@@ -1,6 +1,6 @@
 # Resource Registry
 
-Staging resources are provisioned in the dedicated clean account; production remains unprovisioned.
+Staging and non-secret production resources are provisioned in the dedicated clean account; production compute/secrets/integration remain gated.
 
 ## GitHub
 
@@ -47,6 +47,7 @@ Staging resources are provisioned in the dedicated clean account; production rem
 - Clean staging test Phone Number ID: not yet configured; no ID placeholder is recorded
 - Clean staging test recipient: not configured; synthetic-only use required
 - Clean staging Meta gate: authenticated Meta UI exposes Hoja-linked active portfolio/assets and reports the business portfolio creation limit; no existing portfolio/WABA/app was selected
+- Excluded candidate portfolio: `Garden Shop OK` / `1154400188565490`; visible business overview contains Hoja Seeds ad account `120233855869140541`, so it is not clean and is not used
 - Flow ID: not published; repository definition only
 - Dataset/event source ID: not provisioned
 - Graph API version: `v26.0` observed 2026-09-27; re-verify before live integration

@@ -27,9 +27,9 @@
 - Verified Garden Shop recipient details are not yet available; payment methods remain safe-disabled until supplied.
 - R2 onboarding was explicitly authorized; dashboard verified $0.00 current billable usage and no public bucket access.
 - TypeScript build, ESLint, unit/domain tests, and simulated WhatsApp E2E all pass.
-- Implementation commits through `6493af6` are complete. The earlier `ai-photo-studio` 403 was repaired without bypassing access controls.
-- GitHub authentication was corrected to `gardenshop`; `main` and `codex/gfs-bootstrap-001` are pushed and PR #1 is open against `main`.
-- PR #1 is currently `MERGEABLE`; `main` has no branch protection. Remote CI is optional/unavailable (`REMOTE_CI_UNAVAILABLE_NON_BLOCKING`), so local release checks are active.
+- Implementation base is merged at `28c0bcc`; WABA staging branch commits `8a23811`/`6db14be` are pushed. The earlier `ai-photo-studio` 403 was repaired without bypassing access controls.
+- GitHub authentication is `gardenshop`; `codex/gfs-waba-test-002` is pushed and PR #2 is open against `main`.
+- PR #2 is currently `MERGEABLE`; `main` has no branch protection. Remote CI is optional/unavailable (`REMOTE_CI_UNAVAILABLE_NON_BLOCKING`), so local release checks are active.
 - Minimal CI workflow is locally verified with `npm ci`, Vitest 5, build, lint, and zero dependency audit findings; remote check was triggered but blocked before start by GitHub billing lock.
 - CI workflow is present, but GitHub runners cannot start because the account is locked due to billing. No billing mutation was attempted; this is non-blocking for launch preparation.
 - Cloudflare UI re-verification confirmed clean account context, D1 ID/table count, private R2 (`Public Access: Disabled`), Queue/DLQ IDs, Worker names/subdomain, and Access behavior.
@@ -39,10 +39,11 @@
 - Browser protocol is locked: authenticated `gisupp@gmail.com` profile, same-task tab reuse, no duplicate dashboard tabs, and account verification before mutations.
 - `STAGING_WABA_TEST_ALLOWED` is active for a future clean Meta-provided staging WABA/test number only; production remains `WHATSAPP_NUMBER_PENDING`.
 - Clean WABA staging setup is blocked by Meta's visible business-portfolio creation limit while the available existing portfolios/assets are not independently clean; no existing portfolio/WABA/app/test number was used.
+- Read-only audit proved candidate `Garden Shop OK` also contains a Hoja Seeds ad account; it is excluded. No clean suitable portfolio/WABA/test number is currently available.
 - Deployed staging smoke passed with synthetic-only data: Flow/D1 persistence, JazzCash/Easypaisa/Bank selection, receipt request, mock media retrieval, private R2 receipt write, and `PAYMENT_REVIEW`; synthetic methods/fixtures were restored/removed afterward.
 - Two integration defects were repaired during smoke testing: payment-selection and receipt-request audit SQL placeholder counts.
-- Production D1 `02b707df-a10c-4645-9516-a2a4541f6fab`, private R2, Queue `9b1852f6976343de8bec95ef2cf152a4`, and DLQ `0313fc16837d41bdb8370cf8fe31c969` created in the clean account; migrations 0001/0002 applied and payment methods verified disabled. Production Workers, Access, secrets, and callbacks remain gated.
+- Production D1 `02b707df-a10c-4645-9516-a2a4541f6fab`, private R2, Queue `9b1852f6976343de8bec95ef2cf152a4`, and DLQ `0313fc16837d41bdb8370cf8fe31c969` exist in the clean account; migrations 0001/0002 applied and payment methods verified disabled. Production Workers, Access, secrets, and callbacks remain gated.
 
 ## Next Action
 
-Supply verified Garden Shop payment QR/TILL/instruction values, then enable methods through the Access-protected admin configuration; clean WABA staging remains gated by Meta portfolio availability. Production stays `WHATSAPP_NUMBER_PENDING`.
+Obtain a clean Meta WABA test context without selecting existing Hoja-linked assets; production stays `WHATSAPP_NUMBER_PENDING`.
