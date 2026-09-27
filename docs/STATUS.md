@@ -27,7 +27,7 @@
 - Verified Garden Shop recipient details are not yet available; payment methods remain safe-disabled until supplied.
 - R2 onboarding was explicitly authorized; dashboard verified $0.00 current billable usage and no public bucket access.
 - TypeScript build, ESLint, unit/domain tests, and simulated WhatsApp E2E all pass.
-- Implementation commit `46e7959` is complete. Normal GitHub push was attempted and rejected with `403: Permission to gardenshop/freeseeds.git denied to ai-photo-studio`; no access control was bypassed.
+- Implementation commits `46e7959` and `6fd86ae` are complete. The earlier `ai-photo-studio` 403 was repaired without bypassing access controls.
 - GitHub authentication was corrected to `gardenshop`; `main` and `codex/gfs-bootstrap-001` are pushed and PR #1 is open against `main`.
 - Cloudflare UI re-verification confirmed clean account context, D1 ID/table count, private R2 (`Public Access: Disabled`), Queue/DLQ IDs, Worker names/subdomain, and Access behavior.
 - Hardened API/admin Workers deployed and health-verified; staging bindings show only the clean D1/R2/Queue resources.

@@ -5,7 +5,7 @@ Staging resources are provisioned in the dedicated clean account; production rem
 ## GitHub
 
 - Repository: `https://github.com/gardenshop/freeseeds.git`
-- Branch: `codex/gfs-bootstrap-001` (to be created after governance baseline)
+- Branch: `codex/gfs-bootstrap-001` (pushed; PR #1 targets `main`)
 
 ## Cloudflare
 
