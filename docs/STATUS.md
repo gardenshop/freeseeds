@@ -17,7 +17,7 @@
 ## Verification
 
 - No live WhatsApp number has been used.
-- No Meta test number has been used.
+- No prohibited Meta test number has been used; a clean staging WABA/test number is now allowed but not yet configured.
 - No paid ad spend has been initiated.
 
 ## Blockers and Gates
@@ -35,10 +35,14 @@
 - Cloudflare UI re-verification confirmed clean account context, D1 ID/table count, private R2 (`Public Access: Disabled`), Queue/DLQ IDs, Worker names/subdomain, and Access behavior.
 - Hardened API/admin Workers deployed and health-verified; staging bindings show only the clean D1/R2/Queue resources.
 - Payment model migration is applied and verified in staging: D1 `payment_methods`, private R2 QR validation/storage, Access-only admin configuration/preview, audited updates, method selection, and receipt-request outbox. No real payment values are configured.
-- Latest payment-aware API/admin versions deployed: `3969d4e3-7288-46e2-9891-f8485d9ef3fd` / `46efab4b-796f-4422-b4bf-639930b11904`.
+- Latest payment-aware API/admin versions deployed: `d4aff2d9-1c27-41f5-a01c-22208a37eb78` / `46efab4b-796f-4422-b4bf-639930b11904`.
 - Browser protocol is locked: authenticated `gisupp@gmail.com` profile, same-task tab reuse, no duplicate dashboard tabs, and account verification before mutations.
+- `STAGING_WABA_TEST_ALLOWED` is active for a future clean Meta-provided staging WABA/test number only; production remains `WHATSAPP_NUMBER_PENDING`.
+- Clean WABA staging setup is blocked by Meta's visible business-portfolio creation limit while the available existing portfolios/assets are not independently clean; no existing portfolio/WABA/app/test number was used.
+- Deployed staging smoke passed with synthetic-only data: Flow/D1 persistence, JazzCash/Easypaisa/Bank selection, receipt request, mock media retrieval, private R2 receipt write, and `PAYMENT_REVIEW`; synthetic methods/fixtures were restored/removed afterward.
+- Two integration defects were repaired during smoke testing: payment-selection and receipt-request audit SQL placeholder counts.
 - Production D1 `02b707df-a10c-4645-9516-a2a4541f6fab`, private R2, Queue `9b1852f6976343de8bec95ef2cf152a4`, and DLQ `0313fc16837d41bdb8370cf8fe31c969` created in the clean account; migrations 0001/0002 applied and payment methods verified disabled. Production Workers, Access, secrets, and callbacks remain gated.
 
 ## Next Action
 
-Supply verified Garden Shop payment QR/TILL/instruction values, then enable methods through the Access-protected admin configuration; keep the branch at `WHATSAPP_NUMBER_PENDING`. Remote CI remains non-blocking.
+Supply verified Garden Shop payment QR/TILL/instruction values, then enable methods through the Access-protected admin configuration; clean WABA staging remains gated by Meta portfolio availability. Production stays `WHATSAPP_NUMBER_PENDING`.

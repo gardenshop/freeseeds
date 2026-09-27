@@ -23,3 +23,6 @@
 - Created isolated production D1/R2/Queue/DLQ resources and committed production-only Wrangler bindings without deploying Workers or connecting Meta/WhatsApp.
 - Applied production D1 migrations 0001/0002 and verified all payment methods remain disabled with no recipient values.
 - Recorded verified production Queue/DLQ IDs in the resource registry.
+- Added `STAGING_WABA_TEST_ALLOWED`: clean Meta-provided WABA/test number is permitted only for synthetic staging tests; production number and all prohibited assets remain locked.
+- Audited Meta developer/business UI without mutation; clean staging portfolio creation is blocked by Meta business-portfolio limit, and all existing Hoja-linked assets remain excluded.
+- Ran deployed synthetic staging smoke through Flow, all payment methods, receipt request, mock media, private R2, and `PAYMENT_REVIEW`; repaired two audit SQL placeholder defects and restored test data/configuration.

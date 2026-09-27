@@ -15,7 +15,7 @@ export async function selectPaymentMethod(db: D1Database, orderId: string, metho
     db.prepare("UPDATE payments SET method=?, expected_amount=?, review_state='PENDING', updated_at=? WHERE order_id=? AND review_state IN ('PENDING','REJECTED')").bind(method, amount, now, orderId),
     db.prepare("UPDATE orders SET state='PAYMENT_PENDING', payment_status='PENDING', updated_at=? WHERE id=? AND state='DETAILS_COMPLETED'").bind(now, orderId),
     db.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), idempotencyKey, "WHATSAPP_PAYMENT_INSTRUCTIONS", orderId, JSON.stringify({ orderId, orderNumber, amount, method, qrR2Key: config.qrR2Key, message: formatPaymentMessage(orderNumber, amount, config) }), "PENDING", now, now, now),
-    db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_METHOD_SELECTED", "CUSTOMER", "ORDER", orderId, crypto.randomUUID(), JSON.stringify({ method, orderNumber }), now)
+    db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_METHOD_SELECTED", "CUSTOMER", "ORDER", orderId, crypto.randomUUID(), JSON.stringify({ method, orderNumber }), now)
   ]);
   return { orderNumber, amount, config, message: formatPaymentMessage(orderNumber, amount, config) };
 }

@@ -55,3 +55,11 @@ Created only non-secret isolated production D1/R2/Queue/DLQ resources in the cle
 ## 2026-09-27: Browser and Remote CI Protocol
 
 Dashboard automation uses Chrome DevTools MCP with the authenticated `gisupp@gmail.com` profile, reuses same-task tabs, avoids duplicate service tabs, and verifies account identity before mutations. GitHub Actions billing is optional and not a launch blocker; local release checks remain authoritative while remote CI is unavailable (`REMOTE_CI_UNAVAILABLE_NON_BLOCKING`).
+
+## 2026-09-27: Clean WABA Staging Test Allowed
+
+`STAGING_WABA_TEST_ALLOWED` is now permitted by explicit user decision. A Meta-provided clean test WABA/test number may connect only to staging for synthetic webhook, Flow, message, media, and CAPI test events after visible ownership verification. Hoja-linked, old Garden Shop, Meta test `+1 555-897-9372`, production, real-customer, real-payment, and ad use remain forbidden. Production stays `WHATSAPP_NUMBER_PENDING`.
+
+## 2026-09-27: Clean WABA Portfolio Gate
+
+Meta UI verification showed the active `Hoja Seeds` portfolio and existing apps/WABAs linked to the Hoja business. Creating `Get Free Seeds Test` was blocked by Meta's business-portfolio limit. Existing `Garden Shop`/`Garden Shop OK` portfolios were not selected because clean ownership could not be proven. No existing or prohibited Meta asset was mutated.

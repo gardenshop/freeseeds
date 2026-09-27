@@ -13,3 +13,4 @@
 | WhatsApp | provider boundary, mock sends, no live number | PASS |
 | Isolation | Hoja/Google Sheets/secrets/public receipt scans | PASS |
 | E2E | synthetic referral through delivered | PASS |
+| Real WABA staging E2E | clean WABA webhook/Flow/media/CAPI | BLOCKED: Meta clean portfolio limit; no prohibited asset used |

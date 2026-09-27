@@ -25,10 +25,12 @@
 - Customer-facing WhatsApp identity: Get Free Seeds.
 - Production number: NEW NUMBER TO BE PROVIDED LATER BY USER.
 - Current state: UNASSIGNED / `WHATSAPP_NUMBER_PENDING`.
-- No existing, test, Hoja Seeds, Garden Shop, or other phone number may be used in the meantime.
+- Production must not use any existing, Hoja Seeds, Garden Shop, temporary, or other phone number.
 - Do not locate, migrate, register, connect, or use any existing number or WABA.
-- Do not use Meta test number `+1 555-897-9372`.
-- Do not create live templates, publish a Flow, register callbacks against an existing account, send real WhatsApp messages, or create/reuse an existing WhatsApp token.
+- The known Meta test number `+1 555-897-9372` and every Hoja-linked test asset remain prohibited.
+- `STAGING_WABA_TEST_ALLOWED`: a Meta-provided test WABA/test number may be used only when its visible ownership is independently verified as clean Get Free Seeds, only for staging synthetic data, staging webhook/Flow/messages, and Meta test events. It must never receive real customers, real payments, production events, or ad spend.
+- A clean staging test asset does not change the production number state: production remains `WHATSAPP_NUMBER_PENDING`.
+- Do not publish production templates/Flow, register production callbacks, send real WhatsApp messages, or create/reuse production tokens before the new number and clean WABA onboarding gates pass.
 
 ## Platform
 

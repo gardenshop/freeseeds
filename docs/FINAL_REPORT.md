@@ -1,14 +1,15 @@
 # Final Report
 
-This report covers the current independent engineering phase. No WhatsApp number, WABA, Meta test number, live token, live CAPI dataset, or ad spend was used.
+This report covers the WABA staging test preparation phase. No WhatsApp number, WABA, Meta test number, live token, live CAPI dataset, real payment, or ad spend was used.
 
 ## Governance
 
 - Governance: PASS; baseline commit on `main`: `ee71a93`
 - Plan corrected for future new WhatsApp number: PASS; self-review PASS
-- Branch: `codex/gfs-bootstrap-001`
+- Branch: `codex/gfs-waba-test-002`
 - Payment implementation commit: `6493af6`; documentation follow-up is pushed on the same branch
-- Push/PR: PASS; `main` and `codex/gfs-bootstrap-001` pushed as `gardenshop`; PR #1: https://github.com/gardenshop/freeseeds/pull/1
+- Push/PR: pending new branch push and PR creation; closed PR #1 is not being reused
+- New WABA test branch: `codex/gfs-waba-test-002` (prepared from merged `main` `28c0bcc`)
 
 ## Cloudflare
 
@@ -18,7 +19,7 @@ This report covers the current independent engineering phase. No WhatsApp number
 - Staging D1: `getfreeseeds-staging` / `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, schema applied
 - Staging R2: `getfreeseeds-receipts-staging`, private, public access disabled
 - Staging Queue/DLQ: `getfreeseeds-events-staging` (`7cf7cec60e0d4bd4a0a1e5af41f00dbd`) / `getfreeseeds-events-staging-dlq` (`4e0ec3246cc048c8be71cc37ff48f0a7`)
-- Public Worker: `https://getfreeseeds-api-staging.get-free-seeds.workers.dev`, version `3969d4e3-7288-46e2-9891-f8485d9ef3fd`
+- Public Worker: `https://getfreeseeds-api-staging.get-free-seeds.workers.dev`, version `d4aff2d9-1c27-41f5-a01c-22208a37eb78`
 - Admin Worker: `https://getfreeseeds-admin-staging.get-free-seeds.workers.dev`, version `46efab4b-796f-4422-b4bf-639930b11904`
 - Access: Zero Trust Free activated; application `ea91b1bf-02c1-46d3-921a-ea2f507fb150`; allow policy `b3acdd4f-9767-4d28-a55d-0a8e771d476c`; allowed identity `gisupp@gmail.com`
 - Production preparation: D1 `getfreeseeds-prod` / `02b707df-a10c-4645-9516-a2a4541f6fab`, private R2, Queue `9b1852f6976343de8bec95ef2cf152a4`, DLQ `0313fc16837d41bdb8370cf8fe31c969` created; migrations 0001/0002 applied; Workers not deployed
@@ -40,7 +41,10 @@ This report covers the current independent engineering phase. No WhatsApp number
 - JazzCash/Easypaisa/Bank: backend-ready and safe-disabled; verified Garden Shop recipient values not supplied
 - Page isolation: pending; no ownership change performed
 - WABA: no connection; no Flow publication/templates/callback/token
+- Clean test WABA: FAIL/PENDING; Meta business-portfolio creation limit blocks creating `Get Free Seeds Test`, and existing portfolios/assets were excluded as ownership was not provably clean
 - New number: NOT PROVIDED; no number used
+- Real webhook/WABA-test E2E: NOT RUN; clean WABA gate blocked before configuration
+- Deployed synthetic staging smoke: Flow persistence, three payment selections, receipt request, mock media/R2, and `PAYMENT_REVIEW`: PASS; fixtures/config restored/removed
 - Live WhatsApp number used: NO
 - Live ad spend: NO
 - Hoja isolation: PASS for runtime/resources; prohibited account/assets excluded
@@ -60,8 +64,8 @@ This report covers the current independent engineering phase. No WhatsApp number
 
 ## Completion Estimate
 
-- Overall: 68%
-- Completed: 68%
-- Remaining: 32%, consisting of verified payment values, new WhatsApp/clean Meta onboarding, live CAPI/WhatsApp E2E, and paid-ad authorization. Remote CI billing is non-blocking.
+- Overall: 69%
+- Completed: 69%
+- Remaining: 31%, consisting of clean WABA test access, verified payment values, new production WhatsApp/Meta onboarding, live CAPI/WhatsApp E2E, and paid-ad authorization. Remote CI billing is non-blocking.
 
-Next single action: supply verified Garden Shop payment QR/TILL/instruction values so the three backend-managed methods can be enabled safely.
+Next single action: obtain a clean Meta WABA test context or resolve the Meta business-portfolio limit without selecting existing Hoja-linked assets.
