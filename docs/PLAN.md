@@ -77,7 +77,7 @@ When a new number is supplied, follow `docs/WHATSAPP_NUMBER_ONBOARDING.md`: veri
 | --- | --- |
 | No existing WhatsApp number used | PASS |
 | Hoja test number excluded | PASS |
-| Existing Garden Shop number migration removed | PASS |
+| Existing Garden Shop number migration not planned | PASS |
 | Meta test number excluded | PASS |
 | New production number remains pending | PASS |
 | Backend implementation can proceed independently | PASS |

@@ -53,8 +53,8 @@
 
 ## Bootstrap Lock
 
-- Cloudflare Account ID: `TO_BE_FILLED_ONCE`
-- workers.dev subdomain: `TO_BE_FILLED_ONCE`
+- Cloudflare Account ID: `cb5066a6d71ecdee0bd7ed8aacb4d3c2`
+- workers.dev subdomain: `get-free-seeds.workers.dev`
 - All real resource IDs are recorded in `docs/RESOURCE_REGISTRY.md` and become immutable after bootstrap.
 - Account or resource migration requires explicit user authorization, migration and rollback plans, registry update, decision record, and changelog entry.
 

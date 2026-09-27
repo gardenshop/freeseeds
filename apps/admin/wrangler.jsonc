@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "getfreeseeds-admin-staging",
+  "account_id": "cb5066a6d71ecdee0bd7ed8aacb4d3c2",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-27",
+  "workers_dev": true,
+  "d1_databases": [{ "binding": "DB", "database_name": "getfreeseeds-staging", "database_id": "17b7e9f6-e08b-4bff-a756-10de30b49ab1" }],
+  "r2_buckets": [{ "binding": "RECEIPTS", "bucket_name": "getfreeseeds-receipts-staging" }],
+  "vars": { "DEPLOYMENT_STATE": "WHATSAPP_NUMBER_PENDING", "ADMIN_EMAIL": "gisupp@gmail.com", "PAYMENT_CONFIGURED": "false" }
+}
