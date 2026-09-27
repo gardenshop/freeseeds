@@ -19,3 +19,6 @@
 - Added D1/R2 backend-managed payment configuration, private QR upload/replacement, TILL/instruction controls, audited admin updates, payment selection, and receipt-request outbox behavior. All methods remain disabled until verified values are supplied.
 - Applied payment configuration migration to clean staging D1 and deployed payment-aware API/admin Workers; remote methods verified disabled with null recipient/TILL/QR values.
 - Redeployed latest payment-aware API/admin versions after provider and payment-selection hardening; staging bindings remain isolated to the clean account.
+- Locked authenticated browser profile/tab-reuse protocol and reclassified GitHub Actions billing as `REMOTE_CI_UNAVAILABLE_NON_BLOCKING`; local quality checks remain active.
+- Created isolated production D1/R2/Queue/DLQ resources and committed production-only Wrangler bindings without deploying Workers or connecting Meta/WhatsApp.
+- Applied production D1 migrations 0001/0002 and verified all payment methods remain disabled with no recipient values.

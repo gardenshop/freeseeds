@@ -26,8 +26,13 @@ Staging resources are provisioned in the dedicated clean account; production rem
 - Staging admin version: `46efab4b-796f-4422-b4bf-639930b11904`
 - Cloudflare Access application: `Get Free Seeds Admin Staging` / `ea91b1bf-02c1-46d3-921a-ea2f507fb150`
 - Cloudflare Access allow policy: `Get Free Seeds Admin Operator` / `b3acdd4f-9767-4d28-a55d-0a8e771d476c`
-- Production resources: not provisioned
+- Production compute/secrets: not provisioned
 - Production Access application: not provisioned
+- Production D1: `getfreeseeds-prod` / `02b707df-a10c-4645-9516-a2a4541f6fab` (created; migrations 0001/0002 applied; Workers not deployed)
+- Production R2: `getfreeseeds-receipts-prod` (created; private, no public access)
+- Production Queue: `getfreeseeds-events-prod` (created)
+- Production DLQ: `getfreeseeds-events-prod-dlq` (created)
+- Production Workers: not deployed; production Wrangler bindings committed
 
 ## Meta and WhatsApp
 

@@ -21,6 +21,7 @@ This report covers the current independent engineering phase. No WhatsApp number
 - Public Worker: `https://getfreeseeds-api-staging.get-free-seeds.workers.dev`, version `3969d4e3-7288-46e2-9891-f8485d9ef3fd`
 - Admin Worker: `https://getfreeseeds-admin-staging.get-free-seeds.workers.dev`, version `46efab4b-796f-4422-b4bf-639930b11904`
 - Access: Zero Trust Free activated; application `ea91b1bf-02c1-46d3-921a-ea2f507fb150`; allow policy `b3acdd4f-9767-4d28-a55d-0a8e771d476c`; allowed identity `gisupp@gmail.com`
+- Production preparation: D1 `getfreeseeds-prod` / `02b707df-a10c-4645-9516-a2a4541f6fab`, private R2, Queue, DLQ created; migrations 0001/0002 applied; Workers not deployed
 
 ## Backend and Tests
 
@@ -30,6 +31,7 @@ This report covers the current independent engineering phase. No WhatsApp number
 - Mock E2E: synthetic referral -> five fields -> all payment methods -> receipt -> review -> approval -> Purchase -> confirmation -> packing -> dispatch -> delivered: PASS
 - Validation: `npm test` 18/18, `npm run build` PASS, `npm run lint` PASS, `npm audit` PASS
 - CI: workflow added and triggered; both remote jobs were blocked before starting by GitHub account billing lock. Local clean-install/test/build/lint verification PASS.
+- Browser protocol: authenticated `gisupp@gmail.com` profile, same-task tab reuse, and account verification before mutation documented and applied: PASS
 
 ## External State
 
@@ -58,8 +60,8 @@ This report covers the current independent engineering phase. No WhatsApp number
 
 ## Completion Estimate
 
-- Overall: 64%
-- Completed: 64%
-- Remaining: 36%, including GitHub Actions billing unlock, live Meta/WhatsApp/payment onboarding, and production E2E gates
+- Overall: 68%
+- Completed: 68%
+- Remaining: 32%, consisting of verified payment values, new WhatsApp/clean Meta onboarding, live CAPI/WhatsApp E2E, and paid-ad authorization. Remote CI billing is non-blocking.
 
 Next single action: supply verified Garden Shop payment QR/TILL/instruction values so the three backend-managed methods can be enabled safely.

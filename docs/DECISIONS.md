@@ -47,3 +47,11 @@ The requested minimal GitHub Actions workflow is committed and valid. GitHub cre
 ## 2026-09-27: Backend-Managed Payment Configuration
 
 Customer-visible JazzCash, Easypaisa, and Bank Transfer values are controlled by D1 `payment_methods`, edited only through the Access-protected admin Worker and audited. QR binaries are private R2 objects under `payment-qr/`; methods seed disabled and incomplete. No recipient, TILL/TIL, QR, or instruction values are stored in source, Worker variables, Flow JSON, templates, or frontend strings.
+
+## 2026-09-27: Production Resource Preparation
+
+Created only non-secret isolated production D1/R2/Queue/DLQ resources in the clean Get Free Seeds account, applied migrations 0001/0002, and committed separate Wrangler bindings. Production Worker deployment, Access application, secrets, callbacks, and Meta/WhatsApp integration remain intentionally gated by the new number and clean asset approvals.
+
+## 2026-09-27: Browser and Remote CI Protocol
+
+Dashboard automation uses Chrome DevTools MCP with the authenticated `gisupp@gmail.com` profile, reuses same-task tabs, avoids duplicate service tabs, and verifies account identity before mutations. GitHub Actions billing is optional and not a launch blocker; local release checks remain authoritative while remote CI is unavailable (`REMOTE_CI_UNAVAILABLE_NON_BLOCKING`).

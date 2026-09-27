@@ -69,3 +69,16 @@ Expected state for this phase: `WHATSAPP_NUMBER_PENDING`.
 ## Spend Safety
 
 - Never publish a paid Meta campaign, increase budget, charge a card, or start delivery without explicit authorization containing the intended spend/publication decision.
+
+## Browser Automation Protocol
+
+- Always use Chrome DevTools MCP with the authenticated browser profile/session for `gisupp@gmail.com` when automating Cloudflare, Meta, GitHub, or related dashboards.
+- Verify the visible active account/profile before every external mutation and record the result.
+- Reuse the already-open tab for the same service, task, or page. Do not open a new tab for every sub-step.
+- Open one separate tab only when beginning a genuinely new service, task, or context that should remain separate.
+- Avoid duplicate Cloudflare, Meta, GitHub, or admin tabs. Do not close useful authenticated tabs unless necessary.
+
+## Quality Gate Availability
+
+- `REMOTE_CI_UNAVAILABLE_NON_BLOCKING`: GitHub Actions may remain unavailable because of account billing state. Do not add billing, payment methods, or spend money to enable it.
+- Local `npm ci`, `npm test`, `npm run build`, `npm run lint`, dependency audit, and simulated E2E are the active release quality gate while remote CI is unavailable.
