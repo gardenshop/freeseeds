@@ -39,3 +39,7 @@ The incorrect `ai-photo-studio` GitHub credential was removed and browser-confir
 ## 2026-09-27: Backend Hardening
 
 Added production-capable but disabled Meta WhatsApp/CAPI clients, HMAC verification, referral parsing, private receipt R2 storage, admin configuration/rejection/clearer-receipt/receipt-preview paths, atomic approval guards, bounded queue retry/DLQ logic, and focused safeguards. Payment methods remain disabled without verified recipient values.
+
+## 2026-09-27: CI Billing Gate
+
+The requested minimal GitHub Actions workflow is committed and valid. GitHub created the `verify` jobs but did not start them because the account is locked due to a billing issue. Preserve the workflow and do not bypass, alter billing, or weaken required checks; rerun after the external account gate is resolved.

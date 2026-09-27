@@ -7,7 +7,7 @@ This report covers the current independent engineering phase. No WhatsApp number
 - Governance: PASS; baseline commit on `main`: `ee71a93`
 - Plan corrected for future new WhatsApp number: PASS; self-review PASS
 - Branch: `codex/gfs-bootstrap-001`
-- Latest documented commit before this CI pass: `3ac6571`
+- Latest commit: `ed447a5`
 - Push/PR: PASS; `main` and `codex/gfs-bootstrap-001` pushed as `gardenshop`; PR #1: https://github.com/gardenshop/freeseeds/pull/1
 
 ## Cloudflare
@@ -29,7 +29,7 @@ This report covers the current independent engineering phase. No WhatsApp number
 - WhatsApp provider abstraction: `MockWhatsAppProvider` active for tests; `MetaWhatsAppProvider` disabled/unconfigured: PASS
 - Mock E2E: synthetic referral -> five fields -> all payment methods -> receipt -> review -> approval -> Purchase -> confirmation -> packing -> dispatch -> delivered: PASS
 - Validation: `npm test` 16/16, `npm run build` PASS, `npm run lint` PASS, `npm audit` PASS
-- CI: minimal GitHub Actions workflow added for `npm ci`, test, build, and lint; local clean-install verification PASS, remote run pending push
+- CI: workflow added and triggered; both remote jobs were blocked before starting by GitHub account billing lock. Local clean-install/test/build/lint verification PASS.
 
 ## External State
 
@@ -58,8 +58,8 @@ This report covers the current independent engineering phase. No WhatsApp number
 
 ## Completion Estimate
 
-- Overall: 58%
-- Completed: 58%
-- Remaining: 42%, primarily live Meta/WhatsApp/payment onboarding and production E2E gates
+- Overall: 60%
+- Completed: 60%
+- Remaining: 40%, including GitHub Actions billing unlock, live Meta/WhatsApp/payment onboarding, and production E2E gates
 
-Next single action: supply the new WhatsApp number and verified Garden Shop recipient details so clean Meta/WABA onboarding and live payment tests can begin.
+Next single action: resolve the GitHub Actions billing lock so PR #1 can obtain a green remote CI result.

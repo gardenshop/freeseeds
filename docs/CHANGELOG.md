@@ -15,3 +15,4 @@
 - Hardened provider, receipt, admin approval/rejection, queue retry, and CAPI boundaries; expanded automated coverage to 16 passing tests.
 - Added minimal GitHub Actions CI for install, test, build, and lint; confirmed PR #1 is currently mergeable and clean.
 - Upgraded Vitest to 5.0.2 to remove the dev-only audit advisory; full dependency audit is clean with no test/build/lint regression.
+- GitHub CI was triggered successfully but blocked before job start by the account billing lock; recorded as an external gate without bypassing billing controls.
