@@ -1,0 +1,31 @@
+{
+  "version": "7.1",
+  "data_api_version": "3.0",
+  "routing_model": { "OFFER": ["DETAILS"], "DETAILS": ["SUBMIT"] },
+  "screens": [
+    {
+      "id": "OFFER",
+      "title": "Get Free Seeds",
+      "layout": { "type": "SingleColumnLayout", "children": [{ "type": "TextHeading", "text": "Get 5 Seed Packs FREE" }, { "type": "TextBody", "text": "Seeds are free. You only pay delivery charges. One set per household." }, { "type": "Footer", "label": "Get My Free Seeds", "on-click-action": { "name": "navigate", "next": { "type": "screen", "name": "DETAILS" } } }] }
+    },
+    {
+      "id": "DETAILS",
+      "title": "Delivery details",
+      "layout": { "type": "SingleColumnLayout", "children": [
+        { "type": "Form", "name": "delivery_details", "children": [
+          { "type": "TextInput", "name": "fullName", "label": "Full Name", "required": true },
+          { "type": "TextInput", "name": "deliveryAddress", "label": "Complete Delivery Address", "required": true },
+          { "type": "TextInput", "name": "nearbyPlace", "label": "Nearby Famous Place", "required": true },
+          { "type": "TextInput", "name": "city", "label": "City", "required": true },
+          { "type": "TextInput", "name": "contactNumber", "label": "Contact Number", "input-type": "phone", "required": true },
+          { "type": "Footer", "label": "Continue", "on-click-action": { "name": "navigate", "next": { "type": "screen", "name": "SUBMIT" }, "payload": { "fullName": "${form.fullName}", "deliveryAddress": "${form.deliveryAddress}", "nearbyPlace": "${form.nearbyPlace}", "city": "${form.city}", "contactNumber": "${form.contactNumber}" } } }
+        ] }
+      ] }
+    },
+    {
+      "id": "SUBMIT",
+      "title": "Confirm details",
+      "layout": { "type": "SingleColumnLayout", "children": [{ "type": "TextBody", "text": "Review your delivery details and submit." }, { "type": "Footer", "label": "Submit", "on-click-action": { "name": "data_exchange", "payload": { "fullName": "${data.fullName}", "deliveryAddress": "${data.deliveryAddress}", "nearbyPlace": "${data.nearbyPlace}", "city": "${data.city}", "contactNumber": "${data.contactNumber}" } } }] }
+    }
+  ]
+}

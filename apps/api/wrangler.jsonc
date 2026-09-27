@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "getfreeseeds-api-staging",
+  "account_id": "cb5066a6d71ecdee0bd7ed8aacb4d3c2",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-27",
+  "workers_dev": true,
+  "d1_databases": [{ "binding": "DB", "database_name": "getfreeseeds-staging", "database_id": "17b7e9f6-e08b-4bff-a756-10de30b49ab1" }],
+  "r2_buckets": [{ "binding": "RECEIPTS", "bucket_name": "getfreeseeds-receipts-staging" }],
+  "queues": {
+    "producers": [{ "binding": "EVENTS", "queue": "getfreeseeds-events-staging" }],
+    "consumers": [{ "queue": "getfreeseeds-events-staging", "max_batch_size": 10, "max_batch_timeout": 5, "max_retries": 5, "dead_letter_queue": "getfreeseeds-events-staging-dlq" }]
+  },
+  "vars": { "DEPLOYMENT_STATE": "WHATSAPP_NUMBER_PENDING", "WHATSAPP_PROVIDER": "mock", "META_PROVIDER_ENABLED": "false" }
+}

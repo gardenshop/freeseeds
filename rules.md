@@ -17,6 +17,8 @@
 - Offer: Get 5 Seed Packs FREE; seed price Rs. 0; coverage approximately 2 to 3 marla depending on crop, spacing and growing method; one promotional set per household per campaign.
 - Required WhatsApp Flow fields are exactly: Full Name; Complete Delivery Address; Nearby Famous Place; City; Contact Number.
 - Payment methods are JazzCash, Easypaisa, and Bank Transfer. Garden Shop recipient values must be verified before activation; never guess account numbers, IBANs, wallet numbers, merchant IDs, or credentials.
+- Customer-visible payment configuration is backend-managed in D1 `payment_methods`; QR binaries are private R2 objects. Do not hardcode recipient values, TILL/TIL IDs, QR keys, or payment instructions in source, Worker environment variables, Flow JSON, templates, or frontend strings.
+- Payment credentials and provider secrets remain Cloudflare secrets and are never stored in customer-visible configuration.
 
 ## WhatsApp Number Lock
 
@@ -53,8 +55,8 @@
 
 ## Bootstrap Lock
 
-- Cloudflare Account ID: `TO_BE_FILLED_ONCE`
-- workers.dev subdomain: `TO_BE_FILLED_ONCE`
+- Cloudflare Account ID: `cb5066a6d71ecdee0bd7ed8aacb4d3c2`
+- workers.dev subdomain: `get-free-seeds.workers.dev`
 - All real resource IDs are recorded in `docs/RESOURCE_REGISTRY.md` and become immutable after bootstrap.
 - Account or resource migration requires explicit user authorization, migration and rollback plans, registry update, decision record, and changelog entry.
 
@@ -67,3 +69,16 @@ Expected state for this phase: `WHATSAPP_NUMBER_PENDING`.
 ## Spend Safety
 
 - Never publish a paid Meta campaign, increase budget, charge a card, or start delivery without explicit authorization containing the intended spend/publication decision.
+
+## Browser Automation Protocol
+
+- Always use Chrome DevTools MCP with the authenticated browser profile/session for `gisupp@gmail.com` when automating Cloudflare, Meta, GitHub, or related dashboards.
+- Verify the visible active account/profile before every external mutation and record the result.
+- Reuse the already-open tab for the same service, task, or page. Do not open a new tab for every sub-step.
+- Open one separate tab only when beginning a genuinely new service, task, or context that should remain separate.
+- Avoid duplicate Cloudflare, Meta, GitHub, or admin tabs. Do not close useful authenticated tabs unless necessary.
+
+## Quality Gate Availability
+
+- `REMOTE_CI_UNAVAILABLE_NON_BLOCKING`: GitHub Actions may remain unavailable because of account billing state. Do not add billing, payment methods, or spend money to enable it.
+- Local `npm ci`, `npm test`, `npm run build`, `npm run lint`, dependency audit, and simulated E2E are the active release quality gate while remote CI is unavailable.
