@@ -26,3 +26,4 @@
 - Added `STAGING_WABA_TEST_ALLOWED`: clean Meta-provided WABA/test number is permitted only for synthetic staging tests; production number and all prohibited assets remain locked.
 - Audited Meta developer/business UI without mutation; clean staging portfolio creation is blocked by Meta business-portfolio limit, and all existing Hoja-linked assets remain excluded.
 - Ran deployed synthetic staging smoke through Flow, all payment methods, receipt request, mock media, private R2, and `PAYMENT_REVIEW`; repaired two audit SQL placeholder defects and restored test data/configuration.
+- Pushed `codex/gfs-waba-test-002` from merged main and opened PR #2; real clean WABA E2E remains blocked by Meta portfolio limit.

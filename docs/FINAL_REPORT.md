@@ -7,8 +7,9 @@ This report covers the WABA staging test preparation phase. No WhatsApp number, 
 - Governance: PASS; baseline commit on `main`: `ee71a93`
 - Plan corrected for future new WhatsApp number: PASS; self-review PASS
 - Branch: `codex/gfs-waba-test-002`
-- Payment implementation commit: `6493af6`; documentation follow-up is pushed on the same branch
-- Push/PR: pending new branch push and PR creation; closed PR #1 is not being reused
+- Payment implementation base commit: `6493af6`
+- WABA test commit: `8a23811`
+- Push/PR: PASS; PR #2 https://github.com/gardenshop/freeseeds/pull/2 targets `main`; closed PR #1 was not reused
 - New WABA test branch: `codex/gfs-waba-test-002` (prepared from merged `main` `28c0bcc`)
 
 ## Cloudflare

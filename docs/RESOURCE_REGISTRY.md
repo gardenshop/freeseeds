@@ -5,7 +5,7 @@ Staging resources are provisioned in the dedicated clean account; production rem
 ## GitHub
 
 - Repository: `https://github.com/gardenshop/freeseeds.git`
-- Branch: `codex/gfs-waba-test-002` (current; PR pending)
+- Branch: `codex/gfs-waba-test-002` (pushed; PR #2 targets `main`)
 
 ## Cloudflare
 
