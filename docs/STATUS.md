@@ -39,4 +39,4 @@
 
 ## Next Action
 
-Run final payment/receipt regression and push the payment backend commit; keep the branch at `WHATSAPP_NUMBER_PENDING`.
+Supply verified Garden Shop payment QR/TILL/instruction values, then enable methods through the Access-protected admin configuration; keep the branch at `WHATSAPP_NUMBER_PENDING`.

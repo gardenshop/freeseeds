@@ -62,4 +62,4 @@ This report covers the current independent engineering phase. No WhatsApp number
 - Completed: 64%
 - Remaining: 36%, including GitHub Actions billing unlock, live Meta/WhatsApp/payment onboarding, and production E2E gates
 
-Next single action: resolve the GitHub Actions billing lock so PR #1 can obtain a green remote CI result.
+Next single action: supply verified Garden Shop payment QR/TILL/instruction values so the three backend-managed methods can be enabled safely.
