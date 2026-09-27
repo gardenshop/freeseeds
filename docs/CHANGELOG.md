@@ -10,3 +10,4 @@
 - Created and locked the dedicated clean Cloudflare account ID `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
 - Provisioned isolated staging D1, private R2, Queue, and DLQ; recorded real IDs.
 - Deployed staging API/admin Workers and verified public API plus Access-protected admin health endpoints.
+- Recorded GitHub push blocker: target repository denied the authenticated `ai-photo-studio` identity with HTTP 403; no access controls were bypassed.
