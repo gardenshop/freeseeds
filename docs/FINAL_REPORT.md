@@ -7,7 +7,7 @@ This report covers the current independent engineering phase. No WhatsApp number
 - Governance: PASS; baseline commit on `main`: `ee71a93`
 - Plan corrected for future new WhatsApp number: PASS; self-review PASS
 - Branch: `codex/gfs-bootstrap-001`
-- Latest commit: `6fd86ae`
+- Latest documented commit before this CI pass: `3ac6571`
 - Push/PR: PASS; `main` and `codex/gfs-bootstrap-001` pushed as `gardenshop`; PR #1: https://github.com/gardenshop/freeseeds/pull/1
 
 ## Cloudflare
@@ -28,7 +28,8 @@ This report covers the current independent engineering phase. No WhatsApp number
 - Five-field Flow definition: `whatsapp/flows/get-free-seeds.json`, exactly five required fields, not published: PASS
 - WhatsApp provider abstraction: `MockWhatsAppProvider` active for tests; `MetaWhatsAppProvider` disabled/unconfigured: PASS
 - Mock E2E: synthetic referral -> five fields -> all payment methods -> receipt -> review -> approval -> Purchase -> confirmation -> packing -> dispatch -> delivered: PASS
-- Validation: `npm test` 16/16, `npm run build` PASS, `npm run lint` PASS
+- Validation: `npm test` 16/16, `npm run build` PASS, `npm run lint` PASS, `npm audit` PASS
+- CI: minimal GitHub Actions workflow added for `npm ci`, test, build, and lint; local clean-install verification PASS, remote run pending push
 
 ## External State
 
