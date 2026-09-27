@@ -21,7 +21,7 @@ This report covers the current independent engineering phase. No WhatsApp number
 - Public Worker: `https://getfreeseeds-api-staging.get-free-seeds.workers.dev`, version `3969d4e3-7288-46e2-9891-f8485d9ef3fd`
 - Admin Worker: `https://getfreeseeds-admin-staging.get-free-seeds.workers.dev`, version `46efab4b-796f-4422-b4bf-639930b11904`
 - Access: Zero Trust Free activated; application `ea91b1bf-02c1-46d3-921a-ea2f507fb150`; allow policy `b3acdd4f-9767-4d28-a55d-0a8e771d476c`; allowed identity `gisupp@gmail.com`
-- Production preparation: D1 `getfreeseeds-prod` / `02b707df-a10c-4645-9516-a2a4541f6fab`, private R2, Queue, DLQ created; migrations 0001/0002 applied; Workers not deployed
+- Production preparation: D1 `getfreeseeds-prod` / `02b707df-a10c-4645-9516-a2a4541f6fab`, private R2, Queue `9b1852f6976343de8bec95ef2cf152a4`, DLQ `0313fc16837d41bdb8370cf8fe31c969` created; migrations 0001/0002 applied; Workers not deployed
 
 ## Backend and Tests
 

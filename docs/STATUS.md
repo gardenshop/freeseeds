@@ -37,7 +37,7 @@
 - Payment model migration is applied and verified in staging: D1 `payment_methods`, private R2 QR validation/storage, Access-only admin configuration/preview, audited updates, method selection, and receipt-request outbox. No real payment values are configured.
 - Latest payment-aware API/admin versions deployed: `3969d4e3-7288-46e2-9891-f8485d9ef3fd` / `46efab4b-796f-4422-b4bf-639930b11904`.
 - Browser protocol is locked: authenticated `gisupp@gmail.com` profile, same-task tab reuse, no duplicate dashboard tabs, and account verification before mutations.
-- Production D1 `02b707df-a10c-4645-9516-a2a4541f6fab`, private R2, Queue, and DLQ created in the clean account; migrations 0001/0002 applied and payment methods verified disabled. Production Workers, Access, secrets, and callbacks remain gated.
+- Production D1 `02b707df-a10c-4645-9516-a2a4541f6fab`, private R2, Queue `9b1852f6976343de8bec95ef2cf152a4`, and DLQ `0313fc16837d41bdb8370cf8fe31c969` created in the clean account; migrations 0001/0002 applied and payment methods verified disabled. Production Workers, Access, secrets, and callbacks remain gated.
 
 ## Next Action
 

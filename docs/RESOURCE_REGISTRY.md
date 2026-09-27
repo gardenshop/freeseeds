@@ -32,6 +32,8 @@ Staging resources are provisioned in the dedicated clean account; production rem
 - Production R2: `getfreeseeds-receipts-prod` (created; private, no public access)
 - Production Queue: `getfreeseeds-events-prod` (created)
 - Production DLQ: `getfreeseeds-events-prod-dlq` (created)
+- Production Queue ID: `9b1852f6976343de8bec95ef2cf152a4`
+- Production DLQ ID: `0313fc16837d41bdb8370cf8fe31c969`
 - Production Workers: not deployed; production Wrangler bindings committed
 
 ## Meta and WhatsApp

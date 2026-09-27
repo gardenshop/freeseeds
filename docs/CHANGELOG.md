@@ -22,3 +22,4 @@
 - Locked authenticated browser profile/tab-reuse protocol and reclassified GitHub Actions billing as `REMOTE_CI_UNAVAILABLE_NON_BLOCKING`; local quality checks remain active.
 - Created isolated production D1/R2/Queue/DLQ resources and committed production-only Wrangler bindings without deploying Workers or connecting Meta/WhatsApp.
 - Applied production D1 migrations 0001/0002 and verified all payment methods remain disabled with no recipient values.
+- Recorded verified production Queue/DLQ IDs in the resource registry.
