@@ -27,7 +27,7 @@
 - Verified Garden Shop recipient details are not yet available; payment methods remain safe-disabled until supplied.
 - R2 onboarding was explicitly authorized; dashboard verified $0.00 current billable usage and no public bucket access.
 - TypeScript build, ESLint, unit/domain tests, and simulated WhatsApp E2E all pass.
-- Implementation commits through `ed447a5` are complete; payment migration changes are in progress. The earlier `ai-photo-studio` 403 was repaired without bypassing access controls.
+- Implementation commits through `6493af6` are complete. The earlier `ai-photo-studio` 403 was repaired without bypassing access controls.
 - GitHub authentication was corrected to `gardenshop`; `main` and `codex/gfs-bootstrap-001` are pushed and PR #1 is open against `main`.
 - PR #1 is currently `MERGEABLE`/`CLEAN`; `main` has no branch protection and no CI existed before the minimal workflow added in this release-hardening pass.
 - Minimal CI workflow is locally verified with `npm ci`, Vitest 5, build, lint, and zero dependency audit findings; remote check was triggered but blocked before start by GitHub billing lock.
