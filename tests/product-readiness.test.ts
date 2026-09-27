@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { MetaWhatsAppProvider, MetaCapiProvider, isTerminalOutboxStatus, paymentInstructions, retryDelaySeconds, shouldDeadLetter, storeReceipt } from "@gfs/core";
+import { MetaWhatsAppProvider, MetaCapiProvider, formatPaymentMessage, isPaymentMethodComplete, isTerminalOutboxStatus, paymentInstructions, retryDelaySeconds, selectPaymentMethod, shouldDeadLetter, storePaymentQr, storeReceipt, validatePaymentQr } from "@gfs/core";
 
 describe("product readiness safeguards", () => {
   it("verifies Meta signatures and keeps the disabled provider closed", async () => {
@@ -33,8 +33,33 @@ describe("product readiness safeguards", () => {
   });
 
   it("keeps all payment methods disabled without verified recipient values", () => {
-    for (const method of ["JAZZCASH", "EASYPAISA", "BANK_TRANSFER"] as const) expect(paymentInstructions(method, {}).configured).toBe(false);
-    expect(paymentInstructions("JAZZCASH", { PAYMENT_JAZZCASH: "Garden Shop synthetic wallet" }).configured).toBe(true);
+    for (const [method, displayName] of [["JAZZCASH", "JazzCash"], ["EASYPAISA", "Easypaisa"], ["BANK_TRANSFER", "Bank Transfer"]] as const) expect(paymentInstructions({ id: `synthetic-${method}`, method, displayName, enabled: false, sortOrder: 10 }).configured).toBe(false);
+    const config = { id: "synthetic", method: "JAZZCASH" as const, displayName: "JazzCash", recipientName: "Garden Shop", instructions: "Synthetic instruction", referenceInstruction: "Use order number", enabled: true, sortOrder: 10 };
+    expect(isPaymentMethodComplete(config)).toBe(true);
+    expect(formatPaymentMessage("FS-100001", 250, config)).toContain("Garden Shop");
+  });
+
+  it("selects only a complete configured method and creates idempotent payment work", async () => {
+    const statements: unknown[] = [];
+    const row = { order_number: "FS-100001", total_payable: 250, state: "DETAILS_COMPLETED", payment_id: "synthetic-payment", id: "synthetic-method", method: "JAZZCASH", display_name: "JazzCash", recipient_name: "Garden Shop", instructions: "Synthetic instruction", reference_instruction: "Use order number", enabled: 1, sort_order: 10 };
+    const db = { prepare: (_sql: string) => { const statement = { bind: (...args: unknown[]) => { statements.push(args); return statement; }, first: async () => row }; return statement; }, batch: async (batchStatements: unknown[]) => { statements.push(batchStatements); return []; } } as unknown as D1Database;
+    const result = await selectPaymentMethod(db, "synthetic-order", "JAZZCASH");
+    expect(result.message).toContain("Amount due: PKR 250");
+    expect(JSON.stringify(statements)).toContain("WHATSAPP_PAYMENT_INSTRUCTIONS");
+    const incomplete = { ...row, enabled: 0 };
+    const incompleteDb = { prepare: (_sql: string) => { const statement = { bind: (..._args: unknown[]) => statement, first: async () => incomplete }; return statement; } } as unknown as D1Database;
+    await expect(selectPaymentMethod(incompleteDb, "synthetic-order", "JAZZCASH")).rejects.toThrow("PAYMENT_METHOD_NOT_CONFIGURED");
+  });
+
+  it("validates, stores and replaces private payment QR objects", async () => {
+    const writes: Array<{ key: string; value: ArrayBuffer }> = [];
+    const bucket = { put: async (key: string, value: ArrayBuffer) => { writes.push({ key, value }); } } as unknown as R2Bucket;
+    expect(() => validatePaymentQr("image/png", 4)).not.toThrow();
+    expect(() => validatePaymentQr("application/pdf", 4)).toThrow("PAYMENT_QR_MIME_NOT_ALLOWED");
+    const stored = await storePaymentQr(bucket, "JAZZCASH", new Uint8Array([1, 2, 3, 4]).buffer, "image/png");
+    expect(stored.objectKey).toMatch(/^payment-qr\/JAZZCASH\//);
+    expect(stored.sha256).toHaveLength(64);
+    expect(writes).toHaveLength(1);
   });
 
   it("stores receipts privately with a checksum and safe metadata", async () => {
@@ -48,7 +73,7 @@ describe("product readiness safeguards", () => {
 
   it("contains all required D1 tables and no third-party CRM dependency", () => {
     const schema = readFileSync("migrations/0001_initial.sql", "utf8");
-    for (const table of ["customers", "leads", "orders", "payments", "payment_receipts", "meta_attribution", "capi_events", "whatsapp_events", "outbound_messages", "audit_log", "configuration", "outbox_jobs"]) expect(schema).toContain(`CREATE TABLE ${table}`);
+    for (const table of ["customers", "leads", "orders", "payments", "payment_receipts", "payment_methods", "meta_attribution", "capi_events", "whatsapp_events", "outbound_messages", "audit_log", "configuration", "outbox_jobs"]) expect(schema + readFileSync("migrations/0002_payment_methods.sql", "utf8")).toContain(`CREATE TABLE ${table}`);
     expect(schema).not.toContain("google");
   });
 

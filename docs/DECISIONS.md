@@ -43,3 +43,7 @@ Added production-capable but disabled Meta WhatsApp/CAPI clients, HMAC verificat
 ## 2026-09-27: CI Billing Gate
 
 The requested minimal GitHub Actions workflow is committed and valid. GitHub created the `verify` jobs but did not start them because the account is locked due to a billing issue. Preserve the workflow and do not bypass, alter billing, or weaken required checks; rerun after the external account gate is resolved.
+
+## 2026-09-27: Backend-Managed Payment Configuration
+
+Customer-visible JazzCash, Easypaisa, and Bank Transfer values are controlled by D1 `payment_methods`, edited only through the Access-protected admin Worker and audited. QR binaries are private R2 objects under `payment-qr/`; methods seed disabled and incomplete. No recipient, TILL/TIL, QR, or instruction values are stored in source, Worker variables, Flow JSON, templates, or frontend strings.

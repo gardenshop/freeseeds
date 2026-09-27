@@ -18,24 +18,24 @@ This report covers the current independent engineering phase. No WhatsApp number
 - Staging D1: `getfreeseeds-staging` / `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, schema applied
 - Staging R2: `getfreeseeds-receipts-staging`, private, public access disabled
 - Staging Queue/DLQ: `getfreeseeds-events-staging` (`7cf7cec60e0d4bd4a0a1e5af41f00dbd`) / `getfreeseeds-events-staging-dlq` (`4e0ec3246cc048c8be71cc37ff48f0a7`)
-- Public Worker: `https://getfreeseeds-api-staging.get-free-seeds.workers.dev`, version `a5b1b2bf-fe88-4335-a26b-e67a91d08077`
-- Admin Worker: `https://getfreeseeds-admin-staging.get-free-seeds.workers.dev`, version `f6c72a71-9b37-45b7-b766-89a29943e671`
+- Public Worker: `https://getfreeseeds-api-staging.get-free-seeds.workers.dev`, version `3969d4e3-7288-46e2-9891-f8485d9ef3fd`
+- Admin Worker: `https://getfreeseeds-admin-staging.get-free-seeds.workers.dev`, version `46efab4b-796f-4422-b4bf-639930b11904`
 - Access: Zero Trust Free activated; application `ea91b1bf-02c1-46d3-921a-ea2f507fb150`; allow policy `b3acdd4f-9767-4d28-a55d-0a8e771d476c`; allowed identity `gisupp@gmail.com`
 
 ## Backend and Tests
 
-- Backend: TypeScript/Hono/Zod Workers scaffold, D1 model, state machine, transactional outbox schema, private R2 receipt validation, payment-safe config, CAPI logic, admin approval and fulfillment endpoints: PASS
+- Backend: TypeScript/Hono/Zod Workers, D1 model/migrations, state machine, transactional outbox, private R2 receipt validation, backend-managed payment configuration, CAPI logic, admin approval and fulfillment endpoints: PASS
 - Five-field Flow definition: `whatsapp/flows/get-free-seeds.json`, exactly five required fields, not published: PASS
 - WhatsApp provider abstraction: `MockWhatsAppProvider` active for tests; `MetaWhatsAppProvider` disabled/unconfigured: PASS
 - Mock E2E: synthetic referral -> five fields -> all payment methods -> receipt -> review -> approval -> Purchase -> confirmation -> packing -> dispatch -> delivered: PASS
-- Validation: `npm test` 16/16, `npm run build` PASS, `npm run lint` PASS, `npm audit` PASS
+- Validation: `npm test` 18/18, `npm run build` PASS, `npm run lint` PASS, `npm audit` PASS
 - CI: workflow added and triggered; both remote jobs were blocked before starting by GitHub account billing lock. Local clean-install/test/build/lint verification PASS.
 
 ## External State
 
 - CAPI implementation: deterministic Lead/Purchase code and queue/outbox model; live send disabled
 - CAPI Lead/Purchase live test: deferred until clean Meta assets and new number/WABA exist
-- JazzCash/Easypaisa/Bank: safe-disabled; verified Garden Shop recipient values not supplied
+- JazzCash/Easypaisa/Bank: backend-ready and safe-disabled; verified Garden Shop recipient values not supplied
 - Page isolation: pending; no ownership change performed
 - WABA: no connection; no Flow publication/templates/callback/token
 - New number: NOT PROVIDED; no number used
@@ -58,8 +58,8 @@ This report covers the current independent engineering phase. No WhatsApp number
 
 ## Completion Estimate
 
-- Overall: 60%
-- Completed: 60%
-- Remaining: 40%, including GitHub Actions billing unlock, live Meta/WhatsApp/payment onboarding, and production E2E gates
+- Overall: 64%
+- Completed: 64%
+- Remaining: 36%, including GitHub Actions billing unlock, live Meta/WhatsApp/payment onboarding, and production E2E gates
 
 Next single action: resolve the GitHub Actions billing lock so PR #1 can obtain a green remote CI result.

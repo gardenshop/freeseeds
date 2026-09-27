@@ -6,3 +6,5 @@ export * from "./receipt";
 export * from "./flow";
 export * from "./queue";
 export * from "./capi-provider";
+export * from "./payment-qr";
+export * from "./payment-flow";

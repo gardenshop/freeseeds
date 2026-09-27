@@ -1,15 +1,11 @@
 import { Hono } from "hono";
-import { canTransition, OrderState, approvedPurchaseValue, createPurchaseEvent, paymentInstructions, PaymentMethod } from "@gfs/core";
+import { canTransition, OrderState, approvedPurchaseValue, createPurchaseEvent, isPaymentMethodComplete, normalizePaymentMethodRow, paymentInstructions, PaymentMethod, storePaymentQr } from "@gfs/core";
 
-type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; PAYMENT_CONFIGURED: string; PAYMENT_JAZZCASH?: string; PAYMENT_EASYPAISA?: string; PAYMENT_BANK_TRANSFER?: string } };
+type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string } };
 const app = new Hono<Env>();
 
 function authorized(c: { req: { header(name: string): string | undefined }; env: Env["Bindings"] }): boolean {
   return c.req.header("cf-access-authenticated-user-email") === c.env.ADMIN_EMAIL;
-}
-
-function paymentConfig(env: Env["Bindings"]): Record<string, string | undefined> {
-  return { PAYMENT_JAZZCASH: env.PAYMENT_JAZZCASH, PAYMENT_EASYPAISA: env.PAYMENT_EASYPAISA, PAYMENT_BANK_TRANSFER: env.PAYMENT_BANK_TRANSFER };
 }
 
 app.use("*", async (c, next) => {
@@ -17,10 +13,71 @@ app.use("*", async (c, next) => {
   await next();
 });
 
-app.get("/health", (c) => c.json({ ok: true, service: "getfreeseeds-admin", state: c.env.DEPLOYMENT_STATE, paymentConfigured: c.env.PAYMENT_CONFIGURED === "true" }));
+app.get("/health", async (c) => {
+  const configured = c.env.DB ? await c.env.DB.prepare("SELECT COUNT(*) AS count FROM payment_methods WHERE enabled=1 AND recipient_name IS NOT NULL AND instructions IS NOT NULL").first<{ count: number }>() : null;
+  return c.json({ ok: true, service: "getfreeseeds-admin", state: c.env.DEPLOYMENT_STATE, paymentConfigured: Number(configured?.count ?? 0) > 0 });
+});
 app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav>Dashboard | Leads | Orders | Payment Verification | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
 
-app.get("/api/configuration", (c) => c.json({ paymentMethods: Object.fromEntries(PaymentMethod.options.map((method) => [method, paymentInstructions(method, paymentConfig(c.env))])), whatsappState: c.env.DEPLOYMENT_STATE, metaProviderEnabled: false }));
+app.get("/api/payment-methods", async (c) => {
+  if (!c.env.DB) return c.json({ paymentMethods: [] });
+  const result = await c.env.DB.prepare("SELECT * FROM payment_methods ORDER BY sort_order, method").all();
+  return c.json({ paymentMethods: result.results.map((row) => normalizePaymentMethodRow(row as Record<string, unknown>)) });
+});
+
+app.get("/api/configuration", async (c) => {
+  const methods = c.env.DB ? (await c.env.DB.prepare("SELECT * FROM payment_methods ORDER BY sort_order, method").all()).results.map((row) => normalizePaymentMethodRow(row as Record<string, unknown>)) : [];
+  return c.json({ paymentMethods: methods.map((method) => paymentInstructions(method)), whatsappState: c.env.DEPLOYMENT_STATE, metaProviderEnabled: false });
+});
+
+app.post("/api/payment-methods/:method", async (c) => {
+  const method = PaymentMethod.parse(c.req.param("method").toUpperCase());
+  const body = await c.req.json<{ recipientName?: string; tillId?: string; instructions?: string; referenceInstruction?: string; enabled?: boolean; sortOrder?: number }>();
+  const candidate = { id: `payment-method-${method.toLowerCase()}`, method, displayName: method === "BANK_TRANSFER" ? "Bank Transfer" : method === "EASYPAISA" ? "Easypaisa" : "JazzCash", recipientName: body.recipientName?.trim(), tillId: body.tillId?.trim(), instructions: body.instructions?.trim(), referenceInstruction: body.referenceInstruction?.trim(), enabled: body.enabled === true, sortOrder: Number.isInteger(body.sortOrder) ? Number(body.sortOrder) : 100 };
+  if (candidate.enabled && !isPaymentMethodComplete(candidate)) return c.json({ error: "PAYMENT_METHOD_INCOMPLETE" }, 400);
+  if (!c.env.DB) return c.json({ ok: true, simulated: true, configured: isPaymentMethodComplete(candidate) });
+  const now = new Date().toISOString();
+  await c.env.DB.batch([
+    c.env.DB.prepare("INSERT INTO payment_methods (id,method,display_name,recipient_name,till_id,instructions,reference_instruction,enabled,sort_order,updated_at,updated_by) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(method) DO UPDATE SET recipient_name=excluded.recipient_name,till_id=excluded.till_id,instructions=excluded.instructions,reference_instruction=excluded.reference_instruction,enabled=excluded.enabled,sort_order=excluded.sort_order,updated_at=excluded.updated_at,updated_by=excluded.updated_by").bind(candidate.id, candidate.method, candidate.displayName, candidate.recipientName ?? null, candidate.tillId ?? null, candidate.instructions ?? null, candidate.referenceInstruction ?? null, candidate.enabled ? 1 : 0, candidate.sortOrder, now, c.env.ADMIN_EMAIL),
+    c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_METHOD_UPDATED", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT_METHOD", method, crypto.randomUUID(), JSON.stringify({ method, enabled: candidate.enabled, sortOrder: candidate.sortOrder }), now)
+  ]);
+  return c.json({ ok: true, configured: isPaymentMethodComplete(candidate) });
+});
+
+app.post("/api/payment-methods/:method/qr", async (c) => {
+  const method = PaymentMethod.parse(c.req.param("method").toUpperCase());
+  if (!c.env.DB || !c.env.RECEIPTS) return c.json({ error: "PAYMENT_CONFIGURATION_UNAVAILABLE" }, 503);
+  const mimeType = c.req.header("content-type")?.split(";", 1)[0] ?? "";
+  const body = await c.req.arrayBuffer();
+  try {
+    const stored = await storePaymentQr(c.env.RECEIPTS, method, body, mimeType);
+    const current = await c.env.DB.prepare("SELECT qr_r2_key FROM payment_methods WHERE method=?").bind(method).first<{ qr_r2_key?: string }>();
+    const now = new Date().toISOString();
+    try {
+      await c.env.DB.batch([
+        c.env.DB.prepare("UPDATE payment_methods SET qr_r2_key=?, qr_sha256=?, qr_mime_type=?, qr_size_bytes=?, updated_at=?, updated_by=? WHERE method=?").bind(stored.objectKey, stored.sha256, mimeType, stored.sizeBytes, now, c.env.ADMIN_EMAIL, method),
+        c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_QR_REPLACED", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT_METHOD", method, crypto.randomUUID(), JSON.stringify({ method, sha256: stored.sha256, sizeBytes: stored.sizeBytes }), now)
+      ]);
+    } catch (error) {
+      await c.env.RECEIPTS.delete(stored.objectKey);
+      throw error;
+    }
+    if (current?.qr_r2_key && current.qr_r2_key !== stored.objectKey) await c.env.RECEIPTS.delete(current.qr_r2_key);
+    return c.json({ ok: true, method, qrR2Key: stored.objectKey, sha256: stored.sha256, sizeBytes: stored.sizeBytes });
+  } catch (error) {
+    return c.json({ error: error instanceof Error ? error.message : "PAYMENT_QR_UPLOAD_FAILED" }, 400);
+  }
+});
+
+app.get("/api/payment-methods/:method/qr", async (c) => {
+  const method = PaymentMethod.parse(c.req.param("method").toUpperCase());
+  if (!c.env.DB || !c.env.RECEIPTS) return c.json({ error: "PAYMENT_CONFIGURATION_UNAVAILABLE" }, 503);
+  const row = await c.env.DB.prepare("SELECT qr_r2_key, qr_mime_type FROM payment_methods WHERE method=?").bind(method).first<{ qr_r2_key?: string; qr_mime_type?: string }>();
+  if (!row?.qr_r2_key) return c.json({ error: "PAYMENT_QR_NOT_CONFIGURED" }, 404);
+  const object = await c.env.RECEIPTS.get(row.qr_r2_key);
+  if (!object) return c.json({ error: "PAYMENT_QR_NOT_FOUND" }, 404);
+  return new Response(object.body, { headers: { "Content-Type": row.qr_mime_type ?? "application/octet-stream", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff", "Content-Disposition": "inline" } });
+});
 
 app.post("/api/orders/:id/transition", async (c) => {
   const body = await c.req.json<{ from: OrderState; to: OrderState }>();
@@ -82,9 +139,10 @@ app.get("/api/receipts/:key{.+}", async (c) => {
   return new Response(object.body, { headers: { "Content-Type": object.httpMetadata?.contentType ?? "application/octet-stream", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff", "Content-Disposition": "inline" } });
 });
 
-app.get("/api/payment-instructions/:method", (c) => {
-  const method = PaymentMethod.parse(c.req.param("method").toUpperCase());
-  return c.json(paymentInstructions(method, paymentConfig(c.env)));
+app.get("/api/payment-instructions/:method", async (c) => {
+  if (!c.env.DB) return c.json({ error: "PAYMENT_METHOD_NOT_CONFIGURED" }, 503);
+  const row = await c.env.DB.prepare("SELECT * FROM payment_methods WHERE method=?").bind(c.req.param("method").toUpperCase()).first();
+  return row ? c.json(paymentInstructions(normalizePaymentMethodRow(row as Record<string, unknown>))) : c.json({ error: "PAYMENT_METHOD_NOT_FOUND" }, 404);
 });
 
 app.all("*", (c) => c.json({ error: "NOT_FOUND" }, 404));

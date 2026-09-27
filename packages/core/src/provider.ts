@@ -9,6 +9,8 @@ export interface WhatsAppProvider {
   sendInteractive(to: string, body: string, buttons: string[]): Promise<{ providerMessageId: string }>;
   sendTemplate(to: string, template: string, parameters: string[]): Promise<{ providerMessageId: string }>;
   sendFlow(to: string, flowId: string, flowToken: string): Promise<{ providerMessageId: string }>;
+  sendPaymentInstructions(to: string, body: string, qr?: { body: ArrayBuffer; mimeType: string }): Promise<{ providerMessageId: string }>;
+  sendConfirmation(to: string, body: string): Promise<{ providerMessageId: string }>;
   downloadMedia(mediaId: string): Promise<MediaResult>;
 }
 
@@ -21,6 +23,8 @@ export class MockWhatsAppProvider implements WhatsAppProvider {
   async sendInteractive(to: string, body: string, _buttons: string[] = []) { this.sent.push({ to, kind: "interactive", body }); return { providerMessageId: `mock_${this.sent.length}` }; }
   async sendTemplate(to: string, template: string, _parameters: string[] = []) { this.sent.push({ to, kind: "template", body: template }); return { providerMessageId: `mock_${this.sent.length}` }; }
   async sendFlow(to: string, flowId: string, _flowToken: string) { this.sent.push({ to, kind: "flow", body: flowId }); return { providerMessageId: `mock_${this.sent.length}` }; }
+  async sendPaymentInstructions(to: string, body: string, _qr?: { body: ArrayBuffer; mimeType: string }) { this.sent.push({ to, kind: "payment-instructions", body }); return { providerMessageId: `mock_${this.sent.length}` }; }
+  async sendConfirmation(to: string, body: string) { this.sent.push({ to, kind: "confirmation", body }); return { providerMessageId: `mock_${this.sent.length}` }; }
   async downloadMedia(mediaId: string): Promise<MediaResult> { return { mediaId, mimeType: "image/png", size: 4, body: new Uint8Array([137, 80, 78, 71]).buffer }; }
 }
 
@@ -64,6 +68,20 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
   async sendInteractive(to: string, body: string, buttons: string[]) { return this.send({ messaging_product: "whatsapp", to, type: "interactive", interactive: { type: "button", body: { text: body }, action: { buttons: buttons.map((title, index) => ({ type: "reply", reply: { id: `button_${index}`, title } })) } } }); }
   async sendTemplate(to: string, template: string, parameters: string[]) { return this.send({ messaging_product: "whatsapp", to, type: "template", template: { name: template, language: { code: "en_US" }, components: parameters.length ? [{ type: "body", parameters: parameters.map((text) => ({ type: "text", text })) }] : undefined } }); }
   async sendFlow(to: string, flowId: string, flowToken: string) { return this.send({ messaging_product: "whatsapp", to, type: "interactive", interactive: { type: "flow", body: { text: "Get Free Seeds" }, action: { name: "flow", parameters: { flow_id: flowId, flow_token: flowToken, mode: "published" } } } }); }
+  async sendPaymentInstructions(to: string, body: string, qr?: { body: ArrayBuffer; mimeType: string }) {
+    const text = await this.sendText(to, body);
+    if (!qr) return text;
+    this.requireEnabled();
+    const form = new FormData();
+    form.append("messaging_product", "whatsapp");
+    form.append("file", new Blob([qr.body], { type: qr.mimeType }), "payment-qr");
+    const upload = await fetch(`https://graph.facebook.com/${this.config.graphVersion}/${this.config.phoneNumberId}/media`, { method: "POST", headers: { Authorization: `Bearer ${this.config.accessToken}` }, body: form });
+    if (!upload.ok) throw new Error(`META_MEDIA_UPLOAD_${upload.status}`);
+    const uploaded = await upload.json() as { id?: string };
+    if (!uploaded.id) throw new Error("META_MEDIA_UPLOAD_ID_MISSING");
+    return this.send({ messaging_product: "whatsapp", to, type: "image", image: { id: uploaded.id, caption: "Payment QR" } });
+  }
+  async sendConfirmation(to: string, body: string) { return this.sendText(to, body); }
 
   async downloadMedia(mediaId: string): Promise<MediaResult> {
     this.requireEnabled();

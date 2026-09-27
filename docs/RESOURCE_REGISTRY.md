@@ -13,6 +13,7 @@ Staging resources are provisioned in the dedicated clean account; production rem
 - Account ID: `cb5066a6d71ecdee0bd7ed8aacb4d3c2`
 - Prohibited account: `85f6a6181b4653c2a45e69cb7ce8a474` (not used)
 - Staging D1: `getfreeseeds-staging` / `17b7e9f6-e08b-4bff-a756-10de30b49ab1`
+- Staging D1 migrations: `0001_initial.sql`, `0002_payment_methods.sql` applied and verified
 - Staging R2: `getfreeseeds-receipts-staging` (private; public access not enabled)
 - Staging Queue: `getfreeseeds-events-staging`
 - Staging DLQ: `getfreeseeds-events-staging-dlq`
@@ -21,8 +22,8 @@ Staging resources are provisioned in the dedicated clean account; production rem
 - workers.dev subdomain: `get-free-seeds.workers.dev`
 - Staging public Worker: `getfreeseeds-api-staging` / `https://getfreeseeds-api-staging.get-free-seeds.workers.dev`
 - Staging admin Worker: `getfreeseeds-admin-staging` / `https://getfreeseeds-admin-staging.get-free-seeds.workers.dev`
-- Staging API version: `a5b1b2bf-fe88-4335-a26b-e67a91d08077`
-- Staging admin version: `f6c72a71-9b37-45b7-b766-89a29943e671`
+- Staging API version: `3969d4e3-7288-46e2-9891-f8485d9ef3fd`
+- Staging admin version: `46efab4b-796f-4422-b4bf-639930b11904`
 - Cloudflare Access application: `Get Free Seeds Admin Staging` / `ea91b1bf-02c1-46d3-921a-ea2f507fb150`
 - Cloudflare Access allow policy: `Get Free Seeds Admin Operator` / `b3acdd4f-9767-4d28-a55d-0a8e771d476c`
 - Production resources: not provisioned

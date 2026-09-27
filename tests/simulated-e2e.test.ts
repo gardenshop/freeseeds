@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MockWhatsAppProvider, canTransition, createLeadEvent, createPurchaseEvent, paymentInstructions, validateReceipt } from "@gfs/core";
+import { MockWhatsAppProvider, canTransition, createLeadEvent, createPurchaseEvent, isPaymentMethodComplete, paymentInstructions, validateReceipt } from "@gfs/core";
 
 describe("simulated WhatsApp-to-delivery journey", () => {
   it("runs referral, five-field submission, payment, receipt, approval, CAPI and fulfillment with mocks", async () => {
@@ -12,7 +12,8 @@ describe("simulated WhatsApp-to-delivery journey", () => {
     expect(createLeadEvent(orderNumber, referral).eventId).toBe("lead_FS-100001");
     expect(canTransition("NEW", "DETAILS_COMPLETED")).toBe(true);
     expect(canTransition("DETAILS_COMPLETED", "PAYMENT_PENDING")).toBe(true);
-    for (const method of ["JAZZCASH", "EASYPAISA", "BANK_TRANSFER"] as const) expect(paymentInstructions(method, {}).configured).toBe(false);
+    for (const method of ["JAZZCASH", "EASYPAISA", "BANK_TRANSFER"] as const) expect(paymentInstructions(undefined).configured).toBe(false);
+    expect(isPaymentMethodComplete({ id: "synthetic", method: "JAZZCASH", displayName: "JazzCash", enabled: true, sortOrder: 10 })).toBe(false);
     await provider.sendInteractive("synthetic", "Choose payment method", ["JazzCash", "Easypaisa", "Bank Transfer"]);
     await provider.sendText("synthetic", "Send your payment receipt in this chat.");
     const receipt = await provider.downloadMedia("synthetic-media");

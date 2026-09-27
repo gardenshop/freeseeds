@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { createWhatsAppProvider, isTerminalOutboxStatus, parseFlowSubmission, persistFlowSubmission, retryDelaySeconds, storeReceipt } from "@gfs/core";
+import { createWhatsAppProvider, isTerminalOutboxStatus, parseFlowSubmission, PaymentMethod, persistFlowSubmission, retryDelaySeconds, selectPaymentMethod, storeReceipt } from "@gfs/core";
 
 type Env = {
   Bindings: {
@@ -45,6 +45,30 @@ app.post("/flows/get-free-seeds", async (c) => {
   } catch (error) {
     return c.json({ error: error instanceof Error ? error.message : "INVALID_FLOW_SUBMISSION" }, 400);
   }
+});
+
+app.post("/payments/:orderId/select", async (c) => {
+  if (!c.env.DB) return c.json({ error: "PAYMENT_CONFIGURATION_UNAVAILABLE" }, 503);
+  try {
+    const body = await c.req.json<{ method: string }>();
+    const result = await selectPaymentMethod(c.env.DB, c.req.param("orderId"), PaymentMethod.parse(body.method.toUpperCase()));
+    return c.json({ ok: true, orderNumber: result.orderNumber, amount: result.amount, method: result.config.method, message: result.message, qrAvailable: Boolean(result.config.qrR2Key) });
+  } catch (error) {
+    return c.json({ error: error instanceof Error ? error.message : "PAYMENT_METHOD_SELECTION_FAILED" }, 400);
+  }
+});
+
+app.post("/payments/:orderId/i-have-paid", async (c) => {
+  if (!c.env.DB) return c.json({ error: "PAYMENT_CONFIGURATION_UNAVAILABLE" }, 503);
+  const payment = await c.env.DB.prepare("SELECT id, review_state FROM payments WHERE order_id=? AND method IS NOT NULL").bind(c.req.param("orderId")).first<{ id: string; review_state: string }>();
+  if (!payment) return c.json({ error: "PAYMENT_METHOD_NOT_SELECTED" }, 409);
+  if (payment.review_state !== "PENDING") return c.json({ error: "PAYMENT_NOT_AWAITING_RECEIPT" }, 409);
+  const now = new Date().toISOString();
+  await c.env.DB.batch([
+    c.env.DB.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), `receipt_request_${c.req.param("orderId")}`, "WHATSAPP_RECEIPT_REQUEST", c.req.param("orderId"), JSON.stringify({ orderId: c.req.param("orderId"), paymentId: payment.id }), "PENDING", now, now, now),
+    c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_RECEIPT_REQUESTED", "CUSTOMER", "PAYMENT", payment.id, crypto.randomUUID(), JSON.stringify({ orderId: c.req.param("orderId") }), now)
+  ]);
+  return c.json({ ok: true, message: "Please share your payment receipt or screenshot here. Payment will be reviewed manually." });
 });
 
 app.post("/receipts/ingest", async (c) => {
