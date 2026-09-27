@@ -7,7 +7,7 @@ This report covers the current independent engineering phase. No WhatsApp number
 - Governance: PASS; baseline commit on `main`: `ee71a93`
 - Plan corrected for future new WhatsApp number: PASS; self-review PASS
 - Branch: `codex/gfs-bootstrap-001`
-- Push/PR: blocked; normal push rejected with `403: Permission to gardenshop/freeseeds.git denied to ai-photo-studio`; no bypass attempted
+- Push/PR: PASS; `main` and `codex/gfs-bootstrap-001` pushed as `gardenshop`; PR #1: https://github.com/gardenshop/freeseeds/pull/1
 
 ## Cloudflare
 
@@ -16,9 +16,9 @@ This report covers the current independent engineering phase. No WhatsApp number
 - workers.dev: `get-free-seeds.workers.dev`
 - Staging D1: `getfreeseeds-staging` / `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, schema applied
 - Staging R2: `getfreeseeds-receipts-staging`, private, public access disabled
-- Staging Queue/DLQ: `getfreeseeds-events-staging` / `getfreeseeds-events-staging-dlq`
-- Public Worker: `https://getfreeseeds-api-staging.get-free-seeds.workers.dev`, version `37a03178-9683-4506-bf47-895ebc71dbf2`
-- Admin Worker: `https://getfreeseeds-admin-staging.get-free-seeds.workers.dev`, version `3b66b672-3056-4282-965b-6a2dae97b99a`
+- Staging Queue/DLQ: `getfreeseeds-events-staging` (`7cf7cec60e0d4bd4a0a1e5af41f00dbd`) / `getfreeseeds-events-staging-dlq` (`4e0ec3246cc048c8be71cc37ff48f0a7`)
+- Public Worker: `https://getfreeseeds-api-staging.get-free-seeds.workers.dev`, version `a5b1b2bf-fe88-4335-a26b-e67a91d08077`
+- Admin Worker: `https://getfreeseeds-admin-staging.get-free-seeds.workers.dev`, version `f6c72a71-9b37-45b7-b766-89a29943e671`
 - Access: Zero Trust Free activated; application `ea91b1bf-02c1-46d3-921a-ea2f507fb150`; allow policy `b3acdd4f-9767-4d28-a55d-0a8e771d476c`; allowed identity `gisupp@gmail.com`
 
 ## Backend and Tests
@@ -27,7 +27,7 @@ This report covers the current independent engineering phase. No WhatsApp number
 - Five-field Flow definition: `whatsapp/flows/get-free-seeds.json`, exactly five required fields, not published: PASS
 - WhatsApp provider abstraction: `MockWhatsAppProvider` active for tests; `MetaWhatsAppProvider` disabled/unconfigured: PASS
 - Mock E2E: synthetic referral -> five fields -> all payment methods -> receipt -> review -> approval -> Purchase -> confirmation -> packing -> dispatch -> delivered: PASS
-- Validation: `npm test` 9/9, `npm run build` PASS, `npm run lint` PASS
+- Validation: `npm test` 16/16, `npm run build` PASS, `npm run lint` PASS
 
 ## External State
 
@@ -54,4 +54,10 @@ This report covers the current independent engineering phase. No WhatsApp number
 - `LIVE_WHATSAPP_E2E`
 - `PAID_AD_AUTHORIZATION`
 
-Next single action: obtain authorized GitHub push permission, then push `codex/gfs-bootstrap-001` and open the PR.
+## Completion Estimate
+
+- Overall: 58%
+- Completed: 58%
+- Remaining: 42%, primarily live Meta/WhatsApp/payment onboarding and production E2E gates
+
+Next single action: supply the new WhatsApp number and verified Garden Shop recipient details so clean Meta/WABA onboarding and live payment tests can begin.

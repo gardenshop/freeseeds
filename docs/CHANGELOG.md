@@ -11,3 +11,5 @@
 - Provisioned isolated staging D1, private R2, Queue, and DLQ; recorded real IDs.
 - Deployed staging API/admin Workers and verified public API plus Access-protected admin health endpoints.
 - Recorded GitHub push blocker: target repository denied the authenticated `ai-photo-studio` identity with HTTP 403; no access controls were bypassed.
+- Repaired GitHub authentication to `gardenshop`, pushed both branches, opened PR #1, and re-verified clean Cloudflare resources and Access behavior.
+- Hardened provider, receipt, admin approval/rejection, queue retry, and CAPI boundaries; expanded automated coverage to 16 passing tests.

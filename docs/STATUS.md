@@ -28,7 +28,10 @@
 - R2 onboarding was explicitly authorized; dashboard verified $0.00 current billable usage and no public bucket access.
 - TypeScript build, ESLint, unit/domain tests, and simulated WhatsApp E2E all pass.
 - Implementation commit `46e7959` is complete. Normal GitHub push was attempted and rejected with `403: Permission to gardenshop/freeseeds.git denied to ai-photo-studio`; no access control was bypassed.
+- GitHub authentication was corrected to `gardenshop`; `main` and `codex/gfs-bootstrap-001` are pushed and PR #1 is open against `main`.
+- Cloudflare UI re-verification confirmed clean account context, D1 ID/table count, private R2 (`Public Access: Disabled`), Queue/DLQ IDs, Worker names/subdomain, and Access behavior.
+- Hardened API/admin Workers deployed and health-verified; staging bindings show only the clean D1/R2/Queue resources.
 
 ## Next Action
 
-Obtain authorized GitHub push access, then push `codex/gfs-bootstrap-001` and open a PR; no code or resource mutation is required before that.
+Complete backend/admin idempotency and regression coverage, then push the resulting commit to PR #1.
