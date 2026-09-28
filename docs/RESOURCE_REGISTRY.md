@@ -1,11 +1,11 @@
 # Resource Registry
 
-Staging resources are provisioned in the dedicated clean account; production remains unprovisioned.
+Staging and non-secret production resources are provisioned in the dedicated clean account; production compute/secrets/integration remain gated.
 
 ## GitHub
 
 - Repository: `https://github.com/gardenshop/freeseeds.git`
-- Branch: `codex/gfs-bootstrap-001` (pushed; PR #1 targets `main`)
+- Branch: `codex/gfs-waba-test-002` (pushed; PR #2 targets `main`)
 
 ## Cloudflare
 
@@ -22,7 +22,7 @@ Staging resources are provisioned in the dedicated clean account; production rem
 - workers.dev subdomain: `get-free-seeds.workers.dev`
 - Staging public Worker: `getfreeseeds-api-staging` / `https://getfreeseeds-api-staging.get-free-seeds.workers.dev`
 - Staging admin Worker: `getfreeseeds-admin-staging` / `https://getfreeseeds-admin-staging.get-free-seeds.workers.dev`
-- Staging API version: `3969d4e3-7288-46e2-9891-f8485d9ef3fd`
+- Staging API version: `d4aff2d9-1c27-41f5-a01c-22208a37eb78`
 - Staging admin version: `46efab4b-796f-4422-b4bf-639930b11904`
 - Cloudflare Access application: `Get Free Seeds Admin Staging` / `ea91b1bf-02c1-46d3-921a-ea2f507fb150`
 - Cloudflare Access allow policy: `Get Free Seeds Admin Operator` / `b3acdd4f-9767-4d28-a55d-0a8e771d476c`
@@ -43,6 +43,12 @@ Staging resources are provisioned in the dedicated clean account; production rem
 - Clean Meta Business ID: not provisioned
 - Clean WABA ID: not provisioned
 - Phone Number ID: intentionally unassigned; new number pending user supply
+- Clean staging WABA test: not yet configured; no ID placeholder is recorded
+- Clean staging test Phone Number ID: not yet configured; no ID placeholder is recorded
+- Clean staging test recipient: not configured; synthetic-only use required
+- Clean staging Meta gate: authenticated Meta UI exposes Hoja-linked active portfolio/assets and reports the business portfolio creation limit; no existing portfolio/WABA/app was selected
+- Excluded candidate portfolio: `Garden Shop OK` / `1154400188565490`; visible business overview contains Hoja Seeds ad account `120233855869140541`, so it is not clean and is not used
+- Meta support case: not created; no case ID available
 - Flow ID: not published; repository definition only
 - Dataset/event source ID: not provisioned
 - Graph API version: `v26.0` observed 2026-09-27; re-verify before live integration

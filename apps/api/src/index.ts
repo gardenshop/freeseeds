@@ -66,7 +66,7 @@ app.post("/payments/:orderId/i-have-paid", async (c) => {
   const now = new Date().toISOString();
   await c.env.DB.batch([
     c.env.DB.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), `receipt_request_${c.req.param("orderId")}`, "WHATSAPP_RECEIPT_REQUEST", c.req.param("orderId"), JSON.stringify({ orderId: c.req.param("orderId"), paymentId: payment.id }), "PENDING", now, now, now),
-    c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_RECEIPT_REQUESTED", "CUSTOMER", "PAYMENT", payment.id, crypto.randomUUID(), JSON.stringify({ orderId: c.req.param("orderId") }), now)
+    c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_RECEIPT_REQUESTED", "CUSTOMER", "PAYMENT", payment.id, crypto.randomUUID(), JSON.stringify({ orderId: c.req.param("orderId") }), now)
   ]);
   return c.json({ ok: true, message: "Please share your payment receipt or screenshot here. Payment will be reviewed manually." });
 });
@@ -85,7 +85,7 @@ app.post("/receipts/ingest", async (c) => {
       c.env.DB.prepare("INSERT INTO payment_receipts (id,payment_id,order_id,provider_media_id,r2_object_key,sha256,mime_type,size_bytes,submitted_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), body.paymentId, body.orderId, media.mediaId, stored.objectKey, stored.sha256, media.mimeType, media.size, now, now),
       c.env.DB.prepare("UPDATE payments SET review_state='REVIEW', submitted_at=?, updated_at=? WHERE id=? AND review_state IN ('PENDING','REJECTED')").bind(now, now, body.paymentId),
       c.env.DB.prepare("UPDATE orders SET state='PAYMENT_REVIEW', updated_at=? WHERE id=? AND state IN ('PAYMENT_PENDING','RECEIPT_SUBMITTED')").bind(now, body.orderId),
-      c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "RECEIPT_ASSOCIATED", "CUSTOMER", "PAYMENT", body.paymentId, crypto.randomUUID(), JSON.stringify({ orderId: body.orderId, objectKey: stored.objectKey, sha256: stored.sha256 }), now)
+      c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "RECEIPT_ASSOCIATED", "CUSTOMER", "PAYMENT", body.paymentId, crypto.randomUUID(), JSON.stringify({ orderId: body.orderId, objectKey: stored.objectKey, sha256: stored.sha256 }), now)
     ]);
     return c.json({ ok: true, reviewState: "REVIEW", receiptKey: stored.objectKey });
   } catch (error) {
