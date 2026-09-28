@@ -30,3 +30,4 @@
 - Verified `Garden Shop OK` is not clean because its visible assets include a Hoja Seeds ad account; no existing Meta portfolio was selected.
 - Recorded Meta portfolio-limit support case as not created; no existing asset was modified or repurposed.
 - Fixed ESLint to ignore managed `.kilo/worktrees` and `.wrangler` directories; final sequential local quality gate is green.
+- Merged PR #2 into `main` at `d8b0511`; clean WABA remains the only Meta integration gate.
