@@ -29,7 +29,7 @@
 - TypeScript build, ESLint, unit/domain tests, and simulated WhatsApp E2E all pass.
 - Implementation base is merged at `28c0bcc`; WABA staging branch commits `8a23811`/`6db14be` are pushed. The earlier `ai-photo-studio` 403 was repaired without bypassing access controls.
 - GitHub authentication is `gardenshop`; `codex/gfs-waba-test-002` is pushed and PR #2 is open against `main`.
-- PR #2 is currently `MERGEABLE`; `main` has no branch protection. Remote CI is optional/unavailable (`REMOTE_CI_UNAVAILABLE_NON_BLOCKING`), so local release checks are active.
+- PR #2 is merged into `main` at `d8b0511`; `main` has no branch protection. Remote CI is optional/unavailable (`REMOTE_CI_UNAVAILABLE_NON_BLOCKING`), so local release checks are active.
 - Minimal CI workflow is locally verified with `npm ci`, Vitest 5, build, lint, and zero dependency audit findings; remote check was triggered but blocked before start by GitHub billing lock.
 - CI workflow is present, but GitHub runners cannot start because the account is locked due to billing. No billing mutation was attempted; this is non-blocking for launch preparation.
 - Cloudflare UI re-verification confirmed clean account context, D1 ID/table count, private R2 (`Public Access: Disabled`), Queue/DLQ IDs, Worker names/subdomain, and Access behavior.

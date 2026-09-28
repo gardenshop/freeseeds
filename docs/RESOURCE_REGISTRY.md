@@ -5,7 +5,7 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 ## GitHub
 
 - Repository: `https://github.com/gardenshop/freeseeds.git`
-- Branch: `codex/gfs-waba-test-002` (pushed; PR #2 targets `main`)
+- Branch: `main` at merged PR #2 commit `d8b0511`; test branch `codex/gfs-waba-test-002` retained remotely for provenance
 
 ## Cloudflare
 
