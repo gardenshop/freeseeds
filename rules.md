@@ -96,7 +96,7 @@ Expected state for this phase: `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING`.
 - Chrome DevTools MCP is mandatory for dashboard automation; do not substitute unauthenticated HTTP/API guesses or claim browser evidence from mocks.
 - If the MCP namespace disappears, diagnose before declaring a blocker: inspect the loaded Kilo/Codex MCP configuration, package/command, process state, logs, Chrome process, DevToolsActivePort/endpoint, and existing profile.
 - Repair locally where possible by restarting/reconnecting only the MCP bridge or required browser component; test with MCP initialization, page listing, and a read-only page inspection after every repair.
-- Preserve the existing authenticated Chrome Default profile/session for `gisupp@gmail.com`; never create a fresh profile merely to bypass recovery.
+- Preserve existing service-specific Chrome profiles/sessions: `ayesha.butt55@hotmail.com` for Meta and `gisupp@gmail.com` for Cloudflare/GitHub/admin. Never create a fresh profile merely to bypass recovery.
 - Reuse existing service tabs; create a tab only for a genuinely new task/context, and verify the visible account before every mutation.
 - Declare `PLATFORM_BLOCKED` only when the MCP server works locally but its tools cannot be exposed to the active agent because of an external Codex/platform restriction, with the exact diagnostics recorded in `STATUS.md`, `DECISIONS.md`, and `CHANGELOG.md`.
 

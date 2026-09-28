@@ -8,6 +8,7 @@
 - Fresh MCP audit completed read-only: existing WhatsApp/Meta tabs were inspected, prohibited Garden Shop context `568026370701542` / ad account `1198439777611633` was confirmed, staging challenge was `Forbidden`, and no number or asset was mutated.
 - GFS-15 read-only Creeper Seeds audit found the matching `creeper seeds` ad account (`1198439777611633`) inside prohibited Garden Shop/Hoja portfolio `568026370701542`; the context was excluded and no Meta asset or number was mutated.
 - GFS-15 Cloudflare identity check redirected to login as `nazimsaeed@gmail.com` instead of required `gisupp@gmail.com`; deployment and secrets remained untouched.
+- GFS-16 enforced service-specific identities: Meta login uses `ayesha.butt55@hotmail.com`; Cloudflare/GitHub/admin remain `gisupp@gmail.com`. Meta email was accepted after logout, but password authentication is pending; no asset mutation occurred.
 
 ## Unreleased - 2026-09-28 (GFS-13)
 
