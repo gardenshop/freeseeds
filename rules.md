@@ -7,10 +7,14 @@
 - Customer identity: Get Free Seeds / Free Seeds In Pakistan.
 - Customer-facing Page: `https://www.facebook.com/FreeSeedsPK/` (Page ID `101192938541236`); it is not a runtime dependency until clean Meta ownership is verified.
 - Designated Meta/advertising/WhatsApp ownership context: `Creeper Seeds`.
+- Facebook/Meta account for the clean Creeper Seeds context: `ayesha.butt55@hotmail.com` only.
+- Cloudflare, GitHub, and Get Free Seeds admin account: `gisupp@gmail.com` only.
+- Never use `ayesha.butt55@hotmail.com` for Cloudflare/GitHub, and never use `gisupp@gmail.com` as the intended Meta owner for this new clean setup.
 - Creeper Seeds is authorized for Get Free Seeds advertising, Click-to-WhatsApp campaigns, WhatsApp Business Platform/WABA, Meta App, system user/token ownership, Page/WhatsApp linkage, and CAPI/event-source integration.
 - Hoja Seeds has zero connection. Do not use, import, reference, share, or depend on any Hoja Seeds repository, source, database, Cloudflare resource, domain, DNS, API, secret, Meta asset, WhatsApp asset, payment credential, customer record, CRM data, analytics, webhook, campaign, deployment, or configuration.
 - The known Hoja-linked Cloudflare account ID `85f6a6181b4653c2a45e69cb7ce8a474` is prohibited.
 - Hoja portfolio, WABA, app, dataset, system user, ad account, credentials, and old Garden Shop WhatsApp assets are prohibited.
+- The contaminated `creeper seeds` ad account `1198439777611633` under Garden Shop portfolio `568026370701542` is prohibited and must never be migrated, reused, or connected.
 - Google Sheets is not an operational dependency. Cloudflare D1 is authoritative.
 
 ## Customer Journey
@@ -80,7 +84,8 @@ Expected state for this phase: `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING`.
 
 ## Browser Automation Protocol
 
-- Always use Chrome DevTools MCP with the authenticated browser profile/session for `gisupp@gmail.com` when automating Cloudflare, Meta, GitHub, or related dashboards.
+- Always use Chrome DevTools MCP with the service-specific authenticated browser profile/session: `ayesha.butt55@hotmail.com` for Meta/Facebook, and `gisupp@gmail.com` for Cloudflare, GitHub, and Get Free Seeds admin.
+- Never cross-use the Meta identity for Cloudflare/GitHub or the Cloudflare/GitHub identity for intended Meta ownership.
 - Verify the visible active account/profile before every external mutation and record the result.
 - Reuse the already-open tab for the same service, task, or page. Do not open a new tab for every sub-step.
 - Open one separate tab only when beginning a genuinely new service, task, or context that should remain separate.
