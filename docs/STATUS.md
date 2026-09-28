@@ -58,10 +58,13 @@
 - Current active-session tool namespace is restored only in fresh Codex execution; this session's static tool registry still lacks the MCP namespace. Meta mutations remain gated until the executing MCP session verifies the visible profile and clean ownership.
 - Fresh MCP-enabled Codex read-only audit verified the existing Meta tabs and selected the Ads Manager tab. Visible account context was prohibited Garden Shop portfolio `568026370701542` with ad account `1198439777611633`; no clean Get Free Seeds ownership was found. No mutation, onboarding, OTP, or secret action occurred.
 - Fresh MCP read-only staging checks returned webhook challenge `Forbidden` and health state `WHATSAPP_NUMBER_PENDING` / `disabled-until-new-number`, proving the deployed Worker is an older gated version and has not been live-connected.
+- GFS-15 Creeper Seeds audit: the visible ad account named `creeper seeds` (`1198439777611633`) is nested under prohibited `Garden Shop` portfolio `568026370701542`, whose legal business name is `Hoja Seeds`. Visible Pages included Hoja Seeds, Dutch Seeds Export, Free Seeds In Pakistan - www.gardenshop.pk, and Garden Shop. This is not a clean Creeper Seeds context under the zero-Hoja rule; no asset was mutated.
+- The authorized Page `101192938541236`, App, WABA, dataset/event source, system user, and number registration were not independently verified. Audit stopped before entering the proven Hoja portfolio's Apps/WABA views.
+- Cloudflare pre-mutation check found no existing Cloudflare tab. A single new service tab was opened and redirected to login showing `nazimsaeed@gmail.com`, not the required authenticated `gisupp@gmail.com`; account identity and Worker deployment state were therefore not verified, and no deploy/secrets mutation was attempted.
 
 ## Current External Gate
 
-- Local MCP and fresh Codex MCP are proven working. The remaining gate is Meta's contaminated/limited portfolio context and the stale deployed staging Worker; no token, OTP, secret, Meta mutation, or real WhatsApp E2E result is claimed.
+- Local MCP and direct WebSocket MCP are proven working. The remaining gates are the Hoja/Garden Shop-owned `creeper seeds` ad account, missing clean Meta authority, and Cloudflare dashboard authentication mismatch (`nazimsaeed@gmail.com` vs required `gisupp@gmail.com`). No token, OTP, secret, deploy, Meta mutation, or real WhatsApp E2E result is claimed.
 
 ## Next Action
 

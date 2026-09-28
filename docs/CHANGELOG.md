@@ -6,6 +6,8 @@
 - Recovered and verified the local MCP bridge: Codex/Kilo configuration is present, Chrome `DevToolsActivePort` is live, the existing Default profile is `gisupp@gmail.com`, and fresh Codex MCP `list_pages` returned the existing WhatsApp/Meta tabs.
 - Recorded that the active session's static tool registry still requires a fresh MCP-enabled Codex execution; no Meta mutation, secret, OTP, or live integration claim was made.
 - Fresh MCP audit completed read-only: existing WhatsApp/Meta tabs were inspected, prohibited Garden Shop context `568026370701542` / ad account `1198439777611633` was confirmed, staging challenge was `Forbidden`, and no number or asset was mutated.
+- GFS-15 read-only Creeper Seeds audit found the matching `creeper seeds` ad account (`1198439777611633`) inside prohibited Garden Shop/Hoja portfolio `568026370701542`; the context was excluded and no Meta asset or number was mutated.
+- GFS-15 Cloudflare identity check redirected to login as `nazimsaeed@gmail.com` instead of required `gisupp@gmail.com`; deployment and secrets remained untouched.
 
 ## Unreleased - 2026-09-28 (GFS-13)
 
