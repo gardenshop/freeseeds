@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - 2026-09-28 (GFS-13)
+
+- Audited Git facts: origin/main `aa673e7`, active branch `codex/gfs-whatsapp-prod-004` at `0a52ef3`, PR #4 open and mergeable.
+- Corrected stale documentation that said the authorized number was not provided.
+- Verified Chrome DevTools MCP is unavailable in the exposed tool set; no Meta/Cloudflare mutation, OTP attempt, secret change, or live integration claim was made.
+
 ## Unreleased - 2026-09-28
 
 - Recorded explicit authorization of `+923328883383` for Get Free Seeds / Free Seeds In Pakistan WhatsApp Business Platform onboarding and controlled integration testing.

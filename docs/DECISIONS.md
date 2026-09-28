@@ -2,7 +2,7 @@
 
 ## 2026-09-27: New WhatsApp Number Required
 
-The earlier assumption to use an existing Garden Shop WhatsApp number is superseded. Production number is **NEW NUMBER TO BE PROVIDED LATER BY USER**. No existing, test, Hoja Seeds, Garden Shop, or other number may be searched for, migrated, registered, connected, or used. Expected deployment state is `WHATSAPP_NUMBER_PENDING`.
+Historical record: the earlier assumption to use an existing Garden Shop WhatsApp number was superseded by the later explicit authorization recorded below. No existing, test, Hoja Seeds, Garden Shop, or other number may be searched for, migrated, registered, connected, or used. The prior expected state was `WHATSAPP_NUMBER_PENDING`.
 
 ## 2026-09-28: Authorized Production Number and Identity
 
@@ -38,7 +38,7 @@ Created only in the clean account: D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, pr
 
 ## 2026-09-27: Staging Workers and Access
 
-Deployed public API `getfreeseeds-api-staging` at `https://getfreeseeds-api-staging.get-free-seeds.workers.dev` and admin `getfreeseeds-admin-staging` at `https://getfreeseeds-admin-staging.get-free-seeds.workers.dev`. The admin is protected by Access application `ea91b1bf-02c1-46d3-921a-ea2f507fb150` with email allow policy `b3acdd4f-9767-4d28-a55d-0a8e771d476c`; browser verification returned the admin health response. API health returned `WHATSAPP_NUMBER_PENDING` and Meta provider remains disabled.
+Deployed public API `getfreeseeds-api-staging` at `https://getfreeseeds-api-staging.get-free-seeds.workers.dev` and admin `getfreeseeds-admin-staging` at `https://getfreeseeds-admin-staging.get-free-seeds.workers.dev`. The admin is protected by Access application `ea91b1bf-02c1-46d3-921a-ea2f507fb150` with email allow policy `b3acdd4f-9767-4d28-a55d-0a8e771d476c`; browser verification returned the admin health response. API health returned the then-current `WHATSAPP_NUMBER_PENDING` state and Meta provider remained disabled.
 
 ## 2026-09-27: GitHub and Infrastructure Re-verification
 
@@ -66,7 +66,7 @@ Dashboard automation uses Chrome DevTools MCP with the authenticated `gisupp@gma
 
 ## 2026-09-27: Clean WABA Staging Test Allowed
 
-`STAGING_WABA_TEST_ALLOWED` is now permitted by explicit user decision. A Meta-provided clean test WABA/test number may connect only to staging for synthetic webhook, Flow, message, media, and CAPI test events after visible ownership verification. Hoja-linked, old Garden Shop, Meta test `+1 555-897-9372`, production, real-customer, real-payment, and ad use remain forbidden. Production stays `WHATSAPP_NUMBER_PENDING`.
+`STAGING_WABA_TEST_ALLOWED` is now permitted by explicit user decision. A Meta-provided clean test WABA/test number may connect only to staging for synthetic webhook, Flow, message, media, and CAPI test events after visible ownership verification. Hoja-linked, old Garden Shop, Meta test `+1 555-897-9372`, production, real-customer, real-payment, and ad use remain forbidden. This historical decision predates the authorized-number state recorded on 2026-09-28.
 
 ## 2026-09-27: Clean WABA Portfolio Gate
 

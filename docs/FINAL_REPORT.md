@@ -1,5 +1,16 @@
 # Final Report
 
+## GFS-13-META-LIVE-ONBOARD Execution Update — 2026-09-28
+
+- Overall: 71%; Remaining: 29%.
+- Chrome DevTools MCP: **UNAVAILABLE** in the exposed tool set. Meta, Cloudflare, and browser-based GitHub mutations were not attempted.
+- Git: `codex/gfs-whatsapp-prod-004` at `0a52ef3`; PR #4 open/mergeable; origin/main `aa673e7`.
+- Meta Business/App/WABA/Phone Number ID: not provisioned or verified.
+- Authorized number `+923328883383`: onboarding pending; no OTP or registration attempt made.
+- Page isolation: PENDING. Webhook, real media, live CAPI, and real WhatsApp E2E: BLOCKED.
+- Cloudflare existing clean staging infrastructure: PASS; no secret or dashboard mutation performed.
+- Local quality evidence remains: 18/18 tests, build, lint, and audit PASS; payment production values remain PENDING; ad spend NO.
+
 ## GFS-12-PRODUCTION-WHATSAPP-ONBOARD Execution Update — 2026-09-28
 
 - Overall: 71% (no increase without verifiable Meta/WhatsApp integration evidence); Remaining: 29%.
@@ -16,7 +27,7 @@ This report covers the WABA staging test preparation phase. No WhatsApp number, 
 
 - Governance: PASS; baseline commit on `main`: `ee71a93`
 - Plan corrected for future new WhatsApp number: PASS; self-review PASS
-- Branch: `main` (merged PR #2; test branch retained for provenance)
+- Branch: `codex/gfs-whatsapp-prod-004` at `0a52ef3`; PR #4 open; main base `aa673e7`
 - Payment implementation base commit: `6493af6`
 - WABA test commit: `8a23811`
 - Push/PR: PASS; PR #2 https://github.com/gardenshop/freeseeds/pull/2 merged into `main` at `d8b0511`; closed PR #1 was not reused
@@ -54,7 +65,7 @@ This report covers the WABA staging test preparation phase. No WhatsApp number, 
 - WABA: no connection; no Flow publication/templates/callback/token
 - Clean test WABA: FAIL/PENDING; Meta business-portfolio creation limit blocks creating `Get Free Seeds Test`, and existing portfolios/assets were excluded as ownership was not provably clean
 - Meta portfolio-limit support case: NOT CREATED; no support case ID available
-- New number: NOT PROVIDED; no number used
+- Authorized number: `+923328883383`; not registered or used in this run
 - Real webhook/WABA-test E2E: NOT RUN; clean WABA gate blocked before configuration
 - Deployed synthetic staging smoke: Flow persistence, three payment selections, receipt request, mock media/R2, and `PAYMENT_REVIEW`: PASS; fixtures/config restored/removed
 - Live WhatsApp number used: NO
@@ -64,7 +75,7 @@ This report covers the WABA staging test preparation phase. No WhatsApp number, 
 
 ## Remaining Manual Gates
 
-- `NEW_WHATSAPP_NUMBER_REQUIRED`
+- `META_NUMBER_ONBOARDING_REQUIRED`
 - `CLEAN_WABA_REQUIRED`
 - `WHATSAPP_DISPLAY_NAME_APPROVAL`
 - `META_PAGE_ISOLATION`
@@ -78,6 +89,6 @@ This report covers the WABA staging test preparation phase. No WhatsApp number, 
 
 - Overall: 71%
 - Completed: 71%
-- Remaining: 29%, consisting of clean WABA test access, verified payment values, new production WhatsApp/Meta onboarding, live CAPI/WhatsApp E2E, and paid-ad authorization. Remote CI billing is non-blocking.
+- Remaining: 29%, consisting of clean WABA access, verified payment values, authorized-number Meta onboarding, live CAPI/WhatsApp E2E, and paid-ad authorization. Remote CI billing and unavailable Chrome DevTools MCP are external gates.
 
 Next single action: obtain a clean Meta WABA test context or submit a Meta support request through an authenticated support form, without selecting existing Hoja-linked assets.
