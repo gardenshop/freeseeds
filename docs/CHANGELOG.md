@@ -5,6 +5,7 @@
 - Added a permanent Chrome DevTools MCP self-recovery protocol covering configuration, process/log/port diagnostics, bridge restart, existing-profile preservation, and proof requirements.
 - Recovered and verified the local MCP bridge: Codex/Kilo configuration is present, Chrome `DevToolsActivePort` is live, the existing Default profile is `gisupp@gmail.com`, and fresh Codex MCP `list_pages` returned the existing WhatsApp/Meta tabs.
 - Recorded that the active session's static tool registry still requires a fresh MCP-enabled Codex execution; no Meta mutation, secret, OTP, or live integration claim was made.
+- Fresh MCP audit completed read-only: existing WhatsApp/Meta tabs were inspected, prohibited Garden Shop context `568026370701542` / ad account `1198439777611633` was confirmed, staging challenge was `Forbidden`, and no number or asset was mutated.
 
 ## Unreleased - 2026-09-28 (GFS-13)
 

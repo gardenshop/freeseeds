@@ -53,6 +53,7 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Clean staging test recipient: not configured; synthetic-only use required
 - Clean staging Meta gate: authenticated Meta UI exposes Hoja-linked active portfolio/assets and reports the business portfolio creation limit; no existing portfolio/WABA/app was selected
 - Excluded candidate portfolio: `Garden Shop OK` / `1154400188565490`; visible business overview contains Hoja Seeds ad account `120233855869140541`, so it is not clean and is not used
+- GFS-14 read-only Meta audit: visible Ads Manager context was prohibited Garden Shop portfolio `568026370701542` with ad account `1198439777611633`; no clean Get Free Seeds ownership was verified and no asset was mutated
 - Meta support case: not created; no case ID available
 - Flow ID: not published; repository definition only
 - Dataset/event source ID: not provisioned

@@ -56,10 +56,12 @@
 - Chrome stable is already running with the existing Default profile. `DevToolsActivePort` reports port `9222`; `Default\Preferences` visibly identifies `gisupp@gmail.com`. No new profile was created.
 - The local MCP bridge was directly initialized and its `list_pages` call returned the existing WhatsApp, Meta Ads Manager, and Meta Business Suite tabs. A fresh Codex execution also exposed `chrome_devtools.list_pages` and returned the same pages.
 - Current active-session tool namespace is restored only in fresh Codex execution; this session's static tool registry still lacks the MCP namespace. Meta mutations remain gated until the executing MCP session verifies the visible profile and clean ownership.
+- Fresh MCP-enabled Codex read-only audit verified the existing Meta tabs and selected the Ads Manager tab. Visible account context was prohibited Garden Shop portfolio `568026370701542` with ad account `1198439777611633`; no clean Get Free Seeds ownership was found. No mutation, onboarding, OTP, or secret action occurred.
+- Fresh MCP read-only staging checks returned webhook challenge `Forbidden` and health state `WHATSAPP_NUMBER_PENDING` / `disabled-until-new-number`, proving the deployed Worker is an older gated version and has not been live-connected.
 
 ## Current External Gate
 
-- Existing active-session MCP namespace remains unavailable, but local MCP and fresh Codex MCP are proven working. No token, OTP, secret, Meta mutation, or real WhatsApp E2E result is claimed by this session.
+- Local MCP and fresh Codex MCP are proven working. The remaining gate is Meta's contaminated/limited portfolio context and the stale deployed staging Worker; no token, OTP, secret, Meta mutation, or real WhatsApp E2E result is claimed.
 
 ## Next Action
 

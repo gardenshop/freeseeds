@@ -8,6 +8,7 @@
 - Repair: verified Codex/Kilo MCP configuration, package availability, Chrome PID/DevToolsActivePort, existing Default `gisupp@gmail.com` profile, direct MCP initialization, and fresh Codex `list_pages`.
 - Existing tabs proven: WhatsApp Web, Meta Ads Manager, Meta Business Suite. No new profile or duplicate tab created.
 - Meta/Cloudflare mutations, OTP, secrets, and live E2E remain unclaimed until the fresh MCP-enabled execution verifies visible account identity and clean ownership.
+- Fresh MCP audit: visible prohibited Garden Shop portfolio `568026370701542` and ad account `1198439777611633`; no clean portfolio, onboarding mutation, number query, OTP, or CAPTCHA gate reached. Staging challenge was `Forbidden`; health remained `WHATSAPP_NUMBER_PENDING` / `disabled-until-new-number`.
 
 ## GFS-13-META-LIVE-ONBOARD Execution Update — 2026-09-28
 

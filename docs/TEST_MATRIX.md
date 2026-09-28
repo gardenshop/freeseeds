@@ -13,5 +13,6 @@
 | WhatsApp | provider boundary, authorized number not yet live-enabled | PASS (external onboarding pending) |
 | Isolation | Hoja/Google Sheets/secrets/public receipt scans | PASS |
 | E2E | synthetic referral through delivered | PASS |
-| Real WhatsApp production E2E | clean Meta onboarding, webhook/Flow/media/CAPI | BLOCKED: dashboard MCP unavailable; no prohibited asset used |
+| Real WhatsApp production E2E | clean Meta onboarding, webhook/Flow/media/CAPI | BLOCKED: prohibited/limited Meta portfolio; no prohibited asset used |
 | MCP recovery | config/process/Chrome/profile/fresh MCP `list_pages` proof | PASS locally; active session namespace requires fresh MCP-enabled execution |
+| Fresh MCP staging probe | challenge and health against deployed staging Worker | BLOCKED: challenge `Forbidden`; deployed Worker remains old number gate |
