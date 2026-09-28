@@ -48,7 +48,7 @@
 - Final regression also repaired ESLint traversal of managed `.kilo/worktrees`; `.kilo/**` and `.wrangler/**` are now ignored, and sequential `npm test` (18/18), build, lint, audit all pass.
 - Production D1 `02b707df-a10c-4645-9516-a2a4541f6fab`, private R2, Queue `9b1852f6976343de8bec95ef2cf152a4`, and DLQ `0313fc16837d41bdb8370cf8fe31c969` exist in the clean account; migrations 0001/0002 applied and payment methods verified disabled. Production Workers, Access, secrets, and callbacks remain gated.
 - GFS-12 local verification after the authorized-number state/config update: `npm ci`, `npm test` (18/18), `npm run build`, `npm run lint`, and `npm audit` all pass; no deployment was attempted because external dashboard evidence is unavailable.
-- GFS-13 Git audit: active branch `codex/gfs-whatsapp-prod-004` at `828da04`, origin/main at `aa673e7`, PR #4 open and mergeable. No Meta or Cloudflare mutation was attempted because Chrome DevTools MCP was unavailable in the active tool registry.
+- GFS-13/GFS-15 Git audit: active branch `codex/gfs-whatsapp-prod-004` at `a3e7d6e`, origin/main at `aa673e7`, PR #4 open and mergeable. No Meta or Cloudflare mutation was attempted.
 
 ## GFS-14 MCP Recovery Evidence
 
