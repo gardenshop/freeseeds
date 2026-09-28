@@ -14,3 +14,4 @@
 | Isolation | Hoja/Google Sheets/secrets/public receipt scans | PASS |
 | E2E | synthetic referral through delivered | PASS |
 | Real WhatsApp production E2E | clean Meta onboarding, webhook/Flow/media/CAPI | BLOCKED: dashboard MCP unavailable; no prohibited asset used |
+| MCP recovery | config/process/Chrome/profile/fresh MCP `list_pages` proof | PASS locally; active session namespace requires fresh MCP-enabled execution |

@@ -6,7 +6,7 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 
 - Repository: `https://github.com/gardenshop/freeseeds.git`
 - Main: `aa673e7` (origin/main, verified 2026-09-28)
-- Active execution branch: `codex/gfs-whatsapp-prod-004` at `0a52ef3`; PR #4 open and mergeable
+- Active execution branch: `codex/gfs-whatsapp-prod-004` at `828da04`; PR #4 open and mergeable
 - Prior branch `codex/gfs-waba-test-002` retained remotely for provenance
 
 ## Cloudflare

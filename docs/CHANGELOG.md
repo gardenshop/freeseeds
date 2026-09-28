@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - 2026-09-28 (GFS-14)
+
+- Added a permanent Chrome DevTools MCP self-recovery protocol covering configuration, process/log/port diagnostics, bridge restart, existing-profile preservation, and proof requirements.
+- Recovered and verified the local MCP bridge: Codex/Kilo configuration is present, Chrome `DevToolsActivePort` is live, the existing Default profile is `gisupp@gmail.com`, and fresh Codex MCP `list_pages` returned the existing WhatsApp/Meta tabs.
+- Recorded that the active session's static tool registry still requires a fresh MCP-enabled Codex execution; no Meta mutation, secret, OTP, or live integration claim was made.
+
 ## Unreleased - 2026-09-28 (GFS-13)
 
 - Audited Git facts: origin/main `aa673e7`, active branch `codex/gfs-whatsapp-prod-004` at `0a52ef3`, PR #4 open and mergeable.
