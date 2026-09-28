@@ -2,7 +2,7 @@
 
 ## Current State
 
-`WHATSAPP_NUMBER_PENDING`
+`WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING`
 
 ## Completed Work
 
@@ -37,7 +37,8 @@
 - Payment model migration is applied and verified in staging: D1 `payment_methods`, private R2 QR validation/storage, Access-only admin configuration/preview, audited updates, method selection, and receipt-request outbox. No real payment values are configured.
 - Latest payment-aware API/admin versions deployed: `d4aff2d9-1c27-41f5-a01c-22208a37eb78` / `46efab4b-796f-4422-b4bf-639930b11904`.
 - Browser protocol is locked: authenticated `gisupp@gmail.com` profile, same-task tab reuse, no duplicate dashboard tabs, and account verification before mutations.
-- `STAGING_WABA_TEST_ALLOWED` is active for a future clean Meta-provided staging WABA/test number only; production remains `WHATSAPP_NUMBER_PENDING`.
+- User authorized `+923328883383` for Get Free Seeds / Free Seeds In Pakistan WhatsApp Business Platform onboarding and controlled integration testing; no registration or external mutation is evidenced in this execution environment.
+- `STAGING_WABA_TEST_ALLOWED` remains limited to a visibly clean Meta-owned staging context; the authorized number is not yet connected to runtime.
 - Clean WABA staging setup is blocked by Meta's visible business-portfolio creation limit while the available existing portfolios/assets are not independently clean; no existing portfolio/WABA/app/test number was used.
 - Read-only audit proved candidate `Garden Shop OK` also contains a Hoja Seeds ad account; it is excluded. No clean suitable portfolio/WABA/test number is currently available.
 - Meta alternative-path audit found no no-portfolio WhatsApp sandbox; Meta app creation requires a business portfolio selection for the WhatsApp use case. Support path investigation is in progress; no support case has been submitted yet.
@@ -46,7 +47,12 @@
 - Two integration defects were repaired during smoke testing: payment-selection and receipt-request audit SQL placeholder counts.
 - Final regression also repaired ESLint traversal of managed `.kilo/worktrees`; `.kilo/**` and `.wrangler/**` are now ignored, and sequential `npm test` (18/18), build, lint, audit all pass.
 - Production D1 `02b707df-a10c-4645-9516-a2a4541f6fab`, private R2, Queue `9b1852f6976343de8bec95ef2cf152a4`, and DLQ `0313fc16837d41bdb8370cf8fe31c969` exist in the clean account; migrations 0001/0002 applied and payment methods verified disabled. Production Workers, Access, secrets, and callbacks remain gated.
+- GFS-12 local verification after the authorized-number state/config update: `npm ci`, `npm test` (18/18), `npm run build`, `npm run lint`, and `npm audit` all pass; no deployment was attempted because external dashboard evidence is unavailable.
+
+## Current External Gate
+
+- Chrome DevTools MCP is not exposed in the available tool set for this execution, so Meta/Cloudflare/GitHub dashboard mutations and real WhatsApp E2E evidence cannot be truthfully claimed. No token, OTP, or secret was requested or stored.
 
 ## Next Action
 
-Obtain a clean Meta WABA test context or submit a Meta support request when an authenticated support form is available; production stays `WHATSAPP_NUMBER_PENDING`.
+Use the authenticated `gisupp@gmail.com` Chrome DevTools MCP session to verify clean Meta ownership, onboard `+923328883383`, and record the resulting non-secret IDs before enabling any runtime callback.

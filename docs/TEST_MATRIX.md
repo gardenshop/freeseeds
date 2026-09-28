@@ -2,7 +2,7 @@
 
 | Area | Required coverage | Status |
 | --- | --- | --- |
-| Governance | new-number lock, no existing number | PASS |
+| Governance | authorized number lock, no existing number | PASS |
 | Webhook | challenge, signature, replay boundary, parsing | PASS (live callback deferred) |
 | Flow | exactly five fields, validation, persistence contract | PASS |
 | Orders | FS numbering, concurrency contract, state transitions | PASS |
@@ -10,7 +10,7 @@
 | Receipts | mock retrieval, invalid media, private R2, checksum, payment review | PASS |
 | Admin | Access, configuration, QR upload/replacement, approve, reject, clearer receipt, fulfillment | PASS (staging routes) |
 | CAPI | Lead/Purchase IDs, approval timing, deduplication, retries | PASS (live send deferred) |
-| WhatsApp | provider boundary, mock sends, no live number | PASS |
+| WhatsApp | provider boundary, authorized number not yet live-enabled | PASS (external onboarding pending) |
 | Isolation | Hoja/Google Sheets/secrets/public receipt scans | PASS |
 | E2E | synthetic referral through delivered | PASS |
-| Real WABA staging E2E | clean WABA webhook/Flow/media/CAPI | BLOCKED: Meta clean portfolio limit; no prohibited asset used |
+| Real WhatsApp production E2E | clean Meta onboarding, webhook/Flow/media/CAPI | BLOCKED: dashboard MCP unavailable; no prohibited asset used |

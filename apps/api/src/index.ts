@@ -11,6 +11,7 @@ type Env = {
     META_PROVIDER_ENABLED: string;
     META_GRAPH_VERSION?: string;
     META_ACCESS_TOKEN?: string;
+    META_PHONE_NUMBER_ID?: string;
     WEBHOOK_VERIFY_TOKEN?: string;
     META_APP_SECRET?: string;
   };
@@ -18,19 +19,19 @@ type Env = {
 
 const app = new Hono<Env>();
 
-app.get("/health", (c) => c.json({ ok: true, service: "getfreeseeds-api", state: c.env.DEPLOYMENT_STATE, whatsapp: "disabled-until-new-number" }));
+app.get("/health", (c) => c.json({ ok: true, service: "getfreeseeds-api", state: c.env.DEPLOYMENT_STATE, whatsapp: "disabled-until-meta-onboarding" }));
 
 app.get("/webhooks/whatsapp", (c) => {
-  const provider = createWhatsAppProvider(c.env.WHATSAPP_PROVIDER);
+  const provider = createWhatsAppProvider(c.env.WHATSAPP_PROVIDER, { enabled: c.env.META_PROVIDER_ENABLED === "true", graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", accessToken: c.env.META_ACCESS_TOKEN, phoneNumberId: c.env.META_PHONE_NUMBER_ID, verifyToken: c.env.WEBHOOK_VERIFY_TOKEN, appSecret: c.env.META_APP_SECRET });
   const challenge = provider.verifyWebhook(c.req.query("hub.challenge") ?? "", c.req.query("hub.verify_token") ?? "", c.env.WEBHOOK_VERIFY_TOKEN);
   return challenge === null ? c.text("Forbidden", 403) : c.text(challenge);
 });
 
 app.post("/webhooks/whatsapp", async (c) => {
-  if (c.env.META_PROVIDER_ENABLED !== "true") return c.json({ error: "WHATSAPP_NUMBER_PENDING", state: c.env.DEPLOYMENT_STATE }, 503);
+  if (c.env.META_PROVIDER_ENABLED !== "true") return c.json({ error: "WHATSAPP_ONBOARDING_PENDING", state: c.env.DEPLOYMENT_STATE }, 503);
   const raw = await c.req.arrayBuffer();
   const signature = c.req.header("x-hub-signature-256") ?? null;
-  const provider = createWhatsAppProvider("meta", { enabled: true, graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", accessToken: c.env.META_ACCESS_TOKEN, appSecret: c.env.META_APP_SECRET });
+  const provider = createWhatsAppProvider("meta", { enabled: true, graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", accessToken: c.env.META_ACCESS_TOKEN, phoneNumberId: c.env.META_PHONE_NUMBER_ID, verifyToken: c.env.WEBHOOK_VERIFY_TOKEN, appSecret: c.env.META_APP_SECRET });
   if (!(await provider.validateSignature(raw, signature, c.env.META_APP_SECRET))) return c.text("Forbidden", 403);
   return c.json({ accepted: true });
 });
@@ -103,8 +104,8 @@ export default {
         if (!env.DB) { message.ack(); continue; }
         const job = await env.DB.prepare("SELECT status, attempts FROM outbox_jobs WHERE idempotency_key=?").bind(message.body.idempotencyKey).first<{ status: string; attempts: number }>();
         if (!job || isTerminalOutboxStatus(job.status)) { message.ack(); continue; }
-        if (env.DEPLOYMENT_STATE === "WHATSAPP_NUMBER_PENDING") {
-          await env.DB.prepare("UPDATE outbox_jobs SET status='DEFERRED', last_error=?, updated_at=? WHERE idempotency_key=?").bind("WHATSAPP_NUMBER_PENDING", new Date().toISOString(), message.body.idempotencyKey).run();
+        if (env.DEPLOYMENT_STATE === "WHATSAPP_NUMBER_PENDING" || env.DEPLOYMENT_STATE === "WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING") {
+          await env.DB.prepare("UPDATE outbox_jobs SET status='DEFERRED', last_error=?, updated_at=? WHERE idempotency_key=?").bind("WHATSAPP_ONBOARDING_PENDING", new Date().toISOString(), message.body.idempotencyKey).run();
           message.ack();
           continue;
         }

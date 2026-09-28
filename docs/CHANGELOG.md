@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - 2026-09-28
+
+- Recorded explicit authorization of `+923328883383` for Get Free Seeds / Free Seeds In Pakistan WhatsApp Business Platform onboarding and controlled integration testing.
+- Replaced the old `WHATSAPP_NUMBER_PENDING` governance state with `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING` while retaining zero Hoja runtime dependency and payment safety locks.
+- Recorded Page ID `101192938541236`, clean-asset onboarding requirements, and the unavailable Chrome DevTools MCP external-evidence gate; no Meta mutation or secret was performed.
+
 ## Unreleased - 2026-09-27
 
 - Superseded existing-number assumption with a mandatory new WhatsApp number supplied later by the user.

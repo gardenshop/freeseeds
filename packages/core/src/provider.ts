@@ -34,7 +34,7 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
   constructor(private readonly config: MetaWhatsAppConfig) {}
 
   private requireEnabled(): void {
-    if (!this.config.enabled) throw new Error("META_PROVIDER_DISABLED_WHATSAPP_NUMBER_PENDING");
+    if (!this.config.enabled) throw new Error("META_PROVIDER_DISABLED_UNTIL_WHATSAPP_ONBOARDING");
     if (!this.config.phoneNumberId || !this.config.accessToken) throw new Error("META_PROVIDER_REQUIRES_LIVE_CONFIGURATION");
   }
 

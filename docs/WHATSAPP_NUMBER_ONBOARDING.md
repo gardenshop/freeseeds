@@ -1,6 +1,6 @@
-# Future WhatsApp Number Onboarding
+# Authorized WhatsApp Number Onboarding
 
-Do not execute this runbook until the user explicitly supplies the new production number.
+Authorized production number: `+923328883383`. Execute only through the authenticated `gisupp@gmail.com` browser session and record visible account identity before every mutation.
 
 Staging exception: a Meta-provided clean test WABA/test number may be configured only after visible clean ownership verification. It is synthetic-only, cannot be used for real customers/payments/production events, and does not satisfy production onboarding.
 

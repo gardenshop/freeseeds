@@ -38,11 +38,14 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 
 ## Meta and WhatsApp
 
+- Customer identity: `Get Free Seeds / Free Seeds In Pakistan`
 - Customer-facing Page input: `https://www.facebook.com/FreeSeedsPK/`
-- Page ID: `101192938541236` (currently Hoja-linked; not a runtime dependency)
+- Page ID: `101192938541236` (previously documented as Hoja-linked; isolation is authorized but not yet verified)
 - Clean Meta Business ID: not provisioned
 - Clean WABA ID: not provisioned
-- Phone Number ID: intentionally unassigned; new number pending user supply
+- Authorized WhatsApp number: `+923328883383`
+- Number registration status: authorized; onboarding/OTP/ownership verification pending
+- Phone Number ID: not yet returned by Meta
 - Clean staging WABA test: not yet configured; no ID placeholder is recorded
 - Clean staging test Phone Number ID: not yet configured; no ID placeholder is recorded
 - Clean staging test recipient: not configured; synthetic-only use required
