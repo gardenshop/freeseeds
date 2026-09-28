@@ -40,10 +40,13 @@
 - `STAGING_WABA_TEST_ALLOWED` is active for a future clean Meta-provided staging WABA/test number only; production remains `WHATSAPP_NUMBER_PENDING`.
 - Clean WABA staging setup is blocked by Meta's visible business-portfolio creation limit while the available existing portfolios/assets are not independently clean; no existing portfolio/WABA/app/test number was used.
 - Read-only audit proved candidate `Garden Shop OK` also contains a Hoja Seeds ad account; it is excluded. No clean suitable portfolio/WABA/test number is currently available.
+- Meta alternative-path audit found no no-portfolio WhatsApp sandbox; Meta app creation requires a business portfolio selection for the WhatsApp use case. Support path investigation is in progress; no support case has been submitted yet.
+- Meta support case: not created; no clean WABA/test context or support-case ID is available. This remains a platform-enforced external gate.
 - Deployed staging smoke passed with synthetic-only data: Flow/D1 persistence, JazzCash/Easypaisa/Bank selection, receipt request, mock media retrieval, private R2 receipt write, and `PAYMENT_REVIEW`; synthetic methods/fixtures were restored/removed afterward.
 - Two integration defects were repaired during smoke testing: payment-selection and receipt-request audit SQL placeholder counts.
+- Final regression also repaired ESLint traversal of managed `.kilo/worktrees`; `.kilo/**` and `.wrangler/**` are now ignored, and sequential `npm test` (18/18), build, lint, audit all pass.
 - Production D1 `02b707df-a10c-4645-9516-a2a4541f6fab`, private R2, Queue `9b1852f6976343de8bec95ef2cf152a4`, and DLQ `0313fc16837d41bdb8370cf8fe31c969` exist in the clean account; migrations 0001/0002 applied and payment methods verified disabled. Production Workers, Access, secrets, and callbacks remain gated.
 
 ## Next Action
 
-Obtain a clean Meta WABA test context without selecting existing Hoja-linked assets; production stays `WHATSAPP_NUMBER_PENDING`.
+Obtain a clean Meta WABA test context or submit a Meta support request when an authenticated support form is available; production stays `WHATSAPP_NUMBER_PENDING`.

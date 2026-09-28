@@ -28,3 +28,5 @@
 - Ran deployed synthetic staging smoke through Flow, all payment methods, receipt request, mock media, private R2, and `PAYMENT_REVIEW`; repaired two audit SQL placeholder defects and restored test data/configuration.
 - Pushed `codex/gfs-waba-test-002` from merged main and opened PR #2; real clean WABA E2E remains blocked by Meta portfolio limit.
 - Verified `Garden Shop OK` is not clean because its visible assets include a Hoja Seeds ad account; no existing Meta portfolio was selected.
+- Recorded Meta portfolio-limit support case as not created; no existing asset was modified or repurposed.
+- Fixed ESLint to ignore managed `.kilo/worktrees` and `.wrangler` directories; final sequential local quality gate is green.

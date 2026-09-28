@@ -31,7 +31,7 @@ This report covers the WABA staging test preparation phase. No WhatsApp number, 
 - Five-field Flow definition: `whatsapp/flows/get-free-seeds.json`, exactly five required fields, not published: PASS
 - WhatsApp provider abstraction: `MockWhatsAppProvider` active for tests; `MetaWhatsAppProvider` disabled/unconfigured: PASS
 - Mock E2E: synthetic referral -> five fields -> all payment methods -> receipt -> review -> approval -> Purchase -> confirmation -> packing -> dispatch -> delivered: PASS
-- Validation: `npm test` 18/18, `npm run build` PASS, `npm run lint` PASS, `npm audit` PASS
+- Validation: `npm test` 18/18, `npm run build` PASS, `npm run lint` PASS (managed-worktree ignore repaired), `npm audit` PASS
 - CI: workflow added and triggered; both remote jobs were blocked before starting by GitHub account billing lock. Local clean-install/test/build/lint verification PASS.
 - Browser protocol: authenticated `gisupp@gmail.com` profile, same-task tab reuse, and account verification before mutation documented and applied: PASS
 
@@ -43,6 +43,7 @@ This report covers the WABA staging test preparation phase. No WhatsApp number, 
 - Page isolation: pending; no ownership change performed
 - WABA: no connection; no Flow publication/templates/callback/token
 - Clean test WABA: FAIL/PENDING; Meta business-portfolio creation limit blocks creating `Get Free Seeds Test`, and existing portfolios/assets were excluded as ownership was not provably clean
+- Meta portfolio-limit support case: NOT CREATED; no support case ID available
 - New number: NOT PROVIDED; no number used
 - Real webhook/WABA-test E2E: NOT RUN; clean WABA gate blocked before configuration
 - Deployed synthetic staging smoke: Flow persistence, three payment selections, receipt request, mock media/R2, and `PAYMENT_REVIEW`: PASS; fixtures/config restored/removed
@@ -69,4 +70,4 @@ This report covers the WABA staging test preparation phase. No WhatsApp number, 
 - Completed: 71%
 - Remaining: 29%, consisting of clean WABA test access, verified payment values, new production WhatsApp/Meta onboarding, live CAPI/WhatsApp E2E, and paid-ad authorization. Remote CI billing is non-blocking.
 
-Next single action: obtain a clean Meta WABA test context or resolve the Meta business-portfolio limit without selecting existing Hoja-linked assets.
+Next single action: obtain a clean Meta WABA test context or submit a Meta support request through an authenticated support form, without selecting existing Hoja-linked assets.
