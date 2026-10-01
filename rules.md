@@ -87,9 +87,11 @@ Expected state for this phase: `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING`.
 - Always use Chrome DevTools MCP with the service-specific authenticated browser profile/session: `ayesha.butt55@hotmail.com` for Meta/Facebook, and `gisupp@gmail.com` for Cloudflare, GitHub, and Get Free Seeds admin.
 - Never cross-use the Meta identity for Cloudflare/GitHub or the Cloudflare/GitHub identity for intended Meta ownership.
 - Verify the visible active account/profile before every external mutation and record the result.
+- Never log out an already authenticated useful Meta session merely to switch accounts; use the current authenticated session for read-only asset discovery first.
+- Switch/login only when the required clean asset cannot be accessed from the current session, and stop at the exact permission/authentication gate rather than repeatedly retrying.
 - Reuse the already-open tab for the same service, task, or page. Do not open a new tab for every sub-step.
 - Open one separate tab only when beginning a genuinely new service, task, or context that should remain separate.
-- Avoid duplicate Cloudflare, Meta, GitHub, or admin tabs. Do not close useful authenticated tabs unless necessary.
+- Same-task tab reuse is mandatory. Avoid duplicate Cloudflare, Meta, GitHub, or admin tabs. Do not close useful authenticated tabs unless necessary.
 
 ## Chrome DevTools MCP Recovery Protocol
 
