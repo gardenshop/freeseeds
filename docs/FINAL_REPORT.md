@@ -17,7 +17,7 @@
 - No App, WABA, dataset, system user, token, number registration, or Meta mutation occurred. Audit stopped before entering prohibited deeper asset views.
 - Garden Shop remains the unchanged operational payment recipient; Creeper Seeds does not change payment ownership. Payment values remain PENDING and ads remain unpublished.
 - Cloudflare pre-deploy identity was BLOCKED: no existing Cloudflare tab was available, and the single new service tab redirected to login showing `nazimsaeed@gmail.com` rather than required `gisupp@gmail.com`; no deploy or secret mutation occurred.
-- Git: `codex/gfs-whatsapp-prod-004` at `ba5f55b`; PR #4 open/mergeable; main `aa673e7`.
+- Git: `codex/gfs-whatsapp-prod-004` at `cf220c4`; PR #4 open/mergeable; main `aa673e7`.
 
 ## GFS-16-CLEAN-CREEPER-META-ACCOUNT Execution Update — 2026-09-28
 
@@ -60,7 +60,7 @@ This report covers the WABA staging test preparation phase. No WhatsApp number, 
 
 - Governance: PASS; baseline commit on `main`: `ee71a93`
 - Plan corrected for future new WhatsApp number: PASS; self-review PASS
-- Branch: `codex/gfs-whatsapp-prod-004` at `ba5f55b`; PR #4 open; main base `aa673e7`
+- Branch: `codex/gfs-whatsapp-prod-004` at `cf220c4`; PR #4 open; main base `aa673e7`
 - Payment implementation base commit: `6493af6`
 - WABA test commit: `8a23811`
 - Push/PR: PASS; PR #2 https://github.com/gardenshop/freeseeds/pull/2 merged into `main` at `d8b0511`; closed PR #1 was not reused
@@ -87,7 +87,7 @@ This report covers the WABA staging test preparation phase. No WhatsApp number, 
 - Mock E2E: synthetic referral -> five fields -> all payment methods -> receipt -> review -> approval -> Purchase -> confirmation -> packing -> dispatch -> delivered: PASS
 - Validation: `npm test` 18/18, `npm run build` PASS, `npm run lint` PASS (managed-worktree ignore repaired), `npm audit` PASS
 - CI: workflow added and triggered; both remote jobs were blocked before starting by GitHub account billing lock. Local clean-install/test/build/lint verification PASS.
-- Browser protocol: authenticated `gisupp@gmail.com` profile, same-task tab reuse, and account verification before mutation documented and applied: PASS
+- Browser protocol: service-specific Meta `ayesha.butt55@hotmail.com` and Cloudflare/GitHub/admin `gisupp@gmail.com`, same-task tab reuse, and account verification before mutation documented and applied: PASS
 
 ## External State
 
@@ -122,6 +122,6 @@ This report covers the WABA staging test preparation phase. No WhatsApp number, 
 
 - Overall: 71%
 - Completed: 71%
-- Remaining: 29%, consisting of clean WABA access, verified payment values, authorized-number Meta onboarding, live CAPI/WhatsApp E2E, and paid-ad authorization. Remote CI billing and unavailable Chrome DevTools MCP are external gates.
+- Remaining: 29%, consisting of clean WABA access, verified payment values, authorized-number Meta onboarding, live CAPI/WhatsApp E2E, and paid-ad authorization. Remote CI billing remains a non-blocking external gate; Chrome DevTools MCP is restored.
 
 Next single action: obtain a clean Meta WABA test context or submit a Meta support request through an authenticated support form, without selecting existing Hoja-linked assets.
