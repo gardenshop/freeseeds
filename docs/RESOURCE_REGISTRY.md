@@ -6,7 +6,7 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 
 - Repository: `https://github.com/gardenshop/freeseeds.git`
 - Main: `aa673e7` (origin/main, verified 2026-09-28)
-- Active execution branch: `codex/gfs-whatsapp-prod-004` at `2de6a5d`; PR #4 open and mergeable
+- Active execution branch: `codex/gfs-whatsapp-prod-004` at `ba5f55b`; PR #4 open and mergeable
 - Prior branch `codex/gfs-waba-test-002` retained remotely for provenance
 
 ## Cloudflare
@@ -24,7 +24,7 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - workers.dev subdomain: `get-free-seeds.workers.dev`
 - Staging public Worker: `getfreeseeds-api-staging` / `https://getfreeseeds-api-staging.get-free-seeds.workers.dev`
 - Staging admin Worker: `getfreeseeds-admin-staging` / `https://getfreeseeds-admin-staging.get-free-seeds.workers.dev`
-- Staging API version: `d4aff2d9-1c27-41f5-a01c-22208a37eb78`
+- Staging API version: `8daa6dc6-6f56-45a2-b7b9-734a146a6156` (GFS-17 redeploy; clean account verified as `gisupp@gmail.com`)
 - Staging admin version: `46efab4b-796f-4422-b4bf-639930b11904`
 - Cloudflare Access application: `Get Free Seeds Admin Staging` / `ea91b1bf-02c1-46d3-921a-ea2f507fb150`
 - Cloudflare Access allow policy: `Get Free Seeds Admin Operator` / `b3acdd4f-9767-4d28-a55d-0a8e771d476c`
@@ -61,6 +61,7 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - GFS-15 Cloudflare pre-mutation identity: not verified; dashboard redirected to login showing `nazimsaeed@gmail.com`, not required `gisupp@gmail.com`; no Worker deploy or secret mutation performed
 - GFS-16 Meta identity: `ayesha.butt55@hotmail.com` email accepted on Facebook login; password authentication pending; no Meta asset mutation
 - GFS-16 Cloudflare/GitHub identity: required `gisupp@gmail.com` session not changed or reauthenticated
+- GFS-17 Cloudflare identity: `gisupp@gmail.com` visibly authenticated in Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; staging API redeployed, no secret mutation
 - Meta support case: not created; no case ID available
 - Flow ID: not published; repository definition only
 - Dataset/event source ID: not provisioned

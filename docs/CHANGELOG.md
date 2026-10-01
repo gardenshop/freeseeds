@@ -9,6 +9,7 @@
 - GFS-15 read-only Creeper Seeds audit found the matching `creeper seeds` ad account (`1198439777611633`) inside prohibited Garden Shop/Hoja portfolio `568026370701542`; the context was excluded and no Meta asset or number was mutated.
 - GFS-15 Cloudflare identity check redirected to login as `nazimsaeed@gmail.com` instead of required `gisupp@gmail.com`; deployment and secrets remained untouched.
 - GFS-16 enforced service-specific identities: Meta login uses `ayesha.butt55@hotmail.com`; Cloudflare/GitHub/admin remain `gisupp@gmail.com`. Meta email was accepted after logout, but password authentication is pending; no asset mutation occurred.
+- GFS-17 authenticated Cloudflare visibly as `gisupp@gmail.com` in clean account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, redeployed staging API version `8daa6dc6-6f56-45a2-b7b9-734a146a6156`, and verified new health gating. Webhook challenge/POST remain intentionally gated until Meta secrets and clean WABA exist.
 
 ## Unreleased - 2026-09-28 (GFS-13)
 

@@ -48,8 +48,10 @@
 - Final regression also repaired ESLint traversal of managed `.kilo/worktrees`; `.kilo/**` and `.wrangler/**` are now ignored, and sequential `npm test` (18/18), build, lint, audit all pass.
 - Production D1 `02b707df-a10c-4645-9516-a2a4541f6fab`, private R2, Queue `9b1852f6976343de8bec95ef2cf152a4`, and DLQ `0313fc16837d41bdb8370cf8fe31c969` exist in the clean account; migrations 0001/0002 applied and payment methods verified disabled. Production Workers, Access, secrets, and callbacks remain gated.
 - GFS-12 local verification after the authorized-number state/config update: `npm ci`, `npm test` (18/18), `npm run build`, `npm run lint`, and `npm audit` all pass; no deployment was attempted because external dashboard evidence is unavailable.
-- GFS-13/GFS-15 Git audit: active branch `codex/gfs-whatsapp-prod-004` at `a3e7d6e`, origin/main at `aa673e7`, PR #4 open and mergeable. No Meta or Cloudflare mutation was attempted.
+- GFS-13/GFS-15/GFS-17 Git audit: active branch `codex/gfs-whatsapp-prod-004` at `ba5f55b`, origin/main at `aa673e7`, PR #4 open and mergeable. No Meta mutation was attempted; Cloudflare staging redeploy was verified.
 - GFS-16 identity separation: Meta session was logged out from Saeed A Nazim/Garden Shop and reached Facebook login with `ayesha.butt55@hotmail.com` accepted; password authentication is the exact remaining gate. No Meta asset changed. Cloudflare/GitHub sessions were not touched.
+- GFS-17 Cloudflare authentication passed visibly as `gisupp@gmail.com` in clean Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; current staging API Worker deployed as version `8daa6dc6-6f56-45a2-b7b9-734a146a6156`.
+- GFS-17 staging checks: `/health` PASS with `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING` and `disabled-until-meta-onboarding`; webhook challenge returned 403 because no verify secret is configured; POST returned expected 503 while Meta remains disabled. No Meta secret or callback mutation occurred.
 
 ## GFS-14 MCP Recovery Evidence
 
@@ -65,7 +67,7 @@
 
 ## Current External Gate
 
-- Local MCP and direct WebSocket MCP are proven working. The remaining gates are the Hoja/Garden Shop-owned `creeper seeds` ad account, missing clean Meta authority, and Cloudflare dashboard authentication mismatch (`nazimsaeed@gmail.com` vs required `gisupp@gmail.com`). No token, OTP, secret, deploy, Meta mutation, or real WhatsApp E2E result is claimed.
+- Local MCP and direct WebSocket MCP are proven working. Cloudflare identity is now PASS; remaining gates are Ayesha Facebook password authentication, clean Meta ownership, Meta onboarding, and webhook secrets/provider enablement. No token, OTP, Meta mutation, or real WhatsApp E2E result is claimed.
 - GFS-16 current gate: Facebook is at “Log into Facebook” for `ayesha.butt55@hotmail.com`; password is required and was not entered. Ayesha authentication, clean portfolio verification, Meta onboarding, and Cloudflare correction remain pending.
 
 ## Next Action
