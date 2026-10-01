@@ -36,7 +36,7 @@
 - Hardened API/admin Workers deployed and health-verified; staging bindings show only the clean D1/R2/Queue resources.
 - Payment model migration is applied and verified in staging: D1 `payment_methods`, private R2 QR validation/storage, Access-only admin configuration/preview, audited updates, method selection, and receipt-request outbox. No real payment values are configured.
 - Latest payment-aware API/admin versions deployed: `d4aff2d9-1c27-41f5-a01c-22208a37eb78` / `46efab4b-796f-4422-b4bf-639930b11904`.
-- Browser protocol is locked: authenticated `gisupp@gmail.com` profile, same-task tab reuse, no duplicate dashboard tabs, and account verification before mutations.
+- Browser protocol is locked: authenticated `ayesha.butt55@hotmail.com` for Meta/Facebook and `gisupp@gmail.com` for Cloudflare/GitHub/admin, with same-task tab reuse and account verification before mutations.
 - User authorized `+923328883383` for Get Free Seeds / Free Seeds In Pakistan WhatsApp Business Platform onboarding and controlled integration testing; no registration or external mutation is evidenced in this execution environment.
 - `STAGING_WABA_TEST_ALLOWED` remains limited to a visibly clean Meta-owned staging context; the authorized number is not yet connected to runtime.
 - Clean WABA staging setup is blocked by Meta's visible business-portfolio creation limit while the available existing portfolios/assets are not independently clean; no existing portfolio/WABA/app/test number was used.
@@ -70,4 +70,4 @@
 
 ## Next Action
 
-Use the authenticated `gisupp@gmail.com` Chrome DevTools MCP session to verify clean Meta ownership, onboard `+923328883383`, and record the resulting non-secret IDs before enabling any runtime callback.
+Use the authenticated `ayesha.butt55@hotmail.com` Chrome DevTools MCP session for Meta ownership and onboarding; use `gisupp@gmail.com` separately for Cloudflare deployment and runtime callbacks.

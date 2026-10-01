@@ -17,7 +17,7 @@
 - No App, WABA, dataset, system user, token, number registration, or Meta mutation occurred. Audit stopped before entering prohibited deeper asset views.
 - Garden Shop remains the unchanged operational payment recipient; Creeper Seeds does not change payment ownership. Payment values remain PENDING and ads remain unpublished.
 - Cloudflare pre-deploy identity was BLOCKED: no existing Cloudflare tab was available, and the single new service tab redirected to login showing `nazimsaeed@gmail.com` rather than required `gisupp@gmail.com`; no deploy or secret mutation occurred.
-- Git: `codex/gfs-whatsapp-prod-004` at `a3e7d6e`; PR #4 open/mergeable; main `aa673e7`.
+- Git: `codex/gfs-whatsapp-prod-004` at `2de6a5d`; PR #4 open/mergeable; main `aa673e7`.
 
 ## GFS-16-CLEAN-CREEPER-META-ACCOUNT Execution Update — 2026-09-28
 
@@ -53,7 +53,7 @@ This report covers the WABA staging test preparation phase. No WhatsApp number, 
 
 - Governance: PASS; baseline commit on `main`: `ee71a93`
 - Plan corrected for future new WhatsApp number: PASS; self-review PASS
-- Branch: `codex/gfs-whatsapp-prod-004` at `0a52ef3`; PR #4 open; main base `aa673e7`
+- Branch: `codex/gfs-whatsapp-prod-004` at `2de6a5d`; PR #4 open; main base `aa673e7`
 - Payment implementation base commit: `6493af6`
 - WABA test commit: `8a23811`
 - Push/PR: PASS; PR #2 https://github.com/gardenshop/freeseeds/pull/2 merged into `main` at `d8b0511`; closed PR #1 was not reused

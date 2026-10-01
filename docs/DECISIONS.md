@@ -78,7 +78,7 @@ Created only non-secret isolated production D1/R2/Queue/DLQ resources in the cle
 
 ## 2026-09-27: Browser and Remote CI Protocol
 
-Dashboard automation uses Chrome DevTools MCP with the authenticated `gisupp@gmail.com` profile, reuses same-task tabs, avoids duplicate service tabs, and verifies account identity before mutations. GitHub Actions billing is optional and not a launch blocker; local release checks remain authoritative while remote CI is unavailable (`REMOTE_CI_UNAVAILABLE_NON_BLOCKING`).
+Dashboard automation uses Chrome DevTools MCP with service-specific identities: `ayesha.butt55@hotmail.com` for Meta/Facebook and `gisupp@gmail.com` for Cloudflare/GitHub/admin. It reuses same-task tabs, avoids duplicate service tabs, and verifies account identity before mutations. GitHub Actions billing is optional and not a launch blocker; local release checks remain authoritative while remote CI is unavailable (`REMOTE_CI_UNAVAILABLE_NON_BLOCKING`).
 
 ## 2026-09-27: Clean WABA Staging Test Allowed
 
