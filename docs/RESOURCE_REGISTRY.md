@@ -5,7 +5,9 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 ## GitHub
 
 - Repository: `https://github.com/gardenshop/freeseeds.git`
-- Branch: `main` at merged PR #2 commit `d8b0511`; test branch `codex/gfs-waba-test-002` retained remotely for provenance
+- Main: `aa673e7` (origin/main, verified 2026-09-28)
+- Active execution branch: `codex/gfs-whatsapp-prod-004` at `90c4c5f`; PR #4 open and mergeable
+- Prior branch `codex/gfs-waba-test-002` retained remotely for provenance
 
 ## Cloudflare
 
@@ -22,7 +24,7 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - workers.dev subdomain: `get-free-seeds.workers.dev`
 - Staging public Worker: `getfreeseeds-api-staging` / `https://getfreeseeds-api-staging.get-free-seeds.workers.dev`
 - Staging admin Worker: `getfreeseeds-admin-staging` / `https://getfreeseeds-admin-staging.get-free-seeds.workers.dev`
-- Staging API version: `d4aff2d9-1c27-41f5-a01c-22208a37eb78`
+- Staging API version: `8daa6dc6-6f56-45a2-b7b9-734a146a6156` (GFS-17 redeploy; clean account verified as `gisupp@gmail.com`)
 - Staging admin version: `46efab4b-796f-4422-b4bf-639930b11904`
 - Cloudflare Access application: `Get Free Seeds Admin Staging` / `ea91b1bf-02c1-46d3-921a-ea2f507fb150`
 - Cloudflare Access allow policy: `Get Free Seeds Admin Operator` / `b3acdd4f-9767-4d28-a55d-0a8e771d476c`
@@ -38,16 +40,29 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 
 ## Meta and WhatsApp
 
+- Customer identity: `Get Free Seeds / Free Seeds In Pakistan`
 - Customer-facing Page input: `https://www.facebook.com/FreeSeedsPK/`
-- Page ID: `101192938541236` (currently Hoja-linked; not a runtime dependency)
+- Page ID: `101192938541236` (previously documented as Hoja-linked; isolation is authorized but not yet verified)
 - Clean Meta Business ID: not provisioned
 - Clean WABA ID: not provisioned
-- Phone Number ID: intentionally unassigned; new number pending user supply
+- Authorized WhatsApp number: `+923328883383`
+- Number registration status: authorized; onboarding/OTP/ownership verification pending
+- Phone Number ID: not yet returned by Meta
 - Clean staging WABA test: not yet configured; no ID placeholder is recorded
 - Clean staging test Phone Number ID: not yet configured; no ID placeholder is recorded
 - Clean staging test recipient: not configured; synthetic-only use required
 - Clean staging Meta gate: authenticated Meta UI exposes Hoja-linked active portfolio/assets and reports the business portfolio creation limit; no existing portfolio/WABA/app was selected
 - Excluded candidate portfolio: `Garden Shop OK` / `1154400188565490`; visible business overview contains Hoja Seeds ad account `120233855869140541`, so it is not clean and is not used
+- GFS-14 read-only Meta audit: visible Ads Manager context was prohibited Garden Shop portfolio `568026370701542` with ad account `1198439777611633`; no clean Get Free Seeds ownership was verified and no asset was mutated
+- Designated Meta context per user: `Creeper Seeds`; clean ownership status: **NOT VERIFIED / PROHIBITED CONTEXT OBSERVED**
+- GFS-15 visible ad account: `creeper seeds` / `1198439777611633`, nested under `Garden Shop` portfolio `568026370701542`, legal business name `Hoja Seeds`; excluded under the zero-Hoja rule
+- GFS-15 visible Page names in that prohibited context: Hoja Seeds; Dutch Seeds Export; Free Seeds In Pakistan - www.gardenshop.pk; Garden Shop. Target Page `101192938541236` was not independently verified.
+- GFS-15 App/WABA/dataset/event-source/system-user IDs: not inspected because entering the proven Hoja portfolio's deeper asset views would violate the isolation lock
+- GFS-15 Cloudflare pre-mutation identity: not verified; dashboard redirected to login showing `nazimsaeed@gmail.com`, not required `gisupp@gmail.com`; no Worker deploy or secret mutation performed
+- GFS-16 Meta identity: `ayesha.butt55@hotmail.com` email accepted on Facebook login; password authentication pending; no Meta asset mutation
+- GFS-16 Cloudflare/GitHub identity: required `gisupp@gmail.com` session not changed or reauthenticated
+- GFS-17 Cloudflare identity: `gisupp@gmail.com` visibly authenticated in Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; staging API redeployed, no secret mutation
+- GFS-19 Meta identity: visible Facebook session remains Saeed A Nazim; Ayesha authentication failed at password gate `META_AUTH_PASSWORD_REQUIRED`; no Meta asset was touched
 - Meta support case: not created; no case ID available
 - Flow ID: not published; repository definition only
 - Dataset/event source ID: not provisioned

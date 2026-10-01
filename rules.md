@@ -4,9 +4,17 @@
 
 - Public brand: Get Free Seeds.
 - Operational merchant and payment recipient: Garden Shop.
-- Customer-facing Page input: `https://www.facebook.com/FreeSeedsPK/`; it is not a runtime dependency until clean Meta ownership is verified.
+- Customer identity: Get Free Seeds / Free Seeds In Pakistan.
+- Customer-facing Page: `https://www.facebook.com/FreeSeedsPK/` (Page ID `101192938541236`); it is not a runtime dependency until clean Meta ownership is verified.
+- Designated Meta/advertising/WhatsApp ownership context: `Creeper Seeds`.
+- Facebook/Meta account for the clean Creeper Seeds context: `ayesha.butt55@hotmail.com` only.
+- Cloudflare, GitHub, and Get Free Seeds admin account: `gisupp@gmail.com` only.
+- Never use `ayesha.butt55@hotmail.com` for Cloudflare/GitHub, and never use `gisupp@gmail.com` as the intended Meta owner for this new clean setup.
+- Creeper Seeds is authorized for Get Free Seeds advertising, Click-to-WhatsApp campaigns, WhatsApp Business Platform/WABA, Meta App, system user/token ownership, Page/WhatsApp linkage, and CAPI/event-source integration.
 - Hoja Seeds has zero connection. Do not use, import, reference, share, or depend on any Hoja Seeds repository, source, database, Cloudflare resource, domain, DNS, API, secret, Meta asset, WhatsApp asset, payment credential, customer record, CRM data, analytics, webhook, campaign, deployment, or configuration.
 - The known Hoja-linked Cloudflare account ID `85f6a6181b4653c2a45e69cb7ce8a474` is prohibited.
+- Hoja portfolio, WABA, app, dataset, system user, ad account, credentials, and old Garden Shop WhatsApp assets are prohibited.
+- The contaminated `creeper seeds` ad account `1198439777611633` under Garden Shop portfolio `568026370701542` is prohibited and must never be migrated, reused, or connected.
 - Google Sheets is not an operational dependency. Cloudflare D1 is authoritative.
 
 ## Customer Journey
@@ -19,18 +27,20 @@
 - Payment methods are JazzCash, Easypaisa, and Bank Transfer. Garden Shop recipient values must be verified before activation; never guess account numbers, IBANs, wallet numbers, merchant IDs, or credentials.
 - Customer-visible payment configuration is backend-managed in D1 `payment_methods`; QR binaries are private R2 objects. Do not hardcode recipient values, TILL/TIL IDs, QR keys, or payment instructions in source, Worker environment variables, Flow JSON, templates, or frontend strings.
 - Payment credentials and provider secrets remain Cloudflare secrets and are never stored in customer-visible configuration.
+- Creeper Seeds is not the customer payment recipient. JazzCash, Easypaisa, and Bank QR/TILL payment recipients remain Garden Shop, backend-controlled, manually reviewed, and disabled until verified values are supplied.
 
 ## WhatsApp Number Lock
 
 - Customer-facing WhatsApp identity: Get Free Seeds.
-- Production number: NEW NUMBER TO BE PROVIDED LATER BY USER.
-- Current state: UNASSIGNED / `WHATSAPP_NUMBER_PENDING`.
+- Production number: `+923328883383` (explicitly authorized by the user for WhatsApp Business Platform/Cloud API onboarding and controlled integration testing).
+- Current state: `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING`.
 - Production must not use any existing, Hoja Seeds, Garden Shop, temporary, or other phone number.
-- Do not locate, migrate, register, connect, or use any existing number or WABA.
+- Do not locate, migrate, register, connect, or use any existing, Hoja-linked, or old Garden Shop number or WABA.
 - The known Meta test number `+1 555-897-9372` and every Hoja-linked test asset remain prohibited.
 - `STAGING_WABA_TEST_ALLOWED`: a Meta-provided test WABA/test number may be used only when its visible ownership is independently verified as clean Get Free Seeds, only for staging synthetic data, staging webhook/Flow/messages, and Meta test events. It must never receive real customers, real payments, production events, or ad spend.
-- A clean staging test asset does not change the production number state: production remains `WHATSAPP_NUMBER_PENDING`.
+- The authorized number remains blocked from runtime use until clean Meta ownership, OTP/verification, and least-privilege credentials are independently verified.
 - Do not publish production templates/Flow, register production callbacks, send real WhatsApp messages, or create/reuse production tokens before the new number and clean WABA onboarding gates pass.
+- Creeper Seeds may be used only for the authorized Free Seeds In Pakistan Page/number integration. Unrelated Hoja assets visible inside that context remain excluded and must not become runtime dependencies.
 
 ## Platform
 
@@ -64,9 +74,9 @@
 
 ## Release States
 
-`LOCAL` -> `STAGING_INFRA_READY` -> `WHATSAPP_NUMBER_PENDING` -> `META_ASSETS_PENDING` -> `PRODUCTION_INTEGRATION_READY` -> `PRODUCTION_READY`
+`LOCAL` -> `STAGING_INFRA_READY` -> `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING` -> `META_ASSETS_PENDING` -> `PRODUCTION_INTEGRATION_READY` -> `PRODUCTION_READY`
 
-Expected state for this phase: `WHATSAPP_NUMBER_PENDING`.
+Expected state for this phase: `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING`.
 
 ## Spend Safety
 
@@ -74,11 +84,21 @@ Expected state for this phase: `WHATSAPP_NUMBER_PENDING`.
 
 ## Browser Automation Protocol
 
-- Always use Chrome DevTools MCP with the authenticated browser profile/session for `gisupp@gmail.com` when automating Cloudflare, Meta, GitHub, or related dashboards.
+- Always use Chrome DevTools MCP with the service-specific authenticated browser profile/session: `ayesha.butt55@hotmail.com` for Meta/Facebook, and `gisupp@gmail.com` for Cloudflare, GitHub, and Get Free Seeds admin.
+- Never cross-use the Meta identity for Cloudflare/GitHub or the Cloudflare/GitHub identity for intended Meta ownership.
 - Verify the visible active account/profile before every external mutation and record the result.
 - Reuse the already-open tab for the same service, task, or page. Do not open a new tab for every sub-step.
 - Open one separate tab only when beginning a genuinely new service, task, or context that should remain separate.
 - Avoid duplicate Cloudflare, Meta, GitHub, or admin tabs. Do not close useful authenticated tabs unless necessary.
+
+## Chrome DevTools MCP Recovery Protocol
+
+- Chrome DevTools MCP is mandatory for dashboard automation; do not substitute unauthenticated HTTP/API guesses or claim browser evidence from mocks.
+- If the MCP namespace disappears, diagnose before declaring a blocker: inspect the loaded Kilo/Codex MCP configuration, package/command, process state, logs, Chrome process, DevToolsActivePort/endpoint, and existing profile.
+- Repair locally where possible by restarting/reconnecting only the MCP bridge or required browser component; test with MCP initialization, page listing, and a read-only page inspection after every repair.
+- Preserve existing service-specific Chrome profiles/sessions: `ayesha.butt55@hotmail.com` for Meta and `gisupp@gmail.com` for Cloudflare/GitHub/admin. Never create a fresh profile merely to bypass recovery.
+- Reuse existing service tabs; create a tab only for a genuinely new task/context, and verify the visible account before every mutation.
+- Declare `PLATFORM_BLOCKED` only when the MCP server works locally but its tools cannot be exposed to the active agent because of an external Codex/platform restriction, with the exact diagnostics recorded in `STATUS.md`, `DECISIONS.md`, and `CHANGELOG.md`.
 
 ## Quality Gate Availability
 

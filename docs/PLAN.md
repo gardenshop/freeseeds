@@ -4,9 +4,9 @@
 
 The repository was empty and had no Git history, source, branch, remote, or legacy architecture at bootstrap. GitHub repository `gardenshop/freeseeds` is the target. The known Cloudflare account `85f6a6181b4653c2a45e69cb7ce8a474` is Hoja-linked and prohibited. The supplied Free Seeds Page is currently connected to a prohibited Meta portfolio and is documented only as a future isolation task.
 
-Production WhatsApp number: **NOT YET PROVIDED**.
+Production WhatsApp number: **+923328883383**, explicitly authorized by the user and pending clean Meta onboarding.
 
-A new number will be supplied later by the user. No existing, test, Hoja Seeds, Garden Shop, or other phone number may be used in the meantime. No number migration or WABA connection is part of this phase.
+No existing, test, Hoja Seeds, Garden Shop, or other phone number may be used. The authorized number must not be registered, migrated, connected, or enabled until clean ownership, OTP/verification, WABA linkage, and least-privilege credentials are visibly verified.
 
 ## Architecture
 
@@ -21,9 +21,9 @@ A new number will be supplied later by the user. No existing, test, Hoja Seeds, 
 
 ## Deployment States
 
-`LOCAL`, `STAGING_INFRA_READY`, `WHATSAPP_NUMBER_PENDING`, `META_ASSETS_PENDING`, `PRODUCTION_INTEGRATION_READY`, `PRODUCTION_READY`.
+`LOCAL`, `STAGING_INFRA_READY`, `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING`, `META_ASSETS_PENDING`, `PRODUCTION_INTEGRATION_READY`, `PRODUCTION_READY`.
 
-Expected state: `WHATSAPP_NUMBER_PENDING`. This does not block independent backend, infrastructure, test, or documentation work.
+Expected state: `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING`. This does not block independent backend, infrastructure, test, or documentation work.
 
 ## Cloudflare Resources
 
@@ -57,7 +57,7 @@ Use Cloudflare secrets, raw-body HMAC verification, Flow validation, Access iden
 
 ## Future WhatsApp Gate
 
-When a new number is supplied, follow `docs/WHATSAPP_NUMBER_ONBOARDING.md`: verify clean Meta portfolio, create/select clean WABA, verify no Hoja relationship, add number, OTP verify, configure Get Free Seeds display name and approvals, create least-privilege token, set secrets, register callback/public key, publish Flow/templates, record IDs, run live WhatsApp/CAPI/E2E tests, and only then consider campaign activation. Do not execute this runbook now.
+For the authorized number, follow `docs/WHATSAPP_NUMBER_ONBOARDING.md`: verify clean Meta portfolio, create/select clean WABA, verify no Hoja relationship, add number, OTP verify, configure Get Free Seeds display name and approvals, create least-privilege token, set secrets, register callback/public key, publish Flow/templates, record IDs, run live WhatsApp/CAPI/E2E tests, and only then consider campaign activation. Do not claim completion without authenticated dashboard evidence.
 
 ## Ordered Implementation
 

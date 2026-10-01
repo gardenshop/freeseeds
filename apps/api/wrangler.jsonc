@@ -11,5 +11,5 @@
     "producers": [{ "binding": "EVENTS", "queue": "getfreeseeds-events-staging" }],
     "consumers": [{ "queue": "getfreeseeds-events-staging", "max_batch_size": 10, "max_batch_timeout": 5, "max_retries": 5, "dead_letter_queue": "getfreeseeds-events-staging-dlq" }]
   },
-  "vars": { "DEPLOYMENT_STATE": "WHATSAPP_NUMBER_PENDING", "WHATSAPP_PROVIDER": "mock", "META_PROVIDER_ENABLED": "false" }
+  "vars": { "DEPLOYMENT_STATE": "WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING", "WHATSAPP_PROVIDER": "mock", "META_PROVIDER_ENABLED": "false" }
 }

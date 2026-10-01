@@ -1,5 +1,30 @@
 # Changelog
 
+## Unreleased - 2026-09-28 (GFS-14)
+
+- Added a permanent Chrome DevTools MCP self-recovery protocol covering configuration, process/log/port diagnostics, bridge restart, existing-profile preservation, and proof requirements.
+- Recovered and verified the local MCP bridge: Codex/Kilo configuration is present, Chrome `DevToolsActivePort` is live, the existing Default profile is `gisupp@gmail.com`, and fresh Codex MCP `list_pages` returned the existing WhatsApp/Meta tabs.
+- Recorded that the active session's static tool registry still requires a fresh MCP-enabled Codex execution; no Meta mutation, secret, OTP, or live integration claim was made.
+- Fresh MCP audit completed read-only: existing WhatsApp/Meta tabs were inspected, prohibited Garden Shop context `568026370701542` / ad account `1198439777611633` was confirmed, staging challenge was `Forbidden`, and no number or asset was mutated.
+- GFS-15 read-only Creeper Seeds audit found the matching `creeper seeds` ad account (`1198439777611633`) inside prohibited Garden Shop/Hoja portfolio `568026370701542`; the context was excluded and no Meta asset or number was mutated.
+- GFS-15 Cloudflare identity check redirected to login as `nazimsaeed@gmail.com` instead of required `gisupp@gmail.com`; deployment and secrets remained untouched.
+- GFS-16 enforced service-specific identities: Meta login uses `ayesha.butt55@hotmail.com`; Cloudflare/GitHub/admin remain `gisupp@gmail.com`. Meta email was accepted after logout, but password authentication is pending; no asset mutation occurred.
+- GFS-17 authenticated Cloudflare visibly as `gisupp@gmail.com` in clean account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, redeployed staging API version `8daa6dc6-6f56-45a2-b7b9-734a146a6156`, and verified new health gating. Webhook challenge/POST remain intentionally gated until Meta secrets and clean WABA exist.
+- GFS-19 verified the Meta blocker without retrying unchanged login: visible Facebook identity is Saeed A Nazim, Ayesha authentication remains `META_AUTH_PASSWORD_REQUIRED`, browser autofill supplied no credential, and no Meta asset changed.
+- GFS-20 repaired the dependency audit gate by refreshing locked Wrangler/Miniflare/Undici resolutions; post-repair tests (18/18), build, lint, and audit pass with 0 vulnerabilities.
+
+## Unreleased - 2026-09-28 (GFS-13)
+
+- Audited Git facts: origin/main `aa673e7`, active branch `codex/gfs-whatsapp-prod-004` at `0a52ef3`, PR #4 open and mergeable.
+- Corrected stale documentation that said the authorized number was not provided.
+- Verified Chrome DevTools MCP is unavailable in the exposed tool set; no Meta/Cloudflare mutation, OTP attempt, secret change, or live integration claim was made.
+
+## Unreleased - 2026-09-28
+
+- Recorded explicit authorization of `+923328883383` for Get Free Seeds / Free Seeds In Pakistan WhatsApp Business Platform onboarding and controlled integration testing.
+- Replaced the old `WHATSAPP_NUMBER_PENDING` governance state with `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING` while retaining zero Hoja runtime dependency and payment safety locks.
+- Recorded Page ID `101192938541236`, clean-asset onboarding requirements, and the unavailable Chrome DevTools MCP external-evidence gate; no Meta mutation or secret was performed.
+
 ## Unreleased - 2026-09-27
 
 - Superseded existing-number assumption with a mandatory new WhatsApp number supplied later by the user.
