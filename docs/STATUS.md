@@ -54,6 +54,7 @@
 - GFS-17 staging checks: `/health` PASS with `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING` and `disabled-until-meta-onboarding`; webhook challenge returned 403 because no verify secret is configured; POST returned expected 503 while Meta remains disabled. No Meta secret or callback mutation occurred.
 - GFS-19 read-only Meta verification: visible Facebook identity remains Saeed A Nazim, not `ayesha.butt55@hotmail.com`; exact gate is `META_AUTH_PASSWORD_REQUIRED`. Safe browser/password-manager autofill was not available, no password was read or entered, and no Meta asset was touched.
 - GFS-20 quality gate: initial `npm ci` exposed 3 dependency vulnerabilities; `npm audit fix` updated the locked Wrangler/Miniflare/Undici packages, then tests (18/18), build, lint, and audit all passed with 0 vulnerabilities. No application source changed.
+- GFS-20 Git stabilization: PR #4 merged into `main` as `c46ea1f`; fresh local branch `codex/gfs-meta-live-005` was created from that merged main. The merged branch is no longer used for development.
 
 ## GFS-14 MCP Recovery Evidence
 
@@ -71,7 +72,7 @@
 
 - Local MCP and direct WebSocket MCP are proven working. Cloudflare identity is now PASS; remaining gates are Ayesha Facebook password authentication, clean Meta ownership, Meta onboarding, and webhook secrets/provider enablement. No token, OTP, Meta mutation, or real WhatsApp E2E result is claimed.
 - GFS-16 current gate: Facebook is at “Log into Facebook” for `ayesha.butt55@hotmail.com`; password is required and was not entered. Ayesha authentication, clean portfolio verification, Meta onboarding, and Cloudflare correction remain pending.
-- GFS-19 current gate: Meta remains `META_AUTH_PASSWORD_REQUIRED`; do not retry unchanged authentication. Cloudflare identity remains PASS and staging is deployed but Meta-disabled.
+- GFS-19/GFS-20 current gate: Meta remains `META_AUTH_PASSWORD_REQUIRED`; do not retry unchanged authentication. Cloudflare identity remains PASS and staging is deployed but Meta-disabled.
 
 ## Next Action
 

@@ -12,6 +12,7 @@
 - GFS-17 authenticated Cloudflare visibly as `gisupp@gmail.com` in clean account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, redeployed staging API version `8daa6dc6-6f56-45a2-b7b9-734a146a6156`, and verified new health gating. Webhook challenge/POST remain intentionally gated until Meta secrets and clean WABA exist.
 - GFS-19 verified the Meta blocker without retrying unchanged login: visible Facebook identity is Saeed A Nazim, Ayesha authentication remains `META_AUTH_PASSWORD_REQUIRED`, browser autofill supplied no credential, and no Meta asset changed.
 - GFS-20 repaired the dependency audit gate by refreshing locked Wrangler/Miniflare/Undici resolutions; post-repair tests (18/18), build, lint, and audit pass with 0 vulnerabilities.
+- GFS-20 merged PR #4 into main at `c46ea1f` after local validation and created fresh branch `codex/gfs-meta-live-005` for any future Meta work.
 
 ## Unreleased - 2026-09-28 (GFS-13)
 

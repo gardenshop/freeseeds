@@ -44,6 +44,7 @@
 - Initial `npm ci` exposed 3 dependency vulnerabilities. `npm audit fix` refreshed lockfile-only Wrangler/Miniflare/Undici resolutions.
 - Post-repair: tests 18/18 PASS, build PASS, lint PASS, audit PASS with 0 vulnerabilities. No application source changed.
 - PR #4 remains open pending merge; Meta authentication remains `META_AUTH_PASSWORD_REQUIRED`.
+- PR #4 is now merged into `main` at `c46ea1f`; fresh branch `codex/gfs-meta-live-005` was created locally from merged main. No development continues on the merged branch.
 
 ## GFS-13-META-LIVE-ONBOARD Execution Update — 2026-09-28
 
