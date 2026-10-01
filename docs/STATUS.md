@@ -49,7 +49,7 @@
 - Production D1 `02b707df-a10c-4645-9516-a2a4541f6fab`, private R2, Queue `9b1852f6976343de8bec95ef2cf152a4`, and DLQ `0313fc16837d41bdb8370cf8fe31c969` exist in the clean account; migrations 0001/0002 applied and payment methods verified disabled. Production Workers, Access, secrets, and callbacks remain gated.
 - GFS-12 local verification after the authorized-number state/config update: `npm ci`, `npm test` (18/18), `npm run build`, `npm run lint`, and `npm audit` all pass; no deployment was attempted because external dashboard evidence is unavailable.
 - GFS-13/GFS-15/GFS-17/GFS-19/GFS-20 Git audit: active branch `codex/gfs-whatsapp-prod-004` at `90c4c5f`, origin/main at `aa673e7`, PR #4 open and mergeable. No Meta mutation was attempted; Cloudflare staging redeploy was verified.
-- GFS-21 Git audit: active branch `codex/gfs-meta-live-005` at `52c6d96`, origin/main at `c46ea1f`; PR #4 is merged and no development continues on the old branch.
+- GFS-21/GFS-22 Git audit: active branch `codex/gfs-meta-live-005` at `fb3d25c`, origin/main at `c46ea1f`; PR #5 open and mergeable.
 - GFS-16 identity separation: Meta session was logged out from Saeed A Nazim/Garden Shop and reached Facebook login with `ayesha.butt55@hotmail.com` accepted; password authentication is the exact remaining gate. No Meta asset changed. Cloudflare/GitHub sessions were not touched.
 - GFS-17 Cloudflare authentication passed visibly as `gisupp@gmail.com` in clean Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; current staging API Worker deployed as version `8daa6dc6-6f56-45a2-b7b9-734a146a6156`.
 - GFS-17 staging checks: `/health` PASS with `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING` and `disabled-until-meta-onboarding`; webhook challenge returned 403 because no verify secret is configured; POST returned expected 503 while Meta remains disabled. No Meta secret or callback mutation occurred.
@@ -76,6 +76,7 @@
 - GFS-16 current gate: Facebook is at “Log into Facebook” for `ayesha.butt55@hotmail.com`; password is required and was not entered. Ayesha authentication, clean portfolio verification, Meta onboarding, and Cloudflare correction remain pending.
 - GFS-19/GFS-20 current gate: Meta remains `META_AUTH_PASSWORD_REQUIRED`; do not retry unchanged authentication. Cloudflare identity remains PASS and staging is deployed but Meta-disabled.
 - GFS-21 discovery confirms no clean Creeper Seeds portfolio/Page/WABA/App/dataset was verified. Ayesha authentication remains required before clean ownership can be assessed; no Meta asset was mutated.
+- GFS-22 preserved the current Saeed A Nazim session and inspected existing Chrome profiles/tabs read-only. Profiles included `gisupp@gmail.com`, `hafizasadkk7@gmail.com`, `wpaistudio@gmail.com`, and `nazimsaeed@gmail.com`; no authenticated or saved Ayesha context was found. Exact gate remains `META_AUTH_PASSWORD_REQUIRED`; no logout, switch, new profile, credential entry, or asset mutation occurred.
 
 ## Next Action
 
