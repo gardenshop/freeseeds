@@ -103,6 +103,13 @@
 - New WABA: **BLOCKED**. Get Free Seeds / Food and Grocery form reached; reCAPTCHA checkbox completed without image challenge, but Continue stayed disabled and no WABA ID was generated.
 - STOP_GATE: `META_RECAPTCHA_REQUIRED`. No number, OTP, token, Cloudflare, payment, or Hoja mutation occurred.
 
+## GFS-32-DISPLAY-NAME-ONLY-WHATSAPP Execution Update — 2026-10-02
+
+- Display-name-only: **BLOCKED**. Selected `Use a display name only`; display name target `Free Seeds`; did not select `Add a new number`.
+- Meta returned: **Business reached maximum allowed WhatsApp Number limit** and required additional business/display-name review.
+- Capacity inventory: excluded Hoja WABA `810731151319635` contains only active connected Hoja Seeds number `+92 313 4799681` with High quality. No unused/unknown number was safe to delete.
+- STOP_GATE: `META_WHATSAPP_NUMBER_LIMIT_REACHED`. No destructive deletion, WABA, display name, Page/App linkage, token, Cloudflare, or payment mutation occurred.
+
 ## GFS-13-META-LIVE-ONBOARD Execution Update — 2026-09-28
 
 - Overall: 71%; Remaining: 29%.

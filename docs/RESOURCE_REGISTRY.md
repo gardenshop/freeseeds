@@ -75,6 +75,8 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - GFS-29 Page linkage: target Page `101192938541236` Connected Assets panel showed none. Visible WhatsApp account list contained only Hoja/Garden Shop entries; no clean WABA or Page-to-WhatsApp connection was available. No Page, WABA, number, App, or token mutation occurred.
 - GFS-30 new App: `2354726831735899` / `Get Free Seeds`, owned under canonical Portfolio `568026370701542`, WhatsApp customer-connection use case; no WABA/Phone Number ID yet.
 - GFS-31 WABA creation: form `Get Free Seeds` / Food and Grocery reached; reCAPTCHA checkbox completed, Continue remained disabled, no WABA ID/Phone Number ID generated. STOP_GATE=`META_RECAPTCHA_REQUIRED`.
+- GFS-32 display-name-only: Meta selected path but returned maximum allowed WhatsApp Number limit and additional business/display-name review. No new WABA/display name/Phone Number ID.
+- GFS-32 existing Hoja WABA inventory: `810731151319635` / Hoja Seeds / Garden Shop; visible number `+92 313 4799681`, display name Hoja Seeds, Connected, High quality. Active Hoja asset; never delete. No unused/unknown numbers visible.
 - GFS-26 branch: `codex/gfs-meta-clean-007` from `origin/main` `a4ac98c`; pending evidence PR.
 - Meta support case: not created; no case ID available
 - Flow ID: not published; repository definition only

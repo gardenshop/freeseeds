@@ -5,6 +5,7 @@
 - Public brand: Get Free Seeds.
 - Operational merchant and payment recipient: Garden Shop.
 - Customer identity: Get Free Seeds / Free Seeds In Pakistan.
+- Current WhatsApp launch display name: `Free Seeds` (display-name-only path is preferred and does not require phone onboarding unless Meta later requires it).
 - Customer-facing Page: `https://www.facebook.com/FreeSeedsPK/` (Page ID `101192938541236`); it is not a runtime dependency until clean Meta ownership is verified.
 - Designated Meta/advertising/WhatsApp ownership context: `Creeper Seeds`.
 - Current authenticated Saeed A Nazim Meta session is authorized as the operator for creating/managing the new clean Creeper Seeds context. `ayesha.butt55@hotmail.com` remains historical/intended ownership context, but Ayesha authentication is not a prerequisite when the working Meta session exposes the required clean, non-Hoja authority. Do not force logout/login solely to match the intended email.
@@ -32,14 +33,14 @@
 ## WhatsApp Number Lock
 
 - Customer-facing WhatsApp identity: Get Free Seeds.
-- Production number: `+923328883383` (explicitly authorized by the user for WhatsApp Business Platform/Cloud API onboarding and controlled integration testing).
-- Current state: `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING`.
+- Authorized number: `+923328883383`; currently deferred and not a launch dependency while the supported display-name-only path is active.
+- Current state: `WHATSAPP_NUMBER_DEFERRED_DISPLAY_NAME_ONLY`.
 - Production must not use any existing, Hoja Seeds, Garden Shop, temporary, or other phone number.
 - Do not locate, migrate, register, connect, or use any existing, Hoja-linked, or old Garden Shop number or WABA.
 - The known Meta test number `+1 555-897-9372` and every Hoja-linked test asset remain prohibited.
 - `STAGING_WABA_TEST_ALLOWED`: a Meta-provided test WABA/test number may be used only when its visible ownership is independently verified as clean Get Free Seeds, only for staging synthetic data, staging webhook/Flow/messages, and Meta test events. It must never receive real customers, real payments, production events, or ad spend.
-- The authorized number remains blocked from runtime use until clean Meta ownership, OTP/verification, and least-privilege credentials are independently verified.
-- Do not publish production templates/Flow, register production callbacks, send real WhatsApp messages, or create/reuse production tokens before the new number and clean WABA onboarding gates pass.
+- Do not force phone-number onboarding while the verified display-name-only path works. If Meta later requires a phone number, resume the authorized-number OTP/verification gate before runtime use.
+- Display-name-only runtime still requires a new GFS WABA/App, least-privilege credentials, approved Flow/templates, registered callbacks, and verified CAPI before real traffic.
 - Creeper Seeds may be used only for the authorized Free Seeds In Pakistan Page/number integration. Unrelated Hoja assets visible inside that context remain excluded and must not become runtime dependencies.
 
 ## Platform
