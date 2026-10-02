@@ -8,6 +8,7 @@
 - GFS-27 recorded the explicit Meta-only exception: canonical Portfolio `568026370701542`, Ad Account `1198439777611633`, and verified Page `101192938541236`. Existing Hoja App `1065866162865361` was excluded; no Meta mutation occurred.
 - GFS-27 setup reached the canonical Meta root but stopped at `META_REAUTH_PASSWORD_REQUIRED` before creating App/WABA/number; existing Hoja WABA `810731151319635` was excluded.
 - GFS-29 inspected the verified Free Seeds Page first: Connected Assets was empty and all visible WhatsApp accounts were Hoja/Garden Shop entries. No clean linkage or mutation occurred; Meta reauth remains required for new GFS App/WABA setup.
+- GFS-30 created new App `2354726831735899` / `Get Free Seeds` with WhatsApp use case under canonical root. WABA creation did not complete because Meta tab control became unresponsive; Hoja App/WABA remained untouched.
 
 ## Unreleased - 2026-09-28 (GFS-14)
 
