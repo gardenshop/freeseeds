@@ -7,7 +7,7 @@
 - Customer identity: Get Free Seeds / Free Seeds In Pakistan.
 - Customer-facing Page: `https://www.facebook.com/FreeSeedsPK/` (Page ID `101192938541236`); it is not a runtime dependency until clean Meta ownership is verified.
 - Designated Meta/advertising/WhatsApp ownership context: `Creeper Seeds`.
-- Facebook/Meta account for the clean Creeper Seeds context: `ayesha.butt55@hotmail.com` only.
+- Current authenticated Saeed A Nazim Meta session is authorized as the operator for creating/managing the new clean Creeper Seeds context. `ayesha.butt55@hotmail.com` remains historical/intended ownership context, but Ayesha authentication is not a prerequisite when the working Meta session exposes the required clean, non-Hoja authority. Do not force logout/login solely to match the intended email.
 - Cloudflare, GitHub, and Get Free Seeds admin account: `gisupp@gmail.com` only.
 - Never use `ayesha.butt55@hotmail.com` for Cloudflare/GitHub, and never use `gisupp@gmail.com` as the intended Meta owner for this new clean setup.
 - Creeper Seeds is authorized for Get Free Seeds advertising, Click-to-WhatsApp campaigns, WhatsApp Business Platform/WABA, Meta App, system user/token ownership, Page/WhatsApp linkage, and CAPI/event-source integration.
@@ -84,9 +84,11 @@ Expected state for this phase: `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING`.
 
 ## Browser Automation Protocol
 
-- Always use Chrome DevTools MCP with the service-specific authenticated browser profile/session: `ayesha.butt55@hotmail.com` for Meta/Facebook, and `gisupp@gmail.com` for Cloudflare, GitHub, and Get Free Seeds admin.
+- Always use Chrome DevTools MCP with the current authenticated Meta/Facebook session for Meta work (currently Saeed A Nazim), and `gisupp@gmail.com` for Cloudflare, GitHub, and Get Free Seeds admin. The same human operator may administer multiple businesses, but GFS must share zero Hoja runtime/business assets.
 - Never cross-use the Meta identity for Cloudflare/GitHub or the Cloudflare/GitHub identity for intended Meta ownership.
 - Verify the visible active account/profile before every external mutation and record the result.
+- First call Chrome DevTools MCP `list_pages`, then inspect every already-open Facebook/Meta/Business Suite/Ads Manager/WhatsApp Manager/Developer tab before navigating to login or creating a context.
+- Authentication is established by the working authenticated page and actual clean asset access; do not treat a forced email login screen as a prerequisite when the current session has verified clean authority.
 - Never log out an already authenticated useful Meta session merely to switch accounts; use the current authenticated session for read-only asset discovery first.
 - Switch/login only when the required clean asset cannot be accessed from the current session, and stop at the exact permission/authentication gate rather than repeatedly retrying.
 - Reuse the already-open tab for the same service, task, or page. Do not open a new tab for every sub-step.
