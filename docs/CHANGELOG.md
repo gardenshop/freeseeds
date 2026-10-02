@@ -12,6 +12,7 @@
 - GFS-31 restored Meta tab control with MCP 1.10.1; WABA form/reCAPTCHA was attempted safely, but Continue remained disabled after checkbox completion. No WABA/number or prohibited asset changed.
 - GFS-32 selected display-name-only `Free Seeds` without adding a number; Meta returned the explicit WhatsApp Number limit and additional review requirement. Inventory found only active connected Hoja Seeds number `+92 313 4799681`; no deletion performed.
 - GFS-33 resolved the quota diagnosis: existing GFS WABA `2616648355452496` is Approved/business verified with 2,000 new conversations/day and no phone numbers. Page/App Connect assets remained unlinked because connector UIDs were unavailable for safe MCP mutation; no Hoja asset changed.
+- GFS-34 repaired MCP targeting and reacquired live Page/App Connect controls. Choosers lacked canonical Page/WABA/App assets, so no linkage or Hoja mutation occurred.
 
 ## Unreleased - 2026-09-28 (GFS-14)
 
