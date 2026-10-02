@@ -1,3 +1,4 @@
+import { createLeadEvent } from "./capi";
 import { FlowSubmission, normalizeContactNumber } from "./domain";
 
 export function parseFlowSubmission(input: unknown): FlowSubmission {
@@ -15,7 +16,8 @@ export async function persistFlowSubmission(db: D1Database, submission: FlowSubm
   const correlationId = crypto.randomUUID();
   const addressHash = await digestText(`${submission.deliveryAddress.trim().toLowerCase()}|${submission.city.trim().toLowerCase()}`);
   const orderNumber = await allocateOrderNumber(db, "FREE_SEEDS");
-  const leadEventId = `lead_${orderNumber}`;
+  const leadEvent = createLeadEvent(orderNumber, attribution);
+  const leadEventId = leadEvent.eventId;
   const outboxId = crypto.randomUUID();
   await db.batch([
     db.prepare("INSERT INTO customers (id,wa_id,full_name,delivery_address,nearby_place,city,contact_number,normalized_phone,normalized_address_hash,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)").bind(customerId, null, submission.fullName, submission.deliveryAddress, submission.nearbyPlace, submission.city, submission.contactNumber, submission.contactNumber, addressHash, now, now),
@@ -24,7 +26,7 @@ export async function persistFlowSubmission(db: D1Database, submission: FlowSubm
     db.prepare("INSERT INTO leads (id,customer_id,order_id,status,capi_event_id,created_at) VALUES (?,?,?,?,?,?)").bind(leadId, customerId, orderId, "CREATED", leadEventId, now),
     db.prepare("INSERT INTO meta_attribution (id,order_id,customer_id,ctwa_clid,campaign_id,ad_set_id,ad_id,minimized_referral_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(attributionId, orderId, customerId, attribution?.ctwaClid ?? null, attribution?.campaignId ?? null, attribution?.adSetId ?? null, attribution?.adId ?? null, attribution ? JSON.stringify(attribution) : null, now),
     db.prepare("INSERT INTO capi_events (id,event_id,event_name,order_id,customer_id,send_status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), leadEventId, "Lead", orderId, customerId, "PENDING", now, now),
-    db.prepare("INSERT INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(outboxId, leadEventId, "CAPI_LEAD", orderId, JSON.stringify({ eventId: leadEventId, orderNumber }), "PENDING", now, now, now),
+    db.prepare("INSERT INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(outboxId, leadEventId, "CAPI_LEAD", orderId, JSON.stringify(leadEvent), "PENDING", now, now, now),
     db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "FLOW_SUBMITTED", "CUSTOMER", "ORDER", orderId, correlationId, JSON.stringify({ orderNumber }), now)
   ]);
   return { customerId, leadId, orderId, orderNumber };

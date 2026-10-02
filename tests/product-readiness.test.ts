@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { MetaWhatsAppProvider, MetaCapiProvider, formatPaymentMessage, isPaymentMethodComplete, isTerminalOutboxStatus, paymentInstructions, retryDelaySeconds, selectPaymentMethod, shouldDeadLetter, storePaymentQr, storeReceipt, validatePaymentQr } from "@gfs/core";
+import { MetaWhatsAppProvider, MetaCapiProvider, formatPaymentMessage, isPaymentMethodComplete, isTerminalOutboxStatus, parseWebhookRecords, paymentInstructions, retryDelaySeconds, selectPaymentMethod, shouldDeadLetter, storePaymentQr, storeReceipt, validatePaymentQr } from "@gfs/core";
 
 describe("product readiness safeguards", () => {
   it("verifies Meta signatures and keeps the disabled provider closed", async () => {
@@ -21,6 +21,15 @@ describe("product readiness safeguards", () => {
     const events = provider.parseInboundEvent({ entry: [{ changes: [{ value: { messages: [{ id: "synthetic-message", from: "synthetic-user", type: "text", referral: { ctwa_clid: "synthetic-ctwa" } }] } }] }] });
     expect(events[0]).toMatchObject({ id: "synthetic-message", referral: { ctwaClid: "synthetic-ctwa" } });
     expect(provider.parseInboundEvent({ entry: [] })).toEqual([]);
+  });
+
+  it("classifies inbound messages, media, and statuses without storing payloads", () => {
+    const records = parseWebhookRecords({ entry: [{ changes: [{ value: { messages: [{ id: "synthetic-message", type: "text" }, { id: "synthetic-media", type: "image", image: { id: "synthetic-media" } }], statuses: [{ id: "synthetic-status", status: "delivered" }] } }] }] });
+    expect(records).toEqual([
+      { providerEventId: "message:synthetic-message", eventType: "MESSAGE", status: "RECEIVED" },
+      { providerEventId: "message:synthetic-media", eventType: "MEDIA", status: "RECEIVED" },
+      { providerEventId: "status:synthetic-status", eventType: "STATUS", status: "delivered" }
+    ]);
   });
 
   it("uses bounded retry and DLQ decisions", () => {

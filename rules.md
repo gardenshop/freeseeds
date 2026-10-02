@@ -42,6 +42,8 @@
 - Do not force phone-number onboarding while the verified display-name-only path works. If Meta later requires a phone number, resume the authorized-number OTP/verification gate before runtime use.
 - Display-name-only runtime still requires a new GFS WABA/App, least-privilege credentials, approved Flow/templates, registered callbacks, and verified CAPI before real traffic.
 - Creeper Seeds may be used only for the authorized Free Seeds In Pakistan Page/number integration. Unrelated Hoja assets visible inside that context remain excluded and must not become runtime dependencies.
+- Canonical Meta assets for this phase are Business `568026370701542`, Ad Account `1198439777611633`, Page `101192938541236`, App `2354726831735899`, and approved WABA `2616648355452496`; Hoja App `1065866162865361`, Hoja WABA `810731151319635`, and all Hoja numbers remain excluded.
+- The generic Page/App `Connect assets` chooser is not assumed to be the WhatsApp integration mechanism. Verify App WhatsApp API Setup/WABA subscription and WABA assigned-app surfaces before mutating assets.
 
 ## Platform
 

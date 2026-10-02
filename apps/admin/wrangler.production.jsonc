@@ -7,5 +7,6 @@
   "workers_dev": true,
   "d1_databases": [{ "binding": "DB", "database_name": "getfreeseeds-prod", "database_id": "02b707df-a10c-4645-9516-a2a4541f6fab" }],
   "r2_buckets": [{ "binding": "RECEIPTS", "bucket_name": "getfreeseeds-receipts-prod" }],
+  "queues": { "producers": [{ "binding": "EVENTS", "queue": "getfreeseeds-events-prod" }] },
   "vars": { "DEPLOYMENT_STATE": "WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING", "ADMIN_EMAIL": "gisupp@gmail.com" }
 }

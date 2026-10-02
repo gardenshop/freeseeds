@@ -46,14 +46,15 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Page ID: `101192938541236` / `Free Seeds In Pakistan - www.gardenshop.pk`; visible under canonical Meta root with Saeed Nazim full access and 0 partners
 - Canonical Meta Business Portfolio (explicit Meta-only exception): `568026370701542` / UI name `Garden Shop`; unrelated Hoja assets remain excluded
 - Canonical Creeper Seeds Ad Account (explicit Meta-only exception): `1198439777611633` / UI name `creeper seeds`
-- Clean WABA ID: not provisioned
+- Canonical App: `2354726831735899` / `Get Free Seeds` (WhatsApp customer-connection use case)
+- Canonical WABA: `2616648355452496` / `Get Free Seeds` (Approved; business verified; 2,000 new conversations/day; no phone numbers)
 - Authorized WhatsApp number: `+923328883383`
-- Number registration status: authorized; onboarding/OTP/ownership verification pending
+- Number registration status: deferred; display-name-only path is preferred while Meta permits it
 - Phone Number ID: not yet returned by Meta
-- Clean staging WABA test: not yet configured; no ID placeholder is recorded
+- Clean staging WABA test: not configured; no separate staging WABA/test number is used
 - Clean staging test Phone Number ID: not yet configured; no ID placeholder is recorded
 - Clean staging test recipient: not configured; synthetic-only use required
-- Clean staging Meta gate: authenticated Meta UI exposes Hoja-linked active portfolio/assets and reports the business portfolio creation limit; no existing portfolio/WABA/app was selected
+- App↔WABA subscription: not independently verified; generic Connect-assets chooser did not expose the canonical WABA and no indirect mutation was attempted
 - Excluded candidate portfolio: `Garden Shop OK` / `1154400188565490`; visible business overview contains Hoja Seeds ad account `120233855869140541`, so it is not clean and is not used
 - GFS-14 read-only Meta audit: visible Ads Manager context was prohibited Garden Shop portfolio `568026370701542` with ad account `1198439777611633`; no clean Get Free Seeds ownership was verified and no asset was mutated
 - Designated Meta context per user: `Creeper Seeds`; clean ownership status: **NOT VERIFIED / PROHIBITED CONTEXT OBSERVED**
@@ -77,8 +78,8 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - GFS-31 WABA creation: form `Get Free Seeds` / Food and Grocery reached; reCAPTCHA checkbox completed, Continue remained disabled, no WABA ID/Phone Number ID generated. STOP_GATE=`META_RECAPTCHA_REQUIRED`.
 - GFS-32 display-name-only: Meta selected path but returned maximum allowed WhatsApp Number limit and additional business/display-name review. No new WABA/display name/Phone Number ID.
 - GFS-32 existing Hoja WABA inventory: `810731151319635` / Hoja Seeds / Garden Shop; visible number `+92 313 4799681`, display name Hoja Seeds, Connected, High quality. Active Hoja asset; never delete. No unused/unknown numbers visible.
-- GFS-33 new GFS WABA: `2616648355452496` / Get Free Seeds; Approved, business verified, 2,000 new conversations/day, no phone numbers, no partners, display name shown upon approval. Page `101192938541236` and App `2354726831735899` currently show Connect assets with no verified linkage; connector UID unavailable for safe mutation.
-- GFS-34 linkage verification: Page Connect assets chooser exposed only Instagram; App Connect assets chooser exposed only Other business assets; canonical Page/WABA/App options were absent. Page↔WABA and App↔WABA remain unlinked; no mutation occurred.
+- GFS-33 canonical GFS WABA: `2616648355452496` / Get Free Seeds; Approved, business verified, 2,000 new conversations/day, no phone numbers, no partners, display name shown upon approval. App `2354726831735899` is canonical; App↔WABA subscription remains unverified.
+- GFS-34 linkage verification: Page Connect assets chooser exposed only Instagram; App Connect assets chooser exposed only Other business assets; canonical Page/WABA/App options were absent. The chooser is not treated as the WhatsApp integration mechanism; App API Setup/WABA subscription remains the required verification surface.
 - GFS-26 branch: `codex/gfs-meta-clean-007` from `origin/main` `a4ac98c`; pending evidence PR.
 - Meta support case: not created; no case ID available
 - Flow ID: not published; repository definition only

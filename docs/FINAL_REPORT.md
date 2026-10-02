@@ -217,3 +217,26 @@ This report covers the WABA staging test preparation phase. No WhatsApp number, 
 - Remaining: 29%, consisting of clean WABA access, verified payment values, authorized-number Meta onboarding, live CAPI/WhatsApp E2E, and paid-ad authorization. Remote CI billing remains a non-blocking external gate; Chrome DevTools MCP is restored.
 
 Next single action: obtain a clean Meta WABA test context or submit a Meta support request through an authenticated support form, without selecting existing Hoja-linked assets.
+
+## GFS-35-APP-APPROVED-WABA-WEBHOOK-FLOW Execution Update - 2026-10-02
+
+- Overall: **76%**. Remaining: **24%**.
+- App `2354726831735899`: **PASS**, canonical Get Free Seeds App with WhatsApp customer-connection use case.
+- WABA `2616648355452496`: **PASS**, canonical Get Free Seeds WABA; Approved/business verified, 2,000 new conversations/day, no phone numbers.
+- App -> WABA subscription: **FAIL/UNVERIFIED**. Method not claimed; generic Connect-assets chooser is explicitly not assumed to be the WhatsApp path. Required App WhatsApp API Setup/WABA subscription and WABA assigned-app surfaces were not completed because the active MCP bridge stopped responding after the initial `list_pages` inventory.
+- Page `101192938541236` role: canonical Free Seeds Facebook identity and CTWA entry Page under the authorized Meta root; no Page -> WABA direct dependency is established.
+- Direct Page -> WABA link required: **UNKNOWN**, and not a launch blocker under the current rules unless Meta explicitly requires it for the intended CTWA setup.
+- Display-name-only sender: **BLOCKED/UNVERIFIED**. WABA approval shows the display name, but live sender capability has not been proven; `+923328883383` remains **DEFERRED**.
+- Webhook challenge: **FAIL/EXPECTED GATED**. Staging returns 403 because no verify secret is configured.
+- WABA subscription: **FAIL/UNVERIFIED**.
+- Inbound/status/media: **CODE READY, LIVE NOT RUN**. Signed webhook records now classify and persist message/media/status event hashes; live callback and media download remain untested.
+- Flow: **PASS REPOSITORY-ONLY**. Exact five fields remain defined and durable order persistence is wired; publication/real submission is pending Meta verification.
+- CAPI Lead/Purchase: **CODE PASS, LIVE BLOCKED**. Lead is enqueued after durable Flow persistence; Purchase is enqueued only after admin payment approval; Meta send remains disabled without event-source credentials.
+- Real E2E: **BLOCKED**. No real customer, payment, paid campaign, OTP, or Hoja number was used.
+- Cloudflare: **PASS** for identity and disabled-safe staging deployment. Account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API/admin versions `2890c42d-aec9-4a97-bee4-9e641a7009a5` / `f4d9b765-d878-4eeb-983c-3e6a04070be2`.
+- Tests: **PASS**. `npm test` 19/19, `npm run build`, `npm run lint`, `npm audit --audit-level=high`, four Wrangler dry-runs, and deployed health/challenge/POST probes completed. Admin health without an authenticated browser session correctly stops at Cloudflare Access login.
+- Zero regression: **PASS** for local and disabled-safe staging checks.
+- Git: branch `codex/gfs-meta-clean-007`; pre-change head `b08c7d7`; PR #7 remains open/mergeable. Local code/docs changes are not yet committed or pushed.
+- STOP_GATE: `META_MCP_TOOL_CALL_UNRESPONSIVE_AFTER_LIST_PAGES`; exact external gates remain App/WABA subscription verification, sender capability, callback secrets, Flow/templates, CAPI event source, and real synthetic E2E.
+- Remaining genuine launch gates: supported App -> WABA subscription; sender/phone requirement decision; Meta webhook/WABA subscription; verify/app secrets and least-privilege token; Flow/template publication; CAPI event source and live send; Garden Shop payment recipient values; real synthetic E2E; explicit paid-ad authorization.
+- Next highest-value action: resume in a fresh MCP-enabled session and inspect App WhatsApp API Setup/WABA subscription plus WABA assigned apps, then make only the supported GFS App -> WABA mutation after visible Saeed identity verification.

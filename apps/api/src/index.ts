@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { createWhatsAppProvider, isTerminalOutboxStatus, parseFlowSubmission, PaymentMethod, persistFlowSubmission, retryDelaySeconds, selectPaymentMethod, storeReceipt } from "@gfs/core";
+import { createWhatsAppProvider, isTerminalOutboxStatus, MetaCapiProvider, parseFlowSubmission, PaymentMethod, persistFlowSubmission, persistWebhookRecords, retryDelaySeconds, selectPaymentMethod, storeReceipt } from "@gfs/core";
 
 type Env = {
   Bindings: {
@@ -14,6 +14,8 @@ type Env = {
     META_PHONE_NUMBER_ID?: string;
     WEBHOOK_VERIFY_TOKEN?: string;
     META_APP_SECRET?: string;
+    META_CAPI_ENABLED?: string;
+    META_DATASET_ID?: string;
   };
 };
 
@@ -33,15 +35,32 @@ app.post("/webhooks/whatsapp", async (c) => {
   const signature = c.req.header("x-hub-signature-256") ?? null;
   const provider = createWhatsAppProvider("meta", { enabled: true, graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", accessToken: c.env.META_ACCESS_TOKEN, phoneNumberId: c.env.META_PHONE_NUMBER_ID, verifyToken: c.env.WEBHOOK_VERIFY_TOKEN, appSecret: c.env.META_APP_SECRET });
   if (!(await provider.validateSignature(raw, signature, c.env.META_APP_SECRET))) return c.text("Forbidden", 403);
-  return c.json({ accepted: true });
+  let payload: unknown;
+  try {
+    payload = JSON.parse(new TextDecoder().decode(raw));
+  } catch {
+    return c.json({ error: "INVALID_WEBHOOK_JSON" }, 400);
+  }
+  const correlationId = c.req.header("x-correlation-id") ?? crypto.randomUUID();
+  const eventCount = c.env.DB ? await persistWebhookRecords(c.env.DB, payload, raw, correlationId) : 0;
+  return c.json({ accepted: true, eventCount });
 });
 
 app.post("/flows/get-free-seeds", async (c) => {
   const body = await c.req.json<{ data?: unknown; action?: string; screen?: string }>();
   try {
     const submission = parseFlowSubmission(body.data ?? body);
+    const metadata = body as { referral?: unknown; data?: unknown };
+    const referral = metadata.referral && typeof metadata.referral === "object" ? metadata.referral as Record<string, unknown> : undefined;
+    const attribution = referral ? {
+      ctwaClid: typeof referral.ctwa_clid === "string" ? referral.ctwa_clid : undefined,
+      campaignId: typeof referral.campaign_id === "string" ? referral.campaign_id : undefined,
+      adSetId: typeof referral.adset_id === "string" ? referral.adset_id : undefined,
+      adId: typeof referral.ad_id === "string" ? referral.ad_id : undefined
+    } : undefined;
     if (!c.env.DB) return c.json({ screen: "SUBMIT", data: { accepted: true, mode: "mock" } });
-    const result = await persistFlowSubmission(c.env.DB, submission);
+    const result = await persistFlowSubmission(c.env.DB, submission, attribution);
+    if (c.env.EVENTS) await c.env.EVENTS.send({ kind: "CAPI_LEAD", idempotencyKey: `lead_${result.orderNumber}`, entityId: result.orderId, schemaVersion: 1 });
     return c.json({ screen: "SUBMIT", data: { accepted: true, orderNumber: result.orderNumber } });
   } catch (error) {
     return c.json({ error: error instanceof Error ? error.message : "INVALID_FLOW_SUBMISSION" }, 400);
@@ -79,7 +98,7 @@ app.post("/receipts/ingest", async (c) => {
   if (!record) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
   if (!["PAYMENT_PENDING", "RECEIPT_SUBMITTED", "PAYMENT_REVIEW"].includes(record.state)) return c.json({ error: "ORDER_NOT_ACCEPTING_RECEIPT" }, 409);
   try {
-    const media = await createWhatsAppProvider(c.env.WHATSAPP_PROVIDER).downloadMedia(body.mediaId);
+    const media = await createWhatsAppProvider(c.env.WHATSAPP_PROVIDER, { enabled: c.env.META_PROVIDER_ENABLED === "true", graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", accessToken: c.env.META_ACCESS_TOKEN, phoneNumberId: c.env.META_PHONE_NUMBER_ID, verifyToken: c.env.WEBHOOK_VERIFY_TOKEN, appSecret: c.env.META_APP_SECRET }).downloadMedia(body.mediaId);
     const stored = await storeReceipt(c.env.RECEIPTS, record.order_number, media);
     const now = new Date().toISOString();
     await c.env.DB.batch([
@@ -114,6 +133,33 @@ export default {
           await env.DB.prepare("UPDATE outbox_jobs SET status='DEAD_LETTER', attempts=?, last_error=?, updated_at=? WHERE idempotency_key=?").bind(nextAttempt, "MAX_RETRIES_EXCEEDED", new Date().toISOString(), message.body.idempotencyKey).run();
           message.ack();
           continue;
+        }
+        if (message.body.kind === "CAPI_LEAD" || message.body.kind === "CAPI_PURCHASE") {
+          try {
+            const outbox = await env.DB.prepare("SELECT payload_json FROM outbox_jobs WHERE idempotency_key=?").bind(message.body.idempotencyKey).first<{ payload_json: string }>();
+            if (!outbox) { message.ack(); continue; }
+            const event = JSON.parse(outbox.payload_json) as Parameters<MetaCapiProvider["send"]>[0];
+            const response = await new MetaCapiProvider({ enabled: env.META_CAPI_ENABLED === "true", graphVersion: env.META_GRAPH_VERSION ?? "v26.0", datasetId: env.META_DATASET_ID, accessToken: env.META_ACCESS_TOKEN }).send(event);
+            await env.DB.batch([
+              env.DB.prepare("UPDATE capi_events SET send_status='SENT', provider_response_id=?, sent_at=?, updated_at=? WHERE event_id=?").bind(response.responseId ?? null, new Date().toISOString(), new Date().toISOString(), event.eventId),
+              env.DB.prepare("UPDATE outbox_jobs SET status='SENT', attempts=?, last_error=NULL, updated_at=? WHERE idempotency_key=?").bind(nextAttempt, new Date().toISOString(), message.body.idempotencyKey)
+            ]);
+            message.ack();
+            continue;
+          } catch (error) {
+            const failure = error instanceof Error ? error.message.slice(0, 120) : "CAPI_SEND_FAILED";
+            if (nextAttempt >= 5) {
+              await env.DB.batch([
+                env.DB.prepare("UPDATE capi_events SET send_status='FAILED', attempt_count=?, last_error=?, updated_at=? WHERE event_id=?").bind(nextAttempt, failure, new Date().toISOString(), message.body.idempotencyKey),
+                env.DB.prepare("UPDATE outbox_jobs SET status='DEAD_LETTER', attempts=?, last_error=?, updated_at=? WHERE idempotency_key=?").bind(nextAttempt, failure, new Date().toISOString(), message.body.idempotencyKey)
+              ]);
+              message.ack();
+              continue;
+            }
+            await env.DB.prepare("UPDATE outbox_jobs SET status='RETRY', attempts=?, last_error=?, updated_at=? WHERE idempotency_key=?").bind(nextAttempt, failure, new Date().toISOString(), message.body.idempotencyKey).run();
+            message.retry({ delaySeconds: retryDelaySeconds(nextAttempt) });
+            continue;
+          }
         }
         await env.DB.prepare("UPDATE outbox_jobs SET status='RETRY', attempts=?, last_error=?, updated_at=? WHERE idempotency_key=?").bind(nextAttempt, "PROVIDER_NOT_CONFIGURED", new Date().toISOString(), message.body.idempotencyKey).run();
         message.retry({ delaySeconds: retryDelaySeconds(nextAttempt) });

@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { canTransition, OrderState, approvedPurchaseValue, createPurchaseEvent, isPaymentMethodComplete, normalizePaymentMethodRow, paymentInstructions, PaymentMethod, storePaymentQr } from "@gfs/core";
 
-type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string } };
+type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string } };
 const app = new Hono<Env>();
 
 function authorized(c: { req: { header(name: string): string | undefined }; env: Env["Bindings"] }): boolean {
@@ -91,10 +91,10 @@ app.post("/api/payments/:id/approve", async (c) => {
   const body = await c.req.json<{ orderId: string; orderNumber: string; expectedAmount: number; approvedAmount: number; customerId: string }>();
   try {
     const amount = approvedPurchaseValue(body.expectedAmount, body.approvedAmount);
-    const event = createPurchaseEvent(body.orderNumber, amount);
-    if (!c.env.DB) return c.json({ ok: true, simulated: true, event });
-    const current = await c.env.DB.prepare("SELECT p.review_state, o.state FROM payments p JOIN orders o ON o.id = p.order_id WHERE p.id = ? AND o.id = ?").bind(c.req.param("id"), body.orderId).first<{ review_state: string; state: OrderState }>();
+    if (!c.env.DB) return c.json({ ok: true, simulated: true, event: createPurchaseEvent(body.orderNumber, amount) });
+    const current = await c.env.DB.prepare("SELECT p.review_state, o.state, ma.ctwa_clid FROM payments p JOIN orders o ON o.id = p.order_id LEFT JOIN meta_attribution ma ON ma.order_id = o.id WHERE p.id = ? AND o.id = ?").bind(c.req.param("id"), body.orderId).first<{ review_state: string; state: OrderState; ctwa_clid?: string }>();
     if (!current) return c.json({ error: "PAYMENT_NOT_FOUND" }, 404);
+    const event = createPurchaseEvent(body.orderNumber, amount, current.ctwa_clid ? { ctwaClid: current.ctwa_clid } : undefined);
     if (current.review_state === "APPROVED" && current.state === "PAID") return c.json({ ok: true, alreadyApproved: true, eventId: event.eventId });
     if (current.review_state !== "REVIEW" || current.state !== "PAYMENT_REVIEW") return c.json({ error: "PAYMENT_NOT_IN_REVIEW" }, 409);
     const now = new Date().toISOString();
@@ -105,6 +105,7 @@ app.post("/api/payments/:id/approve", async (c) => {
       c.env.DB.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) SELECT ?,?,?,?,?,?,?,?,? FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=? AND o.state='PAID' AND p.id=? AND p.review_state='APPROVED'").bind(crypto.randomUUID(), event.eventId, "CAPI_PURCHASE", body.orderId, JSON.stringify(event), "PENDING", now, now, now, body.orderId, c.req.param("id")),
       c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? FROM orders WHERE id=? AND state='PAID'").bind(crypto.randomUUID(), "PAYMENT_APPROVED", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT", c.req.param("id"), crypto.randomUUID(), JSON.stringify({ orderNumber: body.orderNumber, eventId: event.eventId }), now, body.orderId)
     ]);
+    if (c.env.EVENTS) await c.env.EVENTS.send({ kind: "CAPI_PURCHASE", idempotencyKey: event.eventId, entityId: body.orderId, schemaVersion: 1 });
     return c.json({ ok: true, eventId: event.eventId });
   } catch (error) { return c.json({ error: error instanceof Error ? error.message : "APPROVAL_FAILED" }, 400); }
 });

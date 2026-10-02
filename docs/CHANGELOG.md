@@ -13,6 +13,9 @@
 - GFS-32 selected display-name-only `Free Seeds` without adding a number; Meta returned the explicit WhatsApp Number limit and additional review requirement. Inventory found only active connected Hoja Seeds number `+92 313 4799681`; no deletion performed.
 - GFS-33 resolved the quota diagnosis: existing GFS WABA `2616648355452496` is Approved/business verified with 2,000 new conversations/day and no phone numbers. Page/App Connect assets remained unlinked because connector UIDs were unavailable for safe MCP mutation; no Hoja asset changed.
 - GFS-34 repaired MCP targeting and reacquired live Page/App Connect controls. Choosers lacked canonical Page/WABA/App assets, so no linkage or Hoja mutation occurred.
+- GFS-35 recorded canonical App `2354726831735899` and approved WABA `2616648355452496` as the App/WABA pair; the generic Connect-assets chooser is not treated as the WhatsApp integration mechanism. App API Setup/WABA subscription remains unverified because the active bridge stopped responding after the required initial page inventory.
+- GFS-35 hardened the safe runtime path: signed webhook message/media/status records are persisted as hashed D1 events, Flow attribution is retained, media ingestion preserves the configured provider, and durable Lead/Purchase outbox jobs can send through the guarded Meta CAPI provider. No secrets or live credentials were added.
+- GFS-35 deployed only disabled-safe staging code after `wrangler whoami` verified `gisupp@gmail.com` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API/admin versions are `2890c42d-aec9-4a97-bee4-9e641a7009a5` / `f4d9b765-d878-4eeb-983c-3e6a04070be2`.
 
 ## Unreleased - 2026-09-28 (GFS-14)
 

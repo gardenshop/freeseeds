@@ -3,13 +3,13 @@
 | Area | Required coverage | Status |
 | --- | --- | --- |
 | Governance | authorized number lock, no existing number | PASS |
-| Webhook | challenge, signature, replay boundary, parsing | PASS (live callback deferred) |
+| Webhook | challenge, signature, replay boundary, message/media/status classification and hashed D1 persistence | PASS (live callback deferred) |
 | Flow | exactly five fields, validation, persistence contract | PASS |
 | Orders | FS numbering, concurrency contract, state transitions | PASS |
 | Payments | JazzCash, Easypaisa, Bank Transfer, disabled-safe config, D1 methods | PASS (synthetic; recipient values pending) |
 | Receipts | mock retrieval, invalid media, private R2, checksum, payment review | PASS |
 | Admin | Access, configuration, QR upload/replacement, approve, reject, clearer receipt, fulfillment | PASS (staging routes) |
-| CAPI | Lead/Purchase IDs, approval timing, deduplication, retries | PASS (live send deferred) |
+| CAPI | Lead/Purchase IDs, approval timing, deduplication, queue delivery/retries | PASS (live send deferred) |
 | WhatsApp | provider boundary, authorized number not yet live-enabled | PASS (external onboarding pending) |
 | Isolation | Hoja/Google Sheets/secrets/public receipt scans | PASS |
 | E2E | synthetic referral through delivered | PASS |
@@ -34,3 +34,5 @@
 | GFS-32 display-name-only | select `Free Seeds`, avoid number onboarding, inventory capacity safely | BLOCKED: Meta number limit/additional review; only active Hoja number visible; no deletion |
 | GFS-33 existing GFS WABA | verify quota resolution, approval, Page/App linkage, and phone slots | PARTIAL: WABA `2616648355452496` approved/verified; Page/App unlinked; safe connector UID unavailable |
 | GFS-34 canonical linkage | reacquire Page/App Connect controls and link only canonical assets | BLOCKED: choosers lack canonical Page/WABA/App assets; no mutation |
+| GFS-35 App/WABA supported relationship | inspect App WhatsApp API Setup/WABA subscription and WABA assigned apps | BLOCKED: active MCP bridge stopped responding after initial read-only inventory; no dashboard mutation claimed |
+| GFS-35 staging code path | persist signed webhook records, enqueue Lead/Purchase CAPI, preserve media provider config | PASS: deployed staging API/admin versions `2890c42d-aec9-4a97-bee4-9e641a7009a5` / `f4d9b765-d878-4eeb-983c-3e6a04070be2`; provider remains disabled |
