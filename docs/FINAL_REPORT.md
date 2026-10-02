@@ -187,11 +187,11 @@ This report covers the WABA staging test preparation phase. No WhatsApp number, 
 - CAPI Lead/Purchase live test: deferred until clean Meta assets and new number/WABA exist
 - JazzCash/Easypaisa/Bank: backend-ready and safe-disabled; verified Garden Shop recipient values not supplied
 - Page isolation: pending; no ownership change performed
-- WABA: no connection; no Flow publication/templates/callback/token
-- Clean test WABA: FAIL/PENDING; Meta business-portfolio creation limit blocks creating `Get Free Seeds Test`, and existing portfolios/assets were excluded as ownership was not provably clean
+- WABA: canonical approved WABA `2616648355452496`; App subscription and callback/WABA subscription remain unverified; no Flow publication/templates/token
+- Clean test WABA: not used; the approved canonical WABA is not being treated as a live runtime until supported App/WABA subscription and secrets are verified
 - Meta portfolio-limit support case: NOT CREATED; no support case ID available
 - Authorized number: `+923328883383`; not registered or used in this run
-- Real webhook/WABA-test E2E: NOT RUN; clean WABA gate blocked before configuration
+- Real webhook/WABA-test E2E: NOT RUN; App/WABA subscription and secrets remain unverified
 - Deployed synthetic staging smoke: Flow persistence, three payment selections, receipt request, mock media/R2, and `PAYMENT_REVIEW`: PASS; fixtures/config restored/removed
 - Live WhatsApp number used: NO
 - Live ad spend: NO
