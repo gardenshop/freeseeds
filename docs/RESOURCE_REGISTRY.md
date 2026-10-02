@@ -6,7 +6,8 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 
 - Repository: `https://github.com/gardenshop/freeseeds.git`
 - Main: `aa673e7` (origin/main, verified 2026-09-28)
-- Active execution branch: `codex/gfs-whatsapp-prod-004` at `90c4c5f`; PR #4 open and mergeable
+- Main: `c46ea1f` (PR #4 merged, origin/main verified 2026-10-01)
+- Active execution branch: `codex/gfs-meta-live-005` at `d8c9e06` from merged main; PR #5 open and mergeable
 - Prior branch `codex/gfs-waba-test-002` retained remotely for provenance
 
 ## Cloudflare
@@ -63,6 +64,9 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - GFS-16 Cloudflare/GitHub identity: required `gisupp@gmail.com` session not changed or reauthenticated
 - GFS-17 Cloudflare identity: `gisupp@gmail.com` visibly authenticated in Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; staging API redeployed, no secret mutation
 - GFS-19 Meta identity: visible Facebook session remains Saeed A Nazim; Ayesha authentication failed at password gate `META_AUTH_PASSWORD_REQUIRED`; no Meta asset was touched
+- GFS-21 current-session discovery: visible `creeper seeds` ad account `1198439777611633` is HOJA-CONTAMINATED under Garden Shop portfolio `568026370701542`, legal business Hoja Seeds; visible Meta Business Suite business is Hoja Seeds, exposed Facebook asset ID `200402333163427`, and Instagram `hojaseeds`. `Free Seeds In Pakistan - www.gardenshop.pk` was visible in that chain, but target Page ID `101192938541236` was not independently verified.
+- GFS-21 clean Creeper Seeds assets: none verified; WABA/App/dataset/system-user links intentionally not inspected inside prohibited chain.
+- GFS-22 Ayesha context discovery: no existing Chrome profile, tab, account chooser entry, or saved account visibly associated with `ayesha.butt55@hotmail.com`; current Saeed session preserved and no credential/session mutation performed.
 - Meta support case: not created; no case ID available
 - Flow ID: not published; repository definition only
 - Dataset/event source ID: not provisioned

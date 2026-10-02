@@ -44,6 +44,22 @@
 - Initial `npm ci` exposed 3 dependency vulnerabilities. `npm audit fix` refreshed lockfile-only Wrangler/Miniflare/Undici resolutions.
 - Post-repair: tests 18/18 PASS, build PASS, lint PASS, audit PASS with 0 vulnerabilities. No application source changed.
 - PR #4 remains open pending merge; Meta authentication remains `META_AUTH_PASSWORD_REQUIRED`.
+- PR #4 is now merged into `main` at `c46ea1f`; fresh branch `codex/gfs-meta-live-005` was created locally from merged main. No development continues on the merged branch.
+- Current Git: `codex/gfs-meta-live-005` at `52c6d96`, based on `main` `c46ea1f`; branch is local and not yet pushed.
+- GFS-23 Git baseline: branch head `d8c9e06`, PR #5 open/mergeable against `main` `c46ea1f`.
+
+## GFS-21-CURRENT-FACEBOOK-SESSION-CREEPER-DISCOVERY Execution Update — 2026-10-01
+
+- Current Facebook identity: **Saeed A Nazim**. Existing tabs were reused; no logout, account switch, new profile, or new Facebook session.
+- Creeper Seeds result: ad account `creeper seeds` / `1198439777611633`, owned through Garden Shop portfolio `568026370701542`, legal business Hoja Seeds. Classification: **HOJA-CONTAMINATED / PROHIBITED**.
+- Other exposed assets: Meta Business Suite Hoja Seeds (`568026370701542`), Facebook asset `200402333163427`, Instagram `hojaseeds`, and visible Page `Free Seeds In Pakistan - www.gardenshop.pk`; target Page ID `101192938541236` was not independently verified.
+- Clean Creeper Seeds: **NONE VERIFIED**. WABA/App/dataset/system-user details were not inspected inside the prohibited chain. Ayesha authentication remains required; no Meta asset changed.
+
+## GFS-22-PRESERVE-CURRENT-SESSION-AUTH-AYESHA-WABA Execution Update — 2026-10-01
+
+- Saeed session preserved: **YES**. Existing Meta tabs and Chrome profiles were inspected read-only; no logout, account switch, new profile, credential entry, or asset mutation occurred.
+- Ayesha auth: **META_AUTH_PASSWORD_REQUIRED**. No authenticated/saved Ayesha context or account-chooser entry was found.
+- Clean Creeper Seeds/WABA/number remain blocked pending authenticated Ayesha access.
 
 ## GFS-13-META-LIVE-ONBOARD Execution Update — 2026-09-28
 
