@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased - 2026-10-02 (GFS-25)
+
+- Added the current-session Meta protocol: call `list_pages` first, inspect all existing Meta tabs read-only, preserve useful sessions, and do not force Ayesha login when a clean authenticated asset is accessible.
+- Inventoried all open Meta tabs: only Business Suite and Ads Manager were present, both in prohibited Hoja/Garden Shop context. No logout, new session, credential, or Meta mutation occurred.
+
 ## Unreleased - 2026-09-28 (GFS-14)
 
 - Added a permanent Chrome DevTools MCP self-recovery protocol covering configuration, process/log/port diagnostics, bridge restart, existing-profile preservation, and proof requirements.

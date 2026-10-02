@@ -50,6 +50,7 @@
 - GFS-12 local verification after the authorized-number state/config update: `npm ci`, `npm test` (18/18), `npm run build`, `npm run lint`, and `npm audit` all pass; no deployment was attempted because external dashboard evidence is unavailable.
 - GFS-13/GFS-15/GFS-17/GFS-19/GFS-20 Git audit: active branch `codex/gfs-whatsapp-prod-004` at `90c4c5f`, origin/main at `aa673e7`, PR #4 open and mergeable. No Meta mutation was attempted; Cloudflare staging redeploy was verified.
 - GFS-21/GFS-22/GFS-23 Git audit: active branch `codex/gfs-meta-live-005` at `d8c9e06`, origin/main at `c46ea1f`; PR #5 open and mergeable.
+- GFS-25 protocol update: existing working Meta sessions must be inspected via MCP `list_pages` first; Ayesha login is historical/intended ownership context, not a prerequisite when an authenticated current session exposes a verified clean asset. Saeed session must not be logged out.
 - GFS-16 identity separation: Meta session was logged out from Saeed A Nazim/Garden Shop and reached Facebook login with `ayesha.butt55@hotmail.com` accepted; password authentication is the exact remaining gate. No Meta asset changed. Cloudflare/GitHub sessions were not touched.
 - GFS-17 Cloudflare authentication passed visibly as `gisupp@gmail.com` in clean Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; current staging API Worker deployed as version `8daa6dc6-6f56-45a2-b7b9-734a146a6156`.
 - GFS-17 staging checks: `/health` PASS with `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING` and `disabled-until-meta-onboarding`; webhook challenge returned 403 because no verify secret is configured; POST returned expected 503 while Meta remains disabled. No Meta secret or callback mutation occurred.
@@ -57,6 +58,8 @@
 - GFS-20 quality gate: initial `npm ci` exposed 3 dependency vulnerabilities; `npm audit fix` updated the locked Wrangler/Miniflare/Undici packages, then tests (18/18), build, lint, and audit all passed with 0 vulnerabilities. No application source changed.
 - GFS-20 Git stabilization: PR #4 merged into `main` as `c46ea1f`; fresh local branch `codex/gfs-meta-live-005` was created from that merged main. The merged branch is no longer used for development.
 - GFS-21 current-session discovery: reused the existing Facebook/Meta tabs without logout, account switching, new profile, or new Facebook session. Visible identity is Saeed A Nazim. Exact `creeper seeds` ad account `1198439777611633` is under Garden Shop portfolio `568026370701542`, legal business Hoja Seeds; exposed assets are Hoja-contaminated and prohibited.
+- GFS-25 changes the execution gate: use the current authenticated Meta session for discovery first; only classify `CLEAN_META_ASSET_NOT_ACCESSIBLE` after every open Meta tab is inspected and no clean asset is accessible.
+- GFS-25 final gate: `CLEAN_META_ASSET_NOT_ACCESSIBLE`. Meta Business Suite asset `200402333163427` and Creeper Seeds ad account `1198439777611633` were both under prohibited portfolio `568026370701542`; target Page `101192938541236` was not independently displayed. No logout, account switch, new session, or asset mutation occurred.
 
 ## GFS-14 MCP Recovery Evidence
 
@@ -76,7 +79,9 @@
 - GFS-16 current gate: Facebook is at “Log into Facebook” for `ayesha.butt55@hotmail.com`; password is required and was not entered. Ayesha authentication, clean portfolio verification, Meta onboarding, and Cloudflare correction remain pending.
 - GFS-19/GFS-20 current gate: Meta remains `META_AUTH_PASSWORD_REQUIRED`; do not retry unchanged authentication. Cloudflare identity remains PASS and staging is deployed but Meta-disabled.
 - GFS-21 discovery confirms no clean Creeper Seeds portfolio/Page/WABA/App/dataset was verified. Ayesha authentication remains required before clean ownership can be assessed; no Meta asset was mutated.
-- GFS-22 preserved the current Saeed A Nazim session and inspected existing Chrome profiles/tabs read-only. Profiles included `gisupp@gmail.com`, `hafizasadkk7@gmail.com`, `wpaistudio@gmail.com`, and `nazimsaeed@gmail.com`; no authenticated or saved Ayesha context was found. Exact gate remains `META_AUTH_PASSWORD_REQUIRED`; no logout, switch, new profile, credential entry, or asset mutation occurred.
+- GFS-22 preserved the current Saeed A Nazim session and inspected existing Chrome profiles/tabs read-only. Profiles included `gisupp@gmail.com`, `hafizasadkk7@gmail.com`, `wpaistudio@gmail.com`, and `nazimsaeed@gmail.com`; no authenticated or saved Ayesha context was found. No logout, switch, new profile, credential entry, or asset mutation occurred.
+- GFS-25 has not yet performed the mandatory `list_pages` discovery; no Meta login, navigation, or mutation is authorized before that read-only inventory.
+- GFS-25 read-only `list_pages` inventory found 8 tabs: Cloudflare Account home, Pakistan Post Office, ChatGPT, X, Meta Business Suite, Ads Manager, DeepSeek, and Google Search. Meta Business Suite and Ads Manager were inspected; no separate Facebook, WhatsApp Manager, or Developer tab was open. Visible identity was Saeed A Nazim.
 
 ## Next Action
 

@@ -67,6 +67,7 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - GFS-21 current-session discovery: visible `creeper seeds` ad account `1198439777611633` is HOJA-CONTAMINATED under Garden Shop portfolio `568026370701542`, legal business Hoja Seeds; visible Meta Business Suite business is Hoja Seeds, exposed Facebook asset ID `200402333163427`, and Instagram `hojaseeds`. `Free Seeds In Pakistan - www.gardenshop.pk` was visible in that chain, but target Page ID `101192938541236` was not independently verified.
 - GFS-21 clean Creeper Seeds assets: none verified; WABA/App/dataset/system-user links intentionally not inspected inside prohibited chain.
 - GFS-22 Ayesha context discovery: no existing Chrome profile, tab, account chooser entry, or saved account visibly associated with `ayesha.butt55@hotmail.com`; current Saeed session preserved and no credential/session mutation performed.
+- GFS-25 `list_pages` inventory: 8 tabs; only Meta Business Suite and Ads Manager were open among Meta services. Visible Meta identity was Saeed A Nazim. Business Suite asset `200402333163427` and ad account `1198439777611633` were HOJA-CONTAMINATED under portfolio `568026370701542`; no clean Meta context, WABA/App/dataset IDs, or target Page linkage was verified.
 - Meta support case: not created; no case ID available
 - Flow ID: not published; repository definition only
 - Dataset/event source ID: not provisioned

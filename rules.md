@@ -7,7 +7,7 @@
 - Customer identity: Get Free Seeds / Free Seeds In Pakistan.
 - Customer-facing Page: `https://www.facebook.com/FreeSeedsPK/` (Page ID `101192938541236`); it is not a runtime dependency until clean Meta ownership is verified.
 - Designated Meta/advertising/WhatsApp ownership context: `Creeper Seeds`.
-- Facebook/Meta account for the clean Creeper Seeds context: `ayesha.butt55@hotmail.com` only.
+- Intended Facebook/Meta owner for the clean Creeper Seeds context: `ayesha.butt55@hotmail.com`; however, an already-authenticated Meta session may be used for read-only discovery and authorized setup when the exact asset is visibly clean, non-Hoja, and permissioned. Do not force reauthentication solely to match the intended email.
 - Cloudflare, GitHub, and Get Free Seeds admin account: `gisupp@gmail.com` only.
 - Never use `ayesha.butt55@hotmail.com` for Cloudflare/GitHub, and never use `gisupp@gmail.com` as the intended Meta owner for this new clean setup.
 - Creeper Seeds is authorized for Get Free Seeds advertising, Click-to-WhatsApp campaigns, WhatsApp Business Platform/WABA, Meta App, system user/token ownership, Page/WhatsApp linkage, and CAPI/event-source integration.
@@ -87,6 +87,8 @@ Expected state for this phase: `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING`.
 - Always use Chrome DevTools MCP with the service-specific authenticated browser profile/session: `ayesha.butt55@hotmail.com` for Meta/Facebook, and `gisupp@gmail.com` for Cloudflare, GitHub, and Get Free Seeds admin.
 - Never cross-use the Meta identity for Cloudflare/GitHub or the Cloudflare/GitHub identity for intended Meta ownership.
 - Verify the visible active account/profile before every external mutation and record the result.
+- First call Chrome DevTools MCP `list_pages`, then inspect every already-open Facebook/Meta/Business Suite/Ads Manager/WhatsApp Manager/Developer tab before navigating to login or creating a context.
+- Authentication is established by the working authenticated page and actual clean asset access; do not treat a forced email login screen as a prerequisite when the current session has verified clean authority.
 - Never log out an already authenticated useful Meta session merely to switch accounts; use the current authenticated session for read-only asset discovery first.
 - Switch/login only when the required clean asset cannot be accessed from the current session, and stop at the exact permission/authentication gate rather than repeatedly retrying.
 - Reuse the already-open tab for the same service, task, or page. Do not open a new tab for every sub-step.
