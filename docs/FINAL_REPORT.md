@@ -96,6 +96,13 @@
 - New GFS WABA: **BLOCKED**, WABA Add flow opened but Meta tab control became unresponsive before creation. Existing Hoja WABA `810731151319635` was not selected.
 - `+923328883383`: not added; Phone Number ID pending. No password, OTP, token, Cloudflare, or payment mutation occurred.
 
+## GFS-31-RESTORE-META-CONTROL-WABA Execution Update — 2026-10-02
+
+- MCP/Meta tab control: **PASS** after direct WebSocket bridge upgrade to `chrome-devtools-mcp@1.10.1`.
+- New GFS App remains `2354726831735899` / Get Free Seeds.
+- New WABA: **BLOCKED**. Get Free Seeds / Food and Grocery form reached; reCAPTCHA checkbox completed without image challenge, but Continue stayed disabled and no WABA ID was generated.
+- STOP_GATE: `META_RECAPTCHA_REQUIRED`. No number, OTP, token, Cloudflare, payment, or Hoja mutation occurred.
+
 ## GFS-13-META-LIVE-ONBOARD Execution Update — 2026-09-28
 
 - Overall: 71%; Remaining: 29%.
