@@ -60,8 +60,16 @@ app.post("/flows/get-free-seeds", async (c) => {
     } : undefined;
     if (!c.env.DB) return c.json({ screen: "SUBMIT", data: { accepted: true, mode: "mock" } });
     const result = await persistFlowSubmission(c.env.DB, submission, attribution);
-    if (c.env.EVENTS) await c.env.EVENTS.send({ kind: "CAPI_LEAD", idempotencyKey: `lead_${result.orderNumber}`, entityId: result.orderId, schemaVersion: 1 });
-    return c.json({ screen: "SUBMIT", data: { accepted: true, orderNumber: result.orderNumber } });
+    let queued = false;
+    try {
+      if (c.env.EVENTS) {
+        await c.env.EVENTS.send({ kind: "CAPI_LEAD", idempotencyKey: `lead_${result.orderNumber}`, entityId: result.orderId, schemaVersion: 1 });
+        queued = true;
+      }
+    } catch {
+      // The durable outbox remains authoritative when Queue delivery is temporarily unavailable.
+    }
+    return c.json({ screen: "SUBMIT", data: { accepted: true, orderNumber: result.orderNumber, capiQueue: queued ? "QUEUED" : "DEFERRED" } });
   } catch (error) {
     return c.json({ error: error instanceof Error ? error.message : "INVALID_FLOW_SUBMISSION" }, 400);
   }

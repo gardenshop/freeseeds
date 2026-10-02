@@ -233,7 +233,7 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - Flow: **PASS REPOSITORY-ONLY**. Exact five fields remain defined and durable order persistence is wired; publication/real submission is pending Meta verification.
 - CAPI Lead/Purchase: **CODE PASS, LIVE BLOCKED**. Lead is enqueued after durable Flow persistence; Purchase is enqueued only after admin payment approval; Meta send remains disabled without event-source credentials.
 - Real E2E: **BLOCKED**. No real customer, payment, paid campaign, OTP, or Hoja number was used.
-- Cloudflare: **PASS** for identity and disabled-safe staging deployment. Account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API/admin versions `2890c42d-aec9-4a97-bee4-9e641a7009a5` / `f4d9b765-d878-4eeb-983c-3e6a04070be2`.
+- Cloudflare: **PASS** for identity and disabled-safe staging deployment. Account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; final API/admin versions `a93e0d64-7562-4979-aaba-a54acc9cf6af` / `07709470-34ee-4de1-b81e-8896257627c9`.
 - Tests: **PASS**. `npm test` 19/19, `npm run build`, `npm run lint`, `npm audit --audit-level=high`, four Wrangler dry-runs, and deployed health/challenge/POST probes completed. Admin health without an authenticated browser session correctly stops at Cloudflare Access login.
 - Zero regression: **PASS** for local and disabled-safe staging checks.
 - Git: branch `codex/gfs-meta-clean-007`; pre-change head `b08c7d7`; PR #7 remains open/mergeable. Local code/docs changes are not yet committed or pushed.

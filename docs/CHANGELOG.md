@@ -15,7 +15,7 @@
 - GFS-34 repaired MCP targeting and reacquired live Page/App Connect controls. Choosers lacked canonical Page/WABA/App assets, so no linkage or Hoja mutation occurred.
 - GFS-35 recorded canonical App `2354726831735899` and approved WABA `2616648355452496` as the App/WABA pair; the generic Connect-assets chooser is not treated as the WhatsApp integration mechanism. App API Setup/WABA subscription remains unverified because the active bridge stopped responding after the required initial page inventory.
 - GFS-35 hardened the safe runtime path: signed webhook message/media/status records are persisted as hashed D1 events, Flow attribution is retained, media ingestion preserves the configured provider, and durable Lead/Purchase outbox jobs can send through the guarded Meta CAPI provider. No secrets or live credentials were added.
-- GFS-35 deployed only disabled-safe staging code after `wrangler whoami` verified `gisupp@gmail.com` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API/admin versions are `2890c42d-aec9-4a97-bee4-9e641a7009a5` / `f4d9b765-d878-4eeb-983c-3e6a04070be2`.
+- GFS-35 deployed only disabled-safe staging code after `wrangler whoami` verified `gisupp@gmail.com` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; final API/admin versions are `a93e0d64-7562-4979-aaba-a54acc9cf6af` / `07709470-34ee-4de1-b81e-8896257627c9`. Queue delivery failures now report deferred delivery without falsely rejecting durable Flow/payment commits.
 
 ## Unreleased - 2026-09-28 (GFS-14)
 

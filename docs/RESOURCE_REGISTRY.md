@@ -25,8 +25,8 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - workers.dev subdomain: `get-free-seeds.workers.dev`
 - Staging public Worker: `getfreeseeds-api-staging` / `https://getfreeseeds-api-staging.get-free-seeds.workers.dev`
 - Staging admin Worker: `getfreeseeds-admin-staging` / `https://getfreeseeds-admin-staging.get-free-seeds.workers.dev`
-- Staging API version: `8daa6dc6-6f56-45a2-b7b9-734a146a6156` (GFS-17 redeploy; clean account verified as `gisupp@gmail.com`)
-- Staging admin version: `46efab4b-796f-4422-b4bf-639930b11904`
+- Staging API version: `a93e0d64-7562-4979-aaba-a54acc9cf6af` (GFS-35 redeploy; clean account verified as `gisupp@gmail.com`)
+- Staging admin version: `07709470-34ee-4de1-b81e-8896257627c9`
 - Cloudflare Access application: `Get Free Seeds Admin Staging` / `ea91b1bf-02c1-46d3-921a-ea2f507fb150`
 - Cloudflare Access allow policy: `Get Free Seeds Admin Operator` / `b3acdd4f-9767-4d28-a55d-0a8e771d476c`
 - Production compute/secrets: not provisioned
