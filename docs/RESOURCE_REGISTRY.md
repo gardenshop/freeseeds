@@ -72,6 +72,7 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - GFS-26 clean Business creation: not provisioned; Meta portfolio-creation limit blocked creation under current Saeed session. Support Home was reached but generated no case/reference ID or response. No existing asset was mutated.
 - GFS-27 existing App `1065866162865361` / `Hoja Lead Integration`: excluded; no WABA, dataset, or event-source ID was safely verified.
 - GFS-27 existing WABA `810731151319635` / Hoja Seeds: excluded; no new App/WABA/Phone Number ID was created because Meta required reauthentication.
+- GFS-29 Page linkage: target Page `101192938541236` Connected Assets panel showed none. Visible WhatsApp account list contained only Hoja/Garden Shop entries; no clean WABA or Page-to-WhatsApp connection was available. No Page, WABA, number, App, or token mutation occurred.
 - GFS-26 branch: `codex/gfs-meta-clean-007` from `origin/main` `a4ac98c`; pending evidence PR.
 - Meta support case: not created; no case ID available
 - Flow ID: not published; repository definition only
