@@ -57,7 +57,7 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Excluded candidate portfolio: `Garden Shop OK` / `1154400188565490`; visible business overview contains Hoja Seeds ad account `120233855869140541`, so it is not clean and is not used
 - GFS-14 read-only Meta audit: visible Ads Manager context was prohibited Garden Shop portfolio `568026370701542` with ad account `1198439777611633`; no clean Get Free Seeds ownership was verified and no asset was mutated
 - Designated Meta context per user: `Creeper Seeds`; clean ownership status: **NOT VERIFIED / PROHIBITED CONTEXT OBSERVED**
-- GFS-15 visible ad account: `creeper seeds` / `1198439777611633`, nested under `Garden Shop` portfolio `568026370701542`, legal business name `Hoja Seeds`; excluded under the zero-Hoja rule
+- GFS-15 historical classification: `creeper seeds` / `1198439777611633` was excluded under the then-current zero-Hoja rule; GFS-27 explicitly supersedes this for Meta-only use of the canonical root, while unrelated Hoja assets remain excluded
 - GFS-15 visible Page names in that prohibited context: Hoja Seeds; Dutch Seeds Export; Free Seeds In Pakistan - www.gardenshop.pk; Garden Shop. Target Page `101192938541236` was not independently verified.
 - GFS-15 App/WABA/dataset/event-source/system-user IDs: not inspected because entering the proven Hoja portfolio's deeper asset views would violate the isolation lock
 - GFS-15 Cloudflare pre-mutation identity: not verified; dashboard redirected to login showing `nazimsaeed@gmail.com`, not required `gisupp@gmail.com`; no Worker deploy or secret mutation performed
