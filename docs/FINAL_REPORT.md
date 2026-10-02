@@ -46,7 +46,7 @@
 - PR #4 remains open pending merge; Meta authentication remains `META_AUTH_PASSWORD_REQUIRED`.
 - PR #4 is now merged into `main` at `c46ea1f`; fresh branch `codex/gfs-meta-live-005` was created locally from merged main. No development continues on the merged branch.
 - Current Git: `codex/gfs-meta-live-005` at `52c6d96`, based on `main` `c46ea1f`; branch is local and not yet pushed.
-- GFS-22 Git baseline: branch head `fb3d25c`, PR #5 open/mergeable against `main` `c46ea1f`.
+- GFS-23 Git baseline: branch head `d8c9e06`, PR #5 open/mergeable against `main` `c46ea1f`.
 
 ## GFS-21-CURRENT-FACEBOOK-SESSION-CREEPER-DISCOVERY Execution Update — 2026-10-01
 
