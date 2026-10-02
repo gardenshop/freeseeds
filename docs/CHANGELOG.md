@@ -5,6 +5,8 @@
 - Added the current-session Meta protocol: call `list_pages` first, inspect all existing Meta tabs read-only, preserve useful sessions, and do not force Ayesha login when a clean authenticated asset is accessible.
 - Inventoried all open Meta tabs: only Business Suite and Ads Manager were present, both in prohibited Hoja/Garden Shop context. No logout, new session, credential, or Meta mutation occurred.
 - GFS-26 attempted clean Business Portfolio creation through the current authenticated Saeed session; Meta's portfolio limit blocked creation. Authenticated Business Support Home was reached but produced no support case/reference ID or response; no assets were mutated.
+- GFS-27 recorded the explicit Meta-only exception: canonical Portfolio `568026370701542`, Ad Account `1198439777611633`, and verified Page `101192938541236`. Existing Hoja App `1065866162865361` was excluded; no Meta mutation occurred.
+- GFS-27 setup reached the canonical Meta root but stopped at `META_REAUTH_PASSWORD_REQUIRED` before creating App/WABA/number; existing Hoja WABA `810731151319635` was excluded.
 
 ## Unreleased - 2026-09-28 (GFS-14)
 

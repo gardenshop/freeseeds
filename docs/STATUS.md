@@ -81,6 +81,8 @@
 - GFS-21/GFS-22 recorded historical read-only discovery; no logout, switch, new profile, credential entry, or asset mutation occurred.
 - GFS-25 recorded the prior `CLEAN_META_ASSET_NOT_ACCESSIBLE` gate before the current-session creation authorization.
 - GFS-26 current action: use the existing authenticated Saeed Meta session to create a new independent Creeper Seeds business; Ayesha authentication is not a prerequisite.
+- GFS-27 canonical Meta root read-only trace verified Portfolio `568026370701542` (Garden Shop UI), Ad Account `1198439777611633` (creeper seeds UI), and Page `Free Seeds In Pakistan - www.gardenshop.pk` ID `101192938541236`. Page showed Saeed Nazim full access and 0 partners; existing Hoja App `1065866162865361` was excluded.
+- GFS-27 Meta setup attempt: current root/Page verification passed, but Meta required Saeed password re-entry before creating a new App/WABA. Exact gate `META_REAUTH_PASSWORD_REQUIRED`; no password entered, no OTP reached, and no App/WABA/number mutation occurred. Existing Hoja WABA `810731151319635` and Hoja App remain excluded.
 - GFS-26 Meta creation attempt: current session identity was Saeed Nazim (`ags.rom@gmail.com`); new Business Portfolio creation returned the exact limit message that no more portfolios can be created. No Business ID was created and no prohibited asset was mutated.
 - GFS-26 support path: Meta Business Support Home was reached in the same session, but no standalone form or case/reference ID was produced; built-in support assistant gave no response. STOP_GATE=`META_SUPPORT_REQUIRED`.
 - GFS-26 Git: active branch `codex/gfs-meta-clean-007` from merged main `a4ac98c`; no PR opened yet.

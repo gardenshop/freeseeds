@@ -77,6 +77,13 @@
 - STOP_GATE: `META_SUPPORT_REQUIRED`.
 - No Hoja/prohibited asset, Page, App, WABA, number, ad account, or campaign was modified.
 
+## GFS-27-USE-EXISTING-CREEPER-META-ROOT Execution Update — 2026-10-02
+
+- Canonical Meta root: Portfolio `568026370701542` / Garden Shop; Ad Account `1198439777611633` / creeper seeds. This is the explicit Meta-only exception; no backend/payment/Cloudflare cross-use is permitted.
+- Verified Page: `Free Seeds In Pakistan - www.gardenshop.pk`, ID `101192938541236`, visible under the canonical root with Saeed Nazim full access and 0 partners.
+- Existing App `1065866162865361` / Hoja Lead Integration: **EXCLUDED**. WABA, dataset, and event-source IDs were not confirmed. No mutation occurred.
+- App/WABA setup: **BLOCKED** by `META_REAUTH_PASSWORD_REQUIRED`. Existing Hoja WABA `810731151319635` was excluded; no password, OTP, new App, WABA, number, or token mutation occurred.
+
 ## GFS-13-META-LIVE-ONBOARD Execution Update — 2026-09-28
 
 - Overall: 71%; Remaining: 29%.

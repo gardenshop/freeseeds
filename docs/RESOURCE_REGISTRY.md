@@ -43,8 +43,9 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 
 - Customer identity: `Get Free Seeds / Free Seeds In Pakistan`
 - Customer-facing Page input: `https://www.facebook.com/FreeSeedsPK/`
-- Page ID: `101192938541236` (previously documented as Hoja-linked; isolation is authorized but not yet verified)
-- Clean Meta Business ID: not provisioned
+- Page ID: `101192938541236` / `Free Seeds In Pakistan - www.gardenshop.pk`; visible under canonical Meta root with Saeed Nazim full access and 0 partners
+- Canonical Meta Business Portfolio (explicit Meta-only exception): `568026370701542` / UI name `Garden Shop`; unrelated Hoja assets remain excluded
+- Canonical Creeper Seeds Ad Account (explicit Meta-only exception): `1198439777611633` / UI name `creeper seeds`
 - Clean WABA ID: not provisioned
 - Authorized WhatsApp number: `+923328883383`
 - Number registration status: authorized; onboarding/OTP/ownership verification pending
@@ -69,6 +70,8 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - GFS-22 Ayesha context discovery: no existing Chrome profile, tab, account chooser entry, or saved account visibly associated with `ayesha.butt55@hotmail.com`; current Saeed session preserved and no credential/session mutation performed.
 - GFS-25 `list_pages` inventory: 8 tabs; only Meta Business Suite and Ads Manager were open among Meta services. Visible Meta identity was Saeed A Nazim. Business Suite asset `200402333163427` and ad account `1198439777611633` were HOJA-CONTAMINATED under portfolio `568026370701542`; no clean Meta context, WABA/App/dataset IDs, or target Page linkage was verified.
 - GFS-26 clean Business creation: not provisioned; Meta portfolio-creation limit blocked creation under current Saeed session. Support Home was reached but generated no case/reference ID or response. No existing asset was mutated.
+- GFS-27 existing App `1065866162865361` / `Hoja Lead Integration`: excluded; no WABA, dataset, or event-source ID was safely verified.
+- GFS-27 existing WABA `810731151319635` / Hoja Seeds: excluded; no new App/WABA/Phone Number ID was created because Meta required reauthentication.
 - GFS-26 branch: `codex/gfs-meta-clean-007` from `origin/main` `a4ac98c`; pending evidence PR.
 - Meta support case: not created; no case ID available
 - Flow ID: not published; repository definition only
