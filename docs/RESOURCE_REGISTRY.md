@@ -49,12 +49,12 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Canonical App: `2354726831735899` / `Get Free Seeds` (WhatsApp customer-connection use case)
 - Canonical WABA: `2616648355452496` / `Get Free Seeds` (Approved; business verified; 2,000 new conversations/day; no phone numbers)
 - Authorized WhatsApp number: `+923328883383`
-- Number registration status: deferred; display-name-only path is preferred while Meta permits it
-- Phone Number ID: not yet returned by Meta
+- Number registration status: **In Review / Unverified** in canonical WABA phone-number settings; OTP prompt was not exposed after submission
+- Phone Number ID: `1429127796940691`
 - Clean staging WABA test: not configured; no separate staging WABA/test number is used
 - Clean staging test Phone Number ID: not yet configured; no ID placeholder is recorded
 - Clean staging test recipient: not configured; synthetic-only use required
-- App↔WABA subscription: not independently verified; generic Connect-assets chooser did not expose the canonical WABA and no indirect mutation was attempted
+- App↔WABA subscription: **FAIL / not subscribed**. App API console still exposes only Meta test WABA `1932075647340454` and test Phone Number ID `870701809469791`; canonical WABA settings expose no assigned-app relationship. Generic Connect-assets chooser remains excluded.
 - Excluded candidate portfolio: `Garden Shop OK` / `1154400188565490`; visible business overview contains Hoja Seeds ad account `120233855869140541`, so it is not clean and is not used
 - GFS-14 read-only Meta audit: visible Ads Manager context was prohibited Garden Shop portfolio `568026370701542` with ad account `1198439777611633`; no clean Get Free Seeds ownership was verified and no asset was mutated
 - Designated Meta context per user: `Creeper Seeds`; clean ownership status: **NOT VERIFIED / PROHIBITED CONTEXT OBSERVED**

@@ -16,6 +16,9 @@
 - GFS-35 recorded canonical App `2354726831735899` and approved WABA `2616648355452496` as the App/WABA pair; the generic Connect-assets chooser is not treated as the WhatsApp integration mechanism. App API Setup/WABA subscription remains unverified because the active bridge stopped responding after the required initial page inventory.
 - GFS-35 hardened the safe runtime path: signed webhook message/media/status records are persisted as hashed D1 events, Flow attribution is retained, media ingestion preserves the configured provider, and durable Lead/Purchase outbox jobs can send through the guarded Meta CAPI provider. No secrets or live credentials were added.
 - GFS-35 deployed only disabled-safe staging code after `wrangler whoami` verified `gisupp@gmail.com` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; final API/admin versions are `a93e0d64-7562-4979-aaba-a54acc9cf6af` / `07709470-34ee-4de1-b81e-8896257627c9`. Queue delivery failures now report deferred delivery without falsely rejecting durable Flow/payment commits.
+- GFS-36 repaired the local Chrome DevTools MCP bridge by upgrading `1.8.0` to `1.10.1` and using the live DevToolsActivePort endpoint. Required `list_pages` plus two consecutive Meta read-only calls passed without logging out or creating a profile.
+- GFS-36 verified the supported App Developer WhatsApp surface and canonical WABA phone settings. The App console still points to Meta test WABA `1932075647340454` / test phone `870701809469791`, while canonical WABA `2616648355452496` now shows authorized Phone Number ID `1429127796940691` as In Review/Unverified. No App↔WABA subscription or live token was available.
+- GFS-36 stopped safely before OTP, Graph mutation, webhook secret configuration, or provider enablement. Meta and CAPI remain disabled; no test or Hoja number was used.
 
 ## Unreleased - 2026-09-28 (GFS-14)
 

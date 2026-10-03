@@ -53,7 +53,7 @@
 - Current Facebook identity: **Saeed A Nazim**. Existing tabs were reused; no logout, account switch, new profile, or new Facebook session.
 - Creeper Seeds result: ad account `creeper seeds` / `1198439777611633`, owned through Garden Shop portfolio `568026370701542`, legal business Hoja Seeds. Classification: **HOJA-CONTAMINATED / PROHIBITED**.
 - Other exposed assets: Meta Business Suite Hoja Seeds (`568026370701542`), Facebook asset `200402333163427`, Instagram `hojaseeds`, and visible Page `Free Seeds In Pakistan - www.gardenshop.pk`; target Page ID `101192938541236` was not independently verified.
-- Clean Creeper Seeds: **NONE VERIFIED**. WABA/App/dataset/system-user details were not inspected inside the prohibited chain. Ayesha authentication remains required; no Meta asset changed.
+- Historical GFS-21 state: **superseded**. Canonical App/WABA now exist and the current gate is App↔WABA subscription plus phone verification; no Hoja asset was changed.
 
 ## GFS-22-PRESERVE-CURRENT-SESSION-AUTH-AYESHA-WABA Execution Update — 2026-10-01
 
@@ -240,3 +240,30 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - STOP_GATE: `META_MCP_TOOL_CALL_UNRESPONSIVE_AFTER_LIST_PAGES`; exact external gates remain App/WABA subscription verification, sender capability, callback secrets, Flow/templates, CAPI event source, and real synthetic E2E.
 - Remaining genuine launch gates: supported App -> WABA subscription; sender/phone requirement decision; Meta webhook/WABA subscription; verify/app secrets and least-privilege token; Flow/template publication; CAPI event source and live send; Garden Shop payment recipient values; real synthetic E2E; explicit paid-ad authorization.
 - Next highest-value action: resume in a fresh MCP-enabled session and inspect App WhatsApp API Setup/WABA subscription plus WABA assigned apps, then make only the supported GFS App -> WABA mutation after visible Saeed identity verification.
+
+## GFS-36-MCP-APP-WABA-LIVE-WEBHOOK Execution Update - 2026-10-03
+
+- Overall: **84%**. Remaining: **16%**.
+- MCP: **PASS**. Local bridge upgraded to `chrome-devtools-mcp@1.10.1`, live endpoint `ws://127.0.0.1:9222/devtools/browser/0a6fd083-d7b2-425b-8687-b585977a1cbc`, existing Chrome profile preserved.
+- Two consecutive Meta calls after `list_pages`: **PASS** (`select_page`, `take_snapshot`).
+- App: `2354726831735899` / Get Free Seeds, visible Saeed full-access assignment.
+- WABA: `2616648355452496` / Get Free Seeds, Approved/business verified.
+- App -> WABA: **FAIL / not subscribed**. Exact evidence: App API console still exposes Meta test WABA `1932075647340454` and test phone `870701809469791`; canonical WABA settings expose no assigned App relationship. No generic Connect-assets workaround was used.
+- Sender mode: **phone-required**. App console says a verified business phone is required to send at scale; display-name-only is not runnable.
+- `+923328883383`: **REQUIRED / In Review / Unverified**. Canonical Phone Number ID `1429127796940691` was created; no OTP prompt was exposed and no code was entered.
+- Webhook challenge: **FAIL / safely gated**. No verify secret exists.
+- Signed POST: **FAIL / safely gated** while Meta provider remains disabled.
+- D1 webhook persistence: **PASS CODE PATH**, live callback not exercised.
+- Inbound/status/media: **NOT LIVE**; parser and hashed D1 persistence are implemented, but no canonical App/WABA subscription exists.
+- Flow: **PASS REPOSITORY-ONLY**; live publication remains blocked.
+- CAPI Lead: **PASS CODE PATH / LIVE BLOCKED**; no authorized Meta event source/token.
+- CAPI Purchase: **PASS CODE PATH / LIVE BLOCKED**; manual approval guard remains enforced.
+- Real E2E: **BLOCKED** at App↔WABA subscription and phone verification.
+- Cloudflare: **PASS identity, disabled-safe staging**. Account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API/admin `a93e0d64-7562-4979-aaba-a54acc9cf6af` / `07709470-34ee-4de1-b81e-8896257627c9`; secret list empty; provider/CAPI disabled.
+- Tests: **PASS prior code gate**. `npm test` 19/19, build, lint, audit, Wrangler dry-runs, and simulated E2E pass; final rerun is required after this documentation-only update.
+- Zero regression: **PASS** for code and safe external state; no Hoja/test number or real payment used.
+- Docs: **PASS**. Rules, Status, Resource Registry, Decisions, Test Matrix, Changelog, and Final Report updated with current App/WABA/sender evidence.
+- Git: branch `codex/gfs-meta-clean-007`; current pre-GFS-36 head `030e1ef`; PR #7 remains open/mergeable; main `a4ac98c`.
+- STOP_GATE: `WHATSAPP_OTP_REQUIRED` plus `META_APP_WABA_NOT_SUBSCRIBED`; Meta did not expose an OTP prompt, so no code was entered.
+- Remaining launch gates: canonical App↔WABA subscription; phone review/OTP verification; least-privilege token and app secret; webhook callback/field subscription; Flow/templates publication; CAPI event source; live signed callback and media tests; controlled synthetic E2E.
+- Next highest-value action: use the repaired MCP to inspect the App’s supported WABA subscription control or official authorized Graph path, then subscribe only App `2354726831735899` to WABA `2616648355452496` after a secure token is provisioned.
