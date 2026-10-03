@@ -20,9 +20,10 @@
 
 ## Customer Journey
 
-- Customer journey remains entirely inside WhatsApp.
-- No customer website, customer web form, or custom domain.
-- Meta advertising, when authorized, goes directly to WhatsApp.
+- Temporary primary acquisition channel is Meta Instant Form; target primary after approval is WhatsApp; Facebook Messenger is secondary support and Instagram DM automation is deferred.
+- Meta Instant Form is the sole authorized temporary customer web form; no additional website form or custom domain is introduced.
+- All allowed channel sources (`META_INSTANT_FORM`, `WHATSAPP`, `FACEBOOK_MESSENGER`, `INSTAGRAM_DM`) feed the same D1 customer/lead/order/payment workflow. Do not create a separate CRM or channel-specific business logic.
+- Meta advertising, when explicitly authorized, uses the Instant Form until WhatsApp production sender approval.
 - Offer: Get 5 Seed Packs FREE; seed price Rs. 0; coverage approximately 2 to 3 marla depending on crop, spacing and growing method; one promotional set per household per campaign.
 - Required WhatsApp Flow fields are exactly: Full Name; Complete Delivery Address; Nearby Famous Place; City; Contact Number.
 - Payment methods are JazzCash, Easypaisa, and Bank Transfer. Garden Shop recipient values must be verified before activation; never guess account numbers, IBANs, wallet numbers, merchant IDs, or credentials.

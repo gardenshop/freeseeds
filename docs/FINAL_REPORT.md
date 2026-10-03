@@ -290,3 +290,25 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - STOP_GATE: `WHATSAPP_PHONE_VERIFICATION_PENDING` + `META_APP_WABA_NOT_SUBSCRIBED`.
 - Remaining launch gates: phone review/verification; canonical App↔WABA subscription; secure token/app secret; sender registration; webhook fields/callback; Flow/templates; CAPI event source; live controlled E2E.
 - Next highest-value action: once Meta exposes phone verification and a secure authorized token is provisioned, subscribe App `2354726831735899` to WABA `2616648355452496` through the official supported path and verify both surfaces.
+
+## GFS-38-INSTANT-FORM-FALLBACK Execution Update - 2026-10-03
+
+- Overall project: **86%**. Remaining: **14%**.
+- Instant Form: **PARTIAL**. Canonical Page editor configured; Meta blocked save/create on incomplete privacy/ending.
+- Form ID: **none**. No incomplete form was published or saved.
+- 5 required fields: **PASS in editor**: Full name, Phone number, Complete Delivery Address, Nearby Famous Place, City. Email removed. Meta labels standard phone as Phone number; it maps to Contact Number in the shared model.
+- Synthetic submission: **PASS code path / no live form ID**.
+- D1 lead/order: **PASS code path**. `lead_sources` table exists in staging and shares the existing order/payment model.
+- Source attribution: **PASS code path**. Source, provider lead/form ID, created time, campaign/ad set/ad IDs persist on `lead_sources`.
+- Lead CAPI: **PASS guarded code path / live disabled**. One deterministic `lead_<FS_ORDER_ID>` emits only after durable D1 persistence.
+- Admin visibility: **PASS code path** through shared `/api/leads?source=META_INSTANT_FORM`; no second admin.
+- Campaign draft: **FAIL / not created**. No form ID exists and no paid launch was authorized.
+- Published/spend: **NO**.
+- WhatsApp phone status: **verification code requested**. Meta displayed six-digit SMS entry for `+923328883383`; no code entered or resent.
+- App -> WABA: **FAIL / unchanged**. Canonical App still exposes test WABA; no authorized subscription token.
+- Messenger backup: **not needed**. Instagram DM: **deferred**.
+- Cloudflare: **PASS**, clean account and safe staging deployment. API/admin `785826f2-f07c-4dea-9f3c-c604d0d10670` / `62bcbd9d-ba6f-404f-b686-7bd9a5ef063b`; Meta providers and Instant Form ingestion disabled; no secrets.
+- Tests: **PASS**. 20/20, build, lint, audit, Wrangler dry-runs; staging D1 `lead_sources` verified.
+- Zero regression: **PASS**.
+- STOP_GATE: `WHATSAPP_OTP_REQUIRED` plus `META_APP_WABA_NOT_SUBSCRIBED` plus `META_INSTANT_FORM_PRIVACY_ENDING_INCOMPLETE`.
+- Next highest-value action: enter the received six-digit Meta SMS code for `+923328883383` only through the visible verification dialog, then verify sender registration before App↔WABA subscription.

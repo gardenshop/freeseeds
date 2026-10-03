@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { createWhatsAppProvider, isTerminalOutboxStatus, MetaCapiProvider, parseFlowSubmission, PaymentMethod, persistFlowSubmission, persistWebhookRecords, retryDelaySeconds, selectPaymentMethod, storeReceipt } from "@gfs/core";
+import { createWhatsAppProvider, isTerminalOutboxStatus, MetaCapiProvider, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInstantFormSubmission, persistWebhookRecords, retryDelaySeconds, selectPaymentMethod, storeReceipt } from "@gfs/core";
 
 type Env = {
   Bindings: {
@@ -16,6 +16,8 @@ type Env = {
     META_APP_SECRET?: string;
     META_CAPI_ENABLED?: string;
     META_DATASET_ID?: string;
+    META_INSTANT_FORM_ENABLED?: string;
+    META_LEAD_ACCESS_TOKEN?: string;
   };
 };
 
@@ -44,6 +46,32 @@ app.post("/webhooks/whatsapp", async (c) => {
   const correlationId = c.req.header("x-correlation-id") ?? crypto.randomUUID();
   const eventCount = c.env.DB ? await persistWebhookRecords(c.env.DB, payload, raw, correlationId) : 0;
   return c.json({ accepted: true, eventCount });
+});
+
+app.get("/webhooks/meta/instant-form", (c) => {
+  if (c.env.META_INSTANT_FORM_ENABLED !== "true") return c.text("Forbidden", 403);
+  const provider = createWhatsAppProvider("meta", { enabled: true, graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", appSecret: c.env.META_APP_SECRET, verifyToken: c.env.WEBHOOK_VERIFY_TOKEN });
+  const challenge = provider.verifyWebhook(c.req.query("hub.challenge") ?? "", c.req.query("hub.verify_token") ?? "", c.env.WEBHOOK_VERIFY_TOKEN);
+  return challenge === null ? c.text("Forbidden", 403) : c.text(challenge);
+});
+
+app.post("/webhooks/meta/instant-form", async (c) => {
+  if (c.env.META_INSTANT_FORM_ENABLED !== "true") return c.json({ error: "META_INSTANT_FORM_DISABLED" }, 503);
+  const raw = await c.req.arrayBuffer();
+  const provider = createWhatsAppProvider("meta", { enabled: true, graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", appSecret: c.env.META_APP_SECRET });
+  if (!(await provider.validateSignature(raw, c.req.header("x-hub-signature-256") ?? null, c.env.META_APP_SECRET))) return c.text("Forbidden", 403);
+  let payload: { entry?: Array<{ changes?: Array<{ field?: string; value?: Record<string, unknown> }> }> };
+  try { payload = JSON.parse(new TextDecoder().decode(raw)); } catch { return c.json({ error: "INVALID_META_LEAD_WEBHOOK" }, 400); }
+  const now = new Date().toISOString();
+  const leads = (payload.entry ?? []).flatMap((entry) => (entry.changes ?? []).filter((change) => change.field === "leadgen" && typeof change.value?.leadgen_id === "string").map((change) => change.value as Record<string, unknown>));
+  if (!c.env.DB || !leads.length) return c.json({ accepted: true, eventCount: 0 });
+  await c.env.DB.batch(leads.map((lead) => {
+    const leadId = lead.leadgen_id as string;
+    const idempotencyKey = `meta_lead_${leadId}`;
+    return c.env.DB.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), idempotencyKey, "META_INSTANT_FORM_LEAD", leadId, JSON.stringify({ leadId, formId: lead.form_id, createdTime: lead.created_time, campaignId: lead.campaign_id, adSetId: lead.adgroup_id, adId: lead.ad_id }), "PENDING", now, now, now);
+  }));
+  for (const lead of leads) await c.env.EVENTS.send({ kind: "META_INSTANT_FORM_LEAD", idempotencyKey: `meta_lead_${lead.leadgen_id as string}`, entityId: lead.leadgen_id as string, schemaVersion: 1 });
+  return c.json({ accepted: true, eventCount: leads.length });
 });
 
 app.post("/flows/get-free-seeds", async (c) => {
@@ -131,12 +159,35 @@ export default {
         if (!env.DB) { message.ack(); continue; }
         const job = await env.DB.prepare("SELECT status, attempts FROM outbox_jobs WHERE idempotency_key=?").bind(message.body.idempotencyKey).first<{ status: string; attempts: number }>();
         if (!job || isTerminalOutboxStatus(job.status)) { message.ack(); continue; }
-        if (env.DEPLOYMENT_STATE === "WHATSAPP_NUMBER_PENDING" || env.DEPLOYMENT_STATE === "WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING" || env.DEPLOYMENT_STATE === "WHATSAPP_PHONE_VERIFICATION_PENDING") {
+        const nextAttempt = Number(job.attempts ?? 0) + 1;
+        if (message.body.kind.startsWith("WHATSAPP_") && (env.DEPLOYMENT_STATE === "WHATSAPP_NUMBER_PENDING" || env.DEPLOYMENT_STATE === "WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING" || env.DEPLOYMENT_STATE === "WHATSAPP_PHONE_VERIFICATION_PENDING")) {
           await env.DB.prepare("UPDATE outbox_jobs SET status='DEFERRED', last_error=?, updated_at=? WHERE idempotency_key=?").bind("WHATSAPP_ONBOARDING_PENDING", new Date().toISOString(), message.body.idempotencyKey).run();
           message.ack();
           continue;
         }
-        const nextAttempt = Number(job.attempts ?? 0) + 1;
+        if (message.body.kind === "META_INSTANT_FORM_LEAD") {
+          try {
+            if (!env.META_LEAD_ACCESS_TOKEN) throw new Error("META_LEAD_ACCESS_TOKEN_MISSING");
+            const response = await fetch(`https://graph.facebook.com/${env.META_GRAPH_VERSION ?? "v26.0"}/${encodeURIComponent(message.body.entityId)}?fields=id,form_id,created_time,campaign_id,adset_id,ad_id,field_data&access_token=${encodeURIComponent(env.META_LEAD_ACCESS_TOKEN)}`);
+            if (!response.ok) throw new Error(`META_LEAD_FETCH_${response.status}`);
+            const lead = parseMetaInstantFormLead(await response.json());
+            const persisted = await persistInstantFormSubmission(env.DB, lead);
+            await env.DB.prepare("UPDATE outbox_jobs SET status='SENT', attempts=?, last_error=NULL, updated_at=? WHERE idempotency_key=?").bind(nextAttempt, new Date().toISOString(), message.body.idempotencyKey).run();
+            if (!persisted.duplicate) await env.EVENTS.send({ kind: "CAPI_LEAD", idempotencyKey: `lead_${persisted.orderNumber}`, entityId: persisted.orderId, schemaVersion: 1 });
+            message.ack();
+            continue;
+          } catch (error) {
+            const failure = error instanceof Error ? error.message.slice(0, 120) : "META_LEAD_INGEST_FAILED";
+            if (nextAttempt >= 5) {
+              await env.DB.prepare("UPDATE outbox_jobs SET status='DEAD_LETTER', attempts=?, last_error=?, updated_at=? WHERE idempotency_key=?").bind(nextAttempt, failure, new Date().toISOString(), message.body.idempotencyKey).run();
+              message.ack();
+              continue;
+            }
+            await env.DB.prepare("UPDATE outbox_jobs SET status='RETRY', attempts=?, last_error=?, updated_at=? WHERE idempotency_key=?").bind(nextAttempt, failure, new Date().toISOString(), message.body.idempotencyKey).run();
+            message.retry({ delaySeconds: retryDelaySeconds(nextAttempt) });
+            continue;
+          }
+        }
         if (nextAttempt > 5) {
           await env.DB.prepare("UPDATE outbox_jobs SET status='DEAD_LETTER', attempts=?, last_error=?, updated_at=? WHERE idempotency_key=?").bind(nextAttempt, "MAX_RETRIES_EXCEEDED", new Date().toISOString(), message.body.idempotencyKey).run();
           message.ack();

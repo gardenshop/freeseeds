@@ -23,6 +23,9 @@
 - GFS-37 rechecked the canonical WABA phone settings through MCP: status `In Review`, quality/status `Unverified`, display name `Get Free Seeds`; no SMS/voice verification option was exposed. Current gate is `WHATSAPP_PHONE_VERIFICATION_PENDING`, not `WHATSAPP_OTP_REQUIRED`.
 - GFS-37 confirmed App API still resolves to Meta test WABA `1932075647340454`, so canonical App↔WABA subscription remains unresolved. No token, Graph mutation, webhook secret, provider enablement, or prohibited sender was used.
 - GFS-37 aligned Wrangler/runtime state to `WHATSAPP_PHONE_VERIFICATION_PENDING` and deployed disabled-safe staging API/admin versions `73e0d310-da94-43d0-819a-4e86c4ace794` / `f0135e82-b28d-453b-a5af-e9b12d2d34d7`. Health passed; challenge 403 and webhook POST 503 remain intentional until Meta verification, subscription, and secrets exist.
+- GFS-38 added the Meta Instant Form fallback architecture and shared D1 lead-source model. The signed lead webhook, Graph retrieval, dedupe, attribution, Lead CAPI outbox, and shared admin lead endpoint are deployed disabled-safe; no second CRM or payment workflow was added.
+- GFS-38 opened the canonical Page Instant Form editor, configured More volume, 5 free seed packs/Rs. 0 offer text, removed email, and added Complete Delivery Address, Nearby Famous Place, and City alongside Meta standard Full name/Phone number. Meta blocked save/create on incomplete privacy/ending, so no form/campaign/spend was created.
+- GFS-38 requested one SMS verification code for canonical phone `+923328883383`; the code prompt is visible, no code was entered or resent, and no test/Hoja asset was touched.
 
 ## Unreleased - 2026-09-28 (GFS-14)
 

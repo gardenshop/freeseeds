@@ -3,6 +3,8 @@ import { z } from "zod";
 export const REQUIRED_FLOW_FIELDS = ["fullName", "deliveryAddress", "nearbyPlace", "city", "contactNumber"] as const;
 export const PaymentMethod = z.enum(["JAZZCASH", "EASYPAISA", "BANK_TRANSFER"]);
 export type PaymentMethod = z.infer<typeof PaymentMethod>;
+export const LeadSource = z.enum(["META_INSTANT_FORM", "WHATSAPP", "FACEBOOK_MESSENGER", "INSTAGRAM_DM"]);
+export type LeadSource = z.infer<typeof LeadSource>;
 export const OrderState = z.enum(["NEW", "DETAILS_COMPLETED", "PAYMENT_PENDING", "RECEIPT_SUBMITTED", "PAYMENT_REVIEW", "PAYMENT_REJECTED", "PAID", "PACKING", "DISPATCHED", "DELIVERED", "CANCELLED"]);
 export type OrderState = z.infer<typeof OrderState>;
 
@@ -14,6 +16,15 @@ export const FlowSubmission = z.object({
   contactNumber: z.string().trim().min(7).max(30)
 }).strict();
 export type FlowSubmission = z.infer<typeof FlowSubmission>;
+export const InstantFormSubmission = FlowSubmission.extend({
+  leadId: z.string().trim().min(1).max(100),
+  formId: z.string().trim().min(1).max(100),
+  createdTime: z.string().trim().min(1).max(100),
+  campaignId: z.string().trim().min(1).max(100).optional(),
+  adSetId: z.string().trim().min(1).max(100).optional(),
+  adId: z.string().trim().min(1).max(100).optional()
+}).strict();
+export type InstantFormSubmission = z.infer<typeof InstantFormSubmission>;
 
 export const transitions: Record<OrderState, readonly OrderState[]> = {
   NEW: ["DETAILS_COMPLETED", "CANCELLED"],
