@@ -264,6 +264,29 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - Zero regression: **PASS** for code and safe external state; no Hoja/test number or real payment used.
 - Docs: **PASS**. Rules, Status, Resource Registry, Decisions, Test Matrix, Changelog, and Final Report updated with current App/WABA/sender evidence.
 - Git: branch `codex/gfs-meta-clean-007`; current pre-GFS-36 head `030e1ef`; PR #7 remains open/mergeable; main `a4ac98c`.
-- STOP_GATE: `WHATSAPP_OTP_REQUIRED` plus `META_APP_WABA_NOT_SUBSCRIBED`; Meta did not expose an OTP prompt, so no code was entered.
+- Historical GFS-36 STOP_GATE: `WHATSAPP_OTP_REQUIRED` plus `META_APP_WABA_NOT_SUBSCRIBED`; superseded by GFS-37's verified `WHATSAPP_PHONE_VERIFICATION_PENDING` state because Meta exposed no OTP action.
 - Remaining launch gates: canonical App↔WABA subscription; phone review/OTP verification; least-privilege token and app secret; webhook callback/field subscription; Flow/templates publication; CAPI event source; live signed callback and media tests; controlled synthetic E2E.
 - Next highest-value action: use the repaired MCP to inspect the App’s supported WABA subscription control or official authorized Graph path, then subscribe only App `2354726831735899` to WABA `2616648355452496` after a secure token is provisioned.
+
+## GFS-37-PHONE-VERIFY-APP-WABA Execution Update - 2026-10-03
+
+- Overall: **84%**. Remaining: **16%**.
+- Phone: `+923328883383`
+- Phone Number ID: `1429127796940691`
+- Phone status: **In Review**, quality/status **Unverified**, display name `Get Free Seeds` in canonical WABA phone settings.
+- Verification: **PENDING**. No SMS/voice verification option was exposed; do not call this OTP-required.
+- Display name: `Free Seeds` is the intended customer display name, but Meta's phone settings show `Get Free Seeds`; neither is a standalone sender. The registered phone is required.
+- App -> WABA: **FAIL**. Subscription evidence: App API Setup still shows test WABA `1932075647340454` / test phone `870701809469791`; canonical WABA settings show no assigned App relationship.
+- Sender registered: **FAIL/PENDING**. Phone Number ID exists, but registration/verification is not complete.
+- Webhook: challenge/signed POST/subscription **NOT CONFIGURED**; provider remains disabled and no secrets exist.
+- Inbound/status/media: **CODE READY, LIVE BLOCKED**.
+- Flow: **PASS repository-only**; publication blocked.
+- CAPI Lead/Purchase: **CODE READY, LIVE BLOCKED**.
+- Real E2E: **BLOCKED** by phone review and App↔WABA subscription.
+- Cloudflare: **PASS identity and safe disabled state**; final API/admin versions `73e0d310-da94-43d0-819a-4e86c4ace794` / `f0135e82-b28d-453b-a5af-e9b12d2d34d7`; no secrets.
+- Tests: **PASS**. 19/19 tests, build, lint, audit, Wrangler dry-runs, simulated E2E.
+- Zero regression: **PASS**.
+- Git: commit `45b2bc3` before GFS-37 docs; PR #7 open/mergeable; main `a4ac98c`.
+- STOP_GATE: `WHATSAPP_PHONE_VERIFICATION_PENDING` + `META_APP_WABA_NOT_SUBSCRIBED`.
+- Remaining launch gates: phone review/verification; canonical App↔WABA subscription; secure token/app secret; sender registration; webhook fields/callback; Flow/templates; CAPI event source; live controlled E2E.
+- Next highest-value action: once Meta exposes phone verification and a secure authorized token is provisioned, subscribe App `2354726831735899` to WABA `2616648355452496` through the official supported path and verify both surfaces.

@@ -19,6 +19,10 @@
 - GFS-36 repaired the local Chrome DevTools MCP bridge by upgrading `1.8.0` to `1.10.1` and using the live DevToolsActivePort endpoint. Required `list_pages` plus two consecutive Meta read-only calls passed without logging out or creating a profile.
 - GFS-36 verified the supported App Developer WhatsApp surface and canonical WABA phone settings. The App console still points to Meta test WABA `1932075647340454` / test phone `870701809469791`, while canonical WABA `2616648355452496` now shows authorized Phone Number ID `1429127796940691` as In Review/Unverified. No App↔WABA subscription or live token was available.
 - GFS-36 stopped safely before OTP, Graph mutation, webhook secret configuration, or provider enablement. Meta and CAPI remain disabled; no test or Hoja number was used.
+- GFS-37 corrected the sender model: Cloud API production messaging requires the registered business phone; `Free Seeds` is display name only. Canonical sender is `+923328883383` / Phone Number ID `1429127796940691`.
+- GFS-37 rechecked the canonical WABA phone settings through MCP: status `In Review`, quality/status `Unverified`, display name `Get Free Seeds`; no SMS/voice verification option was exposed. Current gate is `WHATSAPP_PHONE_VERIFICATION_PENDING`, not `WHATSAPP_OTP_REQUIRED`.
+- GFS-37 confirmed App API still resolves to Meta test WABA `1932075647340454`, so canonical App↔WABA subscription remains unresolved. No token, Graph mutation, webhook secret, provider enablement, or prohibited sender was used.
+- GFS-37 aligned Wrangler/runtime state to `WHATSAPP_PHONE_VERIFICATION_PENDING` and deployed disabled-safe staging API/admin versions `73e0d310-da94-43d0-819a-4e86c4ace794` / `f0135e82-b28d-453b-a5af-e9b12d2d34d7`. Health passed; challenge 403 and webhook POST 503 remain intentional until Meta verification, subscription, and secrets exist.
 
 ## Unreleased - 2026-09-28 (GFS-14)
 

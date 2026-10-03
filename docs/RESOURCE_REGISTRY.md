@@ -6,8 +6,8 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 
 - Repository: `https://github.com/gardenshop/freeseeds.git`
 - Main: `aa673e7` (origin/main, verified 2026-09-28)
-- Main: `c46ea1f` (PR #4 merged, origin/main verified 2026-10-01)
-- Active execution branch: `codex/gfs-meta-live-005` at `d8c9e06` from merged main; PR #5 open and mergeable
+- Main: `a4ac98c` (origin/main, current GFS branch base)
+- Active execution branch: `codex/gfs-meta-clean-007` at `45b2bc3`; PR #7 open and mergeable
 - Prior branch `codex/gfs-waba-test-002` retained remotely for provenance
 
 ## Cloudflare
@@ -25,8 +25,8 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - workers.dev subdomain: `get-free-seeds.workers.dev`
 - Staging public Worker: `getfreeseeds-api-staging` / `https://getfreeseeds-api-staging.get-free-seeds.workers.dev`
 - Staging admin Worker: `getfreeseeds-admin-staging` / `https://getfreeseeds-admin-staging.get-free-seeds.workers.dev`
-- Staging API version: `a93e0d64-7562-4979-aaba-a54acc9cf6af` (GFS-35 redeploy; clean account verified as `gisupp@gmail.com`)
-- Staging admin version: `07709470-34ee-4de1-b81e-8896257627c9`
+- Staging API version: `73e0d310-da94-43d0-819a-4e86c4ace794` (GFS-37 phone-verification-pending redeploy; clean account verified as `gisupp@gmail.com`)
+- Staging admin version: `f0135e82-b28d-453b-a5af-e9b12d2d34d7`
 - Cloudflare Access application: `Get Free Seeds Admin Staging` / `ea91b1bf-02c1-46d3-921a-ea2f507fb150`
 - Cloudflare Access allow policy: `Get Free Seeds Admin Operator` / `b3acdd4f-9767-4d28-a55d-0a8e771d476c`
 - Production compute/secrets: not provisioned
@@ -47,9 +47,9 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Canonical Meta Business Portfolio (explicit Meta-only exception): `568026370701542` / UI name `Garden Shop`; unrelated Hoja assets remain excluded
 - Canonical Creeper Seeds Ad Account (explicit Meta-only exception): `1198439777611633` / UI name `creeper seeds`
 - Canonical App: `2354726831735899` / `Get Free Seeds` (WhatsApp customer-connection use case)
-- Canonical WABA: `2616648355452496` / `Get Free Seeds` (Approved; business verified; 2,000 new conversations/day; no phone numbers)
+- Canonical WABA: `2616648355452496` / `Get Free Seeds` (Approved; business verified; 2,000 new conversations/day)
 - Authorized WhatsApp number: `+923328883383`
-- Number registration status: **In Review / Unverified** in canonical WABA phone-number settings; OTP prompt was not exposed after submission
+- Number registration status: **In Review / Unverified** in canonical WABA phone-number settings; no SMS/voice verification method was exposed
 - Phone Number ID: `1429127796940691`
 - Clean staging WABA test: not configured; no separate staging WABA/test number is used
 - Clean staging test Phone Number ID: not yet configured; no ID placeholder is recorded

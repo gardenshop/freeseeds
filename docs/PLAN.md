@@ -21,9 +21,9 @@ No existing, test, Hoja Seeds, Garden Shop, or other phone number may be used. T
 
 ## Deployment States
 
-`LOCAL`, `STAGING_INFRA_READY`, `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING`, `META_ASSETS_PENDING`, `PRODUCTION_INTEGRATION_READY`, `PRODUCTION_READY`.
+`LOCAL`, `STAGING_INFRA_READY`, `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING`, `WHATSAPP_PHONE_VERIFICATION_PENDING`, `META_ASSETS_PENDING`, `PRODUCTION_INTEGRATION_READY`, `PRODUCTION_READY`.
 
-Expected state: `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING`. This does not block independent backend, infrastructure, test, or documentation work.
+Expected state: `WHATSAPP_PHONE_VERIFICATION_PENDING`. This does not block independent backend, infrastructure, test, or documentation work.
 
 ## Cloudflare Resources
 
@@ -43,7 +43,7 @@ Successful Flow submission validates exactly five fields, normalizes contact num
 
 ## Provider Boundary
 
-`WhatsAppProvider` exposes verification, signature validation, inbound parsing, text/interactive/template/Flow sends, media download, payment instructions, and confirmation. `MockWhatsAppProvider` is used in all current tests and simulated E2E. `MetaWhatsAppProvider` is production-capable code only, disabled by configuration, and cannot run without a new number, clean WABA, approved assets, and secrets.
+`WhatsAppProvider` exposes verification, signature validation, inbound parsing, text/interactive/template/Flow sends, media download, payment instructions, and confirmation. `MockWhatsAppProvider` is used in all current tests and simulated E2E. `MetaWhatsAppProvider` is production-capable code only, disabled by configuration, and cannot run without the registered authorized sender, canonical App↔WABA subscription, approved assets, and secrets.
 
 The Flow definition is versioned at `whatsapp/flows/get-free-seeds.json` and has exactly five required fields. It is not published to any WABA in this phase.
 

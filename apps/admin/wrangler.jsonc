@@ -8,5 +8,5 @@
   "d1_databases": [{ "binding": "DB", "database_name": "getfreeseeds-staging", "database_id": "17b7e9f6-e08b-4bff-a756-10de30b49ab1" }],
   "r2_buckets": [{ "binding": "RECEIPTS", "bucket_name": "getfreeseeds-receipts-staging" }],
   "queues": { "producers": [{ "binding": "EVENTS", "queue": "getfreeseeds-events-staging" }] },
-  "vars": { "DEPLOYMENT_STATE": "WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING", "ADMIN_EMAIL": "gisupp@gmail.com" }
+  "vars": { "DEPLOYMENT_STATE": "WHATSAPP_PHONE_VERIFICATION_PENDING", "ADMIN_EMAIL": "gisupp@gmail.com" }
 }

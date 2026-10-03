@@ -2,7 +2,7 @@
 
 ## Current State
 
-`WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING`
+`WHATSAPP_PHONE_VERIFICATION_PENDING`
 
 ## Completed Work
 
@@ -16,14 +16,14 @@
 
 ## Verification
 
-- No live WhatsApp number has been used.
+- Canonical sender `+923328883383` / Phone Number ID `1429127796940691` exists in WABA `2616648355452496` with status In Review/Unverified; it is not enabled for runtime.
 - No prohibited Meta test number has been used; a clean staging WABA/test number is now allowed but not yet configured.
 - No paid ad spend has been initiated.
 
 ## Blockers and Gates
 
-- Authorized production WhatsApp number is `+923328883383`; Meta onboarding, ownership verification, and runtime connection remain pending.
-- Clean Meta portfolio/WABA and Page isolation remain future integration gates.
+- Authorized production sender is `+923328883383` / Phone Number ID `1429127796940691`; phone verification/review, App↔WABA subscription, and runtime connection remain pending.
+- Canonical Meta App/WABA/Page exist; supported subscription and sender registration remain integration gates.
 - Verified Garden Shop recipient details are not yet available; payment methods remain safe-disabled until supplied.
 - R2 onboarding was explicitly authorized; dashboard verified $0.00 current billable usage and no public bucket access.
 - TypeScript build, ESLint, unit/domain tests, and simulated WhatsApp E2E all pass.
@@ -95,7 +95,9 @@
 - GFS-35 staging update: `wrangler whoami` verified `gisupp@gmail.com` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; final API `a93e0d64-7562-4979-aaba-a54acc9cf6af` and admin `07709470-34ee-4de1-b81e-8896257627c9` deployed with provider/CAPI disabled. Health PASS; challenge remains expected 403 without secret; POST remains expected 503 while Meta is disabled.
 - GFS-36 MCP repair: upgraded the local bridge from `chrome-devtools-mcp@1.8.0` to `1.10.1`, replaced the stale Codex WebSocket UUID with live `DevToolsActivePort` `9222/0a6fd083-d7b2-425b-8687-b585977a1cbc`, preserved the existing Chrome profile, and verified `list_pages` followed by successful `select_page` and `take_snapshot` calls.
 - GFS-36 App/WABA truth: canonical WABA `2616648355452496` still shows Get Free Seeds Approved, no prior phone numbers, then the authorized `+923328883383` was added as Phone Number ID `1429127796940691` with status In Review/Unverified. Canonical App API console still shows only test WABA `1932075647340454` / test phone `870701809469791`; App↔WABA subscription is not present or verified. No test/Hoja number was used.
-- GFS-36 sender gate: display-name-only is not runnable on the App console. Meta requires a verified business phone for scale; the authorized number form accepted Pakistan `+92` and `3328883383`, but no OTP prompt was exposed after submission. Do not retry or enter any code; status remains `WHATSAPP_OTP_REQUIRED` pending Meta's verification action.
+- GFS-36 sender gate: display-name-only is not runnable on the App console. Meta requires a verified business phone for scale; the authorized number form accepted Pakistan `+92` and `3328883383`, but no SMS/voice OTP option was exposed after submission. Do not retry or enter any code; current gate is `WHATSAPP_PHONE_VERIFICATION_PENDING`.
+- GFS-37 status verification: canonical WABA phone settings show `+92 332 8883383`, Phone Number ID `1429127796940691`, display name `Get Free Seeds`, registration status `In Review`, quality `Unverified`; no verification method/action is exposed beyond the pending review state. App API still resolves to test WABA `1932075647340454`, so App↔canonical-WABA subscription remains absent.
+- GFS-37 staging state update: after `wrangler whoami` verified `gisupp@gmail.com` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, API `73e0d310-da94-43d0-819a-4e86c4ace794` and admin `f0135e82-b28d-453b-a5af-e9b12d2d34d7` deployed with `WHATSAPP_PHONE_VERIFICATION_PENDING`, Meta provider/CAPI disabled. Health PASS; challenge 403 and POST 503 are expected safe gates.
 - GFS-26 Meta creation attempt: current session identity was Saeed Nazim (`ags.rom@gmail.com`); new Business Portfolio creation returned the exact limit message that no more portfolios can be created. No Business ID was created and no prohibited asset was mutated.
 - GFS-26 support path: Meta Business Support Home was reached in the same session, but no standalone form or case/reference ID was produced; built-in support assistant gave no response. STOP_GATE=`META_SUPPORT_REQUIRED`.
 - GFS-26 Git: active branch `codex/gfs-meta-clean-007` from merged main `a4ac98c`; no PR opened yet.
@@ -103,4 +105,4 @@
 
 ## Next Action
 
-Use the existing authenticated Saeed Chrome DevTools MCP session for clean Meta discovery/creation; use `gisupp@gmail.com` separately for Cloudflare deployment and runtime callbacks.
+Use the existing authenticated Saeed Chrome DevTools MCP session to recheck phone review and supported App↔WABA subscription; use `gisupp@gmail.com` separately for Cloudflare deployment and runtime callbacks.

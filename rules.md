@@ -33,13 +33,13 @@
 ## WhatsApp Number Lock
 
 - Customer-facing WhatsApp identity: Get Free Seeds.
-- Authorized number: `+923328883383`; currently deferred and not a launch dependency while the supported display-name-only path is active.
-- Current state: `WHATSAPP_NUMBER_DEFERRED_DISPLAY_NAME_ONLY`.
+- Authorized production sender: `+923328883383`; Phone Number ID `1429127796940691`; canonical WABA status is In Review/Unverified.
+- Current state: `WHATSAPP_PHONE_VERIFICATION_PENDING`.
 - Production must not use any existing, Hoja Seeds, Garden Shop, temporary, or other phone number.
 - Do not locate, migrate, register, connect, or use any existing, Hoja-linked, or old Garden Shop number or WABA.
 - The known Meta test number `+1 555-897-9372` and every Hoja-linked test asset remain prohibited.
 - `STAGING_WABA_TEST_ALLOWED`: a Meta-provided test WABA/test number may be used only when its visible ownership is independently verified as clean Get Free Seeds, only for staging synthetic data, staging webhook/Flow/messages, and Meta test events. It must never receive real customers, real payments, production events, or ad spend.
-- Do not force phone-number onboarding while the verified display-name-only path works. If Meta later requires a phone number, resume the authorized-number OTP/verification gate before runtime use.
+- Cloud API production messaging requires the registered business phone sender. The display name `Free Seeds` is not a standalone sender; continue only through Meta's supported phone verification/registration flow.
 - Display-name-only runtime is not available on the verified App console: the canonical App/WABA exist, but the App currently exposes only Meta's separate test WABA/phone. Live runtime still requires canonical App↔WABA subscription, least-privilege credentials, approved Flow/templates, registered callbacks, and verified CAPI before real traffic.
 - Creeper Seeds may be used only for the authorized Free Seeds In Pakistan Page/number integration. Unrelated Hoja assets visible inside that context remain excluded and must not become runtime dependencies.
 - Canonical Meta assets for this phase are Business `568026370701542`, Ad Account `1198439777611633`, Page `101192938541236`, App `2354726831735899`, and approved WABA `2616648355452496`; Hoja App `1065866162865361`, Hoja WABA `810731151319635`, and all Hoja numbers remain excluded.
@@ -77,9 +77,9 @@
 
 ## Release States
 
-`LOCAL` -> `STAGING_INFRA_READY` -> `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING` -> `META_ASSETS_PENDING` -> `PRODUCTION_INTEGRATION_READY` -> `PRODUCTION_READY`
+`LOCAL` -> `STAGING_INFRA_READY` -> `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING` -> `WHATSAPP_PHONE_VERIFICATION_PENDING` -> `META_ASSETS_PENDING` -> `PRODUCTION_INTEGRATION_READY` -> `PRODUCTION_READY`
 
-Expected state for this phase: `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING`.
+Expected state for this phase: `WHATSAPP_PHONE_VERIFICATION_PENDING`.
 
 ## Spend Safety
 
