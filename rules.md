@@ -5,23 +5,25 @@
 - Public brand: Get Free Seeds.
 - Operational merchant and payment recipient: Garden Shop.
 - Customer identity: Get Free Seeds / Free Seeds In Pakistan.
+- Current WhatsApp launch display name: `Free Seeds` (Meta's verified App console requires an authorized phone sender; display-name-only is not treated as runnable).
 - Customer-facing Page: `https://www.facebook.com/FreeSeedsPK/` (Page ID `101192938541236`); it is not a runtime dependency until clean Meta ownership is verified.
 - Designated Meta/advertising/WhatsApp ownership context: `Creeper Seeds`.
 - Current authenticated Saeed A Nazim Meta session is authorized as the operator for creating/managing the new clean Creeper Seeds context. `ayesha.butt55@hotmail.com` remains historical/intended ownership context, but Ayesha authentication is not a prerequisite when the working Meta session exposes the required clean, non-Hoja authority. Do not force logout/login solely to match the intended email.
 - Cloudflare, GitHub, and Get Free Seeds admin account: `gisupp@gmail.com` only.
 - Never use `ayesha.butt55@hotmail.com` for Cloudflare/GitHub, and never use `gisupp@gmail.com` as the intended Meta owner for this new clean setup.
 - Creeper Seeds is authorized for Get Free Seeds advertising, Click-to-WhatsApp campaigns, WhatsApp Business Platform/WABA, Meta App, system user/token ownership, Page/WhatsApp linkage, and CAPI/event-source integration.
-- Hoja Seeds has zero connection. Do not use, import, reference, share, or depend on any Hoja Seeds repository, source, database, Cloudflare resource, domain, DNS, API, secret, Meta asset, WhatsApp asset, payment credential, customer record, CRM data, analytics, webhook, campaign, deployment, or configuration.
+- Hoja Seeds has zero runtime/backend connection. Do not use, import, reference, share, or depend on any Hoja Seeds repository, source, database, Cloudflare resource, domain, DNS, API, secret, payment credential, customer record, CRM data, analytics, webhook, campaign, deployment, or configuration. The only explicit exception is the Meta-only root authorized below; it must never cross into GFS backend/payment/runtime resources.
 - The known Hoja-linked Cloudflare account ID `85f6a6181b4653c2a45e69cb7ce8a474` is prohibited.
-- Hoja portfolio, WABA, app, dataset, system user, ad account, credentials, and old Garden Shop WhatsApp assets are prohibited.
-- The contaminated `creeper seeds` ad account `1198439777611633` under Garden Shop portfolio `568026370701542` is prohibited and must never be migrated, reused, or connected.
+- Hoja portfolio, WABA, app, dataset, system user, ad account, credentials, and old Garden Shop WhatsApp assets remain prohibited except for the explicit Meta-only root below; unrelated Hoja assets inside that root remain excluded.
+- Explicit Meta-only exception authorized by the user: Business Portfolio `568026370701542` and existing Creeper Seeds Ad Account `1198439777611633` may be used for Get Free Seeds Meta advertising/CTWA/WhatsApp/App/WABA/CAPI only. Do not create another Business Portfolio, and do not share this root with Cloudflare, GitHub, D1, R2, payment, or other backend resources.
 - Google Sheets is not an operational dependency. Cloudflare D1 is authoritative.
 
 ## Customer Journey
 
-- Customer journey remains entirely inside WhatsApp.
-- No customer website, customer web form, or custom domain.
-- Meta advertising, when authorized, goes directly to WhatsApp.
+- Temporary primary acquisition channel is Meta Instant Form; target primary after approval is WhatsApp; Facebook Messenger is secondary support and Instagram DM automation is deferred.
+- Meta Instant Form is the sole authorized temporary customer web form; no additional website form or custom domain is introduced.
+- All allowed channel sources (`META_INSTANT_FORM`, `WHATSAPP`, `FACEBOOK_MESSENGER`, `INSTAGRAM_DM`) feed the same D1 customer/lead/order/payment workflow. Do not create a separate CRM or channel-specific business logic.
+- Meta advertising, when explicitly authorized, uses the Instant Form until WhatsApp production sender approval.
 - Offer: Get 5 Seed Packs FREE; seed price Rs. 0; coverage approximately 2 to 3 marla depending on crop, spacing and growing method; one promotional set per household per campaign.
 - Required WhatsApp Flow fields are exactly: Full Name; Complete Delivery Address; Nearby Famous Place; City; Contact Number.
 - Payment methods are JazzCash, Easypaisa, and Bank Transfer. Garden Shop recipient values must be verified before activation; never guess account numbers, IBANs, wallet numbers, merchant IDs, or credentials.
@@ -32,15 +34,17 @@
 ## WhatsApp Number Lock
 
 - Customer-facing WhatsApp identity: Get Free Seeds.
-- Production number: `+923328883383` (explicitly authorized by the user for WhatsApp Business Platform/Cloud API onboarding and controlled integration testing).
-- Current state: `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING`.
+- Authorized production sender: `+923328883383`; Phone Number ID `1429127796940691`; canonical WABA status is In Review/Unverified.
+- Current state: `WHATSAPP_PHONE_VERIFICATION_PENDING`.
 - Production must not use any existing, Hoja Seeds, Garden Shop, temporary, or other phone number.
 - Do not locate, migrate, register, connect, or use any existing, Hoja-linked, or old Garden Shop number or WABA.
 - The known Meta test number `+1 555-897-9372` and every Hoja-linked test asset remain prohibited.
 - `STAGING_WABA_TEST_ALLOWED`: a Meta-provided test WABA/test number may be used only when its visible ownership is independently verified as clean Get Free Seeds, only for staging synthetic data, staging webhook/Flow/messages, and Meta test events. It must never receive real customers, real payments, production events, or ad spend.
-- The authorized number remains blocked from runtime use until clean Meta ownership, OTP/verification, and least-privilege credentials are independently verified.
-- Do not publish production templates/Flow, register production callbacks, send real WhatsApp messages, or create/reuse production tokens before the new number and clean WABA onboarding gates pass.
+- Cloud API production messaging requires the registered business phone sender. The display name `Free Seeds` is not a standalone sender; continue only through Meta's supported phone verification/registration flow.
+- Display-name-only runtime is not available on the verified App console: the canonical App/WABA exist, but the App currently exposes only Meta's separate test WABA/phone. Live runtime still requires canonical App↔WABA subscription, least-privilege credentials, approved Flow/templates, registered callbacks, and verified CAPI before real traffic.
 - Creeper Seeds may be used only for the authorized Free Seeds In Pakistan Page/number integration. Unrelated Hoja assets visible inside that context remain excluded and must not become runtime dependencies.
+- Canonical Meta assets for this phase are Business `568026370701542`, Ad Account `1198439777611633`, Page `101192938541236`, App `2354726831735899`, and approved WABA `2616648355452496`; Hoja App `1065866162865361`, Hoja WABA `810731151319635`, and all Hoja numbers remain excluded.
+- The generic Page/App `Connect assets` chooser is not assumed to be the WhatsApp integration mechanism. Verify App WhatsApp API Setup/WABA subscription and WABA assigned-app surfaces before mutating assets.
 
 ## Platform
 
@@ -74,9 +78,9 @@
 
 ## Release States
 
-`LOCAL` -> `STAGING_INFRA_READY` -> `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING` -> `META_ASSETS_PENDING` -> `PRODUCTION_INTEGRATION_READY` -> `PRODUCTION_READY`
+`LOCAL` -> `STAGING_INFRA_READY` -> `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING` -> `WHATSAPP_PHONE_VERIFICATION_PENDING` -> `META_ASSETS_PENDING` -> `PRODUCTION_INTEGRATION_READY` -> `PRODUCTION_READY`
 
-Expected state for this phase: `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING`.
+Expected state for this phase: `WHATSAPP_PHONE_VERIFICATION_PENDING`.
 
 ## Spend Safety
 

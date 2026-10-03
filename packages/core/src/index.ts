@@ -8,3 +8,4 @@ export * from "./queue";
 export * from "./capi-provider";
 export * from "./payment-qr";
 export * from "./payment-flow";
+export * from "./webhook";
