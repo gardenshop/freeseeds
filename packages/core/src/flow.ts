@@ -25,6 +25,7 @@ export function parseMetaInstantFormLead(input: unknown): InstantFormSubmission 
   return parseInstantFormSubmission({
     leadId: value.id,
     formId: value.form_id,
+    pageId: (value as { page_id?: unknown }).page_id,
     createdTime: value.created_time,
     fullName: required(["fullname", "fullnamequestion"]),
     deliveryAddress: required(["completedeliveryaddress", "deliveryaddress"]),
@@ -37,8 +38,12 @@ export function parseMetaInstantFormLead(input: unknown): InstantFormSubmission 
   });
 }
 
+export function isAllowedInstantFormLead(input: { page_id?: unknown; form_id?: unknown }, pageId: string, formId: string): boolean {
+  return input.page_id === pageId && input.form_id === formId;
+}
+
 type Attribution = { ctwaClid?: string; campaignId?: string; adSetId?: string; adId?: string };
-type PersistOptions = { source: LeadSource; attribution?: Attribution; providerLeadId?: string; formId?: string; createdTime?: string };
+type PersistOptions = { source: LeadSource; attribution?: Attribution; providerLeadId?: string; formId?: string; pageId?: string; createdTime?: string };
 export type PersistLeadResult = { customerId: string; leadId: string; orderId: string; orderNumber: string; duplicate: boolean };
 
 export async function persistFlowSubmission(db: D1Database, submission: FlowSubmission, attribution?: Attribution): Promise<PersistLeadResult> {
@@ -46,7 +51,7 @@ export async function persistFlowSubmission(db: D1Database, submission: FlowSubm
 }
 
 export async function persistInstantFormSubmission(db: D1Database, submission: InstantFormSubmission): Promise<PersistLeadResult> {
-  return persistLeadSubmission(db, submission, { source: "META_INSTANT_FORM", providerLeadId: submission.leadId, formId: submission.formId, createdTime: submission.createdTime, attribution: { campaignId: submission.campaignId, adSetId: submission.adSetId, adId: submission.adId } });
+  return persistLeadSubmission(db, submission, { source: "META_INSTANT_FORM", providerLeadId: submission.leadId, formId: submission.formId, pageId: submission.pageId, createdTime: submission.createdTime, attribution: { campaignId: submission.campaignId, adSetId: submission.adSetId, adId: submission.adId } });
 }
 
 async function persistLeadSubmission(db: D1Database, submission: FlowSubmission, options: PersistOptions): Promise<PersistLeadResult> {
@@ -72,7 +77,7 @@ async function persistLeadSubmission(db: D1Database, submission: FlowSubmission,
     db.prepare("INSERT INTO payments (id,order_id,expected_amount,review_state,created_at,updated_at) VALUES (?,?,?,?,?,?)").bind(paymentId, orderId, 0, "PENDING", now, now),
     db.prepare("INSERT INTO leads (id,customer_id,order_id,status,capi_event_id,created_at) VALUES (?,?,?,?,?,?)").bind(leadId, customerId, orderId, "CREATED", leadEventId, now),
     db.prepare("INSERT INTO meta_attribution (id,order_id,customer_id,ctwa_clid,campaign_id,ad_set_id,ad_id,minimized_referral_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(attributionId, orderId, customerId, options.attribution?.ctwaClid ?? null, options.attribution?.campaignId ?? null, options.attribution?.adSetId ?? null, options.attribution?.adId ?? null, JSON.stringify({ source: options.source, ...options.attribution }), now),
-    db.prepare("INSERT INTO lead_sources (id,lead_id,order_id,source,provider_lead_id,meta_form_id,provider_created_time,campaign_id,ad_set_id,ad_id,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), leadId, orderId, options.source, options.providerLeadId ?? null, options.formId ?? null, options.createdTime ?? null, options.attribution?.campaignId ?? null, options.attribution?.adSetId ?? null, options.attribution?.adId ?? null, now),
+    db.prepare("INSERT INTO lead_sources (id,lead_id,order_id,source,provider_lead_id,meta_form_id,provider_created_time,campaign_id,ad_set_id,ad_id,created_at,page_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), leadId, orderId, options.source, options.providerLeadId ?? null, options.formId ?? null, options.createdTime ?? null, options.attribution?.campaignId ?? null, options.attribution?.adSetId ?? null, options.attribution?.adId ?? null, now, options.pageId ?? null),
     db.prepare("INSERT INTO capi_events (id,event_id,event_name,order_id,customer_id,send_status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), leadEventId, "Lead", orderId, customerId, "PENDING", now, now),
     db.prepare("INSERT INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(outboxId, leadEventId, "CAPI_LEAD", orderId, JSON.stringify(leadEvent), "PENDING", now, now, now),
     db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), `${options.source}_SUBMITTED`, "CUSTOMER", "ORDER", orderId, correlationId, JSON.stringify({ orderNumber, source: options.source }), now)

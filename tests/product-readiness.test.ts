@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { LeadSource, MetaWhatsAppProvider, MetaCapiProvider, formatPaymentMessage, isPaymentMethodComplete, isTerminalOutboxStatus, parseMetaInstantFormLead, parseWebhookRecords, paymentInstructions, retryDelaySeconds, selectPaymentMethod, shouldDeadLetter, storePaymentQr, storeReceipt, validatePaymentQr } from "@gfs/core";
+import { isAllowedInstantFormLead, LeadSource, MetaWhatsAppProvider, MetaCapiProvider, formatPaymentMessage, isPaymentMethodComplete, isTerminalOutboxStatus, parseMetaInstantFormLead, parseWebhookRecords, paymentInstructions, retryDelaySeconds, selectPaymentMethod, shouldDeadLetter, storePaymentQr, storeReceipt, validatePaymentQr } from "@gfs/core";
 
 describe("product readiness safeguards", () => {
   it("verifies Meta signatures and keeps the disabled provider closed", async () => {
@@ -33,15 +33,18 @@ describe("product readiness safeguards", () => {
   });
 
   it("normalizes a Meta Instant Form lead into the shared five-field model", () => {
-    const lead = parseMetaInstantFormLead({ id: "synthetic-meta-lead", form_id: "synthetic-form", created_time: "2026-10-03T00:00:00Z", campaign_id: "synthetic-campaign", adset_id: "synthetic-adset", ad_id: "synthetic-ad", field_data: [
+    const lead = parseMetaInstantFormLead({ id: "synthetic-meta-lead", form_id: "synthetic-form", page_id: "synthetic-page", created_time: "2026-10-03T00:00:00Z", campaign_id: "synthetic-campaign", adset_id: "synthetic-adset", ad_id: "synthetic-ad", field_data: [
       { name: "Full Name", values: ["Synthetic Customer"] },
       { name: "Complete Delivery Address", values: ["1 Test Street"] },
       { name: "Nearby Famous Place", values: ["Test Park"] },
       { name: "City", values: ["Sahiwal"] },
       { name: "Contact Number", values: ["03001234567"] }
     ] });
-    expect(lead).toMatchObject({ leadId: "synthetic-meta-lead", formId: "synthetic-form", contactNumber: "+923001234567", campaignId: "synthetic-campaign" });
+    expect(lead).toMatchObject({ leadId: "synthetic-meta-lead", formId: "synthetic-form", pageId: "synthetic-page", contactNumber: "+923001234567", campaignId: "synthetic-campaign" });
     expect(LeadSource.options).toEqual(["META_INSTANT_FORM", "WHATSAPP", "FACEBOOK_MESSENGER", "INSTAGRAM_DM"]);
+    expect(isAllowedInstantFormLead({ page_id: "canonical-page", form_id: "canonical-form" }, "canonical-page", "canonical-form")).toBe(true);
+    expect(isAllowedInstantFormLead({ page_id: "other-page", form_id: "canonical-form" }, "canonical-page", "canonical-form")).toBe(false);
+    expect(isAllowedInstantFormLead({ page_id: "canonical-page", form_id: "other-form" }, "canonical-page", "canonical-form")).toBe(false);
   });
 
   it("uses bounded retry and DLQ decisions", () => {

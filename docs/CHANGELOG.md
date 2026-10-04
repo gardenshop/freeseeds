@@ -26,6 +26,8 @@
 - GFS-38 added the Meta Instant Form fallback architecture and shared D1 lead-source model. The signed lead webhook, Graph retrieval, dedupe, attribution, Lead CAPI outbox, and shared admin lead endpoint are deployed disabled-safe; no second CRM or payment workflow was added.
 - GFS-38 opened the canonical Page Instant Form editor, configured More volume, 5 free seed packs/Rs. 0 offer text, removed email, and added Complete Delivery Address, Nearby Famous Place, and City alongside Meta standard Full name/Phone number. Meta blocked save/create on incomplete privacy/ending, so no form/campaign/spend was created.
 - GFS-38 requested one SMS verification code for canonical phone `+923328883383`; the code prompt is visible, no code was entered or resent, and no test/Hoja asset was touched.
+- GFS-39 audited the existing `Free Seeds 04-10-2026` form only: Form ID `2816887225374285`, canonical Page `101192938541236`, Active, created Oct 4 2026, 0 leads. No duplicate form was created.
+- GFS-39 locked leadgen ingestion to the exact Page/Form pair, persisted Page ID attribution, and added allowlist tests. API staging version `1c9e42ca-ad13-4e4a-8fbc-e01300cfebc3` remains disabled-safe; no token, leadgen subscription, real lead, ad draft, or spend was used.
 
 ## Unreleased - 2026-09-28 (GFS-14)
 

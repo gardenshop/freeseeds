@@ -19,6 +19,7 @@ export type FlowSubmission = z.infer<typeof FlowSubmission>;
 export const InstantFormSubmission = FlowSubmission.extend({
   leadId: z.string().trim().min(1).max(100),
   formId: z.string().trim().min(1).max(100),
+  pageId: z.string().trim().min(1).max(100),
   createdTime: z.string().trim().min(1).max(100),
   campaignId: z.string().trim().min(1).max(100).optional(),
   adSetId: z.string().trim().min(1).max(100).optional(),

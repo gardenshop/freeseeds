@@ -55,8 +55,9 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Clean staging test Phone Number ID: not yet configured; no ID placeholder is recorded
 - Clean staging test recipient: not configured; synthetic-only use required
 - App↔WABA subscription: **FAIL / not subscribed**. App API console still exposes only Meta test WABA `1932075647340454` and test Phone Number ID `870701809469791`; canonical WABA settings expose no assigned-app relationship. Generic Connect-assets chooser remains excluded.
-- Instant Form: canonical Page `101192938541236` editor configured; no saved form ID due incomplete Meta privacy/ending sections. No campaign/ad set/ad draft and no spend.
-- Lead ingestion: staging D1 `lead_sources` table verified; `/webhooks/meta/instant-form` is deployed but `META_INSTANT_FORM_ENABLED=false` until a published form, Page webhook subscription, and least-privilege lead token exist.
+- Instant Form: `Free Seeds 04-10-2026` / Form ID `2816887225374285`, canonical Page `101192938541236`, status **Active**, created Oct 4 2026; leads count 0. No campaign/ad set/ad draft and no spend.
+- Instant Form audit: More volume, verified privacy/ending required by Meta; expected five customer categories are Full name/`full_name`, Phone number/`phone_number`, Complete Delivery Address/`complete_delivery_address`, Nearby Famous Place/`nearby_famous_place`, City/`city`; Email absent.
+- Lead ingestion: staging D1 `lead_sources` table with `page_id` verified; `/webhooks/meta/instant-form` is deployed but `META_INSTANT_FORM_ENABLED=false` until Page leadgen subscription and least-privilege lead token exist.
 - Excluded candidate portfolio: `Garden Shop OK` / `1154400188565490`; visible business overview contains Hoja Seeds ad account `120233855869140541`, so it is not clean and is not used
 - GFS-14 read-only Meta audit: visible Ads Manager context was prohibited Garden Shop portfolio `568026370701542` with ad account `1198439777611633`; no clean Get Free Seeds ownership was verified and no asset was mutated
 - Designated Meta context per user: `Creeper Seeds`; clean ownership status: **NOT VERIFIED / PROHIBITED CONTEXT OBSERVED**

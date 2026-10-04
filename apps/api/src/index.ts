@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { createWhatsAppProvider, isTerminalOutboxStatus, MetaCapiProvider, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInstantFormSubmission, persistWebhookRecords, retryDelaySeconds, selectPaymentMethod, storeReceipt } from "@gfs/core";
+import { createWhatsAppProvider, isAllowedInstantFormLead, isTerminalOutboxStatus, MetaCapiProvider, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInstantFormSubmission, persistWebhookRecords, retryDelaySeconds, selectPaymentMethod, storeReceipt } from "@gfs/core";
 
 type Env = {
   Bindings: {
@@ -18,6 +18,8 @@ type Env = {
     META_DATASET_ID?: string;
     META_INSTANT_FORM_ENABLED?: string;
     META_LEAD_ACCESS_TOKEN?: string;
+    META_PAGE_ID?: string;
+    META_INSTANT_FORM_ID?: string;
   };
 };
 
@@ -64,14 +66,15 @@ app.post("/webhooks/meta/instant-form", async (c) => {
   try { payload = JSON.parse(new TextDecoder().decode(raw)); } catch { return c.json({ error: "INVALID_META_LEAD_WEBHOOK" }, 400); }
   const now = new Date().toISOString();
   const leads = (payload.entry ?? []).flatMap((entry) => (entry.changes ?? []).filter((change) => change.field === "leadgen" && typeof change.value?.leadgen_id === "string").map((change) => change.value as Record<string, unknown>));
-  if (!c.env.DB || !leads.length) return c.json({ accepted: true, eventCount: 0 });
-  await c.env.DB.batch(leads.map((lead) => {
+  const allowedLeads = leads.filter((lead) => isAllowedInstantFormLead(lead, c.env.META_PAGE_ID ?? "", c.env.META_INSTANT_FORM_ID ?? ""));
+  if (!c.env.DB || !allowedLeads.length) return c.json({ accepted: true, eventCount: 0, ignoredCount: leads.length });
+  await c.env.DB.batch(allowedLeads.map((lead) => {
     const leadId = lead.leadgen_id as string;
     const idempotencyKey = `meta_lead_${leadId}`;
     return c.env.DB.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), idempotencyKey, "META_INSTANT_FORM_LEAD", leadId, JSON.stringify({ leadId, formId: lead.form_id, createdTime: lead.created_time, campaignId: lead.campaign_id, adSetId: lead.adgroup_id, adId: lead.ad_id }), "PENDING", now, now, now);
   }));
-  for (const lead of leads) await c.env.EVENTS.send({ kind: "META_INSTANT_FORM_LEAD", idempotencyKey: `meta_lead_${lead.leadgen_id as string}`, entityId: lead.leadgen_id as string, schemaVersion: 1 });
-  return c.json({ accepted: true, eventCount: leads.length });
+  for (const lead of allowedLeads) await c.env.EVENTS.send({ kind: "META_INSTANT_FORM_LEAD", idempotencyKey: `meta_lead_${lead.leadgen_id as string}`, entityId: lead.leadgen_id as string, schemaVersion: 1 });
+  return c.json({ accepted: true, eventCount: allowedLeads.length, ignoredCount: leads.length - allowedLeads.length });
 });
 
 app.post("/flows/get-free-seeds", async (c) => {
@@ -171,6 +174,7 @@ export default {
             const response = await fetch(`https://graph.facebook.com/${env.META_GRAPH_VERSION ?? "v26.0"}/${encodeURIComponent(message.body.entityId)}?fields=id,form_id,created_time,campaign_id,adset_id,ad_id,field_data&access_token=${encodeURIComponent(env.META_LEAD_ACCESS_TOKEN)}`);
             if (!response.ok) throw new Error(`META_LEAD_FETCH_${response.status}`);
             const lead = parseMetaInstantFormLead(await response.json());
+            if (lead.pageId !== env.META_PAGE_ID || lead.formId !== env.META_INSTANT_FORM_ID) throw new Error("META_LEAD_ALLOWLIST_REJECTED");
             const persisted = await persistInstantFormSubmission(env.DB, lead);
             await env.DB.prepare("UPDATE outbox_jobs SET status='SENT', attempts=?, last_error=NULL, updated_at=? WHERE idempotency_key=?").bind(nextAttempt, new Date().toISOString(), message.body.idempotencyKey).run();
             if (!persisted.duplicate) await env.EVENTS.send({ kind: "CAPI_LEAD", idempotencyKey: `lead_${persisted.orderNumber}`, entityId: persisted.orderId, schemaVersion: 1 });

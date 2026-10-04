@@ -312,3 +312,36 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - Zero regression: **PASS**.
 - STOP_GATE: `WHATSAPP_OTP_REQUIRED` plus `META_APP_WABA_NOT_SUBSCRIBED` plus `META_INSTANT_FORM_PRIVACY_ENDING_INCOMPLETE`.
 - Next highest-value action: enter the received six-digit Meta SMS code for `+923328883383` only through the visible verification dialog, then verify sender registration before App↔WABA subscription.
+
+## GFS-39-EXISTING-FORM-BACKEND-AD-DRAFT Execution Update - 2026-10-04
+
+- Overall project: **87%**. Remaining: **13%**.
+- Instant Form launch readiness: **70%**. Existing form is active and allowlisted; Page subscription, token, real lead, and ad draft remain unresolved.
+- WhatsApp readiness: **84% baseline**. OTP and App↔WABA gates unchanged.
+- Form name: `Free Seeds 04-10-2026`
+- Form ID: `2816887225374285`
+- Form status: **Active**, created Oct 4 2026, 0 leads
+- Page: `101192938541236`
+- Five fields: **PASS allowlist/parser**. Actual expected Meta keys: `full_name`, `phone_number`, `complete_delivery_address`, `nearby_famous_place`, `city`; Email absent in the audited active form.
+- Privacy: **PASS/Meta active form**; exact policy URL was not re-edited.
+- Ending: **PASS/Meta active form**; exact ending copy was not re-edited.
+- App leadgen webhook: **FAIL/BLOCKED**. No authorized lead token or canonical App webhook mutation.
+- Page leadgen subscription: **FAIL/BLOCKED**.
+- Form/Page allowlist: **PASS**. Backend locks Page `101192938541236` + Form `2816887225374285` before and after Graph retrieval.
+- Real Meta test lead: **NOT RUN**. Form has 0 leads and leadgen subscription/token are unavailable.
+- Graph retrieval: **CODE READY, LIVE BLOCKED**.
+- D1 customer/lead/order: **CODE PASS**; shared pipeline and `lead_sources.page_id` deployed.
+- META_INSTANT_FORM source: **PASS code path**.
+- Admin visibility: **PASS code path** via shared admin endpoint.
+- Dedupe: **PASS code path** by provider lead ID and deterministic Lead event ID.
+- CAPI: **DISABLED-SAFE**; no double-counting native lead submission.
+- Campaign draft: **NOT CREATED**; wait for real lead PASS and explicit ad-draft authorization.
+- Published/spend: **NO**.
+- WhatsApp phone: SMS OTP prompt remains active/unresolved.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Cloudflare: **PASS**. API version `1c9e42ca-ad13-4e4a-8fbc-e01300cfebc3`; clean account `gisupp@gmail.com`; no secrets.
+- Tests: **PASS**. 20/20, build, lint, audit, Wrangler validation, allowlist tests; real lead E2E not run.
+- Zero regression: **PASS**.
+- Git: pending GFS-39 commit; PR #7 open/mergeable; main `a4ac98c`.
+- STOP_GATE: `META_PAGE_LEADGEN_SUBSCRIPTION_AND_TOKEN_UNAVAILABLE`; WhatsApp remains separately gated by `WHATSAPP_OTP_REQUIRED`.
+- Next highest-value action: provision the least-privilege lead token and subscribe canonical Page leadgen through App `2354726831735899`, then submit one supported test lead and verify D1/dedupe before creating the no-spend ad draft.
