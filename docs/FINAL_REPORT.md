@@ -344,4 +344,33 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - Zero regression: **PASS**.
 - Git: pending GFS-39 commit; PR #7 open/mergeable; main `a4ac98c`.
 - STOP_GATE: `META_PAGE_LEADGEN_SUBSCRIPTION_AND_TOKEN_UNAVAILABLE`; WhatsApp remains separately gated by `WHATSAPP_OTP_REQUIRED`.
+
+## GFS-40-LIVE-FORM-LEADGEN Execution Update - 2026-10-04
+
+- Overall: **87%**. Remaining: **13%**.
+- Instant Form readiness: **70%**. Existing Active Form and exact backend allowlist are ready; Meta leadgen subscription/token are blocked.
+- WhatsApp readiness: **84%**. OTP and App↔WABA gates unchanged.
+- Form ID: `2816887225374285`.
+- Lead app: **BLOCKED**. Canonical App supports WhatsApp only; dedicated Marketing API wizard stalled at Business pending/disabled before creation. No new App ID.
+- Lead token: **BLOCKED**. No least-privilege credential exists in Cloudflare secrets.
+- App page-webhook subscription: **FAIL/BLOCKED**.
+- Page leadgen subscription: **FAIL/BLOCKED**.
+- Webhook challenge: **NOT CONFIGURED**; endpoint safely remains disabled.
+- Real Meta test lead: **NOT RUN**; form has 0 leads.
+- Graph retrieval: **CODE READY, LIVE BLOCKED**.
+- Five-field mapping: **PASS code path/allowlist**.
+- D1 customer/lead/order: **CODE PASS**.
+- Admin visibility: **CODE PASS**.
+- Dedupe: **PASS code path**.
+- Instant Form provider: **DISABLED**.
+- CAPI: **DISABLED-SAFE**.
+- Campaign draft: **NOT CREATED**; no lead PASS and no explicit publish/spend authorization.
+- Published/spend: **NO**.
+- WhatsApp phone: SMS OTP required/pending.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Tests: **20/20**, build, lint, audit, Wrangler validation PASS.
+- Zero regression: **PASS**.
+- Git: pending GFS-40 commit; PR #7 open/mergeable; main `a4ac98c`.
+- STOP_GATE: `META_LEAD_APP_CREATION_BUSINESS_STEP_STALLED` + `META_LEAD_TOKEN_AND_PAGE_SUBSCRIPTION_UNAVAILABLE`; WhatsApp separately `WHATSAPP_OTP_REQUIRED`.
+- Next highest-value action: provision the dedicated lead app through Meta's supported Business assignment path, then configure Page leadgen subscription and secure token before enabling staging ingestion.
 - Next highest-value action: provision the least-privilege lead token and subscribe canonical Page leadgen through App `2354726831735899`, then submit one supported test lead and verify D1/dedupe before creating the no-spend ad draft.

@@ -28,6 +28,8 @@
 - GFS-38 requested one SMS verification code for canonical phone `+923328883383`; the code prompt is visible, no code was entered or resent, and no test/Hoja asset was touched.
 - GFS-39 audited the existing `Free Seeds 04-10-2026` form only: Form ID `2816887225374285`, canonical Page `101192938541236`, Active, created Oct 4 2026, 0 leads. No duplicate form was created.
 - GFS-39 locked leadgen ingestion to the exact Page/Form pair, persisted Page ID attribution, and added allowlist tests. API staging version `1c9e42ca-ad13-4e4a-8fbc-e01300cfebc3` remains disabled-safe; no token, leadgen subscription, real lead, ad draft, or spend was used.
+- GFS-40 confirmed canonical App `2354726831735899` exposes only WhatsApp and cannot add Page Lead Ads/Webhooks through Add use cases. The supported dedicated Marketing API app wizard stalled at Business pending/disabled before creation; no second App, token, Page subscription, lead, ad draft, or spend was created.
+- GFS-40 corrected recovery language to identify the existing Saeed Meta session as operator; Ayesha remains historical only.
 
 ## Unreleased - 2026-09-28 (GFS-14)
 
