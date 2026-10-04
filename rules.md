@@ -35,7 +35,7 @@
 
 - Customer-facing WhatsApp identity: Get Free Seeds.
 - Authorized production sender: `+923328883383`; Phone Number ID `1429127796940691`; canonical WABA status is In Review/Unverified.
-- Current state: `WHATSAPP_PHONE_VERIFICATION_PENDING`.
+- Current state: `WHATSAPP_OTP_REQUIRED` (Meta displayed a six-digit SMS verification dialog; no code was entered or resent).
 - Production must not use any existing, Hoja Seeds, Garden Shop, temporary, or other phone number.
 - Do not locate, migrate, register, connect, or use any existing, Hoja-linked, or old Garden Shop number or WABA.
 - The known Meta test number `+1 555-897-9372` and every Hoja-linked test asset remain prohibited.

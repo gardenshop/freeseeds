@@ -61,6 +61,7 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - GFS-40 lead app: no dedicated App created; canonical App supports only WhatsApp use case. Marketing API dedicated-app wizard stalled at Business pending/disabled before creation.
 - GFS-42 Business restriction: Business `568026370701542` is Meta Verified with Saeed full access/2FA, but legal identity is `Hoja Seeds` / `hojaseeds.pk`; dedicated lead-app Business assignment remains disabled.
 - GFS-42 existing ad draft: campaign `120255495379100054`, ad set `120255495379110054`, ad `120255495379120054`, unpublished/no-spend; linkage to Form `1093015800183328` not changed.
+- GFS-43 staging API version: `abaef4e0-b477-463d-a998-50810f5bcb43`; `DEPLOYMENT_STATE=WHATSAPP_OTP_REQUIRED`, Meta providers remain disabled.
 - Excluded candidate portfolio: `Garden Shop OK` / `1154400188565490`; visible business overview contains Hoja Seeds ad account `120233855869140541`, so it is not clean and is not used
 - GFS-14 read-only Meta audit: visible Ads Manager context was prohibited Garden Shop portfolio `568026370701542` with ad account `1198439777611633`; no clean Get Free Seeds ownership was verified and no asset was mutated
 - Designated Meta context per user: `Creeper Seeds`; clean ownership status: **NOT VERIFIED / PROHIBITED CONTEXT OBSERVED**

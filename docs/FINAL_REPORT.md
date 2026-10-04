@@ -307,7 +307,7 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - WhatsApp phone status: **verification code requested**. Meta displayed six-digit SMS entry for `+923328883383`; no code entered or resent.
 - App -> WABA: **FAIL / unchanged**. Canonical App still exposes test WABA; no authorized subscription token.
 - Messenger backup: **not needed**. Instagram DM: **deferred**.
-- Cloudflare: **PASS**, clean account and safe staging deployment. API/admin `785826f2-f07c-4dea-9f3c-c604d0d10670` / `62bcbd9d-ba6f-404f-b686-7bd9a5ef063b`; Meta providers and Instant Form ingestion disabled; no secrets.
+- Cloudflare: **PASS**, clean account and safe staging deployment. API `abaef4e0-b477-463d-a998-50810f5bcb43`; Meta providers and Instant Form ingestion disabled; no secrets.
 - Tests: **PASS**. 20/20, build, lint, audit, Wrangler dry-runs; staging D1 `lead_sources` verified.
 - Zero regression: **PASS**.
 - STOP_GATE: `WHATSAPP_OTP_REQUIRED` plus `META_APP_WABA_NOT_SUBSCRIBED` plus `META_INSTANT_FORM_PRIVACY_ENDING_INCOMPLETE`.
@@ -425,4 +425,27 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - STOP_GATE: `META_LEAD_APP_CREATION_BUSINESS_STEP_STALLED` + `META_LEAD_TOKEN_AND_PAGE_SUBSCRIPTION_UNAVAILABLE`; WhatsApp `WHATSAPP_OTP_REQUIRED`.
 - Remaining gates: clean lead-app Business assignment, lead token, Page leadgen subscription, real lead/dedupe, form-linked draft verification.
 - Next highest-value action: resolve the Meta Business legal/assignment restriction through the supported Business Support/verification path, then create exactly one lead-capable GFS app.
+
+## GFS-43-FORM-CAMPAIGN-ESCALATION Execution Update - 2026-10-04
+
+- Overall: **87%**. Remaining: **13%**.
+- Instant Form readiness: **70%**. Native Form/Page are available; backend realtime sync blocked.
+- WhatsApp readiness: **84%**.
+- Campaign draft: existing `120255495379100054` / `120255495379110054` / `120255495379120054`, unpublished and Leads/Form-oriented. Exact Form `1093015800183328` attachment, creative, placements, audience, and preview **not verified** because Ads Manager edit remained Loading. No mutation.
+- Launch-ready: **PARTIAL**, native Meta lead collection available; backend sync not launch-ready.
+- Published/spend: **NO**.
+- Lead App: **BLOCKED**; no ID created.
+- Business-selector root cause: verified Business with Saeed full access/2FA but legal identity Hoja Seeds, `hojaseeds.pk`, no primary location; Business assignment disabled.
+- Support case: **NONE**; Business Support Home exposed no case form/ID.
+- Lead token/Page subscription: **BLOCKED**.
+- Native Meta Leads Center: **PASS**, canonical Page accessible, 0 leads.
+- Backend realtime sync: **BLOCKED**.
+- Popup repeated prompts: **NOT PROVEN**.
+- WhatsApp OTP: **WHATSAPP_OTP_REQUIRED**.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Tests: **PASS** prior GFS-41 suite, 20/20/build/lint/audit/Wrangler; no code changes in GFS-43.
+- Zero regression: **PASS**.
+- Git: pending GFS-43 commit; PR #7 open/mergeable; main `a4ac98c`.
+- STOP_GATE: `META_LEAD_APP_CREATION_BUSINESS_STEP_STALLED` + `META_LEAD_TOKEN_AND_PAGE_SUBSCRIPTION_UNAVAILABLE` + `WHATSAPP_OTP_REQUIRED`.
+- Next highest-value action: resolve the Business legal/assignment restriction through Meta Support/verification so one lead-capable App can be created and subscribed.
 - Next highest-value action: provision the least-privilege lead token and subscribe canonical Page leadgen through App `2354726831735899`, then submit one supported test lead and verify D1/dedupe before creating the no-spend ad draft.

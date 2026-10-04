@@ -34,6 +34,10 @@
 - GFS-41 recorded safe MCP permission policy: routine Meta same-site navigation may persist, while password/OTP/CAPTCHA/spend/publication/payment/destructive prompts remain protected. No new App was created; Meta lead app Business step remains blocked.
 - GFS-42 diagnosed the lead-app blocker without repeating the wizard: Business `568026370701542` is Verified with Saeed full access/2FA, but legal identity is Hoja Seeds and Business assignment remains disabled. No App/token/Page subscription mutation was attempted.
 - GFS-42 recorded the existing unpublished Ads Manager draft IDs in canonical Ad Account `1198439777611633`; no publish, spend, duplicate draft, or form-link edit was made.
+- GFS-43 switched the active WhatsApp state to `WHATSAPP_OTP_REQUIRED` based on the visible six-digit SMS dialog; no code/resend was attempted.
+- GFS-43 audited the existing unpublished Leads/Form-oriented draft and native Leads Center. Campaign/adset/ad IDs remain `120255495379100054` / `120255495379110054` / `120255495379120054`; exact Form attachment could not be verified because Ads Manager edit stayed Loading. No publish/spend/mutation.
+- GFS-43 checked Business Support Home; no supported case form or Case ID was exposed. Lead realtime sync remains blocked while native Leads Center is available with 0 leads.
+- GFS-43 aligned deployed staging `DEPLOYMENT_STATE` to `WHATSAPP_OTP_REQUIRED`; API version `abaef4e0-b477-463d-a998-50810f5bcb43`, health PASS, providers still disabled.
 
 ## Unreleased - 2026-09-28 (GFS-14)
 
