@@ -30,6 +30,8 @@
 - GFS-39 locked leadgen ingestion to the exact Page/Form pair, persisted Page ID attribution, and added allowlist tests. API staging version `1c9e42ca-ad13-4e4a-8fbc-e01300cfebc3` remains disabled-safe; no token, leadgen subscription, real lead, ad draft, or spend was used.
 - GFS-40 confirmed canonical App `2354726831735899` exposes only WhatsApp and cannot add Page Lead Ads/Webhooks through Add use cases. The supported dedicated Marketing API app wizard stalled at Business pending/disabled before creation; no second App, token, Page subscription, lead, ad draft, or spend was created.
 - GFS-40 corrected recovery language to identify the existing Saeed Meta session as operator; Ayesha remains historical only.
+- GFS-41 switched the active Instant Form allowlist from superseded `2816887225374285` to canonical Form `1093015800183328` on Page `101192938541236`; old-form events are rejected.
+- GFS-41 recorded safe MCP permission policy: routine Meta same-site navigation may persist, while password/OTP/CAPTCHA/spend/publication/payment/destructive prompts remain protected. No new App was created; Meta lead app Business step remains blocked.
 
 ## Unreleased - 2026-09-28 (GFS-14)
 

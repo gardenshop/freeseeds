@@ -373,4 +373,30 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - Git: pending GFS-40 commit; PR #7 open/mergeable; main `a4ac98c`.
 - STOP_GATE: `META_LEAD_APP_CREATION_BUSINESS_STEP_STALLED` + `META_LEAD_TOKEN_AND_PAGE_SUBSCRIPTION_UNAVAILABLE`; WhatsApp separately `WHATSAPP_OTP_REQUIRED`.
 - Next highest-value action: provision the dedicated lead app through Meta's supported Business assignment path, then configure Page leadgen subscription and secure token before enabling staging ingestion.
+
+## GFS-41-CANONICAL-FORM-SWITCH Execution Update - 2026-10-04
+
+- Overall: **87%**. Remaining: **13%**.
+- MCP popup permissions: **PASS policy** for routine same-site Meta navigation; protected actions remain explicit.
+- Repeated prompts eliminated: **NOT PROVEN** across two popup openings; no global browser security change made.
+- Canonical Form: `1093015800183328`.
+- Name/status/Page: `Free Seeds 04-10-2026` / existing form / Page `101192938541236`.
+- Old form disabled from backend: **PASS**. `2816887225374285` superseded and rejected; active Wrangler config uses `1093015800183328`.
+- Lead App: **BLOCKED**. Canonical WhatsApp App only; dedicated app wizard Business step stalled.
+- Lead token: **BLOCKED**.
+- Page leadgen subscription: **FAIL/BLOCKED**.
+- Webhook challenge: **NOT CONFIGURED**; provider disabled-safe.
+- Real test lead: **NOT RUN**.
+- Graph retrieval: **CODE READY, LIVE BLOCKED**.
+- D1/order/admin: **CODE PASS**.
+- Dedupe: **PASS code path**.
+- Campaign draft: **NOT CREATED**.
+- Published/spend: **NO**.
+- WhatsApp OTP: pending/required from prior SMS verification dialog.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Tests: 20/20, build, lint, audit, Wrangler validation PASS after config switch.
+- Zero regression: **PASS**.
+- Git: pending GFS-41 commit; PR #7 open/mergeable; main `a4ac98c`.
+- STOP_GATE: `META_LEAD_APP_CREATION_BUSINESS_STEP_STALLED` + `META_LEAD_TOKEN_AND_PAGE_SUBSCRIPTION_UNAVAILABLE`.
+- Next highest-value action: resolve Meta Business assignment for a dedicated lead-capable app, then provision the secure lead token and Page subscription.
 - Next highest-value action: provision the least-privilege lead token and subscribe canonical Page leadgen through App `2354726831735899`, then submit one supported test lead and verify D1/dedupe before creating the no-spend ad draft.
