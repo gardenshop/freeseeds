@@ -199,3 +199,9 @@ The exact unavoidable gate is `META_LEAD_APP_CREATION_BUSINESS_STEP_STALLED` plu
 The canonical Instant Form is now Form ID `1093015800183328` on Page `101192938541236`. Form `2816887225374285` is superseded and must be rejected by the backend. The active Cloudflare variables and exact Page/Form allowlist are switched to the new ID; no second form was created.
 
 Chrome DevTools MCP continues to reuse the authenticated Saeed session. Routine same-site Meta navigation may use the existing session permission state; password/reauth, OTP/2FA, CAPTCHA, spend/publication, payment, deletion, deregistration, and destructive actions remain explicit approvals and are never globally auto-approved.
+
+## 2026-10-04: GFS-42 Business Restriction Diagnosis
+
+Business `568026370701542` was inspected read-only through Business Info and app creation. It is Meta Verified, Saeed Nazim has Full access, and two-factor authentication is on; however, legal business identity is `Hoja Seeds`, website `https://hojaseeds.pk/`, phone `+923034901810`, with no primary business location. The lead-app wizard's Business step remains disabled, so no dedicated App was created and no token/Page subscription was attempted. This is the exact supported-path blocker, not a permission-loop guess.
+
+Ads Manager showed an existing unpublished Leads draft (`120255495379100054` / `120255495379110054` / `120255495379120054`) in the canonical ad account. It was not published, spent, duplicated, or edited while lead integration is blocked.

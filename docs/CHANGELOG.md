@@ -32,6 +32,8 @@
 - GFS-40 corrected recovery language to identify the existing Saeed Meta session as operator; Ayesha remains historical only.
 - GFS-41 switched the active Instant Form allowlist from superseded `2816887225374285` to canonical Form `1093015800183328` on Page `101192938541236`; old-form events are rejected.
 - GFS-41 recorded safe MCP permission policy: routine Meta same-site navigation may persist, while password/OTP/CAPTCHA/spend/publication/payment/destructive prompts remain protected. No new App was created; Meta lead app Business step remains blocked.
+- GFS-42 diagnosed the lead-app blocker without repeating the wizard: Business `568026370701542` is Verified with Saeed full access/2FA, but legal identity is Hoja Seeds and Business assignment remains disabled. No App/token/Page subscription mutation was attempted.
+- GFS-42 recorded the existing unpublished Ads Manager draft IDs in canonical Ad Account `1198439777611633`; no publish, spend, duplicate draft, or form-link edit was made.
 
 ## Unreleased - 2026-09-28 (GFS-14)
 

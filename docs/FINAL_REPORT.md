@@ -399,4 +399,30 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - Git: pending GFS-41 commit; PR #7 open/mergeable; main `a4ac98c`.
 - STOP_GATE: `META_LEAD_APP_CREATION_BUSINESS_STEP_STALLED` + `META_LEAD_TOKEN_AND_PAGE_SUBSCRIPTION_UNAVAILABLE`.
 - Next highest-value action: resolve Meta Business assignment for a dedicated lead-capable app, then provision the secure lead token and Page subscription.
+
+## GFS-42-UNBLOCK-LEAD-APP Execution Update - 2026-10-04
+
+- Overall: **87%**. Remaining: **13%**.
+- Instant Form readiness: **70%**. Form `1093015800183328` and backend allowlist are ready; lead app/token/subscription blocked.
+- WhatsApp readiness: **84%**. OTP/App↔WABA gates unchanged.
+- Popup repeated prompts: **NOT PROVEN**; routine MCP navigation policy preserved, protected prompts remain manual.
+- Lead-app blocker root cause: Business `568026370701542` is Verified, Saeed full access, 2FA on, but Business Info legal identity is Hoja Seeds / `hojaseeds.pk`, no primary location; Meta Create App Business assignment remains disabled.
+- Lead App ID/status: **none created**.
+- Support case ID: **none**.
+- Lead token: **BLOCKED**.
+- Page leadgen subscription: **FAIL/BLOCKED**.
+- Webhook challenge: **NOT CONFIGURED**, provider disabled-safe.
+- Real test lead: **NOT RUN**.
+- Graph retrieval: **CODE READY, LIVE BLOCKED**.
+- D1/admin/dedupe: **CODE PASS**.
+- Campaign/adset/ad IDs: existing unpublished draft `120255495379100054` / `120255495379110054` / `120255495379120054`; no edits, publication, or spend.
+- Published/spend: **NO**.
+- WhatsApp OTP: **WHATSAPP_OTP_REQUIRED** from prior SMS verification dialog.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Tests: **20/20**, build, lint, audit, Wrangler validation PASS.
+- Zero regression: **PASS**.
+- Git: pending GFS-42 commit; PR #7 open/mergeable; main `a4ac98c`.
+- STOP_GATE: `META_LEAD_APP_CREATION_BUSINESS_STEP_STALLED` + `META_LEAD_TOKEN_AND_PAGE_SUBSCRIPTION_UNAVAILABLE`; WhatsApp `WHATSAPP_OTP_REQUIRED`.
+- Remaining gates: clean lead-app Business assignment, lead token, Page leadgen subscription, real lead/dedupe, form-linked draft verification.
+- Next highest-value action: resolve the Meta Business legal/assignment restriction through the supported Business Support/verification path, then create exactly one lead-capable GFS app.
 - Next highest-value action: provision the least-privilege lead token and subscribe canonical Page leadgen through App `2354726831735899`, then submit one supported test lead and verify D1/dedupe before creating the no-spend ad draft.

@@ -59,6 +59,8 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Instant Form audit: More volume, verified privacy/ending required by Meta; expected five customer categories are Full name/`full_name`, Phone number/`phone_number`, Complete Delivery Address/`complete_delivery_address`, Nearby Famous Place/`nearby_famous_place`, City/`city`; Email absent.
 - Lead ingestion: staging D1 `lead_sources` table with `page_id` verified; `/webhooks/meta/instant-form` is deployed but `META_INSTANT_FORM_ENABLED=false` until Page leadgen subscription and least-privilege lead token exist.
 - GFS-40 lead app: no dedicated App created; canonical App supports only WhatsApp use case. Marketing API dedicated-app wizard stalled at Business pending/disabled before creation.
+- GFS-42 Business restriction: Business `568026370701542` is Meta Verified with Saeed full access/2FA, but legal identity is `Hoja Seeds` / `hojaseeds.pk`; dedicated lead-app Business assignment remains disabled.
+- GFS-42 existing ad draft: campaign `120255495379100054`, ad set `120255495379110054`, ad `120255495379120054`, unpublished/no-spend; linkage to Form `1093015800183328` not changed.
 - Excluded candidate portfolio: `Garden Shop OK` / `1154400188565490`; visible business overview contains Hoja Seeds ad account `120233855869140541`, so it is not clean and is not used
 - GFS-14 read-only Meta audit: visible Ads Manager context was prohibited Garden Shop portfolio `568026370701542` with ad account `1198439777611633`; no clean Get Free Seeds ownership was verified and no asset was mutated
 - Designated Meta context per user: `Creeper Seeds`; clean ownership status: **NOT VERIFIED / PROHIBITED CONTEXT OBSERVED**
