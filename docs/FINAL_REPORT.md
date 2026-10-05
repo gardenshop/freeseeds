@@ -562,3 +562,31 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - Git: pending GFS-48 commit; PR #7 open/mergeable; main `a4ac98c`.
 - STOP_GATE: `BACKEND_REALTIME_SYNC_BLOCKED` + `PAYMENT_AMOUNT_NOT_CONFIGURED` + `WHATSAPP_OTP_REQUIRED`.
 - Next action: resolve lead App/token/Page subscription, then persist this native lead into D1/order and test Messenger acknowledgement before payment messaging.
+
+## GFS-49-PAYMENT-ADMIN-MESSENGER-ACK Execution Update - 2026-10-05
+
+- Overall: **90%**. Remaining: **10%**.
+- Payment Settings URL: `https://getfreeseeds-admin-staging.get-free-seeds.workers.dev/payment-settings`.
+- JazzCash UI: **PASS**.
+- Easypaisa UI: **PASS**.
+- Bank UI: **PASS**.
+- QR upload/preview: **NOT CONFIGURED**; private endpoints return 404, no synthetic QR persisted.
+- Access protection: **PASS** for `gisupp@gmail.com`.
+- Audit: **PASS** synthetic payment-method updates are audited; no real values written.
+- Real payment values: **NOT PROVIDED**.
+- Order amount: **BLOCKED**.
+- Messenger acknowledgement: **NOT SENT**; native customer receipt unverified.
+- Lead -> D1: **BLOCKED** by lead App/token/Page subscription.
+- Order created: **BLOCKED**.
+- Contact number: **PASS**.
+- Auto WhatsApp: **PASS**.
+- Recipient priority: **PASS** code path.
+- WhatsApp OTP: **WHATSAPP_OTP_REQUIRED**.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Actual WhatsApp send: **BLOCKED**.
+- Tests: **PASS**. 22/22, build, lint, audit, Wrangler validation, admin/payment smoke.
+- Zero regression: **PASS**.
+- Admin Worker version: `c236589e-760a-4190-95b9-285fc29b3518`.
+- Git: pending GFS-49 commit; PR #7 open/mergeable; main `a4ac98c`.
+- STOP_GATE: `PAYMENT_AMOUNT_NOT_CONFIGURED` + `BACKEND_REALTIME_SYNC_BLOCKED` + `WHATSAPP_OTP_REQUIRED`.
+- Next action: verify real Garden Shop payment recipients/amount rules through authorized admin configuration, then test one acknowledgement without payment instructions.
