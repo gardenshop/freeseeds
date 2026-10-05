@@ -6,8 +6,8 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 
 - Repository: `https://github.com/gardenshop/freeseeds.git`
 - Main: `aa673e7` (origin/main, verified 2026-09-28)
-- Main: `a4ac98c` (origin/main, current GFS branch base)
-- Active execution branch: `codex/gfs-meta-clean-007` at `45b2bc3`; PR #7 open and mergeable
+- Main: `7794b686e942901fc549c1c25a97a4175d9fa663` (PR #7 merged)
+- Active execution branch: `codex/gfs-launch-next-001` from merged main; remaining launch gates are external Meta/payment gates
 - Prior branch `codex/gfs-waba-test-002` retained remotely for provenance
 
 ## Cloudflare

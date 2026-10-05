@@ -104,6 +104,7 @@
 - Merged PR #2 into `main` at `d8b0511`; clean WABA remains the only Meta integration gate.
 - GFS-48 reverified the native lead detail: manual contact `03001234567`, Meta WhatsApp `+923034901810`, Form `1093015800183328`, and actual product/province/amount answers. No D1/order/payment was fabricated; active release state is explicitly `WHATSAPP_OTP_REQUIRED`.
 - GFS-49 added Access-protected `/payment-settings` using existing D1/R2 APIs, deployed admin `c236589e-760a-4190-95b9-285fc29b3518`. Synthetic incomplete-enable validation and disabled save/restore passed; no real payment values or QR were stored.
+- GFS-49 merged PR #7 into main at `7794b686e942901fc549c1c25a97a4175d9fa663` after local tests/build/lint/audit/Wrangler/admin payment smoke passed. Created fresh branch `codex/gfs-launch-next-001` for remaining external launch work.
 - GFS-46 verified native customer WhatsApp data `+923034901810` from the canonical Form lead and added E.164 normalization tests. It remains recipient data, never the GFS sender `+923328883383`.
 - GFS-46 added a safe deferred `WHATSAPP_ORDER_CONFIRMATION` outbox reference after durable lead/order persistence; OTP/App-WABA/provider gates defer it, and payment remains blocked without Garden Shop configuration.
 - GFS-47 separated customer-entered contact and Meta auto-fetched WhatsApp numbers in D1, added E.164 normalization/priority/fallback tests, rejected sender/old CTA recipients, and deployed API `97c038d1-6382-4a3e-9509-2ad2005472b9`. No WhatsApp send was attempted.
