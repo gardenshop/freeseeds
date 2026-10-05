@@ -38,6 +38,8 @@
 - GFS-43 audited the existing unpublished Leads/Form-oriented draft and native Leads Center. Campaign/adset/ad IDs remain `120255495379100054` / `120255495379110054` / `120255495379120054`; exact Form attachment could not be verified because Ads Manager edit stayed Loading. No publish/spend/mutation.
 - GFS-43 checked Business Support Home; no supported case form or Case ID was exposed. Lead realtime sync remains blocked while native Leads Center is available with 0 leads.
 - GFS-43 aligned deployed staging `DEPLOYMENT_STATE` to `WHATSAPP_OTP_REQUIRED`; API version `abaef4e0-b477-463d-a998-50810f5bcb43`, health PASS, providers still disabled.
+- GFS-44 proved no Form→Messenger continuation or automatic Page message from available native surfaces; Leads Center has 0 leads and Ads Manager draft edit remains Loading.
+- GFS-44 preserved payment safety: Garden Shop payment methods/recipient values are unconfigured, so no order/payment notification or Rs. 0 request was sent (`PAYMENT_AMOUNT_NOT_CONFIGURED`).
 
 ## Unreleased - 2026-09-28 (GFS-14)
 

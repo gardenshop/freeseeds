@@ -448,4 +448,27 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - Git: pending GFS-43 commit; PR #7 open/mergeable; main `a4ac98c`.
 - STOP_GATE: `META_LEAD_APP_CREATION_BUSINESS_STEP_STALLED` + `META_LEAD_TOKEN_AND_PAGE_SUBSCRIPTION_UNAVAILABLE` + `WHATSAPP_OTP_REQUIRED`.
 - Next highest-value action: resolve the Business legal/assignment restriction through Meta Support/verification so one lead-capable App can be created and subscribed.
+
+## GFS-44-FORM-MESSENGER-ORDER-PAYMENT Execution Update - 2026-10-05
+
+- Overall: **87%**. Remaining: **13%**.
+- Real Form submission: **NOT RUN**; no lead-capable App/token/Page subscription.
+- Lead in Leads Center: **PASS surface / 0 leads**.
+- Lead appears as Messenger conversation: **FAIL/UNAVAILABLE**; no supported native continuation evidence.
+- Native Messenger follow-up: **FAIL/UNVERIFIED**; Form completion is not assumed to open a thread.
+- Customer auto-notification: **FAIL/NOT SENT**.
+- Order number sent: **FAIL/NOT SENT**.
+- Address/details sent: **FAIL/NOT SENT**.
+- Payment amount valid: **FAIL**; Garden Shop payment methods/recipients are unconfigured.
+- Payment instructions sent: **FAIL/NOT SENT**.
+- Receipt flow: **NOT STARTED**.
+- Backend realtime sync: **BLOCKED** by lead App/token/Page subscription.
+- Messenger API: **NOT NEEDED / BLOCKED** because no native session exists and no supported Page Messenger credential path is available.
+- WhatsApp OTP: **WHATSAPP_OTP_REQUIRED**.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Tests: **PASS**. 20/20, build, lint, audit, Wrangler validation; no code changes required for GFS-44.
+- Zero regression: **PASS**.
+- Git: pending GFS-44 commit; PR #7 open/mergeable; main `a4ac98c`.
+- STOP_GATE: `INSTANT_FORM_TO_MESSENGER_NATIVE_UNAVAILABLE` + `PAYMENT_AMOUNT_NOT_CONFIGURED` + lead App/token/Page subscription blocker + `WHATSAPP_OTP_REQUIRED`.
+- Next action: resolve lead-capable App/credential/Page subscription, then submit one supported Form test lead before implementing any Messenger/order/payment notification.
 - Next highest-value action: provision the least-privilege lead token and subscribe canonical Page leadgen through App `2354726831735899`, then submit one supported test lead and verify D1/dedupe before creating the no-spend ad draft.

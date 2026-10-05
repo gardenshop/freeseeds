@@ -21,6 +21,7 @@
 ## Customer Journey
 
 - Temporary primary acquisition channel is Meta Instant Form; target primary after approval is WhatsApp; Facebook Messenger is secondary support and Instagram DM automation is deferred.
+- An Instant Form submission is not a Messenger conversation unless Meta visibly proves a supported native continuation/session. Never claim Messenger follow-up from form completion alone.
 - Meta Instant Form is the sole authorized temporary customer web form; no additional website form or custom domain is introduced.
 - All allowed channel sources (`META_INSTANT_FORM`, `WHATSAPP`, `FACEBOOK_MESSENGER`, `INSTAGRAM_DM`) feed the same D1 customer/lead/order/payment workflow. Do not create a separate CRM or channel-specific business logic.
 - Meta advertising, when explicitly authorized, uses the Instant Form until WhatsApp production sender approval.
@@ -29,6 +30,7 @@
 - Payment methods are JazzCash, Easypaisa, and Bank Transfer. Garden Shop recipient values must be verified before activation; never guess account numbers, IBANs, wallet numbers, merchant IDs, or credentials.
 - Customer-visible payment configuration is backend-managed in D1 `payment_methods`; QR binaries are private R2 objects. Do not hardcode recipient values, TILL/TIL IDs, QR keys, or payment instructions in source, Worker environment variables, Flow JSON, templates, or frontend strings.
 - Payment credentials and provider secrets remain Cloudflare secrets and are never stored in customer-visible configuration.
+- Do not send a payment request when payable amount or Garden Shop recipient configuration is absent. Exact gate: `PAYMENT_AMOUNT_NOT_CONFIGURED`; never send a Rs. 0 request or guess payment values.
 - Creeper Seeds is not the customer payment recipient. JazzCash, Easypaisa, and Bank QR/TILL payment recipients remain Garden Shop, backend-controlled, manually reviewed, and disabled until verified values are supplied.
 
 ## WhatsApp Number Lock
