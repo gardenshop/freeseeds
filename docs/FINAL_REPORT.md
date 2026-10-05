@@ -518,3 +518,27 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - Git: pending GFS-46 commit; PR #7 open/mergeable; main `a4ac98c`.
 - STOP_GATE: `BACKEND_REALTIME_SYNC_BLOCKED` + `PAYMENT_AMOUNT_NOT_CONFIGURED` + `WHATSAPP_OTP_REQUIRED`.
 - Next action: resolve lead App/token/Page subscription, then persist the proven native lead into D1/order before any eligible customer follow-up.
+
+## GFS-47-TWO-CUSTOMER-NUMBERS Execution Update - 2026-10-05
+
+- Overall: **89%**. Remaining: **11%**.
+- Contact number mapping: **PASS**; entered form phone `03001234567` maps to `+923001234567`.
+- WhatsApp number mapping: **PASS**; Meta auto-fetched `+923034901810` remains separate.
+- Both stored separately: **PASS** via `contact_number`/`normalized_contact_number` and `whatsapp_number`/`normalized_whatsapp_number`.
+- Priority resolver: **PASS**; Meta `wa_id` → auto WhatsApp → entered contact, dedupe identical candidates.
+- Meta wa_id available: **NO** in observed lead; resolver supports it only when supplied.
+- WhatsApp availability method: no recipient-validation API used; deferred send path only.
+- Primary candidate: **AUTO_WHATSAPP** (`+923034901810`).
+- Fallback: **CUSTOMER_CONTACT** (`+923001234567` in test matrix).
+- Fallback tested: **PASS unit matrix**; no live send.
+- Duplicate-send prevention: **PASS code path** via idempotent outbox/order key; no message sent.
+- Messenger acknowledgement: **NOT SENT**; customer-side delivery unverified.
+- WhatsApp actual send: **BLOCKED**.
+- WhatsApp OTP: **WHATSAPP_OTP_REQUIRED**.
+- Lead -> D1: **BLOCKED** realtime; native lead remains in Leads Center.
+- Payment: **BLOCKED** by `PAYMENT_AMOUNT_NOT_CONFIGURED`.
+- Tests: **PASS**. 22 tests, build, lint, audit, Wrangler validation.
+- Zero regression: **PASS**.
+- Git: pending GFS-47 commit; PR #7 open/mergeable; main `a4ac98c`.
+- STOP_GATE: `BACKEND_REALTIME_SYNC_BLOCKED` + `WHATSAPP_OTP_REQUIRED` + `PAYMENT_AMOUNT_NOT_CONFIGURED`.
+- Next action: resolve lead App/token/Page subscription, then persist native lead/order and test recipient fallback only after sender activation.

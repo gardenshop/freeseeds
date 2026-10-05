@@ -65,6 +65,7 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - GFS-44 payment/Messenger state: no enabled Garden Shop payment method or recipient values are configured; native Form→Messenger continuation is unverified/unavailable; no customer notification/order/payment was sent.
 - GFS-45 native lead: synthetic supported preview created one Intake lead in Leads Center for Form `1093015800183328`; backend realtime sync remains blocked. The form's WhatsApp CTA target was noncanonical and was not used.
 - GFS-46 customer contact: test lead exposes customer WhatsApp `+923034901810`; this is recipient data only, never the GFS sender. Business sender remains `+923328883383`; old CTA `923124093162` remains prohibited.
+- GFS-47 customer-number schema: staging D1 preserves entered contact and Meta WhatsApp fields separately; API version `97c038d1-6382-4a3e-9509-2ad2005472b9`; no sender credential or recipient validation API used.
 - Excluded candidate portfolio: `Garden Shop OK` / `1154400188565490`; visible business overview contains Hoja Seeds ad account `120233855869140541`, so it is not clean and is not used
 - GFS-14 read-only Meta audit: visible Ads Manager context was prohibited Garden Shop portfolio `568026370701542` with ad account `1198439777611633`; no clean Get Free Seeds ownership was verified and no asset was mutated
 - Designated Meta context per user: `Creeper Seeds`; clean ownership status: **NOT VERIFIED / PROHIBITED CONTEXT OBSERVED**

@@ -23,6 +23,8 @@
 - Temporary primary acquisition channel is Meta Instant Form; target primary after approval is WhatsApp; Facebook Messenger is secondary support and Instagram DM automation is deferred.
 - Native Instant Form Messenger continuation is available when the customer selects Meta's checked Messenger consent option and Meta creates the messaging context. Form completion alone still does not prove a customer-side message was received; verify the native session/message separately.
 - An Instant Form customer WhatsApp/contact number is a recipient value (`CUSTOMER_WHATSAPP_NUMBER`), never the GFS business sender. The only business sender is `+923328883383`; the old CTA target `923124093162` is prohibited.
+- `CUSTOMER_CONTACT_NUMBER` is the number manually entered in the form; `CUSTOMER_WHATSAPP_NUMBER` is Meta's auto-fetched WhatsApp number. Persist both separately and never overwrite either.
+- WhatsApp recipient priority is Meta `wa_id` when actually supplied, then `CUSTOMER_WHATSAPP_NUMBER`, then `CUSTOMER_CONTACT_NUMBER`; deduplicate identical candidates and reject the business sender/old CTA target.
 - Any customer WhatsApp follow-up requires an eligible Meta messaging context/consent and a verified sender; a phone field alone does not authorize proactive WhatsApp automation.
 - Meta Instant Form is the sole authorized temporary customer web form; no additional website form or custom domain is introduced.
 - All allowed channel sources (`META_INSTANT_FORM`, `WHATSAPP`, `FACEBOOK_MESSENGER`, `INSTAGRAM_DM`) feed the same D1 customer/lead/order/payment workflow. Do not create a separate CRM or channel-specific business logic.

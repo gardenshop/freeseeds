@@ -12,7 +12,7 @@ export function parseInstantFormSubmission(input: unknown): InstantFormSubmissio
 }
 
 export function parseMetaInstantFormLead(input: unknown): InstantFormSubmission {
-  const value = input as { id?: unknown; form_id?: unknown; created_time?: unknown; campaign_id?: unknown; adset_id?: unknown; adgroup_id?: unknown; ad_id?: unknown; field_data?: unknown };
+  const value = input as { id?: unknown; form_id?: unknown; page_id?: unknown; created_time?: unknown; campaign_id?: unknown; adset_id?: unknown; adgroup_id?: unknown; ad_id?: unknown; field_data?: unknown };
   const fields = new Map<string, string>();
   for (const item of Array.isArray(value.field_data) ? value.field_data : []) {
     if (!item || typeof item !== "object") continue;
@@ -21,17 +21,28 @@ export function parseMetaInstantFormLead(input: unknown): InstantFormSubmission 
     const firstValue = Array.isArray(field.values) && typeof field.values[0] === "string" ? field.values[0] : undefined;
     if (name && firstValue) fields.set(name, firstValue);
   }
+  const exact = (names: string[]) => {
+    for (const item of Array.isArray(value.field_data) ? value.field_data : []) {
+      if (!item || typeof item !== "object") continue;
+      const field = item as { name?: unknown; values?: unknown };
+      if (typeof field.name === "string" && names.includes(field.name) && Array.isArray(field.values) && typeof field.values[0] === "string") return field.values[0];
+    }
+    return undefined;
+  };
   const required = (keys: string[]) => keys.map((key) => fields.get(key)).find(Boolean);
+  const contactNumber = exact(["اپنا درست موبایل نمبر مہیا کریں۔", "اپنا درست موبایل نمبر مہیا کریں۔"]) ?? required(["contactnumber"]);
+  const whatsappNumber = required(["phonenumber", "whatsappnumber"]);
   return parseInstantFormSubmission({
     leadId: value.id,
     formId: value.form_id,
-    pageId: (value as { page_id?: unknown }).page_id,
+    pageId: value.page_id,
     createdTime: value.created_time,
     fullName: required(["fullname", "fullnamequestion"]),
     deliveryAddress: required(["completedeliveryaddress", "deliveryaddress"]),
     nearbyPlace: required(["nearbyfamousplace", "nearbyplace"]),
     city: required(["city"]),
-    contactNumber: required(["contactnumber", "phonenumber"]),
+    contactNumber,
+    whatsappNumber,
     campaignId: value.campaign_id,
     adSetId: value.adset_id ?? value.adgroup_id,
     adId: value.ad_id
@@ -71,14 +82,15 @@ async function persistLeadSubmission(db: D1Database, submission: FlowSubmission,
   const leadEvent = createLeadEvent(orderNumber, options.attribution);
   const leadEventId = leadEvent.eventId;
   const outboxId = crypto.randomUUID();
+  const whatsappNumber = "whatsappNumber" in submission && typeof submission.whatsappNumber === "string" ? submission.whatsappNumber : undefined;
   await db.batch([
-    db.prepare("INSERT INTO customers (id,wa_id,full_name,delivery_address,nearby_place,city,contact_number,normalized_phone,normalized_address_hash,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)").bind(customerId, null, submission.fullName, submission.deliveryAddress, submission.nearbyPlace, submission.city, submission.contactNumber, submission.contactNumber, addressHash, now, now),
+    db.prepare("INSERT INTO customers (id,wa_id,full_name,delivery_address,nearby_place,city,contact_number,normalized_phone,normalized_address_hash,created_at,updated_at,normalized_contact_number,whatsapp_number,normalized_whatsapp_number) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(customerId, null, submission.fullName, submission.deliveryAddress, submission.nearbyPlace, submission.city, submission.contactNumber, normalizeContactNumber(submission.contactNumber), addressHash, now, now, normalizeContactNumber(submission.contactNumber), whatsappNumber ?? null, whatsappNumber ? normalizeContactNumber(whatsappNumber) : null),
     db.prepare("INSERT INTO orders (id,order_number,customer_id,offer_code,pack_quantity,seed_price,delivery_fee,total_payable,state,payment_status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)").bind(orderId, orderNumber, customerId, "GET_FREE_SEEDS_5_PACKS", 5, 0, 0, 0, "DETAILS_COMPLETED", "PENDING", now, now),
     db.prepare("INSERT INTO payments (id,order_id,expected_amount,review_state,created_at,updated_at) VALUES (?,?,?,?,?,?)").bind(paymentId, orderId, 0, "PENDING", now, now),
     db.prepare("INSERT INTO leads (id,customer_id,order_id,status,capi_event_id,created_at) VALUES (?,?,?,?,?,?)").bind(leadId, customerId, orderId, "CREATED", leadEventId, now),
     db.prepare("INSERT INTO meta_attribution (id,order_id,customer_id,ctwa_clid,campaign_id,ad_set_id,ad_id,minimized_referral_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(attributionId, orderId, customerId, options.attribution?.ctwaClid ?? null, options.attribution?.campaignId ?? null, options.attribution?.adSetId ?? null, options.attribution?.adId ?? null, JSON.stringify({ source: options.source, ...options.attribution }), now),
     db.prepare("INSERT INTO lead_sources (id,lead_id,order_id,source,provider_lead_id,meta_form_id,provider_created_time,campaign_id,ad_set_id,ad_id,created_at,page_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), leadId, orderId, options.source, options.providerLeadId ?? null, options.formId ?? null, options.createdTime ?? null, options.attribution?.campaignId ?? null, options.attribution?.adSetId ?? null, options.attribution?.adId ?? null, now, options.pageId ?? null),
-    ...(options.source === "META_INSTANT_FORM" ? [db.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), `whatsapp_order_confirmation_${orderId}`, "WHATSAPP_ORDER_CONFIRMATION", orderId, JSON.stringify({ orderId, customerId, recipient: normalizeContactNumber(submission.contactNumber) }), "PENDING", now, now, now)] : []),
+    ...(options.source === "META_INSTANT_FORM" ? [db.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), `whatsapp_order_confirmation_${orderId}`, "WHATSAPP_ORDER_CONFIRMATION", orderId, JSON.stringify({ orderId, customerId }), "PENDING", now, now, now)] : []),
     db.prepare("INSERT INTO capi_events (id,event_id,event_name,order_id,customer_id,send_status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), leadEventId, "Lead", orderId, customerId, "PENDING", now, now),
     db.prepare("INSERT INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(outboxId, leadEventId, "CAPI_LEAD", orderId, JSON.stringify(leadEvent), "PENDING", now, now, now),
     db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), `${options.source}_SUBMITTED`, "CUSTOMER", "ORDER", orderId, correlationId, JSON.stringify({ orderNumber, source: options.source }), now)

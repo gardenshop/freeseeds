@@ -104,3 +104,4 @@
 - Merged PR #2 into `main` at `d8b0511`; clean WABA remains the only Meta integration gate.
 - GFS-46 verified native customer WhatsApp data `+923034901810` from the canonical Form lead and added E.164 normalization tests. It remains recipient data, never the GFS sender `+923328883383`.
 - GFS-46 added a safe deferred `WHATSAPP_ORDER_CONFIRMATION` outbox reference after durable lead/order persistence; OTP/App-WABA/provider gates defer it, and payment remains blocked without Garden Shop configuration.
+- GFS-47 separated customer-entered contact and Meta auto-fetched WhatsApp numbers in D1, added E.164 normalization/priority/fallback tests, rejected sender/old CTA recipients, and deployed API `97c038d1-6382-4a3e-9509-2ad2005472b9`. No WhatsApp send was attempted.
