@@ -542,3 +542,23 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - Git: pending GFS-47 commit; PR #7 open/mergeable; main `a4ac98c`.
 - STOP_GATE: `BACKEND_REALTIME_SYNC_BLOCKED` + `WHATSAPP_OTP_REQUIRED` + `PAYMENT_AMOUNT_NOT_CONFIGURED`.
 - Next action: resolve lead App/token/Page subscription, then persist native lead/order and test recipient fallback only after sender activation.
+
+## GFS-48-REAL-LEAD-INGESTION-MESSENGER-PAYMENT Execution Update - 2026-10-05
+
+- Overall: **89%**. Remaining: **11%**.
+- Lead -> D1: **BLOCKED**; native Leads Center detail is verified but automated lead token/Page subscription is absent.
+- Order created: **BLOCKED**; no fake order.
+- Contact number: **PASS** `03001234567` -> `+923001234567`.
+- Auto WhatsApp: **PASS** `+923034901810` stored separately/recipient priority.
+- Recipient priority: **PASS** code path; no send.
+- Messenger acknowledgement: **NOT SENT**; native Chat/customer receipt remains unverified.
+- Payment amount: **BLOCKED**; form text is not authoritative Garden Shop config.
+- Payment config: **BLOCKED**; no enabled method/recipient.
+- Payment message sent: **NO**.
+- WhatsApp OTP: **WHATSAPP_OTP_REQUIRED**.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Tests: **PASS**. 22/22, build, lint, audit, Wrangler validation.
+- Zero regression: **PASS**.
+- Git: pending GFS-48 commit; PR #7 open/mergeable; main `a4ac98c`.
+- STOP_GATE: `BACKEND_REALTIME_SYNC_BLOCKED` + `PAYMENT_AMOUNT_NOT_CONFIGURED` + `WHATSAPP_OTP_REQUIRED`.
+- Next action: resolve lead App/token/Page subscription, then persist this native lead into D1/order and test Messenger acknowledgement before payment messaging.
