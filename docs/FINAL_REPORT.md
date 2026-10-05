@@ -496,3 +496,25 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - STOP_GATE: `BACKEND_REALTIME_SYNC_BLOCKED` + `PAYMENT_AMOUNT_NOT_CONFIGURED` + customer-side Messenger receipt unverified + `WHATSAPP_OTP_REQUIRED`.
 - Next action: resolve the lead App/token/Page subscription, then map the verified native lead into the shared D1/order workflow before any Messenger payment message.
 - Next highest-value action: provision the least-privilege lead token and subscribe canonical Page leadgen through App `2354726831735899`, then submit one supported test lead and verify D1/dedupe before creating the no-spend ad draft.
+
+## GFS-46-CUSTOMER-WHATSAPP-FOLLOWUP Execution Update - 2026-10-05
+
+- Overall: **88%**. Remaining: **12%**.
+- Lead in Leads Center: **PASS**, Form `1093015800183328`; customer WhatsApp field verified as `+923034901810`.
+- Customer WhatsApp captured: **PASS**.
+- Captured field key: Meta submitted phone field plus Leads Center WhatsApp number; normalized recipient `+923034901810`.
+- Business sender: `+923328883383`; status **WHATSAPP_OTP_REQUIRED**.
+- Wrong CTA `923124093162`: **BLOCKED**, never clicked/reused.
+- Lead -> D1: **BLOCKED** realtime; native lead exists but token/Page subscription absent.
+- Order created: **BLOCKED**; no fake order.
+- Messenger acknowledgement: **NOT SENT**; native Chat context exists but customer-side delivery unverified.
+- Customer-side Messenger receipt: **NOT PROVEN**.
+- WhatsApp consent/context: Form visibly offers WhatsApp; phone field alone is not proactive authorization. CTA target was noncanonical and not used.
+- WhatsApp outbound outbox: **PASS deferred code path**; `WHATSAPP_ORDER_CONFIRMATION` stores only order/customer/recipient references and remains deferred under OTP/provider gates.
+- WhatsApp actual send: **BLOCKED**.
+- Payment amount: **BLOCKED** by `PAYMENT_AMOUNT_NOT_CONFIGURED`.
+- Tests: **PASS**. 20/20, build, lint, audit, Wrangler validation.
+- Zero regression: **PASS**.
+- Git: pending GFS-46 commit; PR #7 open/mergeable; main `a4ac98c`.
+- STOP_GATE: `BACKEND_REALTIME_SYNC_BLOCKED` + `PAYMENT_AMOUNT_NOT_CONFIGURED` + `WHATSAPP_OTP_REQUIRED`.
+- Next action: resolve lead App/token/Page subscription, then persist the proven native lead into D1/order before any eligible customer follow-up.

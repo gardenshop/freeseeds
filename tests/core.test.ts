@@ -6,7 +6,12 @@ describe("Get Free Seeds domain", () => {
     expect(FlowSubmission.parse({ fullName: "Synthetic Customer", deliveryAddress: "1 Test Street", nearbyPlace: "Test Park", city: "Sahiwal", contactNumber: "03001234567" })).toBeTruthy();
     expect(() => FlowSubmission.parse({ fullName: "Synthetic Customer", deliveryAddress: "1 Test Street", nearbyPlace: "Test Park", city: "Sahiwal", contactNumber: "03001234567", email: "x@example.test" })).toThrow();
   });
-  it("normalizes Pakistani numbers without using a real number", () => expect(normalizeContactNumber("03001234567")).toBe("+923001234567"));
+  it("normalizes Pakistani numbers without using a real number", () => {
+    expect(normalizeContactNumber("03001234567")).toBe("+923001234567");
+    expect(normalizeContactNumber("03034901810")).toBe("+923034901810");
+    expect(normalizeContactNumber("923034901810")).toBe("+923034901810");
+    expect(normalizeContactNumber("+923034901810")).toBe("+923034901810");
+  });
   it("guards legal order transitions", () => { expect(canTransition("PAYMENT_REVIEW", "PAID")).toBe(true); expect(canTransition("NEW", "PAID")).toBe(false); });
   it("creates deterministic event IDs", () => { expect(eventId("lead", "FS-100001")).toBe("lead_FS-100001"); expect(createLeadEvent("FS-100001").eventId).toBe("lead_FS-100001"); expect(createPurchaseEvent("FS-100001", 250).value).toBe(250); });
   it("formats concurrent-safe sequence output", () => expect(nextOrderNumber(100001)).toBe("FS-100001"));

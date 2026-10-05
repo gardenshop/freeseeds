@@ -102,3 +102,5 @@
 - Recorded Meta portfolio-limit support case as not created; no existing asset was modified or repurposed.
 - Fixed ESLint to ignore managed `.kilo/worktrees` and `.wrangler` directories; final sequential local quality gate is green.
 - Merged PR #2 into `main` at `d8b0511`; clean WABA remains the only Meta integration gate.
+- GFS-46 verified native customer WhatsApp data `+923034901810` from the canonical Form lead and added E.164 normalization tests. It remains recipient data, never the GFS sender `+923328883383`.
+- GFS-46 added a safe deferred `WHATSAPP_ORDER_CONFIRMATION` outbox reference after durable lead/order persistence; OTP/App-WABA/provider gates defer it, and payment remains blocked without Garden Shop configuration.
