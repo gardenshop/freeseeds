@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { canTransition, OrderState, approvedPurchaseValue, createPurchaseEvent, isPaymentMethodComplete, normalizePaymentMethodRow, paymentInstructions, PaymentMethod, storePaymentQr } from "@gfs/core";
 
-type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string } };
+type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string } };
 const app = new Hono<Env>();
 
 function authorized(c: { req: { header(name: string): string | undefined }; env: Env["Bindings"] }): boolean {
@@ -17,7 +17,21 @@ app.get("/health", async (c) => {
   const configured = c.env.DB ? await c.env.DB.prepare("SELECT COUNT(*) AS count FROM payment_methods WHERE enabled=1 AND recipient_name IS NOT NULL AND instructions IS NOT NULL").first<{ count: number }>() : null;
   return c.json({ ok: true, service: "getfreeseeds-admin", state: c.env.DEPLOYMENT_STATE, paymentConfigured: Number(configured?.count ?? 0) > 0 });
 });
-app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav>Dashboard | Leads | Orders | Payment Verification | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
+app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav><a href='/payment-settings'>Payment Settings</a> | Dashboard | Leads | Meta Instant Form | Orders | Payment Verification | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
+
+app.get("/payment-settings", (c) => c.html(`<!doctype html><html><head><meta charset="utf-8"><title>Payment Settings | Get Free Seeds</title><style>body{font:16px system-ui;max-width:1100px;margin:2rem auto;padding:0 1rem}nav{margin-bottom:1rem}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}.card{border:1px solid #ccc;border-radius:8px;padding:1rem}.card h2{margin-top:0}.card label{display:block;margin:.6rem 0}.card input,.card textarea{box-sizing:border-box;width:100%;padding:.5rem}.status{font-size:.9rem;margin:.5rem 0}.configured{color:green}.incomplete{color:#a15c00}.error{color:#b00020}.qr{max-width:180px;max-height:180px;display:block;margin-top:.5rem}.actions{display:flex;gap:.5rem;align-items:center}button{padding:.5rem .8rem}</style></head><body><nav><a href='/'>Admin home</a></nav><h1>Garden Shop Payment Settings</h1><p>Values are backend-controlled. Disabled or incomplete methods cannot send payment instructions.</p><div id="methods" class="grid">Loading...</div><script>
+const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const label=(m)=>m==='BANK_TRANSFER'?'Bank Transfer':m==='EASYPAISA'?'Easypaisa':'JazzCash';
+async function load(){const r=await fetch('/api/payment-methods');const d=await r.json();document.querySelector('#methods').innerHTML=(d.paymentMethods||[]).map((m)=>{const complete=m.enabled&&m.recipientName&&m.instructions;const qr=m.qrR2Key?'<img class="qr" data-preview alt="Private QR preview">':'';return '<section class="card" data-method="'+m.method+'"><h2>'+label(m.method)+'</h2><div class="status '+(complete?'configured':'incomplete')+'">'+(complete?'Configured':'Incomplete or disabled')+'</div><label>Recipient name<input data-key="recipientName" value="'+esc(m.recipientName)+'"></label><label>TILL/TIL/account identifier<input data-key="tillId" value="'+esc(m.tillId)+'"></label><label>Instructions<textarea data-key="instructions">'+esc(m.instructions)+'</textarea></label><label>Reference instruction<input data-key="referenceInstruction" value="'+esc(m.referenceInstruction)+'"></label><label>Sort order<input data-key="sortOrder" type="number" value="'+(Number(m.sortOrder)||100)+'"></label><label><input data-key="enabled" type="checkbox" '+(m.enabled?'checked':'')+'> Enabled</label><div class="actions"><button data-save>Save</button><input data-qr type="file" accept="image/*"><button data-upload>Upload QR</button></div><div data-result class="status"></div>'+qr+'</section>'}).join('');for(const card of document.querySelectorAll('.card')){const method=card.dataset.method;const result=card.querySelector('[data-result]');card.querySelector('[data-save]').onclick=async()=>{const body={};for(const e of card.querySelectorAll('[data-key]'))body[e.dataset.key]=e.type==='checkbox'?e.checked:e.type==='number'?Number(e.value):e.value;const r=await fetch('/api/payment-methods/'+method,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});result.textContent=r.ok?'Saved':'Validation blocked';result.className='status '+(r.ok?'configured':'error');if(r.ok)await load()};card.querySelector('[data-upload]').onclick=async()=>{const file=card.querySelector('[data-qr]').files[0];if(!file){result.textContent='Choose an image first';return}const r=await fetch('/api/payment-methods/'+method+'/qr',{method:'POST',headers:{'Content-Type':file.type},body:file});result.textContent=r.ok?'QR uploaded privately':'QR upload failed';if(r.ok)await load()};const img=card.querySelector('[data-preview]');if(img){img.src='/api/payment-methods/'+method+'/qr'}}}
+load().catch(()=>document.querySelector('#methods').textContent='Payment settings unavailable');</script></body></html>`));
+
+app.get("/api/leads", async (c) => {
+  if (!c.env.DB) return c.json({ leads: [] });
+  const source = c.req.query("source");
+  const query = "SELECT l.id AS lead_id, l.status, l.capi_event_id, o.id AS order_id, o.order_number, o.state AS order_state, c.full_name, c.city, ls.source, ls.provider_lead_id, ls.meta_form_id, ls.provider_created_time, ls.campaign_id, ls.ad_set_id, ls.ad_id FROM leads l JOIN orders o ON o.id=l.order_id JOIN customers c ON c.id=l.customer_id LEFT JOIN lead_sources ls ON ls.lead_id=l.id" + (source ? " WHERE ls.source=?" : "") + " ORDER BY l.created_at DESC";
+  const result = source ? await c.env.DB.prepare(query).bind(source).all() : await c.env.DB.prepare(query).all();
+  return c.json({ leads: result.results });
+});
 
 app.get("/api/payment-methods", async (c) => {
   if (!c.env.DB) return c.json({ paymentMethods: [] });
@@ -91,10 +105,10 @@ app.post("/api/payments/:id/approve", async (c) => {
   const body = await c.req.json<{ orderId: string; orderNumber: string; expectedAmount: number; approvedAmount: number; customerId: string }>();
   try {
     const amount = approvedPurchaseValue(body.expectedAmount, body.approvedAmount);
-    const event = createPurchaseEvent(body.orderNumber, amount);
-    if (!c.env.DB) return c.json({ ok: true, simulated: true, event });
-    const current = await c.env.DB.prepare("SELECT p.review_state, o.state FROM payments p JOIN orders o ON o.id = p.order_id WHERE p.id = ? AND o.id = ?").bind(c.req.param("id"), body.orderId).first<{ review_state: string; state: OrderState }>();
+    if (!c.env.DB) return c.json({ ok: true, simulated: true, event: createPurchaseEvent(body.orderNumber, amount) });
+    const current = await c.env.DB.prepare("SELECT p.review_state, o.state, ma.ctwa_clid FROM payments p JOIN orders o ON o.id = p.order_id LEFT JOIN meta_attribution ma ON ma.order_id = o.id WHERE p.id = ? AND o.id = ?").bind(c.req.param("id"), body.orderId).first<{ review_state: string; state: OrderState; ctwa_clid?: string }>();
     if (!current) return c.json({ error: "PAYMENT_NOT_FOUND" }, 404);
+    const event = createPurchaseEvent(body.orderNumber, amount, current.ctwa_clid ? { ctwaClid: current.ctwa_clid } : undefined);
     if (current.review_state === "APPROVED" && current.state === "PAID") return c.json({ ok: true, alreadyApproved: true, eventId: event.eventId });
     if (current.review_state !== "REVIEW" || current.state !== "PAYMENT_REVIEW") return c.json({ error: "PAYMENT_NOT_IN_REVIEW" }, 409);
     const now = new Date().toISOString();
@@ -105,7 +119,16 @@ app.post("/api/payments/:id/approve", async (c) => {
       c.env.DB.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) SELECT ?,?,?,?,?,?,?,?,? FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=? AND o.state='PAID' AND p.id=? AND p.review_state='APPROVED'").bind(crypto.randomUUID(), event.eventId, "CAPI_PURCHASE", body.orderId, JSON.stringify(event), "PENDING", now, now, now, body.orderId, c.req.param("id")),
       c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? FROM orders WHERE id=? AND state='PAID'").bind(crypto.randomUUID(), "PAYMENT_APPROVED", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT", c.req.param("id"), crypto.randomUUID(), JSON.stringify({ orderNumber: body.orderNumber, eventId: event.eventId }), now, body.orderId)
     ]);
-    return c.json({ ok: true, eventId: event.eventId });
+    let queued = false;
+    try {
+      if (c.env.EVENTS) {
+        await c.env.EVENTS.send({ kind: "CAPI_PURCHASE", idempotencyKey: event.eventId, entityId: body.orderId, schemaVersion: 1 });
+        queued = true;
+      }
+    } catch {
+      // The durable outbox remains authoritative when Queue delivery is temporarily unavailable.
+    }
+    return c.json({ ok: true, eventId: event.eventId, capiQueue: queued ? "QUEUED" : "DEFERRED" });
   } catch (error) { return c.json({ error: error instanceof Error ? error.message : "APPROVAL_FAILED" }, 400); }
 });
 

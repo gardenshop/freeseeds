@@ -3,6 +3,8 @@ import { z } from "zod";
 export const REQUIRED_FLOW_FIELDS = ["fullName", "deliveryAddress", "nearbyPlace", "city", "contactNumber"] as const;
 export const PaymentMethod = z.enum(["JAZZCASH", "EASYPAISA", "BANK_TRANSFER"]);
 export type PaymentMethod = z.infer<typeof PaymentMethod>;
+export const LeadSource = z.enum(["META_INSTANT_FORM", "WHATSAPP", "FACEBOOK_MESSENGER", "INSTAGRAM_DM"]);
+export type LeadSource = z.infer<typeof LeadSource>;
 export const OrderState = z.enum(["NEW", "DETAILS_COMPLETED", "PAYMENT_PENDING", "RECEIPT_SUBMITTED", "PAYMENT_REVIEW", "PAYMENT_REJECTED", "PAID", "PACKING", "DISPATCHED", "DELIVERED", "CANCELLED"]);
 export type OrderState = z.infer<typeof OrderState>;
 
@@ -14,6 +16,17 @@ export const FlowSubmission = z.object({
   contactNumber: z.string().trim().min(7).max(30)
 }).strict();
 export type FlowSubmission = z.infer<typeof FlowSubmission>;
+export const InstantFormSubmission = FlowSubmission.extend({
+  leadId: z.string().trim().min(1).max(100),
+  formId: z.string().trim().min(1).max(100),
+  pageId: z.string().trim().min(1).max(100),
+  whatsappNumber: z.string().trim().min(7).max(30).optional(),
+  createdTime: z.string().trim().min(1).max(100),
+  campaignId: z.string().trim().min(1).max(100).optional(),
+  adSetId: z.string().trim().min(1).max(100).optional(),
+  adId: z.string().trim().min(1).max(100).optional()
+}).strict();
+export type InstantFormSubmission = z.infer<typeof InstantFormSubmission>;
 
 export const transitions: Record<OrderState, readonly OrderState[]> = {
   NEW: ["DETAILS_COMPLETED", "CANCELLED"],
@@ -39,6 +52,21 @@ export function normalizeContactNumber(value: string): string {
   if (digits.startsWith("03") && digits.length === 11) return `+92${digits.slice(1)}`;
   if (digits.startsWith("92") && !digits.startsWith("+")) return `+${digits}`;
   return digits;
+}
+
+export type CustomerRecipientSource = "META_WA_ID" | "CUSTOMER_WHATSAPP_NUMBER" | "CUSTOMER_CONTACT_NUMBER";
+export type CustomerRecipient = { recipient: string; source: CustomerRecipientSource };
+
+export function resolveWhatsAppRecipients(customer: { wa_id?: string | null; normalized_whatsapp_number?: string | null; normalized_contact_number?: string | null; normalized_phone?: string | null }, businessSender = "+923328883383"): CustomerRecipient[] {
+  const candidates: CustomerRecipient[] = [];
+  const add = (recipient: string | null | undefined, source: CustomerRecipientSource) => {
+    if (!recipient || normalizeContactNumber(recipient) === normalizeContactNumber(businessSender) || normalizeContactNumber(recipient) === normalizeContactNumber("923124093162") || candidates.some((candidate) => candidate.recipient === recipient)) return;
+    candidates.push({ recipient, source });
+  };
+  add(customer.wa_id, "META_WA_ID");
+  add(customer.normalized_whatsapp_number, "CUSTOMER_WHATSAPP_NUMBER");
+  add(customer.normalized_contact_number ?? customer.normalized_phone, "CUSTOMER_CONTACT_NUMBER");
+  return candidates;
 }
 
 export function eventId(kind: "lead" | "purchase", orderNumber: string): string {

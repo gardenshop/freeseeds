@@ -2,7 +2,7 @@
 
 ## Current State
 
-`WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING`
+`WHATSAPP_PHONE_VERIFICATION_PENDING`
 
 ## Completed Work
 
@@ -16,14 +16,14 @@
 
 ## Verification
 
-- No live WhatsApp number has been used.
+- Canonical sender `+923328883383` / Phone Number ID `1429127796940691` exists in WABA `2616648355452496` with status In Review/Unverified; it is not enabled for runtime.
 - No prohibited Meta test number has been used; a clean staging WABA/test number is now allowed but not yet configured.
 - No paid ad spend has been initiated.
 
 ## Blockers and Gates
 
-- Authorized production WhatsApp number is `+923328883383`; Meta onboarding, ownership verification, and runtime connection remain pending.
-- Clean Meta portfolio/WABA and Page isolation remain future integration gates.
+- Authorized production sender is `+923328883383` / Phone Number ID `1429127796940691`; phone verification/review, App↔WABA subscription, and runtime connection remain pending.
+- Canonical Meta App/WABA/Page exist; supported subscription and sender registration remain integration gates.
 - Verified Garden Shop recipient details are not yet available; payment methods remain safe-disabled until supplied.
 - R2 onboarding was explicitly authorized; dashboard verified $0.00 current billable usage and no public bucket access.
 - TypeScript build, ESLint, unit/domain tests, and simulated WhatsApp E2E all pass.
@@ -38,9 +38,9 @@
 - Latest payment-aware API/admin versions deployed: `d4aff2d9-1c27-41f5-a01c-22208a37eb78` / `46efab4b-796f-4422-b4bf-639930b11904`.
 - Browser protocol is locked: authenticated `ayesha.butt55@hotmail.com` for Meta/Facebook and `gisupp@gmail.com` for Cloudflare/GitHub/admin, with same-task tab reuse and account verification before mutations.
 - User authorized `+923328883383` for Get Free Seeds / Free Seeds In Pakistan WhatsApp Business Platform onboarding and controlled integration testing; no registration or external mutation is evidenced in this execution environment.
-- `STAGING_WABA_TEST_ALLOWED` remains limited to a visibly clean Meta-owned staging context; the authorized number is not yet connected to runtime.
-- Clean WABA staging setup is blocked by Meta's visible business-portfolio creation limit while the available existing portfolios/assets are not independently clean; no existing portfolio/WABA/app/test number was used.
-- Read-only audit proved candidate `Garden Shop OK` also contains a Hoja Seeds ad account; it is excluded. No clean suitable portfolio/WABA/test number is currently available.
+- `STAGING_WABA_TEST_ALLOWED` remains limited to a visibly clean Meta-owned staging context; canonical WABA `2616648355452496` now has authorized Phone Number ID `1429127796940691` in Review/Unverified, but it is not connected to runtime.
+- Canonical WABA/App now exist; the active launch gate is App↔WABA subscription and phone review, not portfolio creation. No existing Hoja portfolio/WABA/app/test number was used.
+- Read-only audit proved candidate `Garden Shop OK` also contains a Hoja Seeds ad account; it remains excluded. No Meta test sender was used.
 - Meta alternative-path audit found no no-portfolio WhatsApp sandbox; Meta app creation requires a business portfolio selection for the WhatsApp use case. Support path investigation is in progress; no support case has been submitted yet.
 - Meta support case: not created; no clean WABA/test context or support-case ID is available. This remains a platform-enforced external gate.
 - Deployed staging smoke passed with synthetic-only data: Flow/D1 persistence, JazzCash/Easypaisa/Bank selection, receipt request, mock media retrieval, private R2 receipt write, and `PAYMENT_REVIEW`; synthetic methods/fixtures were restored/removed afterward.
@@ -75,14 +75,56 @@
 
 ## Current External Gate
 
-- Local MCP and direct WebSocket MCP are proven working. Cloudflare identity is now PASS; remaining gates are Ayesha Facebook password authentication, clean Meta ownership, Meta onboarding, and webhook secrets/provider enablement. No token, OTP, Meta mutation, or real WhatsApp E2E result is claimed.
-- GFS-16 current gate: Facebook is at “Log into Facebook” for `ayesha.butt55@hotmail.com`; password is required and was not entered. Ayesha authentication, clean portfolio verification, Meta onboarding, and Cloudflare correction remain pending.
-- GFS-19/GFS-20 recorded a historical `META_AUTH_PASSWORD_REQUIRED` gate; it is superseded by the current-session operator protocol. Cloudflare identity remains PASS and staging is deployed but Meta-disabled.
+- Local MCP and direct WebSocket MCP are proven working; the required initial `list_pages` inventory succeeded in GFS-35. Cloudflare identity is PASS. The current gate is App/WABA relationship verification through supported WhatsApp API Setup/subscription surfaces, followed by secrets/provider enablement. No token, OTP, Meta mutation, or real WhatsApp E2E result is claimed.
+- GFS-16 recorded a historical Ayesha login gate; it is not the current operator gate and must not drive execution. The current authenticated Saeed session remains the authorized Meta operator when it exposes the required clean GFS authority.
+- GFS-19/GFS-20 recorded historical dependency/authentication gates; Cloudflare identity remains PASS and staging is deployed but Meta-disabled.
 - GFS-21/GFS-22 recorded historical read-only discovery; no logout, switch, new profile, credential entry, or asset mutation occurred.
-- GFS-25 recorded the prior `CLEAN_META_ASSET_NOT_ACCESSIBLE` gate before the current-session creation authorization.
-- GFS-26 current action: use the existing authenticated Saeed Meta session to create a new independent Creeper Seeds business; Ayesha authentication is not a prerequisite.
+- GFS-25 recorded the prior `CLEAN_META_ASSET_NOT_ACCESSIBLE` gate before the current-session creation authorization; it is historical.
+- GFS-26 recorded the portfolio-limit/support path; no new portfolio is required for the canonical Meta-only root now authorized.
+- GFS-27 canonical Meta root read-only trace verified Portfolio `568026370701542` (Garden Shop UI), Ad Account `1198439777611633` (creeper seeds UI), and Page `Free Seeds In Pakistan - www.gardenshop.pk` ID `101192938541236`. Page showed Saeed Nazim full access and 0 partners; existing Hoja App `1065866162865361` was excluded.
+- GFS-27 Meta setup attempt recorded a historical `META_REAUTH_PASSWORD_REQUIRED` gate before the canonical App/WABA existed; no password or OTP was entered. Existing Hoja WABA `810731151319635` and Hoja App remain excluded.
+- GFS-29 Page-first check recorded the Page's then-empty Connected Assets panel and excluded Hoja accounts; it does not establish a current App/WABA integration requirement.
+- GFS-30 Meta App creation: new GFS App `2354726831735899` / `Get Free Seeds` was created under canonical root `568026370701542` with WhatsApp customer-connection use case. Existing Hoja App/WABA remain excluded. WABA Add flow was opened but current Meta tab control became unresponsive before new WABA creation; no number, WABA, token, or Cloudflare mutation occurred.
+- GFS-31 MCP control recovered with direct WebSocket bridge `chrome-devtools-mcp@1.10.1`; new WABA form was resumed. `Get Free Seeds` / Food and Grocery form accepted, normal reCAPTCHA checkbox completed without image challenge, but Continue remained disabled and no WABA was created. STOP_GATE=`META_RECAPTCHA_REQUIRED`; no number or Hoja mutation occurred.
+- GFS-32 display-name-only attempt: selected `Use a display name only`, set intended display name `Free Seeds`, and did not choose `Add a new number`. Meta explicitly returned `Business reached maximum allowed WhatsApp Number limit`; additional business/display-name review was required at that time. The approved GFS WABA was subsequently verified in GFS-33.
+- GFS-32 capacity inventory: excluded Hoja WABA `810731151319635` contains only visible number `+92 313 4799681`, display name Hoja Seeds, status Connected, quality High. It is active Hoja/Garden Shop and must not be deleted; no unused/unknown number was visible.
+- GFS-33 quota diagnosis: new GFS WABA `2616648355452496` / Get Free Seeds is Approved, business verified, 2,000 new conversations/day, no phone numbers, no partners, and display name shown upon approval. Canonical Page/App each expose Connect assets but no linkage is currently visible; browser bridge omitted connector UIDs, so no mutation was attempted.
+- GFS-34 MCP targeting repaired: fresh list_pages and snapshots reacquired live Page Connect assets UID and App Connect assets UID. Page chooser contained only Instagram; App chooser contained only Other business assets, with no canonical Page/WABA option. Neither Page nor App connected to WABA `2616648355452496`; no mutation occurred. STOP_GATE=`META_ASSET_CONNECTION_CHOOSER_MISSING_CANONICAL_ASSETS`.
+- GFS-35 canonical facts: App `2354726831735899` / Get Free Seeds and WABA `2616648355452496` / Get Free Seeds are the GFS pair; WABA is Approved/business verified with no phone numbers. The generic Connect-assets chooser is not assumed to be the WhatsApp integration mechanism; App API Setup/WABA subscription and WABA assigned apps remain unverified.
+- GFS-35 MCP recovery: direct local bridge initialization and required `list_pages` succeeded using the live `DevToolsActivePort`; inventory exposed WhatsApp Manager for WABA `2616648355452496` and App settings for App `2354726831735899`. Subsequent read-only snapshot/tool calls stopped responding, so no dashboard mutation or subscription claim is recorded.
+- GFS-35 staging update: `wrangler whoami` verified `gisupp@gmail.com` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; final API `a93e0d64-7562-4979-aaba-a54acc9cf6af` and admin `07709470-34ee-4de1-b81e-8896257627c9` deployed with provider/CAPI disabled. Health PASS; challenge remains expected 403 without secret; POST remains expected 503 while Meta is disabled.
+- GFS-36 MCP repair: upgraded the local bridge from `chrome-devtools-mcp@1.8.0` to `1.10.1`, replaced the stale Codex WebSocket UUID with live `DevToolsActivePort` `9222/0a6fd083-d7b2-425b-8687-b585977a1cbc`, preserved the existing Chrome profile, and verified `list_pages` followed by successful `select_page` and `take_snapshot` calls.
+- GFS-36 App/WABA truth: canonical WABA `2616648355452496` still shows Get Free Seeds Approved, no prior phone numbers, then the authorized `+923328883383` was added as Phone Number ID `1429127796940691` with status In Review/Unverified. Canonical App API console still shows only test WABA `1932075647340454` / test phone `870701809469791`; App↔WABA subscription is not present or verified. No test/Hoja number was used.
+- GFS-36 sender gate: display-name-only is not runnable on the App console. Meta requires a verified business phone for scale; the authorized number form accepted Pakistan `+92` and `3328883383`, but no SMS/voice OTP option was exposed after submission. Do not retry or enter any code; current gate is `WHATSAPP_PHONE_VERIFICATION_PENDING`.
+- GFS-37 status verification: canonical WABA phone settings show `+92 332 8883383`, Phone Number ID `1429127796940691`, display name `Get Free Seeds`, registration status `In Review`, quality `Unverified`; no verification method/action is exposed beyond the pending review state. App API still resolves to test WABA `1932075647340454`, so App↔canonical-WABA subscription remains absent.
+- GFS-37 staging state update: after `wrangler whoami` verified `gisupp@gmail.com` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, API `73e0d310-da94-43d0-819a-4e86c4ace794` and admin `f0135e82-b28d-453b-a5af-e9b12d2d34d7` deployed with `WHATSAPP_PHONE_VERIFICATION_PENDING`, Meta provider/CAPI disabled. Health PASS; challenge 403 and POST 503 are expected safe gates.
+- GFS-38 WhatsApp check: canonical phone settings changed to “Phone number verification required”; one SMS verification code was requested for `+923328883383`, then Meta displayed the six-digit code dialog. No code was entered or resent. STOP_GATE is now `WHATSAPP_OTP_REQUIRED`; App↔WABA remains unverified and no Hoja/test sender was used.
+- GFS-38 Instant Form: canonical Page `101192938541236` editor was configured as a More volume draft named `Get Free Seeds - 5 Free Seed Packs`, with offer “Get 5 Seed Packs FREE” and delivery/payment disclosure. Email was removed; fields are Full name, Phone number, Complete Delivery Address, Nearby Famous Place, and City. Meta blocked save/create because the privacy policy and ending sections remained incomplete after policy-link interaction failed. No form ID, publication, campaign draft, spend, or leads exist.
+- GFS-38 shared backend: added D1 `lead_sources`, signed disabled-by-default Meta Instant Form lead webhook path, Graph lead retrieval, five-field normalization, source/form/campaign attribution, Meta lead ID dedupe, Lead CAPI outbox creation after durable D1 storage, and shared admin `/api/leads?source=META_INSTANT_FORM` visibility. Staging migration applied directly because legacy D1 schema existed without a Wrangler migration ledger; `lead_sources` table was verified. API/admin versions `785826f2-f07c-4dea-9f3c-c604d0d10670` / `62bcbd9d-ba6f-404f-b686-7bd9a5ef063b` retain all Meta providers disabled.
+- GFS-39 exact form audit: `Free Seeds 04-10-2026`, Form ID `2816887225374285`, Page `101192938541236`, status Active, created Oct 4 2026, 0 leads. Backend allowlist is locked to this Page/Form pair; unrelated Page/Form leadgen events are ignored/rejected. Staging API version `1c9e42ca-ad13-4e4a-8fbc-e01300cfebc3`; `META_INSTANT_FORM_ENABLED=false`.
+- GFS-39 subscription gate: canonical App `2354726831735899`/Page leadgen subscription and secure `META_LEAD_ACCESS_TOKEN` are not available; no Meta webhook mutation, real lead, or ad draft was performed. WhatsApp remains separate and pending OTP/subscription.
+- GFS-40 Meta leadgen check: canonical App `2354726831735899` supports only the WhatsApp use case; Add use cases exposes no Lead Ads/Page Webhooks option. Meta's supported dedicated-app wizard accepted Marketing API as a use case but stalled with Business pending/disabled before creation; no new App ID was created. Active Meta operator is the existing authenticated Saeed session; Ayesha remains historical.
+- GFS-40 current backend: exact Form/Page allowlist remains deployed (`2816887225374285`/`101192938541236`), staging API `1c9e42ca-ad13-4e4a-8fbc-e01300cfebc3`, `META_INSTANT_FORM_ENABLED=false`, CAPI/provider disabled. No lead token, Page subscription, real lead, or ad draft exists.
+- GFS-41 canonical form switch: active allowlist/config is now Form `1093015800183328` + Page `101192938541236`; superseded Form `2816887225374285` is rejected. Staging remains disabled-safe until lead app/token/Page subscription exist.
+- GFS-41 MCP permission/recovery: existing Saeed session and `chrome-devtools-mcp@1.10.1` were reused; routine Meta navigation was allowed only through the existing MCP session. Password/OTP/CAPTCHA/spend/destructive actions remain protected. App creation remains blocked at Business pending/disabled.
+- GFS-42 Business diagnosis: Business `568026370701542` is Verified and Saeed Nazim has Full access with 2FA on, but Business Info visibly identifies legal business `Hoja Seeds`, website `https://hojaseeds.pk/`, phone `+923034901810`, and no primary location. Dedicated lead-app wizard remains Business pending/disabled; no app/token mutation was made.
+- GFS-42 Ads Manager: existing unpublished `New Leads Campaign` draft is visible in Ad Account `1198439777611633` with campaign `120255495379100054`, ad set `120255495379110054`, and ad `120255495379120054`; no publish/spend or form-link edit was made because real leadgen remains blocked.
+- GFS-43 WhatsApp state: rules now use `WHATSAPP_OTP_REQUIRED`; the six-digit SMS dialog remains the protected gate and no code was entered/resend requested.
+- GFS-43 campaign draft: existing `New Leads Campaign` remains unpublished in the canonical ad account and is visibly Leads/Form-oriented, but the edit surface stayed Loading and the exact Form `1093015800183328` attachment/preview could not be verified. No draft mutation was made. Native Leads Center shows 0 leads and no realtime backend sync. Staging API version `abaef4e0-b477-463d-a998-50810f5bcb43` now reflects `WHATSAPP_OTP_REQUIRED`.
+- GFS-43 support escalation: Business Support Home exposes overview/status only; no case form or case ID was available without entering unsupported/destructive flows. Exact blocker remains legal Hoja identity + disabled Business assignment.
+- GFS-44 Messenger/order proof: native Leads Center is accessible with 0 leads; no supported Instant Form→Messenger session or automatic Page message was observed. Ads Manager draft edit remains Loading, so no Form preview/continuation claim is made. Payment methods are disabled/unconfigured in D1; no order/payment request was created.
+- GFS-45 native test: canonical Form preview visibly has checked Messenger consent and WhatsApp options. Supported synthetic preview submission created 1 native Leads Center Intake lead for Form `1093015800183328` at 10:16 AM, with actual answers including Punjab, amount text 500, address, place, and phone. Ending screen states a Messenger conversation was created and Leads Center exposes Chat; no new customer-side message was observed. WhatsApp ending link points to noncanonical phone `923124093162` and was not clicked.
+- GFS-45 payment boundary: form text contains delivery/fertilizer amounts, but D1 payment methods/recipient values remain disabled/unconfigured. No order/payment notification or Rs. 0/guessed payment request was sent.
+- GFS-46 customer recipient proof: native lead record shows WhatsApp number `+923034901810` (submitted form phone `03034901810`), separate from GFS sender `+923328883383`. Form ID `1093015800183328` is verified in the lead record. No customer message/payment was sent.
+- GFS-46 backend: added Pakistani E.164 normalization coverage and deferred `WHATSAPP_ORDER_CONFIRMATION` outbox payload with only order/customer/recipient references. Queue defers it while `WHATSAPP_OTP_REQUIRED`; no token or sender use.
+- GFS-47 schema/routing: staging customer columns `normalized_contact_number`, `whatsapp_number`, and `normalized_whatsapp_number` applied; resolver priority is Meta `wa_id` → auto WhatsApp → entered contact, with sender/old CTA rejection. API version `97c038d1-6382-4a3e-9509-2ad2005472b9` deployed; send remains deferred.
+- GFS-48 lead verification: current Leads Center detail confirms Form `1093015800183328`, manual contact `03001234567`, Meta WhatsApp `+923034901810`, name/address/place/province/product/amount fields. No D1/backend lead sync or order exists.
+- GFS-49 Payment Settings: admin `/payment-settings` deployed at admin version `c236589e-760a-4190-95b9-285fc29b3518` with Access identity `gisupp@gmail.com`; JazzCash, Easypaisa, and Bank Transfer render. Incomplete enabled save returns 400; synthetic disabled save/restore succeeds; QR endpoints return 404 because no real QR is configured. Payment remains `PAYMENT_AMOUNT_NOT_CONFIGURED`.
+- GFS-26 Meta creation attempt: current session identity was Saeed Nazim (`ags.rom@gmail.com`); new Business Portfolio creation returned the exact limit message that no more portfolios can be created. No Business ID was created and no prohibited asset was mutated.
+- GFS-26 support path: Meta Business Support Home was reached in the same session, but no standalone form or case/reference ID was produced; built-in support assistant gave no response. STOP_GATE=`META_SUPPORT_REQUIRED`.
+- GFS-26 Git: active branch `codex/gfs-meta-clean-007` from merged main `a4ac98c`; no PR opened yet.
 - GFS-25 read-only `list_pages` inventory found 8 tabs: Cloudflare Account home, Pakistan Post Office, ChatGPT, X, Meta Business Suite, Ads Manager, DeepSeek, and Google Search. Meta Business Suite and Ads Manager were inspected; no separate Facebook, WhatsApp Manager, or Developer tab was open. Visible identity was Saeed A Nazim.
 
 ## Next Action
 
-Use the existing authenticated Saeed Chrome DevTools MCP session for clean Meta discovery/creation; use `gisupp@gmail.com` separately for Cloudflare deployment and runtime callbacks.
+Use the existing authenticated Saeed Chrome DevTools MCP session to recheck phone review and supported App↔WABA subscription; use `gisupp@gmail.com` separately for Cloudflare deployment and runtime callbacks.

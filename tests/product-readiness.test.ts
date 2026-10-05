@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { MetaWhatsAppProvider, MetaCapiProvider, formatPaymentMessage, isPaymentMethodComplete, isTerminalOutboxStatus, paymentInstructions, retryDelaySeconds, selectPaymentMethod, shouldDeadLetter, storePaymentQr, storeReceipt, validatePaymentQr } from "@gfs/core";
+import { isAllowedInstantFormLead, LeadSource, MetaWhatsAppProvider, MetaCapiProvider, formatPaymentMessage, isPaymentMethodComplete, isTerminalOutboxStatus, parseMetaInstantFormLead, parseWebhookRecords, paymentInstructions, retryDelaySeconds, selectPaymentMethod, shouldDeadLetter, storePaymentQr, storeReceipt, validatePaymentQr } from "@gfs/core";
 
 describe("product readiness safeguards", () => {
   it("verifies Meta signatures and keeps the disabled provider closed", async () => {
@@ -21,6 +21,43 @@ describe("product readiness safeguards", () => {
     const events = provider.parseInboundEvent({ entry: [{ changes: [{ value: { messages: [{ id: "synthetic-message", from: "synthetic-user", type: "text", referral: { ctwa_clid: "synthetic-ctwa" } }] } }] }] });
     expect(events[0]).toMatchObject({ id: "synthetic-message", referral: { ctwaClid: "synthetic-ctwa" } });
     expect(provider.parseInboundEvent({ entry: [] })).toEqual([]);
+  });
+
+  it("classifies inbound messages, media, and statuses without storing payloads", () => {
+    const records = parseWebhookRecords({ entry: [{ changes: [{ value: { messages: [{ id: "synthetic-message", type: "text" }, { id: "synthetic-media", type: "image", image: { id: "synthetic-media" } }], statuses: [{ id: "synthetic-status", status: "delivered" }] } }] }] });
+    expect(records).toEqual([
+      { providerEventId: "message:synthetic-message", eventType: "MESSAGE", status: "RECEIVED" },
+      { providerEventId: "message:synthetic-media", eventType: "MEDIA", status: "RECEIVED" },
+      { providerEventId: "status:synthetic-status", eventType: "STATUS", status: "delivered" }
+    ]);
+  });
+
+  it("normalizes a Meta Instant Form lead into the shared five-field model", () => {
+    const lead = parseMetaInstantFormLead({ id: "synthetic-meta-lead", form_id: "synthetic-form", page_id: "synthetic-page", created_time: "2026-10-03T00:00:00Z", campaign_id: "synthetic-campaign", adset_id: "synthetic-adset", ad_id: "synthetic-ad", field_data: [
+      { name: "Full Name", values: ["Synthetic Customer"] },
+      { name: "Complete Delivery Address", values: ["1 Test Street"] },
+      { name: "Nearby Famous Place", values: ["Test Park"] },
+      { name: "City", values: ["Sahiwal"] },
+      { name: "Contact Number", values: ["03001234567"] }
+    ] });
+    expect(lead).toMatchObject({ leadId: "synthetic-meta-lead", formId: "synthetic-form", pageId: "synthetic-page", contactNumber: "+923001234567", campaignId: "synthetic-campaign" });
+    expect(LeadSource.options).toEqual(["META_INSTANT_FORM", "WHATSAPP", "FACEBOOK_MESSENGER", "INSTAGRAM_DM"]);
+    expect(isAllowedInstantFormLead({ page_id: "canonical-page", form_id: "canonical-form" }, "canonical-page", "canonical-form")).toBe(true);
+    expect(isAllowedInstantFormLead({ page_id: "other-page", form_id: "canonical-form" }, "canonical-page", "canonical-form")).toBe(false);
+    expect(isAllowedInstantFormLead({ page_id: "canonical-page", form_id: "other-form" }, "canonical-page", "canonical-form")).toBe(false);
+  });
+
+  it("keeps entered contact and Meta WhatsApp numbers separate", () => {
+    const lead = parseMetaInstantFormLead({ id: "two-number-lead", form_id: "synthetic-form", page_id: "synthetic-page", created_time: "2026-10-05T00:00:00Z", field_data: [
+      { name: "اپنا درست موبایل نمبر مہیا کریں۔", values: ["03001234567"] },
+      { name: "phone_number", values: ["+923034901810"] },
+      { name: "Full Name", values: ["Synthetic Customer"] },
+      { name: "Complete Delivery Address", values: ["1 Test Street"] },
+      { name: "Nearby Famous Place", values: ["Test Park"] },
+      { name: "City", values: ["Lahore"] }
+    ] });
+    expect(lead.contactNumber).toBe("+923001234567");
+    expect(lead.whatsappNumber).toBe("+923034901810");
   });
 
   it("uses bounded retry and DLQ decisions", () => {
@@ -73,7 +110,8 @@ describe("product readiness safeguards", () => {
 
   it("contains all required D1 tables and no third-party CRM dependency", () => {
     const schema = readFileSync("migrations/0001_initial.sql", "utf8");
-    for (const table of ["customers", "leads", "orders", "payments", "payment_receipts", "payment_methods", "meta_attribution", "capi_events", "whatsapp_events", "outbound_messages", "audit_log", "configuration", "outbox_jobs"]) expect(schema + readFileSync("migrations/0002_payment_methods.sql", "utf8")).toContain(`CREATE TABLE ${table}`);
+    const migrations = schema + readFileSync("migrations/0002_payment_methods.sql", "utf8") + readFileSync("migrations/0003_lead_sources.sql", "utf8") + readFileSync("migrations/0004_lead_source_page.sql", "utf8") + readFileSync("migrations/0005_customer_whatsapp_numbers.sql", "utf8");
+    for (const table of ["customers", "leads", "lead_sources", "orders", "payments", "payment_receipts", "payment_methods", "meta_attribution", "capi_events", "whatsapp_events", "outbound_messages", "audit_log", "configuration", "outbox_jobs"]) expect(migrations).toContain(`CREATE TABLE ${table}`);
     expect(schema).not.toContain("google");
   });
 
