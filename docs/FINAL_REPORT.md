@@ -471,4 +471,28 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - Git: pending GFS-44 commit; PR #7 open/mergeable; main `a4ac98c`.
 - STOP_GATE: `INSTANT_FORM_TO_MESSENGER_NATIVE_UNAVAILABLE` + `PAYMENT_AMOUNT_NOT_CONFIGURED` + lead App/token/Page subscription blocker + `WHATSAPP_OTP_REQUIRED`.
 - Next action: resolve lead-capable App/credential/Page subscription, then submit one supported Form test lead before implementing any Messenger/order/payment notification.
+
+## GFS-45-FORM-MESSENGER-ORDER-PAYMENT Execution Update - 2026-10-05
+
+- Overall: **88%**. Remaining: **12%**.
+- Form name/ID/Page: `Free Seeds 05-10-2026` preview / `1093015800183328` / `101192938541236`.
+- Messenger option visible: **PASS**.
+- Messenger consent selected: **PASS in form preview capability**; customer-side selection/receipt not independently observed.
+- Real form submission: **PASS synthetic supported preview**.
+- Lead in Leads Center: **PASS**, 1 Intake lead, Form ID verified, actual answers visible.
+- Messenger conversation created: **PASS native ending claim + Leads Center Chat pane**, customer-side message receipt unverified.
+- Customer Messenger received: **NOT PROVEN**; operator session showed no new message.
+- Native auto message: **NOT OBSERVED**.
+- Order number sent: **FAIL/NOT SENT**.
+- Order details sent: **FAIL/NOT SENT**.
+- Payment amount valid: **FAIL** for backend use; form text mentions amounts, but Garden Shop payment config is absent.
+- Payment request sent: **NO**.
+- WhatsApp option: **PASS visible**.
+- WhatsApp post-submit behavior: Meta exposed a WhatsApp CTA targeting noncanonical phone `923124093162`; not clicked or used.
+- Backend realtime sync: **BLOCKED** by lead App/token/Page subscription.
+- Tests: **PASS**. 20/20, build, lint, audit, Wrangler validation; no code changes required for GFS-45.
+- Zero regression: **PASS**.
+- Git: pending GFS-45 commit; PR #7 open/mergeable; main `a4ac98c`.
+- STOP_GATE: `BACKEND_REALTIME_SYNC_BLOCKED` + `PAYMENT_AMOUNT_NOT_CONFIGURED` + customer-side Messenger receipt unverified + `WHATSAPP_OTP_REQUIRED`.
+- Next action: resolve the lead App/token/Page subscription, then map the verified native lead into the shared D1/order workflow before any Messenger payment message.
 - Next highest-value action: provision the least-privilege lead token and subscribe canonical Page leadgen through App `2354726831735899`, then submit one supported test lead and verify D1/dedupe before creating the no-spend ad draft.

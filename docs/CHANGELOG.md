@@ -40,6 +40,8 @@
 - GFS-43 aligned deployed staging `DEPLOYMENT_STATE` to `WHATSAPP_OTP_REQUIRED`; API version `abaef4e0-b477-463d-a998-50810f5bcb43`, health PASS, providers still disabled.
 - GFS-44 proved no Form→Messenger continuation or automatic Page message from available native surfaces; Leads Center has 0 leads and Ads Manager draft edit remains Loading.
 - GFS-44 preserved payment safety: Garden Shop payment methods/recipient values are unconfigured, so no order/payment notification or Rs. 0 request was sent (`PAYMENT_AMOUNT_NOT_CONFIGURED`).
+- GFS-45 verified the canonical form's checked Messenger/WhatsApp options and ran a supported synthetic preview submission. Leads Center now has one Intake lead for Form `1093015800183328` with actual field answers; native ending claims a Messenger conversation and exposes Chat, but customer-side message receipt was not observed. The WhatsApp CTA target was noncanonical and not used.
+- GFS-45 kept payment safe: form displays advance/fertilizer amounts, but backend Garden Shop payment methods/recipients remain unconfigured; no D1 order, notification, or payment request was fabricated.
 
 ## Unreleased - 2026-09-28 (GFS-14)
 
