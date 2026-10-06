@@ -591,6 +591,38 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - STOP_GATE: `PAYMENT_AMOUNT_NOT_CONFIGURED` + `BACKEND_REALTIME_SYNC_BLOCKED` + `WHATSAPP_OTP_REQUIRED`.
 - Next action: verify real Garden Shop payment recipients/amount rules through authorized admin configuration, then test one acknowledgement without payment instructions.
 
+## GFS-50-MVP-BLOCKERS Execution Update - 2026-10-06
+
+- Overall: **90%**. Remaining: **10%**.
+- Pricing rules extracted: **BLOCKED**; form choices/text are not authoritative Garden Shop pricing.
+- All Form paths tested: **NOT APPLICABLE**; no valid server pricing table exists.
+- Server-authoritative amount: **BLOCKED**.
+- Payment expected_amount: **BLOCKED**.
+- Real Garden Shop values: **NOT PROVIDED**.
+- Enabled payment methods: **none**.
+- QR status: **none configured**.
+- Messenger acknowledgement: **NOT SENT**; native context observed but customer delivery unverified.
+- Lead -> D1: **BLOCKED** by lead App/token/Page subscription.
+- Order creation: **BLOCKED**.
+- Contact/WhatsApp separation: **PASS**.
+- Recipient priority: **PASS** code path.
+- WhatsApp OTP: **WHATSAPP_OTP_REQUIRED**.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Actual WhatsApp send: **BLOCKED**.
+- Tests: **PASS**. 22/22, build, lint, audit, Wrangler validation, admin/payment smoke.
+- Zero regression: **PASS**.
+- Git: fresh branch `codex/gfs-launch-next-001` at merged main; new PR pending; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- STOP_GATE: `PAYMENT_AMOUNT_NOT_CONFIGURED` + `BACKEND_REALTIME_SYNC_BLOCKED` + `WHATSAPP_OTP_REQUIRED`.
+- Next action: obtain verified Garden Shop pricing/recipient configuration and Meta lead App/token/Page subscription, then test one acknowledgement before any payment message.
+
+## GFS-50-QUALITY-FINALIZATION Execution Update - 2026-10-06
+
+- Overall: **90%**. Remaining: **10%**.
+- Payment/admin/lead/Messenger gates unchanged and documented above.
+- Security audit: **PASS**, targeted `source-map-js` update to `1.2.2` removed the advisory.
+- Tests: **PASS**, 22/22, build, lint, audit, Wrangler validation.
+- Git: pending GFS-50 commit on `codex/gfs-launch-next-001`; main `7794b686e942901fc549c1c25a97a4175d9fa663`; new PR required.
+
 ## GFS-49-MERGE Finalization Update - 2026-10-05
 
 - PR #7: **MERGED**.
