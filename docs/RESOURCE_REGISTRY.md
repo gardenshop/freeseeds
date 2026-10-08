@@ -52,6 +52,7 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Number registration status: not yet added/verified in canonical WABA; OTP onboarding pending
 - Phone Number ID: not known; old `1429127796940691` for `+923328883383` is superseded and prohibited
 - GFS-51 onboarding gate: canonical WABA phone surface still displays old `+923328883383` In Review/Unverified and a pending Business profile with Add number disabled; new sender `+923044429933` has no Phone ID yet.
+- GFS-52 deletion gate: old `+923328883383` / Phone ID `1429127796940691` was not deleted because Add Phone onboarding is blocked before a safe slot action; explicit authorization remains recorded, no deletion mutation attempted.
 - Clean staging WABA test: not configured; no separate staging WABA/test number is used
 - Clean staging test Phone Number ID: not yet configured; no ID placeholder is recorded
 - Clean staging test recipient: not configured; synthetic-only use required

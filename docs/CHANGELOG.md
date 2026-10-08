@@ -109,6 +109,7 @@
 - GFS-50 applied targeted dev dependency security update `source-map-js` `1.2.1` → `1.2.2`; audit is clean with no test/build/lint regression.
 - GFS-51 switched active sender governance to authorized `+923044429933`, prohibited old sender/Phone ID, and inspected canonical WABA. Meta Add Phone is blocked by existing Business profile pending/Add number disabled; no new Phone ID or OTP mutation occurred.
 - GFS-51 recorded transitive Wrangler/Miniflare/sharp audit advisories; no breaking forced downgrade was applied.
+- GFS-52 inspected the explicitly authorized old-phone deletion path. Meta's Business profile pending/Add Phone disabled gate prevented a safe delete/add/OTP sequence; no old number deletion or new-number mutation was forced.
 - GFS-46 verified native customer WhatsApp data `+923034901810` from the canonical Form lead and added E.164 normalization tests. It remains recipient data, never the GFS sender `+923328883383`.
 - GFS-46 added a safe deferred `WHATSAPP_ORDER_CONFIRMATION` outbox reference after durable lead/order persistence; OTP/App-WABA/provider gates defer it, and payment remains blocked without Garden Shop configuration.
 - GFS-47 separated customer-entered contact and Meta auto-fetched WhatsApp numbers in D1, added E.164 normalization/priority/fallback tests, rejected sender/old CTA recipients, and deployed API `97c038d1-6382-4a3e-9509-2ad2005472b9`. No WhatsApp send was attempted.

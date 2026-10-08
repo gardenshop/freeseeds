@@ -657,3 +657,26 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - Main SHA: `7794b686e942901fc549c1c25a97a4175d9fa663`.
 - STOP_GATE: `WHATSAPP_NUMBER_SLOT_BLOCKED` / pending Business profile + `BACKEND_REALTIME_SYNC_BLOCKED` + `PAYMENT_AMOUNT_NOT_CONFIGURED`.
 - Next action: resolve the pending Business profile/Add number restriction through supported Meta Business/WABA support; do not delete the old sender.
+
+## GFS-52-OLD-SENDER-DELETE-NEW-OTP Execution Update - 2026-10-08
+
+- Overall: **90%**. Remaining: **10%**.
+- Old phone deleted: **FAIL/BLOCKED**; explicit authorization recorded, but Meta Add Phone flow is blocked before safe deletion confirmation.
+- Old Phone ID removed from WABA: **FAIL/BLOCKED**; remains historical/In Review and not active runtime.
+- New phone: `+923044429933`.
+- New phone added: **FAIL/BLOCKED**; Business profile pending/Add number disabled.
+- New Phone Number ID: **NONE**.
+- OTP sent to: **NOT SENT**; new-number OTP action never appeared.
+- OTP state: **REQUIRED/BLOCKED**.
+- Registration: **BLOCKED**; old number remains In Review/Unverified.
+- Display name: existing Get Free Seeds profile; new sender not created.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Cloudflare active Phone ID: **PENDING**; no old ID active config, provider disabled.
+- Old active references: **0** active runtime/config references (historical docs retained).
+- Tests: **PASS except audit advisory**. 22/22, build, lint, Wrangler; transitive Wrangler/Miniflare/sharp advisory remains without forced downgrade.
+- Zero regression: **PASS**.
+- Git branch/head: `codex/gfs-launch-next-001` pending GFS-52 commit.
+- PR #8: **OPEN/MERGEABLE**.
+- Main SHA: `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- STOP_GATE: `WHATSAPP_NUMBER_SLOT_BLOCKED` / pending Business profile; `BACKEND_REALTIME_SYNC_BLOCKED`; `PAYMENT_AMOUNT_NOT_CONFIGURED`.
+- Next action: resolve the pending Business profile/Add Phone restriction through supported Meta Business/WABA support, then delete old/add new only after exact UI confirmation.
