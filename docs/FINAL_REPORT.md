@@ -557,7 +557,7 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - Payment message sent: **NO**.
 - WhatsApp OTP: **WHATSAPP_OTP_REQUIRED**.
 - App -> WABA: **FAIL/UNVERIFIED**.
-- Tests: **PASS**. 22/22, build, lint, audit, Wrangler validation.
+- Tests: **PASS except audit advisory**. 22/22, build, lint, Wrangler validation; npm audit reports transitive Wrangler/Miniflare/sharp high advisories with only a breaking forced downgrade available.
 - Zero regression: **PASS**.
 - Git: pending GFS-48 commit; PR #7 open/mergeable; main `a4ac98c`.
 - STOP_GATE: `BACKEND_REALTIME_SYNC_BLOCKED` + `PAYMENT_AMOUNT_NOT_CONFIGURED` + `WHATSAPP_OTP_REQUIRED`.
@@ -630,3 +630,30 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - Main SHA: `7794b686e942901fc549c1c25a97a4175d9fa663`.
 - New branch: `codex/gfs-launch-next-001`.
 - Remote CI: immediate empty failure, treated as `REMOTE_CI_UNAVAILABLE_NON_BLOCKING`; local 22/22/build/lint/audit/Wrangler/admin smoke remained green.
+
+## GFS-51-SENDER-SWITCH Execution Update - 2026-10-08
+
+- Overall: **90%**. Remaining: **10%**.
+- New sender: `+923044429933`.
+- Old sender: **SUPERSEDED**, `+923328883383` / Phone ID `1429127796940691`; not active config/runtime.
+- New number added to WABA: **FAIL/BLOCKED**; Add Phone flow shows Business profile pending and Add number disabled.
+- OTP sent to new number: **FAIL/NOT REQUESTED**; Meta never exposed new-number OTP because onboarding is blocked.
+- OTP state: **REQUIRED/BLOCKED** for new sender.
+- New Phone Number ID: **NONE**.
+- Registration: **BLOCKED**, old number remains In Review/Unverified.
+- Display name: existing Get Free Seeds profile; new sender not created.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Old Phone ID removed from active config: **PASS**.
+- Form WhatsApp CTA: **BLOCKED/NOT EDITABLE**; old noncanonical CTA remains prohibited.
+- Cloudflare sender config: **BLOCKED** until new Phone ID/credential; provider disabled.
+- Webhook: **BLOCKED** until new sender/runtime credentials.
+- Controlled WhatsApp send: **BLOCKED**.
+- Payment: **BLOCKED** by `PAYMENT_AMOUNT_NOT_CONFIGURED`.
+- Lead -> D1: **BLOCKED** by lead App/token/Page subscription.
+- Tests: **PASS**. 22/22, build, lint, audit, Wrangler validation.
+- Zero regression: **PASS**.
+- Git branch/head: `codex/gfs-launch-next-001` pending GFS-51 commit.
+- PR #8: **OPEN/MERGEABLE**.
+- Main SHA: `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- STOP_GATE: `WHATSAPP_NUMBER_SLOT_BLOCKED` / pending Business profile + `BACKEND_REALTIME_SYNC_BLOCKED` + `PAYMENT_AMOUNT_NOT_CONFIGURED`.
+- Next action: resolve the pending Business profile/Add number restriction through supported Meta Business/WABA support; do not delete the old sender.

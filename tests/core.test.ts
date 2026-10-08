@@ -17,6 +17,7 @@ describe("Get Free Seeds domain", () => {
     expect(resolveWhatsAppRecipients({ normalized_whatsapp_number: "+923001234567", normalized_contact_number: "+923001234567" })).toHaveLength(1);
     expect(resolveWhatsAppRecipients({ wa_id: "923034901810", normalized_whatsapp_number: "+923034901810", normalized_contact_number: "+923001234567" })[0].source).toBe("META_WA_ID");
     expect(resolveWhatsAppRecipients({ normalized_whatsapp_number: "+923328883383", normalized_contact_number: "+923001234567" }).map((candidate) => candidate.recipient)).toEqual(["+923001234567"]);
+    expect(resolveWhatsAppRecipients({ normalized_whatsapp_number: "+923044429933", normalized_contact_number: "+923001234567" }).map((candidate) => candidate.recipient)).toEqual(["+923001234567"]);
     expect(resolveWhatsAppRecipients({ normalized_whatsapp_number: "+923124093162", normalized_contact_number: "+923001234567" }).map((candidate) => candidate.recipient)).toEqual(["+923001234567"]);
   });
   it("guards legal order transitions", () => { expect(canTransition("PAYMENT_REVIEW", "PAID")).toBe(true); expect(canTransition("NEW", "PAID")).toBe(false); });

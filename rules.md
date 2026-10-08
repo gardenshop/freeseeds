@@ -22,7 +22,7 @@
 
 - Temporary primary acquisition channel is Meta Instant Form; target primary after approval is WhatsApp; Facebook Messenger is secondary support and Instagram DM automation is deferred.
 - Native Instant Form Messenger continuation is available when the customer selects Meta's checked Messenger consent option and Meta creates the messaging context. Form completion alone still does not prove a customer-side message was received; verify the native session/message separately.
-- An Instant Form customer WhatsApp/contact number is a recipient value (`CUSTOMER_WHATSAPP_NUMBER`), never the GFS business sender. The only business sender is `+923328883383`; the old CTA target `923124093162` is prohibited.
+- An Instant Form customer WhatsApp/contact number is a recipient value (`CUSTOMER_WHATSAPP_NUMBER`), never the GFS business sender. The current business sender is `+923044429933`; superseded `+923328883383`, old Phone ID `1429127796940691`, and CTA target `923124093162` are prohibited for runtime.
 - `CUSTOMER_CONTACT_NUMBER` is the number manually entered in the form; `CUSTOMER_WHATSAPP_NUMBER` is Meta's auto-fetched WhatsApp number. Persist both separately and never overwrite either.
 - WhatsApp recipient priority is Meta `wa_id` when actually supplied, then `CUSTOMER_WHATSAPP_NUMBER`, then `CUSTOMER_CONTACT_NUMBER`; deduplicate identical candidates and reject the business sender/old CTA target.
 - Any customer WhatsApp follow-up requires an eligible Meta messaging context/consent and a verified sender; a phone field alone does not authorize proactive WhatsApp automation.
@@ -41,7 +41,7 @@
 ## WhatsApp Number Lock
 
 - Customer-facing WhatsApp identity: Get Free Seeds.
-- Authorized production sender: `+923328883383`; Phone Number ID `1429127796940691`; canonical WABA status is In Review/Unverified.
+- Authorized production sender: `+923044429933`; new Phone Number ID is not yet known; superseded sender `+923328883383` / Phone ID `1429127796940691` is historical only.
 - Current state: `WHATSAPP_OTP_REQUIRED` (Meta displayed a six-digit SMS verification dialog; no code was entered or resent).
 - Production must not use any existing, Hoja Seeds, Garden Shop, temporary, or other phone number.
 - Do not locate, migrate, register, connect, or use any existing, Hoja-linked, or old Garden Shop number or WABA.

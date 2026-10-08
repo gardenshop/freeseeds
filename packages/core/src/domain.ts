@@ -57,10 +57,10 @@ export function normalizeContactNumber(value: string): string {
 export type CustomerRecipientSource = "META_WA_ID" | "CUSTOMER_WHATSAPP_NUMBER" | "CUSTOMER_CONTACT_NUMBER";
 export type CustomerRecipient = { recipient: string; source: CustomerRecipientSource };
 
-export function resolveWhatsAppRecipients(customer: { wa_id?: string | null; normalized_whatsapp_number?: string | null; normalized_contact_number?: string | null; normalized_phone?: string | null }, businessSender = "+923328883383"): CustomerRecipient[] {
+export function resolveWhatsAppRecipients(customer: { wa_id?: string | null; normalized_whatsapp_number?: string | null; normalized_contact_number?: string | null; normalized_phone?: string | null }, businessSender = "+923044429933"): CustomerRecipient[] {
   const candidates: CustomerRecipient[] = [];
   const add = (recipient: string | null | undefined, source: CustomerRecipientSource) => {
-    if (!recipient || normalizeContactNumber(recipient) === normalizeContactNumber(businessSender) || normalizeContactNumber(recipient) === normalizeContactNumber("923124093162") || candidates.some((candidate) => candidate.recipient === recipient)) return;
+    if (!recipient || normalizeContactNumber(recipient) === normalizeContactNumber(businessSender) || normalizeContactNumber(recipient) === normalizeContactNumber("+923328883383") || normalizeContactNumber(recipient) === normalizeContactNumber("923124093162") || candidates.some((candidate) => candidate.recipient === recipient)) return;
     candidates.push({ recipient, source });
   };
   add(customer.wa_id, "META_WA_ID");
