@@ -658,6 +658,26 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - STOP_GATE: `WHATSAPP_NUMBER_SLOT_BLOCKED` / pending Business profile + `BACKEND_REALTIME_SYNC_BLOCKED` + `PAYMENT_AMOUNT_NOT_CONFIGURED`.
 - Next action: resolve the pending Business profile/Add number restriction through supported Meta Business/WABA support; do not delete the old sender.
 
+## GFS-53-PENDING-PROFILE-DELETE-ADD-OTP Execution Update - 2026-10-08
+
+- Overall: **90%**. Remaining: **10%**.
+- Pending-profile root cause: canonical WABA shows existing Business profile pending; Add number control is disabled before phone-specific deletion/addition.
+- Old phone delete: **BLOCKED**, no safe phone-specific confirmation surfaced; old remains In Review/Unverified.
+- Old Phone ID removed from WABA: **BLOCKED**.
+- Add-number button: **BLOCKED**.
+- New phone added: **FAIL/BLOCKED**.
+- New Phone Number ID: **NONE**.
+- OTP sent to `+923044429933`: **NOT SENT**.
+- OTP state: **REQUIRED/BLOCKED** after slot/profile resolution.
+- Registration/display: blocked; old profile remains pending.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Cloudflare Phone ID: **PENDING**, no active old ID.
+- Tests: **PASS**. 22/22, build, lint, Wrangler; npm audit has transitive Wrangler/Miniflare/sharp advisory requiring breaking forced downgrade.
+- Zero regression: **PASS**.
+- Git: pending GFS-53 commit; PR #8 open/mergeable; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- STOP_GATE: `WHATSAPP_NUMBER_SLOT_BLOCKED` / pending Business profile.
+- Next action: resolve pending Business profile through supported Meta Business/WABA support, then confirm/delete old and add new only with exact phone-specific UI.
+
 ## GFS-52-OLD-SENDER-DELETE-NEW-OTP Execution Update - 2026-10-08
 
 - Overall: **90%**. Remaining: **10%**.
