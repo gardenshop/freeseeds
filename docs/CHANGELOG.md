@@ -111,6 +111,8 @@
 - GFS-51 recorded transitive Wrangler/Miniflare/sharp audit advisories; no breaking forced downgrade was applied.
 - GFS-52 inspected the explicitly authorized old-phone deletion path. Meta's Business profile pending/Add Phone disabled gate prevented a safe delete/add/OTP sequence; no old number deletion or new-number mutation was forced.
 - GFS-53 aligned active state to `WHATSAPP_NUMBER_SLOT_BLOCKED`; pending Business profile/Add Phone disabled remains the exact gate before deletion/add/OTP.
+- GFS-54 inspected canonical WABA Help once; Business Support Home/category updates were available but no case creation UI/reference ID was exposed. No repeated Add Phone/delete loop.
+- GFS-54 aligned API/admin active Wrangler variables to `WHATSAPP_NUMBER_SLOT_BLOCKED`; no old Phone ID is active.
 - GFS-46 verified native customer WhatsApp data `+923034901810` from the canonical Form lead and added E.164 normalization tests. It remains recipient data, never the GFS sender `+923328883383`.
 - GFS-46 added a safe deferred `WHATSAPP_ORDER_CONFIRMATION` outbox reference after durable lead/order persistence; OTP/App-WABA/provider gates defer it, and payment remains blocked without Garden Shop configuration.
 - GFS-47 separated customer-entered contact and Meta auto-fetched WhatsApp numbers in D1, added E.164 normalization/priority/fallback tests, rejected sender/old CTA recipients, and deployed API `97c038d1-6382-4a3e-9509-2ad2005472b9`. No WhatsApp send was attempted.
