@@ -163,7 +163,7 @@ export default {
         const job = await env.DB.prepare("SELECT status, attempts FROM outbox_jobs WHERE idempotency_key=?").bind(message.body.idempotencyKey).first<{ status: string; attempts: number }>();
         if (!job || isTerminalOutboxStatus(job.status)) { message.ack(); continue; }
         const nextAttempt = Number(job.attempts ?? 0) + 1;
-        if (message.body.kind.startsWith("WHATSAPP_") && (env.DEPLOYMENT_STATE === "WHATSAPP_NUMBER_PENDING" || env.DEPLOYMENT_STATE === "WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING" || env.DEPLOYMENT_STATE === "WHATSAPP_PHONE_VERIFICATION_PENDING" || env.DEPLOYMENT_STATE === "WHATSAPP_OTP_REQUIRED")) {
+        if (message.body.kind.startsWith("WHATSAPP_") && (env.DEPLOYMENT_STATE === "WHATSAPP_NUMBER_PENDING" || env.DEPLOYMENT_STATE === "WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING" || env.DEPLOYMENT_STATE === "WHATSAPP_PHONE_VERIFICATION_PENDING" || env.DEPLOYMENT_STATE === "WHATSAPP_OTP_REQUIRED" || env.DEPLOYMENT_STATE === "WHATSAPP_NUMBER_SLOT_BLOCKED" || env.DEPLOYMENT_STATE === "META_ASSETS_PENDING")) {
           await env.DB.prepare("UPDATE outbox_jobs SET status='DEFERRED', last_error=?, updated_at=? WHERE idempotency_key=?").bind("WHATSAPP_ONBOARDING_PENDING", new Date().toISOString(), message.body.idempotencyKey).run();
           message.ack();
           continue;

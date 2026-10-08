@@ -41,8 +41,8 @@
 ## WhatsApp Number Lock
 
 - Customer-facing WhatsApp identity: Get Free Seeds.
-- Authorized production sender: `+923044429933`; new Phone Number ID is not yet known; superseded sender `+923328883383` / Phone ID `1429127796940691` is historical only.
-- Current state: `WHATSAPP_NUMBER_SLOT_BLOCKED` (canonical WABA Add Phone is disabled by a pending Business profile; new-number OTP has not been exposed).
+- Authorized production sender: `+923044429933`; Phone Number ID `1323932417479627`; superseded sender `+923328883383` / Phone ID `1429127796940691` is historical only.
+- Current state: `META_ASSETS_PENDING` (new number exists in canonical WABA; display name/status remain in review and canonical App↔WABA subscription is absent).
 - Production must not use any existing, Hoja Seeds, Garden Shop, temporary, or other phone number.
 - Do not locate, migrate, register, connect, or use any existing, Hoja-linked, or old Garden Shop number or WABA.
 - The known Meta test number `+1 555-897-9372` and every Hoja-linked test asset remain prohibited.
@@ -87,7 +87,7 @@
 
 `LOCAL` -> `STAGING_INFRA_READY` -> `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING` -> `WHATSAPP_PHONE_VERIFICATION_PENDING` -> `WHATSAPP_OTP_REQUIRED` -> `META_ASSETS_PENDING` -> `PRODUCTION_INTEGRATION_READY` -> `PRODUCTION_READY`
 
-Expected state for this phase: `WHATSAPP_NUMBER_SLOT_BLOCKED`.
+Expected state for this phase: `META_ASSETS_PENDING`.
 
 ## Spend Safety
 

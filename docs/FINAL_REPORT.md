@@ -679,6 +679,30 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - STOP_GATE: `WHATSAPP_NUMBER_SLOT_BLOCKED` / pending Business profile.
 - Next action: Meta Business Support must resolve the pending profile/Add Phone slot; then delete old/add new/OTP in one supported session.
 
+## GFS-55-VERIFY-NEW-SENDER-RUNTIME Execution Update - 2026-10-08
+
+- Overall: **92%**. Remaining: **8%**.
+- New sender verified: **PARTIAL**. Asset exists and user confirms verification; Meta UI remains In Review/Pending review.
+- New Phone Number ID: `1323932417479627`.
+- Registration: number present; Meta status **In Review**.
+- Display name: `Get Free Seeds`, **Pending display name review**.
+- Quality: **Pending**.
+- App -> WABA: **FAIL**; App API Setup exposes only test/Hoja WABA `1932075647340454` and Hoja/test numbers.
+- Cloudflare Phone ID: **BLOCKED/NOT SET**; no authorized Meta credentials and no secrets exist.
+- Webhook challenge: **BLOCKED**, verify/app secrets unavailable.
+- Signed webhook: **BLOCKED**.
+- Provider enabled: **NO**.
+- Controlled WhatsApp send: **BLOCKED**.
+- Delivery/status webhook: **BLOCKED**.
+- Flow: **READY repository-only / publication blocked**.
+- Old sender active: **YES in WABA, NO in runtime/config**; superseded and prohibited.
+- Tests: **PASS**. 22/22, build, lint, Wrangler validation; npm audit retains transitive Wrangler/Miniflare/sharp advisory with breaking forced downgrade avoided.
+- Zero regression: **PASS**.
+- Cloudflare versions: API `c62d6606-9b38-4dde-abfb-ca2ef92e6deb`, admin `7053221d-8e53-457f-b780-ed43905fc7d6`.
+- Git: pending GFS-55 commit; PR #8 open/mergeable; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- Remaining gates: Meta display-name/phone review; canonical App↔WABA subscription; least-privilege credentials; webhook configuration; controlled send; `BACKEND_REALTIME_SYNC_BLOCKED`; `PAYMENT_AMOUNT_NOT_CONFIGURED`.
+- Next action: complete canonical App↔WABA subscription through Meta's supported subscription path, then provision secure credentials and test webhook challenge.
+
 ## GFS-53-PENDING-PROFILE-DELETE-ADD-OTP Execution Update - 2026-10-08
 
 - Overall: **90%**. Remaining: **10%**.
