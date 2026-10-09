@@ -727,6 +727,30 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - STOP_GATE: `META_CREDENTIAL_PROVISIONING_REQUIRED` + `META_APP_WABA_NOT_SUBSCRIBED` + Meta display-name/phone review pending.
 - Next action: generate the system-user token directly in the protected Meta UI, store it only as Cloudflare secrets, then verify `subscribed_apps` and webhook challenge without exposing the token.
 
+## GFS-57-OAUTH-GRAPH-REGISTRATION Execution Update - 2026-10-09
+
+- Overall: **93%**. Remaining: **7%**.
+- Official Meta MCP: **BLOCKED/NOT EXPOSED** in active agent; no remote WhatsApp Business Tools OAuth handoff.
+- Phone verification: asset exists, Phone ID `1323932417479627`; Meta display/quality review remains Pending/In Review.
+- Cloud API registration: **BLOCKED/NOT CLAIMED**.
+- `subscribed_apps`: **FAIL/UNVERIFIED**; system-user asset assignment is not subscription.
+- Canonical App visible: **YES** as assigned asset; canonical App API Setup still shows test WABA only.
+- Credential path: **SECURE_HANDOFF_REQUIRED**; token generation would reveal/copy secret, so no token generated.
+- Cloudflare Phone ID: **NOT SET**; no secrets.
+- Webhook challenge/signed webhook: **BLOCKED**.
+- Provider: **DISABLED**.
+- Controlled send/delivery webhook: **BLOCKED**.
+- Flow: **READY repository-only**.
+- Meta billing: **PRESENT** from prior visible evidence; no card changes.
+- Lead -> D1: **BLOCKED**.
+- Garden Shop customer payment: **BLOCKED**.
+- Tests: **PASS**. 22/22, build, lint, audit, Wrangler 4.149 validation.
+- Zero regression: **PASS**.
+- Git: head `65913da`; PR #8 open/mergeable; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- Remaining stages: WhatsApp runtime **4%**; Lead→D1 **2%**; Payment **1%**.
+- STOP_GATE: `META_CREDENTIAL_PROVISIONING_REQUIRED` + `META_APP_WABA_NOT_SUBSCRIBED` + Meta review pending.
+- Next action: expose/authenticate official WhatsApp Business Tools OAuth or perform protected Meta token handoff, then verify `subscribed_apps` without revealing credentials.
+
 ## GFS-53-PENDING-PROFILE-DELETE-ADD-OTP Execution Update - 2026-10-08
 
 - Overall: **90%**. Remaining: **10%**.
