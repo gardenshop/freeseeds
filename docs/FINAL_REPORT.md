@@ -703,6 +703,30 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - Remaining gates: Meta display-name/phone review; canonical App↔WABA subscription; least-privilege credentials; webhook configuration; controlled send; `BACKEND_REALTIME_SYNC_BLOCKED`; `PAYMENT_AMOUNT_NOT_CONFIGURED`.
 - Next action: complete canonical App↔WABA subscription through Meta's supported subscription path, then provision secure credentials and test webhook challenge.
 
+## GFS-56-CONNECT-APP-WABA-RUNTIME Execution Update - 2026-10-09
+
+- Overall: **93%**. Remaining: **7%**.
+- Phone review: **In Review**.
+- Display-name review: `Get Free Seeds`, **Pending**.
+- Quality: **Pending**.
+- App -> WABA: **FAIL for `subscribed_apps` / PASS for system-user asset assignment**. Automation `61595003169877` has exactly canonical App and WABA; App API Setup still shows test WABA only.
+- Credential path: **READY structurally / BLOCKED at secret generation**. `Generate token` would reveal/copy a sensitive token; none generated.
+- Cloudflare Phone ID: **NOT SET**; no secrets exist.
+- Webhook challenge: **BLOCKED**.
+- Signed webhook: **BLOCKED**.
+- Provider: **DISABLED**.
+- Controlled send: **BLOCKED**.
+- Delivery/status webhook: **BLOCKED**.
+- Flow: **READY repository-only**.
+- Old sender active: **NO in runtime/config**; still visible historically in WABA.
+- Tests: **PASS**. 22/22, build, lint, audit, Wrangler 4.149 validation.
+- Zero regression: **PASS**.
+- Git: pending GFS-56 commit; PR #8 open/mergeable; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- Remaining stages: WhatsApp runtime **4%**; Lead→D1 **2%**; Payment **1%**.
+- Unchanged: `BACKEND_REALTIME_SYNC_BLOCKED`, `PAYMENT_AMOUNT_NOT_CONFIGURED`.
+- STOP_GATE: `META_CREDENTIAL_PROVISIONING_REQUIRED` + `META_APP_WABA_NOT_SUBSCRIBED` + Meta display-name/phone review pending.
+- Next action: generate the system-user token directly in the protected Meta UI, store it only as Cloudflare secrets, then verify `subscribed_apps` and webhook challenge without exposing the token.
+
 ## GFS-53-PENDING-PROFILE-DELETE-ADD-OTP Execution Update - 2026-10-08
 
 - Overall: **90%**. Remaining: **10%**.
