@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - 2026-10-09 (GFS-60)
+
+- Corrected active documentation authority to `META_ASSETS_PENDING`, sender `+923044429933`, and Phone Number ID `1323932417479627`; former sender/ID remain historical only.
+- Diagnosed MCP exposure: Chrome is running with the existing profile and DevTools port `9222`; package `chrome-devtools-mcp` `1.10.1` is available, but the Codex registration points to a stale WebSocket UUID and this agent lacks the MCP tool namespace.
+- No token, PIN, OTP, Graph mutation, Cloudflare secret, webhook, provider, or controlled send was performed.
+
 ## Unreleased - 2026-10-02 (GFS-25)
 
 - Added the current-session Meta protocol: call `list_pages` first, inspect all existing Meta tabs read-only, preserve useful sessions, and do not force Ayesha login when a clean authenticated asset is accessible.

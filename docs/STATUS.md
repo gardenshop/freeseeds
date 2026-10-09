@@ -2,7 +2,10 @@
 
 ## Current State
 
-`WHATSAPP_PHONE_VERIFICATION_PENDING`
+`META_ASSETS_PENDING`
+
+Current authorized sender: `+923044429933`
+Phone Number ID: `1323932417479627`
 
 ## Completed Work
 
@@ -148,4 +151,4 @@
 
 ## Next Action
 
-Next action: protected credential generation is required before Graph `subscribed_apps` verification; do not display/copy the token. Then verify canonical App↔WABA subscription and webhook challenge.
+Next action: restore/expose Chrome DevTools MCP, then perform protected credential generation without displaying or copying the token into chat; verify Graph phone state, registration, canonical App↔WABA subscription, and webhook challenge.

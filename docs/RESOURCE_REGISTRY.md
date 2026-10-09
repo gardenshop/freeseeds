@@ -2,6 +2,13 @@
 
 Staging and non-secret production resources are provisioned in the dedicated clean account; production compute/secrets/integration remain gated.
 
+## Active WhatsApp Authority (GFS-60)
+
+- State: `META_ASSETS_PENDING`
+- Authorized sender: `+923044429933`
+- Phone Number ID: `1323932417479627`
+- Historical only: `+923328883383` / `1429127796940691`
+
 ## GitHub
 
 - Repository: `https://github.com/gardenshop/freeseeds.git`

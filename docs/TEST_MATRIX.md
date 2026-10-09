@@ -2,6 +2,8 @@
 
 | Area | Required coverage | Status |
 | --- | --- | --- |
+| GFS-60 active sender authority | current state, sender, Phone Number ID, historical sender exclusion | PASS: `META_ASSETS_PENDING`, `+923044429933`, `1323932417479627` |
+| GFS-60 MCP recovery | existing profile, DevToolsActivePort, package, registration, namespace exposure | BLOCKED: local prerequisites present; Codex registration has stale WebSocket UUID and active namespace is unavailable |
 | Governance | authorized number lock, no existing number | PASS |
 | Webhook | challenge, signature, replay boundary, message/media/status classification and hashed D1 persistence | PASS (live callback deferred) |
 | Flow | exactly five fields, validation, persistence contract | PASS |
