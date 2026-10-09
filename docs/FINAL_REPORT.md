@@ -721,7 +721,7 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - Old sender active: **NO in runtime/config**; still visible historically in WABA.
 - Tests: **PASS**. 22/22, build, lint, audit, Wrangler 4.149 validation.
 - Zero regression: **PASS**.
-- Git: pending GFS-56 commit; PR #8 open/mergeable; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- Git: GFS-56 commit pending; PR #8 open/mergeable; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
 - Remaining stages: WhatsApp runtime **4%**; Lead→D1 **2%**; Payment **1%**.
 - Unchanged: `BACKEND_REALTIME_SYNC_BLOCKED`, `PAYMENT_AMOUNT_NOT_CONFIGURED`.
 - STOP_GATE: `META_CREDENTIAL_PROVISIONING_REQUIRED` + `META_APP_WABA_NOT_SUBSCRIBED` + Meta display-name/phone review pending.

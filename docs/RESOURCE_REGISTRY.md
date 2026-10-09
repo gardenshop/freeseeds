@@ -57,7 +57,7 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - GFS-54 support: canonical WABA Help exposes Business Support Home/category updates only; no support case UI or case ID available.
 - GFS-54 active vars: API/admin deployments are configured for `WHATSAPP_NUMBER_SLOT_BLOCKED`; no active old Phone ID.
 - GFS-55 active vars: API/admin deployments now use `META_ASSETS_PENDING`; API/admin versions `c62d6606-9b38-4dde-abfb-ca2ef92e6deb` / `7053221d-8e53-457f-b780-ed43905fc7d6`; no WhatsApp secrets, provider disabled.
-- GFS-56 system user: `Automation` ID `61595003169877`, Employee, assigned only canonical App `2354726831735899` and WABA `2616648355452496`; no token generated.
+- GFS-56 system user: `Automation` ID `61595003169877`, Employee, assigned only canonical App `2354726831735899` and WABA `2616648355452496`; assignment verified; no token generated.
 - GFS-56 toolchain: Wrangler `4.149.0`, audit 0 vulnerabilities.
 - Clean staging WABA test: not configured; no separate staging WABA/test number is used
 - Clean staging test Phone Number ID: not yet configured; no ID placeholder is recorded
