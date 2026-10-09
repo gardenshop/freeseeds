@@ -138,6 +138,7 @@
 - GFS-56 quality: Wrangler lock/runtime updated to `4.149.0`; 22 tests/build/lint/audit/Wrangler PASS with zero vulnerabilities.
 - GFS-57 authoritative asset check: new phone `+923044429933` / Phone ID `1323932417479627` exists, but Meta UI remains In Review/Pending display-name review. System user `Automation` has canonical App/WABA assets assigned; App API Setup still exposes only test WABA, so `subscribed_apps` is unverified.
 - GFS-57 credential/runtime: official WhatsApp Business Tools OAuth/remote MCP is not exposed to this agent; token generation would reveal a secret and was not clicked. Cloudflare has no secrets; provider remains disabled.
+- GFS-58 asset assignment: clean Employee system user `Automation` has exactly canonical App/WABA assigned with partial permissions; no token generated. App API Setup still shows test WABA only; `subscribed_apps` remains unverified.
 - GFS-26 Meta creation attempt: current session identity was Saeed Nazim (`ags.rom@gmail.com`); new Business Portfolio creation returned the exact limit message that no more portfolios can be created. No Business ID was created and no prohibited asset was mutated.
 - GFS-26 support path: Meta Business Support Home was reached in the same session, but no standalone form or case/reference ID was produced; built-in support assistant gave no response. STOP_GATE=`META_SUPPORT_REQUIRED`.
 - GFS-26 Git: active branch `codex/gfs-meta-clean-007` from merged main `a4ac98c`; no PR opened yet.

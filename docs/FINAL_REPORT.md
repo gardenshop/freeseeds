@@ -751,6 +751,27 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - STOP_GATE: `META_CREDENTIAL_PROVISIONING_REQUIRED` + `META_APP_WABA_NOT_SUBSCRIBED` + Meta review pending.
 - Next action: expose/authenticate official WhatsApp Business Tools OAuth or perform protected Meta token handoff, then verify `subscribed_apps` without revealing credentials.
 
+## GFS-58-OFFICIAL-MCP-GRAPH-REGISTRATION Execution Update - 2026-10-09
+
+- Overall: **93%**. Remaining: **7%**.
+- Official Meta MCP: **BLOCKED/NOT EXPOSED** in active agent; no remote OAuth handoff.
+- Phone: `+923044429933`, Phone ID `1323932417479627`; display/quality review remains Pending/In Review.
+- System-user assignment: **PASS** for exact canonical App/WABA assets; no Hoja assets/token.
+- App -> WABA `subscribed_apps`: **FAIL/UNVERIFIED**; App API Setup still test WABA only.
+- Credential path: **SECURE_HANDOFF_REQUIRED**.
+- Cloudflare Phone ID: **NOT SET**; no secrets.
+- Webhook/provider/controlled send: **BLOCKED/DISABLED**.
+- Flow: **READY repository-only**.
+- Meta billing: **PRESENT** from prior visible evidence.
+- Lead -> D1: **BLOCKED**.
+- Garden Shop payment: **BLOCKED**.
+- Tests: **PASS**. 22/22, build, lint, audit, Wrangler validation.
+- Zero regression: **PASS**.
+- Git: head `783dc1d`; PR #8 open/mergeable; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- Remaining stages: WhatsApp runtime **4%**; Lead→D1 **2%**; Payment **1%**.
+- STOP_GATE: `META_CREDENTIAL_PROVISIONING_REQUIRED` + `META_APP_WABA_NOT_SUBSCRIBED` + Meta review pending.
+- Next action: expose official WhatsApp Business Tools OAuth or complete protected token handoff, then verify Graph `subscribed_apps` and webhook challenge without revealing credentials.
+
 ## GFS-53-PENDING-PROFILE-DELETE-ADD-OTP Execution Update - 2026-10-08
 
 - Overall: **90%**. Remaining: **10%**.
