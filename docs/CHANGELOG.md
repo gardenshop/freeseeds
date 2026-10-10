@@ -28,6 +28,14 @@
 - Refactored payment selection to use persisted dynamic `orders.total_payable` and preserved legacy fixed-payment behavior for non-dynamic paths.
 - Workbook discovery returned `PRODUCT_WORKBOOK_NOT_FOUND`; no product/rate import or Meta mutation occurred.
 
+## Unreleased - 2026-10-10 (GFS-72)
+
+- Loaded the user-authoritative `AUTHORITATIVE_FREE_SEEDS_TARIFF_2026` into staging D1/admin: free five-pack seeds Rs. 0, optional fertilizer Rs. 250, and seven province delivery rates.
+- Added pack quantity migration and province alias normalization. Live staging quote smoke passes all 14 required tariff combinations.
+- Confirmed pricing works independently of incomplete payment recipients; no payment method was enabled or invented.
+- Read-only canonical Flow Manager opens Get Free Seeds WABA but reports message-quality and business-verification requirements for publication. No Flow/campaign mutation occurred.
+- Generated a supported RSA Flow keypair in memory and stored only the private key as Cloudflare secret `FLOW_PRIVATE_KEY`; no key material was logged. Public-key registration remains pending.
+
 ## Unreleased - 2026-10-09 (GFS-60)
 
 - Corrected active documentation authority to `META_ASSETS_PENDING`, sender `+923044429933`, and Phone Number ID `1323932417479627`; former sender/ID remain historical only.

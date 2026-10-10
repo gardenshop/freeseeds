@@ -41,6 +41,17 @@ Phone Number ID: `1323932417479627`
 - Staging D1 migrations `0007_dynamic_catalog.sql` and `0008_catalog_category.sql` applied; catalog/rates remain empty/disabled.
 - Flow health smoke: PASS. Encrypted protocol tests: PASS. Live encrypted Flow is gated by missing `FLOW_PRIVATE_KEY` and Meta Flow publication/registration.
 
+## GFS-72 Authoritative Free Seeds Tariff
+
+- Rule: `AUTHORITATIVE_FREE_SEEDS_TARIFF_2026`.
+- Seed product: `FREE_5_PACK_VEGETABLE_SEEDS`, Free 5 Packs Vegetables Seeds, 5 packs, Rs. 0, active.
+- Fertilizer: `MICRO_NUTRIENTS_FERTILIZER`, 1 Pack Micro Nutrients Fertilizer, Rs. 250, active.
+- Province delivery: Punjab 250; Islamabad 250; Sindh 300; KPK 300; Balochistan 350; AJK 350; Gilgit Baltistan 350 PKR, all active.
+- Live staging quote smoke: all 14 combinations pass, including Punjab 250/500 and Sindh 300/550. Alias normalization passes for Khyber Pakhtunkhwa, Azad Jammu & Kashmir, and GB.
+- Payment methods remain incomplete/disabled; pricing can complete independently, but payment selection is gated by `PAYMENT_METHOD_VALUES_REQUIRED`.
+- Canonical Flow Manager opens the Get Free Seeds WABA and reports publication requirements: improve message quality and complete business verification. No Flow publication mutation was made.
+- `FLOW_PRIVATE_KEY` secret name is configured in staging; public-key registration and Meta Flow publication remain pending. The private value is not recorded.
+
 ## Completed Work
 
 - Repository audit confirmed an empty directory with no Git history or legacy architecture.

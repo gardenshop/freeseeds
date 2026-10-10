@@ -36,6 +36,19 @@
 - Encrypted Flow endpoint: **PASS protocol tests/health smoke**; `FLOW_PRIVATE_KEY` is not provisioned and Meta Flow publication/registration is pending.
 - Fertilizer upsell/order summary/payment buttons/receipt review: **BLOCKED** by missing catalog, delivery rates, payment methods, durable WhatsApp credential, and Flow publication.
 - CTWA window handling: **DOCUMENTED** — customer-initiated 24-hour service window and Meta qualifying free-entry-point handling; Instant Form phone capture is not treated as consent.
+
+## GFS-72-AUTHORITATIVE-TARIFF Update — 2026-10-10
+
+- Authoritative tariff: **LOADED** into staging D1/admin under `AUTHORITATIVE_FREE_SEEDS_TARIFF_2026`.
+- Seed: **Rs. 0**, 5 packs, active.
+- Fertilizer: **Rs. 250**, 1 pack, active.
+- Province rates: Punjab 250; Islamabad 250; Sindh 300; KPK 300; Balochistan 350; AJK 350; Gilgit Baltistan 350 PKR.
+- 14 tariff combinations: **PASS** live staging. Punjab 250/500; Islamabad 250/500; Sindh/KPK 300/550; Balochistan/AJK/Gilgit Baltistan 350/600.
+- Meta Form: **DRIFT/SEPARATE COMMERCE** — prior read-only canonical evidence includes product/province/fertilizer/amount answers; backend/Flow tariff is authoritative and Form was not edited.
+- Quote endpoint: **PASS**; aliases Khyber Pakhtunkhwa, Azad Jammu & Kashmir, and GB normalize safely.
+- Flow: **DRAFT/BLOCKED publication**. Backend protocol/health/tests pass; `FLOW_PRIVATE_KEY` is absent and Meta requires message-quality/business-verification steps.
+- Payment: JazzCash, Easypaisa, Bank **MISSING** recipient/instruction values. Payment buttons/details and receipt review remain blocked only at payment configuration/runtime gates.
+- Flow private/public key: **PRIVATE CONFIGURED / PUBLIC REGISTRATION BLOCKED**; private value was generated in memory and stored by secret name only, never exposed.
 - Meta ending: **READY_FOR_PAYMENT_VALUES**, not edited. Campaign and WhatsApp remain untouched.
 
 ## GFS-60-MCP-AND-ACTIVE-SENDER Update — 2026-10-09

@@ -43,6 +43,15 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Order source of truth: D1 orders/order_items with persisted dynamic `total_payable`; payment selection does not overwrite dynamic totals from the legacy global amount.
 - Flow secret: `FLOW_PRIVATE_KEY` required in Cloudflare secret storage before Meta encrypted traffic; value is intentionally absent from this registry.
 
+## GFS-72 Authoritative Tariff Registry
+
+- Product `FREE_5_PACK_VEGETABLE_SEEDS`: active, 5 packs, Rs. 0.
+- Product `MICRO_NUTRIENTS_FERTILIZER`: active, 1 pack, Rs. 250.
+- Delivery rates: Punjab/Islamabad 250; Sindh/KPK 300; Balochistan/AJK/Gilgit Baltistan 350 PKR; all active.
+- Source label: `AUTHORITATIVE_FREE_SEEDS_TARIFF_2026`; no workbook import is required for these launch rows.
+- Formula: `seed_price + fertilizer_fee + province_delivery_fee`; seed price is zero and fertilizer is optional.
+- Flow key state: Cloudflare secret `FLOW_PRIVATE_KEY` present by name; Meta public-key registration remains pending. No key material is recorded.
+
 ## GitHub
 
 - Repository: `https://github.com/gardenshop/freeseeds.git`
