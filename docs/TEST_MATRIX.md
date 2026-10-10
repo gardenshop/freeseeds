@@ -32,6 +32,8 @@
 | GFS-75 Graph activation | authoritative phone/register/subscription state | BLOCKED: official opaque MCP unavailable; raw credential handling prohibited |
 | GFS-76 registration ordering | ownership → `/register` independent of name review | PASS policy/documentation; execution blocked at protected official path |
 | GFS-76 payment audit | enabled complete payment method status | BLOCKED: all three methods disabled/incomplete |
+| GFS-77 activation console | Access protection, secret absence, sanitized Graph status/actions, transient OTP/PIN | PASS: 46 tests; staging route returns Access 302 |
+| GFS-77 protected handoff | token never exposed; secret name check only | BLOCKED until direct user handoff populates `META_ACCESS_TOKEN` |
 | GFS-60 active sender authority | current state, sender, Phone Number ID, historical sender exclusion | PASS: `META_ASSETS_PENDING`, `+923044429933`, `1323932417479627` |
 | GFS-60 MCP recovery | existing profile, DevToolsActivePort, package, registration, namespace exposure | BLOCKED: local prerequisites present; Codex registration has stale WebSocket UUID and active namespace is unavailable |
 | Governance | authorized number lock, no existing number | PASS |

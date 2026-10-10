@@ -1,7 +1,7 @@
 import { Hono } from "hono";
-import { canTransition, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, isPaymentMethodComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, paymentInstructions, PaymentMethod, storePaymentQr, validatePaymentAmount } from "@gfs/core";
+import { canTransition, createMetaActivationService, MetaActivationAction, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, isPaymentMethodComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, paymentInstructions, PaymentMethod, storePaymentQr, validatePaymentAmount } from "@gfs/core";
 
-type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string } };
+type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string } };
 const app = new Hono<Env>();
 
 function authorized(c: { req: { header(name: string): string | undefined }; env: Env["Bindings"] }): boolean {
@@ -48,6 +48,10 @@ function catalogError(error: unknown): string {
   return error instanceof Error && /^[A-Z0-9_]{3,80}$/.test(error.message) ? error.message : "CATALOG_VALIDATION_FAILED";
 }
 
+function metaActivation(c: { env: Env["Bindings"] }) {
+  return createMetaActivationService({ accessToken: c.env.META_ACCESS_TOKEN, graphVersion: c.env.META_GRAPH_VERSION, phoneNumberId: c.env.META_PHONE_NUMBER_ID, wabaId: c.env.META_WABA_ID, appId: c.env.META_APP_ID, callbackUrl: c.env.META_CALLBACK_URL, providerEnabled: c.env.META_PROVIDER_ENABLED === "true", webhookVerifyToken: c.env.WEBHOOK_VERIFY_TOKEN, appSecret: c.env.META_APP_SECRET, flowPrivateKey: c.env.FLOW_PRIVATE_KEY });
+}
+
 app.use("*", async (c, next) => {
   if (!authorized(c)) return c.json({ error: "ADMIN_ACCESS_REQUIRED" }, 403);
   await next();
@@ -57,7 +61,45 @@ app.get("/health", async (c) => {
   const configured = c.env.DB ? await c.env.DB.prepare("SELECT COUNT(*) AS count FROM payment_methods WHERE enabled=1 AND recipient_name IS NOT NULL AND instructions IS NOT NULL AND EXISTS (SELECT 1 FROM payment_configuration WHERE id=1 AND advance_amount_pkr > 0)").first<{ count: number }>() : null;
   return c.json({ ok: true, service: "getfreeseeds-admin", state: c.env.DEPLOYMENT_STATE, paymentConfigured: Number(configured?.count ?? 0) > 0 });
 });
-app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav><a href='/payment-settings'>Payment Settings</a> | <a href='/payment-amount'>Legacy Advance Amount</a> | <a href='/tariff'>Tariff Management</a> | Dashboard | Leads | Meta Instant Form | Orders | Payment Verification | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
+app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav><a href='/payment-settings'>Payment Settings</a> | <a href='/payment-amount'>Legacy Advance Amount</a> | <a href='/tariff'>Tariff Management</a> | <a href='/meta-activation'>Meta Activation</a> | Dashboard | Leads | Meta Instant Form | Orders | Payment Verification | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
+
+ app.get("/meta-activation", (c) => c.html(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Meta Activation | Get Free Seeds</title><style>body{font:16px system-ui;max-width:900px;margin:2rem auto;padding:0 1rem}nav{margin-bottom:1rem}.card{border:1px solid #ccc;border-radius:8px;padding:1rem;margin:1rem 0}pre{white-space:pre-wrap;background:#f6f6f6;padding:1rem}label{display:block;margin:.7rem 0}input,select{box-sizing:border-box;width:100%;padding:.5rem}button{padding:.5rem .8rem;margin:.2rem}.muted{color:#666}.warning{color:#8a4b00}</style></head><body><nav><a href='/'>Admin home</a></nav><h1>Meta activation</h1><p class="muted">Status is safe to reread. Graph actions use only the configured server token; OTP and PIN fields are transient and cleared after each attempt.</p><pre id="status">Loading...</pre><section class="card"><h2>Phone verification</h2><button id="request-code">Request SMS code (once)</button><label>OTP<input id="otp" type="password" inputmode="numeric" autocomplete="one-time-code"></label><button id="verify-code">Verify OTP</button></section><section class="card"><h2>Phone registration and app subscription</h2><label>Two-step PIN<input id="pin" type="password" inputmode="numeric" autocomplete="off"></label><button id="register">Register phone</button><button id="subscribe-app">Subscribe App to WABA</button></section><section class="card"><h2>Status-only checks</h2><button id="refresh">Refresh status</button><button id="controlled-test">Run controlled test</button><p class="warning">Provider, webhook, Flow key, and controlled-test actions never mutate external services.</p></section><p id="result" role="status"></p><script>
+ const status=document.querySelector('#status');const result=document.querySelector('#result');
+ async function load(){const response=await fetch('/api/meta-activation/status');status.textContent=JSON.stringify(await response.json(),null,2)}
+ async function action(name,payload={}){try{const response=await fetch('/api/meta-activation/actions/'+name,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});result.textContent=response.ok?'Action completed; status reread safely.':'Action was not completed';await load()}catch{result.textContent='Activation action unavailable'}}
+ document.querySelector('#request-code').onclick=()=>action('request-code',{codeMethod:'SMS'});
+ document.querySelector('#verify-code').onclick=async()=>{const input=document.querySelector('#otp');try{await action('verify-code',{otp:input.value})}finally{input.value=''}};
+ document.querySelector('#register').onclick=async()=>{const input=document.querySelector('#pin');try{await action('register',{pin:input.value})}finally{input.value=''}};
+ document.querySelector('#subscribe-app').onclick=()=>action('subscribe-app');
+ document.querySelector('#refresh').onclick=load;
+ document.querySelector('#controlled-test').onclick=()=>action('controlled-test');
+ load().catch(()=>status.textContent='Activation status unavailable');</script></body></html>`));
+
+app.get("/api/meta-activation/status", async (c) => c.json(await metaActivation(c).status()));
+
+app.post("/api/meta-activation/actions/:action", async (c) => {
+  const action = c.req.param("action") as MetaActivationAction;
+  const allowed: MetaActivationAction[] = ["phone-state", "waba-subscription", "webhook", "provider", "flow-key", "controlled-test", "request-code", "request_code", "verify-code", "verify_code", "register", "subscribe-app"];
+  if (!allowed.includes(action)) return c.json({ error: "META_ACTIVATION_ACTION_NOT_FOUND" }, 404);
+  let body: Record<string, unknown> = {};
+  try {
+    const parsed = await c.req.json<unknown>();
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return c.json({ error: "META_ACTIVATION_INVALID_REQUEST" }, 400);
+    body = parsed as Record<string, unknown>;
+  } catch {
+    return c.json({ error: "META_ACTIVATION_INVALID_REQUEST" }, 400);
+  }
+  // Only the narrow action inputs below reach the service. Secrets never reach logs, audits, or responses.
+  const otp = typeof body.otp === "string" ? body.otp : typeof body.code === "string" ? body.code : undefined;
+  const input = (action === "request-code" || action === "request_code")
+    ? { codeMethod: body.codeMethod === "VOICE" ? "VOICE" as const : body.codeMethod === "SMS" ? "SMS" as const : undefined, language: typeof body.language === "string" ? body.language : undefined }
+    : (action === "verify-code" || action === "verify_code")
+      ? { otp }
+      : action === "register"
+        ? { pin: typeof body.pin === "string" ? body.pin : undefined }
+        : {};
+  return c.json(await metaActivation(c).action(action, input));
+});
 
 app.get("/payment-settings", (c) => c.html(`<!doctype html><html><head><meta charset="utf-8"><title>Payment Settings | Get Free Seeds</title><style>body{font:16px system-ui;max-width:1100px;margin:2rem auto;padding:0 1rem}nav{margin-bottom:1rem}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}.card{border:1px solid #ccc;border-radius:8px;padding:1rem}.card h2{margin-top:0}.card label{display:block;margin:.6rem 0}.card input,.card textarea{box-sizing:border-box;width:100%;padding:.5rem}.status{font-size:.9rem;margin:.5rem 0}.configured{color:green}.incomplete{color:#a15c00}.error{color:#b00020}.qr{max-width:180px;max-height:180px;display:block;margin-top:.5rem}.actions{display:flex;gap:.5rem;align-items:center}button{padding:.5rem .8rem}</style></head><body><nav><a href='/'>Admin home</a></nav><h1>Garden Shop Payment Settings</h1><p>Values are backend-controlled. Disabled or incomplete methods cannot send payment instructions.</p><div id="methods" class="grid">Loading...</div><script>
 const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

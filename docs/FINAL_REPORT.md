@@ -100,6 +100,14 @@
 - Controlled message/status callback/webhook: **BLOCKED**.
 - BSUID: **READY**, actual BSUID observed **NO**, scoped storage **PASS**.
 - Payments: JazzCash/Easypaisa/Bank **MISSING** recipient/instruction values.
+
+## GFS-77-ACTIVATION-CONSOLE Update — 2026-10-10
+
+- Activation console: **PASS implementation/deployment** at Access-protected `/meta-activation`.
+- `META_ACCESS_TOKEN`: **ABSENT by name check**; raw credential not exposed.
+- Phone/register/subscription/message actions: **PENDING protected handoff**; no mutation attempted.
+- OTP/PIN handling: transient password fields only, never persisted/logged.
+- Tests: **46/46 pass**, build/lint/audit/Wrangler pass.
 - Meta ending: **READY_FOR_PAYMENT_VALUES**, not edited. Campaign and WhatsApp remain untouched.
 
 ## GFS-60-MCP-AND-ACTIVE-SENDER Update — 2026-10-09

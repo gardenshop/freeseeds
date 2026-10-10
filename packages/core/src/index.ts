@@ -13,3 +13,4 @@ export * from "./quote";
 export * from "./meta-flow";
 export * from "./catalog";
 export * from "./order-interaction";
+export * from "./meta-activation";

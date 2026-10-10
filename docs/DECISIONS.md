@@ -38,6 +38,10 @@ No opaque official WhatsApp Business Tools MCP was available to this agent, so n
 
 The registration attempt was correctly prioritized independently of `name_status=In Review`, but the supported phone UI exposed no register/verify control and the official opaque WhatsApp Business Tools MCP was unavailable. The exact remaining gate is protected Graph credential/official-MCP access; no raw token or PIN path was substituted.
 
+## 2026-10-10: GFS-77 Activation Console and Protected Handoff
+
+Added and deployed an Access-protected activation console with secret-only Graph action support, transient OTP/PIN fields, sanitized status/errors, and canonical asset bindings. Since `META_ACCESS_TOKEN` is absent, no Graph registration/subscription/message mutation was attempted. The secure Meta token-generation and Cloudflare secret surfaces are prepared for direct user entry; execution must continue after the secret name becomes present.
+
 Meta Form read-only inventory remains separate from WhatsApp commerce: historical canonical evidence includes customer fields plus product/province/fertilizer/amount answers, while this Flow owns server-authoritative product/rate/quote data. No Form or campaign mutation occurred.
 
 ## 2026-10-10: GFS-69 Final Meta Form Preparation

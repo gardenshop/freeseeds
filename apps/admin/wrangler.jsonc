@@ -8,5 +8,6 @@
   "d1_databases": [{ "binding": "DB", "database_name": "getfreeseeds-staging", "database_id": "17b7e9f6-e08b-4bff-a756-10de30b49ab1" }],
   "r2_buckets": [{ "binding": "RECEIPTS", "bucket_name": "getfreeseeds-receipts-staging" }],
   "queues": { "producers": [{ "binding": "EVENTS", "queue": "getfreeseeds-events-staging" }] },
-  "vars": { "DEPLOYMENT_STATE": "META_ASSETS_PENDING", "ADMIN_EMAIL": "gisupp@gmail.com" }
+  // META_ACCESS_TOKEN and FLOW_PRIVATE_KEY are Wrangler secret bindings, never vars.
+  "vars": { "DEPLOYMENT_STATE": "META_ASSETS_PENDING", "ADMIN_EMAIL": "gisupp@gmail.com", "META_GRAPH_VERSION": "v26.0", "META_PHONE_NUMBER_ID": "1323932417479627", "META_WABA_ID": "2616648355452496", "META_APP_ID": "2354726831735899", "META_CALLBACK_URL": "https://getfreeseeds-api-staging.get-free-seeds.workers.dev/webhooks/whatsapp", "META_PROVIDER_ENABLED": "false" }
 }

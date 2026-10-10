@@ -230,3 +230,10 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Registration sequence was not executable through the available supported surfaces: Meta phone UI exposes only read-only Pending/In Review state, and no official opaque WhatsApp Business Tools MCP/OAuth tool is exposed to this agent.
 - No OTP, two-step PIN, password, token, or raw Graph request was attempted. Display-name review was not used as a precondition; the actual blocker is the protected Graph/official-MCP credential path.
 - Payment audit: JazzCash, Easypaisa, and Bank Transfer are all disabled with recipient/instruction fields absent. This does not block phone registration but blocks payment E2E.
+
+## GFS-77 Activation Console
+
+- Access-protected `/meta-activation` is deployed for canonical Phone/WABA/App state, ownership/register/subscription actions, webhook/provider/Flow-key status, and controlled-test preparation. No Meta mutation or message was executed.
+- `META_ACCESS_TOKEN` secret name check: **ABSENT**. No raw token was read or handled.
+- Secure Meta App API Setup and Cloudflare secret surfaces were prepared in the existing authenticated browser context. The protected token handoff is the only current autonomous pause.
+- Activation console tests cover secret absence, sanitized Graph errors, transient OTP/PIN fields, and action request safety.

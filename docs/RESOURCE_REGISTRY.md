@@ -66,6 +66,12 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - BSUID storage: D1 `customers.bsuid` + `customers.bsuid_business_id` + `customers.whatsapp_username`; no observed customer BSUID and no fabricated business/user ID.
 - Canonical business scope for future BSUID association: Business `568026370701542`, WABA `2616648355452496`. A separate Garden Shop scope is supported by scoped storage but not configured.
 
+## GFS-77 Activation Authority
+
+- Admin console: `/meta-activation` on staging, Access-protected for `gisupp@gmail.com`.
+- Graph credential: `META_ACCESS_TOKEN` is a Cloudflare secret name only; currently absent. No credential material is recorded.
+- Canonical action scope: Phone `1323932417479627`, WABA `2616648355452496`, App `2354726831735899`.
+
 ## GFS-76 Registration State
 
 - Registration authority: official Graph/WhatsApp Business Tools only; current Chrome UI is observation-only for this action.
