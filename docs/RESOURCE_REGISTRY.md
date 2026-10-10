@@ -66,6 +66,12 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - BSUID storage: D1 `customers.bsuid` + `customers.bsuid_business_id` + `customers.whatsapp_username`; no observed customer BSUID and no fabricated business/user ID.
 - Canonical business scope for future BSUID association: Business `568026370701542`, WABA `2616648355452496`. A separate Garden Shop scope is supported by scoped storage but not configured.
 
+## GFS-76 Registration State
+
+- Registration authority: official Graph/WhatsApp Business Tools only; current Chrome UI is observation-only for this action.
+- Name review remains separate from registration. Current phone remains Pending/In Review; no claim of approval or activation is made.
+- Payment methods remain absent and are not used as a reason to delay protected phone registration.
+
 ## GFS-73 Tariff Governance
 
 - Single runtime source: Access-protected `/tariff` → D1 `products` and `province_delivery_rates`.

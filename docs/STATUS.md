@@ -224,3 +224,9 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Canonical App↔WABA subscription remains unverified; API health remains `META_ASSETS_PENDING` / WhatsApp disabled until onboarding. No OTP/PIN/token action was attempted.
 - BSUID support: staging migration `0010_customer_bsuid.sql` adds scoped `bsuid`, `bsuid_business_id`, and `whatsapp_username` fields with a scoped unique index; Flow submission persistence preserves existing phone/wa_id fields. No actual BSUID was observed.
 - Flow private key remains Cloudflare secret-only; public registration, phone activation, webhook/provider, and controlled send remain protected Meta gates.
+
+## GFS-76 Registration Priority Audit
+
+- Registration sequence was not executable through the available supported surfaces: Meta phone UI exposes only read-only Pending/In Review state, and no official opaque WhatsApp Business Tools MCP/OAuth tool is exposed to this agent.
+- No OTP, two-step PIN, password, token, or raw Graph request was attempted. Display-name review was not used as a precondition; the actual blocker is the protected Graph/official-MCP credential path.
+- Payment audit: JazzCash, Easypaisa, and Bank Transfer are all disabled with recipient/instruction fields absent. This does not block phone registration but blocks payment E2E.

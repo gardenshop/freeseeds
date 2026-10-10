@@ -87,6 +87,19 @@
 - Get Free Seeds scope: Business `568026370701542` / WABA `2616648355452496`.
 - Future separate Garden Shop scope: **SUPPORTED / NOT CONFIGURED**.
 - Username: **OPTIONAL_PENDING**.
+
+## GFS-76-PHONE-REGISTRATION Update — 2026-10-10
+
+- Ownership verification: **NOT PROVEN through supported opaque Graph path**.
+- Graph `/register`: **BLOCKED** — official credential/MCP access unavailable; no raw request attempted.
+- Registration response: **NO REQUEST**.
+- Registered: **NO PROOF**.
+- Name status before/after: **In Review / not changed**; name review was not treated as a prerequisite.
+- WABA phone read: **PASS dashboard observation** — canonical phone is Pending/In Review.
+- App subscribed: **FAIL/unverified**.
+- Controlled message/status callback/webhook: **BLOCKED**.
+- BSUID: **READY**, actual BSUID observed **NO**, scoped storage **PASS**.
+- Payments: JazzCash/Easypaisa/Bank **MISSING** recipient/instruction values.
 - Meta ending: **READY_FOR_PAYMENT_VALUES**, not edited. Campaign and WhatsApp remain untouched.
 
 ## GFS-60-MCP-AND-ACTIVE-SENDER Update — 2026-10-09

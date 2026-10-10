@@ -54,6 +54,12 @@
 - Applied migration `0010_customer_bsuid.sql` and deployed API; no actual BSUID or customer PII was added.
 - Reconfirmed Graph activation is blocked at the protected opaque credential/official WhatsApp Business Tools MCP path; no OTP, PIN, token, phone, App, WABA, or campaign mutation occurred.
 
+## Unreleased - 2026-10-10 (GFS-76)
+
+- Added `INITIAL_PHONE_REGISTRATION_DOES_NOT_WAIT_ON_NAME_REVIEW` policy and recorded the exact protected registration gate.
+- Rechecked canonical phone UI: Pending registration, display name In Review; no supported register/OTP/PIN control was exposed.
+- Rechecked payment D1: JazzCash, Easypaisa, and Bank Transfer all disabled with no recipient/instruction values.
+
 ## Unreleased - 2026-10-09 (GFS-60)
 
 - Corrected active documentation authority to `META_ASSETS_PENDING`, sender `+923044429933`, and Phone Number ID `1323932417479627`; former sender/ID remain historical only.

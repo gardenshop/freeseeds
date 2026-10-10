@@ -34,6 +34,10 @@ Read-only canonical Meta audit found no existing Flow under WABA `26166483554524
 
 No opaque official WhatsApp Business Tools MCP was available to this agent, so no raw Graph credential path was substituted. Phone/quality/name/runtime claims remain blocked until supported Graph-backed state is available. BSUID is modeled as a scoped customer identity, not a business identifier; `wa_id`, entered/contact numbers, auto WhatsApp number, BSUID, and username remain separate and BSUID absence preserves existing routing.
 
+## 2026-10-10: GFS-76 Registration Does Not Wait on Name Review
+
+The registration attempt was correctly prioritized independently of `name_status=In Review`, but the supported phone UI exposed no register/verify control and the official opaque WhatsApp Business Tools MCP was unavailable. The exact remaining gate is protected Graph credential/official-MCP access; no raw token or PIN path was substituted.
+
 Meta Form read-only inventory remains separate from WhatsApp commerce: historical canonical evidence includes customer fields plus product/province/fertilizer/amount answers, while this Flow owns server-authoritative product/rate/quote data. No Form or campaign mutation occurred.
 
 ## 2026-10-10: GFS-69 Final Meta Form Preparation
