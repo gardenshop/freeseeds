@@ -2,7 +2,64 @@
 
 ## Current State
 
-`WHATSAPP_PHONE_VERIFICATION_PENDING`
+`META_ASSETS_PENDING`
+
+Current authorized sender: `+923044429933`
+Phone Number ID: `1323932417479627`
+
+## Meta Form Launch Track (GFS-68)
+
+- Launch mode: `META_FORM_LAUNCH_FIRST`
+- Canonical Page: `101192938541236`
+- Canonical Form authority: `1093015800183328` / `Free Seeds 05-10-2026` (active in the canonical Page form list; the older `Free Seeds 04-10-2026` is a separate active form)
+- Native Leads Center is an acceptable temporary lead-capture path; WhatsApp API runtime is `WHATSAPP_API_ENHANCEMENT_PENDING` and non-blocking for this track.
+- Payment source check: all staging D1 payment methods are disabled and have no recipient, instructions, or QR configuration. Exact gate: `PAYMENT_VALUES_REQUIRED`.
+- Campaign publication/spend remains unapproved; do not publish or spend without exact budget authorization.
+
+## GFS-69 Final Form Preparation
+
+- Form field authority: the existing canonical verification covers exactly Full Name, Complete Delivery Address, Nearby Famous Place, City, and Contact Number; Email is excluded.
+- Ending template is prepared but **not published** until payment values are verified: `Request received` → `Your 5 seed packs are FREE.` → verified advance amount/method details → receipt CTA.
+- Last verified native ending exposed Messenger continuation, while its WhatsApp CTA targeted a prohibited noncanonical number; no WhatsApp CTA was used. Current customer-side CTA proof remains pending.
+- Campaign draft is visible in canonical Ad Account `1198439777611633` as `New Leads Campaign`, In draft, with a visible Rs2,625 daily draft budget. Exact Form attachment remains unverified; no edit or publish mutation was made.
+
+## GFS-70 Initial Payment Path
+
+- Rule: `INITIAL_LAUNCH_PAYMENT_FIRST`; campaign, spend, WhatsApp API, and Lead→D1 work are out of scope.
+- Cloudflare identity verified: `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- Staging D1 now has backend-managed `payment_configuration.advance_amount_pkr` and the Access-protected `/payment-amount` admin page. Current amount is `NULL`; no value was invented.
+- Existing payment methods remain disabled/incomplete: JazzCash, Easypaisa, and Bank Transfer have no recipient/instructions/QR configuration.
+- Admin UI direct access reached Cloudflare Access login rather than an authenticated `gisupp@gmail.com` page; backend/D1 state was verified with Wrangler. No payment mutation was made.
+- Form ending was not edited. Payment launch remains `PAYMENT_VALUES_REQUIRED` until verified values are supplied.
+
+## GFS-71 WhatsApp Flow Order Track
+
+- Rule: `WHATSAPP_FLOW_CTWA_LAUNCH_FIRST`; campaign/ad/budget work remains untouched.
+- Canonical Meta Form read-only inventory confirms Form `1093015800183328` / `Free Seeds 05-10-2026` is active with one lead; no Form mutation was made.
+- Product workbook: `PRODUCT_WORKBOOK_NOT_FOUND`; no products, fertilizer prices, or province rates were invented or imported.
+- Backend: dynamic catalog/province/order_items schema, server-side quote endpoint, encrypted Flow endpoint, dynamic order persistence, payment selection using persisted `orders.total_payable`, and Access-protected catalog admin controls implemented and deployed to staging.
+- Staging D1 migrations `0007_dynamic_catalog.sql` and `0008_catalog_category.sql` applied; catalog/rates remain empty/disabled.
+- Flow health smoke: PASS. Encrypted protocol tests: PASS. Live encrypted Flow is gated by missing `FLOW_PRIVATE_KEY` and Meta Flow publication/registration.
+
+## GFS-72 Authoritative Free Seeds Tariff
+
+- Rule: `AUTHORITATIVE_FREE_SEEDS_TARIFF_2026`.
+- Seed product: `FREE_5_PACK_VEGETABLE_SEEDS`, Free 5 Packs Vegetables Seeds, 5 packs, Rs. 0, active.
+- Fertilizer: `MICRO_NUTRIENTS_FERTILIZER`, 1 Pack Micro Nutrients Fertilizer, Rs. 250, active.
+- Province delivery: Punjab 250; Islamabad 250; Sindh 300; KPK 300; Balochistan 350; AJK 350; Gilgit Baltistan 350 PKR, all active.
+- Live staging quote smoke: all 14 combinations pass, including Punjab 250/500 and Sindh 300/550. Alias normalization passes for Khyber Pakhtunkhwa, Azad Jammu & Kashmir, and GB.
+- Payment methods remain incomplete/disabled; pricing can complete independently, but payment selection is gated by `PAYMENT_METHOD_VALUES_REQUIRED`.
+- Canonical Flow Manager opens the Get Free Seeds WABA and reports publication requirements: improve message quality and complete business verification. No Flow publication mutation was made.
+- `FLOW_PRIVATE_KEY` secret name is configured in staging; public-key registration and Meta Flow publication remain pending. The private value is not recorded.
+
+## GFS-73 Admin Tariff Source of Truth
+
+- Rule: `ADMIN_TARIFF_SOURCE_OF_TRUTH`.
+- Access-protected `/tariff` is deployed and renders one D1-backed editable table for products and province delivery fees; Payment Settings remains separate.
+- Product price validation now permits zero for free seeds/fertilizer; delivery fee remains strictly positive. Pack quantity is D1-backed.
+- Runtime proof without redeploy: temporary Punjab fee change produced quote 251, restore produced 250; temporary fertilizer price change produced 501, restore produced 500. Staging data is restored.
+- Admin browser smoke reaches Cloudflare Access (HTTP 302); direct authenticated UI edit proof remains gated by the `gisupp@gmail.com` Access session. D1/runtime change proof passes.
+- No permanent tariff constants remain in binding rules, Flow JSON, or Worker variables; tests use labeled fixtures only.
 
 ## Completed Work
 
@@ -120,11 +177,85 @@
 - GFS-47 schema/routing: staging customer columns `normalized_contact_number`, `whatsapp_number`, and `normalized_whatsapp_number` applied; resolver priority is Meta `wa_id` → auto WhatsApp → entered contact, with sender/old CTA rejection. API version `97c038d1-6382-4a3e-9509-2ad2005472b9` deployed; send remains deferred.
 - GFS-48 lead verification: current Leads Center detail confirms Form `1093015800183328`, manual contact `03001234567`, Meta WhatsApp `+923034901810`, name/address/place/province/product/amount fields. No D1/backend lead sync or order exists.
 - GFS-49 Payment Settings: admin `/payment-settings` deployed at admin version `c236589e-760a-4190-95b9-285fc29b3518` with Access identity `gisupp@gmail.com`; JazzCash, Easypaisa, and Bank Transfer render. Incomplete enabled save returns 400; synthetic disabled save/restore succeeds; QR endpoints return 404 because no real QR is configured. Payment remains `PAYMENT_AMOUNT_NOT_CONFIGURED`.
+- GFS-49 Git finalization: PR #7 merged into `main` at `7794b686e942901fc549c1c25a97a4175d9fa663`; fresh branch `codex/gfs-launch-next-001` created from merged main. Remote CI remained an empty immediate failure; local gates are authoritative per rules.
+- GFS-50 launch blockers: Form answers expose product/province/fertilizer/delivery text, but no authoritative Garden Shop pricing table or recipient values exists. Payment remains `PAYMENT_AMOUNT_NOT_CONFIGURED`; native Messenger acknowledgement was not sent; lead App/token/Page subscription still blocks D1 sync.
+- GFS-50 security/quality: targeted `source-map-js` lockfile update to `1.2.2` cleared the high audit advisory; 22 tests/build/lint/audit/Wrangler remain green.
+- GFS-51 sender switch: active business sender is `+923044429933`; old `+923328883383` / Phone ID `1429127796940691` are superseded. WABA Add Phone flow shows an existing Business profile pending and disables Add number; no new Phone ID or OTP was created/requested.
+- GFS-51 sender switch: current business sender is authorized `+923044429933`; old `+923328883383` / Phone ID `1429127796940691` are superseded and prohibited. New Phone Number ID is not known until Meta WABA onboarding; provider remains disabled.
+- GFS-51 quality note: local tests/build/lint/Wrangler pass. `npm audit` reports transitive Wrangler→Miniflare→sharp/librsvg advisories; only `npm audit fix --force` proposes a breaking Wrangler downgrade, so no forced toolchain change was applied.
+- GFS-52 migration: old sender deletion was explicitly authorized but not executed because canonical WABA Add Phone is blocked at Business profile pending/Add number disabled. New `+923044429933` has no Phone ID/OTP; old number remains In Review/Unverified and is not active config.
+- GFS-53 active state: `WHATSAPP_NUMBER_SLOT_BLOCKED`; pending Business profile/Add number disabled is the current gate, not OTP yet. Old sender deletion remains authorized but not performed without a phone-specific safe action.
+- GFS-54 escalation: WABA Help link routes to Business Support Home/category updates; no case form/reference-ID creation control was exposed. Gate remains `WHATSAPP_NUMBER_SLOT_BLOCKED`; no deletion/add/OTP mutation.
+- GFS-54 runtime state: API/admin Wrangler active vars now use `WHATSAPP_NUMBER_SLOT_BLOCKED`; providers remain disabled and old Phone ID is absent from active config.
+- GFS-55 new sender verification: canonical WABA now shows `+923044429933`, Phone Number ID `1323932417479627`, display name `Get Free Seeds`, status `In Review`, quality/status `Pending`, and pending display-name review. Slot blocker is resolved; active state is `META_ASSETS_PENDING`.
+- GFS-55 App/WABA evidence: App `2354726831735899` API Setup still exposes only test/Hoja WABA `1932075647340454` and Hoja/test phone options; canonical WABA/new phone is absent. App↔WABA remains FAIL.
+- GFS-55 Cloudflare: clean account verified as `gisupp@gmail.com` / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no API secrets exist. Disabled-safe API/admin versions `c62d6606-9b38-4dde-abfb-ca2ef92e6deb` / `7053221d-8e53-457f-b780-ed43905fc7d6` deployed with `META_ASSETS_PENDING`; health PASS, webhook POST intentionally 503.
+- GFS-56 canonical assignment: created clean Employee system user `Automation` (`61595003169877`) and assigned exactly App `2354726831735899` plus WABA `2616648355452496`. App partial access is Develop app/View insights/Test app; WABA partial access covers management/messages. No Hoja asset assigned.
+- GFS-56 subscription distinction: system-user→App and system-user→WABA assignments PASS, but App API Setup still exposes only test WABA `1932075647340454`; canonical `subscribed_apps` remains unverified/absent. Token generation would reveal a secret, so `META_CREDENTIAL_PROVISIONING_REQUIRED` blocks Graph verification/subscription and webhook credentials.
+- GFS-56 quality: Wrangler lock/runtime updated to `4.149.0`; 22 tests/build/lint/audit/Wrangler PASS with zero vulnerabilities.
+- GFS-57 authoritative asset check: new phone `+923044429933` / Phone ID `1323932417479627` exists, but Meta UI remains In Review/Pending display-name review. System user `Automation` has canonical App/WABA assets assigned; App API Setup still exposes only test WABA, so `subscribed_apps` is unverified.
+- GFS-57 credential/runtime: official WhatsApp Business Tools OAuth/remote MCP is not exposed to this agent; token generation would reveal a secret and was not clicked. Cloudflare has no secrets; provider remains disabled.
+- GFS-58 asset assignment: clean Employee system user `Automation` has exactly canonical App/WABA assigned with partial permissions; no token generated. App API Setup still shows test WABA only; `subscribed_apps` remains unverified.
 - GFS-26 Meta creation attempt: current session identity was Saeed Nazim (`ags.rom@gmail.com`); new Business Portfolio creation returned the exact limit message that no more portfolios can be created. No Business ID was created and no prohibited asset was mutated.
 - GFS-26 support path: Meta Business Support Home was reached in the same session, but no standalone form or case/reference ID was produced; built-in support assistant gave no response. STOP_GATE=`META_SUPPORT_REQUIRED`.
 - GFS-26 Git: active branch `codex/gfs-meta-clean-007` from merged main `a4ac98c`; no PR opened yet.
 - GFS-25 read-only `list_pages` inventory found 8 tabs: Cloudflare Account home, Pakistan Post Office, ChatGPT, X, Meta Business Suite, Ads Manager, DeepSeek, and Google Search. Meta Business Suite and Ads Manager were inspected; no separate Facebook, WhatsApp Manager, or Developer tab was open. Visible identity was Saeed A Nazim.
 
+- GFS-56 system user assignment: Meta Business Manager UI confirmed `2 assets were assigned` to system user `Automation`, ID `61595003169877`, under canonical Business Portfolio `568026370701542`: App `Get Free Seeds` (`2354726831735899`) with partial permissions and WhatsApp account `Get Free Seeds` (WABA `2616648355452496`) with partial permissions. No token generated, no Hoja asset touched. Assignment does NOT constitute App↔WABA subscription.
+
 ## Next Action
 
-Use the existing authenticated Saeed Chrome DevTools MCP session to recheck phone review and supported App↔WABA subscription; use `gisupp@gmail.com` separately for Cloudflare deployment and runtime callbacks.
+Next action: complete the protected Meta Flow publication gate after public-key registration, then verify canonical App↔WABA/runtime credentials before any synthetic send.
+
+## GFS-74 Exact Meta Flow Gates
+
+- Flow Manager canonical WABA: `2616648355452496` / Get Free Seeds selected; no existing Flow is listed.
+- Exact publication text: “To publish Flows, you are required to improve message quality and complete business verification.”
+- App WhatsApp setup additionally shows: **Missing valid payment method**; Meta says customers can initiate free-tier conversations but business messaging is unavailable until a valid payment method is added. App review is marked incomplete; business verification status control is marked completed.
+- Phone `+923044429933` / `1323932417479627`: status `Pending`, display name `Get Free Seeds` / `In Review`, quality rating not shown.
+- Flow private key secret: present by name only. Public-key registration was not completed; private material was never read/exported.
+- API health: `META_ASSETS_PENDING`, WhatsApp disabled until Meta onboarding. Flow health/ping remains PASS.
+- Canonical App↔WABA subscription and durable runtime credential remain unverified/blocked; no message or Flow E2E was attempted.
+
+## GFS-75 Graph Activation and BSUID Readiness
+
+- Official WhatsApp Business Tools MCP/OAuth is advertised in Meta Developer UI but is not exposed as an available agent tool; raw Graph credentials remain prohibited.
+- Authoritative dashboard state: phone `1323932417479627` / `+923044429933` is `Pending`, display name `Get Free Seeds` is `In Review`, quality rating not displayed. App setup marks App Review incomplete and reports missing valid Meta payment method.
+- Canonical App↔WABA subscription remains unverified; API health remains `META_ASSETS_PENDING` / WhatsApp disabled until onboarding. No OTP/PIN/token action was attempted.
+- BSUID support: staging migration `0010_customer_bsuid.sql` adds scoped `bsuid`, `bsuid_business_id`, and `whatsapp_username` fields with a scoped unique index; Flow submission persistence preserves existing phone/wa_id fields. No actual BSUID was observed.
+- Flow private key remains Cloudflare secret-only; public registration, phone activation, webhook/provider, and controlled send remain protected Meta gates.
+
+## GFS-76 Registration Priority Audit
+
+- Registration sequence was not executable through the available supported surfaces: Meta phone UI exposes only read-only Pending/In Review state, and no official opaque WhatsApp Business Tools MCP/OAuth tool is exposed to this agent.
+- No OTP, two-step PIN, password, token, or raw Graph request was attempted. Display-name review was not used as a precondition; the actual blocker is the protected Graph/official-MCP credential path.
+- Payment audit: JazzCash, Easypaisa, and Bank Transfer are all disabled with recipient/instruction fields absent. This does not block phone registration but blocks payment E2E.
+
+## GFS-85 Live E2E Attempt
+
+- API secret names: `META_APP_SECRET`, `META_ACCESS_TOKEN`, and `WEBHOOK_VERIFY_TOKEN` present; active API deployment after App Secret update verified through Wrangler.
+- Webhook challenge: **PASS**. Invalid signed POST: **PASS rejection** (`403`) after provider enablement. Valid Meta-signed event remains unproven because no real callback has arrived.
+- Provider/deployment: enabled and `PRODUCTION_INTEGRATION_READY` deployed; campaign untouched.
+- One authorized fixed-recipient send was attempted; it returned HTTP `400 Bad Request`, no `wamid`, and no retry was issued to avoid duplicate testing. Flow E2E remains pending.
+
+## GFS-77 Activation Console
+
+- Access-protected `/meta-activation` is deployed for canonical Phone/WABA/App state, ownership/register/subscription actions, webhook/provider/Flow-key status, and controlled-test preparation. No Meta mutation or message was executed.
+- `META_ACCESS_TOKEN` secret name check: **ABSENT**. No raw token was read or handled.
+- Secure Meta App API Setup and Cloudflare secret surfaces were prepared in the existing authenticated browser context. The protected token handoff is the only current autonomous pause.
+- Activation console tests cover secret absence, sanitized Graph errors, transient OTP/PIN fields, and action request safety.
+
+## GFS-80 Connected Runtime Reconciliation
+
+- Phone UI: **CONNECTED**; Graph runtime read: **PASS**; `code_verification_status=VERIFIED`; name status `PENDING_REVIEW`; quality `UNKNOWN`.
+- Canonical App↔WABA: **PASS** — observed canonical App `2354726831735899` in subscribed apps.
+- Flow public-key retry after connection: **BLOCKED** with exact Meta error `(#10) Application does not have permission for this action`.
+- Webhook/provider: verify token is configured on API by secret name, but App Secret is absent and provider remains disabled; no signed webhook or message was attempted.
+- Payment methods remain missing; pricing/order-summary work is independent, payment stage remains gated.
+
+## GFS-79 Activation Console Repair
+
+- Fixed Graph verification payload from `language` to official `locale`.
+- Activation UI now exposes sanitized `reason`, `error.code`, and HTTP status instead of a generic failure message.
+- Runtime token check: **PASS**; phone Graph read: **PASS**; `code_verification_status=VERIFIED`, `name_status=PENDING_REVIEW`.
+- `/register` attempt currently returns sanitized Meta error `(#133010) The account is not registered`; no PIN was observed or logged. Secure PIN entry remains the next registration action.

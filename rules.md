@@ -20,37 +20,52 @@
 
 ## Customer Journey
 
+- `META_FORM_LAUNCH_FIRST`: temporary lead/order-request launch uses the canonical Meta Instant Form and native Leads Center; it does not depend on the WhatsApp system-user token, `/register`, `subscribed_apps`, WhatsApp webhook, or Lead→D1 realtime integration. The separate WhatsApp API track remains `WHATSAPP_API_ENHANCEMENT_PENDING`.
+- `INITIAL_LAUNCH_PAYMENT_FIRST`: the first customer launch gate is authoritative Garden Shop payment configuration and immediate post-submit payment/receipt instructions. It does not authorize campaign/ad edits, paid spend, WhatsApp API work, or Lead→D1 realtime work. Payment amount and at least one complete enabled method must come from D1/admin; never use placeholders, synthetic values, zero-value requests, or Hoja values.
+- `WHATSAPP_FLOW_CTWA_LAUNCH_FIRST`: the WhatsApp order path begins from a customer-initiated Click-to-WhatsApp conversation. Use the encrypted Flow endpoint, server-side catalog/province quote, optional fertilizer upsell, order summary, configured payment buttons/details, and same-chat receipt. Do not rely on Instant Form phone capture as WhatsApp consent or a proactive messaging window.
+- Flow publication is not messaging runtime readiness: public encryption keys are non-secret and may be registered in Meta; the matching private key remains Cloudflare secret-only. Never read/export raw Meta credentials, private keys, passwords, OTPs, or 2FA PINs.
+- `GRAPH_ACTIVATION_AUTHORITY`: current supported Meta Graph/WhatsApp Business Tools state is authoritative for phone registration, quality/name status, App↔WABA subscription, and runtime readiness; dashboard banners are not proof of activation.
+- `INITIAL_PHONE_REGISTRATION_DOES_NOT_WAIT_ON_NAME_REVIEW`: ownership verification precedes `/register`; do not wait for `name_status` approval unless Meta explicitly requires it for the registration case or Graph returns that exact blocker. Track name review separately.
+- Meta phone verification request payloads use the official `locale` field; OTP verification is distinct from the six-digit registration PIN. Activation-console failures must expose only sanitized `reason`, error code, and HTTP status.
+- `BSUID_USER_IDENTITY_NOT_BUSINESS_ID`: a Meta BSUID is a customer/user-scoped identity, never a Business ID. Store it separately with its business scope when Meta supplies it; never invent or route by it without current official support.
+- `BSUID_READY`: preserve `CUSTOMER_CONTACT_NUMBER`, `CUSTOMER_WHATSAPP_NUMBER`, and `META_WA_ID` independently. BSUID absence leaves existing recipient resolution unchanged, and different business scopes must never collide.
+- `META_ACTIVATION_CONSOLE`: all Meta activation actions use the Access-protected admin console and secret-only `META_ACCESS_TOKEN`; OTP/PIN fields are transient password inputs, never persisted or logged. Public status is sanitized and never includes credentials.
+- Webhook challenge and signed POST are separate gates: `WEBHOOK_VERIFY_TOKEN` authenticates the GET challenge; `META_APP_SECRET` validates `X-Hub-Signature-256` POSTs. A challenge pass never proves signed-event readiness.
+- `ADMIN_TARIFF_SOURCE_OF_TRUTH`: all product prices, fertilizer prices, pack quantities, and province delivery fees live only in Access-protected admin/D1 and are editable without deployment. Flow/runtime code and Flow JSON must never embed permanent tariff values; tests may use clearly labeled fixtures only.
 - Temporary primary acquisition channel is Meta Instant Form; target primary after approval is WhatsApp; Facebook Messenger is secondary support and Instagram DM automation is deferred.
 - Native Instant Form Messenger continuation is available when the customer selects Meta's checked Messenger consent option and Meta creates the messaging context. Form completion alone still does not prove a customer-side message was received; verify the native session/message separately.
-- An Instant Form customer WhatsApp/contact number is a recipient value (`CUSTOMER_WHATSAPP_NUMBER`), never the GFS business sender. The only business sender is `+923328883383`; the old CTA target `923124093162` is prohibited.
+- An Instant Form customer WhatsApp/contact number is a recipient value (`CUSTOMER_WHATSAPP_NUMBER`), never the GFS business sender. The current business sender is `+923044429933`; superseded `+923328883383`, old Phone ID `1429127796940691`, and CTA target `923124093162` are prohibited for runtime.
 - `CUSTOMER_CONTACT_NUMBER` is the number manually entered in the form; `CUSTOMER_WHATSAPP_NUMBER` is Meta's auto-fetched WhatsApp number. Persist both separately and never overwrite either.
 - WhatsApp recipient priority is Meta `wa_id` when actually supplied, then `CUSTOMER_WHATSAPP_NUMBER`, then `CUSTOMER_CONTACT_NUMBER`; deduplicate identical candidates and reject the business sender/old CTA target.
 - Any customer WhatsApp follow-up requires an eligible Meta messaging context/consent and a verified sender; a phone field alone does not authorize proactive WhatsApp automation.
 - Meta Instant Form is the sole authorized temporary customer web form; no additional website form or custom domain is introduced.
 - All allowed channel sources (`META_INSTANT_FORM`, `WHATSAPP`, `FACEBOOK_MESSENGER`, `INSTAGRAM_DM`) feed the same D1 customer/lead/order/payment workflow. Do not create a separate CRM or channel-specific business logic.
 - Meta advertising, when explicitly authorized, uses the Instant Form until WhatsApp production sender approval.
-- Offer: Get 5 Seed Packs FREE; seed price Rs. 0; coverage approximately 2 to 3 marla depending on crop, spacing and growing method; one promotional set per household per campaign.
-- Required WhatsApp Flow fields are exactly: Full Name; Complete Delivery Address; Nearby Famous Place; City; Contact Number.
+- Offer: Get 5 Seed Packs FREE; coverage approximately 2 to 3 marla depending on crop, spacing and growing method; one promotional set per household per campaign. Product price is admin/D1 data.
+- Required WhatsApp Flow customer data fields remain exactly: Full Name; Complete Delivery Address; Nearby Famous Place; City; Contact Number. Separate commerce fields may be added for product, province, fertilizer choice, quote, payment method, and receipt workflow; these are not customer-identity fields.
 - Payment methods are JazzCash, Easypaisa, and Bank Transfer. Garden Shop recipient values must be verified before activation; never guess account numbers, IBANs, wallet numbers, merchant IDs, or credentials.
 - Customer-visible payment configuration is backend-managed in D1 `payment_methods`; QR binaries are private R2 objects. Do not hardcode recipient values, TILL/TIL IDs, QR keys, or payment instructions in source, Worker environment variables, Flow JSON, templates, or frontend strings.
 - Admin payment settings are managed only through the existing `/payment-settings` UI and payment-method APIs; incomplete methods remain disabled, synthetic test values are restored, and private QR previews never become public.
 - Payment credentials and provider secrets remain Cloudflare secrets and are never stored in customer-visible configuration.
-- Do not send a payment request when payable amount or Garden Shop recipient configuration is absent. Exact gate: `PAYMENT_AMOUNT_NOT_CONFIGURED`; never send a Rs. 0 request or guess payment values.
+- Do not send a payment request when payable amount or Garden Shop recipient configuration is absent. Exact gate: `PAYMENT_AMOUNT_NOT_CONFIGURED`; never send a zero-value request or guess payment values.
+- Dynamic WhatsApp quotes are server-authoritative: catalog product price + optional fertilizer price + selected province delivery fee = total payable. Never trust client-supplied price or total. Catalog and province rates are D1/admin-managed; workbook imports require verified source content.
+- CTWA customer-initiated messages use the normal 24-hour service window; qualifying CTWA entry points may provide Meta's free-entry-point window. Instant Form leads do not authorize automatic WhatsApp messages without supported consent/template rules.
 - Creeper Seeds is not the customer payment recipient. JazzCash, Easypaisa, and Bank QR/TILL payment recipients remain Garden Shop, backend-controlled, manually reviewed, and disabled until verified values are supplied.
 
 ## WhatsApp Number Lock
 
 - Customer-facing WhatsApp identity: Get Free Seeds.
-- Authorized production sender: `+923328883383`; Phone Number ID `1429127796940691`; canonical WABA status is In Review/Unverified.
-- Current state: `WHATSAPP_OTP_REQUIRED` (Meta displayed a six-digit SMS verification dialog; no code was entered or resent).
+- Authorized production sender: `+923044429933`; Phone Number ID `1323932417479627`; superseded sender `+923328883383` / Phone ID `1429127796940691` is historical only.
+- Current state: phone UI `CONNECTED`, Graph phone reads code verification `VERIFIED`, and canonical App↔WABA subscription is present; display name remains in review and webhook/provider/Flow publication remain pending.
 - Production must not use any existing, Hoja Seeds, Garden Shop, temporary, or other phone number.
 - Do not locate, migrate, register, connect, or use any existing, Hoja-linked, or old Garden Shop number or WABA.
 - The known Meta test number `+1 555-897-9372` and every Hoja-linked test asset remain prohibited.
 - `STAGING_WABA_TEST_ALLOWED`: a Meta-provided test WABA/test number may be used only when its visible ownership is independently verified as clean Get Free Seeds, only for staging synthetic data, staging webhook/Flow/messages, and Meta test events. It must never receive real customers, real payments, production events, or ad spend.
 - Cloud API production messaging requires the registered business phone sender. The display name `Free Seeds` is not a standalone sender; continue only through Meta's supported phone verification/registration flow.
-- Display-name-only runtime is not available on the verified App console: the canonical App/WABA exist, but the App currently exposes only Meta's separate test WABA/phone. Live runtime still requires canonical App↔WABA subscription, least-privilege credentials, approved Flow/templates, registered callbacks, and verified CAPI before real traffic.
+- Display-name-only runtime is not sufficient on the verified App console: live runtime still requires least-privilege credentials, registered callbacks, approved Flow/templates, and verified CAPI before real traffic. Canonical App↔WABA subscription is now separately proven.
 - Creeper Seeds may be used only for the authorized Free Seeds In Pakistan Page/number integration. Unrelated Hoja assets visible inside that context remain excluded and must not become runtime dependencies.
 - Canonical Meta assets for this phase are Business `568026370701542`, Ad Account `1198439777611633`, Page `101192938541236`, App `2354726831735899`, and approved WABA `2616648355452496`; Hoja App `1065866162865361`, Hoja WABA `810731151319635`, and all Hoja numbers remain excluded.
+- Clean WhatsApp system user `Automation` (`61595003169877`) is assigned only canonical App `2354726831735899` and WABA `2616648355452496`. Token generation is a protected credential step; never display, copy, log, or commit the token.
 - The generic Page/App `Connect assets` chooser is not assumed to be the WhatsApp integration mechanism. Verify App WhatsApp API Setup/WABA subscription and WABA assigned-app surfaces before mutating assets.
 
 ## Platform
@@ -87,7 +102,7 @@
 
 `LOCAL` -> `STAGING_INFRA_READY` -> `WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING` -> `WHATSAPP_PHONE_VERIFICATION_PENDING` -> `WHATSAPP_OTP_REQUIRED` -> `META_ASSETS_PENDING` -> `PRODUCTION_INTEGRATION_READY` -> `PRODUCTION_READY`
 
-Expected state for this phase: `WHATSAPP_OTP_REQUIRED`.
+Expected state for this phase: `META_ASSETS_PENDING`.
 
 ## Spend Safety
 

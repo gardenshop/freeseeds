@@ -1,5 +1,153 @@
 # Final Report
 
+## GFS-85-LIVE-E2E Update — 2026-10-10
+
+- `META_APP_SECRET`: **PRESENT** by secret name; active API deployment **PASS**.
+- Webhook GET challenge: **PASS**.
+- Signed POST: invalid signature **PASS rejected**; valid signed POST **UNPROVEN**.
+- Provider: **ENABLED** in deployed staging state.
+- Test send: **FAIL** — HTTP 400, no `wamid`; no duplicate retry.
+- Delivery: **UNKNOWN**; inbound reply **WAITING/NOT OBSERVED**.
+- Flow public key: **PASS previously registered**; Flow E2E **BLOCKED** by missing successful outbound message.
+
+## GFS-68-META-FORM-LAUNCH-FIRST Update — 2026-10-10
+
+- Launch track: **`META_FORM_LAUNCH_FIRST`**
+- Canonical Page: `101192938541236`
+- Form authority: `1093015800183328` / `Free Seeds 05-10-2026`, active in the canonical Page form list.
+- Separate active `Free Seeds 04-10-2026` remains distinct; no form substitution or duplicate creation was performed.
+- Native Leads Center is permitted for temporary capture. WhatsApp API remains **`WHATSAPP_API_ENHANCEMENT_PENDING`** and is not a launch blocker.
+- Payment source check: all three staging D1 methods are disabled and recipient/instruction/QR fields are absent. **`PAYMENT_VALUES_REQUIRED`**.
+- Existing campaign draft remains unpublished for this track; no spend authorization was supplied and no publication/edit mutation was made.
+
+## GFS-69-FINAL-FORM-PREP Update — 2026-10-10
+
+- Canonical form: `1093015800183328` / `Free Seeds 05-10-2026` / Page `101192938541236`.
+- Five fields: **PASS** from existing canonical preview evidence — Full Name, Complete Delivery Address, Nearby Famous Place, City, Contact Number; no Email.
+- Immediate ending: **READY_PENDING_VALUES**. Internal copy prepared; not published because payment amount and Garden Shop recipient details are absent.
+- Receipt route: **BLOCKED/UNVERIFIED**. Messenger is preferred; previously observed WhatsApp CTA was prohibited and was not used.
+- Campaign: existing draft visible in Ad Account `1198439777611633`, with Rs2,625 daily draft budget. Exact Form attachment remains unverified; no edit, publish, or spend mutation occurred.
+
+## GFS-70-INITIAL-PAYMENT-PATH Update — 2026-10-10
+
+- Initial rule: **`INITIAL_LAUNCH_PAYMENT_FIRST`**.
+- Admin/D1 support: **PASS implementation**. Added positive integer `advance_amount_pkr`, Access-protected `/payment-amount`, audit logging, and complete-enabled-method gate; staging admin/API deployed.
+- Cloudflare identity: **PASS** — `gisupp@gmail.com` / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- Current amount: **MISSING** (`NULL`). JazzCash, Easypaisa, and Bank Transfer: **INCOMPLETE/DISABLED** with no real recipient/instructions/QR.
+- Admin UI: Cloudflare Access login was shown instead of an authenticated page; backend/D1 was verified through Wrangler. No mutation was made.
+
+## GFS-71-WHATSAPP-FLOW-COMMERCE Update — 2026-10-10
+
+- Meta Form inspected: **PASS inventory** — canonical Form `1093015800183328` / `Free Seeds 05-10-2026` active with one lead; no edit/campaign mutation.
+- Exact customer data fields: **PASS** — Full Name, Complete Delivery Address, Nearby Famous Place, City, Contact Number. Commerce fields are separate: product, province, fertilizer choice, quote/payment workflow.
+- Product workbook: **NOT_FOUND**. Required source: verified seed/fertilizer workbook containing SKU/code, product name/category, PKR price, active/status, pack quantity, and fertilizer data where applicable.
+- Dynamic catalog/admin/quote backend: **PASS implementation/deployment**; staging D1 catalog and province tables are empty/disabled by design.
+- Quote endpoint: **PASS implementation/tests**, but live quote data unavailable until verified products and province rates exist.
+- Encrypted Flow endpoint: **PASS protocol tests/health smoke**; `FLOW_PRIVATE_KEY` is not provisioned and Meta Flow publication/registration is pending.
+- Fertilizer upsell/order summary/payment buttons/receipt review: **BLOCKED** by missing catalog, delivery rates, payment methods, durable WhatsApp credential, and Flow publication.
+- CTWA window handling: **DOCUMENTED** — customer-initiated 24-hour service window and Meta qualifying free-entry-point handling; Instant Form phone capture is not treated as consent.
+
+## GFS-72-AUTHORITATIVE-TARIFF Update — 2026-10-10
+
+- Authoritative tariff: **LOADED** into staging D1/admin under `AUTHORITATIVE_FREE_SEEDS_TARIFF_2026`.
+- Seed: **Rs. 0**, 5 packs, active.
+- Fertilizer: **Rs. 250**, 1 pack, active.
+- Province rates: Punjab 250; Islamabad 250; Sindh 300; KPK 300; Balochistan 350; AJK 350; Gilgit Baltistan 350 PKR.
+- 14 tariff combinations: **PASS** live staging. Punjab 250/500; Islamabad 250/500; Sindh/KPK 300/550; Balochistan/AJK/Gilgit Baltistan 350/600.
+- Meta Form: **DRIFT/SEPARATE COMMERCE** — prior read-only canonical evidence includes product/province/fertilizer/amount answers; backend/Flow tariff is authoritative and Form was not edited.
+- Quote endpoint: **PASS**; aliases Khyber Pakhtunkhwa, Azad Jammu & Kashmir, and GB normalize safely.
+- Flow: **DRAFT/BLOCKED publication**. Backend protocol/health/tests pass; `FLOW_PRIVATE_KEY` is absent and Meta requires message-quality/business-verification steps.
+- Payment: JazzCash, Easypaisa, Bank **MISSING** recipient/instruction values. Payment buttons/details and receipt review remain blocked only at payment configuration/runtime gates.
+- Flow private/public key: **PRIVATE CONFIGURED / PUBLIC REGISTRATION BLOCKED**; private value was generated in memory and stored by secret name only, never exposed.
+
+## GFS-73-ADMIN-TARIFF-SOURCE Update — 2026-10-10
+
+- Admin tariff: **PASS**. `/tariff` deployed as the single D1-backed product/province editor.
+- Single source of truth: **D1/ADMIN = YES**.
+- Seed Rs0 editable: **PASS**. Fertilizer and product values are editable without deploy; delivery fees require positive values.
+- Dynamic quote fetch: **PASS**. Change proof passed without redeploy: Punjab 251→250 and fertilizer 501→500 after restore.
+- Hardcoded production tariff: **NONE FOUND**. Numeric values remaining are labeled tests/history; binding rules no longer embed permanent tariff values.
+- Meta Form: **READ_ONLY**; tariff drift risk **YES** because prior fixed text answers are non-authoritative.
+- Payment methods: JazzCash/Easypaisa/Bank **MISSING** recipient/instruction values; payment selection remains safely hidden.
+- Flow endpoint: **PASS**. Flow public key: **BLOCKED** at Meta registration/publication. Flow remains **DRAFT/BLOCKED**.
+
+## GFS-74-META-FLOW-GATES Update — 2026-10-10
+
+- Public key: **BLOCKED** — private secret exists by name; no public-key registration completed.
+- Exact Flow publication blocker: Meta says **“improve message quality” and “complete business verification.”** App setup separately reports **Missing valid payment method** and App Review incomplete.
+- Business verification: status control marked completed; publication surface still requires completion condition.
+- Phone registration: **Pending**; display name: **In Review**; quality: not displayed.
+- Canonical App↔WABA: **FAIL/unverified**.
+- Runtime credential: **BLOCKED**; provider health reports WhatsApp disabled until Meta onboarding.
+- Flow send: **BLOCKED**; no synthetic conversation attempted.
+
+## GFS-75-GRAPH-ACTIVATION-BSUID Update — 2026-10-10
+
+- Graph phone: verification **Pending**; registration **Pending**; name status **In Review**; quality **not displayed**.
+- Phone activated: **FAIL**.
+- Canonical App subscribed: **FAIL/unverified**.
+- Public key: **BLOCKED**; encrypted handshake not attempted without Meta registration.
+- Webhook: **BLOCKED**; provider health remains disabled until Meta onboarding.
+- Controlled WhatsApp send / delivery callback: **BLOCKED**.
+- Flow: **DRAFT/BLOCKED**.
+- Flow E2E: **BLOCKED**.
+- BSUID support: **PASS**; scoped fields and uniqueness migration deployed, no actual BSUID observed.
+- Actual BSUID observed from Meta: **NO**.
+- BSUID storage: **PASS**.
+- Get Free Seeds scope: Business `568026370701542` / WABA `2616648355452496`.
+- Future separate Garden Shop scope: **SUPPORTED / NOT CONFIGURED**.
+- Username: **OPTIONAL_PENDING**.
+
+## GFS-76-PHONE-REGISTRATION Update — 2026-10-10
+
+- Ownership verification: **NOT PROVEN through supported opaque Graph path**.
+- Graph `/register`: **BLOCKED** — official credential/MCP access unavailable; no raw request attempted.
+- Registration response: **NO REQUEST**.
+- Registered: **NO PROOF**.
+- Name status before/after: **In Review / not changed**; name review was not treated as a prerequisite.
+- WABA phone read: **PASS dashboard observation** — canonical phone is Pending/In Review.
+- App subscribed: **FAIL/unverified**.
+- Controlled message/status callback/webhook: **BLOCKED**.
+- BSUID: **READY**, actual BSUID observed **NO**, scoped storage **PASS**.
+- Payments: JazzCash/Easypaisa/Bank **MISSING** recipient/instruction values.
+
+## GFS-80-CONNECTED-RUNTIME Update — 2026-10-10
+
+- Phone UI Connected: **YES**.
+- Graph registered/runtime: **YES by connected UI + code verification VERIFIED**; name review remains separate.
+- App subscribed: **PASS**; canonical App observed in WABA subscription.
+- Flow public key: **FAIL/BLOCKED** — exact Meta error `(#10) Application does not have permission for this action`.
+- Webhook: **BLOCKED** — App Secret absent; provider disabled.
+- Inbound/outbound/status/delivery: **NOT ATTEMPTED** until signed webhook/provider prerequisites are repaired.
+- Flow E2E: **BLOCKED** at public-key permission gate.
+
+## GFS-77-ACTIVATION-CONSOLE Update — 2026-10-10
+
+- Activation console: **PASS implementation/deployment** at Access-protected `/meta-activation`.
+- `META_ACCESS_TOKEN`: **ABSENT by name check**; raw credential not exposed.
+- Phone/register/subscription/message actions: **PENDING protected handoff**; no mutation attempted.
+- OTP/PIN handling: transient password fields only, never persisted/logged.
+- Tests: **46/46 pass**, build/lint/audit/Wrangler pass.
+
+## GFS-79-ACTIVATION-DIAGNOSTICS Update — 2026-10-10
+
+- Graph runtime: **PASS**; token secret present by name on API/admin Workers.
+- Ownership/code verification: **VERIFIED**; OTP required: **NO**.
+- `/register`: **FAIL pending protected PIN**; safe error `(#133010) The account is not registered`.
+- Name status: **PENDING_REVIEW**; not treated as registration prerequisite.
+- App subscription: **PASS via Graph state** after nested response parsing; canonical App `2354726831735899` observed.
+- Flow public key: **BLOCKED** until phone registration; payment recipients remain missing.
+- Meta ending: **READY_FOR_PAYMENT_VALUES**, not edited. Campaign and WhatsApp remain untouched.
+
+## GFS-60-MCP-AND-ACTIVE-SENDER Update — 2026-10-09
+
+- Active state: **`META_ASSETS_PENDING`**
+- Current sender: **`+923044429933`**; Phone Number ID **`1323932417479627`**
+- Former `+923328883383` / `1429127796940691`: historical only; excluded from runtime.
+- MCP diagnostics: Chrome stable and existing profile are running; `DevToolsActivePort` is port `9222`; `chrome-devtools-mcp` `1.10.1` is installed/available. Codex registration contains stale WebSocket UUID `1bd33a65-0775-4aec-b397-56b12157f07f`, while the live marker reports a different UUID. The active agent namespace does not expose Chrome DevTools MCP, so required `list_pages`/snapshot proof cannot be completed here.
+- Token exposed: **NO**. No Meta or Cloudflare mutation was performed.
+- Stop gate: **`PLATFORM_MCP_BLOCKED`** pending fresh MCP-enabled Codex execution with the live endpoint.
+
 ## GFS-14-RESTORE-CHROME-DEVTOOLS-MCP Execution Update — 2026-09-28
 
 - Overall: 71%; Remaining: 29%.
@@ -557,7 +705,7 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - Payment message sent: **NO**.
 - WhatsApp OTP: **WHATSAPP_OTP_REQUIRED**.
 - App -> WABA: **FAIL/UNVERIFIED**.
-- Tests: **PASS**. 22/22, build, lint, audit, Wrangler validation.
+- Tests: **PASS except audit advisory**. 22/22, build, lint, Wrangler validation; npm audit reports transitive Wrangler/Miniflare/sharp high advisories with only a breaking forced downgrade available.
 - Zero regression: **PASS**.
 - Git: pending GFS-48 commit; PR #7 open/mergeable; main `a4ac98c`.
 - STOP_GATE: `BACKEND_REALTIME_SYNC_BLOCKED` + `PAYMENT_AMOUNT_NOT_CONFIGURED` + `WHATSAPP_OTP_REQUIRED`.
@@ -590,3 +738,227 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - Git: pending GFS-49 commit; PR #7 open/mergeable; main `a4ac98c`.
 - STOP_GATE: `PAYMENT_AMOUNT_NOT_CONFIGURED` + `BACKEND_REALTIME_SYNC_BLOCKED` + `WHATSAPP_OTP_REQUIRED`.
 - Next action: verify real Garden Shop payment recipients/amount rules through authorized admin configuration, then test one acknowledgement without payment instructions.
+
+## GFS-50-MVP-BLOCKERS Execution Update - 2026-10-06
+
+- Overall: **90%**. Remaining: **10%**.
+- Pricing rules extracted: **BLOCKED**; form choices/text are not authoritative Garden Shop pricing.
+- All Form paths tested: **NOT APPLICABLE**; no valid server pricing table exists.
+- Server-authoritative amount: **BLOCKED**.
+- Payment expected_amount: **BLOCKED**.
+- Real Garden Shop values: **NOT PROVIDED**.
+- Enabled payment methods: **none**.
+- QR status: **none configured**.
+- Messenger acknowledgement: **NOT SENT**; native context observed but customer delivery unverified.
+- Lead -> D1: **BLOCKED** by lead App/token/Page subscription.
+- Order creation: **BLOCKED**.
+- Contact/WhatsApp separation: **PASS**.
+- Recipient priority: **PASS** code path.
+- WhatsApp OTP: **WHATSAPP_OTP_REQUIRED**.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Actual WhatsApp send: **BLOCKED**.
+- Tests: **PASS**. 22/22, build, lint, audit, Wrangler validation, admin/payment smoke.
+- Zero regression: **PASS**.
+- Git: fresh branch `codex/gfs-launch-next-001` at merged main; new PR pending; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- STOP_GATE: `PAYMENT_AMOUNT_NOT_CONFIGURED` + `BACKEND_REALTIME_SYNC_BLOCKED` + `WHATSAPP_OTP_REQUIRED`.
+- Next action: obtain verified Garden Shop pricing/recipient configuration and Meta lead App/token/Page subscription, then test one acknowledgement before any payment message.
+
+## GFS-50-QUALITY-FINALIZATION Execution Update - 2026-10-06
+
+- Overall: **90%**. Remaining: **10%**.
+- Payment/admin/lead/Messenger gates unchanged and documented above.
+- Security audit: **PASS**, targeted `source-map-js` update to `1.2.2` removed the advisory.
+- Tests: **PASS**, 22/22, build, lint, audit, Wrangler validation.
+- Git: pending GFS-50 commit on `codex/gfs-launch-next-001`; main `7794b686e942901fc549c1c25a97a4175d9fa663`; new PR required.
+
+## GFS-49-MERGE Finalization Update - 2026-10-05
+
+- PR #7: **MERGED**.
+- Merge SHA: `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- Main SHA: `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- New branch: `codex/gfs-launch-next-001`.
+- Remote CI: immediate empty failure, treated as `REMOTE_CI_UNAVAILABLE_NON_BLOCKING`; local 22/22/build/lint/audit/Wrangler/admin smoke remained green.
+
+## GFS-51-SENDER-SWITCH Execution Update - 2026-10-08
+
+- Overall: **90%**. Remaining: **10%**.
+- New sender: `+923044429933`.
+- Old sender: **SUPERSEDED**, `+923328883383` / Phone ID `1429127796940691`; not active config/runtime.
+- New number added to WABA: **FAIL/BLOCKED**; Add Phone flow shows Business profile pending and Add number disabled.
+- OTP sent to new number: **FAIL/NOT REQUESTED**; Meta never exposed new-number OTP because onboarding is blocked.
+- OTP state: **REQUIRED/BLOCKED** for new sender.
+- New Phone Number ID: **NONE**.
+- Registration: **BLOCKED**, old number remains In Review/Unverified.
+- Display name: existing Get Free Seeds profile; new sender not created.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Old Phone ID removed from active config: **PASS**.
+- Form WhatsApp CTA: **BLOCKED/NOT EDITABLE**; old noncanonical CTA remains prohibited.
+- Cloudflare sender config: **BLOCKED** until new Phone ID/credential; provider disabled.
+- Webhook: **BLOCKED** until new sender/runtime credentials.
+- Controlled WhatsApp send: **BLOCKED**.
+- Payment: **BLOCKED** by `PAYMENT_AMOUNT_NOT_CONFIGURED`.
+- Lead -> D1: **BLOCKED** by lead App/token/Page subscription.
+- Tests: **PASS**. 22/22, build, lint, audit, Wrangler validation.
+- Zero regression: **PASS**.
+- Git branch/head: `codex/gfs-launch-next-001` pending GFS-51 commit.
+- PR #8: **OPEN/MERGEABLE**.
+- Main SHA: `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- STOP_GATE: `WHATSAPP_NUMBER_SLOT_BLOCKED` / pending Business profile + `BACKEND_REALTIME_SYNC_BLOCKED` + `PAYMENT_AMOUNT_NOT_CONFIGURED`.
+- Next action: resolve the pending Business profile/Add number restriction through supported Meta Business/WABA support; do not delete the old sender.
+
+## GFS-54-ESCALATE-PENDING-PROFILE Execution Update - 2026-10-08
+
+- Overall: **90%**. Remaining: **10%**.
+- Current state: **WHATSAPP_NUMBER_SLOT_BLOCKED**.
+- Old phone deletion: **BLOCKED**; exact old row confirmed, but no phone-specific delete/cancel control exposed.
+- Support case ID: **NONE**; WABA Help routes to Business Support Home/category updates only, no case form/reference ID.
+- Slot: **BLOCKED**.
+- New phone added: **FAIL/BLOCKED**.
+- New Phone Number ID: **NONE**.
+- OTP sent to `+923044429933`: **FAIL/NOT SENT**.
+- OTP state: **REQUIRED/BLOCKED** after slot/profile resolution.
+- Registration: old phone remains In Review/Unverified; new registration not started.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Active old-number references: **0** runtime/config references; historical docs only.
+- Cloudflare Phone ID: **PENDING**; provider disabled.
+- Tests: **PASS**. 22/22, build, lint, Wrangler validation; transitive toolchain audit advisory remains without forced downgrade.
+- Zero regression: **PASS**.
+- Git: pending GFS-54 commit; PR #8 open/mergeable; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- STOP_GATE: `WHATSAPP_NUMBER_SLOT_BLOCKED` / pending Business profile.
+- Next action: Meta Business Support must resolve the pending profile/Add Phone slot; then delete old/add new/OTP in one supported session.
+
+## GFS-55-VERIFY-NEW-SENDER-RUNTIME Execution Update - 2026-10-08
+
+- Overall: **92%**. Remaining: **8%**.
+- New sender verified: **PARTIAL**. Asset exists and user confirms verification; Meta UI remains In Review/Pending review.
+- New Phone Number ID: `1323932417479627`.
+- Registration: number present; Meta status **In Review**.
+- Display name: `Get Free Seeds`, **Pending display name review**.
+- Quality: **Pending**.
+- App -> WABA: **FAIL**; App API Setup exposes only test/Hoja WABA `1932075647340454` and Hoja/test numbers.
+- Cloudflare Phone ID: **BLOCKED/NOT SET**; no authorized Meta credentials and no secrets exist.
+- Webhook challenge: **BLOCKED**, verify/app secrets unavailable.
+- Signed webhook: **BLOCKED**.
+- Provider enabled: **NO**.
+- Controlled WhatsApp send: **BLOCKED**.
+- Delivery/status webhook: **BLOCKED**.
+- Flow: **READY repository-only / publication blocked**.
+- Old sender active: **YES in WABA, NO in runtime/config**; superseded and prohibited.
+- Tests: **PASS**. 22/22, build, lint, Wrangler validation; npm audit retains transitive Wrangler/Miniflare/sharp advisory with breaking forced downgrade avoided.
+- Zero regression: **PASS**.
+- Cloudflare versions: API `c62d6606-9b38-4dde-abfb-ca2ef92e6deb`, admin `7053221d-8e53-457f-b780-ed43905fc7d6`.
+- Git: pending GFS-55 commit; PR #8 open/mergeable; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- Remaining gates: Meta display-name/phone review; canonical App↔WABA subscription; least-privilege credentials; webhook configuration; controlled send; `BACKEND_REALTIME_SYNC_BLOCKED`; `PAYMENT_AMOUNT_NOT_CONFIGURED`.
+- Next action: complete canonical App↔WABA subscription through Meta's supported subscription path, then provision secure credentials and test webhook challenge.
+
+## GFS-56-CONNECT-APP-WABA-RUNTIME Execution Update - 2026-10-09
+
+- Overall: **93%**. Remaining: **7%**.
+- Phone review: **In Review**.
+- Display-name review: `Get Free Seeds`, **Pending**.
+- Quality: **Pending**.
+- App -> WABA: **FAIL for `subscribed_apps` / PASS for system-user asset assignment**. Automation `61595003169877` has exactly canonical App and WABA; App API Setup still shows test WABA only.
+- Credential path: **READY structurally / BLOCKED at secret generation**. `Generate token` would reveal/copy a sensitive token; none generated.
+- Cloudflare Phone ID: **NOT SET**; no secrets exist.
+- Webhook challenge: **BLOCKED**.
+- Signed webhook: **BLOCKED**.
+- Provider: **DISABLED**.
+- Controlled send: **BLOCKED**.
+- Delivery/status webhook: **BLOCKED**.
+- Flow: **READY repository-only**.
+- Old sender active: **NO in runtime/config**; still visible historically in WABA.
+- Tests: **PASS**. 22/22, build, lint, audit, Wrangler 4.149 validation.
+- Zero regression: **PASS**.
+- Git: GFS-56 commit pending; PR #8 open/mergeable; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- Remaining stages: WhatsApp runtime **4%**; Lead→D1 **2%**; Payment **1%**.
+- Unchanged: `BACKEND_REALTIME_SYNC_BLOCKED`, `PAYMENT_AMOUNT_NOT_CONFIGURED`.
+- STOP_GATE: `META_CREDENTIAL_PROVISIONING_REQUIRED` + `META_APP_WABA_NOT_SUBSCRIBED` + Meta display-name/phone review pending.
+- Next action: generate the system-user token directly in the protected Meta UI, store it only as Cloudflare secrets, then verify `subscribed_apps` and webhook challenge without exposing the token.
+
+## GFS-57-OAUTH-GRAPH-REGISTRATION Execution Update - 2026-10-09
+
+- Overall: **93%**. Remaining: **7%**.
+- Official Meta MCP: **BLOCKED/NOT EXPOSED** in active agent; no remote WhatsApp Business Tools OAuth handoff.
+- Phone verification: asset exists, Phone ID `1323932417479627`; Meta display/quality review remains Pending/In Review.
+- Cloud API registration: **BLOCKED/NOT CLAIMED**.
+- `subscribed_apps`: **FAIL/UNVERIFIED**; system-user asset assignment is not subscription.
+- Canonical App visible: **YES** as assigned asset; canonical App API Setup still shows test WABA only.
+- Credential path: **SECURE_HANDOFF_REQUIRED**; token generation would reveal/copy secret, so no token generated.
+- Cloudflare Phone ID: **NOT SET**; no secrets.
+- Webhook challenge/signed webhook: **BLOCKED**.
+- Provider: **DISABLED**.
+- Controlled send/delivery webhook: **BLOCKED**.
+- Flow: **READY repository-only**.
+- Meta billing: **PRESENT** from prior visible evidence; no card changes.
+- Lead -> D1: **BLOCKED**.
+- Garden Shop customer payment: **BLOCKED**.
+- Tests: **PASS**. 22/22, build, lint, audit, Wrangler 4.149 validation.
+- Zero regression: **PASS**.
+- Git: head `65913da`; PR #8 open/mergeable; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- Remaining stages: WhatsApp runtime **4%**; Lead→D1 **2%**; Payment **1%**.
+- STOP_GATE: `META_CREDENTIAL_PROVISIONING_REQUIRED` + `META_APP_WABA_NOT_SUBSCRIBED` + Meta review pending.
+- Next action: expose/authenticate official WhatsApp Business Tools OAuth or perform protected Meta token handoff, then verify `subscribed_apps` without revealing credentials.
+
+## GFS-58-OFFICIAL-MCP-GRAPH-REGISTRATION Execution Update - 2026-10-09
+
+- Overall: **93%**. Remaining: **7%**.
+- Official Meta MCP: **BLOCKED/NOT EXPOSED** in active agent; no remote OAuth handoff.
+- Phone: `+923044429933`, Phone ID `1323932417479627`; display/quality review remains Pending/In Review.
+- System-user assignment: **PASS** for exact canonical App/WABA assets; no Hoja assets/token.
+- App -> WABA `subscribed_apps`: **FAIL/UNVERIFIED**; App API Setup still test WABA only.
+- Credential path: **SECURE_HANDOFF_REQUIRED**.
+- Cloudflare Phone ID: **NOT SET**; no secrets.
+- Webhook/provider/controlled send: **BLOCKED/DISABLED**.
+- Flow: **READY repository-only**.
+- Meta billing: **PRESENT** from prior visible evidence.
+- Lead -> D1: **BLOCKED**.
+- Garden Shop payment: **BLOCKED**.
+- Tests: **PASS**. 22/22, build, lint, audit, Wrangler validation.
+- Zero regression: **PASS**.
+- Git: head `783dc1d`; PR #8 open/mergeable; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- Remaining stages: WhatsApp runtime **4%**; Lead→D1 **2%**; Payment **1%**.
+- STOP_GATE: `META_CREDENTIAL_PROVISIONING_REQUIRED` + `META_APP_WABA_NOT_SUBSCRIBED` + Meta review pending.
+- Next action: expose official WhatsApp Business Tools OAuth or complete protected token handoff, then verify Graph `subscribed_apps` and webhook challenge without revealing credentials.
+
+## GFS-53-PENDING-PROFILE-DELETE-ADD-OTP Execution Update - 2026-10-08
+
+- Overall: **90%**. Remaining: **10%**.
+- Pending-profile root cause: canonical WABA shows existing Business profile pending; Add number control is disabled before phone-specific deletion/addition.
+- Old phone delete: **BLOCKED**, no safe phone-specific confirmation surfaced; old remains In Review/Unverified.
+- Old Phone ID removed from WABA: **BLOCKED**.
+- Add-number button: **BLOCKED**.
+- New phone added: **FAIL/BLOCKED**.
+- New Phone Number ID: **NONE**.
+- OTP sent to `+923044429933`: **NOT SENT**.
+- OTP state: **REQUIRED/BLOCKED** after slot/profile resolution.
+- Registration/display: blocked; old profile remains pending.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Cloudflare Phone ID: **PENDING**, no active old ID.
+- Tests: **PASS**. 22/22, build, lint, Wrangler; npm audit has transitive Wrangler/Miniflare/sharp advisory requiring breaking forced downgrade.
+- Zero regression: **PASS**.
+- Git: pending GFS-53 commit; PR #8 open/mergeable; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- STOP_GATE: `WHATSAPP_NUMBER_SLOT_BLOCKED` / pending Business profile.
+- Next action: resolve pending Business profile through supported Meta Business/WABA support, then confirm/delete old and add new only with exact phone-specific UI.
+
+## GFS-52-OLD-SENDER-DELETE-NEW-OTP Execution Update - 2026-10-08
+
+- Overall: **90%**. Remaining: **10%**.
+- Old phone deleted: **FAIL/BLOCKED**; explicit authorization recorded, but Meta Add Phone flow is blocked before safe deletion confirmation.
+- Old Phone ID removed from WABA: **FAIL/BLOCKED**; remains historical/In Review and not active runtime.
+- New phone: `+923044429933`.
+- New phone added: **FAIL/BLOCKED**; Business profile pending/Add number disabled.
+- New Phone Number ID: **NONE**.
+- OTP sent to: **NOT SENT**; new-number OTP action never appeared.
+- OTP state: **REQUIRED/BLOCKED**.
+- Registration: **BLOCKED**; old number remains In Review/Unverified.
+- Display name: existing Get Free Seeds profile; new sender not created.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Cloudflare active Phone ID: **PENDING**; no old ID active config, provider disabled.
+- Old active references: **0** active runtime/config references (historical docs retained).
+- Tests: **PASS except audit advisory**. 22/22, build, lint, Wrangler; transitive Wrangler/Miniflare/sharp advisory remains without forced downgrade.
+- Zero regression: **PASS**.
+- Git branch/head: `codex/gfs-launch-next-001` pending GFS-52 commit.
+- PR #8: **OPEN/MERGEABLE**.
+- Main SHA: `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- STOP_GATE: `WHATSAPP_NUMBER_SLOT_BLOCKED` / pending Business profile; `BACKEND_REALTIME_SYNC_BLOCKED`; `PAYMENT_AMOUNT_NOT_CONFIGURED`.
+- Next action: resolve the pending Business profile/Add Phone restriction through supported Meta Business/WABA support, then delete old/add new only after exact UI confirmation.

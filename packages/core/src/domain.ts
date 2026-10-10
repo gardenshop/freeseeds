@@ -13,9 +13,29 @@ export const FlowSubmission = z.object({
   deliveryAddress: z.string().trim().min(5).max(500),
   nearbyPlace: z.string().trim().min(2).max(160),
   city: z.string().trim().min(2).max(100),
-  contactNumber: z.string().trim().min(7).max(30)
+  contactNumber: z.string().trim().min(7).max(30),
+  productCode: z.string().trim().min(1).max(100).optional(),
+  fertilizerSelected: z.boolean().optional(),
+  province: z.string().trim().min(1).max(100).optional(),
+  bsuid: z.string().trim().min(1).max(200).optional(),
+  bsuidBusinessId: z.string().trim().min(1).max(100).optional(),
+  whatsappUsername: z.string().trim().min(1).max(100).optional()
 }).strict();
 export type FlowSubmission = z.infer<typeof FlowSubmission>;
+export const FlowCustomerDetails = FlowSubmission.pick({
+  fullName: true,
+  deliveryAddress: true,
+  nearbyPlace: true,
+  city: true,
+  contactNumber: true
+}).strict();
+export type FlowCustomerDetails = z.infer<typeof FlowCustomerDetails>;
+export const FlowOrderSelection = z.object({
+  productCode: z.string().trim().min(1).max(100),
+  province: z.string().trim().min(1).max(100),
+  fertilizerSelected: z.boolean()
+}).strict();
+export type FlowOrderSelection = z.infer<typeof FlowOrderSelection>;
 export const InstantFormSubmission = FlowSubmission.extend({
   leadId: z.string().trim().min(1).max(100),
   formId: z.string().trim().min(1).max(100),
@@ -57,10 +77,10 @@ export function normalizeContactNumber(value: string): string {
 export type CustomerRecipientSource = "META_WA_ID" | "CUSTOMER_WHATSAPP_NUMBER" | "CUSTOMER_CONTACT_NUMBER";
 export type CustomerRecipient = { recipient: string; source: CustomerRecipientSource };
 
-export function resolveWhatsAppRecipients(customer: { wa_id?: string | null; normalized_whatsapp_number?: string | null; normalized_contact_number?: string | null; normalized_phone?: string | null }, businessSender = "+923328883383"): CustomerRecipient[] {
+export function resolveWhatsAppRecipients(customer: { wa_id?: string | null; normalized_whatsapp_number?: string | null; normalized_contact_number?: string | null; normalized_phone?: string | null }, businessSender = "+923044429933"): CustomerRecipient[] {
   const candidates: CustomerRecipient[] = [];
   const add = (recipient: string | null | undefined, source: CustomerRecipientSource) => {
-    if (!recipient || normalizeContactNumber(recipient) === normalizeContactNumber(businessSender) || normalizeContactNumber(recipient) === normalizeContactNumber("923124093162") || candidates.some((candidate) => candidate.recipient === recipient)) return;
+    if (!recipient || normalizeContactNumber(recipient) === normalizeContactNumber(businessSender) || normalizeContactNumber(recipient) === normalizeContactNumber("+923328883383") || normalizeContactNumber(recipient) === normalizeContactNumber("923124093162") || candidates.some((candidate) => candidate.recipient === recipient)) return;
     candidates.push({ recipient, source });
   };
   add(customer.wa_id, "META_WA_ID");

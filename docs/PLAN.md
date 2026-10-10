@@ -4,7 +4,7 @@
 
 The repository was empty and had no Git history, source, branch, remote, or legacy architecture at bootstrap. GitHub repository `gardenshop/freeseeds` is the target. The known Cloudflare account `85f6a6181b4653c2a45e69cb7ce8a474` is Hoja-linked and prohibited. The supplied Free Seeds Page is currently connected to a prohibited Meta portfolio and is documented only as a future isolation task.
 
-Production WhatsApp number: **+923328883383**, explicitly authorized by the user and pending clean Meta onboarding.
+Production WhatsApp number: **+923044429933**, explicitly authorized by the user and pending clean Meta onboarding; old `+923328883383` is superseded.
 
 No existing, test, Hoja Seeds, Garden Shop, or other phone number may be used. The authorized number must not be registered, migrated, connected, or enabled until clean ownership, OTP/verification, WABA linkage, and least-privilege credentials are visibly verified.
 

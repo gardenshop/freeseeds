@@ -1,4 +1,4 @@
-import { formatPaymentMessage, isPaymentMethodComplete, normalizePaymentMethodRow, PaymentMethodConfig } from "./payments";
+import { formatPaymentMessage, isPaymentMethodComplete, normalizePaymentMethodRow, PaymentMethodConfig, requirePaymentAmount } from "./payments";
 import { PaymentMethod } from "./domain";
 
 export async function selectPaymentMethod(db: D1Database, orderId: string, method: PaymentMethod): Promise<{ orderNumber: string; amount: number; config: PaymentMethodConfig; message: string }> {
@@ -8,7 +8,8 @@ export async function selectPaymentMethod(db: D1Database, orderId: string, metho
   if (!isPaymentMethodComplete(config)) throw new Error("PAYMENT_METHOD_NOT_CONFIGURED");
   if (row.state !== "DETAILS_COMPLETED" && row.state !== "PAYMENT_PENDING") throw new Error("ORDER_NOT_ACCEPTING_PAYMENT_METHOD");
   const orderNumber = String(row.order_number);
-  const amount = Number(row.total_payable);
+  const persistedAmount = Number(row.total_payable);
+  const amount = requirePaymentAmount(persistedAmount);
   const now = new Date().toISOString();
   const idempotencyKey = `payment_instructions_${orderId}_${method}`;
   await db.batch([
