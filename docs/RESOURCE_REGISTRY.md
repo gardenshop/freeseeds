@@ -52,6 +52,14 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Formula: `seed_price + fertilizer_fee + province_delivery_fee`; seed price is zero and fertilizer is optional.
 - Flow key state: Cloudflare secret `FLOW_PRIVATE_KEY` present by name; Meta public-key registration remains pending. No key material is recorded.
 
+## GFS-74 Meta Runtime Gate
+
+- Canonical Flow Manager WABA selected: `2616648355452496`; no existing Flow listed.
+- Exact publication requirements shown: improve message quality and complete business verification.
+- App setup exact additional blocker: missing valid payment method; App review incomplete.
+- Phone status: `Pending`; display name: `Get Free Seeds` / `In Review`; quality rating not displayed.
+- Flow publication and messaging runtime are separate gates. Public key registration remains pending; private key is Cloudflare secret-only.
+
 ## GFS-73 Tariff Governance
 
 - Single runtime source: Access-protected `/tariff` → D1 `products` and `province_delivery_rates`.

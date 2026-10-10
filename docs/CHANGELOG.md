@@ -43,6 +43,11 @@
 - Proved D1→quote propagation without redeploy using temporary staging edits and restored all values. No tariff constants were added to runtime or Flow JSON.
 - Payment Settings remains separate; dynamic quotes do not use legacy `/payment-amount`.
 
+## Unreleased - 2026-10-10 (GFS-74)
+
+- Audited canonical Flow Manager and App WhatsApp setup read-only. Exact Flow publication text requires improved message quality and completed business verification; App setup also reports missing valid payment method and incomplete App Review.
+- Recorded canonical phone state: Pending, `Get Free Seeds` display name In Review, quality not displayed. No Flow, phone, App, WABA, credential, payment, or campaign mutation occurred.
+
 ## Unreleased - 2026-10-09 (GFS-60)
 
 - Corrected active documentation authority to `META_ASSETS_PENDING`, sender `+923044429933`, and Phone Number ID `1323932417479627`; former sender/ID remain historical only.

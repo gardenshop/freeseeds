@@ -60,6 +60,16 @@
 - Meta Form: **READ_ONLY**; tariff drift risk **YES** because prior fixed text answers are non-authoritative.
 - Payment methods: JazzCash/Easypaisa/Bank **MISSING** recipient/instruction values; payment selection remains safely hidden.
 - Flow endpoint: **PASS**. Flow public key: **BLOCKED** at Meta registration/publication. Flow remains **DRAFT/BLOCKED**.
+
+## GFS-74-META-FLOW-GATES Update — 2026-10-10
+
+- Public key: **BLOCKED** — private secret exists by name; no public-key registration completed.
+- Exact Flow publication blocker: Meta says **“improve message quality” and “complete business verification.”** App setup separately reports **Missing valid payment method** and App Review incomplete.
+- Business verification: status control marked completed; publication surface still requires completion condition.
+- Phone registration: **Pending**; display name: **In Review**; quality: not displayed.
+- Canonical App↔WABA: **FAIL/unverified**.
+- Runtime credential: **BLOCKED**; provider health reports WhatsApp disabled until Meta onboarding.
+- Flow send: **BLOCKED**; no synthetic conversation attempted.
 - Meta ending: **READY_FOR_PAYMENT_VALUES**, not edited. Campaign and WhatsApp remain untouched.
 
 ## GFS-60-MCP-AND-ACTIVE-SENDER Update — 2026-10-09

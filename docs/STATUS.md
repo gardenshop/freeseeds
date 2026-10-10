@@ -205,4 +205,14 @@ Phone Number ID: `1323932417479627`
 
 ## Next Action
 
-Next action: restore/expose Chrome DevTools MCP, then perform protected credential generation without displaying or copying the token into chat; verify Graph phone state, registration, canonical App↔WABA subscription, and webhook challenge.
+Next action: complete the protected Meta Flow publication gate after public-key registration, then verify canonical App↔WABA/runtime credentials before any synthetic send.
+
+## GFS-74 Exact Meta Flow Gates
+
+- Flow Manager canonical WABA: `2616648355452496` / Get Free Seeds selected; no existing Flow is listed.
+- Exact publication text: “To publish Flows, you are required to improve message quality and complete business verification.”
+- App WhatsApp setup additionally shows: **Missing valid payment method**; Meta says customers can initiate free-tier conversations but business messaging is unavailable until a valid payment method is added. App review is marked incomplete; business verification status control is marked completed.
+- Phone `+923044429933` / `1323932417479627`: status `Pending`, display name `Get Free Seeds` / `In Review`, quality rating not shown.
+- Flow private key secret: present by name only. Public-key registration was not completed; private material was never read/exported.
+- API health: `META_ASSETS_PENDING`, WhatsApp disabled until Meta onboarding. Flow health/ping remains PASS.
+- Canonical App↔WABA subscription and durable runtime credential remain unverified/blocked; no message or Flow E2E was attempted.
