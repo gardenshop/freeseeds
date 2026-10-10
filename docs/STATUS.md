@@ -16,6 +16,13 @@ Phone Number ID: `1323932417479627`
 - Payment source check: all staging D1 payment methods are disabled and have no recipient, instructions, or QR configuration. Exact gate: `PAYMENT_VALUES_REQUIRED`.
 - Campaign publication/spend remains unapproved; do not publish or spend without exact budget authorization.
 
+## GFS-69 Final Form Preparation
+
+- Form field authority: the existing canonical verification covers exactly Full Name, Complete Delivery Address, Nearby Famous Place, City, and Contact Number; Email is excluded.
+- Ending template is prepared but **not published** until payment values are verified: `Request received` → `Your 5 seed packs are FREE.` → verified advance amount/method details → receipt CTA.
+- Last verified native ending exposed Messenger continuation, while its WhatsApp CTA targeted a prohibited noncanonical number; no WhatsApp CTA was used. Current customer-side CTA proof remains pending.
+- Campaign draft is visible in canonical Ad Account `1198439777611633` as `New Leads Campaign`, In draft, with a visible Rs2,625 daily draft budget. Exact Form attachment remains unverified; no edit or publish mutation was made.
+
 ## Completed Work
 
 - Repository audit confirmed an empty directory with no Git history or legacy architecture.

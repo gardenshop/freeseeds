@@ -19,6 +19,13 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Payment configuration: all three staging D1 methods disabled; recipient/amount/instructions/QR values absent. No payment value is recorded here.
 - WhatsApp API: `WHATSAPP_API_ENHANCEMENT_PENDING`, not a form-launch dependency.
 
+## GFS-69 Launch Preparation Findings
+
+- Canonical form field set: Full Name; Complete Delivery Address; Nearby Famous Place; City; Contact Number. Email is not part of the verified set.
+- Payment ending copy is prepared as an internal, unpublished template only; no amount, recipient, QR, or account placeholder was exposed to customers.
+- Receipt route: Messenger is the preferred path, but current customer-side CTA opening is not freshly proven. The previously observed WhatsApp CTA was noncanonical and remains prohibited.
+- Draft campaign `120255495379100054` / ad set `120255495379110054` / ad `120255495379120054` is visible as an unpublished draft. Meta UI showed Rs2,625 daily draft budget; exact canonical Form attachment was not verified.
+
 ## GitHub
 
 - Repository: `https://github.com/gardenshop/freeseeds.git`

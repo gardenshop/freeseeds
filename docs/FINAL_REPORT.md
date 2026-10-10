@@ -10,6 +10,14 @@
 - Payment source check: all three staging D1 methods are disabled and recipient/instruction/QR fields are absent. **`PAYMENT_VALUES_REQUIRED`**.
 - Existing campaign draft remains unpublished for this track; no spend authorization was supplied and no publication/edit mutation was made.
 
+## GFS-69-FINAL-FORM-PREP Update — 2026-10-10
+
+- Canonical form: `1093015800183328` / `Free Seeds 05-10-2026` / Page `101192938541236`.
+- Five fields: **PASS** from existing canonical preview evidence — Full Name, Complete Delivery Address, Nearby Famous Place, City, Contact Number; no Email.
+- Immediate ending: **READY_PENDING_VALUES**. Internal copy prepared; not published because payment amount and Garden Shop recipient details are absent.
+- Receipt route: **BLOCKED/UNVERIFIED**. Messenger is preferred; previously observed WhatsApp CTA was prohibited and was not used.
+- Campaign: existing draft visible in Ad Account `1198439777611633`, with Rs2,625 daily draft budget. Exact Form attachment remains unverified; no edit, publish, or spend mutation occurred.
+
 ## GFS-60-MCP-AND-ACTIVE-SENDER Update — 2026-10-09
 
 - Active state: **`META_ASSETS_PENDING`**
