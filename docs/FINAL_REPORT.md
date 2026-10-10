@@ -101,6 +101,16 @@
 - BSUID: **READY**, actual BSUID observed **NO**, scoped storage **PASS**.
 - Payments: JazzCash/Easypaisa/Bank **MISSING** recipient/instruction values.
 
+## GFS-80-CONNECTED-RUNTIME Update — 2026-10-10
+
+- Phone UI Connected: **YES**.
+- Graph registered/runtime: **YES by connected UI + code verification VERIFIED**; name review remains separate.
+- App subscribed: **PASS**; canonical App observed in WABA subscription.
+- Flow public key: **FAIL/BLOCKED** — exact Meta error `(#10) Application does not have permission for this action`.
+- Webhook: **BLOCKED** — App Secret absent; provider disabled.
+- Inbound/outbound/status/delivery: **NOT ATTEMPTED** until signed webhook/provider prerequisites are repaired.
+- Flow E2E: **BLOCKED** at public-key permission gate.
+
 ## GFS-77-ACTIVATION-CONSOLE Update — 2026-10-10
 
 - Activation console: **PASS implementation/deployment** at Access-protected `/meta-activation`.
@@ -108,6 +118,15 @@
 - Phone/register/subscription/message actions: **PENDING protected handoff**; no mutation attempted.
 - OTP/PIN handling: transient password fields only, never persisted/logged.
 - Tests: **46/46 pass**, build/lint/audit/Wrangler pass.
+
+## GFS-79-ACTIVATION-DIAGNOSTICS Update — 2026-10-10
+
+- Graph runtime: **PASS**; token secret present by name on API/admin Workers.
+- Ownership/code verification: **VERIFIED**; OTP required: **NO**.
+- `/register`: **FAIL pending protected PIN**; safe error `(#133010) The account is not registered`.
+- Name status: **PENDING_REVIEW**; not treated as registration prerequisite.
+- App subscription: **PASS via Graph state** after nested response parsing; canonical App `2354726831735899` observed.
+- Flow public key: **BLOCKED** until phone registration; payment recipients remain missing.
 - Meta ending: **READY_FOR_PAYMENT_VALUES**, not edited. Campaign and WhatsApp remain untouched.
 
 ## GFS-60-MCP-AND-ACTIVE-SENDER Update — 2026-10-09

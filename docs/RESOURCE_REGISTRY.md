@@ -72,6 +72,18 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Graph credential: `META_ACCESS_TOKEN` is a Cloudflare secret name only; currently absent. No credential material is recorded.
 - Canonical action scope: Phone `1323932417479627`, WABA `2616648355452496`, App `2354726831735899`.
 
+## GFS-79 Activation Runtime
+
+- `META_ACCESS_TOKEN` secret is present by name on both staging Workers; values are never read back.
+- Graph phone read is available and code verification is `VERIFIED`; registration is separate and still requires the protected two-step PIN.
+- Graph error `(#133010) The account is not registered` is recorded as the current register gate; no credential material is recorded.
+
+## GFS-80 Connected Phone State
+
+- Phone `1323932417479627`: UI Connected; Graph code verification `VERIFIED`; registration runtime inferred connected, name review still pending.
+- WABA `2616648355452496` subscribed App IDs include canonical `2354726831735899`.
+- Flow public-key Graph operation exact error: `(#10) Application does not have permission for this action`; no token material recorded.
+
 ## GFS-76 Registration State
 
 - Registration authority: official Graph/WhatsApp Business Tools only; current Chrome UI is observation-only for this action.

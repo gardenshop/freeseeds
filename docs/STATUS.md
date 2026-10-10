@@ -237,3 +237,18 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - `META_ACCESS_TOKEN` secret name check: **ABSENT**. No raw token was read or handled.
 - Secure Meta App API Setup and Cloudflare secret surfaces were prepared in the existing authenticated browser context. The protected token handoff is the only current autonomous pause.
 - Activation console tests cover secret absence, sanitized Graph errors, transient OTP/PIN fields, and action request safety.
+
+## GFS-80 Connected Runtime Reconciliation
+
+- Phone UI: **CONNECTED**; Graph runtime read: **PASS**; `code_verification_status=VERIFIED`; name status `PENDING_REVIEW`; quality `UNKNOWN`.
+- Canonical App↔WABA: **PASS** — observed canonical App `2354726831735899` in subscribed apps.
+- Flow public-key retry after connection: **BLOCKED** with exact Meta error `(#10) Application does not have permission for this action`.
+- Webhook/provider: verify token is configured on API by secret name, but App Secret is absent and provider remains disabled; no signed webhook or message was attempted.
+- Payment methods remain missing; pricing/order-summary work is independent, payment stage remains gated.
+
+## GFS-79 Activation Console Repair
+
+- Fixed Graph verification payload from `language` to official `locale`.
+- Activation UI now exposes sanitized `reason`, `error.code`, and HTTP status instead of a generic failure message.
+- Runtime token check: **PASS**; phone Graph read: **PASS**; `code_verification_status=VERIFIED`, `name_status=PENDING_REVIEW`.
+- `/register` attempt currently returns sanitized Meta error `(#133010) The account is not registered`; no PIN was observed or logged. Secure PIN entry remains the next registration action.

@@ -34,7 +34,7 @@ describe("Meta activation safety boundary", () => {
     const token = "secret-token-fixture";
     const fetcher = vi.fn<typeof fetch>()
       .mockResolvedValueOnce(new Response(JSON.stringify({ id: "phone-id", display_phone_number: "+923000000000", verified_name: "Free Seeds", name_status: "APPROVED", quality_rating: "GREEN", status: "CONNECTED", internal_secret: token }), { status: 200 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ data: [{ id: "app-id", access_token: token }] }), { status: 200 }));
+      .mockResolvedValueOnce(new Response(JSON.stringify({ data: [{ whatsapp_business_api_data: { id: "app-id" }, access_token: token }] }), { status: 200 }));
     const status = await createMetaActivationService({ accessToken: token, phoneNumberId: "phone-id", wabaId: "waba-id", appId: "app-id", fetcher }).status();
 
     expect(fetcher.mock.calls[0]?.[1]).toMatchObject({ headers: { Authorization: `Bearer ${token}`, Accept: "application/json" } });
@@ -72,8 +72,8 @@ describe("Meta activation safety boundary", () => {
     });
     const service = createMetaActivationService({ accessToken: token, phoneNumberId: "phone-id", wabaId: "waba-id", appId: "app-id", fetcher });
 
-    const request = await service.action("request-code", { codeMethod: "SMS", language: "en_US" });
-    const duplicate = await service.action("request-code", { codeMethod: "SMS", language: "en_US" });
+    const request = await service.action("request-code", { codeMethod: "SMS", locale: "en_US" });
+    const duplicate = await service.action("request-code", { codeMethod: "SMS", locale: "en_US" });
     const verify = await service.action("verify-code", { otp });
     const register = await service.action("register", { pin });
     const subscribe = await service.action("subscribe-app");
@@ -86,7 +86,7 @@ describe("Meta activation safety boundary", () => {
     expect(subscribe.executed).toBe(true);
     expect(posts).toHaveLength(4);
     expect(posts[0]?.[0]).toBe("https://graph.facebook.com/v26.0/phone-id/request_code");
-    expect(JSON.parse(String(posts[0]?.[1]?.body))).toEqual({ code_method: "SMS", language: "en_US" });
+    expect(JSON.parse(String(posts[0]?.[1]?.body))).toEqual({ code_method: "SMS", locale: "en_US" });
     expect(posts[1]?.[0]).toBe("https://graph.facebook.com/v26.0/phone-id/verify_code");
     expect(JSON.parse(String(posts[1]?.[1]?.body))).toEqual({ code: otp });
     expect(posts[2]?.[0]).toBe("https://graph.facebook.com/v26.0/phone-id/register");

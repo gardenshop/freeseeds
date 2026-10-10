@@ -34,6 +34,12 @@
 | GFS-76 payment audit | enabled complete payment method status | BLOCKED: all three methods disabled/incomplete |
 | GFS-77 activation console | Access protection, secret absence, sanitized Graph status/actions, transient OTP/PIN | PASS: 46 tests; staging route returns Access 302 |
 | GFS-77 protected handoff | token never exposed; secret name check only | BLOCKED until direct user handoff populates `META_ACCESS_TOKEN` |
+| GFS-79 request-code payload | official `locale`, not `language` | PASS unit test |
+| GFS-79 activation diagnostics | sanitized reason/error code/HTTP status | PASS 46-test suite; no credential/PIN exposure |
+| GFS-79 registration | verified ownership → protected `/register` PIN | BLOCKED at Meta `(#133010) The account is not registered` pending secure PIN entry |
+| GFS-80 connected phone | UI Connected + Graph verified + canonical subscription | PASS: phone code verification `VERIFIED`; App `2354726831735899` observed subscribed |
+| GFS-80 Flow key permission | public-key registration after phone connection | BLOCKED: Meta `(#10) Application does not have permission for this action` |
+| GFS-80 webhook/message | signed callback and controlled send | BLOCKED: App Secret absent/provider disabled |
 | GFS-60 active sender authority | current state, sender, Phone Number ID, historical sender exclusion | PASS: `META_ASSETS_PENDING`, `+923044429933`, `1323932417479627` |
 | GFS-60 MCP recovery | existing profile, DevToolsActivePort, package, registration, namespace exposure | BLOCKED: local prerequisites present; Codex registration has stale WebSocket UUID and active namespace is unavailable |
 | Governance | authorized number lock, no existing number | PASS |

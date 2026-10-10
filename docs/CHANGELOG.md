@@ -66,6 +66,18 @@
 - Confirmed `META_ACCESS_TOKEN` is absent by secret name only. Prepared Meta App API Setup and Cloudflare secret surfaces without exposing credentials.
 - No Graph phone registration, App↔WABA subscription, webhook, provider, message, Flow, or campaign mutation occurred.
 
+## Unreleased - 2026-10-10 (GFS-79)
+
+- Corrected activation request-code payload to official `locale`.
+- Replaced generic activation failure text with sanitized reason/error-code/HTTP diagnostics.
+- Confirmed secret runtime and Graph phone read; code verification is `VERIFIED`. Registration returned `(#133010) The account is not registered`; secure PIN entry remains pending.
+
+## Unreleased - 2026-10-10 (GFS-80)
+
+- Reconciled phone to UI `CONNECTED`, Graph code verification `VERIFIED`, and canonical App↔WABA subscription PASS.
+- Retried Flow public-key registration after connection; exact Meta result is `(#10) Application does not have permission for this action`.
+- Webhook/provider/message testing remains gated by missing App Secret and provider enablement. Campaign remains untouched.
+
 ## Unreleased - 2026-10-09 (GFS-60)
 
 - Corrected active documentation authority to `META_ASSETS_PENDING`, sender `+923044429933`, and Phone Number ID `1323932417479627`; former sender/ID remain historical only.

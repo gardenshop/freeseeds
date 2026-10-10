@@ -9,6 +9,7 @@ export type MetaActivationConfig = {
   webhookVerifyToken?: string;
   appSecret?: string;
   flowPrivateKey?: string;
+  flowPublicKey?: string;
   fetcher?: typeof fetch;
 };
 
@@ -17,10 +18,10 @@ type GraphObject = Record<string, unknown>;
 export type MetaActivationStatus = {
   graph: { configured: boolean; version: string; error?: { code: string; status?: number } };
   phone: { configured: boolean; state: "not_configured" | "unavailable" | "available"; idConfigured: boolean; displayNumber?: string; verifiedName?: string; nameStatus?: string; qualityRating?: string; registrationStatus?: string };
-  wabaSubscription: { configured: boolean; state: "not_configured" | "unavailable" | "subscribed" | "not_subscribed"; appIdConfigured: boolean; subscribed: boolean };
+  wabaSubscription: { configured: boolean; state: "not_configured" | "unavailable" | "subscribed" | "not_subscribed"; appIdConfigured: boolean; subscribed: boolean; observedAppIds: string[] };
   webhook: { callbackConfigured: boolean; verifyTokenConfigured: boolean; appSecretConfigured: boolean };
   provider: { enabled: boolean; configured: boolean; state: "disabled" | "not_configured" | "ready" };
-  flowKey: { configured: boolean };
+  flowKey: { configured: boolean; publicConfigured: boolean };
   controlledTest: { allowed: true; sendsMessages: false; performsMutations: false };
 };
 
@@ -32,6 +33,7 @@ export type MetaActivationActionInput = {
   code?: string;
   otp?: string;
   pin?: string;
+  locale?: string;
 };
 
 export type MetaActivationActionResult = {
@@ -43,7 +45,7 @@ export type MetaActivationActionResult = {
 };
 
 type GraphResult = { ok: true; data: GraphObject } | { ok: false; status?: number };
-type GraphMutationResult = { ok: true } | { ok: false; status?: number };
+type GraphMutationResult = { ok: true; data?: { success?: boolean; id?: string } } | { ok: false; status?: number; error?: { code: string; message?: string } };
 
 function stringValue(value: unknown, secret?: string): string | undefined {
   return typeof value === "string" && value.length > 0 && (!secret || !value.includes(secret)) ? value : undefined;
@@ -69,7 +71,11 @@ async function postGraph(fetcher: typeof fetch, baseUrl: string, token: string, 
     const init: RequestInit = { method: "POST", headers: { Authorization: `Bearer ${token}`, Accept: "application/json", ...(body ? { "Content-Type": "application/json" } : {}) } };
     if (body) init.body = JSON.stringify(body);
     const response = await fetcher(`${baseUrl}/${path}`, init);
-    return response.ok ? { ok: true } : { ok: false, status: response.status };
+    const parsed = await response.json().catch(() => ({})) as GraphObject;
+    const graphErrorBody = parsed.error && typeof parsed.error === "object" ? parsed.error as GraphObject : undefined;
+    const safeError = graphErrorBody ? { code: typeof graphErrorBody.code === "string" ? graphErrorBody.code : "META_GRAPH_REQUEST_FAILED", message: typeof graphErrorBody.message === "string" ? graphErrorBody.message.slice(0, 240) : undefined } : undefined;
+    const safeData = { success: typeof parsed.success === "boolean" ? parsed.success : undefined, id: typeof parsed.id === "string" && /^\d+$/.test(parsed.id) ? parsed.id : undefined };
+    return response.ok ? { ok: true, data: safeData } : { ok: false, status: response.status, error: safeError };
   } catch {
     return { ok: false };
   }
@@ -104,7 +110,12 @@ export function createMetaActivationService(config: MetaActivationConfig) {
       }
 
       const subscribedApps = Array.isArray(subscriptionData?.data) ? subscriptionData.data : [];
-      const subscribed = Boolean(config.appId && subscribedApps.some((entry) => entry && typeof entry === "object" && String((entry as GraphObject).id ?? "") === config.appId));
+      const observedAppIds = subscribedApps.filter((entry) => entry && typeof entry === "object").map((entry) => {
+        const object = entry as GraphObject;
+        const nested = object.whatsapp_business_api_data && typeof object.whatsapp_business_api_data === "object" ? object.whatsapp_business_api_data as GraphObject : undefined;
+        return String(object.id ?? nested?.id ?? "");
+      }).filter(Boolean);
+      const subscribed = Boolean(config.appId && observedAppIds.includes(config.appId));
       const providerEnabled = config.providerEnabled === true;
       const providerConfigured = Boolean(config.accessToken && config.phoneNumberId);
       return {
@@ -123,17 +134,18 @@ export function createMetaActivationService(config: MetaActivationConfig) {
           configured: Boolean(graphConfigured && config.wabaId && subscriptionData),
           state: !graphConfigured || !config.wabaId ? "not_configured" : subscriptionData ? subscribed ? "subscribed" : "not_subscribed" : "unavailable",
           appIdConfigured: Boolean(config.appId),
-          subscribed
+           subscribed,
+           observedAppIds
         },
         webhook: { callbackConfigured: Boolean(config.callbackUrl), verifyTokenConfigured: Boolean(config.webhookVerifyToken), appSecretConfigured: Boolean(config.appSecret) },
         provider: { enabled: providerEnabled, configured: providerConfigured, state: !providerEnabled ? "disabled" : providerConfigured ? "ready" : "not_configured" },
-        flowKey: { configured: Boolean(config.flowPrivateKey) },
+         flowKey: { configured: Boolean(config.flowPrivateKey), publicConfigured: Boolean(config.flowPublicKey) },
         controlledTest: { allowed: true, sendsMessages: false, performsMutations: false }
       };
     },
     async action(action: MetaActivationAction, input: MetaActivationActionInput = {}): Promise<MetaActivationActionResult> {
       const graphAction = action === "request_code" ? "request-code" : action === "verify_code" ? "verify-code" : action;
-      const readOnly = ["phone-state", "waba-subscription", "webhook", "provider", "flow-key", "controlled-test"].includes(action);
+       const readOnly = ["phone-state", "waba-subscription", "webhook", "provider", "controlled-test"].includes(action);
       if (readOnly) return { action, executed: false, reason: "READ_ONLY_ACTIVATION", status: await service.status() };
       if (!config.accessToken) return { action, executed: false, reason: "META_ACCESS_TOKEN_REQUIRED", status: await service.status() };
 
@@ -143,11 +155,11 @@ export function createMetaActivationService(config: MetaActivationConfig) {
         if (!config.phoneNumberId) return { action, executed: false, reason: "META_PHONE_NUMBER_ID_REQUIRED", status: await service.status() };
         if (requestCodeAttempted) return { action, executed: false, reason: "META_REQUEST_CODE_ALREADY_SENT", status: await service.status() };
         const codeMethod = input.codeMethod ?? "SMS";
-        const language = input.language ?? "en_US";
-        if ((codeMethod !== "SMS" && codeMethod !== "VOICE") || !/^[A-Za-z]{2}_[A-Za-z]{2}$/.test(language)) return { action, executed: false, reason: "META_REQUEST_CODE_INPUT_INVALID", status: await service.status() };
+         const locale = input.locale ?? input.language ?? "en_US";
+         if ((codeMethod !== "SMS" && codeMethod !== "VOICE") || !/^[A-Za-z]{2}_[A-Za-z]{2}$/.test(locale)) return { action, executed: false, reason: "META_REQUEST_CODE_INPUT_INVALID", status: await service.status() };
         requestCodeAttempted = true;
         path = `${encodeURIComponent(config.phoneNumberId)}/request_code`;
-        body = { code_method: codeMethod, language };
+         body = { code_method: codeMethod, locale };
       } else if (graphAction === "verify-code") {
         if (!config.phoneNumberId) return { action, executed: false, reason: "META_PHONE_NUMBER_ID_REQUIRED", status: await service.status() };
         const code = transientDigits(input.otp ?? input.code, 6);
@@ -160,17 +172,22 @@ export function createMetaActivationService(config: MetaActivationConfig) {
         if (!pin) return { action, executed: false, reason: "META_PIN_INVALID", status: await service.status() };
         path = `${encodeURIComponent(config.phoneNumberId)}/register`;
         body = { messaging_product: "whatsapp", pin };
-      } else if (action === "subscribe-app") {
-        if (!config.wabaId) return { action, executed: false, reason: "META_WABA_ID_REQUIRED", status: await service.status() };
-        path = `${encodeURIComponent(config.wabaId)}/subscribed_apps`;
+       } else if (action === "subscribe-app") {
+         if (!config.wabaId) return { action, executed: false, reason: "META_WABA_ID_REQUIRED", status: await service.status() };
+         path = `${encodeURIComponent(config.wabaId)}/subscribed_apps`;
+       } else if (action === "flow-key") {
+         if (!config.phoneNumberId || !config.flowPublicKey) return { action, executed: false, reason: "META_FLOW_PUBLIC_KEY_REQUIRED", status: await service.status() };
+         path = `${encodeURIComponent(config.phoneNumberId)}/whatsapp_business_encryption`;
+         body = { business_public_key: config.flowPublicKey };
       } else {
         return { action, executed: false, reason: "META_ACTIVATION_ACTION_NOT_FOUND", status: await service.status() };
       }
 
       const result = await postGraph(fetcher, baseUrl, config.accessToken, path, body);
       const reread = await service.status();
-      if (!result.ok) return { action, executed: false, reason: "META_GRAPH_REQUEST_FAILED", error: graphError(result.status), status: reread };
-      return { action, executed: true, reason: "GRAPH_MUTATION_APPLIED", status: reread };
+       if (!result.ok) return { action, executed: false, reason: "META_GRAPH_REQUEST_FAILED", error: result.error ?? graphError(result.status), status: reread };
+       if (result.data?.success === false) return { action, executed: false, reason: "META_GRAPH_REPORTED_FAILURE", status: reread };
+       return { action, executed: true, reason: "GRAPH_MUTATION_APPLIED", status: reread };
     }
   };
 

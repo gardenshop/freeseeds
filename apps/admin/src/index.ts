@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { canTransition, createMetaActivationService, MetaActivationAction, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, isPaymentMethodComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, paymentInstructions, PaymentMethod, storePaymentQr, validatePaymentAmount } from "@gfs/core";
 
-type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string } };
+ type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
 const app = new Hono<Env>();
 
 function authorized(c: { req: { header(name: string): string | undefined }; env: Env["Bindings"] }): boolean {
@@ -49,7 +49,7 @@ function catalogError(error: unknown): string {
 }
 
 function metaActivation(c: { env: Env["Bindings"] }) {
-  return createMetaActivationService({ accessToken: c.env.META_ACCESS_TOKEN, graphVersion: c.env.META_GRAPH_VERSION, phoneNumberId: c.env.META_PHONE_NUMBER_ID, wabaId: c.env.META_WABA_ID, appId: c.env.META_APP_ID, callbackUrl: c.env.META_CALLBACK_URL, providerEnabled: c.env.META_PROVIDER_ENABLED === "true", webhookVerifyToken: c.env.WEBHOOK_VERIFY_TOKEN, appSecret: c.env.META_APP_SECRET, flowPrivateKey: c.env.FLOW_PRIVATE_KEY });
+  return createMetaActivationService({ accessToken: c.env.META_ACCESS_TOKEN, graphVersion: c.env.META_GRAPH_VERSION, phoneNumberId: c.env.META_PHONE_NUMBER_ID, wabaId: c.env.META_WABA_ID, appId: c.env.META_APP_ID, callbackUrl: c.env.META_CALLBACK_URL, providerEnabled: c.env.META_PROVIDER_ENABLED === "true", webhookVerifyToken: c.env.WEBHOOK_VERIFY_TOKEN, appSecret: c.env.META_APP_SECRET, flowPrivateKey: c.env.FLOW_PRIVATE_KEY, flowPublicKey: c.env.FLOW_PUBLIC_KEY });
 }
 
 app.use("*", async (c, next) => {
@@ -66,11 +66,12 @@ app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and f
  app.get("/meta-activation", (c) => c.html(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Meta Activation | Get Free Seeds</title><style>body{font:16px system-ui;max-width:900px;margin:2rem auto;padding:0 1rem}nav{margin-bottom:1rem}.card{border:1px solid #ccc;border-radius:8px;padding:1rem;margin:1rem 0}pre{white-space:pre-wrap;background:#f6f6f6;padding:1rem}label{display:block;margin:.7rem 0}input,select{box-sizing:border-box;width:100%;padding:.5rem}button{padding:.5rem .8rem;margin:.2rem}.muted{color:#666}.warning{color:#8a4b00}</style></head><body><nav><a href='/'>Admin home</a></nav><h1>Meta activation</h1><p class="muted">Status is safe to reread. Graph actions use only the configured server token; OTP and PIN fields are transient and cleared after each attempt.</p><pre id="status">Loading...</pre><section class="card"><h2>Phone verification</h2><button id="request-code">Request SMS code (once)</button><label>OTP<input id="otp" type="password" inputmode="numeric" autocomplete="one-time-code"></label><button id="verify-code">Verify OTP</button></section><section class="card"><h2>Phone registration and app subscription</h2><label>Two-step PIN<input id="pin" type="password" inputmode="numeric" autocomplete="off"></label><button id="register">Register phone</button><button id="subscribe-app">Subscribe App to WABA</button></section><section class="card"><h2>Status-only checks</h2><button id="refresh">Refresh status</button><button id="controlled-test">Run controlled test</button><p class="warning">Provider, webhook, Flow key, and controlled-test actions never mutate external services.</p></section><p id="result" role="status"></p><script>
  const status=document.querySelector('#status');const result=document.querySelector('#result');
  async function load(){const response=await fetch('/api/meta-activation/status');status.textContent=JSON.stringify(await response.json(),null,2)}
- async function action(name,payload={}){try{const response=await fetch('/api/meta-activation/actions/'+name,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});result.textContent=response.ok?'Action completed; status reread safely.':'Action was not completed';await load()}catch{result.textContent='Activation action unavailable'}}
+  async function action(name,payload={}){try{const response=await fetch('/api/meta-activation/actions/'+name,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const data=await response.json();const failure=data.error||{};const detail=(failure.code||data.reason||'unknown')+(failure.status?(' HTTP='+failure.status):'');result.textContent=response.ok?(data.executed?('Action '+name+' applied; status reread safely.'):('Action '+name+' not applied: '+detail)):('Action '+name+' failed: '+detail);await load()}catch{result.textContent='Activation action unavailable'}}
  document.querySelector('#request-code').onclick=()=>action('request-code',{codeMethod:'SMS'});
  document.querySelector('#verify-code').onclick=async()=>{const input=document.querySelector('#otp');try{await action('verify-code',{otp:input.value})}finally{input.value=''}};
  document.querySelector('#register').onclick=async()=>{const input=document.querySelector('#pin');try{await action('register',{pin:input.value})}finally{input.value=''}};
- document.querySelector('#subscribe-app').onclick=()=>action('subscribe-app');
+  document.querySelector('#subscribe-app').onclick=()=>action('subscribe-app');
+  const flowKeyButton=document.createElement('button');flowKeyButton.textContent='Register Flow public key';flowKeyButton.onclick=()=>action('flow-key');document.querySelector('#subscribe-app').after(flowKeyButton);
  document.querySelector('#refresh').onclick=load;
  document.querySelector('#controlled-test').onclick=()=>action('controlled-test');
  load().catch(()=>status.textContent='Activation status unavailable');</script></body></html>`));
