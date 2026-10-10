@@ -48,6 +48,12 @@
 - Audited canonical Flow Manager and App WhatsApp setup read-only. Exact Flow publication text requires improved message quality and completed business verification; App setup also reports missing valid payment method and incomplete App Review.
 - Recorded canonical phone state: Pending, `Get Free Seeds` display name In Review, quality not displayed. No Flow, phone, App, WABA, credential, payment, or campaign mutation occurred.
 
+## Unreleased - 2026-10-10 (GFS-75)
+
+- Added BSUID-ready scoped customer identity fields (`bsuid`, `bsuid_business_id`, `whatsapp_username`) while preserving `wa_id`, contact, and WhatsApp-number fields.
+- Applied migration `0010_customer_bsuid.sql` and deployed API; no actual BSUID or customer PII was added.
+- Reconfirmed Graph activation is blocked at the protected opaque credential/official WhatsApp Business Tools MCP path; no OTP, PIN, token, phone, App, WABA, or campaign mutation occurred.
+
 ## Unreleased - 2026-10-09 (GFS-60)
 
 - Corrected active documentation authority to `META_ASSETS_PENDING`, sender `+923044429933`, and Phone Number ID `1323932417479627`; former sender/ID remain historical only.

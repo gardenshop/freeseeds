@@ -12,6 +12,10 @@ describe("Get Free Seeds domain", () => {
     expect(normalizeContactNumber("923034901810")).toBe("+923034901810");
     expect(normalizeContactNumber("+923034901810")).toBe("+923034901810");
   });
+  it("accepts optional scoped BSUID without replacing phone identity fields", () => {
+    expect(FlowSubmission.parse({ fullName: "Synthetic Customer", deliveryAddress: "1 Test Street", nearbyPlace: "Test Park", city: "Sahiwal", contactNumber: "03001234567", bsuid: "bsuid-test", bsuidBusinessId: "business-test", whatsappUsername: "customer-test" })).toMatchObject({ bsuid: "bsuid-test", bsuidBusinessId: "business-test" });
+    expect(FlowSubmission.parse({ fullName: "Synthetic Customer", deliveryAddress: "1 Test Street", nearbyPlace: "Test Park", city: "Sahiwal", contactNumber: "03001234567" })).not.toHaveProperty("bsuid");
+  });
   it("resolves WhatsApp recipient priority without using the business sender", () => {
     expect(resolveWhatsAppRecipients({ normalized_whatsapp_number: "+923034901810", normalized_contact_number: "+923001234567" }).map((candidate) => candidate.recipient)).toEqual(["+923034901810", "+923001234567"]);
     expect(resolveWhatsAppRecipients({ normalized_whatsapp_number: "+923001234567", normalized_contact_number: "+923001234567" })).toHaveLength(1);

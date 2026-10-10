@@ -204,8 +204,10 @@ describe("product readiness safeguards", () => {
 
   it("contains all required D1 tables and no third-party CRM dependency", () => {
     const schema = readFileSync("migrations/0001_initial.sql", "utf8");
-    const migrations = schema + readFileSync("migrations/0002_payment_methods.sql", "utf8") + readFileSync("migrations/0003_lead_sources.sql", "utf8") + readFileSync("migrations/0004_lead_source_page.sql", "utf8") + readFileSync("migrations/0005_customer_whatsapp_numbers.sql", "utf8") + readFileSync("migrations/0006_payment_configuration.sql", "utf8") + readFileSync("migrations/0007_dynamic_catalog.sql", "utf8") + readFileSync("migrations/0008_catalog_category.sql", "utf8");
+    const migrations = schema + readFileSync("migrations/0002_payment_methods.sql", "utf8") + readFileSync("migrations/0003_lead_sources.sql", "utf8") + readFileSync("migrations/0004_lead_source_page.sql", "utf8") + readFileSync("migrations/0005_customer_whatsapp_numbers.sql", "utf8") + readFileSync("migrations/0006_payment_configuration.sql", "utf8") + readFileSync("migrations/0007_dynamic_catalog.sql", "utf8") + readFileSync("migrations/0008_catalog_category.sql", "utf8") + readFileSync("migrations/0009_product_pack_quantity.sql", "utf8") + readFileSync("migrations/0010_customer_bsuid.sql", "utf8");
     for (const table of ["customers", "leads", "lead_sources", "orders", "payments", "payment_receipts", "payment_methods", "payment_configuration", "products", "province_delivery_rates", "order_items", "meta_attribution", "capi_events", "whatsapp_events", "outbound_messages", "audit_log", "configuration", "outbox_jobs"]) expect(migrations).toContain(`CREATE TABLE ${table}`);
+    expect(migrations).toContain("ALTER TABLE customers ADD COLUMN bsuid TEXT");
+    expect(migrations).toContain("bsuid_business_id");
     expect(migrations).toContain("CHECK(advance_amount_pkr IS NULL OR (typeof(advance_amount_pkr) = 'integer' AND advance_amount_pkr > 0))");
     expect(migrations).toContain("total_payable INTEGER NOT NULL CHECK(typeof(total_payable) = 'integer' AND total_payable = seed_price + fertilizer_fee + delivery_fee)");
     expect(readFileSync("migrations/0007_dynamic_catalog.sql", "utf8")).not.toMatch(/INSERT INTO (products|province_delivery_rates)/);

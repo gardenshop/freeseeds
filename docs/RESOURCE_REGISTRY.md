@@ -60,6 +60,12 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Phone status: `Pending`; display name: `Get Free Seeds` / `In Review`; quality rating not displayed.
 - Flow publication and messaging runtime are separate gates. Public key registration remains pending; private key is Cloudflare secret-only.
 
+## GFS-75 Graph/Identity Registry
+
+- Graph activation authority: supported Meta Graph/WhatsApp Business Tools state only; no dashboard banner is treated as activation proof.
+- BSUID storage: D1 `customers.bsuid` + `customers.bsuid_business_id` + `customers.whatsapp_username`; no observed customer BSUID and no fabricated business/user ID.
+- Canonical business scope for future BSUID association: Business `568026370701542`, WABA `2616648355452496`. A separate Garden Shop scope is supported by scoped storage but not configured.
+
 ## GFS-73 Tariff Governance
 
 - Single runtime source: Access-protected `/tariff` → D1 `products` and `province_delivery_rates`.

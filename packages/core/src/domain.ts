@@ -16,7 +16,10 @@ export const FlowSubmission = z.object({
   contactNumber: z.string().trim().min(7).max(30),
   productCode: z.string().trim().min(1).max(100).optional(),
   fertilizerSelected: z.boolean().optional(),
-  province: z.string().trim().min(1).max(100).optional()
+  province: z.string().trim().min(1).max(100).optional(),
+  bsuid: z.string().trim().min(1).max(200).optional(),
+  bsuidBusinessId: z.string().trim().min(1).max(100).optional(),
+  whatsappUsername: z.string().trim().min(1).max(100).optional()
 }).strict();
 export type FlowSubmission = z.infer<typeof FlowSubmission>;
 export const FlowCustomerDetails = FlowSubmission.pick({

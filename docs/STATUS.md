@@ -216,3 +216,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Flow private key secret: present by name only. Public-key registration was not completed; private material was never read/exported.
 - API health: `META_ASSETS_PENDING`, WhatsApp disabled until Meta onboarding. Flow health/ping remains PASS.
 - Canonical App↔WABA subscription and durable runtime credential remain unverified/blocked; no message or Flow E2E was attempted.
+
+## GFS-75 Graph Activation and BSUID Readiness
+
+- Official WhatsApp Business Tools MCP/OAuth is advertised in Meta Developer UI but is not exposed as an available agent tool; raw Graph credentials remain prohibited.
+- Authoritative dashboard state: phone `1323932417479627` / `+923044429933` is `Pending`, display name `Get Free Seeds` is `In Review`, quality rating not displayed. App setup marks App Review incomplete and reports missing valid Meta payment method.
+- Canonical App↔WABA subscription remains unverified; API health remains `META_ASSETS_PENDING` / WhatsApp disabled until onboarding. No OTP/PIN/token action was attempted.
+- BSUID support: staging migration `0010_customer_bsuid.sql` adds scoped `bsuid`, `bsuid_business_id`, and `whatsapp_username` fields with a scoped unique index; Flow submission persistence preserves existing phone/wa_id fields. No actual BSUID was observed.
+- Flow private key remains Cloudflare secret-only; public registration, phone activation, webhook/provider, and controlled send remain protected Meta gates.

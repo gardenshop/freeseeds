@@ -70,6 +70,23 @@
 - Canonical App↔WABA: **FAIL/unverified**.
 - Runtime credential: **BLOCKED**; provider health reports WhatsApp disabled until Meta onboarding.
 - Flow send: **BLOCKED**; no synthetic conversation attempted.
+
+## GFS-75-GRAPH-ACTIVATION-BSUID Update — 2026-10-10
+
+- Graph phone: verification **Pending**; registration **Pending**; name status **In Review**; quality **not displayed**.
+- Phone activated: **FAIL**.
+- Canonical App subscribed: **FAIL/unverified**.
+- Public key: **BLOCKED**; encrypted handshake not attempted without Meta registration.
+- Webhook: **BLOCKED**; provider health remains disabled until Meta onboarding.
+- Controlled WhatsApp send / delivery callback: **BLOCKED**.
+- Flow: **DRAFT/BLOCKED**.
+- Flow E2E: **BLOCKED**.
+- BSUID support: **PASS**; scoped fields and uniqueness migration deployed, no actual BSUID observed.
+- Actual BSUID observed from Meta: **NO**.
+- BSUID storage: **PASS**.
+- Get Free Seeds scope: Business `568026370701542` / WABA `2616648355452496`.
+- Future separate Garden Shop scope: **SUPPORTED / NOT CONFIGURED**.
+- Username: **OPTIONAL_PENDING**.
 - Meta ending: **READY_FOR_PAYMENT_VALUES**, not edited. Campaign and WhatsApp remain untouched.
 
 ## GFS-60-MCP-AND-ACTIVE-SENDER Update — 2026-10-09
