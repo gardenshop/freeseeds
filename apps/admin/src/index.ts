@@ -16,8 +16,19 @@ function productView(row: Record<string, unknown>) {
     category: String(row.category ?? ""),
     pricePkr: Number(row.price_pkr),
     fertilizerPricePkr: row.fertilizer_price_pkr == null ? null : Number(row.fertilizer_price_pkr),
+    packQuantity: Number(row.pack_quantity ?? 1),
     active: Number(row.enabled) === 1
   };
+}
+
+function tariffPageHtml(): string {
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tariff Management | Get Free Seeds</title><style>body{font:16px system-ui;max-width:1100px;margin:2rem auto;padding:0 1rem}nav{margin-bottom:1rem}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:.5rem;text-align:left}input{box-sizing:border-box;max-width:12rem;padding:.35rem}small{display:block;color:#666}.status{margin-left:.5rem}.ok{color:green}.error{color:#b00020}</style></head><body><nav><a href="/">Admin home</a> | <a href="/payment-settings">Payment Settings</a></nav><h1>Tariff Management</h1><p>D1/admin is the only dynamic quote source.</p><table><thead><tr><th>Item/Province</th><th>Type</th><th>Price/Fee PKR</th><th>Packs</th><th>Active</th><th>Save</th></tr></thead><tbody id="rows"></tbody></table><script>
+const escapeHtml=(value)=>String(value??'').replace(/[&<>"']/g,(character)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
+function productRow(item){return '<tr data-kind="p" data-id="'+escapeHtml(item.id)+'"><td><input name="name" value="'+escapeHtml(item.name)+'"><small>'+escapeHtml(item.code)+'</small></td><td>'+escapeHtml(item.category)+'</td><td><input name="pricePkr" type="number" min="0" value="'+escapeHtml(item.pricePkr)+'"></td><td><input name="packQuantity" type="number" min="1" value="'+escapeHtml(item.packQuantity||1)+'"></td><td><input name="active" type="checkbox" '+(item.active?'checked':'')+'></td><td><button type="button">Save</button><span class="status"></span></td></tr>'}
+function rateRow(item){return '<tr data-kind="r" data-id="'+escapeHtml(item.id)+'"><td>'+escapeHtml(item.province)+'</td><td>DELIVERY</td><td><input name="deliveryFeePkr" type="number" min="1" value="'+escapeHtml(item.deliveryFeePkr)+'"></td><td>-</td><td><input name="active" type="checkbox" '+(item.active?'checked':'')+'></td><td><button type="button">Save</button><span class="status"></span></td></tr>'}
+async function load(){const [productResponse,rateResponse]=await Promise.all([fetch('/api/catalog/products').then((response)=>response.json()),fetch('/api/catalog/province-delivery-rates').then((response)=>response.json())]);const rows=(productResponse.products||[]).map(productRow).concat((rateResponse.rates||[]).map(rateRow));document.querySelector('#rows').innerHTML=rows.join('');for(const row of document.querySelectorAll('#rows tr')){const button=row.querySelector('button');const status=row.querySelector('span');button.onclick=async()=>{const body={};for(const input of row.querySelectorAll('input[name]'))body[input.name]=input.type==='checkbox'?input.checked:input.type==='number'?Number(input.value):input.value;const path=row.dataset.kind==='p'?'products':'province-delivery-rates';const result=await fetch('/api/catalog/'+path+'/'+row.dataset.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});status.textContent=result.ok?' Saved':' Validation blocked';status.className='status '+(result.ok?'ok':'error')}}}
+load().catch(()=>{document.querySelector('#rows').textContent='Tariff unavailable'});
+</script></body></html>`;
 }
 
 function rateView(row: Record<string, unknown>) {
@@ -46,7 +57,7 @@ app.get("/health", async (c) => {
   const configured = c.env.DB ? await c.env.DB.prepare("SELECT COUNT(*) AS count FROM payment_methods WHERE enabled=1 AND recipient_name IS NOT NULL AND instructions IS NOT NULL AND EXISTS (SELECT 1 FROM payment_configuration WHERE id=1 AND advance_amount_pkr > 0)").first<{ count: number }>() : null;
   return c.json({ ok: true, service: "getfreeseeds-admin", state: c.env.DEPLOYMENT_STATE, paymentConfigured: Number(configured?.count ?? 0) > 0 });
 });
-app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav><a href='/payment-settings'>Payment Settings</a> | <a href='/payment-amount'>Advance Amount</a> | <a href='/catalog'>Catalog</a> | Dashboard | Leads | Meta Instant Form | Orders | Payment Verification | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
+app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav><a href='/payment-settings'>Payment Settings</a> | <a href='/payment-amount'>Legacy Advance Amount</a> | <a href='/tariff'>Tariff Management</a> | Dashboard | Leads | Meta Instant Form | Orders | Payment Verification | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
 
 app.get("/payment-settings", (c) => c.html(`<!doctype html><html><head><meta charset="utf-8"><title>Payment Settings | Get Free Seeds</title><style>body{font:16px system-ui;max-width:1100px;margin:2rem auto;padding:0 1rem}nav{margin-bottom:1rem}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}.card{border:1px solid #ccc;border-radius:8px;padding:1rem}.card h2{margin-top:0}.card label{display:block;margin:.6rem 0}.card input,.card textarea{box-sizing:border-box;width:100%;padding:.5rem}.status{font-size:.9rem;margin:.5rem 0}.configured{color:green}.incomplete{color:#a15c00}.error{color:#b00020}.qr{max-width:180px;max-height:180px;display:block;margin-top:.5rem}.actions{display:flex;gap:.5rem;align-items:center}button{padding:.5rem .8rem}</style></head><body><nav><a href='/'>Admin home</a></nav><h1>Garden Shop Payment Settings</h1><p>Values are backend-controlled. Disabled or incomplete methods cannot send payment instructions.</p><div id="methods" class="grid">Loading...</div><script>
 const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -73,7 +84,7 @@ app.get("/catalog", (c) => c.html(`<!doctype html><html><head><meta charset="utf
  </script></body></html>`));
 app.get("/api/catalog/products", async (c) => {
   if (!c.env.DB) return c.json({ products: [] });
-  const result = await c.env.DB.prepare("SELECT id,code,name,category,price_pkr,fertilizer_price_pkr,enabled FROM products ORDER BY category,name,code").all();
+  const result = await c.env.DB.prepare("SELECT id,code,name,category,price_pkr,fertilizer_price_pkr,pack_quantity,enabled FROM products ORDER BY category,name,code").all();
   return c.json({ products: result.results.map((row) => productView(row as Record<string, unknown>)) });
 });
 
@@ -95,7 +106,7 @@ app.post("/api/catalog/products", async (c) => {
   const now = new Date().toISOString();
   try {
     await c.env.DB.batch([
-      c.env.DB.prepare("INSERT INTO products (id,code,name,category,price_pkr,fertilizer_price_pkr,enabled,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(id, product.code, product.name, product.category, product.pricePkr, product.fertilizerPricePkr, product.active ? 1 : 0, now, now),
+       c.env.DB.prepare("INSERT INTO products (id,code,name,category,price_pkr,fertilizer_price_pkr,pack_quantity,enabled,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)").bind(id, product.code, product.name, product.category, product.pricePkr, product.fertilizerPricePkr, product.packQuantity, product.active ? 1 : 0, now, now),
       auditStatement(c.env.DB, "PRODUCT_CREATED", "PRODUCT", id, { code: product.code, category: product.category, pricePkr: product.pricePkr, fertilizerPricePkr: product.fertilizerPricePkr, active: product.active }, now, c.env.ADMIN_EMAIL)
     ]);
   } catch {
@@ -107,7 +118,7 @@ app.post("/api/catalog/products", async (c) => {
 app.on(["POST", "PUT"], "/api/catalog/products/:id", async (c) => {
   if (!c.env.DB) return c.json({ error: "CATALOG_UNAVAILABLE" }, 503);
   const id = c.req.param("id");
-  const existing = await c.env.DB.prepare("SELECT id,code,name,category,price_pkr,fertilizer_price_pkr,enabled FROM products WHERE id=?").bind(id).first<Record<string, unknown>>();
+   const existing = await c.env.DB.prepare("SELECT id,code,name,category,price_pkr,fertilizer_price_pkr,pack_quantity,enabled FROM products WHERE id=?").bind(id).first<Record<string, unknown>>();
   if (!existing) return c.json({ error: "PRODUCT_NOT_FOUND" }, 404);
   try {
     const body = await c.req.json<Record<string, unknown>>();
@@ -116,12 +127,13 @@ app.on(["POST", "PUT"], "/api/catalog/products/:id", async (c) => {
       name: body.name ?? existing.name,
       category: body.category ?? existing.category,
       pricePkr: body.pricePkr ?? body.price_pkr ?? existing.price_pkr,
-      fertilizerPricePkr: Object.prototype.hasOwnProperty.call(body, "fertilizerPricePkr") ? body.fertilizerPricePkr : Object.prototype.hasOwnProperty.call(body, "fertilizer_price_pkr") ? body.fertilizer_price_pkr : existing.fertilizer_price_pkr,
+       fertilizerPricePkr: Object.prototype.hasOwnProperty.call(body, "fertilizerPricePkr") ? body.fertilizerPricePkr : Object.prototype.hasOwnProperty.call(body, "fertilizer_price_pkr") ? body.fertilizer_price_pkr : existing.fertilizer_price_pkr,
+       packQuantity: body.packQuantity ?? body.pack_quantity ?? existing.pack_quantity,
       active: body.active ?? body.enabled ?? Number(existing.enabled) === 1
     });
     const now = new Date().toISOString();
     await c.env.DB.batch([
-      c.env.DB.prepare("UPDATE products SET code=?,name=?,category=?,price_pkr=?,fertilizer_price_pkr=?,enabled=?,updated_at=? WHERE id=?").bind(product.code, product.name, product.category, product.pricePkr, product.fertilizerPricePkr, product.active ? 1 : 0, now, id),
+       c.env.DB.prepare("UPDATE products SET code=?,name=?,category=?,price_pkr=?,fertilizer_price_pkr=?,pack_quantity=?,enabled=?,updated_at=? WHERE id=?").bind(product.code, product.name, product.category, product.pricePkr, product.fertilizerPricePkr, product.packQuantity, product.active ? 1 : 0, now, id),
       auditStatement(c.env.DB, "PRODUCT_UPDATED", "PRODUCT", id, { code: product.code, category: product.category, pricePkr: product.pricePkr, fertilizerPricePkr: product.fertilizerPricePkr, active: product.active }, now, c.env.ADMIN_EMAIL)
     ]);
     return c.json({ ok: true, product: { id, ...product } });
@@ -362,6 +374,8 @@ app.get("/api/payment-instructions/:method", async (c) => {
   if (amount?.advance_amount_pkr == null || Number(amount.advance_amount_pkr) <= 0) return c.json({ error: "PAYMENT_AMOUNT_NOT_CONFIGURED" }, 503);
   return c.json(paymentInstructions(normalizePaymentMethodRow(row as Record<string, unknown>)));
 });
+
+app.get("/tariff", (c) => c.html(tariffPageHtml()));
 
 app.all("*", (c) => c.json({ error: "NOT_FOUND" }, 404));
 export default app;

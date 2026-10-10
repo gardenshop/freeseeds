@@ -32,7 +32,7 @@ describe("admin payment configuration", () => {
     const invalidProduct = await app.fetch(new Request("https://admin.example.test/api/catalog/products", {
       method: "POST",
       headers: { "cf-access-authenticated-user-email": "admin@example.test", "content-type": "application/json" },
-      body: JSON.stringify({ code: "SYNTHETIC", name: "Synthetic product", category: "Synthetic", pricePkr: 0, fertilizerPricePkr: null, active: false })
+      body: JSON.stringify({ code: "SYNTHETIC", name: "Synthetic product", category: "Synthetic", pricePkr: -1, fertilizerPricePkr: null, active: false })
     }), env);
     expect(invalidProduct.status).toBe(400);
     expect(await invalidProduct.json()).toEqual({ error: "PRODUCT_PRICE_INVALID" });

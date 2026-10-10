@@ -52,6 +52,15 @@ Phone Number ID: `1323932417479627`
 - Canonical Flow Manager opens the Get Free Seeds WABA and reports publication requirements: improve message quality and complete business verification. No Flow publication mutation was made.
 - `FLOW_PRIVATE_KEY` secret name is configured in staging; public-key registration and Meta Flow publication remain pending. The private value is not recorded.
 
+## GFS-73 Admin Tariff Source of Truth
+
+- Rule: `ADMIN_TARIFF_SOURCE_OF_TRUTH`.
+- Access-protected `/tariff` is deployed and renders one D1-backed editable table for products and province delivery fees; Payment Settings remains separate.
+- Product price validation now permits zero for free seeds/fertilizer; delivery fee remains strictly positive. Pack quantity is D1-backed.
+- Runtime proof without redeploy: temporary Punjab fee change produced quote 251, restore produced 250; temporary fertilizer price change produced 501, restore produced 500. Staging data is restored.
+- Admin browser smoke reaches Cloudflare Access (HTTP 302); direct authenticated UI edit proof remains gated by the `gisupp@gmail.com` Access session. D1/runtime change proof passes.
+- No permanent tariff constants remain in binding rules, Flow JSON, or Worker variables; tests use labeled fixtures only.
+
 ## Completed Work
 
 - Repository audit confirmed an empty directory with no Git history or legacy architecture.

@@ -52,6 +52,13 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Formula: `seed_price + fertilizer_fee + province_delivery_fee`; seed price is zero and fertilizer is optional.
 - Flow key state: Cloudflare secret `FLOW_PRIVATE_KEY` present by name; Meta public-key registration remains pending. No key material is recorded.
 
+## GFS-73 Tariff Governance
+
+- Single runtime source: Access-protected `/tariff` → D1 `products` and `province_delivery_rates`.
+- Legacy `/payment-amount` remains separate and is not used by dynamic WhatsApp quotes.
+- Product price may be zero; delivery fee must be positive. All runtime quote values are fetched at request time.
+- Change proof passed without Worker redeploy and values were restored. No tariff values are embedded in Flow JSON or Worker variables.
+
 ## GitHub
 
 - Repository: `https://github.com/gardenshop/freeseeds.git`

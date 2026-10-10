@@ -36,6 +36,13 @@
 - Read-only canonical Flow Manager opens Get Free Seeds WABA but reports message-quality and business-verification requirements for publication. No Flow/campaign mutation occurred.
 - Generated a supported RSA Flow keypair in memory and stored only the private key as Cloudflare secret `FLOW_PRIVATE_KEY`; no key material was logged. Public-key registration remains pending.
 
+## Unreleased - 2026-10-10 (GFS-73)
+
+- Added `ADMIN_TARIFF_SOURCE_OF_TRUTH` and deployed `/tariff`, a D1-backed editable product/province tariff table with audit-backed API updates.
+- Fixed product/fertilizer validation to accept zero prices while keeping delivery fees positive; added pack quantity support.
+- Proved D1→quote propagation without redeploy using temporary staging edits and restored all values. No tariff constants were added to runtime or Flow JSON.
+- Payment Settings remains separate; dynamic quotes do not use legacy `/payment-amount`.
+
 ## Unreleased - 2026-10-09 (GFS-60)
 
 - Corrected active documentation authority to `META_ASSETS_PENDING`, sender `+923044429933`, and Phone Number ID `1323932417479627`; former sender/ID remain historical only.

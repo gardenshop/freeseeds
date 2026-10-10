@@ -4,6 +4,7 @@ export type CatalogProductInput = {
   category: string;
   pricePkr: number;
   fertilizerPricePkr: number | null;
+  packQuantity: number;
   active: boolean;
 };
 
@@ -31,6 +32,12 @@ export function validatePositiveInteger(value: unknown, error = "CATALOG_POSITIV
   return number;
 }
 
+export function validateNonNegativeInteger(value: unknown, error = "CATALOG_NON_NEGATIVE_INTEGER_REQUIRED"): number {
+  const number = typeof value === "number" ? value : typeof value === "string" && value.trim() ? Number(value) : Number.NaN;
+  if (!Number.isSafeInteger(number) || number < 0) throw new Error(error);
+  return number;
+}
+
 function booleanValue(value: unknown): boolean {
   if (typeof value !== "boolean") throw new Error("CATALOG_ACTIVE_REQUIRED");
   return value;
@@ -43,8 +50,9 @@ export function parseProductInput(input: unknown): CatalogProductInput {
     code: requiredText(body.code, "CATALOG_CODE_REQUIRED", 100),
     name: requiredText(body.name, "CATALOG_NAME_REQUIRED", 160),
     category: requiredText(body.category, "CATALOG_CATEGORY_REQUIRED", 100),
-    pricePkr: validatePositiveInteger(body.pricePkr ?? body.price_pkr, "PRODUCT_PRICE_INVALID"),
-    fertilizerPricePkr: fertilizer === null || fertilizer === undefined || fertilizer === "" ? null : validatePositiveInteger(fertilizer, "FERTILIZER_PRICE_INVALID"),
+    pricePkr: validateNonNegativeInteger(body.pricePkr ?? body.price_pkr, "PRODUCT_PRICE_INVALID"),
+    fertilizerPricePkr: fertilizer === null || fertilizer === undefined || fertilizer === "" ? null : validateNonNegativeInteger(fertilizer, "FERTILIZER_PRICE_INVALID"),
+    packQuantity: body.packQuantity === undefined && body.pack_quantity === undefined ? 1 : validatePositiveInteger(body.packQuantity ?? body.pack_quantity, "PACK_QUANTITY_INVALID"),
     active: booleanValue(body.active ?? body.enabled)
   };
 }

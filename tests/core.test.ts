@@ -42,7 +42,8 @@ describe("Get Free Seeds domain", () => {
     expect(() => validatePositiveInteger(0)).toThrow("CATALOG_POSITIVE_INTEGER_REQUIRED");
     expect(() => validatePositiveInteger(1.5)).toThrow("CATALOG_POSITIVE_INTEGER_REQUIRED");
     expect(parseProductInput({ code: "SYNTHETIC", name: "Synthetic product", category: "Synthetic", pricePkr: 10, fertilizerPricePkr: null, active: false })).toMatchObject({ pricePkr: 10, fertilizerPricePkr: null, active: false });
-    expect(() => parseProductInput({ code: "SYNTHETIC", name: "Synthetic product", category: "Synthetic", pricePkr: 0, fertilizerPricePkr: null, active: false })).toThrow("PRODUCT_PRICE_INVALID");
+    expect(parseProductInput({ code: "SYNTHETIC_ZERO", name: "Synthetic free product", category: "Synthetic", pricePkr: 0, fertilizerPricePkr: 0, active: true })).toMatchObject({ pricePkr: 0, fertilizerPricePkr: 0 });
+    expect(() => parseProductInput({ code: "SYNTHETIC_NEGATIVE", name: "Synthetic product", category: "Synthetic", pricePkr: -1, fertilizerPricePkr: null, active: false })).toThrow("PRODUCT_PRICE_INVALID");
     expect(() => parseProvinceDeliveryRateInput({ province: "Synthetic Province", deliveryFeePkr: -1, active: false })).toThrow("DELIVERY_RATE_INVALID");
   });
   it("validates receipt media", () => { expect(() => validateReceipt("image/png", 10)).not.toThrow(); expect(() => validateReceipt("text/html", 10)).toThrow(); });

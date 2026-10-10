@@ -49,6 +49,17 @@
 - Flow: **DRAFT/BLOCKED publication**. Backend protocol/health/tests pass; `FLOW_PRIVATE_KEY` is absent and Meta requires message-quality/business-verification steps.
 - Payment: JazzCash, Easypaisa, Bank **MISSING** recipient/instruction values. Payment buttons/details and receipt review remain blocked only at payment configuration/runtime gates.
 - Flow private/public key: **PRIVATE CONFIGURED / PUBLIC REGISTRATION BLOCKED**; private value was generated in memory and stored by secret name only, never exposed.
+
+## GFS-73-ADMIN-TARIFF-SOURCE Update — 2026-10-10
+
+- Admin tariff: **PASS**. `/tariff` deployed as the single D1-backed product/province editor.
+- Single source of truth: **D1/ADMIN = YES**.
+- Seed Rs0 editable: **PASS**. Fertilizer and product values are editable without deploy; delivery fees require positive values.
+- Dynamic quote fetch: **PASS**. Change proof passed without redeploy: Punjab 251→250 and fertilizer 501→500 after restore.
+- Hardcoded production tariff: **NONE FOUND**. Numeric values remaining are labeled tests/history; binding rules no longer embed permanent tariff values.
+- Meta Form: **READ_ONLY**; tariff drift risk **YES** because prior fixed text answers are non-authoritative.
+- Payment methods: JazzCash/Easypaisa/Bank **MISSING** recipient/instruction values; payment selection remains safely hidden.
+- Flow endpoint: **PASS**. Flow public key: **BLOCKED** at Meta registration/publication. Flow remains **DRAFT/BLOCKED**.
 - Meta ending: **READY_FOR_PAYMENT_VALUES**, not edited. Campaign and WhatsApp remain untouched.
 
 ## GFS-60-MCP-AND-ACTIVE-SENDER Update — 2026-10-09
