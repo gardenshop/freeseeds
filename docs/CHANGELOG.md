@@ -78,6 +78,12 @@
 - Retried Flow public-key registration after connection; exact Meta result is `(#10) Application does not have permission for this action`.
 - Webhook/provider/message testing remains gated by missing App Secret and provider enablement. Campaign remains untouched.
 
+## Unreleased - 2026-10-10 (GFS-85)
+
+- Confirmed API `META_APP_SECRET` secret presence and active provider deployment.
+- Webhook challenge passes; invalid signatures are rejected with 403.
+- Attempted exactly one authorized test send to `+923354299783`; received HTTP 400 without a message ID. No duplicate send was attempted.
+
 ## Unreleased - 2026-10-09 (GFS-60)
 
 - Corrected active documentation authority to `META_ASSETS_PENDING`, sender `+923044429933`, and Phone Number ID `1323932417479627`; former sender/ID remain historical only.

@@ -231,6 +231,13 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - No OTP, two-step PIN, password, token, or raw Graph request was attempted. Display-name review was not used as a precondition; the actual blocker is the protected Graph/official-MCP credential path.
 - Payment audit: JazzCash, Easypaisa, and Bank Transfer are all disabled with recipient/instruction fields absent. This does not block phone registration but blocks payment E2E.
 
+## GFS-85 Live E2E Attempt
+
+- API secret names: `META_APP_SECRET`, `META_ACCESS_TOKEN`, and `WEBHOOK_VERIFY_TOKEN` present; active API deployment after App Secret update verified through Wrangler.
+- Webhook challenge: **PASS**. Invalid signed POST: **PASS rejection** (`403`) after provider enablement. Valid Meta-signed event remains unproven because no real callback has arrived.
+- Provider/deployment: enabled and `PRODUCTION_INTEGRATION_READY` deployed; campaign untouched.
+- One authorized fixed-recipient send was attempted; it returned HTTP `400 Bad Request`, no `wamid`, and no retry was issued to avoid duplicate testing. Flow E2E remains pending.
+
 ## GFS-77 Activation Console
 
 - Access-protected `/meta-activation` is deployed for canonical Phone/WABA/App state, ownership/register/subscription actions, webhook/provider/Flow-key status, and controlled-test preparation. No Meta mutation or message was executed.

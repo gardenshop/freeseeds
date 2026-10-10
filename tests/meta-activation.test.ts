@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import admin from "../apps/admin/src/index";
-import { createMetaActivationService } from "@gfs/core";
+import { createMetaActivationService, META_SEND_TEST_MESSAGE, META_SEND_TEST_RECIPIENT } from "@gfs/core";
 
 const accessHeaders = { "cf-access-authenticated-user-email": "admin@example.test" };
 
@@ -11,7 +11,7 @@ describe("Meta activation safety boundary", () => {
     const status = await service.status();
 
     expect(fetcher).not.toHaveBeenCalled();
-    expect(status.graph).toEqual({ configured: false, version: "v26.0" });
+    expect(status.graph).toEqual({ configured: false, version: "v26.0", permissions: [] });
     expect(JSON.stringify(status)).not.toContain("token");
     expect(status.phone.state).toBe("not_configured");
     expect(status.wabaSubscription.state).toBe("not_configured");
@@ -23,7 +23,7 @@ describe("Meta activation safety boundary", () => {
     const service = createMetaActivationService({ accessToken: token, phoneNumberId: "phone-id", wabaId: "waba-id", appId: "app-id", fetcher });
     const status = await service.status();
 
-    expect(fetcher).toHaveBeenCalledTimes(2);
+     expect(fetcher).toHaveBeenCalledTimes(3);
     expect(status.graph.error).toEqual({ code: "META_GRAPH_REQUEST_FAILED", status: 500 });
     expect(JSON.stringify(status)).not.toContain(token);
     expect(JSON.stringify(status)).not.toContain("leaked");
@@ -34,7 +34,8 @@ describe("Meta activation safety boundary", () => {
     const token = "secret-token-fixture";
     const fetcher = vi.fn<typeof fetch>()
       .mockResolvedValueOnce(new Response(JSON.stringify({ id: "phone-id", display_phone_number: "+923000000000", verified_name: "Free Seeds", name_status: "APPROVED", quality_rating: "GREEN", status: "CONNECTED", internal_secret: token }), { status: 200 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ data: [{ whatsapp_business_api_data: { id: "app-id" }, access_token: token }] }), { status: 200 }));
+      .mockResolvedValueOnce(new Response(JSON.stringify({ data: [{ whatsapp_business_api_data: { id: "app-id" }, access_token: token }] }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ data: [{ permission: "whatsapp_business_messaging", status: "granted" }, { permission: "whatsapp_business_management", status: "granted" }] }), { status: 200 }));
     const status = await createMetaActivationService({ accessToken: token, phoneNumberId: "phone-id", wabaId: "waba-id", appId: "app-id", fetcher }).status();
 
     expect(fetcher.mock.calls[0]?.[1]).toMatchObject({ headers: { Authorization: `Bearer ${token}`, Accept: "application/json" } });
@@ -108,5 +109,53 @@ describe("Meta activation safety boundary", () => {
   it("keeps the activation API behind Access", async () => {
     const response = await admin.fetch(new Request("https://admin.example.test/api/meta-activation/status"), { ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL" } as never);
     expect(response.status).toBe(403);
+  });
+
+  it("sends only the fixed test message to the fixed recipient through Graph", async () => {
+    const token = "fixture-send-test-token";
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(async (input, init) => {
+      if (init?.method === "POST") return new Response(JSON.stringify({ messages: [{ id: "wamid.test-message-1" }], access_token: token }), { status: 200 });
+      return new Response(JSON.stringify({ id: "phone-id", status: "CONNECTED", access_token: token }), { status: 200 });
+    });
+    const service = createMetaActivationService({ accessToken: token, providerEnabled: true, phoneNumberId: "phone-id", wabaId: "waba-id", appId: "app-id", fetcher });
+
+    const result = await service.action("send-test");
+    const post = fetcher.mock.calls.find(([, init]) => init?.method === "POST");
+
+    expect(result).toMatchObject({ action: "send-test", executed: true, reason: "META_TEST_MESSAGE_SENT", messageId: "wamid.test-message-1", httpStatus: 200 });
+    expect(post?.[0]).toBe("https://graph.facebook.com/v26.0/phone-id/messages");
+    expect(post?.[1]?.headers).toMatchObject({ Authorization: `Bearer ${token}` });
+    expect(JSON.parse(String(post?.[1]?.body))).toEqual({
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: META_SEND_TEST_RECIPIENT,
+      type: "text",
+      text: { preview_url: false, body: META_SEND_TEST_MESSAGE }
+    });
+    expect(JSON.stringify(result)).not.toContain(token);
+  });
+
+  it("returns only sanitized Graph failure details for the send action", async () => {
+    const token = "fixture-send-error-token";
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(async (_input, init) => {
+      if (init?.method === "POST") return new Response(JSON.stringify({ error: { code: "131000", message: `secret ${token} must not escape` }, access_token: token }), { status: 400 });
+      return new Response(JSON.stringify({ id: "phone-id", access_token: token }), { status: 200 });
+    });
+    const result = await createMetaActivationService({ accessToken: token, providerEnabled: true, phoneNumberId: "phone-id", fetcher }).action("send-test");
+
+    expect(result).toMatchObject({ action: "send-test", executed: false, reason: "META_GRAPH_REQUEST_FAILED", error: { code: "131000", status: 400 } });
+    expect(JSON.stringify(result)).not.toContain(token);
+    expect(JSON.stringify(result)).not.toContain("must not escape");
+  });
+
+  it("rejects an arbitrary recipient at the Access-protected endpoint", async () => {
+    const response = await admin.fetch(new Request("https://admin.example.test/api/meta-activation/actions/send-test", {
+      method: "POST",
+      headers: { ...accessHeaders, "content-type": "application/json" },
+      body: JSON.stringify({ to: "+923000000000" })
+    }), { ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL", META_ACCESS_TOKEN: "fixture-token", META_PROVIDER_ENABLED: "true", META_PHONE_NUMBER_ID: "phone-id" } as never);
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: "META_SEND_TEST_RECIPIENT_FIXED" });
   });
 });

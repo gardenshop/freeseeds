@@ -40,6 +40,9 @@
 | GFS-80 connected phone | UI Connected + Graph verified + canonical subscription | PASS: phone code verification `VERIFIED`; App `2354726831735899` observed subscribed |
 | GFS-80 Flow key permission | public-key registration after phone connection | BLOCKED: Meta `(#10) Application does not have permission for this action` |
 | GFS-80 webhook/message | signed callback and controlled send | BLOCKED: App Secret absent/provider disabled |
+| GFS-85 secret/deployment | App Secret name, active API version, provider enablement | PASS: API secret present; `PRODUCTION_INTEGRATION_READY` deployed |
+| GFS-85 webhook signatures | challenge and invalid signature rejection | PASS: challenge PASS; invalid POST 403; valid Meta callback pending |
+| GFS-85 authorized send | one fixed recipient, message ID/status | FAIL/UNPROVEN: HTTP 400, no wamid; no retry issued |
 | GFS-60 active sender authority | current state, sender, Phone Number ID, historical sender exclusion | PASS: `META_ASSETS_PENDING`, `+923044429933`, `1323932417479627` |
 | GFS-60 MCP recovery | existing profile, DevToolsActivePort, package, registration, namespace exposure | BLOCKED: local prerequisites present; Codex registration has stale WebSocket UUID and active namespace is unavailable |
 | Governance | authorized number lock, no existing number | PASS |

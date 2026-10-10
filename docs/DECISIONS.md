@@ -50,6 +50,10 @@ The token is now present as a Cloudflare secret on both staging Workers and Grap
 
 Current Meta state reconciles to a connected phone and canonical App↔WABA subscription. A public-key registration retry now reaches Graph but returns `(#10) Application does not have permission for this action`, proving the remaining Flow-key gate is App/token permission rather than name review or phone registration. Webhook signed verification remains gated by absent App Secret/provider enablement.
 
+## 2026-10-10: GFS-85 App Secret and Single E2E Attempt
+
+`META_APP_SECRET` is now present as an API Worker secret and the API is deployed with provider enabled. The webhook challenge passes and invalid signatures return 403. One authorized send to `+923354299783` returned HTTP 400 with no message ID; no duplicate retry was made. This is a real send failure, not an accepted/delivered claim.
+
 Meta Form read-only inventory remains separate from WhatsApp commerce: historical canonical evidence includes customer fields plus product/province/fertilizer/amount answers, while this Flow owns server-authoritative product/rate/quote data. No Form or campaign mutation occurred.
 
 ## 2026-10-10: GFS-69 Final Meta Form Preparation

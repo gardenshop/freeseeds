@@ -1,5 +1,15 @@
 # Final Report
 
+## GFS-85-LIVE-E2E Update — 2026-10-10
+
+- `META_APP_SECRET`: **PRESENT** by secret name; active API deployment **PASS**.
+- Webhook GET challenge: **PASS**.
+- Signed POST: invalid signature **PASS rejected**; valid signed POST **UNPROVEN**.
+- Provider: **ENABLED** in deployed staging state.
+- Test send: **FAIL** — HTTP 400, no `wamid`; no duplicate retry.
+- Delivery: **UNKNOWN**; inbound reply **WAITING/NOT OBSERVED**.
+- Flow public key: **PASS previously registered**; Flow E2E **BLOCKED** by missing successful outbound message.
+
 ## GFS-68-META-FORM-LAUNCH-FIRST Update — 2026-10-10
 
 - Launch track: **`META_FORM_LAUNCH_FIRST`**

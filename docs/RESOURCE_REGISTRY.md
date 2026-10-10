@@ -66,6 +66,12 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - BSUID storage: D1 `customers.bsuid` + `customers.bsuid_business_id` + `customers.whatsapp_username`; no observed customer BSUID and no fabricated business/user ID.
 - Canonical business scope for future BSUID association: Business `568026370701542`, WABA `2616648355452496`. A separate Garden Shop scope is supported by scoped storage but not configured.
 
+## GFS-85 Signed Runtime State
+
+- API Worker secret names: `META_ACCESS_TOKEN`, `META_APP_SECRET`, `WEBHOOK_VERIFY_TOKEN` present; values never recorded.
+- API deployment state: `PRODUCTION_INTEGRATION_READY`; Meta provider enabled.
+- Webhook GET challenge passes; invalid signature is rejected. Valid signed event and real message delivery remain unproven.
+
 ## GFS-77 Activation Authority
 
 - Admin console: `/meta-activation` on staging, Access-protected for `gisupp@gmail.com`.
