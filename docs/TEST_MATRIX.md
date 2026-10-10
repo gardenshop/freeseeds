@@ -3,7 +3,7 @@
 | Area | Required coverage | Status |
 | --- | --- | --- |
 | GFS-68 launch separation | Meta Form/Leads Center independent of WhatsApp API | PASS: `META_FORM_LAUNCH_FIRST`; WhatsApp is enhancement-pending and non-blocking |
-| GFS-68 canonical form inventory | Page `101192938541236`, Form `1093015800183328`, no duplicate substitution | PARTIAL: canonical Page list shows active `Free Seeds 04-10-2026`; newer `Free Seeds 05-10-2026` also exists and is not substituted |
+| GFS-68 canonical form inventory | Page `101192938541236`, Form `1093015800183328`, no duplicate substitution | PASS authority mapping: Form `1093015800183328` is active `Free Seeds 05-10-2026`; separate `Free Seeds 04-10-2026` also active |
 | GFS-68 payment source | authoritative amount and Garden Shop recipient configuration | BLOCKED: all three staging D1 methods disabled; recipient/instructions/QR fields absent (`PAYMENT_VALUES_REQUIRED`) |
 | GFS-60 active sender authority | current state, sender, Phone Number ID, historical sender exclusion | PASS: `META_ASSETS_PENDING`, `+923044429933`, `1323932417479627` |
 | GFS-60 MCP recovery | existing profile, DevToolsActivePort, package, registration, namespace exposure | BLOCKED: local prerequisites present; Codex registration has stale WebSocket UUID and active namespace is unavailable |

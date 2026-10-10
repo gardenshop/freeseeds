@@ -4,7 +4,7 @@
 
 The temporary customer acquisition launch is separated from WhatsApp API activation. `META_FORM_LAUNCH_FIRST` permits native Meta Form submission and Leads Center capture without a WhatsApp system-user token, phone `/register`, `subscribed_apps`, WhatsApp webhook, or Lead→D1 realtime integration. WhatsApp remains `WHATSAPP_API_ENHANCEMENT_PENDING`.
 
-The canonical Page form list visibly contains active `Free Seeds 04-10-2026` and `Free Seeds 05-10-2026` entries. Existing authority remains Form ID `1093015800183328` / `Free Seeds 04-10-2026`; no replacement or duplicate form was created. Remote staging D1 read-only presence checks show JazzCash, Easypaisa, and Bank Transfer all disabled with recipient/instruction/QR fields absent, so payment launch data is gated by `PAYMENT_VALUES_REQUIRED`.
+The canonical Page form list visibly contains active `Free Seeds 04-10-2026` and `Free Seeds 05-10-2026` entries. Existing authority is Form ID `1093015800183328` / `Free Seeds 05-10-2026`; the older `Free Seeds 04-10-2026` is separate. No replacement or duplicate form was created. Remote staging D1 read-only presence checks show JazzCash, Easypaisa, and Bank Transfer all disabled with recipient/instruction/QR fields absent, so payment launch data is gated by `PAYMENT_VALUES_REQUIRED`.
 
 ## 2026-10-09: GFS-60 MCP and Active Sender Authority
 
