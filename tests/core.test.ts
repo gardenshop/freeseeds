@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FlowSubmission, MockWhatsAppProvider, canTransition, createLeadEvent, createPurchaseEvent, eventId, nextOrderNumber, normalizeContactNumber, paymentInstructions, resolveWhatsAppRecipients, validateReceipt } from "@gfs/core";
+import { FlowSubmission, MockWhatsAppProvider, canTransition, createLeadEvent, createPurchaseEvent, eventId, formatPaymentMessage, hasCompleteEnabledPaymentMethod, nextOrderNumber, normalizeContactNumber, paymentInstructions, requirePaymentAmount, resolveWhatsAppRecipients, validatePaymentAmount, validateReceipt } from "@gfs/core";
 
 describe("Get Free Seeds domain", () => {
   it("requires exactly five Flow fields", () => {
@@ -24,6 +24,19 @@ describe("Get Free Seeds domain", () => {
   it("creates deterministic event IDs", () => { expect(eventId("lead", "FS-100001")).toBe("lead_FS-100001"); expect(createLeadEvent("FS-100001").eventId).toBe("lead_FS-100001"); expect(createPurchaseEvent("FS-100001", 250).value).toBe(250); });
   it("formats concurrent-safe sequence output", () => expect(nextOrderNumber(100001)).toBe("FS-100001"));
   it("keeps payment methods safely disabled until configuration", () => expect(paymentInstructions({ id: "synthetic", method: "JAZZCASH", displayName: "JazzCash", enabled: false, sortOrder: 10 }).configured).toBe(false));
+  it("requires a positive PKR payment amount and never formats Rs. 0", () => {
+    expect(validatePaymentAmount(250)).toBe(250);
+    expect(() => validatePaymentAmount(0)).toThrow("PAYMENT_AMOUNT_INVALID");
+    expect(() => validatePaymentAmount(-1)).toThrow("PAYMENT_AMOUNT_INVALID");
+    expect(() => validatePaymentAmount(true)).toThrow("PAYMENT_AMOUNT_INVALID");
+    expect(() => requirePaymentAmount(null)).toThrow("PAYMENT_AMOUNT_NOT_CONFIGURED");
+    expect(() => requirePaymentAmount(0)).toThrow("PAYMENT_AMOUNT_NOT_CONFIGURED");
+    expect(() => formatPaymentMessage("FS-100001", 0, { id: "synthetic", method: "JAZZCASH", displayName: "JazzCash", recipientName: "Garden Shop", instructions: "Synthetic instruction", enabled: true, sortOrder: 10 })).toThrow("PAYMENT_AMOUNT_NOT_CONFIGURED");
+  });
+  it("requires at least one complete enabled payment method", () => {
+    expect(hasCompleteEnabledPaymentMethod([{ id: "synthetic", method: "JAZZCASH", displayName: "JazzCash", enabled: false, sortOrder: 10 }])).toBe(false);
+    expect(hasCompleteEnabledPaymentMethod([{ id: "synthetic", method: "JAZZCASH", displayName: "JazzCash", recipientName: "Garden Shop", instructions: "Synthetic instruction", enabled: true, sortOrder: 10 }])).toBe(true);
+  });
   it("validates receipt media", () => { expect(() => validateReceipt("image/png", 10)).not.toThrow(); expect(() => validateReceipt("text/html", 10)).toThrow(); });
   it("uses a provider boundary with a mock", async () => { const provider = new MockWhatsAppProvider(); await provider.sendText("synthetic", "Payment received for verification"); expect(provider.sent[0]?.kind).toBe("text"); });
 });

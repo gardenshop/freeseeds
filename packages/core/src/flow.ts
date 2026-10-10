@@ -1,5 +1,6 @@
 import { createLeadEvent } from "./capi";
 import { FlowSubmission, InstantFormSubmission, LeadSource, normalizeContactNumber } from "./domain";
+import { requirePaymentAmount } from "./payments";
 
 export function parseFlowSubmission(input: unknown): FlowSubmission {
   const parsed = FlowSubmission.parse(input);
@@ -70,6 +71,8 @@ async function persistLeadSubmission(db: D1Database, submission: FlowSubmission,
     const existing = await db.prepare("SELECT ls.lead_id, ls.order_id, l.customer_id, o.order_number FROM lead_sources ls JOIN leads l ON l.id=ls.lead_id JOIN orders o ON o.id=ls.order_id WHERE ls.provider_lead_id=?").bind(options.providerLeadId).first<{ lead_id: string; order_id: string; customer_id: string; order_number: string }>();
     if (existing) return { customerId: existing.customer_id, leadId: existing.lead_id, orderId: existing.order_id, orderNumber: existing.order_number, duplicate: true };
   }
+  const paymentConfiguration = await db.prepare("SELECT advance_amount_pkr FROM payment_configuration WHERE id=1").first<{ advance_amount_pkr?: number | null }>();
+  const paymentAmount = paymentConfiguration?.advance_amount_pkr == null ? 0 : requirePaymentAmount(paymentConfiguration.advance_amount_pkr);
   const now = new Date().toISOString();
   const customerId = crypto.randomUUID();
   const leadId = crypto.randomUUID();
@@ -85,8 +88,8 @@ async function persistLeadSubmission(db: D1Database, submission: FlowSubmission,
   const whatsappNumber = "whatsappNumber" in submission && typeof submission.whatsappNumber === "string" ? submission.whatsappNumber : undefined;
   await db.batch([
     db.prepare("INSERT INTO customers (id,wa_id,full_name,delivery_address,nearby_place,city,contact_number,normalized_phone,normalized_address_hash,created_at,updated_at,normalized_contact_number,whatsapp_number,normalized_whatsapp_number) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(customerId, null, submission.fullName, submission.deliveryAddress, submission.nearbyPlace, submission.city, submission.contactNumber, normalizeContactNumber(submission.contactNumber), addressHash, now, now, normalizeContactNumber(submission.contactNumber), whatsappNumber ?? null, whatsappNumber ? normalizeContactNumber(whatsappNumber) : null),
-    db.prepare("INSERT INTO orders (id,order_number,customer_id,offer_code,pack_quantity,seed_price,delivery_fee,total_payable,state,payment_status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)").bind(orderId, orderNumber, customerId, "GET_FREE_SEEDS_5_PACKS", 5, 0, 0, 0, "DETAILS_COMPLETED", "PENDING", now, now),
-    db.prepare("INSERT INTO payments (id,order_id,expected_amount,review_state,created_at,updated_at) VALUES (?,?,?,?,?,?)").bind(paymentId, orderId, 0, "PENDING", now, now),
+    db.prepare("INSERT INTO orders (id,order_number,customer_id,offer_code,pack_quantity,seed_price,delivery_fee,total_payable,state,payment_status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)").bind(orderId, orderNumber, customerId, "GET_FREE_SEEDS_5_PACKS", 5, 0, paymentAmount, paymentAmount, "DETAILS_COMPLETED", "PENDING", now, now),
+    db.prepare("INSERT INTO payments (id,order_id,expected_amount,review_state,created_at,updated_at) VALUES (?,?,?,?,?,?)").bind(paymentId, orderId, paymentAmount, "PENDING", now, now),
     db.prepare("INSERT INTO leads (id,customer_id,order_id,status,capi_event_id,created_at) VALUES (?,?,?,?,?,?)").bind(leadId, customerId, orderId, "CREATED", leadEventId, now),
     db.prepare("INSERT INTO meta_attribution (id,order_id,customer_id,ctwa_clid,campaign_id,ad_set_id,ad_id,minimized_referral_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(attributionId, orderId, customerId, options.attribution?.ctwaClid ?? null, options.attribution?.campaignId ?? null, options.attribution?.adSetId ?? null, options.attribution?.adId ?? null, JSON.stringify({ source: options.source, ...options.attribution }), now),
     db.prepare("INSERT INTO lead_sources (id,lead_id,order_id,source,provider_lead_id,meta_form_id,provider_created_time,campaign_id,ad_set_id,ad_id,created_at,page_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), leadId, orderId, options.source, options.providerLeadId ?? null, options.formId ?? null, options.createdTime ?? null, options.attribution?.campaignId ?? null, options.attribution?.adSetId ?? null, options.attribution?.adId ?? null, now, options.pageId ?? null),

@@ -29,8 +29,27 @@ export type PaymentInstructions = {
   referenceInstruction?: string;
 };
 
+export function validatePaymentAmount(value: unknown): number {
+  const amount = typeof value === "number" ? value : typeof value === "string" && value.trim() ? Number(value) : Number.NaN;
+  if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error("PAYMENT_AMOUNT_INVALID");
+  return amount;
+}
+
+export function requirePaymentAmount(value: unknown): number {
+  if (value === null || value === undefined || value === "") throw new Error("PAYMENT_AMOUNT_NOT_CONFIGURED");
+  try {
+    return validatePaymentAmount(value);
+  } catch {
+    throw new Error("PAYMENT_AMOUNT_NOT_CONFIGURED");
+  }
+}
+
 export function isPaymentMethodComplete(config: PaymentMethodConfig | undefined): boolean {
   return Boolean(config?.enabled && config.recipientName?.trim() && config.instructions?.trim());
+}
+
+export function hasCompleteEnabledPaymentMethod(configs: PaymentMethodConfig[]): boolean {
+  return configs.some((config) => isPaymentMethodComplete(config));
 }
 
 export function paymentInstructions(config: PaymentMethodConfig | undefined): PaymentInstructions {
@@ -48,9 +67,10 @@ export function paymentInstructions(config: PaymentMethodConfig | undefined): Pa
 }
 
 export function formatPaymentMessage(orderNumber: string, amount: number, config: PaymentMethodConfig): string {
+  const payableAmount = requirePaymentAmount(amount);
   const details = paymentInstructions(config);
   if (!details.configured) throw new Error("PAYMENT_METHOD_NOT_CONFIGURED");
-  const lines = [details.displayName, `Amount due: PKR ${amount}`, `Payments for Get Free Seeds are processed by Garden Shop.`, `Recipient: ${details.recipientName}`];
+  const lines = [details.displayName, `Amount due: PKR ${payableAmount}`, `Payments for Get Free Seeds are processed by Garden Shop.`, `Recipient: ${details.recipientName}`];
   if (details.tillId) lines.push(`TILL/TIL ID: ${details.tillId}`);
   if (details.instructions) lines.push(details.instructions);
   if (details.referenceInstruction) lines.push(details.referenceInstruction);

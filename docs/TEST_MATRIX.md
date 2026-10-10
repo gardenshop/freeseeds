@@ -9,6 +9,9 @@
 | GFS-69 payment ending | immediate verified amount/method details after submission | READY_PENDING_VALUES: copy prepared internally; publication blocked by `PAYMENT_VALUES_REQUIRED` |
 | GFS-69 receipt CTA | customer-side Messenger or canonical WhatsApp destination | BLOCKED/UNVERIFIED: prior WhatsApp CTA was prohibited; Messenger customer-side open not freshly proven |
 | GFS-69 campaign attachment | exact Form `1093015800183328` on campaign/ad set/ad | BLOCKED/UNVERIFIED; draft visible, no edit/publish mutation |
+| GFS-70 payment amount source | D1 singleton, positive PKR validation, Access-protected admin edit, audit | PASS implementation/deployment; current value absent by design |
+| GFS-70 payment method gate | complete enabled method required; incomplete methods rejected | PASS tests; staging methods remain disabled/incomplete |
+| GFS-70 customer ending | real amount/method details shown immediately after submit | BLOCKED by `PAYMENT_VALUES_REQUIRED`; Meta form was not edited |
 | GFS-60 active sender authority | current state, sender, Phone Number ID, historical sender exclusion | PASS: `META_ASSETS_PENDING`, `+923044429933`, `1323932417479627` |
 | GFS-60 MCP recovery | existing profile, DevToolsActivePort, package, registration, namespace exposure | BLOCKED: local prerequisites present; Codex registration has stale WebSocket UUID and active namespace is unavailable |
 | Governance | authorized number lock, no existing number | PASS |

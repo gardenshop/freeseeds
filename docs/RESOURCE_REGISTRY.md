@@ -26,6 +26,13 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Receipt route: Messenger is the preferred path, but current customer-side CTA opening is not freshly proven. The previously observed WhatsApp CTA was noncanonical and remains prohibited.
 - Draft campaign `120255495379100054` / ad set `120255495379110054` / ad `120255495379120054` is visible as an unpublished draft. Meta UI showed Rs2,625 daily draft budget; exact canonical Form attachment was not verified.
 
+## GFS-70 Payment Path Authority
+
+- D1 source: staging `payment_configuration.advance_amount_pkr` (positive integer PKR, singleton row); current value absent.
+- Admin edit surface: Access-protected `/payment-amount`; method details remain in `/payment-settings` and D1 `payment_methods`.
+- A method can be enabled only when complete recipient name and customer-visible instructions are present; method-specific account/TILL details and optional private QR are managed by the existing fields.
+- No payment recipient, amount, QR, or customer-facing instruction value is recorded here until Garden Shop verifies it.
+
 ## GitHub
 
 - Repository: `https://github.com/gardenshop/freeseeds.git`

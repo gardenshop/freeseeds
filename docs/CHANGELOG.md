@@ -14,6 +14,12 @@
 - Read-only Ads Manager inspection found the existing campaign draft and Rs2,625 daily draft budget; no spend authorization, edit, or publication occurred. Exact Form attachment remains unverified.
 - Kept the previously observed noncanonical WhatsApp CTA excluded; Messenger remains preferred but customer-side CTA opening is not freshly proven.
 
+## Unreleased - 2026-10-10 (GFS-70)
+
+- Added `INITIAL_LAUNCH_PAYMENT_FIRST` governance: payment configuration and customer-facing receipt instructions are the only initial launch path; campaign/spend, WhatsApp API, and Lead→D1 remain out of scope.
+- Added D1 `payment_configuration.advance_amount_pkr`, positive PKR validation, Access-protected `/payment-amount`, audit logging, and complete-method gating. Deployed staging admin version `db145806-e566-466f-bab8-dc5e7b3c9bf0` and API version `3db9f3cb-297a-4fd0-b338-013b22fe6c06`.
+- Verified staging amount is unset and all payment methods remain disabled/incomplete. No real values, QR, Meta form edit, campaign edit, or spend mutation occurred.
+
 ## Unreleased - 2026-10-09 (GFS-60)
 
 - Corrected active documentation authority to `META_ASSETS_PENDING`, sender `+923044429933`, and Phone Number ID `1323932417479627`; former sender/ID remain historical only.

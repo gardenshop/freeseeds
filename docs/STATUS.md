@@ -23,6 +23,15 @@ Phone Number ID: `1323932417479627`
 - Last verified native ending exposed Messenger continuation, while its WhatsApp CTA targeted a prohibited noncanonical number; no WhatsApp CTA was used. Current customer-side CTA proof remains pending.
 - Campaign draft is visible in canonical Ad Account `1198439777611633` as `New Leads Campaign`, In draft, with a visible Rs2,625 daily draft budget. Exact Form attachment remains unverified; no edit or publish mutation was made.
 
+## GFS-70 Initial Payment Path
+
+- Rule: `INITIAL_LAUNCH_PAYMENT_FIRST`; campaign, spend, WhatsApp API, and Lead→D1 work are out of scope.
+- Cloudflare identity verified: `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- Staging D1 now has backend-managed `payment_configuration.advance_amount_pkr` and the Access-protected `/payment-amount` admin page. Current amount is `NULL`; no value was invented.
+- Existing payment methods remain disabled/incomplete: JazzCash, Easypaisa, and Bank Transfer have no recipient/instructions/QR configuration.
+- Admin UI direct access reached Cloudflare Access login rather than an authenticated `gisupp@gmail.com` page; backend/D1 state was verified with Wrangler. No payment mutation was made.
+- Form ending was not edited. Payment launch remains `PAYMENT_VALUES_REQUIRED` until verified values are supplied.
+
 ## Completed Work
 
 - Repository audit confirmed an empty directory with no Git history or legacy architecture.

@@ -78,7 +78,7 @@ describe("product readiness safeguards", () => {
 
   it("selects only a complete configured method and creates idempotent payment work", async () => {
     const statements: unknown[] = [];
-    const row = { order_number: "FS-100001", total_payable: 250, state: "DETAILS_COMPLETED", payment_id: "synthetic-payment", id: "synthetic-method", method: "JAZZCASH", display_name: "JazzCash", recipient_name: "Garden Shop", instructions: "Synthetic instruction", reference_instruction: "Use order number", enabled: 1, sort_order: 10 };
+    const row = { order_number: "FS-100001", total_payable: 0, advance_amount_pkr: 250, state: "DETAILS_COMPLETED", payment_id: "synthetic-payment", id: "synthetic-method", method: "JAZZCASH", display_name: "JazzCash", recipient_name: "Garden Shop", instructions: "Synthetic instruction", reference_instruction: "Use order number", enabled: 1, sort_order: 10 };
     const db = { prepare: (_sql: string) => { const statement = { bind: (...args: unknown[]) => { statements.push(args); return statement; }, first: async () => row }; return statement; }, batch: async (batchStatements: unknown[]) => { statements.push(batchStatements); return []; } } as unknown as D1Database;
     const result = await selectPaymentMethod(db, "synthetic-order", "JAZZCASH");
     expect(result.message).toContain("Amount due: PKR 250");
@@ -110,8 +110,9 @@ describe("product readiness safeguards", () => {
 
   it("contains all required D1 tables and no third-party CRM dependency", () => {
     const schema = readFileSync("migrations/0001_initial.sql", "utf8");
-    const migrations = schema + readFileSync("migrations/0002_payment_methods.sql", "utf8") + readFileSync("migrations/0003_lead_sources.sql", "utf8") + readFileSync("migrations/0004_lead_source_page.sql", "utf8") + readFileSync("migrations/0005_customer_whatsapp_numbers.sql", "utf8");
-    for (const table of ["customers", "leads", "lead_sources", "orders", "payments", "payment_receipts", "payment_methods", "meta_attribution", "capi_events", "whatsapp_events", "outbound_messages", "audit_log", "configuration", "outbox_jobs"]) expect(migrations).toContain(`CREATE TABLE ${table}`);
+    const migrations = schema + readFileSync("migrations/0002_payment_methods.sql", "utf8") + readFileSync("migrations/0003_lead_sources.sql", "utf8") + readFileSync("migrations/0004_lead_source_page.sql", "utf8") + readFileSync("migrations/0005_customer_whatsapp_numbers.sql", "utf8") + readFileSync("migrations/0006_payment_configuration.sql", "utf8");
+    for (const table of ["customers", "leads", "lead_sources", "orders", "payments", "payment_receipts", "payment_methods", "payment_configuration", "meta_attribution", "capi_events", "whatsapp_events", "outbound_messages", "audit_log", "configuration", "outbox_jobs"]) expect(migrations).toContain(`CREATE TABLE ${table}`);
+    expect(migrations).toContain("CHECK(advance_amount_pkr IS NULL OR (typeof(advance_amount_pkr) = 'integer' AND advance_amount_pkr > 0))");
     expect(schema).not.toContain("google");
   });
 

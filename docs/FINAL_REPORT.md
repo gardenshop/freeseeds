@@ -18,6 +18,15 @@
 - Receipt route: **BLOCKED/UNVERIFIED**. Messenger is preferred; previously observed WhatsApp CTA was prohibited and was not used.
 - Campaign: existing draft visible in Ad Account `1198439777611633`, with Rs2,625 daily draft budget. Exact Form attachment remains unverified; no edit, publish, or spend mutation occurred.
 
+## GFS-70-INITIAL-PAYMENT-PATH Update — 2026-10-10
+
+- Initial rule: **`INITIAL_LAUNCH_PAYMENT_FIRST`**.
+- Admin/D1 support: **PASS implementation**. Added positive integer `advance_amount_pkr`, Access-protected `/payment-amount`, audit logging, and complete-enabled-method gate; staging admin/API deployed.
+- Cloudflare identity: **PASS** — `gisupp@gmail.com` / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- Current amount: **MISSING** (`NULL`). JazzCash, Easypaisa, and Bank Transfer: **INCOMPLETE/DISABLED** with no real recipient/instructions/QR.
+- Admin UI: Cloudflare Access login was shown instead of an authenticated page; backend/D1 was verified through Wrangler. No mutation was made.
+- Meta ending: **READY_FOR_PAYMENT_VALUES**, not edited. Campaign and WhatsApp remain untouched.
+
 ## GFS-60-MCP-AND-ACTIVE-SENDER Update — 2026-10-09
 
 - Active state: **`META_ASSETS_PENDING`**
