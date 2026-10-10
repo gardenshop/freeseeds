@@ -52,6 +52,15 @@ export function hasCompleteEnabledPaymentMethod(configs: PaymentMethodConfig[]):
   return configs.some((config) => isPaymentMethodComplete(config));
 }
 
+export async function configuredPaymentMethodNames(db: D1Database, payableAmount?: number): Promise<string[]> {
+  if (payableAmount !== undefined && (!Number.isSafeInteger(payableAmount) || payableAmount <= 0)) return [];
+  const methods = await db.prepare("SELECT display_name, enabled, recipient_name, instructions FROM payment_methods WHERE enabled=1 ORDER BY sort_order, method").all<{ display_name: string; enabled: number; recipient_name?: string | null; instructions?: string | null }>();
+  return (methods.results ?? [])
+    .filter((row) => Number(row.enabled) === 1 && Boolean(row.recipient_name?.trim()) && Boolean(row.instructions?.trim()))
+    .map((row) => String(row.display_name).trim())
+    .filter(Boolean);
+}
+
 export function paymentInstructions(config: PaymentMethodConfig | undefined): PaymentInstructions {
   if (!config) return { method: "JAZZCASH", displayName: "Unavailable", configured: false };
   return {

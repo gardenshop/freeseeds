@@ -13,9 +13,26 @@ export const FlowSubmission = z.object({
   deliveryAddress: z.string().trim().min(5).max(500),
   nearbyPlace: z.string().trim().min(2).max(160),
   city: z.string().trim().min(2).max(100),
-  contactNumber: z.string().trim().min(7).max(30)
+  contactNumber: z.string().trim().min(7).max(30),
+  productCode: z.string().trim().min(1).max(100).optional(),
+  fertilizerSelected: z.boolean().optional(),
+  province: z.string().trim().min(1).max(100).optional()
 }).strict();
 export type FlowSubmission = z.infer<typeof FlowSubmission>;
+export const FlowCustomerDetails = FlowSubmission.pick({
+  fullName: true,
+  deliveryAddress: true,
+  nearbyPlace: true,
+  city: true,
+  contactNumber: true
+}).strict();
+export type FlowCustomerDetails = z.infer<typeof FlowCustomerDetails>;
+export const FlowOrderSelection = z.object({
+  productCode: z.string().trim().min(1).max(100),
+  province: z.string().trim().min(1).max(100),
+  fertilizerSelected: z.boolean()
+}).strict();
+export type FlowOrderSelection = z.infer<typeof FlowOrderSelection>;
 export const InstantFormSubmission = FlowSubmission.extend({
   leadId: z.string().trim().min(1).max(100),
   formId: z.string().trim().min(1).max(100),

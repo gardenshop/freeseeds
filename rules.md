@@ -22,6 +22,7 @@
 
 - `META_FORM_LAUNCH_FIRST`: temporary lead/order-request launch uses the canonical Meta Instant Form and native Leads Center; it does not depend on the WhatsApp system-user token, `/register`, `subscribed_apps`, WhatsApp webhook, or Lead→D1 realtime integration. The separate WhatsApp API track remains `WHATSAPP_API_ENHANCEMENT_PENDING`.
 - `INITIAL_LAUNCH_PAYMENT_FIRST`: the first customer launch gate is authoritative Garden Shop payment configuration and immediate post-submit payment/receipt instructions. It does not authorize campaign/ad edits, paid spend, WhatsApp API work, or Lead→D1 realtime work. Payment amount and at least one complete enabled method must come from D1/admin; never use placeholders, synthetic values, Rs. 0, or Hoja values.
+- `WHATSAPP_FLOW_CTWA_LAUNCH_FIRST`: the WhatsApp order path begins from a customer-initiated Click-to-WhatsApp conversation. Use the encrypted Flow endpoint, server-side catalog/province quote, optional fertilizer upsell, order summary, configured payment buttons/details, and same-chat receipt. Do not rely on Instant Form phone capture as WhatsApp consent or a proactive messaging window.
 - Temporary primary acquisition channel is Meta Instant Form; target primary after approval is WhatsApp; Facebook Messenger is secondary support and Instagram DM automation is deferred.
 - Native Instant Form Messenger continuation is available when the customer selects Meta's checked Messenger consent option and Meta creates the messaging context. Form completion alone still does not prove a customer-side message was received; verify the native session/message separately.
 - An Instant Form customer WhatsApp/contact number is a recipient value (`CUSTOMER_WHATSAPP_NUMBER`), never the GFS business sender. The current business sender is `+923044429933`; superseded `+923328883383`, old Phone ID `1429127796940691`, and CTA target `923124093162` are prohibited for runtime.
@@ -32,12 +33,14 @@
 - All allowed channel sources (`META_INSTANT_FORM`, `WHATSAPP`, `FACEBOOK_MESSENGER`, `INSTAGRAM_DM`) feed the same D1 customer/lead/order/payment workflow. Do not create a separate CRM or channel-specific business logic.
 - Meta advertising, when explicitly authorized, uses the Instant Form until WhatsApp production sender approval.
 - Offer: Get 5 Seed Packs FREE; seed price Rs. 0; coverage approximately 2 to 3 marla depending on crop, spacing and growing method; one promotional set per household per campaign.
-- Required WhatsApp Flow fields are exactly: Full Name; Complete Delivery Address; Nearby Famous Place; City; Contact Number.
+- Required WhatsApp Flow customer data fields remain exactly: Full Name; Complete Delivery Address; Nearby Famous Place; City; Contact Number. Separate commerce fields may be added for product, province, fertilizer choice, quote, payment method, and receipt workflow; these are not customer-identity fields.
 - Payment methods are JazzCash, Easypaisa, and Bank Transfer. Garden Shop recipient values must be verified before activation; never guess account numbers, IBANs, wallet numbers, merchant IDs, or credentials.
 - Customer-visible payment configuration is backend-managed in D1 `payment_methods`; QR binaries are private R2 objects. Do not hardcode recipient values, TILL/TIL IDs, QR keys, or payment instructions in source, Worker environment variables, Flow JSON, templates, or frontend strings.
 - Admin payment settings are managed only through the existing `/payment-settings` UI and payment-method APIs; incomplete methods remain disabled, synthetic test values are restored, and private QR previews never become public.
 - Payment credentials and provider secrets remain Cloudflare secrets and are never stored in customer-visible configuration.
 - Do not send a payment request when payable amount or Garden Shop recipient configuration is absent. Exact gate: `PAYMENT_AMOUNT_NOT_CONFIGURED`; never send a Rs. 0 request or guess payment values.
+- Dynamic WhatsApp quotes are server-authoritative: catalog product price + optional fertilizer price + selected province delivery fee = total payable. Never trust client-supplied price or total. Catalog and province rates are D1/admin-managed; workbook imports require verified source content.
+- CTWA customer-initiated messages use the normal 24-hour service window; qualifying CTWA entry points may provide Meta's free-entry-point window. Instant Form leads do not authorize automatic WhatsApp messages without supported consent/template rules.
 - Creeper Seeds is not the customer payment recipient. JazzCash, Easypaisa, and Bank QR/TILL payment recipients remain Garden Shop, backend-controlled, manually reviewed, and disabled until verified values are supplied.
 
 ## WhatsApp Number Lock

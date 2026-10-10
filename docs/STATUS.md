@@ -32,6 +32,15 @@ Phone Number ID: `1323932417479627`
 - Admin UI direct access reached Cloudflare Access login rather than an authenticated `gisupp@gmail.com` page; backend/D1 state was verified with Wrangler. No payment mutation was made.
 - Form ending was not edited. Payment launch remains `PAYMENT_VALUES_REQUIRED` until verified values are supplied.
 
+## GFS-71 WhatsApp Flow Order Track
+
+- Rule: `WHATSAPP_FLOW_CTWA_LAUNCH_FIRST`; campaign/ad/budget work remains untouched.
+- Canonical Meta Form read-only inventory confirms Form `1093015800183328` / `Free Seeds 05-10-2026` is active with one lead; no Form mutation was made.
+- Product workbook: `PRODUCT_WORKBOOK_NOT_FOUND`; no products, fertilizer prices, or province rates were invented or imported.
+- Backend: dynamic catalog/province/order_items schema, server-side quote endpoint, encrypted Flow endpoint, dynamic order persistence, payment selection using persisted `orders.total_payable`, and Access-protected catalog admin controls implemented and deployed to staging.
+- Staging D1 migrations `0007_dynamic_catalog.sql` and `0008_catalog_category.sql` applied; catalog/rates remain empty/disabled.
+- Flow health smoke: PASS. Encrypted protocol tests: PASS. Live encrypted Flow is gated by missing `FLOW_PRIVATE_KEY` and Meta Flow publication/registration.
+
 ## Completed Work
 
 - Repository audit confirmed an empty directory with no Git history or legacy architecture.

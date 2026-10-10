@@ -1,11 +1,40 @@
 import { Hono } from "hono";
-import { canTransition, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, isPaymentMethodComplete, normalizePaymentMethodRow, paymentInstructions, PaymentMethod, storePaymentQr, validatePaymentAmount } from "@gfs/core";
+import { canTransition, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, isPaymentMethodComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, paymentInstructions, PaymentMethod, storePaymentQr, validatePaymentAmount } from "@gfs/core";
 
 type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string } };
 const app = new Hono<Env>();
 
 function authorized(c: { req: { header(name: string): string | undefined }; env: Env["Bindings"] }): boolean {
   return c.req.header("cf-access-authenticated-user-email") === c.env.ADMIN_EMAIL;
+}
+
+function productView(row: Record<string, unknown>) {
+  return {
+    id: String(row.id),
+    code: String(row.code),
+    name: String(row.name),
+    category: String(row.category ?? ""),
+    pricePkr: Number(row.price_pkr),
+    fertilizerPricePkr: row.fertilizer_price_pkr == null ? null : Number(row.fertilizer_price_pkr),
+    active: Number(row.enabled) === 1
+  };
+}
+
+function rateView(row: Record<string, unknown>) {
+  return {
+    id: String(row.id),
+    province: String(row.province),
+    deliveryFeePkr: Number(row.delivery_fee_pkr),
+    active: Number(row.enabled) === 1
+  };
+}
+
+function auditStatement(db: D1Database, action: string, entityType: string, entityId: string, metadata: Record<string, unknown>, now: string, actor: string) {
+  return db.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), action, "ADMIN", actor, entityType, entityId, crypto.randomUUID(), JSON.stringify(metadata), now);
+}
+
+function catalogError(error: unknown): string {
+  return error instanceof Error && /^[A-Z0-9_]{3,80}$/.test(error.message) ? error.message : "CATALOG_VALIDATION_FAILED";
 }
 
 app.use("*", async (c, next) => {
@@ -17,7 +46,7 @@ app.get("/health", async (c) => {
   const configured = c.env.DB ? await c.env.DB.prepare("SELECT COUNT(*) AS count FROM payment_methods WHERE enabled=1 AND recipient_name IS NOT NULL AND instructions IS NOT NULL AND EXISTS (SELECT 1 FROM payment_configuration WHERE id=1 AND advance_amount_pkr > 0)").first<{ count: number }>() : null;
   return c.json({ ok: true, service: "getfreeseeds-admin", state: c.env.DEPLOYMENT_STATE, paymentConfigured: Number(configured?.count ?? 0) > 0 });
 });
-app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav><a href='/payment-settings'>Payment Settings</a> | <a href='/payment-amount'>Advance Amount</a> | Dashboard | Leads | Meta Instant Form | Orders | Payment Verification | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
+app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav><a href='/payment-settings'>Payment Settings</a> | <a href='/payment-amount'>Advance Amount</a> | <a href='/catalog'>Catalog</a> | Dashboard | Leads | Meta Instant Form | Orders | Payment Verification | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
 
 app.get("/payment-settings", (c) => c.html(`<!doctype html><html><head><meta charset="utf-8"><title>Payment Settings | Get Free Seeds</title><style>body{font:16px system-ui;max-width:1100px;margin:2rem auto;padding:0 1rem}nav{margin-bottom:1rem}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}.card{border:1px solid #ccc;border-radius:8px;padding:1rem}.card h2{margin-top:0}.card label{display:block;margin:.6rem 0}.card input,.card textarea{box-sizing:border-box;width:100%;padding:.5rem}.status{font-size:.9rem;margin:.5rem 0}.configured{color:green}.incomplete{color:#a15c00}.error{color:#b00020}.qr{max-width:180px;max-height:180px;display:block;margin-top:.5rem}.actions{display:flex;gap:.5rem;align-items:center}button{padding:.5rem .8rem}</style></head><body><nav><a href='/'>Admin home</a></nav><h1>Garden Shop Payment Settings</h1><p>Values are backend-controlled. Disabled or incomplete methods cannot send payment instructions.</p><div id="methods" class="grid">Loading...</div><script>
 const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -26,9 +55,126 @@ async function load(){const r=await fetch('/api/payment-methods');const d=await 
 load().catch(()=>document.querySelector('#methods').textContent='Payment settings unavailable');</script></body></html>`));
 
 app.get("/payment-amount", (c) => c.html(`<!doctype html><html><head><meta charset="utf-8"><title>Advance Amount | Get Free Seeds</title><style>body{font:16px system-ui;max-width:700px;margin:2rem auto;padding:0 1rem}label{display:block;margin:1rem 0}input{box-sizing:border-box;width:100%;padding:.6rem}button{padding:.6rem .9rem}.status{margin:1rem 0}.error{color:#b00020}.ok{color:green}</style></head><body><nav><a href='/'>Admin home</a> | <a href='/payment-settings'>Payment methods</a></nav><h1>Authoritative advance payment</h1><p>Set the positive PKR delivery/advance amount used for new payment requests. At least one complete enabled payment method is required.</p><label>Amount (PKR)<input id="amount" type="number" min="1" step="1" inputmode="numeric"></label><button id="save">Save amount</button><div id="status" class="status"></div><script>
-const amount=document.querySelector('#amount');const status=document.querySelector('#status');
-async function load(){const r=await fetch('/api/payment-configuration');const d=await r.json();amount.value=d.advanceAmountPkr??'';status.textContent=d.paymentMethodsConfigured?'':'Configure a complete enabled payment method before saving an amount.';status.className='status '+(d.paymentMethodsConfigured?'':'error')}
-document.querySelector('#save').onclick=async()=>{const value=Number(amount.value);const r=await fetch('/api/payment-configuration',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({advanceAmountPkr:value})});const d=await r.json();status.textContent=r.ok?'Saved':'Unable to save: '+(d.error||'validation failed');status.className='status '+(r.ok?'ok':'error');if(r.ok)await load()};load().catch(()=>status.textContent='Payment configuration unavailable');</script></body></html>`));
+ const amount=document.querySelector('#amount');const status=document.querySelector('#status');
+ async function load(){const r=await fetch('/api/payment-configuration');const d=await r.json();amount.value=d.advanceAmountPkr??'';status.textContent=d.paymentMethodsConfigured?'':'Configure a complete enabled payment method before saving an amount.';status.className='status '+(d.paymentMethodsConfigured?'':'error')}
+ document.querySelector('#save').onclick=async()=>{const value=Number(amount.value);const r=await fetch('/api/payment-configuration',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({advanceAmountPkr:value})});const d=await r.json();status.textContent=r.ok?'Saved':'Unable to save: '+(d.error||'validation failed');status.className='status '+(r.ok?'ok':'error');if(r.ok)await load()};load().catch(()=>status.textContent='Payment configuration unavailable');</script></body></html>`));
+
+app.get("/catalog", (c) => c.html(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Catalog | Get Free Seeds</title><style>body{font:16px system-ui;max-width:1100px;margin:2rem auto;padding:0 1rem}nav{margin-bottom:1rem}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}.card{border:1px solid #ccc;border-radius:8px;padding:1rem}.card h2{margin-top:0}label{display:block;margin:.6rem 0}input{box-sizing:border-box;width:100%;padding:.5rem}button{padding:.5rem .8rem}.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.5rem;align-items:end;border-top:1px solid #ddd;padding:1rem 0}.status{margin:.5rem 0}.error{color:#b00020}.ok{color:green}</style></head><body><nav><a href='/'>Admin home</a> | <a href='/payment-settings'>Payment methods</a></nav><h1>Catalog and delivery rates</h1><p>Only values saved here are used for dynamic quotes. New entries start disabled.</p><div class="grid"><section class="card"><h2>Products</h2><form id="product-form"><label>Code<input name="code" required></label><label>Name<input name="name" required></label><label>Category<input name="category" required></label><label>Price (PKR)<input name="pricePkr" type="number" min="1" step="1" required></label><label>Fertilizer price (PKR, optional)<input name="fertilizerPricePkr" type="number" min="1" step="1"></label><label><input name="active" type="checkbox"> Active</label><button>Save new product</button></form><div id="products" class="status">Loading...</div></section><section class="card"><h2>Province delivery rates</h2><form id="rate-form"><label>Province<input name="province" required></label><label>Delivery fee (PKR)<input name="deliveryFeePkr" type="number" min="1" step="1" required></label><label><input name="active" type="checkbox"> Active</label><button>Save new rate</button></form><div id="rates" class="status">Loading...</div></section></div><script>
+ const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const value=(form,name)=>form.elements[name].type==='checkbox'?form.elements[name].checked:form.elements[name].value;
+ const payload=(form,names)=>Object.fromEntries(names.map((name)=>[name,value(form,name)]));
+ async function request(url,method,body){const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.error||'Save failed');return d}
+  function productForm(item){return '<form class="row" data-product="'+esc(item.id)+'"><input name="code" value="'+esc(item.code)+'" required><input name="name" value="'+esc(item.name)+'" required><input name="category" value="'+esc(item.category)+'" required><input name="pricePkr" type="number" min="1" step="1" value="'+item.pricePkr+'" required><input name="fertilizerPricePkr" type="number" min="1" step="1" value="'+(item.fertilizerPricePkr??'')+'"><label><input name="active" type="checkbox" '+(item.active?'checked':'')+'> Active</label><button>Save</button><button type="button" data-toggle>'+(item.active?'Disable':'Enable')+'</button><span data-status></span></form>'}
+  function rateForm(item){return '<form class="row" data-rate="'+esc(item.id)+'"><input name="province" value="'+esc(item.province)+'" required><input name="deliveryFeePkr" type="number" min="1" step="1" value="'+item.deliveryFeePkr+'" required><label><input name="active" type="checkbox" '+(item.active?'checked':'')+'> Active</label><button>Save</button><button type="button" data-toggle>'+(item.active?'Disable':'Enable')+'</button><span data-status></span></form>'}
+ async function load(){const [products,rates]=await Promise.all([fetch('/api/catalog/products').then((r)=>r.json()),fetch('/api/catalog/province-delivery-rates').then((r)=>r.json())]);document.querySelector('#products').innerHTML=(products.products||[]).map(productForm).join('')||'No products configured.';document.querySelector('#rates').innerHTML=(rates.rates||[]).map(rateForm).join('')||'No delivery rates configured.';for(const form of document.querySelectorAll('[data-product]'))bind(form,'product');for(const form of document.querySelectorAll('[data-rate]'))bind(form,'rate')}
+  function bind(form,type){const names=type==='product'?['code','name','category','pricePkr','fertilizerPricePkr','active']:['province','deliveryFeePkr','active'];const status=form.querySelector('[data-status]');const toggle=form.querySelector('[data-toggle]');form.onsubmit=async(e)=>{e.preventDefault();try{await request('/api/catalog/'+(type==='product'?'products/':'province-delivery-rates/')+form.dataset[type], 'PUT', payload(form,names));status.textContent='Saved';status.className='ok';toggle.textContent=form.elements.active.checked?'Disable':'Enable';}catch(error){status.textContent=error.message;status.className='error'}};toggle.onclick=()=>{form.elements.active.checked=!form.elements.active.checked;form.requestSubmit()}}
+ document.querySelector('#product-form').onsubmit=async(e)=>{e.preventDefault();const form=e.currentTarget;try{await request('/api/catalog/products','POST',payload(form,['code','name','category','pricePkr','fertilizerPricePkr','active']));form.reset();await load()}catch(error){alert(error.message)}};
+ document.querySelector('#rate-form').onsubmit=async(e)=>{e.preventDefault();const form=e.currentTarget;try{await request('/api/catalog/province-delivery-rates','POST',payload(form,['province','deliveryFeePkr','active']));form.reset();await load()}catch(error){alert(error.message)}};load().catch(()=>{document.querySelector('#products').textContent='Catalog unavailable';document.querySelector('#rates').textContent='Catalog unavailable'});
+ </script></body></html>`));
+app.get("/api/catalog/products", async (c) => {
+  if (!c.env.DB) return c.json({ products: [] });
+  const result = await c.env.DB.prepare("SELECT id,code,name,category,price_pkr,fertilizer_price_pkr,enabled FROM products ORDER BY category,name,code").all();
+  return c.json({ products: result.results.map((row) => productView(row as Record<string, unknown>)) });
+});
+
+app.get("/api/catalog/province-delivery-rates", async (c) => {
+  if (!c.env.DB) return c.json({ rates: [] });
+  const result = await c.env.DB.prepare("SELECT id,province,delivery_fee_pkr,enabled FROM province_delivery_rates ORDER BY province").all();
+  return c.json({ rates: result.results.map((row) => rateView(row as Record<string, unknown>)) });
+});
+
+app.post("/api/catalog/products", async (c) => {
+  let product;
+  try {
+    product = parseProductInput(await c.req.json<Record<string, unknown>>());
+  } catch (error) {
+    return c.json({ error: catalogError(error) }, 400);
+  }
+  const id = crypto.randomUUID();
+  if (!c.env.DB) return c.json({ ok: true, simulated: true, product: { id, ...product } });
+  const now = new Date().toISOString();
+  try {
+    await c.env.DB.batch([
+      c.env.DB.prepare("INSERT INTO products (id,code,name,category,price_pkr,fertilizer_price_pkr,enabled,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(id, product.code, product.name, product.category, product.pricePkr, product.fertilizerPricePkr, product.active ? 1 : 0, now, now),
+      auditStatement(c.env.DB, "PRODUCT_CREATED", "PRODUCT", id, { code: product.code, category: product.category, pricePkr: product.pricePkr, fertilizerPricePkr: product.fertilizerPricePkr, active: product.active }, now, c.env.ADMIN_EMAIL)
+    ]);
+  } catch {
+    return c.json({ error: "PRODUCT_ALREADY_EXISTS_OR_WRITE_FAILED" }, 409);
+  }
+  return c.json({ ok: true, product: { id, ...product } });
+});
+
+app.on(["POST", "PUT"], "/api/catalog/products/:id", async (c) => {
+  if (!c.env.DB) return c.json({ error: "CATALOG_UNAVAILABLE" }, 503);
+  const id = c.req.param("id");
+  const existing = await c.env.DB.prepare("SELECT id,code,name,category,price_pkr,fertilizer_price_pkr,enabled FROM products WHERE id=?").bind(id).first<Record<string, unknown>>();
+  if (!existing) return c.json({ error: "PRODUCT_NOT_FOUND" }, 404);
+  try {
+    const body = await c.req.json<Record<string, unknown>>();
+    const product = parseProductInput({
+      code: body.code ?? existing.code,
+      name: body.name ?? existing.name,
+      category: body.category ?? existing.category,
+      pricePkr: body.pricePkr ?? body.price_pkr ?? existing.price_pkr,
+      fertilizerPricePkr: Object.prototype.hasOwnProperty.call(body, "fertilizerPricePkr") ? body.fertilizerPricePkr : Object.prototype.hasOwnProperty.call(body, "fertilizer_price_pkr") ? body.fertilizer_price_pkr : existing.fertilizer_price_pkr,
+      active: body.active ?? body.enabled ?? Number(existing.enabled) === 1
+    });
+    const now = new Date().toISOString();
+    await c.env.DB.batch([
+      c.env.DB.prepare("UPDATE products SET code=?,name=?,category=?,price_pkr=?,fertilizer_price_pkr=?,enabled=?,updated_at=? WHERE id=?").bind(product.code, product.name, product.category, product.pricePkr, product.fertilizerPricePkr, product.active ? 1 : 0, now, id),
+      auditStatement(c.env.DB, "PRODUCT_UPDATED", "PRODUCT", id, { code: product.code, category: product.category, pricePkr: product.pricePkr, fertilizerPricePkr: product.fertilizerPricePkr, active: product.active }, now, c.env.ADMIN_EMAIL)
+    ]);
+    return c.json({ ok: true, product: { id, ...product } });
+  } catch (error) {
+    if (error instanceof Error && /^CATALOG_|^PRODUCT_|^FERTILIZER_/.test(error.message)) return c.json({ error: catalogError(error) }, 400);
+    return c.json({ error: "PRODUCT_ALREADY_EXISTS_OR_WRITE_FAILED" }, 409);
+  }
+});
+
+app.post("/api/catalog/province-delivery-rates", async (c) => {
+  let rate;
+  try {
+    rate = parseProvinceDeliveryRateInput(await c.req.json<Record<string, unknown>>());
+  } catch (error) {
+    return c.json({ error: catalogError(error) }, 400);
+  }
+  const id = crypto.randomUUID();
+  if (!c.env.DB) return c.json({ ok: true, simulated: true, rate: { id, ...rate } });
+  const now = new Date().toISOString();
+  try {
+    await c.env.DB.batch([
+      c.env.DB.prepare("INSERT INTO province_delivery_rates (id,province,delivery_fee_pkr,enabled,created_at,updated_at) VALUES (?,?,?,?,?,?)").bind(id, rate.province, rate.deliveryFeePkr, rate.active ? 1 : 0, now, now),
+      auditStatement(c.env.DB, "PROVINCE_DELIVERY_RATE_CREATED", "PROVINCE_DELIVERY_RATE", id, { province: rate.province, deliveryFeePkr: rate.deliveryFeePkr, active: rate.active }, now, c.env.ADMIN_EMAIL)
+    ]);
+  } catch {
+    return c.json({ error: "PROVINCE_ALREADY_EXISTS_OR_WRITE_FAILED" }, 409);
+  }
+  return c.json({ ok: true, rate: { id, ...rate } });
+});
+
+app.on(["POST", "PUT"], "/api/catalog/province-delivery-rates/:id", async (c) => {
+  if (!c.env.DB) return c.json({ error: "CATALOG_UNAVAILABLE" }, 503);
+  const id = c.req.param("id");
+  const existing = await c.env.DB.prepare("SELECT id,province,delivery_fee_pkr,enabled FROM province_delivery_rates WHERE id=?").bind(id).first<Record<string, unknown>>();
+  if (!existing) return c.json({ error: "PROVINCE_DELIVERY_RATE_NOT_FOUND" }, 404);
+  try {
+    const body = await c.req.json<Record<string, unknown>>();
+    const rate = parseProvinceDeliveryRateInput({
+      province: body.province ?? existing.province,
+      deliveryFeePkr: body.deliveryFeePkr ?? body.delivery_fee_pkr ?? existing.delivery_fee_pkr,
+      active: body.active ?? body.enabled ?? Number(existing.enabled) === 1
+    });
+    const now = new Date().toISOString();
+    await c.env.DB.batch([
+      c.env.DB.prepare("UPDATE province_delivery_rates SET province=?,delivery_fee_pkr=?,enabled=?,updated_at=? WHERE id=?").bind(rate.province, rate.deliveryFeePkr, rate.active ? 1 : 0, now, id),
+      auditStatement(c.env.DB, "PROVINCE_DELIVERY_RATE_UPDATED", "PROVINCE_DELIVERY_RATE", id, { province: rate.province, deliveryFeePkr: rate.deliveryFeePkr, active: rate.active }, now, c.env.ADMIN_EMAIL)
+    ]);
+    return c.json({ ok: true, rate: { id, ...rate } });
+  } catch (error) {
+    if (error instanceof Error && /^CATALOG_|^DELIVERY_|^PROVINCE_/.test(error.message)) return c.json({ error: catalogError(error) }, 400);
+    return c.json({ error: "PROVINCE_ALREADY_EXISTS_OR_WRITE_FAILED" }, 409);
+  }
+});
 
 app.get("/api/leads", async (c) => {
   if (!c.env.DB) return c.json({ leads: [] });

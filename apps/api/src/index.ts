@@ -1,5 +1,7 @@
 import { Hono } from "hono";
-import { createWhatsAppProvider, isAllowedInstantFormLead, isTerminalOutboxStatus, MetaCapiProvider, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInstantFormSubmission, persistWebhookRecords, retryDelaySeconds, selectPaymentMethod, storeReceipt } from "@gfs/core";
+import type { Context } from "hono";
+import { applyFertilizerDecision, createWhatsAppProvider, decryptMetaFlowRequest, encryptMetaFlowResponse, getPersistedOrderSummary, isAllowedInstantFormLead, isTerminalOutboxStatus, MetaCapiProvider, MetaFlowEnvelope, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInstantFormSubmission, persistWebhookRecords, quoteOrder, retryDelaySeconds, selectPaymentMethod, storeReceipt } from "@gfs/core";
+import { handleMetaFlowPayload } from "./flow-endpoint";
 
 type Env = {
   Bindings: {
@@ -20,6 +22,7 @@ type Env = {
     META_LEAD_ACCESS_TOKEN?: string;
     META_PAGE_ID?: string;
     META_INSTANT_FORM_ID?: string;
+    FLOW_PRIVATE_KEY?: string;
   };
 };
 
@@ -48,6 +51,35 @@ app.post("/webhooks/whatsapp", async (c) => {
   const correlationId = c.req.header("x-correlation-id") ?? crypto.randomUUID();
   const eventCount = c.env.DB ? await persistWebhookRecords(c.env.DB, payload, raw, correlationId) : 0;
   return c.json({ accepted: true, eventCount });
+});
+
+app.post("/webhooks/whatsapp/flows", async (c) => {
+  let envelope: MetaFlowEnvelope;
+  try {
+    envelope = await c.req.json<MetaFlowEnvelope>();
+  } catch {
+    return c.json({ error: "INVALID_FLOW_JSON" }, 400);
+  }
+  if (envelope && envelope.health_check === "ping") return c.json({ data: { status: "active" } });
+  if (!c.env.FLOW_PRIVATE_KEY) return c.json({ error: "FLOW_PRIVATE_KEY_NOT_CONFIGURED" }, 503);
+  let decrypted: Awaited<ReturnType<typeof decryptMetaFlowRequest>>;
+  try {
+    decrypted = await decryptMetaFlowRequest(envelope, c.env.FLOW_PRIVATE_KEY);
+  } catch {
+    return c.json({ error: "FLOW_DECRYPTION_FAILED" }, 400);
+  }
+  try {
+    const response = await handleMetaFlowPayload(decrypted.payload, c.env.DB);
+    const encrypted = await encryptMetaFlowResponse(response, decrypted.aesKey, decrypted.initialVector);
+    return c.text(encrypted, 200, { "content-type": "text/plain; charset=UTF-8" });
+  } catch {
+    try {
+      const encrypted = await encryptMetaFlowResponse({ version: "3.0", error: "FLOW_RESPONSE_FAILED" }, decrypted.aesKey, decrypted.initialVector);
+      return c.text(encrypted, 200, { "content-type": "text/plain; charset=UTF-8" });
+    } catch {
+      return c.json({ error: "FLOW_RESPONSE_FAILED" }, 500);
+    }
+  }
 });
 
 app.get("/webhooks/meta/instant-form", (c) => {
@@ -91,6 +123,19 @@ app.post("/flows/get-free-seeds", async (c) => {
     } : undefined;
     if (!c.env.DB) return c.json({ screen: "SUBMIT", data: { accepted: true, mode: "mock" } });
     const result = await persistFlowSubmission(c.env.DB, submission, attribution);
+    const orderSummary = result.quote ? {
+      currency: result.quote.currency,
+      orderId: result.orderId,
+      orderNumber: result.orderNumber,
+      productCode: result.quote.productCode,
+      province: result.quote.province,
+      fertilizerSelected: result.quote.fertilizerSelected,
+      items: result.quote.items,
+      subtotalPkr: result.quote.subtotalPkr,
+      deliveryPkr: result.quote.deliveryFeePkr,
+      totalPayablePkr: result.quote.totalPayablePkr,
+      paymentMethods: result.quote.paymentMethods
+    } : await getPersistedOrderSummary(c.env.DB, result.orderId);
     let queued = false;
     try {
       if (c.env.EVENTS) {
@@ -100,22 +145,52 @@ app.post("/flows/get-free-seeds", async (c) => {
     } catch {
       // The durable outbox remains authoritative when Queue delivery is temporarily unavailable.
     }
-    return c.json({ screen: "SUBMIT", data: { accepted: true, orderNumber: result.orderNumber, capiQueue: queued ? "QUEUED" : "DEFERRED" } });
+    return c.json({ screen: "PAYMENT_METHOD", data: { accepted: true, orderId: result.orderId, orderNumber: result.orderNumber, orderSummary, paymentMethods: orderSummary.paymentMethods, paymentMethodOptions: orderSummary.paymentMethods.map((name) => ({ id: name, title: name })), capiQueue: queued ? "QUEUED" : "DEFERRED" } });
   } catch (error) {
     return c.json({ error: error instanceof Error ? error.message : "INVALID_FLOW_SUBMISSION" }, 400);
   }
 });
 
-app.post("/payments/:orderId/select", async (c) => {
+app.post("/api/orders/quote", async (c) => {
+  if (!c.env.DB) return c.json({ error: "QUOTE_UNAVAILABLE" }, 503);
+  try {
+    const quote = await quoteOrder(c.env.DB, await c.req.json());
+    const orderSummary = { currency: quote.currency, productCode: quote.productCode, province: quote.province, fertilizerSelected: quote.fertilizerSelected, items: quote.items, subtotalPkr: quote.subtotalPkr, deliveryPkr: quote.deliveryFeePkr, totalPayablePkr: quote.totalPayablePkr };
+    return c.json({ ...quote, orderSummary, paymentMethodOptions: quote.paymentMethods.map((name) => ({ id: name, title: name })) });
+  } catch (error) {
+    const code = error instanceof Error ? error.message : "QUOTE_FAILED";
+    return c.json({ error: code }, code === "PRODUCT_NOT_FOUND" || code === "PROVINCE_DELIVERY_RATE_NOT_FOUND" ? 404 : 400);
+  }
+});
+
+const fertilizerDecisionHandler = async (c: Context<Env>) => {
+  if (!c.env.DB) return c.json({ error: "ORDER_INTERACTION_UNAVAILABLE" }, 503);
+  try {
+    const body = await c.req.json<unknown>();
+    const result = await applyFertilizerDecision(c.env.DB, c.req.param("orderId") ?? "", body);
+    return c.json({ ok: true, orderId: result.orderId, orderNumber: result.orderNumber, fertilizerSelected: result.fertilizerSelected, idempotent: result.idempotent, orderSummary: result.orderSummary, paymentMethods: result.paymentMethods, paymentMethodOptions: result.paymentMethods.map((name) => ({ id: name, title: name })) });
+  } catch (error) {
+    const code = error instanceof Error ? error.message : "FERTILIZER_DECISION_FAILED";
+    return c.json({ error: code }, code === "ORDER_NOT_FOUND" ? 404 : 400);
+  }
+};
+app.post("/api/orders/:orderId/fertilizer", fertilizerDecisionHandler);
+app.post("/orders/:orderId/fertilizer", fertilizerDecisionHandler);
+
+const paymentSelectionHandler = async (c: Context<Env>) => {
   if (!c.env.DB) return c.json({ error: "PAYMENT_CONFIGURATION_UNAVAILABLE" }, 503);
   try {
     const body = await c.req.json<{ method: string }>();
-    const result = await selectPaymentMethod(c.env.DB, c.req.param("orderId"), PaymentMethod.parse(body.method.toUpperCase()));
-    return c.json({ ok: true, orderNumber: result.orderNumber, amount: result.amount, method: result.config.method, message: result.message, qrAvailable: Boolean(result.config.qrR2Key) });
+    const orderId = c.req.param("orderId") ?? "";
+    const result = await selectPaymentMethod(c.env.DB, orderId, PaymentMethod.parse(body.method.toUpperCase()));
+    const orderSummary = await getPersistedOrderSummary(c.env.DB, orderId);
+    return c.json({ ok: true, orderNumber: result.orderNumber, amount: result.amount, method: result.config.method, message: result.message, qrAvailable: Boolean(result.config.qrR2Key), orderSummary, paymentMethods: orderSummary.paymentMethods, paymentMethodOptions: orderSummary.paymentMethods.map((name) => ({ id: name, title: name })) });
   } catch (error) {
     return c.json({ error: error instanceof Error ? error.message : "PAYMENT_METHOD_SELECTION_FAILED" }, 400);
   }
-});
+};
+app.post("/payments/:orderId/select", paymentSelectionHandler);
+app.post("/api/payments/:orderId/select", paymentSelectionHandler);
 
 app.post("/payments/:orderId/i-have-paid", async (c) => {
   if (!c.env.DB) return c.json({ error: "PAYMENT_CONFIGURATION_UNAVAILABLE" }, 503);
@@ -136,6 +211,8 @@ app.post("/receipts/ingest", async (c) => {
   const record = await c.env.DB.prepare("SELECT o.order_number, o.state, p.id AS payment_id FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=? AND p.id=?").bind(body.orderId, body.paymentId).first<{ order_number: string; state: string; payment_id: string }>();
   if (!record) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
   if (!["PAYMENT_PENDING", "RECEIPT_SUBMITTED", "PAYMENT_REVIEW"].includes(record.state)) return c.json({ error: "ORDER_NOT_ACCEPTING_RECEIPT" }, 409);
+  const existingReceipt = await c.env.DB.prepare("SELECT r2_object_key, sha256 FROM payment_receipts WHERE provider_media_id=? AND payment_id=? AND order_id=?").bind(body.mediaId, body.paymentId, body.orderId).first<{ r2_object_key: string; sha256: string }>();
+  if (existingReceipt) return c.json({ ok: true, alreadyAssociated: true, reviewState: "REVIEW", receiptKey: existingReceipt.r2_object_key, sha256: existingReceipt.sha256 });
   try {
     const media = await createWhatsAppProvider(c.env.WHATSAPP_PROVIDER, { enabled: c.env.META_PROVIDER_ENABLED === "true", graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", accessToken: c.env.META_ACCESS_TOKEN, phoneNumberId: c.env.META_PHONE_NUMBER_ID, verifyToken: c.env.WEBHOOK_VERIFY_TOKEN, appSecret: c.env.META_APP_SECRET }).downloadMedia(body.mediaId);
     const stored = await storeReceipt(c.env.RECEIPTS, record.order_number, media);

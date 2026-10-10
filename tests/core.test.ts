@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FlowSubmission, MockWhatsAppProvider, canTransition, createLeadEvent, createPurchaseEvent, eventId, formatPaymentMessage, hasCompleteEnabledPaymentMethod, nextOrderNumber, normalizeContactNumber, paymentInstructions, requirePaymentAmount, resolveWhatsAppRecipients, validatePaymentAmount, validateReceipt } from "@gfs/core";
+import { FlowSubmission, MockWhatsAppProvider, canTransition, createLeadEvent, createPurchaseEvent, eventId, formatPaymentMessage, hasCompleteEnabledPaymentMethod, nextOrderNumber, normalizeContactNumber, parseProductInput, parseProvinceDeliveryRateInput, paymentInstructions, requirePaymentAmount, resolveWhatsAppRecipients, validatePaymentAmount, validatePositiveInteger, validateReceipt } from "@gfs/core";
 
 describe("Get Free Seeds domain", () => {
   it("requires exactly five Flow fields", () => {
@@ -36,6 +36,14 @@ describe("Get Free Seeds domain", () => {
   it("requires at least one complete enabled payment method", () => {
     expect(hasCompleteEnabledPaymentMethod([{ id: "synthetic", method: "JAZZCASH", displayName: "JazzCash", enabled: false, sortOrder: 10 }])).toBe(false);
     expect(hasCompleteEnabledPaymentMethod([{ id: "synthetic", method: "JAZZCASH", displayName: "JazzCash", recipientName: "Garden Shop", instructions: "Synthetic instruction", enabled: true, sortOrder: 10 }])).toBe(true);
+  });
+  it("validates catalog prices as positive integers without inventing catalog values", () => {
+    expect(validatePositiveInteger(1)).toBe(1);
+    expect(() => validatePositiveInteger(0)).toThrow("CATALOG_POSITIVE_INTEGER_REQUIRED");
+    expect(() => validatePositiveInteger(1.5)).toThrow("CATALOG_POSITIVE_INTEGER_REQUIRED");
+    expect(parseProductInput({ code: "SYNTHETIC", name: "Synthetic product", category: "Synthetic", pricePkr: 10, fertilizerPricePkr: null, active: false })).toMatchObject({ pricePkr: 10, fertilizerPricePkr: null, active: false });
+    expect(() => parseProductInput({ code: "SYNTHETIC", name: "Synthetic product", category: "Synthetic", pricePkr: 0, fertilizerPricePkr: null, active: false })).toThrow("PRODUCT_PRICE_INVALID");
+    expect(() => parseProvinceDeliveryRateInput({ province: "Synthetic Province", deliveryFeePkr: -1, active: false })).toThrow("DELIVERY_RATE_INVALID");
   });
   it("validates receipt media", () => { expect(() => validateReceipt("image/png", 10)).not.toThrow(); expect(() => validateReceipt("text/html", 10)).toThrow(); });
   it("uses a provider boundary with a mock", async () => { const provider = new MockWhatsAppProvider(); await provider.sendText("synthetic", "Payment received for verification"); expect(provider.sent[0]?.kind).toBe("text"); });

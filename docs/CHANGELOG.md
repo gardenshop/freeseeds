@@ -20,6 +20,14 @@
 - Added D1 `payment_configuration.advance_amount_pkr`, positive PKR validation, Access-protected `/payment-amount`, audit logging, and complete-method gating. Deployed staging admin version `db145806-e566-466f-bab8-dc5e7b3c9bf0` and API version `3db9f3cb-297a-4fd0-b338-013b22fe6c06`.
 - Verified staging amount is unset and all payment methods remain disabled/incomplete. No real values, QR, Meta form edit, campaign edit, or spend mutation occurred.
 
+## Unreleased - 2026-10-10 (GFS-71)
+
+- Added `WHATSAPP_FLOW_CTWA_LAUNCH_FIRST` commerce path with fixed five customer fields plus separate product/province/fertilizer fields.
+- Added dynamic D1 catalog, province delivery, order item, and persisted total support; added quote endpoint and admin CRUD controls without seeding invented values.
+- Added encrypted Meta Flow endpoint with health/INIT/navigation/data-exchange/submit handling and protocol tests. Staging API deployed with Flow endpoint; `FLOW_PRIVATE_KEY` and Meta Flow publication remain pending.
+- Refactored payment selection to use persisted dynamic `orders.total_payable` and preserved legacy fixed-payment behavior for non-dynamic paths.
+- Workbook discovery returned `PRODUCT_WORKBOOK_NOT_FOUND`; no product/rate import or Meta mutation occurred.
+
 ## Unreleased - 2026-10-09 (GFS-60)
 
 - Corrected active documentation authority to `META_ASSETS_PENDING`, sender `+923044429933`, and Phone Number ID `1323932417479627`; former sender/ID remain historical only.

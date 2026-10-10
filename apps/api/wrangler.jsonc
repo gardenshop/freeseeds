@@ -11,5 +11,6 @@
     "producers": [{ "binding": "EVENTS", "queue": "getfreeseeds-events-staging" }],
     "consumers": [{ "queue": "getfreeseeds-events-staging", "max_batch_size": 10, "max_batch_timeout": 5, "max_retries": 5, "dead_letter_queue": "getfreeseeds-events-staging-dlq" }]
   },
+  // FLOW_PRIVATE_KEY is a Wrangler secret binding, never a vars value.
   "vars": { "DEPLOYMENT_STATE": "META_ASSETS_PENDING", "WHATSAPP_PROVIDER": "mock", "META_PROVIDER_ENABLED": "false", "META_CAPI_ENABLED": "false", "META_INSTANT_FORM_ENABLED": "false", "META_PAGE_ID": "101192938541236", "META_INSTANT_FORM_ID": "1093015800183328" }
 }

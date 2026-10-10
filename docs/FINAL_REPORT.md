@@ -25,6 +25,17 @@
 - Cloudflare identity: **PASS** — `gisupp@gmail.com` / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
 - Current amount: **MISSING** (`NULL`). JazzCash, Easypaisa, and Bank Transfer: **INCOMPLETE/DISABLED** with no real recipient/instructions/QR.
 - Admin UI: Cloudflare Access login was shown instead of an authenticated page; backend/D1 was verified through Wrangler. No mutation was made.
+
+## GFS-71-WHATSAPP-FLOW-COMMERCE Update — 2026-10-10
+
+- Meta Form inspected: **PASS inventory** — canonical Form `1093015800183328` / `Free Seeds 05-10-2026` active with one lead; no edit/campaign mutation.
+- Exact customer data fields: **PASS** — Full Name, Complete Delivery Address, Nearby Famous Place, City, Contact Number. Commerce fields are separate: product, province, fertilizer choice, quote/payment workflow.
+- Product workbook: **NOT_FOUND**. Required source: verified seed/fertilizer workbook containing SKU/code, product name/category, PKR price, active/status, pack quantity, and fertilizer data where applicable.
+- Dynamic catalog/admin/quote backend: **PASS implementation/deployment**; staging D1 catalog and province tables are empty/disabled by design.
+- Quote endpoint: **PASS implementation/tests**, but live quote data unavailable until verified products and province rates exist.
+- Encrypted Flow endpoint: **PASS protocol tests/health smoke**; `FLOW_PRIVATE_KEY` is not provisioned and Meta Flow publication/registration is pending.
+- Fertilizer upsell/order summary/payment buttons/receipt review: **BLOCKED** by missing catalog, delivery rates, payment methods, durable WhatsApp credential, and Flow publication.
+- CTWA window handling: **DOCUMENTED** — customer-initiated 24-hour service window and Meta qualifying free-entry-point handling; Instant Form phone capture is not treated as consent.
 - Meta ending: **READY_FOR_PAYMENT_VALUES**, not edited. Campaign and WhatsApp remain untouched.
 
 ## GFS-60-MCP-AND-ACTIVE-SENDER Update — 2026-10-09

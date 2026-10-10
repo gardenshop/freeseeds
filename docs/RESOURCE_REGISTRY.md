@@ -33,6 +33,16 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - A method can be enabled only when complete recipient name and customer-visible instructions are present; method-specific account/TILL details and optional private QR are managed by the existing fields.
 - No payment recipient, amount, QR, or customer-facing instruction value is recorded here until Garden Shop verifies it.
 
+## GFS-71 WhatsApp Flow Commerce Authority
+
+- Flow mode: `WHATSAPP_FLOW_CTWA_LAUNCH_FIRST`; customer-initiated Click-to-WhatsApp entry only.
+- Flow endpoint: `POST /webhooks/whatsapp/flows`; encrypted Meta protocol implemented, health/ping smoke passes.
+- Catalog source: verified workbook required; current result `PRODUCT_WORKBOOK_NOT_FOUND`. No production catalog values are recorded.
+- Delivery source: D1 `province_delivery_rates`, admin-managed; no rates currently configured.
+- Quote formula: enabled catalog product + optional enabled fertilizer + enabled province delivery fee; server-side only.
+- Order source of truth: D1 orders/order_items with persisted dynamic `total_payable`; payment selection does not overwrite dynamic totals from the legacy global amount.
+- Flow secret: `FLOW_PRIVATE_KEY` required in Cloudflare secret storage before Meta encrypted traffic; value is intentionally absent from this registry.
+
 ## GitHub
 
 - Repository: `https://github.com/gardenshop/freeseeds.git`
