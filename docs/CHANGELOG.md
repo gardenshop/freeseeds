@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased - 2026-10-10 (GFS-68)
+
+- Added the permanent `META_FORM_LAUNCH_FIRST` distinction: native Meta Form/Leads Center capture may launch before WhatsApp API credentials, `/register`, `subscribed_apps`, webhook, or Lead→D1 realtime integration.
+- Verified canonical Page `101192938541236` form inventory: active `Free Seeds 04-10-2026` remains Form ID `1093015800183328`; a newer active `Free Seeds 05-10-2026` is visible but was not substituted.
+- Read-only staging D1 payment check found JazzCash, Easypaisa, and Bank Transfer all disabled with recipient/instructions/QR values absent. Gate: `PAYMENT_VALUES_REQUIRED`.
+- No Meta form, campaign, ad, payment, WhatsApp, or secret mutation was performed.
+
 ## Unreleased - 2026-10-09 (GFS-60)
 
 - Corrected active documentation authority to `META_ASSETS_PENDING`, sender `+923044429933`, and Phone Number ID `1323932417479627`; former sender/ID remain historical only.

@@ -7,6 +7,15 @@
 Current authorized sender: `+923044429933`
 Phone Number ID: `1323932417479627`
 
+## Meta Form Launch Track (GFS-68)
+
+- Launch mode: `META_FORM_LAUNCH_FIRST`
+- Canonical Page: `101192938541236`
+- Canonical Form authority: `1093015800183328` / `Free Seeds 04-10-2026` (active in the canonical Page form list)
+- Native Leads Center is an acceptable temporary lead-capture path; WhatsApp API runtime is `WHATSAPP_API_ENHANCEMENT_PENDING` and non-blocking for this track.
+- Payment source check: all staging D1 payment methods are disabled and have no recipient, instructions, or QR configuration. Exact gate: `PAYMENT_VALUES_REQUIRED`.
+- Campaign publication/spend remains unapproved; do not publish or spend without exact budget authorization.
+
 ## Completed Work
 
 - Repository audit confirmed an empty directory with no Git history or legacy architecture.

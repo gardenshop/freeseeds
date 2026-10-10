@@ -9,6 +9,16 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Phone Number ID: `1323932417479627`
 - Historical only: `+923328883383` / `1429127796940691`
 
+## Active Meta Form Launch Authority (GFS-68)
+
+- Launch mode: `META_FORM_LAUNCH_FIRST`
+- Canonical Page: `101192938541236`
+- Canonical Form: `1093015800183328` / `Free Seeds 04-10-2026`
+- Canonical form list verification: active form visible under Page `101192938541236`; a newer `Free Seeds 05-10-2026` form is also visible and is not substituted without verified ID/field review.
+- Native Leads Center: permitted temporary capture surface.
+- Payment configuration: all three staging D1 methods disabled; recipient/amount/instructions/QR values absent. No payment value is recorded here.
+- WhatsApp API: `WHATSAPP_API_ENHANCEMENT_PENDING`, not a form-launch dependency.
+
 ## GitHub
 
 - Repository: `https://github.com/gardenshop/freeseeds.git`
