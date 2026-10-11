@@ -10,6 +10,13 @@
 - Delivery: **UNKNOWN**; inbound reply **WAITING/NOT OBSERVED**.
 - Flow public key: **PASS previously registered**; Flow E2E **BLOCKED** by missing successful outbound message.
 
+## GFS-86-OUTBOUND-400 Update — 2026-10-11
+
+- Exact outbound result: **HTTP 400**, no `wamid`; no duplicate retry.
+- Safe diagnostic repair: **PASS implementation/deployment**; future errors expose only sanitized Meta fields.
+- Delivery/inbound: **UNKNOWN/WAITING**; no signed Meta callback or recipient reply observed.
+- Flow E2E: **BLOCKED** pending a customer-service context or approved template.
+
 ## GFS-68-META-FORM-LAUNCH-FIRST Update — 2026-10-10
 
 - Launch track: **`META_FORM_LAUNCH_FIRST`**

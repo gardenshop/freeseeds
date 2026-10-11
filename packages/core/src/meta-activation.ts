@@ -44,7 +44,7 @@ export type MetaActivationActionResult = {
   executed: boolean;
   reason: string;
   status: MetaActivationStatus;
-  error?: { code: string; status?: number };
+  error?: { code: string; subcode?: string; message?: string; fbtraceId?: string; status?: number };
   httpStatus?: number;
   messageId?: string;
 };

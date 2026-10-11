@@ -78,6 +78,11 @@
 - Retried Flow public-key registration after connection; exact Meta result is `(#10) Application does not have permission for this action`.
 - Webhook/provider/message testing remains gated by missing App Secret and provider enablement. Campaign remains untouched.
 
+## Unreleased - 2026-10-11 (GFS-86)
+
+- Improved restricted send diagnostics to expose only safe Meta error code, subcode, message, fbtrace ID, and HTTP status.
+- Preserved the one-send safety limit after HTTP 400; no duplicate message was sent. Inbound-first recipient interaction is now the required next runtime step.
+
 ## Unreleased - 2026-10-10 (GFS-85)
 
 - Confirmed API `META_APP_SECRET` secret presence and active provider deployment.

@@ -238,6 +238,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Provider/deployment: enabled and `PRODUCTION_INTEGRATION_READY` deployed; campaign untouched.
 - One authorized fixed-recipient send was attempted; it returned HTTP `400 Bad Request`, no `wamid`, and no retry was issued to avoid duplicate testing. Flow E2E remains pending.
 
+## GFS-86 Outbound 400 Diagnosis
+
+- The single authorized send attempt returned HTTP 400 without a message ID. No duplicate request was made.
+- Activation diagnostics now preserve only safe Meta error code, subcode, message, fbtrace ID, and HTTP status for future attempts; no raw response/token is logged.
+- The fixed free-form test requires an eligible customer-service context or approved template. No approved template was available in current evidence; inbound-first recipient interaction is the next safe path.
+
 ## GFS-77 Activation Console
 
 - Access-protected `/meta-activation` is deployed for canonical Phone/WABA/App state, ownership/register/subscription actions, webhook/provider/Flow-key status, and controlled-test preparation. No Meta mutation or message was executed.

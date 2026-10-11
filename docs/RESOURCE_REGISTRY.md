@@ -72,6 +72,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - API deployment state: `PRODUCTION_INTEGRATION_READY`; Meta provider enabled.
 - Webhook GET challenge passes; invalid signature is rejected. Valid signed event and real message delivery remain unproven.
 
+## GFS-86 Outbound Test State
+
+- Authorized recipient: `+923354299783`; exactly one send attempt, HTTP 400, no `wamid`.
+- No duplicate sends or payment messages. Next supported path is recipient-initiated inbound context or an approved template.
+
 ## GFS-77 Activation Authority
 
 - Admin console: `/meta-activation` on staging, Access-protected for `gisupp@gmail.com`.

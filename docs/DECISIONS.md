@@ -54,6 +54,10 @@ Current Meta state reconciles to a connected phone and canonical App↔WABA subs
 
 `META_APP_SECRET` is now present as an API Worker secret and the API is deployed with provider enabled. The webhook challenge passes and invalid signatures return 403. One authorized send to `+923354299783` returned HTTP 400 with no message ID; no duplicate retry was made. This is a real send failure, not an accepted/delivered claim.
 
+## 2026-10-11: GFS-86 Inbound-First Recovery
+
+The restricted send action was improved to retain safe Meta error diagnostics, but no second send was issued. The remaining runtime dependency is a recipient-initiated customer-service window or an existing approved template; the recipient must send `TEST GFS` before another outbound attempt is safe.
+
 Meta Form read-only inventory remains separate from WhatsApp commerce: historical canonical evidence includes customer fields plus product/province/fertilizer/amount answers, while this Flow owns server-authoritative product/rate/quote data. No Form or campaign mutation occurred.
 
 ## 2026-10-10: GFS-69 Final Meta Form Preparation
