@@ -83,6 +83,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Auto-reply: inbound text message ID → `WELCOME_REPLY` idempotency key → one welcome text, subject to Meta service-window rules.
 - Current D1 evidence: `whatsapp_events=0`, `outbound_messages=0`; Meta dashboard message counts are not callback proof.
 
+## GFS-88 Browser Evidence
+
+- `list_pages` PASS; matching Meta/Cloudflare tabs reused; unrelated tabs changed: 0.
+- Canonical phone list confirms connected `+923044429933`; no individual sender/message evidence was available from the accessible list.
+
 ## GFS-77 Activation Authority
 
 - Admin console: `/meta-activation` on staging, Access-protected for `gisupp@gmail.com`.

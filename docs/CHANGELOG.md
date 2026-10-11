@@ -89,6 +89,11 @@
 - Confirmed D1 currently contains zero WhatsApp events despite Meta dashboard showing two received messages; no synthetic callback was fabricated.
 - Invalid signature rejection remains 403; callback delivery/subscription configuration is the remaining external webhook gate.
 
+## Unreleased - 2026-10-11 (GFS-88)
+
+- Added permanent Chrome tab governance: `list_pages` first, matching-tab reuse, no unrelated-tab navigation, and report inventory fields.
+- Reused canonical WhatsApp Manager phone and Developer App tabs; no unrelated tabs changed. Historical sender/message correlation remains unavailable.
+
 ## Unreleased - 2026-10-10 (GFS-85)
 
 - Confirmed API `META_APP_SECRET` secret presence and active provider deployment.

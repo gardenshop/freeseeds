@@ -62,6 +62,10 @@ The restricted send action was improved to retain safe Meta error diagnostics, b
 
 Meta reports two received messages, while D1 has zero `whatsapp_events`; the first failure is therefore callback delivery/configuration, not message parsing. The API now persists signed inbound events and sends one idempotent welcome reply keyed by message ID. No synthetic callback or fabricated customer reply was created.
 
+## 2026-10-11: GFS-88 Permanent Tab Inventory
+
+Every MCP execution now begins with `list_pages`, reuses the matching existing service tab, and records unrelated-tab changes. The canonical phone list confirms the connected sender, but individual historical sender/message details remain unavailable; no sender identity was invented. The Developer App Webhooks surface remained in loading state, so no callback mutation was attempted.
+
 Meta Form read-only inventory remains separate from WhatsApp commerce: historical canonical evidence includes customer fields plus product/province/fertilizer/amount answers, while this Flow owns server-authoritative product/rate/quote data. No Form or campaign mutation occurred.
 
 ## 2026-10-10: GFS-69 Final Meta Form Preparation

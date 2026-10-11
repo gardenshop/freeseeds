@@ -250,6 +250,13 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Invalid signature rejection remains 403 after the auto-reply deployment. The callback was not observed in D1; Meta Webhooks callback/subscription configuration remains the first external failure point.
 - API now parses signed inbound text events and creates one idempotent `WELCOME_REPLY` outbound record/send keyed by the Meta message ID. Replays cannot duplicate the welcome reply.
 
+## GFS-88 Browser Inventory and Inbound Evidence
+
+- Chrome MCP `list_pages`: **PASS**. Existing matching tabs reused: Cloudflare API variables, Meta Developer App, Meta Basic Settings, and canonical WhatsApp Manager phone numbers. Unrelated tabs changed: **0**.
+- Canonical phone row is `+92 304 4429933`, `Get Free Seeds`, `Connected`; the individual conversation/message record was not exposed in the accessible phone list.
+- Actual historical sender, message IDs, timestamps, and sender-to-phone correlation: `HISTORICAL_SENDER_UNVERIFIABLE`.
+- D1 remains `whatsapp_events=0`; Meta dashboard counts are not treated as webhook delivery proof. App Webhooks route remained loading/progress-only in the reused Developer tab, so callback subscription is unverified.
+
 ## GFS-77 Activation Console
 
 - Access-protected `/meta-activation` is deployed for canonical Phone/WABA/App state, ownership/register/subscription actions, webhook/provider/Flow-key status, and controlled-test preparation. No Meta mutation or message was executed.
