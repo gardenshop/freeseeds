@@ -49,6 +49,13 @@
 - Auto-reply: **FAIL** — `META_MESSAGE_SEND_401`, no outbound `wamid`; no duplicate retry.
 - Flow E2E/order: **BLOCKED** by API Worker Meta token runtime rejection.
 
+## GFS-92-TOKEN-RUNTIME Update — 2026-10-11
+
+- Active server-side Graph `/me`: **FAIL HTTP 401**.
+- `/me/permissions`, phone, and WABA: **FAIL HTTP 401**.
+- Secret/deployment presence: **YES by name/list only**; values never inspected.
+- Existing real inbound evidence remains valid; reply retry withheld to prevent duplicate sends.
+
 ## GFS-68-META-FORM-LAUNCH-FIRST Update — 2026-10-10
 
 - Launch track: **`META_FORM_LAUNCH_FIRST`**

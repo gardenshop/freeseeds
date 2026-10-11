@@ -99,6 +99,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Verified sender: `+923034901810` (masked in public reporting); two WAMIDs persisted in D1 with `MESSAGE`/`RECEIVED` status.
 - Auto-reply records are idempotent by WAMID and show `FAILED` with safe error `META_MESSAGE_SEND_401`; no credentials or customer content are recorded.
 
+## GFS-92 Token Runtime Gate
+
+- API/admin secret names remain present, but current server-side Graph ladder returns HTTP 401; values are never read or recorded.
+- Phone/WABA state cannot be reread until the API Worker receives a valid canonical Meta token.
+
 ## GFS-77 Activation Authority
 
 - Admin console: `/meta-activation` on staging, Access-protected for `gisupp@gmail.com`.

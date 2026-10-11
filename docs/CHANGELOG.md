@@ -105,6 +105,11 @@
 - Confirmed real inbound customer evidence from `+923034901810`: two WAMIDs persisted in D1.
 - Auto-reply attempted idempotently once per event; Graph returned HTTP 401 from the API Worker's Meta token. No duplicate send or fabricated delivery claim.
 
+## Unreleased - 2026-10-11 (GFS-92)
+
+- Rechecked active server-side Graph token ladder; `/me`, permissions, phone, and WABA reads all return HTTP 401 despite secret/deployment presence.
+- Preserved the two real inbound events and one-attempt idempotency; no duplicate reply or blind token rotation.
+
 ## Unreleased - 2026-10-10 (GFS-85)
 
 - Confirmed API `META_APP_SECRET` secret presence and active provider deployment.
