@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { canTransition, createMetaActivationService, MetaActivationAction, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, isPaymentMethodComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, paymentInstructions, PaymentMethod, storePaymentQr, validatePaymentAmount } from "@gfs/core";
+import { canTransition, createMetaActivationService, createWhatsAppProvider, MetaActivationAction, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, isPaymentMethodComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, paymentInstructions, PaymentMethod, storePaymentQr, validatePaymentAmount } from "@gfs/core";
 
  type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
 const app = new Hono<Env>();
@@ -80,7 +80,25 @@ app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and f
 app.get("/api/meta-activation/status", async (c) => c.json(await metaActivation(c).status()));
 
 app.post("/api/meta-activation/actions/:action", async (c) => {
-  const action = c.req.param("action") as MetaActivationAction;
+  const rawAction = c.req.param("action");
+  if (rawAction === "retry-failed-reply") {
+    if (!authorized(c)) return c.json({ error: "UNAUTHORIZED" }, 401);
+    const row = await c.env.DB.prepare("SELECT id,idempotency_key FROM outbound_messages WHERE idempotency_key LIKE 'welcome_reply:%' AND status='FAILED' AND provider_message_id IS NULL ORDER BY updated_at ASC LIMIT 1").first<{ id: string; idempotency_key: string }>();
+    if (!row) return c.json({ executed: false, reason: "NO_FAILED_REPLY_ELIGIBLE" });
+    const claim = await c.env.DB.prepare("UPDATE outbound_messages SET status='RETRYING',attempt_count=attempt_count+1,updated_at=? WHERE id=? AND status='FAILED' AND provider_message_id IS NULL").bind(new Date().toISOString(), row.id).run();
+    if (!claim.meta.changes) return c.json({ executed: false, reason: "REPLY_ALREADY_CLAIMED" });
+    const provider = createWhatsAppProvider("meta", { enabled: true, graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", phoneNumberId: c.env.META_PHONE_NUMBER_ID, accessToken: c.env.META_ACCESS_TOKEN, appSecret: c.env.META_APP_SECRET });
+    try {
+      const sent = await provider.sendText("+923034901810", "Welcome to Get Free Seeds! 🌱 Get 5 packs of vegetable seeds FREE. Reply START to begin your order.");
+      await c.env.DB.prepare("UPDATE outbound_messages SET status='SENT',provider_message_id=?,updated_at=? WHERE id=?").bind(sent.providerMessageId, new Date().toISOString(), row.id).run();
+      return c.json({ executed: true, messageId: sent.providerMessageId, idempotencyKey: row.idempotency_key });
+    } catch (error) {
+      const safe = error instanceof Error ? error.message.slice(0, 180) : "META_REPLY_FAILED";
+      await c.env.DB.prepare("UPDATE outbound_messages SET status='FAILED',last_error=?,updated_at=? WHERE id=?").bind(safe, new Date().toISOString(), row.id).run();
+      return c.json({ executed: false, reason: safe, idempotencyKey: row.idempotency_key }, 502);
+    }
+  }
+  const action = rawAction as MetaActivationAction;
   const allowed: MetaActivationAction[] = ["phone-state", "waba-subscription", "webhook", "provider", "flow-key", "controlled-test", "send-test", "request-code", "request_code", "verify-code", "verify_code", "register", "subscribe-app"];
   if (!allowed.includes(action)) return c.json({ error: "META_ACTIVATION_ACTION_NOT_FOUND" }, 404);
   let body: Record<string, unknown> = {};
@@ -102,6 +120,24 @@ app.post("/api/meta-activation/actions/:action", async (c) => {
         ? { pin: typeof body.pin === "string" ? body.pin : undefined }
         : {};
   return c.json(await metaActivation(c).action(action, input));
+});
+
+app.post("/api/meta-activation/actions/retry-failed-reply", async (c) => {
+  if (!authorized(c)) return c.json({ error: "UNAUTHORIZED" }, 401);
+  const row = await c.env.DB.prepare("SELECT id,idempotency_key FROM outbound_messages WHERE idempotency_key LIKE 'welcome_reply:%' AND status='FAILED' AND provider_message_id IS NULL ORDER BY updated_at ASC LIMIT 1").first<{ id: string; idempotency_key: string }>();
+  if (!row) return c.json({ executed: false, reason: "NO_FAILED_REPLY_ELIGIBLE" });
+  const claim = await c.env.DB.prepare("UPDATE outbound_messages SET status='RETRYING',attempt_count=attempt_count+1,updated_at=? WHERE id=? AND status='FAILED' AND provider_message_id IS NULL").bind(new Date().toISOString(), row.id).run();
+  if (!claim.meta.changes) return c.json({ executed: false, reason: "REPLY_ALREADY_CLAIMED" });
+  const provider = createWhatsAppProvider("meta", { enabled: true, graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", phoneNumberId: c.env.META_PHONE_NUMBER_ID, accessToken: c.env.META_ACCESS_TOKEN, appSecret: c.env.META_APP_SECRET });
+  try {
+    const sent = await provider.sendText("+923034901810", "Welcome to Get Free Seeds! 🌱 Get 5 packs of vegetable seeds FREE. Reply START to begin your order.");
+    await c.env.DB.prepare("UPDATE outbound_messages SET status='SENT',provider_message_id=?,updated_at=? WHERE id=?").bind(sent.providerMessageId, new Date().toISOString(), row.id).run();
+    return c.json({ executed: true, messageId: sent.providerMessageId, idempotencyKey: row.idempotency_key });
+  } catch (error) {
+    const safe = error instanceof Error ? error.message.slice(0, 180) : "META_REPLY_FAILED";
+    await c.env.DB.prepare("UPDATE outbound_messages SET status='FAILED',last_error=?,updated_at=? WHERE id=?").bind(safe, new Date().toISOString(), row.id).run();
+    return c.json({ executed: false, reason: safe, idempotencyKey: row.idempotency_key }, 502);
+  }
 });
 
 app.get("/payment-settings", (c) => c.html(`<!doctype html><html><head><meta charset="utf-8"><title>Payment Settings | Get Free Seeds</title><style>body{font:16px system-ui;max-width:1100px;margin:2rem auto;padding:0 1rem}nav{margin-bottom:1rem}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}.card{border:1px solid #ccc;border-radius:8px;padding:1rem}.card h2{margin-top:0}.card label{display:block;margin:.6rem 0}.card input,.card textarea{box-sizing:border-box;width:100%;padding:.5rem}.status{font-size:.9rem;margin:.5rem 0}.configured{color:green}.incomplete{color:#a15c00}.error{color:#b00020}.qr{max-width:180px;max-height:180px;display:block;margin-top:.5rem}.actions{display:flex;gap:.5rem;align-items:center}button{padding:.5rem .8rem}</style></head><body><nav><a href='/'>Admin home</a></nav><h1>Garden Shop Payment Settings</h1><p>Values are backend-controlled. Disabled or incomplete methods cannot send payment instructions.</p><div id="methods" class="grid">Loading...</div><script>

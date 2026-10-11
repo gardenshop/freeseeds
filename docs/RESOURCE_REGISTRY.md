@@ -104,6 +104,12 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - API/admin secret names remain present, but current server-side Graph ladder returns HTTP 401; values are never read or recorded.
 - Phone/WABA state cannot be reread until the API Worker receives a valid canonical Meta token.
 
+## GFS-98 Token and Reply Evidence
+
+- Fresh canonical token validated by sanitized Graph ladder; no token value recorded.
+- One failed welcome reply was retried atomically; outbound `wamid` persisted with `SENT` and matching status event. No duplicate accepted send exists.
+- Delivery status remains pending/unknown; Flow/order state remains unproven.
+
 ## GFS-96 Security Recovery
 
 - Token material was unexpectedly rendered by Meta UI; no value is recorded here.

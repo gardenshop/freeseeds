@@ -63,6 +63,15 @@
 - Chrome list_pages: **PASS**; matching tabs reused; unrelated tabs changed: **0**.
 - Exact blocker: `TOKEN_REVOCATION_UI_REQUIRED` — Meta system-user revoke control was unavailable while the page remained loading.
 
+## GFS-98-FRESH-TOKEN-REPLY Update — 2026-10-11
+
+- Revocation: **confirmed by owner before new generation**.
+- New token installed: **YES** as Worker Secrets; API/Admin Graph ladder **PASS**.
+- Real inbound: **PASS**; existing failed reply retried exactly once.
+- Outbound WAMID: **PRESENT**; D1 status **SENT**; delivery **PENDING/UNKNOWN**.
+- Subsequent inbound MESSAGE event: **PERSISTED**; content not inferred; BSUID not observed.
+- Flow E2E/order: **BLOCKED** pending actual customer Flow interaction/content.
+
 ## GFS-68-META-FORM-LAUNCH-FIRST Update — 2026-10-10
 
 - Launch track: **`META_FORM_LAUNCH_FIRST`**

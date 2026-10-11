@@ -115,6 +115,12 @@
 - Stopped token generation after Meta UI unexpectedly rendered token material in an MCP snapshot.
 - Recorded security recovery gate: affected token must be revoked through Meta's visible control before any replacement is generated. No secrets or token values were committed.
 
+## Unreleased - 2026-10-11 (GFS-98)
+
+- Validated the owner-installed canonical token through API/Admin Graph state.
+- Atomically retried exactly one failed welcome reply; persisted real outbound WAMID and `sent` webhook status with no duplicate send.
+- Recorded a subsequent inbound MESSAGE event without inventing its content or treating it as Flow completion.
+
 ## Unreleased - 2026-10-10 (GFS-85)
 
 - Confirmed API `META_APP_SECRET` secret presence and active provider deployment.

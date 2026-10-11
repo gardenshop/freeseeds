@@ -276,6 +276,14 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.
 - This proves the current runtime token is rejected/expired or wrong-context, not a customer-window or payload-only failure. Existing real inbound events remain valid; no duplicate reply was attempted.
 
+## GFS-98 Fresh Token and Real Reply
+
+- Fresh token validation: **PASS** through activation console; Graph permissions granted, phone available, canonical WABA subscription present.
+- API/Admin secret names: `META_ACCESS_TOKEN` present as secret; API/Admin deployments updated at 17:18.
+- Existing failed reply was atomically claimed once after the fresh token was installed. Graph returned `wamid.HBgMOTIzMDM0OTAxODEwFQIAERgSOENDNTUxQkI2NTA5MDJFMDZCAA==`; D1 outbound status is `SENT`.
+- A real STATUS webhook persisted with status `sent` at 17:32:50Z. Delivery has not yet been reported.
+- A subsequent real MESSAGE webhook persisted at 17:33:15Z; no customer answer content is inferred from metadata and no Flow/order answers were invented.
+
 ## GFS-96 Token Security Recovery
 
 - A Meta system-user page snapshot unexpectedly rendered token material. No value was copied, stored, or repeated; token generation was stopped.
