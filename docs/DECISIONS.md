@@ -78,6 +78,10 @@ The customer message from `+923034901810` is real inbound evidence: two WAMIDs p
 
 The activation console server-side ladder now returns HTTP 401 for `/me`, permissions, phone, and WABA reads. This is an authoritative runtime token rejection despite secret-name/deployment presence. No blind rotation or duplicate customer message was performed; the only remaining protected action is canonical token replacement.
 
+## 2026-10-11: GFS-96 Token Snapshot Incident
+
+Meta rendered token material in an MCP page snapshot during system-user inspection. The value was not intentionally copied or stored, and no replacement token was generated. Because a token-specific revoke control could not be reached safely in the loading UI, execution stops at `TOKEN_REVOCATION_UI_REQUIRED` rather than risk further credential exposure.
+
 Meta Form read-only inventory remains separate from WhatsApp commerce: historical canonical evidence includes customer fields plus product/province/fertilizer/amount answers, while this Flow owns server-authoritative product/rate/quote data. No Form or campaign mutation occurred.
 
 ## 2026-10-10: GFS-69 Final Meta Form Preparation

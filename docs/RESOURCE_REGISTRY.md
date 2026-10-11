@@ -104,6 +104,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - API/admin secret names remain present, but current server-side Graph ladder returns HTTP 401; values are never read or recorded.
 - Phone/WABA state cannot be reread until the API Worker receives a valid canonical Meta token.
 
+## GFS-96 Security Recovery
+
+- Token material was unexpectedly rendered by Meta UI; no value is recorded here.
+- Revocation status: **UNPROVEN**. Replacement generation remains prohibited until the affected token is revoked through a visible Meta control.
+
 ## GFS-77 Activation Authority
 
 - Admin console: `/meta-activation` on staging, Access-protected for `gisupp@gmail.com`.

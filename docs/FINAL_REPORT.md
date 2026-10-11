@@ -56,6 +56,13 @@
 - Secret/deployment presence: **YES by name/list only**; values never inspected.
 - Existing real inbound evidence remains valid; reply retry withheld to prevent duplicate sends.
 
+## GFS-96-SECURITY-RECOVERY Update — 2026-10-11
+
+- Exposed token revoked: **NO proof**.
+- New token generated: **NO**; generation correctly stopped.
+- Chrome list_pages: **PASS**; matching tabs reused; unrelated tabs changed: **0**.
+- Exact blocker: `TOKEN_REVOCATION_UI_REQUIRED` — Meta system-user revoke control was unavailable while the page remained loading.
+
 ## GFS-68-META-FORM-LAUNCH-FIRST Update — 2026-10-10
 
 - Launch track: **`META_FORM_LAUNCH_FIRST`**

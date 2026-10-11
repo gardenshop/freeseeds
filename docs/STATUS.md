@@ -276,6 +276,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.
 - This proves the current runtime token is rejected/expired or wrong-context, not a customer-window or payload-only failure. Existing real inbound events remain valid; no duplicate reply was attempted.
 
+## GFS-96 Token Security Recovery
+
+- A Meta system-user page snapshot unexpectedly rendered token material. No value was copied, stored, or repeated; token generation was stopped.
+- Revocation could not be completed because the reused Meta system-user tabs remained loading and exposed no usable `Revoke tokens` control through structural checks.
+- No replacement token was generated or installed. No Graph, send, Flow, or campaign mutation was attempted after the incident.
+
 ## GFS-77 Activation Console
 
 - Access-protected `/meta-activation` is deployed for canonical Phone/WABA/App state, ownership/register/subscription actions, webhook/provider/Flow-key status, and controlled-test preparation. No Meta mutation or message was executed.

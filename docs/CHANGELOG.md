@@ -110,6 +110,11 @@
 - Rechecked active server-side Graph token ladder; `/me`, permissions, phone, and WABA reads all return HTTP 401 despite secret/deployment presence.
 - Preserved the two real inbound events and one-attempt idempotency; no duplicate reply or blind token rotation.
 
+## Unreleased - 2026-10-11 (GFS-96)
+
+- Stopped token generation after Meta UI unexpectedly rendered token material in an MCP snapshot.
+- Recorded security recovery gate: affected token must be revoked through Meta's visible control before any replacement is generated. No secrets or token values were committed.
+
 ## Unreleased - 2026-10-10 (GFS-85)
 
 - Confirmed API `META_APP_SECRET` secret presence and active provider deployment.
