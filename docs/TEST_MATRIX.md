@@ -45,6 +45,8 @@
 | GFS-85 authorized send | one fixed recipient, message ID/status | FAIL/UNPROVEN: HTTP 400, no wamid; no retry issued |
 | GFS-86 safe outbound diagnostics | code/subcode/message/fbtrace/status without credentials | PASS implementation/deployment; no duplicate send |
 | GFS-86 inbound-first runtime | recipient reply opens service context and enables approved outbound | BLOCKED/WAITING for authorized recipient interaction |
+| GFS-87 webhook persistence | signed inbound event stored once; replay safe | PASS implementation/deployment; live callback absent (`whatsapp_events=0`) |
+| GFS-87 automatic welcome reply | one reply per inbound Meta message ID | PASS implementation/tests; live send pending callback/window |
 | GFS-60 active sender authority | current state, sender, Phone Number ID, historical sender exclusion | PASS: `META_ASSETS_PENDING`, `+923044429933`, `1323932417479627` |
 | GFS-60 MCP recovery | existing profile, DevToolsActivePort, package, registration, namespace exposure | BLOCKED: local prerequisites present; Codex registration has stale WebSocket UUID and active namespace is unavailable |
 | Governance | authorized number lock, no existing number | PASS |

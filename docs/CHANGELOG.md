@@ -83,6 +83,12 @@
 - Improved restricted send diagnostics to expose only safe Meta error code, subcode, message, fbtrace ID, and HTTP status.
 - Preserved the one-send safety limit after HTTP 400; no duplicate message was sent. Inbound-first recipient interaction is now the required next runtime step.
 
+## Unreleased - 2026-10-11 (GFS-87)
+
+- Added deployed idempotent inbound text handling: persist signed event, then send one welcome reply keyed by Meta message ID.
+- Confirmed D1 currently contains zero WhatsApp events despite Meta dashboard showing two received messages; no synthetic callback was fabricated.
+- Invalid signature rejection remains 403; callback delivery/subscription configuration is the remaining external webhook gate.
+
 ## Unreleased - 2026-10-10 (GFS-85)
 
 - Confirmed API `META_APP_SECRET` secret presence and active provider deployment.

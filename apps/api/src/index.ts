@@ -50,7 +50,24 @@ app.post("/webhooks/whatsapp", async (c) => {
   }
   const correlationId = c.req.header("x-correlation-id") ?? crypto.randomUUID();
   const eventCount = c.env.DB ? await persistWebhookRecords(c.env.DB, payload, raw, correlationId) : 0;
-  return c.json({ accepted: true, eventCount });
+  const inbound = provider.parseInboundEvent(payload).filter((event) => event.kind === "text");
+  let autoReplies = 0;
+  for (const event of inbound) {
+    const idempotencyKey = `welcome_reply:${event.id}`;
+    const existing = c.env.DB ? await c.env.DB.prepare("SELECT status FROM outbound_messages WHERE idempotency_key=?").bind(idempotencyKey).first<{ status: string }>() : null;
+    if (existing) continue;
+    const now = new Date().toISOString();
+    if (c.env.DB) await c.env.DB.prepare("INSERT INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), idempotencyKey, "WELCOME_REPLY", "PENDING", 0, now, now).run();
+    try {
+      const sent = await provider.sendText(event.from, "Welcome to Get Free Seeds! Thank you for contacting us. Reply START to begin your free vegetable seeds order.");
+      if (c.env.DB) await c.env.DB.prepare("UPDATE outbound_messages SET provider_message_id=?,status='SENT',attempt_count=1,updated_at=? WHERE idempotency_key=?").bind(sent.providerMessageId, new Date().toISOString(), idempotencyKey).run();
+      autoReplies += 1;
+    } catch (error) {
+      const safeError = error instanceof Error ? error.message.slice(0, 160) : "META_AUTO_REPLY_FAILED";
+      if (c.env.DB) await c.env.DB.prepare("UPDATE outbound_messages SET status='FAILED',attempt_count=1,last_error=?,updated_at=? WHERE idempotency_key=?").bind(safeError, new Date().toISOString(), idempotencyKey).run();
+    }
+  }
+  return c.json({ accepted: true, eventCount, autoReplies });
 });
 
 app.post("/webhooks/whatsapp/flows", async (c) => {

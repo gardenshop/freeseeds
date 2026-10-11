@@ -244,6 +244,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Activation diagnostics now preserve only safe Meta error code, subcode, message, fbtrace ID, and HTTP status for future attempts; no raw response/token is logged.
 - The fixed free-form test requires an eligible customer-service context or approved template. No approved template was available in current evidence; inbound-first recipient interaction is the next safe path.
 
+## GFS-87 Inbound Webhook Repair
+
+- Meta-provided evidence says two messages received, but staging D1 `whatsapp_events` count is zero and no outbound records exist. Dashboard counts do not prove callback delivery.
+- Invalid signature rejection remains 403 after the auto-reply deployment. The callback was not observed in D1; Meta Webhooks callback/subscription configuration remains the first external failure point.
+- API now parses signed inbound text events and creates one idempotent `WELCOME_REPLY` outbound record/send keyed by the Meta message ID. Replays cannot duplicate the welcome reply.
+
 ## GFS-77 Activation Console
 
 - Access-protected `/meta-activation` is deployed for canonical Phone/WABA/App state, ownership/register/subscription actions, webhook/provider/Flow-key status, and controlled-test preparation. No Meta mutation or message was executed.

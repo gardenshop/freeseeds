@@ -17,6 +17,13 @@
 - Delivery/inbound: **UNKNOWN/WAITING**; no signed Meta callback or recipient reply observed.
 - Flow E2E: **BLOCKED** pending a customer-service context or approved template.
 
+## GFS-87-INBOUND-WEBHOOK Update — 2026-10-11
+
+- Meta received count: **2** (dashboard evidence); D1 `whatsapp_events`: **0**.
+- Webhook root cause: live callback was not observed; callback/subscription configuration remains unproven. Invalid signatures are rejected with 403.
+- Automatic reply: **PASS implementation/deployment**, idempotent by inbound Meta message ID; no real inbound event has triggered it.
+- Inbound/outbound/delivery: **WAITING** for actual signed Meta callback and eligible customer-service context.
+
 ## GFS-68-META-FORM-LAUNCH-FIRST Update — 2026-10-10
 
 - Launch track: **`META_FORM_LAUNCH_FIRST`**

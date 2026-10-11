@@ -58,6 +58,10 @@ Current Meta state reconciles to a connected phone and canonical App↔WABA subs
 
 The restricted send action was improved to retain safe Meta error diagnostics, but no second send was issued. The remaining runtime dependency is a recipient-initiated customer-service window or an existing approved template; the recipient must send `TEST GFS` before another outbound attempt is safe.
 
+## 2026-10-11: GFS-87 Inbound Webhook Auto-Reply
+
+Meta reports two received messages, while D1 has zero `whatsapp_events`; the first failure is therefore callback delivery/configuration, not message parsing. The API now persists signed inbound events and sends one idempotent welcome reply keyed by message ID. No synthetic callback or fabricated customer reply was created.
+
 Meta Form read-only inventory remains separate from WhatsApp commerce: historical canonical evidence includes customer fields plus product/province/fertilizer/amount answers, while this Flow owns server-authoritative product/rate/quote data. No Form or campaign mutation occurred.
 
 ## 2026-10-10: GFS-69 Final Meta Form Preparation

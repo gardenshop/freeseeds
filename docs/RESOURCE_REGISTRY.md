@@ -77,6 +77,12 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Authorized recipient: `+923354299783`; exactly one send attempt, HTTP 400, no `wamid`.
 - No duplicate sends or payment messages. Next supported path is recipient-initiated inbound context or an approved template.
 
+## GFS-87 Inbound Runtime
+
+- Public callback: `POST /webhooks/whatsapp`; signature validation and idempotent event persistence are deployed.
+- Auto-reply: inbound text message ID → `WELCOME_REPLY` idempotency key → one welcome text, subject to Meta service-window rules.
+- Current D1 evidence: `whatsapp_events=0`, `outbound_messages=0`; Meta dashboard message counts are not callback proof.
+
 ## GFS-77 Activation Authority
 
 - Admin console: `/meta-activation` on staging, Access-protected for `gisupp@gmail.com`.
