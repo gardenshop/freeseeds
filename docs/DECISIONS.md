@@ -70,6 +70,10 @@ Every MCP execution now begins with `list_pages`, reuses the matching existing s
 
 The first failed hop was Meta App publication: production webhook data was blocked while the App was unpublished. After publication and `messages` subscription, a Meta sample event reached D1. The first auto-reply attempt then exposed a separate deployment defect—missing API `META_PHONE_NUMBER_ID`—which is now fixed and deployed. Sample callback success is not treated as real-customer success; no fabricated sender or reply evidence is accepted.
 
+## 2026-10-11: GFS-90 Real Inbound and Token Failure
+
+The customer message from `+923034901810` is real inbound evidence: two WAMIDs persisted as signed `MESSAGE`/`RECEIVED` events. The idempotent welcome reply attempted once per event but Graph returned `META_MESSAGE_SEND_401`, proving the remaining failure is the API Worker's Meta token runtime, not callback delivery. No duplicate send was attempted.
+
 Meta Form read-only inventory remains separate from WhatsApp commerce: historical canonical evidence includes customer fields plus product/province/fertilizer/amount answers, while this Flow owns server-authoritative product/rate/quote data. No Form or campaign mutation occurred.
 
 ## 2026-10-10: GFS-69 Final Meta Form Preparation

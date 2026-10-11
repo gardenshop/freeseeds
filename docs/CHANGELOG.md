@@ -100,6 +100,11 @@
 - Meta sample event reached D1 as `MESSAGE`/`RECEIVED`.
 - Fixed missing API `META_PHONE_NUMBER_ID` binding that caused the initial auto-reply attempt to fail before provider configuration was complete. No duplicate/sample replay was sent.
 
+## Unreleased - 2026-10-11 (GFS-90)
+
+- Confirmed real inbound customer evidence from `+923034901810`: two WAMIDs persisted in D1.
+- Auto-reply attempted idempotently once per event; Graph returned HTTP 401 from the API Worker's Meta token. No duplicate send or fabricated delivery claim.
+
 ## Unreleased - 2026-10-10 (GFS-85)
 
 - Confirmed API `META_APP_SECRET` secret presence and active provider deployment.

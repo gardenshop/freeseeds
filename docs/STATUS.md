@@ -264,6 +264,13 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Meta `messages` field is now visibly Subscribed, callback URL is canonical, and Meta sample event persisted as `MESSAGE`/`RECEIVED` with provider ID `message:ABGGFlA5Fpa`.
 - Sample event is transport proof only, not real-customer proof. Its failed auto-reply was not retried or fabricated; a fresh real customer message is required for live sender/reply proof.
 
+## GFS-90 Real Customer Event
+
+- Actual inbound event now exists for sender `+923034901810`, represented by two real Meta WAMIDs and D1 `MESSAGE`/`RECEIVED` rows at `16:03:51Z`/`16:03:52Z`.
+- Signed inbound persistence: **PASS**. No BSUID was supplied.
+- Idempotent auto-reply attempted once per real message but failed with `META_MESSAGE_SEND_401`; no message ID or duplicate retry was produced.
+- First failure after inbound: API Worker Meta access token rejected/expired at outbound Graph send. Secure token replacement/runtime repair is required; no token value was read.
+
 ## GFS-77 Activation Console
 
 - Access-protected `/meta-activation` is deployed for canonical Phone/WABA/App state, ownership/register/subscription actions, webhook/provider/Flow-key status, and controlled-test preparation. No Meta mutation or message was executed.

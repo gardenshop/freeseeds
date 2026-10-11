@@ -51,6 +51,8 @@
 | GFS-88 historical sender evidence | sender/message/timestamp/Phone ID correlation | BLOCKED: individual Meta conversation evidence unavailable; `HISTORICAL_SENDER_UNVERIFIABLE` |
 | GFS-89 Meta production callback | App published, messages subscribed, canonical callback, D1 event | PASS sample transport: `MESSAGE`/`RECEIVED`; real customer callback pending |
 | GFS-89 auto-reply binding | API phone ID present before provider send | PASS deployed fix; sample failed before fix and was not replayed |
+| GFS-90 real inbound | actual sender WAMID/event persisted and deduplicated | PASS: two WAMIDs from `+923034901810`; no BSUID supplied |
+| GFS-90 live auto-reply | Graph send accepted with wamid/status | BLOCKED: API Worker Meta token rejected with HTTP 401; no retry |
 | GFS-60 active sender authority | current state, sender, Phone Number ID, historical sender exclusion | PASS: `META_ASSETS_PENDING`, `+923044429933`, `1323932417479627` |
 | GFS-60 MCP recovery | existing profile, DevToolsActivePort, package, registration, namespace exposure | BLOCKED: local prerequisites present; Codex registration has stale WebSocket UUID and active namespace is unavailable |
 | Governance | authorized number lock, no existing number | PASS |

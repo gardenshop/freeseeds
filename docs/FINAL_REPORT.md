@@ -42,6 +42,13 @@
 - API phone binding: **FIXED/DEPLOYED**; health reports WhatsApp enabled.
 - Flow E2E: **BLOCKED** pending one genuine customer message and interaction.
 
+## GFS-90-REAL-INBOUND Update — 2026-10-11
+
+- Actual sender: **YES** — `+923034901810` (masked in public reporting), two WAMIDs persisted.
+- Real webhook: **PASS**; D1 inbound: **PASS**; signed callback and deduplication proven.
+- Auto-reply: **FAIL** — `META_MESSAGE_SEND_401`, no outbound `wamid`; no duplicate retry.
+- Flow E2E/order: **BLOCKED** by API Worker Meta token runtime rejection.
+
 ## GFS-68-META-FORM-LAUNCH-FIRST Update — 2026-10-10
 
 - Launch track: **`META_FORM_LAUNCH_FIRST`**

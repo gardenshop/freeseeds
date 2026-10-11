@@ -94,6 +94,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - API: `META_PHONE_NUMBER_ID=1323932417479627` binding deployed; health reports provider enabled.
 - D1 sample transport evidence: one `MESSAGE`/`RECEIVED` event, provider ID recorded; no real sender identity inferred.
 
+## GFS-90 Real Inbound Evidence
+
+- Verified sender: `+923034901810` (masked in public reporting); two WAMIDs persisted in D1 with `MESSAGE`/`RECEIVED` status.
+- Auto-reply records are idempotent by WAMID and show `FAILED` with safe error `META_MESSAGE_SEND_401`; no credentials or customer content are recorded.
+
 ## GFS-77 Activation Authority
 
 - Admin console: `/meta-activation` on staging, Access-protected for `gisupp@gmail.com`.
