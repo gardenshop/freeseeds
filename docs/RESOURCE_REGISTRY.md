@@ -88,6 +88,12 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - `list_pages` PASS; matching Meta/Cloudflare tabs reused; unrelated tabs changed: 0.
 - Canonical phone list confirms connected `+923044429933`; no individual sender/message evidence was available from the accessible list.
 
+## GFS-89 Webhook State
+
+- Meta App: Published; `messages` webhook field Subscribed; callback URL canonical.
+- API: `META_PHONE_NUMBER_ID=1323932417479627` binding deployed; health reports provider enabled.
+- D1 sample transport evidence: one `MESSAGE`/`RECEIVED` event, provider ID recorded; no real sender identity inferred.
+
 ## GFS-77 Activation Authority
 
 - Admin console: `/meta-activation` on staging, Access-protected for `gisupp@gmail.com`.

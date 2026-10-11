@@ -33,6 +33,15 @@
 - Webhook callback: **UNVERIFIED**; D1 inbound remains zero. Developer Webhooks surface was still loading, so no unsafe mutation was attempted.
 - Automatic reply: **PASS implementation**, live reply **WAITING** for a real callback/customer-service event.
 
+## GFS-89-WEBHOOK-REPAIR Update — 2026-10-11
+
+- Meta App publication: **PASS**; `messages` field: **Subscribed**; callback URL: **canonical**.
+- Sample signed callback transport: **PASS**; D1 inbound: **PASS sample only** (`MESSAGE`/`RECEIVED`).
+- Actual sender: **NOT VERIFIED**; sample data is not customer evidence.
+- Auto-reply: **NOT PROVEN**. Initial sample attempt failed before the phone-ID binding fix; no duplicate replay was made.
+- API phone binding: **FIXED/DEPLOYED**; health reports WhatsApp enabled.
+- Flow E2E: **BLOCKED** pending one genuine customer message and interaction.
+
 ## GFS-68-META-FORM-LAUNCH-FIRST Update — 2026-10-10
 
 - Launch track: **`META_FORM_LAUNCH_FIRST`**

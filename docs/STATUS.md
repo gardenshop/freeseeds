@@ -257,6 +257,13 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Actual historical sender, message IDs, timestamps, and sender-to-phone correlation: `HISTORICAL_SENDER_UNVERIFIABLE`.
 - D1 remains `whatsapp_events=0`; Meta dashboard counts are not treated as webhook delivery proof. App Webhooks route remained loading/progress-only in the reused Developer tab, so callback subscription is unverified.
 
+## GFS-89 Webhook Repair
+
+- Root cause 1: Meta App was unpublished; Meta explicitly warned production data would not be delivered until publication. App is now Published.
+- Root cause 2: API Worker lacked `META_PHONE_NUMBER_ID`, so the first sample inbound was persisted but auto-reply failed with `META_PROVIDER_REQUIRES_LIVE_CONFIGURATION`. Canonical phone binding `1323932417479627` is now deployed and `/health` reports WhatsApp enabled.
+- Meta `messages` field is now visibly Subscribed, callback URL is canonical, and Meta sample event persisted as `MESSAGE`/`RECEIVED` with provider ID `message:ABGGFlA5Fpa`.
+- Sample event is transport proof only, not real-customer proof. Its failed auto-reply was not retried or fabricated; a fresh real customer message is required for live sender/reply proof.
+
 ## GFS-77 Activation Console
 
 - Access-protected `/meta-activation` is deployed for canonical Phone/WABA/App state, ownership/register/subscription actions, webhook/provider/Flow-key status, and controlled-test preparation. No Meta mutation or message was executed.

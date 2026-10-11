@@ -94,6 +94,12 @@
 - Added permanent Chrome tab governance: `list_pages` first, matching-tab reuse, no unrelated-tab navigation, and report inventory fields.
 - Reused canonical WhatsApp Manager phone and Developer App tabs; no unrelated tabs changed. Historical sender/message correlation remains unavailable.
 
+## Unreleased - 2026-10-11 (GFS-89)
+
+- Published canonical Meta App and subscribed `messages` webhook field; saved canonical callback URL.
+- Meta sample event reached D1 as `MESSAGE`/`RECEIVED`.
+- Fixed missing API `META_PHONE_NUMBER_ID` binding that caused the initial auto-reply attempt to fail before provider configuration was complete. No duplicate/sample replay was sent.
+
 ## Unreleased - 2026-10-10 (GFS-85)
 
 - Confirmed API `META_APP_SECRET` secret presence and active provider deployment.
