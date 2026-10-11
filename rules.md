@@ -121,6 +121,9 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Reuse the already-open tab for the same service, task, or page. Do not open a new tab for every sub-step.
 - Open one separate tab only when beginning a genuinely new service, task, or context that should remain separate.
 - Same-task tab reuse is mandatory. Avoid duplicate Cloudflare, Meta, GitHub, or admin tabs. Do not close useful authenticated tabs unless necessary.
+- `CHROME_LIST_PAGES_FIRST`: every browser automation execution or MCP reconnection must begin with `chrome_devtools.list_pages`; build a page-ID, URL, and service inventory before navigation or clicking.
+- `REUSE_EXISTING_MATCHING_TAB`: reuse the exact existing Meta, Cloudflare, GitHub, or Admin page when it matches the task; open exactly one new tab only when no same-service tab exists.
+- `NEVER_CHANGE_UNRELATED_TABS`: never navigate, refresh, close, overwrite, or repurpose an unrelated-origin/task tab. Verify page ID, URL, authenticated identity, and asset before every mutation. Record list-pages result, tab reuse/new-tab result, and unrelated-tab changes in every report.
 
 ## Chrome DevTools MCP Recovery Protocol
 
