@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { applyFertilizerDecision, createWhatsAppProvider, decryptMetaFlowRequest, encryptMetaFlowResponse, getPersistedOrderSummary, isAllowedInstantFormLead, isPaymentMethodComplete, isTerminalOutboxStatus, MetaCapiProvider, MetaFlowEnvelope, normalizePaymentMethodRow, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInstantFormSubmission, persistWebhookRecords, quoteOrder, retryDelaySeconds, selectPaymentMethod, storeReceipt } from "@gfs/core";
+import { applyFertilizerDecision, createWhatsAppProvider, decryptMetaFlowRequest, encryptMetaFlowResponse, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isPaymentMethodComplete, isTerminalOutboxStatus, MetaCapiProvider, MetaFlowEnvelope, normalizePaymentMethodRow, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInstantFormSubmission, persistWebhookRecords, quoteOrder, retryDelaySeconds, selectPaymentMethod, storeReceipt } from "@gfs/core";
 import { handleMetaFlowPayload } from "./flow-endpoint";
 
 type Env = {
@@ -30,14 +30,14 @@ const app = new Hono<Env>();
 
 type ConversationData = { fullName?: string; deliveryAddress?: string; nearbyPlace?: string; city?: string; contactNumber?: string; province?: string; fertilizerSelected?: boolean; orderId?: string; orderNumber?: string };
 
-async function sendConversationReply(db: D1Database, provider: ReturnType<typeof createWhatsAppProvider>, to: string, inboundId: string, body: string): Promise<{ sent: boolean; messageId?: string }> {
+async function sendConversationReply(db: D1Database, provider: ReturnType<typeof createWhatsAppProvider>, to: string, inboundId: string, body: string, buttons?: InteractiveButton[]): Promise<{ sent: boolean; messageId?: string }> {
   const key = `conversation_reply:${inboundId}`;
   const existing = await db.prepare("SELECT status,provider_message_id FROM outbound_messages WHERE idempotency_key=?").bind(key).first<{ status: string; provider_message_id: string | null }>();
   if (existing) return { sent: existing.status === "SENT", ...(existing.provider_message_id ? { messageId: existing.provider_message_id } : {}) };
   const now = new Date().toISOString();
   await db.prepare("INSERT INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), key, "CONVERSATION_REPLY", "PENDING", 0, now, now).run();
   try {
-    const sent = await provider.sendText(to, body);
+    const sent = buttons?.length ? await provider.sendInteractive(to, body, buttons) : await provider.sendText(to, body);
     await db.prepare("UPDATE outbound_messages SET provider_message_id=?,status='SENT',attempt_count=1,updated_at=? WHERE idempotency_key=?").bind(sent.providerMessageId, new Date().toISOString(), key).run();
     return { sent: true, messageId: sent.providerMessageId };
   } catch (error) {
@@ -48,23 +48,26 @@ async function sendConversationReply(db: D1Database, provider: ReturnType<typeof
 }
 
 async function processGuidedConversation(db: D1Database, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }): Promise<boolean> {
-  const message = event.payload && typeof event.payload === "object" ? event.payload as { text?: { body?: string } } : {};
-  const text = typeof message.text?.body === "string" ? message.text.body.trim() : "";
+  const message = event.payload && typeof event.payload === "object" ? event.payload as { text?: { body?: string }; interactive?: { button_reply?: { id?: string; title?: string }; list_reply?: { id?: string; title?: string } }; button?: { payload?: string; text?: string } } : {};
+  const interaction = message.interactive?.button_reply ?? message.interactive?.list_reply;
+  const interactionId = interaction?.id ?? message.button?.payload;
+  const text = typeof message.text?.body === "string" ? message.text.body.trim() : String(interactionId ?? interaction?.title ?? message.button?.text ?? "").trim();
   if (!text) return false;
-  const normalized = text.toUpperCase();
+  const normalized = (interactionId ?? text).toUpperCase();
   const row = await db.prepare("SELECT state,state_data FROM whatsapp_conversations WHERE wa_id=?").bind(event.from).first<{ state: string; state_data: string }>();
   const state = row?.state ?? "NEW";
   let data: ConversationData = {};
   try { data = row?.state_data ? JSON.parse(row.state_data) as ConversationData : {}; } catch { data = {}; }
   let nextState = state;
   let reply: string | null = null;
-  if (state === "NEW" && normalized === "START") { nextState = "FULL_NAME"; reply = "Please reply with your full name."; }
+  if (state === "NEW" && normalized === "START") { nextState = "NEW"; reply = "Welcome to Get Free Seeds! Tap below to begin your order."; }
+  else if (state === "NEW" && normalized === "GET_FREE_PACKS") { nextState = "PRODUCT"; reply = "Confirm your free 5 packs of vegetable seeds."; }
   else if (state === "FULL_NAME") { data.fullName = text; nextState = "ADDRESS"; reply = "Please reply with your complete delivery address."; }
   else if (state === "ADDRESS") { data.deliveryAddress = text; nextState = "NEARBY"; reply = "Please reply with a nearby famous place."; }
   else if (state === "NEARBY") { data.nearbyPlace = text; nextState = "CITY"; reply = "Please reply with your city."; }
   else if (state === "CITY") { data.city = text; nextState = "CONTACT"; reply = "Please reply with your contact number."; }
   else if (state === "CONTACT") { data.contactNumber = text; nextState = "PRODUCT"; reply = "Confirm your free 5 packs of vegetable seeds by replying YES."; }
-  else if (state === "PRODUCT") { if (!/^Y(ES)?$/i.test(text)) { reply = "Please reply YES to confirm the free 5 packs of vegetable seeds."; } else { nextState = "PROVINCE"; reply = "Reply with your province: Punjab, Islamabad, Sindh, KPK, Balochistan, AJK, or Gilgit Baltistan."; } }
+  else if (state === "PRODUCT") { if (!/^(YES|SEEDS_ONLY|ADD_FERTILIZER)$/i.test(normalized)) { reply = "Please choose Seeds Only or Add Fertilizer."; } else { data.fertilizerSelected = normalized === "ADD_FERTILIZER"; nextState = "PROVINCE"; reply = "Reply with your province: Punjab, Islamabad, Sindh, KPK, Balochistan, AJK, or Gilgit Baltistan."; } }
   else if (state === "PROVINCE") { try { const quote = await quoteOrder(db, { productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: text, fertilizerSelected: false }); data.province = quote.province; nextState = "FERTILIZER"; reply = `${quote.items.map((item) => `${item.name}: PKR ${item.lineTotalPkr}`).join("\n")}\nDelivery: PKR ${quote.deliveryFeePkr}\nWould you like Micro Nutrients Fertilizer for the configured price? Reply YES or NO.`; } catch { reply = "Please choose one of the listed provinces."; } }
   else if (state === "FERTILIZER") { if (!/^Y(ES)?$|^N(O)?$/i.test(text)) reply = "Please reply YES or NO for Micro Nutrients Fertilizer."; else { data.fertilizerSelected = /^Y/i.test(text); nextState = "REVIEW"; const quote = await quoteOrder(db, { productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: data.province ?? "", fertilizerSelected: data.fertilizerSelected }); reply = `${quote.items.map((item) => `${item.name}: PKR ${item.lineTotalPkr}`).join("\n")}\nDelivery: PKR ${quote.deliveryFeePkr}\nTOTAL: PKR ${quote.totalPayablePkr}\nReply CONFIRM to create your order.`; } }
   else if (state === "REVIEW") { if (!/^CONFIRM$/i.test(text)) reply = "Reply CONFIRM to create your order, or CANCEL to restart."; else if (!data.fullName || !data.deliveryAddress || !data.nearbyPlace || !data.city || !data.contactNumber || !data.province) { nextState = "FULL_NAME"; data = {}; reply = "I need to restart safely. Please reply with your full name."; } else { const submission = { fullName: data.fullName, deliveryAddress: data.deliveryAddress, nearbyPlace: data.nearbyPlace, city: data.city, contactNumber: data.contactNumber, productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: data.province, fertilizerSelected: data.fertilizerSelected ?? false, whatsappNumber: event.from }; const result = await persistFlowSubmission(db, submission, undefined, `WHATSAPP:${event.id}`); data.orderId = result.orderId; data.orderNumber = result.orderNumber; const methods = (await db.prepare("SELECT * FROM payment_methods WHERE enabled=1").all()).results.map((row) => normalizePaymentMethodRow(row as Record<string, unknown>)).filter((method) => isPaymentMethodComplete(method)); nextState = methods.length ? "PAYMENT_METHOD" : "COMPLETE"; reply = `Order ${result.orderNumber} created.\nTotal: PKR ${result.quote?.totalPayablePkr ?? "configured tariff"}\n${methods.length ? `Reply JAZZCASH to view your verified payment instructions.` : "Payment methods are not configured; no payment request was sent."}`; } }
@@ -73,7 +76,8 @@ async function processGuidedConversation(db: D1Database, provider: ReturnType<ty
   if (!reply) return false;
   const now = new Date().toISOString();
   await db.prepare("INSERT INTO whatsapp_conversations (id,wa_id,state,state_data,last_inbound_message_id,created_at,updated_at) VALUES (?,?,?,?,?,?,?) ON CONFLICT(wa_id) DO UPDATE SET state=excluded.state,state_data=excluded.state_data,last_inbound_message_id=excluded.last_inbound_message_id,updated_at=excluded.updated_at").bind(crypto.randomUUID(), event.from, nextState, JSON.stringify(data), event.id, now, now).run();
-  await sendConversationReply(db, provider, event.from, event.id, reply);
+  const buttons = state === "NEW" && normalized === "START" ? [{ id: "GET_FREE_PACKS", title: "Get 5 Free Packs" }] : state === "PRODUCT" && /^Y(ES)?$/i.test(text) ? [{ id: "SEEDS_ONLY", title: "Seeds Only" }, { id: "ADD_FERTILIZER", title: "Add Fertilizer" }] : undefined;
+  await sendConversationReply(db, provider, event.from, event.id, reply, buttons);
   return true;
 }
 

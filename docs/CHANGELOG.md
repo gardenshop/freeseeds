@@ -148,6 +148,11 @@
 - Reconciled owner-reported/live D1 order `FS-261012-000001`: Punjab, seed-only, dynamic total PKR 250, JazzCash `PAYMENT_PENDING`.
 - No payment receipt, approval, PAID transition, Purchase CAPI, or fulfillment claim was made.
 
+## Unreleased - 2026-10-12 (GFS-107)
+
+- Deployed normalized interactive WhatsApp routing with semantic button/list IDs, text fallback, and pending-payment handling.
+- Added server-side 14-day submitted-order cooldown with only the verified E2E sender exempt; replay/concurrency tests remain green.
+
 ## Unreleased - 2026-10-11 (GFS-92)
 
 - Rechecked active server-side Graph token ladder; `/me`, permissions, phone, and WABA reads all return HTTP 401 despite secret/deployment presence.

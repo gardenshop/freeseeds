@@ -106,6 +106,10 @@ The guided-chat and order-number infrastructure is ready, but no authorized cust
 
 Staging D1 now contains the owner-reported live order `FS-261012-000001` in `PAYMENT_PENDING` with dynamic Punjab total PKR 250, seed-only items, and JazzCash expected amount PKR 250. This is real order evidence; no payment receipt, approval, PAID transition, Purchase CAPI, or fulfillment claim is made.
 
+## 2026-10-12: GFS-107 Interactive Router and Cooldown
+
+Interactive and text inputs now share normalized semantic routing, preventing repeated welcomes and positional button drift. Order creation enforces the 14-day server-side cooldown using submitted timestamps; only the verified E2E sender is exempt. Native client coverage remains untested outside the available environment.
+
 ## 2026-10-11: GFS-92 Token Validation Order
 
 The activation console server-side ladder now returns HTTP 401 for `/me`, permissions, phone, and WABA reads. This is an authoritative runtime token rejection despite secret-name/deployment presence. No blind rotation or duplicate customer message was performed; the only remaining protected action is canonical token replacement.

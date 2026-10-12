@@ -116,6 +116,14 @@
 - Real FS order/summary/JazzCash instructions: **NOT RUN**; no customer answers or payment details were invented.
 - Receipt/R2/admin approval/Purchase CAPI/fulfillment: **NOT RUN**; real payment approval remains gated.
 
+## GFS-107-ROUTER-COOLDOWN Update — 2026-10-12
+
+- Interactive router: **PASS implementation/deployed**; stable IDs and text fallback share one dispatcher.
+- Repeated welcome prevention: **PASS implementation**.
+- 14-day cooldown: **PASS implementation/tests**; verified E2E sender exemption scoped.
+- Real tap/device E2E: **NOT RUN**; no physical Android/iOS/Desktop coverage available.
+- Live order/payment/receipt: existing order evidence remains; no duplicate order or payment claim.
+
 ## GFS-105-LIVE-COMMERCE Update — 2026-10-12
 
 - START: **NOT OBSERVED** after deployment; no customer session was proven available.

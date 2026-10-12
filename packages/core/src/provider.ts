@@ -1,12 +1,13 @@
 export type InboundEvent = { id: string; from: string; kind: "text" | "interactive" | "flow" | "media"; payload: unknown; referral?: { ctwaClid?: string; campaignId?: string; adSetId?: string; adId?: string } };
 export type MediaResult = { mimeType: string; size: number; body: ArrayBuffer; mediaId: string };
+export type InteractiveButton = string | { id: string; title: string };
 
 export interface WhatsAppProvider {
   verifyWebhook(challenge: string, verifyToken: string, configuredToken?: string): string | null;
   validateSignature(rawBody: ArrayBuffer, signature: string | null, appSecret?: string): Promise<boolean>;
   parseInboundEvent(payload: unknown): InboundEvent[];
   sendText(to: string, body: string): Promise<{ providerMessageId: string }>;
-  sendInteractive(to: string, body: string, buttons: string[]): Promise<{ providerMessageId: string }>;
+  sendInteractive(to: string, body: string, buttons: InteractiveButton[]): Promise<{ providerMessageId: string }>;
   sendTemplate(to: string, template: string, parameters: string[]): Promise<{ providerMessageId: string }>;
   sendFlow(to: string, flowId: string, flowToken: string): Promise<{ providerMessageId: string }>;
   sendPaymentInstructions(to: string, body: string, qr?: { body: ArrayBuffer; mimeType: string }): Promise<{ providerMessageId: string }>;
@@ -20,7 +21,7 @@ export class MockWhatsAppProvider implements WhatsAppProvider {
   async validateSignature(): Promise<boolean> { return true; }
   parseInboundEvent(payload: unknown): InboundEvent[] { return Array.isArray(payload) ? payload as InboundEvent[] : []; }
   async sendText(to: string, body: string) { this.sent.push({ to, kind: "text", body }); return { providerMessageId: `mock_${this.sent.length}` }; }
-  async sendInteractive(to: string, body: string, _buttons: string[] = []) { this.sent.push({ to, kind: "interactive", body }); return { providerMessageId: `mock_${this.sent.length}` }; }
+  async sendInteractive(to: string, body: string, _buttons: InteractiveButton[] = []) { this.sent.push({ to, kind: "interactive", body }); return { providerMessageId: `mock_${this.sent.length}` }; }
   async sendTemplate(to: string, template: string, _parameters: string[] = []) { this.sent.push({ to, kind: "template", body: template }); return { providerMessageId: `mock_${this.sent.length}` }; }
   async sendFlow(to: string, flowId: string, _flowToken: string) { this.sent.push({ to, kind: "flow", body: flowId }); return { providerMessageId: `mock_${this.sent.length}` }; }
   async sendPaymentInstructions(to: string, body: string, _qr?: { body: ArrayBuffer; mimeType: string }) { this.sent.push({ to, kind: "payment-instructions", body }); return { providerMessageId: `mock_${this.sent.length}` }; }
@@ -65,7 +66,7 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
   }
 
   async sendText(to: string, body: string) { return this.send({ messaging_product: "whatsapp", to, type: "text", text: { body } }); }
-  async sendInteractive(to: string, body: string, buttons: string[]) { return this.send({ messaging_product: "whatsapp", to, type: "interactive", interactive: { type: "button", body: { text: body }, action: { buttons: buttons.map((title, index) => ({ type: "reply", reply: { id: `button_${index}`, title } })) } } }); }
+  async sendInteractive(to: string, body: string, buttons: InteractiveButton[]) { return this.send({ messaging_product: "whatsapp", to, type: "interactive", interactive: { type: "button", body: { text: body }, action: { buttons: buttons.slice(0, 3).map((button, index) => { const item = typeof button === "string" ? { id: `button_${index}`, title: button } : button; return { type: "reply", reply: item }; }) } } }); }
   async sendTemplate(to: string, template: string, parameters: string[]) { return this.send({ messaging_product: "whatsapp", to, type: "template", template: { name: template, language: { code: "en_US" }, components: parameters.length ? [{ type: "body", parameters: parameters.map((text) => ({ type: "text", text })) }] : undefined } }); }
   async sendFlow(to: string, flowId: string, flowToken: string) { return this.send({ messaging_product: "whatsapp", to, type: "interactive", interactive: { type: "flow", body: { text: "Get Free Seeds" }, action: { name: "flow", parameters: { flow_id: flowId, flow_token: flowToken, mode: "published" } } } }); }
   async sendPaymentInstructions(to: string, body: string, qr?: { body: ArrayBuffer; mimeType: string }) {

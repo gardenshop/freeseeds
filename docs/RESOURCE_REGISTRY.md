@@ -139,6 +139,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Existing live order authority: `FS-261012-000001`, state `PAYMENT_PENDING`, dynamic total PKR 250, Punjab seed-only path.
 - JazzCash expected payment amount is PKR 250 and review state is `PENDING`; no receipt or approval exists.
 
+## GFS-107 Interaction Governance
+
+- Stable interactive IDs are server-recognized and client fallbacks use numbered text mapped to the same intents.
+- Cooldown is server/D1 enforced across supported order paths; exact E2E sender exemption is scoped to `923034901810`.
+
 ## GFS-92 Token Runtime Gate
 
 - API/admin secret names remain present, but current server-side Graph ladder returns HTTP 401; values are never read or recorded.

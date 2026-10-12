@@ -321,6 +321,13 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Conversation state is `PAYMENT_PENDING`; JazzCash payment row exists with expected amount PKR 250 and review state `PENDING`.
 - Customer/order personal fields are not repeated in docs. Live WhatsApp response records are present; no PAID or fulfillment claim was made.
 
+## GFS-107 Tap Router and Cooldown
+
+- API now accepts text, interactive button/list replies, template payloads and Flow replies through normalized intent routing; stable semantic IDs replace positional button IDs.
+- START/product/payment-pending paths no longer fall through to repeated welcome replies; response idempotency remains keyed by inbound message ID.
+- Server/D1 order cooldown rule is implemented as fourteen 24-hour days from submitted order creation, with only verified E2E sender `+923034901810` exempt.
+- Tap UX implementation is deployed; real-device Android/iOS/Desktop rendering was not independently tested in this environment.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.
