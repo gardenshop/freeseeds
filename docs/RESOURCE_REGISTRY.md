@@ -115,6 +115,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - JazzCash staging row has non-secret configuration presence and QR object by D1 flags, but payee ownership is not verified and it remains disabled.
 - Easypaisa/Bank remain unconfigured. Dynamic WhatsApp totals remain tariff/D1 authoritative.
 
+## GFS-102 Commerce Readiness
+
+- JazzCash configuration is present by safe D1 flags but disabled pending payee/QR ownership verification.
+- No live order or real payment request has been created; guided chat awaits a fresh customer START.
+
 ## GFS-92 Token Runtime Gate
 
 - API/admin secret names remain present, but current server-side Graph ladder returns HTTP 401; values are never read or recorded.

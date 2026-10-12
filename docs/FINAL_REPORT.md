@@ -95,6 +95,13 @@
 - START/state machine: **PASS implementation**, no fresh live state yet.
 - Flow/order: **READY_PENDING customer START and field responses**; no payment request sent.
 
+## GFS-102-PAYMENT-ORDER Update — 2026-10-12
+
+- Payment Save: **PASS**; JazzCash draft persisted, disabled; QR/payee ownership **UNVERIFIED**. Easypaisa/Bank missing.
+- Fresh START: **NOT OBSERVED** after state-machine deployment.
+- Five fields/quote/FS order/summary: **NOT RUN**; no customer answers invented.
+- Payment backend E2E: **NOT RUN**; real payment remains disabled.
+
 ## GFS-68-META-FORM-LAUNCH-FIRST Update — 2026-10-10
 
 - Launch track: **`META_FORM_LAUNCH_FIRST`**
