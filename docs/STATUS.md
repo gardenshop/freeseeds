@@ -277,6 +277,13 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - No duplicate welcome/order was sent. The existing code has idempotent welcome handling, but no complete START state machine can safely advance without the actual message content and customer responses.
 - Current exact blocker: `INBOUND_MESSAGE_CONTENT_UNAVAILABLE`; no customer answers or FS order were invented.
 
+## GFS-100 Privacy-Safe Guided Chat
+
+- Added and deployed `whatsapp_conversations` state storage with `NEW → FULL_NAME → ADDRESS → NEARBY → CITY → CONTACT → PRODUCT → PROVINCE → FERTILIZER → REVIEW → COMPLETE` transitions.
+- Incoming text is parsed in memory; only state, validated fields, last inbound message ID, and idempotent response records are persisted. Raw message bodies are not stored.
+- `START` now routes to the first question and invalid answers repeat the current state. Dynamic D1 quote and `persistFlowSubmission` are reused; payment details remain disabled.
+- Existing historical START cannot be replayed because its body was intentionally not stored. One fresh customer START is required now that the deployed handler is ready.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

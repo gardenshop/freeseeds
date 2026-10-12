@@ -104,6 +104,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - D1 event privacy model stores provider event ID, type, status, payload hash, and correlation ID—not raw WhatsApp message text.
 - Existing real inbound metadata is sufficient for delivery/idempotency proof but not for replaying START or deriving customer field answers.
 
+## GFS-100 Conversation State
+
+- D1 `whatsapp_conversations` stores normalized state/data, `wa_id`, last inbound message ID, and timestamps; raw WhatsApp bodies remain excluded.
+- State responses use `conversation_reply:<message_id>` idempotency keys and existing Admin/D1 tariff quote authority.
+
 ## GFS-92 Token Runtime Gate
 
 - API/admin secret names remain present, but current server-side Graph ladder returns HTTP 401; values are never read or recorded.

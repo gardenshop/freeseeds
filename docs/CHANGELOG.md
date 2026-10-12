@@ -110,6 +110,12 @@
 - Traced existing persisted inbound events and documented the privacy boundary: event body text is intentionally not stored, so START/order answers cannot be reconstructed or fabricated.
 - No duplicate welcome, order, or customer-field response was sent.
 
+## Unreleased - 2026-10-12 (GFS-100)
+
+- Added/deployed privacy-safe WhatsApp guided-chat state machine and D1 conversation migration.
+- START now begins the five-field order conversation; raw message bodies are not persisted, and response/order transitions are idempotent by real message ID.
+- Historical START could not be reconstructed; one fresh START is required after the deployed handler.
+
 ## Unreleased - 2026-10-11 (GFS-92)
 
 - Rechecked active server-side Graph token ladder; `/me`, permissions, phone, and WABA reads all return HTTP 401 despite secret/deployment presence.

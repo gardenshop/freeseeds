@@ -55,6 +55,8 @@
 | GFS-90 live auto-reply | Graph send accepted with wamid/status | BLOCKED: API Worker Meta token rejected with HTTP 401; no retry |
 | GFS-99 START trace | persisted event identifies exact START text and advances state | BLOCKED by privacy schema: message body not stored; no invented customer answers |
 | GFS-99 order state | five fields → quote → FS order → summary | BLOCKED pending real message content/customer interaction |
+| GFS-100 privacy-safe START | START parser, state transitions, raw-body exclusion, response idempotency | PASS implementation/build/tests; live START pending |
+| GFS-100 order conversation | fields → quote → review → FS order → summary | READY_PENDING real customer answers; payment request remains disabled |
 | GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |
 | GFS-98 token recovery | owner-installed secret → Graph ladder → API/Admin readiness | PASS fresh token; no token value inspected |
 | GFS-98 atomic reply | one failed event retry, outbound ID, status webhook, no duplicate | PASS: WAMID persisted, SENT status persisted, duplicate count 0 |

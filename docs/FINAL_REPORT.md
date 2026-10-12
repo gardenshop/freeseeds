@@ -79,6 +79,14 @@
 - Subsequent inbound MESSAGE event: **PERSISTED**; content not inferred; BSUID not observed.
 - Flow E2E/order: **BLOCKED** pending actual customer Flow interaction/content.
 
+## GFS-100-START-ROUTING Update — 2026-10-12
+
+- START recognition: **PASS implementation**, live event pending.
+- D1 conversation state: **PASS implementation/deployment**; raw bodies excluded.
+- Actual next bot message: **READY**, not triggered by historical event.
+- Five fields/quote/FS order: **READY_PENDING customer answers**.
+- Flow E2E: **BLOCKED** only by fresh customer interaction; payment configuration remains separate.
+
 ## GFS-68-META-FORM-LAUNCH-FIRST Update — 2026-10-10
 
 - Launch track: **`META_FORM_LAUNCH_FIRST`**

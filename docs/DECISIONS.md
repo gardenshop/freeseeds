@@ -78,6 +78,10 @@ The customer message from `+923034901810` is real inbound evidence: two WAMIDs p
 
 The existing privacy-preserving webhook schema deliberately does not store raw message bodies. Therefore the persisted event IDs cannot prove or replay the customer's START text, and no customer identity/order answers may be invented. A future guided-chat state machine must receive a fresh real message after the content/state contract is implemented.
 
+## 2026-10-12: GFS-100 Privacy-Safe START Routing
+
+Implemented the guided-chat state machine and deployed it with migration `0011_whatsapp_conversations.sql`. START and subsequent answers are parsed in memory; durable state and validated fields are stored without raw message bodies, and responses are idempotent by inbound message ID. Historical START remains unrecoverable, so one genuine START after deployment is the only remaining interaction dependency.
+
 ## 2026-10-11: GFS-92 Token Validation Order
 
 The activation console server-side ladder now returns HTTP 401 for `/me`, permissions, phone, and WABA reads. This is an authoritative runtime token rejection despite secret-name/deployment presence. No blind rotation or duplicate customer message was performed; the only remaining protected action is canonical token replacement.

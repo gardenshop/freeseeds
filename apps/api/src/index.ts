@@ -28,6 +28,54 @@ type Env = {
 
 const app = new Hono<Env>();
 
+type ConversationData = { fullName?: string; deliveryAddress?: string; nearbyPlace?: string; city?: string; contactNumber?: string; province?: string; fertilizerSelected?: boolean };
+
+async function sendConversationReply(db: D1Database, provider: ReturnType<typeof createWhatsAppProvider>, to: string, inboundId: string, body: string): Promise<{ sent: boolean; messageId?: string }> {
+  const key = `conversation_reply:${inboundId}`;
+  const existing = await db.prepare("SELECT status,provider_message_id FROM outbound_messages WHERE idempotency_key=?").bind(key).first<{ status: string; provider_message_id: string | null }>();
+  if (existing) return { sent: existing.status === "SENT", ...(existing.provider_message_id ? { messageId: existing.provider_message_id } : {}) };
+  const now = new Date().toISOString();
+  await db.prepare("INSERT INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), key, "CONVERSATION_REPLY", "PENDING", 0, now, now).run();
+  try {
+    const sent = await provider.sendText(to, body);
+    await db.prepare("UPDATE outbound_messages SET provider_message_id=?,status='SENT',attempt_count=1,updated_at=? WHERE idempotency_key=?").bind(sent.providerMessageId, new Date().toISOString(), key).run();
+    return { sent: true, messageId: sent.providerMessageId };
+  } catch (error) {
+    const safe = error instanceof Error ? error.message.slice(0, 160) : "META_CONVERSATION_REPLY_FAILED";
+    await db.prepare("UPDATE outbound_messages SET status='FAILED',attempt_count=1,last_error=?,updated_at=? WHERE idempotency_key=?").bind(safe, new Date().toISOString(), key).run();
+    return { sent: false };
+  }
+}
+
+async function processGuidedConversation(db: D1Database, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }): Promise<boolean> {
+  const message = event.payload && typeof event.payload === "object" ? event.payload as { text?: { body?: string } } : {};
+  const text = typeof message.text?.body === "string" ? message.text.body.trim() : "";
+  if (!text) return false;
+  const normalized = text.toUpperCase();
+  const row = await db.prepare("SELECT state,state_data FROM whatsapp_conversations WHERE wa_id=?").bind(event.from).first<{ state: string; state_data: string }>();
+  const state = row?.state ?? "NEW";
+  let data: ConversationData = {};
+  try { data = row?.state_data ? JSON.parse(row.state_data) as ConversationData : {}; } catch { data = {}; }
+  let nextState = state;
+  let reply: string | null = null;
+  if (state === "NEW" && normalized === "START") { nextState = "FULL_NAME"; reply = "Please reply with your full name."; }
+  else if (state === "FULL_NAME") { data.fullName = text; nextState = "ADDRESS"; reply = "Please reply with your complete delivery address."; }
+  else if (state === "ADDRESS") { data.deliveryAddress = text; nextState = "NEARBY"; reply = "Please reply with a nearby famous place."; }
+  else if (state === "NEARBY") { data.nearbyPlace = text; nextState = "CITY"; reply = "Please reply with your city."; }
+  else if (state === "CITY") { data.city = text; nextState = "CONTACT"; reply = "Please reply with your contact number."; }
+  else if (state === "CONTACT") { data.contactNumber = text; nextState = "PRODUCT"; reply = "Confirm your free 5 packs of vegetable seeds by replying YES."; }
+  else if (state === "PRODUCT") { if (!/^Y(ES)?$/i.test(text)) { reply = "Please reply YES to confirm the free 5 packs of vegetable seeds."; } else { nextState = "PROVINCE"; reply = "Reply with your province: Punjab, Islamabad, Sindh, KPK, Balochistan, AJK, or Gilgit Baltistan."; } }
+  else if (state === "PROVINCE") { try { const quote = await quoteOrder(db, { productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: text, fertilizerSelected: false }); data.province = quote.province; nextState = "FERTILIZER"; reply = `${quote.items.map((item) => `${item.name}: PKR ${item.lineTotalPkr}`).join("\n")}\nDelivery: PKR ${quote.deliveryFeePkr}\nWould you like Micro Nutrients Fertilizer for the configured price? Reply YES or NO.`; } catch { reply = "Please choose one of the listed provinces."; } }
+  else if (state === "FERTILIZER") { if (!/^Y(ES)?$|^N(O)?$/i.test(text)) reply = "Please reply YES or NO for Micro Nutrients Fertilizer."; else { data.fertilizerSelected = /^Y/i.test(text); nextState = "REVIEW"; const quote = await quoteOrder(db, { productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: data.province ?? "", fertilizerSelected: data.fertilizerSelected }); reply = `${quote.items.map((item) => `${item.name}: PKR ${item.lineTotalPkr}`).join("\n")}\nDelivery: PKR ${quote.deliveryFeePkr}\nTOTAL: PKR ${quote.totalPayablePkr}\nReply CONFIRM to create your order.`; } }
+  else if (state === "REVIEW") { if (!/^CONFIRM$/i.test(text)) reply = "Reply CONFIRM to create your order, or CANCEL to restart."; else if (!data.fullName || !data.deliveryAddress || !data.nearbyPlace || !data.city || !data.contactNumber || !data.province) { nextState = "FULL_NAME"; data = {}; reply = "I need to restart safely. Please reply with your full name."; } else { const submission = { fullName: data.fullName, deliveryAddress: data.deliveryAddress, nearbyPlace: data.nearbyPlace, city: data.city, contactNumber: data.contactNumber, productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: data.province, fertilizerSelected: data.fertilizerSelected ?? false, whatsappNumber: event.from }; const result = await persistFlowSubmission(db, submission); nextState = "COMPLETE"; reply = `Order ${result.orderNumber} created.\nTotal: PKR ${result.quote?.totalPayablePkr ?? "configured tariff"}\nPayment details are not configured yet; no payment request was sent.`; } }
+  else if (state === "COMPLETE" && normalized === "START") { nextState = "FULL_NAME"; data = {}; reply = "Starting a new order. Please reply with your full name."; }
+  if (!reply) return false;
+  const now = new Date().toISOString();
+  await db.prepare("INSERT INTO whatsapp_conversations (id,wa_id,state,state_data,last_inbound_message_id,created_at,updated_at) VALUES (?,?,?,?,?,?,?) ON CONFLICT(wa_id) DO UPDATE SET state=excluded.state,state_data=excluded.state_data,last_inbound_message_id=excluded.last_inbound_message_id,updated_at=excluded.updated_at").bind(crypto.randomUUID(), event.from, nextState, JSON.stringify(data), event.id, now, now).run();
+  await sendConversationReply(db, provider, event.from, event.id, reply);
+  return true;
+}
+
 app.get("/health", (c) => c.json({ ok: true, service: "getfreeseeds-api", state: c.env.DEPLOYMENT_STATE, whatsapp: c.env.META_PROVIDER_ENABLED === "true" && c.env.WHATSAPP_PROVIDER === "meta" ? "enabled" : "disabled-until-meta-onboarding" }));
 app.get("/privacy", (c) => c.html("<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Get Free Seeds Privacy Policy</title></head><body><main><h1>Get Free Seeds Privacy Policy</h1><p>Get Free Seeds is operated by Garden Shop. We collect the information a customer submits to request seed delivery, including name, delivery address, nearby landmark, city, contact number, WhatsApp identifiers supplied by Meta, order choices, and payment receipt evidence when provided.</p><p>We use this information only to process, verify, fulfil, support, and audit the customer request; prevent duplicate or fraudulent requests; and measure service performance. Payment evidence is stored privately and is reviewed only by authorised staff.</p><p>We do not sell customer information. We share data only with service providers required to operate the service, comply with law, or protect the service and its users.</p><p>Customers may request access, correction, or deletion through the Get Free Seeds Page or the same official WhatsApp conversation used for the request.</p><p>Last updated: 11 October 2026.</p></main></body></html>"));
 app.get("/data-deletion", (c) => c.html("<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Get Free Seeds Data Deletion</title></head><body><main><h1>Data Deletion Instructions</h1><p>To request deletion of information held by Get Free Seeds, contact the Get Free Seeds Facebook Page or send the request through the same official WhatsApp conversation used for the seed request. Include only the information needed to identify the request. Garden Shop will verify the requester and delete or anonymise eligible records, subject to legal, fraud-prevention, and accounting retention requirements.</p></main></body></html>"));
@@ -55,6 +103,7 @@ app.post("/webhooks/whatsapp", async (c) => {
   const inbound = provider.parseInboundEvent(payload).filter((event) => event.kind === "text");
   let autoReplies = 0;
   for (const event of inbound) {
+    if (c.env.DB && await processGuidedConversation(c.env.DB, provider, event)) continue;
     const idempotencyKey = `welcome_reply:${event.id}`;
     const existing = c.env.DB ? await c.env.DB.prepare("SELECT status FROM outbound_messages WHERE idempotency_key=?").bind(idempotencyKey).first<{ status: string }>() : null;
     if (existing) continue;
