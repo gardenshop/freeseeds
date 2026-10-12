@@ -13,11 +13,17 @@ export type PaymentMethodConfig = {
   instructions?: string;
   referenceInstruction?: string;
   heading?: string;
+  headingUr?: string;
   qrCaption?: string;
+  qrCaptionUr?: string;
   shortInstructions?: string;
+  shortInstructionsUr?: string;
   receiptInstructions?: string;
+  receiptInstructionsUr?: string;
   paymentHelpCopy?: string;
+  paymentHelpCopyUr?: string;
   statusCopy?: string;
+  statusCopyUr?: string;
   enabled: boolean;
   sortOrder: number;
   updatedAt?: string;
@@ -34,11 +40,17 @@ export type PaymentInstructions = {
   instructions?: string;
   referenceInstruction?: string;
   heading?: string;
+  headingUr?: string;
   qrCaption?: string;
+  qrCaptionUr?: string;
   shortInstructions?: string;
+  shortInstructionsUr?: string;
   receiptInstructions?: string;
+  receiptInstructionsUr?: string;
   paymentHelpCopy?: string;
+  paymentHelpCopyUr?: string;
   statusCopy?: string;
+  statusCopyUr?: string;
 };
 
 export function validatePaymentAmount(value: unknown): number {
@@ -85,11 +97,17 @@ export function paymentInstructions(config: PaymentMethodConfig | undefined): Pa
     ...(config.instructions ? { instructions: config.instructions } : {}),
     ...(config.referenceInstruction ? { referenceInstruction: config.referenceInstruction } : {}),
     ...(config.heading ? { heading: config.heading } : {}),
+    ...(config.headingUr ? { headingUr: config.headingUr } : {}),
     ...(config.qrCaption ? { qrCaption: config.qrCaption } : {}),
+    ...(config.qrCaptionUr ? { qrCaptionUr: config.qrCaptionUr } : {}),
     ...(config.shortInstructions ? { shortInstructions: config.shortInstructions } : {}),
+    ...(config.shortInstructionsUr ? { shortInstructionsUr: config.shortInstructionsUr } : {}),
     ...(config.receiptInstructions ? { receiptInstructions: config.receiptInstructions } : {}),
+    ...(config.receiptInstructionsUr ? { receiptInstructionsUr: config.receiptInstructionsUr } : {}),
     ...(config.paymentHelpCopy ? { paymentHelpCopy: config.paymentHelpCopy } : {}),
-    ...(config.statusCopy ? { statusCopy: config.statusCopy } : {})
+    ...(config.paymentHelpCopyUr ? { paymentHelpCopyUr: config.paymentHelpCopyUr } : {}),
+    ...(config.statusCopy ? { statusCopy: config.statusCopy } : {}),
+    ...(config.statusCopyUr ? { statusCopyUr: config.statusCopyUr } : {})
   };
 }
 
@@ -120,11 +138,17 @@ export function normalizePaymentMethodRow(row: Record<string, unknown>): Payment
     ...(row.instructions ? { instructions: String(row.instructions) } : {}),
     ...(row.reference_instruction ? { referenceInstruction: String(row.reference_instruction) } : {}),
     ...(row.heading ? { heading: String(row.heading) } : {}),
+    ...(row.heading_ur ? { headingUr: String(row.heading_ur) } : {}),
     ...(row.qr_caption ? { qrCaption: String(row.qr_caption) } : {}),
+    ...(row.qr_caption_ur ? { qrCaptionUr: String(row.qr_caption_ur) } : {}),
     ...(row.short_instructions ? { shortInstructions: String(row.short_instructions) } : {}),
+    ...(row.short_instructions_ur ? { shortInstructionsUr: String(row.short_instructions_ur) } : {}),
     ...(row.receipt_instructions ? { receiptInstructions: String(row.receipt_instructions) } : {}),
+    ...(row.receipt_instructions_ur ? { receiptInstructionsUr: String(row.receipt_instructions_ur) } : {}),
     ...(row.payment_help_copy ? { paymentHelpCopy: String(row.payment_help_copy) } : {}),
+    ...(row.payment_help_copy_ur ? { paymentHelpCopyUr: String(row.payment_help_copy_ur) } : {}),
     ...(row.status_copy ? { statusCopy: String(row.status_copy) } : {}),
+    ...(row.status_copy_ur ? { statusCopyUr: String(row.status_copy_ur) } : {}),
     enabled: Number(row.enabled) === 1,
     sortOrder: Number(row.sort_order),
     ...(row.updated_at ? { updatedAt: String(row.updated_at) } : {}),

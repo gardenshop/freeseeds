@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { decryptMetaFlowRequest, encryptMetaFlowResponse } from "@gfs/core";
 import { handleMetaFlowPayload } from "../apps/api/src/flow-endpoint";
@@ -38,11 +39,9 @@ describe("Meta encrypted WhatsApp Flow protocol", () => {
   });
 
   it("returns safe protocol screens and quote errors without exposing input data", async () => {
-    await expect(handleMetaFlowPayload({ version: "3.0", action: "INIT", data: {} })).resolves.toMatchObject({ screen: "CUSTOMER_DETAILS" });
-    await expect(handleMetaFlowPayload({ version: "3.0", action: "data_exchange", screen: "ORDER", data: {
-      fullName: "Synthetic Customer", deliveryAddress: "1 Test Street", nearbyPlace: "Test Park", city: "Sahiwal", contactNumber: "03001234567", productCode: "MISSING", province: "Punjab", fertilizerSelected: false
-    } }, { prepare: () => ({ bind: () => ({ first: async () => undefined }) }) } as unknown as D1Database)).resolves.toMatchObject({ screen: "ORDER", data: { error: "PRODUCT_NOT_FOUND" } });
-    await expect(handleMetaFlowPayload({ version: "3.0", action: "data_exchange", screen: "ORDER", data: { fullName: "x" } })).resolves.toMatchObject({ screen: "ORDER", data: { error: expect.stringMatching(/^[A-Z_]+$/) } });
+    await expect(handleMetaFlowPayload({ version: "3.0", action: "INIT", data: {} })).resolves.toMatchObject({ screen: "OFFER" });
+    await expect(handleMetaFlowPayload({ version: "3.0", action: "data_exchange", screen: "OFFER", data: { productCode: "FIXTURE-SEEDS" } })).resolves.toMatchObject({ screen: "FERTILIZER" });
+    await expect(handleMetaFlowPayload({ version: "3.0", action: "data_exchange", screen: "OFFER", data: {} })).resolves.toMatchObject({ screen: "OFFER", data: { error: "PRODUCT_REQUIRED" } });
   });
 
   it("returns only server quote values and complete payment method names", async () => {
@@ -61,11 +60,23 @@ describe("Meta encrypted WhatsApp Flow protocol", () => {
         return statement;
       }
     } as unknown as D1Database;
-    const response = await handleMetaFlowPayload({ version: "3.0", action: "data_exchange", screen: "ORDER", data: {
-      fullName: "Synthetic Customer", deliveryAddress: "1 Test Street", nearbyPlace: "Test Park", city: "Sahiwal", contactNumber: "03001234567", productCode: "FIXTURE-SEEDS", province: "Punjab"
+    const response = await handleMetaFlowPayload({ version: "3.0", action: "data_exchange", screen: "PROVINCE", data: {
+      productCode: "FIXTURE-SEEDS", province: "Punjab", fertilizerSelected: false
     } }, db);
-    expect(response).toMatchObject({ screen: "FERTILIZER", data: { quote: { totalPayablePkr: 450, paymentMethods: ["JazzCash"] } } });
+    expect(response).toMatchObject({ screen: "DELIVERY_FORM", data: { quote: { totalPayablePkr: 450, paymentMethods: ["JazzCash"] } } });
     expect(JSON.stringify(response)).not.toContain("Incomplete");
+  });
+
+  it("keeps the Meta Flow journey ordered with one five-field delivery screen", async () => {
+    const definition = JSON.parse(await readFile("whatsapp/flows/get-free-seeds.json", "utf8")) as { routing_model: Record<string, string[]>; screens: Array<{ id: string; layout: { children: unknown[] } }> };
+    expect(Object.keys(definition.routing_model)).toEqual(["OFFER", "FERTILIZER", "PROVINCE", "DELIVERY_FORM", "REVIEW", "CONFIRM", "PAYMENT_METHOD"]);
+    expect(definition.routing_model.DELIVERY_FORM).toEqual(["REVIEW"]);
+    const delivery = definition.screens.find((screen) => screen.id === "DELIVERY_FORM");
+    expect(JSON.stringify(delivery)).toContain("fullName");
+    expect(JSON.stringify(delivery)).toContain("deliveryAddress");
+    expect(JSON.stringify(delivery)).toContain("nearbyPlace");
+    expect(JSON.stringify(delivery)).toContain("city");
+    expect(JSON.stringify(delivery)).toContain("contactNumber");
   });
 
   it("serves plaintext health checks and encrypted INIT responses", async () => {
@@ -79,6 +90,6 @@ describe("Meta encrypted WhatsApp Flow protocol", () => {
     const response = await api.fetch(new Request("https://example.test/webhooks/whatsapp/flows", { method: "POST", body: JSON.stringify(fixture.envelope), headers: { "content-type": "application/json" } }), { FLOW_PRIVATE_KEY: pem } as never);
     const encrypted = await response.text();
     const plaintext = await crypto.subtle.decrypt({ name: "AES-GCM", iv: fixture.initialVector, tagLength: 128 }, fixture.aesKey, Uint8Array.from(atob(encrypted), (value) => value.charCodeAt(0)));
-    expect(JSON.parse(new TextDecoder().decode(plaintext))).toMatchObject({ screen: "CUSTOMER_DETAILS" });
+    expect(JSON.parse(new TextDecoder().decode(plaintext))).toMatchObject({ screen: "OFFER" });
   });
 });

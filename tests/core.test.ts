@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FlowSubmission, MockWhatsAppProvider, canTransition, createLeadEvent, createPurchaseEvent, eventId, formatPaymentMessage, hasCompleteEnabledPaymentMethod, normalizeContactNumber, parseProductInput, parseProvinceDeliveryRateInput, paymentInstructions, requirePaymentAmount, resolveWhatsAppRecipients, validatePaymentAmount, validatePositiveInteger, validateReceipt } from "@gfs/core";
+import { FlowSubmission, MetaWhatsAppProvider, MockWhatsAppProvider, canTransition, createLeadEvent, createPurchaseEvent, eventId, formatPaymentMessage, hasCompleteEnabledPaymentMethod, normalizeContactNumber, parseProductInput, parseProvinceDeliveryRateInput, paymentInstructions, requirePaymentAmount, resolveWhatsAppRecipients, validatePaymentAmount, validatePositiveInteger, validateReceipt } from "@gfs/core";
 
 describe("Get Free Seeds domain", () => {
   it("requires exactly five Flow fields", () => {
@@ -51,4 +51,19 @@ describe("Get Free Seeds domain", () => {
   });
   it("validates receipt media", () => { expect(() => validateReceipt("image/png", 10)).not.toThrow(); expect(() => validateReceipt("text/html", 10)).toThrow(); });
   it("uses a provider boundary with a mock", async () => { const provider = new MockWhatsAppProvider(); await provider.sendText("synthetic", "Payment received for verification"); expect(provider.sent[0]?.kind).toBe("text"); });
+  it("sends Meta-compatible Flow parameters", async () => {
+    const originalFetch = globalThis.fetch;
+    let payload: Record<string, unknown> | undefined;
+    globalThis.fetch = async (_input, init) => {
+      payload = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      return new Response(JSON.stringify({ messages: [{ id: "synthetic-flow-message" }] }), { status: 200 });
+    };
+    try {
+      const provider = new MetaWhatsAppProvider({ enabled: true, graphVersion: "v26.0", phoneNumberId: "synthetic-phone", accessToken: "synthetic-token" });
+      await provider.sendFlow("synthetic-recipient", "synthetic-flow", "synthetic-flow-token");
+      expect(payload).toMatchObject({ type: "interactive", interactive: { type: "flow", action: { name: "flow", parameters: { flow_id: "synthetic-flow", flow_token: "synthetic-flow-token", flow_message_version: "3", flow_cta: "Get Free Seeds", mode: "published" } } } });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
 });

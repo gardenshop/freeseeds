@@ -1,4 +1,4 @@
-import { FlowCustomerDetails, FlowOrderSelection, MetaFlowPayload, parseFlowSubmission, persistFlowSubmission, quoteOrder, PaymentMethod, selectPaymentMethod, applyFertilizerDecision, getPersistedOrderSummary, configuredPaymentMethodNames, parseFertilizerDecision } from "@gfs/core";
+import { FlowCustomerDetails, FlowOrderSelection, MetaFlowPayload, parseFlowSubmission, persistFlowSubmission, quoteOrder, PaymentMethod, selectPaymentMethod, getPersistedOrderSummary, configuredPaymentMethodNames, parseFertilizerDecision } from "@gfs/core";
 
 const CUSTOMER_FIELDS = ["fullName", "deliveryAddress", "nearbyPlace", "city", "contactNumber"] as const;
 const ORDER_FIELDS = ["productCode", "province", "fertilizerSelected", "orderId", "fertilizerDecision", "paymentMethod"] as const;
@@ -116,42 +116,41 @@ export async function handleMetaFlowPayload(payload: MetaFlowPayload, db?: D1Dat
   const action = actionName(payload);
   const screen = screenName(payload);
   if (action === "PING" || payload.health_check === "ping") return { version: "3.0", data: { status: "active" } };
-  if (action === "INIT") return protocolResponse("CUSTOMER_DETAILS", db ? await catalogData(db) : { products: [], provinces: [] });
+  if (action === "INIT") return protocolResponse("OFFER", db ? await catalogData(db) : { products: [], provinces: [] });
   if (action !== "DATA_EXCHANGE" && action !== "NAVIGATE") return protocolError("FLOW_ACTION_UNSUPPORTED", screen || undefined);
 
   const data = dataFromPayload(payload);
   try {
-    if (screen === "CUSTOMER_DETAILS") {
-      const customer = parseCustomer(data);
-      return protocolResponse("ORDER", { ...customer, ...(db ? await catalogData(db) : { products: [], provinces: [] }) });
-    }
-    if (screen === "ORDER") {
-      const customer = parseCustomer(data);
-      const selection = parseSelection(data);
-      if (!db) return protocolError("ORDER_QUOTE_UNAVAILABLE", screen);
-      const quote = await quoteOrder(db, { ...selection, fertilizerSelected: false });
-      return protocolResponse("FERTILIZER", { ...customer, ...selection, fertilizerSelected: false, quote: quoteData(quote), paymentMethods: quote.paymentMethods, paymentMethodOptions: quote.paymentMethods.map((name) => ({ id: name, title: name })) });
+    if (screen === "OFFER") {
+      if (typeof data.productCode !== "string" || !data.productCode.trim()) throw new Error("PRODUCT_REQUIRED");
+      return protocolResponse("FERTILIZER", { productCode: data.productCode.trim() });
     }
     if (screen === "FERTILIZER") {
-      if (db && typeof data.orderId === "string" && data.orderId.trim()) {
-        const decision = parseFertilizerDecision(data.fertilizerDecision ?? data.fertilizerSelected);
-        const result = await applyFertilizerDecision(db, data.orderId, decision);
-        return protocolResponse("REVIEW", { orderId: result.orderId, orderNumber: result.orderNumber, fertilizerSelected: result.fertilizerSelected, orderSummary: result.orderSummary, paymentMethods: result.paymentMethods, paymentMethodOptions: result.paymentMethods.map((name) => ({ id: name, title: name })) });
-      }
+      if (typeof data.productCode !== "string" || !data.productCode.trim()) throw new Error("PRODUCT_REQUIRED");
+      const fertilizerSelected = parseFertilizerDecision(data.fertilizerDecision ?? data.fertilizerSelected);
+      return protocolResponse("PROVINCE", { productCode: data.productCode.trim(), fertilizerSelected, ...(db ? await catalogData(db) : { provinces: [] }) });
+    }
+    if (screen === "PROVINCE") {
+      const selection = parseSelection(data);
+      if (!db) return protocolError("ORDER_QUOTE_UNAVAILABLE", screen);
+      const quote = await quoteOrder(db, selection);
+      return protocolResponse("DELIVERY_FORM", { ...selection, quote: quoteData(quote) });
+    }
+    if (screen === "DELIVERY_FORM") {
       const customer = parseCustomer(data);
       const selection = parseSelection(data);
       if (!db) return protocolError("ORDER_QUOTE_UNAVAILABLE", screen);
       const quote = await quoteOrder(db, selection);
-      return protocolResponse("REVIEW", { ...customer, ...selection, quote: quoteData(quote), paymentMethods: quote.paymentMethods, paymentMethodOptions: quote.paymentMethods.map((name) => ({ id: name, title: name })) });
+      return protocolResponse("REVIEW", { ...customer, ...selection, quote: quoteData(quote) });
     }
     if (screen === "REVIEW") {
       const customer = parseCustomer(data);
       const selection = parseSelection(data);
       if (!db) return protocolError("ORDER_QUOTE_UNAVAILABLE", screen);
       const quote = await quoteOrder(db, selection);
-      return protocolResponse("SUBMIT", { ...customer, ...selection, quote: quoteData(quote), paymentMethods: quote.paymentMethods, paymentMethodOptions: quote.paymentMethods.map((name) => ({ id: name, title: name })) });
+      return protocolResponse("CONFIRM", { ...customer, ...selection, quote: quoteData(quote) });
     }
-    if (screen === "SUBMIT") {
+    if (screen === "CONFIRM") {
       const customer = parseCustomer(data);
       const selection = parseSelection(data);
       if (!db) return protocolError("ORDER_PERSISTENCE_UNAVAILABLE", screen);

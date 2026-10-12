@@ -10,6 +10,12 @@ describe("GFS-111 WhatsApp content admin", () => {
     expect((await app.fetch(new Request("https://admin.example.test/api/whatsapp-content"), env)).status).toBe(403);
   });
 
+  it("keeps private content-media uploads CSRF-protected", async () => {
+    const response = await app.fetch(new Request("https://admin.example.test/api/whatsapp-content/media", { method: "POST", headers: auth, body: new Uint8Array([137, 80, 78, 71]) }), env);
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({ error: "CSRF_VALIDATION_FAILED" });
+  });
+
   it("requires CSRF and rejects an unapproved template key before a write", async () => {
     const csrf = await app.fetch(new Request("https://admin.example.test/api/csrf", { headers: auth }), env);
     const token = (await csrf.json() as { csrfToken: string }).csrfToken;

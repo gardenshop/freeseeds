@@ -71,7 +71,27 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
   async sendInteractive(to: string, body: string, buttons: InteractiveButton[]) { return this.send({ messaging_product: "whatsapp", to, type: "interactive", interactive: { type: "button", body: { text: body }, action: { buttons: buttons.slice(0, 3).map((button, index) => { const item = typeof button === "string" ? { id: `button_${index}`, title: button } : button; return { type: "reply", reply: item }; }) } } }); }
   async sendList(to: string, body: string, buttonText: string, rows: Array<{ id: string; title: string; description?: string }>) { return this.send({ messaging_product: "whatsapp", to, type: "interactive", interactive: { type: "list", body: { text: body }, action: { button: buttonText, sections: [{ title: "Options", rows: rows.slice(0, 10) }] } } }); }
   async sendTemplate(to: string, template: string, parameters: string[]) { return this.send({ messaging_product: "whatsapp", to, type: "template", template: { name: template, language: { code: "en_US" }, components: parameters.length ? [{ type: "body", parameters: parameters.map((text) => ({ type: "text", text })) }] : undefined } }); }
-  async sendFlow(to: string, flowId: string, flowToken: string) { return this.send({ messaging_product: "whatsapp", to, type: "interactive", interactive: { type: "flow", body: { text: "Get Free Seeds" }, action: { name: "flow", parameters: { flow_id: flowId, flow_token: flowToken, mode: "published" } } } }); }
+  async sendFlow(to: string, flowId: string, flowToken: string) {
+    return this.send({
+      messaging_product: "whatsapp",
+      to,
+      type: "interactive",
+      interactive: {
+        type: "flow",
+        body: { text: "Get Free Seeds" },
+        action: {
+          name: "flow",
+          parameters: {
+            flow_message_version: "3",
+            flow_id: flowId,
+            flow_token: flowToken,
+            flow_cta: "Get Free Seeds",
+            mode: "published"
+          }
+        }
+      }
+    });
+  }
   async sendPaymentInstructions(to: string, body: string, qr?: { body: ArrayBuffer; mimeType: string }) {
     const text = await this.sendText(to, body);
     if (!qr) return text;

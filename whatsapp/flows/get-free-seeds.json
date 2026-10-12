@@ -2,79 +2,95 @@
   "version": "7.1",
   "data_api_version": "3.0",
   "routing_model": {
-    "CUSTOMER_DETAILS": ["ORDER"],
-    "ORDER": ["FERTILIZER"],
-    "FERTILIZER": ["REVIEW"],
-    "REVIEW": ["SUBMIT"],
-    "SUBMIT": ["PAYMENT_METHOD"],
+    "OFFER": ["FERTILIZER"],
+    "FERTILIZER": ["PROVINCE"],
+    "PROVINCE": ["DELIVERY_FORM"],
+    "DELIVERY_FORM": ["REVIEW"],
+    "REVIEW": ["CONFIRM"],
+    "CONFIRM": ["PAYMENT_METHOD"],
     "PAYMENT_METHOD": ["PAYMENT_DETAILS"]
   },
   "screens": [
     {
-      "id": "CUSTOMER_DETAILS",
-      "title": "Delivery details",
+      "id": "OFFER",
+      "title": "Free Seeds Offer",
+      "data": { "products": { "type": "array", "__example__": [] } },
       "layout": { "type": "SingleColumnLayout", "children": [
         { "type": "TextHeading", "text": "Get 5 Seed Packs FREE" },
-        { "type": "Form", "name": "customer_details", "children": [
+        { "type": "TextBody", "text": "Select the available seed offer to continue." },
+        { "type": "Form", "name": "offer_form", "children": [
+          { "type": "Dropdown", "name": "productCode", "label": "Seed offer", "required": true, "data-source": "${data.products}" },
+          { "type": "Footer", "label": "Continue", "on-click-action": { "name": "data_exchange", "payload": { "productCode": "${form.productCode}" } } }
+        ] }
+      ] }
+    },
+    {
+      "id": "FERTILIZER",
+      "title": "Optional Fertilizer",
+      "layout": { "type": "SingleColumnLayout", "children": [
+        { "type": "TextBody", "text": "Would you like to add optional fertilizer? Pricing is calculated by the server." },
+        { "type": "Form", "name": "fertilizer_form", "children": [
+          { "type": "RadioButtonsGroup", "name": "fertilizerSelected", "label": "Fertilizer", "required": true, "data-source": [{ "id": "false", "title": "Seeds only" }, { "id": "true", "title": "Add fertilizer" }] },
+          { "type": "Footer", "label": "Continue", "on-click-action": { "name": "data_exchange", "payload": { "productCode": "${data.productCode}", "fertilizerSelected": "${form.fertilizerSelected}" } } }
+        ] }
+      ] }
+    },
+    {
+      "id": "PROVINCE",
+      "title": "Delivery Province",
+      "data": { "provinces": { "type": "array", "__example__": [] } },
+      "layout": { "type": "SingleColumnLayout", "children": [
+        { "type": "Form", "name": "province_form", "children": [
+          { "type": "Dropdown", "name": "province", "label": "Province", "required": true, "data-source": "${data.provinces}" },
+          { "type": "Footer", "label": "Continue", "on-click-action": { "name": "data_exchange", "payload": { "productCode": "${data.productCode}", "fertilizerSelected": "${data.fertilizerSelected}", "province": "${form.province}" } } }
+        ] }
+      ] }
+    },
+    {
+      "id": "DELIVERY_FORM",
+      "title": "Delivery Details",
+      "layout": { "type": "SingleColumnLayout", "children": [
+        { "type": "TextBody", "text": "Complete all five delivery fields on this screen." },
+        { "type": "Form", "name": "delivery_form", "children": [
           { "type": "TextInput", "name": "fullName", "label": "Full Name", "required": true },
           { "type": "TextInput", "name": "deliveryAddress", "label": "Complete Delivery Address", "required": true },
           { "type": "TextInput", "name": "nearbyPlace", "label": "Nearby Famous Place", "required": true },
           { "type": "TextInput", "name": "city", "label": "City", "required": true },
           { "type": "TextInput", "name": "contactNumber", "label": "Contact Number", "input-type": "phone", "required": true },
-          { "type": "Footer", "label": "Continue", "on-click-action": { "name": "navigate", "next": { "type": "screen", "name": "ORDER" }, "payload": { "fullName": "${form.fullName}", "deliveryAddress": "${form.deliveryAddress}", "nearbyPlace": "${form.nearbyPlace}", "city": "${form.city}", "contactNumber": "${form.contactNumber}" } } }
+          { "type": "Footer", "label": "Review Order", "on-click-action": { "name": "data_exchange", "payload": { "productCode": "${data.productCode}", "fertilizerSelected": "${data.fertilizerSelected}", "province": "${data.province}", "fullName": "${form.fullName}", "deliveryAddress": "${form.deliveryAddress}", "nearbyPlace": "${form.nearbyPlace}", "city": "${form.city}", "contactNumber": "${form.contactNumber}" } } }
         ] }
       ] }
     },
     {
-      "id": "ORDER",
-      "title": "Choose your order",
-      "layout": { "type": "SingleColumnLayout", "children": [
-        { "type": "TextBody", "text": "Select your seed product and province." },
-        { "type": "Dropdown", "name": "productCode", "label": "Seed product", "required": true, "data-source": "${data.products}" },
-        { "type": "Dropdown", "name": "province", "label": "Province", "required": true, "data-source": "${data.provinces}" },
-        { "type": "Footer", "label": "Continue", "on-click-action": { "name": "data_exchange", "payload": { "fullName": "${data.fullName}", "deliveryAddress": "${data.deliveryAddress}", "nearbyPlace": "${data.nearbyPlace}", "city": "${data.city}", "contactNumber": "${data.contactNumber}", "productCode": "${form.productCode}", "province": "${form.province}", "fertilizerSelected": false } } }
-      ] }
-    },
-    {
-      "id": "FERTILIZER",
-      "title": "Optional fertilizer",
-      "layout": { "type": "SingleColumnLayout", "children": [
-        { "type": "TextBody", "text": "Your server-calculated order summary is shown below." },
-        { "type": "TextBody", "text": "${data.quote.totalPayablePkr} PKR" },
-        { "type": "Checkbox", "name": "fertilizerSelected", "label": "Add fertilizer", "required": false },
-        { "type": "Footer", "label": "Continue", "on-click-action": { "name": "data_exchange", "payload": { "fullName": "${data.fullName}", "deliveryAddress": "${data.deliveryAddress}", "nearbyPlace": "${data.nearbyPlace}", "city": "${data.city}", "contactNumber": "${data.contactNumber}", "productCode": "${data.productCode}", "province": "${data.province}", "fertilizerSelected": "${form.fertilizerSelected}" } } }
-      ] }
-    },
-    {
       "id": "REVIEW",
-      "title": "Review order",
+      "title": "Review Order",
       "layout": { "type": "SingleColumnLayout", "children": [
-        { "type": "TextBody", "text": "Review your server-calculated order summary." },
-        { "type": "TextBody", "text": "${data.quote.totalPayablePkr} PKR" },
-        { "type": "TextBody", "text": "${data.paymentMethods}" },
-        { "type": "Footer", "label": "Continue", "on-click-action": { "name": "navigate", "next": { "type": "screen", "name": "SUBMIT" }, "payload": { "fullName": "${data.fullName}", "deliveryAddress": "${data.deliveryAddress}", "nearbyPlace": "${data.nearbyPlace}", "city": "${data.city}", "contactNumber": "${data.contactNumber}", "productCode": "${data.productCode}", "province": "${data.province}", "fertilizerSelected": "${data.fertilizerSelected}" } } }
+        { "type": "TextBody", "text": "Your server-calculated total is ${data.quote.totalPayablePkr} PKR." },
+        { "type": "Footer", "label": "Continue", "on-click-action": { "name": "data_exchange", "payload": { "productCode": "${data.productCode}", "fertilizerSelected": "${data.fertilizerSelected}", "province": "${data.province}", "fullName": "${data.fullName}", "deliveryAddress": "${data.deliveryAddress}", "nearbyPlace": "${data.nearbyPlace}", "city": "${data.city}", "contactNumber": "${data.contactNumber}" } } }
       ] }
     },
     {
-      "id": "SUBMIT",
-      "title": "Submit order",
+      "id": "CONFIRM",
+      "title": "Confirm Order",
       "layout": { "type": "SingleColumnLayout", "children": [
-        { "type": "TextBody", "text": "Submit your order request. Seeds are free; delivery charges are shown above." },
-        { "type": "Footer", "label": "Submit order", "on-click-action": { "name": "data_exchange", "payload": { "fullName": "${data.fullName}", "deliveryAddress": "${data.deliveryAddress}", "nearbyPlace": "${data.nearbyPlace}", "city": "${data.city}", "contactNumber": "${data.contactNumber}", "productCode": "${data.productCode}", "province": "${data.province}", "fertilizerSelected": "${data.fertilizerSelected}" } } }
+        { "type": "TextBody", "text": "Confirm your order. The payable total remains server-calculated." },
+        { "type": "TextBody", "text": "Total: ${data.quote.totalPayablePkr} PKR" },
+        { "type": "Footer", "label": "Place Order", "on-click-action": { "name": "data_exchange", "payload": { "productCode": "${data.productCode}", "fertilizerSelected": "${data.fertilizerSelected}", "province": "${data.province}", "fullName": "${data.fullName}", "deliveryAddress": "${data.deliveryAddress}", "nearbyPlace": "${data.nearbyPlace}", "city": "${data.city}", "contactNumber": "${data.contactNumber}" } } }
       ] }
     },
     {
       "id": "PAYMENT_METHOD",
-      "title": "Payment method",
+      "title": "Payment Method",
       "layout": { "type": "SingleColumnLayout", "children": [
         { "type": "TextBody", "text": "Choose a configured payment method for your server-calculated order total." },
         { "type": "Dropdown", "name": "paymentMethod", "label": "Payment method", "required": true, "data-source": "${data.paymentMethodOptions}" },
-        { "type": "Footer", "label": "Show payment details", "on-click-action": { "name": "data_exchange", "payload": { "orderId": "${data.orderId}", "paymentMethod": "${form.paymentMethod}" } } }
+        { "type": "Footer", "label": "Show Payment Details", "on-click-action": { "name": "data_exchange", "payload": { "orderId": "${data.orderId}", "paymentMethod": "${form.paymentMethod}" } } }
       ] }
     },
     {
       "id": "PAYMENT_DETAILS",
-      "title": "Payment details",
+      "title": "Payment Details",
+      "terminal": true,
       "layout": { "type": "SingleColumnLayout", "children": [
         { "type": "TextBody", "text": "${data.message}" },
         { "type": "TextBody", "text": "Order total: ${data.orderSummary.totalPayablePkr} PKR" },
