@@ -309,6 +309,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Migration `0012_order_number_format.sql` is applied to staging and API version `33092b31-7d6b-4f74-9c8e-0e81214a503c` is active.
 - Customer WhatsApp Web tab ownership was not verified as `+923034901810`; no START was sent from it. A genuine customer interaction remains required.
 
+## GFS-105 Live Commerce Attempt
+
+- D1 conversation state: empty; no genuine START after the deployed guided-chat handler.
+- No authorized customer-controlled WhatsApp Web session was proven available, so no impersonated START or customer answers were sent.
+- Order-number allocator is deployed and ready; JazzCash is enabled in D1 but ownership/payment activation remains a separate verified gate.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

@@ -130,6 +130,10 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - D1 `order_number_sequences` provides atomic per-Karachi-date allocations for new `FS-YYMMDD-######` orders.
 - D1 `order_requests` preserves source idempotency mappings. Existing historical order numbers are not migrated.
 
+## GFS-105 Live Commerce
+
+- No live conversation/order state exists for the authorized customer; no customer data was fabricated.
+
 ## GFS-92 Token Runtime Gate
 
 - API/admin secret names remain present, but current server-side Graph ladder returns HTTP 401; values are never read or recorded.

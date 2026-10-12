@@ -98,6 +98,10 @@ The guided-chat CONFIRM transition now persists a dynamic FS order, reports its 
 
 All new creation paths now allocate `FS-YYMMDD-######` using the Asia/Karachi date and atomic D1 sequence allocation. Meta Flow, WhatsApp, and Instant Form replays map to the original order through idempotency keys. Staging migration is applied; no historical order identifier was changed. No WhatsApp Web message was sent because the displayed Web session was not independently proven to belong to the authorized customer.
 
+## 2026-10-12: GFS-105 Live Commerce Boundary
+
+The guided-chat and order-number infrastructure is ready, but no authorized customer-controlled session or fresh START was available. We do not impersonate the customer or invent five field answers; live FS order/payment/fulfillment remains an external customer interaction gate.
+
 ## 2026-10-11: GFS-92 Token Validation Order
 
 The activation console server-side ladder now returns HTTP 401 for `/me`, permissions, phone, and WABA reads. This is an authoritative runtime token rejection despite secret-name/deployment presence. No blind rotation or duplicate customer message was performed; the only remaining protected action is canonical token replacement.
