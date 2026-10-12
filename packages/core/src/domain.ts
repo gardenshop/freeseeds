@@ -93,10 +93,6 @@ export function eventId(kind: "lead" | "purchase", orderNumber: string): string 
   return `${kind}_${orderNumber}`;
 }
 
-export function nextOrderNumber(sequence: number): string {
-  return `FS-${String(sequence).padStart(6, "0")}`;
-}
-
 export function approvedPurchaseValue(expectedAmount: number, approvedAmount: number): number {
   if (!Number.isInteger(approvedAmount) || approvedAmount < 0 || approvedAmount > expectedAmount) throw new Error("INVALID_APPROVED_AMOUNT");
   return approvedAmount;

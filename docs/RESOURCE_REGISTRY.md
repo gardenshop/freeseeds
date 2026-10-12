@@ -125,6 +125,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Confirmed order confirmation/payment selection path uses dynamic persisted total and complete enabled methods only.
 - JazzCash configuration is present but disabled pending ownership verification; no recipient values are recorded here.
 
+## GFS-104 Order Number Authority
+
+- D1 `order_number_sequences` provides atomic per-Karachi-date allocations for new `FS-YYMMDD-######` orders.
+- D1 `order_requests` preserves source idempotency mappings. Existing historical order numbers are not migrated.
+
 ## GFS-92 Token Runtime Gate
 
 - API/admin secret names remain present, but current server-side Graph ladder returns HTTP 401; values are never read or recorded.

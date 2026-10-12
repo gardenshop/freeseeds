@@ -62,6 +62,9 @@
 | GFS-102 JazzCash enablement | safe persisted draft vs verified enabled collection | READY_PENDING ownership proof; currently disabled |
 | GFS-102 live order | fresh START through fields/quote/FS order/summary | BLOCKED pending genuine customer START |
 | GFS-103 order summary/payment handoff | dynamic total, method names, JazzCash selection, no auto-PAID | PASS implementation/tests; live customer interaction/payment ownership pending |
+| GFS-104 order format | Karachi date, atomic sequence, six digits, historical preservation | PASS 54 tests; staging migration applied |
+| GFS-104 replay/concurrency | multi-channel idempotency and no duplicate sequence/order | PASS unit coverage |
+| GFS-104 live guided chat | START → fields → quote → order → summary | BLOCKED pending verified customer-controlled START |
 | GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |
 | GFS-98 token recovery | owner-installed secret → Graph ladder → API/Admin readiness | PASS fresh token; no token value inspected |
 | GFS-98 atomic reply | one failed event retry, outbound ID, status webhook, no duplicate | PASS: WAMID persisted, SENT status persisted, duplicate count 0 |

@@ -132,6 +132,12 @@
 - Fixed order confirmation/payment handoff to report dynamic FS order total and complete payment method names, then use persisted total for selected method details.
 - PAID/Purchase CAPI remains approval-gated; JazzCash remains disabled pending payee ownership verification.
 
+## Unreleased - 2026-10-12 (GFS-104)
+
+- Added atomic Asia/Karachi `FS-YYMMDD-######` order number allocation across WhatsApp, Meta Flow, and Instant Form paths.
+- Added replay/idempotency mappings and migration `0012_order_number_format.sql`; historical identifiers remain untouched.
+- Applied the staging migration and deployed the allocator. No unverified WhatsApp Web session was used for customer messages.
+
 ## Unreleased - 2026-10-11 (GFS-92)
 
 - Rechecked active server-side Graph token ladder; `/me`, permissions, phone, and WABA reads all return HTTP 401 despite secret/deployment presence.

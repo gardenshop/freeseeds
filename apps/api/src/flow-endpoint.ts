@@ -16,6 +16,11 @@ function dataFromPayload(payload: MetaFlowPayload): FlowData {
   return { ...topLevel, ...nested };
 }
 
+function flowIdempotencyKey(payload: MetaFlowPayload): string | undefined {
+  const token = typeof payload.flow_token === "string" ? payload.flow_token.trim() : "";
+  return token && token.length <= 200 ? `META_FLOW:${token}` : undefined;
+}
+
 function actionName(payload: MetaFlowPayload): string {
   return typeof payload.action === "string" ? payload.action.trim().toUpperCase() : "";
 }
@@ -150,7 +155,7 @@ export async function handleMetaFlowPayload(payload: MetaFlowPayload, db?: D1Dat
       const customer = parseCustomer(data);
       const selection = parseSelection(data);
       if (!db) return protocolError("ORDER_PERSISTENCE_UNAVAILABLE", screen);
-      const result = await persistFlowSubmission(db, parseFlowSubmission({ ...customer, ...selection }));
+      const result = await persistFlowSubmission(db, parseFlowSubmission({ ...customer, ...selection }), undefined, flowIdempotencyKey(payload));
       const summary = result.quote ? { ...quoteData(result.quote), orderId: result.orderId, orderNumber: result.orderNumber } : { orderId: result.orderId, orderNumber: result.orderNumber, paymentMethods: [] };
       return protocolResponse("PAYMENT_METHOD", { submitted: true, orderId: result.orderId, orderNumber: result.orderNumber, orderSummary: summary, paymentMethods: result.quote?.paymentMethods ?? [], paymentMethodOptions: (result.quote?.paymentMethods ?? []).map((name) => ({ id: name, title: name })) });
     }

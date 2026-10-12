@@ -94,6 +94,10 @@ Payment UX now distinguishes Saved—Disabled from Enabled and Configured; JazzC
 
 The guided-chat CONFIRM transition now persists a dynamic FS order, reports its order number/total and complete enabled method names, and supports JazzCash selection through the existing payment selector. It never marks PAID or emits Purchase CAPI before genuine admin approval. Live testing remains dependent on a fresh customer START and verified JazzCash ownership.
 
+## 2026-10-12: GFS-104 Karachi Atomic Order Numbers
+
+All new creation paths now allocate `FS-YYMMDD-######` using the Asia/Karachi date and atomic D1 sequence allocation. Meta Flow, WhatsApp, and Instant Form replays map to the original order through idempotency keys. Staging migration is applied; no historical order identifier was changed. No WhatsApp Web message was sent because the displayed Web session was not independently proven to belong to the authorized customer.
+
 ## 2026-10-11: GFS-92 Token Validation Order
 
 The activation console server-side ladder now returns HTTP 401 for `/me`, permissions, phone, and WABA reads. This is an authoritative runtime token rejection despite secret-name/deployment presence. No blind rotation or duplicate customer message was performed; the only remaining protected action is canonical token replacement.

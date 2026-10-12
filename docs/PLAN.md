@@ -35,7 +35,7 @@ All resources must be created only in the dedicated clean Get Free Seeds Cloudfl
 
 ## Data Model and Workflow
 
-Migrations support customers, leads, orders, payments, payment_receipts, meta_attribution, capi_events, whatsapp_events, outbound_messages, audit_log, configuration, duplicate_flags, order_counters, and transactional outbox jobs. Order numbering is concurrency-safe with `FS-100001` format. State transitions are validated and idempotent:
+Migrations support customers, leads, orders, payments, payment_receipts, meta_attribution, capi_events, whatsapp_events, outbound_messages, audit_log, configuration, duplicate_flags, per-date order counters, idempotent order requests, and transactional outbox jobs. New orders use a concurrency-safe `FS-YYMMDD-######` format based on the Asia/Karachi order date; historical order numbers are never renamed. State transitions are validated and idempotent:
 
 `NEW -> DETAILS_COMPLETED -> PAYMENT_PENDING -> RECEIPT_SUBMITTED -> PAYMENT_REVIEW -> PAID -> PACKING -> DISPATCHED -> DELIVERED`, with rejection, correction, cancellation, and audited fulfillment transitions.
 

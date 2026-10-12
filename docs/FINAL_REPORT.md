@@ -109,6 +109,13 @@
 - JazzCash: **SAVED/DISABLED** pending payee ownership verification; no payment instructions sent.
 - Payment approval/CAPI/fulfillment: **NOT RUN**; real payment remains gated.
 
+## GFS-104-ORDER-NUMBER Update — 2026-10-12
+
+- Order format: **PASS implementation/deployed** — `FS-YYMMDD-######` using Asia/Karachi and atomic D1 allocation.
+- START recognized/live customer interaction: **NOT RUN**; WhatsApp Web session ownership not verified.
+- Real FS order/summary/JazzCash instructions: **NOT RUN**; no customer answers or payment details were invented.
+- Receipt/R2/admin approval/Purchase CAPI/fulfillment: **NOT RUN**; real payment approval remains gated.
+
 ## GFS-68-META-FORM-LAUNCH-FIRST Update — 2026-10-10
 
 - Launch track: **`META_FORM_LAUNCH_FIRST`**

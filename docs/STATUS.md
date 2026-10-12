@@ -303,6 +303,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Customer `JAZZCASH` selection uses `selectPaymentMethod()` and persisted `orders.total_payable`; stored instructions are returned only for enabled complete methods.
 - JazzCash remains disabled pending payee/QR ownership verification, so no live payment request or receipt flow is enabled.
 
+## GFS-104 Launch-Ready Order Numbers
+
+- New shared allocator deployed: `FS-YYMMDD-######`, Asia/Karachi date, atomic D1 per-date sequence, replay-safe across WhatsApp, Meta Flow, and Instant Form. Historical orders are unchanged.
+- Migration `0012_order_number_format.sql` is applied to staging and API version `33092b31-7d6b-4f74-9c8e-0e81214a503c` is active.
+- Customer WhatsApp Web tab ownership was not verified as `+923034901810`; no START was sent from it. A genuine customer interaction remains required.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.
