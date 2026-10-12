@@ -143,6 +143,11 @@
 - Verified staging order-number/tariff/payment infrastructure remains ready.
 - No customer-controlled session or fresh START was available; no live order, payment request, or fulfillment claim was fabricated.
 
+## Unreleased - 2026-10-12 (GFS-106)
+
+- Reconciled owner-reported/live D1 order `FS-261012-000001`: Punjab, seed-only, dynamic total PKR 250, JazzCash `PAYMENT_PENDING`.
+- No payment receipt, approval, PAID transition, Purchase CAPI, or fulfillment claim was made.
+
 ## Unreleased - 2026-10-11 (GFS-92)
 
 - Rechecked active server-side Graph token ladder; `/me`, permissions, phone, and WABA reads all return HTTP 401 despite secret/deployment presence.

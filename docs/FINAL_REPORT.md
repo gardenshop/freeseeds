@@ -123,6 +123,14 @@
 - JazzCash: **ENABLED D1**, but live payment/ownership verification remains separate.
 - Receipt/R2/admin approval/Purchase CAPI/fulfillment: **NOT RUN**.
 
+## GFS-106-TAP-COMMERCE Update — 2026-10-12
+
+- Existing real FS order: **YES** — `FS-261012-000001`, `PAYMENT_PENDING`.
+- Dynamic quote: **PASS** — Punjab seed-only total PKR 250.
+- JazzCash selection/payment handoff: **PASS pending review** — expected amount PKR 250; no receipt submitted.
+- Receipt/private R2/admin review/PAID/Purchase CAPI/fulfillment: **NOT COMPLETE**.
+- Native Flow: **DRAFT**; guided-chat order path produced the live order.
+
 ## GFS-68-META-FORM-LAUNCH-FIRST Update — 2026-10-10
 
 - Launch track: **`META_FORM_LAUNCH_FIRST`**

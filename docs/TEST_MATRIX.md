@@ -66,6 +66,8 @@
 | GFS-104 replay/concurrency | multi-channel idempotency and no duplicate sequence/order | PASS unit coverage |
 | GFS-104 live guided chat | START → fields → quote → order → summary | BLOCKED pending verified customer-controlled START |
 | GFS-105 live commerce | real customer START, answers, order, JazzCash handoff | BLOCKED: no authorized customer session/fresh START; no fabricated interaction |
+| GFS-106 live order | real START → fields → quote → FS order → payment pending | PASS: `FS-261012-000001`, Punjab total PKR 250, JazzCash pending |
+| GFS-106 payment approval | receipt/R2/admin approval/PAID/CAPI/fulfillment | BLOCKED: no verified receipt or approval evidence |
 | GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |
 | GFS-98 token recovery | owner-installed secret → Graph ladder → API/Admin readiness | PASS fresh token; no token value inspected |
 | GFS-98 atomic reply | one failed event retry, outbound ID, status webhook, no duplicate | PASS: WAMID persisted, SENT status persisted, duplicate count 0 |

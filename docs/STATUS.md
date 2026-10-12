@@ -315,6 +315,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - No authorized customer-controlled WhatsApp Web session was proven available, so no impersonated START or customer answers were sent.
 - Order-number allocator is deployed and ready; JazzCash is enabled in D1 but ownership/payment activation remains a separate verified gate.
 
+## GFS-106 Tap-Only Commerce Evidence
+
+- Existing real D1 order `FS-261012-000001` is verified: `PAYMENT_PENDING`, Punjab, dynamic total PKR 250, seeds only, one order item, no duplicate order.
+- Conversation state is `PAYMENT_PENDING`; JazzCash payment row exists with expected amount PKR 250 and review state `PENDING`.
+- Customer/order personal fields are not repeated in docs. Live WhatsApp response records are present; no PAID or fulfillment claim was made.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

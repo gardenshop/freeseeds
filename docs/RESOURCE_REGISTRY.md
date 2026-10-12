@@ -134,6 +134,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 
 - No live conversation/order state exists for the authorized customer; no customer data was fabricated.
 
+## GFS-106 Live Order
+
+- Existing live order authority: `FS-261012-000001`, state `PAYMENT_PENDING`, dynamic total PKR 250, Punjab seed-only path.
+- JazzCash expected payment amount is PKR 250 and review state is `PENDING`; no receipt or approval exists.
+
 ## GFS-92 Token Runtime Gate
 
 - API/admin secret names remain present, but current server-side Graph ladder returns HTTP 401; values are never read or recorded.
