@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ORDER_NUMBER_ALLOCATION_SQL, allocateOrderNumber, karachiOrderDate, nextOrderNumber, persistFlowSubmission, persistInstantFormSubmission } from "@gfs/core";
+import { ORDER_NUMBER_ALLOCATION_SQL, OrderCooldownError, allocateOrderNumber, karachiOrderDate, nextOrderNumber, persistFlowSubmission, persistInstantFormSubmission } from "@gfs/core";
 
 function sequenceDatabase() {
   const sequences = new Map<string, number>();
@@ -29,6 +29,7 @@ function sequenceDatabase() {
 
 function replayDatabase() {
   const requests = new Map<string, { customerId: string; leadId: string; orderId: string; orderNumber: string }>();
+  const locks = new Map<string, { orderId: string; orderNumber: string | null; lastOrderAt: string }>();
   let sequence = 1;
   let allocationCount = 0;
   let batchCount = 0;
@@ -41,6 +42,17 @@ function replayDatabase() {
         }
         if (sql.includes("FROM lead_sources")) return undefined;
         if (sql.includes("payment_configuration")) return { advance_amount_pkr: null };
+        if (sql.startsWith("INSERT INTO order_eligibility_locks")) {
+          const key = String(args[0]), now = String(args[2]), threshold = String(args[3]);
+          const current = locks.get(key);
+          if (current && current.lastOrderAt > threshold) return undefined;
+          locks.set(key, { orderId: String(args[1]), orderNumber: null, lastOrderAt: now });
+          return { order_id: String(args[1]) };
+        }
+        if (sql.includes("FROM order_eligibility_locks")) {
+          const current = locks.get(String(args[0]));
+          return current ? { order_number: current.orderNumber, last_order_at: current.lastOrderAt } : undefined;
+        }
         if (sql.includes("order_number_sequences")) {
           allocationCount += 1;
           return { sequence: sequence++ };
@@ -66,6 +78,11 @@ function replayDatabase() {
       const order = statements.find((statement) => statement.sql.includes("INSERT INTO orders"));
       const customer = statements.find((statement) => statement.sql.includes("INSERT INTO customers"));
       const lead = statements.find((statement) => statement.sql.includes("INSERT INTO leads"));
+      const lockUpdate = statements.find((statement) => statement.sql.startsWith("UPDATE order_eligibility_locks SET order_number"));
+      if (lockUpdate) {
+        const current = locks.get(String(lockUpdate.args[1]));
+        if (current) locks.set(String(lockUpdate.args[1]), { ...current, orderNumber: String(lockUpdate.args[0]) });
+      }
       if (request && order && customer && lead) {
         requests.set(String(request.args[0]), {
           customerId: String(customer.args[0]),
@@ -124,18 +141,36 @@ describe("GFS-104 order number allocation", () => {
       city: "Sahiwal",
       contactNumber: "+923001234567"
     };
-    const flowSubmission = { fullName: "Synthetic Customer", deliveryAddress: "1 Test Street", nearbyPlace: "Test Park", city: "Sahiwal", contactNumber: "+923001234567" };
+    const flowSubmission = { fullName: "Synthetic Customer", deliveryAddress: "2 Test Street", nearbyPlace: "Test Park", city: "Sahiwal", contactNumber: "+923001234567" };
+    const whatsappSubmission = { ...flowSubmission, deliveryAddress: "3 Test Street" };
     const instant = await persistInstantFormSubmission(db, instantSubmission);
     const flow = await persistFlowSubmission(db, flowSubmission, undefined, "META_FLOW:synthetic-flow-104");
-    const whatsapp = await persistFlowSubmission(db, flowSubmission, undefined, "WHATSAPP:synthetic-message-104");
+    const whatsapp = await persistFlowSubmission(db, whatsappSubmission, undefined, "WHATSAPP:synthetic-message-104");
     const instantReplay = await persistInstantFormSubmission(db, instantSubmission);
     const flowReplay = await persistFlowSubmission(db, flowSubmission, undefined, "META_FLOW:synthetic-flow-104");
-    const whatsappReplay = await persistFlowSubmission(db, flowSubmission, undefined, "WHATSAPP:synthetic-message-104");
+    const whatsappReplay = await persistFlowSubmission(db, whatsappSubmission, undefined, "WHATSAPP:synthetic-message-104");
     for (const [first, replay] of [[instant, instantReplay], [flow, flowReplay], [whatsapp, whatsappReplay]]) {
       expect(first.duplicate).toBe(false);
       expect(replay).toMatchObject({ duplicate: true, orderId: first.orderId, orderNumber: first.orderNumber });
     }
     expect(allocationCount()).toBe(3);
     expect(batchCount()).toBe(3);
+  });
+
+  it("blocks a second cross-channel household order during the cooldown", async () => {
+    const { db } = replayDatabase();
+    const submission = { fullName: "Synthetic Customer", deliveryAddress: "9 Cooldown Street", nearbyPlace: "Test Park", city: "Sahiwal", contactNumber: "+923001234567" };
+    await persistFlowSubmission(db, submission, undefined, "WHATSAPP:first");
+    await expect(persistFlowSubmission(db, submission, undefined, "META_FLOW:second")).rejects.toBeInstanceOf(OrderCooldownError);
+  });
+
+  it("exempts only the verified E2E wa_id while preserving replay idempotency", async () => {
+    const { db } = replayDatabase();
+    const submission = { fullName: "Synthetic Customer", deliveryAddress: "10 Test Street", nearbyPlace: "Test Park", city: "Sahiwal", contactNumber: "+923001234567" };
+    const first = await persistFlowSubmission(db, submission, undefined, "WHATSAPP:test-one", "923034901810");
+    const second = await persistFlowSubmission(db, submission, undefined, "WHATSAPP:test-two", "923034901810");
+    const replay = await persistFlowSubmission(db, submission, undefined, "WHATSAPP:test-two", "923034901810");
+    expect(second.orderId).not.toBe(first.orderId);
+    expect(replay).toMatchObject({ duplicate: true, orderId: second.orderId });
   });
 });

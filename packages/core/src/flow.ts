@@ -60,15 +60,19 @@ type Attribution = { ctwaClid?: string; campaignId?: string; adSetId?: string; a
 type PersistOptions = { source: LeadSource; attribution?: Attribution; providerLeadId?: string; formId?: string; pageId?: string; createdTime?: string; idempotencyKey?: string };
 export type PersistLeadResult = { customerId: string; leadId: string; orderId: string; orderNumber: string; duplicate: boolean; quote?: OrderQuote };
 
-export async function persistFlowSubmission(db: D1Database, submission: FlowSubmission, attribution?: Attribution, idempotencyKey?: string): Promise<PersistLeadResult> {
-  return persistLeadSubmission(db, submission, { source: "WHATSAPP", attribution, idempotencyKey });
+export class OrderCooldownError extends Error {
+  constructor(readonly orderNumber: string, readonly nextEligibleAt: string) { super("ORDER_COOLDOWN_ACTIVE"); }
+}
+
+export async function persistFlowSubmission(db: D1Database, submission: FlowSubmission, attribution?: Attribution, idempotencyKey?: string, trustedWaId?: string): Promise<PersistLeadResult> {
+  return persistLeadSubmission(db, submission, { source: "WHATSAPP", attribution, idempotencyKey }, trustedWaId);
 }
 
 export async function persistInstantFormSubmission(db: D1Database, submission: InstantFormSubmission): Promise<PersistLeadResult> {
   return persistLeadSubmission(db, submission, { source: "META_INSTANT_FORM", providerLeadId: submission.leadId, formId: submission.formId, pageId: submission.pageId, createdTime: submission.createdTime, idempotencyKey: `META_INSTANT_FORM:${submission.leadId}`, attribution: { campaignId: submission.campaignId, adSetId: submission.adSetId, adId: submission.adId } });
 }
 
-async function persistLeadSubmission(db: D1Database, submission: FlowSubmission, options: PersistOptions): Promise<PersistLeadResult> {
+async function persistLeadSubmission(db: D1Database, submission: FlowSubmission, options: PersistOptions, trustedWaId?: string): Promise<PersistLeadResult> {
   const existing = await findExistingOrderRequest(db, options);
   if (existing) return existing;
   const hasDynamicField = submission.productCode !== undefined || submission.province !== undefined || submission.fertilizerSelected !== undefined;
@@ -89,6 +93,19 @@ async function persistLeadSubmission(db: D1Database, submission: FlowSubmission,
   const paymentId = crypto.randomUUID();
   const correlationId = crypto.randomUUID();
   const addressHash = await digestText(`${submission.deliveryAddress.trim().toLowerCase()}|${submission.city.trim().toLowerCase()}`);
+  const normalizedTrustedWaId = trustedWaId ? normalizeContactNumber(trustedWaId) : undefined;
+  const cooldownExempt = normalizedTrustedWaId === "+923034901810";
+  let cooldownClaimed = false;
+  if (!cooldownExempt) {
+    const threshold = new Date(nowDate.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString();
+    const claim = await db.prepare("INSERT INTO order_eligibility_locks (household_key,order_id,order_number,last_order_at) VALUES (?,?,NULL,?) ON CONFLICT(household_key) DO UPDATE SET order_id=excluded.order_id,order_number=NULL,last_order_at=excluded.last_order_at WHERE order_eligibility_locks.last_order_at<=? RETURNING order_id").bind(addressHash, orderId, now, threshold).first<{ order_id: string }>();
+    if (!claim) {
+      const existingLock = await db.prepare("SELECT order_number,last_order_at FROM order_eligibility_locks WHERE household_key=?").bind(addressHash).first<{ order_number: string | null; last_order_at: string }>();
+      const nextEligible = new Date(new Date(existingLock?.last_order_at ?? now).getTime() + 14 * 24 * 60 * 60 * 1000).toISOString();
+      throw new OrderCooldownError(existingLock?.order_number ?? "existing order", nextEligible);
+    }
+    cooldownClaimed = true;
+  }
   const orderNumber = await allocateOrderNumber(db, nowDate);
   const leadEvent = createLeadEvent(orderNumber, options.attribution);
   const leadEventId = leadEvent.eventId;
@@ -107,12 +124,14 @@ async function persistLeadSubmission(db: D1Database, submission: FlowSubmission,
     ...(options.source === "META_INSTANT_FORM" ? [db.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), `whatsapp_order_confirmation_${orderId}`, "WHATSAPP_ORDER_CONFIRMATION", orderId, JSON.stringify({ orderId, customerId }), "PENDING", now, now, now)] : []),
     db.prepare("INSERT INTO capi_events (id,event_id,event_name,order_id,customer_id,send_status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), leadEventId, "Lead", orderId, customerId, "PENDING", now, now),
     db.prepare("INSERT INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(outboxId, leadEventId, "CAPI_LEAD", orderId, JSON.stringify(leadEvent), "PENDING", now, now, now),
-      db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), `${options.source}_SUBMITTED`, "CUSTOMER", "ORDER", orderId, correlationId, JSON.stringify({ orderNumber, source: options.source }), now)
+      db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), `${options.source}_SUBMITTED`, "CUSTOMER", "ORDER", orderId, correlationId, JSON.stringify({ orderNumber, source: options.source }), now),
+      ...(cooldownClaimed ? [db.prepare("UPDATE order_eligibility_locks SET order_number=? WHERE household_key=? AND order_id=?").bind(orderNumber, addressHash, orderId)] : [])
     ]);
   } catch (error) {
     // A concurrent replay may lose the idempotency-key insert after allocating a number.
     const replay = await findExistingOrderRequest(db, options);
     if (replay) return replay;
+    if (cooldownClaimed) await db.prepare("DELETE FROM order_eligibility_locks WHERE household_key=? AND order_id=?").bind(addressHash, orderId).run();
     throw error;
   }
   return { customerId, leadId, orderId, orderNumber, duplicate: false, ...(quote ? { quote } : {}) };
