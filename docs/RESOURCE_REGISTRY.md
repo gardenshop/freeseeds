@@ -150,6 +150,12 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - D1 `cooldown_exemptions` is the allowlist authority; only `923034901810` is initially seeded.
 - Reset preserves orders/payments/receipts/cooldown locks/audit; cancellation/archive never hard-deletes financial history.
 
+## GFS-111 WhatsApp Content Authority
+
+- `/whatsapp-content`: Access-protected D1 versioned template CMS; English/Urdu, private R2 media key only, draft/publish/rollback/audit.
+- `whatsapp_content_templates`/`whatsapp_content_template_versions` are the customer-copy source of truth. Action IDs and dynamic tariff/payment logic are excluded from free-text editing.
+- Live guided-chat evidence: `FS-261012-000003`, Punjab, fertilizer selected, PKR 500, awaiting JazzCash method selection.
+
 ## GFS-92 Token Runtime Gate
 
 - API/admin secret names remain present, but current server-side Graph ladder returns HTTP 401; values are never read or recorded.

@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { canTransition, createMetaActivationService, createWhatsAppProvider, getLatestOrderForWaId, MetaActivationAction, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, isPaymentMethodComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, paymentInstructions, PaymentMethod, storePaymentQr, validatePaymentAmount } from "@gfs/core";
+import { canTransition, createMetaActivationService, createWhatsAppProvider, getLatestOrderForWaId, MetaActivationAction, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, isPaymentMethodComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, storePaymentQr, validatePaymentAmount, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
 
  type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
 const app = new Hono<Env>();
@@ -134,6 +134,27 @@ document.querySelector('#lookup').onsubmit=async(event)=>{event.preventDefault()
 </script></body></html>`;
 }
 
+function whatsappContentPageHtml(csrfToken: string): string {
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WhatsApp Content | Get Free Seeds</title><style>body{font:16px system-ui;max-width:1100px;margin:2rem auto;padding:0 1rem}nav{margin-bottom:1rem}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1rem}.card{border:1px solid #ccd5cc;border-radius:8px;padding:1rem}label{display:block;margin:.55rem 0}input,textarea,button{box-sizing:border-box;width:100%;font:inherit;padding:.45rem}textarea{min-height:4rem}.row{display:flex;gap:.5rem}.row button{width:auto}.muted{color:#59635a}.error{color:#a40019}</style></head><body><nav><a href="/">Admin home</a> | <a href="/payment-settings">Payment Settings</a></nav><h1>WhatsApp Content</h1><p class="muted">Draft, publish, and rollback versioned EN/UR content. Media references must be private R2 keys under <code>whatsapp-content/</code>; public URLs are rejected.</p><div id="content" class="grid">Loading...</div><script>
+const csrf=${JSON.stringify(csrfToken)};const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function request(path,body){const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.error||'Request failed');return d}
+function field(name,label,value,area=false){return '<label>'+label+(area?'<textarea name="'+name+'">'+esc(value)+'</textarea>':'<input name="'+name+'" value="'+esc(value)+'">')+'</label>'}
+function card(t){const en=t.published?.contentEn||t.draft?.contentEn||{};const ur=t.published?.contentUr||t.draft?.contentUr||{};return '<section class="card" data-key="'+esc(t.templateKey)+'"><h2>'+esc(t.templateKey)+'</h2><p class="muted">Published: '+esc(t.publishedVersion??'none')+' | Draft: '+esc(t.draftVersion??'none')+'</p><h3>English</h3>'+field('enText','Text',en.text,true)+field('enButton','Button label',en.buttonLabel)+field('enListButton','List button label',en.listButtonLabel)+field('enListDescription','List description',en.listDescription)+'<h3>اردو</h3>'+field('urText','Text',ur.text,true)+field('urButton','Button label',ur.buttonLabel)+field('urListButton','List button label',ur.listButtonLabel)+field('urListDescription','List description',ur.listDescription)+field('mediaR2Key','Private R2 media key',t.published?.mediaR2Key||t.draft?.mediaR2Key||'')+'<div class="row"><button data-draft>Save draft</button><button data-publish '+(t.draftVersion?'':'disabled')+'>Publish draft</button></div><p data-result></p><details><summary>Rollback</summary><div class="row"><input data-version type="number" min="1" placeholder="Version"><button data-rollback>Rollback</button></div></details></section>'}
+function values(card,prefix){return {text:card.querySelector('[name="'+prefix+'Text"]').value,buttonLabel:card.querySelector('[name="'+prefix+'Button"]').value||undefined,listButtonLabel:card.querySelector('[name="'+prefix+'ListButton"]').value||undefined,listDescription:card.querySelector('[name="'+prefix+'ListDescription"]').value||undefined}}
+async function load(){const data=await fetch('/api/whatsapp-content').then((r)=>r.json());const root=document.querySelector('#content');root.innerHTML=(data.templates||[]).map(card).join('');for(const node of root.querySelectorAll('[data-key]')){const key=node.dataset.key;const result=node.querySelector('[data-result]');node.querySelector('[data-draft]').onclick=async()=>{try{const body={confirmation:key,contentEn:values(node,'en'),contentUr:values(node,'ur'),mediaR2Key:node.querySelector('[name="mediaR2Key"]').value||undefined};const saved=await request('/api/whatsapp-content/'+key+'/draft',body);result.textContent='Draft version '+saved.version+' saved.';await load()}catch(error){result.className='error';result.textContent=error.message}};node.querySelector('[data-publish]').onclick=async()=>{const version=node.querySelector('[data-version]').value||node.querySelector('p').textContent.match(/Draft: (\\d+)/)?.[1];if(!version||!confirm('Publish '+key+' version '+version+'?'))return;try{await request('/api/whatsapp-content/'+key+'/publish',{version:Number(version),confirmation:key+':'+version});await load()}catch(error){result.className='error';result.textContent=error.message}};node.querySelector('[data-rollback]').onclick=async()=>{const version=node.querySelector('[data-version]').value;if(!version||!confirm('Rollback '+key+' to version '+version+'?'))return;try{await request('/api/whatsapp-content/'+key+'/rollback',{version:Number(version),confirmation:key+':'+version});await load()}catch(error){result.className='error';result.textContent=error.message}}}}
+load().catch(()=>document.querySelector('#content').textContent='WhatsApp content unavailable');</script></body></html>`;
+}
+
+function contentKey(value: string | undefined): ReturnType<typeof WhatsAppTemplateKey.parse> | undefined {
+  return WhatsAppTemplateKey.safeParse(value).data;
+}
+
+function paymentCopy(value: unknown, previous: unknown): string | undefined {
+  if (value === undefined) return previous == null ? undefined : String(previous);
+  if (typeof value !== "string" || value.trim().length > 1000) throw new Error("PAYMENT_COPY_INVALID");
+  return value.trim() || undefined;
+}
+
 function rateView(row: Record<string, unknown>) {
   return {
     id: String(row.id),
@@ -164,11 +185,88 @@ app.get("/health", async (c) => {
   const configured = c.env.DB ? await c.env.DB.prepare("SELECT COUNT(*) AS count FROM payment_methods WHERE enabled=1 AND recipient_name IS NOT NULL AND instructions IS NOT NULL AND EXISTS (SELECT 1 FROM payment_configuration WHERE id=1 AND advance_amount_pkr > 0)").first<{ count: number }>() : null;
   return c.json({ ok: true, service: "getfreeseeds-admin", state: c.env.DEPLOYMENT_STATE, paymentConfigured: Number(configured?.count ?? 0) > 0 });
 });
-app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav><a href='/payment-settings'>Payment Settings</a> | <a href='/payment-amount'>Legacy Advance Amount</a> | <a href='/tariff'>Tariff Management</a> | <a href='/meta-activation'>Meta Activation</a> | <a href='/orders'>Orders</a> | <a href='/test-controls'>Test Controls</a> | Dashboard | Leads | Meta Instant Form | Payment Verification | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
+app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav><a href='/payment-settings'>Payment Settings</a> | <a href='/whatsapp-content'>WhatsApp Content</a> | <a href='/payment-amount'>Legacy Advance Amount</a> | <a href='/tariff'>Tariff Management</a> | <a href='/meta-activation'>Meta Activation</a> | <a href='/orders'>Orders</a> | <a href='/test-controls'>Test Controls</a> | Dashboard | Leads | Meta Instant Form | Payment Verification | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
 
 app.get("/api/csrf", (c) => c.json({ csrfToken: issueCsrfToken(c) }));
 app.get("/orders", (c) => c.html(ordersPageHtml(issueCsrfToken(c))));
 app.get("/test-controls", (c) => c.html(testControlsPageHtml(issueCsrfToken(c))));
+app.get("/whatsapp-content", (c) => c.html(whatsappContentPageHtml(issueCsrfToken(c))));
+
+app.get("/api/whatsapp-content", async (c) => {
+  if (!c.env.DB) return c.json({ templates: [] });
+  const result = await c.env.DB.prepare("SELECT t.template_key,t.draft_version,t.published_version,d.content_en_json AS draft_en,d.content_ur_json AS draft_ur,d.media_r2_key AS draft_media,p.content_en_json AS published_en,p.content_ur_json AS published_ur,p.media_r2_key AS published_media FROM whatsapp_content_templates t LEFT JOIN whatsapp_content_template_versions d ON d.template_key=t.template_key AND d.version=t.draft_version LEFT JOIN whatsapp_content_template_versions p ON p.template_key=t.template_key AND p.version=t.published_version ORDER BY t.template_key").all<Record<string, unknown>>();
+  const templates = result.results.map((row) => {
+    const parse = (en: unknown, ur: unknown, media: unknown) => {
+      if (typeof en !== "string" || typeof ur !== "string") return undefined;
+      try { return { contentEn: JSON.parse(en), contentUr: JSON.parse(ur), ...(typeof media === "string" ? { mediaR2Key: media } : {}) }; } catch { return undefined; }
+    };
+    return { templateKey: String(row.template_key), draftVersion: row.draft_version == null ? null : Number(row.draft_version), publishedVersion: row.published_version == null ? null : Number(row.published_version), draft: parse(row.draft_en, row.draft_ur, row.draft_media), published: parse(row.published_en, row.published_ur, row.published_media) };
+  });
+  return c.json({ templates });
+});
+
+app.get("/api/whatsapp-content/:key", async (c) => {
+  const key = contentKey(c.req.param("key"));
+  if (!key) return c.json({ error: "WHATSAPP_TEMPLATE_KEY_INVALID" }, 400);
+  if (!c.env.DB) return c.json({ error: "WHATSAPP_CONTENT_UNAVAILABLE" }, 503);
+  const versions = await c.env.DB.prepare("SELECT version,status,content_en_json,content_ur_json,media_r2_key,created_at,created_by FROM whatsapp_content_template_versions WHERE template_key=? ORDER BY version DESC").bind(key).all();
+  return c.json({ templateKey: key, versions: versions.results });
+});
+
+app.post("/api/whatsapp-content/:key/draft", async (c) => {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  const key = contentKey(c.req.param("key"));
+  if (!key) return c.json({ error: "WHATSAPP_TEMPLATE_KEY_INVALID" }, 400);
+  if (!c.env.DB) return c.json({ error: "WHATSAPP_CONTENT_UNAVAILABLE" }, 503);
+  let body: { confirmation?: unknown; contentEn?: unknown; contentUr?: unknown; mediaR2Key?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
+  if (body.confirmation !== key) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+  let draft;
+  try { draft = parseWhatsAppContentDraft({ contentEn: body.contentEn, contentUr: body.contentUr, ...(body.mediaR2Key === undefined ? {} : { mediaR2Key: body.mediaR2Key }) }); } catch (error) { return c.json({ error: error instanceof Error && /^WHATSAPP_CONTENT_/.test(error.message) ? error.message : "WHATSAPP_CONTENT_INVALID" }, 400); }
+  if (draft.mediaR2Key) {
+    if (!c.env.RECEIPTS || !await c.env.RECEIPTS.head(draft.mediaR2Key)) return c.json({ error: "WHATSAPP_CONTENT_MEDIA_NOT_FOUND" }, 400);
+  }
+  const template = await c.env.DB.prepare("SELECT template_key FROM whatsapp_content_templates WHERE template_key=?").bind(key).first<{ template_key: string }>();
+  if (!template) return c.json({ error: "WHATSAPP_TEMPLATE_NOT_FOUND" }, 404);
+  const latest = await c.env.DB.prepare("SELECT COALESCE(MAX(version),0) AS version FROM whatsapp_content_template_versions WHERE template_key=?").bind(key).first<{ version: number }>();
+  const version = Number(latest?.version ?? 0) + 1;
+  const now = new Date().toISOString();
+  await c.env.DB.batch([
+    c.env.DB.prepare("INSERT INTO whatsapp_content_template_versions (id,template_key,version,status,content_en_json,content_ur_json,media_r2_key,created_at,created_by) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), key, version, "DRAFT", JSON.stringify(draft.contentEn), JSON.stringify(draft.contentUr), draft.mediaR2Key ?? null, now, c.env.ADMIN_EMAIL),
+    c.env.DB.prepare("UPDATE whatsapp_content_templates SET draft_version=?,updated_at=?,updated_by=? WHERE template_key=?").bind(version, now, c.env.ADMIN_EMAIL, key),
+    auditStatement(c.env.DB, "WHATSAPP_CONTENT_DRAFT_SAVED", "WHATSAPP_CONTENT_TEMPLATE", key, { version, hasPrivateMedia: Boolean(draft.mediaR2Key) }, now, c.env.ADMIN_EMAIL)
+  ]);
+  return c.json({ ok: true, templateKey: key, version }, 201);
+});
+
+async function publishWhatsAppContent(c: AdminContext, rollback: boolean) {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  const key = contentKey(c.req.param("key"));
+  if (!key) return c.json({ error: "WHATSAPP_TEMPLATE_KEY_INVALID" }, 400);
+  if (!c.env.DB) return c.json({ error: "WHATSAPP_CONTENT_UNAVAILABLE" }, 503);
+  let body: { version?: unknown; confirmation?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
+  const version = typeof body.version === "number" && Number.isInteger(body.version) && body.version > 0 ? body.version : 0;
+  if (!version || body.confirmation !== `${key}:${version}`) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+  const [template, target] = await Promise.all([
+    c.env.DB.prepare("SELECT published_version FROM whatsapp_content_templates WHERE template_key=?").bind(key).first<{ published_version: number | null }>(),
+    c.env.DB.prepare("SELECT status,content_en_json,content_ur_json,media_r2_key FROM whatsapp_content_template_versions WHERE template_key=? AND version=?").bind(key, version).first<{ status: string; content_en_json: string; content_ur_json: string; media_r2_key: string | null }>()
+  ]);
+  if (!template || !target) return c.json({ error: "WHATSAPP_TEMPLATE_VERSION_NOT_FOUND" }, 404);
+  if ((!rollback && target.status !== "DRAFT") || (rollback && !["PUBLISHED", "ARCHIVED"].includes(target.status))) return c.json({ error: rollback ? "WHATSAPP_CONTENT_ROLLBACK_NOT_ALLOWED" : "WHATSAPP_CONTENT_PUBLISH_REQUIRES_DRAFT" }, 409);
+  try { parseWhatsAppContentDraft({ contentEn: JSON.parse(target.content_en_json), contentUr: JSON.parse(target.content_ur_json), ...(target.media_r2_key ? { mediaR2Key: target.media_r2_key } : {}) }); } catch { return c.json({ error: "WHATSAPP_CONTENT_INVALID" }, 409); }
+  const now = new Date().toISOString();
+  await c.env.DB.batch([
+    c.env.DB.prepare("UPDATE whatsapp_content_template_versions SET status='ARCHIVED' WHERE template_key=? AND status='PUBLISHED' AND version<>?").bind(key, version),
+    c.env.DB.prepare("UPDATE whatsapp_content_template_versions SET status='PUBLISHED' WHERE template_key=? AND version=?").bind(key, version),
+    c.env.DB.prepare("UPDATE whatsapp_content_templates SET published_version=?,updated_at=?,updated_by=? WHERE template_key=?").bind(version, now, c.env.ADMIN_EMAIL, key),
+    auditStatement(c.env.DB, rollback ? "WHATSAPP_CONTENT_ROLLED_BACK" : "WHATSAPP_CONTENT_PUBLISHED", "WHATSAPP_CONTENT_TEMPLATE", key, { version, previousPublishedVersion: template.published_version }, now, c.env.ADMIN_EMAIL)
+  ]);
+  return c.json({ ok: true, templateKey: key, publishedVersion: version, rolledBack: rollback });
+}
+
+app.post("/api/whatsapp-content/:key/publish", (c) => publishWhatsAppContent(c, false));
+app.post("/api/whatsapp-content/:key/rollback", (c) => publishWhatsAppContent(c, true));
 
  app.get("/meta-activation", (c) => c.html(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Meta Activation | Get Free Seeds</title><style>body{font:16px system-ui;max-width:900px;margin:2rem auto;padding:0 1rem}nav{margin-bottom:1rem}.card{border:1px solid #ccc;border-radius:8px;padding:1rem;margin:1rem 0}pre{white-space:pre-wrap;background:#f6f6f6;padding:1rem}label{display:block;margin:.7rem 0}input,select{box-sizing:border-box;width:100%;padding:.5rem}button{padding:.5rem .8rem;margin:.2rem}.muted{color:#666}.warning{color:#8a4b00}</style></head><body><nav><a href='/'>Admin home</a></nav><h1>Meta activation</h1><p class="muted">Status is safe to reread. Graph actions use only the configured server token; OTP and PIN fields are transient and cleared after each attempt.</p><pre id="status">Loading...</pre><section class="card"><h2>Phone verification</h2><button id="request-code">Request SMS code (once)</button><label>OTP<input id="otp" type="password" inputmode="numeric" autocomplete="one-time-code"></label><button id="verify-code">Verify OTP</button></section><section class="card"><h2>Phone registration and app subscription</h2><label>Two-step PIN<input id="pin" type="password" inputmode="numeric" autocomplete="off"></label><button id="register">Register phone</button><button id="subscribe-app">Subscribe App to WABA</button></section><section class="card"><h2>Status-only checks</h2><button id="refresh">Refresh status</button><button id="controlled-test">Run controlled test</button><button id="send-test">Send fixed test message</button><p class="warning">The test message has one fixed recipient and message. No recipient input is accepted.</p></section><p id="result" role="status"></p><script>
  const status=document.querySelector('#status');const result=document.querySelector('#result');
@@ -257,6 +355,9 @@ async function load(){const r=await fetch('/api/payment-methods');const d=await 
  const readJson=async(response)=>{try{return await response.json()}catch{return {}}};
   const bindPaymentSaveButtons=()=>{for(const card of paymentMethods.querySelectorAll('.card')){const method=card.dataset.method;const result=card.querySelector('[data-result]');card.querySelector('[data-save]').onclick=async()=>{const body={};for(const e of card.querySelectorAll('[data-key]'))body[e.dataset.key]=e.type==='checkbox'?e.checked:e.type==='number'?Number(e.value):e.value;try{const response=await fetch('/api/payment-methods/'+method,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await readJson(response);result.textContent=response.ok?'Saved':responseDetail(response,data);result.className='status '+(response.ok?'configured':'error');if(response.ok)await load()}catch{result.textContent='Save failed: request unavailable';result.className='status error'}}}};
  new MutationObserver(bindPaymentSaveButtons).observe(paymentMethods,{childList:true});bindPaymentSaveButtons();
+ const copyFields=(m)=>'<label>Payment heading<input data-key="heading" value="'+esc(m.heading)+'"></label><label>QR caption<input data-key="qrCaption" value="'+esc(m.qrCaption)+'"></label><label>Short instructions<textarea data-key="shortInstructions">'+esc(m.shortInstructions)+'</textarea></label><label>Receipt instructions<textarea data-key="receiptInstructions">'+esc(m.receiptInstructions)+'</textarea></label><label>Payment help copy<textarea data-key="paymentHelpCopy">'+esc(m.paymentHelpCopy)+'</textarea></label><label>Status copy<textarea data-key="statusCopy">'+esc(m.statusCopy)+'</textarea></label>';
+ const addCopyFields=async()=>{const data=await fetch('/api/payment-methods').then((r)=>r.json());for(const m of data.paymentMethods||[]){const card=paymentMethods.querySelector('[data-method="'+m.method+'"]');if(card&&!card.querySelector('[data-key="heading"]'))card.querySelector('.actions').insertAdjacentHTML('beforebegin',copyFields(m))}};
+ new MutationObserver(()=>{addCopyFields().catch(()=>{})}).observe(paymentMethods,{childList:true});addCopyFields().catch(()=>{});
  </script></body></html>`));
 
 app.get("/payment-amount", (c) => c.html(`<!doctype html><html><head><meta charset="utf-8"><title>Advance Amount | Get Free Seeds</title><style>body{font:16px system-ui;max-width:700px;margin:2rem auto;padding:0 1rem}label{display:block;margin:1rem 0}input{box-sizing:border-box;width:100%;padding:.6rem}button{padding:.6rem .9rem}.status{margin:1rem 0}.error{color:#b00020}.ok{color:green}</style></head><body><nav><a href='/'>Admin home</a> | <a href='/payment-settings'>Payment methods</a></nav><h1>Authoritative advance payment</h1><p>Set the positive PKR delivery/advance amount used for new payment requests. At least one complete enabled payment method is required.</p><label>Amount (PKR)<input id="amount" type="number" min="1" step="1" inputmode="numeric"></label><button id="save">Save amount</button><div id="status" class="status"></div><script>
@@ -435,16 +536,37 @@ app.get("/api/configuration", async (c) => {
 
 app.post("/api/payment-methods/:method", async (c) => {
   const method = PaymentMethod.parse(c.req.param("method").toUpperCase());
-  const body = await c.req.json<{ recipientName?: string; tillId?: string; instructions?: string; referenceInstruction?: string; enabled?: boolean; sortOrder?: number }>();
-  const candidate = { id: `payment-method-${method.toLowerCase()}`, method, displayName: method === "BANK_TRANSFER" ? "Bank Transfer" : method === "EASYPAISA" ? "Easypaisa" : "JazzCash", recipientName: body.recipientName?.trim(), tillId: body.tillId?.trim(), instructions: body.instructions?.trim(), referenceInstruction: body.referenceInstruction?.trim(), enabled: body.enabled === true, sortOrder: Number.isInteger(body.sortOrder) ? Number(body.sortOrder) : 100 };
+  const body = await c.req.json<{ recipientName?: unknown; tillId?: unknown; instructions?: unknown; referenceInstruction?: unknown; heading?: unknown; qrCaption?: unknown; shortInstructions?: unknown; receiptInstructions?: unknown; paymentHelpCopy?: unknown; statusCopy?: unknown; enabled?: unknown; sortOrder?: unknown }>();
+  const current = c.env.DB ? await c.env.DB.prepare("SELECT * FROM payment_methods WHERE method=?").bind(method).first<Record<string, unknown>>() : undefined;
+  try {
+    const candidate = {
+      id: String(current?.id ?? `payment-method-${method.toLowerCase()}`),
+      method,
+      displayName: String(current?.display_name ?? (method === "BANK_TRANSFER" ? "Bank Transfer" : method === "EASYPAISA" ? "Easypaisa" : "JazzCash")),
+      recipientName: paymentCopy(body.recipientName, current?.recipient_name),
+      tillId: paymentCopy(body.tillId, current?.till_id),
+      instructions: paymentCopy(body.instructions, current?.instructions),
+      referenceInstruction: paymentCopy(body.referenceInstruction, current?.reference_instruction),
+      heading: paymentCopy(body.heading, current?.heading),
+      qrCaption: paymentCopy(body.qrCaption, current?.qr_caption),
+      shortInstructions: paymentCopy(body.shortInstructions, current?.short_instructions),
+      receiptInstructions: paymentCopy(body.receiptInstructions, current?.receipt_instructions),
+      paymentHelpCopy: paymentCopy(body.paymentHelpCopy, current?.payment_help_copy),
+      statusCopy: paymentCopy(body.statusCopy, current?.status_copy),
+      enabled: body.enabled === undefined ? Number(current?.enabled ?? 0) === 1 : body.enabled === true,
+      sortOrder: body.sortOrder === undefined ? Number(current?.sort_order ?? 100) : Number.isInteger(body.sortOrder) ? Number(body.sortOrder) : 100
+    };
   if (candidate.enabled && !isPaymentMethodComplete(candidate)) return c.json({ error: "PAYMENT_METHOD_INCOMPLETE", message: "Enabled payment methods require a recipient name and instructions." }, 400);
   if (!c.env.DB) return c.json({ ok: true, simulated: true, configured: isPaymentMethodComplete(candidate) });
   const now = new Date().toISOString();
   await c.env.DB.batch([
-    c.env.DB.prepare("INSERT INTO payment_methods (id,method,display_name,recipient_name,till_id,instructions,reference_instruction,enabled,sort_order,updated_at,updated_by) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(method) DO UPDATE SET recipient_name=excluded.recipient_name,till_id=excluded.till_id,instructions=excluded.instructions,reference_instruction=excluded.reference_instruction,enabled=excluded.enabled,sort_order=excluded.sort_order,updated_at=excluded.updated_at,updated_by=excluded.updated_by").bind(candidate.id, candidate.method, candidate.displayName, candidate.recipientName ?? null, candidate.tillId ?? null, candidate.instructions ?? null, candidate.referenceInstruction ?? null, candidate.enabled ? 1 : 0, candidate.sortOrder, now, c.env.ADMIN_EMAIL),
+    c.env.DB.prepare("INSERT INTO payment_methods (id,method,display_name,recipient_name,till_id,instructions,reference_instruction,heading,qr_caption,short_instructions,receipt_instructions,payment_help_copy,status_copy,enabled,sort_order,updated_at,updated_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(method) DO UPDATE SET recipient_name=excluded.recipient_name,till_id=excluded.till_id,instructions=excluded.instructions,reference_instruction=excluded.reference_instruction,heading=excluded.heading,qr_caption=excluded.qr_caption,short_instructions=excluded.short_instructions,receipt_instructions=excluded.receipt_instructions,payment_help_copy=excluded.payment_help_copy,status_copy=excluded.status_copy,enabled=excluded.enabled,sort_order=excluded.sort_order,updated_at=excluded.updated_at,updated_by=excluded.updated_by").bind(candidate.id, candidate.method, candidate.displayName, candidate.recipientName ?? null, candidate.tillId ?? null, candidate.instructions ?? null, candidate.referenceInstruction ?? null, candidate.heading ?? null, candidate.qrCaption ?? null, candidate.shortInstructions ?? null, candidate.receiptInstructions ?? null, candidate.paymentHelpCopy ?? null, candidate.statusCopy ?? null, candidate.enabled ? 1 : 0, candidate.sortOrder, now, c.env.ADMIN_EMAIL),
     c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_METHOD_UPDATED", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT_METHOD", method, crypto.randomUUID(), JSON.stringify({ method, enabled: candidate.enabled, sortOrder: candidate.sortOrder }), now)
   ]);
   return c.json({ ok: true, configured: isPaymentMethodComplete(candidate) });
+  } catch (error) {
+    return c.json({ error: error instanceof Error && error.message === "PAYMENT_COPY_INVALID" ? error.message : "PAYMENT_METHOD_INVALID" }, 400);
+  }
 });
 
 app.post("/api/payment-methods/:method/qr", async (c) => {

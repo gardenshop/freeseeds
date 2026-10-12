@@ -12,6 +12,12 @@ export type PaymentMethodConfig = {
   qrSizeBytes?: number;
   instructions?: string;
   referenceInstruction?: string;
+  heading?: string;
+  qrCaption?: string;
+  shortInstructions?: string;
+  receiptInstructions?: string;
+  paymentHelpCopy?: string;
+  statusCopy?: string;
   enabled: boolean;
   sortOrder: number;
   updatedAt?: string;
@@ -27,6 +33,12 @@ export type PaymentInstructions = {
   qrR2Key?: string;
   instructions?: string;
   referenceInstruction?: string;
+  heading?: string;
+  qrCaption?: string;
+  shortInstructions?: string;
+  receiptInstructions?: string;
+  paymentHelpCopy?: string;
+  statusCopy?: string;
 };
 
 export function validatePaymentAmount(value: unknown): number {
@@ -71,7 +83,13 @@ export function paymentInstructions(config: PaymentMethodConfig | undefined): Pa
     ...(config.tillId ? { tillId: config.tillId } : {}),
     ...(config.qrR2Key ? { qrR2Key: config.qrR2Key } : {}),
     ...(config.instructions ? { instructions: config.instructions } : {}),
-    ...(config.referenceInstruction ? { referenceInstruction: config.referenceInstruction } : {})
+    ...(config.referenceInstruction ? { referenceInstruction: config.referenceInstruction } : {}),
+    ...(config.heading ? { heading: config.heading } : {}),
+    ...(config.qrCaption ? { qrCaption: config.qrCaption } : {}),
+    ...(config.shortInstructions ? { shortInstructions: config.shortInstructions } : {}),
+    ...(config.receiptInstructions ? { receiptInstructions: config.receiptInstructions } : {}),
+    ...(config.paymentHelpCopy ? { paymentHelpCopy: config.paymentHelpCopy } : {}),
+    ...(config.statusCopy ? { statusCopy: config.statusCopy } : {})
   };
 }
 
@@ -79,11 +97,12 @@ export function formatPaymentMessage(orderNumber: string, amount: number, config
   const payableAmount = requirePaymentAmount(amount);
   const details = paymentInstructions(config);
   if (!details.configured) throw new Error("PAYMENT_METHOD_NOT_CONFIGURED");
-  const lines = [details.displayName, `Amount due: PKR ${payableAmount}`, `Payments for Get Free Seeds are processed by Garden Shop.`, `Recipient: ${details.recipientName}`];
+  const lines = [details.heading ?? details.displayName, `Amount due: PKR ${payableAmount}`, `Payments for Get Free Seeds are processed by Garden Shop.`, `Recipient: ${details.recipientName}`];
   if (details.tillId) lines.push(`TILL/TIL ID: ${details.tillId}`);
+  if (details.shortInstructions) lines.push(details.shortInstructions);
   if (details.instructions) lines.push(details.instructions);
   if (details.referenceInstruction) lines.push(details.referenceInstruction);
-  lines.push(`Reference: ${orderNumber}`, "After payment, select I Have Paid and share your receipt here.");
+  lines.push(`Reference: ${orderNumber}`, details.receiptInstructions ?? "After payment, select I Have Paid and share your receipt here.");
   return lines.join("\n");
 }
 
@@ -100,6 +119,12 @@ export function normalizePaymentMethodRow(row: Record<string, unknown>): Payment
     ...(row.qr_size_bytes ? { qrSizeBytes: Number(row.qr_size_bytes) } : {}),
     ...(row.instructions ? { instructions: String(row.instructions) } : {}),
     ...(row.reference_instruction ? { referenceInstruction: String(row.reference_instruction) } : {}),
+    ...(row.heading ? { heading: String(row.heading) } : {}),
+    ...(row.qr_caption ? { qrCaption: String(row.qr_caption) } : {}),
+    ...(row.short_instructions ? { shortInstructions: String(row.short_instructions) } : {}),
+    ...(row.receipt_instructions ? { receiptInstructions: String(row.receipt_instructions) } : {}),
+    ...(row.payment_help_copy ? { paymentHelpCopy: String(row.payment_help_copy) } : {}),
+    ...(row.status_copy ? { statusCopy: String(row.status_copy) } : {}),
     enabled: Number(row.enabled) === 1,
     sortOrder: Number(row.sort_order),
     ...(row.updated_at ? { updatedAt: String(row.updated_at) } : {}),

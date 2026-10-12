@@ -16,3 +16,4 @@ export * from "./order-interaction";
 export * from "./meta-activation";
 export * from "./order-number";
 export * from "./order-status";
+export * from "./whatsapp-content";

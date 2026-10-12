@@ -336,6 +336,14 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Check Order now uses current D1 order/payment/receipt/fulfillment records and distinguishes PAYMENT_PENDING from PAYMENT_REVIEW.
 - Live button journey remains pending an authorized customer-controlled device/session; unrelated WhatsApp Web identity was not used.
 
+## GFS-111 Content CMS and Live Guided Commerce
+
+- Versioned bilingual `/whatsapp-content` CMS is deployed with D1 draft/publish/rollback, audit, allowlisted placeholders and private R2 media-key validation. Default templates are published v1.
+- Payment method copy fields are Admin-managed; existing JazzCash configuration is preserved.
+- D1 now proves customer `923034901810` completed a live guided journey with multiple inbound/outbound WAMIDs: latest order `FS-261012-000003`, Punjab, fertilizer selected, dynamic total PKR 500; conversation is at `PAYMENT_METHOD`.
+- Existing order `FS-261012-000002` is `PAYMENT_REVIEW`; no PAID/CAPI/fulfillment status is inferred.
+- Native Meta Flow remains separately DRAFT; no native Flow device E2E claim is made.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

@@ -74,6 +74,9 @@
 | GFS-109 conversation reset | selected wa_id reset, history/cooldown preserved | PASS live admin reset and D1 audit |
 | GFS-109 order management | search/detail/cancel/archive financial safety | PASS implementation/tests; no destructive live order mutation |
 | GFS-109 Check Order | actual payment/receipt/fulfillment status | PASS implementation/tests; live tap pending |
+| GFS-111 content CMS | versioned EN/UR draft/publish/rollback, private media, audit/CSRF | PASS 70 tests and staging deployment |
+| GFS-111 live guided chat | real inbound/outbound WAMIDs, dynamic order/quote | PASS D1 evidence: `FS-261012-000003`, PKR 500, PAYMENT_METHOD |
+| GFS-111 native Flow | published Flow CTA/screen/device E2E | DRAFT/UNTESTED |
 | GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |
 | GFS-98 token recovery | owner-installed secret → Graph ladder → API/Admin readiness | PASS fresh token; no token value inspected |
 | GFS-98 atomic reply | one failed event retry, outbound ID, status webhook, no duplicate | PASS: WAMID persisted, SENT status persisted, duplicate count 0 |
