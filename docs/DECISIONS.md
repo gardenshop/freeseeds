@@ -90,6 +90,10 @@ Payment method draft persistence is independent from legacy `payment_configurati
 
 Payment UX now distinguishes Saved—Disabled from Enabled and Configured; JazzCash cannot be enabled until Garden Shop payee/QR ownership is verified. The privacy-safe START handler is deployed, but no fresh START/state row exists, so no order or customer answer was fabricated.
 
+## 2026-10-12: GFS-103 Order Payment Handoff
+
+The guided-chat CONFIRM transition now persists a dynamic FS order, reports its order number/total and complete enabled method names, and supports JazzCash selection through the existing payment selector. It never marks PAID or emits Purchase CAPI before genuine admin approval. Live testing remains dependent on a fresh customer START and verified JazzCash ownership.
+
 ## 2026-10-11: GFS-92 Token Validation Order
 
 The activation console server-side ladder now returns HTTP 401 for `/me`, permissions, phone, and WABA reads. This is an authoritative runtime token rejection despite secret-name/deployment presence. No blind rotation or duplicate customer message was performed; the only remaining protected action is canonical token replacement.

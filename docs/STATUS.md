@@ -297,6 +297,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - JazzCash was not enabled because the QR preview payee/ownership mismatch is unverified. Easypaisa/Bank remain missing.
 - Guided-chat handler is deployed, but `whatsapp_conversations` has no fresh state row. A genuine START after deployment is required; no customer answers/order were invented.
 
+## GFS-103 Order-to-Payment Handoff
+
+- API now sends the created FS order number, dynamic total, and available complete payment method names after CONFIRM; it no longer unconditionally says payment is unconfigured.
+- Customer `JAZZCASH` selection uses `selectPaymentMethod()` and persisted `orders.total_payable`; stored instructions are returned only for enabled complete methods.
+- JazzCash remains disabled pending payee/QR ownership verification, so no live payment request or receipt flow is enabled.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

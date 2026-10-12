@@ -127,6 +127,11 @@
 - Confirmed payment status UX and D1 draft persistence; JazzCash remains disabled because QR/payee ownership is not verified.
 - Confirmed deployed guided-chat state machine has no fresh conversation state; no live order or payment request was fabricated.
 
+## Unreleased - 2026-10-12 (GFS-103)
+
+- Fixed order confirmation/payment handoff to report dynamic FS order total and complete payment method names, then use persisted total for selected method details.
+- PAID/Purchase CAPI remains approval-gated; JazzCash remains disabled pending payee ownership verification.
+
 ## Unreleased - 2026-10-11 (GFS-92)
 
 - Rechecked active server-side Graph token ladder; `/me`, permissions, phone, and WABA reads all return HTTP 401 despite secret/deployment presence.
