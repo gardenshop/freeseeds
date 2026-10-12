@@ -74,6 +74,10 @@ The first failed hop was Meta App publication: production webhook data was block
 
 The customer message from `+923034901810` is real inbound evidence: two WAMIDs persisted as signed `MESSAGE`/`RECEIVED` events. The idempotent welcome reply attempted once per event but Graph returned `META_MESSAGE_SEND_401`, proving the remaining failure is the API Worker's Meta token runtime, not callback delivery. No duplicate send was attempted.
 
+## 2026-10-12: GFS-99 START Content Boundary
+
+The existing privacy-preserving webhook schema deliberately does not store raw message bodies. Therefore the persisted event IDs cannot prove or replay the customer's START text, and no customer identity/order answers may be invented. A future guided-chat state machine must receive a fresh real message after the content/state contract is implemented.
+
 ## 2026-10-11: GFS-92 Token Validation Order
 
 The activation console server-side ladder now returns HTTP 401 for `/me`, permissions, phone, and WABA reads. This is an authoritative runtime token rejection despite secret-name/deployment presence. No blind rotation or duplicate customer message was performed; the only remaining protected action is canonical token replacement.

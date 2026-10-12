@@ -49,6 +49,13 @@
 - Auto-reply: **FAIL** — `META_MESSAGE_SEND_401`, no outbound `wamid`; no duplicate retry.
 - Flow E2E/order: **BLOCKED** by API Worker Meta token runtime rejection.
 
+## GFS-99-START-WORKFLOW Update — 2026-10-12
+
+- START inbound: **metadata exists, text unavailable** under the privacy-preserving event schema.
+- START handler/state machine: **NOT PROVEN**; no customer answers or order created.
+- Actual bot response: **NONE after START evidence**; no duplicate sent.
+- Flow/order: **BLOCKED** by `INBOUND_MESSAGE_CONTENT_UNAVAILABLE` and missing customer interaction.
+
 ## GFS-92-TOKEN-RUNTIME Update — 2026-10-11
 
 - Active server-side Graph `/me`: **FAIL HTTP 401**.

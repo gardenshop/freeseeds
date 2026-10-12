@@ -105,6 +105,11 @@
 - Confirmed real inbound customer evidence from `+923034901810`: two WAMIDs persisted in D1.
 - Auto-reply attempted idempotently once per event; Graph returned HTTP 401 from the API Worker's Meta token. No duplicate send or fabricated delivery claim.
 
+## Unreleased - 2026-10-12 (GFS-99)
+
+- Traced existing persisted inbound events and documented the privacy boundary: event body text is intentionally not stored, so START/order answers cannot be reconstructed or fabricated.
+- No duplicate welcome, order, or customer-field response was sent.
+
 ## Unreleased - 2026-10-11 (GFS-92)
 
 - Rechecked active server-side Graph token ladder; `/me`, permissions, phone, and WABA reads all return HTTP 401 despite secret/deployment presence.

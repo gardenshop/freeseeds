@@ -99,6 +99,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Verified sender: `+923034901810` (masked in public reporting); two WAMIDs persisted in D1 with `MESSAGE`/`RECEIVED` status.
 - Auto-reply records are idempotent by WAMID and show `FAILED` with safe error `META_MESSAGE_SEND_401`; no credentials or customer content are recorded.
 
+## GFS-99 Conversation Trace
+
+- D1 event privacy model stores provider event ID, type, status, payload hash, and correlation ID—not raw WhatsApp message text.
+- Existing real inbound metadata is sufficient for delivery/idempotency proof but not for replaying START or deriving customer field answers.
+
 ## GFS-92 Token Runtime Gate
 
 - API/admin secret names remain present, but current server-side Graph ladder returns HTTP 401; values are never read or recorded.

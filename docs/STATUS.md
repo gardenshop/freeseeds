@@ -271,6 +271,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Idempotent auto-reply attempted once per real message but failed with `META_MESSAGE_SEND_401`; no message ID or duplicate retry was produced.
 - First failure after inbound: API Worker Meta access token rejected/expired at outbound Graph send. Secure token replacement/runtime repair is required; no token value was read.
 
+## GFS-99 START Workflow Trace
+
+- Existing real inbound records are present, but `whatsapp_events` intentionally stores event IDs/hash/status rather than message body text. The persisted metadata cannot prove that the latest event text was `START` or reproduce customer answers.
+- No duplicate welcome/order was sent. The existing code has idempotent welcome handling, but no complete START state machine can safely advance without the actual message content and customer responses.
+- Current exact blocker: `INBOUND_MESSAGE_CONTENT_UNAVAILABLE`; no customer answers or FS order were invented.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.
