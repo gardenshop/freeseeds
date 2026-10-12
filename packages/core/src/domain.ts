@@ -52,10 +52,10 @@ export const transitions: Record<OrderState, readonly OrderState[]> = {
   NEW: ["DETAILS_COMPLETED", "CANCELLED"],
   DETAILS_COMPLETED: ["PAYMENT_PENDING", "CANCELLED"],
   PAYMENT_PENDING: ["RECEIPT_SUBMITTED", "PAYMENT_REJECTED", "CANCELLED"],
-  RECEIPT_SUBMITTED: ["PAYMENT_REVIEW", "CANCELLED"],
-  PAYMENT_REVIEW: ["PAID", "PAYMENT_REJECTED", "CANCELLED"],
+  RECEIPT_SUBMITTED: ["PAYMENT_REVIEW"],
+  PAYMENT_REVIEW: ["PAID", "PAYMENT_REJECTED"],
   PAYMENT_REJECTED: ["PAYMENT_PENDING", "RECEIPT_SUBMITTED", "CANCELLED"],
-  PAID: ["PACKING", "CANCELLED"],
+  PAID: ["PACKING"],
   PACKING: ["DISPATCHED"],
   DISPATCHED: ["DELIVERED"],
   DELIVERED: [],
@@ -72,6 +72,12 @@ export function normalizeContactNumber(value: string): string {
   if (digits.startsWith("03") && digits.length === 11) return `+92${digits.slice(1)}`;
   if (digits.startsWith("92") && !digits.startsWith("+")) return `+${digits}`;
   return digits;
+}
+
+export function normalizeWhatsAppWaId(value: string): string | undefined {
+  const normalized = normalizeContactNumber(value.trim());
+  const digits = normalized.startsWith("+") ? normalized.slice(1) : normalized;
+  return /^\d{7,20}$/.test(digits) ? digits : undefined;
 }
 
 export type CustomerRecipientSource = "META_WA_ID" | "CUSTOMER_WHATSAPP_NUMBER" | "CUSTOMER_CONTACT_NUMBER";

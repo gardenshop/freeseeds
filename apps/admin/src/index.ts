@@ -1,11 +1,94 @@
 import { Hono } from "hono";
-import { canTransition, createMetaActivationService, createWhatsAppProvider, MetaActivationAction, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, isPaymentMethodComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, paymentInstructions, PaymentMethod, storePaymentQr, validatePaymentAmount } from "@gfs/core";
+import type { Context } from "hono";
+import { canTransition, createMetaActivationService, createWhatsAppProvider, getLatestOrderForWaId, MetaActivationAction, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, isPaymentMethodComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, paymentInstructions, PaymentMethod, storePaymentQr, validatePaymentAmount } from "@gfs/core";
 
  type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
 const app = new Hono<Env>();
+type AdminContext = Context<Env>;
+const CSRF_COOKIE = "__Host-gfs_admin_csrf";
 
 function authorized(c: { req: { header(name: string): string | undefined }; env: Env["Bindings"] }): boolean {
   return c.req.header("cf-access-authenticated-user-email") === c.env.ADMIN_EMAIL;
+}
+
+function cookieValue(header: string | undefined, name: string): string | undefined {
+  for (const part of (header ?? "").split(";")) {
+    const [key, ...value] = part.trim().split("=");
+    if (key === name) return value.join("=");
+  }
+  return undefined;
+}
+
+function newCsrfToken(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return [...bytes].map((value) => value.toString(16).padStart(2, "0")).join("");
+}
+
+function issueCsrfToken(c: AdminContext): string {
+  const current = cookieValue(c.req.header("cookie"), CSRF_COOKIE);
+  const token = current && /^[a-f0-9]{64}$/.test(current) ? current : newCsrfToken();
+  if (token !== current) c.header("Set-Cookie", `${CSRF_COOKIE}=${token}; Path=/; Secure; HttpOnly; SameSite=Strict`);
+  return token;
+}
+
+function equalToken(left: string, right: string): boolean {
+  if (left.length !== right.length) return false;
+  let difference = 0;
+  for (let index = 0; index < left.length; index += 1) difference |= left.charCodeAt(index) ^ right.charCodeAt(index);
+  return difference === 0;
+}
+
+function validCsrf(c: AdminContext): boolean {
+  const origin = c.req.header("origin");
+  const expectedOrigin = new URL(c.req.url).origin;
+  const cookie = cookieValue(c.req.header("cookie"), CSRF_COOKIE) ?? "";
+  const header = c.req.header("x-csrf-token") ?? "";
+  return origin === expectedOrigin && /^[a-f0-9]{64}$/.test(cookie) && equalToken(cookie, header);
+}
+
+function strictWaId(value: unknown): string | undefined {
+  if (typeof value !== "string" || !/^[1-9]\d{6,19}$/.test(value.trim())) return undefined;
+  return normalizeWhatsAppWaId(value.trim());
+}
+
+function requiredReason(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const reason = value.trim();
+  return reason.length >= 3 && reason.length <= 500 ? reason : undefined;
+}
+
+function orderView(row: Record<string, unknown>) {
+  const receiptCount = Number(row.receipt_count ?? 0);
+  const financial = String(row.state) === "PAID" || String(row.payment_status) === "PAID" || String(row.review_state ?? "") === "APPROVED" || row.approved_at != null || row.approved_amount != null;
+  const state = String(row.state);
+  const unpaidState = ["NEW", "DETAILS_COMPLETED", "PAYMENT_PENDING", "PAYMENT_REJECTED", "CANCELLED"].includes(state);
+  return {
+    id: String(row.id),
+    orderNumber: String(row.order_number),
+    state,
+    paymentStatus: String(row.payment_status),
+    totalPayablePkr: Number(row.total_payable),
+    province: row.province == null ? null : String(row.province),
+    customerName: row.full_name == null ? null : String(row.full_name),
+    waId: row.wa_id == null ? null : String(row.wa_id),
+    contactNumber: row.normalized_contact_number == null ? null : String(row.normalized_contact_number),
+    paymentId: row.payment_id == null ? null : String(row.payment_id),
+    paymentMethod: row.method == null ? null : String(row.method),
+    paymentReviewState: row.review_state == null ? null : String(row.review_state),
+    expectedAmountPkr: row.expected_amount == null ? null : Number(row.expected_amount),
+    approvedAmountPkr: row.approved_amount == null ? null : Number(row.approved_amount),
+    receiptCount,
+    createdAt: String(row.created_at),
+    updatedAt: String(row.updated_at),
+    cancelledAt: row.cancelled_at == null ? null : String(row.cancelled_at),
+    cancelledBy: row.cancelled_by == null ? null : String(row.cancelled_by),
+    cancellationReason: row.cancellation_reason == null ? null : String(row.cancellation_reason),
+    archivedAt: row.archived_at == null ? null : String(row.archived_at),
+    archivedBy: row.archived_by == null ? null : String(row.archived_by),
+    archiveReason: row.archive_reason == null ? null : String(row.archive_reason),
+    canCancel: !financial && receiptCount === 0 && state !== "CANCELLED" && unpaidState && row.archived_at == null,
+    canArchive: !financial && receiptCount === 0 && unpaidState && row.archived_at == null
+  };
 }
 
 function productView(row: Record<string, unknown>) {
@@ -28,6 +111,26 @@ function productRow(item){return '<tr data-kind="p" data-id="'+escapeHtml(item.i
 function rateRow(item){return '<tr data-kind="r" data-id="'+escapeHtml(item.id)+'"><td>'+escapeHtml(item.province)+'</td><td>DELIVERY</td><td><input name="deliveryFeePkr" type="number" min="1" value="'+escapeHtml(item.deliveryFeePkr)+'"></td><td>-</td><td><input name="active" type="checkbox" '+(item.active?'checked':'')+'></td><td><button type="button">Save</button><span class="status"></span></td></tr>'}
 async function load(){const [productResponse,rateResponse]=await Promise.all([fetch('/api/catalog/products').then((response)=>response.json()),fetch('/api/catalog/province-delivery-rates').then((response)=>response.json())]);const rows=(productResponse.products||[]).map(productRow).concat((rateResponse.rates||[]).map(rateRow));document.querySelector('#rows').innerHTML=rows.join('');for(const row of document.querySelectorAll('#rows tr')){const button=row.querySelector('button');const status=row.querySelector('span');button.onclick=async()=>{const body={};for(const input of row.querySelectorAll('input[name]'))body[input.name]=input.type==='checkbox'?input.checked:input.type==='number'?Number(input.value):input.value;const path=row.dataset.kind==='p'?'products':'province-delivery-rates';const result=await fetch('/api/catalog/'+path+'/'+row.dataset.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});status.textContent=result.ok?' Saved':' Validation blocked';status.className='status '+(result.ok?'ok':'error')}}}
 load().catch(()=>{document.querySelector('#rows').textContent='Tariff unavailable'});
+</script></body></html>`;
+}
+
+function ordersPageHtml(csrfToken: string): string {
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Orders | Get Free Seeds</title><style>body{font:15px system-ui;max-width:1200px;margin:2rem auto;padding:0 1rem;color:#172018}nav{margin-bottom:1rem}.filters{display:flex;flex-wrap:wrap;gap:.6rem;margin:1rem 0}input,select,textarea,button{font:inherit;padding:.5rem}table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid #d9dfd9;padding:.55rem;text-align:left}tr:hover{background:#f4f7f4}.panel{border:1px solid #ccd5cc;border-radius:8px;padding:1rem;margin-top:1rem;white-space:pre-wrap}.actions{display:flex;gap:.5rem;margin-top:1rem}.error{color:#a40019}.muted{color:#59635a}</style></head><body><nav><a href="/">Admin home</a> | <a href="/test-controls">Test controls</a></nav><h1>Orders</h1><form id="filters" class="filters"><input name="q" placeholder="Order, customer, or wa_id"><select name="state"><option value="">All states</option><option>DETAILS_COMPLETED</option><option>PAYMENT_PENDING</option><option>PAYMENT_REVIEW</option><option>PAYMENT_REJECTED</option><option>PAID</option><option>PACKING</option><option>DISPATCHED</option><option>DELIVERED</option><option>CANCELLED</option></select><select name="archived"><option value="active">Active</option><option value="all">All</option><option value="only">Archived</option></select><button>Search</button></form><table><thead><tr><th>Order</th><th>Customer</th><th>State</th><th>Payment</th><th>Total</th><th>Created</th></tr></thead><tbody id="rows"></tbody></table><section id="detail" class="panel muted">Select an order.</section><script>
+const csrf=${JSON.stringify(csrfToken)};const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const detail=document.querySelector('#detail');
+async function json(response){const data=await response.json();if(!response.ok)throw new Error(data.error||'Request failed');return data}
+async function load(){const params=new URLSearchParams(new FormData(document.querySelector('#filters')));const data=await json(await fetch('/api/orders?'+params));document.querySelector('#rows').innerHTML=data.orders.map((o)=>'<tr data-id="'+esc(o.id)+'"><td>'+esc(o.orderNumber)+'</td><td>'+esc(o.customerName)+'</td><td>'+esc(o.state)+(o.archivedAt?' (archived)':'')+'</td><td>'+esc(o.paymentReviewState||o.paymentStatus)+'</td><td>PKR '+esc(o.totalPayablePkr)+'</td><td>'+esc(o.createdAt)+'</td></tr>').join('')||'<tr><td colspan="6">No matching orders.</td></tr>';for(const row of document.querySelectorAll('[data-id]'))row.onclick=()=>show(row.dataset.id)}
+async function mutate(path,body){return json(await fetch(path,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(body)}))}
+async function show(id){try{const data=await json(await fetch('/api/orders/'+encodeURIComponent(id)));const o=data.order;detail.className='panel';detail.innerHTML='<strong>'+esc(o.orderNumber)+'</strong>\nCustomer: '+esc(o.customerName)+'\nState: '+esc(o.state)+'\nPayment: '+esc(o.paymentReviewState||o.paymentStatus)+'\nReceipts: '+esc(o.receiptCount)+'\nTotal: PKR '+esc(o.totalPayablePkr)+'\nProvince: '+esc(o.province)+'\nItems: '+esc(data.items.map((i)=>i.description+' x '+i.quantity).join(', ')||'None')+'<div class="actions"></div>';const actions=detail.querySelector('.actions');if(o.canCancel){const button=document.createElement('button');button.textContent='Cancel unpaid order';button.onclick=async()=>{const reason=prompt('Cancellation reason');if(!reason||!confirm('Cancel '+o.orderNumber+'? Financial history will be retained.'))return;await mutate('/api/orders/'+encodeURIComponent(o.id)+'/cancel',{reason,confirmation:o.orderNumber});await load();await show(o.id)};actions.append(button)}if(o.canArchive){const button=document.createElement('button');button.textContent='Archive unpaid order';button.onclick=async()=>{const reason=prompt('Archive reason');if(!reason||!confirm('Archive '+o.orderNumber+'? No records will be deleted.'))return;await mutate('/api/orders/'+encodeURIComponent(o.id)+'/archive',{reason,confirmation:o.orderNumber});await load();await show(o.id)};actions.append(button)}}catch(error){detail.className='panel error';detail.textContent=error.message}}
+document.querySelector('#filters').onsubmit=(event)=>{event.preventDefault();load().catch((error)=>{detail.textContent=error.message})};load().catch((error)=>{detail.textContent=error.message});
+</script></body></html>`;
+}
+
+function testControlsPageHtml(csrfToken: string): string {
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Test Controls | Get Free Seeds</title><style>body{font:15px system-ui;max-width:960px;margin:2rem auto;padding:0 1rem}nav{margin-bottom:1rem}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem}.card{border:1px solid #ccd5cc;border-radius:8px;padding:1rem}input,button{font:inherit;padding:.5rem}.row{display:flex;gap:.5rem;margin:.5rem 0}.row input{flex:1}pre{white-space:pre-wrap;background:#f5f7f5;padding:1rem;min-height:5rem}.error{color:#a40019}</style></head><body><nav><a href="/">Admin home</a> | <a href="/orders">Orders</a></nav><h1>Test controls</h1><p>Conversation reset affects only the selected state row. Orders, payments, receipts, cooldown locks, and audit history are retained.</p><div class="grid"><section class="card"><h2>Conversation</h2><form id="lookup" class="row"><input name="waId" inputmode="numeric" pattern="[0-9]{7,20}" placeholder="Meta wa_id" required><button>Load</button></form><pre id="conversation">Select a conversation.</pre><button id="reset" disabled>Reset selected conversation to NEW</button></section><section class="card"><h2>Cooldown exemptions</h2><form id="add" class="row"><input name="waId" inputmode="numeric" pattern="[0-9]{7,20}" placeholder="Meta wa_id" required><button>Add</button></form><div id="exemptions">Loading...</div></section></div><p id="result"></p><script>
+const csrf=${JSON.stringify(csrfToken)};let selected='';const conversation=document.querySelector('#conversation');const result=document.querySelector('#result');const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));async function json(response){const data=await response.json();if(!response.ok)throw new Error(data.error||'Request failed');return data}async function request(path,method,body){return json(await fetch(path,{method,headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(body)}))}
+async function show(waId){const data=await json(await fetch('/api/test-controls/conversations/'+encodeURIComponent(waId)));selected=waId;document.querySelector('#reset').disabled=false;conversation.textContent=JSON.stringify(data,null,2)}
+async function loadExemptions(){const data=await json(await fetch('/api/test-controls/cooldown-exemptions'));document.querySelector('#exemptions').innerHTML=data.exemptions.map((e)=>'<div>'+esc(e.waId)+' <button data-remove="'+esc(e.waId)+'">Remove</button></div>').join('')||'No exemptions.';for(const button of document.querySelectorAll('[data-remove]'))button.onclick=async()=>{const waId=button.dataset.remove;if(!confirm('Remove cooldown exemption for '+waId+'?'))return;await request('/api/test-controls/cooldown-exemptions/'+waId,'DELETE',{confirmation:waId});await loadExemptions();if(selected===waId)await show(waId)}}
+document.querySelector('#lookup').onsubmit=async(event)=>{event.preventDefault();try{await show(new FormData(event.currentTarget).get('waId'))}catch(error){conversation.textContent=error.message}};document.querySelector('#reset').onclick=async()=>{if(!selected||!confirm('Reset only conversation '+selected+' to NEW?'))return;try{await request('/api/test-controls/conversations/'+selected+'/reset','POST',{confirmation:selected});await show(selected);result.textContent='Conversation reset; order and payment history retained.'}catch(error){result.textContent=error.message;result.className='error'}};document.querySelector('#add').onsubmit=async(event)=>{event.preventDefault();const waId=String(new FormData(event.currentTarget).get('waId')||'');if(!confirm('Add cooldown exemption for '+waId+'?'))return;try{await request('/api/test-controls/cooldown-exemptions','POST',{waId,confirmation:waId});event.currentTarget.reset();await loadExemptions()}catch(error){result.textContent=error.message;result.className='error'}};loadExemptions().catch((error)=>{result.textContent=error.message});
 </script></body></html>`;
 }
 
@@ -61,7 +164,11 @@ app.get("/health", async (c) => {
   const configured = c.env.DB ? await c.env.DB.prepare("SELECT COUNT(*) AS count FROM payment_methods WHERE enabled=1 AND recipient_name IS NOT NULL AND instructions IS NOT NULL AND EXISTS (SELECT 1 FROM payment_configuration WHERE id=1 AND advance_amount_pkr > 0)").first<{ count: number }>() : null;
   return c.json({ ok: true, service: "getfreeseeds-admin", state: c.env.DEPLOYMENT_STATE, paymentConfigured: Number(configured?.count ?? 0) > 0 });
 });
-app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav><a href='/payment-settings'>Payment Settings</a> | <a href='/payment-amount'>Legacy Advance Amount</a> | <a href='/tariff'>Tariff Management</a> | <a href='/meta-activation'>Meta Activation</a> | Dashboard | Leads | Meta Instant Form | Orders | Payment Verification | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
+app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav><a href='/payment-settings'>Payment Settings</a> | <a href='/payment-amount'>Legacy Advance Amount</a> | <a href='/tariff'>Tariff Management</a> | <a href='/meta-activation'>Meta Activation</a> | <a href='/orders'>Orders</a> | <a href='/test-controls'>Test Controls</a> | Dashboard | Leads | Meta Instant Form | Payment Verification | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
+
+app.get("/api/csrf", (c) => c.json({ csrfToken: issueCsrfToken(c) }));
+app.get("/orders", (c) => c.html(ordersPageHtml(issueCsrfToken(c))));
+app.get("/test-controls", (c) => c.html(testControlsPageHtml(issueCsrfToken(c))));
 
  app.get("/meta-activation", (c) => c.html(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Meta Activation | Get Free Seeds</title><style>body{font:16px system-ui;max-width:900px;margin:2rem auto;padding:0 1rem}nav{margin-bottom:1rem}.card{border:1px solid #ccc;border-radius:8px;padding:1rem;margin:1rem 0}pre{white-space:pre-wrap;background:#f6f6f6;padding:1rem}label{display:block;margin:.7rem 0}input,select{box-sizing:border-box;width:100%;padding:.5rem}button{padding:.5rem .8rem;margin:.2rem}.muted{color:#666}.warning{color:#8a4b00}</style></head><body><nav><a href='/'>Admin home</a></nav><h1>Meta activation</h1><p class="muted">Status is safe to reread. Graph actions use only the configured server token; OTP and PIN fields are transient and cleared after each attempt.</p><pre id="status">Loading...</pre><section class="card"><h2>Phone verification</h2><button id="request-code">Request SMS code (once)</button><label>OTP<input id="otp" type="password" inputmode="numeric" autocomplete="one-time-code"></label><button id="verify-code">Verify OTP</button></section><section class="card"><h2>Phone registration and app subscription</h2><label>Two-step PIN<input id="pin" type="password" inputmode="numeric" autocomplete="off"></label><button id="register">Register phone</button><button id="subscribe-app">Subscribe App to WABA</button></section><section class="card"><h2>Status-only checks</h2><button id="refresh">Refresh status</button><button id="controlled-test">Run controlled test</button><button id="send-test">Send fixed test message</button><p class="warning">The test message has one fixed recipient and message. No recipient input is accepted.</p></section><p id="result" role="status"></p><script>
  const status=document.querySelector('#status');const result=document.querySelector('#result');
@@ -375,8 +482,174 @@ app.get("/api/payment-methods/:method/qr", async (c) => {
   return new Response(object.body, { headers: { "Content-Type": row.qr_mime_type ?? "application/octet-stream", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff", "Content-Disposition": "inline" } });
 });
 
+const ORDER_ADMIN_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,o.total_payable,o.province,o.created_at,o.updated_at,
+  o.cancelled_at,o.cancelled_by,o.cancellation_reason,o.archived_at,o.archived_by,o.archive_reason,
+  c.full_name,c.wa_id,c.normalized_contact_number,p.id AS payment_id,p.method,p.expected_amount,p.approved_amount,p.review_state,p.submitted_at,p.approved_at,
+  COUNT(pr.id) AS receipt_count
+  FROM orders o JOIN customers c ON c.id=o.customer_id
+  LEFT JOIN payments p ON p.order_id=o.id
+  LEFT JOIN payment_receipts pr ON pr.order_id=o.id`;
+
+app.get("/api/orders", async (c) => {
+  if (!c.env.DB) return c.json({ orders: [] });
+  const state = c.req.query("state")?.trim();
+  if (state && !OrderState.safeParse(state).success) return c.json({ error: "ORDER_STATE_INVALID" }, 400);
+  const archived = c.req.query("archived") ?? "active";
+  if (!["active", "only", "all"].includes(archived)) return c.json({ error: "ARCHIVED_FILTER_INVALID" }, 400);
+  const paymentStatus = c.req.query("paymentStatus")?.trim();
+  if (paymentStatus && !/^[A-Z_]{2,40}$/.test(paymentStatus)) return c.json({ error: "PAYMENT_STATUS_INVALID" }, 400);
+  const search = c.req.query("q")?.trim().slice(0, 100);
+  const where: string[] = [];
+  const bindings: unknown[] = [];
+  if (state) { where.push("o.state=?"); bindings.push(state); }
+  if (paymentStatus) { where.push("o.payment_status=?"); bindings.push(paymentStatus); }
+  if (archived === "active") where.push("o.archived_at IS NULL");
+  if (archived === "only") where.push("o.archived_at IS NOT NULL");
+  if (search) {
+    where.push("(o.order_number LIKE ? OR c.full_name LIKE ? OR c.wa_id LIKE ? OR c.normalized_contact_number LIKE ?)");
+    const pattern = `%${search}%`;
+    bindings.push(pattern, pattern, pattern, pattern);
+  }
+  const sql = `${ORDER_ADMIN_SELECT}${where.length ? ` WHERE ${where.join(" AND ")}` : ""} GROUP BY o.id,p.id ORDER BY o.created_at DESC LIMIT 100`;
+  const result = await c.env.DB.prepare(sql).bind(...bindings).all();
+  return c.json({ orders: result.results.map((row) => orderView(row as Record<string, unknown>)) });
+});
+
+app.get("/api/orders/:id", async (c) => {
+  if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
+  const row = await c.env.DB.prepare(`${ORDER_ADMIN_SELECT} WHERE o.id=? GROUP BY o.id,p.id`).bind(c.req.param("id")).first<Record<string, unknown>>();
+  if (!row) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
+  const [items, receipts, audit] = await Promise.all([
+    c.env.DB.prepare("SELECT id,item_type,product_code,description,quantity,unit_price_pkr,line_total_pkr,created_at FROM order_items WHERE order_id=? ORDER BY created_at,id").bind(c.req.param("id")).all(),
+    c.env.DB.prepare("SELECT id,payment_id,mime_type,size_bytes,submitted_at,created_at FROM payment_receipts WHERE order_id=? ORDER BY submitted_at DESC").bind(c.req.param("id")).all(),
+    c.env.DB.prepare("SELECT id,action,actor_type,actor_id,metadata_json,created_at FROM audit_log WHERE (entity_type='ORDER' AND entity_id=?) OR (entity_type='PAYMENT' AND entity_id=(SELECT id FROM payments WHERE order_id=?)) ORDER BY created_at DESC LIMIT 100").bind(c.req.param("id"), c.req.param("id")).all()
+  ]);
+  return c.json({ order: orderView(row), items: items.results, receipts: receipts.results, audit: audit.results });
+});
+
+app.get("/api/test-controls/conversations", async (c) => {
+  if (!c.env.DB) return c.json({ conversations: [] });
+  const search = c.req.query("q")?.trim().slice(0, 40);
+  const result = search
+    ? await c.env.DB.prepare("SELECT wa_id,state,last_inbound_message_id,created_at,updated_at FROM whatsapp_conversations WHERE wa_id LIKE ? ORDER BY updated_at DESC LIMIT 100").bind(`%${search}%`).all()
+    : await c.env.DB.prepare("SELECT wa_id,state,last_inbound_message_id,created_at,updated_at FROM whatsapp_conversations ORDER BY updated_at DESC LIMIT 100").all();
+  return c.json({ conversations: result.results });
+});
+
+app.get("/api/test-controls/conversations/:waId", async (c) => {
+  if (!c.env.DB) return c.json({ error: "TEST_CONTROLS_UNAVAILABLE" }, 503);
+  const waId = strictWaId(c.req.param("waId"));
+  if (!waId) return c.json({ error: "WA_ID_INVALID" }, 400);
+  const conversation = await c.env.DB.prepare("SELECT wa_id,state,state_data,last_inbound_message_id,created_at,updated_at FROM whatsapp_conversations WHERE wa_id IN (?,?) ORDER BY CASE WHEN wa_id=? THEN 0 ELSE 1 END LIMIT 1").bind(waId, `+${waId}`, waId).first<{ wa_id: string; state: string; state_data: string; last_inbound_message_id: string | null; created_at: string; updated_at: string }>();
+  if (!conversation) return c.json({ error: "CONVERSATION_NOT_FOUND" }, 404);
+  let preferredOrderId: string | undefined;
+  try {
+    const stateData = JSON.parse(conversation.state_data) as { orderId?: unknown };
+    if (typeof stateData.orderId === "string") preferredOrderId = stateData.orderId;
+  } catch {
+    // Corrupt legacy state is not returned to the browser and does not block safe inspection/reset.
+  }
+  const [latestOrder, exemption] = await Promise.all([
+    getLatestOrderForWaId(c.env.DB, waId, preferredOrderId),
+    c.env.DB.prepare("SELECT wa_id,reason,created_by,created_at FROM cooldown_exemptions WHERE wa_id=?").bind(waId).first<Record<string, unknown>>()
+  ]);
+  const lock = latestOrder ? await c.env.DB.prepare("SELECT order_id,order_number,last_order_at FROM order_eligibility_locks WHERE household_key=?").bind(latestOrder.householdKey).first<{ order_id: string; order_number: string | null; last_order_at: string }>() : undefined;
+  const nextEligibleAt = lock ? new Date(new Date(lock.last_order_at).getTime() + 14 * 24 * 60 * 60 * 1000).toISOString() : null;
+  const exempt = Boolean(exemption);
+  return c.json({
+    conversation: { waId: conversation.wa_id, state: conversation.state, lastInboundMessageId: conversation.last_inbound_message_id, createdAt: conversation.created_at, updatedAt: conversation.updated_at },
+    latestOrder: latestOrder ? { ...latestOrder, householdKey: undefined } : null,
+    cooldown: { exempt, lastOrderAt: lock?.last_order_at ?? null, orderNumber: lock?.order_number ?? null, nextEligibleAt, active: !exempt && Boolean(nextEligibleAt && nextEligibleAt > new Date().toISOString()) }
+  });
+});
+
+app.post("/api/test-controls/conversations/:waId/reset", async (c) => {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  if (!c.env.DB) return c.json({ error: "TEST_CONTROLS_UNAVAILABLE" }, 503);
+  const waId = strictWaId(c.req.param("waId"));
+  if (!waId) return c.json({ error: "WA_ID_INVALID" }, 400);
+  let body: { confirmation?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
+  if (body.confirmation !== waId) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+  const current = await c.env.DB.prepare("SELECT wa_id,state FROM whatsapp_conversations WHERE wa_id IN (?,?) ORDER BY CASE WHEN wa_id=? THEN 0 ELSE 1 END LIMIT 1").bind(waId, `+${waId}`, waId).first<{ wa_id: string; state: string }>();
+  if (!current) return c.json({ error: "CONVERSATION_NOT_FOUND" }, 404);
+  const now = new Date().toISOString();
+  const result = await c.env.DB.batch([
+    c.env.DB.prepare("UPDATE whatsapp_conversations SET state='NEW',state_data='{}',last_inbound_message_id=NULL,updated_at=? WHERE wa_id=?").bind(now, current.wa_id),
+    auditStatement(c.env.DB, "WHATSAPP_CONVERSATION_RESET", "WHATSAPP_CONVERSATION", current.wa_id, { previousState: current.state, preservedHistory: true }, now, c.env.ADMIN_EMAIL)
+  ]);
+  return result[0].meta.changes === 1 ? c.json({ ok: true, waId: current.wa_id, state: "NEW", historyPreserved: true }) : c.json({ error: "CONVERSATION_STATE_CONFLICT" }, 409);
+});
+
+app.get("/api/test-controls/cooldown-exemptions", async (c) => {
+  const result = c.env.DB ? await c.env.DB.prepare("SELECT wa_id,reason,created_by,created_at FROM cooldown_exemptions ORDER BY created_at,wa_id").all() : { results: [] };
+  return c.json({ exemptions: result.results.map((row) => ({ waId: String(row.wa_id), reason: String(row.reason), createdBy: String(row.created_by), createdAt: String(row.created_at) })) });
+});
+
+app.post("/api/test-controls/cooldown-exemptions", async (c) => {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  if (!c.env.DB) return c.json({ error: "TEST_CONTROLS_UNAVAILABLE" }, 503);
+  let body: { waId?: unknown; confirmation?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
+  const waId = strictWaId(body.waId);
+  if (!waId) return c.json({ error: "WA_ID_INVALID" }, 400);
+  if (body.confirmation !== waId) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+  const now = new Date().toISOString();
+  try {
+    await c.env.DB.batch([
+      c.env.DB.prepare("INSERT INTO cooldown_exemptions (wa_id,reason,created_by,created_at) VALUES (?,?,?,?)").bind(waId, "ADMIN_TEST_EXEMPTION", c.env.ADMIN_EMAIL, now),
+      auditStatement(c.env.DB, "COOLDOWN_EXEMPTION_ADDED", "COOLDOWN_EXEMPTION", waId, { waId }, now, c.env.ADMIN_EMAIL)
+    ]);
+  } catch {
+    return c.json({ error: "COOLDOWN_EXEMPTION_ALREADY_EXISTS" }, 409);
+  }
+  return c.json({ ok: true, waId }, 201);
+});
+
+app.delete("/api/test-controls/cooldown-exemptions/:waId", async (c) => {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  if (!c.env.DB) return c.json({ error: "TEST_CONTROLS_UNAVAILABLE" }, 503);
+  const waId = strictWaId(c.req.param("waId"));
+  if (!waId) return c.json({ error: "WA_ID_INVALID" }, 400);
+  let body: { confirmation?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
+  if (body.confirmation !== waId) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+  const now = new Date().toISOString();
+  const result = await c.env.DB.batch([
+    c.env.DB.prepare("DELETE FROM cooldown_exemptions WHERE wa_id=?").bind(waId),
+    c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE changes()=1").bind(crypto.randomUUID(), "COOLDOWN_EXEMPTION_REMOVED", "ADMIN", c.env.ADMIN_EMAIL, "COOLDOWN_EXEMPTION", waId, crypto.randomUUID(), JSON.stringify({ waId }), now)
+  ]);
+  return result[0].meta.changes === 1 ? c.json({ ok: true, waId }) : c.json({ error: "COOLDOWN_EXEMPTION_NOT_FOUND" }, 404);
+});
+
+async function orderRetentionAction(c: AdminContext, action: "cancel" | "archive") {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
+  let body: { reason?: unknown; confirmation?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
+  const orderId = c.req.param("id");
+  const order = await c.env.DB.prepare("SELECT order_number FROM orders WHERE id=?").bind(orderId).first<{ order_number: string }>();
+  if (!order) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
+  if (body.confirmation !== order.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+  const reason = requiredReason(body.reason);
+  if (!reason) return c.json({ error: "REASON_REQUIRED" }, 400);
+  const now = new Date().toISOString();
+  const eligible = "state IN ('NEW','DETAILS_COMPLETED','PAYMENT_PENDING','PAYMENT_REJECTED','CANCELLED') AND payment_status<>'PAID' AND NOT EXISTS (SELECT 1 FROM payment_receipts r WHERE r.order_id=orders.id) AND NOT EXISTS (SELECT 1 FROM payments p WHERE p.order_id=orders.id AND (p.review_state='APPROVED' OR p.approved_at IS NOT NULL OR p.approved_amount IS NOT NULL))";
+  const update = action === "cancel"
+    ? c.env.DB.prepare(`UPDATE orders SET state='CANCELLED',cancelled_at=?,cancelled_by=?,cancellation_reason=?,updated_at=? WHERE id=? AND archived_at IS NULL AND state<>'CANCELLED' AND ${eligible}`).bind(now, c.env.ADMIN_EMAIL, reason, now, orderId)
+    : c.env.DB.prepare(`UPDATE orders SET archived_at=?,archived_by=?,archive_reason=?,updated_at=? WHERE id=? AND archived_at IS NULL AND ${eligible}`).bind(now, c.env.ADMIN_EMAIL, reason, now, orderId);
+  const audit = c.env.DB.prepare(`INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? FROM orders WHERE id=? AND ${action === "cancel" ? "cancelled_at" : "archived_at"}=?`).bind(crypto.randomUUID(), action === "cancel" ? "ORDER_CANCELLED" : "ORDER_ARCHIVED", "ADMIN", c.env.ADMIN_EMAIL, "ORDER", orderId, crypto.randomUUID(), JSON.stringify({ orderNumber: order.order_number, reason, financialHistoryPreserved: true }), now, orderId, now);
+  const result = await c.env.DB.batch([update, audit]);
+  if (result[0].meta.changes !== 1) return c.json({ error: action === "cancel" ? "ORDER_NOT_ELIGIBLE_FOR_CANCELLATION" : "ORDER_NOT_ELIGIBLE_FOR_ARCHIVE" }, 409);
+  return c.json({ ok: true, orderId, orderNumber: order.order_number, action, historyPreserved: true });
+}
+
+app.post("/api/orders/:id/cancel", (c) => orderRetentionAction(c, "cancel"));
+app.post("/api/orders/:id/archive", (c) => orderRetentionAction(c, "archive"));
+
 app.post("/api/orders/:id/transition", async (c) => {
   const body = await c.req.json<{ from: OrderState; to: OrderState }>();
+  if (body.to === "CANCELLED") return c.json({ error: "USE_EXPLICIT_CANCELLATION" }, 409);
   if (!canTransition(body.from, body.to)) return c.json({ error: "INVALID_STATE_TRANSITION" }, 409);
   if (!c.env.DB) return c.json({ ok: true, simulated: true });
   const result = await c.env.DB.prepare("UPDATE orders SET state = ?, updated_at = ? WHERE id = ? AND state = ?").bind(body.to, new Date().toISOString(), c.req.param("id"), body.from).run();

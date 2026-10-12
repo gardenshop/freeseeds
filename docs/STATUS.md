@@ -328,6 +328,14 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Server/D1 order cooldown rule is implemented as fourteen 24-hour days from submitted order creation, with only verified E2E sender `+923034901810` exempt.
 - Tap UX implementation is deployed; real-device Android/iOS/Desktop rendering was not independently tested in this environment.
 
+## GFS-109 Admin Reset and Order Management
+
+- Access-protected `/orders` and `/test-controls` are deployed with CSRF, confirmation, validation and mutation audit trails.
+- D1 cooldown exemption allowlist is persisted and seeded only with verified `wa_id` `923034901810`.
+- Authorized test conversation reset succeeded: state is `NEW`, last inbound ID cleared, audit action `WHATSAPP_CONVERSATION_RESET` recorded for `gisupp@gmail.com`; historical order `FS-261012-000001` remains `PAYMENT_PENDING` and unchanged.
+- Check Order now uses current D1 order/payment/receipt/fulfillment records and distinguishes PAYMENT_PENDING from PAYMENT_REVIEW.
+- Live button journey remains pending an authorized customer-controlled device/session; unrelated WhatsApp Web identity was not used.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

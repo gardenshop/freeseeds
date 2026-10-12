@@ -124,6 +124,14 @@
 - Real tap/device E2E: **NOT RUN**; no physical Android/iOS/Desktop coverage available.
 - Live order/payment/receipt: existing order evidence remains; no duplicate order or payment claim.
 
+## GFS-109-ADMIN-CONTROLS Update — 2026-10-12
+
+- `/test-controls`: **PASS deployed**; exemption seeded, scoped reset live-tested and audited.
+- `/orders`: **PASS deployed**; search/detail/cancel/archive safety implemented and tested.
+- Historical order preservation: **PASS** — `FS-261012-000001` remains PAYMENT_PENDING.
+- Check Order: **PASS implementation** with distinct payment-review/fulfillment states.
+- Live tap/button E2E: **BLOCKED** by unavailable authorized customer device/session; no impersonation.
+
 ## GFS-105-LIVE-COMMERCE Update — 2026-10-12
 
 - START: **NOT OBSERVED** after deployment; no customer session was proven available.

@@ -1,5 +1,5 @@
 import { createLeadEvent } from "./capi";
-import { FlowSubmission, InstantFormSubmission, LeadSource, normalizeContactNumber } from "./domain";
+import { FlowSubmission, InstantFormSubmission, LeadSource, normalizeContactNumber, normalizeWhatsAppWaId } from "./domain";
 import { allocateOrderNumber } from "./order-number";
 import { requirePaymentAmount } from "./payments";
 import { OrderQuote, quoteOrder } from "./quote";
@@ -93,8 +93,8 @@ async function persistLeadSubmission(db: D1Database, submission: FlowSubmission,
   const paymentId = crypto.randomUUID();
   const correlationId = crypto.randomUUID();
   const addressHash = await digestText(`${submission.deliveryAddress.trim().toLowerCase()}|${submission.city.trim().toLowerCase()}`);
-  const normalizedTrustedWaId = trustedWaId ? normalizeContactNumber(trustedWaId) : undefined;
-  const cooldownExempt = normalizedTrustedWaId === "+923034901810";
+  const normalizedTrustedWaId = trustedWaId ? normalizeWhatsAppWaId(trustedWaId) : undefined;
+  const cooldownExempt = normalizedTrustedWaId ? Boolean(await db.prepare("SELECT wa_id FROM cooldown_exemptions WHERE wa_id=?").bind(normalizedTrustedWaId).first<{ wa_id: string }>()) : false;
   let cooldownClaimed = false;
   if (!cooldownExempt) {
     const threshold = new Date(nowDate.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString();
@@ -125,7 +125,8 @@ async function persistLeadSubmission(db: D1Database, submission: FlowSubmission,
     db.prepare("INSERT INTO capi_events (id,event_id,event_name,order_id,customer_id,send_status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), leadEventId, "Lead", orderId, customerId, "PENDING", now, now),
     db.prepare("INSERT INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(outboxId, leadEventId, "CAPI_LEAD", orderId, JSON.stringify(leadEvent), "PENDING", now, now, now),
       db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), `${options.source}_SUBMITTED`, "CUSTOMER", "ORDER", orderId, correlationId, JSON.stringify({ orderNumber, source: options.source }), now),
-      ...(cooldownClaimed ? [db.prepare("UPDATE order_eligibility_locks SET order_number=? WHERE household_key=? AND order_id=?").bind(orderNumber, addressHash, orderId)] : [])
+      ...(cooldownClaimed ? [db.prepare("UPDATE order_eligibility_locks SET order_number=? WHERE household_key=? AND order_id=?").bind(orderNumber, addressHash, orderId)] : []),
+      ...(cooldownExempt ? [db.prepare("INSERT INTO order_eligibility_locks (household_key,order_id,order_number,last_order_at) VALUES (?,?,?,?) ON CONFLICT(household_key) DO UPDATE SET order_id=excluded.order_id,order_number=excluded.order_number,last_order_at=excluded.last_order_at").bind(addressHash, orderId, orderNumber, now)] : [])
     ]);
   } catch (error) {
     // A concurrent replay may lose the idempotency-key insert after allocating a number.

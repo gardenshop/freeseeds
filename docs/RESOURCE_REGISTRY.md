@@ -144,6 +144,12 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Stable interactive IDs are server-recognized and client fallbacks use numbered text mapped to the same intents.
 - Cooldown is server/D1 enforced across supported order paths; exact E2E sender exemption is scoped to `923034901810`.
 
+## GFS-109 Admin Operations
+
+- Admin URLs: `/orders` and `/test-controls`, Cloudflare Access protected for `gisupp@gmail.com`.
+- D1 `cooldown_exemptions` is the allowlist authority; only `923034901810` is initially seeded.
+- Reset preserves orders/payments/receipts/cooldown locks/audit; cancellation/archive never hard-deletes financial history.
+
 ## GFS-92 Token Runtime Gate
 
 - API/admin secret names remain present, but current server-side Graph ladder returns HTTP 401; values are never read or recorded.

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { ORDER_NUMBER_ALLOCATION_SQL, OrderCooldownError, allocateOrderNumber, karachiOrderDate, nextOrderNumber, persistFlowSubmission, persistInstantFormSubmission } from "@gfs/core";
 
@@ -33,6 +34,7 @@ function replayDatabase() {
   let sequence = 1;
   let allocationCount = 0;
   let batchCount = 0;
+  const exemptions = new Set(["923034901810"]);
   const db = {
     prepare: (sql: string) => {
       const first = async (args: unknown[]) => {
@@ -42,6 +44,7 @@ function replayDatabase() {
         }
         if (sql.includes("FROM lead_sources")) return undefined;
         if (sql.includes("payment_configuration")) return { advance_amount_pkr: null };
+        if (sql.includes("FROM cooldown_exemptions")) return exemptions.has(String(args[0])) ? { wa_id: String(args[0]) } : undefined;
         if (sql.startsWith("INSERT INTO order_eligibility_locks")) {
           const key = String(args[0]), now = String(args[2]), threshold = String(args[3]);
           const current = locks.get(key);
@@ -172,5 +175,21 @@ describe("GFS-104 order number allocation", () => {
     const replay = await persistFlowSubmission(db, submission, undefined, "WHATSAPP:test-two", "923034901810");
     expect(second.orderId).not.toBe(first.orderId);
     expect(replay).toMatchObject({ duplicate: true, orderId: second.orderId });
+  });
+
+  it("does not trust a customer-supplied WhatsApp number for exemption", async () => {
+    const { db } = replayDatabase();
+    const submission = { leadId: "synthetic-spoof-one", formId: "synthetic-form", pageId: "synthetic-page", createdTime: "2026-10-12T12:00:00.000Z", fullName: "Synthetic Customer", deliveryAddress: "11 Spoof Street", nearbyPlace: "Test Park", city: "Sahiwal", contactNumber: "+923001234567", whatsappNumber: "+923034901810" };
+    await persistInstantFormSubmission(db, submission);
+    await expect(persistInstantFormSubmission(db, { ...submission, leadId: "synthetic-spoof-two" })).rejects.toBeInstanceOf(OrderCooldownError);
+  });
+
+  it("uses only the D1 exemption table and seeds exactly the verified wa_id", () => {
+    const core = readFileSync("packages/core/src/flow.ts", "utf8");
+    const migration = readFileSync("migrations/0014_admin_controls.sql", "utf8");
+    expect(core).toContain("FROM cooldown_exemptions WHERE wa_id=?");
+    expect(core).not.toContain("923034901810");
+    expect(migration.match(/INSERT INTO cooldown_exemptions/g)).toHaveLength(1);
+    expect(migration).toContain("'923034901810'");
   });
 });

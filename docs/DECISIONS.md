@@ -110,6 +110,10 @@ Staging D1 now contains the owner-reported live order `FS-261012-000001` in `PAY
 
 Interactive and text inputs now share normalized semantic routing, preventing repeated welcomes and positional button drift. Order creation enforces the 14-day server-side cooldown using submitted timestamps; only the verified E2E sender is exempt. Native client coverage remains untested outside the available environment.
 
+## 2026-10-12: GFS-109 Protected Admin Reset and Order Controls
+
+Cooldown exemption and conversation reset are separate D1/admin concepts. `/test-controls` manages verified Meta wa_id exemptions and scoped resets; `/orders` provides search/details and only allows audited cancel/archive for eligible unpaid, receipt-free orders. The authorized E2E conversation was reset to NEW while preserving `FS-261012-000001` and all payment history.
+
 ## 2026-10-11: GFS-92 Token Validation Order
 
 The activation console server-side ladder now returns HTTP 401 for `/me`, permissions, phone, and WABA reads. This is an authoritative runtime token rejection despite secret-name/deployment presence. No blind rotation or duplicate customer message was performed; the only remaining protected action is canonical token replacement.
