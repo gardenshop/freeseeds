@@ -82,6 +82,10 @@ The existing privacy-preserving webhook schema deliberately does not store raw m
 
 Implemented the guided-chat state machine and deployed it with migration `0011_whatsapp_conversations.sql`. START and subsequent answers are parsed in memory; durable state and validated fields are stored without raw message bodies, and responses are idempotent by inbound message ID. Historical START remains unrecoverable, so one genuine START after deployment is the only remaining interaction dependency.
 
+## 2026-10-12: GFS-101 Draft Payment Save
+
+Payment method draft persistence is independent from legacy `payment_configuration.advance_amount_pkr`. Incomplete/disabled drafts may be saved; enabling still requires complete recipient/instruction fields. JazzCash staging presence is confirmed without exposing values, but the displayed QR payee mismatch means it remains disabled pending ownership verification.
+
 ## 2026-10-11: GFS-92 Token Validation Order
 
 The activation console server-side ladder now returns HTTP 401 for `/me`, permissions, phone, and WABA reads. This is an authoritative runtime token rejection despite secret-name/deployment presence. No blind rotation or duplicate customer message was performed; the only remaining protected action is canonical token replacement.

@@ -45,4 +45,25 @@ describe("admin payment configuration", () => {
     expect(invalidRate.status).toBe(400);
     expect(await invalidRate.json()).toEqual({ error: "DELIVERY_RATE_INVALID" });
   });
+
+  it("allows incomplete drafts but validates methods when enabling", async () => {
+    const draft = await app.fetch(new Request("https://admin.example.test/api/payment-methods/JAZZCASH", {
+      method: "POST",
+      headers: { "cf-access-authenticated-user-email": "admin@example.test", "content-type": "application/json" },
+      body: JSON.stringify({ recipientName: "", instructions: "", enabled: false })
+    }), env);
+    expect(draft.status).toBe(200);
+    expect(await draft.json()).toMatchObject({ ok: true, configured: false });
+
+    const enabled = await app.fetch(new Request("https://admin.example.test/api/payment-methods/JAZZCASH", {
+      method: "POST",
+      headers: { "cf-access-authenticated-user-email": "admin@example.test", "content-type": "application/json" },
+      body: JSON.stringify({ recipientName: "", instructions: "", enabled: true })
+    }), env);
+    expect(enabled.status).toBe(400);
+    expect(await enabled.json()).toEqual({
+      error: "PAYMENT_METHOD_INCOMPLETE",
+      message: "Enabled payment methods require a recipient name and instructions."
+    });
+  });
 });

@@ -109,6 +109,12 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - D1 `whatsapp_conversations` stores normalized state/data, `wa_id`, last inbound message ID, and timestamps; raw WhatsApp bodies remain excluded.
 - State responses use `conversation_reply:<message_id>` idempotency keys and existing Admin/D1 tariff quote authority.
 
+## GFS-101 Payment Configuration
+
+- `/payment-settings` draft saves no longer depend on legacy fixed advance amount; incomplete drafts remain disabled.
+- JazzCash staging row has non-secret configuration presence and QR object by D1 flags, but payee ownership is not verified and it remains disabled.
+- Easypaisa/Bank remain unconfigured. Dynamic WhatsApp totals remain tariff/D1 authoritative.
+
 ## GFS-92 Token Runtime Gate
 
 - API/admin secret names remain present, but current server-side Graph ladder returns HTTP 401; values are never read or recorded.

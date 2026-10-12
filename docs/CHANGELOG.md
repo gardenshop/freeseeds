@@ -116,6 +116,12 @@
 - START now begins the five-field order conversation; raw message bodies are not persisted, and response/order transitions are idempotent by real message ID.
 - Historical START could not be reconstructed; one fresh START is required after the deployed handler.
 
+## Unreleased - 2026-10-12 (GFS-101)
+
+- Fixed Payment Settings draft Save so legacy advance amount no longer blocks incomplete/disabled methods.
+- Added safe HTTP/error feedback and preserved failed form values; enabling remains completeness-gated.
+- Verified JazzCash staging presence/QR flags without exposing payment values; method remains disabled pending payee ownership verification.
+
 ## Unreleased - 2026-10-11 (GFS-92)
 
 - Rechecked active server-side Graph token ladder; `/me`, permissions, phone, and WABA reads all return HTTP 401 despite secret/deployment presence.

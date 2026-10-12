@@ -57,6 +57,8 @@
 | GFS-99 order state | five fields → quote → FS order → summary | BLOCKED pending real message content/customer interaction |
 | GFS-100 privacy-safe START | START parser, state transitions, raw-body exclusion, response idempotency | PASS implementation/build/tests; live START pending |
 | GFS-100 order conversation | fields → quote → review → FS order → summary | READY_PENDING real customer answers; payment request remains disabled |
+| GFS-101 payment draft save | incomplete/disabled Save, exact error feedback, values persist | PASS: 50 tests; JazzCash D1 presence verified, disabled |
+| GFS-101 enable gate | incomplete method cannot enable; complete method can | PASS validation; no method enabled without ownership proof |
 | GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |
 | GFS-98 token recovery | owner-installed secret → Graph ladder → API/Admin readiness | PASS fresh token; no token value inspected |
 | GFS-98 atomic reply | one failed event retry, outbound ID, status webhook, no duplicate | PASS: WAMID persisted, SENT status persisted, duplicate count 0 |

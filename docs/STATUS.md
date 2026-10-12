@@ -284,6 +284,13 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - `START` now routes to the first question and invalid answers repeat the current state. Dynamic D1 quote and `persistFlowSubmission` are reused; payment details remain disabled.
 - Existing historical START cannot be replayed because its body was intentionally not stored. One fresh customer START is required now that the deployed handler is ready.
 
+## GFS-101 Payment Save and Commerce Readiness
+
+- Payment Save root cause fixed: legacy `advance_amount_pkr` incorrectly blocked saving incomplete/disabled drafts. Draft Save now persists values; only enabling validates completeness.
+- Admin feedback now preserves form values and exposes safe HTTP/error code/message. Staging D1 confirms JazzCash draft persisted with recipient/identifier/instructions/QR present but remains disabled pending payee ownership verification.
+- Easypaisa and Bank remain missing. No method was enabled and no payment request was sent.
+- Conversation migration/state machine is deployed; no live conversation state exists yet because the historical START body was intentionally unavailable.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

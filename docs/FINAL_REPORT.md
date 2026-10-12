@@ -87,6 +87,14 @@
 - Five fields/quote/FS order: **READY_PENDING customer answers**.
 - Flow E2E: **BLOCKED** only by fresh customer interaction; payment configuration remains separate.
 
+## GFS-101-PAYMENT-SAVE Update — 2026-10-12
+
+- Payment Save root cause: legacy fixed advance gate incorrectly rejected incomplete drafts. **FIXED**.
+- D1 persistence: **PASS**; JazzCash values/QR presence confirmed by flags only, still disabled.
+- Easypaisa/Bank: **MISSING**.
+- START/state machine: **PASS implementation**, no fresh live state yet.
+- Flow/order: **READY_PENDING customer START and field responses**; no payment request sent.
+
 ## GFS-68-META-FORM-LAUNCH-FIRST Update — 2026-10-10
 
 - Launch track: **`META_FORM_LAUNCH_FIRST`**
