@@ -172,6 +172,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - `LANG_EN`/`LANG_UR` are stable conversation intents; selected language is stored in conversation state and does not alter tariffs/order logic.
 - Flow CTA uses published Flow `1133458765899784` with a session-scoped token; no credential is stored.
 
+## GFS-120 Live CMS/Flow
+
+- Admin CMS page renders ordered bilingual templates and private media gallery.
+- Native Flow `1133458765899784` remains Graph PUBLISHED; live device rendering/e2e is unverified.
+
 ## GFS-114 Flow Graph Evidence
 
 - Canonical WABA Flow ID created via Graph-backed Admin route: `1133458765899784`.

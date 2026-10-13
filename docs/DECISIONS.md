@@ -130,6 +130,10 @@ Graph-backed Flow asset validation passed for `1133458765899784`, but Meta publi
 
 START now presents English/Urdu choices and invokes the published Flow after selection. The existing guided backend remains the fallback; no duplicate Flow or customer answer was invented.
 
+## 2026-10-13: GFS-120 Live UI Boundary
+
+The authenticated Admin CMS now renders correctly with paired EN/UR rows and private gallery controls. Native Flow remains published by Graph but no authorized customer-device interaction was available for live CTA evidence; no tap or customer answer was fabricated.
+
 ## 2026-10-13: GFS-117 Flow/Media Boundary
 
 Flow asset validation succeeds, but Meta publish still rejects the endpoint as unavailable. The API observed an invalid-initial-vector result for live encrypted requests; no customer Flow success is claimed. Media gallery work remains private-R2/D1 controlled and does not alter pricing/order logic.

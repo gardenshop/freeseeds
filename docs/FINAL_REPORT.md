@@ -185,6 +185,13 @@
 - Published Flow CTA: **PASS implementation**; real customer Flow open/navigation **UNTESTED**.
 - Guided fallback: **GO**; native Flow: **GO publication / NO-GO live E2E evidence**.
 
+## GFS-120-LIVE-UI Update — 2026-10-13
+
+- CMS live render: **PASS** — paired EN/UR journey sections and gallery controls visible.
+- Native Flow: **PUBLISHED** by Graph; real CTA/device E2E **UNTESTED**.
+- Guided-chat launch: **GO**.
+- Payment/receipt: **not advanced**; no real payment claim.
+
 ## GFS-105-LIVE-COMMERCE Update — 2026-10-12
 
 - START: **NOT OBSERVED** after deployment; no customer session was proven available.

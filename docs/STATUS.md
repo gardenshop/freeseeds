@@ -386,6 +386,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - START now routes to bilingual English/Urdu language buttons; language selection persists on the verified wa_id and sends the published Flow CTA with a session-scoped token.
 - Native Flow remains Graph `PUBLISHED`; guided chat remains fallback. Live customer CTA/device E2E is not yet observed.
 
+## GFS-120 Live Welcome/Flow Audit
+
+- Admin CMS now renders bilingual EN/UR grouped journey content and private image gallery. Current page shows published/draft versions and private upload controls.
+- Canonical Flow Graph status is published; native CTA path is deployed but no authorized device/customer Flow interaction was observed in this session.
+- Any stale welcome/image/publish error must be reproduced on the authenticated Admin tab before mutation; no unrelated tab was changed.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.
