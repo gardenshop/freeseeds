@@ -182,6 +182,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Published CMS content is the welcome/locale source of truth; already-published versions are up-to-date and cannot be republished without a draft.
 - Native Flow `1133458765899784` is Graph PUBLISHED; customer-device E2E is not recorded.
 
+## GFS-122 Welcome Routing
+
+- Published WELCOME EN/UR CMS entries are the universal first-message source; session language is stored by trusted wa_id.
+- `LANG_UR` and `LANG_EN` route to the published Flow session token; no hardcoded welcome copy remains in the first-message path.
+
 ## GFS-114 Flow Graph Evidence
 
 - Canonical WABA Flow ID created via Graph-backed Admin route: `1133458765899784`.

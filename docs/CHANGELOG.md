@@ -202,6 +202,11 @@
 - Fixed CMS publish lifecycle to report already-published versions as up-to-date instead of a generic draft-required error.
 - Preserved draft/publish/rollback history and kept published Flow/guided fallback unchanged.
 
+## Unreleased - 2026-10-13 (GFS-122)
+
+- Fixed live welcome routing so every ordinary NEW/idle inbound text receives CMS Urdu-first + English welcome content and stable language buttons.
+- Persisted language selection by trusted wa_id and dispatches the published Flow CTA without resetting active orders.
+
 ## Unreleased - 2026-10-13 (GFS-114)
 
 - Added Graph-first Flow discovery route and created exactly one canonical draft Flow `1133458765899784` after enumeration returned none.

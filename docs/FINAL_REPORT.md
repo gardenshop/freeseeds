@@ -199,6 +199,13 @@
 - Native Flow: **PUBLISHED**; live authorized device/customer E2E **UNTESTED**.
 - Guided chat: **GO**; native Flow live launch: **NO-GO pending device evidence**.
 
+## GFS-122-LIVE-WELCOME Update — 2026-10-13
+
+- Any-message welcome: **PASS implementation/deployed**; CMS Urdu/English text and language buttons now apply beyond START.
+- Language routing: **PASS implementation**; published Flow CTA dispatch wired.
+- Native Flow/customer device E2E: **UNTESTED**; no authorized customer device evidence.
+- Guided-chat: **GO**; native Flow live: **NO-GO pending device evidence**.
+
 ## GFS-105-LIVE-COMMERCE Update — 2026-10-12
 
 - START: **NOT OBSERVED** after deployment; no customer session was proven available.

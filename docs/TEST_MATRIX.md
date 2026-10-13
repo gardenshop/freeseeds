@@ -91,6 +91,7 @@
 | GFS-120 CMS live render | ordered bilingual rows, gallery controls, published/draft status | PASS browser snapshot; image send/publish mutation not performed |
 | GFS-120 native Flow device | CTA → screens → order/payment | UNTESTED: authorized device/customer interaction unavailable |
 | GFS-121 CMS publish guard | already-published up-to-date response; fresh draft required for publish | PASS deployed/tests |
+| GFS-122 universal welcome | hi/hello/Salam/START/arbitrary text → CMS EN/UR + language buttons | PASS implementation/tests/deployment; live device pending |
 | GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |
 | GFS-98 token recovery | owner-installed secret → Graph ladder → API/Admin readiness | PASS fresh token; no token value inspected |
 | GFS-98 atomic reply | one failed event retry, outbound ID, status webhook, no duplicate | PASS: WAMID persisted, SENT status persisted, duplicate count 0 |

@@ -398,6 +398,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - CMS publish lifecycle now returns `Up to date` for already-published versions instead of `WHATSAPP_CONTENT_PUBLISH_REQUIRES_DRAFT`; gallery changes require a new draft.
 - Native Flow is Graph PUBLISHED and local validation/encryption passes; authorized device/customer Flow E2E remains unobserved.
 
+## GFS-122 Live Welcome/Flow
+
+- Universal NEW/idle inbound text now loads published CMS Urdu + English welcome text in Urdu-first order and sends `LANG_UR`/`LANG_EN` buttons for every ordinary first message, not only START.
+- Language selection persists by verified wa_id and sends the published Flow CTA; unknown language replies repeat choices.
+- API version `89082c89-58e6-41e6-b824-db16c70071b4` is active. Live customer/device Flow E2E remains unobserved.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.
