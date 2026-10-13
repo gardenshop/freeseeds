@@ -325,6 +325,47 @@ app.post("/api/whatsapp-content/:key/rollback", (c) => publishWhatsAppContent(c,
 
 app.get("/api/meta-activation/status", async (c) => c.json(await metaActivation(c).status()));
 
+app.get("/api/meta-activation/flows", async (c) => {
+  if (!authorized(c)) return c.json({ error: "UNAUTHORIZED" }, 401);
+  if (!c.env.META_ACCESS_TOKEN || !c.env.META_WABA_ID) return c.json({ error: "META_GRAPH_NOT_CONFIGURED" }, 503);
+  const version = c.env.META_GRAPH_VERSION ?? "v26.0";
+  const response = await fetch(`https://graph.facebook.com/${version}/${encodeURIComponent(c.env.META_WABA_ID)}/flows?fields=id,name,status,validation_errors,health_status,data_channel_uri,whatsapp_business_account,application`, { headers: { Authorization: `Bearer ${c.env.META_ACCESS_TOKEN}` } });
+  const body = await response.json().catch(() => ({})) as Record<string, unknown>;
+  const data = Array.isArray(body.data) ? body.data.filter((item) => item && typeof item === "object").map((item) => { const flow = item as Record<string, unknown>; return { id: typeof flow.id === "string" ? flow.id : undefined, name: typeof flow.name === "string" ? flow.name : undefined, status: typeof flow.status === "string" ? flow.status : undefined, health_status: typeof flow.health_status === "string" ? flow.health_status : undefined, data_channel_uri: typeof flow.data_channel_uri === "string" ? flow.data_channel_uri : undefined, validation_errors: Array.isArray(flow.validation_errors) ? flow.validation_errors : [] }; }) : [];
+  return c.json({ httpStatus: response.status, data, paging: body.paging ?? null, error: body.error && typeof body.error === "object" ? { code: (body.error as Record<string, unknown>).code, message: (body.error as Record<string, unknown>).message } : undefined }, response.ok ? 200 : 400);
+});
+
+app.post("/api/meta-activation/flows/create", async (c) => {
+  if (!authorized(c)) return c.json({ error: "UNAUTHORIZED" }, 401);
+  if (!c.env.META_ACCESS_TOKEN || !c.env.META_WABA_ID) return c.json({ error: "META_GRAPH_NOT_CONFIGURED" }, 503);
+  const version = c.env.META_GRAPH_VERSION ?? "v26.0";
+  const response = await fetch(`https://graph.facebook.com/${version}/${encodeURIComponent(c.env.META_WABA_ID)}/flows`, { method: "POST", headers: { Authorization: `Bearer ${c.env.META_ACCESS_TOKEN}`, "Content-Type": "application/json" }, body: JSON.stringify({ name: "Get Free Seeds Commerce", categories: ["OTHER"] }) });
+  const body = await response.json().catch(() => ({})) as Record<string, unknown>;
+  return c.json({ httpStatus: response.status, id: typeof body.id === "string" ? body.id : undefined, error: body.error && typeof body.error === "object" ? { code: (body.error as Record<string, unknown>).code, subcode: (body.error as Record<string, unknown>).error_subcode, message: (body.error as Record<string, unknown>).message, trace: (body.error as Record<string, unknown>).fbtrace_id } : undefined }, response.ok ? 200 : 400);
+});
+
+app.post("/api/meta-activation/flows/:id/assets", async (c) => {
+  if (!authorized(c)) return c.json({ error: "UNAUTHORIZED" }, 401);
+  const flowId = c.req.param("id");
+  const body = await c.req.json().catch(() => ({})) as { flowJson?: unknown };
+  if (!body.flowJson || typeof body.flowJson !== "object") return c.json({ error: "FLOW_JSON_REQUIRED" }, 400);
+  const form = new FormData();
+  form.append("asset_type", "FLOW_JSON");
+  form.append("file", new Blob([JSON.stringify(body.flowJson)], { type: "application/json" }), "flow.json");
+  const version = c.env.META_GRAPH_VERSION ?? "v26.0";
+  const response = await fetch(`https://graph.facebook.com/${version}/${encodeURIComponent(flowId)}/assets`, { method: "POST", headers: { Authorization: `Bearer ${c.env.META_ACCESS_TOKEN}` }, body: form });
+  const result = await response.json().catch(() => ({})) as Record<string, unknown>;
+  return c.json({ httpStatus: response.status, result, error: result.error && typeof result.error === "object" ? { code: (result.error as Record<string, unknown>).code, message: (result.error as Record<string, unknown>).message, validation_errors: (result.error as Record<string, unknown>).error_data } : undefined }, response.ok ? 200 : 400);
+});
+
+app.post("/api/meta-activation/flows/:id/publish", async (c) => {
+  if (!authorized(c)) return c.json({ error: "UNAUTHORIZED" }, 401);
+  const version = c.env.META_GRAPH_VERSION ?? "v26.0";
+  const response = await fetch(`https://graph.facebook.com/${version}/${encodeURIComponent(c.req.param("id"))}/publish`, { method: "POST", headers: { Authorization: `Bearer ${c.env.META_ACCESS_TOKEN}` } });
+  const result = await response.json().catch(() => ({})) as Record<string, unknown>;
+  return c.json({ httpStatus: response.status, result, error: result.error && typeof result.error === "object" ? { code: (result.error as Record<string, unknown>).code, message: (result.error as Record<string, unknown>).message, validation_errors: (result.error as Record<string, unknown>).error_data } : undefined }, response.ok ? 200 : 400);
+});
+
 app.post("/api/meta-activation/actions/:action", async (c) => {
   const rawAction = c.req.param("action");
   if (rawAction === "retry-failed-reply") {

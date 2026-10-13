@@ -79,6 +79,8 @@
 | GFS-111 native Flow | published Flow CTA/screen/device E2E | DRAFT/UNTESTED |
 | GFS-113 Meta publication | validated canonical Flow ID/status and publish evidence | BLOCKED: Meta Flow Manager object/status unavailable from loading surface |
 | GFS-113 guided launch | deployed tap/text guided backend and D1 order path | PASS implementation; native Flow separate |
+| GFS-114 Graph Flow discovery | WABA enumeration and exact Flow ownership | PASS: one canonical draft created, ID recorded |
+| GFS-114 asset upload | exact `flow.json` asset validation | BLOCKED at Meta `#195/2498084`; correction prepared, publish not claimed |
 | GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |
 | GFS-98 token recovery | owner-installed secret → Graph ladder → API/Admin readiness | PASS fresh token; no token value inspected |
 | GFS-98 atomic reply | one failed event retry, outbound ID, status webhook, no duplicate | PASS: WAMID persisted, SENT status persisted, duplicate count 0 |

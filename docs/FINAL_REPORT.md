@@ -149,6 +149,14 @@
 - Guided-chat launch: **GO** for backend/order path.
 - Native Flow launch: **NO-GO** until Meta exposes validated Flow object/status and permits publication.
 
+## GFS-114-GRAPH-FLOW Update — 2026-10-13
+
+- Flow ID discovered: **1133458765899784**.
+- Graph access: **PASS**; canonical WABA ownership used.
+- Flow validation/upload: **BLOCKED** by Meta `#195` / `2498084` requiring asset name `flow.json` after initial `#100` name error.
+- Meta Flow status: **DRAFT**; publish not attempted without accepted assets.
+- Native Flow E2E: **NOT RUN**; guided fallback remains launch path.
+
 ## GFS-105-LIVE-COMMERCE Update — 2026-10-12
 
 - START: **NOT OBSERVED** after deployment; no customer session was proven available.

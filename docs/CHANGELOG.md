@@ -170,6 +170,11 @@
 - Rechecked canonical Flow Manager read-only; the Flow object/status remained unavailable while the surface loaded. No guessed ID or publish mutation was made.
 - Kept guided chat as the launch path and preserved native Flow as a separate publication gate.
 
+## Unreleased - 2026-10-13 (GFS-114)
+
+- Added Graph-first Flow discovery route and created exactly one canonical draft Flow `1133458765899784` after enumeration returned none.
+- Recorded actionable Meta asset errors: `#100` missing name, then `#195/2498084` requiring asset filename `flow.json`. No duplicate Flow or publish claim.
+
 ## Unreleased - 2026-10-11 (GFS-92)
 
 - Rechecked active server-side Graph token ladder; `/me`, permissions, phone, and WABA reads all return HTTP 401 despite secret/deployment presence.

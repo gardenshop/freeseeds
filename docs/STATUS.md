@@ -350,6 +350,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Local encrypted Flow JSON/endpoint tests remain PASS, but they are not Meta publication evidence. Native Flow is DRAFT/UNPUBLISHED until Meta exposes a validated Flow ID/status.
 - Guided-chat commerce remains the launch path; no campaign or spend action was taken.
 
+## GFS-114 Graph Flow Recovery
+
+- Graph-backed Flow enumeration found no existing canonical Flow, so exactly one draft was created: `1133458765899784`, `Get Free Seeds Commerce`.
+- First asset upload error was exact Meta `#100`: name parameter required; corrected upload shape then returned exact `#195` / subcode `2498084`: FLOW_JSON asset name must be `flow.json`.
+- No publish claim was made; Flow remains DRAFT pending successful asset upload/validation and publish.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

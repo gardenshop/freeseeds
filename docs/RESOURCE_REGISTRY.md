@@ -161,6 +161,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Canonical WABA `2616648355452496`; Flow object ID/status not safely available from the loading Meta Manager surface.
 - Local Flow definition and encrypted endpoint remain repository/runtime assets only; publication is not claimed.
 
+## GFS-114 Flow Graph Evidence
+
+- Canonical WABA Flow ID created via Graph-backed Admin route: `1133458765899784`.
+- Current Meta asset upload blocker was exact `#195` / `2498084`: asset filename must be `flow.json`; no token/error credential data recorded.
+
 ## GFS-92 Token Runtime Gate
 
 - API/admin secret names remain present, but current server-side Graph ladder returns HTTP 401; values are never read or recorded.
