@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { canTransition, createMetaActivationService, createWhatsAppProvider, getLatestOrderForWaId, MetaActivationAction, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, isPaymentMethodComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, storePaymentQr, validatePaymentAmount, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
+import { canTransition, createMetaActivationService, createWhatsAppProvider, getLatestOrderForWaId, MetaActivationAction, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, isPaymentMethodComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
 
  type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
 const app = new Hono<Env>();
@@ -146,15 +146,19 @@ load().catch(()=>document.querySelector('#content').textContent='WhatsApp conten
 }
 
 function whatsappContentJourneyPageHtml(csrfToken: string): string {
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WhatsApp Content | Get Free Seeds</title><style>body{font:16px system-ui;max-width:1180px;margin:2rem auto;padding:0 1rem}.journey{margin:2rem 0}.journey>h2{border-bottom:2px solid #2f6b43}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:1rem}.card{border:1px solid #ccd5cc;border-radius:8px;padding:1rem}.langs{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}.lang{border:1px solid #e1e7e1;padding:.6rem}.preview{white-space:pre-wrap;min-height:2.5rem;background:#f4f7f4;padding:.6rem}.row{display:flex;gap:.5rem}.row button{width:auto}label{display:block;margin:.45rem 0}input,textarea,button{box-sizing:border-box;width:100%;font:inherit;padding:.45rem}textarea{min-height:4rem}.muted{color:#59635a}.error{color:#a40019}@media(max-width:700px){.langs{grid-template-columns:1fr}}</style></head><body><nav><a href="/">Admin home</a> | <a href="/payment-settings">Payment Settings</a></nav><h1>WhatsApp Content</h1><p class="muted">Customer journey order, versioned bilingual copy, and private media. Public URLs are rejected; uploads are stored only at <code>whatsapp-content/</code>.</p><div id="content">Loading...</div><script>
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WhatsApp Content | Get Free Seeds</title><style>:root{color-scheme:light;--ink:#172018;--leaf:#245b38;--line:#ccd5cc;--wash:#f4f7f4;--danger:#a40019}body{font:15px system-ui;max-width:1240px;margin:2rem auto;padding:0 1rem;color:var(--ink)}nav{margin-bottom:1rem}.journey{margin:2.5rem 0}.journey>h2{border-bottom:2px solid var(--leaf);padding-bottom:.35rem}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:1rem}.card{border:1px solid var(--line);border-radius:10px;padding:1rem;background:#fff}.langs{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}.lang{border:1px solid #e1e7e1;padding:.7rem;border-radius:7px}.preview{white-space:pre-wrap;min-height:2.5rem;background:var(--wash);padding:.6rem}.row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}.row button{width:auto}.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.65rem;margin:.75rem 0}.media{border:1px solid var(--line);border-radius:7px;padding:.45rem}.media.active{outline:3px solid #5a9b70}.media.disabled{opacity:.55}.media img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--wash);border-radius:4px}.media small{display:block;overflow-wrap:anywhere}.media .row{gap:.25rem}.media button{font-size:.8rem;padding:.35rem}.badge{display:inline-block;background:var(--wash);padding:.15rem .4rem;border-radius:999px;margin:.3rem .2rem .3rem 0}label{display:block;margin:.45rem 0}input,textarea,button{box-sizing:border-box;width:100%;font:inherit;padding:.45rem}textarea{min-height:4rem}.muted{color:#59635a}.error{color:var(--danger)}.ok{color:#176b36}@media(max-width:760px){.langs{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}</style></head><body><nav><a href="/">Admin home</a> | <a href="/payment-settings">Payment Settings</a></nav><h1>WhatsApp Content</h1><p class="muted">Each journey screen has a private image gallery. Masters are retained; the browser creates a WhatsApp-sized JPEG variant before upload. Gallery changes become customer-visible only when a draft is published.</p><div id="content">Loading...</div><script>
 const csrf=${JSON.stringify(csrfToken)};const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const field=(n,l,v,a=false)=>'<label>'+l+(a?'<textarea name="'+n+'">'+esc(v||'')+'</textarea>':'<input name="'+n+'" value="'+esc(v||'')+'">')+'</label>';
 const language=(p,title,v,rtl)=>'<div class="lang"'+(rtl?' dir="rtl"':'')+'><h3>'+title+'</h3>'+field(p+'Text','Text',v.text,true)+field(p+'Button','Button label',v.buttonLabel)+field(p+'ListButton','List button',v.listButtonLabel)+field(p+'ListDescription','List description',v.listDescription)+'<strong>Preview</strong><div class="preview" data-preview="'+p+'">'+esc(v.text||'')+'</div></div>';
-function card(t){const en=t.draft?.contentEn||t.published?.contentEn||{};const ur=t.draft?.contentUr||t.published?.contentUr||{};return '<section class="card" data-key="'+esc(t.templateKey)+'"><h3>'+esc(t.templateKey)+'</h3><p class="muted">Published '+esc(t.publishedVersion??'none')+' | Draft '+esc(t.draftVersion??'none')+'</p><div class="langs">'+language('en','English',en,false)+language('ur','اردو',ur,true)+'</div>'+field('mediaR2Key','Private R2 media key',t.draft?.mediaR2Key||t.published?.mediaR2Key)+'<label>Upload private content media<input data-media type="file" accept="image/png,image/jpeg,image/webp"></label><div class="row"><button type="button" data-upload>Upload media</button><button type="button" data-save>Save draft</button><button type="button" data-publish>Publish draft</button></div><p data-result></p><details><summary>Rollback</summary><div class="row"><input data-version type="number" min="1" placeholder="Version"><button type="button" data-rollback>Rollback</button></div></details></section>'}
+function mediaCard(m){return '<article class="media '+(m.active?'active ':'')+(m.enabled?'':'disabled')+'" data-media-id="'+esc(m.id)+'"><img src="'+esc(m.previewUrl)+'" alt="Private content preview" loading="lazy"><span class="badge">'+(m.active?'Active':m.enabled?'Rotation':'Disabled')+'</span><small>'+esc(m.mimeType)+' · '+Math.ceil(m.sizeBytes/1024)+' KiB</small><small title="'+esc(m.sha256)+'">SHA-256 '+esc(m.sha256.slice(0,12))+'…</small><div class="row"><button type="button" data-up title="Move earlier">↑</button><button type="button" data-down title="Move later">↓</button></div><button type="button" data-active>'+(m.active?'Use rotation':'Set active')+'</button><button type="button" data-enabled>'+(m.enabled?'Disable':'Enable')+'</button><button type="button" data-remove>Remove</button></article>'}
+function card(t){const en=t.draft?.contentEn||t.published?.contentEn||{};const ur=t.draft?.contentUr||t.published?.contentUr||{};return '<section class="card" data-key="'+esc(t.templateKey)+'"><h3>'+esc(t.templateKey)+'</h3><p class="muted">Published '+esc(t.publishedVersion??'none')+' | Draft '+esc(t.draftVersion??'none')+'</p><div class="langs">'+language('en','English',en,false)+language('ur','اردو',ur,true)+'</div><h4>Image gallery</h4><div class="gallery">'+(t.media||[]).map(mediaCard).join('')+'</div><label>Upload one or more masters<input name="mediaFiles" data-media type="file" multiple accept="image/png,image/jpeg,image/webp"></label><div class="row"><button type="button" data-upload>Optimize and upload</button><button type="button" data-save>Save draft</button><button type="button" data-publish>Publish draft + gallery</button></div><p data-result role="status"></p><details><summary>Rollback</summary><div class="row"><input name="rollbackVersion" data-version type="number" min="1" placeholder="Version"><button type="button" data-rollback>Rollback</button></div></details></section>'}
 function copy(node,p){return {text:node.querySelector('[name="'+p+'Text"]').value,buttonLabel:node.querySelector('[name="'+p+'Button"]').value||undefined,listButtonLabel:node.querySelector('[name="'+p+'ListButton"]').value||undefined,listDescription:node.querySelector('[name="'+p+'ListDescription"]').value||undefined}}
-async function post(path,body){const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.error||'Request failed');return d}
-async function load(){const data=await fetch('/api/whatsapp-content').then((r)=>r.json());const groups={};for(const t of data.templates||[])(groups[t.section||'Other']??=[]).push(t);const root=document.querySelector('#content');root.innerHTML=Object.entries(groups).map(([s,ts])=>'<section class="journey"><h2>'+esc(s)+'</h2><div class="grid">'+ts.map(card).join('')+'</div></section>').join('');for(const node of root.querySelectorAll('[data-key]')){const key=node.dataset.key;const result=node.querySelector('[data-result]');for(const input of node.querySelectorAll('[name^="en"],[name^="ur"]'))input.oninput=()=>node.querySelector('[data-preview="'+input.name.slice(0,2)+'"]').textContent=node.querySelector('[name="'+input.name.slice(0,2)+'Text"]').value;node.querySelector('[data-upload]').onclick=async()=>{try{const file=node.querySelector('[data-media]').files[0];if(!file)throw new Error('Choose PNG, JPEG, or WebP media.');const r=await fetch('/api/whatsapp-content/media',{method:'POST',headers:{'Content-Type':file.type,'X-CSRF-Token':csrf},body:file});const d=await r.json();if(!r.ok)throw new Error(d.error||'Media upload failed');node.querySelector('[name="mediaR2Key"]').value=d.mediaR2Key;result.textContent='Private media uploaded.'}catch(error){result.className='error';result.textContent=error.message}};node.querySelector('[data-save]').onclick=async()=>{try{const d=await post('/api/whatsapp-content/'+key+'/draft',{confirmation:key,contentEn:copy(node,'en'),contentUr:copy(node,'ur'),mediaR2Key:node.querySelector('[name="mediaR2Key"]').value||undefined});result.textContent='Draft '+d.version+' saved.';await load()}catch(error){result.className='error';result.textContent=error.message}};node.querySelector('[data-publish]').onclick=async()=>{const v=String((data.templates||[]).find((t)=>t.templateKey===key)?.draftVersion||'');if(!v||!confirm('Publish '+key+' v'+v+'?'))return;try{await post('/api/whatsapp-content/'+key+'/publish',{version:Number(v),confirmation:key+':'+v});await load()}catch(error){result.className='error';result.textContent=error.message}};node.querySelector('[data-rollback]').onclick=async()=>{const v=node.querySelector('[data-version]').value;if(!v||!confirm('Rollback '+key+' to v'+v+'?'))return;try{await post('/api/whatsapp-content/'+key+'/rollback',{version:Number(v),confirmation:key+':'+v});await load()}catch(error){result.className='error';result.textContent=error.message}}}}
-load().catch(()=>document.querySelector('#content').textContent='WhatsApp content unavailable');</script></body></html>`;
+async function json(response){const data=await response.json();if(!response.ok)throw new Error(data.error||'Request failed');return data}async function post(path,body){return json(await fetch(path,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(body)}))}
+async function optimized(file){if(file.size>10*1024*1024)throw new Error('Master exceeds 10 MiB.');const bitmap=await createImageBitmap(file);const scale=Math.min(1,1600/Math.max(bitmap.width,bitmap.height));const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));const context=canvas.getContext('2d');context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);context.drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();const blob=await new Promise((resolve)=>canvas.toBlob(resolve,'image/jpeg',.82));if(!blob||blob.size>5*1024*1024)throw new Error('Could not create a WhatsApp image under 5 MiB.');return blob}
+async function upload(key,file){const variant=await optimized(file);const form=new FormData();form.append('master',file,file.name);form.append('variant',variant,'whatsapp.jpg');return json(await fetch('/api/whatsapp-content/'+encodeURIComponent(key)+'/media',{method:'POST',headers:{'X-CSRF-Token':csrf},body:form}))}
+async function reorder(key,gallery){const ids=[...gallery.querySelectorAll('[data-media-id]')].map((item)=>item.dataset.mediaId);await post('/api/whatsapp-content/'+encodeURIComponent(key)+'/media/order',{ids})}
+async function load(){const data=await json(await fetch('/api/whatsapp-content'));const groups={};for(const t of data.templates||[])(groups[t.section||'Other']??=[]).push(t);const root=document.querySelector('#content');root.innerHTML=Object.entries(groups).map(([s,ts])=>'<section class="journey"><h2>'+esc(s)+'</h2><div class="grid">'+ts.map(card).join('')+'</div></section>').join('');for(const node of root.querySelectorAll('[data-key]')){const key=node.dataset.key;const result=node.querySelector('[data-result]');const show=(message,error=false)=>{result.className=error?'error':'ok';result.textContent=message};for(const input of node.querySelectorAll('[name^="en"],[name^="ur"]'))input.oninput=()=>node.querySelector('[data-preview="'+input.name.slice(0,2)+'"]').textContent=node.querySelector('[name="'+input.name.slice(0,2)+'Text"]').value;node.querySelector('[data-upload]').onclick=async()=>{try{const files=[...node.querySelector('[data-media]').files];if(!files.length)throw new Error('Choose PNG, JPEG, or WebP images.');for(let index=0;index<files.length;index+=1){show('Optimizing and uploading '+(index+1)+' of '+files.length+'…');await upload(key,files[index])}await load()}catch(error){show(error.message,true)}};for(const media of node.querySelectorAll('[data-media-id]')){const id=media.dataset.mediaId;media.querySelector('[data-active]').onclick=async()=>{try{await post('/api/whatsapp-content/'+key+'/media/'+id+'/active',{active:!media.classList.contains('active')});await load()}catch(error){show(error.message,true)}};media.querySelector('[data-enabled]').onclick=async()=>{try{await post('/api/whatsapp-content/'+key+'/media/'+id+'/enabled',{enabled:media.classList.contains('disabled')});await load()}catch(error){show(error.message,true)}};media.querySelector('[data-remove]').onclick=async()=>{if(!confirm('Remove this image? Published or session-referenced images will only be disabled.'))return;try{const d=await json(await fetch('/api/whatsapp-content/'+key+'/media/'+id,{method:'DELETE',headers:{'X-CSRF-Token':csrf}}));if(d.softDisabled)alert('This image is referenced and was safely disabled instead of deleted.');await load()}catch(error){show(error.message,true)}};media.querySelector('[data-up]').onclick=async()=>{const previous=media.previousElementSibling;if(!previous)return;media.parentNode.insertBefore(media,previous);try{await reorder(key,media.parentNode);await load()}catch(error){show(error.message,true)}};media.querySelector('[data-down]').onclick=async()=>{const next=media.nextElementSibling;if(!next)return;media.parentNode.insertBefore(next,media);try{await reorder(key,media.parentNode);await load()}catch(error){show(error.message,true)}}}node.querySelector('[data-save]').onclick=async()=>{try{const d=await post('/api/whatsapp-content/'+key+'/draft',{confirmation:key,contentEn:copy(node,'en'),contentUr:copy(node,'ur')});show('Draft '+d.version+' saved.');await load()}catch(error){show(error.message,true)}};node.querySelector('[data-publish]').onclick=async()=>{const v=String((data.templates||[]).find((t)=>t.templateKey===key)?.draftVersion||'');if(!v||!confirm('Publish '+key+' v'+v+' and its enabled gallery?'))return;try{await post('/api/whatsapp-content/'+key+'/publish',{version:Number(v),confirmation:key+':'+v});await load()}catch(error){show(error.message,true)}};node.querySelector('[data-rollback]').onclick=async()=>{const v=node.querySelector('[data-version]').value;if(!v||!confirm('Rollback '+key+' to v'+v+'?'))return;try{await post('/api/whatsapp-content/'+key+'/rollback',{version:Number(v),confirmation:key+':'+v});await load()}catch(error){show(error.message,true)}}}}
+load().catch((error)=>document.querySelector('#content').textContent=error.message||'WhatsApp content unavailable');</script></body></html>`;
 }
 
 function paymentSettingsPreviewPageHtml(): string {
@@ -214,36 +218,165 @@ app.get("/payment-settings", (c) => c.html(paymentSettingsPreviewPageHtml()));
 
 app.get("/api/whatsapp-content", async (c) => {
   if (!c.env.DB) return c.json({ templates: [] });
-  const result = await c.env.DB.prepare("SELECT t.template_key,t.flow_order,t.section,t.draft_version,t.published_version,d.content_en_json AS draft_en,d.content_ur_json AS draft_ur,d.media_r2_key AS draft_media,p.content_en_json AS published_en,p.content_ur_json AS published_ur,p.media_r2_key AS published_media FROM whatsapp_content_templates t LEFT JOIN whatsapp_content_template_versions d ON d.template_key=t.template_key AND d.version=t.draft_version LEFT JOIN whatsapp_content_template_versions p ON p.template_key=t.template_key AND p.version=t.published_version ORDER BY t.flow_order,t.template_key").all<Record<string, unknown>>();
+  const [result, gallery] = await Promise.all([
+    c.env.DB.prepare("SELECT t.template_key,t.flow_order,t.section,t.draft_version,t.published_version,d.content_en_json AS draft_en,d.content_ur_json AS draft_ur,d.media_r2_key AS draft_media,p.content_en_json AS published_en,p.content_ur_json AS published_ur,p.media_r2_key AS published_media FROM whatsapp_content_templates t LEFT JOIN whatsapp_content_template_versions d ON d.template_key=t.template_key AND d.version=t.draft_version LEFT JOIN whatsapp_content_template_versions p ON p.template_key=t.template_key AND p.version=t.published_version ORDER BY t.flow_order,t.template_key").all<Record<string, unknown>>(),
+    c.env.DB.prepare("SELECT m.id,m.template_key,m.mime_type,m.size_bytes,m.sha256,m.master_mime_type,m.master_size_bytes,m.enabled,m.active,m.sort_order,m.created_at,m.created_by,m.updated_at,m.updated_by,EXISTS(SELECT 1 FROM whatsapp_content_version_media vm WHERE vm.media_id=m.id) AS referenced FROM whatsapp_content_media m ORDER BY m.template_key,m.sort_order,m.created_at,m.id").all<Record<string, unknown>>().catch(() => ({ results: [] }))
+  ]);
+  const galleryByTemplate = new Map<string, Array<Record<string, unknown>>>();
+  for (const row of gallery.results ?? []) {
+    const templateKey = String(row.template_key);
+    const items = galleryByTemplate.get(templateKey) ?? [];
+    items.push({ id: String(row.id), mimeType: String(row.mime_type), sizeBytes: Number(row.size_bytes), sha256: String(row.sha256), masterMimeType: String(row.master_mime_type), masterSizeBytes: Number(row.master_size_bytes), enabled: Number(row.enabled) === 1, active: Number(row.active) === 1, sortOrder: Number(row.sort_order), referenced: Number(row.referenced) === 1, createdAt: String(row.created_at), createdBy: String(row.created_by), updatedAt: String(row.updated_at), updatedBy: String(row.updated_by), previewUrl: `/api/whatsapp-content/${encodeURIComponent(templateKey)}/media/${encodeURIComponent(String(row.id))}/preview` });
+    galleryByTemplate.set(templateKey, items);
+  }
   const templates = result.results.map((row) => {
     const parse = (en: unknown, ur: unknown, media: unknown) => {
       if (typeof en !== "string" || typeof ur !== "string") return undefined;
       try { return { contentEn: JSON.parse(en), contentUr: JSON.parse(ur), ...(typeof media === "string" ? { mediaR2Key: media } : {}) }; } catch { return undefined; }
     };
-    return { templateKey: String(row.template_key), flowOrder: row.flow_order == null ? null : Number(row.flow_order), section: row.section == null ? "Other" : String(row.section), draftVersion: row.draft_version == null ? null : Number(row.draft_version), publishedVersion: row.published_version == null ? null : Number(row.published_version), draft: parse(row.draft_en, row.draft_ur, row.draft_media), published: parse(row.published_en, row.published_ur, row.published_media) };
+    const templateKey = String(row.template_key);
+    return { templateKey, flowOrder: row.flow_order == null ? null : Number(row.flow_order), section: row.section == null ? "Other" : String(row.section), draftVersion: row.draft_version == null ? null : Number(row.draft_version), publishedVersion: row.published_version == null ? null : Number(row.published_version), draft: parse(row.draft_en, row.draft_ur, row.draft_media), published: parse(row.published_en, row.published_ur, row.published_media), media: galleryByTemplate.get(templateKey) ?? [] };
   });
   return c.json({ templates });
 });
 
-function contentMediaExtension(mimeType: string): string | undefined { return mimeType === "image/png" ? "png" : mimeType === "image/jpeg" ? "jpg" : mimeType === "image/webp" ? "webp" : undefined; }
-function validContentMedia(bytes: Uint8Array, mimeType: string): boolean {
-  if (mimeType === "image/png") return bytes.length >= 8 && bytes[0] === 137 && bytes[1] === 80 && bytes[2] === 78 && bytes[3] === 71;
-  if (mimeType === "image/jpeg") return bytes.length >= 3 && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255;
-  return mimeType === "image/webp" && bytes.length >= 12 && String.fromCharCode(...bytes.slice(0, 4)) === "RIFF" && String.fromCharCode(...bytes.slice(8, 12)) === "WEBP";
+function mediaError(error: unknown): string {
+  return error instanceof Error && /^WHATSAPP_CONTENT_[A-Z0-9_]+$/.test(error.message) ? error.message : "WHATSAPP_CONTENT_MEDIA_INVALID";
 }
+
+async function uploadContentMedia(c: AdminContext, key: ReturnType<typeof WhatsAppTemplateKey.parse>, master: { body: ArrayBuffer; mimeType: string }, variant: { body: ArrayBuffer; mimeType: string }) {
+  if (!c.env.DB || !c.env.RECEIPTS) return c.json({ error: "WHATSAPP_CONTENT_UNAVAILABLE" }, 503);
+  const template = await c.env.DB.prepare("SELECT template_key FROM whatsapp_content_templates WHERE template_key=?").bind(key).first();
+  if (!template) return c.json({ error: "WHATSAPP_TEMPLATE_NOT_FOUND" }, 404);
+  try {
+    validateWhatsAppContentImage(master.body, master.mimeType, "master");
+    validateWhatsAppContentImage(variant.body, variant.mimeType, "variant");
+  } catch (error) {
+    return c.json({ error: mediaError(error) }, 400);
+  }
+  const id = crypto.randomUUID();
+  let stored: Awaited<ReturnType<typeof storeWhatsAppContentMedia>>;
+  try { stored = await storeWhatsAppContentMedia(c.env.RECEIPTS, key, id, master, variant); } catch (error) { return c.json({ error: mediaError(error) }, 400); }
+  const state = await c.env.DB.prepare("SELECT COALESCE(MAX(sort_order),-10)+10 AS sort_order,COALESCE(SUM(active),0) AS active_count FROM whatsapp_content_media WHERE template_key=?").bind(key).first<{ sort_order: number; active_count: number }>();
+  const now = new Date().toISOString();
+  const sortOrder = Math.max(0, Number(state?.sort_order ?? 0));
+  const active = Number(state?.active_count ?? 0) === 0 ? 1 : 0;
+  try {
+    await c.env.DB.batch([
+      c.env.DB.prepare("INSERT INTO whatsapp_content_media (id,template_key,r2_key,master_r2_key,mime_type,size_bytes,sha256,master_mime_type,master_size_bytes,master_sha256,enabled,active,sort_order,created_at,created_by,updated_at,updated_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(id, key, stored.r2Key, stored.masterR2Key, variant.mimeType, stored.sizeBytes, stored.sha256, master.mimeType, stored.masterSizeBytes, stored.masterSha256, 1, active, sortOrder, now, c.env.ADMIN_EMAIL, now, c.env.ADMIN_EMAIL),
+      auditStatement(c.env.DB, "WHATSAPP_CONTENT_MEDIA_UPLOADED", "WHATSAPP_CONTENT_MEDIA", id, { templateKey: key, mimeType: variant.mimeType, sizeBytes: stored.sizeBytes, sha256: stored.sha256, masterMimeType: master.mimeType, masterSizeBytes: stored.masterSizeBytes, masterSha256: stored.masterSha256 }, now, c.env.ADMIN_EMAIL)
+    ]);
+  } catch (error) {
+    await Promise.allSettled([c.env.RECEIPTS.delete(stored.r2Key), c.env.RECEIPTS.delete(stored.masterR2Key)]);
+    throw error;
+  }
+  return c.json({ ok: true, id, mediaR2Key: stored.r2Key, mimeType: variant.mimeType, sizeBytes: stored.sizeBytes, sha256: stored.sha256, active: active === 1, enabled: true, sortOrder }, 201);
+}
+
+app.post("/api/whatsapp-content/:key/media", async (c) => {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  const key = contentKey(c.req.param("key"));
+  if (!key) return c.json({ error: "WHATSAPP_TEMPLATE_KEY_INVALID" }, 400);
+  let form: FormData;
+  try { form = await c.req.formData(); } catch { return c.json({ error: "WHATSAPP_CONTENT_MEDIA_FORM_INVALID" }, 400); }
+  const masterFile = form.get("master");
+  const variantFile = form.get("variant");
+  if (!(masterFile instanceof File) || !(variantFile instanceof File)) return c.json({ error: "WHATSAPP_CONTENT_MEDIA_FILES_REQUIRED" }, 400);
+  return uploadContentMedia(c, key, { body: await masterFile.arrayBuffer(), mimeType: masterFile.type.toLowerCase() }, { body: await variantFile.arrayBuffer(), mimeType: variantFile.type.toLowerCase() });
+});
+
+// Compatibility path for existing callers; a template key is now mandatory and the
+// original can only double as the WhatsApp variant when it is already compatible.
 app.post("/api/whatsapp-content/media", async (c) => {
   if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
-  if (!c.env.DB || !c.env.RECEIPTS) return c.json({ error: "WHATSAPP_CONTENT_UNAVAILABLE" }, 503);
+  const key = contentKey(c.req.header("x-whatsapp-template-key"));
+  if (!key) return c.json({ error: "WHATSAPP_TEMPLATE_KEY_INVALID" }, 400);
   const mimeType = c.req.header("content-type")?.split(";", 1)[0].toLowerCase() ?? "";
-  const extension = contentMediaExtension(mimeType);
-  if (!extension) return c.json({ error: "WHATSAPP_CONTENT_MEDIA_TYPE_INVALID" }, 400);
-  const bytes = new Uint8Array(await c.req.arrayBuffer());
-  if (!bytes.byteLength || bytes.byteLength > 5 * 1024 * 1024 || !validContentMedia(bytes, mimeType)) return c.json({ error: "WHATSAPP_CONTENT_MEDIA_INVALID" }, 400);
-  const key = `whatsapp-content/${crypto.randomUUID()}.${extension}`;
-  await c.env.RECEIPTS.put(key, bytes, { httpMetadata: { contentType: mimeType }, customMetadata: { purpose: "whatsapp-content" } });
+  const body = await c.req.arrayBuffer();
+  return uploadContentMedia(c, key, { body, mimeType }, { body, mimeType });
+});
+
+app.get("/api/whatsapp-content/:key/media/:id/preview", async (c) => {
+  const key = contentKey(c.req.param("key"));
+  if (!key || !c.env.DB || !c.env.RECEIPTS) return c.json({ error: "WHATSAPP_CONTENT_MEDIA_NOT_FOUND" }, 404);
+  const row = await c.env.DB.prepare("SELECT r2_key,mime_type FROM whatsapp_content_media WHERE id=? AND template_key=?").bind(c.req.param("id"), key).first<{ r2_key: string; mime_type: string }>();
+  if (!row) return c.json({ error: "WHATSAPP_CONTENT_MEDIA_NOT_FOUND" }, 404);
+  const object = await c.env.RECEIPTS.get(row.r2_key);
+  if (!object) return c.json({ error: "WHATSAPP_CONTENT_MEDIA_NOT_FOUND" }, 404);
+  return new Response(object.body, { headers: { "Content-Type": row.mime_type, "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff", "Content-Disposition": "inline" } });
+});
+
+app.post("/api/whatsapp-content/:key/media/:id/enabled", async (c) => {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  const key = contentKey(c.req.param("key"));
+  if (!key || !c.env.DB) return c.json({ error: key ? "WHATSAPP_CONTENT_UNAVAILABLE" : "WHATSAPP_TEMPLATE_KEY_INVALID" }, key ? 503 : 400);
+  let body: { enabled?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
+  if (typeof body.enabled !== "boolean") return c.json({ error: "WHATSAPP_CONTENT_MEDIA_ENABLED_INVALID" }, 400);
   const now = new Date().toISOString();
-  await auditStatement(c.env.DB, "WHATSAPP_CONTENT_MEDIA_UPLOADED", "WHATSAPP_CONTENT_MEDIA", key, { mimeType, sizeBytes: bytes.byteLength }, now, c.env.ADMIN_EMAIL).run();
-  return c.json({ ok: true, mediaR2Key: key, mimeType, sizeBytes: bytes.byteLength }, 201);
+  const found = await c.env.DB.prepare("SELECT id FROM whatsapp_content_media WHERE id=? AND template_key=?").bind(c.req.param("id"), key).first();
+  if (!found) return c.json({ error: "WHATSAPP_CONTENT_MEDIA_NOT_FOUND" }, 404);
+  await c.env.DB.batch([
+    c.env.DB.prepare("UPDATE whatsapp_content_media SET enabled=?,active=CASE WHEN ?=0 THEN 0 ELSE active END,disabled_at=CASE WHEN ?=0 THEN ? ELSE NULL END,disabled_by=CASE WHEN ?=0 THEN ? ELSE NULL END,updated_at=?,updated_by=? WHERE id=? AND template_key=?").bind(body.enabled ? 1 : 0, body.enabled ? 1 : 0, body.enabled ? 1 : 0, now, body.enabled ? 1 : 0, c.env.ADMIN_EMAIL, now, c.env.ADMIN_EMAIL, c.req.param("id"), key),
+    auditStatement(c.env.DB, body.enabled ? "WHATSAPP_CONTENT_MEDIA_ENABLED" : "WHATSAPP_CONTENT_MEDIA_DISABLED", "WHATSAPP_CONTENT_MEDIA", c.req.param("id"), { templateKey: key }, now, c.env.ADMIN_EMAIL)
+  ]);
+  return c.json({ ok: true, enabled: body.enabled });
+});
+
+app.post("/api/whatsapp-content/:key/media/:id/active", async (c) => {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  const key = contentKey(c.req.param("key"));
+  if (!key || !c.env.DB) return c.json({ error: key ? "WHATSAPP_CONTENT_UNAVAILABLE" : "WHATSAPP_TEMPLATE_KEY_INVALID" }, key ? 503 : 400);
+  let body: { active?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
+  if (typeof body.active !== "boolean") return c.json({ error: "WHATSAPP_CONTENT_MEDIA_ACTIVE_INVALID" }, 400);
+  const found = await c.env.DB.prepare("SELECT id FROM whatsapp_content_media WHERE id=? AND template_key=?").bind(c.req.param("id"), key).first();
+  if (!found) return c.json({ error: "WHATSAPP_CONTENT_MEDIA_NOT_FOUND" }, 404);
+  const now = new Date().toISOString();
+  const statements = body.active ? [
+    c.env.DB.prepare("UPDATE whatsapp_content_media SET active=0,updated_at=?,updated_by=? WHERE template_key=? AND active=1").bind(now, c.env.ADMIN_EMAIL, key),
+    c.env.DB.prepare("UPDATE whatsapp_content_media SET active=1,enabled=1,disabled_at=NULL,disabled_by=NULL,updated_at=?,updated_by=? WHERE id=? AND template_key=?").bind(now, c.env.ADMIN_EMAIL, c.req.param("id"), key)
+  ] : [c.env.DB.prepare("UPDATE whatsapp_content_media SET active=0,updated_at=?,updated_by=? WHERE id=? AND template_key=?").bind(now, c.env.ADMIN_EMAIL, c.req.param("id"), key)];
+  await c.env.DB.batch([...statements, auditStatement(c.env.DB, body.active ? "WHATSAPP_CONTENT_MEDIA_ACTIVATED" : "WHATSAPP_CONTENT_MEDIA_ROTATION_ENABLED", "WHATSAPP_CONTENT_MEDIA", c.req.param("id"), { templateKey: key }, now, c.env.ADMIN_EMAIL)]);
+  return c.json({ ok: true, active: body.active });
+});
+
+app.post("/api/whatsapp-content/:key/media/order", async (c) => {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  const key = contentKey(c.req.param("key"));
+  if (!key || !c.env.DB) return c.json({ error: key ? "WHATSAPP_CONTENT_UNAVAILABLE" : "WHATSAPP_TEMPLATE_KEY_INVALID" }, key ? 503 : 400);
+  let body: { ids?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
+  if (!Array.isArray(body.ids) || body.ids.some((id) => typeof id !== "string" || !/^[A-Za-z0-9-]{8,64}$/.test(id)) || new Set(body.ids).size !== body.ids.length) return c.json({ error: "WHATSAPP_CONTENT_MEDIA_ORDER_INVALID" }, 400);
+  const ids = body.ids as string[];
+  const existing = await c.env.DB.prepare("SELECT id FROM whatsapp_content_media WHERE template_key=? ORDER BY sort_order,created_at,id").bind(key).all<{ id: string }>();
+  if (existing.results.length !== ids.length || existing.results.some((row) => !ids.includes(row.id))) return c.json({ error: "WHATSAPP_CONTENT_MEDIA_ORDER_MISMATCH" }, 409);
+  const now = new Date().toISOString();
+  await c.env.DB.batch([...ids.map((id, index) => c.env.DB.prepare("UPDATE whatsapp_content_media SET sort_order=?,updated_at=?,updated_by=? WHERE id=? AND template_key=?").bind(index * 10, now, c.env.ADMIN_EMAIL, id, key)), auditStatement(c.env.DB, "WHATSAPP_CONTENT_MEDIA_REORDERED", "WHATSAPP_CONTENT_TEMPLATE", key, { ids }, now, c.env.ADMIN_EMAIL)]);
+  return c.json({ ok: true });
+});
+
+app.delete("/api/whatsapp-content/:key/media/:id", async (c) => {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  const key = contentKey(c.req.param("key"));
+  if (!key || !c.env.DB || !c.env.RECEIPTS) return c.json({ error: key ? "WHATSAPP_CONTENT_UNAVAILABLE" : "WHATSAPP_TEMPLATE_KEY_INVALID" }, key ? 503 : 400);
+  const row = await c.env.DB.prepare("SELECT id,r2_key,master_r2_key FROM whatsapp_content_media WHERE id=? AND template_key=?").bind(c.req.param("id"), key).first<{ id: string; r2_key: string; master_r2_key: string }>();
+  if (!row) return c.json({ error: "WHATSAPP_CONTENT_MEDIA_NOT_FOUND" }, 404);
+  const references = await c.env.DB.prepare("SELECT (SELECT COUNT(*) FROM whatsapp_content_version_media WHERE media_id=?) + (SELECT COUNT(*) FROM whatsapp_content_media_selections WHERE media_id=?) AS count").bind(row.id, row.id).first<{ count: number }>();
+  const now = new Date().toISOString();
+  if (Number(references?.count ?? 0) > 0) {
+    await c.env.DB.batch([
+      c.env.DB.prepare("UPDATE whatsapp_content_media SET enabled=0,active=0,disabled_at=?,disabled_by=?,updated_at=?,updated_by=? WHERE id=?").bind(now, c.env.ADMIN_EMAIL, now, c.env.ADMIN_EMAIL, row.id),
+      auditStatement(c.env.DB, "WHATSAPP_CONTENT_MEDIA_SOFT_DISABLED", "WHATSAPP_CONTENT_MEDIA", row.id, { templateKey: key, reason: "REFERENCED" }, now, c.env.ADMIN_EMAIL)
+    ]);
+    return c.json({ ok: true, removed: false, softDisabled: true });
+  }
+  await Promise.all([c.env.RECEIPTS.delete(row.r2_key), c.env.RECEIPTS.delete(row.master_r2_key)]);
+  await c.env.DB.batch([
+    c.env.DB.prepare("DELETE FROM whatsapp_content_media WHERE id=? AND template_key=?").bind(row.id, key),
+    auditStatement(c.env.DB, "WHATSAPP_CONTENT_MEDIA_REMOVED", "WHATSAPP_CONTENT_MEDIA", row.id, { templateKey: key }, now, c.env.ADMIN_EMAIL)
+  ]);
+  return c.json({ ok: true, removed: true, softDisabled: false });
 });
 
 app.get("/api/whatsapp-content/:key", async (c) => {
@@ -297,11 +430,19 @@ async function publishWhatsAppContent(c: AdminContext, rollback: boolean) {
   if ((!rollback && target.status !== "DRAFT") || (rollback && !["PUBLISHED", "ARCHIVED"].includes(target.status))) return c.json({ error: rollback ? "WHATSAPP_CONTENT_ROLLBACK_NOT_ALLOWED" : "WHATSAPP_CONTENT_PUBLISH_REQUIRES_DRAFT" }, 409);
   try { parseWhatsAppContentDraft({ contentEn: JSON.parse(target.content_en_json), contentUr: JSON.parse(target.content_ur_json), ...(target.media_r2_key ? { mediaR2Key: target.media_r2_key } : {}) }); } catch { return c.json({ error: "WHATSAPP_CONTENT_INVALID" }, 409); }
   const now = new Date().toISOString();
+  const gallery = rollback ? { results: [] as Array<{ id: string; active: number; sort_order: number }> } : await c.env.DB.prepare("SELECT id,active,sort_order FROM whatsapp_content_media WHERE template_key=? AND enabled=1 ORDER BY active DESC,sort_order,created_at,id").bind(key).all<{ id: string; active: number; sort_order: number }>();
+  const snapshotStatements = rollback ? [] : [
+    c.env.DB.prepare("DELETE FROM whatsapp_content_version_media WHERE template_key=? AND version=?").bind(key, version),
+    ...gallery.results.map((media) => c.env.DB.prepare("INSERT INTO whatsapp_content_version_media (template_key,version,media_id,active,sort_order,created_at,created_by) VALUES (?,?,?,?,?,?,?)").bind(key, version, media.id, Number(media.active) === 1 ? 1 : 0, Number(media.sort_order), now, c.env.ADMIN_EMAIL))
+  ];
+  const legacyMediaStatement = !rollback && gallery.results.length ? [c.env.DB.prepare("UPDATE whatsapp_content_template_versions SET media_r2_key=(SELECT r2_key FROM whatsapp_content_media WHERE id=?) WHERE template_key=? AND version=?").bind(gallery.results[0].id, key, version)] : [];
   await c.env.DB.batch([
+    ...snapshotStatements,
+    ...legacyMediaStatement,
     c.env.DB.prepare("UPDATE whatsapp_content_template_versions SET status='ARCHIVED' WHERE template_key=? AND status='PUBLISHED' AND version<>?").bind(key, version),
     c.env.DB.prepare("UPDATE whatsapp_content_template_versions SET status='PUBLISHED' WHERE template_key=? AND version=?").bind(key, version),
     c.env.DB.prepare("UPDATE whatsapp_content_templates SET published_version=?,updated_at=?,updated_by=? WHERE template_key=?").bind(version, now, c.env.ADMIN_EMAIL, key),
-    auditStatement(c.env.DB, rollback ? "WHATSAPP_CONTENT_ROLLED_BACK" : "WHATSAPP_CONTENT_PUBLISHED", "WHATSAPP_CONTENT_TEMPLATE", key, { version, previousPublishedVersion: template.published_version }, now, c.env.ADMIN_EMAIL)
+    auditStatement(c.env.DB, rollback ? "WHATSAPP_CONTENT_ROLLED_BACK" : "WHATSAPP_CONTENT_PUBLISHED", "WHATSAPP_CONTENT_TEMPLATE", key, { version, previousPublishedVersion: template.published_version, mediaCount: rollback ? undefined : gallery.results.length }, now, c.env.ADMIN_EMAIL)
   ]);
   return c.json({ ok: true, templateKey: key, publishedVersion: version, rolledBack: rollback });
 }
@@ -402,6 +543,24 @@ app.post("/api/meta-activation/actions/:action", async (c) => {
       const safe = error instanceof Error ? error.message.slice(0, 180) : "META_REPLY_FAILED";
       await c.env.DB.prepare("UPDATE outbound_messages SET status='FAILED',last_error=?,updated_at=? WHERE id=?").bind(safe, new Date().toISOString(), row.id).run();
       return c.json({ executed: false, reason: safe, idempotencyKey: row.idempotency_key }, 502);
+    }
+  }
+  if (rawAction === "send-flow-test") {
+    if (!authorized(c)) return c.json({ error: "UNAUTHORIZED" }, 401);
+    const key = "flow_cta:1133458765899784:923034901810";
+    const existing = await c.env.DB.prepare("SELECT status,provider_message_id FROM outbound_messages WHERE idempotency_key=?").bind(key).first<{ status: string; provider_message_id: string | null }>();
+    if (existing) return c.json({ executed: false, reason: "FLOW_CTA_ALREADY_ATTEMPTED", status: existing.status, messageId: existing.provider_message_id });
+    const now = new Date().toISOString();
+    await c.env.DB.prepare("INSERT INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), key, "FLOW_CTA", "PENDING", 0, now, now).run();
+    const provider = createWhatsAppProvider("meta", { enabled: true, graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", phoneNumberId: c.env.META_PHONE_NUMBER_ID, accessToken: c.env.META_ACCESS_TOKEN, appSecret: c.env.META_APP_SECRET });
+    try {
+      const sent = await provider.sendFlow("+923034901810", "1133458765899784", "GFS_FLOW_E2E_1133458765899784");
+      await c.env.DB.prepare("UPDATE outbound_messages SET status='SENT',provider_message_id=?,attempt_count=1,updated_at=? WHERE idempotency_key=?").bind(sent.providerMessageId, new Date().toISOString(), key).run();
+      return c.json({ executed: true, messageId: sent.providerMessageId });
+    } catch (error) {
+      const safe = error instanceof Error ? error.message.slice(0, 180) : "META_FLOW_SEND_FAILED";
+      await c.env.DB.prepare("UPDATE outbound_messages SET status='FAILED',attempt_count=1,last_error=?,updated_at=? WHERE idempotency_key=?").bind(safe, new Date().toISOString(), key).run();
+      return c.json({ executed: false, reason: safe }, 502);
     }
   }
   const action = rawAction as MetaActivationAction;

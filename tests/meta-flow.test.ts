@@ -14,7 +14,7 @@ function toBase64(bytes: ArrayBuffer | Uint8Array): string {
 async function makeEnvelope(payload: Record<string, unknown>, keyPair: CryptoKeyPair) {
   const aesBytes = crypto.getRandomValues(new Uint8Array(16));
   const aesKey = await crypto.subtle.importKey("raw", aesBytes, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
-  const initialVector = crypto.getRandomValues(new Uint8Array(12));
+  const initialVector = crypto.getRandomValues(new Uint8Array(16));
   const encryptedFlowData = await crypto.subtle.encrypt({ name: "AES-GCM", iv: initialVector, tagLength: 128 }, aesKey, new TextEncoder().encode(JSON.stringify(payload)));
   const encryptedAesKey = await crypto.subtle.encrypt({ name: "RSA-OAEP" }, keyPair.publicKey, aesBytes);
   return {
@@ -34,7 +34,8 @@ describe("Meta encrypted WhatsApp Flow protocol", () => {
     const decrypted = await decryptMetaFlowRequest(fixture.envelope, pem);
     expect(decrypted.payload).toEqual(payload);
     const encrypted = await encryptMetaFlowResponse({ version: "3.0", data: { status: "active" } }, decrypted.aesKey, decrypted.initialVector);
-    const response = await crypto.subtle.decrypt({ name: "AES-GCM", iv: fixture.initialVector, tagLength: 128 }, fixture.aesKey, Uint8Array.from(atob(encrypted), (value) => value.charCodeAt(0)));
+    const responseVector = Uint8Array.from(fixture.initialVector, (value) => value ^ 0xff);
+    const response = await crypto.subtle.decrypt({ name: "AES-GCM", iv: responseVector, tagLength: 128 }, fixture.aesKey, Uint8Array.from(atob(encrypted), (value) => value.charCodeAt(0)));
     expect(JSON.parse(new TextDecoder().decode(response))).toEqual({ version: "3.0", data: { status: "active" } });
   });
 
@@ -89,7 +90,8 @@ describe("Meta encrypted WhatsApp Flow protocol", () => {
     const pem = `-----BEGIN PRIVATE KEY-----\n${toBase64(privateKey as ArrayBuffer)}\n-----END PRIVATE KEY-----`;
     const response = await api.fetch(new Request("https://example.test/webhooks/whatsapp/flows", { method: "POST", body: JSON.stringify(fixture.envelope), headers: { "content-type": "application/json" } }), { FLOW_PRIVATE_KEY: pem } as never);
     const encrypted = await response.text();
-    const plaintext = await crypto.subtle.decrypt({ name: "AES-GCM", iv: fixture.initialVector, tagLength: 128 }, fixture.aesKey, Uint8Array.from(atob(encrypted), (value) => value.charCodeAt(0)));
+    const responseVector = Uint8Array.from(fixture.initialVector, (value) => value ^ 0xff);
+    const plaintext = await crypto.subtle.decrypt({ name: "AES-GCM", iv: responseVector, tagLength: 128 }, fixture.aesKey, Uint8Array.from(atob(encrypted), (value) => value.charCodeAt(0)));
     expect(JSON.parse(new TextDecoder().decode(plaintext))).toMatchObject({ screen: "OFFER" });
   });
 });

@@ -169,6 +169,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 
 - Canonical API-first phone read-only fields: `is_on_biz_app=false`, `platform_type=CLOUD_API`.
 - Support-number/business-app coexistence remains **NO-GO/UNVERIFIED** for in-place enrollment; no phone migration or deregistration was attempted.
+
+## GFS-117 Flow/Media Registry
+
+- Flow `1133458765899784`: asset JSON validated; publish blocked by Meta endpoint health gate.
+- Content media: `whatsapp-content/images/{screen}/...` private R2 namespace, gallery metadata in D1 `whatsapp_content_media`, no public URLs.
 - Current Meta asset upload blocker was exact `#195` / `2498084`: asset filename must be `flow.json`; no token/error credential data recorded.
 
 ## GFS-92 Token Runtime Gate

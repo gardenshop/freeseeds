@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { applyFertilizerDecision, createWhatsAppProvider, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isPaymentMethodComplete, isTerminalOutboxStatus, MetaCapiProvider, MetaFlowEnvelope, normalizePaymentMethodRow, OrderCooldownError, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInstantFormSubmission, persistWebhookRecords, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, selectPaymentMethod, storeReceipt, WhatsAppTemplateKey } from "@gfs/core";
+import { applyFertilizerDecision, createWhatsAppProvider, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isPaymentMethodComplete, isTerminalOutboxStatus, MetaCapiProvider, MetaFlowEnvelope, normalizePaymentMethodRow, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInstantFormSubmission, persistWebhookRecords, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, WhatsAppTemplateKey } from "@gfs/core";
 import { handleMetaFlowPayload } from "./flow-endpoint";
 
 type Env = {
@@ -30,15 +30,18 @@ const app = new Hono<Env>();
 
 type ConversationData = { fullName?: string; deliveryAddress?: string; nearbyPlace?: string; city?: string; contactNumber?: string; province?: string; fertilizerSelected?: boolean; orderId?: string; orderNumber?: string };
 
-type ConversationReplyOptions = { buttons?: InteractiveButton[]; list?: { buttonText: string; rows: Array<{ id: string; title: string; description?: string }> } };
+type ConversationReplyOptions = { buttons?: InteractiveButton[]; list?: { buttonText: string; rows: Array<{ id: string; title: string; description?: string }> }; image?: OutboundImage };
 
-async function contentFor(db: D1Database, key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string } = {}) {
-  const content = await publishedWhatsAppContent(db, key);
+async function contentFor(db: D1Database, key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string } = {}, sessionKey?: string) {
+  const content = await publishedWhatsAppContent(db, key, "en", sessionKey);
   return {
     text: renderWhatsAppContent(content?.text ?? fallback, values),
     buttonLabel: content?.buttonLabel,
     listButtonLabel: content?.listButtonLabel,
-    listDescription: content?.listDescription
+    listDescription: content?.listDescription,
+    mediaId: content?.mediaId,
+    mediaR2Key: content?.mediaR2Key,
+    mediaMimeType: content?.mediaMimeType
   };
 }
 
@@ -48,6 +51,31 @@ async function paymentCopyForOrder(db: D1Database, orderId: string | undefined, 
   return row?.copy?.trim() || undefined;
 }
 
+async function contentImageFor(db: D1Database, bucket: R2Bucket, key: WhatsAppTemplateKey, sessionKey: string): Promise<OutboundImage | undefined> {
+  try {
+    const selected = await selectPublishedWhatsAppContentMedia(db, key, sessionKey);
+    if (!selected) return undefined;
+    const object = await bucket.get(selected.r2Key);
+    if (!object) return undefined;
+    return { body: await object.arrayBuffer(), mimeType: selected.mimeType, filename: `${key.toLowerCase()}.${selected.mimeType === "image/png" ? "png" : "jpg"}` };
+  } catch {
+    return undefined;
+  }
+}
+
+function guidedReplyMediaKey(normalized: string, state: string, nextState: string): WhatsAppTemplateKey | undefined {
+  if (normalized === "CANCEL" || (state === "NEW" && normalized === "START")) return "WELCOME";
+  if (/^(STATUS|CHECK_ORDER)$/i.test(normalized)) return "ORDER_STATUS";
+  if (/^(HELP|SUPPORT)$/i.test(normalized)) return "SUPPORT";
+  if (normalized === "PAYMENT_HELP") return "PAYMENT";
+  if (["PRODUCT", "PROVINCE", "FERTILIZER"].includes(state) && nextState === state) return "VALIDATION";
+  if (state === "NEW" && normalized === "GET_FREE_PACKS") return "OFFER";
+  if (state === "PAYMENT_METHOD" || nextState === "PAYMENT_PENDING") return "PAYMENT";
+  if (state === "REVIEW" && nextState === "PAYMENT_METHOD") return "CONFIRMATION";
+  const nextStateTemplate: Partial<Record<string, WhatsAppTemplateKey>> = { FERTILIZER: "OFFER", PROVINCE: "PROVINCE_DELIVERY", FULL_NAME: "FIELD_FULL_NAME", ADDRESS: "FIELD_DELIVERY_ADDRESS", NEARBY: "FIELD_NEARBY_PLACE", CITY: "FIELD_CITY", CONTACT: "FIELD_CONTACT_NUMBER", REVIEW: "REVIEW", COMPLETE: "CONFIRMATION" };
+  return nextStateTemplate[nextState];
+}
+
 async function sendConversationReply(db: D1Database, provider: ReturnType<typeof createWhatsAppProvider>, to: string, inboundId: string, body: string, options: ConversationReplyOptions = {}): Promise<{ sent: boolean; messageId?: string }> {
   const key = `conversation_reply:${inboundId}`;
   const existing = await db.prepare("SELECT status,provider_message_id FROM outbound_messages WHERE idempotency_key=?").bind(key).first<{ status: string; provider_message_id: string | null }>();
@@ -55,7 +83,7 @@ async function sendConversationReply(db: D1Database, provider: ReturnType<typeof
   const now = new Date().toISOString();
   await db.prepare("INSERT INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), key, "CONVERSATION_REPLY", "PENDING", 0, now, now).run();
   try {
-    const sent = options.list ? await provider.sendList(to, body, options.list.buttonText, options.list.rows) : options.buttons?.length ? await provider.sendInteractive(to, body, options.buttons) : await provider.sendText(to, body);
+    const sent = options.list ? await provider.sendList(to, body, options.list.buttonText, options.list.rows, options.image) : options.buttons?.length ? await provider.sendInteractive(to, body, options.buttons, options.image) : options.image ? await provider.sendImage(to, body, options.image) : await provider.sendText(to, body);
     await db.prepare("UPDATE outbound_messages SET provider_message_id=?,status='SENT',attempt_count=1,updated_at=? WHERE idempotency_key=?").bind(sent.providerMessageId, new Date().toISOString(), key).run();
     return { sent: true, messageId: sent.providerMessageId };
   } catch (error) {
@@ -65,7 +93,8 @@ async function sendConversationReply(db: D1Database, provider: ReturnType<typeof
   }
 }
 
-async function processGuidedConversation(db: D1Database, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }): Promise<boolean> {
+async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }): Promise<boolean> {
+  const sessionContent = (key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string } = {}) => contentFor(db, key, fallback, values, `CHAT:${event.from}`);
   const message = event.payload && typeof event.payload === "object" ? event.payload as { text?: { body?: string }; interactive?: { button_reply?: { id?: string; title?: string }; list_reply?: { id?: string; title?: string }; nfm_reply?: { response_json?: string } }; button?: { payload?: string; text?: string } } : {};
   const interaction = message.interactive?.button_reply ?? message.interactive?.list_reply;
   const interactionId = interaction?.id ?? message.button?.payload;
@@ -79,38 +108,40 @@ async function processGuidedConversation(db: D1Database, provider: ReturnType<ty
   try { data = row?.state_data ? JSON.parse(row.state_data) as ConversationData : {}; } catch { data = {}; }
   let nextState = state;
   let reply: string | null = null;
-  if (normalized === "CANCEL") { nextState = "NEW"; data = {}; reply = (await contentFor(db, "WELCOME", "Order entry cancelled. Tap below when you are ready to start.")).text; }
+  if (normalized === "CANCEL") { nextState = "NEW"; data = {}; reply = (await sessionContent("WELCOME", "Order entry cancelled. Tap below when you are ready to start.")).text; }
   else if (normalized === "BACK" && state === "REVIEW") { nextState = "CONTACT"; reply = "Please re-enter your contact number."; }
-  else if (/^(STATUS|CHECK_ORDER)$/i.test(normalized)) { const order = await getLatestOrderForWaId(db, event.from, data.orderId); const status = await contentFor(db, "ORDER_STATUS", "Use Check Order to see the current order and payment status."); const paymentStatusCopy = order ? await paymentCopyForOrder(db, order.id, "status_copy") : undefined; reply = order ? `${paymentStatusCopy ?? status.text}\n${formatCustomerOrderStatus(order)}` : "No order was found for this WhatsApp conversation."; }
-  else if (/^(HELP|SUPPORT)$/i.test(normalized)) { reply = (await contentFor(db, "SUPPORT", "Reply START to begin, STATUS to check an order, or CANCEL to stop the current order entry.")).text; }
-  else if (state === "NEW" && normalized === "START") { nextState = "NEW"; reply = (await contentFor(db, "WELCOME", "Welcome to Get Free Seeds! Tap below to begin your order.")).text; }
-  else if (state === "NEW" && normalized === "GET_FREE_PACKS") { nextState = "FERTILIZER"; reply = (await contentFor(db, "OFFER", "Get 5 seed packs FREE. Choose your option to continue.")).text; }
-  else if (state === "FULL_NAME") { data.fullName = text; nextState = "ADDRESS"; reply = (await contentFor(db, "FIELD_DELIVERY_ADDRESS", "Please reply with your complete delivery address.")).text; }
-  else if (state === "ADDRESS") { data.deliveryAddress = text; nextState = "NEARBY"; reply = (await contentFor(db, "FIELD_NEARBY_PLACE", "Please reply with a nearby famous place.")).text; }
-  else if (state === "NEARBY") { data.nearbyPlace = text; nextState = "CITY"; reply = (await contentFor(db, "FIELD_CITY", "Please reply with your city.")).text; }
-  else if (state === "CITY") { data.city = text; nextState = "CONTACT"; reply = (await contentFor(db, "FIELD_CONTACT_NUMBER", "Please reply with your contact number.")).text; }
-  else if (state === "CONTACT") { data.contactNumber = text; nextState = "REVIEW"; const quote = await quoteOrder(db, { productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: data.province ?? "", fertilizerSelected: data.fertilizerSelected ?? false }); const review = await contentFor(db, "REVIEW", "Review your order. Tap Place Order to confirm."); reply = `${quote.items.map((item) => `${item.name}: PKR ${item.lineTotalPkr}`).join("\n")}\nDelivery: PKR ${quote.deliveryFeePkr}\nTOTAL: PKR ${quote.totalPayablePkr}\n${review.text}`; }
-  else if (state === "PRODUCT") { if (!/^(YES|SEEDS_ONLY|ADD_FERTILIZER)$/i.test(normalized)) { reply = (await contentFor(db, "VALIDATION", "Please choose one of the listed options.")).text; } else { data.fertilizerSelected = normalized === "ADD_FERTILIZER"; nextState = "PROVINCE"; reply = (await contentFor(db, "PROVINCE_DELIVERY", "Choose your province for delivery.")).text; } }
-  else if (state === "PROVINCE") { const provinceChoice = normalized.startsWith("PROVINCE_") ? normalized.slice(9).replace(/_/g, " ") : text; try { const quote = await quoteOrder(db, { productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: provinceChoice, fertilizerSelected: data.fertilizerSelected ?? false }); data.province = quote.province; nextState = "FULL_NAME"; reply = (await contentFor(db, "FIELD_FULL_NAME", "Please reply with your full name.")).text; } catch { reply = (await contentFor(db, "VALIDATION", "Please choose one of the listed options.")).text; } }
-  else if (state === "FERTILIZER") { if (!/^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/i.test(normalized)) reply = (await contentFor(db, "VALIDATION", "Please choose one of the listed options.")).text; else { data.fertilizerSelected = /^(YES|ADD_FERTILIZER)$/i.test(normalized); nextState = "PROVINCE"; reply = (await contentFor(db, "PROVINCE_DELIVERY", "Choose your province for delivery.")).text; } }
-  else if (state === "REVIEW") { if (!/^(CONFIRM|PLACE_ORDER)$/i.test(normalized)) reply = (await contentFor(db, "REVIEW", "Review your order. Tap Place Order to confirm.")).text; else if (!data.fullName || !data.deliveryAddress || !data.nearbyPlace || !data.city || !data.contactNumber || !data.province) { nextState = "FULL_NAME"; data = {}; reply = (await contentFor(db, "FIELD_FULL_NAME", "I need to restart safely. Please reply with your full name.")).text; } else { const submission = { fullName: data.fullName, deliveryAddress: data.deliveryAddress, nearbyPlace: data.nearbyPlace, city: data.city, contactNumber: data.contactNumber, productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: data.province, fertilizerSelected: data.fertilizerSelected ?? false, whatsappNumber: event.from }; try { const result = await persistFlowSubmission(db, submission, undefined, `WHATSAPP:${event.id}`, event.from); data.orderId = result.orderId; data.orderNumber = result.orderNumber; const methods = (await db.prepare("SELECT * FROM payment_methods WHERE enabled=1").all()).results.map((row) => normalizePaymentMethodRow(row as Record<string, unknown>)).filter((method) => isPaymentMethodComplete(method)); nextState = methods.length ? "PAYMENT_METHOD" : "COMPLETE"; const confirmation = await contentFor(db, "CONFIRMATION", "Order {orderNumber} created. Total: PKR {totalPkr}.", { orderNumber: result.orderNumber, totalPkr: result.quote?.totalPayablePkr ?? "configured tariff" }); reply = `${confirmation.text}\n${methods.length ? (await contentFor(db, "PAYMENT", "Choose a verified payment method for order {orderNumber}.", { orderNumber: result.orderNumber })).text : "Payment methods are not configured; no payment request was sent."}`; } catch (error) { if (error instanceof OrderCooldownError) { nextState = "PAYMENT_PENDING"; data.orderNumber = error.orderNumber; reply = `You already have order ${error.orderNumber}. You can request another order on ${new Date(error.nextEligibleAt).toLocaleDateString("en-PK", { timeZone: "Asia/Karachi" })}.`; } else throw error; } } }
-  else if (state === "PAYMENT_METHOD") { if (!/^(JAZZCASH|PAY_JAZZCASH)$/i.test(normalized) || !data.orderId) reply = (await contentFor(db, "PAYMENT", "Tap JazzCash to view the available verified payment instructions.", { orderNumber: data.orderNumber ?? "" })).text; else { try { const selected = await selectPaymentMethod(db, data.orderId, "JAZZCASH"); nextState = "PAYMENT_PENDING"; reply = `${selected.message}\nReference: ${selected.orderNumber}`; } catch { reply = "That payment method is not currently available."; } } }
-  else if (state === "PAYMENT_PENDING" && /^(HELP|PAYMENT_HELP)$/i.test(normalized)) { reply = (await paymentCopyForOrder(db, data.orderId, "payment_help_copy")) ?? (await contentFor(db, "PAYMENT", "Upload your JazzCash receipt here after payment. Garden Shop will review it manually.", { orderNumber: data.orderNumber ?? "" })).text; }
+  else if (/^(STATUS|CHECK_ORDER)$/i.test(normalized)) { const order = await getLatestOrderForWaId(db, event.from, data.orderId); const status = await sessionContent("ORDER_STATUS", "Use Check Order to see the current order and payment status."); const paymentStatusCopy = order ? await paymentCopyForOrder(db, order.id, "status_copy") : undefined; reply = order ? `${paymentStatusCopy ?? status.text}\n${formatCustomerOrderStatus(order)}` : "No order was found for this WhatsApp conversation."; }
+  else if (/^(HELP|SUPPORT)$/i.test(normalized)) { reply = (await sessionContent("SUPPORT", "Reply START to begin, STATUS to check an order, or CANCEL to stop the current order entry.")).text; }
+  else if (state === "NEW" && normalized === "START") { nextState = "NEW"; reply = (await sessionContent("WELCOME", "Welcome to Get Free Seeds! Tap below to begin your order.")).text; }
+  else if (state === "NEW" && normalized === "GET_FREE_PACKS") { nextState = "FERTILIZER"; reply = (await sessionContent("OFFER", "Get 5 seed packs FREE. Choose your option to continue.")).text; }
+  else if (state === "FULL_NAME") { data.fullName = text; nextState = "ADDRESS"; reply = (await sessionContent("FIELD_DELIVERY_ADDRESS", "Please reply with your complete delivery address.")).text; }
+  else if (state === "ADDRESS") { data.deliveryAddress = text; nextState = "NEARBY"; reply = (await sessionContent("FIELD_NEARBY_PLACE", "Please reply with a nearby famous place.")).text; }
+  else if (state === "NEARBY") { data.nearbyPlace = text; nextState = "CITY"; reply = (await sessionContent("FIELD_CITY", "Please reply with your city.")).text; }
+  else if (state === "CITY") { data.city = text; nextState = "CONTACT"; reply = (await sessionContent("FIELD_CONTACT_NUMBER", "Please reply with your contact number.")).text; }
+  else if (state === "CONTACT") { data.contactNumber = text; nextState = "REVIEW"; const quote = await quoteOrder(db, { productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: data.province ?? "", fertilizerSelected: data.fertilizerSelected ?? false }); const review = await sessionContent("REVIEW", "Review your order. Tap Place Order to confirm."); reply = `${quote.items.map((item) => `${item.name}: PKR ${item.lineTotalPkr}`).join("\n")}\nDelivery: PKR ${quote.deliveryFeePkr}\nTOTAL: PKR ${quote.totalPayablePkr}\n${review.text}`; }
+  else if (state === "PRODUCT") { if (!/^(YES|SEEDS_ONLY|ADD_FERTILIZER)$/i.test(normalized)) { reply = (await sessionContent("VALIDATION", "Please choose one of the listed options.")).text; } else { data.fertilizerSelected = normalized === "ADD_FERTILIZER"; nextState = "PROVINCE"; reply = (await sessionContent("PROVINCE_DELIVERY", "Choose your province for delivery.")).text; } }
+  else if (state === "PROVINCE") { const provinceChoice = normalized.startsWith("PROVINCE_") ? normalized.slice(9).replace(/_/g, " ") : text; try { const quote = await quoteOrder(db, { productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: provinceChoice, fertilizerSelected: data.fertilizerSelected ?? false }); data.province = quote.province; nextState = "FULL_NAME"; reply = (await sessionContent("FIELD_FULL_NAME", "Please reply with your full name.")).text; } catch { reply = (await sessionContent("VALIDATION", "Please choose one of the listed options.")).text; } }
+  else if (state === "FERTILIZER") { if (!/^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/i.test(normalized)) reply = (await sessionContent("VALIDATION", "Please choose one of the listed options.")).text; else { data.fertilizerSelected = /^(YES|ADD_FERTILIZER)$/i.test(normalized); nextState = "PROVINCE"; reply = (await sessionContent("PROVINCE_DELIVERY", "Choose your province for delivery.")).text; } }
+  else if (state === "REVIEW") { if (!/^(CONFIRM|PLACE_ORDER)$/i.test(normalized)) reply = (await sessionContent("REVIEW", "Review your order. Tap Place Order to confirm.")).text; else if (!data.fullName || !data.deliveryAddress || !data.nearbyPlace || !data.city || !data.contactNumber || !data.province) { nextState = "FULL_NAME"; data = {}; reply = (await sessionContent("FIELD_FULL_NAME", "I need to restart safely. Please reply with your full name.")).text; } else { const submission = { fullName: data.fullName, deliveryAddress: data.deliveryAddress, nearbyPlace: data.nearbyPlace, city: data.city, contactNumber: data.contactNumber, productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: data.province, fertilizerSelected: data.fertilizerSelected ?? false, whatsappNumber: event.from }; try { const result = await persistFlowSubmission(db, submission, undefined, `WHATSAPP:${event.id}`, event.from); data.orderId = result.orderId; data.orderNumber = result.orderNumber; const methods = (await db.prepare("SELECT * FROM payment_methods WHERE enabled=1").all()).results.map((row) => normalizePaymentMethodRow(row as Record<string, unknown>)).filter((method) => isPaymentMethodComplete(method)); nextState = methods.length ? "PAYMENT_METHOD" : "COMPLETE"; const confirmation = await sessionContent("CONFIRMATION", "Order {orderNumber} created. Total: PKR {totalPkr}.", { orderNumber: result.orderNumber, totalPkr: result.quote?.totalPayablePkr ?? "configured tariff" }); reply = `${confirmation.text}\n${methods.length ? (await sessionContent("PAYMENT", "Choose a verified payment method for order {orderNumber}.", { orderNumber: result.orderNumber })).text : "Payment methods are not configured; no payment request was sent."}`; } catch (error) { if (error instanceof OrderCooldownError) { nextState = "PAYMENT_PENDING"; data.orderNumber = error.orderNumber; reply = `You already have order ${error.orderNumber}. You can request another order on ${new Date(error.nextEligibleAt).toLocaleDateString("en-PK", { timeZone: "Asia/Karachi" })}.`; } else throw error; } } }
+  else if (state === "PAYMENT_METHOD") { if (!/^(JAZZCASH|PAY_JAZZCASH)$/i.test(normalized) || !data.orderId) reply = (await sessionContent("PAYMENT", "Tap JazzCash to view the available verified payment instructions.", { orderNumber: data.orderNumber ?? "" })).text; else { try { const selected = await selectPaymentMethod(db, data.orderId, "JAZZCASH"); nextState = "PAYMENT_PENDING"; reply = `${selected.message}\nReference: ${selected.orderNumber}`; } catch { reply = "That payment method is not currently available."; } } }
+  else if (state === "PAYMENT_PENDING" && /^(HELP|PAYMENT_HELP)$/i.test(normalized)) { reply = (await paymentCopyForOrder(db, data.orderId, "payment_help_copy")) ?? (await sessionContent("PAYMENT", "Upload your JazzCash receipt here after payment. Garden Shop will review it manually.", { orderNumber: data.orderNumber ?? "" })).text; }
   else if (state === "PAYMENT_PENDING" && normalized === "START") { reply = `You already have order ${data.orderNumber ?? "in progress"}. Upload the receipt, check status, or contact support.`; }
   else if (state === "COMPLETE" && normalized === "START") { nextState = "FULL_NAME"; data = {}; reply = "Starting a new order. Please reply with your full name."; }
   if (!reply) return false;
   const now = new Date().toISOString();
   await db.prepare("INSERT INTO whatsapp_conversations (id,wa_id,state,state_data,last_inbound_message_id,created_at,updated_at) VALUES (?,?,?,?,?,?,?) ON CONFLICT(wa_id) DO UPDATE SET state=excluded.state,state_data=excluded.state_data,last_inbound_message_id=excluded.last_inbound_message_id,updated_at=excluded.updated_at").bind(crypto.randomUUID(), event.from, nextState, JSON.stringify(data), event.id, now, now).run();
   const [welcome, fertilizer, province, review, status, support, payment] = await Promise.all([
-    contentFor(db, "WELCOME", "Welcome to Get Free Seeds! Tap below to begin your order."),
-    contentFor(db, "FERTILIZER", "Would you like to add Micro Nutrients Fertilizer, or continue with seeds only?"),
-    contentFor(db, "PROVINCE_DELIVERY", "Choose your province for delivery."),
-    contentFor(db, "REVIEW", "Review your order. Tap Place Order to confirm."),
-    contentFor(db, "ORDER_STATUS", "Use Check Order to see the current order and payment status."),
-    contentFor(db, "SUPPORT", "Reply START to begin, STATUS to check an order, or CANCEL to stop the current order entry."),
-    contentFor(db, "PAYMENT", "Choose a verified payment method.")
+    sessionContent("WELCOME", "Welcome to Get Free Seeds! Tap below to begin your order."),
+    sessionContent("FERTILIZER", "Would you like to add Micro Nutrients Fertilizer, or continue with seeds only?"),
+    sessionContent("PROVINCE_DELIVERY", "Choose your province for delivery."),
+    sessionContent("REVIEW", "Review your order. Tap Place Order to confirm."),
+    sessionContent("ORDER_STATUS", "Use Check Order to see the current order and payment status."),
+    sessionContent("SUPPORT", "Reply START to begin, STATUS to check an order, or CANCEL to stop the current order entry."),
+    sessionContent("PAYMENT", "Choose a verified payment method.")
   ]);
   const options: ConversationReplyOptions = (state === "NEW" && normalized === "START") || normalized === "CANCEL" ? { buttons: [{ id: "GET_FREE_PACKS", title: welcome.buttonLabel ?? "Get 5 Free Packs" }] } : state === "NEW" && normalized === "GET_FREE_PACKS" ? { buttons: [{ id: "ADD_FERTILIZER", title: "Add Fertilizer" }, { id: "SEEDS_ONLY", title: fertilizer.buttonLabel ?? "Seeds Only" }] } : state === "FERTILIZER" && /^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/i.test(normalized) ? { list: { buttonText: province.listButtonLabel ?? "Select Province", rows: ["Punjab", "Islamabad", "Sindh", "KPK", "Balochistan", "AJK", "Gilgit Baltistan"].map((provinceName) => ({ id: `PROVINCE_${provinceName.toUpperCase().replace(/ /g, "_")}`, title: provinceName, ...(province.listDescription ? { description: province.listDescription } : {}) })) } } : state === "CONTACT" ? { buttons: [{ id: "PLACE_ORDER", title: review.buttonLabel ?? "Place Order" }, { id: "BACK", title: "Back" }] } : state === "REVIEW" && /^(CONFIRM|PLACE_ORDER)$/i.test(normalized) ? { buttons: [{ id: "PAY_JAZZCASH", title: payment.buttonLabel ?? "JazzCash" }, { id: "CHECK_ORDER", title: status.buttonLabel ?? "Check Order" }] } : state === "PAYMENT_PENDING" ? { buttons: [{ id: "CHECK_ORDER", title: status.buttonLabel ?? "Check Order" }, { id: "PAYMENT_HELP", title: "Payment Help" }, { id: "SUPPORT", title: support.buttonLabel ?? "Support" }] } : {};
+  const mediaKey = guidedReplyMediaKey(normalized, state, nextState);
+  if (mediaKey) options.image = await contentImageFor(db, bucket, mediaKey, `CHAT:${event.from}`);
   const sent = await sendConversationReply(db, provider, event.from, event.id, reply, options);
   if (!sent.sent) await db.prepare("UPDATE whatsapp_conversations SET state=?,state_data=?,updated_at=? WHERE wa_id=? AND last_inbound_message_id=?").bind(state, originalStateData, new Date().toISOString(), event.from, event.id).run();
   return true;
@@ -139,8 +170,9 @@ async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: R
       db.prepare("UPDATE whatsapp_conversations SET state='PAYMENT_REVIEW',last_inbound_message_id=?,updated_at=? WHERE wa_id=?").bind(event.id, now, event.from)
     ]);
   }
-  const receipt = await contentFor(db, "RECEIPT", "Receipt received for order {orderNumber}. Garden Shop will review it before payment is marked PAID.", { orderNumber: record.order_number });
-  await sendConversationReply(db, provider, event.from, event.id, receipt.text);
+  const receipt = await contentFor(db, "RECEIPT", "Receipt received for order {orderNumber}. Garden Shop will review it before payment is marked PAID.", { orderNumber: record.order_number }, `CHAT:${event.from}`);
+  const image = await contentImageFor(db, bucket, "RECEIPT", `CHAT:${event.from}`);
+  await sendConversationReply(db, provider, event.from, event.id, receipt.text, { image });
   return true;
 }
 
@@ -172,7 +204,7 @@ app.post("/webhooks/whatsapp", async (c) => {
   let autoReplies = 0;
   for (const event of inbound) {
     if (event.kind === "media") { if (c.env.DB && await processReceiptMedia(c.env.DB, c.env.RECEIPTS, provider, event)) continue; else continue; }
-    if (c.env.DB && await processGuidedConversation(c.env.DB, provider, event)) continue;
+    if (c.env.DB && await processGuidedConversation(c.env.DB, c.env.RECEIPTS, provider, event)) continue;
     const activeConversation = c.env.DB ? await c.env.DB.prepare("SELECT state FROM whatsapp_conversations WHERE wa_id=?").bind(event.from).first<{ state: string }>() : null;
     if (activeConversation) continue;
     const idempotencyKey = `welcome_reply:${event.id}`;
@@ -181,8 +213,9 @@ app.post("/webhooks/whatsapp", async (c) => {
     const now = new Date().toISOString();
     if (c.env.DB) await c.env.DB.prepare("INSERT INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), idempotencyKey, "WELCOME_REPLY", "PENDING", 0, now, now).run();
     try {
-      const welcome = await contentFor(c.env.DB, "WELCOME", "Welcome to Get Free Seeds! Tap below to begin your order.");
-      const sent = await provider.sendInteractive(event.from, welcome.text, [{ id: "GET_FREE_PACKS", title: welcome.buttonLabel ?? "Get 5 Free Packs" }]);
+      const welcome = await contentFor(c.env.DB, "WELCOME", "Welcome to Get Free Seeds! Tap below to begin your order.", {}, `CHAT:${event.from}`);
+      const image = await contentImageFor(c.env.DB, c.env.RECEIPTS, "WELCOME", `CHAT:${event.from}`);
+      const sent = await provider.sendInteractive(event.from, welcome.text, [{ id: "GET_FREE_PACKS", title: welcome.buttonLabel ?? "Get 5 Free Packs" }], image);
       if (c.env.DB) await c.env.DB.prepare("UPDATE outbound_messages SET provider_message_id=?,status='SENT',attempt_count=1,updated_at=? WHERE idempotency_key=?").bind(sent.providerMessageId, new Date().toISOString(), idempotencyKey).run();
       autoReplies += 1;
     } catch (error) {

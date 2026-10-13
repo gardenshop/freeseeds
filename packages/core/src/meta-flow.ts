@@ -53,7 +53,7 @@ export async function decryptMetaFlowRequest(envelope: MetaFlowEnvelope, private
   if (!privateKeyPem) throw new Error("FLOW_PRIVATE_KEY_NOT_CONFIGURED");
   if (typeof envelope.encrypted_flow_data !== "string" || typeof envelope.encrypted_aes_key !== "string" || typeof envelope.initial_vector !== "string") throw new Error("FLOW_ENVELOPE_INVALID");
   const initialVector = decodeBase64(envelope.initial_vector, "INITIAL_VECTOR");
-  if (initialVector.byteLength !== 12) throw new Error("FLOW_INITIAL_VECTOR_INVALID");
+  if (initialVector.byteLength !== 16) throw new Error("FLOW_INITIAL_VECTOR_INVALID");
   const privateKey = await importPrivateKey(privateKeyPem);
   const aesBytes = new Uint8Array(await crypto.subtle.decrypt({ name: "RSA-OAEP" }, privateKey, decodeBase64(envelope.encrypted_aes_key, "AES_KEY")));
   if (aesBytes.byteLength !== 16) throw new Error("FLOW_AES_KEY_INVALID");
@@ -70,6 +70,7 @@ export async function decryptMetaFlowRequest(envelope: MetaFlowEnvelope, private
 
 export async function encryptMetaFlowResponse(payload: MetaFlowPayload, aesKey: CryptoKey, initialVector: Uint8Array): Promise<string> {
   const plaintext = new TextEncoder().encode(JSON.stringify(payload));
-  const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv: initialVector, tagLength: 128 }, aesKey, plaintext);
+  const responseVector = Uint8Array.from(initialVector, (value) => value ^ 0xff);
+  const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv: responseVector, tagLength: 128 }, aesKey, plaintext);
   return encodeBase64(encrypted);
 }

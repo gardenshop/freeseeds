@@ -83,6 +83,8 @@
 | GFS-114 asset upload | exact `flow.json` asset validation | BLOCKED at Meta `#195/2498084`; correction prepared, publish not claimed |
 | GFS-116 coexistence | read-only phone platform/Business App eligibility | PASS read-only: `false` / `CLOUD_API`; no migration |
 | GFS-116 Flow publish | endpoint health/validation/publish status | BLOCKED: Meta `#139002/4233014` Endpoint not available |
+| GFS-117 media gallery | private R2 keys, validation, ordering, rotation/session selection | PASS implementation/tests; live image delivery untested |
+| GFS-117 encrypted Flow | Meta request/decrypt/encrypt round trip | BLOCKED live: `FLOW_INITIAL_VECTOR_INVALID` observed; local tests pass |
 | GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |
 | GFS-98 token recovery | owner-installed secret → Graph ladder → API/Admin readiness | PASS fresh token; no token value inspected |
 | GFS-98 atomic reply | one failed event retry, outbound ID, status webhook, no duplicate | PASS: WAMID persisted, SENT status persisted, duplicate count 0 |

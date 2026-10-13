@@ -164,6 +164,13 @@
 - Meta Flow status: **DRAFT**; publish not attempted without accepted assets.
 - Native Flow E2E: **NOT RUN**; guided fallback remains launch path.
 
+## GFS-117-FLOW-MEDIA Update — 2026-10-13
+
+- Admin CMS/media gallery: **PASS implementation**; private R2/D1 controls, bilingual journey ordering and rotation/session selection deployed.
+- Flow asset validation: **PASS**; publication: **BLOCKED** by Meta `#139002/4233014` Endpoint not available.
+- Live encrypted Flow: **BLOCKED**; endpoint diagnostics observed `FLOW_INITIAL_VECTOR_INVALID`, while local crypto tests pass.
+- Native Flow E2E/image delivery: **NOT PROVEN**.
+
 ## GFS-105-LIVE-COMMERCE Update — 2026-10-12
 
 - START: **NOT OBSERVED** after deployment; no customer session was proven available.

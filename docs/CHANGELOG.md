@@ -176,6 +176,11 @@
 - Recorded exact Meta publish blocker `#139002/4233014` Endpoint not available.
 - Added read-only coexistence evidence: `is_on_biz_app=false`, `platform_type=CLOUD_API`; no migration or phone mutation.
 
+## Unreleased - 2026-10-13 (GFS-117)
+
+- Added private-R2/D1 WhatsApp content media gallery and session-stable image selection.
+- Corrected Flow crypto tests; local encrypted tests pass, but live Meta requests still report invalid initial vector and publication remains blocked by endpoint availability.
+
 ## Unreleased - 2026-10-13 (GFS-114)
 
 - Added Graph-first Flow discovery route and created exactly one canonical draft Flow `1133458765899784` after enumeration returned none.

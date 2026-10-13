@@ -367,6 +367,13 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Existing Flow `1133458765899784` validation/upload succeeded, but publish returned exact `#139002/4233014` Endpoint not available. No publish claim is made.
 - Read-only Graph coexistence fields for canonical phone: `is_on_biz_app=false`, `platform_type=CLOUD_API`. In-place Business App coexistence is not verified/eligible from current evidence; no migration was attempted.
 
+## GFS-117 Native Flow and Media Audit
+
+- Canonical Flow asset upload validation: **PASS** (`validation_errors=[]`); Flow ID `1133458765899784`.
+- Meta publish remains blocked with exact `#139002/4233014` Endpoint not available. Key-pair rotation/public registration were completed; Meta endpoint availability remains unresolved.
+- API diagnostics observed `FLOW_INITIAL_VECTOR_INVALID` on Meta encrypted requests; private/public pairing was repaired and redeployed for follow-up.
+- Admin content/media gallery implementation uses private R2 keys, ordered bilingual sections and D1 rotation/session selection. Public/customer image delivery is not claimed.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.
