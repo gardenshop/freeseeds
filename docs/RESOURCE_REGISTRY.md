@@ -177,6 +177,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Admin CMS page renders ordered bilingual templates and private media gallery.
 - Native Flow `1133458765899784` remains Graph PUBLISHED; live device rendering/e2e is unverified.
 
+## GFS-121 Closeout
+
+- Published CMS content is the welcome/locale source of truth; already-published versions are up-to-date and cannot be republished without a draft.
+- Native Flow `1133458765899784` is Graph PUBLISHED; customer-device E2E is not recorded.
+
 ## GFS-114 Flow Graph Evidence
 
 - Canonical WABA Flow ID created via Graph-backed Admin route: `1133458765899784`.

@@ -392,6 +392,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Canonical Flow Graph status is published; native CTA path is deployed but no authorized device/customer Flow interaction was observed in this session.
 - Any stale welcome/image/publish error must be reproduced on the authenticated Admin tab before mutation; no unrelated tab was changed.
 
+## GFS-121 CMS/Native Flow Closeout
+
+- Universal welcome now comes from published bilingual CMS content; language selection is persisted by wa_id.
+- CMS publish lifecycle now returns `Up to date` for already-published versions instead of `WHATSAPP_CONTENT_PUBLISH_REQUIRES_DRAFT`; gallery changes require a new draft.
+- Native Flow is Graph PUBLISHED and local validation/encryption passes; authorized device/customer Flow E2E remains unobserved.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

@@ -197,6 +197,11 @@
 - Verified authenticated Admin CMS renders ordered bilingual templates, private gallery controls and draft/published status.
 - Reconfirmed Graph-published Flow; no device/customer tap evidence was fabricated. Guided chat remains safe fallback.
 
+## Unreleased - 2026-10-13 (GFS-121)
+
+- Fixed CMS publish lifecycle to report already-published versions as up-to-date instead of a generic draft-required error.
+- Preserved draft/publish/rollback history and kept published Flow/guided fallback unchanged.
+
 ## Unreleased - 2026-10-13 (GFS-114)
 
 - Added Graph-first Flow discovery route and created exactly one canonical draft Flow `1133458765899784` after enumeration returned none.

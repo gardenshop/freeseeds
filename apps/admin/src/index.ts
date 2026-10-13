@@ -423,10 +423,11 @@ async function publishWhatsAppContent(c: AdminContext, rollback: boolean) {
   const version = typeof body.version === "number" && Number.isInteger(body.version) && body.version > 0 ? body.version : 0;
   if (!version || body.confirmation !== `${key}:${version}`) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
   const [template, target] = await Promise.all([
-    c.env.DB.prepare("SELECT published_version FROM whatsapp_content_templates WHERE template_key=?").bind(key).first<{ published_version: number | null }>(),
+    c.env.DB.prepare("SELECT published_version,draft_version FROM whatsapp_content_templates WHERE template_key=?").bind(key).first<{ published_version: number | null; draft_version: number | null }>(),
     c.env.DB.prepare("SELECT status,content_en_json,content_ur_json,media_r2_key FROM whatsapp_content_template_versions WHERE template_key=? AND version=?").bind(key, version).first<{ status: string; content_en_json: string; content_ur_json: string; media_r2_key: string | null }>()
   ]);
   if (!template || !target) return c.json({ error: "WHATSAPP_TEMPLATE_VERSION_NOT_FOUND" }, 404);
+  if (!rollback && target.status === "PUBLISHED" && template.published_version === version && template.draft_version === version) return c.json({ ok: true, templateKey: key, version, upToDate: true });
   if ((!rollback && target.status !== "DRAFT") || (rollback && !["PUBLISHED", "ARCHIVED"].includes(target.status))) return c.json({ error: rollback ? "WHATSAPP_CONTENT_ROLLBACK_NOT_ALLOWED" : "WHATSAPP_CONTENT_PUBLISH_REQUIRES_DRAFT" }, 409);
   try { parseWhatsAppContentDraft({ contentEn: JSON.parse(target.content_en_json), contentUr: JSON.parse(target.content_ur_json), ...(target.media_r2_key ? { mediaR2Key: target.media_r2_key } : {}) }); } catch { return c.json({ error: "WHATSAPP_CONTENT_INVALID" }, 409); }
   const now = new Date().toISOString();

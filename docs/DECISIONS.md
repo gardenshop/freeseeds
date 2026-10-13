@@ -134,6 +134,10 @@ START now presents English/Urdu choices and invokes the published Flow after sel
 
 The authenticated Admin CMS now renders correctly with paired EN/UR rows and private gallery controls. Native Flow remains published by Graph but no authorized customer-device interaction was available for live CTA evidence; no tap or customer answer was fabricated.
 
+## 2026-10-13: GFS-121 CMS Publish Guard
+
+Already-published CMS versions now return an explicit up-to-date result; publish remains protected until a fresh draft exists. This prevents stale gallery clicks from producing a generic requires-draft error. Native Flow remains published, but device/customer E2E is a separate evidence gate.
+
 ## 2026-10-13: GFS-117 Flow/Media Boundary
 
 Flow asset validation succeeds, but Meta publish still rejects the endpoint as unavailable. The API observed an invalid-initial-vector result for live encrypted requests; no customer Flow success is claimed. Media gallery work remains private-R2/D1 controlled and does not alter pricing/order logic.

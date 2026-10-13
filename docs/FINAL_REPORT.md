@@ -192,6 +192,13 @@
 - Guided-chat launch: **GO**.
 - Payment/receipt: **not advanced**; no real payment claim.
 
+## GFS-121-CMS-FLOW Closeout — 2026-10-13
+
+- Universal welcome/CMS source: **PASS implementation/deployed**.
+- CMS draft/publish guard: **PASS**; stale publish now reports up-to-date.
+- Native Flow: **PUBLISHED**; live authorized device/customer E2E **UNTESTED**.
+- Guided chat: **GO**; native Flow live launch: **NO-GO pending device evidence**.
+
 ## GFS-105-LIVE-COMMERCE Update — 2026-10-12
 
 - START: **NOT OBSERVED** after deployment; no customer session was proven available.
