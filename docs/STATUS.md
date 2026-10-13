@@ -362,6 +362,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - The corrected uploader is deployed. Upload response was not returned before the MCP invocation ended, so no validation/publish claim is made.
 - Coexistence remains a read-only future study; no phone/provider/migration change was made.
 
+## GFS-116 Flow/Coexistence Audit
+
+- Existing Flow `1133458765899784` validation/upload succeeded, but publish returned exact `#139002/4233014` Endpoint not available. No publish claim is made.
+- Read-only Graph coexistence fields for canonical phone: `is_on_biz_app=false`, `platform_type=CLOUD_API`. In-place Business App coexistence is not verified/eligible from current evidence; no migration was attempted.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

@@ -193,6 +193,7 @@ app.post("/webhooks/whatsapp", async (c) => {
   return c.json({ accepted: true, eventCount, autoReplies });
 });
 
+app.get("/webhooks/whatsapp/flows", (c) => c.json({ data: { status: "active" } }));
 app.post("/webhooks/whatsapp/flows", async (c) => {
   let envelope: MetaFlowEnvelope;
   try {

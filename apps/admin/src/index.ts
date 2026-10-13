@@ -335,6 +335,15 @@ app.get("/api/meta-activation/flows", async (c) => {
   return c.json({ httpStatus: response.status, data, paging: body.paging ?? null, error: body.error && typeof body.error === "object" ? { code: (body.error as Record<string, unknown>).code, message: (body.error as Record<string, unknown>).message } : undefined }, response.ok ? 200 : 400);
 });
 
+app.get("/api/meta-activation/phone-coexistence", async (c) => {
+  if (!authorized(c)) return c.json({ error: "UNAUTHORIZED" }, 401);
+  if (!c.env.META_ACCESS_TOKEN || !c.env.META_PHONE_NUMBER_ID) return c.json({ error: "META_GRAPH_NOT_CONFIGURED" }, 503);
+  const version = c.env.META_GRAPH_VERSION ?? "v26.0";
+  const response = await fetch(`https://graph.facebook.com/${version}/${encodeURIComponent(c.env.META_PHONE_NUMBER_ID)}?fields=is_on_biz_app,platform_type`, { headers: { Authorization: `Bearer ${c.env.META_ACCESS_TOKEN}` } });
+  const body = await response.json().catch(() => ({})) as Record<string, unknown>;
+  return c.json({ httpStatus: response.status, is_on_biz_app: body.is_on_biz_app ?? null, platform_type: body.platform_type ?? null, error: body.error && typeof body.error === "object" ? { code: (body.error as Record<string, unknown>).code, message: (body.error as Record<string, unknown>).message } : undefined }, response.ok ? 200 : 400);
+});
+
 app.post("/api/meta-activation/flows/create", async (c) => {
   if (!authorized(c)) return c.json({ error: "UNAUTHORIZED" }, 401);
   if (!c.env.META_ACCESS_TOKEN || !c.env.META_WABA_ID) return c.json({ error: "META_GRAPH_NOT_CONFIGURED" }, 503);
@@ -365,6 +374,15 @@ app.post("/api/meta-activation/flows/:id/publish", async (c) => {
   const response = await fetch(`https://graph.facebook.com/${version}/${encodeURIComponent(c.req.param("id"))}/publish`, { method: "POST", headers: { Authorization: `Bearer ${c.env.META_ACCESS_TOKEN}` } });
   const result = await response.json().catch(() => ({})) as Record<string, unknown>;
   return c.json({ httpStatus: response.status, result, error: result.error && typeof result.error === "object" ? { code: (result.error as Record<string, unknown>).code, message: (result.error as Record<string, unknown>).message, validation_errors: (result.error as Record<string, unknown>).error_data } : undefined }, response.ok ? 200 : 400);
+});
+
+app.post("/api/meta-activation/flows/:id/endpoint", async (c) => {
+  if (!authorized(c)) return c.json({ error: "UNAUTHORIZED" }, 401);
+  const version = c.env.META_GRAPH_VERSION ?? "v26.0";
+  const endpointUri = "https://getfreeseeds-api-staging.get-free-seeds.workers.dev/webhooks/whatsapp/flows";
+  const response = await fetch(`https://graph.facebook.com/${version}/${encodeURIComponent(c.req.param("id"))}`, { method: "POST", headers: { Authorization: `Bearer ${c.env.META_ACCESS_TOKEN}`, "Content-Type": "application/json" }, body: JSON.stringify({ endpoint_uri: endpointUri }) });
+  const result = await response.json().catch(() => ({})) as Record<string, unknown>;
+  return c.json({ httpStatus: response.status, endpointUri, result, error: result.error && typeof result.error === "object" ? { code: (result.error as Record<string, unknown>).code, subcode: (result.error as Record<string, unknown>).error_subcode, message: (result.error as Record<string, unknown>).message, trace: (result.error as Record<string, unknown>).fbtrace_id } : undefined }, response.ok ? 200 : 400);
 });
 
 app.post("/api/meta-activation/actions/:action", async (c) => {

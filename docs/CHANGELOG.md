@@ -170,6 +170,12 @@
 - Rechecked canonical Flow Manager read-only; the Flow object/status remained unavailable while the surface loaded. No guessed ID or publish mutation was made.
 - Kept guided chat as the launch path and preserved native Flow as a separate publication gate.
 
+## Unreleased - 2026-10-13 (GFS-116)
+
+- Corrected and validated the canonical `flow.json` asset upload.
+- Recorded exact Meta publish blocker `#139002/4233014` Endpoint not available.
+- Added read-only coexistence evidence: `is_on_biz_app=false`, `platform_type=CLOUD_API`; no migration or phone mutation.
+
 ## Unreleased - 2026-10-13 (GFS-114)
 
 - Added Graph-first Flow discovery route and created exactly one canonical draft Flow `1133458765899784` after enumeration returned none.

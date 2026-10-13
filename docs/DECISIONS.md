@@ -122,6 +122,10 @@ Customer messaging copy is now versioned in D1 and managed by protected Admin ra
 
 Local Flow schema/encryption validation cannot substitute for Meta publication. The canonical Flow Manager surface was loading without a safely readable Flow ID/status, so no upload/publish mutation was attempted. Guided chat remains the safe launch path.
 
+## 2026-10-13: GFS-116 Flow/Coexistence
+
+Graph-backed Flow asset validation passed for `1133458765899784`, but Meta publish returned `#139002/4233014` Endpoint not available after endpoint health deployment. Canonical phone coexistence read returned `is_on_biz_app=false`, `platform_type=CLOUD_API`; no migration was attempted.
+
 ## 2026-10-13: GFS-114 Graph Flow Creation
 
 Graph-first recovery found no existing Flow and created exactly one canonical draft `1133458765899784`. Meta returned actionable asset-upload errors (`#100` then `#195/2498084` requiring `flow.json`); publication remains blocked until the corrected asset upload is accepted.

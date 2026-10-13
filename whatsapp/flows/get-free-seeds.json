@@ -14,7 +14,7 @@
     {
       "id": "OFFER",
       "title": "Free Seeds Offer",
-      "data": { "products": { "type": "array", "__example__": [] } },
+      "data": { "products": { "type": "array", "items": { "type": "object", "properties": { "id": { "type": "string" }, "title": { "type": "string" }, "code": { "type": "string" } } }, "__example__": [{ "id": "FREE_5_PACK_VEGETABLE_SEEDS", "title": "Free seed packs", "code": "FREE_5_PACK_VEGETABLE_SEEDS" }] } },
       "layout": { "type": "SingleColumnLayout", "children": [
         { "type": "TextHeading", "text": "Get 5 Seed Packs FREE" },
         { "type": "TextBody", "text": "Select the available seed offer to continue." },
@@ -38,7 +38,7 @@
     {
       "id": "PROVINCE",
       "title": "Delivery Province",
-      "data": { "provinces": { "type": "array", "__example__": [] } },
+      "data": { "provinces": { "type": "array", "items": { "type": "object", "properties": { "id": { "type": "string" }, "title": { "type": "string" } } }, "__example__": [{ "id": "Punjab", "title": "Punjab" }] } },
       "layout": { "type": "SingleColumnLayout", "children": [
         { "type": "Form", "name": "province_form", "children": [
           { "type": "Dropdown", "name": "province", "label": "Province", "required": true, "data-source": "${data.provinces}" },

@@ -149,6 +149,13 @@
 - Guided-chat launch: **GO** for backend/order path.
 - Native Flow launch: **NO-GO** until Meta exposes validated Flow object/status and permits publication.
 
+## GFS-116-FLOW-COEXISTENCE Update — 2026-10-13
+
+- Flow upload/validation: **PASS**; Flow ID `1133458765899784`.
+- Flow publish: **FAIL/BLOCKED** — Meta `#139002/4233014` Endpoint not available.
+- Native CTA/E2E: **NOT RUN**.
+- Coexistence: **NO-GO/UNVERIFIED** — `is_on_biz_app=false`, `platform_type=CLOUD_API`; no migration attempted.
+
 ## GFS-114-GRAPH-FLOW Update — 2026-10-13
 
 - Flow ID discovered: **1133458765899784**.
