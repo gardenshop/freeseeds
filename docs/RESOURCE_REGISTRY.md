@@ -167,6 +167,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Flow schema uses only `id`/`title` dropdown item properties; runtime catalog payload matches.
 - Encryption key pair was rotated and registered; private key remains Cloudflare secret-only.
 
+## GFS-119 Language Routing
+
+- `LANG_EN`/`LANG_UR` are stable conversation intents; selected language is stored in conversation state and does not alter tariffs/order logic.
+- Flow CTA uses published Flow `1133458765899784` with a session-scoped token; no credential is stored.
+
 ## GFS-114 Flow Graph Evidence
 
 - Canonical WABA Flow ID created via Graph-backed Admin route: `1133458765899784`.

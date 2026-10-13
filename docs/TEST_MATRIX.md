@@ -87,6 +87,7 @@
 | GFS-117 encrypted Flow | Meta request/decrypt/encrypt round trip | BLOCKED live: `FLOW_INITIAL_VECTOR_INVALID` observed; local tests pass |
 | GFS-118 Flow publication | corrected schema, key pair, asset upload, Graph publish/status | PASS: Flow `1133458765899784` PUBLISHED; validation errors empty |
 | GFS-118 native device E2E | published CTA/screens/order/payment | UNTESTED: authorized device interaction unavailable |
+| GFS-119 language routing | LANG_EN/LANG_UR state persistence and published Flow CTA | PASS implementation/deployment; live device session pending |
 | GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |
 | GFS-98 token recovery | owner-installed secret → Graph ladder → API/Admin readiness | PASS fresh token; no token value inspected |
 | GFS-98 atomic reply | one failed event retry, outbound ID, status webhook, no duplicate | PASS: WAMID persisted, SENT status persisted, duplicate count 0 |

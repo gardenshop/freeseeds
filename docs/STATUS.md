@@ -381,6 +381,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Existing Flow `1133458765899784` asset upload returned `success=true`, validation errors empty; Graph publish returned `success=true`; subsequent Graph status is `PUBLISHED`.
 - Native customer CTA/device E2E remains untested; guided chat remains the safe fallback.
 
+## GFS-119 Language-First Flow Routing
+
+- START now routes to bilingual English/Urdu language buttons; language selection persists on the verified wa_id and sends the published Flow CTA with a session-scoped token.
+- Native Flow remains Graph `PUBLISHED`; guided chat remains fallback. Live customer CTA/device E2E is not yet observed.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

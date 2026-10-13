@@ -187,6 +187,11 @@
 - Rotated/re-paired Flow encryption keys and corrected 16-byte request/inverted response IV handling.
 - Uploaded and published existing Flow `1133458765899784`; Graph status is PUBLISHED with empty validation errors.
 
+## Unreleased - 2026-10-13 (GFS-119)
+
+- Added language-first START routing with stable `LANG_EN`/`LANG_UR` actions and published Flow CTA session tokens.
+- Preserved guided chat fallback, cooldown, D1 pricing and order idempotency. Live device E2E remains untested.
+
 ## Unreleased - 2026-10-13 (GFS-114)
 
 - Added Graph-first Flow discovery route and created exactly one canonical draft Flow `1133458765899784` after enumeration returned none.
