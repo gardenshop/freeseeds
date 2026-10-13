@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { selectPublishedWhatsAppContentMedia } from "./whatsapp-media";
 
 export const WHATSAPP_TEMPLATE_KEYS = [
   "WELCOME",
@@ -73,11 +74,19 @@ export function renderWhatsAppContent(template: string, values: Partial<Record<(
   });
 }
 
-export async function publishedWhatsAppContent(db: D1Database, key: WhatsAppTemplateKey, locale: "en" | "ur" = "en"): Promise<(WhatsAppContent & { mediaR2Key?: string }) | undefined> {
+export async function publishedWhatsAppContent(db: D1Database, key: WhatsAppTemplateKey, locale: "en" | "ur" = "en", sessionKey?: string): Promise<(WhatsAppContent & { mediaId?: string; mediaR2Key?: string; mediaMimeType?: string }) | undefined> {
   const row = await db.prepare("SELECT v.content_en_json,v.content_ur_json,v.media_r2_key FROM whatsapp_content_templates t JOIN whatsapp_content_template_versions v ON v.template_key=t.template_key AND v.version=t.published_version WHERE t.template_key=? AND t.published_version IS NOT NULL").bind(key).first<{ content_en_json: string; content_ur_json: string; media_r2_key: string | null }>();
   if (!row) return undefined;
   try {
     const content = validateContent(JSON.parse(locale === "ur" ? row.content_ur_json : row.content_en_json) as WhatsAppContent);
+    if (sessionKey) {
+      try {
+        const media = await selectPublishedWhatsAppContentMedia(db, key, sessionKey);
+        if (media) return { ...content, mediaId: media.id, mediaR2Key: media.r2Key, mediaMimeType: media.mimeType };
+      } catch {
+        // Older databases remain text-capable until additive migration 0017 is applied.
+      }
+    }
     return { ...content, ...(row.media_r2_key ? { mediaR2Key: row.media_r2_key } : {}) };
   } catch {
     return undefined;

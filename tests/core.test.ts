@@ -51,6 +51,7 @@ describe("Get Free Seeds domain", () => {
   });
   it("validates receipt media", () => { expect(() => validateReceipt("image/png", 10)).not.toThrow(); expect(() => validateReceipt("text/html", 10)).toThrow(); });
   it("uses a provider boundary with a mock", async () => { const provider = new MockWhatsAppProvider(); await provider.sendText("synthetic", "Payment received for verification"); expect(provider.sent[0]?.kind).toBe("text"); });
+  it("keeps private content images inside the provider boundary", async () => { const provider = new MockWhatsAppProvider(); await provider.sendInteractive("synthetic", "Choose", ["Continue"], { body: new Uint8Array([255, 216, 255, 224]).buffer, mimeType: "image/jpeg" }); expect(provider.sent[0]?.kind).toBe("interactive-image"); });
   it("sends Meta-compatible Flow parameters", async () => {
     const originalFetch = globalThis.fetch;
     let payload: Record<string, unknown> | undefined;
@@ -62,6 +63,25 @@ describe("Get Free Seeds domain", () => {
       const provider = new MetaWhatsAppProvider({ enabled: true, graphVersion: "v26.0", phoneNumberId: "synthetic-phone", accessToken: "synthetic-token" });
       await provider.sendFlow("synthetic-recipient", "synthetic-flow", "synthetic-flow-token");
       expect(payload).toMatchObject({ type: "interactive", interactive: { type: "flow", action: { name: "flow", parameters: { flow_id: "synthetic-flow", flow_token: "synthetic-flow-token", flow_message_version: "3", flow_cta: "Get Free Seeds", mode: "published" } } } });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("uploads private content media before sending an interactive image header", async () => {
+    const originalFetch = globalThis.fetch;
+    const requests: Array<{ url: string; body: unknown }> = [];
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      requests.push({ url, body: typeof init?.body === "string" ? JSON.parse(init.body) : init?.body });
+      return url.endsWith("/media") ? new Response(JSON.stringify({ id: "synthetic-media-id" }), { status: 200 }) : new Response(JSON.stringify({ messages: [{ id: "synthetic-message-id" }] }), { status: 200 });
+    }) as typeof fetch;
+    try {
+      const provider = new MetaWhatsAppProvider({ enabled: true, graphVersion: "v26.0", phoneNumberId: "synthetic-phone", accessToken: "synthetic-token" });
+      await provider.sendInteractive("synthetic-recipient", "Synthetic offer", [{ id: "CONTINUE", title: "Continue" }], { body: new Uint8Array([255, 216, 255, 224]).buffer, mimeType: "image/jpeg" });
+      expect(requests).toHaveLength(2);
+      expect(requests[0]?.url).toContain("synthetic-phone/media");
+      expect(requests[1]?.body).toMatchObject({ type: "interactive", interactive: { header: { type: "image", image: { id: "synthetic-media-id" } } } });
     } finally {
       globalThis.fetch = originalFetch;
     }

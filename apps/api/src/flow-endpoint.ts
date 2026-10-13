@@ -1,4 +1,4 @@
-import { FlowCustomerDetails, FlowOrderSelection, MetaFlowPayload, parseFlowSubmission, persistFlowSubmission, quoteOrder, PaymentMethod, selectPaymentMethod, getPersistedOrderSummary, configuredPaymentMethodNames, parseFertilizerDecision } from "@gfs/core";
+import { FlowCustomerDetails, FlowOrderSelection, MetaFlowPayload, parseFlowSubmission, persistFlowSubmission, quoteOrder, PaymentMethod, selectPaymentMethod, getPersistedOrderSummary, configuredPaymentMethodNames, parseFertilizerDecision, selectPublishedWhatsAppContentMedia, WhatsAppTemplateKey } from "@gfs/core";
 
 const CUSTOMER_FIELDS = ["fullName", "deliveryAddress", "nearbyPlace", "city", "contactNumber"] as const;
 const ORDER_FIELDS = ["productCode", "province", "fertilizerSelected", "orderId", "fertilizerDecision", "paymentMethod"] as const;
@@ -31,6 +31,29 @@ function screenName(payload: MetaFlowPayload): string {
 
 function protocolResponse(screen: string, data: FlowData): MetaFlowPayload {
   return { version: "3.0", screen, data };
+}
+
+const SCREEN_MEDIA: Partial<Record<string, WhatsAppTemplateKey>> = {
+  OFFER: "OFFER",
+  FERTILIZER: "FERTILIZER",
+  PROVINCE: "PROVINCE_DELIVERY",
+  DELIVERY_FORM: "FIELD_FULL_NAME",
+  REVIEW: "REVIEW",
+  CONFIRM: "CONFIRMATION",
+  PAYMENT_METHOD: "PAYMENT",
+  PAYMENT_DETAILS: "PAYMENT"
+};
+
+async function screenResponse(screen: string, data: FlowData, payload: MetaFlowPayload, db?: D1Database): Promise<MetaFlowPayload> {
+  const token = typeof payload.flow_token === "string" ? payload.flow_token.trim() : "";
+  const templateKey = SCREEN_MEDIA[screen];
+  if (!db || !token || token.length > 200 || !templateKey) return protocolResponse(screen, data);
+  try {
+    const media = await selectPublishedWhatsAppContentMedia(db, templateKey, `FLOW:${token}`);
+    return protocolResponse(screen, { ...data, ...(media ? { contentMediaId: media.id } : {}) });
+  } catch {
+    return protocolResponse(screen, data);
+  }
 }
 
 function protocolError(code: string, screen?: string): MetaFlowPayload {
@@ -116,39 +139,39 @@ export async function handleMetaFlowPayload(payload: MetaFlowPayload, db?: D1Dat
   const action = actionName(payload);
   const screen = screenName(payload);
   if (action === "PING" || payload.health_check === "ping") return { version: "3.0", data: { status: "active" } };
-  if (action === "INIT") return protocolResponse("OFFER", db ? await catalogData(db) : { products: [], provinces: [] });
+  if (action === "INIT") return screenResponse("OFFER", db ? await catalogData(db) : { products: [], provinces: [] }, payload, db);
   if (action !== "DATA_EXCHANGE" && action !== "NAVIGATE") return protocolError("FLOW_ACTION_UNSUPPORTED", screen || undefined);
 
   const data = dataFromPayload(payload);
   try {
     if (screen === "OFFER") {
       if (typeof data.productCode !== "string" || !data.productCode.trim()) throw new Error("PRODUCT_REQUIRED");
-      return protocolResponse("FERTILIZER", { productCode: data.productCode.trim() });
+      return screenResponse("FERTILIZER", { productCode: data.productCode.trim() }, payload, db);
     }
     if (screen === "FERTILIZER") {
       if (typeof data.productCode !== "string" || !data.productCode.trim()) throw new Error("PRODUCT_REQUIRED");
       const fertilizerSelected = parseFertilizerDecision(data.fertilizerDecision ?? data.fertilizerSelected);
-      return protocolResponse("PROVINCE", { productCode: data.productCode.trim(), fertilizerSelected, ...(db ? await catalogData(db) : { provinces: [] }) });
+      return screenResponse("PROVINCE", { productCode: data.productCode.trim(), fertilizerSelected, ...(db ? await catalogData(db) : { provinces: [] }) }, payload, db);
     }
     if (screen === "PROVINCE") {
       const selection = parseSelection(data);
       if (!db) return protocolError("ORDER_QUOTE_UNAVAILABLE", screen);
       const quote = await quoteOrder(db, selection);
-      return protocolResponse("DELIVERY_FORM", { ...selection, quote: quoteData(quote) });
+      return screenResponse("DELIVERY_FORM", { ...selection, quote: quoteData(quote) }, payload, db);
     }
     if (screen === "DELIVERY_FORM") {
       const customer = parseCustomer(data);
       const selection = parseSelection(data);
       if (!db) return protocolError("ORDER_QUOTE_UNAVAILABLE", screen);
       const quote = await quoteOrder(db, selection);
-      return protocolResponse("REVIEW", { ...customer, ...selection, quote: quoteData(quote) });
+      return screenResponse("REVIEW", { ...customer, ...selection, quote: quoteData(quote) }, payload, db);
     }
     if (screen === "REVIEW") {
       const customer = parseCustomer(data);
       const selection = parseSelection(data);
       if (!db) return protocolError("ORDER_QUOTE_UNAVAILABLE", screen);
       const quote = await quoteOrder(db, selection);
-      return protocolResponse("CONFIRM", { ...customer, ...selection, quote: quoteData(quote) });
+      return screenResponse("CONFIRM", { ...customer, ...selection, quote: quoteData(quote) }, payload, db);
     }
     if (screen === "CONFIRM") {
       const customer = parseCustomer(data);
@@ -156,7 +179,7 @@ export async function handleMetaFlowPayload(payload: MetaFlowPayload, db?: D1Dat
       if (!db) return protocolError("ORDER_PERSISTENCE_UNAVAILABLE", screen);
       const result = await persistFlowSubmission(db, parseFlowSubmission({ ...customer, ...selection }), undefined, flowIdempotencyKey(payload));
       const summary = result.quote ? { ...quoteData(result.quote), orderId: result.orderId, orderNumber: result.orderNumber } : { orderId: result.orderId, orderNumber: result.orderNumber, paymentMethods: [] };
-      return protocolResponse("PAYMENT_METHOD", { submitted: true, orderId: result.orderId, orderNumber: result.orderNumber, orderSummary: summary, paymentMethods: result.quote?.paymentMethods ?? [], paymentMethodOptions: (result.quote?.paymentMethods ?? []).map((name) => ({ id: name, title: name })) });
+      return screenResponse("PAYMENT_METHOD", { submitted: true, orderId: result.orderId, orderNumber: result.orderNumber, orderSummary: summary, paymentMethods: result.quote?.paymentMethods ?? [], paymentMethodOptions: (result.quote?.paymentMethods ?? []).map((name) => ({ id: name, title: name })) }, payload, db);
     }
     if (screen === "PAYMENT_METHOD") {
       if (!db || typeof data.orderId !== "string" || !data.orderId.trim()) return protocolError("ORDER_ID_REQUIRED", screen);
@@ -164,7 +187,7 @@ export async function handleMetaFlowPayload(payload: MetaFlowPayload, db?: D1Dat
       try { method = PaymentMethod.parse(typeof data.paymentMethod === "string" ? data.paymentMethod.toUpperCase() : data.paymentMethod); } catch { throw new Error("PAYMENT_METHOD_REQUIRED"); }
       const result = await selectPaymentMethod(db, data.orderId, method);
       const summary = await getPersistedOrderSummary(db, data.orderId);
-      return protocolResponse("PAYMENT_DETAILS", { orderId: data.orderId, orderNumber: result.orderNumber, amount: result.amount, method: result.config.method, message: result.message, qrAvailable: Boolean(result.config.qrR2Key), orderSummary: summary, paymentMethods: summary.paymentMethods, paymentMethodOptions: summary.paymentMethods.map((name) => ({ id: name, title: name })) });
+      return screenResponse("PAYMENT_DETAILS", { orderId: data.orderId, orderNumber: result.orderNumber, amount: result.amount, method: result.config.method, message: result.message, qrAvailable: Boolean(result.config.qrR2Key), orderSummary: summary, paymentMethods: summary.paymentMethods, paymentMethodOptions: summary.paymentMethods.map((name) => ({ id: name, title: name })) }, payload, db);
     }
     if (screen === "PAYMENT_DETAILS") {
       return protocolResponse("PAYMENT_DETAILS", data);

@@ -10,6 +10,16 @@ describe("GFS-111 WhatsApp content admin", () => {
     expect((await app.fetch(new Request("https://admin.example.test/api/whatsapp-content"), env)).status).toBe(403);
   });
 
+  it("renders the protected multiple-image gallery controls and local optimizer", async () => {
+    const response = await app.fetch(new Request("https://admin.example.test/whatsapp-content", { headers: auth }), env);
+    const html = await response.text();
+    expect(response.status).toBe(200);
+    expect(html).toContain("multiple accept=\"image/png,image/jpeg,image/webp\"");
+    expect(html).toContain("createImageBitmap");
+    expect(html).toContain("Set active");
+    expect(html).toContain("softDisabled");
+  });
+
   it("keeps private content-media uploads CSRF-protected", async () => {
     const response = await app.fetch(new Request("https://admin.example.test/api/whatsapp-content/media", { method: "POST", headers: auth, body: new Uint8Array([137, 80, 78, 71]) }), env);
     expect(response.status).toBe(403);
