@@ -351,6 +351,7 @@ app.post("/api/meta-activation/flows/:id/assets", async (c) => {
   if (!body.flowJson || typeof body.flowJson !== "object") return c.json({ error: "FLOW_JSON_REQUIRED" }, 400);
   const form = new FormData();
   form.append("asset_type", "FLOW_JSON");
+  form.append("name", "flow.json");
   form.append("file", new Blob([JSON.stringify(body.flowJson)], { type: "application/json" }), "flow.json");
   const version = c.env.META_GRAPH_VERSION ?? "v26.0";
   const response = await fetch(`https://graph.facebook.com/${version}/${encodeURIComponent(flowId)}/assets`, { method: "POST", headers: { Authorization: `Bearer ${c.env.META_ACCESS_TOKEN}` }, body: form });

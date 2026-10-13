@@ -356,6 +356,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - First asset upload error was exact Meta `#100`: name parameter required; corrected upload shape then returned exact `#195` / subcode `2498084`: FLOW_JSON asset name must be `flow.json`.
 - No publish claim was made; Flow remains DRAFT pending successful asset upload/validation and publish.
 
+## GFS-115 Multipart Flow Upload Fix
+
+- Admin Graph uploader now sends both multipart `name=flow.json` and file filename `flow.json` with `asset_type=FLOW_JSON`.
+- The corrected uploader is deployed. Upload response was not returned before the MCP invocation ended, so no validation/publish claim is made.
+- Coexistence remains a read-only future study; no phone/provider/migration change was made.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.
