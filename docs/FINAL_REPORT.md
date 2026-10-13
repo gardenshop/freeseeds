@@ -142,6 +142,13 @@
 - Native Flow screens/publication: **DRAFT/UNTESTED**.
 - Android/iOS/Desktop evidence: **UNTESTED**.
 
+## GFS-113-NATIVE-FLOW Update — 2026-10-13
+
+- Native Flow validation: **local PASS**, Meta publication evidence **not available**.
+- Flow ID/status: **UNVERIFIED**; canonical Manager surface remained loading.
+- Guided-chat launch: **GO** for backend/order path.
+- Native Flow launch: **NO-GO** until Meta exposes validated Flow object/status and permits publication.
+
 ## GFS-105-LIVE-COMMERCE Update — 2026-10-12
 
 - START: **NOT OBSERVED** after deployment; no customer session was proven available.

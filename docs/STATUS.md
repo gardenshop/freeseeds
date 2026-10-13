@@ -344,6 +344,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Existing order `FS-261012-000002` is `PAYMENT_REVIEW`; no PAID/CAPI/fulfillment status is inferred.
 - Native Meta Flow remains separately DRAFT; no native Flow device E2E claim is made.
 
+## GFS-113 Native Flow Gate
+
+- Canonical Meta Flow Manager remained loading/without an accessible Flow object during the read-only MCP attempt; no guessed Flow ID or mutation was made.
+- Local encrypted Flow JSON/endpoint tests remain PASS, but they are not Meta publication evidence. Native Flow is DRAFT/UNPUBLISHED until Meta exposes a validated Flow ID/status.
+- Guided-chat commerce remains the launch path; no campaign or spend action was taken.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

@@ -165,6 +165,11 @@
 - Extended protected payment settings with customer-visible copy fields while retaining existing values.
 - Reconciled live guided-chat evidence: order `FS-261012-000003`, Punjab with fertilizer, dynamic PKR 500, awaiting payment-method selection.
 
+## Unreleased - 2026-10-13 (GFS-113)
+
+- Rechecked canonical Flow Manager read-only; the Flow object/status remained unavailable while the surface loaded. No guessed ID or publish mutation was made.
+- Kept guided chat as the launch path and preserved native Flow as a separate publication gate.
+
 ## Unreleased - 2026-10-11 (GFS-92)
 
 - Rechecked active server-side Graph token ladder; `/me`, permissions, phone, and WABA reads all return HTTP 401 despite secret/deployment presence.

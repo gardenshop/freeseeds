@@ -156,6 +156,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - `whatsapp_content_templates`/`whatsapp_content_template_versions` are the customer-copy source of truth. Action IDs and dynamic tariff/payment logic are excluded from free-text editing.
 - Live guided-chat evidence: `FS-261012-000003`, Punjab, fertilizer selected, PKR 500, awaiting JazzCash method selection.
 
+## GFS-113 Native Flow Registry
+
+- Canonical WABA `2616648355452496`; Flow object ID/status not safely available from the loading Meta Manager surface.
+- Local Flow definition and encrypted endpoint remain repository/runtime assets only; publication is not claimed.
+
 ## GFS-92 Token Runtime Gate
 
 - API/admin secret names remain present, but current server-side Graph ladder returns HTTP 401; values are never read or recorded.

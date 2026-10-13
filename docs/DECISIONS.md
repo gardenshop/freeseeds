@@ -118,6 +118,10 @@ Cooldown exemption and conversation reset are separate D1/admin concepts. `/test
 
 Customer messaging copy is now versioned in D1 and managed by protected Admin rather than code deployment. Private content media is referenced only by constrained R2 keys. Current D1 evidence shows a subsequent real guided-chat order `FS-261012-000003` at PKR 500 for Punjab with fertilizer selected and payment-method selection pending. This is guided-chat evidence, not native Meta Flow publication evidence.
 
+## 2026-10-13: GFS-113 Native Flow Boundary
+
+Local Flow schema/encryption validation cannot substitute for Meta publication. The canonical Flow Manager surface was loading without a safely readable Flow ID/status, so no upload/publish mutation was attempted. Guided chat remains the safe launch path.
+
 ## 2026-10-11: GFS-92 Token Validation Order
 
 The activation console server-side ladder now returns HTTP 401 for `/me`, permissions, phone, and WABA reads. This is an authoritative runtime token rejection despite secret-name/deployment presence. No blind rotation or duplicate customer message was performed; the only remaining protected action is canonical token replacement.

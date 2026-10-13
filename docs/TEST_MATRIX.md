@@ -77,6 +77,8 @@
 | GFS-111 content CMS | versioned EN/UR draft/publish/rollback, private media, audit/CSRF | PASS 70 tests and staging deployment |
 | GFS-111 live guided chat | real inbound/outbound WAMIDs, dynamic order/quote | PASS D1 evidence: `FS-261012-000003`, PKR 500, PAYMENT_METHOD |
 | GFS-111 native Flow | published Flow CTA/screen/device E2E | DRAFT/UNTESTED |
+| GFS-113 Meta publication | validated canonical Flow ID/status and publish evidence | BLOCKED: Meta Flow Manager object/status unavailable from loading surface |
+| GFS-113 guided launch | deployed tap/text guided backend and D1 order path | PASS implementation; native Flow separate |
 | GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |
 | GFS-98 token recovery | owner-installed secret → Graph ladder → API/Admin readiness | PASS fresh token; no token value inspected |
 | GFS-98 atomic reply | one failed event retry, outbound ID, status webhook, no duplicate | PASS: WAMID persisted, SENT status persisted, duplicate count 0 |
