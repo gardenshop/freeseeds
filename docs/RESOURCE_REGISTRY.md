@@ -161,6 +161,12 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Canonical WABA `2616648355452496`; Flow object ID/status not safely available from the loading Meta Manager surface.
 - Local Flow definition and encrypted endpoint remain repository/runtime assets only; publication is not claimed.
 
+## GFS-118 Published Flow
+
+- Flow `1133458765899784`: Graph status `PUBLISHED`, validation errors empty.
+- Flow schema uses only `id`/`title` dropdown item properties; runtime catalog payload matches.
+- Encryption key pair was rotated and registered; private key remains Cloudflare secret-only.
+
 ## GFS-114 Flow Graph Evidence
 
 - Canonical WABA Flow ID created via Graph-backed Admin route: `1133458765899784`.

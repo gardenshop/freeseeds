@@ -171,6 +171,14 @@
 - Live encrypted Flow: **BLOCKED**; endpoint diagnostics observed `FLOW_INITIAL_VECTOR_INVALID`, while local crypto tests pass.
 - Native Flow E2E/image delivery: **NOT PROVEN**.
 
+## GFS-118-FLOW-PUBLISHED Update — 2026-10-13
+
+- Flow JSON/schema: **PASS**; unsupported dropdown `code` removed.
+- Flow encryption: **PASS implementation/deployed**; paired keys and corrected IV protocol.
+- Flow asset upload: **PASS**; validation errors empty.
+- Flow publication: **PASS** — Graph reports `PUBLISHED` for `1133458765899784`.
+- Native CTA/device E2E: **UNTESTED**; guided-chat fallback remains available.
+
 ## GFS-105-LIVE-COMMERCE Update — 2026-10-12
 
 - START: **NOT OBSERVED** after deployment; no customer session was proven available.

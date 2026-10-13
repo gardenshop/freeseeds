@@ -181,6 +181,12 @@
 - Added private-R2/D1 WhatsApp content media gallery and session-stable image selection.
 - Corrected Flow crypto tests; local encrypted tests pass, but live Meta requests still report invalid initial vector and publication remains blocked by endpoint availability.
 
+## Unreleased - 2026-10-13 (GFS-118)
+
+- Removed unsupported Flow dropdown item `code` properties and aligned runtime catalog payload to `id`/`title`.
+- Rotated/re-paired Flow encryption keys and corrected 16-byte request/inverted response IV handling.
+- Uploaded and published existing Flow `1133458765899784`; Graph status is PUBLISHED with empty validation errors.
+
 ## Unreleased - 2026-10-13 (GFS-114)
 
 - Added Graph-first Flow discovery route and created exactly one canonical draft Flow `1133458765899784` after enumeration returned none.

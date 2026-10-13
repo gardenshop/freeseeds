@@ -14,7 +14,7 @@
     {
       "id": "OFFER",
       "title": "Free Seeds Offer",
-      "data": { "products": { "type": "array", "items": { "type": "object", "properties": { "id": { "type": "string" }, "title": { "type": "string" }, "code": { "type": "string" } } }, "__example__": [{ "id": "FREE_5_PACK_VEGETABLE_SEEDS", "title": "Free seed packs", "code": "FREE_5_PACK_VEGETABLE_SEEDS" }] } },
+      "data": { "products": { "type": "array", "items": { "type": "object", "properties": { "id": { "type": "string" }, "title": { "type": "string" } } }, "__example__": [{ "id": "FREE_5_PACK_VEGETABLE_SEEDS", "title": "Free seed packs" }] } },
       "layout": { "type": "SingleColumnLayout", "children": [
         { "type": "TextHeading", "text": "Get 5 Seed Packs FREE" },
         { "type": "TextBody", "text": "Select the available seed offer to continue." },

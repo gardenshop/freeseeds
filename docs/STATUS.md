@@ -374,6 +374,13 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - API diagnostics observed `FLOW_INITIAL_VECTOR_INVALID` on Meta encrypted requests; private/public pairing was repaired and redeployed for follow-up.
 - Admin content/media gallery implementation uses private R2 keys, ordered bilingual sections and D1 rotation/session selection. Public/customer image delivery is not claimed.
 
+## GFS-118 Native Flow Published
+
+- Removed unsupported Dropdown item `code` properties from Flow data schema and runtime catalog payload.
+- Rotated and paired Flow RSA secrets, registered the matching public key, and corrected Meta encryption protocol to 16-byte IV/request plus inverted response IV.
+- Existing Flow `1133458765899784` asset upload returned `success=true`, validation errors empty; Graph publish returned `success=true`; subsequent Graph status is `PUBLISHED`.
+- Native customer CTA/device E2E remains untested; guided chat remains the safe fallback.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

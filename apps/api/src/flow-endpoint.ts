@@ -106,7 +106,7 @@ async function catalogData(db: D1Database): Promise<FlowData> {
       configuredPaymentMethodNames(db)
     ]);
     return {
-      products: (products.results ?? []).map((product) => ({ id: product.code, title: product.name, code: product.code })),
+      products: (products.results ?? []).map((product) => ({ id: product.code, title: product.name })),
       provinces: (provinces.results ?? []).map((province) => ({ id: province.province, title: province.province })),
       paymentMethods: paymentMethods.map((name) => ({ id: name, title: name })),
       paymentMethodNames: paymentMethods

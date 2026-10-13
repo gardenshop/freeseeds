@@ -130,6 +130,10 @@ Graph-backed Flow asset validation passed for `1133458765899784`, but Meta publi
 
 Flow asset validation succeeds, but Meta publish still rejects the endpoint as unavailable. The API observed an invalid-initial-vector result for live encrypted requests; no customer Flow success is claimed. Media gallery work remains private-R2/D1 controlled and does not alter pricing/order logic.
 
+## 2026-10-13: GFS-118 Flow Publication
+
+Removed the unsupported dropdown `code` property, repaired RSA Flow request/response IV handling and re-paired public/private keys. Meta accepted the existing Flow asset and publish request; Graph now reports `PUBLISHED` with no validation errors. Native device E2E remains a separate evidence gate.
+
 ## 2026-10-13: GFS-114 Graph Flow Creation
 
 Graph-first recovery found no existing Flow and created exactly one canonical draft `1133458765899784`. Meta returned actionable asset-upload errors (`#100` then `#195/2498084` requiring `flow.json`); publication remains blocked until the corrected asset upload is accepted.
