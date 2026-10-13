@@ -32,8 +32,8 @@ type ConversationData = { language?: "en" | "ur"; fullName?: string; deliveryAdd
 
 type ConversationReplyOptions = { buttons?: InteractiveButton[]; list?: { buttonText: string; rows: Array<{ id: string; title: string; description?: string }> }; image?: OutboundImage; flow?: { id: string; token: string } };
 
-async function contentFor(db: D1Database, key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string } = {}, sessionKey?: string) {
-  const content = await publishedWhatsAppContent(db, key, "en", sessionKey);
+async function contentFor(db: D1Database, key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string } = {}, sessionKey?: string, locale: "en" | "ur" = "en") {
+  const content = await publishedWhatsAppContent(db, key, locale, sessionKey);
   return {
     text: renderWhatsAppContent(content?.text ?? fallback, values),
     buttonLabel: content?.buttonLabel,
@@ -94,7 +94,7 @@ async function sendConversationReply(db: D1Database, provider: ReturnType<typeof
 }
 
 async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }): Promise<boolean> {
-  const sessionContent = (key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string } = {}) => contentFor(db, key, fallback, values, `CHAT:${event.from}`);
+  const sessionContent = (key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string } = {}) => contentFor(db, key, fallback, values, `CHAT:${event.from}`, data.language ?? "en");
   const message = event.payload && typeof event.payload === "object" ? event.payload as { text?: { body?: string }; interactive?: { button_reply?: { id?: string; title?: string }; list_reply?: { id?: string; title?: string }; nfm_reply?: { response_json?: string } }; button?: { payload?: string; text?: string } } : {};
   const interaction = message.interactive?.button_reply ?? message.interactive?.list_reply;
   const interactionId = interaction?.id ?? message.button?.payload;
@@ -112,7 +112,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   else if (normalized === "BACK" && state === "REVIEW") { nextState = "CONTACT"; reply = "Please re-enter your contact number."; }
   else if (/^(STATUS|CHECK_ORDER)$/i.test(normalized)) { const order = await getLatestOrderForWaId(db, event.from, data.orderId); const status = await sessionContent("ORDER_STATUS", "Use Check Order to see the current order and payment status."); const paymentStatusCopy = order ? await paymentCopyForOrder(db, order.id, "status_copy") : undefined; reply = order ? `${paymentStatusCopy ?? status.text}\n${formatCustomerOrderStatus(order)}` : "No order was found for this WhatsApp conversation."; }
   else if (/^(HELP|SUPPORT)$/i.test(normalized)) { reply = (await sessionContent("SUPPORT", "Reply START to begin, STATUS to check an order, or CANCEL to stop the current order entry.")).text; }
-  else if (state === "NEW" && normalized === "START") { nextState = "LANGUAGE"; reply = "Welcome to Get Free Seeds! / گٹ فری سیڈز میں خوش آمدید! Choose your language."; }
+  else if (state === "NEW" && (normalized === "START" || Boolean(text))) { nextState = "LANGUAGE"; reply = "Welcome to Get Free Seeds! / گٹ فری سیڈز میں خوش آمدید! Choose your language."; }
   else if (state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) { data.language = normalized === "LANG_UR" ? "ur" : "en"; nextState = "FLOW_ACTIVE"; reply = normalized === "LANG_UR" ? "آپ کا آرڈر شروع ہو رہا ہے۔" : "Your order is starting."; }
   else if (state === "NEW" && normalized === "GET_FREE_PACKS") { nextState = "FERTILIZER"; reply = (await sessionContent("OFFER", "Get 5 seed packs FREE. Choose your option to continue.")).text; }
   else if (state === "FULL_NAME") { data.fullName = text; nextState = "ADDRESS"; reply = (await sessionContent("FIELD_DELIVERY_ADDRESS", "Please reply with your complete delivery address.")).text; }
