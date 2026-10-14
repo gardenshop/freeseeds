@@ -98,6 +98,19 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   const message = event.payload && typeof event.payload === "object" ? event.payload as { text?: { body?: string }; interactive?: { button_reply?: { id?: string; title?: string }; list_reply?: { id?: string; title?: string }; nfm_reply?: { response_json?: string } }; button?: { payload?: string; text?: string } } : {};
   const interaction = message.interactive?.button_reply ?? message.interactive?.list_reply;
   const interactionId = interaction?.id ?? message.button?.payload;
+  if (message.interactive?.nfm_reply?.response_json) {
+    try {
+      const flowData = JSON.parse(message.interactive.nfm_reply.response_json) as { orderNumber?: string; orderId?: string; submitted?: boolean };
+      if (flowData.orderId || flowData.orderNumber) {
+        const existing = await db.prepare("SELECT state_data FROM whatsapp_conversations WHERE wa_id=?").bind(event.from).first<{ state_data: string }>();
+        let stateData: Record<string, unknown> = {};
+        try { stateData = existing?.state_data ? JSON.parse(existing.state_data) as Record<string, unknown> : {}; } catch { stateData = {}; }
+        Object.assign(stateData, { orderId: flowData.orderId, orderNumber: flowData.orderNumber });
+        await db.prepare("UPDATE whatsapp_conversations SET state='PAYMENT_METHOD',state_data=?,last_inbound_message_id=?,updated_at=? WHERE wa_id=?").bind(JSON.stringify(stateData), event.id, new Date().toISOString(), event.from).run();
+        return true;
+      }
+    } catch { /* invalid Flow response remains ignored without raw-body logging */ }
+  }
   const text = typeof message.text?.body === "string" ? message.text.body.trim() : String(interactionId ?? interaction?.title ?? message.button?.text ?? (message.interactive?.nfm_reply ? "FLOW_SUBMIT" : "")).trim();
   if (!text) return false;
   const normalized = (interactionId ?? text).toUpperCase();
