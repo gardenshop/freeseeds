@@ -225,6 +225,11 @@
 
 - Revalidated encrypted FERTILIZER→PROVINCE contracts and explicit catalog errors.
 - Ignored stale/replayed Cloudflare OAuth consent callback without replay or bypass; Wrangler access remained valid.
+
+## Unreleased - 2026-10-14 (GFS-132)
+
+- Reconciled Flow IDs: Meta Manager tab showed rollback `1133458765899784`; runtime targets published v2 `28410343535328014`.
+- Preserved rollback Flow and made no old-Flow mutation. Customer-device E2E remains external.
 - Live native Flow remains blocked only by missing verified customer-device interaction evidence.
 - Sent one authorized v2 Flow CTA; Meta accepted it and emitted sent status. Customer open/submission remains unverified.
 

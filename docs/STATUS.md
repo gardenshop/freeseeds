@@ -428,6 +428,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Local encrypted FERTILIZER→PROVINCE contract is covered by Flow tests; no verified customer/device interaction was available.
 - Cloudflare OAuth consent tab shows stale/replayed `access_denied` state and was not reused or replayed. Wrangler account access remains valid; no OAuth bypass was attempted.
 
+## GFS-132 Active Flow Reconciliation
+
+- The authenticated Meta Flow Manager tab is showing rollback Flow `1133458765899784` with the old OFFER dropdown; this is not the active runtime Flow ID.
+- Runtime API/CTA configuration targets published replacement Flow `28410343535328014`, whose first-screen contract starts at the server-authorized fertilizer/offer path. The old tab explains the screenshot's blank/Continue behavior.
+- No old Flow was overwritten and no duplicate replacement was created in this run. Customer-device E2E remains unverified.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

@@ -208,6 +208,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - FERTILIZER→PROVINCE data exchange uses D1 catalog/province data and explicit protocol errors; local contract tests pass.
 - Cloudflare consent callback is stale/replayed and is not a runtime dependency for the deployed API; no callback URL was revisited.
 
+## GFS-132 Flow ID Authority
+
+- Rollback/published historical Flow: `1133458765899784` (old OFFER dropdown; not runtime target).
+- Active runtime Flow: `28410343535328014` (published v2); CTA/config should use this ID only.
+
 ## GFS-114 Flow Graph Evidence
 
 - Canonical WABA Flow ID created via Graph-backed Admin route: `1133458765899784`.

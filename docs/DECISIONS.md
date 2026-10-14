@@ -158,6 +158,10 @@ The deployed v2 first-screen/data contract addresses the Continue failure. Remai
 
 The FERTILIZER→PROVINCE contract remains server-catalog/D1-driven and passes local encrypted tests. The available Cloudflare consent tab is a stale/replayed OAuth callback; bypassing or replaying it is prohibited. Live customer Flow acceptance remains a device-session dependency.
 
+## 2026-10-14: GFS-132 Active Flow Authority
+
+The authenticated Manager screenshot was confirmed to be rollback Flow `1133458765899784`, not the active runtime Flow. It retains the old OFFER dropdown and explains the observed Continue failure. Runtime v2 `28410343535328014` remains the configured published Flow; no old Flow mutation was made.
+
 ## 2026-10-13: GFS-117 Flow/Media Boundary
 
 Flow asset validation succeeds, but Meta publish still rejects the endpoint as unavailable. The API observed an invalid-initial-vector result for live encrypted requests; no customer Flow success is claimed. Media gallery work remains private-R2/D1 controlled and does not alter pricing/order logic.

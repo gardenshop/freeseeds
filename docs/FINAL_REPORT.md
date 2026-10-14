@@ -226,6 +226,12 @@
 - Flow E2E: **BLOCKED** by unverified customer-controlled session/device.
 - Cloudflare OAuth: stale/replayed callback safely ignored; no bypass or replay.
 
+## GFS-132-ACTIVE-FLOW Update — 2026-10-14
+
+- Flow ID audit: **PASS** — old Manager tab `1133458765899784` is rollback; runtime v2 `28410343535328014` is active target.
+- Screenshot Continue failure: **explained** by viewing the old rollback Flow, not runtime v2.
+- Native customer E2E: **UNTESTED**; no verified customer device interaction.
+
 ## GFS-128-FORENSIC-FLOW Update — 2026-10-14
 
 - First-screen/Continue implementation: **PASS deployed**; v2 Flow is server-catalog bound.
