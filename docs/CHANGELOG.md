@@ -212,6 +212,12 @@
 - Repaired native Flow OFFER/PROVINCE option schema and runtime catalog handling; unsupported `code` properties removed.
 - Added explicit catalog-unavailable protocol behavior to prevent blank first screens from silent endpoint failures.
 
+## Unreleased - 2026-10-14 (GFS-125)
+
+- Added explicit Flow `data_exchange` action and created/published replacement Flow v2 `28410343535328014` with the redundant OFFER dropdown removed.
+- Added HMAC-bound expiring Flow session tokens and trusted wa_id propagation into order persistence.
+- Sent one authorized v2 Flow CTA; Meta accepted it and emitted sent status. Customer open/submission remains unverified.
+
 ## Unreleased - 2026-10-13 (GFS-114)
 
 - Added Graph-first Flow discovery route and created exactly one canonical draft Flow `1133458765899784` after enumeration returned none.

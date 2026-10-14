@@ -14,6 +14,8 @@ type Env = {
     META_GRAPH_VERSION?: string;
     META_ACCESS_TOKEN?: string;
     META_PHONE_NUMBER_ID?: string;
+    META_WABA_ID?: string;
+    META_FLOW_ID?: string;
     WEBHOOK_VERIFY_TOKEN?: string;
     META_APP_SECRET?: string;
     META_CAPI_ENABLED?: string;
@@ -27,6 +29,11 @@ type Env = {
 };
 
 const app = new Hono<Env>();
+
+function base64Url(data: Uint8Array): string { return btoa(String.fromCharCode(...data)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, ""); }
+function decodeBase64Url(value: string): Uint8Array { const padded = value.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - value.length % 4) % 4); return Uint8Array.from(atob(padded), (char) => char.charCodeAt(0)); }
+async function createFlowToken(waId: string, inboundId: string, secret: string): Promise<string> { const payload = base64Url(new TextEncoder().encode(JSON.stringify({ waId, inboundId, exp: Date.now() + 60 * 60 * 1000 }))); const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]); const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload)); return `${payload}.${base64Url(new Uint8Array(signature))}`; }
+async function verifyFlowToken(token: string, secret: string): Promise<string | null> { const [payload, signature] = token.split("."); if (!payload || !signature) return null; try { const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["verify"]); if (!(await crypto.subtle.verify("HMAC", key, decodeBase64Url(signature), new TextEncoder().encode(payload)))) return null; const data = JSON.parse(new TextDecoder().decode(decodeBase64Url(payload))) as { waId?: string; exp?: number }; return typeof data.waId === "string" && typeof data.exp === "number" && data.exp > Date.now() ? data.waId : null; } catch { return null; } }
 
 type ConversationData = { language?: "en" | "ur"; fullName?: string; deliveryAddress?: string; nearbyPlace?: string; city?: string; contactNumber?: string; province?: string; fertilizerSelected?: boolean; orderId?: string; orderNumber?: string };
 
@@ -93,7 +100,7 @@ async function sendConversationReply(db: D1Database, provider: ReturnType<typeof
   }
 }
 
-async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }): Promise<boolean> {
+async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }, flowId: string, flowTokenSecret?: string): Promise<boolean> {
   const sessionContent = (key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string } = {}) => contentFor(db, key, fallback, values, `CHAT:${event.from}`, data.language ?? "en");
   const message = event.payload && typeof event.payload === "object" ? event.payload as { text?: { body?: string }; interactive?: { button_reply?: { id?: string; title?: string }; list_reply?: { id?: string; title?: string }; nfm_reply?: { response_json?: string } }; button?: { payload?: string; text?: string } } : {};
   const interaction = message.interactive?.button_reply ?? message.interactive?.list_reply;
@@ -154,7 +161,8 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
     sessionContent("SUPPORT", "Reply START to begin, STATUS to check an order, or CANCEL to stop the current order entry."),
     sessionContent("PAYMENT", "Choose a verified payment method.")
   ]);
-  const options: ConversationReplyOptions = (state === "LANGUAGE" || (state === "NEW" && Boolean(text)) || normalized === "CANCEL") && !(state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) ? { buttons: [{ id: "LANG_UR", title: "اردو" }, { id: "LANG_EN", title: "English" }] } : state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR") ? { flow: { id: "1133458765899784", token: `gfs:${event.from}:${event.id}` } } : state === "NEW" && normalized === "GET_FREE_PACKS" ? { buttons: [{ id: "ADD_FERTILIZER", title: "Add Fertilizer" }, { id: "SEEDS_ONLY", title: fertilizer.buttonLabel ?? "Seeds Only" }] } : state === "FERTILIZER" && /^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/i.test(normalized) ? { list: { buttonText: province.listButtonLabel ?? "Select Province", rows: ["Punjab", "Islamabad", "Sindh", "KPK", "Balochistan", "AJK", "Gilgit Baltistan"].map((provinceName) => ({ id: `PROVINCE_${provinceName.toUpperCase().replace(/ /g, "_")}`, title: provinceName, ...(province.listDescription ? { description: province.listDescription } : {}) })) } } : state === "CONTACT" ? { buttons: [{ id: "PLACE_ORDER", title: review.buttonLabel ?? "Place Order" }, { id: "BACK", title: "Back" }] } : state === "REVIEW" && /^(CONFIRM|PLACE_ORDER)$/i.test(normalized) ? { buttons: [{ id: "PAY_JAZZCASH", title: payment.buttonLabel ?? "JazzCash" }, { id: "CHECK_ORDER", title: status.buttonLabel ?? "Check Order" }] } : state === "PAYMENT_PENDING" ? { buttons: [{ id: "CHECK_ORDER", title: status.buttonLabel ?? "Check Order" }, { id: "PAYMENT_HELP", title: "Payment Help" }, { id: "SUPPORT", title: support.buttonLabel ?? "Support" }] } : {};
+  const sessionFlowToken = state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR") && flowTokenSecret ? await createFlowToken(event.from, event.id, flowTokenSecret) : undefined;
+  const options: ConversationReplyOptions = (state === "LANGUAGE" || (state === "NEW" && Boolean(text)) || normalized === "CANCEL") && !(state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) ? { buttons: [{ id: "LANG_UR", title: "اردو" }, { id: "LANG_EN", title: "English" }] } : sessionFlowToken ? { flow: { id: flowId, token: sessionFlowToken } } : state === "NEW" && normalized === "GET_FREE_PACKS" ? { buttons: [{ id: "ADD_FERTILIZER", title: "Add Fertilizer" }, { id: "SEEDS_ONLY", title: fertilizer.buttonLabel ?? "Seeds Only" }] } : state === "FERTILIZER" && /^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/i.test(normalized) ? { list: { buttonText: province.listButtonLabel ?? "Select Province", rows: ["Punjab", "Islamabad", "Sindh", "KPK", "Balochistan", "AJK", "Gilgit Baltistan"].map((provinceName) => ({ id: `PROVINCE_${provinceName.toUpperCase().replace(/ /g, "_")}`, title: provinceName, ...(province.listDescription ? { description: province.listDescription } : {}) })) } } : state === "CONTACT" ? { buttons: [{ id: "PLACE_ORDER", title: review.buttonLabel ?? "Place Order" }, { id: "BACK", title: "Back" }] } : state === "REVIEW" && /^(CONFIRM|PLACE_ORDER)$/i.test(normalized) ? { buttons: [{ id: "PAY_JAZZCASH", title: payment.buttonLabel ?? "JazzCash" }, { id: "CHECK_ORDER", title: status.buttonLabel ?? "Check Order" }] } : state === "PAYMENT_PENDING" ? { buttons: [{ id: "CHECK_ORDER", title: status.buttonLabel ?? "Check Order" }, { id: "PAYMENT_HELP", title: "Payment Help" }, { id: "SUPPORT", title: support.buttonLabel ?? "Support" }] } : {};
   const mediaKey = guidedReplyMediaKey(normalized, state, nextState);
   if (mediaKey) options.image = await contentImageFor(db, bucket, mediaKey, `CHAT:${event.from}`);
   const sent = await sendConversationReply(db, provider, event.from, event.id, reply, options);
@@ -193,6 +201,7 @@ async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: R
 
 app.get("/health", (c) => c.json({ ok: true, service: "getfreeseeds-api", state: c.env.DEPLOYMENT_STATE, whatsapp: c.env.META_PROVIDER_ENABLED === "true" && c.env.WHATSAPP_PROVIDER === "meta" ? "enabled" : "disabled-until-meta-onboarding" }));
 app.get("/privacy", (c) => c.html("<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Get Free Seeds Privacy Policy</title></head><body><main><h1>Get Free Seeds Privacy Policy</h1><p>Get Free Seeds is operated by Garden Shop. We collect the information a customer submits to request seed delivery, including name, delivery address, nearby landmark, city, contact number, WhatsApp identifiers supplied by Meta, order choices, and payment receipt evidence when provided.</p><p>We use this information only to process, verify, fulfil, support, and audit the customer request; prevent duplicate or fraudulent requests; and measure service performance. Payment evidence is stored privately and is reviewed only by authorised staff.</p><p>We do not sell customer information. We share data only with service providers required to operate the service, comply with law, or protect the service and its users.</p><p>Customers may request access, correction, or deletion through the Get Free Seeds Page or the same official WhatsApp conversation used for the request.</p><p>Last updated: 11 October 2026.</p></main></body></html>"));
+
 app.get("/data-deletion", (c) => c.html("<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Get Free Seeds Data Deletion</title></head><body><main><h1>Data Deletion Instructions</h1><p>To request deletion of information held by Get Free Seeds, contact the Get Free Seeds Facebook Page or send the request through the same official WhatsApp conversation used for the seed request. Include only the information needed to identify the request. Garden Shop will verify the requester and delete or anonymise eligible records, subject to legal, fraud-prevention, and accounting retention requirements.</p></main></body></html>"));
 
 app.get("/webhooks/whatsapp", (c) => {
@@ -219,7 +228,7 @@ app.post("/webhooks/whatsapp", async (c) => {
   let autoReplies = 0;
   for (const event of inbound) {
     if (event.kind === "media") { if (c.env.DB && await processReceiptMedia(c.env.DB, c.env.RECEIPTS, provider, event)) continue; else continue; }
-    if (c.env.DB && await processGuidedConversation(c.env.DB, c.env.RECEIPTS, provider, event)) continue;
+    if (c.env.DB && await processGuidedConversation(c.env.DB, c.env.RECEIPTS, provider, event, c.env.META_FLOW_ID ?? "1133458765899784", c.env.META_APP_SECRET)) continue;
     const activeConversation = c.env.DB ? await c.env.DB.prepare("SELECT state FROM whatsapp_conversations WHERE wa_id=?").bind(event.from).first<{ state: string }>() : null;
     if (activeConversation) continue;
     const idempotencyKey = `welcome_reply:${event.id}`;
@@ -257,6 +266,13 @@ app.post("/webhooks/whatsapp/flows", async (c) => {
   } catch {
     return c.json({ error: "FLOW_DECRYPTION_FAILED" }, 400);
   }
+  const flowToken = typeof decrypted.payload.flow_token === "string" ? decrypted.payload.flow_token : "";
+  const trustedWaId = c.env.META_APP_SECRET && flowToken ? await verifyFlowToken(flowToken, c.env.META_APP_SECRET) : null;
+  if (c.env.META_PROVIDER_ENABLED === "true" && !trustedWaId) {
+    const encrypted = await encryptMetaFlowResponse({ version: "3.0", data: { error: "FLOW_TOKEN_INVALID" } }, decrypted.aesKey, decrypted.initialVector);
+    return c.text(encrypted, 200, { "content-type": "text/plain; charset=UTF-8" });
+  }
+  if (trustedWaId) decrypted.payload.__trustedWaId = trustedWaId;
   try {
     const response = await handleMetaFlowPayload(decrypted.payload, c.env.DB);
     const encrypted = await encryptMetaFlowResponse(response, decrypted.aesKey, decrypted.initialVector);

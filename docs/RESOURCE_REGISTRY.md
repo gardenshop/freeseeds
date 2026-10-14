@@ -192,6 +192,12 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - OFFER/PROVINCE dynamic options are strict `{id,title}` D1 values; unsupported schema properties are excluded.
 - Empty/missing D1 catalogs yield a protocol error, not an empty native dropdown.
 
+## GFS-125 Canonical Flow Version
+
+- Active runtime Flow: `28410343535328014`, PUBLISHED, validation errors empty, health available.
+- Rollback Flow: `1133458765899784`, PUBLISHED but first-screen selector was unusable; runtime CTA switched only after v2 publication.
+- Flow session tokens are HMAC-bound to trusted wa_id and expire after one hour; order creation still uses server D1/cooldown/idempotency.
+
 ## GFS-114 Flow Graph Evidence
 
 - Canonical WABA Flow ID created via Graph-backed Admin route: `1133458765899784`.

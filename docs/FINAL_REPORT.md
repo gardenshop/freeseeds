@@ -212,6 +212,14 @@
 - Flow/order reconciliation: **PASS implementation** for nfm_reply IDs.
 - Native device preview/E2E: **UNTESTED**; no customer actions fabricated.
 
+## GFS-125-FLOW-V2 Update — 2026-10-14
+
+- Previous first-screen failure: missing `flow_action=data_exchange` plus redundant dynamic OFFER dropdown.
+- Replacement Flow v2: **PUBLISHED** — `28410343535328014`, validation empty, health AVAILABLE.
+- Real CTA: **PASS accepted/sent**; WAMID present. Customer opened/submitted: **NOT OBSERVED**.
+- Admin orders: protected search/details/payment/fulfillment controls remain deployed; no unpaid order was approved.
+- Guided fallback: **GO**; Native Flow: **GO server-side / NO-GO complete customer E2E evidence**.
+
 ## GFS-105-LIVE-COMMERCE Update — 2026-10-12
 
 - START: **NOT OBSERVED** after deployment; no customer session was proven available.

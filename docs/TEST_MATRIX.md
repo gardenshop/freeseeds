@@ -93,6 +93,8 @@
 | GFS-121 CMS publish guard | already-published up-to-date response; fresh draft required for publish | PASS deployed/tests |
 | GFS-122 universal welcome | hi/hello/Salam/START/arbitrary text → CMS EN/UR + language buttons | PASS implementation/tests/deployment; live device pending |
 | GFS-124 Flow OFFER | strict D1 `id`/`title` options; explicit empty-catalog error | PASS implementation/tests; Meta preview/device retest pending |
+| GFS-125 Flow v2 | data_exchange CTA, simplified first screen, validation/publish/health | PASS Graph: `28410343535328014` PUBLISHED/AVAILABLE; live open pending |
+| GFS-125 Flow token binding | HMAC wa_id/session binding, expiry, replay/order idempotency | PASS implementation/tests; live completion pending |
 | GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |
 | GFS-98 token recovery | owner-installed secret → Graph ladder → API/Admin readiness | PASS fresh token; no token value inspected |
 | GFS-98 atomic reply | one failed event retry, outbound ID, status webhook, no duplicate | PASS: WAMID persisted, SENT status persisted, duplicate count 0 |

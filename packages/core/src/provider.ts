@@ -90,6 +90,7 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
             flow_id: flowId,
             flow_token: flowToken,
             flow_cta: "Get Free Seeds",
+            flow_action: "data_exchange",
             mode: "published"
           }
         }

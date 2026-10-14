@@ -410,6 +410,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - nfm_reply order IDs reconcile trusted conversation state to `PAYMENT_METHOD` without accepting a client total.
 - Published Flow device E2E remains unverified; no customer/device taps are claimed.
 
+## GFS-125 Native Flow v2
+
+- Root cause of unusable first screen: outbound Flow CTA lacked `flow_action=data_exchange`, and the published Flow redundantly depended on a dynamic OFFER dropdown before INIT data was usable.
+- One replacement Flow was created and published: `28410343535328014` (`Get Free Seeds Commerce v2`). It starts at FERTILIZER with fixed server-authorized free-seed product, then province, five-field form, review, confirmation and payment.
+- Flow v2 asset validation is empty, health `can_send_message=AVAILABLE`, and one real CTA was accepted with WAMID `...RDAxAA==`/sent status. Customer opening/submission remains unobserved.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

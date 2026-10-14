@@ -146,6 +146,10 @@ Any ordinary NEW/idle inbound text now produces the published bilingual welcome 
 
 Native Flow preview reported unsupported Dropdown `code` properties and an empty first-screen selector. Runtime catalog data and schema are now constrained to `id`/`title`; catalog errors are explicit protocol failures instead of silent empty lists. Live preview/device confirmation remains required.
 
+## 2026-10-14: GFS-125 Replacement Flow v2
+
+Because the original published Flow is immutable and its OFFER selector remained unusable, exactly one replacement Flow was created. v2 removes the redundant product dropdown, begins with fertilizer selection, requires data_exchange INIT, and uses the same D1/order backend. Runtime uses v2; the original remains documented rollback only.
+
 ## 2026-10-13: GFS-117 Flow/Media Boundary
 
 Flow asset validation succeeds, but Meta publish still rejects the endpoint as unavailable. The API observed an invalid-initial-vector result for live encrypted requests; no customer Flow success is claimed. Media gallery work remains private-R2/D1 controlled and does not alter pricing/order logic.

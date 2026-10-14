@@ -40,7 +40,7 @@ describe("Meta encrypted WhatsApp Flow protocol", () => {
   });
 
   it("returns safe protocol screens and quote errors without exposing input data", async () => {
-    await expect(handleMetaFlowPayload({ version: "3.0", action: "INIT", data: {} })).resolves.toMatchObject({ screen: "OFFER" });
+    await expect(handleMetaFlowPayload({ version: "3.0", action: "INIT", data: {} })).resolves.toMatchObject({ screen: "FERTILIZER" });
     await expect(handleMetaFlowPayload({ version: "3.0", action: "data_exchange", screen: "OFFER", data: { productCode: "FIXTURE-SEEDS" } })).resolves.toMatchObject({ screen: "FERTILIZER" });
     await expect(handleMetaFlowPayload({ version: "3.0", action: "data_exchange", screen: "OFFER", data: {} })).resolves.toMatchObject({ screen: "OFFER", data: { error: "PRODUCT_REQUIRED" } });
   });
@@ -70,7 +70,7 @@ describe("Meta encrypted WhatsApp Flow protocol", () => {
 
   it("keeps the Meta Flow journey ordered with one five-field delivery screen", async () => {
     const definition = JSON.parse(await readFile("whatsapp/flows/get-free-seeds.json", "utf8")) as { routing_model: Record<string, string[]>; screens: Array<{ id: string; layout: { children: unknown[] } }> };
-    expect(Object.keys(definition.routing_model)).toEqual(["OFFER", "FERTILIZER", "PROVINCE", "DELIVERY_FORM", "REVIEW", "CONFIRM", "PAYMENT_METHOD"]);
+    expect(Object.keys(definition.routing_model)).toEqual(["FERTILIZER", "PROVINCE", "DELIVERY_FORM", "REVIEW", "CONFIRM", "PAYMENT_METHOD"]);
     expect(definition.routing_model.DELIVERY_FORM).toEqual(["REVIEW"]);
     const delivery = definition.screens.find((screen) => screen.id === "DELIVERY_FORM");
     expect(JSON.stringify(delivery)).toContain("fullName");
@@ -92,6 +92,6 @@ describe("Meta encrypted WhatsApp Flow protocol", () => {
     const encrypted = await response.text();
     const responseVector = Uint8Array.from(fixture.initialVector, (value) => value ^ 0xff);
     const plaintext = await crypto.subtle.decrypt({ name: "AES-GCM", iv: responseVector, tagLength: 128 }, fixture.aesKey, Uint8Array.from(atob(encrypted), (value) => value.charCodeAt(0)));
-    expect(JSON.parse(new TextDecoder().decode(plaintext))).toMatchObject({ screen: "OFFER" });
+    expect(JSON.parse(new TextDecoder().decode(plaintext))).toMatchObject({ screen: "FERTILIZER" });
   });
 });

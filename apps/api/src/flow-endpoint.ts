@@ -139,8 +139,12 @@ export async function handleMetaFlowPayload(payload: MetaFlowPayload, db?: D1Dat
   const screen = screenName(payload);
   if (action === "PING" || payload.health_check === "ping") return { version: "3.0", data: { status: "active" } };
   if (action === "INIT") {
-    if (!db) return protocolError("FLOW_CATALOG_UNAVAILABLE", "OFFER");
-    try { return screenResponse("OFFER", await catalogData(db), payload, db); } catch { return protocolError("FLOW_CATALOG_UNAVAILABLE", "OFFER"); }
+    if (!db) return protocolError("FLOW_CATALOG_UNAVAILABLE", "FERTILIZER");
+    try {
+      const product = await db.prepare("SELECT code FROM products WHERE code='FREE_5_PACK_VEGETABLE_SEEDS' AND enabled=1").first<{ code: string }>();
+      if (!product) return protocolError("FLOW_CATALOG_UNAVAILABLE", "FERTILIZER");
+      return screenResponse("FERTILIZER", { productCode: product.code }, payload, db);
+    } catch { return protocolError("FLOW_CATALOG_UNAVAILABLE", "FERTILIZER"); }
   }
   if (action !== "DATA_EXCHANGE" && action !== "NAVIGATE") return protocolError("FLOW_ACTION_UNSUPPORTED", screen || undefined);
 
@@ -179,7 +183,8 @@ export async function handleMetaFlowPayload(payload: MetaFlowPayload, db?: D1Dat
       const customer = parseCustomer(data);
       const selection = parseSelection(data);
       if (!db) return protocolError("ORDER_PERSISTENCE_UNAVAILABLE", screen);
-      const result = await persistFlowSubmission(db, parseFlowSubmission({ ...customer, ...selection }), undefined, flowIdempotencyKey(payload));
+      const trustedWaId = typeof payload.__trustedWaId === "string" ? payload.__trustedWaId : undefined;
+      const result = await persistFlowSubmission(db, parseFlowSubmission({ ...customer, ...selection, ...(trustedWaId ? { whatsappNumber: trustedWaId } : {}) }), undefined, flowIdempotencyKey(payload), trustedWaId);
       const summary = result.quote ? { ...quoteData(result.quote), orderId: result.orderId, orderNumber: result.orderNumber } : { orderId: result.orderId, orderNumber: result.orderNumber, paymentMethods: [] };
       return screenResponse("PAYMENT_METHOD", { submitted: true, orderId: result.orderId, orderNumber: result.orderNumber, orderSummary: summary, paymentMethods: result.quote?.paymentMethods ?? [], paymentMethodOptions: (result.quote?.paymentMethods ?? []).map((name) => ({ id: name, title: name })) }, payload, db);
     }

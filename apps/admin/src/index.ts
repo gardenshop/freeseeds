@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import { canTransition, createMetaActivationService, createWhatsAppProvider, getLatestOrderForWaId, MetaActivationAction, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, isPaymentMethodComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
 
- type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
+ type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
 const app = new Hono<Env>();
 type AdminContext = Context<Env>;
 const CSRF_COOKIE = "__Host-gfs_admin_csrf";
@@ -489,8 +489,10 @@ app.get("/api/meta-activation/phone-coexistence", async (c) => {
 app.post("/api/meta-activation/flows/create", async (c) => {
   if (!authorized(c)) return c.json({ error: "UNAUTHORIZED" }, 401);
   if (!c.env.META_ACCESS_TOKEN || !c.env.META_WABA_ID) return c.json({ error: "META_GRAPH_NOT_CONFIGURED" }, 503);
+  const request = await c.req.json().catch(() => ({})) as { name?: string };
+  const name = typeof request.name === "string" && /^[A-Za-z0-9 _-]{3,80}$/.test(request.name) ? request.name : "Get Free Seeds Commerce";
   const version = c.env.META_GRAPH_VERSION ?? "v26.0";
-  const response = await fetch(`https://graph.facebook.com/${version}/${encodeURIComponent(c.env.META_WABA_ID)}/flows`, { method: "POST", headers: { Authorization: `Bearer ${c.env.META_ACCESS_TOKEN}`, "Content-Type": "application/json" }, body: JSON.stringify({ name: "Get Free Seeds Commerce", categories: ["OTHER"] }) });
+  const response = await fetch(`https://graph.facebook.com/${version}/${encodeURIComponent(c.env.META_WABA_ID)}/flows`, { method: "POST", headers: { Authorization: `Bearer ${c.env.META_ACCESS_TOKEN}`, "Content-Type": "application/json" }, body: JSON.stringify({ name, categories: ["OTHER"] }) });
   const body = await response.json().catch(() => ({})) as Record<string, unknown>;
   return c.json({ httpStatus: response.status, id: typeof body.id === "string" ? body.id : undefined, error: body.error && typeof body.error === "object" ? { code: (body.error as Record<string, unknown>).code, subcode: (body.error as Record<string, unknown>).error_subcode, message: (body.error as Record<string, unknown>).message, trace: (body.error as Record<string, unknown>).fbtrace_id } : undefined }, response.ok ? 200 : 400);
 });
@@ -548,14 +550,15 @@ app.post("/api/meta-activation/actions/:action", async (c) => {
   }
   if (rawAction === "send-flow-test") {
     if (!authorized(c)) return c.json({ error: "UNAUTHORIZED" }, 401);
-    const key = "flow_cta:1133458765899784:923034901810";
+    const flowId = c.env.META_FLOW_ID ?? "1133458765899784";
+    const key = `flow_cta:${flowId}:923034901810`;
     const existing = await c.env.DB.prepare("SELECT status,provider_message_id FROM outbound_messages WHERE idempotency_key=?").bind(key).first<{ status: string; provider_message_id: string | null }>();
     if (existing) return c.json({ executed: false, reason: "FLOW_CTA_ALREADY_ATTEMPTED", status: existing.status, messageId: existing.provider_message_id });
     const now = new Date().toISOString();
     await c.env.DB.prepare("INSERT INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), key, "FLOW_CTA", "PENDING", 0, now, now).run();
     const provider = createWhatsAppProvider("meta", { enabled: true, graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", phoneNumberId: c.env.META_PHONE_NUMBER_ID, accessToken: c.env.META_ACCESS_TOKEN, appSecret: c.env.META_APP_SECRET });
     try {
-      const sent = await provider.sendFlow("+923034901810", "1133458765899784", "GFS_FLOW_E2E_1133458765899784");
+      const sent = await provider.sendFlow("+923034901810", flowId, `GFS_FLOW_E2E_${flowId}`);
       await c.env.DB.prepare("UPDATE outbound_messages SET status='SENT',provider_message_id=?,attempt_count=1,updated_at=? WHERE idempotency_key=?").bind(sent.providerMessageId, new Date().toISOString(), key).run();
       return c.json({ executed: true, messageId: sent.providerMessageId });
     } catch (error) {
