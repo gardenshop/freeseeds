@@ -220,6 +220,12 @@
 - Admin orders: protected search/details/payment/fulfillment controls remain deployed; no unpaid order was approved.
 - Guided fallback: **GO**; Native Flow: **GO server-side / NO-GO complete customer E2E evidence**.
 
+## GFS-130-FLOW-CONTINUE Update — 2026-10-14
+
+- FERTILIZER→PROVINCE: **PASS local encrypted contract**, **UNTESTED live client**.
+- Flow E2E: **BLOCKED** by unverified customer-controlled session/device.
+- Cloudflare OAuth: stale/replayed callback safely ignored; no bypass or replay.
+
 ## GFS-128-FORENSIC-FLOW Update — 2026-10-14
 
 - First-screen/Continue implementation: **PASS deployed**; v2 Flow is server-catalog bound.

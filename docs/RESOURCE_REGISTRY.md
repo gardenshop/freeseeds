@@ -203,6 +203,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Flow v2 `28410343535328014` first-screen contract and token binding are deployed.
 - Live CTA/device evidence remains unavailable without a verified customer-controlled WhatsApp session.
 
+## GFS-130 Flow Runtime
+
+- FERTILIZER→PROVINCE data exchange uses D1 catalog/province data and explicit protocol errors; local contract tests pass.
+- Cloudflare consent callback is stale/replayed and is not a runtime dependency for the deployed API; no callback URL was revisited.
+
 ## GFS-114 Flow Graph Evidence
 
 - Canonical WABA Flow ID created via Graph-backed Admin route: `1133458765899784`.

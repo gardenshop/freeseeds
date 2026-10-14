@@ -422,6 +422,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - nfm_reply reconciliation and trusted wa_id/session binding are deployed; D1 catalog/province data is available.
 - Browser inventory contains WhatsApp Web tabs without verified ownership of `+923034901810`; no customer tap or Flow submission was fabricated.
 
+## GFS-130 Flow Continue Audit
+
+- Existing Flow v2 uses explicit `data_exchange`, strict `id/title` catalog options, server D1 quote and HMAC session tokens.
+- Local encrypted FERTILIZER→PROVINCE contract is covered by Flow tests; no verified customer/device interaction was available.
+- Cloudflare OAuth consent tab shows stale/replayed `access_denied` state and was not reused or replayed. Wrangler account access remains valid; no OAuth bypass was attempted.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

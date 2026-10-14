@@ -220,6 +220,11 @@
 ## Unreleased - 2026-10-14 (GFS-128)
 
 - Reconciled v2 first-screen Continue contract and server catalog behavior; no customer interaction was fabricated.
+
+## Unreleased - 2026-10-14 (GFS-130)
+
+- Revalidated encrypted FERTILIZER→PROVINCE contracts and explicit catalog errors.
+- Ignored stale/replayed Cloudflare OAuth consent callback without replay or bypass; Wrangler access remained valid.
 - Live native Flow remains blocked only by missing verified customer-device interaction evidence.
 - Sent one authorized v2 Flow CTA; Meta accepted it and emitted sent status. Customer open/submission remains unverified.
 
