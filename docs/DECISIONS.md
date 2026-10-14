@@ -150,6 +150,10 @@ Native Flow preview reported unsupported Dropdown `code` properties and an empty
 
 Because the original published Flow is immutable and its OFFER selector remained unusable, exactly one replacement Flow was created. v2 removes the redundant product dropdown, begins with fertilizer selection, requires data_exchange INIT, and uses the same D1/order backend. Runtime uses v2; the original remains documented rollback only.
 
+## 2026-10-14: GFS-128 Live Flow Boundary
+
+The deployed v2 first-screen/data contract addresses the Continue failure. Remaining acceptance is customer-device Flow interaction; available WhatsApp Web tabs were not verified as the authorized customer, so no impersonation or fabricated tap occurred.
+
 ## 2026-10-13: GFS-117 Flow/Media Boundary
 
 Flow asset validation succeeds, but Meta publish still rejects the endpoint as unavailable. The API observed an invalid-initial-vector result for live encrypted requests; no customer Flow success is claimed. Media gallery work remains private-R2/D1 controlled and does not alter pricing/order logic.

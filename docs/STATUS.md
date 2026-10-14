@@ -416,6 +416,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - One replacement Flow was created and published: `28410343535328014` (`Get Free Seeds Commerce v2`). It starts at FERTILIZER with fixed server-authorized free-seed product, then province, five-field form, review, confirmation and payment.
 - Flow v2 asset validation is empty, health `can_send_message=AVAILABLE`, and one real CTA was accepted with WAMID `...RDAxAA==`/sent status. Customer opening/submission remains unobserved.
 
+## GFS-128 Live Flow Contract
+
+- Flow v2 first screen starts at a server-authorized fertilizer/offer contract; OFFER dropdown no longer blocks Continue.
+- nfm_reply reconciliation and trusted wa_id/session binding are deployed; D1 catalog/province data is available.
+- Browser inventory contains WhatsApp Web tabs without verified ownership of `+923034901810`; no customer tap or Flow submission was fabricated.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

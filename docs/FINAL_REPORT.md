@@ -220,6 +220,12 @@
 - Admin orders: protected search/details/payment/fulfillment controls remain deployed; no unpaid order was approved.
 - Guided fallback: **GO**; Native Flow: **GO server-side / NO-GO complete customer E2E evidence**.
 
+## GFS-128-FORENSIC-FLOW Update — 2026-10-14
+
+- First-screen/Continue implementation: **PASS deployed**; v2 Flow is server-catalog bound.
+- Flow publication: **PUBLISHED**; native device/customer E2E: **UNTESTED**.
+- Guided-chat launch: **GO**; native Flow launch: **NO-GO pending verified customer device interaction**.
+
 ## GFS-105-LIVE-COMMERCE Update — 2026-10-12
 
 - START: **NOT OBSERVED** after deployment; no customer session was proven available.

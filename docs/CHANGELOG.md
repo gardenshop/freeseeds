@@ -216,6 +216,11 @@
 
 - Added explicit Flow `data_exchange` action and created/published replacement Flow v2 `28410343535328014` with the redundant OFFER dropdown removed.
 - Added HMAC-bound expiring Flow session tokens and trusted wa_id propagation into order persistence.
+
+## Unreleased - 2026-10-14 (GFS-128)
+
+- Reconciled v2 first-screen Continue contract and server catalog behavior; no customer interaction was fabricated.
+- Live native Flow remains blocked only by missing verified customer-device interaction evidence.
 - Sent one authorized v2 Flow CTA; Meta accepted it and emitted sent status. Customer open/submission remains unverified.
 
 ## Unreleased - 2026-10-13 (GFS-114)

@@ -198,6 +198,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Rollback Flow: `1133458765899784`, PUBLISHED but first-screen selector was unusable; runtime CTA switched only after v2 publication.
 - Flow session tokens are HMAC-bound to trusted wa_id and expire after one hour; order creation still uses server D1/cooldown/idempotency.
 
+## GFS-128 Live Flow Gate
+
+- Flow v2 `28410343535328014` first-screen contract and token binding are deployed.
+- Live CTA/device evidence remains unavailable without a verified customer-controlled WhatsApp session.
+
 ## GFS-114 Flow Graph Evidence
 
 - Canonical WABA Flow ID created via Graph-backed Admin route: `1133458765899784`.
