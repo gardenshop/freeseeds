@@ -404,6 +404,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Language selection persists by verified wa_id and sends the published Flow CTA; unknown language replies repeat choices.
 - API version `89082c89-58e6-41e6-b824-db16c70071b4` is active. Live customer/device Flow E2E remains unobserved.
 
+## GFS-124 Flow First-Screen Contract
+
+- OFFER catalog now returns only Meta-supported `id`/`title` option objects. D1 failures/no enabled catalog no longer silently produce an empty dropdown; endpoint returns `FLOW_CATALOG_UNAVAILABLE`.
+- nfm_reply order IDs reconcile trusted conversation state to `PAYMENT_METHOD` without accepting a client total.
+- Published Flow device E2E remains unverified; no customer/device taps are claimed.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

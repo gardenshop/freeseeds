@@ -99,21 +99,20 @@ function parseSelection(data: FlowData, defaultFertilizer = false) {
 }
 
 async function catalogData(db: D1Database): Promise<FlowData> {
-  try {
-    const [products, provinces, paymentMethods] = await Promise.all([
-      db.prepare("SELECT code, name FROM products WHERE enabled=1 ORDER BY name, code").all<{ code: string; name: string }>(),
-      db.prepare("SELECT province FROM province_delivery_rates WHERE enabled=1 ORDER BY province").all<{ province: string }>(),
-      configuredPaymentMethodNames(db)
-    ]);
-    return {
-      products: (products.results ?? []).map((product) => ({ id: product.code, title: product.name })),
-      provinces: (provinces.results ?? []).map((province) => ({ id: province.province, title: province.province })),
-      paymentMethods: paymentMethods.map((name) => ({ id: name, title: name })),
-      paymentMethodNames: paymentMethods
-    };
-  } catch {
-    return { products: [], provinces: [], paymentMethods: [], paymentMethodNames: [] };
-  }
+  const [products, provinces, paymentMethods] = await Promise.all([
+    db.prepare("SELECT code, name FROM products WHERE enabled=1 ORDER BY name, code").all<{ code: string; name: string }>(),
+    db.prepare("SELECT province FROM province_delivery_rates WHERE enabled=1 ORDER BY province").all<{ province: string }>(),
+    configuredPaymentMethodNames(db)
+  ]);
+  const productOptions = (products.results ?? []).map((product) => ({ id: product.code, title: product.name }));
+  const provinceOptions = (provinces.results ?? []).map((province) => ({ id: province.province, title: province.province }));
+  if (!productOptions.length || !provinceOptions.length) throw new Error("FLOW_CATALOG_UNAVAILABLE");
+  return {
+    products: productOptions,
+    provinces: provinceOptions,
+    paymentMethods: paymentMethods.map((name) => ({ id: name, title: name })),
+    paymentMethodNames: paymentMethods
+  };
 }
 
 function quoteData(quote: Awaited<ReturnType<typeof quoteOrder>>): FlowData {
@@ -139,7 +138,10 @@ export async function handleMetaFlowPayload(payload: MetaFlowPayload, db?: D1Dat
   const action = actionName(payload);
   const screen = screenName(payload);
   if (action === "PING" || payload.health_check === "ping") return { version: "3.0", data: { status: "active" } };
-  if (action === "INIT") return screenResponse("OFFER", db ? await catalogData(db) : { products: [], provinces: [] }, payload, db);
+  if (action === "INIT") {
+    if (!db) return protocolError("FLOW_CATALOG_UNAVAILABLE", "OFFER");
+    try { return screenResponse("OFFER", await catalogData(db), payload, db); } catch { return protocolError("FLOW_CATALOG_UNAVAILABLE", "OFFER"); }
+  }
   if (action !== "DATA_EXCHANGE" && action !== "NAVIGATE") return protocolError("FLOW_ACTION_UNSUPPORTED", screen || undefined);
 
   const data = dataFromPayload(payload);

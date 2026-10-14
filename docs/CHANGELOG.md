@@ -207,6 +207,11 @@
 - Fixed live welcome routing so every ordinary NEW/idle inbound text receives CMS Urdu-first + English welcome content and stable language buttons.
 - Persisted language selection by trusted wa_id and dispatches the published Flow CTA without resetting active orders.
 
+## Unreleased - 2026-10-14 (GFS-124)
+
+- Repaired native Flow OFFER/PROVINCE option schema and runtime catalog handling; unsupported `code` properties removed.
+- Added explicit catalog-unavailable protocol behavior to prevent blank first screens from silent endpoint failures.
+
 ## Unreleased - 2026-10-13 (GFS-114)
 
 - Added Graph-first Flow discovery route and created exactly one canonical draft Flow `1133458765899784` after enumeration returned none.

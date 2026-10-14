@@ -187,6 +187,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Published WELCOME EN/UR CMS entries are the universal first-message source; session language is stored by trusted wa_id.
 - `LANG_UR` and `LANG_EN` route to the published Flow session token; no hardcoded welcome copy remains in the first-message path.
 
+## GFS-124 Flow Data Contract
+
+- OFFER/PROVINCE dynamic options are strict `{id,title}` D1 values; unsupported schema properties are excluded.
+- Empty/missing D1 catalogs yield a protocol error, not an empty native dropdown.
+
 ## GFS-114 Flow Graph Evidence
 
 - Canonical WABA Flow ID created via Graph-backed Admin route: `1133458765899784`.

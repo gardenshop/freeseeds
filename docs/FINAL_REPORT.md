@@ -206,6 +206,12 @@
 - Native Flow/customer device E2E: **UNTESTED**; no authorized customer device evidence.
 - Guided-chat: **GO**; native Flow live: **NO-GO pending device evidence**.
 
+## GFS-124-FORENSIC-FLOW Update — 2026-10-14
+
+- OFFER dropdown defect: **FIXED implementation/deployed** — only `id`/`title` data, no silent empty catalog.
+- Flow/order reconciliation: **PASS implementation** for nfm_reply IDs.
+- Native device preview/E2E: **UNTESTED**; no customer actions fabricated.
+
 ## GFS-105-LIVE-COMMERCE Update — 2026-10-12
 
 - START: **NOT OBSERVED** after deployment; no customer session was proven available.
