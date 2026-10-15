@@ -213,6 +213,10 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Rollback/published historical Flow: `1133458765899784` (old OFFER dropdown; not runtime target).
 - Active runtime Flow: `28410343535328014` (published v2); CTA/config should use this ID only.
 
+## GFS-133 Checkout Mode
+
+- Runtime checkout mode: `guided` (API Worker environment), native Flow preserved as published fallback/opt-in.
+
 ## GFS-114 Flow Graph Evidence
 
 - Canonical WABA Flow ID created via Graph-backed Admin route: `1133458765899784`.

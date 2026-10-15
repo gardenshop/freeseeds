@@ -434,6 +434,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Runtime API/CTA configuration targets published replacement Flow `28410343535328014`, whose first-screen contract starts at the server-authorized fertilizer/offer path. The old tab explains the screenshot's blank/Continue behavior.
 - No old Flow was overwritten and no duplicate replacement was created in this run. Customer-device E2E remains unverified.
 
+## GFS-133 Guided-First Runtime
+
+- API deployment explicitly sets `WHATSAPP_CHECKOUT_MODE=guided`; native Flow CTA dispatch is disabled by configuration while published Flow v2 is preserved for later opt-in.
+- Guided state machine, buttons/lists, order numbers, cooldown, payment handoff and Admin order controls remain active.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

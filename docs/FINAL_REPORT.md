@@ -199,6 +199,12 @@
 - Native Flow: **PUBLISHED**; live authorized device/customer E2E **UNTESTED**.
 - Guided chat: **GO**; native Flow live launch: **NO-GO pending device evidence**.
 
+## GFS-133-GUIDED-FIRST Update — 2026-10-14
+
+- Runtime mode: **GUIDED**; native Flow CTA disabled by environment flag.
+- Guided checkout/Admin orders: **GO** implementation/deployment.
+- Native Flow: **PUBLISHED/PRESERVED**, but **NO-GO** for live client until verified device E2E.
+
 ## GFS-122-LIVE-WELCOME Update — 2026-10-13
 
 - Any-message welcome: **PASS implementation/deployed**; CMS Urdu/English text and language buttons now apply beyond START.

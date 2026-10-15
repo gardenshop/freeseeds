@@ -230,6 +230,10 @@
 
 - Reconciled Flow IDs: Meta Manager tab showed rollback `1133458765899784`; runtime targets published v2 `28410343535328014`.
 - Preserved rollback Flow and made no old-Flow mutation. Customer-device E2E remains external.
+
+## Unreleased - 2026-10-14 (GFS-133)
+
+- Set API `WHATSAPP_CHECKOUT_MODE=guided` for safe fast launch while preserving published native Flow v2 as opt-in/rollback.
 - Live native Flow remains blocked only by missing verified customer-device interaction evidence.
 - Sent one authorized v2 Flow CTA; Meta accepted it and emitted sent status. Customer open/submission remains unverified.
 
