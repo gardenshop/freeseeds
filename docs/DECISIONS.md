@@ -170,6 +170,10 @@ Native Flow live client acceptance remains unverified, so the API runtime is exp
 
 The latest Chrome MCP reconnect failed before the Admin Orders snapshot because its transient package installation lacks `pkce-challenge`. No unrelated tabs/accounts were changed and no financial mutation was attempted. Backend controls remain deployed; UI/device verification is a genuine tooling/customer dependency.
 
+## 2026-10-15: GFS-135 Real Order Audit
+
+D1 confirms `FS-261015-000001` exists in `PAYMENT_REVIEW` for PKR 300 with a JazzCash payment record and one receipt. Admin UI navigation now reaches the exact order URL but Chrome returns `ERR_QUIC_PROTOCOL_ERROR`; the mismatch receipt remains unapproved and no financial mutation is allowed.
+
 ## 2026-10-13: GFS-117 Flow/Media Boundary
 
 Flow asset validation succeeds, but Meta publish still rejects the endpoint as unavailable. The API observed an invalid-initial-vector result for live encrypted requests; no customer Flow success is claimed. Media gallery work remains private-R2/D1 controlled and does not alter pricing/order logic.

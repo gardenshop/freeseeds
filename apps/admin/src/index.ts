@@ -67,7 +67,6 @@ function orderView(row: Record<string, unknown>) {
     orderNumber: String(row.order_number),
     state,
     paymentStatus: String(row.payment_status),
-    totalPayablePkr: Number(row.total_payable),
     province: row.province == null ? null : String(row.province),
     customerName: row.full_name == null ? null : String(row.full_name),
     waId: row.wa_id == null ? null : String(row.wa_id),
@@ -75,8 +74,6 @@ function orderView(row: Record<string, unknown>) {
     paymentId: row.payment_id == null ? null : String(row.payment_id),
     paymentMethod: row.method == null ? null : String(row.method),
     paymentReviewState: row.review_state == null ? null : String(row.review_state),
-    expectedAmountPkr: row.expected_amount == null ? null : Number(row.expected_amount),
-    approvedAmountPkr: row.approved_amount == null ? null : Number(row.approved_amount),
     receiptCount,
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
@@ -115,14 +112,20 @@ load().catch(()=>{document.querySelector('#rows').textContent='Tariff unavailabl
 }
 
 function ordersPageHtml(csrfToken: string): string {
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Orders | Get Free Seeds</title><style>body{font:15px system-ui;max-width:1200px;margin:2rem auto;padding:0 1rem;color:#172018}nav{margin-bottom:1rem}.filters{display:flex;flex-wrap:wrap;gap:.6rem;margin:1rem 0}input,select,textarea,button{font:inherit;padding:.5rem}table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid #d9dfd9;padding:.55rem;text-align:left}tr:hover{background:#f4f7f4}.panel{border:1px solid #ccd5cc;border-radius:8px;padding:1rem;margin-top:1rem;white-space:pre-wrap}.actions{display:flex;gap:.5rem;margin-top:1rem}.error{color:#a40019}.muted{color:#59635a}</style></head><body><nav><a href="/">Admin home</a> | <a href="/test-controls">Test controls</a></nav><h1>Orders</h1><form id="filters" class="filters"><input name="q" placeholder="Order, customer, or wa_id"><select name="state"><option value="">All states</option><option>DETAILS_COMPLETED</option><option>PAYMENT_PENDING</option><option>PAYMENT_REVIEW</option><option>PAYMENT_REJECTED</option><option>PAID</option><option>PACKING</option><option>DISPATCHED</option><option>DELIVERED</option><option>CANCELLED</option></select><select name="archived"><option value="active">Active</option><option value="all">All</option><option value="only">Archived</option></select><button>Search</button></form><table><thead><tr><th>Order</th><th>Customer</th><th>State</th><th>Payment</th><th>Total</th><th>Created</th></tr></thead><tbody id="rows"></tbody></table><section id="detail" class="panel muted">Select an order.</section><script>
-const csrf=${JSON.stringify(csrfToken)};const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const detail=document.querySelector('#detail');
-async function json(response){const data=await response.json();if(!response.ok)throw new Error(data.error||'Request failed');return data}
-async function load(){const params=new URLSearchParams(new FormData(document.querySelector('#filters')));const data=await json(await fetch('/api/orders?'+params));document.querySelector('#rows').innerHTML=data.orders.map((o)=>'<tr data-id="'+esc(o.id)+'"><td>'+esc(o.orderNumber)+'</td><td>'+esc(o.customerName)+'</td><td>'+esc(o.state)+(o.archivedAt?' (archived)':'')+'</td><td>'+esc(o.paymentReviewState||o.paymentStatus)+'</td><td>PKR '+esc(o.totalPayablePkr)+'</td><td>'+esc(o.createdAt)+'</td></tr>').join('')||'<tr><td colspan="6">No matching orders.</td></tr>';for(const row of document.querySelectorAll('[data-id]'))row.onclick=()=>show(row.dataset.id)}
-async function mutate(path,body){return json(await fetch(path,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(body)}))}
-async function show(id){try{const data=await json(await fetch('/api/orders/'+encodeURIComponent(id)));const o=data.order;detail.className='panel';detail.innerHTML='<strong>'+esc(o.orderNumber)+'</strong>\nCustomer: '+esc(o.customerName)+'\nState: '+esc(o.state)+'\nPayment: '+esc(o.paymentReviewState||o.paymentStatus)+'\nReceipts: '+esc(o.receiptCount)+'\nTotal: PKR '+esc(o.totalPayablePkr)+'\nProvince: '+esc(o.province)+'\nItems: '+esc(data.items.map((i)=>i.description+' x '+i.quantity).join(', ')||'None')+'<div class="actions"></div>';const actions=detail.querySelector('.actions');if(o.canCancel){const button=document.createElement('button');button.textContent='Cancel unpaid order';button.onclick=async()=>{const reason=prompt('Cancellation reason');if(!reason||!confirm('Cancel '+o.orderNumber+'? Financial history will be retained.'))return;await mutate('/api/orders/'+encodeURIComponent(o.id)+'/cancel',{reason,confirmation:o.orderNumber});await load();await show(o.id)};actions.append(button)}if(o.canArchive){const button=document.createElement('button');button.textContent='Archive unpaid order';button.onclick=async()=>{const reason=prompt('Archive reason');if(!reason||!confirm('Archive '+o.orderNumber+'? No records will be deleted.'))return;await mutate('/api/orders/'+encodeURIComponent(o.id)+'/archive',{reason,confirmation:o.orderNumber});await load();await show(o.id)};actions.append(button)}}catch(error){detail.className='panel error';detail.textContent=error.message}}
-document.querySelector('#filters').onsubmit=(event)=>{event.preventDefault();load().catch((error)=>{detail.textContent=error.message})};load().catch((error)=>{detail.textContent=error.message});
-</script></body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Orders | Get Free Seeds</title><style>body{font:15px system-ui;max-width:1200px;margin:2rem auto;padding:0 1rem;color:#172018}nav{margin-bottom:1rem}.filters{display:flex;flex-wrap:wrap;gap:.6rem;margin:1rem 0}input,select,textarea,button{font:inherit;padding:.5rem}table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid #d9dfd9;padding:.55rem;text-align:left}tr:hover{background:#f4f7f4}tr[aria-selected=true]{background:#e8f1e9}.panel{border:1px solid #ccd5cc;border-radius:8px;padding:1rem;margin-top:1rem;white-space:pre-wrap}.actions{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem}.receipt{margin:.75rem 0}.error{color:#a40019}.ok{color:#176b36}.muted{color:#59635a}.state{font-weight:600}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(max-width:700px){table{font-size:.9rem}th,td{padding:.4rem}.actions button{width:100%}}</style></head><body><nav><a href="/">Admin home</a> | <a href="/test-controls">Test controls</a></nav><h1>Orders</h1><form id="filters" class="filters"><label>Search <input name="q" placeholder="Order, customer, or wa_id"></label><label>State <select name="state"><option value="">All states</option><option>NEW</option><option>DETAILS_COMPLETED</option><option>PAYMENT_PENDING</option><option>RECEIPT_SUBMITTED</option><option>PAYMENT_REVIEW</option><option>PAYMENT_REJECTED</option><option>PAID</option><option>PACKING</option><option>DISPATCHED</option><option>DELIVERED</option><option>CANCELLED</option></select></label><label>Archived <select name="archived"><option value="active">Active</option><option value="all">All</option><option value="only">Archived</option></select></label><button>Search</button></form><p id="list-status" class="muted" role="status" aria-live="polite">Loading orders...</p><table><thead><tr><th>Order</th><th>Customer</th><th>State</th><th>Payment</th><th>Created</th></tr></thead><tbody id="rows"></tbody></table><section id="detail" class="panel muted" aria-live="polite">Select an order.</section><script>
+ const csrf=${JSON.stringify(csrfToken)};const filters=document.querySelector('#filters');const rows=document.querySelector('#rows');const listStatus=document.querySelector('#list-status');const detail=document.querySelector('#detail');let selectedId='';
+ const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ async function json(response){const data=await response.json();if(!response.ok)throw new Error(data.error||'Request failed');return data}
+ function hydrateFilters(){const params=new URLSearchParams(location.search);for(const name of ['q','state','archived']){const value=params.get(name);if(value!==null&&filters.elements[name])filters.elements[name].value=value}}
+ function query(){return new URLSearchParams(new FormData(filters))}
+ function syncUrl(){const params=query();const queryString=params.toString();history.replaceState(null,'',location.pathname+(queryString?'?'+queryString:''))}
+ async function load(){listStatus.className='muted';listStatus.textContent='Loading orders...';rows.innerHTML='';const data=await json(await fetch('/api/orders?'+query()));const orders=data.orders||[];if(!orders.length){listStatus.textContent='No matching orders.';rows.innerHTML='<tr><td colspan="5" class="muted">No orders match these filters.</td></tr>';return}listStatus.textContent=orders.length+' order'+(orders.length===1?'':'s')+' found.';rows.innerHTML=orders.map((o)=>'<tr data-id="'+esc(o.id)+'" tabindex="0" aria-selected="'+(o.id===selectedId)+'"><td>'+esc(o.orderNumber)+'</td><td>'+esc(o.customerName)+'</td><td class="state">'+esc(o.state)+(o.archivedAt?' (archived)':'')+'</td><td>'+esc(o.paymentReviewState||o.paymentStatus)+'</td><td>'+esc(o.createdAt)+'</td></tr>').join('');for(const row of rows.querySelectorAll('[data-id]')){row.onclick=()=>show(row.dataset.id);row.onkeydown=(event)=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();show(row.dataset.id)}}}}
+ async function mutate(path,body){return json(await fetch(path,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(body)}))}
+ async function refresh(id){await load();if(id)await show(id)}
+ function actionButton(label,handler){const button=document.createElement('button');button.type='button';button.textContent=label;button.onclick=async()=>{button.disabled=true;try{await handler();}catch(error){detail.className='panel error';detail.textContent=error instanceof Error?error.message:'Request failed'}finally{button.disabled=false}};return button}
+ async function show(id){selectedId=id;detail.className='panel muted';detail.textContent='Loading order details...';try{const data=await json(await fetch('/api/orders/'+encodeURIComponent(id)));const o=data.order;const items=(data.items||[]).map((item)=>esc(item.description)+' x '+esc(item.quantity)).join(', ')||'None';const receipts=(data.receipts||[]).map((receipt)=>'<li class="receipt"><a href="'+esc(receipt.previewUrl)+'" target="_blank" rel="noreferrer">View private receipt preview</a> <span class="muted">('+esc(receipt.mimeType)+', submitted '+esc(receipt.submittedAt)+')</span></li>').join('')||'<li class="muted">No receipts.</li>';detail.className='panel';detail.innerHTML='<strong>'+esc(o.orderNumber)+'</strong><br>Customer: '+esc(o.customerName)+'<br>State: <span class="state">'+esc(o.state)+'</span><br>Payment: '+esc(o.paymentReviewState||o.paymentStatus)+'<br>Province: '+esc(o.province)+'<br>Items: '+items+'<br>Receipts:<ul>'+receipts+'</ul><div class="actions"></div><p class="action-status muted" role="status"></p>';const actions=detail.querySelector('.actions');const status=detail.querySelector('.action-status');const confirmOrder=()=>confirm('Confirm action for '+o.orderNumber+'?');const run=async(path,body,message)=>{await mutate(path,body);status.className='action-status ok';status.textContent=message;await refresh(o.id)};if(o.paymentId&&o.state==='PAYMENT_REVIEW'&&o.paymentReviewState==='REVIEW'){actions.append(actionButton('Approve payment',async()=>{if(!confirmOrder())return;await run('/api/payments/'+encodeURIComponent(o.paymentId)+'/approve',{orderId:o.id,confirmation:o.orderNumber},'Payment approved.')}));actions.append(actionButton('Reject payment',async()=>{const reason=prompt('Rejection reason');if(!reason||!confirm('Reject payment for '+o.orderNumber+'?'))return;await run('/api/payments/'+encodeURIComponent(o.paymentId)+'/reject',{orderId:o.id,reason,confirmation:o.orderNumber},'Payment rejected.')}));if(o.receiptCount>0)actions.append(actionButton('Request clearer receipt',async()=>{if(!confirm('Request a clearer receipt for '+o.orderNumber+'?'))return;await run('/api/payments/'+encodeURIComponent(o.paymentId)+'/request-clearer-receipt',{orderId:o.id,confirmation:o.orderNumber},'Clearer receipt requested.')}))}const next={PAID:'PACKING',PACKING:'DISPATCHED',DISPATCHED:'DELIVERED'}[o.state];if(next)actions.append(actionButton('Mark '+next,async()=>{if(!confirm('Move '+o.orderNumber+' from '+o.state+' to '+next+'?'))return;await run('/api/orders/'+encodeURIComponent(o.id)+'/transition',{from:o.state,to:next,confirmation:o.orderNumber},'Order moved to '+next+'.')}));if(o.canCancel)actions.append(actionButton('Cancel unpaid order',async()=>{const reason=prompt('Cancellation reason');if(!reason||!confirm('Cancel '+o.orderNumber+'? Financial history will be retained.'))return;await run('/api/orders/'+encodeURIComponent(o.id)+'/cancel',{reason,confirmation:o.orderNumber},'Order cancelled; financial history retained.')}));if(o.canArchive)actions.append(actionButton('Archive unpaid order',async()=>{const reason=prompt('Archive reason');if(!reason||!confirm('Archive '+o.orderNumber+'? No records will be deleted.'))return;await run('/api/orders/'+encodeURIComponent(o.id)+'/archive',{reason,confirmation:o.orderNumber},'Order archived; no records deleted.')}))}catch(error){detail.className='panel error';detail.textContent=error instanceof Error?error.message:'Request failed'}}
+ filters.onsubmit=(event)=>{event.preventDefault();syncUrl();load().catch((error)=>{listStatus.className='error';listStatus.textContent=error instanceof Error?error.message:'Orders unavailable'})};hydrateFilters();load().catch((error)=>{listStatus.className='error';listStatus.textContent=error instanceof Error?error.message:'Orders unavailable'});
+ </script></body></html>`;
 }
 
 function testControlsPageHtml(csrfToken: string): string {
@@ -911,12 +914,21 @@ app.get("/api/orders/:id", async (c) => {
   if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
   const row = await c.env.DB.prepare(`${ORDER_ADMIN_SELECT} WHERE o.id=? GROUP BY o.id,p.id`).bind(c.req.param("id")).first<Record<string, unknown>>();
   if (!row) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
-  const [items, receipts, audit] = await Promise.all([
-    c.env.DB.prepare("SELECT id,item_type,product_code,description,quantity,unit_price_pkr,line_total_pkr,created_at FROM order_items WHERE order_id=? ORDER BY created_at,id").bind(c.req.param("id")).all(),
-    c.env.DB.prepare("SELECT id,payment_id,mime_type,size_bytes,submitted_at,created_at FROM payment_receipts WHERE order_id=? ORDER BY submitted_at DESC").bind(c.req.param("id")).all(),
+  const [items, receiptsResult, audit] = await Promise.all([
+    c.env.DB.prepare("SELECT id,item_type,product_code,description,quantity,created_at FROM order_items WHERE order_id=? ORDER BY created_at,id").bind(c.req.param("id")).all(),
+    c.env.DB.prepare("SELECT id,payment_id,r2_object_key,mime_type,size_bytes,submitted_at,created_at FROM payment_receipts WHERE order_id=? ORDER BY submitted_at DESC").bind(c.req.param("id")).all(),
     c.env.DB.prepare("SELECT id,action,actor_type,actor_id,metadata_json,created_at FROM audit_log WHERE (entity_type='ORDER' AND entity_id=?) OR (entity_type='PAYMENT' AND entity_id=(SELECT id FROM payments WHERE order_id=?)) ORDER BY created_at DESC LIMIT 100").bind(c.req.param("id"), c.req.param("id")).all()
   ]);
-  return c.json({ order: orderView(row), items: items.results, receipts: receipts.results, audit: audit.results });
+  const receipts = receiptsResult.results.map((receipt) => ({
+    id: String(receipt.id),
+    paymentId: String(receipt.payment_id),
+    mimeType: String(receipt.mime_type),
+    sizeBytes: Number(receipt.size_bytes),
+    submittedAt: String(receipt.submitted_at),
+    createdAt: String(receipt.created_at),
+    previewUrl: `/api/receipts/${encodeURIComponent(String(receipt.r2_object_key))}`
+  }));
+  return c.json({ order: orderView(row), items: items.results, receipts, audit: audit.results });
 });
 
 app.get("/api/test-controls/conversations", async (c) => {
@@ -1040,36 +1052,52 @@ app.post("/api/orders/:id/cancel", (c) => orderRetentionAction(c, "cancel"));
 app.post("/api/orders/:id/archive", (c) => orderRetentionAction(c, "archive"));
 
 app.post("/api/orders/:id/transition", async (c) => {
-  const body = await c.req.json<{ from: OrderState; to: OrderState }>();
-  if (body.to === "CANCELLED") return c.json({ error: "USE_EXPLICIT_CANCELLATION" }, 409);
-  if (!canTransition(body.from, body.to)) return c.json({ error: "INVALID_STATE_TRANSITION" }, 409);
+  let body: { from?: unknown; to?: unknown; confirmation?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
+  const from = OrderState.safeParse(body.from);
+  const to = OrderState.safeParse(body.to);
+  if (!from.success || !to.success) return c.json({ error: "ORDER_STATE_INVALID" }, 400);
+  if (to.data === "CANCELLED") return c.json({ error: "USE_EXPLICIT_CANCELLATION" }, 409);
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  if (!canTransition(from.data, to.data)) return c.json({ error: "INVALID_STATE_TRANSITION" }, 409);
   if (!c.env.DB) return c.json({ ok: true, simulated: true });
-  const result = await c.env.DB.prepare("UPDATE orders SET state = ?, updated_at = ? WHERE id = ? AND state = ?").bind(body.to, new Date().toISOString(), c.req.param("id"), body.from).run();
-  return result.meta.changes === 1 ? c.json({ ok: true }) : c.json({ error: "STATE_CONFLICT" }, 409);
+  const current = await c.env.DB.prepare("SELECT order_number,state,archived_at FROM orders WHERE id=?").bind(c.req.param("id")).first<{ order_number: string; state: OrderState; archived_at: string | null }>();
+  if (!current) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
+  if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+  if (current.archived_at != null || current.state !== from.data) return c.json({ error: "STATE_CONFLICT" }, 409);
+  const now = new Date().toISOString();
+  const result = await c.env.DB.batch([
+    c.env.DB.prepare("UPDATE orders SET state=?,updated_at=? WHERE id=? AND state=? AND archived_at IS NULL").bind(to.data, now, c.req.param("id"), from.data),
+    c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE changes()=1").bind(crypto.randomUUID(), "ORDER_STATE_TRANSITIONED", "ADMIN", c.env.ADMIN_EMAIL, "ORDER", c.req.param("id"), crypto.randomUUID(), JSON.stringify({ from: from.data, to: to.data, orderNumber: current.order_number }), now)
+  ]);
+  return result[0].meta.changes === 1 ? c.json({ ok: true, from: from.data, to: to.data }) : c.json({ error: "STATE_CONFLICT" }, 409);
 });
 
 app.post("/api/payments/:id/approve", async (c) => {
-  const body = await c.req.json<{ orderId: string; orderNumber: string; expectedAmount: number; approvedAmount: number; customerId: string }>();
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  let body: { orderId?: unknown; confirmation?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
+  if (!c.env.DB) return c.json({ ok: true, simulated: true });
   try {
-    const amount = approvedPurchaseValue(body.expectedAmount, body.approvedAmount);
-    if (!c.env.DB) return c.json({ ok: true, simulated: true, event: createPurchaseEvent(body.orderNumber, amount) });
-    const current = await c.env.DB.prepare("SELECT p.review_state, o.state, ma.ctwa_clid FROM payments p JOIN orders o ON o.id = p.order_id LEFT JOIN meta_attribution ma ON ma.order_id = o.id WHERE p.id = ? AND o.id = ?").bind(c.req.param("id"), body.orderId).first<{ review_state: string; state: OrderState; ctwa_clid?: string }>();
+    const current = await c.env.DB.prepare("SELECT p.review_state,p.expected_amount,p.approved_amount,o.id AS order_id,o.order_number,o.state,o.archived_at,c.id AS customer_id,ma.ctwa_clid FROM payments p JOIN orders o ON o.id=p.order_id JOIN customers c ON c.id=o.customer_id LEFT JOIN meta_attribution ma ON ma.order_id=o.id WHERE p.id=? AND o.id=?").bind(c.req.param("id"), body.orderId).first<{ review_state: string; expected_amount: number; approved_amount: number | null; order_id: string; order_number: string; state: OrderState; archived_at: string | null; customer_id: string; ctwa_clid?: string }>();
     if (!current) return c.json({ error: "PAYMENT_NOT_FOUND" }, 404);
-    const event = createPurchaseEvent(body.orderNumber, amount, current.ctwa_clid ? { ctwaClid: current.ctwa_clid } : undefined);
+    if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+    const amount = approvedPurchaseValue(Number(current.expected_amount), Number(current.expected_amount));
+    const event = createPurchaseEvent(current.order_number, amount, current.ctwa_clid ? { ctwaClid: current.ctwa_clid } : undefined);
     if (current.review_state === "APPROVED" && current.state === "PAID") return c.json({ ok: true, alreadyApproved: true, eventId: event.eventId });
-    if (current.review_state !== "REVIEW" || current.state !== "PAYMENT_REVIEW") return c.json({ error: "PAYMENT_NOT_IN_REVIEW" }, 409);
+    if (current.archived_at != null || current.review_state !== "REVIEW" || current.state !== "PAYMENT_REVIEW") return c.json({ error: "PAYMENT_NOT_IN_REVIEW" }, 409);
     const now = new Date().toISOString();
     await c.env.DB.batch([
       c.env.DB.prepare("UPDATE payments SET review_state='APPROVED', approved_amount=?, approved_by=?, approved_at=?, updated_at=? WHERE id=? AND review_state='REVIEW'").bind(amount, c.env.ADMIN_EMAIL, now, now, c.req.param("id")),
-      c.env.DB.prepare("UPDATE orders SET state='PAID', payment_status='PAID', updated_at=? WHERE id=? AND state='PAYMENT_REVIEW' AND EXISTS (SELECT 1 FROM payments WHERE id=? AND review_state='APPROVED')").bind(now, body.orderId, c.req.param("id")),
-      c.env.DB.prepare("INSERT OR IGNORE INTO capi_events (id,event_id,event_name,order_id,customer_id,send_status,created_at,updated_at) SELECT ?,?,?,?,?,?,?,? FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=? AND o.state='PAID' AND p.id=? AND p.review_state='APPROVED'").bind(crypto.randomUUID(), event.eventId, event.eventName, body.orderId, body.customerId, "PENDING", now, now, body.orderId, c.req.param("id")),
-      c.env.DB.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) SELECT ?,?,?,?,?,?,?,?,? FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=? AND o.state='PAID' AND p.id=? AND p.review_state='APPROVED'").bind(crypto.randomUUID(), event.eventId, "CAPI_PURCHASE", body.orderId, JSON.stringify(event), "PENDING", now, now, now, body.orderId, c.req.param("id")),
-      c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? FROM orders WHERE id=? AND state='PAID'").bind(crypto.randomUUID(), "PAYMENT_APPROVED", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT", c.req.param("id"), crypto.randomUUID(), JSON.stringify({ orderNumber: body.orderNumber, eventId: event.eventId }), now, body.orderId)
+      c.env.DB.prepare("UPDATE orders SET state='PAID', payment_status='PAID', updated_at=? WHERE id=? AND state='PAYMENT_REVIEW' AND EXISTS (SELECT 1 FROM payments WHERE id=? AND review_state='APPROVED')").bind(now, current.order_id, c.req.param("id")),
+      c.env.DB.prepare("INSERT OR IGNORE INTO capi_events (id,event_id,event_name,order_id,customer_id,send_status,created_at,updated_at) SELECT ?,?,?,?,?,?,?,? FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=? AND o.state='PAID' AND p.id=? AND p.review_state='APPROVED'").bind(crypto.randomUUID(), event.eventId, event.eventName, current.order_id, current.customer_id, "PENDING", now, now, current.order_id, c.req.param("id")),
+      c.env.DB.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) SELECT ?,?,?,?,?,?,?,?,? FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=? AND o.state='PAID' AND p.id=? AND p.review_state='APPROVED'").bind(crypto.randomUUID(), event.eventId, "CAPI_PURCHASE", current.order_id, JSON.stringify(event), "PENDING", now, now, now, current.order_id, c.req.param("id")),
+      c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? FROM orders WHERE id=? AND state='PAID'").bind(crypto.randomUUID(), "PAYMENT_APPROVED", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT", c.req.param("id"), crypto.randomUUID(), JSON.stringify({ orderNumber: current.order_number, eventId: event.eventId }), now, current.order_id)
     ]);
     let queued = false;
     try {
       if (c.env.EVENTS) {
-        await c.env.EVENTS.send({ kind: "CAPI_PURCHASE", idempotencyKey: event.eventId, entityId: body.orderId, schemaVersion: 1 });
+        await c.env.EVENTS.send({ kind: "CAPI_PURCHASE", idempotencyKey: event.eventId, entityId: current.order_id, schemaVersion: 1 });
         queued = true;
       }
     } catch {
@@ -1080,25 +1108,38 @@ app.post("/api/payments/:id/approve", async (c) => {
 });
 
 app.post("/api/payments/:id/reject", async (c) => {
-  const body = await c.req.json<{ orderId: string; reason: string }>();
-  if (!body.reason?.trim()) return c.json({ error: "REJECTION_REASON_REQUIRED" }, 400);
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  let body: { orderId?: unknown; reason?: unknown; confirmation?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
+  const reason = requiredReason(body.reason);
+  if (!reason) return c.json({ error: "REJECTION_REASON_REQUIRED" }, 400);
   if (!c.env.DB) return c.json({ ok: true, simulated: true });
+  const current = await c.env.DB.prepare("SELECT p.review_state,o.id AS order_id,o.order_number,o.state,o.archived_at FROM payments p JOIN orders o ON o.id=p.order_id WHERE p.id=? AND o.id=?").bind(c.req.param("id"), body.orderId).first<{ review_state: string; order_id: string; order_number: string; state: OrderState; archived_at: string | null }>();
+  if (!current) return c.json({ error: "PAYMENT_NOT_FOUND" }, 404);
+  if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+  if (current.archived_at != null || current.review_state !== "REVIEW" || current.state !== "PAYMENT_REVIEW") return c.json({ error: "PAYMENT_NOT_IN_REVIEW" }, 409);
   const now = new Date().toISOString();
   const result = await c.env.DB.batch([
-    c.env.DB.prepare("UPDATE payments SET review_state='REJECTED', rejection_reason=?, approved_by=?, updated_at=? WHERE id=? AND review_state='REVIEW'").bind(body.reason.trim().slice(0, 500), c.env.ADMIN_EMAIL, now, c.req.param("id")),
-    c.env.DB.prepare("UPDATE orders SET state='PAYMENT_REJECTED', payment_status='REJECTED', updated_at=? WHERE id=? AND state='PAYMENT_REVIEW' AND EXISTS (SELECT 1 FROM payments WHERE id=? AND review_state='REJECTED')").bind(now, body.orderId, c.req.param("id")),
-    c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? FROM orders WHERE id=? AND state='PAYMENT_REJECTED'").bind(crypto.randomUUID(), "PAYMENT_REJECTED", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT", c.req.param("id"), crypto.randomUUID(), JSON.stringify({ reason: body.reason.trim().slice(0, 500) }), now, body.orderId)
+    c.env.DB.prepare("UPDATE payments SET review_state='REJECTED', rejection_reason=?, approved_by=?, updated_at=? WHERE id=? AND review_state='REVIEW'").bind(reason, c.env.ADMIN_EMAIL, now, c.req.param("id")),
+    c.env.DB.prepare("UPDATE orders SET state='PAYMENT_REJECTED', payment_status='REJECTED', updated_at=? WHERE id=? AND state='PAYMENT_REVIEW' AND archived_at IS NULL AND EXISTS (SELECT 1 FROM payments WHERE id=? AND review_state='REJECTED')").bind(now, current.order_id, c.req.param("id")),
+    c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? FROM orders WHERE id=? AND state='PAYMENT_REJECTED'").bind(crypto.randomUUID(), "PAYMENT_REJECTED", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT", c.req.param("id"), crypto.randomUUID(), JSON.stringify({ reason }), now, current.order_id)
   ]);
   return result[1].meta.changes === 1 ? c.json({ ok: true }) : c.json({ error: "PAYMENT_NOT_IN_REVIEW" }, 409);
 });
 
 app.post("/api/payments/:id/request-clearer-receipt", async (c) => {
-  const body = await c.req.json<{ orderId: string }>();
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  let body: { orderId?: unknown; confirmation?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
   if (!c.env.DB) return c.json({ ok: true, simulated: true });
+  const current = await c.env.DB.prepare("SELECT p.review_state,o.id AS order_id,o.order_number,o.state,o.archived_at,COUNT(pr.id) AS receipt_count FROM payments p JOIN orders o ON o.id=p.order_id LEFT JOIN payment_receipts pr ON pr.order_id=o.id WHERE p.id=? AND o.id=? GROUP BY p.id,o.id").bind(c.req.param("id"), body.orderId).first<{ review_state: string; order_id: string; order_number: string; state: OrderState; archived_at: string | null; receipt_count: number }>();
+  if (!current) return c.json({ error: "PAYMENT_NOT_FOUND" }, 404);
+  if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+  if (current.archived_at != null || current.review_state !== "REVIEW" || current.state !== "PAYMENT_REVIEW" || Number(current.receipt_count) < 1) return c.json({ error: "PAYMENT_NOT_IN_REVIEW" }, 409);
   const now = new Date().toISOString();
   await c.env.DB.batch([
-    c.env.DB.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), `clearer_receipt_${c.req.param("id")}`, "WHATSAPP_CLEARER_RECEIPT", body.orderId, JSON.stringify({ paymentId: c.req.param("id"), orderId: body.orderId }), "PENDING", now, now, now),
-    c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "REQUEST_CLEARER_RECEIPT", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT", c.req.param("id"), crypto.randomUUID(), JSON.stringify({ orderId: body.orderId }), now)
+    c.env.DB.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), `clearer_receipt_${c.req.param("id")}`, "WHATSAPP_CLEARER_RECEIPT", current.order_id, JSON.stringify({ paymentId: c.req.param("id"), orderId: current.order_id }), "PENDING", now, now, now),
+    c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "REQUEST_CLEARER_RECEIPT", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT", c.req.param("id"), crypto.randomUUID(), JSON.stringify({ orderId: current.order_id }), now)
   ]);
   return c.json({ ok: true });
 });

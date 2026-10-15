@@ -444,6 +444,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Canonical Test Controls tab was reused; latest MCP reconnection failed before Admin Orders inspection because the local `chrome-devtools-mcp` installation lacked `pkce-challenge`.
 - Backend/Admin controls remain deployed; no financial mutation was made. Live customer/device and Admin UI evidence remain external/MCP-gated.
 
+## GFS-135 Existing Order Audit
+
+- D1 locates `FS-261015-000001`: `PAYMENT_REVIEW`, total PKR 300, province KPK; JazzCash expected amount PKR 300, review state REVIEW, one receipt record.
+- Admin Orders URL was opened with exact order query, but Chrome returned `ERR_QUIC_PROTOCOL_ERROR`; no UI mutation was made and payment was not approved.
+- The real receipt/payment discrepancy remains a manual review gate; no PAID/CAPI/fulfillment claim.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

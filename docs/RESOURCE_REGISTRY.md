@@ -221,6 +221,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 
 - Admin order/test-control backend remains canonical; browser inspection is currently blocked by local MCP dependency error (`pkce-challenge` missing).
 
+## GFS-135 Order Evidence
+
+- Existing order `FS-261015-000001` is present in D1 as `PAYMENT_REVIEW`, PKR 300, KPK, JazzCash, one receipt.
+- Admin UI transport currently fails in Chrome with `ERR_QUIC_PROTOCOL_ERROR`; no real payment state mutation occurred.
+
 ## GFS-114 Flow Graph Evidence
 
 - Canonical WABA Flow ID created via Graph-backed Admin route: `1133458765899784`.

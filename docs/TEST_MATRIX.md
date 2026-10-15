@@ -103,6 +103,7 @@
 | GFS-132 live device | active v2 screen/tap/order evidence | BLOCKED: no verified customer device session |
 | GFS-133 guided-first mode | runtime flag disables native CTA and keeps guided chat functional | PASS deployed; native Flow preserved |
 | GFS-134 Admin UI/live audit | Orders/test controls and authorized device inspection | BLOCKED by local MCP `pkce-challenge` dependency; backend unchanged |
+| GFS-135 real order audit | order/payment/receipt D1 evidence and Admin UI | PASS D1: PAYMENT_REVIEW/PKR300/one receipt; Admin UI blocked by ERR_QUIC_PROTOCOL_ERROR |
 | GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |
 | GFS-98 token recovery | owner-installed secret → Graph ladder → API/Admin readiness | PASS fresh token; no token value inspected |
 | GFS-98 atomic reply | one failed event retry, outbound ID, status webhook, no duplicate | PASS: WAMID persisted, SENT status persisted, duplicate count 0 |

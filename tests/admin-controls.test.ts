@@ -109,6 +109,34 @@ describe("GFS-109 admin controls", () => {
     }
   });
 
+  it("renders URL-hydrated, non-financial order controls", async () => {
+    const response = await app.fetch(new Request("https://admin.example.test/orders?q=synthetic&state=PAYMENT_REVIEW&archived=all", { headers: auth }), env(new AdminMemoryDb()));
+    expect(response.status).toBe(200);
+    const html = await response.text();
+    expect(html).toContain("new URLSearchParams(location.search)");
+    expect(html).toContain("/api/payments/'");
+    expect(html).toContain("request-clearer-receipt");
+    expect(html).toContain("View private receipt preview");
+    expect(html).not.toContain("totalPayablePkr");
+    expect(html).not.toContain("expectedAmount");
+    expect(html).not.toContain("approvedAmount");
+    expect(html).not.toContain("line_total_pkr");
+  });
+
+  it("requires CSRF for payment and fulfillment detail mutations", async () => {
+    const db = new AdminMemoryDb();
+    const requests = [
+      ["/api/payments/payment/approve", { orderId: "order", confirmation: "FS-261012-990001" }],
+      ["/api/payments/payment/reject", { orderId: "order", reason: "Synthetic", confirmation: "FS-261012-990001" }],
+      ["/api/payments/payment/request-clearer-receipt", { orderId: "order", confirmation: "FS-261012-990001" }],
+      ["/api/orders/order/transition", { from: "PAID", to: "PACKING", confirmation: "FS-261012-990001" }]
+    ] as const;
+    for (const [path, body] of requests) {
+      const response = await app.fetch(new Request(`https://admin.example.test${path}`, { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify(body) }), env(db));
+      expect(response.status).toBe(403);
+    }
+  });
+
   it("requires a same-origin per-session CSRF token and explicit confirmation", async () => {
     const db = new AdminMemoryDb();
     db.conversations.set("923001234567", { waId: "923001234567", state: "PAYMENT_PENDING", stateData: "{}", lastInboundMessageId: "synthetic-message", createdAt: "2026-10-12T00:00:00.000Z", updatedAt: "2026-10-12T00:00:00.000Z" });
