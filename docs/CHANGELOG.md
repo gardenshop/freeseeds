@@ -234,6 +234,10 @@
 ## Unreleased - 2026-10-14 (GFS-133)
 
 - Set API `WHATSAPP_CHECKOUT_MODE=guided` for safe fast launch while preserving published native Flow v2 as opt-in/rollback.
+
+## Unreleased - 2026-10-14 (GFS-134)
+
+- Reconciled guided-first runtime and preserved Admin/order controls. Latest MCP reconnect is blocked by missing `pkce-challenge`; no unrelated tab or financial state was changed.
 - Live native Flow remains blocked only by missing verified customer-device interaction evidence.
 - Sent one authorized v2 Flow CTA; Meta accepted it and emitted sent status. Customer open/submission remains unverified.
 

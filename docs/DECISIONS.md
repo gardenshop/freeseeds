@@ -166,6 +166,10 @@ The authenticated Manager screenshot was confirmed to be rollback Flow `11334587
 
 Native Flow live client acceptance remains unverified, so the API runtime is explicitly configured for guided checkout. Published Flow v2 is preserved without deletion or mutation; switching back requires a verified customer-device E2E gate.
 
+## 2026-10-14: GFS-134 MCP/Admin Boundary
+
+The latest Chrome MCP reconnect failed before the Admin Orders snapshot because its transient package installation lacks `pkce-challenge`. No unrelated tabs/accounts were changed and no financial mutation was attempted. Backend controls remain deployed; UI/device verification is a genuine tooling/customer dependency.
+
 ## 2026-10-13: GFS-117 Flow/Media Boundary
 
 Flow asset validation succeeds, but Meta publish still rejects the endpoint as unavailable. The API observed an invalid-initial-vector result for live encrypted requests; no customer Flow success is claimed. Media gallery work remains private-R2/D1 controlled and does not alter pricing/order logic.

@@ -217,6 +217,10 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 
 - Runtime checkout mode: `guided` (API Worker environment), native Flow preserved as published fallback/opt-in.
 
+## GFS-134 Audit
+
+- Admin order/test-control backend remains canonical; browser inspection is currently blocked by local MCP dependency error (`pkce-challenge` missing).
+
 ## GFS-114 Flow Graph Evidence
 
 - Canonical WABA Flow ID created via Graph-backed Admin route: `1133458765899784`.
