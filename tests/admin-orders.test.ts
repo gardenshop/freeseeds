@@ -142,7 +142,7 @@ describe("GFS-139 orders dashboard API", () => {
     const body = await response.json() as { order: Record<string, unknown>; items: Array<Record<string, unknown>>; receipts: Array<Record<string, unknown>> };
     expect(body.order).toMatchObject({ deliveryAddress: "Synthetic delivery address", landmark: "Synthetic landmark", city: "Synthetic City", province: "Synthetic Province", contactNumber: "03001234567", waId: "923001234567", expectedAmountPkr: 300, paymentSubmittedAt: "2026-10-16T12:20:00.000Z", fulfillmentStatus: "NOT_READY" });
     expect(body.items[0]).toMatchObject({ description: "Synthetic seed packs", quantity: 5, lineTotalPkr: 0 });
-    expect(body.receipts[0]).toMatchObject({ mimeType: "image/png", previewUrl: "/api/receipts/receipts%2Fsynthetic%2Fprivate-object" });
+    expect(body.receipts[0]).toMatchObject({ mimeType: "image/png", previewUrl: "/api/orders/synthetic-order-newest/receipts/synthetic-receipt/preview" });
     expect(JSON.stringify(body)).not.toContain("r2_object_key");
   });
 
