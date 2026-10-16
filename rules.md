@@ -41,6 +41,7 @@
 - New customer orders are blocked for fourteen 24-hour days from the last submitted order, except the verified E2E sender `+923034901810`; UI/input changes cannot bypass the server/D1 rule.
 - Cooldown exemptions are D1/admin managed by verified Meta `wa_id`; only `923034901810` is initially exempt. Conversation reset is a separate explicit audited action and never deletes historical orders, payments, receipts, or audit records.
 - Admin order cancellation/archive is Access-protected, CSRF-confirmed, audited, and limited to eligible unpaid orders; PAID orders, real receipts, and financial history are never hard-deleted.
+- Admin Orders opens all active orders newest-first with server pagination/counts; payment approval requires a receipt plus independently verified funds, payee, amount and unique reference. Client-supplied financial authority is never accepted.
 - Payment Settings saves are draft-safe: incomplete/disabled method values may be persisted for later verification, but enabling a method requires complete recipient and instruction fields. Legacy fixed advance configuration never blocks dynamic WhatsApp order totals.
 - New orders use a Karachi-dated, atomic `FS-YYMMDD-######` identifier. Historical order numbers are immutable; replay/idempotency returns the original order without consuming a second sequence.
 - After FS order confirmation, only complete enabled payment methods may be offered; selected method details must use persisted `orders.total_payable`, and PAID/CAPI Purchase requires genuine admin approval.

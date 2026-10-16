@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased - 2026-10-16 (GFS-139)
+
+- Added/deployed professional four-tab Orders dashboard with counts, server pagination, filters, newest auto-selection and complete details/receipt/actions.
+- Preserved real rejected order/receipt/audit state; no payment approval or fulfillment mutation.
+
 ## Unreleased - 2026-10-10 (GFS-68)
 
 - Added the permanent `META_FORM_LAUNCH_FIRST` distinction: native Meta Form/Leads Center capture may launch before WhatsApp API credentials, `/register`, `subscribed_apps`, webhook, or Lead→D1 realtime integration.

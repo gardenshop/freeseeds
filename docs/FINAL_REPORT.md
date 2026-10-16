@@ -1,5 +1,11 @@
 # Final Report
 
+## GFS-139-PROFESSIONAL-ORDERS Update — 2026-10-16
+
+- All Orders/Verify Payments/Confirmed Payments/Fulfillment tabs: **PASS implementation/deployment**.
+- Real order `FS-261015-000001`: **PAYMENT_REJECTED**, PKR 300, JazzCash, one receipt; audited rejection preserved.
+- Financial mutation: **NONE**. Admin browser post-deploy proof is **PARTIAL** because MCP stopped returning page inventory after deployment.
+
 ## GFS-85-LIVE-E2E Update — 2026-10-10
 
 - `META_APP_SECRET`: **PRESENT** by secret name; active API deployment **PASS**.

@@ -57,8 +57,43 @@ function requiredReason(value: unknown): string | undefined {
   return reason.length >= 3 && reason.length <= 500 ? reason : undefined;
 }
 
+function validOrderDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
+function jsonRecords(value: unknown): Record<string, unknown>[] {
+  if (typeof value !== "string") return [];
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null && !Array.isArray(item)) : [];
+  } catch {
+    return [];
+  }
+}
+
 function orderView(row: Record<string, unknown>) {
-  const receiptCount = Number(row.receipt_count ?? 0);
+  const items = jsonRecords(row.items_json).map((item) => ({
+    id: String(item.id),
+    type: String(item.itemType),
+    productCode: String(item.productCode),
+    description: String(item.description),
+    quantity: Number(item.quantity),
+    unitPricePkr: Number(item.unitPricePkr),
+    lineTotalPkr: Number(item.lineTotalPkr),
+    createdAt: String(item.createdAt)
+  }));
+  const receipts = jsonRecords(row.receipts_json).map((receipt) => ({
+    id: String(receipt.id),
+    paymentId: String(receipt.paymentId),
+    mimeType: String(receipt.mimeType),
+    sizeBytes: Number(receipt.sizeBytes),
+    submittedAt: String(receipt.submittedAt),
+    createdAt: String(receipt.createdAt),
+    previewUrl: `/api/receipts/${encodeURIComponent(String(receipt.objectKey))}`
+  }));
+  const receiptCount = Number(row.receipt_count ?? receipts.length);
   const financial = String(row.state) === "PAID" || String(row.payment_status) === "PAID" || String(row.review_state ?? "") === "APPROVED" || row.approved_at != null || row.approved_amount != null;
   const state = String(row.state);
   const unpaidState = ["NEW", "DETAILS_COMPLETED", "PAYMENT_PENDING", "PAYMENT_REJECTED", "CANCELLED"].includes(state);
@@ -67,15 +102,34 @@ function orderView(row: Record<string, unknown>) {
     orderNumber: String(row.order_number),
     state,
     paymentStatus: String(row.payment_status),
+    fulfillmentStatus: ["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(state) ? state : "NOT_READY",
     province: row.province == null ? null : String(row.province),
     customerName: row.full_name == null ? null : String(row.full_name),
+    deliveryAddress: row.delivery_address == null ? null : String(row.delivery_address),
+    landmark: row.nearby_place == null ? null : String(row.nearby_place),
+    city: row.city == null ? null : String(row.city),
     waId: row.wa_id == null ? null : String(row.wa_id),
-    contactNumber: row.normalized_contact_number == null ? null : String(row.normalized_contact_number),
+    contactNumber: row.contact_number == null ? null : String(row.contact_number),
+    normalizedContactNumber: row.normalized_contact_number == null ? null : String(row.normalized_contact_number),
+    whatsappNumber: row.whatsapp_number == null ? null : String(row.whatsapp_number),
+    normalizedWhatsappNumber: row.normalized_whatsapp_number == null ? null : String(row.normalized_whatsapp_number),
     paymentId: row.payment_id == null ? null : String(row.payment_id),
     paymentMethod: row.method == null ? null : String(row.method),
     paymentReviewState: row.review_state == null ? null : String(row.review_state),
+    expectedAmountPkr: row.expected_amount == null ? null : Number(row.expected_amount),
+    approvedAmountPkr: row.approved_amount == null ? null : Number(row.approved_amount),
+    paymentReviewedBy: row.approved_by == null ? null : String(row.approved_by),
+    paymentRejectionReason: row.rejection_reason == null ? null : String(row.rejection_reason),
+    paymentSubmittedAt: row.submitted_at == null ? null : String(row.submitted_at),
+    paymentApprovedAt: row.approved_at == null ? null : String(row.approved_at),
+    paymentCreatedAt: row.payment_created_at == null ? null : String(row.payment_created_at),
+    paymentUpdatedAt: row.payment_updated_at == null ? null : String(row.payment_updated_at),
+    customerTransactionReference: row.customer_transaction_reference == null ? null : String(row.customer_transaction_reference),
     totalPayablePkr: Number(row.total_payable ?? 0),
     receiptCount,
+    itemSummary: items.map((item) => `${item.description} x ${item.quantity}`).join(", "),
+    items,
+    receipts,
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
     cancelledAt: row.cancelled_at == null ? null : String(row.cancelled_at),
@@ -127,6 +181,48 @@ function ordersPageHtml(csrfToken: string): string {
  async function show(id){selectedId=id;detail.className='panel muted';detail.textContent='Loading order details...';try{const data=await json(await fetch('/api/orders/'+encodeURIComponent(id)));const o=data.order;const items=(data.items||[]).map((item)=>esc(item.description)+' x '+esc(item.quantity)).join(', ')||'None';const receipts=(data.receipts||[]).map((receipt)=>'<li class="receipt"><a href="'+esc(receipt.previewUrl)+'" target="_blank" rel="noreferrer">View private receipt preview</a> <span class="muted">('+esc(receipt.mimeType)+', submitted '+esc(receipt.submittedAt)+')</span></li>').join('')||'<li class="muted">No receipts.</li>';detail.className='panel';detail.innerHTML='<strong>'+esc(o.orderNumber)+'</strong><br>Customer: '+esc(o.customerName)+'<br>State: <span class="state">'+esc(o.state)+'</span><br>Payment: '+esc(o.paymentReviewState||o.paymentStatus)+'<br>Province: '+esc(o.province)+'<br>Items: '+items+'<br>Receipts:<ul>'+receipts+'</ul><div class="actions"></div><p class="action-status muted" role="status"></p>';const actions=detail.querySelector('.actions');const status=detail.querySelector('.action-status');const confirmOrder=()=>confirm('Confirm action for '+o.orderNumber+'?');const run=async(path,body,message)=>{await mutate(path,body);status.className='action-status ok';status.textContent=message;await refresh(o.id)};if(o.paymentId&&o.state==='PAYMENT_REVIEW'&&o.paymentReviewState==='REVIEW'){actions.append(actionButton('Approve payment',async()=>{if(!confirmOrder())return;await run('/api/payments/'+encodeURIComponent(o.paymentId)+'/approve',{orderId:o.id,confirmation:o.orderNumber},'Payment approved.')}));actions.append(actionButton('Reject payment',async()=>{const reason=prompt('Rejection reason');if(!reason||!confirm('Reject payment for '+o.orderNumber+'?'))return;await run('/api/payments/'+encodeURIComponent(o.paymentId)+'/reject',{orderId:o.id,reason,confirmation:o.orderNumber},'Payment rejected.')}));if(o.receiptCount>0)actions.append(actionButton('Request clearer receipt',async()=>{if(!confirm('Request a clearer receipt for '+o.orderNumber+'?'))return;await run('/api/payments/'+encodeURIComponent(o.paymentId)+'/request-clearer-receipt',{orderId:o.id,confirmation:o.orderNumber},'Clearer receipt requested.')}))}const next={PAID:'PACKING',PACKING:'DISPATCHED',DISPATCHED:'DELIVERED'}[o.state];if(next)actions.append(actionButton('Mark '+next,async()=>{if(!confirm('Move '+o.orderNumber+' from '+o.state+' to '+next+'?'))return;await run('/api/orders/'+encodeURIComponent(o.id)+'/transition',{from:o.state,to:next,confirmation:o.orderNumber},'Order moved to '+next+'.')}));if(o.canCancel)actions.append(actionButton('Cancel unpaid order',async()=>{const reason=prompt('Cancellation reason');if(!reason||!confirm('Cancel '+o.orderNumber+'? Financial history will be retained.'))return;await run('/api/orders/'+encodeURIComponent(o.id)+'/cancel',{reason,confirmation:o.orderNumber},'Order cancelled; financial history retained.')}));if(o.canArchive)actions.append(actionButton('Archive unpaid order',async()=>{const reason=prompt('Archive reason');if(!reason||!confirm('Archive '+o.orderNumber+'? No records will be deleted.'))return;await run('/api/orders/'+encodeURIComponent(o.id)+'/archive',{reason,confirmation:o.orderNumber},'Order archived; no records deleted.')}))}catch(error){detail.className='panel error';detail.textContent=error instanceof Error?error.message:'Request failed'}}
  filters.onsubmit=(event)=>{event.preventDefault();syncUrl();load().catch((error)=>{listStatus.className='error';listStatus.textContent=error instanceof Error?error.message:'Orders unavailable'})};hydrateFilters();load().catch((error)=>{listStatus.className='error';listStatus.textContent=error instanceof Error?error.message:'Orders unavailable'});
  </script></body></html>`;
+}
+
+function ordersDashboardPageHtml(csrfToken: string): string {
+  return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Orders | Get Free Seeds</title>
+<style>
+:root{color-scheme:light;--ink:#17231c;--muted:#657269;--line:#dbe3dc;--paper:#fff;--wash:#f4f7f4;--green:#174d31;--green-2:#dcecdf;--amber:#e8a72f;--danger:#a32929;--shadow:0 12px 32px rgba(23,35,28,.08)}*{box-sizing:border-box}body{margin:0;background:#edf2ed;color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select{font:inherit}button{cursor:pointer}.shell{max-width:1500px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:20px}.eyebrow{color:var(--green);font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.top h1{font-family:Georgia,serif;font-size:34px;line-height:1;margin:5px 0 7px}.top p{margin:0;color:var(--muted)}nav a{color:var(--green);text-decoration:none;font-weight:700}.refresh{border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:9px 14px;box-shadow:var(--shadow)}.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.tab{border:1px solid var(--line);border-radius:13px;background:var(--paper);padding:15px;text-align:left;box-shadow:0 5px 16px rgba(23,35,28,.04)}.tab span{display:block;color:var(--muted);font-size:12px;font-weight:700}.tab strong{display:block;margin-top:4px;color:var(--green);font:700 27px Georgia,serif}.tab.active{border-color:var(--green);background:var(--green);color:#fff}.tab.active span,.tab.active strong{color:#fff}.filters{display:grid;grid-template-columns:minmax(230px,2fr) repeat(4,minmax(130px,1fr)) auto auto;gap:9px;align-items:end;background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:13px;margin-bottom:14px}.filters label{color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.03em;text-transform:uppercase}.filters input,.filters select{display:block;width:100%;margin-top:5px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px;color:var(--ink)}.filters button{height:38px;border-radius:8px;padding:0 14px}.apply{border:0;background:var(--green);color:#fff;font-weight:750}.clear{border:1px solid var(--line);background:#fff}.workspace{display:grid;grid-template-columns:minmax(370px,440px) minmax(0,1fr);height:calc(100vh - 285px);min-height:560px;background:var(--paper);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}.master{display:flex;min-height:0;flex-direction:column;border-right:1px solid var(--line);background:#f8faf8}.list-head{display:flex;justify-content:space-between;gap:10px;padding:13px 15px;border-bottom:1px solid var(--line);background:#fff}.muted{color:var(--muted)}.error{color:var(--danger)}.ok{color:#176b36}.orders{overflow:auto;flex:1}.order{width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;padding:14px 15px;text-align:left}.order:hover{background:#f0f5f0}.order.active{background:var(--green-2);box-shadow:inset 4px 0 var(--green)}.order-top,.order-bottom{display:flex;justify-content:space-between;gap:12px;align-items:center}.order-number{font-weight:850}.customer{margin:5px 0;color:#344139}.order-bottom{color:var(--muted);font-size:12px}.badge{display:inline-flex;align-items:center;border-radius:999px;background:#e7ede8;padding:3px 8px;font-size:10px;font-weight:850;letter-spacing:.04em}.badge.review{background:#fff0cf;color:#7a5200}.badge.paid{background:#dcecdf;color:#174d31}.pager{display:flex;justify-content:space-between;align-items:center;padding:10px 13px;border-top:1px solid var(--line);background:#fff}.pager button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 10px}.pager button:disabled{opacity:.4;cursor:not-allowed}.detail{overflow:auto;padding:23px 26px}.empty{height:100%;display:grid;place-items:center;color:var(--muted);text-align:center}.detail-header{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;padding-bottom:17px;border-bottom:1px solid var(--line)}.detail-header h2{font:700 29px Georgia,serif;margin:0 0 5px}.amount{text-align:right}.amount strong{display:block;color:var(--green);font:700 25px Georgia,serif}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:16px 0}.card{border:1px solid var(--line);border-radius:11px;padding:15px;background:#fff}.card h3{margin:0 0 11px;color:var(--green);font-size:12px;letter-spacing:.08em;text-transform:uppercase}.facts{display:grid;grid-template-columns:minmax(110px,.7fr) 1.3fr;gap:7px 12px;margin:0}.facts dt{color:var(--muted)}.facts dd{margin:0;overflow-wrap:anywhere}.wide{grid-column:1/-1}.items,.receipts,.timeline{list-style:none;padding:0;margin:0}.items li,.receipts li,.timeline li{padding:8px 0;border-top:1px solid var(--wash)}.items li:first-child,.receipts li:first-child,.timeline li:first-child{border-top:0}.item-line{display:flex;justify-content:space-between;gap:12px}.receipts a{color:var(--green);font-weight:750}.actions{display:flex;flex-wrap:wrap;gap:8px;position:sticky;bottom:-23px;margin:18px -26px -23px;padding:13px 26px;background:rgba(255,255,255,.96);border-top:1px solid var(--line);backdrop-filter:blur(8px)}.actions button{border:1px solid var(--green);border-radius:8px;padding:8px 12px;background:#fff;color:var(--green);font-weight:750}.actions .primary{background:var(--green);color:#fff}.actions .danger{border-color:#d8adad;color:var(--danger)}.action-status{flex-basis:100%;margin:0}.skeleton{padding:22px;color:var(--muted)}@media(max-width:1050px){.filters{grid-template-columns:repeat(3,minmax(0,1fr))}.filters label:first-child{grid-column:span 2}}@media(max-width:760px){.shell{padding:14px}.top{align-items:center}.top h1{font-size:28px}.tabs{grid-template-columns:1fr 1fr}.filters{grid-template-columns:1fr 1fr}.filters label:first-child{grid-column:1/-1}.workspace{grid-template-columns:1fr;grid-template-rows:minmax(280px,42vh) minmax(430px,1fr);height:auto;min-height:850px}.master{border-right:0;border-bottom:1px solid var(--line)}.detail{padding:18px}.grid{grid-template-columns:1fr}.wide{grid-column:auto}.actions{bottom:-18px;margin:18px -18px -18px;padding:12px 18px}.amount strong{font-size:20px}}@media(max-width:430px){.filters{grid-template-columns:1fr}.filters label:first-child{grid-column:auto}.tabs{gap:7px}.tab{padding:11px}.tab strong{font-size:23px}.detail-header{display:block}.amount{text-align:left;margin-top:10px}}
+</style></head><body><main class="shell"><header class="top"><div><div class="eyebrow">Operations console</div><h1>Orders</h1><p>Payment review and fulfillment from one protected workspace.</p><nav><a href="/">Admin home</a> &nbsp;·&nbsp; <a href="/test-controls">Test controls</a></nav></div><button id="refresh" class="refresh" type="button">Refresh</button></header>
+<section class="tabs" aria-label="Order queues"><button class="tab" data-tab="all" type="button"><span>All Orders</span><strong data-count="all">—</strong></button><button class="tab" data-tab="verify" type="button"><span>Verify Payments</span><strong data-count="verify">—</strong></button><button class="tab" data-tab="confirmed" type="button"><span>Confirmed Payments</span><strong data-count="confirmed">—</strong></button><button class="tab" data-tab="fulfillment" type="button"><span>Fulfillment</span><strong data-count="fulfillment">—</strong></button></section>
+<form id="filters" class="filters"><label>Search<input name="q" type="search" autocomplete="off" placeholder="Order, customer, 03xx, +92, wa_id"></label><label>Order date<input name="date" type="date"></label><label>Payment<select name="paymentStatus"><option value="">Any payment</option><option value="PENDING">Pending</option><option value="REVIEW">In review</option><option value="APPROVED">Approved</option><option value="REJECTED">Rejected</option></select></label><label>Fulfillment<select name="fulfillment"><option value="">Any stage</option><option value="NOT_STARTED">Ready to pack</option><option value="PACKING">Packing</option><option value="DISPATCHED">Dispatched</option><option value="DELIVERED">Delivered</option><option value="CANCELLED">Cancelled</option></select></label><label>Archive<select name="archived"><option value="active">Active only</option><option value="all">Active + archived</option><option value="only">Archived only</option></select></label><label>Rows<select name="pageSize"><option>25</option><option>50</option><option>100</option></select></label><button class="apply" type="submit">Apply</button><button id="clear" class="clear" type="button">Clear</button></form>
+<section class="workspace"><aside class="master"><div class="list-head"><strong id="queue-title">All Orders</strong><span id="list-status" class="muted" role="status" aria-live="polite">Loading…</span></div><div id="orders" class="orders"><div class="skeleton">Loading orders…</div></div><div class="pager"><button id="previous" type="button">Previous</button><span id="page-status" class="muted">Page 1</span><button id="next" type="button">Next</button></div></aside><article id="detail" class="detail"><div class="empty"><p>Select an order to inspect its full record.</p></div></article></section></main>
+<script>
+const csrf=${JSON.stringify(csrfToken)};
+const filters=document.querySelector('#filters'),ordersRoot=document.querySelector('#orders'),detail=document.querySelector('#detail'),listStatus=document.querySelector('#list-status'),pageStatus=document.querySelector('#page-status');
+const tabNames={all:'All Orders',verify:'Verify Payments',confirmed:'Confirmed Payments',fulfillment:'Fulfillment'};let tab='all',page=1,totalPages=0,selectedId='',loading=0;
+const esc=(value)=>String(value??'').replace(/[&<>"']/g,(character)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
+const text=(value)=>value===null||value===undefined||value===''?'—':esc(value);
+const money=(value)=>value===null||value===undefined?'—':'PKR '+Number(value).toLocaleString('en-PK');
+const when=(value)=>value?new Date(value).toLocaleString('en-PK',{dateStyle:'medium',timeStyle:'short'}):'—';
+async function json(response){const data=await response.json();if(!response.ok)throw new Error(data.error||'Request failed');return data}
+function hydrate(){const params=new URLSearchParams(location.search);tab=tabNames[params.get('tab')]?params.get('tab'):'all';page=Math.max(1,Number(params.get('page'))||1);for(const name of ['q','date','paymentStatus','fulfillment','archived','pageSize']){const value=params.get(name);if(value!==null&&filters.elements[name])filters.elements[name].value=value}}
+function params(){const result=new URLSearchParams(new FormData(filters));result.set('tab',tab);result.set('page',String(page));return result}
+function syncUrl(){history.replaceState(null,'',location.pathname+'?'+params().toString())}
+function setTabs(counts){for(const button of document.querySelectorAll('[data-tab]'))button.classList.toggle('active',button.dataset.tab===tab);for(const [key,value] of Object.entries(counts||{})){const node=document.querySelector('[data-count="'+key+'"]');if(node)node.textContent=Number(value).toLocaleString('en-PK')}document.querySelector('#queue-title').textContent=tabNames[tab]}
+function badge(order){const value=order.paymentReviewState||order.paymentStatus||order.state;const tone=value==='REVIEW'?' review':value==='APPROVED'||value==='PAID'?' paid':'';return '<span class="badge'+tone+'">'+esc(value)+'</span>'}
+function orderCard(order){return '<button class="order '+(order.id===selectedId?'active':'')+'" data-order-id="'+esc(order.id)+'" type="button"><span class="order-top"><span class="order-number">'+esc(order.orderNumber)+'</span>'+badge(order)+'</span><span class="customer">'+text(order.customerName)+'</span><span class="order-bottom"><span>'+esc(order.itemSummary||'No item summary')+'</span><strong>'+money(order.totalPayablePkr)+'</strong></span><span class="order-bottom"><span>'+esc(order.state)+(order.archivedAt?' · Archived':'')+'</span><time>'+esc(when(order.createdAt))+'</time></span></button>'}
+function renderList(data){const list=data.orders||[];totalPages=data.pagination.totalPages;listStatus.textContent=Number(data.total).toLocaleString('en-PK')+' total';pageStatus.textContent='Page '+data.pagination.page+' of '+Math.max(1,totalPages);document.querySelector('#previous').disabled=data.pagination.page<=1;document.querySelector('#next').disabled=data.pagination.page>=totalPages;setTabs(data.counts);if(!list.length){ordersRoot.innerHTML='<div class="skeleton">No orders match this queue and filter set.</div>';selectedId='';detail.innerHTML='<div class="empty"><p>No matching order to inspect.</p></div>';return null}if(!list.some((order)=>order.id===selectedId))selectedId=list[0].id;ordersRoot.innerHTML=list.map(orderCard).join('');for(const button of ordersRoot.querySelectorAll('[data-order-id]'))button.onclick=()=>show(button.dataset.orderId);return selectedId}
+async function load(){const current=++loading;listStatus.className='muted';listStatus.textContent='Loading…';ordersRoot.innerHTML='<div class="skeleton">Loading orders…</div>';const data=await json(await fetch('/api/orders?'+params().toString(),{cache:'no-store'}));if(current!==loading)return;const id=renderList(data);syncUrl();if(id)await show(id)}
+function facts(entries){return '<dl class="facts">'+entries.map((entry)=>'<dt>'+esc(entry[0])+'</dt><dd>'+entry[1]+'</dd>').join('')+'</dl>'}
+function actionButton(label,handler,className=''){const button=document.createElement('button');button.type='button';button.className=className;button.textContent=label;button.onclick=async()=>{button.disabled=true;try{await handler()}catch(error){showActionError(error)}finally{button.disabled=false}};return button}
+function showActionError(error){const node=detail.querySelector('.action-status');if(node){node.className='action-status error';node.textContent=error instanceof Error?error.message:'Request failed'}}
+async function mutate(path,body){return json(await fetch(path,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(body)}))}
+async function run(path,body){await mutate(path,body);await load()}
+function confirmAction(order,label){return confirm(label+' for '+order.orderNumber+'? This action is audited.')}
+function addActions(order){const root=detail.querySelector('.actions');if(!root||order.archivedAt)return;if(order.paymentId&&order.state==='PAYMENT_REVIEW'&&order.paymentReviewState==='REVIEW'&&order.receiptCount>0){root.append(actionButton('Approve payment',async()=>{if(confirmAction(order,'Approve the reviewed payment'))await run('/api/payments/'+encodeURIComponent(order.paymentId)+'/approve',{orderId:order.id,confirmation:order.orderNumber})},'primary'));root.append(actionButton('Reject payment',async()=>{const reason=prompt('Rejection reason');if(reason&&confirmAction(order,'Reject the payment'))await run('/api/payments/'+encodeURIComponent(order.paymentId)+'/reject',{orderId:order.id,reason,confirmation:order.orderNumber})},'danger'));root.append(actionButton('Request clearer receipt',async()=>{if(confirmAction(order,'Request a clearer receipt'))await run('/api/payments/'+encodeURIComponent(order.paymentId)+'/request-clearer-receipt',{orderId:order.id,confirmation:order.orderNumber})}))}const next={PAID:['PACKING','Mark packing'],PACKING:['DISPATCHED','Mark dispatched'],DISPATCHED:['DELIVERED','Mark delivered']}[order.state];if(next)root.append(actionButton(next[1],async()=>{if(confirmAction(order,next[1]))await run('/api/orders/'+encodeURIComponent(order.id)+'/transition',{from:order.state,to:next[0],confirmation:order.orderNumber})},'primary'));if(order.canCancel)root.append(actionButton('Cancel order',async()=>{const reason=prompt('Cancellation reason');if(reason&&confirmAction(order,'Cancel order'))await run('/api/orders/'+encodeURIComponent(order.id)+'/cancel',{reason,confirmation:order.orderNumber})},'danger'));if(order.canArchive)root.append(actionButton('Archive order',async()=>{const reason=prompt('Archive reason');if(reason&&confirmAction(order,'Archive order'))await run('/api/orders/'+encodeURIComponent(order.id)+'/archive',{reason,confirmation:order.orderNumber})}));root.insertAdjacentHTML('beforeend','<p class="action-status muted" role="status"></p>')}
+function renderDetail(data){const order=data.order,items=data.items||order.items||[],receipts=data.receipts||order.receipts||[],audit=data.audit||[];const itemHtml=items.length?items.map((item)=>'<li><div class="item-line"><span><strong>'+text(item.description)+'</strong> × '+text(item.quantity)+'</span><span>'+money(item.lineTotalPkr)+'</span></div><small class="muted">'+text(item.productCode)+' · '+money(item.unitPricePkr)+' each</small></li>').join(''):'<li class="muted">No items recorded.</li>';const receiptHtml=receipts.length?receipts.map((receipt,index)=>'<li><a href="'+esc(receipt.previewUrl)+'" target="_blank" rel="noreferrer">Open private receipt '+(index+1)+'</a><br><small class="muted">'+text(receipt.mimeType)+' · '+Number(receipt.sizeBytes||0).toLocaleString('en-PK')+' bytes · '+esc(when(receipt.submittedAt))+'</small></li>').join(''):'<li class="muted">No receipts submitted.</li>';const auditHtml=audit.length?audit.map((entry)=>'<li><strong>'+text(entry.action)+'</strong><br><small class="muted">'+esc(when(entry.created_at))+' · '+text(entry.actor_id||entry.actor_type)+'</small></li>').join(''):'<li class="muted">No audit entries.</li>';detail.innerHTML='<header class="detail-header"><div><h2>'+esc(order.orderNumber)+'</h2><span class="badge">'+esc(order.state)+'</span> '+badge(order)+(order.archivedAt?' <span class="badge">Archived</span>':'')+'</div><div class="amount"><span class="muted">Order total</span><strong>'+money(order.totalPayablePkr)+'</strong><small>'+esc(when(order.createdAt))+'</small></div></header><div class="grid"><section class="card"><h3>Customer & delivery</h3>'+facts([['Name',text(order.customerName)],['Phone',text(order.contactNumber)],['Normalized phone',text(order.normalizedContactNumber)],['WhatsApp',text(order.whatsappNumber)],['Meta wa_id',text(order.waId)],['Address',text(order.deliveryAddress)],['Landmark',text(order.landmark)],['City',text(order.city)],['Province',text(order.province)]])+'</section><section class="card"><h3>Payment record</h3>'+facts([['Method',text(order.paymentMethod)],['Status',text(order.paymentReviewState||order.paymentStatus)],['Expected',money(order.expectedAmountPkr)],['Approved',money(order.approvedAmountPkr)],['Reviewer',text(order.paymentReviewedBy)],['Submitted',esc(when(order.paymentSubmittedAt))],['Approved at',esc(when(order.paymentApprovedAt))],['Reference',text(order.customerTransactionReference)],['Rejection reason',text(order.paymentRejectionReason)]])+'</section><section class="card"><h3>Fulfillment & retention</h3>'+facts([['Stage',text(order.fulfillmentStatus)],['Last updated',esc(when(order.updatedAt))],['Cancelled at',esc(when(order.cancelledAt))],['Cancelled by',text(order.cancelledBy)],['Cancellation reason',text(order.cancellationReason)],['Archived at',esc(when(order.archivedAt))],['Archived by',text(order.archivedBy)],['Archive reason',text(order.archiveReason)]])+'</section><section class="card"><h3>Receipts</h3><ul class="receipts">'+receiptHtml+'</ul></section><section class="card wide"><h3>Items</h3><ul class="items">'+itemHtml+'</ul></section><section class="card wide"><details><summary><strong>Audit trail</strong> <span class="muted">('+audit.length+')</span></summary><ul class="timeline">'+auditHtml+'</ul></details></section></div><div class="actions"></div>';addActions(order)}
+async function show(id){selectedId=id;for(const node of ordersRoot.querySelectorAll('[data-order-id]'))node.classList.toggle('active',node.dataset.orderId===id);detail.innerHTML='<div class="skeleton">Loading full order record…</div>';try{const data=await json(await fetch('/api/orders/'+encodeURIComponent(id),{cache:'no-store'}));if(selectedId===id)renderDetail(data)}catch(error){detail.innerHTML='<div class="empty error"><p>'+esc(error instanceof Error?error.message:'Order unavailable')+'</p></div>'}}
+filters.onsubmit=(event)=>{event.preventDefault();page=1;load().catch(fail)};document.querySelector('#clear').onclick=()=>{filters.reset();tab='all';page=1;selectedId='';load().catch(fail)};document.querySelector('#refresh').onclick=()=>load().catch(fail);document.querySelector('#previous').onclick=()=>{if(page>1){page-=1;selectedId='';load().catch(fail)}};document.querySelector('#next').onclick=()=>{if(page<totalPages){page+=1;selectedId='';load().catch(fail)}};for(const button of document.querySelectorAll('[data-tab]'))button.onclick=()=>{tab=button.dataset.tab;page=1;selectedId='';load().catch(fail)};
+function fail(error){listStatus.className='error';listStatus.textContent=error instanceof Error?error.message:'Orders unavailable';ordersRoot.innerHTML='<div class="skeleton error">Orders could not be loaded.</div>'}
+hydrate();setTabs({});load().catch(fail);
+</script></body></html>`;
 }
 
 function testControlsPageHtml(csrfToken: string): string {
@@ -215,7 +311,7 @@ app.get("/health", async (c) => {
 app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav><a href='/payment-settings'>Payment Settings</a> | <a href='/whatsapp-content'>WhatsApp Content</a> | <a href='/payment-amount'>Legacy Advance Amount</a> | <a href='/tariff'>Tariff Management</a> | <a href='/meta-activation'>Meta Activation</a> | <a href='/orders'>Orders</a> | <a href='/test-controls'>Test Controls</a> | Dashboard | Leads | Meta Instant Form | Payment Verification | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
 
 app.get("/api/csrf", (c) => c.json({ csrfToken: issueCsrfToken(c) }));
-app.get("/orders", (c) => c.html(ordersPageHtml(issueCsrfToken(c))));
+app.get("/orders", (c) => c.html(ordersDashboardPageHtml(issueCsrfToken(c))));
 app.get("/test-controls", (c) => c.html(testControlsPageHtml(issueCsrfToken(c))));
 app.get("/whatsapp-content", (c) => c.html(whatsappContentJourneyPageHtml(issueCsrfToken(c))));
 app.get("/payment-settings", (c) => c.html(paymentSettingsPreviewPageHtml()));
@@ -880,56 +976,88 @@ app.get("/api/payment-methods/:method/qr", async (c) => {
 
 const ORDER_ADMIN_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,o.total_payable,o.province,o.created_at,o.updated_at,
   o.cancelled_at,o.cancelled_by,o.cancellation_reason,o.archived_at,o.archived_by,o.archive_reason,
-  c.full_name,c.wa_id,c.normalized_contact_number,p.id AS payment_id,p.method,p.expected_amount,p.approved_amount,p.review_state,p.submitted_at,p.approved_at,
-  COUNT(pr.id) AS receipt_count
+  c.full_name,c.delivery_address,c.nearby_place,c.city,c.contact_number,c.normalized_phone,c.normalized_contact_number,c.whatsapp_number,c.normalized_whatsapp_number,c.wa_id,
+  p.id AS payment_id,p.method,p.expected_amount,p.approved_amount,p.review_state,p.submitted_at,p.approved_by,p.approved_at,p.rejection_reason,p.customer_transaction_reference,p.created_at AS payment_created_at,p.updated_at AS payment_updated_at,
+  (SELECT COUNT(*) FROM payment_receipts receipt_count WHERE receipt_count.order_id=o.id) AS receipt_count,
+  COALESCE((SELECT json_group_array(json_object('id',items.id,'itemType',items.item_type,'productCode',items.product_code,'description',items.description,'quantity',items.quantity,'unitPricePkr',items.unit_price_pkr,'lineTotalPkr',items.line_total_pkr,'createdAt',items.created_at)) FROM order_items items WHERE items.order_id=o.id),'[]') AS items_json,
+  COALESCE((SELECT json_group_array(json_object('id',receipts.id,'paymentId',receipts.payment_id,'objectKey',receipts.r2_object_key,'mimeType',receipts.mime_type,'sizeBytes',receipts.size_bytes,'submittedAt',receipts.submitted_at,'createdAt',receipts.created_at)) FROM payment_receipts receipts WHERE receipts.order_id=o.id),'[]') AS receipts_json
   FROM orders o JOIN customers c ON c.id=o.customer_id
-  LEFT JOIN payments p ON p.order_id=o.id
-  LEFT JOIN payment_receipts pr ON pr.order_id=o.id`;
+  LEFT JOIN payments p ON p.order_id=o.id`;
+
+const ORDER_TAB_SQL: Record<string, string> = {
+  all: "1=1",
+  verify: "o.state='PAYMENT_REVIEW' AND p.review_state='REVIEW'",
+  confirmed: "(p.review_state='APPROVED' OR o.payment_status='PAID')",
+  fulfillment: "o.state IN ('PAID','PACKING','DISPATCHED','DELIVERED')"
+};
 
 app.get("/api/orders", async (c) => {
-  if (!c.env.DB) return c.json({ orders: [] });
-  const state = c.req.query("state")?.trim();
-  if (state && !OrderState.safeParse(state).success) return c.json({ error: "ORDER_STATE_INVALID" }, 400);
+  if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
+  const tab = c.req.query("tab")?.trim() || "all";
+  if (!ORDER_TAB_SQL[tab]) return c.json({ error: "ORDER_TAB_INVALID" }, 400);
   const archived = c.req.query("archived") ?? "active";
   if (!["active", "only", "all"].includes(archived)) return c.json({ error: "ARCHIVED_FILTER_INVALID" }, 400);
   const paymentStatus = c.req.query("paymentStatus")?.trim();
-  if (paymentStatus && !/^[A-Z_]{2,40}$/.test(paymentStatus)) return c.json({ error: "PAYMENT_STATUS_INVALID" }, 400);
+  if (paymentStatus && !["PENDING", "REVIEW", "APPROVED", "REJECTED"].includes(paymentStatus)) return c.json({ error: "PAYMENT_STATUS_INVALID" }, 400);
+  const fulfillment = c.req.query("fulfillment")?.trim();
+  if (fulfillment && !["NOT_STARTED", "PACKING", "DISPATCHED", "DELIVERED", "CANCELLED"].includes(fulfillment)) return c.json({ error: "FULFILLMENT_FILTER_INVALID" }, 400);
+  const date = c.req.query("date")?.trim();
+  if (date && !validOrderDate(date)) return c.json({ error: "ORDER_DATE_INVALID" }, 400);
+  const page = Number(c.req.query("page") ?? "1");
+  const pageSize = Number(c.req.query("pageSize") ?? "25");
+  if (!Number.isInteger(page) || page < 1) return c.json({ error: "PAGE_INVALID" }, 400);
+  if (![25, 50, 100].includes(pageSize)) return c.json({ error: "PAGE_SIZE_INVALID" }, 400);
   const search = c.req.query("q")?.trim().slice(0, 100);
-  const where: string[] = [];
-  const bindings: unknown[] = [];
-  if (state) { where.push("o.state=?"); bindings.push(state); }
-  if (paymentStatus) { where.push("o.payment_status=?"); bindings.push(paymentStatus); }
-  if (archived === "active") where.push("o.archived_at IS NULL");
-  if (archived === "only") where.push("o.archived_at IS NOT NULL");
+  const commonWhere: string[] = [];
+  const commonBindings: unknown[] = [];
+  if (paymentStatus === "PENDING") commonWhere.push("p.review_state='PENDING'");
+  if (paymentStatus === "REVIEW") commonWhere.push("p.review_state='REVIEW'");
+  if (paymentStatus === "APPROVED") commonWhere.push("(p.review_state='APPROVED' OR o.payment_status='PAID')");
+  if (paymentStatus === "REJECTED") commonWhere.push("(p.review_state='REJECTED' OR o.payment_status='REJECTED')");
+  if (fulfillment === "NOT_STARTED") commonWhere.push("o.state='PAID'");
+  if (fulfillment && fulfillment !== "NOT_STARTED") { commonWhere.push("o.state=?"); commonBindings.push(fulfillment); }
+  if (date) { commonWhere.push("substr(o.created_at,1,10)=?"); commonBindings.push(date); }
+  if (archived === "active") commonWhere.push("o.archived_at IS NULL");
+  if (archived === "only") commonWhere.push("o.archived_at IS NOT NULL");
   if (search) {
-    where.push("(o.order_number LIKE ? OR c.full_name LIKE ? OR c.wa_id LIKE ? OR c.normalized_contact_number LIKE ?)");
+    const normalizedPhone = normalizeWhatsAppWaId(search);
     const pattern = `%${search}%`;
-    bindings.push(pattern, pattern, pattern, pattern);
+    if (normalizedPhone) {
+      commonWhere.push("(o.order_number LIKE ? OR c.full_name LIKE ? OR c.city LIKE ? OR c.wa_id LIKE ? OR c.normalized_phone LIKE ? OR c.normalized_contact_number LIKE ? OR c.normalized_whatsapp_number LIKE ?)");
+      const digitsPattern = `%${normalizedPhone}%`;
+      const internationalPattern = `%+${normalizedPhone}%`;
+      commonBindings.push(pattern, pattern, pattern, digitsPattern, internationalPattern, internationalPattern, internationalPattern);
+    } else {
+      commonWhere.push("(o.order_number LIKE ? OR c.full_name LIKE ? OR c.city LIKE ?)");
+      commonBindings.push(pattern, pattern, pattern);
+    }
   }
-  const sql = `${ORDER_ADMIN_SELECT}${where.length ? ` WHERE ${where.join(" AND ")}` : ""} GROUP BY o.id,p.id ORDER BY o.created_at DESC LIMIT 100`;
-  const result = await c.env.DB.prepare(sql).bind(...bindings).all();
-  return c.json({ orders: result.results.map((row) => orderView(row as Record<string, unknown>)) });
+  const joins = " FROM orders o JOIN customers c ON c.id=o.customer_id LEFT JOIN payments p ON p.order_id=o.id";
+  const commonSql = commonWhere.length ? ` WHERE ${commonWhere.join(" AND ")}` : "";
+  const tabWhere = [...commonWhere, ORDER_TAB_SQL[tab]];
+  const tabSql = ` WHERE ${tabWhere.join(" AND ")}`;
+  const offset = (page - 1) * pageSize;
+  const [countsRow, totalRow, result] = await Promise.all([
+    c.env.DB.prepare(`SELECT COUNT(*) AS all_count,SUM(CASE WHEN ${ORDER_TAB_SQL.verify} THEN 1 ELSE 0 END) AS verify_count,SUM(CASE WHEN ${ORDER_TAB_SQL.confirmed} THEN 1 ELSE 0 END) AS confirmed_count,SUM(CASE WHEN ${ORDER_TAB_SQL.fulfillment} THEN 1 ELSE 0 END) AS fulfillment_count${joins}${commonSql}`).bind(...commonBindings).first<Record<string, unknown>>(),
+    c.env.DB.prepare(`SELECT COUNT(*) AS total${joins}${tabSql}`).bind(...commonBindings).first<{ total: number }>(),
+    c.env.DB.prepare(`${ORDER_ADMIN_SELECT}${tabSql} ORDER BY o.created_at DESC,o.id DESC LIMIT ? OFFSET ?`).bind(...commonBindings, pageSize, offset).all()
+  ]);
+  const total = Number(totalRow?.total ?? 0);
+  return c.json({
+    orders: result.results.map((row) => orderView(row as Record<string, unknown>)),
+    counts: { all: Number(countsRow?.all_count ?? 0), verify: Number(countsRow?.verify_count ?? 0), confirmed: Number(countsRow?.confirmed_count ?? 0), fulfillment: Number(countsRow?.fulfillment_count ?? 0) },
+    total,
+    pagination: { page, pageSize, totalPages: Math.ceil(total / pageSize) }
+  });
 });
 
 app.get("/api/orders/:id", async (c) => {
   if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
-  const row = await c.env.DB.prepare(`${ORDER_ADMIN_SELECT} WHERE o.id=? GROUP BY o.id,p.id`).bind(c.req.param("id")).first<Record<string, unknown>>();
+  const row = await c.env.DB.prepare(`${ORDER_ADMIN_SELECT} WHERE o.id=?`).bind(c.req.param("id")).first<Record<string, unknown>>();
   if (!row) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
-  const [items, receiptsResult, audit] = await Promise.all([
-    c.env.DB.prepare("SELECT id,item_type,product_code,description,quantity,created_at FROM order_items WHERE order_id=? ORDER BY created_at,id").bind(c.req.param("id")).all(),
-    c.env.DB.prepare("SELECT id,payment_id,r2_object_key,mime_type,size_bytes,submitted_at,created_at FROM payment_receipts WHERE order_id=? ORDER BY submitted_at DESC").bind(c.req.param("id")).all(),
-    c.env.DB.prepare("SELECT id,action,actor_type,actor_id,metadata_json,created_at FROM audit_log WHERE (entity_type='ORDER' AND entity_id=?) OR (entity_type='PAYMENT' AND entity_id=(SELECT id FROM payments WHERE order_id=?)) ORDER BY created_at DESC LIMIT 100").bind(c.req.param("id"), c.req.param("id")).all()
-  ]);
-  const receipts = receiptsResult.results.map((receipt) => ({
-    id: String(receipt.id),
-    paymentId: String(receipt.payment_id),
-    mimeType: String(receipt.mime_type),
-    sizeBytes: Number(receipt.size_bytes),
-    submittedAt: String(receipt.submitted_at),
-    createdAt: String(receipt.created_at),
-    previewUrl: `/api/receipts/${encodeURIComponent(String(receipt.r2_object_key))}`
-  }));
-  return c.json({ order: orderView(row), items: items.results, receipts, audit: audit.results });
+  const audit = await c.env.DB.prepare("SELECT id,action,actor_type,actor_id,metadata_json,created_at FROM audit_log WHERE (entity_type='ORDER' AND entity_id=?) OR (entity_type='PAYMENT' AND entity_id=(SELECT id FROM payments WHERE order_id=?)) ORDER BY created_at DESC LIMIT 100").bind(c.req.param("id"), c.req.param("id")).all();
+  const order = orderView(row);
+  return c.json({ order, items: order.items, receipts: order.receipts, audit: audit.results });
 });
 
 app.get("/api/test-controls/conversations", async (c) => {
@@ -1078,15 +1206,17 @@ app.post("/api/payments/:id/approve", async (c) => {
   if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
   let body: { orderId?: unknown; confirmation?: unknown };
   try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
-  if (!c.env.DB) return c.json({ ok: true, simulated: true });
+  if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
   try {
-    const current = await c.env.DB.prepare("SELECT p.review_state,p.expected_amount,p.approved_amount,o.id AS order_id,o.order_number,o.state,o.archived_at,c.id AS customer_id,ma.ctwa_clid FROM payments p JOIN orders o ON o.id=p.order_id JOIN customers c ON c.id=o.customer_id LEFT JOIN meta_attribution ma ON ma.order_id=o.id WHERE p.id=? AND o.id=?").bind(c.req.param("id"), body.orderId).first<{ review_state: string; expected_amount: number; approved_amount: number | null; order_id: string; order_number: string; state: OrderState; archived_at: string | null; customer_id: string; ctwa_clid?: string }>();
+    const current = await c.env.DB.prepare("SELECT p.review_state,p.expected_amount,p.approved_amount,o.id AS order_id,o.order_number,o.state,o.archived_at,c.id AS customer_id,ma.ctwa_clid,COUNT(pr.id) AS receipt_count FROM payments p JOIN orders o ON o.id=p.order_id JOIN customers c ON c.id=o.customer_id LEFT JOIN meta_attribution ma ON ma.order_id=o.id LEFT JOIN payment_receipts pr ON pr.payment_id=p.id WHERE p.id=? AND o.id=? GROUP BY p.id,o.id,c.id,ma.id").bind(c.req.param("id"), body.orderId).first<{ review_state: string; expected_amount: number; approved_amount: number | null; order_id: string; order_number: string; state: OrderState; archived_at: string | null; customer_id: string; ctwa_clid?: string; receipt_count: number }>();
     if (!current) return c.json({ error: "PAYMENT_NOT_FOUND" }, 404);
     if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+    if (!Number.isSafeInteger(Number(current.expected_amount)) || Number(current.expected_amount) <= 0) return c.json({ error: "PAYMENT_AMOUNT_INVALID" }, 409);
     const amount = approvedPurchaseValue(Number(current.expected_amount), Number(current.expected_amount));
     const event = createPurchaseEvent(current.order_number, amount, current.ctwa_clid ? { ctwaClid: current.ctwa_clid } : undefined);
     if (current.review_state === "APPROVED" && current.state === "PAID") return c.json({ ok: true, alreadyApproved: true, eventId: event.eventId });
     if (current.archived_at != null || current.review_state !== "REVIEW" || current.state !== "PAYMENT_REVIEW") return c.json({ error: "PAYMENT_NOT_IN_REVIEW" }, 409);
+    if (Number(current.receipt_count) < 1) return c.json({ error: "PAYMENT_RECEIPT_REQUIRED" }, 409);
     const now = new Date().toISOString();
     await c.env.DB.batch([
       c.env.DB.prepare("UPDATE payments SET review_state='APPROVED', approved_amount=?, approved_by=?, approved_at=?, updated_at=? WHERE id=? AND review_state='REVIEW'").bind(amount, c.env.ADMIN_EMAIL, now, now, c.req.param("id")),

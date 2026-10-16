@@ -226,6 +226,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Existing order `FS-261015-000001` is present in D1 as `PAYMENT_REVIEW`, PKR 300, KPK, JazzCash, one receipt.
 - Admin UI transport currently fails in Chrome with `ERR_QUIC_PROTOCOL_ERROR`; no real payment state mutation occurred.
 
+## GFS-139 Admin Operations
+
+- `/orders` professional dashboard version `9e36ce18-c5d2-4702-9388-c1f4e4d23921` deployed to canonical Admin Worker/D1.
+- Real rejected order and one private receipt remain preserved; financial history unchanged.
+
 ## GFS-114 Flow Graph Evidence
 
 - Canonical WABA Flow ID created via Graph-backed Admin route: `1133458765899784`.

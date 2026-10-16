@@ -456,6 +456,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Exact order search `FS-261015-000001` rendered one row after the authenticated browser search; the prior blank table was caused by missing URL hydration/UI data state.
 - Order remains PAYMENT_REVIEW; no payment approval or fulfillment mutation was made.
 
+## GFS-139 Professional Orders Dashboard
+
+- Four-tab `/orders` dashboard deployed: All Orders, Verify Payments, Confirmed Payments and Fulfillment, with summary counts, pagination, filters, newest auto-selection, complete detail/receipt/audit panels and state-aware actions.
+- Real order `FS-261015-000001` is currently `PAYMENT_REJECTED`, JazzCash expected PKR 300, one receipt. Audit shows `PAYMENT_REJECTED` by `gisupp@gmail.com` at `2026-10-15T12:37:59.050Z`; no reversal or approval occurred.
+- Browser post-deploy verification remains incomplete because the recovered MCP initialized but `list_pages` stopped responding; backend/API/tests/deployment succeeded.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

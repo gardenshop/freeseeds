@@ -109,18 +109,22 @@ describe("GFS-109 admin controls", () => {
     }
   });
 
-  it("renders URL-hydrated, non-financial order controls", async () => {
-    const response = await app.fetch(new Request("https://admin.example.test/orders?q=synthetic&state=PAYMENT_REVIEW&archived=all", { headers: auth }), env(new AdminMemoryDb()));
+  it("renders the tabbed, URL-hydrated split-pane order workspace", async () => {
+    const response = await app.fetch(new Request("https://admin.example.test/orders?q=synthetic&paymentStatus=REVIEW&archived=all", { headers: auth }), env(new AdminMemoryDb()));
     expect(response.status).toBe(200);
     const html = await response.text();
     expect(html).toContain("new URLSearchParams(location.search)");
+    for (const tab of ["All Orders", "Verify Payments", "Confirmed Payments", "Fulfillment"]) expect(html).toContain(tab);
+    for (const size of ["25", "50", "100"]) expect(html).toContain(`<option>${size}</option>`);
+    expect(html).toContain("selectedId=list[0].id");
+    expect(html).toContain("grid-template-rows:minmax(280px,42vh)");
     expect(html).toContain("/api/payments/'");
     expect(html).toContain("request-clearer-receipt");
-    expect(html).toContain("View private receipt preview");
-    expect(html).not.toContain("totalPayablePkr");
-    expect(html).not.toContain("expectedAmount");
-    expect(html).not.toContain("approvedAmount");
-    expect(html).not.toContain("line_total_pkr");
+    expect(html).toContain("Open private receipt");
+    expect(html).toContain("order.receiptCount>0");
+    expect(html).toContain("Mark packing");
+    expect(html).toContain("Mark dispatched");
+    expect(html).toContain("Mark delivered");
   });
 
   it("requires CSRF for payment and fulfillment detail mutations", async () => {
