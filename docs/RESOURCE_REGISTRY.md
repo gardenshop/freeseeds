@@ -236,6 +236,10 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Staging D1 media schema now exists after safely applying migration `0017_whatsapp_content_media.sql`.
 - Private R2 media remains authoritative; no public URL or customer-facing image success is claimed without browser/WAMID evidence.
 
+## GFS-144 Media Evidence
+
+- Migration 0017 tables are present in canonical staging D1; live R2 gallery upload and WhatsApp image delivery remain unverified.
+
 ## GFS-141 Shipping/Operations
 
 - Shipping labels render from D1 order/customer/address data with no public R2 URL and optional tracking only when assigned.

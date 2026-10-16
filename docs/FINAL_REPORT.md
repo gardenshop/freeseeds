@@ -18,6 +18,12 @@
 - Migration 0017 media tables: **APPLIED** safely.
 - CMS image upload/R2/publish/customer WAMID: **NOT PROVEN**; browser upload evidence remains pending.
 
+## GFS-144-CMS-MEDIA Update — 2026-10-16
+
+- Migration 0017: **PRESENT**; canonical D1 media tables exist.
+- CMS image upload/publish: **UNVERIFIED**; no approved R2/media WAMID evidence captured.
+- Guided checkout: **GO**; native Flow remains deferred/opt-in.
+
 ## GFS-140-ADMIN-BROWSER Update — 2026-10-16
 
 - Admin Orders browser: **PASS** — four tabs, four orders, newest detail auto-selected, full customer/payment/items/receipt/audit fields and state-aware controls visible.
