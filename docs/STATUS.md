@@ -462,6 +462,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Real order `FS-261015-000001` is currently `PAYMENT_REJECTED`, JazzCash expected PKR 300, one receipt. Audit shows `PAYMENT_REJECTED` by `gisupp@gmail.com` at `2026-10-15T12:37:59.050Z`; no reversal or approval occurred.
 - Browser post-deploy verification remains incomplete because the recovered MCP initialized but `list_pages` stopped responding; backend/API/tests/deployment succeeded.
 
+## GFS-140 Browser Acceptance Evidence
+
+- Recovered Chrome MCP using `pkce-challenge`; `list_pages` returned existing tabs, and Admin Orders rendered four active orders with All/Verify/Confirmed/Fulfillment tabs.
+- Newest order auto-selected with full customer/delivery/payment/items/receipt/audit details and state-aware Approve/Reject/Clearer Receipt controls.
+- Actual order `FS-261012-000002` is PAYMENT_REVIEW with one private receipt and PKR 600; no approval mutation performed.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.
