@@ -4,6 +4,7 @@ import { canTransition, createMetaActivationService, createWhatsAppProvider, get
 
  type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
 const app = new Hono<Env>();
+app.use("/orders", async (c, next) => { c.header("Cache-Control", "no-store, max-age=0"); c.header("X-Content-Type-Options", "nosniff"); await next(); });
 type AdminContext = Context<Env>;
 const CSRF_COOKIE = "__Host-gfs_admin_csrf";
 
