@@ -6,6 +6,12 @@
 - Real order `FS-261015-000001`: **PAYMENT_REJECTED**, PKR 300, JazzCash, one receipt; audited rejection preserved.
 - Financial mutation: **NONE**. Admin browser post-deploy proof is **PARTIAL** because MCP stopped returning page inventory after deployment.
 
+## GFS-141-OPERATIONS Update — 2026-10-16
+
+- Admin operations: **PASS implementation/deployment** — payment review, clearer receipt, Confirm Order, fulfillment controls and shipping labels.
+- Real rejected order: **PRESERVED**, no financial mutation.
+- Tests: **91/91 pass**; browser post-deploy evidence remains dependent on MCP/session stability.
+
 ## GFS-140-ADMIN-BROWSER Update — 2026-10-16
 
 - Admin Orders browser: **PASS** — four tabs, four orders, newest detail auto-selected, full customer/payment/items/receipt/audit fields and state-aware controls visible.

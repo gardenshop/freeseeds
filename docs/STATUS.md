@@ -468,6 +468,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Newest order auto-selected with full customer/delivery/payment/items/receipt/audit details and state-aware Approve/Reject/Clearer Receipt controls.
 - Actual order `FS-261012-000002` is PAYMENT_REVIEW with one private receipt and PKR 600; no approval mutation performed.
 
+## GFS-141 Admin Order Operations
+
+- Admin Worker version `160ea7d4-5f8d-4124-9944-ecd1d5e079dd` deployed with Confirm Order, clearer-receipt, payment/fulfillment guards and escaped printable A6/4×6 shipping labels.
+- Existing rejected order `FS-261015-000001` was not approved or modified. No real CAPI Purchase or fulfillment mutation occurred.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

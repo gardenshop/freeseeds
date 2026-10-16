@@ -73,6 +73,47 @@ function jsonRecords(value: unknown): Record<string, unknown>[] {
   }
 }
 
+export type ShippingLabelFormat = "4x6" | "A6";
+
+function escapeHtml(value: unknown): string {
+  return String(value ?? "").replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[character] ?? character);
+}
+
+function parseShippingLabelFormat(value: unknown): ShippingLabelFormat | undefined {
+  const normalized = typeof value === "string" ? value.trim().toUpperCase() : "";
+  return normalized === "A6" ? "A6" : normalized === "4X6" ? "4x6" : undefined;
+}
+
+function trackingNumber(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const normalized = value.trim();
+  return /^[A-Za-z0-9][A-Za-z0-9 ._\/-]{0,59}$/.test(normalized) ? normalized : undefined;
+}
+
+export function renderShippingLabelHtml(order: Record<string, unknown>, format: ShippingLabelFormat, assignedTrackingNumber?: string): string {
+  const tracking = trackingNumber(assignedTrackingNumber ?? order.trackingNumber);
+  const size = format === "A6" ? "105mm 148mm" : "4in 6in";
+  const value = (key: string) => escapeHtml(order[key]);
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Shipping label ${value("orderNumber")}</title><style>@page{size:${size};margin:0}*{box-sizing:border-box}body{margin:0;background:#fff;color:#111;font:12pt/1.3 Arial,sans-serif}.label{width:100%;min-height:100%;padding:8mm;display:flex;flex-direction:column;gap:5mm}.brand{font-size:18pt;font-weight:800;letter-spacing:.03em}.rule{border-top:2px solid #111}.order{display:flex;justify-content:space-between;gap:8mm;align-items:flex-start}.order-number{font-size:20pt;font-weight:800}.caption{font-size:8pt;text-transform:uppercase;letter-spacing:.08em;font-weight:700}.address{font-size:16pt;font-weight:700;line-height:1.35;overflow-wrap:anywhere}.meta{display:grid;grid-template-columns:1fr 1fr;gap:3mm 6mm}.meta div{min-width:0}.value{font-weight:600;overflow-wrap:anywhere}.tracking{border:2px dashed #111;padding:3mm;font-size:13pt;font-weight:800}.print{border:0;background:#111;color:#fff;padding:2.5mm 4mm;font-size:11pt;font-weight:700;align-self:flex-end}@media print{.print{display:none}}@media screen{body{max-width:${format === "A6" ? "105mm" : "4in"};margin:1rem auto;box-shadow:0 0 0 1px #ddd}.label{min-height:${format === "A6" ? "148mm" : "6in"}}}</style></head><body><main class="label"><button class="print" type="button" onclick="window.print()">Print label</button><div class="brand">Get Free Seeds</div><div class="rule"></div><div class="order"><div><div class="caption">Order number</div><div class="order-number">${value("orderNumber")}</div></div><div><div class="caption">Province</div><div class="value">${value("province")}</div></div></div><section><div class="caption">Deliver to</div><div class="address">${value("customerName")}</div><div class="value">${value("deliveryAddress")}</div></section><div class="meta"><div><div class="caption">Landmark</div><div class="value">${value("landmark")}</div></div><div><div class="caption">City</div><div class="value">${value("city")}</div></div><div><div class="caption">Contact</div><div class="value">${value("contactNumber")}</div></div></div>${tracking ? `<div class="tracking">Tracking: ${escapeHtml(tracking)}</div>` : ""}<div class="rule"></div><div class="caption">Please keep this label with the parcel</div></main></body></html>`;
+}
+
+async function assignedTrackingNumber(db: D1Database, orderId: string): Promise<string | undefined> {
+  const row = await db.prepare("SELECT metadata_json FROM audit_log WHERE entity_type='ORDER' AND entity_id=? AND action='ORDER_TRACKING_ASSIGNED' ORDER BY created_at DESC LIMIT 1").bind(orderId).first<{ metadata_json?: string }>();
+  if (!row?.metadata_json) return undefined;
+  try {
+    const metadata = JSON.parse(row.metadata_json) as Record<string, unknown>;
+    return trackingNumber(metadata.trackingNumber);
+  } catch {
+    return undefined;
+  }
+}
+
 function orderView(row: Record<string, unknown>) {
   const items = jsonRecords(row.items_json).map((item) => ({
     id: String(item.id),
@@ -91,7 +132,7 @@ function orderView(row: Record<string, unknown>) {
     sizeBytes: Number(receipt.sizeBytes),
     submittedAt: String(receipt.submittedAt),
     createdAt: String(receipt.createdAt),
-    previewUrl: `/api/receipts/${encodeURIComponent(String(receipt.objectKey))}`
+    previewUrl: `/api/orders/${encodeURIComponent(String(row.id))}/receipts/${encodeURIComponent(String(receipt.id))}/preview`
   }));
   const receiptCount = Number(row.receipt_count ?? receipts.length);
   const financial = String(row.state) === "PAID" || String(row.payment_status) === "PAID" || String(row.review_state ?? "") === "APPROVED" || row.approved_at != null || row.approved_amount != null;
@@ -130,6 +171,8 @@ function orderView(row: Record<string, unknown>) {
     itemSummary: items.map((item) => `${item.description} x ${item.quantity}`).join(", "),
     items,
     receipts,
+    trackingNumber: row.tracking_number == null ? null : trackingNumber(row.tracking_number) ?? null,
+    confirmedAt: row.order_confirmed_at == null ? null : String(row.order_confirmed_at),
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
     cancelledAt: row.cancelled_at == null ? null : String(row.cancelled_at),
@@ -138,6 +181,8 @@ function orderView(row: Record<string, unknown>) {
     archivedAt: row.archived_at == null ? null : String(row.archived_at),
     archivedBy: row.archived_by == null ? null : String(row.archived_by),
     archiveReason: row.archive_reason == null ? null : String(row.archive_reason),
+    canConfirmOrder: ["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(state) && row.order_confirmed_at == null && row.archived_at == null,
+    canPrintShippingLabel: ["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(state) && row.archived_at == null,
     canCancel: !financial && receiptCount === 0 && state !== "CANCELLED" && unpaidState && row.archived_at == null,
     canArchive: !financial && receiptCount === 0 && unpaidState && row.archived_at == null
   };
@@ -222,6 +267,12 @@ async function show(id){selectedId=id;for(const node of ordersRoot.querySelector
 filters.onsubmit=(event)=>{event.preventDefault();page=1;load().catch(fail)};document.querySelector('#clear').onclick=()=>{filters.reset();tab='all';page=1;selectedId='';load().catch(fail)};document.querySelector('#refresh').onclick=()=>load().catch(fail);document.querySelector('#previous').onclick=()=>{if(page>1){page-=1;selectedId='';load().catch(fail)}};document.querySelector('#next').onclick=()=>{if(page<totalPages){page+=1;selectedId='';load().catch(fail)}};for(const button of document.querySelectorAll('[data-tab]'))button.onclick=()=>{tab=button.dataset.tab;page=1;selectedId='';load().catch(fail)};
 function fail(error){listStatus.className='error';listStatus.textContent=error instanceof Error?error.message:'Orders unavailable';ordersRoot.innerHTML='<div class="skeleton error">Orders could not be loaded.</div>'}
 hydrate();setTabs({});load().catch(fail);
+</script></body></html>`;
+}
+
+function professionalOrdersPageHtml(csrfToken: string): string {
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Orders | Get Free Seeds</title><style>:root{color-scheme:light;--ink:#17231c;--muted:#657269;--line:#dbe3dc;--paper:#fff;--wash:#f4f7f4;--green:#174d31;--danger:#a32929;--shadow:0 12px 32px rgba(23,35,28,.08)}*{box-sizing:border-box}body{margin:0;background:#edf2ed;color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,sans-serif}button,input,select{font:inherit}button{cursor:pointer}.shell{max-width:1500px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;gap:18px;margin-bottom:20px}.eyebrow{color:var(--green);font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.top h1{font-family:Georgia,serif;font-size:34px;line-height:1;margin:5px 0 7px}.top p{margin:0;color:var(--muted)}nav a{color:var(--green);text-decoration:none;font-weight:700}.refresh,.tab,.filters,.card,.detail{border:1px solid var(--line);background:var(--paper);border-radius:13px;box-shadow:var(--shadow)}.refresh{padding:9px 14px}.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.tab{padding:15px;text-align:left}.tab span{display:block;color:var(--muted);font-size:12px;font-weight:700}.tab strong{display:block;margin-top:4px;color:var(--green);font:700 27px Georgia,serif}.tab.active{border-color:var(--green);background:var(--green);color:#fff}.tab.active span,.tab.active strong{color:#fff}.filters{display:grid;grid-template-columns:minmax(230px,2fr) repeat(4,minmax(130px,1fr)) auto auto;gap:9px;align-items:end;padding:13px;margin-bottom:14px}.filters label{color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.03em;text-transform:uppercase}.filters input,.filters select{display:block;width:100%;margin-top:5px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px;color:var(--ink)}.apply,.primary{border:0;border-radius:8px;background:var(--green);color:#fff;padding:9px 13px}.clear{border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px 13px}.workspace{display:grid;grid-template-columns:minmax(280px,420px) 1fr;gap:14px}.master{min-width:0}.list-head{display:flex;justify-content:space-between;align-items:center;padding:11px 4px}.orders{display:grid;grid-template-rows:minmax(280px,42vh);overflow:auto;gap:8px}.order{display:block;width:100%;border:1px solid var(--line);border-radius:10px;background:var(--paper);padding:12px;text-align:left}.order.active{outline:3px solid #9cc7a8}.order-top,.order-bottom{display:flex;justify-content:space-between;gap:8px}.order-number{font-weight:800;color:var(--green)}.customer{display:block;margin:5px 0;font-weight:700}.muted{color:var(--muted)}.badge{display:inline-block;border-radius:999px;padding:2px 7px;background:var(--wash);font-size:11px;font-weight:800}.badge.review{background:#fff0c7}.badge.paid{background:#dcecdf}.pager{display:flex;justify-content:space-between;align-items:center;padding:12px 0}.detail{padding:18px;min-width:0}.detail-header{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding-bottom:12px}.detail-header h2{margin:0 0 6px;font-family:Georgia,serif}.amount{text-align:right}.amount strong{display:block;font:700 24px Georgia,serif;color:var(--green)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:14px}.card{padding:14px;box-shadow:none}.card h3{margin:0 0 10px}.facts{display:grid;grid-template-columns:minmax(110px,.7fr) 1.3fr;gap:7px;margin:0}.facts dt{color:var(--muted);font-weight:700}.facts dd{margin:0;overflow-wrap:anywhere}.items{padding-left:20px}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.actions button{border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px 11px}.actions .primary{border-color:var(--green);background:var(--green)}.actions .danger{border-color:#e6b4b4;color:var(--danger)}.action-status{min-height:1.4em}.error{color:var(--danger)}.ok{color:#176b36}.empty{display:grid;place-items:center;min-height:300px;color:var(--muted)}@media(max-width:900px){.filters{grid-template-columns:repeat(2,minmax(0,1fr))}.workspace{grid-template-columns:1fr}.orders{grid-template-rows:minmax(220px,35vh)}}@media(max-width:600px){.shell{padding:14px}.tabs{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr}.top{display:block}.refresh{margin-top:12px}.detail-header{display:block}.amount{text-align:left;margin-top:8px}.actions button{width:100%}}</style></head><body><main class="shell"><header class="top"><div><div class="eyebrow">Operations console</div><h1>Orders</h1><p>Payment review, operational confirmation, and fulfillment from one protected workspace.</p><nav><a href="/">Admin home</a> &nbsp;·&nbsp; <a href="/test-controls">Test controls</a></nav></div><button id="refresh" class="refresh" type="button">Refresh</button></header><section class="tabs" aria-label="Order queues"><button class="tab" data-tab="all" type="button"><span>All Orders</span><strong data-count="all">—</strong></button><button class="tab" data-tab="verify" type="button"><span>Verify Payments</span><strong data-count="verify">—</strong></button><button class="tab" data-tab="confirmed" type="button"><span>Confirmed Payments</span><strong data-count="confirmed">—</strong></button><button class="tab" data-tab="fulfillment" type="button"><span>Fulfillment</span><strong data-count="fulfillment">—</strong></button></section><form id="filters" class="filters"><label>Search<input name="q" type="search" autocomplete="off" placeholder="Order, customer, 03xx, +92, wa_id"></label><label>Order date<input name="date" type="date"></label><label>Payment<select name="paymentStatus"><option value="">Any payment</option><option value="PENDING">Pending</option><option value="REVIEW">In review</option><option value="APPROVED">Approved</option><option value="REJECTED">Rejected</option></select></label><label>Fulfillment<select name="fulfillment"><option value="">Any stage</option><option value="NOT_STARTED">Ready to pack</option><option value="PACKING">Packing</option><option value="DISPATCHED">Dispatched</option><option value="DELIVERED">Delivered</option><option value="CANCELLED">Cancelled</option></select></label><label>Archive<select name="archived"><option value="active">Active only</option><option value="all">Active + archived</option><option value="only">Archived only</option></select></label><label>Rows<select name="pageSize"><option>25</option><option>50</option><option>100</option></select></label><button class="apply" type="submit">Apply</button><button id="clear" class="clear" type="button">Clear</button></form><section class="workspace"><aside class="master"><div class="list-head"><strong id="queue-title">All Orders</strong><span id="list-status" class="muted" role="status" aria-live="polite">Loading...</span></div><div id="orders" class="orders"><div class="empty">Loading orders...</div></div><div class="pager"><button id="previous" type="button">Previous</button><span id="page-status" class="muted">Page 1</span><button id="next" type="button">Next</button></div></aside><article id="detail" class="detail"><div class="empty">Select an order to inspect its full record.</div></article></section></main><script>
+const csrf=${JSON.stringify(csrfToken)};const filters=document.querySelector('#filters'),ordersRoot=document.querySelector('#orders'),detail=document.querySelector('#detail'),listStatus=document.querySelector('#list-status'),pageStatus=document.querySelector('#page-status');const tabNames={all:'All Orders',verify:'Verify Payments',confirmed:'Confirmed Payments',fulfillment:'Fulfillment'};let tab='all',page=1,totalPages=0,selectedId='';const esc=(value)=>String(value??'').replace(/[&<>"']/g,(character)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));const text=(value)=>value===null||value===undefined||value===''?'—':esc(value);const money=(value)=>value===null||value===undefined?'—':'PKR '+Number(value).toLocaleString('en-PK');const when=(value)=>value?new Date(value).toLocaleString('en-PK',{dateStyle:'medium',timeStyle:'short'}):'—';async function json(response){const data=await response.json();if(!response.ok)throw new Error(data.error||'Request failed');return data}function hydrate(){const params=new URLSearchParams(location.search);tab=tabNames[params.get('tab')]?params.get('tab'):'all';page=Math.max(1,Number(params.get('page'))||1);for(const name of ['q','date','paymentStatus','fulfillment','archived','pageSize']){const value=params.get(name);if(value!==null&&filters.elements[name])filters.elements[name].value=value}}function params(){const result=new URLSearchParams(new FormData(filters));result.set('tab',tab);result.set('page',String(page));return result}function syncUrl(){history.replaceState(null,'',location.pathname+'?'+params().toString())}function badge(order){const value=order.paymentReviewState||order.paymentStatus||order.state;return '<span class="badge '+(value==='REVIEW'?'review':value==='APPROVED'||value==='PAID'?'paid':'')+'">'+esc(value)+'</span>'}function orderCard(order){return '<button class="order '+(order.id===selectedId?'active':'')+'" data-order-id="'+esc(order.id)+'" type="button"><span class="order-top"><span class="order-number">'+esc(order.orderNumber)+'</span>'+badge(order)+'</span><span class="customer">'+text(order.customerName)+'</span><span class="order-bottom"><span>'+esc(order.itemSummary||'No item summary')+'</span><strong>'+money(order.totalPayablePkr)+'</strong></span><span class="order-bottom"><span>'+esc(order.state)+(order.archivedAt?' · Archived':'')+'</span><time>'+esc(when(order.createdAt))+'</time></span></button>'}function setTabs(counts){for(const button of document.querySelectorAll('[data-tab]'))button.classList.toggle('active',button.dataset.tab===tab);for(const key of Object.keys(tabNames)){const node=document.querySelector('[data-count="'+key+'"]');if(node)node.textContent=Number(counts?.[key]||0).toLocaleString('en-PK')}document.querySelector('#queue-title').textContent=tabNames[tab]}function renderList(data){const list=data.orders||[];totalPages=data.pagination.totalPages;listStatus.textContent=Number(data.total).toLocaleString('en-PK')+' total';pageStatus.textContent='Page '+data.pagination.page+' of '+Math.max(1,totalPages);document.querySelector('#previous').disabled=data.pagination.page<=1;document.querySelector('#next').disabled=data.pagination.page>=totalPages;setTabs(data.counts);if(!list.length){ordersRoot.innerHTML='<div class="empty">No orders match this queue and filter set.</div>';selectedId='';detail.innerHTML='<div class="empty">No matching order to inspect.</div>';return null}if(!list.some((order)=>order.id===selectedId))selectedId=list[0].id;ordersRoot.innerHTML=list.map(orderCard).join('');for(const button of ordersRoot.querySelectorAll('[data-order-id]'))button.onclick=()=>show(button.dataset.orderId);return selectedId}async function mutate(path,body){return json(await fetch(path,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(body)}))}function confirmAction(order,label){return confirm(label+' for '+order.orderNumber+'? This action is audited.')}function actionButton(label,handler,className){const button=document.createElement('button');button.type='button';button.textContent=label;if(className)button.className=className;button.onclick=async()=>{button.disabled=true;try{await handler()}catch(error){const status=detail.querySelector('.action-status');if(status){status.className='action-status error';status.textContent=error instanceof Error?error.message:'Request failed'}}finally{button.disabled=false}};return button}async function run(path,body){await mutate(path,body);await load()}function addActions(order){const root=detail.querySelector('.actions');if(!root||order.archivedAt)return;if(order.paymentId&&order.state==='PAYMENT_REVIEW'&&order.paymentReviewState==='REVIEW'&&order.receiptCount>0){root.append(actionButton('Approve payment',async()=>{if(confirmAction(order,'Approve the reviewed payment'))await run('/api/payments/'+encodeURIComponent(order.paymentId)+'/approve',{orderId:order.id,confirmation:order.orderNumber})},'primary'));root.append(actionButton('Reject payment',async()=>{const reason=prompt('Rejection reason');if(reason&&confirmAction(order,'Reject the payment'))await run('/api/payments/'+encodeURIComponent(order.paymentId)+'/reject',{orderId:order.id,reason,confirmation:order.orderNumber})},'danger'));root.append(actionButton('Request Clearer Receipt',async()=>{if(confirmAction(order,'Request a clearer receipt'))await run('/api/payments/'+encodeURIComponent(order.paymentId)+'/request-clearer-receipt',{orderId:order.id,confirmation:order.orderNumber})}))}if(order.canConfirmOrder){root.append(actionButton('Confirm Order',async()=>{if(confirmAction(order,'Confirm Order'))await run('/api/orders/'+encodeURIComponent(order.id)+'/confirm',{confirmation:order.orderNumber})},'primary'))}const next={PAID:['PACKING','Mark Packing'],PACKING:['DISPATCHED','Mark Dispatched'],DISPATCHED:['DELIVERED','Mark Delivered']}[order.state];if(next)root.append(actionButton(next[1],async()=>{if(confirmAction(order,next[1]))await run('/api/orders/'+encodeURIComponent(order.id)+'/transition',{from:order.state,to:next[0],confirmation:order.orderNumber})},'primary'));if(order.canPrintShippingLabel){root.append(actionButton('Print 4x6 Shipping Label',()=>{window.open('/api/orders/'+encodeURIComponent(order.id)+'/shipping-label?format=4x6','_blank','noopener,noreferrer')}));root.append(actionButton('Print A6 Shipping Label',()=>{window.open('/api/orders/'+encodeURIComponent(order.id)+'/shipping-label?format=A6','_blank','noopener,noreferrer')}))}if(['PAID','PACKING','DISPATCHED','DELIVERED'].includes(order.state)&&!order.trackingNumber){root.append(actionButton('Assign Tracking',async()=>{const value=prompt('Tracking number');if(value&&confirmAction(order,'Assign tracking number'))await run('/api/orders/'+encodeURIComponent(order.id)+'/tracking',{trackingNumber:value,confirmation:order.orderNumber})}))}if(order.trackingNumber){const tracking=document.createElement('span');tracking.className='badge';tracking.textContent='Tracking: '+order.trackingNumber;root.append(tracking)}if(order.canCancel)root.append(actionButton('Cancel order',async()=>{const reason=prompt('Cancellation reason');if(reason&&confirmAction(order,'Cancel order'))await run('/api/orders/'+encodeURIComponent(order.id)+'/cancel',{reason,confirmation:order.orderNumber})},'danger'));if(order.canArchive)root.append(actionButton('Archive order',async()=>{const reason=prompt('Archive reason');if(reason&&confirmAction(order,'Archive order'))await run('/api/orders/'+encodeURIComponent(order.id)+'/archive',{reason,confirmation:order.orderNumber})}));root.insertAdjacentHTML('beforeend','<p class="action-status muted" role="status"></p>')}function facts(entries){return '<dl class="facts">'+entries.map((entry)=>'<dt>'+esc(entry[0])+'</dt><dd>'+entry[1]+'</dd>').join('')+'</dl>'}function renderDetail(data){const order=data.order,items=data.items||[],receipts=data.receipts||[],audit=data.audit||[];const itemHtml=items.length?items.map((item)=>'<li>'+text(item.description)+' × '+text(item.quantity)+' <span class="muted">('+money(item.lineTotalPkr)+')</span></li>').join(''):'<li class="muted">No items recorded.</li>';const receiptHtml=receipts.length?receipts.map((receipt,index)=>'<li><a href="'+esc(receipt.previewUrl)+'" target="_blank" rel="noreferrer">Preview private receipt '+(index+1)+'</a> <small class="muted">'+text(receipt.mimeType)+' · '+esc(when(receipt.submittedAt))+'</small></li>').join(''):'<li class="muted">No receipts submitted.</li>';const auditHtml=audit.length?audit.map((entry)=>'<li><strong>'+text(entry.action)+'</strong> <small class="muted">'+esc(when(entry.created_at))+' · '+text(entry.actor_id||entry.actor_type)+'</small></li>').join(''):'<li class="muted">No audit entries.</li>';detail.innerHTML='<header class="detail-header"><div><h2>'+esc(order.orderNumber)+'</h2><span class="badge">'+esc(order.state)+'</span> '+badge(order)+(order.confirmedAt?' <span class="badge">Order confirmed</span>':'')+'</div><div class="amount"><span class="muted">Order total</span><strong>'+money(order.totalPayablePkr)+'</strong><small>'+esc(when(order.createdAt))+'</small></div></header><div class="grid"><section class="card"><h3>Customer & delivery</h3>'+facts([['Name',text(order.customerName)],['Contact',text(order.contactNumber)],['WhatsApp',text(order.whatsappNumber)],['Address',text(order.deliveryAddress)],['Landmark',text(order.landmark)],['City',text(order.city)],['Province',text(order.province)],['Tracking',text(order.trackingNumber)])+'</section><section class="card"><h3>Items</h3><ul class="items">'+itemHtml+'</ul><h3>Receipts</h3><ul>'+receiptHtml+'</ul></section><section class="card"><h3>Audit history</h3><ul>'+auditHtml+'</ul></section></div><div class="actions"></div>';addActions(order)}async function show(id){selectedId=id;detail.innerHTML='<div class="empty">Loading full order record...</div>';try{const data=await json(await fetch('/api/orders/'+encodeURIComponent(id),{cache:'no-store'}));if(selectedId===id)renderDetail(data)}catch(error){detail.innerHTML='<div class="empty error">'+esc(error instanceof Error?error.message:'Order unavailable')+'</div>'}}async function load(){listStatus.textContent='Loading...';const data=await json(await fetch('/api/orders?'+params().toString(),{cache:'no-store'}));const id=renderList(data);syncUrl();if(id)await show(id)}function fail(error){listStatus.className='error';listStatus.textContent=error instanceof Error?error.message:'Orders unavailable'}filters.onsubmit=(event)=>{event.preventDefault();page=1;load().catch(fail)};document.querySelector('#clear').onclick=()=>{filters.reset();tab='all';page=1;selectedId='';load().catch(fail)};document.querySelector('#refresh').onclick=()=>load().catch(fail);document.querySelector('#previous').onclick=()=>{if(page>1){page-=1;selectedId='';load().catch(fail)}};document.querySelector('#next').onclick=()=>{if(page<totalPages){page+=1;selectedId='';load().catch(fail)}};for(const button of document.querySelectorAll('[data-tab]'))button.onclick=()=>{tab=button.dataset.tab;page=1;selectedId='';load().catch(fail)};hydrate();setTabs({});load().catch(fail);
 </script></body></html>`;
 }
 
@@ -311,7 +362,7 @@ app.get("/health", async (c) => {
 app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav><a href='/payment-settings'>Payment Settings</a> | <a href='/whatsapp-content'>WhatsApp Content</a> | <a href='/payment-amount'>Legacy Advance Amount</a> | <a href='/tariff'>Tariff Management</a> | <a href='/meta-activation'>Meta Activation</a> | <a href='/orders'>Orders</a> | <a href='/test-controls'>Test Controls</a> | Dashboard | Leads | Meta Instant Form | Payment Verification | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
 
 app.get("/api/csrf", (c) => c.json({ csrfToken: issueCsrfToken(c) }));
-app.get("/orders", (c) => c.html(ordersDashboardPageHtml(issueCsrfToken(c))));
+app.get("/orders", (c) => c.html(professionalOrdersPageHtml(issueCsrfToken(c))));
 app.get("/test-controls", (c) => c.html(testControlsPageHtml(issueCsrfToken(c))));
 app.get("/whatsapp-content", (c) => c.html(whatsappContentJourneyPageHtml(issueCsrfToken(c))));
 app.get("/payment-settings", (c) => c.html(paymentSettingsPreviewPageHtml()));
@@ -976,6 +1027,7 @@ app.get("/api/payment-methods/:method/qr", async (c) => {
 
 const ORDER_ADMIN_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,o.total_payable,o.province,o.created_at,o.updated_at,
   o.cancelled_at,o.cancelled_by,o.cancellation_reason,o.archived_at,o.archived_by,o.archive_reason,
+  (SELECT created_at FROM audit_log confirmation WHERE confirmation.entity_type='ORDER' AND confirmation.entity_id=o.id AND confirmation.action='ORDER_CONFIRMED' ORDER BY confirmation.created_at DESC LIMIT 1) AS order_confirmed_at,
   c.full_name,c.delivery_address,c.nearby_place,c.city,c.contact_number,c.normalized_phone,c.normalized_contact_number,c.whatsapp_number,c.normalized_whatsapp_number,c.wa_id,
   p.id AS payment_id,p.method,p.expected_amount,p.approved_amount,p.review_state,p.submitted_at,p.approved_by,p.approved_at,p.rejection_reason,p.customer_transaction_reference,p.created_at AS payment_created_at,p.updated_at AS payment_updated_at,
   (SELECT COUNT(*) FROM payment_receipts receipt_count WHERE receipt_count.order_id=o.id) AS receipt_count,
@@ -1057,6 +1109,7 @@ app.get("/api/orders/:id", async (c) => {
   if (!row) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
   const audit = await c.env.DB.prepare("SELECT id,action,actor_type,actor_id,metadata_json,created_at FROM audit_log WHERE (entity_type='ORDER' AND entity_id=?) OR (entity_type='PAYMENT' AND entity_id=(SELECT id FROM payments WHERE order_id=?)) ORDER BY created_at DESC LIMIT 100").bind(c.req.param("id"), c.req.param("id")).all();
   const order = orderView(row);
+  order.trackingNumber = await assignedTrackingNumber(c.env.DB, c.req.param("id")) ?? order.trackingNumber;
   return c.json({ order, items: order.items, receipts: order.receipts, audit: audit.results });
 });
 
@@ -1186,14 +1239,18 @@ app.post("/api/orders/:id/transition", async (c) => {
   const from = OrderState.safeParse(body.from);
   const to = OrderState.safeParse(body.to);
   if (!from.success || !to.success) return c.json({ error: "ORDER_STATE_INVALID" }, 400);
-  if (to.data === "CANCELLED") return c.json({ error: "USE_EXPLICIT_CANCELLATION" }, 409);
+  const fulfillmentTransition = from.data === "PAID" && to.data === "PACKING"
+    || from.data === "PACKING" && to.data === "DISPATCHED"
+    || from.data === "DISPATCHED" && to.data === "DELIVERED";
+  if (!fulfillmentTransition) return c.json({ error: to.data === "CANCELLED" ? "USE_EXPLICIT_CANCELLATION" : "FULFILLMENT_TRANSITION_INVALID" }, 409);
   if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
   if (!canTransition(from.data, to.data)) return c.json({ error: "INVALID_STATE_TRANSITION" }, 409);
   if (!c.env.DB) return c.json({ ok: true, simulated: true });
-  const current = await c.env.DB.prepare("SELECT order_number,state,archived_at FROM orders WHERE id=?").bind(c.req.param("id")).first<{ order_number: string; state: OrderState; archived_at: string | null }>();
+  const current = await c.env.DB.prepare("SELECT o.order_number,o.state,o.payment_status,o.archived_at,p.review_state FROM orders o LEFT JOIN payments p ON p.order_id=o.id WHERE o.id=?").bind(c.req.param("id")).first<{ order_number: string; state: OrderState; payment_status: string; review_state: string | null; archived_at: string | null }>();
   if (!current) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
   if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
   if (current.archived_at != null || current.state !== from.data) return c.json({ error: "STATE_CONFLICT" }, 409);
+  if (current.payment_status !== "PAID" && current.review_state !== "APPROVED") return c.json({ error: "FULFILLMENT_PAYMENT_NOT_APPROVED" }, 409);
   const now = new Date().toISOString();
   const result = await c.env.DB.batch([
     c.env.DB.prepare("UPDATE orders SET state=?,updated_at=? WHERE id=? AND state=? AND archived_at IS NULL").bind(to.data, now, c.req.param("id"), from.data),
@@ -1201,6 +1258,61 @@ app.post("/api/orders/:id/transition", async (c) => {
   ]);
   return result[0].meta.changes === 1 ? c.json({ ok: true, from: from.data, to: to.data }) : c.json({ error: "STATE_CONFLICT" }, 409);
 });
+
+app.post("/api/orders/:id/confirm", async (c) => {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
+  let body: { confirmation?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
+  const current = await c.env.DB.prepare("SELECT o.order_number,o.state,o.payment_status,o.archived_at,p.review_state FROM orders o LEFT JOIN payments p ON p.order_id=o.id WHERE o.id=?").bind(c.req.param("id")).first<{ order_number: string; state: OrderState; payment_status: string; review_state: string | null; archived_at: string | null }>();
+  if (!current) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
+  if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+  if (current.archived_at != null) return c.json({ error: "ORDER_ARCHIVED" }, 409);
+  if (current.payment_status !== "PAID" && current.review_state !== "APPROVED") return c.json({ error: "ORDER_CONFIRMATION_REQUIRES_APPROVED_PAYMENT" }, 409);
+  if (!["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(current.state)) return c.json({ error: "ORDER_CONFIRMATION_NOT_READY" }, 409);
+  const existing = await c.env.DB.prepare("SELECT created_at FROM audit_log WHERE entity_type='ORDER' AND entity_id=? AND action='ORDER_CONFIRMED' ORDER BY created_at DESC LIMIT 1").bind(c.req.param("id")).first<{ created_at: string }>();
+  if (existing) return c.json({ ok: true, alreadyConfirmed: true, confirmedAt: existing.created_at });
+  const now = new Date().toISOString();
+  const result = await c.env.DB.batch([
+    auditStatement(c.env.DB, "ORDER_CONFIRMED", "ORDER", c.req.param("id"), { orderNumber: current.order_number, operationalOnly: true, financialStateUnchanged: true }, now, c.env.ADMIN_EMAIL)
+  ]);
+  return result[0].meta.changes === 1 ? c.json({ ok: true, confirmedAt: now }) : c.json({ error: "ORDER_CONFIRMATION_FAILED" }, 409);
+});
+
+app.post("/api/orders/:id/tracking", async (c) => {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
+  let body: { trackingNumber?: unknown; confirmation?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
+  const value = trackingNumber(body.trackingNumber);
+  if (!value) return c.json({ error: "TRACKING_NUMBER_INVALID" }, 400);
+  const current = await c.env.DB.prepare("SELECT order_number,state,archived_at FROM orders WHERE id=?").bind(c.req.param("id")).first<{ order_number: string; state: OrderState; archived_at: string | null }>();
+  if (!current) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
+  if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+  if (current.archived_at != null) return c.json({ error: "ORDER_ARCHIVED" }, 409);
+  if (!["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(current.state)) return c.json({ error: "TRACKING_NOT_READY" }, 409);
+  const now = new Date().toISOString();
+  await c.env.DB.batch([
+    auditStatement(c.env.DB, "ORDER_TRACKING_ASSIGNED", "ORDER", c.req.param("id"), { orderNumber: current.order_number, trackingNumber: value }, now, c.env.ADMIN_EMAIL)
+  ]);
+  return c.json({ ok: true, trackingNumber: value });
+});
+
+async function shippingLabelResponse(c: AdminContext) {
+  if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
+  const format = parseShippingLabelFormat(c.req.query("format") ?? c.req.query("size") ?? "4x6");
+  if (!format) return c.json({ error: "SHIPPING_LABEL_FORMAT_INVALID" }, 400);
+  const row = await c.env.DB.prepare(`${ORDER_ADMIN_SELECT} WHERE o.id=?`).bind(c.req.param("id")).first<Record<string, unknown>>();
+  if (!row) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
+  const order = orderView(row);
+  if (!order.canPrintShippingLabel) return c.json({ error: "SHIPPING_LABEL_NOT_READY" }, 409);
+  const tracking = await assignedTrackingNumber(c.env.DB, c.req.param("id") ?? "");
+  const html = renderShippingLabelHtml(order, format, tracking);
+  return new Response(html, { headers: { "Content-Type": "text/html; charset=UTF-8", "Cache-Control": "private, no-store", "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none';", "X-Content-Type-Options": "nosniff", "Content-Disposition": `inline; filename="${order.orderNumber}-${format}.html"` } });
+}
+
+app.get("/api/orders/:id/shipping-label", shippingLabelResponse);
+app.get("/api/orders/:id/label", shippingLabelResponse);
 
 app.post("/api/payments/:id/approve", async (c) => {
   if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
@@ -1273,6 +1385,15 @@ app.post("/api/payments/:id/request-clearer-receipt", async (c) => {
     c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "REQUEST_CLEARER_RECEIPT", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT", c.req.param("id"), crypto.randomUUID(), JSON.stringify({ orderId: current.order_id }), now)
   ]);
   return c.json({ ok: true });
+});
+
+app.get("/api/orders/:id/receipts/:receiptId/preview", async (c) => {
+  if (!c.env.DB || !c.env.RECEIPTS) return c.json({ error: "RECEIPT_PREVIEW_UNAVAILABLE" }, 503);
+  const receipt = await c.env.DB.prepare("SELECT r2_object_key,mime_type FROM payment_receipts WHERE id=? AND order_id=?").bind(c.req.param("receiptId"), c.req.param("id")).first<{ r2_object_key: string; mime_type: string }>();
+  if (!receipt) return c.json({ error: "RECEIPT_NOT_FOUND" }, 404);
+  const object = await c.env.RECEIPTS.get(receipt.r2_object_key);
+  if (!object) return c.json({ error: "RECEIPT_NOT_FOUND" }, 404);
+  return new Response(object.body, { headers: { "Content-Type": receipt.mime_type ?? object.httpMetadata?.contentType ?? "application/octet-stream", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff", "Content-Disposition": "inline" } });
 });
 
 app.get("/api/receipts/:key{.+}", async (c) => {

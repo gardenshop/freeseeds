@@ -231,6 +231,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - `/orders` professional dashboard version `9e36ce18-c5d2-4702-9388-c1f4e4d23921` deployed to canonical Admin Worker/D1.
 - Real rejected order and one private receipt remain preserved; financial history unchanged.
 
+## GFS-141 Shipping/Operations
+
+- Shipping labels render from D1 order/customer/address data with no public R2 URL and optional tracking only when assigned.
+- Confirm Order is separate from payment approval; PAID/CAPI remains evidence/approval gated.
+
 ## GFS-114 Flow Graph Evidence
 
 - Canonical WABA Flow ID created via Graph-backed Admin route: `1133458765899784`.

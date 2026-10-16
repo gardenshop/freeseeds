@@ -120,11 +120,11 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("grid-template-rows:minmax(280px,42vh)");
     expect(html).toContain("/api/payments/'");
     expect(html).toContain("request-clearer-receipt");
-    expect(html).toContain("Open private receipt");
+    expect(html).toContain("Preview private receipt");
     expect(html).toContain("order.receiptCount>0");
-    expect(html).toContain("Mark packing");
-    expect(html).toContain("Mark dispatched");
-    expect(html).toContain("Mark delivered");
+    expect(html).toContain("Mark Packing");
+    expect(html).toContain("Mark Dispatched");
+    expect(html).toContain("Mark Delivered");
   });
 
   it("requires CSRF for payment and fulfillment detail mutations", async () => {
@@ -133,7 +133,9 @@ describe("GFS-109 admin controls", () => {
       ["/api/payments/payment/approve", { orderId: "order", confirmation: "FS-261012-990001" }],
       ["/api/payments/payment/reject", { orderId: "order", reason: "Synthetic", confirmation: "FS-261012-990001" }],
       ["/api/payments/payment/request-clearer-receipt", { orderId: "order", confirmation: "FS-261012-990001" }],
-      ["/api/orders/order/transition", { from: "PAID", to: "PACKING", confirmation: "FS-261012-990001" }]
+      ["/api/orders/order/transition", { from: "PAID", to: "PACKING", confirmation: "FS-261012-990001" }],
+      ["/api/orders/order/confirm", { confirmation: "FS-261012-990001" }],
+      ["/api/orders/order/tracking", { trackingNumber: "TRK-123", confirmation: "FS-261012-990001" }]
     ] as const;
     for (const [path, body] of requests) {
       const response = await app.fetch(new Request(`https://admin.example.test${path}`, { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify(body) }), env(db));

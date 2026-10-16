@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased - 2026-10-16 (GFS-141)
+
+- Added protected order operations: Confirm Order, clearer-receipt, payment/fulfillment state controls and printable shipping labels.
+- Preserved financial safety: no approval, PAID, CAPI or fulfillment mutation was made to real rejected order.
+
 ## Unreleased - 2026-10-16 (GFS-139)
 
 - Added/deployed professional four-tab Orders dashboard with counts, server pagination, filters, newest auto-selection and complete details/receipt/actions.

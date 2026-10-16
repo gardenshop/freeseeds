@@ -108,6 +108,8 @@
 | GFS-139 professional dashboard | tabs/counts/pagination/filters/autoselect/details/receipt/actions | PASS 87 tests/deployment; post-deploy browser blocked by MCP response hang |
 | GFS-139 rejected order audit | actor/timestamp/reason history preserved, no reversal | PASS D1 read-only evidence |
 | GFS-140 browser dashboard | four tabs, four orders, auto-details, receipt link, actions | PASS real Chrome snapshot after MCP dependency recovery |
+| GFS-141 shipping labels | escaped A6/4×6 label, tracking assignment, order safety | PASS 91 tests; no real order mutation |
+| GFS-141 operational actions | confirm/clearer/review/fulfillment guards and audit | PASS implementation/tests; real rejected order untouched |
 | GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |
 | GFS-98 token recovery | owner-installed secret → Graph ladder → API/Admin readiness | PASS fresh token; no token value inspected |
 | GFS-98 atomic reply | one failed event retry, outbound ID, status webhook, no duplicate | PASS: WAMID persisted, SENT status persisted, duplicate count 0 |
