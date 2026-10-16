@@ -450,6 +450,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Admin Orders URL was opened with exact order query, but Chrome returned `ERR_QUIC_PROTOCOL_ERROR`; no UI mutation was made and payment was not approved.
 - The real receipt/payment discrepancy remains a manual review gate; no PAID/CAPI/fulfillment claim.
 
+## GFS-136 Admin Orders Repair
+
+- Admin Orders page now hydrates URL search state, renders explicit loading/error/empty states, and exposes full order totals/detail/payment controls.
+- Exact order search `FS-261015-000001` rendered one row after the authenticated browser search; the prior blank table was caused by missing URL hydration/UI data state.
+- Order remains PAYMENT_REVIEW; no payment approval or fulfillment mutation was made.
+
 ## GFS-92 Token Runtime Recheck
 
 - Active API/admin activation status now returns Graph HTTP 401 for `/me`, `/me/permissions`, phone, and WABA reads while secret bindings/deployments are present by name.

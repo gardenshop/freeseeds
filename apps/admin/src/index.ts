@@ -74,6 +74,7 @@ function orderView(row: Record<string, unknown>) {
     paymentId: row.payment_id == null ? null : String(row.payment_id),
     paymentMethod: row.method == null ? null : String(row.method),
     paymentReviewState: row.review_state == null ? null : String(row.review_state),
+    totalPayablePkr: Number(row.total_payable ?? 0),
     receiptCount,
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
