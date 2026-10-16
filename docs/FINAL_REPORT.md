@@ -12,6 +12,12 @@
 - Real rejected order: **PRESERVED**, no financial mutation.
 - Tests: **91/91 pass**; browser post-deploy evidence remains dependent on MCP/session stability.
 
+## GFS-143-CMS-RECOVERY Update — 2026-10-16
+
+- Cloudflare 7403: **RESOLVED** under canonical account; staging D1 access restored.
+- Migration 0017 media tables: **APPLIED** safely.
+- CMS image upload/R2/publish/customer WAMID: **NOT PROVEN**; browser upload evidence remains pending.
+
 ## GFS-140-ADMIN-BROWSER Update — 2026-10-16
 
 - Admin Orders browser: **PASS** — four tabs, four orders, newest detail auto-selected, full customer/payment/items/receipt/audit fields and state-aware controls visible.

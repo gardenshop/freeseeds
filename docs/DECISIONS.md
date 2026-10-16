@@ -178,6 +178,10 @@ D1 confirms `FS-261015-000001` exists in `PAYMENT_REVIEW` for PKR 300 with a Jaz
 
 Orders are managed through four operational queues with server-side counts/pagination and complete D1-backed details. Real order `FS-261015-000001` is PAYMENT_REJECTED by audited staff action and remains unchanged. Approval controls remain receipt/state/CSRF guarded and cannot derive authority from client financial values.
 
+## 2026-10-16: GFS-143 CMS Migration Recovery
+
+Cloudflare 7403 was resolved using the canonical authorized account. Staging D1 lacked migration 0017 media tables; the existing migration was applied once without reset/destruction. Image upload/publish remains unclaimed until authenticated browser evidence exists.
+
 ## 2026-10-16: GFS-141 Operations Controls
 
 Added audited Confirm Order, clearer-receipt and stateful Packing/Dispatched/Delivered controls plus escaped printable labels. These controls never approve payment, assign tracking without an input, or emit Purchase CAPI without verified approval.

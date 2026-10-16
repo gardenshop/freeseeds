@@ -231,6 +231,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - `/orders` professional dashboard version `9e36ce18-c5d2-4702-9388-c1f4e4d23921` deployed to canonical Admin Worker/D1.
 - Real rejected order and one private receipt remain preserved; financial history unchanged.
 
+## GFS-143 CMS Media Recovery
+
+- Staging D1 media schema now exists after safely applying migration `0017_whatsapp_content_media.sql`.
+- Private R2 media remains authoritative; no public URL or customer-facing image success is claimed without browser/WAMID evidence.
+
 ## GFS-141 Shipping/Operations
 
 - Shipping labels render from D1 order/customer/address data with no public R2 URL and optional tracking only when assigned.

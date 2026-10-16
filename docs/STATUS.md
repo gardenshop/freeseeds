@@ -468,6 +468,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Newest order auto-selected with full customer/delivery/payment/items/receipt/audit details and state-aware Approve/Reject/Clearer Receipt controls.
 - Actual order `FS-261012-000002` is PAYMENT_REVIEW with one private receipt and PKR 600; no approval mutation performed.
 
+## GFS-143 CMS/R2 Recovery
+
+- Cloudflare OAuth account access is restored and staging D1 was verified under the canonical account.
+- Migration `0017_whatsapp_content_media.sql` was absent from staging and has now been applied safely; media tables exist.
+- CMS/image upload retry and private R2 preview require final browser upload evidence; no customer-facing image claim is made yet.
+
 ## GFS-141 Admin Order Operations
 
 - Admin Worker version `160ea7d4-5f8d-4124-9944-ecd1d5e079dd` deployed with Confirm Order, clearer-receipt, payment/fulfillment guards and escaped printable A6/4×6 shipping labels.
