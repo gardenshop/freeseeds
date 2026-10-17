@@ -118,6 +118,7 @@
 | GFS-155 media publication | gallery-only clone, stale selection invalidation, R2 snapshot | PASS D1/R2/WAMID sent evidence; customer rendering unverified |
 | GFS-156 Fertilizer CMS | overlength label validation, EN/UR correction, publish compatibility | PASS D1 correction/audit; real customer button rendering pending |
 | GFS-157 live province fees | enabled D1 rates → list options/descriptions → quote | PASS implementation/deployment; real customer tap pending |
+| GFS-158 payment settings | single route, bilingual fields, QR/enable controls | PASS tests/deployment; live browser evidence pending |
 | GFS-155 PR CI | GitHub required verify check | BLOCKED externally: workflow not started due account billing lock |
 | GFS-144 CMS media delivery | approved upload, R2/D1 gallery, published WhatsApp image WAMID | BLOCKED/unverified: no browser media evidence captured |
 | GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |

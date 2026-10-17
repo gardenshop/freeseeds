@@ -504,6 +504,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 
 - Guided province list now reads enabled `province_delivery_rates` at request time and includes actual PKR fee in list descriptions.
 - D1 remains the sole price source; no province fee constants or fallback prices are used. API version `8bb78ad8-b3b3-4520-819d-9850e988538c` deployed.
+
+## GFS-158 Payment Settings Route
+
+- Removed duplicate `/payment-settings` registration; one canonical bilingual route remains.
+- All existing payment fields, enabled controls, validation and private QR preview are preserved. Admin Worker `906dedf0-a383-493b-af92-46a35cd5d8e9` deployed.
 - PR #8 CI run `39026603148` did not start because the GitHub account is locked by a billing issue; code verification did not fail. Merge remains blocked by this external required-check gate.
 
 ## GFS-144 CMS Upload Verification

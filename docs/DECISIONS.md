@@ -194,6 +194,10 @@ The reported `WHATSAPP_CONTENT_INVALID` was caused by an overlength draft action
 
 Province delivery menus must not embed prices. The guided router now queries enabled D1 rates per request and displays the current fee in list descriptions; the next quote re-reads D1 and preserves existing order totals.
 
+## 2026-10-17: GFS-158 Payment Route Consolidation
+
+Removed the duplicate `/payment-settings` route that could shadow the canonical bilingual form. Existing payment fields, enable safeguards and QR preview remain intact.
+
 ## 2026-10-16: GFS-144 CMS Media Evidence Boundary
 
 Migration and backend prerequisites are repaired, but no approved image upload/WAMID evidence was captured in the current MCP run. We do not claim customer-facing media success.

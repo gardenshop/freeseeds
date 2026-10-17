@@ -249,6 +249,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 
 - Province menu options are generated from enabled D1 `province_delivery_rates`; IDs are stable province names and descriptions include current PKR fee.
 
+## GFS-158 Payment Settings
+
+- Canonical route: `/payment-settings`; duplicate legacy route removed.
+- Payment method values and QR storage remain D1/private R2 authoritative.
+
 ## GFS-144 Media Evidence
 
 - Migration 0017 tables are present in canonical staging D1; live R2 gallery upload and WhatsApp image delivery remain unverified.

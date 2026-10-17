@@ -20,6 +20,11 @@
 - Repair: **PASS** — labels corrected/audited in D1; published version already valid.
 - Real customer button/image evidence: **UNVERIFIED**.
 
+## GFS-158-PAYMENT-ROUTE Update — 2026-10-17
+
+- `/payment-settings`: **PASS single canonical route**; fields, enable guards and private QR preserved.
+- Live payment/browser E2E: **UNVERIFIED**; no real PAID/CAPI/fulfillment claim.
+
 ## GFS-157-LIVE-TARIFF Update — 2026-10-17
 
 - Province menu source: **D1/Admin live**; current delivery fee is included per option.
