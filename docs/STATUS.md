@@ -499,6 +499,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 
 - Draft version 4 contained invalid `ADD_FERTILIZER` labels (`Fertilizer + Seeds` exceeded the 20-character schema limit). Corrected safely to `Add Fertilizer` / `کھاد شامل کریں`; `SEEDS_ONLY` labels were normalized as well.
 - Draft correction was audited under `gisupp@gmail.com`; published version 3 already contained valid labels. No customer financial/order state was changed.
+
+## GFS-157 Live Province Tariffs
+
+- Guided province list now reads enabled `province_delivery_rates` at request time and includes actual PKR fee in list descriptions.
+- D1 remains the sole price source; no province fee constants or fallback prices are used. API version `8bb78ad8-b3b3-4520-819d-9850e988538c` deployed.
 - PR #8 CI run `39026603148` did not start because the GitHub account is locked by a billing issue; code verification did not fail. Merge remains blocked by this external required-check gate.
 
 ## GFS-144 CMS Upload Verification

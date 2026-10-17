@@ -28,6 +28,10 @@
 ## Unreleased - 2026-10-17 (GFS-156)
 
 - Corrected invalid draft FERTILIZER action label length and localized labels without weakening Meta limits.
+
+## Unreleased - 2026-10-17 (GFS-157)
+
+- Replaced static guided province labels with enabled D1 province rates and live PKR descriptions; deployed API version `8bb78ad8-b3b3-4520-819d-9850e988538c`.
 - Deployed Admin Worker version `506c9630-dfde-4c01-a736-7a2093c1c415`.
 
 ## Unreleased - 2026-10-16 (GFS-144)

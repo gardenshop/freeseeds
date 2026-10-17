@@ -20,6 +20,12 @@
 - Repair: **PASS** — labels corrected/audited in D1; published version already valid.
 - Real customer button/image evidence: **UNVERIFIED**.
 
+## GFS-157-LIVE-TARIFF Update — 2026-10-17
+
+- Province menu source: **D1/Admin live**; current delivery fee is included per option.
+- Quote source: **D1 authoritative**; no hardcoded rates.
+- Real customer tap/e2e: **UNVERIFIED**; authorized device interaction remains pending.
+
 ## GFS-141-OPERATIONS Update — 2026-10-16
 
 - Admin operations: **PASS implementation/deployment** — payment review, clearer receipt, Confirm Order, fulfillment controls and shipping labels.

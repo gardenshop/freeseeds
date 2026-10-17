@@ -190,6 +190,10 @@ All editable guided-chat text/button/list labels resolve from published EN/UR CM
 
 The reported `WHATSAPP_CONTENT_INVALID` was caused by an overlength draft action label, not the schema limit. Draft `ADD_FERTILIZER` labels were corrected to valid localized text and audited; no permanent limit was loosened.
 
+## 2026-10-17: GFS-157 Live Tariff Menu
+
+Province delivery menus must not embed prices. The guided router now queries enabled D1 rates per request and displays the current fee in list descriptions; the next quote re-reads D1 and preserves existing order totals.
+
 ## 2026-10-16: GFS-144 CMS Media Evidence Boundary
 
 Migration and backend prerequisites are repaired, but no approved image upload/WAMID evidence was captured in the current MCP run. We do not claim customer-facing media success.

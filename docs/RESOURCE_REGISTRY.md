@@ -245,6 +245,10 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 
 - FERTILIZER draft labels are schema-valid and within Meta button limits; published labels remain valid.
 
+## GFS-157 Province Menu
+
+- Province menu options are generated from enabled D1 `province_delivery_rates`; IDs are stable province names and descriptions include current PKR fee.
+
 ## GFS-144 Media Evidence
 
 - Migration 0017 tables are present in canonical staging D1; live R2 gallery upload and WhatsApp image delivery remain unverified.
