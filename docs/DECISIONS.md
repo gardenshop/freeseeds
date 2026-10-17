@@ -186,6 +186,10 @@ Cloudflare 7403 was resolved using the canonical authorized account. Staging D1 
 
 All editable guided-chat text/button/list labels resolve from published EN/UR CMS versions. Gallery-only publication clones an immutable version and snapshots enabled media. Cached selections are invalidated when version/media membership changes. WELCOME v6 and its private image were published and sent once to the authorized test customer with Meta WAMID/sent evidence.
 
+## 2026-10-17: GFS-156 Fertilizer CMS Validation
+
+The reported `WHATSAPP_CONTENT_INVALID` was caused by an overlength draft action label, not the schema limit. Draft `ADD_FERTILIZER` labels were corrected to valid localized text and audited; no permanent limit was loosened.
+
 ## 2026-10-16: GFS-144 CMS Media Evidence Boundary
 
 Migration and backend prerequisites are repaired, but no approved image upload/WAMID evidence was captured in the current MCP run. We do not claim customer-facing media success.

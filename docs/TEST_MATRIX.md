@@ -116,6 +116,7 @@
 | GFS-153 browser Orders | four orders/counts/details/receipt/payment tabs after reload | PASS actual Chrome snapshot with four orders and selected detail panel |
 | GFS-155 CMS action mapping | versioned EN/UR stable labels across guided actions | PASS 100 tests and Admin preview evidence |
 | GFS-155 media publication | gallery-only clone, stale selection invalidation, R2 snapshot | PASS D1/R2/WAMID sent evidence; customer rendering unverified |
+| GFS-156 Fertilizer CMS | overlength label validation, EN/UR correction, publish compatibility | PASS D1 correction/audit; real customer button rendering pending |
 | GFS-155 PR CI | GitHub required verify check | BLOCKED externally: workflow not started due account billing lock |
 | GFS-144 CMS media delivery | approved upload, R2/D1 gallery, published WhatsApp image WAMID | BLOCKED/unverified: no browser media evidence captured |
 | GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |

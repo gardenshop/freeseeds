@@ -14,6 +14,12 @@
 - Guided checkout: **GO**; payment/fulfillment remains evidence-gated.
 - PR merge: **NO-GO** while required GitHub verify check is blocked by account billing lock; no protection bypass attempted.
 
+## GFS-156-FERTILIZER-CMS Update — 2026-10-17
+
+- Root cause: draft `ADD_FERTILIZER` label exceeded the 20-character schema limit.
+- Repair: **PASS** — labels corrected/audited in D1; published version already valid.
+- Real customer button/image evidence: **UNVERIFIED**.
+
 ## GFS-141-OPERATIONS Update — 2026-10-16
 
 - Admin operations: **PASS implementation/deployment** — payment review, clearer receipt, Confirm Order, fulfillment controls and shipping labels.

@@ -494,6 +494,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Migration 0018 semantic action labels applied; Admin live preview shows localized stable IDs for Welcome, Fertilizer, Review, Payment, Order Status and Support.
 - Welcome gallery-only change published immutable version 6 with media `b99ba6e6-c5b0-4ee0-b819-b470083ab78d`; private R2 object exists (429231 bytes) and session selections are version-validated.
 - One authorized bilingual image+buttons message was accepted as WAMID `...NTYyAA==` and a real `sent` status webhook persisted. Customer-side rendering/read remains unverified.
+
+## GFS-156 Fertilizer CMS Validation
+
+- Draft version 4 contained invalid `ADD_FERTILIZER` labels (`Fertilizer + Seeds` exceeded the 20-character schema limit). Corrected safely to `Add Fertilizer` / `کھاد شامل کریں`; `SEEDS_ONLY` labels were normalized as well.
+- Draft correction was audited under `gisupp@gmail.com`; published version 3 already contained valid labels. No customer financial/order state was changed.
 - PR #8 CI run `39026603148` did not start because the GitHub account is locked by a billing issue; code verification did not fail. Merge remains blocked by this external required-check gate.
 
 ## GFS-144 CMS Upload Verification
