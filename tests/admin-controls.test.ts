@@ -127,6 +127,18 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("Mark Delivered");
   });
 
+  it("renders bounded, stale-safe startup request handling", async () => {
+    const response = await app.fetch(new Request("https://admin.example.test/orders?q=synthetic&tab=verify&page=2", { headers: auth }), env(new AdminMemoryDb()));
+    const html = await response.text();
+    expect(html).toContain("setTimeout(()=>{timedOut=true;controller.abort()},12000)");
+    expect(html).toContain("Server returned a non-JSON response (HTTP '+response.status+')");
+    expect(html).toContain("Request failed (HTTP '+response.status+')");
+    expect(html).toContain("if(listController)listController.abort()");
+    expect(html).toContain("if(generation!==listGeneration||isAbort(error))return");
+    expect(html).toContain("Orders could not be loaded. Use Refresh to try again.");
+    expect(html).toContain("hydrate();setTabs({});load();");
+  });
+
   it("requires CSRF for payment and fulfillment detail mutations", async () => {
     const db = new AdminMemoryDb();
     const requests = [

@@ -24,6 +24,11 @@
 - CMS image upload/publish: **UNVERIFIED**; no approved R2/media WAMID evidence captured.
 - Guided checkout: **GO**; native Flow remains deferred/opt-in.
 
+## GFS-151-ORDERS-REPAIR Update — 2026-10-16
+
+- Orders loading fix: **PASS implementation/deployment** — timeout, cancellation, safe JSON/non-JSON handling, Retry and URL hydration.
+- Admin browser post-deploy verification: **PENDING** MCP session stability.
+
 ## GFS-140-ADMIN-BROWSER Update — 2026-10-16
 
 - Admin Orders browser: **PASS** — four tabs, four orders, newest detail auto-selected, full customer/payment/items/receipt/audit fields and state-aware controls visible.

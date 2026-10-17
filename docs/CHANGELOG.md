@@ -10,6 +10,11 @@
 - Resolved Cloudflare account authorization and applied missing staging migration 0017 for private WhatsApp media gallery tables.
 - No image upload/customer-facing media success was claimed before authenticated browser evidence.
 
+## Unreleased - 2026-10-16 (GFS-151)
+
+- Hardened professional Orders startup with bounded timeout, stale-request cancellation, safe response parsing, Retry/error states and URL filter hydration.
+- Deployed Admin Worker version `710cf772-dfc9-4dce-b4a2-cad26f581946`.
+
 ## Unreleased - 2026-10-16 (GFS-144)
 
 - Reconfirmed migration 0017/media prerequisites and protected private R2 path. Live CMS image upload/delivery evidence remains pending.

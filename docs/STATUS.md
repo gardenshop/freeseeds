@@ -474,6 +474,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Migration `0017_whatsapp_content_media.sql` was absent from staging and has now been applied safely; media tables exist.
 - CMS/image upload retry and private R2 preview require final browser upload evidence; no customer-facing image claim is made yet.
 
+## GFS-151 Orders Loading Repair
+
+- Professional Orders frontend now has bounded fetch timeout, stale-request cancellation, safe JSON/non-JSON errors, controlled Retry and URL filter hydration.
+- Admin Worker version `710cf772-dfc9-4dce-b4a2-cad26f581946` deployed; post-deploy browser retest remains MCP-session dependent.
+
 ## GFS-144 CMS Upload Verification
 
 - Cloudflare OAuth/D1 access is restored and migration 0017 media tables exist.
