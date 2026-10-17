@@ -2,6 +2,132 @@
 
 | Area | Required coverage | Status |
 | --- | --- | --- |
+| GFS-68 launch separation | Meta Form/Leads Center independent of WhatsApp API | PASS: `META_FORM_LAUNCH_FIRST`; WhatsApp is enhancement-pending and non-blocking |
+| GFS-68 canonical form inventory | Page `101192938541236`, Form `1093015800183328`, no duplicate substitution | PASS authority mapping: Form `1093015800183328` is active `Free Seeds 05-10-2026`; separate `Free Seeds 04-10-2026` also active |
+| GFS-68 payment source | authoritative amount and Garden Shop recipient configuration | BLOCKED: all three staging D1 methods disabled; recipient/instructions/QR fields absent (`PAYMENT_VALUES_REQUIRED`) |
+| GFS-69 five-field contract | canonical Form ID and customer-entered fields, no Email | PASS from existing canonical preview evidence; live Page inventory confirms Form `1093015800183328` / `Free Seeds 05-10-2026` |
+| GFS-69 payment ending | immediate verified amount/method details after submission | READY_PENDING_VALUES: copy prepared internally; publication blocked by `PAYMENT_VALUES_REQUIRED` |
+| GFS-69 receipt CTA | customer-side Messenger or canonical WhatsApp destination | BLOCKED/UNVERIFIED: prior WhatsApp CTA was prohibited; Messenger customer-side open not freshly proven |
+| GFS-69 campaign attachment | exact Form `1093015800183328` on campaign/ad set/ad | BLOCKED/UNVERIFIED; draft visible, no edit/publish mutation |
+| GFS-70 payment amount source | D1 singleton, positive PKR validation, Access-protected admin edit, audit | PASS implementation/deployment; current value absent by design |
+| GFS-70 payment method gate | complete enabled method required; incomplete methods rejected | PASS tests; staging methods remain disabled/incomplete |
+| GFS-70 customer ending | real amount/method details shown immediately after submit | BLOCKED by `PAYMENT_VALUES_REQUIRED`; Meta form was not edited |
+| GFS-71 catalog source | verified seed/fertilizer workbook content | BLOCKED: `PRODUCT_WORKBOOK_NOT_FOUND`; no production values inserted |
+| GFS-71 quote engine | server product + fertilizer + province delivery calculation | PASS implementation/tests; staging quote data absent until verified catalog/rates |
+| GFS-71 encrypted Flow | health, INIT, data exchange/navigation, encrypted response/errors | PASS unit/protocol tests and plaintext health smoke; live secret/publication pending |
+| GFS-71 dynamic payment total | payment selection uses persisted order total, not global fixed amount | PASS regression tests |
+| GFS-71 receipt path | same-chat receipt to private R2/PAYMENT_REVIEW | BLOCKED until canonical runtime credential and catalog/payment data exist |
+| GFS-72 product bootstrap | authoritative seed/fertilizer rows, pack quantities, active status | PASS: 2 staging D1 products loaded |
+| GFS-72 province tariff | seven active province rates and aliases | PASS: seven rows loaded; aliases KPK/AJK/GB normalize |
+| GFS-72 quote matrix | 14 province × fertilizer combinations | PASS live staging: Punjab 250/500; Islamabad 250/500; Sindh/KPK 300/550; Balochistan/AJK/GB 350/600 |
+| GFS-72 payment separation | quote works while payment methods incomplete; no fake payment details | PASS pricing; payment selection remains gated |
+| GFS-73 tariff page | Access-protected `/tariff`, dynamic D1 rows, Save/audit path | PASS deployed; unauthenticated smoke correctly returns Access 302 |
+| GFS-73 zero-price | seed/fertilizer price zero accepted by API/UI/quote | PASS tests and `/tariff` input min 0 |
+| GFS-73 change proof | temporary fee/price edits alter quote without deploy and restore | PASS: Punjab 251→250; fertilizer 501→500 |
+| GFS-73 hardcode audit | no permanent tariff constants in runtime/Flow/Worker vars | PASS; remaining numeric values are labeled tests/history |
+| GFS-74 Meta Flow gate audit | canonical WABA, Flow inventory, exact publication text, phone/app setup | PASS read-only; publication requires message-quality/business-verification conditions, App Review incomplete, payment method missing |
+| GFS-74 runtime readiness | canonical phone, App↔WABA, credential, provider/webhook | BLOCKED: phone Pending/In Review, subscription/credential unverified, provider disabled |
+| GFS-75 BSUID schema | scoped BSUID/business fields, username, no collision across scopes | PASS migration/tests; no real BSUID observed |
+| GFS-75 BSUID absence | no BSUID preserves current recipient resolver and phone fields | PASS implementation/regression |
+| GFS-75 Graph activation | authoritative phone/register/subscription state | BLOCKED: official opaque MCP unavailable; raw credential handling prohibited |
+| GFS-76 registration ordering | ownership → `/register` independent of name review | PASS policy/documentation; execution blocked at protected official path |
+| GFS-76 payment audit | enabled complete payment method status | BLOCKED: all three methods disabled/incomplete |
+| GFS-77 activation console | Access protection, secret absence, sanitized Graph status/actions, transient OTP/PIN | PASS: 46 tests; staging route returns Access 302 |
+| GFS-77 protected handoff | token never exposed; secret name check only | BLOCKED until direct user handoff populates `META_ACCESS_TOKEN` |
+| GFS-79 request-code payload | official `locale`, not `language` | PASS unit test |
+| GFS-79 activation diagnostics | sanitized reason/error code/HTTP status | PASS 46-test suite; no credential/PIN exposure |
+| GFS-79 registration | verified ownership → protected `/register` PIN | BLOCKED at Meta `(#133010) The account is not registered` pending secure PIN entry |
+| GFS-80 connected phone | UI Connected + Graph verified + canonical subscription | PASS: phone code verification `VERIFIED`; App `2354726831735899` observed subscribed |
+| GFS-80 Flow key permission | public-key registration after phone connection | BLOCKED: Meta `(#10) Application does not have permission for this action` |
+| GFS-80 webhook/message | signed callback and controlled send | BLOCKED: App Secret absent/provider disabled |
+| GFS-85 secret/deployment | App Secret name, active API version, provider enablement | PASS: API secret present; `PRODUCTION_INTEGRATION_READY` deployed |
+| GFS-85 webhook signatures | challenge and invalid signature rejection | PASS: challenge PASS; invalid POST 403; valid Meta callback pending |
+| GFS-85 authorized send | one fixed recipient, message ID/status | FAIL/UNPROVEN: HTTP 400, no wamid; no retry issued |
+| GFS-86 safe outbound diagnostics | code/subcode/message/fbtrace/status without credentials | PASS implementation/deployment; no duplicate send |
+| GFS-86 inbound-first runtime | recipient reply opens service context and enables approved outbound | BLOCKED/WAITING for authorized recipient interaction |
+| GFS-87 webhook persistence | signed inbound event stored once; replay safe | PASS implementation/deployment; live callback absent (`whatsapp_events=0`) |
+| GFS-87 automatic welcome reply | one reply per inbound Meta message ID | PASS implementation/tests; live send pending callback/window |
+| GFS-88 tab governance | list pages first, matching tab reuse, unrelated tab isolation | PASS: list_pages; existing tabs reused; unrelated changes 0 |
+| GFS-88 historical sender evidence | sender/message/timestamp/Phone ID correlation | BLOCKED: individual Meta conversation evidence unavailable; `HISTORICAL_SENDER_UNVERIFIABLE` |
+| GFS-89 Meta production callback | App published, messages subscribed, canonical callback, D1 event | PASS sample transport: `MESSAGE`/`RECEIVED`; real customer callback pending |
+| GFS-89 auto-reply binding | API phone ID present before provider send | PASS deployed fix; sample failed before fix and was not replayed |
+| GFS-90 real inbound | actual sender WAMID/event persisted and deduplicated | PASS: two WAMIDs from `+923034901810`; no BSUID supplied |
+| GFS-90 live auto-reply | Graph send accepted with wamid/status | BLOCKED: API Worker Meta token rejected with HTTP 401; no retry |
+| GFS-99 START trace | persisted event identifies exact START text and advances state | BLOCKED by privacy schema: message body not stored; no invented customer answers |
+| GFS-99 order state | five fields → quote → FS order → summary | BLOCKED pending real message content/customer interaction |
+| GFS-100 privacy-safe START | START parser, state transitions, raw-body exclusion, response idempotency | PASS implementation/build/tests; live START pending |
+| GFS-100 order conversation | fields → quote → review → FS order → summary | READY_PENDING real customer answers; payment request remains disabled |
+| GFS-101 payment draft save | incomplete/disabled Save, exact error feedback, values persist | PASS: 50 tests; JazzCash D1 presence verified, disabled |
+| GFS-101 enable gate | incomplete method cannot enable; complete method can | PASS validation; no method enabled without ownership proof |
+| GFS-102 JazzCash enablement | safe persisted draft vs verified enabled collection | READY_PENDING ownership proof; currently disabled |
+| GFS-102 live order | fresh START through fields/quote/FS order/summary | BLOCKED pending genuine customer START |
+| GFS-103 order summary/payment handoff | dynamic total, method names, JazzCash selection, no auto-PAID | PASS implementation/tests; live customer interaction/payment ownership pending |
+| GFS-104 order format | Karachi date, atomic sequence, six digits, historical preservation | PASS 54 tests; staging migration applied |
+| GFS-104 replay/concurrency | multi-channel idempotency and no duplicate sequence/order | PASS unit coverage |
+| GFS-104 live guided chat | START → fields → quote → order → summary | BLOCKED pending verified customer-controlled START |
+| GFS-105 live commerce | real customer START, answers, order, JazzCash handoff | BLOCKED: no authorized customer session/fresh START; no fabricated interaction |
+| GFS-106 live order | real START → fields → quote → FS order → payment pending | PASS: `FS-261012-000001`, Punjab total PKR 250, JazzCash pending |
+| GFS-106 payment approval | receipt/R2/admin approval/PAID/CAPI/fulfillment | BLOCKED: no verified receipt or approval evidence |
+| GFS-107 interactive routing | stable button/list IDs, template/Flow/text normalization, PAYMENT_PENDING handling | PASS 54-test suite and deployed code; physical clients untested |
+| GFS-107 cooldown | 14-day boundary, concurrency/replay, test exemption, cross-channel enforcement | PASS order-number/cooldown test coverage; live repeat not run |
+| GFS-109 admin security | Access ACL, CSRF, confirmation, validation, audit | PASS 66 tests and deployed routes |
+| GFS-109 conversation reset | selected wa_id reset, history/cooldown preserved | PASS live admin reset and D1 audit |
+| GFS-109 order management | search/detail/cancel/archive financial safety | PASS implementation/tests; no destructive live order mutation |
+| GFS-109 Check Order | actual payment/receipt/fulfillment status | PASS implementation/tests; live tap pending |
+| GFS-111 content CMS | versioned EN/UR draft/publish/rollback, private media, audit/CSRF | PASS 70 tests and staging deployment |
+| GFS-111 live guided chat | real inbound/outbound WAMIDs, dynamic order/quote | PASS D1 evidence: `FS-261012-000003`, PKR 500, PAYMENT_METHOD |
+| GFS-111 native Flow | published Flow CTA/screen/device E2E | DRAFT/UNTESTED |
+| GFS-113 Meta publication | validated canonical Flow ID/status and publish evidence | BLOCKED: Meta Flow Manager object/status unavailable from loading surface |
+| GFS-113 guided launch | deployed tap/text guided backend and D1 order path | PASS implementation; native Flow separate |
+| GFS-114 Graph Flow discovery | WABA enumeration and exact Flow ownership | PASS: one canonical draft created, ID recorded |
+| GFS-114 asset upload | exact `flow.json` asset validation | BLOCKED at Meta `#195/2498084`; correction prepared, publish not claimed |
+| GFS-116 coexistence | read-only phone platform/Business App eligibility | PASS read-only: `false` / `CLOUD_API`; no migration |
+| GFS-116 Flow publish | endpoint health/validation/publish status | BLOCKED: Meta `#139002/4233014` Endpoint not available |
+| GFS-117 media gallery | private R2 keys, validation, ordering, rotation/session selection | PASS implementation/tests; live image delivery untested |
+| GFS-117 encrypted Flow | Meta request/decrypt/encrypt round trip | BLOCKED live: `FLOW_INITIAL_VECTOR_INVALID` observed; local tests pass |
+| GFS-118 Flow publication | corrected schema, key pair, asset upload, Graph publish/status | PASS: Flow `1133458765899784` PUBLISHED; validation errors empty |
+| GFS-118 native device E2E | published CTA/screens/order/payment | UNTESTED: authorized device interaction unavailable |
+| GFS-119 language routing | LANG_EN/LANG_UR state persistence and published Flow CTA | PASS implementation/deployment; live device session pending |
+| GFS-120 CMS live render | ordered bilingual rows, gallery controls, published/draft status | PASS browser snapshot; image send/publish mutation not performed |
+| GFS-120 native Flow device | CTA → screens → order/payment | UNTESTED: authorized device/customer interaction unavailable |
+| GFS-121 CMS publish guard | already-published up-to-date response; fresh draft required for publish | PASS deployed/tests |
+| GFS-122 universal welcome | hi/hello/Salam/START/arbitrary text → CMS EN/UR + language buttons | PASS implementation/tests/deployment; live device pending |
+| GFS-124 Flow OFFER | strict D1 `id`/`title` options; explicit empty-catalog error | PASS implementation/tests; Meta preview/device retest pending |
+| GFS-125 Flow v2 | data_exchange CTA, simplified first screen, validation/publish/health | PASS Graph: `28410343535328014` PUBLISHED/AVAILABLE; live open pending |
+| GFS-125 Flow token binding | HMAC wa_id/session binding, expiry, replay/order idempotency | PASS implementation/tests; live completion pending |
+| GFS-128 first screen | v2 fertilizer/offer screen progresses with server data | PASS implementation/deployed; live client interaction pending |
+| GFS-128 native E2E | customer tap through Flow/order/payment | BLOCKED: no verified customer-controlled session |
+| GFS-130 fertilizer/province exchange | encrypted action, catalog, province response | PASS local Flow contract tests; live client rendering pending |
+| GFS-130 OAuth recovery | stale callback handling | PASS safety: no replay/bypass; Wrangler access remains valid |
+| GFS-132 Flow ID authority | old Manager tab vs runtime CTA/config ID | PASS reconciliation: old `1133458765899784` is rollback; runtime `28410343535328014` is active |
+| GFS-132 live device | active v2 screen/tap/order evidence | BLOCKED: no verified customer device session |
+| GFS-133 guided-first mode | runtime flag disables native CTA and keeps guided chat functional | PASS deployed; native Flow preserved |
+| GFS-134 Admin UI/live audit | Orders/test controls and authorized device inspection | BLOCKED by local MCP `pkce-challenge` dependency; backend unchanged |
+| GFS-135 real order audit | order/payment/receipt D1 evidence and Admin UI | PASS D1: PAYMENT_REVIEW/PKR300/one receipt; Admin UI blocked by ERR_QUIC_PROTOCOL_ERROR |
+| GFS-136 Orders UI | query hydration, exact search, order totals/detail/payment actions | PASS tests/deployment; browser row rendered before detail transport interruption |
+| GFS-139 professional dashboard | tabs/counts/pagination/filters/autoselect/details/receipt/actions | PASS 87 tests/deployment; post-deploy browser blocked by MCP response hang |
+| GFS-139 rejected order audit | actor/timestamp/reason history preserved, no reversal | PASS D1 read-only evidence |
+| GFS-140 browser dashboard | four tabs, four orders, auto-details, receipt link, actions | PASS real Chrome snapshot after MCP dependency recovery |
+| GFS-141 shipping labels | escaped A6/4×6 label, tracking assignment, order safety | PASS 91 tests; no real order mutation |
+| GFS-141 operational actions | confirm/clearer/review/fulfillment guards and audit | PASS implementation/tests; real rejected order untouched |
+| GFS-143 media migration | schema tables, gallery constraints, private R2 path | PASS migration applied; browser upload/delivery pending |
+| GFS-151 Orders loading | timeout, non-JSON, retry, stale request, URL hydration | PASS 92 tests/deployment; browser post-deploy retest pending |
+| GFS-152 Orders script | generated JS parse/startup, four tabs/counts, timeout/retry, auto-select | PASS 93 tests/deployment; browser retest pending MCP response |
+| GFS-153 browser Orders | four orders/counts/details/receipt/payment tabs after reload | PASS actual Chrome snapshot with four orders and selected detail panel |
+| GFS-155 CMS action mapping | versioned EN/UR stable labels across guided actions | PASS 100 tests and Admin preview evidence |
+| GFS-155 media publication | gallery-only clone, stale selection invalidation, R2 snapshot | PASS D1/R2/WAMID sent evidence; customer rendering unverified |
+| GFS-156 Fertilizer CMS | overlength label validation, EN/UR correction, publish compatibility | PASS D1 correction/audit; real customer button rendering pending |
+| GFS-157 live province fees | enabled D1 rates → list options/descriptions → quote | PASS implementation/deployment; real customer tap pending |
+| GFS-158 payment settings | single route, bilingual fields, QR/enable controls | PASS tests/deployment; live browser evidence pending |
+| GFS-155 PR CI | GitHub required verify check | BLOCKED externally: workflow not started due account billing lock |
+| GFS-144 CMS media delivery | approved upload, R2/D1 gallery, published WhatsApp image WAMID | BLOCKED/unverified: no browser media evidence captured |
+| GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |
+| GFS-98 token recovery | owner-installed secret → Graph ladder → API/Admin readiness | PASS fresh token; no token value inspected |
+| GFS-98 atomic reply | one failed event retry, outbound ID, status webhook, no duplicate | PASS: WAMID persisted, SENT status persisted, duplicate count 0 |
+| GFS-98 delivery | delivered status and Flow/order completion | BLOCKED/PENDING customer interaction and delivery callback |
+| GFS-96 token recovery | revoke exposed token before replacement | BLOCKED: Meta revoke control unavailable in loading system-user tabs |
+| GFS-60 active sender authority | current state, sender, Phone Number ID, historical sender exclusion | PASS: `META_ASSETS_PENDING`, `+923044429933`, `1323932417479627` |
+| GFS-60 MCP recovery | existing profile, DevToolsActivePort, package, registration, namespace exposure | BLOCKED: local prerequisites present; Codex registration has stale WebSocket UUID and active namespace is unavailable |
 | Governance | authorized number lock, no existing number | PASS |
 | Webhook | challenge, signature, replay boundary, message/media/status classification and hashed D1 persistence | PASS (live callback deferred) |
 | Flow | exactly five fields, validation, persistence contract | PASS |
@@ -63,3 +189,21 @@
 | GFS-46 deferred follow-up | safe WhatsApp recipient outbox and OTP/provider deferral | PASS code path: `WHATSAPP_ORDER_CONFIRMATION` references order/customer/recipient only; no send while gates active |
 | GFS-47 two-number model | entered contact vs Meta WhatsApp, normalization, priority, dedupe, sender/old CTA rejection | PASS: 22 tests; separate D1 columns and resolver deployed |
 | GFS-49 Payment Settings UI | Access, three methods, validation, save/restore, QR privacy | PASS: Access protected; 3 methods visible; incomplete enable 400; synthetic restore 200; QR endpoints 404/unconfigured |
+| GFS-51 sender switch | old sender prohibition and new WABA onboarding/OTP boundary | BLOCKED: old number remains In Review; Add number disabled by pending Business profile; no new ID/OTP |
+| GFS-53 active slot state | rules/status/runtime consistency | PASS: `WHATSAPP_NUMBER_SLOT_BLOCKED`; no OTP request or old-number deletion |
+| GFS-54 support escalation | canonical WABA Help/Business Support case path | BLOCKED: support/category surface available, no case form or reference ID |
+| GFS-54 runtime state | API/admin active deployment variables | PASS dry-run: `WHATSAPP_NUMBER_SLOT_BLOCKED`, Meta providers disabled |
+| GFS-55 new sender asset | WABA phone, Phone ID, display/quality status | PASS asset evidence: `+923044429933`, `1323932417479627`; Meta review Pending/In Review |
+| GFS-55 App↔WABA | canonical App API Setup From/WABA selection | FAIL: only test/Hoja WABA `1932075647340454` and Hoja/test numbers visible |
+| GFS-55 disabled-safe runtime | Cloudflare identity/secrets/state/health/webhook gate | PASS: no secrets, provider disabled, `META_ASSETS_PENDING`, health 200, webhook POST 503 |
+| GFS-56 system-user assets | clean system user, exact canonical App/WABA, partial permissions, no Hoja | PASS: Automation `61595003169877`, 2 canonical assets assigned |
+| GFS-56 App↔WABA subscription | system-user assignment vs `subscribed_apps` / App API Setup | FAIL/BLOCKED: assignments present, App still shows test WABA only; token required for Graph verification |
+| GFS-56 credential/webhook | token generation and Cloudflare secret readiness | BLOCKED: generation reveals secret; no token generated, no Cloudflare secrets/provider enablement |
+| GFS-57 phone/App-WABA authoritative check | new Phone ID, WABA status, system-user assignments, subscribed_apps | PARTIAL: Phone ID/asset and assignments PASS; review Pending and subscribed_apps unverified |
+| GFS-57 credential safety | OAuth/MCP/token exposure boundary | PASS policy: no token generated/displayed/copied; provider disabled |
+| GFS-58 canonical assignment | system user exact App/WABA asset permissions | PASS: Automation has canonical App/WABA only; no Hoja assets/token |
+| GFS-58 Graph credential gate | official OAuth/Graph subscribed_apps and token safety | BLOCKED: remote MCP/OAuth unavailable; token requires protected secret handoff |
+| GFS-51 toolchain audit | dependency vulnerabilities and safe remediation | BLOCKED NON-RUNTIME: Wrangler/Miniflare/sharp advisory; forced fix is breaking downgrade; no runtime dependency exposure |
+| GFS-52 sender migration | exact old-phone confirmation, deletion authorization, new-number slot/OTP | BLOCKED: old number remains In Review; Add Phone disabled by Business profile pending; no destructive deletion performed |
+| GFS-50 pricing authority | form text vs authoritative Garden Shop rules/recipient values | BLOCKED: no authoritative pricing/recipient configuration; payment gate remains active |
+| GFS-50 launch blockers | Messenger ack, D1 lead sync, payment guard | BLOCKED safely: no ack sent, D1 sync external gate, no payment message |

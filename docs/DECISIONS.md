@@ -1,5 +1,247 @@
 # Decisions
 
+## 2026-10-10: GFS-68 Meta Form Launch First
+
+The temporary customer acquisition launch is separated from WhatsApp API activation. `META_FORM_LAUNCH_FIRST` permits native Meta Form submission and Leads Center capture without a WhatsApp system-user token, phone `/register`, `subscribed_apps`, WhatsApp webhook, or Lead→D1 realtime integration. WhatsApp remains `WHATSAPP_API_ENHANCEMENT_PENDING`.
+
+The canonical Page form list visibly contains active `Free Seeds 04-10-2026` and `Free Seeds 05-10-2026` entries. Existing authority is Form ID `1093015800183328` / `Free Seeds 05-10-2026`; the older `Free Seeds 04-10-2026` is separate. No replacement or duplicate form was created. Remote staging D1 read-only presence checks show JazzCash, Easypaisa, and Bank Transfer all disabled with recipient/instruction/QR fields absent, so payment launch data is gated by `PAYMENT_VALUES_REQUIRED`.
+
+## 2026-10-10: GFS-70 Initial Launch Payment Path
+
+The payment path is now represented by a minimal backend/admin source of truth: staging D1 `payment_configuration.advance_amount_pkr`, positive-integer validation, Access-protected `/payment-amount`, audit action `PAYMENT_CONFIGURATION_UPDATED`, and an invariant that at least one complete enabled payment method is required before saving an amount. The migration and staging admin/API deployments succeeded under the verified Cloudflare account. The amount remains unset and all methods remain disabled, so no customer-facing Meta ending update was attempted.
+
+## 2026-10-10: GFS-71 CTWA Flow Commerce Path
+
+WhatsApp commerce is modeled as customer-initiated CTWA → encrypted Flow → server quote → optional fertilizer decision → order summary → configured payment method details → same-chat receipt. Customer identity fields remain the fixed five; product/province/fertilizer/payment fields are separate commerce fields. Prices and delivery are D1/admin authority, not Flow/client authority. No workbook was found, so catalog/rate rows remain unseeded and the Flow cannot produce a live quote until verified values exist.
+
+The encrypted Flow endpoint and tests are implemented, but live Meta traffic remains gated by Cloudflare `FLOW_PRIVATE_KEY` provisioning and Meta Flow Manager callback/publication. No Meta token, campaign, budget, or paid spend mutation was performed.
+
+## 2026-10-10: GFS-72 Authoritative Launch Tariff
+
+The user-provided tariff is authoritative for the Free Seeds launch and was bootstrapped into staging D1/admin: free five-pack vegetable seeds at Rs. 0, optional Micro Nutrients Fertilizer at Rs. 250, and delivery rates Punjab/Islamabad 250, Sindh/KPK 300, Balochistan/AJK/Gilgit Baltistan 350 PKR. All 14 quote combinations pass live staging smoke checks. Province aliases normalize to canonical customer labels. Payment recipients remain unconfigured and no payment method was enabled.
+
+The staging Flow private key was generated in memory and stored directly as Cloudflare secret `FLOW_PRIVATE_KEY`; the value was never printed or read back. Meta public-key registration and Flow publication remain protected external actions.
+
+## 2026-10-10: GFS-73 Admin Tariff Authority
+
+All dynamic WhatsApp prices/rates are now governed by `ADMIN_TARIFF_SOURCE_OF_TRUTH`: Access-protected `/tariff` edits D1 products/province rates, and the quote endpoint reads D1 on every request. Product price validation accepts zero; delivery fees remain positive. The old fixed `/payment-amount` page is explicitly legacy and cannot overwrite dynamic order totals. Temporary staging edits proved quote propagation without redeploy and were restored.
+
+## 2026-10-10: GFS-74 Meta Flow Gate Audit
+
+Read-only canonical Meta audit found no existing Flow under WABA `2616648355452496`. Flow Manager explicitly requires improved message quality and completed business verification for publication. App WhatsApp setup separately reports missing valid payment method and incomplete App Review; phone status is Pending with display name In Review and no displayed quality rating. The API runtime remains disabled and App↔WABA/durable credential are unverified. No protected credential or Meta mutation was attempted.
+
+## 2026-10-10: GFS-75 Graph Authority and BSUID Readiness
+
+No opaque official WhatsApp Business Tools MCP was available to this agent, so no raw Graph credential path was substituted. Phone/quality/name/runtime claims remain blocked until supported Graph-backed state is available. BSUID is modeled as a scoped customer identity, not a business identifier; `wa_id`, entered/contact numbers, auto WhatsApp number, BSUID, and username remain separate and BSUID absence preserves existing routing.
+
+## 2026-10-10: GFS-76 Registration Does Not Wait on Name Review
+
+The registration attempt was correctly prioritized independently of `name_status=In Review`, but the supported phone UI exposed no register/verify control and the official opaque WhatsApp Business Tools MCP was unavailable. The exact remaining gate is protected Graph credential/official-MCP access; no raw token or PIN path was substituted.
+
+## 2026-10-10: GFS-77 Activation Console and Protected Handoff
+
+Added and deployed an Access-protected activation console with secret-only Graph action support, transient OTP/PIN fields, sanitized status/errors, and canonical asset bindings. Since `META_ACCESS_TOKEN` is absent, no Graph registration/subscription/message mutation was attempted. The secure Meta token-generation and Cloudflare secret surfaces are prepared for direct user entry; execution must continue after the secret name becomes present.
+
+## 2026-10-10: GFS-79 Console Diagnostics and Registration Gate
+
+The token is now present as a Cloudflare secret on both staging Workers and Graph phone reads succeed. The console was corrected to send `locale` for request-code and to expose sanitized failure reason/code/status. Ownership/code verification is already `VERIFIED`; no SMS was requested. `/register` returned Meta `(#133010) The account is not registered`, so the next safe action is direct owner entry of the new six-digit registration PIN.
+
+## 2026-10-10: GFS-80 Connected Phone and Flow Permission
+
+Current Meta state reconciles to a connected phone and canonical App↔WABA subscription. A public-key registration retry now reaches Graph but returns `(#10) Application does not have permission for this action`, proving the remaining Flow-key gate is App/token permission rather than name review or phone registration. Webhook signed verification remains gated by absent App Secret/provider enablement.
+
+## 2026-10-10: GFS-85 App Secret and Single E2E Attempt
+
+`META_APP_SECRET` is now present as an API Worker secret and the API is deployed with provider enabled. The webhook challenge passes and invalid signatures return 403. One authorized send to `+923354299783` returned HTTP 400 with no message ID; no duplicate retry was made. This is a real send failure, not an accepted/delivered claim.
+
+## 2026-10-11: GFS-86 Inbound-First Recovery
+
+The restricted send action was improved to retain safe Meta error diagnostics, but no second send was issued. The remaining runtime dependency is a recipient-initiated customer-service window or an existing approved template; the recipient must send `TEST GFS` before another outbound attempt is safe.
+
+## 2026-10-11: GFS-87 Inbound Webhook Auto-Reply
+
+Meta reports two received messages, while D1 has zero `whatsapp_events`; the first failure is therefore callback delivery/configuration, not message parsing. The API now persists signed inbound events and sends one idempotent welcome reply keyed by message ID. No synthetic callback or fabricated customer reply was created.
+
+## 2026-10-11: GFS-88 Permanent Tab Inventory
+
+Every MCP execution now begins with `list_pages`, reuses the matching existing service tab, and records unrelated-tab changes. The canonical phone list confirms the connected sender, but individual historical sender/message details remain unavailable; no sender identity was invented. The Developer App Webhooks surface remained in loading state, so no callback mutation was attempted.
+
+## 2026-10-11: GFS-89 Meta Production Callback Repair
+
+The first failed hop was Meta App publication: production webhook data was blocked while the App was unpublished. After publication and `messages` subscription, a Meta sample event reached D1. The first auto-reply attempt then exposed a separate deployment defect—missing API `META_PHONE_NUMBER_ID`—which is now fixed and deployed. Sample callback success is not treated as real-customer success; no fabricated sender or reply evidence is accepted.
+
+## 2026-10-11: GFS-90 Real Inbound and Token Failure
+
+The customer message from `+923034901810` is real inbound evidence: two WAMIDs persisted as signed `MESSAGE`/`RECEIVED` events. The idempotent welcome reply attempted once per event but Graph returned `META_MESSAGE_SEND_401`, proving the remaining failure is the API Worker's Meta token runtime, not callback delivery. No duplicate send was attempted.
+
+## 2026-10-12: GFS-99 START Content Boundary
+
+The existing privacy-preserving webhook schema deliberately does not store raw message bodies. Therefore the persisted event IDs cannot prove or replay the customer's START text, and no customer identity/order answers may be invented. A future guided-chat state machine must receive a fresh real message after the content/state contract is implemented.
+
+## 2026-10-12: GFS-100 Privacy-Safe START Routing
+
+Implemented the guided-chat state machine and deployed it with migration `0011_whatsapp_conversations.sql`. START and subsequent answers are parsed in memory; durable state and validated fields are stored without raw message bodies, and responses are idempotent by inbound message ID. Historical START remains unrecoverable, so one genuine START after deployment is the only remaining interaction dependency.
+
+## 2026-10-12: GFS-101 Draft Payment Save
+
+Payment method draft persistence is independent from legacy `payment_configuration.advance_amount_pkr`. Incomplete/disabled drafts may be saved; enabling still requires complete recipient/instruction fields. JazzCash staging presence is confirmed without exposing values, but the displayed QR payee mismatch means it remains disabled pending ownership verification.
+
+## 2026-10-12: GFS-102 Payment Status and Live Order Gate
+
+Payment UX now distinguishes Saved—Disabled from Enabled and Configured; JazzCash cannot be enabled until Garden Shop payee/QR ownership is verified. The privacy-safe START handler is deployed, but no fresh START/state row exists, so no order or customer answer was fabricated.
+
+## 2026-10-12: GFS-103 Order Payment Handoff
+
+The guided-chat CONFIRM transition now persists a dynamic FS order, reports its order number/total and complete enabled method names, and supports JazzCash selection through the existing payment selector. It never marks PAID or emits Purchase CAPI before genuine admin approval. Live testing remains dependent on a fresh customer START and verified JazzCash ownership.
+
+## 2026-10-12: GFS-104 Karachi Atomic Order Numbers
+
+All new creation paths now allocate `FS-YYMMDD-######` using the Asia/Karachi date and atomic D1 sequence allocation. Meta Flow, WhatsApp, and Instant Form replays map to the original order through idempotency keys. Staging migration is applied; no historical order identifier was changed. No WhatsApp Web message was sent because the displayed Web session was not independently proven to belong to the authorized customer.
+
+## 2026-10-12: GFS-105 Live Commerce Boundary
+
+The guided-chat and order-number infrastructure is ready, but no authorized customer-controlled session or fresh START was available. We do not impersonate the customer or invent five field answers; live FS order/payment/fulfillment remains an external customer interaction gate.
+
+## 2026-10-12: GFS-106 Live Order Reconciliation
+
+Staging D1 now contains the owner-reported live order `FS-261012-000001` in `PAYMENT_PENDING` with dynamic Punjab total PKR 250, seed-only items, and JazzCash expected amount PKR 250. This is real order evidence; no payment receipt, approval, PAID transition, Purchase CAPI, or fulfillment claim is made.
+
+## 2026-10-12: GFS-107 Interactive Router and Cooldown
+
+Interactive and text inputs now share normalized semantic routing, preventing repeated welcomes and positional button drift. Order creation enforces the 14-day server-side cooldown using submitted timestamps; only the verified E2E sender is exempt. Native client coverage remains untested outside the available environment.
+
+## 2026-10-12: GFS-109 Protected Admin Reset and Order Controls
+
+Cooldown exemption and conversation reset are separate D1/admin concepts. `/test-controls` manages verified Meta wa_id exemptions and scoped resets; `/orders` provides search/details and only allows audited cancel/archive for eligible unpaid, receipt-free orders. The authorized E2E conversation was reset to NEW while preserving `FS-261012-000001` and all payment history.
+
+## 2026-10-12: GFS-111 Admin Content and Live Guided Chat
+
+Customer messaging copy is now versioned in D1 and managed by protected Admin rather than code deployment. Private content media is referenced only by constrained R2 keys. Current D1 evidence shows a subsequent real guided-chat order `FS-261012-000003` at PKR 500 for Punjab with fertilizer selected and payment-method selection pending. This is guided-chat evidence, not native Meta Flow publication evidence.
+
+## 2026-10-13: GFS-113 Native Flow Boundary
+
+Local Flow schema/encryption validation cannot substitute for Meta publication. The canonical Flow Manager surface was loading without a safely readable Flow ID/status, so no upload/publish mutation was attempted. Guided chat remains the safe launch path.
+
+## 2026-10-13: GFS-116 Flow/Coexistence
+
+Graph-backed Flow asset validation passed for `1133458765899784`, but Meta publish returned `#139002/4233014` Endpoint not available after endpoint health deployment. Canonical phone coexistence read returned `is_on_biz_app=false`, `platform_type=CLOUD_API`; no migration was attempted.
+
+## 2026-10-13: GFS-119 Language-First CTA
+
+START now presents English/Urdu choices and invokes the published Flow after selection. The existing guided backend remains the fallback; no duplicate Flow or customer answer was invented.
+
+## 2026-10-13: GFS-120 Live UI Boundary
+
+The authenticated Admin CMS now renders correctly with paired EN/UR rows and private gallery controls. Native Flow remains published by Graph but no authorized customer-device interaction was available for live CTA evidence; no tap or customer answer was fabricated.
+
+## 2026-10-13: GFS-121 CMS Publish Guard
+
+Already-published CMS versions now return an explicit up-to-date result; publish remains protected until a fresh draft exists. This prevents stale gallery clicks from producing a generic requires-draft error. Native Flow remains published, but device/customer E2E is a separate evidence gate.
+
+## 2026-10-13: GFS-122 Universal Welcome
+
+Any ordinary NEW/idle inbound text now produces the published bilingual welcome and language buttons. Locale choice is persisted by verified wa_id before Flow CTA dispatch; active order/payment/status states are not reset.
+
+## 2026-10-14: GFS-124 Flow First-Screen Repair
+
+Native Flow preview reported unsupported Dropdown `code` properties and an empty first-screen selector. Runtime catalog data and schema are now constrained to `id`/`title`; catalog errors are explicit protocol failures instead of silent empty lists. Live preview/device confirmation remains required.
+
+## 2026-10-14: GFS-125 Replacement Flow v2
+
+Because the original published Flow is immutable and its OFFER selector remained unusable, exactly one replacement Flow was created. v2 removes the redundant product dropdown, begins with fertilizer selection, requires data_exchange INIT, and uses the same D1/order backend. Runtime uses v2; the original remains documented rollback only.
+
+## 2026-10-14: GFS-128 Live Flow Boundary
+
+The deployed v2 first-screen/data contract addresses the Continue failure. Remaining acceptance is customer-device Flow interaction; available WhatsApp Web tabs were not verified as the authorized customer, so no impersonation or fabricated tap occurred.
+
+## 2026-10-14: GFS-130 Continue/OAuth Boundary
+
+The FERTILIZER→PROVINCE contract remains server-catalog/D1-driven and passes local encrypted tests. The available Cloudflare consent tab is a stale/replayed OAuth callback; bypassing or replaying it is prohibited. Live customer Flow acceptance remains a device-session dependency.
+
+## 2026-10-14: GFS-132 Active Flow Authority
+
+The authenticated Manager screenshot was confirmed to be rollback Flow `1133458765899784`, not the active runtime Flow. It retains the old OFFER dropdown and explains the observed Continue failure. Runtime v2 `28410343535328014` remains the configured published Flow; no old Flow mutation was made.
+
+## 2026-10-14: GFS-133 Guided-First Launch
+
+Native Flow live client acceptance remains unverified, so the API runtime is explicitly configured for guided checkout. Published Flow v2 is preserved without deletion or mutation; switching back requires a verified customer-device E2E gate.
+
+## 2026-10-14: GFS-134 MCP/Admin Boundary
+
+The latest Chrome MCP reconnect failed before the Admin Orders snapshot because its transient package installation lacks `pkce-challenge`. No unrelated tabs/accounts were changed and no financial mutation was attempted. Backend controls remain deployed; UI/device verification is a genuine tooling/customer dependency.
+
+## 2026-10-15: GFS-135 Real Order Audit
+
+D1 confirms `FS-261015-000001` exists in `PAYMENT_REVIEW` for PKR 300 with a JazzCash payment record and one receipt. Admin UI navigation now reaches the exact order URL but Chrome returns `ERR_QUIC_PROTOCOL_ERROR`; the mismatch receipt remains unapproved and no financial mutation is allowed.
+
+## 2026-10-16: GFS-139 Professional Orders Console
+
+Orders are managed through four operational queues with server-side counts/pagination and complete D1-backed details. Real order `FS-261015-000001` is PAYMENT_REJECTED by audited staff action and remains unchanged. Approval controls remain receipt/state/CSRF guarded and cannot derive authority from client financial values.
+
+## 2026-10-16: GFS-143 CMS Migration Recovery
+
+Cloudflare 7403 was resolved using the canonical authorized account. Staging D1 lacked migration 0017 media tables; the existing migration was applied once without reset/destruction. Image upload/publish remains unclaimed until authenticated browser evidence exists.
+
+## 2026-10-17: GFS-155 Universal CMS Contract
+
+All editable guided-chat text/button/list labels resolve from published EN/UR CMS versions. Gallery-only publication clones an immutable version and snapshots enabled media. Cached selections are invalidated when version/media membership changes. WELCOME v6 and its private image were published and sent once to the authorized test customer with Meta WAMID/sent evidence.
+
+## 2026-10-17: GFS-156 Fertilizer CMS Validation
+
+The reported `WHATSAPP_CONTENT_INVALID` was caused by an overlength draft action label, not the schema limit. Draft `ADD_FERTILIZER` labels were corrected to valid localized text and audited; no permanent limit was loosened.
+
+## 2026-10-17: GFS-157 Live Tariff Menu
+
+Province delivery menus must not embed prices. The guided router now queries enabled D1 rates per request and displays the current fee in list descriptions; the next quote re-reads D1 and preserves existing order totals.
+
+## 2026-10-17: GFS-158 Payment Route Consolidation
+
+Removed the duplicate `/payment-settings` route that could shadow the canonical bilingual form. Existing payment fields, enable safeguards and QR preview remain intact.
+
+## 2026-10-16: GFS-144 CMS Media Evidence Boundary
+
+Migration and backend prerequisites are repaired, but no approved image upload/WAMID evidence was captured in the current MCP run. We do not claim customer-facing media success.
+
+## 2026-10-16: GFS-141 Operations Controls
+
+Added audited Confirm Order, clearer-receipt and stateful Packing/Dispatched/Delivered controls plus escaped printable labels. These controls never approve payment, assign tracking without an input, or emit Purchase CAPI without verified approval.
+
+## 2026-10-13: GFS-117 Flow/Media Boundary
+
+Flow asset validation succeeds, but Meta publish still rejects the endpoint as unavailable. The API observed an invalid-initial-vector result for live encrypted requests; no customer Flow success is claimed. Media gallery work remains private-R2/D1 controlled and does not alter pricing/order logic.
+
+## 2026-10-13: GFS-118 Flow Publication
+
+Removed the unsupported dropdown `code` property, repaired RSA Flow request/response IV handling and re-paired public/private keys. Meta accepted the existing Flow asset and publish request; Graph now reports `PUBLISHED` with no validation errors. Native device E2E remains a separate evidence gate.
+
+## 2026-10-13: GFS-114 Graph Flow Creation
+
+Graph-first recovery found no existing Flow and created exactly one canonical draft `1133458765899784`. Meta returned actionable asset-upload errors (`#100` then `#195/2498084` requiring `flow.json`); publication remains blocked until the corrected asset upload is accepted.
+
+## 2026-10-11: GFS-92 Token Validation Order
+
+The activation console server-side ladder now returns HTTP 401 for `/me`, permissions, phone, and WABA reads. This is an authoritative runtime token rejection despite secret-name/deployment presence. No blind rotation or duplicate customer message was performed; the only remaining protected action is canonical token replacement.
+
+## 2026-10-11: GFS-98 Fresh Token and Atomic Reply
+
+The owner-installed canonical token now passes the sanitized Graph ladder. Exactly one previously failed welcome reply was atomically retried; Meta accepted it and D1 recorded the outbound WAMID and `sent` status webhook. A later inbound MESSAGE event arrived, but its content was not available from D1 metadata; no order/Flow answers were fabricated.
+
+## 2026-10-11: GFS-96 Token Snapshot Incident
+
+Meta rendered token material in an MCP page snapshot during system-user inspection. The value was not intentionally copied or stored, and no replacement token was generated. Because a token-specific revoke control could not be reached safely in the loading UI, execution stops at `TOKEN_REVOCATION_UI_REQUIRED` rather than risk further credential exposure.
+
+Meta Form read-only inventory remains separate from WhatsApp commerce: historical canonical evidence includes customer fields plus product/province/fertilizer/amount answers, while this Flow owns server-authoritative product/rate/quote data. No Form or campaign mutation occurred.
+
+## 2026-10-10: GFS-69 Final Meta Form Preparation
+
+The canonical form's verified five-field contract remains Full Name, Complete Delivery Address, Nearby Famous Place, City, and Contact Number, with no Email. The customer-facing completion copy is prepared but cannot be published until authoritative Garden Shop payment amount and recipient details exist. The draft campaign is visible and remains unpublished; its Rs2,625 daily budget is not authorization to spend, and exact Form attachment was not verified.
+
+## 2026-10-09: GFS-60 MCP and Active Sender Authority
+
+The active launch state is `META_ASSETS_PENDING` for sender `+923044429933`, Phone Number ID `1323932417479627`. The former sender `+923328883383` / Phone Number ID `1429127796940691` remains historical only and must not be runtime configuration.
+
+Local diagnostics found Chrome stable running with the existing profile, `DevToolsActivePort` at port `9222`, and `chrome-devtools-mcp` `1.10.1` available. The Codex MCP registration still contains a stale WebSocket UUID, while this agent session does not expose the Chrome DevTools MCP namespace. No browser, Meta, Cloudflare, credential, or secret mutation was performed.
+
 ## 2026-09-27: New WhatsApp Number Required
 
 Historical record: the earlier assumption to use an existing Garden Shop WhatsApp number was superseded by the later explicit authorization recorded below. No existing, test, Hoja Seeds, Garden Shop, or other number may be searched for, migrated, registered, connected, or used. The prior expected state was `WHATSAPP_NUMBER_PENDING`.
@@ -245,3 +487,51 @@ Current state is `WHATSAPP_OTP_REQUIRED`; sender activation, App↔WABA, custom 
 ## 2026-10-05: GFS-49 Payment Settings Admin
 
 Admin `/payment-settings` was added using existing payment-method/D1/R2 APIs only. Access is restricted to `gisupp@gmail.com`; all three methods render incomplete/disabled. Synthetic validation returned 400 for an incomplete enabled method, synthetic disabled save/restore returned 200, and QR retrieval returned 404 for all methods because no real QR is configured. No real Garden Shop payment value was invented or stored.
+
+## 2026-10-08: GFS-51 WhatsApp Sender Switch
+
+The authorized business sender is now `+923044429933` (`03044429933`). Former sender `+923328883383` and Phone Number ID `1429127796940691` are superseded and must not be runtime recipients or sender config. The new Phone Number ID is unknown until Meta adds/verifies the new number; OTP must target only the new number. No old-number deletion/deregistration is authorized.
+
+## 2026-10-08: GFS-51 New Sender Onboarding Gate
+
+Canonical WABA `2616648355452496` still shows old `+923328883383` In Review/Unverified. The supported Add Phone flow for authorized `+923044429933` reaches an existing Business profile pending state with Add number disabled; Meta has not displayed a new Phone Number ID or OTP action. Exact gate: `WHATSAPP_NUMBER_SLOT_BLOCKED` / pending Business profile. No old number deletion or deregistration was attempted.
+
+Toolchain audit currently reports Wrangler 4.145.0's transitive Miniflare/sharp librsvg advisory; the only automated fix is a breaking `wrangler@4.15.2` downgrade. Do not force it during sender onboarding; track as a dev-toolchain security update.
+
+## 2026-10-08: GFS-52 Old Sender Deletion Gate
+
+User explicitly authorized deletion of old `+923328883383` / Phone ID `1429127796940691`, but canonical WABA Add Phone is blocked by an existing Business profile pending state with Add number disabled. No safe deletion confirmation was available in the supported flow, so the old phone was not deleted/deregistered. New `+923044429933` was not added and no OTP was requested.
+
+## 2026-10-08: GFS-53 Current Slot State
+
+Active governance state is `WHATSAPP_NUMBER_SLOT_BLOCKED`. No OTP is available until Meta resolves the pending Business profile/Add Phone disabled gate. Old-phone deletion remains explicitly authorized but is not forced without a phone-specific supported confirmation; no WABA/App/Business/Page deletion is permitted.
+
+## 2026-10-08: GFS-54 Support Escalation Boundary
+
+Canonical WABA Help was inspected once. It routes to Business Support Home/category updates but exposes no supported case form or reference-ID creation control. No duplicate support attempt, phone deletion, or Add Phone retry was made.
+
+## 2026-10-08: GFS-55 New Sender Asset Verified
+
+Canonical WABA `2616648355452496` now contains `+923044429933` with Phone Number ID `1323932417479627`. Meta UI shows display name `Get Free Seeds`, status `In Review`, quality/status `Pending`, and pending display-name review. The number asset exists, so active state advances to `META_ASSETS_PENDING`; Meta review is not claimed complete.
+
+Canonical App `2354726831735899` API Setup still exposes only test/Hoja WABA `1932075647340454` and Hoja/test numbers. The canonical WABA/new phone is absent, proving App↔WABA is not connected. Cloudflare has no WhatsApp secrets; provider remains disabled. Old sender remains visible in WABA but is prohibited from runtime.
+
+## 2026-10-09: GFS-56 Canonical System User Assignment
+
+A clean Employee system user `Automation` (`61595003169877`) was created under the authorized Business. It is assigned exactly canonical App `2354726831735899` with Develop app/View insights/Test app access and canonical WABA `2616648355452496` with management/messages partial access. No Hoja asset was selected.
+
+This assignment enables the supported credential path but does not itself prove `/{waba-id}/subscribed_apps`. App API Setup still displays only test WABA `1932075647340454`; canonical WABA/new phone remains absent. `Generate token` would populate and expose a secret token, so execution stops at `META_CREDENTIAL_PROVISIONING_REQUIRED`. Cloudflare secrets remain empty and provider disabled.
+
+## 2026-10-09: GFS-58 Assignment Verified, Credential Gate Remains
+
+System user `Automation` (`61595003169877`) visibly owns exactly canonical App `2354726831735899` and WABA `2616648355452496`, with partial App development and WhatsApp management/messages permissions. This is not `subscribed_apps`; official remote WhatsApp Business Tools OAuth is unavailable to this active agent, and token generation would expose a secret. Provider/webhook/send remain disabled.
+
+## 2026-10-09: GFS-57 OAuth/Graph Credential Boundary
+
+Phone ID `1323932417479627` is authoritative in the WABA phone surface, but display-name/quality review remains Pending. Canonical App/WABA assets are assigned to system user `Automation`; this is not `subscribed_apps`. The official WhatsApp Business Tools remote MCP/OAuth handoff is unavailable to the active agent, and Meta token generation would expose a secret, so the exact gate is `META_CREDENTIAL_PROVISIONING_REQUIRED`. Provider/webhook/send remain disabled.
+
+## 2026-10-06: GFS-50 MVP Blocker Closure Boundary
+
+The canonical Form's product/province/fertilizer/delivery answers are customer/form data, not authoritative Garden Shop pricing configuration. No deterministic server-side pricing rule or real recipient values are available, so `PAYMENT_AMOUNT_NOT_CONFIGURED` remains active and no payment message is permitted.
+
+Native Messenger Chat context remains observable from the synthetic lead, but no acknowledgement was sent because customer-side delivery was not independently observable. Automated lead→D1 sync remains blocked by the missing lead-capable App/token/Page subscription; no recurring manual import is introduced.

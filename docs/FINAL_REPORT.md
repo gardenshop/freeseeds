@@ -1,5 +1,480 @@
 # Final Report
 
+## GFS-139-PROFESSIONAL-ORDERS Update — 2026-10-16
+
+- All Orders/Verify Payments/Confirmed Payments/Fulfillment tabs: **PASS implementation/deployment**.
+- Real order `FS-261015-000001`: **PAYMENT_REJECTED**, PKR 300, JazzCash, one receipt; audited rejection preserved.
+- Financial mutation: **NONE**. Admin browser post-deploy proof is **PARTIAL** because MCP stopped returning page inventory after deployment.
+
+## GFS-155-UNIVERSAL-CMS Update — 2026-10-17
+
+- Published WELCOME: **v6**, private media snapshot present, R2 object verified.
+- Meta outbound image/buttons: **WAMID PRESENT**, status `sent`; delivery/read/customer rendering not observed.
+- EN/UR action labels: **PASS Admin/runtime mapping**.
+- Guided checkout: **GO**; payment/fulfillment remains evidence-gated.
+- PR merge: **NO-GO** while required GitHub verify check is blocked by account billing lock; no protection bypass attempted.
+
+## GFS-156-FERTILIZER-CMS Update — 2026-10-17
+
+- Root cause: draft `ADD_FERTILIZER` label exceeded the 20-character schema limit.
+- Repair: **PASS** — labels corrected/audited in D1; published version already valid.
+- Real customer button/image evidence: **UNVERIFIED**.
+
+## GFS-158-PAYMENT-ROUTE Update — 2026-10-17
+
+- `/payment-settings`: **PASS single canonical route**; fields, enable guards and private QR preserved.
+- Live payment/browser E2E: **UNVERIFIED**; no real PAID/CAPI/fulfillment claim.
+
+## GFS-157-LIVE-TARIFF Update — 2026-10-17
+
+- Province menu source: **D1/Admin live**; current delivery fee is included per option.
+- Quote source: **D1 authoritative**; no hardcoded rates.
+- Real customer tap/e2e: **UNVERIFIED**; authorized device interaction remains pending.
+
+## GFS-141-OPERATIONS Update — 2026-10-16
+
+- Admin operations: **PASS implementation/deployment** — payment review, clearer receipt, Confirm Order, fulfillment controls and shipping labels.
+- Real rejected order: **PRESERVED**, no financial mutation.
+- Tests: **91/91 pass**; browser post-deploy evidence remains dependent on MCP/session stability.
+
+## GFS-143-CMS-RECOVERY Update — 2026-10-16
+
+- Cloudflare 7403: **RESOLVED** under canonical account; staging D1 access restored.
+- Migration 0017 media tables: **APPLIED** safely.
+- CMS image upload/R2/publish/customer WAMID: **NOT PROVEN**; browser upload evidence remains pending.
+
+## GFS-144-CMS-MEDIA Update — 2026-10-16
+
+- Migration 0017: **PRESENT**; canonical D1 media tables exist.
+- CMS image upload/publish: **UNVERIFIED**; no approved R2/media WAMID evidence captured.
+- Guided checkout: **GO**; native Flow remains deferred/opt-in.
+
+## GFS-151-ORDERS-REPAIR Update — 2026-10-16
+
+- Orders loading fix: **PASS implementation/deployment** — timeout, cancellation, safe JSON/non-JSON handling, Retry and URL hydration.
+- Admin browser post-deploy verification: **PENDING** MCP session stability.
+
+## GFS-152-ORDERS-STARTUP Update — 2026-10-16
+
+- Exact root cause: **inline `renderDetail()` JavaScript syntax error** prevented hydration/load.
+- Repair: **PASS implementation/deployment**; bounded requests, non-JSON diagnostics, retry and stale cancellation retained.
+- Browser proof: **PENDING** because current MCP page-response is unstable.
+
+## GFS-153-ORDERS-BROWSER Update — 2026-10-17
+
+- Orders browser: **PASS** — four orders, summary counts, tabs, auto-selected detail, complete delivery/payment/items/audit and private receipt links.
+- Payment/fulfillment: **NO-GO** for real financial claims; inspected approved record was not mutated and no independent payment verification was performed.
+
+## GFS-140-ADMIN-BROWSER Update — 2026-10-16
+
+- Admin Orders browser: **PASS** — four tabs, four orders, newest detail auto-selected, full customer/payment/items/receipt/audit fields and state-aware controls visible.
+- MCP recovery: **PASS** using explicit `pkce-challenge` package; unrelated tabs changed 0.
+- Real payment approval: **NO-GO**; inspected receipt/order remains PAYMENT_REVIEW and was not approved.
+
+## GFS-85-LIVE-E2E Update — 2026-10-10
+
+- `META_APP_SECRET`: **PRESENT** by secret name; active API deployment **PASS**.
+- Webhook GET challenge: **PASS**.
+- Signed POST: invalid signature **PASS rejected**; valid signed POST **UNPROVEN**.
+- Provider: **ENABLED** in deployed staging state.
+- Test send: **FAIL** — HTTP 400, no `wamid`; no duplicate retry.
+- Delivery: **UNKNOWN**; inbound reply **WAITING/NOT OBSERVED**.
+- Flow public key: **PASS previously registered**; Flow E2E **BLOCKED** by missing successful outbound message.
+
+## GFS-86-OUTBOUND-400 Update — 2026-10-11
+
+- Exact outbound result: **HTTP 400**, no `wamid`; no duplicate retry.
+- Safe diagnostic repair: **PASS implementation/deployment**; future errors expose only sanitized Meta fields.
+- Delivery/inbound: **UNKNOWN/WAITING**; no signed Meta callback or recipient reply observed.
+- Flow E2E: **BLOCKED** pending a customer-service context or approved template.
+
+## GFS-87-INBOUND-WEBHOOK Update — 2026-10-11
+
+- Meta received count: **2** (dashboard evidence); D1 `whatsapp_events`: **0**.
+- Webhook root cause: live callback was not observed; callback/subscription configuration remains unproven. Invalid signatures are rejected with 403.
+- Automatic reply: **PASS implementation/deployment**, idempotent by inbound Meta message ID; no real inbound event has triggered it.
+- Inbound/outbound/delivery: **WAITING** for actual signed Meta callback and eligible customer-service context.
+
+## GFS-88-INBOUND-TRACE Update — 2026-10-11
+
+- Chrome list_pages: **PASS**.
+- Tab reused/new: **Existing matching Meta/Cloudflare tabs reused; no new task tab required**.
+- Unrelated tabs changed: **0**.
+- Meta received messages: **2** dashboard count; actual sender verified **NO**; `HISTORICAL_SENDER_UNVERIFIABLE`.
+- Webhook callback: **UNVERIFIED**; D1 inbound remains zero. Developer Webhooks surface was still loading, so no unsafe mutation was attempted.
+- Automatic reply: **PASS implementation**, live reply **WAITING** for a real callback/customer-service event.
+
+## GFS-89-WEBHOOK-REPAIR Update — 2026-10-11
+
+- Meta App publication: **PASS**; `messages` field: **Subscribed**; callback URL: **canonical**.
+- Sample signed callback transport: **PASS**; D1 inbound: **PASS sample only** (`MESSAGE`/`RECEIVED`).
+- Actual sender: **NOT VERIFIED**; sample data is not customer evidence.
+- Auto-reply: **NOT PROVEN**. Initial sample attempt failed before the phone-ID binding fix; no duplicate replay was made.
+- API phone binding: **FIXED/DEPLOYED**; health reports WhatsApp enabled.
+- Flow E2E: **BLOCKED** pending one genuine customer message and interaction.
+
+## GFS-90-REAL-INBOUND Update — 2026-10-11
+
+- Actual sender: **YES** — `+923034901810` (masked in public reporting), two WAMIDs persisted.
+- Real webhook: **PASS**; D1 inbound: **PASS**; signed callback and deduplication proven.
+- Auto-reply: **FAIL** — `META_MESSAGE_SEND_401`, no outbound `wamid`; no duplicate retry.
+- Flow E2E/order: **BLOCKED** by API Worker Meta token runtime rejection.
+
+## GFS-99-START-WORKFLOW Update — 2026-10-12
+
+- START inbound: **metadata exists, text unavailable** under the privacy-preserving event schema.
+- START handler/state machine: **NOT PROVEN**; no customer answers or order created.
+- Actual bot response: **NONE after START evidence**; no duplicate sent.
+- Flow/order: **BLOCKED** by `INBOUND_MESSAGE_CONTENT_UNAVAILABLE` and missing customer interaction.
+
+## GFS-92-TOKEN-RUNTIME Update — 2026-10-11
+
+- Active server-side Graph `/me`: **FAIL HTTP 401**.
+- `/me/permissions`, phone, and WABA: **FAIL HTTP 401**.
+- Secret/deployment presence: **YES by name/list only**; values never inspected.
+- Existing real inbound evidence remains valid; reply retry withheld to prevent duplicate sends.
+
+## GFS-96-SECURITY-RECOVERY Update — 2026-10-11
+
+- Exposed token revoked: **NO proof**.
+- New token generated: **NO**; generation correctly stopped.
+- Chrome list_pages: **PASS**; matching tabs reused; unrelated tabs changed: **0**.
+- Exact blocker: `TOKEN_REVOCATION_UI_REQUIRED` — Meta system-user revoke control was unavailable while the page remained loading.
+
+## GFS-98-FRESH-TOKEN-REPLY Update — 2026-10-11
+
+- Revocation: **confirmed by owner before new generation**.
+- New token installed: **YES** as Worker Secrets; API/Admin Graph ladder **PASS**.
+- Real inbound: **PASS**; existing failed reply retried exactly once.
+- Outbound WAMID: **PRESENT**; D1 status **SENT**; delivery **PENDING/UNKNOWN**.
+- Subsequent inbound MESSAGE event: **PERSISTED**; content not inferred; BSUID not observed.
+- Flow E2E/order: **BLOCKED** pending actual customer Flow interaction/content.
+
+## GFS-100-START-ROUTING Update — 2026-10-12
+
+- START recognition: **PASS implementation**, live event pending.
+- D1 conversation state: **PASS implementation/deployment**; raw bodies excluded.
+- Actual next bot message: **READY**, not triggered by historical event.
+- Five fields/quote/FS order: **READY_PENDING customer answers**.
+- Flow E2E: **BLOCKED** only by fresh customer interaction; payment configuration remains separate.
+
+## GFS-101-PAYMENT-SAVE Update — 2026-10-12
+
+- Payment Save root cause: legacy fixed advance gate incorrectly rejected incomplete drafts. **FIXED**.
+- D1 persistence: **PASS**; JazzCash values/QR presence confirmed by flags only, still disabled.
+- Easypaisa/Bank: **MISSING**.
+- START/state machine: **PASS implementation**, no fresh live state yet.
+- Flow/order: **READY_PENDING customer START and field responses**; no payment request sent.
+
+## GFS-102-PAYMENT-ORDER Update — 2026-10-12
+
+- Payment Save: **PASS**; JazzCash draft persisted, disabled; QR/payee ownership **UNVERIFIED**. Easypaisa/Bank missing.
+- Fresh START: **NOT OBSERVED** after state-machine deployment.
+- Five fields/quote/FS order/summary: **NOT RUN**; no customer answers invented.
+- Payment backend E2E: **NOT RUN**; real payment remains disabled.
+
+## GFS-103-ORDER-HANDOFF Update — 2026-10-12
+
+- Order confirmation/payment handoff: **PASS implementation**; dynamic total and complete enabled method selection are wired.
+- Live FS order: **NOT CREATED**; no fresh START/customer answers.
+- JazzCash: **SAVED/DISABLED** pending payee ownership verification; no payment instructions sent.
+- Payment approval/CAPI/fulfillment: **NOT RUN**; real payment remains gated.
+
+## GFS-104-ORDER-NUMBER Update — 2026-10-12
+
+- Order format: **PASS implementation/deployed** — `FS-YYMMDD-######` using Asia/Karachi and atomic D1 allocation.
+- START recognized/live customer interaction: **NOT RUN**; WhatsApp Web session ownership not verified.
+- Real FS order/summary/JazzCash instructions: **NOT RUN**; no customer answers or payment details were invented.
+- Receipt/R2/admin approval/Purchase CAPI/fulfillment: **NOT RUN**; real payment approval remains gated.
+
+## GFS-107-ROUTER-COOLDOWN Update — 2026-10-12
+
+- Interactive router: **PASS implementation/deployed**; stable IDs and text fallback share one dispatcher.
+- Repeated welcome prevention: **PASS implementation**.
+- 14-day cooldown: **PASS implementation/tests**; verified E2E sender exemption scoped.
+- Real tap/device E2E: **NOT RUN**; no physical Android/iOS/Desktop coverage available.
+- Live order/payment/receipt: existing order evidence remains; no duplicate order or payment claim.
+
+## GFS-109-ADMIN-CONTROLS Update — 2026-10-12
+
+- `/test-controls`: **PASS deployed**; exemption seeded, scoped reset live-tested and audited.
+- `/orders`: **PASS deployed**; search/detail/cancel/archive safety implemented and tested.
+- Historical order preservation: **PASS** — `FS-261012-000001` remains PAYMENT_PENDING.
+- Check Order: **PASS implementation** with distinct payment-review/fulfillment states.
+- Live tap/button E2E: **BLOCKED** by unavailable authorized customer device/session; no impersonation.
+
+## GFS-111-CONTENT-CMS Update — 2026-10-12
+
+- Admin content editable: **PASS** — versioned EN/UR templates, previewable private-media references, draft/publish/rollback/audit.
+- Admin payment wording editable: **PASS**.
+- Image + buttons: **IMPLEMENTED**, live image media requires uploaded private R2 content asset; no public link used.
+- Dynamic quote: **PASS live guided-chat evidence** — `FS-261012-000003`, Punjab/fertilizer, PKR 500.
+- Real FS order: **YES**; payment method selection pending.
+- Native Flow screens/publication: **DRAFT/UNTESTED**.
+- Android/iOS/Desktop evidence: **UNTESTED**.
+
+## GFS-113-NATIVE-FLOW Update — 2026-10-13
+
+- Native Flow validation: **local PASS**, Meta publication evidence **not available**.
+- Flow ID/status: **UNVERIFIED**; canonical Manager surface remained loading.
+- Guided-chat launch: **GO** for backend/order path.
+- Native Flow launch: **NO-GO** until Meta exposes validated Flow object/status and permits publication.
+
+## GFS-116-FLOW-COEXISTENCE Update — 2026-10-13
+
+- Flow upload/validation: **PASS**; Flow ID `1133458765899784`.
+- Flow publish: **FAIL/BLOCKED** — Meta `#139002/4233014` Endpoint not available.
+- Native CTA/E2E: **NOT RUN**.
+- Coexistence: **NO-GO/UNVERIFIED** — `is_on_biz_app=false`, `platform_type=CLOUD_API`; no migration attempted.
+
+## GFS-114-GRAPH-FLOW Update — 2026-10-13
+
+- Flow ID discovered: **1133458765899784**.
+- Graph access: **PASS**; canonical WABA ownership used.
+- Flow validation/upload: **BLOCKED** by Meta `#195` / `2498084` requiring asset name `flow.json` after initial `#100` name error.
+- Meta Flow status: **DRAFT**; publish not attempted without accepted assets.
+- Native Flow E2E: **NOT RUN**; guided fallback remains launch path.
+
+## GFS-117-FLOW-MEDIA Update — 2026-10-13
+
+- Admin CMS/media gallery: **PASS implementation**; private R2/D1 controls, bilingual journey ordering and rotation/session selection deployed.
+- Flow asset validation: **PASS**; publication: **BLOCKED** by Meta `#139002/4233014` Endpoint not available.
+- Live encrypted Flow: **BLOCKED**; endpoint diagnostics observed `FLOW_INITIAL_VECTOR_INVALID`, while local crypto tests pass.
+- Native Flow E2E/image delivery: **NOT PROVEN**.
+
+## GFS-118-FLOW-PUBLISHED Update — 2026-10-13
+
+- Flow JSON/schema: **PASS**; unsupported dropdown `code` removed.
+- Flow encryption: **PASS implementation/deployed**; paired keys and corrected IV protocol.
+- Flow asset upload: **PASS**; validation errors empty.
+- Flow publication: **PASS** — Graph reports `PUBLISHED` for `1133458765899784`.
+- Native CTA/device E2E: **UNTESTED**; guided-chat fallback remains available.
+
+## GFS-119-LANGUAGE-FLOW Update — 2026-10-13
+
+- Bilingual welcome/language routing: **PASS implementation/deployed**.
+- Published Flow CTA: **PASS implementation**; real customer Flow open/navigation **UNTESTED**.
+- Guided fallback: **GO**; native Flow: **GO publication / NO-GO live E2E evidence**.
+
+## GFS-120-LIVE-UI Update — 2026-10-13
+
+- CMS live render: **PASS** — paired EN/UR journey sections and gallery controls visible.
+- Native Flow: **PUBLISHED** by Graph; real CTA/device E2E **UNTESTED**.
+- Guided-chat launch: **GO**.
+- Payment/receipt: **not advanced**; no real payment claim.
+
+## GFS-121-CMS-FLOW Closeout — 2026-10-13
+
+- Universal welcome/CMS source: **PASS implementation/deployed**.
+- CMS draft/publish guard: **PASS**; stale publish now reports up-to-date.
+- Native Flow: **PUBLISHED**; live authorized device/customer E2E **UNTESTED**.
+- Guided chat: **GO**; native Flow live launch: **NO-GO pending device evidence**.
+
+## GFS-133-GUIDED-FIRST Update — 2026-10-14
+
+- Runtime mode: **GUIDED**; native Flow CTA disabled by environment flag.
+- Guided checkout/Admin orders: **GO** implementation/deployment.
+- Native Flow: **PUBLISHED/PRESERVED**, but **NO-GO** for live client until verified device E2E.
+
+## GFS-134-FINAL-AUDIT Update — 2026-10-14
+
+- Guided checkout: **GO backend**.
+- Admin orders: **GO backend / UI audit blocked** by MCP `pkce-challenge` missing.
+- Native Flow: **NO-GO live E2E**; guided mode remains default.
+- Payment/fulfillment: **NO-GO** without verified receipt/approval.
+
+## GFS-122-LIVE-WELCOME Update — 2026-10-13
+
+- Any-message welcome: **PASS implementation/deployed**; CMS Urdu/English text and language buttons now apply beyond START.
+- Language routing: **PASS implementation**; published Flow CTA dispatch wired.
+- Native Flow/customer device E2E: **UNTESTED**; no authorized customer device evidence.
+- Guided-chat: **GO**; native Flow live: **NO-GO pending device evidence**.
+
+## GFS-124-FORENSIC-FLOW Update — 2026-10-14
+
+- OFFER dropdown defect: **FIXED implementation/deployed** — only `id`/`title` data, no silent empty catalog.
+- Flow/order reconciliation: **PASS implementation** for nfm_reply IDs.
+- Native device preview/E2E: **UNTESTED**; no customer actions fabricated.
+
+## GFS-125-FLOW-V2 Update — 2026-10-14
+
+- Previous first-screen failure: missing `flow_action=data_exchange` plus redundant dynamic OFFER dropdown.
+- Replacement Flow v2: **PUBLISHED** — `28410343535328014`, validation empty, health AVAILABLE.
+- Real CTA: **PASS accepted/sent**; WAMID present. Customer opened/submitted: **NOT OBSERVED**.
+- Admin orders: protected search/details/payment/fulfillment controls remain deployed; no unpaid order was approved.
+- Guided fallback: **GO**; Native Flow: **GO server-side / NO-GO complete customer E2E evidence**.
+
+## GFS-130-FLOW-CONTINUE Update — 2026-10-14
+
+- FERTILIZER→PROVINCE: **PASS local encrypted contract**, **UNTESTED live client**.
+- Flow E2E: **BLOCKED** by unverified customer-controlled session/device.
+- Cloudflare OAuth: stale/replayed callback safely ignored; no bypass or replay.
+
+## GFS-132-ACTIVE-FLOW Update — 2026-10-14
+
+- Flow ID audit: **PASS** — old Manager tab `1133458765899784` is rollback; runtime v2 `28410343535328014` is active target.
+- Screenshot Continue failure: **explained** by viewing the old rollback Flow, not runtime v2.
+- Native customer E2E: **UNTESTED**; no verified customer device interaction.
+
+## GFS-128-FORENSIC-FLOW Update — 2026-10-14
+
+- First-screen/Continue implementation: **PASS deployed**; v2 Flow is server-catalog bound.
+- Flow publication: **PUBLISHED**; native device/customer E2E: **UNTESTED**.
+- Guided-chat launch: **GO**; native Flow launch: **NO-GO pending verified customer device interaction**.
+
+## GFS-105-LIVE-COMMERCE Update — 2026-10-12
+
+- START: **NOT OBSERVED** after deployment; no customer session was proven available.
+- Five fields/quote/FS order/WhatsApp summary: **NOT RUN**.
+- JazzCash: **ENABLED D1**, but live payment/ownership verification remains separate.
+- Receipt/R2/admin approval/Purchase CAPI/fulfillment: **NOT RUN**.
+
+## GFS-106-TAP-COMMERCE Update — 2026-10-12
+
+- Existing real FS order: **YES** — `FS-261012-000001`, `PAYMENT_PENDING`.
+- Dynamic quote: **PASS** — Punjab seed-only total PKR 250.
+- JazzCash selection/payment handoff: **PASS pending review** — expected amount PKR 250; no receipt submitted.
+- Receipt/private R2/admin review/PAID/Purchase CAPI/fulfillment: **NOT COMPLETE**.
+- Native Flow: **DRAFT**; guided-chat order path produced the live order.
+
+## GFS-68-META-FORM-LAUNCH-FIRST Update — 2026-10-10
+
+- Launch track: **`META_FORM_LAUNCH_FIRST`**
+- Canonical Page: `101192938541236`
+- Form authority: `1093015800183328` / `Free Seeds 05-10-2026`, active in the canonical Page form list.
+- Separate active `Free Seeds 04-10-2026` remains distinct; no form substitution or duplicate creation was performed.
+- Native Leads Center is permitted for temporary capture. WhatsApp API remains **`WHATSAPP_API_ENHANCEMENT_PENDING`** and is not a launch blocker.
+- Payment source check: all three staging D1 methods are disabled and recipient/instruction/QR fields are absent. **`PAYMENT_VALUES_REQUIRED`**.
+- Existing campaign draft remains unpublished for this track; no spend authorization was supplied and no publication/edit mutation was made.
+
+## GFS-69-FINAL-FORM-PREP Update — 2026-10-10
+
+- Canonical form: `1093015800183328` / `Free Seeds 05-10-2026` / Page `101192938541236`.
+- Five fields: **PASS** from existing canonical preview evidence — Full Name, Complete Delivery Address, Nearby Famous Place, City, Contact Number; no Email.
+- Immediate ending: **READY_PENDING_VALUES**. Internal copy prepared; not published because payment amount and Garden Shop recipient details are absent.
+- Receipt route: **BLOCKED/UNVERIFIED**. Messenger is preferred; previously observed WhatsApp CTA was prohibited and was not used.
+- Campaign: existing draft visible in Ad Account `1198439777611633`, with Rs2,625 daily draft budget. Exact Form attachment remains unverified; no edit, publish, or spend mutation occurred.
+
+## GFS-70-INITIAL-PAYMENT-PATH Update — 2026-10-10
+
+- Initial rule: **`INITIAL_LAUNCH_PAYMENT_FIRST`**.
+- Admin/D1 support: **PASS implementation**. Added positive integer `advance_amount_pkr`, Access-protected `/payment-amount`, audit logging, and complete-enabled-method gate; staging admin/API deployed.
+- Cloudflare identity: **PASS** — `gisupp@gmail.com` / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- Current amount: **MISSING** (`NULL`). JazzCash, Easypaisa, and Bank Transfer: **INCOMPLETE/DISABLED** with no real recipient/instructions/QR.
+- Admin UI: Cloudflare Access login was shown instead of an authenticated page; backend/D1 was verified through Wrangler. No mutation was made.
+
+## GFS-71-WHATSAPP-FLOW-COMMERCE Update — 2026-10-10
+
+- Meta Form inspected: **PASS inventory** — canonical Form `1093015800183328` / `Free Seeds 05-10-2026` active with one lead; no edit/campaign mutation.
+- Exact customer data fields: **PASS** — Full Name, Complete Delivery Address, Nearby Famous Place, City, Contact Number. Commerce fields are separate: product, province, fertilizer choice, quote/payment workflow.
+- Product workbook: **NOT_FOUND**. Required source: verified seed/fertilizer workbook containing SKU/code, product name/category, PKR price, active/status, pack quantity, and fertilizer data where applicable.
+- Dynamic catalog/admin/quote backend: **PASS implementation/deployment**; staging D1 catalog and province tables are empty/disabled by design.
+- Quote endpoint: **PASS implementation/tests**, but live quote data unavailable until verified products and province rates exist.
+- Encrypted Flow endpoint: **PASS protocol tests/health smoke**; `FLOW_PRIVATE_KEY` is not provisioned and Meta Flow publication/registration is pending.
+- Fertilizer upsell/order summary/payment buttons/receipt review: **BLOCKED** by missing catalog, delivery rates, payment methods, durable WhatsApp credential, and Flow publication.
+- CTWA window handling: **DOCUMENTED** — customer-initiated 24-hour service window and Meta qualifying free-entry-point handling; Instant Form phone capture is not treated as consent.
+
+## GFS-72-AUTHORITATIVE-TARIFF Update — 2026-10-10
+
+- Authoritative tariff: **LOADED** into staging D1/admin under `AUTHORITATIVE_FREE_SEEDS_TARIFF_2026`.
+- Seed: **Rs. 0**, 5 packs, active.
+- Fertilizer: **Rs. 250**, 1 pack, active.
+- Province rates: Punjab 250; Islamabad 250; Sindh 300; KPK 300; Balochistan 350; AJK 350; Gilgit Baltistan 350 PKR.
+- 14 tariff combinations: **PASS** live staging. Punjab 250/500; Islamabad 250/500; Sindh/KPK 300/550; Balochistan/AJK/Gilgit Baltistan 350/600.
+- Meta Form: **DRIFT/SEPARATE COMMERCE** — prior read-only canonical evidence includes product/province/fertilizer/amount answers; backend/Flow tariff is authoritative and Form was not edited.
+- Quote endpoint: **PASS**; aliases Khyber Pakhtunkhwa, Azad Jammu & Kashmir, and GB normalize safely.
+- Flow: **DRAFT/BLOCKED publication**. Backend protocol/health/tests pass; `FLOW_PRIVATE_KEY` is absent and Meta requires message-quality/business-verification steps.
+- Payment: JazzCash, Easypaisa, Bank **MISSING** recipient/instruction values. Payment buttons/details and receipt review remain blocked only at payment configuration/runtime gates.
+- Flow private/public key: **PRIVATE CONFIGURED / PUBLIC REGISTRATION BLOCKED**; private value was generated in memory and stored by secret name only, never exposed.
+
+## GFS-73-ADMIN-TARIFF-SOURCE Update — 2026-10-10
+
+- Admin tariff: **PASS**. `/tariff` deployed as the single D1-backed product/province editor.
+- Single source of truth: **D1/ADMIN = YES**.
+- Seed Rs0 editable: **PASS**. Fertilizer and product values are editable without deploy; delivery fees require positive values.
+- Dynamic quote fetch: **PASS**. Change proof passed without redeploy: Punjab 251→250 and fertilizer 501→500 after restore.
+- Hardcoded production tariff: **NONE FOUND**. Numeric values remaining are labeled tests/history; binding rules no longer embed permanent tariff values.
+- Meta Form: **READ_ONLY**; tariff drift risk **YES** because prior fixed text answers are non-authoritative.
+- Payment methods: JazzCash/Easypaisa/Bank **MISSING** recipient/instruction values; payment selection remains safely hidden.
+- Flow endpoint: **PASS**. Flow public key: **BLOCKED** at Meta registration/publication. Flow remains **DRAFT/BLOCKED**.
+
+## GFS-74-META-FLOW-GATES Update — 2026-10-10
+
+- Public key: **BLOCKED** — private secret exists by name; no public-key registration completed.
+- Exact Flow publication blocker: Meta says **“improve message quality” and “complete business verification.”** App setup separately reports **Missing valid payment method** and App Review incomplete.
+- Business verification: status control marked completed; publication surface still requires completion condition.
+- Phone registration: **Pending**; display name: **In Review**; quality: not displayed.
+- Canonical App↔WABA: **FAIL/unverified**.
+- Runtime credential: **BLOCKED**; provider health reports WhatsApp disabled until Meta onboarding.
+- Flow send: **BLOCKED**; no synthetic conversation attempted.
+
+## GFS-75-GRAPH-ACTIVATION-BSUID Update — 2026-10-10
+
+- Graph phone: verification **Pending**; registration **Pending**; name status **In Review**; quality **not displayed**.
+- Phone activated: **FAIL**.
+- Canonical App subscribed: **FAIL/unverified**.
+- Public key: **BLOCKED**; encrypted handshake not attempted without Meta registration.
+- Webhook: **BLOCKED**; provider health remains disabled until Meta onboarding.
+- Controlled WhatsApp send / delivery callback: **BLOCKED**.
+- Flow: **DRAFT/BLOCKED**.
+- Flow E2E: **BLOCKED**.
+- BSUID support: **PASS**; scoped fields and uniqueness migration deployed, no actual BSUID observed.
+- Actual BSUID observed from Meta: **NO**.
+- BSUID storage: **PASS**.
+- Get Free Seeds scope: Business `568026370701542` / WABA `2616648355452496`.
+- Future separate Garden Shop scope: **SUPPORTED / NOT CONFIGURED**.
+- Username: **OPTIONAL_PENDING**.
+
+## GFS-76-PHONE-REGISTRATION Update — 2026-10-10
+
+- Ownership verification: **NOT PROVEN through supported opaque Graph path**.
+- Graph `/register`: **BLOCKED** — official credential/MCP access unavailable; no raw request attempted.
+- Registration response: **NO REQUEST**.
+- Registered: **NO PROOF**.
+- Name status before/after: **In Review / not changed**; name review was not treated as a prerequisite.
+- WABA phone read: **PASS dashboard observation** — canonical phone is Pending/In Review.
+- App subscribed: **FAIL/unverified**.
+- Controlled message/status callback/webhook: **BLOCKED**.
+- BSUID: **READY**, actual BSUID observed **NO**, scoped storage **PASS**.
+- Payments: JazzCash/Easypaisa/Bank **MISSING** recipient/instruction values.
+
+## GFS-80-CONNECTED-RUNTIME Update — 2026-10-10
+
+- Phone UI Connected: **YES**.
+- Graph registered/runtime: **YES by connected UI + code verification VERIFIED**; name review remains separate.
+- App subscribed: **PASS**; canonical App observed in WABA subscription.
+- Flow public key: **FAIL/BLOCKED** — exact Meta error `(#10) Application does not have permission for this action`.
+- Webhook: **BLOCKED** — App Secret absent; provider disabled.
+- Inbound/outbound/status/delivery: **NOT ATTEMPTED** until signed webhook/provider prerequisites are repaired.
+- Flow E2E: **BLOCKED** at public-key permission gate.
+
+## GFS-77-ACTIVATION-CONSOLE Update — 2026-10-10
+
+- Activation console: **PASS implementation/deployment** at Access-protected `/meta-activation`.
+- `META_ACCESS_TOKEN`: **ABSENT by name check**; raw credential not exposed.
+- Phone/register/subscription/message actions: **PENDING protected handoff**; no mutation attempted.
+- OTP/PIN handling: transient password fields only, never persisted/logged.
+- Tests: **46/46 pass**, build/lint/audit/Wrangler pass.
+
+## GFS-79-ACTIVATION-DIAGNOSTICS Update — 2026-10-10
+
+- Graph runtime: **PASS**; token secret present by name on API/admin Workers.
+- Ownership/code verification: **VERIFIED**; OTP required: **NO**.
+- `/register`: **FAIL pending protected PIN**; safe error `(#133010) The account is not registered`.
+- Name status: **PENDING_REVIEW**; not treated as registration prerequisite.
+- App subscription: **PASS via Graph state** after nested response parsing; canonical App `2354726831735899` observed.
+- Flow public key: **BLOCKED** until phone registration; payment recipients remain missing.
+- Meta ending: **READY_FOR_PAYMENT_VALUES**, not edited. Campaign and WhatsApp remain untouched.
+
+## GFS-60-MCP-AND-ACTIVE-SENDER Update — 2026-10-09
+
+- Active state: **`META_ASSETS_PENDING`**
+- Current sender: **`+923044429933`**; Phone Number ID **`1323932417479627`**
+- Former `+923328883383` / `1429127796940691`: historical only; excluded from runtime.
+- MCP diagnostics: Chrome stable and existing profile are running; `DevToolsActivePort` is port `9222`; `chrome-devtools-mcp` `1.10.1` is installed/available. Codex registration contains stale WebSocket UUID `1bd33a65-0775-4aec-b397-56b12157f07f`, while the live marker reports a different UUID. The active agent namespace does not expose Chrome DevTools MCP, so required `list_pages`/snapshot proof cannot be completed here.
+- Token exposed: **NO**. No Meta or Cloudflare mutation was performed.
+- Stop gate: **`PLATFORM_MCP_BLOCKED`** pending fresh MCP-enabled Codex execution with the live endpoint.
+
 ## GFS-14-RESTORE-CHROME-DEVTOOLS-MCP Execution Update — 2026-09-28
 
 - Overall: 71%; Remaining: 29%.
@@ -557,7 +1032,7 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - Payment message sent: **NO**.
 - WhatsApp OTP: **WHATSAPP_OTP_REQUIRED**.
 - App -> WABA: **FAIL/UNVERIFIED**.
-- Tests: **PASS**. 22/22, build, lint, audit, Wrangler validation.
+- Tests: **PASS except audit advisory**. 22/22, build, lint, Wrangler validation; npm audit reports transitive Wrangler/Miniflare/sharp high advisories with only a breaking forced downgrade available.
 - Zero regression: **PASS**.
 - Git: pending GFS-48 commit; PR #7 open/mergeable; main `a4ac98c`.
 - STOP_GATE: `BACKEND_REALTIME_SYNC_BLOCKED` + `PAYMENT_AMOUNT_NOT_CONFIGURED` + `WHATSAPP_OTP_REQUIRED`.
@@ -590,3 +1065,227 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - Git: pending GFS-49 commit; PR #7 open/mergeable; main `a4ac98c`.
 - STOP_GATE: `PAYMENT_AMOUNT_NOT_CONFIGURED` + `BACKEND_REALTIME_SYNC_BLOCKED` + `WHATSAPP_OTP_REQUIRED`.
 - Next action: verify real Garden Shop payment recipients/amount rules through authorized admin configuration, then test one acknowledgement without payment instructions.
+
+## GFS-50-MVP-BLOCKERS Execution Update - 2026-10-06
+
+- Overall: **90%**. Remaining: **10%**.
+- Pricing rules extracted: **BLOCKED**; form choices/text are not authoritative Garden Shop pricing.
+- All Form paths tested: **NOT APPLICABLE**; no valid server pricing table exists.
+- Server-authoritative amount: **BLOCKED**.
+- Payment expected_amount: **BLOCKED**.
+- Real Garden Shop values: **NOT PROVIDED**.
+- Enabled payment methods: **none**.
+- QR status: **none configured**.
+- Messenger acknowledgement: **NOT SENT**; native context observed but customer delivery unverified.
+- Lead -> D1: **BLOCKED** by lead App/token/Page subscription.
+- Order creation: **BLOCKED**.
+- Contact/WhatsApp separation: **PASS**.
+- Recipient priority: **PASS** code path.
+- WhatsApp OTP: **WHATSAPP_OTP_REQUIRED**.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Actual WhatsApp send: **BLOCKED**.
+- Tests: **PASS**. 22/22, build, lint, audit, Wrangler validation, admin/payment smoke.
+- Zero regression: **PASS**.
+- Git: fresh branch `codex/gfs-launch-next-001` at merged main; new PR pending; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- STOP_GATE: `PAYMENT_AMOUNT_NOT_CONFIGURED` + `BACKEND_REALTIME_SYNC_BLOCKED` + `WHATSAPP_OTP_REQUIRED`.
+- Next action: obtain verified Garden Shop pricing/recipient configuration and Meta lead App/token/Page subscription, then test one acknowledgement before any payment message.
+
+## GFS-50-QUALITY-FINALIZATION Execution Update - 2026-10-06
+
+- Overall: **90%**. Remaining: **10%**.
+- Payment/admin/lead/Messenger gates unchanged and documented above.
+- Security audit: **PASS**, targeted `source-map-js` update to `1.2.2` removed the advisory.
+- Tests: **PASS**, 22/22, build, lint, audit, Wrangler validation.
+- Git: pending GFS-50 commit on `codex/gfs-launch-next-001`; main `7794b686e942901fc549c1c25a97a4175d9fa663`; new PR required.
+
+## GFS-49-MERGE Finalization Update - 2026-10-05
+
+- PR #7: **MERGED**.
+- Merge SHA: `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- Main SHA: `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- New branch: `codex/gfs-launch-next-001`.
+- Remote CI: immediate empty failure, treated as `REMOTE_CI_UNAVAILABLE_NON_BLOCKING`; local 22/22/build/lint/audit/Wrangler/admin smoke remained green.
+
+## GFS-51-SENDER-SWITCH Execution Update - 2026-10-08
+
+- Overall: **90%**. Remaining: **10%**.
+- New sender: `+923044429933`.
+- Old sender: **SUPERSEDED**, `+923328883383` / Phone ID `1429127796940691`; not active config/runtime.
+- New number added to WABA: **FAIL/BLOCKED**; Add Phone flow shows Business profile pending and Add number disabled.
+- OTP sent to new number: **FAIL/NOT REQUESTED**; Meta never exposed new-number OTP because onboarding is blocked.
+- OTP state: **REQUIRED/BLOCKED** for new sender.
+- New Phone Number ID: **NONE**.
+- Registration: **BLOCKED**, old number remains In Review/Unverified.
+- Display name: existing Get Free Seeds profile; new sender not created.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Old Phone ID removed from active config: **PASS**.
+- Form WhatsApp CTA: **BLOCKED/NOT EDITABLE**; old noncanonical CTA remains prohibited.
+- Cloudflare sender config: **BLOCKED** until new Phone ID/credential; provider disabled.
+- Webhook: **BLOCKED** until new sender/runtime credentials.
+- Controlled WhatsApp send: **BLOCKED**.
+- Payment: **BLOCKED** by `PAYMENT_AMOUNT_NOT_CONFIGURED`.
+- Lead -> D1: **BLOCKED** by lead App/token/Page subscription.
+- Tests: **PASS**. 22/22, build, lint, audit, Wrangler validation.
+- Zero regression: **PASS**.
+- Git branch/head: `codex/gfs-launch-next-001` pending GFS-51 commit.
+- PR #8: **OPEN/MERGEABLE**.
+- Main SHA: `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- STOP_GATE: `WHATSAPP_NUMBER_SLOT_BLOCKED` / pending Business profile + `BACKEND_REALTIME_SYNC_BLOCKED` + `PAYMENT_AMOUNT_NOT_CONFIGURED`.
+- Next action: resolve the pending Business profile/Add number restriction through supported Meta Business/WABA support; do not delete the old sender.
+
+## GFS-54-ESCALATE-PENDING-PROFILE Execution Update - 2026-10-08
+
+- Overall: **90%**. Remaining: **10%**.
+- Current state: **WHATSAPP_NUMBER_SLOT_BLOCKED**.
+- Old phone deletion: **BLOCKED**; exact old row confirmed, but no phone-specific delete/cancel control exposed.
+- Support case ID: **NONE**; WABA Help routes to Business Support Home/category updates only, no case form/reference ID.
+- Slot: **BLOCKED**.
+- New phone added: **FAIL/BLOCKED**.
+- New Phone Number ID: **NONE**.
+- OTP sent to `+923044429933`: **FAIL/NOT SENT**.
+- OTP state: **REQUIRED/BLOCKED** after slot/profile resolution.
+- Registration: old phone remains In Review/Unverified; new registration not started.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Active old-number references: **0** runtime/config references; historical docs only.
+- Cloudflare Phone ID: **PENDING**; provider disabled.
+- Tests: **PASS**. 22/22, build, lint, Wrangler validation; transitive toolchain audit advisory remains without forced downgrade.
+- Zero regression: **PASS**.
+- Git: pending GFS-54 commit; PR #8 open/mergeable; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- STOP_GATE: `WHATSAPP_NUMBER_SLOT_BLOCKED` / pending Business profile.
+- Next action: Meta Business Support must resolve the pending profile/Add Phone slot; then delete old/add new/OTP in one supported session.
+
+## GFS-55-VERIFY-NEW-SENDER-RUNTIME Execution Update - 2026-10-08
+
+- Overall: **92%**. Remaining: **8%**.
+- New sender verified: **PARTIAL**. Asset exists and user confirms verification; Meta UI remains In Review/Pending review.
+- New Phone Number ID: `1323932417479627`.
+- Registration: number present; Meta status **In Review**.
+- Display name: `Get Free Seeds`, **Pending display name review**.
+- Quality: **Pending**.
+- App -> WABA: **FAIL**; App API Setup exposes only test/Hoja WABA `1932075647340454` and Hoja/test numbers.
+- Cloudflare Phone ID: **BLOCKED/NOT SET**; no authorized Meta credentials and no secrets exist.
+- Webhook challenge: **BLOCKED**, verify/app secrets unavailable.
+- Signed webhook: **BLOCKED**.
+- Provider enabled: **NO**.
+- Controlled WhatsApp send: **BLOCKED**.
+- Delivery/status webhook: **BLOCKED**.
+- Flow: **READY repository-only / publication blocked**.
+- Old sender active: **YES in WABA, NO in runtime/config**; superseded and prohibited.
+- Tests: **PASS**. 22/22, build, lint, Wrangler validation; npm audit retains transitive Wrangler/Miniflare/sharp advisory with breaking forced downgrade avoided.
+- Zero regression: **PASS**.
+- Cloudflare versions: API `c62d6606-9b38-4dde-abfb-ca2ef92e6deb`, admin `7053221d-8e53-457f-b780-ed43905fc7d6`.
+- Git: pending GFS-55 commit; PR #8 open/mergeable; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- Remaining gates: Meta display-name/phone review; canonical App↔WABA subscription; least-privilege credentials; webhook configuration; controlled send; `BACKEND_REALTIME_SYNC_BLOCKED`; `PAYMENT_AMOUNT_NOT_CONFIGURED`.
+- Next action: complete canonical App↔WABA subscription through Meta's supported subscription path, then provision secure credentials and test webhook challenge.
+
+## GFS-56-CONNECT-APP-WABA-RUNTIME Execution Update - 2026-10-09
+
+- Overall: **93%**. Remaining: **7%**.
+- Phone review: **In Review**.
+- Display-name review: `Get Free Seeds`, **Pending**.
+- Quality: **Pending**.
+- App -> WABA: **FAIL for `subscribed_apps` / PASS for system-user asset assignment**. Automation `61595003169877` has exactly canonical App and WABA; App API Setup still shows test WABA only.
+- Credential path: **READY structurally / BLOCKED at secret generation**. `Generate token` would reveal/copy a sensitive token; none generated.
+- Cloudflare Phone ID: **NOT SET**; no secrets exist.
+- Webhook challenge: **BLOCKED**.
+- Signed webhook: **BLOCKED**.
+- Provider: **DISABLED**.
+- Controlled send: **BLOCKED**.
+- Delivery/status webhook: **BLOCKED**.
+- Flow: **READY repository-only**.
+- Old sender active: **NO in runtime/config**; still visible historically in WABA.
+- Tests: **PASS**. 22/22, build, lint, audit, Wrangler 4.149 validation.
+- Zero regression: **PASS**.
+- Git: GFS-56 commit pending; PR #8 open/mergeable; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- Remaining stages: WhatsApp runtime **4%**; Lead→D1 **2%**; Payment **1%**.
+- Unchanged: `BACKEND_REALTIME_SYNC_BLOCKED`, `PAYMENT_AMOUNT_NOT_CONFIGURED`.
+- STOP_GATE: `META_CREDENTIAL_PROVISIONING_REQUIRED` + `META_APP_WABA_NOT_SUBSCRIBED` + Meta display-name/phone review pending.
+- Next action: generate the system-user token directly in the protected Meta UI, store it only as Cloudflare secrets, then verify `subscribed_apps` and webhook challenge without exposing the token.
+
+## GFS-57-OAUTH-GRAPH-REGISTRATION Execution Update - 2026-10-09
+
+- Overall: **93%**. Remaining: **7%**.
+- Official Meta MCP: **BLOCKED/NOT EXPOSED** in active agent; no remote WhatsApp Business Tools OAuth handoff.
+- Phone verification: asset exists, Phone ID `1323932417479627`; Meta display/quality review remains Pending/In Review.
+- Cloud API registration: **BLOCKED/NOT CLAIMED**.
+- `subscribed_apps`: **FAIL/UNVERIFIED**; system-user asset assignment is not subscription.
+- Canonical App visible: **YES** as assigned asset; canonical App API Setup still shows test WABA only.
+- Credential path: **SECURE_HANDOFF_REQUIRED**; token generation would reveal/copy secret, so no token generated.
+- Cloudflare Phone ID: **NOT SET**; no secrets.
+- Webhook challenge/signed webhook: **BLOCKED**.
+- Provider: **DISABLED**.
+- Controlled send/delivery webhook: **BLOCKED**.
+- Flow: **READY repository-only**.
+- Meta billing: **PRESENT** from prior visible evidence; no card changes.
+- Lead -> D1: **BLOCKED**.
+- Garden Shop customer payment: **BLOCKED**.
+- Tests: **PASS**. 22/22, build, lint, audit, Wrangler 4.149 validation.
+- Zero regression: **PASS**.
+- Git: head `65913da`; PR #8 open/mergeable; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- Remaining stages: WhatsApp runtime **4%**; Lead→D1 **2%**; Payment **1%**.
+- STOP_GATE: `META_CREDENTIAL_PROVISIONING_REQUIRED` + `META_APP_WABA_NOT_SUBSCRIBED` + Meta review pending.
+- Next action: expose/authenticate official WhatsApp Business Tools OAuth or perform protected Meta token handoff, then verify `subscribed_apps` without revealing credentials.
+
+## GFS-58-OFFICIAL-MCP-GRAPH-REGISTRATION Execution Update - 2026-10-09
+
+- Overall: **93%**. Remaining: **7%**.
+- Official Meta MCP: **BLOCKED/NOT EXPOSED** in active agent; no remote OAuth handoff.
+- Phone: `+923044429933`, Phone ID `1323932417479627`; display/quality review remains Pending/In Review.
+- System-user assignment: **PASS** for exact canonical App/WABA assets; no Hoja assets/token.
+- App -> WABA `subscribed_apps`: **FAIL/UNVERIFIED**; App API Setup still test WABA only.
+- Credential path: **SECURE_HANDOFF_REQUIRED**.
+- Cloudflare Phone ID: **NOT SET**; no secrets.
+- Webhook/provider/controlled send: **BLOCKED/DISABLED**.
+- Flow: **READY repository-only**.
+- Meta billing: **PRESENT** from prior visible evidence.
+- Lead -> D1: **BLOCKED**.
+- Garden Shop payment: **BLOCKED**.
+- Tests: **PASS**. 22/22, build, lint, audit, Wrangler validation.
+- Zero regression: **PASS**.
+- Git: head `783dc1d`; PR #8 open/mergeable; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- Remaining stages: WhatsApp runtime **4%**; Lead→D1 **2%**; Payment **1%**.
+- STOP_GATE: `META_CREDENTIAL_PROVISIONING_REQUIRED` + `META_APP_WABA_NOT_SUBSCRIBED` + Meta review pending.
+- Next action: expose official WhatsApp Business Tools OAuth or complete protected token handoff, then verify Graph `subscribed_apps` and webhook challenge without revealing credentials.
+
+## GFS-53-PENDING-PROFILE-DELETE-ADD-OTP Execution Update - 2026-10-08
+
+- Overall: **90%**. Remaining: **10%**.
+- Pending-profile root cause: canonical WABA shows existing Business profile pending; Add number control is disabled before phone-specific deletion/addition.
+- Old phone delete: **BLOCKED**, no safe phone-specific confirmation surfaced; old remains In Review/Unverified.
+- Old Phone ID removed from WABA: **BLOCKED**.
+- Add-number button: **BLOCKED**.
+- New phone added: **FAIL/BLOCKED**.
+- New Phone Number ID: **NONE**.
+- OTP sent to `+923044429933`: **NOT SENT**.
+- OTP state: **REQUIRED/BLOCKED** after slot/profile resolution.
+- Registration/display: blocked; old profile remains pending.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Cloudflare Phone ID: **PENDING**, no active old ID.
+- Tests: **PASS**. 22/22, build, lint, Wrangler; npm audit has transitive Wrangler/Miniflare/sharp advisory requiring breaking forced downgrade.
+- Zero regression: **PASS**.
+- Git: pending GFS-53 commit; PR #8 open/mergeable; main `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- STOP_GATE: `WHATSAPP_NUMBER_SLOT_BLOCKED` / pending Business profile.
+- Next action: resolve pending Business profile through supported Meta Business/WABA support, then confirm/delete old and add new only with exact phone-specific UI.
+
+## GFS-52-OLD-SENDER-DELETE-NEW-OTP Execution Update - 2026-10-08
+
+- Overall: **90%**. Remaining: **10%**.
+- Old phone deleted: **FAIL/BLOCKED**; explicit authorization recorded, but Meta Add Phone flow is blocked before safe deletion confirmation.
+- Old Phone ID removed from WABA: **FAIL/BLOCKED**; remains historical/In Review and not active runtime.
+- New phone: `+923044429933`.
+- New phone added: **FAIL/BLOCKED**; Business profile pending/Add number disabled.
+- New Phone Number ID: **NONE**.
+- OTP sent to: **NOT SENT**; new-number OTP action never appeared.
+- OTP state: **REQUIRED/BLOCKED**.
+- Registration: **BLOCKED**; old number remains In Review/Unverified.
+- Display name: existing Get Free Seeds profile; new sender not created.
+- App -> WABA: **FAIL/UNVERIFIED**.
+- Cloudflare active Phone ID: **PENDING**; no old ID active config, provider disabled.
+- Old active references: **0** active runtime/config references (historical docs retained).
+- Tests: **PASS except audit advisory**. 22/22, build, lint, Wrangler; transitive Wrangler/Miniflare/sharp advisory remains without forced downgrade.
+- Zero regression: **PASS**.
+- Git branch/head: `codex/gfs-launch-next-001` pending GFS-52 commit.
+- PR #8: **OPEN/MERGEABLE**.
+- Main SHA: `7794b686e942901fc549c1c25a97a4175d9fa663`.
+- STOP_GATE: `WHATSAPP_NUMBER_SLOT_BLOCKED` / pending Business profile; `BACKEND_REALTIME_SYNC_BLOCKED`; `PAYMENT_AMOUNT_NOT_CONFIGURED`.
+- Next action: resolve the pending Business profile/Add Phone restriction through supported Meta Business/WABA support, then delete old/add new only after exact UI confirmation.
