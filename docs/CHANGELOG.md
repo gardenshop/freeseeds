@@ -23,6 +23,7 @@
 
 - Added version-scoped EN/UR semantic action labels and Admin live button/list previews for guided checkout.
 - Fixed gallery-only publication and stale media selection validation; published WELCOME v6 with private image and sent a real Meta image/button WAMID.
+- Recorded external CI blocker: GitHub Actions verify job could not start due account billing lock.
 - Deployed Admin Worker version `506c9630-dfde-4c01-a736-7a2093c1c415`.
 
 ## Unreleased - 2026-10-16 (GFS-144)

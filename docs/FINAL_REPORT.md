@@ -12,6 +12,7 @@
 - Meta outbound image/buttons: **WAMID PRESENT**, status `sent`; delivery/read/customer rendering not observed.
 - EN/UR action labels: **PASS Admin/runtime mapping**.
 - Guided checkout: **GO**; payment/fulfillment remains evidence-gated.
+- PR merge: **NO-GO** while required GitHub verify check is blocked by account billing lock; no protection bypass attempted.
 
 ## GFS-141-OPERATIONS Update — 2026-10-16
 
