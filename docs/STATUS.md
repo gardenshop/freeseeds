@@ -484,6 +484,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Root cause found: generated `professionalOrdersPageHtml()` contained an invalid `renderDetail()` facts-array delimiter, causing the inline script to fail before hydration/load and leaving the page at Loading.
 - Fixed script parsing/startup, bounded timeout/non-JSON errors, stale request cancellation, Retry, URL filter hydration and auto-selection. Admin Worker `506c9630-dfde-4c01-a736-7a2093c1c415` deployed.
 
+## GFS-153 Browser Orders Evidence
+
+- Recovered Chrome MCP with explicit `pkce-challenge`; authenticated Admin Orders now renders four orders, counts, tabs, auto-selected details, payment/audit fields and private receipt links.
+- Browser snapshot confirms one approved fixture order and three other active orders; no real financial mutation was made during verification.
+
 ## GFS-144 CMS Upload Verification
 
 - Cloudflare OAuth/D1 access is restored and migration 0017 media tables exist.

@@ -35,6 +35,11 @@
 - Repair: **PASS implementation/deployment**; bounded requests, non-JSON diagnostics, retry and stale cancellation retained.
 - Browser proof: **PENDING** because current MCP page-response is unstable.
 
+## GFS-153-ORDERS-BROWSER Update — 2026-10-17
+
+- Orders browser: **PASS** — four orders, summary counts, tabs, auto-selected detail, complete delivery/payment/items/audit and private receipt links.
+- Payment/fulfillment: **NO-GO** for real financial claims; inspected approved record was not mutated and no independent payment verification was performed.
+
 ## GFS-140-ADMIN-BROWSER Update — 2026-10-16
 
 - Admin Orders browser: **PASS** — four tabs, four orders, newest detail auto-selected, full customer/payment/items/receipt/audit fields and state-aware controls visible.
