@@ -1,4 +1,4 @@
-import { FlowCustomerDetails, FlowOrderSelection, MetaFlowPayload, parseFlowSubmission, persistFlowSubmission, quoteOrder, PaymentMethod, selectPaymentMethod, getPersistedOrderSummary, configuredPaymentMethodNames, parseFertilizerDecision, selectPublishedWhatsAppContentMedia, WhatsAppTemplateKey } from "@gfs/core";
+import { FlowCustomerDetails, FlowOrderSelection, MetaFlowPayload, parseFlowSubmission, persistFlowSubmission, quoteOrder, PaymentMethod, selectPaymentMethod, getPersistedOrderSummary, configuredPaymentMethodNames, logWhatsAppContentMediaError, parseFertilizerDecision, selectPublishedWhatsAppContentMedia, WhatsAppTemplateKey } from "@gfs/core";
 
 const CUSTOMER_FIELDS = ["fullName", "deliveryAddress", "nearbyPlace", "city", "contactNumber"] as const;
 const ORDER_FIELDS = ["productCode", "province", "fertilizerSelected", "orderId", "fertilizerDecision", "paymentMethod"] as const;
@@ -51,7 +51,8 @@ async function screenResponse(screen: string, data: FlowData, payload: MetaFlowP
   try {
     const media = await selectPublishedWhatsAppContentMedia(db, templateKey, `FLOW:${token}`);
     return protocolResponse(screen, { ...data, ...(media ? { contentMediaId: media.id } : {}) });
-  } catch {
+  } catch (error) {
+    logWhatsAppContentMediaError(templateKey, error);
     return protocolResponse(screen, data);
   }
 }

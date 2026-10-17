@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { canTransition, createMetaActivationService, createWhatsAppProvider, getLatestOrderForWaId, MetaActivationAction, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, isPaymentMethodComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
+import { canTransition, createMetaActivationService, createWhatsAppProvider, getLatestOrderForWaId, MetaActivationAction, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, isPaymentMethodComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, publishedWhatsAppContent, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, WhatsAppActionId, whatsAppActionIdsForTemplate, whatsAppActionLabel, WhatsAppContent, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
 
  type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
 const app = new Hono<Env>();
@@ -348,16 +348,18 @@ function whatsappContentJourneyPageHtml(csrfToken: string): string {
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WhatsApp Content | Get Free Seeds</title><style>:root{color-scheme:light;--ink:#172018;--leaf:#245b38;--line:#ccd5cc;--wash:#f4f7f4;--danger:#a40019}body{font:15px system-ui;max-width:1240px;margin:2rem auto;padding:0 1rem;color:var(--ink)}nav{margin-bottom:1rem}.journey{margin:2.5rem 0}.journey>h2{border-bottom:2px solid var(--leaf);padding-bottom:.35rem}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:1rem}.card{border:1px solid var(--line);border-radius:10px;padding:1rem;background:#fff}.langs{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}.lang{border:1px solid #e1e7e1;padding:.7rem;border-radius:7px}.preview{white-space:pre-wrap;min-height:2.5rem;background:var(--wash);padding:.6rem}.row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}.row button{width:auto}.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.65rem;margin:.75rem 0}.media{border:1px solid var(--line);border-radius:7px;padding:.45rem}.media.active{outline:3px solid #5a9b70}.media.disabled{opacity:.55}.media img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--wash);border-radius:4px}.media small{display:block;overflow-wrap:anywhere}.media .row{gap:.25rem}.media button{font-size:.8rem;padding:.35rem}.badge{display:inline-block;background:var(--wash);padding:.15rem .4rem;border-radius:999px;margin:.3rem .2rem .3rem 0}label{display:block;margin:.45rem 0}input,textarea,button{box-sizing:border-box;width:100%;font:inherit;padding:.45rem}textarea{min-height:4rem}.muted{color:#59635a}.error{color:var(--danger)}.ok{color:#176b36}@media(max-width:760px){.langs{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}</style></head><body><nav><a href="/">Admin home</a> | <a href="/payment-settings">Payment Settings</a></nav><h1>WhatsApp Content</h1><p class="muted">Each journey screen has a private image gallery. Masters are retained; the browser creates a WhatsApp-sized JPEG variant before upload. Gallery changes become customer-visible only when a draft is published.</p><div id="content">Loading...</div><script>
 const csrf=${JSON.stringify(csrfToken)};const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const field=(n,l,v,a=false)=>'<label>'+l+(a?'<textarea name="'+n+'">'+esc(v||'')+'</textarea>':'<input name="'+n+'" value="'+esc(v||'')+'">')+'</label>';
-const language=(p,title,v,rtl)=>'<div class="lang"'+(rtl?' dir="rtl"':'')+'><h3>'+title+'</h3>'+field(p+'Text','Text',v.text,true)+field(p+'Button','Button label',v.buttonLabel)+field(p+'ListButton','List button',v.listButtonLabel)+field(p+'ListDescription','List description',v.listDescription)+'<strong>Preview</strong><div class="preview" data-preview="'+p+'">'+esc(v.text||'')+'</div></div>';
+const provinceNames=['Punjab','Islamabad','Sindh','KPK','Balochistan','AJK','Gilgit Baltistan'];const listPreview=(value)=>value.listButtonLabel?'<div><button type="button" disabled>'+esc(value.listButtonLabel)+'</button><ul>'+provinceNames.map((province)=>'<li><strong>'+esc(province)+'</strong><br><small>'+esc(value.listDescription||'')+'</small></li>').join('')+'</ul></div>':'';
+const language=(p,title,v,rtl,actionIds)=>{const actions=(actionIds||[]).map((id)=>'<button type="button" disabled title="'+esc(id)+'">'+esc(v.actionLabels&&v.actionLabels[id]||'')+'</button>').join('');return '<div class="lang"'+(rtl?' dir="rtl"':'')+'><h3>'+title+'</h3>'+field(p+'Text','Text',v.text,true)+field(p+'Button','Legacy button label',v.buttonLabel)+field(p+'ListButton','Province list title',v.listButtonLabel)+field(p+'ListDescription','Province list description',v.listDescription)+(actionIds||[]).map((id)=>field(p+'Action'+id,'Action '+id,v.actionLabels&&v.actionLabels[id])).join('')+'<strong>Actual WhatsApp preview</strong><div class="preview" data-preview="'+p+'"><div>'+esc(v.text||'')+'</div><div class="row">'+actions+listPreview(v)+'</div></div></div>'};
 function mediaCard(m){return '<article class="media '+(m.active?'active ':'')+(m.enabled?'':'disabled')+'" data-media-id="'+esc(m.id)+'"><img src="'+esc(m.previewUrl)+'" alt="Private content preview" loading="lazy"><span class="badge">'+(m.active?'Active':m.enabled?'Rotation':'Disabled')+'</span><small>'+esc(m.mimeType)+' · '+Math.ceil(m.sizeBytes/1024)+' KiB</small><small title="'+esc(m.sha256)+'">SHA-256 '+esc(m.sha256.slice(0,12))+'…</small><div class="row"><button type="button" data-up title="Move earlier">↑</button><button type="button" data-down title="Move later">↓</button></div><button type="button" data-active>'+(m.active?'Use rotation':'Set active')+'</button><button type="button" data-enabled>'+(m.enabled?'Disable':'Enable')+'</button><button type="button" data-remove>Remove</button></article>'}
-function card(t){const en=t.draft?.contentEn||t.published?.contentEn||{};const ur=t.draft?.contentUr||t.published?.contentUr||{};return '<section class="card" data-key="'+esc(t.templateKey)+'"><h3>'+esc(t.templateKey)+'</h3><p class="muted">Published '+esc(t.publishedVersion??'none')+' | Draft '+esc(t.draftVersion??'none')+'</p><div class="langs">'+language('en','English',en,false)+language('ur','اردو',ur,true)+'</div><h4>Image gallery</h4><div class="gallery">'+(t.media||[]).map(mediaCard).join('')+'</div><label>Upload one or more masters<input name="mediaFiles" data-media type="file" multiple accept="image/png,image/jpeg,image/webp"></label><div class="row"><button type="button" data-upload>Optimize and upload</button><button type="button" data-save>Save draft</button><button type="button" data-publish>Publish draft + gallery</button></div><p data-result role="status"></p><details><summary>Rollback</summary><div class="row"><input name="rollbackVersion" data-version type="number" min="1" placeholder="Version"><button type="button" data-rollback>Rollback</button></div></details></section>'}
-function copy(node,p){return {text:node.querySelector('[name="'+p+'Text"]').value,buttonLabel:node.querySelector('[name="'+p+'Button"]').value||undefined,listButtonLabel:node.querySelector('[name="'+p+'ListButton"]').value||undefined,listDescription:node.querySelector('[name="'+p+'ListDescription"]').value||undefined}}
+function card(t){const en=t.draft?.contentEn||t.published?.contentEn||{};const ur=t.draft?.contentUr||t.published?.contentUr||{};return '<section class="card" data-key="'+esc(t.templateKey)+'" data-action-ids="'+esc((t.actionIds||[]).join(','))+'"><h3>'+esc(t.templateKey)+'</h3><p class="muted">Published '+esc(t.publishedVersion??'none')+' | Draft '+esc(t.draftVersion??'none')+'</p><div class="langs">'+language('en','English',en,false,t.actionIds)+language('ur','اردو',ur,true,t.actionIds)+'</div><h4>Image gallery</h4><div class="gallery">'+(t.media||[]).map(mediaCard).join('')+'</div><label>Upload one or more masters<input name="mediaFiles" data-media type="file" multiple accept="image/png,image/jpeg,image/webp"></label><div class="row"><button type="button" data-upload>Optimize and upload</button><button type="button" data-save>Save draft</button><button type="button" data-publish>Publish draft + gallery</button></div><p data-result role="status"></p><details><summary>Rollback</summary><div class="row"><input name="rollbackVersion" data-version type="number" min="1" placeholder="Version"><button type="button" data-rollback>Rollback</button></div></details></section>'}
+function copy(node,p){const actionLabels={};for(const id of (node.dataset.actionIds||'').split(',').filter(Boolean))actionLabels[id]=node.querySelector('[name="'+p+'Action'+id+'"]').value;return {text:node.querySelector('[name="'+p+'Text"]').value,buttonLabel:node.querySelector('[name="'+p+'Button"]').value||undefined,listButtonLabel:node.querySelector('[name="'+p+'ListButton"]').value||undefined,listDescription:node.querySelector('[name="'+p+'ListDescription"]').value||undefined,...(Object.keys(actionLabels).length?{actionLabels}:{})}}
+function renderContentPreview(node,p){const value=copy(node,p);const buttons=Object.entries(value.actionLabels||{}).map(([id,label])=>'<button type="button" disabled title="'+esc(id)+'">'+esc(label)+'</button>').join('');node.querySelector('[data-preview="'+p+'"]').innerHTML='<div>'+esc(value.text)+'</div><div class="row">'+buttons+listPreview(value)+'</div>'}
 async function json(response){const data=await response.json();if(!response.ok)throw new Error(data.error||'Request failed');return data}async function post(path,body){return json(await fetch(path,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(body)}))}
 async function optimized(file){if(file.size>10*1024*1024)throw new Error('Master exceeds 10 MiB.');const bitmap=await createImageBitmap(file);const scale=Math.min(1,1600/Math.max(bitmap.width,bitmap.height));const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));const context=canvas.getContext('2d');context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);context.drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();const blob=await new Promise((resolve)=>canvas.toBlob(resolve,'image/jpeg',.82));if(!blob||blob.size>5*1024*1024)throw new Error('Could not create a WhatsApp image under 5 MiB.');return blob}
 async function upload(key,file){const variant=await optimized(file);const form=new FormData();form.append('master',file,file.name);form.append('variant',variant,'whatsapp.jpg');return json(await fetch('/api/whatsapp-content/'+encodeURIComponent(key)+'/media',{method:'POST',headers:{'X-CSRF-Token':csrf},body:form}))}
 async function reorder(key,gallery){const ids=[...gallery.querySelectorAll('[data-media-id]')].map((item)=>item.dataset.mediaId);await post('/api/whatsapp-content/'+encodeURIComponent(key)+'/media/order',{ids})}
 async function load(){const data=await json(await fetch('/api/whatsapp-content'));const groups={};for(const t of data.templates||[])(groups[t.section||'Other']??=[]).push(t);const root=document.querySelector('#content');root.innerHTML=Object.entries(groups).map(([s,ts])=>'<section class="journey"><h2>'+esc(s)+'</h2><div class="grid">'+ts.map(card).join('')+'</div></section>').join('');for(const node of root.querySelectorAll('[data-key]')){const key=node.dataset.key;const result=node.querySelector('[data-result]');const show=(message,error=false)=>{result.className=error?'error':'ok';result.textContent=message};for(const input of node.querySelectorAll('[name^="en"],[name^="ur"]'))input.oninput=()=>node.querySelector('[data-preview="'+input.name.slice(0,2)+'"]').textContent=node.querySelector('[name="'+input.name.slice(0,2)+'Text"]').value;node.querySelector('[data-upload]').onclick=async()=>{try{const files=[...node.querySelector('[data-media]').files];if(!files.length)throw new Error('Choose PNG, JPEG, or WebP images.');for(let index=0;index<files.length;index+=1){show('Optimizing and uploading '+(index+1)+' of '+files.length+'…');await upload(key,files[index])}await load()}catch(error){show(error.message,true)}};for(const media of node.querySelectorAll('[data-media-id]')){const id=media.dataset.mediaId;media.querySelector('[data-active]').onclick=async()=>{try{await post('/api/whatsapp-content/'+key+'/media/'+id+'/active',{active:!media.classList.contains('active')});await load()}catch(error){show(error.message,true)}};media.querySelector('[data-enabled]').onclick=async()=>{try{await post('/api/whatsapp-content/'+key+'/media/'+id+'/enabled',{enabled:media.classList.contains('disabled')});await load()}catch(error){show(error.message,true)}};media.querySelector('[data-remove]').onclick=async()=>{if(!confirm('Remove this image? Published or session-referenced images will only be disabled.'))return;try{const d=await json(await fetch('/api/whatsapp-content/'+key+'/media/'+id,{method:'DELETE',headers:{'X-CSRF-Token':csrf}}));if(d.softDisabled)alert('This image is referenced and was safely disabled instead of deleted.');await load()}catch(error){show(error.message,true)}};media.querySelector('[data-up]').onclick=async()=>{const previous=media.previousElementSibling;if(!previous)return;media.parentNode.insertBefore(media,previous);try{await reorder(key,media.parentNode);await load()}catch(error){show(error.message,true)}};media.querySelector('[data-down]').onclick=async()=>{const next=media.nextElementSibling;if(!next)return;media.parentNode.insertBefore(next,media);try{await reorder(key,media.parentNode);await load()}catch(error){show(error.message,true)}}}node.querySelector('[data-save]').onclick=async()=>{try{const d=await post('/api/whatsapp-content/'+key+'/draft',{confirmation:key,contentEn:copy(node,'en'),contentUr:copy(node,'ur')});show('Draft '+d.version+' saved.');await load()}catch(error){show(error.message,true)}};node.querySelector('[data-publish]').onclick=async()=>{const v=String((data.templates||[]).find((t)=>t.templateKey===key)?.draftVersion||'');if(!v||!confirm('Publish '+key+' v'+v+' and its enabled gallery?'))return;try{await post('/api/whatsapp-content/'+key+'/publish',{version:Number(v),confirmation:key+':'+v});await load()}catch(error){show(error.message,true)}};node.querySelector('[data-rollback]').onclick=async()=>{const v=node.querySelector('[data-version]').value;if(!v||!confirm('Rollback '+key+' to v'+v+'?'))return;try{await post('/api/whatsapp-content/'+key+'/rollback',{version:Number(v),confirmation:key+':'+v});await load()}catch(error){show(error.message,true)}}}}
-load().catch((error)=>document.querySelector('#content').textContent=error.message||'WhatsApp content unavailable');</script></body></html>`;
+document.querySelector('#content').addEventListener('input',(event)=>{const node=event.target.closest('[data-key]');if(node&&/^(en|ur)/.test(event.target.name||''))renderContentPreview(node,event.target.name.slice(0,2))});load().catch((error)=>document.querySelector('#content').textContent=error.message||'WhatsApp content unavailable');</script></body></html>`;
 }
 
 function paymentSettingsPreviewPageHtml(): string {
@@ -369,6 +371,15 @@ function values(node){const body={};for(const e of node.querySelectorAll('[data-
 
 function contentKey(value: string | undefined): ReturnType<typeof WhatsAppTemplateKey.parse> | undefined {
   return WhatsAppTemplateKey.safeParse(value).data;
+}
+
+function contentWithoutActionLabels(content: WhatsAppContent): Omit<WhatsAppContent, "actionLabels"> {
+  const { actionLabels: _actionLabels, ...copy } = content;
+  return copy;
+}
+
+function actionLabelStatements(db: D1Database, key: ReturnType<typeof WhatsAppTemplateKey.parse>, version: number, contentEn: WhatsAppContent, contentUr: WhatsAppContent, now: string, actor: string) {
+  return whatsAppActionIdsForTemplate(key).map((actionId) => db.prepare("INSERT INTO whatsapp_content_version_action_labels (template_key,version,action_id,label_en,label_ur,created_at,created_by) VALUES (?,?,?,?,?,?,?)").bind(key, version, actionId, contentEn.actionLabels?.[actionId], contentUr.actionLabels?.[actionId], now, actor));
 }
 
 function paymentCopy(value: unknown, previous: unknown): string | undefined {
@@ -417,10 +428,20 @@ app.get("/payment-settings", (c) => c.html(paymentSettingsPreviewPageHtml()));
 
 app.get("/api/whatsapp-content", async (c) => {
   if (!c.env.DB) return c.json({ templates: [] });
-  const [result, gallery] = await Promise.all([
+  const [result, gallery, actionLabels] = await Promise.all([
     c.env.DB.prepare("SELECT t.template_key,t.flow_order,t.section,t.draft_version,t.published_version,d.content_en_json AS draft_en,d.content_ur_json AS draft_ur,d.media_r2_key AS draft_media,p.content_en_json AS published_en,p.content_ur_json AS published_ur,p.media_r2_key AS published_media FROM whatsapp_content_templates t LEFT JOIN whatsapp_content_template_versions d ON d.template_key=t.template_key AND d.version=t.draft_version LEFT JOIN whatsapp_content_template_versions p ON p.template_key=t.template_key AND p.version=t.published_version ORDER BY t.flow_order,t.template_key").all<Record<string, unknown>>(),
-    c.env.DB.prepare("SELECT m.id,m.template_key,m.mime_type,m.size_bytes,m.sha256,m.master_mime_type,m.master_size_bytes,m.enabled,m.active,m.sort_order,m.created_at,m.created_by,m.updated_at,m.updated_by,EXISTS(SELECT 1 FROM whatsapp_content_version_media vm WHERE vm.media_id=m.id) AS referenced FROM whatsapp_content_media m ORDER BY m.template_key,m.sort_order,m.created_at,m.id").all<Record<string, unknown>>().catch(() => ({ results: [] }))
+    c.env.DB.prepare("SELECT m.id,m.template_key,m.mime_type,m.size_bytes,m.sha256,m.master_mime_type,m.master_size_bytes,m.enabled,m.active,m.sort_order,m.created_at,m.created_by,m.updated_at,m.updated_by,EXISTS(SELECT 1 FROM whatsapp_content_version_media vm WHERE vm.media_id=m.id) AS referenced FROM whatsapp_content_media m ORDER BY m.template_key,m.sort_order,m.created_at,m.id").all<Record<string, unknown>>().catch(() => ({ results: [] })),
+    c.env.DB.prepare("SELECT template_key,version,action_id,label_en,label_ur FROM whatsapp_content_version_action_labels ORDER BY template_key,version,action_id").all<{ template_key: string; version: number; action_id: string; label_en: string; label_ur: string }>()
   ]);
+  const labelsByVersion = new Map<string, { en: Partial<Record<WhatsAppActionId, string>>; ur: Partial<Record<WhatsAppActionId, string>> }>();
+  for (const row of actionLabels.results ?? []) {
+    const mapKey = `${row.template_key}:${row.version}`;
+    const labels = labelsByVersion.get(mapKey) ?? { en: {}, ur: {} };
+    const actionId = WhatsAppActionId.parse(row.action_id);
+    labels.en[actionId] = row.label_en;
+    labels.ur[actionId] = row.label_ur;
+    labelsByVersion.set(mapKey, labels);
+  }
   const galleryByTemplate = new Map<string, Array<Record<string, unknown>>>();
   for (const row of gallery.results ?? []) {
     const templateKey = String(row.template_key);
@@ -429,12 +450,17 @@ app.get("/api/whatsapp-content", async (c) => {
     galleryByTemplate.set(templateKey, items);
   }
   const templates = result.results.map((row) => {
-    const parse = (en: unknown, ur: unknown, media: unknown) => {
+    const parse = (en: unknown, ur: unknown, media: unknown, version: number | null) => {
       if (typeof en !== "string" || typeof ur !== "string") return undefined;
-      try { return { contentEn: JSON.parse(en), contentUr: JSON.parse(ur), ...(typeof media === "string" ? { mediaR2Key: media } : {}) }; } catch { return undefined; }
+      try {
+        const labels = version == null ? undefined : labelsByVersion.get(`${String(row.template_key)}:${version}`);
+        return { contentEn: { ...JSON.parse(en), ...(labels && Object.keys(labels.en).length ? { actionLabels: labels.en } : {}) }, contentUr: { ...JSON.parse(ur), ...(labels && Object.keys(labels.ur).length ? { actionLabels: labels.ur } : {}) }, ...(typeof media === "string" ? { mediaR2Key: media } : {}) };
+      } catch { return undefined; }
     };
     const templateKey = String(row.template_key);
-    return { templateKey, flowOrder: row.flow_order == null ? null : Number(row.flow_order), section: row.section == null ? "Other" : String(row.section), draftVersion: row.draft_version == null ? null : Number(row.draft_version), publishedVersion: row.published_version == null ? null : Number(row.published_version), draft: parse(row.draft_en, row.draft_ur, row.draft_media), published: parse(row.published_en, row.published_ur, row.published_media), media: galleryByTemplate.get(templateKey) ?? [] };
+    const draftVersion = row.draft_version == null ? null : Number(row.draft_version);
+    const publishedVersion = row.published_version == null ? null : Number(row.published_version);
+    return { templateKey, actionIds: whatsAppActionIdsForTemplate(WhatsAppTemplateKey.parse(templateKey)), flowOrder: row.flow_order == null ? null : Number(row.flow_order), section: row.section == null ? "Other" : String(row.section), draftVersion, publishedVersion, draft: parse(row.draft_en, row.draft_ur, row.draft_media, draftVersion), published: parse(row.published_en, row.published_ur, row.published_media, publishedVersion), media: galleryByTemplate.get(templateKey) ?? [] };
   });
   return c.json({ templates });
 });
@@ -595,7 +621,7 @@ app.post("/api/whatsapp-content/:key/draft", async (c) => {
   try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
   if (body.confirmation !== key) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
   let draft;
-  try { draft = parseWhatsAppContentDraft({ contentEn: body.contentEn, contentUr: body.contentUr, ...(body.mediaR2Key === undefined ? {} : { mediaR2Key: body.mediaR2Key }) }); } catch (error) { return c.json({ error: error instanceof Error && /^WHATSAPP_CONTENT_/.test(error.message) ? error.message : "WHATSAPP_CONTENT_INVALID" }, 400); }
+  try { draft = parseWhatsAppContentDraft({ contentEn: body.contentEn, contentUr: body.contentUr, ...(body.mediaR2Key === undefined ? {} : { mediaR2Key: body.mediaR2Key }) }, key); } catch (error) { return c.json({ error: error instanceof Error && /^WHATSAPP_CONTENT_/.test(error.message) ? error.message : "WHATSAPP_CONTENT_INVALID" }, 400); }
   if (draft.mediaR2Key) {
     if (!c.env.RECEIPTS || !await c.env.RECEIPTS.head(draft.mediaR2Key)) return c.json({ error: "WHATSAPP_CONTENT_MEDIA_NOT_FOUND" }, 400);
   }
@@ -605,12 +631,18 @@ app.post("/api/whatsapp-content/:key/draft", async (c) => {
   const version = Number(latest?.version ?? 0) + 1;
   const now = new Date().toISOString();
   await c.env.DB.batch([
-    c.env.DB.prepare("INSERT INTO whatsapp_content_template_versions (id,template_key,version,status,content_en_json,content_ur_json,media_r2_key,created_at,created_by) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), key, version, "DRAFT", JSON.stringify(draft.contentEn), JSON.stringify(draft.contentUr), draft.mediaR2Key ?? null, now, c.env.ADMIN_EMAIL),
+    c.env.DB.prepare("INSERT INTO whatsapp_content_template_versions (id,template_key,version,status,content_en_json,content_ur_json,media_r2_key,created_at,created_by) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), key, version, "DRAFT", JSON.stringify(contentWithoutActionLabels(draft.contentEn)), JSON.stringify(contentWithoutActionLabels(draft.contentUr)), draft.mediaR2Key ?? null, now, c.env.ADMIN_EMAIL),
+    ...actionLabelStatements(c.env.DB, key, version, draft.contentEn, draft.contentUr, now, c.env.ADMIN_EMAIL),
     c.env.DB.prepare("UPDATE whatsapp_content_templates SET draft_version=?,updated_at=?,updated_by=? WHERE template_key=?").bind(version, now, c.env.ADMIN_EMAIL, key),
     auditStatement(c.env.DB, "WHATSAPP_CONTENT_DRAFT_SAVED", "WHATSAPP_CONTENT_TEMPLATE", key, { version, hasPrivateMedia: Boolean(draft.mediaR2Key) }, now, c.env.ADMIN_EMAIL)
   ]);
   return c.json({ ok: true, templateKey: key, version }, 201);
 });
+
+export function whatsappContentMediaSnapshotMatches(current: Array<{ id: string; active: number; sort_order: number }>, published: Array<{ id: string; active: number; sort_order: number }>): boolean {
+  const signature = (rows: Array<{ id: string; active: number; sort_order: number }>) => rows.map((row) => `${row.id}:${Number(row.active) === 1 ? 1 : 0}:${Number(row.sort_order)}`).join("|");
+  return signature(current) === signature(published);
+}
 
 async function publishWhatsAppContent(c: AdminContext, rollback: boolean) {
   if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
@@ -621,30 +653,55 @@ async function publishWhatsAppContent(c: AdminContext, rollback: boolean) {
   try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
   const version = typeof body.version === "number" && Number.isInteger(body.version) && body.version > 0 ? body.version : 0;
   if (!version || body.confirmation !== `${key}:${version}`) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
-  const [template, target] = await Promise.all([
+  const [template, target, targetLabels] = await Promise.all([
     c.env.DB.prepare("SELECT published_version,draft_version FROM whatsapp_content_templates WHERE template_key=?").bind(key).first<{ published_version: number | null; draft_version: number | null }>(),
-    c.env.DB.prepare("SELECT status,content_en_json,content_ur_json,media_r2_key FROM whatsapp_content_template_versions WHERE template_key=? AND version=?").bind(key, version).first<{ status: string; content_en_json: string; content_ur_json: string; media_r2_key: string | null }>()
+    c.env.DB.prepare("SELECT status,content_en_json,content_ur_json,media_r2_key FROM whatsapp_content_template_versions WHERE template_key=? AND version=?").bind(key, version).first<{ status: string; content_en_json: string; content_ur_json: string; media_r2_key: string | null }>(),
+    c.env.DB.prepare("SELECT action_id,label_en,label_ur FROM whatsapp_content_version_action_labels WHERE template_key=? AND version=? ORDER BY action_id").bind(key, version).all<{ action_id: string; label_en: string; label_ur: string }>()
   ]);
   if (!template || !target) return c.json({ error: "WHATSAPP_TEMPLATE_VERSION_NOT_FOUND" }, 404);
-  if (!rollback && target.status === "PUBLISHED" && template.published_version === version && template.draft_version === version) return c.json({ ok: true, templateKey: key, version, upToDate: true });
-  if ((!rollback && target.status !== "DRAFT") || (rollback && !["PUBLISHED", "ARCHIVED"].includes(target.status))) return c.json({ error: rollback ? "WHATSAPP_CONTENT_ROLLBACK_NOT_ALLOWED" : "WHATSAPP_CONTENT_PUBLISH_REQUIRES_DRAFT" }, 409);
-  try { parseWhatsAppContentDraft({ contentEn: JSON.parse(target.content_en_json), contentUr: JSON.parse(target.content_ur_json), ...(target.media_r2_key ? { mediaR2Key: target.media_r2_key } : {}) }); } catch { return c.json({ error: "WHATSAPP_CONTENT_INVALID" }, 409); }
+  const enActionLabels: Partial<Record<WhatsAppActionId, string>> = {};
+  const urActionLabels: Partial<Record<WhatsAppActionId, string>> = {};
+  for (const label of targetLabels.results ?? []) {
+    const actionId = WhatsAppActionId.parse(label.action_id);
+    enActionLabels[actionId] = label.label_en;
+    urActionLabels[actionId] = label.label_ur;
+  }
+  try { parseWhatsAppContentDraft({ contentEn: { ...JSON.parse(target.content_en_json), ...(Object.keys(enActionLabels).length ? { actionLabels: enActionLabels } : {}) }, contentUr: { ...JSON.parse(target.content_ur_json), ...(Object.keys(urActionLabels).length ? { actionLabels: urActionLabels } : {}) }, ...(target.media_r2_key ? { mediaR2Key: target.media_r2_key } : {}) }, key); } catch { return c.json({ error: "WHATSAPP_CONTENT_INVALID" }, 409); }
   const now = new Date().toISOString();
   const gallery = rollback ? { results: [] as Array<{ id: string; active: number; sort_order: number }> } : await c.env.DB.prepare("SELECT id,active,sort_order FROM whatsapp_content_media WHERE template_key=? AND enabled=1 ORDER BY active DESC,sort_order,created_at,id").bind(key).all<{ id: string; active: number; sort_order: number }>();
+  let publishVersion = version;
+  const cloneStatements = [];
+  if (!rollback && target.status === "PUBLISHED" && template.published_version === version && template.draft_version === version) {
+    const publishedGallery = await c.env.DB.prepare("SELECT media_id AS id,active,sort_order FROM whatsapp_content_version_media WHERE template_key=? AND version=? ORDER BY active DESC,sort_order,media_id").bind(key, version).all<{ id: string; active: number; sort_order: number }>();
+    if (whatsappContentMediaSnapshotMatches(gallery.results, publishedGallery.results)) return c.json({ ok: true, templateKey: key, version, upToDate: true });
+    const latest = await c.env.DB.prepare("SELECT COALESCE(MAX(version),0) AS version FROM whatsapp_content_template_versions WHERE template_key=?").bind(key).first<{ version: number }>();
+    publishVersion = Number(latest?.version ?? 0) + 1;
+    cloneStatements.push(
+      c.env.DB.prepare("INSERT INTO whatsapp_content_template_versions (id,template_key,version,status,content_en_json,content_ur_json,media_r2_key,created_at,created_by) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), key, publishVersion, "DRAFT", target.content_en_json, target.content_ur_json, target.media_r2_key, now, c.env.ADMIN_EMAIL),
+      c.env.DB.prepare("INSERT INTO whatsapp_content_version_action_labels (template_key,version,action_id,label_en,label_ur,created_at,created_by) SELECT template_key,?,action_id,label_en,label_ur,?,? FROM whatsapp_content_version_action_labels WHERE template_key=? AND version=?").bind(publishVersion, now, c.env.ADMIN_EMAIL, key, version),
+      c.env.DB.prepare("UPDATE whatsapp_content_templates SET draft_version=?,updated_at=?,updated_by=? WHERE template_key=?").bind(publishVersion, now, c.env.ADMIN_EMAIL, key)
+    );
+  } else if ((!rollback && target.status !== "DRAFT") || (rollback && !["PUBLISHED", "ARCHIVED"].includes(target.status))) {
+    return c.json({ error: rollback ? "WHATSAPP_CONTENT_ROLLBACK_NOT_ALLOWED" : "WHATSAPP_CONTENT_PUBLISH_REQUIRES_DRAFT" }, 409);
+  }
   const snapshotStatements = rollback ? [] : [
-    c.env.DB.prepare("DELETE FROM whatsapp_content_version_media WHERE template_key=? AND version=?").bind(key, version),
-    ...gallery.results.map((media) => c.env.DB.prepare("INSERT INTO whatsapp_content_version_media (template_key,version,media_id,active,sort_order,created_at,created_by) VALUES (?,?,?,?,?,?,?)").bind(key, version, media.id, Number(media.active) === 1 ? 1 : 0, Number(media.sort_order), now, c.env.ADMIN_EMAIL))
+    c.env.DB.prepare("DELETE FROM whatsapp_content_version_media WHERE template_key=? AND version=?").bind(key, publishVersion),
+    ...gallery.results.map((media) => c.env.DB.prepare("INSERT INTO whatsapp_content_version_media (template_key,version,media_id,active,sort_order,created_at,created_by) VALUES (?,?,?,?,?,?,?)").bind(key, publishVersion, media.id, Number(media.active) === 1 ? 1 : 0, Number(media.sort_order), now, c.env.ADMIN_EMAIL))
   ];
-  const legacyMediaStatement = !rollback && gallery.results.length ? [c.env.DB.prepare("UPDATE whatsapp_content_template_versions SET media_r2_key=(SELECT r2_key FROM whatsapp_content_media WHERE id=?) WHERE template_key=? AND version=?").bind(gallery.results[0].id, key, version)] : [];
+  const legacyMediaStatement = !rollback && gallery.results.length ? [c.env.DB.prepare("UPDATE whatsapp_content_template_versions SET media_r2_key=(SELECT r2_key FROM whatsapp_content_media WHERE id=?) WHERE template_key=? AND version=?").bind(gallery.results[0].id, key, publishVersion)] : [];
+  const templatePublishStatement = rollback
+    ? c.env.DB.prepare("UPDATE whatsapp_content_templates SET published_version=?,updated_at=?,updated_by=? WHERE template_key=?").bind(publishVersion, now, c.env.ADMIN_EMAIL, key)
+    : c.env.DB.prepare("UPDATE whatsapp_content_templates SET published_version=?,draft_version=?,updated_at=?,updated_by=? WHERE template_key=?").bind(publishVersion, publishVersion, now, c.env.ADMIN_EMAIL, key);
   await c.env.DB.batch([
+    ...cloneStatements,
     ...snapshotStatements,
     ...legacyMediaStatement,
-    c.env.DB.prepare("UPDATE whatsapp_content_template_versions SET status='ARCHIVED' WHERE template_key=? AND status='PUBLISHED' AND version<>?").bind(key, version),
-    c.env.DB.prepare("UPDATE whatsapp_content_template_versions SET status='PUBLISHED' WHERE template_key=? AND version=?").bind(key, version),
-    c.env.DB.prepare("UPDATE whatsapp_content_templates SET published_version=?,updated_at=?,updated_by=? WHERE template_key=?").bind(version, now, c.env.ADMIN_EMAIL, key),
-    auditStatement(c.env.DB, rollback ? "WHATSAPP_CONTENT_ROLLED_BACK" : "WHATSAPP_CONTENT_PUBLISHED", "WHATSAPP_CONTENT_TEMPLATE", key, { version, previousPublishedVersion: template.published_version, mediaCount: rollback ? undefined : gallery.results.length }, now, c.env.ADMIN_EMAIL)
+    c.env.DB.prepare("UPDATE whatsapp_content_template_versions SET status='ARCHIVED' WHERE template_key=? AND status='PUBLISHED' AND version<>?").bind(key, publishVersion),
+    c.env.DB.prepare("UPDATE whatsapp_content_template_versions SET status='PUBLISHED' WHERE template_key=? AND version=?").bind(key, publishVersion),
+    templatePublishStatement,
+    auditStatement(c.env.DB, rollback ? "WHATSAPP_CONTENT_ROLLED_BACK" : "WHATSAPP_CONTENT_PUBLISHED", "WHATSAPP_CONTENT_TEMPLATE", key, { version: publishVersion, sourceVersion: publishVersion === version ? undefined : version, previousPublishedVersion: template.published_version, mediaCount: rollback ? undefined : gallery.results.length }, now, c.env.ADMIN_EMAIL)
   ]);
-  return c.json({ ok: true, templateKey: key, publishedVersion: version, rolledBack: rollback });
+  return c.json({ ok: true, templateKey: key, publishedVersion: publishVersion, rolledBack: rollback });
 }
 
 app.post("/api/whatsapp-content/:key/publish", (c) => publishWhatsAppContent(c, false));
@@ -730,6 +787,20 @@ app.post("/api/meta-activation/flows/:id/endpoint", async (c) => {
 
 app.post("/api/meta-activation/actions/:action", async (c) => {
   const rawAction = c.req.param("action");
+  if (rawAction === "send-welcome-media-test") {
+    if (!authorized(c)) return c.json({ error: "UNAUTHORIZED" }, 401);
+    const key = "welcome_media_test:923034901810:v6";
+    const existing = await c.env.DB.prepare("SELECT status,provider_message_id FROM outbound_messages WHERE idempotency_key=?").bind(key).first<{ status: string; provider_message_id: string | null }>();
+    if (existing) return c.json({ executed: false, status: existing.status, messageId: existing.provider_message_id });
+    const [ur, en] = await Promise.all([publishedWhatsAppContent(c.env.DB, "WELCOME", "ur", "WELCOME_TEST:923034901810"), publishedWhatsAppContent(c.env.DB, "WELCOME", "en", "WELCOME_TEST:923034901810")]);
+    if (!ur || !en || !ur.mediaR2Key || !ur.mediaMimeType || !["image/jpeg", "image/png"].includes(ur.mediaMimeType)) return c.json({ executed: false, reason: "WELCOME_PUBLISHED_MEDIA_REQUIRED" }, 409);
+    const object = await c.env.RECEIPTS.get(ur.mediaR2Key);
+    if (!object) return c.json({ executed: false, reason: "WELCOME_R2_MEDIA_MISSING" }, 409);
+    const provider = createWhatsAppProvider("meta", { enabled: true, graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", phoneNumberId: c.env.META_PHONE_NUMBER_ID, accessToken: c.env.META_ACCESS_TOKEN, appSecret: c.env.META_APP_SECRET });
+    const now = new Date().toISOString();
+    await c.env.DB.prepare("INSERT INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), key, "WELCOME_MEDIA_TEST", "PENDING", 0, now, now).run();
+    try { const sent = await provider.sendInteractive("+923034901810", `${ur.text}\n\n${en.text}`, [{ id: "LANG_UR", title: whatsAppActionLabel(ur, "LANG_UR") }, { id: "LANG_EN", title: whatsAppActionLabel(en, "LANG_EN") }], { body: await object.arrayBuffer(), mimeType: ur.mediaMimeType as "image/jpeg" | "image/png", filename: "welcome.jpg" }); await c.env.DB.prepare("UPDATE outbound_messages SET status='SENT',provider_message_id=?,attempt_count=1,updated_at=? WHERE idempotency_key=?").bind(sent.providerMessageId, new Date().toISOString(), key).run(); return c.json({ executed: true, messageId: sent.providerMessageId }); } catch (error) { const safe = error instanceof Error ? error.message.slice(0, 160) : "WELCOME_MEDIA_SEND_FAILED"; await c.env.DB.prepare("UPDATE outbound_messages SET status='FAILED',attempt_count=1,last_error=?,updated_at=? WHERE idempotency_key=?").bind(safe, new Date().toISOString(), key).run(); return c.json({ executed: false, reason: safe }, 502); }
+  }
   if (rawAction === "retry-failed-reply") {
     if (!authorized(c)) return c.json({ error: "UNAUTHORIZED" }, 401);
     const row = await c.env.DB.prepare("SELECT id,idempotency_key FROM outbound_messages WHERE idempotency_key LIKE 'welcome_reply:%' AND status='FAILED' AND provider_message_id IS NULL ORDER BY updated_at ASC LIMIT 1").first<{ id: string; idempotency_key: string }>();

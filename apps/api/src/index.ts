@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { applyFertilizerDecision, createWhatsAppProvider, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isPaymentMethodComplete, isTerminalOutboxStatus, MetaCapiProvider, MetaFlowEnvelope, normalizePaymentMethodRow, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInstantFormSubmission, persistWebhookRecords, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, WhatsAppTemplateKey } from "@gfs/core";
+import { applyFertilizerDecision, createWhatsAppProvider, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isPaymentMethodComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, MetaCapiProvider, MetaFlowEnvelope, normalizePaymentMethodRow, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInstantFormSubmission, persistWebhookRecords, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, whatsAppActionLabel, WhatsAppTemplateKey } from "@gfs/core";
 import { handleMetaFlowPayload } from "./flow-endpoint";
 
 type Env = {
@@ -47,6 +47,7 @@ async function contentFor(db: D1Database, key: WhatsAppTemplateKey, fallback: st
     buttonLabel: content?.buttonLabel,
     listButtonLabel: content?.listButtonLabel,
     listDescription: content?.listDescription,
+    actionLabels: content?.actionLabels,
     mediaId: content?.mediaId,
     mediaR2Key: content?.mediaR2Key,
     mediaMimeType: content?.mediaMimeType
@@ -64,15 +65,19 @@ async function contentImageFor(db: D1Database, bucket: R2Bucket, key: WhatsAppTe
     const selected = await selectPublishedWhatsAppContentMedia(db, key, sessionKey);
     if (!selected) return undefined;
     const object = await bucket.get(selected.r2Key);
-    if (!object) return undefined;
+    if (!object) {
+      logWhatsAppContentMediaError(key, new Error("WHATSAPP_CONTENT_MEDIA_OBJECT_MISSING"));
+      return undefined;
+    }
     return { body: await object.arrayBuffer(), mimeType: selected.mimeType, filename: `${key.toLowerCase()}.${selected.mimeType === "image/png" ? "png" : "jpg"}` };
-  } catch {
+  } catch (error) {
+    logWhatsAppContentMediaError(key, error);
     return undefined;
   }
 }
 
-function guidedReplyMediaKey(normalized: string, state: string, nextState: string): WhatsAppTemplateKey | undefined {
-  if (normalized === "CANCEL" || (state === "NEW" && normalized === "START")) return "WELCOME";
+export function guidedReplyMediaKey(normalized: string, state: string, nextState: string): WhatsAppTemplateKey | undefined {
+  if (normalized === "CANCEL" || (state === "NEW" && nextState === "LANGUAGE")) return "WELCOME";
   if (/^(STATUS|CHECK_ORDER)$/i.test(normalized)) return "ORDER_STATUS";
   if (/^(HELP|SUPPORT)$/i.test(normalized)) return "SUPPORT";
   if (normalized === "PAYMENT_HELP") return "PAYMENT";
@@ -130,11 +135,11 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   let nextState = state;
   let reply: string | null = null;
   if (normalized === "CANCEL") { nextState = "NEW"; data = {}; reply = (await sessionContent("WELCOME", "Order entry cancelled. Tap below when you are ready to start.")).text; }
-  else if (normalized === "BACK" && state === "REVIEW") { nextState = "CONTACT"; reply = "Please re-enter your contact number."; }
+  else if (normalized === "BACK" && state === "REVIEW") { nextState = "CONTACT"; reply = (await sessionContent("FIELD_CONTACT_NUMBER", "Please reply with your contact number.")).text; }
   else if (/^(STATUS|CHECK_ORDER)$/i.test(normalized)) { const order = await getLatestOrderForWaId(db, event.from, data.orderId); const status = await sessionContent("ORDER_STATUS", "Use Check Order to see the current order and payment status."); const paymentStatusCopy = order ? await paymentCopyForOrder(db, order.id, "status_copy") : undefined; reply = order ? `${paymentStatusCopy ?? status.text}\n${formatCustomerOrderStatus(order)}` : "No order was found for this WhatsApp conversation."; }
   else if (/^(HELP|SUPPORT)$/i.test(normalized)) { reply = (await sessionContent("SUPPORT", "Reply START to begin, STATUS to check an order, or CANCEL to stop the current order entry.")).text; }
   else if (state === "NEW" && (normalized === "START" || Boolean(text))) { nextState = "LANGUAGE"; const [welcomeUr, welcomeEn] = await Promise.all([contentFor(db, "WELCOME", "گٹ فری سیڈز میں خوش آمدید!", {}, `CHAT:${event.from}`, "ur"), contentFor(db, "WELCOME", "Welcome to Get Free Seeds!", {}, `CHAT:${event.from}`, "en")]); reply = `${welcomeUr.text}\n\n${welcomeEn.text}`; }
-  else if (state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) { data.language = normalized === "LANG_UR" ? "ur" : "en"; nextState = checkoutMode === "guided" ? "FERTILIZER" : "FLOW_ACTIVE"; reply = normalized === "LANG_UR" ? "آپ کا آرڈر شروع ہو رہا ہے۔" : "Your order is starting."; }
+  else if (state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) { data.language = normalized === "LANG_UR" ? "ur" : "en"; nextState = checkoutMode === "guided" ? "FERTILIZER" : "FLOW_ACTIVE"; reply = (await sessionContent("FERTILIZER", "Would you like to add Micro Nutrients Fertilizer, or continue with seeds only?")).text; }
   else if (state === "LANGUAGE") { const [welcomeUr, welcomeEn] = await Promise.all([contentFor(db, "WELCOME", "گٹ فری سیڈز میں خوش آمدید!", {}, `CHAT:${event.from}`, "ur"), contentFor(db, "WELCOME", "Welcome to Get Free Seeds!", {}, `CHAT:${event.from}`, "en")]); reply = `${welcomeUr.text}\n\n${welcomeEn.text}`; }
   else if (state === "NEW" && normalized === "GET_FREE_PACKS") { nextState = "FERTILIZER"; reply = (await sessionContent("OFFER", "Get 5 seed packs FREE. Choose your option to continue.")).text; }
   else if (state === "FULL_NAME") { data.fullName = text; nextState = "ADDRESS"; reply = (await sessionContent("FIELD_DELIVERY_ADDRESS", "Please reply with your complete delivery address.")).text; }
@@ -149,12 +154,11 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   else if (state === "PAYMENT_METHOD") { if (!/^(JAZZCASH|PAY_JAZZCASH)$/i.test(normalized) || !data.orderId) reply = (await sessionContent("PAYMENT", "Tap JazzCash to view the available verified payment instructions.", { orderNumber: data.orderNumber ?? "" })).text; else { try { const selected = await selectPaymentMethod(db, data.orderId, "JAZZCASH"); nextState = "PAYMENT_PENDING"; reply = `${selected.message}\nReference: ${selected.orderNumber}`; } catch { reply = "That payment method is not currently available."; } } }
   else if (state === "PAYMENT_PENDING" && /^(HELP|PAYMENT_HELP)$/i.test(normalized)) { reply = (await paymentCopyForOrder(db, data.orderId, "payment_help_copy")) ?? (await sessionContent("PAYMENT", "Upload your JazzCash receipt here after payment. Garden Shop will review it manually.", { orderNumber: data.orderNumber ?? "" })).text; }
   else if (state === "PAYMENT_PENDING" && normalized === "START") { reply = `You already have order ${data.orderNumber ?? "in progress"}. Upload the receipt, check status, or contact support.`; }
-  else if (state === "COMPLETE" && normalized === "START") { nextState = "FULL_NAME"; data = {}; reply = "Starting a new order. Please reply with your full name."; }
+  else if (state === "COMPLETE" && normalized === "START") { nextState = "FULL_NAME"; data = {}; reply = (await sessionContent("FIELD_FULL_NAME", "Please reply with your full name.")).text; }
   if (!reply) return false;
-  const now = new Date().toISOString();
-  await db.prepare("INSERT INTO whatsapp_conversations (id,wa_id,state,state_data,last_inbound_message_id,created_at,updated_at) VALUES (?,?,?,?,?,?,?) ON CONFLICT(wa_id) DO UPDATE SET state=excluded.state,state_data=excluded.state_data,last_inbound_message_id=excluded.last_inbound_message_id,updated_at=excluded.updated_at").bind(crypto.randomUUID(), event.from, nextState, JSON.stringify(data), event.id, now, now).run();
-  const [welcome, fertilizer, province, review, status, support, payment] = await Promise.all([
-    sessionContent("WELCOME", "Welcome to Get Free Seeds! Tap below to begin your order."),
+  const [welcomeEn, welcomeUr, fertilizer, province, review, status, support, payment] = await Promise.all([
+    contentFor(db, "WELCOME", "Welcome to Get Free Seeds! Tap below to begin your order.", {}, `CHAT:${event.from}`, "en"),
+    contentFor(db, "WELCOME", "گٹ فری سیڈز میں خوش آمدید!", {}, `CHAT:${event.from}`, "ur"),
     sessionContent("FERTILIZER", "Would you like to add Micro Nutrients Fertilizer, or continue with seeds only?"),
     sessionContent("PROVINCE_DELIVERY", "Choose your province for delivery."),
     sessionContent("REVIEW", "Review your order. Tap Place Order to confirm."),
@@ -163,9 +167,11 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
     sessionContent("PAYMENT", "Choose a verified payment method.")
   ]);
   const sessionFlowToken = checkoutMode !== "guided" && state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR") && flowTokenSecret ? await createFlowToken(event.from, event.id, flowTokenSecret) : undefined;
-  const options: ConversationReplyOptions = (state === "LANGUAGE" || (state === "NEW" && Boolean(text)) || normalized === "CANCEL") && !(state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) ? { buttons: [{ id: "LANG_UR", title: "اردو" }, { id: "LANG_EN", title: "English" }] } : sessionFlowToken ? { flow: { id: flowId, token: sessionFlowToken } } : (state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) || state === "NEW" && normalized === "GET_FREE_PACKS" ? { buttons: [{ id: "ADD_FERTILIZER", title: "Add Fertilizer" }, { id: "SEEDS_ONLY", title: fertilizer.buttonLabel ?? "Seeds Only" }] } : state === "FERTILIZER" && /^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/i.test(normalized) ? { list: { buttonText: province.listButtonLabel ?? "Select Province", rows: ["Punjab", "Islamabad", "Sindh", "KPK", "Balochistan", "AJK", "Gilgit Baltistan"].map((provinceName) => ({ id: `PROVINCE_${provinceName.toUpperCase().replace(/ /g, "_")}`, title: provinceName, ...(province.listDescription ? { description: province.listDescription } : {}) })) } } : state === "CONTACT" ? { buttons: [{ id: "PLACE_ORDER", title: review.buttonLabel ?? "Place Order" }, { id: "BACK", title: "Back" }] } : state === "REVIEW" && /^(CONFIRM|PLACE_ORDER)$/i.test(normalized) ? { buttons: [{ id: "PAY_JAZZCASH", title: payment.buttonLabel ?? "JazzCash" }, { id: "CHECK_ORDER", title: status.buttonLabel ?? "Check Order" }] } : state === "PAYMENT_PENDING" ? { buttons: [{ id: "CHECK_ORDER", title: status.buttonLabel ?? "Check Order" }, { id: "PAYMENT_HELP", title: "Payment Help" }, { id: "SUPPORT", title: support.buttonLabel ?? "Support" }] } : {};
+  const options: ConversationReplyOptions = (state === "LANGUAGE" || (state === "NEW" && Boolean(text)) || normalized === "CANCEL") && !(state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) ? { buttons: [{ id: "LANG_UR", title: whatsAppActionLabel(welcomeUr, "LANG_UR") }, { id: "LANG_EN", title: whatsAppActionLabel(welcomeEn, "LANG_EN") }] } : sessionFlowToken ? { flow: { id: flowId, token: sessionFlowToken } } : (state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) || state === "NEW" && normalized === "GET_FREE_PACKS" ? { buttons: [{ id: "ADD_FERTILIZER", title: whatsAppActionLabel(fertilizer, "ADD_FERTILIZER") }, { id: "SEEDS_ONLY", title: whatsAppActionLabel(fertilizer, "SEEDS_ONLY") }] } : state === "FERTILIZER" && /^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/i.test(normalized) ? { list: { buttonText: province.listButtonLabel!, rows: ["Punjab", "Islamabad", "Sindh", "KPK", "Balochistan", "AJK", "Gilgit Baltistan"].map((provinceName) => ({ id: `PROVINCE_${provinceName.toUpperCase().replace(/ /g, "_")}`, title: provinceName, description: province.listDescription! })) } } : state === "CONTACT" ? { buttons: [{ id: "PLACE_ORDER", title: whatsAppActionLabel(review, "PLACE_ORDER") }, { id: "BACK", title: whatsAppActionLabel(review, "BACK") }] } : state === "REVIEW" && /^(CONFIRM|PLACE_ORDER)$/i.test(normalized) ? { buttons: [{ id: "PAY_JAZZCASH", title: whatsAppActionLabel(payment, "PAY_JAZZCASH") }, { id: "CHECK_ORDER", title: whatsAppActionLabel(status, "CHECK_ORDER") }] } : state === "PAYMENT_PENDING" ? { buttons: [{ id: "CHECK_ORDER", title: whatsAppActionLabel(status, "CHECK_ORDER") }, { id: "PAYMENT_HELP", title: whatsAppActionLabel(payment, "PAYMENT_HELP") }, { id: "SUPPORT", title: whatsAppActionLabel(support, "SUPPORT") }] } : {};
   const mediaKey = guidedReplyMediaKey(normalized, state, nextState);
   if (mediaKey) options.image = await contentImageFor(db, bucket, mediaKey, `CHAT:${event.from}`);
+  const now = new Date().toISOString();
+  await db.prepare("INSERT INTO whatsapp_conversations (id,wa_id,state,state_data,last_inbound_message_id,created_at,updated_at) VALUES (?,?,?,?,?,?,?) ON CONFLICT(wa_id) DO UPDATE SET state=excluded.state,state_data=excluded.state_data,last_inbound_message_id=excluded.last_inbound_message_id,updated_at=excluded.updated_at").bind(crypto.randomUUID(), event.from, nextState, JSON.stringify(data), event.id, now, now).run();
   const sent = await sendConversationReply(db, provider, event.from, event.id, reply, options);
   if (!sent.sent) await db.prepare("UPDATE whatsapp_conversations SET state=?,state_data=?,updated_at=? WHERE wa_id=? AND last_inbound_message_id=?").bind(state, originalStateData, new Date().toISOString(), event.from, event.id).run();
   return true;

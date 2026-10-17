@@ -95,20 +95,34 @@ function mediaFromRow(row: Record<string, unknown>): WhatsAppContentMedia {
   };
 }
 
+export function logWhatsAppContentMediaError(templateKey: WhatsAppTemplateKey, error: unknown): void {
+  const code = error instanceof Error && /^WHATSAPP_CONTENT_[A-Z0-9_]+$/.test(error.message) ? error.message : "WHATSAPP_CONTENT_MEDIA_FAILED";
+  // eslint-disable-next-line no-console -- runtime CMS failures must be visible without customer/session data
+  console.error("WHATSAPP_CONTENT_MEDIA_ERROR", { templateKey, code });
+}
+
+async function validPersistedSelection(db: D1Database, templateKey: WhatsAppTemplateKey, sessionKey: string): Promise<Record<string, unknown> | null> {
+  return db.prepare("SELECT m.* FROM whatsapp_content_media_selections s JOIN whatsapp_content_templates t ON t.template_key=s.template_key JOIN whatsapp_content_media m ON m.id=s.media_id JOIN whatsapp_content_version_media vm ON vm.template_key=s.template_key AND vm.version=t.published_version AND vm.media_id=s.media_id WHERE s.session_key=? AND s.template_key=? AND s.content_version=t.published_version AND m.enabled=1").bind(sessionKey, templateKey).first<Record<string, unknown>>();
+}
+
 export async function selectPublishedWhatsAppContentMedia(db: D1Database, templateKey: WhatsAppTemplateKey, sessionKey: string): Promise<WhatsAppContentMedia | undefined> {
   if (!sessionKey || sessionKey.length > 200) throw new Error("WHATSAPP_CONTENT_MEDIA_SESSION_INVALID");
-  const existing = await db.prepare("SELECT m.* FROM whatsapp_content_media_selections s JOIN whatsapp_content_media m ON m.id=s.media_id WHERE s.session_key=? AND s.template_key=?").bind(sessionKey, templateKey).first<Record<string, unknown>>();
-  if (existing) return mediaFromRow(existing);
-  const template = await db.prepare("SELECT published_version FROM whatsapp_content_templates WHERE template_key=?").bind(templateKey).first<{ published_version: number | null }>();
-  const version = Number(template?.published_version ?? 0);
-  if (!version) return undefined;
-  const result = await db.prepare("SELECT m.*,vm.active AS published_active,vm.sort_order AS published_sort_order FROM whatsapp_content_version_media vm JOIN whatsapp_content_media m ON m.id=vm.media_id WHERE vm.template_key=? AND vm.version=? AND m.enabled=1 ORDER BY vm.active DESC,vm.sort_order,m.created_at,m.id").bind(templateKey, version).all<Record<string, unknown>>();
-  const candidates = result.results ?? [];
-  if (!candidates.length) return undefined;
-  const active = candidates.filter((row) => Number(row.published_active) === 1);
-  const selected = (active.length ? active : candidates)[deterministicMediaIndex(sessionKey, templateKey, (active.length ? active : candidates).length)];
-  const now = new Date().toISOString();
-  await db.prepare("INSERT OR IGNORE INTO whatsapp_content_media_selections (id,session_key,template_key,media_id,content_version,created_at) VALUES (?,?,?,?,?,?)").bind(crypto.randomUUID(), sessionKey, templateKey, String(selected.id), version, now).run();
-  const persisted = await db.prepare("SELECT m.* FROM whatsapp_content_media_selections s JOIN whatsapp_content_media m ON m.id=s.media_id WHERE s.session_key=? AND s.template_key=?").bind(sessionKey, templateKey).first<Record<string, unknown>>();
-  return persisted ? mediaFromRow(persisted) : mediaFromRow(selected);
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const existing = await validPersistedSelection(db, templateKey, sessionKey);
+    if (existing) return mediaFromRow(existing);
+    await db.prepare("DELETE FROM whatsapp_content_media_selections WHERE session_key=? AND template_key=?").bind(sessionKey, templateKey).run();
+    const template = await db.prepare("SELECT published_version FROM whatsapp_content_templates WHERE template_key=?").bind(templateKey).first<{ published_version: number | null }>();
+    const version = Number(template?.published_version ?? 0);
+    if (!version) return undefined;
+    const result = await db.prepare("SELECT m.*,vm.active AS published_active,vm.sort_order AS published_sort_order FROM whatsapp_content_version_media vm JOIN whatsapp_content_media m ON m.id=vm.media_id WHERE vm.template_key=? AND vm.version=? AND m.enabled=1 ORDER BY vm.active DESC,vm.sort_order,m.created_at,m.id").bind(templateKey, version).all<Record<string, unknown>>();
+    const candidates = result.results ?? [];
+    if (!candidates.length) return undefined;
+    const active = candidates.filter((row) => Number(row.published_active) === 1);
+    const selected = (active.length ? active : candidates)[deterministicMediaIndex(sessionKey, templateKey, (active.length ? active : candidates).length)];
+    const now = new Date().toISOString();
+    await db.prepare("INSERT OR IGNORE INTO whatsapp_content_media_selections (id,session_key,template_key,media_id,content_version,created_at) SELECT ?,?,?,m.id,t.published_version,? FROM whatsapp_content_templates t JOIN whatsapp_content_version_media vm ON vm.template_key=t.template_key AND vm.version=t.published_version JOIN whatsapp_content_media m ON m.id=vm.media_id AND m.enabled=1 WHERE t.template_key=? AND t.published_version=? AND m.id=?").bind(crypto.randomUUID(), sessionKey, templateKey, now, templateKey, version, String(selected.id)).run();
+    const persisted = await validPersistedSelection(db, templateKey, sessionKey);
+    if (persisted) return mediaFromRow(persisted);
+  }
+  throw new Error("WHATSAPP_CONTENT_MEDIA_SELECTION_STALE");
 }

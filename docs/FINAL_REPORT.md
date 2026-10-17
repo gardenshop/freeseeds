@@ -6,6 +6,13 @@
 - Real order `FS-261015-000001`: **PAYMENT_REJECTED**, PKR 300, JazzCash, one receipt; audited rejection preserved.
 - Financial mutation: **NONE**. Admin browser post-deploy proof is **PARTIAL** because MCP stopped returning page inventory after deployment.
 
+## GFS-155-UNIVERSAL-CMS Update — 2026-10-17
+
+- Published WELCOME: **v6**, private media snapshot present, R2 object verified.
+- Meta outbound image/buttons: **WAMID PRESENT**, status `sent`; delivery/read/customer rendering not observed.
+- EN/UR action labels: **PASS Admin/runtime mapping**.
+- Guided checkout: **GO**; payment/fulfillment remains evidence-gated.
+
 ## GFS-141-OPERATIONS Update — 2026-10-16
 
 - Admin operations: **PASS implementation/deployment** — payment review, clearer receipt, Confirm Order, fulfillment controls and shipping labels.

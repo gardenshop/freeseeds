@@ -489,6 +489,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Recovered Chrome MCP with explicit `pkce-challenge`; authenticated Admin Orders now renders four orders, counts, tabs, auto-selected details, payment/audit fields and private receipt links.
 - Browser snapshot confirms one approved fixture order and three other active orders; no real financial mutation was made during verification.
 
+## GFS-155 Universal CMS Delivery
+
+- Migration 0018 semantic action labels applied; Admin live preview shows localized stable IDs for Welcome, Fertilizer, Review, Payment, Order Status and Support.
+- Welcome gallery-only change published immutable version 6 with media `b99ba6e6-c5b0-4ee0-b819-b470083ab78d`; private R2 object exists (429231 bytes) and session selections are version-validated.
+- One authorized bilingual image+buttons message was accepted as WAMID `...NTYyAA==` and a real `sent` status webhook persisted. Customer-side rendering/read remains unverified.
+
 ## GFS-144 CMS Upload Verification
 
 - Cloudflare OAuth/D1 access is restored and migration 0017 media tables exist.

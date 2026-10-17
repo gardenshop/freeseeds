@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
-import { deterministicMediaIndex, parseWhatsAppContentDraft, renderWhatsAppContent, selectPublishedWhatsAppContentMedia, storeWhatsAppContentMedia, validateWhatsAppContentImage, WhatsAppTemplateKey } from "@gfs/core";
+import { deterministicMediaIndex, parseWhatsAppContentDraft, publishedWhatsAppContent, renderWhatsAppContent, selectPublishedWhatsAppContentMedia, storeWhatsAppContentMedia, validateWhatsAppContentImage, whatsAppActionLabel, WhatsAppTemplateKey } from "@gfs/core";
+import { guidedReplyMediaKey } from "../apps/api/src/index";
 
 describe("GFS-111 WhatsApp content", () => {
   const draft = {
@@ -20,6 +21,13 @@ describe("GFS-111 WhatsApp content", () => {
   it("renders only declared semantic placeholders", () => {
     expect(renderWhatsAppContent("Order {orderNumber}: PKR {totalPkr}", { orderNumber: "FS-SYNTHETIC", totalPkr: 250 })).toBe("Order FS-SYNTHETIC: PKR 250");
     expect(renderWhatsAppContent("Unknown {customerName}", {})).toBe("Unknown {customerName}");
+  });
+
+  it("requires the stable per-template action labels and province list copy", () => {
+    const welcome = { contentEn: { text: "Welcome", actionLabels: { LANG_EN: "English", LANG_UR: "Urdu" } }, contentUr: { text: "خوش آمدید", actionLabels: { LANG_EN: "انگریزی", LANG_UR: "اردو" } } };
+    expect(parseWhatsAppContentDraft(welcome, "WELCOME").contentUr.actionLabels?.LANG_UR).toBe("اردو");
+    expect(() => parseWhatsAppContentDraft({ ...welcome, contentEn: { text: "Welcome", actionLabels: { LANG_EN: "English" } } }, "WELCOME")).toThrow("WHATSAPP_CONTENT_ACTION_LABELS_INVALID");
+    expect(() => parseWhatsAppContentDraft({ contentEn: { text: "Province" }, contentUr: { text: "صوبہ" } }, "PROVINCE_DELIVERY")).toThrow("WHATSAPP_CONTENT_PROVINCE_LIST_INVALID");
   });
 
   it("defines stable journey metadata for every WhatsApp template", async () => {
@@ -47,7 +55,7 @@ describe("GFS-111 WhatsApp content", () => {
 
   it("uses deterministic rotation and persists one stable selection per session", async () => {
     expect(deterministicMediaIndex("checkout-a", "OFFER", 3)).toBe(deterministicMediaIndex("checkout-a", "OFFER", 3));
-    let selectedId: string | undefined;
+    let selection: { id: string; version: number } | undefined;
     const rows = [
       { id: "media-a", template_key: "OFFER", r2_key: "whatsapp-content/images/offer/a/whatsapp.jpg", master_r2_key: "whatsapp-content/images/offer/a/master.jpg", mime_type: "image/jpeg", size_bytes: 4, sha256: "a".repeat(64), enabled: 1, active: 0, sort_order: 0, created_at: "2026-01-01" },
       { id: "media-b", template_key: "OFFER", r2_key: "whatsapp-content/images/offer/b/whatsapp.jpg", master_r2_key: "whatsapp-content/images/offer/b/master.jpg", mime_type: "image/jpeg", size_bytes: 4, sha256: "b".repeat(64), enabled: 1, active: 0, sort_order: 10, created_at: "2026-01-02" }
@@ -58,12 +66,12 @@ describe("GFS-111 WhatsApp content", () => {
         const statement = {
           bind: (...values: unknown[]) => { args = values; return statement; },
           first: async () => {
-            if (sql.includes("media_selections s")) return rows.find((row) => row.id === selectedId) ?? null;
+            if (sql.includes("media_selections s")) return selection?.version === 2 ? rows.find((row) => row.id === selection?.id) ?? null : null;
             if (sql.includes("published_version")) return { published_version: 2 };
             return null;
           },
           all: async () => ({ results: rows.map((row) => ({ ...row, published_active: 0, published_sort_order: row.sort_order })) }),
-          run: async () => { if (sql.startsWith("INSERT OR IGNORE")) selectedId = String(args[3]); return { success: true }; }
+          run: async () => { if (sql.startsWith("DELETE")) selection = undefined; if (sql.startsWith("INSERT OR IGNORE")) selection = { id: String(args[6]), version: Number(args[5]) }; return { success: true }; }
         };
         return statement;
       }
@@ -73,10 +81,77 @@ describe("GFS-111 WhatsApp content", () => {
     expect(replay?.id).toBe(first?.id);
   });
 
+  it("deletes and reselects cached media that is stale, disabled, or outside the published snapshot", async () => {
+    const media = {
+      old: { id: "media-old", template_key: "WELCOME", r2_key: "whatsapp-content/images/welcome/old/whatsapp.jpg", master_r2_key: "whatsapp-content/images/welcome/old/master.jpg", mime_type: "image/jpeg", size_bytes: 4, sha256: "a".repeat(64), enabled: 0, active: 0, sort_order: 0, created_at: "2026-01-01" },
+      current: { id: "media-current", template_key: "WELCOME", r2_key: "whatsapp-content/images/welcome/current/whatsapp.jpg", master_r2_key: "whatsapp-content/images/welcome/current/master.jpg", mime_type: "image/jpeg", size_bytes: 4, sha256: "b".repeat(64), enabled: 1, active: 1, sort_order: 10, created_at: "2026-01-02" }
+    };
+    let selection: { id: string; version: number } | undefined = { id: media.old.id, version: 1 };
+    let deletes = 0;
+    const db = {
+      prepare: (sql: string) => {
+        let args: unknown[] = [];
+        const statement = {
+          bind: (...values: unknown[]) => { args = values; return statement; },
+          first: async () => {
+            if (sql.includes("media_selections s")) return selection?.version === 2 && selection.id === media.current.id ? media.current : null;
+            if (sql.includes("published_version")) return { published_version: 2 };
+            return null;
+          },
+          all: async () => ({ results: [{ ...media.current, published_active: 1, published_sort_order: 10 }] }),
+          run: async () => {
+            if (sql.startsWith("DELETE")) { selection = undefined; deletes += 1; }
+            if (sql.startsWith("INSERT OR IGNORE")) selection = { id: String(args[6]), version: Number(args[5]) };
+            return { success: true };
+          }
+        };
+        return statement;
+      }
+    } as unknown as D1Database;
+    await expect(selectPublishedWhatsAppContentMedia(db, "WELCOME", "stale-session")).resolves.toMatchObject({ id: "media-current", enabled: true });
+    expect(selection).toEqual({ id: "media-current", version: 2 });
+    expect(deletes).toBe(1);
+  });
+
+  it("maps published semantic action labels by locale without changing action IDs", async () => {
+    const db = {
+      prepare: (sql: string) => {
+        const statement = {
+          bind: () => statement,
+          first: async () => sql.includes("content_en_json") ? { version: 1, content_en_json: '{"text":"Welcome"}', content_ur_json: '{"text":"خوش آمدید"}', media_r2_key: null } : null,
+          all: async () => ({ results: [
+            { action_id: "LANG_EN", label_en: "English", label_ur: "انگریزی" },
+            { action_id: "LANG_UR", label_en: "Urdu", label_ur: "اردو" }
+          ] })
+        };
+        return statement;
+      }
+    } as unknown as D1Database;
+    const en = await publishedWhatsAppContent(db, "WELCOME", "en");
+    const ur = await publishedWhatsAppContent(db, "WELCOME", "ur");
+    expect(whatsAppActionLabel(en!, "LANG_EN")).toBe("English");
+    expect(whatsAppActionLabel(ur!, "LANG_EN")).toBe("انگریزی");
+    expect(whatsAppActionLabel(ur!, "LANG_UR")).toBe("اردو");
+  });
+
+  it("uses WELCOME media for every eligible NEW greeting", () => {
+    expect(guidedReplyMediaKey("START", "NEW", "LANGUAGE")).toBe("WELCOME");
+    expect(guidedReplyMediaKey("HELLO", "NEW", "LANGUAGE")).toBe("WELCOME");
+    expect(guidedReplyMediaKey("ANY GREETING", "NEW", "LANGUAGE")).toBe("WELCOME");
+    expect(guidedReplyMediaKey("CHECK_ORDER", "NEW", "NEW")).toBe("ORDER_STATUS");
+  });
+
   it("defines gallery, publish snapshots, and D1 session selections additively", async () => {
     const migration = await readFile("migrations/0017_whatsapp_content_media.sql", "utf8");
     for (const table of ["whatsapp_content_media", "whatsapp_content_version_media", "whatsapp_content_media_selections"]) expect(migration).toContain(`CREATE TABLE ${table}`);
     expect(migration).toContain("whatsapp-content/images/*/*");
     expect(migration).toContain("UNIQUE(session_key, template_key)");
+  });
+
+  it("adds version-scoped semantic action labels without rewriting content versions", async () => {
+    const migration = await readFile("migrations/0018_whatsapp_content_action_labels.sql", "utf8");
+    expect(migration).toContain("CREATE TABLE whatsapp_content_version_action_labels");
+    expect(migration).not.toContain("UPDATE whatsapp_content_template_versions");
+    for (const actionId of ["LANG_EN", "LANG_UR", "ADD_FERTILIZER", "SEEDS_ONLY", "PLACE_ORDER", "BACK", "PAY_JAZZCASH", "CHECK_ORDER", "PAYMENT_HELP", "SUPPORT"]) expect(migration).toContain(`'${actionId}'`);
   });
 });

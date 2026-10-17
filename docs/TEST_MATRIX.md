@@ -114,6 +114,8 @@
 | GFS-151 Orders loading | timeout, non-JSON, retry, stale request, URL hydration | PASS 92 tests/deployment; browser post-deploy retest pending |
 | GFS-152 Orders script | generated JS parse/startup, four tabs/counts, timeout/retry, auto-select | PASS 93 tests/deployment; browser retest pending MCP response |
 | GFS-153 browser Orders | four orders/counts/details/receipt/payment tabs after reload | PASS actual Chrome snapshot with four orders and selected detail panel |
+| GFS-155 CMS action mapping | versioned EN/UR stable labels across guided actions | PASS 100 tests and Admin preview evidence |
+| GFS-155 media publication | gallery-only clone, stale selection invalidation, R2 snapshot | PASS D1/R2/WAMID sent evidence; customer rendering unverified |
 | GFS-144 CMS media delivery | approved upload, R2/D1 gallery, published WhatsApp image WAMID | BLOCKED/unverified: no browser media evidence captured |
 | GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |
 | GFS-98 token recovery | owner-installed secret → Graph ladder → API/Admin readiness | PASS fresh token; no token value inspected |

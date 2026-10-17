@@ -236,6 +236,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Staging D1 media schema now exists after safely applying migration `0017_whatsapp_content_media.sql`.
 - Private R2 media remains authoritative; no public URL or customer-facing image success is claimed without browser/WAMID evidence.
 
+## GFS-155 Published Welcome
+
+- WELCOME published version: 6; media ID `b99ba6e6-c5b0-4ee0-b819-b470083ab78d`; private R2 variant verified.
+- Action labels are version-scoped in `whatsapp_content_version_action_labels`; stable IDs remain code-controlled.
+
 ## GFS-144 Media Evidence
 
 - Migration 0017 tables are present in canonical staging D1; live R2 gallery upload and WhatsApp image delivery remain unverified.
