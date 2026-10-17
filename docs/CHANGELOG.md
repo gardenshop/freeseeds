@@ -15,6 +15,11 @@
 - Hardened professional Orders startup with bounded timeout, stale-request cancellation, safe response parsing, Retry/error states and URL filter hydration.
 - Deployed Admin Worker version `710cf772-dfc9-4dce-b4a2-cad26f581946`.
 
+## Unreleased - 2026-10-16 (GFS-152)
+
+- Fixed the Orders inline JavaScript parse error in generated `renderDetail()` facts markup; loading now reaches bounded API startup, retry and error handling.
+- Deployed Admin Worker version `506c9630-dfde-4c01-a736-7a2093c1c415`.
+
 ## Unreleased - 2026-10-16 (GFS-144)
 
 - Reconfirmed migration 0017/media prerequisites and protected private R2 path. Live CMS image upload/delivery evidence remains pending.

@@ -479,6 +479,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Professional Orders frontend now has bounded fetch timeout, stale-request cancellation, safe JSON/non-JSON errors, controlled Retry and URL filter hydration.
 - Admin Worker version `710cf772-dfc9-4dce-b4a2-cad26f581946` deployed; post-deploy browser retest remains MCP-session dependent.
 
+## GFS-152 Orders Startup Root Cause
+
+- Root cause found: generated `professionalOrdersPageHtml()` contained an invalid `renderDetail()` facts-array delimiter, causing the inline script to fail before hydration/load and leaving the page at Loading.
+- Fixed script parsing/startup, bounded timeout/non-JSON errors, stale request cancellation, Retry, URL filter hydration and auto-selection. Admin Worker `506c9630-dfde-4c01-a736-7a2093c1c415` deployed.
+
 ## GFS-144 CMS Upload Verification
 
 - Cloudflare OAuth/D1 access is restored and migration 0017 media tables exist.

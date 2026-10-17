@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { Script } from "node:vm";
 import app from "../apps/admin/src/index";
 
 type ConversationFixture = { waId: string; state: string; stateData: string; lastInboundMessageId: string | null; createdAt: string; updatedAt: string };
@@ -137,6 +138,18 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("if(generation!==listGeneration||isAbort(error))return");
     expect(html).toContain("Orders could not be loaded. Use Refresh to try again.");
     expect(html).toContain("hydrate();setTabs({});load();");
+  });
+
+  it("keeps the professional startup script parseable with all queues and auto-selection", async () => {
+    const response = await app.fetch(new Request("https://admin.example.test/orders?tab=confirmed&page=3&q=synthetic", { headers: auth }), env(new AdminMemoryDb()));
+    const html = await response.text();
+    const script = html.match(/<script>([\s\S]*)<\/script>/)?.[1];
+    expect(script).toBeDefined();
+    expect(() => new Script(script!)).not.toThrow();
+    for (const tab of ["all", "verify", "confirmed", "fulfillment"]) expect(html).toContain(`data-tab="${tab}"`);
+    expect(html).toContain("setTabs(data.counts)");
+    expect(html).toContain("selectedId=list[0].id");
+    expect(html).toContain("if(id)await show(id)");
   });
 
   it("requires CSRF for payment and fulfillment detail mutations", async () => {

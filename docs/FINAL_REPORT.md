@@ -29,6 +29,12 @@
 - Orders loading fix: **PASS implementation/deployment** — timeout, cancellation, safe JSON/non-JSON handling, Retry and URL hydration.
 - Admin browser post-deploy verification: **PENDING** MCP session stability.
 
+## GFS-152-ORDERS-STARTUP Update — 2026-10-16
+
+- Exact root cause: **inline `renderDetail()` JavaScript syntax error** prevented hydration/load.
+- Repair: **PASS implementation/deployment**; bounded requests, non-JSON diagnostics, retry and stale cancellation retained.
+- Browser proof: **PENDING** because current MCP page-response is unstable.
+
 ## GFS-140-ADMIN-BROWSER Update — 2026-10-16
 
 - Admin Orders browser: **PASS** — four tabs, four orders, newest detail auto-selected, full customer/payment/items/receipt/audit fields and state-aware controls visible.
