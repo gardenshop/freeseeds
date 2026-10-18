@@ -2,6 +2,13 @@ import { describe, expect, it } from "vitest";
 import app from "../apps/admin/src/index";
 
 const env = { ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL" } as Parameters<typeof app.fetch>[1];
+const access = { "cf-access-authenticated-user-email": "admin@example.test" };
+
+async function csrfHeaders(contentType = "application/json") {
+  const response = await app.fetch(new Request("https://admin.example.test/api/csrf", { headers: access }), env);
+  const data = await response.json() as { csrfToken: string };
+  return { ...access, "content-type": contentType, origin: "https://admin.example.test", cookie: `__Host-gfs_admin_csrf=${data.csrfToken}`, "x-csrf-token": data.csrfToken };
+}
 
 describe("admin payment configuration", () => {
   it("keeps the amount endpoint Access-protected and rejects non-positive values", async () => {
@@ -49,7 +56,7 @@ describe("admin payment configuration", () => {
   it("allows incomplete drafts but validates methods when enabling", async () => {
     const draft = await app.fetch(new Request("https://admin.example.test/api/payment-methods/JAZZCASH", {
       method: "POST",
-      headers: { "cf-access-authenticated-user-email": "admin@example.test", "content-type": "application/json" },
+      headers: await csrfHeaders(),
       body: JSON.stringify({ recipientName: "", instructions: "", enabled: false })
     }), env);
     expect(draft.status).toBe(200);
@@ -57,7 +64,7 @@ describe("admin payment configuration", () => {
 
     const enabled = await app.fetch(new Request("https://admin.example.test/api/payment-methods/JAZZCASH", {
       method: "POST",
-      headers: { "cf-access-authenticated-user-email": "admin@example.test", "content-type": "application/json" },
+      headers: await csrfHeaders(),
       body: JSON.stringify({ recipientName: "", instructions: "", enabled: true })
     }), env);
     expect(enabled.status).toBe(400);
