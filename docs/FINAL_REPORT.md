@@ -23,6 +23,11 @@
 ## GFS-158-PAYMENT-ROUTE Update — 2026-10-17
 
 - `/payment-settings`: **PASS single canonical route**; fields, enable guards and private QR preserved.
+
+## GFS-159-PAYMENT-CMS Update — 2026-10-18
+
+- Payment message renderer: **PASS implementation/deployed** — locale-aware CMS/payment copy, one reference, server-authoritative amount/recipient.
+- Live `/payment-settings` browser save/reload and live EN/UR customer rendering: **UNVERIFIED** due unstable browser session.
 - Live payment/browser E2E: **UNVERIFIED**; no real PAID/CAPI/fulfillment claim.
 
 ## GFS-157-LIVE-TARIFF Update — 2026-10-17

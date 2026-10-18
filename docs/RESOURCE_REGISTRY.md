@@ -254,6 +254,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Canonical route: `/payment-settings`; duplicate legacy route removed.
 - Payment method values and QR storage remain D1/private R2 authoritative.
 
+## GFS-159 Payment Presentation
+
+- `formatPaymentMessage` consumes locale-specific Admin payment copy and injects only persisted order amount/order number/method/recipient values.
+- No duplicate reference/instruction assembly remains in the API payment handoff.
+
 ## GFS-144 Media Evidence
 
 - Migration 0017 tables are present in canonical staging D1; live R2 gallery upload and WhatsApp image delivery remain unverified.

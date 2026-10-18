@@ -36,6 +36,10 @@
 ## Unreleased - 2026-10-17 (GFS-158)
 
 - Removed duplicate `/payment-settings` registration and deployed the canonical bilingual payment form.
+
+## Unreleased - 2026-10-18 (GFS-159)
+
+- Made payment handoff locale-aware and CMS/payment-settings driven; removed duplicate Reference/instruction assembly while preserving server-authoritative values.
 - Deployed Admin Worker version `506c9630-dfde-4c01-a736-7a2093c1c415`.
 
 ## Unreleased - 2026-10-16 (GFS-144)

@@ -198,6 +198,10 @@ Province delivery menus must not embed prices. The guided router now queries ena
 
 Removed the duplicate `/payment-settings` route that could shadow the canonical bilingual form. Existing payment fields, enable safeguards and QR preview remain intact.
 
+## 2026-10-18: GFS-159 Payment CMS Authority
+
+Payment messages now use the selected conversation locale and Admin payment copy fields; order amount and reference remain server-owned. The API no longer appends a second reference or forces English payment wording.
+
 ## 2026-10-16: GFS-144 CMS Media Evidence Boundary
 
 Migration and backend prerequisites are repaired, but no approved image upload/WAMID evidence was captured in the current MCP run. We do not claim customer-facing media success.

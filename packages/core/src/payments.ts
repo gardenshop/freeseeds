@@ -111,16 +111,18 @@ export function paymentInstructions(config: PaymentMethodConfig | undefined): Pa
   };
 }
 
-export function formatPaymentMessage(orderNumber: string, amount: number, config: PaymentMethodConfig): string {
+export function formatPaymentMessage(orderNumber: string, amount: number, config: PaymentMethodConfig, locale: "en" | "ur" = "en"): string {
   const payableAmount = requirePaymentAmount(amount);
   const details = paymentInstructions(config);
   if (!details.configured) throw new Error("PAYMENT_METHOD_NOT_CONFIGURED");
-  const lines = [details.heading ?? details.displayName, `Amount due: PKR ${payableAmount}`, `Payments for Get Free Seeds are processed by Garden Shop.`, `Recipient: ${details.recipientName}`];
+  const lines = [locale === "ur" ? (details.headingUr ?? details.heading ?? details.displayName) : (details.heading ?? details.displayName), locale === "ur" ? `قابل ادائیگی رقم: PKR ${payableAmount}` : `Amount due: PKR ${payableAmount}`, locale === "ur" ? `وصول کنندہ: ${details.recipientName}` : `Recipient: ${details.recipientName}`];
   if (details.tillId) lines.push(`TILL/TIL ID: ${details.tillId}`);
-  if (details.shortInstructions) lines.push(details.shortInstructions);
-  if (details.instructions) lines.push(details.instructions);
+  const shortInstructions = locale === "ur" ? (details.shortInstructionsUr ?? details.shortInstructions) : details.shortInstructions;
+  if (shortInstructions) lines.push(shortInstructions);
+  else if (details.instructions) lines.push(details.instructions);
   if (details.referenceInstruction) lines.push(details.referenceInstruction);
-  lines.push(`Reference: ${orderNumber}`, details.receiptInstructions ?? "After payment, select I Have Paid and share your receipt here.");
+  const receipt = locale === "ur" ? (details.receiptInstructionsUr ?? details.receiptInstructions ?? "ادائیگی کے بعد رسید اسی چیٹ میں بھیجیں۔") : (details.receiptInstructions ?? "After payment, share your receipt here.");
+  lines.push(locale === "ur" ? `حوالہ: ${orderNumber}` : `Reference: ${orderNumber}`, receipt);
   return lines.join("\n");
 }
 

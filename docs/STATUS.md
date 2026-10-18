@@ -508,6 +508,7 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 ## GFS-158 Payment Settings Route
 
 - Removed duplicate `/payment-settings` registration; one canonical bilingual route remains.
+- Payment message renderer now consumes selected-locale Admin copy with one server-generated reference.
 - All existing payment fields, enabled controls, validation and private QR preview are preserved. Admin Worker `906dedf0-a383-493b-af92-46a35cd5d8e9` deployed.
 - PR #8 CI run `39026603148` did not start because the GitHub account is locked by a billing issue; code verification did not fail. Merge remains blocked by this external required-check gate.
 
