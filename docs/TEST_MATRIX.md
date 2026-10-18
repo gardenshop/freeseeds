@@ -120,6 +120,7 @@
 | GFS-157 live province fees | enabled D1 rates → list options/descriptions → quote | PASS implementation/deployment; real customer tap pending |
 | GFS-158 payment settings | single route, bilingual fields, QR/enable controls | PASS tests/deployment; live browser evidence pending |
 | GFS-159 payment messages | EN/UR copy, one reference, server amount/recipient placeholders | PASS 100 tests/deployment; live customer rendering pending |
+| GFS-166 payment selector | three enabled methods, stable IDs, selected details/locale | PASS 102 tests/deployment; live customer method taps pending |
 | GFS-160 payment settings browser | three methods, JazzCash enabled/QR, generated JS | PASS live authenticated snapshot; save/reload mutation not performed |
 | GFS-161 live Admin | Payment Settings and CMS browser snapshots, bilingual/media state | PASS actual authenticated snapshots; customer image WAMID pending |
 | GFS-155 PR CI | GitHub required verify check | BLOCKED externally: workflow not started due account billing lock |

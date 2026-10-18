@@ -518,6 +518,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Generated inline script compile defect was fixed by escaping preview newline strings; live page no longer remains Loading.
 - Real Save/reload and CMS payment WAMID remain pending; no financial mutation was made.
 
+## GFS-166 Dynamic Payment Methods
+
+- API Worker now renders every complete enabled D1 method with stable `PAY_JAZZCASH`, `PAY_EASYPAISA`, `PAY_BANK_TRANSFER` IDs and passes selected method/locale to details.
+- API version `2c0335e7-0914-42eb-9501-b207bbe9752b` deployed; guided checkout remains active. Live/browser payment-method evidence remains pending.
+
 ## GFS-161 Live Admin Verification
 
 - Authenticated Payment Settings now visibly renders all three method tabs; JazzCash is enabled/complete with private QR preview and saved values.

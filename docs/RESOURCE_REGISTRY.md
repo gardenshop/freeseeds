@@ -259,6 +259,11 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - `formatPaymentMessage` consumes locale-specific Admin payment copy and injects only persisted order amount/order number/method/recipient values.
 - No duplicate reference/instruction assembly remains in the API payment handoff.
 
+## GFS-166 Payment Selector
+
+- Eligible payment buttons are read from enabled complete D1 `payment_methods` at runtime; no legacy JazzCash-only selector remains.
+- Selected method details use persisted `orders.total_payable`, locale copy and method-specific protected values.
+
 ## GFS-144 Media Evidence
 
 - Migration 0017 tables are present in canonical staging D1; live R2 gallery upload and WhatsApp image delivery remain unverified.

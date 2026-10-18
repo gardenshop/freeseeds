@@ -202,6 +202,10 @@ Removed the duplicate `/payment-settings` route that could shadow the canonical 
 
 Payment messages now use the selected conversation locale and Admin payment copy fields; order amount and reference remain server-owned. The API no longer appends a second reference or forces English payment wording.
 
+## 2026-10-18: GFS-166 Dynamic Payment Buttons
+
+Payment method selection now enumerates complete enabled D1 methods in stable order and routes each semantic ID through the existing selector. Payment Help/Support/Check Order are not payment-selection buttons; payment/receipt approval remains gated.
+
 ## 2026-10-16: GFS-144 CMS Media Evidence Boundary
 
 Migration and backend prerequisites are repaired, but no approved image upload/WAMID evidence was captured in the current MCP run. We do not claim customer-facing media success.

@@ -41,6 +41,11 @@
 
 - Made payment handoff locale-aware and CMS/payment-settings driven; removed duplicate Reference/instruction assembly while preserving server-authoritative values.
 
+## Unreleased - 2026-10-18 (GFS-166)
+
+- Replaced JazzCash-only payment selection with dynamic complete-enabled D1 method buttons for JazzCash, Easypaisa and Bank Transfer.
+- Selected method details now use persisted order total, protected method values and conversation locale.
+
 ## Unreleased - 2026-10-18 (GFS-160)
 
 - Fixed generated Payment Settings inline JavaScript newline escaping; authenticated browser now renders all three methods and private JazzCash QR instead of Loading.

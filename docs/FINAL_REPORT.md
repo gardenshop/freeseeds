@@ -39,6 +39,11 @@
 ## GFS-159-PAYMENT-CMS Update — 2026-10-18
 
 - Payment message renderer: **PASS implementation/deployed** — locale-aware CMS/payment copy, one reference, server-authoritative amount/recipient.
+
+## GFS-166-PAYMENT-SELECTOR Update — 2026-10-18
+
+- Payment buttons: **PASS implementation/deployed** — dynamic complete-enabled D1 methods and stable IDs.
+- Live customer payment taps: **UNVERIFIED**; no payment approval or receipt claim.
 - Live `/payment-settings` browser save/reload and live EN/UR customer rendering: **UNVERIFIED** due unstable browser session.
 - Live payment/browser E2E: **UNVERIFIED**; no real PAID/CAPI/fulfillment claim.
 
