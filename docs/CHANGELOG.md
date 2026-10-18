@@ -40,6 +40,10 @@
 ## Unreleased - 2026-10-18 (GFS-159)
 
 - Made payment handoff locale-aware and CMS/payment-settings driven; removed duplicate Reference/instruction assembly while preserving server-authoritative values.
+
+## Unreleased - 2026-10-18 (GFS-160)
+
+- Fixed generated Payment Settings inline JavaScript newline escaping; authenticated browser now renders all three methods and private JazzCash QR instead of Loading.
 - Deployed Admin Worker version `506c9630-dfde-4c01-a736-7a2093c1c415`.
 
 ## Unreleased - 2026-10-16 (GFS-144)

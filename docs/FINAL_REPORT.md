@@ -1,5 +1,11 @@
 # Final Report
 
+## GFS-160-PAYMENT-UI Update — 2026-10-18
+
+- Payment Settings browser: **PASS** — JazzCash, Easypaisa and Bank panels loaded; JazzCash enabled/complete and private QR preview visible.
+- Root cause: generated inline JavaScript contained unescaped newline literals in `.join()` preview code.
+- Save/reload and live customer payment rendering: **PENDING**; no financial mutation.
+
 ## GFS-139-PROFESSIONAL-ORDERS Update — 2026-10-16
 
 - All Orders/Verify Payments/Confirmed Payments/Fulfillment tabs: **PASS implementation/deployment**.

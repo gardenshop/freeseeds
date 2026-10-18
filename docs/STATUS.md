@@ -512,6 +512,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - All existing payment fields, enabled controls, validation and private QR preview are preserved. Admin Worker `906dedf0-a383-493b-af92-46a35cd5d8e9` deployed.
 - PR #8 CI run `39026603148` did not start because the GitHub account is locked by a billing issue; code verification did not fail. Merge remains blocked by this external required-check gate.
 
+## GFS-160 Payment Browser Verification
+
+- Authenticated Payment Settings page now renders JazzCash, Easypaisa and Bank panels; JazzCash shows Enabled and complete with private QR preview.
+- Generated inline script compile defect was fixed by escaping preview newline strings; live page no longer remains Loading.
+- Real Save/reload and CMS payment WAMID remain pending; no financial mutation was made.
+
 ## GFS-144 CMS Upload Verification
 
 - Cloudflare OAuth/D1 access is restored and migration 0017 media tables exist.
