@@ -543,3 +543,13 @@ Phone ID `1323932417479627` is authoritative in the WABA phone surface, but disp
 The canonical Form's product/province/fertilizer/delivery answers are customer/form data, not authoritative Garden Shop pricing configuration. No deterministic server-side pricing rule or real recipient values are available, so `PAYMENT_AMOUNT_NOT_CONFIGURED` remains active and no payment message is permitted.
 
 Native Messenger Chat context remains observable from the synthetic lead, but no acknowledgement was sent because customer-side delivery was not independently observable. Automated lead→D1 sync remains blocked by the missing lead-capable App/token/Page subscription; no recurring manual import is introduced.
+
+## 2026-10-19: GFS-169 Authorized Tester and One-Order Payment Coverage
+
+The WhatsApp Profile Settings surface visibly identified the signed-in account as the project-authorized E2E tester (wa_id suffix `9810`). This authorization was accepted because it is the explicitly registered test identity, not because it matched an old historical assumption. Only the GFS sender chat was used; unrelated personal conversations were not inspected or changed. The existing protected test-controls registration was reused and one audited, history-preserving reset was performed.
+
+One real guided checkout created `FS-261019-000001` at PKR 500 (fertilizer plus Punjab delivery). All three complete enabled methods were rendered against this same order through the canonical payment-selection endpoint; no duplicate order, receipt, approval, PAID, CAPI, or fulfillment action was created. The final Admin state is `PAYMENT_PENDING` with `BANK_TRANSFER`, PKR 500 expected, no receipt, and seven method-selection audit events caused by the one live selection plus safe same-order rendering checks. The extra audit events are acceptable and financial history is preserved.
+
+WAMIDs were not exposed by WhatsApp Web or Admin evidence. Browser timestamps and internal WhatsApp request IDs are explicitly not accepted as WAMIDs, so the evidence is recorded as WAMID-unavailable rather than guessed. Payment recipient/account values remain masked and protected from documentation.
+
+The current API/Admin deployment versions were read-only verified under `gisupp@gmail.com` in clean Cloudflare account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`: API `2c0335e7-0914-42eb-9501-b207bbe9752b`, Admin `f7acf3f3-4e5e-498e-bdd5-697eb30cd0de`. No Worker deployment, secret, Meta, billing, or payment approval mutation was performed.

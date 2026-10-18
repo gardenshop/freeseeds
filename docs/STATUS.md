@@ -579,3 +579,16 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Activation UI now exposes sanitized `reason`, `error.code`, and HTTP status instead of a generic failure message.
 - Runtime token check: **PASS**; phone Graph read: **PASS**; `code_verification_status=VERIFIED`, `name_status=PENDING_REVIEW`.
 - `/register` attempt currently returns sanitized Meta error `(#133010) The account is not registered`; no PIN was observed or logged. Secure PIN entry remains the next registration action.
+
+## GFS-169 Authorized Live WhatsApp and Payment E2E
+
+- BEFORE: WhatsApp Web identity and test conversation state were unresolved; prior notes did not prove the historical tester session. AFTER: WhatsApp Profile Settings visibly identified the signed-in tester account as the project-authorized E2E account (wa_id suffix `9810`); only the GFS sender conversation was used. Unrelated tabs changed: `0`.
+- `/test-controls` already contained the verified test wa_id. The one required reset changed only the conversation to `NEW`; response was `200`, `historyPreserved=true`, and the prior order/payment/audit history remained intact.
+- LIVE EVIDENCE: real tester interaction sent `START`, Welcome image/text, English, Fertilizer + Seeds, Punjab, full name, address, landmark, city, contact number, review and Place Order. Fresh order `FS-261019-000001` was created with seed PKR 0 + fertilizer PKR 250 + Punjab delivery PKR 250 = **PKR 500**.
+- Admin `/orders` LIVE EVIDENCE: one matching active order, `PAYMENT_PENDING`, final method `BANK_TRANSFER`, expected PKR 500, no receipt, no approval, no reference, no fulfillment. Customer/test data is intentionally masked here.
+- Payment selector LIVE EVIDENCE: exactly `JazzCash`, `Easypaisa`, and `Bank Transfer`; no Help/Support/Check Order control. Same-order method rendering returned HTTP 200 for all three and preserved order `FS-261019-000001`; no duplicate order was created.
+- Payment mapping (masked): JazzCash `TILL/TIL ...2511`, Easypaisa `TILL/TIL ...9783`, Bank Transfer account/identifier `...8547`; all returned the persisted PKR 500 amount and one order reference. Exact recipient values remain protected and are not recorded.
+- WAMIDs: **UNAVAILABLE** in WhatsApp Web/Admin evidence. Browser timestamps/internal request identifiers are not WAMIDs; no WAMID was inferred or fabricated. Private screenshot captured outside the repository at `D:\Temp\kilo\gfs169-whatsapp-welcome.png`.
+- No receipt was uploaded; payment remains `PENDING`. No PAID, CAPI Purchase, fulfillment, shipping label, or financial approval was performed.
+- Current deployed versions read with Wrangler under verified `gisupp@gmail.com` / clean account: API `2c0335e7-0914-42eb-9501-b207bbe9752b`; Admin `f7acf3f3-4e5e-498e-bdd5-697eb30cd0de`. API `/health` returned `PRODUCTION_INTEGRATION_READY` / WhatsApp enabled.
+- Result: live guided checkout to payment details **PASS**; live WAMID capture **BLOCKED/UNAVAILABLE**; actual payment/approval **NOT RUN** by safety rule.

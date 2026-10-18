@@ -123,6 +123,13 @@
 | GFS-166 payment selector | three enabled methods, stable IDs, selected details/locale | PASS 102 tests/deployment; live customer method taps pending |
 | GFS-160 payment settings browser | three methods, JazzCash enabled/QR, generated JS | PASS live authenticated snapshot; save/reload mutation not performed |
 | GFS-161 live Admin | Payment Settings and CMS browser snapshots, bilingual/media state | PASS actual authenticated snapshots; customer image WAMID pending |
+| GFS-169 tester authorization | WhatsApp Profile Settings identity, registered wa_id, protected reset | PASS: project-authorized tester verified; reset returned 200/history preserved; unrelated tabs changed 0 |
+| GFS-169 live guided checkout | START → Welcome image → EN → fertilizer → province fee → five fields → review → order | PASS: real order `FS-261019-000001`, PKR 500, Admin/D1 `PAYMENT_PENDING` |
+| GFS-169 payment selector | complete enabled methods only; no Help/Support/Check Order selector control | PASS: JazzCash, Easypaisa, Bank Transfer only |
+| GFS-169 payment details | same-order JazzCash/Easypaisa/Bank Transfer rendering; persisted amount/reference; no duplicate order | PASS API HTTP 200 for all three, PKR 500; final Admin method BANK_TRANSFER; no receipt/approval |
+| GFS-169 WAMID evidence | authenticated Meta/D1 WAMIDs for live journey | BLOCKED/UNAVAILABLE: WhatsApp Web/Admin surfaces exposed no WAMID; no ID inferred |
+| GFS-169 payment safety | no fake receipt, PAID, CAPI, fulfillment, or financial approval | PASS: order remains PAYMENT_PENDING with no receipt |
+| GFS-169 deployment identity | Wrangler account and active API/Admin versions | PASS: `gisupp@gmail.com`, clean account; API `2c0335e7-0914-42eb-9501-b207bbe9752b`, Admin `f7acf3f3-4e5e-498e-bdd5-697eb30cd0de` |
 | GFS-155 PR CI | GitHub required verify check | BLOCKED externally: workflow not started due account billing lock |
 | GFS-144 CMS media delivery | approved upload, R2/D1 gallery, published WhatsApp image WAMID | BLOCKED/unverified: no browser media evidence captured |
 | GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |

@@ -1,5 +1,46 @@
 # Final Report
 
+## GFS-169 Final Audit - 2026-10-19
+
+| Task | BEFORE | AFTER | LIVE EVIDENCE | Result |
+| --- | --- | --- | --- | --- |
+| GFS-163/167 authorization and controls | Tester/session authorization was unresolved; prior live claim was not permitted | Project-authorized tester verified privately in WhatsApp Profile Settings; one protected reset preserved history | `/test-controls` returned 200 with `historyPreserved=true`; unrelated tabs changed 0 | PASS |
+| GFS-168 guided checkout | Fresh live journey pending | One real tester completed START through payment selector | Welcome image/text, EN, fertilizer, Punjab fee, five fields, review, order `FS-261019-000001` | PASS |
+| GFS-169 payment/Admin proof | Live payment methods and order match unverified | One order, PKR 500, Admin/D1 `PAYMENT_PENDING`; final method BANK_TRANSFER | Admin Orders shows one matching order, no receipt, no approval, no fulfillment | PASS |
+| GFS-169 method mapping | Only implementation/synthetic coverage | Same order rendered JazzCash, Easypaisa, Bank Transfer; selector had no Help/Support/Check Order | HTTP 200 method responses, persisted PKR 500 and one order reference; values masked | PASS |
+| GFS-169 WAMIDs | No evidence | WhatsApp Web/Admin did not expose WAMIDs | No WAMID claimed; private welcome screenshot captured outside repo | BLOCKED/UNAVAILABLE |
+| GFS-169 payment safety | Financial mutation risk | No receipt, PAID, CAPI, fulfillment, shipping label, or approval | Admin remains `PAYMENT_PENDING` | PASS |
+
+### Authorization
+
+- Tester authorization: **PASS**. WhatsApp Profile Settings showed the project-registered E2E tester account (wa_id suffix `9810`); only the GFS sender chat was used.
+- Account/session mutation: one scoped, audited conversation reset; historical orders, receipts and audit history preserved.
+- Payment account identity: Cloudflare/Wrangler read-only identity verified as `gisupp@gmail.com` in clean account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` before external checks.
+
+### Live Order
+
+- Order: `FS-261019-000001`.
+- Amount: PKR 500, composed of PKR 0 seeds, PKR 250 fertilizer, and PKR 250 Punjab delivery.
+- Admin state: `PAYMENT_PENDING`; final selected method `BANK_TRANSFER`; expected PKR 500; no receipt, reference, approval, or fulfillment.
+- Payment mapping: JazzCash `...2511`, Easypaisa `...9783`, Bank Transfer `...8547` (masked; full recipient values are not documented).
+- WAMIDs: unavailable from the permitted WhatsApp Web/Admin evidence. Timestamps and internal browser request IDs are not WAMIDs.
+
+### Release Audit
+
+- Active API Worker: `2c0335e7-0914-42eb-9501-b207bbe9752b`.
+- Active Admin Worker: `f7acf3f3-4e5e-498e-bdd5-697eb30cd0de`.
+- Unrelated tabs changed: `0`; existing service tabs reused, with one new API service tab because no API tab existed.
+- Git baseline at start: verified HEAD `9bf71505...`; this report is documentation-only. Merge remains prohibited pending legitimate CI status.
+- Screenshots: private temporary welcome screenshot at `D:\Temp\kilo\gfs169-whatsapp-welcome.png`, not committed or published.
+- Tests/build/lint/audit/Wrangler: **PASS** — `npm test` 14 files/102 tests, `npm run build`, `npm run lint`, `npm audit` 0 vulnerabilities, and API/Admin Wrangler dry-runs both passed.
+
+### GO/NO-GO
+
+- Guided checkout to payment details: **GO for controlled staging E2E**.
+- Real payment approval, PAID/CAPI, fulfillment: **NO-GO**, correctly not performed.
+- WAMID-complete evidence package: **NO-GO/BLOCKED** until authenticated Meta/D1 WAMIDs are available.
+- PR #8 merge: **NO-GO** in this run; no push or merge was authorized/performed.
+
 ## GFS-160-PAYMENT-UI Update — 2026-10-18
 
 - Payment Settings browser: **PASS** — JazzCash, Easypaisa and Bank panels loaded; JazzCash enabled/complete and private QR preview visible.

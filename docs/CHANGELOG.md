@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased - 2026-10-19 (GFS-169)
+
+- Verified the project-authorized WhatsApp tester privately in Profile Settings and reused only the GFS sender conversation.
+- Registered/reset the authorized test conversation through protected Admin controls with history preservation; no prior orders, receipts, or audit records were deleted.
+- Completed one real guided checkout to `FS-261019-000001` at PKR 500 and verified the matching Admin order remains `PAYMENT_PENDING`.
+- Render-tested JazzCash, Easypaisa, and Bank Transfer against that same order; no duplicate order, receipt, approval, PAID, CAPI, or fulfillment mutation occurred.
+- Confirmed the selector contains no Help/Support/Check Order control. WAMIDs were not exposed by available browser/Admin evidence and were not fabricated.
+- Recorded active API/Admin Worker versions and masked payment mapping in the resource registry; no secrets or full payment recipient values were documented.
+
 ## Unreleased - 2026-10-16 (GFS-141)
 
 - Added protected order operations: Confirm Order, clearer-receipt, payment/fulfillment state controls and printable shipping labels.

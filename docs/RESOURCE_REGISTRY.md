@@ -444,3 +444,13 @@ Staging and non-secret production resources are provisioned in the dedicated cle
 - Public callback URL (staging only): `https://getfreeseeds-api-staging.get-free-seeds.workers.dev/webhooks/whatsapp`
 
 No secrets are stored in this registry.
+
+## GFS-169 Live Evidence Registry
+
+- Authorized tester: project-registered WhatsApp profile, wa_id suffix `9810`; authorization verified in WhatsApp Profile Settings before the live mutation.
+- Live GFS sender conversation: `+923044429933`; no unrelated WhatsApp chat was used or changed.
+- Live order: `FS-261019-000001`; Admin/D1 state `PAYMENT_PENDING`; payable total PKR 500; no receipt or approval.
+- Payment rendering mapping, masked: JazzCash `...2511`, Easypaisa `...9783`, Bank Transfer `...8547`. Full recipient values are intentionally excluded.
+- Screenshot evidence: private temporary file `D:\Temp\kilo\gfs169-whatsapp-welcome.png`; not committed and not published.
+- WAMIDs: unavailable from WhatsApp Web/Admin surfaces; no browser request ID is recorded as a WAMID.
+- Current read-only Worker versions: API `2c0335e7-0914-42eb-9501-b207bbe9752b`; Admin `f7acf3f3-4e5e-498e-bdd5-697eb30cd0de`.

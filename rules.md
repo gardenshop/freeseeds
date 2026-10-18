@@ -155,3 +155,14 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 
 - `REMOTE_CI_UNAVAILABLE_NON_BLOCKING`: GitHub Actions may remain unavailable because of account billing state. Do not add billing, payment methods, or spend money to enable it.
 - Local `npm ci`, `npm test`, `npm run build`, `npm run lint`, dependency audit, and simulated E2E are the active release quality gate while remote CI is unavailable.
+
+## GFS-169 Authorized Live E2E Protocol
+
+- The verified E2E tester is authorized only when WhatsApp Profile/Account Settings visibly identify the signed-in account as the project-approved tester; chat-list names, historical message content, or assumptions are not identity proof.
+- After identity proof, use only the Get Free Seeds conversation with the authorized GFS sender. Do not open, search, inspect, forward, reply to, or capture unrelated personal chats.
+- `/test-controls` may register or reset only the verified test `wa_id`. Reset is explicit, CSRF-protected, audited, and history-preserving; it must not delete or alter orders, receipts, payment history, or audit records.
+- A real live E2E requires an actual tester-controlled inbound interaction and matching Admin/D1 order evidence. Backend/API, Admin preview, or synthetic-provider results must be labeled SIMULATED or API-ONLY and never reported as customer completion.
+- Payment rendering coverage may select multiple methods on one existing test order only when the endpoint is idempotent and no receipt, approval, PAID, CAPI, or fulfillment mutation is made. Never create duplicate orders solely to render another method.
+- Payment selector evidence must contain only complete enabled methods. Help, Support, Check Order, or other legacy controls are not valid payment-method selector buttons; do not hide incomplete methods by label alone.
+- WAMIDs must come from authenticated Meta/D1 evidence. WhatsApp Web timestamps or internal browser request IDs are not WAMIDs and must be reported as unavailable.
+- Live evidence records must mask customer phone numbers, payment account/TILL/IBAN values, receipts, tokens, cookies, and other secrets. Screenshots remain private and uncommitted.
