@@ -518,6 +518,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Generated inline script compile defect was fixed by escaping preview newline strings; live page no longer remains Loading.
 - Real Save/reload and CMS payment WAMID remain pending; no financial mutation was made.
 
+## GFS-161 Live Admin Verification
+
+- Authenticated Payment Settings now visibly renders all three method tabs; JazzCash is enabled/complete with private QR preview and saved values.
+- Authenticated WhatsApp Content now visibly renders published WELCOME v7, EN/UR text, localized buttons and active private image.
+- A harmless JazzCash reference-copy edit was saved and restored; no payee/account/enabled financial value was changed.
+
 ## GFS-144 CMS Upload Verification
 
 - Cloudflare OAuth/D1 access is restored and migration 0017 media tables exist.

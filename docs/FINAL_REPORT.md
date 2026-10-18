@@ -6,6 +6,12 @@
 - Root cause: generated inline JavaScript contained unescaped newline literals in `.join()` preview code.
 - Save/reload and live customer payment rendering: **PENDING**; no financial mutation.
 
+## GFS-161-LIVE-ADMIN Update — 2026-10-18
+
+- Payment Settings browser: **PASS** — JazzCash/Easypaisa/Bank tabs rendered; JazzCash enabled/complete and QR preview visible. Reversible copy Save/restore passed.
+- CMS browser: **PASS** — WELCOME v7 published, bilingual rows/buttons and active private image visible.
+- Live customer image/WAMID: **UNVERIFIED**; no customer device evidence claimed.
+
 ## GFS-139-PROFESSIONAL-ORDERS Update — 2026-10-16
 
 - All Orders/Verify Payments/Confirmed Payments/Fulfillment tabs: **PASS implementation/deployment**.
