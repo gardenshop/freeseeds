@@ -137,6 +137,14 @@
 | GFS-170 Easypaisa | enabled, complete, no QR fallback, live text/WAMID/customer screenshot | BLOCKED: text-only configuration known from masked D1; browser MCP unavailable |
 | GFS-170 Bank Transfer | enabled, complete, no QR fallback, live text/WAMID/customer screenshot | BLOCKED: text-only configuration known from masked D1; browser MCP unavailable |
 | GFS-170 payment safety | no duplicate order, receipt, approval, PAID, CAPI, fulfillment | PASS: no live customer mutation performed in this execution |
+| GFS-171 QR reconciliation | all three Admin rows, private R2 HTTP/MIME/size/SHA, timestamps and ownership flags | PASS: three current JPEG objects match D1; all ownership flags false |
+| GFS-171 JazzCash ownership | visible QR payee/account matches Admin recipient and independent ownership evidence | BLOCKED: visual Garden Shop/TILL consistency; independent authorization not recorded |
+| GFS-171 Easypaisa ownership | visible QR payee/account matches Admin recipient | FAIL/BLOCKED: visible merchant identifier differs from configured account; QR delivery remains blocked |
+| GFS-171 Bank ownership | visible QR payee/account matches Admin recipient | FAIL/BLOCKED: visible BIO TECH - 5038 differs from configured Garden Shop; QR delivery remains blocked |
+| GFS-171 JazzCash live | fresh order method text, WAMID/status, QR safety, Admin/D1 match | PASS text WAMID READ and PKR 500; QR correctly SKIPPED/unverified |
+| GFS-171 Easypaisa live | post-repair customer text/QR/WAMID/status | BLOCKED: pre-repair click had no response; MCP unavailable for post-deploy retest |
+| GFS-171 Bank Transfer live | customer text/QR/WAMID/status | BLOCKED: MCP unavailable before selection |
+| GFS-171 protected order history | preserve paid historical order and avoid unsafe reset | PASS: `FS-261019-000001` untouched; new pending order `FS-261019-000002` used |
 | GFS-155 PR CI | GitHub required verify check | BLOCKED externally: workflow not started due account billing lock |
 | GFS-144 CMS media delivery | approved upload, R2/D1 gallery, published WhatsApp image WAMID | BLOCKED/unverified: no browser media evidence captured |
 | GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |

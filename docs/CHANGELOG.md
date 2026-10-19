@@ -8,6 +8,13 @@
 - Applied staging D1 QR ownership migration and deployed API `2fd41947-036d-407c-8b4e-b753aaa86bdc` plus final Admin `a00bb9ab-d9dc-43e1-896c-efe2bdbc9718` under the verified canonical Cloudflare account.
 - Live customer WhatsApp testing is blocked in this execution because Chrome DevTools MCP is unavailable; JazzCash QR ownership remains unverified and no customer/WAMID claim is made.
 
+## Unreleased - 2026-10-19 (GFS-171)
+
+- Reconciled current D1/R2/Admin state: all three payment QRs are uploaded, private, JPEG, and hash/size/MIME consistent; prior missing-QR result was stale.
+- Kept all three QR ownership gates false. JazzCash visually matches Garden Shop/TILL but lacks independent ownership authorization; Easypaisa and Bank visibly mismatch configured payee/account and remain blocked.
+- Completed one fresh authorized PKR 500 order. JazzCash text reached `READ` with a real WAMID; QR safely fell back/blocked with `PAYMENT_QR_OWNERSHIP_UNVERIFIED`.
+- Repaired pending-order method switching and deployed API `0817b3ea-7a26-4bc6-a211-9db447de9046`; Easypaisa/Bank post-deploy browser retest remains blocked by intermittent MCP unavailability.
+
 ## Unreleased - 2026-10-19 (GFS-169)
 
 - Verified the project-authorized WhatsApp tester privately in Profile Settings and reused only the GFS sender conversation.

@@ -37,6 +37,34 @@
 - Final Git: `0e12658` pushed to PR #8 branch `codex/gfs-launch-next-001`; pre-existing untracked `images/` was untouched. PR merge remains pending legitimate CI and live browser evidence.
 - Source repair SHA: `0e12658`; documentation follow-ups were pushed afterward. PR #8 verify run `39212898697` was not started because the GitHub account is billing-locked; no billing/security bypass or merge was attempted.
 
+## GFS-171 Final Audit - 2026-10-19
+
+| Method | Admin enabled | R2 QR | Ownership | Live image | WAMID/status | Customer proof |
+| --- | --- | --- | --- | --- | --- | --- |
+| JazzCash | PASS | PASS JPEG/hash/size/MIME | BLOCKED: gate false; visual Garden Shop/TILL consistency only | BLOCKED by ownership gate | Text WAMID recorded, `READ`; QR none | PASS text, private QR screenshot; QR delivery blocked |
+| Easypaisa | PASS | PASS JPEG/hash/size/MIME | FAIL/BLOCKED: visible merchant ID differs from configured account | BLOCKED | BLOCKED post-repair | BLOCKED |
+| Bank Transfer | PASS | PASS JPEG/hash/size/MIME | FAIL/BLOCKED: visible BIO TECH - 5038 differs from configured Garden Shop | BLOCKED | BLOCKED | BLOCKED |
+
+### GFS-170 → GFS-171 Evidence
+
+- Root cause/status: previous missing-QR report was stale D1 data; all three QRs are now uploaded and R2/D1 integrity matches.
+- Ownership: no method was marked verified. JazzCash needs independent payee authorization; Easypaisa and Bank require authorized reconciliation because visible QR identifiers conflict with Admin values.
+- Orders: historical `FS-261019-000001` is now externally `PAID/APPROVED` with receipt and was untouched. Fresh `FS-261019-000002` is `PENDING`, `PAYMENT_PENDING`, PKR 500, and has no receipt/approval/fulfillment.
+- Live JazzCash evidence: customer text matched Garden Shop, TILL, PKR 500, and reference `FS-261019-000002`; text WAMID `wamid.HBgMOTIzMDM0OTAxODEwFQIAERgSQUY1RkM4MjczRDg5MDlBRDVEAA==`, status `READ`; QR status `SKIPPED` with `PAYMENT_QR_OWNERSHIP_UNVERIFIED`.
+- Method-switch repair: `PAYMENT_PENDING` now accepts safe same-order method actions. API deployed `0817b3ea-7a26-4bc6-a211-9db447de9046`. The first Easypaisa click occurred before this deploy and had no response; post-deploy retest was blocked by MCP failure.
+
+### Completion and Release
+
+- QR reconciliation/integrity: **100%**.
+- Admin settings comparison: **100%**.
+- JazzCash live text/safety path: **100%**; QR delivery **0%** pending ownership.
+- Easypaisa live post-repair: **0%**, blocked by MCP after deploy and ownership mismatch.
+- Bank Transfer live: **0%**, blocked by MCP and ownership mismatch.
+- WhatsApp evidence: **33%** (JazzCash text only; Easypaisa/Bank unavailable).
+- Admin evidence: **100%** for configuration/order comparison.
+- Overall GFS-171: **62%**.
+- GO/NO-GO: controlled staging repair **GO**; any QR customer delivery **NO-GO**; three-method success criterion **NO-GO/BLOCKED**; no payment approval/PAID/CAPI/fulfillment performed by this run.
+
 ## GFS-169 Final Audit - 2026-10-19
 
 | Task | BEFORE | AFTER | LIVE EVIDENCE | Result |

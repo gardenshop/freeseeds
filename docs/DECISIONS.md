@@ -559,3 +559,9 @@ The current API/Admin deployment versions were read-only verified under `gisupp@
 The guided payment branch must not reuse CMS `PAYMENT` gallery media. It now resolves the selected D1 payment method, verifies the private R2 object and ownership gate, sends text and QR independently, and persists separate outbound provider IDs/statuses. Missing QR is text-only; any unverified or corrupted QR is blocked and audited.
 
 The live staging configuration has JazzCash QR bytes but no independent payee/QR ownership verification (`qr_owner_verified=0`), while Easypaisa and Bank Transfer are complete text-only methods. No existing financial data was replaced and no QR was marked verified. Because Chrome DevTools MCP was unavailable, no live customer branch was exercised and no WAMID or screenshot was claimed.
+
+## 2026-10-19: GFS-171 Three-QR Reconciliation
+
+The earlier “no Easypaisa/Bank QR” result was stale D1 data: current Admin/D1/R2 evidence shows all three private JPEG objects exist and hash/size/MIME match. That does not authorize delivery. JazzCash is visually consistent with Garden Shop/TILL, while Easypaisa and Bank visibly identify different merchant/account information; all three remain ownership-unverified and QR-blocked.
+
+The historical GFS-169 order changed externally to `PAID/APPROVED` and was preserved. A fresh authorized pending order was used. A state-machine defect that ignored payment-method actions after entering `PAYMENT_PENDING` was repaired and deployed. Browser retest after deployment is required; no raw API or fabricated customer evidence substitutes for it.

@@ -602,3 +602,13 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Deployment identity: Wrangler confirmed `gisupp@gmail.com` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Staging API deployed version `2fd41947-036d-407c-8b4e-b753aaa86bdc`; final staging Admin deployed version `a00bb9ab-d9dc-43e1-896c-efe2bdbc9718`; D1 QR ownership column applied successfully.
 - Browser/live gate: **BLOCKED**. The required Chrome DevTools MCP namespace was unavailable in this execution, so no authenticated tab inventory, tester identity check, WhatsApp selection, customer screenshot, WAMID, payee/QR ownership confirmation, or live order mutation was performed.
 - Quality evidence: `npm test` 14 files/103 tests, build pass, lint pass, audit 0 vulnerabilities. Live method matrix remains incomplete until the authenticated Chrome session is available and the JazzCash payee/QR ownership mismatch is independently resolved.
+
+## GFS-171 Live QR Reconciliation and Method Retest
+
+- MCP recovery: local `chrome-devtools-mcp@1.11.0` and the existing DevTools WebSocket were verified; MCP `list_pages` worked intermittently, then became nonresponsive after repeated reconnects. No Chrome restart or unrelated tab/account mutation was performed.
+- Current D1 reconciliation: all three methods are enabled/complete and now have private JPEG R2 objects. Each authenticated Admin QR endpoint returned HTTP 200, `image/jpeg`, and matching byte count/SHA-256. All three `qr_owner_verified=0`.
+- Visual ownership evidence: JazzCash QR visibly says Garden Shop and TILL/TIL matching configured masked recipient; Easypaisa QR visibly shows merchant identifier `0147••99`, not the configured account ending `9783`; Bank QR visibly says `BIO TECH - 5038`, not configured Garden Shop/account ending `8547`. No ownership flag was changed.
+- Historical order `FS-261019-000001` was found externally changed to `PAID/APPROVED` with receipt under `gisupp@gmail.com`; it was not reset or modified.
+- Fresh authorized test order: `FS-261019-000002`, PKR 500, `PENDING`, `JAZZCASH`, expected PKR 500. JazzCash text outbound WAMID `wamid.HBgMOTIzMDM0OTAxODEwFQIAERgSQUY1RkM4MjczRDg5MDlBRDVEAA==` reached `READ`; QR was safely `SKIPPED` with `PAYMENT_QR_OWNERSHIP_UNVERIFIED`.
+- A pre-repair Easypaisa click produced no server response. The `PAYMENT_PENDING` method-switch fix was deployed as API `0817b3ea-7a26-4bc6-a211-9db447de9046`, but MCP became unavailable before the post-deploy Easypaisa/Bank retest. No raw HTTP substitute was used.
+- Result: JazzCash safe text/fail-closed path **PASS**; JazzCash QR **BLOCKED**; Easypaisa live post-repair **BLOCKED**; Bank Transfer live **BLOCKED**; all three QR ownership verifications **BLOCKED**.

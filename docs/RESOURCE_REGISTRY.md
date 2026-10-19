@@ -464,3 +464,11 @@ No secrets are stored in this registry.
 - Easypaisa: enabled/complete, no QR configured; permitted fallback is text-only.
 - Bank Transfer: enabled/complete, no QR configured; permitted fallback is text-only.
 - Live evidence: Chrome DevTools MCP unavailable; no customer screenshot, WAMID, Meta status callback, or payee/QR ownership verification recorded.
+
+## GFS-171 Live QR Evidence
+
+- Current live QR rows: JazzCash, Easypaisa, Bank Transfer all enabled/complete; private JPEG object HTTP 200; D1/R2 byte and SHA-256 matches; ownership flags all `0`.
+- Private screenshots (not committed): `D:\Temp\kilo\gfs171-jazzcash-qr.png`, `D:\Temp\kilo\gfs171-easypaisa-qr.png`, `D:\Temp\kilo\gfs171-bank-qr.png`.
+- Fresh order: `FS-261019-000002`, PKR 500, `PENDING`; JazzCash text WAMID recorded in STATUS, status `READ`; QR status `SKIPPED` due ownership gate.
+- Historical order: `FS-261019-000001` is now `PAID/APPROVED` with receipt; preserved and not mutated.
+- API post-repair version: `0817b3ea-7a26-4bc6-a211-9db447de9046`; Easypaisa/Bank post-deploy browser retest blocked by intermittent MCP failure.
