@@ -573,3 +573,11 @@ All three QR objects are present and cryptographically consistent, but ownership
 The fresh pending order successfully delivered all three text branches with separate `READ` WAMIDs and matching PKR 500/reference data. Bank QR delivery occurred before the unsafe flag was cleared and is recorded as an incident; no reversal or automatic financial mutation is permitted.
 
 The historical paid order has receipt/actor/timestamp/audit evidence but no external transaction reference or independent bank verification. Its transition to `PACKING` and dead-lettered Purchase CAPI require an explicit fulfillment hold and manual incident review. Check Order was repaired by canonicalizing whitespace commands and then returned the pending order state; launch remains NO-GO for the financial/QR incident.
+
+## 2026-10-19: GFS-173 Locale and Action Safety
+
+The payment-language defects were caused by shared English fields being rendered in the Urdu preview and by `formatPaymentMessage()` falling back per field. Dedicated Urdu instruction/reference columns and a fail-closed `PAYMENT_TRANSLATION_MISSING` path are now the authority. English copy containing Urdu script is rejected; Admin reports missing Urdu translation before customer delivery. Locale-specific CMS fallbacks are explicit and never silently mix languages.
+
+Payment selection is now strictly method-only: complete enabled D1 methods generate the buttons, while `CHECK_ORDER` is status-only and Help/Support/Payment Help are not selector controls. Legacy action rows are ignored during CMS load/publish rather than crashing or recreating obsolete actions. Invalid and stale taps return a localized safe response without state mutation.
+
+No live browser or external dashboard evidence was claimed because the active session did not expose Chrome DevTools MCP. No Cloudflare, Meta, GitHub, payment, QR ownership, fulfillment, or financial mutation was attempted in this execution. Local gates passed with 105 tests, build, lint, and zero high-severity audit findings. Launch remains NO-GO for unresolved QR ownership and the paid/packing incident.

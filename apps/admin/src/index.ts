@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { canTransition, createMetaActivationService, createWhatsAppProvider, getLatestOrderForWaId, MetaActivationAction, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, isPaymentMethodComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, publishedWhatsAppContent, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, WhatsAppActionId, whatsAppActionIdsForTemplate, whatsAppActionLabel, WhatsAppContent, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
+import { canTransition, createMetaActivationService, createWhatsAppProvider, getLatestOrderForWaId, MetaActivationAction, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, isPaymentMethodComplete, isPaymentMethodLocaleComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, publishedWhatsAppContent, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, WhatsAppActionId, whatsAppActionIdsForTemplate, whatsAppActionLabel, WhatsAppContent, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
 
  type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
 const app = new Hono<Env>();
@@ -384,17 +384,17 @@ function paymentSettingsScript(csrfToken: string): string {
     "const csrf=" + csrf + ";",
     "const root=document.querySelector('#methods');",
     "const labels={JAZZCASH:'JazzCash',EASYPAISA:'Easypaisa',BANK_TRANSFER:'Bank Transfer'};",
-    "const fields=[['heading','Heading'],['qrCaption','QR caption'],['shortInstructions','Short instructions',true],['receiptInstructions','Receipt instructions',true],['paymentHelpCopy','Payment help',true],['statusCopy','Status copy',true]];",
+     "const fields=[['heading','Heading'],['qrCaption','QR caption'],['shortInstructions','Short instructions',true],['receiptInstructions','Receipt instructions',true],['paymentHelpCopy','Payment help',true],['statusCopy','Status copy',true]];",
     "const esc=(value)=>String(value??'').replace(/[&<>\"']/g,(character)=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[character]));",
     "const field=(key,label,value,area)=>'<label>'+label+(area?'<textarea data-key=\"'+key+'\">'+esc(value)+'</textarea>':'<input data-key=\"'+key+'\" value=\"'+esc(value)+'\">')+'</label>';",
     "const status=(method)=>method.enabled&&method.recipientName&&method.instructions?'Enabled':'Draft / incomplete';",
-    "const badge=(method)=>'<span class=\"badge '+(method.enabled&&method.recipientName&&method.instructions?'badge-on':'badge-draft')+'\">'+status(method)+'</span>';",
+     "const badge=(method)=>'<span class=\"badge '+(method.enabled&&method.recipientName&&method.instructions?'badge-on':'badge-draft')+'\">'+status(method)+'</span>'+(method.translationWarnings&&method.translationWarnings.length?'<p class=\"status error\">'+method.translationWarnings.join(', ')+'</p>':'');",
     "const qr=(method)=>method.qrR2Key?'<img class=\"qr\" src=\"/api/payment-methods/'+encodeURIComponent(method.method)+'/qr\" alt=\"Private '+labels[method.method]+' QR code\">':'<p class=\"muted\">No QR configured.</p>';",
     "let methods=[];let selected='JAZZCASH';let current={};",
-    "function localized(prefix){return fields.map((item)=>field(prefix+item[0],item[1],current[prefix+item[0]],item[2])).join('');}",
+     "function localized(prefix){const copy=fields.map((item)=>field(prefix+item[0],item[1],current[prefix+item[0]],item[2])).join('');return prefix==='Ur'?field('instructionsUr','Payment instructions',current.instructionsUr,true)+field('referenceInstructionUr','Reference instruction',current.referenceInstructionUr)+copy:copy;}",
     "function card(method){current=method;const basic='<section class=\"panel\"><div class=\"section-heading\"><div><h2>Basic settings</h2><p class=\"muted\">Recipient details used in customer payment instructions.</p></div>'+badge(method)+'</div><div class=\"form-grid\">'+field('recipientName','Recipient name',method.recipientName)+'<label>Account / TILL / TIL identifier<input data-key=\"tillId\" value=\"'+esc(method.tillId)+'\"></label><label>Payment instructions<textarea data-key=\"instructions\">'+esc(method.instructions)+'</textarea></label><label>Reference instruction<input data-key=\"referenceInstruction\" value=\"'+esc(method.referenceInstruction)+'\"></label><label>Sort order<input data-key=\"sortOrder\" type=\"number\" min=\"0\" step=\"1\" value=\"'+(Number.isFinite(Number(method.sortOrder))?Number(method.sortOrder):100)+'\"></label></div><label class=\"toggle\"><input data-key=\"enabled\" type=\"checkbox\" '+(method.enabled?'checked':'')+'> Enable after Garden Shop verification</label></section>';const advanced='<details class=\"panel advanced\"><summary>Advanced EN / UR copy</summary><div class=\"language-grid\"><div><h3>English</h3>'+localized('')+'</div><div dir=\"rtl\"><h3>اردو</h3>'+localized('Ur')+'</div></div></details>';const preview='<section class=\"panel preview-panel\"><div class=\"section-heading\"><div><h2>Customer preview</h2><p class=\"muted\">Preview the payment copy without exposing private storage.</p></div><a class=\"text-link\" href=\"/api/payment-instructions/'+encodeURIComponent(method.method)+'\" target=\"_blank\" rel=\"noreferrer\">Open payment preview</a></div><div class=\"preview-grid\"><div><h3>English</h3><div class=\"preview\" data-preview=\"en\"></div></div><div dir=\"rtl\"><h3>اردو</h3><div class=\"preview\" data-preview=\"ur\"></div></div></div><p class=\"muted preview-links\">Manage shared WhatsApp copy in <a class=\"text-link\" href=\"/whatsapp-content\">WhatsApp CMS</a>.</p></section>';const qrPanel='<section class=\"panel qr-panel\"><div class=\"section-heading\"><div><h2>Private QR code</h2><p class=\"muted\">Stored privately in R2. Uploading replaces the current QR for this method.</p></div></div>'+qr(method)+'<div class=\"actions\"><input data-qr type=\"file\" accept=\"image/png,image/jpeg,image/webp\"><button type=\"button\" data-upload>Upload QR</button></div></section>';return basic+advanced+preview+qrPanel+'<div class=\"save-bar\"><button class=\"primary\" type=\"button\" data-save>Save '+labels[method.method]+' draft</button><span data-result class=\"status\" role=\"status\" aria-live=\"polite\"></span></div>';}",
     "function values(node){const qrPanel=node.querySelector('.qr-panel');if(qrPanel&&!qrPanel.querySelector('[data-key=qrOwnerVerified]')){const label=document.createElement('label');label.className='toggle';label.innerHTML='<input data-key=\"qrOwnerVerified\" type=\"checkbox\" '+(current.qrOwnerVerified?'checked':'')+'> QR ownership independently verified by Garden Shop';qrPanel.insertBefore(label,qrPanel.firstChild);}const body={};for(const element of node.querySelectorAll('[data-key]'))body[element.dataset.key]=element.type==='checkbox'?element.checked:element.type==='number'?Number(element.value):element.value;return body;}",
-    "function preview(node){const value=values(node);node.querySelector('[data-preview=\"en\"]').textContent=[value.heading,value.qrCaption,value.shortInstructions,value.instructions,value.referenceInstruction,value.receiptInstructions,value.paymentHelpCopy,value.statusCopy].filter(Boolean).join('\\n')||'Payment copy preview appears here.';node.querySelector('[data-preview=\"ur\"]').textContent=[value.headingUr,value.qrCaptionUr,value.shortInstructionsUr,value.instructions,value.referenceInstruction,value.receiptInstructionsUr,value.paymentHelpCopyUr,value.statusCopyUr].filter(Boolean).join('\\n')||'اردو ادائیگی کا پیش نظارہ یہاں ظاہر ہوگا۔';}",
+     "function preview(node){const value=values(node);node.querySelector('[data-preview=\"en\"]').textContent=[value.heading,value.qrCaption,value.shortInstructions,value.instructions,value.referenceInstruction,value.receiptInstructions,value.paymentHelpCopy,value.statusCopy].filter(Boolean).join('\\n')||'Payment copy preview appears here.';node.querySelector('[data-preview=\"ur\"]').textContent=[value.headingUr,value.qrCaptionUr,value.shortInstructionsUr,value.instructionsUr,value.referenceInstructionUr,value.receiptInstructionsUr,value.paymentHelpCopyUr,value.statusCopyUr].filter(Boolean).join('\\n')||'اردو ادائیگی کا پیش نظارہ یہاں ظاہر ہوگا۔';}",
     "async function readJson(response){try{return await response.json();}catch{return {};}}",
     "function responseError(response,data){if(data&&typeof data.error==='string')return data.error+(typeof data.message==='string'?' — '+data.message:'');if(data&&typeof data.message==='string')return data.message;return 'Request failed (HTTP '+response.status+').';}",
     "async function request(url,options){const response=await fetch(url,options);const data=await readJson(response);if(!response.ok){const error=new Error(responseError(response,data));error.code=data&&data.error;throw error;}return data;}",
@@ -431,6 +431,11 @@ function paymentCopy(value: unknown, previous: unknown): string | undefined {
   if (value === undefined) return previous == null ? undefined : String(previous);
   if (typeof value !== "string" || value.trim().length > 1000) throw new Error("PAYMENT_COPY_INVALID");
   return value.trim() || undefined;
+}
+
+function validatePaymentLocaleCopy(candidate: { heading?: string; instructions?: string; referenceInstruction?: string; shortInstructions?: string; receiptInstructions?: string; paymentHelpCopy?: string; statusCopy?: string }): void {
+  const english = [candidate.heading, candidate.instructions, candidate.referenceInstruction, candidate.shortInstructions, candidate.receiptInstructions, candidate.paymentHelpCopy, candidate.statusCopy];
+  if (english.some((value) => value && /[\u0600-\u06ff]/u.test(value))) throw new Error("PAYMENT_COPY_LANGUAGE_MIXED");
 }
 
 function rateView(row: Record<string, unknown>) {
@@ -485,7 +490,8 @@ app.get("/api/whatsapp-content", async (c) => {
   for (const row of actionLabels.results ?? []) {
     const mapKey = `${row.template_key}:${row.version}`;
     const labels = labelsByVersion.get(mapKey) ?? { en: {}, ur: {} };
-    const actionId = WhatsAppActionId.parse(row.action_id);
+    const actionId = WhatsAppActionId.safeParse(row.action_id).data;
+    if (!actionId) continue;
     labels.en[actionId] = row.label_en;
     labels.ur[actionId] = row.label_ur;
     labelsByVersion.set(mapKey, labels);
@@ -710,7 +716,8 @@ async function publishWhatsAppContent(c: AdminContext, rollback: boolean) {
   const enActionLabels: Partial<Record<WhatsAppActionId, string>> = {};
   const urActionLabels: Partial<Record<WhatsAppActionId, string>> = {};
   for (const label of targetLabels.results ?? []) {
-    const actionId = WhatsAppActionId.parse(label.action_id);
+    const actionId = WhatsAppActionId.safeParse(label.action_id).data;
+    if (!actionId) continue;
     enActionLabels[actionId] = label.label_en;
     urActionLabels[actionId] = label.label_ur;
   }
@@ -1061,7 +1068,7 @@ app.get("/api/leads", async (c) => {
 app.get("/api/payment-methods", async (c) => {
   if (!c.env.DB) return c.json({ paymentMethods: [] });
   const result = await c.env.DB.prepare("SELECT * FROM payment_methods ORDER BY sort_order, method").all();
-  return c.json({ paymentMethods: result.results.map((row) => { const method = normalizePaymentMethodRow(row as Record<string, unknown>); return { ...method, qrDeliveryStatus: method.qrR2Key ? (method.qrOwnerVerified ? "READY" : "BLOCKED_OWNERSHIP_UNVERIFIED") : "TEXT_ONLY" }; }) });
+   return c.json({ paymentMethods: result.results.map((row) => { const method = normalizePaymentMethodRow(row as Record<string, unknown>); const translationWarnings = isPaymentMethodComplete(method) && !isPaymentMethodLocaleComplete(method, "ur") ? ["PAYMENT_URDU_TRANSLATION_MISSING"] : []; return { ...method, translationWarnings, qrDeliveryStatus: method.qrR2Key ? (method.qrOwnerVerified ? "READY" : "BLOCKED_OWNERSHIP_UNVERIFIED") : "TEXT_ONLY" }; }) });
 });
 
 app.get("/api/payment-configuration", async (c) => {
@@ -1104,7 +1111,7 @@ app.get("/api/configuration", async (c) => {
 app.post("/api/payment-methods/:method", async (c) => {
   if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
   const method = PaymentMethod.parse(c.req.param("method").toUpperCase());
-  const body = await c.req.json<{ recipientName?: unknown; tillId?: unknown; instructions?: unknown; referenceInstruction?: unknown; heading?: unknown; headingUr?: unknown; qrCaption?: unknown; qrCaptionUr?: unknown; shortInstructions?: unknown; shortInstructionsUr?: unknown; receiptInstructions?: unknown; receiptInstructionsUr?: unknown; paymentHelpCopy?: unknown; paymentHelpCopyUr?: unknown; statusCopy?: unknown; statusCopyUr?: unknown; enabled?: unknown; sortOrder?: unknown; qrOwnerVerified?: unknown }>();
+  const body = await c.req.json<{ recipientName?: unknown; tillId?: unknown; instructions?: unknown; instructionsUr?: unknown; referenceInstruction?: unknown; referenceInstructionUr?: unknown; heading?: unknown; headingUr?: unknown; qrCaption?: unknown; qrCaptionUr?: unknown; shortInstructions?: unknown; shortInstructionsUr?: unknown; receiptInstructions?: unknown; receiptInstructionsUr?: unknown; paymentHelpCopy?: unknown; paymentHelpCopyUr?: unknown; statusCopy?: unknown; statusCopyUr?: unknown; enabled?: unknown; sortOrder?: unknown; qrOwnerVerified?: unknown }>();
   const current = c.env.DB ? await c.env.DB.prepare("SELECT * FROM payment_methods WHERE method=?").bind(method).first<Record<string, unknown>>() : undefined;
   try {
     const candidate = {
@@ -1114,7 +1121,9 @@ app.post("/api/payment-methods/:method", async (c) => {
       recipientName: paymentCopy(body.recipientName, current?.recipient_name),
       tillId: paymentCopy(body.tillId, current?.till_id),
       instructions: paymentCopy(body.instructions, current?.instructions),
+      instructionsUr: paymentCopy(body.instructionsUr, current?.instructions_ur),
       referenceInstruction: paymentCopy(body.referenceInstruction, current?.reference_instruction),
+      referenceInstructionUr: paymentCopy(body.referenceInstructionUr, current?.reference_instruction_ur),
       heading: paymentCopy(body.heading, current?.heading),
       headingUr: paymentCopy(body.headingUr, current?.heading_ur),
       qrCaption: paymentCopy(body.qrCaption, current?.qr_caption),
@@ -1131,17 +1140,18 @@ app.post("/api/payment-methods/:method", async (c) => {
       sortOrder: body.sortOrder === undefined ? Number(current?.sort_order ?? 100) : Number.isInteger(body.sortOrder) ? Number(body.sortOrder) : 100,
       qrOwnerVerified: body.qrOwnerVerified === undefined ? Number(current?.qr_owner_verified ?? 0) === 1 : body.qrOwnerVerified === true
     };
-  if (candidate.enabled && !isPaymentMethodComplete(candidate)) return c.json({ error: "PAYMENT_METHOD_INCOMPLETE", message: "Enabled payment methods require a recipient name and instructions." }, 400);
+   validatePaymentLocaleCopy(candidate);
+   if (candidate.enabled && !isPaymentMethodComplete(candidate)) return c.json({ error: "PAYMENT_METHOD_INCOMPLETE", message: "Enabled payment methods require a recipient name and instructions." }, 400);
   if (!c.env.DB) return c.json({ ok: true, simulated: true, configured: isPaymentMethodComplete(candidate) });
   const now = new Date().toISOString();
   await c.env.DB.batch([
-    c.env.DB.prepare("INSERT INTO payment_methods (id,method,display_name,recipient_name,till_id,instructions,reference_instruction,heading,heading_ur,qr_caption,qr_caption_ur,short_instructions,short_instructions_ur,receipt_instructions,receipt_instructions_ur,payment_help_copy,payment_help_copy_ur,status_copy,status_copy_ur,enabled,sort_order,updated_at,updated_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(method) DO UPDATE SET recipient_name=excluded.recipient_name,till_id=excluded.till_id,instructions=excluded.instructions,reference_instruction=excluded.reference_instruction,heading=excluded.heading,heading_ur=excluded.heading_ur,qr_caption=excluded.qr_caption,qr_caption_ur=excluded.qr_caption_ur,short_instructions=excluded.short_instructions,short_instructions_ur=excluded.short_instructions_ur,receipt_instructions=excluded.receipt_instructions,receipt_instructions_ur=excluded.receipt_instructions_ur,payment_help_copy=excluded.payment_help_copy,payment_help_copy_ur=excluded.payment_help_copy_ur,status_copy=excluded.status_copy,status_copy_ur=excluded.status_copy_ur,enabled=excluded.enabled,sort_order=excluded.sort_order,updated_at=excluded.updated_at,updated_by=excluded.updated_by").bind(candidate.id, candidate.method, candidate.displayName, candidate.recipientName ?? null, candidate.tillId ?? null, candidate.instructions ?? null, candidate.referenceInstruction ?? null, candidate.heading ?? null, candidate.headingUr ?? null, candidate.qrCaption ?? null, candidate.qrCaptionUr ?? null, candidate.shortInstructions ?? null, candidate.shortInstructionsUr ?? null, candidate.receiptInstructions ?? null, candidate.receiptInstructionsUr ?? null, candidate.paymentHelpCopy ?? null, candidate.paymentHelpCopyUr ?? null, candidate.statusCopy ?? null, candidate.statusCopyUr ?? null, candidate.enabled ? 1 : 0, candidate.sortOrder, now, c.env.ADMIN_EMAIL),
+     c.env.DB.prepare("INSERT INTO payment_methods (id,method,display_name,recipient_name,till_id,instructions,instructions_ur,reference_instruction,reference_instruction_ur,heading,heading_ur,qr_caption,qr_caption_ur,short_instructions,short_instructions_ur,receipt_instructions,receipt_instructions_ur,payment_help_copy,payment_help_copy_ur,status_copy,status_copy_ur,enabled,sort_order,updated_at,updated_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(method) DO UPDATE SET recipient_name=excluded.recipient_name,till_id=excluded.till_id,instructions=excluded.instructions,instructions_ur=excluded.instructions_ur,reference_instruction=excluded.reference_instruction,reference_instruction_ur=excluded.reference_instruction_ur,heading=excluded.heading,heading_ur=excluded.heading_ur,qr_caption=excluded.qr_caption,qr_caption_ur=excluded.qr_caption_ur,short_instructions=excluded.short_instructions,short_instructions_ur=excluded.short_instructions_ur,receipt_instructions=excluded.receipt_instructions,receipt_instructions_ur=excluded.receipt_instructions_ur,payment_help_copy=excluded.payment_help_copy,payment_help_copy_ur=excluded.payment_help_copy_ur,status_copy=excluded.status_copy,status_copy_ur=excluded.status_copy_ur,enabled=excluded.enabled,sort_order=excluded.sort_order,updated_at=excluded.updated_at,updated_by=excluded.updated_by").bind(candidate.id, candidate.method, candidate.displayName, candidate.recipientName ?? null, candidate.tillId ?? null, candidate.instructions ?? null, candidate.instructionsUr ?? null, candidate.referenceInstruction ?? null, candidate.referenceInstructionUr ?? null, candidate.heading ?? null, candidate.headingUr ?? null, candidate.qrCaption ?? null, candidate.qrCaptionUr ?? null, candidate.shortInstructions ?? null, candidate.shortInstructionsUr ?? null, candidate.receiptInstructions ?? null, candidate.receiptInstructionsUr ?? null, candidate.paymentHelpCopy ?? null, candidate.paymentHelpCopyUr ?? null, candidate.statusCopy ?? null, candidate.statusCopyUr ?? null, candidate.enabled ? 1 : 0, candidate.sortOrder, now, c.env.ADMIN_EMAIL),
     c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_METHOD_UPDATED", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT_METHOD", method, crypto.randomUUID(), JSON.stringify({ method, enabled: candidate.enabled, sortOrder: candidate.sortOrder, qrOwnerVerified: candidate.qrOwnerVerified }), now),
     c.env.DB.prepare("UPDATE payment_methods SET qr_owner_verified=? WHERE method=?").bind(candidate.qrOwnerVerified ? 1 : 0, method)
   ]);
   return c.json({ ok: true, configured: isPaymentMethodComplete(candidate) });
   } catch (error) {
-    return c.json({ error: error instanceof Error && error.message === "PAYMENT_COPY_INVALID" ? error.message : "PAYMENT_METHOD_INVALID" }, 400);
+     return c.json({ error: error instanceof Error && ["PAYMENT_COPY_INVALID", "PAYMENT_COPY_LANGUAGE_MIXED"].includes(error.message) ? error.message : "PAYMENT_METHOD_INVALID" }, 400);
   }
 });
 

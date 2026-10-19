@@ -12,7 +12,9 @@ export type PaymentMethodConfig = {
   qrSizeBytes?: number;
   qrOwnerVerified?: boolean;
   instructions?: string;
+  instructionsUr?: string;
   referenceInstruction?: string;
+  referenceInstructionUr?: string;
   heading?: string;
   headingUr?: string;
   qrCaption?: string;
@@ -39,7 +41,9 @@ export type PaymentInstructions = {
   tillId?: string;
   qrR2Key?: string;
   instructions?: string;
+  instructionsUr?: string;
   referenceInstruction?: string;
+  referenceInstructionUr?: string;
   heading?: string;
   headingUr?: string;
   qrCaption?: string;
@@ -73,6 +77,12 @@ export function isPaymentMethodComplete(config: PaymentMethodConfig | undefined)
   return Boolean(config?.enabled && config.recipientName?.trim() && config.instructions?.trim());
 }
 
+export function isPaymentMethodLocaleComplete(config: PaymentMethodConfig | undefined, locale: "en" | "ur"): boolean {
+  if (!isPaymentMethodComplete(config)) return false;
+  if (locale === "en") return true;
+  return Boolean(config?.headingUr?.trim() && config.instructionsUr?.trim() && config.referenceInstructionUr?.trim() && config.receiptInstructionsUr?.trim());
+}
+
 export function hasCompleteEnabledPaymentMethod(configs: PaymentMethodConfig[]): boolean {
   return configs.some((config) => isPaymentMethodComplete(config));
 }
@@ -96,7 +106,9 @@ export function paymentInstructions(config: PaymentMethodConfig | undefined): Pa
     ...(config.tillId ? { tillId: config.tillId } : {}),
     ...(config.qrR2Key ? { qrR2Key: config.qrR2Key } : {}),
     ...(config.instructions ? { instructions: config.instructions } : {}),
+    ...(config.instructionsUr ? { instructionsUr: config.instructionsUr } : {}),
     ...(config.referenceInstruction ? { referenceInstruction: config.referenceInstruction } : {}),
+    ...(config.referenceInstructionUr ? { referenceInstructionUr: config.referenceInstructionUr } : {}),
     ...(config.heading ? { heading: config.heading } : {}),
     ...(config.headingUr ? { headingUr: config.headingUr } : {}),
     ...(config.qrCaption ? { qrCaption: config.qrCaption } : {}),
@@ -116,13 +128,17 @@ export function formatPaymentMessage(orderNumber: string, amount: number, config
   const payableAmount = requirePaymentAmount(amount);
   const details = paymentInstructions(config);
   if (!details.configured) throw new Error("PAYMENT_METHOD_NOT_CONFIGURED");
-  const lines = [locale === "ur" ? (details.headingUr ?? details.heading ?? details.displayName) : (details.heading ?? details.displayName), locale === "ur" ? `قابل ادائیگی رقم: PKR ${payableAmount}` : `Amount due: PKR ${payableAmount}`, locale === "ur" ? `وصول کنندہ: ${details.recipientName}` : `Recipient: ${details.recipientName}`];
-  if (details.tillId) lines.push(`TILL/TIL ID: ${details.tillId}`);
-  const shortInstructions = locale === "ur" ? (details.shortInstructionsUr ?? details.shortInstructions) : details.shortInstructions;
+  if (!isPaymentMethodLocaleComplete(config, locale)) throw new Error("PAYMENT_TRANSLATION_MISSING");
+  const lines = locale === "ur"
+    ? [`${details.headingUr}`, `قابل ادائیگی رقم: PKR ${payableAmount}`, `وصول کنندہ: ${details.recipientName}`]
+    : [`${details.heading ?? details.displayName}`, `Amount due: PKR ${payableAmount}`, `Recipient: ${details.recipientName}`];
+  if (details.tillId) lines.push(locale === "ur" ? `TILL/TIL شناخت: ${details.tillId}` : `TILL/TIL ID: ${details.tillId}`);
+  const shortInstructions = locale === "ur" ? details.shortInstructionsUr : details.shortInstructions;
   if (shortInstructions) lines.push(shortInstructions);
-  else if (details.instructions) lines.push(details.instructions);
-  if (details.referenceInstruction) lines.push(details.referenceInstruction);
-  const receipt = locale === "ur" ? (details.receiptInstructionsUr ?? details.receiptInstructions ?? "ادائیگی کے بعد رسید اسی چیٹ میں بھیجیں۔") : (details.receiptInstructions ?? "After payment, share your receipt here.");
+  else lines.push(locale === "ur" ? details.instructionsUr! : details.instructions!);
+  const referenceInstruction = locale === "ur" ? details.referenceInstructionUr! : details.referenceInstruction;
+  if (referenceInstruction) lines.push(referenceInstruction);
+  const receipt = locale === "ur" ? details.receiptInstructionsUr! : (details.receiptInstructions ?? "After payment, share your receipt here.");
   lines.push(locale === "ur" ? `حوالہ: ${orderNumber}` : `Reference: ${orderNumber}`, receipt);
   return lines.join("\n");
 }
@@ -140,7 +156,9 @@ export function normalizePaymentMethodRow(row: Record<string, unknown>): Payment
     ...(row.qr_size_bytes ? { qrSizeBytes: Number(row.qr_size_bytes) } : {}),
     qrOwnerVerified: Number(row.qr_owner_verified ?? 0) === 1,
     ...(row.instructions ? { instructions: String(row.instructions) } : {}),
+    ...(row.instructions_ur ? { instructionsUr: String(row.instructions_ur) } : {}),
     ...(row.reference_instruction ? { referenceInstruction: String(row.reference_instruction) } : {}),
+    ...(row.reference_instruction_ur ? { referenceInstructionUr: String(row.reference_instruction_ur) } : {}),
     ...(row.heading ? { heading: String(row.heading) } : {}),
     ...(row.heading_ur ? { headingUr: String(row.heading_ur) } : {}),
     ...(row.qr_caption ? { qrCaption: String(row.qr_caption) } : {}),

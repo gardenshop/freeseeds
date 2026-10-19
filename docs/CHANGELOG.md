@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased - 2026-10-19 (GFS-173)
+
+- Fixed bilingual payment rendering: Urdu messages use dedicated Urdu heading/instructions/reference/receipt copy and fail closed with `PAYMENT_TRANSLATION_MISSING` instead of mixing English fields; English payment fields reject Urdu-script contamination.
+- Added payment migration `0020_payment_locale_and_action_cleanup.sql`, Admin translation warnings, and independent EN/UR previews while preserving D1 amounts, recipients, references, QR ownership, and payment state authority.
+- Removed legacy Payment Help/Support/Check Order controls from payment selection; payment buttons are generated only from complete enabled D1 methods. Historical unknown CMS actions are ignored safely and stale taps receive localized responses.
+- Made Check Order, receipt acknowledgement, pending status, and order-status output follow the persisted locale with explicit locale-safe fallbacks.
+- Local quality gate: 105/105 tests, TypeScript build, ESLint, and high-severity dependency audit pass with 0 vulnerabilities.
+- Verified `gisupp@gmail.com` in canonical Cloudflare account before applying the additive staging SQL and deploying API `4375a7b7-463e-4373-8156-bfb6e1344f49` and Admin `2ab5c27f-30c7-4614-ac89-7ef51d6b73cf`; production was not deployed.
+- Chrome DevTools MCP was unavailable in the active session, so no live WhatsApp/Admin screenshots, WAMIDs, external Meta/tab evidence, push, or production launch is claimed. Financial incident and QR ownership NO-GO gates remain unchanged.
+
 ## Unreleased - 2026-10-19 (GFS-170)
 
 - Repaired guided payment delivery to use the selected method's private R2 QR instead of CMS gallery media.

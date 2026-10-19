@@ -1,5 +1,56 @@
 # Final Report
 
+## GFS-173 Final Report - 2026-10-19
+
+### GFS-172 → GFS-173
+
+- **Before:** Urdu payment preview reused shared English instructions/reference fields; `formatPaymentMessage()` silently mixed locales; status/receipt fallbacks were hardcoded English; payment selection could include `CHECK_ORDER`, and legacy Payment Help action definitions remained active.
+- **After:** EN/UR payment fields are separated, English Urdu-script contamination is rejected, Urdu delivery fails closed on missing required translation, Admin exposes translation warnings, locale persists through receipt/status paths, and payment selectors contain only eligible runtime methods. Legacy CMS action rows are ignored safely.
+- **Validation:** local `npm test` 105/105, `npm run build`, `npm run lint`, `npm audit --audit-level=high` 0 vulnerabilities.
+
+### WhatsApp Stage/Button Matrix
+
+| State | Action | EN | UR | Admin source | Live result | WAMID | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| WELCOME | START / arbitrary text | CMS WELCOME EN + language buttons | CMS WELCOME UR + language buttons | Published WhatsApp CMS WELCOME | Not tested in this execution; MCP unavailable | Unavailable | BLOCKED |
+| LANGUAGE | LANG_EN | Published FERTILIZER EN | N/A | CMS FERTILIZER EN | Not tested | Unavailable | BLOCKED |
+| LANGUAGE | LANG_UR | N/A | Published FERTILIZER UR | CMS FERTILIZER UR | Not tested | Unavailable | BLOCKED |
+| FERTILIZER | ADD_FERTILIZER / SEEDS_ONLY | CMS labels, D1 province list | CMS labels, D1 province list | CMS + D1 tariff | Not tested | Unavailable | BLOCKED |
+| PROVINCE | Province list | D1 province + current fee | D1 province + current fee | D1 province_delivery_rates | Not tested | Unavailable | BLOCKED |
+| DELIVERY | Five text fields | CMS field prompts EN | CMS field prompts UR | Published CMS field templates | Not tested | Unavailable | BLOCKED |
+| REVIEW | PLACE_ORDER | CMS REVIEW EN | CMS REVIEW UR | Published CMS REVIEW | Not tested | Unavailable | BLOCKED |
+| REVIEW | BACK | CMS REVIEW EN | CMS REVIEW UR | Published CMS REVIEW | Not tested | Unavailable | BLOCKED |
+| PAYMENT_METHOD | PAY_JAZZCASH | Payment Settings/D1 eligible method | Payment Settings/D1; Urdu copy required | D1 payment_methods + CMS PAYMENT text | Not tested | Unavailable | BLOCKED |
+| PAYMENT_METHOD | PAY_EASYPAISA | Payment Settings/D1 eligible method | Payment Settings/D1; Urdu copy required | D1 payment_methods + CMS PAYMENT text | Not tested | Unavailable | BLOCKED |
+| PAYMENT_METHOD | PAY_BANK_TRANSFER | Payment Settings/D1 eligible method | Payment Settings/D1; Urdu copy required | D1 payment_methods + CMS PAYMENT text | Not tested | Unavailable | BLOCKED |
+| PAYMENT_PENDING | Receipt image/document | Receipt acknowledgement EN | Receipt acknowledgement UR | CMS RECEIPT + private R2 | Not tested | Unavailable | BLOCKED |
+| PAYMENT_PENDING | CHECK_ORDER / STATUS | D1 order/payment/fulfillment status EN | D1 status + localized status copy UR | D1 + Payment Settings status copy | Not tested | Unavailable | BLOCKED |
+| PAYMENT_PENDING | START | Current order status EN | Current order status UR | D1 + locale router | Not tested | Unavailable | BLOCKED |
+| PAYMENT_REVIEW | CHECK_ORDER | Receipt under review EN | Receipt under review UR | D1 payment/receipt state | Not tested | Unavailable | BLOCKED |
+| PAID | CHECK_ORDER | Approved/fulfillment status EN | Approved/fulfillment status UR | D1 + Admin state | Not tested; incident remains held | Unavailable | BLOCKED |
+| STALE/INVALID | Old payment/help tap | Localized safe method/status response | Localized safe method/status response | Code-controlled safe fallback + CMS locale | Not tested | Unavailable | BLOCKED |
+
+### Payment and Safety
+
+| Method | Admin/config | QR ownership/delivery | Locale status | Result |
+| --- | --- | --- | --- | --- |
+| JazzCash | Existing masked D1 configuration; recipient changes require authorization | `qr_owner_verified=0`; delivery blocked | Urdu copy required before UR delivery | BLOCKED |
+| Easypaisa | Existing masked D1 configuration | Ownership unresolved; delivery blocked | Urdu copy required before UR delivery | BLOCKED |
+| Bank Transfer | Existing masked D1 configuration | Ownership unresolved after prior mismatch; delivery blocked | Urdu copy required before UR delivery | BLOCKED |
+
+- Stale actions removed from runtime selector: Payment Help, Support, and Check Order. Check Order remains available as a separate status action; legacy text taps are safe and localized.
+- `FS-261019-000001` remains a preserved paid/approved/packing incident with missing independent bank verification, no customer transaction reference, and five failed/dead-lettered Purchase CAPI attempts. Fulfillment hold and manual review remain required; no reversal, replay, fabricated evidence, or dispatch was performed.
+- `FS-261019-000002` remains preserved.
+
+### Release Accounting
+
+- Worker IDs: staging API `4375a7b7-463e-4373-8156-bfb6e1344f49`, Admin `2ab5c27f-30c7-4614-ac89-7ef51d6b73cf`; API health and D1 locale-column checks passed. Production was not deployed.
+- Git: start HEAD `48dc85c6b7d1061992d45fc347a3fc335aa81809`; source/doc changes are uncommitted in this execution; PR #8 remains open and no merge is claimed.
+- CI: not rerun; prior required CI billing lock remains an external gate.
+- Unrelated tabs changed: `0` by this execution; Chrome MCP was unavailable, so no tabs were navigated or repurposed.
+- Completed stages: local implementation/documentation 100%; live customer/Admin stages 0% in this execution. Overall 50% for requested GFS-173 evidence package; WhatsApp live 0%; Admin live 0%; financial containment 100% preserved but unresolved.
+- **GO/NO-GO: NO-GO.** Correct locale-safe source behavior is locally repaired, but live bilingual/button evidence, authenticated Admin save→publish→reload proof, WAMIDs, QR ownership, and fulfillment incident closure remain material blockers.
+
 ## GFS-170 QR Delivery Audit - 2026-10-19
 
 | Method | Enabled | Correct details | QR R2 | Live image | WAMID | Customer screenshot |

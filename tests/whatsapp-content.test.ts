@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
-import { deterministicMediaIndex, parseWhatsAppContentDraft, publishedWhatsAppContent, renderWhatsAppContent, selectPublishedWhatsAppContentMedia, storeWhatsAppContentMedia, validateWhatsAppContentImage, whatsAppActionLabel, WhatsAppTemplateKey } from "@gfs/core";
+import { deterministicMediaIndex, parseWhatsAppContentDraft, publishedWhatsAppContent, renderWhatsAppContent, selectPublishedWhatsAppContentMedia, storeWhatsAppContentMedia, validateWhatsAppContentImage, whatsAppActionLabel, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_ACTION_IDS } from "@gfs/core";
 import { guidedReplyMediaKey } from "../apps/api/src/index";
 
 describe("GFS-111 WhatsApp content", () => {
@@ -132,6 +132,11 @@ describe("GFS-111 WhatsApp content", () => {
     expect(whatsAppActionLabel(en!, "LANG_EN")).toBe("English");
     expect(whatsAppActionLabel(ur!, "LANG_EN")).toBe("انگریزی");
     expect(whatsAppActionLabel(ur!, "LANG_UR")).toBe("اردو");
+  });
+
+  it("keeps payment buttons runtime-generated and removes legacy help labels", () => {
+    expect(WHATSAPP_TEMPLATE_ACTION_IDS.PAYMENT).toEqual([]);
+    expect(WHATSAPP_TEMPLATE_ACTION_IDS.PAYMENT).not.toContain("PAYMENT_HELP");
   });
 
   it("uses WELCOME media for every eligible NEW greeting", () => {

@@ -30,9 +30,7 @@ export const WHATSAPP_ACTION_IDS = [
   "SEEDS_ONLY",
   "PLACE_ORDER",
   "BACK",
-  "PAY_JAZZCASH",
   "CHECK_ORDER",
-  "PAYMENT_HELP",
   "SUPPORT"
 ] as const;
 
@@ -43,7 +41,7 @@ export const WHATSAPP_TEMPLATE_ACTION_IDS: Partial<Record<WhatsAppTemplateKey, r
   WELCOME: ["LANG_EN", "LANG_UR"],
   FERTILIZER: ["ADD_FERTILIZER", "SEEDS_ONLY"],
   REVIEW: ["PLACE_ORDER", "BACK"],
-  PAYMENT: ["PAY_JAZZCASH", "PAYMENT_HELP"],
+  PAYMENT: [],
   ORDER_STATUS: ["CHECK_ORDER"],
   SUPPORT: ["SUPPORT"]
 };
@@ -127,7 +125,10 @@ export async function publishedWhatsAppContent(db: D1Database, key: WhatsAppTemp
   if (!row) return undefined;
   try {
     const labels = await db.prepare("SELECT action_id,label_en,label_ur FROM whatsapp_content_version_action_labels WHERE template_key=? AND version=? ORDER BY action_id").bind(key, row.version).all<{ action_id: string; label_en: string; label_ur: string }>();
-    const actionLabels = Object.fromEntries((labels.results ?? []).map((label) => [WhatsAppActionId.parse(label.action_id), locale === "ur" ? label.label_ur : label.label_en]));
+    const actionLabels = Object.fromEntries((labels.results ?? []).flatMap((label) => {
+      const actionId = WhatsAppActionId.safeParse(label.action_id).data;
+      return actionId ? [[actionId, locale === "ur" ? label.label_ur : label.label_en]] : [];
+    }));
     const content = validateWhatsAppTemplateContent(key, { ...(JSON.parse(locale === "ur" ? row.content_ur_json : row.content_en_json) as WhatsAppContent), ...(Object.keys(actionLabels).length ? { actionLabels } : {}) });
     if (sessionKey) {
       try {

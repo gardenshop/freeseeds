@@ -207,6 +207,15 @@ Phone Number ID: `1323932417479627`
 
 Next action: complete the protected Meta Flow publication gate after public-key registration, then verify canonical App↔WABA/runtime credentials before any synthetic send.
 
+## GFS-173 EN/UR Payment and WhatsApp Action Repair - 2026-10-19
+
+- Root cause repaired in source: Urdu payment formatting no longer falls back field-by-field to English. Dedicated `instructions_ur` and `reference_instruction_ur` fields were added by migration `0020_payment_locale_and_action_cleanup.sql`; Urdu delivery now fails closed with `PAYMENT_TRANSLATION_MISSING` when required localized copy is absent.
+- Payment Settings now keeps recipient/account identifiers separate from localized copy, previews English and Urdu independently, rejects Urdu-script contamination in English fields, and reports `PAYMENT_URDU_TRANSLATION_MISSING` for enabled methods missing Urdu copy. Existing QR ownership and verified-recipient gates remain unchanged.
+- Locale routing now persists after language selection through payment, receipt acknowledgement, Check Order, status, and stale-tap responses. Missing CMS content uses an explicit locale-specific safe fallback rather than mixing languages.
+- Payment selectors now contain only complete enabled D1 methods. `CHECK_ORDER`, `SUPPORT`, and legacy `PAYMENT_HELP` controls were removed from payment-selection/payment-pending buttons; `CHECK_ORDER` remains a separate status action. Historical unknown CMS action rows are ignored safely.
+- Local verification: `npm test` 105/105, `npm run build`, `npm run lint`, `npm audit --audit-level=high` 0 vulnerabilities. Canonical Cloudflare identity `gisupp@gmail.com` was verified before staging mutation; migration SQL applied and API `4375a7b7-463e-4373-8156-bfb6e1344f49` plus Admin `2ab5c27f-30c7-4614-ac89-7ef51d6b73cf` deployed. API `/health` PASS and D1 columns verified. No Chrome DevTools MCP namespace was available in this execution, so no live WhatsApp/Admin screenshots, WAMIDs, tab inventory, or production launch is claimed.
+- Financial containment unchanged: `FS-261019-000001` remains the paid/approved/packing incident with missing independent bank verification and five dead-lettered Purchase CAPI attempts; fulfillment hold and manual review remain required. `FS-261019-000002` remains preserved.
+
 ## GFS-74 Exact Meta Flow Gates
 
 - Flow Manager canonical WABA: `2616648355452496` / Get Free Seeds selected; no existing Flow is listed.

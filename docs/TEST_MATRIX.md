@@ -153,6 +153,13 @@
 | GFS-172 Check Order | authorized pending-order status response | PASS after space-to-underscore normalization repair; returned order, payment, amount, receipt and fulfillment state |
 | GFS-172 paid-order forensics | actor, receipt, amount, transitions, CAPI, fulfillment | PASS evidence collected; INCIDENT/HOLD required due missing external verification/reference and `PACKING` transition |
 | GFS-172 release gate | launch only with all QR ownership and critical regressions resolved | NO-GO |
+| GFS-173 payment locale fields | EN/UR Payment Settings fields are isolated; English rejects Urdu contamination; Urdu fields are explicit | PASS local implementation/tests; live save/publish/reload not available without Chrome MCP |
+| GFS-173 payment formatter | selected locale uses only its own localized customer copy; missing Urdu copy fails closed | PASS 105 local tests; live WhatsApp output BLOCKED |
+| GFS-173 CMS fallback | missing translation emits safe locale-specific fallback and Admin warning without silent mixed-language output | PASS implementation; live Admin publish/reload BLOCKED |
+| GFS-173 payment buttons | selector contains only complete enabled D1 methods; no Help/Support/Check Order selector actions | PASS implementation/tests; live button taps BLOCKED |
+| GFS-173 stale actions | legacy payment-help/action rows are ignored; invalid taps return localized safe responses | PASS implementation/tests; live old-tap evidence BLOCKED |
+| GFS-173 complete live bilingual journey | Welcome/image/language through receipt/status in EN and UR | BLOCKED: Chrome DevTools MCP unavailable in this execution |
+| GFS-173 financial incident hold | paid/packing order forensic hold, no replay/reversal/dispatch | BLOCKED external Admin mutation; incident remains NO-GO and preserved |
 | GFS-155 PR CI | GitHub required verify check | BLOCKED externally: workflow not started due account billing lock |
 | GFS-144 CMS media delivery | approved upload, R2/D1 gallery, published WhatsApp image WAMID | BLOCKED/unverified: no browser media evidence captured |
 | GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |

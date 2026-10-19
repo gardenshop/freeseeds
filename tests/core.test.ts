@@ -40,6 +40,13 @@ describe("Get Free Seeds domain", () => {
     expect(hasCompleteEnabledPaymentMethod([{ id: "synthetic", method: "JAZZCASH", displayName: "JazzCash", enabled: false, sortOrder: 10 }])).toBe(false);
     expect(hasCompleteEnabledPaymentMethod([{ id: "synthetic", method: "JAZZCASH", displayName: "JazzCash", recipientName: "Garden Shop", instructions: "Synthetic instruction", enabled: true, sortOrder: 10 }])).toBe(true);
   });
+  it("never mixes English payment fields into an Urdu payment message", () => {
+    const config = { id: "synthetic", method: "BANK_TRANSFER" as const, displayName: "Bank Transfer", recipientName: "Garden Shop", instructions: "Use the order reference", heading: "Bank transfer", instructionsUr: "آرڈر ریفرنس استعمال کریں", headingUr: "بینک ٹرانسفر", referenceInstructionUr: "حوالہ نمبر ضرور لکھیں", receiptInstructionsUr: "ادائیگی کے بعد رسید اسی چیٹ میں بھیجیں۔", enabled: true, sortOrder: 10 };
+    const ur = formatPaymentMessage("FS-100001", 250, config, "ur");
+    expect(ur).toContain("بینک ٹرانسفر");
+    expect(ur).not.toContain("Use the order reference");
+    expect(() => formatPaymentMessage("FS-100001", 250, { ...config, instructionsUr: undefined }, "ur")).toThrow("PAYMENT_TRANSLATION_MISSING");
+  });
   it("validates catalog prices as positive integers without inventing catalog values", () => {
     expect(validatePositiveInteger(1)).toBe(1);
     expect(() => validatePositiveInteger(0)).toThrow("CATALOG_POSITIVE_INTEGER_REQUIRED");

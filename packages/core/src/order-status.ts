@@ -58,7 +58,22 @@ export async function getLatestOrderForWaId(db: D1Database, trustedWaId: string,
   };
 }
 
-export function formatCustomerOrderStatus(order: CurrentOrderDetails): string {
+export function formatCustomerOrderStatus(order: CurrentOrderDetails, locale: "en" | "ur" = "en"): string {
+  if (locale === "ur") {
+    const payment = order.state === "PAID" || order.paymentStatus === "PAID" || order.paymentReviewState === "APPROVED" ? "ادائیگی منظور ہو گئی ہے۔"
+      : order.receiptCount > 0 || order.state === "PAYMENT_REVIEW" || order.paymentReviewState === "REVIEW" ? "ادائیگی کی رسید موصول ہو گئی ہے اور جائزہ جاری ہے۔"
+        : order.state === "PAYMENT_REJECTED" || order.paymentReviewState === "REJECTED" ? "ادائیگی کی رسید منظور نہیں ہوئی؛ نئی رسید درکار ہے۔"
+          : order.state === "PAYMENT_PENDING" || order.paymentReviewState === "PENDING" ? "ادائیگی زیر التوا ہے؛ کوئی رسید جائزے میں نہیں ہے۔"
+            : "ادائیگی ابھی ترتیب نہیں دی گئی۔";
+    const fulfillment = order.state === "DELIVERED" ? "ڈیلیور ہو گیا"
+      : order.state === "DISPATCHED" ? "روانہ کر دیا گیا"
+        : order.state === "PACKING" ? "پیکنگ جاری ہے"
+          : order.state === "CANCELLED" ? "منسوخ"
+            : order.state === "PAID" ? "منظور؛ پیکنگ شروع نہیں ہوئی"
+              : "شروع نہیں ہوا";
+    const method = order.paymentMethod ? ` طریقہ: ${order.paymentMethod}۔` : "";
+    return `آرڈر ${order.orderNumber}\nآرڈر کی حالت: ${order.state}\n${payment}${method}\nرقم: PKR ${order.totalPayablePkr}\nتکمیل: ${fulfillment}۔`;
+  }
   let payment = "Payment has not been configured.";
   if (order.state === "PAID" || order.paymentStatus === "PAID" || order.paymentReviewState === "APPROVED") payment = "Payment approved.";
   else if (order.receiptCount > 0 || order.state === "PAYMENT_REVIEW" || order.paymentReviewState === "REVIEW") payment = "Payment receipt received and under review.";

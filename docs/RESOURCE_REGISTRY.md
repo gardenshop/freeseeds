@@ -480,3 +480,11 @@ No secrets are stored in this registry.
 - Final QR ownership state: JazzCash `0`, Easypaisa `0`, Bank Transfer `0`; no QR is authorized for customer delivery.
 - Incident order: `FS-261019-000001`, Admin approval by `gisupp@gmail.com`, receipt present, no customer transaction reference, `PACKING`, CAPI dead-lettered, fulfillment hold required.
 - Launch status: **NO-GO** until Bank QR incident, Check Order regression, and independent payee ownership are resolved.
+
+## GFS-173 Locale and Action Repair
+
+- Source repair adds migration `0020_payment_locale_and_action_cleanup.sql` with dedicated payment `instructions_ur` and `reference_instruction_ur` columns. No recipient, account, QR, secret, customer, receipt, or financial identifier is recorded here.
+- Runtime action authority: payment buttons are generated from complete enabled D1 methods only; current semantic IDs are `PAY_JAZZCASH`, `PAY_EASYPAISA`, and `PAY_BANK_TRANSFER` at runtime. `CHECK_ORDER` is status-only; `PAYMENT_HELP` is legacy and no longer a CMS/runtime button.
+- Live evidence for GFS-173: **BLOCKED**. Chrome DevTools MCP was not exposed to this session; no list-pages inventory, tab mutation, account verification, screenshot, WAMID, Admin save/publish/reload, or external deployment is claimed.
+- Staging deployment after identity verification: API `4375a7b7-463e-4373-8156-bfb6e1344f49`; Admin `2ab5c27f-30c7-4614-ac89-7ef51d6b73cf`. API `/health` returned `ok` and D1 `payment_methods` exposes `instructions_ur` and `reference_instruction_ur`.
+- Financial incident remains `FS-261019-000001` paid/approved/packing with no independent bank verification; five Purchase CAPI attempts are dead-lettered. Fulfillment hold is required. `FS-261019-000002` remains preserved.
