@@ -130,6 +130,13 @@
 | GFS-169 WAMID evidence | authenticated Meta/D1 WAMIDs for live journey | BLOCKED/UNAVAILABLE: WhatsApp Web/Admin surfaces exposed no WAMID; no ID inferred |
 | GFS-169 payment safety | no fake receipt, PAID, CAPI, fulfillment, or financial approval | PASS: order remains PAYMENT_PENDING with no receipt |
 | GFS-169 deployment identity | Wrangler account and active API/Admin versions | PASS: `gisupp@gmail.com`, clean account; API `2c0335e7-0914-42eb-9501-b207bbe9752b`, Admin `f7acf3f3-4e5e-498e-bdd5-697eb30cd0de` |
+| GFS-170 QR root cause | guided payment branch loads selected method QR rather than CMS gallery | PASS implementation: private R2 method lookup and dedicated QR provider send |
+| GFS-170 QR integrity | ownership gate, R2 MIME/signature, size, checksum, method metadata | PASS local tests; live JazzCash QR remains blocked because `qr_owner_verified=0` and payee ownership is unverified |
+| GFS-170 outbound idempotency | independent text/QR rows, provider IDs, retry only failed part | PASS implementation/tests; live Meta WAMIDs/status callbacks pending browser access |
+| GFS-170 JazzCash | enabled, complete, private JPEG QR, ownership verified, live image/WAMID/customer screenshot | BLOCKED: QR present but ownership gate false; browser MCP unavailable; no image/WAMID claimed |
+| GFS-170 Easypaisa | enabled, complete, no QR fallback, live text/WAMID/customer screenshot | BLOCKED: text-only configuration known from masked D1; browser MCP unavailable |
+| GFS-170 Bank Transfer | enabled, complete, no QR fallback, live text/WAMID/customer screenshot | BLOCKED: text-only configuration known from masked D1; browser MCP unavailable |
+| GFS-170 payment safety | no duplicate order, receipt, approval, PAID, CAPI, fulfillment | PASS: no live customer mutation performed in this execution |
 | GFS-155 PR CI | GitHub required verify check | BLOCKED externally: workflow not started due account billing lock |
 | GFS-144 CMS media delivery | approved upload, R2/D1 gallery, published WhatsApp image WAMID | BLOCKED/unverified: no browser media evidence captured |
 | GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |

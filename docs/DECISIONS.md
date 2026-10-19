@@ -553,3 +553,9 @@ One real guided checkout created `FS-261019-000001` at PKR 500 (fertilizer plus 
 WAMIDs were not exposed by WhatsApp Web or Admin evidence. Browser timestamps and internal WhatsApp request IDs are explicitly not accepted as WAMIDs, so the evidence is recorded as WAMID-unavailable rather than guessed. Payment recipient/account values remain masked and protected from documentation.
 
 The current API/Admin deployment versions were read-only verified under `gisupp@gmail.com` in clean Cloudflare account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`: API `2c0335e7-0914-42eb-9501-b207bbe9752b`, Admin `f7acf3f3-4e5e-498e-bdd5-697eb30cd0de`. No Worker deployment, secret, Meta, billing, or payment approval mutation was performed.
+
+## 2026-10-19: GFS-170 Payment QR Delivery Safety Gate
+
+The guided payment branch must not reuse CMS `PAYMENT` gallery media. It now resolves the selected D1 payment method, verifies the private R2 object and ownership gate, sends text and QR independently, and persists separate outbound provider IDs/statuses. Missing QR is text-only; any unverified or corrupted QR is blocked and audited.
+
+The live staging configuration has JazzCash QR bytes but no independent payee/QR ownership verification (`qr_owner_verified=0`), while Easypaisa and Bank Transfer are complete text-only methods. No existing financial data was replaced and no QR was marked verified. Because Chrome DevTools MCP was unavailable, no live customer branch was exercised and no WAMID or screenshot was claimed.

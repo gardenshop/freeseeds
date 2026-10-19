@@ -592,3 +592,13 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - No receipt was uploaded; payment remains `PENDING`. No PAID, CAPI Purchase, fulfillment, shipping label, or financial approval was performed.
 - Current deployed versions read with Wrangler under verified `gisupp@gmail.com` / clean account: API `2c0335e7-0914-42eb-9501-b207bbe9752b`; Admin `f7acf3f3-4e5e-498e-bdd5-697eb30cd0de`. API `/health` returned `PRODUCTION_INTEGRATION_READY` / WhatsApp enabled.
 - Result: live guided checkout to payment details **PASS**; live WAMID capture **BLOCKED/UNAVAILABLE**; actual payment/approval **NOT RUN** by safety rule.
+
+## GFS-170 Payment QR Delivery Repair
+
+- BEFORE: guided payment selection sent generic `sendConversationReply()` content and never loaded the selected method's private `qr_r2_key`; the existing payment-instructions outbox job had no queue consumer. AFTER: guided selection sends method-specific text and QR as separate idempotent outbound parts, with private R2 verification and failed-part retry.
+- QR safety repair: added `qr_owner_verified` default false; new/replaced QR assets reset verification. Delivery checks ownership gate, R2 method metadata, HTTP MIME, image signature, exact D1 byte size, and SHA-256. Blocked QR creates `PAYMENT_QR_DELIVERY_BLOCKED` audit evidence and an Admin warning.
+- Status callback repair: Meta status records now update each matching outbound row independently (`SENT`, `DELIVERED`, `READ`, or `FAILED`) by provider message ID.
+- Live masked D1 configuration after migration: JazzCash enabled/complete with private JPEG QR, ownership verification `0` (blocked); Easypaisa enabled/complete with no QR (text-only); Bank Transfer enabled/complete with no QR (text-only). Recipient/account values were not read into logs.
+- Deployment identity: Wrangler confirmed `gisupp@gmail.com` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Staging API deployed version `2fd41947-036d-407c-8b4e-b753aaa86bdc`; final staging Admin deployed version `a00bb9ab-d9dc-43e1-896c-efe2bdbc9718`; D1 QR ownership column applied successfully.
+- Browser/live gate: **BLOCKED**. The required Chrome DevTools MCP namespace was unavailable in this execution, so no authenticated tab inventory, tester identity check, WhatsApp selection, customer screenshot, WAMID, payee/QR ownership confirmation, or live order mutation was performed.
+- Quality evidence: `npm test` 14 files/103 tests, build pass, lint pass, audit 0 vulnerabilities. Live method matrix remains incomplete until the authenticated Chrome session is available and the JazzCash payee/QR ownership mismatch is independently resolved.

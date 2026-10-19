@@ -166,3 +166,11 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Payment selector evidence must contain only complete enabled methods. Help, Support, Check Order, or other legacy controls are not valid payment-method selector buttons; do not hide incomplete methods by label alone.
 - WAMIDs must come from authenticated Meta/D1 evidence. WhatsApp Web timestamps or internal browser request IDs are not WAMIDs and must be reported as unavailable.
 - Live evidence records must mask customer phone numbers, payment account/TILL/IBAN values, receipts, tokens, cookies, and other secrets. Screenshots remain private and uncommitted.
+
+## GFS-170 Protected Payment QR Protocol
+
+- A payment QR is a private R2 asset, never a public URL and never a CMS WhatsApp-content gallery image. Guided payment delivery must load the selected method's `qr_r2_key` only.
+- QR delivery requires independent Garden Shop verification of the payee/account and QR ownership. A QR that merely has a key, MIME type, size, or checksum is not ownership proof. The `qr_owner_verified` gate defaults false and every replacement upload resets it.
+- Before Meta delivery, verify R2 object existence, method metadata, HTTP content type, allowed image type/signature, exact byte size, and SHA-256 against D1. A mismatch is fail-closed and must create an Admin-visible warning/audit event.
+- Payment text and QR are separate idempotent outbound records with separate provider IDs and callback statuses. A retry may resend only the failed part; a successful text or QR part must never be duplicated.
+- Missing QR is a valid text-only fallback with an explicit `SKIPPED` QR status. Ownership-unverified, corrupted, mismatched, or otherwise unverified QR assets are `FAILED`/blocked and must not reach Meta.

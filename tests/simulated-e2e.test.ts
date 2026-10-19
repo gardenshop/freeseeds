@@ -15,7 +15,9 @@ describe("simulated WhatsApp-to-delivery journey", () => {
     for (const method of ["JAZZCASH", "EASYPAISA", "BANK_TRANSFER"] as const) expect(paymentInstructions(undefined).configured).toBe(false);
     expect(isPaymentMethodComplete({ id: "synthetic", method: "JAZZCASH", displayName: "JazzCash", enabled: true, sortOrder: 10 })).toBe(false);
     await provider.sendInteractive("synthetic", "Choose payment method", ["JazzCash", "Easypaisa", "Bank Transfer"]);
-    await provider.sendText("synthetic", "Send your payment receipt in this chat.");
+    await provider.sendPaymentInstructions("synthetic", "Send your payment receipt in this chat.", { body: new Uint8Array([1, 2, 3]).buffer, mimeType: "image/png" });
+    expect(provider.sent.map((message) => message.kind)).toContain("text");
+    expect(provider.sent.map((message) => message.kind)).toContain("payment-qr");
     const receipt = await provider.downloadMedia("synthetic-media");
     validateReceipt(receipt.mimeType, receipt.size);
     expect(canTransition("PAYMENT_PENDING", "RECEIPT_SUBMITTED")).toBe(true);

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased - 2026-10-19 (GFS-170)
+
+- Repaired guided payment delivery to use the selected method's private R2 QR instead of CMS gallery media.
+- Added QR ownership verification gate, R2 method/MIME/signature/size/SHA-256 checks, fail-closed audit warnings, and text-only missing-QR fallback.
+- Added independent idempotent text/QR outbound records, provider IDs, status callback updates, and retry of only failed payment parts.
+- Applied staging D1 QR ownership migration and deployed API `2fd41947-036d-407c-8b4e-b753aaa86bdc` plus final Admin `a00bb9ab-d9dc-43e1-896c-efe2bdbc9718` under the verified canonical Cloudflare account.
+- Live customer WhatsApp testing is blocked in this execution because Chrome DevTools MCP is unavailable; JazzCash QR ownership remains unverified and no customer/WAMID claim is made.
+
 ## Unreleased - 2026-10-19 (GFS-169)
 
 - Verified the project-authorized WhatsApp tester privately in Profile Settings and reused only the GFS sender conversation.

@@ -36,6 +36,11 @@ export async function persistWebhookRecords(db: D1Database, payload: unknown, ra
   if (!records.length) return 0;
   const payloadHash = await webhookPayloadHash(rawBody);
   const now = new Date().toISOString();
-  await db.batch(records.map((record) => db.prepare("INSERT OR IGNORE INTO whatsapp_events (id,provider_event_id,event_type,payload_hash,status,correlation_id,created_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), record.providerEventId, record.eventType, payloadHash, record.status, correlationId, now)));
+  const statusUpdates = records.filter((record) => record.eventType === "STATUS").map((record) => {
+    const providerMessageId = record.providerEventId.slice("status:".length);
+    const outboundStatus = record.status === "failed" ? "FAILED" : record.status === "delivered" ? "DELIVERED" : record.status === "read" ? "READ" : record.status === "sent" ? "SENT" : "PROVIDER_STATUS";
+    return db.prepare("UPDATE outbound_messages SET status=?,last_error=?,updated_at=? WHERE provider_message_id=?").bind(outboundStatus, record.status === "failed" ? "META_DELIVERY_FAILED" : null, now, providerMessageId);
+  });
+  await db.batch([...records.map((record) => db.prepare("INSERT OR IGNORE INTO whatsapp_events (id,provider_event_id,event_type,payload_hash,status,correlation_id,created_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), record.providerEventId, record.eventType, payloadHash, record.status, correlationId, now)), ...statusUpdates]);
   return records.length;
 }

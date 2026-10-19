@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { applyFertilizerDecision, isAllowedInstantFormLead, LeadSource, MetaWhatsAppProvider, MetaCapiProvider, formatPaymentMessage, isPaymentMethodComplete, isTerminalOutboxStatus, parseMetaInstantFormLead, parseWebhookRecords, paymentInstructions, quoteOrder, retryDelaySeconds, selectPaymentMethod, shouldDeadLetter, storePaymentQr, storeReceipt, validatePaymentQr } from "@gfs/core";
+import { applyFertilizerDecision, isAllowedInstantFormLead, LeadSource, MetaWhatsAppProvider, MetaCapiProvider, formatPaymentMessage, isPaymentMethodComplete, isTerminalOutboxStatus, parseMetaInstantFormLead, parseWebhookRecords, paymentInstructions, quoteOrder, retryDelaySeconds, selectPaymentMethod, shouldDeadLetter, storePaymentQr, storeReceipt, validatePaymentQr, verifyPaymentQr } from "@gfs/core";
 import api from "../apps/api/src/index";
 
 describe("product readiness safeguards", () => {
@@ -176,6 +176,15 @@ describe("product readiness safeguards", () => {
     expect(writes).toHaveLength(1);
   });
 
+  it("fails closed on payment QR ownership, type, size, and checksum mismatches", async () => {
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).buffer;
+    const digest = await crypto.subtle.digest("SHA-256", png);
+    const sha256 = [...new Uint8Array(digest)].map((value) => value.toString(16).padStart(2, "0")).join("");
+    await expect(verifyPaymentQr(png, "image/png", sha256, png.byteLength)).resolves.toBeUndefined();
+    await expect(verifyPaymentQr(png, "image/png", "0".repeat(64), png.byteLength)).rejects.toThrow("PAYMENT_QR_CHECKSUM_MISMATCH");
+    await expect(verifyPaymentQr(new Uint8Array([1, 2, 3]).buffer, "image/png")).rejects.toThrow("PAYMENT_QR_TYPE_MISMATCH");
+  });
+
   it("associates a repeated private receipt request idempotently", async () => {
     let bucketWrites = 0;
     const db = {
@@ -204,12 +213,13 @@ describe("product readiness safeguards", () => {
 
   it("contains all required D1 tables and no third-party CRM dependency", () => {
     const schema = readFileSync("migrations/0001_initial.sql", "utf8");
-    const migrations = schema + readFileSync("migrations/0002_payment_methods.sql", "utf8") + readFileSync("migrations/0003_lead_sources.sql", "utf8") + readFileSync("migrations/0004_lead_source_page.sql", "utf8") + readFileSync("migrations/0005_customer_whatsapp_numbers.sql", "utf8") + readFileSync("migrations/0006_payment_configuration.sql", "utf8") + readFileSync("migrations/0007_dynamic_catalog.sql", "utf8") + readFileSync("migrations/0008_catalog_category.sql", "utf8") + readFileSync("migrations/0009_product_pack_quantity.sql", "utf8") + readFileSync("migrations/0010_customer_bsuid.sql", "utf8") + readFileSync("migrations/0011_whatsapp_conversations.sql", "utf8") + readFileSync("migrations/0012_order_number_format.sql", "utf8") + readFileSync("migrations/0013_order_cooldown.sql", "utf8") + readFileSync("migrations/0014_admin_controls.sql", "utf8") + readFileSync("migrations/0015_whatsapp_content_templates.sql", "utf8") + readFileSync("migrations/0016_whatsapp_content_journey.sql", "utf8") + readFileSync("migrations/0017_whatsapp_content_media.sql", "utf8") + readFileSync("migrations/0018_whatsapp_content_action_labels.sql", "utf8");
+    const migrations = schema + readFileSync("migrations/0002_payment_methods.sql", "utf8") + readFileSync("migrations/0003_lead_sources.sql", "utf8") + readFileSync("migrations/0004_lead_source_page.sql", "utf8") + readFileSync("migrations/0005_customer_whatsapp_numbers.sql", "utf8") + readFileSync("migrations/0006_payment_configuration.sql", "utf8") + readFileSync("migrations/0007_dynamic_catalog.sql", "utf8") + readFileSync("migrations/0008_catalog_category.sql", "utf8") + readFileSync("migrations/0009_product_pack_quantity.sql", "utf8") + readFileSync("migrations/0010_customer_bsuid.sql", "utf8") + readFileSync("migrations/0011_whatsapp_conversations.sql", "utf8") + readFileSync("migrations/0012_order_number_format.sql", "utf8") + readFileSync("migrations/0013_order_cooldown.sql", "utf8") + readFileSync("migrations/0014_admin_controls.sql", "utf8") + readFileSync("migrations/0015_whatsapp_content_templates.sql", "utf8") + readFileSync("migrations/0016_whatsapp_content_journey.sql", "utf8") + readFileSync("migrations/0017_whatsapp_content_media.sql", "utf8") + readFileSync("migrations/0018_whatsapp_content_action_labels.sql", "utf8") + readFileSync("migrations/0019_payment_qr_ownership.sql", "utf8");
     for (const table of ["customers", "leads", "lead_sources", "orders", "payments", "payment_receipts", "payment_methods", "payment_configuration", "products", "province_delivery_rates", "order_items", "meta_attribution", "capi_events", "whatsapp_events", "outbound_messages", "audit_log", "configuration", "outbox_jobs", "order_number_sequences", "order_requests", "cooldown_exemptions", "whatsapp_content_templates", "whatsapp_content_template_versions", "whatsapp_content_media", "whatsapp_content_version_media", "whatsapp_content_media_selections", "whatsapp_content_version_action_labels"]) expect(migrations).toContain(`CREATE TABLE ${table}`);
     expect(migrations).toContain("ALTER TABLE customers ADD COLUMN bsuid TEXT");
     expect(migrations).toContain("bsuid_business_id");
     expect(readFileSync("migrations/0012_order_number_format.sql", "utf8")).not.toMatch(/UPDATE\s+orders\s+SET\s+order_number/i);
     expect(migrations).toContain("CHECK(advance_amount_pkr IS NULL OR (typeof(advance_amount_pkr) = 'integer' AND advance_amount_pkr > 0))");
+    expect(migrations).toContain("qr_owner_verified");
     expect(migrations).toContain("total_payable INTEGER NOT NULL CHECK(typeof(total_payable) = 'integer' AND total_payable = seed_price + fertilizer_fee + delivery_fee)");
     expect(readFileSync("migrations/0007_dynamic_catalog.sql", "utf8")).not.toMatch(/INSERT INTO (products|province_delivery_rates)/);
     expect(readFileSync("migrations/0008_catalog_category.sql", "utf8")).toContain("ALTER TABLE products ADD COLUMN category");

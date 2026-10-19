@@ -10,6 +10,7 @@ export type PaymentMethodConfig = {
   qrSha256?: string;
   qrMimeType?: string;
   qrSizeBytes?: number;
+  qrOwnerVerified?: boolean;
   instructions?: string;
   referenceInstruction?: string;
   heading?: string;
@@ -137,6 +138,7 @@ export function normalizePaymentMethodRow(row: Record<string, unknown>): Payment
     ...(row.qr_sha256 ? { qrSha256: String(row.qr_sha256) } : {}),
     ...(row.qr_mime_type ? { qrMimeType: String(row.qr_mime_type) } : {}),
     ...(row.qr_size_bytes ? { qrSizeBytes: Number(row.qr_size_bytes) } : {}),
+    qrOwnerVerified: Number(row.qr_owner_verified ?? 0) === 1,
     ...(row.instructions ? { instructions: String(row.instructions) } : {}),
     ...(row.reference_instruction ? { referenceInstruction: String(row.reference_instruction) } : {}),
     ...(row.heading ? { heading: String(row.heading) } : {}),

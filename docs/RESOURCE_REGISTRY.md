@@ -454,3 +454,13 @@ No secrets are stored in this registry.
 - Screenshot evidence: private temporary file `D:\Temp\kilo\gfs169-whatsapp-welcome.png`; not committed and not published.
 - WAMIDs: unavailable from WhatsApp Web/Admin surfaces; no browser request ID is recorded as a WAMID.
 - Current read-only Worker versions: API `2c0335e7-0914-42eb-9501-b207bbe9752b`; Admin `f7acf3f3-4e5e-498e-bdd5-697eb30cd0de`.
+
+## GFS-170 QR Delivery Registry
+
+- Staging API Worker: `2fd41947-036d-407c-8b4e-b753aaa86bdc`.
+- Staging Admin Worker: `a00bb9ab-d9dc-43e1-896c-efe2bdbc9718`.
+- Staging D1: QR ownership column applied; no payment recipient/account values recorded.
+- JazzCash: enabled/complete, private JPEG QR present, ownership verification `0`, customer QR delivery blocked.
+- Easypaisa: enabled/complete, no QR configured; permitted fallback is text-only.
+- Bank Transfer: enabled/complete, no QR configured; permitted fallback is text-only.
+- Live evidence: Chrome DevTools MCP unavailable; no customer screenshot, WAMID, Meta status callback, or payee/QR ownership verification recorded.

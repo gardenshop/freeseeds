@@ -1,5 +1,40 @@
 # Final Report
 
+## GFS-170 QR Delivery Audit - 2026-10-19
+
+| Method | Enabled | Correct details | QR R2 | Live image | WAMID | Customer screenshot |
+| --- | --- | --- | --- | --- | --- | --- |
+| JazzCash | PASS masked D1 | PASS complete masked configuration | BLOCKED: private JPEG present, `qr_owner_verified=0` | BLOCKED ownership gate and browser MCP | BLOCKED | BLOCKED |
+| Easypaisa | PASS masked D1 | PASS complete masked configuration | PASS text-only fallback; no QR configured | BLOCKED browser MCP | BLOCKED | BLOCKED |
+| Bank Transfer | PASS masked D1 | PASS complete masked configuration | PASS text-only fallback; no QR configured | BLOCKED browser MCP | BLOCKED | BLOCKED |
+
+### GFS-169 → GFS-170
+
+- BEFORE: GFS-169 delivered payment details through a generic reply path; QR was not selected from the payment method and live WAMIDs were unavailable.
+- AFTER: selected-method delivery resolves private R2 QR metadata, verifies ownership/type/size/checksum, sends text and QR as separate idempotent parts, and updates each provider status independently.
+- LIVE EVIDENCE: staging API health `ok`, masked D1 configuration read, D1 ownership migration applied, API `2fd41947-036d-407c-8b4e-b753aaa86bdc`, final Admin `a00bb9ab-d9dc-43e1-896c-efe2bdbc9718`; no customer mutation.
+- PAYEE/QR OWNERSHIP: **BLOCKED** for JazzCash. The private JPEG exists, but the Admin ownership gate is false and the previously observed payee/QR identity mismatch was not independently resolved. It was not delivered or replaced.
+- BROWSER EVIDENCE: **BLOCKED**. Chrome DevTools MCP was unavailable, so authenticated tabs, tester identity, WhatsApp selections, screenshots, WAMIDs, Meta status callbacks, and Admin order comparison were not claimed.
+
+### Completion
+
+- QR root-cause repair: **100%**.
+- Local regression/quality gates: **100%** (`103/103` tests, build, lint, audit 0 vulnerabilities).
+- Staging migration/deployment: **100%**.
+- JazzCash live image branch: **0%**, ownership blocked.
+- Easypaisa live branch: **0%**, browser blocked.
+- Bank Transfer live branch: **0%**, browser blocked.
+- WhatsApp live evidence: **0%** in this execution.
+- Admin masked configuration comparison: **100%**.
+- Overall GFS-170: **55%**; remaining work is authenticated browser access, independent JazzCash ownership verification, and three customer-side method/WAMID/screenshot comparisons.
+
+### GO/NO-GO
+
+- Repair/deployment: **GO for controlled staging retest**.
+- Customer-facing QR delivery: **NO-GO** until ownership verification is explicitly recorded.
+- Live three-method E2E: **NO-GO/BLOCKED** without Chrome DevTools MCP and real customer evidence.
+- Payment approval, PAID/CAPI, receipt, fulfillment: **NO-GO**, not performed.
+
 ## GFS-169 Final Audit - 2026-10-19
 
 | Task | BEFORE | AFTER | LIVE EVIDENCE | Result |

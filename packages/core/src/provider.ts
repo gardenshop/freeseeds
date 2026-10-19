@@ -14,6 +14,7 @@ export interface WhatsAppProvider {
   sendTemplate(to: string, template: string, parameters: string[]): Promise<{ providerMessageId: string }>;
   sendFlow(to: string, flowId: string, flowToken: string): Promise<{ providerMessageId: string }>;
   sendPaymentInstructions(to: string, body: string, qr?: { body: ArrayBuffer; mimeType: string }): Promise<{ providerMessageId: string }>;
+  sendPaymentQr(to: string, qr: { body: ArrayBuffer; mimeType: string }): Promise<{ providerMessageId: string }>;
   sendConfirmation(to: string, body: string): Promise<{ providerMessageId: string }>;
   downloadMedia(mediaId: string): Promise<MediaResult>;
 }
@@ -29,7 +30,8 @@ export class MockWhatsAppProvider implements WhatsAppProvider {
   async sendList(to: string, body: string, _buttonText: string, _rows: Array<{ id: string; title: string; description?: string }>, image?: OutboundImage) { this.sent.push({ to, kind: image ? "list-image" : "list", body }); return { providerMessageId: `mock_${this.sent.length}` }; }
   async sendTemplate(to: string, template: string, _parameters: string[] = []) { this.sent.push({ to, kind: "template", body: template }); return { providerMessageId: `mock_${this.sent.length}` }; }
   async sendFlow(to: string, flowId: string, _flowToken: string) { this.sent.push({ to, kind: "flow", body: flowId }); return { providerMessageId: `mock_${this.sent.length}` }; }
-  async sendPaymentInstructions(to: string, body: string, _qr?: { body: ArrayBuffer; mimeType: string }) { this.sent.push({ to, kind: "payment-instructions", body }); return { providerMessageId: `mock_${this.sent.length}` }; }
+  async sendPaymentInstructions(to: string, body: string, qr?: { body: ArrayBuffer; mimeType: string }) { const text = await this.sendText(to, body); return qr ? this.sendPaymentQr(to, qr) : text; }
+  async sendPaymentQr(to: string, _qr: { body: ArrayBuffer; mimeType: string }) { this.sent.push({ to, kind: "payment-qr", body: "Payment QR" }); return { providerMessageId: `mock_${this.sent.length}` }; }
   async sendConfirmation(to: string, body: string) { this.sent.push({ to, kind: "confirmation", body }); return { providerMessageId: `mock_${this.sent.length}` }; }
   async downloadMedia(mediaId: string): Promise<MediaResult> { return { mediaId, mimeType: "image/png", size: 4, body: new Uint8Array([137, 80, 78, 71]).buffer }; }
 }
@@ -100,6 +102,9 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
   async sendPaymentInstructions(to: string, body: string, qr?: { body: ArrayBuffer; mimeType: string }) {
     const text = await this.sendText(to, body);
     if (!qr) return text;
+    return this.sendPaymentQr(to, qr);
+  }
+  async sendPaymentQr(to: string, qr: { body: ArrayBuffer; mimeType: string }) {
     this.requireEnabled();
     const form = new FormData();
     form.append("messaging_product", "whatsapp");
