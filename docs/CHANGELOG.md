@@ -9,6 +9,7 @@
 - Local quality gate: 105/105 tests, TypeScript build, ESLint, and high-severity dependency audit pass with 0 vulnerabilities.
 - Verified `gisupp@gmail.com` in canonical Cloudflare account before applying the additive staging SQL and deploying API `4375a7b7-463e-4373-8156-bfb6e1344f49` and Admin `2ab5c27f-30c7-4614-ac89-7ef51d6b73cf`; production was not deployed.
 - Chrome DevTools MCP was unavailable in the active session, so no live WhatsApp/Admin screenshots, WAMIDs, external Meta/tab evidence, push, or production launch is claimed. Financial incident and QR ownership NO-GO gates remain unchanged.
+- PR #8 required CI run `39262725184` started for the pushed head and failed before recorded steps/logs; local quality gates remain green and no CI/billing/security bypass or merge was attempted.
 
 ## Unreleased - 2026-10-19 (GFS-170)
 

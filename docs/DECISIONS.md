@@ -581,3 +581,5 @@ The payment-language defects were caused by shared English fields being rendered
 Payment selection is now strictly method-only: complete enabled D1 methods generate the buttons, while `CHECK_ORDER` is status-only and Help/Support/Payment Help are not selector controls. Legacy action rows are ignored during CMS load/publish rather than crashing or recreating obsolete actions. Invalid and stale taps return a localized safe response without state mutation.
 
 No live browser or external dashboard evidence was claimed because the active session did not expose Chrome DevTools MCP. No Cloudflare, Meta, GitHub, payment, QR ownership, fulfillment, or financial mutation was attempted in this execution. Local gates passed with 105 tests, build, lint, and zero high-severity audit findings. Launch remains NO-GO for unresolved QR ownership and the paid/packing incident.
+
+PR #8 required CI run `39262725184` was triggered after the push and failed before any recorded job step or downloadable log. This is an external CI failure, not a local test failure; the branch is not mergeable on this evidence and no bypass is permitted.

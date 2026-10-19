@@ -46,7 +46,7 @@
 
 - Worker IDs: staging API `4375a7b7-463e-4373-8156-bfb6e1344f49`, Admin `2ab5c27f-30c7-4614-ac89-7ef51d6b73cf`; API health and D1 locale-column checks passed. Production was not deployed.
 - Git: start HEAD `48dc85c6b7d1061992d45fc347a3fc335aa81809`; source/doc changes are uncommitted in this execution; PR #8 remains open and no merge is claimed.
-- CI: not rerun; prior required CI billing lock remains an external gate.
+- CI: PR #8 required verify run `39262725184` started for head `168ba254` and failed after three seconds before any recorded step/log. No bypass or merge was attempted; local gates remain green.
 - Unrelated tabs changed: `0` by this execution; Chrome MCP was unavailable, so no tabs were navigated or repurposed.
 - Completed stages: local implementation/documentation 100%; live customer/Admin stages 0% in this execution. Overall 50% for requested GFS-173 evidence package; WhatsApp live 0%; Admin live 0%; financial containment 100% preserved but unresolved.
 - **GO/NO-GO: NO-GO.** Correct locale-safe source behavior is locally repaired, but live bilingual/button evidence, authenticated Admin save→publish→reload proof, WAMIDs, QR ownership, and fulfillment incident closure remain material blockers.
