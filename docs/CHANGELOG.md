@@ -15,6 +15,14 @@
 - Completed one fresh authorized PKR 500 order. JazzCash text reached `READ` with a real WAMID; QR safely fell back/blocked with `PAYMENT_QR_OWNERSHIP_UNVERIFIED`.
 - Repaired pending-order method switching and deployed API `0817b3ea-7a26-4bc6-a211-9db447de9046`; Easypaisa/Bank post-deploy browser retest remains blocked by intermittent MCP unavailability.
 
+## Unreleased - 2026-10-19 (GFS-172)
+
+- Restored authenticated MCP intermittently and completed current Admin/D1/R2 reconciliation for all three QRs.
+- Cleared unsafe Easypaisa and Bank ownership flags after visual payee mismatches; JazzCash remains unverified and blocked.
+- Captured live text WAMIDs/statuses for JazzCash, Bank Transfer, and Easypaisa on `FS-261019-000002`; Bank QR delivery before the safety correction is recorded as an incident.
+- Audited `FS-261019-000001`: receipt/approval actor and timestamps recorded, no external transaction reference, `PACKING`, and Purchase CAPI dead-lettered. Launch remains NO-GO pending fulfillment hold and Check Order repair.
+- Repaired Check Order command normalization (`CHECK ORDER` → `CHECK_ORDER`) and verified a live customer response for `FS-261019-000002`.
+
 ## Unreleased - 2026-10-19 (GFS-169)
 
 - Verified the project-authorized WhatsApp tester privately in Profile Settings and reused only the GFS sender conversation.

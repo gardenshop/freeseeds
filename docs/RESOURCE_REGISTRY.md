@@ -472,3 +472,11 @@ No secrets are stored in this registry.
 - Fresh order: `FS-261019-000002`, PKR 500, `PENDING`; JazzCash text WAMID recorded in STATUS, status `READ`; QR status `SKIPPED` due ownership gate.
 - Historical order: `FS-261019-000001` is now `PAID/APPROVED` with receipt; preserved and not mutated.
 - API post-repair version: `0817b3ea-7a26-4bc6-a211-9db447de9046`; Easypaisa/Bank post-deploy browser retest blocked by intermittent MCP failure.
+
+## GFS-172 Launch Audit
+
+- Current QR screenshots: `D:\Temp\kilo\gfs172-easypaisa-qr.png`, `D:\Temp\kilo\gfs172-bank-qr.png`, `D:\Temp\kilo\gfs172-customer-payment-methods.png`; private and uncommitted.
+- Live WAMIDs on `FS-261019-000002`: JazzCash text `...RDg5MDlBRDVEAA==`, Bank text `...ODIwREE0Njg0AA==`, Bank QR `...Nzc4RjFFAA==`, Easypaisa text `...MTU1M0NERjc4AA==`; all recorded as `READ`.
+- Final QR ownership state: JazzCash `0`, Easypaisa `0`, Bank Transfer `0`; no QR is authorized for customer delivery.
+- Incident order: `FS-261019-000001`, Admin approval by `gisupp@gmail.com`, receipt present, no customer transaction reference, `PACKING`, CAPI dead-lettered, fulfillment hold required.
+- Launch status: **NO-GO** until Bank QR incident, Check Order regression, and independent payee ownership are resolved.

@@ -565,3 +565,11 @@ The live staging configuration has JazzCash QR bytes but no independent payee/QR
 The earlier “no Easypaisa/Bank QR” result was stale D1 data: current Admin/D1/R2 evidence shows all three private JPEG objects exist and hash/size/MIME match. That does not authorize delivery. JazzCash is visually consistent with Garden Shop/TILL, while Easypaisa and Bank visibly identify different merchant/account information; all three remain ownership-unverified and QR-blocked.
 
 The historical GFS-169 order changed externally to `PAID/APPROVED` and was preserved. A fresh authorized pending order was used. A state-machine defect that ignored payment-method actions after entering `PAYMENT_PENDING` was repaired and deployed. Browser retest after deployment is required; no raw API or fabricated customer evidence substitutes for it.
+
+## 2026-10-19: GFS-172 Launch Gate and Payment Incident
+
+All three QR objects are present and cryptographically consistent, but ownership is not established by upload, hash, or an Admin checkbox. Easypaisa and Bank verification flags were cleared after current QR visuals contradicted configured recipients. JazzCash remains blocked pending independent ownership evidence.
+
+The fresh pending order successfully delivered all three text branches with separate `READ` WAMIDs and matching PKR 500/reference data. Bank QR delivery occurred before the unsafe flag was cleared and is recorded as an incident; no reversal or automatic financial mutation is permitted.
+
+The historical paid order has receipt/actor/timestamp/audit evidence but no external transaction reference or independent bank verification. Its transition to `PACKING` and dead-lettered Purchase CAPI require an explicit fulfillment hold and manual incident review. Check Order was repaired by canonicalizing whitespace commands and then returned the pending order state; launch remains NO-GO for the financial/QR incident.

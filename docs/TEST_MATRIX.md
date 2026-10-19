@@ -145,6 +145,14 @@
 | GFS-171 Easypaisa live | post-repair customer text/QR/WAMID/status | BLOCKED: pre-repair click had no response; MCP unavailable for post-deploy retest |
 | GFS-171 Bank Transfer live | customer text/QR/WAMID/status | BLOCKED: MCP unavailable before selection |
 | GFS-171 protected order history | preserve paid historical order and avoid unsafe reset | PASS: `FS-261019-000001` untouched; new pending order `FS-261019-000002` used |
+| GFS-172 MCP recovery | authenticated list_pages and reuse protected tabs | PASS intermittent; no Chrome restart; later bridge instability remains |
+| GFS-172 QR authority correction | clear unsafe ownership flags only after visible recipient mismatch and identity verification | PASS: Easypaisa and Bank flags cleared; JazzCash remains blocked |
+| GFS-172 JazzCash live | text, amount/reference, WAMID/status, QR safety | PASS text `READ`; QR `SKIPPED` unverified |
+| GFS-172 Easypaisa live | text, amount/reference, WAMID/status, QR safety | PASS text `READ`; QR `SKIPPED` unverified |
+| GFS-172 Bank live | text, amount/reference, WAMID/status, QR safety | FAIL/INCIDENT: text and QR `READ`, but delivered QR mismatched configured payee before flag clear |
+| GFS-172 Check Order | authorized pending-order status response | PASS after space-to-underscore normalization repair; returned order, payment, amount, receipt and fulfillment state |
+| GFS-172 paid-order forensics | actor, receipt, amount, transitions, CAPI, fulfillment | PASS evidence collected; INCIDENT/HOLD required due missing external verification/reference and `PACKING` transition |
+| GFS-172 release gate | launch only with all QR ownership and critical regressions resolved | NO-GO |
 | GFS-155 PR CI | GitHub required verify check | BLOCKED externally: workflow not started due account billing lock |
 | GFS-144 CMS media delivery | approved upload, R2/D1 gallery, published WhatsApp image WAMID | BLOCKED/unverified: no browser media evidence captured |
 | GFS-92 token ladder | active `/me` → permissions → phone → WABA | FAIL: all Graph-backed reads return HTTP 401; secret values not inspected |

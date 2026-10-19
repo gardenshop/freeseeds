@@ -210,7 +210,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   }
   const text = typeof message.text?.body === "string" ? message.text.body.trim() : String(interactionId ?? interaction?.title ?? message.button?.text ?? (message.interactive?.nfm_reply ? "FLOW_SUBMIT" : "")).trim();
   if (!text) return false;
-  const normalized = (interactionId ?? text).toUpperCase();
+  const normalized = (interactionId ?? text).toUpperCase().replace(/\s+/g, "_");
   const row = await db.prepare("SELECT state,state_data FROM whatsapp_conversations WHERE wa_id=?").bind(event.from).first<{ state: string; state_data: string }>();
   const state = row?.state ?? "NEW";
   const originalStateData = row?.state_data ?? "{}";

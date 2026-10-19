@@ -65,6 +65,31 @@
 - Overall GFS-171: **62%**.
 - GO/NO-GO: controlled staging repair **GO**; any QR customer delivery **NO-GO**; three-method success criterion **NO-GO/BLOCKED**; no payment approval/PAID/CAPI/fulfillment performed by this run.
 
+## GFS-172 Final Audit - 2026-10-19
+
+| Method | Admin enabled | R2 QR/integrity | Ownership | Live WhatsApp | WAMID/status | Customer screenshot | Result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| JazzCash | PASS | JPEG, HTTP 200, D1 hash/size match | BLOCKED; gate false, visual consistency only | Text PKR 500/reference delivered | `...RDlBRDVEAA==`, READ; QR SKIPPED | Included in private chat capture | PASS text / BLOCKED QR |
+| Easypaisa | PASS | JPEG, HTTP 200, D1 hash/size match | BLOCKED; unsafe flag cleared after visible mismatch | Text PKR 500/reference delivered | `...M0NERjc4AA==`, READ; QR SKIPPED | `gfs172-customer-payment-methods.png` | PASS text / BLOCKED QR |
+| Bank Transfer | PASS | JPEG, HTTP 200, D1 hash/size match | BLOCKED; unsafe flag cleared after BIO TECH mismatch | Text and QR delivered before flag clear | text `...Njg0AA==`, QR `...RjFFAA==`, READ | `gfs172-customer-payment-methods.png` | INCIDENT / NO-GO |
+
+### Financial Forensics
+
+- `FS-261019-000001`: receipt uploaded `2026-10-18T19:56:57.227Z`; approved by `gisupp@gmail.com` at `19:57:21.353Z`; PKR 500 Bank Transfer; no customer transaction reference or independent bank verification; transitioned `PAID -> PACKING` at `2026-10-19T08:29:43.843Z`.
+- Purchase CAPI: five failed attempts, dead-lettered with `META_CAPI_DISABLED_UNTIL_CLEAN_EVENT_SOURCE`; no Purchase event sent.
+- Incident: fulfillment hold and manual review required. No reversal, approval, receipt, PAID, CAPI, or fulfillment mutation was made by this run.
+
+### Live and Release Status
+
+- Fresh test order: `FS-261019-000002`, PKR 500, remains `PAYMENT_PENDING`; all three text branches reached `READ` with matching reference/amount.
+- Check Order: **PASS after repair**; returned `FS-261019-000002`, `PAYMENT_PENDING`, Easypaisa, PKR 500, no receipt under review, fulfillment not started.
+- Tests: **103/103**, build/lint/audit/Wrangler dry-runs pass; audit reports 0 vulnerabilities.
+- API Worker: `0817b3ea-7a26-4bc6-a211-9db447de9046`; Admin Worker: `a00bb9ab-d9dc-43e1-896c-efe2bdbc9718`.
+- Git source repair commit: `73193a7`; final branch head after documentation: report at final pushed head. PR #8 remains open; CI billing lock blocks legitimate verification/merge.
+- Unrelated tabs changed: `0`; existing service tabs reused. A transient unrelated chat panel was opened by stale WhatsApp menu interception and closed without messaging or account changes.
+- Completion: MCP **100% intermittent**, QR audit **100%**, Admin comparison **100%**, WhatsApp text **100%**, QR delivery **0% authorized**, Check Order **100% after repair**, financial incident closure **0%**. Overall **75%**.
+- Launch decision: **NO-GO** until Bank QR incident is reviewed, all QR ownership is independently authorized, Check Order is repaired, and fulfillment hold is confirmed.
+
 ## GFS-169 Final Audit - 2026-10-19
 
 | Task | BEFORE | AFTER | LIVE EVIDENCE | Result |
