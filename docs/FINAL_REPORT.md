@@ -35,6 +35,7 @@
 - Live three-method E2E: **NO-GO/BLOCKED** without Chrome DevTools MCP and real customer evidence.
 - Payment approval, PAID/CAPI, receipt, fulfillment: **NO-GO**, not performed.
 - Final Git: `0e12658` pushed to PR #8 branch `codex/gfs-launch-next-001`; pre-existing untracked `images/` was untouched. PR merge remains pending legitimate CI and live browser evidence.
+- Final pushed SHA: `5d00e0d5d98fb6074eda9da1ea3e19b5d8bb377b`. PR #8 verify run `39212898697` was not started because the GitHub account is billing-locked; no billing/security bypass or merge was attempted.
 
 ## GFS-169 Final Audit - 2026-10-19
 
