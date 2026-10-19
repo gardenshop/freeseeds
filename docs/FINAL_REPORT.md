@@ -34,6 +34,7 @@
 - Customer-facing QR delivery: **NO-GO** until ownership verification is explicitly recorded.
 - Live three-method E2E: **NO-GO/BLOCKED** without Chrome DevTools MCP and real customer evidence.
 - Payment approval, PAID/CAPI, receipt, fulfillment: **NO-GO**, not performed.
+- Final Git: `0e12658` pushed to PR #8 branch `codex/gfs-launch-next-001`; pre-existing untracked `images/` was untouched. PR merge remains pending legitimate CI and live browser evidence.
 
 ## GFS-169 Final Audit - 2026-10-19
 
