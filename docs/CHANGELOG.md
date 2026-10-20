@@ -2,13 +2,18 @@
 
 ## Unreleased - 2026-10-20 (GFS-176)
 
+- Continued GFS-176 with authenticated Admin API saves for distinct EN/UR heading, payment instructions, reference instructions, and receipt text for all three methods; all D1 placeholders are present. Recipient/account values were not included or altered. Methods remain disabled and QR-owner flags remain false.
+- Added and applied staging D1 guards that reject enabling/self-verification without a matching scanned, payload-matched derivative plus independent evidence; added an incident audit trigger blocking new fulfillment/confirmation/tracking audit entries for `FS-261019-000001`. Existing financial rows remain unchanged.
+- Added recipient/account-change invalidation: any future D1 recipient/TILL edit clears QR ownership evidence and disables that method until it is independently reverified.
+- Restored `list_pages`, inspected existing Admin tabs, and found no authorized tester conversation in WhatsApp Web. No actual message, order, WAMID, or screenshot was created. One unrelated contact-info panel was opened and immediately closed; no contact data changed.
+- Current deployed Admin still renders stale Urdu preview because the fix is in the un-deployed PR build. PR CI `39395460377` attempt 2 still failed with runner ID 0 and no steps; org billing details are inaccessible without `admin:org`. No deploy or bypass.
 - Extracted three private staging QR originals into method-specific 800×800 PNGs using `extract-payment-qr.mjs`, `sharp`, jsQR, and ZBar. Both decoders agree on source/derivative payloads; exact payload hashes match; quiet zones preserved; original SHA-256 values rechecked unchanged.
 - Added D1 QR-asset provenance and audit schema, recorded the user owner assertion separately from independent verification, and moved each staging Admin preview association to its corresponding derivative. No owner verification flag was set.
 - Disabled all three staging methods and wrote audit entries because payment text templates and independent recipient ownership are incomplete. Recipient/account fields and orders were not changed.
 - Fixed Urdu Admin field key suffix mapping, added language and placeholder validation, and removed hardcoded amount/recipient/reference text from the formatter in favor of EN/UR settings templates and D1-injected placeholders.
 - Payment selectors, stale method actions, Admin enablement, and QR transmission now require matching active extraction provenance plus independent ownership evidence; the text-only path no longer bypasses recipient eligibility.
 - Pending payment outbox retries recheck current order state/amount/method, settings and message copy before sending; outdated queued text/QR actions fail closed after settings or eligibility changes.
-- Live Admin/browser/WhatsApp verification remains BLOCKED: active Chrome MCP does not expose `list_pages`; direct bridge initialization timed out. No WAMID/screenshot or deployment is claimed. Financial incident remains held.
+- Chrome MCP `list_pages` was restored through the installed bridge; the authorized tester chat was not found and the active WhatsApp account number was not verified. No WAMID/screenshot or customer message. The old deployed Admin preview still has the Urdu heading/receipt defect; PR fix is not deployed. Financial incident remains held.
 - Committed and pushed `dec4f1a74b8a50111b514c3a8978f4519e2fd825` to PR #8. Required CI `39395258112` failed with zero steps and no logs; no bypass, merge, or deployment.
 
 ## Unreleased - 2026-10-20 (GFS-175)

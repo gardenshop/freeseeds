@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import app, { renderShippingLabelHtml } from "../apps/admin/src/index";
 
@@ -11,6 +13,7 @@ type BoundStatement = {
 };
 
 class FulfillmentDb {
+  orderNumber = "FS-261016-990001";
   state = "PAID";
   paymentStatus = "PAID";
   reviewState = "APPROVED";
@@ -37,8 +40,9 @@ class FulfillmentDb {
   }
 
   private first(sql: string): Record<string, unknown> | null {
-    if (sql.includes("SELECT o.order_number,o.state,o.payment_status")) return { order_number: "FS-261016-990001", state: this.state, payment_status: this.paymentStatus, review_state: this.reviewState, archived_at: null };
-    if (sql.includes("SELECT order_number,state,archived_at")) return { order_number: "FS-261016-990001", state: this.state, archived_at: null };
+    if (sql.startsWith("SELECT o.id,o.order_number,o.state")) return { id: "order", order_number: this.orderNumber, state: this.state, payment_status: this.paymentStatus, total_payable: 1000, province: "Punjab", created_at: "2026-10-16T12:00:00.000Z", updated_at: "2026-10-16T12:00:00.000Z", archived_at: null, order_confirmed_at: null, full_name: "Synthetic Tester", delivery_address: "Synthetic address", nearby_place: "Synthetic landmark", city: "Synthetic city", wa_id: "923000000001", contact_number: "03000000000", normalized_contact_number: "923000000000", whatsapp_number: "923000000001", normalized_whatsapp_number: "923000000001", payment_id: "payment", method: "BANK_TRANSFER", expected_amount: 1000, approved_amount: 1000, review_state: this.reviewState, submitted_at: "2026-10-16T12:01:00.000Z", approved_by: "admin@example.test", approved_at: "2026-10-16T12:02:00.000Z", rejection_reason: null, customer_transaction_reference: null, payment_created_at: "2026-10-16T12:01:00.000Z", payment_updated_at: "2026-10-16T12:02:00.000Z", receipt_count: 1, items_json: "[]", receipts_json: "[]", tracking_number: null, cancelled_at: null, cancelled_by: null, cancellation_reason: null, archived_by: null, archive_reason: null };
+    if (sql.includes("SELECT o.order_number,o.state,o.payment_status")) return { order_number: this.orderNumber, state: this.state, payment_status: this.paymentStatus, review_state: this.reviewState, archived_at: null };
+    if (sql.includes("SELECT order_number,state,archived_at")) return { order_number: this.orderNumber, state: this.state, archived_at: null };
     if (sql.includes("action='ORDER_CONFIRMED'")) return this.confirmed ? { created_at: "2026-10-16T12:00:00.000Z" } : null;
     return null;
   }
@@ -84,6 +88,7 @@ describe("GFS-141 admin fulfillment actions", () => {
     expect(html).toContain("shipping-label?format=4x6");
     expect(html).toContain("shipping-label?format=A6");
     expect(html).toContain("Assign Tracking");
+    expect(html).toContain("Fulfillment held pending independent settlement verification and transaction reference.");
   });
 
   it("escapes label fields and omits tracking until it is assigned", () => {
@@ -123,5 +128,46 @@ describe("GFS-141 admin fulfillment actions", () => {
     expect(db.paymentStatus).toBe("PAID");
     expect(db.confirmed).toBe(true);
     expect((await app.fetch(new Request("https://admin.example.test/api/orders/order/confirm", { method: "POST", headers: mutationHeaders(session), body: JSON.stringify({ confirmation: "FS-261016-990001" }) }), env(db))).status).toBe(200);
+  });
+
+  it("keeps the unresolved FS-261019 incident on hold in detail, transition, label, tracking, and confirmation routes", async () => {
+    const db = new FulfillmentDb();
+    db.orderNumber = "FS-261019-000001";
+    db.state = "PACKING";
+    const detailResponse = await app.fetch(new Request("https://admin.example.test/api/orders/order", { headers: auth }), env(db));
+    const { order } = await detailResponse.json() as { order: { fulfillmentHold: boolean; canConfirmOrder: boolean; canPrintShippingLabel: boolean } };
+    expect(order.fulfillmentHold).toBe(true);
+    expect(order.canConfirmOrder).toBe(false);
+    expect(order.canPrintShippingLabel).toBe(false);
+    expect((await app.fetch(new Request("https://admin.example.test/api/orders/order/shipping-label?format=4x6", { headers: auth }), env(db))).status).toBe(409);
+
+    const session = await csrf(db);
+    const transition = await app.fetch(new Request("https://admin.example.test/api/orders/order/transition", { method: "POST", headers: mutationHeaders(session), body: JSON.stringify({ from: "PACKING", to: "DISPATCHED", confirmation: db.orderNumber }) }), env(db));
+    expect(transition.status).toBe(409);
+    await expect(transition.json()).resolves.toEqual({ error: "FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED" });
+
+    const tracking = await app.fetch(new Request("https://admin.example.test/api/orders/order/tracking", { method: "POST", headers: mutationHeaders(session), body: JSON.stringify({ trackingNumber: "TRK-SYNTHETIC", confirmation: db.orderNumber }) }), env(db));
+    expect(tracking.status).toBe(409);
+    await expect(tracking.json()).resolves.toEqual({ error: "FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED" });
+
+    const confirmation = await app.fetch(new Request("https://admin.example.test/api/orders/order/confirm", { method: "POST", headers: mutationHeaders(session), body: JSON.stringify({ confirmation: db.orderNumber }) }), env(db));
+    expect(confirmation.status).toBe(409);
+    expect(db.state).toBe("PACKING");
+    expect(db.audits).toHaveLength(0);
+  });
+
+  it("blocks incident fulfillment audit inserts in D1 while permitting unrelated orders", () => {
+    const db = new DatabaseSync(":memory:");
+    try {
+      db.exec("CREATE TABLE orders(id TEXT PRIMARY KEY,order_number TEXT NOT NULL);");
+      db.exec("CREATE TABLE audit_log(id TEXT PRIMARY KEY,action TEXT,actor_type TEXT,actor_id TEXT,entity_type TEXT,entity_id TEXT,correlation_id TEXT,metadata_json TEXT,created_at TEXT);");
+      db.exec("INSERT INTO orders VALUES('incident','FS-261019-000001'),('synthetic','FS-TEST-000001');");
+      db.exec(readFileSync("migrations/0023_incident_fulfillment_audit_hold.sql", "utf8"));
+      expect(() => db.exec("INSERT INTO audit_log VALUES('blocked','ORDER_TRACKING_ASSIGNED','ADMIN','synthetic','ORDER','incident','c','{}','2026-10-20T00:00:00Z')")).toThrow("FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED");
+      db.exec("INSERT INTO audit_log VALUES('allowed','ORDER_TRACKING_ASSIGNED','ADMIN','synthetic','ORDER','synthetic','c','{}','2026-10-20T00:00:00Z');");
+      expect(db.prepare("SELECT COUNT(*) AS count FROM audit_log").get()).toEqual({ count: 1 });
+    } finally {
+      db.close();
+    }
   });
 });

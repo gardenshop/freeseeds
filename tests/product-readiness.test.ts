@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import { applyFertilizerDecision, isAllowedInstantFormLead, LeadSource, MetaWhatsAppProvider, MetaCapiProvider, configuredPaymentMethodNames, formatPaymentMessage, isPaymentMethodComplete, isTerminalOutboxStatus, parseMetaInstantFormLead, parseWebhookRecords, paymentInstructions, quoteOrder, retryDelaySeconds, selectPaymentMethod, shouldDeadLetter, storePaymentQr, storeReceipt, validatePaymentQr, verifyPaymentQr, verifyPaymentQrAsset } from "@gfs/core";
 import api from "../apps/api/src/index";
@@ -90,6 +91,33 @@ describe("product readiness safeguards", () => {
     expect(query).toContain("payment_qr_assets");
     expect(query).toContain("independent_ownership_verified=1");
     expect(query).toContain("qr_owner_verified=1");
+  });
+
+  it("blocks legacy Admin self-verification and method enablement without independent evidence", () => {
+    const db = new DatabaseSync(":memory:");
+    try {
+      db.exec("CREATE TABLE payment_methods(method TEXT PRIMARY KEY,enabled INTEGER NOT NULL,qr_owner_verified INTEGER NOT NULL,qr_r2_key TEXT,qr_sha256 TEXT,qr_mime_type TEXT,qr_size_bytes INTEGER,recipient_name TEXT,till_id TEXT,updated_at TEXT,updated_by TEXT);");
+      db.exec("CREATE TABLE payment_qr_assets(method TEXT,derivative_r2_key TEXT,derivative_sha256 TEXT,derivative_mime_type TEXT,derivative_size_bytes INTEGER,active INTEGER,decoder_agreement INTEGER,payload_match INTEGER,scan_pass INTEGER,independent_ownership_verified INTEGER,independent_evidence_ref TEXT);");
+      db.exec("CREATE TABLE audit_log(id TEXT PRIMARY KEY,action TEXT,actor_type TEXT,actor_id TEXT,entity_type TEXT,entity_id TEXT,correlation_id TEXT,metadata_json TEXT,created_at TEXT);");
+      db.exec("INSERT INTO payment_methods VALUES('JAZZCASH',0,0,'derivative/JAZZCASH/test.png','synthetic-sha','image/png',8,'Synthetic recipient','SYNTHETIC_ACCOUNT','2026-10-20T00:00:00Z','synthetic-test');");
+      db.exec("INSERT INTO payment_qr_assets VALUES('JAZZCASH','derivative/JAZZCASH/test.png','synthetic-sha','image/png',8,1,1,1,1,0,NULL);");
+      db.exec(readFileSync("migrations/0022_payment_qr_owner_guard.sql", "utf8"));
+      db.exec(readFileSync("migrations/0024_reverify_qr_on_recipient_change.sql", "utf8"));
+
+      expect(() => db.exec("UPDATE payment_methods SET qr_owner_verified=1 WHERE method='JAZZCASH'")).toThrow("PAYMENT_RECIPIENT_OWNERSHIP_UNVERIFIED");
+      expect(() => db.exec("UPDATE payment_methods SET enabled=1 WHERE method='JAZZCASH'")).toThrow("PAYMENT_RECIPIENT_OWNERSHIP_UNVERIFIED");
+      expect(db.prepare("SELECT enabled,qr_owner_verified FROM payment_methods WHERE method='JAZZCASH'").get()).toEqual({ enabled: 0, qr_owner_verified: 0 });
+
+      db.exec("UPDATE payment_qr_assets SET independent_ownership_verified=1,independent_evidence_ref='synthetic-evidence-fixture' WHERE method='JAZZCASH';");
+      db.exec("UPDATE payment_methods SET qr_owner_verified=1,enabled=1 WHERE method='JAZZCASH';");
+      expect(db.prepare("SELECT enabled,qr_owner_verified FROM payment_methods WHERE method='JAZZCASH'").get()).toEqual({ enabled: 1, qr_owner_verified: 1 });
+      db.exec("UPDATE payment_methods SET recipient_name='Updated synthetic recipient' WHERE method='JAZZCASH';");
+      expect(db.prepare("SELECT enabled,qr_owner_verified FROM payment_methods WHERE method='JAZZCASH'").get()).toEqual({ enabled: 0, qr_owner_verified: 0 });
+      expect(db.prepare("SELECT independent_ownership_verified,independent_evidence_ref FROM payment_qr_assets WHERE method='JAZZCASH'").get()).toEqual({ independent_ownership_verified: 0, independent_evidence_ref: null });
+      expect(db.prepare("SELECT action FROM audit_log").get()).toEqual({ action: "PAYMENT_RECIPIENT_CHANGED_REVERIFICATION_REQUIRED" });
+    } finally {
+      db.close();
+    }
   });
 
   it("selects only a complete configured method and creates idempotent payment work", async () => {
@@ -251,8 +279,12 @@ describe("product readiness safeguards", () => {
 
   it("contains all required D1 tables and no third-party CRM dependency", () => {
     const schema = readFileSync("migrations/0001_initial.sql", "utf8");
-    const migrations = schema + readFileSync("migrations/0002_payment_methods.sql", "utf8") + readFileSync("migrations/0003_lead_sources.sql", "utf8") + readFileSync("migrations/0004_lead_source_page.sql", "utf8") + readFileSync("migrations/0005_customer_whatsapp_numbers.sql", "utf8") + readFileSync("migrations/0006_payment_configuration.sql", "utf8") + readFileSync("migrations/0007_dynamic_catalog.sql", "utf8") + readFileSync("migrations/0008_catalog_category.sql", "utf8") + readFileSync("migrations/0009_product_pack_quantity.sql", "utf8") + readFileSync("migrations/0010_customer_bsuid.sql", "utf8") + readFileSync("migrations/0011_whatsapp_conversations.sql", "utf8") + readFileSync("migrations/0012_order_number_format.sql", "utf8") + readFileSync("migrations/0013_order_cooldown.sql", "utf8") + readFileSync("migrations/0014_admin_controls.sql", "utf8") + readFileSync("migrations/0015_whatsapp_content_templates.sql", "utf8") + readFileSync("migrations/0016_whatsapp_content_journey.sql", "utf8") + readFileSync("migrations/0017_whatsapp_content_media.sql", "utf8") + readFileSync("migrations/0018_whatsapp_content_action_labels.sql", "utf8") + readFileSync("migrations/0019_payment_qr_ownership.sql", "utf8") + readFileSync("migrations/0020_payment_locale_and_action_cleanup.sql", "utf8") + readFileSync("migrations/0021_payment_qr_asset_audit.sql", "utf8");
+    const migrations = schema + readFileSync("migrations/0002_payment_methods.sql", "utf8") + readFileSync("migrations/0003_lead_sources.sql", "utf8") + readFileSync("migrations/0004_lead_source_page.sql", "utf8") + readFileSync("migrations/0005_customer_whatsapp_numbers.sql", "utf8") + readFileSync("migrations/0006_payment_configuration.sql", "utf8") + readFileSync("migrations/0007_dynamic_catalog.sql", "utf8") + readFileSync("migrations/0008_catalog_category.sql", "utf8") + readFileSync("migrations/0009_product_pack_quantity.sql", "utf8") + readFileSync("migrations/0010_customer_bsuid.sql", "utf8") + readFileSync("migrations/0011_whatsapp_conversations.sql", "utf8") + readFileSync("migrations/0012_order_number_format.sql", "utf8") + readFileSync("migrations/0013_order_cooldown.sql", "utf8") + readFileSync("migrations/0014_admin_controls.sql", "utf8") + readFileSync("migrations/0015_whatsapp_content_templates.sql", "utf8") + readFileSync("migrations/0016_whatsapp_content_journey.sql", "utf8") + readFileSync("migrations/0017_whatsapp_content_media.sql", "utf8") + readFileSync("migrations/0018_whatsapp_content_action_labels.sql", "utf8") + readFileSync("migrations/0019_payment_qr_ownership.sql", "utf8") + readFileSync("migrations/0020_payment_locale_and_action_cleanup.sql", "utf8") + readFileSync("migrations/0021_payment_qr_asset_audit.sql", "utf8") + readFileSync("migrations/0022_payment_qr_owner_guard.sql", "utf8") + readFileSync("migrations/0023_incident_fulfillment_audit_hold.sql", "utf8") + readFileSync("migrations/0024_reverify_qr_on_recipient_change.sql", "utf8");
     for (const table of ["customers", "leads", "lead_sources", "orders", "payments", "payment_receipts", "payment_methods", "payment_qr_assets", "payment_configuration", "products", "province_delivery_rates", "order_items", "meta_attribution", "capi_events", "whatsapp_events", "outbound_messages", "audit_log", "configuration", "outbox_jobs", "order_number_sequences", "order_requests", "cooldown_exemptions", "whatsapp_content_templates", "whatsapp_content_template_versions", "whatsapp_content_media", "whatsapp_content_version_media", "whatsapp_content_media_selections", "whatsapp_content_version_action_labels"]) expect(migrations).toContain(`CREATE TABLE ${table}`);
+    expect(migrations).toContain("CREATE TRIGGER payment_methods_require_verified_qr_on_insert");
+    expect(migrations).toContain("CREATE TRIGGER payment_methods_require_verified_qr_on_update");
+    expect(migrations).toContain("CREATE TRIGGER guard_incident_fulfillment_audit");
+    expect(migrations).toContain("CREATE TRIGGER payment_methods_reverify_after_recipient_change");
     expect(migrations).toContain("ALTER TABLE customers ADD COLUMN bsuid TEXT");
     expect(migrations).toContain("bsuid_business_id");
     expect(readFileSync("migrations/0012_order_number_format.sql", "utf8")).not.toMatch(/UPDATE\s+orders\s+SET\s+order_number/i);

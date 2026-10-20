@@ -138,11 +138,14 @@ function orderView(row: Record<string, unknown>) {
   const receiptCount = Number(row.receipt_count ?? receipts.length);
   const financial = String(row.state) === "PAID" || String(row.payment_status) === "PAID" || String(row.review_state ?? "") === "APPROVED" || row.approved_at != null || row.approved_amount != null;
   const state = String(row.state);
+  const fulfillmentHold = String(row.order_number) === "FS-261019-000001";
   const unpaidState = ["NEW", "DETAILS_COMPLETED", "PAYMENT_PENDING", "PAYMENT_REJECTED", "CANCELLED"].includes(state);
   return {
     id: String(row.id),
     orderNumber: String(row.order_number),
     state,
+    fulfillmentHold,
+    fulfillmentHoldReason: fulfillmentHold ? "Independent bank settlement and customer transaction reference are missing." : null,
     paymentStatus: String(row.payment_status),
     fulfillmentStatus: ["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(state) ? state : "NOT_READY",
     province: row.province == null ? null : String(row.province),
@@ -182,8 +185,8 @@ function orderView(row: Record<string, unknown>) {
     archivedAt: row.archived_at == null ? null : String(row.archived_at),
     archivedBy: row.archived_by == null ? null : String(row.archived_by),
     archiveReason: row.archive_reason == null ? null : String(row.archive_reason),
-    canConfirmOrder: ["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(state) && row.order_confirmed_at == null && row.archived_at == null,
-    canPrintShippingLabel: ["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(state) && row.archived_at == null,
+    canConfirmOrder: !fulfillmentHold && ["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(state) && row.order_confirmed_at == null && row.archived_at == null,
+    canPrintShippingLabel: !fulfillmentHold && ["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(state) && row.archived_at == null,
     canCancel: !financial && receiptCount === 0 && state !== "CANCELLED" && unpaidState && row.archived_at == null,
     canArchive: !financial && receiptCount === 0 && unpaidState && row.archived_at == null
   };
@@ -309,7 +312,7 @@ function orderCard(order){return '<button class="order '+(order.id===selectedId?
 function renderList(data){const list=data.orders||[];totalPages=data.pagination.totalPages;listStatus.textContent=Number(data.total).toLocaleString('en-PK')+' total';pageStatus.textContent='Page '+data.pagination.page+' of '+Math.max(1,totalPages);document.querySelector('#previous').disabled=data.pagination.page<=1;document.querySelector('#next').disabled=data.pagination.page>=totalPages;setTabs(data.counts);if(!list.length){ordersRoot.innerHTML='<div class="skeleton">No orders match this queue and filter set.</div>';selectedId='';detail.innerHTML='<div class="empty"><p>No matching order to inspect.</p></div>';return null}if(!list.some((order)=>order.id===selectedId))selectedId=list[0].id;ordersRoot.innerHTML=list.map(orderCard).join('');for(const button of ordersRoot.querySelectorAll('[data-order-id]'))button.onclick=()=>show(button.dataset.orderId);return selectedId}
 async function load(){const generation=++listGeneration;if(listController)listController.abort();listController=new AbortController();const controller=listController;listStatus.className='muted';listStatus.textContent='Loading orders...';ordersRoot.innerHTML='<div class="skeleton">Loading orders...</div>';try{const data=await requestJson('/api/orders?'+params().toString(),{cache:'no-store'},controller.signal,true);if(generation!==listGeneration)return;const id=renderList(data);syncUrl();if(id)await show(id)}catch(error){if(generation!==listGeneration||isAbort(error))return;fail(error)}}
 function facts(entries){return '<dl class="facts">'+entries.map((entry)=>'<dt>'+esc(entry[0])+'</dt><dd>'+entry[1]+'</dd>').join('')+'</dl>'}
- function actionButton(label,handler,className){const button=document.createElement('button');button.type='button';button.className=className||'';button.textContent=label==='Request clearer receipt'?'Request Clearer Receipt':label;button.onclick=async()=>{button.disabled=true;try{await handler()}catch(error){showActionError(error)}finally{button.disabled=false}};return button}
+ function actionButton(label,handler,className){const button=document.createElement('button');button.type='button';button.className=className||'';button.textContent=label==='Request clearer receipt'?'Request Clearer Receipt':label;const held=document.querySelector('.detail-header h2')?.textContent.trim()==='FS-261019-000001';if(held){button.disabled=true;button.title='Fulfillment held pending independent settlement verification and transaction reference.';const actions=detail.querySelector('.actions');if(actions&&!detail.querySelector('.fulfillment-hold'))actions.insertAdjacentHTML('beforebegin','<p class="error fulfillment-hold" role="alert">Fulfillment is on hold pending independent bank settlement verification and the customer transaction reference.</p>');return button}button.onclick=async()=>{button.disabled=true;try{await handler()}catch(error){showActionError(error)}finally{button.disabled=false}};return button}
 function showActionError(error){const node=detail.querySelector('.action-status');if(node){node.className='action-status error';node.textContent=error instanceof Error?error.message:'Request failed'}}
 const createOperationalActions=addActions;addActions=(order)=>{createOperationalActions(order);const root=detail.querySelector('.actions');if(!root||order.archivedAt)return;if(order.canPrintShippingLabel)root.append(actionButton('Print A6 Shipping Label',()=>{window.open('/api/orders/'+encodeURIComponent(order.id)+'/shipping-label?format=A6','_blank','noopener')}));if(['PAID','PACKING','DISPATCHED','DELIVERED'].includes(order.state)&&!order.trackingNumber)root.append(actionButton('Assign Tracking',async()=>{const value=prompt('Tracking number');if(value&&confirmAction(order,'Assign tracking number'))await run('/api/orders/'+encodeURIComponent(order.id)+'/tracking',{trackingNumber:value,confirmation:order.orderNumber})}))};
 async function mutate(path,body){return requestJson(path,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(body)},undefined,false)}
@@ -1479,6 +1482,7 @@ app.post("/api/orders/:id/tracking", async (c) => {
   const current = await c.env.DB.prepare("SELECT order_number,state,archived_at FROM orders WHERE id=?").bind(c.req.param("id")).first<{ order_number: string; state: OrderState; archived_at: string | null }>();
   if (!current) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
   if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+  if (current.order_number === "FS-261019-000001") return c.json({ error: "FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED" }, 409);
   if (current.archived_at != null) return c.json({ error: "ORDER_ARCHIVED" }, 409);
   if (!["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(current.state)) return c.json({ error: "TRACKING_NOT_READY" }, 409);
   const now = new Date().toISOString();
