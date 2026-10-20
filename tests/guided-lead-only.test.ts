@@ -2,7 +2,8 @@ import { readFileSync, readdirSync } from "node:fs";
 import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import api from "../apps/api/src/index";
-import { getLatestOrderForWaId, persistFlowSubmission } from "@gfs/core";
+import admin from "../apps/admin/src/index";
+import { formatPaymentMessage, getLatestOrderForWaId, MockWhatsAppProvider, persistFlowSubmission, selectPaymentMethod, storeReceipt } from "@gfs/core";
 
 // Synthetic fixtures only. SQLite executes the real migrations and journey SQL.
 const sender = "923001234567";
@@ -96,6 +97,57 @@ beforeEach(() => {
 afterEach(() => { sqlite.close(); vi.unstubAllGlobals(); });
 
 describe("GFS-178 simulated signed-webhook lead-only journey", () => {
+  it("returns retryable 429 before mutation and accepts the signed retry after the durable window", async () => {
+    const first = await inbound("START");
+    for (let i = 1; i < 30; i++) await inbound("START");
+    expect((await callback([first])).status).toBe(200);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_sender_admissions").get()).toEqual({ count: 30 });
+    const before = conversation();
+    const retry = { from: sender, id: "synthetic-throttled-retry", type: "text", text: { body: "START" } };
+    const limited = await callback([retry]);
+    expect(limited.status).toBe(429);
+    expect(limited.headers.get("Retry-After")).toBe("60");
+    expect(conversation()).toEqual(before);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_events WHERE provider_event_id=?").get(retry.id)).toEqual({ count: 0 });
+    const clock = vi.spyOn(Date, "now").mockReturnValue(Date.now() + 61000);
+    try { expect((await callback([retry])).status).toBe(200); } finally { clock.mockRestore(); }
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_sender_admissions").get()).toEqual({ count: 31 });
+  });
+
+  it("exercises NON-PAYABLE bilingual composition, private receipt storage and Admin rejection without enabling a method or PAID", async () => {
+    const order = await persistFlowSubmission(db, { fullName: "NON-PAYABLE Synthetic", deliveryAddress: "Synthetic test lane", nearbyPlace: "Synthetic Park", city: "Synthetic City", contactNumber: "03001234567", productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: "Synthetic Province", fertilizerSelected: false }, undefined, "synthetic-non-payable-tail", sender);
+    const provider = new MockWhatsAppProvider();
+    for (const method of ["JAZZCASH", "EASYPAISA", "BANK_TRANSFER"] as const) {
+      await expect(selectPaymentMethod(db, order.orderId, method)).rejects.toThrow("PAYMENT_METHOD_NOT_ELIGIBLE");
+      // Pure formatter input only: never persisted as a payable method or ownership proof.
+      const config = { id: "NON-PAYABLE", method, displayName: method, enabled: true, sortOrder: 0, qrOwnerVerified: false, recipientName: "NON-PAYABLE FIXTURE", tillId: "NOT-AN-ACCOUNT", heading: "NON-PAYABLE TEST", headingUr: "NON-PAYABLE TEST", instructions: "TEST {amount} {recipientName} {tillId} {orderNumber}", instructionsUr: "ٹیسٹ {amount} {recipientName} {tillId} {orderNumber}", referenceInstruction: "TEST {orderNumber}", referenceInstructionUr: "ٹیسٹ {orderNumber}", receiptInstructions: "TEST ONLY", receiptInstructionsUr: "صرف ٹیسٹ" };
+      for (const locale of ["en", "ur"] as const) {
+        const copy = formatPaymentMessage(order.orderNumber, 125, config, locale);
+        expect(copy).toContain("125");
+        expect(copy).toContain("NON-PAYABLE");
+        expect(copy).not.toMatch(/\{(amount|orderNumber|recipientName|tillId)\}/);
+        await provider.sendPaymentInstructions("synthetic-only", copy, { body: new Uint8Array([1, 2, 3]).buffer, mimeType: "image/png" });
+      }
+    }
+    expect(provider.sent.filter((item) => item.kind === "payment-qr")).toHaveLength(6);
+    const put = vi.fn(async (_key: string, _body: ArrayBuffer, options: R2PutOptions) => options);
+    const receipt = await storeReceipt({ put } as unknown as R2Bucket, order.orderNumber, { body: new Uint8Array([1, 2, 3]).buffer, size: 3, mimeType: "image/png", mediaId: "NON-PAYABLE-SYNTHETIC" });
+    expect(put.mock.calls[0]?.[2]).toMatchObject({ httpMetadata: { cacheControl: "private, no-store" } });
+    const payment = sqlite.prepare("SELECT id FROM payments WHERE order_id=?").get(order.orderId)!;
+    sqlite.prepare("UPDATE orders SET state='PAYMENT_REVIEW' WHERE id=?").run(order.orderId);
+    sqlite.prepare("UPDATE payments SET review_state='REVIEW' WHERE id=?").run(payment.id);
+    sqlite.prepare("INSERT INTO payment_receipts(id,order_id,payment_id,provider_media_id,r2_object_key,mime_type,size_bytes,sha256,submitted_at,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)").run("synthetic-receipt", order.orderId, payment.id, "NON-PAYABLE-SYNTHETIC", receipt.objectKey, "image/png", 3, receipt.sha256, "2026-01-01", "2026-01-01");
+    const adminEnv = { DB: db, ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL" } as never;
+    const headers = { "cf-access-authenticated-user-email": "admin@example.test" };
+    const csrf = await admin.fetch(new Request("https://admin.example.test/api/csrf", { headers }), adminEnv);
+    const { csrfToken } = await csrf.json() as { csrfToken: string };
+    const response = await admin.fetch(new Request(`https://admin.example.test/api/payments/${payment.id}/reject`, { method: "POST", headers: { ...headers, "content-type": "application/json", origin: "https://admin.example.test", cookie: `__Host-gfs_admin_csrf=${csrfToken}`, "x-csrf-token": csrfToken }, body: JSON.stringify({ orderId: order.orderId, confirmation: order.orderNumber, reason: "NON-PAYABLE SYNTHETIC TEST - no funds" }) }), adminEnv);
+    expect(response.status).toBe(200);
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(order.orderId)).toEqual({ state: "PAYMENT_REJECTED", payment_status: "REJECTED" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM capi_events WHERE event_name='Purchase'").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_methods WHERE enabled=1 OR qr_owner_verified=1").get()).toEqual({ count: 0 });
+  });
+
   it("allows a returning exempt tester order without rewriting historical delivery details", async () => {
     sqlite.prepare("INSERT INTO cooldown_exemptions(wa_id,reason,created_by,created_at) VALUES (?,?,?,?)").run(sender, "SYNTHETIC_TEST", "synthetic-admin", "2026-01-01");
     const submission = { fullName: "Synthetic First", deliveryAddress: "First synthetic street", nearbyPlace: "Synthetic Park", city: "Synthetic City", contactNumber: "03001234567", productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: "Synthetic Province", fertilizerSelected: false };
