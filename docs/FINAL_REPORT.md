@@ -29,6 +29,7 @@ Real Garden Shop status per method remains: JazzCash beneficiary proof BLOCKED, 
 - The actual fresh Chrome customer acceptance remains GFS-183: `FS-261020-000011`, 19 READ WAMIDs, 19 private masked screenshots, and matching D1/Admin audit. No new customer messages were sent for GFS-184.
 - Isolated synthetic coverage is unit/integration-only, not a test Chrome customer payment and not Meta transport: three method/locale compositions, mock image calls, private receipt storage and Admin rejection. No live payable fixture was deployed because it could expose/bypass customer configuration.
 - Quality: 135/135 tests; build/lint/audit0; API/Admin Wrangler dry-runs PASS. No source change/deployment in GFS-184. API5151e081/Admin6fb34f89; rollback8a045e16.
+- Post-push CI `39477757383` failed before any step and carries the explicit account billing-lock annotation; no protection bypass.
 - Branch fetched `492e1a4`; final GFS-184 docs/source status to be recorded at pushed commit. GitHub billing lock remains external; no protection bypass.
 - Release: controlled lead-only staging **GO**; payment selector **NO OPTIONS** until independently verified methods exist; public leads **NO-GO** pending CAPI/consent/name release gates; customer payments **NO-GO** pending beneficiary/funds/transaction evidence.
 - Progress estimate: total **92% complete / 8% remaining**; P0 **100/0**; P1 customer journey **100/0**; P2 payment UI/testability **85/15**; P3 release/quality **95/5**. Remaining blockers are independent evidence/authorization, not code flags to bypass.

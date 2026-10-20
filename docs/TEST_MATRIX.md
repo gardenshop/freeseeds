@@ -16,6 +16,7 @@
 | Real receipt/PAID/fulfillment | BLOCKED correctly | No verified method/funds/reference/approval; no mutation |
 | Real Chrome journey | PASS carried forward | GFS-183 `FS-261020-000011`, 19 READ WAMIDs, 19 screenshots, Admin/D1 reconciliation |
 | Full quality gate | PASS | 135/135 tests, build/lint/audit0, Wrangler dry-runs; no source change this run |
+| Remote CI | BLOCKED external | Post-push run39477757383, zero steps, explicit billing lock; no bypass |
 
 ## GFS-183 Requirement Comparison (2026-10-20)
 
