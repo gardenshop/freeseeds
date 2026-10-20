@@ -24,7 +24,7 @@ export async function verifyPaymentQr(body: ArrayBuffer, mimeType: string, expec
 }
 
 export async function storePaymentQr(bucket: R2Bucket, method: string, body: ArrayBuffer, mimeType: string, now = new Date()): Promise<{ objectKey: string; sha256: string; sizeBytes: number }> {
-  validatePaymentQr(mimeType, body.byteLength);
+  await verifyPaymentQr(body, mimeType);
   const digest = await crypto.subtle.digest("SHA-256", body);
   const sha256 = [...new Uint8Array(digest)].map((value) => value.toString(16).padStart(2, "0")).join("");
   const objectKey = `payment-qr/${method}/${now.toISOString().slice(0, 10)}/${crypto.randomUUID()}-${sha256.slice(0, 12)}`;

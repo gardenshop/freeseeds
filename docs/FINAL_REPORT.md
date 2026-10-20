@@ -1,5 +1,54 @@
 # Final Report
 
+## GFS-174 Final Guided WhatsApp Journey - 2026-10-20
+
+### Decision
+
+**NO-GO for production launch.** The guided journey received local safety repairs, but live WhatsApp/Admin evidence is unavailable because this execution's Chrome DevTools MCP namespace did not expose `list_pages`, and the audited paid/packing incident plus QR ownership remain unresolved. Safe lead collection and controlled guided checkout remain separable from payment approval/fulfillment authorization.
+
+### GFS-173 Carry-Forward Audit
+
+| GFS-173 issue | GFS-174 disposition |
+| --- | --- |
+| Live bilingual journey, buttons, screenshots, WAMIDs | Carried forward; BLOCKED by MCP/live tester evidence |
+| Admin CMS/payment/tariff/orders authenticated edit/save/publish/reload | Carried forward; BLOCKED by MCP; no mutation claimed |
+| QR ownership/payee authorization | Carried forward; fail-closed; no owner authorization supplied |
+| `FS-261019-000001` independent bank verification, reference, Purchase CAPI | Carried forward; explicit confirmation/fulfillment hold added |
+| Production Meta sender/onboarding and provider readiness | Carried forward; production remains `META_ASSETS_PENDING`/disabled |
+| Remote CI and PR merge | Carried forward; no bypass or merge claimed |
+| Obsolete payment actions and stale CMS rows | Repaired locally; historical taps remain safe and new selectors exclude them |
+| Invalid field input, `wa_id`, retry/idempotency, callback number lock, QR metadata | Repaired locally and covered by the green quality gate |
+
+### State/Button Matrix
+
+| Stage | New actions | Source/control | Evidence |
+| --- | --- | --- | --- |
+| WELCOME/LANGUAGE | `LANG_UR`, `LANG_EN` | Published WELCOME/FERTILIZER CMS; stable IDs and numbered fallback | Local only; live BLOCKED |
+| FERTILIZER | `ADD_FERTILIZER`, `SEEDS_ONLY` | Published FERTILIZER CMS; D1 tariff remains server authority | Local only; live BLOCKED |
+| PROVINCE | D1 enabled province rows with live fee | D1 `province_delivery_rates` and quote engine | Local only; live BLOCKED |
+| DELIVERY | Five text fields | Published field templates; server validation | Local only; live BLOCKED |
+| REVIEW | `PLACE_ORDER`, `BACK` | Published REVIEW; order/amount code-controlled | Local only; live BLOCKED |
+| PAYMENT_METHOD | Eligible configured methods only | D1 `payment_methods` plus published PAYMENT copy; no Help/Support/Check Order | Local only; live BLOCKED |
+| METHOD_SELECTED/PENDING | Relevant instructions plus receipt/status path | D1 selected amount/account/instructions, private QR gate, localized CMS | Local only; live BLOCKED |
+| PAYMENT_REVIEW/PAID | `CHECK_ORDER` status path; Admin approval only | D1 payment/order state; receipt and transaction-reference gate | Local only; incident remains held |
+| Historical legacy taps | Safe localized fallback; no state mutation | Code-controlled dispatcher | Local only; live stale-tap BLOCKED |
+
+### Payment/Safety Table
+
+| Method | Configured/eligible | QR ownership | Delivered/WAMID/status |
+| --- | --- | --- | --- |
+| JazzCash | D1 eligibility is runtime-filtered; live current values not reverified | Unverified, blocked | No live delivery evidence in this execution |
+| Easypaisa | D1 eligibility is runtime-filtered; live current values not reverified | Unverified/mismatch history, blocked | No live delivery evidence in this execution |
+| Bank Transfer | D1 eligibility is runtime-filtered; live current values not reverified | Unverified/mismatch incident history, blocked | No live delivery evidence in this execution |
+
+### Evidence and Completion
+
+- Git baseline: `8f1c2da`; source changes are uncommitted in this workspace; `images/` remains untouched. Controlled staging deployments: API `4779d60b-6f93-41d4-b1e3-1c37bdfcf599`, Admin `2cb3d3ec-9104-41d9-a3d9-45cb6b1cf8ab`; production deployment was intentionally withheld.
+- Cloudflare identity: PASS, `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- Local quality: PASS, 105/105 tests, build, lint, and high-severity audit with 0 findings.
+- Live WhatsApp: 0% new evidence; Admin live: 0% new evidence; payment/QR authorization: 0% closure; local repair: 100%; evidence package overall: 35% based only on verified local/static evidence.
+- Exact blockers: MCP `list_pages` unavailable to active namespace; authorized tester/browser/WAMID/screenshots unavailable; recipient/QR ownership not independently authorized; incident bank verification and transaction reference absent; Purchase CAPI failed history unresolved; production Meta/provider readiness remains gated; remote CI/merge not legitimately verified.
+
 ## GFS-173 Final Report - 2026-10-19
 
 ### GFS-172 → GFS-173

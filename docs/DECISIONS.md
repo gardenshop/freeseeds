@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-20: GFS-174 Guided Journey and Launch Gate
+
+GFS-174 keeps the existing guided WhatsApp journey as the launch path and leaves native Flow OFF. Local inspection found and repaired invalid delivery-field acceptance, missing Meta `wa_id` persistence, positional interactive fallback, failed outbound retry, legacy PAYMENT action contamination, missing canonical callback Phone ID enforcement, QR metadata fail-open, missing receipt audit/status action, locale-stale payment idempotency, and unsafe legacy Flow POST acceptance. The repairs passed 105/105 tests, build, lint, and high-severity audit.
+
+The active MCP namespace did not expose Chrome DevTools `list_pages`. Chrome and the packaged bridge were diagnosed, but no MCP initialization result was obtained; no live WhatsApp/Admin claims are made. Cloudflare identity was independently verified as `gisupp@gmail.com` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; controlled staging API/Admin deployments succeeded, while production/config/payment mutations were withheld.
+
+Payment and fulfillment remain fail-closed. QR delivery now requires exact R2 metadata and independent ownership. Approval requires a receipt plus transaction reference. `FS-261019-000001` is explicitly held from confirmation/fulfillment because independent bank verification and Purchase CAPI evidence remain absent. This is a NO-GO, not a request to bypass or repair evidence artificially.
+
 ## 2026-10-10: GFS-68 Meta Form Launch First
 
 The temporary customer acquisition launch is separated from WhatsApp API activation. `META_FORM_LAUNCH_FIRST` permits native Meta Form submission and Leads Center capture without a WhatsApp system-user token, phone `/register`, `subscribed_apps`, WhatsApp webhook, or Lead→D1 realtime integration. WhatsApp remains `WHATSAPP_API_ENHANCEMENT_PENDING`.

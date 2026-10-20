@@ -11,7 +11,7 @@ export async function selectPaymentMethod(db: D1Database, orderId: string, metho
   const persistedAmount = Number(row.total_payable);
   const amount = requirePaymentAmount(persistedAmount);
   const now = new Date().toISOString();
-  const idempotencyKey = `payment_instructions_${orderId}_${method}`;
+  const idempotencyKey = `payment_instructions_${orderId}_${method}_${locale}`;
   await db.batch([
     db.prepare("UPDATE payments SET method=?, expected_amount=?, review_state='PENDING', updated_at=? WHERE order_id=? AND review_state IN ('PENDING','REJECTED')").bind(method, amount, now, orderId),
     db.prepare("UPDATE orders SET state='PAYMENT_PENDING', payment_status='PENDING', updated_at=? WHERE id=? AND state='DETAILS_COMPLETED'").bind(now, orderId),

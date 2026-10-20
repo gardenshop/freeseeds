@@ -58,7 +58,7 @@ describe("Get Free Seeds domain", () => {
   });
   it("validates receipt media", () => { expect(() => validateReceipt("image/png", 10)).not.toThrow(); expect(() => validateReceipt("text/html", 10)).toThrow(); });
   it("uses a provider boundary with a mock", async () => { const provider = new MockWhatsAppProvider(); await provider.sendText("synthetic", "Payment received for verification"); expect(provider.sent[0]?.kind).toBe("text"); });
-  it("keeps private content images inside the provider boundary", async () => { const provider = new MockWhatsAppProvider(); await provider.sendInteractive("synthetic", "Choose", ["Continue"], { body: new Uint8Array([255, 216, 255, 224]).buffer, mimeType: "image/jpeg" }); expect(provider.sent[0]?.kind).toBe("interactive-image"); });
+   it("keeps stable action IDs inside the provider boundary", async () => { const provider = new MockWhatsAppProvider(); await provider.sendInteractive("synthetic", "Choose", [{ id: "CONTINUE", title: "Continue" }], { body: new Uint8Array([255, 216, 255, 224]).buffer, mimeType: "image/jpeg" }); expect(provider.sent[0]?.kind).toBe("interactive-image"); });
   it("sends Meta-compatible Flow parameters", async () => {
     const originalFetch = globalThis.fetch;
     let payload: Record<string, unknown> | undefined;

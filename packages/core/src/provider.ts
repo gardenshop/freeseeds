@@ -1,7 +1,7 @@
 export type InboundEvent = { id: string; from: string; kind: "text" | "interactive" | "flow" | "media"; payload: unknown; referral?: { ctwaClid?: string; campaignId?: string; adSetId?: string; adId?: string } };
 export type MediaResult = { mimeType: string; size: number; body: ArrayBuffer; mediaId: string };
 export type OutboundImage = { body: ArrayBuffer; mimeType: "image/jpeg" | "image/png"; filename?: string };
-export type InteractiveButton = string | { id: string; title: string };
+export type InteractiveButton = { id: string; title: string };
 
 export interface WhatsAppProvider {
   verifyWebhook(challenge: string, verifyToken: string, configuredToken?: string): string | null;
@@ -74,7 +74,7 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
 
   async sendText(to: string, body: string) { return this.send({ messaging_product: "whatsapp", to, type: "text", text: { body } }); }
   async sendImage(to: string, body: string, image: OutboundImage) { const id = await this.uploadMedia(image); return this.send({ messaging_product: "whatsapp", to, type: "image", image: { id, caption: body.slice(0, 1024) } }); }
-  async sendInteractive(to: string, body: string, buttons: InteractiveButton[], image?: OutboundImage) { const header = image ? { type: "image", image: { id: await this.uploadMedia(image) } } : undefined; return this.send({ messaging_product: "whatsapp", to, type: "interactive", interactive: { type: "button", ...(header ? { header } : {}), body: { text: body }, action: { buttons: buttons.slice(0, 3).map((button, index) => { const item = typeof button === "string" ? { id: `button_${index}`, title: button } : button; return { type: "reply", reply: item }; }) } } }); }
+  async sendInteractive(to: string, body: string, buttons: InteractiveButton[], image?: OutboundImage) { const header = image ? { type: "image", image: { id: await this.uploadMedia(image) } } : undefined; return this.send({ messaging_product: "whatsapp", to, type: "interactive", ...(header ? { interactive: { type: "button", header, body: { text: body }, action: { buttons: buttons.slice(0, 3).map((button) => ({ type: "reply", reply: button })) } } } : { interactive: { type: "button", body: { text: body }, action: { buttons: buttons.slice(0, 3).map((button) => ({ type: "reply", reply: button })) } } }) }); }
   async sendList(to: string, body: string, buttonText: string, rows: Array<{ id: string; title: string; description?: string }>, image?: OutboundImage) { const header = image ? { type: "image", image: { id: await this.uploadMedia(image) } } : undefined; return this.send({ messaging_product: "whatsapp", to, type: "interactive", interactive: { type: "list", ...(header ? { header } : {}), body: { text: body }, action: { button: buttonText, sections: [{ title: "Options", rows: rows.slice(0, 10) }] } } }); }
   async sendTemplate(to: string, template: string, parameters: string[]) { return this.send({ messaging_product: "whatsapp", to, type: "template", template: { name: template, language: { code: "en_US" }, components: parameters.length ? [{ type: "body", parameters: parameters.map((text) => ({ type: "text", text })) }] : undefined } }); }
   async sendFlow(to: string, flowId: string, flowToken: string) {

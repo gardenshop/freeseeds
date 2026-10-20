@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-174 Execution Record (2026-10-20)
+
+- Git baseline: `8f1c2da`; working-tree source repairs are uncommitted; untracked `images/` preserved.
+- Cloudflare identity verified before any mutation: `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- API staging binding: `getfreeseeds-api-staging`, D1 `getfreeseeds-staging`, R2 `getfreeseeds-receipts-staging`, Queue `getfreeseeds-events-staging`, guided mode, canonical Phone ID `1323932417479627`.
+- API production binding: `getfreeseeds-api`, D1 `getfreeseeds-prod`, R2 `getfreeseeds-receipts-prod`, Queue `getfreeseeds-events-prod`, `META_ASSETS_PENDING`, Meta provider disabled. No production version was deployed in this execution.
+- Chrome evidence: DevToolsActivePort and bridge package were present, but this active session exposed no MCP namespace and the recovery client did not complete `list_pages`; live pages, WAMIDs, screenshots, and Admin mutations are unavailable. Staging API/Admin deployments: `4779d60b-6f93-41d4-b1e3-1c37bdfcf599` / `2cb3d3ec-9104-41d9-a3d9-45cb6b1cf8ab`.
+- Financial registry: `FS-261019-000001` remains under audited fulfillment hold; no new QR ownership or payment recipient authorization was recorded.
+
 Staging and non-secret production resources are provisioned in the dedicated clean account; production compute/secrets/integration remain gated.
 
 ## Active WhatsApp Authority (GFS-60)

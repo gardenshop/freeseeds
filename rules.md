@@ -1,5 +1,15 @@
 # Get Free Seeds Binding Rules
 
+## GFS-174 Final Guided Journey Lock (2026-10-20)
+
+- Guided WhatsApp checkout remains the only launch path; `WHATSAPP_CHECKOUT_MODE=guided` is required and the legacy `/flows/get-free-seeds` POST is disabled while guided mode is active. Native Meta Flow remains OFF for launch.
+- New payment selectors may contain only complete, enabled, locale-complete D1 payment methods. `PAYMENT_HELP`, `SUPPORT`, and `CHECK_ORDER` are never selector actions; historical taps receive safe localized handling without mutating payment state.
+- Interactive actions require stable semantic IDs. Numbered text fallback is state-aware for language, fertilizer, and review controls; no positional button IDs are synthesized.
+- Webhook callbacks fail closed unless every callback carries the configured canonical `META_PHONE_NUMBER_ID`; rejected callbacks write only a sanitized audit reason. The new-number WhatsApp lock is never bypassed.
+- QR delivery requires exact R2 content type, image signature, method metadata, and D1 SHA-256 metadata in addition to independent `qr_owner_verified`; missing metadata is blocked, not inferred.
+- Payment approval requires a receipt and a customer transaction reference. Incident `FS-261019-000001` is hard-blocked from confirmation/fulfillment transitions until independent verification and incident review are recorded. No reversal, CAPI replay, dispatch, or artificial approval is permitted.
+- GFS-174 evidence is strictly separated: local tests/build/lint/audit are not live WhatsApp/Admin evidence. Missing Chrome DevTools MCP, WAMIDs, screenshots, or third-party authorization must be reported as `BLOCKED`, never inferred.
+
 ## Identity and Isolation
 
 - Public brand: Get Free Seeds.

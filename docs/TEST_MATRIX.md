@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-174 Evidence Gate (2026-10-20)
+
+| Area | Required coverage | Status |
+| --- | --- | --- |
+| Guided state/validation | WELCOME → language → fertilizer → D1 province/tariff → five fields → review → payment | PASS local implementation/tests; live customer evidence BLOCKED by MCP |
+| Payment selector | Only eligible JazzCash/Easypaisa/Bank Transfer; no Help/Support/Check Order | PASS static/runtime repair; live buttons/WAMIDs BLOCKED |
+| Locale/CMS | EN/UR published content, locale-complete methods, legacy action filtering | PASS local implementation/tests; Admin publish/reload BLOCKED |
+| Receipt/status | Receipt audit and localized Check Order after upload | PASS local implementation; live receipt/status BLOCKED |
+| QR/financial safety | Exact R2 metadata, independent ownership, transaction reference, incident hold | PASS fail-closed guards; ownership/incident authorization BLOCKED |
+| Browser/Admin | `/whatsapp-content`, `/payment-settings`, `/tariff`, `/orders` authenticated workflows | BLOCKED: active MCP `list_pages` unavailable; no mutation claimed |
+| Quality | Tests/build/lint/audit | PASS: 105/105, build, lint, 0 high-severity audit findings |
+| Deploy/CI | Canonical production deploy and legitimate PR CI | BLOCKED/NOT RUN: no deploy mutation; PR/CI/merge status requires remote verification |
+
 | Area | Required coverage | Status |
 | --- | --- | --- |
 | GFS-68 launch separation | Meta Form/Leads Center independent of WhatsApp API | PASS: `META_FORM_LAUNCH_FIRST`; WhatsApp is enhancement-pending and non-blocking |

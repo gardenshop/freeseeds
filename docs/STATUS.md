@@ -1,5 +1,16 @@
 # Status
 
+## GFS-174 Final Audit (2026-10-20)
+
+- Starting Git HEAD was `8f1c2da` on `codex/gfs-launch-next-001`; the pre-existing untracked `images/` directory was preserved. Source changes are currently uncommitted in this workspace pending final review.
+- Local repair gates: `npm test` 105/105, `npm run build`, `npm run lint`, and `npm audit --audit-level=high` all PASS with 0 high-severity vulnerabilities.
+- Repaired source defects: invalid guided field acceptance; missing `customers.wa_id`; positional interactive IDs; failed outbound reply retry/race; stale payment outbound claims; legacy PAYMENT CMS action contamination; webhook recipient Phone ID lock; QR metadata fail-open; receipt audit/status action; locale-scoped payment idempotency; legacy Flow POST acceptance; incident fulfillment/confirmation gate; approval without transaction evidence.
+- Chrome DevTools MCP: the active tool namespace was unavailable. Local Chrome/DevToolsActivePort and `chrome-devtools-mcp@1.10.1` were diagnosed, but a standalone initialization did not return `list_pages`; no browser tab was navigated, reused, or mutated in this execution. Live WhatsApp/Admin evidence is therefore BLOCKED.
+- Cloudflare identity: `wrangler whoami` PASS as `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Staging config is guided/canonical-number bound; production config is `META_ASSETS_PENDING` and Meta-disabled. Controlled staging deployments succeeded: API `4779d60b-6f93-41d4-b1e3-1c37bdfcf599`, Admin `2cb3d3ec-9104-41d9-a3d9-45cb6b1cf8ab`; no production deployment mutation was performed.
+- Financial safety: `FS-261019-000001` remains PAID/PACKING with missing independent bank verification, missing transaction reference, and failed Purchase CAPI history. The new admin guard blocks confirmation/fulfillment; no reversal, replay, approval, or dispatch was performed.
+- GFS-173 carried-forward issues: live bilingual/button/WAMID/screenshot evidence; authenticated Admin edit/draft/publish/reload proof; payment recipient/QR ownership authorization; independent financial verification and CAPI incident closure; production Meta onboarding; remote CI/merge. These remain material blockers.
+- Release decision: `NO-GO` for production launch. Controlled local/staging repair is the only supported scope until live authorization and financial review are complete.
+
 ## Current State
 
 `META_ASSETS_PENDING`

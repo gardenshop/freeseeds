@@ -125,9 +125,10 @@ export async function publishedWhatsAppContent(db: D1Database, key: WhatsAppTemp
   if (!row) return undefined;
   try {
     const labels = await db.prepare("SELECT action_id,label_en,label_ur FROM whatsapp_content_version_action_labels WHERE template_key=? AND version=? ORDER BY action_id").bind(key, row.version).all<{ action_id: string; label_en: string; label_ur: string }>();
+    const expected = new Set(whatsAppActionIdsForTemplate(key));
     const actionLabels = Object.fromEntries((labels.results ?? []).flatMap((label) => {
       const actionId = WhatsAppActionId.safeParse(label.action_id).data;
-      return actionId ? [[actionId, locale === "ur" ? label.label_ur : label.label_en]] : [];
+      return actionId && expected.has(actionId) ? [[actionId, locale === "ur" ? label.label_ur : label.label_en]] : [];
     }));
     const content = validateWhatsAppTemplateContent(key, { ...(JSON.parse(locale === "ur" ? row.content_ur_json : row.content_en_json) as WhatsAppContent), ...(Object.keys(actionLabels).length ? { actionLabels } : {}) });
     if (sessionKey) {

@@ -1415,6 +1415,7 @@ app.post("/api/orders/:id/transition", async (c) => {
   const current = await c.env.DB.prepare("SELECT o.order_number,o.state,o.payment_status,o.archived_at,p.review_state FROM orders o LEFT JOIN payments p ON p.order_id=o.id WHERE o.id=?").bind(c.req.param("id")).first<{ order_number: string; state: OrderState; payment_status: string; review_state: string | null; archived_at: string | null }>();
   if (!current) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
   if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+  if (current.order_number === "FS-261019-000001") return c.json({ error: "FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED" }, 409);
   if (current.archived_at != null || current.state !== from.data) return c.json({ error: "STATE_CONFLICT" }, 409);
   if (current.payment_status !== "PAID" && current.review_state !== "APPROVED") return c.json({ error: "FULFILLMENT_PAYMENT_NOT_APPROVED" }, 409);
   const now = new Date().toISOString();
@@ -1433,6 +1434,7 @@ app.post("/api/orders/:id/confirm", async (c) => {
   const current = await c.env.DB.prepare("SELECT o.order_number,o.state,o.payment_status,o.archived_at,p.review_state FROM orders o LEFT JOIN payments p ON p.order_id=o.id WHERE o.id=?").bind(c.req.param("id")).first<{ order_number: string; state: OrderState; payment_status: string; review_state: string | null; archived_at: string | null }>();
   if (!current) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
   if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+  if (current.order_number === "FS-261019-000001") return c.json({ error: "FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED" }, 409);
   if (current.archived_at != null) return c.json({ error: "ORDER_ARCHIVED" }, 409);
   if (current.payment_status !== "PAID" && current.review_state !== "APPROVED") return c.json({ error: "ORDER_CONFIRMATION_REQUIRES_APPROVED_PAYMENT" }, 409);
   if (!["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(current.state)) return c.json({ error: "ORDER_CONFIRMATION_NOT_READY" }, 409);
@@ -1486,7 +1488,7 @@ app.post("/api/payments/:id/approve", async (c) => {
   try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
   if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
   try {
-    const current = await c.env.DB.prepare("SELECT p.review_state,p.expected_amount,p.approved_amount,o.id AS order_id,o.order_number,o.state,o.archived_at,c.id AS customer_id,ma.ctwa_clid,COUNT(pr.id) AS receipt_count FROM payments p JOIN orders o ON o.id=p.order_id JOIN customers c ON c.id=o.customer_id LEFT JOIN meta_attribution ma ON ma.order_id=o.id LEFT JOIN payment_receipts pr ON pr.payment_id=p.id WHERE p.id=? AND o.id=? GROUP BY p.id,o.id,c.id,ma.id").bind(c.req.param("id"), body.orderId).first<{ review_state: string; expected_amount: number; approved_amount: number | null; order_id: string; order_number: string; state: OrderState; archived_at: string | null; customer_id: string; ctwa_clid?: string; receipt_count: number }>();
+    const current = await c.env.DB.prepare("SELECT p.review_state,p.expected_amount,p.approved_amount,p.customer_transaction_reference,o.id AS order_id,o.order_number,o.state,o.archived_at,c.id AS customer_id,ma.ctwa_clid,COUNT(pr.id) AS receipt_count FROM payments p JOIN orders o ON o.id=p.order_id JOIN customers c ON c.id=o.customer_id LEFT JOIN meta_attribution ma ON ma.order_id=o.id LEFT JOIN payment_receipts pr ON pr.payment_id=p.id WHERE p.id=? AND o.id=? GROUP BY p.id,o.id,c.id,ma.id").bind(c.req.param("id"), body.orderId).first<{ review_state: string; expected_amount: number; approved_amount: number | null; customer_transaction_reference: string | null; order_id: string; order_number: string; state: OrderState; archived_at: string | null; customer_id: string; ctwa_clid?: string; receipt_count: number }>();
     if (!current) return c.json({ error: "PAYMENT_NOT_FOUND" }, 404);
     if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
     if (!Number.isSafeInteger(Number(current.expected_amount)) || Number(current.expected_amount) <= 0) return c.json({ error: "PAYMENT_AMOUNT_INVALID" }, 409);
@@ -1495,6 +1497,7 @@ app.post("/api/payments/:id/approve", async (c) => {
     if (current.review_state === "APPROVED" && current.state === "PAID") return c.json({ ok: true, alreadyApproved: true, eventId: event.eventId });
     if (current.archived_at != null || current.review_state !== "REVIEW" || current.state !== "PAYMENT_REVIEW") return c.json({ error: "PAYMENT_NOT_IN_REVIEW" }, 409);
     if (Number(current.receipt_count) < 1) return c.json({ error: "PAYMENT_RECEIPT_REQUIRED" }, 409);
+    if (!current.customer_transaction_reference?.trim()) return c.json({ error: "PAYMENT_TRANSACTION_REFERENCE_REQUIRED" }, 409);
     const now = new Date().toISOString();
     await c.env.DB.batch([
       c.env.DB.prepare("UPDATE payments SET review_state='APPROVED', approved_amount=?, approved_by=?, approved_at=?, updated_at=? WHERE id=? AND review_state='REVIEW'").bind(amount, c.env.ADMIN_EMAIL, now, now, c.req.param("id")),

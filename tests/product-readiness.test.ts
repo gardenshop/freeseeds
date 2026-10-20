@@ -161,7 +161,7 @@ describe("product readiness safeguards", () => {
     const bucket = { put: async (key: string, value: ArrayBuffer) => { writes.push({ key, value }); } } as unknown as R2Bucket;
     expect(() => validatePaymentQr("image/png", 4)).not.toThrow();
     expect(() => validatePaymentQr("application/pdf", 4)).toThrow("PAYMENT_QR_MIME_NOT_ALLOWED");
-    const stored = await storePaymentQr(bucket, "JAZZCASH", new Uint8Array([1, 2, 3, 4]).buffer, "image/png");
+     const stored = await storePaymentQr(bucket, "JAZZCASH", new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).buffer, "image/png");
     expect(stored.objectKey).toMatch(/^payment-qr\/JAZZCASH\//);
     expect(stored.sha256).toHaveLength(64);
     expect(writes).toHaveLength(1);
