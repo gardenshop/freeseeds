@@ -57,6 +57,10 @@ describe("product readiness safeguards", () => {
       const payload = (status: string) => ({ entry: [{ changes: [{ value: { statuses: [{ id: "synthetic-provider-message", status }] } }] }] });
       const raw = (status: string) => new TextEncoder().encode(`synthetic-${status}`).buffer as ArrayBuffer;
 
+      await persistWebhookRecords(d1, payload("sent"), raw("sent"), "synthetic-sent");
+      await persistWebhookRecords(d1, payload("failed"), raw("failed"), "synthetic-failed");
+      expect(sqlite.prepare("SELECT status,last_error FROM outbound_messages").get()).toEqual({ status: "FAILED", last_error: "META_DELIVERY_FAILED" });
+
       await Promise.all([
         persistWebhookRecords(d1, payload("sent"), raw("sent"), "synthetic-concurrent-sent"),
         persistWebhookRecords(d1, payload("delivered"), raw("delivered"), "synthetic-concurrent-delivered"),
@@ -65,6 +69,7 @@ describe("product readiness safeguards", () => {
       await persistWebhookRecords(d1, payload("read"), raw("read-duplicate"), "synthetic-duplicate");
       await persistWebhookRecords(d1, payload("delivered"), raw("delivered-delayed"), "synthetic-delayed");
       await persistWebhookRecords(d1, payload("sent"), raw("sent-reordered"), "synthetic-reordered");
+      await persistWebhookRecords(d1, payload("failed"), raw("failed-delayed"), "synthetic-delayed-failure");
 
       expect(sqlite.prepare("SELECT status,last_error FROM outbound_messages WHERE provider_message_id='synthetic-provider-message'").get()).toEqual({ status: "READ", last_error: null });
       expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_events").get()).toEqual({ count: 1 });
@@ -107,6 +112,7 @@ describe("product readiness safeguards", () => {
     expect(shouldDeadLetter(5)).toBe(true);
     expect(shouldDeadLetter(4)).toBe(false);
     expect(isTerminalOutboxStatus("SENT")).toBe(true);
+    expect(isTerminalOutboxStatus("DEAD_LETTER")).toBe(true);
     expect(isTerminalOutboxStatus("RETRY")).toBe(false);
   });
 

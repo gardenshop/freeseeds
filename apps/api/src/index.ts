@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import { applyFertilizerDecision, createWhatsAppProvider, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, MetaCapiProvider, MetaFlowEnvelope, normalizePaymentMethodRow, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey } from "@gfs/core";
 import { handleMetaFlowPayload } from "./flow-endpoint";
+import { admitWhatsAppSenders } from "./rate-limit";
 
 type Env = {
   Bindings: {
@@ -476,8 +477,12 @@ app.post("/webhooks/whatsapp", async (c) => {
     if (c.env.DB) await c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "WHATSAPP_CALLBACK_REJECTED", "SYSTEM", "WEBHOOK", "whatsapp", correlationId, JSON.stringify({ reason: "WHATSAPP_PHONE_NUMBER_MISMATCH", callbackPhoneIdsPresent: callbackPhoneIds.length > 0 }), new Date().toISOString()).run();
     return c.json({ error: "WHATSAPP_PHONE_NUMBER_MISMATCH" }, 403);
   }
-  const eventCount = c.env.DB ? await persistWebhookRecords(c.env.DB, payload, raw, correlationId) : 0;
   const inbound = provider.parseInboundEvent(payload);
+  if (c.env.DB && !(await admitWhatsAppSenders(c.env.DB, inbound))) {
+    c.header("Retry-After", "60");
+    return c.json({ error: "WHATSAPP_SENDER_RATE_LIMITED", retryAfterSeconds: 60 }, 429);
+  }
+  const eventCount = c.env.DB ? await persistWebhookRecords(c.env.DB, payload, raw, correlationId) : 0;
   let autoReplies = 0;
   for (const event of inbound) {
     if (event.kind === "media") { if (c.env.DB && await processReceiptMedia(c.env.DB, c.env.RECEIPTS, provider, event)) continue; else continue; }
