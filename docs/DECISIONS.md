@@ -2,9 +2,9 @@
 
 ## 2026-10-20: GFS-177 Admin Deploy / API Inbound Hold
 
-Admin staging is deployed and all saved EN/UR payment previews pass after reload. The local API LIST selector uses enabled D1 rates and localized text, but the API is not deployed because Meta `messages` webhook is actively subscribed to the staging API, the sender display name is Rejected, and no authorized WhatsApp Web tester session is available. Deployment could change real inbound behavior.
+Admin staging is deployed and all saved EN/UR payment previews pass after reload. The D1-driven province LIST selector is pushed as `0e12c623b37aafca7a2382ed697fcdea272d2535` and passes local tests, but the API is not deployed because Meta `messages` webhook is actively subscribed to the staging API, the sender display name is Rejected, and no authorized WhatsApp Web tester session is available. Deployment could change real inbound behavior.
 
-The phone is Connected/High quality in the authorized WABA, but no Meta display-name or webhook changes were made. The existing tester/order remains read-only. Payment methods stay disabled until independent beneficiary verification; the Purchase CAPI remains disabled/unreplayed. Rules permit local gates for Admin staging despite remote CI failure, but this does not authorize an API deploy or public release.
+The phone is Connected/High quality in the authorized WABA, but no Meta display-name or webhook changes were made. The existing tester/order remains read-only. Payment methods stay disabled until independent beneficiary verification; the Purchase CAPI remains disabled/unreplayed. Rules permit local gates for Admin staging despite remote CI failure, but this does not authorize an API deploy or public release. Latest CI `39419025641` still failed before runner assignment.
 
 ## 2026-10-20: GFS-176 QR/Locale Release Gate
 

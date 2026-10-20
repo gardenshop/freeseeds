@@ -5,13 +5,13 @@
 | Requirement | Result | Evidence / blocker |
 |---|---|---|
 | Admin EN/UR payment settings | PASS staging | Admin Worker `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`; fresh reload confirms all D1 EN/UR fields/receipt copy render correctly; all methods remain disabled |
-| Province selector | PASS local / BLOCKED live | Seven enabled D1 rates and bilingual CMS list labels; local LIST payload tests title/description/row caps; API Worker not deployed |
+| Province selector | PASS local / BLOCKED live | Seven enabled D1 rates and bilingual CMS list labels; commit `0e12c62` passes LIST payload/title/description/row-cap tests; API Worker not deployed |
 | Meta sender | BLOCKED for sends | Canonical WABA context matches rules; sender Connected/High but display name Rejected; `messages` webhook is subscribed to staging API callback |
 | Tester E2E | BLOCKED | Admin has authorized tester record and existing pending order; WhatsApp Web account/chat not verified; no message/WAMID/screenshot |
 | Payment safety | PASS fail-closed | All three methods disabled/unverified; stale/legacy payment actions filtered in local source; no receipt/approval/send performed |
 | Incident/CAPI | BLOCKED resolution | Incident unchanged PAID/PACKING/APPROVED/reference missing; Purchase CAPI FAILED/5/DISABLED/no provider id; Lead PENDING/0; no replay |
 | Local quality | PASS | 14 files/114 tests, build/lint, 0 high audit findings, API/Admin Wrangler dry-runs PASS |
-| Release | BLOCKED | Admin-only staging deployment done; API is active Meta webhook and sender identity is not customer-safe; no production action |
+| Release | BLOCKED | Admin-only staging deployment done; API is active Meta webhook and sender display name is Rejected; CI run `39419025641` has no runner/steps; no production action |
 
 ## GFS-176 Evidence (2026-10-20)
 

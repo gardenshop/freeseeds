@@ -3,11 +3,11 @@
 ## GFS-177 Active Staging/Meta Context (2026-10-20)
 
 - Admin staging Worker deployed: `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`. Fresh authenticated UI reload verifies all three EN/UR payment previews against D1, no Urdu contamination in English, method-specific QR paths, and `enabled=0` / `qr_owner_verified=0`.
-- Province selector code locally builds LIST rows from seven enabled staging D1 rates and the bilingual published CMS list-button label. Each row uses the D1 province title and formatted D1 fee, with Meta title/description/10-row validation. The code is tested locally but not deployed.
+- Province selector code is pushed as `0e12c623b37aafca7a2382ed697fcdea272d2535`; it builds LIST rows from seven enabled staging D1 rates and the bilingual published CMS list-button label. Each row uses the D1 province title and formatted D1 fee, with Meta title/description/10-row validation. The API code is tested locally but not deployed.
 - Canonical Meta Business/WABA context matches current rules. Phone Manager shows the authorized sender Connected/High quality but display name `Get Free Seeds` Rejected. Developer Webhooks shows the WABA `messages` field subscribed to the staging API callback. No Meta display-name, callback, WABA, ad, or app mutation.
 - Admin Test Controls identifies the authorized tester and an existing pending order; no reset or order change. WhatsApp Web has no chat for the tester and the logged-in account number did not match/was not visible. No test message/WAMID/screenshot.
 - API staging is `getfreeseeds-api-staging` and currently serves the active WABA callback. No API deployment was made because new code could affect live inbound users; the display name and tester path are unresolved. Admin-only deployment was made after local gates.
-- Current source work is in `codex/gfs-launch-next-001`; local changes are uncommitted pending PR push. The only untracked project data is the preserved `images/` directory.
+- Current source commit is `0e12c623b37aafca7a2382ed697fcdea272d2535` on PR #8 branch `codex/gfs-launch-next-001`. The only untracked project data is the preserved `images/` directory.
 
 ## GFS-176 Continued Execution (2026-10-20)
 

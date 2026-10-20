@@ -3,10 +3,10 @@
 ## Unreleased - 2026-10-20 (GFS-177)
 
 - Deployed Admin staging Worker `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`; fresh EN/UR preview tests pass for all methods while all payment methods remain disabled.
-- Added local D1-driven Meta province LIST formatting for seven enabled rows, correct localized delivery-fee descriptions, and Meta row-length/count limits. API code is tested but not deployed.
+- Pushed D1-driven Meta province LIST formatting for seven enabled rows, correct localized delivery-fee descriptions, and Meta row-length/count limits in `0e12c623b37aafca7a2382ed697fcdea272d2535`. API code is tested but not deployed.
 - Read-only Meta check confirms canonical WABA/phone and a subscribed `messages` webhook to the staging API; sender display name is Rejected. No Meta profile, webhook, asset, ad, or spend mutation.
 - Live E2E is blocked because the authorized tester has no existing WhatsApp Web chat and the active account number is not verified. No customer messages, WAMIDs, screenshots, or payment test.
-- API staging deployment remains withheld because it is the active WABA callback and sender presentation is rejected; no CI/branch bypass.
+- API staging deployment remains withheld because it is the active WABA callback and sender presentation is rejected; latest CI `39419025641` has no runner/steps, and no CI/branch bypass was used.
 
 ## Unreleased - 2026-10-20 (GFS-176)
 
