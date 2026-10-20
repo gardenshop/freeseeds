@@ -19,7 +19,7 @@
 | Approval/fulfillment | PASS SIMULATED ONLY | Explicit NOT PAID / NOT DISPATCHED, in-memory audit only; no real PAID state |
 | Real receipt/PAID/fulfillment | BLOCKED correctly | No method eligible, funds/reference/approval absent |
 | Full local quality | PASS | npmci; 137/137; build/lint/audit0; both Wrangler dry-runs |
-| Remote CI | BLOCKED external | Run39491982284 failed before steps under known billing lock; no bypass |
+| Remote CI | BLOCKED external | Post-push39500604300 explicitly billing-locked before all steps; no bypass |
 
 ## GFS-185 Launch Blocker Audit
 

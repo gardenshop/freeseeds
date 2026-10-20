@@ -14,6 +14,7 @@
 - Real payment status: JazzCash till ownership, Easypaisa alias/D1, Bank Alfalah QR-to-IBAN/Raast proof still unavailable. All disabled. `FS-261019-000001` remains PACKING/PAID under hold; no changes. No receipt/funds/approval/real PAID/fulfillment.
 - CI/local gates: `npm ci`; focused harness `2/2`; full `137/137` across17 files; build/lint/audit0; API/Admin Wrangler dry-runs PASS. Lockfile's vulnerable Vite peer dependencies were nonbreakingly updated to8.3.4. No runtime source/deployment change; API `5151e081-98ab-45c4-a57f-3ba43c4e6983`, Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`, rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`.
 - GitHub CI run `39491982284` failed before any job steps on baseline HEAD `164c33d`, consistent with the existing billing-lock policy; no protection bypass.
+- GFS-186 commit `c94b17874fdf6a33ea4cfad02a8cb963d423bca3` is pushed to PR #8. Post-push CI `39500604300` explicitly reports the account locked due to a billing issue; zero steps ran and no protection was bypassed.
 - Decision: staging lead-only **GO**; isolated fixture **PASS / simulated only**; public leads **NO-GO** until bearer revocation is confirmed, consent/CAPI/name gates close; customer payments **NO-GO** pending three independent payee proofs and real funds/approval.
 - Progress estimate: total **86%/14%**; P0 security/history **70/30**; P1 flow/test harness **95/5**; P2 real payments **60/40**; P3 release/security **65/35**.
 

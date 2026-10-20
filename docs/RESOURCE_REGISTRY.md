@@ -11,7 +11,7 @@
 - Meta state: clean dataset allowlist verified Garden Shop only in GFS-185; GFS-185 security incident remains. Removed list token-free confirms Hoja, Wix, Daraz, WooCommerce and Zapier all Removed; no Restore UI. Bearer invalidation needs owner confirmation.
 - Real staging unchanged: API5151e081, Admin6fb34f89, rollback8a045e16; all payment methods disabled; CAPI/Purchase OFF; incident FS-261019-000001 held.
 - Quality: npm ci;137 tests/build/lint/audit0/Wrangler dry-runs PASS. package-lock updates Vite peer8.3.4 and transitive fixes.
-- CI run `39491982284` failed with zero job steps at source baseline `164c33d`; known account billing lock; no protection bypass.
+- GFS-186 commit `c94b17874fdf6a33ea4cfad02a8cb963d423bca3` is pushed to PR #8. CI `39500604300` explicitly failed before steps because the account is billing-locked.
 
 ## GFS-185 Meta/Payment State (2026-10-20)
 

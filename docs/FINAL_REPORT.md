@@ -42,7 +42,7 @@ Simulated orders reuse in-memory ID `NP-TEST-000001` after resets; it is never w
 ### Quality and Versions
 
 - `npm ci`; focused harness2/2; full suite137/137 across17 files; build/lint/audit0; API/Admin Wrangler dry-runs PASS. Vite peer lockfile updated to8.3.4 due moderate advisory. No app runtime changes or deployment.
-- CI `39491982284` failed before any job step on baseline `164c33d` (known billing-lock policy); no repository protection bypass.
+- Final GFS-186 commit `c94b17874fdf6a33ea4cfad02a8cb963d423bca3` is pushed to PR #8. CI `39500604300` explicitly failed before any job step due the account billing lock; no repository protection bypass.
 - Starting HEAD `164c33d`; GFS-186 changes are isolated local harness/tests/lockfile/docs. Staging API `5151e081-98ab-45c4-a57f-3ba43c4e6983`; Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`; rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`.
 - Progress estimate: total **86% complete /14% remaining**; P0 security/history **70/30**; P1 flow/UI **95/5**; P2 real payments **60/40**; P3 public launch **65/35**.
 - **Staging lead-only GO; public leads NO-GO; customer payments NO-GO.**
