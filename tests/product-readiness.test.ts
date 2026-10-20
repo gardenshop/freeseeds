@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
-import { applyFertilizerDecision, isAllowedInstantFormLead, LeadSource, MetaWhatsAppProvider, MetaCapiProvider, configuredPaymentMethodNames, formatPaymentMessage, isPaymentMethodComplete, isTerminalOutboxStatus, parseMetaInstantFormLead, parseWebhookRecords, paymentInstructions, quoteOrder, retryDelaySeconds, selectPaymentMethod, shouldDeadLetter, storePaymentQr, storeReceipt, validatePaymentQr, verifyPaymentQr, verifyPaymentQrAsset } from "@gfs/core";
+import { applyFertilizerDecision, isAllowedInstantFormLead, LeadSource, MetaWhatsAppProvider, MetaCapiProvider, configuredPaymentMethodNames, formatPaymentMessage, isPaymentMethodComplete, isTerminalOutboxStatus, parseMetaInstantFormLead, parseWebhookRecords, paymentInstructions, persistWebhookRecords, quoteOrder, retryDelaySeconds, selectPaymentMethod, shouldDeadLetter, storePaymentQr, storeReceipt, validatePaymentQr, verifyPaymentQr, verifyPaymentQrAsset } from "@gfs/core";
 import api from "../apps/api/src/index";
 
 describe("product readiness safeguards", () => {
@@ -32,6 +32,45 @@ describe("product readiness safeguards", () => {
       { providerEventId: "message:synthetic-media", eventType: "MEDIA", status: "RECEIVED" },
       { providerEventId: "status:synthetic-status", eventType: "STATUS", status: "delivered" }
     ]);
+  });
+
+  it("keeps callback status monotonic across concurrent, duplicate, delayed, and reordered deliveries", async () => {
+    const sqlite = new DatabaseSync(":memory:");
+    try {
+      sqlite.exec("CREATE TABLE outbound_messages(provider_message_id TEXT,status TEXT,last_error TEXT,updated_at TEXT);");
+      sqlite.exec("CREATE TABLE whatsapp_events(provider_event_id TEXT UNIQUE,event_type TEXT,payload_hash TEXT,status TEXT,correlation_id TEXT,created_at TEXT,id TEXT PRIMARY KEY);");
+      sqlite.exec("INSERT INTO outbound_messages(provider_message_id,status,last_error,updated_at) VALUES('synthetic-provider-message','PENDING',NULL,'2026-01-01T00:00:00.000Z');");
+      const d1 = {
+        prepare: (sql: string) => {
+          type SqlValue = null | number | bigint | string | Uint8Array;
+          let args: SqlValue[] = [];
+          const statement = {
+            bind: (...values: unknown[]) => { args = values as SqlValue[]; return statement; },
+            run: async () => { const result = sqlite.prepare(sql).run(...args); return { meta: { changes: Number(result.changes) } }; },
+            first: async <T>() => sqlite.prepare(sql).get(...args) as T | undefined,
+            all: async <T>() => ({ results: sqlite.prepare(sql).all(...args) as T[] })
+          };
+          return statement;
+        },
+        batch: async (statements: Array<{ run: () => Promise<unknown> }>) => { sqlite.exec("BEGIN"); try { for (const statement of statements) await statement.run(); sqlite.exec("COMMIT"); } catch (error) { sqlite.exec("ROLLBACK"); throw error; } }
+      } as unknown as D1Database;
+      const payload = (status: string) => ({ entry: [{ changes: [{ value: { statuses: [{ id: "synthetic-provider-message", status }] } }] }] });
+      const raw = (status: string) => new TextEncoder().encode(`synthetic-${status}`).buffer as ArrayBuffer;
+
+      await Promise.all([
+        persistWebhookRecords(d1, payload("sent"), raw("sent"), "synthetic-concurrent-sent"),
+        persistWebhookRecords(d1, payload("delivered"), raw("delivered"), "synthetic-concurrent-delivered"),
+        persistWebhookRecords(d1, payload("read"), raw("read"), "synthetic-concurrent-read")
+      ]);
+      await persistWebhookRecords(d1, payload("read"), raw("read-duplicate"), "synthetic-duplicate");
+      await persistWebhookRecords(d1, payload("delivered"), raw("delivered-delayed"), "synthetic-delayed");
+      await persistWebhookRecords(d1, payload("sent"), raw("sent-reordered"), "synthetic-reordered");
+
+      expect(sqlite.prepare("SELECT status,last_error FROM outbound_messages WHERE provider_message_id='synthetic-provider-message'").get()).toEqual({ status: "READ", last_error: null });
+      expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_events").get()).toEqual({ count: 1 });
+    } finally {
+      sqlite.close();
+    }
   });
 
   it("normalizes a Meta Instant Form lead into the shared five-field model", () => {
