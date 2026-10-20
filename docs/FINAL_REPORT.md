@@ -21,10 +21,10 @@
 | P1.5 LIST rows/fees | PASS live EN/UR | Actual seven-row Meta LIST, D1 titles and fee descriptions; Punjab 250. Screenshot verified for Urdu; EN LIST DOM and WAMID verified (initial EN LIST screenshot blank, not counted) |
 | P1.6 Language consistency | PASS lead-only after repair | English and Urdu prompts, five fields, Back, review, confirmation/unavailable notice/status tested. Live English catalog-name leakage in Urdu review repaired and live retested. Province titles remain authoritative D1 names, PKR/order IDs are identifiers |
 | P1.7 Payment choices/stale taps | PASS safe no-method path | No selector, payment image or invitation when none eligible; only post-order Check Order. Live stale/duplicate commands do not create another order; delivered webhook replay and forged callbacks also simulated |
-| P1.8 Editable content | PASS architecture / partial UI test | Existing CMS journey and Payment Settings D1 templates used; no merchant/account/tariff code values changed. No shared CMS publish/restore experiment in this run; safety-unavailable sentences/generic UI labels remain bilingual code fallback |
+| P1.8 Editable content | PASS EN/UR save/publish/restore | Payment Settings D1 fields use placeholders; harmless Validation v2 produced live EN/UR replies, rollback restored approved v1 (draft v3 matches v1); Confirmation `Total ayable` was corrected to `Total payable` and verified on order 000010 |
 | P2.1–3 MCP/tester/history | PASS actual identity | list_pages first; own WhatsApp Profile → Phone matched tester, GFS Contact Info matched sender. Audited Admin resets changed only tester conversation; prior orders and exemption preserved |
 | P2.4 EN/UR full journey | PASS real lead-only; BLOCKED payment tail | Both fertilizer choices, LIST, five fields, Back/review/order/unavailable/status proven. Receipt/review/PAID portion cannot be run honestly with all beneficiaries unverified and no authorized transaction |
-| P2.5 Real evidence | PASS | Actual incoming/outgoing WAMIDs below, private verified screenshots, real Admin/D1 unpaid orders 000008/000009 |
+| P2.5 Real evidence | PASS | Actual incoming/outgoing WAMIDs below, private verified screenshots, real Admin/D1 unpaid orders 000008/000009/000010 |
 | P2.6 Edge cases | PASS live subset / PASS simulated subset | Live invalid contact, Back, repeat Place Order/START, disabled method, provider 500 state rollback/retry. Signed-webhook SQLite/Graph-mock tests prove sequential dedup, stale/forged callbacks, queue safety and ownership. Arbitrary concurrent/reordered callbacks not live-proven |
 | P3.1 QR preservation | PASS | All original/derivative assets reused unchanged; no repeat extraction |
 | P3.2–4 Beneficiary/payment test | BLOCKED | No authenticated bank/merchant evidence/session available. JazzCash identifier match is not proof; Easypaisa alias and Bank destination linkage unresolved. All methods disabled/owner flags false; no money or verification flags changed |
@@ -56,18 +56,22 @@ All IDs in this table are real provider records for the authorized tester, not s
 | UR actual Place Order inbound | `wamid.HBgMOTIzMDM0OTAxODEwFQIAEhgWM0VCMEZBN0FERDQ2REU0MzAxOEFEQwA=` | RECEIVED |
 | UR order/unavailable confirmation | `wamid.HBgMOTIzMDM0OTAxODEwFQIAERgSOURBRDdCOUIzOUNDNTk2NTU0AA==` | READ |
 | UR localized status | `wamid.HBgMOTIzMDM0OTAxODEwFQIAERgSREM1MEVFQkU1NzY2NzNGOTNDAA==` | READ |
+| EN Validation test copy | `wamid.HBgMOTIzMDM0OTAxODEwFQIAERgSREVGMUY3RDFDRTdFRkM5ODEwAA==` | READ |
+| UR Validation test copy | `wamid.HBgMOTIzMDM0OTAxODEwFQIAERgSMEM4QTJGRjk3RkZGMUVFOURDAA==` | DELIVERED |
+| UR restored Validation copy | `wamid.HBgMOTIzMDM0OTAxODEwFQIAERgSMDM2MjIwNEJDOUI1QjczMDc3AA==` | DELIVERED |
+| EN Confirmation amount-label test | `wamid.HBgMOTIzMDM0OTAxODEwFQIAERgSODhGNTg4QThEOTg1NkE1RTUzAA==` | READ |
 
 Verified private screenshots: `D:\Temp\kilo\gfs178-en-status.png`, `D:\Temp\kilo\gfs178-ur-province.png`, `D:\Temp\kilo\gfs178-ur-status.png`. Images were read back; unrelated/history UI was hidden before capture and restored afterward. The blank first EN province image is excluded. No screenshot or real customer content committed.
 
 ### Versions, Rollback, and Remaining Gates
 
-- Baseline HEAD c9cfdbc7; implementation commits 8699d67, 78b1de8, d2082e4 and pushed evidence commit ba06a4df7788cba7f559b46ab9e70fafa2384780. PR #8 remains OPEN, no merge. Verify run 39431746821 failed before execution; its official annotation confirms the account billing lock, not a test failure. No CI PASS claimed.
+- Baseline HEAD c9cfdbc7; implementation commits 8699d67, 78b1de8, d2082e4 and pushed evidence commit ba06a4df7788cba7f559b46ab9e70fafa2384780. PR #8 remains OPEN, no merge. Required verify run 39432151856 failed before execution; its official annotation confirms the account billing lock, not a test failure. No CI PASS claimed.
 - Final API staging `8a045e16-17c5-4663-bc65-f8c815712ce9`; Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`. Intermediate APIs `1e3d43e5-f6fe-45b4-b959-0376e5197bc9`, `c3fa866b-2751-4eea-83ed-5ef4d0667de1`. No bindings/webhook/payment/CAPI flag changes.
 - Prior-compatible rollback command (identity check first): `npx wrangler rollback c3fa866b-2751-4eea-83ed-5ef4d0667de1 --config apps/api/wrangler.jsonc`. Syntax verified; rollback not executed. Baseline 4779d60b predates safeguards; assess risk before restoring. No D1/customer/order financial rollback.
 - New Lead events remain PENDING/0 attempts with CAPI disabled; no claim of Meta Lead conversion delivery. Existing Purchase incident remains FAILED/5/DISABLED. No receipt/rejection/approval/PAID or real-transaction evidence exists.
 - Meta next action: use a supported account/name-review path with genuine public brand relationship evidence when it becomes available; current Request Review is disabled. Do not resubmit the same name blindly or adopt an alternative without authorization.
 - Payment next action: independently map decoded wallet/bank destinations to Garden Shop using authorized merchant records, then obtain explicit transaction authorization before any fund movement. Until then methods stay disabled.
-- Technical residual: arbitrary concurrent/reordered callbacks and unattended provider-retry recovery require further evidence; generic contact validation text and English CMS typo are copy-quality limitations, not payment authorizations. No unauthorized source/customer-data mutation to hide these gaps.
+- Technical residual: arbitrary concurrent/reordered callbacks and unattended provider-retry recovery require further evidence. The Validation CMS smoke copy was restored to the approved version, and the English Confirmation typo was corrected; no temporary copy remains published.
 - Estimates, not measured completion: overall launch project **80% complete / 20% remaining**; P0 name recovery **35% / 65%**, P1 corrected staging journey **95% / 5%**, P2 full commerce E2E **70% / 30%** (lead-only actual **90%**, payment tail **0%**), P3 payment readiness **45% / 55%**. WhatsApp live lead-only **90%**, Admin live lead-only **90%**; paid/receipt E2E not accepted. Scope-weighted judgment, not independent verification.
 - Staging lead-only **GO**, public WhatsApp leads **NO-GO**, customer payments **NO-GO**. Browser work stayed within authorized GFS/tester/Meta context; no unrelated chat read, page closed or customer messaged. `images/` and historical financial records preserved.
 

@@ -7,6 +7,8 @@
 | Canonical Meta / Graph | PASS eligibility; name FAIL | Phone VERIFIED/GREEN, permissions granted, WABA subscribed; name DECLINED; live READ/DELIVERED outbound proves messaging works |
 | Name appeal / username | BLOCKED appeal; PASS preservation | Support Request Review disabled/no eligible issue; only replacement-name dialog. No submission/reference, no alternate name; @FreeSeeds unchanged |
 | Tester account | PASS actual profile | Own Profile Phone matches tester; recipient Contact Info matches GFS sender; not a chat-list assumption |
+| CMS save/publish/rollback | PASS | Validation v2 EN/UR copy produced real tester replies; rolled back to approved v1; archived v2 and draft v3 matches v1 |
+| Confirmation total wording | PASS EN | Repaired `Total ayable` typo to `Total payable`; live confirmation verified on unpaid test order 000010; Urdu/D1 placeholders unchanged |
 | WELCOME / LANG_EN / LANG_UR | PASS live | Real inbound/outbound; Urdu initial Graph 500 recovered after rollback/retry |
 | Seeds Only / Add Fertilizer | PASS live | EN seeds-only 250; UR fertilizer 500; amounts cross-checked D1 |
 | Seven province LIST rows | PASS live EN/UR | Actual Meta LIST with title/fee descriptions; Punjab selection; UR LIST screenshot verified. No tariff edit attempted |
@@ -16,7 +18,7 @@
 | No eligible payments | PASS live fail-closed | No selector, QR, payment invitation or payment job; clear localized unavailable notice; Check Order only post-order |
 | Status / START / disabled-method text | PASS live | Same unpaid order/reference retained; UR status labels localized |
 | Webhook replay / forged callbacks / queue | PASS simulated | Signed requests/SQLite/Graph mock regression; delivered sequential replays and disabled jobs safe; arbitrary concurrency/reordering NOT proven live |
-| D1 / authenticated Admin | PASS live | UI and API show both test orders PENDING, totals 250/500, zero receipts, null method, no confirmation/label actions |
+| D1 / authenticated Admin | PASS live | UI and API show test orders 000008/000009/000010 PENDING, totals 250/500/250, zero receipts, null method, no confirmation/label actions |
 | Receipt / rejection / approval / PAID | BLOCKED live | No beneficiary proof or real transaction authorization; no fabricated receipt/payment; financial guard regressions simulated only |
 | Financial incident / CAPI | PASS containment, BLOCKED closure | Held order unchanged; Purchase FAILED/5/DISABLED; new Lead events pending, no Purchase |
 | CI | FAIL billing, not code | Official annotation: account locked due to billing issue; nonblocking staging rule used; no billing/protection bypass |

@@ -6,6 +6,8 @@ Official Graph confirms VERIFIED/GREEN registered phone, granted messaging/manag
 
 Controlled staging deployment was permitted after local gates, verified account, only-tester recent activity, unchanged financial/Meta bindings and recorded rollback. Real EN/UR lead-only journeys created only unpaid synthetic-data test orders 000008/000009. No payment method is enabled; no receipt/approval/PAID/fulfillment or CAPI replay was attempted. Tests found and repaired returning-customer identity collision without rewriting historical delivery snapshots; Urdu review/status leakage and replay/stale-field defects were also repaired and retested.
 
+CMS smoke: the harmless Validation EN/UR retry copy was published and observed in actual tester replies, then rolled back to published version 1; the archived test version remains audit-only and draft version 3 matches version 1. Confirmation's English `Total ayable` typo was corrected to `Total payable` and verified on a separate unpaid tester order; Urdu and amount placeholders were unchanged.
+
 Public launch remains NO-GO: name recovery and public release sign-off, beneficiary proof, broader concurrent/reordered callback evidence, and disabled Lead CAPI remain unresolved. Controlled lead-only staging is GO. Do not use pending Lead records as evidence of successful CAPI delivery or test receipts as real payment.
 
 ## 2026-10-20: GFS-177 Admin Deploy / API Inbound Hold

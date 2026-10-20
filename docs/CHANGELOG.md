@@ -7,6 +7,7 @@
 - Live Place Order reproduced unique wa_id collision for a returning tester. Preserve prior delivery snapshots and associate later snapshots with trusted normalized WhatsApp identity; retested successfully without altering historical orders.
 - Repaired Urdu catalog review/status-code leakage; deployed final API staging version 8a045e16-17c5-4663-bc65-f8c815712ce9. Admin version unchanged.
 - Actual EN/UR lead-only test orders 000008/000009 remain unpaid; LIST/5 fields/Back/status tested and private screenshots/WAMIDs recorded. No receipt/payment approval/PAID/CAPI replay or financial history mutation.
+- CMS `VALIDATION` EN/UR harmless retry copy was published, observed through real tester WAMIDs, and rolled back to approved version 1; the archived test version remains in history only. Corrected Confirmation EN typo to `Total payable` and verified on unpaid order 000010; Urdu copy unchanged.
 - Full local gate passes 131 tests. CI root cause evidenced as account billing lock; no billing/security bypass or production release.
 
 ## Unreleased - 2026-10-20 (GFS-177)

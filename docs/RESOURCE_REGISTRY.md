@@ -2,6 +2,9 @@
 
 ## GFS-178 Verified Context / Versions (2026-10-20)
 
+- Admin `VALIDATION` CMS smoke: version 2 added a harmless EN/UR retry suffix, was published and observed on real tester replies, then rolled back to approved version 1. Version 2 is archived. Draft version 3 matches published version 1 exactly.
+- Admin `CONFIRMATION` typo `Total ayable` was corrected to `Total payable` in EN; Urdu and D1 placeholders were unchanged. Published version 3 was verified using real unpaid test order `FS-261020-000010`.
+- CMS validation WAMIDs: EN temp `wamid.HBgMOTIzMDM0OTAxODEwFQIAERgSREVGMUY3RDFDRTdFRkM5ODEwAA==` READ; UR temp `wamid.HBgMOTIzMDM0OTAxODEwFQIAERgSMEM4QTJGRjk3RkZGMUVFOURDAA==` DELIVERED; restored UR `wamid.HBgMOTIzMDM0OTAxODEwFQIAERgSMDM2MjIwNEJDOUI1QjczMDc3AA==` DELIVERED. Order `FS-261020-000010` remains DETAILS_COMPLETED/PENDING, null method, zero receipt.
 - Git baseline `c9cfdbc7e403bbeae476f4cf9ce0a0624af172cd`; source commits `8699d67`, `78b1de8`, `d2082e4`. Authorized GitHub gardenshop, Cloudflare gisupp@gmail.com / cb5066a6d71ecdee0bd7ed8aacb4d3c2, Admin Access identity verified before mutations. No Hoja interaction.
 - Canonical Meta phone/WABA verified through secret-safe Admin Graph status and authenticated Phone Manager: verified phone GREEN, name DECLINED, both permissions granted, subscribed. Tester own WhatsApp Profile Phone was checked against authorized number, and GFS contact details against canonical sender. Real messaging succeeded. Username unchanged.
 - Name review evidence: only generic guideline rejection. Edit dialog has replacement-name input; canonical WABA Support Request Review is disabled with zero eligible issues. No appeal/resubmission, reference, profile/username/number/webhook change.
