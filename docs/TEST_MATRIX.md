@@ -1,5 +1,34 @@
 # Test Matrix
 
+## GFS-176 Evidence (2026-10-20)
+
+| Method | QR-only image | Two-decoder/source-payload match | Derivative scan | Beneficiary validation | EN/UR data | Live delivery/WAMID/screenshot |
+| --- | --- | --- | --- | --- | --- | --- |
+| JazzCash | PASS, private 800×800 PNG | PASS: jsQR/ZBar agree; derivative exact payload hash | PASS, both decoders | D1 identifier exact match; independent owner proof BLOCKED | FAIL/BLOCKED: existing settings lack required localized placeholder templates | BLOCKED: no MCP customer session |
+| Easypaisa | PASS, private 800×800 PNG | PASS: jsQR/ZBar agree; derivative exact payload hash | PASS, both decoders | BLOCKED: QR identifier differs from D1 but matches printed candidate alias; alias ownership evidence absent | FAIL/BLOCKED: Urdu fields/templates incomplete | BLOCKED: no MCP customer session |
+| Bank Transfer | PASS, private 800×800 PNG | PASS: jsQR/ZBar agree; derivative exact payload hash | PASS, both decoders | BLOCKED: payload has no exact D1 IBAN or printed alternate match; owner alias evidence absent | FAIL: English field contains Urdu; Urdu/template copy incomplete | BLOCKED: no MCP customer session |
+| Original retention and linkage | PASS: R2 source checksums unchanged after extraction | PASS: source/derivative/payload hashes, MIME, dimensions, decoder versions and attestation stored in D1 | PASS | Independent verification remains false for all | N/A | N/A |
+| Staging method eligibility | All three derivative keys associated in Admin D1 | N/A | N/A | All `qr_owner_verified=0` | All three methods disabled; original recipient/account fields unchanged | Current customer selector not live-tested |
+| EN/UR payment formatter | N/A | N/A | N/A | N/A | PASS local code/tests: separate suffix mapping, no code-generated amount/recipient/reference labels, template placeholders validated; live D1 copy not repaired | BLOCKED: no authenticated Admin save/publish/reload |
+| Guided customer buttons | N/A | N/A | N/A | N/A | N/A | BLOCKED individually: `LANG_EN`, `LANG_UR`, `ADD_FERTILIZER`, `SEEDS_ONLY`, each province, five fields, `PLACE_ORDER`, `BACK`, payment selection, receipt, `CHECK_ORDER`, stale/expired actions, Admin Orders; no WAMID/screenshots |
+| Incident | N/A | N/A | N/A | N/A | N/A | `FS-261019-000001` remains PAID/PACKING/APPROVED, reference missing; one Purchase event record, five attempts; fulfillment hold remains; no replay |
+| Local release gates | N/A | N/A | N/A | N/A | N/A | 109/109 tests, build, lint, 0 high-severity audit findings, API/Admin Wrangler dry-run PASS; prior PR CI failed before steps; no deployment |
+
+## GFS-175 QR Extraction and Launch Evidence (2026-10-20)
+
+| Area | Required coverage | Status |
+| --- | --- | --- |
+| Chrome MCP | `list_pages` first; reuse authenticated Admin/customer tabs; unrelated-tab count | PARTIAL/BLOCKED: stale Codex endpoint corrected to current DevToolsActivePort; active session still exposes no MCP tools, so `list_pages` and browser inspection remain unavailable; tabs changed 0 |
+| JazzCash QR | immutable original → QR-only derivative → exact decoded payload match → scan PASS → authorized recipient | BLOCKED: private R2 source unavailable; ownership unverified; no derivative or live evidence |
+| Easypaisa QR | immutable original → QR-only derivative → exact decoded payload match → scan PASS → authorized recipient | BLOCKED extraction/scan; ownership FAIL/BLOCKED due recorded merchant/account mismatch |
+| Bank Transfer QR | immutable original → QR-only derivative → exact decoded payload match → scan PASS → authorized recipient | BLOCKED extraction/scan; ownership FAIL/BLOCKED due recorded `BIO TECH - 5038` mismatch |
+| QR integrity/rollback | source preservation, deterministic repeat upload, derivative linkage/hash/MIME, rollback | PASS local deterministic source-object implementation; derivative/linkage/rollback evidence BLOCKED |
+| Ownership authorization | reject ordinary UI/API self-verification; preserve independent evidence gate | PASS local source change; no account authorization recorded |
+| Payment methods/WhatsApp | Admin→QR→payload→recipient→method-specific customer render→WAMID/status/screenshot, each method | BLOCKED: no MCP pages, customer session, fresh method delivery, WAMID or screenshot |
+| Journey EN/UR | `LANG_EN`, `LANG_UR`, `ADD_FERTILIZER`, `SEEDS_ONLY`, each D1 province, five delivery fields, `PLACE_ORDER`, `BACK`, three payment IDs, receipt/status, `CHECK_ORDER`, stale/expired actions, Admin Orders | BLOCKED live for each action; selector exclusions and localized stale-action fallback remain source-level only |
+| Financial incident | `FS-261019-000001`, independent bank verification, reference, hold, failed Purchase CAPI | Incident remains unresolved and held; no mutation/replay/dispatch |
+| Regression | tests, build, lint, dependency audit, Wrangler, PR CI | PASS local: `npm ci`, 106/106 tests, build, lint, audit 0 vulnerabilities, API/Admin Wrangler dry-runs; remote CI/deploy not run |
+
 ## GFS-174 Evidence Gate (2026-10-20)
 
 | Area | Required coverage | Status |

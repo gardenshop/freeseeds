@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { applyFertilizerDecision, createWhatsAppProvider, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, MetaCapiProvider, MetaFlowEnvelope, normalizePaymentMethodRow, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInstantFormSubmission, persistWebhookRecords, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQr, whatsAppActionLabel, WhatsAppTemplateKey } from "@gfs/core";
+import { applyFertilizerDecision, createWhatsAppProvider, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, MetaCapiProvider, MetaFlowEnvelope, normalizePaymentMethodRow, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInstantFormSubmission, persistWebhookRecords, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey } from "@gfs/core";
 import { handleMetaFlowPayload } from "./flow-endpoint";
 
 type Env = {
@@ -75,8 +75,8 @@ async function contentFor(db: D1Database, key: WhatsAppTemplateKey, fallback: st
 }
 
 async function completeEnabledPaymentMethods(db: D1Database, locale: "en" | "ur" = "en") {
-  const methods = await db.prepare("SELECT * FROM payment_methods WHERE enabled=1 ORDER BY sort_order, method").all();
-  return (methods.results ?? []).map((row) => normalizePaymentMethodRow(row as Record<string, unknown>)).filter((method) => isPaymentMethodComplete(method) && isPaymentMethodLocaleComplete(method, locale));
+  const methods = await db.prepare("SELECT pm.* FROM payment_methods pm JOIN payment_qr_assets qa ON qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref IS NOT NULL AND TRIM(qa.independent_evidence_ref)<>'' WHERE pm.enabled=1 AND pm.qr_owner_verified=1 ORDER BY pm.sort_order, pm.method").all();
+  return (methods.results ?? []).map((row) => normalizePaymentMethodRow(row as Record<string, unknown>)).filter((method) => method.qrOwnerVerified && isPaymentMethodComplete(method) && isPaymentMethodLocaleComplete(method, locale));
 }
 
 function paymentMethodFromAction(value: string): PaymentMethod | undefined {
@@ -191,30 +191,55 @@ async function markPaymentPartSkipped(db: D1Database, orderId: string, key: stri
   return "SKIPPED";
 }
 
-async function paymentQrFromR2(bucket: R2Bucket, config: ReturnType<typeof normalizePaymentMethodRow>): Promise<{ body: ArrayBuffer; mimeType: string } | undefined> {
+async function paymentQrFromR2(db: D1Database, bucket: R2Bucket, config: ReturnType<typeof normalizePaymentMethodRow>): Promise<{ body: ArrayBuffer; mimeType: string } | undefined> {
   if (!config.qrR2Key) return undefined;
   if (!config.qrOwnerVerified) throw new Error("PAYMENT_QR_OWNERSHIP_UNVERIFIED");
   if (!config.qrMimeType || !config.qrSha256 || config.qrSizeBytes === undefined) throw new Error("PAYMENT_QR_METADATA_UNVERIFIED");
+  const asset = await db.prepare("SELECT method,derivative_r2_key AS object_key,derivative_sha256 AS sha256,derivative_mime_type AS mime_type,derivative_size_bytes AS size_bytes,decoder_agreement,payload_match,scan_pass,independent_ownership_verified,independent_evidence_ref,active FROM payment_qr_assets WHERE method=? AND derivative_r2_key=?").bind(config.method, config.qrR2Key).first<Record<string, unknown>>();
+  if (!asset) throw new Error("PAYMENT_QR_PROVENANCE_NOT_FOUND");
   const object = await bucket.get(config.qrR2Key);
   if (!object) throw new Error("PAYMENT_QR_NOT_FOUND");
   const body = await object.arrayBuffer();
   const contentType = object.httpMetadata?.contentType;
   if (!contentType || contentType !== config.qrMimeType) throw new Error("PAYMENT_QR_CONTENT_TYPE_MISMATCH");
-  if (object.customMetadata?.method !== config.method) throw new Error("PAYMENT_QR_METHOD_MISMATCH");
-  if (object.customMetadata?.sha256 !== config.qrSha256) throw new Error("PAYMENT_QR_METADATA_CHECKSUM_MISMATCH");
-  await verifyPaymentQr(body, config.qrMimeType, config.qrSha256, config.qrSizeBytes);
+  await verifyPaymentQrAsset(body, contentType, config, {
+    method: String(asset.method),
+    objectKey: String(asset.object_key),
+    sha256: String(asset.sha256),
+    mimeType: String(asset.mime_type),
+    sizeBytes: Number(asset.size_bytes),
+    decoderAgreement: Number(asset.decoder_agreement) === 1,
+    payloadMatch: Number(asset.payload_match) === 1,
+    scanPass: Number(asset.scan_pass) === 1,
+    independentOwnershipVerified: Number(asset.independent_ownership_verified) === 1,
+    independentEvidenceRef: asset.independent_evidence_ref == null ? null : String(asset.independent_evidence_ref),
+    active: Number(asset.active) === 1
+  });
   return { body, mimeType: config.qrMimeType };
 }
 
-async function deliverPaymentInstructions(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, to: string, orderId: string, orderNumber: string, method: PaymentMethod, locale: "en" | "ur", message: string, config: ReturnType<typeof normalizePaymentMethodRow>): Promise<PaymentDeliveryResult> {
-  const textStatus = await sendPaymentPart(db, to, orderId, `payment_text_${orderId}_${method}_${locale}`, "WHATSAPP_PAYMENT_TEXT", () => provider.sendText(to, message));
+async function deliverPaymentInstructions(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, to: string, orderId: string, orderNumber: string, amount: number, method: PaymentMethod, locale: "en" | "ur", message: string, config: ReturnType<typeof normalizePaymentMethodRow>): Promise<PaymentDeliveryResult> {
   const qrKey = `payment_qr_${orderId}_${method}`;
+  const order = await db.prepare("SELECT o.order_number,o.total_payable,o.state,o.payment_status,p.method AS selected_method FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=?").bind(orderId).first<Record<string, unknown>>();
+  const currentRow = await db.prepare("SELECT pm.* FROM payment_methods pm JOIN payment_qr_assets qa ON qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref IS NOT NULL AND TRIM(qa.independent_evidence_ref)<>'' WHERE pm.method=? AND pm.enabled=1 AND pm.qr_owner_verified=1").bind(method).first<Record<string, unknown>>();
+  const currentConfig = currentRow ? normalizePaymentMethodRow(currentRow) : undefined;
+  const currentMessage = order && currentConfig && isPaymentMethodLocaleComplete(currentConfig, locale)
+    ? formatPaymentMessage(String(order.order_number), Number(order.total_payable), currentConfig, locale)
+    : undefined;
+  const orderStillPending = order?.state === "PAYMENT_PENDING" && order.payment_status === "PENDING" && order.selected_method === method && String(order.order_number) === orderNumber && Number(order.total_payable) === amount;
+  const sameSettings = currentConfig && currentConfig.method === config.method && currentConfig.qrR2Key === config.qrR2Key && currentConfig.qrSha256 === config.qrSha256 && currentConfig.recipientName === config.recipientName && currentConfig.tillId === config.tillId;
+  if (!orderStillPending || !currentConfig?.qrOwnerVerified || !sameSettings || currentMessage !== message) {
+    await markPaymentPartSkipped(db, orderId, `payment_text_${orderId}_${method}_${locale}`, "WHATSAPP_PAYMENT_TEXT", "PAYMENT_METHOD_NO_LONGER_ELIGIBLE");
+    await markPaymentPartSkipped(db, orderId, qrKey, "WHATSAPP_PAYMENT_QR", "PAYMENT_METHOD_NO_LONGER_ELIGIBLE");
+    return { textSent: false, qrStatus: "SKIPPED" };
+  }
+  const textStatus = await sendPaymentPart(db, to, orderId, `payment_text_${orderId}_${method}_${locale}`, "WHATSAPP_PAYMENT_TEXT", () => provider.sendText(to, currentMessage));
   let qrStatus: PaymentPartStatus;
-  if (!config.qrR2Key) {
+  if (!currentConfig.qrR2Key) {
     qrStatus = await markPaymentPartSkipped(db, orderId, qrKey, "WHATSAPP_PAYMENT_QR", "PAYMENT_QR_NOT_CONFIGURED");
   } else {
     try {
-      const qr = await paymentQrFromR2(bucket, config);
+      const qr = await paymentQrFromR2(db, bucket, currentConfig);
       qrStatus = qr ? await sendPaymentPart(db, to, orderId, qrKey, "WHATSAPP_PAYMENT_QR", () => provider.sendPaymentQr(to, qr)) : "SKIPPED";
     } catch (error) {
       const reason = error instanceof Error ? error.message.slice(0, 160) : "PAYMENT_QR_DELIVERY_BLOCKED";
@@ -261,7 +286,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   try { data = row?.state_data ? JSON.parse(row.state_data) as ConversationData : {}; } catch { data = {}; }
   let nextState = state;
   let reply: string | null = null;
-  let paymentSelection: { orderId: string; orderNumber: string; method: PaymentMethod; locale: "en" | "ur"; message: string; config: ReturnType<typeof normalizePaymentMethodRow> } | undefined;
+  let paymentSelection: { orderId: string; orderNumber: string; amount: number; method: PaymentMethod; locale: "en" | "ur"; message: string; config: ReturnType<typeof normalizePaymentMethodRow> } | undefined;
   let completePaymentMethods: Awaited<ReturnType<typeof completeEnabledPaymentMethods>> = [];
   if (normalized === "CANCEL") { nextState = "NEW"; data = {}; reply = (await sessionContent("WELCOME", "Order entry cancelled. Tap below when you are ready to start.")).text; }
   else if (normalized === "BACK" && state === "REVIEW") { nextState = "CONTACT"; reply = (await sessionContent("FIELD_CONTACT_NUMBER", "Please reply with your contact number.")).text; }
@@ -280,8 +305,8 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   else if (state === "PROVINCE") { const provinceChoice = normalized.startsWith("PROVINCE_") ? normalized.slice(9).replace(/_/g, " ") : text; try { const quote = await quoteOrder(db, { productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: provinceChoice, fertilizerSelected: data.fertilizerSelected ?? false }); data.province = quote.province; nextState = "FULL_NAME"; reply = (await sessionContent("FIELD_FULL_NAME", "Please reply with your full name.")).text; } catch { reply = (await sessionContent("VALIDATION", "Please choose one of the listed options.")).text; } }
   else if (state === "FERTILIZER") { if (!/^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/i.test(normalized)) reply = (await sessionContent("VALIDATION", "Please choose one of the listed options.")).text; else { data.fertilizerSelected = /^(YES|ADD_FERTILIZER)$/i.test(normalized); nextState = "PROVINCE"; reply = (await sessionContent("PROVINCE_DELIVERY", "Choose your province for delivery.")).text; } }
   else if (state === "REVIEW") { if (!/^(CONFIRM|PLACE_ORDER)$/i.test(normalized)) reply = (await sessionContent("REVIEW", "Review your order. Tap Place Order to confirm.")).text; else if (!data.fullName || !data.deliveryAddress || !data.nearbyPlace || !data.city || !data.contactNumber || !data.province) { nextState = "FULL_NAME"; data = {}; reply = (await sessionContent("FIELD_FULL_NAME", "I need to restart safely. Please reply with your full name.")).text; } else { const submission = { fullName: data.fullName, deliveryAddress: data.deliveryAddress, nearbyPlace: data.nearbyPlace, city: data.city, contactNumber: data.contactNumber, productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: data.province, fertilizerSelected: data.fertilizerSelected ?? false, whatsappNumber: event.from }; try { const result = await persistFlowSubmission(db, submission, undefined, `WHATSAPP:${event.id}`, event.from); data.orderId = result.orderId; data.orderNumber = result.orderNumber; const methods = (await db.prepare("SELECT * FROM payment_methods WHERE enabled=1").all()).results.map((row) => normalizePaymentMethodRow(row as Record<string, unknown>)).filter((method) => isPaymentMethodComplete(method)); nextState = methods.length ? "PAYMENT_METHOD" : "COMPLETE"; const confirmation = await sessionContent("CONFIRMATION", "Order {orderNumber} created. Total: PKR {totalPkr}.", { orderNumber: result.orderNumber, totalPkr: result.quote?.totalPayablePkr ?? "configured tariff" }); reply = `${confirmation.text}\n${methods.length ? (await sessionContent("PAYMENT", "Choose a verified payment method for order {orderNumber}.", { orderNumber: result.orderNumber })).text : "Payment methods are not configured; no payment request was sent."}`; } catch (error) { if (error instanceof OrderCooldownError) { nextState = "PAYMENT_PENDING"; data.orderNumber = error.orderNumber; reply = `You already have order ${error.orderNumber}. You can request another order on ${new Date(error.nextEligibleAt).toLocaleDateString("en-PK", { timeZone: "Asia/Karachi" })}.`; } else throw error; } } }
-  else if (state === "PAYMENT_METHOD") { const selectedMethod = paymentMethodFromAction(normalized); if (!selectedMethod || !data.orderId) reply = (await sessionContent("PAYMENT", "Choose a verified payment method for order {orderNumber}.", { orderNumber: data.orderNumber ?? "" })).text; else { try { const selected = await selectPaymentMethod(db, data.orderId, selectedMethod, data.language ?? "en", event.from); nextState = "PAYMENT_PENDING"; reply = selected.message; paymentSelection = { orderId: data.orderId, orderNumber: selected.orderNumber, method: selectedMethod, locale: data.language ?? "en", message: selected.message, config: selected.config }; } catch { reply = (await sessionContent("PAYMENT", "That payment method is not currently available.", { orderNumber: data.orderNumber ?? "" })).text; } } }
-  else if (state === "PAYMENT_PENDING" && paymentMethodFromAction(normalized) && data.orderId) { const selectedMethod = paymentMethodFromAction(normalized)!; try { const selected = await selectPaymentMethod(db, data.orderId, selectedMethod, data.language ?? "en", event.from); nextState = "PAYMENT_PENDING"; reply = selected.message; paymentSelection = { orderId: data.orderId, orderNumber: selected.orderNumber, method: selectedMethod, locale: data.language ?? "en", message: selected.message, config: selected.config }; } catch { reply = (await sessionContent("PAYMENT", "That payment method is not currently available.", { orderNumber: data.orderNumber ?? "" })).text; } }
+  else if (state === "PAYMENT_METHOD") { const selectedMethod = paymentMethodFromAction(normalized); if (!selectedMethod || !data.orderId) reply = (await sessionContent("PAYMENT", "Choose a verified payment method for order {orderNumber}.", { orderNumber: data.orderNumber ?? "" })).text; else { try { const selected = await selectPaymentMethod(db, data.orderId, selectedMethod, data.language ?? "en", event.from); nextState = "PAYMENT_PENDING"; reply = selected.message; paymentSelection = { orderId: data.orderId, orderNumber: selected.orderNumber, amount: selected.amount, method: selectedMethod, locale: data.language ?? "en", message: selected.message, config: selected.config }; } catch { reply = (await sessionContent("PAYMENT", "That payment method is not currently available.", { orderNumber: data.orderNumber ?? "" })).text; } } }
+  else if (state === "PAYMENT_PENDING" && paymentMethodFromAction(normalized) && data.orderId) { const selectedMethod = paymentMethodFromAction(normalized)!; try { const selected = await selectPaymentMethod(db, data.orderId, selectedMethod, data.language ?? "en", event.from); nextState = "PAYMENT_PENDING"; reply = selected.message; paymentSelection = { orderId: data.orderId, orderNumber: selected.orderNumber, amount: selected.amount, method: selectedMethod, locale: data.language ?? "en", message: selected.message, config: selected.config }; } catch { reply = (await sessionContent("PAYMENT", "That payment method is not currently available.", { orderNumber: data.orderNumber ?? "" })).text; } }
   else if (state === "PAYMENT_PENDING" && /^(HELP|PAYMENT_HELP)$/i.test(normalized)) { reply = (await sessionContent("ORDER_STATUS", "Upload your payment receipt here after payment. Garden Shop will review it manually.", { orderNumber: data.orderNumber ?? "" })).text; }
   else if (state === "PAYMENT_PENDING" && normalized === "START") { const order = await getLatestOrderForWaId(db, event.from, data.orderId); const locale = data.language ?? "en"; reply = order ? formatCustomerOrderStatus(order, locale) : (await sessionContent("ORDER_STATUS", "Your order is still in progress. Upload the receipt or use Check Order.")).text; }
   else if (state === "COMPLETE" && normalized === "START") { nextState = "FULL_NAME"; data = {}; reply = (await sessionContent("FIELD_FULL_NAME", "Please reply with your full name.")).text; }
@@ -301,7 +326,13 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   ]);
   const sessionFlowToken = checkoutMode !== "guided" && state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR") && flowTokenSecret ? await createFlowToken(event.from, event.id, flowTokenSecret) : undefined;
   const enabledProvinces = (await db.prepare("SELECT province,delivery_fee_pkr FROM province_delivery_rates WHERE enabled=1 ORDER BY province").all<{ province: string; delivery_fee_pkr: number }>()).results ?? [];
-  if (nextState === "PAYMENT_METHOD") completePaymentMethods = await completeEnabledPaymentMethods(db, data.language ?? "en");
+  if (nextState === "PAYMENT_METHOD") {
+    completePaymentMethods = await completeEnabledPaymentMethods(db, data.language ?? "en");
+    if (!completePaymentMethods.length) {
+      nextState = "COMPLETE";
+      reply = (await sessionContent("PAYMENT", "No verified payment method is currently available; no payment request was sent.", { orderNumber: data.orderNumber ?? "" })).text;
+    }
+  }
   const paymentOptions = completePaymentMethods.map((method) => ({ id: paymentActionId(method.method), title: paymentActionTitle(payment, method) }));
   const options: ConversationReplyOptions = (state === "LANGUAGE" || (state === "NEW" && Boolean(text)) || normalized === "CANCEL") && !(state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) ? { buttons: [{ id: "LANG_UR", title: whatsAppActionLabel(welcomeUr, "LANG_UR") }, { id: "LANG_EN", title: whatsAppActionLabel(welcomeEn, "LANG_EN") }] } : sessionFlowToken ? { flow: { id: flowId, token: sessionFlowToken } } : (state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) || state === "NEW" && normalized === "GET_FREE_PACKS" ? { buttons: [{ id: "ADD_FERTILIZER", title: whatsAppActionLabel(fertilizer, "ADD_FERTILIZER") }, { id: "SEEDS_ONLY", title: whatsAppActionLabel(fertilizer, "SEEDS_ONLY") }] } : state === "FERTILIZER" && /^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/i.test(normalized) ? { list: { buttonText: province.listButtonLabel!, rows: enabledProvinces.slice(0, 10).map((row) => ({ id: `PROVINCE_${row.province.toUpperCase().replace(/ /g, "_")}`, title: row.province, description: `PKR ${row.delivery_fee_pkr}` })) } } : state === "CONTACT" ? { buttons: [{ id: "PLACE_ORDER", title: whatsAppActionLabel(review, "PLACE_ORDER") }, { id: "BACK", title: whatsAppActionLabel(review, "BACK") }] } : nextState === "PAYMENT_METHOD" && paymentOptions.length ? { buttons: paymentOptions } : state === "PAYMENT_PENDING" ? { buttons: [{ id: "CHECK_ORDER", title: whatsAppActionLabel(status, "CHECK_ORDER") }] } : {};
   const mediaKey = guidedReplyMediaKey(normalized, state, nextState);
@@ -309,7 +340,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   const now = new Date().toISOString();
   await db.prepare("INSERT INTO whatsapp_conversations (id,wa_id,state,state_data,last_inbound_message_id,created_at,updated_at) VALUES (?,?,?,?,?,?,?) ON CONFLICT(wa_id) DO UPDATE SET state=excluded.state,state_data=excluded.state_data,last_inbound_message_id=excluded.last_inbound_message_id,updated_at=excluded.updated_at").bind(crypto.randomUUID(), event.from, nextState, JSON.stringify(data), event.id, now, now).run();
   if (paymentSelection) {
-    const delivery = await deliverPaymentInstructions(db, bucket, provider, event.from, paymentSelection.orderId, paymentSelection.orderNumber, paymentSelection.method, paymentSelection.locale, paymentSelection.message, paymentSelection.config);
+    const delivery = await deliverPaymentInstructions(db, bucket, provider, event.from, paymentSelection.orderId, paymentSelection.orderNumber, paymentSelection.amount, paymentSelection.method, paymentSelection.locale, paymentSelection.message, paymentSelection.config);
     try { if (events) await events.send({ kind: "WHATSAPP_PAYMENT_INSTRUCTIONS", idempotencyKey: `payment_instructions_${paymentSelection.orderId}_${paymentSelection.method}_${paymentSelection.locale}`, entityId: paymentSelection.orderId, schemaVersion: 1 }); } catch { /* the durable outbox remains authoritative */ }
     if (delivery.textSent && delivery.qrStatus !== "FAILED") {
       return true;
@@ -640,12 +671,12 @@ export default {
         if (message.body.kind === "WHATSAPP_PAYMENT_INSTRUCTIONS") {
           try {
             const outbox = await env.DB.prepare("SELECT payload_json FROM outbox_jobs WHERE idempotency_key=?").bind(message.body.idempotencyKey).first<{ payload_json: string }>();
-            const payload = outbox ? JSON.parse(outbox.payload_json) as { orderId: string; orderNumber: string; method: PaymentMethod; locale: "en" | "ur"; recipient?: string; message: string } : undefined;
+            const payload = outbox ? JSON.parse(outbox.payload_json) as { orderId: string; orderNumber: string; amount: number; method: PaymentMethod; locale: "en" | "ur"; recipient?: string; message: string } : undefined;
             if (!payload?.recipient) throw new Error("PAYMENT_RECIPIENT_REQUIRED");
             const row = await env.DB.prepare("SELECT * FROM payment_methods WHERE method=?").bind(payload.method).first<Record<string, unknown>>();
             if (!row) throw new Error("PAYMENT_METHOD_NOT_CONFIGURED");
             const provider = createWhatsAppProvider("meta", { enabled: env.META_PROVIDER_ENABLED === "true", graphVersion: env.META_GRAPH_VERSION ?? "v26.0", accessToken: env.META_ACCESS_TOKEN, phoneNumberId: env.META_PHONE_NUMBER_ID, verifyToken: env.WEBHOOK_VERIFY_TOKEN, appSecret: env.META_APP_SECRET });
-            const delivery = await deliverPaymentInstructions(env.DB, env.RECEIPTS, provider, payload.recipient, payload.orderId, payload.orderNumber, payload.method, payload.locale ?? "en", payload.message, normalizePaymentMethodRow(row));
+            const delivery = await deliverPaymentInstructions(env.DB, env.RECEIPTS, provider, payload.recipient, payload.orderId, payload.orderNumber, Number(payload.amount), payload.method, payload.locale ?? "en", payload.message, normalizePaymentMethodRow(row));
             if (!delivery.textSent || delivery.qrStatus === "FAILED") throw new Error(delivery.textSent ? "PAYMENT_QR_DELIVERY_BLOCKED" : "PAYMENT_TEXT_DELIVERY_FAILED");
             await env.DB.prepare("UPDATE outbox_jobs SET status='SENT',attempts=?,last_error=NULL,updated_at=? WHERE idempotency_key=?").bind(nextAttempt, new Date().toISOString(), message.body.idempotencyKey).run();
             message.ack();

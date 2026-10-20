@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { applyFertilizerDecision, isAllowedInstantFormLead, LeadSource, MetaWhatsAppProvider, MetaCapiProvider, formatPaymentMessage, isPaymentMethodComplete, isTerminalOutboxStatus, parseMetaInstantFormLead, parseWebhookRecords, paymentInstructions, quoteOrder, retryDelaySeconds, selectPaymentMethod, shouldDeadLetter, storePaymentQr, storeReceipt, validatePaymentQr, verifyPaymentQr } from "@gfs/core";
+import { applyFertilizerDecision, isAllowedInstantFormLead, LeadSource, MetaWhatsAppProvider, MetaCapiProvider, configuredPaymentMethodNames, formatPaymentMessage, isPaymentMethodComplete, isTerminalOutboxStatus, parseMetaInstantFormLead, parseWebhookRecords, paymentInstructions, quoteOrder, retryDelaySeconds, selectPaymentMethod, shouldDeadLetter, storePaymentQr, storeReceipt, validatePaymentQr, verifyPaymentQr, verifyPaymentQrAsset } from "@gfs/core";
 import api from "../apps/api/src/index";
 
 describe("product readiness safeguards", () => {
@@ -72,17 +72,33 @@ describe("product readiness safeguards", () => {
 
   it("keeps all payment methods disabled without verified recipient values", () => {
     for (const [method, displayName] of [["JAZZCASH", "JazzCash"], ["EASYPAISA", "Easypaisa"], ["BANK_TRANSFER", "Bank Transfer"]] as const) expect(paymentInstructions({ id: `synthetic-${method}`, method, displayName, enabled: false, sortOrder: 10 }).configured).toBe(false);
-    const config = { id: "synthetic", method: "JAZZCASH" as const, displayName: "JazzCash", recipientName: "Garden Shop", instructions: "Synthetic instruction", referenceInstruction: "Use order number", enabled: true, sortOrder: 10 };
+    const config = { id: "synthetic", method: "JAZZCASH" as const, displayName: "JazzCash", recipientName: "Synthetic recipient", instructions: "Pay {amount} to {recipientName}.", referenceInstruction: "Reference {orderNumber}.", receiptInstructions: "Share your receipt here.", enabled: true, sortOrder: 10 };
     expect(isPaymentMethodComplete(config)).toBe(true);
-    expect(formatPaymentMessage("FS-100001", 250, config)).toContain("Garden Shop");
+    expect(formatPaymentMessage("FS-100001", 250, config)).toContain("Synthetic recipient");
+  });
+
+  it("filters payment choices unless D1 has independently verified QR provenance", async () => {
+    let query = "";
+    const db = {
+      prepare: (sql: string) => {
+        query = sql;
+        const statement = { all: async () => ({ results: [{ method: "JAZZCASH", display_name: "JazzCash", recipient_name: "Synthetic recipient", instructions: "Pay {amount} to {recipientName}.", reference_instruction: "Reference {orderNumber}.", receipt_instructions: "Share the receipt here.", enabled: 1, qr_owner_verified: 0 }] }) };
+        return statement;
+      }
+    } as unknown as D1Database;
+    await expect(configuredPaymentMethodNames(db)).resolves.toEqual([]);
+    expect(query).toContain("payment_qr_assets");
+    expect(query).toContain("independent_ownership_verified=1");
+    expect(query).toContain("qr_owner_verified=1");
   });
 
   it("selects only a complete configured method and creates idempotent payment work", async () => {
     const statements: unknown[] = [];
-    const row = { order_number: "FS-100001", total_payable: 250, state: "DETAILS_COMPLETED", payment_id: "synthetic-payment", id: "synthetic-method", method: "JAZZCASH", display_name: "JazzCash", recipient_name: "Garden Shop", instructions: "Synthetic instruction", reference_instruction: "Use order number", enabled: 1, sort_order: 10 };
+    const row = { order_number: "FS-100001", total_payable: 250, state: "DETAILS_COMPLETED", payment_id: "synthetic-payment", id: "synthetic-method", method: "JAZZCASH", display_name: "JazzCash", recipient_name: "Synthetic recipient", instructions: "Pay {amount} to {recipientName}.", reference_instruction: "Reference {orderNumber}.", receipt_instructions: "Share your receipt here.", qr_owner_verified: 1, enabled: 1, sort_order: 10 };
     const db = { prepare: (_sql: string) => { const statement = { bind: (...args: unknown[]) => { statements.push(args); return statement; }, first: async () => row }; return statement; }, batch: async (batchStatements: unknown[]) => { statements.push(batchStatements); return []; } } as unknown as D1Database;
     const result = await selectPaymentMethod(db, "synthetic-order", "JAZZCASH");
-    expect(result.message).toContain("Amount due: PKR 250");
+    expect(result.message).toContain("Pay 250 to Synthetic recipient.");
+    expect(result.message).not.toContain("Amount due:");
     expect(JSON.stringify(statements)).toContain("WHATSAPP_PAYMENT_INSTRUCTIONS");
     const incomplete = { ...row, enabled: 0 };
     const incompleteDb = { prepare: (_sql: string) => { const statement = { bind: (..._args: unknown[]) => statement, first: async () => incomplete }; return statement; } } as unknown as D1Database;
@@ -95,7 +111,7 @@ describe("product readiness safeguards", () => {
         const statement = {
           bind: (..._args: unknown[]) => statement,
           first: async () => sql.includes("FROM products") ? { id: "fixture-product", code: "FIXTURE-SEEDS", name: "Fixture Seeds", price_pkr: 300, fertilizer_price_pkr: 50, enabled: 1 } : { province: "Punjab", delivery_fee_pkr: 150, enabled: 1 },
-          all: async () => ({ results: [{ display_name: "Configured Fixture Method", enabled: 1, recipient_name: "Fixture recipient", instructions: "Fixture instructions" }, { display_name: "Incomplete Fixture Method", enabled: 1, recipient_name: null, instructions: null }] })
+          all: async () => ({ results: [{ method: "JAZZCASH", display_name: "Configured Fixture Method", enabled: 1, qr_owner_verified: 1, recipient_name: "Fixture recipient", instructions: "Pay {amount} to {recipientName}.", reference_instruction: "Reference {orderNumber}.", receipt_instructions: "Share the receipt here." }, { method: "EASYPAISA", display_name: "Incomplete Fixture Method", enabled: 1, qr_owner_verified: 1, recipient_name: null, instructions: null }] })
         };
         return statement;
       }
@@ -120,7 +136,7 @@ describe("product readiness safeguards", () => {
 
   it("uses the persisted payable total instead of global payment configuration", async () => {
     const statements: string[] = [];
-    const row = { order_number: "FS-100002", total_payable: 500, province: "Punjab", state: "DETAILS_COMPLETED", payment_id: "synthetic-payment", id: "synthetic-method", method: "JAZZCASH", display_name: "JazzCash", recipient_name: "Garden Shop", instructions: "Fixture instruction", enabled: 1, sort_order: 10 };
+    const row = { order_number: "FS-100002", total_payable: 500, province: "Punjab", state: "DETAILS_COMPLETED", payment_id: "synthetic-payment", id: "synthetic-method", method: "JAZZCASH", display_name: "JazzCash", recipient_name: "Synthetic recipient", instructions: "Pay {amount} to {recipientName}.", reference_instruction: "Reference {orderNumber}.", receipt_instructions: "Share your receipt here.", qr_owner_verified: 1, enabled: 1, sort_order: 10 };
     const db = { prepare: (sql: string) => { statements.push(sql); const statement = { bind: (..._args: unknown[]) => statement, first: async () => row }; return statement; }, batch: async () => [] } as unknown as D1Database;
     const result = await selectPaymentMethod(db, "synthetic-order", "JAZZCASH");
     expect(result.amount).toBe(500);
@@ -136,7 +152,7 @@ describe("product readiness safeguards", () => {
         const statement = {
           bind: (..._args: unknown[]) => statement,
           first: async () => query.includes("offer_code") ? row : query.includes("province_delivery_rates") ? { province: "Punjab", delivery_fee_pkr: 150, enabled: 1 } : query.includes("id FROM products") ? { id: "fixture-product" } : { id: "fixture-product", code: "FIXTURE-SEEDS", name: "Fixture Seeds", price_pkr: 300, fertilizer_price_pkr: 50, enabled: 1 },
-          all: async () => ({ results: query.includes("payment_methods") ? [{ display_name: "JazzCash", enabled: 1, recipient_name: "Garden Shop", instructions: "Synthetic instructions" }] : [] })
+          all: async () => ({ results: query.includes("payment_methods") ? [{ method: "JAZZCASH", display_name: "JazzCash", enabled: 1, qr_owner_verified: 1, recipient_name: "Synthetic recipient", instructions: "Pay {amount} to {recipientName}.", reference_instruction: "Reference {orderNumber}.", receipt_instructions: "Share your receipt here." }] : [] })
         };
         return statement;
       },
@@ -151,20 +167,42 @@ describe("product readiness safeguards", () => {
   });
 
   it("keeps legacy zero-seed orders payable by their persisted delivery total", async () => {
-    const row = { order_number: "FS-100003", seed_price: 0, delivery_fee: 250, fertilizer_fee: 0, total_payable: 250, province: null, state: "DETAILS_COMPLETED", payment_id: "synthetic-payment", id: "synthetic-method", method: "JAZZCASH", display_name: "JazzCash", recipient_name: "Garden Shop", instructions: "Fixture instruction", enabled: 1, sort_order: 10 };
+    const row = { order_number: "FS-100003", seed_price: 0, delivery_fee: 250, fertilizer_fee: 0, total_payable: 250, province: null, state: "DETAILS_COMPLETED", payment_id: "synthetic-payment", id: "synthetic-method", method: "JAZZCASH", display_name: "JazzCash", recipient_name: "Synthetic recipient", instructions: "Pay {amount} to {recipientName}.", reference_instruction: "Reference {orderNumber}.", receipt_instructions: "Share your receipt here.", qr_owner_verified: 1, enabled: 1, sort_order: 10 };
     const db = { prepare: (_sql: string) => { const statement = { bind: (..._args: unknown[]) => statement, first: async () => row }; return statement; }, batch: async () => [] } as unknown as D1Database;
     await expect(selectPaymentMethod(db, "synthetic-order", "JAZZCASH")).resolves.toMatchObject({ amount: 250 });
   });
 
-  it("validates, stores and replaces private payment QR objects", async () => {
+  it("validates and stores immutable private payment QR objects idempotently", async () => {
     const writes: Array<{ key: string; value: ArrayBuffer }> = [];
-    const bucket = { put: async (key: string, value: ArrayBuffer) => { writes.push({ key, value }); } } as unknown as R2Bucket;
+    const objects = new Map<string, { size: number; customMetadata: Record<string, string>; httpMetadata: { contentType: string } }>();
+    const bucket = {
+      head: async (key: string) => objects.get(key) ?? null,
+      put: async (key: string, value: ArrayBuffer, options: { customMetadata: Record<string, string>; httpMetadata: { contentType: string } }) => {
+        writes.push({ key, value });
+        objects.set(key, { size: value.byteLength, customMetadata: options.customMetadata, httpMetadata: options.httpMetadata });
+      }
+    } as unknown as R2Bucket;
     expect(() => validatePaymentQr("image/png", 4)).not.toThrow();
     expect(() => validatePaymentQr("application/pdf", 4)).toThrow("PAYMENT_QR_MIME_NOT_ALLOWED");
-     const stored = await storePaymentQr(bucket, "JAZZCASH", new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).buffer, "image/png");
-    expect(stored.objectKey).toMatch(/^payment-qr\/JAZZCASH\//);
+    const original = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).buffer;
+    const stored = await storePaymentQr(bucket, "JAZZCASH", original, "image/png");
+    const repeated = await storePaymentQr(bucket, "JAZZCASH", original, "image/png");
+    expect(stored.objectKey).toMatch(/^payment-qr\/original\/JAZZCASH\//);
+    expect(repeated.objectKey).toBe(stored.objectKey);
     expect(stored.sha256).toHaveLength(64);
     expect(writes).toHaveLength(1);
+  });
+
+  it("requires matching provenance and independent evidence before QR delivery", async () => {
+    const body = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).buffer;
+    const sha256 = [...new Uint8Array(await crypto.subtle.digest("SHA-256", body))].map((value) => value.toString(16).padStart(2, "0")).join("");
+    const config = { method: "JAZZCASH", qrR2Key: "derivative/JAZZCASH/test.png", qrSha256: sha256, qrMimeType: "image/png", qrSizeBytes: body.byteLength, qrOwnerVerified: true };
+    const asset = { method: "JAZZCASH", objectKey: config.qrR2Key, sha256, mimeType: "image/png", sizeBytes: body.byteLength, decoderAgreement: true, payloadMatch: true, scanPass: true, independentOwnershipVerified: true, independentEvidenceRef: "synthetic-evidence", active: true };
+    await expect(verifyPaymentQrAsset(body, "image/png", config, asset)).resolves.toBeUndefined();
+    await expect(verifyPaymentQrAsset(body, "image/png", { ...config, qrOwnerVerified: false }, asset)).rejects.toThrow("PAYMENT_QR_OWNERSHIP_UNVERIFIED");
+    await expect(verifyPaymentQrAsset(body, "image/png", config, { ...asset, method: "EASYPAISA" })).rejects.toThrow("PAYMENT_QR_METHOD_MISMATCH");
+    await expect(verifyPaymentQrAsset(body, "image/png", config, { ...asset, independentEvidenceRef: null })).rejects.toThrow("PAYMENT_QR_OWNERSHIP_UNVERIFIED");
+    await expect(verifyPaymentQrAsset(body, "image/png", config, { ...asset, scanPass: false })).rejects.toThrow("PAYMENT_QR_PROVENANCE_UNVERIFIED");
   });
 
   it("stores receipts privately with a checksum and safe metadata", async () => {
@@ -213,8 +251,8 @@ describe("product readiness safeguards", () => {
 
   it("contains all required D1 tables and no third-party CRM dependency", () => {
     const schema = readFileSync("migrations/0001_initial.sql", "utf8");
-    const migrations = schema + readFileSync("migrations/0002_payment_methods.sql", "utf8") + readFileSync("migrations/0003_lead_sources.sql", "utf8") + readFileSync("migrations/0004_lead_source_page.sql", "utf8") + readFileSync("migrations/0005_customer_whatsapp_numbers.sql", "utf8") + readFileSync("migrations/0006_payment_configuration.sql", "utf8") + readFileSync("migrations/0007_dynamic_catalog.sql", "utf8") + readFileSync("migrations/0008_catalog_category.sql", "utf8") + readFileSync("migrations/0009_product_pack_quantity.sql", "utf8") + readFileSync("migrations/0010_customer_bsuid.sql", "utf8") + readFileSync("migrations/0011_whatsapp_conversations.sql", "utf8") + readFileSync("migrations/0012_order_number_format.sql", "utf8") + readFileSync("migrations/0013_order_cooldown.sql", "utf8") + readFileSync("migrations/0014_admin_controls.sql", "utf8") + readFileSync("migrations/0015_whatsapp_content_templates.sql", "utf8") + readFileSync("migrations/0016_whatsapp_content_journey.sql", "utf8") + readFileSync("migrations/0017_whatsapp_content_media.sql", "utf8") + readFileSync("migrations/0018_whatsapp_content_action_labels.sql", "utf8") + readFileSync("migrations/0019_payment_qr_ownership.sql", "utf8");
-    for (const table of ["customers", "leads", "lead_sources", "orders", "payments", "payment_receipts", "payment_methods", "payment_configuration", "products", "province_delivery_rates", "order_items", "meta_attribution", "capi_events", "whatsapp_events", "outbound_messages", "audit_log", "configuration", "outbox_jobs", "order_number_sequences", "order_requests", "cooldown_exemptions", "whatsapp_content_templates", "whatsapp_content_template_versions", "whatsapp_content_media", "whatsapp_content_version_media", "whatsapp_content_media_selections", "whatsapp_content_version_action_labels"]) expect(migrations).toContain(`CREATE TABLE ${table}`);
+    const migrations = schema + readFileSync("migrations/0002_payment_methods.sql", "utf8") + readFileSync("migrations/0003_lead_sources.sql", "utf8") + readFileSync("migrations/0004_lead_source_page.sql", "utf8") + readFileSync("migrations/0005_customer_whatsapp_numbers.sql", "utf8") + readFileSync("migrations/0006_payment_configuration.sql", "utf8") + readFileSync("migrations/0007_dynamic_catalog.sql", "utf8") + readFileSync("migrations/0008_catalog_category.sql", "utf8") + readFileSync("migrations/0009_product_pack_quantity.sql", "utf8") + readFileSync("migrations/0010_customer_bsuid.sql", "utf8") + readFileSync("migrations/0011_whatsapp_conversations.sql", "utf8") + readFileSync("migrations/0012_order_number_format.sql", "utf8") + readFileSync("migrations/0013_order_cooldown.sql", "utf8") + readFileSync("migrations/0014_admin_controls.sql", "utf8") + readFileSync("migrations/0015_whatsapp_content_templates.sql", "utf8") + readFileSync("migrations/0016_whatsapp_content_journey.sql", "utf8") + readFileSync("migrations/0017_whatsapp_content_media.sql", "utf8") + readFileSync("migrations/0018_whatsapp_content_action_labels.sql", "utf8") + readFileSync("migrations/0019_payment_qr_ownership.sql", "utf8") + readFileSync("migrations/0020_payment_locale_and_action_cleanup.sql", "utf8") + readFileSync("migrations/0021_payment_qr_asset_audit.sql", "utf8");
+    for (const table of ["customers", "leads", "lead_sources", "orders", "payments", "payment_receipts", "payment_methods", "payment_qr_assets", "payment_configuration", "products", "province_delivery_rates", "order_items", "meta_attribution", "capi_events", "whatsapp_events", "outbound_messages", "audit_log", "configuration", "outbox_jobs", "order_number_sequences", "order_requests", "cooldown_exemptions", "whatsapp_content_templates", "whatsapp_content_template_versions", "whatsapp_content_media", "whatsapp_content_version_media", "whatsapp_content_media_selections", "whatsapp_content_version_action_labels"]) expect(migrations).toContain(`CREATE TABLE ${table}`);
     expect(migrations).toContain("ALTER TABLE customers ADD COLUMN bsuid TEXT");
     expect(migrations).toContain("bsuid_business_id");
     expect(readFileSync("migrations/0012_order_number_format.sql", "utf8")).not.toMatch(/UPDATE\s+orders\s+SET\s+order_number/i);

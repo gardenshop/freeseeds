@@ -1,5 +1,32 @@
 # Resource Registry
 
+## GFS-176 QR Assets and External State (2026-10-20)
+
+- Starting HEAD: `df07ce54d6746842b8205fc523e9a5d14722b337`, branch `codex/gfs-launch-next-001`, PR #8 open. `images/` preserved and excluded from source changes.
+- Cloudflare identity was verified as `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` immediately before each staging R2/D1 mutation. No production, GitHub merge, or Meta mutation.
+- Three original staging R2 objects were independently re-read after processing; source SHA-256 unchanged. Each row in `payment_qr_assets` stores source key/hash, derivative key/hash/MIME/bytes/dimensions, exact payload hash, decoder agreement, payload match, scan result, tool versions, owner-attestation source/time, and independent verification=false. Original keys are not duplicated in this shared report.
+- JazzCash: source SHA-256 `9aa906dac069e5715ad41df56ba052e50e4ddcfc6c64ac2dd4fa5b58d64fe2e2`; derivative SHA-256 `e5df57cadaba4b0c861e2ad776aed437c9c449fcba4e2c5604e846d163a93d20`; payload SHA-256 `32839f7e195de95076024eeeeb44cee856831cd4a1073858f5cbe813621e99a0`; image/png, 800×800, 299742 bytes; exact D1 identifier match; ownership BLOCKED.
+- Easypaisa: source SHA-256 `33d99fe2b20981a266feff352e7a9fdf833fd7889a326c07e97cd8c715906e87`; derivative SHA-256 `2c99c5f4653050f1a1d87a690e066dfdbc0addccaba2b3b820c593c5e2b1e3af`; payload SHA-256 `092ba2aa83dda255f9495ce072456b3b5b458c3aa10e6fa7109ab664ae3b1e30`; image/png, 800×800, 82555 bytes; D1 identifier absent, printed alternate identifier exact; alias ownership BLOCKED.
+- Bank Transfer: source SHA-256 `684dd8809d5bef894567142595a257086f5eb7a45d6793c51979be7f64153e18`; derivative SHA-256 `27ecfd39904082bd97aee90173cfb35509863d1b7f3e41c47bf6c1b5710578da`; payload SHA-256 `70fad5c42f711a88b513b5c962517ab3e4360228f1ba3230b89e34a7ca4b29b8`; image/png, 800×800, 22963 bytes; neither D1 IBAN nor printed alternate exact; ownership BLOCKED.
+- Both decoders: `jsqr@1.4.0` and `@undecaf/zbar-wasm@0.11.0`; extractor `gfs-176-v1`. All originals and derivatives had exact decoder agreement, payload equality, and scan PASS.
+- Staging D1 active QR keys point to method-specific derivatives. All three `enabled=0`, `qr_owner_verified=0`; disable action audited. The three recipient/account fields were not changed. No bilingual D1 content was changed because canonical Admin session was unavailable.
+- Chrome `list_pages`: BLOCKED; active tool namespace absent and direct MCP initialization timed out after endpoint repair. No tabs navigated or changed; inventory unknown. No WAMID or screenshot.
+- Financial recheck: `FS-261019-000001` remains PAID/PACKING with review already APPROVED, missing transaction reference; Purchase CAPI event has five attempts including dead-letter failure. No mutation/replay/dispatch.
+- Existing D1 migration tracker had an empty history and showed all legacy migrations pending. Added asset schema was applied directly to staging D1; historical migrations were not replayed. Record this tracker inconsistency before future migration automation.
+- Local validation after clean `npm ci`: 14 test files / 109 tests PASS; TypeScript build, lint, 0 high-severity audit findings, and API/Admin Wrangler dry-runs PASS. PR #8 prior CI failed before steps; no bypass or deploy.
+
+## GFS-175 QR Extraction Audit (2026-10-20)
+
+- Git start SHA: `df07ce54d6746842b8205fc523e9a5d14722b337`; branch `codex/gfs-launch-next-001`. `images/` was preserved. No external mutation/deploy/push occurred.
+- Chrome DevTools MCP `list_pages`: **BLOCKED**, tool namespace not exposed to this session. Local repair updated stale Codex endpoint to the current `DevToolsActivePort` UUID; reconnect not verifiable here. No tabs were inspected, navigated, or changed; unrelated tabs changed `0`, inventory unknown.
+- Original QR R2 keys/checksums and recipient values were not read or copied in this run. No source identifiers, decoded payment payloads, or customer data are recorded.
+- JazzCash: original **NOT INSPECTED**; QR-only derivative **NONE**; payload compare/scan **NOT RUN**; ownership **UNVERIFIED/BLOCKED**; new live WAMID/screenshot **NONE**.
+- Easypaisa: original **NOT INSPECTED**; QR-only derivative **NONE**; payload compare/scan **NOT RUN**; ownership **FAIL/BLOCKED** because prior evidence records a merchant identifier mismatch; new live WAMID/screenshot **NONE**.
+- Bank Transfer: original **NOT INSPECTED**; QR-only derivative **NONE**; payload compare/scan **NOT RUN**; ownership **FAIL/BLOCKED** because prior evidence records `BIO TECH - 5038`; historical unsafe QR delivery is an incident; no new WAMID/screenshot.
+- Local source change only: immutable method-scoped content-addressed original keys and duplicate-byte reuse; prior R2 objects are retained. General settings cannot grant `qr_owner_verified`; ordinary saves force false. No migration/deployment or R2 write was performed.
+- Local validation: `npm ci` PASS; `npm test` 14 files/106 tests PASS; build PASS; lint PASS; audit PASS with 0 vulnerabilities; API/Admin Wrangler dry-runs PASS. No remote CI was queried.
+- `FS-261019-000001` remains PAID/PACKING; missing independent bank verification/reference and failed/dead-lettered Purchase CAPI history require continued fulfillment hold.
+
 ## GFS-174 Execution Record (2026-10-20)
 
 - Git baseline: `8f1c2da`; source repair `c57c252`, documentation `8f0ab7d`/`a5d115f`; all pushed to PR #8; untracked `images/` preserved.

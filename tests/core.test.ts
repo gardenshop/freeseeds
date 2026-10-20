@@ -38,14 +38,17 @@ describe("Get Free Seeds domain", () => {
   });
   it("requires at least one complete enabled payment method", () => {
     expect(hasCompleteEnabledPaymentMethod([{ id: "synthetic", method: "JAZZCASH", displayName: "JazzCash", enabled: false, sortOrder: 10 }])).toBe(false);
-    expect(hasCompleteEnabledPaymentMethod([{ id: "synthetic", method: "JAZZCASH", displayName: "JazzCash", recipientName: "Garden Shop", instructions: "Synthetic instruction", enabled: true, sortOrder: 10 }])).toBe(true);
+    expect(hasCompleteEnabledPaymentMethod([{ id: "synthetic", method: "JAZZCASH", displayName: "JazzCash", recipientName: "Synthetic recipient", instructions: "Pay {amount} to {recipientName}.", referenceInstruction: "Reference {orderNumber}.", receiptInstructions: "Share the receipt here.", enabled: true, sortOrder: 10 }])).toBe(true);
   });
   it("never mixes English payment fields into an Urdu payment message", () => {
-    const config = { id: "synthetic", method: "BANK_TRANSFER" as const, displayName: "Bank Transfer", recipientName: "Garden Shop", instructions: "Use the order reference", heading: "Bank transfer", instructionsUr: "آرڈر ریفرنس استعمال کریں", headingUr: "بینک ٹرانسفر", referenceInstructionUr: "حوالہ نمبر ضرور لکھیں", receiptInstructionsUr: "ادائیگی کے بعد رسید اسی چیٹ میں بھیجیں۔", enabled: true, sortOrder: 10 };
+    const config = { id: "synthetic", method: "BANK_TRANSFER" as const, displayName: "Bank Transfer", recipientName: "Synthetic recipient", tillId: "SYNTHETIC_ACCOUNT", instructions: "Pay PKR {amount} to {recipientName} ({tillId}).", heading: "Bank transfer", referenceInstruction: "Include reference {orderNumber}.", receiptInstructions: "Share the receipt in this chat.", instructionsUr: "{amount} روپے {recipientName} کو {tillId} پر ادا کریں۔", headingUr: "بینک ٹرانسفر", referenceInstructionUr: "حوالہ نمبر {orderNumber} شامل کریں۔", receiptInstructionsUr: "ادائیگی کے بعد رسید اسی چیٹ میں بھیجیں۔", enabled: true, sortOrder: 10 };
     const ur = formatPaymentMessage("FS-100001", 250, config, "ur");
     expect(ur).toContain("بینک ٹرانسفر");
-    expect(ur).not.toContain("Use the order reference");
+    expect(ur).toContain("SYNTHETIC_ACCOUNT");
+    expect(ur).toContain("FS-100001");
+    expect(ur).not.toContain("Pay PKR");
     expect(() => formatPaymentMessage("FS-100001", 250, { ...config, instructionsUr: undefined }, "ur")).toThrow("PAYMENT_TRANSLATION_MISSING");
+    expect(() => formatPaymentMessage("FS-100001", 250, { ...config, instructionsUr: "بینک ٹرانسفر" }, "ur")).toThrow("PAYMENT_TRANSLATION_MISSING");
   });
   it("validates catalog prices as positive integers without inventing catalog values", () => {
     expect(validatePositiveInteger(1)).toBe(1);

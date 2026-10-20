@@ -77,22 +77,34 @@ export function isPaymentMethodComplete(config: PaymentMethodConfig | undefined)
   return Boolean(config?.enabled && config.recipientName?.trim() && config.instructions?.trim());
 }
 
+export function hasPaymentMessagePlaceholders(config: PaymentMethodConfig | undefined, locale: "en" | "ur"): boolean {
+  if (!config) return false;
+  const instructions = locale === "ur" ? config.instructionsUr : config.instructions;
+  const reference = locale === "ur" ? config.referenceInstructionUr : config.referenceInstruction;
+  const template = `${instructions ?? ""} ${reference ?? ""}`;
+  const required = ["{amount}", "{recipientName}", "{orderNumber}", ...(config.tillId ? ["{tillId}"] : [])];
+  return required.every((placeholder) => template.includes(placeholder));
+}
+
 export function isPaymentMethodLocaleComplete(config: PaymentMethodConfig | undefined, locale: "en" | "ur"): boolean {
-  if (!isPaymentMethodComplete(config)) return false;
+  if (!config || !isPaymentMethodComplete(config)) return false;
+  const receipt = locale === "ur" ? config.receiptInstructionsUr : config.receiptInstructions;
+  if (!receipt?.trim() || !hasPaymentMessagePlaceholders(config, locale)) return false;
   if (locale === "en") return true;
-  return Boolean(config?.headingUr?.trim() && config.instructionsUr?.trim() && config.referenceInstructionUr?.trim() && config.receiptInstructionsUr?.trim());
+  return Boolean(config.headingUr?.trim() && config.instructionsUr?.trim() && config.referenceInstructionUr?.trim() && config.receiptInstructionsUr?.trim());
 }
 
 export function hasCompleteEnabledPaymentMethod(configs: PaymentMethodConfig[]): boolean {
-  return configs.some((config) => isPaymentMethodComplete(config));
+  return configs.some((config) => isPaymentMethodComplete(config) && isPaymentMethodLocaleComplete(config, "en"));
 }
 
 export async function configuredPaymentMethodNames(db: D1Database, payableAmount?: number): Promise<string[]> {
   if (payableAmount !== undefined && (!Number.isSafeInteger(payableAmount) || payableAmount <= 0)) return [];
-  const methods = await db.prepare("SELECT display_name, enabled, recipient_name, instructions FROM payment_methods WHERE enabled=1 ORDER BY sort_order, method").all<{ display_name: string; enabled: number; recipient_name?: string | null; instructions?: string | null }>();
+  const methods = await db.prepare("SELECT pm.* FROM payment_methods pm JOIN payment_qr_assets qa ON qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref IS NOT NULL AND TRIM(qa.independent_evidence_ref)<>'' WHERE pm.enabled=1 AND pm.qr_owner_verified=1 ORDER BY pm.sort_order, pm.method").all<Record<string, unknown>>();
   return (methods.results ?? [])
-    .filter((row) => Number(row.enabled) === 1 && Boolean(row.recipient_name?.trim()) && Boolean(row.instructions?.trim()))
-    .map((row) => String(row.display_name).trim())
+    .map((row) => normalizePaymentMethodRow(row))
+    .filter((method) => method.qrOwnerVerified && isPaymentMethodComplete(method) && isPaymentMethodLocaleComplete(method, "en"))
+    .map((method) => String(method.displayName).trim())
     .filter(Boolean);
 }
 
@@ -129,18 +141,17 @@ export function formatPaymentMessage(orderNumber: string, amount: number, config
   const details = paymentInstructions(config);
   if (!details.configured) throw new Error("PAYMENT_METHOD_NOT_CONFIGURED");
   if (!isPaymentMethodLocaleComplete(config, locale)) throw new Error("PAYMENT_TRANSLATION_MISSING");
-  const lines = locale === "ur"
-    ? [`${details.headingUr}`, `قابل ادائیگی رقم: PKR ${payableAmount}`, `وصول کنندہ: ${details.recipientName}`]
-    : [`${details.heading ?? details.displayName}`, `Amount due: PKR ${payableAmount}`, `Recipient: ${details.recipientName}`];
-  if (details.tillId) lines.push(locale === "ur" ? `TILL/TIL شناخت: ${details.tillId}` : `TILL/TIL ID: ${details.tillId}`);
-  const shortInstructions = locale === "ur" ? details.shortInstructionsUr : details.shortInstructions;
-  if (shortInstructions) lines.push(shortInstructions);
-  else lines.push(locale === "ur" ? details.instructionsUr! : details.instructions!);
-  const referenceInstruction = locale === "ur" ? details.referenceInstructionUr! : details.referenceInstruction;
-  if (referenceInstruction) lines.push(referenceInstruction);
-  const receipt = locale === "ur" ? details.receiptInstructionsUr! : (details.receiptInstructions ?? "After payment, share your receipt here.");
-  lines.push(locale === "ur" ? `حوالہ: ${orderNumber}` : `Reference: ${orderNumber}`, receipt);
-  return lines.join("\n");
+  const instructions = locale === "ur" ? details.instructionsUr : details.instructions;
+  const reference = locale === "ur" ? details.referenceInstructionUr : details.referenceInstruction;
+  const receipt = locale === "ur" ? details.receiptInstructionsUr : details.receiptInstructions;
+  const values: Record<string, string> = {
+    amount: String(payableAmount),
+    recipientName: details.recipientName ?? "",
+    tillId: details.tillId ?? "",
+    orderNumber
+  };
+  const render = (template: string | undefined) => template?.replace(/\{(amount|recipientName|tillId|orderNumber)\}/g, (_match, key: string) => values[key]) ?? "";
+  return [locale === "ur" ? details.headingUr : (details.heading ?? details.displayName), render(instructions), render(reference), receipt].filter(Boolean).join("\n");
 }
 
 export function normalizePaymentMethodRow(row: Record<string, unknown>): PaymentMethodConfig {

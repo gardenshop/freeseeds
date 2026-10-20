@@ -1,5 +1,120 @@
 # Final Report
 
+## GFS-175 → GFS-176 QR, Locale, and Live Launch Audit - 2026-10-20
+
+### Decision
+
+**NO-GO for customer payments and launch.** The image work is complete and audited, but account ownership and bilingual customer settings are not authorized/complete. All staging payment methods were disabled; QR owner flags remain false. A valid GitHub PR push/CI and controlled staging deployment are pending. No real customer test, WAMID, screenshot, or production action is claimed.
+
+### Method Audit
+
+| Method | QR-only image | Scan/decode | Beneficiary validation | EN/UR copy | Live delivery | WAMID | Screenshot |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| JazzCash | PASS: private 800×800 PNG; original retained | PASS: jsQR + ZBar agree on source/derivative; exact payload SHA match | Decoded identifier exactly matches D1; independent wallet ownership evidence BLOCKED | FAIL/BLOCKED: Urdu settings absent and current English template lacks required D1 placeholders | BLOCKED: method disabled, ownership false, no customer session | NONE | NONE |
+| Easypaisa | PASS: private 800×800 PNG; original retained | PASS: jsQR + ZBar agree on source/derivative; exact payload SHA match | BLOCKED: QR identifier differs from D1, matches printed candidate alias; no authoritative link to Garden Shop | FAIL/BLOCKED: Urdu settings absent and current templates incomplete | BLOCKED: method disabled, alias/ownership unverified | NONE | NONE |
+| Bank Transfer | PASS: private 800×800 PNG; original retained | PASS: jsQR + ZBar agree on source/derivative; exact payload SHA match | BLOCKED: QR payload matches neither D1 IBAN nor printed alternate identifier; authorized alias not established. Current original says Garden Shop; historic `BIO TECH` report is not this source. | FAIL: English D1 field contains Urdu; Urdu settings and placeholders incomplete | BLOCKED: method disabled, beneficiary evidence unresolved | NONE | NONE |
+
+The user stated that all three belong to Garden Shop. D1 records this separately as `USER_ASSERTION_GFS-176`; it is not independent ownership evidence. `independent_ownership_verified=0` and `qr_owner_verified=0` for every method. The exact account identifiers and decoded payloads are intentionally omitted here; source, derivative, and payload SHA-256 values and method linkage are recorded in `docs/RESOURCE_REGISTRY.md` and staging `payment_qr_assets`.
+
+### Extraction and Staging Data
+
+- Retrieved each private R2 original, matched its SHA-256 to D1, and re-read it after extraction with the same SHA-256. No source object was overwritten or deleted.
+- `extract-payment-qr.mjs` automatically detects the QR boundary, crops only the square, preserves all modules, adds four modules of white quiet zone, and outputs a 800×800 `image/png` derivative. It prints only checksums/flags, not decoded account payloads.
+- jsQR 1.4.0 and `@undecaf/zbar-wasm` 0.11.0 independently decoded every original and derivative; decoder agreement, exact source/derivative payload equality, and derivative scan passed for all methods.
+- The staging `payment_qr_assets` table stores original/derivative links, checksums, MIME/size/dimensions, payload hash, decoder versions, equality/scan flags, extraction time/tool, user owner attestation, and a separate independent-verification flag. Audit entries were added. D1 `payment_methods.qr_r2_key` now points to the correct method-specific derivative. Payment selectors, stale method actions, Admin enablement, pending outbox retries, and text/QR transmission require a matching active provenance row plus independent evidence; no text-only fallback bypasses this gate.
+- All three staging methods were set `enabled=0` and this action was audited. Their account/recipient fields were not changed. The methods cannot be selected in the current staging database; QR ownership flags remain `0`.
+- The existing D1 migration tracker has no historical entries although the current schema is populated. `0021_payment_qr_asset_audit.sql` was applied directly to staging; Wrangler migration apply was not run because it reported all historical migrations pending. Record this tracker inconsistency before automating future migrations.
+
+### EN/UR and Journey Matrix
+
+| State/action | EN | UR | Result in GFS-176 |
+| --- | --- | --- | --- |
+| WELCOME: `LANG_EN` / `LANG_UR` | Published CMS route | Published CMS route | BLOCKED live: no `list_pages` or authorized customer session |
+| FERTILIZER: `ADD_FERTILIZER` / `SEEDS_ONLY` | CMS copy; D1 catalog price | Urdu CMS copy; D1 catalog price | BLOCKED: no tap or WAMID |
+| PROVINCE: every enabled D1 province button | Current D1 delivery fee | Current D1 fee with Urdu response | BLOCKED: no live D1 option/button inventory or taps |
+| DELIVERY: full name, address, nearby place, city, contact | CMS field prompts | Urdu CMS field prompts | BLOCKED: no authorized test answers submitted |
+| REVIEW: `PLACE_ORDER` / `BACK` | CMS review; D1 quote | Urdu review; same D1 quote | BLOCKED: no test order created |
+| PAYMENT_METHOD: JazzCash / Easypaisa / Bank Transfer | D1-configured template only | Distinct Urdu D1 template only | Methods disabled pending copy and independent recipient proof; no button rendered/tested |
+| PAYMENT_METHOD: Help / Support / Check Order | Must not be offered | Must not be offered | Selector source filters these; live selection screen not inspected |
+| PAYMENT_PENDING: receipt submission | Saved receipt instructions | Saved Urdu receipt instructions | BLOCKED: no receipt uploaded or customer response tested |
+| Existing order: `CHECK_ORDER` / status | Localized post-order status | Localized post-order status | BLOCKED live; real history untouched |
+| Stale/expired interactive buttons | Safe localized fallback; no payment mutation | Safe localized fallback; no payment mutation | BLOCKED: no stale button was exercised |
+| Admin `/orders` | Access-protected order/receipt view | Admin locale-independent | BLOCKED: no authenticated Admin tab |
+| Admin `/payment-settings` | EN fields/preview | Urdu fields/preview | PASS source fix/tests: Urdu keys now use `fieldUr`; live save/publish/reload not run |
+| Admin `/whatsapp-content` | Published shared CMS | Published Urdu CMS | BLOCKED live; no CMS mutation |
+
+No current D1 payment text was modified. The Admin UI now maps Urdu keys correctly, warns for mixed/duplicate language and missing placeholders, requires complete Urdu fields before enablement, and surfaces actionable errors. The formatter now renders only saved EN/UR templates and injects `{amount}`, `{recipientName}`, `{tillId}` when present, and `{orderNumber}` from D1/order data; it no longer adds hardcoded payment labels. This code is not deployed, and live copy remains incomplete.
+
+### Financial Safety and Validation
+
+- Read-only incident audit: `FS-261019-000001` is still PAID/PACKING and its payment review was already APPROVED; the customer transaction reference is missing. One Purchase CAPI record shows five attempts including a failure/dead-letter result. Do not interpret this historical status as new approval. The deployed Admin code has an explicit fulfillment hold for this order; no order or payment state was changed and no event was replayed.
+- Chrome DevTools MCP: endpoint was corrected in local Codex config, but two direct bridge handshakes timed out and this active session exposes no `list_pages`. No tabs were navigated or changed (0); inventory unknown. No actual WAMIDs/screenshots.
+- Account verification: `wrangler whoami` matched authorized Cloudflare account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` / `gisupp@gmail.com` before each staging R2/D1 mutation. GitHub identity `gardenshop` verified. Meta account/assets were not verified or mutated.
+- Local gates after clean `npm ci`: 14 test files / 109 tests **PASS**, TypeScript build **PASS**, ESLint **PASS**, `npm audit --audit-level=high` **PASS** with 0 vulnerabilities, API/Admin Wrangler deploy `--dry-run` **PASS**.
+- Current staged Worker versions, unchanged: API `4779d60b-6f93-41d4-b1e3-1c37bdfcf599`; Admin `2cb3d3ec-9104-41d9-a3d9-45cb6b1cf8ab`. GFS-176 Worker code has no deployed version yet.
+- Git SHA at start: `df07ce54d6746842b8205fc523e9a5d14722b337`; PR #8 is open to `main`. Previous CI run `39375835290` failed before any steps. No CI bypass, merge, deployment, or push is claimed here; local changes are pending final commit/push and required CI.
+- Completion estimates for this GFS-176 acceptance package: QR extraction/integrity **100%**; beneficiary ownership validation **0%**; EN/UR code repair **100%** / saved D1 copy correction **0%**; WhatsApp live test **0%**; Admin live validation **0%**; incident containment **100%** / incident resolution **0%**; local regression **100%**; CI/deploy/release **0%**. Overall GFS-176 acceptance **40%**, remaining **60%**. WhatsApp live completion **0%**; Admin live completion **0%** (local code changes do not count as live proof). Percentages are scoped to this request, not historical project progress.
+- Final decision: **NO-GO** until independent wallet/bank ownership evidence validates all destinations/aliases, Admin EN/UR text is saved and reloaded, required CI passes, a fresh MCP-enabled session proves the full authorized customer journey and method-specific rendering, and the financial incident is independently resolved.
+
+## GFS-174 → GFS-175 QR-Only Extraction and Launch Audit - 2026-10-20
+
+### Decision
+
+**NO-GO.** The extraction/live acceptance criteria require the three private original images, their decoded payloads, independently verified Garden Shop recipient records, and authenticated Admin/WhatsApp customer evidence. Chrome DevTools MCP `list_pages` is not exposed in this session and the R2 originals were not accessible here. No QR was extracted, decoded, scanned, delivered, or authorized in this run. Local source safeguards were repaired and regression checks are listed below; no dashboard mutation, deployment, push, or merge occurred.
+
+### Required Method Audit
+
+| Method | QR-only image | Payload matches | Scan PASS | Ownership PASS | Live WAMID | Screenshot |
+| --- | --- | --- | --- | --- | --- | --- |
+| JazzCash | BLOCKED: none produced | BLOCKED: source unavailable | BLOCKED: not run | BLOCKED: independently unverified | BLOCKED: no new evidence | BLOCKED: no new evidence |
+| Easypaisa | BLOCKED: none produced | BLOCKED: source unavailable | BLOCKED: not run | FAIL/BLOCKED: prior merchant/account mismatch | BLOCKED: no new evidence | BLOCKED: no new evidence |
+| Bank Transfer | BLOCKED: none produced | BLOCKED: source unavailable | BLOCKED: not run | FAIL/BLOCKED: prior `BIO TECH - 5038` mismatch | BLOCKED: no new evidence; historical unsafe QR delivery is incident evidence | BLOCKED: no new evidence |
+
+Historical GFS-172 text/QR WAMIDs and screenshots are not new GFS-175 proof. No method's asset was changed to another method's image. No live tab/account context was available to verify.
+
+### WhatsApp Button/State Matrix
+
+| State | Button/action | EN | UR | Live test/result |
+| --- | --- | --- | --- | --- |
+| WELCOME | `LANG_EN` | Published CMS English route | N/A | BLOCKED: no authenticated customer session |
+| WELCOME | `LANG_UR` | N/A | Published CMS Urdu route | BLOCKED: no authenticated customer session |
+| LANGUAGE | `LANG_EN` | Continues with English prompts | N/A | BLOCKED: no tap, WAMID, or screenshot |
+| LANGUAGE | `LANG_UR` | N/A | Continues with Urdu prompts | BLOCKED: no tap, WAMID, or screenshot |
+| FERTILIZER | `ADD_FERTILIZER` | CMS label; D1 price authority | CMS localized label; D1 price authority | BLOCKED live |
+| FERTILIZER | `SEEDS_ONLY` | CMS label; D1 price authority | CMS localized label; D1 price authority | BLOCKED live |
+| PROVINCE | Each enabled D1 province option | Current D1 delivery fee | Current D1 delivery fee, localized response | BLOCKED: options/taps not read live |
+| DELIVERY | Full name, address, nearby place, city, contact | CMS field prompts; server validation | CMS field prompts; server validation | BLOCKED: no customer answers submitted |
+| REVIEW | `PLACE_ORDER` | CMS review and D1 quote | CMS review and D1 quote | BLOCKED: no new order created |
+| REVIEW | `BACK` | Prior guided state | Prior guided state | BLOCKED: no tap tested |
+| PAYMENT_METHOD | `PAY_JAZZCASH` | Eligible D1 method only | Eligible only with complete Urdu copy | BLOCKED live; QR separately blocked |
+| PAYMENT_METHOD | `PAY_EASYPAISA` | Eligible D1 method only | Eligible only with complete Urdu copy | BLOCKED live; ownership mismatch |
+| PAYMENT_METHOD | `PAY_BANK_TRANSFER` | Eligible D1 method only | Eligible only with complete Urdu copy | BLOCKED live; ownership mismatch/incident |
+| PAYMENT_METHOD | Help / Support / Check Order | Must not be offered | Must not be offered | PASS source rule only; live selector not inspected |
+| PAYMENT_PENDING | Receipt submission/acknowledgement | CMS receipt instructions | CMS Urdu receipt instructions | BLOCKED: no receipt uploaded or message tested |
+| Existing order status | `CHECK_ORDER` | Separate localized status action | Separate localized status action | BLOCKED live; existing order history preserved |
+| Stale/expired | Old payment/help/support buttons | Safe localized fallback, no payment mutation | Safe localized fallback, no payment mutation | BLOCKED live; no stale tap exercised |
+| Admin Orders | Inspect order/payment/receipt/fulfillment | Access-protected `/orders` | Not customer locale-dependent | BLOCKED: no authenticated Admin tab |
+
+The selector-removal and stale-action behavior are present in the locally tested source; every customer action above remains unverified on WhatsApp in this GFS-175 execution.
+
+### Local Change and Safety
+
+- Ordinary Payment Settings no longer shows/accepts `qrOwnerVerified`; attempts to submit it are rejected, and ordinary settings saves set the flag false. Independent ownership remains an external evidence gate.
+- Newly uploaded originals use private method-scoped content-addressed R2 keys. Repeating the same bytes reuses the same object; replacing an active QR no longer deletes prior original objects. This preserves the original source bytes and rollback history.
+- No extraction/decoder/scan implementation was added because originals were inaccessible and no safe source-vs-derivative proof could be executed. No optimized derivatives or source/derivative D1 linkage records exist from this run.
+- Local checks after a clean `npm ci`: 14 test files / 106 tests **PASS**; TypeScript build **PASS**; ESLint **PASS**; `npm audit --audit-level=high` **PASS** with 0 vulnerabilities; API and Admin Wrangler deploy `--dry-run` **PASS**. Remote CI was not queried or bypassed.
+- Updated `rules.md`, STATUS, TEST_MATRIX, DECISIONS, RESOURCE_REGISTRY, CHANGELOG, and this report with the immutable-source, decoding, quiet-zone, recipient-authorization, audit, rollback and no-self-verification protocol.
+- `FS-261019-000001` remains PAID/PACKING with receipt, missing customer transaction reference and independent bank evidence, plus five failed/dead-lettered Purchase CAPI attempts. Preserve fulfillment hold; no approval, reversal, replay, or dispatch action was performed.
+
+### Journey and Release Evidence
+
+- Guided WhatsApp remains the intended primary launch mode; native Meta Flow remains deferred. New bilingual live journey, per-button/stale-button taps, receipt/status, Admin Orders and customer rendering are **BLOCKED/NOT TESTED** in this run because MCP `list_pages` could not be called.
+- Unrelated tabs changed: **0**; no browser calls were made. This is not an assertion that the browser inventory is empty.
+- Verified start SHA: `df07ce54d6746842b8205fc523e9a5d14722b337`. Local diagnostics found Chrome active on port `9222`, package `chrome-devtools-mcp@1.10.1`, and a stale Codex MCP WebSocket UUID; the config now points to the current `DevToolsActivePort` UUID. Active session still has no Chrome MCP namespace, so `list_pages` was not verified. PR #8, CI, and remote account state were not re-queried; no push, deployment, merge, or CI bypass occurred.
+- Known prior staged Worker versions from GFS-174, not re-queried or changed in GFS-175: API `4779d60b-6f93-41d4-b1e3-1c37bdfcf599`; Admin `2cb3d3ec-9104-41d9-a3d9-45cb6b1cf8ab`. Current local changes have no deployed Worker version. Prior PR #8 verify run `39262725184` was recorded as failed before steps/log output; remote CI was not queried in this run.
+- Progress accounting (evidence package, not project completion): local QR safety repair **100%**; extraction/decoding/scan **0%**; JazzCash live method **0%**; Easypaisa live method **0%**; Bank Transfer live method **0%**; live WhatsApp journey **0%**; Admin browser validation **0%**; financial incident containment maintained **100%**, incident closure **0%**; overall GFS-175 acceptance **15%**; remaining **85%**. Percentages count only this requested GFS-175 evidence package.
+- Final decision: **NO-GO** for payment QR delivery and production launch. External blockers are MCP/browser tool availability, inaccessible private originals, independent recipient evidence, and the unresolved financial incident. GitHub/Cloudflare/Meta identity was not reverified because no external mutation was attempted.
+
 ## GFS-174 Final Guided WhatsApp Journey - 2026-10-20
 
 ### Decision

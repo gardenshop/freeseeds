@@ -54,8 +54,8 @@ describe("Meta encrypted WhatsApp Flow protocol", () => {
             ? { id: "fixture-product", code: "FIXTURE-SEEDS", name: "Fixture Seeds", price_pkr: 300, fertilizer_price_pkr: 50, enabled: 1 }
             : { province: "Punjab", delivery_fee_pkr: 150, enabled: 1 },
           all: async () => ({ results: [
-            { display_name: "JazzCash", enabled: 1, recipient_name: "Garden Shop", instructions: "Synthetic instructions" },
-            { display_name: "Incomplete", enabled: 1, recipient_name: null, instructions: null }
+            { method: "JAZZCASH", display_name: "JazzCash", enabled: 1, qr_owner_verified: 1, recipient_name: "Synthetic recipient", instructions: "Pay {amount} to {recipientName}.", reference_instruction: "Reference {orderNumber}.", receipt_instructions: "Share the receipt here." },
+            { method: "EASYPAISA", display_name: "Incomplete", enabled: 1, qr_owner_verified: 0, recipient_name: null, instructions: null }
           ] })
         };
         return statement;

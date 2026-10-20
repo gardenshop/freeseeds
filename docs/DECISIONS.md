@@ -1,5 +1,23 @@
 # Decisions
 
+## 2026-10-20: GFS-176 QR/Locale Release Gate
+
+The user attested that all three codes belong to Garden Shop. This is stored separately as `USER_ASSERTION_GFS-176`; it is not independent evidence. All independent ownership flags remain false. QR pixels were extracted without regeneration; jsQR and ZBar independently decoded source and derivative to identical payloads. The current JazzCash QR identifier matches D1. Easypaisa's encoded identifier is an alternate to D1 and matches the printed candidate alias; Bank's encoded payload matches neither D1 IBAN nor printed alternate. Neither alternate is declared legitimate or fraudulent without bank/wallet evidence.
+
+Private staging R2 now stores three method-specific 800×800 PNG derivatives. D1 retains original source keys/checksums, links each derivative and payload hash, records tool/decoder versions, scan/payload match, and the separate owner attestation. Active Admin QR pointers use the derivative. Originals were re-read and remained byte-identical. `qr_owner_verified=0` for all three; the staged methods were disabled and audited because EN/UR templates and independent account authorization are incomplete. Recipient/account fields were not changed.
+
+The Admin Urdu field suffix defect was fixed. The formatter now renders only configured language-specific templates and injects D1-backed placeholders; enabled methods require both languages, receipt copy, and amount/recipient/account/order placeholders. Selectors, stale payment actions, Admin enablement, pending outbox retries, text sends, and QR sends all require a current order and an active matching asset with exact decode/scan evidence and independent ownership evidence. Existing D1 copy was not saved because authenticated Admin MCP access was not available. No guessed payment text or aliases were written.
+
+Chrome MCP remains unavailable to the active session. The configured bridge endpoint is current, but direct MCP initialization timed out; `list_pages` did not return. No live customer tests, WAMIDs, screenshots, deployment, Meta mutation, or production action are claimed. The existing paid/packing incident remains held. Release is **NO-GO**.
+
+## 2026-10-20: GFS-175 Immutable QR Source and Ownership Gate
+
+The requested QR-only extraction cannot be proven or executed without the three original private R2 objects and the authenticated Admin/customer browser surfaces. Do not substitute stale screenshots, locally generated QR content, mocked scans, or decoded values inferred from labels. No derivative or ownership authorization is claimed. The user-recorded Easypaisa merchant mismatch and Bank `BIO TECH - 5038` mismatch remain blocked; JazzCash remains independently unverified.
+
+Local code audit found that the existing Admin save API exposed a `qrOwnerVerified` input and upload replaced/deleted the previous R2 object. The local repair removes the UI control, rejects attempts to set the ownership flag through ordinary Payment Settings, clears it on ordinary settings saves, uses a method-scoped content-addressed key for originals, reuses identical source uploads, and retains previous objects for rollback. This does not create extraction, payload-decode, scan, derivative linkage, or independent authorization capability and has not been deployed.
+
+The current Chrome DevTools MCP namespace is absent. Local diagnostics found Chrome on the existing profile, DevTools port `9222`, package `chrome-devtools-mcp@1.10.1`, and a stale Codex WebSocket UUID. The Codex endpoint was updated to the live `DevToolsActivePort` UUID; this active session still cannot call `list_pages`, so reconnection must be verified in a fresh MCP-enabled session. No dashboard access, identity check, external mutation, live WhatsApp test, or tab inventory is claimed. Preserve the canonical new-number lock, Hoja zero-connection rule, paid-order hold, and CI/branch-protection requirements. Release remains **NO-GO**.
+
 ## 2026-10-20: GFS-174 Guided Journey and Launch Gate
 
 GFS-174 keeps the existing guided WhatsApp journey as the launch path and leaves native Flow OFF. Local inspection found and repaired invalid delivery-field acceptance, missing Meta `wa_id` persistence, positional interactive fallback, failed outbound retry, legacy PAYMENT action contamination, missing canonical callback Phone ID enforcement, QR metadata fail-open, missing receipt audit/status action, locale-stale payment idempotency, and unsafe legacy Flow POST acceptance. The repairs passed 105/105 tests, build, lint, and high-severity audit.

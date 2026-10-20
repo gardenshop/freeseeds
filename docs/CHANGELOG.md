@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased - 2026-10-20 (GFS-176)
+
+- Extracted three private staging QR originals into method-specific 800×800 PNGs using `extract-payment-qr.mjs`, `sharp`, jsQR, and ZBar. Both decoders agree on source/derivative payloads; exact payload hashes match; quiet zones preserved; original SHA-256 values rechecked unchanged.
+- Added D1 QR-asset provenance and audit schema, recorded the user owner assertion separately from independent verification, and moved each staging Admin preview association to its corresponding derivative. No owner verification flag was set.
+- Disabled all three staging methods and wrote audit entries because payment text templates and independent recipient ownership are incomplete. Recipient/account fields and orders were not changed.
+- Fixed Urdu Admin field key suffix mapping, added language and placeholder validation, and removed hardcoded amount/recipient/reference text from the formatter in favor of EN/UR settings templates and D1-injected placeholders.
+- Payment selectors, stale method actions, Admin enablement, and QR transmission now require matching active extraction provenance plus independent ownership evidence; the text-only path no longer bypasses recipient eligibility.
+- Pending payment outbox retries recheck current order state/amount/method, settings and message copy before sending; outdated queued text/QR actions fail closed after settings or eligibility changes.
+- Live Admin/browser/WhatsApp verification remains BLOCKED: active Chrome MCP does not expose `list_pages`; direct bridge initialization timed out. No WAMID/screenshot or deployment is claimed. Financial incident remains held.
+
+## Unreleased - 2026-10-20 (GFS-175)
+
+- Locked QR ownership out of ordinary Payment Settings edits; requests attempting to set `qrOwnerVerified` are rejected and normal settings saves fail closed to unverified.
+- Payment QR source uploads are now private, method-scoped and content-addressed; identical repeats reuse the same object, and replacing the active key no longer deletes prior originals, preserving rollback evidence.
+- Added binding rules for immutable source retention, exact decoded-payload equality, successful derivative scanning, QR quiet-zone preservation, independent recipient authorization, method linkage, audit and rollback.
+- QR extraction and live testing were **not performed**: Chrome DevTools MCP `list_pages` is unavailable in this session and the private original R2 images could not be accessed. No decoded payload, derivative, WAMID, screenshot, customer/Admin result, deployment, push, or external mutation is claimed.
+- Repaired the stale DevTools WebSocket UUID in the local Codex MCP configuration using the current `DevToolsActivePort`; active-session MCP tools remain unavailable, so reconnect/list-pages is not claimed. Local quality gate: `npm ci`, 106/106 tests, build, lint, audit 0 vulnerabilities, API/Admin Wrangler dry-runs all PASS.
+- Current recorded ownership remains JazzCash unverified, Easypaisa mismatch, Bank Transfer mismatch (`BIO TECH - 5038`). `FS-261019-000001` remains held; no CAPI replay, payment mutation, reversal, or dispatch.
+
 ## Unreleased - 2026-10-20 (GFS-174)
 
 - Hardened the guided WhatsApp journey: validated all five delivery fields, preserved Meta `wa_id` separately, required stable action objects, added safe numbered fallback, and made failed outbound replies/payment sends retryable without duplicating successful messages.
