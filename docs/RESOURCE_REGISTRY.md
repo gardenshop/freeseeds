@@ -2,7 +2,7 @@
 
 ## GFS-174 Execution Record (2026-10-20)
 
-- Git baseline: `8f1c2da`; working-tree source repairs are uncommitted; untracked `images/` preserved.
+- Git baseline: `8f1c2da`; final pushed GFS-174 commit `c57c252`; untracked `images/` preserved.
 - Cloudflare identity verified before any mutation: `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
 - API staging binding: `getfreeseeds-api-staging`, D1 `getfreeseeds-staging`, R2 `getfreeseeds-receipts-staging`, Queue `getfreeseeds-events-staging`, guided mode, canonical Phone ID `1323932417479627`.
 - API production binding: `getfreeseeds-api`, D1 `getfreeseeds-prod`, R2 `getfreeseeds-receipts-prod`, Queue `getfreeseeds-events-prod`, `META_ASSETS_PENDING`, Meta provider disabled. No production version was deployed in this execution.

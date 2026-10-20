@@ -6,7 +6,7 @@
 - Filtered historical CMS action rows by current template actions, enforced canonical callback Phone ID, scoped payment idempotency by locale, disabled the untrusted legacy Flow POST in guided mode, and added localized receipt status action plus audit evidence.
 - Made QR delivery fail closed for absent/mismatched R2 content type, method metadata, or checksum metadata. Approval now requires a customer transaction reference; incident `FS-261019-000001` is blocked from confirmation/fulfillment.
 - Local validation PASS: 105/105 tests, TypeScript build, ESLint, and `npm audit --audit-level=high` with 0 high-severity vulnerabilities.
-- Cloudflare identity PASS (`gisupp@gmail.com`, `cb5066a6d71ecdee0bd7ed8aacb4d3c2`). Controlled staging deployments succeeded (API `4779d60b-6f93-41d4-b1e3-1c37bdfcf599`, Admin `2cb3d3ec-9104-41d9-a3d9-45cb6b1cf8ab`); no production deploy, push, merge, payment mutation, Meta mutation, browser navigation, WAMID, screenshot, or production launch was claimed because Chrome MCP `list_pages` was unavailable and material financial/QR blockers remain.
+- Cloudflare identity PASS (`gisupp@gmail.com`, `cb5066a6d71ecdee0bd7ed8aacb4d3c2`). Controlled staging deployments succeeded (API `4779d60b-6f93-41d4-b1e3-1c37bdfcf599`, Admin `2cb3d3ec-9104-41d9-a3d9-45cb6b1cf8ab`); commit `c57c252` is pushed to PR #8. No production deploy, merge, payment mutation, Meta mutation, browser navigation, WAMID, screenshot, or production launch was claimed because Chrome MCP `list_pages` was unavailable and material financial/QR blockers remain.
 
 ## Unreleased - 2026-10-19 (GFS-173)
 
