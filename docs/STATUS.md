@@ -14,6 +14,7 @@
 - Private verified screenshots: `D:\Temp\kilo\gfs178-en-status.png`, `gfs178-ur-province.png`, `gfs178-ur-status.png`. Unrelated/history UI masked; no screenshot committed. Initial EN province image was blank and is NOT evidence. Exact WAMIDs are in FINAL_REPORT; provider statuses READ/DELIVERED.
 - All three QR original/derivative assets reused unchanged; all owner flags/methods remain false/disabled. Incident `FS-261019-000001` unchanged PAID/PACKING/APPROVED/reference missing; Purchase FAILED/5/DISABLED, no replay. New orders have only PENDING Lead events, no Purchase.
 - Local gate: clean install, 15 files / 131 tests PASS, build/lint/audit and API dry-run PASS. Public lead launch NO-GO pending name recovery/release sign-off, broader concurrent-retry acceptance and Lead CAPI decision; controlled staging lead-only testing GO; accepting payments NO-GO.
+- Implementation and real evidence pushed to PR #8 through ba06a4df7788cba7f559b46ab9e70fafa2384780. Required run 39431746821 failed before execution with official account-billing-lock annotation; no bypass/merge/public release.
 
 ## GFS-177 Active Staging, Province LIST, and Launch Gate (2026-10-20)
 

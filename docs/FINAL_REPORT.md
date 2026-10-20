@@ -61,7 +61,7 @@ Verified private screenshots: `D:\Temp\kilo\gfs178-en-status.png`, `D:\Temp\kilo
 
 ### Versions, Rollback, and Remaining Gates
 
-- Baseline HEAD c9cfdbc7; implementation commits 8699d67, 78b1de8, d2082e4. PR #8 remains the only target, no merge. Final report commit/CI status is recorded after push, not assumed passed.
+- Baseline HEAD c9cfdbc7; implementation commits 8699d67, 78b1de8, d2082e4 and pushed evidence commit ba06a4df7788cba7f559b46ab9e70fafa2384780. PR #8 remains OPEN, no merge. Verify run 39431746821 failed before execution; its official annotation confirms the account billing lock, not a test failure. No CI PASS claimed.
 - Final API staging `8a045e16-17c5-4663-bc65-f8c815712ce9`; Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`. Intermediate APIs `1e3d43e5-f6fe-45b4-b959-0376e5197bc9`, `c3fa866b-2751-4eea-83ed-5ef4d0667de1`. No bindings/webhook/payment/CAPI flag changes.
 - Prior-compatible rollback command (identity check first): `npx wrangler rollback c3fa866b-2751-4eea-83ed-5ef4d0667de1 --config apps/api/wrangler.jsonc`. Syntax verified; rollback not executed. Baseline 4779d60b predates safeguards; assess risk before restoring. No D1/customer/order financial rollback.
 - New Lead events remain PENDING/0 attempts with CAPI disabled; no claim of Meta Lead conversion delivery. Existing Purchase incident remains FAILED/5/DISABLED. No receipt/rejection/approval/PAID or real-transaction evidence exists.
