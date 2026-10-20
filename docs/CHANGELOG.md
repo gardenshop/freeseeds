@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased - 2026-10-20 (GFS-182)
+
+- Repaired outbound WhatsApp delivery status ordering so delayed/reordered callbacks cannot regress `READ`; added synthetic concurrent/duplicate/delayed/reordered SQLite coverage.
+- Reconfirmed bounded queue retry/DLQ behavior and documented that recovery requires authorized, audited deterministic replay; no replay was performed.
+- Inspected the authenticated clean Meta Events Manager once for CAPI: `Free Seeds` dataset `1210750267244729` has no integrations or activity. Test Events is available, but no code/token/test event/acknowledgement was created. Prohibited Hoja data source was not used.
+- Diagnosed staging CAPI as intentionally disabled (`META_CAPI_ENABLED=false`) with pending Lead rows and no provider acknowledgements. No production activation, consent inference, CAPI replay, ads, spend, or public promotion.
+- Recorded the remaining public blockers: durable/edge rate limiting, public consent/release evidence, CAPI token/integration/test-event acknowledgement, legitimate Meta name route, and current authorized deployment preconditions.
+- Full local gate passes 132 tests, build, lint, 0-vulnerability audit, and API/Admin Wrangler dry-runs. Active callback Worker was not deployed; payment methods and incident hold remain unchanged.
+
 ## Unreleased - 2026-10-20 (GFS-181)
 
 - Reused GFS-178/GFS-180 real EN/UR lead-only evidence and did not repeat completed Graph journeys or migrate the WhatsApp number.

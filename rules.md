@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-182 Final Launch Readiness (2026-10-20)
+
+- Webhook status callbacks are monotonic: `SENT <= DELIVERED <= READ`; duplicate provider event IDs remain ignored and delayed/reordered callbacks must never regress a successful outbound status. This is local/synthetic evidence until an authorized live callback is available.
+- Queue work is bounded to five attempts with retry backoff and a terminal dead-letter state. There is no automatic DLQ replay. Recovery requires an authorized operator, provider health evidence, deterministic idempotency review, and a new audited replay; never replay CAPI, payment, receipt, or historical financial events by default.
+- The clean Meta Events Manager `Free Seeds` dataset is the only candidate CAPI source observed for this project (`1210750267244729`). It currently reports no integrations and no event activity. The visible Hoja dataset is prohibited and must not be queried, connected, or used. Dataset visibility is not token permission, test-event acknowledgement, consent, or production authorization.
+- `META_CAPI_ENABLED=false` remains fail-closed. Lead IDs are deterministic `lead_<FS_ORDER_ID>` and deduplicated by D1 event/outbox uniqueness, but pending D1 rows are not Meta delivery proof. Do not add a dataset/token, send Test Events, or activate production CAPI without authorized clean-asset, token-permission, consent, test-event, and acknowledgement evidence.
+- Public lead release additionally requires an approved consent path, privacy/data-deletion proof, signed webhook and canonical sender gates, an enforced edge or durable per-sender rate limit, queue/DLQ recovery runbook, Admin access/error recovery, and legitimate Meta brand/release approval. A local test pass does not satisfy these public gates.
+- Do not deploy a Worker change affecting the active Meta callback unless the authorized tester/account, recent activity, unchanged payment/CAPI flags, compatibility, and rollback have been reverified in the same execution. Preserve the new-number WhatsApp lock, zero-Hoja runtime rule, payment gates, and incident hold.
+
 ## GFS-181 Payment Resolution and Launch Completion (2026-10-20)
 
 - Existing owner-uploaded JazzCash, Easypaisa, and Bank Transfer QR files are accepted as private draft assets when R2 integrity, method linkage, decoder agreement, payload equality, scan, MIME, size, and D1 hash evidence pass. Draft acceptance is not beneficiary verification and never enables a method.

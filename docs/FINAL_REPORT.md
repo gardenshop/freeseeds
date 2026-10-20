@@ -1,5 +1,59 @@
 # Final Report
 
+## GFS-182 Final Launch Readiness - 2026-10-20
+
+### Decision
+
+**Controlled staging readiness: GO. Public lead-only launch: NO-GO. Customer payments: NO-GO.** GFS-181 payment and GFS-178 real EN/UR lead-only evidence were reused. The only code repair was monotonic callback status handling; no QR extraction, unrelated Meta discovery, financial replay, or public mutation was performed.
+
+### Requirement Results
+
+| Task | Result | Evidence / remaining dependency |
+|---|---|---|
+| P0 reuse completed work | PASS | Baseline `72fd50e`; prior real WAMIDs/screenshots/Admin/D1 lead-only evidence reused |
+| P1 concurrent callbacks | PASS synthetic | Concurrent duplicate writes and ordered status guard preserve one event and final `READ` |
+| P1 delayed/reordered callbacks | PASS synthetic | `SENT <= DELIVERED <= READ`; delayed lower states cannot regress outbound status |
+| P1 queue retries/DLQ | PASS synthetic / PARTIAL recovery | Backoff, max five attempts, terminal DLQ and ack pass; no automatic recovery route |
+| P1 order isolation/idempotency | PASS | Existing multi-channel replay/cooldown/order-number tests; historical orders unchanged |
+| P1 consent/privacy/eligibility | PARTIAL | Controlled inbound/session and privacy-safe routes pass; public consent/release evidence not authorized |
+| P1 signed webhook/Admin access | PASS local | HMAC/canonical Phone ID, stale/forged rejection, Access/CSRF and sanitized audit tests pass |
+| P1 rate limits | BLOCKED | No authorized durable/edge per-sender limiter is configured or evidenced |
+| P1 Lead CAPI | BLOCKED | Correct clean dataset identified, but no integration/token permissions/test code/event acknowledgement; `META_CAPI_ENABLED=false` |
+| P1 Meta name review | BLOCKED | Name remains DECLINED; no legitimate eligible review/support route appeared |
+| P1 public lead-only release | NO-GO | Technical local subset passes; public consent, rate-limit, CAPI ack, name/release and deployment gates remain |
+| P2 payment readiness | BLOCKED safely | All three QR drafts valid but beneficiary evidence absent; all disabled |
+| P3 local quality/deploy | PASS local / NOT DEPLOYED | 132 tests/build/lint/audit/Wrangler pass; active callback deployment preconditions not re-established |
+
+### CAPI Evidence
+
+- Authenticated Events Manager displayed the clean `Free Seeds` dataset ID `1210750267244729` with `No Integrations`, zero activity, and a Test Events tab. No Test Events code was generated or used.
+- Wrangler staging configuration contains `META_CAPI_ENABLED=false`, no dataset ID variable, and no token value. Staging D1 contains 14 Lead events at `PENDING/0` with no provider response. Historical Purchase events remain dead-lettered at five attempts; they were not replayed.
+- Local event IDs are deterministic `lead_<FS_ORDER_ID>` and `purchase_<FS_ORDER_ID>`, with D1/outbox deduplication. Pending rows and local mocks are not Meta delivery acknowledgements.
+- Consent is not inferred from a phone field. Public consent, token permission, dataset integration, Test Events acknowledgement, Lead CAPI delivery, and production activation remain blocked dependencies.
+
+### Callback and Recovery Evidence
+
+- `whatsapp_events.provider_event_id` remains unique and raw bodies remain unstored. Status updates now use monotonic ranks `SENT=1`, `DELIVERED=2`, `READ=3`.
+- Focused readiness tests pass `63/63`; full suite passes `132/132`. Concurrent, duplicate, delayed, and reordered callback coverage is synthetic SQLite/D1 evidence, not live provider proof.
+- Queue retry/backoff and DLQ terminal handling pass. No automatic DLQ recovery exists; next action requires authorized operator review, provider health evidence, deterministic idempotency check, and an audited non-financial replay. Do not replay CAPI/payment/receipt/incident history.
+
+### Payments and Protected State
+
+- JazzCash: QR draft/integrity PASS; independent wallet beneficiary proof BLOCKED; disabled.
+- Easypaisa: QR draft/integrity PASS; printed alias ownership and D1 mismatch unresolved; disabled.
+- Bank Alfalah: QR draft/integrity PASS; decoded destination does not match configured IBAN/printed alternate; disabled.
+- No method appears in the eligible payment selector. No real QR/text delivery, receipt, approval, PAID, Purchase CAPI, dispatch, or fulfillment occurred.
+- `FS-261019-000001` remains preserved under fulfillment hold with no replay or state mutation.
+
+### Evidence and Release
+
+- Real live WAMIDs and private screenshots remain the GFS-178/GFS-181 evidence set in this report; GFS-182 created no new customer message or WAMID. Existing exact IDs and screenshot paths remain recorded below.
+- Meta Ads/Forms and Events Manager were read-only. The visible Hoja dataset was not opened, connected, or used. No ad, spend, brand, WABA, number, or public promotion mutation occurred.
+- Source baseline: `72fd50e`; GFS-182 source repair commit `b4e3f861a63afef3cdd1553a332e693072e18f39`. Staging API `8a045e16-17c5-4663-bc65-f8c815712ce9`; Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`; rollback `c3fa866b-2751-4eea-83ed-5ef4d0667de1`. No Worker deployment.
+- GitHub verify `39465975146` failed before steps with no runner, consistent with billing lock and the non-blocking policy. No protection bypass.
+- Progress estimate, not acceptance: overall **85% complete / 15% remaining**; P0 **100/0**; P1 **72/28**; P2 **60/40**; P3 **90/10**.
+- Next actions: configure and verify an authorized rate limiter; obtain public consent/release approval; connect the clean dataset with authorized token permissions; send Meta Test Events and record acknowledgements; re-establish current tester/deployment preconditions before deploying the callback repair; obtain independent payment beneficiary evidence before enabling any method.
+
 ## GFS-181 Payment Resolution and Launch Completion - 2026-10-20
 
 ### Executive Decision

@@ -1,5 +1,31 @@
 # Test Matrix
 
+## GFS-182 Final Launch Readiness (2026-10-20)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Baseline/protocol reuse | PASS | Fetched `72fd50e`; GFS-178/GFS-181 QR/live lead evidence reused; no unrelated replay |
+| Callback duplicate/idempotency | PASS synthetic | Provider event unique key plus `INSERT OR IGNORE`; concurrent duplicate status writes leave one event |
+| Delayed/reordered callbacks | PASS synthetic | Monotonic `SENT <= DELIVERED <= READ`; delayed `DELIVERED`/`SENT` cannot regress `READ` |
+| Order isolation/replay | PASS | Existing multi-channel idempotency/order-number/cooldown tests; historical orders untouched |
+| Queue retry/backoff | PASS synthetic | Bounded retry delay and max-five attempt behavior covered; payment stale job remains blocked |
+| DLQ recovery | PARTIAL/BLOCKED | Terminal DLQ and ack behavior pass; no automatic replay route exists, and no authorized provider recovery/replay was attempted |
+| Consent/customer eligibility | PARTIAL | Inbound/customer-service boundaries and controlled tester evidence pass; public consent/release evidence unavailable |
+| Privacy/data deletion | PASS local | Raw message bodies excluded; privacy/data-deletion routes and normalized persistence covered |
+| Signed webhooks/canonical sender | PASS local | HMAC, canonical Phone ID, stale/forged callback rejection and sanitized audit covered |
+| Rate limits | BLOCKED | No edge/durable per-sender rate-limit control is configured or evidenced |
+| Correct CAPI dataset | PASS identification | Events Manager clean `Free Seeds` dataset `1210750267244729` observed read-only; Hoja dataset untouched |
+| CAPI integration/token permissions | BLOCKED | Dataset reports `No Integrations`; no configured dataset/token permission evidence |
+| CAPI test events/acknowledgement | BLOCKED | Test Events surface exists but no authorized test code/event was sent; no provider acknowledgement |
+| Lead event deduplication | PASS local / pending live | Deterministic `lead_<FS_ORDER_ID>`, D1 uniqueness and outbox idempotency; staging rows remain `PENDING/0` |
+| Meta name/release route | BLOCKED | Name remains DECLINED; no eligible review/support path appeared |
+| Payment methods | BLOCKED safely | All three private QR drafts remain disabled/unverified; no new beneficiary proof |
+| Incident hold | PASS containment | `FS-261019-000001` preserved; no replay, receipt, approval, PAID, dispatch, or tracking mutation |
+| Local quality | PASS | Full `132/132`, build, lint, audit 0 vulnerabilities, API/Admin dry-runs |
+| Remote CI | BLOCKED external | Run `39465975146` failed before steps with no runner; billing policy followed |
+| Worker deployment | NOT PERFORMED | Active callback deployment preconditions were not re-established; versions/rollback unchanged |
+| Release | SPLIT | Controlled staging readiness GO; public leads and payments NO-GO |
+
 ## GFS-181 Payment Resolution and Launch Completion (2026-10-20)
 
 | Requirement | Result | Evidence / blocker |

@@ -1,5 +1,18 @@
 # Resource Registry
 
+## GFS-182 Final Launch Readiness (2026-10-20)
+
+- Fetched baseline `72fd50e356bf39467e821cd73afcd0406b955029`; GFS-182 source commit is `b4e3f861a63afef3cdd1553a332e693072e18f39` (monotonic webhook status guard and synthetic regression test). PR #8 remains open on `codex/gfs-launch-next-001`; `images/` is preserved and untracked.
+- Chrome evidence: initial `list_pages` returned 11 existing tabs; one dedicated Events Manager tab was opened for the new CAPI task, total 12. Meta developer tabs remained DNS errors; Ads/Forms, Events Manager, Admin, and WhatsApp surfaces were read-only. No unrelated tab/message/ad/payment/brand mutation.
+- CAPI dataset evidence: clean `Free Seeds` dataset ID `1210750267244729` is visible in the authorized Meta Events Manager under the current business context, with `No Integrations`, zero event activity, and a Test Events tab. No test code, token, permission, event, or acknowledgement was created. Hoja dataset visibility was not used.
+- Runtime CAPI state: `META_CAPI_ENABLED=false`; no `META_DATASET_ID` or token value is configured in Wrangler vars. Staging D1 has 14 pending Lead events at attempt 0/no provider response and historical Purchase dead-letter groups at five attempts. No replay.
+- Reliability change: `whatsapp_events.provider_event_id` remains unique and inbound payloads remain hashed only; outbound status updates now use monotonic rank `SENT=1`, `DELIVERED=2`, `READ=3`. Synthetic concurrent/duplicate/delayed/reordered coverage passes.
+- Queue/DLQ: five-attempt retry/backoff and terminal dead-letter states are covered. No automatic DLQ replay route is registered; any future recovery requires authorized operator evidence and audit.
+- Public gates: privacy/data deletion, signed/canonical callback, Admin Access/CSRF, eligibility, idempotency and local error handling pass; no runtime rate-limit control or public consent/CAPI acknowledgement is evidenced.
+- Staging Workers unchanged: API `8a045e16-17c5-4663-bc65-f8c815712ce9`, Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`; rollback `c3fa866b-2751-4eea-83ed-5ef4d0667de1` retained. No GFS-182 deployment.
+- Quality: focused `63/63`, full `132/132`, build/lint/audit and API/Admin dry-runs PASS. GitHub verify `39465975146` failed with no runner/steps under billing lock; no bypass.
+- Financial protection: all three payment methods remain disabled/unverified; `FS-261019-000001` remains held; no receipt, transfer, approval, PAID, Purchase replay, dispatch, or tracking mutation.
+
 ## GFS-181 Payment Resolution and Launch Completion (2026-10-20)
 
 - Fetched baseline `420f2b49dacc1320a49a3b94168f14b81c03fc96`; final GFS-181 commit `ba7376e` is pushed to `origin/codex/gfs-launch-next-001`; PR #8 remains open. Preserved `images/` is untracked and untouched. Hono lockfile was updated to the audited non-vulnerable patch release; no Worker deploy followed.

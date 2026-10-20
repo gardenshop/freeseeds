@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-10-20: GFS-182 Final Lead Readiness Boundary
+
+The only source repair in GFS-182 is monotonic WhatsApp delivery status handling. `SENT`, `DELIVERED`, and `READ` are ordered; duplicate provider IDs remain idempotent; delayed or reordered callbacks cannot downgrade a successful outbound record. Focused and full local tests prove this with synthetic SQLite/D1 behavior. No live callback, message, order, or payment record was replayed.
+
+Queue handling remains bounded and fail-closed: retry/backoff and terminal DLQ behavior are covered, but there is no automatic DLQ recovery. A future replay requires an authorized operator, provider-health evidence, deterministic key review, and an audited non-financial replay. Historical CAPI, payment, receipt, and incident jobs must never be replayed merely to clear a dashboard.
+
+Read-only Events Manager evidence identifies the clean `Free Seeds` dataset `1210750267244729`; it has no integrations and no event activity. The Hoja dataset was visible but prohibited and untouched. Because the API has `META_CAPI_ENABLED=false`, no dataset/token permission is configured, no Test Events code was used, and no Meta acknowledgement exists, Lead CAPI remains disabled. Pending D1 Lead rows are not delivery proof. No consent or public release authorization is inferred from controlled tester evidence.
+
+No runtime rate-limit control was found. This is a public release blocker, not a reason to add an unsafe in-memory substitute. Add and verify an authorized Cloudflare edge or durable per-sender limiter, then prove abuse/error recovery before public launch. The active callback Worker was not deployed because current tester/activity/payment/CAPI/rollback preconditions were not re-established in this execution. Staging versions and all protected financial state remain unchanged.
+
 ## 2026-10-20: GFS-181 Payment Evidence Boundary and Launch Split
 
 GFS-181 reuses the already-proven GFS-178/GFS-180 live EN/UR lead-only evidence instead of replaying completed work. The authenticated browser inventory was collected with `list_pages` first. GitHub and Cloudflare/Admin identities were verified; existing Meta/Admin/WhatsApp pages were inspected read-only and no unrelated conversation, ad, payment, or production asset was changed.
