@@ -1,5 +1,62 @@
 # Final Report
 
+## GFS-181 Payment Resolution and Launch Completion - 2026-10-20
+
+### Executive Decision
+
+**GO for controlled lead-only staging and Admin draft/read-only validation. NO-GO for public promotion and customer payments.** GFS-178/GFS-180 already prove the real EN/UR lead journey, D1 province LIST, five fields, review/back, order creation, WAMIDs, screenshots, and Admin previews; those results were reused. Payment verification is not complete because no authenticated merchant/bank beneficiary record was accessible, and no method was enabled.
+
+### Assigned Tasks
+
+| Task | Result | Evidence |
+|---|---|---|
+| P0 stop repeated work | PASS | Existing GFS-178/GFS-180 real evidence reused; no repeated Graph/name/number migration work |
+| P1 QR draft acceptance | PASS | Three existing private method-specific QR assets accepted as drafts; D1/R2 integrity and provenance retained |
+| P1 beneficiary verification | BLOCKED | No accessible provider/bank record; exact JazzCash/Easypaisa/Bank mismatch states recorded below |
+| P1 enablement | BLOCKED by policy | All methods remain `enabled=0`, ownership flags false, no eligible selector |
+| P2 editable EN/UR/payment checkout | PASS safe subset / BLOCKED payment tail | Admin reload/previews and no-method customer path pass; verified payment selection, receipt, PAID, and fulfillment cannot run honestly |
+| P2 simulated blocked methods | PASS | NON-PAYABLE local fixtures pass; no real money or financial mutation |
+| P3 Meta name route | BLOCKED | Existing authenticated Meta evidence still shows declined name; no eligible review route was available and no blind submission was made |
+| P3 lead-only readiness | PARTIAL | Identity/privacy/signed webhook/retry/guard checks pass locally; concurrency/reordering, Lead CAPI, and public release authorization remain open |
+| P4 quality/release | PASS local / BLOCKED CI | 131 tests, build, lint, audit, Wrangler dry-runs pass; CI run 39448956004 had no runner/steps |
+
+### Payment Methods
+
+| Method | QR integrity | Owner attestation | Destination finding | Independent beneficiary | Enabled / delivery |
+|---|---|---|---|---|---|
+| JazzCash | PASS: existing private asset has active method linkage, hashes, decoder agreement, payload match, scan | `USER_ASSERTION_GFS-176` only | Decoded identifier matches configured D1 identifier | BLOCKED: no independent wallet record linking it to Garden Shop | Disabled; QR/text delivery blocked |
+| Easypaisa | PASS: existing private asset has active method linkage, hashes, decoder agreement, payload match, scan | `USER_ASSERTION_GFS-176` only | Decoded identifier differs from D1 and matches a printed alias candidate | BLOCKED: alias ownership not independently proven | Disabled; QR/text delivery blocked |
+| Bank Transfer | PASS: existing private asset has active method linkage, hashes, decoder agreement, payload match, scan | `USER_ASSERTION_GFS-176` only | Decoded destination matches neither configured IBAN nor printed alternate | BLOCKED: bank beneficiary linkage unavailable | Disabled; QR/text delivery blocked |
+
+The three files are valid private drafts, not payable methods. No recipient field was changed to make a mismatch disappear. Required next evidence is an authenticated provider/bank record linking each decoded destination to the authorized Garden Shop account. The existing browser session had no accessible merchant/bank record; Meta pages also had a network error. This dependency was recorded once and not retried indefinitely.
+
+### E2E and Evidence
+
+- Real EN/UR customer and Admin lead-only E2E is PASS from GFS-178/GFS-180: WELCOME, language, fertilizer, D1 province/fee LIST, exactly five fields, review/back, order, no-method response, Check Order/status, WAMIDs, private screenshots, and matching unpaid Admin/D1 records. Exact WAMIDs remain in the prior report section and were not duplicated or fabricated here.
+- Current staging Admin read-only checks show all three localized payment previews and private QR previews, with `paymentConfigured=false`. The WhatsApp tab shows the prior unpaid order's localized no-method response. No payment selector method appears while all methods are disabled.
+- Real receipt/PAID results: NONE. No authorized real transaction, receipt upload, Admin approval, Purchase CAPI, dispatch, tracking, or fulfillment was performed. `FS-261019-000001` remains preserved under hold.
+- Simulated results: affected payment, selector, Admin, and guided tests pass (`53/53`); they use synthetic NON-PAYABLE fixtures only and are not real payment evidence.
+- Help, Support, and Check Order are not payment-selection buttons. Check Order remains a separate order-status function.
+
+### Launch Readiness
+
+- Identity: controlled GFS tester and service identities are supported by prior authenticated evidence; public identity/name release remains blocked.
+- Consent: controlled tester/session evidence is preserved; public customer consent/release authorization is not inferred from a phone field or lead record.
+- Privacy: raw WhatsApp bodies remain excluded from durable storage; normalized state and validated fields only. Local tests pass.
+- Webhook security: canonical phone ID and signature gates pass local regression; stale/forged callbacks fail closed.
+- Retries and idempotency: local signed-webhook, order, outbound, and payment-guard tests pass. Arbitrary concurrent/reordered live callbacks remain unproven.
+- Lead CAPI: disabled/pending; pending D1 outbox records are not delivery proof.
+- Release checks: local 131/131, build, lint, audit 0 vulnerabilities, and Wrangler dry-runs PASS. Remote CI is externally blocked before runner steps by billing lock. No paid ads, public promotion, or production release was authorized.
+
+### Versions, Rollback, and Completion
+
+- Source: `420f2b49dacc1320a49a3b94168f14b81c03fc96`; PR #8 open on `codex/gfs-launch-next-001`.
+- Staging API: `8a045e16-17c5-4663-bc65-f8c815712ce9`; Admin: `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`. No GFS-181 deploy was performed.
+- API rollback version retained: `c3fa866b-2751-4eea-83ed-5ef4d0667de1`; rollback not executed. No D1/order/financial rollback.
+- Overall project estimate: **82% complete / 18% remaining**. P0 **100/0**; P1 **60/40**; P2 **55/45**; P3 **70/30**. These are scoped progress estimates, not acceptance claims.
+- Final GO/NO-GO: staging lead-only **GO**; Admin draft/read-only **GO**; public leads **NO-GO**; payments **NO-GO**.
+- Exact blockers and next actions: obtain authenticated wallet/bank beneficiary records for all three decoded destinations, then record evidence and use the authorized Admin workflow; obtain a supported Meta name/release review path with genuine brand evidence; enable Lead CAPI and prove concurrency/reordering before public release. Until then preserve the QR drafts, flags, incident hold, new-number lock, and zero-Hoja runtime rule.
+
 ## GFS-178 Meta Recovery and Real Lead-Only E2E - 2026-10-20
 
 ### Release Decision

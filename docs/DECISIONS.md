@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-10-20: GFS-181 Payment Evidence Boundary and Launch Split
+
+GFS-181 reuses the already-proven GFS-178/GFS-180 live EN/UR lead-only evidence instead of replaying completed work. The authenticated browser inventory was collected with `list_pages` first. GitHub and Cloudflare/Admin identities were verified; existing Meta/Admin/WhatsApp pages were inspected read-only and no unrelated conversation, ad, payment, or production asset was changed.
+
+The three owner-uploaded QR files are accepted as private draft assets. D1/R2 evidence passes method linkage, hashes, decoder agreement, payload equality, and derivative scan. This is intentionally separate from the owner statement, destination comparison, and independent beneficiary verification. JazzCash has only an identifier match; Easypaisa has a D1 mismatch with a printed alias candidate; Bank Transfer has no exact match to the configured IBAN or printed alternate. No authenticated merchant/bank proof was accessible, so the exact external dependency is recorded once: provide a provider/bank record linking each decoded destination to Garden Shop. Until then every method remains disabled, unselected, and non-payable.
+
+No recipient fields were altered to force a match. No ownership flag, amount, payment state, receipt, approval, PAID/CAPI, fulfillment, incident, or historical order was mutated. The missing evidence is not replaced by a visual label, owner attestation, QR checksum, simulated fixture, or prior WAMID.
+
+The launch decision is intentionally split: controlled lead-only staging and Admin draft/read-only validation are GO; public leads remain NO-GO pending name/release authorization, Lead CAPI, and live concurrency/reordering evidence; customer payments remain NO-GO pending independent beneficiary proof and an explicitly authorized real transaction. The remote CI billing lock is recorded as non-blocking under the existing policy. No payment transfer, paid advertisement, public promotion, production deployment, or Meta name submission was attempted.
+
 ## 2026-10-20: GFS-178 Name Status Is Not Messaging Eligibility
 
 Official Graph confirms VERIFIED/GREEN registered phone, granted messaging/management permissions and WABA subscription while name_status remains DECLINED. A profile-verified tester actually sent inbound and received Graph-delivered/read replies; prior name-only/API-deployment blockers were overbroad. Username @FreeSeeds remains separate and unchanged. No alternate name or blind name resubmission is authorized. Canonical Support lists no eligible issue and disables Request Review; no appeal was submitted.

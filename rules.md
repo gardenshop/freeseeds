@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-181 Payment Resolution and Launch Completion (2026-10-20)
+
+- Existing owner-uploaded JazzCash, Easypaisa, and Bank Transfer QR files are accepted as private draft assets when R2 integrity, method linkage, decoder agreement, payload equality, scan, MIME, size, and D1 hash evidence pass. Draft acceptance is not beneficiary verification and never enables a method.
+- Keep QR integrity, owner attestation, destination matching, and independent beneficiary verification as separate evidence fields. `USER_ASSERTION_GFS-176` remains an owner statement only; it cannot set either ownership flag or authorize delivery.
+- Current staging evidence passes QR integrity for all three methods, but no authenticated merchant/bank record was accessible in the inspected browser session. JazzCash has a D1 identifier match without independent wallet proof; Easypaisa has a decoded identifier/D1 mismatch with a printed alias candidate but no alias proof; Bank Transfer has no exact decoded match to the configured IBAN or printed alternate. All three remain disabled and non-payable.
+- If provider evidence is inaccessible after one authenticated inspection, record the exact blocker and required evidence once, then continue local, simulated, lead-only, and documentation work. Do not loop, guess a beneficiary, alter recipient fields, or enable a method.
+- GFS-181 reuses GFS-178/GFS-180 real EN/UR lead-only evidence and WAMIDs. Payment-tail, receipt, approval, PAID, and fulfillment results are not inferred from lead-only or simulated tests. Simulated disabled-method fixtures must remain clearly labeled and cannot change financial state.
+- Public lead-only readiness is assessed separately from payment readiness: identity/consent, privacy-safe persistence, signed webhook/canonical sender checks, idempotent retries, concurrent/reordered callback acceptance, Lead CAPI delivery, and release authorization each require their own evidence. No paid spend, public promotion, or production payment launch is implied.
+
 ## GFS-174 Final Guided Journey Lock (2026-10-20)
 
 - Guided WhatsApp checkout remains the only launch path; `WHATSAPP_CHECKOUT_MODE=guided` is required and the legacy `/flows/get-free-seeds` POST is disabled while guided mode is active. Native Meta Flow remains OFF for launch.

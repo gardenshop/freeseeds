@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased - 2026-10-20 (GFS-181)
+
+- Reused GFS-178/GFS-180 real EN/UR lead-only evidence and did not repeat completed Graph journeys or migrate the WhatsApp number.
+- Accepted the existing JazzCash, Easypaisa, and Bank Transfer QR files as private draft assets only. Recorded QR integrity/provenance separately from owner attestation, destination matching, and independent beneficiary verification.
+- Reconciled staging D1/R2: all three method-linked QR assets pass hash/decoder/payload/scan checks and have complete EN/UR copy, while all remain disabled with ownership flags false and no independent evidence reference.
+- Recorded one external payment blocker: authenticated merchant/bank beneficiary records were not accessible. JazzCash identifier match is not ownership proof; Easypaisa alias mismatch remains unresolved; Bank Transfer has no exact configured/printed destination match. No recipient edit, flag change, enablement, or transfer occurred.
+- Verified read-only Admin previews and no-method customer behavior; simulated NON-PAYABLE payment/selector regressions pass. No receipt, PAID, Purchase CAPI, fulfillment, or financial-history mutation was attempted.
+- Updated the local dependency lockfile through `npm audit fix`; full 131-test, build, lint, audit, and API/Admin dry-run gates pass. Remote CI run `39448956004` remains blocked before runner steps by the existing billing lock policy.
+- Staging lead-only remains GO; public leads and accepting payments remain NO-GO pending their separate release, CAPI, concurrency, beneficiary, and transaction-evidence gates.
+
 ## Unreleased - 2026-10-20 (GFS-178)
 
 - Proved live Graph messaging despite DECLINED name using profile-verified authorized tester; preserved @FreeSeeds and all Meta assets. Name appeal blocked by no eligible Support issue/disabled review control; no blind resubmission.

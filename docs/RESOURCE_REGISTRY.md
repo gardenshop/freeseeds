@@ -1,5 +1,17 @@
 # Resource Registry
 
+## GFS-181 Payment Resolution and Launch Completion (2026-10-20)
+
+- Branch HEAD: `420f2b49dacc1320a49a3b94168f14b81c03fc96`, fetched from `origin/codex/gfs-launch-next-001`; PR #8 remains open. Preserved `images/` is untracked and untouched. Hono lockfile was updated to the audited non-vulnerable patch release; no Worker deploy followed.
+- Identity evidence: GitHub `gardenshop`; Wrangler/Cloudflare/Admin `gisupp@gmail.com` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. No secret, token, cookie, full recipient value, receipt, or real customer export is recorded here.
+- Browser evidence: Chrome `list_pages` first returned 11 existing pages. Meta tabs were inspected read-only; two returned `DNS_PROBE_FINISHED_NO_INTERNET`. Admin Payment Settings, WhatsApp CMS, and WhatsApp tabs were reused. No unrelated tab/message/action was changed.
+- Payment methods: JazzCash, Easypaisa, and Bank Transfer each have a private R2 QR, D1 hash metadata, complete saved EN/UR copy, and draft configuration. Current D1 state is `enabled=0`, `qr_owner_verified=0`, `paymentConfigured=false` for all three.
+- QR asset state: each active method-linked provenance row has decoder agreement, payload match, scan pass, and source/derivative/payload hashes. Each lacks `independent_ownership_verified` and an independent evidence reference. Owner statement remains `USER_ASSERTION_GFS-176` only.
+- Beneficiary evidence: JazzCash decoded identifier equals configured D1 identifier but has no independent wallet proof. Easypaisa decoded identifier differs from D1 and matches a printed alias candidate, with no independent alias proof. Bank Transfer decoded destination matches neither configured D1 IBAN nor printed alternate. No provider/bank record was accessible in this run; methods stay disabled.
+- Current staged Workers are unchanged: API `8a045e16-17c5-4663-bc65-f8c815712ce9`, Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`. API rollback `c3fa866b-2751-4eea-83ed-5ef4d0667de1` remains recorded and unused. No D1/order/financial rollback.
+- Quality evidence: targeted affected tests `53/53`; full suite `131/131`; build/lint/audit and API/Admin dry-runs PASS. GitHub verify `39448956004` stopped before steps with no assigned runner; no bypass.
+- Financial protection: `FS-261019-000001` remains under fulfillment hold with missing customer transaction reference. No receipt, transfer, approval, PAID transition, Purchase replay, dispatch, or tracking mutation.
+
 ## GFS-178 Verified Context / Versions (2026-10-20)
 
 - Admin `VALIDATION` CMS smoke: version 2 added a harmless EN/UR retry suffix, was published and observed on real tester replies, then rolled back to approved version 1. Version 2 is archived. Draft version 3 matches published version 1 exactly.

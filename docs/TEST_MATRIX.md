@@ -1,5 +1,29 @@
 # Test Matrix
 
+## GFS-181 Payment Resolution and Launch Completion (2026-10-20)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Required identity checks | PASS | GitHub `gardenshop`; Cloudflare/Admin `gisupp@gmail.com`; no external mutation |
+| Chrome inventory and isolation | PASS read-only | `list_pages` first, 11 existing pages inspected/reused; Meta network errors recorded; no unrelated navigation/message |
+| Owner QR draft acceptance | PASS | All three private method-specific QR assets present in Admin/R2/D1; draft state preserved |
+| QR integrity/provenance | PASS | Active method linkage, hashes, decoder agreement, payload match, scan pass for all three |
+| Owner attestation separation | PASS | `USER_ASSERTION_GFS-176` remains separate; ownership flags/evidence refs are false/empty |
+| JazzCash beneficiary | BLOCKED | Decoded identifier matches D1; independent wallet record linking it to Garden Shop unavailable |
+| Easypaisa beneficiary | BLOCKED | Decoded identifier differs from D1 and matches printed alias candidate; independent alias ownership unavailable |
+| Bank Transfer beneficiary | BLOCKED | Decoded destination matches neither configured IBAN nor printed alternate; independent bank linkage unavailable |
+| Method enablement | PASS fail-closed | All three `enabled=0`; no selector method; no amount/payment configuration |
+| Admin EN/UR save/publish/reload | PASS carried forward | GFS-178 CMS publish/rollback and current Payment Settings EN/UR reload evidence; no new copy mutation |
+| Payment selector exclusions | PASS local/staging read-only | Only verified complete methods can appear; Help/Support/Check Order are not selector actions |
+| Real EN/UR customer journey | PASS lead-only | GFS-178/GFS-180 WELCOME through order, WAMIDs, screenshots, Admin/D1 matching unpaid orders |
+| Real payment tail | BLOCKED | No verified method, authorized transaction, receipt, PAID, Purchase CAPI, or fulfillment evidence |
+| Simulated blocked-method transport | PASS | Affected synthetic NON-PAYABLE fixtures: 53/53; no financial mutation |
+| Incident hold | PASS containment | `FS-261019-000001` unchanged and held; no replay/reversal/dispatch |
+| Public lead-only requirements | PARTIAL | Identity/privacy/webhook/retry gates pass locally; concurrency/reordering, Lead CAPI, name/release approval remain open |
+| Local quality | PASS | Full 131/131 tests, build, lint, audit 0 vulnerabilities, API/Admin dry-runs |
+| Remote CI | BLOCKED external | Verify run `39448956004` had no runner/steps; billing policy remains non-blocking for permitted staging work |
+| Release | SPLIT | Controlled staging lead-only GO; public leads and payments NO-GO |
+
 ## GFS-178 Real Versus Simulated Evidence (2026-10-20)
 
 | Requirement / State | Actual Result | Evidence / Limit |
