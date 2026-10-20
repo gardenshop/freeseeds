@@ -109,7 +109,7 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
   });
   it.each(["en", "ur"] as const)("persists one %s lead/order with every payment method disabled", async (locale) => {
     await reachReview(locale, true);
-    if (locale === "ur") expect(body()).not.toMatch(/Delivery:|TOTAL:/);
+    if (locale === "ur") expect(body()).not.toMatch(/Delivery:|TOTAL:|Synthetic seeds|Synthetic fertilizer/);
     const confirmation = await inbound(tap("PLACE_ORDER"));
     expect(conversation()?.state).toBe("COMPLETE");
     const order = sqlite.prepare("SELECT * FROM orders").get()!;

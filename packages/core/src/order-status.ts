@@ -72,7 +72,8 @@ export function formatCustomerOrderStatus(order: CurrentOrderDetails, locale: "e
             : order.state === "PAID" ? "منظور؛ پیکنگ شروع نہیں ہوئی"
               : "شروع نہیں ہوا";
     const method = order.paymentMethod ? ` طریقہ: ${order.paymentMethod}۔` : "";
-    return `آرڈر ${order.orderNumber}\nآرڈر کی حالت: ${order.state}\n${payment}${method}\nرقم: PKR ${order.totalPayablePkr}\nتکمیل: ${fulfillment}۔`;
+    const stateLabels: Record<string, string> = { DETAILS_COMPLETED: "تفصیلات مکمل", PAYMENT_PENDING: "ادائیگی زیر التوا", PAYMENT_REVIEW: "رسید کا جائزہ جاری", PAYMENT_REJECTED: "رسید مسترد", PAID: "ادائیگی منظور", PACKING: "پیکنگ جاری", DISPATCHED: "روانہ کر دیا گیا", DELIVERED: "ڈیلیور ہو گیا", CANCELLED: "منسوخ" };
+    return `آرڈر ${order.orderNumber}\nآرڈر کی حالت: ${stateLabels[order.state] ?? "آرڈر پر کارروائی جاری"}\n${payment}${method}\nرقم: PKR ${order.totalPayablePkr}\nتکمیل: ${fulfillment}۔`;
   }
   let payment = "Payment has not been configured.";
   if (order.state === "PAID" || order.paymentStatus === "PAID" || order.paymentReviewState === "APPROVED") payment = "Payment approved.";

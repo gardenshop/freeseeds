@@ -27,6 +27,12 @@ const base = {
 };
 
 describe("Check Order details", () => {
+  it("renders Urdu state labels without exposing English state codes", async () => {
+    const order = await getLatestOrderForWaId(statusDb({ ...base, state: "DETAILS_COMPLETED" }), "923001234567");
+    const message = formatCustomerOrderStatus(order!, "ur");
+    expect(message).toContain("تفصیلات مکمل");
+    expect(message).not.toContain("DETAILS_COMPLETED");
+  });
   it("reports PAYMENT_PENDING only when no receipt is under review", async () => {
     const order = await getLatestOrderForWaId(statusDb(base), "923001234567");
     expect(order).toBeDefined();
