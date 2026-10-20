@@ -14,7 +14,7 @@
 - Local/privacy/reliability evidence remains: GFS-183 135/135 full suite, build/lint/audit0, Wrangler dry-runs, durable 30/60s D1 admission, HMAC/canonical webhook, Admin Access/CSRF. No changed code in GFS-185. API `5151e081-98ab-45c4-a57f-3ba43c4e6983`, Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`, rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`.
 - Clean-install validation in GFS-185: `npm ci`; full `135/135`; build/lint/audit0; API/Admin dry-runs PASS. Post-push CI `39491350447` has zero steps and explicit billing-lock annotation. No protection bypass.
 - Decision: controlled staging lead-only **GO**; public lead-only **NO-GO** (bearer revocation confirmation, name approval, public consent/release, and authorized dataset token/Test Event); accepting customer payments **NO-GO** (three payee proof gaps). Four unrelated integration reauthorizations are a separate account-owner recovery item.
-- Progress estimate: total **90%/10%**; P0 **100/0**; P1 public lead launch **75/25**; P2 payments **60/40**; P3 release/protection **90/10**.
+- Progress estimate: total **88%/12%**; P0 **100/0**; P1 public lead launch **70/30**; P2 payments **60/40**; P3 release/protection **75/25**.
 
 ## GFS-184 Restore Complete WhatsApp Payment Journey (2026-10-20)
 
