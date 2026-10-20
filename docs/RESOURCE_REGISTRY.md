@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-184 Payment Journey State (2026-10-20)
+
+- Start `492e1a49676930b5d24a571cb2b23f1fd48f2c54`; no source/Worker changes in GFS-184. Current runtime API `5151e081-98ab-45c4-a57f-3ba43c4e6983`, Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`, rollback `8a045e16-17c5-4663-bc65-f8c815712ce9` unchanged.
+- Historical `8f1c2da` is documentation only; `c57c252` locale/QR/idempotency/signed sender/receipt hardening is present. Current active provenance + independent ownership constraints retained.
+- Authenticated Admin identity `gisupp@gmail.com`; JazzCash/Easypaisa/Bank Transfer each have a private method-matched PNG and complete localized text; all `enabled=0`, owner false, amount/payment config absent. QR assets were only read/rendered, never delivered to WhatsApp or changed.
+- Current live order is GFS-183 `FS-261020-000011`, DETAILS_COMPLETED/PENDING, Punjab250, no method/receipt. Historical incident FS-261019-000001 remains under hold. No payment, PAID, fulfillment, order reset or CMS/payment setting mutation.
+- GFS-184 local synthetic payment-tail tests cover three distinct method copy/QR mock paths, amount/order text, private no-store receipt fixture, and Admin rejection status. No staged fixture/config or real provider message exists.
+
 ## GFS-183 Deployed Real Chrome Evidence (2026-10-20)
 
 - Baseline `0413a20`; runtime source `79b503397af73e4836b389314407cbcd8fc2d86c`; isolated test coverage `d052ca3`; branch `codex/gfs-launch-next-001`, PR8. Preserved `images/` untouched.

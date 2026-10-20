@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-20: GFS-184 Preserve Verified Payment Guard
+
+Comparison found `8f1c2da` changes only report documentation. `c57c252` added the locale-aware method filter and method+locale idempotency while hardening QR metadata, callback sender validation, field validation, stale outbound recovery and receipt status action. Current additional independent ownership/provenance checks are intentional financial guards, not a UI regression; do not revert them.
+
+With current staging D1 no eligible methods exist. The deployed guided path correctly creates the unpaid order, moves to `COMPLETE`, sends localized no-payment text and keeps Check Order separate. Therefore no eligible JazzCash/Easypaisa/Bank selector button is expected until independent evidence exists. Restoring the prior weaker query would bypass Garden Shop ownership verification and is prohibited.
+
+The synthetic payment fixture tests are intentionally local NON-PAYABLE cases only. They test localized amount/order/method text, mock image transport, private receipt storage and actual Admin rejection handler on synthetic SQLite. They do not exercise a real staging/browser payment UI, deliver Meta media, use real QR assets, or mark PAID. Current evidence cannot support a real receipt, PAID or fulfillment assertion. The user-facing real journey is GFS-183 and remains fail-closed.
+
 ## 2026-10-20: GFS-183 Real Staging Acceptance and Rate-Limit Boundary
 
 The active callback safety preconditions were re-established, not waived: own WhatsApp Profile Phone, GFS Contact Info, GitHub/Cloudflare/Admin identity, recent tester-only traffic, bindings, unchanged payment/CAPI flags, jobs, quality gates, and rollback. Applied additive migration 0025 and deployed API `5151e081-98ab-45c4-a57f-3ba43c4e6983` from runtime commit `79b5033`; the previous `8a045e16` remains the immediate rollback. No Meta subscription, production, Admin Worker, payment or history promotion.

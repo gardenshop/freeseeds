@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-184 Payment Journey Restore Boundary (2026-10-20)
+
+- `8f1c2da` is a report-only commit; it contains no payment runtime change. `c57c252` adds locale-complete method filtering, method+locale outbox idempotency, stricter QR/R2 metadata checks, stale outbound claims, field validation, authenticated canonical-phone validation and separate receipt Check Order action. Preserve these protections.
+- Do not restore the historical selector query that only checked `enabled=1`/complete fields. Live selectors, stale action handlers, payment selection and QR/text delivery require the current independent Garden Shop QR ownership/evidence gate. Help/Support/Check Order are never payment methods.
+- No source UX regression was found when staging has zero independently eligible methods. A successful order then transitions to `COMPLETE`, sends the localized no-payment message and offers a separate Check Order button. This is correct fail-closed UI, not a reason to inject real QR drafts into the selector.
+- NON-PAYABLE fixture coverage is local-only and synthetic, explicitly labeled in source/test data. Fixture method details/text/QR markers must be unique per method and locale; never create active D1 `payment_methods`, change staging flags, use private real QR bytes, send mock content through Meta, or imply payment. Selection of each actual staging method must still reject.
+- Receipt storage and Admin rejection tests against synthetic SQLite are not real receipt/Chrome/Admin staging proof. Actual PAID and fulfillment require a real verified method, independently confirmed funds, unique customer transaction reference and authorized Admin approval. Never synthesize or manually set these states.
+
 ## GFS-183 Real Chrome Acceptance and Durable Admission (2026-10-20)
 
 - Staging API `5151e081-98ab-45c4-a57f-3ba43c4e6983` includes runtime source `79b5033`, the GFS-182 monotonic callback repair, durable sender admission, and terminal DLQ isolation. Immediate API rollback is `8a045e16-17c5-4663-bc65-f8c815712ce9`; preserve the additive admission table on rollback and never reverse orders/payments.

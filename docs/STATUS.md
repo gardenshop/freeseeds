@@ -1,5 +1,17 @@
 # Status
 
+## GFS-184 Restore Complete WhatsApp Payment Journey (2026-10-20)
+
+- Fetched starting HEAD `492e1a49676930b5d24a571cb2b23f1fd48f2c54`; origin matched. Preserved `images/` untracked and untouched. No source changes were needed: historical `8f1c2da` is documentation-only; `c57c252` safeguards are present and current.
+- Comparison PASS: current API and `packages/core/payment-flow.ts` require enabled, complete, locale-complete methods plus `qr_owner_verified`, active QR asset matching the selected method, decoder/payload/scan passes, independent ownership and non-empty evidence. The historical weaker selector was not restored. The guarded receipt/status path and no-payment `COMPLETE` transition are present.
+- Fresh staging Admin/API read-only state: JazzCash, Easypaisa, Bank Transfer have method-specific private 800x800 QR and EN/UR copy/previews, but all are `enabled=0`, `qr_owner_verified=0`; no payment amount configured. Real selector is correctly empty. Prior three beneficiary mismatches remain unresolved; no settings, R2, order or payment mutation.
+- Real live E2E reused GFS-183, not repeated: Chrome `list_pages` first; order `FS-261020-000011`, English Seeds Only/Punjab/PKR250, Details Completed/Pending, one order, 19 READ WAMIDs and 19 masked private screenshots. Real no-payment notice and separate Check Order were already proven. Safe Urdu fee/method-locale path was exercised on same order without duplication. No payment request/receipt/PAID/fulfillment claimed.
+- Isolated NON-PAYABLE fixture suite PASS locally: all three actual selection gates reject; each fixture produces EN/UR amount/order/method-specific text and mock image transport; private no-store receipt fixture and authenticated CSRF Admin rejection route produce PAYMENT_REJECTED/REJECTED. No method flag set, actual QR exposed, Meta payment message sent, PAID/Purchase or fulfillment created. This is a local harness, not a Chrome UI or real Meta delivery claim.
+- PAID/fulfillment remains BLOCKED correctly: no independently verified method, funds, unique transaction evidence or approval. `FS-261019-000001` and all historical orders unchanged.
+- Quality reused current GFS-183 gate: `npm test` 135/135, build, lint, audit 0 vulnerabilities, API/Admin Wrangler dry-runs; `npm ci` was completed GFS-183. No source/deployment change in GFS-184. API remains `5151e081-98ab-45c4-a57f-3ba43c4e6983`, Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`, rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`.
+- Final decision: staging lead-only **GO**; staging payment-method selector is **correctly NO-OPTIONS** until independent verification; public leads remain **NO-GO** under CAPI/consent/name gates; accepting customer payments **NO-GO**.
+- Progress estimate: total **92%/8%**; P0 **100/0**; P1 journey **100/0**; P2 payment UI/testability **85/15** (local fixture pass, real verification/PAID blocked); P3 release/protection **95/5**.
+
 ## GFS-183 Real Chrome E2E and Launch Repair (2026-10-20)
 
 - Fetched starting HEAD `0413a20`; runtime repair committed as `79b503397af73e4836b389314407cbcd8fc2d86c`, additional isolated tests as `d052ca3`. PR #8/branch/account remain correct; unrelated `images/` is untouched.

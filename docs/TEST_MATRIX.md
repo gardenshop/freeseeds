@@ -1,5 +1,22 @@
 # Test Matrix
 
+## GFS-184 Payment Journey Comparison and Fixture Coverage (2026-10-20)
+
+| Requirement | Result | Evidence / limit |
+|---|---|---|
+| Historical/current comparison | PASS | `8f1c2da` docs only; `c57c252` guided hardening present; no wholesale rollback |
+| Live payment selector gate | PASS fail-closed | Independent ownership + complete locale + active method-linked provenance required; actual three methods reject |
+| No-method UI | PASS REAL carried forward | GFS-183 order received no-payment notice and distinct Check Order; no legacy help/support selector buttons |
+| D1/Admin sources | PASS read-only | Payment copy/private method QR previews load; all three disabled/unverified; no amount configuration |
+| NON-PAYABLE method separation | PASS LOCAL | Fixture method, recipient and labels are synthetic; no real configuration/QR loaded |
+| JazzCash EN/UR composition | PASS LOCAL | Amount, order, unique method fixture details compose; mock image call only |
+| Easypaisa EN/UR composition | PASS LOCAL | Separate method fixture details; mock image call only |
+| Bank EN/UR composition | PASS LOCAL | Separate method fixture details; mock image call only |
+| Private receipt + Admin rejection | PASS LOCAL | Synthetic no-store receipt, actual Admin reject route against SQLite fixture; status REJECTED |
+| Real receipt/PAID/fulfillment | BLOCKED correctly | No verified method/funds/reference/approval; no mutation |
+| Real Chrome journey | PASS carried forward | GFS-183 `FS-261020-000011`, 19 READ WAMIDs, 19 screenshots, Admin/D1 reconciliation |
+| Full quality gate | PASS | 135/135 tests, build/lint/audit0, Wrangler dry-runs; no source change this run |
+
 ## GFS-183 Requirement Comparison (2026-10-20)
 
 | Prompt requirement | Result | Real evidence / scope boundary |

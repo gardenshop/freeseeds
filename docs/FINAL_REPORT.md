@@ -1,5 +1,38 @@
 # Final Report
 
+## GFS-184 Payment Journey Restore - 2026-10-20
+
+### Historical Comparison and Finding
+
+- `8f1c2da` changes only `docs/FINAL_REPORT.md`; it contains no runtime/payment implementation.
+- `c57c252` changed `apps/api/src/index.ts` and `packages/core/src/payment-flow.ts`: locale-complete enabled-method filtering, method+locale idempotency, stricter R2 method/content-type/hash checks, stale send recovery, field validation, canonical callback phone ID validation, and receipt acknowledgment with separate Check Order. These changes are present and must remain.
+- Current selection adds required `qr_owner_verified`, active method-linked provenance, decoder agreement, payload match, scan pass, independent ownership and non-empty evidence reference. This is not a missing UX transition; it is the financial authorization boundary.
+- D1 has zero independently eligible methods. The real no-method result transitions to COMPLETE, sends localized no-payment text, and exposes Check Order separately. The weaker historical selector and legacy help/support/check-order buttons were not restored.
+
+### Journey and Method Results
+
+| Step/requirement | Result | Evidence |
+|---|---|---|
+| WELCOME/language/fertilizer/province/five fields/review/back/order | PASS REAL carried forward | GFS-183 `FS-261020-000011`, single order, five D1/Admin fields, Punjab and PKR250 |
+| Real payment selection | PASS fail-closed | No eligible method, localized no-payment notice, separate Check Order; no Help/Support selector button |
+| Real receipt/payment review/PAID/fulfillment | BLOCKED correctly | No verified method, funds, unique reference or authorized approval; no financial mutation |
+| JazzCash fixture | PASS LOCAL NON-PAYABLE | EN/UR text includes fixture method/order/amount; mock QR composition only |
+| Easypaisa fixture | PASS LOCAL NON-PAYABLE | Separate fixture method details; selection against actual D1 rejects |
+| Bank Transfer fixture | PASS LOCAL NON-PAYABLE | Separate fixture method details; selection against actual D1 rejects |
+| Receipt/Admin review | PASS LOCAL NON-PAYABLE | Synthetic private no-store receipt plus actual Admin reject handler on synthetic SQLite; resulting status REJECTED |
+| Real staged QR/config | PASS unchanged | Private PNG/locale previews exist, but actual methods remain disabled and QR bytes are not used in fixtures or sent |
+
+Real Garden Shop status per method remains: JazzCash beneficiary proof BLOCKED, Easypaisa alias mapping BLOCKED, Bank Alfalah QR-to-IBAN/Raast mapping BLOCKED. All are disabled. No real receipt, PAID, Purchase, funds, or fulfillment result is claimed. `FS-261019-000001` and all historical orders remain preserved.
+
+### Validation and Release
+
+- The actual fresh Chrome customer acceptance remains GFS-183: `FS-261020-000011`, 19 READ WAMIDs, 19 private masked screenshots, and matching D1/Admin audit. No new customer messages were sent for GFS-184.
+- Isolated synthetic coverage is unit/integration-only, not a test Chrome customer payment and not Meta transport: three method/locale compositions, mock image calls, private receipt storage and Admin rejection. No live payable fixture was deployed because it could expose/bypass customer configuration.
+- Quality: 135/135 tests; build/lint/audit0; API/Admin Wrangler dry-runs PASS. No source change/deployment in GFS-184. API5151e081/Admin6fb34f89; rollback8a045e16.
+- Branch fetched `492e1a4`; final GFS-184 docs/source status to be recorded at pushed commit. GitHub billing lock remains external; no protection bypass.
+- Release: controlled lead-only staging **GO**; payment selector **NO OPTIONS** until independently verified methods exist; public leads **NO-GO** pending CAPI/consent/name release gates; customer payments **NO-GO** pending beneficiary/funds/transaction evidence.
+- Progress estimate: total **92% complete / 8% remaining**; P0 **100/0**; P1 customer journey **100/0**; P2 payment UI/testability **85/15**; P3 release/quality **95/5**. Remaining blockers are independent evidence/authorization, not code flags to bypass.
+
 ## GFS-183 Real Chrome E2E and Launch Repair - 2026-10-20
 
 ### Central Acceptance

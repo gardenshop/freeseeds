@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased - 2026-10-20 (GFS-184)
+
+- Compared historical payment hardening and current selector/receipt flow; no unsafe legacy eligibility or unrelated help/status selector controls were restored.
+- Confirmed all three methods remain private, localized, method-linked and disabled because independent beneficiary evidence is missing; real no-method notice and separate Check Order remain correct.
+- Added/verified isolated local NON-PAYABLE method-specific copy/mock-image, private receipt and Admin rejection tests. No real QR delivery, configuration mutation, transfer, PAID, Purchase or fulfillment.
+- Reused GFS-183 fresh real Chrome lead-only evidence. All quality gates pass; no source or deployment changes in GFS-184.
+
 ## Unreleased - 2026-10-20 (GFS-183)
 
 - Deployed GFS-182 monotonic callbacks plus durable D1 per-sender admission (30 distinct IDs/60s, duplicates/statuses exempt, atomic retryable429, hashed keys and traffic-triggered cleanup).
