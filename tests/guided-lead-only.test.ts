@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import api from "../apps/api/src/index";
+import { getLatestOrderForWaId, persistFlowSubmission } from "@gfs/core";
 
 // Synthetic fixtures only. SQLite executes the real migrations and journey SQL.
 const sender = "923001234567";
@@ -95,6 +96,17 @@ beforeEach(() => {
 afterEach(() => { sqlite.close(); vi.unstubAllGlobals(); });
 
 describe("GFS-178 simulated signed-webhook lead-only journey", () => {
+  it("allows a returning exempt tester order without rewriting historical delivery details", async () => {
+    sqlite.prepare("INSERT INTO cooldown_exemptions(wa_id,reason,created_by,created_at) VALUES (?,?,?,?)").run(sender, "SYNTHETIC_TEST", "synthetic-admin", "2026-01-01");
+    const submission = { fullName: "Synthetic First", deliveryAddress: "First synthetic street", nearbyPlace: "Synthetic Park", city: "Synthetic City", contactNumber: "03001234567", productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: "Synthetic Province", fertilizerSelected: false };
+    const first = await persistFlowSubmission(db, submission, undefined, "synthetic-first-order", sender);
+    const second = await persistFlowSubmission(db, { ...submission, fullName: "Synthetic Second", deliveryAddress: "Second synthetic street" }, undefined, "synthetic-second-order", sender);
+    expect(second.orderId).not.toBe(first.orderId);
+    expect(sqlite.prepare("SELECT full_name,delivery_address,wa_id FROM customers WHERE id=?").get(first.customerId)).toEqual({ full_name: "Synthetic First", delivery_address: "First synthetic street", wa_id: sender });
+    expect(sqlite.prepare("SELECT full_name,delivery_address,normalized_whatsapp_number FROM customers WHERE id=?").get(second.customerId)).toEqual({ full_name: "Synthetic Second", delivery_address: "Second synthetic street", normalized_whatsapp_number: `+${sender}` });
+    expect((await getLatestOrderForWaId(db, sender, second.orderId))?.id).toBe(second.orderId);
+    expect((await getLatestOrderForWaId(db, "923009999999", second.orderId))).toBeUndefined();
+  });
   it.each(["en", "ur"] as const)("persists one %s lead/order with every payment method disabled", async (locale) => {
     await reachReview(locale, true);
     if (locale === "ur") expect(body()).not.toMatch(/Delivery:|TOTAL:/);
