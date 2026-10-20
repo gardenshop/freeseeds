@@ -50,7 +50,7 @@ The three files are valid private drafts, not payable methods. No recipient fiel
 
 ### Versions, Rollback, and Completion
 
-- Source: `420f2b49dacc1320a49a3b94168f14b81c03fc96`; PR #8 open on `codex/gfs-launch-next-001`.
+- Source: `ba7376e` (full commit `ba7376e`); PR #8 open on `codex/gfs-launch-next-001`.
 - Staging API: `8a045e16-17c5-4663-bc65-f8c815712ce9`; Admin: `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`. No GFS-181 deploy was performed.
 - API rollback version retained: `c3fa866b-2751-4eea-83ed-5ef4d0667de1`; rollback not executed. No D1/order/financial rollback.
 - Overall project estimate: **82% complete / 18% remaining**. P0 **100/0**; P1 **60/40**; P2 **55/45**; P3 **70/30**. These are scoped progress estimates, not acceptance claims.

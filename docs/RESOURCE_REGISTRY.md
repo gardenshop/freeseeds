@@ -2,7 +2,7 @@
 
 ## GFS-181 Payment Resolution and Launch Completion (2026-10-20)
 
-- Branch HEAD: `420f2b49dacc1320a49a3b94168f14b81c03fc96`, fetched from `origin/codex/gfs-launch-next-001`; PR #8 remains open. Preserved `images/` is untracked and untouched. Hono lockfile was updated to the audited non-vulnerable patch release; no Worker deploy followed.
+- Fetched baseline `420f2b49dacc1320a49a3b94168f14b81c03fc96`; final GFS-181 commit `ba7376e` is pushed to `origin/codex/gfs-launch-next-001`; PR #8 remains open. Preserved `images/` is untracked and untouched. Hono lockfile was updated to the audited non-vulnerable patch release; no Worker deploy followed.
 - Identity evidence: GitHub `gardenshop`; Wrangler/Cloudflare/Admin `gisupp@gmail.com` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. No secret, token, cookie, full recipient value, receipt, or real customer export is recorded here.
 - Browser evidence: Chrome `list_pages` first returned 11 existing pages. Meta tabs were inspected read-only; two returned `DNS_PROBE_FINISHED_NO_INTERNET`. Admin Payment Settings, WhatsApp CMS, and WhatsApp tabs were reused. No unrelated tab/message/action was changed.
 - Payment methods: JazzCash, Easypaisa, and Bank Transfer each have a private R2 QR, D1 hash metadata, complete saved EN/UR copy, and draft configuration. Current D1 state is `enabled=0`, `qr_owner_verified=0`, `paymentConfigured=false` for all three.

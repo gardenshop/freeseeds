@@ -2,7 +2,7 @@
 
 ## GFS-181 Payment Resolution and Launch Completion (2026-10-20)
 
-- HEAD was fetched and confirmed at `420f2b49dacc1320a49a3b94168f14b81c03fc96` on `codex/gfs-launch-next-001`, matching the remote branch. PR #8 remains open. Preserved untracked `images/` was not touched. The only source-adjacent change in this run is the non-breaking Hono lockfile audit update.
+- Fetched baseline `420f2b49dacc1320a49a3b94168f14b81c03fc96`; final GFS-181 commit is `ba7376e` on `codex/gfs-launch-next-001`, pushed to the open PR #8. Preserved untracked `images/` was not touched. The only source-adjacent change in this run is the non-breaking Hono lockfile audit update.
 - Identities: GitHub `gardenshop` PASS; Wrangler/Cloudflare/Admin identity `gisupp@gmail.com` in clean Get Free Seeds account PASS. No Meta, Cloudflare resource, payment, order, receipt, CAPI, ad, or production mutation was made.
 - Chrome DevTools protocol: `list_pages` was called first and returned 11 existing pages. Existing Meta/Business tabs were inspected read-only; two Meta developer/manager tabs returned `DNS_PROBE_FINISHED_NO_INTERNET`, while accessible Ads/Forms surfaces were not changed. Existing Admin Payment Settings, CMS, and WhatsApp tabs were reused. No unrelated tab was navigated, closed, or messaged.
 - Payment draft acceptance: Admin Payment Settings and authenticated read-only API show JazzCash, Easypaisa, and Bank Transfer each have a private QR, saved EN/UR copy, and draft state. All three have `enabled=0`, `qr_owner_verified=0`, `paymentConfigured=false`, and QR delivery `BLOCKED_OWNERSHIP_UNVERIFIED`. The UI displays private QR previews only.
