@@ -1,5 +1,52 @@
 # Final Report
 
+## GFS-186 Complete WhatsApp Flow and Meta Security Recovery - 2026-10-20
+
+### Real Versus Simulated
+
+**The complete simulated UI path passes in Chrome; real financial E2E remains BLOCKED by the intended payment gate.** The harness is served only from `127.0.0.1:5178`, under `tests/fixtures`; CSP forbids all network connections. It has no Worker, Meta/WhatsApp transport, production D1, R2, real payment recipient, or persistent browser storage. The receipt is an uploaded synthetic SVG held as a browser `File` and blob URL; the URL is revoked on reset. Browser local/session storage were both zero; reload clears the NP order. Browser network showed loopback document + data/blob images and installed extension traffic only.
+
+### Browser Test Results
+
+| Flow | Result | Private screenshots |
+|---|---|---|
+| EN welcome/language/fertilizer/province/five fields/review/back | PASS simulated; exact five fields restored; total PKR900 TEST | `D:/Temp/kilo/gfs186-en-review.png` |
+| EN selector | PASS simulated; only JazzCash/Easypaisa/Bank fixture choices; no Help/Support/Check Order | `gfs186-en-selector.png` |
+| EN JazzCash | PASS simulated; `TEST-JC-001`, no other recipient; unique image hash350099772, PKR900 | `gfs186-en-jazzcash.png` |
+| EN Easypaisa | PASS simulated; `TEST-EP-002`, no other recipient; hash909545255, PKR900 | `gfs186-en-easypaisa.png` |
+| EN Bank | PASS simulated; `TEST-IBAN-003`, no other recipient; hash2699088081, PKR900 | `gfs186-en-bank.png` |
+| EN receipt/pending/status | PASS simulated; invalid MIME error, actual synthetic SVG upload clears error, Check Order says awaiting Admin | `gfs186-en-pending.png`, `gfs186-en-order-status.png` |
+| EN Admin/rejection | PASS simulated; visible in-memory SVG preview, duplicate suppressed with same one ID, TEST REJECTED | `gfs186-en-admin-receipt-preview.png`, `gfs186-en-rejected.png` |
+| UR welcome/language/seeds/province/five fields/review/back | PASS simulated; total PKR600 TEST | `gfs186-ur-selector.png` |
+| UR JazzCash/Easypaisa/Bank | PASS simulated; correct distinct localized synthetic account per method, no cross-mix; hashes match EN method assets | `gfs186-ur-jazzcash.png`, `gfs186-ur-easypaisa.png`, `gfs186-ur-bank.png` |
+| UR receipt/Admin pending | PASS simulated; browser upload, memory preview, localized awaiting-review | `gfs186-ur-receipt-preview.png`, `gfs186-ur-admin-receipt.png` |
+| UR simulated approval/fulfillment/status | PASS simulated; “approval not paid”, “fulfillment not dispatched”, same NP order | `gfs186-ur-sim-fulfillment.png` |
+| Mobile viewport | PASS; no horizontal overflow in local harness | `gfs186-mobile-ur-status.png` |
+
+Simulated orders reuse in-memory ID `NP-TEST-000001` after resets; it is never written to D1. The image is a deliberately non-scannable QR-like marker, not an actual QR. Simulated approval never sets real PAID, Purchase, receipt R2, or dispatch.
+
+### Actual Customer and Payments
+
+- No new actual WhatsApp message/order was sent in GFS-186. Reuse the unchanged GFS-183 real result: FS-261020-000011, 19 READ WAMIDs, 19 masked screenshots, D1/Admin matching; order status and localized no-payment response remain applicable because staging API is unchanged. Do not attribute fixture output to Meta.
+- Actual staging payment methods remain `enabled=false`, `qr_owner_verified=false`, and `paymentConfigured=false`; no payable methods appear. JazzCash till ownership, Easypaisa alias mapping, and Bank Alfalah QR-to-IBAN/Raast proof remain blocked. No real receipt, funds, transaction reference, approval, PAID or fulfillment.
+- FS-261019-000001 remains PACKING/PAID under the protected hold; D1 confirms unchanged. D1 has zero NP test orders.
+
+### Security and Launch Gates
+
+- GitHub `gardenshop`, Wrangler/Cloudflare/Admin `gisupp@gmail.com` verified. No Meta credential values read or printed in GFS-186.
+- Safe, token-free Meta Removed list confirms Hoja Lead Integration and four unrelated apps remain Removed; no Restore control. No removal/reconnect was attempted in GFS-186. Hoja integration removal is observed, but invalidation of already-issued bearer remains BLOCKED without token-free Meta confirmation. Do not test compromised token. Account owner must revoke/confirm through Meta credential controls before public release.
+- Four unrelated integrations remain unavailable: Wix Marketing Tools, Daraz Seller Center, WooCommerce by Meta, Zapier. Their owners/providers must reauthorize them if still required. No authorization to reconnect exists.
+- Meta name remains DECLINED. Clean dataset permission and consent remain incomplete; CAPI/Purchase OFF. No Test Event. Ads and spend remain unauthorized.
+- NO-GO public lead launch until bearer revocation confirmation, consent/data-use approval, clean least-privilege dataset credential/Test Event, and approved display-name/release checklist. Staging lead-only remains GO.
+
+### Quality and Versions
+
+- `npm ci`; focused harness2/2; full suite137/137 across17 files; build/lint/audit0; API/Admin Wrangler dry-runs PASS. Vite peer lockfile updated to8.3.4 due moderate advisory. No app runtime changes or deployment.
+- CI `39491982284` failed before any job step on baseline `164c33d` (known billing-lock policy); no repository protection bypass.
+- Starting HEAD `164c33d`; GFS-186 changes are isolated local harness/tests/lockfile/docs. Staging API `5151e081-98ab-45c4-a57f-3ba43c4e6983`; Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`; rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`.
+- Progress estimate: total **86% complete /14% remaining**; P0 security/history **70/30**; P1 flow/UI **95/5**; P2 real payments **60/40**; P3 public launch **65/35**.
+- **Staging lead-only GO; public leads NO-GO; customer payments NO-GO.**
+
 ## GFS-185 Final Launch Blocker Audit - 2026-10-20
 
 ### Public Lead Launch

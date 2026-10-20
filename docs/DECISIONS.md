@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-20: GFS-186 Offline Payment Lab and Security Hold
+
+To test the full checkout UI without weakening finance controls, use only the loopback static harness. It has a network-denying CSP, no backend/API route, no persistent storage, fake recipients, unique unscannable synthetic method images, and memory-only order/receipt/admin state. EN/UR Chrome runs cover review/back, amounts, all three method presentations, real browser file selection, blob receipt preview, pending/Admin rejection, simulated approval, and non-dispatch fulfillment. These are not WhatsApp/provider delivery, not R2 receipt storage, not PAID, and not financial evidence.
+
+Actual WhatsApp remains unchanged and fail-closed: no eligible recipient means no method button; GFS-183 real order and 19 READ WAMIDs are reused. Never expose fixture methods or image bytes in customer configuration.
+
+The Meta security incident remains partially unresolved. Token-free Meta UI verifies Hoja and four unrelated integrations are Removed, but cannot prove the issued bearer invalid. Do not test the token. Require the account owner to confirm/revoke it through Meta security controls before public release. Do not reconnect any removed integrations without their respective owners.
+
 ## 2026-10-20: GFS-185 Clean Meta/CAPI and Token Incident
 
 The clean dataset is owned by Garden Shop and is business-connected but has no recent activity (174 days). The configured server Graph token is WhatsApp-scoped only; secret value remains unopened. Meta's Dataset Quality API token dialog explicitly warns that generated access would be granted to previously generated tokens, so least-privilege cannot be established by that shortcut. CAPI remains disabled and no Test Event/production event was sent. Require an explicitly assigned clean GFS system-user/app token with dataset permission and authorized consent, then send one new Lead Test Event and record acknowledgement/dedup. Purchase remains OFF.

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased - 2026-10-20 (GFS-186)
+
+- Added a loopback-only browser checkout lab with network-denying CSP, no persistent storage/backend, synthetic method-specific QR-like fixtures and explicit NON-PAYABLE labeling.
+- Exercised complete EN and UR simulated checkout/review paths, five-field Back, amounts, each method's recipient marker/unique image, actual synthetic receipt upload/blob preview, Admin rejection, simulated approval and non-dispatch fulfillment.
+- Added/retested memory-only receipt preview/revoke, localized pending Admin status, duplicate feedback, invalid file handling and network/secret guard tests.
+- Reused real GFS-183 WhatsApp evidence; actual customer methods remain disabled. No provider delivery, D1/R2 write, real receipt/payment/PAID/Purchase/fulfillment, CAPI event or Worker deployment.
+- Updated vulnerable Vite/rolldown peer lockfile to Vite8.3.4; 137 tests, build, lint, zero-vulnerability audit, Wrangler dry-runs PASS.
+- Reconfirmed Meta integration removal token-free; bearer invalidation remains owner-confirmation blocker, unrelated integrations remain Removed with no reconnect.
+
 ## Unreleased - 2026-10-20 (GFS-185)
 
 - Removed `hojaseeds.pk` and `hojaseeds.pages.dev` from the clean Free Seeds dataset website allowlist; Garden Shop domain is the only remaining website source.

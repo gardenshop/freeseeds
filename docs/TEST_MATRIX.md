@@ -1,5 +1,26 @@
 # Test Matrix
 
+## GFS-186 Full Browser Fixture Matrix
+
+| Requirement | Result | Evidence / scope |
+|---|---|---|
+| Token-free Meta incident check | PARTIAL | Hoja + four unrelated entries confirmed Removed, no restore controls; bearer invalidation still needs owner confirmation |
+| No asset churn | PASS in GFS-186 | No remove/reconnect, CAPI token generation, message, payment, or deployment |
+| Real staging method guard | PASS fail-closed | Three disabled, owner false; paymentConfigured and amount config false |
+| Existing real WhatsApp lead journey | PASS reused | GFS-183 order/WAMIDs/screenshots same API; no repeat/new order |
+| Isolated harness network boundary | PASS | Loopback-only HTTP; CSP connect-src none; browser requests only local file, data/blob images and installed Chrome extension; no external endpoint |
+| Isolated storage | PASS | `File` object held in memory; image blob preview; object URL revoked on reset; local/session storage0; reload clears NP order |
+| English complete visual flow | PASS SIMULATED | Welcome/language/add fertilizer/Test South/five fields/review/back/place/selector/details/upload/status/Admin/reject |
+| Urdu complete visual flow | PASS SIMULATED | Welcome/language/Seeds Only/Test North/five fields/review/back/place/selector/details/upload/status/Admin/sim approval/fulfillment |
+| All three method fixtures | PASS SIMULATED | Unique TEST JC/EP/IBAN details and QR-like hashes350099772/909545255/2699088081; correct amount; no cross-mix; not scannable |
+| Receipt upload and Admin preview | PASS SIMULATED | Actual synthetic SVG browser file upload, visible memory-only blob preview, no R2/D1 |
+| Invalid receipt handling | PASS SIMULATED | Invalid MIME produces error; valid SVG clears it; max2MiB guard present |
+| Duplicate/rejection | PASS SIMULATED | Duplicate suppressed/one in-memory ID; Admin rejection is TEST REJECTED, no payment |
+| Approval/fulfillment | PASS SIMULATED ONLY | Explicit NOT PAID / NOT DISPATCHED, in-memory audit only; no real PAID state |
+| Real receipt/PAID/fulfillment | BLOCKED correctly | No method eligible, funds/reference/approval absent |
+| Full local quality | PASS | npmci; 137/137; build/lint/audit0; both Wrangler dry-runs |
+| Remote CI | BLOCKED external | Run39491982284 failed before steps under known billing lock; no bypass |
+
 ## GFS-185 Launch Blocker Audit
 
 | Requirement | Result | Evidence / blocker |

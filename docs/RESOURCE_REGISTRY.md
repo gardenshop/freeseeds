@@ -1,5 +1,18 @@
 # Resource Registry
 
+## GFS-186 Offline Payment Lab
+
+- Source starting baseline `164c33d`; changes are fixture-only + test + package-lock peer security update. Harness `tests/fixtures/nonpayable-checkout.html`; synthetic receipt `tests/fixtures/receipt-nonpayable.svg`; test `tests/nonpayable-harness.test.ts`.
+- Serve safely with CWD `tests/fixtures`, `python -m http.server 5178 --bind 127.0.0.1`; stop server after use. CSP `connect-src 'none'`; no API calls, no customer messaging, no D1/R2, no persistence; receipt File stays in memory/blob URL and object URL is revoked on reset. Three unique synthetic QR-like assets are NOT SCANNABLE.
+- Chrome private screenshots in `D:/Temp/kilo/gfs186-*.png`; no screenshot or test file is uploaded to R2/Meta or a real order. Test order `NP-TEST-000001` exists only in memory and resets on reload; remote D1 NP-test count is0.
+- EN test total PKR900 TEST (fertilizer250 + Test South fee150 + fixture base500). UR PKR600 TEST (Seeds Only + Test North fee100 + fixture base500). No relationship to Garden Shop catalog/fees.
+- Methods: JazzCash TEST-JC-001 synthetic recipient QR-like hash350099772; Easypaisa TEST-EP-002 hash909545255; Bank TEST-IBAN-003 hash2699088081. All synthetic, non-scannable, unique, locale-aware and crossed checks pass.
+- Browser Admin rejection, simulated approval and fulfillment are memory state only, explicitly `NOT PAID` and `NOT DISPATCHED`. No D1 `PAID`, receipt object, Purchase, transfer, or fulfillment record.
+- Meta state: clean dataset allowlist verified Garden Shop only in GFS-185; GFS-185 security incident remains. Removed list token-free confirms Hoja, Wix, Daraz, WooCommerce and Zapier all Removed; no Restore UI. Bearer invalidation needs owner confirmation.
+- Real staging unchanged: API5151e081, Admin6fb34f89, rollback8a045e16; all payment methods disabled; CAPI/Purchase OFF; incident FS-261019-000001 held.
+- Quality: npm ci;137 tests/build/lint/audit0/Wrangler dry-runs PASS. package-lock updates Vite peer8.3.4 and transitive fixes.
+- CI run `39491982284` failed with zero job steps at source baseline `164c33d`; known account billing lock; no protection bypass.
+
 ## GFS-185 Meta/Payment State (2026-10-20)
 
 - Branch start `3060e9c`; no source/Worker changes. API `5151e081-98ab-45c4-a57f-3ba43c4e6983`, Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`, rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`.

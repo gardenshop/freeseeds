@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-186 Payment Harness and Security Recovery
+
+- The browser payment lab is `tests/fixtures/nonpayable-checkout.html`, served only from `127.0.0.1` with the working directory restricted to `tests/fixtures`. Its CSP is `default-src 'none'` and `connect-src 'none'`; no Worker, D1, R2, Meta, WhatsApp, or real recipient is reachable. Order/receipt/review state is in memory only; receipt preview uses an object URL revoked on reset; page reload clears all state.
+- All harness account names, identifiers, provinces, fees, totals, order IDs, receipts, QR-like images and approvals must be visibly marked TEST/NON-PAYABLE. QR-like fixture assets are intentionally NOT SCANNABLE and never contain or reuse real QR bytes. TEST approval is not PAID; TEST fulfillment is not dispatch. Never point a fixture at a real method, recipient, browser messaging profile, or database.
+- Do not add Check Order, Help, or Support to payment-selection buttons; Check Order belongs only to later status. Actual customer methods continue to require enabled + complete localized settings + independent beneficiary evidence + method-matched active QR provenance. Do not change that gate to make fixtures work.
+- GFS-186 verified Hoja is listed under Meta Business Integrations Removed, but bearer invalidation is not proven without using the token. Never test the compromised bearer. Account owner must confirm/revoke through Meta security controls before public release. Four unrelated integrations remain Removed; do not remove or reconnect them without each owner/provider's authorization.
+
 ## GFS-185 Meta Credential and Asset Isolation (2026-10-20)
 
 - Never take a full accessibility snapshot or screenshot of Graph API Explorer when an access token can be rendered. If a token appears in MCP output, do not quote, copy, inspect, or use it; close the page and revoke it immediately through the narrowest app-scoped visible control. Verify only a token-free revocation state. Do not use a broad business-integration removal button if its target cannot be unambiguously anchored; confirm each exact app/domain before mutation.
