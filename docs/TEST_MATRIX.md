@@ -13,7 +13,7 @@
 | EN/UR payment formatter | N/A | N/A | N/A | N/A | PASS staging D1 saves; local formatter/tests use separate templates/placeholders; deployed UI preview remains stale until PR code deploy | BLOCKED customer rendering |
 | Guided customer buttons | N/A | N/A | N/A | N/A | N/A | BLOCKED individually: `LANG_EN`, `LANG_UR`, `ADD_FERTILIZER`, `SEEDS_ONLY`, each province, five fields, `PLACE_ORDER`, `BACK`, payment selection, receipt, `CHECK_ORDER`, stale/expired actions, Admin Orders; no WAMID/screenshots |
 | Incident | N/A | N/A | N/A | N/A | N/A | `FS-261019-000001` remains PAID/PACKING/APPROVED, reference missing; one Purchase event record, five attempts; D1 trigger 0023 blocks new fulfillment/confirmation/tracking audit entries; no replay |
-| Local release gates | N/A | N/A | N/A | N/A | N/A | 112/112 tests, build, lint, 0 high-severity audit findings, API/Admin dry-runs PASS; PR run `39395460377` attempt 2 has no runner/steps; no deployment |
+| Local release gates | N/A | N/A | N/A | N/A | N/A | 112/112 tests, build, lint, 0 high-severity audit findings, API/Admin dry-runs PASS; PR run `39403272414` has no runner/steps; no deployment |
 
 ## GFS-175 QR Extraction and Launch Evidence (2026-10-20)
 

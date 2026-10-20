@@ -27,8 +27,8 @@ The user owner statement is still recorded separately as `USER_ASSERTION_GFS-176
 
 ### CI and Deployment
 
-- GitHub identity is `gardenshop`; PR #8 remains open on `codex/gfs-launch-next-001`. Source commit `dec4f1a74b8a50111b514c3a8978f4519e2fd825` and report commit `564ef705f80de771bc3a2ff964e11389028702bc` are present; current local Admin hold/migration/test edits are uncommitted pending final validation.
-- Required CI `39395460377` attempt 2 failed in 2 seconds with runner ID `0`, empty runner name, and `steps=[]`. Repository Actions are enabled, workflow targets `ubuntu-latest`, and no self-hosted runners exist. GitHub billing/org diagnostics require `admin:org`; the verified token has `read:org`, not `admin:org`. Root cause cannot be confirmed or fixed with available authorization; no bypass or merge.
+- GitHub identity is `gardenshop`; PR #8 remains open on `codex/gfs-launch-next-001`. Source commit `85977d77601306a13c7bcd2f7e1934047732128c` is pushed after commits `dec4f1a74b8a50111b514c3a8978f4519e2fd825` and `564ef705f80de771bc3a2ff964e11389028702bc`. `images/` remains untracked and untouched.
+- Required CI `39403272414` for `85977d7` failed in 2 seconds with runner ID `0`, empty runner name, and `steps=[]` (same runner failure as `39395460377` attempt 2). Repository Actions are enabled, workflow targets `ubuntu-latest`, and no self-hosted runners exist. GitHub billing/org diagnostics require `admin:org`; the verified token has `read:org`, not `admin:org`. Root cause cannot be confirmed or fixed with available authorization; no bypass or merge.
 - Current staging Worker versions remain API `4779d60b-6f93-41d4-b1e3-1c37bdfcf599` and Admin `2cb3d3ec-9104-41d9-a3d9-45cb6b1cf8ab`; no new Worker deployment.
 - Wrangler dry-run currently reports `META_PROVIDER_ENABLED=true` and `DEPLOYMENT_STATE=PRODUCTION_INTEGRATION_READY`, while the active Meta registry remains `META_ASSETS_PENDING` and no authorized staging/test WABA/phone was verified. Treat this as configuration drift, not identity or messaging authorization. Meta assets/pages were not touched.
 - Cloudflare identity was verified as `gisupp@gmail.com` / `cb5066a6d71ecdee0bd7ed8aacb4d3c2` before D1 safety-trigger mutations. No production deploy, Meta mutation, CI bypass, or merge.
@@ -39,7 +39,7 @@ The user owner statement is still recorded separately as `USER_ASSERTION_GFS-176
 - QR extraction/integrity **100%**; independent beneficiary validation **0%**; EN/UR D1 values **100%** / old deployed preview **partial**; staging fail-closed gates **100%**; live Admin **30%**; live WhatsApp **0%**; incident containment **100%** / incident resolution **0%**; CI/deploy **0%**.
 - Estimated GFS-176 acceptance: **55% complete / 45% remaining**. P0 leads journey **35%**; P1 payment readiness **60%**; P2 live WhatsApp regression **0%**. WhatsApp live completion **0%**; Admin end-to-end completion **30%**. Estimates are scoped to this launch request, not total historical project completion.
 - Unrelated tabs opened/closed/navigated: **0**; one unrelated WhatsApp contact-info panel was transiently opened/restored. No messages or customer data were changed.
-- Next safe automated action: finish local regression, commit/push the Admin incident UI/trigger safeguards to PR #8, then retry only the required CI. Do not deploy until CI truly runs and passes. WhatsApp E2E remains blocked until a verified GFS-authorized tester conversation/number and Meta sender identity are available.
+- Next safe automated action: inspect/run CI again only when an authorized org admin restores runner/billing diagnostics; then deploy the pushed staging build. Do not deploy until required CI truly runs and passes. WhatsApp E2E remains blocked until a verified GFS-authorized tester conversation/number and Meta sender identity are available.
 
 ## GFS-175 → GFS-176 QR, Locale, and Live Launch Audit - 2026-10-20
 
