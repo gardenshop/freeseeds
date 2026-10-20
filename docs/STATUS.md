@@ -2,7 +2,7 @@
 
 ## GFS-174 Final Audit (2026-10-20)
 
-- Starting Git HEAD was `8f1c2da` on `codex/gfs-launch-next-001`; the final GFS-174 source/documentation commit is `c57c252` and was pushed to PR #8. The pre-existing untracked `images/` directory was preserved.
+- Starting Git HEAD was `8f1c2da` on `codex/gfs-launch-next-001`; source repair commit `c57c252` and final documentation commit `8f0ab7d` were pushed to PR #8. The pre-existing untracked `images/` directory was preserved.
 - Local repair gates: `npm test` 105/105, `npm run build`, `npm run lint`, and `npm audit --audit-level=high` all PASS with 0 high-severity vulnerabilities.
 - Repaired source defects: invalid guided field acceptance; missing `customers.wa_id`; positional interactive IDs; failed outbound reply retry/race; stale payment outbound claims; legacy PAYMENT CMS action contamination; webhook recipient Phone ID lock; QR metadata fail-open; receipt audit/status action; locale-scoped payment idempotency; legacy Flow POST acceptance; incident fulfillment/confirmation gate; approval without transaction evidence.
 - Chrome DevTools MCP: the active tool namespace was unavailable. Local Chrome/DevToolsActivePort and `chrome-devtools-mcp@1.10.1` were diagnosed, but a standalone initialization did not return `list_pages`; no browser tab was navigated, reused, or mutated in this execution. Live WhatsApp/Admin evidence is therefore BLOCKED.

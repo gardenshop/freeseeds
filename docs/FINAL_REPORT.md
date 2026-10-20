@@ -43,7 +43,7 @@
 
 ### Evidence and Completion
 
-- Git baseline: `8f1c2da`; final pushed commit `c57c252`; `images/` remains untouched. Controlled staging deployments: API `4779d60b-6f93-41d4-b1e3-1c37bdfcf599`, Admin `2cb3d3ec-9104-41d9-a3d9-45cb6b1cf8ab`; production deployment was intentionally withheld.
+- Git baseline: `8f1c2da`; source repair `c57c252`, final documentation `8f0ab7d`, both pushed to PR #8; `images/` remains untouched. Controlled staging deployments: API `4779d60b-6f93-41d4-b1e3-1c37bdfcf599`, Admin `2cb3d3ec-9104-41d9-a3d9-45cb6b1cf8ab`; production deployment was intentionally withheld.
 - Cloudflare identity: PASS, `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
 - Local quality: PASS, 105/105 tests, build, lint, and high-severity audit with 0 findings.
 - Live WhatsApp: 0% new evidence; Admin live: 0% new evidence; payment/QR authorization: 0% closure; local repair: 100%; evidence package overall: 35% based only on verified local/static evidence.
