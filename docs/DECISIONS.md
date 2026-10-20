@@ -6,6 +6,8 @@ Admin staging is deployed and all saved EN/UR payment previews pass after reload
 
 The phone is Connected/High quality in the authorized WABA, but no Meta display-name or webhook changes were made. The existing tester/order remains read-only. Payment methods stay disabled until independent beneficiary verification; the Purchase CAPI remains disabled/unreplayed. Rules permit local gates for Admin staging despite remote CI failure, but this does not authorize an API deploy or public release. Latest CI `39419025641` still failed before runner assignment.
 
+Read-only D1 inspection found twelve pending, zero-attempt `WHATSAPP_PAYMENT_INSTRUCTIONS` jobs while all methods were disabled. To prevent the currently deployed old API from sending stale payment text, these jobs were terminally marked `PERMANENT_FAILURE` and audited after Cloudflare identity verification. The one previously SENT job, all orders, payments, receipts, and CAPI records remain unchanged.
+
 ## 2026-10-20: GFS-176 QR/Locale Release Gate
 
 The user attested that all three codes belong to Garden Shop. This is stored separately as `USER_ASSERTION_GFS-176`; it is not independent evidence. All independent ownership flags remain false. QR pixels were extracted without regeneration; jsQR and ZBar independently decoded source and derivative to identical payloads. The current JazzCash QR identifier matches D1. Easypaisa's encoded identifier is an alternate to D1 and matches the printed candidate alias; Bank's encoded payload matches neither D1 IBAN nor printed alternate. Neither alternate is declared legitimate or fraudulent without bank/wallet evidence.

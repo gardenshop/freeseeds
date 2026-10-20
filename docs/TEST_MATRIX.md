@@ -9,6 +9,7 @@
 | Meta sender | BLOCKED for sends | Canonical WABA context matches rules; sender Connected/High but display name Rejected; `messages` webhook is subscribed to staging API callback |
 | Tester E2E | BLOCKED | Admin has authorized tester record and existing pending order; WhatsApp Web account/chat not verified; no message/WAMID/screenshot |
 | Payment safety | PASS fail-closed | All three methods disabled/unverified; stale/legacy payment actions filtered in local source; no receipt/approval/send performed |
+| Queued payment instructions | PASS blocked | 12 pending/zero-attempt instruction jobs marked terminal `PERMANENT_FAILURE` with audit; previously SENT records unchanged; no payment order state changed |
 | Incident/CAPI | BLOCKED resolution | Incident unchanged PAID/PACKING/APPROVED/reference missing; Purchase CAPI FAILED/5/DISABLED/no provider id; Lead PENDING/0; no replay |
 | Local quality | PASS | 14 files/114 tests, build/lint, 0 high audit findings, API/Admin Wrangler dry-runs PASS |
 | Release | BLOCKED | Admin-only staging deployment done; API is active Meta webhook and sender display name is Rejected; CI run `39419025641` has no runner/steps; no production action |

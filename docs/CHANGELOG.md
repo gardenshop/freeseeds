@@ -7,6 +7,7 @@
 - Read-only Meta check confirms canonical WABA/phone and a subscribed `messages` webhook to the staging API; sender display name is Rejected. No Meta profile, webhook, asset, ad, or spend mutation.
 - Live E2E is blocked because the authorized tester has no existing WhatsApp Web chat and the active account number is not verified. No customer messages, WAMIDs, screenshots, or payment test.
 - API staging deployment remains withheld because it is the active WABA callback and sender presentation is rejected; latest CI `39419025641` has no runner/steps, and no CI/branch bypass was used.
+- Safely terminalized 12 stale zero-attempt payment-instruction outbox jobs because all methods are disabled; each has an audit entry. Existing SENT jobs/orders were left unchanged.
 
 ## Unreleased - 2026-10-20 (GFS-176)
 
