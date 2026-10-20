@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased - 2026-10-20 (GFS-178)
+
+- Proved live Graph messaging despite DECLINED name using profile-verified authorized tester; preserved @FreeSeeds and all Meta assets. Name appeal blocked by no eligible Support issue/disabled review control; no blind resubmission.
+- Repaired bilingual lead-only confirmation/quote/status, no-method messaging, replay/stale callback guards, forged Flow ownership checks, and invalid-contact actions; added signed-webhook/real-SQLite integration tests.
+- Live Place Order reproduced unique wa_id collision for a returning tester. Preserve prior delivery snapshots and associate later snapshots with trusted normalized WhatsApp identity; retested successfully without altering historical orders.
+- Repaired Urdu catalog review/status-code leakage; deployed final API staging version 8a045e16-17c5-4663-bc65-f8c815712ce9. Admin version unchanged.
+- Actual EN/UR lead-only test orders 000008/000009 remain unpaid; LIST/5 fields/Back/status tested and private screenshots/WAMIDs recorded. No receipt/payment approval/PAID/CAPI replay or financial history mutation.
+- Full local gate passes 131 tests. CI root cause evidenced as account billing lock; no billing/security bypass or production release.
+
 ## Unreleased - 2026-10-20 (GFS-177)
 
 - Deployed Admin staging Worker `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`; fresh EN/UR preview tests pass for all methods while all payment methods remain disabled.

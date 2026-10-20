@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-20: GFS-178 Name Status Is Not Messaging Eligibility
+
+Official Graph confirms VERIFIED/GREEN registered phone, granted messaging/management permissions and WABA subscription while name_status remains DECLINED. A profile-verified tester actually sent inbound and received Graph-delivered/read replies; prior name-only/API-deployment blockers were overbroad. Username @FreeSeeds remains separate and unchanged. No alternate name or blind name resubmission is authorized. Canonical Support lists no eligible issue and disables Request Review; no appeal was submitted.
+
+Controlled staging deployment was permitted after local gates, verified account, only-tester recent activity, unchanged financial/Meta bindings and recorded rollback. Real EN/UR lead-only journeys created only unpaid synthetic-data test orders 000008/000009. No payment method is enabled; no receipt/approval/PAID/fulfillment or CAPI replay was attempted. Tests found and repaired returning-customer identity collision without rewriting historical delivery snapshots; Urdu review/status leakage and replay/stale-field defects were also repaired and retested.
+
+Public launch remains NO-GO: name recovery and public release sign-off, beneficiary proof, broader concurrent/reordered callback evidence, and disabled Lead CAPI remain unresolved. Controlled lead-only staging is GO. Do not use pending Lead records as evidence of successful CAPI delivery or test receipts as real payment.
+
 ## 2026-10-20: GFS-177 Admin Deploy / API Inbound Hold
 
 Admin staging is deployed and all saved EN/UR payment previews pass after reload. The D1-driven province LIST selector is pushed as `0e12c623b37aafca7a2382ed697fcdea272d2535` and passes local tests, but the API is not deployed because Meta `messages` webhook is actively subscribed to the staging API, the sender display name is Rejected, and no authorized WhatsApp Web tester session is available. Deployment could change real inbound behavior.

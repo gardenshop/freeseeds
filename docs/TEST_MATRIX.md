@@ -1,5 +1,27 @@
 # Test Matrix
 
+## GFS-178 Real Versus Simulated Evidence (2026-10-20)
+
+| Requirement / State | Actual Result | Evidence / Limit |
+|---|---|---|
+| Canonical Meta / Graph | PASS eligibility; name FAIL | Phone VERIFIED/GREEN, permissions granted, WABA subscribed; name DECLINED; live READ/DELIVERED outbound proves messaging works |
+| Name appeal / username | BLOCKED appeal; PASS preservation | Support Request Review disabled/no eligible issue; only replacement-name dialog. No submission/reference, no alternate name; @FreeSeeds unchanged |
+| Tester account | PASS actual profile | Own Profile Phone matches tester; recipient Contact Info matches GFS sender; not a chat-list assumption |
+| WELCOME / LANG_EN / LANG_UR | PASS live | Real inbound/outbound; Urdu initial Graph 500 recovered after rollback/retry |
+| Seeds Only / Add Fertilizer | PASS live | EN seeds-only 250; UR fertilizer 500; amounts cross-checked D1 |
+| Seven province LIST rows | PASS live EN/UR | Actual Meta LIST with title/fee descriptions; Punjab selection; UR LIST screenshot verified. No tariff edit attempted |
+| Exactly five fields | PASS live both locales | Synthetic name/address/landmark/city; authorized tester contact; no sixth field |
+| Invalid input / Back | PASS live | Invalid EN contact has no Place Order buttons; Back returns contact; quote preserved. Generic validation text remains CMS-controlled |
+| Review / Place Order | PASS after live repairs | Returning wa_id collision and Urdu catalog leakage reproduced/repaired/retested; real orders 000008/000009 |
+| No eligible payments | PASS live fail-closed | No selector, QR, payment invitation or payment job; clear localized unavailable notice; Check Order only post-order |
+| Status / START / disabled-method text | PASS live | Same unpaid order/reference retained; UR status labels localized |
+| Webhook replay / forged callbacks / queue | PASS simulated | Signed requests/SQLite/Graph mock regression; delivered sequential replays and disabled jobs safe; arbitrary concurrency/reordering NOT proven live |
+| D1 / authenticated Admin | PASS live | UI and API show both test orders PENDING, totals 250/500, zero receipts, null method, no confirmation/label actions |
+| Receipt / rejection / approval / PAID | BLOCKED live | No beneficiary proof or real transaction authorization; no fabricated receipt/payment; financial guard regressions simulated only |
+| Financial incident / CAPI | PASS containment, BLOCKED closure | Held order unchanged; Purchase FAILED/5/DISABLED; new Lead events pending, no Purchase |
+| CI | FAIL billing, not code | Official annotation: account locked due to billing issue; nonblocking staging rule used; no billing/protection bypass |
+| Regression / deployment | PASS local/staging | 131 tests, build/lint/audit, final API 8a045e16; rollback versions retained. No production release |
+
 ## GFS-177 Active Staging Evidence (2026-10-20)
 
 | Requirement | Result | Evidence / blocker |

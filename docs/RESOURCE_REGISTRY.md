@@ -1,5 +1,19 @@
 # Resource Registry
 
+## GFS-178 Verified Context / Versions (2026-10-20)
+
+- Git baseline `c9cfdbc7e403bbeae476f4cf9ce0a0624af172cd`; source commits `8699d67`, `78b1de8`, `d2082e4`. Authorized GitHub gardenshop, Cloudflare gisupp@gmail.com / cb5066a6d71ecdee0bd7ed8aacb4d3c2, Admin Access identity verified before mutations. No Hoja interaction.
+- Canonical Meta phone/WABA verified through secret-safe Admin Graph status and authenticated Phone Manager: verified phone GREEN, name DECLINED, both permissions granted, subscribed. Tester own WhatsApp Profile Phone was checked against authorized number, and GFS contact details against canonical sender. Real messaging succeeded. Username unchanged.
+- Name review evidence: only generic guideline rejection. Edit dialog has replacement-name input; canonical WABA Support Request Review is disabled with zero eligible issues. No appeal/resubmission, reference, profile/username/number/webhook change.
+- Deployed API final `8a045e16-17c5-4663-bc65-f8c815712ce9` from d2082e4; intermediate `1e3d43e5-f6fe-45b4-b959-0376e5197bc9`, `c3fa866b-2751-4eea-83ed-5ef4d0667de1`; Admin unchanged `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`. API is active webhook; no production promotion/ads/spend.
+- Rollback: after identity verification, `npx wrangler rollback c3fa866b-2751-4eea-83ed-5ef4d0667de1 --config apps/api/wrangler.jsonc` restores the prior compatible fix; baseline `4779d60b-6f93-41d4-b1e3-1c37bdfcf599` predates safeguards and must not be restored without evaluating stale payment risks. Do not roll back D1/order/financial data. Versions recorded, rollback not executed.
+- Actual synthetic-data lead-only orders: EN FS-261020-000008 (250 delivery/0 fertilizer/250 total), UR FS-261020-000009 (250/250/500). Both DETAILS_COMPLETED/PENDING, null method, zero receipts, no Purchase. Authenticated Admin UI and API match; historical customers/orders preserved. Tester conversation resets audited; existing tester cooldown exemption reused, not changed.
+- Each new order has an idempotent `AUTHORIZED_SYNTHETIC_DATA_TEST_ORDER` audit label identifying real WhatsApp transport but synthetic delivery data and no payment/fulfillment authorization. Order/payment states were not altered by labeling.
+- Private screenshots verified by image read: D:\Temp\kilo\gfs178-en-status.png; gfs178-ur-province.png; gfs178-ur-status.png. History/unrelated UI masked. EN province screenshot blank and discarded as evidence. No screenshot/source QR/customer body committed.
+- Representative exact live WAMIDs and inbound correlations are in FINAL_REPORT. Source of truth: outbound_messages + whatsapp_events with provider READ/DELIVERED status; no simulated ID is listed as real.
+- CI check annotation for run 39420605812: account locked due to billing issue. No runner/steps; no paid change. Actual branch protection/rulesets absent; current nonblocking-CI staging rule used.
+- QR originals/derivatives untouched; methods disabled/unverified; no bank/wallet authenticated ownership record available. Incident PAID/PACKING/reference missing unchanged; Purchase FAILED/5/DISABLED. New Lead events remain pending (CAPI disabled); no replay.
+
 ## GFS-177 Active Staging/Meta Context (2026-10-20)
 
 - Admin staging Worker deployed: `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`. Fresh authenticated UI reload verifies all three EN/UR payment previews against D1, no Urdu contamination in English, method-specific QR paths, and `enabled=0` / `qr_owner_verified=0`.

@@ -212,7 +212,17 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - CMS action labels are allowlisted by current runtime actions. Historical unknown action rows are ignored safely during load/publish and cannot reintroduce obsolete buttons. CMS publish remains the source for journey copy; payment method details remain Payment Settings/D1 source.
 - The paid/packing incident `FS-261019-000001` remains read-only under fulfillment hold until independent payment verification and incident review are recorded. No reversal, fabricated evidence, Purchase replay, or dispatch is permitted.
 
-## GFS-177 Active Staging and Province Selector Guard
+## GFS-178 Verified Sender and Lead-Only Recovery
+
+- Display-name review and API messaging eligibility are separate. Graph `name_status=DECLINED` alone is not a messaging prohibition: check registered phone verification, messaging permissions, WABA subscription, actual delivery status, and the authorized tester's own WhatsApp Profile Phone before a controlled send.
+- On 2026-10-20 the canonical phone was verified with GREEN quality, both WhatsApp permissions granted, subscribed WABA, and actual delivered/read replies while its display name remained declined. `@FreeSeeds` is a separate username and remains unchanged. Do not change display name, username, number, WABA, or webhook to manufacture a PASS.
+- A display-name resubmission must have genuine brand evidence and a supported review path. The present Meta dialog offers only a replacement-name input; canonical Support has no eligible issues and Request Review is disabled. Do not submit a blind repeat or choose an alternative name without explicit authorization. No appeal/case reference exists from GFS-178.
+- Controlled GFS-178 E2E uses only the profile-verified authorized tester and synthetic delivery fields. Admin conversation resets preserve historical orders; all payment methods remain disabled. Real lead-only results must be labeled separately from simulated receipts/approvals and never marked PAID.
+- Returning order delivery data is immutable per order: preserve earlier customer/order snapshots and associate later snapshots with the trusted normalized WhatsApp number rather than overwriting old delivery data or duplicating unique `wa_id`. Ownership checks must accept only that trusted association.
+- No eligible method means clear localized payment unavailability, no payment-selector/media or payment request, and a separate post-order Check Order action. Delivered webhook replays and stale structured callbacks must not advance fields or create extra orders.
+- API staging is the active Meta webhook. Before a controlled deploy verify account, recent traffic, local regression, unchanged payment/CAPI flags, version compatibility, and record rollback. GFS-178 checked only the authorized tester active in the preceding 24 hours. This grants no ads/spend/production or public launch permission.
+
+## GFS-177 Active Staging and Province Selector Guard (Historical)
 
 - The authorized GFS WABA is connected to `getfreeseeds-api-staging` for its `messages` webhook. A deployment of that Worker can change responses for real inbound traffic; do not deploy API/customer-message changes until an authorized tester/account is confirmed and the active sender identity/status is safe.
 - The currently connected phone row reports quality `High`, but Meta marks the `Get Free Seeds` display name `Rejected`. Do not change/re-submit the name or send a new customer message without verified display-name authorization. The canonical Business/WABA route is authorized; Hoja-associated assets remain excluded.

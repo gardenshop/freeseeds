@@ -1,5 +1,76 @@
 # Final Report
 
+## GFS-178 Meta Recovery and Real Lead-Only E2E - 2026-10-20
+
+### Release Decision
+
+**GO for controlled, authorized lead-only staging testing. NO-GO for public WhatsApp launch. NO-GO for accepting payments.** Actual EN/UR journeys, delivered/read WAMIDs, private screenshots and matching Admin/D1 orders now exist. Display-name approval, independent beneficiary evidence, real payment/receipt approval and public release acceptance remain unresolved. No production promotion, ads, spend, real transfer, fabricated receipt, PAID approval, incident reversal or Purchase replay occurred.
+
+### Requirement-by-Requirement
+
+| Task | PASS / FAIL / BLOCKED | Outcome |
+|---|---|---|
+| P0.1 Canonical Meta/Graph | PASS inspection; FAIL name approval | Authenticated Admin Graph: phone VERIFIED, GREEN quality, permissions granted, WABA subscribed; nameStatus DECLINED. Canonical Meta UI agrees and gives only generic Display Name Guidelines rejection |
+| P0.2 Username separate | PASS | @FreeSeeds preserved; never used as a replacement-name submission |
+| P0.3–4 Evidence-backed appeal | BLOCKED | Replacement-name dialog has no evidence field. Canonical WABA Support has no eligible issue and disabled Request Review. No blind submit or appeal/case reference; no independent brand evidence attached |
+| P0.5 Alternatives | BLOCKED/not authorized | Neither Free Seeds In Pakistan nor Garden Shop was submitted or adopted; naming/public-ownership proof not established |
+| P0.6 API eligibility despite rejection | PASS real | Profile-verified tester sent inbound and received actual Graph-delivered/read replies while name remained DECLINED; name rejection alone was not treated as a send prohibition |
+| P0.7 No workaround assets | PASS | No number migration/new WABA/Hoja connection/webhook change |
+| P1.1 Admin EN/UR | PASS preserved | Existing Admin 6fb34f89 retained; method-specific D1 copy preserved, methods disabled. Authenticated Orders UI/API verifies new unpaid test orders |
+| P1.2–4 API deployment/isolation | PASS controlled staging | Only authorized tester active in prior 24h; historical orders preserved; local 131-test gate; three documented repair deployments; final API 8a045e16 from d2082e4; prior versions/rollback retained |
+| P1.5 LIST rows/fees | PASS live EN/UR | Actual seven-row Meta LIST, D1 titles and fee descriptions; Punjab 250. Screenshot verified for Urdu; EN LIST DOM and WAMID verified (initial EN LIST screenshot blank, not counted) |
+| P1.6 Language consistency | PASS lead-only after repair | English and Urdu prompts, five fields, Back, review, confirmation/unavailable notice/status tested. Live English catalog-name leakage in Urdu review repaired and live retested. Province titles remain authoritative D1 names, PKR/order IDs are identifiers |
+| P1.7 Payment choices/stale taps | PASS safe no-method path | No selector, payment image or invitation when none eligible; only post-order Check Order. Live stale/duplicate commands do not create another order; delivered webhook replay and forged callbacks also simulated |
+| P1.8 Editable content | PASS architecture / partial UI test | Existing CMS journey and Payment Settings D1 templates used; no merchant/account/tariff code values changed. No shared CMS publish/restore experiment in this run; safety-unavailable sentences/generic UI labels remain bilingual code fallback |
+| P2.1–3 MCP/tester/history | PASS actual identity | list_pages first; own WhatsApp Profile → Phone matched tester, GFS Contact Info matched sender. Audited Admin resets changed only tester conversation; prior orders and exemption preserved |
+| P2.4 EN/UR full journey | PASS real lead-only; BLOCKED payment tail | Both fertilizer choices, LIST, five fields, Back/review/order/unavailable/status proven. Receipt/review/PAID portion cannot be run honestly with all beneficiaries unverified and no authorized transaction |
+| P2.5 Real evidence | PASS | Actual incoming/outgoing WAMIDs below, private verified screenshots, real Admin/D1 unpaid orders 000008/000009 |
+| P2.6 Edge cases | PASS live subset / PASS simulated subset | Live invalid contact, Back, repeat Place Order/START, disabled method, provider 500 state rollback/retry. Signed-webhook SQLite/Graph-mock tests prove sequential dedup, stale/forged callbacks, queue safety and ownership. Arbitrary concurrent/reordered callbacks not live-proven |
+| P3.1 QR preservation | PASS | All original/derivative assets reused unchanged; no repeat extraction |
+| P3.2–4 Beneficiary/payment test | BLOCKED | No authenticated bank/merchant evidence/session available. JazzCash identifier match is not proof; Easypaisa alias and Bank destination linkage unresolved. All methods disabled/owner flags false; no money or verification flags changed |
+| P3.5 Financial incident | PASS containment / BLOCKED resolution | FS-261019-000001 remains PAID/PACKING/APPROVED with transaction reference absent; Purchase FAILED/5/DISABLED, no provider ID; no replay/reversal/dispatch |
+| P3.6 Safe lead-only alternative | PASS real | Both newly created orders PENDING with null method, no receipt, no approved amount, no Purchase; explicit no-payment-request message |
+| P4 CI diagnosis | FAIL external billing; PASS diagnosis | Official GitHub check annotation for 39420605812 says account locked due to billing. No runner/steps. Actual main protection/rulesets absent; REMOTE_CI_UNAVAILABLE_NON_BLOCKING used for staging; no billing/security bypass or merge |
+| P4 Regression | PASS local | npm ci; 15 files / 131 tests, build, lint, audit 0 vulnerabilities, API/Admin Wrangler dry-runs PASS |
+| P4 Accounts/protections | PASS | gardenshop repository/branch, verified gisupp Cloudflare/Admin identity before mutations; separate canonical Meta, no Hoja, no ads/spend/production release; images/ untouched |
+
+### Real Journey / Repair Loop
+
+1. Controlled tester hello proved Graph messaging despite DECLINED name; prior refusal based only on name was corrected.
+2. English Seeds Only: actual English button, seven-row LIST, Punjab, exactly Name → Address → Nearby Place → City → Contact. Invalid contact showed no confirmation actions. Back returned Contact; quote stayed 250.
+3. Place Order reproduced returning-customer unique wa_id failure. Repair stores a separate later delivery snapshot associated with trusted normalized WhatsApp identity, preserves earlier snapshot and unique canonical wa_id, and retains owner isolation. Regression + deploy + actual retry produced FS-261020-000008 once. Numeric confirmation, no-payment notice and status matched 250.
+4. Urdu: actual Urdu and fertilizer buttons, localized seven-row LIST, five Urdu fields, Back/review. One transient META_MESSAGE_SEND_500 rolled state back to LANGUAGE; a controlled retry succeeded. Initial review leaked English catalog names; repair uses localized generic category labels with unchanged D1 amounts and localized order-state labels. Final deploy/live retest produced FS-261020-000009 once: delivery 250 + fertilizer 250 = 500.
+5. Actual Urdu Check Order, disabled-method command and START retained the same unpaid order, correct locale and explicit unavailability. Admin UI/API matched both new test orders and exposed no approval/confirmation/shipping-label controls. No receipt was uploaded or payment method enabled.
+
+### Actual WAMIDs
+
+All IDs in this table are real provider records for the authorized tester, not simulated fixtures. Status is the persisted provider receipt at verification time; full message correlation remains in private D1 `whatsapp_events` / `outbound_messages`.
+
+| Evidence | Provider ID | Status |
+|---|---|---|
+| EN province LIST | `wamid.HBgMOTIzMDM0OTAxODEwFQIAERgSMjhFNjkwQkQ2RDMyOURDMjc1AA==` | READ |
+| EN confirmation inbound | `wamid.HBgMOTIzMDM0OTAxODEwFQIAEhgWM0VCMDM1MEY5Q0NGNkI5RTY5MUNDQgA=` | RECEIVED |
+| EN order/unavailable confirmation | `wamid.HBgMOTIzMDM0OTAxODEwFQIAERgSRDhGNzYwNzZCODFCRjU5NDU4AA==` | READ |
+| EN status | `wamid.HBgMOTIzMDM0OTAxODEwFQIAERgSMEY3OEJFM0RFNzA4OTYyNTIxAA==` | DELIVERED |
+| UR province LIST | `wamid.HBgMOTIzMDM0OTAxODEwFQIAERgSQTU0REQ3MTVCRTY2MDVERENEAA==` | READ |
+| UR actual Place Order inbound | `wamid.HBgMOTIzMDM0OTAxODEwFQIAEhgWM0VCMEZBN0FERDQ2REU0MzAxOEFEQwA=` | RECEIVED |
+| UR order/unavailable confirmation | `wamid.HBgMOTIzMDM0OTAxODEwFQIAERgSOURBRDdCOUIzOUNDNTk2NTU0AA==` | READ |
+| UR localized status | `wamid.HBgMOTIzMDM0OTAxODEwFQIAERgSREM1MEVFQkU1NzY2NzNGOTNDAA==` | READ |
+
+Verified private screenshots: `D:\Temp\kilo\gfs178-en-status.png`, `D:\Temp\kilo\gfs178-ur-province.png`, `D:\Temp\kilo\gfs178-ur-status.png`. Images were read back; unrelated/history UI was hidden before capture and restored afterward. The blank first EN province image is excluded. No screenshot or real customer content committed.
+
+### Versions, Rollback, and Remaining Gates
+
+- Baseline HEAD c9cfdbc7; implementation commits 8699d67, 78b1de8, d2082e4. PR #8 remains the only target, no merge. Final report commit/CI status is recorded after push, not assumed passed.
+- Final API staging `8a045e16-17c5-4663-bc65-f8c815712ce9`; Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`. Intermediate APIs `1e3d43e5-f6fe-45b4-b959-0376e5197bc9`, `c3fa866b-2751-4eea-83ed-5ef4d0667de1`. No bindings/webhook/payment/CAPI flag changes.
+- Prior-compatible rollback command (identity check first): `npx wrangler rollback c3fa866b-2751-4eea-83ed-5ef4d0667de1 --config apps/api/wrangler.jsonc`. Syntax verified; rollback not executed. Baseline 4779d60b predates safeguards; assess risk before restoring. No D1/customer/order financial rollback.
+- New Lead events remain PENDING/0 attempts with CAPI disabled; no claim of Meta Lead conversion delivery. Existing Purchase incident remains FAILED/5/DISABLED. No receipt/rejection/approval/PAID or real-transaction evidence exists.
+- Meta next action: use a supported account/name-review path with genuine public brand relationship evidence when it becomes available; current Request Review is disabled. Do not resubmit the same name blindly or adopt an alternative without authorization.
+- Payment next action: independently map decoded wallet/bank destinations to Garden Shop using authorized merchant records, then obtain explicit transaction authorization before any fund movement. Until then methods stay disabled.
+- Technical residual: arbitrary concurrent/reordered callbacks and unattended provider-retry recovery require further evidence; generic contact validation text and English CMS typo are copy-quality limitations, not payment authorizations. No unauthorized source/customer-data mutation to hide these gaps.
+- Estimates, not measured completion: overall launch project **80% complete / 20% remaining**; P0 name recovery **35% / 65%**, P1 corrected staging journey **95% / 5%**, P2 full commerce E2E **70% / 30%** (lead-only actual **90%**, payment tail **0%**), P3 payment readiness **45% / 55%**. WhatsApp live lead-only **90%**, Admin live lead-only **90%**; paid/receipt E2E not accepted. Scope-weighted judgment, not independent verification.
+- Staging lead-only **GO**, public WhatsApp leads **NO-GO**, customer payments **NO-GO**. Browser work stayed within authorized GFS/tester/Meta context; no unrelated chat read, page closed or customer messaged. `images/` and historical financial records preserved.
+
 ## GFS-177 Province LIST and Staging Deployment Audit - 2026-10-20
 
 ### Decision
