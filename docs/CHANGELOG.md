@@ -9,6 +9,7 @@
 - Payment selectors, stale method actions, Admin enablement, and QR transmission now require matching active extraction provenance plus independent ownership evidence; the text-only path no longer bypasses recipient eligibility.
 - Pending payment outbox retries recheck current order state/amount/method, settings and message copy before sending; outdated queued text/QR actions fail closed after settings or eligibility changes.
 - Live Admin/browser/WhatsApp verification remains BLOCKED: active Chrome MCP does not expose `list_pages`; direct bridge initialization timed out. No WAMID/screenshot or deployment is claimed. Financial incident remains held.
+- Committed and pushed `dec4f1a74b8a50111b514c3a8978f4519e2fd825` to PR #8. Required CI `39395258112` failed with zero steps and no logs; no bypass, merge, or deployment.
 
 ## Unreleased - 2026-10-20 (GFS-175)
 

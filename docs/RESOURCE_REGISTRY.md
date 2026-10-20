@@ -14,6 +14,7 @@
 - Financial recheck: `FS-261019-000001` remains PAID/PACKING with review already APPROVED, missing transaction reference; Purchase CAPI event has five attempts including dead-letter failure. No mutation/replay/dispatch.
 - Existing D1 migration tracker had an empty history and showed all legacy migrations pending. Added asset schema was applied directly to staging D1; historical migrations were not replayed. Record this tracker inconsistency before future migration automation.
 - Local validation after clean `npm ci`: 14 test files / 109 tests PASS; TypeScript build, lint, 0 high-severity audit findings, and API/Admin Wrangler dry-runs PASS. PR #8 prior CI failed before steps; no bypass or deploy.
+- Pushed source commit `dec4f1a74b8a50111b514c3a8978f4519e2fd825` to PR #8. Required check run `39395258112` concluded FAILURE after 2 seconds with `steps=[]`; GitHub provided no job logs/reason. No bypass, merge or deploy; staging versions remain unchanged.
 
 ## GFS-175 QR Extraction Audit (2026-10-20)
 

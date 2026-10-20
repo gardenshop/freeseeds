@@ -12,7 +12,7 @@
 | EN/UR payment formatter | N/A | N/A | N/A | N/A | PASS local code/tests: separate suffix mapping, no code-generated amount/recipient/reference labels, template placeholders validated; live D1 copy not repaired | BLOCKED: no authenticated Admin save/publish/reload |
 | Guided customer buttons | N/A | N/A | N/A | N/A | N/A | BLOCKED individually: `LANG_EN`, `LANG_UR`, `ADD_FERTILIZER`, `SEEDS_ONLY`, each province, five fields, `PLACE_ORDER`, `BACK`, payment selection, receipt, `CHECK_ORDER`, stale/expired actions, Admin Orders; no WAMID/screenshots |
 | Incident | N/A | N/A | N/A | N/A | N/A | `FS-261019-000001` remains PAID/PACKING/APPROVED, reference missing; one Purchase event record, five attempts; fulfillment hold remains; no replay |
-| Local release gates | N/A | N/A | N/A | N/A | N/A | 109/109 tests, build, lint, 0 high-severity audit findings, API/Admin Wrangler dry-run PASS; prior PR CI failed before steps; no deployment |
+| Local release gates | N/A | N/A | N/A | N/A | N/A | 109/109 tests, build, lint, 0 high-severity audit findings, API/Admin Wrangler dry-run PASS; PR run `39395258112` failed before any step/log; no deployment |
 
 ## GFS-175 QR Extraction and Launch Evidence (2026-10-20)
 
