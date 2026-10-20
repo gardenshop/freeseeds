@@ -1,5 +1,83 @@
 # Final Report
 
+## GFS-183 Real Chrome E2E and Launch Repair - 2026-10-20
+
+### Central Acceptance
+
+**Fresh real Chrome customer journey PASS, with matching Meta/D1/Admin evidence.** This is not a substituted simulation. Own WhatsApp Profile Phone and GFS Contact Info matched the authorized tester/recipient before sending. Only the authorized chat was used. Cloudflare/Admin gisupp@gmail.com, GitHub gardenshop, canonical sender/WABA, recent tester-only traffic and protected flags were verified before staging mutations.
+
+Runtime source `79b503397af73e4836b389314407cbcd8fc2d86c` deployed at17:51:49Z as API `5151e081-98ab-45c4-a57f-3ba43c4e6983`. Real order `FS-261020-000011` / `5a1d6e64-12d9-410b-8fe1-f56b3c1eb12d` was created17:58:07.660Z with English, Seeds Only, Punjab, delivery/totalPKR250, fertilizerPKR0, stateDETAILS_COMPLETED/paymentPENDING, zero receipts and no method. Authenticated Chrome Admin reconciled the synthetic name/address/landmark/city and verified tester contact, plus WHATSAPP_SUBMITTED audit. Fresh-order count remained exactlyone after repeated PLACE_ORDER and the safe Urdu branch.
+
+### Fresh Chrome Steps
+
+Screenshot names below use private local prefix `D:/Temp/kilo/gfs183-`. Side/profile/outgoing identifiers are masked; no screenshot is committed or public. WAMID prefix `wamid.HBgMOTIzMDM0OTAxODEwFQIAERgS` is shared only by these authorized-tester responses; the full ID is prefix plus the exact suffix shown. Every response below reached **READ** in staging D1.
+
+| UTC / real action | Expected versus actual | Screenshot suffix | WAMID suffix (append to prefix) |
+|---|---|---|---|
+| 17:52:39 START | PASS bilingual welcome and language buttons | 01-welcome.png | RDU3MDI4Njc2MTlDMTQ2ODkzAA== |
+| 17:53:21 English tap | PASS English fertilizer/Seeds Only buttons | 02-english-fertilizer.png | NkNFQjFFNjNFNTUzRUZERDAwAA== |
+| 17:53:47 Seeds Only tap | PASS actual province LIST action | 03-province-list.png | MTE0ODEwREVDRDg3M0VEMUJDAA== |
+| 17:54:48 Punjab LIST submit | PASS feePKR250, name prompt | 04-name.png | MkIyRjMyOTE5NDZCRTNEQjk1AA== |
+| 17:55:21 synthetic name | PASS address prompt | 05-address.png | QjkxNzgxODEwMjQzQTExRjYwAA== |
+| 17:55:50 synthetic address | PASS landmark prompt | 06-landmark.png | NkY2ODZBNzU4MTIxQTgyRTM4AA== |
+| 17:56:12 synthetic landmark | PASS city prompt | 07-city.png | QTkyMjgwODQ5RjRCMkVDQjI5AA== |
+| 17:56:37 synthetic city | PASS contact prompt, fifth field | 08-contact.png | NDdDMTRCMDhDRTNEQjNFQzVBAA== |
+| 17:57:03 verified tester contact | PASS review totalPKR250, Place Order/Back | 09-review.png | MEIyQjBGMDY2Rjk5OTk5MTFFAA== |
+| 17:57:28 Back tap | PASS contact step reopened without order | 10-back.png | Mzk4N0I2N0EzNTgyNkUzREI3AA== |
+| 17:57:51 contact resubmission | PASS same review/total, no stale creation | 11-order-no-payment.png includes review | RTE2MzRFMTQ1Q0FDRTBGQzhEAA== |
+| 17:58:10 Place Order tap | PASS one order + no verified method notice | 11-order-no-payment.png | QTI1NjI4OThGQTc2MEY5NEQ0AA== |
+| 17:59:01 Check Order tap | PASS same order and PENDING, separate action | 12-status.png | RENENDYzQTEzRDk5OUU0NjY4AA== |
+| 17:59:32 repeated PLACE_ORDER text | PASS invalid/stale action rejected; countone | 17-stale-rejected.png | ODQ2RUZFMEE1NzA0NzdGRDJBAA== |
+| 18:00:40 reset then START | PASS fresh language welcome, history preserved | 18-urdu-welcome.png | MjMyMTA0NDNCMTZDRTE0RTA1AA== |
+| 18:00:51 Urdu tap | PASS Urdu fertilizer/Seeds Only labels | 13-urdu-fertilizer.png | NUJEMUNFNDI3RjQzQkE4NUUzAA== |
+| 18:01:16 fertilizer tap | PASS Urdu LIST with D1 delivery+fertilizer fees | 14-urdu-province.png | MEM5QzlDNzYwQTU3QzU4MDk5AA== |
+| 18:03:33 Sindh LIST submit | PASS Urdu name prompt; no order confirmed | 19-urdu-name.png | OUU0Njc0NzRDQUZGRjlDMjBCAA== |
+| 18:03:52 CHECK_ORDER | PASS same FS order/status localized Urdu | 15-urdu-status.png | RUJFODBEQUQ4Qjk2NDUyRTBGAA== |
+
+The province LIST had seven options; English Punjab described deliveryPKR250. Urdu Sindh described deliveryPKR300 plus fertilizerPKR250. The Urdu branch intentionally stopped before fields/confirmation and created no duplicate. English order's saved province/amount/language remain unchanged. Screenshot `16-admin-order.png` shows the complete masked Admin reconciliation and audit. Historical messages were hidden for evidence only; no WhatsApp history was deleted.
+
+### Requirement Comparison
+
+| Assigned requirement | Result | Evidence / limitation |
+|---|---|---|
+| Browser first/identities/no unrelated messages | PASS | list_pages first, own Profile Phone/Contact Info, clean accounts, canonical sender; separate Meta context respected |
+| Inspect traffic/bindings/jobs/flags/rollback | PASS | Tester-only last24h, no pending payment work, flags unchanged, previous Worker preserved |
+| Deploy tested current repair to staging | PASS | migration0025/API5151e081; no production/subscription mutation |
+| Worker health/signatures/rollback | PASS | health200, unsigned401, genuine callback/WAMID READ states; rollback8a045e16 ready |
+| Complete real English Chrome journey | PASS | All steps above, one new order, D1/Admin reconciliation and screenshots |
+| Same-version safe Urdu | PASS | Real localized fertilizer/LIST/name/status, no new order |
+| Eligible payment selection only | PASS fail-closed | Zero verified methods; localized English no-payment notice; Check Order separate; no Help/Support/payment bypass |
+| Admin Orders/fields/amount/state/audit | PASS REAL | UUID/order above; five fields/250/PENDING and WHATSAPP_SUBMITTED; screenshot16 |
+| Private QR drafts/EN-UR preview | PASS REAL | Three method-specific200/private,no-store PNGs render800x800; client-only editable preview restored |
+| Isolated payment-tail coverage | PASS LOCAL, not real payment | Real selection rejects, pure NON-PAYABLE formatter/mock-media, mocked private receipt storage, actual CSRF Admin rejection route on synthetic SQLite; no staged payable fixture |
+| Durable sender limit | PASS | Atomic D1 30/60s, duplicate/status exemption,429+Retry-After, window retry, multi-sender isolation and cleanup tests |
+| Live deployed limit overflow | PASS isolated storage | Synthetic31-row statement rejected by staging trigger; residual0; real19 hashed admissions. No tester flood |
+| Concurrent/duplicate/delayed/reordered | PASS LOCAL / ordinary live READ | Synthetic atomic/monotonic callback tests; live signed provider statuses READ. No forged delayed callback or historical replay |
+| Queue retries/DLQ/isolation | PASS LOCAL | DEAD_LETTER terminal, bounded retries, no historical financial/CAPI replay; real jobs preserved |
+| Clean dataset/permissions/Lead Test Event | BLOCKED | Test code available; Explorer selected Hoja Lead Integration token; token unused and no acknowledgement. CAPI OFF |
+| Privacy/Admin/signatures/eligibility | PASS scoped | Privacy/data deletion200, unsigned401, Admin Access302/identity and localCSRF; real inbound session within24h |
+| Public consent/name/release | BLOCKED | Controlled tester evidence is not public consent/spend/release authorization; display nameDECLINED |
+| Full install/tests/build/lint/audit/Wrangler | PASS | npmci,135/135 in16 files, build/lint,0 vulnerabilities, both dry-runs |
+| CI/protection policy | BLOCKED external | Baseline39467663972 billing failure; no protections bypassed |
+| Required records/push/protected state | PASS | Seven records updated; images/history/incident preserved; correct PR/branch |
+
+### Payment and CAPI Boundary
+
+- JazzCash: private draft/integrity/render PASS; decoded till match is not independent wallet ownership. Disabled/unverified; required next evidence: authenticated provider record linking decoded till to Garden Shop.
+- Easypaisa: private draft/integrity/render PASS; printed alias/D1 mismatch unresolved. Disabled/unverified; required next evidence: authenticated merchant-alias ownership and destination mapping.
+- Bank Alfalah: private draft/integrity/render PASS; decoded destination does not match configured IBAN/printed alternate. Disabled/unverified; required next evidence: authenticated bank QR-to-IBAN/Raast beneficiary mapping.
+- No new beneficiary record was accessible. No live receipt, funds, approval, PAID, Purchase, dispatch or fulfillment was attempted. FS-261019-000001 remains PACKING/PAID under protected hold, unchanged.
+- NON-PAYABLE local fixtures compose six EN/UR text/mock-image calls and privately store a synthetic receipt before Admin rejection to PAYMENT_REJECTED/REJECTED. The fixture does not mark PAID or enqueue Purchase. Mock image bytes are not QR scannability/Meta media-delivery evidence; real private draft rendering is independently checked in Chrome.
+- Dataset1210750267244729 Test Events is available. Explorer's selected Hoja app/token is outside authorized runtime boundaries and was not used/exported/submitted. Require an authorized clean Get Free Seeds app token with dataset permissions and consent, then send a new uniquely identified Lead with test code and prove deduplication/acknowledgement. Do not replay pending history. New lead_FS-261020-000011 is PENDING/0, not a Meta acknowledgement.
+
+### Versions and Decision
+
+- Runtime commit `79b503397af73e4836b389314407cbcd8fc2d86c`; isolated tests commit `d052ca3`. API `5151e081-98ab-45c4-a57f-3ba43c4e6983`; Admin unchanged `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`.
+- Immediate rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`; older `c3fa866b-2751-4eea-83ed-5ef4d0667de1` retained. Leave additive admission schema on rollback; never reverse financial/order history.
+- Progress estimate: total **90% complete /10% remaining**; P0 protected setup/reuse **100/0**; P1 fresh Chrome journey **100/0**; P2 technical/Admin/payment readiness **80/20**; P3 quality/staging/release records **95/5**. Percentages do not convert external dependencies into acceptance.
+- **Staging lead-only GO** based on real Chrome acceptance. **Public lead-only NO-GO** pending clean CAPI token/Test Events acknowledgement/deduplication, public consent/release approval and legitimate name review. **Customer payments NO-GO** pending each beneficiary proof plus independently confirmed funds/unique transaction/authorized approval.
+- Remaining actions: authorized clean dataset-token provisioning and Lead Test Event; legitimate Meta name review; explicit public release/consent authorization; provider beneficiary records per method; authorized funds/receipt review only after a method is independently verified. None is replaced by this local test pass or staging deploy.
+
 ## GFS-182 Final Launch Readiness - 2026-10-20
 
 ### Decision

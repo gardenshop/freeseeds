@@ -1,5 +1,36 @@
 # Test Matrix
 
+## GFS-183 Requirement Comparison (2026-10-20)
+
+| Prompt requirement | Result | Real evidence / scope boundary |
+|---|---|---|
+| Chrome first, own Profile Phone, GFS Contact Info | PASS | Existing tabs; both authorized numbers verified before sending; no unrelated chat activity |
+| GitHub/Cloudflare/Admin identities | PASS | gardenshop; gisupp@gmail.com; clean GFS account; correct branch/PR |
+| Active callback/bindings/flags/rollback inspection | PASS | Tester-only recent traffic, no pending payment job, flags OFF, previous Worker retained |
+| Clean install/full local gate | PASS | npm ci, 135/135, build, lint, audit 0, both Wrangler dry-runs |
+| Staging deployment/live signatures | PASS | API 5151e081 at 17:51:49Z; health200/unsigned401; 19 genuine signed callbacks and READ WAMIDs |
+| Fresh EN START/language/fertilizer | PASS REAL | Welcome, English, Seeds Only actual taps/responses; screenshots 01-02 |
+| Province LIST/D1 fee | PASS REAL | Seven options, Punjab PKR250; screenshot03 |
+| Exactly five delivery fields | PASS REAL | Synthetic name/address/landmark/city/authorized contact; screenshots04-09 and Admin16 |
+| Review/Back/Place Order | PASS REAL | Back reopens contact; re-review then one confirmed order; screenshots09-11 |
+| Payment selection and order status | PASS REAL fail-closed | No verified methods, no-payment notice, separate Check Order; screenshots11-12 |
+| Duplicate/stale action safety | PASS REAL scoped | Repeated PLACE_ORDER rejected and one new order remains; arbitrary simultaneous confirmation is local-only evidence |
+| Same-version Urdu | PASS REAL safe branch | Fertilizer, localized fees/LIST, name prompt, existing-order status; screenshots13-15, no duplicate order |
+| Per-step provider/D1/Admin evidence | PASS REAL | Nineteen READ WAMIDs; order fields/amount/state/audit and exact mapping in FINAL_REPORT |
+| Private masked screenshots | PASS | 19 local files D:/Temp/kilo/gfs183-*.png; no QR/recipient secrets or unrelated conversations in evidence |
+| Admin method-linked QR/EN/UR editable previews | PASS REAL read-only | Three private200 PNGs render800x800; editable preview restored without save |
+| Isolated NON-PAYABLE payment tail | PASS LOCAL / NOT LIVE PAYABLE | Selection rejection, six formatter/mock-image calls, private mocked R2 receipt and actual Admin rejection route on synthetic SQLite |
+| Beneficiary/real PAID/fulfillment | BLOCKED | Three methods disabled/unverified; no new beneficiary proof or authorized funds; incident held |
+| Durable sender rate limit | PASS | Atomic D1 trigger; 30/60s; duplicates/status exempt; 429+Retry-After; local concurrent/isolation/cleanup tests |
+| Deployed limit overflow | PASS isolated staging storage | 31 synthetic admissions rejected atomically, zero residual rows; not a live 31-message customer flood |
+| Duplicate/concurrent/delayed/reordered callbacks | PASS LOCAL / REAL ordinary callbacks | Signed/SQLite tests and live READ states; no forged or replayed provider callback |
+| Queue retry/DLQ isolation | PASS LOCAL / preserved live | DEAD_LETTER terminal fix; bounded retries; historical jobs unchanged/no financial replay |
+| Clean CAPI permissions/Test Event | BLOCKED | Test code available, but Explorer is Hoja app/token; no permitted token used, no acknowledgement; CAPI OFF |
+| Display name/public consent | BLOCKED release | Name DECLINED; public authorization absent; inbound tester consent/window is not public release approval |
+| Privacy/security | PASS scoped | Live privacy/data deletion200, unsigned401, Admin Access302; local CSRF/signature/privacy regressions |
+| Remote CI | BLOCKED external | Billing-locked baseline39467663972; no protections bypassed |
+| Protected records/push | PASS on completion | Seven required records updated; source commits retained; images untouched |
+
 ## GFS-182 Final Launch Readiness (2026-10-20)
 
 | Requirement | Result | Evidence / blocker |

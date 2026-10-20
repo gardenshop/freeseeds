@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased - 2026-10-20 (GFS-183)
+
+- Deployed GFS-182 monotonic callbacks plus durable D1 per-sender admission (30 distinct IDs/60s, duplicates/statuses exempt, atomic retryable429, hashed keys and traffic-triggered cleanup).
+- Fixed DEAD_LETTER terminal classification and preserved valid SENT failure handling without regressing DELIVERED/READ.
+- Completed a fresh real Chrome English journey to FS-261020-000011 (Punjab/PKR250/unpaid), matching Admin/D1/audit, nineteen READ WAMIDs and nineteen masked local screenshots. Safe same-version Urdu branch created no second order.
+- Added signed throttling/window-retry and NON-PAYABLE local formatter/private-receipt/Admin-rejection coverage. No actual funds, receipt, PAID/Purchase or fulfillment mutation.
+- Verified private800x800 method-specific drafts and EN/UR editable previews; methods remain disabled. CAPI Test Event blocked by Explorer's Hoja app/token boundary; no token use or request. Payment ownership/name/public-release gates remain.
+- Clean-install full gate135/135, build/lint/audit0 and Wrangler dry-runs PASS. API5151e081 deployed; Admin unchanged; immediate rollback8a045e16 retained.
+
 ## Unreleased - 2026-10-20 (GFS-182)
 
 - Repaired outbound WhatsApp delivery status ordering so delayed/reordered callbacks cannot regress `READ`; added synthetic concurrent/duplicate/delayed/reordered SQLite coverage.

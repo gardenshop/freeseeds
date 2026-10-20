@@ -1,5 +1,17 @@
 # Resource Registry
 
+## GFS-183 Deployed Real Chrome Evidence (2026-10-20)
+
+- Baseline `0413a20`; runtime source `79b503397af73e4836b389314407cbcd8fc2d86c`; isolated test coverage `d052ca3`; branch `codex/gfs-launch-next-001`, PR8. Preserved `images/` untouched.
+- API deployed `5151e081-98ab-45c4-a57f-3ba43c4e6983` at17:51:49Z; author gisupp@gmail.com; unchanged clean GFS D1/R2/Queue bindings. Admin remains `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`. Immediate API rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`; older `c3fa866b` retained. No rollback executed.
+- Additive staging schema `0025_whatsapp_sender_rate_limit.sql`: hashed admission table/index/atomic trigger. No raw sender, payload or real delivery data in the new table. Real admission count19/hash length64; isolated overflow probe rejected31 and left0 rows.
+- Fresh real order `FS-261020-000011`, UUID `5a1d6e64-12d9-410b-8fe1-f56b3c1eb12d`, created17:58:07.660Z. English/Seeds Only/Punjab; total250/delivery250/fertilizer0; DETAILS_COMPLETED/PENDING; no method, receipt, transaction, approval or fulfillment. Admin WHATSAPP_SUBMITTED audit and all five synthetic fields reconcile. One new order remains after repeated confirmation and Urdu status.
+- Nineteen outbound WAMIDs created17:52:39Z-18:03:52Z all READ. Exact per-step IDs and expected/actual results in FINAL_REPORT. Nineteen masked private screenshots `D:/Temp/kilo/gfs183-01-welcome.png` through `gfs183-19-urdu-name.png`; files are local only, not Git/R2/public assets.
+- Authenticated private drafts: JazzCash299742 bytes, Easypaisa82555 bytes, Bank Transfer22963 bytes; each PNG renders800x800, cache private,no-store. All disabled, owner flagsfalse. No QR re-extraction or beneficiary field change.
+- Clean dataset1210750267244729 exposes Test Events; no authorized clean token. Explorer selected Hoja Lead Integration; its existing token was not used/exported/submitted. No event acknowledgement; CAPI false and new lead event PENDING/0.
+- Local tests135/135 plus npmci/build/lint/audit0/API+Admin dry-runs. Live health/privacy/data deletion200, unsigned callback401, unauthenticated Admin302 to Access. Baseline CI39467663972 billing failure; protected policy unchanged.
+- Historical Purchase DLQs2 and payment failures remain unchanged; held incident FS-261019-000001 unchanged. No Purchase replay, payment, approval, PAID, dispatch or production release.
+
 ## GFS-182 Final Launch Readiness (2026-10-20)
 
 - Fetched baseline `72fd50e356bf39467e821cd73afcd0406b955029`; GFS-182 source commit is `b4e3f861a63afef3cdd1553a332e693072e18f39` (monotonic webhook status guard and synthetic regression test). PR #8 remains open on `codex/gfs-launch-next-001`; `images/` is preserved and untracked.

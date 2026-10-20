@@ -1,5 +1,16 @@
 # Get Free Seeds Binding Rules
 
+## GFS-183 Real Chrome Acceptance and Durable Admission (2026-10-20)
+
+- Staging API `5151e081-98ab-45c4-a57f-3ba43c4e6983` includes runtime source `79b5033`, the GFS-182 monotonic callback repair, durable sender admission, and terminal DLQ isolation. Immediate API rollback is `8a045e16-17c5-4663-bc65-f8c815712ce9`; preserve the additive admission table on rollback and never reverse orders/payments.
+- Verify the tester through WhatsApp's own Profile Phone and the recipient through Contact Info before sending. GFS-183 did both, then used only synthetic delivery fields and the existing tester exemption. Any reset must use the authenticated CSRF-protected Admin test-control action and preserve history.
+- Signed canonical WhatsApp callbacks admit at most 30 distinct inbound IDs per sender in a rolling 60-second D1 window. D1 trigger/batch admission is atomic, duplicate IDs consume no extra quota, status-only callbacks are exempt, and excess callbacks receive `429` plus `Retry-After: 60` before event/conversation mutation. Never add a tester exemption to the limiter or drop excess messages with a successful acknowledgement. Ordinary guided replies and accessible text commands remain supported.
+- Admission stores only SHA-256 sender/event keys, not message bodies or phone strings; entries older than 24 hours are removed on subsequent inbound admission. This is traffic-triggered cleanup, not a guaranteed scheduled deletion SLA. Provider/event/order deduplication remains independently required.
+- `DEAD_LETTER` is terminal alongside SENT/SUCCEEDED/PERMANENT_FAILURE. Never replay historical financial/CAPI failures. A failure callback can update SENT, but cannot regress DELIVERED/READ.
+- Fresh real acceptance is `FS-261020-000011`, English Seeds Only/Punjab/PKR 250, DETAILS_COMPLETED/PENDING, zero receipts/method. The safe same-version Urdu branch stops before creating another order. A real no-method notice and separate Check Order are PASS, not a payment acceptance result.
+- A dataset test-event code does not authorize a token. GFS-183 Graph Explorer was selected to Hoja Lead Integration with a pre-existing token; it was not used, copied, or submitted. Require an authorized clean-app/dataset token before sending any Lead Test Event. Keep CAPI OFF and never connect Hoja runtime assets.
+- NON-PAYABLE formatter/mock-media/private-receipt/Admin-rejection tests are isolated local fixtures only. They must never enable staged customer methods, be labeled real QR delivery, receive PAID, emit Purchase, or be substituted for the real Chrome lead journey.
+
 ## GFS-182 Final Launch Readiness (2026-10-20)
 
 - Webhook status callbacks are monotonic: `SENT <= DELIVERED <= READ`; duplicate provider event IDs remain ignored and delayed/reordered callbacks must never regress a successful outbound status. This is local/synthetic evidence until an authorized live callback is available.

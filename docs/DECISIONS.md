@@ -1,5 +1,17 @@
 # Decisions
 
+## 2026-10-20: GFS-183 Real Staging Acceptance and Rate-Limit Boundary
+
+The active callback safety preconditions were re-established, not waived: own WhatsApp Profile Phone, GFS Contact Info, GitHub/Cloudflare/Admin identity, recent tester-only traffic, bindings, unchanged payment/CAPI flags, jobs, quality gates, and rollback. Applied additive migration 0025 and deployed API `5151e081-98ab-45c4-a57f-3ba43c4e6983` from runtime commit `79b5033`; the previous `8a045e16` remains the immediate rollback. No Meta subscription, production, Admin Worker, payment or history promotion.
+
+Durable D1 admission was selected instead of an in-memory limiter: 30 distinct inbound IDs per sender/rolling60 seconds; atomic batch trigger, duplicates free, statuses exempt, SHA-256 keys, retryable429 before mutation and 24-hour traffic-triggered cleanup. No tester exception, silent drop, CAPTCHA or inaccessible new step. The remote31-row synthetic overflow proved atomic rejection without residual data. Full guided real traffic remains usable. DEAD_LETTER is now terminal and failure callbacks cannot downgrade delivered/read records.
+
+Central real acceptance is fresh English order FS-261020-000011 with one confirmation, D1/Admin five-field reconciliation, PKR250 total, nineteen new READ WAMIDs, and masked screenshots. The safe Urdu branch reuses the existing order for status and creates none. No verified method exists, so the no-payment notice plus separate status function is the correct outcome, not a failed test to bypass.
+
+Payment-tail fixtures remain local and explicitly NON-PAYABLE: pure formatter/mock-media/storage plus the actual Admin rejection route against synthetic SQLite. They neither prove real QR transport/payment nor create PAID/Purchase. The production-equivalent staged three drafts remain disabled and private.
+
+The clean dataset exposes a test code, but Graph Explorer's selected app/token belongs to Hoja Lead Integration. Using that token would violate isolation. No request was submitted; the external dependency is an authorized clean-app token with dataset permission/consent. CAPI remains OFF and the new Lead row PENDING/0. Name/public consent/release authorization remain independent NO-GO gates.
+
 ## 2026-10-20: GFS-182 Final Lead Readiness Boundary
 
 The only source repair in GFS-182 is monotonic WhatsApp delivery status handling. `SENT`, `DELIVERED`, and `READ` are ordered; duplicate provider IDs remain idempotent; delayed or reordered callbacks cannot downgrade a successful outbound record. Focused and full local tests prove this with synthetic SQLite/D1 behavior. No live callback, message, order, or payment record was replayed.
