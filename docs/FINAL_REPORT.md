@@ -50,7 +50,7 @@
 - Real live WAMIDs and private screenshots remain the GFS-178/GFS-181 evidence set in this report; GFS-182 created no new customer message or WAMID. Existing exact IDs and screenshot paths remain recorded below.
 - Meta Ads/Forms and Events Manager were read-only. The visible Hoja dataset was not opened, connected, or used. No ad, spend, brand, WABA, number, or public promotion mutation occurred.
 - Source baseline: `72fd50e`; GFS-182 source repair commit `b4e3f861a63afef3cdd1553a332e693072e18f39`. Staging API `8a045e16-17c5-4663-bc65-f8c815712ce9`; Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`; rollback `c3fa866b-2751-4eea-83ed-5ef4d0667de1`. No Worker deployment.
-- GitHub verify `39465975146` failed before steps with no runner, consistent with billing lock and the non-blocking policy. No protection bypass.
+- GitHub verifies `39465975146` and post-push `39467542844` failed before steps with no runner, consistent with billing lock and the non-blocking policy. No protection bypass.
 - Progress estimate, not acceptance: overall **85% complete / 15% remaining**; P0 **100/0**; P1 **72/28**; P2 **60/40**; P3 **90/10**.
 - Next actions: configure and verify an authorized rate limiter; obtain public consent/release approval; connect the clean dataset with authorized token permissions; send Meta Test Events and record acknowledgements; re-establish current tester/deployment preconditions before deploying the callback repair; obtain independent payment beneficiary evidence before enabling any method.
 

@@ -22,7 +22,7 @@
 | Payment methods | BLOCKED safely | All three private QR drafts remain disabled/unverified; no new beneficiary proof |
 | Incident hold | PASS containment | `FS-261019-000001` preserved; no replay, receipt, approval, PAID, dispatch, or tracking mutation |
 | Local quality | PASS | Full `132/132`, build, lint, audit 0 vulnerabilities, API/Admin dry-runs |
-| Remote CI | BLOCKED external | Run `39465975146` failed before steps with no runner; billing policy followed |
+| Remote CI | BLOCKED external | Runs `39465975146` and post-push `39467542844` failed before steps with no runner; billing policy followed |
 | Worker deployment | NOT PERFORMED | Active callback deployment preconditions were not re-established; versions/rollback unchanged |
 | Release | SPLIT | Controlled staging readiness GO; public leads and payments NO-GO |
 
