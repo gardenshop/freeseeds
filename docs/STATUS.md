@@ -1,5 +1,18 @@
 # Status
 
+## GFS-177 Active Staging, Province LIST, and Launch Gate (2026-10-20)
+
+- Identity/repository: GitHub `gardenshop`, Cloudflare `gisupp@gmail.com` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, and Admin Access `gisupp@gmail.com` verified. PR #8 remains open on `codex/gfs-launch-next-001`; ruleset/branch-protection queries show no main protection or repo rulesets. `REMOTE_CI_UNAVAILABLE_NON_BLOCKING` applies when local gates pass.
+- Admin staging Worker deployed after local gates: `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`. After page reload, all three method previews match saved EN/UR D1 fields, English is Urdu-free, QR preview is method-specific, and each remains disabled/owner-unverified.
+- Province selector repair is local/uncommitted: the API now builds WhatsApp LIST rows from enabled D1 province/fee rows, with localized `Delivery Fee: Rs. …` / `ڈلیوری فیس: … روپے`, title/description limits, and 10-row guard. Staging D1 has 7 enabled rates and both localized CMS list buttons. The currently deployed API has not yet been updated or live-tested.
+- Meta validation: authenticated canonical Business/WABA context matches the rules; the sender phone row is Connected/High quality, but its `Get Free Seeds` display name is **Rejected**. Meta DevTools shows the WABA `messages` webhook subscribed to `getfreeseeds-api-staging`. Therefore an API deployment could affect real inbound traffic; no API deploy or customer send was made. No display-name edit/review was submitted.
+- E2E/tester: Admin Test Controls contains an authorized tester record and an existing pending order; it was left unchanged. WhatsApp Web search found no existing chat for the tester and the signed-in account number could not be matched. No message, new order, receipt, WAMID, or screenshot. One new authorized WABA Manager tab was opened read-only; unrelated tabs stayed untouched. One contact-info panel had been transiently opened/restored earlier.
+- Payment safety: all three methods remain disabled and QR-owner flags false. QR source/derivative evidence from GFS-176 remains unchanged. D1 guards 0022-0024 remain installed. No transaction was sent.
+- Incident/CAPI: `FS-261019-000001` remains PAID/PACKING/APPROVED with transaction reference missing. Purchase CAPI is FAILED/5 attempts/error class DISABLED/no provider response ID; Lead is PENDING/0 attempts because `META_CAPI_ENABLED=false`. No replay, approval, reversal, tracking, label, or dispatch.
+- Current staged API Worker remains `4779d60b-6f93-41d4-b1e3-1c37bdfcf599`; Admin is `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`. No production deployment or Meta mutation.
+- Local gates after clean `npm ci`: 14 files / 114 tests PASS, build/lint PASS, audit 0 vulnerabilities, API/Admin Wrangler dry-runs PASS. Source changes are pending commit/push. Remote CI remains unavailable (runner ID 0, zero steps); billing details require `admin:org`.
+- Decisions: Admin staging testing **GO**; controlled staging API deployment **NO-GO** until the rejected display name/active callback/tester isolation is resolved; public WhatsApp lead launch **NO-GO**; accepting payments **NO-GO**.
+
 ## GFS-176 Continued Execution (2026-10-20)
 
 - Chrome MCP was restored through the installed bridge and `list_pages` succeeded before page inspection. Ten existing tabs were listed; Admin `/payment-settings`, `/whatsapp-content`, `/orders`, and the existing WhatsApp Web page were read without opening/navigating/closing tabs. One unrelated contact-details panel was briefly opened while locating a profile control, then closed; no message or contact data changed.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FlowSubmission, MetaWhatsAppProvider, MockWhatsAppProvider, canTransition, createLeadEvent, createPurchaseEvent, eventId, formatPaymentMessage, hasCompleteEnabledPaymentMethod, normalizeContactNumber, parseProductInput, parseProvinceDeliveryRateInput, paymentInstructions, requirePaymentAmount, resolveWhatsAppRecipients, validatePaymentAmount, validatePositiveInteger, validateReceipt } from "@gfs/core";
+import { FlowSubmission, MetaWhatsAppProvider, MockWhatsAppProvider, canTransition, createLeadEvent, createPurchaseEvent, eventId, formatPaymentMessage, hasCompleteEnabledPaymentMethod, normalizeContactNumber, parseProductInput, parseProvinceDeliveryRateInput, paymentInstructions, provinceDeliveryListRows, requirePaymentAmount, resolveWhatsAppRecipients, validatePaymentAmount, validatePositiveInteger, validateReceipt } from "@gfs/core";
 
 describe("Get Free Seeds domain", () => {
   it("requires exactly five Flow fields", () => {
@@ -59,6 +59,17 @@ describe("Get Free Seeds domain", () => {
     expect(() => parseProductInput({ code: "SYNTHETIC_NEGATIVE", name: "Synthetic product", category: "Synthetic", pricePkr: -1, fertilizerPricePkr: null, active: false })).toThrow("PRODUCT_PRICE_INVALID");
     expect(() => parseProvinceDeliveryRateInput({ province: "Synthetic Province", deliveryFeePkr: -1, active: false })).toThrow("DELIVERY_RATE_INVALID");
   });
+  it("builds bounded, localized Meta province LIST rows from D1 rates", () => {
+    const rates = ["Synthetic A", "Synthetic B", "Synthetic C", "Synthetic D", "Synthetic E", "Synthetic F", "Synthetic G"].map((province, index) => ({ province, delivery_fee_pkr: 250 + index * 10 }));
+    const english = provinceDeliveryListRows(rates, "en");
+    const urdu = provinceDeliveryListRows(rates, "ur");
+    expect(english).toHaveLength(7);
+    expect(english[0]).toEqual({ id: "PROVINCE_SYNTHETIC_A", title: "Synthetic A", description: "Delivery Fee: Rs. 250" });
+    expect(urdu[0]).toEqual({ id: "PROVINCE_SYNTHETIC_A", title: "Synthetic A", description: "ڈلیوری فیس: 250 روپے" });
+    expect([...english, ...urdu].every((row) => row.title.length <= 24 && row.description.length <= 72)).toBe(true);
+    expect(() => provinceDeliveryListRows(Array.from({ length: 11 }, (_, index) => ({ province: `Province ${index}`, delivery_fee_pkr: 1 })), "en")).toThrow("PROVINCE_LIST_ROW_LIMIT_EXCEEDED");
+    expect(() => provinceDeliveryListRows([{ province: "A province name exceeding twenty-four characters", delivery_fee_pkr: 1 }], "en")).toThrow("PROVINCE_LIST_TITLE_INVALID");
+  });
   it("validates receipt media", () => { expect(() => validateReceipt("image/png", 10)).not.toThrow(); expect(() => validateReceipt("text/html", 10)).toThrow(); });
   it("uses a provider boundary with a mock", async () => { const provider = new MockWhatsAppProvider(); await provider.sendText("synthetic", "Payment received for verification"); expect(provider.sent[0]?.kind).toBe("text"); });
    it("keeps stable action IDs inside the provider boundary", async () => { const provider = new MockWhatsAppProvider(); await provider.sendInteractive("synthetic", "Choose", [{ id: "CONTINUE", title: "Continue" }], { body: new Uint8Array([255, 216, 255, 224]).buffer, mimeType: "image/jpeg" }); expect(provider.sent[0]?.kind).toBe("interactive-image"); });
@@ -73,6 +84,23 @@ describe("Get Free Seeds domain", () => {
       const provider = new MetaWhatsAppProvider({ enabled: true, graphVersion: "v26.0", phoneNumberId: "synthetic-phone", accessToken: "synthetic-token" });
       await provider.sendFlow("synthetic-recipient", "synthetic-flow", "synthetic-flow-token");
       expect(payload).toMatchObject({ type: "interactive", interactive: { type: "flow", action: { name: "flow", parameters: { flow_id: "synthetic-flow", flow_token: "synthetic-flow-token", flow_message_version: "3", flow_cta: "Get Free Seeds", mode: "published" } } } });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("sends province rows as a Meta LIST with localized descriptions", async () => {
+    const originalFetch = globalThis.fetch;
+    let payload: Record<string, unknown> | undefined;
+    globalThis.fetch = async (_input, init) => {
+      payload = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      return new Response(JSON.stringify({ messages: [{ id: "synthetic-list-message" }] }), { status: 200 });
+    };
+    try {
+      const provider = new MetaWhatsAppProvider({ enabled: true, graphVersion: "v26.0", phoneNumberId: "synthetic-phone", accessToken: "synthetic-token" });
+      const rows = provinceDeliveryListRows([{ province: "Synthetic Province", delivery_fee_pkr: 275 }], "ur");
+      await provider.sendList("synthetic-recipient", "صوبہ منتخب کریں", "اختیار منتخب کریں", rows);
+      expect(payload).toMatchObject({ type: "interactive", interactive: { type: "list", action: { button: "اختیار منتخب کریں", sections: [{ title: "اختیار منتخب کریں", rows: [{ id: "PROVINCE_SYNTHETIC_PROVINCE", title: "Synthetic Province", description: "ڈلیوری فیس: 275 روپے" }] }] } } });
     } finally {
       globalThis.fetch = originalFetch;
     }

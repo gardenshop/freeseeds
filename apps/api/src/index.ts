@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { applyFertilizerDecision, createWhatsAppProvider, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, MetaCapiProvider, MetaFlowEnvelope, normalizePaymentMethodRow, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInstantFormSubmission, persistWebhookRecords, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey } from "@gfs/core";
+import { applyFertilizerDecision, createWhatsAppProvider, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, MetaCapiProvider, MetaFlowEnvelope, normalizePaymentMethodRow, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey } from "@gfs/core";
 import { handleMetaFlowPayload } from "./flow-endpoint";
 
 type Env = {
@@ -326,6 +326,18 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   ]);
   const sessionFlowToken = checkoutMode !== "guided" && state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR") && flowTokenSecret ? await createFlowToken(event.from, event.id, flowTokenSecret) : undefined;
   const enabledProvinces = (await db.prepare("SELECT province,delivery_fee_pkr FROM province_delivery_rates WHERE enabled=1 ORDER BY province").all<{ province: string; delivery_fee_pkr: number }>()).results ?? [];
+  let provinceRows: Array<{ id: string; title: string; description: string }> = [];
+  if (nextState === "PROVINCE") {
+    try {
+      provinceRows = provinceDeliveryListRows(enabledProvinces, data.language ?? "en");
+    } catch {
+      provinceRows = [];
+    }
+    if (!provinceRows.length || !province.listButtonLabel?.trim()) {
+      nextState = state;
+      reply = (await sessionContent("VALIDATION", "Province delivery options are temporarily unavailable. Please try again later.")).text;
+    }
+  }
   if (nextState === "PAYMENT_METHOD") {
     completePaymentMethods = await completeEnabledPaymentMethods(db, data.language ?? "en");
     if (!completePaymentMethods.length) {
@@ -334,7 +346,22 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
     }
   }
   const paymentOptions = completePaymentMethods.map((method) => ({ id: paymentActionId(method.method), title: paymentActionTitle(payment, method) }));
-  const options: ConversationReplyOptions = (state === "LANGUAGE" || (state === "NEW" && Boolean(text)) || normalized === "CANCEL") && !(state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) ? { buttons: [{ id: "LANG_UR", title: whatsAppActionLabel(welcomeUr, "LANG_UR") }, { id: "LANG_EN", title: whatsAppActionLabel(welcomeEn, "LANG_EN") }] } : sessionFlowToken ? { flow: { id: flowId, token: sessionFlowToken } } : (state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) || state === "NEW" && normalized === "GET_FREE_PACKS" ? { buttons: [{ id: "ADD_FERTILIZER", title: whatsAppActionLabel(fertilizer, "ADD_FERTILIZER") }, { id: "SEEDS_ONLY", title: whatsAppActionLabel(fertilizer, "SEEDS_ONLY") }] } : state === "FERTILIZER" && /^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/i.test(normalized) ? { list: { buttonText: province.listButtonLabel!, rows: enabledProvinces.slice(0, 10).map((row) => ({ id: `PROVINCE_${row.province.toUpperCase().replace(/ /g, "_")}`, title: row.province, description: `PKR ${row.delivery_fee_pkr}` })) } } : state === "CONTACT" ? { buttons: [{ id: "PLACE_ORDER", title: whatsAppActionLabel(review, "PLACE_ORDER") }, { id: "BACK", title: whatsAppActionLabel(review, "BACK") }] } : nextState === "PAYMENT_METHOD" && paymentOptions.length ? { buttons: paymentOptions } : state === "PAYMENT_PENDING" ? { buttons: [{ id: "CHECK_ORDER", title: whatsAppActionLabel(status, "CHECK_ORDER") }] } : {};
+  let options: ConversationReplyOptions = {};
+  if ((state === "LANGUAGE" || (state === "NEW" && Boolean(text)) || normalized === "CANCEL") && !(state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR"))) {
+    options = { buttons: [{ id: "LANG_UR", title: whatsAppActionLabel(welcomeUr, "LANG_UR") }, { id: "LANG_EN", title: whatsAppActionLabel(welcomeEn, "LANG_EN") }] };
+  } else if (sessionFlowToken) {
+    options = { flow: { id: flowId, token: sessionFlowToken } };
+  } else if ((state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) || (state === "NEW" && normalized === "GET_FREE_PACKS")) {
+    options = { buttons: [{ id: "ADD_FERTILIZER", title: whatsAppActionLabel(fertilizer, "ADD_FERTILIZER") }, { id: "SEEDS_ONLY", title: whatsAppActionLabel(fertilizer, "SEEDS_ONLY") }] };
+  } else if ((state === "FERTILIZER" || state === "PRODUCT") && /^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/i.test(normalized) && nextState === "PROVINCE" && provinceRows.length) {
+    options = { list: { buttonText: province.listButtonLabel!, rows: provinceRows } };
+  } else if (state === "CONTACT") {
+    options = { buttons: [{ id: "PLACE_ORDER", title: whatsAppActionLabel(review, "PLACE_ORDER") }, { id: "BACK", title: whatsAppActionLabel(review, "BACK") }] };
+  } else if (nextState === "PAYMENT_METHOD" && paymentOptions.length) {
+    options = { buttons: paymentOptions };
+  } else if (state === "PAYMENT_PENDING") {
+    options = { buttons: [{ id: "CHECK_ORDER", title: whatsAppActionLabel(status, "CHECK_ORDER") }] };
+  }
   const mediaKey = guidedReplyMediaKey(normalized, state, nextState);
   if (mediaKey) options.image = await contentImageFor(db, bucket, mediaKey, `CHAT:${event.from}`);
   const now = new Date().toISOString();

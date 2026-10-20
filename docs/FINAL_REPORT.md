@@ -1,5 +1,38 @@
 # Final Report
 
+## GFS-177 Province LIST and Staging Deployment Audit - 2026-10-20
+
+### Decision
+
+**Admin staging GO; staging API/live WhatsApp NO-GO; public lead launch NO-GO; accepting payments NO-GO.** The Admin Worker is deployed and EN/UR payment previews pass. The API province LIST fix is locally tested but not deployed because its WABA `messages` callback is active and the sender display name is Rejected. No authorized WhatsApp Web tester session was found.
+
+### Requirement Matrix
+
+| Requirement | Status | Evidence / blocker |
+|---|---|---|
+| Current rules / account isolation | PASS | GitHub `gardenshop`, Cloudflare account, and Admin Access verified; no Hoja runtime or asset mutation |
+| Chrome MCP | PASS | `list_pages` used before interactions; existing pages preserved; only authorized WABA/App read-only tabs opened |
+| Admin payment settings | PASS staging | Worker `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`; after fresh reload, all three EN/UR D1 headings/instructions/reference/receipt fields match actual preview; English contains no Urdu |
+| QR assets | PASS integrity / BLOCKED beneficiary | GFS-176 originals/derivatives and dual-decoder hashes retained; all methods remain disabled because independent ownership evidence is incomplete |
+| Province selector | PASS local / BLOCKED live | Seven enabled D1 rows, localized CMS list labels; new code builds Meta LIST rows with D1 titles/fees, 24/72-character and 10-row limits; API is not deployed |
+| PAYMENT button cleanup | PASS local / BLOCKED live | Local runtime filters Help/Support/Check Order from PAYMENT; methods disabled; no customer selector interaction |
+| Bilingual journey | BLOCKED live | Admin test record exists with a prior pending order, but no matching WhatsApp Web chat/account. No inbound/outbound test, WAMID, receipt, or screenshot |
+| Meta sender | BLOCKED for sending | Canonical Business/WABA context and sender row verified; phone is Connected/High quality, but display name `Get Free Seeds` is Rejected. WABA messages webhook targets staging API |
+| Incident/CAPI | BLOCKED resolution | `FS-261019-000001` unchanged PAID/PACKING/APPROVED/reference missing; Purchase CAPI FAILED/5 attempts/DISABLED/no provider id; Lead PENDING/0; no replay/dispatch |
+| CI / release | PARTIAL | Local gates pass; remote verify runs fail with no runner/steps. Admin staging deployed under current nonblocking-CI rule; API/production not deployed |
+
+### Local Validation and State
+
+- After `npm ci`: 14 files / 114 tests **PASS**, TypeScript build **PASS**, lint **PASS**, audit **PASS** with 0 high-severity findings, API/Admin Wrangler dry-runs **PASS**.
+- Cloudflare identity verified as `gisupp@gmail.com` / `cb5066a6d71ecdee0bd7ed8aacb4d3c2` before staging mutations. Meta display-name/webhook settings were not changed. GitHub `gardenshop` verified.
+- Admin Test Controls shows an existing authorized tester record and pending order; it was not reset or modified. Exact test number had no matching conversation in the current WhatsApp Web session, and the signed-in account number could not be verified. No live customer or tester message was sent.
+- The WABA `messages` webhook is subscribed to `getfreeseeds-api-staging`; staging API configuration is Meta-enabled. Deploying the new API build could affect real inbound users, so it remains withheld until tester/session and display-name issues are resolved.
+- Current Workers: Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`; API `4779d60b-6f93-41d4-b1e3-1c37bdfcf599`. Admin alone was deployed. No production change.
+- Git source changes to the province LIST are local/uncommitted at this report point; PR #8 remains open. Untracked `images/` is untouched.
+- Final scope estimate: overall **65% complete / 35% remaining**; P0 lead journey **55%**, P1 payment readiness **60%**, P2 improvements **0%**. WhatsApp live **0%**, Admin live **75%** (payment previews pass; CMS publish and order/customer E2E not proven). These estimates are not acceptance evidence.
+- Browser tab inventory: 14 pages after opening one authorized WABA Manager and one App Webhooks read-only tab. No unrelated page navigated or closed; one unrelated WhatsApp contact-info pane had previously been opened/restored. No message/contact data changed.
+- Final decision: **NO-GO** for public lead launch and accepting payments until a verified tester interaction/WAMIDs/screenshots, safe Meta display-name/account authority, and live API province/payment journey are proven.
+
 ## GFS-176 Continued Execution - 2026-10-20
 
 ### Outcome

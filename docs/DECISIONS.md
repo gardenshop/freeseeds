@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-20: GFS-177 Admin Deploy / API Inbound Hold
+
+Admin staging is deployed and all saved EN/UR payment previews pass after reload. The local API LIST selector uses enabled D1 rates and localized text, but the API is not deployed because Meta `messages` webhook is actively subscribed to the staging API, the sender display name is Rejected, and no authorized WhatsApp Web tester session is available. Deployment could change real inbound behavior.
+
+The phone is Connected/High quality in the authorized WABA, but no Meta display-name or webhook changes were made. The existing tester/order remains read-only. Payment methods stay disabled until independent beneficiary verification; the Purchase CAPI remains disabled/unreplayed. Rules permit local gates for Admin staging despite remote CI failure, but this does not authorize an API deploy or public release.
+
 ## 2026-10-20: GFS-176 QR/Locale Release Gate
 
 The user attested that all three codes belong to Garden Shop. This is stored separately as `USER_ASSERTION_GFS-176`; it is not independent evidence. All independent ownership flags remain false. QR pixels were extracted without regeneration; jsQR and ZBar independently decoded source and derivative to identical payloads. The current JazzCash QR identifier matches D1. Easypaisa's encoded identifier is an alternate to D1 and matches the printed candidate alias; Bank's encoded payload matches neither D1 IBAN nor printed alternate. Neither alternate is declared legitimate or fraudulent without bank/wallet evidence.
