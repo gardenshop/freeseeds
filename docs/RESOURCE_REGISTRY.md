@@ -1,5 +1,15 @@
 # Resource Registry
 
+## GFS-185 Meta/Payment State (2026-10-20)
+
+- Branch start `3060e9c`; no source/Worker changes. API `5151e081-98ab-45c4-a57f-3ba43c4e6983`, Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`, rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`.
+- Meta clean business `568026370701542`; Free Seeds dataset `1210750267244729`, owner Garden Shop, business-connected, Web-only, no activity174 days. After exact removal and fresh reload, website allowlist contains only `gardenshopfreeseeds.netlify.app`; `hojaseeds.pk` and `hojaseeds.pages.dev` are absent. Pixel detail expansion, first-party cookies and automatic advanced matching are On; consent scope is not established.
+- GFS token secret exists in Cloudflare by name only. Sanitized Admin graph permissions are WhatsApp management/messaging/public profile; not dataset/Marketing API. `META_CAPI_ENABLED=false`, dataset ID unset, Purchase off. The separate Graph Explorer token exposure is documented below; no value was copied into repo records or used for an API request. No CAPI event was sent. Dataset Quality API token generation was declined because Meta states existing tokens also gain permission.
+- WhatsApp Manager account remained correct GFS phone, High quality; name remains declined. Ads account showed nine campaigns Off. No campaign/CTA live preview available and nothing published/spent.
+- Token handling incident: Hoja Graph Explorer token appeared in snapshot; Explorer closed, Hoja Business Integration now Removed, no API submission. Bearer invalidation is not independently confirmed without prohibited token use; account owner must confirm/revoke through Meta security controls. Meta Business Integrations also reports Wix Marketing Tools, Daraz Seller Center, WooCommerce by Meta, Zapier as Removed. Removed UI has no Restore control. Provider-owner reauthorization required for those four; do not restore Hoja.
+- Latest CI `39478074597` has zero steps/no retrievable job log; prior run `39477757383` contains explicit account billing lock. No CI protection bypass.
+- Provider evidence remains unavailable; payment methods disabled; financial incident/order history protected. GFS-183 real Chrome report remains source for order/WAMIDs/screenshots.
+
 ## GFS-184 Payment Journey State (2026-10-20)
 
 - Start `492e1a49676930b5d24a571cb2b23f1fd48f2c54`; no source/Worker changes in GFS-184. Current runtime API `5151e081-98ab-45c4-a57f-3ba43c4e6983`, Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`, rollback `8a045e16-17c5-4663-bc65-f8c815712ce9` unchanged.

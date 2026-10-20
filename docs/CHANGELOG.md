@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased - 2026-10-20 (GFS-185)
+
+- Removed `hojaseeds.pk` and `hojaseeds.pages.dev` from the clean Free Seeds dataset website allowlist; Garden Shop domain is the only remaining website source.
+- Verified clean dataset business ownership/connectivity but no recent activity or least-privilege CAPI token. Declined Dataset Quality token generation because Meta warns it broadens prior tokens. CAPI/Purchase remain OFF; no event sent.
+- Recorded display-name rejection, all campaigns off, and unavailable independent payee evidence. No name retry, ad publish/spend, payment enablement or transfer.
+- Contained an exposed Hoja Graph Explorer token by closing Explorer and removing its Business Integration. Four unrelated integrations also became Removed in the same UI sequence; Meta offers no Restore UI. Provider-owner reauthorization is required; this incident is documented without token data.
+
 ## Unreleased - 2026-10-20 (GFS-184)
 
 - Compared historical payment hardening and current selector/receipt flow; no unsafe legacy eligibility or unrelated help/status selector controls were restored.

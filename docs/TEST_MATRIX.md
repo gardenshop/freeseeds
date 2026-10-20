@@ -1,5 +1,26 @@
 # Test Matrix
 
+## GFS-185 Launch Blocker Audit
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Current accounts/branch | PASS | GitHub gardenshop, Cloudflare/Admin gisupp@gmail.com, current branch fetched |
+| WhatsApp sender/display name | PARTIAL | Correct connected GFS sender, High quality; display name remains DECLINED, no authorized review result |
+| Ads-to-WhatsApp CTA | BLOCKED | All nine campaigns off; no active/draft preview CTA; no publish/spend |
+| Clean dataset ownership | PASS | Dataset1210750267244729 owner Garden Shop, business connected, Web-only |
+| Dataset website boundary | PASS after repair | Fresh reload confirms only Garden Shop domain allowlisted; pixel details/cookies/advanced matching ON, consent not established |
+| Dataset token/system-user permission | BLOCKED | GFS WhatsApp token perms lack Marketing/dataset access; no clean system-user token evidence |
+| Lead Test Event/ack | BLOCKED | Dataset last received174 days ago; none sent; CAPI off |
+| Hoja isolation | PASS after repair | Both Hoja website domains removed from clean GFS dataset allowlist; only Garden Shop domain remains |
+| Display name review | BLOCKED | Name remains declined; no new supported approval decision; no blind retry |
+| Payment recipients | BLOCKED | JazzCash till/Easypaisa alias/Bank QR-to-IBAN-Raast independent evidence absent; all methods disabled |
+| Existing real Chrome E2E | PASS reused | GFS-183 order, 19 READ WAMIDs, 19 screenshots; no repeat needed |
+| Real payment/PAID | BLOCKED | No eligible method/funds/reference/approval; no financial mutation |
+| Token leak containment | PARTIAL | Explorer closed; Hoja integration removed and token not reused; bearer invalidation cannot be tested without token use; owner confirmation/revocation required |
+| Unrelated Meta integrations | BLOCKED recovery | Wix, Daraz Seller Center, WooCommerce by Meta, Zapier also show Removed; UI has no Restore action; owner/provider reauth required |
+| Worker/local quality | PASS carried forward | No code change/deploy; GFS-183 135 tests/build/lint/audit/Wrangler evidence retained |
+| CI | BLOCKED external | Latest39478074597 has zero steps/no log; prior39477757383 explicitly billing-locked; no bypass |
+
 ## GFS-184 Payment Journey Comparison and Fixture Coverage (2026-10-20)
 
 | Requirement | Result | Evidence / limit |

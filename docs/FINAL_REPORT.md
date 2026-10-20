@@ -1,5 +1,59 @@
 # Final Report
 
+## GFS-185 Final Launch Blocker Audit - 2026-10-20
+
+### Public Lead Launch
+
+- **Staging lead-only: GO. Public lead-only: NO-GO.** GFS-183 remains the real Chrome acceptance reference: order FS-261020-000011, nineteen READ WAMIDs, nineteen private masked screenshots, reconciled D1/Admin. No lead journey was unnecessarily repeated.
+- Meta WhatsApp Manager shows the correct connected Garden Shop sender with High quality; display name `Get Free Seeds` remains DECLINED. No supported positive review decision or authorized alternate brand exists. No blind resubmission or asset change.
+- Ads Manager lists nine campaigns, all Off. No active/draft ads-to-WhatsApp CTA preview was available. No ad was published, no spend occurred, and CTA verification remains blocked until an authorized draft/preview exists.
+- Dataset Free Seeds `1210750267244729` is owned by Garden Shop/business `568026370701542`, Business Connected, Web-only, last activity 174 days ago. CAPI is not operationally evidenced.
+- Wrangler has a secret named `META_ACCESS_TOKEN` (value never read). Sanitized GFS status reports WhatsApp management/messaging/public profile permissions only, not dataset/Marketing API. `META_CAPI_ENABLED=false`, no dataset ID is configured, and Purchase remains OFF. No CAPI event was sent.
+- Meta warned Dataset Quality API token generation also grants permissions to previously generated tokens. That route was not used. Exact next step: provision an explicitly least-privilege clean GFS system-user/app token with dataset access and approved consent, store through Cloudflare secret workflow, then submit one new Lead Test Event and verify Meta acknowledgement and D1 dedup. Do not use/revive Hoja credentials.
+- Dataset website allowlist previously contained Garden Shop plus two Hoja domains. Both Hoja domains were removed with explicit per-domain confirmation; a fresh full-page reload then confirmed only the Garden Shop domain remains. No other dataset setting changed.
+- Dataset Pixel detailed-info expansion, first-party cookies, and automatic advanced matching (email/phone/name/location/external ID parameters) are On. Consent scope/notice for these website data uses is not verified; no settings were changed, and public launch remains NO-GO until the authorized business/privacy owner confirms consent and intended matching scope.
+
+### Payment Verification
+
+| Method | Current verified state | Enablement | Exact next evidence |
+|---|---|---|---|
+| JazzCash | QR integrity/draft PASS; independent till ownership absent | Disabled | Authenticated provider record tying till to Garden Shop |
+| Easypaisa | QR integrity/draft PASS; alias/D1 relationship absent | Disabled | Authenticated merchant alias and decoded destination mapping |
+| Bank Alfalah | QR integrity/draft PASS; QR destination/IBAN/Raast mapping absent | Disabled | Authenticated bank mapping between QR destination and Garden Shop IBAN/Raast |
+
+No provider record became accessible in this inspection; do not repeat the same search. Editable EN/UR copy and private method-linked QR remain. No recipient values were edited, no transfer/payment/test receipt/PAID/fulfillment occurred. FS-261019-000001 remains held and all historical state preserved. GFS-184 NON-PAYABLE local fixtures remain simulated only.
+
+### Security Incident and Isolation
+
+- An existing Hoja Graph Explorer access token unexpectedly rendered in MCP output. It is deliberately not reproduced here. The Explorer was closed immediately; token was never copied, read further, or submitted to an API.
+- The authenticated Meta Business Integrations UI now shows Hoja Lead Integration as Removed. During that sequence, four unrelated entries also changed to Removed: Wix Marketing Tools, Daraz Seller Center, WooCommerce by Meta, and Zapier. Meta's Removed tab offers View details only and no Restore control. User authorized inspection/restoration; no supported restore path was available. Exact next action is owner/provider-driven reauthorization for those four integrations, excluding Hoja. Account owner must confirm/revoke any already-issued Hoja bearer via Meta security controls; it was not tested by use. No further Meta app removals/reconnects were attempted.
+- The GFS dataset allowlist was narrowed to Garden Shop's `gardenshopfreeseeds.netlify.app`; `hojaseeds.pk` and `hojaseeds.pages.dev` were removed. A fresh full-page reload confirmed the exact final list before ending this inspection.
+- Account-owner verification that the exposed bearer is revoked is required before public release. Reauthorization of the four unrelated integrations is a separate account-owner/provider recovery; it is not a GFS runtime dependency, but this report does not claim those integrations remain operational.
+
+### Other Requirements and Verification
+
+| Requirement | Result | Evidence |
+|---|---|---|
+| Account separation | PASS | GitHub gardenshop, Cloudflare/Admin gisupp@gmail.com, clean GFS Meta business selected |
+| Signed callbacks/rate limit/DLQ/privacy/Admin Access | PASS carried forward | GFS-183 deployed API and 135-test evidence; no runtime changes in GFS-185 |
+| Active WhatsApp service window/sender | PASS carried forward | GFS-183 authorized inbound tester journey; no unsolicited message now sent |
+| Ads-to-WhatsApp CTA | BLOCKED | Nine campaigns Off, no preview CTA |
+| Display name | BLOCKED | Existing DECLINED state; no authorized review route or new brand approval |
+| Clean dataset integration/token | BLOCKED | Business-level connection only, last activity174 days, dataset permission absent from sanitized token scopes |
+| Lead Test Event | BLOCKED | No authorized clean least-privilege token/consent; none sent |
+| Purchase CAPI | OFF | No replay or financial readiness |
+| Three recipient proofs | BLOCKED | No new independent records; all methods disabled |
+| Real Chrome/WAMIDs/screenshots | PASS reused | See GFS-183 report; one order, 19 READ WAMIDs, 19 private masked screenshots |
+| Real paid/receipt test | BLOCKED correctly | No real transfer/receipt/PAID or fulfillment |
+| Quality/deploy/CI | PASS local / BLOCKED CI | `npm ci`, 135 tests/build/lint/audit/Wrangler pass; no new code/deploy; latest39478074597 has zero steps/no log, prior39477757383 explicitly confirms billing lock; no bypass |
+| Required docs and PR | PASS on completion | rules/STATUS/TEST_MATRIX/DECISIONS/RESOURCE_REGISTRY/CHANGELOG/FINAL_REPORT updated and pushed |
+
+### Versions, Release, Progress
+
+- Starting source `3060e9c`; no source changes/deployment in GFS-185. API `5151e081-98ab-45c4-a57f-3ba43c4e6983`; Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`; rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`.
+- Whole project estimate **88% complete /12% remaining**; P0 **100/0**; P1 public lead launch **70/30**; P2 payments **60/40**; P3 release/security **75/25**.
+- **Staging lead-only GO. Public lead-only NO-GO. Customer payments NO-GO.** Smallest next actions: account owner confirms/revokes the exposed bearer; Meta admin provisions an explicitly scoped clean dataset GFS token and confirms consent, then sends one Lead Test Event; obtain supported display-name review decision; obtain provider/bank beneficiary records for each payment method. Four unrelated integrations require provider-owner reauthorization separately. No unsafe legacy eligibility, paid ads, or production changes.
+
 ## GFS-184 Payment Journey Restore - 2026-10-20
 
 ### Historical Comparison and Finding

@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-185 Meta Credential and Asset Isolation (2026-10-20)
+
+- Never take a full accessibility snapshot or screenshot of Graph API Explorer when an access token can be rendered. If a token appears in MCP output, do not quote, copy, inspect, or use it; close the page and revoke it immediately through the narrowest app-scoped visible control. Verify only a token-free revocation state. Do not use a broad business-integration removal button if its target cannot be unambiguously anchored; confirm each exact app/domain before mutation.
+- GFS-185 removed the Hoja Lead Integration through Meta's Business Integrations UI after its token was exposed in a rendered snapshot. Meta now shows it in Removed, but already-issued bearer invalidation is not independently confirmed; require account-owner confirmation/revocation before public release. Four unrelated integrations were also removed during that UI sequence (Wix Marketing Tools, Daraz Seller Center, WooCommerce by Meta, Zapier). Their Removed entries provide only View details, no Restore action. Do not reconnect them without their own provider authorization. Record this incident; never repeat broad list-index clicks.
+- Clean Garden Shop dataset `1210750267244729` website allowlist must contain only authorized Garden Shop domains. GFS-185 removed `hojaseeds.pk` and `hojaseeds.pages.dev`; preserve `gardenshopfreeseeds.netlify.app`. Verify exact dialog domain before confirming removals.
+- Meta says generating a Dataset Quality API token will grant permission to previously generated tokens. Do not click it as a shortcut to CAPI least privilege. Require a documented clean GFS system-user/app token with dataset permission and explicit consent, then send a new Lead Test Event. Never use a Hoja token/app/dataset. Keep Lead CAPI OFF until every gate passes and keep Purchase CAPI OFF until financial readiness.
+- An existing WhatsApp Graph token secret is not evidence of Marketing API/dataset permission. Secret presence is not authorization; never print secret values. Current sanitized permissions show WhatsApp management/messaging and public profile only.
+- Ads with all campaigns off provide no live ads-to-WhatsApp CTA acceptance. Verify a draft/preview read-only only when available; do not publish/spend for a launch test.
+
 ## GFS-184 Payment Journey Restore Boundary (2026-10-20)
 
 - `8f1c2da` is a report-only commit; it contains no payment runtime change. `c57c252` adds locale-complete method filtering, method+locale outbox idempotency, stricter QR/R2 metadata checks, stale outbound claims, field validation, authenticated canonical-phone validation and separate receipt Check Order action. Preserve these protections.
