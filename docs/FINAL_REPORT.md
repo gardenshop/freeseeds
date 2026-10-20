@@ -58,7 +58,7 @@ The province LIST had seven options; English Punjab described deliveryPKR250. Ur
 | Privacy/Admin/signatures/eligibility | PASS scoped | Privacy/data deletion200, unsigned401, Admin Access302/identity and localCSRF; real inbound session within24h |
 | Public consent/name/release | BLOCKED | Controlled tester evidence is not public consent/spend/release authorization; display nameDECLINED |
 | Full install/tests/build/lint/audit/Wrangler | PASS | npmci,135/135 in16 files, build/lint,0 vulnerabilities, both dry-runs |
-| CI/protection policy | BLOCKED external | Baseline39467663972 billing failure; no protections bypassed |
+| CI/protection policy | BLOCKED external | Baseline39467663972; post-push39474453497 has zero steps and explicit account billing-lock annotation; no protections bypassed |
 | Required records/push/protected state | PASS | Seven records updated; images/history/incident preserved; correct PR/branch |
 
 ### Payment and CAPI Boundary
@@ -73,6 +73,7 @@ The province LIST had seven options; English Punjab described deliveryPKR250. Ur
 ### Versions and Decision
 
 - Runtime commit `79b503397af73e4836b389314407cbcd8fc2d86c`; isolated tests commit `d052ca3`. API `5151e081-98ab-45c4-a57f-3ba43c4e6983`; Admin unchanged `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`.
+- Source/evidence commits were pushed to PR8 at `89128d1`. CI run `39474453497` explicitly reports "The job was not started because your account is locked due to a billing issue." No job step ran; no bypass. This final annotation is a documentation-only follow-up.
 - Immediate rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`; older `c3fa866b-2751-4eea-83ed-5ef4d0667de1` retained. Leave additive admission schema on rollback; never reverse financial/order history.
 - Progress estimate: total **90% complete /10% remaining**; P0 protected setup/reuse **100/0**; P1 fresh Chrome journey **100/0**; P2 technical/Admin/payment readiness **80/20**; P3 quality/staging/release records **95/5**. Percentages do not convert external dependencies into acceptance.
 - **Staging lead-only GO** based on real Chrome acceptance. **Public lead-only NO-GO** pending clean CAPI token/Test Events acknowledgement/deduplication, public consent/release approval and legitimate name review. **Customer payments NO-GO** pending each beneficiary proof plus independently confirmed funds/unique transaction/authorized approval.

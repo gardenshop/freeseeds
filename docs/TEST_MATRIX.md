@@ -28,7 +28,7 @@
 | Clean CAPI permissions/Test Event | BLOCKED | Test code available, but Explorer is Hoja app/token; no permitted token used, no acknowledgement; CAPI OFF |
 | Display name/public consent | BLOCKED release | Name DECLINED; public authorization absent; inbound tester consent/window is not public release approval |
 | Privacy/security | PASS scoped | Live privacy/data deletion200, unsigned401, Admin Access302; local CSRF/signature/privacy regressions |
-| Remote CI | BLOCKED external | Billing-locked baseline39467663972; no protections bypassed |
+| Remote CI | BLOCKED external | Baseline39467663972; post-push39474453497 has zero steps and explicit account billing-lock annotation; no protections bypassed |
 | Protected records/push | PASS on completion | Seven required records updated; source commits retained; images untouched |
 
 ## GFS-182 Final Launch Readiness (2026-10-20)

@@ -9,7 +9,7 @@
 - Nineteen outbound WAMIDs created17:52:39Z-18:03:52Z all READ. Exact per-step IDs and expected/actual results in FINAL_REPORT. Nineteen masked private screenshots `D:/Temp/kilo/gfs183-01-welcome.png` through `gfs183-19-urdu-name.png`; files are local only, not Git/R2/public assets.
 - Authenticated private drafts: JazzCash299742 bytes, Easypaisa82555 bytes, Bank Transfer22963 bytes; each PNG renders800x800, cache private,no-store. All disabled, owner flagsfalse. No QR re-extraction or beneficiary field change.
 - Clean dataset1210750267244729 exposes Test Events; no authorized clean token. Explorer selected Hoja Lead Integration; its existing token was not used/exported/submitted. No event acknowledgement; CAPI false and new lead event PENDING/0.
-- Local tests135/135 plus npmci/build/lint/audit0/API+Admin dry-runs. Live health/privacy/data deletion200, unsigned callback401, unauthenticated Admin302 to Access. Baseline CI39467663972 billing failure; protected policy unchanged.
+- Local tests135/135 plus npmci/build/lint/audit0/API+Admin dry-runs. Live health/privacy/data deletion200, unsigned callback401, unauthenticated Admin302 to Access. CI39474453497 on source/evidence tip89128d1 has zero steps and explicit account billing-lock annotation, matching baseline39467663972; protected policy unchanged.
 - Historical Purchase DLQs2 and payment failures remain unchanged; held incident FS-261019-000001 unchanged. No Purchase replay, payment, approval, PAID, dispatch or production release.
 
 ## GFS-182 Final Launch Readiness (2026-10-20)
