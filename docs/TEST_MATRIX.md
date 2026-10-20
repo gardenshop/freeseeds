@@ -19,7 +19,7 @@
 | Token leak containment | PARTIAL | Explorer closed; Hoja integration removed and token not reused; bearer invalidation cannot be tested without token use; owner confirmation/revocation required |
 | Unrelated Meta integrations | BLOCKED recovery | Wix, Daraz Seller Center, WooCommerce by Meta, Zapier also show Removed; UI has no Restore action; owner/provider reauth required |
 | Worker/local quality | PASS carried forward | No code change/deploy; GFS-183 135 tests/build/lint/audit/Wrangler evidence retained |
-| CI | BLOCKED external | Latest39478074597 has zero steps/no log; prior39477757383 explicitly billing-locked; no bypass |
+| CI | BLOCKED external | Post-push39491350447 has zero steps and explicit account billing-lock annotation; no bypass |
 
 ## GFS-184 Payment Journey Comparison and Fixture Coverage (2026-10-20)
 
