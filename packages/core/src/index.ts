@@ -19,3 +19,5 @@ export * from "./order-status";
 export * from "./whatsapp-content";
 export * from "./whatsapp-media";
 export * from "./province-list";
+export * from "./service-window";
+export * from "./service-window";

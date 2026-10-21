@@ -32,6 +32,10 @@ function conversation() {
   return row ? { state: row.state, data: JSON.parse(String(row.state_data)) as Record<string, unknown> } : undefined;
 }
 
+function lastInboundAt() {
+  return sqlite.prepare("SELECT last_inbound_at FROM whatsapp_conversations WHERE wa_id=?").get(sender)?.last_inbound_at as string | null | undefined;
+}
+
 function body() {
   const sent = sends.at(-1)!;
   return sent.type === "text" ? String((sent.text as { body: string }).body) : String((sent.interactive as { body: { text: string } }).body.text);
@@ -97,6 +101,42 @@ beforeEach(() => {
 afterEach(() => { sqlite.close(); vi.unstubAllGlobals(); });
 
 describe("GFS-178 simulated signed-webhook lead-only journey", () => {
+  it("stores trusted inbound receipt time and leaves it unchanged for status-only callbacks", async () => {
+    const message = await inbound("START", "synthetic-window-inbound");
+    const event = sqlite.prepare("SELECT created_at FROM whatsapp_events WHERE provider_event_id=?").get(`message:${message.id}`) as { created_at: string };
+    expect(lastInboundAt()).toBe(event.created_at);
+    const recordedAt = lastInboundAt();
+    await callback([], [{ field: "messages", value: { metadata: { phone_number_id: phoneId }, statuses: [{ id: "synthetic-provider-status", status: "delivered" }] } }]);
+    expect(lastInboundAt()).toBe(recordedAt);
+  });
+
+  it("permanently blocks a free-form reply retry after the original inbound event leaves the 24-hour window", async () => {
+    const oldAt = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
+    const inboundId = "synthetic-stale-reply";
+    sqlite.prepare("INSERT INTO whatsapp_events(id,provider_event_id,event_type,payload_hash,status,correlation_id,created_at) VALUES(?,?,?,?,?,?,?)").run("synthetic-old-event", `message:${inboundId}`, "MESSAGE", "synthetic-hash", "RECEIVED", "synthetic-correlation", oldAt);
+    sqlite.prepare("INSERT INTO whatsapp_conversations(id,wa_id,state,state_data,last_inbound_message_id,last_inbound_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)").run("synthetic-stale-conversation", sender, "LANGUAGE", "{}", inboundId, oldAt, oldAt, oldAt);
+    sqlite.prepare("INSERT INTO outbound_messages(id,idempotency_key,kind,status,attempt_count,created_at,updated_at) VALUES(?,?,?,?,?,?,?)").run("synthetic-stale-outbound", `conversation_reply:${inboundId}`, "CONVERSATION_REPLY", "FAILED", 1, oldAt, oldAt);
+    const sentBefore = sends.length;
+    const response = await callback([{ from: sender, id: inboundId, type: "text", text: { body: "invalid-language" } }]);
+    expect(response.status).toBe(200);
+    expect(sends).toHaveLength(sentBefore);
+    expect(sqlite.prepare("SELECT status,last_error FROM outbound_messages WHERE idempotency_key=?").get(`conversation_reply:${inboundId}`)).toEqual({ status: "PERMANENT_FAILURE", last_error: "WHATSAPP_SERVICE_WINDOW_CLOSED" });
+    expect(lastInboundAt()).toBe(oldAt);
+  });
+
+  it("terminally blocks expired queued payment instructions without calling the provider", async () => {
+    const oldAt = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
+    sqlite.prepare("INSERT INTO whatsapp_conversations(id,wa_id,state,state_data,last_inbound_message_id,last_inbound_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)").run("synthetic-expired-conversation", sender, "PAYMENT_PENDING", "{}", "synthetic-old-message", oldAt, oldAt, oldAt);
+    sqlite.prepare("INSERT INTO outbox_jobs(id,idempotency_key,kind,entity_id,payload_json,status,attempts,available_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)").run("synthetic-expired-job", "synthetic-expired-payment", "WHATSAPP_PAYMENT_INSTRUCTIONS", "synthetic-order", JSON.stringify({ recipient: sender, orderId: "synthetic-order", orderNumber: "TEST-ORDER" }), "PENDING", 0, oldAt, oldAt, oldAt);
+    const message = { body: { kind: "WHATSAPP_PAYMENT_INSTRUCTIONS", idempotencyKey: "synthetic-expired-payment", entityId: "synthetic-order", schemaVersion: 1 as const }, attempts: 1, ack: vi.fn(), retry: vi.fn() };
+    const sentBefore = sends.length;
+    await api.queue({ messages: [message] } as unknown as MessageBatch<typeof message.body>, env());
+    expect(message.ack).toHaveBeenCalledOnce();
+    expect(message.retry).not.toHaveBeenCalled();
+    expect(sends).toHaveLength(sentBefore);
+    expect(sqlite.prepare("SELECT status,last_error FROM outbox_jobs WHERE idempotency_key=?").get("synthetic-expired-payment")).toEqual({ status: "PERMANENT_FAILURE", last_error: "WHATSAPP_SERVICE_WINDOW_CLOSED" });
+  });
+
   it("returns retryable 429 before mutation and accepts the signed retry after the durable window", async () => {
     const first = await inbound("START");
     for (let i = 1; i < 30; i++) await inbound("START");

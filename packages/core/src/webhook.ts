@@ -45,3 +45,17 @@ export async function persistWebhookRecords(db: D1Database, payload: unknown, ra
   await db.batch([...records.map((record) => db.prepare("INSERT OR IGNORE INTO whatsapp_events (id,provider_event_id,event_type,payload_hash,status,correlation_id,created_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), record.providerEventId, record.eventType, payloadHash, record.status, correlationId, now)), ...statusUpdates]);
   return records.length;
 }
+
+export async function persistInboundConversationActivity(db: D1Database, events: Array<{ id: string; from: string }>): Promise<void> {
+  if (!events.length) return;
+  await db.batch(events.map((event) => db.prepare(`INSERT INTO whatsapp_conversations
+    (id,wa_id,state,state_data,last_inbound_message_id,last_inbound_at,created_at,updated_at)
+    SELECT ?,?,'NEW','{}',?,created_at,created_at,created_at
+    FROM whatsapp_events WHERE provider_event_id=?
+    ON CONFLICT(wa_id) DO UPDATE SET
+      last_inbound_message_id=excluded.last_inbound_message_id,
+      last_inbound_at=excluded.last_inbound_at,
+      updated_at=CASE WHEN excluded.last_inbound_at>COALESCE(whatsapp_conversations.last_inbound_at,'') THEN excluded.updated_at ELSE whatsapp_conversations.updated_at END
+    WHERE whatsapp_conversations.last_inbound_at IS NULL OR excluded.last_inbound_at>=whatsapp_conversations.last_inbound_at`)
+    .bind(crypto.randomUUID(), event.from, event.id, `message:${event.id}`)));
+}

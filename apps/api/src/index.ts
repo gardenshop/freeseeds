@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { applyFertilizerDecision, createWhatsAppProvider, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, MetaCapiProvider, MetaFlowEnvelope, normalizePaymentMethodRow, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey } from "@gfs/core";
+import { applyFertilizerDecision, createWhatsAppProvider, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isInsideWhatsAppServiceWindow, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, MetaCapiProvider, MetaFlowEnvelope, normalizePaymentMethodRow, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInboundConversationActivity, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey } from "@gfs/core";
 import { handleMetaFlowPayload } from "./flow-endpoint";
 import { admitWhatsAppSenders } from "./rate-limit";
 
@@ -145,10 +145,20 @@ export function guidedReplyMediaKey(normalized: string, state: string, nextState
 
 async function sendConversationReply(db: D1Database, provider: ReturnType<typeof createWhatsAppProvider>, to: string, inboundId: string, body: string, options: ConversationReplyOptions = {}): Promise<{ sent: boolean; messageId?: string }> {
   const key = `conversation_reply:${inboundId}`;
-  const existing = await db.prepare("SELECT status,provider_message_id FROM outbound_messages WHERE idempotency_key=?").bind(key).first<{ status: string; provider_message_id: string | null }>();
+  const existing = await db.prepare("SELECT id,status,provider_message_id FROM outbound_messages WHERE idempotency_key=?").bind(key).first<{ id: string; status: string; provider_message_id: string | null }>();
   const now = new Date().toISOString();
   if (existing?.status === "SENT" || existing?.provider_message_id) return { sent: true, ...(existing.provider_message_id ? { messageId: existing.provider_message_id } : {}) };
-  if (!existing) await db.prepare("INSERT OR IGNORE INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), key, "CONVERSATION_REPLY", "PENDING", 0, now, now).run();
+  if (existing && isTerminalOutboxStatus(existing.status)) return { sent: false };
+  const outboundId = existing?.id ?? crypto.randomUUID();
+  if (!existing) await db.prepare("INSERT OR IGNORE INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").bind(outboundId, key, "CONVERSATION_REPLY", "PENDING", 0, now, now).run();
+  const inboundEvent = await db.prepare("SELECT created_at FROM whatsapp_events WHERE provider_event_id=?").bind(`message:${inboundId}`).first<{ created_at: string }>();
+  if (!isInsideWhatsAppServiceWindow(inboundEvent?.created_at)) {
+    await db.batch([
+      db.prepare("UPDATE outbound_messages SET status='PERMANENT_FAILURE',last_error='WHATSAPP_SERVICE_WINDOW_CLOSED',updated_at=? WHERE id=? AND provider_message_id IS NULL AND status IN ('PENDING','FAILED','RETRY','SENDING')").bind(now, outboundId),
+      db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "WHATSAPP_SERVICE_WINDOW_BLOCKED", "SYSTEM", "OUTBOUND_MESSAGE", outboundId, crypto.randomUUID(), JSON.stringify({ reason: "WHATSAPP_SERVICE_WINDOW_CLOSED" }), now)
+    ]);
+    return { sent: false };
+  }
   const claim = await db.prepare("UPDATE outbound_messages SET status='SENDING',attempt_count=attempt_count+1,updated_at=? WHERE idempotency_key=? AND provider_message_id IS NULL AND status IN ('PENDING','FAILED','RETRY')").bind(now, key).run();
   if (!claim.meta.changes) return { sent: false };
   try {
@@ -221,6 +231,15 @@ async function paymentQrFromR2(db: D1Database, bucket: R2Bucket, config: ReturnT
 
 async function deliverPaymentInstructions(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, to: string, orderId: string, orderNumber: string, amount: number, method: PaymentMethod, locale: "en" | "ur", message: string, config: ReturnType<typeof normalizePaymentMethodRow>): Promise<PaymentDeliveryResult> {
   const qrKey = `payment_qr_${orderId}_${method}`;
+  const conversation = await db.prepare("SELECT last_inbound_at FROM whatsapp_conversations WHERE wa_id=?").bind(to).first<{ last_inbound_at: string | null }>();
+  if (!isInsideWhatsAppServiceWindow(conversation?.last_inbound_at)) {
+    const reason = "WHATSAPP_SERVICE_WINDOW_CLOSED";
+    const blockedAt = new Date().toISOString();
+    await markPaymentPartSkipped(db, orderId, `payment_text_${orderId}_${method}_${locale}`, "WHATSAPP_PAYMENT_TEXT", reason);
+    await markPaymentPartSkipped(db, orderId, qrKey, "WHATSAPP_PAYMENT_QR", reason);
+    await db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "WHATSAPP_SERVICE_WINDOW_BLOCKED", "SYSTEM", "ORDER", orderId, crypto.randomUUID(), JSON.stringify({ reason }), blockedAt).run();
+    return { textSent: false, qrStatus: "FAILED" };
+  }
   const order = await db.prepare("SELECT o.order_number,o.total_payable,o.state,o.payment_status,p.method AS selected_method FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=?").bind(orderId).first<Record<string, unknown>>();
   const currentRow = await db.prepare("SELECT pm.* FROM payment_methods pm JOIN payment_qr_assets qa ON qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref IS NOT NULL AND TRIM(qa.independent_evidence_ref)<>'' WHERE pm.method=? AND pm.enabled=1 AND pm.qr_owner_verified=1").bind(method).first<Record<string, unknown>>();
   const currentConfig = currentRow ? normalizePaymentMethodRow(currentRow) : undefined;
@@ -483,6 +502,7 @@ app.post("/webhooks/whatsapp", async (c) => {
     return c.json({ error: "WHATSAPP_SENDER_RATE_LIMITED", retryAfterSeconds: 60 }, 429);
   }
   const eventCount = c.env.DB ? await persistWebhookRecords(c.env.DB, payload, raw, correlationId) : 0;
+  if (c.env.DB) await persistInboundConversationActivity(c.env.DB, inbound);
   let autoReplies = 0;
   for (const event of inbound) {
     if (event.kind === "media") { if (c.env.DB && await processReceiptMedia(c.env.DB, c.env.RECEIPTS, provider, event)) continue; else continue; }
@@ -493,6 +513,16 @@ app.post("/webhooks/whatsapp", async (c) => {
     const existing = c.env.DB ? await c.env.DB.prepare("SELECT status FROM outbound_messages WHERE idempotency_key=?").bind(idempotencyKey).first<{ status: string }>() : null;
     if (existing) continue;
     const now = new Date().toISOString();
+    if (c.env.DB) {
+      const inboundEvent = await c.env.DB.prepare("SELECT created_at FROM whatsapp_events WHERE provider_event_id=?").bind(`message:${event.id}`).first<{ created_at: string }>();
+      if (!isInsideWhatsAppServiceWindow(inboundEvent?.created_at)) {
+        await c.env.DB.batch([
+          c.env.DB.prepare("INSERT OR IGNORE INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,last_error,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), idempotencyKey, "WELCOME_REPLY", "PERMANENT_FAILURE", 0, "WHATSAPP_SERVICE_WINDOW_CLOSED", now, now),
+          c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "WHATSAPP_SERVICE_WINDOW_BLOCKED", "SYSTEM", "OUTBOUND_MESSAGE", idempotencyKey, crypto.randomUUID(), JSON.stringify({ reason: "WHATSAPP_SERVICE_WINDOW_CLOSED" }), now)
+        ]);
+        continue;
+      }
+    }
     if (c.env.DB) await c.env.DB.prepare("INSERT INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), idempotencyKey, "WELCOME_REPLY", "PENDING", 0, now, now).run();
     try {
       const welcome = await contentFor(c.env.DB, "WELCOME", "Welcome to Get Free Seeds! Tap below to begin your order.", {}, `CHAT:${event.from}`);
@@ -739,6 +769,17 @@ export default {
             const outbox = await env.DB.prepare("SELECT payload_json FROM outbox_jobs WHERE idempotency_key=?").bind(message.body.idempotencyKey).first<{ payload_json: string }>();
             const payload = outbox ? JSON.parse(outbox.payload_json) as { orderId: string; orderNumber: string; amount: number; method: PaymentMethod; locale: "en" | "ur"; recipient?: string; message: string } : undefined;
             if (!payload?.recipient) throw new Error("PAYMENT_RECIPIENT_REQUIRED");
+            const recipient = payload.recipient.trim();
+            const conversation = await env.DB.prepare("SELECT last_inbound_at FROM whatsapp_conversations WHERE wa_id IN (?,?) ORDER BY CASE WHEN wa_id=? THEN 0 ELSE 1 END LIMIT 1").bind(recipient, recipient.startsWith("+") ? recipient.slice(1) : `+${recipient}`, recipient).first<{ last_inbound_at: string | null }>();
+            if (!isInsideWhatsAppServiceWindow(conversation?.last_inbound_at)) {
+              const blockedAt = new Date().toISOString();
+              await env.DB.batch([
+                env.DB.prepare("UPDATE outbox_jobs SET status='PERMANENT_FAILURE',attempts=?,last_error='WHATSAPP_SERVICE_WINDOW_CLOSED',updated_at=? WHERE idempotency_key=? AND status NOT IN ('SENT','DEAD_LETTER')").bind(nextAttempt, blockedAt, message.body.idempotencyKey),
+                env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "WHATSAPP_SERVICE_WINDOW_BLOCKED", "SYSTEM", "ORDER", message.body.entityId, crypto.randomUUID(), JSON.stringify({ reason: "WHATSAPP_SERVICE_WINDOW_CLOSED" }), blockedAt)
+              ]);
+              message.ack();
+              continue;
+            }
             const row = await env.DB.prepare("SELECT * FROM payment_methods WHERE method=?").bind(payload.method).first<Record<string, unknown>>();
             if (!row) throw new Error("PAYMENT_METHOD_NOT_CONFIGURED");
             const provider = createWhatsAppProvider("meta", { enabled: env.META_PROVIDER_ENABLED === "true", graphVersion: env.META_GRAPH_VERSION ?? "v26.0", accessToken: env.META_ACCESS_TOKEN, phoneNumberId: env.META_PHONE_NUMBER_ID, verifyToken: env.WEBHOOK_VERIFY_TOKEN, appSecret: env.META_APP_SECRET });

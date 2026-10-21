@@ -1329,8 +1329,8 @@ app.get("/api/test-controls/conversations", async (c) => {
   if (!c.env.DB) return c.json({ conversations: [] });
   const search = c.req.query("q")?.trim().slice(0, 40);
   const result = search
-    ? await c.env.DB.prepare("SELECT wa_id,state,last_inbound_message_id,created_at,updated_at FROM whatsapp_conversations WHERE wa_id LIKE ? ORDER BY updated_at DESC LIMIT 100").bind(`%${search}%`).all()
-    : await c.env.DB.prepare("SELECT wa_id,state,last_inbound_message_id,created_at,updated_at FROM whatsapp_conversations ORDER BY updated_at DESC LIMIT 100").all();
+    ? await c.env.DB.prepare("SELECT wa_id,state,last_inbound_message_id,last_inbound_at,created_at,updated_at FROM whatsapp_conversations WHERE wa_id LIKE ? ORDER BY updated_at DESC LIMIT 100").bind(`%${search}%`).all()
+    : await c.env.DB.prepare("SELECT wa_id,state,last_inbound_message_id,last_inbound_at,created_at,updated_at FROM whatsapp_conversations ORDER BY updated_at DESC LIMIT 100").all();
   return c.json({ conversations: result.results });
 });
 
@@ -1338,7 +1338,7 @@ app.get("/api/test-controls/conversations/:waId", async (c) => {
   if (!c.env.DB) return c.json({ error: "TEST_CONTROLS_UNAVAILABLE" }, 503);
   const waId = strictWaId(c.req.param("waId"));
   if (!waId) return c.json({ error: "WA_ID_INVALID" }, 400);
-  const conversation = await c.env.DB.prepare("SELECT wa_id,state,state_data,last_inbound_message_id,created_at,updated_at FROM whatsapp_conversations WHERE wa_id IN (?,?) ORDER BY CASE WHEN wa_id=? THEN 0 ELSE 1 END LIMIT 1").bind(waId, `+${waId}`, waId).first<{ wa_id: string; state: string; state_data: string; last_inbound_message_id: string | null; created_at: string; updated_at: string }>();
+  const conversation = await c.env.DB.prepare("SELECT wa_id,state,state_data,last_inbound_message_id,last_inbound_at,created_at,updated_at FROM whatsapp_conversations WHERE wa_id IN (?,?) ORDER BY CASE WHEN wa_id=? THEN 0 ELSE 1 END LIMIT 1").bind(waId, `+${waId}`, waId).first<{ wa_id: string; state: string; state_data: string; last_inbound_message_id: string | null; last_inbound_at: string | null; created_at: string; updated_at: string }>();
   if (!conversation) return c.json({ error: "CONVERSATION_NOT_FOUND" }, 404);
   let preferredOrderId: string | undefined;
   try {
@@ -1355,7 +1355,7 @@ app.get("/api/test-controls/conversations/:waId", async (c) => {
   const nextEligibleAt = lock ? new Date(new Date(lock.last_order_at).getTime() + 14 * 24 * 60 * 60 * 1000).toISOString() : null;
   const exempt = Boolean(exemption);
   return c.json({
-    conversation: { waId: conversation.wa_id, state: conversation.state, lastInboundMessageId: conversation.last_inbound_message_id, createdAt: conversation.created_at, updatedAt: conversation.updated_at },
+    conversation: { waId: conversation.wa_id, state: conversation.state, lastInboundMessageId: conversation.last_inbound_message_id, lastInboundAt: conversation.last_inbound_at, createdAt: conversation.created_at, updatedAt: conversation.updated_at },
     latestOrder: latestOrder ? { ...latestOrder, householdKey: undefined } : null,
     cooldown: { exempt, lastOrderAt: lock?.last_order_at ?? null, orderNumber: lock?.order_number ?? null, nextEligibleAt, active: !exempt && Boolean(nextEligibleAt && nextEligibleAt > new Date().toISOString()) }
   });
@@ -1373,7 +1373,7 @@ app.post("/api/test-controls/conversations/:waId/reset", async (c) => {
   if (!current) return c.json({ error: "CONVERSATION_NOT_FOUND" }, 404);
   const now = new Date().toISOString();
   const result = await c.env.DB.batch([
-    c.env.DB.prepare("UPDATE whatsapp_conversations SET state='NEW',state_data='{}',last_inbound_message_id=NULL,updated_at=? WHERE wa_id=?").bind(now, current.wa_id),
+    c.env.DB.prepare("UPDATE whatsapp_conversations SET state='NEW',state_data='{}',last_inbound_message_id=NULL,last_inbound_at=NULL,updated_at=? WHERE wa_id=?").bind(now, current.wa_id),
     auditStatement(c.env.DB, "WHATSAPP_CONVERSATION_RESET", "WHATSAPP_CONVERSATION", current.wa_id, { previousState: current.state, preservedHistory: true }, now, c.env.ADMIN_EMAIL)
   ]);
   return result[0].meta.changes === 1 ? c.json({ ok: true, waId: current.wa_id, state: "NEW", historyPreserved: true }) : c.json({ error: "CONVERSATION_STATE_CONFLICT" }, 409);
