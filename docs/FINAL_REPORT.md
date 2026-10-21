@@ -58,8 +58,8 @@ Chrome MCP could not be restored in this agent session. Global config has the ap
 ### Validation, Deployment, Release
 
 - `npm ci`; focused Admin/order/window/idempotency tests52/52; full `143/143` across19 files; build/lint/audit0; API/Admin Wrangler dry-runs PASS.
-- Source commits `41d94b061bb4830aeefa3eb8ed7d5248ad541c6a` and `fcc41c97cb10d0291a3654a2512df570746efc2d` are not deployed.
-- No deployment: API5151e081/Admin6fb34f89; rollback8a045e16. Migration0026 and service-window code are in source only; Chrome live retest unavailable. Post-push CI39575960147 ran zero steps under known billing lock; no protection bypass.
+- Source commits `41d94b061bb4830aeefa3eb8ed7d5248ad541c6a`, `fcc41c97cb10d0291a3654a2512df570746efc2d`, and `80a09908562d2198f02e837b8a893e8f5bf83d1b` are not deployed.
+- No deployment: API5151e081/Admin6fb34f89; rollback8a045e16. Migration0026 and service-window code are in source only; Chrome live retest unavailable. Post-push CI39578100146 ran zero steps under known billing lock; no protection bypass.
 - Progress estimate overall **62%/38%**; P0 **80/20**; P1 **70/30**; P2 **10/90**; P3 **15/85**; P4 **5/95**; P5 **80/20**; P6 **100/0**.
 - **Staging lead-only GO** (existing GFS-183 evidence only); **public leads NO-GO**; **real payments NO-GO**; **second number NO-GO/UNVERIFIED**.
 - Remaining dependencies: reconnect supported Chrome MCP to authenticated profile; apply/test migration in authorized staging after Chrome recovery; publish editable EN/UR payment intro; obtain beneficiary proofs; validate owner/Embedded Signup for second number; inspect ad preview. No messages/payment until guards pass.

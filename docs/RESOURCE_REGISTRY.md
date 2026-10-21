@@ -10,13 +10,13 @@
 
 ## GFS-189 Inbound Service-Window Migration
 
-- Source commits `41d94b061bb4830aeefa3eb8ed7d5248ad541c6a` and `fcc41c97cb10d0291a3654a2512df570746efc2d` (baseline `86c1cc8`); additive migration `0026_whatsapp_last_inbound_at.sql`; API helper `persistInboundConversationActivity`, pure 24h validator `isInsideWhatsAppServiceWindow`; Admin Orders/conversation endpoints include lastInboundAt and reset clears it.
+- Source commits `41d94b061bb4830aeefa3eb8ed7d5248ad541c6a`, `fcc41c97cb10d0291a3654a2512df570746efc2d`, and `80a09908562d2198f02e837b8a893e8f5bf83d1b` (baseline `86c1cc8`); additive migration `0026_whatsapp_last_inbound_at.sql`; API helper `persistInboundConversationActivity`, pure 24h validator `isInsideWhatsAppServiceWindow`; Admin Orders/conversation endpoints include lastInboundAt and reset clears it.
 - Timestamp derives from first signed/canonical inbound webhook event's `whatsapp_events.created_at`, not Meta client data/order creation/conversation.updated_at. Unique provider event ID preserves original timestamp on duplicate; no backfill.
 - Direct free-form retries and queued payment instructions require <24h. Missing/expired window terminalizes with reason/audit, ACKs and does not send. No approved utility template or historical replay.
 - Payment instruction outbox/text/QR keys use a hash of the signed inbound message/Flow request ID. Same-event retries deduplicate; a later authorized customer selection gets a fresh key without persisting raw WAMID/token.
 - GFS-188 four new orders remain pending and unchanged; existing old conversation timestamp nulls remain null until next authenticated inbound. No provider message, receipt or paid transition.
 - Final remote D1 query returned Cloudflare API7403 with the correct GFS identity; no retry/account switch. Current orders remain unverified pending owner access restoration.
-- Chrome MCP remains unavailable; migration/API/Admin changes not deployed. API5151e081/Admin6fb34f89; rollback8a045e16. Local npmci/focused52/full143/build/lint/audit0/Wrangler dry-runs pass. Post-push CI39575960147 ran zero steps under known billing lock; no bypass.
+- Chrome MCP remains unavailable; migration/API/Admin changes not deployed. API5151e081/Admin6fb34f89; rollback8a045e16. Local npmci/focused52/full143/build/lint/audit0/Wrangler dry-runs pass. Post-push CI39578100146 ran zero steps under known billing lock; no bypass.
 
 ## GFS-188 New Orders and Release Boundary
 
