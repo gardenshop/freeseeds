@@ -8,6 +8,7 @@
 |---|---|---|
 | Chrome MCP recovery/list_pages | BLOCKED | Kilo global server is enabled, but active tool namespace/bridge absent and Chrome has no DevTools endpoint. No raw CDP or profile workaround. Host restart/reconnect required. |
 | Reliable inbound timestamp | PASS LOCAL | Migration0026 nullable last_inbound_at, no backfill; signed/canonical inbound event's first `whatsapp_events.created_at` |
+| Admin Orders lastInboundAt | PASS LOCAL | Authenticated Orders API exposes inbound time; synthetic serialization test passes |
 | 24-hour free-form guard | PASS LOCAL | Exact inbound event check for replies; conversation timestamp check for payment direct/queue sends |
 | Retry/DLQ outside window | PASS LOCAL | Stale messages terminalize PERMANENT_FAILURE, audit, no provider send/retry; no approved template configured |
 | New order reconciliation | PASS D1 audit reused | Four new orders details-complete/payment-pending, totals PKR2000/2750/6250/1000, no method/receipt/ref |
@@ -41,7 +42,7 @@ Chrome MCP could not be restored in this agent session. Global config has the ap
 
 ### Orders and Service Window
 
-- Redacted D1 confirms FS-261021-000001..000004 are DETAILS_COMPLETED/PENDING with totals PKR2000, 2750, 6250, 1000; no selected method/receipt/transaction reference. Pending pool is 11 without methods and six older PAYMENT_PENDING with historical JazzCash/Easypaisa selections; no receipts. No message was sent/replayed.
+- Last-known redacted GFS-188 D1 audit showed FS-261021-000001..000004 as DETAILS_COMPLETED/PENDING with totals PKR2000/2750/6250/1000; no method/receipt/transaction reference. Pending pool was 11 without methods and six older PAYMENT_PENDING with historical JazzCash/Easypaisa selections; receipts0. Final GFS-189 D1 reread returned Cloudflare API7403 despite the correct GFS identity, so current order state is BLOCKED, not asserted. No message/replay.
 - Last inbound message ID is present for recently received order events, but historic schema had no timestamp. Migration0026 adds nullable `last_inbound_at`, no backfill. Only signed/canonical incoming messages populate it from first stored server receipt time; duplicates retain original time; status/outbound events do not extend.
 - Direct replies and queued payment instructions reject missing/expired (>24h) timestamps. With no approved utility template configured, they terminalize as WHATSAPP_SERVICE_WINDOW_CLOSED without provider send. Tests simulate 25h stale message/queue and prove no sends; these are not live WhatsApp proof. Payment selection outbox keys are hashed per inbound message/Flow ID; same-event retries deduplicate and a fresh authorized selection receives a new key.
 - The current staging migration is NOT applied, so historical timestamps remain unknown. D1 order creation or conversation updated_at is not used to infer the service window.
@@ -56,9 +57,9 @@ Chrome MCP could not be restored in this agent session. Global config has the ap
 
 ### Validation, Deployment, Release
 
-- `npm ci`; focused service-window/payment-idempotency tests47/47; full `143/143` across19 files; build/lint/audit0; API/Admin Wrangler dry-runs PASS.
-- Source commit `41d94b061bb4830aeefa3eb8ed7d5248ad541c6a` is not deployed.
-- No deployment: API5151e081/Admin6fb34f89; rollback8a045e16. Migration0026 and service-window code are in source only; Chrome live retest unavailable. Existing CI billing lock remains nonblocking only per policy; no protection bypass.
+- `npm ci`; focused Admin/order/window/idempotency tests52/52; full `143/143` across19 files; build/lint/audit0; API/Admin Wrangler dry-runs PASS.
+- Source commits `41d94b061bb4830aeefa3eb8ed7d5248ad541c6a` and `fcc41c97cb10d0291a3654a2512df570746efc2d` are not deployed.
+- No deployment: API5151e081/Admin6fb34f89; rollback8a045e16. Migration0026 and service-window code are in source only; Chrome live retest unavailable. Post-push CI39575960147 ran zero steps under known billing lock; no protection bypass.
 - Progress estimate overall **62%/38%**; P0 **80/20**; P1 **70/30**; P2 **10/90**; P3 **15/85**; P4 **5/95**; P5 **80/20**; P6 **100/0**.
 - **Staging lead-only GO** (existing GFS-183 evidence only); **public leads NO-GO**; **real payments NO-GO**; **second number NO-GO/UNVERIFIED**.
 - Remaining dependencies: reconnect supported Chrome MCP to authenticated profile; apply/test migration in authorized staging after Chrome recovery; publish editable EN/UR payment intro; obtain beneficiary proofs; validate owner/Embedded Signup for second number; inspect ad preview. No messages/payment until guards pass.

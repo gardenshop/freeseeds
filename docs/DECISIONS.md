@@ -10,6 +10,8 @@ Payment outbox idempotency is scoped to a hash of the triggering signed inbound 
 
 The migration/code is local only because Chrome MCP is absent. Do not deploy until supported list_pages works and signed webhook, Admin order timestamp, outbox and provider E2E retests pass. Historical order jobs are never replayed.
 
+The final redacted D1 read returned API7403 while Wrangler identity remained the authorized GFS account. Stop retries and do not switch credentials/accounts. Current order status after the last-known GFS-188 audit is unknown; restore D1 authorization before processing or messaging pending orders.
+
 ## 2026-10-21: GFS-189 Trusted Service Window
 
 Add last_inbound_at rather than repurposing conversation.updated_at. Migration0026 is nullable and deliberately does not backfill historic activity. Only signed/canonical WhatsApp message events advance it, using their unique first `whatsapp_events.created_at`; duplicate deliveries preserve the original timestamp, status callbacks do not advance it, and outbound activity never extends the window.

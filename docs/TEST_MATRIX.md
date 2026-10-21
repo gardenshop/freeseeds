@@ -24,6 +24,7 @@
 |---|---|---|
 | Chrome MCP/list_pages | BLOCKED | Kilo config enabled; Chrome no DevTools endpoint, no bridge/tool namespace; no raw CDP |
 | Migration/no backfill | PASS LOCAL | 0026 adds nullable last_inbound_at; existing values stay NULL |
+| Admin Orders lastInboundAt | PASS LOCAL | Orders API exposes timestamp for authenticated reconciliation; synthetic API assertion passes |
 | Signed inbound timestamp | PASS LOCAL | Uses original whatsapp_events.created_at after signature/Phone ID checks |
 | Status/outbound isolation | PASS LOCAL | Only parsed inbound messages invoke timestamp persistence |
 | Duplicate/delayed webhook | PASS LOCAL | INSERT OR IGNORE preserves first receipt time; replay at25h cannot extend |
@@ -32,12 +33,14 @@
 | Queued payment retry | PASS LOCAL | Expired window terminalizes job/acks; no provider send/retry |
 | Payment selection idempotency | PASS LOCAL | Same inbound/Flow ID reuses hashed key; new authorized selection gets a distinct key |
 | Payment request idempotency | PASS LOCAL | Same inbound/Flow request hash reuses one key; a later authorized selection gets a distinct key; text/QR parts are per-request |
-| New orders1-4 | PASS audit reused | DETAILS_COMPLETED/PENDING, totals2000/2750/6250/1000, no method/receipt/ref |
+| New orders1-4 | PASS last-known / BLOCKED current | GFS-188 D1 audit totals2000/2750/6250/1000; final GFS-189 read returned API7403 |
 | Pending customer sends | BLOCKED safely | No verified method; inbound time unavailable for historical records; no send/replay |
 | CMS intro/mobile Admin | BLOCKED | PAYMENT v1 lacks required text; Chrome/Admin UI unavailable; mobile issue unreproduced |
 | New number coexistence | BLOCKED | Owner/embedded signup/Pakistan eligibility unavailable; no migration |
 | Ads-to-WhatsApp | BLOCKED | No current Chrome/Meta draft preview; no publish/spend |
-| Full local quality | PASS | Focused47/47; full143/143;build/lint/audit0;API/Admin Wrangler dry-runs |
+| Full local quality | PASS | Focused52/52; full143/143;build/lint/audit0;API/Admin Wrangler dry-runs |
+| Current order read | BLOCKED | Cloudflare API7403 despite correct account identity; no retry/account switch |
+| Post-push CI | BLOCKED | Run39575960147 completed with zero steps under known billing lock |
 | Staging deploy/live test | NOT PERFORMED | No Chrome MCP; rollback and current versions preserved |
 
 ## GFS-188 Order/Payment/Coexistence Audit

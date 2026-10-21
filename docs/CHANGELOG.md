@@ -8,6 +8,7 @@
 - Scoped payment outbox/text/QR idempotency to hashed inbound message/Flow IDs: duplicate events reuse keys; a new explicit method-selection event creates fresh authorized work.
 - Added tests for 24h boundaries, no historic backfill, status-only exclusion, duplicate replay non-extension, stale direct reply and queued payment no-send.
 - Admin read/test endpoint exposes lastInboundAt; reset clears it without deleting history.
+- Admin Orders API now also returns lastInboundAt for masked reconciliation; a synthetic API test covers the field.
 - No staging deployment or live Chrome test; MCP unavailable. Real methods/CMS/provider/number/ads state remains unchanged.
 
 ## Unreleased - 2026-10-21 (GFS-189)
