@@ -32,7 +32,7 @@ An initial broad staging D1 query returned unmasked payment recipient/account id
 ### Validation and Deployment
 
 - `npm ci`; focused payment tests4/4; full `138/138` across18 files; build/lint/audit0; API/Admin Wrangler dry-runs PASS.
-- CI run `39500843883` at baseline `7bbea9d` failed before steps under existing billing lock; no protection bypass.
+- Fix/docs commit `ebb10a9637245317c517ed3ccbb230fc9cac10a1` is pushed to PR #8. CI `39558420776` ran zero steps under the billing lock; no protection bypass.
 - Source fix is not deployed. API `5151e081-98ab-45c4-a57f-3ba43c4e6983`; Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`; rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`. No deployment because Chrome MCP/live Admin retest unavailable.
 - Staging read-only active webhook evidence: 536 event rows, newest timestamp `2026-10-21T01:48:22.090Z`; no job replay. Outbox counts are recorded in STATUS; historical Purchase DLQ and payment failures remain untouched.
 - CI is billing-locked and non-blocking only per existing staging policy; no protections bypassed.

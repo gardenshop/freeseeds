@@ -36,6 +36,7 @@
 | D1 data disclosure | INCIDENT | Initial broad read returned raw recipient identifiers; not copied to repo; owner review required |
 | Local quality | PASS | npmci;138/138; build/lint/audit0; API/Admin Wrangler dry-runs |
 | CI | BLOCKED external | Run39500843883 failed before steps under billing lock; no bypass |
+| Post-push CI | BLOCKED external | Run39558420776 job had zero steps; existing billing lock; no bypass |
 | Live deploy | NOT PERFORMED | No Chrome retest; staging stays API5151e081/Admin6fb34f89 |
 
 ## GFS-186 Full Browser Fixture Matrix
