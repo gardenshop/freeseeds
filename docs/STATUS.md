@@ -1,5 +1,22 @@
 # Status
 
+## GFS-187 Real Payment Setup and Live WhatsApp E2E (2026-10-21)
+
+- Starting/fetched HEAD `7bbea9d`; PR #8 and branch correct. Required protected records read. GitHub account `gardenshop`, Cloudflare/Admin `gisupp@gmail.com` verified. Preserved `images/` untouched.
+- Browser blocker: Chrome DevTools MCP/list_pages is not available in this tool session. No profile/contact verification, Admin UI visit, provider-record inspection, WAMID or real WhatsApp test was attempted. No direct debug port/browser substitute was used. GFS-183 real E2E remains historical evidence only.
+- Staging D1 read-only payment state: all three methods disabled and `qr_owner_verified=0`. Their existing method-linked QR assets remain active with decoder/payload/scan checks passing and hashes/derivatives present; independent ownership flags/ref remain false/empty. No new owner/provider evidence or audit approval was available. Existing drafts were not replaced. Exact account details deliberately omitted.
+- Source repair in `apps/admin/src/index.ts`: copy-only saves now update localized copy and sort order without touching recipient, till, enabled, QR or ownership columns. Recipient/account changes force disabled state and clear owner flag before saving, then protected migration 0024 clears independent asset evidence and audits re-verification. Response reflects persisted state and reports `reverificationRequired`. QR upload/reset path remains unchanged.
+- Focused local integration test passes copy-only save preserving a synthetic verified enabled method; a synthetic recipient change disables, clears evidence and records both re-verification audit entries. These are SQLite fixtures, not evidence about Garden Shop ownership.
+- QR pipeline was not mutated: current staging provenance still passes existing integrity checks. No new QR upload, original/derivative write, source extraction, R2 change or private preview write.
+- Payment provider evidence: BLOCKED because authenticated merchant/bank records and Chrome are unavailable; the task supplies no new evidence artifact. JazzCash till ownership, Easypaisa alias/D1 mapping, and Bank Alfalah QR-to-IBAN/Raast mapping remain unverified. All methods stay disabled. No account-value changes, payment transfer, receipt, PAID, or fulfillment.
+- Real WhatsApp E2E: BLOCKED by zero qualifying methods and unavailable Chrome MCP. Existing actual GFS-183 order `FS-261020-000011`, 19 READ WAMIDs and screenshots are not repeated or misrepresented as GFS-187. No new order/customer message. Held incident `FS-261019-000001` remains PACKING/PAID and unchanged.
+- CAPI/Purchase remains OFF. Read-only outbox counts: 16 Lead pending, 2 Purchase dead-lettered, 12 WhatsApp payment-instruction permanent failures and 1 sent. No retry/replay was performed. Latest webhook event row time is `2026-10-21T01:48:22.090Z`; no payload/customer data was selected.
+- Deployment preflight: API/Admin bindings match existing GFS staging resources; current versions API `5151e081-98ab-45c4-a57f-3ba43c4e6983`, Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`. API rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`; previous Admin deployment available in Wrangler history. No deployment because authenticated browser live retest was unavailable.
+- Security disclosure: the initial broad payment-method D1 query returned unmasked recipient/account identifiers in tool output. Values were not copied into repository records or used; no payment configuration was changed. Treat as a sensitive-output incident. Account owner must assess whether provider identifiers need rotation; do not repeat broad payment D1 reads.
+- Quality: `npm ci`; focused Admin payment tests 4/4; full suite 138/138 across18 files; build/lint/audit0; API/Admin Wrangler dry-runs PASS. CI run `39500843883` failed before steps under the known billing lock; no bypass.
+- Decision: source fix **PASS locally**; Admin live-save/Chrome retest **BLOCKED**; real checkout and payment enablement **BLOCKED**; staging deployment **NOT PERFORMED**. Staging lead-only remains GO; public lead launch and customer payments NO-GO.
+- Progress estimate: total **78%/22%**; P0 Admin save repair **85/15**; P1 real checkout **30/70**; P2 provider payment setup **25/75**; P3 release/testing **70/30**.
+
 ## GFS-186 Complete WhatsApp Flow and Meta Recovery (2026-10-20)
 
 - Fetched starting HEAD `164c33d`; correct branch/PR #8. No new real WhatsApp messages, real order, financial mutation, CAPI event, Meta token generation, or Worker deployment. `images/` preserved.

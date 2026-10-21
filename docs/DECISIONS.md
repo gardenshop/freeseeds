@@ -1,5 +1,23 @@
 # Decisions
 
+## 2026-10-21: GFS-187 Safe Payment Save and Evidence Boundary
+
+Removed unconditional QR owner-verification reset from Admin copy saves. Copy-only updates omit identity/enabled/QR columns, preserving valid independent evidence. If recipient identity changes, disable and clear owner state first with audit, persist new details, then rely on migration0024 to clear asset evidence and record re-verification. Local synthetic D1 integration passes both paths. Existing enable guard and QR upload reset remain.
+
+Do not deploy until authenticated Chrome Admin save/reload readback passes. Chrome DevTools MCP was absent; no browser substitute or Admin mutation was made. Real verification remains blocked because D1 owner/evidence flags are false and no authenticated provider/bank records were supplied. No methods enabled/transfer/real checkout.
+
+Sensitive-output incident: a broad read-only D1 command returned raw recipient identifiers to tool output. Values were not reused or recorded; no config changed. Account owner assesses whether identifiers need rotation. Future queries are aggregate/boolean only. Preserve the historic order hold.
+
+## 2026-10-21: GFS-187 Copy-Save Verification Boundary
+
+Remove ownership invalidation from ordinary copy saves. The copy-only route updates localized instruction/heading/receipt/help/status copy and sort order while omitting account, enabled, QR and verification columns; returned state is read back from D1. Recipient/account change forces method disable and owner-flag clear before saving; protected 0024 trigger invalidates QR asset evidence and audits the change. If the update fails after pre-disable, failure is closed: method remains disabled/unverified.
+
+Local SQLite integration proves a verified synthetic method remains verified on copy save and becomes disabled/evidence-cleared after synthetic till change. This does not verify real recipient evidence. No real methods were changed.
+
+Chrome MCP was unavailable, so do not deploy the Admin change or claim live retest. All real methods remain off for missing independent provider proof. No transfer/receipt/PAID/fulfillment or historical replay.
+
+Sensitive-output incident: one broad remote D1 query emitted raw payment identifiers in tool output. Do not reproduce them in logs/docs/tests or change values without account-owner instruction. Owner reviews disclosure/rotation; future queries must return masked metadata only.
+
 ## 2026-10-20: GFS-186 Offline Payment Lab and Security Hold
 
 To test the full checkout UI without weakening finance controls, use only the loopback static harness. It has a network-denying CSP, no backend/API route, no persistent storage, fake recipients, unique unscannable synthetic method images, and memory-only order/receipt/admin state. EN/UR Chrome runs cover review/back, amounts, all three method presentations, real browser file selection, blob receipt preview, pending/Admin rejection, simulated approval, and non-dispatch fulfillment. These are not WhatsApp/provider delivery, not R2 receipt storage, not PAID, and not financial evidence.

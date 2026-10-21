@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased - 2026-10-21 (GFS-187)
+
+- Fixed payment copy-only Admin saves to preserve owner verification by omitting identity, enabled and QR columns from copy updates.
+- Recipient/account change now disables first, records audit, saves the new identity and lets migration0024 invalidate asset evidence/ref. Save response reflects persisted state.
+- Added synthetic D1 integration regression for copy preservation and recipient-change invalidation.
+- No QR upload, provider verification, real method enablement, Chrome checkout, transfer, receipt, PAID, fulfillment or staging deployment; Chrome MCP unavailable and payee evidence absent.
+- Recorded sensitive-output incident from broad D1 read; no values copied into repository; owner review required.
+- `npm ci`,138 tests/build/lint/audit0/Wrangler dry-runs PASS.
+
+## Unreleased - 2026-10-21 (GFS-187)
+
+- Fixed Admin copy-only payment saves so they preserve verified ownership and do not update recipient/enabled/QR fields.
+- Recipient/account edits fail closed by disabling the method first; migration0024 then clears QR ownership evidence and writes the re-verification audit. Admin response now reflects persisted state.
+- Added synthetic SQLite integration coverage for copy preservation and account-change invalidation.
+- No method enablement, QR upload, Worker deployment, real WhatsApp message, payment, receipt, PAID or fulfillment. Chrome MCP/profile unavailable and beneficiary evidence absent.
+- Recorded a sensitive-output incident from an unmasked D1 read; no values copied to repo. Owner review required.
+- `npm ci`, 138 tests, build/lint/audit0 and Wrangler dry-runs pass.
+
 ## Unreleased - 2026-10-20 (GFS-186)
 
 - Added a loopback-only browser checkout lab with network-denying CSP, no persistent storage/backend, synthetic method-specific QR-like fixtures and explicit NON-PAYABLE labeling.

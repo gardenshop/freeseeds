@@ -1156,8 +1156,10 @@ app.post("/api/payment-methods/:method", async (c) => {
       statusCopyUr: paymentCopy(body.statusCopyUr, current?.status_copy_ur),
       enabled: body.enabled === undefined ? Number(current?.enabled ?? 0) === 1 : body.enabled === true,
       sortOrder: body.sortOrder === undefined ? Number(current?.sort_order ?? 100) : Number.isInteger(body.sortOrder) ? Number(body.sortOrder) : 100,
-   };
-   validatePaymentLocaleCopy(candidate);
+    };
+    const recipientChanged = Boolean(current) && ((candidate.recipientName ?? null) !== (current?.recipient_name ?? null) || (candidate.tillId ?? null) !== (current?.till_id ?? null));
+    if (recipientChanged) candidate.enabled = false;
+    validatePaymentLocaleCopy(candidate);
    if (candidate.enabled && !isPaymentMethodComplete(candidate)) return c.json({ error: "PAYMENT_METHOD_INCOMPLETE", message: "Enabled payment methods require a recipient name and instructions." }, 400);
    if (candidate.enabled && (!candidate.headingUr?.trim() || !candidate.instructionsUr?.trim() || !candidate.referenceInstructionUr?.trim() || !candidate.receiptInstructionsUr?.trim())) return c.json({ error: "PAYMENT_URDU_TRANSLATION_MISSING", message: "Add a distinct Urdu heading, payment instruction, reference instruction, and receipt instruction before enabling this method." }, 400);
    if (candidate.enabled && (!hasPaymentMessagePlaceholders(candidate, "en") || !hasPaymentMessagePlaceholders(candidate, "ur"))) return c.json({ error: "PAYMENT_COPY_PLACEHOLDER_MISSING", message: "English and Urdu instructions must include {amount}, {recipientName}, {orderNumber}, and {tillId} when an account identifier is configured." }, 400);
@@ -1168,14 +1170,33 @@ app.post("/api/payment-methods/:method", async (c) => {
        : undefined;
      if (!ownership) return c.json({ error: "PAYMENT_RECIPIENT_OWNERSHIP_UNVERIFIED", message: "Do not enable this payment method until independent recipient evidence is recorded for its QR asset." }, 400);
    }
-  if (!c.env.DB) return c.json({ ok: true, simulated: true, configured: isPaymentMethodComplete(candidate) });
-  const now = new Date().toISOString();
-  await c.env.DB.batch([
+    if (!c.env.DB) return c.json({ ok: true, simulated: true, configured: isPaymentMethodComplete(candidate) });
+    const now = new Date().toISOString();
+    if (recipientChanged) {
+      await c.env.DB.batch([
+        c.env.DB.prepare("UPDATE payment_methods SET enabled=0,qr_owner_verified=0,updated_at=?,updated_by=? WHERE method=?").bind(now, c.env.ADMIN_EMAIL, method),
+        c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_RECIPIENT_CHANGE_REVERIFICATION_STARTED", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT_METHOD", method, crypto.randomUUID(), JSON.stringify({ method, methodDisabled: true, independentReverificationRequired: true }), now)
+      ]);
+    }
+    const enabledChanged = current && body.enabled !== undefined && candidate.enabled !== (Number(current.enabled ?? 0) === 1);
+    if (current && !recipientChanged && !enabledChanged) {
+      await c.env.DB.batch([
+        c.env.DB.prepare("UPDATE payment_methods SET instructions=?,instructions_ur=?,reference_instruction=?,reference_instruction_ur=?,heading=?,heading_ur=?,qr_caption=?,qr_caption_ur=?,short_instructions=?,short_instructions_ur=?,receipt_instructions=?,receipt_instructions_ur=?,payment_help_copy=?,payment_help_copy_ur=?,status_copy=?,status_copy_ur=?,sort_order=?,updated_at=?,updated_by=? WHERE method=?").bind(candidate.instructions ?? null, candidate.instructionsUr ?? null, candidate.referenceInstruction ?? null, candidate.referenceInstructionUr ?? null, candidate.heading ?? null, candidate.headingUr ?? null, candidate.qrCaption ?? null, candidate.qrCaptionUr ?? null, candidate.shortInstructions ?? null, candidate.shortInstructionsUr ?? null, candidate.receiptInstructions ?? null, candidate.receiptInstructionsUr ?? null, candidate.paymentHelpCopy ?? null, candidate.paymentHelpCopyUr ?? null, candidate.statusCopy ?? null, candidate.statusCopyUr ?? null, candidate.sortOrder, now, c.env.ADMIN_EMAIL, method),
+        c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_METHOD_UPDATED", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT_METHOD", method, crypto.randomUUID(), JSON.stringify({ method, requestedEnabled: candidate.enabled, sortOrder: candidate.sortOrder }), now)
+      ]);
+      const saved = await c.env.DB.prepare("SELECT enabled,qr_owner_verified FROM payment_methods WHERE method=?").bind(method).first<{ enabled: number; qr_owner_verified: number }>();
+      const enabled = Number(saved?.enabled ?? 0) === 1;
+      const qrOwnerVerified = Number(saved?.qr_owner_verified ?? 0) === 1;
+      return c.json({ ok: true, configured: enabled && qrOwnerVerified && isPaymentMethodComplete(candidate), enabled, qrOwnerVerified, reverificationRequired: false });
+    }
+   await c.env.DB.batch([
      c.env.DB.prepare("INSERT INTO payment_methods (id,method,display_name,recipient_name,till_id,instructions,instructions_ur,reference_instruction,reference_instruction_ur,heading,heading_ur,qr_caption,qr_caption_ur,short_instructions,short_instructions_ur,receipt_instructions,receipt_instructions_ur,payment_help_copy,payment_help_copy_ur,status_copy,status_copy_ur,enabled,sort_order,updated_at,updated_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(method) DO UPDATE SET recipient_name=excluded.recipient_name,till_id=excluded.till_id,instructions=excluded.instructions,instructions_ur=excluded.instructions_ur,reference_instruction=excluded.reference_instruction,reference_instruction_ur=excluded.reference_instruction_ur,heading=excluded.heading,heading_ur=excluded.heading_ur,qr_caption=excluded.qr_caption,qr_caption_ur=excluded.qr_caption_ur,short_instructions=excluded.short_instructions,short_instructions_ur=excluded.short_instructions_ur,receipt_instructions=excluded.receipt_instructions,receipt_instructions_ur=excluded.receipt_instructions_ur,payment_help_copy=excluded.payment_help_copy,payment_help_copy_ur=excluded.payment_help_copy_ur,status_copy=excluded.status_copy,status_copy_ur=excluded.status_copy_ur,enabled=excluded.enabled,sort_order=excluded.sort_order,updated_at=excluded.updated_at,updated_by=excluded.updated_by").bind(candidate.id, candidate.method, candidate.displayName, candidate.recipientName ?? null, candidate.tillId ?? null, candidate.instructions ?? null, candidate.instructionsUr ?? null, candidate.referenceInstruction ?? null, candidate.referenceInstructionUr ?? null, candidate.heading ?? null, candidate.headingUr ?? null, candidate.qrCaption ?? null, candidate.qrCaptionUr ?? null, candidate.shortInstructions ?? null, candidate.shortInstructionsUr ?? null, candidate.receiptInstructions ?? null, candidate.receiptInstructionsUr ?? null, candidate.paymentHelpCopy ?? null, candidate.paymentHelpCopyUr ?? null, candidate.statusCopy ?? null, candidate.statusCopyUr ?? null, candidate.enabled ? 1 : 0, candidate.sortOrder, now, c.env.ADMIN_EMAIL),
-     c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_METHOD_UPDATED", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT_METHOD", method, crypto.randomUUID(), JSON.stringify({ method, enabled: candidate.enabled, sortOrder: candidate.sortOrder }), now),
-     c.env.DB.prepare("UPDATE payment_methods SET qr_owner_verified=0 WHERE method=?").bind(method)
-  ]);
-   return c.json({ ok: true, configured: isPaymentMethodComplete(candidate) });
+      c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_METHOD_UPDATED", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT_METHOD", method, crypto.randomUUID(), JSON.stringify({ method, requestedEnabled: candidate.enabled, sortOrder: candidate.sortOrder }), now)
+   ]);
+    const saved = await c.env.DB.prepare("SELECT enabled,qr_owner_verified FROM payment_methods WHERE method=?").bind(method).first<{ enabled: number; qr_owner_verified: number }>();
+    const enabled = Number(saved?.enabled ?? 0) === 1;
+    const qrOwnerVerified = Number(saved?.qr_owner_verified ?? 0) === 1;
+    return c.json({ ok: true, configured: enabled && qrOwnerVerified && isPaymentMethodComplete(candidate), enabled, qrOwnerVerified, reverificationRequired: recipientChanged });
    } catch (error) {
       const code = error instanceof Error && ["PAYMENT_COPY_INVALID", "PAYMENT_COPY_LANGUAGE_MIXED", "PAYMENT_URDU_TRANSLATION_DUPLICATED", "PAYMENT_URDU_TRANSLATION_MISSING"].includes(error.message) ? error.message : "PAYMENT_METHOD_INVALID";
       const message = code === "PAYMENT_COPY_LANGUAGE_MIXED" ? "Move Urdu text to its matching Urdu field; English fields must use English text." : code === "PAYMENT_URDU_TRANSLATION_DUPLICATED" ? "Enter an Urdu translation instead of repeating the English field." : code === "PAYMENT_URDU_TRANSLATION_MISSING" ? "Enter Urdu-script copy in the matching Urdu field." : "Check the payment settings and try again.";

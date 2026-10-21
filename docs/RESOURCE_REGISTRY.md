@@ -1,5 +1,15 @@
 # Resource Registry
 
+## GFS-187 Admin Payment Save Fix
+
+- Starting source `7bbea9d`; modified Admin payment-copy save only. Copy branch no longer writes recipient/till/enabled/QR/owner columns; DB recipient-change guard remains authoritative. Identity changes disable + clear verification and trigger the audited 0024 asset evidence reset. Response reads persisted enabled/owner state.
+- Focused synthetic SQLite test: verified enabled method retains enabled/verified/evidence on copy-only edit; recipient change returns disabled/unverified and records re-verification. No authentic data in fixture.
+- CI run `39500843883` at baseline `7bbea9d` failed before steps under existing billing lock; no protection bypass.
+- Current staging versions unchanged: Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`; API `5151e081-98ab-45c4-a57f-3ba43c4e6983`; API rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`; prior Admin deployment listed by Wrangler. No staging deploy.
+- QR assets unchanged; prior integrity passes reused. All three method owner flags false/evidence refs absent, enabled false. No payment configuration/transfer/receipt/PAID.
+- Chrome DevTools MCP unavailable in GFS-187; no list_pages/profile/admin/provider UI, live E2E or WAMID. Existing GFS-183 actual E2E remains separate historical evidence.
+- Sensitive-output incident: broad D1 query in this run included unmasked payment recipient identifiers. No values copied into repo docs/code or used. Owner security review/possible rotation required; future D1 payment reads must mask values.
+
 ## GFS-186 Offline Payment Lab
 
 - Source starting baseline `164c33d`; changes are fixture-only + test + package-lock peer security update. Harness `tests/fixtures/nonpayable-checkout.html`; synthetic receipt `tests/fixtures/receipt-nonpayable.svg`; test `tests/nonpayable-harness.test.ts`.

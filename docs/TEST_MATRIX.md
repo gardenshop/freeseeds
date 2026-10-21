@@ -1,5 +1,43 @@
 # Test Matrix
 
+## GFS-187 Payment Save and Real E2E
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Branch/accounts | PASS | Starting HEAD7bbea9d; GitHub gardenshop; Cloudflare/Admin gisupp@gmail.com |
+| Chrome list_pages/tester/Admin | BLOCKED | Chrome DevTools MCP absent; no alternate browser/debug-port use |
+| Copy-only settings save | PASS LOCAL | Verified enabled synthetic method retains qr_owner_verified, enabled and asset evidence |
+| Recipient/till change | PASS LOCAL | Method disabled before identity save; migration0024 clears owner/evidence; audited re-verification |
+| Existing QR integrity | PASS read-only reused | All three active method-specific hashes/decoder/payload/scan pass |
+| QR upload/R2/D1 pipeline | PASS existing implementation/tests; not live re-uploaded | No R2/D1 mutation; preserve originals/derivatives |
+| Current real eligibility | BLOCKED safely | All three enabled0/owner0, independent refs absent, amount config0 |
+| Provider verification | BLOCKED | No new authenticated merchant/bank document available |
+| Actual WhatsApp EN/UR checkout | BLOCKED | No eligible method and Chrome MCP unavailable; no transfer authorization |
+| Receipt/PAID/fulfillment | BLOCKED correctly | No funds/reference/approval; no financial mutation |
+| Historical hold | PASS | FS-261019-000001 unchanged |
+| Sensitive D1 output incident | INCIDENT | First read returned raw recipient identifiers; omitted from repo/docs; owner review required |
+| Quality | PASS | npm ci;138/138; build/lint/audit0; both Wrangler dry-runs |
+| Deployment | NOT PERFORMED | Chrome retest absent; staging versions unchanged |
+
+## GFS-187 Payment Setup and Real E2E
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Branch, accounts, protected docs | PASS | Starting HEAD7bbea9d fetched; GitHub gardenshop, Cloudflare/Admin gisupp@gmail.com |
+| Chrome `list_pages`/tester profiles | BLOCKED | Chrome DevTools MCP unavailable; no substitute browser/debug port used |
+| QR integrity/provenance | PASS reused/read-only | Existing three assets active and decoder/payload/scan pass; independent ownership/ref absent |
+| Copy-only Admin save | PASS LOCAL integration | Synthetic verified enabled fixture retains enabled/owner/evidence; real Admin Worker unchanged |
+| Recipient/account change | PASS LOCAL integration | Synthetic change disables before save; D1 trigger clears owner evidence and creates reverify audits |
+| R2 upload/original/derivative synchronization | PASS existing / no new upload | Existing code/tests retained; no QR upload or private storage mutation |
+| Authentic provider evidence | BLOCKED | No authenticated merchant/bank evidence; all real methods disabled |
+| Real WhatsApp payment flow | BLOCKED | No qualifying method and no Chrome MCP; no message/order created |
+| Receipt/PAID/fulfillment | BLOCKED safely | No genuine funds/reference/authorized approval; no receipt or financial mutation |
+| Security/incident hold | PASS containment | `FS-261019-000001` unchanged; no CAPI/payment/DLQ replay |
+| D1 data disclosure | INCIDENT | Initial broad read returned raw recipient identifiers; not copied to repo; owner review required |
+| Local quality | PASS | npmci;138/138; build/lint/audit0; API/Admin Wrangler dry-runs |
+| CI | BLOCKED external | Run39500843883 failed before steps under billing lock; no bypass |
+| Live deploy | NOT PERFORMED | No Chrome retest; staging stays API5151e081/Admin6fb34f89 |
+
 ## GFS-186 Full Browser Fixture Matrix
 
 | Requirement | Result | Evidence / scope |

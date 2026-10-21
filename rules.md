@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-187 Admin Ownership Preservation and Redacted D1 Reads
+
+- Admin Payment Settings copy-only updates change only localized copy/sort fields; they never touch recipient, till/account, enabled, QR metadata, or ownership evidence. This preserves independent QR verification and avoids firing financial triggers for unchanged state.
+- If recipient name or identifier changes, force method disabled and owner flag false first in an audited fail-closed operation, save the new recipient details, and let migration0024 clear independent asset ownership/evidence. Return persisted state and indicate re-verification required. QR upload remains the only asset replacement path and resets ownership; preserve original/derivative/hash/provenance/private-preview synchronization.
+- Never select or print raw payment identifiers in D1 diagnostics. Query only booleans, aggregate counts, or explicitly masked data. GFS-187's first broad D1 diagnostic output raw payment identifiers; they were not copied to source/docs, but owner review is required. Do not repeat or post the values.
+- No new method may be enabled without an authenticated independent provider/bank record. Owner statement and QR integrity are not beneficiary proof. Do not perform real WhatsApp checkout or request a transfer without method verification and explicit amount authorization.
+- If Chrome DevTools MCP/list_pages is unavailable, stop browser/E2E work and do not substitute raw CDP/debug ports. Do not deploy Admin payment changes without the required authenticated Chrome retest; keep staging methods disabled.
+
 ## GFS-186 Payment Harness and Security Recovery
 
 - The browser payment lab is `tests/fixtures/nonpayable-checkout.html`, served only from `127.0.0.1` with the working directory restricted to `tests/fixtures`. Its CSP is `default-src 'none'` and `connect-src 'none'`; no Worker, D1, R2, Meta, WhatsApp, or real recipient is reachable. Order/receipt/review state is in memory only; receipt preview uses an object URL revoked on reset; page reload clears all state.

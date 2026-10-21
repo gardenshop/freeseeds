@@ -1,5 +1,45 @@
 # Final Report
 
+## GFS-187 Real Payment Setup and Live E2E - 2026-10-21
+
+### Results
+
+| Requirement | Result | Evidence |
+|---|---|---|
+| Admin copy-only ownership reset | PASS source/local | Removed unconditional owner reset; verified method stays verified in synthetic D1 integration |
+| Account-change handling | PASS source/local | Pre-disable + migration0024 invalidation + audit; synthetic D1 integration asserts owner/evidence cleared |
+| QR upload synchronization | PASS existing code / not live retested | Existing hashes/provenance pass; no replacement/upload necessary |
+| Authenticated Admin save | BLOCKED | Chrome MCP unavailable; no UI/profile access |
+| Actual owner/provider evidence | BLOCKED | No authenticated JazzCash/Easypaisa/bank evidence artifact available |
+| Method enablement | NO CHANGE | JazzCash, Easypaisa, Bank all disabled; independent ownership false |
+| Real WhatsApp payment E2E | BLOCKED | No eligible method and Chrome MCP missing; no transfer authorization, real message, or order created |
+| Real receipt/PAID/fulfillment | BLOCKED correctly | No verified funds/reference/authorized approval |
+| Historical hold | PASS | FS-261019-000001 remains PACKING/PAID; no change/replay |
+
+### Current Payment State
+
+Existing QR assets retain active method-linked provenance and prior integrity PASS for all three methods. Current D1 owner/evidence fields remain unverified; no QR bytes were extracted or replaced. JazzCash still requires authenticated till ownership evidence; Easypaisa requires merchant alias-to-decoded-D1 mapping; Bank Alfalah requires QR destination-to-IBAN/Raast proof. Do not enable from owner attestation alone.
+
+### Actual WhatsApp Versus Simulated
+
+- Actual GFS-183 evidence is reused, not repeated: FS-261020-000011, 19 READ WAMIDs, 19 private masked screenshots, one order reconciled with D1/Admin, no-method notice and separate Check Order. No new GFS-187 WAMID/screenshot/customer order because Chrome MCP was unavailable and all methods remain disabled.
+- Simulated GFS-187 coverage consists only of the local SQLite Admin route regression: copy-save preservation and recipient-change invalidation. It is not a customer checkout, provider payment, receipt, PAID or fulfillment test.
+
+### Sensitive Output Incident
+
+An initial broad staging D1 query returned unmasked payment recipient/account identifiers in tool output. The values are intentionally not reproduced in this report or repository. They were not used or changed; no transfer occurred. Exact external dependency: Garden Shop account owner reviews whether provider identifiers should be rotated. Future D1 reads must return only booleans/masked metadata.
+
+### Validation and Deployment
+
+- `npm ci`; focused payment tests4/4; full `138/138` across18 files; build/lint/audit0; API/Admin Wrangler dry-runs PASS.
+- CI run `39500843883` at baseline `7bbea9d` failed before steps under existing billing lock; no protection bypass.
+- Source fix is not deployed. API `5151e081-98ab-45c4-a57f-3ba43c4e6983`; Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`; rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`. No deployment because Chrome MCP/live Admin retest unavailable.
+- Staging read-only active webhook evidence: 536 event rows, newest timestamp `2026-10-21T01:48:22.090Z`; no job replay. Outbox counts are recorded in STATUS; historical Purchase DLQ and payment failures remain untouched.
+- CI is billing-locked and non-blocking only per existing staging policy; no protections bypassed.
+- Progress estimate **78%/22%**; P0 **85/15**; P1 actual checkout **30/70**; P2 payments **25/75**; P3 release/testing **70/30**.
+- **Staging lead-only GO; public lead launch NO-GO; customer payments NO-GO.**
+- Next actions: provide Chrome DevTools MCP/list_pages and authenticated tester/Admin profile; supply authenticated beneficiary proof per provider; account owner reviews the D1 output disclosure; authorize exact funds if/when method verification passes. Until then keep all methods/CAPI/Purchase off.
+
 ## GFS-186 Complete WhatsApp Flow and Meta Security Recovery - 2026-10-20
 
 ### Real Versus Simulated
