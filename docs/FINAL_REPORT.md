@@ -1,5 +1,68 @@
 # Final Report
 
+## GFS-189 Chrome Recovery and Service-Window Repair - 2026-10-21
+
+### Requirement Status
+
+| Requirement | Result | Evidence |
+|---|---|---|
+| Chrome MCP recovery/list_pages | BLOCKED | Kilo global server is enabled, but active tool namespace/bridge absent and Chrome has no DevTools endpoint. No raw CDP or profile workaround. Host restart/reconnect required. |
+| Reliable inbound timestamp | PASS LOCAL | Migration0026 nullable last_inbound_at, no backfill; signed/canonical inbound event's first `whatsapp_events.created_at` |
+| 24-hour free-form guard | PASS LOCAL | Exact inbound event check for replies; conversation timestamp check for payment direct/queue sends |
+| Retry/DLQ outside window | PASS LOCAL | Stale messages terminalize PERMANENT_FAILURE, audit, no provider send/retry; no approved template configured |
+| New order reconciliation | PASS D1 audit reused | Four new orders details-complete/payment-pending, totals PKR2000/2750/6250/1000, no method/receipt/ref |
+| Existing pending customers | BLOCKED to message | 11 no-method details-complete + six old selected-method pending; old lastInboundAt unavailable/no backfill; no sends/replays |
+| CMS EN/UR intro | BLOCKED | Published PAYMENT v1 lacks supplied copy; no Chrome/Admin UI; no direct D1 write |
+| Admin mobile blank space | BLOCKED | Screenshot/Admin Chrome inaccessible; no speculative CSS edit |
+| Admin GFS-187 copy fix | BLOCKED live | Source already contains fix but Admin Worker remains6fb34f89; no Chrome save/reload retest, no deploy |
+| Provider ownership/payment | BLOCKED | No authenticated evidence, all methods disabled; no QR change/receipt/PAID/fulfillment |
+| Second number coexistence | BLOCKED | Candidate ownership/provider/Embedded Signup/Pakistan status not verified; no migration |
+| Ads/CTA | BLOCKED | No current Meta preview; no draft/publish/spend |
+| Security/history | PASS containment | No Hoja/Meta token use, no D1 financial mutation, FS-261019-000001 hold preserved |
+| Tests/build | PASS | npmci;143/143;build/lint/audit0;API/Admin Wrangler dry-runs |
+
+### Actual Versus Historical Evidence
+
+GFS-189 created no new customer message, WAMID, screenshot, order, receipt, payment, or provider acknowledgement. GFS-183's 19 READ WAMIDs and screenshots remain prior real evidence and are not claimed as GFS-189. GFS188's order audit is reused, not reissued. CAPI/Purchase remains OFF; no event replay.
+
+### Deployment and Release
+
+- Migration0026 and service-window guards are source-only. Current staging API `5151e081-98ab-45c4-a57f-3ba43c4e6983`, Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`; API rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`. Do not apply/deploy until Chrome MCP is restored and signed-webhook/Admin/outbox live retest passes.
+- GitHub billing lock remains nonblocking only under documented staging policy; no protection bypass.
+- Progress estimates: overall **62% complete/38% remaining**; P0 **80/20**; P1 **70/30**; P2 **10/90**; P3 **15/85**; P4 **5/95**; P5 **80/20**; P6 **100/0**.
+- **Staging lead-only GO** (historical GFS-183 only; GFS-189 not live-verified). **Public leads NO-GO. Payments NO-GO. Second number NO-GO. Ads/spend NO-GO.**
+- Remaining smallest actions: restore supported Chrome MCP and authenticated profile; deploy migration/Worker only after live retest; publish CMS intro via Admin; obtain provider beneficiary documents; verify consent/Meta/CAPI/name; verify candidate-number ownership/coexistence; test ads preview without publishing.
+
+## GFS-189 Chrome Recovery and Service-Window Repair - 2026-10-21
+
+### Chrome MCP
+
+Chrome MCP could not be restored in this agent session. Global config has the approved `chrome-devtools-mcp` command enabled and no override disabling it; Chrome processes exist but lack the remote-debug argument/DevToolsActivePort, and the supported MCP bridge/tool namespace is absent. No direct CDP, profile restart, token access, unrelated tab or alternate browser was used. Smallest host action: restart/reconnect the configured Chrome DevTools MCP through Kilo against the already-authenticated profile, then call `list_pages` first.
+
+### Orders and Service Window
+
+- Redacted D1 confirms FS-261021-000001..000004 are DETAILS_COMPLETED/PENDING with totals PKR2000, 2750, 6250, 1000; no selected method/receipt/transaction reference. Pending pool is 11 without methods and six older PAYMENT_PENDING with historical JazzCash/Easypaisa selections; no receipts. No message was sent/replayed.
+- Last inbound message ID is present for recently received order events, but historic schema had no timestamp. Migration0026 adds nullable `last_inbound_at`, no backfill. Only signed/canonical incoming messages populate it from first stored server receipt time; duplicates retain original time; status/outbound events do not extend.
+- Direct replies and queued payment instructions reject missing/expired (>24h) timestamps. With no approved utility template configured, they terminalize as WHATSAPP_SERVICE_WINDOW_CLOSED without provider send. Tests simulate 25h stale message/queue and prove no sends; these are not live WhatsApp proof. Payment selection outbox keys are hashed per inbound message/Flow ID; same-event retries deduplicate and a fresh authorized selection receives a new key.
+- The current staging migration is NOT applied, so historical timestamps remain unknown. D1 order creation or conversation updated_at is not used to infer the service window.
+
+### Payment/CMS/Other Work
+
+- Payment CMS PAYMENT v1 is missing the requested localized introduction. Admin Chrome UI unavailable; no direct D1 edit or copy publish. All methods remain disabled and unverified; account evidence is missing; no real receipt, PAID or fulfillment.
+- Mobile order-card blank space not reproduced; cited screenshot not accessible and no Chrome Admin. No speculative CSS edit.
+- Candidate secondary number not checked/connected; owner, Business App, Embedded Signup/Pakistan provider eligibility, WABA routing, message echo and manual handoff remain blocked. No OTP/migration/contact published.
+- No current ads CTA preview or draft because Meta browser is unavailable. Prior campaigns-off state reused; no publish/spend.
+- Existing GFS-183 E2E is historical only: no new WAMIDs/screenshots/real customer message. FS-261019-000001 remains held. CAPI/Purchase off. No Meta token/integration used and no outbox replay.
+
+### Validation, Deployment, Release
+
+- `npm ci`; focused service-window/payment-idempotency tests47/47; full `143/143` across19 files; build/lint/audit0; API/Admin Wrangler dry-runs PASS.
+- Source commit `41d94b061bb4830aeefa3eb8ed7d5248ad541c6a` is not deployed.
+- No deployment: API5151e081/Admin6fb34f89; rollback8a045e16. Migration0026 and service-window code are in source only; Chrome live retest unavailable. Existing CI billing lock remains nonblocking only per policy; no protection bypass.
+- Progress estimate overall **62%/38%**; P0 **80/20**; P1 **70/30**; P2 **10/90**; P3 **15/85**; P4 **5/95**; P5 **80/20**; P6 **100/0**.
+- **Staging lead-only GO** (existing GFS-183 evidence only); **public leads NO-GO**; **real payments NO-GO**; **second number NO-GO/UNVERIFIED**.
+- Remaining dependencies: reconnect supported Chrome MCP to authenticated profile; apply/test migration in authorized staging after Chrome recovery; publish editable EN/UR payment intro; obtain beneficiary proofs; validate owner/Embedded Signup for second number; inspect ad preview. No messages/payment until guards pass.
+
 ## GFS-188 New Orders, Payment and Coexistence Audit - 2026-10-21
 
 ### Orders and Payment State

@@ -1,5 +1,22 @@
 # Resource Registry
 
+## GFS-189 Inbound-Time Migration
+
+- New migration `0026_whatsapp_last_inbound_at.sql`; API route persists `last_inbound_at` from first unique signed inbound event receipt timestamp. No historic backfill. Core `isInsideWhatsAppServiceWindow` enforces a strict24h boundary.
+- Stale synchronous replies set outbound PERMANENT_FAILURE. Expired direct/queued payment instructions are skipped/terminalized, audited, and never sent/retried absent an approved utility template. Status/outbound callbacks don't advance time; duplicate provider message IDs keep original `created_at`.
+- Admin conversation/test-controls include lastInboundAt; tester reset clears it without deleting history. Existing GFS188 orders were not backfilled or messaged.
+- Tests143/143, build/lint/audit0, API/Admin dry-runs pass. Migration/API/Admin changes not deployed due missing Chrome MCP/live retest. Current staging versions API5151e081/Admin6fb34f89; rollback8a045e16.
+- User-facing CMS intro, recipients, amounts, new-number eligibility and ads remain unchanged/unverified. No messages/payments/Meta ads/number changes.
+
+## GFS-189 Inbound Service-Window Migration
+
+- Source commit `41d94b061bb4830aeefa3eb8ed7d5248ad541c6a` (baseline `86c1cc8`); additive migration `0026_whatsapp_last_inbound_at.sql`; API helper `persistInboundConversationActivity`, pure 24h validator `isInsideWhatsAppServiceWindow`; Admin conversation endpoint includes lastInboundAt and reset clears it.
+- Timestamp derives from first signed/canonical inbound webhook event's `whatsapp_events.created_at`, not Meta client data/order creation/conversation.updated_at. Unique provider event ID preserves original timestamp on duplicate; no backfill.
+- Direct free-form retries and queued payment instructions require <24h. Missing/expired window terminalizes with reason/audit, ACKs and does not send. No approved utility template or historical replay.
+- Payment instruction outbox/text/QR keys use a hash of the signed inbound message/Flow request ID. Same-event retries deduplicate; a later authorized customer selection gets a fresh key without persisting raw WAMID/token.
+- GFS-188 four new orders remain pending and unchanged; existing old conversation timestamp nulls remain null until next authenticated inbound. No provider message, receipt or paid transition.
+- Chrome MCP remains unavailable; migration/API/Admin changes not deployed. API5151e081/Admin6fb34f89; rollback8a045e16. Local npmci/143 tests/build/lint/audit0/Wrangler dry-runs pass.
+
 ## GFS-188 New Orders and Release Boundary
 
 - Branch `codex/gfs-launch-next-001`, PR8, baseline9aa63af. Chrome MCP config enabled globally but namespace absent in current agent; Chrome process lacks remote-debug flag/DevToolsActivePort and bridge process absent. No raw CDP; host/session reconnect is required.

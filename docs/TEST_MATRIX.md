@@ -1,5 +1,45 @@
 # Test Matrix
 
+## GFS-189 Timestamp and Service-Window Matrix
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Chrome MCP/list_pages | BLOCKED | MCP namespace absent; Chrome has no DevTools endpoint/bridge; no raw CDP |
+| Migration | PASS LOCAL | 0026 adds nullable last_inbound_at; existing conversations remain NULL |
+| Inbound timestamp provenance | PASS LOCAL | HMAC/Phone ID validated route persists first server receipt time from unique inbound event |
+| Duplicate/delayed callback | PASS LOCAL | Existing provider event created_at retained; stale duplicate at25h doesn't move last_inbound_at |
+| Status/outbound isolation | PASS LOCAL | Status-only callback produces no inbound timestamp write |
+| 24h boundary | PASS LOCAL | Fresh and 23h59m59s accepted; exactly24h, future, null and invalid rejected |
+| Free-form stale retry | PASS LOCAL | Failed reply at25h set PERMANENT_FAILURE; provider mock not called |
+| Queued payment outside window | PASS LOCAL | Job permanently blocked/audited/acked; no retry/provider call |
+| Payment request idempotency | PASS LOCAL | Same inbound/Flow ID hashes to same key; a fresh selection gets a distinct request key; text/QR parts are scoped to request |
+| Historical/new order activity | BLOCKED live messaging | GFS-188 order totals remain D1 audit; no CMS/provider/Chrome send |
+| Real-time service eligibility for old orders | BLOCKED | No backfill; last inbound time unknown until next authenticated message |
+| Full local regression | PASS | npmci;143/143;build/lint/audit0;API/Admin Wrangler dry-runs |
+| Staging deploy/Chrome | NOT PERFORMED | No MCP; GFS-187 Admin fix and migration not live |
+
+## GFS-189 Inbound Window and Release Gates
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Chrome MCP/list_pages | BLOCKED | Kilo config enabled; Chrome no DevTools endpoint, no bridge/tool namespace; no raw CDP |
+| Migration/no backfill | PASS LOCAL | 0026 adds nullable last_inbound_at; existing values stay NULL |
+| Signed inbound timestamp | PASS LOCAL | Uses original whatsapp_events.created_at after signature/Phone ID checks |
+| Status/outbound isolation | PASS LOCAL | Only parsed inbound messages invoke timestamp persistence |
+| Duplicate/delayed webhook | PASS LOCAL | INSERT OR IGNORE preserves first receipt time; replay at25h cannot extend |
+| 24-hour boundary | PASS LOCAL | <24h accepted; exactly24h/null/invalid/future rejected |
+| Free-form stale retry | PASS LOCAL | Outbound reply becomes terminal PERMANENT_FAILURE; provider not called |
+| Queued payment retry | PASS LOCAL | Expired window terminalizes job/acks; no provider send/retry |
+| Payment selection idempotency | PASS LOCAL | Same inbound/Flow ID reuses hashed key; new authorized selection gets a distinct key |
+| Payment request idempotency | PASS LOCAL | Same inbound/Flow request hash reuses one key; a later authorized selection gets a distinct key; text/QR parts are per-request |
+| New orders1-4 | PASS audit reused | DETAILS_COMPLETED/PENDING, totals2000/2750/6250/1000, no method/receipt/ref |
+| Pending customer sends | BLOCKED safely | No verified method; inbound time unavailable for historical records; no send/replay |
+| CMS intro/mobile Admin | BLOCKED | PAYMENT v1 lacks required text; Chrome/Admin UI unavailable; mobile issue unreproduced |
+| New number coexistence | BLOCKED | Owner/embedded signup/Pakistan eligibility unavailable; no migration |
+| Ads-to-WhatsApp | BLOCKED | No current Chrome/Meta draft preview; no publish/spend |
+| Full local quality | PASS | Focused47/47; full143/143;build/lint/audit0;API/Admin Wrangler dry-runs |
+| Staging deploy/live test | NOT PERFORMED | No Chrome MCP; rollback and current versions preserved |
+
 ## GFS-188 Order/Payment/Coexistence Audit
 
 | Requirement | Result | Evidence / blocker |

@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased - 2026-10-21 (GFS-189)
+
+- Added nullable last_inbound_at with no backfill, updated only from signed/canonical inbound webhook events using unique first receipt timestamp.
+- Source commit `41d94b061bb4830aeefa3eb8ed7d5248ad541c6a` (not deployed).
+- Enforced strict24h checks for synchronous replies and direct/queued payment instructions; missing/expired sessions fail closed and terminalize without an approved utility template.
+- Scoped payment outbox/text/QR idempotency to hashed inbound message/Flow IDs: duplicate events reuse keys; a new explicit method-selection event creates fresh authorized work.
+- Added tests for 24h boundaries, no historic backfill, status-only exclusion, duplicate replay non-extension, stale direct reply and queued payment no-send.
+- Admin read/test endpoint exposes lastInboundAt; reset clears it without deleting history.
+- No staging deployment or live Chrome test; MCP unavailable. Real methods/CMS/provider/number/ads state remains unchanged.
+
+## Unreleased - 2026-10-21 (GFS-189)
+
+- Added nullable last_inbound_at migration with no history backfill and signed-inbound server-receipt persistence.
+- Prevented duplicate/late webhook replays, status callbacks and outbound activity from extending the service window.
+- Added 24-hour gates to free-form replies, direct/queued payment instructions and terminal failure for closed-window sends when no approved utility template exists.
+- Added Admin conversation read-only lastInboundAt and reset behavior; no live mutation/deploy.
+- Local tests143, build/lint/audit0/Wrangler dry-runs PASS. Chrome MCP unavailable; no fresh real WhatsApp E2E or payment send.
+
 ## Unreleased - 2026-10-21 (GFS-188)
 
 - Reconciled four new and all current pending orders with PII-masked D1 reads; no customer or payment state mutated.

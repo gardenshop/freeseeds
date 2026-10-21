@@ -1,5 +1,23 @@
 # Decisions
 
+## 2026-10-21: GFS-189 Inbound Timestamp and Closed-Window Policy
+
+Add a separate nullable `last_inbound_at`; do not reinterpret conversation.updated_at. Derive the timestamp only from a signed/canonical inbound webhook's unique `whatsapp_events.created_at` (trusted server receipt), not provider text, order creation, or outbound/status events. Do not backfill old conversations. Duplicate callback ID leaves original timestamp unchanged.
+
+No free-form customer reply or queued payment detail may send when the exact original event/conversation inbound timestamp is missing or 24h old. No approved utility template is available, so jobs become permanent failures with a safe audit and no retry/send. The next genuine inbound creates a new window. Payment recipients/methods remain unverified and disabled.
+
+Payment outbox idempotency is scoped to a hash of the triggering signed inbound message ID or Flow token. Re-delivery of the same request reuses its key; a later explicit customer method selection gets a new key. Text and QR delivery use separate child keys under that request. Never rearm a terminal job.
+
+The migration/code is local only because Chrome MCP is absent. Do not deploy until supported list_pages works and signed webhook, Admin order timestamp, outbox and provider E2E retests pass. Historical order jobs are never replayed.
+
+## 2026-10-21: GFS-189 Trusted Service Window
+
+Add last_inbound_at rather than repurposing conversation.updated_at. Migration0026 is nullable and deliberately does not backfill historic activity. Only signed/canonical WhatsApp message events advance it, using their unique first `whatsapp_events.created_at`; duplicate deliveries preserve the original timestamp, status callbacks do not advance it, and outbound activity never extends the window.
+
+Free-form replies and payment instructions must check the original inbound timestamp. Outbox retries after expiry/null terminalize with WHATSAPP_SERVICE_WINDOW_CLOSED; no approved utility template is available, so no out-of-window message is sent. No historical job was replayed. Tests cover the timestamp boundary, duplicate delayed messages, and both direct and queued no-send behavior.
+
+Because Chrome MCP is missing, migration and Admin/API updates are not deployed. Existing rows remain null until new signed inbound events after a future authorized migration; no guessed backfill or re-send. Payment methods and CAPI/Purchase stay disabled/off.
+
 ## 2026-10-21: GFS-188 Orders and No-Send Boundary
 
 Four new orders are confirmed in D1, but all are payment-pending with no method, receipt or transaction reference. The remaining pending pool has 11 orders with no method and six older historical method selections with no receipts. Since recipient evidence is still false, no payment messages, templates, approvals, PAID or fulfillment are authorized. Existing totals are authoritative; do not introduce an advance amount.

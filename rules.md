@@ -1,5 +1,20 @@
 # Get Free Seeds Binding Rules
 
+## GFS-189 Service-Window and Messaging Controls
+
+- Migration0026 adds nullable `whatsapp_conversations.last_inbound_at`, with no historical backfill. Populate only after HMAC signature and canonical callback Phone ID validation, from the first unique `whatsapp_events.created_at` server receipt timestamp. Duplicate provider IDs keep their original time; status/outbound events never extend the service window.
+- Before any free-form reply/payment text, compare the source inbound event against the strict 24-hour boundary. Direct and queued payment instructions also require a current conversation timestamp. Missing/invalid/future/expired timestamp is closed. If no approved utility template is configured, permanently block and audit; never retry terminal history or send stale details.
+- A later authentic customer inbound opens a new window. Order creation, `conversation.updated_at`, order ID, owner statement or outbound delivery is not proof of inbound time/consent. Old conversations remain NULL until new authenticated inbound activity.
+- WhatsApp payment outbox keys include a hash of the triggering message ID; the same inbound retry keeps the same key, while a new authorized customer method-selection message creates a distinct key. Text and QR parts derive from that request key. Never clear/rearm a terminal job to resend.
+- Preserve service-window error/terminal status behavior on D1 deployment. Apply migration before the Worker, then verify signed webhook message updates, duplicate replay doesn't extend, status callbacks don't update, and the outbox doesn't send outside the window.
+
+## GFS-189 Trusted Inbound Time and Service Window
+
+- Migration0026 adds nullable `whatsapp_conversations.last_inbound_at` with no historic backfill. Set it only after the signed WhatsApp webhook and canonical callback Phone ID pass. Use the first `whatsapp_events.created_at` server receipt time for the unique `message:<provider-id>`; `INSERT OR IGNORE` preserves that original time on duplicate delivery. Status/outbound/Flow-server callbacks alone never advance the timestamp.
+- Do not infer historic inbound time from order creation, message ID, or conversation `updated_at`. Null/invalid/future/age>=24h means the free-form service window is closed.
+- Before free-form replies, QR/payment messages, or queued payment-instruction retries, validate the exact persisted inbound timestamp. Outside the 24-hour window, use only an explicitly approved utility template. No approved template means permanently block/terminalize the outbox job with a safe reason and audit; never retry terminal history or send details without customer service eligibility.
+- A new signed inbound message can open a fresh window. A duplicate old message cannot extend it. Message retries use the original event timestamp, not retry time. Historical rows remain null until a new authenticated inbound event; do not backfill.
+
 ## GFS-188 Pending Orders, Service Window, and Coexistence
 
 - Before sending any payment details, publish the exact approved localized PAYMENT CMS introduction and then expose only enabled independently verified methods. Never bypass versioned Admin CMS with direct production D1 edits.

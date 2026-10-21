@@ -193,7 +193,7 @@ export async function handleMetaFlowPayload(payload: MetaFlowPayload, db?: D1Dat
       if (!db || typeof data.orderId !== "string" || !data.orderId.trim()) return protocolError("ORDER_ID_REQUIRED", screen);
       let method: PaymentMethod;
       try { method = PaymentMethod.parse(typeof data.paymentMethod === "string" ? data.paymentMethod.toUpperCase() : data.paymentMethod); } catch { throw new Error("PAYMENT_METHOD_REQUIRED"); }
-      const result = await selectPaymentMethod(db, data.orderId, method);
+      const result = await selectPaymentMethod(db, data.orderId, method, "en", undefined, flowIdempotencyKey(payload));
       const summary = await getPersistedOrderSummary(db, data.orderId);
       return screenResponse("PAYMENT_DETAILS", { orderId: data.orderId, orderNumber: result.orderNumber, amount: result.amount, method: result.config.method, message: result.message, qrAvailable: Boolean(result.config.qrR2Key), orderSummary: summary, paymentMethods: summary.paymentMethods, paymentMethodOptions: summary.paymentMethods.map((name) => ({ id: name, title: name })) }, payload, db);
     }
