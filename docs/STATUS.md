@@ -1,5 +1,22 @@
 # Status
 
+## GFS-188 New Orders and Coexistence Audit (2026-10-21)
+
+- Starting/fetched HEAD `9aa63af`; PR #8 correct. GitHub `gardenshop`, Cloudflare/Admin `gisupp@gmail.com` verified. Chrome DevTools MCP/list_pages absent from active tool catalog. Global Kilo config has `chrome-devtools-mcp` enabled, but no MCP bridge process is running; Chrome is present but no remote-debugging arg or DevToolsActivePort. No raw CDP or unsupported browser workaround used. Restore requires the host/Kilo session to relaunch the configured MCP against the existing authenticated profile.
+- Redacted D1 audit: orders `FS-261021-000001` to `000004` exist, all `DETAILS_COMPLETED/PENDING`, total payable PKR 2000/2750/6250/1000 respectively, no selected method, no receipt, no transaction reference. All four have one pending CAPI_LEAD outbox item; this is not provider delivery. No outbound-message row is associated with those orders; no customer reply or WAMID is claimed.
+- All current pending payment orders: 11 `DETAILS_COMPLETED/PENDING` with no method and six older `PAYMENT_PENDING/PENDING` with historical selections (five JazzCash, one Easypaisa); zero receipt rows. All real methods are now disabled/unverified, so no new or duplicate payment instructions were sent, and terminal jobs were not replayed. `FS-261019-000001` unchanged under hold.
+- Service-window blocker: D1 stores last inbound message ID but no dedicated timestamp. Conversation `updated_at` can include outbound activity, so it is not treated as the 24-hour inbound boundary. Order creation timestamps do not prove later replies/consent. No pending customer was messaged.
+- Published PAYMENT CMS v1 (last updated 2026-10-12) does not contain the specified localized introduction (redacted boolean comparison only). Chrome/Admin UI was unavailable; no CMS draft/publish or direct D1 edit was made. No payment details sent.
+- Payment settings remain all three `enabled=0`, `qr_owner_verified=0`, active existing QR provenance/integrity retained, amount configuration unset. No authenticated provider records surfaced: JazzCash till, Easypaisa alias/D1 mapping, Bank Alfalah QR-to-IBAN/Raast remain unverified. No account changes, QR uploads, transfer, PAID or fulfillment.
+- Admin mobile-card blank-space complaint is NOT REPRODUCED: screenshot was not attached/accessibly present and Chrome MCP unavailable. No speculative CSS edit.
+- Owner-provided candidate second number was not inspected/connected. Previous primary-phone Coexistence read only said the primary is Cloud API/not on Business App; this does not establish candidate eligibility. Pakistan/provider support, Business App age, ownership, WABA linkage and webhook/echo behavior remain unverified. No OTP, Embedded Signup, migration, human reply or manual-support contact.
+- Ads: no Chrome/Meta view or CTA test. Prior read-only account showed campaigns off; no draft was created, published, or spent. No fabricated leads/costs.
+- Existing Hoja isolation/security restrictions maintained; no Meta credential used and no integrations changed. CAPI/Purchase remain OFF.
+- Quality: `npm ci`; full 138/138 across18 files; build/lint/audit0; API/Admin Wrangler dry-runs PASS. GFS-187 Admin copy-save fix is in source commit `ebb10a9` but staging Admin `6fb34f89` remains pre-fix; no GFS-188 deploy because authenticated Chrome/live retest is unavailable. API `5151e081`; rollback API `8a045e16`. CI run `39558601305` failed before steps under the known billing lock; no bypass.
+- Result: D1 order reconciliation **PASS**; recipient verification/activation **BLOCKED**; Admin mobile visual **BLOCKED**; CMS intro change **BLOCKED**; real WhatsApp payment E2E **BLOCKED**; coexistence **BLOCKED**; advertising test **BLOCKED**.
+- Decisions: staging lead-only **GO**; public leads **NO-GO**; second number **NO-GO/UNVERIFIED**; real payments **NO-GO**.
+- Progress estimate: overall **58%/42%**; P0 new orders/Admin repair **70/30**; P1 payment messaging **20/80**; P2 real WhatsApp E2E **10/90**; P3 coexistence **15/85**; P4 ads **5/95**; P5 security/regression **75/25**; P6 docs **100/0**.
+
 ## GFS-187 Real Payment Setup and Live WhatsApp E2E (2026-10-21)
 
 - Starting/fetched HEAD `7bbea9d`; PR #8 and branch correct. Required protected records read. GitHub account `gardenshop`, Cloudflare/Admin `gisupp@gmail.com` verified. Preserved `images/` untouched.

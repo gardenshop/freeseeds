@@ -1,5 +1,15 @@
 # Resource Registry
 
+## GFS-188 New Orders and Release Boundary
+
+- Branch `codex/gfs-launch-next-001`, PR8, baseline9aa63af. Chrome MCP config enabled globally but namespace absent in current agent; Chrome process lacks remote-debug flag/DevToolsActivePort and bridge process absent. No raw CDP; host/session reconnect is required.
+- New D1 orders `FS-261021-000001`–`000004`: state DETAILS_COMPLETED, payment PENDING, totals PKR2000/2750/6250/1000; method, receipt and transaction reference absent. There is no outbound_message for these orders; one CAPI_LEAD pending job per order, no Meta delivery proof.
+- Pending pool: 11 details-completed/no method, six older PAYMENT_PENDING with five historical JazzCash and one Easypaisa selection, all receipts0. Methods now disabled; no resend/replay.
+- Last inbound message ID exists but no exact `last_inbound_at`; conversation `updated_at` is not a reliable service-window timestamp.
+- Payment CMS template `PAYMENT` published version1; boolean search confirms requested EN/UR introduction absent. No authenticated CMS UI/publish. Amount configuration unset; methods disabled and independent evidence false.
+- Existing Worker versions API5151e081/Admin6fb34f89; rollback8a045e16. No GFS188 deploy, config edit, payment, ads, or Meta call.
+- Latest CI run `39558601305` failed before steps under known account billing lock; no bypass.
+
 ## GFS-187 Admin Payment Save Fix
 
 - Starting source `7bbea9d`; modified Admin payment-copy save only. Copy branch no longer writes recipient/till/enabled/QR/owner columns; DB recipient-change guard remains authoritative. Identity changes disable + clear verification and trigger the audited 0024 asset evidence reset. Response reads persisted enabled/owner state.

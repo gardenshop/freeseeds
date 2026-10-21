@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-188 Pending Orders, Service Window, and Coexistence
+
+- Before sending any payment details, publish the exact approved localized PAYMENT CMS introduction and then expose only enabled independently verified methods. Never bypass versioned Admin CMS with direct production D1 edits.
+- Pending orders with no verified method receive no payment instructions. Do not infer a WhatsApp 24-hour service window from order age or conversation `updated_at`; current schema has `last_inbound_message_id` but no dedicated `last_inbound_at`. If the window cannot be proven, do not send free-form messages. Outside the window require an approved utility template. Never replay terminalized outbox jobs.
+- Use each order's authoritative `total_payable`; never invent a fixed advance. A real transfer needs explicit method and amount authorization, independently confirmed funds, transaction reference, and authorized Admin approval before PAID/fulfillment.
+- Do not register or migrate a second WhatsApp number until its owner, Business App age, country/provider Embedded Signup eligibility, and coexistence status are verified through supported Meta workflow. Preserve all app history. Manual support is a separate optional contact only after ownership verification and never a payment-selection button.
+- Advertising verification must stay draft/preview-only. No campaign activation/spend without explicit budget and release approval.
+
 ## GFS-187 Admin Ownership Preservation and Redacted D1 Reads
 
 - Admin Payment Settings copy-only updates change only localized copy/sort fields; they never touch recipient, till/account, enabled, QR metadata, or ownership evidence. This preserves independent QR verification and avoids firing financial triggers for unchanged state.

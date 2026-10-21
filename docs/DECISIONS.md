@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-10-21: GFS-188 Orders and No-Send Boundary
+
+Four new orders are confirmed in D1, but all are payment-pending with no method, receipt or transaction reference. The remaining pending pool has 11 orders with no method and six older historical method selections with no receipts. Since recipient evidence is still false, no payment messages, templates, approvals, PAID or fulfillment are authorized. Existing totals are authoritative; do not introduce an advance amount.
+
+The PAYMENT CMS v1 misses the requested exact EN/UR intro. Do not send details before updating and publishing that copy via authenticated Admin CMS. Chrome MCP is not present, therefore no live CMS, tester, profile, service-window, Admin-mobile, WAMID or Coexistence verification was claimed. Direct D1/CMS edits and raw CDP are prohibited.
+
+D1 stores inbound message ID but no inbound timestamp. Do not infer the WhatsApp 24-hour session window from conversation updated_at; when uncertain, do not send free-form messages. No stale outbox replay.
+
+Candidate second number is not eligible until owner/Business App age/Pakistan provider support/Embedded Signup and WABA status are verified. No OTP, registration, migration, or public support contact. Ads remain draft/preview-only with no spend; no Meta browser surface was available.
+
 ## 2026-10-21: GFS-187 Safe Payment Save and Evidence Boundary
 
 Removed unconditional QR owner-verification reset from Admin copy saves. Copy-only updates omit identity/enabled/QR columns, preserving valid independent evidence. If recipient identity changes, disable and clear owner state first with audit, persist new details, then rely on migration0024 to clear asset evidence and record re-verification. Local synthetic D1 integration passes both paths. Existing enable guard and QR upload reset remain.

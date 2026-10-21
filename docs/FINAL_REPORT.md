@@ -1,5 +1,44 @@
 # Final Report
 
+## GFS-188 New Orders, Payment and Coexistence Audit - 2026-10-21
+
+### Orders and Payment State
+
+| Order | D1 state | Total | Payment/method | Receipt/reference |
+|---|---|---:|---|---|
+| FS-261021-000001 | DETAILS_COMPLETED | PKR2000 | PENDING / none | none |
+| FS-261021-000002 | DETAILS_COMPLETED | PKR2750 | PENDING / none | none |
+| FS-261021-000003 | DETAILS_COMPLETED | PKR6250 | PENDING / none | none |
+| FS-261021-000004 | DETAILS_COMPLETED | PKR1000 | PENDING / none | none |
+
+Overall current pending pool: eleven orders with no method and six older PAYMENT_PENDING orders with historical method selections (five JazzCash, one Easypaisa); all receipts0. Four target orders have zero outbound-message rows and one CAPI_LEAD pending outbox job each. These are not WAMIDs/Meta acknowledgements. No message, payment detail, template, receipt, approval, PAID or fulfillment action was taken.
+
+All three current real methods are disabled and independently unverified. Existing QR integrity/provenance was reused; no upload/replacement. Amount configuration is unset; the orders' D1 totals remain authoritative. No fixed advance was invented.
+
+### P0/P1 Findings
+
+- Chrome DevTools MCP/list_pages is unavailable. Global config entry is enabled; Chrome is running, but lacks remote-debug argument/DevToolsActivePort and the MCP bridge process is absent. No raw CDP workaround. Therefore authenticated Admin order UI, profile/contact identity, CMS editing, mobile whitespace, service-window, WAMID, screenshots, and actual WhatsApp checkout are BLOCKED.
+- D1 schema records `last_inbound_message_id` but not a timestamp. Conversation `updated_at` cannot prove last inbound because outbound updates may also change it. The new orders are recent, but service-window eligibility is not independently established; no free-form messages were sent.
+- Published `PAYMENT` CMS v1 does not contain the requested exact English/Urdu introduction. No CMS publish/direct SQL workaround; no payment message sent while no method qualifies.
+- Mobile order-card whitespace was not reproducible without the referenced screenshot or Admin Chrome; no speculative CSS change.
+
+### P2-P4 External Work
+
+- JazzCash till ownership, Easypaisa merchant-alias/D1 mapping and Bank Alfalah QR-to-IBAN/Raast beneficiary mapping remain BLOCKED. No new authenticated provider records. No method enabled.
+- Real payment E2E BLOCKED; there are no verified options and no authorized transfer. No receipt/PAID/fulfillment. Existing six historical pending method selections were not resent because methods are now disabled and service-window/consent cannot be proven. Terminal jobs not replayed.
+- Owner-provided candidate second number was not inspected through Meta; ownership, Business App age, Pakistan provider support, Embedded Signup eligibility, WABA link, number-specific API routing and message echo remain unverified. Previous primary is Cloud API/not Business App, but this does not prove candidate eligibility. No OTP, migration, registration or handoff changes. No manual support contact published.
+- No Meta ads CTA/draft could be inspected without Chrome. Existing campaigns remain off per prior audit. No ad draft, publish, spend or fabricated lead/cost result.
+- CAPI/Purchase remains OFF. No Meta/Hoja token or integration was accessed.
+
+### Safeguards and Release
+
+- `FS-261019-000001` unchanged under incident hold. No historical financial/CAPI/outbox replay.
+- Existing actual GFS-183 E2E is not claimed as GFS-188: no new WAMIDs or screenshots were produced. The four order records are D1 evidence only.
+- Quality: npmci;138/138;build/lint/audit0; API/Admin Wrangler dry-runs PASS. GFS-187 Admin fix is in source commit ebb10a9 but not deployed; Chrome live retest is blocked. API5151e081/Admin6fb34f89; rollback8a045e16. CI run39558601305 failed before steps under known billing lock; no bypass.
+- Completion estimate: total **58%/42%**; P0 **70/30**; P1 **20/80**; P2 **10/90**; P3 **15/85**; P4 **5/95**; P5 **75/25**; P6 **100/0**.
+- **Staging lead-only GO. Public leads NO-GO. Second number NO-GO/UNVERIFIED. Real payments NO-GO. Ads/spend NO-GO.**
+- Exact next dependencies: reconnect supported Chrome DevTools MCP against the authenticated GFS profile; verify order/admin UI and service window; publish requested CMS intro; obtain independent provider beneficiary records; owner verification for candidate number and Embedded Signup support; authorized ad preview/release if needed. Do not send payment instructions until a method qualifies.
+
 ## GFS-187 Real Payment Setup and Live E2E - 2026-10-21
 
 ### Results

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased - 2026-10-21 (GFS-188)
+
+- Reconciled four new and all current pending orders with PII-masked D1 reads; no customer or payment state mutated.
+- Confirmed payment intro absent from published CMS v1 and all methods disabled/unverified; no customer payment messages sent.
+- Recorded Chrome MCP unavailability, missing inbound timestamp, candidate-number coexistence, mobile screenshot, ads-preview and provider-evidence blockers. No WABA, number, CMS, ad, or financial mutation.
+- Reused current 138-test/build/lint/audit/Wrangler evidence; no source/deployment change.
+
 ## Unreleased - 2026-10-21 (GFS-187)
 
 - Fixed payment copy-only Admin saves to preserve owner verification by omitting identity, enabled and QR columns from copy updates.

@@ -1,5 +1,25 @@
 # Test Matrix
 
+## GFS-188 Order/Payment/Coexistence Audit
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Branch/protected records | PASS | HEAD9aa63af fetched; required rules/status/test/decision/resource docs read |
+| Chrome MCP/list_pages | BLOCKED | Namespace unavailable; Kilo config enabled, Chrome running without DevTools endpoint, no MCP bridge process; no raw CDP |
+| New orders1-4 | PASS audit / BLOCKED action | Four orders details-complete/payment pending; totals2000/2750/6250/1000; no method/receipt/ref |
+| All other pending | PASS audit | Eleven no-method details-complete; six historical selected-method pending; zero receipts; no replay/message |
+| Outbound/WAMID | BLOCKED | Zero outbound-message rows for four new orders; CAPI lead outbox only; no fresh WAMID |
+| Service window | BLOCKED | No persisted `last_inbound_at`; `conversation.updated_at` is not an exact inbound timestamp; no messages sent |
+| Payment methods | BLOCKED safely | Three disabled/unverified; QR integrity reused; provider evidence absent |
+| CMS intro | BLOCKED | Published PAYMENT v1 does not contain supplied EN/UR intro; no Chrome/Admin workflow, no direct D1 write |
+| Admin mobile blank space | NOT REPRODUCED | Screenshot/Admin browser unavailable; no CSS guess |
+| Second-number coexistence | BLOCKED | Candidate ownership/age/provider/Embedded Signup status unavailable; no migration/OTP/WABA change |
+| Manual handoff | BLOCKED | No validated second contact or Coexistence route; no bot/human state change |
+| Ads CTA/draft | BLOCKED | No Meta browser; no draft, publish or spend |
+| Security/hold | PASS containment | No Hoja/token/integration use; FS-261019-000001 unchanged |
+| Local release gates | PASS | npmci;138/138; build/lint/audit0; Wrangler API/Admin dry-runs |
+| Deployment/CI | NOT PERFORMED / BLOCKED | No source change; current staging versions unchanged; run39558601305 failed under billing lock before steps |
+
 ## GFS-187 Payment Save and Real E2E
 
 | Requirement | Result | Evidence / blocker |
