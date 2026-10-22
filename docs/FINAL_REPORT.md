@@ -17,8 +17,8 @@
 | P3 receipt/review/PAID/fulfillment | NOT AUTHORIZED / NOT PERFORMED | No method, transfer authorization, funds, unique transaction reference, receipt, or Admin approval. No simulated result is presented as real. |
 | P4 pending orders | PASS audit / BLOCKED follow-up | Read-only redacted audit found 20 pending orders, zero receipts, 14 without method and six with historical selections. Screenshot-referenced total matches supplied evidence. No customer contacted: no qualifying method and exact inbound service windows unavailable. Held incident unchanged. |
 | P5 quality | PASS local | `npm audit fix` updated lockfile to resolve two moderate Vitest advisories. Clean `npm ci`, 143/143 tests across19 files, build, lint, full audit0, API/Admin Wrangler dry-runs, and second `list_pages` PASS. |
-| P5 deployment/CI | NOT DEPLOYED / CI BLOCKED | API remains `5151e081-98ab-45c4-a57f-3ba43c4e6983`; Admin remains `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`; API rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`. Latest PR CI `39578902016` failed with zero steps, consistent with billing lock. No bypass. |
-| P6 records/PR | PASS preparation | Required records updated for the authorized PR #8 push. GitHub `gardenshop`, target branch, and source head `e17684c` verified. No merge or protection bypass. |
+| P5 deployment/CI | NOT DEPLOYED / CI BLOCKED | API remains `5151e081-98ab-45c4-a57f-3ba43c4e6983`; Admin remains `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`; API rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`. Post-push PR CI `39744649236` failed with zero steps, consistent with the known billing lock. No bypass. |
+| P6 records/PR | PASS | Required records and lockfile fix pushed to open PR #8 as `a2d685571d1401ae85113e05763ede0cda9fd068`. No merge or protection bypass. |
 
 ### Reconciliation and Release
 
@@ -27,7 +27,7 @@
 - The screenshot-referenced order is `DETAILS_COMPLETED/PENDING`, and its total matches the supplied evidence; no method or receipt is recorded. Current pending pool is 20 with zero receipts (14 no method; six historical selections). No order/payment state or customer record was changed.
 - **Chrome MCP: PASS. D1 remote reads via Wrangler: PASS. Dashboard API7403/Cloudflare Access: unresolved. Payment verification/enablement/QR delivery: BLOCKED. Deployment/CMS: BLOCKED. New real E2E: BLOCKED. Receipt/review/PAID/fulfillment: NOT PERFORMED.**
 - Staging lead-only **GO based only on historical GFS-183**; no new acceptance is claimed. Public leads **NO-GO**. Customer payments **NO-GO**. No ad/spend, number migration, Hoja integration, or incident-history change.
-- Completion estimates: whole project **63% complete / 37% remaining**; P0 **60/40**; P1 **35/65**; P2 **10/90**; P3 **15/85**; P4 **10/90**; P5 **85/15**; P6 **100/0 for record preparation**. Estimates do not convert external blockers into PASS.
+- Completion estimates: whole project **63% complete / 37% remaining**; P0 **60/40**; P1 **35/65**; P2 **10/90**; P3 **15/85**; P4 **10/90**; P5 **85/15**; P6 **100/0**. Estimates do not convert external blockers into PASS.
 - Smallest remaining dependencies: restore authenticated Cloudflare Access/Admin identity for `gisupp@gmail.com`; provide the three independent provider/bank beneficiary mappings; then execute the protected evidence review. After eligibility, verify tester profile and current inbound window, validate D1/migration tracking and rollback, apply migration before Worker deploy, publish bilingual PAYMENT CMS through Save→Publish→Reload, and perform fresh real WhatsApp acceptance. Actual transfer still requires explicit method/amount authorization; PAID/fulfillment still require genuine funds, unique reference, and authorized Admin approval.
 
 ## GFS-189 Chrome Recovery and Service-Window Repair - 2026-10-21
