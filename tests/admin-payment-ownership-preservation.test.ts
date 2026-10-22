@@ -1,12 +1,13 @@
 import { readFileSync } from "node:fs";
 import { DatabaseSync, type SQLInputValue } from "node:sqlite";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import app from "../apps/admin/src/index";
 
 const access = { "cf-access-authenticated-user-email": "admin@example.test" };
 let sqlite: DatabaseSync;
 
-function makeDb(): D1Database {
+function makeDb(beforeBatch?: () => void | Promise<void>): D1Database {
+  let batchQueue = Promise.resolve<unknown>(undefined);
   return {
     prepare(sql: string) {
       let values: SQLInputValue[] = [];
@@ -19,9 +20,14 @@ function makeDb(): D1Database {
       return statement;
     },
     batch: async (statements: Array<{ run: () => Promise<unknown> }>) => {
-      sqlite.exec("BEGIN");
-      try { const results = []; for (const statement of statements) results.push(await statement.run()); sqlite.exec("COMMIT"); return results; }
-      catch (error) { sqlite.exec("ROLLBACK"); throw error; }
+      await beforeBatch?.();
+      const result = batchQueue.then(async () => {
+        sqlite.exec("BEGIN");
+        try { const results = []; for (const statement of statements) results.push(await statement.run()); sqlite.exec("COMMIT"); return results; }
+        catch (error) { sqlite.exec("ROLLBACK"); throw error; }
+      });
+      batchQueue = result.catch(() => undefined);
+      return result;
     }
   } as unknown as D1Database;
 }
@@ -36,8 +42,17 @@ async function save(env: Parameters<typeof app.fetch>[1], body: Record<string, u
   return app.fetch(new Request("https://admin.example.test/api/payment-methods/JAZZCASH", { method: "POST", headers: await headers(env), body: JSON.stringify(body) }), env);
 }
 
+async function review(env: Parameters<typeof app.fetch>[1]) {
+  const response = await app.fetch(new Request("https://admin.example.test/api/payment-methods", { headers: access }), env);
+  expect(response.status).toBe(200);
+  expect(response.headers.get("cache-control")).toContain("no-store");
+  const data = await response.json() as { paymentMethods: Array<{ method: string; reviewSnapshot: string }> };
+  return data.paymentMethods.find((method) => method.method === "JAZZCASH")!.reviewSnapshot;
+}
+
 async function approve(env: Parameters<typeof app.fetch>[1], body: Record<string, unknown>) {
-  return app.fetch(new Request("https://admin.example.test/api/payment-methods/JAZZCASH/beneficiary-approval", { method: "POST", headers: await headers(env), body: JSON.stringify(body) }), env);
+  const reviewSnapshot = Object.hasOwn(body, "reviewSnapshot") ? body.reviewSnapshot : await review(env);
+  return app.fetch(new Request("https://admin.example.test/api/payment-methods/JAZZCASH/beneficiary-approval", { method: "POST", headers: await headers(env), body: JSON.stringify({ ...body, reviewSnapshot }) }), env);
 }
 
 describe("payment copy saves preserve verified ownership until recipient changes", () => {
@@ -102,9 +117,11 @@ describe("payment copy saves preserve verified ownership until recipient changes
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_RECIPIENT_CHANGE_REVERIFICATION_STARTED'").get()).toEqual({ count: 1 });
   });
 
-  it("records one explicit evidence review for the current QR and enables only that method", async () => {
-    sqlite = new DatabaseSync(":memory:");
+  describe("synthetic NON-PAYABLE beneficiary approval", () => {
+    let env: Parameters<typeof app.fetch>[1] & { DB: D1Database };
     const hash = "a".repeat(64);
+    beforeEach(() => {
+    sqlite = new DatabaseSync(":memory:");
     sqlite.exec(`
       CREATE TABLE payment_methods (
         id TEXT, method TEXT PRIMARY KEY, display_name TEXT, recipient_name TEXT, till_id TEXT,
@@ -139,20 +156,23 @@ describe("payment copy saves preserve verified ownership until recipient changes
       "Test instruction", "ٹیسٹ ہدایت", "Send test receipt", "ٹیسٹ رسید بھیجیں", "Test help", "ٹیسٹ مدد", "Test pending", "ٹیسٹ زیر التوا",
       0, 10, 0, "synthetic/JAZZCASH.png", hash, "image/png", 64
     );
-    const env = { DB: makeDb(), ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL" } as Parameters<typeof app.fetch>[1];
+    env = { DB: makeDb(), ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL" } as typeof env;
+    });
 
+    it("records one explicit evidence review for the current QR and enables only that method", async () => {
     const rejected = await approve(env, { evidenceRef: "PROVIDER-RECORD-SYNTHETIC-001" });
     expect(rejected.status).toBe(400);
     expect(sqlite.prepare("SELECT enabled,qr_owner_verified FROM payment_methods").get()).toEqual({ enabled: 0, qr_owner_verified: 0 });
 
-    const approved = await approve(env, { evidenceRef: "PROVIDER-RECORD-SYNTHETIC-001", confirmed: true });
+    const reviewSnapshot = await review(env);
+    const approved = await approve(env, { evidenceRef: "PROVIDER-RECORD-SYNTHETIC-001", confirmed: true, reviewSnapshot });
     expect(approved.status).toBe(200);
     expect(await approved.json()).toMatchObject({ ok: true, method: "JAZZCASH", enabled: true, reviewer: "admin@example.test", qrSha256: hash });
     expect(sqlite.prepare("SELECT enabled,qr_owner_verified FROM payment_methods").get()).toEqual({ enabled: 1, qr_owner_verified: 1 });
     expect(sqlite.prepare("SELECT independent_ownership_verified,independent_evidence_ref FROM payment_qr_assets").get()).toEqual({ independent_ownership_verified: 1, independent_evidence_ref: "PROVIDER-RECORD-SYNTHETIC-001" });
     const audit = sqlite.prepare("SELECT action,actor_id,metadata_json,created_at FROM audit_log WHERE action='PAYMENT_BENEFICIARY_APPROVED_AND_ENABLED'").get() as { action: string; actor_id: string; metadata_json: string; created_at: string };
     expect(audit).toMatchObject({ action: "PAYMENT_BENEFICIARY_APPROVED_AND_ENABLED", actor_id: "admin@example.test" });
-    expect(JSON.parse(audit.metadata_json)).toMatchObject({ method: "JAZZCASH", evidenceRef: "PROVIDER-RECORD-SYNTHETIC-001", qrSha256: hash, enabledAfterApproval: true });
+    expect(JSON.parse(audit.metadata_json)).toMatchObject({ method: "JAZZCASH", evidenceRef: "PROVIDER-RECORD-SYNTHETIC-001", qrSha256: hash, reviewSnapshot, enabledAfterApproval: true });
     expect(audit.created_at).toBeTruthy();
 
     const duplicate = await approve(env, { evidenceRef: "PROVIDER-RECORD-SYNTHETIC-002", confirmed: true });
@@ -161,5 +181,92 @@ describe("payment copy saves preserve verified ownership until recipient changes
     expect(changed.status).toBe(200);
     expect(sqlite.prepare("SELECT enabled,qr_owner_verified,till_id FROM payment_methods").get()).toEqual({ enabled: 0, qr_owner_verified: 0, till_id: "TEST-TILL-002" });
     expect(sqlite.prepare("SELECT independent_ownership_verified,independent_evidence_ref FROM payment_qr_assets").get()).toEqual({ independent_ownership_verified: 0, independent_evidence_ref: null });
+    });
+
+    it.each(["recipient_name", "till_id", "qr_sha256", "qr_r2_key"])("rejects a stale reviewed %s before approval", async (column) => {
+      const reviewSnapshot = await review(env);
+      const value = column === "qr_sha256" ? "b".repeat(64) : "SYNTHETIC-CHANGED";
+      sqlite.prepare(`UPDATE payment_methods SET ${column}=?`).run(value);
+      if (column === "qr_sha256") sqlite.prepare("UPDATE payment_qr_assets SET derivative_sha256=?").run(value);
+      if (column === "qr_r2_key") sqlite.prepare("UPDATE payment_qr_assets SET derivative_r2_key=?").run(value);
+      const response = await approve(env, { evidenceRef: "SYNTHETIC-PROVIDER-001", confirmed: true, reviewSnapshot });
+      expect(response.status).toBe(409);
+      expect(await response.json()).toEqual({ error: "PAYMENT_BENEFICIARY_REVIEW_STALE" });
+      expect(sqlite.prepare("SELECT enabled,qr_owner_verified FROM payment_methods").get()).toEqual({ enabled: 0, qr_owner_verified: 0 });
+      expect(sqlite.prepare("SELECT independent_ownership_verified,independent_evidence_ref FROM payment_qr_assets").get()).toEqual({ independent_ownership_verified: 0, independent_evidence_ref: null });
+      expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_BENEFICIARY_APPROVED_AND_ENABLED'").get()).toEqual({ count: 0 });
+    });
+
+    it.each(["recipient", "copy", "metadata", "asset"])("rejects a %s change between preflight and transactional approval", async (change) => {
+      env.DB = makeDb(() => {
+        if (change === "recipient") sqlite.exec("UPDATE payment_methods SET till_id='SYNTHETIC-CHANGED'");
+        if (change === "copy") sqlite.exec("UPDATE payment_methods SET instructions_ur=NULL");
+        if (change === "metadata") sqlite.exec("UPDATE payment_methods SET qr_size_bytes=65; UPDATE payment_qr_assets SET derivative_size_bytes=65");
+        if (change === "asset") sqlite.exec("UPDATE payment_qr_assets SET scan_pass=0");
+      });
+      const response = await approve(env, { evidenceRef: "SYNTHETIC-PROVIDER-001", confirmed: true });
+      expect(response.status).toBe(409);
+      expect(sqlite.prepare("SELECT enabled,qr_owner_verified FROM payment_methods").get()).toEqual({ enabled: 0, qr_owner_verified: 0 });
+      expect(sqlite.prepare("SELECT independent_ownership_verified,independent_evidence_ref FROM payment_qr_assets").get()).toEqual({ independent_ownership_verified: 0, independent_evidence_ref: null });
+      expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_BENEFICIARY_APPROVED_AND_ENABLED'").get()).toEqual({ count: 0 });
+    });
+
+    it.each([true, false])("allows exactly one concurrent review and success audit (same reference: %s)", async (sameReference) => {
+      let arrivals = 0;
+      let release!: () => void;
+      const ready = new Promise<void>((resolve) => { release = resolve; });
+      env.DB = makeDb(async () => { if (++arrivals === 2) release(); await ready; });
+      const reviewSnapshot = await review(env);
+      const responses = await Promise.all([
+        approve(env, { evidenceRef: "SYNTHETIC-PROVIDER-001", confirmed: true, reviewSnapshot }),
+        approve(env, { evidenceRef: sameReference ? "SYNTHETIC-PROVIDER-001" : "SYNTHETIC-PROVIDER-002", confirmed: true, reviewSnapshot })
+      ]);
+      expect(responses.map((response) => response.status).sort()).toEqual([200, 409]);
+      expect(sqlite.prepare("SELECT enabled,qr_owner_verified FROM payment_methods").get()).toEqual({ enabled: 1, qr_owner_verified: 1 });
+      const audits = sqlite.prepare("SELECT metadata_json FROM audit_log WHERE action='PAYMENT_BENEFICIARY_APPROVED_AND_ENABLED'").all();
+      expect(audits).toHaveLength(1);
+      const asset = sqlite.prepare("SELECT independent_evidence_ref FROM payment_qr_assets").get();
+      expect(JSON.parse(String(audits[0].metadata_json)).evidenceRef).toBe(asset!.independent_evidence_ref);
+    });
+
+    it("rolls back evidence when enabling changes zero rows", async () => {
+      sqlite.exec("CREATE TRIGGER synthetic_ignore_enable BEFORE UPDATE OF enabled ON payment_methods WHEN NEW.enabled=1 BEGIN SELECT RAISE(IGNORE); END");
+      const response = await approve(env, { evidenceRef: "SYNTHETIC-PROVIDER-001", confirmed: true });
+      expect(response.status).toBe(409);
+      expect(sqlite.prepare("SELECT enabled,qr_owner_verified FROM payment_methods").get()).toEqual({ enabled: 0, qr_owner_verified: 0 });
+      expect(sqlite.prepare("SELECT independent_ownership_verified,independent_evidence_ref FROM payment_qr_assets").get()).toEqual({ independent_ownership_verified: 0, independent_evidence_ref: null });
+      expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log").get()).toEqual({ count: 0 });
+    });
+
+    it("rolls back evidence and enablement when the audit insert fails", async () => {
+      sqlite.exec("CREATE TRIGGER synthetic_audit_failure BEFORE INSERT ON audit_log BEGIN SELECT RAISE(ABORT,'SYNTHETIC_AUDIT_FAILURE'); END");
+      const response = await approve(env, { evidenceRef: "SYNTHETIC-PROVIDER-001", confirmed: true });
+      expect(response.status).toBe(409);
+      expect(sqlite.prepare("SELECT enabled,qr_owner_verified FROM payment_methods").get()).toEqual({ enabled: 0, qr_owner_verified: 0 });
+      expect(sqlite.prepare("SELECT independent_ownership_verified,independent_evidence_ref FROM payment_qr_assets").get()).toEqual({ independent_ownership_verified: 0, independent_evidence_ref: null });
+      expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log").get()).toEqual({ count: 0 });
+    });
+
+    it("requires a snapshot, independent confirmation, Access identity and CSRF", async () => {
+      const body = { evidenceRef: "SYNTHETIC-PROVIDER-001", confirmed: true, reviewSnapshot: await review(env) };
+      expect((await approve(env, { ...body, reviewSnapshot: undefined })).status).toBe(409);
+      expect((await approve(env, { ...body, confirmed: false })).status).toBe(400);
+      for (const requestHeaders of [{}, access]) {
+        const response = await app.fetch(new Request("https://admin.example.test/api/payment-methods/JAZZCASH/beneficiary-approval", { method: "POST", headers: requestHeaders, body: JSON.stringify(body) }), env);
+        expect(response.status).toBe(403);
+      }
+      expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log").get()).toEqual({ count: 0 });
+    });
+
+    it("renders reviewed destination details and sends the loaded snapshot in valid JavaScript", async () => {
+      const response = await app.fetch(new Request("https://admin.example.test/payment-beneficiary-review", { headers: access }), env);
+      const html = await response.text();
+      const script = html.match(/<script>([\s\S]*?)<\/script>/)![1];
+      expect(() => new Function(script)).not.toThrow();
+      expect(script).toContain("esc(m.recipientName)");
+      expect(script).toContain("esc(m.tillId)");
+      expect(script).toContain("reviewSnapshot:reviewed.reviewSnapshot");
+      expect(script).toContain("[data-confirm]').checked=false");
+    });
   });
 });

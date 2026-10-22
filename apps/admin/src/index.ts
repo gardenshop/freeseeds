@@ -486,11 +486,38 @@ app.get("/health", async (c) => {
   const configured = c.env.DB ? await c.env.DB.prepare("SELECT COUNT(*) AS count FROM payment_methods WHERE enabled=1 AND recipient_name IS NOT NULL AND instructions IS NOT NULL AND EXISTS (SELECT 1 FROM payment_configuration WHERE id=1 AND advance_amount_pkr > 0)").first<{ count: number }>() : null;
   return c.json({ ok: true, service: "getfreeseeds-admin", state: c.env.DEPLOYMENT_STATE, paymentConfigured: Number(configured?.count ?? 0) > 0 });
 });
+const paymentReviewColumns = ["method", "recipient_name", "till_id", "qr_r2_key", "qr_sha256", "qr_mime_type", "qr_size_bytes", "enabled", "qr_owner_verified", "instructions", "instructions_ur", "reference_instruction", "reference_instruction_ur", "heading", "heading_ur", "short_instructions", "short_instructions_ur", "receipt_instructions", "receipt_instructions_ur", "payment_help_copy", "payment_help_copy_ur", "status_copy", "status_copy_ur", "updated_at"];
+
+async function paymentReviewSnapshot(row: Record<string, unknown>): Promise<string> {
+  const bytes = new TextEncoder().encode(JSON.stringify(paymentReviewColumns.map((column) => row[column] ?? null)));
+  return Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 function paymentBeneficiaryReviewPageHtml(csrfToken: string): string {
   const csrf = JSON.stringify(csrfToken);
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Payment Verification | Get Free Seeds</title><style>body{font:16px/1.5 system-ui,sans-serif;max-width:900px;margin:2rem auto;padding:0 1rem;color:#1b2a22}article{border:1px solid #ccd5cc;border-radius:10px;padding:1rem;margin:1rem 0}label{display:block;margin:.7rem 0}input,button{font:inherit;padding:.5rem}input[type=text]{width:min(100%,32rem)}button{cursor:pointer}.blocked{color:#8a5a00}.ok{color:#176b36}.error{color:#a40019}.muted{color:#59635a}</style></head><body><nav><a href="/">Admin home</a> | <a href="/payment-settings">Payment Settings</a></nav><h1>One-time beneficiary verification</h1><p>Review an authenticated provider/bank record and compare its exact Garden Shop beneficiary to the currently configured QR destination in Payment Settings. Owner confirmation alone is not sufficient. Never paste account numbers, customer data, credentials, or document contents here; use only an opaque provider record reference.</p><p>Submitting records one approval for the unchanged QR hash and enables that method only if its current EN/UR instructions and private QR integrity also pass. Recipient or QR changes revoke the approval automatically.</p><div id="methods">Loading payment methods...</div><script>
 const csrf=${csrf};const labels={JAZZCASH:'JazzCash',EASYPAISA:'Easypaisa',BANK_TRANSFER:'Bank Alfalah'};const esc=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-async function load(){const r=await fetch('/api/payment-methods',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Payment configuration unavailable');const root=document.querySelector('#methods');root.innerHTML=(d.paymentMethods||[]).map(m=>'<article data-method="'+esc(m.method)+'"><h2>'+labels[m.method]+'</h2><p class="'+(m.qrDeliveryStatus==='READY'?'ok':'blocked')+'">'+(m.qrDeliveryStatus==='READY'?'Beneficiary already approved.':'Disabled; independent evidence required.')+'</p><p class="muted">QR reference/hash '+(m.qrR2Key&&m.qrSha256?'present':'missing')+'; EN/UR copy '+(m.translationWarnings?.length?'incomplete':'complete')+'.</p>'+(m.qrDeliveryStatus==='READY'?'':'<label>Opaque provider record reference<input type="text" maxlength="128" data-evidence-ref autocomplete="off"></label><label><input type="checkbox" data-confirm> I reviewed an authenticated provider record and confirmed the exact QR beneficiary matches Garden Shop.</label><button type="button" data-approve '+(!m.qrR2Key||!m.qrSha256?'disabled':'')+'>Approve and enable this method</button>')+'<p data-result aria-live="polite"></p></article>').join('')||'<p>No payment methods are configured.</p>';for(const card of root.querySelectorAll('article[data-method]')){const button=card.querySelector('[data-approve]');if(!button)continue;button.onclick=async()=>{const result=card.querySelector('[data-result]');const evidenceRef=card.querySelector('[data-evidence-ref]').value.trim();if(!card.querySelector('[data-confirm]').checked){result.className='error';result.textContent='Confirm independent provider verification before approval.';return}button.disabled=true;try{const response=await fetch('/api/payment-methods/'+encodeURIComponent(card.dataset.method)+'/beneficiary-approval',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify({evidenceRef,confirmed:true})});const data=await response.json();if(!response.ok)throw new Error(data.error||'Approval failed');result.className='ok';result.textContent='Approved and enabled; method, reviewer, time, evidence reference and QR hash were audited.';await load()}catch(error){result.className='error';result.textContent=error instanceof Error?error.message:'Approval failed'}finally{button.disabled=false}}}}load().catch(error=>document.querySelector('#methods').textContent=error.message||'Payment configuration unavailable');
+async function load(){
+  const r=await fetch('/api/payment-methods',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Payment configuration unavailable');
+  const methods=d.paymentMethods||[];const root=document.querySelector('#methods');
+  root.innerHTML=methods.map(m=>'<article data-method="'+esc(m.method)+'"><h2>'+esc(labels[m.method])+'</h2><p>'+esc(m.recipientName)+' / '+esc(m.tillId)+'</p><p class="muted">QR SHA-256: '+esc(m.qrSha256)+'</p>'+(m.qrR2Key?'<img width="240" src="/api/payment-methods/'+encodeURIComponent(m.method)+'/qr" alt="Private QR for independent beneficiary review">':'')+'<p>'+(m.qrDeliveryStatus==='READY'?'Beneficiary already approved.':'Independent evidence required.')+'</p>'+(m.qrDeliveryStatus==='READY'?'':'<label>Opaque provider record reference<input type="text" maxlength="128" data-evidence-ref autocomplete="off"></label><label><input type="checkbox" data-confirm> I reviewed an authenticated provider record and confirmed this exact recipient and QR beneficiary match Garden Shop.</label><button type="button" data-approve '+(!m.qrR2Key||!m.qrSha256||!m.reviewSnapshot?'disabled':'')+'>Approve and enable this method</button>')+'<p data-result aria-live="polite"></p></article>').join('')||'<p>No payment methods are configured.</p>';
+  for(const card of root.querySelectorAll('article[data-method]')){
+    const button=card.querySelector('[data-approve]');if(!button)continue;
+    const reviewed=methods.find(m=>m.method===card.dataset.method);
+    button.onclick=async()=>{
+      const result=card.querySelector('[data-result]');const evidenceRef=card.querySelector('[data-evidence-ref]').value.trim();
+      if(!card.querySelector('[data-confirm]').checked){result.className='error';result.textContent='Confirm independent provider verification before approval.';return}
+      button.disabled=true;
+      try{
+        const response=await fetch('/api/payment-methods/'+encodeURIComponent(card.dataset.method)+'/beneficiary-approval',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify({evidenceRef,confirmed:true,reviewSnapshot:reviewed.reviewSnapshot})});
+        const data=await response.json();if(!response.ok)throw new Error(data.error||'Approval failed');
+        await load();
+      }catch(error){result.className='error';result.textContent=(error instanceof Error?error.message:'Approval failed')+'. Reload and review the current destination before retrying.';card.querySelector('[data-confirm]').checked=false}
+      finally{button.disabled=false}
+    }
+  }
+}
+load().catch(error=>document.querySelector('#methods').textContent=error.message||'Payment configuration unavailable');
 </script></body></html>`;
 }
 
@@ -1097,8 +1124,9 @@ app.get("/api/leads", async (c) => {
 
 app.get("/api/payment-methods", async (c) => {
   if (!c.env.DB) return c.json({ paymentMethods: [] });
+  c.header("Cache-Control", "private, no-store");
   const result = await c.env.DB.prepare("SELECT pm.*,EXISTS(SELECT 1 FROM payment_qr_assets qa WHERE qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref IS NOT NULL AND TRIM(qa.independent_evidence_ref)<>'') AS qr_asset_verified FROM payment_methods pm ORDER BY pm.sort_order, pm.method").all();
-   return c.json({ paymentMethods: result.results.map((row) => { const values = row as Record<string, unknown>; const method = normalizePaymentMethodRow(values); const translationWarnings: string[] = []; const englishCopy = [method.heading, method.instructions, method.referenceInstruction, method.shortInstructions, method.receiptInstructions, method.paymentHelpCopy, method.statusCopy]; if (englishCopy.some((value) => value && /[\u0600-\u06ff]/u.test(value))) translationWarnings.push("PAYMENT_COPY_LANGUAGE_MIXED"); if (!method.instructions?.trim() || !method.receiptInstructions?.trim()) translationWarnings.push("PAYMENT_ENGLISH_TRANSLATION_MISSING"); if (!hasPaymentMessagePlaceholders(method, "en") || !hasPaymentMessagePlaceholders(method, "ur")) translationWarnings.push("PAYMENT_COPY_PLACEHOLDER_MISSING"); if (!method.headingUr?.trim() || !method.instructionsUr?.trim() || !method.referenceInstructionUr?.trim() || !method.receiptInstructionsUr?.trim()) translationWarnings.push("PAYMENT_URDU_TRANSLATION_MISSING"); return { ...method, translationWarnings, qrDeliveryStatus: method.qrR2Key ? (method.qrOwnerVerified && Number(values.qr_asset_verified) === 1 ? "READY" : "BLOCKED_OWNERSHIP_UNVERIFIED") : "TEXT_ONLY" }; }) });
+   return c.json({ paymentMethods: await Promise.all(result.results.map(async (row) => { const values = row as Record<string, unknown>; const method = normalizePaymentMethodRow(values); const translationWarnings: string[] = []; const englishCopy = [method.heading, method.instructions, method.referenceInstruction, method.shortInstructions, method.receiptInstructions, method.paymentHelpCopy, method.statusCopy]; if (englishCopy.some((value) => value && /[\u0600-\u06ff]/u.test(value))) translationWarnings.push("PAYMENT_COPY_LANGUAGE_MIXED"); if (!method.instructions?.trim() || !method.receiptInstructions?.trim()) translationWarnings.push("PAYMENT_ENGLISH_TRANSLATION_MISSING"); if (!hasPaymentMessagePlaceholders(method, "en") || !hasPaymentMessagePlaceholders(method, "ur")) translationWarnings.push("PAYMENT_COPY_PLACEHOLDER_MISSING"); if (!method.headingUr?.trim() || !method.instructionsUr?.trim() || !method.referenceInstructionUr?.trim() || !method.receiptInstructionsUr?.trim()) translationWarnings.push("PAYMENT_URDU_TRANSLATION_MISSING"); return { ...method, reviewSnapshot: await paymentReviewSnapshot(values), translationWarnings, qrDeliveryStatus: method.qrR2Key ? (method.qrOwnerVerified && Number(values.qr_asset_verified) === 1 ? "READY" : "BLOCKED_OWNERSHIP_UNVERIFIED") : "TEXT_ONLY" }; })) });
 });
 
 app.get("/api/payment-configuration", async (c) => {
@@ -1136,13 +1164,15 @@ app.post("/api/payment-methods/:method/beneficiary-approval", async (c) => {
   if (!authorized(c) || !c.env.DB) return c.json({ error: "PAYMENT_CONFIGURATION_UNAVAILABLE" }, 503);
   const methodResult = PaymentMethod.safeParse(c.req.param("method").toUpperCase());
   if (!methodResult.success) return c.json({ error: "PAYMENT_METHOD_INVALID" }, 400);
-  let body: { evidenceRef?: unknown; confirmed?: unknown };
+  let body: { evidenceRef?: unknown; confirmed?: unknown; reviewSnapshot?: unknown };
   try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
+  if (!body || typeof body !== "object" || Array.isArray(body)) return c.json({ error: "INVALID_REQUEST" }, 400);
   const evidenceRef = typeof body.evidenceRef === "string" ? body.evidenceRef.trim() : "";
   if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{5,127}$/.test(evidenceRef) || body.confirmed !== true) return c.json({ error: "INDEPENDENT_PROVIDER_EVIDENCE_REQUIRED" }, 400);
   const method = methodResult.data;
   const current = await c.env.DB.prepare("SELECT * FROM payment_methods WHERE method=?").bind(method).first<Record<string, unknown>>();
   if (!current) return c.json({ error: "PAYMENT_METHOD_NOT_FOUND" }, 404);
+  if (typeof body.reviewSnapshot !== "string" || body.reviewSnapshot !== await paymentReviewSnapshot(current)) return c.json({ error: "PAYMENT_BENEFICIARY_REVIEW_STALE" }, 409);
   if (Number(current.enabled) === 1 || Number(current.qr_owner_verified) === 1) return c.json({ error: "PAYMENT_BENEFICIARY_ALREADY_REVIEWED" }, 409);
   const qrR2Key = String(current.qr_r2_key ?? "");
   const qrSha256 = String(current.qr_sha256 ?? "");
@@ -1150,18 +1180,26 @@ app.post("/api/payment-methods/:method/beneficiary-approval", async (c) => {
   const asset = await c.env.DB.prepare("SELECT derivative_r2_key,derivative_sha256,derivative_mime_type,derivative_size_bytes,active,decoder_agreement,payload_match,scan_pass,independent_ownership_verified,independent_evidence_ref FROM payment_qr_assets WHERE method=? AND active=1").bind(method).first<Record<string, unknown>>();
   if (!asset || asset.derivative_r2_key !== qrR2Key || asset.derivative_sha256 !== qrSha256 || asset.derivative_mime_type !== current.qr_mime_type || Number(asset.derivative_size_bytes) !== Number(current.qr_size_bytes) || Number(asset.decoder_agreement) !== 1 || Number(asset.payload_match) !== 1 || Number(asset.scan_pass) !== 1 || Number(asset.independent_ownership_verified) !== 0 || asset.independent_evidence_ref != null || Number(current.enabled) !== 0 || Number(current.qr_owner_verified) !== 0) return c.json({ error: "PAYMENT_QR_INTEGRITY_NOT_READY" }, 409);
   const config = normalizePaymentMethodRow({ ...current, enabled: 1 });
+  try { validatePaymentLocaleCopy(config); } catch { return c.json({ error: "PAYMENT_METHOD_COPY_INCOMPLETE" }, 409); }
   if (!isPaymentMethodComplete(config) || !isPaymentMethodLocaleComplete(config, "en") || !isPaymentMethodLocaleComplete(config, "ur")) return c.json({ error: "PAYMENT_METHOD_COPY_INCOMPLETE" }, 409);
   const reviewer = c.req.header("cf-access-authenticated-user-email")!;
   const now = new Date().toISOString();
   const auditId = crypto.randomUUID();
   const correlationId = crypto.randomUUID();
-  const metadata = JSON.stringify({ method, evidenceRef, qrSha256, enabledAfterApproval: true });
-  const results = await c.env.DB.batch([
-    c.env.DB.prepare("UPDATE payment_qr_assets SET independent_ownership_verified=1,independent_evidence_ref=? WHERE method=? AND derivative_r2_key=? AND derivative_sha256=? AND active=1 AND decoder_agreement=1 AND payload_match=1 AND scan_pass=1 AND independent_ownership_verified=0 AND independent_evidence_ref IS NULL AND EXISTS (SELECT 1 FROM payment_methods pm WHERE pm.method=? AND pm.recipient_name IS ? AND pm.till_id IS ? AND pm.qr_r2_key=? AND pm.qr_sha256=? AND pm.enabled=0 AND pm.qr_owner_verified=0)").bind(evidenceRef, method, qrR2Key, qrSha256, method, current.recipient_name ?? null, current.till_id ?? null, qrR2Key, qrSha256),
-    c.env.DB.prepare("UPDATE payment_methods SET qr_owner_verified=1,enabled=1,updated_at=?,updated_by=? WHERE method=? AND recipient_name IS ? AND till_id IS ? AND qr_r2_key=? AND qr_sha256=? AND enabled=0 AND qr_owner_verified=0 AND EXISTS (SELECT 1 FROM payment_qr_assets qa WHERE qa.method=payment_methods.method AND qa.derivative_r2_key=payment_methods.qr_r2_key AND qa.derivative_sha256=payment_methods.qr_sha256 AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref=?)").bind(now, reviewer, method, current.recipient_name ?? null, current.till_id ?? null, qrR2Key, qrSha256, evidenceRef),
-    c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE EXISTS (SELECT 1 FROM payment_methods pm JOIN payment_qr_assets qa ON qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.derivative_sha256=pm.qr_sha256 WHERE pm.method=? AND pm.enabled=1 AND pm.qr_owner_verified=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref=? AND pm.qr_sha256=?)").bind(auditId, "PAYMENT_BENEFICIARY_APPROVED_AND_ENABLED", "ADMIN", reviewer, "PAYMENT_METHOD", method, correlationId, metadata, now, method, evidenceRef, qrSha256)
-  ]);
-  if (results.some((result) => Number(result.meta?.changes ?? 0) !== 1)) return c.json({ error: "PAYMENT_BENEFICIARY_REVIEW_STALE" }, 409);
+  const metadata = JSON.stringify({ method, evidenceRef, qrSha256, reviewSnapshot: body.reviewSnapshot, enabledAfterApproval: true });
+  const unchanged = paymentReviewColumns.map((column) => `pm.${column} IS ?`).join(" AND ");
+  const reviewedValues = paymentReviewColumns.map((column) => current[column] ?? null);
+  try {
+    await c.env.DB.batch([
+      c.env.DB.prepare(`UPDATE payment_qr_assets SET independent_ownership_verified=1,independent_evidence_ref=? WHERE method=? AND derivative_r2_key=? AND derivative_sha256=? AND derivative_mime_type IS ? AND derivative_size_bytes IS ? AND active=1 AND decoder_agreement=1 AND payload_match=1 AND scan_pass=1 AND independent_ownership_verified=0 AND independent_evidence_ref IS NULL AND EXISTS (SELECT 1 FROM payment_methods pm WHERE ${unchanged})`).bind(evidenceRef, method, qrR2Key, qrSha256, current.qr_mime_type, current.qr_size_bytes, ...reviewedValues),
+      c.env.DB.prepare("UPDATE payment_methods SET qr_owner_verified=1,enabled=1,updated_at=?,updated_by=? WHERE method=? AND changes()=1 AND enabled=0 AND qr_owner_verified=0 AND EXISTS (SELECT 1 FROM payment_qr_assets qa WHERE qa.method=payment_methods.method AND qa.derivative_r2_key=payment_methods.qr_r2_key AND qa.derivative_sha256=payment_methods.qr_sha256 AND qa.derivative_mime_type=payment_methods.qr_mime_type AND qa.derivative_size_bytes=payment_methods.qr_size_bytes AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref=?)").bind(now, reviewer, method, evidenceRef),
+      // json() deliberately aborts the transactional batch if this request did not enable exactly one method.
+      // A zero-row update is not a SQL error by itself and must not commit partial evidence or a losing audit.
+      c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,json(CASE WHEN changes()=1 THEN ? ELSE 'PAYMENT_BENEFICIARY_REVIEW_STALE' END),?)").bind(auditId, "PAYMENT_BENEFICIARY_APPROVED_AND_ENABLED", "ADMIN", reviewer, "PAYMENT_METHOD", method, correlationId, metadata, now)
+    ]);
+  } catch {
+    return c.json({ error: "PAYMENT_BENEFICIARY_REVIEW_STALE" }, 409);
+  }
   return c.json({ ok: true, method, enabled: true, reviewer, approvedAt: now, qrSha256 });
 });
 
