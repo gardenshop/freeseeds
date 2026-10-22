@@ -1,5 +1,21 @@
 # Test Matrix
 
+## GFS-193 Owner-Supplied QR Review (2026-10-22)
+
+| Requirement | Result | Actual evidence / blocker |
+|---|---|---|
+| Chrome MCP/page inventory | PASS | `list_pages` first,10-page inventory; Admin/WA tabs reused; one D1 tab became unavailable; no Meta write |
+| Admin identity/live methods | PASS read-only | GFS Access identity; three methods disabled/owner=false/QR not ready; hashes/review snapshots/previews present |
+| Owner QR screenshots | PASS supporting only | Names/payloads for JazzCash/Easypaisa and ALFH destination reviewed; screenshot is not provider proof |
+| JazzCash | BLOCKED safely | Draft QR identifier matches previous masked D1 comparison; official till ownership record absent |
+| Easypaisa | BLOCKED safely | Official alias-to-Garden-Shop mapping absent; previous destination mismatch unresolved |
+| Bank Alfalah | BLOCKED safely | Payload lacks Garden Shop payee name; exact destination-to-account/bank confirmation absent |
+| Approval workflow | NOT USED | Deployed snapshot-bound workflow is available; no authenticated evidence reference/settlement supplied |
+| Payment/CMS | PAYMENT BLOCKED | CMS v2 placeholders pass; no qualifying method, so actual payment introduction/QR not delivered |
+| Pending orders | PASS aggregate / follow-up BLOCKED | 21 pending, totals balanced21, receipts0; zero enabled/verified methods; no messaging |
+| Regression | PASS | clean npm ci,159/159,lint,build,audit0,Wrangler dry-runs |
+| Final financial state | BLOCKED | No transfer authorization,receipt,confirmed funds,PAID or fulfillment |
+
 ## GFS-192 Actual Deployment and Transport (2026-10-22)
 
 | Requirement | Result | Actual evidence / dependency |

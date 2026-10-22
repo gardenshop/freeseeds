@@ -1,5 +1,29 @@
 # Final Report
 
+## GFS-193 QR Evidence Review - 2026-10-22
+
+**NOT COMPLETE.** The screenshots support decoded QR payload review but do not independently prove Garden Shop beneficiary ownership. All methods remain disabled; no actual payment QR or payment instructions were delivered.
+
+| Requirement | Result | Evidence / exact dependency |
+|---|---|---|
+| JazzCash | BLOCKED | Owner-supplied scan labels Garden Shop; prior masked comparison matched the configured till, but an authenticated JazzCash merchant/till ownership record is still required. |
+| Easypaisa | BLOCKED | Scan labels Garden Shop, but the authenticated merchant alias-to-Garden-Shop destination mapping is absent and prior D1 mapping mismatch remains unresolved. |
+| Bank Alfalah | BLOCKED | Scan shows bank route/destination, not Garden Shop payee. Need authenticated bank record tying the exact QR/Raast/IBAN destination to Garden Shop. |
+| Approval/enablement | NOT PERFORMED | Deployed one-time snapshot-bound workflow remains ready; no provider evidence reference or settlement proof was available. No verification flags/direct recipient changes. |
+| Live configuration | PASS unchanged | All three disabled, owner flags false, R2 reference/hash/snapshots present, private previews3/3 loaded. PAYMENT CMS v2 EN/UR order+amount placeholders remain published. |
+| Pending orders | PASS aggregate / contact BLOCKED | 21 pending, all totals balance, receipts0, verified/enabled methods0. No messages/replays. Held incident not mutated; GFS-192 last authenticated read had hold true. GFS-193 preservation query used a nonexistent column and did not yield a fresh hold read. |
+| Regression | PASS | Clean `npm ci`;159/159,lint,build,audit0,both Wrangler dry-runs. GFS-193 changed no source/deploy. |
+| PR CI | BLOCKED | Run `39780742135` failed before job steps: GitHub stated the account is locked due to a billing issue. No billing/protection bypass. |
+| GO/NO-GO | Lead-only staging GO; public leads NO-GO; real payments NO-GO | Financial E2E remains BLOCKED: no method qualifies; no transfer authorization,receipt,funds,PAID or fulfillment. |
+
+### Required External Records
+
+- JazzCash: authenticated Garden Shop merchant/till ownership page or provider-issued merchant confirmation for the QR destination.
+- Easypaisa: authenticated merchant account record explicitly mapping the decoded QR alias to Garden Shop.
+- Bank Alfalah: authenticated bank payee/account record matching the exact decoded QR destination to Garden Shop’s IBAN/Raast beneficiary.
+- Generic scanner screenshots from the owner are not independent provider records. No provider portal/evidence artifact was available in authenticated browser tabs. Do not repeat searches or treat the screenshot as approval.
+- Progress estimates: whole project75%/25%; P0 50/50; P1 95/5; P2 45/55; P3 85/15; P4 100/0; P5 100/0. Estimates do not imply payment acceptance.
+
 ## GFS-192 Mandatory Results - 2026-10-22
 
 **NOT COMPLETE: staging recovery and live lead-only acceptance passed; financial checkout remains BLOCKED.** This section supersedes earlier runtime/schema claims.

@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-22: GFS-193 Scanner Evidence Does Not Prove Payee
+
+The new owner-uploaded generic scanner screenshots corroborate QR payloads only. Do not independently approve/enable JazzCash from a Garden Shop label or prior D1 till match; require the authenticated JazzCash merchant/till ownership record. Easypaisa still needs the official alias mapping to Garden Shop because the stored alias/destination comparison remains unresolved. Bank Alfalah's ALFH/destination payload has no payee name; require the authenticated bank record linking that exact QR/Raast/IBAN destination to Garden Shop.
+
+The deployed one-time approval UI is ready, but no real provider reference was supplied or accessible. Do not submit the explicit confirmation, set flags, change recipient fields, or perform settlement without explicit method/amount authorization. All three methods remain disabled.
+
+No source/Worker/financial mutation in GFS-193. Reconciled 21 pending orders, balanced totals,0 receipts,0 enabled methods,0 approvals; contacted no customers. CMS v2 remains published. Existing lead-only evidence from GFS-192 is not full payment acceptance. Public leads/payment launch remain NO-GO; staging lead-only remains GO.
+
 ## 2026-10-22: GFS-192 Supported D1 Recovery and Honest Acceptance
 
 Direct authenticated D1 reads now work. Cloudflare documents `quick_check` (not `integrity_check`) as supported; successful quick/FK checks and a Time Travel bookmark resolved the integrity preflight without widening permissions. GFS-191's inference from old Admin output was incorrect: direct table_info proved last_inbound_at absent. Applied only the missing nullable migration0026 once, leaving historical values null and the empty migration ledger untouched. Schema compatibility permits the tested deployment; the ledger still prohibits blanket migrations apply.

@@ -1,5 +1,15 @@
 # Resource Registry
 
+## GFS-193 Payment Evidence Status (2026-10-22)
+
+- Branch `codex/gfs-launch-next-001` fetched at `de512fb` (origin matched); no GFS-193 source/runtime/deployment change. GitHub `gardenshop`, Cloudflare/Admin `gisupp@gmail.com` verified.
+- Reused existing Admin/WhatsApp tabs after `list_pages`. One D1 dashboard tab was opened because none existed and later became unavailable; unrelated pages were not operated. Supplied scanner images were reviewed as owner-supported payload evidence only; no decoding or QR extraction repeated.
+- Live payment API, redacted: three methods disabled, ownership0, QR refs/hashes/snapshots present, previews3/3, ready0. Published CMS v2 unchanged. No review API submitted.
+- JazzCash: decoded Garden Shop label and prior masked configured-destination match are supporting only; authenticated merchant/till ownership link absent. Easypaisa: name in QR is supporting only; merchant alias-to-Garden-Shop record absent. Bank Alfalah: bank route/destination code only; authenticated exact beneficiary link absent.
+- No raw merchant identifiers/provider app data copied. No account/recipient/QR change, approval, enablement, outbound payment message, or transfer. Pending aggregate21 balanced, receipts0, enabled0, approvals0. Test order from GFS-192 unchanged; no new order.
+- GFS-192 active API/Admin versions and migration0026 remain in service. Legacy migration ledger0 untouched. D1 list-read with wrong hold-column name failed without mutation; previous authenticated hold status remains last-known.
+- `npm ci`,159 tests,lint,build,audit0,Wrangler dry-runs pass. Current branch has no GFS-193 commit yet; PR CI lock issue unchanged.
+
 ## GFS-192 Current Live Resources (2026-10-22)
 
 - Canonical GFS account/operator and approved tester verified; same Admin/WhatsApp tabs reused. One canonical Cloudflare D1 tab was opened when none existed, later externally closed. Meta tab/selected WhatsApp chat changed externally; destination was rechecked before every test send. No unrelated message or Meta integration mutation.

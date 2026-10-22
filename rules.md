@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-193 Owner-Supplied QR Evidence Limit (2026-10-22)
+
+- Generic QR-scanner screenshots are supporting evidence of encoded payload only. They do not independently authenticate the destination or prove that the encoded merchant/wallet/bank account belongs to Garden Shop. Never approve from an owner-uploaded scanner screen alone.
+- For each method, approve once only after an authenticated provider/bank record or a separately authorized and independently confirmed settlement links the exact decoded destination to Garden Shop. The one-time workflow is available, but keep all methods disabled until that evidence is reviewed against the current recipient-bound QR snapshot.
+- JazzCash still needs an official till-ownership link even when the displayed Garden Shop payload matches the configured draft. Easypaisa still needs the official alias-to-Garden-Shop destination mapping. A Bank Alfalah/ALFH payload or partial identifier without the beneficiary name needs an authenticated bank payee record matching the exact QR/Raast/IBAN destination.
+- Do not rescan, re-upload, replace a QR, expose raw payment identifiers, accept a mismatched destination, or repeat provider searches. When the account portal/record is absent, report the exact missing provider record once; no transfer or account switch to create synthetic verification.
+- GFS-193 reused CMS v2 and deployed Workers from GFS-192. Current new scan evidence does not qualify any method, so no payment selector/QR/receipt stage can be newly accepted. Keep previous lead-only WAMIDs/screenshots separate from financial acceptance.
+
 ## GFS-192 Live Staging Protocol (2026-10-22)
 
 - Current deployed state supersedes GFS-191: migration0026 was applied once after direct `PRAGMA table_info` proved the column absent. Do not infer schema from an old Admin JSON response. Never replay the 26 pending migrations or fabricate historical ledger rows; the legacy `d1_migrations` table remains empty.
