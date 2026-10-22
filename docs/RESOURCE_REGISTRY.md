@@ -1,5 +1,16 @@
 # Resource Registry
 
+## GFS-192 Current Live Resources (2026-10-22)
+
+- Canonical GFS account/operator and approved tester verified; same Admin/WhatsApp tabs reused. One canonical Cloudflare D1 tab was opened when none existed, later externally closed. Meta tab/selected WhatsApp chat changed externally; destination was rechecked before every test send. No unrelated message or Meta integration mutation.
+- D1 SQL restored without account/scope changes. quick_check=ok; FK violations0. Direct schema corrected GFS-191: last_inbound_at was absent until exact migration0026 applied in this execution.33 old conversation rows remained null. Ledger0 remains an explicit maintenance issue; never replay all pending files or invent entries.
+- Pre-migration recovery bookmark `0000015a-00000000-0000510c-897d4839155526e3b003252d4168724a`; post `0000015d-00000006-0000510c-3b3f10432e4257c11517ac8dc4d51e82`. Recovery only; do not restore over subsequent orders without approved incident procedure.
+- API live `8da54b28-4bec-45b2-9a3f-672225dba843`; Admin live `26ac1162-ef03-41c2-bd47-9472d325b690`; baseline rollback API5151e081/Admin6fb34f89 (full IDs in STATUS). Canonical D1/R2/Queue/Phone/WABA retained; CAPI and Instant Form false.
+- Approval workflow hardened/deployed from source `3c837ed`; no live approval. All3 QR private previews load and integrity flags remain passing, but provider proof/owner/enabled remain0. Missing links: authenticated JazzCash till ownership, Easypaisa merchant alias mapping, Bank Alfalah exact QR-destination-to-Garden-Shop bank mapping.
+- PAYMENT CMS v2 is published EN/UR with order and authoritative amount placeholders; previous v1 available for rollback. Method localized copy complete; safe no-op draft save/reload works. No fixed checkout amount configured.
+- Real lead-only test FS-261022-000002/PENDING/PKR500/no method/no receipt.15 new READ outbound WAMIDs; private evidence JSON and2 cropped PNGs under `D:\Temp\kilo\gfs192-*`, outside Git. Urdu test stopped at FULL_NAME without duplicate order.
+- Current pending21 (20 pre-existing +1 safe test),balanced totals21,receipts0; held incident unchanged. No payment instructions,QR media,receipt upload,funds,PAID or fulfillment.
+
 ## GFS-191 Payment Activation (2026-10-22)
 
 - Start/refreshed branch head `76b08d1`; GitHub `gardenshop`; Cloudflare Wrangler and same-origin Access identity verified for the configured GFS operator. Tokens and raw beneficiary identifiers are not recorded.

@@ -1,5 +1,15 @@
 # Get Free Seeds Binding Rules
 
+## GFS-192 Live Staging Protocol (2026-10-22)
+
+- Current deployed state supersedes GFS-191: migration0026 was applied once after direct `PRAGMA table_info` proved the column absent. Do not infer schema from an old Admin JSON response. Never replay the 26 pending migrations or fabricate historical ledger rows; the legacy `d1_migrations` table remains empty.
+- Use Cloudflare-supported `PRAGMA quick_check` and `PRAGMA foreign_key_check` for D1 preflight. `PRAGMA integrity_check` is not in D1's supported list; its SQLITE_AUTH failure does not by itself prove missing account permissions. API7403 was not reproduced in GFS-192; do not change accounts or widen scopes on transient errors.
+- Migration0026 is nullable/no-backfill. Fresh signed tester messages now populate last_inbound_at; historical timestamps must remain unknown. Preserve existing orders and held incident. Never infer customer windows from aggregate traffic or changed conversation state.
+- The deployed beneficiary-review UI/API binds the reviewed recipient/account/copy/QR state to a SHA-256 snapshot. Stale snapshots, concurrent losing reviews and failed audit/enablement must roll back; one approval records opaque provider reference, authenticated reviewer, server time, QR hash and recipient-bound snapshot. Do not repeat approval for an unchanged approved destination. Never approve from owner confirmation alone.
+- PAYMENT CMS v2 is published in EN/UR with `{orderNumber}` and authoritative `{amount}`. Runtime must use persisted order totals; a global fixed advance is not checkout evidence. Zero verified enabled methods must show no payable buttons or QR and no payment request. Check Order remains separately available under order status.
+- GFS-192 live evidence is lead-only: one English test order and partial Urdu regression, not a payment checkout. No receipt, transfer, PAID or fulfillment is authorized by this evidence. Keep full WAMIDs and cropped screenshots in private external evidence storage, never source control.
+- Roll back Workers/CMS through supported version controls; retain the additive timestamp column. Time Travel bookmark is recovery evidence, not approval to restore over subsequent orders. Database restoration requires an independently approved incident procedure with writes quiesced.
+
 ## GFS-191 Payment Activation and Checkout (2026-10-22)
 
 - An owner's statement that an account/QR belongs to Garden Shop is not independent proof of the QR's decoded beneficiary. Reconcile each exact destination to an authenticated provider/bank record, or a separately authorized and confirmed settlement. Never infer an alias or IBAN/Raast mismatch is harmless.

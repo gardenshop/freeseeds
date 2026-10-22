@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-10-22: GFS-192 Supported D1 Recovery and Honest Acceptance
+
+Direct authenticated D1 reads now work. Cloudflare documents `quick_check` (not `integrity_check`) as supported; successful quick/FK checks and a Time Travel bookmark resolved the integrity preflight without widening permissions. GFS-191's inference from old Admin output was incorrect: direct table_info proved last_inbound_at absent. Applied only the missing nullable migration0026 once, leaving historical values null and the empty migration ledger untouched. Schema compatibility permits the tested deployment; the ledger still prohibits blanket migrations apply.
+
+Deployed GFS-187 Admin copy-save, GFS-189 inbound-time/idempotency, GFS-191 CMS/approval, and GFS-192 stale-review/atomic-audit fixes. Approval must use the exact reviewed snapshot; stale/concurrent/failed-audit requests cannot commit partial evidence. Persist a recipient-bound snapshot rather than raw account data in audit metadata. No independent provider record was accessible, so no real beneficiary approval or method enablement was made.
+
+Published PAYMENT CMS v2 through the authenticated UI with EN/UR order/amount placeholders. One fresh English real lead journey and partial Urdu regression verify transport, not financial checkout. With no verified method, the correct runtime output is a no-payment notice and separate Check Order, not a payment QR. Receipt/funds/PAID/fulfillment remain blocked; no transfer authorization is implied by the deployment or owner account statement.
+
+Keep full tester WAMIDs/cropped evidence outside Git, preserve historical customers/held incident, and do not contact pending customers until a method qualifies and a service window/template is proven. Staging lead-only GO is separate from public-lead/payment NO-GO.
+
 ## 2026-10-22: GFS-191 Payment Approval and Release Gate
 
 The configured GFS Admin identity is now verified through the existing Cloudflare Access identity endpoint, and same-origin Admin reads work. Wrangler D1 execute still returns API7403; migration discovery resolves the root directory but marks every migration pending while the live Orders API successfully selects `last_inbound_at`. Treat the migration ledger as untrustworthy: do not reapply migration0026 or replay all migrations, and do not deploy until authorized integrity/rollback checks are established.

@@ -1,5 +1,26 @@
 # Test Matrix
 
+## GFS-192 Actual Deployment and Transport (2026-10-22)
+
+| Requirement | Result | Actual evidence / dependency |
+|---|---|---|
+| Chrome / GFS identities | PASS, Meta operator partial | Admin Access, Wrangler and tester own Profile verified; canonical sender contact/Graph match; separate Meta browser operator not reverified |
+| D1/API7403 | PASS this session | Direct queries, supported quick_check=ok, no FK violations; no permission/account change |
+| Migration0026 | PASS application / ledger unresolved | Direct schema proved absent; exact additive file applied once,33 null timestamps/no backfill; ledger0, no fabricated entries |
+| API/Admin deploy | PASS | API8da54b28; Admin26ac1162; canonical bindings, health and live signed webhook/status transport |
+| One-time beneficiary workflow | PASS local / live render | 16 synthetic tests cover stale recipient/QR, race, audit rollback, duplicate, Access/CSRF;3 private previews load; no live approval without proof |
+| All3 method activation | BLOCKED safely | Independent provider records absent,0 verified/enabled; owner statement not substituted |
+| GFS-187 copy-save | PASS live | Unchanged JazzCash draft save returned safe-draft success; reload preserves disabled/owner=false and complete locale copy |
+| EN/UR PAYMENT CMS | PASS publication / output BLOCKED | v2 Save/Publish/Reload, both placeholders; no eligible method so actual payment intro not sent |
+| EN real lead journey | PASS lead-only | New test FS-261022-000002, PKR500; full five-field lead/review/Place Order; fail-closed payment notice and separate Check Order |
+| UR real regression | PASS partial | Locale ur, Seeds Only, seven localized province fees, FULL_NAME; no second order |
+| New transport evidence | PASS | 15 new READ WAMIDs and2 private cropped screenshots; external JSON only, no historical evidence reused |
+| Per-method QR, switching, receipt association/privacy | BLOCKED live | No approved method/QR may be delivered; local coverage is not live acceptance |
+| Funds / review / PAID / fulfillment | BLOCKED, not simulated | No method/amount transfer authorization, funds, unique reference or Admin payment approval |
+| Existing orders | PASS reconciliation / follow-up BLOCKED | 21 pending incl1 test; all totals balance,zero receipts; incident held; no customer messaging/replay |
+| Regression | PASS | clean install,159 tests,lint,build,audit0,both dry-runs,real Chrome retests |
+
+
 ## GFS-191 Urgent Payment Activation (2026-10-22)
 
 | Requirement | Result | Evidence / blocker |

@@ -1,5 +1,39 @@
 # Final Report
 
+## GFS-192 Mandatory Results - 2026-10-22
+
+**NOT COMPLETE: staging recovery and live lead-only acceptance passed; financial checkout remains BLOCKED.** This section supersedes earlier runtime/schema claims.
+
+| Assigned requirement | Result | Evidence / smallest remaining dependency |
+|---|---|---|
+| P0 JazzCash | BLOCKED | Disabled,owner=false;QR integrity/private preview PASS. Missing authenticated decoded-till-to-Garden-Shop ownership record. |
+| P0 Easypaisa | BLOCKED | Disabled,owner=false;QR integrity/private preview PASS. Exact decoded-alias merchant mapping remains unproven. |
+| P0 Bank Alfalah | BLOCKED | Disabled,owner=false;QR integrity/private preview PASS. Exact decoded-QR-to-Garden-Shop IBAN/Raast mapping remains unproven. |
+| P0 approval workflow | PASS deployed / approval NOT PERFORMED | Current UI displays recipient/QR and captures reviewed snapshot. Audits bind reference,reviewer,time,QR hash and recipient-bound snapshot. Stale/racing/partial approvals roll back; no fabricated proof or flag update. |
+| P1 D1/identity/integrity | PASS | Correct GFS identities; direct SQL,quick_check=ok,FK violations0,Time Travel bookmark. API7403 not reproduced. No scope change. |
+| P1 migration0026 | PASS applied / legacy ledger unresolved | Direct table_info proved column absent; exact file applied once;33 old rows stayed null. Ledger remains0: no replay or invented entries. |
+| P1 API/Admin deployment | PASS | API `8da54b28-4bec-45b2-9a3f-672225dba843`; Admin `26ac1162-ef03-41c2-bd47-9472d325b690`. Canonical bindings retained,health and new signed webhook/status traffic PASS. |
+| P2 CMS | PASS publication / actual PAYMENT output BLOCKED | EN/UR PAYMENT v2 Save->Publish->Reload includes `{orderNumber}` and `{amount}`; deployed runtime uses persisted total. No payable method so intro/QR not sent. |
+| P2 selector safety | PASS fail-closed | Zero method buttons while methods unverified. Separate Check Order delivered under order status; no Help/Support payment menu. Eligible selector/media still needs live acceptance. |
+| P3 fresh English journey | PASS lead-only | One safe test order FS-261022-000002,PKR500,DETAILS_COMPLETED/PENDING,no method/receipt. Five test delivery fields and seven D1 fees matched. Real final no-method notice and Check Order. |
+| P3 Urdu regression | PASS partial | Real Urdu language/Seeds Only/seven localized province fees/FULL_NAME. Stopped without a second order; payment tail blocked. |
+| P3 new messages/screenshots | PASS lead evidence | 15 fresh outbound WAMIDs all READ. Private JSON plus EN result and UR province cropped screenshots under `D:\Temp\kilo\gfs192-*`; full IDs are not in Git. |
+| P3 duplicates/stale/receipt/method switching | PARTIAL | Synthetic approval/idempotency regression PASS; only1 live order created. Per-method switching,stale payable buttons,receipt privacy/association not live-tested because no method qualifies. |
+| P3 review/PAID/fulfillment | BLOCKED,not simulated | No receipt or transfer; no method/amount authorization,funds,unique transaction reference or Admin payment approval. |
+| P4 existing orders | PASS reconciliation / contact BLOCKED | 21 pending incl1 new test;21 balanced totals,0 receipts,15 no method,6 historical selections;incident hold intact. No customer follow-up or terminal-job replay. |
+| P5 regression | PASS local + live lead | `npm ci`,focused16,full159/159 across19 files,lint,build,audit0,both dry-runs. Live approval previews,unchanged draft save/reload,CMS publication,EN/UR messages and API health pass. |
+| P6 source/records | Recorded for PR #8 | Approval repair source `3c837ed`; required7 records updated. Final push/CI evidence is verified separately; known billing lock is not bypassed. |
+
+### Evidence and Rollback
+
+- Private full message IDs: `D:\Temp\kilo\gfs192-live-evidence.json`; screenshots `gfs192-en-lead-only-payment-blocked.png` and `gfs192-ur-province-live.png` in the same directory. These are actual new tester messages, not historical or simulated payment acceptance.
+- Safe test total: seeds0 + fertilizer250 + Punjab delivery250 =PKR500. Current old customer/order data are omitted. Exactly1 order was created during execution; Urdu reset kept all history and stopped before order creation.
+- Baseline Worker rollback: API `5151e081-98ab-45c4-a57f-3ba43c4e6983`, Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`; CMS rollback version1. Retain the additive timestamp column. Database restore would overwrite subsequent data and requires separate approved incident controls.
+- Pre-migration Time Travel bookmark `0000015a-00000000-0000510c-897d4839155526e3b003252d4168724a`; post-migration `0000015d-00000006-0000510c-3b3f10432e4257c11517ac8dc4d51e82`. Legacy migration ledger0 remains an explicit maintenance dependency, not a reason to invent history or replay all26 files.
+- Own tester Profile,canonical sender contact and GFS Admin/Cloudflare identities verified. Canonical Graph permissions/app subscription matched; separate Meta operator was not reverified, no Meta mutation. Transient Chrome timeouts recovered without profile change. No ad/spend/number migration/Hoja integration or unrelated messages.
+- Whole-project estimate70% complete/30% remaining. P0 40/60;P1 90/10;P2 75/25;P3 45/55;P4 60/40;P5 95/5;P6 records prepared. Percentages are estimates and do not turn blocked financial acceptance into PASS.
+- **GO:** authorized staging lead-only. **NO-GO:** public leads,real payment collection,complete financial E2E. Remaining critical path is independent provider destination evidence -> one protected approval per method -> actual method/QR/CMS transport -> authorized receipt/funds/Admin review. Financial authorization cannot be inferred from account ownership.
+
 ## GFS-191 Urgent Payment Activation - 2026-10-22
 
 ### Acceptance Results

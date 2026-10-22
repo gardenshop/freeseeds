@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-22 (GFS-192)
+
+- Restored direct D1 preflight with supported quick/FK checks and Time Travel recovery evidence. Corrected prior column inference; applied only missing migration0026 without historical backfill or fabricated ledger entries.
+- Deployed API8da54b28 and Admin26ac1162 with canonical bindings; GFS-187 safe-draft save/reload and GFS-189 real inbound timestamps now verified live.
+- Fixed stale-destination approval, concurrent duplicate audit and partial-evidence commits. Added reviewed-state snapshot, transaction guards and synthetic race tests; source `3c837ed`.
+- Published bilingual PAYMENT CMS v2 through Save/Publish/Reload. No eligible payment method; actual payment intro/QR remains blocked on independent provider evidence.
+- Created one fresh real lead-only test order,15 new READ WAMIDs and2 private cropped screenshots. Partial Urdu regression passed; no duplicate order,customer follow-up,receipt,funds,PAID or fulfillment.
+- Validation: clean install,159 tests,lint,build,audit0,both Wrangler dry-runs,actual staging deployment and Chrome transport retests. No secrets/customer identifiers in this record; private evidence stays outside Git.
+
 ## Unreleased - 2026-10-22 (GFS-191)
 
 - Added the root D1 migrations directory to Wrangler config; remote ledger reports all migrations pending, so no migration was replayed against the populated DB.
