@@ -7,6 +7,7 @@
 - Added a protected one-time beneficiary approval UI/API that audits the authenticated reviewer, evidence reference, timestamp, and QR hash, enables only the matching complete method, rejects duplicate review, and respects recipient-change revocation. Not deployed or used without real provider evidence.
 - Rechecked authenticated Admin payment/CMS/orders APIs: methods remain disabled with ownership unverified; pending pool has no receipts or inbound timestamps. No provider proof, payment, message, CMS publication, or D1/Worker write.
 - Direct Wrangler D1 queries remain API7403; same-origin Admin reads work. Regression passes:145 tests, lint, build, audit0, API/Admin dry-runs.
+- Pushed to PR #8 as `4aed0e800e7c42f14c633e64a41e7843952d350f`; CI `39756357140` failed before steps under the known billing lock. No bypass.
 
 ## Unreleased - 2026-10-22 (GFS-190)
 

@@ -18,7 +18,7 @@
 | New real WhatsApp order/E2E | NOT PERFORMED | No method qualifies; no tester or separate Meta identity verified. No new order, WAMID, screenshot, payment QR delivery, or receipt. |
 | Receipt / review / PAID / fulfillment | NOT AUTHORIZED / NOT PERFORMED | No funds, unique reference, or Admin approval. No simulated result reported as live. |
 | Local regression | PASS | clean `npm ci`; focused payment tests; full145/145 across19 files; lint; build; audit0; API/Admin dry-runs; Chrome list retest. |
-| PR/CI | READY TO PUSH | Source and records are prepared against PR branch start `76b08d1`; PR #8 remains the target. CI billing lock is not bypassed. |
+| PR/CI | PUSHED / CI BLOCKED | Commit `4aed0e800e7c42f14c633e64a41e7843952d350f` is on open PR #8. CI run `39756357140` failed with zero steps before job execution, consistent with the known billing lock. No bypass. |
 
 ### Code and Safety
 

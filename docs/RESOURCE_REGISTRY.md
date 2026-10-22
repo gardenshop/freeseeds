@@ -8,7 +8,7 @@
 - Exact missing evidence: JazzCash provider link from decoded till to Garden Shop; Easypaisa authenticated merchant alias-to-destination mapping; Bank Alfalah bank confirmation of QR destination to Garden Shop IBAN/Raast. Owner statement alone does not satisfy independent proof. No enablement or settlement.
 - Published PAYMENT CMS v1 in EN/UR has order placeholder, not amount; draft v1, no action IDs. No CMS write. Payment method buttons remain runtime-generated; Check Order remains under order status.
 - `last_inbound_at` column exists, but all20 current pending orders have null/missing inbound timestamps and no receipts. No contact. Held incident remains held.
-- Local source changes: root Wrangler migrations directory; safe `{amount}` placeholder and persisted-order amount injection; bilingual fallback; protected one-time beneficiary approval UI/API with audit, duplicate protection, and recipient-change revocation. Validation:145 tests, lint, build, audit0, clean install, API/Admin dry-runs, Chrome list/GET PASS. Approval workflow is not deployed or used; no D1 write.
+- Source/records pushed to PR #8 as `4aed0e800e7c42f14c633e64a41e7843952d350f`: root Wrangler migrations directory; safe `{amount}` placeholder and persisted-order amount injection; bilingual fallback; protected one-time beneficiary approval UI/API with audit, duplicate protection, and recipient-change revocation. Validation:145 tests, lint, build, audit0, clean install, API/Admin dry-runs, Chrome list/GET PASS. Approval workflow is not deployed or used; no D1 write. CI `39756357140` failed before steps.
 
 ## GFS-190 Emergency Payment Recovery (2026-10-22)
 
