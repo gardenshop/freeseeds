@@ -8,6 +8,7 @@
 - Current review remains without a reference and the service window is closed. No customer message, reference, settlement, PAID or fulfillment action.
 - Validation: npm ci,168 tests,lint,build,audit0,Admin/API dry-runs; Admin live read/retest passes. No full real WhatsApp or financial E2E.
 - Independent review found legacy internal-space references could evade the trim-only index. Applied migration0029 after normalized duplicate preflight0; Admin/API normalization now matches. No stored reference was rewritten.
+- Pushed GFS-195 source/tests/docs to PR #8 as `8b193aa7e8851d005372580d238002a65f25fd01`; CI `39812621109` failed before steps with the explicit billing lock. No bypass.
 
 ## 2026-10-22 (GFS-193)
 

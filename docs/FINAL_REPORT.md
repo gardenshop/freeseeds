@@ -19,6 +19,7 @@
 | D1 | PASS preflight/migrations | quick_check/FK pass;0027/0028/0029 applied narrowly; normalized duplicate refs0,43 prior labels preserved,ledger0 untouched. Pending22 totals balanced; one reference-missing receipt review row. |
 | New real WhatsApp E2E | BLOCKED | Tester profile mismatch; no fresh order, WAMID, QR, screenshot, receipt, settlement or fulfillment in GFS-195. Prior GFS-192 lead evidence not reused. |
 | Tests/CI | PASS local / CI locked | clean `npm ci`,168/168,lint,build,audit0,Wrangler dry-runs. GitHub CI billing lock remains; no bypass. |
+| PR/commit | PASS push / CI blocked | Commit `8b193aa7e8851d005372580d238002a65f25fd01` is on open PR #8. CI `39812621109` had zero steps because GitHub explicitly reports the account locked due to billing. |
 | Pending follow-up | BLOCKED safely | No request was sent because service window is closed and no approved template exists. Existing order amounts and held incident unchanged. |
 | Release decision | NO-GO for complete checkout | Admin/schema staging changes verified; API/payment-output release waits for authorized tester identity. Real customer payments/financial E2E are not accepted on this evidence. |
 
