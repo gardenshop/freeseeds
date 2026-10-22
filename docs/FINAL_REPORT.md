@@ -11,7 +11,7 @@
 | Bank Alfalah | BLOCKED | Scan shows bank route/destination, not Garden Shop payee. Need authenticated bank record tying the exact QR/Raast/IBAN destination to Garden Shop. |
 | Approval/enablement | NOT PERFORMED | Deployed one-time snapshot-bound workflow remains ready; no provider evidence reference or settlement proof was available. No verification flags/direct recipient changes. |
 | Live configuration | PASS unchanged | All three disabled, owner flags false, R2 reference/hash/snapshots present, private previews3/3 loaded. PAYMENT CMS v2 EN/UR order+amount placeholders remain published. |
-| Pending orders | PASS aggregate / contact BLOCKED | 21 pending, all totals balance, receipts0, verified/enabled methods0. No messages/replays. Held incident not mutated; GFS-192 last authenticated read had hold true. GFS-193 preservation query used a nonexistent column and did not yield a fresh hold read. |
+| Pending orders | PASS aggregate / contact BLOCKED | 21 pending, all totals balance, receipts0, verified/enabled methods0. No messages/replays. The protected incident hold was freshly reconfirmed true via read-only Admin Orders GET; no mutation. An earlier D1 check used an invalid column and yielded no order data. |
 | Regression | PASS | Clean `npm ci`;159/159,lint,build,audit0,both Wrangler dry-runs. GFS-193 changed no source/deploy. |
 | PR CI | BLOCKED | Run `39780742135` failed before job steps: GitHub stated the account is locked due to a billing issue. No billing/protection bypass. |
 | GO/NO-GO | Lead-only staging GO; public leads NO-GO; real payments NO-GO | Financial E2E remains BLOCKED: no method qualifies; no transfer authorization,receipt,funds,PAID or fulfillment. |
