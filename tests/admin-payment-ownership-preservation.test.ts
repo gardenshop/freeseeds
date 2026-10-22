@@ -36,6 +36,10 @@ async function save(env: Parameters<typeof app.fetch>[1], body: Record<string, u
   return app.fetch(new Request("https://admin.example.test/api/payment-methods/JAZZCASH", { method: "POST", headers: await headers(env), body: JSON.stringify(body) }), env);
 }
 
+async function approve(env: Parameters<typeof app.fetch>[1], body: Record<string, unknown>) {
+  return app.fetch(new Request("https://admin.example.test/api/payment-methods/JAZZCASH/beneficiary-approval", { method: "POST", headers: await headers(env), body: JSON.stringify(body) }), env);
+}
+
 describe("payment copy saves preserve verified ownership until recipient changes", () => {
   afterEach(() => sqlite?.close());
 
@@ -96,5 +100,66 @@ describe("payment copy saves preserve verified ownership until recipient changes
     expect(sqlite.prepare("SELECT independent_ownership_verified,independent_evidence_ref FROM payment_qr_assets WHERE method='JAZZCASH'").get()).toEqual({ independent_ownership_verified: 0, independent_evidence_ref: null });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_RECIPIENT_CHANGED_REVERIFICATION_REQUIRED'").get()).toEqual({ count: 1 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_RECIPIENT_CHANGE_REVERIFICATION_STARTED'").get()).toEqual({ count: 1 });
+  });
+
+  it("records one explicit evidence review for the current QR and enables only that method", async () => {
+    sqlite = new DatabaseSync(":memory:");
+    const hash = "a".repeat(64);
+    sqlite.exec(`
+      CREATE TABLE payment_methods (
+        id TEXT, method TEXT PRIMARY KEY, display_name TEXT, recipient_name TEXT, till_id TEXT,
+        instructions TEXT, instructions_ur TEXT, reference_instruction TEXT, reference_instruction_ur TEXT,
+        heading TEXT, heading_ur TEXT, qr_caption TEXT, qr_caption_ur TEXT, short_instructions TEXT, short_instructions_ur TEXT,
+        receipt_instructions TEXT, receipt_instructions_ur TEXT, payment_help_copy TEXT, payment_help_copy_ur TEXT,
+        status_copy TEXT, status_copy_ur TEXT, enabled INTEGER NOT NULL DEFAULT 0, sort_order INTEGER NOT NULL DEFAULT 10,
+        updated_at TEXT, updated_by TEXT, qr_owner_verified INTEGER NOT NULL DEFAULT 0,
+        qr_r2_key TEXT, qr_sha256 TEXT, qr_mime_type TEXT, qr_size_bytes INTEGER
+      );
+      CREATE TABLE payment_qr_assets (
+        method TEXT, derivative_r2_key TEXT, derivative_sha256 TEXT, derivative_mime_type TEXT, derivative_size_bytes INTEGER,
+        active INTEGER, decoder_agreement INTEGER, payload_match INTEGER, scan_pass INTEGER,
+        independent_ownership_verified INTEGER, independent_evidence_ref TEXT
+      );
+      CREATE TABLE audit_log (
+        id TEXT, action TEXT, actor_type TEXT, actor_id TEXT, entity_type TEXT, entity_id TEXT,
+        correlation_id TEXT, metadata_json TEXT, created_at TEXT
+      );
+    `);
+    sqlite.exec(readFileSync("migrations/0022_payment_qr_owner_guard.sql", "utf8"));
+    sqlite.exec(readFileSync("migrations/0024_reverify_qr_on_recipient_change.sql", "utf8"));
+    sqlite.prepare("INSERT INTO payment_qr_assets VALUES(?,?,?,?,?,?,?,?,?,?,?)").run("JAZZCASH", "synthetic/JAZZCASH.png", hash, "image/png", 64, 1, 1, 1, 1, 0, null);
+    sqlite.prepare(`INSERT INTO payment_methods
+      (id,method,display_name,recipient_name,till_id,instructions,instructions_ur,reference_instruction,reference_instruction_ur,
+       heading,heading_ur,qr_caption,qr_caption_ur,short_instructions,short_instructions_ur,receipt_instructions,receipt_instructions_ur,
+       payment_help_copy,payment_help_copy_ur,status_copy,status_copy_ur,enabled,sort_order,qr_owner_verified,qr_r2_key,qr_sha256,qr_mime_type,qr_size_bytes)
+       VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
+      "synthetic-jc", "JAZZCASH", "JazzCash", "SYNTHETIC BENEFICIARY", "TEST-TILL-001",
+      "Pay {amount} to {recipientName}, TILL {tillId}, order {orderNumber}.", "{recipientName} کو PKR {amount} TILL {tillId} پر ادا کریں، آرڈر {orderNumber}۔",
+      "Reference {orderNumber}", "حوالہ {orderNumber}", "JazzCash Payment", "جاز کیش ادائیگی", "Test QR", "ٹیسٹ کیو آر",
+      "Test instruction", "ٹیسٹ ہدایت", "Send test receipt", "ٹیسٹ رسید بھیجیں", "Test help", "ٹیسٹ مدد", "Test pending", "ٹیسٹ زیر التوا",
+      0, 10, 0, "synthetic/JAZZCASH.png", hash, "image/png", 64
+    );
+    const env = { DB: makeDb(), ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL" } as Parameters<typeof app.fetch>[1];
+
+    const rejected = await approve(env, { evidenceRef: "PROVIDER-RECORD-SYNTHETIC-001" });
+    expect(rejected.status).toBe(400);
+    expect(sqlite.prepare("SELECT enabled,qr_owner_verified FROM payment_methods").get()).toEqual({ enabled: 0, qr_owner_verified: 0 });
+
+    const approved = await approve(env, { evidenceRef: "PROVIDER-RECORD-SYNTHETIC-001", confirmed: true });
+    expect(approved.status).toBe(200);
+    expect(await approved.json()).toMatchObject({ ok: true, method: "JAZZCASH", enabled: true, reviewer: "admin@example.test", qrSha256: hash });
+    expect(sqlite.prepare("SELECT enabled,qr_owner_verified FROM payment_methods").get()).toEqual({ enabled: 1, qr_owner_verified: 1 });
+    expect(sqlite.prepare("SELECT independent_ownership_verified,independent_evidence_ref FROM payment_qr_assets").get()).toEqual({ independent_ownership_verified: 1, independent_evidence_ref: "PROVIDER-RECORD-SYNTHETIC-001" });
+    const audit = sqlite.prepare("SELECT action,actor_id,metadata_json,created_at FROM audit_log WHERE action='PAYMENT_BENEFICIARY_APPROVED_AND_ENABLED'").get() as { action: string; actor_id: string; metadata_json: string; created_at: string };
+    expect(audit).toMatchObject({ action: "PAYMENT_BENEFICIARY_APPROVED_AND_ENABLED", actor_id: "admin@example.test" });
+    expect(JSON.parse(audit.metadata_json)).toMatchObject({ method: "JAZZCASH", evidenceRef: "PROVIDER-RECORD-SYNTHETIC-001", qrSha256: hash, enabledAfterApproval: true });
+    expect(audit.created_at).toBeTruthy();
+
+    const duplicate = await approve(env, { evidenceRef: "PROVIDER-RECORD-SYNTHETIC-002", confirmed: true });
+    expect(duplicate.status).toBe(409);
+    const changed = await save(env, { tillId: "TEST-TILL-002" });
+    expect(changed.status).toBe(200);
+    expect(sqlite.prepare("SELECT enabled,qr_owner_verified,till_id FROM payment_methods").get()).toEqual({ enabled: 0, qr_owner_verified: 0, till_id: "TEST-TILL-002" });
+    expect(sqlite.prepare("SELECT independent_ownership_verified,independent_evidence_ref FROM payment_qr_assets").get()).toEqual({ independent_ownership_verified: 0, independent_evidence_ref: null });
   });
 });

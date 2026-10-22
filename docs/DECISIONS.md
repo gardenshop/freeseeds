@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-22: GFS-191 Payment Approval and Release Gate
+
+The configured GFS Admin identity is now verified through the existing Cloudflare Access identity endpoint, and same-origin Admin reads work. Wrangler D1 execute still returns API7403; migration discovery resolves the root directory but marks every migration pending while the live Orders API successfully selects `last_inbound_at`. Treat the migration ledger as untrustworthy: do not reapply migration0026 or replay all migrations, and do not deploy until authorized integrity/rollback checks are established.
+
+The owner confirms account/QR ownership, but this does not resolve the exact beneficiary mapping. Keep JazzCash, Easypaisa, and Bank Transfer disabled until each decoded QR destination is linked to Garden Shop by authenticated provider/bank evidence or an explicitly authorized, independently confirmed settlement. A protected one-time approval UI/API is implemented locally; it binds approval to the unchanged QR hash and audits reviewer/time/reference, but was not deployed or used because no independent provider record was available. No live verification flags or audit rows were written.
+
+Local API/CMS support for `{amount}` now uses the persisted order total. CMS remains unpublished because its current published EN/UR copy lacks `{amount}` and current deployed runtime/Admin do not include the fix. No payment menu/message may be sent until both are deployed and a method qualifies. No customer message, receipt, funds, PAID, or fulfillment action occurred. Preserve the current held incident and all order amounts.
+
 ## 2026-10-22: GFS-190 Payment Recovery Boundary
 
 The supported Chrome DevTools MCP is available (`list_pages` succeeds), but that does not establish Admin, Meta, or tester identity. The existing Admin Payment Settings page renders, but the active Access identity is not visible; no CMS/payment mutation is permitted until the authorized identity is verified. Do not switch accounts or broaden OAuth scopes to bypass the Cloudflare Access/dashboard issue.

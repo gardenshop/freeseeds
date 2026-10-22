@@ -206,6 +206,7 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(conversation()?.state).toBe("COMPLETE");
     const order = sqlite.prepare("SELECT * FROM orders").get()!;
     expect(order).toMatchObject({ state: "DETAILS_COMPLETED", payment_status: "PENDING", total_payable: 200 });
+    expect(conversation()?.data.amountPkr).toBe(order.total_payable);
     expect(body()).toContain(String(order.order_number));
     expect(body()).toContain("200");
     expect(body()).toContain(locale === "ur" ? "کوئی ادائیگی کی درخواست نہیں بھیجی گئی" : "no payment request was sent");

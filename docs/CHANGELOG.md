@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased - 2026-10-22 (GFS-191)
+
+- Added the root D1 migrations directory to Wrangler config; remote ledger reports all migrations pending, so no migration was replayed against the populated DB.
+- Added safe `{amount}` rendering from the persisted order total to PAYMENT intro and bilingual CMS validation; added synthetic tests for amount rendering and persisted totals.
+- Added a protected one-time beneficiary approval UI/API that audits the authenticated reviewer, evidence reference, timestamp, and QR hash, enables only the matching complete method, rejects duplicate review, and respects recipient-change revocation. Not deployed or used without real provider evidence.
+- Rechecked authenticated Admin payment/CMS/orders APIs: methods remain disabled with ownership unverified; pending pool has no receipts or inbound timestamps. No provider proof, payment, message, CMS publication, or D1/Worker write.
+- Direct Wrangler D1 queries remain API7403; same-origin Admin reads work. Regression passes:145 tests, lint, build, audit0, API/Admin dry-runs.
+
 ## Unreleased - 2026-10-22 (GFS-190)
 
 - Restored supported Chrome DevTools MCP availability; `list_pages` passes with existing tabs reused. Admin identity remains unverified and no dashboard mutation occurred.

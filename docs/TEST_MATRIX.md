@@ -1,5 +1,24 @@
 # Test Matrix
 
+## GFS-191 Urgent Payment Activation (2026-10-22)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Chrome MCP / Admin identity | PASS | `list_pages` works; same-origin Access identity matched configured GFS Admin account; no tokens recorded |
+| D1 reads | PARTIAL | Admin Orders/payment/CMS GETs succeed; direct Wrangler D1 execute API7403; do not switch account |
+| Migration0026 schema | PASS / ledger BLOCKED | Orders API selects `last_inbound_at`; Wrangler tracker lists all 26 pending, so full replay is unsafe |
+| Current payment methods | BLOCKED safely | All disabled, owner false, QR reference/hash present, QR delivery blocked; EN/UR method copy/placeholders complete |
+| JazzCash beneficiary | BLOCKED | Provider till ownership link absent |
+| Easypaisa beneficiary | BLOCKED | Authenticated merchant alias-to-Garden-Shop link absent; destination mismatch unresolved |
+| Bank Alfalah beneficiary | BLOCKED | Authenticated QR destination-to-IBAN/Raast link absent; mismatch unresolved |
+| PAYMENT CMS | BLOCKED | Published v1 EN/UR have `{orderNumber}`, lack `{amount}`; not published against old runtime |
+| Payment-selection actions | PASS source check | PAYMENT template action IDs empty; dynamic options use verified enabled methods; Check Order stays in order-status branch |
+| One-time beneficiary approval workflow | PASS local | Protected route requires Access identity, CSRF, opaque reference and explicit confirmation; binds evidence to unchanged QR hash, audits, enables only that method, rejects duplicate, recipient change revokes; not deployed/used |
+| Pending orders | PASS audit / BLOCKED contact | 20 pending, zero receipts, no inbound timestamp; no eligible method/window |
+| New real WhatsApp E2E | NOT PERFORMED | No verified enabled method, tester/Meta identity not reverified |
+| Regression | PASS | clean `npm ci`, focused payment workflow tests, full 145/145, lint, build, audit0, API/Admin dry-runs |
+| Deployment/CI | BLOCKED | No deployment without D1 integrity/ledger reconciliation; existing billing lock not bypassed |
+
 ## GFS-190 Emergency Checkout Recovery (2026-10-22)
 
 | Requirement | Result | Evidence / blocker |

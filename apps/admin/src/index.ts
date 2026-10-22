@@ -486,7 +486,15 @@ app.get("/health", async (c) => {
   const configured = c.env.DB ? await c.env.DB.prepare("SELECT COUNT(*) AS count FROM payment_methods WHERE enabled=1 AND recipient_name IS NOT NULL AND instructions IS NOT NULL AND EXISTS (SELECT 1 FROM payment_configuration WHERE id=1 AND advance_amount_pkr > 0)").first<{ count: number }>() : null;
   return c.json({ ok: true, service: "getfreeseeds-admin", state: c.env.DEPLOYMENT_STATE, paymentConfigured: Number(configured?.count ?? 0) > 0 });
 });
-app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav><a href='/payment-settings'>Payment Settings</a> | <a href='/whatsapp-content'>WhatsApp Content</a> | <a href='/payment-amount'>Legacy Advance Amount</a> | <a href='/tariff'>Tariff Management</a> | <a href='/meta-activation'>Meta Activation</a> | <a href='/orders'>Orders</a> | <a href='/test-controls'>Test Controls</a> | Dashboard | Leads | Meta Instant Form | Payment Verification | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
+function paymentBeneficiaryReviewPageHtml(csrfToken: string): string {
+  const csrf = JSON.stringify(csrfToken);
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Payment Verification | Get Free Seeds</title><style>body{font:16px/1.5 system-ui,sans-serif;max-width:900px;margin:2rem auto;padding:0 1rem;color:#1b2a22}article{border:1px solid #ccd5cc;border-radius:10px;padding:1rem;margin:1rem 0}label{display:block;margin:.7rem 0}input,button{font:inherit;padding:.5rem}input[type=text]{width:min(100%,32rem)}button{cursor:pointer}.blocked{color:#8a5a00}.ok{color:#176b36}.error{color:#a40019}.muted{color:#59635a}</style></head><body><nav><a href="/">Admin home</a> | <a href="/payment-settings">Payment Settings</a></nav><h1>One-time beneficiary verification</h1><p>Review an authenticated provider/bank record and compare its exact Garden Shop beneficiary to the currently configured QR destination in Payment Settings. Owner confirmation alone is not sufficient. Never paste account numbers, customer data, credentials, or document contents here; use only an opaque provider record reference.</p><p>Submitting records one approval for the unchanged QR hash and enables that method only if its current EN/UR instructions and private QR integrity also pass. Recipient or QR changes revoke the approval automatically.</p><div id="methods">Loading payment methods...</div><script>
+const csrf=${csrf};const labels={JAZZCASH:'JazzCash',EASYPAISA:'Easypaisa',BANK_TRANSFER:'Bank Alfalah'};const esc=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function load(){const r=await fetch('/api/payment-methods',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Payment configuration unavailable');const root=document.querySelector('#methods');root.innerHTML=(d.paymentMethods||[]).map(m=>'<article data-method="'+esc(m.method)+'"><h2>'+labels[m.method]+'</h2><p class="'+(m.qrDeliveryStatus==='READY'?'ok':'blocked')+'">'+(m.qrDeliveryStatus==='READY'?'Beneficiary already approved.':'Disabled; independent evidence required.')+'</p><p class="muted">QR reference/hash '+(m.qrR2Key&&m.qrSha256?'present':'missing')+'; EN/UR copy '+(m.translationWarnings?.length?'incomplete':'complete')+'.</p>'+(m.qrDeliveryStatus==='READY'?'':'<label>Opaque provider record reference<input type="text" maxlength="128" data-evidence-ref autocomplete="off"></label><label><input type="checkbox" data-confirm> I reviewed an authenticated provider record and confirmed the exact QR beneficiary matches Garden Shop.</label><button type="button" data-approve '+(!m.qrR2Key||!m.qrSha256?'disabled':'')+'>Approve and enable this method</button>')+'<p data-result aria-live="polite"></p></article>').join('')||'<p>No payment methods are configured.</p>';for(const card of root.querySelectorAll('article[data-method]')){const button=card.querySelector('[data-approve]');if(!button)continue;button.onclick=async()=>{const result=card.querySelector('[data-result]');const evidenceRef=card.querySelector('[data-evidence-ref]').value.trim();if(!card.querySelector('[data-confirm]').checked){result.className='error';result.textContent='Confirm independent provider verification before approval.';return}button.disabled=true;try{const response=await fetch('/api/payment-methods/'+encodeURIComponent(card.dataset.method)+'/beneficiary-approval',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify({evidenceRef,confirmed:true})});const data=await response.json();if(!response.ok)throw new Error(data.error||'Approval failed');result.className='ok';result.textContent='Approved and enabled; method, reviewer, time, evidence reference and QR hash were audited.';await load()}catch(error){result.className='error';result.textContent=error instanceof Error?error.message:'Approval failed'}finally{button.disabled=false}}}}load().catch(error=>document.querySelector('#methods').textContent=error.message||'Payment configuration unavailable');
+</script></body></html>`;
+}
+
+app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav><a href='/payment-settings'>Payment Settings</a> | <a href='/payment-beneficiary-review'>Payment Verification</a> | <a href='/whatsapp-content'>WhatsApp Content</a> | <a href='/payment-amount'>Legacy Advance Amount</a> | <a href='/tariff'>Tariff Management</a> | <a href='/meta-activation'>Meta Activation</a> | <a href='/orders'>Orders</a> | <a href='/test-controls'>Test Controls</a> | Dashboard | Leads | Meta Instant Form | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
 
 app.get("/api/csrf", (c) => c.json({ csrfToken: issueCsrfToken(c) }));
 app.get("/orders", (c) => c.html(professionalOrdersPageHtml(issueCsrfToken(c))));
@@ -495,6 +503,10 @@ app.get("/whatsapp-content", (c) => c.html(whatsappContentJourneyPageHtml(issueC
 app.get("/payment-settings", (c) => {
   c.header("Cache-Control", "no-store, max-age=0");
   return c.html(paymentSettingsPageHtml(issueCsrfToken(c)));
+});
+app.get("/payment-beneficiary-review", (c) => {
+  c.header("Cache-Control", "no-store, max-age=0");
+  return c.html(paymentBeneficiaryReviewPageHtml(issueCsrfToken(c)));
 });
 
 app.get("/api/whatsapp-content", async (c) => {
@@ -1117,6 +1129,40 @@ app.post("/api/payment-configuration", async (c) => {
     c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_CONFIGURATION_UPDATED", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT_CONFIGURATION", "1", crypto.randomUUID(), JSON.stringify({ advanceAmountPkr: amount }), now)
   ]);
   return c.json({ ok: true, advanceAmountPkr: amount });
+});
+
+app.post("/api/payment-methods/:method/beneficiary-approval", async (c) => {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  if (!authorized(c) || !c.env.DB) return c.json({ error: "PAYMENT_CONFIGURATION_UNAVAILABLE" }, 503);
+  const methodResult = PaymentMethod.safeParse(c.req.param("method").toUpperCase());
+  if (!methodResult.success) return c.json({ error: "PAYMENT_METHOD_INVALID" }, 400);
+  let body: { evidenceRef?: unknown; confirmed?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
+  const evidenceRef = typeof body.evidenceRef === "string" ? body.evidenceRef.trim() : "";
+  if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{5,127}$/.test(evidenceRef) || body.confirmed !== true) return c.json({ error: "INDEPENDENT_PROVIDER_EVIDENCE_REQUIRED" }, 400);
+  const method = methodResult.data;
+  const current = await c.env.DB.prepare("SELECT * FROM payment_methods WHERE method=?").bind(method).first<Record<string, unknown>>();
+  if (!current) return c.json({ error: "PAYMENT_METHOD_NOT_FOUND" }, 404);
+  if (Number(current.enabled) === 1 || Number(current.qr_owner_verified) === 1) return c.json({ error: "PAYMENT_BENEFICIARY_ALREADY_REVIEWED" }, 409);
+  const qrR2Key = String(current.qr_r2_key ?? "");
+  const qrSha256 = String(current.qr_sha256 ?? "");
+  if (!qrR2Key || !/^[a-f0-9]{64}$/i.test(qrSha256)) return c.json({ error: "PAYMENT_QR_INTEGRITY_NOT_READY" }, 409);
+  const asset = await c.env.DB.prepare("SELECT derivative_r2_key,derivative_sha256,derivative_mime_type,derivative_size_bytes,active,decoder_agreement,payload_match,scan_pass,independent_ownership_verified,independent_evidence_ref FROM payment_qr_assets WHERE method=? AND active=1").bind(method).first<Record<string, unknown>>();
+  if (!asset || asset.derivative_r2_key !== qrR2Key || asset.derivative_sha256 !== qrSha256 || asset.derivative_mime_type !== current.qr_mime_type || Number(asset.derivative_size_bytes) !== Number(current.qr_size_bytes) || Number(asset.decoder_agreement) !== 1 || Number(asset.payload_match) !== 1 || Number(asset.scan_pass) !== 1 || Number(asset.independent_ownership_verified) !== 0 || asset.independent_evidence_ref != null || Number(current.enabled) !== 0 || Number(current.qr_owner_verified) !== 0) return c.json({ error: "PAYMENT_QR_INTEGRITY_NOT_READY" }, 409);
+  const config = normalizePaymentMethodRow({ ...current, enabled: 1 });
+  if (!isPaymentMethodComplete(config) || !isPaymentMethodLocaleComplete(config, "en") || !isPaymentMethodLocaleComplete(config, "ur")) return c.json({ error: "PAYMENT_METHOD_COPY_INCOMPLETE" }, 409);
+  const reviewer = c.req.header("cf-access-authenticated-user-email")!;
+  const now = new Date().toISOString();
+  const auditId = crypto.randomUUID();
+  const correlationId = crypto.randomUUID();
+  const metadata = JSON.stringify({ method, evidenceRef, qrSha256, enabledAfterApproval: true });
+  const results = await c.env.DB.batch([
+    c.env.DB.prepare("UPDATE payment_qr_assets SET independent_ownership_verified=1,independent_evidence_ref=? WHERE method=? AND derivative_r2_key=? AND derivative_sha256=? AND active=1 AND decoder_agreement=1 AND payload_match=1 AND scan_pass=1 AND independent_ownership_verified=0 AND independent_evidence_ref IS NULL AND EXISTS (SELECT 1 FROM payment_methods pm WHERE pm.method=? AND pm.recipient_name IS ? AND pm.till_id IS ? AND pm.qr_r2_key=? AND pm.qr_sha256=? AND pm.enabled=0 AND pm.qr_owner_verified=0)").bind(evidenceRef, method, qrR2Key, qrSha256, method, current.recipient_name ?? null, current.till_id ?? null, qrR2Key, qrSha256),
+    c.env.DB.prepare("UPDATE payment_methods SET qr_owner_verified=1,enabled=1,updated_at=?,updated_by=? WHERE method=? AND recipient_name IS ? AND till_id IS ? AND qr_r2_key=? AND qr_sha256=? AND enabled=0 AND qr_owner_verified=0 AND EXISTS (SELECT 1 FROM payment_qr_assets qa WHERE qa.method=payment_methods.method AND qa.derivative_r2_key=payment_methods.qr_r2_key AND qa.derivative_sha256=payment_methods.qr_sha256 AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref=?)").bind(now, reviewer, method, current.recipient_name ?? null, current.till_id ?? null, qrR2Key, qrSha256, evidenceRef),
+    c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE EXISTS (SELECT 1 FROM payment_methods pm JOIN payment_qr_assets qa ON qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.derivative_sha256=pm.qr_sha256 WHERE pm.method=? AND pm.enabled=1 AND pm.qr_owner_verified=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref=? AND pm.qr_sha256=?)").bind(auditId, "PAYMENT_BENEFICIARY_APPROVED_AND_ENABLED", "ADMIN", reviewer, "PAYMENT_METHOD", method, correlationId, metadata, now, method, evidenceRef, qrSha256)
+  ]);
+  if (results.some((result) => Number(result.meta?.changes ?? 0) !== 1)) return c.json({ error: "PAYMENT_BENEFICIARY_REVIEW_STALE" }, 409);
+  return c.json({ ok: true, method, enabled: true, reviewer, approvedAt: now, qrSha256 });
 });
 
 app.get("/api/configuration", async (c) => {

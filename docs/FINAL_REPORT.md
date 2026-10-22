@@ -1,5 +1,35 @@
 # Final Report
 
+## GFS-191 Urgent Payment Activation - 2026-10-22
+
+### Acceptance Results
+
+| Requirement | Result | Evidence / exact remaining dependency |
+|---|---|---|
+| JazzCash | BLOCKED safely | Disabled; QR reference/hash present but QR readiness/owner verification false. Missing authenticated provider record linking decoded till to Garden Shop. |
+| Easypaisa | BLOCKED safely | Disabled; decoded alias/configured destination mismatch unresolved. Missing authenticated merchant alias mapping. |
+| Bank Alfalah | BLOCKED safely | Disabled; decoded QR destination/configured IBAN/Raast mismatch unresolved. Missing authenticated bank beneficiary mapping. |
+| Admin identity/settings | PASS read-only | Same-origin Cloudflare Access identity matches authorized GFS email; all Admin GETs used read-only filtered diagnostics. No setting changed. |
+| D1/API7403 | PARTIAL | Wrangler identity is correct; direct D1 execute returns API7403. Admin Orders/payment/CMS reads succeed. No account/scope switch. |
+| Migration0026 | SCHEMA PRESENT / LEDGER BLOCKED | Live Orders query selects `last_inbound_at`; all26 migrations show pending in Wrangler ledger. Replaying them could conflict with populated schema; no migration applied. |
+| API/Admin/CMS deployment | NOT DEPLOYED | Current API `5151e081-98ab-45c4-a57f-3ba43c4e6983`, rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`; Admin `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`. D1 integrity/ledger preflight unavailable. |
+| EN/UR PAYMENT CMS | BLOCKED | Published/draft v1; both published locales have `{orderNumber}` but lack `{amount}`. Source now allows amount and uses persisted total, but old deployed runtime cannot safely consume it; no Save/Publish. |
+| Pending follow-up | BLOCKED safely | Re-read 20 pending orders, zero receipts, no inbound timestamps; five requested remain pending. No messages or changed totals. Held incident still held. |
+| New real WhatsApp order/E2E | NOT PERFORMED | No method qualifies; no tester or separate Meta identity verified. No new order, WAMID, screenshot, payment QR delivery, or receipt. |
+| Receipt / review / PAID / fulfillment | NOT AUTHORIZED / NOT PERFORMED | No funds, unique reference, or Admin approval. No simulated result reported as live. |
+| Local regression | PASS | clean `npm ci`; focused payment tests; full145/145 across19 files; lint; build; audit0; API/Admin dry-runs; Chrome list retest. |
+| PR/CI | READY TO PUSH | Source and records are prepared against PR branch start `76b08d1`; PR #8 remains the target. CI billing lock is not bypassed. |
+
+### Code and Safety
+
+- Wrangler now points D1 migration discovery to root `migrations/`. Because all26 entries show pending while live application queries confirm the inbound-time field exists, do not run migration apply until the ledger is safely reconciled.
+- The safe CMS placeholder set includes `{amount}`; guided checkout stores the persisted order summary amount and reloads it from the order for resumed PAYMENT_METHOD conversations. English/Urdu fallback copy includes `{orderNumber}` and `{amount}`. Tests use synthetic-only data.
+- A protected Admin one-time beneficiary review UI/API now requires Access identity, CSRF, an opaque authenticated-provider-record reference, and explicit exact-destination confirmation. It binds to the active integrity-passing QR hash, writes one audit event with reviewer/time/reference/hash, and enables only the complete reviewed method. Duplicate review is rejected and recipient changes revoke approval. This workflow is source-tested, not deployed or invoked; no evidence was fabricated.
+- Runtime PAYMENT action IDs remain empty. Payment buttons are generated only from complete verified enabled methods; Check Order remains separately available in order status. No direct verification flag write or beneficiary substitution occurred.
+- GFS owner confirms the accounts/QRs, but the specific provider destination mappings remain unproven. Ordinary method saves still reject direct `qrOwnerVerified` updates; only the protected one-time evidence workflow may approve a verified destination. Methods stay disabled until actual provider records are reviewed.
+- Completion estimates: whole project **59%/41%**; P0 **25/75**; P1 **60/40**; P2 **10/90**; P3 **75/25**; P4 **80/20**; P5 **90/10**. Estimates do not convert local validation into live acceptance.
+- Lead launch **NO-GO**; payment collection **NO-GO**; complete financial E2E **NO-GO**. Remaining dependencies: provider records/authorized settlement, deployment of the source-tested approval path, D1 integrity and migration-ledger reconciliation, and fresh real WhatsApp tests. Transfer still requires explicit method/amount approval.
+
 ## GFS-190 Emergency Payment Checkout Recovery - 2026-10-22
 
 ### Mandatory Results

@@ -46,7 +46,7 @@ export const WHATSAPP_TEMPLATE_ACTION_IDS: Partial<Record<WhatsAppTemplateKey, r
   SUPPORT: ["SUPPORT"]
 };
 
-const SAFE_PLACEHOLDERS = new Set(["orderNumber", "totalPkr", "province", "paymentMethod", "recipientName", "tillId"]);
+const SAFE_PLACEHOLDERS = new Set(["orderNumber", "amount", "totalPkr", "province", "paymentMethod", "recipientName", "tillId"]);
 const PRIVATE_R2_KEY = /^whatsapp-content\/(?!.*(?:^|\/)\.\.?\/)[A-Za-z0-9][A-Za-z0-9/_.-]{0,510}$/;
 
 export type WhatsAppContent = {
@@ -112,7 +112,7 @@ export function parseWhatsAppContentDraft(value: unknown, templateKey?: WhatsApp
   return { contentEn, contentUr, ...(mediaR2Key ? { mediaR2Key } : {}) };
 }
 
-export function renderWhatsAppContent(template: string, values: Partial<Record<(typeof WHATSAPP_TEMPLATE_KEYS)[number] | "orderNumber" | "totalPkr" | "province" | "paymentMethod" | "recipientName" | "tillId", string | number>>): string {
+export function renderWhatsAppContent(template: string, values: Partial<Record<(typeof WHATSAPP_TEMPLATE_KEYS)[number] | "orderNumber" | "amount" | "totalPkr" | "province" | "paymentMethod" | "recipientName" | "tillId", string | number>>): string {
   return template.replace(/\{([^{}]+)\}/g, (match, name: string) => {
     if (!SAFE_PLACEHOLDERS.has(name)) return match;
     const value = values[name as keyof typeof values];

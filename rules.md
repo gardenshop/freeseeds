@@ -1,5 +1,15 @@
 # Get Free Seeds Binding Rules
 
+## GFS-191 Payment Activation and Checkout (2026-10-22)
+
+- An owner's statement that an account/QR belongs to Garden Shop is not independent proof of the QR's decoded beneficiary. Reconcile each exact destination to an authenticated provider/bank record, or a separately authorized and confirmed settlement. Never infer an alias or IBAN/Raast mismatch is harmless.
+- Approve once per unchanged payment destination only after the independent source is reviewed. Record method, non-sensitive evidence reference, authenticated reviewer, server time, and current QR hash in the protected audit path. A changed recipient/account/QR automatically invalidates approval. Never write verification flags directly or invent references.
+- Keep each method disabled until recipient, both-language copy, required identifiers/placeholders, and current private QR integrity/ownership all pass. Enable a qualifying method immediately after approval; do not wait for other methods.
+- `{amount}` in the PAYMENT introduction must be rendered from the persisted order summary, never from user input, a global hardcoded amount, or a mutable preview.
+- Wrangler may report every migration pending when its D1 migration ledger is absent even though application schema exists. Confirm field presence through a read path and do not replay a full pending migration list against a populated database. Do not repair migration history by blind inserts or direct SQL bypass.
+- Before Worker deployment, verify authenticated GFS identity, active bindings, application/D1 health, rollback version, and a clean regression. When direct D1 integrity/query access returns API7403, do not switch accounts or widen scopes; use existing authorized read-only Admin APIs for diagnosis and stop before writes/deploys if integrity cannot be established.
+- Do not send payment instructions without a verified enabled method and a proven open 24-hour window or approved template. Never claim simulation as live WhatsApp evidence; PAID still requires real funds, unique reference, and authorized approval.
+
 ## GFS-190 Emergency Payment Recovery (2026-10-22)
 
 - A successful supported `chrome_devtools.list_pages` call proves the Chrome MCP tool path is available for this session; it does not prove authenticated identity on every already-open service page. Reuse matching tabs, verify the active account before mutations, and stop if the Admin/Cloudflare Access identity is not visible.

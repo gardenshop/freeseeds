@@ -1,5 +1,15 @@
 # Resource Registry
 
+## GFS-191 Payment Activation (2026-10-22)
+
+- Start/refreshed branch head `76b08d1`; GitHub `gardenshop`; Cloudflare Wrangler and same-origin Access identity verified for the configured GFS operator. Tokens and raw beneficiary identifiers are not recorded.
+- Chrome DevTools MCP works; existing Admin tab reused. Admin GETs return current payment/CMS/order state. Direct Wrangler D1 execute API7403; configured migration path is now `../../migrations`. Remote migration tracking reports all26 pending despite live `last_inbound_at` being selectable through Orders; never replay the full set or fabricate migration records.
+- Method states (redacted): all three disabled and ownership false; R2 reference and QR hash exist; QR readiness blocked on independent ownership. EN/UR settings and placeholder checks complete; sort orders unchanged; global payment amount unset. No QR bytes or raw keys read.
+- Exact missing evidence: JazzCash provider link from decoded till to Garden Shop; Easypaisa authenticated merchant alias-to-destination mapping; Bank Alfalah bank confirmation of QR destination to Garden Shop IBAN/Raast. Owner statement alone does not satisfy independent proof. No enablement or settlement.
+- Published PAYMENT CMS v1 in EN/UR has order placeholder, not amount; draft v1, no action IDs. No CMS write. Payment method buttons remain runtime-generated; Check Order remains under order status.
+- `last_inbound_at` column exists, but all20 current pending orders have null/missing inbound timestamps and no receipts. No contact. Held incident remains held.
+- Local source changes: root Wrangler migrations directory; safe `{amount}` placeholder and persisted-order amount injection; bilingual fallback; protected one-time beneficiary approval UI/API with audit, duplicate protection, and recipient-change revocation. Validation:145 tests, lint, build, audit0, clean install, API/Admin dry-runs, Chrome list/GET PASS. Approval workflow is not deployed or used; no D1 write.
+
 ## GFS-190 Emergency Payment Recovery (2026-10-22)
 
 - Fetched PR #8 branch `codex/gfs-launch-next-001` at `e17684c`; GitHub identity `gardenshop`; Wrangler identity `gisupp@gmail.com` / canonical GFS account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.

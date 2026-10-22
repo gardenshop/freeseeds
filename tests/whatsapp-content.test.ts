@@ -23,6 +23,12 @@ describe("GFS-111 WhatsApp content", () => {
     expect(renderWhatsAppContent("Unknown {customerName}", {})).toBe("Unknown {customerName}");
   });
 
+  it("accepts and renders the authoritative payment amount in both locales", () => {
+    const payment = parseWhatsAppContentDraft({ contentEn: { text: "For order {orderNumber}, the payable amount is PKR {amount}." }, contentUr: { text: "آرڈر {orderNumber} کی قابلِ ادائیگی رقم PKR {amount} ہے۔" } }, "PAYMENT");
+    expect(renderWhatsAppContent(payment.contentEn.text, { orderNumber: "SYNTHETIC-ORDER", amount: 250 })).toBe("For order SYNTHETIC-ORDER, the payable amount is PKR 250.");
+    expect(renderWhatsAppContent(payment.contentUr.text, { orderNumber: "SYNTHETIC-ORDER", amount: 250 })).toBe("آرڈر SYNTHETIC-ORDER کی قابلِ ادائیگی رقم PKR 250 ہے۔");
+  });
+
   it("requires the stable per-template action labels and province list copy", () => {
     const welcome = { contentEn: { text: "Welcome", actionLabels: { LANG_EN: "English", LANG_UR: "Urdu" } }, contentUr: { text: "خوش آمدید", actionLabels: { LANG_EN: "انگریزی", LANG_UR: "اردو" } } };
     expect(parseWhatsAppContentDraft(welcome, "WELCOME").contentUr.actionLabels?.LANG_UR).toBe("اردو");
