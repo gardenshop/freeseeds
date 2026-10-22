@@ -8,6 +8,7 @@
 - JazzCash: decoded Garden Shop label and prior masked configured-destination match are supporting only; authenticated merchant/till ownership link absent. Easypaisa: name in QR is supporting only; merchant alias-to-Garden-Shop record absent. Bank Alfalah: bank route/destination code only; authenticated exact beneficiary link absent.
 - No raw merchant identifiers/provider app data copied. No account/recipient/QR change, approval, enablement, outbound payment message, or transfer. Pending aggregate21 balanced, receipts0, enabled0, approvals0. Test order from GFS-192 unchanged; no new order.
 - GFS-192 active API/Admin versions and migration0026 remain in service. Legacy migration ledger0 untouched. A read-only Admin Orders GET freshly confirms the protected incident remains held. A separate D1 check with a wrong hold-column name failed without mutation.
+- GFS-193 records are pushed to PR #8 in commits `930bf66` and `2f0316d`; CI runs `39783561808`/`39784012412` did not start steps because of the explicit billing-lock annotation.
 - `npm ci`,159 tests,lint,build,audit0,Wrangler dry-runs pass. Current branch has no GFS-193 commit yet; PR CI lock issue unchanged.
 
 ## GFS-192 Current Live Resources (2026-10-22)

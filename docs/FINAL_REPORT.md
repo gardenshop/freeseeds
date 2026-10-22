@@ -22,6 +22,7 @@
 - Easypaisa: authenticated merchant account record explicitly mapping the decoded QR alias to Garden Shop.
 - Bank Alfalah: authenticated bank payee/account record matching the exact decoded QR destination to Garden Shop’s IBAN/Raast beneficiary.
 - Generic scanner screenshots from the owner are not independent provider records. No provider portal/evidence artifact was available in authenticated browser tabs. Do not repeat searches or treat the screenshot as approval.
+- PR #8 is open on `codex/gfs-launch-next-001`; GFS-193 records are in commits `930bf66` and `2f0316d`. CI runs `39783561808` and `39784012412` failed before job steps because GitHub reports the account locked due to billing. No protection bypass.
 - Progress estimates: whole project75%/25%; P0 50/50; P1 95/5; P2 45/55; P3 85/15; P4 100/0; P5 100/0. Estimates do not imply payment acceptance.
 
 ## GFS-192 Mandatory Results - 2026-10-22

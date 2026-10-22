@@ -5,6 +5,7 @@
 - Reviewed user-supplied QR scanner screenshots as supporting payload evidence only; no QR was rescanned or replaced.
 - Rechecked masked live payment gates and D1 pending aggregate: three methods disabled/owner-unverified,21 pending balanced,receipts0,approvals0. No provider evidence or authorized settlement; no payment/customer mutation.
 - Re-ran clean install,159 tests,lint,build,audit0 and Wrangler dry-runs. No source/runtime/deployment change; PR CI remains blocked by explicit GitHub billing lock.
+- Pushed the GFS-193 report to PR #8 in commits `930bf66`,`2f0316d`; CI runs `39783561808`,`39784012412` failed before steps under the account billing lock. No bypass.
 
 ## 2026-10-22 (GFS-192)
 
