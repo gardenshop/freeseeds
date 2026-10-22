@@ -17,8 +17,8 @@
 | P3 receipt/review/PAID/fulfillment | NOT AUTHORIZED / NOT PERFORMED | No method, transfer authorization, funds, unique transaction reference, receipt, or Admin approval. No simulated result is presented as real. |
 | P4 pending orders | PASS audit / BLOCKED follow-up | Read-only redacted audit found 20 pending orders, zero receipts, 14 without method and six with historical selections. Screenshot-referenced total matches supplied evidence. No customer contacted: no qualifying method and exact inbound service windows unavailable. Held incident unchanged. |
 | P5 quality | PASS local | `npm audit fix` updated lockfile to resolve two moderate Vitest advisories. Clean `npm ci`, 143/143 tests across19 files, build, lint, full audit0, API/Admin Wrangler dry-runs, and second `list_pages` PASS. |
-| P5 deployment/CI | NOT DEPLOYED / CI BLOCKED | API remains `5151e081-98ab-45c4-a57f-3ba43c4e6983`; Admin remains `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`; API rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`. Post-push PR CI `39744649236` failed with zero steps, consistent with the known billing lock. No bypass. |
-| P6 records/PR | PASS | Required records and lockfile fix pushed to open PR #8 as `a2d685571d1401ae85113e05763ede0cda9fd068`. No merge or protection bypass. |
+| P5 deployment/CI | NOT DEPLOYED / CI BLOCKED | API remains `5151e081-98ab-45c4-a57f-3ba43c4e6983`; Admin remains `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`; API rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`. Post-push PR CI runs `39744649236` and `39744908685` both failed with zero steps, consistent with the known billing lock. No bypass. |
+| P6 records/PR | PASS | Required records and lockfile fix pushed to open PR #8 in commits `a2d685571d1401ae85113e05763ede0cda9fd068` and `6e9ecc5b70c6503b100373f7ee63125d7b0de687`. No merge or protection bypass. |
 
 ### Reconciliation and Release
 
