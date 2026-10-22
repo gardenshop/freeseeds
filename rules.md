@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-190 Emergency Payment Recovery (2026-10-22)
+
+- A successful supported `chrome_devtools.list_pages` call proves the Chrome MCP tool path is available for this session; it does not prove authenticated identity on every already-open service page. Reuse matching tabs, verify the active account before mutations, and stop if the Admin/Cloudflare Access identity is not visible.
+- Cloudflare Wrangler identity and dashboard/API identity are separate checks. Do not switch accounts or broaden scopes on API7403; test the authorized account through a read-only staging D1 query and record which surface succeeds. Never infer dashboard authorization from `wrangler whoami` alone.
+- D1 staging still requires independently verified Garden Shop beneficiary evidence and a complete, published payment configuration. QR integrity flags, active D1 provenance, owner attestation, and a visible QR are not beneficiary proof. Keep all methods disabled until the protected evidence-review workflow records independent proof and audit.
+- Existing pending orders must not be contacted based on order age, a recent aggregate webhook timestamp, or `conversation.updated_at`. Migration0026 is not applied in the recorded GFS-190 execution; no inbound service window is established for historical orders. Require a proven signed inbound timestamp or an approved utility template.
+- An additive migration or Worker deployment affecting the active WhatsApp callback still requires verified bindings, D1 integrity/rollback, clean local regression, authenticated Admin/Meta/tester identity, and a real Chrome retest. Do not deploy or claim live recovery when any of these prerequisites is unavailable.
+- Never record raw D1 payment identifiers, customer data, QR bytes, Access/OAuth challenges, or credentials in logs, screenshots, tests, or documentation.
+
 ## GFS-189 Service-Window and Messaging Controls
 
 - Migration0026 adds nullable `whatsapp_conversations.last_inbound_at`, with no historical backfill. Populate only after HMAC signature and canonical callback Phone ID validation, from the first unique `whatsapp_events.created_at` server receipt timestamp. Duplicate provider IDs keep their original time; status/outbound events never extend the service window.

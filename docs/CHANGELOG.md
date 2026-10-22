@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased - 2026-10-22 (GFS-190)
+
+- Restored supported Chrome DevTools MCP availability; `list_pages` passes with existing tabs reused. Admin identity remains unverified and no dashboard mutation occurred.
+- Diagnosed D1 API7403: correct Wrangler account verified and masked staging reads succeed; dashboard/Access authorization remains unresolved. No account switch or permission expansion.
+- Reconciled the screenshot-referenced order total to the supplied evidence and the current pending pool (20 pending, zero receipts); all payment methods remain disabled/unverified and no customer was contacted.
+- Kept migration0026, GFS-187 Admin deployment, and PAYMENT CMS publication blocked pending migration/integrity preflight and authenticated Chrome retest. No message, WAMID, QR delivery, or payment claim.
+- Updated `package-lock.json` to resolve two moderate Vitest advisories; clean install,143 tests, build, lint, zero-vulnerability audit, and API/Admin dry-runs pass.
+
 ## Unreleased - 2026-10-21 (GFS-189)
 
 - Added nullable last_inbound_at with no backfill, updated only from signed/canonical inbound webhook events using unique first receipt timestamp.

@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-10-22: GFS-190 Payment Recovery Boundary
+
+The supported Chrome DevTools MCP is available (`list_pages` succeeds), but that does not establish Admin, Meta, or tester identity. The existing Admin Payment Settings page renders, but the active Access identity is not visible; no CMS/payment mutation is permitted until the authorized identity is verified. Do not switch accounts or broaden OAuth scopes to bypass the Cloudflare Access/dashboard issue.
+
+Cloudflare Wrangler confirms the correct GFS account and can perform read-only staging D1 queries; the prior dashboard/API7403 is not reproduced on that path. Treat it as a surface-specific auth/API issue, not evidence of D1 outage. Staging reads confirm no `last_inbound_at`, so recent aggregate webhook activity must not be used to message any historical order.
+
+All three payment methods remain disabled. Stored QR integrity/provenance is not independent beneficiary proof; amount configuration is absent and localized settings are incomplete. Do not enable or send payment instructions. Obtain the provider records linking each decoded destination to Garden Shop through authenticated provider/bank sources and record them through the protected evidence-review workflow.
+
+The active API deployment and bindings are unchanged. Migration0026, GFS-187 Admin code, and CMS edits remain undeployed/unapplied because D1 integrity/migration preflight and authenticated Chrome webhook retest cannot be completed. Pending orders remain unchanged and unmessaged. No real WhatsApp payment E2E, receipt, funds, PAID, or fulfillment result is claimed. Preserve the existing incident hold.
+
 ## 2026-10-21: GFS-189 Inbound Timestamp and Closed-Window Policy
 
 Add a separate nullable `last_inbound_at`; do not reinterpret conversation.updated_at. Derive the timestamp only from a signed/canonical inbound webhook's unique `whatsapp_events.created_at` (trusted server receipt), not provider text, order creation, or outbound/status events. Do not backfill old conversations. Duplicate callback ID leaves original timestamp unchanged.

@@ -1,5 +1,23 @@
 # Test Matrix
 
+## GFS-190 Emergency Checkout Recovery (2026-10-22)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Supported Chrome DevTools MCP | PASS | `list_pages` succeeded twice; first inventory contained 10 existing pages; same Admin tab reused |
+| Admin identity and settings | PARTIAL | Payment Settings rendered, all methods `Draft / incomplete`; active Admin identity not visible; no mutation |
+| Cloudflare identity | PASS | Wrangler `gisupp@gmail.com`, canonical GFS account ID; GitHub `gardenshop` |
+| D1 API7403 | PARTIAL | `SELECT 1` and masked remote queries succeed via Wrangler; dashboard/API7403 not reproduced there; Access/consent surface unresolved |
+| Payment methods | BLOCKED safely | All three disabled/owner false; QR integrity flags pass, independent beneficiary proof and refs absent; amount unset |
+| Screenshot-referenced pending order | PASS audit / BLOCKED payment | DETAILS_COMPLETED/PENDING; total matches supplied screenshot; no method/receipt (amount omitted) |
+| Other pending orders | PASS audit / BLOCKED contact | 20 total pending, 14 no method, 6 historical selections, zero receipts; no current authenticated inbound window |
+| Migration0026 | BLOCKED | Remote schema lacks `last_inbound_at`; remote PRAGMA returns SQLITE_AUTH and Wrangler migration directory is mislocated; no write |
+| CMS / Admin GFS-187 fix | BLOCKED | No active Admin identity; no Save/Publish/deploy or browser retest |
+| Fresh WhatsApp journey/WAMIDs/QR media | NOT PERFORMED | No method qualifies; tester identity not reverified; no new message/order |
+| Receipt / review / PAID / fulfillment | NOT PERFORMED | No receipt/funds/unique reference/authorized approval; no financial state mutation |
+| Quality after lockfile security fix | PASS | Clean install,143/143,build,lint,audit0,API/Admin dry-runs; Chrome list_pages retest PASS |
+| Release decisions | NO-GO | Public leads and customer payments remain NO-GO; no deployment or CI bypass |
+
 ## GFS-189 Timestamp and Service-Window Matrix
 
 | Requirement | Result | Evidence / blocker |

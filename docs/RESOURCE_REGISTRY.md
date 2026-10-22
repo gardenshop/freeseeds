@@ -1,5 +1,17 @@
 # Resource Registry
 
+## GFS-190 Emergency Payment Recovery (2026-10-22)
+
+- Fetched PR #8 branch `codex/gfs-launch-next-001` at `e17684c`; GitHub identity `gardenshop`; Wrangler identity `gisupp@gmail.com` / canonical GFS account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- Chrome MCP `list_pages` works in this session (10 existing pages, same Admin tab reused). Payment Settings renders three `Draft / incomplete` methods; active Admin identity is not visible. No Admin, Meta, WhatsApp, payment, or order mutation.
+- Wrangler D1 `SELECT 1` and explicitly masked reads succeed on staging `getfreeseeds-staging` (`17b7e9f6-e08b-4bff-a756-10de30b49ab1`). Dashboard/API7403 is not reproduced through Wrangler. Do not switch accounts/scopes. Cloudflare Access/consent state must be restored by the authorized account operator before Admin mutation.
+- Current API `5151e081-98ab-45c4-a57f-3ba43c4e6983`; rollback `8a045e16-17c5-4663-bc65-f8c815712ce9`; Admin last deployed `6fb34f89-dc19-4cec-9347-ec1ce6bf299d`. Dry-run bindings remain canonical GFS; CAPI and Instant Form are false; guided mode and canonical Phone/WABA IDs unchanged.
+- D1 schema confirms `whatsapp_conversations` has no `last_inbound_at`; migration0026 remains unapplied. Latest event receipt is `2026-10-22T07:41:17.998Z`; recent aggregate is not an inbound eligibility proof. No staging mutation/deploy; R2 binaries not freshly fetched.
+- Redacted method flags: all three `enabled=0`, `qr_owner_verified=0`, active QR provenance and decoder/payload/scan flags pass, independent evidence absent, amount configuration absent, localized copy completeness false. Keep non-payable.
+- Screenshot-referenced pending order's total matches the supplied screenshot; state is DETAILS_COMPLETED/PENDING with no selected method/receipt. Current pending pool:20, zero receipts; 14 no method and six historical selections. No messages/replays.
+- Exact missing evidence: JazzCash authenticated till ownership record; Easypaisa authenticated alias/destination mapping; Bank Alfalah authenticated QR-to-IBAN/Raast beneficiary mapping. No owner/provider proof or enablement.
+- `npm audit fix` updated lockfile only; clean install/full143/build/lint/audit0/API+Admin dry-runs pass. No deploy, WAMID, receipt, payment, PAID, fulfillment, or customer follow-up.
+
 ## GFS-189 Inbound-Time Migration
 
 - New migration `0026_whatsapp_last_inbound_at.sql`; API route persists `last_inbound_at` from first unique signed inbound event receipt timestamp. No historic backfill. Core `isInsideWhatsAppServiceWindow` enforces a strict24h boundary.
