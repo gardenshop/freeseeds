@@ -1,5 +1,15 @@
 # Get Free Seeds Binding Rules
 
+## GFS-195 Reference and OFFER Safeguards (2026-10-22)
+
+- Admin may store a normalized customer transaction reference only on its receipt-backed PAYMENT_REVIEW payment, bound to the matching order, method and exact persisted total. Database uniqueness, Admin checks and customer normalization must use the same case/ASCII-whitespace canonical form, including legacy values with internal spaces. Audit stores a hash, actor, time and order/payment association; do not log the raw reference.
+- A reference is not settlement proof. PAID requires the associated receipt, saved genuine reference, persisted order amount, currently approved receiving destination, authenticated Admin review of actual account credit, and a non-sensitive settlement evidence reference. The API must atomically record payment/order/audit state. CAPI remains disabled unless explicitly configured.
+- Request Reference may send only inside a proven open service window or via an approved utility template. Admin shows a clear closed-window/API-not-deployed blocker and must not enqueue a request when either condition fails. Historical age and conversation.updated_at never open a window.
+- On receipt, keep order/payment at PAYMENT_REVIEW while requesting the genuine reference in the customer's language. Do not mark paid from media, reference alone, or an Admin checkbox without provider-account credit verification.
+- OFFER quick replies are exactly stable `CONTINUE_ORDER` and `CANCEL_ORDER`. Continue alone opens FERTILIZER; cancel clears only the unsubmitted entry, creates no order/payment/CAPI/dispatch, and START restarts. Preserve the payment selector allowlist and separate Check Order status action.
+- Do not deploy webhook/offer changes or publish changed customer-facing copy until the authorized tester profile matches the project rule. Never switch numbers/create profiles to bypass this lock. Drafts are safe; publication is not.
+- Directly apply only the narrow versioned migrations after duplicate/reference and D1 backup/integrity preflight. Never replay the empty legacy ledger or invent history.
+
 ## GFS-193 Owner-Supplied QR Evidence Limit (2026-10-22)
 
 - Generic QR-scanner screenshots are supporting evidence of encoded payload only. They do not independently authenticate the destination or prove that the encoded merchant/wallet/bank account belongs to Garden Shop. Never approve from an owner-uploaded scanner screen alone.

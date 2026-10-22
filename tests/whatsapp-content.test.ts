@@ -36,6 +36,16 @@ describe("GFS-111 WhatsApp content", () => {
     expect(() => parseWhatsAppContentDraft({ contentEn: { text: "Province" }, contentUr: { text: "صوبہ" } }, "PROVINCE_DELIVERY")).toThrow("WHATSAPP_CONTENT_PROVINCE_LIST_INVALID");
   });
 
+  it("requires editable stable Continue and Cancel OFFER labels in both locales", () => {
+    expect(WHATSAPP_TEMPLATE_ACTION_IDS.OFFER).toEqual(["CONTINUE_ORDER", "CANCEL_ORDER"]);
+    const offer = parseWhatsAppContentDraft({
+      contentEn: { text: "Choose how to proceed.", actionLabels: { CONTINUE_ORDER: "Continue Order", CANCEL_ORDER: "Cancel Order" } },
+      contentUr: { text: "آگے بڑھنے کا انتخاب کریں۔", actionLabels: { CONTINUE_ORDER: "آرڈر جاری رکھیں", CANCEL_ORDER: "آرڈر منسوخ کریں" } }
+    }, "OFFER");
+    expect(offer.contentUr.actionLabels).toEqual({ CONTINUE_ORDER: "آرڈر جاری رکھیں", CANCEL_ORDER: "آرڈر منسوخ کریں" });
+    expect(() => parseWhatsAppContentDraft({ contentEn: { text: "Offer", actionLabels: { CONTINUE_ORDER: "Continue Order" } }, contentUr: { text: "آفر", actionLabels: { CONTINUE_ORDER: "آرڈر جاری رکھیں" } } }, "OFFER")).toThrow("WHATSAPP_CONTENT_ACTION_LABELS_INVALID");
+  });
+
   it("defines stable journey metadata for every WhatsApp template", async () => {
     const migration = await readFile("migrations/0016_whatsapp_content_journey.sql", "utf8");
     expect(migration).toContain("ADD COLUMN flow_order");

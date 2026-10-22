@@ -11,6 +11,17 @@ async function csrfHeaders(contentType = "application/json") {
 }
 
 describe("admin payment configuration", () => {
+  it("renders transaction-reference, reference-request and settlement-confirmation controls", async () => {
+    const response = await app.fetch(new Request("https://admin.example.test/orders", { headers: access }), env);
+    const html = await response.text();
+    expect(response.status).toBe(200);
+    expect(html).toContain("Save Reference");
+    expect(html).toContain("Request Reference");
+    expect(html).toContain("Receiving-account settlement evidence reference");
+    expect(html).toContain("I verified the actual credit in the authorized Garden Shop receiving account");
+    expect(html).toContain("data.message==='string'");
+  });
+
   it("keeps the amount endpoint Access-protected and rejects non-positive values", async () => {
     const unauthorized = await app.fetch(new Request("https://admin.example.test/api/payment-configuration"), env);
     expect(unauthorized.status).toBe(403);

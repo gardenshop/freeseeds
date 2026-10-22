@@ -1,5 +1,32 @@
 # Final Report
 
+## GFS-195 Payment Reference and OFFER Repair (2026-10-22)
+
+**INCOMPLETE.** The Admin approval screen and OFFER flow were repaired locally; Admin and narrow D1 safeguards are deployed. The webhook API/CMS remain on the prior release, and no financial settlement was claimed.
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Root cause | PASS | Live Admin Orders API showed one REVIEW payment with receipt, matching total and missing `customer_transaction_reference`; approval previously had no input field. No approve attempt was made. |
+| Admin Save Reference | PASS deployed UX / no live value | Input, Save Reference, order/payment association, validation and audit fingerprint deployed. No genuine transaction reference was available to save. |
+| Duplicate references | PASS | Migrations0027/0029 enforce method-scoped case/ASCII-whitespace-normalized uniqueness; legacy-space collision regression and D1 preflight0 PASS. |
+| JazzCash/Easypaisa/Bank | CONFIG PASS / fresh media E2E NOT RUN | All3 remain enabled and QR-ready; each has one reviewer/evidence/time/current-QR-hash audit. No method setting changed in GFS-195. |
+| Receiving-account settlement/PAID | BLOCKED | Requires actual account credit and non-sensitive provider evidence reference plus explicit authenticated Admin confirmation. None was observed or submitted. The affected payment remains in PAYMENT_REVIEW; no PAID/fulfillment. |
+| Request Reference | BLOCKED safely | Admin displays the action but API dispatch flag is false, current customer's 24-hour window is closed, and no approved utility template was used. No message/outbox event. |
+| Bilingual OFFER | PASS locally / DRAFT only | `CONTINUE_ORDER` and `CANCEL_ORDER`, localized CMS action fields. Continue routes to FERTILIZER; cancel creates no order/payment/CAPI/dispatch; START restarts. Offer v5 draft saved, not published. |
+| Receipt reference prompt | PASS draft only | EN/UR RECEIPT v2 asks for real transaction ID and states receipt does not confirm payment. Not published because API deployment is blocked. |
+| API/Webhook deploy | BLOCKED | API remains `8da54b28-4bec-45b2-9a3f-672225dba843`; own WhatsApp Profile does not match the authorized tester in rules. No number switching or alternate contact. |
+| Admin deploy | PASS | Admin `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0`; rollback `132f5ea9-324f-482d-b350-f52bc6907758`. Request queue fails closed until API version is enabled. |
+| D1 | PASS preflight/migrations | quick_check/FK pass;0027/0028/0029 applied narrowly; normalized duplicate refs0,43 prior labels preserved,ledger0 untouched. Pending22 totals balanced; one reference-missing receipt review row. |
+| New real WhatsApp E2E | BLOCKED | Tester profile mismatch; no fresh order, WAMID, QR, screenshot, receipt, settlement or fulfillment in GFS-195. Prior GFS-192 lead evidence not reused. |
+| Tests/CI | PASS local / CI locked | clean `npm ci`,168/168,lint,build,audit0,Wrangler dry-runs. GitHub CI billing lock remains; no bypass. |
+| Pending follow-up | BLOCKED safely | No request was sent because service window is closed and no approved template exists. Existing order amounts and held incident unchanged. |
+| Release decision | NO-GO for complete checkout | Admin/schema staging changes verified; API/payment-output release waits for authorized tester identity. Real customer payments/financial E2E are not accepted on this evidence. |
+
+### Progress
+
+- Project estimate65% complete /35% remaining; P0 85/15; P1 75/25; P2 30/70; P3 60/40; P4 95/5. Percentages do not imply live customer acceptance.
+- Exact external blocker: re-establish the existing authorized WhatsApp tester Profile so its own number matches `rules.md`; do not change the approved number or use another contact. For the current review order, obtain a genuine reference and evidence of account credit; the closed service window additionally needs a separately approved utility template or a fresh customer inbound.
+
 ## GFS-193 QR Evidence Review - 2026-10-22
 
 **NOT COMPLETE.** The screenshots support decoded QR payload review but do not independently prove Garden Shop beneficiary ownership. All methods remain disabled; no actual payment QR or payment instructions were delivered.

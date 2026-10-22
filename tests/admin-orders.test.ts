@@ -151,14 +151,14 @@ describe("GFS-139 orders dashboard API", () => {
     const db = new OrdersDb();
     const session = await csrf(db);
     const approve = () => app.fetch(new Request("https://admin.example.test/api/payments/synthetic-payment/approve", { method: "POST", headers: { ...auth, origin: "https://admin.example.test", cookie: session.cookie, "x-csrf-token": session.token, "content-type": "application/json" }, body: JSON.stringify({ orderId: "synthetic-order-newest", confirmation: "FS-261016-990001" }) }), environment(db));
-    db.approvalRow = { review_state: "REVIEW", expected_amount: 300, approved_amount: null, order_id: "synthetic-order-newest", order_number: "FS-261016-990001", state: "PAYMENT_REVIEW", archived_at: null, customer_id: "synthetic-customer", receipt_count: 0 };
+    db.approvalRow = { review_state: "REVIEW", method:"JAZZCASH", expected_amount: 300, approved_amount: null, customer_transaction_reference:"SYNTHETIC-REF-001", order_id: "synthetic-order-newest", order_number: "FS-261016-990001", state: "PAYMENT_REVIEW", archived_at: null, total_payable:300, customer_id: "synthetic-customer", receipt_count: 0,qr_sha256:"a".repeat(64),payment_method_verified:1 };
     const missingReceipt = await approve();
     expect(missingReceipt.status).toBe(409);
-    expect(await missingReceipt.json()).toEqual({ error: "PAYMENT_RECEIPT_REQUIRED" });
+    expect(await missingReceipt.json()).toMatchObject({ error: "PAYMENT_RECEIPT_REQUIRED",message:"A receipt associated with this order and payment is required before settlement review." });
     db.approvalRow = { ...db.approvalRow, expected_amount: 0, receipt_count: 1 };
     const zeroAmount = await approve();
     expect(zeroAmount.status).toBe(409);
-    expect(await zeroAmount.json()).toEqual({ error: "PAYMENT_AMOUNT_INVALID" });
+    expect(await zeroAmount.json()).toMatchObject({ error: "PAYMENT_AMOUNT_MISMATCH" });
     expect(db.batches).toBe(0);
   });
 });

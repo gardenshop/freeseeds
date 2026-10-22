@@ -1,5 +1,19 @@
 # Decisions
 
+## 2026-10-22: GFS-195 Reference Is Not Settlement
+
+The approval error originated because payment approval required `payments.customer_transaction_reference` while Admin supplied no entry field. Admin now saves the reference to the matching receipt-backed order/payment, audits a fingerprint and reviewer, and blocks duplicate references with a method-scoped unique index. Reference capture leaves the order and payment in REVIEW.
+
+A final reviewer found legacy transaction references containing internal spaces could evade a trim-only SQL index. Migration0029 rebuilds the method-scoped key with case/ASCII-whitespace normalization aligned to Admin/API validators. Preflight found0 collisions; existing refs were not rewritten and no ledger history was added.
+
+PAID additionally requires exact expected/order total match, associated receipt, approved destination, Admin-attested provider evidence of actual receiving-account credit, and an opaque settlement evidence reference in the audit. Do not approve from a receipt/reference alone. The current review row's reference remains missing; no receipt was inspected, reference entered, or payment approved.
+
+Receipt messages now request the reference in both locales in the next draft. Request Reference is disabled in Admin until the matching API queue deployment and a verified open service window/approved utility template. Current window is closed; no customer message sent.
+
+OFFER IDs `CONTINUE_ORDER`/`CANCEL_ORDER` are in the versioned CMS action schema. Cancellation only discards the pre-order entry, has no order/payment/CAPI/dispatch side effect, and START restarts. Drafts are saved, not published, until API deployment is authorized.
+
+API deployment is blocked by the current Chrome WhatsApp own-Profile mismatch against the authorized tester. Do not switch/relink numbers or send to another contact. Admin-only changes are deployed; no live WhatsApp E2E or real funds outcome claimed.
+
 ## 2026-10-22: GFS-193 Scanner Evidence Does Not Prove Payee
 
 The new owner-uploaded generic scanner screenshots corroborate QR payloads only. Do not independently approve/enable JazzCash from a Garden Shop label or prior D1 till match; require the authenticated JazzCash merchant/till ownership record. Easypaisa still needs the official alias mapping to Garden Shop because the stored alias/destination comparison remains unresolved. Bank Alfalah's ALFH/destination payload has no payee name; require the authenticated bank record linking that exact QR/Raast/IBAN destination to Garden Shop.

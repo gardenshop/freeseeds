@@ -31,7 +31,9 @@ export const WHATSAPP_ACTION_IDS = [
   "PLACE_ORDER",
   "BACK",
   "CHECK_ORDER",
-  "SUPPORT"
+  "SUPPORT",
+  "CONTINUE_ORDER",
+  "CANCEL_ORDER"
 ] as const;
 
 export const WhatsAppActionId = z.enum(WHATSAPP_ACTION_IDS);
@@ -39,6 +41,7 @@ export type WhatsAppActionId = z.infer<typeof WhatsAppActionId>;
 
 export const WHATSAPP_TEMPLATE_ACTION_IDS: Partial<Record<WhatsAppTemplateKey, readonly WhatsAppActionId[]>> = {
   WELCOME: ["LANG_EN", "LANG_UR"],
+  OFFER: ["CONTINUE_ORDER", "CANCEL_ORDER"],
   FERTILIZER: ["ADD_FERTILIZER", "SEEDS_ONLY"],
   REVIEW: ["PLACE_ORDER", "BACK"],
   PAYMENT: [],

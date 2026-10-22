@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-195 Reference and Offer Repair (2026-10-22)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| PAYMENT_TRANSACTION_REFERENCE_REQUIRED root | PASS diagnosis/fix | Live masked Orders GET showed one REVIEW+receipt+amount match with no ref; deployed Admin adds Save Reference and clear review actions |
+| Reference persistence/duplicates | PASS local | Migrations0027/0029 use case/ASCII-whitespace normalization; synthetic API/Admin tests verify association, hash audit, exact duplicate and legacy internal-space collision |
+| Settlement/PAID gate | PASS fail-closed | Admin requires receipt, reference, method owner/QR state, matching total, settlement evidence reference and explicit reviewer confirmation; no live PAID tested |
+| Request Reference | BLOCKED safely | Window closed, no approved utility template; Admin/API config gate false, no outbox/email/message |
+| OFFER Continue/Cancel | PASS local | Stable IDs, bilingual CMS labels, cancel creates no order/payment/CAPI/outbox; START restart; stale/callback duplicates covered |
+| OFFER CMS/receipt CMS | PASS draft only | OFFER v5 EN/UR labels and RECEIPT v2 ref prompt saved; published versions unchanged pending API/tester |
+| API / active WhatsApp | BLOCKED | Own WhatsApp Profile mismatches authorized tester; no deployment, no new WAMID/order/receipt |
+| D1 migrations | PASS applied | Narrow0027/28/29 applied; quick_check ok,FK violations0,normalized duplicate refs0,43 old labels preserved; ledger0 untouched |
+| Regression | PASS | clean `npm ci`,168/168,lint,build,audit0,API/Admin dry-runs; Admin live retest PASS |
+| Funds/receipt/PAID/fulfillment | BLOCKED | No actual provider-account credit/evidence or transfer authorization; no financial simulation in live D1 |
+
 ## GFS-193 Owner-Supplied QR Review (2026-10-22)
 
 | Requirement | Result | Actual evidence / blocker |

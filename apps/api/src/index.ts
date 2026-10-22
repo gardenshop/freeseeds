@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { applyFertilizerDecision, createWhatsAppProvider, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isInsideWhatsAppServiceWindow, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, MetaCapiProvider, MetaFlowEnvelope, normalizePaymentMethodRow, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInboundConversationActivity, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey } from "@gfs/core";
+import { applyFertilizerDecision, createWhatsAppProvider, customerTransactionReferenceHash, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isInsideWhatsAppServiceWindow, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, MetaCapiProvider, MetaFlowEnvelope, normalizeCustomerTransactionReference, normalizePaymentMethodRow, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInboundConversationActivity, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey } from "@gfs/core";
 import { handleMetaFlowPayload } from "./flow-endpoint";
 import { admitWhatsAppSenders } from "./rate-limit";
 
@@ -40,10 +40,11 @@ async function verifyFlowToken(token: string, secret: string): Promise<string | 
 type ConversationData = { language?: "en" | "ur"; fullName?: string; deliveryAddress?: string; nearbyPlace?: string; city?: string; contactNumber?: string; province?: string; fertilizerSelected?: boolean; orderId?: string; orderNumber?: string; amountPkr?: number };
 
 type ConversationReplyOptions = { buttons?: InteractiveButton[]; list?: { buttonText: string; rows: Array<{ id: string; title: string; description?: string }> }; image?: OutboundImage; flow?: { id: string; token: string } };
+type ConversationOutboundAssociation = { orderId?: string; customerId?: string; kind?: string };
 
 const LOCALE_FALLBACKS: Partial<Record<WhatsAppTemplateKey, { en: string; ur: string }>> = {
   WELCOME: { en: "Welcome to Get Free Seeds! Tap below to begin your order.", ur: "گٹ فری سیڈز میں خوش آمدید! آرڈر شروع کرنے کے لیے نیچے دبائیں۔" },
-  OFFER: { en: "Get 5 seed packs FREE. Choose your option to continue.", ur: "5 بیجوں کے پیک مفت حاصل کریں۔ جاری رکھنے کے لیے انتخاب کریں۔" },
+  OFFER: { en: "Choose whether to continue your free seed order or cancel this unsubmitted request.", ur: "مفت بیجوں کا غیر جمع شدہ آرڈر جاری رکھنے یا منسوخ کرنے کا انتخاب کریں۔" },
   FERTILIZER: { en: "Would you like to add Micro Nutrients Fertilizer, or continue with seeds only?", ur: "کیا آپ مائیکرو نیوٹرینٹس کھاد شامل کرنا چاہتے ہیں یا صرف بیج جاری رکھنا چاہتے ہیں؟" },
   PROVINCE_DELIVERY: { en: "Choose your province for delivery.", ur: "ڈیلیوری کے لیے اپنا صوبہ منتخب کریں۔" },
   FIELD_FULL_NAME: { en: "Please reply with your full name.", ur: "براہ کرم اپنا پورا نام لکھیں۔" },
@@ -57,7 +58,7 @@ const LOCALE_FALLBACKS: Partial<Record<WhatsAppTemplateKey, { en: string; ur: st
   ORDER_STATUS: { en: "Use Check Order to see the current order and payment status.", ur: "موجودہ آرڈر اور ادائیگی کی حالت دیکھنے کے لیے آرڈر چیک کریں۔" },
   SUPPORT: { en: "Reply START to begin, STATUS to check an order, or CANCEL to stop the current order entry.", ur: "شروع کرنے کے لیے START، آرڈر دیکھنے کے لیے STATUS، یا روکنے کے لیے CANCEL لکھیں۔" },
   PAYMENT: { en: "For order {orderNumber}, the payable amount is PKR {amount}. Select an enabled payment method below.", ur: "آرڈر {orderNumber} کی قابلِ ادائیگی رقم PKR {amount} ہے۔ نیچے سے فعال ادائیگی کا طریقہ منتخب کریں۔" },
-  RECEIPT: { en: "Receipt received for order {orderNumber}. Garden Shop will review it before payment is marked PAID.", ur: "آرڈر {orderNumber} کی رسید موصول ہو گئی۔ گارڈن شاپ ادائیگی منظور کرنے سے پہلے اس کا جائزہ لے گی۔" }
+  RECEIPT: { en: "Receipt received for order {orderNumber}. Reply with the transaction/reference ID shown in your payment app. This is not payment confirmation; Garden Shop will verify actual account credit. Payment remains under Admin review.", ur: "آرڈر {orderNumber} کی رسید موصول ہوئی۔ اپنی ادائیگی کی ایپ میں دکھایا گیا ٹرانزیکشن/حوالہ نمبر جواب میں بھیجیں۔ یہ ادائیگی کی تصدیق نہیں؛ گارڈن شاپ اکاؤنٹ میں اصل رقم کی تصدیق کرے گا۔ ادائیگی ایڈمن کے جائزے میں رہے گی۔" }
 };
 
 async function contentFor(db: D1Database, key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; amount?: string | number; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string } = {}, sessionKey?: string, locale: "en" | "ur" = "en") {
@@ -143,14 +144,14 @@ export function guidedReplyMediaKey(normalized: string, state: string, nextState
   return nextStateTemplate[nextState];
 }
 
-async function sendConversationReply(db: D1Database, provider: ReturnType<typeof createWhatsAppProvider>, to: string, inboundId: string, body: string, options: ConversationReplyOptions = {}): Promise<{ sent: boolean; messageId?: string }> {
-  const key = `conversation_reply:${inboundId}`;
+async function sendConversationReply(db: D1Database, provider: ReturnType<typeof createWhatsAppProvider>, to: string, inboundId: string, body: string, options: ConversationReplyOptions = {}, idempotencyKey = `conversation_reply:${inboundId}`, association: ConversationOutboundAssociation = {}): Promise<{ sent: boolean; messageId?: string }> {
+  const key = idempotencyKey;
   const existing = await db.prepare("SELECT id,status,provider_message_id FROM outbound_messages WHERE idempotency_key=?").bind(key).first<{ id: string; status: string; provider_message_id: string | null }>();
   const now = new Date().toISOString();
   if (existing?.status === "SENT" || existing?.provider_message_id) return { sent: true, ...(existing.provider_message_id ? { messageId: existing.provider_message_id } : {}) };
   if (existing && isTerminalOutboxStatus(existing.status)) return { sent: false };
   const outboundId = existing?.id ?? crypto.randomUUID();
-  if (!existing) await db.prepare("INSERT OR IGNORE INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").bind(outboundId, key, "CONVERSATION_REPLY", "PENDING", 0, now, now).run();
+  if (!existing) await db.prepare("INSERT OR IGNORE INTO outbound_messages (id,idempotency_key,order_id,customer_id,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(outboundId, key, association.orderId ?? null, association.customerId ?? null, association.kind ?? "CONVERSATION_REPLY", "PENDING", 0, now, now).run();
   const inboundEvent = await db.prepare("SELECT created_at FROM whatsapp_events WHERE provider_event_id=?").bind(`message:${inboundId}`).first<{ created_at: string }>();
   if (!isInsideWhatsAppServiceWindow(inboundEvent?.created_at)) {
     await db.batch([
@@ -169,6 +170,27 @@ async function sendConversationReply(db: D1Database, provider: ReturnType<typeof
     const safe = error instanceof Error ? error.message.slice(0, 160) : "META_CONVERSATION_REPLY_FAILED";
     await db.prepare("UPDATE outbound_messages SET status='FAILED',last_error=?,updated_at=? WHERE idempotency_key=?").bind(safe, new Date().toISOString(), key).run();
     return { sent: false };
+  }
+}
+
+async function saveCustomerTransactionReference(db: D1Database, waId: string, orderId: string, submitted: unknown, inboundId: string): Promise<"SAVED" | "ALREADY_SAVED" | "INVALID_REFERENCE" | "REFERENCE_ALREADY_SAVED" | "REFERENCE_DUPLICATE" | "PAYMENT_NOT_IN_REVIEW"> {
+  const current = await db.prepare("SELECT p.id,p.method,p.review_state,p.expected_amount,p.customer_transaction_reference,o.order_number,o.state,o.archived_at,o.total_payable,COUNT(r.id) AS receipt_count FROM payments p JOIN orders o ON o.id=p.order_id JOIN customers c ON c.id=o.customer_id LEFT JOIN payment_receipts r ON r.payment_id=p.id AND r.order_id=o.id WHERE p.order_id=? AND o.id=? AND c.wa_id=? GROUP BY p.id,o.id").bind(orderId,orderId,waId).first<{id:string;method:string|null;review_state:string;expected_amount:number;customer_transaction_reference:string|null;order_number:string;state:string;archived_at:string|null;total_payable:number;receipt_count:number}>();
+  if (!current || current.archived_at || current.order_number === "FS-261019-000001" || current.state !== "PAYMENT_REVIEW" || current.review_state !== "REVIEW" || !current.method || Number(current.receipt_count) < 1 || Number(current.expected_amount) !== Number(current.total_payable)) return "PAYMENT_NOT_IN_REVIEW";
+  const reference = normalizeCustomerTransactionReference(submitted, current.order_number);
+  if (!reference) return "INVALID_REFERENCE";
+  if (current.customer_transaction_reference) return current.customer_transaction_reference.trim().toUpperCase() === reference.toUpperCase() ? "ALREADY_SAVED" : "REFERENCE_ALREADY_SAVED";
+  const now = new Date().toISOString();
+  const fingerprint = await customerTransactionReferenceHash(reference);
+  try {
+    const results = await db.batch([
+      db.prepare("UPDATE payments SET customer_transaction_reference=?,updated_at=? WHERE id=? AND order_id=? AND review_state='REVIEW' AND (customer_transaction_reference IS NULL OR trim(customer_transaction_reference)='') AND expected_amount=? AND EXISTS(SELECT 1 FROM orders o JOIN payment_receipts r ON r.order_id=o.id WHERE o.id=? AND o.state='PAYMENT_REVIEW' AND o.archived_at IS NULL AND o.total_payable=? AND r.payment_id=payments.id)").bind(reference,now,current.id,orderId,current.expected_amount,orderId,current.total_payable),
+      db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM payments p JOIN orders o ON o.id=p.order_id WHERE p.id=? AND p.order_id=? AND p.customer_transaction_reference=? AND p.review_state='REVIEW' AND o.state='PAYMENT_REVIEW')").bind(crypto.randomUUID(),"CUSTOMER_TRANSACTION_REFERENCE_SAVED","CUSTOMER","PAYMENT",current.id,inboundId,JSON.stringify({orderId,method:current.method,referenceHash:fingerprint,source:"SIGNED_WHATSAPP"}),now,current.id,orderId,reference)
+    ]);
+    if (Number(results[0].meta?.changes ?? 0) !== 1 || Number(results[1].meta?.changes ?? 0) !== 1) return "PAYMENT_NOT_IN_REVIEW";
+    return "SAVED";
+  } catch (error) {
+    if (error instanceof Error && /UNIQUE constraint failed/i.test(error.message)) return "REFERENCE_DUPLICATE";
+    throw error;
   }
 }
 
@@ -314,26 +336,34 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   let nextState = state;
   let reply: string | null = null;
   const noPaymentRequest = () => data.language === "ur" ? "فی الحال کوئی تصدیق شدہ ادائیگی کا طریقہ دستیاب نہیں؛ کوئی ادائیگی کی درخواست نہیں بھیجی گئی۔" : "No verified payment method is currently available; no payment request was sent.";
-  const actionAllowed = /^(CANCEL|STATUS|CHECK_ORDER|HELP|SUPPORT)$/.test(normalized)
+  const preSubmitStates = ["NEW", "LANGUAGE", "OFFER", "FERTILIZER", "PRODUCT", "PROVINCE", "FULL_NAME", "ADDRESS", "NEARBY", "CITY", "CONTACT", "REVIEW"];
+  const actionAllowed = /^(STATUS|CHECK_ORDER|HELP|SUPPORT)$/.test(normalized)
+    || (normalized === "CANCEL" && preSubmitStates.includes(state))
+    || (state === "OFFER" && /^(CONTINUE_ORDER|CANCEL_ORDER)$/.test(normalized))
+    || (state === "NEW" && normalized === "GET_FREE_PACKS")
+    || (state === "CANCELLED" && normalized === "START")
     || (["NEW", "PAYMENT_PENDING", "COMPLETE"].includes(state) && normalized === "START")
     || (state === "LANGUAGE" && /^(LANG_EN|LANG_UR)$/.test(normalized))
     || (["FERTILIZER", "PRODUCT"].includes(state) && /^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/.test(normalized))
     || (state === "PROVINCE" && normalized.startsWith("PROVINCE_"))
     || (state === "REVIEW" && /^(CONFIRM|PLACE_ORDER|BACK)$/.test(normalized))
     || (["PAYMENT_METHOD", "PAYMENT_PENDING"].includes(state) && Boolean(paymentMethodFromAction(normalized)));
-  const semanticAction = /^(START|GET_FREE_PACKS|LANG_.*|PAY_.*|PAYMENT_HELP|PROVINCE_.*|ADD_FERTILIZER|SEEDS_ONLY|PLACE_ORDER|CONFIRM|BACK|FLOW_SUBMIT)$/.test(normalized) || Boolean(paymentMethodFromAction(normalized));
+  const semanticAction = /^(START|GET_FREE_PACKS|LANG_.*|PAY_.*|PAYMENT_HELP|PROVINCE_.*|ADD_FERTILIZER|SEEDS_ONLY|PLACE_ORDER|CONFIRM|BACK|CONTINUE_ORDER|CANCEL_ORDER|FLOW_SUBMIT)$/.test(normalized) || Boolean(paymentMethodFromAction(normalized));
   const invalidAction = Boolean(message.interactive || message.button || semanticAction) && !actionAllowed;
   let paymentSelection: { orderId: string; orderNumber: string; amount: number; method: PaymentMethod; locale: "en" | "ur"; message: string; idempotencyKey: string; config: ReturnType<typeof normalizePaymentMethodRow> } | undefined;
   let completePaymentMethods: Awaited<ReturnType<typeof completeEnabledPaymentMethods>> = [];
   if (invalidAction) { reply = (await sessionContent("VALIDATION", "Please choose one of the listed options.")).text; }
-  else if (normalized === "CANCEL") { nextState = "NEW"; data = { language: data.language }; reply = (await sessionContent("WELCOME", "Order entry cancelled. Tap below when you are ready to start.")).text; }
+  else if (normalized === "CANCEL") { nextState = "CANCELLED"; data = { language: data.language }; reply = data.language === "ur" ? "یہ غیر جمع شدہ آرڈر منسوخ کر دیا گیا ہے۔ کوئی آرڈر یا ادائیگی نہیں بنائی گئی۔ دوبارہ شروع کرنے کے لیے START لکھیں۔" : "This unsubmitted order entry is cancelled. No order or payment was created. Reply START to begin again."; }
   else if (normalized === "BACK" && state === "REVIEW") { nextState = "CONTACT"; reply = (await sessionContent("FIELD_CONTACT_NUMBER", "Please reply with your contact number.")).text; }
   else if (/^(STATUS|CHECK_ORDER)$/i.test(normalized)) { const locale = data.language ?? "en"; const order = await getLatestOrderForWaId(db, event.from, data.orderId); const status = await sessionContent("ORDER_STATUS", "Use Check Order to see the current order and payment status."); const paymentStatusCopy = order ? await paymentCopyForOrder(db, order.id, "status_copy", locale) : undefined; reply = order ? `${paymentStatusCopy ?? status.text}\n${formatCustomerOrderStatus(order, locale)}` : locale === "ur" ? "اس واٹس ایپ گفتگو کے لیے کوئی آرڈر نہیں ملا۔" : "No order was found for this WhatsApp conversation."; }
   else if (/^(HELP|SUPPORT)$/i.test(normalized)) { reply = (await sessionContent("SUPPORT", "Reply START to begin, STATUS to check an order, or CANCEL to stop the current order entry.")).text; }
+  else if ((state === "NEW" && normalized === "GET_FREE_PACKS")) { nextState = "OFFER"; reply = (await sessionContent("OFFER", "Choose whether to continue your free seed order or cancel this unsubmitted request.")).text; }
+  else if (state === "CANCELLED" && normalized === "START") { nextState = "LANGUAGE"; data = {}; const [welcomeUr, welcomeEn] = await Promise.all([contentFor(db, "WELCOME", "گٹ فری سیڈز میں خوش آمدید!", {}, `CHAT:${event.from}`, "ur"), contentFor(db, "WELCOME", "Welcome to Get Free Seeds!", {}, `CHAT:${event.from}`, "en")]); reply = `${welcomeUr.text}\n\n${welcomeEn.text}`; }
   else if (state === "NEW" && (normalized === "START" || Boolean(text))) { nextState = "LANGUAGE"; const [welcomeUr, welcomeEn] = await Promise.all([contentFor(db, "WELCOME", "گٹ فری سیڈز میں خوش آمدید!", {}, `CHAT:${event.from}`, "ur"), contentFor(db, "WELCOME", "Welcome to Get Free Seeds!", {}, `CHAT:${event.from}`, "en")]); reply = `${welcomeUr.text}\n\n${welcomeEn.text}`; }
-  else if (state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) { data.language = normalized === "LANG_UR" ? "ur" : "en"; nextState = checkoutMode === "guided" ? "FERTILIZER" : "FLOW_ACTIVE"; reply = (await sessionContent("FERTILIZER", "Would you like to add Micro Nutrients Fertilizer, or continue with seeds only?")).text; }
+  else if (state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) { data.language = normalized === "LANG_UR" ? "ur" : "en"; nextState = "OFFER"; reply = (await sessionContent("OFFER", "Choose whether to continue your free seed order or cancel this unsubmitted request.")).text; }
   else if (state === "LANGUAGE") { const [welcomeUr, welcomeEn] = await Promise.all([contentFor(db, "WELCOME", "گٹ فری سیڈز میں خوش آمدید!", {}, `CHAT:${event.from}`, "ur"), contentFor(db, "WELCOME", "Welcome to Get Free Seeds!", {}, `CHAT:${event.from}`, "en")]); reply = `${welcomeUr.text}\n\n${welcomeEn.text}`; }
-  else if (state === "NEW" && normalized === "GET_FREE_PACKS") { nextState = "FERTILIZER"; reply = (await sessionContent("OFFER", "Get 5 seed packs FREE. Choose your option to continue.")).text; }
+  else if (state === "OFFER" && normalized === "CONTINUE_ORDER") { nextState = checkoutMode === "guided" ? "FERTILIZER" : "FLOW_ACTIVE"; reply = (await sessionContent("FERTILIZER", "Would you like to add Micro Nutrients Fertilizer, or continue with seeds only?")).text; }
+  else if (state === "OFFER" && normalized === "CANCEL_ORDER") { nextState = "CANCELLED"; data = { language: data.language }; reply = data.language === "ur" ? "یہ غیر جمع شدہ آرڈر منسوخ کر دیا گیا ہے۔ کوئی آرڈر یا ادائیگی نہیں بنائی گئی۔ دوبارہ شروع کرنے کے لیے START لکھیں۔" : "This unsubmitted order entry is cancelled. No order or payment was created. Reply START to begin again."; }
   else if (state === "FULL_NAME") { if (!guidedFieldIsValid(state, text)) reply = (await sessionContent("VALIDATION", "Please enter a valid full name.")).text; else { data.fullName = text; nextState = "ADDRESS"; reply = (await sessionContent("FIELD_DELIVERY_ADDRESS", "Please reply with your complete delivery address.")).text; } }
   else if (state === "ADDRESS") { if (!guidedFieldIsValid(state, text)) reply = (await sessionContent("VALIDATION", "Please enter a complete delivery address.")).text; else { data.deliveryAddress = text; nextState = "NEARBY"; reply = (await sessionContent("FIELD_NEARBY_PLACE", "Please reply with a nearby famous place.")).text; } }
   else if (state === "NEARBY") { if (!guidedFieldIsValid(state, text)) reply = (await sessionContent("VALIDATION", "Please enter a nearby famous place.")).text; else { data.nearbyPlace = text; nextState = "CITY"; reply = (await sessionContent("FIELD_CITY", "Please reply with your city.")).text; } }
@@ -367,14 +397,31 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   else if (["PAYMENT_METHOD", "PAYMENT_PENDING"].includes(state) && paymentMethodFromAction(normalized) && data.orderId) { const selectedMethod = paymentMethodFromAction(normalized)!; try { const selected = await selectPaymentMethod(db, data.orderId, selectedMethod, data.language ?? "en", event.from, event.id); nextState = "PAYMENT_PENDING"; reply = selected.message; paymentSelection = { orderId: data.orderId, orderNumber: selected.orderNumber, amount: selected.amount, method: selectedMethod, locale: data.language ?? "en", message: selected.message, idempotencyKey: selected.idempotencyKey, config: selected.config }; } catch { reply = data.language === "ur" ? "یہ ادائیگی کا طریقہ فی الحال دستیاب نہیں؛ کوئی ادائیگی کی درخواست نہیں بھیجی گئی۔" : "That payment method is not currently available; no payment request was sent."; } }
   else if (state === "PAYMENT_PENDING" && /^(HELP|PAYMENT_HELP)$/i.test(normalized)) { reply = (await sessionContent("ORDER_STATUS", "Upload your payment receipt here after payment. Garden Shop will review it manually.", { orderNumber: data.orderNumber ?? "" })).text; }
   else if (state === "PAYMENT_PENDING" && normalized === "START") { const order = await getLatestOrderForWaId(db, event.from, data.orderId); const locale = data.language ?? "en"; reply = order ? formatCustomerOrderStatus(order, locale) : (await sessionContent("ORDER_STATUS", "Your order is still in progress. Upload the receipt or use Check Order.")).text; }
+  else if (state === "PAYMENT_REFERENCE" || state === "PAYMENT_REVIEW") {
+    const saved = await saveCustomerTransactionReference(db, event.from, data.orderId ?? "", text, event.id);
+    if (saved === "SAVED" || saved === "ALREADY_SAVED") {
+      nextState = "PAYMENT_REVIEW";
+      reply = data.language === "ur" ? "ٹرانزیکشن حوالہ موصول ہو گیا۔ ادائیگی ایڈمن کے جائزے میں ہے اور اصل رقم کی تصدیق تک PAID نہیں ہو گی۔" : "Transaction reference received. Payment remains under Admin review and will not be marked PAID until actual account credit is verified.";
+    } else if (saved === "REFERENCE_DUPLICATE") {
+      reply = data.language === "ur" ? "یہ حوالہ پہلے استعمال ہو چکا ہے۔ اپنی رسید یا ادائیگی ایپ سے درست ٹرانزیکشن حوالہ بھیجیں۔" : "That reference was already used for this payment method. Check your receipt or payment app and send the correct transaction reference.";
+    } else if (saved === "REFERENCE_ALREADY_SAVED") {
+      nextState = "PAYMENT_REVIEW";
+      reply = data.language === "ur" ? "حوالہ پہلے محفوظ ہو چکا ہے۔ ادائیگی ایڈمن کے جائزے میں ہے؛ دوبارہ کوئی حوالہ نہ بھیجیں۔" : "A transaction reference is already saved. Payment remains under Admin review; do not send a duplicate reference.";
+    } else if (saved === "PAYMENT_NOT_IN_REVIEW") {
+      reply = data.language === "ur" ? "ادائیگی کی حالت تبدیل نہیں ہوئی۔ آرڈر چیک کریں یا گارڈن شاپ سے رابطہ کریں۔" : "Payment remains unchanged. Use Check Order or contact Garden Shop for help.";
+    } else {
+      reply = data.language === "ur" ? "اپنی ادائیگی کی ایپ میں دکھایا گیا ٹرانزیکشن حوالہ 4 سے 80 حروف میں بھیجیں، آرڈر نمبر نہیں۔" : "Reply with the 4-80 character transaction reference shown in your payment app, not the order number.";
+    }
+  }
   else if (state === "COMPLETE" && normalized === "START") { const order = await getLatestOrderForWaId(db, event.from, data.orderId); reply = order ? `${formatCustomerOrderStatus(order, data.language ?? "en")}\n${noPaymentRequest()}` : noPaymentRequest(); }
   if (!reply) {
     const invalidKey: WhatsAppTemplateKey = state === "PAYMENT_METHOD" ? "PAYMENT" : state === "PAYMENT_PENDING" ? "ORDER_STATUS" : state === "LANGUAGE" ? "WELCOME" : "VALIDATION";
     reply = (await sessionContent(invalidKey, invalidKey === "PAYMENT" ? "Choose a verified payment method." : "Please choose one of the listed options.", { orderNumber: data.orderNumber ?? "", amount: data.amountPkr })).text;
   }
-  const [welcomeEn, welcomeUr, fertilizer, province, review, status, support, payment] = await Promise.all([
+  const [welcomeEn, welcomeUr, offer, fertilizer, province, review, status, support, payment] = await Promise.all([
     contentFor(db, "WELCOME", "Welcome to Get Free Seeds! Tap below to begin your order.", {}, `CHAT:${event.from}`, "en"),
     contentFor(db, "WELCOME", "گٹ فری سیڈز میں خوش آمدید!", {}, `CHAT:${event.from}`, "ur"),
+    sessionContent("OFFER", "Choose whether to continue your free seed order or cancel this unsubmitted request."),
     sessionContent("FERTILIZER", "Would you like to add Micro Nutrients Fertilizer, or continue with seeds only?"),
     sessionContent("PROVINCE_DELIVERY", "Choose your province for delivery."),
     sessionContent("REVIEW", "Review your order. Tap Place Order to confirm."),
@@ -382,7 +429,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
     sessionContent("SUPPORT", "Reply START to begin, STATUS to check an order, or CANCEL to stop the current order entry."),
     sessionContent("PAYMENT", "Choose a verified payment method.")
   ]);
-  const sessionFlowToken = checkoutMode !== "guided" && state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR") && flowTokenSecret ? await createFlowToken(event.from, event.id, flowTokenSecret) : undefined;
+  const sessionFlowToken = checkoutMode !== "guided" && state === "OFFER" && normalized === "CONTINUE_ORDER" && flowTokenSecret ? await createFlowToken(event.from, event.id, flowTokenSecret) : undefined;
   const enabledProvinces = (await db.prepare("SELECT province,delivery_fee_pkr FROM province_delivery_rates WHERE enabled=1 ORDER BY province").all<{ province: string; delivery_fee_pkr: number }>()).results ?? [];
   let provinceRows: Array<{ id: string; title: string; description: string }> = [];
   if (nextState === "PROVINCE") {
@@ -407,11 +454,13 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   }
   const paymentOptions = completePaymentMethods.map((method) => ({ id: paymentActionId(method.method), title: paymentActionTitle(payment, method) }));
   let options: ConversationReplyOptions = {};
-  if ((state === "LANGUAGE" || (state === "NEW" && Boolean(text)) || normalized === "CANCEL") && !(state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR"))) {
+  if ((state === "LANGUAGE" && !/^(LANG_EN|LANG_UR)$/.test(normalized)) || (state === "CANCELLED" && normalized === "START") || (state === "NEW" && normalized !== "GET_FREE_PACKS" && Boolean(text))) {
     options = { buttons: [{ id: "LANG_UR", title: whatsAppActionLabel(welcomeUr, "LANG_UR") }, { id: "LANG_EN", title: whatsAppActionLabel(welcomeEn, "LANG_EN") }] };
   } else if (sessionFlowToken) {
     options = { flow: { id: flowId, token: sessionFlowToken } };
   } else if ((state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) || (state === "NEW" && normalized === "GET_FREE_PACKS")) {
+    options = { buttons: [{ id: "CONTINUE_ORDER", title: offer.actionLabels?.CONTINUE_ORDER ?? (data.language === "ur" ? "آرڈر جاری رکھیں" : "Continue Order") }, { id: "CANCEL_ORDER", title: offer.actionLabels?.CANCEL_ORDER ?? (data.language === "ur" ? "آرڈر منسوخ کریں" : "Cancel Order") }] };
+  } else if (state === "OFFER" && normalized === "CONTINUE_ORDER" && nextState === "FERTILIZER") {
     options = { buttons: [{ id: "ADD_FERTILIZER", title: whatsAppActionLabel(fertilizer, "ADD_FERTILIZER") }, { id: "SEEDS_ONLY", title: whatsAppActionLabel(fertilizer, "SEEDS_ONLY") }] };
   } else if ((state === "FERTILIZER" || state === "PRODUCT") && /^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/i.test(normalized) && nextState === "PROVINCE" && provinceRows.length) {
     options = { list: { buttonText: province.listButtonLabel!, rows: provinceRows } };
@@ -419,7 +468,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
     options = { buttons: [{ id: "PLACE_ORDER", title: whatsAppActionLabel(review, "PLACE_ORDER") }, { id: "BACK", title: whatsAppActionLabel(review, "BACK") }] };
   } else if (nextState === "PAYMENT_METHOD" && paymentOptions.length) {
     options = { buttons: paymentOptions };
-  } else if (state === "PAYMENT_PENDING" || nextState === "COMPLETE") {
+  } else if (["PAYMENT_PENDING", "PAYMENT_REFERENCE", "PAYMENT_REVIEW"].includes(state) || nextState === "PAYMENT_REVIEW" || nextState === "COMPLETE") {
     options = { buttons: [{ id: "CHECK_ORDER", title: whatsAppActionLabel(status, "CHECK_ORDER") }] };
   }
   const mediaKey = invalidAction ? "VALIDATION" : guidedReplyMediaKey(normalized, state, nextState);
@@ -447,14 +496,21 @@ async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: R
   const mediaId = message.image?.id ?? message.document?.id;
   if (!mediaId) return false;
   const conversation = await db.prepare("SELECT state,state_data FROM whatsapp_conversations WHERE wa_id=?").bind(event.from).first<{ state: string; state_data: string }>();
-  if (conversation?.state !== "PAYMENT_PENDING") return false;
+  if (!conversation || !["PAYMENT_PENDING", "PAYMENT_REFERENCE", "PAYMENT_REVIEW"].includes(conversation.state)) return false;
   let data: ConversationData = {};
   try { data = JSON.parse(conversation.state_data) as ConversationData; } catch { return false; }
   if (!data.orderId) return false;
-  const record = await db.prepare("SELECT o.id,o.order_number,p.id AS payment_id,p.review_state FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=?").bind(data.orderId).first<{ id: string; order_number: string; payment_id: string; review_state: string }>();
+  const record = await db.prepare("SELECT o.id,o.order_number,o.state,p.id AS payment_id,p.method,p.review_state,p.customer_transaction_reference FROM orders o JOIN payments p ON p.order_id=o.id JOIN customers c ON c.id=o.customer_id WHERE o.id=? AND c.wa_id=?").bind(data.orderId,event.from).first<{ id: string; order_number: string; state: string; payment_id: string; method: string | null; review_state: string; customer_transaction_reference: string | null }>();
   if (!record) return false;
+  if (record.state !== "PAYMENT_PENDING" && record.state !== "PAYMENT_REVIEW") return false;
+  const status = await contentFor(db, "ORDER_STATUS", "Use Check Order to see the current order and payment status.", {}, `CHAT:${event.from}`, data.language ?? "en");
+  if (record.customer_transaction_reference) {
+    const messageText = data.language === "ur" ? "ٹرانزیکشن حوالہ محفوظ ہے۔ ادائیگی اب بھی ایڈمن کے جائزے میں ہے؛ اصل رقم کی تصدیق تک اسے PAID نہیں کیا جائے گا۔" : "The transaction reference is saved. Payment remains under Admin review and will not be marked PAID until the actual account credit is verified.";
+    await sendConversationReply(db, provider, event.from, event.id, messageText, { buttons: [{ id: "CHECK_ORDER", title: whatsAppActionLabel(status, "CHECK_ORDER") }] });
+    return true;
+  }
   const existing = await db.prepare("SELECT id FROM payment_receipts WHERE provider_media_id=? AND order_id=?").bind(mediaId, record.id).first<{ id: string }>();
-  if (!existing) {
+  if (!existing && record.state === "PAYMENT_PENDING" && conversation.state === "PAYMENT_PENDING") {
     const media = await provider.downloadMedia(mediaId);
     const stored = await storeReceipt(bucket, record.order_number, media);
     const now = new Date().toISOString();
@@ -462,14 +518,14 @@ async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: R
       db.prepare("INSERT INTO payment_receipts (id,payment_id,order_id,provider_media_id,r2_object_key,sha256,mime_type,size_bytes,submitted_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), record.payment_id, record.id, media.mediaId, stored.objectKey, stored.sha256, media.mimeType, media.size, now, now),
       db.prepare("UPDATE payments SET review_state='REVIEW',submitted_at=?,updated_at=? WHERE id=? AND review_state IN ('PENDING','REJECTED')").bind(now, now, record.payment_id),
       db.prepare("UPDATE orders SET state='PAYMENT_REVIEW',updated_at=? WHERE id=? AND state='PAYMENT_PENDING'").bind(now, record.id),
-      db.prepare("UPDATE whatsapp_conversations SET state='PAYMENT_REVIEW',last_inbound_message_id=?,updated_at=? WHERE wa_id=?").bind(event.id, now, event.from),
+       db.prepare("UPDATE whatsapp_conversations SET state='PAYMENT_REFERENCE',last_inbound_message_id=?,updated_at=? WHERE wa_id=? AND state='PAYMENT_PENDING'").bind(event.id, now, event.from),
       db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "RECEIPT_SUBMITTED", "CUSTOMER", "PAYMENT", record.payment_id, event.id, JSON.stringify({ orderId: record.id, providerMediaId: mediaId }), now)
     ]);
   }
-  const receipt = await contentFor(db, "RECEIPT", "Receipt received for order {orderNumber}. Garden Shop will review it before payment is marked PAID.", { orderNumber: record.order_number }, `CHAT:${event.from}`, data.language ?? "en");
-  const status = await contentFor(db, "ORDER_STATUS", "Use Check Order to see the current order and payment status.", {}, `CHAT:${event.from}`, data.language ?? "en");
+  const receipt = await contentFor(db, "RECEIPT", "Receipt received for order {orderNumber}. Reply with the transaction/reference ID shown in your payment app. Payment remains under Admin review until actual account credit is verified.", { orderNumber: record.order_number }, `CHAT:${event.from}`, data.language ?? "en");
+  const orderStatus = await contentFor(db, "ORDER_STATUS", "Use Check Order to see the current order and payment status.", {}, `CHAT:${event.from}`, data.language ?? "en");
   const image = await contentImageFor(db, bucket, "RECEIPT", `CHAT:${event.from}`);
-  await sendConversationReply(db, provider, event.from, event.id, receipt.text, { image, buttons: [{ id: "CHECK_ORDER", title: whatsAppActionLabel(status, "CHECK_ORDER") }] });
+  await sendConversationReply(db, provider, event.from, event.id, receipt.text, { image, buttons: [{ id: "CHECK_ORDER", title: whatsAppActionLabel(orderStatus, "CHECK_ORDER") }] });
   return true;
 }
 
@@ -805,6 +861,42 @@ export default {
             await env.DB.prepare("UPDATE outbox_jobs SET status='RETRY',attempts=?,last_error=?,updated_at=? WHERE idempotency_key=?").bind(nextAttempt, failure, new Date().toISOString(), message.body.idempotencyKey).run();
             message.retry({ delaySeconds: retryDelaySeconds(nextAttempt) });
             continue;
+          }
+        }
+        if (message.body.kind === "WHATSAPP_TRANSACTION_REFERENCE_REQUEST") {
+          try {
+            const outbox = await env.DB.prepare("SELECT payload_json FROM outbox_jobs WHERE idempotency_key=?").bind(message.body.idempotencyKey).first<{ payload_json:string }>();
+            const payload = outbox ? JSON.parse(outbox.payload_json) as { paymentId:string;orderId:string;orderNumber:string;waId:string;locale:"en"|"ur";windowMessageId:string } : undefined;
+            if (!payload) throw new Error("REFERENCE_REQUEST_PAYLOAD_MISSING");
+            const current = await env.DB.prepare("SELECT p.review_state,p.customer_transaction_reference,o.state,o.archived_at,o.total_payable,p.expected_amount,c.wa_id,wc.last_inbound_at,wc.last_inbound_message_id,(SELECT COUNT(*) FROM payment_receipts r WHERE r.payment_id=p.id AND r.order_id=o.id AND r.r2_object_key<>'' AND r.sha256<>'') AS receipt_count FROM payments p JOIN orders o ON o.id=p.order_id JOIN customers c ON c.id=o.customer_id JOIN whatsapp_conversations wc ON wc.wa_id=c.wa_id WHERE p.id=? AND o.id=? AND c.wa_id=?").bind(payload.paymentId,payload.orderId,payload.waId).first<{review_state:string;customer_transaction_reference:string|null;state:string;archived_at:string|null;total_payable:number;expected_amount:number;wa_id:string;last_inbound_at:string|null;last_inbound_message_id:string|null;receipt_count:number}>();
+            if (!current) {
+              await env.DB.prepare("UPDATE outbox_jobs SET status='PERMANENT_FAILURE',attempts=?,last_error='PAYMENT_REFERENCE_CONTEXT_MISSING',updated_at=? WHERE idempotency_key=?").bind(nextAttempt,new Date().toISOString(),message.body.idempotencyKey).run();
+              message.ack();
+              continue;
+            }
+            const failure = current.archived_at || current.review_state!=="REVIEW" || current.state!=="PAYMENT_REVIEW" || current.customer_transaction_reference?.trim() || Number(current.receipt_count)<1 || Number(current.total_payable)!==Number(current.expected_amount) ? "PAYMENT_REFERENCE_NO_LONGER_REQUIRED" : !current.last_inbound_message_id || !isInsideWhatsAppServiceWindow(current.last_inbound_at) ? "WHATSAPP_SERVICE_WINDOW_CLOSED" : null;
+            if (failure) {
+              const now=new Date().toISOString();
+              await env.DB.batch([
+                env.DB.prepare("UPDATE outbox_jobs SET status='PERMANENT_FAILURE',attempts=?,last_error=?,updated_at=? WHERE idempotency_key=? AND status IN ('PENDING','RETRY')").bind(nextAttempt,failure,now,message.body.idempotencyKey),
+                env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(),failure==="WHATSAPP_SERVICE_WINDOW_CLOSED"?"WHATSAPP_SERVICE_WINDOW_BLOCKED":"REFERENCE_REQUEST_SUPPRESSED","SYSTEM","PAYMENT",payload.paymentId,crypto.randomUUID(),JSON.stringify({orderId:payload.orderId,reason:failure}),now)
+              ]);
+              message.ack();
+              continue;
+            }
+            const provider=createWhatsAppProvider("meta",{enabled:env.META_PROVIDER_ENABLED==="true",graphVersion:env.META_GRAPH_VERSION??"v26.0",accessToken:env.META_ACCESS_TOKEN,phoneNumberId:env.META_PHONE_NUMBER_ID,verifyToken:env.WEBHOOK_VERIFY_TOKEN,appSecret:env.META_APP_SECRET});
+            const receipt=await contentFor(env.DB,"RECEIPT","Receipt received for order {orderNumber}. Reply with the transaction/reference ID from your payment app.",{orderNumber:payload.orderNumber},`CHAT:${payload.waId}`,payload.locale);
+            const status=await contentFor(env.DB,"ORDER_STATUS","Use Check Order to see your current order and payment status.",{},`CHAT:${payload.waId}`,payload.locale);
+            const sent=await sendConversationReply(env.DB,provider,payload.waId,current.last_inbound_message_id!,receipt.text,{buttons:[{id:"CHECK_ORDER",title:whatsAppActionLabel(status,"CHECK_ORDER")}]},message.body.idempotencyKey,{orderId:payload.orderId,kind:"TRANSACTION_REFERENCE_REQUEST"});
+            if(sent.sent){await env.DB.prepare("UPDATE outbox_jobs SET status='SENT',attempts=?,last_error=NULL,updated_at=? WHERE idempotency_key=?").bind(nextAttempt,new Date().toISOString(),message.body.idempotencyKey).run();message.ack();continue;}
+            const failureRow=await env.DB.prepare("SELECT status,last_error FROM outbound_messages WHERE idempotency_key=?").bind(message.body.idempotencyKey).first<{status:string;last_error:string|null}>();
+            if(failureRow?.last_error==="WHATSAPP_SERVICE_WINDOW_CLOSED"){await env.DB.prepare("UPDATE outbox_jobs SET status='PERMANENT_FAILURE',attempts=?,last_error=?,updated_at=? WHERE idempotency_key=?").bind(nextAttempt,failureRow.last_error,new Date().toISOString(),message.body.idempotencyKey).run();message.ack();continue;}
+            if(nextAttempt>=5){await env.DB.prepare("UPDATE outbox_jobs SET status='DEAD_LETTER',attempts=?,last_error='REFERENCE_REQUEST_SEND_FAILED',updated_at=? WHERE idempotency_key=?").bind(nextAttempt,new Date().toISOString(),message.body.idempotencyKey).run();message.ack();continue;}
+            await env.DB.prepare("UPDATE outbox_jobs SET status='RETRY',attempts=?,last_error='REFERENCE_REQUEST_SEND_FAILED',updated_at=? WHERE idempotency_key=?").bind(nextAttempt,new Date().toISOString(),message.body.idempotencyKey).run();message.retry({delaySeconds:retryDelaySeconds(nextAttempt)});continue;
+          } catch(error) {
+            const failure=error instanceof Error?error.message.slice(0,120):"REFERENCE_REQUEST_SEND_FAILED";
+            if(nextAttempt>=5){await env.DB.prepare("UPDATE outbox_jobs SET status='DEAD_LETTER',attempts=?,last_error=?,updated_at=? WHERE idempotency_key=?").bind(nextAttempt,failure,new Date().toISOString(),message.body.idempotencyKey).run();message.ack();continue;}
+            await env.DB.prepare("UPDATE outbox_jobs SET status='RETRY',attempts=?,last_error=?,updated_at=? WHERE idempotency_key=?").bind(nextAttempt,failure,new Date().toISOString(),message.body.idempotencyKey).run();message.retry({delaySeconds:retryDelaySeconds(nextAttempt)});continue;
           }
         }
         if (nextAttempt > 5) {

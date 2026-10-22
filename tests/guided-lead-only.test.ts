@@ -27,8 +27,8 @@ function statement(sql: string) {
   return prepared;
 }
 
-function conversation() {
-  const row = sqlite.prepare("SELECT state,state_data FROM whatsapp_conversations WHERE wa_id=?").get(sender);
+function conversation(waId = sender) {
+  const row = sqlite.prepare("SELECT state,state_data FROM whatsapp_conversations WHERE wa_id=?").get(waId);
   return row ? { state: row.state, data: JSON.parse(String(row.state_data)) as Record<string, unknown> } : undefined;
 }
 
@@ -57,8 +57,17 @@ async function callback(messages: Record<string, unknown>[], extraChanges: unkno
   return api.fetch(new Request("https://api.example.test/webhooks/whatsapp", { method: "POST", headers: { "content-type": "application/json", "x-hub-signature-256": `sha256=${signature}` }, body: payload }), env());
 }
 
-async function inbound(input: string | Record<string, unknown>, id = `synthetic-inbound-${++sequence}`) {
-  const message = { from: sender, id, timestamp: "1792497600", ...(typeof input === "string" ? { type: "text", text: { body: input } } : { type: "interactive", interactive: input }) };
+async function adminPost(path: string, body: Record<string, unknown>, referenceRequestsEnabled = "true") {
+  const adminEnv = { DB: db, ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL", REFERENCE_REQUESTS_ENABLED: referenceRequestsEnabled, EVENTS: { send: vi.fn(async () => undefined) } } as never;
+  const identity = { "cf-access-authenticated-user-email": "admin@example.test" };
+  const csrfResponse = await admin.fetch(new Request("https://admin.example.test/api/csrf", { headers: identity }), adminEnv);
+  const csrf = await csrfResponse.json() as { csrfToken: string };
+  const cookie = `__Host-gfs_admin_csrf=${csrf.csrfToken}`;
+  return admin.fetch(new Request(`https://admin.example.test${path}`, { method: "POST", headers: { ...identity, origin:"https://admin.example.test", cookie, "x-csrf-token": csrf.csrfToken, "content-type": "application/json" }, body: JSON.stringify(body) }), adminEnv);
+}
+
+async function inbound(input: string | Record<string, unknown>, id = `synthetic-inbound-${++sequence}`, waId = sender) {
+  const message = { from: waId, id, timestamp: "1792497600", ...(typeof input === "string" ? { type: "text", text: { body: input } } : { type: "interactive", interactive: input }) };
   const response = await callback([message]);
   expect(response.status).toBe(200);
   return message;
@@ -70,11 +79,30 @@ async function reachReview(locale: "en" | "ur", fertilizer = false) {
   await inbound("START");
   expect(buttons()).toEqual(["LANG_UR", "LANG_EN"]);
   await inbound(tap(locale === "ur" ? "LANG_UR" : "LANG_EN"));
+  expect(conversation()?.state).toBe("OFFER");
+  expect(buttons()).toEqual(["CONTINUE_ORDER", "CANCEL_ORDER"]);
+  await inbound(tap("CONTINUE_ORDER"));
+  expect(conversation()?.state).toBe("FERTILIZER");
+  expect(buttons()).toEqual(["ADD_FERTILIZER", "SEEDS_ONLY"]);
   await inbound(tap(fertilizer ? "ADD_FERTILIZER" : "SEEDS_ONLY"));
   expect(sends.at(-1)).toMatchObject({ interactive: { type: "list", action: { sections: [{ rows: [{ id: "PROVINCE_SYNTHETIC_PROVINCE", title: "Synthetic Province" }] }] } } });
   await inbound({ type: "list_reply", list_reply: { id: "PROVINCE_SYNTHETIC_PROVINCE", title: "Synthetic Province" } });
   for (const value of ["Synthetic Customer", "123 Synthetic Street", "Synthetic Park", "Synthetic City", "03001234567"]) await inbound(value);
   expect(conversation()?.state).toBe("REVIEW");
+}
+
+async function createSyntheticPaymentReviewOrder(waId: string, idempotencyKey: string) {
+  sqlite.prepare("INSERT OR IGNORE INTO cooldown_exemptions(wa_id,reason,created_by,created_at) VALUES(?,?,?,?)").run(waId,"SYNTHETIC_TEST_ONLY","TEST_FIXTURE",new Date().toISOString());
+  const order = await persistFlowSubmission(db, { fullName: "NON-PAYABLE Synthetic", deliveryAddress: `SYNTHETIC ${idempotencyKey}`, nearbyPlace: `SYNTHETIC ${idempotencyKey}`, city: "Synthetic City", contactNumber: "03001234567", productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: "Synthetic Province", fertilizerSelected: false }, undefined, idempotencyKey, waId);
+  if(!order.quote)throw new Error("SYNTHETIC_QUOTE_MISSING");
+  const payment = sqlite.prepare("SELECT id FROM payments WHERE order_id=?").get(order.orderId) as { id: string };
+  sqlite.prepare("UPDATE payments SET method='JAZZCASH',review_state='REVIEW',expected_amount=? WHERE id=?").run(order.quote.totalPayablePkr,payment.id);
+  sqlite.prepare("UPDATE orders SET state='PAYMENT_REVIEW' WHERE id=?").run(order.orderId);
+  const receipt=await storeReceipt({put:vi.fn(async(_key:string,_body:ArrayBuffer,options:R2PutOptions)=>options)} as unknown as R2Bucket,order.orderNumber,{body:new Uint8Array([4,5,6]).buffer,size:3,mimeType:"image/png",mediaId:`SYNTHETIC-${idempotencyKey}`});
+  const now=new Date().toISOString();
+  sqlite.prepare("INSERT INTO payment_receipts(id,order_id,payment_id,provider_media_id,r2_object_key,mime_type,size_bytes,sha256,submitted_at,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)").run(`receipt-${idempotencyKey}`,order.orderId,payment.id,`SYNTHETIC-${idempotencyKey}`,receipt.objectKey,"image/png",3,receipt.sha256,now,now);
+  sqlite.prepare("INSERT INTO whatsapp_conversations(id,wa_id,state,state_data,last_inbound_message_id,last_inbound_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)").run(`conversation-${idempotencyKey}`,waId,"PAYMENT_REFERENCE",JSON.stringify({language:"en",orderId:order.orderId,orderNumber:order.orderNumber,amountPkr:order.quote.totalPayablePkr}),null,null,now,now);
+  return {order,paymentId:payment.id,amount:order.quote.totalPayablePkr};
 }
 
 beforeEach(() => {
@@ -101,6 +129,79 @@ beforeEach(() => {
 afterEach(() => { sqlite.close(); vi.unstubAllGlobals(); });
 
 describe("GFS-178 simulated signed-webhook lead-only journey", () => {
+  it.each(["en", "ur"] as const)("offers bilingual Continue/Cancel and safely restarts after $language cancellation", async (language) => {
+    await inbound("START");
+    await inbound(tap(language === "ur" ? "LANG_UR" : "LANG_EN"));
+    expect(conversation()?.state).toBe("OFFER");
+    expect(buttons()).toEqual(["CONTINUE_ORDER", "CANCEL_ORDER"]);
+    const cancel = await inbound(tap("CANCEL_ORDER"), `synthetic-cancel-${language}`);
+    expect(conversation()?.state).toBe("CANCELLED");
+    expect(body()).toContain(language === "ur" ? "منسوخ" : "cancelled");
+    expect(sqlite.prepare("SELECT count(*) AS count FROM orders").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT count(*) AS count FROM payments").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT count(*) AS count FROM capi_events").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT count(*) AS count FROM outbox_jobs").get()).toEqual({ count: 0 });
+    const sendsAfterCancel = sends.length;
+    await callback([cancel]);
+    expect(sends).toHaveLength(sendsAfterCancel);
+    await inbound(tap("CONTINUE_ORDER"), `synthetic-stale-continue-${language}`);
+    expect(conversation()?.state).toBe("CANCELLED");
+    expect(sqlite.prepare("SELECT count(*) AS count FROM orders").get()).toEqual({ count: 0 });
+    await inbound("START", `synthetic-restart-${language}`);
+    expect(conversation()?.state).toBe("LANGUAGE");
+    expect(buttons()).toEqual(["LANG_UR", "LANG_EN"]);
+    expect(sqlite.prepare("SELECT count(*) AS count FROM orders").get()).toEqual({ count: 0 });
+  });
+
+  it("captures a signed customer transaction reference and rejects reuse on another payment", async () => {
+    const first=await createSyntheticPaymentReviewOrder(sender,"reference-order-one");
+    await inbound("SYNTHETIC-TXN-192001","synthetic-customer-reference-one",sender);
+    expect(sqlite.prepare("SELECT customer_transaction_reference,review_state FROM payments WHERE id=?").get(first.paymentId)).toEqual({customer_transaction_reference:"SYNTHETIC-TXN-192001",review_state:"REVIEW"});
+    expect(sqlite.prepare("SELECT state FROM orders WHERE id=?").get(first.order.orderId)).toEqual({state:"PAYMENT_REVIEW"});
+    const referenceAudit=sqlite.prepare("SELECT metadata_json FROM audit_log WHERE action='CUSTOMER_TRANSACTION_REFERENCE_SAVED'").get() as {metadata_json:string};
+    expect(referenceAudit.metadata_json).toContain('"referenceHash"');
+    expect(referenceAudit.metadata_json).not.toContain("SYNTHETIC-TXN-192001");
+    sqlite.prepare("UPDATE payments SET customer_transaction_reference=? WHERE id=?").run("SYNTHETIC-TXN -192001",first.paymentId);
+
+    const secondWa="923001234568";
+    const second=await createSyntheticPaymentReviewOrder(secondWa,"reference-order-two");
+    await inbound("SYNTHETIC-TXN-192001","synthetic-customer-reference-two",secondWa);
+    expect(body()).toContain("already used");
+    expect(sqlite.prepare("SELECT customer_transaction_reference,review_state FROM payments WHERE id=?").get(second.paymentId)).toEqual({customer_transaction_reference:null,review_state:"REVIEW"});
+    expect(sqlite.prepare("SELECT state FROM orders WHERE id=?").get(second.order.orderId)).toEqual({state:"PAYMENT_REVIEW"});
+    expect(sqlite.prepare("SELECT count(*) AS count FROM capi_events WHERE event_name='Purchase'").get()).toEqual({count:0});
+  });
+
+  it("saves Admin reference with a hash audit, keeps REVIEW, and blocks PAID without verified settlement method", async () => {
+    const testOrder=await createSyntheticPaymentReviewOrder(sender,"admin-reference-order");
+    const disabledApiRequest=await adminPost(`/api/payments/${testOrder.paymentId}/request-transaction-reference`,{orderId:testOrder.order.orderId,confirmation:testOrder.order.orderNumber},"false");
+    expect(disabledApiRequest.status).toBe(503);
+    expect(await disabledApiRequest.json()).toMatchObject({error:"REFERENCE_REQUEST_API_NOT_DEPLOYED"});
+    expect(sqlite.prepare("SELECT count(*) AS count FROM outbox_jobs WHERE kind='WHATSAPP_TRANSACTION_REFERENCE_REQUEST'").get()).toEqual({count:0});
+    const closedWindowRequest=await adminPost(`/api/payments/${testOrder.paymentId}/request-transaction-reference`,{orderId:testOrder.order.orderId,confirmation:testOrder.order.orderNumber},"true");
+    expect(closedWindowRequest.status).toBe(409);
+    expect(await closedWindowRequest.json()).toMatchObject({error:"WHATSAPP_SERVICE_WINDOW_CLOSED_TEMPLATE_REQUIRED"});
+    expect(sqlite.prepare("SELECT count(*) AS count FROM outbox_jobs WHERE kind='WHATSAPP_TRANSACTION_REFERENCE_REQUEST'").get()).toEqual({count:0});
+    const saved=await adminPost(`/api/payments/${testOrder.paymentId}/transaction-reference`,{orderId:testOrder.order.orderId,confirmation:testOrder.order.orderNumber,reference:"SYNTHETIC-ADMIN-TXN-192"});
+    expect(saved.status, JSON.stringify({error:await saved.clone().json(),payment:sqlite.prepare("SELECT customer_transaction_reference,review_state FROM payments WHERE id=?").get(testOrder.paymentId),auditCount:sqlite.prepare("SELECT count(*) AS count FROM audit_log WHERE action='PAYMENT_TRANSACTION_REFERENCE_SAVED'").get()})).toBe(200);
+    expect(await saved.json()).toMatchObject({ok:true,saved:true,paymentRemainsUnderReview:true,reference:"SYNTHETIC-ADMIN-TXN-192"});
+    const audit=sqlite.prepare("SELECT metadata_json FROM audit_log WHERE action='PAYMENT_TRANSACTION_REFERENCE_SAVED'").get() as {metadata_json:string};
+    expect(audit.metadata_json).toContain('"referenceHash"');
+    expect(audit.metadata_json).not.toContain("SYNTHETIC-ADMIN-TXN-192");
+
+    const approval=await adminPost(`/api/payments/${testOrder.paymentId}/approve`,{orderId:testOrder.order.orderId,confirmation:testOrder.order.orderNumber,settlementEvidenceRef:"SYNTHETIC-BANK-RECORD-192",settlementConfirmed:true});
+    expect(approval.status).toBe(409);
+    expect(await approval.json()).toMatchObject({error:"PAYMENT_METHOD_NOT_VERIFIED"});
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(testOrder.order.orderId)).toEqual({state:"PAYMENT_REVIEW",payment_status:"PENDING"});
+    expect(sqlite.prepare("SELECT review_state,customer_transaction_reference FROM payments WHERE id=?").get(testOrder.paymentId)).toEqual({review_state:"REVIEW",customer_transaction_reference:"SYNTHETIC-ADMIN-TXN-192"});
+
+    const request=await adminPost(`/api/payments/${testOrder.paymentId}/request-transaction-reference`,{orderId:testOrder.order.orderId,confirmation:testOrder.order.orderNumber});
+    expect(request.status).toBe(409);
+    expect(await request.json()).toMatchObject({error:"TRANSACTION_REFERENCE_ALREADY_SAVED"});
+    expect(sqlite.prepare("SELECT count(*) AS count FROM outbox_jobs WHERE kind='WHATSAPP_TRANSACTION_REFERENCE_REQUEST'").get()).toEqual({count:0});
+    expect(sqlite.prepare("SELECT count(*) AS count FROM capi_events WHERE event_name='Purchase'").get()).toEqual({count:0});
+  });
+
   it("stores trusted inbound receipt time and leaves it unchanged for status-only callbacks", async () => {
     const message = await inbound("START", "synthetic-window-inbound");
     const event = sqlite.prepare("SELECT created_at FROM whatsapp_events WHERE provider_event_id=?").get(`message:${message.id}`) as { created_at: string };

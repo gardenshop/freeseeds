@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-22 (GFS-195)
+
+- Deployed Admin Save Reference, duplicate protection, settlement-proof approval gate and reference-request UI. A method-scoped transaction-reference unique index and OFFER action-label schema were applied narrowly; legacy migration ledger untouched.
+- Added local bilingual OFFER Continue/Cancel flow, receipt transaction-reference prompt/capture, idempotent service-window-gated reference request, settlement evidence guard, and fail-closed CAPI behavior.
+- Saved OFFER v5 and RECEIPT v2 drafts in Admin; did not publish or deploy API because the authenticated WhatsApp tester Profile does not match the authorized tester.
+- Current review remains without a reference and the service window is closed. No customer message, reference, settlement, PAID or fulfillment action.
+- Validation: npm ci,168 tests,lint,build,audit0,Admin/API dry-runs; Admin live read/retest passes. No full real WhatsApp or financial E2E.
+- Independent review found legacy internal-space references could evade the trim-only index. Applied migration0029 after normalized duplicate preflight0; Admin/API normalization now matches. No stored reference was rewritten.
+
 ## 2026-10-22 (GFS-193)
 
 - Reviewed user-supplied QR scanner screenshots as supporting payload evidence only; no QR was rescanned or replaced.

@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-195 Current PAYMENT Review State (2026-10-22)
+
+- Starting PR head `2f0316d`; GitHub gardenshop, Cloudflare/Admin gisupp account and canonical Meta Graph sender verified. Authorized tester own WhatsApp Profile mismatched; no profile/number change and no send.
+- D1 quick/FK health clean. Migrations0027/0028/0029 applied; method-scoped reference uniqueness now matches case/ASCII-whitespace normalization and OFFER action-label schema. Normalized duplicate groups0; existing43 action-label rows retained; legacy ledger0 not fabricated/replayed. Retain the current Time Travel recovery procedure.
+- Admin live version `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0`; previous rollback `132f5ea9-324f-482d-b350-f52bc6907758`. Admin Save Reference/Request Reference/settlement evidence controls live; Request Reference queue disabled until API rollout. API remains `8da54b28-4bec-45b2-9a3f-672225dba843`, rollback `5151e081-98ab-45c4-a57f-3ba43c4e6983`.
+- Methods remain3 enabled and one-time approved with current QR hashes matching protected audits. No method changes. PAYMENT CMS v2 remains live; OFFER v5 and RECEIPT v2 drafts saved but not published. Actual runtime still uses previous API.
+- Current review pool1, receipt1, reference missing, amount consistent, service window closed. Aggregate pending22/balanced22. No customer identifier/reference or receipt content copied to logs/docs; no Save Reference value, settlement evidence, outbox message, PAID or fulfillment was created.
+- Local suite168/168,lint,build,audit0,Wrangler dry-runs and live Admin retest pass. API/webhook/Offer runtime is blocked until the already authorized tester profile is restored; no CI bypass.
+
 ## GFS-193 Payment Evidence Status (2026-10-22)
 
 - Branch `codex/gfs-launch-next-001` fetched at `de512fb` (origin matched); no GFS-193 source/runtime/deployment change. GitHub `gardenshop`, Cloudflare/Admin `gisupp@gmail.com` verified.
