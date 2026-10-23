@@ -11,6 +11,7 @@
 | Admin/reference error | PASS deployed UX | Save Reference and settlement evidence controls live; current REVIEW still lacks reference |
 | Request Reference | BLOCKED safely | 24-hour window closed, no approved utility template, API dispatch gate false; no customer message |
 | OFFER/RECEIPT CMS | BLOCKED publication | Draft OFFER v5 / RECEIPT v2 saved; active published versions retained for old runtime compatibility |
+| OFFER notice/actions | PASS draft only | Draft v5 includes EN/UR advance-payment/no-COD notice plus Continue Order/Cancel Order; no published output while API is old |
 | Methods | PASS configuration only | Three previously approved methods remain enabled/QR-ready; no new method-specific delivery |
 | New real WhatsApp flow | NOT PERFORMED | No new WAMID, screenshot, test order, QR delivery or message in GFS-197 |
 | Reference/receipt/PAID/fulfillment | BLOCKED | No genuine reference or settlement evidence submitted; no payment/approval/dispatch |

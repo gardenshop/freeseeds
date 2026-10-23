@@ -8,6 +8,7 @@
 | WhatsApp tester identity | BLOCKED | Current own Profile fails/misses approved tester match; no switch or send |
 | OFFER API source | PASS local / NOT DEPLOYED | Source carries stable Continue/Cancel route; active API `8da54b28` is older |
 | OFFER/RECEIPT CMS | BLOCKED publication | Drafts v5/v2; published v4/v1 preserved to avoid incompatibility |
+| OFFER content | PASS draft only | Draft v5 states advance-payment/no-COD in EN/UR and contains the two required action labels |
 | Admin reference guard | PASS deployed | Reference/settlement controls live; current REVIEW missing reference; Request action disabled |
 | Financial E2E | NOT PERFORMED | No new order, WAMID, QR, receipt, settlement, PAID or fulfillment |
 | Regression | PASS | clean npm ci,168 tests,lint,build,audit0,Wrangler dry-runs |

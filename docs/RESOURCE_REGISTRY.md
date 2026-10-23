@@ -3,7 +3,7 @@
 ## GFS-197 Runtime/CMS Gate (2026-10-23)
 
 - PR #8 start head `8af1a877`; current Admin `9482bd56`, API `8da54b28`. Admin identity `gisupp@gmail.com` verified. Current authorized tester Profile does not match; no API deploy, profile change or message.
-- OFFER v5 and RECEIPT v2 drafts remain unpublished; active PAYMENT v2 and previous OFFER/RECEIPT versions remain intact. No CMS edit/publish in GFS-197.
+- OFFER v5 and RECEIPT v2 drafts remain unpublished; OFFER draft has the bilingual advance-payment/no-COD notice and two stable action labels. Active PAYMENT v2 and published OFFER/RECEIPT remain intact. No CMS publication in GFS-197.
 - Live Admin reference/settlement gate remains deployed; REVIEW ref absent, window closed, request queue disabled. All3 methods remain enabled/QR-audited; no settings or R2 change. No new order/message.
 - D1 API7403 remains on direct Wrangler read; same-origin Admin GET is available. Ledger remains empty; migrations0027-0029 were already applied. Do not replay history or change scopes/accounts.
 - GFS-197 records commit `b022bb94ec5974f124c283a7cefa801f2ec25506` is on PR #8; CI `39907703609` had no steps because of the billing lock.
