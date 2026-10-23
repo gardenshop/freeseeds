@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-23: GFS-197 API Rollout Remains Blocked
+
+The current own WhatsApp Profile does not match/expose the approved tester in `rules.md`. Do not deploy API, publish the saved OFFER/RECEIPT drafts, or send real messages until that existing profile is restored and verified; no alternative account/number is authorized.
+
+Keep Admin deployed with the fail-closed reference/settlement panel and queue flag false. The current receipt-backed REVIEW lacks a reference and its window is closed, so do not request it via WhatsApp or approve/mark PAID. All three method approvals/QRs remain unchanged.
+
 ## 2026-10-23: GFS-196 Do Not Deploy or Message Unverified Tester
 
 Admin identity/reads work but direct Wrangler D1 API7403 remains unresolved; do not change account/scopes. The authorized WhatsApp tester Profile does not match the existing `rules.md` tester. Do not switch/relink/create a profile, deploy the active callback, or send to another recipient to bypass the lock.

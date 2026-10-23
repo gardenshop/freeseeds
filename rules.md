@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-197 OFFER API Deployment Gate (2026-10-23)
+
+- The authenticated Admin profile does not substitute for the approved WhatsApp tester. Before any callback/API deployment or real outbound E2E, verify the tester's OWN WhatsApp Profile Phone against the authorized tester in these rules and verify the GFS sender via Contact Info. If either fails, stop; never switch/relink/create a number/profile or send to another contact.
+- Active API `8da54b28` predates the OFFER action/state flow and new receipt-reference handling. Keep OFFER/RECEIPT v5/v2 as drafts and do not publish incompatible content until the matching API is deployed and retested.
+- The current receipt-backed REVIEW has no transaction reference, a closed service window and no approved utility template. Admin Request Reference remains disabled; do not send or mark PAID. Await a genuine reference, actual receiving-account credit and authorized evidence.
+- Preserve the three approved methods and recipient-bound QR evidence; no screenshots/old WAMIDs are substitutes for a new live test. Payment transfer/PAID/fulfillment remain separate authorization gates.
+
 ## GFS-196 OFFER Release and Tester Lock (2026-10-23)
 
 - The current deployed API predates the stable OFFER Continue/Cancel flow and customer transaction-reference capture. Never publish OFFER/RECEIPT drafts or expose new customer-facing callbacks on that API version.

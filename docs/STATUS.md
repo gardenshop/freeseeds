@@ -1,8 +1,20 @@
 # Status
 
+## GFS-197 Current Release Gate (2026-10-23)
+
+- Start head `8af1a877` fetched. `list_pages` passed first; current Chrome reused Admin and WhatsApp tabs. Admin Access identity verified as `gisupp@gmail.com`. The authorized tester's own WhatsApp Profile still does not match or expose the tester in `rules.md`; no number/profile switch or message.
+- Admin `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0` is deployed with the reference/settlement UI; API remains `8da54b28-4bec-45b2-9a3f-672225dba843`. Admin/API rollback IDs remain documented below. Direct D1 query API7403 and migration ledger0 are unresolved; same-origin Admin reads work.
+- OFFER source is in PR, but the active API is older. OFFER v5/RECEIPT v2 drafts remain unpublished; active published versions stay unchanged for compatibility. No API deployment without the tester match.
+- Transaction reference and settlement review remain blocked: one receipt-backed REVIEW order lacks a reference, the 24-hour window is closed, and no approved utility template/evidence exists. Admin Request Reference is disabled; no reference, settlement, message, PAID or fulfillment mutation.
+- Three methods remain enabled/QR-ready under prior one-time audited approvals. No method, QR, recipient or account change in GFS-197. No new order/WAMID/screenshot; prior-session evidence is not reused.
+- Regression is 168/168 with clean npm install, lint, build, audit0, API/Admin dry-runs and Admin/browser retest. CI billing lock remains; no bypass. PR #8 will receive this report-only update.
+- Gates: Admin staging GO; API/OFFER release NO-GO pending authorized tester Profile. Public leads and complete customer payments NO-GO. Estimates project68%; P0 85%,P1 70%,P2 20%,P3 60%,P4 95%.
+- Exact external dependency: restore the existing approved tester Profile to the rules-authorized identity. Separately, provide the actual transaction reference/settlement evidence and an approved utility template or new inbound if the current window remains closed.
+
 ## GFS-196 OFFER Runtime Gate (2026-10-23)
 
 - Refreshed PR #8 branch at `8af1a877`; source history includes GFS-195 reference/Offer fixes. Chrome `list_pages` passed first. Existing Admin Test Controls tab1, Meta pages3/4, and WhatsApp tab7 reused; no new tabs, unrelated chats, or Meta settings changed.
+- Current inventory has7 existing tabs; Admin tab1 and WhatsApp tab7 reused. Own Profile was checked only; no customer chat was opened, no other account was used, and no unrelated tab was navigated.
 - GFS Admin Access identity `gisupp@gmail.com` is verified. Cloudflare Wrangler identity is the correct GFS account, but direct D1 query again returns API7403. Same-origin Admin reads work; do not widen scopes/change accounts. The legacy migration ledger remains0 and must not be replayed.
 - API remains `8da54b28-4bec-45b2-9a3f-672225dba843`, rollback `5151e081-98ab-45c4-a57f-3ba43c4e6983`; Admin remains `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0`, rollback `132f5ea9-324f-482d-b350-f52bc6907758`. No GFS-196 Worker deployment.
 - Live CMS is PAYMENT v2, OFFER published v4/draft v5, RECEIPT published v1/draft v2. Drafts contain bilingual Continue/Cancel labels and transaction-reference prompt. **No draft was published** because API v8da54 predates the OFFER callback/state machine and receipt reference handler.
@@ -10,6 +22,7 @@
 - WhatsApp own Profile did not match the authorized tester from `rules.md`; Profile view did not expose the approved tester number. No API/webhook deployment, Test Controls reset, customer/test message, WAMID, order, screenshot, receipt or QR delivery was created in GFS-196. Do not switch/relink the number.
 - D1 previously has migrations0027/0028/0029 applied, method-scoped normalized reference uniqueness, quick/FK checks, and the legacy ledger0. This session direct D1 reads return API7403; no D1 changes were attempted.
 - Validation PASS: clean `npm ci`,168/168 tests,lint,build,audit0,API/Admin Wrangler dry-runs and read-only Admin identity checks. CI billing lock remains; no protection bypass.
+- Starting-head CI run `39813633938` failed before steps with the explicit GitHub billing lock; no bypass.
 - Results: Admin reference UI PASS; OFFER/API source locally tested; CMS publication and API release BLOCKED; real payment E2E BLOCKED; pending-order data unchanged and no customer follow-up.
 - GO/NO-GO: Admin staging GO; API/Offer rollout NO-GO until tester identity is fixed; public leads NO-GO; real payment/financial E2E NO-GO. Estimates project65%; P0 85%,P1 75%,P2 20%,P3 60%,P4 95%.
 - Exact remaining dependencies: restore the authorized tester's existing WhatsApp Profile; regain supported D1 query/health path if it is needed for further change; receive a genuine customer/provider transaction reference and authenticated evidence of actual receiving-account credit; use an approved utility template if the service window is closed. No manual settlement or synthetic reference is permitted.

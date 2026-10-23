@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-197 OFFER Rollout Gate (2026-10-23)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Admin/GitHub identity | PASS | Admin `gisupp@gmail.com`; PR #8 current head `8af1a877` |
+| WhatsApp tester identity | BLOCKED | Current own Profile fails/misses approved tester match; no switch or send |
+| OFFER API source | PASS local / NOT DEPLOYED | Source carries stable Continue/Cancel route; active API `8da54b28` is older |
+| OFFER/RECEIPT CMS | BLOCKED publication | Drafts v5/v2; published v4/v1 preserved to avoid incompatibility |
+| Admin reference guard | PASS deployed | Reference/settlement controls live; current REVIEW missing reference; Request action disabled |
+| Financial E2E | NOT PERFORMED | No new order, WAMID, QR, receipt, settlement, PAID or fulfillment |
+| Regression | PASS | clean npm ci,168 tests,lint,build,audit0,Wrangler dry-runs |
+
 ## GFS-196 OFFER Release Gate (2026-10-23)
 
 | Requirement | Result | Evidence / blocker |
@@ -13,6 +25,7 @@
 | API deployment/live callbacks | BLOCKED | API `8da54b28`; tester lock prevents deployment; no outbound WAMID/order/QR/receipt in GFS-196 |
 | D1 access | BLOCKED for direct query | Wrangler/API7403 despite correct account; no account/scope change. Same-origin Admin reads work |
 | Regression | PASS | clean install,168 tests,lint,build,audit0,Wrangler dry-runs |
+| PR CI | BLOCKED external | Run `39813633938` failed before steps; billing lock remains enforced and was not bypassed |
 | Payment/settlement/PAID | BLOCKED | No actual receipt reference, account-credit evidence, transfer, or Admin approval |
 
 ## GFS-195 Reference and Offer Repair (2026-10-22)

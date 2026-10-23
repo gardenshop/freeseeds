@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-23 (GFS-197)
+
+- Reverified Admin identity and current release/tester gates. API remains old, approved tester Profile mismatch blocks deployment/live sends, and CMS drafts remain unpublished.
+- Current PAYMENT_REVIEW has no transaction ref; service window closed and utility template absent, so no Request Reference/settlement/PAID action.
+- Clean install,168 tests,lint,build,audit0,Wrangler dry-runs pass. No GFS-197 runtime/financial change; records are pushed to PR #8.
+
 ## 2026-10-23 (GFS-196)
 
 - Reverified Admin identity and tester lock. Own WhatsApp Profile does not match the authorized tester; API8da54 remains deployed, and no messages/deployment were performed.

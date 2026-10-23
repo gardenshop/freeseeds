@@ -1,5 +1,28 @@
 # Final Report
 
+## GFS-197 OFFER Deployment and E2E (2026-10-23)
+
+**NOT COMPLETE: the API release and live WhatsApp acceptance are blocked by tester identity.** No GFS-197 payment/order/message or financial state was created.
+
+| Requirement | Result | Evidence / exact blocker |
+|---|---|---|
+| Active API/OFFER fix | BLOCKED live | Source is already on PR; deployed API `8da54b28` is older, so LANGUAGE still skips OFFER |
+| Authorized tester | BLOCKED | Existing WhatsApp own Profile does not match/expose the approved tester in rules; no account/number switch |
+| Admin/reference error | PASS deployed UX | Save Reference and settlement evidence controls live; current REVIEW still lacks reference |
+| Request Reference | BLOCKED safely | 24-hour window closed, no approved utility template, API dispatch gate false; no customer message |
+| OFFER/RECEIPT CMS | BLOCKED publication | Draft OFFER v5 / RECEIPT v2 saved; active published versions retained for old runtime compatibility |
+| Methods | PASS configuration only | Three previously approved methods remain enabled/QR-ready; no new method-specific delivery |
+| New real WhatsApp flow | NOT PERFORMED | No new WAMID, screenshot, test order, QR delivery or message in GFS-197 |
+| Reference/receipt/PAID/fulfillment | BLOCKED | No genuine reference or settlement evidence submitted; no payment/approval/dispatch |
+| Regression | PASS local | clean npm ci,168 tests,lint,build,audit0,API/Admin Wrangler dry-runs |
+| Git/CI | PASS source PR / CI blocked | Source commit `8b193aa7e8851d005372580d238002a65f25fd01` is on PR #8; run `39813633938` failed before steps with the explicit billing-lock message. GFS-197 records are included in this PR update; no bypass. |
+
+- Current live baseline: API `8da54b28-4bec-45b2-9a3f-672225dba843` (rollback `5151e081-98ab-45c4-a57f-3ba43c4e6983`); Admin `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0` (rollback `132f5ea9-324f-482d-b350-f52bc6907758`). D1 migrations0027-0029 and reference uniqueness remain in place; do not replay the empty legacy ledger.
+- Starting-head CI run `39813633938` failed before any steps with GitHub's explicit billing-lock message; no protection bypass.
+- Current D1/Admin reconciliation: 22 pending with balanced totals; one receipt-backed REVIEW lacks a transaction reference. No customer contact/terminal replay; incident hold untouched.
+- Gate decision: Admin/staging tools GO; API/OFFER release and real E2E NO-GO until the current authorized tester profile is verified. Public leads NO-GO; real customer payment/complete financial E2E NO-GO.
+- Completion estimate: project68%; P0 85%,P1 70%,P2 20%,P3 60%,P4 95%. Remaining dependencies: authorized tester Profile, deploy/verify matching API, publish CMS, then real fresh EN/UR journey; actual payment additionally needs genuine reference, receiving-account credit evidence and authenticated Admin approval.
+
 ## GFS-196 OFFER Release and Full WhatsApp Flow (2026-10-23)
 
 **NOT COMPLETE.** Safe Admin/reference work and local OFFER/API tests pass, but API/webhook deployment and live WhatsApp messaging are blocked by tester identity. No new WAMID/order/QR/receipt or financial stage was claimed.
