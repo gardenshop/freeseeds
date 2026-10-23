@@ -1,5 +1,14 @@
 # Decisions
 
+## 2026-10-23: GFS-204 Attestation UX, Isolated Workers and Access Gate
+
+- The reported live review remains PAYMENT_REVIEW/PENDING with one receipt, saved reference and verified method. Receipt/reference do not prove credit. Only the authenticated Admin's exact checked wallet/bank credit attestation may authorize PAID; no real credit was verified, so no live approval.
+- Make separate settlement evidence reference optional; store any supplied evidence only as a hash. Require exact order/payment/receipt/reference/method/amount/review binding. Atomically save reviewer/time/amount/method/reference hash/attestation/PAID, stop pending V2 jobs, and use one idempotent customer PAID notification outbox.
+- Isolated resources were created and migrations/backup-restore checked only on the new V2 D1. Keep all shared V1/staging DBs and active webhook untouched. Deploy API with no public route, provider/feature flags OFF; deploy Admin with an in-code Cloudflare Access JWT signature gate.
+- Migration `0033_payment_reminder_template_names.sql` renames old 210/240/270-minute CMS keys without dropping template text/version/state history; new Admin choices and API/scheduler mappings use `FINAL_WARNING_210M`, `GRACE_NOTICE_240M`, `CANCELLATION_270M`.
+- Do not attach/save the new Admin Worker to an Access application until the editor reliably shows both the existing Admin destination and the V2 destination. Dashboard reports Workers outage; no existing Access app change is justified. The unauthed V2 route currently returns ACCESS_JWT_REQUIRED.
+- The WhatsApp tester's You > View Profile still mismatches authorized tester. No chat, message, template publication or Meta account operation until identity is corrected and independently reverified. Real PAID/notification remains blocked.
+
 ## 2026-10-23: GFS-202 Fail-Closed Receipt Association and No Live Deploy
 
 - Admin list evidence separates a pending zero-receipt order from a distinct receipt-backed review order. No claim that a WhatsApp screenshot maps to either order until webhook sender, reply context, payment and D1/R2 evidence match.

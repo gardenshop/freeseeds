@@ -1,5 +1,21 @@
 # Test Matrix
 
+## GFS-204 Simple Confirmation and Isolated Staging (2026-10-23)
+
+| Requirement | Result | Evidence / remaining scope |
+|---|---|---|
+| Reported real REVIEW order | BLOCKED safely | Authenticated Admin GET shows REVIEW/PENDING, one receipt, saved reference and verified method. No actual account credit verified; no approval/POST; order remains REVIEW. |
+| Single Admin attestation | PASS SOURCE/SYNTHETIC | UI shows saved receipt/ref/method/amount, exact one checkbox and one primary button. Backend requires checked credit attestation plus order/payment/receipt/ref/verified method/exact amount/REVIEW; missing checkbox stays REVIEW. |
+| Optional settlement evidence | PASS SYNTHETIC | Omission accepted after attestation; if supplied, evidence is hashed, not stored raw. Transaction-reference hash and Admin reviewer/time/method/amount/attestation are audited with PAID transition. |
+| Duplicate/atomic PAID and reminder stop | PASS SYNTHETIC | Repeat approval is idempotent; one confirmation outbox key; active V2 stages/outbox are cancelled/stopped in the PAID batch. Historical order gets no timer but can receive gated confirmation. |
+| Real PAID/WhatsApp confirmation | BLOCKED | No receiving-account credit. No real PAID transition or WAMID. WhatsApp tester Profile mismatch prevents safe real sends. |
+| Home/confirmation UI | PASS SOURCE / LIVE BLOCKED | Responsive Home links Orders/Payment Reminders. V2 Admin Worker route returns 401 without signed Access JWT. Existing Access app was not modified; protected UI screenshot unavailable. |
+| Isolated V2 data plane | PASS | New D1, private R2, events queue/DLQ, API/Admin configs point to separate V2 resources; migrations 0001-0033 applied only to V2 primary/recovery D1s. Shared D1 untouched. |
+| Backup/recovery | PASS | Full isolated D1 export restored into separate recovery D1; both show 33 migrations and 0 orders/customers. `PRAGMA integrity_check` unsupported/denied (`SQLITE_AUTH`); schema/export restore validation used instead. |
+| Worker deployment | PARTIAL PASS | API `e43e23dd-22a6-4338-b77a-c48bbcee6cad` deployed, Cron/Queue enabled but flags OFF/provider disabled/no public route. Admin `92809f45-9bcb-403c-9bd8-7e481d6ad3d0` deployed with JWT guard; Access destination attachment blocked by Cloudflare outage/editor issue. |
+| Timers, CMS, Meta delivery | BLOCKED LIVE | Existing 15/30/60/210/240/270 synthetic unit coverage remains. V2 flags OFF; no published real templates, stage run, actual WAMID, live cancellation or screenshot. |
+| Regression/CI | PASS LOCAL / NO CI | `npm ci`; 204/204 tests across 21 files; lint/build; audit 0 vulnerabilities; Wrangler isolated dry-runs. GitHub reports no checks. |
+
 ## GFS-202 Receipt and Reminder Regression (2026-10-23)
 
 | Requirement | Result | Evidence / remaining scope |

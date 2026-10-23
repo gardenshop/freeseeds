@@ -1,5 +1,15 @@
 # Get Free Seeds Binding Rules
 
+## GFS-204 Simple Credit Confirmation and Isolated Deployment (2026-10-23)
+
+- The reported receipt-backed Easypaisa order was re-read in authenticated Admin: it remains `PAYMENT_REVIEW`/`PENDING`, has one receipt, saved reference and verified payment method. No wallet/bank credit was confirmed; never mark this or any real order PAID without the Admin's truthful checked attestation after checking the actual Garden Shop account. Leave REVIEW otherwise.
+- V2 confirmation requires the associated order/payment, exact expected amount, saved transaction reference, verified method, receipt, REVIEW state and explicit checked credit attestation. A separate opaque settlement evidence reference is optional and stored only as a hash. Attestation, reviewer/time/method/amount/reference hash, PAID transition and stop-pending-reminders updates are audited/atomic; retries must not duplicate money transitions or confirmation jobs.
+- Real PAID notifications are only enqueued after authorized approval and remain subject to the original customer's identity, WhatsApp service window/template approval, opt-out and idempotency. No real payment/receipt/transaction data belongs in source, logs, tests, screenshots or docs.
+- GFS-204 isolated staging resources are `getfreeseeds-v2-staging` D1, `getfreeseeds-v2-receipts-staging` private R2, `getfreeseeds-v2-events-staging` plus its DLQ, and separately deployed V2 API/Admin Workers. Schema 0001-0033 is applied only to isolated D1/recovery clone. Shared staging/V1 bindings and migration ledger remain untouched.
+- All V2 messaging/confirmation/reminder flags are OFF. API has no public workers.dev route. The isolated Admin route returns `ACCESS_JWT_REQUIRED` without a signed Cloudflare Access JWT; do not weaken this gate. It is not yet attached to the authorized Admin Access app because the Cloudflare dashboard reports a Workers outage and its Access editor did not safely expose the new Worker. Do not change or replace the existing Admin destination.
+- Chrome `You > View Profile` tester identity still mismatches the authorized tester in these rules. Do not open chats, send, switch/relink accounts, approve real funds, publish Meta templates or use the Hoja-associated Meta tabs. V2 Admin promotion/live acceptance waits for correct Access attachment and authorized tester/Meta verification.
+- Preserve held incident `FS-261019-000001`, all history, frozen V1 `d816ba1`, PR #8, `images/`, private R2, canonical GFS sender, Hoja Seeds zero-connection boundary and new-number WhatsApp lock.
+
 ## GFS-202 Receipt and Reminder Safety (2026-10-23)
 
 - The Admin evidence shows distinct records: one JazzCash `PAYMENT_PENDING` order with zero receipt rows, and a separate Easypaisa `PAYMENT_REVIEW` order with one receipt and a saved reference. Never treat a screenshot/conversation image as evidence for either order without matching authenticated sender, inbound message, payment and stored receipt associations.

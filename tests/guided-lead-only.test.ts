@@ -227,16 +227,25 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
   it("confirms a verified payment once, atomically saves the reference and queues the gated acknowledgement", async () => {
     const testOrder=await createSyntheticPaymentReviewOrder(sender,"single-confirm-order",true);
     verifySyntheticPaymentMethod();
+    sqlite.prepare("UPDATE payments SET customer_transaction_reference=? WHERE id=?").run("SYNTHETIC-TXN-193001",testOrder.paymentId);
     const path=`/api/payments/${testOrder.paymentId}/approve`;
-    const bodyData={orderId:testOrder.order.orderId,confirmation:testOrder.order.orderNumber,reference:"SYNTHETIC-TXN-193001",settlementEvidenceRef:"SYNTHETIC-STATEMENT-193",settlementConfirmed:true};
-    const approval=await adminPost(path,bodyData,"true","true");
+    const bodyData={orderId:testOrder.order.orderId,confirmation:testOrder.order.orderNumber,settlementConfirmed:true};
+    const missingAttestation=await adminPost(path,{orderId:testOrder.order.orderId,confirmation:testOrder.order.orderNumber},"true","true","true","true");
+    expect(missingAttestation.status).toBe(409);
+    expect(await missingAttestation.json()).toMatchObject({error:"CREDIT_ATTESTATION_REQUIRED"});
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(testOrder.order.orderId)).toEqual({state:"PAYMENT_REVIEW",payment_status:"PENDING"});
+    const approval=await adminPost(path,bodyData,"true","true","true","true");
     expect(approval.status,JSON.stringify(await approval.clone().json())).toBe(200);
     expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(testOrder.order.orderId)).toEqual({state:"PAID",payment_status:"PAID"});
     expect(sqlite.prepare("SELECT review_state,customer_transaction_reference,approved_amount FROM payments WHERE id=?").get(testOrder.paymentId)).toEqual({review_state:"APPROVED",customer_transaction_reference:"SYNTHETIC-TXN-193001",approved_amount:testOrder.amount});
     expect(sqlite.prepare("SELECT kind,status,idempotency_key FROM outbox_jobs WHERE kind='WHATSAPP_PAYMENT_CONFIRMATION'").get()).toEqual({kind:"WHATSAPP_PAYMENT_CONFIRMATION",status:"QUEUED",idempotency_key:`payment_confirmation_v2_${testOrder.paymentId}`});
     const audit=sqlite.prepare("SELECT metadata_json FROM audit_log WHERE action='PAYMENT_APPROVED'").get() as {metadata_json:string};
     expect(audit.metadata_json).toContain('"transactionReferenceHash"');
+    expect(audit.metadata_json).toContain('"creditConfirmedByAdmin":true');
     expect(audit.metadata_json).not.toContain("SYNTHETIC-TXN-193001");
+    expect(audit.metadata_json).toContain('"settlementEvidenceReferenceHash":null');
+    expect(sqlite.prepare("SELECT status,phase,stop_reason FROM payment_reminder_v2_schedules WHERE order_id=?").get(testOrder.order.orderId)).toEqual({status:"STOPPED",phase:"STOPPED",stop_reason:"PAYMENT_CONFIRMED"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_reminder_v2_stages WHERE schedule_id=(SELECT id FROM payment_reminder_v2_schedules WHERE order_id=?) AND status IN ('PENDING','QUEUED')").get(testOrder.order.orderId)).toEqual({count:0});
 
     const lastInboundAt=new Date().toISOString();
     sqlite.prepare("UPDATE whatsapp_conversations SET last_inbound_message_id=?,last_inbound_at=?,state_data=? WHERE wa_id=?").run("synthetic-confirmation-window",lastInboundAt,JSON.stringify({language:"en"}),sender);
@@ -261,11 +270,22 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(duplicateQueueMessage.ack).toHaveBeenCalledOnce();
     expect(sends).toHaveLength(sendCount);
 
-    const retry=await adminPost(path,bodyData,"true","true");
+    const retry=await adminPost(path,bodyData,"true","true","true","true");
     expect(retry.status).toBe(200);
     expect(await retry.json()).toMatchObject({alreadyApproved:true});
     expect(sqlite.prepare("SELECT count(*) AS count FROM outbox_jobs WHERE kind='WHATSAPP_PAYMENT_CONFIRMATION'").get()).toEqual({count:1});
     expect(sqlite.prepare("SELECT count(*) AS count FROM audit_log WHERE action='PAYMENT_APPROVED'").get()).toEqual({count:1});
+  });
+
+  it("confirms a historical payment without retro-enrolling a reminder schedule", async () => {
+    const testOrder=await createSyntheticPaymentReviewOrder("923001234565","historical-order-paid",false);
+    verifySyntheticPaymentMethod();
+    sqlite.prepare("UPDATE payments SET customer_transaction_reference=? WHERE id=?").run("SYNTHETIC-HISTORICAL-TXN-194",testOrder.paymentId);
+    const response=await adminPost(`/api/payments/${testOrder.paymentId}/approve`,{orderId:testOrder.order.orderId,confirmation:testOrder.order.orderNumber,settlementConfirmed:true},"true","true","true","true");
+    expect(response.status,JSON.stringify(await response.clone().json())).toBe(200);
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(testOrder.order.orderId)).toEqual({state:"PAID",payment_status:"PAID"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_reminder_v2_schedules WHERE order_id=?").get(testOrder.order.orderId)).toEqual({count:0});
+    expect(sqlite.prepare("SELECT status FROM outbox_jobs WHERE idempotency_key=?").get(`payment_confirmation_v2_${testOrder.paymentId}`)).toEqual({status:"QUEUED"});
   });
 
   it("sends the exact Urdu PAID confirmation to the order's stored WhatsApp identity", async () => {
@@ -425,7 +445,7 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     sqlite.prepare("UPDATE payment_reminder_v2_schedules SET phase='PAYMENT_GRACE' WHERE id=?").run(schedule.scheduleId);
     sqlite.prepare("UPDATE orders SET state='PAYMENT_GRACE' WHERE id=?").run(testOrder.order.orderId);
     sqlite.prepare("UPDATE whatsapp_conversations SET last_inbound_at=? WHERE wa_id=?").run(new Date().toISOString(),sender);
-    sqlite.prepare("UPDATE payment_v2_template_versions SET body=?,state='PUBLISHED',published_at=?,published_by='SYNTHETIC_TEST' WHERE template_key='GRACE_NOTICE_4H' AND locale='en' AND version=1").run("Final grace for {orderNumber}, PKR {amount}, until {deadline}: {remainingMinutes} minutes remain.",new Date().toISOString());
+    sqlite.prepare("UPDATE payment_v2_template_versions SET body=?,state='PUBLISHED',published_at=?,published_by='SYNTHETIC_TEST' WHERE template_key='GRACE_NOTICE_240M' AND locale='en' AND version=1").run("Final grace for {orderNumber}, PKR {amount}, until {deadline}: {remainingMinutes} minutes remain.",new Date().toISOString());
     sqlite.prepare("INSERT INTO outbox_jobs(id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES(?,?,?,?,?,'QUEUED',?,?,?)").run(`outbox-${graceStage}`,graceStage,"WHATSAPP_PAYMENT_REMINDER",testOrder.order.orderId,JSON.stringify({scheduleId:schedule.scheduleId,stageId:graceStage,stageMinutes:240,orderId:testOrder.order.orderId,paymentId:testOrder.paymentId,customerId:sqlite.prepare("SELECT customer_id FROM orders WHERE id=?").get(testOrder.order.orderId)?.customer_id}),now,now,now);
     const graceMessage={body:{kind:"WHATSAPP_PAYMENT_REMINDER",idempotencyKey:graceStage,entityId:testOrder.order.orderId,schemaVersion:1 as const},attempts:1,ack:vi.fn(),retry:vi.fn()};
     await api.queue({messages:[graceMessage]} as never,env("false","true","true"));

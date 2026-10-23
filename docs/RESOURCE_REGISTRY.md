@@ -1,5 +1,15 @@
 # Resource Registry
 
+## GFS-204 Deployed Isolated V2 Resources (2026-10-23)
+
+- V2 source starts at `8796bdb` on `codex/gfs-v2-payments-reminders-001`; GFS-204 code/tests/docs are in progress on this branch and target PR #9 only. Frozen V1 `d816ba1`, PR #8 and untracked `images/` untouched.
+- Cloudflare account verified as Get Free Seeds / `gisupp@gmail.com`, account ID `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- Isolated primary D1 `getfreeseeds-v2-staging`, ID `6f26ba71-3c10-4b6e-97ab-5df7473c21c7`; recovery D1 `getfreeseeds-v2-restore-check`, ID `0a9ae021-64c9-4591-ac3c-aadd29ce13b6`. Both ledger counts 33, no customers/orders/receipts. Schema dump restored at migration 0032, then 0033 applied/verified on both. Shared D1 `getfreeseeds-staging` was not accessed or changed. Native `PRAGMA integrity_check` denied by D1 (`SQLITE_AUTH`).
+- V2 private R2 bucket `getfreeseeds-v2-receipts-staging`; no public domain configured. Queue `getfreeseeds-v2-events-staging` and DLQ `getfreeseeds-v2-events-staging-dlq` are dedicated to V2.
+- API Worker `getfreeseeds-v2-api-staging`: latest version `e43e23dd-22a6-4338-b77a-c48bbcee6cad`, previous `a42c6d65-adca-410e-baf8-e94887cf3df5`, cron `* * * * *`, isolated Queue consumer, workers.dev disabled. Provider and payment/reminder/automation/utility flags false. No active webhook binding/route.
+- Admin Worker `getfreeseeds-v2-admin-staging`: latest version `92809f45-9bcb-403c-9bd8-7e481d6ad3d0`, previous signed-JWT-gated `0644d8ec-d85f-495c-9bfc-256915cc085e`; earlier no-public-route version `9fa96aa8-3e7b-4a2c-ae0d-721fe1cc76be`. Admin has workers.dev URL guarded by signed Access JWT; unauthenticated GET returned `401 ACCESS_JWT_REQUIRED`. Existing Access app remains unchanged; V2 destination attachment is blocked by dashboard outage/editor issue.
+- Live Admin GET verified the reported review still PENDING with receipt/reference/method verified; no financial POST. No Meta sends/WAMIDs. Current WhatsApp tester Profile mismatch persists; do not access chats or send.
+
 ## GFS-202 Source Inventory (2026-10-23)
 
 - V2 source starts at fetched HEAD `695748e`; receipt/reminder implementation is commit `046565478bea5a4d49c286b83364f48457a792bd`, pushed to open PR #9 on `codex/gfs-v2-payments-reminders-001`. No Worker/D1 deployment; GitHub reports no CI checks.

@@ -1,5 +1,33 @@
 # Final Report
 
+## GFS-204 Simple Confirmation and Isolated V2 Deployment (2026-10-23)
+
+### Evidence and Results
+
+| Requirement | Result | Evidence / exact blocker |
+|---|---|---|
+| P0 real review order | BLOCKED safely | Authenticated live Admin GET shows the reported Easypaisa payment remains PAYMENT_REVIEW/PENDING, with one receipt, saved reference and verified method. No wallet/bank credit was confirmed; no financial POST; still REVIEW. |
+| P0 simple Confirm Payment UI | PASS SOURCE/SYNTHETIC | V2 source displays receipt preview, order/expected amount/method/reference, exact “I checked the Garden Shop wallet/bank account and confirmed receipt of PKR {amount}.” checkbox, and one “Confirm Payment and Mark PAID” primary button. Method/amount/receipt/review controls fail closed. |
+| P0 backend/audit/idempotency | PASS SYNTHETIC | Missing attestation rejected; attestation without separate evidence accepted; saved transaction ref is loaded from the associated payment. Audit binds Admin/time/method/amount/reference hash/attestation; atomic PAID state stops pending stages/jobs and queues one gated acknowledgement. Duplicate approval does not duplicate transition/message. Historical approval adds no V2 timer. |
+| Real PAID WhatsApp/WAMID | BLOCKED | No receiving-account credit was independently confirmed. Actual order remains REVIEW. WhatsApp own Profile mismatch blocks a real send; no real WAMID/message. |
+| P1 isolated API/Admin deployment | PARTIAL | Separate D1/R2/Queue/DLQ, migration/backup/recovery and both Workers are deployed. API has Cron/Queue and no public route, flags/provider OFF. Admin public route has cryptographic Access JWT gate; unauthenticated browser got `401 ACCESS_JWT_REQUIRED`. Existing Access app could not be safely extended to the V2 Worker; Cloudflare dashboard reports a major Workers outage and its editor behaved inconsistently. Thus authenticated V2 Admin UI is not yet accessible and no new Admin screenshot is available. |
+| P2 Admin reminder management | PASS SOURCE / LIVE BLOCKED | Source includes Home navigation, Orders timeline/panel/filter and `/payment-reminders` editor; no authenticated new Admin UI test due Access attachment blocker. No real `SENT` status, WAMID or screenshots claimed. |
+| P3 EN/UR editable copy | PASS SOURCE / LIVE BLOCKED | Draft/preview/publish/reload and selected-order exact-preview sending remain in source; no actual publication/Meta template verification or customer delivery. |
+| P4 reminder lifecycle | PASS SYNTHETIC / LIVE BLOCKED | Existing tests cover 15/30/60/210/240/270, grace-delivery delay, PAID/review/opt-out holds and duplicate work. Deployed API flags are OFF; no live stage, actual WAMID or cancellation. |
+| P5 isolation/backup/restore | PASS DATA PLANE / PARTIAL ROLLOUT | Isolated D1 ID `6f26ba71-3c10-4b6e-97ab-5df7473c21c7` and recovery D1 ID `0a9ae021-64c9-4591-ac3c-aadd29ce13b6` both report migration count33 and 0 orders/customers. Full dump imported to recovery DB at the previous schema, then migration 0033 applied/verified on both; D1 rejects PRAGMA integrity_check (`SQLITE_AUTH`), so structural ledger/export restore is the integrity evidence. Private R2 and dedicated Queue/DLQ configured. Access/visual/live acceptance blocked. |
+| Worker versions/rollback | PASS DEPLOYED ISOLATED | API `e43e23dd-22a6-4338-b77a-c48bbcee6cad`, previous `a42c6d65-adca-410e-baf8-e94887cf3df5`; Admin `92809f45-9bcb-403c-9bd8-7e481d6ad3d0`, previous signed-JWT-gated `0644d8ec-d85f-495c-9bfc-256915cc085e` (earlier no-public-route version `9fa96aa8-3e7b-4a2c-ae0d-721fe1cc76be`). API Cron `* * * * *`; isolated Queue consumer/DLQ. Shared API/Admin versions and active webhook were not changed. |
+| Frozen V1 | PASS PRESERVATION | V1 branch/tag `d816ba1` and PR #8 unchanged. All V2 configs bind only isolated resources; shared D1 untouched. Full local suite passes. |
+| Test/CI | PASS LOCAL / CI NONE | `npm ci`; 204/204 tests in 21 files; lint/build; `npm audit` 0 vulnerabilities; isolated Wrangler dry-runs. GitHub reports no PR #9 checks. |
+| P6/docs/push | IN PROGRESS | This execution's docs/source/tests still need committing and pushing to PR #9. |
+
+### Completion and Go/No-Go
+
+- Estimates (source plus isolated rollout, not live customer acceptance): overall 78%; P0 80%, P1 70%, P2 75%, P3 80%, P4 75%, P5 80%, P6 75% before push. Remaining percentages: overall 22%; P0 20%, P1 30%, P2 25%, P3 20%, P4 25%, P5 20%, P6 25%.
+- Frozen V1: **GO for preservation only**. Live V1 checkout was not retested this execution.
+- V2 isolated data plane/API: **GO for flags-off staging runtime**. V2 Admin authenticated access: **NO-GO** until the Worker is attached to the existing Access app and verified without changing its current destination.
+- Payment confirmation/public launch: **NO-GO** until real account credit is confirmed, authorized tester profile matches, and the authenticated V2 Admin UI can be verified.
+- Reminders/live cancellation: **NO-GO**; flags remain OFF, Meta tester mismatch and Access outage block authorized live test. No mass/historical messages or customer cancellations.
+
 ## GFS-202 Receipt/Reminder Report (2026-10-23)
 
 ### Evidence and Result

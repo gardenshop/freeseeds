@@ -1051,7 +1051,7 @@ export default {
               else if (conversation.language === "en" || conversation.language === "ur") locale=conversation.language;
               else { await block("PAYMENT_REMINDER_CUSTOMER_LOCALE_UNVERIFIED", "SKIPPED"); continue; }
             } catch { await block("PAYMENT_REMINDER_CUSTOMER_LOCALE_UNVERIFIED", "SKIPPED"); continue; }
-            const templateKeys: Record<number, string> = { 15:"REMINDER_15M",30:"REMINDER_30M",60:"REMINDER_60M",210:"REMINDER_3H30",240:"GRACE_NOTICE_4H",270:"CANCEL_NOTICE_4H30" };
+            const templateKeys: Record<number, string> = { 15:"REMINDER_15M",30:"REMINDER_30M",60:"REMINDER_60M",210:"FINAL_WARNING_210M",240:"GRACE_NOTICE_240M",270:"CANCELLATION_270M" };
             const templateKey=templateKeys[Number(payload.stageMinutes)];
             if (!templateKey) { await block("PAYMENT_REMINDER_STAGE_INVALID", "SKIPPED"); continue; }
             const template = await env.DB.prepare(`SELECT version,body,utility_template_name,utility_approved_at FROM payment_v2_template_versions
