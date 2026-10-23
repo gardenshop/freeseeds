@@ -7,6 +7,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
+    "extract:payment-qr": "node extract-payment-qr.mjs",
     "dev:api": "wrangler dev --config apps/api/wrangler.jsonc",
     "dev:admin": "wrangler dev --config apps/admin/wrangler.jsonc"
   },
@@ -19,9 +20,12 @@
     "@types/node": "^24.5.2",
     "@typescript-eslint/eslint-plugin": "^8.44.0",
     "@typescript-eslint/parser": "^8.44.0",
+    "@undecaf/zbar-wasm": "^0.11.0",
     "eslint": "^9.36.0",
+    "jsqr": "^1.4.0",
+    "sharp": "^0.35.5",
     "typescript": "^5.9.2",
     "vitest": "^5.0.2",
-    "wrangler": "^4.38.0"
+    "wrangler": "^4.149.0"
   }
 }

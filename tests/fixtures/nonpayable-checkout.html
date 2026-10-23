@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none';">
+  <title>NON-PAYABLE Checkout Lab</title>
+  <style>
+    :root{font-family:Inter,Segoe UI,Arial,sans-serif;color:#18231e;background:#eef2ed;font-synthesis:none}*{box-sizing:border-box}body{margin:0}.shell{max-width:880px;margin:32px auto;padding:0 18px}.warning{padding:16px 20px;border:2px solid #a23e20;background:#fff1e9;color:#782b14;font-weight:800;letter-spacing:.04em}.card{margin-top:16px;padding:clamp(20px,5vw,42px);background:#fff;border:1px solid #d3ded5;box-shadow:0 12px 36px #20352812}.eyebrow{color:#557362;text-transform:uppercase;letter-spacing:.14em;font-size:.75rem;font-weight:800}h1{font-size:clamp(1.7rem,5vw,2.5rem);line-height:1.08;margin:.65rem 0}p{line-height:1.6;color:#43534a}.row{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}.choice{flex:1 1 220px;text-align:left;min-height:94px}.button{border:0;border-radius:5px;padding:14px 18px;background:#174e38;color:#fff;font:inherit;font-weight:750;cursor:pointer}.button:hover{background:#0d3928}.button.secondary{background:#e7eee8;color:#1c4532}.button.danger{background:#8b2c25}.button:disabled{opacity:.48;cursor:not-allowed}.notice{padding:14px 16px;border-left:4px solid #cc6b27;background:#fff5ea;color:#653312}.fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}.field{display:grid;gap:6px}.field.wide{grid-column:1/-1}label{font-weight:700;font-size:.92rem}input,select{font:inherit;padding:12px;border:1px solid #aab8ad;border-radius:4px;min-width:0}.summary{display:grid;grid-template-columns:minmax(110px,170px) 1fr;gap:9px 18px;padding:16px;background:#f4f7f3}.summary strong{color:#385747}output{display:block;margin-top:14px;min-height:24px;font-weight:700;color:#8b2c25}.qrbox{display:grid;place-items:center;gap:8px;margin:18px auto;padding:15px;width:min(100%,260px);border:2px dashed #a23e20;background:repeating-linear-gradient(135deg,#fff,#fff 9px,#fff4ee 9px,#fff4ee 18px)}.qrbox img{width:190px;height:190px;image-rendering:pixelated}.testlabel{font-size:.78rem;font-weight:900;letter-spacing:.08em;color:#8b2c25;text-align:center}.tag{display:inline-block;padding:5px 8px;background:#edf1ed;border-radius:3px;font-size:.78rem;font-weight:800}.receipt{margin:16px 0;padding:12px;background:#eef4ef;border:1px solid #cedbd0;overflow-wrap:anywhere}.audit{font-size:.9rem;color:#56665b;padding-left:20px}.urdu{direction:rtl;text-align:right}.urdu .fields,.urdu .row,.urdu .summary{direction:rtl}.footer{margin:14px 0 30px;color:#607067;font-size:.82rem;text-align:center}@media(max-width:600px){.shell{margin:14px auto}.fields{grid-template-columns:1fr}.field.wide{grid-column:auto}.summary{grid-template-columns:1fr;gap:3px}.row>*{flex-basis:100%}}
+    .receipt-preview{display:block;max-width:100%;max-height:280px;height:auto;margin:12px auto;border:1px solid #9cac9f}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="warning" role="alert">TEST ONLY · NON-PAYABLE · NO REAL ACCOUNTS · NO NETWORK</div>
+    <main class="card" id="app" aria-live="polite"></main>
+    <p class="footer">Isolated browser fixture. All order, receipt, review and fulfillment state exists in memory only and disappears on reload.</p>
+  </div>
+  <script>
+    (() => {
+      'use strict';
+      const app = document.getElementById('app');
+      const state = {phase:'welcome',locale:'en',fertilizer:null,province:null,fields:null,order:null,method:null,receipt:null,review:null,fulfillment:false,orderCount:0,audit:[],message:''};
+      const copy = {
+        en:{welcome:'Welcome to the isolated checkout lab.',start:'Continue to language',language:'Choose language',english:'English',urdu:'Urdu',fertilizer:'Choose your test bundle',add:'Add Fertilizer',seeds:'Seeds Only',province:'Choose a demonstration province',fee:'Test delivery fee',delivery:'Delivery details (exactly five fields)',name:'Full name',address:'Complete delivery address',landmark:'Nearby famous place',city:'City',contact:'Contact number',continue:'Continue',review:'Review test order',back:'Back',place:'Place Order',product:'Test seed bundle',fert:'Test fertilizer',total:'TEST TOTAL',selection:'Select a NON-PAYABLE test method',jc:'JazzCash fixture',ep:'Easypaisa fixture',bank:'Bank Transfer fixture',method:'Selected test method',recipient:'Synthetic recipient',account:'Synthetic destination',instructions:'TEST instructions: upload a synthetic receipt only. This is not a payment request.',qr:'Synthetic QR-like marker',notScan:'NOT SCANNABLE · NOT A REAL QR',receipt:'Upload a synthetic receipt file',upload:'Attach test receipt',submit:'Submit for simulated review',pending:'TEST PAYMENT PENDING · NOT A REAL PAYMENT',check:'Check Order Status',status:'TEST order status',awaiting:'TEST RECEIPT AWAITING ADMIN REVIEW',admin:'Open Admin Review (test fixture)',reviewTitle:'TEST ADMIN REVIEW',reject:'Reject test receipt',approve:'Simulate approval (no funds)',fulfill:'Render simulated fulfillment',simApproved:'SIMULATED APPROVAL · NOT PAID',simFulfill:'SIMULATED FULFILLMENT · NOT DISPATCHED',rejected:'TEST REJECTED · NO PAYMENT RECORDED',duplicate:'Simulate duplicate confirmation',reset:'Reset isolated fixture',order:'Test order ID',fields:'Delivery fields',audit:'In-memory audit',onlyTest:'TEST / NON-PAYABLE',error:'A required field is missing.',noReceipt:'Attach an image or PDF under 2 MB.',duplicateResult:'Duplicate suppressed; same test order retained.',realBlocked:'No real payment or funds are involved.'},
+        ur:{welcome:'الگ تھلگ چیک آؤٹ ٹیسٹ میں خوش آمدید۔',start:'زبان کے انتخاب پر جائیں',language:'زبان منتخب کریں',english:'English',urdu:'اردو',fertilizer:'اپنا ٹیسٹ پیک منتخب کریں',add:'کھاد شامل کریں',seeds:'صرف بیج',province:'نمائشی صوبہ منتخب کریں',fee:'ٹیسٹ ڈلیوری فیس',delivery:'ڈلیوری کی تفصیلات (بالکل پانچ خانے)',name:'پورا نام',address:'مکمل ڈلیوری پتہ',landmark:'قریبی مشہور جگہ',city:'شہر',contact:'رابطہ نمبر',continue:'جاری رکھیں',review:'ٹیسٹ آرڈر کا جائزہ',back:'واپس',place:'آرڈر بنائیں',product:'ٹیسٹ بیج پیک',fert:'ٹیسٹ کھاد',total:'ٹیسٹ کل رقم',selection:'غیر قابل ادائیگی ٹیسٹ طریقہ منتخب کریں',jc:'جاز کیش ٹیسٹ',ep:'ایزی پیسہ ٹیسٹ',bank:'بینک ٹرانسفر ٹیسٹ',method:'منتخب ٹیسٹ طریقہ',recipient:'مصنوعی وصول کنندہ',account:'مصنوعی منزل',instructions:'صرف مصنوعی رسید لگائیں۔ یہ ادائیگی کی درخواست نہیں۔',qr:'مصنوعی QR جیسا نشان',notScan:'اسکین نہیں ہوتا · اصل QR نہیں',receipt:'مصنوعی رسید فائل لگائیں',upload:'ٹیسٹ رسید منسلک کریں',submit:'مصنوعی جائزے کے لیے بھیجیں',pending:'ٹیسٹ ادائیگی زیر التوا · اصل ادائیگی نہیں',check:'آرڈر کی حالت دیکھیں',status:'ٹیسٹ آرڈر کی حالت',awaiting:'ٹیسٹ رسید ایڈمن کے جائزے کی منتظر ہے',admin:'ایڈمن ٹیسٹ جائزہ کھولیں',reviewTitle:'ایڈمن ٹیسٹ جائزہ',reject:'ٹیسٹ رسید مسترد کریں',approve:'منظوری کی نقل بنائیں (رقم نہیں)',fulfill:'مصنوعی تکمیل دکھائیں',simApproved:'مصنوعی منظوری · ادا شدہ نہیں',simFulfill:'مصنوعی تکمیل · بھیجا نہیں گیا',rejected:'ٹیسٹ مسترد · کوئی ادائیگی درج نہیں',duplicate:'دہرائی گئی تصدیق کی نقل',reset:'الگ ٹیسٹ ری سیٹ',order:'ٹیسٹ آرڈر نمبر',fields:'ڈلیوری کے خانے',audit:'میموری آڈٹ',onlyTest:'ٹیسٹ / غیر قابل ادائیگی',error:'ایک ضروری خانہ خالی ہے۔',noReceipt:'دو MB سے کم تصویر یا PDF لگائیں۔',duplicateResult:'دہرانا روک دیا گیا؛ وہی ٹیسٹ آرڈر برقرار ہے۔',realBlocked:'کوئی حقیقی ادائیگی یا رقم شامل نہیں۔'}
+      };
+      const methods = {
+        jazzcash:{en:{name:'JazzCash fixture',recipient:'NON-PAYABLE Test Merchant JC',account:'TEST-JC-001 · NOT A TILL'},ur:{name:'جاز کیش ٹیسٹ',recipient:'غیر قابل ادائیگی ٹیسٹ مرچنٹ JC',account:'TEST-JC-001 · اصل ٹِل نہیں'}},
+        easypaisa:{en:{name:'Easypaisa fixture',recipient:'NON-PAYABLE Test Merchant EP',account:'TEST-EP-002 · NOT A MERCHANT'},ur:{name:'ایزی پیسہ ٹیسٹ',recipient:'غیر قابل ادائیگی ٹیسٹ مرچنٹ EP',account:'TEST-EP-002 · اصل مرچنٹ نہیں'}},
+        bank:{en:{name:'Bank Transfer fixture',recipient:'NON-PAYABLE Test Beneficiary BA',account:'TEST-IBAN-003 · NOT AN IBAN'},ur:{name:'بینک ٹرانسفر ٹیسٹ',recipient:'غیر قابل ادائیگی ٹیسٹ بینیفشری BA',account:'TEST-IBAN-003 · اصل IBAN نہیں'}}
+      };
+      const text = key => (copy[state.locale] || copy.en)[key] || key;
+      const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const total = () => (state.fertilizer ? 250 : 0) + (state.province?.fee || 0) + 500;
+      const button = (action,label,cls='') => `<button class="button ${cls}" data-action="${action}">${escapeHtml(label)}</button>`;
+      const heading = (step,title,body='') => `<div class="eyebrow">${text('onlyTest')} · ${step}</div><h1>${escapeHtml(title)}</h1>${body?`<p>${escapeHtml(body)}</p>`:''}`;
+      const summary = () => `<div class="summary"><strong>${text('order')}</strong><span>${escapeHtml(state.order?.id || 'NOT CREATED')}</span><strong>${text('product')}</strong><span>TEST pack</span><strong>${text('fert')}</strong><span>${state.fertilizer?'PKR 250 TEST':'PKR 0 TEST'}</span><strong>${text('province')}</strong><span>${escapeHtml(state.province?.name || '—')}</span><strong>${text('fee')}</strong><span>PKR ${state.province?.fee || 0} TEST</span>${state.fields?`<strong>${text('name')}</strong><span>${escapeHtml(state.fields.name)}</span><strong>${text('address')}</strong><span>${escapeHtml(state.fields.address)}</span><strong>${text('landmark')}</strong><span>${escapeHtml(state.fields.landmark)}</span><strong>${text('city')}</strong><span>${escapeHtml(state.fields.city)}</span><strong>${text('contact')}</strong><span>${escapeHtml(state.fields.contact)}</span>`:''}<strong>${text('total')}</strong><span>PKR ${total()} TEST</span></div>`;
+      const qrData = method => {
+        const seed = [...method].reduce((n,c)=>n+c.charCodeAt(0),17);
+        let cells='';
+        for(let y=0;y<21;y++)for(let x=0;x<21;x++)if(((x*13+y*7+seed+x*y)%11)<5)cells+=`<rect x="${x*8}" y="${y*8}" width="7" height="7"/>`;
+        const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 168"><rect width="168" height="168" fill="white"/><g fill="#142d22">${cells}</g><rect x="12" y="76" width="144" height="20" fill="#fff0e8"/><text x="84" y="90" text-anchor="middle" font-size="12" font-weight="900" fill="#9b321e">TEST · NOT SCANNABLE</text></svg>`;
+        return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+      };
+      const audit = (action) => {state.audit.push(`${new Date().toISOString()} · ${action}`);};
+      const render = () => {
+        app.className=`card ${state.locale==='ur'?'urdu':''}`;
+        const f=copy[state.locale];
+        let body='';
+        if(state.phase==='welcome') body=heading('01',f.welcome)+`<div class="row">${button('start',f.start)}</div>`;
+        if(state.phase==='language') body=heading('02',f.language)+`<div class="row">${button('locale-en',f.english,'choice')}${button('locale-ur',f.urdu,'choice')}</div>`;
+        if(state.phase==='fertilizer') body=heading('03',f.fertilizer)+`<div class="row">${button('fert-on',f.add,'choice')}${button('fert-off',f.seeds,'choice')}</div>`;
+        if(state.phase==='province') body=heading('04',f.province)+`<div class="row"><button class="button choice" data-action="province-north">Test North · ${f.fee}: PKR 100 TEST</button><button class="button choice" data-action="province-south">Test South · ${f.fee}: PKR 150 TEST</button></div>`;
+        if(state.phase==='delivery') body=heading('05',f.delivery)+`<form id="delivery" class="fields"><div class="field"><label for="name">${f.name}</label><input id="name" name="name" required autocomplete="off" value="${escapeHtml(state.fields?.name||'')}"></div><div class="field"><label for="contact">${f.contact}</label><input id="contact" name="contact" required autocomplete="off" value="${escapeHtml(state.fields?.contact||'')}"></div><div class="field wide"><label for="address">${f.address}</label><input id="address" name="address" required autocomplete="off" value="${escapeHtml(state.fields?.address||'')}"></div><div class="field"><label for="landmark">${f.landmark}</label><input id="landmark" name="landmark" required autocomplete="off" value="${escapeHtml(state.fields?.landmark||'')}"></div><div class="field"><label for="city">${f.city}</label><input id="city" name="city" required autocomplete="off" value="${escapeHtml(state.fields?.city||'')}"></div><button class="button" type="submit">${f.continue}</button></form>`;
+        if(state.phase==='review') body=heading('06',f.review)+summary()+`<div class="row">${button('back-delivery',f.back,'secondary')}${button('place-order',f.place)}</div>`;
+        if(state.phase==='selection') body=heading('07',f.selection,`${f.realBlocked} These methods exist only in this offline fixture.`)+summary()+`<div class="row">${button('method-jazzcash',f.jc,'choice')}${button('method-easypaisa',f.ep,'choice')}${button('method-bank',f.bank,'choice')}</div>`;
+        if(state.phase==='method') {const m=methods[state.method][state.locale];body=heading('08',f.method)+summary()+`<div class="summary"><strong>${f.method}</strong><span>${escapeHtml(m.name)}</span><strong>${f.recipient}</strong><span>${escapeHtml(m.recipient)}</span><strong>${f.account}</strong><span>${escapeHtml(m.account)}</span><strong>${f.total}</strong><span>PKR ${total()} TEST</span><strong>${f.instructions}</strong><span>${escapeHtml(m.name)} · ${escapeHtml(m.account)}</span></div><div class="qrbox"><img alt="${f.notScan}" src="${qrData(state.method)}"><span class="testlabel">${f.qr}<br>${f.notScan}<br>${escapeHtml(m.name)}</span></div><div class="row">${button('upload-step',f.upload)}${button('change-method',f.back,'secondary')}</div>`;}
+        if(state.phase==='receipt') body=heading('09',f.receipt)+summary()+`<p class="notice">${f.instructions}</p><label class="field">${f.upload}<input id="receiptFile" type="file" accept="image/png,image/jpeg,image/svg+xml,application/pdf"></label><div class="row">${button('submit-receipt',f.submit)}${button('change-method',f.back,'secondary')}</div>`;
+        if(state.phase==='pending'||state.phase==='rejected'||state.phase==='sim-approved'||state.phase==='sim-fulfillment'||state.phase==='status') {const status=state.phase==='pending'?f.pending:state.phase==='rejected'?f.rejected:state.phase==='sim-approved'?f.simApproved:state.phase==='sim-fulfillment'?f.simFulfill:state.review==='pending'?f.awaiting:state.review==='rejected'?f.rejected:state.review==='approved'?(state.fulfillment?f.simFulfill:f.simApproved):f.status;body=heading('10',status)+summary()+`<div class="notice">${f.realBlocked}</div>${state.receipt?`<div class="receipt"><b>${f.receipt}</b><br>${escapeHtml(state.receipt.name)} · ${state.receipt.size} bytes · MEMORY ONLY${state.receipt.previewUrl?`<img class="receipt-preview" alt="NON-PAYABLE synthetic receipt preview" src="${escapeHtml(state.receipt.previewUrl)}">`:''}</div>`:''}<div class="row">${button('check-order',f.check)}${state.receipt?button('admin',f.admin,'secondary'):''}${button('reset',f.reset,'secondary')}</div>`;}
+        if(state.phase==='admin') body=heading('11',f.reviewTitle)+summary()+`<div class="receipt">${escapeHtml(state.receipt?.name||'NO RECEIPT')} · MEMORY ONLY · NON-PAYABLE${state.receipt?.previewUrl?`<img class="receipt-preview" alt="NON-PAYABLE synthetic receipt preview" src="${escapeHtml(state.receipt.previewUrl)}">`:''}</div><div class="row">${button('reject',f.reject,'danger')}${button('approve',f.approve)}${button('duplicate',f.duplicate,'secondary')}</div><div class="row">${state.review==='approved'?button('fulfill',f.fulfill):''}${button('check-order',f.check,'secondary')}</div>${state.fulfillment?`<p class="notice">${f.simFulfill}</p>`:''}<h2>${f.audit}</h2><ul class="audit">${state.audit.map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul>`;
+        app.innerHTML=body+`<output id="message" role="status">${escapeHtml(state.message)}</output>`;
+        app.setAttribute('data-phase',state.phase);
+        app.setAttribute('data-order-count',String(state.orderCount));
+      };
+      const go=(phase)=>{state.phase=phase;state.message='';render();};
+      app.addEventListener('submit',event=>{
+        if(event.target?.id!=='delivery')return;
+        event.preventDefault();
+        const data=new FormData(event.target);
+        const fields=Object.fromEntries(['name','address','landmark','city','contact'].map(k=>[k,String(data.get(k)||'').trim()]));
+        if(Object.values(fields).some(v=>!v)){state.message=copy[state.locale].error;render();return;}
+        state.fields=fields;go('review');
+      });
+      app.addEventListener('change',event=>{
+        if(event.target?.id!=='receiptFile')return;
+        const file=event.target.files?.[0];
+        if(!file)return;
+        if(file.size>2*1024*1024||!['image/png','image/jpeg','image/svg+xml','application/pdf'].includes(file.type)){if(state.receipt?.previewUrl)URL.revokeObjectURL(state.receipt.previewUrl);state.receipt=null;state.message=copy[state.locale].noReceipt;return render();}
+        if(state.receipt?.previewUrl)URL.revokeObjectURL(state.receipt.previewUrl);
+        state.receipt={name:file.name,size:file.size,type:file.type,file,previewUrl:file.type.startsWith('image/')?URL.createObjectURL(file):null};state.message='';
+        const output=app.querySelector('#message');if(output)output.textContent='';
+      });
+      app.addEventListener('click',event=>{
+        const action=event.target.closest('[data-action]')?.dataset.action;if(!action)return;
+        if(action==='start')return go('language');
+        if(action==='locale-en'||action==='locale-ur'){state.locale=action==='locale-ur'?'ur':'en';return go('fertilizer');}
+        if(action==='fert-on'||action==='fert-off'){state.fertilizer=action==='fert-on';return go('province');}
+        if(action==='province-north'||action==='province-south'){state.province={name:action==='province-north'?'Test North':'Test South',fee:action==='province-north'?100:150};return go('delivery');}
+        if(action==='back-delivery')return go('delivery');
+        if(action==='place-order'){
+          if(state.order){state.message=copy[state.locale].duplicateResult;return render();}
+          state.orderCount++;state.order={id:`NP-TEST-${String(state.orderCount).padStart(6,'0')}`,total:total()};audit('TEST_ORDER_CREATED');return go('selection');
+        }
+        if(action.startsWith('method-')){const method=action.slice(7);if(!methods[method]){state.message='Unknown test method';return render();}state.method=method;audit(`TEST_METHOD_SELECTED:${method}`);return go('method');}
+        if(action==='change-method')return go('selection');
+        if(action==='upload-step')return go('receipt');
+        if(action==='submit-receipt'){
+          if(!state.receipt){state.message=copy[state.locale].noReceipt;return render();}
+          audit('TEST_RECEIPT_ATTACHED_IN_MEMORY');state.review='pending';return go('pending');
+        }
+        if(action==='check-order'){state.phase='status';state.message='';return render();}
+        if(action==='admin')return go('admin');
+        if(action==='reject'){state.review='rejected';audit('TEST_ADMIN_REJECTED');return go('rejected');}
+        if(action==='approve'){state.review='approved';audit('TEST_ADMIN_SIMULATED_APPROVAL_NOT_PAID');return go('sim-approved');}
+        if(action==='fulfill'){if(state.review!=='approved'){state.message='Approval simulation required';return render();}state.fulfillment=true;audit('TEST_FULFILLMENT_RENDERED_NOT_DISPATCHED');return go('sim-fulfillment');}
+        if(action==='duplicate'){state.message=copy[state.locale].duplicateResult;state.orderCount=Math.max(state.orderCount,1);audit('TEST_DUPLICATE_SUPPRESSED');return render();}
+        if(action==='reset'){const locale=state.locale;if(state.receipt?.previewUrl)URL.revokeObjectURL(state.receipt.previewUrl);Object.assign(state,{phase:'welcome',locale,fertilizer:null,province:null,fields:null,order:null,method:null,receipt:null,review:null,fulfillment:false,orderCount:0,audit:[],message:''});return render();}
+      });
+      render();
+    })();
+  </script>
+</body>
+</html>

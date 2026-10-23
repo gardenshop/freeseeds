@@ -4,7 +4,7 @@
 
 The repository was empty and had no Git history, source, branch, remote, or legacy architecture at bootstrap. GitHub repository `gardenshop/freeseeds` is the target. The known Cloudflare account `85f6a6181b4653c2a45e69cb7ce8a474` is Hoja-linked and prohibited. The supplied Free Seeds Page is currently connected to a prohibited Meta portfolio and is documented only as a future isolation task.
 
-Production WhatsApp number: **+923328883383**, explicitly authorized by the user and pending clean Meta onboarding.
+Production WhatsApp number: **+923044429933**, explicitly authorized by the user and pending clean Meta onboarding; old `+923328883383` is superseded.
 
 No existing, test, Hoja Seeds, Garden Shop, or other phone number may be used. The authorized number must not be registered, migrated, connected, or enabled until clean ownership, OTP/verification, WABA linkage, and least-privilege credentials are visibly verified.
 
@@ -35,7 +35,7 @@ All resources must be created only in the dedicated clean Get Free Seeds Cloudfl
 
 ## Data Model and Workflow
 
-Migrations support customers, leads, orders, payments, payment_receipts, meta_attribution, capi_events, whatsapp_events, outbound_messages, audit_log, configuration, duplicate_flags, order_counters, and transactional outbox jobs. Order numbering is concurrency-safe with `FS-100001` format. State transitions are validated and idempotent:
+Migrations support customers, leads, orders, payments, payment_receipts, meta_attribution, capi_events, whatsapp_events, outbound_messages, audit_log, configuration, duplicate_flags, per-date order counters, idempotent order requests, and transactional outbox jobs. New orders use a concurrency-safe `FS-YYMMDD-######` format based on the Asia/Karachi order date; historical order numbers are never renamed. State transitions are validated and idempotent:
 
 `NEW -> DETAILS_COMPLETED -> PAYMENT_PENDING -> RECEIPT_SUBMITTED -> PAYMENT_REVIEW -> PAID -> PACKING -> DISPATCHED -> DELIVERED`, with rejection, correction, cancellation, and audited fulfillment transitions.
 

@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
-import { isAllowedInstantFormLead, LeadSource, MetaWhatsAppProvider, MetaCapiProvider, formatPaymentMessage, isPaymentMethodComplete, isTerminalOutboxStatus, parseMetaInstantFormLead, parseWebhookRecords, paymentInstructions, retryDelaySeconds, selectPaymentMethod, shouldDeadLetter, storePaymentQr, storeReceipt, validatePaymentQr } from "@gfs/core";
+import { applyFertilizerDecision, isAllowedInstantFormLead, LeadSource, MetaWhatsAppProvider, MetaCapiProvider, configuredPaymentMethodNames, formatPaymentMessage, isPaymentMethodComplete, isTerminalOutboxStatus, parseMetaInstantFormLead, parseWebhookRecords, paymentInstructions, persistWebhookRecords, quoteOrder, retryDelaySeconds, selectPaymentMethod, shouldDeadLetter, storePaymentQr, storeReceipt, validatePaymentQr, verifyPaymentQr, verifyPaymentQrAsset } from "@gfs/core";
+import api from "../apps/api/src/index";
 
 describe("product readiness safeguards", () => {
   it("verifies Meta signatures and keeps the disabled provider closed", async () => {
@@ -30,6 +32,50 @@ describe("product readiness safeguards", () => {
       { providerEventId: "message:synthetic-media", eventType: "MEDIA", status: "RECEIVED" },
       { providerEventId: "status:synthetic-status", eventType: "STATUS", status: "delivered" }
     ]);
+  });
+
+  it("keeps callback status monotonic across concurrent, duplicate, delayed, and reordered deliveries", async () => {
+    const sqlite = new DatabaseSync(":memory:");
+    try {
+      sqlite.exec("CREATE TABLE outbound_messages(provider_message_id TEXT,status TEXT,last_error TEXT,updated_at TEXT);");
+      sqlite.exec("CREATE TABLE whatsapp_events(provider_event_id TEXT UNIQUE,event_type TEXT,payload_hash TEXT,status TEXT,correlation_id TEXT,created_at TEXT,id TEXT PRIMARY KEY);");
+      sqlite.exec("INSERT INTO outbound_messages(provider_message_id,status,last_error,updated_at) VALUES('synthetic-provider-message','PENDING',NULL,'2026-01-01T00:00:00.000Z');");
+      const d1 = {
+        prepare: (sql: string) => {
+          type SqlValue = null | number | bigint | string | Uint8Array;
+          let args: SqlValue[] = [];
+          const statement = {
+            bind: (...values: unknown[]) => { args = values as SqlValue[]; return statement; },
+            run: async () => { const result = sqlite.prepare(sql).run(...args); return { meta: { changes: Number(result.changes) } }; },
+            first: async <T>() => sqlite.prepare(sql).get(...args) as T | undefined,
+            all: async <T>() => ({ results: sqlite.prepare(sql).all(...args) as T[] })
+          };
+          return statement;
+        },
+        batch: async (statements: Array<{ run: () => Promise<unknown> }>) => { sqlite.exec("BEGIN"); try { for (const statement of statements) await statement.run(); sqlite.exec("COMMIT"); } catch (error) { sqlite.exec("ROLLBACK"); throw error; } }
+      } as unknown as D1Database;
+      const payload = (status: string) => ({ entry: [{ changes: [{ value: { statuses: [{ id: "synthetic-provider-message", status }] } }] }] });
+      const raw = (status: string) => new TextEncoder().encode(`synthetic-${status}`).buffer as ArrayBuffer;
+
+      await persistWebhookRecords(d1, payload("sent"), raw("sent"), "synthetic-sent");
+      await persistWebhookRecords(d1, payload("failed"), raw("failed"), "synthetic-failed");
+      expect(sqlite.prepare("SELECT status,last_error FROM outbound_messages").get()).toEqual({ status: "FAILED", last_error: "META_DELIVERY_FAILED" });
+
+      await Promise.all([
+        persistWebhookRecords(d1, payload("sent"), raw("sent"), "synthetic-concurrent-sent"),
+        persistWebhookRecords(d1, payload("delivered"), raw("delivered"), "synthetic-concurrent-delivered"),
+        persistWebhookRecords(d1, payload("read"), raw("read"), "synthetic-concurrent-read")
+      ]);
+      await persistWebhookRecords(d1, payload("read"), raw("read-duplicate"), "synthetic-duplicate");
+      await persistWebhookRecords(d1, payload("delivered"), raw("delivered-delayed"), "synthetic-delayed");
+      await persistWebhookRecords(d1, payload("sent"), raw("sent-reordered"), "synthetic-reordered");
+      await persistWebhookRecords(d1, payload("failed"), raw("failed-delayed"), "synthetic-delayed-failure");
+
+      expect(sqlite.prepare("SELECT status,last_error FROM outbound_messages WHERE provider_message_id='synthetic-provider-message'").get()).toEqual({ status: "READ", last_error: null });
+      expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_events").get()).toEqual({ count: 1 });
+    } finally {
+      sqlite.close();
+    }
   });
 
   it("normalizes a Meta Instant Form lead into the shared five-field model", () => {
@@ -66,37 +112,180 @@ describe("product readiness safeguards", () => {
     expect(shouldDeadLetter(5)).toBe(true);
     expect(shouldDeadLetter(4)).toBe(false);
     expect(isTerminalOutboxStatus("SENT")).toBe(true);
+    expect(isTerminalOutboxStatus("DEAD_LETTER")).toBe(true);
     expect(isTerminalOutboxStatus("RETRY")).toBe(false);
   });
 
   it("keeps all payment methods disabled without verified recipient values", () => {
     for (const [method, displayName] of [["JAZZCASH", "JazzCash"], ["EASYPAISA", "Easypaisa"], ["BANK_TRANSFER", "Bank Transfer"]] as const) expect(paymentInstructions({ id: `synthetic-${method}`, method, displayName, enabled: false, sortOrder: 10 }).configured).toBe(false);
-    const config = { id: "synthetic", method: "JAZZCASH" as const, displayName: "JazzCash", recipientName: "Garden Shop", instructions: "Synthetic instruction", referenceInstruction: "Use order number", enabled: true, sortOrder: 10 };
+    const config = { id: "synthetic", method: "JAZZCASH" as const, displayName: "JazzCash", recipientName: "Synthetic recipient", instructions: "Pay {amount} to {recipientName}.", referenceInstruction: "Reference {orderNumber}.", receiptInstructions: "Share your receipt here.", enabled: true, sortOrder: 10 };
     expect(isPaymentMethodComplete(config)).toBe(true);
-    expect(formatPaymentMessage("FS-100001", 250, config)).toContain("Garden Shop");
+    expect(formatPaymentMessage("FS-100001", 250, config)).toContain("Synthetic recipient");
+  });
+
+  it("filters payment choices unless D1 has independently verified QR provenance", async () => {
+    let query = "";
+    const db = {
+      prepare: (sql: string) => {
+        query = sql;
+        const statement = { all: async () => ({ results: [{ method: "JAZZCASH", display_name: "JazzCash", recipient_name: "Synthetic recipient", instructions: "Pay {amount} to {recipientName}.", reference_instruction: "Reference {orderNumber}.", receipt_instructions: "Share the receipt here.", enabled: 1, qr_owner_verified: 0 }] }) };
+        return statement;
+      }
+    } as unknown as D1Database;
+    await expect(configuredPaymentMethodNames(db)).resolves.toEqual([]);
+    expect(query).toContain("payment_qr_assets");
+    expect(query).toContain("independent_ownership_verified=1");
+    expect(query).toContain("qr_owner_verified=1");
+  });
+
+  it("blocks legacy Admin self-verification and method enablement without independent evidence", () => {
+    const db = new DatabaseSync(":memory:");
+    try {
+      db.exec("CREATE TABLE payment_methods(method TEXT PRIMARY KEY,enabled INTEGER NOT NULL,qr_owner_verified INTEGER NOT NULL,qr_r2_key TEXT,qr_sha256 TEXT,qr_mime_type TEXT,qr_size_bytes INTEGER,recipient_name TEXT,till_id TEXT,updated_at TEXT,updated_by TEXT);");
+      db.exec("CREATE TABLE payment_qr_assets(method TEXT,derivative_r2_key TEXT,derivative_sha256 TEXT,derivative_mime_type TEXT,derivative_size_bytes INTEGER,active INTEGER,decoder_agreement INTEGER,payload_match INTEGER,scan_pass INTEGER,independent_ownership_verified INTEGER,independent_evidence_ref TEXT);");
+      db.exec("CREATE TABLE audit_log(id TEXT PRIMARY KEY,action TEXT,actor_type TEXT,actor_id TEXT,entity_type TEXT,entity_id TEXT,correlation_id TEXT,metadata_json TEXT,created_at TEXT);");
+      db.exec("INSERT INTO payment_methods VALUES('JAZZCASH',0,0,'derivative/JAZZCASH/test.png','synthetic-sha','image/png',8,'Synthetic recipient','SYNTHETIC_ACCOUNT','2026-10-20T00:00:00Z','synthetic-test');");
+      db.exec("INSERT INTO payment_qr_assets VALUES('JAZZCASH','derivative/JAZZCASH/test.png','synthetic-sha','image/png',8,1,1,1,1,0,NULL);");
+      db.exec(readFileSync("migrations/0022_payment_qr_owner_guard.sql", "utf8"));
+      db.exec(readFileSync("migrations/0024_reverify_qr_on_recipient_change.sql", "utf8"));
+
+      expect(() => db.exec("UPDATE payment_methods SET qr_owner_verified=1 WHERE method='JAZZCASH'")).toThrow("PAYMENT_RECIPIENT_OWNERSHIP_UNVERIFIED");
+      expect(() => db.exec("UPDATE payment_methods SET enabled=1 WHERE method='JAZZCASH'")).toThrow("PAYMENT_RECIPIENT_OWNERSHIP_UNVERIFIED");
+      expect(db.prepare("SELECT enabled,qr_owner_verified FROM payment_methods WHERE method='JAZZCASH'").get()).toEqual({ enabled: 0, qr_owner_verified: 0 });
+
+      db.exec("UPDATE payment_qr_assets SET independent_ownership_verified=1,independent_evidence_ref='synthetic-evidence-fixture' WHERE method='JAZZCASH';");
+      db.exec("UPDATE payment_methods SET qr_owner_verified=1,enabled=1 WHERE method='JAZZCASH';");
+      expect(db.prepare("SELECT enabled,qr_owner_verified FROM payment_methods WHERE method='JAZZCASH'").get()).toEqual({ enabled: 1, qr_owner_verified: 1 });
+      db.exec("UPDATE payment_methods SET recipient_name='Updated synthetic recipient' WHERE method='JAZZCASH';");
+      expect(db.prepare("SELECT enabled,qr_owner_verified FROM payment_methods WHERE method='JAZZCASH'").get()).toEqual({ enabled: 0, qr_owner_verified: 0 });
+      expect(db.prepare("SELECT independent_ownership_verified,independent_evidence_ref FROM payment_qr_assets WHERE method='JAZZCASH'").get()).toEqual({ independent_ownership_verified: 0, independent_evidence_ref: null });
+      expect(db.prepare("SELECT action FROM audit_log").get()).toEqual({ action: "PAYMENT_RECIPIENT_CHANGED_REVERIFICATION_REQUIRED" });
+    } finally {
+      db.close();
+    }
   });
 
   it("selects only a complete configured method and creates idempotent payment work", async () => {
     const statements: unknown[] = [];
-    const row = { order_number: "FS-100001", total_payable: 250, state: "DETAILS_COMPLETED", payment_id: "synthetic-payment", id: "synthetic-method", method: "JAZZCASH", display_name: "JazzCash", recipient_name: "Garden Shop", instructions: "Synthetic instruction", reference_instruction: "Use order number", enabled: 1, sort_order: 10 };
+    const row = { order_number: "FS-100001", total_payable: 250, state: "DETAILS_COMPLETED", payment_id: "synthetic-payment", id: "synthetic-method", method: "JAZZCASH", display_name: "JazzCash", recipient_name: "Synthetic recipient", instructions: "Pay {amount} to {recipientName}.", reference_instruction: "Reference {orderNumber}.", receipt_instructions: "Share your receipt here.", qr_owner_verified: 1, enabled: 1, sort_order: 10 };
     const db = { prepare: (_sql: string) => { const statement = { bind: (...args: unknown[]) => { statements.push(args); return statement; }, first: async () => row }; return statement; }, batch: async (batchStatements: unknown[]) => { statements.push(batchStatements); return []; } } as unknown as D1Database;
-    const result = await selectPaymentMethod(db, "synthetic-order", "JAZZCASH");
-    expect(result.message).toContain("Amount due: PKR 250");
+    const result = await selectPaymentMethod(db, "synthetic-order", "JAZZCASH", "en", "synthetic-recipient", "synthetic-inbound-1");
+    expect(result.message).toContain("Pay 250 to Synthetic recipient.");
+    expect(result.message).not.toContain("Amount due:");
     expect(JSON.stringify(statements)).toContain("WHATSAPP_PAYMENT_INSTRUCTIONS");
+    const requestKeys = () => statements.filter(Array.isArray).filter((args) => args[2] === "WHATSAPP_PAYMENT_INSTRUCTIONS").map((args) => String(args[1]));
+    const firstRequestKey = result.idempotencyKey;
+    const duplicate = await selectPaymentMethod(db, "synthetic-order", "JAZZCASH", "en", "synthetic-recipient", "synthetic-inbound-1");
+    const newRequest = await selectPaymentMethod(db, "synthetic-order", "JAZZCASH", "en", "synthetic-recipient", "synthetic-inbound-2");
+    expect(duplicate.idempotencyKey).toBe(firstRequestKey);
+    expect(newRequest.idempotencyKey).not.toBe(firstRequestKey);
+    expect(requestKeys()).toHaveLength(3);
+    expect(requestKeys()[0]).toBe(requestKeys()[1]);
+    expect(requestKeys()[1]).not.toBe(requestKeys()[2]);
+    expect(newRequest.idempotencyKey).not.toContain("synthetic-inbound-2");
     const incomplete = { ...row, enabled: 0 };
     const incompleteDb = { prepare: (_sql: string) => { const statement = { bind: (..._args: unknown[]) => statement, first: async () => incomplete }; return statement; } } as unknown as D1Database;
     await expect(selectPaymentMethod(incompleteDb, "synthetic-order", "JAZZCASH")).rejects.toThrow("PAYMENT_METHOD_NOT_CONFIGURED");
   });
 
-  it("validates, stores and replaces private payment QR objects", async () => {
+  it("quotes authoritative fixture catalog values and hides incomplete payment methods", async () => {
+    const db = {
+      prepare: (sql: string) => {
+        const statement = {
+          bind: (..._args: unknown[]) => statement,
+          first: async () => sql.includes("FROM products") ? { id: "fixture-product", code: "FIXTURE-SEEDS", name: "Fixture Seeds", price_pkr: 300, fertilizer_price_pkr: 50, enabled: 1 } : { province: "Punjab", delivery_fee_pkr: 150, enabled: 1 },
+          all: async () => ({ results: [{ method: "JAZZCASH", display_name: "Configured Fixture Method", enabled: 1, qr_owner_verified: 1, recipient_name: "Fixture recipient", instructions: "Pay {amount} to {recipientName}.", reference_instruction: "Reference {orderNumber}.", receipt_instructions: "Share the receipt here." }, { method: "EASYPAISA", display_name: "Incomplete Fixture Method", enabled: 1, qr_owner_verified: 1, recipient_name: null, instructions: null }] })
+        };
+        return statement;
+      }
+    } as unknown as D1Database;
+    const quote = await quoteOrder(db, { productCode: "FIXTURE-SEEDS", fertilizerSelected: true, province: "Punjab" });
+    expect(quote).toMatchObject({ subtotalPkr: 350, deliveryPkr: 150, totalPkr: 500, paymentMethods: ["Configured Fixture Method"] });
+    expect(quote.items).toHaveLength(2);
+  });
+
+  it("rejects disabled or missing catalog and rate fixtures", async () => {
+    const makeDb = (product: unknown, rate: unknown) => ({ prepare: (sql: string) => { const statement = { bind: (..._args: unknown[]) => statement, first: async () => sql.includes("FROM products") ? product : rate, all: async () => ({ results: [] }) }; return statement; } }) as unknown as D1Database;
+    await expect(quoteOrder(makeDb(undefined, undefined), { productCode: "MISSING", fertilizerSelected: false, province: "Punjab" })).rejects.toThrow("PRODUCT_NOT_FOUND");
+    await expect(quoteOrder(makeDb({ code: "DISABLED", enabled: 0 }, undefined), { productCode: "DISABLED", fertilizerSelected: false, province: "Punjab" })).rejects.toThrow("PRODUCT_DISABLED");
+    await expect(quoteOrder(makeDb({ code: "FIXTURE", price_pkr: 1, enabled: 1 }, undefined), { productCode: "FIXTURE", fertilizerSelected: false, province: "Punjab" })).rejects.toThrow("PROVINCE_DELIVERY_RATE_NOT_FOUND");
+    await expect(quoteOrder(makeDb({ code: "FIXTURE", price_pkr: 1, enabled: 1 }, { province: "Punjab", delivery_fee_pkr: 100, enabled: 0 }), { productCode: "FIXTURE", fertilizerSelected: false, province: "Punjab" })).rejects.toThrow("PROVINCE_DELIVERY_RATE_DISABLED");
+  });
+
+  it("rejects client-supplied quote prices", async () => {
+    const db = {} as D1Database;
+    await expect(quoteOrder(db, { productCode: "FIXTURE", fertilizerSelected: false, province: "Punjab", pricePkr: 1 } as never)).rejects.toThrow();
+  });
+
+  it("uses the persisted payable total instead of global payment configuration", async () => {
+    const statements: string[] = [];
+    const row = { order_number: "FS-100002", total_payable: 500, province: "Punjab", state: "DETAILS_COMPLETED", payment_id: "synthetic-payment", id: "synthetic-method", method: "JAZZCASH", display_name: "JazzCash", recipient_name: "Synthetic recipient", instructions: "Pay {amount} to {recipientName}.", reference_instruction: "Reference {orderNumber}.", receipt_instructions: "Share your receipt here.", qr_owner_verified: 1, enabled: 1, sort_order: 10 };
+    const db = { prepare: (sql: string) => { statements.push(sql); const statement = { bind: (..._args: unknown[]) => statement, first: async () => row }; return statement; }, batch: async () => [] } as unknown as D1Database;
+    const result = await selectPaymentMethod(db, "synthetic-order", "JAZZCASH");
+    expect(result.amount).toBe(500);
+    expect(statements.join(" ")).not.toContain("payment_configuration");
+  });
+
+  it("recalculates and idempotently applies the fertilizer decision", async () => {
+    const sql: string[] = [];
+    const row = { id: "synthetic-order", order_number: "FS-100004", offer_code: "FIXTURE-SEEDS", province: "Punjab", fertilizer_selected: 0, seed_price: 300, fertilizer_fee: 0, delivery_fee: 150, total_payable: 450, state: "DETAILS_COMPLETED" };
+    const db = {
+      prepare: (query: string) => {
+        sql.push(query);
+        const statement = {
+          bind: (..._args: unknown[]) => statement,
+          first: async () => query.includes("offer_code") ? row : query.includes("province_delivery_rates") ? { province: "Punjab", delivery_fee_pkr: 150, enabled: 1 } : query.includes("id FROM products") ? { id: "fixture-product" } : { id: "fixture-product", code: "FIXTURE-SEEDS", name: "Fixture Seeds", price_pkr: 300, fertilizer_price_pkr: 50, enabled: 1 },
+          all: async () => ({ results: query.includes("payment_methods") ? [{ method: "JAZZCASH", display_name: "JazzCash", enabled: 1, qr_owner_verified: 1, recipient_name: "Synthetic recipient", instructions: "Pay {amount} to {recipientName}.", reference_instruction: "Reference {orderNumber}.", receipt_instructions: "Share your receipt here." }] : [] })
+        };
+        return statement;
+      },
+      batch: async (statements: unknown[]) => { sql.push(JSON.stringify(statements)); return []; }
+    } as unknown as D1Database;
+    const result = await applyFertilizerDecision(db, "synthetic-order", { decision: "ADD_FERTILIZER", clientTotalPkr: 1 });
+    expect(result.orderSummary.totalPayablePkr).toBe(500);
+    expect(result.orderSummary.paymentMethods).toEqual(["JazzCash"]);
+    expect(sql.some((query) => query.includes("DELETE FROM order_items"))).toBe(true);
+    expect(sql.some((query) => query.includes("UPDATE orders SET seed_price"))).toBe(true);
+    expect(sql.join(" ")).not.toContain("clientTotalPkr");
+  });
+
+  it("keeps legacy zero-seed orders payable by their persisted delivery total", async () => {
+    const row = { order_number: "FS-100003", seed_price: 0, delivery_fee: 250, fertilizer_fee: 0, total_payable: 250, province: null, state: "DETAILS_COMPLETED", payment_id: "synthetic-payment", id: "synthetic-method", method: "JAZZCASH", display_name: "JazzCash", recipient_name: "Synthetic recipient", instructions: "Pay {amount} to {recipientName}.", reference_instruction: "Reference {orderNumber}.", receipt_instructions: "Share your receipt here.", qr_owner_verified: 1, enabled: 1, sort_order: 10 };
+    const db = { prepare: (_sql: string) => { const statement = { bind: (..._args: unknown[]) => statement, first: async () => row }; return statement; }, batch: async () => [] } as unknown as D1Database;
+    await expect(selectPaymentMethod(db, "synthetic-order", "JAZZCASH")).resolves.toMatchObject({ amount: 250 });
+  });
+
+  it("validates and stores immutable private payment QR objects idempotently", async () => {
     const writes: Array<{ key: string; value: ArrayBuffer }> = [];
-    const bucket = { put: async (key: string, value: ArrayBuffer) => { writes.push({ key, value }); } } as unknown as R2Bucket;
+    const objects = new Map<string, { size: number; customMetadata: Record<string, string>; httpMetadata: { contentType: string } }>();
+    const bucket = {
+      head: async (key: string) => objects.get(key) ?? null,
+      put: async (key: string, value: ArrayBuffer, options: { customMetadata: Record<string, string>; httpMetadata: { contentType: string } }) => {
+        writes.push({ key, value });
+        objects.set(key, { size: value.byteLength, customMetadata: options.customMetadata, httpMetadata: options.httpMetadata });
+      }
+    } as unknown as R2Bucket;
     expect(() => validatePaymentQr("image/png", 4)).not.toThrow();
     expect(() => validatePaymentQr("application/pdf", 4)).toThrow("PAYMENT_QR_MIME_NOT_ALLOWED");
-    const stored = await storePaymentQr(bucket, "JAZZCASH", new Uint8Array([1, 2, 3, 4]).buffer, "image/png");
-    expect(stored.objectKey).toMatch(/^payment-qr\/JAZZCASH\//);
+    const original = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).buffer;
+    const stored = await storePaymentQr(bucket, "JAZZCASH", original, "image/png");
+    const repeated = await storePaymentQr(bucket, "JAZZCASH", original, "image/png");
+    expect(stored.objectKey).toMatch(/^payment-qr\/original\/JAZZCASH\//);
+    expect(repeated.objectKey).toBe(stored.objectKey);
     expect(stored.sha256).toHaveLength(64);
     expect(writes).toHaveLength(1);
+  });
+
+  it("requires matching provenance and independent evidence before QR delivery", async () => {
+    const body = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).buffer;
+    const sha256 = [...new Uint8Array(await crypto.subtle.digest("SHA-256", body))].map((value) => value.toString(16).padStart(2, "0")).join("");
+    const config = { method: "JAZZCASH", qrR2Key: "derivative/JAZZCASH/test.png", qrSha256: sha256, qrMimeType: "image/png", qrSizeBytes: body.byteLength, qrOwnerVerified: true };
+    const asset = { method: "JAZZCASH", objectKey: config.qrR2Key, sha256, mimeType: "image/png", sizeBytes: body.byteLength, decoderAgreement: true, payloadMatch: true, scanPass: true, independentOwnershipVerified: true, independentEvidenceRef: "synthetic-evidence", active: true };
+    await expect(verifyPaymentQrAsset(body, "image/png", config, asset)).resolves.toBeUndefined();
+    await expect(verifyPaymentQrAsset(body, "image/png", { ...config, qrOwnerVerified: false }, asset)).rejects.toThrow("PAYMENT_QR_OWNERSHIP_UNVERIFIED");
+    await expect(verifyPaymentQrAsset(body, "image/png", config, { ...asset, method: "EASYPAISA" })).rejects.toThrow("PAYMENT_QR_METHOD_MISMATCH");
+    await expect(verifyPaymentQrAsset(body, "image/png", config, { ...asset, independentEvidenceRef: null })).rejects.toThrow("PAYMENT_QR_OWNERSHIP_UNVERIFIED");
+    await expect(verifyPaymentQrAsset(body, "image/png", config, { ...asset, scanPass: false })).rejects.toThrow("PAYMENT_QR_PROVENANCE_UNVERIFIED");
   });
 
   it("stores receipts privately with a checksum and safe metadata", async () => {
@@ -108,10 +297,59 @@ describe("product readiness safeguards", () => {
     expect(writes).toHaveLength(1);
   });
 
+  it("fails closed on payment QR ownership, type, size, and checksum mismatches", async () => {
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).buffer;
+    const digest = await crypto.subtle.digest("SHA-256", png);
+    const sha256 = [...new Uint8Array(digest)].map((value) => value.toString(16).padStart(2, "0")).join("");
+    await expect(verifyPaymentQr(png, "image/png", sha256, png.byteLength)).resolves.toBeUndefined();
+    await expect(verifyPaymentQr(png, "image/png", "0".repeat(64), png.byteLength)).rejects.toThrow("PAYMENT_QR_CHECKSUM_MISMATCH");
+    await expect(verifyPaymentQr(new Uint8Array([1, 2, 3]).buffer, "image/png")).rejects.toThrow("PAYMENT_QR_TYPE_MISMATCH");
+  });
+
+  it("associates a repeated private receipt request idempotently", async () => {
+    let bucketWrites = 0;
+    const db = {
+      prepare: (sql: string) => {
+        const statement = {
+          bind: (..._args: unknown[]) => statement,
+          first: async () => sql.includes("SELECT o.order_number")
+            ? { order_number: "FS-100001", state: "PAYMENT_PENDING", payment_id: "synthetic-payment" }
+            : sql.includes("payment_receipts")
+              ? { r2_object_key: "receipts/FS-100001/synthetic/object", sha256: "synthetic-sha256" }
+              : undefined
+        };
+        return statement;
+      }
+    } as unknown as D1Database;
+    const bucket = { put: async () => { bucketWrites += 1; } } as unknown as R2Bucket;
+    const response = await api.fetch(new Request("https://api.example.test/receipts/ingest", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ orderId: "synthetic-order", paymentId: "synthetic-payment", mediaId: "synthetic-media" })
+    }), { DB: db, RECEIPTS: bucket, WHATSAPP_PROVIDER: "mock", META_PROVIDER_ENABLED: "false", DEPLOYMENT_STATE: "LOCAL" } as never);
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ ok: true, alreadyAssociated: true, reviewState: "REVIEW" });
+    expect(bucketWrites).toBe(0);
+  });
+
   it("contains all required D1 tables and no third-party CRM dependency", () => {
     const schema = readFileSync("migrations/0001_initial.sql", "utf8");
-    const migrations = schema + readFileSync("migrations/0002_payment_methods.sql", "utf8") + readFileSync("migrations/0003_lead_sources.sql", "utf8") + readFileSync("migrations/0004_lead_source_page.sql", "utf8") + readFileSync("migrations/0005_customer_whatsapp_numbers.sql", "utf8");
-    for (const table of ["customers", "leads", "lead_sources", "orders", "payments", "payment_receipts", "payment_methods", "meta_attribution", "capi_events", "whatsapp_events", "outbound_messages", "audit_log", "configuration", "outbox_jobs"]) expect(migrations).toContain(`CREATE TABLE ${table}`);
+    const migrations = schema + readFileSync("migrations/0002_payment_methods.sql", "utf8") + readFileSync("migrations/0003_lead_sources.sql", "utf8") + readFileSync("migrations/0004_lead_source_page.sql", "utf8") + readFileSync("migrations/0005_customer_whatsapp_numbers.sql", "utf8") + readFileSync("migrations/0006_payment_configuration.sql", "utf8") + readFileSync("migrations/0007_dynamic_catalog.sql", "utf8") + readFileSync("migrations/0008_catalog_category.sql", "utf8") + readFileSync("migrations/0009_product_pack_quantity.sql", "utf8") + readFileSync("migrations/0010_customer_bsuid.sql", "utf8") + readFileSync("migrations/0011_whatsapp_conversations.sql", "utf8") + readFileSync("migrations/0012_order_number_format.sql", "utf8") + readFileSync("migrations/0013_order_cooldown.sql", "utf8") + readFileSync("migrations/0014_admin_controls.sql", "utf8") + readFileSync("migrations/0015_whatsapp_content_templates.sql", "utf8") + readFileSync("migrations/0016_whatsapp_content_journey.sql", "utf8") + readFileSync("migrations/0017_whatsapp_content_media.sql", "utf8") + readFileSync("migrations/0018_whatsapp_content_action_labels.sql", "utf8") + readFileSync("migrations/0019_payment_qr_ownership.sql", "utf8") + readFileSync("migrations/0020_payment_locale_and_action_cleanup.sql", "utf8") + readFileSync("migrations/0021_payment_qr_asset_audit.sql", "utf8") + readFileSync("migrations/0022_payment_qr_owner_guard.sql", "utf8") + readFileSync("migrations/0023_incident_fulfillment_audit_hold.sql", "utf8") + readFileSync("migrations/0024_reverify_qr_on_recipient_change.sql", "utf8");
+    for (const table of ["customers", "leads", "lead_sources", "orders", "payments", "payment_receipts", "payment_methods", "payment_qr_assets", "payment_configuration", "products", "province_delivery_rates", "order_items", "meta_attribution", "capi_events", "whatsapp_events", "outbound_messages", "audit_log", "configuration", "outbox_jobs", "order_number_sequences", "order_requests", "cooldown_exemptions", "whatsapp_content_templates", "whatsapp_content_template_versions", "whatsapp_content_media", "whatsapp_content_version_media", "whatsapp_content_media_selections", "whatsapp_content_version_action_labels"]) expect(migrations).toContain(`CREATE TABLE ${table}`);
+    expect(migrations).toContain("CREATE TRIGGER payment_methods_require_verified_qr_on_insert");
+    expect(migrations).toContain("CREATE TRIGGER payment_methods_require_verified_qr_on_update");
+    expect(migrations).toContain("CREATE TRIGGER guard_incident_fulfillment_audit");
+    expect(migrations).toContain("CREATE TRIGGER payment_methods_reverify_after_recipient_change");
+    expect(migrations).toContain("ALTER TABLE customers ADD COLUMN bsuid TEXT");
+    expect(migrations).toContain("bsuid_business_id");
+    expect(readFileSync("migrations/0012_order_number_format.sql", "utf8")).not.toMatch(/UPDATE\s+orders\s+SET\s+order_number/i);
+    expect(migrations).toContain("CHECK(advance_amount_pkr IS NULL OR (typeof(advance_amount_pkr) = 'integer' AND advance_amount_pkr > 0))");
+    expect(migrations).toContain("qr_owner_verified");
+    expect(migrations).toContain("total_payable INTEGER NOT NULL CHECK(typeof(total_payable) = 'integer' AND total_payable = seed_price + fertilizer_fee + delivery_fee)");
+    expect(readFileSync("migrations/0007_dynamic_catalog.sql", "utf8")).not.toMatch(/INSERT INTO (products|province_delivery_rates)/);
+    expect(readFileSync("migrations/0008_catalog_category.sql", "utf8")).toContain("ALTER TABLE products ADD COLUMN category");
+    expect(migrations).not.toMatch(/INSERT INTO products\s*\([^)]*\)\s*VALUES\s*\([^)]*\)/i);
+    expect(migrations).not.toMatch(/INSERT INTO province_delivery_rates\s*\([^)]*\)\s*VALUES\s*\([^)]*\)/i);
     expect(schema).not.toContain("google");
   });
 

@@ -9,5 +9,5 @@ export function shouldDeadLetter(attempts: number, maxRetries = 5): boolean {
 }
 
 export function isTerminalOutboxStatus(status: string): boolean {
-  return status === "SENT" || status === "SUCCEEDED" || status === "PERMANENT_FAILURE";
+  return status === "SENT" || status === "SUCCEEDED" || status === "PERMANENT_FAILURE" || status === "DEAD_LETTER";
 }
