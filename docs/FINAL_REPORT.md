@@ -15,7 +15,7 @@
 | P4 messaging compliance | PASS source gates / blocked live | Queue resolves stored customer `wa_id` and locale; text only inside last-inbound 24h; outside requires explicitly approved utility record and flag. Missing CMS/Meta approval blocks/audits. No Meta template submit or approval verification. Current WhatsApp You > View Profile does not match the authorized tester in `rules.md`; no chat opened, switch or message. |
 | P5 local quality | PASS | `npm ci`; 198/198 tests in 21 files; lint/build; audit 0 vulnerabilities; API/Admin Wrangler dry-runs; remote D1 `PRAGMA quick_check=ok`, `foreign_key_check` empty. |
 | P5 isolated deployment/live E2E | BLOCKED | Shared `getfreeseeds-staging` D1 is bound to active V1 worker. Wrangler migration list reports 0001-0031 pending in legacy empty ledger; no migration applied. No isolated V2 D1/backup/rollback, tester identity, or approved utility template. No API/Admin deployment or live milestone test. |
-| P6 docs/branch/PR | PASS for source handoff | All requested records updated. Pushed V2 commit `2c404d17f1b01a0da0201da93b2e1078d96af045`; PR #9 `https://github.com/gardenshop/freeseeds/pull/9` is open against frozen V1. PR #8 unchanged. GitHub reported no checks on the branch; no CI bypass. |
+| P6 docs/branch/PR | PASS for source handoff | All requested records updated. V2 implementation commit `2c404d17f1b01a0da0201da93b2e1078d96af045` and docs handoff are pushed; PR #9 `https://github.com/gardenshop/freeseeds/pull/9` is open against frozen V1. PR #8 unchanged. GitHub reported no checks on the branch; no CI bypass. |
 
 ### Results and Blockers
 

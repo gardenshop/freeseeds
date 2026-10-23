@@ -7,7 +7,7 @@
 - Added new-order-only D1 V2 schedules, ordered Cron/Queue outbox, published EN/UR CMS editor, service-window/template fail-closed behavior, four-hour grace, delivered-notice cancellation gate, review/rejection resume, opt-out and late-payment review paths.
 - Preserved `SENT`/`DELIVERED`/`READ` retry and QR no-R2-read fixes; added delayed/duplicate callback, 503, terminal job and QR no-replay tests.
 - Validation: npm ci,198 tests,lint,build,audit0,API/Admin dry-runs,D1 quick_check ok and foreign_key_check empty. No deployment, migration apply, CMS publication, template submission, real payment, WhatsApp send or financial-state mutation.
-- Pushed `codex/gfs-v2-payments-reminders-001` at `2c404d17f1b01a0da0201da93b2e1078d96af045`; opened separate PR #9 against frozen V1. PR #8 unchanged; no CI checks reported. PR is not approval to merge or deploy.
+- Pushed `codex/gfs-v2-payments-reminders-001` implementation commit `2c404d17f1b01a0da0201da93b2e1078d96af045` and a separate docs handoff. Opened separate PR #9 against frozen V1. PR #8 unchanged; no CI checks reported. PR is not approval to merge or deploy.
 - Release remains NO-GO: current own WhatsApp Profile mismatches the authorized tester; REVIEW payment lacks actual credit evidence; shared staging D1 reports all migrations pending; utility-template approval and isolated V2 staging are unavailable. All V2 flags remain false.
 
 ## 2026-10-23 (GFS-199)

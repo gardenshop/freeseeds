@@ -2,7 +2,7 @@
 
 ## GFS-201 V2 Payment/Reminder Release Gate (2026-10-23)
 
-- Frozen V1 source is commit `d816ba17e6ef14e15400141ea34e734ac9d0a9c8`, branch/tag `release/gfs-v1-frozen-20261023`. Do not modify or recreate it. V2 work is on separate `codex/gfs-v2-payments-reminders-001`, based on that SHA; it was pushed as `2c404d17f1b01a0da0201da93b2e1078d96af045` and PR #9 opened against frozen V1. Do not merge/deploy until release gates pass. PR #8 is unchanged.
+- Frozen V1 source is commit `d816ba17e6ef14e15400141ea34e734ac9d0a9c8`, branch/tag `release/gfs-v1-frozen-20261023`. Do not modify or recreate it. V2 implementation commit is `2c404d17f1b01a0da0201da93b2e1078d96af045` on separate `codex/gfs-v2-payments-reminders-001`; PR #9 is open against frozen V1. Do not merge/deploy until release gates pass. PR #8 is unchanged.
 - Preserve the existing payment delivery fix: `SENT`/`DELIVERED`/`READ` and provider IDs are idempotent success; check completed QR child status before any R2 read; never replay terminal jobs or delivered messages.
 - Never approve from receipt/reference alone. One live REVIEW currently has a receipt, saved reference, verified method and matching order amount, but no independently confirmed receiving-account credit. Keep REVIEW; no real funds, PAID, fulfillment or payment-confirmation WAMID is evidenced.
 - The Admin one-button confirmation and V2 reminder/confirmation engine are source-only. All API V2 flags remain `false`; the connected `getfreeseeds-staging` D1 is shared with the active Worker. Wrangler reports migrations 0001-0031 pending against its legacy empty migration ledger. Do not apply/replay migrations or deploy against that database. Require a verified isolated V2 D1, backup/rollback and schema checks first.
