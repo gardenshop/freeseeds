@@ -2,6 +2,11 @@
 
 ## GFS-204 Simple Confirmation and Isolated V2 Deployment (2026-10-23)
 
+### Final Follow-Up
+
+- Commit `7938dd2e153ffd9920e902f2b2971079f5a73899` is pushed to PR #9. A PAID confirmation now stops pending reminder/cancellation work whenever V2 schedule tables exist, independent of the send flag; schema-absent V1 databases are not queried. Synthetic regression covers reminder flag OFF.
+- Latest isolated Admin Worker `d725396b-4bbc-4542-b42b-5c0fba9abe6e`; API remains `e43e23dd-22a6-4338-b77a-c48bbcee6cad`. Flags remain OFF; unauthenticated V2 Admin retest is 401. GitHub reports no CI checks.
+
 ### Follow-Up
 
 - Added a schema-presence guard so PAID stops reminder/cancellation work even when reminder delivery is OFF, without querying V2 tables on pre-migration V1 databases. Synthetic test and final 204/204 suite pass.

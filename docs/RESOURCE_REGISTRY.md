@@ -2,6 +2,8 @@
 
 ## GFS-204 Deployed Isolated V2 Resources (2026-10-23)
 
+- Latest follow-up commit `7938dd2e153ffd9920e902f2b2971079f5a73899` is pushed to PR #9. Current API Worker is `e43e23dd-22a6-4338-b77a-c48bbcee6cad`, Admin Worker is `d725396b-4bbc-4542-b42b-5c0fba9abe6e`; flags remain OFF; latest unauthenticated Admin retest is 401. Access app and real messaging remain blocked.
+
 - Latest follow-up Admin Worker is `d725396b-4bbc-4542-b42b-5c0fba9abe6e`; its unauthenticated route still returns `401 ACCESS_JWT_REQUIRED`. API remains `e43e23dd-22a6-4338-b77a-c48bbcee6cad`. Schema-aware PAID job-stop fix deployed; all V2 flags remain OFF.
 - Core code commit `c8c4edd2d60fe72771c9282d392f1f167ead5a7` and docs commit `da47f81b3334717850489240958625e7ae144e3f` are pushed. The final schema-aware reminder-stop code/test follow-up is not yet committed. GitHub reports no checks.
 

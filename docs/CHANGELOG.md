@@ -2,6 +2,8 @@
 
 ## 2026-10-23 (GFS-204)
 
+- Final follow-up `7938dd2e153ffd9920e902f2b2971079f5a73899` is pushed. PAID suppression is schema-aware and stops pending V2 jobs even when reminder delivery is OFF; full tests remain 204/204. Latest Admin Worker is `d725396b-4bbc-4542-b42b-5c0fba9abe6e`.
+
 - Follow-up: PAID transition stops existing schedule/stage/outbox jobs when V2 tables exist even if the reminder sending feature flag is OFF. The V1/no-migration case does not query missing tables. Latest isolated Admin version `d725396b-4bbc-4542-b42b-5c0fba9abe6e` was redeployed with this fix, flags OFF; unauthenticated retest remained 401.
 - Simplified V2 Confirm Payment to one explicit credit-attestation checkbox and one primary “Confirm Payment and Mark PAID” action. Saved reference/receipt, verified method, exact amount, order/payment association and REVIEW remain required; separate settlement evidence is optional and hashed. Atomic PAID audit/reminder stop and one idempotent PAID outbox notification are covered by synthetic tests. Real order left REVIEW because no actual account credit was verified.
 - Added cryptographic Cloudflare Access JWT enforcement for the V2 Admin Worker and styled responsive Admin Home links. V2 Admin unauthenticated route returns 401. No existing Admin Access app change.

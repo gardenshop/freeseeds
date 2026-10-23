@@ -2,6 +2,8 @@
 
 ## GFS-204 Simple Credit Confirmation and Isolated Deployment (2026-10-23)
 
+- Final safety follow-up `7938dd2e153ffd9920e902f2b2971079f5a73899` is pushed to PR #9; it stops V2 reminder jobs at PAID even when the send flag is OFF, if the V2 schema exists. V1 databases without V2 schema are unaffected.
+
 - The reported receipt-backed Easypaisa order was re-read in authenticated Admin: it remains `PAYMENT_REVIEW`/`PENDING`, has one receipt, saved reference and verified payment method. No wallet/bank credit was confirmed; never mark this or any real order PAID without the Admin's truthful checked attestation after checking the actual Garden Shop account. Leave REVIEW otherwise.
 - V2 confirmation requires the associated order/payment, exact expected amount, saved transaction reference, verified method, receipt, REVIEW state and explicit checked credit attestation. A separate opaque settlement evidence reference is optional and stored only as a hash. Attestation, reviewer/time/method/amount/reference hash, PAID transition and stop-pending-reminders updates are audited/atomic; retries must not duplicate money transitions or confirmation jobs.
 - Real PAID notifications are only enqueued after authorized approval and remain subject to the original customer's identity, WhatsApp service window/template approval, opt-out and idempotency. No real payment/receipt/transaction data belongs in source, logs, tests, screenshots or docs.

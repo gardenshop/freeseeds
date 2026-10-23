@@ -2,6 +2,8 @@
 
 ## GFS-204 Simple Confirmation and Isolated Staging (2026-10-23)
 
+| Latest follow-up | PASS SYNTHETIC / PUSHED | Commit `7938dd2e153ffd9920e902f2b2971079f5a73899` stops existing V2 reminder/cancellation jobs on PAID whenever the schedule schema exists, even if sending is OFF. Full suite 204/204; latest Admin version `d725396b-4bbc-4542-b42b-5c0fba9abe6e`; no GitHub checks. |
+
 | Follow-up safety check | PASS SYNTHETIC | PAID approval stops active schedules/stages/outbox whenever the V2 table exists even with `PAYMENT_REMINDERS_V2_ENABLED=false`; table absence remains V1-safe. 204/204 full tests pass. |
 
 | Requirement | Result | Evidence / remaining scope |

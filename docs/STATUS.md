@@ -2,6 +2,8 @@
 
 ## GFS-204 Simplified Confirmation and Isolated V2 Deployment (2026-10-23)
 
+- Latest follow-up supersedes earlier version/commit lines in this section: schema-aware PAID stop fix is commit `7938dd2e153ffd9920e902f2b2971079f5a73899` and is pushed. Latest Admin Worker `d725396b-4bbc-4542-b42b-5c0fba9abe6e`; API `e43e23dd-22a6-4338-b77a-c48bbcee6cad`; 204/204 tests, lint/build/audit pass; GitHub has no checks. Access attachment and actual-credit/tester gates remain blocked.
+
 - **Follow-up after core PR commit:** Approval now stops pending reminder/cancellation rows whenever the V2 schedule schema exists, even when the reminder send flag is OFF; databases without that schema are detected without querying absent tables. Synthetic test covers the OFF-flag case.
 - Latest deployed Admin is `d725396b-4bbc-4542-b42b-5c0fba9abe6e` (previous JWT-gated `92809f45-9bcb-403c-9bfc-256915cc085e`); latest API remains `e43e23dd-22a6-4338-b77a-c48bbcee6cad`. Unauthenticated GET retest after Admin redeploy still returned `401 ACCESS_JWT_REQUIRED`.
 - Full suite after follow-up: 204/204 tests, lint/build, audit 0, Wrangler dry-runs. Follow-up source/test work is not yet committed; core `c8c4edd` and docs `da47f81` are pushed; PR #9 still has no CI checks.
