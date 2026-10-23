@@ -16,7 +16,7 @@
 | New real WhatsApp flow | NOT PERFORMED | No new WAMID, screenshot, test order, QR delivery or message in GFS-197 |
 | Reference/receipt/PAID/fulfillment | BLOCKED | No genuine reference or settlement evidence submitted; no payment/approval/dispatch |
 | Regression | PASS local | clean npm ci,168 tests,lint,build,audit0,API/Admin Wrangler dry-runs |
-| Git/CI | PASS push / CI blocked | Source commit `8b193aa7e8851d005372580d238002a65f25fd01` and GFS-197 records commit `b022bb94ec5974f124c283a7cefa801f2ec25506` are on open PR #8. Post-push CI `39907703609` ran zero steps because GitHub reported the billing lock; no bypass. |
+| Git/CI | PASS push / CI blocked | Source commit `8b193aa7e8851d005372580d238002a65f25fd01` and GFS-197 records commits `b022bb94ec5974f124c283a7cefa801f2ec25506`,`5e1e5f05b79452e8001e8800e902c7695b2fb059` are on open PR #8. CI runs `39907703609` and `39909946930` ran zero steps because GitHub reports the billing lock; no bypass. |
 
 - Current live baseline: API `8da54b28-4bec-45b2-9a3f-672225dba843` (rollback `5151e081-98ab-45c4-a57f-3ba43c4e6983`); Admin `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0` (rollback `132f5ea9-324f-482d-b350-f52bc6907758`). D1 migrations0027-0029 and reference uniqueness remain in place; do not replay the empty legacy ledger.
 - Starting-head CI run `39813633938` failed before any steps with GitHub's explicit billing-lock message; no protection bypass.
