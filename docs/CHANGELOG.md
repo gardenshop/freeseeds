@@ -7,7 +7,7 @@
 - Added Admin per-receipt status/upload-time/count display, private reminder history endpoint/panel, PKT schedule/countdown, six stages, due/blocked/review/grace/cancelled/PAID filters and exact successful delivery metadata.
 - Added audited selected-order “Send Updated Notice” with exact locale/version preview, CSRF/eligibility/opt-out/session/template/idempotency gates; CMS publish does not bulk-resend. Migration 0032 stores locale/version/rendered text/sent time for new successful sends.
 - Synthetic regression confirms exact-order image association, ambiguous-media rejection, immediate review/pause, per-order history and preview-version-pinned queue delivery. No real Meta send/WAMID or financial transition.
-- Validation: `npm ci`, 200 tests, lint, build, audit 0 vulnerabilities, API/Admin Wrangler dry-runs and diff-check. No D1 migration/deploy/CMS publish. Shared staging binding, tester/Meta identity, settlement evidence and isolated backup/deployment remain blockers. V1 frozen and `images/` preserved.
+- Validation: `npm ci`, 200 tests, lint, build, audit 0 vulnerabilities, API/Admin Wrangler dry-runs and diff-check. Commit `046565478bea5a4d49c286b83364f48457a792bd` pushed to open PR #9; GitHub reports no CI checks. No D1 migration/deploy/CMS publish. Shared staging binding, tester/Meta identity, settlement evidence and isolated backup/deployment remain blockers. V1 frozen and `images/` preserved.
 
 ## 2026-10-23 (GFS-201)
 

@@ -14,7 +14,7 @@
 | P3 EN/UR CMS + explicit notice | PASS SOURCE/SYNTHETIC | Existing draft/preview/publish/reload workflow retained. Per-order action previews exact selected-language text and CMS version, requires confirmation/reason, audits and queues only the chosen eligible unsent stage; worker pins that version. No real Meta message/template approval. |
 | P4 reminders/grace/cancel | PASS SYNTHETIC / LIVE BLOCKED | Existing durable stages and delayed-delivery grace/cancel logic remain covered by tests; receipt immediately pauses schedule. No actual cron, Meta send, delivery WAMID, real cancellation or customer messaging. |
 | P5 isolated V2 + live test | BLOCKED | API/Admin dry-runs point to shared `getfreeseeds-staging` D1 and all V2 flags are false. No isolated DB, backup/restore proof or migration path verification; migration 0032 not applied. Tester identity and approved utility-template gates were not reverified; no deployment/Chrome live retest. |
-| P6 docs/release | PASS LOCAL / PUSH PENDING | Required protocol/status/test/decision/resource/changelog/report records updated locally. Changes remain on PR #9 branch; PR #8 and frozen V1 tag/branch unchanged. |
+| P6 docs/release | PASS | Required protocol/status/test/decision/resource/changelog/report records updated. Commit `046565478bea5a4d49c286b83364f48457a792bd` pushed to open PR #9; PR #8 and frozen V1 tag/branch unchanged. GitHub reports no CI checks. |
 | Regression | PASS LOCAL | `npm ci`; 200/200 tests across 21 files; lint; TypeScript build; audit 0 vulnerabilities; API/Admin Wrangler dry-run; `git diff --check`. No V1 source files/branch modified. |
 
 ### Go / No-Go and Completion
@@ -23,7 +23,7 @@
 - Isolated V2 staging: **NO-GO** until isolated D1 and backup/restore are verified; shared D1 must not receive migration 0032 or replay 0001-0031.
 - Real payments: **NO-GO** until genuine receiving-account credit evidence is independently verified and authorized Admin confirms it.
 - Live reminders/cancellation: **NO-GO**; feature flags remain OFF; tester identity, Meta template approval and isolated deployment/live acceptance are outstanding.
-- Estimates: overall 70%; P0 60%, P1 70%, P2 90%, P3 85%, P4 80%, P5 10%, P6 75% before push/CI. “PASS synthetic” is never live acceptance.
+- Estimates: overall 70%; P0 60%, P1 70%, P2 90%, P3 85%, P4 80%, P5 10%, P6 90% for source/docs/PR handoff. “PASS synthetic” is never live acceptance.
 
 ## GFS-201 V2 Execution Report (2026-10-23)
 

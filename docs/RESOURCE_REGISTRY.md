@@ -2,7 +2,7 @@
 
 ## GFS-202 Source Inventory (2026-10-23)
 
-- V2 local source at starting/fetched HEAD `695748e`; PR #9 branch `codex/gfs-v2-payments-reminders-001`. New local changes cover receipt resolution, Admin receipt/reminder views, explicit notice queue and migration `0032_payment_reminder_delivery_history.sql`. Nothing deployed/pushed yet.
+- V2 source starts at fetched HEAD `695748e`; receipt/reminder implementation is commit `046565478bea5a4d49c286b83364f48457a792bd`, pushed to open PR #9 on `codex/gfs-v2-payments-reminders-001`. No Worker/D1 deployment; GitHub reports no CI checks.
 - Frozen V1 remains `d816ba17e6ef14e15400141ea34e734ac9d0a9c8`; no V1 checkout/source changes. Existing untracked `images/` remains untouched.
 - Current Admin read: one PAYMENT_PENDING order has 0 receipts; a separate PAYMENT_REVIEW order has 1 receipt/reference. No raw webhook/message association or R2 object read in this run; do not treat these records as the same customer/image.
 - Wrangler API and Admin dry-runs bind `getfreeseeds-staging` D1 (shared), events queue and private receipt R2; reminders, automation, confirmation and utility-template flags remain false. Migration 0032 is local-only; no isolated V2 D1, backup, restore or deployment was verified.

@@ -9,6 +9,7 @@
 - Receipt source fix is synthetic-test verified only. The WhatsApp tester Profile mismatch and shared D1 ledger remain live gates; do not deploy or inspect customer chats to infer which image belongs to which order.
 - Reminder delivery history records actual text, locale, CMS version, sent time and provider status only after send success. A newly published copy is for eligible unsent stages; a selected-order updated notice must show its exact preview, require authenticated/audited confirmation and remain subject to opt-out, service-window/template and idempotency gates.
 - Migration `0032_payment_reminder_delivery_history.sql` is source only. The shared staging database remains forbidden for V2 schema/deployment; require isolated D1, backup/restore proof and a validated migration path.
+- GFS-202 source/tests/docs are pushed as `046565478bea5a4d49c286b83364f48457a792bd` to PR #9. GitHub reports no CI checks; this is not deployment approval.
 
 ## GFS-201 V2 Payment/Reminder Release Gate (2026-10-23)
 

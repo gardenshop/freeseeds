@@ -15,6 +15,7 @@
 | Reminder clock/grace/cancel | PASS SYNTHETIC / BLOCKED LIVE | Existing stage tests cover 15/30/60/210/240/270, delayed grace delivery +30m, duplicate work and suppression. No Cloudflare Cron/Meta live acceptance. |
 | Regression | PASS LOCAL | `npm ci`; 200/200 tests across 21 files; lint/build; `npm audit` 0 vulnerabilities; API/Admin Wrangler dry-runs; `git diff --check`. |
 | V1/deployment/isolation | PASS PRESERVATION / BLOCKED DEPLOY | V1 branch/tag unchanged. Wrangler dry-run shows shared staging D1; flags OFF. No migration replay, backup/restore, deploy or live browser test. |
+| PR #9 handoff/CI | PASS PUSH / NO CHECKS | Commit `046565478bea5a4d49c286b83364f48457a792bd` is on open PR #9 against frozen V1; GitHub reports no checks on the branch. |
 
 ## GFS-201 V2 Completion Snapshot (2026-10-23)
 
