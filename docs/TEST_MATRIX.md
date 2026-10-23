@@ -5,7 +5,7 @@
 | Requirement | Result | Evidence / remaining scope |
 |---|---|---|
 | V1 freeze/source | PASS | Branch/tag `release/gfs-v1-frozen-20261023` still points at `d816ba17e6ef14e15400141ea34e734ac9d0a9c8`; no checkout/reset or V1 branch changes |
-| V2 branch/PR | PARTIAL | Local branch `codex/gfs-v2-payments-reminders-001` based on frozen V1; no origin V2 ref at preflight; PR #8 remains open/untouched; push/PR follow-up pending |
+| V2 branch/PR | PASS | `codex/gfs-v2-payments-reminders-001` pushed at `2c404d17`; PR #9 open against `release/gfs-v1-frozen-20261023`; PR #8 remains untouched; no CI checks were reported |
 | Admin/Cloudflare identity | PASS | Same-origin Admin Access `gisupp@gmail.com`; Wrangler account Get Free Seeds `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; read-only only |
 | Authorized WhatsApp tester | BLOCKED | `list_pages` first; You > View Profile currently shows a phone not matching rules-approved tester. No chat opened, account switch or message; canonical Contact Info not rechecked after mismatch |
 | Live payment review | BLOCKED safely | One masked REVIEW has receipt/reference/verified method/amount match; no independently verified receiving-account credit. No POST approval or financial mutation |

@@ -15,7 +15,7 @@
 | P4 messaging compliance | PASS source gates / blocked live | Queue resolves stored customer `wa_id` and locale; text only inside last-inbound 24h; outside requires explicitly approved utility record and flag. Missing CMS/Meta approval blocks/audits. No Meta template submit or approval verification. Current WhatsApp You > View Profile does not match the authorized tester in `rules.md`; no chat opened, switch or message. |
 | P5 local quality | PASS | `npm ci`; 198/198 tests in 21 files; lint/build; audit 0 vulnerabilities; API/Admin Wrangler dry-runs; remote D1 `PRAGMA quick_check=ok`, `foreign_key_check` empty. |
 | P5 isolated deployment/live E2E | BLOCKED | Shared `getfreeseeds-staging` D1 is bound to active V1 worker. Wrangler migration list reports 0001-0031 pending in legacy empty ledger; no migration applied. No isolated V2 D1/backup/rollback, tester identity, or approved utility template. No API/Admin deployment or live milestone test. |
-| P6 docs/branch/PR | PARTIAL at this report revision | rules, STATUS, TEST_MATRIX, DECISIONS, RESOURCE_REGISTRY, CHANGELOG and FINAL_REPORT updated. Local V2 branch has not yet been pushed; no V2 PR exists. |
+| P6 docs/branch/PR | PASS for source handoff | All requested records updated. Pushed V2 commit `2c404d17f1b01a0da0201da93b2e1078d96af045`; PR #9 `https://github.com/gardenshop/freeseeds/pull/9` is open against frozen V1. PR #8 unchanged. GitHub reported no checks on the branch; no CI bypass. |
 
 ### Results and Blockers
 
@@ -28,12 +28,12 @@
 
 ### Completion and Go/No-Go
 
-- Estimated GFS-201 objective completion: 72%; P0 100%, P1 65%, P2 75%, P3 70%, P4 45%, P5 60%, P6 75%. Percentages distinguish local code/tests from live acceptance.
+- Estimated GFS-201 objective completion: 75%; P0 100%, P1 65%, P2 75%, P3 70%, P4 45%, P5 60%, P6 100% for docs/push/PR handoff. Percentages distinguish local code/tests from live acceptance.
 - V1 frozen source and regression: GO for preservation; no V1 source change. Real payment acceptance remains NO-GO until actual funds evidence and authorized approval.
 - V2 isolated staging: NO-GO until isolated DB/migration baseline, tester identity, approved templates and live acceptance are available.
 - Live payments: NO-GO; settlement credit proof missing.
 - Live reminders/cancellation: NO-GO; V2 flags remain OFF and templates are not approved/deployed.
-- V2 PR: pending push/creation from the dedicated branch; PR #8 remains separate and unchanged.
+- V2 PR #9 is open and mergeable on GitHub; no checks are reported. PR #8 remains separate and unchanged. Merge/deploy remains NO-GO until settlement, tester, template and isolated D1 gates pass.
 
 ## GFS-199 Closing Report (2026-10-23)
 

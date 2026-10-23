@@ -2,7 +2,7 @@
 
 ## 2026-10-23: GFS-201 Preserve V1; Keep V2 Local Until Gates Pass
 
-- V1 remains frozen at `d816ba17e6ef14e15400141ea34e734ac9d0a9c8`; all work stays on the separate local V2 branch. Do not amend V1 or PR #8.
+- V1 remains frozen at `d816ba17e6ef14e15400141ea34e734ac9d0a9c8`; V2 is on the separate branch with PR #9 against frozen V1. Do not amend V1 or PR #8, and do not merge/deploy V2 before the external gates pass.
 - The payment confirmation UI/API was repaired locally into one fail-closed action. Receipt, reference, method verification and amount match do not prove account credit. The current REVIEW remains unchanged until actual receiving-account funds evidence is independently verified and an authorized Admin confirms it.
 - Synthetic one-button approval and bilingual WAMID tests are not real payment acceptance. No real payment/receipt/review/order was changed and no customer message was sent.
 - V2 schedules only explicitly eligible new orders; defaults remain OFF. Do not backfill historical V1 orders. Closed-window jobs remain blocked unless the exact approved utility template is verified. Grace/cancellation, opt-out, review, paid, terminal and late-payment states fail closed.
