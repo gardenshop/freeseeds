@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-196 OFFER Release Gate (2026-10-23)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| GitHub/Cloudflare/Admin identity | PASS | gardenshop/GFS Access match; current PR head `8af1a877` |
+| Chrome inventory | PASS | `list_pages` first; Admin and WhatsApp tabs reused; no new tab or unrelated chat/Meta mutation |
+| Authorized WhatsApp tester | BLOCKED | Own Profile does not match/does not expose rules-approved tester; no account switch |
+| Admin reference Save/settlement UI | PASS deployed | Reference field, Request Reference, credit-evidence confirmation and PAID gate visible |
+| Current reference/customer request | BLOCKED safely | One receipt-backed REVIEW order lacks a ref; API queue dispatch is disabled, window is closed, and no approved utility template exists |
+| OFFER/RECEIPT CMS | PASS draft / publication BLOCKED | OFFER v5 and RECEIPT v2 drafts exist; published v4/v1 unchanged because API is older |
+| API deployment/live callbacks | BLOCKED | API `8da54b28`; tester lock prevents deployment; no outbound WAMID/order/QR/receipt in GFS-196 |
+| D1 access | BLOCKED for direct query | Wrangler/API7403 despite correct account; no account/scope change. Same-origin Admin reads work |
+| Regression | PASS | clean install,168 tests,lint,build,audit0,Wrangler dry-runs |
+| Payment/settlement/PAID | BLOCKED | No actual receipt reference, account-credit evidence, transfer, or Admin approval |
+
 ## GFS-195 Reference and Offer Repair (2026-10-22)
 
 | Requirement | Result | Evidence / blocker |

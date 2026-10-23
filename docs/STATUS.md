@@ -1,5 +1,33 @@
 # Status
 
+## GFS-196 OFFER Runtime Gate (2026-10-23)
+
+- Refreshed PR #8 branch at `8af1a877`; source history includes GFS-195 reference/Offer fixes. Chrome `list_pages` passed first. Existing Admin Test Controls tab1, Meta pages3/4, and WhatsApp tab7 reused; no new tabs, unrelated chats, or Meta settings changed.
+- GFS Admin Access identity `gisupp@gmail.com` is verified. Cloudflare Wrangler identity is the correct GFS account, but direct D1 query again returns API7403. Same-origin Admin reads work; do not widen scopes/change accounts. The legacy migration ledger remains0 and must not be replayed.
+- API remains `8da54b28-4bec-45b2-9a3f-672225dba843`, rollback `5151e081-98ab-45c4-a57f-3ba43c4e6983`; Admin remains `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0`, rollback `132f5ea9-324f-482d-b350-f52bc6907758`. No GFS-196 Worker deployment.
+- Live CMS is PAYMENT v2, OFFER published v4/draft v5, RECEIPT published v1/draft v2. Drafts contain bilingual Continue/Cancel labels and transaction-reference prompt. **No draft was published** because API v8da54 predates the OFFER callback/state machine and receipt reference handler.
+- New real payment reference issue: masked Orders GET shows one PAYMENT_REVIEW payment with a receipt and matching amount but no transaction reference. Admin Save Reference/settlement controls are live. The Request Reference action is disabled because `REFERENCE_REQUESTS_ENABLED=false`, the current service window is not open, and no approved utility template exists. No reference, settlement, approval or customer message was added.
+- WhatsApp own Profile did not match the authorized tester from `rules.md`; Profile view did not expose the approved tester number. No API/webhook deployment, Test Controls reset, customer/test message, WAMID, order, screenshot, receipt or QR delivery was created in GFS-196. Do not switch/relink the number.
+- D1 previously has migrations0027/0028/0029 applied, method-scoped normalized reference uniqueness, quick/FK checks, and the legacy ledger0. This session direct D1 reads return API7403; no D1 changes were attempted.
+- Validation PASS: clean `npm ci`,168/168 tests,lint,build,audit0,API/Admin Wrangler dry-runs and read-only Admin identity checks. CI billing lock remains; no protection bypass.
+- Results: Admin reference UI PASS; OFFER/API source locally tested; CMS publication and API release BLOCKED; real payment E2E BLOCKED; pending-order data unchanged and no customer follow-up.
+- GO/NO-GO: Admin staging GO; API/Offer rollout NO-GO until tester identity is fixed; public leads NO-GO; real payment/financial E2E NO-GO. Estimates project65%; P0 85%,P1 75%,P2 20%,P3 60%,P4 95%.
+- Exact remaining dependencies: restore the authorized tester's existing WhatsApp Profile; regain supported D1 query/health path if it is needed for further change; receive a genuine customer/provider transaction reference and authenticated evidence of actual receiving-account credit; use an approved utility template if the service window is closed. No manual settlement or synthetic reference is permitted.
+
+## GFS-196 OFFER Runtime Gate (2026-10-23)
+
+- Refreshed PR #8 branch at `8af1a877`; source history includes GFS-195 reference/Offer fixes. Chrome `list_pages` passed first. Existing Admin Test Controls tab1, Meta pages3/4, and WhatsApp tab7 reused; no new tabs, unrelated chats, or Meta settings changed.
+- GFS Admin Access identity `gisupp@gmail.com` is verified. Cloudflare Wrangler identity is the correct GFS account, but direct D1 query again returns API7403. Same-origin Admin reads work; do not widen scopes/change accounts. The legacy migration ledger remains0 and must not be replayed.
+- API remains `8da54b28-4bec-45b2-9a3f-672225dba843`, rollback `5151e081-98ab-45c4-a57f-3ba43c4e6983`; Admin remains `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0`, rollback `132f5ea9-324f-482d-b350-f52bc6907758`. No GFS-196 Worker deployment.
+- Live CMS is PAYMENT v2, OFFER published v4/draft v5, RECEIPT published v1/draft v2. Drafts contain bilingual Continue/Cancel labels and transaction-reference prompt. **No draft was published** because API v8da54 predates the OFFER callback/state machine and receipt reference handler.
+- New real payment reference issue: masked Orders GET shows1 receipt-backed PAYMENT_REVIEW payment with amount match and missing reference. Deployed Admin Save Reference and settlement gate remain present. Request Reference stays disabled because `REFERENCE_REQUESTS_ENABLED=false`, service window is not open, and no approved utility template exists. No reference, bank credit or Admin approval was added.
+- WhatsApp own Profile did not match the authorized tester from `rules.md`; Profile view did not expose the approved tester number. No API/webhook deploy, test-control reset, customer/test message, WAMID, order, screenshot, receipt or QR delivery was created in GFS-196. Do not switch/relink the number.
+- D1 previously has migrations0027/0028/0029 applied, method-scoped normalized reference uniqueness, quick/FK checks, and the legacy ledger0. The post-migration bookmark is in the preceding GFS-195 report; no GFS-196 D1 mutation occurred.
+- Validation: clean `npm ci`,168/168 tests,lint,build,audit0,API/Admin Wrangler dry-runs and read-only Admin/browser identity checks PASS. CI run `39813633938` failed before steps due the explicit GitHub billing lock; no bypass.
+- Results: local OFFER/reference source PASS; Admin reference UI PASS; CMS Save/Publish/Reload/output BLOCKED at deployment gate; real OFFER/checkout/WAMIDs BLOCKED; receipt/settlement/PAID/fulfillment NOT PERFORMED.
+- GO/NO-GO: Admin staging reference controls GO; API/OFFER rollout NO-GO until approved tester identity is restored; public leads NO-GO; full real customer payment E2E NO-GO. Estimates project67%; P0 85%,P1 70%,P2 20%,P3 60%,P4 100%,P5 100%.
+- Exact blocker: authorized WhatsApp Web own Profile is mismatched/hidden, so tester identity cannot be verified in Chrome. Current pending payment also lacks its actual transaction reference/receiving-account evidence, and its 24-hour request window is closed with no approved template.
+
 ## GFS-195 Reference UI, API Deployment Blocked (2026-10-22)
 
 - Branch started/fetched at `2f0316d`. GFS Admin Access identity is `gisupp@gmail.com`; Cloudflare account is the correct GFS account. Canonical Meta Graph sender/app subscriptions still read healthy and CAPI/Instant Form remain disabled. Current WhatsApp Web own Profile did **not** match the authorized tester in rules; no message was sent and no profile/number switched.

@@ -1,5 +1,21 @@
 # Get Free Seeds Binding Rules
 
+## GFS-196 OFFER Release and Tester Lock (2026-10-23)
+
+- The current deployed API predates the stable OFFER Continue/Cancel flow and customer transaction-reference capture. Never publish OFFER/RECEIPT drafts or expose new customer-facing callbacks on that API version.
+- API/webhook rollout requires the authorized tester's OWN WhatsApp Profile Phone to match the tester in these rules. A different/hidden Profile is a hard stop; do not switch, relink, create a Profile, or message a different contact to create a superficial PASS.
+- Keep the GFS-195 Admin reference/settlement gate deployed and fail-closed. Reference requests require a proven open 24-hour window or an approved utility template; an Admin button must not imply dispatch when the queue is disabled.
+- Saved CMS drafts are not published. Do not publish EN/UR OFFER/RECEIPT action labels or copy until matching API code is deployed and authenticated real Chrome output can be retested.
+- Preserve the three previously audited/approved method configurations, their current QR hashes, enabled state, settlement proof requirements, and all payment/incident history. No transfer, PAID or fulfillment without genuine provider-credit evidence and authorized review.
+
+## GFS-196 OFFER Release and Tester Lock (2026-10-23)
+
+- The current deployed API predates the stable OFFER Continue/Cancel flow and customer transaction-reference capture. Never publish OFFER/RECEIPT drafts or expose new customer-facing callbacks on that API version.
+- API/webhook rollout requires the authorized tester's OWN WhatsApp Profile Phone to match the tester in these rules. A different/hidden Profile is a hard stop; do not switch, relink, create a Profile, or message a different contact to create a superficial PASS.
+- Keep the GFS-195 Admin reference/settlement gate deployed and fail-closed. Reference requests require a verified open 24-hour window or an approved utility template; an Admin button must not imply dispatch when the queue is disabled.
+- Saved CMS drafts are not published. Do not publish EN/UR OFFER/RECEIPT action labels or copy until matching API code is deployed and authenticated real Chrome output can be retested.
+- Preserve the three previously audited/approved method configurations, their current QR hashes, enabled state, settlement proof requirements, and all payment/incident history. No transfer, PAID or fulfillment without genuine provider-credit evidence and authorized review.
+
 ## GFS-195 Reference and OFFER Safeguards (2026-10-22)
 
 - Admin may store a normalized customer transaction reference only on its receipt-backed PAYMENT_REVIEW payment, bound to the matching order, method and exact persisted total. Database uniqueness, Admin checks and customer normalization must use the same case/ASCII-whitespace canonical form, including legacy values with internal spaces. Audit stores a hash, actor, time and order/payment association; do not log the raw reference.

@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-196 Current Release Gate (2026-10-23)
+
+- PR #8 start head `8af1a877`; GitHub gardenshop, Cloudflare/Admin `gisupp@gmail.com` verified. Existing Admin Test Controls page and WhatsApp Web tab reused. Own WhatsApp Profile does not match the authorized tester; no new account/phone.
+- Admin `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0` and baseline rollback `132f5ea9-324f-482d-b350-f52bc6907758`. API `8da54b28-4bec-45b2-9a3f-672225dba843` remains active with rollback `5151e081-98ab-45c4-a57f-3ba43c4e6983`; GFS-196 did not deploy.
+- Admin reads show OFFER v5/RECEIPT v2 drafts; published versions are OFFER v4/RECEIPT v1 and PAYMENT v2. No publication because current API does not implement the draft callbacks/reference prompt.
+- Direct Wrangler D1 reads API7403; same-origin Admin GETs work. No scope/account change or D1 mutation. Migration ledger history remains empty and no replay is allowed.
+- One receipt-backed REVIEW payment lacks reference; service window closed. Request Reference flag remains false. No reference, settlement evidence, message, order or payment state changed.
+- Local validation168 tests/lint/build/audit0/dry-runs PASS; CI lock not bypassed. No new WAMIDs or screenshots. Existing methods and current QR audits unchanged.
+
 ## GFS-195 Current PAYMENT Review State (2026-10-22)
 
 - Starting PR head `2f0316d`; GitHub gardenshop, Cloudflare/Admin gisupp account and canonical Meta Graph sender verified. Authorized tester own WhatsApp Profile mismatched; no profile/number change and no send.

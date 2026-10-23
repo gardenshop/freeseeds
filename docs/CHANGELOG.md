@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-23 (GFS-196)
+
+- Reverified Admin identity and tester lock. Own WhatsApp Profile does not match the authorized tester; API8da54 remains deployed, and no messages/deployment were performed.
+- OFFER v5/RECEIPT v2 remain drafts; PAYMENT v2 remains published. No CMS publication against an incompatible API.
+- Admin transaction-reference/settlement UX remains available; the current REVIEW row lacks a reference and is outside the service window. No request, reference, paid or fulfillment mutation.
+- Direct Wrangler D1 reads again returned API7403; no account/scope change. Same-origin Admin reads succeeded. Regression168, lint, build, audit0 and dry-runs pass; no CI bypass.
+
 ## 2026-10-22 (GFS-195)
 
 - Deployed Admin Save Reference, duplicate protection, settlement-proof approval gate and reference-request UI. A method-scoped transaction-reference unique index and OFFER action-label schema were applied narrowly; legacy migration ledger untouched.

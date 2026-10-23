@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-23: GFS-196 Do Not Deploy or Message Unverified Tester
+
+Admin identity/reads work but direct Wrangler D1 API7403 remains unresolved; do not change account/scopes. The authorized WhatsApp tester Profile does not match the existing `rules.md` tester. Do not switch/relink/create a profile, deploy the active callback, or send to another recipient to bypass the lock.
+
+OFFER v5 and RECEIPT v2 are saved drafts; keep published v4/v1 until the matching API is deployed and live Chrome output can be retested. Current API8da54 is older, so publishing new Offer actions/reference prompt could create an incompatible customer flow.
+
+Admin reference save and settlement confirmation controls remain live. The current REVIEW payment has no transaction reference and its service window is closed; there is no approved utility template. Do not inspect/export the raw receipt, invent a reference, request payment blindly, mark PAID or fulfill. Actual bank-credit evidence and authorized Admin approval remain necessary.
+
 ## 2026-10-22: GFS-195 Reference Is Not Settlement
 
 The approval error originated because payment approval required `payments.customer_transaction_reference` while Admin supplied no entry field. Admin now saves the reference to the matching receipt-backed order/payment, audits a fingerprint and reviewer, and blocks duplicate references with a method-scoped unique index. Reference capture leaves the order and payment in REVIEW.
