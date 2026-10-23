@@ -1,5 +1,15 @@
 # Get Free Seeds Binding Rules
 
+## GFS-199 Verified OFFER Protocol (2026-10-23)
+
+- Verify the tester through **You > View Profile**, where the own phone is visible. You/Settings/Account alone may hide it; missing digits there are not proof of a different account. Compare the exact own phone and separately confirm the canonical GFS phone through Contact Info. Never switch/relink accounts to satisfy a check.
+- API `9b5f13ae-f023-4fa8-befe-2085bb24cbda` implements LANGUAGE -> OFFER -> CONTINUE_ORDER -> FERTILIZER. OFFER owns its text/image and exactly CONTINUE_ORDER/CANCEL_ORDER. FERTILIZER owns its own media; never attach OFFER media as a substitute for OFFER state.
+- Published CMS is OFFER v5, RECEIPT v2, PAYMENT v2, FERTILIZER v7. English fertilizer labels are Add Fertilizer / Seeds Only; preserve approved Urdu copy and dynamic D1 prices/fees.
+- CANCEL_ORDER is accepted only in OFFER and creates no order/payment; START after cancellation returns LANGUAGE. A stale OFFER Cancel after Continue must not cancel a later state or existing order. Test resets remain authenticated, tester-only and history-preserving.
+- GFS-199 proves new real EN/UR OFFER and pre-payment checkout, not confirmed funds. Keep complete WAMIDs/cropped screenshots privately outside Git. No receipt/reference/funds/PAID/fulfillment may be inferred from a delivered QR.
+- At close, all three test payment text/QR parts were READ but instruction queue jobs were DEAD_LETTER/PAYMENT_TEXT_DELIVERY_FAILED. Preserve terminal jobs; do not replay or claim full payment acceptance until this reconciliation defect is independently repaired/retested.
+- Immediate API rollback is `8da54b28-4bec-45b2-9a3f-672225dba843`; CMS rollback OFFER v4/RECEIPT v1/FERTILIZER v6. Coordinate rollback because the old API lacks OFFER/reference callbacks; retain additive D1 schema and all financial history.
+
 ## GFS-197 OFFER API Deployment Gate (2026-10-23)
 
 - The authenticated Admin profile does not substitute for the approved WhatsApp tester. Before any callback/API deployment or real outbound E2E, verify the tester's OWN WhatsApp Profile Phone against the authorized tester in these rules and verify the GFS sender via Contact Info. If either fails, stop; never switch/relink/create a number/profile or send to another contact.

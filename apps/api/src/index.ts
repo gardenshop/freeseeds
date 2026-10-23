@@ -140,7 +140,7 @@ export function guidedReplyMediaKey(normalized: string, state: string, nextState
   if (state === "NEW" && normalized === "GET_FREE_PACKS") return "OFFER";
   if (state === "PAYMENT_METHOD" || nextState === "PAYMENT_PENDING") return "PAYMENT";
   if (state === "REVIEW" && nextState === "PAYMENT_METHOD") return "CONFIRMATION";
-  const nextStateTemplate: Partial<Record<string, WhatsAppTemplateKey>> = { FERTILIZER: "OFFER", PROVINCE: "PROVINCE_DELIVERY", FULL_NAME: "FIELD_FULL_NAME", ADDRESS: "FIELD_DELIVERY_ADDRESS", NEARBY: "FIELD_NEARBY_PLACE", CITY: "FIELD_CITY", CONTACT: "FIELD_CONTACT_NUMBER", REVIEW: "REVIEW", COMPLETE: "CONFIRMATION" };
+  const nextStateTemplate: Partial<Record<string, WhatsAppTemplateKey>> = { OFFER: "OFFER", FERTILIZER: "FERTILIZER", PROVINCE: "PROVINCE_DELIVERY", FULL_NAME: "FIELD_FULL_NAME", ADDRESS: "FIELD_DELIVERY_ADDRESS", NEARBY: "FIELD_NEARBY_PLACE", CITY: "FIELD_CITY", CONTACT: "FIELD_CONTACT_NUMBER", REVIEW: "REVIEW", COMPLETE: "CONFIRMATION" };
   return nextStateTemplate[nextState];
 }
 

@@ -1,5 +1,31 @@
 # Final Report
 
+## GFS-199 Closing Report (2026-10-23)
+
+**OFFER PRIMARY ACCEPTANCE PASS. Full financial checkout is NOT COMPLETE.** Execution was closed at the user's request without further messages, transfers or approval.
+
+| Requirement | Result | Actual evidence / remaining dependency |
+|---|---|---|
+| Tester OWN Profile | PASS | You > View Profile exposes exact approved phone. Prior Settings-only mismatch diagnosis was incorrect; no account switch/login/relink needed. |
+| Sender/identities | PASS runtime / Meta UI partial | Canonical phone separately confirmed in Contact Info; GFS Admin/Cloudflare verified; canonical Graph permissions/subscription pass. Separate Meta browser operator not visibly reverified; no Meta mutation. |
+| Root cause/deployed repair | PASS | Active API was old; new API9b5f13ae includes existing LANGUAGE -> OFFER routing. Minimal media fix maps OFFER->OFFER,FERTILIZER->FERTILIZER. |
+| API/rollback | PASS | Live `9b5f13ae-f023-4fa8-befe-2085bb24cbda`; rollback `8da54b28-4bec-45b2-9a3f-672225dba843`. Admin unchanged9482bd56. |
+| CMS | PASS published | OFFER5/RECEIPT2 published after API and reloaded/read back; PAYMENT2 retained; FERTILIZER7 English label-only update. |
+| New EN/UR OFFER | PASS REAL | New READ WAMIDs,own notice/image and exactly Continue/Cancel labels before fertilizer. Cropped screenshots/private full IDs under D:\Temp\kilo\gfs199-*. |
+| Continue/Cancel/restart | PASS REAL | EN/UR Continue -> FERTILIZER; EN Cancel -> CANCELLED,zero orders (25 before/after),START -> LANGUAGE. Stale Cancel after Continue cannot mutate state. |
+| Fees/five fields/Review/Back/Place Order | PASS REAL EN | Seven D1 fees,five synthetic fields,Back->CONTACT->REVIEW; new safe test FS-261023-000001,PKR500. Urdu tail beyond fertilizer not fully driven by this agent. |
+| Three payment methods/QR | READ delivery / queue FAIL | Closing D1 reconciliation found new READ text+QR pairs for JazzCash,Easypaisa,Bank Transfer. These selections occurred during pause, not driven by resumed agent; no per-method visual/account screenshot acceptance claimed. Three instruction jobs are DEAD_LETTER/PAYMENT_TEXT_DELIVERY_FAILED despite READ parts. No replay. |
+| Selector-only/duplicates | PARTIAL | Code/local allowlist/idempotency tests pass; live stale Cancel and zero duplicate order on cancel proved. Full selector screenshot/repeated Place Order acceptance not captured before close. |
+| Receipt/reference/Admin review | BLOCKED / NOT PERFORMED | Test order has0 receipts,still PENDING. No genuine transaction reference or receiving-account credit evidence available. No fake receipt/reference inserted. |
+| PAID/fulfillment | BLOCKED / NOT PERFORMED | No authorized transfer,verified funds,Admin approval,PAID or dispatch. No live financial simulation. |
+| D1/history/isolation | PASS preflight/preservation | quick_check/FK clean,7 provinces,reference index present,ledger0 untouched. Recovery bookmark0000018e-00000000-0000510d-cc9254c7e25248832583f2ac94a5dd1e; protected incident hold rechecked true. |
+| Tests | PASS local + OFFER live | clean npm ci,focused40/40,full169/169 across20 files,lint,build,audit0,both dry-runs; new real Chrome OFFER checks. Queue failure prevents overall zero-regression/payment GO claim. |
+
+- Private evidence: `D:\Temp\kilo\gfs199-evidence.json`, `gfs199-offer-en.png`, `gfs199-offer-ur.png`. Full WAMIDs are not committed; all evidence is new for this execution, not GFS-192 screenshots.
+- Rollback must coordinate API8da54b28 with OFFER4/RECEIPT1/FERTILIZER6; retain additive schema and all orders/payment history. Never restore D1 over newer orders without separate incident authorization.
+- Gates: **GO** controlled staging/OFFER. **NO-GO** public leads and complete customer payment/financial E2E. Remaining: queue/read-status reconciliation repair and fresh full method/receipt/reference acceptance, plus genuine credit and authorized financial approval.
+- Estimates completed/remaining: project80/20; P0 95/5 (Meta browser operator residual),P1 100/0,P2 65/35,P3 90/10,P4 100/0 after push. These are estimates, not financial acceptance.
+
 ## GFS-197 OFFER Deployment and E2E (2026-10-23)
 
 **NOT COMPLETE: the API release and live WhatsApp acceptance are blocked by tester identity.** No GFS-197 payment/order/message or financial state was created.

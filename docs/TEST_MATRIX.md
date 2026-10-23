@@ -1,5 +1,22 @@
 # Test Matrix
 
+## GFS-199 New Real OFFER Acceptance (2026-10-23)
+
+| Requirement | Result | Evidence / remaining scope |
+|---|---|---|
+| Own tester phone / sender | PASS | You > View Profile exact approved own phone; Contact Info canonical sender separately; no switch |
+| Cloudflare/Admin/Meta | PASS runtime / UI operator partial | Correct GFS Access/Cloudflare, canonical Graph permissions/subscription; separate browser operator not visibly reverified; no Meta mutation |
+| D1/deploy preflight | PASS | quick_check/FK,traffic,bindings,Time Travel,169 tests; ledger0 untouched |
+| API deployment | PASS | 9b5f13ae,rollback8da54b28; OFFER/FERTILIZER media mapping repaired |
+| CMS publication | PASS | OFFER5,RECEIPT2,PAYMENT2,FERTILIZER7 survive reload/API readback |
+| EN/UR OFFER | PASS REAL | New READ WAMIDs,image,advance/no-COD,two exact labels; private cropped screenshots |
+| Continue/Cancel/START | PASS REAL | Both locales Continue -> FERTILIZER; EN Cancel no order,START -> LANGUAGE; stale Cancel rejected |
+| Five fields/fees/Review/Back | PASS REAL EN | Seven D1 fee rows,five synthetic fields,Back -> CONTACT -> REVIEW |
+| Place Order | PASS REAL | FS-261023-000001,PKR500; no simulated funds |
+| Three text/QR deliveries | READ evidence / queue FAIL | New text+QR READ pairs for all3; read-only reconciliation of pause activity, not agent-driven clicks; instruction jobs DEAD_LETTER/PAYMENT_TEXT_DELIVERY_FAILED |
+| Receipt/reference/review/PAID/fulfillment | BLOCKED / NOT PERFORMED | No genuine reference,account-credit evidence,transfer authorization or payment approval;0 receipts on test order |
+| Regression/isolation | PASS local | ci,169 tests,lint,build,audit0,both dry-runs; private evidence/images/history preserved |
+
 ## GFS-197 OFFER Rollout Gate (2026-10-23)
 
 | Requirement | Result | Evidence / blocker |

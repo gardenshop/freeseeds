@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-199 Current Runtime (2026-10-23)
+
+- API `9b5f13ae-f023-4fa8-befe-2085bb24cbda`; rollback `8da54b28-4bec-45b2-9a3f-672225dba843`. Admin unchanged `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0`; request queue flagfalse.
+- CMS published OFFER5,RECEIPT2,PAYMENT2,FERTILIZER7. Rollback OFFER4/RECEIPT1/FERTILIZER6 coordinated with old API. No ledger replay; predeployment bookmark `0000018e-00000000-0000510d-cc9254c7e25248832583f2ac94a5dd1e`.
+- Own tester exact match via You > View Profile; canonical sender Contact Info match; Admin/Cloudflare correct. Canonical Graph permissions/subscription passed; separate Meta browser operator residual not reverified. No Meta settings or unrelated tabs operated.
+- Agent-driven safe order FS-261023-000001,PKR500;0 receipts,PENDING. Later read-only D1 shows all3 READ text/QR pairs but3 DEAD_LETTER instruction jobs; pause activity is not attributed to the resumed agent. No replay or financial mutation.
+- Fresh full WAMIDs/private screenshots under `D:\Temp\kilo\gfs199-*`, outside Git.169 tests/lint/build/audit0/dry-runs/live OFFER pass. Held incident remains held.
+
 ## GFS-197 Runtime/CMS Gate (2026-10-23)
 
 - PR #8 start head `8af1a877`; current Admin `9482bd56`, API `8da54b28`. Admin identity `gisupp@gmail.com` verified. Current authorized tester Profile does not match; no API deploy, profile change or message.

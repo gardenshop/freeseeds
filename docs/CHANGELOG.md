@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-23 (GFS-199)
+
+- Resolved false tester-mismatch diagnosis by opening You > View Profile; exact own phone and canonical recipient verified without account switch.
+- Deployed API9b5f13ae; published OFFER5/RECEIPT2 and label-only FERTILIZER7; PAYMENT2 unchanged.
+- Corrected OFFER/FERTILIZER media mapping with regression. New real EN/UR OFFER,Continue,Cancel,restart,stale-button,fees,five fields and Review/Back/Place Order evidence captured.
+- Closing reconciliation found all3 payment text/QR pairs READ but instruction jobs DEAD_LETTER; no terminal replay or financial acceptance claim. No funds,reference,receipt,PAID or fulfillment.
+- ci,169 tests,lint,build,audit0,both dry-runs and real Chrome OFFER acceptance pass. Private screenshots/WAMIDs and images/ remain uncommitted.
+
 ## 2026-10-23 (GFS-197)
 
 - Reverified Admin identity and current release/tester gates. API remains old, approved tester Profile mismatch blocks deployment/live sends, and CMS drafts remain unpublished.

@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-23: GFS-199 Tester Was Hidden, Not Mismatched
+
+The phone appears under You > View Profile, not the You/Account settings panel used in earlier checks. The exact approved tester matched without authentication/account change; canonical recipient Contact Info matched separately. Prior mismatch conclusions are superseded. Do not treat a hidden field as a different signed-in account.
+
+After D1 integrity/backup/traffic/binding/local checks, deployed API9b5f13ae and published OFFER5/RECEIPT2. Fixed only the media-state mapping: OFFER owns its notice/image; FERTILIZER owns fertilizer media. Exact new EN/UR OFFER buttons and Continue/Cancel/restart passed real Meta transport. FERTILIZER7 aligns English button labels without changing prices or Urdu copy.
+
+One safe English order was created. At requested close, read-only reconciliation shows all three method text/QR pairs READ but their instruction queue jobs DEAD_LETTER. Do not replay terminal jobs or claim zero-defect payment acceptance. Receipt/reference/settlement/PAID/fulfillment are unperformed and remain protected. Subsequent user activity during the pause is not agent-driven acceptance.
+
 ## 2026-10-23: GFS-197 API Rollout Remains Blocked
 
 The current own WhatsApp Profile does not match/expose the approved tester in `rules.md`. Do not deploy API, publish the saved OFFER/RECEIPT drafts, or send real messages until that existing profile is restored and verified; no alternative account/number is authorized.

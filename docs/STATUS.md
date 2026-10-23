@@ -1,5 +1,21 @@
 # Status
 
+## GFS-199 OFFER Live, Financial Acceptance Incomplete (2026-10-23)
+
+- Fetched requested head `34fbe996`. Chrome list_pages first; existing Admin tab1/WhatsApp tab7 reused. Correct GFS Admin/Cloudflare identity verified. Canonical Meta Graph sender/permissions/WABA subscription passed; separate Meta browser operator was not visibly reverified and no Meta settings changed. Unrelated tabs changed externally during execution; none was operated by this agent.
+- Resolved the repeated tester blocker: earlier checks stopped in You/Settings/Account. **You > View Profile** exposed exactly one own phone matching the approved tester; no different phone observed and no login/relink/account switch needed. Canonical GFS recipient phone independently matched Contact Info.
+- D1 direct SQL works, quick_check=ok/FK violations0, recent webhook traffic verified;7 enabled provinces and reference index present. Ledger0 untouched. Predeployment Time Travel bookmark `0000018e-00000000-0000510d-cc9254c7e25248832583f2ac94a5dd1e`.
+- Deployed API `9b5f13ae-f023-4fa8-befe-2085bb24cbda`, immediate rollback `8da54b28-4bec-45b2-9a3f-672225dba843`. Admin remains `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0`; reference-request flag remains false. Canonical bindings, private R2, CAPI/Instant Form false preserved.
+- Minimal source fix: media lookup now maps OFFER to OFFER and FERTILIZER to FERTILIZER. Previous source lacked OFFER media mapping and incorrectly attached it to Fertilizer. Added regression; no routing redesign.
+- Authenticated CMS publish/reload/readback: OFFER5, RECEIPT2, PAYMENT2. FERTILIZER7 updates only English labels to Add Fertilizer / Seeds Only; approved Urdu/prices unchanged. No incompatible draft published before API deployment.
+- Fresh EN OFFER and UR OFFER both delivered image, advance/no-COD notice and exactly their two localized Continue/Cancel buttons before Fertilizer; both primary WAMIDs READ. EN Cancel -> CANCELLED with total order count unchanged25, START -> LANGUAGE, EN/UR Continue -> FERTILIZER. Stale Cancel at FERTILIZER rejected without state/order mutation.
+- English journey matched7 D1 province fees, five synthetic fields, REVIEW, Back -> CONTACT -> REVIEW, Place Order. New safe test order `FS-261023-000001`,PKR500 (0 seeds+250 fertilizer+250 Punjab). No receipt, reference, funds, PAID or fulfillment by this execution.
+- User paused/resumed execution after Place Order. Read-only closing reconciliation found this test order PAYMENT_PENDING with BANK_TRANSFER and0 receipts. All3 method text+QR pairs are READ, but their instruction jobs are DEAD_LETTER/attempts5/PAYMENT_TEXT_DELIVERY_FAILED. Those selections happened during the pause, not driven by the resumed agent. No terminal job replay; complete financial/queue acceptance remains NO-GO.
+- Private fresh evidence `D:\Temp\kilo\gfs199-evidence.json`; cropped `gfs199-offer-en.png`/`gfs199-offer-ur.png` in the same directory. Full new WAMIDs stay outside Git. Separate later test orders/current conversation changes were not attributed to this agent.
+- Existing incident hold freshly confirmed true via Admin GET. Historical orders/payment approvals untouched; no customer follow-up, transfer, receipt upload, reference invention, settlement approval, CAPI Purchase or dispatch.
+- Validation: clean npm ci; focused40/40; full169/169 across20 files; lint/build/audit0; both Wrangler dry-runs; actual deployment/CMS/live Chrome retests. GitHub billing lock remains independent; no bypass.
+- Gates: controlled staging/OFFER GO; public leads NO-GO; complete payment/financial E2E NO-GO. Estimated project80/20; P0 95/5 (Meta UI operator residual),P1 100/0,P2 65/35,P3 90/10,P4 records completed. OFFER primary acceptance is PASS; full checkout is not COMPLETE.
+
 ## GFS-197 Current Release Gate (2026-10-23)
 
 - Start head `8af1a877` fetched. `list_pages` passed first; current Chrome reused Admin and WhatsApp tabs. Admin Access identity verified as `gisupp@gmail.com`. The authorized tester's own WhatsApp Profile still does not match or expose the tester in `rules.md`; no number/profile switch or message.

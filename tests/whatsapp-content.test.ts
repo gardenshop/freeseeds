@@ -162,6 +162,13 @@ describe("GFS-111 WhatsApp content", () => {
     expect(guidedReplyMediaKey("CHECK_ORDER", "NEW", "NEW")).toBe("ORDER_STATUS");
   });
 
+  it("keeps OFFER media on OFFER and fertilizer media after Continue only", () => {
+    expect(guidedReplyMediaKey("LANG_EN", "LANGUAGE", "OFFER")).toBe("OFFER");
+    expect(guidedReplyMediaKey("LANG_UR", "LANGUAGE", "OFFER")).toBe("OFFER");
+    expect(guidedReplyMediaKey("CONTINUE_ORDER", "OFFER", "FERTILIZER")).toBe("FERTILIZER");
+    expect(guidedReplyMediaKey("CANCEL_ORDER", "OFFER", "CANCELLED")).toBeUndefined();
+  });
+
   it("defines gallery, publish snapshots, and D1 session selections additively", async () => {
     const migration = await readFile("migrations/0017_whatsapp_content_media.sql", "utf8");
     for (const table of ["whatsapp_content_media", "whatsapp_content_version_media", "whatsapp_content_media_selections"]) expect(migration).toContain(`CREATE TABLE ${table}`);
