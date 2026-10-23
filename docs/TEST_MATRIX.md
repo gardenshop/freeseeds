@@ -2,6 +2,8 @@
 
 ## GFS-204 Simple Confirmation and Isolated Staging (2026-10-23)
 
+| Follow-up safety check | PASS SYNTHETIC | PAID approval stops active schedules/stages/outbox whenever the V2 table exists even with `PAYMENT_REMINDERS_V2_ENABLED=false`; table absence remains V1-safe. 204/204 full tests pass. |
+
 | Requirement | Result | Evidence / remaining scope |
 |---|---|---|
 | Reported real REVIEW order | BLOCKED safely | Authenticated Admin GET shows REVIEW/PENDING, one receipt, saved reference and verified method. No actual account credit verified; no approval/POST; order remains REVIEW. |

@@ -2,6 +2,10 @@
 
 ## GFS-204 Simplified Confirmation and Isolated V2 Deployment (2026-10-23)
 
+- **Follow-up after core PR commit:** Approval now stops pending reminder/cancellation rows whenever the V2 schedule schema exists, even when the reminder send flag is OFF; databases without that schema are detected without querying absent tables. Synthetic test covers the OFF-flag case.
+- Latest deployed Admin is `d725396b-4bbc-4542-b42b-5c0fba9abe6e` (previous JWT-gated `92809f45-9bcb-403c-9bfc-256915cc085e`); latest API remains `e43e23dd-22a6-4338-b77a-c48bbcee6cad`. Unauthenticated GET retest after Admin redeploy still returned `401 ACCESS_JWT_REQUIRED`.
+- Full suite after follow-up: 204/204 tests, lint/build, audit 0, Wrangler dry-runs. Follow-up source/test work is not yet committed; core `c8c4edd` and docs `da47f81` are pushed; PR #9 still has no CI checks.
+
 - Fetched PR #9 branch; starting HEAD `8796bdb` equals `origin/codex/gfs-v2-payments-reminders-001`. V1 freeze/PR #8 untouched. No shared-staging D1/R2 writes.
 - Authenticated live Admin read of the reported receipt-backed Easypaisa order: `PAYMENT_REVIEW`/`PENDING`, receipt count 1, saved reference present, payment method verified. No independently confirmed wallet/bank credit. No POST/approve; the live order remains REVIEW and held incident `FS-261019-000001` was not touched.
 - Implemented V2 UI with receipt preview, order/amount/method/saved reference, the required exact credit checkbox, and one primary “Confirm Payment and Mark PAID” button. Separate settlement-evidence input is removed; optional evidence is accepted and hashed by the backend. Backend keeps the receipt/reference/method/amount/order/REVIEW checks, hashes audit references, atomically records attestation/reviewer/time/PAID, stops pending V2 jobs, and queues one idempotent PAID notification even without a historical schedule. Actual order was not approved.

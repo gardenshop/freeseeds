@@ -2,6 +2,7 @@
 
 ## 2026-10-23: GFS-204 Attestation UX, Isolated Workers and Access Gate
 
+- Follow-up decision: stop V2 schedules whenever the schema exists, independently of whether reminder sending is enabled. Use SQLite schema detection so old V1 databases safely skip these queries.
 - The reported live review remains PAYMENT_REVIEW/PENDING with one receipt, saved reference and verified method. Receipt/reference do not prove credit. Only the authenticated Admin's exact checked wallet/bank credit attestation may authorize PAID; no real credit was verified, so no live approval.
 - Make separate settlement evidence reference optional; store any supplied evidence only as a hash. Require exact order/payment/receipt/reference/method/amount/review binding. Atomically save reviewer/time/amount/method/reference hash/attestation/PAID, stop pending V2 jobs, and use one idempotent customer PAID notification outbox.
 - Isolated resources were created and migrations/backup-restore checked only on the new V2 D1. Keep all shared V1/staging DBs and active webhook untouched. Deploy API with no public route, provider/feature flags OFF; deploy Admin with an in-code Cloudflare Access JWT signature gate.

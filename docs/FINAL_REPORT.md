@@ -2,6 +2,12 @@
 
 ## GFS-204 Simple Confirmation and Isolated V2 Deployment (2026-10-23)
 
+### Follow-Up
+
+- Added a schema-presence guard so PAID stops reminder/cancellation work even when reminder delivery is OFF, without querying V2 tables on pre-migration V1 databases. Synthetic test and final 204/204 suite pass.
+- Latest API Worker `e43e23dd-22a6-4338-b77a-c48bbcee6cad`; latest Admin Worker `d725396b-4bbc-4542-b42b-5c0fba9abe6e`; flags remain OFF. V2 Admin unauthenticated retest returned 401. Access application is still not attached.
+- Core source commit `c8c4edd2d60fe72771c9282d392f1f167ead5a7` and docs commit `da47f81b3334717850489240958625e7ae144e3f` are pushed to PR #9. This final safety follow-up remains pending commit/push; GitHub reports no CI checks.
+
 ### Evidence and Results
 
 | Requirement | Result | Evidence / exact blocker |

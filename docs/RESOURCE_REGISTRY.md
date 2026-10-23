@@ -2,6 +2,9 @@
 
 ## GFS-204 Deployed Isolated V2 Resources (2026-10-23)
 
+- Latest follow-up Admin Worker is `d725396b-4bbc-4542-b42b-5c0fba9abe6e`; its unauthenticated route still returns `401 ACCESS_JWT_REQUIRED`. API remains `e43e23dd-22a6-4338-b77a-c48bbcee6cad`. Schema-aware PAID job-stop fix deployed; all V2 flags remain OFF.
+- Core code commit `c8c4edd2d60fe72771c9282d392f1f167ead5a7` and docs commit `da47f81b3334717850489240958625e7ae144e3f` are pushed. The final schema-aware reminder-stop code/test follow-up is not yet committed. GitHub reports no checks.
+
 - V2 source starts at `8796bdb` on `codex/gfs-v2-payments-reminders-001`; GFS-204 commit `c8c4edd2d60fe72771c9282d392f1f167ead5a7` is pushed to PR #9 only. Frozen V1 `d816ba1`, PR #8 and untracked `images/` untouched. GitHub reports no CI checks.
 - Cloudflare account verified as Get Free Seeds / `gisupp@gmail.com`, account ID `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
 - Isolated primary D1 `getfreeseeds-v2-staging`, ID `6f26ba71-3c10-4b6e-97ab-5df7473c21c7`; recovery D1 `getfreeseeds-v2-restore-check`, ID `0a9ae021-64c9-4591-ac3c-aadd29ce13b6`. Both ledger counts 33, no customers/orders/receipts. Schema dump restored at migration 0032, then 0033 applied/verified on both. Shared D1 `getfreeseeds-staging` was not accessed or changed. Native `PRAGMA integrity_check` denied by D1 (`SQLITE_AUTH`).

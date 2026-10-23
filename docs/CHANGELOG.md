@@ -2,6 +2,7 @@
 
 ## 2026-10-23 (GFS-204)
 
+- Follow-up: PAID transition stops existing schedule/stage/outbox jobs when V2 tables exist even if the reminder sending feature flag is OFF. The V1/no-migration case does not query missing tables. Latest isolated Admin version `d725396b-4bbc-4542-b42b-5c0fba9abe6e` was redeployed with this fix, flags OFF; unauthenticated retest remained 401.
 - Simplified V2 Confirm Payment to one explicit credit-attestation checkbox and one primary “Confirm Payment and Mark PAID” action. Saved reference/receipt, verified method, exact amount, order/payment association and REVIEW remain required; separate settlement evidence is optional and hashed. Atomic PAID audit/reminder stop and one idempotent PAID outbox notification are covered by synthetic tests. Real order left REVIEW because no actual account credit was verified.
 - Added cryptographic Cloudflare Access JWT enforcement for the V2 Admin Worker and styled responsive Admin Home links. V2 Admin unauthenticated route returns 401. No existing Admin Access app change.
 - Added migration 0033 to rename the 210/240/270-minute CMS keys while preserving locale/version/state/text history. Created isolated V2 D1, private R2, dedicated Queue/DLQ and restore-check D1; migrations 0001-0033 now exist only on isolated D1s, with zero orders/customers/receipts. Shared staging and active webhook untouched.

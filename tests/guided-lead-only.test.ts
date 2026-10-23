@@ -234,7 +234,7 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(missingAttestation.status).toBe(409);
     expect(await missingAttestation.json()).toMatchObject({error:"CREDIT_ATTESTATION_REQUIRED"});
     expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(testOrder.order.orderId)).toEqual({state:"PAYMENT_REVIEW",payment_status:"PENDING"});
-    const approval=await adminPost(path,bodyData,"true","true","true","true");
+    const approval=await adminPost(path,bodyData,"true","true","false","true");
     expect(approval.status,JSON.stringify(await approval.clone().json())).toBe(200);
     expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(testOrder.order.orderId)).toEqual({state:"PAID",payment_status:"PAID"});
     expect(sqlite.prepare("SELECT review_state,customer_transaction_reference,approved_amount FROM payments WHERE id=?").get(testOrder.paymentId)).toEqual({review_state:"APPROVED",customer_transaction_reference:"SYNTHETIC-TXN-193001",approved_amount:testOrder.amount});
