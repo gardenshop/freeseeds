@@ -1,5 +1,16 @@
 # Get Free Seeds Binding Rules
 
+## GFS-201 V2 Payment/Reminder Release Gate (2026-10-23)
+
+- Frozen V1 source is commit `d816ba17e6ef14e15400141ea34e734ac9d0a9c8`, branch/tag `release/gfs-v1-frozen-20261023`. Do not modify or recreate it. V2 work is on local `codex/gfs-v2-payments-reminders-001`, based on that SHA; no remote V2 branch or PR existed at the start of GFS-201.
+- Preserve the existing payment delivery fix: `SENT`/`DELIVERED`/`READ` and provider IDs are idempotent success; check completed QR child status before any R2 read; never replay terminal jobs or delivered messages.
+- Never approve from receipt/reference alone. One live REVIEW currently has a receipt, saved reference, verified method and matching order amount, but no independently confirmed receiving-account credit. Keep REVIEW; no real funds, PAID, fulfillment or payment-confirmation WAMID is evidenced.
+- The Admin one-button confirmation and V2 reminder/confirmation engine are source-only. All API V2 flags remain `false`; the connected `getfreeseeds-staging` D1 is shared with the active Worker. Wrangler reports migrations 0001-0031 pending against its legacy empty migration ledger. Do not apply/replay migrations or deploy against that database. Require a verified isolated V2 D1, backup/rollback and schema checks first.
+- Current live Worker versions at GFS-201 read-only preflight: API `9b5f13ae-f023-4fa8-befe-2085bb24cbda` (previous `8da54b28-4bec-45b2-9a3f-672225dba843`); Admin `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0` (previous `132f5ea9-324f-482d-b350-f52bc6907758`). Existing published CMS is OFFER5/RECEIPT2/PAYMENT2/FERTILIZER7; V2 utility templates are not Meta-approved.
+- Current Chrome `You > View Profile` did not match the authorized tester recorded in these rules. Stop before opening chats, switching/relinking accounts, sending, deploying callbacks or submitting templates. Reverify the tester's own profile and separately verify canonical sender Contact Info before any real send. No identity mismatch authorizes a number/profile change.
+- GitHub `gardenshop` and Cloudflare `gisupp@gmail.com` identities were verified read-only. Do not bypass the GitHub billing lock. Keep the protected incident, `images/`, private R2, historical orders/payments, canonical sender, no-Hoja rule and new-number WhatsApp lock unchanged.
+- Local acceptance is not live payment acceptance. Synthetic PAID, WAMID, reminder, receipt, callback or cancellation tests must remain labeled synthetic; never report them as real customer/provider evidence.
+
 ## GFS-199 Verified OFFER Protocol (2026-10-23)
 
 - Verify the tester through **You > View Profile**, where the own phone is visible. You/Settings/Account alone may hide it; missing digits there are not proof of a different account. Compare the exact own phone and separately confirm the canonical GFS phone through Contact Info. Never switch/relink accounts to satisfy a check.

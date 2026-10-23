@@ -1,5 +1,40 @@
 # Final Report
 
+## GFS-201 V2 Execution Report (2026-10-23)
+
+### Release Summary
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| P0 V1/V2 preservation | PASS locally | Frozen V1 `d816ba17e6ef14e15400141ea34e734ac9d0a9c8`; V1 branch/tag untouched; V2 local branch starts at same SHA; `images/` preserved; PR #8 not edited |
+| P0 rollback/source inventory | PASS read-only | API `9b5f13ae-f023-4fa8-befe-2085bb24cbda`, prior `8da54b28-4bec-45b2-9a3f-672225dba843`; Admin `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0`, prior `132f5ea9-324f-482d-b350-f52bc6907758`; published CMS OFFER5/RECEIPT2/PAYMENT2/FERTILIZER7 |
+| P1 Admin Confirm Payment defect | PASS source repair / live blocker | Previous separate reference and settlement actions could not provide the exact settlement evidence expected by approval. API's fail-closed blocker is `SETTLEMENT_EVIDENCE_REQUIRED`. New one-button UI submits reference, non-sensitive evidence ref and explicit credit confirmation; reference, PAID/order, hash-only audit and V2 outbox are one D1 batch. No live approval attempted. |
+| P1 real payment and confirmation | BLOCKED safely | Authenticated Admin current masked REVIEW has one receipt, saved reference, verified method and matching amount. No independently verified receiving-account credit evidence. Remains REVIEW; no actual PAID WAMID, customer message, CAPI purchase or fulfillment. Synthetic EN/UR confirmation and retry tests are not financial acceptance. |
+| P2 retry/DEAD_LETTER | PASS local / live retest blocked | Preserved delivered/read/provider-ID success and pre-R2 QR child check. Tests cover reordered duplicate callbacks, provider 503 retry, READ text/QR, no resend/no QR read, and terminal-job ACK. No historical terminal job was replayed. No live Meta retest. |
+| P3 reminders/cancellation | PASS source / not deployed | Atomic new-V2-only schedules at +15m/+30m/+60m/+3h30/+4h/+4h30; durable D1 Queue outbox and stale-claim recovery; payment review/paid/terminal stops, opt-out, rejection resume, late payment LATE_REVIEW, and Admin EN/UR versioned CMS. PAYMENT_GRACE at 4h; CANCELLED_UNPAID only after grace stage DELIVERED and 30 minutes from delayed delivery. Tests use synthetic clock/data only. |
+| P4 messaging compliance | PASS source gates / blocked live | Queue resolves stored customer `wa_id` and locale; text only inside last-inbound 24h; outside requires explicitly approved utility record and flag. Missing CMS/Meta approval blocks/audits. No Meta template submit or approval verification. Current WhatsApp You > View Profile does not match the authorized tester in `rules.md`; no chat opened, switch or message. |
+| P5 local quality | PASS | `npm ci`; 198/198 tests in 21 files; lint/build; audit 0 vulnerabilities; API/Admin Wrangler dry-runs; remote D1 `PRAGMA quick_check=ok`, `foreign_key_check` empty. |
+| P5 isolated deployment/live E2E | BLOCKED | Shared `getfreeseeds-staging` D1 is bound to active V1 worker. Wrangler migration list reports 0001-0031 pending in legacy empty ledger; no migration applied. No isolated V2 D1/backup/rollback, tester identity, or approved utility template. No API/Admin deployment or live milestone test. |
+| P6 docs/branch/PR | PARTIAL at this report revision | rules, STATUS, TEST_MATRIX, DECISIONS, RESOURCE_REGISTRY, CHANGELOG and FINAL_REPORT updated. Local V2 branch has not yet been pushed; no V2 PR exists. |
+
+### Results and Blockers
+
+- GitHub identity read-only verified as `gardenshop`; Cloudflare identity `gisupp@gmail.com` in Get Free Seeds account. No billing/protection bypass.
+- Current V2 feature flags are all `false`: automation, reminders, payment confirmation and utility-template approval. Existing V1 customer flow remains frozen; no historical order is backfilled.
+- CMS V2 templates are local DRAFTs only. Existing published CMS versions were not changed.
+- The `images/` directory, private R2, historical orders/payments and held incident `FS-261019-000001` were not modified.
+- No actual WAMID exists for this work. Mock/synthetic provider IDs are not reported as Meta delivery evidence.
+- Separate Meta browser operator, current canonical sender Contact Info, and utility template approval were not reverified after the tester profile mismatch; no Meta mutation occurred.
+
+### Completion and Go/No-Go
+
+- Estimated GFS-201 objective completion: 72%; P0 100%, P1 65%, P2 75%, P3 70%, P4 45%, P5 60%, P6 75%. Percentages distinguish local code/tests from live acceptance.
+- V1 frozen source and regression: GO for preservation; no V1 source change. Real payment acceptance remains NO-GO until actual funds evidence and authorized approval.
+- V2 isolated staging: NO-GO until isolated DB/migration baseline, tester identity, approved templates and live acceptance are available.
+- Live payments: NO-GO; settlement credit proof missing.
+- Live reminders/cancellation: NO-GO; V2 flags remain OFF and templates are not approved/deployed.
+- V2 PR: pending push/creation from the dedicated branch; PR #8 remains separate and unchanged.
+
 ## GFS-199 Closing Report (2026-10-23)
 
 **OFFER PRIMARY ACCEPTANCE PASS. Full financial checkout is NOT COMPLETE.** Execution was closed at the user's request without further messages, transfers or approval.

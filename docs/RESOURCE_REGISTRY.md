@@ -1,5 +1,16 @@
 # Resource Registry
 
+## GFS-201 V2 Branch and Live Release Inventory (2026-10-23)
+
+- Frozen V1 branch/tag: `release/gfs-v1-frozen-20261023` at `d816ba17e6ef14e15400141ea34e734ac9d0a9c8`. V2 local branch `codex/gfs-v2-payments-reminders-001` starts at the same SHA; no remote V2 ref existed at preflight. GitHub `gardenshop`; open PR #8 left unchanged.
+- Cloudflare account `Get Free Seeds`, account ID `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; authenticated Wrangler identity `gisupp@gmail.com`. Admin Access identity also `gisupp@gmail.com`.
+- Active staging API `9b5f13ae-f023-4fa8-befe-2085bb24cbda`; previous API rollback `8da54b28-4bec-45b2-9a3f-672225dba843`. Active Admin `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0`; previous Admin rollback `132f5ea9-324f-482d-b350-f52bc6907758`. No V2 version deployed.
+- Active existing CMS versions recorded by GFS-199: OFFER5, RECEIPT2, PAYMENT2, FERTILIZER7. V2 template versions are only local migration seeds/DRAFT; no utility template approval/status is recorded.
+- Shared configured DB is `getfreeseeds-staging` / ID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; it is bound to active staging, not an isolated V2 DB. Quick check `ok`, foreign-key check empty. Wrangler reports migrations 0001-0031 pending against a legacy empty ledger; do not apply or replay. V2 migrations 0030/0031 are source-only.
+- Flags in source Wrangler vars: `PAYMENT_AUTOMATION_V2_ENABLED=false`, `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_CONFIRMATION_V2_ENABLED=false`, `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`. No current V2 outbox, Cron, CMS or template approval has been deployed.
+- Current Chrome own WhatsApp Profile does not match the approved tester in `rules.md`; no contact/chat opened or message sent. Canonical sender Contact Info was not freshly rechecked after this mismatch. Do not switch numbers/accounts.
+- `images/` and private R2 remain untouched. Protected incident `FS-261019-000001` remains held. Hoja Seeds has zero runtime integration.
+
 ## GFS-199 Current Runtime (2026-10-23)
 
 - API `9b5f13ae-f023-4fa8-befe-2085bb24cbda`; rollback `8da54b28-4bec-45b2-9a3f-672225dba843`. Admin unchanged `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0`; request queue flagfalse.

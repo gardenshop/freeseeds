@@ -1,5 +1,27 @@
 # Test Matrix
 
+## GFS-201 V2 Completion Snapshot (2026-10-23)
+
+| Requirement | Result | Evidence / remaining scope |
+|---|---|---|
+| V1 freeze/source | PASS | Branch/tag `release/gfs-v1-frozen-20261023` still points at `d816ba17e6ef14e15400141ea34e734ac9d0a9c8`; no checkout/reset or V1 branch changes |
+| V2 branch/PR | PARTIAL | Local branch `codex/gfs-v2-payments-reminders-001` based on frozen V1; no origin V2 ref at preflight; PR #8 remains open/untouched; push/PR follow-up pending |
+| Admin/Cloudflare identity | PASS | Same-origin Admin Access `gisupp@gmail.com`; Wrangler account Get Free Seeds `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; read-only only |
+| Authorized WhatsApp tester | BLOCKED | `list_pages` first; You > View Profile currently shows a phone not matching rules-approved tester. No chat opened, account switch or message; canonical Contact Info not rechecked after mismatch |
+| Live payment review | BLOCKED safely | One masked REVIEW has receipt/reference/verified method/amount match; no independently verified receiving-account credit. No POST approval or financial mutation |
+| Admin single Confirm Payment | PASS LOCAL | Synthetic test verifies transaction ref, settlement evidence, PAID order/payment, hash-only audit and V2 outbox in one D1 batch; repeat approval is idempotent |
+| EN/UR PAID confirmation | PASS SYNTHETIC | Exact required English and Urdu service-window text, target is DB-associated `wa_id`, synthetic WAMID persisted; no real customer message or WAMID |
+| Payment retry/QR handling | PASS LOCAL | READ text / DELIVERED QR callbacks survive reordering; no duplicate send or QR R2 read; 503 retry and terminal-job guard covered; no historical job replay |
+| New-order-only scheduling | PASS LOCAL | Six stages are inserted in the new order transaction only when both V2 creation flags are true; default/V1 path inserts no schedule |
+| Reminder/Cron/Queue | PASS LOCAL | Idempotent ordered outbox, duplicate Cron suppression and stale-claim recovery; per-stage EN/UR published CMS rendering and WAMID/status callback covered |
+| Deadlines/grace/cancel | PASS LOCAL / NOT LIVE | Original order timestamp anchors +15/+30/+60/+210/+240/+270; four-hour state enters PAYMENT_GRACE; cancellation waits for delivered grace notice and at least 30 minutes after delayed delivery |
+| Payment/review/terminal holds | PASS LOCAL | PAID and terminal stop; receipt-backed PAYMENT_REVIEW pauses; Admin rejection reschedules eligible V2; late post-cancel receipt becomes LATE_REVIEW without PAID |
+| Opt-out | PASS LOCAL | STOP REMINDERS recorded by `wa_id` before any customer row/order; subsequent schedule is suppressed; no real WhatsApp preference changed |
+| CMS/template compliance | PASS LOCAL / BLOCKED LIVE | Admin can version EN/UR draft/publish and audits changes; closed-window send requires explicit approved utility evidence; no Meta approval or template submission verified |
+| Migrations/remote D1 | BLOCKED | Read-only quick_check `ok`; foreign_key_check empty. `wrangler d1 migrations list` reports 0001-0031 pending in populated shared staging's legacy empty ledger. No apply/replay permitted; isolated V2 DB required |
+| Install/tests/quality | PASS | `npm ci`; full 198/198 tests; lint/build; `npm audit` 0 vulnerabilities; API/Admin Wrangler dry-runs |
+| Deployment/rollback/live E2E | BLOCKED | No deployment. Active API `9b5f13ae`, rollback `8da54b28`; Admin `9482bd56`, rollback `132f5ea9`. V2 flags OFF. Tester mismatch, shared D1 ledger, actual credit and Meta utility approval block staging |
+
 ## GFS-199 New Real OFFER Acceptance (2026-10-23)
 
 | Requirement | Result | Evidence / remaining scope |

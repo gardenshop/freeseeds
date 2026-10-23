@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-10-23: GFS-201 Preserve V1; Keep V2 Local Until Gates Pass
+
+- V1 remains frozen at `d816ba17e6ef14e15400141ea34e734ac9d0a9c8`; all work stays on the separate local V2 branch. Do not amend V1 or PR #8.
+- The payment confirmation UI/API was repaired locally into one fail-closed action. Receipt, reference, method verification and amount match do not prove account credit. The current REVIEW remains unchanged until actual receiving-account funds evidence is independently verified and an authorized Admin confirms it.
+- Synthetic one-button approval and bilingual WAMID tests are not real payment acceptance. No real payment/receipt/review/order was changed and no customer message was sent.
+- V2 schedules only explicitly eligible new orders; defaults remain OFF. Do not backfill historical V1 orders. Closed-window jobs remain blocked unless the exact approved utility template is verified. Grace/cancellation, opt-out, review, paid, terminal and late-payment states fail closed.
+- The active staging D1 is shared and its migration ledger lists all migrations 0001-0031 pending despite populated data. Do not apply migrations or deploy there. First provision/verify isolated V2 D1 with a known backup/rollback and clean migration baseline.
+- Current WhatsApp own Profile does not match the authorized tester in `rules.md`. Do not open chats, switch/relink accounts, send, deploy callback changes or submit templates until the approved tester is restored and matched; canonical sender must then be separately verified through Contact Info.
+- No Meta template submission/approval, live payment, staging deployment or production migration occurred. The account billing lock is not bypassed. Keep feature and utility-template flags false.
+
 ## 2026-10-23: GFS-199 Tester Was Hidden, Not Mismatched
 
 The phone appears under You > View Profile, not the You/Account settings panel used in earlier checks. The exact approved tester matched without authentication/account change; canonical recipient Contact Info matched separately. Prior mismatch conclusions are superseded. Do not treat a hidden field as a different signed-in account.
