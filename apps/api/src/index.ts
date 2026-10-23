@@ -522,37 +522,40 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
 }
 
 async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }, paymentReminderV2Enabled = false): Promise<boolean> {
-  const message = event.payload && typeof event.payload === "object" ? event.payload as { image?: { id?: string }; document?: { id?: string } } : {};
+  const message = event.payload && typeof event.payload === "object" ? event.payload as { image?: { id?: string }; document?: { id?: string }; context?: { id?: string } } : {};
   const mediaId = message.image?.id ?? message.document?.id;
   if (!mediaId) return false;
   const conversation = await db.prepare("SELECT state,state_data FROM whatsapp_conversations WHERE wa_id=?").bind(event.from).first<{ state: string; state_data: string }>();
-  if (!conversation || !["PAYMENT_PENDING", "PAYMENT_REFERENCE", "PAYMENT_REVIEW", ...(paymentReminderV2Enabled ? ["PAYMENT_GRACE", "CANCELLED_UNPAID"] : [])].includes(conversation.state)) return false;
+  if (!conversation || (!message.context?.id && !["PAYMENT_PENDING", "PAYMENT_REFERENCE", "PAYMENT_REVIEW", ...(paymentReminderV2Enabled ? ["PAYMENT_GRACE", "CANCELLED_UNPAID"] : [])].includes(conversation.state))) return false;
   let data: ConversationData = {};
-  try { data = JSON.parse(conversation.state_data) as ConversationData; } catch { return false; }
-  if (!data.orderId) return false;
-  const record = await db.prepare("SELECT o.id,o.order_number,o.state,p.id AS payment_id,p.method,p.review_state,p.customer_transaction_reference FROM orders o JOIN payments p ON p.order_id=o.id JOIN customers c ON c.id=o.customer_id WHERE o.id=? AND c.wa_id=?").bind(data.orderId,event.from).first<{ id: string; order_number: string; state: string; payment_id: string; method: string | null; review_state: string; customer_transaction_reference: string | null }>();
+  try { data = JSON.parse(conversation.state_data) as ConversationData; } catch { if (!message.context?.id) return false; }
+  if (!data.orderId && !message.context?.id) return false;
+  const recordSelect = `SELECT o.id,o.order_number,o.state,p.id AS payment_id,p.method,p.review_state,p.customer_transaction_reference
+    FROM orders o JOIN payments p ON p.order_id=o.id JOIN customers c ON c.id=o.customer_id`;
+  const eligibleStates = paymentReminderV2Enabled
+    ? "('PAYMENT_PENDING','PAYMENT_GRACE','PAYMENT_REVIEW','CANCELLED_UNPAID')"
+    : "('PAYMENT_PENDING','PAYMENT_REVIEW')";
+  let record = message.context?.id
+    ? await db.prepare(`${recordSelect} JOIN outbound_messages m ON m.order_id=o.id
+        WHERE c.wa_id=? AND m.provider_message_id=?
+          AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR','WHATSAPP_PAYMENT_REMINDER')
+          AND o.state IN ${eligibleStates} AND p.review_state IN ('PENDING','REJECTED','REVIEW','CANCELLED_UNPAID') LIMIT 1`)
+      .bind(event.from, message.context.id).first<{ id: string; order_number: string; state: string; payment_id: string; method: string | null; review_state: string; customer_transaction_reference: string | null }>()
+    : null;
+  if (message.context?.id && !record) return false;
+  if (!record) {
+    const candidates = await db.prepare(`${recordSelect} WHERE c.wa_id=? AND o.state IN ${eligibleStates}
+      AND p.review_state IN ('PENDING','REJECTED','REVIEW','CANCELLED_UNPAID') ORDER BY o.created_at DESC,o.id DESC LIMIT 2`)
+      .bind(event.from).all<{ id: string }>();
+    if (candidates.results?.length !== 1 || candidates.results[0].id !== data.orderId) return false;
+    record = await db.prepare(`${recordSelect} WHERE o.id=? AND c.wa_id=?`)
+      .bind(data.orderId, event.from).first<{ id: string; order_number: string; state: string; payment_id: string; method: string | null; review_state: string; customer_transaction_reference: string | null }>();
+  }
   if (!record) return false;
   if (record.state !== "PAYMENT_PENDING" && record.state !== "PAYMENT_REVIEW" && !(paymentReminderV2Enabled && ["PAYMENT_GRACE", "CANCELLED_UNPAID"].includes(record.state))) return false;
   const status = await contentFor(db, "ORDER_STATUS", "Use Check Order to see the current order and payment status.", {}, `CHAT:${event.from}`, data.language ?? "en");
-  if(record.customer_transaction_reference&&!paymentReminderV2Enabled){
-    const messageText=data.language==="ur"?"ٹرانزیکشن حوالہ محفوظ ہے۔ ادائیگی اب بھی ایڈمن کے جائزے میں ہے؛ اصل رقم کی تصدیق تک اسے PAID نہیں کیا جائے گا۔":"The transaction reference is saved. Payment remains under Admin review and will not be marked PAID until the actual account credit is verified.";
-    await sendConversationReply(db,provider,event.from,event.id,messageText,{buttons:[{id:"CHECK_ORDER",title:whatsAppActionLabel(status,"CHECK_ORDER")} ]});
-    return true;
-  }
   const existing = await db.prepare("SELECT id FROM payment_receipts WHERE provider_media_id=? AND order_id=?").bind(mediaId, record.id).first<{ id: string }>();
-  if (!existing && ((record.state === "PAYMENT_PENDING" && conversation.state === "PAYMENT_PENDING") || (paymentReminderV2Enabled && record.state === "PAYMENT_GRACE" && conversation.state === "PAYMENT_GRACE"))) {
-    const media = await provider.downloadMedia(mediaId);
-    const stored = await storeReceipt(bucket, record.order_number, media);
-    const now = new Date().toISOString();
-    await db.batch([
-      db.prepare("INSERT INTO payment_receipts (id,payment_id,order_id,provider_media_id,r2_object_key,sha256,mime_type,size_bytes,submitted_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), record.payment_id, record.id, media.mediaId, stored.objectKey, stored.sha256, media.mimeType, media.size, now, now),
-      db.prepare("UPDATE payments SET review_state='REVIEW',submitted_at=?,updated_at=? WHERE id=? AND review_state IN ('PENDING','REJECTED')").bind(now, now, record.payment_id),
-      db.prepare("UPDATE orders SET state='PAYMENT_REVIEW',updated_at=? WHERE id=? AND state IN ('PAYMENT_PENDING','PAYMENT_GRACE')").bind(now, record.id),
-       db.prepare("UPDATE whatsapp_conversations SET state='PAYMENT_REFERENCE',last_inbound_message_id=?,updated_at=? WHERE wa_id=? AND state IN ('PAYMENT_PENDING','PAYMENT_GRACE')").bind(event.id, now, event.from),
-      db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "RECEIPT_SUBMITTED", "CUSTOMER", "PAYMENT", record.payment_id, event.id, JSON.stringify({ orderId: record.id, providerMediaId: mediaId }), now)
-    ]);
-  }
-  if (paymentReminderV2Enabled && record.state === "CANCELLED_UNPAID" && !existing) {
+  if (!existing && record.state === "CANCELLED_UNPAID") {
     const media=await provider.downloadMedia(mediaId);
     const stored=await storeReceipt(bucket,record.order_number,media);
     const now=new Date().toISOString();
@@ -561,9 +564,27 @@ async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: R
       db.prepare("UPDATE payments SET review_state='LATE_REVIEW',submitted_at=?,updated_at=? WHERE id=? AND review_state='CANCELLED_UNPAID'").bind(now,now,record.payment_id),
       db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(),"LATE_PAYMENT_EVIDENCE_RECEIVED","CUSTOMER","PAYMENT",record.payment_id,event.id,JSON.stringify({orderId:record.id,orderNumber:record.order_number,providerMediaId:mediaId}),now)
     ]);
-    const message=data.language==="ur"?`منسوخ شدہ آرڈر ${record.order_number} کے لیے ادائیگی کا ثبوت موصول ہو گیا ہے۔ یہ ایڈمن کے جائزے میں ہے؛ ابھی PAID کی تصدیق نہیں ہوئی۔ دوبارہ ادائیگی نہ کریں۔`:`Payment evidence for cancelled order ${record.order_number} was received. It is under Admin review and is not marked PAID. Do not pay again.`;
-    await sendConversationReply(db,provider,event.from,event.id,message,{buttons:[{id:"CHECK_ORDER",title:whatsAppActionLabel(status,"CHECK_ORDER")}]});
+    const lateNotice=data.language==="ur"?`منسوخ شدہ آرڈر ${record.order_number} کے لیے ادائیگی کا ثبوت موصول ہو گیا ہے۔ یہ ایڈمن کے جائزے میں ہے؛ ابھی PAID کی تصدیق نہیں ہوئی۔ دوبارہ ادائیگی نہ کریں۔`:`Payment evidence for cancelled order ${record.order_number} was received. It is under Admin review and is not marked PAID. Do not pay again.`;
+    await sendConversationReply(db,provider,event.from,event.id,lateNotice,{buttons:[{id:"CHECK_ORDER",title:whatsAppActionLabel(status,"CHECK_ORDER")}]});
     return true;
+  }
+  if (!existing) {
+    if (paymentReminderV2Enabled) await db.prepare(`UPDATE payment_reminder_v2_schedules SET status='PAUSED',stop_reason='RECEIPT_INGESTION_PENDING',updated_at=?
+      WHERE payment_id=? AND order_id=? AND status='ACTIVE'`).bind(new Date().toISOString(),record.payment_id,record.id).run();
+    const media = await provider.downloadMedia(mediaId);
+    const stored = await storeReceipt(bucket, record.order_number, media);
+    const now = new Date().toISOString();
+    const receiptStatements = [
+      db.prepare("INSERT INTO payment_receipts (id,payment_id,order_id,provider_media_id,r2_object_key,sha256,mime_type,size_bytes,submitted_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), record.payment_id, record.id, media.mediaId, stored.objectKey, stored.sha256, media.mimeType, media.size, now, now),
+      db.prepare("UPDATE payments SET review_state='REVIEW',submitted_at=COALESCE(submitted_at,?),updated_at=? WHERE id=? AND review_state IN ('PENDING','REJECTED','REVIEW')").bind(now, now, record.payment_id),
+      db.prepare("UPDATE orders SET state='PAYMENT_REVIEW',updated_at=? WHERE id=? AND state IN ('PAYMENT_PENDING','PAYMENT_GRACE','PAYMENT_REVIEW')").bind(now, record.id),
+      db.prepare("UPDATE whatsapp_conversations SET state=CASE WHEN state IN ('PAYMENT_PENDING','PAYMENT_GRACE') THEN 'PAYMENT_REFERENCE' ELSE state END,last_inbound_message_id=?,updated_at=? WHERE wa_id=? AND state IN ('PAYMENT_PENDING','PAYMENT_GRACE','PAYMENT_REFERENCE','PAYMENT_REVIEW') AND state_data LIKE ?")
+        .bind(event.id, now, event.from, `%\"orderId\":\"${record.id}\"%`),
+      db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "RECEIPT_SUBMITTED", "CUSTOMER", "PAYMENT", record.payment_id, event.id, JSON.stringify({ orderId: record.id, providerMediaId: mediaId }), now)
+    ];
+    if (paymentReminderV2Enabled) receiptStatements.push(db.prepare(`UPDATE payment_reminder_v2_schedules SET status='PAUSED',stop_reason='RECEIPT_SUBMITTED',updated_at=?
+      WHERE payment_id=? AND order_id=? AND (status='ACTIVE' OR stop_reason='RECEIPT_INGESTION_PENDING')`).bind(now, record.payment_id, record.id));
+    await db.batch(receiptStatements);
   }
   const receipt = await contentFor(db, "RECEIPT", "Receipt received for order {orderNumber}. Reply with the transaction/reference ID shown in your payment app. Payment remains under Admin review until actual account credit is verified.", { orderNumber: record.order_number }, `CHAT:${event.from}`, data.language ?? "en");
   const orderStatus = await contentFor(db, "ORDER_STATUS", "Use Check Order to see the current order and payment status.", {}, `CHAT:${event.from}`, data.language ?? "en");
@@ -1004,7 +1025,7 @@ export default {
             const stored = await env.DB.prepare("SELECT payload_json FROM outbox_jobs WHERE idempotency_key=?").bind(message.body.idempotencyKey).first<{ payload_json: string }>();
             const payload = stored ? JSON.parse(stored.payload_json) as { stageId: string; stageMinutes: number; scheduleId: string; orderId: string; paymentId: string } : undefined;
             if (!payload || payload.orderId !== message.body.entityId || payload.stageId !== message.body.idempotencyKey) { await block("PAYMENT_REMINDER_PAYLOAD_INVALID", "SKIPPED"); continue; }
-            const current = await env.DB.prepare(`SELECT st.id,st.stage_minutes,st.status AS stage_status,st.due_at,st.idempotency_key,
+            const current = await env.DB.prepare(`SELECT st.id,st.stage_minutes,st.status AS stage_status,st.due_at,st.idempotency_key,st.locale AS pinned_locale,st.template_version AS pinned_template_version,
                 s.id AS schedule_id,s.status AS schedule_status,s.phase,s.source_created_at,
                 o.order_number,o.state,o.archived_at,o.payment_status,o.total_payable,
                 p.id AS payment_id,p.review_state,p.method,c.id AS customer_id,c.wa_id,
@@ -1015,7 +1036,7 @@ export default {
               JOIN orders o ON o.id=s.order_id JOIN payments p ON p.id=s.payment_id JOIN customers c ON c.id=o.customer_id
               LEFT JOIN whatsapp_conversations wc ON wc.wa_id=c.wa_id WHERE st.id=? AND s.id=? AND o.id=? AND p.id=? AND c.id=?`)
               .bind(payload.stageId, payload.scheduleId, payload.orderId, payload.paymentId, (JSON.parse(stored!.payload_json) as { customerId?: string }).customerId ?? "")
-              .first<{ id:string;stage_minutes:number;stage_status:string;due_at:string;idempotency_key:string;schedule_id:string;schedule_status:string;phase:string;source_created_at:string;order_number:string;state:string;archived_at:string|null;payment_status:string;total_payable:number;payment_id:string;review_state:string;method:string|null;customer_id:string;wa_id:string|null;last_inbound_at:string|null;state_data:string|null;has_receipt:number;opted_out:number }>();
+              .first<{ id:string;stage_minutes:number;stage_status:string;due_at:string;idempotency_key:string;pinned_locale:string|null;pinned_template_version:number|null;schedule_id:string;schedule_status:string;phase:string;source_created_at:string;order_number:string;state:string;archived_at:string|null;payment_status:string;total_payable:number;payment_id:string;review_state:string;method:string|null;customer_id:string;wa_id:string|null;last_inbound_at:string|null;state_data:string|null;has_receipt:number;opted_out:number }>();
             if (!current || current.id !== payload.stageId || Number(current.stage_minutes) !== Number(payload.stageMinutes) || current.stage_status !== "QUEUED") { await block("PAYMENT_REMINDER_STATE_MISMATCH", "SKIPPED"); continue; }
             const isCancellation = Number(payload.stageMinutes) === 270;
             const eligible = isCancellation
@@ -1026,15 +1047,16 @@ export default {
             let locale: "en" | "ur";
             try {
               const conversation = JSON.parse(current.state_data ?? "{}") as { language?: unknown };
-              if (conversation.language !== "en" && conversation.language !== "ur") { await block("PAYMENT_REMINDER_CUSTOMER_LOCALE_UNVERIFIED", "SKIPPED"); continue; }
-              locale = conversation.language;
+              if (current.pinned_locale === "en" || current.pinned_locale === "ur") locale=current.pinned_locale;
+              else if (conversation.language === "en" || conversation.language === "ur") locale=conversation.language;
+              else { await block("PAYMENT_REMINDER_CUSTOMER_LOCALE_UNVERIFIED", "SKIPPED"); continue; }
             } catch { await block("PAYMENT_REMINDER_CUSTOMER_LOCALE_UNVERIFIED", "SKIPPED"); continue; }
             const templateKeys: Record<number, string> = { 15:"REMINDER_15M",30:"REMINDER_30M",60:"REMINDER_60M",210:"REMINDER_3H30",240:"GRACE_NOTICE_4H",270:"CANCEL_NOTICE_4H30" };
             const templateKey=templateKeys[Number(payload.stageMinutes)];
             if (!templateKey) { await block("PAYMENT_REMINDER_STAGE_INVALID", "SKIPPED"); continue; }
-            const template = await env.DB.prepare(`SELECT body,utility_template_name,utility_approved_at FROM payment_v2_template_versions
-              WHERE template_key=? AND locale=? AND state='PUBLISHED'`).bind(templateKey,locale)
-              .first<{ body:string;utility_template_name:string|null;utility_approved_at:string|null }>();
+            const template = await env.DB.prepare(`SELECT version,body,utility_template_name,utility_approved_at FROM payment_v2_template_versions
+              WHERE template_key=? AND locale=? AND state IN ('PUBLISHED','SUPERSEDED') AND ((? IS NULL AND state='PUBLISHED') OR version=?)`).bind(templateKey,locale,current.pinned_template_version,current.pinned_template_version)
+              .first<{ version:number;body:string;utility_template_name:string|null;utility_approved_at:string|null }>();
             if (!template?.body) { await block("PAYMENT_REMINDER_CMS_TEMPLATE_NOT_PUBLISHED", "BLOCKED_TEMPLATE"); continue; }
             const serviceWindow = isInsideWhatsAppServiceWindow(current.last_inbound_at);
             if (!serviceWindow && (env.PAYMENT_UTILITY_TEMPLATES_APPROVED !== "true" || !template.utility_template_name || !template.utility_approved_at)) { await block("PAYMENT_REMINDER_UTILITY_TEMPLATE_NOT_APPROVED", "BLOCKED_TEMPLATE"); continue; }
@@ -1051,7 +1073,7 @@ export default {
             if (delivery!=="SENT") throw new Error("PAYMENT_REMINDER_SEND_FAILED");
             const now=new Date().toISOString();
             await env.DB.batch([
-              env.DB.prepare("UPDATE payment_reminder_v2_stages SET status='SENT',template_name=?,last_error=NULL,updated_at=? WHERE id=? AND status='QUEUED'").bind(template.utility_template_name??"SERVICE_WINDOW",now,payload.stageId),
+              env.DB.prepare("UPDATE payment_reminder_v2_stages SET status='SENT',template_name=?,locale=?,template_version=?,rendered_text=?,sent_at=?,last_error=NULL,updated_at=? WHERE id=? AND status='QUEUED'").bind(template.utility_template_name??"SERVICE_WINDOW",locale,template.version,text,now,now,payload.stageId),
               env.DB.prepare("UPDATE outbox_jobs SET status='SENT',attempts=?,last_error=NULL,updated_at=? WHERE idempotency_key=?").bind(nextAttempt,now,message.body.idempotencyKey)
             ]);
             message.ack();

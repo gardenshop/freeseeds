@@ -140,6 +140,7 @@ function orderView(row: Record<string, unknown>, referenceRequestDispatchEnabled
     sizeBytes: Number(receipt.sizeBytes),
     submittedAt: String(receipt.submittedAt),
     createdAt: String(receipt.createdAt),
+    reviewState: String(receipt.reviewState ?? "SUBMITTED"),
     previewUrl: `/api/orders/${encodeURIComponent(String(row.id))}/receipts/${encodeURIComponent(String(receipt.id))}/preview`
   }));
   const receiptCount = Number(row.receipt_count ?? receipts.length);
@@ -339,7 +340,10 @@ const refInput=panel.querySelector('[data-transaction-reference]');refInput.valu
 filters.onsubmit=(event)=>{event.preventDefault();page=1;load()};document.querySelector('#clear').onclick=()=>{filters.reset();tab='all';page=1;selectedId='';load()};document.querySelector('#refresh').onclick=()=>load();document.querySelector('#previous').onclick=()=>{if(page>1){page-=1;selectedId='';load()}};document.querySelector('#next').onclick=()=>{if(page<totalPages){page+=1;selectedId='';load()}};for(const button of document.querySelectorAll('[data-tab]'))button.onclick=()=>{tab=button.dataset.tab;page=1;selectedId='';load()};
  const singlePaymentConfirmation=addActions;addActions=(order)=>{singlePaymentConfirmation(order);const panel=detail.querySelector('.payment-reference-panel');if(!panel)return;panel.querySelector('[data-save-reference]')?.remove();panel.querySelector('[data-settlement-approve]')?.remove();panel.querySelector('h3').textContent='Confirm verified payment';const guidance=panel.querySelector('p.muted');if(guidance)guidance.textContent='Enter the genuine transaction reference and the non-sensitive evidence reference for the actual receiving-account credit. One confirmation saves the reference, marks PAID, audits the approval and enables fulfillment only after every server-side check passes.';const reference=panel.querySelector('[data-transaction-reference]');const evidence=panel.querySelector('[data-settlement-reference]');const credit=panel.querySelector('[data-settlement-confirm]');const confirmButton=actionButton('Confirm Payment',async()=>{if(!confirmAction(order,'Confirm payment after matching the actual account credit'))return;await run('/api/payments/'+encodeURIComponent(order.paymentId)+'/approve',{orderId:order.id,confirmation:order.orderNumber,reference:reference.value,settlementEvidenceRef:evidence.value,settlementConfirmed:credit.checked})},'primary');const referenceValue=()=>String(reference.value||'').trim().replace(/\s+/g,'');const evidenceValue=()=>String(evidence.value||'').trim();const refPattern=/^[A-Za-z0-9][A-Za-z0-9._:/-]{3,79}$/;const evidencePattern=/^[A-Za-z][A-Za-z0-9._:-]{5,127}$/;const orderNumber=String(order.orderNumber||'').replace(/\s+/g,'').toUpperCase();const update=()=>{confirmButton.disabled=!(refPattern.test(referenceValue())&&referenceValue().toUpperCase()!==orderNumber&&evidencePattern.test(evidenceValue())&&credit.checked&&order.paymentMethodVerified&&Number(order.expectedAmountPkr)===Number(order.totalPayablePkr)&&Number(order.receiptCount)>0)};reference.addEventListener('input',update);evidence.addEventListener('input',update);credit.addEventListener('change',update);update();panel.append(confirmButton)};
   const latePaymentReviewActions=addActions;addActions=(order)=>{latePaymentReviewActions(order);if(order.paymentReviewState!=='LATE_REVIEW')return;const notice=document.createElement('section');notice.className='card payment-late-review';notice.innerHTML='<h3>Late payment evidence requires manual resolution</h3><p>No automatic PAID transition is allowed after cancellation. Verify the actual receiving-account credit and then follow the authorized refund or reinstatement process. Do not discard or silently approve the funds.</p>';detail.querySelector('.actions')?.append(notice)};
-  hydrate();setTabs({});load();
+   const reminderFilter=document.createElement('label');reminderFilter.textContent='Reminder queue ';reminderFilter.innerHTML='<span>Reminder queue<select name="reminder"><option value="">Any reminder state</option><option value="due">Due</option><option value="blocked">Blocked</option><option value="review">Payment review</option><option value="grace">Grace</option><option value="cancelled">Cancelled unpaid</option><option value="paid">PAID</option></select></span>';filters.append(reminderFilter);reminderFilter.querySelector('select').onchange=()=>{page=1;load()};
+   const renderOrderDetail=renderDetail;renderDetail=(data)=>{renderOrderDetail(data);const order=data.order;const receiptHeading=[...detail.querySelectorAll('h3,h4')].find((node)=>/receipt/i.test(node.textContent));if(receiptHeading)receiptHeading.textContent=receiptHeading.textContent.trim()+' ('+Number(order.receiptCount||0)+')';for(const receipt of (data.receipts||order.receipts||[])){const link=[...detail.querySelectorAll('a')].find((node)=>node.getAttribute('href')===receipt.previewUrl);if(link){const status=document.createElement('small');status.className='muted';status.textContent=' · '+String(receipt.reviewState||'SUBMITTED')+' · uploaded '+when(receipt.submittedAt);link.parentElement.append(status)}}const panel=document.createElement('section');panel.className='card payment-reminder-panel';panel.innerHTML='<h3>Payment Reminder</h3><p class="muted">Loading private reminder history…</p>';detail.querySelector('.actions')?.before(panel);requestJson('/api/orders/'+encodeURIComponent(order.id)+'/payment-reminders',{cache:'no-store'},undefined,true).then((history)=>{if(!panel.isConnected)return;const labels={15:'15m reminder',30:'30m reminder',60:'60m reminder',210:'3h30 final warning',240:'4h grace notice',270:'4h30 cancellation'};const pkt=(value)=>value?new Date(value).toLocaleString('en-PK',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Karachi'}):'—';const schedule=history.schedule;let html='<p>Order created (PKT): '+esc(pkt(order.createdAt))+' · deadline (PKT): '+esc(pkt(schedule?.source_created_at?new Date(Date.parse(schedule.source_created_at)+270*60000).toISOString():null))+'</p><p>Status: '+esc(order.state)+' · '+esc(order.paymentReviewState||order.paymentStatus)+' · reminder opt-out: '+(history.order?.optedOut?'YES':'NO')+'</p>';if(!history.enabled)html+='<p class="muted">V2 reminder history is disabled in this deployment.</p>';else if(!schedule)html+='<p class="muted">No V2 schedule exists for this order. Existing orders are not enrolled retroactively.</p>';else{html+='<p>Schedule: '+esc(schedule.status)+' / '+esc(schedule.phase)+(schedule.stop_reason?' · '+esc(schedule.stop_reason):'')+(schedule.hold_reason?' · '+esc(schedule.hold_reason):'')+'</p><ol>';for(const stage of history.stages||[]){const countdown=stage.status==='PENDING'?Math.max(0,Math.ceil((Date.parse(stage.due_at)-Date.now())/60000))+' min':'—';html+='<li><strong>'+esc(labels[stage.stage_minutes]||stage.stage_minutes+'m')+'</strong> · '+esc(stage.status)+' · due '+esc(pkt(stage.due_at))+' · '+esc(countdown);if(stage.locale)html+='<br>Locale '+esc(stage.locale)+' · CMS v'+esc(stage.template_version)+' · '+esc(stage.template_name||'service-window');if(stage.rendered_text)html+='<br><pre>'+esc(stage.rendered_text)+'</pre>';if(stage.sent_at)html+='<br>Sent '+esc(pkt(stage.sent_at))+' · attempts '+esc(stage.attempts)+' · WAMID '+esc(stage.wamid||'—');if(stage.delivery_status)html+='<br>Delivery '+esc(stage.delivery_status);if(stage.failure_reason)html+='<br>Failure '+esc(stage.failure_reason);html+='</li>'}html+='</ol>'}panel.innerHTML=html}).catch((error)=>{if(panel.isConnected)panel.innerHTML='<h3>Payment Reminder</h3><p class="error">'+esc(error instanceof Error?error.message:'Reminder history unavailable')+'</p>'})};
+    const addReminderNotice=addActions;addActions=(order)=>{addReminderNotice(order);if(!order.paymentId||!['DETAILS_COMPLETED','PAYMENT_PENDING','PAYMENT_GRACE'].includes(order.state)||order.paymentStatus!=='PENDING'||order.archivedAt)return;const root=detail.querySelector('.actions');if(root)root.append(actionButton('Send Updated Notice',async()=>{const stageMinutes=Number(prompt('Unsent stage minutes: 15, 30, 60, 210, or 240','15'));if(![15,30,60,210,240].includes(stageMinutes))return;const history=await requestJson('/api/orders/'+encodeURIComponent(order.id)+'/payment-reminders',{cache:'no-store'},undefined,true);const stage=(history.stages||[]).find((item)=>Number(item.stage_minutes)===stageMinutes);if(!stage?.preview){showActionError(new Error('No published copy is available for this stage.'));return}const preview=stage.preview;if(!confirm('Exact outgoing text ('+preview.locale+', CMS v'+preview.version+'):'+String.fromCharCode(10,10)+preview.renderedText+String.fromCharCode(10,10)+'Send only to '+order.orderNumber+'?'))return;const reason=prompt('Reason for sending this updated notice');if(!reason||!confirmAction(order,'Send updated notice for stage '+stageMinutes+'m'))return;await run('/api/orders/'+encodeURIComponent(order.id)+'/payment-reminders/send-updated',{stageMinutes,templateVersion:preview.version,reason,confirmation:order.orderNumber})}))};
+   hydrate();reminderFilter.querySelector('select').value=new URLSearchParams(location.search).get('reminder')||'';setTabs({});load();
 </script></body></html>`;
 }
 
@@ -1388,7 +1392,7 @@ const ORDER_ADMIN_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,
   EXISTS(SELECT 1 FROM outbox_jobs ref_request WHERE ref_request.entity_id=p.id AND ref_request.kind='WHATSAPP_TRANSACTION_REFERENCE_REQUEST' AND ref_request.status IN ('SENT','PENDING','RETRY')) AS reference_request_sent,
   (SELECT COUNT(*) FROM payment_receipts receipt_count WHERE receipt_count.order_id=o.id) AS receipt_count,
   COALESCE((SELECT json_group_array(json_object('id',items.id,'itemType',items.item_type,'productCode',items.product_code,'description',items.description,'quantity',items.quantity,'unitPricePkr',items.unit_price_pkr,'lineTotalPkr',items.line_total_pkr,'createdAt',items.created_at)) FROM order_items items WHERE items.order_id=o.id),'[]') AS items_json,
-  COALESCE((SELECT json_group_array(json_object('id',receipts.id,'paymentId',receipts.payment_id,'objectKey',receipts.r2_object_key,'mimeType',receipts.mime_type,'sizeBytes',receipts.size_bytes,'submittedAt',receipts.submitted_at,'createdAt',receipts.created_at)) FROM payment_receipts receipts WHERE receipts.order_id=o.id),'[]') AS receipts_json
+  COALESCE((SELECT json_group_array(json_object('id',receipts.id,'paymentId',receipts.payment_id,'objectKey',receipts.r2_object_key,'mimeType',receipts.mime_type,'sizeBytes',receipts.size_bytes,'submittedAt',receipts.submitted_at,'createdAt',receipts.created_at,'reviewState',receipts.review_state)) FROM payment_receipts receipts WHERE receipts.order_id=o.id),'[]') AS receipts_json
   FROM orders o JOIN customers c ON c.id=o.customer_id
   LEFT JOIN payments p ON p.order_id=o.id`;
 
@@ -1409,6 +1413,9 @@ app.get("/api/orders", async (c) => {
   if (paymentStatus && !["PENDING", "REVIEW", "APPROVED", "REJECTED", "LATE_REVIEW"].includes(paymentStatus)) return c.json({ error: "PAYMENT_STATUS_INVALID" }, 400);
   const fulfillment = c.req.query("fulfillment")?.trim();
   if (fulfillment && !["NOT_STARTED", "PACKING", "DISPATCHED", "DELIVERED", "CANCELLED", "CANCELLED_UNPAID"].includes(fulfillment)) return c.json({ error: "FULFILLMENT_FILTER_INVALID" }, 400);
+  const reminderFilter=c.req.query("reminder")?.trim()??"";
+  if(reminderFilter&&!['due','blocked','review','grace','cancelled','paid'].includes(reminderFilter))return c.json({error:"REMINDER_FILTER_INVALID"},400);
+  if(['due','blocked'].includes(reminderFilter)&&c.env.PAYMENT_REMINDERS_V2_ENABLED!=="true")return c.json({error:"PAYMENT_REMINDERS_V2_DISABLED"},503);
   const date = c.req.query("date")?.trim();
   if (date && !validOrderDate(date)) return c.json({ error: "ORDER_DATE_INVALID" }, 400);
   const page = Number(c.req.query("page") ?? "1");
@@ -1423,6 +1430,12 @@ app.get("/api/orders", async (c) => {
   if (paymentStatus === "APPROVED") commonWhere.push("(p.review_state='APPROVED' OR o.payment_status='PAID')");
   if (paymentStatus === "REJECTED") commonWhere.push("(p.review_state='REJECTED' OR o.payment_status='REJECTED')");
   if (paymentStatus === "LATE_REVIEW") commonWhere.push("p.review_state='LATE_REVIEW' AND o.state='CANCELLED_UNPAID'");
+  if(reminderFilter==='review')commonWhere.push("(p.review_state IN ('REVIEW','LATE_REVIEW') OR o.state='PAYMENT_REVIEW')");
+  if(reminderFilter==='grace')commonWhere.push("o.state='PAYMENT_GRACE'");
+  if(reminderFilter==='cancelled')commonWhere.push("o.state='CANCELLED_UNPAID'");
+  if(reminderFilter==='paid')commonWhere.push("(o.payment_status='PAID' OR p.review_state='APPROVED')");
+  if(reminderFilter==='due'){commonWhere.push("EXISTS(SELECT 1 FROM payment_reminder_v2_stages st JOIN payment_reminder_v2_schedules s ON s.id=st.schedule_id WHERE s.order_id=o.id AND s.status='ACTIVE' AND st.status='PENDING' AND st.due_at<=?)");commonBindings.push(new Date().toISOString())}
+  if(reminderFilter==='blocked')commonWhere.push("EXISTS(SELECT 1 FROM payment_reminder_v2_stages st JOIN payment_reminder_v2_schedules s ON s.id=st.schedule_id WHERE s.order_id=o.id AND st.status IN ('BLOCKED_TEMPLATE','BLOCKED_WINDOW','DEAD_LETTER'))");
   if (fulfillment === "NOT_STARTED") commonWhere.push("o.state='PAID'");
   if (fulfillment && fulfillment !== "NOT_STARTED") { commonWhere.push("o.state=?"); commonBindings.push(fulfillment); }
   if (date) { commonWhere.push("substr(o.created_at,1,10)=?"); commonBindings.push(date); }
@@ -1458,6 +1471,83 @@ app.get("/api/orders", async (c) => {
     total,
     pagination: { page, pageSize, totalPages: Math.ceil(total / pageSize) }
   });
+});
+
+app.get("/api/orders/:id/payment-reminders",async(c)=>{
+  if(!c.env.DB)return c.json({error:"ORDER_ADMIN_UNAVAILABLE"},503);
+  c.header("Cache-Control","private, no-store, max-age=0");
+  if(c.env.PAYMENT_REMINDERS_V2_ENABLED!=="true")return c.json({enabled:false,schedule:null,stages:[]});
+  const order=await c.env.DB.prepare("SELECT o.id,o.order_number,o.state,o.payment_status,o.created_at,o.total_payable,p.review_state,p.method,wc.state_data,EXISTS(SELECT 1 FROM payment_reminder_v2_opt_outs x WHERE x.customer_id=c.id OR x.wa_id=c.wa_id) AS opted_out FROM orders o LEFT JOIN payments p ON p.order_id=o.id LEFT JOIN customers c ON c.id=o.customer_id LEFT JOIN whatsapp_conversations wc ON wc.wa_id=c.wa_id WHERE o.id=?")
+    .bind(c.req.param("id")).first<{id:string;order_number:string;state:string;payment_status:string;created_at:string;total_payable:number;review_state:string|null;method:string|null;state_data:string|null;opted_out:number}>();
+  if(!order)return c.json({error:"ORDER_NOT_FOUND"},404);
+  const schedule=await c.env.DB.prepare("SELECT id,source_created_at,phase,status,stop_reason,held_at,hold_reason FROM payment_reminder_v2_schedules WHERE order_id=? ORDER BY cycle DESC LIMIT 1")
+    .bind(order.id).first<Record<string,unknown>>();
+  if(!schedule)return c.json({enabled:true,order:{createdAt:order.created_at,state:order.state,paymentStatus:order.payment_status,reviewState:order.review_state,optedOut:Boolean(order.opted_out)},schedule:null,stages:[]});
+  const stages=await c.env.DB.prepare(`SELECT st.stage_minutes,st.due_at,st.action,st.status,st.template_name,st.locale,st.template_version,st.rendered_text,st.sent_at,st.completed_at,st.last_error,
+      COALESCE(om.status,ob.status) AS delivery_status,om.provider_message_id AS wamid,om.attempt_count AS attempts,COALESCE(om.last_error,ob.last_error,st.last_error) AS failure_reason
+    FROM payment_reminder_v2_stages st LEFT JOIN outbound_messages om ON om.idempotency_key=st.idempotency_key
+    LEFT JOIN outbox_jobs ob ON ob.idempotency_key=st.idempotency_key WHERE st.schedule_id=? ORDER BY st.stage_minutes`).bind(schedule.id).all<Record<string,unknown>>();
+  let locale:"en"|"ur"="en";try{const language=(JSON.parse(order.state_data??"{}") as {language?:unknown}).language;if(language==="en"||language==="ur")locale=language}catch{/* Use English only when saved locale is invalid. */}
+  const templateKeys:Record<number,string>={15:"REMINDER_15M",30:"REMINDER_30M",60:"REMINDER_60M",210:"REMINDER_3H30",240:"GRACE_NOTICE_4H",270:"CANCEL_NOTICE_4H30"};
+  const enriched=await Promise.all((stages.results??[]).map(async(stage)=>{
+    if(stage.rendered_text||!['PENDING','BLOCKED_TEMPLATE','BLOCKED_WINDOW'].includes(String(stage.status)))return {...stage,preview:null};
+    const template=await c.env.DB.prepare("SELECT version,body FROM payment_v2_template_versions WHERE template_key=? AND locale=? AND state='PUBLISHED'")
+      .bind(templateKeys[Number(stage.stage_minutes)]??"",locale).first<{version:number;body:string}>();
+    if(!template)return {...stage,preview:null};
+    const minutes=Number(stage.stage_minutes),deadlineMinutes=minutes<240?240:270;
+    const deadline=new Date(Date.parse(schedule.source_created_at as string)+deadlineMinutes*60_000).toLocaleString(locale==="ur"?"ur-PK":"en-PK",{timeZone:"Asia/Karachi"});
+    const values:Record<string,string>={orderNumber:order.order_number,amount:String(order.total_payable),deadline,remainingMinutes:String(Math.max(0,deadlineMinutes-minutes)),paymentMethod:order.method??(locale==="ur"?"فعال ادائیگی کا طریقہ منتخب کریں":"choose an available payment method")};
+    return {...stage,preview:{locale,version:template.version,renderedText:template.body.replace(/\{(orderNumber|amount|deadline|remainingMinutes|paymentMethod)\}/g,(_match,key:string)=>values[key]??"")}};
+  }));
+  return c.json({enabled:true,order:{createdAt:order.created_at,state:order.state,paymentStatus:order.payment_status,reviewState:order.review_state,optedOut:Boolean(order.opted_out)},schedule,stages:enriched});
+});
+
+app.post("/api/orders/:id/payment-reminders/send-updated",async(c)=>{
+  if(!validCsrf(c))return c.json({error:"CSRF_VALIDATION_FAILED"},403);
+  if(c.env.PAYMENT_REMINDERS_V2_ENABLED!=="true"||c.env.PAYMENT_AUTOMATION_V2_ENABLED!=="true"||!c.env.EVENTS)return c.json({error:"PAYMENT_REMINDERS_V2_DISABLED"},503);
+  let body:{stageMinutes?:unknown;templateVersion?:unknown;confirmation?:unknown;reason?:unknown};try{body=await c.req.json()}catch{return c.json({error:"INVALID_REQUEST"},400)}
+  const minutes=Number(body.stageMinutes),reason=requiredReason(body.reason);
+  if(![15,30,60,210,240].includes(minutes)||!reason)return c.json({error:"PAYMENT_REMINDER_UPDATE_INVALID"},400);
+  const current=await c.env.DB.prepare(`SELECT s.id AS schedule_id,s.status AS schedule_status,s.held_at,o.id AS order_id,o.order_number,o.state,o.payment_status,o.archived_at,
+      p.id AS payment_id,p.review_state,c.id AS customer_id,c.wa_id,wc.state_data,st.id AS stage_id,st.status AS stage_status
+    FROM payment_reminder_v2_schedules s JOIN orders o ON o.id=s.order_id JOIN payments p ON p.id=s.payment_id
+    JOIN customers c ON c.id=o.customer_id JOIN whatsapp_conversations wc ON wc.wa_id=c.wa_id
+    JOIN payment_reminder_v2_stages st ON st.schedule_id=s.id WHERE o.id=? AND st.stage_minutes=? ORDER BY s.cycle DESC LIMIT 1`)
+    .bind(c.req.param("id"),minutes).first<{schedule_id:string;schedule_status:string;held_at:string|null;order_id:string;order_number:string;state:string;payment_status:string;archived_at:string|null;payment_id:string;review_state:string;customer_id:string;wa_id:string;state_data:string;stage_id:string;stage_status:string}>();
+  if(!current)return c.json({error:"PAYMENT_REMINDER_STAGE_NOT_FOUND"},404);
+  if(body.confirmation!==current.order_number)return c.json({error:"CONFIRMATION_REQUIRED"},400);
+  if(current.archived_at||current.schedule_status!=="ACTIVE"||current.held_at||current.payment_status!=="PENDING"||current.review_state!=="PENDING"||!['DETAILS_COMPLETED','PAYMENT_PENDING','PAYMENT_GRACE'].includes(current.state)||!['PENDING','BLOCKED_TEMPLATE','BLOCKED_WINDOW','SKIPPED'].includes(current.stage_status))return c.json({error:"PAYMENT_REMINDER_STAGE_NOT_ELIGIBLE"},409);
+  const receipt=await c.env.DB.prepare("SELECT 1 FROM payment_receipts WHERE payment_id=? AND order_id=? AND review_state='SUBMITTED' LIMIT 1").bind(current.payment_id,current.order_id).first();
+  const optedOut=await c.env.DB.prepare("SELECT 1 FROM payment_reminder_v2_opt_outs WHERE customer_id=? OR wa_id=? LIMIT 1").bind(current.customer_id,current.wa_id).first();
+  if(receipt||optedOut)return c.json({error:receipt?"PAYMENT_REMINDER_RECEIPT_PENDING":"PAYMENT_REMINDER_OPTED_OUT"},409);
+  let conversationData:Record<string,unknown>;try{conversationData=JSON.parse(current.state_data)}catch{return c.json({error:"PAYMENT_REMINDER_CUSTOMER_LOCALE_UNVERIFIED"},409)}
+  if(conversationData.language!=="en"&&conversationData.language!=="ur")return c.json({error:"PAYMENT_REMINDER_CUSTOMER_LOCALE_UNVERIFIED"},409);
+  if(!Number.isInteger(body.templateVersion)||Number(body.templateVersion)<1)return c.json({error:"PAYMENT_REMINDER_TEMPLATE_VERSION_REQUIRED"},400);
+  const templateKey=({15:"REMINDER_15M",30:"REMINDER_30M",60:"REMINDER_60M",210:"REMINDER_3H30",240:"GRACE_NOTICE_4H"} as Record<number,string>)[minutes];
+  const template=await c.env.DB.prepare("SELECT version FROM payment_v2_template_versions WHERE template_key=? AND locale=? AND version=? AND state='PUBLISHED'")
+    .bind(templateKey,conversationData.language,Number(body.templateVersion)).first();
+  if(!template)return c.json({error:"PAYMENT_REMINDER_TEMPLATE_CHANGED_RELOAD_PREVIEW"},409);
+  const now=new Date().toISOString(),key=`payment-reminder-v2:${current.order_id}:${current.payment_id}:stage:${minutes}`;
+  const job={kind:"WHATSAPP_PAYMENT_REMINDER",idempotencyKey:key,entityId:current.order_id,schemaVersion:1};
+  const results=await c.env.DB.batch([
+    c.env.DB.prepare(`INSERT INTO outbox_jobs(id,idempotency_key,kind,entity_id,payload_json,status,attempts,available_at,created_at,updated_at)
+      VALUES(?,?,?,?,?,'PENDING',0,?,?,?) ON CONFLICT(idempotency_key) DO UPDATE SET status='PENDING',attempts=0,last_error=NULL,available_at=excluded.available_at,updated_at=excluded.updated_at
+      WHERE outbox_jobs.status IN ('PERMANENT_FAILURE','DEAD_LETTER','RETRY')`).bind(crypto.randomUUID(),key,job.kind,current.order_id,JSON.stringify({scheduleId:current.schedule_id,stageId:current.stage_id,stageMinutes:minutes,orderId:current.order_id,paymentId:current.payment_id,customerId:current.customer_id}),now,now,now),
+    c.env.DB.prepare(`UPDATE payment_reminder_v2_stages SET status='QUEUED',locale=?,template_version=?,last_error=NULL,updated_at=? WHERE id=? AND status IN ('PENDING','BLOCKED_TEMPLATE','BLOCKED_WINDOW','SKIPPED')
+      AND EXISTS(SELECT 1 FROM outbox_jobs WHERE idempotency_key=? AND status='PENDING')
+      AND EXISTS(SELECT 1 FROM payment_reminder_v2_schedules s JOIN orders o ON o.id=s.order_id JOIN payments p ON p.id=s.payment_id
+        WHERE s.id=? AND s.status='ACTIVE' AND s.held_at IS NULL AND o.archived_at IS NULL AND o.payment_status='PENDING'
+        AND o.state IN ('DETAILS_COMPLETED','PAYMENT_PENDING','PAYMENT_GRACE') AND p.review_state='PENDING'
+        AND NOT EXISTS(SELECT 1 FROM payment_receipts r WHERE r.payment_id=p.id AND r.order_id=o.id AND r.review_state='SUBMITTED')
+        AND NOT EXISTS(SELECT 1 FROM payment_reminder_v2_opt_outs x WHERE x.customer_id=o.customer_id OR x.wa_id=(SELECT c.wa_id FROM customers c WHERE c.id=o.customer_id)))`)
+      .bind(conversationData.language,Number(body.templateVersion),now,current.stage_id,key,current.schedule_id),
+    c.env.DB.prepare(`INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at)
+      SELECT ?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM payment_reminder_v2_stages WHERE id=? AND status='QUEUED' AND updated_at=?)`)
+      .bind(crypto.randomUUID(),"PAYMENT_REMINDER_UPDATED_NOTICE_QUEUED","ADMIN",c.env.ADMIN_EMAIL,"ORDER",current.order_id,crypto.randomUUID(),JSON.stringify({stageMinutes:minutes,reason,orderNumber:current.order_number}),now,current.stage_id,now)
+  ]);
+  if(Number(results[1]?.meta?.changes??0)!==1)return c.json({error:"PAYMENT_REMINDER_STAGE_NOT_ELIGIBLE"},409);
+  try{await c.env.EVENTS.send(job)}catch{/* Cron dispatch recovers the durable outbox job. */}
+  return c.json({ok:true,queued:true,stageMinutes:minutes,templateVersion:Number(body.templateVersion),idempotencyKey:key});
 });
 
 app.get("/api/orders/:id", async (c) => {

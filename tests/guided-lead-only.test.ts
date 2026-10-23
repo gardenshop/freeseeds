@@ -338,6 +338,40 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sqlite.prepare("SELECT state FROM orders WHERE id=?").get(testOrder.order.orderId)).not.toEqual({state:"PAID"});
   });
 
+  it("attaches a payment-context image to its exact order and pauses its V2 reminders", async () => {
+    const targetWa="923001234568";
+    const target=await createSyntheticPaymentReviewOrder(targetWa,"receipt-context-target",true);
+    sqlite.prepare("DELETE FROM payment_receipts WHERE order_id=?").run(target.order.orderId);
+    sqlite.prepare("UPDATE orders SET state='PAYMENT_PENDING',payment_status='PENDING' WHERE id=?").run(target.order.orderId);
+    sqlite.prepare("UPDATE payments SET review_state='PENDING' WHERE id=?").run(target.paymentId);
+
+    sqlite.prepare("DELETE FROM whatsapp_conversations WHERE wa_id=?").run(targetWa);
+    const other=await createSyntheticPaymentReviewOrder(targetWa,"receipt-context-other",true);
+    sqlite.prepare("UPDATE whatsapp_conversations SET state='PAYMENT_REFERENCE',state_data=? WHERE wa_id=?")
+      .run(JSON.stringify({language:"en",orderId:other.order.orderId,orderNumber:other.order.orderNumber}),targetWa);
+    sqlite.prepare("INSERT INTO outbound_messages(id,idempotency_key,order_id,kind,provider_message_id,status,attempt_count,created_at,updated_at) VALUES(?,?,?,?,?,'SENT',1,?,?)")
+      .run("receipt-context-payment-instructions","receipt-context-payment-instructions",target.order.orderId,"WHATSAPP_PAYMENT_TEXT","synthetic-payment-instruction-target",new Date().toISOString(),new Date().toISOString());
+
+    const putsBefore=receiptBucketPut.mock.calls.length;
+    await callback([{from:targetWa,id:"synthetic-ambiguous-receipt",timestamp:"1792497600",type:"image",image:{id:"synthetic-ambiguous-media",mime_type:"image/png"}}],[],true);
+    expect(receiptBucketPut).toHaveBeenCalledTimes(putsBefore);
+    const originalFetch=globalThis.fetch.bind(globalThis);
+    let beginDownload!:()=>void,finishMetadata!: (response:Response)=>void;
+    const downloadStarted=new Promise<void>((resolve)=>{beginDownload=resolve});
+    const metadataResponse=new Promise<Response>((resolve)=>{finishMetadata=resolve});
+    vi.stubGlobal("fetch",vi.fn((input:RequestInfo|URL,init?:RequestInit)=>String(input).includes("synthetic-late-media-context")?(beginDownload(),metadataResponse):originalFetch(input,init)));
+    const ingestion=callback([{from:targetWa,id:"synthetic-context-receipt",timestamp:"1792497601",type:"image",image:{id:"synthetic-late-media-context",mime_type:"image/png"},context:{id:"synthetic-payment-instruction-target"}}],[],true);
+    await downloadStarted;
+    expect(sqlite.prepare("SELECT status,stop_reason FROM payment_reminder_v2_schedules WHERE order_id=?").get(target.order.orderId)).toEqual({status:"PAUSED",stop_reason:"RECEIPT_INGESTION_PENDING"});
+    finishMetadata(Response.json({url:"https://synthetic-media.test/receipt",mime_type:"image/png",file_size:4}));
+    await ingestion;
+
+    expect(sqlite.prepare("SELECT order_id,review_state FROM payment_receipts WHERE provider_media_id='synthetic-late-media-context'").get()).toEqual({order_id:target.order.orderId,review_state:"SUBMITTED"});
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(target.order.orderId)).toEqual({state:"PAYMENT_REVIEW",payment_status:"PENDING"});
+    expect(sqlite.prepare("SELECT status,stop_reason FROM payment_reminder_v2_schedules WHERE order_id=?").get(target.order.orderId)).toEqual({status:"PAUSED",stop_reason:"RECEIPT_SUBMITTED"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(other.order.orderId)).toEqual({count:1});
+  });
+
   it("renders and records a published reminder and advances its delivery stage only on Meta callback", async () => {
     const testOrder=await createSyntheticPaymentReviewOrder(sender,"reminder-queue-order");
     sqlite.prepare("DELETE FROM payment_receipts WHERE order_id=?").run(testOrder.order.orderId);
@@ -360,6 +394,12 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sends.at(-1)).toMatchObject({to:sender,type:"text",text:{body:`Reminder ${testOrder.order.orderNumber}: PKR ${testOrder.amount}; 225 min left until ${expectedDeadline}; method JAZZCASH.`}});
     const sent=sqlite.prepare("SELECT provider_message_id,status FROM outbound_messages WHERE idempotency_key=?").get(idempotencyKey) as {provider_message_id:string;status:string};
     expect(sent).toMatchObject({provider_message_id:`synthetic-outbound-${sends.length}`,status:"SENT"});
+    expect(sqlite.prepare("SELECT locale,template_version,rendered_text,sent_at FROM payment_reminder_v2_stages WHERE id=?").get(stageId)).toMatchObject({locale:"en",template_version:1,rendered_text:`Reminder ${testOrder.order.orderNumber}: PKR ${testOrder.amount}; 225 min left until ${expectedDeadline}; method JAZZCASH.`,sent_at:expect.any(String)});
+    const historyResponse=await admin.fetch(new Request(`https://admin.example.test/api/orders/${testOrder.order.orderId}/payment-reminders`,{headers:{"cf-access-authenticated-user-email":"admin@example.test"}}),{DB:db,ADMIN_EMAIL:"admin@example.test",PAYMENT_REMINDERS_V2_ENABLED:"true"} as never);
+    const history=await historyResponse.json() as {schedule:{status:string};order:{optedOut:boolean};stages:Array<{stage_minutes:number;locale:string;template_version:number;rendered_text:string;wamid:string}>};
+    expect(historyResponse.status).toBe(200);
+    expect(history.order.optedOut).toBe(false);
+    expect(history.stages.find((stage)=>stage.stage_minutes===15)).toMatchObject({locale:"en",template_version:1,rendered_text:`Reminder ${testOrder.order.orderNumber}: PKR ${testOrder.amount}; 225 min left until ${expectedDeadline}; method JAZZCASH.`,wamid:sent.provider_message_id});
     expect(sqlite.prepare("SELECT status FROM payment_reminder_v2_stages WHERE id=?").get(stageId)).toEqual({status:"SENT"});
     sqlite.prepare("UPDATE payment_reminder_v2_stages SET due_at='2000-01-01T00:00:00.000Z' WHERE schedule_id=? AND stage_minutes=270").run(schedule.scheduleId);
     await callback([], [{field:"messages",value:{metadata:{phone_number_id:phoneId},statuses:[{id:sent.provider_message_id,status:"delivered"}]}}]);
@@ -396,6 +436,34 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     await callback([], [{field:"messages",value:{metadata:{phone_number_id:phoneId},statuses:[{id:graceWamid,status:"delivered"}]}}]);
     expect(sqlite.prepare("SELECT status FROM payment_reminder_v2_stages WHERE id=?").get(graceStage)).toEqual({status:"DELIVERED"});
     expect(Date.parse(sqlite.prepare("SELECT due_at FROM payment_reminder_v2_stages WHERE schedule_id=? AND stage_minutes=270").get(schedule.scheduleId)?.due_at as string)).toBeGreaterThan(Date.now()+29*60_000);
+  });
+
+  it("previews and explicitly queues one updated reminder with a pinned CMS version", async () => {
+    const testOrder=await createSyntheticPaymentReviewOrder(sender,"explicit-updated-reminder",true);
+    sqlite.prepare("DELETE FROM payment_receipts WHERE order_id=?").run(testOrder.order.orderId);
+    sqlite.prepare("UPDATE orders SET state='PAYMENT_PENDING',payment_status='PENDING' WHERE id=?").run(testOrder.order.orderId);
+    sqlite.prepare("UPDATE payments SET review_state='PENDING' WHERE id=?").run(testOrder.paymentId);
+    sqlite.prepare("UPDATE whatsapp_conversations SET last_inbound_at=?,last_inbound_message_id=? WHERE wa_id=?").run(new Date().toISOString(),"synthetic-updated-reminder-window",sender);
+    const publishedAt=new Date().toISOString();
+    sqlite.prepare("UPDATE payment_v2_template_versions SET body=?,state='PUBLISHED',published_at=?,published_by='SYNTHETIC_TEST' WHERE template_key='REMINDER_15M' AND locale='en' AND version=1")
+      .run("Updated {orderNumber}: PKR {amount}, {remainingMinutes} minutes remain before {deadline} using {paymentMethod}.",publishedAt);
+    const identity={"cf-access-authenticated-user-email":"admin@example.test"};
+    const historyResponse=await admin.fetch(new Request(`https://admin.example.test/api/orders/${testOrder.order.orderId}/payment-reminders`,{headers:identity}),{DB:db,ADMIN_EMAIL:"admin@example.test",PAYMENT_REMINDERS_V2_ENABLED:"true"} as never);
+    const history=await historyResponse.json() as {stages:Array<{stage_minutes:number;preview:{locale:string;version:number;renderedText:string}|null}>};
+    const preview=history.stages.find((stage)=>stage.stage_minutes===15)?.preview;
+    expect(preview).toMatchObject({locale:"en",version:1});
+    expect(preview?.renderedText).toContain(`Updated ${testOrder.order.orderNumber}: PKR ${testOrder.amount}`);
+    const queued=await adminPost(`/api/orders/${testOrder.order.orderId}/payment-reminders/send-updated`,{stageMinutes:15,templateVersion:1,reason:"Synthetic acceptance case",confirmation:testOrder.order.orderNumber},"true","false","true","true");
+    expect(queued.status).toBe(200);
+    expect(sqlite.prepare("SELECT status,locale,template_version FROM payment_reminder_v2_stages WHERE schedule_id=(SELECT id FROM payment_reminder_v2_schedules WHERE order_id=?) AND stage_minutes=15").get(testOrder.order.orderId)).toEqual({status:"QUEUED",locale:"en",template_version:1});
+    expect(sqlite.prepare("SELECT action FROM audit_log WHERE entity_type='ORDER' AND entity_id=? AND action='PAYMENT_REMINDER_UPDATED_NOTICE_QUEUED'").get(testOrder.order.orderId)).toEqual({action:"PAYMENT_REMINDER_UPDATED_NOTICE_QUEUED"});
+    const key=`payment-reminder-v2:${testOrder.order.orderId}:${testOrder.paymentId}:stage:15`;
+    const message={body:{kind:"WHATSAPP_PAYMENT_REMINDER",idempotencyKey:key,entityId:testOrder.order.orderId,schemaVersion:1 as const},attempts:1,ack:vi.fn(),retry:vi.fn()};
+    await api.queue({messages:[message]} as never,env("false","true","true"));
+    expect(message.ack).toHaveBeenCalledOnce();
+    expect(sqlite.prepare("SELECT status,last_error FROM outbox_jobs WHERE idempotency_key=?").get(key)).toEqual({status:"SENT",last_error:null});
+    expect(sends.at(-1)).toMatchObject({to:sender,type:"text",text:{body:preview?.renderedText}});
+    expect(sqlite.prepare("SELECT status,locale,template_version,rendered_text FROM payment_reminder_v2_stages WHERE id=?").get(`${sqlite.prepare("SELECT id FROM payment_reminder_v2_schedules WHERE order_id=?").get(testOrder.order.orderId)?.id}:stage:15`)).toMatchObject({status:"SENT",locale:"en",template_version:1,rendered_text:preview?.renderedText});
   });
 
   it("creates milestones only for explicitly V2-enabled new submissions", async () => {

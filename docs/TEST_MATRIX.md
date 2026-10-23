@@ -1,5 +1,21 @@
 # Test Matrix
 
+## GFS-202 Receipt and Reminder Regression (2026-10-23)
+
+| Requirement | Result | Evidence / remaining scope |
+|---|---|---|
+| Actual screenshot/order reconciliation | BLOCKED | Admin read showed one pending/0-receipt order and a separate review/1-receipt order. This run did not inspect authenticated webhook event, sender/context association or private R2 object; no live attribution claim. |
+| Receipt source association | PASS SYNTHETIC | Two unpaid orders for one sender: reply-to payment WAMID attaches image only to its matching order; no-context ambiguous image is not downloaded/attached. |
+| Receipt review and scheduler hold | PASS SYNTHETIC | Receipt insert, payment/order REVIEW, audit and immediate V2 schedule PAUSED are tested; late receipt remains LATE_REVIEW and not PAID. |
+| Admin receipt visibility | PASS SOURCE/TEST | Count and per-receipt status/timestamp/private preview are part of order detail; existing refresh/no-store fetch retained. No live UI screenshot/deploy. |
+| Reminder Admin panel/history | PASS SOURCE/TEST | Authenticated private API includes order PKT times, six stage statuses, current preview or actual sent text, locale/CMS version, WAMID, attempts, delivery and failure; due/blocked/review/grace/cancelled/PAID filters added. |
+| Edited notice | PASS SYNTHETIC | Exact selected-order locale/version preview and explicit confirmation/reason; audit/outbox idempotency, worker pins version and test verifies exact sent copy. No actual Meta transport. |
+| Delivery history schema | PASS LOCAL | Migration 0032 adds nullable locale/version/rendered_text/sent_at. New migration not applied remotely. |
+| P1 payment confirmation | PASS SYNTHETIC / BLOCKED LIVE | Existing settlement-evidence guard and synthetic confirmation tests remain; no genuine receiving-account credit or real PAID WAMID. |
+| Reminder clock/grace/cancel | PASS SYNTHETIC / BLOCKED LIVE | Existing stage tests cover 15/30/60/210/240/270, delayed grace delivery +30m, duplicate work and suppression. No Cloudflare Cron/Meta live acceptance. |
+| Regression | PASS LOCAL | `npm ci`; 200/200 tests across 21 files; lint/build; `npm audit` 0 vulnerabilities; API/Admin Wrangler dry-runs; `git diff --check`. |
+| V1/deployment/isolation | PASS PRESERVATION / BLOCKED DEPLOY | V1 branch/tag unchanged. Wrangler dry-run shows shared staging D1; flags OFF. No migration replay, backup/restore, deploy or live browser test. |
+
 ## GFS-201 V2 Completion Snapshot (2026-10-23)
 
 | Requirement | Result | Evidence / remaining scope |

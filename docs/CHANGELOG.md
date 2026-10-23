@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-23 (GFS-202)
+
+- Reconciled Admin evidence without conflating orders: FS-261023-000016 is PAYMENT_PENDING with zero receipt rows; FS-261023-000007 is a separate PAYMENT_REVIEW with one receipt and saved reference. Actual WhatsApp event/sender/context/R2 association remains unverified; no reassociation was made.
+- Fixed receipt ingestion association in source: exact reply-to payment WAMID plus sender, or a unique eligible current payment only; allow REVIEW/reference-stage receipt processing, reject ambiguous/unrelated association, preserve late review, and pause V2 reminders in the receipt transaction.
+- Added Admin per-receipt status/upload-time/count display, private reminder history endpoint/panel, PKT schedule/countdown, six stages, due/blocked/review/grace/cancelled/PAID filters and exact successful delivery metadata.
+- Added audited selected-order “Send Updated Notice” with exact locale/version preview, CSRF/eligibility/opt-out/session/template/idempotency gates; CMS publish does not bulk-resend. Migration 0032 stores locale/version/rendered text/sent time for new successful sends.
+- Synthetic regression confirms exact-order image association, ambiguous-media rejection, immediate review/pause, per-order history and preview-version-pinned queue delivery. No real Meta send/WAMID or financial transition.
+- Validation: `npm ci`, 200 tests, lint, build, audit 0 vulnerabilities, API/Admin Wrangler dry-runs and diff-check. No D1 migration/deploy/CMS publish. Shared staging binding, tester/Meta identity, settlement evidence and isolated backup/deployment remain blockers. V1 frozen and `images/` preserved.
+
 ## 2026-10-23 (GFS-201)
 
 - Continued on V2 branch based on frozen V1 SHA `d816ba17e6ef14e15400141ea34e734ac9d0a9c8`; V1 branch/tag and PR #8 were not changed.

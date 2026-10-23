@@ -1,5 +1,15 @@
 # Get Free Seeds Binding Rules
 
+## GFS-202 Receipt and Reminder Safety (2026-10-23)
+
+- The Admin evidence shows distinct records: one JazzCash `PAYMENT_PENDING` order with zero receipt rows, and a separate Easypaisa `PAYMENT_REVIEW` order with one receipt and a saved reference. Never treat a screenshot/conversation image as evidence for either order without matching authenticated sender, inbound message, payment and stored receipt associations.
+- Receipt association uses an exact reply-to outbound payment message when present. Without reply context, require one eligible unpaid order for the sender and a matching active order; ambiguous media is not downloaded/attached. Never reassign across orders without authenticated, auditable evidence.
+- Keep genuine submitted receipts in REVIEW and pause the V2 schedule immediately. Reference text alone is not receipt/settlement evidence. After cancellation, retain late media as LATE_REVIEW; never mark PAID automatically.
+- Admin receipt totals/status/upload time/private preview and per-order reminder history are V2 source changes only until isolated staging and identity gates pass. Do not expose receipt media publicly or include customer/WAMID/settlement data in source, tests, logs, screenshots, or docs.
+- Receipt source fix is synthetic-test verified only. The WhatsApp tester Profile mismatch and shared D1 ledger remain live gates; do not deploy or inspect customer chats to infer which image belongs to which order.
+- Reminder delivery history records actual text, locale, CMS version, sent time and provider status only after send success. A newly published copy is for eligible unsent stages; a selected-order updated notice must show its exact preview, require authenticated/audited confirmation and remain subject to opt-out, service-window/template and idempotency gates.
+- Migration `0032_payment_reminder_delivery_history.sql` is source only. The shared staging database remains forbidden for V2 schema/deployment; require isolated D1, backup/restore proof and a validated migration path.
+
 ## GFS-201 V2 Payment/Reminder Release Gate (2026-10-23)
 
 - Frozen V1 source is commit `d816ba17e6ef14e15400141ea34e734ac9d0a9c8`, branch/tag `release/gfs-v1-frozen-20261023`. Do not modify or recreate it. V2 implementation commit is `2c404d17f1b01a0da0201da93b2e1078d96af045` on separate `codex/gfs-v2-payments-reminders-001`; PR #9 is open against frozen V1. Do not merge/deploy until release gates pass. PR #8 is unchanged.

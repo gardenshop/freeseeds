@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-202 Source Inventory (2026-10-23)
+
+- V2 local source at starting/fetched HEAD `695748e`; PR #9 branch `codex/gfs-v2-payments-reminders-001`. New local changes cover receipt resolution, Admin receipt/reminder views, explicit notice queue and migration `0032_payment_reminder_delivery_history.sql`. Nothing deployed/pushed yet.
+- Frozen V1 remains `d816ba17e6ef14e15400141ea34e734ac9d0a9c8`; no V1 checkout/source changes. Existing untracked `images/` remains untouched.
+- Current Admin read: one PAYMENT_PENDING order has 0 receipts; a separate PAYMENT_REVIEW order has 1 receipt/reference. No raw webhook/message association or R2 object read in this run; do not treat these records as the same customer/image.
+- Wrangler API and Admin dry-runs bind `getfreeseeds-staging` D1 (shared), events queue and private receipt R2; reminders, automation, confirmation and utility-template flags remain false. Migration 0032 is local-only; no isolated V2 D1, backup, restore or deployment was verified.
+- `npm ci`, tests 200/200, lint/build, audit 0 and both Wrangler dry-runs pass. No actual Meta WAMIDs, real account credit, real receipt processing or live screenshot exists for GFS-202.
+- New-number WhatsApp lock, Hoja Seeds zero-connection boundary, held incident and private `images/`/R2 remain unchanged.
+
 ## GFS-201 V2 Branch and Live Release Inventory (2026-10-23)
 
 - Frozen V1 branch/tag: `release/gfs-v1-frozen-20261023` at `d816ba17e6ef14e15400141ea34e734ac9d0a9c8`. V2 branch `codex/gfs-v2-payments-reminders-001` starts at the same SHA; implementation commit `2c404d17f1b01a0da0201da93b2e1078d96af045` plus docs handoff are pushed. PR #9 is open against frozen V1; PR #8 unchanged. No CI checks reported at verification.

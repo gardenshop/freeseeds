@@ -122,6 +122,10 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("/api/payments/'");
     expect(html).toContain("request-clearer-receipt");
     expect(html).toContain("Preview private receipt");
+    expect(html).toContain("payment-reminder-panel");
+    expect(html).toContain("Send Updated Notice");
+    expect(html).toContain("Reminder queue");
+    expect(html).toContain("preview.renderedText");
     expect(html).toContain("order.receiptCount>0");
     expect(html).toContain("Mark Packing");
     expect(html).toContain("Mark Dispatched");
@@ -137,7 +141,7 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("if(listController)listController.abort()");
     expect(html).toContain("if(generation!==listGeneration||isAbort(error))return");
     expect(html).toContain("Orders could not be loaded. Use Refresh to try again.");
-    expect(html).toContain("hydrate();setTabs({});load();");
+    expect(html).toContain("hydrate();reminderFilter.querySelector('select').value");
   });
 
   it("keeps the professional startup script parseable with all queues and auto-selection", async () => {

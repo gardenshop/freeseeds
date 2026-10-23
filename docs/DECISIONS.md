@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-23: GFS-202 Fail-Closed Receipt Association and No Live Deploy
+
+- Admin list evidence separates a pending zero-receipt order from a distinct receipt-backed review order. No claim that a WhatsApp screenshot maps to either order until webhook sender, reply context, payment and D1/R2 evidence match.
+- Source defect was reproducible: handler relied on current conversation `orderId`/state and could skip media after reference capture; inbound reply context was not used. Use exact outbound payment WAMID + sender when available; otherwise require one eligible order equal to current order. Reject ambiguity; never guess or cross-associate.
+- A submitted image is receipt evidence only, not settlement. Mark payment REVIEW, pause V2 schedule atomically, audit, and keep Admin-confirmed payment-credit requirements unchanged. Late post-cancel evidence remains LATE_REVIEW.
+- Admin history/filters/explicit updated notice and migration 0032 are source/test-only. Previewed template version is pinned for the one explicitly selected unsent stage; no bulk resend on CMS publish.
+- No live event/R2 read or reassociation, actual Meta delivery, payment approval, migration, D1 backup, deploy or screenshot was performed. Wrangler confirms only shared staging bindings; keep V2 flags false and require isolated D1/backup/restore and tester/Meta verification first.
+
 ## 2026-10-23: GFS-201 Preserve V1; Keep V2 Local Until Gates Pass
 
 - V1 remains frozen at `d816ba17e6ef14e15400141ea34e734ac9d0a9c8`; V2 is on the separate branch with PR #9 against frozen V1. Do not amend V1 or PR #8, and do not merge/deploy V2 before the external gates pass.
