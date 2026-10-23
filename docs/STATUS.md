@@ -22,6 +22,7 @@
 - WhatsApp own Profile did not match the authorized tester from `rules.md`; Profile view did not expose the approved tester number. No API/webhook deployment, Test Controls reset, customer/test message, WAMID, order, screenshot, receipt or QR delivery was created in GFS-196. Do not switch/relink the number.
 - D1 previously has migrations0027/0028/0029 applied, method-scoped normalized reference uniqueness, quick/FK checks, and the legacy ledger0. This session direct D1 reads return API7403; no D1 changes were attempted.
 - Validation PASS: clean `npm ci`,168/168 tests,lint,build,audit0,API/Admin Wrangler dry-runs and read-only Admin identity checks. CI billing lock remains; no protection bypass.
+- GFS-197 records commit `b022bb94ec5974f124c283a7cefa801f2ec25506` was pushed to PR #8. Post-push CI run `39907703609` executed zero steps; GitHub's exact annotation says the account is locked due to billing. No bypass.
 - Starting-head CI run `39813633938` failed before steps with the explicit GitHub billing lock; no bypass.
 - Results: Admin reference UI PASS; OFFER/API source locally tested; CMS publication and API release BLOCKED; real payment E2E BLOCKED; pending-order data unchanged and no customer follow-up.
 - GO/NO-GO: Admin staging GO; API/Offer rollout NO-GO until tester identity is fixed; public leads NO-GO; real payment/financial E2E NO-GO. Estimates project65%; P0 85%,P1 75%,P2 20%,P3 60%,P4 95%.

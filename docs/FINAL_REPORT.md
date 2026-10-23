@@ -15,10 +15,11 @@
 | New real WhatsApp flow | NOT PERFORMED | No new WAMID, screenshot, test order, QR delivery or message in GFS-197 |
 | Reference/receipt/PAID/fulfillment | BLOCKED | No genuine reference or settlement evidence submitted; no payment/approval/dispatch |
 | Regression | PASS local | clean npm ci,168 tests,lint,build,audit0,API/Admin Wrangler dry-runs |
-| Git/CI | PASS source PR / CI blocked | Source commit `8b193aa7e8851d005372580d238002a65f25fd01` is on PR #8; run `39813633938` failed before steps with the explicit billing-lock message. GFS-197 records are included in this PR update; no bypass. |
+| Git/CI | PASS push / CI blocked | Source commit `8b193aa7e8851d005372580d238002a65f25fd01` and GFS-197 records commit `b022bb94ec5974f124c283a7cefa801f2ec25506` are on open PR #8. Post-push CI `39907703609` ran zero steps because GitHub reported the billing lock; no bypass. |
 
 - Current live baseline: API `8da54b28-4bec-45b2-9a3f-672225dba843` (rollback `5151e081-98ab-45c4-a57f-3ba43c4e6983`); Admin `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0` (rollback `132f5ea9-324f-482d-b350-f52bc6907758`). D1 migrations0027-0029 and reference uniqueness remain in place; do not replay the empty legacy ledger.
 - Starting-head CI run `39813633938` failed before any steps with GitHub's explicit billing-lock message; no protection bypass.
+- Post-push CI run `39907703609` for the GFS-197 records also started zero steps under the same account billing lock.
 - Current D1/Admin reconciliation: 22 pending with balanced totals; one receipt-backed REVIEW lacks a transaction reference. No customer contact/terminal replay; incident hold untouched.
 - Gate decision: Admin/staging tools GO; API/OFFER release and real E2E NO-GO until the current authorized tester profile is verified. Public leads NO-GO; real customer payment/complete financial E2E NO-GO.
 - Completion estimate: project68%; P0 85%,P1 70%,P2 20%,P3 60%,P4 95%. Remaining dependencies: authorized tester Profile, deploy/verify matching API, publish CMS, then real fresh EN/UR journey; actual payment additionally needs genuine reference, receiving-account credit evidence and authenticated Admin approval.

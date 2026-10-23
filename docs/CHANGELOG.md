@@ -5,6 +5,7 @@
 - Reverified Admin identity and current release/tester gates. API remains old, approved tester Profile mismatch blocks deployment/live sends, and CMS drafts remain unpublished.
 - Current PAYMENT_REVIEW has no transaction ref; service window closed and utility template absent, so no Request Reference/settlement/PAID action.
 - Clean install,168 tests,lint,build,audit0,Wrangler dry-runs pass. No GFS-197 runtime/financial change; records are pushed to PR #8.
+- Records commit `b022bb94ec5974f124c283a7cefa801f2ec25506` is on PR #8; CI `39907703609` ran zero steps under the account billing lock.
 
 ## 2026-10-23 (GFS-196)
 
