@@ -9,6 +9,7 @@
 - All V2 messaging/confirmation/reminder flags are OFF. API has no public workers.dev route. The isolated Admin route returns `ACCESS_JWT_REQUIRED` without a signed Cloudflare Access JWT; do not weaken this gate. It is not yet attached to the authorized Admin Access app because the Cloudflare dashboard reports a Workers outage and its Access editor did not safely expose the new Worker. Do not change or replace the existing Admin destination.
 - Chrome `You > View Profile` tester identity still mismatches the authorized tester in these rules. Do not open chats, send, switch/relink accounts, approve real funds, publish Meta templates or use the Hoja-associated Meta tabs. V2 Admin promotion/live acceptance waits for correct Access attachment and authorized tester/Meta verification.
 - Preserve held incident `FS-261019-000001`, all history, frozen V1 `d816ba1`, PR #8, `images/`, private R2, canonical GFS sender, Hoja Seeds zero-connection boundary and new-number WhatsApp lock.
+- GFS-204 source/tests/docs are pushed to PR #9 as `c8c4edd2d60fe72771c9282d392f1f167ead5a7`. GitHub has no CI checks; this does not clear the Access, real-credit, Meta identity or live messaging gates.
 
 ## GFS-202 Receipt and Reminder Safety (2026-10-23)
 

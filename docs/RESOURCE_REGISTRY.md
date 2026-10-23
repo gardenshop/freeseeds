@@ -2,7 +2,7 @@
 
 ## GFS-204 Deployed Isolated V2 Resources (2026-10-23)
 
-- V2 source starts at `8796bdb` on `codex/gfs-v2-payments-reminders-001`; GFS-204 code/tests/docs are in progress on this branch and target PR #9 only. Frozen V1 `d816ba1`, PR #8 and untracked `images/` untouched.
+- V2 source starts at `8796bdb` on `codex/gfs-v2-payments-reminders-001`; GFS-204 commit `c8c4edd2d60fe72771c9282d392f1f167ead5a7` is pushed to PR #9 only. Frozen V1 `d816ba1`, PR #8 and untracked `images/` untouched. GitHub reports no CI checks.
 - Cloudflare account verified as Get Free Seeds / `gisupp@gmail.com`, account ID `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
 - Isolated primary D1 `getfreeseeds-v2-staging`, ID `6f26ba71-3c10-4b6e-97ab-5df7473c21c7`; recovery D1 `getfreeseeds-v2-restore-check`, ID `0a9ae021-64c9-4591-ac3c-aadd29ce13b6`. Both ledger counts 33, no customers/orders/receipts. Schema dump restored at migration 0032, then 0033 applied/verified on both. Shared D1 `getfreeseeds-staging` was not accessed or changed. Native `PRAGMA integrity_check` denied by D1 (`SQLITE_AUTH`).
 - V2 private R2 bucket `getfreeseeds-v2-receipts-staging`; no public domain configured. Queue `getfreeseeds-v2-events-staging` and DLQ `getfreeseeds-v2-events-staging-dlq` are dedicated to V2.

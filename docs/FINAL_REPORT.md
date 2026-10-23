@@ -18,11 +18,11 @@
 | Worker versions/rollback | PASS DEPLOYED ISOLATED | API `e43e23dd-22a6-4338-b77a-c48bbcee6cad`, previous `a42c6d65-adca-410e-baf8-e94887cf3df5`; Admin `92809f45-9bcb-403c-9bd8-7e481d6ad3d0`, previous signed-JWT-gated `0644d8ec-d85f-495c-9bfc-256915cc085e` (earlier no-public-route version `9fa96aa8-3e7b-4a2c-ae0d-721fe1cc76be`). API Cron `* * * * *`; isolated Queue consumer/DLQ. Shared API/Admin versions and active webhook were not changed. |
 | Frozen V1 | PASS PRESERVATION | V1 branch/tag `d816ba1` and PR #8 unchanged. All V2 configs bind only isolated resources; shared D1 untouched. Full local suite passes. |
 | Test/CI | PASS LOCAL / CI NONE | `npm ci`; 204/204 tests in 21 files; lint/build; `npm audit` 0 vulnerabilities; isolated Wrangler dry-runs. GitHub reports no PR #9 checks. |
-| P6/docs/push | IN PROGRESS | This execution's docs/source/tests still need committing and pushing to PR #9. |
+| P6/docs/push | PASS | Commit `c8c4edd2d60fe72771c9282d392f1f167ead5a7` pushed to PR #9; GitHub reports no CI checks. |
 
 ### Completion and Go/No-Go
 
-- Estimates (source plus isolated rollout, not live customer acceptance): overall 78%; P0 80%, P1 70%, P2 75%, P3 80%, P4 75%, P5 80%, P6 75% before push. Remaining percentages: overall 22%; P0 20%, P1 30%, P2 25%, P3 20%, P4 25%, P5 20%, P6 25%.
+- Estimates (source plus isolated rollout, not live customer acceptance): overall 80%; P0 80%, P1 70%, P2 75%, P3 80%, P4 75%, P5 80%, P6 90% for source/docs/PR handoff. Remaining percentages: overall 20%; P0 20%, P1 30%, P2 25%, P3 20%, P4 25%, P5 20%, P6 10%.
 - Frozen V1: **GO for preservation only**. Live V1 checkout was not retested this execution.
 - V2 isolated data plane/API: **GO for flags-off staging runtime**. V2 Admin authenticated access: **NO-GO** until the Worker is attached to the existing Access app and verified without changing its current destination.
 - Payment confirmation/public launch: **NO-GO** until real account credit is confirmed, authorized tester profile matches, and the authenticated V2 Admin UI can be verified.

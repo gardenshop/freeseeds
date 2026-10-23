@@ -15,6 +15,7 @@
 | Worker deployment | PARTIAL PASS | API `e43e23dd-22a6-4338-b77a-c48bbcee6cad` deployed, Cron/Queue enabled but flags OFF/provider disabled/no public route. Admin `92809f45-9bcb-403c-9bd8-7e481d6ad3d0` deployed with JWT guard; Access destination attachment blocked by Cloudflare outage/editor issue. |
 | Timers, CMS, Meta delivery | BLOCKED LIVE | Existing 15/30/60/210/240/270 synthetic unit coverage remains. V2 flags OFF; no published real templates, stage run, actual WAMID, live cancellation or screenshot. |
 | Regression/CI | PASS LOCAL / NO CI | `npm ci`; 204/204 tests across 21 files; lint/build; audit 0 vulnerabilities; Wrangler isolated dry-runs. GitHub reports no checks. |
+| PR #9 handoff | PASS PUSH / NO CI | Commit `c8c4edd2d60fe72771c9282d392f1f167ead5a7` is pushed to open PR #9 against frozen V1; GitHub reports no checks. |
 
 ## GFS-202 Receipt and Reminder Regression (2026-10-23)
 

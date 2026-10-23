@@ -6,7 +6,7 @@
 - Added cryptographic Cloudflare Access JWT enforcement for the V2 Admin Worker and styled responsive Admin Home links. V2 Admin unauthenticated route returns 401. No existing Admin Access app change.
 - Added migration 0033 to rename the 210/240/270-minute CMS keys while preserving locale/version/state/text history. Created isolated V2 D1, private R2, dedicated Queue/DLQ and restore-check D1; migrations 0001-0033 now exist only on isolated D1s, with zero orders/customers/receipts. Shared staging and active webhook untouched.
 - Deployed isolated API version `e43e23dd-22a6-4338-b77a-c48bbcee6cad` and Admin version `92809f45-9bcb-403c-9bd8-7e481d6ad3d0`; flags OFF. Admin Access attachment and authenticated UI test remain blocked by Cloudflare Workers outage/editor behavior. Wrong WhatsApp tester identity blocked real messaging. No actual Meta WAMID.
-- Validation: `npm ci`; 204/204 tests; lint/build; audit 0; isolated Wrangler dry-runs. GitHub no checks. PR #9 push remains pending in this record.
+- Validation: `npm ci`; 204/204 tests; lint/build; audit 0; isolated Wrangler dry-runs. Commit `c8c4edd2d60fe72771c9282d392f1f167ead5a7` pushed to PR #9; GitHub reports no checks.
 
 ## 2026-10-23 (GFS-202)
 
