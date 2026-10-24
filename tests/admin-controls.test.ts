@@ -122,6 +122,7 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("/api/payments/'");
     expect(html).toContain("request-clearer-receipt");
     expect(html).toContain("Reason code: TEST_IMAGE_NOT_PAYMENT_PROOF or INSUFFICIENT_OR_UNCLEAR_RECEIPT");
+    expect(html).toContain("textContent.trim().toLowerCase()==='request clearer receipt'");
     expect(html).toContain("Preview private receipt");
     expect(html).toContain("order.receiptCount>0");
     expect(html).toContain("Mark Packing");
