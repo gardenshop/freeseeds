@@ -11,7 +11,7 @@
 - Supported D1 `quick_check`=`ok`, `foreign_key_check` empty, required customer schema present. Read budget for those supported checks was 9,267 rows; no event-table scan was run. Active API `9b5f13ae`; immediate rollback `8da54b28`. R2/D1 bindings are canonical staging; no migration or resource creation.
 - Release/live retest remain **BLOCKED**: phone registration reports `EXPIRED`, and audit high-severity findings remain unresolved. GitHub PR #10 has no required branch protection/ruleset and no review/check result is reported for its current head. No merge, protection bypass, deploy, new image, R2 write, receipt row, or customer acknowledgement was made.
 - V2 reminder: PR #9 remains distinct and is not the active webhook. No V2 live receipt claim is made; V2 messaging remains unverified.
-- GFS-208 estimates: overall task 70% complete; P0 100%, P1 95%, P2 75%, P3 20%, P4 85%, P5 100%. Remaining: resolve release gates, push/obtain normal PR review, deploy V1 candidate via permitted path, then run fresh real image E2E and verify Admin/DELIVERED/READ without financial approval.
+- GFS-208 estimates: overall task 70% complete; P0 100%, P1 95%, P2 75%, P3 20%, P4 85%, P5 100%. Remaining: resolve release gates, obtain normal review for pushed PR #10 head `2822de7`, deploy V1 candidate via permitted path, then run fresh real image E2E and verify Admin/DELIVERED/READ without financial approval.
 
 ## GFS-199 OFFER Live, Financial Acceptance Incomplete (2026-10-23)
 
