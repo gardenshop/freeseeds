@@ -393,6 +393,23 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(audit.metadata_json).toContain('"reasonCode":"TEST_IMAGE_NOT_PAYMENT_PROOF"');
   });
 
+  it("archives only a separate cancelled synthetic no-receipt fixture and preserves the row", async () => {
+    const created=await persistFlowSubmission(db,{fullName:"SYNTHETIC ARCHIVE TEST ONLY",deliveryAddress:"SIMULATED ONLY - DO NOT SHIP",nearbyPlace:"SIMULATION",city:"Synthetic City",contactNumber:"03000000001",productCode:"FREE_5_PACK_VEGETABLE_SEEDS",province:"Synthetic Province",fertilizerSelected:false},undefined,"gfs210-archive-only-fixture",sender);
+    if(!created.quote)throw new Error("SYNTHETIC_ARCHIVE_QUOTE_MISSING");
+    const orderNumber="SIM-GFS210-ARCHIVE-ONLY";
+    sqlite.prepare("UPDATE orders SET order_number=?,state='CANCELLED',payment_status='PENDING' WHERE id=?").run(orderNumber,created.orderId);
+    sqlite.prepare("UPDATE payments SET review_state='PENDING' WHERE order_id=?").run(created.orderId);
+    const response=await adminPost(`/api/orders/${created.orderId}/archive`,{confirmation:orderNumber,reason:"SYNTHETIC_TEST_ONLY"});
+    expect(response.status).toBe(200);
+    const row=sqlite.prepare("SELECT state,payment_status,archived_at,archive_reason FROM orders WHERE id=?").get(created.orderId) as {state:string;payment_status:string;archived_at:string|null;archive_reason:string|null};
+    expect(row).toMatchObject({state:"CANCELLED",payment_status:"PENDING",archive_reason:"SYNTHETIC_TEST_ONLY"});
+    expect(row.archived_at).toBeTruthy();
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders WHERE id=?").get(created.orderId)).toEqual({count:1});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(created.orderId)).toEqual({count:0});
+    expect(sqlite.prepare("SELECT action FROM audit_log WHERE entity_type='ORDER' AND entity_id=? ORDER BY created_at DESC LIMIT 1").get(created.orderId)).toEqual({action:"ORDER_ARCHIVED"});
+    expect(queueSend).not.toHaveBeenCalled();
+  });
+
   it.each(["en","ur"] as const)("cancels only a separate isolated unpaid fixture and queues a simulated %s notice", async (locale) => {
     const idempotencyKey=`gfs210-unpaid-cancel-fixture-${locale}`;
     const created=await persistFlowSubmission(db,{fullName:"SYNTHETIC GFS210 — DO NOT CONTACT",deliveryAddress:"SIMULATED ONLY",nearbyPlace:"NO PHYSICAL SHIPMENT",city:"Synthetic City",contactNumber:"03000000001",productCode:"FREE_5_PACK_VEGETABLE_SEEDS",province:"Synthetic Province",fertilizerSelected:false},undefined,idempotencyKey,sender);

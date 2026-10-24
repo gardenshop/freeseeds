@@ -11,9 +11,9 @@
 | Simple V2 credit attestation | PASS SYNTHETIC | V2 checkbox/Confirm Payment path accepts authenticated attestation without mandatory opaque settlement reference; independent receipt/reference/method/amount/review checks remain; no real PAID order changed |
 | PAID→Confirm→PACKING→Tracking→Label→DISPATCHED→DELIVERED | PASS SYNTHETIC ADMIN | Separate V2 `SIM-GFS210-` fixture exercised in actual isolated Admin; watermarked label; stale/out-of-order/repeated actions guarded; physical shipment not claimed |
 | V2 localized notices | PASS SOURCE/SYNTHETIC; LIVE BLOCKED | EN/UR outbox tests cover lifecycle stages. Isolated V2 provider/notification/utility-template flags OFF and Meta secrets absent; remote outbox DEFERRED, no V2 WAMIDs |
-| Reject/clearer/cancel/late/duplicate negatives | PASS SYNTHETIC | Separate fixtures; review/PAID cancellation rejected; receipt retained; duplicate queue/test rows single; service-window/template gate blocks outside-window sends |
+| Reject/clearer/cancel/archive/late/duplicate negatives | PASS SYNTHETIC | Separate fixtures; review/PAID cancellation rejected; cancelled-order archive retains history; duplicate queue/test rows single; service-window/template gate blocks outside-window sends |
 | Cleanup | PASS | V2 synthetic customers/orders/payments/items/outbox/audit removed; D1 counts return zero; no V2 R2 object or Queue message |
-| Regression/security | PASS LOCAL | V1 176 tests, V2 213 tests; lint/build; audit 0; V1/V2 dry-runs; no GitHub protection bypass |
+| Regression/security | PASS LOCAL | V1 176 tests, V2 214 tests with `--maxWorkers=2`; lint/build; audit 0; V1/V2 dry-runs. A single default-parallel 5s ownership test timeout reproduced green standalone (16/16); no tests skipped |
 
 Actual P0 receipt/WAMID evidence is separate from all synthetic V2 fulfillment evidence. No real credit or shipment was simulated as factual.
 
