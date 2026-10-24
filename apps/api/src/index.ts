@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { applyFertilizerDecision, createWhatsAppProvider, customerTransactionReferenceHash, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isInsideWhatsAppServiceWindow, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, MetaCapiProvider, MetaFlowEnvelope, normalizeCustomerTransactionReference, normalizePaymentMethodRow, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInboundConversationActivity, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey } from "@gfs/core";
+import { applyFertilizerDecision, createWhatsAppProvider, customerTransactionReferenceHash, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isInsideWhatsAppServiceWindow, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, MetaCapiProvider, MetaFlowEnvelope, normalizeCustomerTransactionReference, normalizePaymentMethodRow, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, parseV2CodPolicy, PaymentMethod, persistFlowSubmission, persistInboundConversationActivity, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey } from "@gfs/core";
 import { handleMetaFlowPayload } from "./flow-endpoint";
 import { admitWhatsAppSenders } from "./rate-limit";
 import { enqueueDuePaymentV2Stages, setPaymentReminderV2OptOut } from "./payment-reminders-v2";
@@ -18,6 +18,7 @@ type Env = {
     PAYMENT_REMINDERS_V2_ENABLED?: string;
     PAYMENT_UTILITY_TEMPLATES_APPROVED?: string;
     ORDER_STATUS_NOTIFICATIONS_V2_ENABLED?: string;
+    COD_V2_ENABLED?: string;
     WHATSAPP_CHECKOUT_MODE?: string;
     META_GRAPH_VERSION?: string;
     META_ACCESS_TOKEN?: string;
@@ -119,6 +120,12 @@ function paymentMethodFromAction(value: string): PaymentMethod | undefined {
   const method = value.startsWith("PAY_") ? value.slice("PAY_".length) : value;
   return PaymentMethod.safeParse(method).data;
 }
+
+async function loadV2CodPolicy(db:D1Database,environment:string){
+  const row=await db.prepare("SELECT value FROM configuration WHERE key='COD_V2_POLICY' AND environment=?").bind(environment).first<{value:string|null}>();
+  return parseV2CodPolicy(row?.value);
+}
+function v2CodAvailable(policy:ReturnType<typeof parseV2CodPolicy>,featureFlag:string|undefined,province:string|undefined){return Boolean(policy&&featureFlag==="true"&&policy.enabled&&policy.courierProvider&&policy.collectionSupported&&policy.remittanceSupported&&policy.verificationReferenceHash&&province&&policy.eligibleProvinces.includes(province));}
 
 function paymentActionId(method: PaymentMethod): string {
   return `PAY_${method}`;

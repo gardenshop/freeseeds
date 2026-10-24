@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-24 (GFS-211, source-only / incomplete)
+
+- Reproduced and consolidated duplicate COD implementation: one shared strict versioned policy format, one API policy loader, and one Admin GET/POST settings pair. Unknown legacy/unversioned or unprovenanced settings fail closed.
+- Added HMAC-SHA-256 hashing of courier verification references using a dedicated key, Admin explicit enable confirmation/audit, default PKR125 fee, and editable EN/UR customer instructions/previews. No plaintext reference is persisted or logged.
+- Added local additive V2 COD collection schema 0034 and pure dynamic-price calculator; PKR625/PKR375 examples pass. No migration applied, deployment, remote write or live browser mutation.
+- `npm ci`; 220 tests, lint/build/audit0 and V2 Wrangler dry-runs pass; COD stays OFF. Full customer COD flow/fulfillment/collection, comprehensive province D1 tests and isolated acceptance remain incomplete; PR #9 not yet pushed.
+
 ## 2026-10-24 (GFS-210)
 
 - V1: added an audited `TEST_IMAGE_NOT_PAYMENT_PROOF` Request Clearer Receipt outbox path with service-window validation, Queue publication/retry, localized notice, idempotency and a worker consumer. The real test order kept its JPEG and REVIEW/PENDING state; actual notice WAMID status READ.

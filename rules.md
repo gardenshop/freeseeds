@@ -8,6 +8,15 @@
 - V2 order-state tests are non-financial simulations only. Use `SIM-GFS210-` order numbers, explicit TEST ONLY / DO NOT SHIP notices and labels, separate terminal-path fixtures, and cleanup. Do not send customer messages unless V2 provider credentials, approved templates, service window, recipient and release authorization all pass.
 - Keep V1 checkout frozen, V2 notifications/provider/template flags OFF unless separately approved, and Hoja isolation, private R2, prior payments, holds and `images/` untouched. Full WAMIDs/screenshots remain private outside Git.
 
+## GFS-211 COD Consolidation and V2 Gate (2026-10-24)
+
+- COD is V2-only. Keep `COD_V2_ENABLED=false`; do not modify the shared `PaymentMethod` type, frozen V1 checkout, shared payment migrations, or active V1 data.
+- Canonical COD settings use the versioned shared `V2CodPolicy` format. Store a verification reference only as HMAC-SHA-256 under the dedicated `COD_POLICY_HMAC_KEY`; never persist/log the plaintext. A missing key, invalid policy, legacy/plaintext format, or missing provenance fails closed. Do not overwrite/migrate legacy state without a provenance-reviewed, explicit migration.
+- COD customer totals must use the persisted seed/fertilizer selection, enabled D1 province delivery rate, and configured COD fee (default display Rs125); never hardcode a province charge. No receipt/QR/advance-payment request for COD. Keep `PAID` blocked until collection and remittance are independently reconciled.
+- New additive `0034_cod_orders_v2.sql` is local source only and has not been applied remotely. Do not apply it to shared staging or deploy an incomplete COD flow. Current isolated V2 D1 has zero COD policy rows; no legacy state needed migration.
+- Admin COD updates require the existing signed Cloudflare Access identity, CSRF, explicit owner confirmation to enable, audited write, and verified courier collection/remittance. Do not fabricate courier approval or enable COD before isolated E2E and explicit release authorization.
+- Preserve new-number WhatsApp lock, Hoja Seeds zero-connection rule, held incidents, private R2, historical payment/order data, and `images/`. No COD remote settings write, CMS publish, deployment, or customer message is authorized by this source-only work.
+
 ## GFS-206 Active Receipt Hotfix Gate (2026-10-24)
 
 - For a shared order with no linked `whatsapp_conversations` row, no exact inbound-event link, zero D1 receipt rows and no order-prefix R2 object, do not infer that a screenshot image was received or belongs to that order. READ/DELIVERED status for outbound payment text/QR is not inbound-receipt evidence.

@@ -17,6 +17,13 @@ describe("payment settings generated UI", () => {
     expect(html).toContain("JazzCash");
     expect(html).toContain("Easypaisa");
     expect(html).toContain("Bank Transfer");
+    expect(html).toContain("Cash on Delivery (COD) — isolated V2");
+    expect(html).toContain("value=\"125\"");
+    expect(html).toContain("data-cod-instructions-en");
+    expect(html).toContain("data-cod-instructions-ur");
+    expect(html).toContain("data-cod-preview-en");
+    expect(html).toContain("data-cod-preview-ur");
+    expect(script).toContain("ENABLE_COD");
     expect(html).toContain("Advanced EN / UR copy");
     expect(script).toContain("item[0]+suffix");
     expect(script).not.toContain("prefix+item[0]");
@@ -31,6 +38,8 @@ describe("payment settings generated UI", () => {
     expect(script).toContain("independent ownership evidence");
     expect(html).not.toContain("qrOwnerVerified");
     expect(response.headers.get("set-cookie")).toMatch(/__Host-gfs_admin_csrf=[a-f0-9]{64}/);
+    expect(app.routes.filter((route) => route.path === "/api/cod-settings" && route.method === "GET")).toHaveLength(1);
+    expect(app.routes.filter((route) => route.path === "/api/cod-settings" && route.method === "POST")).toHaveLength(1);
   });
 
   it("rejects self-service QR ownership verification", async () => {

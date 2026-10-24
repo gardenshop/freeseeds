@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-211 COD Source-only Inventory (2026-10-24)
+
+- Fetched `origin/codex/gfs-v2-payments-reminders-001`; remote and local branch head are both `a651f87`. Existing uncommitted COD changes were preserved; no checkout/reset or commit/push occurred.
+- Wrangler identity was verified as `gisupp@gmail.com` / Get Free Seeds (`cb5066a6d71ecdee0bd7ed8aacb4d3c2`). A masked read-only query on isolated D1 `getfreeseeds-v2-staging` found zero `COD_V2_POLICY` rows (no raw config content queried). No shared D1 query/write.
+- No hosted resource, migration, secret, route, Access policy, CMS version, R2 object, Queue message, or Worker was created/changed. `COD_V2_ENABLED=false` in both V2 Wrangler configurations. Dedicated `COD_POLICY_HMAC_KEY` has not been provisioned or verified; enabled COD cannot pass until it exists.
+- Local additive migration 0034 is un-applied. Keep existing V2 D1/recovery D1/private R2/Queue/DLQ/Workers per existing 2026-11-23 review; no resource cleanup is due for this source-only run. `images/` and Hoja assets untouched.
+
 ## GFS-210 Staging and Cleanup (2026-10-24)
 
 - V1 Admin `getfreeseeds-admin-staging`: active `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`, rollback `701b3142-47e6-45da-b5e9-c0eddb20892c`. V1 API: active `21a3d74c-3979-432c-9190-1848362592a4`, rollback `76084318-69c7-46b3-bfa0-886610971133`. These carry the PR #10 clearer-receipt outbox fix.

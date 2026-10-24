@@ -1,5 +1,31 @@
 # Final Report
 
+## GFS-211 COD Consolidation (2026-10-24)
+
+**Overall: PARTIAL / NO-GO.** P0 local preservation is PASS; P1 consolidation is partial-to-pass source-only; the end-to-end V2 COD rollout is not complete. COD remains OFF. This report does not authorize merge, deploy, public launch, payment, or shipment.
+
+| Assigned requirement | Result | Evidence / limitation |
+|---|---|---|
+| P0 preserve local work / compare remote | PASS | Inspected status/branches/diff before checkout/reset; fetched branch and found both heads `a651f87`; retained local changes and `images/`; no V1 source change |
+| Duplicate API/Admin code | PASS SOURCE | Focused test reproduced API redeclaration; consolidated one canonical API parser/loader and exactly one Admin GET/POST pair; UI route-count test verifies uniqueness |
+| Canonical HMAC-only policy | PASS LOCAL / STAGING NOT WRITTEN | Shared strict versioned Zod schema; HMAC-SHA-256 with dedicated `COD_POLICY_HMAC_KEY`; plaintext not serialized/audited; tests prove determinism, key separation, and secret absence |
+| Legacy compatibility/provenance | PASS FAIL-CLOSED | Unknown format or missing actor audit rejected and preserved; masked isolated D1 query returned 0 COD rows. No legacy migration was required; remote migration was not run |
+| COD pricing | PARTIAL | Pure calculator verifies fertilizer PKR250 + delivery PKR250 + COD PKR125 = PKR625, and no fertilizer = PKR375. Representative delivery amounts 250/300/350 tested; D1 province integration and every-province proof outstanding |
+| Admin settings | PASS SOURCE / AUTHENTICATED E2E BLOCKED | One settings panel with default Rs125, EN/UR instructions/previews, provinces, Access/JWT middleware, CSRF, explicit enable confirmation, audit and fail-closed checks. No Admin screenshot or write; HMAC secret not provisioned/verified |
+| Customer payment selector and COD flow | NOT IMPLEMENTED | No list with COD option, exact quote/confirmation, explicit customer confirmation, COD_PENDING transition, advance switch handling, receipt rejection or timer exclusion yet |
+| Orders/Packing/Dispatch/Delivered/reconciliation | NOT IMPLEMENTED | Migration 0034 and schema snapshot are local only; Admin lifecycle operations/verified collection/remittance and PAID gate are not wired/tested |
+| Tests/CI | PASS LOCAL / NO CI | `npm ci`, full 220/220 tests, lint, build, `npm audit` 0 vulnerabilities, API/Admin V2 Wrangler dry-runs. No GitHub check or separate V1-worktree full run. `git diff --check` passed |
+| Deployment/rollback/resources | NOT PERFORMED | No migration applied, Worker deployed, settings changed, CMS/R2 altered, new resources created, or rollout attempted. Both COD flags remain false. No cleanup required |
+| External/evidence gates | BLOCKED | Courier COD collection/remittance capability is unverified; isolated browser identity/settings E2E and screenshots absent; HMAC secret provisioning absent; no customer flow means no acceptance screenshot |
+
+**Progress estimate:** P0 100%, P1 70%, P2 15%, P3 60%, P4 30%, P5 45%; overall approximately 45%. These are source-work estimates, not acceptance.
+
+- **V1:** GO for preservation only; V1 source is untouched.
+- **V2 COD:** NO-GO; feature flag false and implementation/testing incomplete.
+- **Advance payment:** NO-GO for actual credit/confirmation without independent receiving-account evidence; existing advance flow regression is part of 220 local tests only.
+- **Public launch:** NO-GO. Do not merge/deploy or enable COD until remaining P2–P5 acceptance and explicit release authorization.
+- PR #9 fetched at `a651f87` but these local changes have not been committed/pushed. No external resource/data/customer mutation occurred; `images/`, Hoja isolation, held incidents and historical records remain untouched.
+
 ## GFS-210 Payment Review and Fulfillment (2026-10-24)
 
 **RELEASE: NO-GO for real PAID confirmation and V2 customer messages. P0 real clearer-receipt notification PASS. Synthetic V2 lifecycle state test PASS; synthetic WAMIDs are not claimed.**

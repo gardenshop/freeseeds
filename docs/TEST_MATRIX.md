@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-211 COD Consolidation (2026-10-24)
+
+| Requirement | Result | Evidence / limitation |
+|---|---|---|
+| Local/remote branch preservation | PASS | Local and fetched PR #9 branch both `a651f87`; no checkout/reset; `images/` remains untracked and untouched; V1 source untouched |
+| Duplicate API policy / Admin routes | PASS SOURCE | API parse error reproduced (`V2CodPolicy` redeclared); consolidated to one shared parser/API loader and exactly one Admin GET + POST pair; route-count regression passes |
+| Hash-only policy | PASS LOCAL | Strict versioned policy; HMAC-SHA-256 uses dedicated key; key-specific/deterministic hash tests pass; schema rejects plaintext legacy format; no plaintext reference stored/logged |
+| Legacy/provenance handling | PASS FAIL-CLOSED | Admin read/update rejects noncanonical or unprovenanced stored state; masked remote D1 query found zero COD policy rows, so no legacy migration required |
+| COD pricing | PASS PURE FUNCTION ONLY | PKR625 example and no-fertilizer PKR375 example pass; unit matrix uses representative delivery amounts PKR250/300/350. No D1 per-province checkout integration yet |
+| Admin settings | PASS SOURCE / LIVE BLOCKED | Single panel has default Rs125, EN/UR instructions/previews, eligible enabled provinces, explicit enable confirmation, CSRF/Access/audit. No remote write, browser screenshot or secret provisioning |
+| COD order, no receipt/timers, fulfillment/collection | NOT IMPLEMENTED | Migration 0034 and pricing helper are source only; API payment selection, COD confirmation/lifecycle, reminders suppression, Admin operations and reconciliation remain incomplete |
+| COD rollout | NO-GO | `COD_V2_ENABLED=false`; courier collection/remittance not verified; no migration/deploy/CMS publish/customer message |
+| Regression/security | PASS LOCAL | `npm ci`; 220/220 full tests; lint/build; audit0; V2 API/Admin Wrangler dry-runs; no isolated live E2E or separate V1 worktree run |
+
 ## GFS-210 Lifecycle Test (2026-10-24)
 
 | Requirement | Result | Evidence / limitation |

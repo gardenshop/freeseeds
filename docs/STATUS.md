@@ -1,5 +1,15 @@
 # Status
 
+## GFS-211 COD Consolidation (2026-10-24)
+
+- **P0 preservation PASS.** Inspected worktree/branches before any checkout/reset; local branch and fetched `origin/codex/gfs-v2-payments-reminders-001` both resolve to `a651f87`. Kept all uncommitted work and untracked `images/`; no V1 source changed.
+- Reproduced the failure: API parse stopped on redeclared `V2CodPolicy`. The source contained two API policy formats (legacy plaintext `verificationReference`/display names and later unkeyed `verificationReferenceHash`) plus three duplicate Admin GET/POST handler pairs. Consolidated to one strict shared version-1 policy parser and one GET/POST pair. Legacy/unversioned/unprovenanced policy fails closed instead of being overwritten.
+- Added keyed HMAC-SHA-256 reference hashing via `COD_POLICY_HMAC_KEY`; canonical JSON stores only the hash. Admin update uses Access/JWT middleware, CSRF, explicit `ENABLE_COD`, audit, dynamic enabled D1 provinces, and clears prior courier approval when courier details change. The UI includes default Rs125, EN/UR instructions and local previews. COD remains OFF.
+- Isolated V2 D1 read-only masked query (Cloudflare identity verified as `gisupp@gmail.com`, Get Free Seeds account) found 0 `COD_V2_POLICY` rows. No legacy data or provenance required migration; no D1 writes. Added local-only additive migration 0034 for COD amount snapshot/collection reconciliation and a pure fee calculator. Neither was applied remotely.
+- Focused HMAC/format/pricing/UI tests pass. `npm ci`, full 220/220 tests, lint, TypeScript build, `npm audit` (0 vulnerabilities), API/Admin V2 Wrangler dry-runs and `git diff --check` pass. Dry-run confirms COD flag remains false. No deployment, screenshot, CMS/R2 change or message.
+- **Incomplete / NO-GO:** API COD selector, confirmation/COD_PENDING customer journey, receipt rejection, no-reminder guarantee, packing/dispatch/delivery collection reconciliation endpoints, all-province D1 pricing integration tests, authenticated settings mutation E2E, migration application/rollback, and V2 browser screenshots are not complete. Courier collection/remittance capability remains unverified. No commit/push yet; PR #9 remote is unchanged.
+- Estimates: P0 100%; P1 70%; P2 15%; P3 60%; P4 30%; P5 45%; overall GFS-211 about 45%. **V1 GO for preservation only; V2 COD NO-GO; real payments NO-GO; public launch NO-GO.**
+
 ## GFS-210 Lifecycle Result (2026-10-24)
 
 - **P0 PASS REAL.** `FS-261024-000005` remains `PAYMENT_REVIEW`/payment `PENDING`, original receipt count 1. Request Clearer Receipt was submitted with `TEST_IMAGE_NOT_PAYMENT_PROOF`; audit and outbox row exist; V1 Queue consumer sent the localized Urdu notice and Meta status reached `READ`. Receipt was not deleted/reassigned; no `PAID`, wallet credit, or cancellation action.
