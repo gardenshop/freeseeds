@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-210 Payment Review and Fulfillment (2026-10-24)
+
+- Reverified WhatsApp **You > View Profile**, canonical GFS **Contact Info**, Admin Access and Cloudflare account. Current tester and GFS sender match the approved identities. Do not use display-name-only matches or any Hoja asset.
+- `FS-261024-000005` is a non-payment test image. Preserve its JPEG/private R2/D1 receipt and history; keep `PAYMENT_REVIEW`/`PENDING`. The V1 Admin clearer-receipt request used audit reason `TEST_IMAGE_NOT_PAYMENT_PROOF`; localized notice was sent and reached READ. This is transport/review messaging, not evidence of funds.
+- Never mark a real order `PAID` without independently verified credit in the receiving wallet/bank and an authenticated Admin attestation. An empty Confirmed Payments queue plus no authenticated account evidence means P1 is blocked; synthetic PAID state is allowed only in the isolated V2 simulation and must be labeled/cleaned.
+- V2 order-state tests are non-financial simulations only. Use `SIM-GFS210-` order numbers, explicit TEST ONLY / DO NOT SHIP notices and labels, separate terminal-path fixtures, and cleanup. Do not send customer messages unless V2 provider credentials, approved templates, service window, recipient and release authorization all pass.
+- Keep V1 checkout frozen, V2 notifications/provider/template flags OFF unless separately approved, and Hoja isolation, private R2, prior payments, holds and `images/` untouched. Full WAMIDs/screenshots remain private outside Git.
+
 ## GFS-206 Active Receipt Hotfix Gate (2026-10-24)
 
 - For a shared order with no linked `whatsapp_conversations` row, no exact inbound-event link, zero D1 receipt rows and no order-prefix R2 object, do not infer that a screenshot image was received or belongs to that order. READ/DELIVERED status for outbound payment text/QR is not inbound-receipt evidence.

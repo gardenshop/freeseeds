@@ -1,6 +1,18 @@
 # Status
 
-## GFS-206 Receipt Hotfix and Active-WebHook Blocker (2026-10-24)
+## GFS-210 Lifecycle Result (2026-10-24)
+
+- **P0 PASS REAL.** `FS-261024-000005` remains `PAYMENT_REVIEW`/payment `PENDING`, original receipt count 1. Request Clearer Receipt was submitted with `TEST_IMAGE_NOT_PAYMENT_PROOF`; audit and outbox row exist; V1 Queue consumer sent the localized Urdu notice and Meta status reached `READ`. Receipt was not deleted/reassigned; no `PAID`, wallet credit, or cancellation action.
+- P0 evidence: receipt ID `4f8e2e7c-b5f8-4fdb-a85e-a88687a8af6e`; actual clearer-message WAMID SHA-256 prefix `5ace6d8452dd78f8` (raw in private evidence outside Git); screenshot `D:\Temp\kilo\gfs210-clearer-request-admin.png`; WhatsApp message screenshot `D:\Temp\kilo\gfs210-clearer-whatsapp.png`. Screenshot masks the customer contact card.
+- **P1 BLOCKED SAFELY.** V1 Admin Confirmed Payments count is 0; there is no independently evidenced genuine paid order and no authenticated receiving wallet/bank statement. Did not click Confirm Payment or mark any real order PAID. V2 confirmation UI/backend is synthetic-tested; the attestation control no longer requires an extra opaque evidence reference, but genuine credit remains mandatory.
+- **P2 SYNTHETIC STATE PASS / LIVE NOTIFICATION BLOCKED.** Isolated V2 Admin exercised Confirm Order, PACKING, tracking assignment, A6 label preview, DISPATCHED and DELIVERED on `SIM-GFS210-...`; label is watermarked `TEST ONLY — SIMULATED FULFILLMENT; DO NOT SHIP`. Separate synthetic unpaid cancellation stayed PENDING/receipt-free before cancel. V2 status outbox rows were `DEFERRED`; provider/notification/template flags and Meta secrets remain off/absent, so there are no V2 outbound WAMIDs. Synthetic remote rows/outbox/audits were cleaned; V2 D1 counts returned to zero.
+- P3 negative/replay/window/out-of-order checks pass in isolated/synthetic tests; real receipt not canceled/rejected. No actual PAID order was used to test terminal transitions.
+- V1 Workers: Admin `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`, rollback `701b3142-47e6-45da-b5e9-c0eddb20892c`; API `21a3d74c-3979-432c-9190-1848362592a4`, rollback `76084318-69c7-46b3-bfa0-886610971133`. V2 isolated staging: Admin `99423a28-2da7-40b3-9a37-10a4d82e4d71`, rollback `d7898150-a54e-4e49-8e85-5a602a6866e6`; API `5fc102a8-259b-4219-a1a9-177a5647e6c7`, rollback `c714ac55-ef19-46b3-a803-e672460abc93`. V2 flags remain OFF; no V2 reminders/customer messages were enabled.
+- PR #10 V1 outbox/clearer fix is pushed; PR #9 V2 localized outbox/status and isolated tests are pushed. Both PRs remain open; no branch protection was bypassed, no GitHub checks are reported.
+- Validation: clean `npm ci`; V1 176/176 and V2 213/213 tests; lint/build; `npm audit` 0; V1/V2 Wrangler dry-runs; supported D1 quick/FK checks. No new Worker, migration, binding, paid resource, or R2 object. V2 synthetic D1 rows were removed; `images/` remains untouched; Hoja assets not used.
+- Completion estimate: GFS-210 78%. P0 100%; P1 0% (blocked); P2 70% (synthetic state sequence PASS, real V2 WAMID blocked); P3 85%; P4 100% local/staging; P5 100%. Overall project remains at its previously recorded 80% estimate. Release: **NO-GO for real payment confirmation or V2 customer messaging**; V1 P0 clearer-notice acceptance is GO.
+
+## GFS-206 Receipt Hotfix and Active-Webhook Blocker (2026-10-24, historical snapshot superseded by GFS-210)
 
 - Fetched PR #9 at `9f8afed`. Re-read `rules.md` and required current status/test/decision/resource/report records. Added the permanent cost/cleanup rule first.
 - Authenticated Admin plus one narrow read-only shared-D1 query reconciled both priority PAYMENT_PENDING orders: each payment/order link is valid, both have zero exact receipt rows, no saved reference, no receipt audit, and no linked conversation/last-inbound event. Targeted shared R2 prefix searches found no order-associated objects. Admin zero counts are accurate, not stale.

@@ -1,5 +1,27 @@
 # Final Report
 
+## GFS-210 Payment Review and Fulfillment (2026-10-24)
+
+**RELEASE: NO-GO for real PAID confirmation and V2 customer messages. P0 real clearer-receipt notification PASS. Synthetic V2 lifecycle state test PASS; synthetic WAMIDs are not claimed.**
+
+| Admin option / stage | Initial → final | Actual vs. synthetic | Audit/D1/message evidence | Result |
+|---|---|---|---|---|
+| FS-261024-000005 Request Clearer Receipt | `PAYMENT_REVIEW`/`REVIEW` → unchanged; receipt count 1 | REAL test-image order | Reason `TEST_IMAGE_NOT_PAYMENT_PROOF`; outbox SENT; actual clearer message WAMID hash prefix `5ace6d8452dd78f8`, status READ. Receipt ID `4f8e2e7c-b5f8-4fdb-a85e-a88687a8af6e` preserved. Admin screenshot `D:\Temp\kilo\gfs210-clearer-request-admin.png`; WhatsApp screenshot `D:\Temp\kilo\gfs210-clearer-whatsapp.png` | PASS REAL |
+| Real payment confirmation | No eligible confirmed-payment order → unchanged | REAL account check unavailable | Admin Confirmed Payments queue count 0; no wallet/bank statement or independently verified credit; no Confirm Payment click, no PAID | BLOCKED |
+| V2 credit-attestation UI | Source uses saved receipt/reference/method/amount plus Admin checkbox; no required opaque settlement evidence field | SYNTHETIC unit/API coverage only | V2 API accepts `settlementConfirmed=true` without `settlementEvidenceRef` while retaining all financial binding checks | PASS SYNTHETIC; real P1 BLOCKED |
+| PAID→Confirm Order→PACKING→Assign Tracking→Label→DISPATCHED→DELIVERED | Synthetic V2 order advanced through each state, then cleaned | SYNTHETIC ONLY; no funds or shipment | Isolated Admin screenshots: `gfs210-v2-confirmed.png`, `gfs210-v2-packing.png`, `gfs210-v2-tracking.png`, `gfs210-v2-simulated-label.png`, `gfs210-v2-dispatched.png`, `gfs210-v2-delivered.png`. Label watermark `TEST ONLY — SIMULATED FULFILLMENT; DO NOT SHIP`; outbox jobs DEFERRED | PASS STATE SIMULATION; LIVE NOTIFICATION BLOCKED |
+| Separate unpaid cancellation | `PAYMENT_PENDING`/`PENDING`, no receipt → `CANCELLED`/`PENDING`, receipt count 0 | SYNTHETIC V2 order, separate terminal path | Audit/outbox checked; notification deferred; screenshot `gfs210-v2-cancelled.png`; fixture removed | PASS SYNTHETIC |
+| Rejection, clearer, insufficient evidence, duplicate approval, stale/out-of-order | Separate local synthetic fixtures/tests | SYNTHETIC only | V1/V2 tests verify review/receipt retention, no duplicate outbox, no cancellation of PAID/reviewed and correct window/template gating | PASS SYNTHETIC |
+| V2 status notifications | Outbox handling exists for rejection, clearer request, confirmation, packing, dispatch, delivery, cancellation | No customer send | V2 Admin/API flags OFF, V2 Meta secrets absent, utility templates unapproved; generated jobs DEFERRED; no outbound V2 WAMID | BLOCKED (authorized provider/template setup required) |
+
+**P0 details:** Verified tester Profile, GFS Contact Info, Admin/Cloudflare identity and Meta subscription; the original test image is not payment proof. The actual Urdu clearer-receipt message was READ. No funds were checked, no receipt removed/reassigned, and the target remained REVIEW/PENDING.
+
+**Worker/release:** V1 Admin `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` (rollback `701b3142-47e6-45da-b5e9-c0eddb20892c`); V1 API `21a3d74c-3979-432c-9190-1848362592a4` (rollback `76084318-69c7-46b3-bfa0-886610971133`). Isolated V2 Admin `99423a28-2da7-40b3-9a37-10a4d82e4d71` (rollback `d7898150-a54e-4e49-8e85-5a602a6866e6`); V2 API `5fc102a8-259b-4219-a1a9-177a5647e6c7` (rollback `c714ac55-ef19-46b3-a803-e672460abc93`). PR #10/PR #9 open; no branch-protection or CI bypass.
+
+**Validation/cost:** `npm ci`; V2 213/213, V1 176/176; lint/build; `npm audit` 0; V1/V2 Wrangler dry-runs. No migration, new resource, paid plan, R2 object, template publication or V2 message. Isolated V2 D1 fixtures and related rows were removed; counts returned to zero. `images/`, V1 financial history and Hoja isolation untouched.
+
+**Completion estimate:** GFS-210 78% (P0 100%, P1 0% blocked, P2 70% synthetic state pass/real messages blocked, P3 85%, P4 100%, P5 100%). Project remains at the previous 80% estimate. Production lifecycle release remains NO-GO until real receiving-account credit is independently verified and V2 messaging permissions/secrets/templates are authorized.
+
 ## GFS-206 Active Receipt Diagnosis (2026-10-24)
 
 ### P0/P1 Evidence

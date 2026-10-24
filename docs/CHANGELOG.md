@@ -1,6 +1,14 @@
 # Changelog
 
-## 2026-10-24 (GFS-206)
+## 2026-10-24 (GFS-210)
+
+- V1: added an audited `TEST_IMAGE_NOT_PAYMENT_PROOF` Request Clearer Receipt outbox path with service-window validation, Queue publication/retry, localized notice, idempotency and a worker consumer. The real test order kept its JPEG and REVIEW/PENDING state; actual notice WAMID status READ.
+- V2 PR #9: added localized outbox notices for PAYMENT_REJECTED, REQUEST_CLEARER_RECEIPT, ORDER_CONFIRMED, PACKING, DISPATCHED, DELIVERED and ORDER_CANCELLED; PAYMENT_CONFIRMED remains on the existing confirmation path. Added optional-credit-evidence UI under Admin attestation, V2-only flags remain OFF, simulation watermarks and synthetic regressions.
+- V1 staging deployments: Admin `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`; API `21a3d74c-3979-432c-9190-1848362592a4`. V2 isolated staging deployments: Admin `99423a28-2da7-40b3-9a37-10a4d82e4d71`; API `5fc102a8-259b-4219-a1a9-177a5647e6c7`. V2 sends remain held; no live V2 WAMIDs.
+- V2 Admin synthetic lifecycle and separate unpaid cancellation were screenshot-tested with TEST ONLY/DO NOT SHIP labels, then all synthetic V2 D1 rows were cleaned. No genuine payment was confirmed, no physical shipment represented, and no Meta template/provider flag was enabled.
+- V1/V2 full regression suites pass, lint/build/audit0 and Worker dry-runs pass. PR #10/PR #9 remain open with no protection bypass.
+
+## 2026-10-24 (GFS-206, historical snapshot superseded by GFS-210)
 
 - Diagnosed both priority orders read-only: valid payment/order links, pending, zero receipt/reference/audit, no linked conversation/last-inbound event and no order-prefix R2 object. Outbound payment text/QR WAMIDs are READ but are not inbound receipt proof. Tester Profile mismatch and Hoja-associated Meta tabs blocked chat/media attribution.
 - Added privacy-safe hashed receipt-association/download/R2/D1 diagnostics and V1-compatible association for exact payment-reply WAMID or unique sender/payment even when the conversation is NEW/missing. Ambiguous associations reject. R2 object is removed if D1 receipt commit fails. No source code touches PAID from image alone.

@@ -1,6 +1,16 @@
 # Decisions
 
-## 2026-10-24: GFS-206 Do Not Guess the Receipt Sender
+## 2026-10-24: GFS-210 Payment Gate and Synthetic Fulfillment
+
+The real P0 test image is not financial evidence. Preserve its D1/R2 receipt and history; Request Clearer Receipt with reason `TEST_IMAGE_NOT_PAYMENT_PROOF` is the appropriate audited action and its actual localized message reached READ. Keep the order REVIEW/payment PENDING.
+
+No genuine paid candidate or receiving wallet/bank credit evidence was available. Do not click Confirm Payment or use the synthetic V2 order to satisfy P1. This is a financial blocker, not permission to relax settlement safeguards.
+
+V2 status outbox code is isolated on PR #9 and tested. The isolated V2 staging deployment keeps provider/status/template flags OFF and has no Meta secrets. Synthetic Admin state tests prove only state/audit/label behavior; their notification outbox is DEFERRED with no provider WAMID. The physical label is explicitly TEST ONLY/DO NOT SHIP.
+
+Synthetic V2 D1 fixtures were removed after screenshots/checks; baseline order/customer/payment/receipt/outbox/outbound/audit counts returned to zero. V1 receipt and payment data, V2 feature flags, Meta account, payment methods, V1 checkout, Hoja data and `images/` remain unchanged.
+
+## 2026-10-24: GFS-206 Do Not Guess the Receipt Sender (historical diagnosis superseded by GFS-210)
 
 - Both priority shared orders have valid payment links but no D1 receipt/reference/audit, no linked conversation or last-inbound event, and no receipt-prefix R2 object. Outbound payment QR/text WAMID/READ statuses do not prove a customer receipt upload. Keep both PAYMENT_PENDING; do not attach, mark REVIEW, PAID, or cancel based on a screenshot.
 - The Meta event store is hash-only and cannot recover a message media ID. The signed-in WhatsApp Profile does not match the authorized tester and current Meta tabs are Hoja-associated; do not open chats/switch accounts/send. Exact attribution and a live image test are externally blocked.

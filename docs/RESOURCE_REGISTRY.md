@@ -1,6 +1,15 @@
 # Resource Registry
 
-## GFS-206 Receipt Hotfix and Resource Review (2026-10-24)
+## GFS-210 Staging and Cleanup (2026-10-24)
+
+- V1 Admin `getfreeseeds-admin-staging`: active `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`, rollback `701b3142-47e6-45da-b5e9-c0eddb20892c`. V1 API: active `21a3d74c-3979-432c-9190-1848362592a4`, rollback `76084318-69c7-46b3-bfa0-886610971133`. These carry the PR #10 clearer-receipt outbox fix.
+- Isolated V2 Admin `getfreeseeds-v2-admin-staging`: active `99423a28-2da7-40b3-9a37-10a4d82e4d71`, rollback `d7898150-a54e-4e49-8e85-5a602a6866e6`. V2 API `getfreeseeds-v2-api-staging`: active `5fc102a8-259b-4219-a1a9-177a5647e6c7`, rollback `c714ac55-ef19-46b3-a803-e672460abc93`. Existing bindings only; no migration, cron or new resource.
+- V2 `META_PROVIDER_ENABLED`, status-notification, payment-confirmation, automation, reminders and utility-template approval remain OFF; V2 API secret list is empty. No V2 outgoing provider message was attempted; status outbox jobs stayed DEFERRED.
+- V2 staging synthetic records (`gfs210v2-synth-*`) were created only in isolated D1 to test Admin state transitions, then deleted along with associated outbox/items/payments/orders/customers/audit rows. Final order/customer/payment/receipt/outbox/outbound/synthetic-audit counts are zero; D1 size returned to baseline 626,688 bytes. No R2 object or Queue message was created.
+- Local screenshots remain private in `D:\Temp\kilo\` (`gfs210-clearer-request-admin.png`, `gfs210-clearer-whatsapp.png`, `gfs210-v2-confirmed.png`, `gfs210-v2-packing.png`, `gfs210-v2-tracking.png`, `gfs210-v2-simulated-label.png`, `gfs210-v2-dispatched.png`, `gfs210-v2-delivered.png`, `gfs210-v2-cancelled.png`). No screenshot contains a real customer contact card.
+- No paid resource purchase or new Cloudflare resource. D1 preflight was limited to supported quick/FK checks and exact fixture queries. Existing `images/` and Hoja assets were not touched.
+
+## GFS-206 Receipt Hotfix and Resource Review (2026-10-24, historical snapshot superseded by GFS-210)
 
 - No Cloudflare/Meta resource was created or deleted in GFS-206. Existing Get Free Seeds V2 resource ownership, cost, quota, and cleanup-deadline table below remains current. V2 Cron remains OFF/removed; V2 Queue consumer stays idle. No paid plan was purchased.
 - Active shared Workers remain API `9b5f13ae-f023-4fa8-befe-2085bb24cbda` and Admin `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0`; no shared DB/R2 writes and no active webhook deployment. Shared Admin Access and `images/` unchanged.

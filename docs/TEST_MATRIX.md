@@ -1,6 +1,23 @@
 # Test Matrix
 
-## GFS-206 Active Receipt Investigation (2026-10-24)
+## GFS-210 Lifecycle Test (2026-10-24)
+
+| Requirement | Result | Evidence / limitation |
+|---|---|---|
+| Tester/Admin/Meta identity | PASS REAL | WhatsApp Profile, GFS Contact Info, Admin Access and Cloudflare identity reverified |
+| FS-261024-000005 receipt review | PASS REAL | Receipt `4f8e2e7c-b5f8-4fdb-a85e-a88687a8af6e` still present/private; order REVIEW, payment PENDING; no PAID or receipt deletion |
+| TEST_IMAGE_NOT_PAYMENT_PROOF | PASS REAL | Admin reason audited, outbox SENT; clearer request visible in GFS chat; WAMID SHA-256 prefix `5ace6d8452dd78f8`, Meta status READ; screenshots under `D:\Temp\kilo\` |
+| Genuine payment confirmation | BLOCKED | Admin reports 0 Confirmed Payments and no receiving-account credit evidence; no real confirmation attempted |
+| Simple V2 credit attestation | PASS SYNTHETIC | V2 checkbox/Confirm Payment path accepts authenticated attestation without mandatory opaque settlement reference; independent receipt/reference/method/amount/review checks remain; no real PAID order changed |
+| PAID→Confirm→PACKING→Tracking→Label→DISPATCHED→DELIVERED | PASS SYNTHETIC ADMIN | Separate V2 `SIM-GFS210-` fixture exercised in actual isolated Admin; watermarked label; stale/out-of-order/repeated actions guarded; physical shipment not claimed |
+| V2 localized notices | PASS SOURCE/SYNTHETIC; LIVE BLOCKED | EN/UR outbox tests cover lifecycle stages. Isolated V2 provider/notification/utility-template flags OFF and Meta secrets absent; remote outbox DEFERRED, no V2 WAMIDs |
+| Reject/clearer/cancel/late/duplicate negatives | PASS SYNTHETIC | Separate fixtures; review/PAID cancellation rejected; receipt retained; duplicate queue/test rows single; service-window/template gate blocks outside-window sends |
+| Cleanup | PASS | V2 synthetic customers/orders/payments/items/outbox/audit removed; D1 counts return zero; no V2 R2 object or Queue message |
+| Regression/security | PASS LOCAL | V1 176 tests, V2 213 tests; lint/build; audit 0; V1/V2 dry-runs; no GitHub protection bypass |
+
+Actual P0 receipt/WAMID evidence is separate from all synthetic V2 fulfillment evidence. No real credit or shipment was simulated as factual.
+
+## GFS-206 Active Receipt Investigation (2026-10-24, historical snapshot superseded by GFS-210)
 
 | Requirement | Result | Evidence / exact blocker |
 |---|---|---|
