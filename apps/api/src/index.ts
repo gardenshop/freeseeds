@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { applyFertilizerDecision, createWhatsAppProvider, customerTransactionReferenceHash, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isInsideWhatsAppServiceWindow, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, MetaCapiProvider, MetaFlowEnvelope, normalizeCustomerTransactionReference, normalizePaymentMethodRow, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInboundConversationActivity, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey } from "@gfs/core";
+import { applyFertilizerDecision, createWhatsAppProvider, customerTransactionReferenceHash, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isInsideWhatsAppServiceWindow, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, MetaCapiProvider, MetaFlowEnvelope, normalizeCustomerTransactionReference, normalizePaymentMethodRow, normalizeWhatsAppWaId, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInboundConversationActivity, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey } from "@gfs/core";
 import { handleMetaFlowPayload } from "./flow-endpoint";
 import { admitWhatsAppSenders } from "./rate-limit";
 
@@ -811,6 +811,16 @@ app.post("/receipts/ingest", async (c) => {
   }
 });
 
+type ClearerReceiptReasonCode = "TEST_IMAGE_NOT_PAYMENT_PROOF" | "INSUFFICIENT_OR_UNCLEAR_RECEIPT";
+function clearerReceiptText(orderNumber: string, locale: "en" | "ur", reasonCode: ClearerReceiptReasonCode): string {
+  if (locale === "ur") return reasonCode === "TEST_IMAGE_NOT_PAYMENT_PROOF"
+    ? `آپ نے آرڈر ${orderNumber} کے لیے جو تصویر بھیجی ہے وہ ٹیسٹ تصویر ہے، ادائیگی کا ثبوت نہیں۔ کوئی ادائیگی تصدیق شدہ نہیں ہے۔ اگر آپ نے ادائیگی کی ہے تو براہِ کرم اس آرڈر کی واضح اور اصل رسید اپ لوڈ کریں۔ آپ کی ادائیگی ایڈمن کے جائزے میں رہے گی۔`
+    : `آرڈر ${orderNumber} کی بھیجی گئی تصویر واضح نہیں ہے۔ براہِ کرم درست آرڈر کی واضح رسید دوبارہ اپ لوڈ کریں۔ آپ کی ادائیگی ایڈمن کے جائزے میں ہے۔`;
+  return reasonCode === "TEST_IMAGE_NOT_PAYMENT_PROOF"
+    ? `The image you sent for order ${orderNumber} is a test image, not payment proof. No payment has been confirmed. If you have paid, please upload a clear genuine receipt for this order. Your payment remains under Admin review.`
+    : `The image submitted for order ${orderNumber} is unclear. Please upload a clear receipt for the correct order. Your payment remains under Admin review.`;
+}
+
 app.all("*", (c) => c.json({ error: "NOT_FOUND" }, 404));
 
 export default {
@@ -921,6 +931,78 @@ export default {
             const failure=error instanceof Error?error.message.slice(0,120):"REFERENCE_REQUEST_SEND_FAILED";
             if(nextAttempt>=5){await env.DB.prepare("UPDATE outbox_jobs SET status='DEAD_LETTER',attempts=?,last_error=?,updated_at=? WHERE idempotency_key=?").bind(nextAttempt,failure,new Date().toISOString(),message.body.idempotencyKey).run();message.ack();continue;}
             await env.DB.prepare("UPDATE outbox_jobs SET status='RETRY',attempts=?,last_error=?,updated_at=? WHERE idempotency_key=?").bind(nextAttempt,failure,new Date().toISOString(),message.body.idempotencyKey).run();message.retry({delaySeconds:retryDelaySeconds(nextAttempt)});continue;
+          }
+        }
+        if (message.body.kind === "WHATSAPP_CLEARER_RECEIPT") {
+          const failClosed = async (reason: string, action: string = "REQUEST_CLEARER_RECEIPT_SUPPRESSED") => {
+            const failedAt = new Date().toISOString();
+            await env.DB.batch([
+              env.DB.prepare("UPDATE outbox_jobs SET status='PERMANENT_FAILURE',attempts=?,last_error=?,updated_at=? WHERE idempotency_key=? AND status NOT IN ('SENT','DEAD_LETTER')").bind(nextAttempt, reason, failedAt, message.body.idempotencyKey),
+              env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), action, "SYSTEM", "PAYMENT", message.body.entityId, crypto.randomUUID(), JSON.stringify({ reason, stage: "CLEARER_RECEIPT_SEND", idempotencyKey: message.body.idempotencyKey }), failedAt)
+            ]);
+            message.ack();
+          };
+          try {
+            const outbox = await env.DB.prepare("SELECT payload_json FROM outbox_jobs WHERE idempotency_key=?").bind(message.body.idempotencyKey).first<{ payload_json: string }>();
+            if (!outbox) { message.ack(); continue; }
+            const payload = JSON.parse(outbox.payload_json) as { paymentId?: string; orderId?: string; receiptId?: string; reasonCode?: string };
+            if (!payload.paymentId || !payload.orderId || !payload.receiptId || !["TEST_IMAGE_NOT_PAYMENT_PROOF", "INSUFFICIENT_OR_UNCLEAR_RECEIPT"].includes(payload.reasonCode ?? "")) {
+              await failClosed("CLEARER_RECEIPT_PAYLOAD_INVALID");
+              continue;
+            }
+            const current = await env.DB.prepare("SELECT p.review_state,o.id AS order_id,o.order_number,o.state,o.archived_at,c.id AS customer_id,c.wa_id,c.normalized_whatsapp_number,c.whatsapp_number,(SELECT COUNT(*) FROM payment_receipts r WHERE r.id=? AND r.payment_id=p.id AND r.order_id=o.id AND r.r2_object_key<>'' AND r.sha256<>'') AS receipt_count FROM payments p JOIN orders o ON o.id=p.order_id JOIN customers c ON c.id=o.customer_id WHERE p.id=? AND o.id=?").bind(payload.receiptId, payload.paymentId, payload.orderId).first<{ review_state: string; order_id: string; order_number: string; state: string; archived_at: string | null; customer_id: string; wa_id: string | null; normalized_whatsapp_number: string | null; whatsapp_number: string | null; receipt_count: number }>();
+            if (!current || current.archived_at || current.review_state !== "REVIEW" || current.state !== "PAYMENT_REVIEW" || Number(current.receipt_count) !== 1) {
+              await failClosed("CLEARER_RECEIPT_NO_LONGER_ELIGIBLE");
+              continue;
+            }
+            const recipientSource = current.wa_id?.trim() || current.normalized_whatsapp_number || current.whatsapp_number || "";
+            const recipient = normalizeWhatsAppWaId(recipientSource);
+            if (!recipient) {
+              await failClosed("CLEARER_RECEIPT_RECIPIENT_UNAVAILABLE");
+              continue;
+            }
+            const conversation = await env.DB.prepare("SELECT state_data,last_inbound_at,last_inbound_message_id FROM whatsapp_conversations WHERE wa_id IN (?,?) ORDER BY CASE WHEN wa_id=? THEN 0 ELSE 1 END LIMIT 1").bind(recipient, `+${recipient}`, recipient).first<{ state_data: string; last_inbound_at: string | null; last_inbound_message_id: string | null }>();
+            if (!conversation?.last_inbound_message_id || !isInsideWhatsAppServiceWindow(conversation.last_inbound_at)) {
+              await failClosed("WHATSAPP_SERVICE_WINDOW_CLOSED", "WHATSAPP_SERVICE_WINDOW_BLOCKED");
+              continue;
+            }
+            let locale: "en" | "ur" = "en";
+            try { locale = JSON.parse(conversation.state_data).language === "ur" ? "ur" : "en"; } catch { /* default to English */ }
+            const provider = createWhatsAppProvider("meta", { enabled: env.META_PROVIDER_ENABLED === "true", graphVersion: env.META_GRAPH_VERSION ?? "v26.0", accessToken: env.META_ACCESS_TOKEN, phoneNumberId: env.META_PHONE_NUMBER_ID, verifyToken: env.WEBHOOK_VERIFY_TOKEN, appSecret: env.META_APP_SECRET });
+            const reasonCode = payload.reasonCode as ClearerReceiptReasonCode;
+            const sent = await sendConversationReply(env.DB, provider, recipient, conversation.last_inbound_message_id, clearerReceiptText(current.order_number, locale, reasonCode), {}, message.body.idempotencyKey, { orderId: current.order_id, customerId: current.customer_id, kind: "CLEARER_RECEIPT_REQUEST" });
+            if (sent.sent) {
+              const sentAt = new Date().toISOString();
+              await env.DB.batch([
+                env.DB.prepare("UPDATE outbox_jobs SET status='SENT',attempts=?,last_error=NULL,updated_at=? WHERE idempotency_key=?").bind(nextAttempt, sentAt, message.body.idempotencyKey),
+                env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "REQUEST_CLEARER_RECEIPT_SENT", "SYSTEM", "PAYMENT", payload.paymentId, crypto.randomUUID(), JSON.stringify({ orderId: payload.orderId, receiptId: payload.receiptId, reasonCode, locale }), sentAt)
+              ]);
+              message.ack();
+              continue;
+            }
+            const failure = await env.DB.prepare("SELECT last_error FROM outbound_messages WHERE idempotency_key=?").bind(message.body.idempotencyKey).first<{ last_error: string | null }>();
+            if (failure?.last_error === "WHATSAPP_SERVICE_WINDOW_CLOSED") {
+              await failClosed("WHATSAPP_SERVICE_WINDOW_CLOSED", "WHATSAPP_SERVICE_WINDOW_BLOCKED");
+              continue;
+            }
+            if (nextAttempt >= 5) {
+              await env.DB.prepare("UPDATE outbox_jobs SET status='DEAD_LETTER',attempts=?,last_error='CLEARER_RECEIPT_SEND_FAILED',updated_at=? WHERE idempotency_key=?").bind(nextAttempt, new Date().toISOString(), message.body.idempotencyKey).run();
+              message.ack();
+              continue;
+            }
+            await env.DB.prepare("UPDATE outbox_jobs SET status='RETRY',attempts=?,last_error='CLEARER_RECEIPT_SEND_FAILED',updated_at=? WHERE idempotency_key=?").bind(nextAttempt, new Date().toISOString(), message.body.idempotencyKey).run();
+            message.retry({ delaySeconds: retryDelaySeconds(nextAttempt) });
+            continue;
+          } catch (error) {
+            const failure = error instanceof Error ? error.message.slice(0, 120) : "CLEARER_RECEIPT_SEND_FAILED";
+            if (nextAttempt >= 5) {
+              await env.DB.prepare("UPDATE outbox_jobs SET status='DEAD_LETTER',attempts=?,last_error=?,updated_at=? WHERE idempotency_key=?").bind(nextAttempt, failure, new Date().toISOString(), message.body.idempotencyKey).run();
+              message.ack();
+              continue;
+            }
+            await env.DB.prepare("UPDATE outbox_jobs SET status='RETRY',attempts=?,last_error=?,updated_at=? WHERE idempotency_key=?").bind(nextAttempt, failure, new Date().toISOString(), message.body.idempotencyKey).run();
+            message.retry({ delaySeconds: retryDelaySeconds(nextAttempt) });
+            continue;
           }
         }
         if (nextAttempt > 5) {

@@ -58,8 +58,8 @@ async function callback(messages: Record<string, unknown>[], extraChanges: unkno
   return api.fetch(new Request("https://api.example.test/webhooks/whatsapp", { method: "POST", headers: { "content-type": "application/json", "x-hub-signature-256": `sha256=${signature}` }, body: payload }), env());
 }
 
-async function adminPost(path: string, body: Record<string, unknown>, referenceRequestsEnabled = "true") {
-  const adminEnv = { DB: db, ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL", REFERENCE_REQUESTS_ENABLED: referenceRequestsEnabled, EVENTS: { send: vi.fn(async () => undefined) } } as never;
+async function adminPost(path: string, body: Record<string, unknown>, referenceRequestsEnabled = "true", events: { send: typeof queueSend } = { send: vi.fn(async () => undefined) }) {
+  const adminEnv = { DB: db, ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL", REFERENCE_REQUESTS_ENABLED: referenceRequestsEnabled, EVENTS: events } as never;
   const identity = { "cf-access-authenticated-user-email": "admin@example.test" };
   const csrfResponse = await admin.fetch(new Request("https://admin.example.test/api/csrf", { headers: identity }), adminEnv);
   const csrf = await csrfResponse.json() as { csrfToken: string };
@@ -485,6 +485,91 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
       expect(sqlite.prepare("SELECT * FROM payments").get()).toEqual(payment);
       expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE kind LIKE 'WHATSAPP_PAYMENT%'").get()).toEqual({ count: 0 });
     }
+  });
+
+  it.each(["en", "ur"] as const)("queues a reasoned clearer-receipt notice, sends it once in the %s service window, and preserves REVIEW", async (locale) => {
+    const testOrder = await createSyntheticPaymentReviewOrder(sender, `clearer-receipt-${locale}`);
+    const inboundId = `synthetic-clearer-window-${locale}`;
+    const now = new Date().toISOString();
+    sqlite.prepare("UPDATE customers SET wa_id=NULL,whatsapp_number=?,normalized_whatsapp_number=NULL WHERE id=?").run(sender, testOrder.order.customerId);
+    sqlite.prepare("UPDATE whatsapp_conversations SET state='PAYMENT_REVIEW',state_data=?,last_inbound_message_id=?,last_inbound_at=?,updated_at=? WHERE wa_id=?").run(JSON.stringify({ language: locale, orderId: testOrder.order.orderId, orderNumber: testOrder.order.orderNumber }), inboundId, now, now, sender);
+    sqlite.prepare("INSERT INTO whatsapp_events(id,provider_event_id,event_type,payload_hash,status,correlation_id,created_at) VALUES(?,?,?,?,?,?,?)").run(`event-${locale}`, `message:${inboundId}`, "MESSAGE", "synthetic-payload-hash", "RECEIVED", `correlation-${locale}`, now);
+    const receiptId = `receipt-clearer-receipt-${locale}`;
+
+    const response = await adminPost(`/api/payments/${testOrder.paymentId}/request-clearer-receipt`, { orderId: testOrder.order.orderId, confirmation: testOrder.order.orderNumber, reasonCode: "TEST_IMAGE_NOT_PAYMENT_PROOF" }, "true", { send: queueSend });
+    expect(response.status).toBe(202);
+    expect(queueSend).toHaveBeenCalledOnce();
+    const job = sqlite.prepare("SELECT idempotency_key,kind,status,payload_json FROM outbox_jobs WHERE entity_id=? AND kind='WHATSAPP_CLEARER_RECEIPT'").get(testOrder.order.orderId) as { idempotency_key:string;kind:string;status:string;payload_json:string };
+    expect(job).toMatchObject({ kind:"WHATSAPP_CLEARER_RECEIPT",status:"QUEUED" });
+    expect(JSON.parse(job.payload_json)).toMatchObject({ orderId:testOrder.order.orderId,paymentId:testOrder.paymentId,receiptId,reasonCode:"TEST_IMAGE_NOT_PAYMENT_PROOF" });
+    const audit = sqlite.prepare("SELECT metadata_json FROM audit_log WHERE action='REQUEST_CLEARER_RECEIPT' AND entity_id=?").get(testOrder.paymentId) as { metadata_json:string };
+    expect(audit.metadata_json).toContain('"reasonCode":"TEST_IMAGE_NOT_PAYMENT_PROOF"');
+
+    const queued = queueSend.mock.calls[0]?.[0] as { kind:string;idempotencyKey:string;entityId:string;schemaVersion:1 };
+    const queuedMessage = { body:queued,attempts:1,ack:vi.fn(),retry:vi.fn() };
+    const sendCount = sends.length;
+    await api.queue({ messages:[queuedMessage] } as never,env());
+    expect(queuedMessage.ack).toHaveBeenCalledOnce();
+    expect(queuedMessage.retry).not.toHaveBeenCalled();
+    expect(sends).toHaveLength(sendCount+1);
+    expect(body()).toBe(locale === "ur"
+      ? `آپ نے آرڈر ${testOrder.order.orderNumber} کے لیے جو تصویر بھیجی ہے وہ ٹیسٹ تصویر ہے، ادائیگی کا ثبوت نہیں۔ کوئی ادائیگی تصدیق شدہ نہیں ہے۔ اگر آپ نے ادائیگی کی ہے تو براہِ کرم اس آرڈر کی واضح اور اصل رسید اپ لوڈ کریں۔ آپ کی ادائیگی ایڈمن کے جائزے میں رہے گی۔`
+      : `The image you sent for order ${testOrder.order.orderNumber} is a test image, not payment proof. No payment has been confirmed. If you have paid, please upload a clear genuine receipt for this order. Your payment remains under Admin review.`);
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(testOrder.order.orderId)).toEqual({ state:"PAYMENT_REVIEW",payment_status:"PENDING" });
+    expect(sqlite.prepare("SELECT review_state FROM payments WHERE id=?").get(testOrder.paymentId)).toEqual({ review_state:"REVIEW" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE id=?").get(receiptId)).toEqual({ count:1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(testOrder.order.orderId)).toEqual({ count:1 });
+    expect(sqlite.prepare("SELECT status,provider_message_id FROM outbound_messages WHERE idempotency_key=?").get(job.idempotency_key)).toMatchObject({ status:"SENT",provider_message_id:"synthetic-outbound-1" });
+    expect(sqlite.prepare("SELECT status,attempts FROM outbox_jobs WHERE idempotency_key=?").get(job.idempotency_key)).toEqual({ status:"SENT",attempts:1 });
+
+    const replay = { body:queued,attempts:2,ack:vi.fn(),retry:vi.fn() };
+    await api.queue({ messages:[replay] } as never,env());
+    expect(replay.ack).toHaveBeenCalledOnce();
+    expect(replay.retry).not.toHaveBeenCalled();
+    expect(sends).toHaveLength(sendCount+1);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(testOrder.order.orderId)).toEqual({ count:1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbound_messages WHERE idempotency_key=?").get(job.idempotency_key)).toEqual({ count:1 });
+  });
+
+  it("requires the test-image reason and refuses clearer-receipt sending after the service window", async () => {
+    const testOrder = await createSyntheticPaymentReviewOrder(sender, "clearer-receipt-expired-window");
+    const oldAt = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
+    const inboundId = "synthetic-clearer-expired-window";
+    sqlite.prepare("UPDATE customers SET wa_id=NULL,whatsapp_number=?,normalized_whatsapp_number=NULL WHERE id=?").run(sender, testOrder.order.customerId);
+    sqlite.prepare("UPDATE whatsapp_conversations SET state='PAYMENT_REVIEW',last_inbound_message_id=?,last_inbound_at=?,updated_at=? WHERE wa_id=?").run(inboundId, oldAt, oldAt, sender);
+    sqlite.prepare("INSERT INTO whatsapp_events(id,provider_event_id,event_type,payload_hash,status,correlation_id,created_at) VALUES(?,?,?,?,?,?,?)").run("event-clearer-expired", `message:${inboundId}`, "MESSAGE", "synthetic-expired-payload", "RECEIVED", "correlation-clearer-expired", oldAt);
+    const invalidReason = await adminPost(`/api/payments/${testOrder.paymentId}/request-clearer-receipt`, { orderId:testOrder.order.orderId,confirmation:testOrder.order.orderNumber,reasonCode:"FREE_TEXT_NOT_ALLOWED" }, "true", { send:queueSend });
+    expect(invalidReason.status).toBe(400);
+    const closedWindow = await adminPost(`/api/payments/${testOrder.paymentId}/request-clearer-receipt`, { orderId:testOrder.order.orderId,confirmation:testOrder.order.orderNumber,reasonCode:"TEST_IMAGE_NOT_PAYMENT_PROOF" }, "true", { send:queueSend });
+    expect(closedWindow.status).toBe(409);
+    expect(await closedWindow.json()).toMatchObject({ error:"WHATSAPP_SERVICE_WINDOW_CLOSED_TEMPLATE_REQUIRED" });
+    expect(queueSend).not.toHaveBeenCalled();
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE kind='WHATSAPP_CLEARER_RECEIPT'").get()).toEqual({ count:0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='REQUEST_CLEARER_RECEIPT'").get()).toEqual({ count:0 });
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(testOrder.order.orderId)).toEqual({ state:"PAYMENT_REVIEW",payment_status:"PENDING" });
+    expect(sqlite.prepare("SELECT review_state FROM payments WHERE id=?").get(testOrder.paymentId)).toEqual({ review_state:"REVIEW" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(testOrder.order.orderId)).toEqual({ count:1 });
+  });
+
+  it("retries a failed queue publish without duplicate audit and keeps the original reason code", async () => {
+    const testOrder = await createSyntheticPaymentReviewOrder(sender, "clearer-receipt-queue-retry");
+    const now = new Date().toISOString();
+    const inboundId = "synthetic-clearer-queue-retry";
+    sqlite.prepare("UPDATE customers SET wa_id=NULL,whatsapp_number=?,normalized_whatsapp_number=NULL WHERE id=?").run(sender, testOrder.order.customerId);
+    sqlite.prepare("UPDATE whatsapp_conversations SET state='PAYMENT_REVIEW',last_inbound_message_id=?,last_inbound_at=?,updated_at=? WHERE wa_id=?").run(inboundId, now, now, sender);
+    sqlite.prepare("INSERT INTO whatsapp_events(id,provider_event_id,event_type,payload_hash,status,correlation_id,created_at) VALUES(?,?,?,?,?,?,?)").run("event-clearer-queue-retry", `message:${inboundId}`, "MESSAGE", "synthetic-retry-payload", "RECEIVED", "correlation-clearer-queue-retry", now);
+    queueSend.mockRejectedValueOnce(new Error("synthetic queue failure"));
+    const request = () => adminPost(`/api/payments/${testOrder.paymentId}/request-clearer-receipt`, { orderId:testOrder.order.orderId,confirmation:testOrder.order.orderNumber,reasonCode:"TEST_IMAGE_NOT_PAYMENT_PROOF" }, "true", { send:queueSend });
+    const first = await request();
+    expect(first.status).toBe(503);
+    expect(sqlite.prepare("SELECT status,last_error FROM outbox_jobs WHERE kind='WHATSAPP_CLEARER_RECEIPT'").get()).toEqual({ status:"RETRY",last_error:"QUEUE_DISPATCH_FAILED" });
+    const second = await request();
+    expect(second.status).toBe(202);
+    expect(queueSend).toHaveBeenCalledTimes(2);
+    expect(sqlite.prepare("SELECT status FROM outbox_jobs WHERE kind='WHATSAPP_CLEARER_RECEIPT'").get()).toEqual({ status:"QUEUED" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='REQUEST_CLEARER_RECEIPT'").get()).toEqual({ count:1 });
+    const job = sqlite.prepare("SELECT payload_json FROM outbox_jobs WHERE kind='WHATSAPP_CLEARER_RECEIPT'").get() as { payload_json:string };
+    expect(JSON.parse(job.payload_json)).toMatchObject({ reasonCode:"TEST_IMAGE_NOT_PAYMENT_PROOF" });
   });
 
   it("fails closed on legacy queued payment work with all methods disabled", async () => {
