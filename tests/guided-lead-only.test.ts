@@ -142,7 +142,7 @@ describe("frozen V1 receipt hotfix", () => {
     const order=await persistFlowSubmission(db,{fullName:"NON-PAYABLE Synthetic",deliveryAddress:`SYNTHETIC ${idempotencyKey}`,nearbyPlace:"SYNTHETIC ONLY",city:"Synthetic City",contactNumber:"03000000001",productCode:"FREE_5_PACK_VEGETABLE_SEEDS",province:"Synthetic Province",fertilizerSelected:false},undefined,idempotencyKey,waId);
     if(!order.quote)throw new Error("SYNTHETIC_QUOTE_MISSING");
     const payment=sqlite.prepare("SELECT id FROM payments WHERE order_id=?").get(order.orderId) as {id:string};
-    sqlite.prepare("UPDATE customers SET wa_id=NULL,normalized_whatsapp_number=? WHERE id=?").run(`+${waId}`,order.customerId);
+    sqlite.prepare("UPDATE customers SET wa_id=NULL,whatsapp_number=?,normalized_whatsapp_number=NULL WHERE id=?").run(waId,order.customerId);
     sqlite.prepare("UPDATE orders SET state='PAYMENT_PENDING',payment_status='PENDING' WHERE id=?").run(order.orderId);
     sqlite.prepare("UPDATE payments SET method='EASYPAISA',review_state='PENDING',expected_amount=? WHERE id=?").run(order.quote.totalPayablePkr,payment.id);
     sqlite.prepare("INSERT INTO outbound_messages(id,idempotency_key,order_id,customer_id,kind,provider_message_id,status,attempt_count,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)").run(`outbound-${idempotencyKey}`,idempotencyKey,order.orderId,order.customerId,"WHATSAPP_PAYMENT_TEXT",paymentMessageId,"SENT",1,new Date().toISOString(),new Date().toISOString());
@@ -176,7 +176,7 @@ describe("frozen V1 receipt hotfix", () => {
     const ambiguousOrder=await persistFlowSubmission(db,{fullName:"NON-PAYABLE Synthetic",deliveryAddress:`SYNTHETIC ${idempotencyKey} SECOND`,nearbyPlace:"SYNTHETIC ONLY",city:"Synthetic City",contactNumber:"03000000001",productCode:"FREE_5_PACK_VEGETABLE_SEEDS",province:"Synthetic Province",fertilizerSelected:false},undefined,`${idempotencyKey}-second`,waId);
     if(!ambiguousOrder.quote)throw new Error("SYNTHETIC_SECOND_QUOTE_MISSING");
     const secondPayment=sqlite.prepare("SELECT id FROM payments WHERE order_id=?").get(ambiguousOrder.orderId) as {id:string};
-    sqlite.prepare("UPDATE customers SET wa_id=NULL,normalized_whatsapp_number=? WHERE id=?").run(`+${waId}`,ambiguousOrder.customerId);
+    sqlite.prepare("UPDATE customers SET wa_id=NULL,whatsapp_number=?,normalized_whatsapp_number=NULL WHERE id=?").run(waId,ambiguousOrder.customerId);
     sqlite.prepare("UPDATE orders SET state='PAYMENT_PENDING',payment_status='PENDING' WHERE id=?").run(ambiguousOrder.orderId);
     sqlite.prepare("UPDATE payments SET review_state='PENDING' WHERE id=?").run(secondPayment.id);
     const unassociatedImage={from:waId,id:`synthetic-ambiguous-image-event-${language}`,timestamp:"1792497601",type:"image",image:{id:`synthetic-unassociated-media-id-${language}`,mime_type:"image/png"}};

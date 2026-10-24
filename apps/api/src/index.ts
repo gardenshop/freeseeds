@@ -509,8 +509,8 @@ async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: R
   const select=`SELECT o.id,o.order_number,o.state,p.id AS payment_id,p.method,p.review_state,p.customer_transaction_reference
     FROM orders o JOIN payments p ON p.order_id=o.id JOIN customers c ON c.id=o.customer_id`;
   const senderDigits=event.from.startsWith("+")?event.from.slice(1):event.from;
-  const senderNumbers=[senderDigits,`+${senderDigits}`,`+${senderDigits}`,senderDigits];
-  const senderMatch="(c.wa_id IN (?,?) OR (c.wa_id IS NULL AND c.normalized_whatsapp_number IN (?,?)))";
+  const senderNumbers=[senderDigits,`+${senderDigits}`,senderDigits,`+${senderDigits}`,senderDigits,`+${senderDigits}`];
+  const senderMatch="(c.wa_id IN (?,?) OR (c.wa_id IS NULL AND (c.normalized_whatsapp_number IN (?,?) OR c.whatsapp_number IN (?,?))))";
   let record=message.context?.id?await db.prepare(`${select} JOIN outbound_messages m ON m.order_id=o.id WHERE ${senderMatch} AND m.provider_message_id=?
     AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND o.state IN ('PAYMENT_PENDING','PAYMENT_REVIEW')
     AND p.review_state IN ('PENDING','REJECTED','REVIEW') LIMIT 1`).bind(...senderNumbers,message.context.id)
