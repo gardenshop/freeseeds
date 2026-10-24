@@ -15,7 +15,9 @@ describe("admin payment configuration", () => {
     const response = await app.fetch(new Request("https://admin.example.test/orders", { headers: access }), env);
     const html = await response.text();
     expect(response.status).toBe(200);
-    expect(html).toContain("Save Reference");
+    expect(html).toContain("singlePaymentConfirmation=addActions");
+    expect(html).toContain("Confirm Payment");
+    expect(html).toContain("reference:reference.value");
     expect(html).toContain("Request Reference");
     expect(html).toContain("Receiving-account settlement evidence reference");
     expect(html).toContain("I verified the actual credit in the authorized Garden Shop receiving account");

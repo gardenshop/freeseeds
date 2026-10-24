@@ -84,6 +84,8 @@ describe("GFS-141 admin fulfillment actions", () => {
     expect(html).toContain("Confirm Order");
     expect(html).toContain("Approve payment");
     expect(html).toContain("Request Clearer Receipt");
+    expect(html).toContain("TEST_IMAGE_NOT_PAYMENT_PROOF");
+    expect(html).toContain("No additional opaque evidence reference is required");
     expect(html).toContain("Preview private receipt");
     expect(html).toContain("shipping-label?format=4x6");
     expect(html).toContain("shipping-label?format=A6");
@@ -100,6 +102,13 @@ describe("GFS-141 admin fulfillment actions", () => {
     const withTracking = renderShippingLabelHtml(order, "A6", "TRK-123");
     expect(withTracking).toContain("@page{size:105mm 148mm");
     expect(withTracking).toContain("Tracking: TRK-123");
+  });
+
+  it("watermarks synthetic fulfillment labels so they cannot represent physical shipment", () => {
+    const order = { orderNumber:"SIM-GFS210-DO-NOT-SHIP",customerName:"SYNTHETIC TEST ONLY",deliveryAddress:"SIMULATED ADDRESS",landmark:"SIMULATED",city:"Synthetic City",province:"Synthetic Province",contactNumber:"" };
+    const label=renderShippingLabelHtml(order,"A6","SIMULATED-GFS210-NOT-A-SHIPMENT");
+    expect(label).toContain("TEST ONLY — SIMULATED FULFILLMENT; DO NOT SHIP");
+    expect(label).toContain("SIMULATED-GFS210-NOT-A-SHIPMENT");
   });
 
   it("requires server-approved payment and exact sequential fulfillment transitions", async () => {

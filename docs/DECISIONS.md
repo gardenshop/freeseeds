@@ -1,5 +1,68 @@
 # Decisions
 
+## 2026-10-24: GFS-211 Canonical COD Policy and Fail-Closed Legacy Handling
+
+- Keep V1 frozen. COD is isolated to the V2 branch and stays disabled by both Admin policy and `COD_V2_ENABLED=false` until full isolated acceptance plus explicit release authorization.
+- Use one shared strict versioned `V2CodPolicy` parser/format for Admin/API. Hash verification references with HMAC-SHA-256 using `COD_POLICY_HMAC_KEY`; plaintext references are transient request input only and never persisted/logged. Missing/invalid key blocks reference hashing.
+- A stored legacy/unversioned value or canonical value lacking an Admin audit provenance is preserved but unusable; Admin GET shows review-required and POST refuses overwrite. Masked isolated D1 query found no COD policy rows, so no legacy migration was needed or performed.
+- Keep COD fee separate from V1 payment methods. COD amount uses the order's server-side seed/fertilizer selection, active D1 province fee and configured COD fee. Local helper passes PKR625 / PKR375 examples; no claim of end-to-end province acceptance.
+- Migration 0034 is additive and applied only to isolated V2 primary after verified identity, zero-data/masked preflight, `quick_check` and FK checks; recovery clone remains 0033. No V1/shared migration.
+- Synthetic COD checkout and Admin fulfillment/reconciliation are tested. V2 Admin only is deployed behind its existing Access/JWT gate; V2 API/customer flow is not deployed. Verified GFS Admin saved one audited, disabled PKR125 settings row; HMAC is null because no courier reference was entered. Live province rates and courier collection/remittance proof are absent; do not enable COD or promote the customer flow.
+- No CMS/R2/Meta/Queue mutation, real payment/order state change, or customer message occurred. Browser Access and Wrangler identities were reverified before migration, deployment and settings write; verify identity before every further mutation.
+
+## 2026-10-24: GFS-210 Payment Gate and Synthetic Fulfillment
+
+The real P0 test image is not financial evidence. Preserve its D1/R2 receipt and history; Request Clearer Receipt with reason `TEST_IMAGE_NOT_PAYMENT_PROOF` is the appropriate audited action and its actual localized message reached READ. Keep the order REVIEW/payment PENDING.
+
+No genuine paid candidate or receiving wallet/bank credit evidence was available. Do not click Confirm Payment or use the synthetic V2 order to satisfy P1. This is a financial blocker, not permission to relax settlement safeguards.
+
+V2 status outbox code is isolated on PR #9 and tested. The isolated V2 staging deployment keeps provider/status/template flags OFF and has no Meta secrets. Synthetic Admin state tests prove only state/audit/label behavior; their notification outbox is DEFERRED with no provider WAMID. The physical label is explicitly TEST ONLY/DO NOT SHIP.
+
+Synthetic V2 D1 fixtures were removed after screenshots/checks; baseline order/customer/payment/receipt/outbox/outbound/audit counts returned to zero. V1 receipt and payment data, V2 feature flags, Meta account, payment methods, V1 checkout, Hoja data and `images/` remain unchanged.
+
+## 2026-10-24: GFS-206 Do Not Guess the Receipt Sender (historical diagnosis superseded by GFS-210)
+
+- Both priority shared orders have valid payment links but no D1 receipt/reference/audit, no linked conversation or last-inbound event, and no receipt-prefix R2 object. Outbound payment QR/text WAMID/READ statuses do not prove a customer receipt upload. Keep both PAYMENT_PENDING; do not attach, mark REVIEW, PAID, or cancel based on a screenshot.
+- The Meta event store is hash-only and cannot recover a message media ID. The signed-in WhatsApp Profile does not match the authorized tester and current Meta tabs are Hoja-associated; do not open chats/switch accounts/send. Exact attribution and a live image test are externally blocked.
+- V2 source now resolves payment-reply WAMID or unique sender/order and emits hashed association/download/R2/D1 diagnostics. The separate V1-baseline hotfix PR #10 makes the minimal no-migration change; do not deploy it to the active shared webhook until tester/sender/route/protection/rollback preflight passes.
+- Keep V2 API Cron removed and provider/send/confirmation flags OFF. Admin view is Access-protected; CMS test publications and synthetic timeline are isolated and do not send.
+- Resource cleanup: deleted only the GFS-205 synthetic order/schedule fixture. Retain the recovery D1 and other V2 acceptance/rollback assets through 2026-11-23 review; current billable usage is $0 but R2 remains usage-based and shared D1 reads are near quota.
+
+## 2026-10-24: GFS-205 Fail-Closed Receipt and Resource Cost Review
+
+- The new order has valid order/payment linkage but no D1 receipt, saved reference, receipt audit, matching conversation/last-inbound event or private R2 object. Do not infer the screenshot image's sender/order; WhatsApp Profile mismatch and hash-only event storage block real attribution.
+- A single eligible sender/payment match may associate a new inbound image when the conversation is NEW/missing; exact reply-to payment context is stronger evidence, and multiple eligible orders still fail closed. This repairs the reproducible silent-return path without attaching across orders.
+- Do not change shared Admin/API Worker or active webhook. V2 Admin uses the existing restricted Access app; V2 Admin can be tested on isolated data only. No real credit or WhatsApp send without actual authorization/evidence.
+- Disable the unused per-minute V2 API Cron while send flags are OFF; retain the idle Queue consumer, recovery D1, private R2 and V2 Workers because they are needed for acceptance/rollback. No resource deletion/plan purchase; current billable usage is $0, D1 shared quota is near its daily read cap, and resource review is due 2026-11-23.
+
+## 2026-10-23: GFS-204 Attestation UX, Isolated Workers and Access Gate
+
+- Follow-up decision: stop V2 schedules whenever the schema exists, independently of whether reminder sending is enabled. Use SQLite schema detection so old V1 databases safely skip these queries.
+- The reported live review remains PAYMENT_REVIEW/PENDING with one receipt, saved reference and verified method. Receipt/reference do not prove credit. Only the authenticated Admin's exact checked wallet/bank credit attestation may authorize PAID; no real credit was verified, so no live approval.
+- Make separate settlement evidence reference optional; store any supplied evidence only as a hash. Require exact order/payment/receipt/reference/method/amount/review binding. Atomically save reviewer/time/amount/method/reference hash/attestation/PAID, stop pending V2 jobs, and use one idempotent customer PAID notification outbox.
+- Isolated resources were created and migrations/backup-restore checked only on the new V2 D1. Keep all shared V1/staging DBs and active webhook untouched. Deploy API with no public route, provider/feature flags OFF; deploy Admin with an in-code Cloudflare Access JWT signature gate.
+- Migration `0033_payment_reminder_template_names.sql` renames old 210/240/270-minute CMS keys without dropping template text/version/state history; new Admin choices and API/scheduler mappings use `FINAL_WARNING_210M`, `GRACE_NOTICE_240M`, `CANCELLATION_270M`.
+- Do not attach/save the new Admin Worker to an Access application until the editor reliably shows both the existing Admin destination and the V2 destination. Dashboard reports Workers outage; no existing Access app change is justified. The unauthed V2 route currently returns ACCESS_JWT_REQUIRED.
+- The WhatsApp tester's You > View Profile still mismatches authorized tester. No chat, message, template publication or Meta account operation until identity is corrected and independently reverified. Real PAID/notification remains blocked.
+
+## 2026-10-23: GFS-202 Fail-Closed Receipt Association and No Live Deploy
+
+- Admin list evidence separates a pending zero-receipt order from a distinct receipt-backed review order. No claim that a WhatsApp screenshot maps to either order until webhook sender, reply context, payment and D1/R2 evidence match.
+- Source defect was reproducible: handler relied on current conversation `orderId`/state and could skip media after reference capture; inbound reply context was not used. Use exact outbound payment WAMID + sender when available; otherwise require one eligible order equal to current order. Reject ambiguity; never guess or cross-associate.
+- A submitted image is receipt evidence only, not settlement. Mark payment REVIEW, pause V2 schedule atomically, audit, and keep Admin-confirmed payment-credit requirements unchanged. Late post-cancel evidence remains LATE_REVIEW.
+- Admin history/filters/explicit updated notice and migration 0032 are source/test-only. Previewed template version is pinned for the one explicitly selected unsent stage; no bulk resend on CMS publish.
+- No live event/R2 read or reassociation, actual Meta delivery, payment approval, migration, D1 backup, deploy or screenshot was performed. Wrangler confirms only shared staging bindings; keep V2 flags false and require isolated D1/backup/restore and tester/Meta verification first.
+
+## 2026-10-23: GFS-201 Preserve V1; Keep V2 Local Until Gates Pass
+
+- V1 remains frozen at `d816ba17e6ef14e15400141ea34e734ac9d0a9c8`; V2 is on the separate branch with PR #9 against frozen V1. Do not amend V1 or PR #8, and do not merge/deploy V2 before the external gates pass.
+- The payment confirmation UI/API was repaired locally into one fail-closed action. Receipt, reference, method verification and amount match do not prove account credit. The current REVIEW remains unchanged until actual receiving-account funds evidence is independently verified and an authorized Admin confirms it.
+- Synthetic one-button approval and bilingual WAMID tests are not real payment acceptance. No real payment/receipt/review/order was changed and no customer message was sent.
+- V2 schedules only explicitly eligible new orders; defaults remain OFF. Do not backfill historical V1 orders. Closed-window jobs remain blocked unless the exact approved utility template is verified. Grace/cancellation, opt-out, review, paid, terminal and late-payment states fail closed.
+- The active staging D1 is shared and its migration ledger lists all migrations 0001-0031 pending despite populated data. Do not apply migrations or deploy there. First provision/verify isolated V2 D1 with a known backup/rollback and clean migration baseline.
+- Current WhatsApp own Profile does not match the authorized tester in `rules.md`. Do not open chats, switch/relink accounts, send, deploy callback changes or submit templates until the approved tester is restored and matched; canonical sender must then be separately verified through Contact Info.
+- No Meta template submission/approval, live payment, staging deployment or production migration occurred. The account billing lock is not bypassed. Keep feature and utility-template flags false.
+
 ## 2026-10-23: GFS-199 Tester Was Hidden, Not Mismatched
 
 The phone appears under You > View Profile, not the You/Account settings panel used in earlier checks. The exact approved tester matched without authentication/account change; canonical recipient Contact Info matched separately. Prior mismatch conclusions are superseded. Do not treat a hidden field as a different signed-in account.

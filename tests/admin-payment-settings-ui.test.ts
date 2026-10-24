@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import app from "../apps/admin/src/index";
 
 const origin = "https://admin.example.test";
-const env = { ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL" } as Parameters<typeof app.fetch>[1];
+const env = { ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL", COD_ADMIN_UI_ENABLED: "true", COD_V2_ENABLED: "false" } as Parameters<typeof app.fetch>[1];
 
 describe("payment settings generated UI", () => {
   it("renders one canonical protected route with an independently compilable script", async () => {
@@ -17,6 +17,18 @@ describe("payment settings generated UI", () => {
     expect(html).toContain("JazzCash");
     expect(html).toContain("Easypaisa");
     expect(html).toContain("Bank Transfer");
+    expect(html).toContain("Cash on Delivery (COD) — isolated V2");
+    expect(html).toContain("value=\"125\"");
+    expect(html).toContain("data-cod-instructions-en");
+    expect(html).toContain("data-cod-instructions-ur");
+    expect(html).toContain("data-cod-preview-en");
+    expect(html).toContain("data-cod-preview-ur");
+    expect(html).toContain("Reload COD settings");
+    expect(script).toContain("ENABLE_COD");
+    expect(script).toContain("cod-settings-loaded");
+    expect(script).toContain("COD settings reloaded from isolated V2 D1.");
+    expect(script).toContain("COD settings saved in isolated V2 D1.");
+    expect(script).toContain("No enabled province delivery rates; COD will be unavailable.");
     expect(html).toContain("Advanced EN / UR copy");
     expect(script).toContain("item[0]+suffix");
     expect(script).not.toContain("prefix+item[0]");
@@ -31,6 +43,8 @@ describe("payment settings generated UI", () => {
     expect(script).toContain("independent ownership evidence");
     expect(html).not.toContain("qrOwnerVerified");
     expect(response.headers.get("set-cookie")).toMatch(/__Host-gfs_admin_csrf=[a-f0-9]{64}/);
+    expect(app.routes.filter((route) => route.path === "/api/cod-settings" && route.method === "GET")).toHaveLength(1);
+    expect(app.routes.filter((route) => route.path === "/api/cod-settings" && route.method === "POST")).toHaveLength(1);
   });
 
   it("rejects self-service QR ownership verification", async () => {

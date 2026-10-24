@@ -1,0 +1,27 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "getfreeseeds-v2-api-staging",
+  "account_id": "cb5066a6d71ecdee0bd7ed8aacb4d3c2",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-27",
+  "workers_dev": false,
+  "triggers": { "crons": [] },
+  "d1_databases": [{ "binding": "DB", "database_name": "getfreeseeds-v2-staging", "database_id": "6f26ba71-3c10-4b6e-97ab-5df7473c21c7", "migrations_dir": "../../migrations" }],
+  "r2_buckets": [{ "binding": "RECEIPTS", "bucket_name": "getfreeseeds-v2-receipts-staging" }],
+  "queues": {
+    "producers": [{ "binding": "EVENTS", "queue": "getfreeseeds-v2-events-staging" }],
+    "consumers": [{ "queue": "getfreeseeds-v2-events-staging", "max_batch_size": 10, "max_batch_timeout": 5, "max_retries": 5, "dead_letter_queue": "getfreeseeds-v2-events-staging-dlq" }]
+  },
+  "vars": {
+    "DEPLOYMENT_STATE": "V2_ISOLATED_STAGING",
+    "WHATSAPP_PROVIDER": "meta",
+    "META_PROVIDER_ENABLED": "false",
+    "WHATSAPP_CHECKOUT_MODE": "guided",
+    "PAYMENT_AUTOMATION_V2_ENABLED": "false",
+    "PAYMENT_REMINDERS_V2_ENABLED": "false",
+    "PAYMENT_CONFIRMATION_V2_ENABLED": "false",
+    "ORDER_STATUS_NOTIFICATIONS_V2_ENABLED": "false",
+    "COD_V2_ENABLED": "false",
+    "PAYMENT_UTILITY_TEMPLATES_APPROVED": "false"
+  }
+}
