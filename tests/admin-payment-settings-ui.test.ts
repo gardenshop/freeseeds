@@ -23,8 +23,11 @@ describe("payment settings generated UI", () => {
     expect(html).toContain("data-cod-instructions-ur");
     expect(html).toContain("data-cod-preview-en");
     expect(html).toContain("data-cod-preview-ur");
+    expect(html).toContain("Reload COD settings");
     expect(script).toContain("ENABLE_COD");
     expect(script).toContain("cod-settings-loaded");
+    expect(script).toContain("COD settings reloaded from isolated V2 D1.");
+    expect(script).toContain("COD settings saved in isolated V2 D1.");
     expect(script).toContain("No enabled province delivery rates; COD will be unavailable.");
     expect(html).toContain("Advanced EN / UR copy");
     expect(script).toContain("item[0]+suffix");
