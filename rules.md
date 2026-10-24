@@ -1,12 +1,20 @@
 # Get Free Seeds Binding Rules
 
+## GFS-209 Real Receipt E2E (2026-10-24)
+
+- Verified the authorized tester through WhatsApp **You > View Profile** and the canonical GFS sender through **Contact Info**; Admin Access and Cloudflare account matched the authorized GFS identity. The target order's `wa_id` and `normalized_whatsapp_number` are NULL; `whatsapp_number` matches the authenticated tester. Association may use that stored number only when `wa_id IS NULL`, and must be anchored by the exact payment-message WAMID reply or a unique eligible order. A non-NULL mismatch or ambiguous order always fails closed.
+- The first fresh attachment was a Sticker/`MESSAGE`, not receipt media; it created no receipt. Do not treat stickers, text, screenshots or synthetic delivery as receipt proof. The accepted retest was a distinct JPEG selected as a photo and replied directly to the target Easypaisa instructions.
+- Current V1 receipt flow is deployed. Exact acknowledgement is EN: `Receipt received for order {orderNumber}. Your payment is under Admin review. We will notify you after verification.` Receipt upload is transport evidence only; keep order `PAYMENT_REVIEW` and payment `PENDING`. Never inspect/authenticate payment contents, infer wallet credit or mark `PAID` without the independent authorized settlement process.
+- WhatsApp Manager reports the canonical phone `Connected` with `High` quality; messaging permissions are granted and the `messages` callback is subscribed. Admin's `registrationStatus=EXPIRED` reflects expired code-verification status, not disconnected phone registration. One official SMS-code request returned HTTP 400; do not retry, change number/WABA, or re-register a connected phone.
+- Preserve V1 journey, the new-number lock, zero-Hoja runtime isolation, private R2, all financial history and `images/`. Full WAMIDs and screenshots stay in private evidence outside Git; do not put raw IDs, phone numbers, receipt bytes or customer data in logs/docs.
+
 ## GFS-208 Receipt Upload Gate (2026-10-24)
 
 - The target non-payment image is test input only. Do not authenticate financial contents, infer wallet credit, store a manual receipt, approve, or mark `PAID`.
 - The verified test account's own WhatsApp Profile matches the authorized tester and the canonical GFS contact was verified separately. The target order's customer `wa_id` is NULL even though its stored WhatsApp number matches that verified sender. Never fill or overwrite `wa_id` from a display name or guess.
-- Receipt association may use the exact customer WhatsApp number only when the customer's `wa_id` is NULL, normalized number equals the authenticated inbound sender, and either the inbound message replies to that order's exact payment-text/QR WAMID or the sender has exactly one eligible payment order. A non-NULL mismatched `wa_id` always fails closed; multiple candidates without exact reply context fail closed.
+- At the GFS-208 snapshot, receipt association used a NULL-only normalized-number fallback. GFS-209 records the live schema gap and the final fallback to the exact stored `whatsapp_number`; both are allowed only with the exact payment-text/QR WAMID reply or exactly one eligible order. Non-NULL mismatch and multiple candidates fail closed.
 - Keep receipt state at `PAYMENT_REVIEW` and payment status `PENDING`. A receipt acknowledgement is transport confirmation only, not funds verification. EN: `Receipt received for order {orderNumber}. Your payment is under Admin review. We will notify you after verification.` UR: `آپ کے آرڈر {orderNumber} کی رسید موصول ہو گئی ہے۔ آپ کی ادائیگی ایڈمن کے جائزے میں ہے۔ تصدیق کے بعد ہم آپ کو مطلع کریں گے۔`
-- Meta `messages` is subscribed to the canonical staging callback and the inbound event was persisted. The current API lacks the missing-`wa_id` fallback. Do not deploy the candidate until D1/binding/rollback and security gates pass; Meta phone registration currently reports `EXPIRED`. Do not change number, WABA, or webhook registration to bypass this state.
+- Historical GFS-208 finding: Meta `messages` was subscribed and the inbound event persisted, but the candidate had not yet deployed. GFS-209 supersedes its release status; phone Manager is connected even though code verification reports `EXPIRED`.
 - Preserve the new-number WhatsApp lock, the zero-Hoja runtime rule, all payment/order history, private R2, and `images/`. Never run broad shared-D1 scans or copy raw WAMIDs, phone numbers, receipt bytes, or customer data to logs/docs.
 
 ## GFS-199 Verified OFFER Protocol (2026-10-23)

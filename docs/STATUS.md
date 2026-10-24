@@ -1,6 +1,21 @@
 # Status
 
-## GFS-208 Receipt Upload Diagnosis (2026-10-24)
+## GFS-209 Real Receipt Acceptance (2026-10-24)
+
+- **PRIMARY ACCEPTANCE PASS.** Exact target `FS-261024-000005`, Easypaisa PKR500, is `PAYMENT_REVIEW`; payment status remains `PENDING`. No financial contents were authenticated, no funds/wallet credit checked, and no `PAID` or fulfillment action taken.
+- Verified own WhatsApp Profile against the authorized tester, GFS Contact Info against canonical sender, authenticated Admin and Cloudflare identities, canonical Meta Phone/WABA, granted messaging permissions, and `messages` subscription to the staging callback. WhatsApp Manager reports `Connected`/`High`. Admin Graph's `registrationStatus=EXPIRED` is the code-verification field; one official request-code attempt returned HTTP400, no re-registration or retry.
+- First fresh attachment at 15:51 local was a Sticker (`whatsapp_events.event_type=MESSAGE`), not image media; it created no receipt. It was not reused. A separate labeled JPEG photo was sent at 16:13 local as a reply to this order's Easypaisa instructions with caption `NON-PAYMENT TEST ONLY. No funds sent. Not payment evidence.`
+- Fresh inbound WAMID SHA-256 prefix `bf0c88050136fbe3`; D1 `whatsapp_events` confirms `MEDIA`/`RECEIVED` at `2026-10-24T11:13:14.710Z`. The matching order's `wa_id` and `normalized_whatsapp_number` are NULL, while stored `whatsapp_number` matches the verified sender. PR #10 now matches that field only when `wa_id` is NULL and exact reply-to-payment or unique-order constraints pass.
+- D1/Admin receipt ID `4f8e2e7c-b5f8-4fdb-a85e-a88687a8af6e`; MIME `image/jpeg`, 79,863 bytes. Private R2-backed Admin preview opened successfully. Screenshot evidence: `D:\Temp\kilo\gfs209-admin-e2e.png` (Admin order/Receipts panel, customer contact card hidden) and `D:\Temp\kilo\gfs209-admin-preview.png` (private image preview). No screenshot or receipt bytes are committed.
+- Customer received exact EN acknowledgement `Receipt received for order FS-261024-000005. Your payment is under Admin review. We will notify you after verification.` Outbound WAMID SHA-256 prefix `7a14232e1692916d`; D1 outbound status `READ` at `2026-10-24T11:13:22.229Z`. Full inbound/outbound WAMIDs remain in private evidence files outside Git.
+- Exact D1 indexed row counts: one inbound event, one receipt, one acknowledgement. Focused synthetic duplicate-webhook regression confirms no duplicate receipt/ack; no forced live retry/replay was generated. No D1/R2 receipt duplication observed.
+- Final deployed V1 Worker `76084318-69c7-46b3-bfa0-886610971133` from PR #10 head `d6ca1a5`; immediate rollback `7b957406-c869-4461-b184-da230f4d29e3`. No V2 reminder, payment journey, migration, binding, secret or CAPI changes.
+- Validation: clean `npm ci`; focused receipt suite 28 tests; full suite 172 tests; lint, build, `npm audit` (0 advisories), Wrangler dry-run/deploy and D1 quick/FK/schema preflight pass. No branch protection/ruleset bypass; PR #10 remains open with no remote check results reported.
+- V2 reminder: PR #9 and its reminder runtime remain separate and unchanged; no V2 deployment or live-reminder claim.
+- Resource/cost: no purchase, new resource, migration or extra binding. Supported D1 checks read 8,943 rows; event/receipt/ack lookups used exact indexed keys. One Meta request-code HTTP400 attempt; no known charge or setting change. Failed sticker fixture and private evidence remain outside the repo; `images/` untouched; Hoja assets not accessed.
+- Completion estimates: project remains at its prior documented 80%; GFS-209 98%. Stages 1-9, 11-12 PASS (100%); stage 10 PASS via synthetic duplicate replay plus live single-row uniqueness evidence (90%; no forced live replay). Main live acceptance is real, not synthetic.
+
+## GFS-208 Receipt Upload Diagnosis (2026-10-24, historical snapshot superseded by GFS-209)
 
 - Exact target `FS-261024-000005` is Easypaisa/PKR500, still `PAYMENT_PENDING`/`PENDING`; Admin reports **zero receipts**. No R2 receipt object, D1 `payment_receipts` row, Admin preview, or acknowledgement exists. No payment evidence was inspected and no financial state changed.
 - Chrome `list_pages` was first; the existing WhatsApp, Admin, Cloudflare and Meta tabs were reused. Own Profile matched the authorized tester; Contact Info matched the canonical GFS sender. Admin Access and Wrangler identities are the approved GFS account. No other chat was inspected or messaged.

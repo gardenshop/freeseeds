@@ -1,6 +1,24 @@
 # Test Matrix
 
-## GFS-208 Live Receipt Fix (2026-10-24)
+## GFS-209 Real Receipt E2E (2026-10-24)
+
+| Requirement | Result | Evidence / remaining scope |
+|---|---|---|
+| Tester, receiver, Admin/Cloudflare identity | PASS REAL | Own WhatsApp Profile matches approved tester; Contact Info is canonical GFS sender; Admin/Cloudflare identity verified |
+| Meta registration, permissions, webhook | PASS REAL | WhatsApp Manager `Connected`/`High`; code-verification field alone is `EXPIRED`; permissions granted; canonical callback `messages` subscription active. One SMS request rejected HTTP400; no repeat/re-registration |
+| First fresh event | FAIL SAFE | Sticker event persisted as `MESSAGE`, not media; no receipt or state change; not counted as acceptance and not resent |
+| Accepted fresh JPEG | PASS REAL | Distinct Photos & videos JPEG replied to exact Easypaisa payment message; visible non-payment label/caption; WAMID hash prefix `bf0c88050136fbe3`; D1 `MEDIA`/`RECEIVED` at `11:13:14.710Z` |
+| Order association | PASS REAL | Exact `FS-261024-000005`; `wa_id=NULL`, normalized column NULL, stored WhatsApp number matches authenticated sender; exact payment-message reply; strict NULL-only/mismatch/ambiguity guards |
+| R2 / D1 receipt / Admin | PASS REAL | Receipt `4f8e2e7c-b5f8-4fdb-a85e-a88687a8af6e`, `image/jpeg`, 79,863 bytes; private Admin preview opened; screenshot `D:\Temp\kilo\gfs209-admin-e2e.png` and `gfs209-admin-preview.png` outside Git |
+| Payment state | PASS REAL | Order `PAYMENT_REVIEW`, payment `PENDING`; reference missing, approval disabled; no funds check, `PAID`, CAPI Purchase or fulfillment |
+| Customer acknowledgement | PASS REAL | Exact required English copy visible in WhatsApp; outbound WAMID SHA-256 prefix `7a14232e1692916d`, D1 status `READ` at `11:13:22.229Z` |
+| Duplicate suppression | PASS SYNTHETIC + LIVE COUNTS | Focused duplicate-webhook test passes; exact D1 counts are one event, one receipt, one acknowledgement. No live duplicate retry was forced |
+| Dependency/security | PASS | Zod 4.6.7 plus Undici 7.30.1 with Zod `partialRecord` compatibility; `npm audit` 0 advisories; 172 tests, lint/build/dry-run pass |
+| Deployment / rollback / V2 | PASS V1 ONLY | Worker `76084318-69c7-46b3-bfa0-886610971133`; rollback `7b957406-c869-4461-b184-da230f4d29e3`; V2 PR #9/reminders unchanged |
+
+Full inbound/outbound WAMIDs are stored only in private local evidence files outside Git; hashes are reported above. No synthetic test is substituted for the accepted photo E2E.
+
+## GFS-208 Live Receipt Fix (2026-10-24, historical snapshot superseded by GFS-209)
 
 | Requirement | Result | Evidence / remaining scope |
 |---|---|---|

@@ -1,6 +1,29 @@
 # Final Report
 
-## GFS-208 Live Receipt Upload and Acknowledgement (2026-10-24)
+## GFS-209 Real Receipt Upload Acceptance (2026-10-24)
+
+**PRIMARY ACCEPTANCE: PASS (REAL).** A newly generated non-payment JPEG, sent from the verified tester as a photo in direct reply to the Easypaisa instructions, reached the correct live Admin receipt panel. The customer received the exact receipt-under-review acknowledgement. No financial evidence was authenticated and no payment was marked `PAID`.
+
+| Requirement | Result | Evidence |
+|---|---|---|
+| Tester / receiver / accounts | PASS REAL | Own WhatsApp Profile matches approved tester; GFS Contact Info is canonical sender; Admin/Cloudflare identities match. Meta developer app selected the canonical GFS app/business |
+| Meta registration/permissions/webhook | PASS REAL | WhatsApp Manager `Connected`/`High`; messaging and management permissions granted; WABA subscribed; `messages` callback active at staging `/webhooks/whatsapp`. Admin's `EXPIRED` is code-verification status, not phone connection. One official SMS request returned HTTP400; stopped without retry/re-registration |
+| First media attempt | FAIL SAFE, NOT RECEIPT | A newly sent Sticker arrived as `MESSAGE`, not `MEDIA`; it created no receipt. This event was not reused or counted as acceptance |
+| Accepted inbound photo | PASS REAL | A distinct fresh JPEG photo with explicit non-payment image label and caption was sent as a direct reply to this order's Easypaisa instruction. Inbound WAMID SHA-256 prefix `bf0c88050136fbe3`; D1 `MEDIA`/`RECEIVED` at `2026-10-24T11:13:14.710Z`. Full WAMID is private outside Git |
+| Correct order association | PASS REAL | `FS-261024-000005`, Easypaisa, PKR500; live `wa_id=NULL` and normalized number column NULL, stored `whatsapp_number` matches the verified sender. The exact payment-message reply WAMID anchors the association; NULL-only fallback is guarded against non-NULL mismatch and ambiguous orders |
+| Meta media download / R2 / D1 | PASS REAL | D1/Admin receipt ID `4f8e2e7c-b5f8-4fdb-a85e-a88687a8af6e`, MIME `image/jpeg`, 79,863 bytes. Authenticated Admin private-preview route returned the R2 image. Screenshot evidence: `D:\Temp\kilo\gfs209-admin-e2e.png` and `D:\Temp\kilo\gfs209-admin-preview.png`; both outside Git |
+| Admin/payment state | PASS REAL | Admin Receipts count 1; order `PAYMENT_REVIEW`, payment `PENDING`; reference absent and settlement approval disabled. No account/wallet/transaction verification, `PAID`, CAPI Purchase or fulfillment |
+| Customer acknowledgement | PASS REAL | Exact text: `Receipt received for order FS-261024-000005. Your payment is under Admin review. We will notify you after verification.` Outbound WAMID SHA-256 prefix `7a14232e1692916d`; D1 status `READ` at `2026-10-24T11:13:22.229Z`. Full WAMID private outside Git |
+| Duplicate behavior | PASS SYNTHETIC + LIVE COUNTS | Focused same-event duplicate test passes; exact indexed live counts are 1 webhook event, 1 receipt, 1 acknowledgement. No forced live duplicate retry/replay was generated to avoid an extra customer message |
+| Worker / rollback / V2 | PASS | V1 Worker `76084318-69c7-46b3-bfa0-886610971133`; immediate rollback `7b957406-c869-4461-b184-da230f4d29e3`. V2 PR #9/reminders unchanged |
+| Regression/security | PASS | Clean `npm ci`, focused 28 tests, full 172 tests, lint, build, `npm audit` 0, Wrangler dry-run/deploy, D1 quick/FK/schema checks. No GitHub protection bypass; PR #10 remains open on the authorized branch |
+| Cost/isolation | PASS | No paid resource purchases, migrations, new bindings/secrets, or R2 cleanup needed; no broad D1 scan. `images/`, Hoja isolation, old financial history and payment configuration untouched |
+
+**Meta status resolution:** Admin Graph's `registrationStatus=EXPIRED` was the code-verification status. Official WhatsApp Manager showed the connected, high-quality sender. One official code request returned HTTP400; no registration change was needed or made.
+
+**Completion estimates:** Project remains at its prior documented 80%; GFS-209 is 98% complete. Stages 1-9 and 11-12 are 100% PASS. Stage 10 is 90%: synthetic same-WAMID duplicate callback regression and live single-row evidence pass, but a forced duplicate live webhook was deliberately not generated. The main live receipt/ack acceptance is PASS and is not synthetic.
+
+## GFS-208 Live Receipt Upload and Acknowledgement (2026-10-24, historical snapshot superseded by GFS-209)
 
 **PARTIAL / NOT ACCEPTED LIVE.** Exact root cause was identified and the PR #10 V1 hotfix was extended and locally verified. Deployment and fresh live image acceptance were withheld at release gates; no receipt or acknowledgement was fabricated.
 

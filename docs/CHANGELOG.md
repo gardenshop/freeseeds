@@ -1,6 +1,14 @@
 # Changelog
 
-## 2026-10-24 (GFS-208)
+## 2026-10-24 (GFS-209)
+
+- Completed a real V1 receipt E2E. A first new sticker was correctly classified as `MESSAGE` and ignored. A distinct, clearly labeled JPEG photo replying to the target Easypaisa instruction was classified `MEDIA`, persisted to private R2/D1, and appeared in the authenticated Admin Receipts preview.
+- Fixed live association for the observed customer shape: `wa_id` and normalized WhatsApp column are NULL while the stored WhatsApp number matches the verified sender. Fallback is allowed only for NULL `wa_id`, exact payment-message reply or a unique eligible order; mismatch/ambiguity still fails closed.
+- Added safe Zod 4 `partialRecord` compatibility and pinned Zod 4.6.7/Undici 7.30.1 to clear prior high-severity advisories; full V1 tests, lint, build and audit0 pass.
+- Deployed V1 Worker `76084318-69c7-46b3-bfa0-886610971133`; rollback `7b957406-c869-4461-b184-da230f4d29e3`. Exact English acknowledgement reached `READ`; order is REVIEW/PENDING, never PAID. V2, payment configuration, Hoja and financial history unchanged.
+- One provider code-verification request returned HTTP400; official WhatsApp Manager instead confirms phone Connected/High. No retry, re-registration, purchases or additional resource. Duplicate live replay was not forced; synthetic duplicate regression and live one-row counts pass.
+
+## 2026-10-24 (GFS-208, historical snapshot superseded by GFS-209)
 
 - Traced the live inbound image to the verified sender and correct test conversation; Admin confirms target order still has no receipt and `wa_id` is NULL. Exact failure: active V1 receipt association required `customers.wa_id`, despite the stored WhatsApp number matching the verified profile.
 - Extended PR #10 with a NULL-only exact normalized WhatsApp number fallback, gated by exact payment-message reply WAMID or unique eligible sender/order; non-NULL mismatch and ambiguous matches still fail closed. Added synthetic EN/UR and duplicate-webhook regression.
