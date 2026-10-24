@@ -6,6 +6,7 @@
 - The V1-compatible candidate hotfix is separate from V2 scheduler work, adds no migration, and changes only media/order association, review/audit and safe R2 cleanup. It is a review PR only; do not merge or deploy to the active callback until the authorized WhatsApp tester and canonical GFS sender are independently verified, the exact inbound image is positively attributed, active bindings/traffic/rollback are preflighted, and the live retest is authorized.
 - Candidate commit `bdef700` is on `codex/gfs206-v1-receipt-hotfix`, PR #10 against the frozen-release branch; the release branch/tag remains unchanged. No merge/deploy before release gates pass.
 - V2 hashed diagnostic implementation/test commit `582cc16` and docs commit `f2fa23a` are pushed on PR #9; not an active webhook deployment. GitHub reports no CI checks.
+- Isolated API diagnostics deploy `c714ac55-ef19-46b3-a803-e672460abc93` has Queue only, no Cron/public route/provider; shared active API remains `9b5f13ae` pending the release gate.
 - Receipt diagnostics must hash message/media identifiers and record only stable reason/stage/count/correlation fields. Never log raw media, phone/WA IDs, content, access tokens or payment references. Never attach across orders; ambiguous media is rejected.
 - Keep shared API/D1/R2, held incident, real payments and frozen V1 checkout untouched. Do not switch into Hoja-associated Meta assets or open unrelated chats. If profile or sender verification fails, no real image submission or acknowledgement is attempted.
 
