@@ -16,7 +16,7 @@
 
 **P0 details:** Verified tester Profile, GFS Contact Info, Admin/Cloudflare identity and Meta subscription; the original test image is not payment proof. The actual Urdu clearer-receipt message was READ. No funds were checked, no receipt removed/reassigned, and the target remained REVIEW/PENDING.
 
-**Worker/release:** V1 Admin `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` (rollback `701b3142-47e6-45da-b5e9-c0eddb20892c`); V1 API `21a3d74c-3979-432c-9190-1848362592a4` (rollback `76084318-69c7-46b3-bfa0-886610971133`). Isolated V2 Admin `99423a28-2da7-40b3-9a37-10a4d82e4d71` (rollback `d7898150-a54e-4e49-8e85-5a602a6866e6`); V2 API `5fc102a8-259b-4219-a1a9-177a5647e6c7` (rollback `c714ac55-ef19-46b3-a803-e672460abc93`). PR #10/PR #9 open; no branch-protection or CI bypass.
+**Worker/release:** V1 Admin `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` (rollback `701b3142-47e6-45da-b5e9-c0eddb20892c`); V1 API `21a3d74c-3979-432c-9190-1848362592a4` (rollback `76084318-69c7-46b3-bfa0-886610971133`). Isolated V2 Admin `99423a28-6469-46c6-bb03-63d42d816eba` (rollback `d7898150-a54e-4e49-8e85-5a602a6866e6`); V2 API `5fc102a8-74df-415d-8515-64bb7e1a12be` (rollback `c714ac55-ef19-46b3-a803-e672460abc93`). PR #10/PR #9 open; no branch-protection or CI bypass.
 
 **Validation/cost:** `npm ci`; V2 213/213, V1 176/176; lint/build; `npm audit` 0; V1/V2 Wrangler dry-runs. No migration, new resource, paid plan, R2 object, template publication or V2 message. Isolated V2 D1 fixtures and related rows were removed; counts returned to zero. `images/`, V1 financial history and Hoja isolation untouched.
 
