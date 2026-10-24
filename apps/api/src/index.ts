@@ -546,9 +546,7 @@ async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: R
       throw new Error("RECEIPT_D1_COMMIT_FAILED");
     }
   }
-  const receiptText=data.language==="ur"
-    ? `آپ کے آرڈر ${record.order_number} کی رسید موصول ہو گئی ہے۔ آپ کی ادائیگی ایڈمن کے جائزے میں ہے۔ تصدیق کے بعد ہم آپ کو مطلع کریں گے۔`
-    : `Receipt received for order ${record.order_number}. Your payment is under Admin review. We will notify you after verification.`;
+  const receiptText=`Receipt received for order ${record.order_number}. Your payment is under Admin review. We will notify you after verification.`;
   const orderStatus=await contentFor(db,"ORDER_STATUS","Use Check Order to see the current order and payment status.",{},`CHAT:${event.from}`,data.language??"en");
   const image=await contentImageFor(db,bucket,"RECEIPT",`CHAT:${event.from}`);
   await sendConversationReply(db,provider,event.from,event.id,receiptText,{image,buttons:[{id:"CHECK_ORDER",title:whatsAppActionLabel(orderStatus,"CHECK_ORDER")}]});

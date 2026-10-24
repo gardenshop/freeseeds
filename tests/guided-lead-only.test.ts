@@ -157,9 +157,7 @@ describe("frozen V1 receipt hotfix", () => {
     const image={from:waId,id:`synthetic-image-event-${language}`,timestamp:"1792497600",type:"image",image:{id:`synthetic-wamid-media-id-${language}`,mime_type:"image/png"},context:{id:paymentMessageId}};
 
     expect((await callback([image])).status).toBe(200);
-    expect(body()).toBe(language==="ur"
-      ? `آپ کے آرڈر ${order.orderNumber} کی رسید موصول ہو گئی ہے۔ آپ کی ادائیگی ایڈمن کے جائزے میں ہے۔ تصدیق کے بعد ہم آپ کو مطلع کریں گے۔`
-      : `Receipt received for order ${order.orderNumber}. Your payment is under Admin review. We will notify you after verification.`);
+    expect(body()).toBe(`Receipt received for order ${order.orderNumber}. Your payment is under Admin review. We will notify you after verification.`);
     expect(sqlite.prepare("SELECT order_id,payment_id FROM payment_receipts WHERE provider_media_id=?").get(`synthetic-wamid-media-id-${language}`)).toEqual({order_id:order.orderId,payment_id:payment.id});
     expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(order.orderId)).toEqual({state:"PAYMENT_REVIEW",payment_status:"PENDING"});
     expect(sqlite.prepare("SELECT review_state FROM payments WHERE id=?").get(payment.id)).toEqual({review_state:"REVIEW"});
