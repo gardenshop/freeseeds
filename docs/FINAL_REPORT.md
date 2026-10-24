@@ -21,6 +21,7 @@
 - Resource review: Workers Free; existing R2 Paid usage-based subscription shows $0 current billable usage. Account D1 reads were 4.55M/5M daily, so further shared reads were avoided. Removed isolated API per-minute Cron; no paid feature/resource was created. Retain recovery D1, private R2, Queue/DLQ and Workers until 2026-11-23 acceptance review; only the synthetic no-receipt fixture was deleted.
 - Active shared API remains `9b5f13ae-f023-4fa8-befe-2085bb24cbda` and shared Admin `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0`; untouched. Latest V2 API `c714ac55-ef19-46b3-a803-e672460abc93` has Queue producer/consumer only, no Cron/public route, provider and send flags OFF; prior no-Cron version is `4891cf76-fc75-42ef-b0bb-c208c2bf724c`. V2 Admin `d7898150-a54e-4e49-8e85-5a602a6866e6` is Access-protected with reminder-view only; automation/confirmation/provider flags remain OFF.
 - Validation: main V2 `npm ci`; 205/205 tests, lint/build, audit 0, Wrangler dry-runs. V1 hotfix worktree `npm ci`; 170/170 tests, lint/build. Frozen V1 lock has 4 inherited audit findings (2 moderate, 2 high); dependencies were not changed in the V1 hotfix. GitHub CI reports no checks.
+- V2 receipt diagnostics/tests commit `582cc16` and docs commits `f2fa23a`/`359f1ca` are pushed to PR #9; V1-compatible hotfix commit `bdef700` is separately in PR #10. Neither PR is merged; shared active API remains unchanged.
 
 ### Completion and Gates
 
