@@ -1,5 +1,35 @@
 # Final Report
 
+## GFS-206 Active Receipt Diagnosis (2026-10-24)
+
+### P0/P1 Evidence
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Priority order D1 relationship | PASS READ-ONLY | Both target orders join to their correct payment row; both are PAYMENT_PENDING with the selected payment methods and expected PKR600. Each has 0 receipt rows, no saved transaction reference, no receipt audit and no linked `whatsapp_conversations`/last-inbound ID. No shared rows changed. |
+| Inbound versus outbound image | BLOCKED ATTRIBUTION | Both orders have outbound payment text/QR messages with provider WAMIDs and READ status. These are outbound payment instructions, not evidence of an inbound receipt. Shared R2 searches for each exact receipt prefix found no object. No inbound media ID/event is linked to either order; webhook table is hash-only. WhatsApp `You > View Profile` still mismatches the authorized tester, and the open Meta assets are Hoja-associated. No chats were opened; cannot distinguish Meta delivery failure from a different sender/order. |
+| Actual order state | BLOCKED SAFELY | Both orders remain PAYMENT_PENDING; neither was attached to media, moved to REVIEW, marked PAID, or cancelled. No fake receipt/reference or settlement was created. |
+| Receipt handler repair | PASS SYNTHETIC / NOT ACTIVE | V2 API source prefers exact reply-to payment WAMID, otherwise a unique eligible sender/order even in NEW/missing conversation. Multiple/order mismatch rejects. Hashed diagnostic rows cover blocked association, Meta download, private R2 write and D1 commit; R2 object cleanup is attempted on a failed receipt commit. Synthetic test exercises the NEW conversation and privacy-safe audit. This source is not deployed to the active shared API.
+| Active V1 hotfix candidate | PASS REVIEW PR / BLOCKED DEPLOY | V1-baseline commit `bdef700` on `codex/gfs206-v1-receipt-hotfix`, PR #10 against frozen release. It changes only the receipt handler/tests, adds no migration/scheduler/checkout changes, and passes V1 170/170 tests, lint/build. Do not merge/deploy until authorized tester and canonical sender match and active route/secrets/rollback/live retest are verified. Frozen tag/branch unchanged. |
+| V2 receipt diagnostic commit | PASS SOURCE / NOT ACTIVE | Hashed association/download/R2/D1 diagnostics and synthetic tests are separately committed as `582cc16` on PR #9; shared active API remains unchanged. |
+
+### V2, Costs, and Validation
+
+- Access-protected V2 Admin is live in isolated staging. Cloudflare Access policy retains the original Admin destination and includes V2. Authenticated CMS and Orders pages work. Screenshots captured: V2 Home, synthetic six-stage timeline, and EN preview. No screenshot shows a real customer's receipt or confirmation because neither order has a receipt and V2 D1 intentionally contains no real customer orders.
+- Isolated D1s `getfreeseeds-v2-staging` and `getfreeseeds-v2-restore-check` both have migration 0033; after cleanup there are 0 orders/customers/receipts/schedules. Private V2 R2 is empty; Queue/DLQ are idle. `PRAGMA integrity_check` is denied by D1 (`SQLITE_AUTH`); export/restore/ledger checks passed.
+- Isolated CMS published only service-copy versions for `REMINDER_15M` EN v3/UR v2 and `PAYMENT_CONFIRMED` EN/UR v2 using labeled synthetic previews. Other stage keys remain drafts. No Meta utility template approval, no API delivery, no `SENT`, WAMID, PAID acknowledgement or real reminder.
+- Resource review: Workers Free; existing R2 Paid usage-based subscription shows $0 current billable usage. Account D1 reads were 4.55M/5M daily, so further shared reads were avoided. Removed isolated API per-minute Cron; no paid feature/resource was created. Retain recovery D1, private R2, Queue/DLQ and Workers until 2026-11-23 acceptance review; only the synthetic no-receipt fixture was deleted.
+- Active shared API remains `9b5f13ae-f023-4fa8-befe-2085bb24cbda` and shared Admin `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0`; untouched. V2 API `f11e391b-5ce0-4849-8973-9c958a652ea8` has no Cron/public route and flags OFF. V2 Admin `d7898150-a54e-4e49-8e85-5a602a6866e6` is Access-protected with reminder-view only; automation/confirmation/provider flags remain OFF.
+- Validation: main V2 `npm ci`; 205/205 tests, lint/build, audit 0, Wrangler dry-runs. V1 hotfix worktree `npm ci`; 170/170 tests, lint/build. Frozen V1 lock has 4 inherited audit findings (2 moderate, 2 high); dependencies were not changed in the V1 hotfix. GitHub CI reports no checks.
+
+### Completion and Gates
+
+- Estimates for GFS-206 source/staging: overall 80%; P0 65%, P1 60%, P2 85%, P3 85%, P4 75%, P5 85%. Remaining: overall 20%; P0 35%, P1 40%, P2 15%, P3 15%, P4 25%, P5 15%. Synthetic coverage does not count as live receipt/delivery acceptance.
+- V1: **GO for preservation only**; no shared Worker changes. Receipt fix is PR #10 candidate, not deployed.
+- Receipt uploads: **NO-GO for live acceptance** until an authorized matching sender produces a verifiable inbound image and its WAMID/correlation can be reconciled to R2/D1/Admin.
+- V2 staging/Admin: **GO for authenticated flags-off UI**; API receipt fix not attached to the active webhook.
+- Live payments: **NO-GO** absent actual receiving-account credit. Live reminders: **NO-GO** until authorized tester, approved out-of-window templates, timer run and real WAMIDs exist. Public launch: **NO-GO**.
+
 ## GFS-205 Receipt, Cleanup, and Safe V2 Admin (2026-10-24)
 
 ### Evidence and Results

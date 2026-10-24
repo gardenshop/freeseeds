@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-24 (GFS-206)
+
+- Diagnosed both priority orders read-only: valid payment/order links, pending, zero receipt/reference/audit, no linked conversation/last-inbound event and no order-prefix R2 object. Outbound payment text/QR WAMIDs are READ but are not inbound receipt proof. Tester Profile mismatch and Hoja-associated Meta tabs blocked chat/media attribution.
+- Added privacy-safe hashed receipt-association/download/R2/D1 diagnostics and V1-compatible association for exact payment-reply WAMID or unique sender/payment even when the conversation is NEW/missing. Ambiguous associations reject. R2 object is removed if D1 receipt commit fails. No source code touches PAID from image alone.
+- Prepared separate V1-baseline hotfix commit `bdef700` on branch `codex/gfs206-v1-receipt-hotfix`, PR #10; no schema migration or checkout-flow changes. It is not merged/deployed pending tester/sender/active Worker preflight. V2 receipt diagnostics are a separate pending commit for PR #9.
+- V2 privacy-hashed receipt diagnostics and synthetic tests are separately committed as `582cc16` on PR #9; no active shared Worker deployment.
+- Reused existing isolated V2 resources, kept flags OFF, API Cron removed. Deleted only the synthetic no-receipt timeline fixture; recovery D1/R2/Queue/DLQ and Workers retained. No paid feature/resource was created.
+- Main V2 passed 205 tests/lint/build/audit0; V1 baseline hotfix passed 170 tests/lint/build with its four inherited dependency audit findings unchanged. No live receipt/WhatsApp message/WAMID or PAID transition.
+
 ## 2026-10-24 (GFS-205)
 
 - Added permanent cost/resource inventory and cleanup rules. Account review found Workers Free, existing R2 Paid usage-based subscription with current billable usage $0, D1 shared read quota at 4.55M/5M, and V2 queue/backlog/R2 buckets empty. Removed the isolated API per-minute Cron; kept the recovery D1, private bucket, idle Queue/DLQ and Workers for V2 acceptance.

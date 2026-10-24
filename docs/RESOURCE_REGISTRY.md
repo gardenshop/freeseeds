@@ -1,5 +1,15 @@
 # Resource Registry
 
+## GFS-206 Receipt Hotfix and Resource Review (2026-10-24)
+
+- No Cloudflare/Meta resource was created or deleted in GFS-206. Existing Get Free Seeds V2 resource ownership, cost, quota, and cleanup-deadline table below remains current. V2 Cron remains OFF/removed; V2 Queue consumer stays idle. No paid plan was purchased.
+- Active shared Workers remain API `9b5f13ae-f023-4fa8-befe-2085bb24cbda` and Admin `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0`; no shared DB/R2 writes and no active webhook deployment. Shared Admin Access and `images/` unchanged.
+- Active receipt hotfix proposal is branch `codex/gfs206-v1-receipt-hotfix` at `bdef700`, PR #10 against `release/gfs-v1-frozen-20261023`. It is not merged/deployed. PR #9 V2 receipt diagnostics are local and await final commit/push.
+- V2 privacy-safe diagnostics/test commit `582cc16` is on PR #9 and has not been deployed to shared API; active API/Admin versions remain unchanged.
+- Read-only reconciliation: both priority orders are pending with no exact receipt row/reference/audit, no linked conversation/inbound event, and no R2 object under their receipt prefix. Their outbound QR/text messages have WAMIDs and READ statuses; do not confuse those with inbound image evidence. WhatsApp profile mismatch prevents chat-level attribution.
+- Isolated V2 resources remain necessary: primary/recovery D1, private empty R2, idle Queue/DLQ, API with Cron removed, Access-protected Admin. No cleanup of backups or customer resources. All retained test resources remain due for review by 2026-11-23.
+- Billing observation remains Workers Free, existing R2 Paid usage-based plan at $0 current billable usage; account D1 shared read quota was 4.55M/5M, writes21.5K/100K, storage4.56MB/5GB. Avoid further shared-D1 reads; do not assert future R2 overage cost is zero.
+
 ## GFS-205 Cost/Resource Register (2026-10-24)
 
 Owner for temporary V2 assets: Get Free Seeds (`gisupp@gmail.com`). No new hosted resource or paid plan was created in GFS-205; the existing protected Admin Access app was reused for V2. Required isolated assets and disposition:

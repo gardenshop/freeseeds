@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-24: GFS-206 Do Not Guess the Receipt Sender
+
+- Both priority shared orders have valid payment links but no D1 receipt/reference/audit, no linked conversation or last-inbound event, and no receipt-prefix R2 object. Outbound payment QR/text WAMID/READ statuses do not prove a customer receipt upload. Keep both PAYMENT_PENDING; do not attach, mark REVIEW, PAID, or cancel based on a screenshot.
+- The Meta event store is hash-only and cannot recover a message media ID. The signed-in WhatsApp Profile does not match the authorized tester and current Meta tabs are Hoja-associated; do not open chats/switch accounts/send. Exact attribution and a live image test are externally blocked.
+- V2 source now resolves payment-reply WAMID or unique sender/order and emits hashed association/download/R2/D1 diagnostics. The separate V1-baseline hotfix PR #10 makes the minimal no-migration change; do not deploy it to the active shared webhook until tester/sender/route/protection/rollback preflight passes.
+- Keep V2 API Cron removed and provider/send/confirmation flags OFF. Admin view is Access-protected; CMS test publications and synthetic timeline are isolated and do not send.
+- Resource cleanup: deleted only the GFS-205 synthetic order/schedule fixture. Retain the recovery D1 and other V2 acceptance/rollback assets through 2026-11-23 review; current billable usage is $0 but R2 remains usage-based and shared D1 reads are near quota.
+
 ## 2026-10-24: GFS-205 Fail-Closed Receipt and Resource Cost Review
 
 - The new order has valid order/payment linkage but no D1 receipt, saved reference, receipt audit, matching conversation/last-inbound event or private R2 object. Do not infer the screenshot image's sender/order; WhatsApp Profile mismatch and hash-only event storage block real attribution.

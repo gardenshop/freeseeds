@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-206 Active Receipt Hotfix Gate (2026-10-24)
+
+- For a shared order with no linked `whatsapp_conversations` row, no exact inbound-event link, zero D1 receipt rows and no order-prefix R2 object, do not infer that a screenshot image was received or belongs to that order. READ/DELIVERED status for outbound payment text/QR is not inbound-receipt evidence.
+- The V1-compatible candidate hotfix is separate from V2 scheduler work, adds no migration, and changes only media/order association, review/audit and safe R2 cleanup. It is a review PR only; do not merge or deploy to the active callback until the authorized WhatsApp tester and canonical GFS sender are independently verified, the exact inbound image is positively attributed, active bindings/traffic/rollback are preflighted, and the live retest is authorized.
+- Candidate commit `bdef700` is on `codex/gfs206-v1-receipt-hotfix`, PR #10 against the frozen-release branch; the release branch/tag remains unchanged. V2 diagnostics/tests are a separate pending commit for PR #9.
+- V2 hashed diagnostic implementation/test commit `582cc16` is isolated on PR #9; it is not an active webhook deployment.
+- Receipt diagnostics must hash message/media identifiers and record only stable reason/stage/count/correlation fields. Never log raw media, phone/WA IDs, content, access tokens or payment references. Never attach across orders; ambiguous media is rejected.
+- Keep shared API/D1/R2, held incident, real payments and frozen V1 checkout untouched. Do not switch into Hoja-associated Meta assets or open unrelated chats. If profile or sender verification fails, no real image submission or acknowledgement is attempted.
+
 ## Permanent Cloud Cost and Resource Cleanup Protocol
 
 - Before creating any Cloudflare, Meta, GitHub, or other hosted resource, inventory reusable resources, verify account/owner identity, inspect billing and quotas, and estimate setup plus recurring costs. Prefer an existing isolated resource when safe.

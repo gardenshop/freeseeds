@@ -1,5 +1,18 @@
 # Status
 
+## GFS-206 Receipt Hotfix and Active-WebHook Blocker (2026-10-24)
+
+- Fetched PR #9 at `9f8afed`. Re-read `rules.md` and required current status/test/decision/resource/report records. Added the permanent cost/cleanup rule first.
+- Authenticated Admin plus one narrow read-only shared-D1 query reconciled both priority PAYMENT_PENDING orders: each payment/order link is valid, both have zero exact receipt rows, no saved reference, no receipt audit, and no linked conversation/last-inbound event. Targeted shared R2 prefix searches found no order-associated objects. Admin zero counts are accurate, not stale.
+- D1 shows delivered/read outbound payment text and QR messages with provider WAMIDs for both orders. They are outbound; they do not prove the screenshot image is an inbound receipt. No sender-linked inbound media event or body/media ID is present; event persistence is hash-only. Current WhatsApp tester Profile mismatch and Hoja-associated Meta tabs block reading the correct chat. Actual image delivery versus another sender/order remains BLOCKED; no chat opened, no receipt/attachment/financial action.
+- Updated receipt code attaches only by exact reply-to payment WAMID or a unique eligible payment for that sender, including a NEW/missing conversation; ambiguous or mismatched orders fail closed. Download/R2/D1/association failures write hashed diagnostics keyed by message hash, reason, stage, candidate count and correlation; successful audits also store hashes, not raw media IDs. Synthetic tests cover association, privacy diagnostics and R2 cleanup. This is not yet live on the shared API.
+- Created V1-compatible hotfix branch `codex/gfs206-v1-receipt-hotfix` from `d816ba1`, commit `bdef700`, separate from V2 scheduler work. PR #10 targets the frozen-release branch but remains unmerged/un-deployed. V1 test suite 170/170, lint/build pass; its frozen dependency lock has four inherited audit findings. No active Worker change until tester/sender/release gates pass.
+- V2 privacy-diagnostic receipt source/test commit `582cc16` is isolated on PR #9; it does not update the shared Worker. V1 hotfix and V2 diagnostics are separate commits/PR tracks.
+- Cloudflare cost policy is permanent. The isolated V2 API per-minute Cron remains disabled; no GFS-206 cloud resource was created or deleted. Existing V2 recovery D1, primary D1, private R2, Queue/DLQ and Workers are required for acceptance and retained to 2026-11-23 review. Current cost/quota/billing observations are in RESOURCE_REGISTRY. V2 API send/provider flags remain OFF.
+- V2 Admin remains Access-protected; CMS Save/Preview/Publish/Reload is tested in isolated D1. Two synthetic service-copy keys have EN/UR published versions; no utility approval or real message. A synthetic no-receipt six-stage timeline was screenshot-tested and its order/schedule/conversation/stages were deleted. D1 cleanup count is zero; no fake receipt was created.
+- Main V2 regression: `npm ci`, 205/205 tests, lint/build, audit 0 after Zod 4.6.7/Undici 7.30.1, Wrangler dry-runs. Shared D1 reads are near the daily limit; no further shared scans. Exact active V1/API versions and P0–P5 status are in FINAL_REPORT.
+- GFS-206 completion estimates (source/staging, not live acceptance): overall 80%; P0 65%, P1 60%, P2 85%, P3 85%, P4 70%, P5 80%. Remaining: 20%, 35%, 40%, 15%, 15%, 30% respectively. V1 GO for preservation only; receipt fix/real payment/reminders remain NO-GO until identity, actual inbound media and controlled release gates pass.
+
 ## GFS-205 Receipt/Cleanup Follow-Up (2026-10-24)
 
 - Fetched branch `codex/gfs-v2-payments-reminders-001`, starting HEAD `7dc0f4c`; V1 remains frozen at `d816ba1`.
