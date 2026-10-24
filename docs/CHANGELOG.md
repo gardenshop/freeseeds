@@ -4,8 +4,8 @@
 
 - Diagnosed both priority orders read-only: valid payment/order links, pending, zero receipt/reference/audit, no linked conversation/last-inbound event and no order-prefix R2 object. Outbound payment text/QR WAMIDs are READ but are not inbound receipt proof. Tester Profile mismatch and Hoja-associated Meta tabs blocked chat/media attribution.
 - Added privacy-safe hashed receipt-association/download/R2/D1 diagnostics and V1-compatible association for exact payment-reply WAMID or unique sender/payment even when the conversation is NEW/missing. Ambiguous associations reject. R2 object is removed if D1 receipt commit fails. No source code touches PAID from image alone.
-- Prepared separate V1-baseline hotfix commit `bdef700` on branch `codex/gfs206-v1-receipt-hotfix`, PR #10; no schema migration or checkout-flow changes. It is not merged/deployed pending tester/sender/active Worker preflight. V2 receipt diagnostics are a separate pending commit for PR #9.
-- V2 privacy-hashed receipt diagnostics and synthetic tests are separately committed as `582cc16` on PR #9; no active shared Worker deployment.
+- Prepared separate V1-baseline hotfix commit `bdef700` on branch `codex/gfs206-v1-receipt-hotfix`, PR #10; no schema migration or checkout-flow changes. It is not merged/deployed pending tester/sender/active Worker preflight.
+- V2 privacy-hashed receipt diagnostics and synthetic tests are separately committed as `582cc16` and pushed to PR #9; no active shared Worker deployment. GFS-206 docs commit `f2fa23a` is also on PR #9; GitHub reports no checks.
 - Reused existing isolated V2 resources, kept flags OFF, API Cron removed. Deleted only the synthetic no-receipt timeline fixture; recovery D1/R2/Queue/DLQ and Workers retained. No paid feature/resource was created.
 - Main V2 passed 205 tests/lint/build/audit0; V1 baseline hotfix passed 170 tests/lint/build with its four inherited dependency audit findings unchanged. No live receipt/WhatsApp message/WAMID or PAID transition.
 

@@ -11,7 +11,7 @@
 | Actual order state | BLOCKED SAFELY | Both orders remain PAYMENT_PENDING; neither was attached to media, moved to REVIEW, marked PAID, or cancelled. No fake receipt/reference or settlement was created. |
 | Receipt handler repair | PASS SYNTHETIC / NOT ACTIVE | V2 API source prefers exact reply-to payment WAMID, otherwise a unique eligible sender/order even in NEW/missing conversation. Multiple/order mismatch rejects. Hashed diagnostic rows cover blocked association, Meta download, private R2 write and D1 commit; R2 object cleanup is attempted on a failed receipt commit. Synthetic test exercises the NEW conversation and privacy-safe audit. This source is not deployed to the active shared API.
 | Active V1 hotfix candidate | PASS REVIEW PR / BLOCKED DEPLOY | V1-baseline commit `bdef700` on `codex/gfs206-v1-receipt-hotfix`, PR #10 against frozen release. It changes only the receipt handler/tests, adds no migration/scheduler/checkout changes, and passes V1 170/170 tests, lint/build. Do not merge/deploy until authorized tester and canonical sender match and active route/secrets/rollback/live retest are verified. Frozen tag/branch unchanged. |
-| V2 receipt diagnostic commit | PASS SOURCE / NOT ACTIVE | Hashed association/download/R2/D1 diagnostics and synthetic tests are separately committed as `582cc16` on PR #9; shared active API remains unchanged. |
+| V2 receipt diagnostic commit | PASS PUSH / NOT ACTIVE | Hashed association/download/R2/D1 diagnostics and synthetic tests are separately committed as `582cc16` and pushed to PR #9; documentation follow-up `f2fa23a` is also pushed. Shared active API remains unchanged. |
 
 ### V2, Costs, and Validation
 
