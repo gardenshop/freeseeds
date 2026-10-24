@@ -375,6 +375,10 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     const putsBefore=receiptBucketPut.mock.calls.length;
     await callback([{from:targetWa,id:"synthetic-ambiguous-receipt",timestamp:"1792497600",type:"image",image:{id:"synthetic-ambiguous-media",mime_type:"image/png"}}],[],true);
     expect(receiptBucketPut).toHaveBeenCalledTimes(putsBefore);
+    const blocked=sqlite.prepare("SELECT correlation_id,metadata_json FROM audit_log WHERE action='RECEIPT_INGESTION_BLOCKED'").get() as {correlation_id:string;metadata_json:string};
+    expect(blocked.metadata_json).toContain('"reason":"ACTIVE_CONVERSATION_ORDER_MISMATCH"');
+    expect(blocked.metadata_json).not.toContain("synthetic-ambiguous-media");
+    expect(blocked.correlation_id).not.toBe("synthetic-ambiguous-receipt");
     const originalFetch=globalThis.fetch.bind(globalThis);
     let beginDownload!:()=>void,finishMetadata!: (response:Response)=>void;
     const downloadStarted=new Promise<void>((resolve)=>{beginDownload=resolve});
@@ -406,6 +410,8 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sqlite.prepare("SELECT state,JSON_EXTRACT(state_data,'$.orderId') AS orderId FROM whatsapp_conversations WHERE wa_id=?").get(targetWa)).toEqual({state:"PAYMENT_REFERENCE",orderId:target.order.orderId});
     const audit=sqlite.prepare("SELECT metadata_json FROM audit_log WHERE action='RECEIPT_SUBMITTED' AND entity_id=?").get(target.paymentId) as {metadata_json:string};
     expect(audit.metadata_json).toContain('"associationEvidence":"UNIQUE_SENDER_PAYMENT"');
+    expect(audit.metadata_json).toContain('"providerMediaIdHash"');
+    expect(audit.metadata_json).not.toContain("synthetic-late-media-no-context");
     expect(sqlite.prepare("SELECT status,stop_reason FROM payment_reminder_v2_schedules WHERE order_id=?").get(target.order.orderId)).toEqual({status:"PAUSED",stop_reason:"RECEIPT_SUBMITTED"});
   });
 

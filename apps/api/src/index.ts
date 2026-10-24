@@ -521,6 +521,12 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   return true;
 }
 
+async function recordReceiptMediaDiagnostic(db: D1Database,eventId:string,mediaId:string,reason:string,stage:string,candidateCount=0):Promise<void>{
+  const messageIdHash=await customerTransactionReferenceHash(eventId),mediaIdHash=await customerTransactionReferenceHash(mediaId),now=new Date().toISOString();
+  await db.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?)")
+    .bind(crypto.randomUUID(),"RECEIPT_INGESTION_BLOCKED","SYSTEM","WHATSAPP_RECEIPT_EVENT",messageIdHash,messageIdHash,JSON.stringify({messageIdHash,mediaIdHash,reason,stage,candidateCount}),now).run();
+}
+
 async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }, paymentReminderV2Enabled = false): Promise<boolean> {
   const message = event.payload && typeof event.payload === "object" ? event.payload as { image?: { id?: string }; document?: { id?: string }; context?: { id?: string } } : {};
   const mediaId = message.image?.id ?? message.document?.id;
@@ -542,29 +548,34 @@ async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: R
           AND o.state IN ${eligibleStates} AND p.review_state IN ('PENDING','REJECTED','REVIEW','CANCELLED_UNPAID') LIMIT 1`)
       .bind(event.from, message.context.id).first<{ id: string; order_number: string; state: string; payment_id: string; method: string | null; review_state: string; customer_transaction_reference: string | null }>()
     : null;
-  if (message.context?.id && !record) return false;
+  if (message.context?.id && !record) { await recordReceiptMediaDiagnostic(db,event.id,mediaId,"REPLY_TO_PAYMENT_NOT_FOUND","ORDER_ASSOCIATION"); return false; }
   if (!record) {
     const candidates = await db.prepare(`${recordSelect} WHERE c.wa_id=? AND o.state IN ${eligibleStates}
       AND p.review_state IN ('PENDING','REJECTED','REVIEW','CANCELLED_UNPAID') ORDER BY o.created_at DESC,o.id DESC LIMIT 2`)
       .bind(event.from).all<{ id: string }>();
-    if (candidates.results?.length !== 1 || (data.orderId && candidates.results[0].id !== data.orderId)) return false;
+    if (candidates.results?.length !== 1) {
+      await recordReceiptMediaDiagnostic(db,event.id,mediaId,candidates.results?.length?"MULTIPLE_ELIGIBLE_PAYMENT_ORDERS":"NO_ELIGIBLE_PAYMENT_ORDER","ORDER_ASSOCIATION",candidates.results?.length??0);
+      return false;
+    }
+    if (data.orderId && candidates.results[0].id !== data.orderId) { await recordReceiptMediaDiagnostic(db,event.id,mediaId,"ACTIVE_CONVERSATION_ORDER_MISMATCH","ORDER_ASSOCIATION",1); return false; }
     const targetOrderId = data.orderId ?? candidates.results[0].id;
     record = await db.prepare(`${recordSelect} WHERE o.id=? AND c.wa_id=?`)
       .bind(targetOrderId, event.from).first<{ id: string; order_number: string; state: string; payment_id: string; method: string | null; review_state: string; customer_transaction_reference: string | null }>();
   }
   if (!record) return false;
-  if (record.state !== "PAYMENT_PENDING" && record.state !== "PAYMENT_REVIEW" && !(paymentReminderV2Enabled && ["PAYMENT_GRACE", "CANCELLED_UNPAID"].includes(record.state))) return false;
+  if (record.state !== "PAYMENT_PENDING" && record.state !== "PAYMENT_REVIEW" && !(paymentReminderV2Enabled && ["PAYMENT_GRACE", "CANCELLED_UNPAID"].includes(record.state))) { await recordReceiptMediaDiagnostic(db,event.id,mediaId,"ORDER_STATE_NOT_RECEIVABLE","ORDER_ASSOCIATION"); return false; }
   const associationEvidence = message.context?.id ? "PAYMENT_REPLY_WAMID" : data.orderId ? "ACTIVE_CONVERSATION_ORDER" : "UNIQUE_SENDER_PAYMENT";
   const status = await contentFor(db, "ORDER_STATUS", "Use Check Order to see the current order and payment status.", {}, `CHAT:${event.from}`, data.language ?? "en");
   const existing = await db.prepare("SELECT id FROM payment_receipts WHERE provider_media_id=? AND order_id=?").bind(mediaId, record.id).first<{ id: string }>();
   if (!existing && record.state === "CANCELLED_UNPAID") {
-    const media=await provider.downloadMedia(mediaId);
-    const stored=await storeReceipt(bucket,record.order_number,media);
+    let media:Awaited<ReturnType<typeof provider.downloadMedia>>,stored:{objectKey:string;sha256:string};
+    try{media=await provider.downloadMedia(mediaId)}catch{await recordReceiptMediaDiagnostic(db,event.id,mediaId,"META_MEDIA_DOWNLOAD_FAILED","MEDIA_DOWNLOAD");throw new Error("RECEIPT_MEDIA_DOWNLOAD_FAILED")}
+    try{stored=await storeReceipt(bucket,record.order_number,media)}catch{await recordReceiptMediaDiagnostic(db,event.id,mediaId,"PRIVATE_R2_WRITE_FAILED","R2_WRITE");throw new Error("RECEIPT_R2_WRITE_FAILED")}
     const now=new Date().toISOString();
     await db.batch([
       db.prepare("INSERT INTO payment_receipts (id,payment_id,order_id,provider_media_id,r2_object_key,sha256,mime_type,size_bytes,submitted_at,created_at,review_state) VALUES (?,?,?,?,?,?,?,?,?,?,'LATE_REVIEW')").bind(crypto.randomUUID(),record.payment_id,record.id,media.mediaId,stored.objectKey,stored.sha256,media.mimeType,media.size,now,now),
       db.prepare("UPDATE payments SET review_state='LATE_REVIEW',submitted_at=?,updated_at=? WHERE id=? AND review_state='CANCELLED_UNPAID'").bind(now,now,record.payment_id),
-      db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(),"LATE_PAYMENT_EVIDENCE_RECEIVED","CUSTOMER","PAYMENT",record.payment_id,event.id,JSON.stringify({orderId:record.id,orderNumber:record.order_number,providerMediaId:mediaId}),now)
+      db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(),"LATE_PAYMENT_EVIDENCE_RECEIVED","CUSTOMER","PAYMENT",record.payment_id,await customerTransactionReferenceHash(event.id),JSON.stringify({orderId:record.id,orderNumber:record.order_number,providerMediaIdHash:await customerTransactionReferenceHash(mediaId)}),now)
     ]);
     const lateNotice=data.language==="ur"?`منسوخ شدہ آرڈر ${record.order_number} کے لیے ادائیگی کا ثبوت موصول ہو گیا ہے۔ یہ ایڈمن کے جائزے میں ہے؛ ابھی PAID کی تصدیق نہیں ہوئی۔ دوبارہ ادائیگی نہ کریں۔`:`Payment evidence for cancelled order ${record.order_number} was received. It is under Admin review and is not marked PAID. Do not pay again.`;
     await sendConversationReply(db,provider,event.from,event.id,lateNotice,{buttons:[{id:"CHECK_ORDER",title:whatsAppActionLabel(status,"CHECK_ORDER")}]});
@@ -573,9 +584,11 @@ async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: R
   if (!existing) {
     if (paymentReminderV2Enabled) await db.prepare(`UPDATE payment_reminder_v2_schedules SET status='PAUSED',stop_reason='RECEIPT_INGESTION_PENDING',updated_at=?
       WHERE payment_id=? AND order_id=? AND status='ACTIVE'`).bind(new Date().toISOString(),record.payment_id,record.id).run();
-    const media = await provider.downloadMedia(mediaId);
-    const stored = await storeReceipt(bucket, record.order_number, media);
+    let media:Awaited<ReturnType<typeof provider.downloadMedia>>,stored:{objectKey:string;sha256:string};
+    try{media=await provider.downloadMedia(mediaId)}catch{await recordReceiptMediaDiagnostic(db,event.id,mediaId,"META_MEDIA_DOWNLOAD_FAILED","MEDIA_DOWNLOAD");throw new Error("RECEIPT_MEDIA_DOWNLOAD_FAILED")}
+    try{stored=await storeReceipt(bucket,record.order_number,media)}catch{await recordReceiptMediaDiagnostic(db,event.id,mediaId,"PRIVATE_R2_WRITE_FAILED","R2_WRITE");throw new Error("RECEIPT_R2_WRITE_FAILED")}
     const now = new Date().toISOString();
+    const messageIdHash=await customerTransactionReferenceHash(event.id),mediaIdHash=await customerTransactionReferenceHash(mediaId);
     const receiptStatements = [
       db.prepare("INSERT INTO payment_receipts (id,payment_id,order_id,provider_media_id,r2_object_key,sha256,mime_type,size_bytes,submitted_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), record.payment_id, record.id, media.mediaId, stored.objectKey, stored.sha256, media.mimeType, media.size, now, now),
       db.prepare("UPDATE payments SET review_state='REVIEW',submitted_at=COALESCE(submitted_at,?),updated_at=? WHERE id=? AND review_state IN ('PENDING','REJECTED','REVIEW')").bind(now, now, record.payment_id),
@@ -584,11 +597,15 @@ async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: R
         state_data=CASE WHEN state='NEW' OR state_data IN ('{}','') THEN ? ELSE state_data END,last_inbound_message_id=?,updated_at=?
         WHERE wa_id=? AND ((state IN ('PAYMENT_PENDING','PAYMENT_GRACE','PAYMENT_REFERENCE','PAYMENT_REVIEW') AND (state_data LIKE ? OR state_data IN ('{}',''))) OR state='NEW')`)
         .bind(JSON.stringify({ ...data, orderId: record.id, orderNumber: record.order_number, language: data.language ?? "en" }), event.id, now, event.from, `%\"orderId\":\"${record.id}\"%`),
-      db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "RECEIPT_SUBMITTED", "CUSTOMER", "PAYMENT", record.payment_id, event.id, JSON.stringify({ orderId: record.id, providerMediaId: mediaId, associationEvidence }), now)
+      db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "RECEIPT_SUBMITTED", "CUSTOMER", "PAYMENT", record.payment_id, messageIdHash, JSON.stringify({ orderId: record.id, providerMediaIdHash: mediaIdHash, messageIdHash, associationEvidence }), now)
     ];
     if (paymentReminderV2Enabled) receiptStatements.push(db.prepare(`UPDATE payment_reminder_v2_schedules SET status='PAUSED',stop_reason='RECEIPT_SUBMITTED',updated_at=?
       WHERE payment_id=? AND order_id=? AND (status='ACTIVE' OR stop_reason='RECEIPT_INGESTION_PENDING')`).bind(now, record.payment_id, record.id));
-    await db.batch(receiptStatements);
+    try{await db.batch(receiptStatements)}catch{
+      try{await bucket.delete(stored.objectKey)}catch{try{await recordReceiptMediaDiagnostic(db,event.id,mediaId,"ORPHAN_R2_CLEANUP_FAILED","D1_COMMIT",1)}catch{}}
+      try{await recordReceiptMediaDiagnostic(db,event.id,mediaId,"RECEIPT_D1_COMMIT_FAILED","D1_COMMIT",1)}catch{}
+      throw new Error("RECEIPT_D1_COMMIT_FAILED");
+    }
   }
   const receipt = await contentFor(db, "RECEIPT", "Receipt received for order {orderNumber}. Reply with the transaction/reference ID shown in your payment app. Payment remains under Admin review until actual account credit is verified.", { orderNumber: record.order_number }, `CHAT:${event.from}`, data.language ?? "en");
   const orderStatus = await contentFor(db, "ORDER_STATUS", "Use Check Order to see the current order and payment status.", {}, `CHAT:${event.from}`, data.language ?? "en");
