@@ -2,11 +2,12 @@
 
 ## GFS-211 COD Inventory (2026-10-24)
 
-- Local and remote PR #9 branch head was `276765b` before current uncommitted changes. No checkout/reset; `images/` remains untouched. Frozen V1 source and bindings are unchanged.
+- Initial local/remote PR #9 head was `276765b`; final source head `1ecffe1` is pushed. No checkout/reset; `images/` remains untouched. Frozen V1 source and bindings are unchanged.
 - Wrangler and same-origin Cloudflare Access identity were reverified as `gisupp@gmail.com` / Get Free Seeds (`cb5066a6d71ecdee0bd7ed8aacb4d3c2`) before the isolated migration. Primary/recovery D1 `quick_check=ok`, foreign-key checks empty. Masked primary counts: customers/orders/payments/receipts/COD policy/province-rate rows all 0.
-- `0034_cod_orders_v2.sql` is applied only to primary isolated `getfreeseeds-v2-staging`. Recovery `getfreeseeds-v2-restore-check` remains at 0033. Shared/V1 D1 untouched. Migration is additive; do not drop it or restore over subsequent data.
-- Browser Access identity endpoint returned `gisupp@gmail.com`; current V2 Admin `/api/cod-settings` remains 404 (new code not deployed). No remote COD policy/settings row, HMAC secret provisioning, Worker deploy, CMS version, R2 object, Queue message, Access policy or public route was changed. API/Admin COD runtime flags remain false; Admin UI flag is true only in isolated V2 Wrangler config.
-- Dedicated `COD_POLICY_HMAC_KEY` is not provisioned/verified, no active province delivery rates exist in isolated D1, and courier collection/remittance remains unverified. No new Cloudflare resource or paid plan; retain V2 D1/recovery D1/private R2/Queue/DLQ/Workers for acceptance and rollback, next review 2026-11-23. `images/` and Hoja assets untouched.
+- `0034_cod_orders_v2.sql` is applied only to primary isolated `getfreeseeds-v2-staging`. Recovery `getfreeseeds-v2-restore-check` is verified at migration 0033 with no COD table; primary/recovery quick checks passed. Shared/V1 D1 untouched. Additive migration remains; do not drop it or restore over subsequent data.
+- V2 Admin Worker `getfreeseeds-v2-admin-staging` deployed version `5a7af6ce-2bac-435b-aa52-4aae14e1ee68` (previous active version `99423a28-6469-46c6-bb03-63d42d816eba`) with Access/JWT enforcement intact; API Worker remains at its existing release and was not deployed. Browser Access identity returned `gisupp@gmail.com`. `/api/cod-settings` returns 200 only on V2 Admin.
+- Browser Save/Reload wrote exactly one canonical disabled PKR125 policy row and audit entry (two audit writes total from one initial save and one final status retest); `enabled=0`, `verificationReferenceHash=NULL`, no plaintext reference, zero enabled province rates and zero COD orders/customers/orders/payments/receipts. `COD_V2_ENABLED=false`; no secret key provisioned. Screenshot saved outside Git at `D:\Temp\kilo\gfs211-cod-admin-settings.png`.
+- Courier collection/remittance remains unverified; no CMS publish, R2/Queue/Access change, customer message or real payment/order mutation. No new resource or paid plan; D1 size after migration/settings write 647,168 bytes. Retain V2 D1/recovery D1/private R2/Queue/DLQ/Workers; next review 2026-11-23. `images/` and Hoja assets untouched.
 
 ## GFS-210 Staging and Cleanup (2026-10-24)
 

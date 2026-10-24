@@ -2,30 +2,30 @@
 
 ## GFS-211 COD Consolidation (2026-10-24)
 
-**Overall: IMPLEMENTED LOCALLY / LIVE ROLLOUT NO-GO.** Duplicate code, hash-only policy, guided COD journey, Admin controls, and migration-backed synthetic fulfillment are implemented/tested. COD remains OFF. This report does not authorize enabling COD, public launch, payment approval, shipment, or production rollout.
+**Overall: IMPLEMENTED / ISOLATED ADMIN ACCEPTANCE PASS / CUSTOMER COD NO-GO.** Duplicate code, hash-only policy, guided COD journey, Admin controls, migration-backed fulfillment and isolated disabled-settings acceptance are complete. COD remains OFF. This report does not authorize enabling COD, public launch, payment approval, shipment, or production rollout.
 
 | Assigned requirement | Result | Evidence / limitation |
 |---|---|---|
-| P0 preserve local work / compare remote | PASS | Inspected worktree and branch before checkout/reset; fetched current PR #9 head `276765b`, retained local changes and untracked `images/`; V1 source untouched |
+| P0 preserve local work / compare remote | PASS | Inspected worktree/branch before checkout/reset; initial head `276765b`; final commits `5125338` and `1ecffe1` pushed to PR #9; `images/` retained; V1 source untouched |
 | Duplicate API/Admin code | PASS | Reproduced API redeclaration; consolidated one shared policy/parser, one loader and exactly one Admin GET/POST settings pair; route-count test passes |
-| Canonical HMAC-only policy | PASS LOCAL | Strict versioned schema, HMAC-SHA-256 under dedicated key, plaintext omitted from storage/audit/API read. Local settings write proves hash-only serialization; no remote policy value exists |
-| Legacy/provenance | PASS FAIL-CLOSED | Unversioned/plaintext/unprovenanced values are preserved but unusable; no legacy policy rows exist in isolated D1, so no migration was required |
+| Canonical HMAC-only policy | PASS | Strict versioned schema; keyed HMAC-SHA-256. Synthetic local test proves reference hashed and not serialized; isolated remote policy has null hash because no reference was entered; key not provisioned/verified |
+| Legacy/provenance | PASS FAIL-CLOSED | Unversioned/plaintext/unprovenanced values preserved but unusable; no legacy policy existed remotely. Disabled settings row carries owner/audit provenance |
 | COD pricing | PASS SYNTHETIC / LIVE RATE BLOCKED | Seven province fixtures; exact PKR625 with fertilizer and PKR375 without; quote snapshots reuse enabled D1 rate. Live isolated V2 D1 currently contains zero province rates |
 | Customer COD flow | PASS SYNTHETIC | Four-method list with eligibility gates; EN/UR active OFFER overrides stale no-COD text; explicit COD confirmation, method attempts/switching, duplicate callbacks; no advance receipt or reminder schedule |
-| Admin COD controls and views | PASS LOCAL / LIVE DEPLOY BLOCKED | Default Rs125, editable fee, bilingual instructions and exact province previews, CSRF/Access, explicit owner confirmation/audit; COD shown distinctly in Orders/Packing/Dispatch/Delivered |
+| Admin COD controls and views | PASS LOCAL + ISOLATED BROWSER | Default Rs125, editable fee, EN/UR instructions and province preview, CSRF/Access, explicit enable confirmation/audit; verified GFS user saved/reloaded disabled settings; screenshot `D:\Temp\kilo\gfs211-cod-admin-settings.png`; COD status/actions distinct in Orders/Packing/Dispatch/Delivered |
 | COD fulfillment/reconciliation | PASS SQLITE SYNTHETIC | Migration-backed COD_PENDING→Packing→Dispatch→Delivered→collection→remittance; invalid/mismatched/retry cases; payment remains COD_PENDING until exact remittance, then PAID |
 | Migration/rollback | PASS ISOLATED MIGRATION | 0034 applied only to isolated V2 primary after verified identity, empty-data counts, primary/recovery quick checks and empty FK checks. Recovery D1 remains at 0033; V1/shared D1 untouched |
-| Tests/CI/security | PASS LOCAL / CI NOT RUN | `npm ci`; 238/238 tests, lint/build, audit 0 vulnerabilities, V2 API/Admin dry-runs and `git diff --check`; no GitHub CI checks or separate V1 worktree run |
-| Deployment/resources | NOT DEPLOYED | No Worker deploy, COD setting row, CMS publish, R2/Queue change or new resource. Both runtime COD flags false; dedicated HMAC secret not provisioned/verified |
-| Browser/external gates | BLOCKED | Cloudflare Access identity read-only verified as `gisupp@gmail.com`, but deployed V2 Admin `/api/cod-settings` returns 404; no settings screenshot/write. Courier collection/remittance unverified; no actual V2 customer API route or live province tariff |
+| Tests/CI/security | PASS LOCAL + ADMIN E2E / CI NOT RUN | `npm ci`; 238/238 tests, lint/build, audit 0 vulnerabilities, Wrangler dry-runs, masked D1 postflight, live Admin Save/Reload. No GitHub checks or WhatsApp/customer API E2E |
+| Deployment/resources | PARTIAL ISOLATED | Applied additive 0034 to isolated V2 D1; deployed protected V2 Admin version `5a7af6ce-2bac-435b-aa52-4aae14e1ee68`; saved one disabled PKR125 policy row, two audit events, no hash/reference. API Worker, CMS/R2/Queue and shared/V1 D1 untouched; COD flags false |
+| Browser/external gates | CUSTOMER COD BLOCKED | Access identity `gisupp@gmail.com` verified. Isolated D1 has zero province fees and zero COD orders/customers/payments/receipts; courier collection/remittance and HMAC secret unverified; no live API/webhook deployment |
 
-**Progress estimate:** P0 100%, P1 95%, P2 90%, P3 85%, P4 75%, P5 70%; overall approximately 85%. These are implementation/test estimates, not live release acceptance.
+**Progress estimate:** P0 100%, P1 100%, P2 90%, P3 95%, P4 85%, P5 95%; overall approximately 92%. These are task implementation/isolated-acceptance estimates, not public COD release acceptance.
 
 - **V1:** GO for preservation only; no V1 source/binding/data changes. Compatibility tests exercise Admin without the COD schema/UI flag.
-- **V2 COD:** NO-GO; runtime flag false, live province tariffs and courier collection/remittance proof absent; Admin route not yet deployed.
+- **V2 COD:** NO-GO; runtime flag false, live province tariffs and courier collection/remittance proof absent; customer API not deployed.
 - **Advance payment:** NO-GO for real credit/confirmation without independent receiving-account evidence. Local regression is not real payment evidence.
-- **Public launch:** NO-GO. Do not enable COD or promote the customer API until browser acceptance and explicit release authorization.
-- Local/remote PR #9 source head was `276765b` before current changes; changes are uncommitted/unpushed at this report point. Migration 0034 is the only external mutation and affected only isolated V2 D1 schema; no customer/financial data changed. `images/`, Hoja isolation, held incidents, R2, and historical records remain untouched.
+- **Public launch:** NO-GO. Do not enable COD or promote the customer API until active province tariffs, courier collection/remittance capability, HMAC key provisioning, end-to-end API/customer acceptance and explicit release authorization exist.
+- PR #9 is open at `1ecffe1`. External changes were limited to isolated V2 migration 0034, deployment of the Access-protected Admin Worker, and the explicitly disabled settings/audit row written by verified GFS owner. No customer/financial row, public API, CMS/R2/Queue, Meta message, production or V1 resource changed. `images/`, Hoja isolation, held incidents, private R2 and historical records remain untouched.
 
 ## GFS-210 Payment Review and Fulfillment (2026-10-24)
 

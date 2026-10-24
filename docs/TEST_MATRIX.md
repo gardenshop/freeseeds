@@ -4,18 +4,18 @@
 
 | Requirement | Result | Evidence / limitation |
 |---|---|---|
-| Local/remote branch preservation | PASS | Local and fetched PR #9 branch both `a651f87`; no checkout/reset; `images/` remains untracked and untouched; V1 source untouched |
+| Local/remote branch preservation | PASS | Initial fetched head `a651f87`; final commits `5125338` and `1ecffe1` pushed to PR #9; no checkout/reset; `images/` preserved; V1 source untouched |
 | Duplicate API policy / Admin routes | PASS SOURCE | API parse error reproduced (`V2CodPolicy` redeclared); consolidated to one shared parser/API loader and exactly one Admin GET + POST pair; route-count regression passes |
 | Hash-only policy | PASS LOCAL | Strict versioned policy; HMAC-SHA-256 uses dedicated key; key-specific/deterministic hash tests pass; schema rejects plaintext legacy format; no plaintext reference stored/logged |
 | Legacy/provenance handling | PASS FAIL-CLOSED | Admin/API reject noncanonical or unprovenanced records; masked V2 primary had zero policy rows; 0034 applied only to isolated V2 D1 after empty-data and recovery-clone checks |
 | COD pricing | PASS SYNTHETIC / LIVE BLOCKED | Full checkout tests for seven province-name/rate fixtures, fertilizer yes/no, PKR625/375; live isolated D1 has zero province-rate rows |
-| Admin settings | PASS SOURCE / LIVE SCREENSHOT BLOCKED | Single panel, default Rs125, EN/UR instructions and exact province preview, Access/CSRF/owner/audit, HMAC-only policy write and runtime-off rejection. Deployed route remains 404; no setting row/screenshot |
+| Admin settings | PASS LOCAL + ISOLATED BROWSER | Deployed V2 Admin; verified GFS Access identity; saved/reloaded PKR125 policy disabled, province preview shows no enabled rates, Save/Reload status works; screenshot `D:\Temp\kilo\gfs211-cod-admin-settings.png` |
 | Customer COD flow / receipts / timers | PASS SYNTHETIC | 4-way list, explicit confirmation, total snapshot, no COD receipt storage/reminder schedule, method-switch fee resnapshot and duplicate click coverage |
 | Packing/dispatch/delivery/reconciliation | PASS SQLITE SYNTHETIC | Migration-backed actual SQLite lifecycle requires tracking, checks invalid transitions/amounts/retries, keeps `COD_PENDING` until exact remittance then marks `PAID` |
 | COD order views | PASS LOCAL | COD status/amount fields and actions verified in Orders/Packing/Dispatch/Delivered views; V1 no-COD-schema/order-page path passes |
-| COD rollout/browser | NO-GO | Flags false; remote Admin route 404; V2 D1 rates empty; courier support/HMAC key unverified; no API/Admin deploy, CMS/R2 mutation or customer message |
+| COD rollout/browser | NO-GO | Flags false; Admin UI only is deployed, API/customer flow not deployed; V2 D1 rates empty; courier support/HMAC key unverified; no CMS/R2 mutation or customer message |
 | Migration | PASS ISOLATED | 0034 applied to V2 primary only; primary/recovery quick-check ok, foreign-key checks empty, masked primary counts zero; recovery remains 0033 |
-| Regression/security | PASS LOCAL | `npm ci`; 238/238 full tests; lint/build; audit0; V2 API/Admin Wrangler dry-runs; no GitHub CI or WhatsApp/customer acceptance |
+| Regression/security | PASS LOCAL + ADMIN E2E | `npm ci`; 238/238 full tests; lint/build; audit0; V2 API/Admin dry-runs; isolated Admin Save/Reload E2E. No GitHub CI or WhatsApp/customer acceptance |
 
 ## GFS-210 Lifecycle Test (2026-10-24)
 

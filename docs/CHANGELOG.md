@@ -6,7 +6,7 @@
 - Added HMAC-SHA-256 hashing of courier verification references using a dedicated key, Admin explicit enable confirmation/audit, default PKR125 fee, and editable EN/UR customer instructions/previews. No plaintext reference is persisted or logged.
 - Added additive V2 migration 0034 and applied only to isolated V2 primary after verified account identity, empty-data/quick/FK/recovery preflight. Shared/V1 D1 unchanged.
 - Completed local V2 guided COD selection, dynamic total snapshot, explicit confirmation, no advance receipt/timer behavior, advance switching, Admin fulfillment/collection/remittance reconciliation, V1 schema/UI gates, and dynamic bilingual active OFFER copy. Full synthetic seven-province matrix and SQLite-backed COD lifecycle pass.
-- `npm ci`; 238 tests, lint/build/audit0 and V2 Wrangler dry-runs pass; COD flags remain OFF. Current live V2 Admin COD settings route returns 404; province rates/HMAC secret/courier proof are absent. No Worker deployment, settings row, CMS/R2/Queue change or customer message; PR #9 not yet pushed.
+- `npm ci`; 238 tests, lint/build/audit0 and V2 Wrangler dry-runs pass; COD flags remain OFF. Deployed the protected V2 Admin Worker for isolated acceptance; verified Access identity, Save/Reload status, default Rs125, disabled policy and screenshot (private temp path). V2 API/webhook remains undeployed; live tariffs, HMAC secret and courier collection/remittance proof are absent. No CMS/R2/Queue change or customer message. PR #9 commits `5125338` and `1ecffe1` pushed.
 
 ## 2026-10-24 (GFS-210)
 

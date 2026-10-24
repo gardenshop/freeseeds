@@ -7,8 +7,8 @@
 - A stored legacy/unversioned value or canonical value lacking an Admin audit provenance is preserved but unusable; Admin GET shows review-required and POST refuses overwrite. Masked isolated D1 query found no COD policy rows, so no legacy migration was needed or performed.
 - Keep COD fee separate from V1 payment methods. COD amount uses the order's server-side seed/fertilizer selection, active D1 province fee and configured COD fee. Local helper passes PKR625 / PKR375 examples; no claim of end-to-end province acceptance.
 - Migration 0034 is additive and applied only to isolated V2 primary after verified identity, zero-data/masked preflight, `quick_check` and FK checks; recovery clone remains 0033. No V1/shared migration.
-- Synthetic COD checkout and Admin fulfillment/reconciliation are tested; source is not yet deployed to V2 Admin/API. The current V2 Admin endpoint returns 404; live province rates and courier collection/remittance proof are absent. Do not enable COD or promote the customer flow.
-- No remote COD policy/settings row, CMS/R2/Meta/Queue mutation, real payment/order state change, or customer message occurred. Browser Access and Wrangler identity were reverified for the schema-only isolated migration; verify identity before every further mutation.
+- Synthetic COD checkout and Admin fulfillment/reconciliation are tested. V2 Admin only is deployed behind its existing Access/JWT gate; V2 API/customer flow is not deployed. Verified GFS Admin saved one audited, disabled PKR125 settings row; HMAC is null because no courier reference was entered. Live province rates and courier collection/remittance proof are absent; do not enable COD or promote the customer flow.
+- No CMS/R2/Meta/Queue mutation, real payment/order state change, or customer message occurred. Browser Access and Wrangler identities were reverified before migration, deployment and settings write; verify identity before every further mutation.
 
 ## 2026-10-24: GFS-210 Payment Gate and Synthetic Fulfillment
 
