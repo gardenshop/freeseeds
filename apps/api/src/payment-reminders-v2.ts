@@ -48,8 +48,11 @@ export async function createPaymentV2Schedule(
   db: D1Database,
   orderId: string,
   paymentId: string,
-  now: Date
+  now: Date,
+  cycle = 0,
+  anchorAtOrderCreation = true
 ): Promise<{ scheduleId: string; created: boolean }> {
+  if (!Number.isInteger(cycle) || cycle < 0) throw new Error("INVALID_PAYMENT_REMINDER_V2_CYCLE");
   const createdAt = await db.prepare(
     "SELECT o.created_at FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=? AND p.id=?"
   ).bind(orderId, paymentId).first<{ created_at: string }>();
@@ -58,26 +61,27 @@ export async function createPaymentV2Schedule(
   }
 
   const timestamp = asIso(now);
-  const scheduleId = `payment-reminder-v2:${orderId}:${paymentId}`;
+  const scheduleId = cycle === 0 ? `payment-reminder-v2:${orderId}:${paymentId}` : `payment-reminder-v2:${orderId}:${paymentId}:cycle:${cycle}`;
+  const scheduleStart = cycle === 0 && anchorAtOrderCreation ? createdAt.created_at : timestamp;
   const statements = [
     db.prepare(`INSERT OR IGNORE INTO payment_reminder_v2_schedules
-      (id,order_id,payment_id,source_created_at,created_at,updated_at)
-      SELECT ?,o.id,p.id,o.created_at,?,? FROM orders o JOIN payments p ON p.order_id=o.id
-      WHERE o.id=? AND p.id=?`).bind(scheduleId, timestamp, timestamp, orderId, paymentId),
+      (id,order_id,payment_id,cycle,source_created_at,created_at,updated_at)
+      SELECT ?,o.id,p.id,?,?,?,? FROM orders o JOIN payments p ON p.order_id=o.id
+      WHERE o.id=? AND p.id=?`).bind(scheduleId, cycle, scheduleStart, timestamp, timestamp, orderId, paymentId),
     ...STAGES.map((stage) => {
-      const dueAt = new Date(Date.parse(createdAt.created_at) + stage * 60_000).toISOString();
+      const dueAt = new Date(Date.parse(scheduleStart) + stage * 60_000).toISOString();
       const action = stage === 270 ? "CANCEL_UNPAID" : "REMINDER";
       const key = `${scheduleId}:stage:${stage}`;
       return db.prepare(`INSERT OR IGNORE INTO payment_reminder_v2_stages
         (id,schedule_id,stage_minutes,due_at,action,idempotency_key,created_at,updated_at)
-        SELECT ?,id,?,?, ?,?,?,? FROM payment_reminder_v2_schedules WHERE order_id=? AND payment_id=?`)
-        .bind(key, stage, dueAt, action, key, timestamp, timestamp, orderId, paymentId);
+        SELECT ?,id,?,?, ?,?,?,? FROM payment_reminder_v2_schedules WHERE order_id=? AND payment_id=? AND cycle=?`)
+        .bind(key, stage, dueAt, action, key, timestamp, timestamp, orderId, paymentId, cycle);
     })
   ];
   const results = await db.batch(statements);
   const existing = await db.prepare(
-    "SELECT id FROM payment_reminder_v2_schedules WHERE order_id=? AND payment_id=?"
-  ).bind(orderId, paymentId).first<{ id: string }>();
+    "SELECT id FROM payment_reminder_v2_schedules WHERE order_id=? AND payment_id=? AND cycle=?"
+  ).bind(orderId, paymentId, cycle).first<{ id: string }>();
   if (!existing) throw new Error("PAYMENT_REMINDER_V2_SCHEDULE_NOT_CREATED");
   return { scheduleId: existing.id, created: Number(results[0]?.meta?.changes ?? 0) > 0 };
 }
@@ -91,24 +95,27 @@ export async function enqueueDuePaymentV2Stages(
   const timestamp = asIso(now);
   const result: PaymentReminderV2EnqueueResult = { queued: 0, cancelled: 0, blocked: 0 };
   if (!enabled) return result;
+  const hasCodOrderDetails=Boolean(await db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='cod_order_details'").first());
+  const codOrderGuard=hasCodOrderDetails?"EXISTS(SELECT 1 FROM cod_order_details cd WHERE cd.order_id=o.id AND cd.status IN ('COD_PENDING','COD_CONFIRMED','PACKING','DISPATCHED','DELIVERED','COLLECTION_PENDING','COLLECTED','RECONCILED')) AS is_cod":"0 AS is_cod";
 
   const schedules = await db.prepare(`SELECT s.id,s.order_id,s.payment_id,s.phase,s.held_at,o.customer_id,c.wa_id,o.state AS order_state,
       o.payment_status,p.review_state,
       EXISTS(SELECT 1 FROM payment_receipts r WHERE r.order_id=o.id AND r.payment_id=p.id AND r.review_state='SUBMITTED') AS has_receipt,
-      EXISTS(SELECT 1 FROM payment_reminder_v2_opt_outs x WHERE x.customer_id=o.customer_id OR x.wa_id=c.wa_id) AS opted_out
+      EXISTS(SELECT 1 FROM payment_reminder_v2_opt_outs x WHERE x.customer_id=o.customer_id OR x.wa_id=c.wa_id) AS opted_out,
+       ${codOrderGuard}
     FROM payment_reminder_v2_schedules s JOIN orders o ON o.id=s.order_id JOIN payments p ON p.id=s.payment_id JOIN customers c ON c.id=o.customer_id
     WHERE s.status='ACTIVE' ORDER BY s.created_at,s.id`).all<{
       id: string; order_id: string; payment_id: string; phase: string; held_at: string | null; customer_id:string;wa_id:string;
-      order_state: string; payment_status: string; review_state: string; has_receipt: number; opted_out: number;
+      order_state: string; payment_status: string; review_state: string; has_receipt: number; opted_out: number;is_cod:number;
     }>();
 
   for (const schedule of schedules.results ?? []) {
     const paused = schedule.held_at || schedule.has_receipt || schedule.review_state === "REVIEW" || schedule.order_state === "PAYMENT_REVIEW";
-    const stopped = schedule.opted_out || schedule.payment_status === "PAID" || TERMINAL_ORDER_STATES.has(schedule.order_state);
+    const stopped = schedule.is_cod || schedule.opted_out || schedule.payment_status === "PAID" || TERMINAL_ORDER_STATES.has(schedule.order_state);
     if (paused || stopped) {
       const reason = schedule.held_at ? "HELD" : schedule.has_receipt ? "RECEIPT_SUBMITTED"
         : schedule.review_state === "REVIEW" || schedule.order_state === "PAYMENT_REVIEW" ? "PAYMENT_REVIEW"
-        : schedule.opted_out ? "OPTED_OUT" : "TERMINAL";
+        : schedule.is_cod ? "COD_ORDER" : schedule.opted_out ? "OPTED_OUT" : "TERMINAL";
       const status = paused ? "PAUSED" : "STOPPED";
       await db.batch([
         db.prepare(`UPDATE payment_reminder_v2_schedules SET status=?,stop_reason=?,updated_at=?

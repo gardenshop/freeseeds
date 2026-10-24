@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import app from "../apps/admin/src/index";
 
 const origin = "https://admin.example.test";
-const env = { ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL" } as Parameters<typeof app.fetch>[1];
+const env = { ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL", COD_ADMIN_UI_ENABLED: "true", COD_V2_ENABLED: "false" } as Parameters<typeof app.fetch>[1];
 
 describe("payment settings generated UI", () => {
   it("renders one canonical protected route with an independently compilable script", async () => {
@@ -24,6 +24,8 @@ describe("payment settings generated UI", () => {
     expect(html).toContain("data-cod-preview-en");
     expect(html).toContain("data-cod-preview-ur");
     expect(script).toContain("ENABLE_COD");
+    expect(script).toContain("cod-settings-loaded");
+    expect(script).toContain("No enabled province delivery rates; COD will be unavailable.");
     expect(html).toContain("Advanced EN / UR copy");
     expect(script).toContain("item[0]+suffix");
     expect(script).not.toContain("prefix+item[0]");

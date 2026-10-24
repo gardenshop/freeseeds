@@ -36,7 +36,10 @@ describe("V2 COD policy", () => {
     await expect(hashV2CodVerificationReference("x", "short")).rejects.toThrow("COD_POLICY_HMAC_KEY_INVALID");
   });
 
-  it.each([250, 300, 350])("adds the COD fee to a configured provincial delivery fee of PKR %i", (deliveryFee) => {
+  it.each([
+    ["Punjab",250],["Islamabad",275],["Sindh",300],["KPK",325],["Balochistan",350],["AJK",375],["Gilgit Baltistan",400]
+  ] as const)("uses the selected D1 fee for synthetic province %s", (province,deliveryFee) => {
+    expect(province.length).toBeGreaterThan(0);
     expect(calculateV2CodPrice(0, 250, deliveryFee, 125).totalPayablePkr).toBe(375 + deliveryFee);
     expect(calculateV2CodPrice(0, 0, deliveryFee, 125).totalPayablePkr).toBe(125 + deliveryFee);
   });

@@ -48,26 +48,28 @@ function buttons() {
   return (sends.at(-1)?.interactive as { action?: { buttons?: Array<{ reply: { id: string } }> } } | undefined)?.action?.buttons?.map((button) => button.reply.id) ?? [];
 }
 
-function env(paymentConfirmationEnabled = "false", paymentRemindersEnabled = "false", paymentAutomationEnabled = "false", utilityTemplatesApproved = "false", orderStatusNotificationsEnabled = "false", metaProviderEnabled = "true") {
-  return { DB: db, RECEIPTS: { get: receiptBucketGet, put: receiptBucketPut }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: metaProviderEnabled, PAYMENT_CONFIRMATION_V2_ENABLED: paymentConfirmationEnabled, PAYMENT_REMINDERS_V2_ENABLED: paymentRemindersEnabled, PAYMENT_AUTOMATION_V2_ENABLED: paymentAutomationEnabled, PAYMENT_UTILITY_TEMPLATES_APPROVED: utilityTemplatesApproved, ORDER_STATUS_NOTIFICATIONS_V2_ENABLED: orderStatusNotificationsEnabled, META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided" } as never;
+function env(paymentConfirmationEnabled = "false", paymentRemindersEnabled = "false", paymentAutomationEnabled = "false", utilityTemplatesApproved = "false", orderStatusNotificationsEnabled = "false", metaProviderEnabled = "true", codV2Enabled = "false") {
+  return { DB: db, RECEIPTS: { get: receiptBucketGet, put: receiptBucketPut }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: metaProviderEnabled, PAYMENT_CONFIRMATION_V2_ENABLED: paymentConfirmationEnabled, PAYMENT_REMINDERS_V2_ENABLED: paymentRemindersEnabled, PAYMENT_AUTOMATION_V2_ENABLED: paymentAutomationEnabled, PAYMENT_UTILITY_TEMPLATES_APPROVED: utilityTemplatesApproved, ORDER_STATUS_NOTIFICATIONS_V2_ENABLED: orderStatusNotificationsEnabled, COD_V2_ENABLED: codV2Enabled, META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided" } as never;
 }
 
-async function callback(messages: Record<string, unknown>[], extraChanges: unknown[] = [], paymentRemindersEnabled = false) {
+async function callback(messages: Record<string, unknown>[], extraChanges: unknown[] = [], paymentRemindersEnabled = false, codV2Enabled = false) {
   const payload = JSON.stringify({ object: "whatsapp_business_account", entry: [{ changes: [{ field: "messages", value: { metadata: { phone_number_id: phoneId }, messages } }, ...extraChanges] }] });
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const digest = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
   const signature = [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-  return api.fetch(new Request("https://api.example.test/webhooks/whatsapp", { method: "POST", headers: { "content-type": "application/json", "x-hub-signature-256": `sha256=${signature}` }, body: payload }), env("false",String(paymentRemindersEnabled),String(paymentRemindersEnabled)));
+  return api.fetch(new Request("https://api.example.test/webhooks/whatsapp", { method: "POST", headers: { "content-type": "application/json", "x-hub-signature-256": `sha256=${signature}` }, body: payload }), env("false",String(paymentRemindersEnabled),String(paymentRemindersEnabled),"false","false","true",String(codV2Enabled)));
 }
 
-async function adminPost(path: string, body: Record<string, unknown>, referenceRequestsEnabled = "true", paymentConfirmationEnabled = "false", paymentRemindersEnabled = "false", paymentAutomationEnabled = "false", orderStatusNotificationsEnabled = "false", events: { send: typeof queueSend } = { send: vi.fn(async () => undefined) }) {
-  const adminEnv = { DB: db, ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL", REFERENCE_REQUESTS_ENABLED: referenceRequestsEnabled, PAYMENT_CONFIRMATION_V2_ENABLED: paymentConfirmationEnabled, PAYMENT_REMINDERS_V2_ENABLED:paymentRemindersEnabled, PAYMENT_AUTOMATION_V2_ENABLED:paymentAutomationEnabled, ORDER_STATUS_NOTIFICATIONS_V2_ENABLED:orderStatusNotificationsEnabled, EVENTS: events } as never;
+async function adminPost(path: string, body: Record<string, unknown>, referenceRequestsEnabled = "true", paymentConfirmationEnabled = "false", paymentRemindersEnabled = "false", paymentAutomationEnabled = "false", orderStatusNotificationsEnabled = "false", events: { send: typeof queueSend } = { send: vi.fn(async () => undefined) },codAdminUiEnabled="false") {
+  const adminEnv = { DB: db, ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL", REFERENCE_REQUESTS_ENABLED: referenceRequestsEnabled, PAYMENT_CONFIRMATION_V2_ENABLED: paymentConfirmationEnabled, PAYMENT_REMINDERS_V2_ENABLED:paymentRemindersEnabled, PAYMENT_AUTOMATION_V2_ENABLED:paymentAutomationEnabled, ORDER_STATUS_NOTIFICATIONS_V2_ENABLED:orderStatusNotificationsEnabled,COD_ADMIN_UI_ENABLED:codAdminUiEnabled,COD_POLICY_HMAC_KEY:"synthetic-cod-policy-key-with-sufficient-entropy", EVENTS: events } as never;
   const identity = { "cf-access-authenticated-user-email": "admin@example.test" };
   const csrfResponse = await admin.fetch(new Request("https://admin.example.test/api/csrf", { headers: identity }), adminEnv);
   const csrf = await csrfResponse.json() as { csrfToken: string };
   const cookie = `__Host-gfs_admin_csrf=${csrf.csrfToken}`;
   return admin.fetch(new Request(`https://admin.example.test${path}`, { method: "POST", headers: { ...identity, origin:"https://admin.example.test", cookie, "x-csrf-token": csrf.csrfToken, "content-type": "application/json" }, body: JSON.stringify(body) }), adminEnv);
 }
+
+async function adminPostCod(path:string,body:Record<string,unknown>){return adminPost(path,body,"true","false","false","false","false",{send:vi.fn(async()=>undefined)},"true")}
 
 async function adminPostWithOrderNotices(path: string, body: Record<string, unknown>) {
   return adminPost(path,body,"true","false","false","false","true",{send:queueSend});
@@ -81,29 +83,32 @@ async function deliverLastSyntheticOrderNotice() {
   return {queued,ack,retry,before,after:sends.length,text:body()};
 }
 
-async function inbound(input: string | Record<string, unknown>, id = `synthetic-inbound-${++sequence}`, waId = sender, paymentRemindersEnabled = false) {
+async function inbound(input: string | Record<string, unknown>, id = `synthetic-inbound-${++sequence}`, waId = sender, paymentRemindersEnabled = false, codV2Enabled = false) {
   const message = { from: waId, id, timestamp: "1792497600", ...(typeof input === "string" ? { type: "text", text: { body: input } } : { type: "interactive", interactive: input }) };
-  const response = await callback([message],[],paymentRemindersEnabled);
+  const response = await callback([message],[],paymentRemindersEnabled,codV2Enabled);
   expect(response.status).toBe(200);
   return message;
 }
 
 const tap = (id: string) => ({ type: "button_reply", button_reply: { id, title: "Synthetic button" } });
 
-async function reachReview(locale: "en" | "ur", fertilizer = false) {
-  await inbound("START");
+async function reachReview(locale: "en" | "ur", fertilizer = false, province="Synthetic Province",waId=sender) {
+  await inbound("START",undefined,waId);
   expect(buttons()).toEqual(["LANG_UR", "LANG_EN"]);
-  await inbound(tap(locale === "ur" ? "LANG_UR" : "LANG_EN"));
-  expect(conversation()?.state).toBe("OFFER");
+  await inbound(tap(locale === "ur" ? "LANG_UR" : "LANG_EN"),undefined,waId);
+  expect(conversation(waId)?.state).toBe("OFFER");
   expect(buttons()).toEqual(["CONTINUE_ORDER", "CANCEL_ORDER"]);
-  await inbound(tap("CONTINUE_ORDER"));
-  expect(conversation()?.state).toBe("FERTILIZER");
+  await inbound(tap("CONTINUE_ORDER"),undefined,waId);
+  expect(conversation(waId)?.state).toBe("FERTILIZER");
   expect(buttons()).toEqual(["ADD_FERTILIZER", "SEEDS_ONLY"]);
-  await inbound(tap(fertilizer ? "ADD_FERTILIZER" : "SEEDS_ONLY"));
-  expect(sends.at(-1)).toMatchObject({ interactive: { type: "list", action: { sections: [{ rows: [{ id: "PROVINCE_SYNTHETIC_PROVINCE", title: "Synthetic Province" }] }] } } });
-  await inbound({ type: "list_reply", list_reply: { id: "PROVINCE_SYNTHETIC_PROVINCE", title: "Synthetic Province" } });
-  for (const value of ["Synthetic Customer", "123 Synthetic Street", "Synthetic Park", "Synthetic City", "03001234567"]) await inbound(value);
-  expect(conversation()?.state).toBe("REVIEW");
+  await inbound(tap(fertilizer ? "ADD_FERTILIZER" : "SEEDS_ONLY"),undefined,waId);
+  const provinceId=`PROVINCE_${province.toUpperCase().replace(/ /g,"_")}`;
+  expect(listRows().some((row)=>row.id===provinceId&&row.title===province)).toBe(true);
+  await inbound({ type: "list_reply", list_reply: { id: provinceId, title: province } },undefined,waId);
+  const contactNumber=`0300${waId.slice(-7)}`;
+  const householdSuffix=waId.slice(-3);
+  for (const value of ["Synthetic Customer", `123 Synthetic Street ${householdSuffix}`, `Synthetic Park ${householdSuffix}`, `Synthetic City ${householdSuffix}`, contactNumber]) await inbound(value,undefined,waId);
+  expect(conversation(waId)?.state).toBe("REVIEW");
 }
 
 async function createSyntheticPaymentReviewOrder(waId: string, idempotencyKey: string, paymentReminderV2Enabled = false) {
@@ -132,6 +137,17 @@ function verifySyntheticPaymentMethod(method = "JAZZCASH") {
 
 function configureSyntheticPaymentMethodCopy(method = "JAZZCASH") {
   sqlite.prepare(`UPDATE payment_methods SET instructions='Pay PKR {amount} to {recipientName} for {orderNumber}, destination {tillId}',reference_instruction='Reference {orderNumber} PKR {amount} {recipientName} {tillId}',receipt_instructions='Send receipt for {orderNumber}',heading_ur='ادائیگی',instructions_ur='PKR {amount} {recipientName} {orderNumber} {tillId}',reference_instruction_ur='حوالہ PKR {amount} {recipientName} {orderNumber} {tillId}',receipt_instructions_ur='رسید {orderNumber}' WHERE method=?`).run(method);
+}
+
+function configureSyntheticCodPolicy(enabled = true,eligibleProvinces=["Synthetic Province"]) {
+  const policy={version:1,feePkr:125,enabled,eligibleProvinces,courierProvider:"Synthetic Courier",collectionSupported:true,remittanceSupported:true,verificationReferenceHash:"c".repeat(64),instructionsEn:"Pay the order total to the courier on delivery.",instructionsUr:"ڈیلیوری کے وقت کورئیر کو کل رقم ادا کریں۔"};
+  const timestamp="2026-01-01T00:00:00.000Z";
+  sqlite.prepare("INSERT INTO configuration(key,value,environment,is_secret,updated_by,updated_at) VALUES('COD_V2_POLICY',?,'V2_ISOLATED_STAGING',0,'TEST_FIXTURE',?)").run(JSON.stringify(policy),timestamp);
+  sqlite.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?,?)").run("synthetic-cod-policy-audit","COD_POLICY_UPDATED","TEST","TEST_FIXTURE","SYSTEM_CONFIG","COD_V2_POLICY","synthetic-cod-policy",JSON.stringify({version:1}),timestamp);
+}
+
+function listRows() {
+  return (sends.at(-1)?.interactive as { action?: { sections?: Array<{ rows: Array<{id:string;title:string;description?:string}> }> } } | undefined)?.action?.sections?.[0]?.rows ?? [];
 }
 
 beforeEach(() => {
@@ -993,5 +1009,188 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sqlite.prepare("SELECT * FROM orders").get()).toEqual(beforeOrder);
     expect(sqlite.prepare("SELECT * FROM payments").get()).toEqual(beforePayment);
     expect(sqlite.prepare("SELECT event_name,send_status FROM capi_events").all()).toEqual([{ event_name: "Lead", send_status: "PENDING" }]);
+  });
+
+  it.each([{fertilizer:true,total:625},{fertilizer:false,total:375}] as const)("offers COD as a separate list choice and confirms a PKR $total delivery order",async({fertilizer,total})=>{
+    configureSyntheticCodPolicy();
+    sqlite.prepare("UPDATE products SET price_pkr=250 WHERE code='MICRO_NUTRIENTS_FERTILIZER'").run();
+    sqlite.prepare("UPDATE province_delivery_rates SET delivery_fee_pkr=250 WHERE province='Synthetic Province'").run();
+    for(const method of ["JAZZCASH","EASYPAISA","BANK_TRANSFER"]){verifySyntheticPaymentMethod(method);configureSyntheticPaymentMethodCopy(method)}
+    await reachReview("en",fertilizer);
+    await inbound(tap("PLACE_ORDER"),"synthetic-cod-place",sender,true,true);
+    expect(conversation()?.state).toBe("PAYMENT_METHOD");
+    expect(listRows().map((row)=>row.id).sort()).toEqual(["PAY_BANK_TRANSFER","PAY_COD","PAY_EASYPAISA","PAY_JAZZCASH"].sort());
+    expect(buttons()).toEqual([]);
+    const codSelection=await inbound({type:"list_reply",list_reply:{id:"PAY_COD",title:"Cash on Delivery"}},"synthetic-cod-select",sender,true,true);
+    expect(conversation()?.state).toBe("COD_PENDING_CONFIRMATION");
+    expect(body()).toContain(`PKR ${total}`);
+    expect(buttons()).toEqual(["COD_CONFIRM","COD_CHANGE_PAYMENT","COD_CANCEL"]);
+    const order=sqlite.prepare("SELECT state,payment_status,total_payable FROM orders").get();
+    expect(order).toMatchObject({state:"COD_PENDING_CONFIRMATION",payment_status:"COD_PENDING",total_payable:fertilizer?500:250});
+    expect(sqlite.prepare("SELECT method,expected_amount,review_state FROM payments").get()).toEqual({method:"COD",expected_amount:total,review_state:"COD_PENDING"});
+    expect(sqlite.prepare("SELECT seed_total_pkr,fertilizer_total_pkr,delivery_fee_pkr,cod_fee_pkr,total_payable_pkr,status FROM cod_order_details").get()).toEqual({seed_total_pkr:0,fertilizer_total_pkr:fertilizer?250:0,delivery_fee_pkr:250,cod_fee_pkr:125,total_payable_pkr:total,status:"COD_PENDING"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_reminder_v2_schedules").get()).toEqual({count:0});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_reminder_v2_stages").get()).toEqual({count:0});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts").get()).toEqual({count:0});
+    const sendsAfterSelection=sends.length;
+    await callback([codSelection],[],true,true);
+    expect(sends).toHaveLength(sendsAfterSelection);
+    await inbound({type:"list_reply",list_reply:{id:"PAY_COD",title:"Cash on Delivery"}},"synthetic-cod-select-duplicate",sender,true,true);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:1});
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders").get()).toEqual({state:"COD_PENDING_CONFIRMATION",payment_status:"COD_PENDING"});
+    const reminders=await enqueueDuePaymentV2Stages(db,new Date("2030-01-01T00:00:00Z"),true);
+    expect(reminders.queued).toBe(0);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE kind LIKE 'WHATSAPP_PAYMENT_REMINDER%'").get()).toEqual({count:0});
+    const confirmation=await inbound(tap("COD_CONFIRM"),"synthetic-cod-confirm",sender,true,true);
+    expect(conversation()?.state).toBe("COD_PENDING");
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders").get()).toEqual({state:"COD_PENDING",payment_status:"COD_PENDING"});
+    expect(sqlite.prepare("SELECT status FROM cod_order_details").get()).toEqual({status:"COD_CONFIRMED"});
+    expect(sqlite.prepare("SELECT review_state FROM payments").get()).toEqual({review_state:"COD_PENDING"});
+    await callback([confirmation],[],true,true);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:1});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_ORDER_CONFIRMED'").get()).toEqual({count:1});
+    const storedBefore=sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts").get();
+    await callback([{from:sender,id:"synthetic-cod-receipt",timestamp:"1792497600",type:"image",image:{id:"synthetic-cod-media"},context:{id:"synthetic-stale-advance-wamid"}}],[],true,true);
+    expect(body()).toContain("No advance receipt is needed");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts").get()).toEqual(storedBefore);
+    expect(receiptBucketPut).not.toHaveBeenCalled();
+  });
+
+  it("fails closed when COD settings are approved but the V2 runtime switch is off",async()=>{
+    configureSyntheticCodPolicy();
+    await reachReview("ur");
+    await inbound(tap("PLACE_ORDER"));
+    expect(conversation()?.state).toBe("COMPLETE");
+    expect(listRows()).toEqual([]);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:0});
+  });
+
+  it.each([["en","Cash on Delivery","eligible provinces"],["ur","کیش آن ڈیلیوری","اہل صوبوں"]] as const)("uses the active bilingual OFFER text without the old COD-unavailable notice ($0)",async(locale,expected,phrase)=>{
+    configureSyntheticCodPolicy();
+    sqlite.prepare("UPDATE whatsapp_content_template_versions SET content_en_json=?,content_ur_json=? WHERE template_key='OFFER' AND version=1").run(JSON.stringify({text:"Cash on delivery is not available."}),JSON.stringify({text:"COD دستیاب نہیں ہے۔"}));
+    await inbound("START","synthetic-cod-offer-start",sender,false,true);
+    await inbound(tap(locale==="ur"?"LANG_UR":"LANG_EN"),`synthetic-cod-offer-${locale}`,sender,false,true);
+    expect(conversation()?.state).toBe("OFFER");
+    expect(body()).toContain(expected);
+    expect(body()).toContain(phrase);
+    expect(body()).not.toMatch(/COD.{0,30}(not available|unavailable)/i);
+    expect(buttons()).toEqual(["CONTINUE_ORDER","CANCEL_ORDER"]);
+  });
+
+  it("allows a customer to switch COD back to advance payment and starts a fresh reminder cycle",async()=>{
+    configureSyntheticCodPolicy();
+    sqlite.prepare("UPDATE products SET price_pkr=250 WHERE code='MICRO_NUTRIENTS_FERTILIZER'").run();
+    sqlite.prepare("UPDATE province_delivery_rates SET delivery_fee_pkr=250 WHERE province='Synthetic Province'").run();
+    verifySyntheticPaymentMethod("JAZZCASH");configureSyntheticPaymentMethodCopy("JAZZCASH");
+    await reachReview("en",true);
+    await inbound(tap("PLACE_ORDER"),"synthetic-cod-switch-place",sender,true,true);
+    await inbound({type:"list_reply",list_reply:{id:"PAY_COD",title:"Cash on Delivery"}},"synthetic-cod-switch-select",sender,true,true);
+    expect(sqlite.prepare("SELECT total_payable_pkr,status FROM cod_order_details").get()).toEqual({total_payable_pkr:625,status:"COD_PENDING"});
+    await inbound(tap("COD_CHANGE_PAYMENT"),"synthetic-cod-switch-change",sender,true,true);
+    expect(conversation()?.state).toBe("PAYMENT_METHOD");
+    expect(sqlite.prepare("SELECT method,expected_amount,review_state FROM payments").get()).toEqual({method:null,expected_amount:500,review_state:"PENDING"});
+    expect(sqlite.prepare("SELECT status FROM cod_order_details").get()).toEqual({status:"COD_METHOD_CHANGED"});
+    await inbound(tap("PAY_JAZZCASH"),"synthetic-cod-switch-jazzcash",sender,true,true);
+    expect(conversation()?.state).toBe("PAYMENT_PENDING");
+    expect(sqlite.prepare("SELECT method,expected_amount,review_state FROM payments").get()).toEqual({method:"JAZZCASH",expected_amount:500,review_state:"PENDING"});
+    expect(sqlite.prepare("SELECT cycle,status FROM payment_reminder_v2_schedules ORDER BY cycle").all()).toEqual([{cycle:1,status:"ACTIVE"}]);
+    expect(sqlite.prepare("SELECT status FROM cod_order_details").get()).toEqual({status:"COD_METHOD_CHANGED"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts").get()).toEqual({count:0});
+  });
+
+  it("snapshots a changed COD fee only on a new, non-active selection attempt",async()=>{
+    configureSyntheticCodPolicy();
+    await reachReview("en");
+    await inbound(tap("PLACE_ORDER"),"synthetic-cod-reprice-place",sender,false,true);
+    await inbound({type:"list_reply",list_reply:{id:"PAY_COD",title:"Cash on Delivery"}},"synthetic-cod-reprice-first",sender,false,true);
+    expect(sqlite.prepare("SELECT total_payable_pkr FROM cod_order_details").get()).toEqual({total_payable_pkr:250});
+    await inbound(tap("COD_CHANGE_PAYMENT"),"synthetic-cod-reprice-change",sender,false,true);
+    const policy=JSON.parse(String(sqlite.prepare("SELECT value FROM configuration WHERE key='COD_V2_POLICY'").get()?.value)) as Record<string,unknown>;
+    policy.feePkr=150;
+    sqlite.prepare("UPDATE configuration SET value=? WHERE key='COD_V2_POLICY'").run(JSON.stringify(policy));
+    await inbound({type:"list_reply",list_reply:{id:"PAY_COD",title:"Cash on Delivery"}},"synthetic-cod-reprice-second",sender,false,true);
+    expect(sqlite.prepare("SELECT attempt,cod_fee_pkr,total_payable_pkr,status FROM cod_order_details ORDER BY attempt").all()).toEqual([{attempt:1,cod_fee_pkr:125,total_payable_pkr:250,status:"COD_METHOD_CHANGED"},{attempt:2,cod_fee_pkr:150,total_payable_pkr:275,status:"COD_PENDING"}]);
+    expect(sqlite.prepare("SELECT method,expected_amount,review_state FROM payments").get()).toEqual({method:"COD",expected_amount:275,review_state:"COD_PENDING"});
+  });
+
+  it("uses each enabled province delivery-rate snapshot in the COD order quote",async()=>{
+    const provinceRates=[["Punjab",250],["Islamabad",275],["Sindh",300],["KPK",325],["Balochistan",350],["AJK",375],["Gilgit Baltistan",400]] as const;
+    for(const [province,deliveryFee] of provinceRates)sqlite.prepare("INSERT INTO province_delivery_rates(id,province,delivery_fee_pkr,enabled,created_at,updated_at) VALUES(?,?,?,1,?,?)").run(`synthetic-rate-${province.toLowerCase().replace(/ /g,"-")}`,province,deliveryFee,"2026-01-01","2026-01-01");
+    configureSyntheticCodPolicy(true,provinceRates.map(([province])=>province));
+    sqlite.prepare("UPDATE products SET price_pkr=250 WHERE code='MICRO_NUTRIENTS_FERTILIZER'").run();
+    for(const [index,[province,deliveryFee]] of provinceRates.entries()){
+      const waId=`923000000${String(index+1).padStart(3,"0")}`;
+      await reachReview("en",true,province,waId);
+      await inbound(tap("PLACE_ORDER"),`synthetic-cod-all-province-place-${index}`,waId,false,true);
+      expect(listRows().map((row)=>row.id),`COD options missing for ${province}`).toContain("PAY_COD");
+      await inbound({type:"list_reply",list_reply:{id:"PAY_COD",title:"Cash on Delivery"}},`synthetic-cod-all-province-select-${index}`,waId,false,true);
+      const order=sqlite.prepare("SELECT o.province,o.delivery_fee,o.fertilizer_fee,o.total_payable,cd.cod_fee_pkr,cd.total_payable_pkr FROM orders o JOIN cod_order_details cd ON cd.order_id=o.id WHERE o.customer_id=(SELECT id FROM customers WHERE wa_id=?)").get(waId);
+      expect(order).toEqual({province,delivery_fee:deliveryFee,fertilizer_fee:250,total_payable:250+deliveryFee,cod_fee_pkr:125,total_payable_pkr:375+deliveryFee});
+      expect(conversation(waId)?.state).toBe("COD_PENDING_CONFIRMATION");
+    }
+  });
+
+  it("runs a COD order through actual D1 packing, delivery, collection and paid reconciliation gates",async()=>{
+    configureSyntheticCodPolicy();
+    sqlite.prepare("UPDATE products SET price_pkr=250 WHERE code='MICRO_NUTRIENTS_FERTILIZER'").run();
+    sqlite.prepare("UPDATE province_delivery_rates SET delivery_fee_pkr=250 WHERE province='Synthetic Province'").run();
+    const waId="923000000777";
+    await reachReview("en",true,"Synthetic Province",waId);
+    await inbound(tap("PLACE_ORDER"),"synthetic-cod-admin-place",waId,false,true);
+    await inbound({type:"list_reply",list_reply:{id:"PAY_COD",title:"Cash on Delivery"}},"synthetic-cod-admin-select",waId,false,true);
+    await inbound(tap("COD_CONFIRM"),"synthetic-cod-admin-confirm",waId,false,true);
+    const order=sqlite.prepare("SELECT o.id,o.order_number FROM orders o JOIN customers c ON c.id=o.customer_id WHERE c.wa_id=?").get(waId) as {id:string;order_number:string};
+    const transition=async(from:string,to:string)=>adminPostCod(`/api/cod-orders/${order.id}/transition`,{from,to,confirmation:order.order_number});
+    let response=await transition("COD_PENDING","PACKING");
+    expect(response.status).toBe(200);
+    response=await transition("COD_PENDING","PACKING");
+    expect((await response.json() as {alreadyTransitioned:boolean}).alreadyTransitioned).toBe(true);
+    response=await transition("PACKING","DELIVERED");
+    expect(response.status).toBe(409);
+    expect(sqlite.prepare("SELECT status FROM cod_order_details WHERE order_id=?").get(order.id)).toEqual({status:"PACKING"});
+    response=await adminPostCod(`/api/orders/${order.id}/tracking`,{trackingNumber:"SYNTHETIC-TRACKING-777",confirmation:order.order_number});
+    expect(response.status).toBe(200);
+    expect((await transition("PACKING","DISPATCHED")).status).toBe(200);
+    expect((await transition("DISPATCHED","DELIVERED")).status).toBe(200);
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(order.id)).toEqual({state:"DELIVERED",payment_status:"COD_PENDING"});
+    expect(sqlite.prepare("SELECT status FROM cod_order_details WHERE order_id=?").get(order.id)).toEqual({status:"COLLECTION_PENDING"});
+    const collectionReference="SYNTHETIC-COURIER-COLLECTION-777";
+    response=await adminPostCod(`/api/cod-orders/${order.id}/collection`,{collectionAmountPkr:624,collectionReference,collectionConfirmed:true,confirmation:order.order_number});
+    expect(response.status).toBe(409);
+    expect(sqlite.prepare("SELECT status FROM cod_order_details WHERE order_id=?").get(order.id)).toEqual({status:"COLLECTION_PENDING"});
+    response=await adminPostCod(`/api/cod-orders/${order.id}/collection`,{collectionAmountPkr:625,collectionReference,collectionConfirmed:true,confirmation:order.order_number});
+    expect(response.status).toBe(200);
+    expect(sqlite.prepare("SELECT status,payment_status FROM cod_order_details cd JOIN orders o ON o.id=cd.order_id WHERE cd.order_id=?").get(order.id)).toMatchObject({status:"COLLECTED",payment_status:"COD_PENDING"});
+    response=await adminPostCod(`/api/cod-orders/${order.id}/reconcile`,{remittanceAmountPkr:624,remittanceReference:"SYNTHETIC-BANK-REMITTANCE-777",remittanceConfirmed:true,confirmation:order.order_number});
+    expect(response.status).toBe(409);
+    expect(sqlite.prepare("SELECT payment_status FROM orders WHERE id=?").get(order.id)).toEqual({payment_status:"COD_PENDING"});
+    response=await adminPostCod(`/api/cod-orders/${order.id}/reconcile`,{remittanceAmountPkr:625,remittanceReference:"SYNTHETIC-BANK-REMITTANCE-777",remittanceConfirmed:true,confirmation:order.order_number});
+    expect(response.status).toBe(200);
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(order.id)).toEqual({state:"DELIVERED",payment_status:"PAID"});
+    expect(sqlite.prepare("SELECT status,collection_amount_pkr FROM cod_order_details WHERE order_id=?").get(order.id)).toEqual({status:"RECONCILED",collection_amount_pkr:625});
+    const codAudit=sqlite.prepare("SELECT metadata_json FROM audit_log WHERE action IN ('COD_CASH_COLLECTED','COD_REMITTANCE_RECONCILED')").all() as Array<{metadata_json:string}>;
+    expect(JSON.stringify(codAudit)).not.toContain(collectionReference);
+    expect(JSON.stringify(codAudit)).not.toContain("SYNTHETIC-BANK-REMITTANCE-777");
+  });
+
+  it("saves only a keyed courier-reference hash and fails closed before runtime approval",async()=>{
+    const reference="SYNTHETIC-COURIER-REFERENCE-SETTINGS-1";
+    let response=await adminPostCod("/api/cod-settings",{feePkr:125,enabled:false,eligibleProvinces:[],courierProvider:"",collectionSupported:false,remittanceSupported:false,verificationReference:reference,instructionsEn:"Pay the order total to the courier on delivery.",instructionsUr:"ڈیلیوری پر کورئیر کو پوری رقم ادا کریں۔"});
+    expect(response.status).toBe(200);
+    const stored=String(sqlite.prepare("SELECT value FROM configuration WHERE key='COD_V2_POLICY' AND environment='LOCAL'").get()?.value);
+    const policy=JSON.parse(stored) as {version:number;feePkr:number;enabled:boolean;verificationReferenceHash:string|null};
+    expect(policy).toMatchObject({version:1,feePkr:125,enabled:false});
+    expect(policy.verificationReferenceHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(stored).not.toContain(reference);
+    const adminEnv={DB:db,ADMIN_EMAIL:"admin@example.test",DEPLOYMENT_STATE:"LOCAL",COD_ADMIN_UI_ENABLED:"true",COD_V2_ENABLED:"false",COD_POLICY_HMAC_KEY:"synthetic-cod-policy-key-with-sufficient-entropy"} as never;
+    response=await admin.fetch(new Request("https://admin.example.test/api/cod-settings",{headers:{"cf-access-authenticated-user-email":"admin@example.test"}}),adminEnv);
+    expect(response.status).toBe(200);
+    const safeRead=await response.json() as {policy:Record<string,unknown>;effectiveEnabled:boolean};
+    expect(safeRead.effectiveEnabled).toBe(false);
+    expect(safeRead.policy).not.toHaveProperty("verificationReferenceHash");
+    response=await adminPostCod("/api/cod-settings",{feePkr:125,enabled:true,eligibleProvinces:["Synthetic Province"],courierProvider:"Synthetic Courier",collectionSupported:true,remittanceSupported:true,verificationReference:"",confirmation:"ENABLE_COD",instructionsEn:"Pay the order total to the courier on delivery.",instructionsUr:"ڈیلیوری پر کورئیر کو پوری رقم ادا کریں۔"});
+    expect(response.status).toBe(409);
+    expect(JSON.parse(String(sqlite.prepare("SELECT value FROM configuration WHERE key='COD_V2_POLICY' AND environment='LOCAL'").get()?.value)).enabled).toBe(false);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_POLICY_UPDATED'").get()).toEqual({count:1});
   });
 });

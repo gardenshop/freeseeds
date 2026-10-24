@@ -1,11 +1,12 @@
 # Changelog
 
-## 2026-10-24 (GFS-211, source-only / incomplete)
+## 2026-10-24 (GFS-211, isolated source/acceptance)
 
 - Reproduced and consolidated duplicate COD implementation: one shared strict versioned policy format, one API policy loader, and one Admin GET/POST settings pair. Unknown legacy/unversioned or unprovenanced settings fail closed.
 - Added HMAC-SHA-256 hashing of courier verification references using a dedicated key, Admin explicit enable confirmation/audit, default PKR125 fee, and editable EN/UR customer instructions/previews. No plaintext reference is persisted or logged.
-- Added local additive V2 COD collection schema 0034 and pure dynamic-price calculator; PKR625/PKR375 examples pass. No migration applied, deployment, remote write or live browser mutation.
-- `npm ci`; 220 tests, lint/build/audit0 and V2 Wrangler dry-runs pass; COD stays OFF. Full customer COD flow/fulfillment/collection, comprehensive province D1 tests and isolated acceptance remain incomplete; PR #9 not yet pushed.
+- Added additive V2 migration 0034 and applied only to isolated V2 primary after verified account identity, empty-data/quick/FK/recovery preflight. Shared/V1 D1 unchanged.
+- Completed local V2 guided COD selection, dynamic total snapshot, explicit confirmation, no advance receipt/timer behavior, advance switching, Admin fulfillment/collection/remittance reconciliation, V1 schema/UI gates, and dynamic bilingual active OFFER copy. Full synthetic seven-province matrix and SQLite-backed COD lifecycle pass.
+- `npm ci`; 238 tests, lint/build/audit0 and V2 Wrangler dry-runs pass; COD flags remain OFF. Current live V2 Admin COD settings route returns 404; province rates/HMAC secret/courier proof are absent. No Worker deployment, settings row, CMS/R2/Queue change or customer message; PR #9 not yet pushed.
 
 ## 2026-10-24 (GFS-210)
 

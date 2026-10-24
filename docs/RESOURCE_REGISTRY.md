@@ -1,11 +1,12 @@
 # Resource Registry
 
-## GFS-211 COD Source-only Inventory (2026-10-24)
+## GFS-211 COD Inventory (2026-10-24)
 
-- Fetched `origin/codex/gfs-v2-payments-reminders-001`; remote and local branch head are both `a651f87`. Existing uncommitted COD changes were preserved; no checkout/reset or commit/push occurred.
-- Wrangler identity was verified as `gisupp@gmail.com` / Get Free Seeds (`cb5066a6d71ecdee0bd7ed8aacb4d3c2`). A masked read-only query on isolated D1 `getfreeseeds-v2-staging` found zero `COD_V2_POLICY` rows (no raw config content queried). No shared D1 query/write.
-- No hosted resource, migration, secret, route, Access policy, CMS version, R2 object, Queue message, or Worker was created/changed. `COD_V2_ENABLED=false` in both V2 Wrangler configurations. Dedicated `COD_POLICY_HMAC_KEY` has not been provisioned or verified; enabled COD cannot pass until it exists.
-- Local additive migration 0034 is un-applied. Keep existing V2 D1/recovery D1/private R2/Queue/DLQ/Workers per existing 2026-11-23 review; no resource cleanup is due for this source-only run. `images/` and Hoja assets untouched.
+- Local and remote PR #9 branch head was `276765b` before current uncommitted changes. No checkout/reset; `images/` remains untouched. Frozen V1 source and bindings are unchanged.
+- Wrangler and same-origin Cloudflare Access identity were reverified as `gisupp@gmail.com` / Get Free Seeds (`cb5066a6d71ecdee0bd7ed8aacb4d3c2`) before the isolated migration. Primary/recovery D1 `quick_check=ok`, foreign-key checks empty. Masked primary counts: customers/orders/payments/receipts/COD policy/province-rate rows all 0.
+- `0034_cod_orders_v2.sql` is applied only to primary isolated `getfreeseeds-v2-staging`. Recovery `getfreeseeds-v2-restore-check` remains at 0033. Shared/V1 D1 untouched. Migration is additive; do not drop it or restore over subsequent data.
+- Browser Access identity endpoint returned `gisupp@gmail.com`; current V2 Admin `/api/cod-settings` remains 404 (new code not deployed). No remote COD policy/settings row, HMAC secret provisioning, Worker deploy, CMS version, R2 object, Queue message, Access policy or public route was changed. API/Admin COD runtime flags remain false; Admin UI flag is true only in isolated V2 Wrangler config.
+- Dedicated `COD_POLICY_HMAC_KEY` is not provisioned/verified, no active province delivery rates exist in isolated D1, and courier collection/remittance remains unverified. No new Cloudflare resource or paid plan; retain V2 D1/recovery D1/private R2/Queue/DLQ/Workers for acceptance and rollback, next review 2026-11-23. `images/` and Hoja assets untouched.
 
 ## GFS-210 Staging and Cleanup (2026-10-24)
 

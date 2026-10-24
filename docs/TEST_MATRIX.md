@@ -7,12 +7,15 @@
 | Local/remote branch preservation | PASS | Local and fetched PR #9 branch both `a651f87`; no checkout/reset; `images/` remains untracked and untouched; V1 source untouched |
 | Duplicate API policy / Admin routes | PASS SOURCE | API parse error reproduced (`V2CodPolicy` redeclared); consolidated to one shared parser/API loader and exactly one Admin GET + POST pair; route-count regression passes |
 | Hash-only policy | PASS LOCAL | Strict versioned policy; HMAC-SHA-256 uses dedicated key; key-specific/deterministic hash tests pass; schema rejects plaintext legacy format; no plaintext reference stored/logged |
-| Legacy/provenance handling | PASS FAIL-CLOSED | Admin read/update rejects noncanonical or unprovenanced stored state; masked remote D1 query found zero COD policy rows, so no legacy migration required |
-| COD pricing | PASS PURE FUNCTION ONLY | PKR625 example and no-fertilizer PKR375 example pass; unit matrix uses representative delivery amounts PKR250/300/350. No D1 per-province checkout integration yet |
-| Admin settings | PASS SOURCE / LIVE BLOCKED | Single panel has default Rs125, EN/UR instructions/previews, eligible enabled provinces, explicit enable confirmation, CSRF/Access/audit. No remote write, browser screenshot or secret provisioning |
-| COD order, no receipt/timers, fulfillment/collection | NOT IMPLEMENTED | Migration 0034 and pricing helper are source only; API payment selection, COD confirmation/lifecycle, reminders suppression, Admin operations and reconciliation remain incomplete |
-| COD rollout | NO-GO | `COD_V2_ENABLED=false`; courier collection/remittance not verified; no migration/deploy/CMS publish/customer message |
-| Regression/security | PASS LOCAL | `npm ci`; 220/220 full tests; lint/build; audit0; V2 API/Admin Wrangler dry-runs; no isolated live E2E or separate V1 worktree run |
+| Legacy/provenance handling | PASS FAIL-CLOSED | Admin/API reject noncanonical or unprovenanced records; masked V2 primary had zero policy rows; 0034 applied only to isolated V2 D1 after empty-data and recovery-clone checks |
+| COD pricing | PASS SYNTHETIC / LIVE BLOCKED | Full checkout tests for seven province-name/rate fixtures, fertilizer yes/no, PKR625/375; live isolated D1 has zero province-rate rows |
+| Admin settings | PASS SOURCE / LIVE SCREENSHOT BLOCKED | Single panel, default Rs125, EN/UR instructions and exact province preview, Access/CSRF/owner/audit, HMAC-only policy write and runtime-off rejection. Deployed route remains 404; no setting row/screenshot |
+| Customer COD flow / receipts / timers | PASS SYNTHETIC | 4-way list, explicit confirmation, total snapshot, no COD receipt storage/reminder schedule, method-switch fee resnapshot and duplicate click coverage |
+| Packing/dispatch/delivery/reconciliation | PASS SQLITE SYNTHETIC | Migration-backed actual SQLite lifecycle requires tracking, checks invalid transitions/amounts/retries, keeps `COD_PENDING` until exact remittance then marks `PAID` |
+| COD order views | PASS LOCAL | COD status/amount fields and actions verified in Orders/Packing/Dispatch/Delivered views; V1 no-COD-schema/order-page path passes |
+| COD rollout/browser | NO-GO | Flags false; remote Admin route 404; V2 D1 rates empty; courier support/HMAC key unverified; no API/Admin deploy, CMS/R2 mutation or customer message |
+| Migration | PASS ISOLATED | 0034 applied to V2 primary only; primary/recovery quick-check ok, foreign-key checks empty, masked primary counts zero; recovery remains 0033 |
+| Regression/security | PASS LOCAL | `npm ci`; 238/238 full tests; lint/build; audit0; V2 API/Admin Wrangler dry-runs; no GitHub CI or WhatsApp/customer acceptance |
 
 ## GFS-210 Lifecycle Test (2026-10-24)
 
