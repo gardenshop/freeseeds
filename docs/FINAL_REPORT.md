@@ -25,7 +25,7 @@
 - **V2 COD:** NO-GO; runtime flag false, live province tariffs and courier collection/remittance proof absent; customer API not deployed.
 - **Advance payment:** NO-GO for real credit/confirmation without independent receiving-account evidence. Local regression is not real payment evidence.
 - **Public launch:** NO-GO. Do not enable COD or promote the customer API until active province tariffs, courier collection/remittance capability, HMAC key provisioning, end-to-end API/customer acceptance and explicit release authorization exist.
-- PR #9 is open at `1ecffe1`. External changes were limited to isolated V2 migration 0034, deployment of the Access-protected Admin Worker, and the explicitly disabled settings/audit row written by verified GFS owner. No customer/financial row, public API, CMS/R2/Queue, Meta message, production or V1 resource changed. `images/`, Hoja isolation, held incidents, private R2 and historical records remain untouched.
+- PR #9 remains open; source commits `5125338`/`1ecffe1` and a documentation follow-up are pushed. External changes were limited to isolated V2 migration 0034, deployment of the Access-protected Admin Worker, and the explicitly disabled settings/audit row written by verified GFS owner. No customer/financial row, customer API, CMS/R2/Queue, Meta message, production or V1 resource changed. `images/`, Hoja isolation, held incidents, private R2 and historical records remain untouched.
 
 ## GFS-210 Payment Review and Fulfillment (2026-10-24)
 

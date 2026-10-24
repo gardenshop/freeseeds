@@ -2,7 +2,7 @@
 
 ## GFS-211 COD Inventory (2026-10-24)
 
-- Initial local/remote PR #9 head was `276765b`; final source head `1ecffe1` is pushed. No checkout/reset; `images/` remains untouched. Frozen V1 source and bindings are unchanged.
+- Initial local/remote PR #9 head was `276765b`; source commits `5125338`/`1ecffe1` and documentation follow-up are pushed. No checkout/reset; `images/` remains untouched. Frozen V1 source and bindings are unchanged.
 - Wrangler and same-origin Cloudflare Access identity were reverified as `gisupp@gmail.com` / Get Free Seeds (`cb5066a6d71ecdee0bd7ed8aacb4d3c2`) before the isolated migration. Primary/recovery D1 `quick_check=ok`, foreign-key checks empty. Masked primary counts: customers/orders/payments/receipts/COD policy/province-rate rows all 0.
 - `0034_cod_orders_v2.sql` is applied only to primary isolated `getfreeseeds-v2-staging`. Recovery `getfreeseeds-v2-restore-check` is verified at migration 0033 with no COD table; primary/recovery quick checks passed. Shared/V1 D1 untouched. Additive migration remains; do not drop it or restore over subsequent data.
 - V2 Admin Worker `getfreeseeds-v2-admin-staging` deployed version `5a7af6ce-2bac-435b-aa52-4aae14e1ee68` (previous active version `99423a28-6469-46c6-bb03-63d42d816eba`) with Access/JWT enforcement intact; API Worker remains at its existing release and was not deployed. Browser Access identity returned `gisupp@gmail.com`. `/api/cod-settings` returns 200 only on V2 Admin.

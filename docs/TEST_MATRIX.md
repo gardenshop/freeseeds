@@ -4,7 +4,7 @@
 
 | Requirement | Result | Evidence / limitation |
 |---|---|---|
-| Local/remote branch preservation | PASS | Initial fetched head `a651f87`; final commits `5125338` and `1ecffe1` pushed to PR #9; no checkout/reset; `images/` preserved; V1 source untouched |
+| Local/remote branch preservation | PASS | Initial fetched head `a651f87`; source commits `5125338` and `1ecffe1` plus documentation follow-up pushed to PR #9; no checkout/reset; `images/` preserved; V1 source untouched |
 | Duplicate API policy / Admin routes | PASS SOURCE | API parse error reproduced (`V2CodPolicy` redeclared); consolidated to one shared parser/API loader and exactly one Admin GET + POST pair; route-count regression passes |
 | Hash-only policy | PASS LOCAL | Strict versioned policy; HMAC-SHA-256 uses dedicated key; key-specific/deterministic hash tests pass; schema rejects plaintext legacy format; no plaintext reference stored/logged |
 | Legacy/provenance handling | PASS FAIL-CLOSED | Admin/API reject noncanonical or unprovenanced records; masked V2 primary had zero policy rows; 0034 applied only to isolated V2 D1 after empty-data and recovery-clone checks |

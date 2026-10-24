@@ -2,7 +2,7 @@
 
 ## GFS-211 COD Consolidation (2026-10-24)
 
-- **P0 preservation PASS.** Inspected worktree/branches before any checkout/reset; initial local/fetched head was `a651f87`; final source commits were pushed to PR #9 (`5125338`, `1ecffe1`). Kept untracked `images/`; no V1 source changed.
+- **P0 preservation PASS.** Inspected worktree/branches before any checkout/reset; initial local/fetched head was `a651f87`; source commits `5125338`/`1ecffe1` and follow-up documentation were pushed to PR #9. Kept untracked `images/`; no V1 source changed.
 - Reproduced the failure: API parse stopped on redeclared `V2CodPolicy`. The source contained two API policy formats (legacy plaintext `verificationReference`/display names and later unkeyed `verificationReferenceHash`) plus three duplicate Admin GET/POST handler pairs. Consolidated to one strict shared version-1 policy parser and one GET/POST pair. Legacy/unversioned/unprovenanced policy fails closed instead of being overwritten.
 - Added keyed HMAC-SHA-256 reference hashing via `COD_POLICY_HMAC_KEY`; canonical JSON stores only the hash. Admin update uses Access/JWT middleware, CSRF, explicit `ENABLE_COD`, audit, dynamic enabled D1 provinces, and clears prior courier approval when courier details change. The UI includes default Rs125, EN/UR instructions and exact province-fee previews. COD remains OFF.
 - V2 guided API flow offers three advance methods plus COD only after policy/provenance/runtime/province checks. COD persists a quote snapshot, asks explicit confirmation, preserves method attempts, creates no advance reminder schedule, rejects advance receipt media, and leaves payment/order unpaid until exact collection and remittance reconciliation. COD-to-advance switching starts a fresh reminder cycle.
