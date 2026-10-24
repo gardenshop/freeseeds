@@ -392,6 +392,23 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(other.order.orderId)).toEqual({count:1});
   });
 
+  it("uses the unique sender/payment match when a new inbound message recreated the conversation as NEW", async () => {
+    const targetWa="923001234570";
+    const target=await createSyntheticPaymentReviewOrder(targetWa,"receipt-new-conversation",true);
+    sqlite.prepare("DELETE FROM payment_receipts WHERE order_id=?").run(target.order.orderId);
+    sqlite.prepare("UPDATE orders SET state='PAYMENT_PENDING',payment_status='PENDING' WHERE id=?").run(target.order.orderId);
+    sqlite.prepare("UPDATE payments SET review_state='PENDING' WHERE id=?").run(target.paymentId);
+    sqlite.prepare("DELETE FROM whatsapp_conversations WHERE wa_id=?").run(targetWa);
+
+    await callback([{from:targetWa,id:"synthetic-new-conversation-image",timestamp:"1792497602",type:"image",image:{id:"synthetic-late-media-no-context",mime_type:"image/png"}}],[],true);
+
+    expect(sqlite.prepare("SELECT order_id,review_state FROM payment_receipts WHERE provider_media_id='synthetic-late-media-no-context'").get()).toEqual({order_id:target.order.orderId,review_state:"SUBMITTED"});
+    expect(sqlite.prepare("SELECT state,JSON_EXTRACT(state_data,'$.orderId') AS orderId FROM whatsapp_conversations WHERE wa_id=?").get(targetWa)).toEqual({state:"PAYMENT_REFERENCE",orderId:target.order.orderId});
+    const audit=sqlite.prepare("SELECT metadata_json FROM audit_log WHERE action='RECEIPT_SUBMITTED' AND entity_id=?").get(target.paymentId) as {metadata_json:string};
+    expect(audit.metadata_json).toContain('"associationEvidence":"UNIQUE_SENDER_PAYMENT"');
+    expect(sqlite.prepare("SELECT status,stop_reason FROM payment_reminder_v2_schedules WHERE order_id=?").get(target.order.orderId)).toEqual({status:"PAUSED",stop_reason:"RECEIPT_SUBMITTED"});
+  });
+
   it("renders and records a published reminder and advances its delivery stage only on Meta callback", async () => {
     const testOrder=await createSyntheticPaymentReviewOrder(sender,"reminder-queue-order");
     sqlite.prepare("DELETE FROM payment_receipts WHERE order_id=?").run(testOrder.order.orderId);

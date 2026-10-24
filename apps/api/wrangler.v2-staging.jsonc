@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-09-27",
   "workers_dev": false,
-  "triggers": { "crons": ["* * * * *"] },
+  "triggers": { "crons": [] },
   "d1_databases": [{ "binding": "DB", "database_name": "getfreeseeds-v2-staging", "database_id": "6f26ba71-3c10-4b6e-97ab-5df7473c21c7", "migrations_dir": "../../migrations" }],
   "r2_buckets": [{ "binding": "RECEIPTS", "bucket_name": "getfreeseeds-v2-receipts-staging" }],
   "queues": {

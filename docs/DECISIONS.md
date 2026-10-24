@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-24: GFS-205 Fail-Closed Receipt and Resource Cost Review
+
+- The new order has valid order/payment linkage but no D1 receipt, saved reference, receipt audit, matching conversation/last-inbound event or private R2 object. Do not infer the screenshot image's sender/order; WhatsApp Profile mismatch and hash-only event storage block real attribution.
+- A single eligible sender/payment match may associate a new inbound image when the conversation is NEW/missing; exact reply-to payment context is stronger evidence, and multiple eligible orders still fail closed. This repairs the reproducible silent-return path without attaching across orders.
+- Do not change shared Admin/API Worker or active webhook. V2 Admin uses the existing restricted Access app; V2 Admin can be tested on isolated data only. No real credit or WhatsApp send without actual authorization/evidence.
+- Disable the unused per-minute V2 API Cron while send flags are OFF; retain the idle Queue consumer, recovery D1, private R2 and V2 Workers because they are needed for acceptance/rollback. No resource deletion/plan purchase; current billable usage is $0, D1 shared quota is near its daily read cap, and resource review is due 2026-11-23.
+
 ## 2026-10-23: GFS-204 Attestation UX, Isolated Workers and Access Gate
 
 - Follow-up decision: stop V2 schedules whenever the schema exists, independently of whether reminder sending is enabled. Use SQLite schema detection so old V1 databases safely skip these queries.

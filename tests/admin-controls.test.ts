@@ -134,6 +134,13 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("GRACE_NOTICE_240M");
     expect(html).toContain("CANCELLATION_270M");
     expect(html).not.toContain("REMINDER_3H30");
+    expect(html).toContain("Synthetic sample values only");
+    expect(html).toContain("id=\"preview-draft\"");
+    expect(html).toContain("id=\"preview-text\"");
+    expect(html).toContain("white-space:pre-wrap;overflow-wrap:anywhere");
+    const previewScript=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].at(-1)?.[1];
+    expect(previewScript).toBeTruthy();
+    expect(() => new Script(previewScript!)).not.toThrow();
   });
 
   it("renders the tabbed, URL-hydrated split-pane order workspace", async () => {
@@ -141,6 +148,7 @@ describe("GFS-109 admin controls", () => {
     expect(response.status).toBe(200);
     const html = await response.text();
     expect(html).toContain("new URLSearchParams(location.search)");
+    expect(html).toContain('href="/payment-reminders">Payment Reminders');
     for (const tab of ["All Orders", "Verify Payments", "Confirmed Payments", "Fulfillment"]) expect(html).toContain(tab);
     for (const size of ["25", "50", "100"]) expect(html).toContain(`<option>${size}</option>`);
     expect(html).toContain("selectedId=list[0].id");

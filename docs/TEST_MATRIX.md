@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-205 Receipt, Access, and Cleanup (2026-10-24)
+
+| Requirement | Result | Evidence / remaining blocker |
+|---|---|---|
+| New order payment/receipt state | PASS READ-ONLY TRACE | Exact order/payment link valid, pending JazzCash PKR600; 0 receipts, no saved reference/audit, no conversation or last inbound ID; Admin zero count matches D1. |
+| Actual WhatsApp media attribution | BLOCKED | No sender-linked webhook event or R2 object. Webhook storage is hash-only; WhatsApp tester Profile mismatch prevents safe chat inspection. No cross-order association. |
+| Receipt ingestion repair | PASS SYNTHETIC | Exact reply-to payment WAMID preferred; missing/NEW conversation can bind only if sender has one eligible payment; multiple matches fail closed. REVIEW/hold code covered by synthetic tests. Not deployed to shared webhook/V1. |
+| V2 Admin Access/navigation | PASS STAGING | Existing Access policy includes V2 Worker; authenticated user `gisupp@gmail.com` sees Home, Orders and Payment Reminders. Screenshot shows synthetic pending order only; no real customer/order copied into V2. |
+| Reminder timeline | PASS SYNTHETIC UI | Six manually seeded PKT stages/countdowns render PENDING for a synthetic no-receipt order. No Cron run/SENT/WAMID is claimed. Synthetic order/schedule/conversation was deleted and zero-count cleanup verified. |
+| CMS edit/preview/publish/reload | PASS ISOLATED | EN/UR `REMINDER_15M` and `PAYMENT_CONFIRMED` published as test service copy; other stage keys are editable drafts. Preview labels synthetic values. No Meta utility approval or customer messages. |
+| Cost/resource cleanup | PASS CONTROL / PARTIAL RETENTION | Removed unused V2 API Cron; API Queue idle; private empty R2, recovery D1, queue/DLQ and Workers retained for acceptance/rollback, review 2026-11-23. Current billing observed $0. |
+| Full regression/security | PASS LOCAL / NO CI | `npm ci`; 205/205 tests; lint/build; audit 0; isolated Wrangler dry-runs. GitHub reports no checks. |
+| V1/payment/send safety | PASS PRESERVATION / BLOCKED LIVE | Shared Worker versions unchanged; no real order/payment/media mutation, no actual sends, WAMIDs or cancellations. |
+
 ## GFS-204 Simple Confirmation and Isolated Staging (2026-10-23)
 
 | Latest follow-up | PASS SYNTHETIC / PUSHED | Commit `7938dd2e153ffd9920e902f2b2971079f5a73899` stops existing V2 reminder/cancellation jobs on PAID whenever the schedule schema exists, even if sending is OFF. Full suite 204/204; latest Admin version `d725396b-4bbc-4542-b42b-5c0fba9abe6e`; no GitHub checks. |

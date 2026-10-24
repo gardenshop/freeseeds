@@ -1,5 +1,29 @@
 # Final Report
 
+## GFS-205 Receipt, Cleanup, and Safe V2 Admin (2026-10-24)
+
+### Evidence and Results
+
+| Requirement | Result | Evidence / exact blocker |
+|---|---|---|
+| New order diagnosis | PASS READ-ONLY / MEDIA ATTRIBUTION BLOCKED | Admin and shared D1 confirm valid order/payment relationship, JazzCash, PKR600, PAYMENT_PENDING; exact receipt rows 0, saved reference absent, receipt audit 0, no conversation/last inbound event. Exact-order prefix search in private shared R2 returned no object. Admin zero count is accurate, not stale. |
+| Did WhatsApp receive the screenshot image? | BLOCKED | No sender-linked webhook event, conversation, media ID or R2 object exists for this order. Webhook persistence stores payload hashes only. The signed-in WhatsApp Profile mismatches authorized tester; the open Meta tabs are Hoja-associated. Could not distinguish Meta not delivering from a different sender/order. No chat was opened. |
+| Receipt code repair | PASS SYNTHETIC / NOT LIVE ON SHARED API | V2 exact reply-to payment WAMID binding or a unique eligible sender/payment when conversation state is NEW/missing; ambiguous multiple-order images reject. RECEIPT_SUBMITTED, REVIEW and pre-download pause remain. Synthetic test passes. Shared active webhook/V1 was not changed, so the live order was not repaired by code deployment. |
+| Actual real order | FAIL/BLOCKED SAFELY | It remains PAYMENT_PENDING with zero receipt rows; no attachment/association was made, no payment reference was invented, no cancellation/payment action occurred. |
+| V2 Admin Access | PASS STAGING | Existing restricted Cloudflare Access app now includes the V2 Worker while preserving the old Admin destination; authenticated identity `gisupp@gmail.com` verified. V2 Home, Orders and Payment Reminders load. |
+| Reminder timeline/CMS | PASS SYNTHETIC STAGING | Six manually seeded PKT stages/countdowns displayed as PENDING for one explicitly synthetic, no-receipt order. EN/UR REMINDER_15M and PAYMENT_CONFIRMED copies were edited/saved/previewed/published/reloaded in isolated D1. Others remain drafts. API Cron/provider/automation/confirmation flags OFF; no Cron run, `SENT`, WAMID or customer message claimed. |
+| Simple payment confirmation | PASS SOURCE/SYNTHETIC / REAL BLOCKED | One attestation checkbox and one primary button remain. No genuine wallet/bank credit was confirmed; real `PAID` transition and WhatsApp acknowledgement were not attempted. No receipt was fabricated to produce a screenshot. |
+| Cost cleanup | PASS CONTROL / REQUIRED ASSETS RETAINED | V2 per-minute Cron removed. Synthetic order/payment/items/conversation/schedule/stages deleted; isolated D1 confirms zero order/customer/receipt/schedule rows. Recovery D1/private R2/Queue/DLQ/Workers retained for rollback and acceptance; no paid plan purchase/deletion. Current displayed billing $0; R2 remains usage-based. Shared D1 is near its daily read quota, so further queries were avoided. |
+| Regression/security | PASS LOCAL / CI NONE | `npm ci`; 205/205 tests; lint/build; audit 0 after Zod 4.6.7 and Undici 7.30.1; isolated Wrangler dry-runs. GitHub reports no CI checks. |
+
+### Screenshots and Release Gates
+
+- Captured Chrome screenshots: authenticated V2 Admin Home, isolated Orders/reminder timeline with a synthetic test order, and CMS EN preview/status. No live customer screenshot or actual payment-confirmation button screenshot was captured because no real order was copied into V2 and the real order has no receipt in D1/R2.
+- Isolated CMS published service copy only: `REMINDER_15M` EN v3: “Order {orderNumber}: PKR {amount} is due by {deadline}. {remainingMinutes} minutes remain. Pay using {paymentMethod}. If already paid, upload your receipt for review.” `REMINDER_15M` UR v2: “آرڈر {orderNumber} کی ادائیگی ابھی زیرِ التوا ہے۔ فعال طریقے {paymentMethod} سے PKR {amount} ادا کریں۔ آخری وقت: {deadline}۔ اگر ادا کر چکے ہیں تو رسید اپ لوڈ کریں؛ تصدیق تک ادائیگی زیرِ التوا رہے گی۔” `PAYMENT_CONFIRMED` EN/UR v2 are published in isolated D1. The preview used explicitly synthetic sample values; no message was sent.
+- V2 API `f11e391b-5ce0-4849-8973-9c958a652ea8` has Queue consumer, no Cron/public URL, provider/send flags OFF. V2 Admin `d7898150-a54e-4e49-8e85-5a602a6866e6` is Access-protected; reminder-view flag enabled only for staging. Shared API `9b5f13ae-f023-4fa8-befe-2085bb24cbda` and Admin `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0` were unchanged.
+- V1: **GO for preservation only**, live checkout not retested. V2 isolated Admin/API: **GO for secured, flags-off staging UI**. Real payments: **NO-GO** pending actual credit and receipt. Live reminders/cancellation/public launch: **NO-GO** pending correct Meta tester, sender verification, approved out-of-window utility templates, and real webhook/Queue acceptance.
+- Completion estimates: overall 83%; P0 70%, P1 85%, P2 85%, P3 85%, P4 75%. Remaining: 17%, 15%, 15%, 15%, 25% respectively. Synthetic tests are not live acceptance.
+
 ## GFS-204 Simple Confirmation and Isolated V2 Deployment (2026-10-23)
 
 ### Final Follow-Up

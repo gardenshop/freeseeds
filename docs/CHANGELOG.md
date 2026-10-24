@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-24 (GFS-205)
+
+- Added permanent cost/resource inventory and cleanup rules. Account review found Workers Free, existing R2 Paid usage-based subscription with current billable usage $0, D1 shared read quota at 4.55M/5M, and V2 queue/backlog/R2 buckets empty. Removed the isolated API per-minute Cron; kept the recovery D1, private bucket, idle Queue/DLQ and Workers for V2 acceptance.
+- Traced the new order read-only: payment link valid, pending JazzCash PKR600; no receipt/reference/audit, no related conversation/last inbound ID, no R2 object. Admin count agrees. The WhatsApp tester Profile mismatch and hash-only webhook event record block attribution of the screenshot image to a sender/order; no image was fabricated, reassociated, or sent.
+- Fixed the V2 media path for a NEW/missing conversation only when there is exactly one eligible payment for the sender; exact payment reply context takes precedence and multiple matches remain rejected. Synthetic test verifies route and cleanup. Shared API/active webhook/V1 untouched.
+- Attached V2 Admin to the existing restricted Access app and confirmed `gisupp@gmail.com` login. V2 Orders navigation/timeline and CMS Save/Preview/Publish/Reload are now usable. In isolated staging, EN/UR `REMINDER_15M` and `PAYMENT_CONFIRMED` test copies were published and reloaded; no provider approval or messages sent. A no-receipt synthetic order produced a six-stage PENDING timeline screenshot, then was fully removed.
+- Security: upgraded Zod to 4.6.7 and pinned vulnerable transitive Undici to 7.30.1; `npm audit` is clean. No shared-order payment action, live Media upload, real reminder or WAMID occurred.
 ## 2026-10-23 (GFS-204)
 
 - Final follow-up `7938dd2e153ffd9920e902f2b2971079f5a73899` is pushed. PAID suppression is schema-aware and stops pending V2 jobs even when reminder delivery is OFF; full tests remain 204/204. Latest Admin Worker is `d725396b-4bbc-4542-b42b-5c0fba9abe6e`.

@@ -1,5 +1,27 @@
 # Get Free Seeds Binding Rules
 
+## Permanent Cloud Cost and Resource Cleanup Protocol
+
+- Before creating any Cloudflare, Meta, GitHub, or other hosted resource, inventory reusable resources, verify account/owner identity, inspect billing and quotas, and estimate setup plus recurring costs. Prefer an existing isolated resource when safe.
+- Never purchase a plan or activate a paid feature without explicit user approval. Free-tier use still requires quota/cost review and cleanup planning.
+- Register every temporary Worker, D1, R2 bucket, Queue/DLQ, Cron, Access app, and integration with owner, purpose, created-at time, cost/quota risk, dependencies, and a cleanup deadline. Use provider tags/description metadata where available and mirror them in `docs/RESOURCE_REGISTRY.md`.
+- After testing, stop unneeded Cron triggers/Queue consumers first; inspect bindings, routes, Access policies, D1/R2 references, audit/financial data, and rollback dependencies; then delete temporary resources only through authorized account tools.
+- Never delete active V1/V2 resources, genuine customer/payment data, required audit evidence, necessary rollback backups, or a resource still referenced by a Worker/Access route. Preserve holds and financial history.
+- Review GFS-204 `getfreeseeds-v2-restore-check`, isolated R2, Queue/DLQ, and Workers for cost and necessity. Keep resources required for V2 acceptance; mark any retained non-production resource with its next review/cleanup date.
+- After successful acceptance, remove disposable clones, temporary databases/buckets/queues, and other unneeded test infrastructure; verify deletion in the authorized dashboard/CLI and record evidence.
+- Record completed cleanup, retained assets/dependencies, expected or observed charges, quota usage, and billing observations in `docs/RESOURCE_REGISTRY.md` and `docs/FINAL_REPORT.md`. Do not claim zero cost without billing evidence.
+- If cleanup is blocked by outage, Access, ownership, or dependencies, disable avoidable charge-generating work (especially Cron/consumers), leave necessary rollback resources intact, and record the exact blocker and next review date.
+- This protocol is mandatory for all future agents, test runs, deployments, and account integrations.
+
+## GFS-205 Receipt Diagnosis, Cost Review, and Staging State (2026-10-24)
+
+- The new shared-staging order is payment-linked and PAYMENT_PENDING for JazzCash PKR 600, but D1 has zero exact payment/order receipt rows, no saved reference, no receipt audit, no `whatsapp_conversations` row/last-inbound ID, and no matching object under its private R2 order prefix. Admin's zero-receipt display matches D1; this is not stale Admin rendering.
+- Do not infer whether a WhatsApp image was delivered or belongs to this order. Current event storage retains hashes, not the inbound media body/ID; the authenticated tester Profile still mismatches the authorized tester and the open Meta tabs are Hoja-associated. Do not open chats, switch identities, or attach media by guess.
+- Receipt code resolves exact payment-reply context first; with no context it permits a unique eligible sender/payment match even when a newly created conversation is `NEW`/missing, and fails closed if multiple orders match. The receipt enters REVIEW and pauses its schedule before attachment; tests cover unique-new-conversation and ambiguous-order cases. The fix is in V2 source only; the shared V1/API webhook was not changed.
+- Access-protected isolated V2 Admin now includes Orders/Payment Reminders. The isolated D1 contains no genuine orders. A clearly synthetic no-receipt timeline order was used for the screenshot, then its orders/payment/item/conversation/schedule/stages were deleted and zero counts verified. No fake receipt, PAID state, or message was created.
+- Test-only EN/UR versions are published in isolated D1 (`REMINDER_15M` and `PAYMENT_CONFIRMED`); remaining stage templates stay drafts. All API send, automation, confirmation, provider, utility-template flags are OFF. Admin reminder-history/CMS view is enabled only in isolated Admin; this is not approval to send.
+- Isolated API Cron is removed while automation is OFF; Queue consumer remains idle for later acceptance. Retain primary/recovery D1, private R2, Queue/DLQ, Workers and existing Access integration until V2 acceptance. Review retained isolated resources by 2026-11-23; no resource/plan deletion or purchase without dependency and billing review.
+
 ## GFS-204 Simple Credit Confirmation and Isolated Deployment (2026-10-23)
 
 - Final safety follow-up `7938dd2e153ffd9920e902f2b2971079f5a73899` is pushed to PR #9; it stops V2 reminder jobs at PAID even when the send flag is OFF, if the V2 schema exists. V1 databases without V2 schema are unaffected.

@@ -1,5 +1,24 @@
 # Resource Registry
 
+## GFS-205 Cost/Resource Register (2026-10-24)
+
+Owner for temporary V2 assets: Get Free Seeds (`gisupp@gmail.com`). No new hosted resource or paid plan was created in GFS-205; the existing protected Admin Access app was reused for V2. Required isolated assets and disposition:
+
+| Resource | Created/purpose | Current usage/cost risk | Cleanup/review |
+|---|---|---|---|
+| `getfreeseeds-v2-staging` D1, `6f26ba71-3c10-4b6e-97ab-5df7473c21c7` | 2026-10-23 ~23:23 PKT; isolated V2 schema/test environment | 626.69KB, migrations 0001-0033, 0 customer/order/receipt rows after cleanup; D1 free-tier quota is account-shared | Retain for V2 acceptance; review 2026-11-23 |
+| `getfreeseeds-v2-restore-check` D1, `0a9ae021-64c9-4591-ac3c-aadd29ce13b6` | 2026-10-23 ~23:46 PKT; restored backup/recovery check | 626.69KB, 33 migrations, no customers/orders; rollback asset | Retain until V2 acceptance/backup sign-off; review 2026-11-23 |
+| `getfreeseeds-v2-receipts-staging` R2 | 2026-10-23; private V2 receipt preview/upload target | Public access disabled; 0 objects/0B; current R2 billing $0, usage-based plan remains active | Retain for genuine receipt acceptance; review 2026-11-23 |
+| `getfreeseeds-v2-events-staging` + `getfreeseeds-v2-events-staging-dlq` | 2026-10-23; durable V2 send/retry pipeline | 0 V2 messages/backlog/billable operations; queue consumer only runs on message | Retain for acceptance; review 2026-11-23 |
+| V2 API `getfreeseeds-v2-api-staging`, `f11e391b-5ce0-4849-8973-9c958a652ea8` | 2026-10-23; isolated API/Queue consumer | No public workers.dev route; per-minute Cron removed; provider and send flags OFF; Workers Free | Retain for accepted V2 webhook/runtime tests; review 2026-11-23 |
+| V2 Admin `getfreeseeds-v2-admin-staging`, `d7898150-a54e-4e49-8e85-5a602a6866e6` | 2026-10-23; Access-protected isolated Admin | Access enforced; only reminder-view flag enabled, automation/payment/provider flags OFF; Workers Free | Retain for acceptance; review 2026-11-23 |
+| Existing Get Free Seeds Admin Access app | Predates GFS-205; existing `gisupp@gmail.com` policy; V2 Worker added 2026-10-24 without removing V1/Admin destination | No new Access app/plan cost; protects V2 Admin JWT identity; Access route verified authenticated | Retain for V2 Admin; review 2026-11-23 |
+| Existing Access app / shared Workers/D1/R2 | Predates GFS-205; existing production integration and receipt data | Workers Free, R2 Paid usage-based subscription; observed billing total $0. D1 account-wide 4.55M/5M rows read, 21.5K/100K writes, 4.56MB/5GB, 4/10 DBs | Preserve; no deletion/plan change. Avoid additional shared D1 reads. |
+
+- Queue dashboard showed 84/10K operations across the account; V2 queue itself was empty. Shared staging R2 remained 22 existing objects/12.98MB and was not changed. R2 account showed 79 Class A/1.05K Class B/12.98MB aggregate, billable $0. Workers subscription Free; R2 Paid already existed and was not purchased in this task. Cost at present measured usage is $0; future R2 overages remain variable and are not guaranteed zero.
+- Cleanup completed: removed the V2 API per-minute Cron trigger; removed the explicitly labeled synthetic no-receipt order, payment, item, conversation, reminder schedule and six stages; subsequent isolated-D1 count check returned zero for all. No genuine data, receipt object, audit, Queue message or financial transition was deleted.
+- No other resource was safely deletable: recovery D1, V2 D1, private R2, Queue/DLQ and V2 Workers remain necessary for acceptance and rollback. No resource deletion/purchase occurred. Next cost/dependency review: 2026-11-23.
+
 ## GFS-204 Deployed Isolated V2 Resources (2026-10-23)
 
 - Latest follow-up commit `7938dd2e153ffd9920e902f2b2971079f5a73899` is pushed to PR #9. Current API Worker is `e43e23dd-22a6-4338-b77a-c48bbcee6cad`, Admin Worker is `d725396b-4bbc-4542-b42b-5c0fba9abe6e`; flags remain OFF; latest unauthenticated Admin retest is 401. Access app and real messaging remain blocked.

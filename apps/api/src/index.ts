@@ -526,10 +526,10 @@ async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: R
   const mediaId = message.image?.id ?? message.document?.id;
   if (!mediaId) return false;
   const conversation = await db.prepare("SELECT state,state_data FROM whatsapp_conversations WHERE wa_id=?").bind(event.from).first<{ state: string; state_data: string }>();
-  if (!conversation || (!message.context?.id && !["PAYMENT_PENDING", "PAYMENT_REFERENCE", "PAYMENT_REVIEW", ...(paymentReminderV2Enabled ? ["PAYMENT_GRACE", "CANCELLED_UNPAID"] : [])].includes(conversation.state))) return false;
+  const paymentConversationStates = ["PAYMENT_PENDING", "PAYMENT_REFERENCE", "PAYMENT_REVIEW", ...(paymentReminderV2Enabled ? ["PAYMENT_GRACE", "CANCELLED_UNPAID"] : [])];
+  if (!message.context?.id && conversation && conversation.state !== "NEW" && !paymentConversationStates.includes(conversation.state)) return false;
   let data: ConversationData = {};
-  try { data = JSON.parse(conversation.state_data) as ConversationData; } catch { if (!message.context?.id) return false; }
-  if (!data.orderId && !message.context?.id) return false;
+  try { if (conversation) data = JSON.parse(conversation.state_data) as ConversationData; } catch { if (!message.context?.id) return false; }
   const recordSelect = `SELECT o.id,o.order_number,o.state,p.id AS payment_id,p.method,p.review_state,p.customer_transaction_reference
     FROM orders o JOIN payments p ON p.order_id=o.id JOIN customers c ON c.id=o.customer_id`;
   const eligibleStates = paymentReminderV2Enabled
@@ -547,12 +547,14 @@ async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: R
     const candidates = await db.prepare(`${recordSelect} WHERE c.wa_id=? AND o.state IN ${eligibleStates}
       AND p.review_state IN ('PENDING','REJECTED','REVIEW','CANCELLED_UNPAID') ORDER BY o.created_at DESC,o.id DESC LIMIT 2`)
       .bind(event.from).all<{ id: string }>();
-    if (candidates.results?.length !== 1 || candidates.results[0].id !== data.orderId) return false;
+    if (candidates.results?.length !== 1 || (data.orderId && candidates.results[0].id !== data.orderId)) return false;
+    const targetOrderId = data.orderId ?? candidates.results[0].id;
     record = await db.prepare(`${recordSelect} WHERE o.id=? AND c.wa_id=?`)
-      .bind(data.orderId, event.from).first<{ id: string; order_number: string; state: string; payment_id: string; method: string | null; review_state: string; customer_transaction_reference: string | null }>();
+      .bind(targetOrderId, event.from).first<{ id: string; order_number: string; state: string; payment_id: string; method: string | null; review_state: string; customer_transaction_reference: string | null }>();
   }
   if (!record) return false;
   if (record.state !== "PAYMENT_PENDING" && record.state !== "PAYMENT_REVIEW" && !(paymentReminderV2Enabled && ["PAYMENT_GRACE", "CANCELLED_UNPAID"].includes(record.state))) return false;
+  const associationEvidence = message.context?.id ? "PAYMENT_REPLY_WAMID" : data.orderId ? "ACTIVE_CONVERSATION_ORDER" : "UNIQUE_SENDER_PAYMENT";
   const status = await contentFor(db, "ORDER_STATUS", "Use Check Order to see the current order and payment status.", {}, `CHAT:${event.from}`, data.language ?? "en");
   const existing = await db.prepare("SELECT id FROM payment_receipts WHERE provider_media_id=? AND order_id=?").bind(mediaId, record.id).first<{ id: string }>();
   if (!existing && record.state === "CANCELLED_UNPAID") {
@@ -578,9 +580,11 @@ async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: R
       db.prepare("INSERT INTO payment_receipts (id,payment_id,order_id,provider_media_id,r2_object_key,sha256,mime_type,size_bytes,submitted_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), record.payment_id, record.id, media.mediaId, stored.objectKey, stored.sha256, media.mimeType, media.size, now, now),
       db.prepare("UPDATE payments SET review_state='REVIEW',submitted_at=COALESCE(submitted_at,?),updated_at=? WHERE id=? AND review_state IN ('PENDING','REJECTED','REVIEW')").bind(now, now, record.payment_id),
       db.prepare("UPDATE orders SET state='PAYMENT_REVIEW',updated_at=? WHERE id=? AND state IN ('PAYMENT_PENDING','PAYMENT_GRACE','PAYMENT_REVIEW')").bind(now, record.id),
-      db.prepare("UPDATE whatsapp_conversations SET state=CASE WHEN state IN ('PAYMENT_PENDING','PAYMENT_GRACE') THEN 'PAYMENT_REFERENCE' ELSE state END,last_inbound_message_id=?,updated_at=? WHERE wa_id=? AND state IN ('PAYMENT_PENDING','PAYMENT_GRACE','PAYMENT_REFERENCE','PAYMENT_REVIEW') AND state_data LIKE ?")
-        .bind(event.id, now, event.from, `%\"orderId\":\"${record.id}\"%`),
-      db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "RECEIPT_SUBMITTED", "CUSTOMER", "PAYMENT", record.payment_id, event.id, JSON.stringify({ orderId: record.id, providerMediaId: mediaId }), now)
+      db.prepare(`UPDATE whatsapp_conversations SET state=CASE WHEN state IN ('PAYMENT_PENDING','PAYMENT_GRACE','NEW') THEN 'PAYMENT_REFERENCE' ELSE state END,
+        state_data=CASE WHEN state='NEW' OR state_data IN ('{}','') THEN ? ELSE state_data END,last_inbound_message_id=?,updated_at=?
+        WHERE wa_id=? AND ((state IN ('PAYMENT_PENDING','PAYMENT_GRACE','PAYMENT_REFERENCE','PAYMENT_REVIEW') AND (state_data LIKE ? OR state_data IN ('{}',''))) OR state='NEW')`)
+        .bind(JSON.stringify({ ...data, orderId: record.id, orderNumber: record.order_number, language: data.language ?? "en" }), event.id, now, event.from, `%\"orderId\":\"${record.id}\"%`),
+      db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "RECEIPT_SUBMITTED", "CUSTOMER", "PAYMENT", record.payment_id, event.id, JSON.stringify({ orderId: record.id, providerMediaId: mediaId, associationEvidence }), now)
     ];
     if (paymentReminderV2Enabled) receiptStatements.push(db.prepare(`UPDATE payment_reminder_v2_schedules SET status='PAUSED',stop_reason='RECEIPT_SUBMITTED',updated_at=?
       WHERE payment_id=? AND order_id=? AND (status='ACTIVE' OR stop_reason='RECEIPT_INGESTION_PENDING')`).bind(now, record.payment_id, record.id));
