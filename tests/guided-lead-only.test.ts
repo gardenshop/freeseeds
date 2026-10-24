@@ -48,8 +48,8 @@ function buttons() {
   return (sends.at(-1)?.interactive as { action?: { buttons?: Array<{ reply: { id: string } }> } } | undefined)?.action?.buttons?.map((button) => button.reply.id) ?? [];
 }
 
-function env(paymentConfirmationEnabled = "false", paymentRemindersEnabled = "false", paymentAutomationEnabled = "false", utilityTemplatesApproved = "false") {
-  return { DB: db, RECEIPTS: { get: receiptBucketGet, put: receiptBucketPut }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: "true", PAYMENT_CONFIRMATION_V2_ENABLED: paymentConfirmationEnabled, PAYMENT_REMINDERS_V2_ENABLED: paymentRemindersEnabled, PAYMENT_AUTOMATION_V2_ENABLED: paymentAutomationEnabled, PAYMENT_UTILITY_TEMPLATES_APPROVED: utilityTemplatesApproved, META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided" } as never;
+function env(paymentConfirmationEnabled = "false", paymentRemindersEnabled = "false", paymentAutomationEnabled = "false", utilityTemplatesApproved = "false", orderStatusNotificationsEnabled = "false", metaProviderEnabled = "true") {
+  return { DB: db, RECEIPTS: { get: receiptBucketGet, put: receiptBucketPut }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: metaProviderEnabled, PAYMENT_CONFIRMATION_V2_ENABLED: paymentConfirmationEnabled, PAYMENT_REMINDERS_V2_ENABLED: paymentRemindersEnabled, PAYMENT_AUTOMATION_V2_ENABLED: paymentAutomationEnabled, PAYMENT_UTILITY_TEMPLATES_APPROVED: utilityTemplatesApproved, ORDER_STATUS_NOTIFICATIONS_V2_ENABLED: orderStatusNotificationsEnabled, META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided" } as never;
 }
 
 async function callback(messages: Record<string, unknown>[], extraChanges: unknown[] = [], paymentRemindersEnabled = false) {
@@ -60,13 +60,25 @@ async function callback(messages: Record<string, unknown>[], extraChanges: unkno
   return api.fetch(new Request("https://api.example.test/webhooks/whatsapp", { method: "POST", headers: { "content-type": "application/json", "x-hub-signature-256": `sha256=${signature}` }, body: payload }), env("false",String(paymentRemindersEnabled),String(paymentRemindersEnabled)));
 }
 
-async function adminPost(path: string, body: Record<string, unknown>, referenceRequestsEnabled = "true", paymentConfirmationEnabled = "false", paymentRemindersEnabled = "false", paymentAutomationEnabled = "false") {
-  const adminEnv = { DB: db, ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL", REFERENCE_REQUESTS_ENABLED: referenceRequestsEnabled, PAYMENT_CONFIRMATION_V2_ENABLED: paymentConfirmationEnabled, PAYMENT_REMINDERS_V2_ENABLED:paymentRemindersEnabled, PAYMENT_AUTOMATION_V2_ENABLED:paymentAutomationEnabled, EVENTS: { send: vi.fn(async () => undefined) } } as never;
+async function adminPost(path: string, body: Record<string, unknown>, referenceRequestsEnabled = "true", paymentConfirmationEnabled = "false", paymentRemindersEnabled = "false", paymentAutomationEnabled = "false", orderStatusNotificationsEnabled = "false", events: { send: typeof queueSend } = { send: vi.fn(async () => undefined) }) {
+  const adminEnv = { DB: db, ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL", REFERENCE_REQUESTS_ENABLED: referenceRequestsEnabled, PAYMENT_CONFIRMATION_V2_ENABLED: paymentConfirmationEnabled, PAYMENT_REMINDERS_V2_ENABLED:paymentRemindersEnabled, PAYMENT_AUTOMATION_V2_ENABLED:paymentAutomationEnabled, ORDER_STATUS_NOTIFICATIONS_V2_ENABLED:orderStatusNotificationsEnabled, EVENTS: events } as never;
   const identity = { "cf-access-authenticated-user-email": "admin@example.test" };
   const csrfResponse = await admin.fetch(new Request("https://admin.example.test/api/csrf", { headers: identity }), adminEnv);
   const csrf = await csrfResponse.json() as { csrfToken: string };
   const cookie = `__Host-gfs_admin_csrf=${csrf.csrfToken}`;
   return admin.fetch(new Request(`https://admin.example.test${path}`, { method: "POST", headers: { ...identity, origin:"https://admin.example.test", cookie, "x-csrf-token": csrf.csrfToken, "content-type": "application/json" }, body: JSON.stringify(body) }), adminEnv);
+}
+
+async function adminPostWithOrderNotices(path: string, body: Record<string, unknown>) {
+  return adminPost(path,body,"true","false","false","false","true",{send:queueSend});
+}
+
+async function deliverLastSyntheticOrderNotice() {
+  const queued=queueSend.mock.calls.at(-1)?.[0] as {kind:string;idempotencyKey:string;entityId:string;schemaVersion:1}|undefined;
+  if(!queued||queued.kind!=="WHATSAPP_ORDER_STATUS")throw new Error("SYNTHETIC_ORDER_NOTICE_QUEUE_MISSING");
+  const ack=vi.fn(),retry=vi.fn(),before=sends.length;
+  await api.queue({messages:[{body:queued,attempts:1,ack,retry}]} as never,env("false","false","false","false","true"));
+  return {queued,ack,retry,before,after:sends.length,text:body()};
 }
 
 async function inbound(input: string | Record<string, unknown>, id = `synthetic-inbound-${++sequence}`, waId = sender, paymentRemindersEnabled = false) {
@@ -286,6 +298,151 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(testOrder.order.orderId)).toEqual({state:"PAID",payment_status:"PAID"});
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_reminder_v2_schedules WHERE order_id=?").get(testOrder.order.orderId)).toEqual({count:0});
     expect(sqlite.prepare("SELECT status FROM outbox_jobs WHERE idempotency_key=?").get(`payment_confirmation_v2_${testOrder.paymentId}`)).toEqual({status:"QUEUED"});
+  });
+
+  it.each(["en","ur"] as const)("runs the isolated V2 lifecycle with TEST ONLY localized notices in %s", async (locale) => {
+    const fixture=await createSyntheticPaymentReviewOrder(sender,`gfs210-lifecycle-${locale}`,false);
+    const orderNumber=`SIM-GFS210-${locale.toUpperCase()}`;
+    const now=new Date().toISOString();
+    sqlite.prepare("UPDATE orders SET order_number=?,state='PAID',payment_status='PAID',updated_at=? WHERE id=?").run(orderNumber,now,fixture.order.orderId);
+    sqlite.prepare("UPDATE payments SET review_state='APPROVED',approved_amount=?,approved_by='SYNTHETIC_FIXTURE',approved_at=?,customer_transaction_reference='SYNTHETIC-GFS210-REFERENCE',updated_at=? WHERE id=?").run(fixture.amount,now,now,fixture.paymentId);
+    const inboundId=`synthetic-lifecycle-window-${locale}`;
+    sqlite.prepare("UPDATE whatsapp_conversations SET state='ORDER_CONFIRMED',state_data=?,last_inbound_message_id=?,last_inbound_at=?,updated_at=? WHERE wa_id=?").run(JSON.stringify({language:locale,orderId:fixture.order.orderId,orderNumber}),inboundId,now,now,sender);
+    sqlite.prepare("INSERT INTO whatsapp_events(id,provider_event_id,event_type,payload_hash,status,correlation_id,created_at) VALUES(?,?,?,?,?,?,?)").run(`event-lifecycle-${locale}`,`message:${inboundId}`,"MESSAGE","synthetic-lifecycle-payload","RECEIVED",`correlation-lifecycle-${locale}`,now);
+    sqlite.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?)").run(`audit-synthetic-${locale}`,"SYNTHETIC_FIXTURE_CREATED","TEST","ORDER",fixture.order.orderId,`correlation-fixture-${locale}`,JSON.stringify({simulationOnly:true,noFunds:true,noShipment:true}),now);
+    const postNotice=(path:string,payload:Record<string,unknown>)=>adminPost(path,payload,"true","false","false","false","true",{send:queueSend});
+    const deliverLast=async(expected:string)=>{const queued=queueSend.mock.calls.at(-1)?.[0] as {kind:string;idempotencyKey:string;entityId:string;schemaVersion:1};expect(queued.kind).toBe("WHATSAPP_ORDER_STATUS");const ack=vi.fn(),retry=vi.fn(),before=sends.length;await api.queue({messages:[{body:queued,attempts:1,ack,retry}]} as never,env("false","false","false","false","true"));expect(ack).toHaveBeenCalledOnce();expect(retry).not.toHaveBeenCalled();expect(sends).toHaveLength(before+1);expect(body()).toContain(locale==="ur"?"ٹیسٹ:":"TEST ONLY:");expect(body()).toContain(expected);expect(sqlite.prepare("SELECT status FROM outbox_jobs WHERE idempotency_key=?").get(queued.idempotencyKey)).toEqual({status:"SENT"});return queued;};
+
+    const confirmed=await postNotice(`/api/orders/${fixture.order.orderId}/confirm`,{confirmation:orderNumber});
+    expect(confirmed.status).toBe(200);
+    const confirmedQueued=await deliverLast(locale==="ur"?"تصدیق ہو گئی":"is confirmed");
+    const confirmationReplay={body:confirmedQueued,attempts:2,ack:vi.fn(),retry:vi.fn()};
+    const sentBeforeReplay=sends.length;
+    await api.queue({messages:[confirmationReplay]} as never,env("false","false","false","false","true"));
+    expect(confirmationReplay.ack).toHaveBeenCalledOnce();
+    expect(sends).toHaveLength(sentBeforeReplay);
+    const confirmedPayload=await confirmed.json() as {notificationStatus:string};
+    expect(confirmedPayload.notificationStatus).toBe("QUEUED");
+
+    const packing=await postNotice(`/api/orders/${fixture.order.orderId}/transition`,{from:"PAID",to:"PACKING",confirmation:orderNumber});
+    expect(packing.status).toBe(200);
+    await deliverLast(locale==="ur"?"پیکنگ ہو رہی":"being packed");
+    const stateAfterPacking=await(await admin.fetch(new Request(`https://admin.example.test/api/orders/${fixture.order.orderId}`,{headers:{"cf-access-authenticated-user-email":"admin@example.test"}}),{DB:db,ADMIN_EMAIL:"admin@example.test",DEPLOYMENT_STATE:"LOCAL"} as never)).json() as {order:{state:string}};
+    expect(stateAfterPacking.order.state).toBe("PACKING");
+
+    const trackingNumber="SIMULATED-GFS210-NOT-SHIPMENT";
+    expect((await postNotice(`/api/orders/${fixture.order.orderId}/tracking`,{trackingNumber,confirmation:orderNumber})).status).toBe(200);
+    const labelResponse=await admin.fetch(new Request(`https://admin.example.test/api/orders/${fixture.order.orderId}/shipping-label?format=A6`,{headers:{"cf-access-authenticated-user-email":"admin@example.test"}}),{DB:db,ADMIN_EMAIL:"admin@example.test",DEPLOYMENT_STATE:"LOCAL"} as never);
+    expect(labelResponse.status).toBe(200);
+    expect(await labelResponse.text()).toContain("TEST ONLY — SIMULATED FULFILLMENT; DO NOT SHIP");
+
+    const dispatched=await postNotice(`/api/orders/${fixture.order.orderId}/transition`,{from:"PACKING",to:"DISPATCHED",confirmation:orderNumber});
+    expect(dispatched.status).toBe(200);
+    const dispatchNotice=await deliverLast(locale==="ur"?"روانہ کر دیا":"dispatched");
+    expect(body()).toContain(trackingNumber);
+    expect(JSON.parse((sqlite.prepare("SELECT payload_json FROM outbox_jobs WHERE idempotency_key=?").get(dispatchNotice.idempotencyKey) as {payload_json:string}).payload_json)).toMatchObject({trackingNumber});
+    const delivered=await postNotice(`/api/orders/${fixture.order.orderId}/transition`,{from:"DISPATCHED",to:"DELIVERED",confirmation:orderNumber});
+    expect(delivered.status).toBe(200);
+    await deliverLast(locale==="ur"?"ڈیلیور شدہ درج کیا گیا":"marked delivered");
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(fixture.order.orderId)).toEqual({state:"DELIVERED",payment_status:"PAID"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE entity_id=? AND kind='WHATSAPP_ORDER_STATUS' AND status='SENT'").get(fixture.order.orderId)).toEqual({count:4});
+    const stale=await postNotice(`/api/orders/${fixture.order.orderId}/transition`,{from:"PACKING",to:"DISPATCHED",confirmation:orderNumber});
+    expect(stale.status).toBe(409);
+    const unsafeCancel=await postNotice(`/api/orders/${fixture.order.orderId}/cancel`,{reason:"SIMULATION ONLY",confirmation:orderNumber});
+    expect(unsafeCancel.status).toBe(409);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(fixture.order.orderId)).toEqual({count:1});
+  });
+
+  it.each(["en","ur"] as const)("keeps synthetic rejection and clearer-receipt notices localized in %s without deleting the receipt", async (locale) => {
+    const rejected=await createSyntheticPaymentReviewOrder(sender,`gfs210-payment-rejected-${locale}`,false);
+    const rejectedNumber=`SIM-GFS210-REJECT-${locale.toUpperCase()}`;
+    const now=new Date().toISOString();
+    sqlite.prepare("UPDATE orders SET order_number=? WHERE id=?").run(rejectedNumber,rejected.order.orderId);
+    sqlite.prepare("UPDATE whatsapp_conversations SET state_data=?,last_inbound_message_id=?,last_inbound_at=?,updated_at=? WHERE wa_id=?").run(JSON.stringify({language:locale,orderId:rejected.order.orderId,orderNumber:rejectedNumber}),`synthetic-reject-window-${locale}`,now,now,sender);
+    const reject=await adminPost(`/api/payments/${rejected.paymentId}/reject`,{orderId:rejected.order.orderId,reason:"TEST_IMAGE_NOT_PAYMENT_PROOF",confirmation:rejectedNumber},"true","false","false","false","true",{send:queueSend});
+    expect(reject.status).toBe(200);
+    const rejectQueue=queueSend.mock.calls.at(-1)?.[0] as {kind:string;idempotencyKey:string;entityId:string;schemaVersion:1};
+    const rejectAck=vi.fn(),rejectRetry=vi.fn();
+    await api.queue({messages:[{body:rejectQueue,attempts:1,ack:rejectAck,retry:rejectRetry}]} as never,env("false","false","false","false","true"));
+    expect(rejectAck).toHaveBeenCalledOnce();
+    expect(rejectRetry).not.toHaveBeenCalled();
+    expect(body()).toContain(locale==="ur"?"تصدیق":`payment`);
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(rejected.order.orderId)).toEqual({state:"PAYMENT_REJECTED",payment_status:"REJECTED"});
+    expect(sqlite.prepare("SELECT review_state FROM payments WHERE id=?").get(rejected.paymentId)).toEqual({review_state:"REJECTED"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(rejected.order.orderId)).toEqual({count:1});
+    expect(sqlite.prepare("SELECT status FROM outbox_jobs WHERE idempotency_key=?").get(rejectQueue.idempotencyKey)).toEqual({status:"SENT"});
+
+    const clearerSender="923001234568";
+    const clearer=await createSyntheticPaymentReviewOrder(clearerSender,`gfs210-clearer-${locale}`,false);
+    const clearerNumber=`SIM-GFS210-CLEARER-${locale.toUpperCase()}`;
+    sqlite.prepare("UPDATE orders SET order_number=? WHERE id=?").run(clearerNumber,clearer.order.orderId);
+    sqlite.prepare("UPDATE whatsapp_conversations SET state='PAYMENT_REVIEW',state_data=?,last_inbound_message_id=?,last_inbound_at=?,updated_at=? WHERE wa_id=?").run(JSON.stringify({language:locale,orderId:clearer.order.orderId,orderNumber:clearerNumber}),`synthetic-clearer-window-${locale}`,new Date().toISOString(),new Date().toISOString(),clearerSender);
+    const receiptId=sqlite.prepare("SELECT id FROM payment_receipts WHERE order_id=?").get(clearer.order.orderId)?.id as string;
+    const request=await adminPost(`/api/payments/${clearer.paymentId}/request-clearer-receipt`,{orderId:clearer.order.orderId,confirmation:clearerNumber,reasonCode:"TEST_IMAGE_NOT_PAYMENT_PROOF"},"true","false","false","false","true",{send:queueSend});
+    expect(request.status).toBe(202);
+    const clearerQueue=queueSend.mock.calls.at(-1)?.[0] as {kind:string;idempotencyKey:string;entityId:string;schemaVersion:1};
+    const clearerAck=vi.fn(),clearerRetry=vi.fn();
+    await api.queue({messages:[{body:clearerQueue,attempts:1,ack:clearerAck,retry:clearerRetry}]} as never,env("false","false","false","false","true"));
+    expect(clearerAck).toHaveBeenCalledOnce();
+    expect(clearerRetry).not.toHaveBeenCalled();
+    expect(body()).toContain(locale==="ur"?"واضح ادائیگی کا ثبوت":"clear payment evidence");
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(clearer.order.orderId)).toEqual({state:"PAYMENT_REVIEW",payment_status:"PENDING"});
+    expect(sqlite.prepare("SELECT review_state FROM payments WHERE id=?").get(clearer.paymentId)).toEqual({review_state:"REVIEW"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE id=?").get(receiptId)).toEqual({count:1});
+    const audit=sqlite.prepare("SELECT metadata_json FROM audit_log WHERE action='REQUEST_CLEARER_RECEIPT' AND entity_id=?").get(clearer.paymentId) as {metadata_json:string};
+    expect(audit.metadata_json).toContain('"reasonCode":"TEST_IMAGE_NOT_PAYMENT_PROOF"');
+  });
+
+  it.each(["en","ur"] as const)("cancels only a separate isolated unpaid fixture and queues a simulated %s notice", async (locale) => {
+    const idempotencyKey=`gfs210-unpaid-cancel-fixture-${locale}`;
+    const created=await persistFlowSubmission(db,{fullName:"SYNTHETIC GFS210 — DO NOT CONTACT",deliveryAddress:"SIMULATED ONLY",nearbyPlace:"NO PHYSICAL SHIPMENT",city:"Synthetic City",contactNumber:"03000000001",productCode:"FREE_5_PACK_VEGETABLE_SEEDS",province:"Synthetic Province",fertilizerSelected:false},undefined,idempotencyKey,sender);
+    if(!created.quote)throw new Error("SYNTHETIC_CANCEL_QUOTE_MISSING");
+    const orderNumber=`SIM-GFS210-CANCEL-UNPAID-${locale.toUpperCase()}`;
+    const now=new Date().toISOString();
+    const inboundId="synthetic-cancel-window";
+    sqlite.prepare("UPDATE orders SET order_number=?,state='PAYMENT_PENDING',payment_status='PENDING' WHERE id=?").run(orderNumber,created.orderId);
+    sqlite.prepare("INSERT INTO whatsapp_conversations(id,wa_id,state,state_data,last_inbound_message_id,last_inbound_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)").run(`conversation-gfs210-cancel-${locale}`,sender,"PAYMENT_PENDING",JSON.stringify({language:locale,orderId:created.orderId,orderNumber}),inboundId,now,now,now);
+    const cancel=await adminPost(`/api/orders/${created.orderId}/cancel`,{confirmation:orderNumber,reason:"SYNTHETIC_TEST_ONLY_NO_PAYMENT"},"true","false","false","false","true",{send:queueSend});
+    expect(cancel.status).toBe(200);
+    expect(await cancel.clone().json()).toMatchObject({ok:true,notificationStatus:"QUEUED"});
+    expect(queueSend).toHaveBeenCalledOnce();
+    const queued=queueSend.mock.calls.at(-1)?.[0] as {kind:string;idempotencyKey:string;entityId:string;schemaVersion:1};
+    const ack=vi.fn(),retry=vi.fn();
+    await api.queue({messages:[{body:queued,attempts:1,ack,retry}]} as never,env("false","false","false","false","true"));
+    expect(ack).toHaveBeenCalledOnce();
+    expect(retry).not.toHaveBeenCalled();
+    expect(body()).toContain(locale==="ur"?"ٹیسٹ:":"TEST ONLY:");
+    expect(body()).toContain(locale==="ur"?"منسوخ":"was cancelled");
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(created.orderId)).toEqual({state:"CANCELLED",payment_status:"PENDING"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(created.orderId)).toEqual({count:0});
+    expect(sqlite.prepare("SELECT status FROM outbox_jobs WHERE idempotency_key=?").get(queued.idempotencyKey)).toEqual({status:"SENT"});
+  });
+
+  it("defers V2 status notices when the feature is disabled or the closed-window utility template is not approved", async () => {
+    const target=await createSyntheticPaymentReviewOrder(sender,"gfs210-status-window-gate",false);
+    const orderNumber="SIM-GFS210-WINDOW-GATE",now=new Date().toISOString(),closed=new Date(Date.now()-25*60*60_000).toISOString();
+    sqlite.prepare("UPDATE orders SET order_number=?,state='DISPATCHED',payment_status='PAID' WHERE id=?").run(orderNumber,target.order.orderId);
+    sqlite.prepare("UPDATE payments SET review_state='APPROVED',approved_amount=?,approved_by='SYNTHETIC_FIXTURE',approved_at=? WHERE id=?").run(target.amount,now,target.paymentId);
+    sqlite.prepare("UPDATE whatsapp_conversations SET state_data=?,last_inbound_at=? WHERE wa_id=?").run(JSON.stringify({language:"en",orderId:target.order.orderId}),closed,sender);
+    const key="gfs210-closed-window-order-notice";
+    sqlite.prepare("INSERT INTO outbox_jobs(id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES(?,?,?,?,?,'QUEUED',?,?,?)").run("outbox-gfs210-closed",key,"WHATSAPP_ORDER_STATUS",target.order.orderId,JSON.stringify({orderId:target.order.orderId,orderNumber,noticeName:"DISPATCHED",trackingNumber:"SIMULATED-NO-SHIP",simulation:true}),now,now,now);
+    const event={body:{kind:"WHATSAPP_ORDER_STATUS",idempotencyKey:key,entityId:target.order.orderId,schemaVersion:1 as const},attempts:1,ack:vi.fn(),retry:vi.fn()};
+    const before=sends.length;
+    await api.queue({messages:[event]} as never,env("false","false","false","false","true"));
+    expect(event.ack).toHaveBeenCalledOnce();
+    expect(event.retry).not.toHaveBeenCalled();
+    expect(sends).toHaveLength(before);
+    expect(sqlite.prepare("SELECT status,last_error FROM outbox_jobs WHERE idempotency_key=?").get(key)).toEqual({status:"DEFERRED",last_error:"ORDER_STATUS_UTILITY_TEMPLATE_NOT_APPROVED"});
+
+    const disabledKey="gfs210-v2-disabled-order-notice";
+    sqlite.prepare("UPDATE whatsapp_conversations SET last_inbound_at=? WHERE wa_id=?").run(now,sender);
+    sqlite.prepare("INSERT INTO outbox_jobs(id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES(?,?,?,?,?,'QUEUED',?,?,?)").run("outbox-gfs210-disabled",disabledKey,"WHATSAPP_ORDER_STATUS",target.order.orderId,JSON.stringify({orderId:target.order.orderId,orderNumber,noticeName:"DISPATCHED",trackingNumber:"SIMULATED-NO-SHIP",simulation:true}),now,now,now);
+    const disabled={body:{kind:"WHATSAPP_ORDER_STATUS",idempotencyKey:disabledKey,entityId:target.order.orderId,schemaVersion:1 as const},attempts:1,ack:vi.fn(),retry:vi.fn()};
+    await api.queue({messages:[disabled]} as never,env("false","false","false","false","false","false"));
+    expect(disabled.ack).toHaveBeenCalledOnce();
+    expect(disabled.retry).not.toHaveBeenCalled();
+    expect(sends).toHaveLength(before);
+    expect(sqlite.prepare("SELECT status,last_error FROM outbox_jobs WHERE idempotency_key=?").get(disabledKey)).toEqual({status:"DEFERRED",last_error:"ORDER_STATUS_NOTIFICATIONS_V2_DISABLED"});
   });
 
   it("sends the exact Urdu PAID confirmation to the order's stored WhatsApp identity", async () => {

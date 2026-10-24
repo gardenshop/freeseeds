@@ -17,6 +17,7 @@ type Env = {
     PAYMENT_AUTOMATION_V2_ENABLED?: string;
     PAYMENT_REMINDERS_V2_ENABLED?: string;
     PAYMENT_UTILITY_TEMPLATES_APPROVED?: string;
+    ORDER_STATUS_NOTIFICATIONS_V2_ENABLED?: string;
     WHATSAPP_CHECKOUT_MODE?: string;
     META_GRAPH_VERSION?: string;
     META_ACCESS_TOKEN?: string;
@@ -65,6 +66,34 @@ const LOCALE_FALLBACKS: Partial<Record<WhatsAppTemplateKey, { en: string; ur: st
   PAYMENT: { en: "For order {orderNumber}, the payable amount is PKR {amount}. Select an enabled payment method below.", ur: "آرڈر {orderNumber} کی قابلِ ادائیگی رقم PKR {amount} ہے۔ نیچے سے فعال ادائیگی کا طریقہ منتخب کریں۔" },
   RECEIPT: { en: "Receipt received for order {orderNumber}. Reply with the transaction/reference ID shown in your payment app. This is not payment confirmation; Garden Shop will verify actual account credit. Payment remains under Admin review.", ur: "آرڈر {orderNumber} کی رسید موصول ہوئی۔ اپنی ادائیگی کی ایپ میں دکھایا گیا ٹرانزیکشن/حوالہ نمبر جواب میں بھیجیں۔ یہ ادائیگی کی تصدیق نہیں؛ گارڈن شاپ اکاؤنٹ میں اصل رقم کی تصدیق کرے گا۔ ادائیگی ایڈمن کے جائزے میں رہے گی۔" }
 };
+
+type V2OrderStatusName = "PAYMENT_REJECTED" | "REQUEST_CLEARER_RECEIPT" | "ORDER_CONFIRMED" | "PACKING" | "DISPATCHED" | "DELIVERED" | "ORDER_CANCELLED";
+function renderV2OrderStatusNotice(eventName: V2OrderStatusName, orderNumber: string, locale: "en" | "ur", trackingNumber?: string | null, simulation = false): string {
+  const copy: Record<V2OrderStatusName, { en:string;ur:string }> = {
+    PAYMENT_REJECTED:{en:`The receipt for order ${orderNumber} was not sufficient to verify payment. No funds were confirmed. If you have paid, contact Admin before paying again.`,ur:`آرڈر ${orderNumber} کی رسید سے ادائیگی کی تصدیق نہیں ہو سکی۔ کوئی رقم تصدیق شدہ نہیں ہے۔ اگر آپ نے ادائیگی کی ہے تو دوبارہ ادائیگی سے پہلے ایڈمن سے رابطہ کریں۔`},
+    REQUEST_CLEARER_RECEIPT:{en:`The image submitted for order ${orderNumber} is not clear payment evidence. If you have paid, please upload a clear genuine receipt for this order. No payment is confirmed.`,ur:`آرڈر ${orderNumber} کے لیے بھیجی گئی تصویر واضح ادائیگی کا ثبوت نہیں ہے۔ اگر آپ نے ادائیگی کی ہے تو براہِ کرم اس آرڈر کی واضح اور اصل رسید اپ لوڈ کریں۔ کوئی ادائیگی تصدیق شدہ نہیں ہے۔`},
+    ORDER_CONFIRMED:{en:`Order ${orderNumber} is confirmed. We will notify you when it is packed and dispatched.`,ur:`آرڈر ${orderNumber} کی تصدیق ہو گئی ہے۔ پیک اور روانہ ہونے پر ہم آپ کو اطلاع دیں گے۔`},
+    PACKING:{en:`Order ${orderNumber} is being packed.`,ur:`آرڈر ${orderNumber} کی پیکنگ ہو رہی ہے۔`},
+    DISPATCHED:{en:`Order ${orderNumber} has been dispatched. Tracking: ${trackingNumber??"pending"}.`,ur:`آرڈر ${orderNumber} روانہ کر دیا گیا ہے۔ ٹریکنگ: ${trackingNumber??"زیرِ عمل"}۔`},
+    DELIVERED:{en:`Order ${orderNumber} is marked delivered. Contact support if you have not received it.`,ur:`آرڈر ${orderNumber} ڈیلیور شدہ درج کیا گیا ہے۔ اگر آپ کو موصول نہیں ہوا تو سپورٹ سے رابطہ کریں۔`},
+    ORDER_CANCELLED:{en:`Order ${orderNumber} was cancelled. Contact support if you need help.`,ur:`آرڈر ${orderNumber} منسوخ کر دیا گیا ہے۔ مدد کے لیے سپورٹ سے رابطہ کریں۔`}
+  };
+  const prefix=simulation?(locale==="ur"?"ٹیسٹ: یہ فرضی اسٹیٹس ہے؛ کوئی حقیقی ادائیگی یا کھیپ نہیں۔ ":"TEST ONLY: simulated status; no real payment or shipment. "):"";
+  return prefix+copy[eventName][locale];
+}
+
+function parseV2OrderStatusPayload(value:string):{orderId:string;orderNumber:string;noticeName:V2OrderStatusName;paymentId?:string;to?:string;trackingNumber?:string|null;reasonCode?:string;simulation?:boolean}|null{
+  try{const d=JSON.parse(value) as Record<string,unknown>;const names:V2OrderStatusName[]=["PAYMENT_REJECTED","REQUEST_CLEARER_RECEIPT","ORDER_CONFIRMED","PACKING","DISPATCHED","DELIVERED","ORDER_CANCELLED"];if(typeof d.orderId!=="string"||typeof d.orderNumber!=="string"||typeof d.noticeName!=="string"||!names.includes(d.noticeName as V2OrderStatusName))return null;return{orderId:d.orderId,orderNumber:d.orderNumber,noticeName:d.noticeName as V2OrderStatusName,paymentId:typeof d.paymentId==="string"?d.paymentId:undefined,to:typeof d.to==="string"?d.to:undefined,trackingNumber:typeof d.trackingNumber==="string"?d.trackingNumber:null,reasonCode:typeof d.reasonCode==="string"?d.reasonCode:undefined,simulation:d.simulation===true};}catch{return null;}
+}
+
+function parseV2StatusPayload(value: string): { orderId:string;orderNumber:string;noticeName:V2OrderStatusName;expectedState?:string;from?:string;trackingNumber?:string|null;paymentId?:string;receiptId?:string;reasonCode?:string;simulation?:boolean } | null {
+  try {
+    const d=JSON.parse(value) as Record<string,unknown>;
+    const names:V2OrderStatusName[]=["PAYMENT_REJECTED","REQUEST_CLEARER_RECEIPT","ORDER_CONFIRMED","PACKING","DISPATCHED","DELIVERED","ORDER_CANCELLED"];
+    if(typeof d.orderId!=="string"||typeof d.orderNumber!=="string"||typeof d.noticeName!=="string"||!names.includes(d.noticeName as V2OrderStatusName))return null;
+    return {orderId:d.orderId,orderNumber:d.orderNumber,noticeName:d.noticeName as V2OrderStatusName,expectedState:typeof d.to==="string"?d.to:typeof d.expectedState==="string"?d.expectedState:undefined,from:typeof d.from==="string"?d.from:undefined,trackingNumber:typeof d.trackingNumber==="string"?d.trackingNumber:null,paymentId:typeof d.paymentId==="string"?d.paymentId:undefined,receiptId:typeof d.receiptId==="string"?d.receiptId:undefined,reasonCode:typeof d.reasonCode==="string"?d.reasonCode:undefined,simulation:d.simulation===true};
+  } catch { return null; }
+}
 
 async function contentFor(db: D1Database, key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; amount?: string | number; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string } = {}, sessionKey?: string, locale: "en" | "ur" = "en") {
   const content = await publishedWhatsAppContent(db, key, locale, sessionKey);
@@ -1029,6 +1058,75 @@ export default {
             await env.DB.prepare("UPDATE outbox_jobs SET status='RETRY',attempts=?,last_error=?,available_at=?,updated_at=? WHERE idempotency_key=?").bind(nextAttempt, failure, retryAt, now, message.body.idempotencyKey).run();
             message.retry({ delaySeconds: retryDelaySeconds(nextAttempt) });
             continue;
+          }
+        }
+        if (message.body.kind === "WHATSAPP_ORDER_STATUS") {
+          const block = async (reason:string, status:"DEFERRED"|"PERMANENT_FAILURE"="DEFERRED") => {
+            const now=new Date().toISOString();
+            await env.DB.batch([
+              env.DB.prepare("UPDATE outbox_jobs SET status=?,attempts=?,last_error=?,updated_at=? WHERE idempotency_key=? AND status NOT IN ('SENT','DEAD_LETTER')").bind(status,nextAttempt,reason,now,message.body.idempotencyKey),
+              env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(),"WHATSAPP_ORDER_STATUS_BLOCKED","SYSTEM","ORDER",message.body.entityId,crypto.randomUUID(),JSON.stringify({reason,idempotencyKey:message.body.idempotencyKey}),now)
+            ]);
+            message.ack();
+          };
+          try {
+            if(env.ORDER_STATUS_NOTIFICATIONS_V2_ENABLED!=="true"){await block("ORDER_STATUS_NOTIFICATIONS_V2_DISABLED");continue;}
+            if(env.META_PROVIDER_ENABLED!=="true"){await block("META_PROVIDER_DISABLED");continue;}
+            const stored=await env.DB.prepare("SELECT payload_json FROM outbox_jobs WHERE idempotency_key=?").bind(message.body.idempotencyKey).first<{payload_json:string}>();
+            const payload=stored?parseV2StatusPayload(stored.payload_json):null;
+            if(!payload||payload.orderId!==message.body.entityId){await block("ORDER_STATUS_PAYLOAD_INVALID","PERMANENT_FAILURE");continue;}
+            const current=await env.DB.prepare(`SELECT o.order_number,o.state,o.archived_at,o.payment_status,o.total_payable,c.id AS customer_id,c.wa_id,wc.last_inbound_at,wc.state_data,
+              p.id AS payment_id,p.review_state,p.approved_amount,
+              EXISTS(SELECT 1 FROM payment_reminder_v2_opt_outs x WHERE x.customer_id=c.id OR x.wa_id=c.wa_id) AS opted_out,
+              (SELECT COUNT(*) FROM payment_receipts r WHERE r.order_id=o.id AND r.payment_id=p.id) AS receipt_count,
+              EXISTS(SELECT 1 FROM audit_log a WHERE a.entity_type='ORDER' AND a.entity_id=o.id AND a.action='ORDER_CONFIRMED') AS order_confirmed
+              FROM orders o JOIN customers c ON c.id=o.customer_id
+              LEFT JOIN payments p ON p.id=COALESCE(?,(SELECT p2.id FROM payments p2 WHERE p2.order_id=o.id ORDER BY p2.created_at DESC LIMIT 1))
+              LEFT JOIN whatsapp_conversations wc ON wc.wa_id=c.wa_id WHERE o.id=? AND (p.id IS NULL OR p.order_id=o.id)`).bind(payload.paymentId??null,payload.orderId)
+              .first<{order_number:string;state:string;archived_at:string|null;payment_status:string;total_payable:number;customer_id:string;wa_id:string|null;last_inbound_at:string|null;state_data:string|null;payment_id:string|null;review_state:string|null;approved_amount:number|null;opted_out:number;receipt_count:number;order_confirmed:number}>();
+            if(!current||current.archived_at||current.order_number!==payload.orderNumber){await block("ORDER_STATUS_ORDER_MISMATCH","PERMANENT_FAILURE");continue;}
+            const eligible=payload.noticeName==="PAYMENT_REJECTED"?current.state==="PAYMENT_REJECTED"&&current.review_state==="REJECTED"
+              :payload.noticeName==="REQUEST_CLEARER_RECEIPT"?current.state==="PAYMENT_REVIEW"&&current.review_state==="REVIEW"&&Number(current.receipt_count)>0
+              :payload.noticeName==="ORDER_CONFIRMED"?["PAID","PACKING","DISPATCHED","DELIVERED"].includes(current.state)&&current.payment_status==="PAID"&&current.review_state==="APPROVED"&&Number(current.order_confirmed)===1
+              :payload.noticeName==="PACKING"?current.state==="PACKING"&&current.payment_status==="PAID"&&current.review_state==="APPROVED"
+              :payload.noticeName==="DISPATCHED"?current.state==="DISPATCHED"&&current.payment_status==="PAID"&&current.review_state==="APPROVED"
+              :payload.noticeName==="DELIVERED"?current.state==="DELIVERED"&&current.payment_status==="PAID"&&current.review_state==="APPROVED"
+              :current.state==="CANCELLED"&&current.payment_status!=="PAID"&&current.review_state!=="APPROVED"&&Number(current.receipt_count)===0;
+            if(!eligible||current.opted_out){await block(current.opted_out?"ORDER_STATUS_CUSTOMER_OPTED_OUT":"ORDER_STATUS_STATE_MISMATCH","PERMANENT_FAILURE");continue;}
+            if(!current.wa_id||!/^[0-9]{7,20}$/.test(current.wa_id)){await block("ORDER_STATUS_CUSTOMER_WA_ID_INVALID","PERMANENT_FAILURE");continue;}
+            let locale:"en"|"ur";
+            try{const data=JSON.parse(current.state_data??"{}") as {language?:unknown};if(data.language!=="en"&&data.language!=="ur"){await block("ORDER_STATUS_LOCALE_UNVERIFIED","PERMANENT_FAILURE");continue;}locale=data.language;}catch{await block("ORDER_STATUS_LOCALE_UNVERIFIED","PERMANENT_FAILURE");continue;}
+            let trackingNumber=payload.trackingNumber??null;
+            if(payload.noticeName==="DISPATCHED"&&!trackingNumber){const row=await env.DB.prepare("SELECT metadata_json FROM audit_log WHERE entity_type='ORDER' AND entity_id=? AND action='ORDER_TRACKING_ASSIGNED' ORDER BY created_at DESC LIMIT 1").bind(payload.orderId).first<{metadata_json:string}>();try{trackingNumber=(JSON.parse(row?.metadata_json??"{}") as {trackingNumber?:string}).trackingNumber??null;}catch{trackingNumber=null;}}
+            if(payload.noticeName==="DISPATCHED"&&!trackingNumber){await block("ORDER_STATUS_TRACKING_MISSING","PERMANENT_FAILURE");continue;}
+            const simulation=payload.simulation===true&&payload.orderNumber.startsWith("SIM-GFS210-");
+            const text=renderV2OrderStatusNotice(payload.noticeName,current.order_number,locale,trackingNumber,simulation);
+            const serviceWindow=isInsideWhatsAppServiceWindow(current.last_inbound_at);
+            let send:()=>Promise<{providerMessageId:string}>;
+            let templateName:string|null=null;
+            if(serviceWindow){const provider=createWhatsAppProvider("meta",{enabled:true,graphVersion:env.META_GRAPH_VERSION??"v26.0",accessToken:env.META_ACCESS_TOKEN,phoneNumberId:env.META_PHONE_NUMBER_ID,verifyToken:env.WEBHOOK_VERIFY_TOKEN,appSecret:env.META_APP_SECRET});send=()=>provider.sendText(current.wa_id!,text);}
+            else {
+              const template=await env.DB.prepare("SELECT body,utility_template_name,utility_approved_at FROM payment_v2_template_versions WHERE template_key=? AND locale=? AND state='PUBLISHED' AND utility_template_name IS NOT NULL AND utility_approved_at IS NOT NULL ORDER BY version DESC LIMIT 1").bind(payload.noticeName,locale).first<{body:string;utility_template_name:string;utility_approved_at:string}>();
+              if(env.PAYMENT_UTILITY_TEMPLATES_APPROVED!=="true"||!template){await block("ORDER_STATUS_UTILITY_TEMPLATE_NOT_APPROVED");continue;}
+              const parameters=[payload.orderNumber,...(payload.noticeName==="DISPATCHED"?[trackingNumber??""]:[])];templateName=template.utility_template_name;
+              const provider=createWhatsAppProvider("meta",{enabled:true,graphVersion:env.META_GRAPH_VERSION??"v26.0",accessToken:env.META_ACCESS_TOKEN,phoneNumberId:env.META_PHONE_NUMBER_ID,verifyToken:env.WEBHOOK_VERIFY_TOKEN,appSecret:env.META_APP_SECRET});send=()=>provider.sendTemplate(current.wa_id!,templateName!,parameters,locale);
+            }
+            const delivery=await sendPaymentPart(env.DB,current.wa_id,payload.orderId,message.body.idempotencyKey,"WHATSAPP_ORDER_STATUS",send);
+            if(delivery!=="SENT")throw new Error("ORDER_STATUS_NOTIFICATION_SEND_FAILED");
+            const sentAt=new Date().toISOString();
+            await env.DB.batch([
+              env.DB.prepare("UPDATE outbox_jobs SET status='SENT',attempts=?,last_error=NULL,updated_at=? WHERE idempotency_key=?").bind(nextAttempt,sentAt,message.body.idempotencyKey),
+              env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(),"WHATSAPP_ORDER_STATUS_SENT","SYSTEM","ORDER",payload.orderId,crypto.randomUUID(),JSON.stringify({noticeName:payload.noticeName,locale,templateName,simulation}),sentAt)
+            ]);
+            message.ack();
+            continue;
+          } catch(error) {
+            const failure=error instanceof Error&&/^[A-Z0-9_:-]{1,120}$/.test(error.message)?error.message:"ORDER_STATUS_NOTIFICATION_SEND_FAILED";
+            if(nextAttempt>=5){const now=new Date().toISOString();await env.DB.batch([
+              env.DB.prepare("UPDATE outbox_jobs SET status='DEAD_LETTER',attempts=?,last_error=?,updated_at=? WHERE idempotency_key=?").bind(nextAttempt,failure,now,message.body.idempotencyKey),
+              env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(),"WHATSAPP_ORDER_STATUS_DEAD_LETTER","SYSTEM","ORDER",message.body.entityId,crypto.randomUUID(),JSON.stringify({reason:failure}),now)
+            ]);message.ack();continue;}
+            const now=new Date().toISOString();const retryAt=new Date(Date.now()+retryDelaySeconds(nextAttempt)*1000).toISOString();await env.DB.prepare("UPDATE outbox_jobs SET status='RETRY',attempts=?,last_error=?,available_at=?,updated_at=? WHERE idempotency_key=?").bind(nextAttempt,failure,retryAt,now,message.body.idempotencyKey).run();message.retry({delaySeconds:retryDelaySeconds(nextAttempt)});continue;
           }
         }
         if (message.body.kind === "WHATSAPP_PAYMENT_REMINDER") {

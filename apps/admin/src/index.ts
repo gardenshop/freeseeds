@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import { canTransition, createMetaActivationService, createWhatsAppProvider, customerTransactionReferenceHash, getLatestOrderForWaId, isInsideWhatsAppServiceWindow, MetaActivationAction, normalizeCustomerTransactionReference, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, hasPaymentMessagePlaceholders, isPaymentMethodComplete, isPaymentMethodLocaleComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, publishedWhatsAppContent, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, WhatsAppActionId, whatsAppActionIdsForTemplate, whatsAppActionLabel, WhatsAppContent, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
 
-  type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; CF_ACCESS_TEAM_DOMAIN?: string; META_CAPI_ENABLED?: string; REFERENCE_REQUESTS_ENABLED?: string; PAYMENT_CONFIRMATION_V2_ENABLED?: string; PAYMENT_AUTOMATION_V2_ENABLED?: string; PAYMENT_REMINDERS_V2_ENABLED?: string; PAYMENT_UTILITY_TEMPLATES_APPROVED?: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
+  type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; CF_ACCESS_TEAM_DOMAIN?: string; META_CAPI_ENABLED?: string; REFERENCE_REQUESTS_ENABLED?: string; ORDER_STATUS_NOTIFICATIONS_V2_ENABLED?: string; PAYMENT_CONFIRMATION_V2_ENABLED?: string; PAYMENT_AUTOMATION_V2_ENABLED?: string; PAYMENT_REMINDERS_V2_ENABLED?: string; PAYMENT_UTILITY_TEMPLATES_APPROVED?: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
 const app = new Hono<Env>();
 let accessJwkCache: { expiresAt: number; keys: JsonWebKey[] } | undefined;
 app.use("/orders", async (c, next) => { c.header("Cache-Control", "no-store, max-age=0"); c.header("X-Content-Type-Options", "nosniff"); await next(); });
@@ -139,11 +139,18 @@ function trackingNumber(value: unknown): string | undefined {
   return /^[A-Za-z0-9][A-Za-z0-9 ._\/-]{0,59}$/.test(normalized) ? normalized : undefined;
 }
 
-export function renderShippingLabelHtml(order: Record<string, unknown>, format: ShippingLabelFormat, assignedTrackingNumber?: string): string {
+function renderShippingLabelHtmlBase(order: Record<string, unknown>, format: ShippingLabelFormat, assignedTrackingNumber?: string): string {
   const tracking = trackingNumber(assignedTrackingNumber ?? order.trackingNumber);
   const size = format === "A6" ? "105mm 148mm" : "4in 6in";
   const value = (key: string) => escapeHtml(order[key]);
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Shipping label ${value("orderNumber")}</title><style>@page{size:${size};margin:0}*{box-sizing:border-box}body{margin:0;background:#fff;color:#111;font:12pt/1.3 Arial,sans-serif}.label{width:100%;min-height:100%;padding:8mm;display:flex;flex-direction:column;gap:5mm}.brand{font-size:18pt;font-weight:800;letter-spacing:.03em}.rule{border-top:2px solid #111}.order{display:flex;justify-content:space-between;gap:8mm;align-items:flex-start}.order-number{font-size:20pt;font-weight:800}.caption{font-size:8pt;text-transform:uppercase;letter-spacing:.08em;font-weight:700}.address{font-size:16pt;font-weight:700;line-height:1.35;overflow-wrap:anywhere}.meta{display:grid;grid-template-columns:1fr 1fr;gap:3mm 6mm}.meta div{min-width:0}.value{font-weight:600;overflow-wrap:anywhere}.tracking{border:2px dashed #111;padding:3mm;font-size:13pt;font-weight:800}.print{border:0;background:#111;color:#fff;padding:2.5mm 4mm;font-size:11pt;font-weight:700;align-self:flex-end}@media print{.print{display:none}}@media screen{body{max-width:${format === "A6" ? "105mm" : "4in"};margin:1rem auto;box-shadow:0 0 0 1px #ddd}.label{min-height:${format === "A6" ? "148mm" : "6in"}}}</style></head><body><main class="label"><button class="print" type="button" onclick="window.print()">Print label</button><div class="brand">Get Free Seeds</div><div class="rule"></div><div class="order"><div><div class="caption">Order number</div><div class="order-number">${value("orderNumber")}</div></div><div><div class="caption">Province</div><div class="value">${value("province")}</div></div></div><section><div class="caption">Deliver to</div><div class="address">${value("customerName")}</div><div class="value">${value("deliveryAddress")}</div></section><div class="meta"><div><div class="caption">Landmark</div><div class="value">${value("landmark")}</div></div><div><div class="caption">City</div><div class="value">${value("city")}</div></div><div><div class="caption">Contact</div><div class="value">${value("contactNumber")}</div></div></div>${tracking ? `<div class="tracking">Tracking: ${escapeHtml(tracking)}</div>` : ""}<div class="rule"></div><div class="caption">Please keep this label with the parcel</div></main></body></html>`;
+}
+
+export function renderShippingLabelHtml(order: Record<string, unknown>, format: ShippingLabelFormat, assignedTrackingNumber?: string): string {
+  const html = renderShippingLabelHtmlBase(order, format, assignedTrackingNumber);
+  if (!String(order.orderNumber ?? "").startsWith("SIM-GFS210-")) return html;
+  const banner = '<div style="border:4px solid #b42318;padding:3mm;text-align:center;font-size:16pt;font-weight:800">TEST ONLY — SIMULATED FULFILLMENT; DO NOT SHIP</div>';
+  return html.replace('<div class="brand">Get Free Seeds</div>', `${banner}<div class="brand">Get Free Seeds</div>`);
 }
 
 async function assignedTrackingNumber(db: D1Database, orderId: string): Promise<string | undefined> {
@@ -376,7 +383,10 @@ filters.onsubmit=(event)=>{event.preventDefault();page=1;load()};document.queryS
  const singlePaymentConfirmation=addActions;addActions=(order)=>{singlePaymentConfirmation(order);const panel=detail.querySelector('.payment-reference-panel');if(!panel)return;panel.querySelector('[data-save-reference]')?.remove();panel.querySelector('[data-settlement-approve]')?.remove();panel.querySelector('h3').textContent='Confirm verified payment';const guidance=panel.querySelector('p.muted');if(guidance)guidance.textContent='Enter the genuine transaction reference and the non-sensitive evidence reference for the actual receiving-account credit. One confirmation saves the reference, marks PAID, audits the approval and enables fulfillment only after every server-side check passes.';const reference=panel.querySelector('[data-transaction-reference]');const evidence=panel.querySelector('[data-settlement-reference]');const credit=panel.querySelector('[data-settlement-confirm]');const confirmButton=actionButton('Confirm Payment',async()=>{if(!confirmAction(order,'Confirm payment after matching the actual account credit'))return;await run('/api/payments/'+encodeURIComponent(order.paymentId)+'/approve',{orderId:order.id,confirmation:order.orderNumber,reference:reference.value,settlementEvidenceRef:evidence.value,settlementConfirmed:credit.checked})},'primary');const referenceValue=()=>String(reference.value||'').trim().replace(/\s+/g,'');const evidenceValue=()=>String(evidence.value||'').trim();const refPattern=/^[A-Za-z0-9][A-Za-z0-9._:/-]{3,79}$/;const evidencePattern=/^[A-Za-z][A-Za-z0-9._:-]{5,127}$/;const orderNumber=String(order.orderNumber||'').replace(/\s+/g,'').toUpperCase();const update=()=>{confirmButton.disabled=!(refPattern.test(referenceValue())&&referenceValue().toUpperCase()!==orderNumber&&evidencePattern.test(evidenceValue())&&credit.checked&&order.paymentMethodVerified&&Number(order.expectedAmountPkr)===Number(order.totalPayablePkr)&&Number(order.receiptCount)>0)};reference.addEventListener('input',update);evidence.addEventListener('input',update);credit.addEventListener('change',update);update();panel.append(confirmButton)};
    const latePaymentReviewActions=addActions;addActions=(order)=>{latePaymentReviewActions(order);if(order.paymentReviewState!=='LATE_REVIEW')return;const notice=document.createElement('section');notice.className='card payment-late-review';notice.innerHTML='<h3>Late payment evidence requires manual resolution</h3><p>No automatic PAID transition is allowed after cancellation. Verify the actual receiving-account credit and then follow the authorized refund or reinstatement process. Do not discard or silently approve the funds.</p>';detail.querySelector('.actions')?.append(notice)};
    const simpleCreditConfirmation=addActions;addActions=(order)=>{simpleCreditConfirmation(order);const panel=detail.querySelector('.payment-reference-panel');if(!panel||!order.customerTransactionReference)return;panel.querySelector('[data-settlement-reference]')?.closest('label')?.remove();panel.querySelector('[data-save-reference]')?.remove();panel.querySelector('[data-request-reference]')?.remove();const guidance=panel.querySelector('p.muted');if(guidance)guidance.textContent='Review the receipt and saved transaction reference. Check the authorized Garden Shop wallet/bank account and confirm the exact credit before marking this order paid.';const checkbox=panel.querySelector('[data-settlement-confirm]');if(checkbox?.parentElement){checkbox.parentElement.replaceChildren(checkbox,document.createTextNode(' I checked the Garden Shop wallet/bank account and confirmed receipt of PKR '+Number(order.expectedAmountPkr).toLocaleString('en-PK')+'.'))}const status=panel.querySelector('[data-reference-status]');if(status)status.textContent='Order '+order.orderNumber+' · expected PKR '+Number(order.expectedAmountPkr).toLocaleString('en-PK')+' · '+order.paymentMethod+' · saved reference '+order.customerTransactionReference;const root=detail.querySelector('.actions');if(!root||!checkbox)return;for(const button of root.querySelectorAll('button'))if(['Approve payment','Confirm Payment'].includes(button.textContent.trim()))button.remove();const valid=()=>Boolean(checkbox.checked&&order.paymentMethodVerified&&Number(order.expectedAmountPkr)===Number(order.totalPayablePkr)&&Number(order.receiptCount)>0&&order.paymentReviewState==='REVIEW'&&order.state==='PAYMENT_REVIEW');const confirmButton=actionButton('Confirm Payment and Mark PAID',async()=>{await run('/api/payments/'+encodeURIComponent(order.paymentId)+'/approve',{orderId:order.id,confirmation:order.orderNumber,settlementConfirmed:checkbox.checked})},'primary');confirmButton.disabled=!valid();checkbox.addEventListener('change',()=>{confirmButton.disabled=!valid()});root.append(confirmButton)};
-    const reminderFilter=document.createElement('label');reminderFilter.textContent='Reminder queue ';reminderFilter.innerHTML='<span>Reminder queue<select name="reminder"><option value="">Any reminder state</option><option value="due">Due</option><option value="blocked">Blocked</option><option value="review">Payment review</option><option value="grace">Grace</option><option value="cancelled">Cancelled unpaid</option><option value="paid">PAID</option></select></span>';filters.append(reminderFilter);reminderFilter.querySelector('select').onchange=()=>{page=1;load()};
+     const adminCreditAttestationOnly=addActions;addActions=(order)=>{adminCreditAttestationOnly(order);const panel=detail.querySelector('.payment-reference-panel');if(!panel||!order.customerTransactionReference)return;const reference=panel.querySelector('[data-transaction-reference]');const credit=panel.querySelector('[data-settlement-confirm]');const button=[...detail.querySelectorAll('.actions button')].find(x=>['Confirm Payment and Mark PAID','Confirm Payment'].includes(x.textContent.trim()));if(!reference||!credit||!button)return;button.textContent='Confirm Payment';const guidance=panel.querySelector('p.muted');if(guidance)guidance.textContent='Review the genuine receipt and transaction reference, then check the authorized Garden Shop wallet/bank account and confirm the exact credit. No additional opaque evidence reference is required for this audited Admin attestation.';const refPattern=/^[A-Za-z0-9][A-Za-z0-9._:/-]{3,79}$/;const orderNumber=String(order.orderNumber||'').replace(/\s+/g,'').toUpperCase();const update=()=>{const ref=String(reference.value||'').trim().replace(/\s+/g,'');button.disabled=!(refPattern.test(ref)&&ref.toUpperCase()!==orderNumber&&credit.checked&&order.paymentMethodVerified&&Number(order.expectedAmountPkr)===Number(order.totalPayablePkr)&&Number(order.receiptCount)>0&&order.paymentReviewState==='REVIEW'&&order.state==='PAYMENT_REVIEW')};update();reference.addEventListener('input',update);credit.addEventListener('change',update)};
+     const requestClearerReasonPrompt=addActions;addActions=(order)=>{requestClearerReasonPrompt(order);const button=[...detail.querySelectorAll('.actions button')].find(x=>x.textContent.trim().toLowerCase()==='request clearer receipt');if(!button)return;button.onclick=async()=>{button.disabled=true;try{const reasonCode=prompt('Reason code: TEST_IMAGE_NOT_PAYMENT_PROOF or INSUFFICIENT_OR_UNCLEAR_RECEIPT');if(!reasonCode)return;if(!['TEST_IMAGE_NOT_PAYMENT_PROOF','INSUFFICIENT_OR_UNCLEAR_RECEIPT'].includes(reasonCode)){showActionError(new Error('CLEARER_RECEIPT_REASON_INVALID'));return}if(confirmAction(order,'Request a clearer receipt'))await run('/api/payments/'+encodeURIComponent(order.paymentId)+'/request-clearer-receipt',{orderId:order.id,confirmation:order.orderNumber,reasonCode})}catch(error){showActionError(error)}finally{button.disabled=false}}};
+     const v2ClearerReasonPrompt=addActions;addActions=(order)=>{v2ClearerReasonPrompt(order);const button=[...detail.querySelectorAll('.actions button')].find(x=>x.textContent.trim().toLowerCase()==='request clearer receipt');if(!button)return;button.onclick=async()=>{button.disabled=true;try{const reasonCode=prompt('Reason code: TEST_IMAGE_NOT_PAYMENT_PROOF or INSUFFICIENT_OR_UNCLEAR_RECEIPT');if(!reasonCode)return;if(!['TEST_IMAGE_NOT_PAYMENT_PROOF','INSUFFICIENT_OR_UNCLEAR_RECEIPT'].includes(reasonCode)){showActionError(new Error('CLEARER_RECEIPT_REASON_INVALID'));return}if(confirmAction(order,'Request a clearer receipt'))await run('/api/payments/'+encodeURIComponent(order.paymentId)+'/request-clearer-receipt',{orderId:order.id,confirmation:order.orderNumber,reasonCode})}catch(error){showActionError(error)}finally{button.disabled=false}}};
+     const reminderFilter=document.createElement('label');reminderFilter.textContent='Reminder queue ';reminderFilter.innerHTML='<span>Reminder queue<select name="reminder"><option value="">Any reminder state</option><option value="due">Due</option><option value="blocked">Blocked</option><option value="review">Payment review</option><option value="grace">Grace</option><option value="cancelled">Cancelled unpaid</option><option value="paid">PAID</option></select></span>';filters.append(reminderFilter);reminderFilter.querySelector('select').onchange=()=>{page=1;load()};
    const renderOrderDetail=renderDetail;renderDetail=(data)=>{renderOrderDetail(data);const order=data.order;const receiptHeading=[...detail.querySelectorAll('h3,h4')].find((node)=>/receipt/i.test(node.textContent));if(receiptHeading)receiptHeading.textContent=receiptHeading.textContent.trim()+' ('+Number(order.receiptCount||0)+')';for(const receipt of (data.receipts||order.receipts||[])){const link=[...detail.querySelectorAll('a')].find((node)=>node.getAttribute('href')===receipt.previewUrl);if(link){const status=document.createElement('small');status.className='muted';status.textContent=' · '+String(receipt.reviewState||'SUBMITTED')+' · uploaded '+when(receipt.submittedAt);link.parentElement.append(status)}}const panel=document.createElement('section');panel.className='card payment-reminder-panel';panel.innerHTML='<h3>Payment Reminder</h3><p class="muted">Loading private reminder history…</p>';detail.querySelector('.actions')?.before(panel);requestJson('/api/orders/'+encodeURIComponent(order.id)+'/payment-reminders',{cache:'no-store'},undefined,true).then((history)=>{if(!panel.isConnected)return;const labels={15:'15m reminder',30:'30m reminder',60:'60m reminder',210:'3h30 final warning',240:'4h grace notice',270:'4h30 cancellation'};const pkt=(value)=>value?new Date(value).toLocaleString('en-PK',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Karachi'}):'—';const schedule=history.schedule;let html='<p>Order created (PKT): '+esc(pkt(order.createdAt))+' · deadline (PKT): '+esc(pkt(schedule?.source_created_at?new Date(Date.parse(schedule.source_created_at)+270*60000).toISOString():null))+'</p><p>Status: '+esc(order.state)+' · '+esc(order.paymentReviewState||order.paymentStatus)+' · reminder opt-out: '+(history.order?.optedOut?'YES':'NO')+'</p>';if(!history.enabled)html+='<p class="muted">V2 reminder history is disabled in this deployment.</p>';else if(!schedule)html+='<p class="muted">No V2 schedule exists for this order. Existing orders are not enrolled retroactively.</p>';else{html+='<p>Schedule: '+esc(schedule.status)+' / '+esc(schedule.phase)+(schedule.stop_reason?' · '+esc(schedule.stop_reason):'')+(schedule.hold_reason?' · '+esc(schedule.hold_reason):'')+'</p><ol>';for(const stage of history.stages||[]){const countdown=stage.status==='PENDING'?Math.max(0,Math.ceil((Date.parse(stage.due_at)-Date.now())/60000))+' min':'—';html+='<li><strong>'+esc(labels[stage.stage_minutes]||stage.stage_minutes+'m')+'</strong> · '+esc(stage.status)+' · due '+esc(pkt(stage.due_at))+' · '+esc(countdown);if(stage.locale)html+='<br>Locale '+esc(stage.locale)+' · CMS v'+esc(stage.template_version)+' · '+esc(stage.template_name||'service-window');if(stage.rendered_text)html+='<br><pre>'+esc(stage.rendered_text)+'</pre>';if(stage.sent_at)html+='<br>Sent '+esc(pkt(stage.sent_at))+' · attempts '+esc(stage.attempts)+' · WAMID '+esc(stage.wamid||'—');if(stage.delivery_status)html+='<br>Delivery '+esc(stage.delivery_status);if(stage.failure_reason)html+='<br>Failure '+esc(stage.failure_reason);html+='</li>'}html+='</ol>'}panel.innerHTML=html}).catch((error)=>{if(panel.isConnected)panel.innerHTML='<h3>Payment Reminder</h3><p class="error">'+esc(error instanceof Error?error.message:'Reminder history unavailable')+'</p>'})};
     const addReminderNotice=addActions;addActions=(order)=>{addReminderNotice(order);if(!order.paymentId||!['DETAILS_COMPLETED','PAYMENT_PENDING','PAYMENT_GRACE'].includes(order.state)||order.paymentStatus!=='PENDING'||order.archivedAt)return;const root=detail.querySelector('.actions');if(root)root.append(actionButton('Send Updated Notice',async()=>{const stageMinutes=Number(prompt('Unsent stage minutes: 15, 30, 60, 210, or 240','15'));if(![15,30,60,210,240].includes(stageMinutes))return;const history=await requestJson('/api/orders/'+encodeURIComponent(order.id)+'/payment-reminders',{cache:'no-store'},undefined,true);const stage=(history.stages||[]).find((item)=>Number(item.stage_minutes)===stageMinutes);if(!stage?.preview){showActionError(new Error('No published copy is available for this stage.'));return}const preview=stage.preview;if(!confirm('Exact outgoing text ('+preview.locale+', CMS v'+preview.version+'):'+String.fromCharCode(10,10)+preview.renderedText+String.fromCharCode(10,10)+'Send only to '+order.orderNumber+'?'))return;const reason=prompt('Reason for sending this updated notice');if(!reason||!confirmAction(order,'Send updated notice for stage '+stageMinutes+'m'))return;await run('/api/orders/'+encodeURIComponent(order.id)+'/payment-reminders/send-updated',{stageMinutes,templateVersion:preview.version,reason,confirmation:order.orderNumber})}))};
    hydrate();reminderFilter.querySelector('select').value=new URLSearchParams(location.search).get('reminder')||'';setTabs({});load();
@@ -522,6 +532,30 @@ function rateView(row: Record<string, unknown>) {
 
 function auditStatement(db: D1Database, action: string, entityType: string, entityId: string, metadata: Record<string, unknown>, now: string, actor: string) {
   return db.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), action, "ADMIN", actor, entityType, entityId, crypto.randomUUID(), JSON.stringify(metadata), now);
+}
+
+type V2OrderNoticeName = "PAYMENT_REJECTED" | "REQUEST_CLEARER_RECEIPT" | "ORDER_CONFIRMED" | "PACKING" | "DISPATCHED" | "DELIVERED" | "ORDER_CANCELLED";
+function v2OrderNotice(db: D1Database, orderId: string, orderNumber: string, noticeName: V2OrderNoticeName, auditEntityId: string, auditAction: string, now: string, details: Record<string, unknown> = {}, stableKey?: string) {
+  const idempotencyKey = stableKey ?? `v2-order-notice:${orderId}:${noticeName}:${now}`;
+  const payload = JSON.stringify({ orderId, orderNumber, noticeName, simulation: orderNumber.startsWith("SIM-GFS210-"), ...details });
+  const statement = db.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,attempts,available_at,created_at,updated_at) SELECT ?,?,?,?,?, 'PENDING',0,?,?,? WHERE EXISTS(SELECT 1 FROM audit_log WHERE entity_id=? AND action=? AND created_at=?)").bind(crypto.randomUUID(), idempotencyKey, "WHATSAPP_ORDER_STATUS", orderId, payload, now, now, now, auditEntityId, auditAction, now);
+  const queueMessage = { kind: "WHATSAPP_ORDER_STATUS", idempotencyKey, entityId: orderId, schemaVersion: 1 as const };
+  return { statement, idempotencyKey, queueMessage };
+}
+
+async function publishV2OrderNotice(db: D1Database, events: Queue | undefined, enabled: string | undefined, notice: ReturnType<typeof v2OrderNotice>): Promise<"QUEUED" | "DEFERRED" | "RETRY"> {
+  if (enabled !== "true" || !events) {
+    await db.prepare("UPDATE outbox_jobs SET status='DEFERRED',last_error=?,updated_at=? WHERE idempotency_key=? AND status='PENDING'").bind(enabled !== "true" ? "ORDER_STATUS_NOTIFICATIONS_V2_DISABLED" : "ORDER_STATUS_QUEUE_UNAVAILABLE", new Date().toISOString(), notice.idempotencyKey).run();
+    return "DEFERRED";
+  }
+  try {
+    await events.send(notice.queueMessage);
+    await db.prepare("UPDATE outbox_jobs SET status='QUEUED',last_error=NULL,updated_at=? WHERE idempotency_key=? AND status='PENDING'").bind(new Date().toISOString(), notice.idempotencyKey).run();
+    return "QUEUED";
+  } catch {
+    await db.prepare("UPDATE outbox_jobs SET status='RETRY',last_error='ORDER_STATUS_QUEUE_DISPATCH_FAILED',updated_at=? WHERE idempotency_key=? AND status IN ('PENDING','RETRY')").bind(new Date().toISOString(), notice.idempotencyKey).run();
+    return "RETRY";
+  }
 }
 
 function catalogError(error: unknown): string {
@@ -694,7 +728,7 @@ async function uploadContentMedia(c: AdminContext, key: ReturnType<typeof WhatsA
   let stored: Awaited<ReturnType<typeof storeWhatsAppContentMedia>>;
   try { stored = await storeWhatsAppContentMedia(c.env.RECEIPTS, key, id, master, variant); } catch (error) { return c.json({ error: mediaError(error) }, 400); }
   const state = await c.env.DB.prepare("SELECT COALESCE(MAX(sort_order),-10)+10 AS sort_order,COALESCE(SUM(active),0) AS active_count FROM whatsapp_content_media WHERE template_key=?").bind(key).first<{ sort_order: number; active_count: number }>();
-  const now = new Date().toISOString();
+   const now = new Date().toISOString();
   const sortOrder = Math.max(0, Number(state?.sort_order ?? 0));
   const active = Number(state?.active_count ?? 0) === 0 ? 1 : 0;
   try {
@@ -1701,6 +1735,7 @@ async function orderRetentionAction(c: AdminContext, action: "cancel" | "archive
   let body: { reason?: unknown; confirmation?: unknown };
   try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
   const orderId = c.req.param("id");
+  if (!orderId) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
   const order = await c.env.DB.prepare("SELECT order_number FROM orders WHERE id=?").bind(orderId).first<{ order_number: string }>();
   if (!order) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
   if (body.confirmation !== order.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
@@ -1712,9 +1747,11 @@ async function orderRetentionAction(c: AdminContext, action: "cancel" | "archive
     ? c.env.DB.prepare(`UPDATE orders SET state='CANCELLED',cancelled_at=?,cancelled_by=?,cancellation_reason=?,updated_at=? WHERE id=? AND archived_at IS NULL AND state<>'CANCELLED' AND ${eligible}`).bind(now, c.env.ADMIN_EMAIL, reason, now, orderId)
     : c.env.DB.prepare(`UPDATE orders SET archived_at=?,archived_by=?,archive_reason=?,updated_at=? WHERE id=? AND archived_at IS NULL AND ${eligible}`).bind(now, c.env.ADMIN_EMAIL, reason, now, orderId);
   const audit = c.env.DB.prepare(`INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? FROM orders WHERE id=? AND ${action === "cancel" ? "cancelled_at" : "archived_at"}=?`).bind(crypto.randomUUID(), action === "cancel" ? "ORDER_CANCELLED" : "ORDER_ARCHIVED", "ADMIN", c.env.ADMIN_EMAIL, "ORDER", orderId, crypto.randomUUID(), JSON.stringify({ orderNumber: order.order_number, reason, financialHistoryPreserved: true }), now, orderId, now);
-  const result = await c.env.DB.batch([update, audit]);
+  const notice = action === "cancel" ? v2OrderNotice(c.env.DB, orderId, order.order_number, "ORDER_CANCELLED", orderId, "ORDER_CANCELLED", now, { reasonCode: "ADMIN_CANCELLED_UNPAID" }) : null;
+  const result = await c.env.DB.batch(notice ? [update, audit, notice.statement] : [update, audit]);
   if (result[0].meta.changes !== 1) return c.json({ error: action === "cancel" ? "ORDER_NOT_ELIGIBLE_FOR_CANCELLATION" : "ORDER_NOT_ELIGIBLE_FOR_ARCHIVE" }, 409);
-  return c.json({ ok: true, orderId, orderNumber: order.order_number, action, historyPreserved: true });
+  const notificationStatus = notice && Number(result[2]?.meta?.changes ?? 0) === 1 ? await publishV2OrderNotice(c.env.DB, c.env.EVENTS, c.env.ORDER_STATUS_NOTIFICATIONS_V2_ENABLED, notice) : undefined;
+  return c.json({ ok: true, orderId, orderNumber: order.order_number, action, historyPreserved: true, notificationStatus });
 }
 
 app.post("/api/orders/:id/cancel", (c) => orderRetentionAction(c, "cancel"));
@@ -1739,12 +1776,18 @@ app.post("/api/orders/:id/transition", async (c) => {
   if (current.order_number === "FS-261019-000001") return c.json({ error: "FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED" }, 409);
   if (current.archived_at != null || current.state !== from.data) return c.json({ error: "STATE_CONFLICT" }, 409);
   if (current.payment_status !== "PAID" && current.review_state !== "APPROVED") return c.json({ error: "FULFILLMENT_PAYMENT_NOT_APPROVED" }, 409);
+  const tracking = to.data === "DISPATCHED" ? await assignedTrackingNumber(c.env.DB, c.req.param("id")) : null;
+  if (to.data === "DISPATCHED" && !tracking) return c.json({ error: "TRACKING_REQUIRED_BEFORE_DISPATCH" }, 409);
   const now = new Date().toISOString();
+  const notice = v2OrderNotice(c.env.DB, c.req.param("id"), current.order_number, to.data as V2OrderNoticeName, c.req.param("id"), "ORDER_STATE_TRANSITIONED", now, { from: from.data, to: to.data, trackingNumber: tracking ?? null });
   const result = await c.env.DB.batch([
     c.env.DB.prepare("UPDATE orders SET state=?,updated_at=? WHERE id=? AND state=? AND archived_at IS NULL").bind(to.data, now, c.req.param("id"), from.data),
-    c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE changes()=1").bind(crypto.randomUUID(), "ORDER_STATE_TRANSITIONED", "ADMIN", c.env.ADMIN_EMAIL, "ORDER", c.req.param("id"), crypto.randomUUID(), JSON.stringify({ from: from.data, to: to.data, orderNumber: current.order_number }), now)
+    c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE changes()=1").bind(crypto.randomUUID(), "ORDER_STATE_TRANSITIONED", "ADMIN", c.env.ADMIN_EMAIL, "ORDER", c.req.param("id"), crypto.randomUUID(), JSON.stringify({ from: from.data, to: to.data, orderNumber: current.order_number, trackingNumber: tracking ?? null }), now),
+    notice.statement
   ]);
-  return result[0].meta.changes === 1 ? c.json({ ok: true, from: from.data, to: to.data }) : c.json({ error: "STATE_CONFLICT" }, 409);
+  if (result[0].meta.changes !== 1) return c.json({ error: "STATE_CONFLICT" }, 409);
+  const notificationStatus = Number(result[2]?.meta?.changes ?? 0) === 1 ? await publishV2OrderNotice(c.env.DB, c.env.EVENTS, c.env.ORDER_STATUS_NOTIFICATIONS_V2_ENABLED, notice) : undefined;
+  return c.json({ ok: true, from: from.data, to: to.data, notificationStatus });
 });
 
 app.post("/api/orders/:id/confirm", async (c) => {
@@ -1762,10 +1805,14 @@ app.post("/api/orders/:id/confirm", async (c) => {
   const existing = await c.env.DB.prepare("SELECT created_at FROM audit_log WHERE entity_type='ORDER' AND entity_id=? AND action='ORDER_CONFIRMED' ORDER BY created_at DESC LIMIT 1").bind(c.req.param("id")).first<{ created_at: string }>();
   if (existing) return c.json({ ok: true, alreadyConfirmed: true, confirmedAt: existing.created_at });
   const now = new Date().toISOString();
+  const notice = v2OrderNotice(c.env.DB, c.req.param("id"), current.order_number, "ORDER_CONFIRMED", c.req.param("id"), "ORDER_CONFIRMED", now, { reasonCode: "ADMIN_ORDER_CONFIRMATION" });
   const result = await c.env.DB.batch([
-    auditStatement(c.env.DB, "ORDER_CONFIRMED", "ORDER", c.req.param("id"), { orderNumber: current.order_number, operationalOnly: true, financialStateUnchanged: true }, now, c.env.ADMIN_EMAIL)
+    auditStatement(c.env.DB, "ORDER_CONFIRMED", "ORDER", c.req.param("id"), { orderNumber: current.order_number, operationalOnly: true, financialStateUnchanged: true }, now, c.env.ADMIN_EMAIL),
+    notice.statement
   ]);
-  return result[0].meta.changes === 1 ? c.json({ ok: true, confirmedAt: now }) : c.json({ error: "ORDER_CONFIRMATION_FAILED" }, 409);
+  if (result[0].meta.changes !== 1) return c.json({ error: "ORDER_CONFIRMATION_FAILED" }, 409);
+  const notificationStatus = Number(result[1]?.meta?.changes ?? 0) === 1 ? await publishV2OrderNotice(c.env.DB, c.env.EVENTS, c.env.ORDER_STATUS_NOTIFICATIONS_V2_ENABLED, notice) : undefined;
+  return c.json({ ok: true, confirmedAt: now, notificationStatus });
 });
 
 app.post("/api/orders/:id/tracking", async (c) => {
@@ -1946,10 +1993,11 @@ app.post("/api/payments/:id/reject", async (c) => {
      .bind(c.req.param("id"), body.orderId).first<{ review_state: string; order_id: string; order_number: string; state: OrderState; archived_at: string | null;wa_id:string;reminder_phase:string|null }>();
    if (!current) return c.json({ error: "PAYMENT_NOT_FOUND" }, 404);
    const remindersV2Enabled=remindersV2Configured&&current.reminder_phase!==null;
-  if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
-  if (current.archived_at != null || current.review_state !== "REVIEW" || current.state !== "PAYMENT_REVIEW") return c.json({ error: "PAYMENT_NOT_IN_REVIEW" }, 409);
-  const now = new Date().toISOString();
-   const result = await c.env.DB.batch([
+   if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+   if (current.archived_at != null || current.review_state !== "REVIEW" || current.state !== "PAYMENT_REVIEW") return c.json({ error: "PAYMENT_NOT_IN_REVIEW" }, 409);
+   const now = new Date().toISOString();
+   const notice = v2OrderNotice(c.env.DB, current.order_id, current.order_number, "PAYMENT_REJECTED", c.req.param("id"), "PAYMENT_REJECTED", now, { paymentId: c.req.param("id"), reasonCode: "PAYMENT_REJECTED" });
+    const result = await c.env.DB.batch([
      c.env.DB.prepare("UPDATE payments SET review_state='REJECTED', rejection_reason=?, approved_by=?, updated_at=? WHERE id=? AND review_state='REVIEW'").bind(reason, c.env.ADMIN_EMAIL, now, c.req.param("id")),
      c.env.DB.prepare("UPDATE orders SET state='PAYMENT_REJECTED', payment_status=?, updated_at=? WHERE id=? AND state='PAYMENT_REVIEW' AND archived_at IS NULL AND EXISTS (SELECT 1 FROM payments WHERE id=? AND review_state='REJECTED')").bind(remindersV2Enabled?"PENDING":"REJECTED",now, current.order_id, c.req.param("id")),
      c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT CASE WHEN changes()=1 AND EXISTS(SELECT 1 FROM orders WHERE id=? AND state='PAYMENT_REJECTED') THEN ? ELSE NULL END,?,?,?,?,?,?,?,?")
@@ -1969,26 +2017,34 @@ app.post("/api/payments/:id/reject", async (c) => {
              WHERE s.payment_id=? AND s.status='ACTIVE' AND st.status='PENDING')`).bind(now,now,c.req.param("id")),
        c.env.DB.prepare(`UPDATE whatsapp_conversations SET state=?,updated_at=? WHERE wa_id=? AND state IN ('PAYMENT_REFERENCE','PAYMENT_REVIEW')`)
          .bind(current.reminder_phase==='PAYMENT_GRACE'?'PAYMENT_GRACE':'PAYMENT_METHOD',now,current.wa_id)
-     ]:[])
-   ]);
-   return result[1].meta.changes === 1 ? c.json({ ok: true }) : c.json({ error: "PAYMENT_NOT_IN_REVIEW" }, 409);
+      ]:[]),
+      notice.statement
+    ]);
+    if (result[1].meta.changes !== 1) return c.json({ error: "PAYMENT_NOT_IN_REVIEW" }, 409);
+    const notificationStatus = Number(result[result.length - 1]?.meta?.changes ?? 0) === 1 ? await publishV2OrderNotice(c.env.DB, c.env.EVENTS, c.env.ORDER_STATUS_NOTIFICATIONS_V2_ENABLED, notice) : undefined;
+    return c.json({ ok: true, notificationStatus });
 });
 
 app.post("/api/payments/:id/request-clearer-receipt", async (c) => {
   if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
-  let body: { orderId?: unknown; confirmation?: unknown };
+  let body: { orderId?: unknown; confirmation?: unknown; reasonCode?: unknown };
   try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
   if (!c.env.DB) return c.json({ ok: true, simulated: true });
-  const current = await c.env.DB.prepare("SELECT p.review_state,o.id AS order_id,o.order_number,o.state,o.archived_at,COUNT(pr.id) AS receipt_count FROM payments p JOIN orders o ON o.id=p.order_id LEFT JOIN payment_receipts pr ON pr.order_id=o.id WHERE p.id=? AND o.id=? GROUP BY p.id,o.id").bind(c.req.param("id"), body.orderId).first<{ review_state: string; order_id: string; order_number: string; state: OrderState; archived_at: string | null; receipt_count: number }>();
+  if (body.reasonCode !== "TEST_IMAGE_NOT_PAYMENT_PROOF" && body.reasonCode !== "INSUFFICIENT_OR_UNCLEAR_RECEIPT") return c.json({ error: "CLEARER_RECEIPT_REASON_REQUIRED" }, 400);
+  const current = await c.env.DB.prepare("SELECT p.review_state,o.id AS order_id,o.order_number,o.state,o.archived_at,COUNT(pr.id) AS receipt_count,(SELECT r.id FROM payment_receipts r WHERE r.payment_id=p.id AND r.order_id=o.id AND r.r2_object_key<>'' AND r.sha256<>'' ORDER BY r.submitted_at DESC,r.id DESC LIMIT 1) AS receipt_id FROM payments p JOIN orders o ON o.id=p.order_id LEFT JOIN payment_receipts pr ON pr.order_id=o.id AND pr.payment_id=p.id WHERE p.id=? AND o.id=? GROUP BY p.id,o.id").bind(c.req.param("id"), body.orderId).first<{ review_state: string; order_id: string; order_number: string; state: OrderState; archived_at: string | null; receipt_count: number; receipt_id:string|null }>();
   if (!current) return c.json({ error: "PAYMENT_NOT_FOUND" }, 404);
   if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
   if (current.archived_at != null || current.review_state !== "REVIEW" || current.state !== "PAYMENT_REVIEW" || Number(current.receipt_count) < 1) return c.json({ error: "PAYMENT_NOT_IN_REVIEW" }, 409);
+  if (!current.receipt_id) return c.json({ error: "PRIVATE_RECEIPT_NOT_FOUND" }, 409);
   const now = new Date().toISOString();
-  await c.env.DB.batch([
-    c.env.DB.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), `clearer_receipt_${c.req.param("id")}`, "WHATSAPP_CLEARER_RECEIPT", current.order_id, JSON.stringify({ paymentId: c.req.param("id"), orderId: current.order_id }), "PENDING", now, now, now),
-    c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "REQUEST_CLEARER_RECEIPT", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT", c.req.param("id"), crypto.randomUUID(), JSON.stringify({ orderId: current.order_id }), now)
+  const notice = v2OrderNotice(c.env.DB,current.order_id,current.order_number,"REQUEST_CLEARER_RECEIPT",c.req.param("id"),"REQUEST_CLEARER_RECEIPT",now,{paymentId:c.req.param("id"),receiptId:current.receipt_id,reasonCode:body.reasonCode},`v2-order-notice-clearer:${c.req.param("id")}:${current.receipt_id}`);
+  const result = await c.env.DB.batch([
+    auditStatement(c.env.DB,"REQUEST_CLEARER_RECEIPT","PAYMENT",c.req.param("id"),{orderId:current.order_id,receiptId:current.receipt_id,reasonCode:body.reasonCode},now,c.env.ADMIN_EMAIL),
+    notice.statement
   ]);
-  return c.json({ ok: true });
+  if (result[0].meta.changes !== 1) return c.json({ error: "REQUEST_CLEARER_RECEIPT_AUDIT_FAILED" }, 409);
+  const notificationStatus=Number(result[1]?.meta?.changes??0)===1?await publishV2OrderNotice(c.env.DB,c.env.EVENTS,c.env.ORDER_STATUS_NOTIFICATIONS_V2_ENABLED,notice):undefined;
+  return c.json({ ok:true,reasonCode:body.reasonCode,notificationStatus },202);
 });
 
 app.get("/api/orders/:id/receipts/:receiptId/preview", async (c) => {
