@@ -491,41 +491,63 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   return true;
 }
 
+async function recordReceiptMediaDiagnostic(db:D1Database,eventId:string,mediaId:string,reason:string,stage:string,candidateCount=0):Promise<void>{
+  const messageIdHash=await customerTransactionReferenceHash(eventId),mediaIdHash=await customerTransactionReferenceHash(mediaId),now=new Date().toISOString();
+  await db.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?)")
+    .bind(crypto.randomUUID(),"RECEIPT_INGESTION_BLOCKED","SYSTEM","WHATSAPP_RECEIPT_EVENT",messageIdHash,messageIdHash,JSON.stringify({messageIdHash,mediaIdHash,reason,stage,candidateCount}),now).run();
+}
+
 async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }): Promise<boolean> {
-  const message = event.payload && typeof event.payload === "object" ? event.payload as { image?: { id?: string }; document?: { id?: string } } : {};
+  const message = event.payload && typeof event.payload === "object" ? event.payload as { image?: { id?: string }; document?: { id?: string }; context?: { id?: string } } : {};
   const mediaId = message.image?.id ?? message.document?.id;
   if (!mediaId) return false;
   const conversation = await db.prepare("SELECT state,state_data FROM whatsapp_conversations WHERE wa_id=?").bind(event.from).first<{ state: string; state_data: string }>();
-  if (!conversation || !["PAYMENT_PENDING", "PAYMENT_REFERENCE", "PAYMENT_REVIEW"].includes(conversation.state)) return false;
-  let data: ConversationData = {};
-  try { data = JSON.parse(conversation.state_data) as ConversationData; } catch { return false; }
-  if (!data.orderId) return false;
-  const record = await db.prepare("SELECT o.id,o.order_number,o.state,p.id AS payment_id,p.method,p.review_state,p.customer_transaction_reference FROM orders o JOIN payments p ON p.order_id=o.id JOIN customers c ON c.id=o.customer_id WHERE o.id=? AND c.wa_id=?").bind(data.orderId,event.from).first<{ id: string; order_number: string; state: string; payment_id: string; method: string | null; review_state: string; customer_transaction_reference: string | null }>();
-  if (!record) return false;
-  if (record.state !== "PAYMENT_PENDING" && record.state !== "PAYMENT_REVIEW") return false;
-  const status = await contentFor(db, "ORDER_STATUS", "Use Check Order to see the current order and payment status.", {}, `CHAT:${event.from}`, data.language ?? "en");
-  if (record.customer_transaction_reference) {
-    const messageText = data.language === "ur" ? "ٹرانزیکشن حوالہ محفوظ ہے۔ ادائیگی اب بھی ایڈمن کے جائزے میں ہے؛ اصل رقم کی تصدیق تک اسے PAID نہیں کیا جائے گا۔" : "The transaction reference is saved. Payment remains under Admin review and will not be marked PAID until the actual account credit is verified.";
-    await sendConversationReply(db, provider, event.from, event.id, messageText, { buttons: [{ id: "CHECK_ORDER", title: whatsAppActionLabel(status, "CHECK_ORDER") }] });
-    return true;
+  const paymentStates=["PAYMENT_PENDING","PAYMENT_REFERENCE","PAYMENT_REVIEW"];
+  if(!message.context?.id&&conversation&&conversation.state!=="NEW"&&!paymentStates.includes(conversation.state))return false;
+  let data:ConversationData={};
+  try{if(conversation)data=JSON.parse(conversation.state_data) as ConversationData}catch{if(!message.context?.id)return false}
+  const select=`SELECT o.id,o.order_number,o.state,p.id AS payment_id,p.method,p.review_state,p.customer_transaction_reference
+    FROM orders o JOIN payments p ON p.order_id=o.id JOIN customers c ON c.id=o.customer_id`;
+  let record=message.context?.id?await db.prepare(`${select} JOIN outbound_messages m ON m.order_id=o.id WHERE c.wa_id=? AND m.provider_message_id=?
+    AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND o.state IN ('PAYMENT_PENDING','PAYMENT_REVIEW')
+    AND p.review_state IN ('PENDING','REJECTED','REVIEW') LIMIT 1`).bind(event.from,message.context.id)
+    .first<{id:string;order_number:string;state:string;payment_id:string;method:string|null;review_state:string;customer_transaction_reference:string|null}>():null;
+  if(message.context?.id&&!record){await recordReceiptMediaDiagnostic(db,event.id,mediaId,"REPLY_TO_PAYMENT_NOT_FOUND","ORDER_ASSOCIATION");return false}
+  if(!record){
+    const candidates=await db.prepare(`${select} WHERE c.wa_id=? AND o.state IN ('PAYMENT_PENDING','PAYMENT_REVIEW') AND p.review_state IN ('PENDING','REJECTED','REVIEW') ORDER BY o.created_at DESC,o.id DESC LIMIT 2`).bind(event.from).all<{id:string}>();
+    if(candidates.results?.length!==1){await recordReceiptMediaDiagnostic(db,event.id,mediaId,candidates.results?.length?"MULTIPLE_ELIGIBLE_PAYMENT_ORDERS":"NO_ELIGIBLE_PAYMENT_ORDER","ORDER_ASSOCIATION",candidates.results?.length??0);return false}
+    if(data.orderId&&candidates.results[0].id!==data.orderId){await recordReceiptMediaDiagnostic(db,event.id,mediaId,"ACTIVE_CONVERSATION_ORDER_MISMATCH","ORDER_ASSOCIATION",1);return false}
+    record=await db.prepare(`${select} WHERE o.id=? AND c.wa_id=?`).bind(data.orderId??candidates.results[0].id,event.from)
+      .first<{id:string;order_number:string;state:string;payment_id:string;method:string|null;review_state:string;customer_transaction_reference:string|null}>();
   }
-  const existing = await db.prepare("SELECT id FROM payment_receipts WHERE provider_media_id=? AND order_id=?").bind(mediaId, record.id).first<{ id: string }>();
-  if (!existing && record.state === "PAYMENT_PENDING" && conversation.state === "PAYMENT_PENDING") {
-    const media = await provider.downloadMedia(mediaId);
-    const stored = await storeReceipt(bucket, record.order_number, media);
-    const now = new Date().toISOString();
-    await db.batch([
-      db.prepare("INSERT INTO payment_receipts (id,payment_id,order_id,provider_media_id,r2_object_key,sha256,mime_type,size_bytes,submitted_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), record.payment_id, record.id, media.mediaId, stored.objectKey, stored.sha256, media.mimeType, media.size, now, now),
-      db.prepare("UPDATE payments SET review_state='REVIEW',submitted_at=?,updated_at=? WHERE id=? AND review_state IN ('PENDING','REJECTED')").bind(now, now, record.payment_id),
-      db.prepare("UPDATE orders SET state='PAYMENT_REVIEW',updated_at=? WHERE id=? AND state='PAYMENT_PENDING'").bind(now, record.id),
-       db.prepare("UPDATE whatsapp_conversations SET state='PAYMENT_REFERENCE',last_inbound_message_id=?,updated_at=? WHERE wa_id=? AND state='PAYMENT_PENDING'").bind(event.id, now, event.from),
-      db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "RECEIPT_SUBMITTED", "CUSTOMER", "PAYMENT", record.payment_id, event.id, JSON.stringify({ orderId: record.id, providerMediaId: mediaId }), now)
-    ]);
+  if(!record)return false;
+  if(record.state!=="PAYMENT_PENDING"&&record.state!=="PAYMENT_REVIEW"){await recordReceiptMediaDiagnostic(db,event.id,mediaId,"ORDER_STATE_NOT_RECEIVABLE","ORDER_ASSOCIATION");return false}
+  const associationEvidence=message.context?.id?"PAYMENT_REPLY_WAMID":data.orderId?"ACTIVE_CONVERSATION_ORDER":"UNIQUE_SENDER_PAYMENT";
+  const status=await contentFor(db,"ORDER_STATUS","Use Check Order to see the current order and payment status.",{},`CHAT:${event.from}`,data.language??"en");
+  const existing=await db.prepare("SELECT id FROM payment_receipts WHERE provider_media_id=? AND order_id=?").bind(mediaId,record.id).first<{id:string}>();
+  if(!existing){
+    let media:Awaited<ReturnType<typeof provider.downloadMedia>>,stored:{objectKey:string;sha256:string};
+    try{media=await provider.downloadMedia(mediaId)}catch{await recordReceiptMediaDiagnostic(db,event.id,mediaId,"META_MEDIA_DOWNLOAD_FAILED","MEDIA_DOWNLOAD");throw new Error("RECEIPT_MEDIA_DOWNLOAD_FAILED")}
+    try{stored=await storeReceipt(bucket,record.order_number,media)}catch{await recordReceiptMediaDiagnostic(db,event.id,mediaId,"PRIVATE_R2_WRITE_FAILED","R2_WRITE");throw new Error("RECEIPT_R2_WRITE_FAILED")}
+    const now=new Date().toISOString(),messageIdHash=await customerTransactionReferenceHash(event.id),mediaIdHash=await customerTransactionReferenceHash(mediaId);
+    const updatedData=JSON.stringify({...data,orderId:record.id,orderNumber:record.order_number,language:data.language??"en"});
+    try{await db.batch([
+      db.prepare("INSERT INTO payment_receipts (id,payment_id,order_id,provider_media_id,r2_object_key,sha256,mime_type,size_bytes,submitted_at,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(),record.payment_id,record.id,media.mediaId,stored.objectKey,stored.sha256,media.mimeType,media.size,now,now),
+      db.prepare("UPDATE payments SET review_state='REVIEW',submitted_at=COALESCE(submitted_at,?),updated_at=? WHERE id=? AND review_state IN ('PENDING','REJECTED','REVIEW')").bind(now,now,record.payment_id),
+      db.prepare("UPDATE orders SET state='PAYMENT_REVIEW',updated_at=? WHERE id=? AND state IN ('PAYMENT_PENDING','PAYMENT_REVIEW')").bind(now,record.id),
+      db.prepare(`UPDATE whatsapp_conversations SET state=CASE WHEN state IN ('PAYMENT_PENDING','NEW') THEN 'PAYMENT_REFERENCE' ELSE state END,state_data=CASE WHEN state='NEW' OR state_data IN ('{}','') THEN ? ELSE state_data END,last_inbound_message_id=?,updated_at=?
+        WHERE wa_id=? AND ((state IN ('PAYMENT_PENDING','PAYMENT_REFERENCE','PAYMENT_REVIEW') AND (state_data LIKE ? OR state_data IN ('{}',''))) OR state='NEW')`).bind(updatedData,event.id,now,event.from,`%\"orderId\":\"${record.id}\"%`),
+      db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(),"RECEIPT_SUBMITTED","CUSTOMER","PAYMENT",record.payment_id,messageIdHash,JSON.stringify({orderId:record.id,messageIdHash,providerMediaIdHash:mediaIdHash,associationEvidence}),now)
+    ])}catch{
+      try{await bucket.delete(stored.objectKey)}catch{try{await recordReceiptMediaDiagnostic(db,event.id,mediaId,"ORPHAN_R2_CLEANUP_FAILED","D1_COMMIT",1)}catch{}}
+      try{await recordReceiptMediaDiagnostic(db,event.id,mediaId,"RECEIPT_D1_COMMIT_FAILED","D1_COMMIT",1)}catch{}
+      throw new Error("RECEIPT_D1_COMMIT_FAILED");
+    }
   }
-  const receipt = await contentFor(db, "RECEIPT", "Receipt received for order {orderNumber}. Reply with the transaction/reference ID shown in your payment app. Payment remains under Admin review until actual account credit is verified.", { orderNumber: record.order_number }, `CHAT:${event.from}`, data.language ?? "en");
-  const orderStatus = await contentFor(db, "ORDER_STATUS", "Use Check Order to see the current order and payment status.", {}, `CHAT:${event.from}`, data.language ?? "en");
-  const image = await contentImageFor(db, bucket, "RECEIPT", `CHAT:${event.from}`);
-  await sendConversationReply(db, provider, event.from, event.id, receipt.text, { image, buttons: [{ id: "CHECK_ORDER", title: whatsAppActionLabel(orderStatus, "CHECK_ORDER") }] });
+  const receipt=await contentFor(db,"RECEIPT","Receipt received for order {orderNumber}. Reply with the transaction/reference ID shown in your payment app. Payment remains under Admin review until actual account credit is verified.",{orderNumber:record.order_number},`CHAT:${event.from}`,data.language??"en");
+  const orderStatus=await contentFor(db,"ORDER_STATUS","Use Check Order to see the current order and payment status.",{},`CHAT:${event.from}`,data.language??"en");
+  const image=await contentImageFor(db,bucket,"RECEIPT",`CHAT:${event.from}`);
+  await sendConversationReply(db,provider,event.from,event.id,receipt.text,{image,buttons:[{id:"CHECK_ORDER",title:whatsAppActionLabel(orderStatus,"CHECK_ORDER")}]});
   return true;
 }
 

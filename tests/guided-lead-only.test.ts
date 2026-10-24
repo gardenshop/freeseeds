@@ -15,6 +15,7 @@ let sequence: number;
 let sends: Array<Record<string, unknown>>;
 let failNextSend: boolean;
 let queueSend: ReturnType<typeof vi.fn>;
+let receiptPuts: number;
 
 function statement(sql: string) {
   let values: SQLInputValue[] = [];
@@ -46,7 +47,7 @@ function buttons() {
 }
 
 function env() {
-  return { DB: db, RECEIPTS: { get: vi.fn(async () => null) }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: "true", META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided" } as never;
+  return { DB: db, RECEIPTS: { get: vi.fn(async () => null), put: vi.fn(async () => { receiptPuts++; }), delete: vi.fn(async () => undefined) }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: "true", META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided" } as never;
 }
 
 async function callback(messages: Record<string, unknown>[], extraChanges: unknown[] = []) {
@@ -105,6 +106,38 @@ async function createSyntheticPaymentReviewOrder(waId: string, idempotencyKey: s
   return {order,paymentId:payment.id,amount:order.quote.totalPayablePkr};
 }
 
+describe("frozen V1 receipt hotfix", () => {
+  it("attaches a new inbound image to the sender's only eligible payment when the webhook creates a NEW conversation", async () => {
+    const idempotencyKey="gfs206-v1-new-conversation-receipt";
+    const order=await persistFlowSubmission(db,{fullName:"NON-PAYABLE Synthetic",deliveryAddress:"SYNTHETIC GFS206 RECEIPT TEST",nearbyPlace:"SYNTHETIC ONLY",city:"Synthetic City",contactNumber:"03001234567",productCode:"FREE_5_PACK_VEGETABLE_SEEDS",province:"Synthetic Province",fertilizerSelected:false},undefined,idempotencyKey,sender);
+    if(!order.quote)throw new Error("SYNTHETIC_QUOTE_MISSING");
+    const payment=sqlite.prepare("SELECT id FROM payments WHERE order_id=?").get(order.orderId) as {id:string};
+    sqlite.prepare("UPDATE orders SET state='PAYMENT_PENDING',payment_status='PENDING' WHERE id=?").run(order.orderId);
+    sqlite.prepare("UPDATE payments SET method='JAZZCASH',review_state='PENDING',customer_transaction_reference=NULL,expected_amount=? WHERE id=?").run(order.quote.totalPayablePkr,payment.id);
+    expect(conversation(sender)).toBeUndefined();
+    const sendFetch=globalThis.fetch;
+    vi.stubGlobal("fetch",vi.fn(async(input:RequestInfo|URL,init:RequestInit={})=>{
+      const url=String(input);
+      if(url.includes("synthetic-v1-media-id"))return Response.json({url:"https://synthetic-media.test/receipt.png",mime_type:"image/png",file_size:3});
+      if(url==="https://synthetic-media.test/receipt.png")return new Response(new Uint8Array([1,2,3]),{headers:{"content-type":"image/png"}});
+      return sendFetch(input,init);
+    }));
+
+    const response=await callback([{from:sender,id:"synthetic-v1-image-event",timestamp:"1792497600",type:"image",image:{id:"synthetic-v1-media-id",mime_type:"image/png"}}]);
+
+    expect(response.status).toBe(200);
+    expect(conversation(sender)).toMatchObject({state:"PAYMENT_REFERENCE",data:{orderId:order.orderId,orderNumber:order.orderNumber}});
+    expect(sqlite.prepare("SELECT order_id,payment_id FROM payment_receipts WHERE provider_media_id='synthetic-v1-media-id'").get()).toEqual({order_id:order.orderId,payment_id:payment.id});
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(order.orderId)).toEqual({state:"PAYMENT_REVIEW",payment_status:"PENDING"});
+    expect(sqlite.prepare("SELECT review_state,customer_transaction_reference FROM payments WHERE id=?").get(payment.id)).toEqual({review_state:"REVIEW",customer_transaction_reference:null});
+    expect(receiptPuts).toBe(1);
+    const audit=sqlite.prepare("SELECT correlation_id,metadata_json FROM audit_log WHERE action='RECEIPT_SUBMITTED' AND entity_id=?").get(payment.id) as {correlation_id:string;metadata_json:string};
+    expect(audit.metadata_json).toContain('"associationEvidence":"UNIQUE_SENDER_PAYMENT"');
+    expect(audit.metadata_json).not.toContain("synthetic-v1-media-id");
+    expect(audit.metadata_json).not.toContain("synthetic-v1-image-event");
+  });
+});
+
 beforeEach(() => {
   sqlite = new DatabaseSync(":memory:");
   for (const file of readdirSync("migrations").filter((name) => /^\d+.*\.sql$/.test(name)).sort()) sqlite.exec(readFileSync(`migrations/${file}`, "utf8"));
@@ -118,6 +151,7 @@ beforeEach(() => {
   sequence = 0;
   sends = [];
   failNextSend = false;
+  receiptPuts = 0;
   queueSend = vi.fn(async () => undefined);
   vi.stubGlobal("fetch", vi.fn(async (_url: unknown, init: RequestInit) => {
     if (failNextSend) { failNextSend = false; return new Response("{}", { status: 503 }); }
