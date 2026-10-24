@@ -1,5 +1,53 @@
 # Final Report
 
+## GFS-209 Real Receipt Upload Acceptance (2026-10-24)
+
+**PRIMARY ACCEPTANCE: PASS (REAL).** A newly generated non-payment JPEG, sent from the verified tester as a photo in direct reply to the Easypaisa instructions, reached the correct live Admin receipt panel. The customer received the exact receipt-under-review acknowledgement. No financial evidence was authenticated and no payment was marked `PAID`.
+
+| Requirement | Result | Evidence |
+|---|---|---|
+| Tester / receiver / accounts | PASS REAL | Own WhatsApp Profile matches approved tester; GFS Contact Info is canonical sender; Admin/Cloudflare identities match. Meta developer app selected the canonical GFS app/business |
+| Meta registration/permissions/webhook | PASS REAL | WhatsApp Manager `Connected`/`High`; messaging and management permissions granted; WABA subscribed; `messages` callback active at staging `/webhooks/whatsapp`. Admin's `EXPIRED` is code-verification status, not phone connection. One official SMS request returned HTTP400; stopped without retry/re-registration |
+| First media attempt | FAIL SAFE, NOT RECEIPT | A newly sent Sticker arrived as `MESSAGE`, not `MEDIA`; it created no receipt. This event was not reused or counted as acceptance |
+| Accepted inbound photo | PASS REAL | A distinct fresh JPEG photo with explicit non-payment image label and caption was sent as a direct reply to this order's Easypaisa instruction. Inbound WAMID SHA-256 prefix `bf0c88050136fbe3`; D1 `MEDIA`/`RECEIVED` at `2026-10-24T11:13:14.710Z`. Full WAMID is private outside Git |
+| Correct order association | PASS REAL | `FS-261024-000005`, Easypaisa, PKR500; live `wa_id=NULL` and normalized number column NULL, stored `whatsapp_number` matches the verified sender. The exact payment-message reply WAMID anchors the association; NULL-only fallback is guarded against non-NULL mismatch and ambiguous orders |
+| Meta media download / R2 / D1 | PASS REAL | D1/Admin receipt ID `4f8e2e7c-b5f8-4fdb-a85e-a88687a8af6e`, MIME `image/jpeg`, 79,863 bytes. Authenticated Admin private-preview route returned the R2 image. Screenshot evidence: `D:\Temp\kilo\gfs209-admin-e2e.png` and `D:\Temp\kilo\gfs209-admin-preview.png`; both outside Git |
+| Admin/payment state | PASS REAL | Admin Receipts count 1; order `PAYMENT_REVIEW`, payment `PENDING`; reference absent and settlement approval disabled. No account/wallet/transaction verification, `PAID`, CAPI Purchase or fulfillment |
+| Customer acknowledgement | PASS REAL | Exact text: `Receipt received for order FS-261024-000005. Your payment is under Admin review. We will notify you after verification.` Outbound WAMID SHA-256 prefix `7a14232e1692916d`; D1 status `READ` at `2026-10-24T11:13:22.229Z`. Full WAMID private outside Git |
+| Duplicate behavior | PASS SYNTHETIC + LIVE COUNTS | Focused same-event duplicate test passes; exact indexed live counts are 1 webhook event, 1 receipt, 1 acknowledgement. No forced live duplicate retry/replay was generated to avoid an extra customer message |
+| Worker / rollback / V2 | PASS | V1 Worker `76084318-69c7-46b3-bfa0-886610971133`; immediate rollback `7b957406-c869-4461-b184-da230f4d29e3`. V2 PR #9/reminders unchanged |
+| Regression/security | PASS | Clean `npm ci`, focused 28 tests, full 172 tests, lint, build, `npm audit` 0, Wrangler dry-run/deploy, D1 quick/FK/schema checks. No GitHub protection bypass; PR #10 remains open on the authorized branch |
+| Cost/isolation | PASS | No paid resource purchases, migrations, new bindings/secrets, or R2 cleanup needed; no broad D1 scan. `images/`, Hoja isolation, old financial history and payment configuration untouched |
+
+**Meta status resolution:** Admin Graph's `registrationStatus=EXPIRED` was the code-verification status. Official WhatsApp Manager showed the connected, high-quality sender. One official code request returned HTTP400; no registration change was needed or made.
+
+**Completion estimates:** Project remains at its prior documented 80%; GFS-209 is 98% complete. Stages 1-9 and 11-12 are 100% PASS. Stage 10 is 90%: synthetic same-WAMID duplicate callback regression and live single-row evidence pass, but a forced duplicate live webhook was deliberately not generated. The main live receipt/ack acceptance is PASS and is not synthetic.
+
+## GFS-208 Live Receipt Upload and Acknowledgement (2026-10-24, historical snapshot superseded by GFS-209)
+
+**PARTIAL / NOT ACCEPTED LIVE.** Exact root cause was identified and the PR #10 V1 hotfix was extended and locally verified. Deployment and fresh live image acceptance were withheld at release gates; no receipt or acknowledgement was fabricated.
+
+| Requirement | Result | Evidence / exact blocker |
+|---|---|---|
+| Authorized tester / receiver | PASS | WhatsApp own Profile matches the rules-approved tester; `@FreeSeeds` Contact Info independently matches the canonical GFS receiver. Admin Access, Wrangler and Meta app/business context were verified. No unrelated chat used. |
+| Meta callback/subscription | PASS read-only | Canonical callback is the staging `/webhooks/whatsapp`; `messages` subscribed (v26.0); canonical Phone ID is configured and WABA subscription is active. No Meta mutation. |
+| Inbound image | PASS accepted, no receipt | Tester-to-GFS image is visibly Delivered at 13:43 local; matching conversation has signed/canonical `lastInboundAt=2026-10-24T08:43:10.493Z`; WAMID SHA-256 prefix `2ef787841e6d07e0` (raw ID withheld). No message body or payment content was inspected. |
+| Exact order association | FAIL before fix / FIXED locally | `FS-261024-000005`, Easypaisa, PKR500 is `PAYMENT_PENDING`/`PENDING`; customer Meta `wa_id` is NULL although the stored WhatsApp number matches the verified sender. V1 `processReceiptMedia` queried only `customers.wa_id`, returning no eligible order; hence no D1 receipt/R2 image/ack. |
+| Hotfix | PASS local / NOT DEPLOYED | PR #10 now permits normalized-number fallback only when `wa_id` is NULL, and requires exact reply to that order's payment-text/QR WAMID or exactly one eligible payment order. Non-NULL mismatch and multiple candidates fail closed. No live customer identity backfill. |
+| EN/UR acknowledgement | PASS local / NOT SENT live | Exact EN text and equivalent Urdu text tested. Live send withheld because Graph status reports phone registration `EXPIRED` and the candidate is not deployed. No outbound acknowledgement WAMID exists. |
+| R2 / D1 / Admin | NOT CREATED | Admin confirms “No receipts submitted”; no D1 `payment_receipts` row or private R2 receipt object. Payment remains PENDING; order did not transition to PAYMENT_REVIEW. |
+| Funds / PAID | NOT AUTHENTICATED / NOT PERFORMED | Image is explicitly non-payment evidence. No wallet/bank credit check, transaction reference, approval, PAID, CAPI Purchase, or fulfillment action. |
+| Active version / rollback | PASS preflight | Active API `9b5f13ae`; immediate rollback `8da54b28`. V1 candidate uses existing schema and staging D1/R2/Queue bindings; Wrangler dry-run pass; no migration. |
+| D1 health | PASS | Supported `quick_check=ok`, `foreign_key_check` empty, required identity columns present. Checks read 9,267 rows total; no broad event/order scan. |
+| Tests | PASS local with security caveat | Clean `npm ci`, focused 28 receipt/media tests, full 172-test suite, lint, build, Wrangler dry-run pass. `npm audit` reports 4 existing vulnerabilities including high severity; no major/force fix applied. |
+| GitHub/release | BLOCKED | PR #10 open on the correct V1 branch; no branch ruleset/protection is configured and no review/check result is reported for its current head. No merge, bypass, or deploy. |
+| Fresh authorized image E2E | BLOCKED | Resolve Meta registration/security release gates, deploy through the approved path, then send one clearly labeled non-payment image as a reply to this order's payment message and confirm private R2, D1/Admin `PAYMENT_REVIEW`, exact localized acknowledgement and outbound DELIVERED/READ. |
+| Cost/isolation | PASS | No paid resource purchase, new binding/migration, R2 write, Hoja access, payment configuration, existing `images/` edit, order mutation, or historical record change. |
+
+**Completion estimates:** GFS-208 execution 70% complete / 30% remaining; P0 100%, P1 95%, P2 75%, P3 20%, P4 85%, P5 100%. Whole-project estimate remains 80% complete / 20% remaining from GFS-199; this receipt task does not change the project’s separate financial-release gates. These are estimates, not acceptance claims.
+
+**Assigned task status:** P0 identity/order: PASS; P1 exact diagnosis: PASS (event body/type was not copied; full historical Worker logs unavailable); P2 source fix: PASS locally, deployment BLOCKED; P3 required real R2/D1/Admin/ack E2E: BLOCKED; P4 tests/preflight: PASS locally, live retest BLOCKED; P5 records/report: PASS.
+
 ## GFS-199 Closing Report (2026-10-23)
 
 **OFFER PRIMARY ACCEPTANCE PASS. Full financial checkout is NOT COMPLETE.** Execution was closed at the user's request without further messages, transfers or approval.

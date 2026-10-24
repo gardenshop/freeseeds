@@ -1,5 +1,27 @@
 # Decisions
 
+## 2026-10-24: GFS-209 Media E2E Passed, Preserve Settlement Gate
+
+The exact order has both `customers.wa_id` and `normalized_whatsapp_number` NULL; only its stored `whatsapp_number` matches the authenticated tester. Extend the receipt association fallback to that field only when `wa_id IS NULL`, with exact reply-to-payment WAMID or unique eligible order required. A non-NULL mismatch and ambiguous matches remain fail closed. Do not write/backfill live identity data.
+
+The first newly sent attachment was a Sticker (`MESSAGE`) and was safely ignored. A separate JPEG sent through Photos & videos, replying to the target Easypaisa instruction, was classified `MEDIA`, persisted to private R2 and D1, and appeared in the real Admin receipt preview. Order moved to `PAYMENT_REVIEW`, payment remained `PENDING`, and no financial contents were validated.
+
+Use the exact deterministic English receipt acknowledgement required by GFS-209. The real outbound row reached `READ`. A forced duplicate live webhook was not generated; duplicate receipt/ack behavior is covered by the synthetic same-WAMID regression and exact live row counts.
+
+Meta Manager reports the phone `Connected`/`High`; Admin's `registrationStatus=EXPIRED` is the code-verification status, not an unregistered phone. One official request-code action returned HTTP400; no retry, number/WABA mutation or re-registration is appropriate. Keep the current connected sender and webhook subscription unchanged.
+
+Keep the deployed release V1-only. Active Worker is `76084318-69c7-46b3-bfa0-886610971133`; immediate rollback is `7b957406-c869-4461-b184-da230f4d29e3`. Zod/Undici audit fixes and Zod partial-record compatibility pass the full V1 suite and audit0. V2 reminders, payment journey, schema, bindings, Hoja isolation and financial history are unchanged.
+
+## 2026-10-24: GFS-208 Initial Receipt Diagnosis (superseded by GFS-209)
+
+The authorized WhatsApp Profile matches the target order's stored WhatsApp number, and the canonical GFS receiver/callback/subscription were independently verified. The inbound image event is evidenced by the signed/canonical conversation timestamp at 13:43 local. The order's Meta `wa_id` is NULL; active V1 receipt matching uses only `customers.wa_id`, so it cannot associate the media. This is an association failure, not evidence that the image is payment proof. No receipt or acknowledgement was fabricated.
+
+PR #10's conversation-state repair is retained and extended narrowly: only a NULL `wa_id` may fall back to the exact normalized WhatsApp number for the authenticated sender. Association must be anchored by the exact outbound payment WAMID reply or a unique eligible order; a non-NULL mismatch or ambiguous sender remains blocked. A test-only transaction does not update the live customer row.
+
+The user-facing receipt acknowledgement is fixed in EN/UR and explicitly says Admin review, not payment confirmation. Receipts remain `PAYMENT_REVIEW`; payment remains `PENDING`. Existing CMS receipt content is not republished by this change.
+
+Do not deploy or send an acknowledgement in this execution: Meta reports phone registration `EXPIRED`, audit has unresolved high-severity findings, and the active callback must pass the remaining owner/release review. Supported D1 quick/FK checks and Wrangler binding/rollback dry-run passed. GitHub rulesets/protection are absent, but PR #10 has no review/check result; do not merge or bypass CI. No D1/R2/order/payment mutation, customer message, new resource, or financial action occurred.
+
 ## 2026-10-23: GFS-199 Tester Was Hidden, Not Mismatched
 
 The phone appears under You > View Profile, not the You/Account settings panel used in earlier checks. The exact approved tester matched without authentication/account change; canonical recipient Contact Info matched separately. Prior mismatch conclusions are superseded. Do not treat a hidden field as a different signed-in account.

@@ -1,5 +1,41 @@
 # Test Matrix
 
+## GFS-209 Real Receipt E2E (2026-10-24)
+
+| Requirement | Result | Evidence / remaining scope |
+|---|---|---|
+| Tester, receiver, Admin/Cloudflare identity | PASS REAL | Own WhatsApp Profile matches approved tester; Contact Info is canonical GFS sender; Admin/Cloudflare identity verified |
+| Meta registration, permissions, webhook | PASS REAL | WhatsApp Manager `Connected`/`High`; code-verification field alone is `EXPIRED`; permissions granted; canonical callback `messages` subscription active. One SMS request rejected HTTP400; no repeat/re-registration |
+| First fresh event | FAIL SAFE | Sticker event persisted as `MESSAGE`, not media; no receipt or state change; not counted as acceptance and not resent |
+| Accepted fresh JPEG | PASS REAL | Distinct Photos & videos JPEG replied to exact Easypaisa payment message; visible non-payment label/caption; WAMID hash prefix `bf0c88050136fbe3`; D1 `MEDIA`/`RECEIVED` at `11:13:14.710Z` |
+| Order association | PASS REAL | Exact `FS-261024-000005`; `wa_id=NULL`, normalized column NULL, stored WhatsApp number matches authenticated sender; exact payment-message reply; strict NULL-only/mismatch/ambiguity guards |
+| R2 / D1 receipt / Admin | PASS REAL | Receipt `4f8e2e7c-b5f8-4fdb-a85e-a88687a8af6e`, `image/jpeg`, 79,863 bytes; private Admin preview opened; screenshot `D:\Temp\kilo\gfs209-admin-e2e.png` and `gfs209-admin-preview.png` outside Git |
+| Payment state | PASS REAL | Order `PAYMENT_REVIEW`, payment `PENDING`; reference missing, approval disabled; no funds check, `PAID`, CAPI Purchase or fulfillment |
+| Customer acknowledgement | PASS REAL | Exact required English copy visible in WhatsApp; outbound WAMID SHA-256 prefix `7a14232e1692916d`, D1 status `READ` at `11:13:22.229Z` |
+| Duplicate suppression | PASS SYNTHETIC + LIVE COUNTS | Focused duplicate-webhook test passes; exact D1 counts are one event, one receipt, one acknowledgement. No live duplicate retry was forced |
+| Dependency/security | PASS | Zod 4.6.7 plus Undici 7.30.1 with Zod `partialRecord` compatibility; `npm audit` 0 advisories; 172 tests, lint/build/dry-run pass |
+| Deployment / rollback / V2 | PASS V1 ONLY | Worker `76084318-69c7-46b3-bfa0-886610971133`; rollback `7b957406-c869-4461-b184-da230f4d29e3`; V2 PR #9/reminders unchanged |
+
+Full inbound/outbound WAMIDs are stored only in private local evidence files outside Git; hashes are reported above. No synthetic test is substituted for the accepted photo E2E.
+
+## GFS-208 Live Receipt Fix (2026-10-24, historical snapshot superseded by GFS-209)
+
+| Requirement | Result | Evidence / remaining scope |
+|---|---|---|
+| Authorized sender/receiver | PASS | Own Profile matches approved tester; canonical GFS Contact Info, Admin identity, Cloudflare identity verified; no unrelated chat used |
+| Inbound transport/webhook | PASS (inbound) | Image visible delivered at 13:43; signed/canonical conversation timestamp `08:43:10.493Z`; WAMID SHA-256 prefix `2ef787841e6d07e0`; callback `/webhooks/whatsapp`, `messages` subscribed |
+| Root cause | PASS diagnosis | Target customer `wa_id` is NULL while stored WhatsApp number matches verified sender; active receipt query requires `wa_id`; no receipt/preview/ack |
+| PR #10 V1 repair | PASS local | NULL-only exact normalized-number fallback; exact payment WAMID reply or unique eligible order required; mismatched non-NULL and ambiguous orders fail closed |
+| Focused regression | PASS | 28 receipt/media tests; synthetic missing-`wa_id` Easypaisa exact-payment-reply path, EN/UR exact acknowledgement and duplicate webhook do not duplicate receipt/ack |
+| Full regression | PASS local | `npm ci`, 172 tests, lint, build, Wrangler dry-run pass; `npm audit` reports 4 existing findings including high severity |
+| D1 / bindings / rollback | PASS preflight | `quick_check=ok`, FK check empty, identity columns present; canonical staging bindings; active API `9b5f13ae`, rollback `8da54b28`; no migration |
+| R2 / Admin / payment state | NOT CREATED | No private receipt object or D1 row; Admin says no receipts; order remains `PAYMENT_PENDING`, payment `PENDING`; no PAID/funds claim |
+| Outbound acknowledgement / WAMID | NOT SENT | Meta status reports phone registration `EXPIRED`; API candidate not deployed. No historical/synthetic WAMID substituted |
+| Deployment / PR protection | BLOCKED | PR #10 has no review/check result; no ruleset exists, but high audit findings and Meta registration gate remain; no bypass/deploy |
+| Fresh real E2E | BLOCKED | Requires owner-side Meta registration revalidation, release/security clearance, deploy, then a fresh clearly non-payment image replying to the exact payment message and real Admin/R2/D1/DELIVERED checks |
+
+No funds, transaction reference, customer acknowledgement, or receipt record was created. No cost-bearing resource was purchased; existing `images/`, payment history, Hoja isolation, and order state were preserved.
+
 ## GFS-199 New Real OFFER Acceptance (2026-10-23)
 
 | Requirement | Result | Evidence / remaining scope |

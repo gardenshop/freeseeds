@@ -1,5 +1,22 @@
 # Resource Registry
 
+## GFS-209 Live Receipt E2E (2026-10-24)
+
+- PR #10 branch `codex/gfs206-v1-receipt-hotfix`, latest code head `d6ca1a5`. V1-only staging Worker `getfreeseeds-api-staging` deployed as `76084318-69c7-46b3-bfa0-886610971133`; immediate rollback `7b957406-c869-4461-b184-da230f4d29e3`. PR #9/V2 reminder runtime untouched.
+- Existing bindings only: D1 `getfreeseeds-staging`, private R2 `getfreeseeds-receipts-staging`, Queue `getfreeseeds-events-staging`, canonical Meta Phone/WABA. No migration, new binding, secret change, queue purchase or new resource.
+- Live target receipt `4f8e2e7c-b5f8-4fdb-a85e-a88687a8af6e`, MIME `image/jpeg`, 79,863 bytes. D1 event type `MEDIA`/`RECEIVED`; Admin preview endpoint returned the private R2 image. Order remains `PAYMENT_REVIEW`/payment `PENDING`.
+- Real outbound acknowledgement WAMID is privately retained, SHA-256 prefix `7a14232e1692916d`, D1 status `READ`; inbound WAMID prefix `bf0c88050136fbe3`. Raw IDs and image bytes remain outside Git. Sanitized screenshots are under `D:\Temp\kilo\gfs209-admin-e2e.png` and `D:\Temp\kilo\gfs209-admin-preview.png`.
+- Meta: canonical number connected/quality High; permissions granted; WABA and `messages` callback subscription active. `EXPIRED` is code-verification status. One request-code attempt returned HTTP400; no retry/re-registration, known charge, or state mutation.
+- D1 preflight quick/FK/schema checks read 8,943 rows; exact indexed lookups show one event/receipt/ack. No broad D1 scan. Zero resource purchases; `images/` and Hoja isolation preserved.
+
+## GFS-208 Receipt Hotfix Resources (2026-10-24, historical snapshot superseded by GFS-209)
+
+- GitHub PR #10 branch `codex/gfs206-v1-receipt-hotfix`, including GFS-208 code commit `2822de7`; candidate is V1-compatible and has no schema changes. PR remains open; no branch protection/ruleset is configured, but no merge or CI bypass occurred.
+- Active API `getfreeseeds-api-staging` version `9b5f13ae`; immediate rollback `8da54b28`. Dry-run retains canonical staging D1 `getfreeseeds-staging`, private receipts R2 `getfreeseeds-receipts-staging`, event Queue, and canonical Meta Phone/WABA bindings. No binding/secret changes.
+- Cloudflare/Admin identity verified against the GFS account. D1 supported preflight: `quick_check=ok`, FK check empty, `customers.wa_id` and `normalized_whatsapp_number` present. 9,267 rows read by checks; no broad event/order scan. No migration, D1 write, R2 object, queue job, purchased resource, or additional cost.
+- Existing browser Meta Developer app is the canonical Get Free Seeds app/business. `messages` is subscribed to the staging `/webhooks/whatsapp` callback. Admin Graph status reports WABA subscribed, canonical phone configured, and registration status `EXPIRED`; owner-side Meta revalidation is required before a real outbound acknowledgement retest.
+- Target order remains pending with no receipt; private R2 object and D1 receipt count are zero. Inbound WAMID SHA-256 fingerprint prefix is `2ef787841e6d07e0`; raw ID remains private. No screenshots/customer identifiers/receipt bytes are retained in the repository. Existing `images/` remains untouched; Hoja assets were not opened or used.
+
 ## GFS-199 Current Runtime (2026-10-23)
 
 - API `9b5f13ae-f023-4fa8-befe-2085bb24cbda`; rollback `8da54b28-4bec-45b2-9a3f-672225dba843`. Admin unchanged `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0`; request queue flagfalse.
