@@ -136,6 +136,55 @@ describe("frozen V1 receipt hotfix", () => {
     expect(audit.metadata_json).not.toContain("synthetic-v1-media-id");
     expect(audit.metadata_json).not.toContain("synthetic-v1-image-event");
   });
+
+  it.each(["en", "ur"] as const)("accepts an exact payment reply for a customer with no stored Meta wa_id and sends the %s review acknowledgement once", async (language) => {
+    const waId="923000000001",idempotencyKey=`gfs208-missing-wa-id-${language}`,paymentMessageId=`synthetic-payment-message-${language}`;
+    const order=await persistFlowSubmission(db,{fullName:"NON-PAYABLE Synthetic",deliveryAddress:`SYNTHETIC ${idempotencyKey}`,nearbyPlace:"SYNTHETIC ONLY",city:"Synthetic City",contactNumber:"03000000001",productCode:"FREE_5_PACK_VEGETABLE_SEEDS",province:"Synthetic Province",fertilizerSelected:false},undefined,idempotencyKey,waId);
+    if(!order.quote)throw new Error("SYNTHETIC_QUOTE_MISSING");
+    const payment=sqlite.prepare("SELECT id FROM payments WHERE order_id=?").get(order.orderId) as {id:string};
+    sqlite.prepare("UPDATE customers SET wa_id=NULL,normalized_whatsapp_number=? WHERE id=?").run(`+${waId}`,order.customerId);
+    sqlite.prepare("UPDATE orders SET state='PAYMENT_PENDING',payment_status='PENDING' WHERE id=?").run(order.orderId);
+    sqlite.prepare("UPDATE payments SET method='EASYPAISA',review_state='PENDING',expected_amount=? WHERE id=?").run(order.quote.totalPayablePkr,payment.id);
+    sqlite.prepare("INSERT INTO outbound_messages(id,idempotency_key,order_id,customer_id,kind,provider_message_id,status,attempt_count,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)").run(`outbound-${idempotencyKey}`,idempotencyKey,order.orderId,order.customerId,"WHATSAPP_PAYMENT_TEXT",paymentMessageId,"SENT",1,new Date().toISOString(),new Date().toISOString());
+    sqlite.prepare("INSERT INTO whatsapp_conversations(id,wa_id,state,state_data,created_at,updated_at) VALUES(?,?,?,?,?,?)").run(`conversation-${idempotencyKey}`,waId,"PAYMENT_PENDING",JSON.stringify({language,orderId:order.orderId,orderNumber:order.orderNumber}),new Date().toISOString(),new Date().toISOString());
+    const sendFetch=globalThis.fetch;
+    vi.stubGlobal("fetch",vi.fn(async(input:RequestInfo|URL,init:RequestInit={})=>{
+      const url=String(input);
+      if(url.includes("synthetic-wamid-media-id"))return Response.json({url:"https://synthetic-media.test/non-payment.png",mime_type:"image/png",file_size:3});
+      if(url==="https://synthetic-media.test/non-payment.png")return new Response(new Uint8Array([7,8,9]),{headers:{"content-type":"image/png"}});
+      return sendFetch(input,init);
+    }));
+    const image={from:waId,id:`synthetic-image-event-${language}`,timestamp:"1792497600",type:"image",image:{id:`synthetic-wamid-media-id-${language}`,mime_type:"image/png"},context:{id:paymentMessageId}};
+
+    expect((await callback([image])).status).toBe(200);
+    expect(body()).toBe(language==="ur"
+      ? `آپ کے آرڈر ${order.orderNumber} کی رسید موصول ہو گئی ہے۔ آپ کی ادائیگی ایڈمن کے جائزے میں ہے۔ تصدیق کے بعد ہم آپ کو مطلع کریں گے۔`
+      : `Receipt received for order ${order.orderNumber}. Your payment is under Admin review. We will notify you after verification.`);
+    expect(sqlite.prepare("SELECT order_id,payment_id FROM payment_receipts WHERE provider_media_id=?").get(`synthetic-wamid-media-id-${language}`)).toEqual({order_id:order.orderId,payment_id:payment.id});
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(order.orderId)).toEqual({state:"PAYMENT_REVIEW",payment_status:"PENDING"});
+    expect(sqlite.prepare("SELECT review_state FROM payments WHERE id=?").get(payment.id)).toEqual({review_state:"REVIEW"});
+    expect(receiptPuts).toBe(1);
+    const outboundCount=sends.length;
+    expect((await callback([image])).status).toBe(200);
+    expect(sends).toHaveLength(outboundCount);
+    expect(receiptPuts).toBe(1);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(order.orderId)).toEqual({count:1});
+    const audit=sqlite.prepare("SELECT metadata_json FROM audit_log WHERE action='RECEIPT_SUBMITTED' AND entity_id=?").get(payment.id) as {metadata_json:string};
+    expect(audit.metadata_json).toContain('"associationEvidence":"PAYMENT_REPLY_WAMID"');
+    expect(audit.metadata_json).not.toContain(paymentMessageId);
+
+    const ambiguousOrder=await persistFlowSubmission(db,{fullName:"NON-PAYABLE Synthetic",deliveryAddress:`SYNTHETIC ${idempotencyKey} SECOND`,nearbyPlace:"SYNTHETIC ONLY",city:"Synthetic City",contactNumber:"03000000001",productCode:"FREE_5_PACK_VEGETABLE_SEEDS",province:"Synthetic Province",fertilizerSelected:false},undefined,`${idempotencyKey}-second`,waId);
+    if(!ambiguousOrder.quote)throw new Error("SYNTHETIC_SECOND_QUOTE_MISSING");
+    const secondPayment=sqlite.prepare("SELECT id FROM payments WHERE order_id=?").get(ambiguousOrder.orderId) as {id:string};
+    sqlite.prepare("UPDATE customers SET wa_id=NULL,normalized_whatsapp_number=? WHERE id=?").run(`+${waId}`,ambiguousOrder.customerId);
+    sqlite.prepare("UPDATE orders SET state='PAYMENT_PENDING',payment_status='PENDING' WHERE id=?").run(ambiguousOrder.orderId);
+    sqlite.prepare("UPDATE payments SET review_state='PENDING' WHERE id=?").run(secondPayment.id);
+    const unassociatedImage={from:waId,id:`synthetic-ambiguous-image-event-${language}`,timestamp:"1792497601",type:"image",image:{id:`synthetic-unassociated-media-id-${language}`,mime_type:"image/png"}};
+    expect((await callback([unassociatedImage])).status).toBe(200);
+    expect(sends).toHaveLength(outboundCount);
+    expect(receiptPuts).toBe(1);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(ambiguousOrder.orderId)).toEqual({count:0});
+  });
 });
 
 beforeEach(() => {

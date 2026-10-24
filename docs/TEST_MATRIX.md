@@ -1,5 +1,23 @@
 # Test Matrix
 
+## GFS-208 Live Receipt Fix (2026-10-24)
+
+| Requirement | Result | Evidence / remaining scope |
+|---|---|---|
+| Authorized sender/receiver | PASS | Own Profile matches approved tester; canonical GFS Contact Info, Admin identity, Cloudflare identity verified; no unrelated chat used |
+| Inbound transport/webhook | PASS (inbound) | Image visible delivered at 13:43; signed/canonical conversation timestamp `08:43:10.493Z`; WAMID SHA-256 prefix `2ef787841e6d07e0`; callback `/webhooks/whatsapp`, `messages` subscribed |
+| Root cause | PASS diagnosis | Target customer `wa_id` is NULL while stored WhatsApp number matches verified sender; active receipt query requires `wa_id`; no receipt/preview/ack |
+| PR #10 V1 repair | PASS local | NULL-only exact normalized-number fallback; exact payment WAMID reply or unique eligible order required; mismatched non-NULL and ambiguous orders fail closed |
+| Focused regression | PASS | 28 receipt/media tests; synthetic missing-`wa_id` Easypaisa exact-payment-reply path, EN/UR exact acknowledgement and duplicate webhook do not duplicate receipt/ack |
+| Full regression | PASS local | `npm ci`, 172 tests, lint, build, Wrangler dry-run pass; `npm audit` reports 4 existing findings including high severity |
+| D1 / bindings / rollback | PASS preflight | `quick_check=ok`, FK check empty, identity columns present; canonical staging bindings; active API `9b5f13ae`, rollback `8da54b28`; no migration |
+| R2 / Admin / payment state | NOT CREATED | No private receipt object or D1 row; Admin says no receipts; order remains `PAYMENT_PENDING`, payment `PENDING`; no PAID/funds claim |
+| Outbound acknowledgement / WAMID | NOT SENT | Meta status reports phone registration `EXPIRED`; API candidate not deployed. No historical/synthetic WAMID substituted |
+| Deployment / PR protection | BLOCKED | PR #10 has no review/check result; no ruleset exists, but high audit findings and Meta registration gate remain; no bypass/deploy |
+| Fresh real E2E | BLOCKED | Requires owner-side Meta registration revalidation, release/security clearance, deploy, then a fresh clearly non-payment image replying to the exact payment message and real Admin/R2/D1/DELIVERED checks |
+
+No funds, transaction reference, customer acknowledgement, or receipt record was created. No cost-bearing resource was purchased; existing `images/`, payment history, Hoja isolation, and order state were preserved.
+
 ## GFS-199 New Real OFFER Acceptance (2026-10-23)
 
 | Requirement | Result | Evidence / remaining scope |

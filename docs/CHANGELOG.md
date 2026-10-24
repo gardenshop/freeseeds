@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-24 (GFS-208)
+
+- Traced the live inbound image to the verified sender and correct test conversation; Admin confirms target order still has no receipt and `wa_id` is NULL. Exact failure: active V1 receipt association required `customers.wa_id`, despite the stored WhatsApp number matching the verified profile.
+- Extended PR #10 with a NULL-only exact normalized WhatsApp number fallback, gated by exact payment-message reply WAMID or unique eligible sender/order; non-NULL mismatch and ambiguous matches still fail closed. Added synthetic EN/UR and duplicate-webhook regression.
+- Set deterministic EN/UR receipt-under-review acknowledgements. No evidence is authenticated as funds; order/payment remain pending and no receipt/ack was fabricated.
+- `npm ci`, focused/full tests, lint, build, Wrangler dry-run and supported D1 quick/FK/schema preflight pass. `npm audit` reports four existing findings including high severity; no forced upgrade.
+- No deployment or new live test: Meta phone registration currently reports `EXPIRED`; high audit findings require resolution. PR #10 stays open; no CI/protection bypass, D1/R2/order/payment/customer mutation, purchase, or cost-bearing resource.
+
 ## 2026-10-23 (GFS-199)
 
 - Resolved false tester-mismatch diagnosis by opening You > View Profile; exact own phone and canonical recipient verified without account switch.

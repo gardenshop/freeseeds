@@ -508,22 +508,24 @@ async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: R
   try{if(conversation)data=JSON.parse(conversation.state_data) as ConversationData}catch{if(!message.context?.id)return false}
   const select=`SELECT o.id,o.order_number,o.state,p.id AS payment_id,p.method,p.review_state,p.customer_transaction_reference
     FROM orders o JOIN payments p ON p.order_id=o.id JOIN customers c ON c.id=o.customer_id`;
-  let record=message.context?.id?await db.prepare(`${select} JOIN outbound_messages m ON m.order_id=o.id WHERE c.wa_id=? AND m.provider_message_id=?
+  const senderDigits=event.from.startsWith("+")?event.from.slice(1):event.from;
+  const senderNumbers=[senderDigits,`+${senderDigits}`,`+${senderDigits}`,senderDigits];
+  const senderMatch="(c.wa_id IN (?,?) OR (c.wa_id IS NULL AND c.normalized_whatsapp_number IN (?,?)))";
+  let record=message.context?.id?await db.prepare(`${select} JOIN outbound_messages m ON m.order_id=o.id WHERE ${senderMatch} AND m.provider_message_id=?
     AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND o.state IN ('PAYMENT_PENDING','PAYMENT_REVIEW')
-    AND p.review_state IN ('PENDING','REJECTED','REVIEW') LIMIT 1`).bind(event.from,message.context.id)
+    AND p.review_state IN ('PENDING','REJECTED','REVIEW') LIMIT 1`).bind(...senderNumbers,message.context.id)
     .first<{id:string;order_number:string;state:string;payment_id:string;method:string|null;review_state:string;customer_transaction_reference:string|null}>():null;
   if(message.context?.id&&!record){await recordReceiptMediaDiagnostic(db,event.id,mediaId,"REPLY_TO_PAYMENT_NOT_FOUND","ORDER_ASSOCIATION");return false}
   if(!record){
-    const candidates=await db.prepare(`${select} WHERE c.wa_id=? AND o.state IN ('PAYMENT_PENDING','PAYMENT_REVIEW') AND p.review_state IN ('PENDING','REJECTED','REVIEW') ORDER BY o.created_at DESC,o.id DESC LIMIT 2`).bind(event.from).all<{id:string}>();
+    const candidates=await db.prepare(`${select} WHERE ${senderMatch} AND o.state IN ('PAYMENT_PENDING','PAYMENT_REVIEW') AND p.review_state IN ('PENDING','REJECTED','REVIEW') ORDER BY o.created_at DESC,o.id DESC LIMIT 2`).bind(...senderNumbers).all<{id:string}>();
     if(candidates.results?.length!==1){await recordReceiptMediaDiagnostic(db,event.id,mediaId,candidates.results?.length?"MULTIPLE_ELIGIBLE_PAYMENT_ORDERS":"NO_ELIGIBLE_PAYMENT_ORDER","ORDER_ASSOCIATION",candidates.results?.length??0);return false}
     if(data.orderId&&candidates.results[0].id!==data.orderId){await recordReceiptMediaDiagnostic(db,event.id,mediaId,"ACTIVE_CONVERSATION_ORDER_MISMATCH","ORDER_ASSOCIATION",1);return false}
-    record=await db.prepare(`${select} WHERE o.id=? AND c.wa_id=?`).bind(data.orderId??candidates.results[0].id,event.from)
+    record=await db.prepare(`${select} WHERE o.id=? AND ${senderMatch}`).bind(data.orderId??candidates.results[0].id,...senderNumbers)
       .first<{id:string;order_number:string;state:string;payment_id:string;method:string|null;review_state:string;customer_transaction_reference:string|null}>();
   }
   if(!record)return false;
   if(record.state!=="PAYMENT_PENDING"&&record.state!=="PAYMENT_REVIEW"){await recordReceiptMediaDiagnostic(db,event.id,mediaId,"ORDER_STATE_NOT_RECEIVABLE","ORDER_ASSOCIATION");return false}
   const associationEvidence=message.context?.id?"PAYMENT_REPLY_WAMID":data.orderId?"ACTIVE_CONVERSATION_ORDER":"UNIQUE_SENDER_PAYMENT";
-  const status=await contentFor(db,"ORDER_STATUS","Use Check Order to see the current order and payment status.",{},`CHAT:${event.from}`,data.language??"en");
   const existing=await db.prepare("SELECT id FROM payment_receipts WHERE provider_media_id=? AND order_id=?").bind(mediaId,record.id).first<{id:string}>();
   if(!existing){
     let media:Awaited<ReturnType<typeof provider.downloadMedia>>,stored:{objectKey:string;sha256:string};
@@ -544,10 +546,12 @@ async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: R
       throw new Error("RECEIPT_D1_COMMIT_FAILED");
     }
   }
-  const receipt=await contentFor(db,"RECEIPT","Receipt received for order {orderNumber}. Reply with the transaction/reference ID shown in your payment app. Payment remains under Admin review until actual account credit is verified.",{orderNumber:record.order_number},`CHAT:${event.from}`,data.language??"en");
+  const receiptText=data.language==="ur"
+    ? `آپ کے آرڈر ${record.order_number} کی رسید موصول ہو گئی ہے۔ آپ کی ادائیگی ایڈمن کے جائزے میں ہے۔ تصدیق کے بعد ہم آپ کو مطلع کریں گے۔`
+    : `Receipt received for order ${record.order_number}. Your payment is under Admin review. We will notify you after verification.`;
   const orderStatus=await contentFor(db,"ORDER_STATUS","Use Check Order to see the current order and payment status.",{},`CHAT:${event.from}`,data.language??"en");
   const image=await contentImageFor(db,bucket,"RECEIPT",`CHAT:${event.from}`);
-  await sendConversationReply(db,provider,event.from,event.id,receipt.text,{image,buttons:[{id:"CHECK_ORDER",title:whatsAppActionLabel(orderStatus,"CHECK_ORDER")}]});
+  await sendConversationReply(db,provider,event.from,event.id,receiptText,{image,buttons:[{id:"CHECK_ORDER",title:whatsAppActionLabel(orderStatus,"CHECK_ORDER")}]});
   return true;
 }
 

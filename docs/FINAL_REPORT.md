@@ -1,5 +1,30 @@
 # Final Report
 
+## GFS-208 Live Receipt Upload and Acknowledgement (2026-10-24)
+
+**PARTIAL / NOT ACCEPTED LIVE.** Exact root cause was identified and the PR #10 V1 hotfix was extended and locally verified. Deployment and fresh live image acceptance were withheld at release gates; no receipt or acknowledgement was fabricated.
+
+| Requirement | Result | Evidence / exact blocker |
+|---|---|---|
+| Authorized tester / receiver | PASS | WhatsApp own Profile matches the rules-approved tester; `@FreeSeeds` Contact Info independently matches the canonical GFS receiver. Admin Access, Wrangler and Meta app/business context were verified. No unrelated chat used. |
+| Meta callback/subscription | PASS read-only | Canonical callback is the staging `/webhooks/whatsapp`; `messages` subscribed (v26.0); canonical Phone ID is configured and WABA subscription is active. No Meta mutation. |
+| Inbound image | PASS accepted, no receipt | Tester-to-GFS image is visibly Delivered at 13:43 local; matching conversation has signed/canonical `lastInboundAt=2026-10-24T08:43:10.493Z`; WAMID SHA-256 prefix `2ef787841e6d07e0` (raw ID withheld). No message body or payment content was inspected. |
+| Exact order association | FAIL before fix / FIXED locally | `FS-261024-000005`, Easypaisa, PKR500 is `PAYMENT_PENDING`/`PENDING`; customer Meta `wa_id` is NULL although the stored WhatsApp number matches the verified sender. V1 `processReceiptMedia` queried only `customers.wa_id`, returning no eligible order; hence no D1 receipt/R2 image/ack. |
+| Hotfix | PASS local / NOT DEPLOYED | PR #10 now permits normalized-number fallback only when `wa_id` is NULL, and requires exact reply to that order's payment-text/QR WAMID or exactly one eligible payment order. Non-NULL mismatch and multiple candidates fail closed. No live customer identity backfill. |
+| EN/UR acknowledgement | PASS local / NOT SENT live | Exact EN text and equivalent Urdu text tested. Live send withheld because Graph status reports phone registration `EXPIRED` and the candidate is not deployed. No outbound acknowledgement WAMID exists. |
+| R2 / D1 / Admin | NOT CREATED | Admin confirms “No receipts submitted”; no D1 `payment_receipts` row or private R2 receipt object. Payment remains PENDING; order did not transition to PAYMENT_REVIEW. |
+| Funds / PAID | NOT AUTHENTICATED / NOT PERFORMED | Image is explicitly non-payment evidence. No wallet/bank credit check, transaction reference, approval, PAID, CAPI Purchase, or fulfillment action. |
+| Active version / rollback | PASS preflight | Active API `9b5f13ae`; immediate rollback `8da54b28`. V1 candidate uses existing schema and staging D1/R2/Queue bindings; Wrangler dry-run pass; no migration. |
+| D1 health | PASS | Supported `quick_check=ok`, `foreign_key_check` empty, required identity columns present. Checks read 9,267 rows total; no broad event/order scan. |
+| Tests | PASS local with security caveat | Clean `npm ci`, focused 28 receipt/media tests, full 172-test suite, lint, build, Wrangler dry-run pass. `npm audit` reports 4 existing vulnerabilities including high severity; no major/force fix applied. |
+| GitHub/release | BLOCKED | PR #10 open on the correct V1 branch; no branch ruleset/protection is configured and no review/check result is reported for its current head. No merge, bypass, or deploy. |
+| Fresh authorized image E2E | BLOCKED | Resolve Meta registration/security release gates, deploy through the approved path, then send one clearly labeled non-payment image as a reply to this order's payment message and confirm private R2, D1/Admin `PAYMENT_REVIEW`, exact localized acknowledgement and outbound DELIVERED/READ. |
+| Cost/isolation | PASS | No paid resource purchase, new binding/migration, R2 write, Hoja access, payment configuration, existing `images/` edit, order mutation, or historical record change. |
+
+**Completion estimates:** GFS-208 execution 70% complete / 30% remaining; P0 100%, P1 95%, P2 75%, P3 20%, P4 85%, P5 100%. Whole-project estimate remains 80% complete / 20% remaining from GFS-199; this receipt task does not change the project’s separate financial-release gates. These are estimates, not acceptance claims.
+
+**Assigned task status:** P0 identity/order: PASS; P1 exact diagnosis: PASS (event body/type was not copied; full historical Worker logs unavailable); P2 source fix: PASS locally, deployment BLOCKED; P3 required real R2/D1/Admin/ack E2E: BLOCKED; P4 tests/preflight: PASS locally, live retest BLOCKED; P5 records/report: PASS.
+
 ## GFS-199 Closing Report (2026-10-23)
 
 **OFFER PRIMARY ACCEPTANCE PASS. Full financial checkout is NOT COMPLETE.** Execution was closed at the user's request without further messages, transfers or approval.

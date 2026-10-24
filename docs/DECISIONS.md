@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-10-24: GFS-208 Receipt Association Is Missing `wa_id`
+
+The authorized WhatsApp Profile matches the target order's stored WhatsApp number, and the canonical GFS receiver/callback/subscription were independently verified. The inbound image event is evidenced by the signed/canonical conversation timestamp at 13:43 local. The order's Meta `wa_id` is NULL; active V1 receipt matching uses only `customers.wa_id`, so it cannot associate the media. This is an association failure, not evidence that the image is payment proof. No receipt or acknowledgement was fabricated.
+
+PR #10's conversation-state repair is retained and extended narrowly: only a NULL `wa_id` may fall back to the exact normalized WhatsApp number for the authenticated sender. Association must be anchored by the exact outbound payment WAMID reply or a unique eligible order; a non-NULL mismatch or ambiguous sender remains blocked. A test-only transaction does not update the live customer row.
+
+The user-facing receipt acknowledgement is fixed in EN/UR and explicitly says Admin review, not payment confirmation. Receipts remain `PAYMENT_REVIEW`; payment remains `PENDING`. Existing CMS receipt content is not republished by this change.
+
+Do not deploy or send an acknowledgement in this execution: Meta reports phone registration `EXPIRED`, audit has unresolved high-severity findings, and the active callback must pass the remaining owner/release review. Supported D1 quick/FK checks and Wrangler binding/rollback dry-run passed. GitHub rulesets/protection are absent, but PR #10 has no review/check result; do not merge or bypass CI. No D1/R2/order/payment mutation, customer message, new resource, or financial action occurred.
+
 ## 2026-10-23: GFS-199 Tester Was Hidden, Not Mismatched
 
 The phone appears under You > View Profile, not the You/Account settings panel used in earlier checks. The exact approved tester matched without authentication/account change; canonical recipient Contact Info matched separately. Prior mismatch conclusions are superseded. Do not treat a hidden field as a different signed-in account.

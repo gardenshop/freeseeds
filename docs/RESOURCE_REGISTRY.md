@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-208 Receipt Hotfix Resources (2026-10-24)
+
+- GitHub PR #10 branch `codex/gfs206-v1-receipt-hotfix`; candidate is V1-compatible and has no schema changes. PR remains open; no branch protection/ruleset is configured, but no merge or CI bypass occurred.
+- Active API `getfreeseeds-api-staging` version `9b5f13ae`; immediate rollback `8da54b28`. Dry-run retains canonical staging D1 `getfreeseeds-staging`, private receipts R2 `getfreeseeds-receipts-staging`, event Queue, and canonical Meta Phone/WABA bindings. No binding/secret changes.
+- Cloudflare/Admin identity verified against the GFS account. D1 supported preflight: `quick_check=ok`, FK check empty, `customers.wa_id` and `normalized_whatsapp_number` present. 9,267 rows read by checks; no broad event/order scan. No migration, D1 write, R2 object, queue job, purchased resource, or additional cost.
+- Existing browser Meta Developer app is the canonical Get Free Seeds app/business. `messages` is subscribed to the staging `/webhooks/whatsapp` callback. Admin Graph status reports WABA subscribed, canonical phone configured, and registration status `EXPIRED`; owner-side Meta revalidation is required before a real outbound acknowledgement retest.
+- Target order remains pending with no receipt; private R2 object and D1 receipt count are zero. Inbound WAMID SHA-256 fingerprint prefix is `2ef787841e6d07e0`; raw ID remains private. No screenshots/customer identifiers/receipt bytes are retained in the repository. Existing `images/` remains untouched; Hoja assets were not opened or used.
+
 ## GFS-199 Current Runtime (2026-10-23)
 
 - API `9b5f13ae-f023-4fa8-befe-2085bb24cbda`; rollback `8da54b28-4bec-45b2-9a3f-672225dba843`. Admin unchanged `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0`; request queue flagfalse.

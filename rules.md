@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-208 Receipt Upload Gate (2026-10-24)
+
+- The target non-payment image is test input only. Do not authenticate financial contents, infer wallet credit, store a manual receipt, approve, or mark `PAID`.
+- The verified test account's own WhatsApp Profile matches the authorized tester and the canonical GFS contact was verified separately. The target order's customer `wa_id` is NULL even though its stored WhatsApp number matches that verified sender. Never fill or overwrite `wa_id` from a display name or guess.
+- Receipt association may use the exact customer WhatsApp number only when the customer's `wa_id` is NULL, normalized number equals the authenticated inbound sender, and either the inbound message replies to that order's exact payment-text/QR WAMID or the sender has exactly one eligible payment order. A non-NULL mismatched `wa_id` always fails closed; multiple candidates without exact reply context fail closed.
+- Keep receipt state at `PAYMENT_REVIEW` and payment status `PENDING`. A receipt acknowledgement is transport confirmation only, not funds verification. EN: `Receipt received for order {orderNumber}. Your payment is under Admin review. We will notify you after verification.` UR: `آپ کے آرڈر {orderNumber} کی رسید موصول ہو گئی ہے۔ آپ کی ادائیگی ایڈمن کے جائزے میں ہے۔ تصدیق کے بعد ہم آپ کو مطلع کریں گے۔`
+- Meta `messages` is subscribed to the canonical staging callback and the inbound event was persisted. The current API lacks the missing-`wa_id` fallback. Do not deploy the candidate until D1/binding/rollback and security gates pass; Meta phone registration currently reports `EXPIRED`. Do not change number, WABA, or webhook registration to bypass this state.
+- Preserve the new-number WhatsApp lock, the zero-Hoja runtime rule, all payment/order history, private R2, and `images/`. Never run broad shared-D1 scans or copy raw WAMIDs, phone numbers, receipt bytes, or customer data to logs/docs.
+
 ## GFS-199 Verified OFFER Protocol (2026-10-23)
 
 - Verify the tester through **You > View Profile**, where the own phone is visible. You/Settings/Account alone may hide it; missing digits there are not proof of a different account. Compare the exact own phone and separately confirm the canonical GFS phone through Contact Info. Never switch/relink accounts to satisfy a check.
