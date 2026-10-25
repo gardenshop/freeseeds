@@ -6,13 +6,13 @@
 
 | Task | Result | Evidence |
 |---|---|---|
-| Git / PR / V1 preservation | **PASS** | Local and remote PR #9 HEAD `ec0a793d08c5c403a59183c4e2e341a6dadd16aa`; PRs #8/#9/#10 open; #9 still targets frozen V1 `d816ba1` and was not merged; `images/` remains untracked/untouched. |
+| Git / PR / V1 preservation | **PASS** | Tested source `ec0a793d08c5c403a59183c4e2e341a6dadd16aa`; documentation commit `12d3d59` pushed to PR #9 branch; PRs #8/#9/#10 open; #9 still targets frozen V1 `d816ba1` and was not merged; `images/` remains untracked/untouched. |
 | P0 approach | **PASS AUTHORIZATION / NOT DEPLOYED** | User authorized Approach A staging-only: additive COD-specific schema and backward-compatible Worker based on active legacy API. Select A over B to retain signed callback/config and avoid V2 credential provisioning/new route/Meta cutover. Do not deploy V2 source wholesale or merge #9 into V1. |
 | P1 customer journey | **PASS SOURCE / NOT LIVE** | Existing V2 source flow/regression covers payment choice, COD summary/advance option and idempotent COD persistence, but no active Worker compatibility release or real journey was exercised this turn. |
 | P2 configuration | **BLOCKED** | Chrome DevTools MCP actions unavailable, so active bindings, backup, migration preflight, current Meta status/test capability and authorized collector/remittance record could not be checked. User reports existing contract; no record/details retrieved. COD/provider/payment flags not changed. |
 | P3 real WhatsApp E2E | **NOT RUN** | No current authorized tester/sender check, public signed callback verification, order, screenshot or WAMID. No claim of live buttons, fee, amount or Admin COD row. No receipt/QR/reminder was produced. |
 | P4 regression/integrity | **PASS LOCAL ONLY** | Full suite 24 files / 261 tests; build, lint and `npm audit --omit=dev` pass (0 production vulnerabilities). No current remote D1 integrity/Admin regression or fulfillment/reconciliation test performed. No real order marked PAID or shipped. |
-| P5 docs/push/deployment | **PARTIAL** | Updated rules, STATUS, TEST_MATRIX, DECISIONS, CHANGELOG, RESOURCE_REGISTRY and this report. No code/deployment change or push in this run; remote remains at verified HEAD `ec0a793`. |
+| P5 docs/push/deployment | **PARTIAL** | Updated rules, STATUS, TEST_MATRIX, DECISIONS, CHANGELOG, RESOURCE_REGISTRY and this report; documentation commit `12d3d59` is pushed to PR #9. No new code/deployment change; tested source remains `ec0a793`. |
 
 **Identity/evidence:** `wrangler whoami` read-only returned `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. This is not authenticated dashboard mutation verification. Official Chrome DevTools MCP namespace/actions (`list_pages`, page-scoped actions) were unavailable. Existing GFS-219 Worker/version/D1 details remain historical, not freshly revalidated.
 
@@ -20,7 +20,7 @@
 
 **Live COD state:** disabled/not enabled by this execution; no new runtime state change verified. No source commit created, so production Worker version remains not freshly verified. No COD test order, Admin status, WAMID, screenshot, rollback execution, or fresh D1 integrity evidence exists in GFS-220. No advertising spend.
 
-**Completion estimate:** P0 60%; P1 65%; P2 15%; P3 0%; P4 45%; P5 70%; overall ~39% complete / ~61% remaining. Public COD/WhatsApp launch **NO-GO**. Exact remaining action: restore exposed official Chrome MCP tools, then verify identities/bindings/contract/Meta/tester, implement and test legacy-compatible additive release, backup and test rollback, and complete authorized live acceptance.
+**Completion estimate:** P0 60%; P1 65%; P2 15%; P3 0%; P4 45%; P5 80%; overall ~41% complete / ~59% remaining. Public COD/WhatsApp launch **NO-GO**. Exact remaining action: restore exposed official Chrome MCP tools, then verify identities/bindings/contract/Meta/tester, implement and test legacy-compatible additive release, backup and test rollback, and complete authorized live acceptance.
 
 ## GFS-219 Complete COD Integration / Production Launch (2026-10-25)
 

@@ -4,7 +4,7 @@
 
 | Requirement | Result | Evidence / blocker |
 |---|---|---|
-| Git / frozen release preservation | PASS | HEAD and remote PR #9 both `ec0a793d08c5c403a59183c4e2e341a6dadd16aa`; PR #8/#9/#10 open; frozen V1 tag remains `d816ba1`; no merge/reset; untracked `images/` untouched. |
+| Git / frozen release preservation | PASS | Tested source `ec0a793d08c5c403a59183c4e2e341a6dadd16aa`; documentation commit `12d3d59` pushed to PR #9 (branch HEAD); PR #8/#9/#10 open; frozen V1 tag remains `d816ba1`; no merge/reset; untracked `images/` untouched. |
 | Proposed approach authorization | PASS | User explicitly authorized staging-only additive COD schema and backward-compatible active-Worker release; no PR #9 merge or production promotion. |
 | Approach A deployment compatibility | BLOCKED | Candidate not yet backported to active Worker; active bindings/version and backup/rollback cannot be browser-verified; no migration/deploy. V2 migration is not applied to shared D1. |
 | Account identity | PASS READ-ONLY / MUTATION PREFLIGHT BLOCKED | `wrangler whoami`: `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Chrome MCP tools not exposed, so no dashboard verification. |
