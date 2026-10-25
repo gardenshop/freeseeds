@@ -116,6 +116,21 @@ function jsonRecords(value: unknown): Record<string, unknown>[] {
   }
 }
 
+const CITY_PROVINCE = new Map([
+  ["lahore", "Punjab"], ["rawalpindi", "Punjab"], ["karachi", "Sindh"], ["quetta", "Balochistan"],
+  ["peshawar", "KPK"], ["islamabad", "Islamabad"], ["muzaffarabad", "AJK"], ["gilgit", "Gilgit Baltistan"], ["skardu", "Gilgit Baltistan"]
+]);
+
+function expectedProvinceForCity(city: unknown): string | undefined {
+  if (typeof city !== "string") return undefined;
+  return CITY_PROVINCE.get(city.trim().replace(/\s+/g, " ").toLowerCase());
+}
+
+function hasCityProvinceMismatch(city: unknown, province: unknown): boolean {
+  const expected = expectedProvinceForCity(city);
+  return Boolean(expected && typeof province === "string" && expected.toLowerCase() !== province.trim().toLowerCase());
+}
+
 export type ShippingLabelFormat = "4x6" | "A6";
 
 function escapeHtml(value: unknown): string {
@@ -164,7 +179,7 @@ async function assignedTrackingNumber(db: D1Database, orderId: string): Promise<
   }
 }
 
-function orderView(row: Record<string, unknown>, referenceRequestDispatchEnabled = false) {
+function orderView(row: Record<string, unknown>, referenceRequestDispatchEnabled = false, locationValidationEnabled = false) {
   const items = jsonRecords(row.items_json).map((item) => ({
     id: String(item.id),
     type: String(item.itemType),
@@ -191,6 +206,8 @@ function orderView(row: Record<string, unknown>, referenceRequestDispatchEnabled
   const codStatus=row.cod_status==null?null:String(row.cod_status);
   const codOrder=String(row.method??"")==="COD"||Boolean(codStatus&&!['COD_METHOD_CHANGED','COD_CANCELLED'].includes(codStatus));
   const fulfillmentHold = String(row.order_number) === "FS-261019-000001";
+  const expectedProvince = locationValidationEnabled ? expectedProvinceForCity(row.city) : undefined;
+  const locationIssue = locationValidationEnabled && hasCityProvinceMismatch(row.city, row.province) ? "CITY_PROVINCE_MISMATCH" : null;
   const unpaidState = ["NEW", "DETAILS_COMPLETED", "PAYMENT_PENDING", "PAYMENT_REJECTED", "CANCELLED"].includes(state);
   return {
     id: String(row.id),
@@ -212,6 +229,8 @@ function orderView(row: Record<string, unknown>, referenceRequestDispatchEnabled
     deliveryAddress: row.delivery_address == null ? null : String(row.delivery_address),
     landmark: row.nearby_place == null ? null : String(row.nearby_place),
     city: row.city == null ? null : String(row.city),
+    locationIssue,
+    expectedProvince: locationIssue ? expectedProvince : null,
     waId: row.wa_id == null ? null : String(row.wa_id),
     contactNumber: row.contact_number == null ? null : String(row.contact_number),
     normalizedContactNumber: row.normalized_contact_number == null ? null : String(row.normalized_contact_number),
@@ -249,7 +268,7 @@ function orderView(row: Record<string, unknown>, referenceRequestDispatchEnabled
     archivedBy: row.archived_by == null ? null : String(row.archived_by),
     archiveReason: row.archive_reason == null ? null : String(row.archive_reason),
     canConfirmOrder: !codOrder && !fulfillmentHold && ["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(state) && row.order_confirmed_at == null && row.archived_at == null,
-    canPrintShippingLabel: !fulfillmentHold && (["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(state)||codOrder&&["COD_PENDING","PACKING","DISPATCHED","DELIVERED"].includes(state)) && row.archived_at == null,
+    canPrintShippingLabel: !fulfillmentHold && !locationIssue && (["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(state)||codOrder&&["COD_PENDING","PACKING","DISPATCHED","DELIVERED"].includes(state)) && row.archived_at == null,
     canCancel: !financial && receiptCount === 0 && state !== "CANCELLED" && unpaidState && row.archived_at == null,
     canArchive: !financial && receiptCount === 0 && unpaidState && row.archived_at == null
   };
@@ -268,12 +287,12 @@ function productView(row: Record<string, unknown>) {
   };
 }
 
-function tariffPageHtml(): string {
+function tariffPageHtml(csrfToken: string): string {
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tariff Management | Get Free Seeds</title><style>body{font:16px system-ui;max-width:1100px;margin:2rem auto;padding:0 1rem}nav{margin-bottom:1rem}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:.5rem;text-align:left}input{box-sizing:border-box;max-width:12rem;padding:.35rem}small{display:block;color:#666}.status{margin-left:.5rem}.ok{color:green}.error{color:#b00020}</style></head><body><nav><a href="/">Admin home</a> | <a href="/payment-settings">Payment Settings</a></nav><h1>Tariff Management</h1><p>D1/admin is the only dynamic quote source.</p><table><thead><tr><th>Item/Province</th><th>Type</th><th>Price/Fee PKR</th><th>Packs</th><th>Active</th><th>Save</th></tr></thead><tbody id="rows"></tbody></table><script>
-const escapeHtml=(value)=>String(value??'').replace(/[&<>"']/g,(character)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
+const csrf=${JSON.stringify(csrfToken)};const escapeHtml=(value)=>String(value??'').replace(/[&<>"']/g,(character)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
 function productRow(item){return '<tr data-kind="p" data-id="'+escapeHtml(item.id)+'"><td><input name="name" value="'+escapeHtml(item.name)+'"><small>'+escapeHtml(item.code)+'</small></td><td>'+escapeHtml(item.category)+'</td><td><input name="pricePkr" type="number" min="0" value="'+escapeHtml(item.pricePkr)+'"></td><td><input name="packQuantity" type="number" min="1" value="'+escapeHtml(item.packQuantity||1)+'"></td><td><input name="active" type="checkbox" '+(item.active?'checked':'')+'></td><td><button type="button">Save</button><span class="status"></span></td></tr>'}
 function rateRow(item){return '<tr data-kind="r" data-id="'+escapeHtml(item.id)+'"><td>'+escapeHtml(item.province)+'</td><td>DELIVERY</td><td><input name="deliveryFeePkr" type="number" min="1" value="'+escapeHtml(item.deliveryFeePkr)+'"></td><td>-</td><td><input name="active" type="checkbox" '+(item.active?'checked':'')+'></td><td><button type="button">Save</button><span class="status"></span></td></tr>'}
-async function load(){const [productResponse,rateResponse]=await Promise.all([fetch('/api/catalog/products').then((response)=>response.json()),fetch('/api/catalog/province-delivery-rates').then((response)=>response.json())]);const rows=(productResponse.products||[]).map(productRow).concat((rateResponse.rates||[]).map(rateRow));document.querySelector('#rows').innerHTML=rows.join('');for(const row of document.querySelectorAll('#rows tr')){const button=row.querySelector('button');const status=row.querySelector('span');button.onclick=async()=>{const body={};for(const input of row.querySelectorAll('input[name]'))body[input.name]=input.type==='checkbox'?input.checked:input.type==='number'?Number(input.value):input.value;const path=row.dataset.kind==='p'?'products':'province-delivery-rates';const result=await fetch('/api/catalog/'+path+'/'+row.dataset.id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});status.textContent=result.ok?' Saved':' Validation blocked';status.className='status '+(result.ok?'ok':'error')}}}
+async function load(){const [productResponse,rateResponse]=await Promise.all([fetch('/api/catalog/products').then((response)=>response.json()),fetch('/api/catalog/province-delivery-rates').then((response)=>response.json())]);const rows=(productResponse.products||[]).map(productRow).concat((rateResponse.rates||[]).map(rateRow));document.querySelector('#rows').innerHTML=rows.join('');for(const row of document.querySelectorAll('#rows tr')){const button=row.querySelector('button');const status=row.querySelector('span');button.onclick=async()=>{const body={};for(const input of row.querySelectorAll('input[name]'))body[input.name]=input.type==='checkbox'?input.checked:input.type==='number'?Number(input.value):input.value;const path=row.dataset.kind==='p'?'products':'province-delivery-rates';const result=await fetch('/api/catalog/'+path+'/'+row.dataset.id,{method:'PUT',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(body)});status.textContent=result.ok?' Saved':' Validation blocked';status.className='status '+(result.ok?'ok':'error')}}}
 load().catch(()=>{document.querySelector('#rows').textContent='Tariff unavailable'});
 </script></body></html>`;
 }
@@ -399,11 +418,39 @@ filters.onsubmit=(event)=>{event.preventDefault();page=1;load()};document.queryS
    const renderOrderDetail=renderDetail;renderDetail=(data)=>{renderOrderDetail(data);const order=data.order;const receiptHeading=[...detail.querySelectorAll('h3,h4')].find((node)=>/receipt/i.test(node.textContent));if(receiptHeading)receiptHeading.textContent=receiptHeading.textContent.trim()+' ('+Number(order.receiptCount||0)+')';for(const receipt of (data.receipts||order.receipts||[])){const link=[...detail.querySelectorAll('a')].find((node)=>node.getAttribute('href')===receipt.previewUrl);if(link){const status=document.createElement('small');status.className='muted';status.textContent=' · '+String(receipt.reviewState||'SUBMITTED')+' · uploaded '+when(receipt.submittedAt);link.parentElement.append(status)}}const panel=document.createElement('section');panel.className='card payment-reminder-panel';panel.innerHTML='<h3>Payment Reminder</h3><p class="muted">Loading private reminder history…</p>';detail.querySelector('.actions')?.before(panel);requestJson('/api/orders/'+encodeURIComponent(order.id)+'/payment-reminders',{cache:'no-store'},undefined,true).then((history)=>{if(!panel.isConnected)return;const labels={15:'15m reminder',30:'30m reminder',60:'60m reminder',210:'3h30 final warning',240:'4h grace notice',270:'4h30 cancellation'};const pkt=(value)=>value?new Date(value).toLocaleString('en-PK',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Karachi'}):'—';const schedule=history.schedule;let html='<p>Order created (PKT): '+esc(pkt(order.createdAt))+' · deadline (PKT): '+esc(pkt(schedule?.source_created_at?new Date(Date.parse(schedule.source_created_at)+270*60000).toISOString():null))+'</p><p>Status: '+esc(order.state)+' · '+esc(order.paymentReviewState||order.paymentStatus)+' · reminder opt-out: '+(history.order?.optedOut?'YES':'NO')+'</p>';if(!history.enabled)html+='<p class="muted">V2 reminder history is disabled in this deployment.</p>';else if(!schedule)html+='<p class="muted">No V2 schedule exists for this order. Existing orders are not enrolled retroactively.</p>';else{html+='<p>Schedule: '+esc(schedule.status)+' / '+esc(schedule.phase)+(schedule.stop_reason?' · '+esc(schedule.stop_reason):'')+(schedule.hold_reason?' · '+esc(schedule.hold_reason):'')+'</p><ol>';for(const stage of history.stages||[]){const countdown=stage.status==='PENDING'?Math.max(0,Math.ceil((Date.parse(stage.due_at)-Date.now())/60000))+' min':'—';html+='<li><strong>'+esc(labels[stage.stage_minutes]||stage.stage_minutes+'m')+'</strong> · '+esc(stage.status)+' · due '+esc(pkt(stage.due_at))+' · '+esc(countdown);if(stage.locale)html+='<br>Locale '+esc(stage.locale)+' · CMS v'+esc(stage.template_version)+' · '+esc(stage.template_name||'service-window');if(stage.rendered_text)html+='<br><pre>'+esc(stage.rendered_text)+'</pre>';if(stage.sent_at)html+='<br>Sent '+esc(pkt(stage.sent_at))+' · attempts '+esc(stage.attempts)+' · WAMID '+esc(stage.wamid||'—');if(stage.delivery_status)html+='<br>Delivery '+esc(stage.delivery_status);if(stage.failure_reason)html+='<br>Failure '+esc(stage.failure_reason);html+='</li>'}html+='</ol>'}panel.innerHTML=html}).catch((error)=>{if(panel.isConnected)panel.innerHTML='<h3>Payment Reminder</h3><p class="error">'+esc(error instanceof Error?error.message:'Reminder history unavailable')+'</p>'})};
     const addReminderNotice=addActions;addActions=(order)=>{addReminderNotice(order);if(!order.paymentId||!['DETAILS_COMPLETED','PAYMENT_PENDING','PAYMENT_GRACE'].includes(order.state)||order.paymentStatus!=='PENDING'||order.archivedAt)return;const root=detail.querySelector('.actions');if(root)root.append(actionButton('Send Updated Notice',async()=>{const stageMinutes=Number(prompt('Unsent stage minutes: 15, 30, 60, 210, or 240','15'));if(![15,30,60,210,240].includes(stageMinutes))return;const history=await requestJson('/api/orders/'+encodeURIComponent(order.id)+'/payment-reminders',{cache:'no-store'},undefined,true);const stage=(history.stages||[]).find((item)=>Number(item.stage_minutes)===stageMinutes);if(!stage?.preview){showActionError(new Error('No published copy is available for this stage.'));return}const preview=stage.preview;if(!confirm('Exact outgoing text ('+preview.locale+', CMS v'+preview.version+'):'+String.fromCharCode(10,10)+preview.renderedText+String.fromCharCode(10,10)+'Send only to '+order.orderNumber+'?'))return;const reason=prompt('Reason for sending this updated notice');if(!reason||!confirmAction(order,'Send updated notice for stage '+stageMinutes+'m'))return;await run('/api/orders/'+encodeURIComponent(order.id)+'/payment-reminders/send-updated',{stageMinutes,templateVersion:preview.version,reason,confirmation:order.orderNumber})}))};
     const renderCodCard=orderCard;orderCard=(order)=>{const html=renderCodCard(order);return order.codOrder?html.replace('</button>','<span class="badge cod">COD · '+esc(order.codStatus||'COD_PENDING')+'</span></button>'):html};
-    const renderCodDetail=renderDetail;renderDetail=(data)=>{renderCodDetail(data);const order=data.order;if(!order.codOrder)return;const panel=document.createElement('section');panel.className='card cod-order-panel';panel.setAttribute('aria-label','COD order and reconciliation');const lines=[['Seeds',order.codSeedPkr],['Fertilizer',order.codFertilizerPkr],['Province delivery',order.codDeliveryFeePkr],['COD fee',order.codFeePkr],['Total due on delivery',order.codTotalPayablePkr]];panel.innerHTML='<h3>Cash on Delivery · '+esc(order.codStatus||'COD_PENDING')+'</h3>'+facts(lines.map((item)=>[item[0],money(item[1])]))+'<p class="muted">Payment remains COD_PENDING until courier collection and remittance are separately verified.</p>';detail.querySelector('.detail-header')?.after(panel)};
+     const renderCodDetail=renderDetail;renderDetail=(data)=>{renderCodDetail(data);const order=data.order;if(!order.codOrder)return;const panel=document.createElement('section');panel.className='card cod-order-panel';panel.setAttribute('aria-label','COD order and reconciliation');const lines=[['Seeds',order.codSeedPkr],['Fertilizer',order.codFertilizerPkr],['Province delivery',order.codDeliveryFeePkr],['COD fee',order.codFeePkr],['Total due on delivery',order.codTotalPayablePkr]];panel.innerHTML='<h3>Cash on Delivery · '+esc(order.codStatus||'COD_PENDING')+'</h3>'+facts(lines.map((item)=>[item[0],money(item[1])]))+'<p class="muted">Payment remains COD_PENDING until courier collection and remittance are separately verified.</p>';detail.querySelector('.detail-header')?.after(panel)};
+     const renderLocationIssue=renderDetail;renderDetail=(data)=>{renderLocationIssue(data);const order=data.order;if(order.locationIssue!=='CITY_PROVINCE_MISMATCH')return;const notice=document.createElement('p');notice.className='error location-issue';notice.setAttribute('role','alert');notice.textContent='Delivery location needs review: '+order.city+' maps to '+order.expectedProvince+', but the saved province is '+order.province+'. Saved details were not changed. Shipping labels and dispatch are blocked until the customer corrects the province.';detail.querySelector('.detail-header')?.after(notice)};
     const addCodActions=addActions;addActions=(order)=>{addCodActions(order);if(!order.codOrder||order.archivedAt)return;const root=detail.querySelector('.actions');if(!root)return;const codNext={COD_PENDING:['PACKING','Mark COD packing'],PACKING:['DISPATCHED','Mark COD dispatched'],DISPATCHED:['DELIVERED','Mark COD delivered']}[order.state];if(codNext&&((order.state==='COD_PENDING'&&order.codStatus==='COD_CONFIRMED')||(order.state==='PACKING'&&order.codStatus==='PACKING')||(order.state==='DISPATCHED'&&order.codStatus==='DISPATCHED')))root.append(actionButton(codNext[1],async()=>{if(confirmAction(order,codNext[1]))await run('/api/cod-orders/'+encodeURIComponent(order.id)+'/transition',{from:order.state,to:codNext[0],confirmation:order.orderNumber})},'primary'));if(order.state==='COD_PENDING'&&!order.trackingNumber)root.append(actionButton('Assign COD tracking',async()=>{const trackingNumber=prompt('Tracking number');if(trackingNumber&&confirmAction(order,'Assign COD tracking'))await run('/api/orders/'+encodeURIComponent(order.id)+'/tracking',{trackingNumber,confirmation:order.orderNumber})}));if(order.codStatus==='COLLECTION_PENDING')root.append(actionButton('Record COD collection',async()=>{const amount=Number(prompt('Verified cash collected (PKR)',String(order.codTotalPayablePkr)));if(!Number.isSafeInteger(amount)||amount!==Number(order.codTotalPayablePkr)){showActionError(new Error('COD_COLLECTION_AMOUNT_MISMATCH'));return}const collectionReference=prompt('Opaque courier collection evidence reference');if(collectionReference&&confirm('I verified the courier collected the exact PKR '+amount+' for '+order.orderNumber+'?'))await run('/api/cod-orders/'+encodeURIComponent(order.id)+'/collection',{collectionAmountPkr:amount,collectionReference,collectionConfirmed:true,confirmation:order.orderNumber})},'primary'));if(order.codStatus==='COLLECTED')root.append(actionButton('Reconcile COD remittance',async()=>{const amount=Number(prompt('Verified remittance received (PKR)',String(order.codTotalPayablePkr)));if(!Number.isSafeInteger(amount)||amount!==Number(order.codTotalPayablePkr)){showActionError(new Error('COD_REMITTANCE_AMOUNT_MISMATCH'));return}const remittanceReference=prompt('Opaque bank/wallet remittance evidence reference');if(remittanceReference&&confirm('I verified the exact PKR '+amount+' remittance in the authorized receiving account for '+order.orderNumber+'?'))await run('/api/cod-orders/'+encodeURIComponent(order.id)+'/reconcile',{remittanceAmountPkr:amount,remittanceReference,remittanceConfirmed:true,confirmation:order.orderNumber})},'primary'))};
     const paymentStatusFilter=document.querySelector('select[name="paymentStatus"]');if(paymentStatusFilter&&!paymentStatusFilter.querySelector('option[value="COD_PENDING"]'))paymentStatusFilter.insertAdjacentHTML('beforeend','<option value="COD_PENDING">COD pending</option>');const fulfillmentFilter=document.querySelector('select[name="fulfillment"]');if(fulfillmentFilter&&!fulfillmentFilter.querySelector('option[value="COD_PENDING"]'))fulfillmentFilter.insertAdjacentHTML('beforeend','<option value="COD_PENDING">COD pending / ready to pack</option>');
     hydrate();reminderFilter.querySelector('select').value=new URLSearchParams(location.search).get('reminder')||'';setTabs({});load();
 </script></body></html>`;
+}
+
+function removeGeneratedOrdersLayer(html: string, startMarker: string, endMarker: string): string {
+  const start = html.indexOf(startMarker);
+  const end = html.indexOf(endMarker, start + startMarker.length);
+  if (start < 0 || end < 0) throw new Error("V2_ORDERS_UI_LAYER_MISSING");
+  return html.slice(0, start) + html.slice(end);
+}
+
+function v2OrdersPageHtml(csrfToken: string): string {
+  let html = professionalOrdersPageHtml(csrfToken);
+  html = removeGeneratedOrdersLayer(html, "const gateReferenceRequestUntilApiDeploy=addActions;", "const latePaymentReviewActions=addActions;");
+  html = removeGeneratedOrdersLayer(html, "const simpleCreditConfirmation=addActions;", "const requestClearerReasonPrompt=addActions;");
+  const canonicalPaymentLayer = `
+const v2ConfirmPaidActions=addActions;addActions=(order)=>{v2ConfirmPaidActions(order);if(!order.paymentId||order.state!=='PAYMENT_REVIEW'||order.paymentReviewState!=='REVIEW'||Number(order.receiptCount)<1||order.archivedAt||order.fulfillmentHold)return;const root=detail.querySelector('.actions');if(!root)return;for(const button of root.querySelectorAll('button'))if(button.textContent.trim()==='Approve payment')button.remove();const savedReference=String(order.customerTransactionReference||'');const panel=document.createElement('section');panel.className='card payment-reference-panel';panel.innerHTML='<h3>Confirm paid</h3><p class="muted">Review the private receipt and independently check the authorized Garden Shop receiving account. This action never infers credit from the receipt or this click.</p><dl class="facts"><dt>Method</dt><dd>'+text(order.paymentMethod)+'</dd><dt>Expected amount</dt><dd>'+money(order.expectedAmountPkr)+'</dd><dt>Receipt</dt><dd>'+Number(order.receiptCount).toLocaleString('en-PK')+' submitted</dd></dl><label>Genuine transaction reference<input data-v2-transaction-reference type="text" maxlength="80" autocomplete="off"></label><details><summary>Advanced details</summary><label>Supplementary evidence (optional)<input data-v2-supplementary-evidence type="text" maxlength="128" autocomplete="off" placeholder="Non-sensitive provider record reference"></label></details><p data-v2-confirm-status class="muted" role="status"></p><button type="button" data-v2-confirm-paid class="primary">Confirm Paid</button>';const reference=panel.querySelector('[data-v2-transaction-reference]');const supplementary=panel.querySelector('[data-v2-supplementary-evidence]');const status=panel.querySelector('[data-v2-confirm-status]');const button=panel.querySelector('[data-v2-confirm-paid]');reference.value=savedReference;reference.readOnly=Boolean(savedReference);const normalizedReference=()=>String(reference.value||'').trim().replace(/\\s+/g,'');const referencePattern=/^[A-Za-z0-9][A-Za-z0-9._:/-]{3,79}$/;const orderNumber=String(order.orderNumber||'').replace(/\\s+/g,'').toUpperCase();const bound=()=>Boolean(order.paymentMethodVerified&&Number(order.expectedAmountPkr)>0&&Number(order.expectedAmountPkr)===Number(order.totalPayablePkr)&&Number(order.receiptCount)>0&&order.paymentReviewState==='REVIEW'&&order.state==='PAYMENT_REVIEW');const update=()=>{const value=normalizedReference();button.disabled=!(bound()&&referencePattern.test(value)&&value.toUpperCase()!==orderNumber);if(!order.paymentMethodVerified)status.textContent='The configured receiving method is not independently verified; keep this payment under review.';else if(Number(order.expectedAmountPkr)!==Number(order.totalPayablePkr))status.textContent='The expected payment and persisted order total do not match; keep this payment under review.';else if(savedReference)status.textContent='Saved reference is read-only. Confirm only after independently verifying the receiving-account credit.';else status.textContent='Enter the genuine reference once. Confirm Paid saves it and approves the bound payment atomically.'};reference.addEventListener('input',update);update();button.onclick=async()=>{const value=normalizedReference();if(button.disabled||!referencePattern.test(value)||value.toUpperCase()===orderNumber){status.className='error';status.textContent='Enter the genuine transaction reference from the receipt or provider history. Do not use the order number.';return}const attestation='Confirm Paid for '+order.orderNumber+'?\\n\\nPayment method: '+order.paymentMethod+'\\nExpected amount: PKR '+Number(order.expectedAmountPkr).toLocaleString('en-PK')+'\\n\\nI independently checked the authorized Garden Shop receiving account and confirmed that this exact amount was credited for this genuine transaction reference. This audited action will mark the order PAID.';if(!confirm(attestation))return;button.disabled=true;status.className='muted';status.textContent='Confirming the bound payment...';try{await run('/api/payments/'+encodeURIComponent(order.paymentId)+'/approve',{orderId:order.id,confirmation:order.orderNumber,reference:value,settlementEvidenceRef:String(supplementary.value||'').trim()||undefined,settlementConfirmed:true})}catch(error){status.className='error';status.textContent=error instanceof Error?error.message:'Payment remains under review.';update()}};root.before(panel)};
+`;
+  const insertionPoint = "const latePaymentReviewActions=addActions;";
+  if (!html.includes(insertionPoint)) throw new Error("V2_ORDERS_UI_INSERTION_MISSING");
+  return html.replace(insertionPoint, canonicalPaymentLayer + insertionPoint);
+}
+
+function paymentConfirmationV2UiEnabled(env: Env["Bindings"]): boolean {
+  return env.PAYMENT_CONFIRMATION_V2_ENABLED === "true" && (env.DEPLOYMENT_STATE === "V2_ISOLATED_STAGING" || env.DEPLOYMENT_STATE === "LOCAL");
+}
+
+function locationValidationV2Enabled(env: Env["Bindings"]): boolean {
+  return paymentConfirmationV2UiEnabled(env) || codV2SchemaEnabled(env);
 }
 
 function testControlsPageHtml(csrfToken: string): string {
@@ -701,7 +748,11 @@ app.post("/api/payment-reminder-templates/:key/:locale/publish", async (c) => {
   return c.json({ok:true,version,state:"PUBLISHED"});
 });
 app.use("/orders",async(c,next)=>{await next();if(c.req.path!=="/orders")return;const response=c.res.clone();if(!response.headers.get("content-type")?.includes("text/html"))return;let html=await response.text();html=html.replace("</nav>"," | <a href=\"/payment-reminders\">Payment Reminders</a></nav>");const headers=new Headers(response.headers);headers.delete("content-length");c.res=new Response(html,{status:response.status,statusText:response.statusText,headers})});
-app.get("/orders", (c) => c.html(professionalOrdersPageHtml(issueCsrfToken(c)).replace("Request the transaction reference in the customer's selected language", "Request a transaction reference in the selected language")));
+app.get("/orders", (c) => {
+  const csrfToken = issueCsrfToken(c);
+  const html = paymentConfirmationV2UiEnabled(c.env) ? v2OrdersPageHtml(csrfToken) : professionalOrdersPageHtml(csrfToken);
+  return c.html(html.replace("Request the transaction reference in the customer's selected language", "Request a transaction reference in the selected language"));
+});
 app.get("/test-controls", (c) => c.html(testControlsPageHtml(issueCsrfToken(c))));
 app.get("/whatsapp-content", (c) => c.html(whatsappContentJourneyPageHtml(issueCsrfToken(c))));
 app.get("/payment-settings", (c) => {
@@ -1169,15 +1220,15 @@ app.post("/api/meta-activation/actions/retry-failed-reply", async (c) => {
 });
 
 app.get("/payment-amount", (c) => c.html(`<!doctype html><html><head><meta charset="utf-8"><title>Advance Amount | Get Free Seeds</title><style>body{font:16px system-ui;max-width:700px;margin:2rem auto;padding:0 1rem}label{display:block;margin:1rem 0}input{box-sizing:border-box;width:100%;padding:.6rem}button{padding:.6rem .9rem}.status{margin:1rem 0}.error{color:#b00020}.ok{color:green}</style></head><body><nav><a href='/'>Admin home</a> | <a href='/payment-settings'>Payment methods</a></nav><h1>Authoritative advance payment</h1><p>Set the positive PKR delivery/advance amount used for new payment requests. At least one complete enabled payment method is required.</p><label>Amount (PKR)<input id="amount" type="number" min="1" step="1" inputmode="numeric"></label><button id="save">Save amount</button><div id="status" class="status"></div><script>
- const amount=document.querySelector('#amount');const status=document.querySelector('#status');
+ const csrf=${JSON.stringify(issueCsrfToken(c))};const amount=document.querySelector('#amount');const status=document.querySelector('#status');
  async function load(){const r=await fetch('/api/payment-configuration');const d=await r.json();amount.value=d.advanceAmountPkr??'';status.textContent=d.paymentMethodsConfigured?'':'Configure a complete enabled payment method before saving an amount.';status.className='status '+(d.paymentMethodsConfigured?'':'error')}
- document.querySelector('#save').onclick=async()=>{const value=Number(amount.value);const r=await fetch('/api/payment-configuration',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({advanceAmountPkr:value})});const d=await r.json();status.textContent=r.ok?'Saved':'Unable to save: '+(d.error||'validation failed');status.className='status '+(r.ok?'ok':'error');if(r.ok)await load()};load().catch(()=>status.textContent='Payment configuration unavailable');</script></body></html>`));
+ document.querySelector('#save').onclick=async()=>{const value=Number(amount.value);const r=await fetch('/api/payment-configuration',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify({advanceAmountPkr:value})});const d=await r.json();status.textContent=r.ok?'Saved':'Unable to save: '+(d.error||'validation failed');status.className='status '+(r.ok?'ok':'error');if(r.ok)await load()};load().catch(()=>status.textContent='Payment configuration unavailable');</script></body></html>`));
 
 app.get("/catalog", (c) => c.html(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Catalog | Get Free Seeds</title><style>body{font:16px system-ui;max-width:1100px;margin:2rem auto;padding:0 1rem}nav{margin-bottom:1rem}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}.card{border:1px solid #ccc;border-radius:8px;padding:1rem}.card h2{margin-top:0}label{display:block;margin:.6rem 0}input{box-sizing:border-box;width:100%;padding:.5rem}button{padding:.5rem .8rem}.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.5rem;align-items:end;border-top:1px solid #ddd;padding:1rem 0}.status{margin:.5rem 0}.error{color:#b00020}.ok{color:green}</style></head><body><nav><a href='/'>Admin home</a> | <a href='/payment-settings'>Payment methods</a></nav><h1>Catalog and delivery rates</h1><p>Only values saved here are used for dynamic quotes. New entries start disabled.</p><div class="grid"><section class="card"><h2>Products</h2><form id="product-form"><label>Code<input name="code" required></label><label>Name<input name="name" required></label><label>Category<input name="category" required></label><label>Price (PKR)<input name="pricePkr" type="number" min="1" step="1" required></label><label>Fertilizer price (PKR, optional)<input name="fertilizerPricePkr" type="number" min="1" step="1"></label><label><input name="active" type="checkbox"> Active</label><button>Save new product</button></form><div id="products" class="status">Loading...</div></section><section class="card"><h2>Province delivery rates</h2><form id="rate-form"><label>Province<input name="province" required></label><label>Delivery fee (PKR)<input name="deliveryFeePkr" type="number" min="1" step="1" required></label><label><input name="active" type="checkbox"> Active</label><button>Save new rate</button></form><div id="rates" class="status">Loading...</div></section></div><script>
- const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const csrf=${JSON.stringify(issueCsrfToken(c))};const esc=(v)=>String(v??'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const value=(form,name)=>form.elements[name].type==='checkbox'?form.elements[name].checked:form.elements[name].value;
  const payload=(form,names)=>Object.fromEntries(names.map((name)=>[name,value(form,name)]));
- async function request(url,method,body){const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.error||'Save failed');return d}
+ async function request(url,method,body){const r=await fetch(url,{method,headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.error||'Save failed');return d}
   function productForm(item){return '<form class="row" data-product="'+esc(item.id)+'"><input name="code" value="'+esc(item.code)+'" required><input name="name" value="'+esc(item.name)+'" required><input name="category" value="'+esc(item.category)+'" required><input name="pricePkr" type="number" min="1" step="1" value="'+item.pricePkr+'" required><input name="fertilizerPricePkr" type="number" min="1" step="1" value="'+(item.fertilizerPricePkr??'')+'"><label><input name="active" type="checkbox" '+(item.active?'checked':'')+'> Active</label><button>Save</button><button type="button" data-toggle>'+(item.active?'Disable':'Enable')+'</button><span data-status></span></form>'}
   function rateForm(item){return '<form class="row" data-rate="'+esc(item.id)+'"><input name="province" value="'+esc(item.province)+'" required><input name="deliveryFeePkr" type="number" min="1" step="1" value="'+item.deliveryFeePkr+'" required><label><input name="active" type="checkbox" '+(item.active?'checked':'')+'> Active</label><button>Save</button><button type="button" data-toggle>'+(item.active?'Disable':'Enable')+'</button><span data-status></span></form>'}
  async function load(){const [products,rates]=await Promise.all([fetch('/api/catalog/products').then((r)=>r.json()),fetch('/api/catalog/province-delivery-rates').then((r)=>r.json())]);document.querySelector('#products').innerHTML=(products.products||[]).map(productForm).join('')||'No products configured.';document.querySelector('#rates').innerHTML=(rates.rates||[]).map(rateForm).join('')||'No delivery rates configured.';for(const form of document.querySelectorAll('[data-product]'))bind(form,'product');for(const form of document.querySelectorAll('[data-rate]'))bind(form,'rate')}
@@ -1198,6 +1249,7 @@ app.get("/api/catalog/province-delivery-rates", async (c) => {
 });
 
 app.post("/api/catalog/products", async (c) => {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
   let product;
   try {
     product = parseProductInput(await c.req.json<Record<string, unknown>>());
@@ -1219,6 +1271,7 @@ app.post("/api/catalog/products", async (c) => {
 });
 
 app.on(["POST", "PUT"], "/api/catalog/products/:id", async (c) => {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
   if (!c.env.DB) return c.json({ error: "CATALOG_UNAVAILABLE" }, 503);
   const id = c.req.param("id");
    const existing = await c.env.DB.prepare("SELECT id,code,name,category,price_pkr,fertilizer_price_pkr,pack_quantity,enabled FROM products WHERE id=?").bind(id).first<Record<string, unknown>>();
@@ -1247,6 +1300,7 @@ app.on(["POST", "PUT"], "/api/catalog/products/:id", async (c) => {
 });
 
 app.post("/api/catalog/province-delivery-rates", async (c) => {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
   let rate;
   try {
     rate = parseProvinceDeliveryRateInput(await c.req.json<Record<string, unknown>>());
@@ -1268,6 +1322,7 @@ app.post("/api/catalog/province-delivery-rates", async (c) => {
 });
 
 app.on(["POST", "PUT"], "/api/catalog/province-delivery-rates/:id", async (c) => {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
   if (!c.env.DB) return c.json({ error: "CATALOG_UNAVAILABLE" }, 503);
   const id = c.req.param("id");
   const existing = await c.env.DB.prepare("SELECT id,province,delivery_fee_pkr,enabled FROM province_delivery_rates WHERE id=?").bind(id).first<Record<string, unknown>>();
@@ -1365,6 +1420,7 @@ app.get("/api/payment-configuration", async (c) => {
 });
 
 app.post("/api/payment-configuration", async (c) => {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
   let amount: number;
   try {
     const body = await c.req.json<{ advanceAmountPkr?: unknown }>();
@@ -1645,7 +1701,7 @@ app.get("/api/orders", async (c) => {
   ]);
   const total = Number(totalRow?.total ?? 0);
   return c.json({
-    orders: result.results.map((row) => orderView(row as Record<string, unknown>, c.env.REFERENCE_REQUESTS_ENABLED === "true")),
+    orders: result.results.map((row) => orderView(row as Record<string, unknown>, c.env.REFERENCE_REQUESTS_ENABLED === "true", locationValidationV2Enabled(c.env))),
     counts: { all: Number(countsRow?.all_count ?? 0), verify: Number(countsRow?.verify_count ?? 0), confirmed: Number(countsRow?.confirmed_count ?? 0), fulfillment: Number(countsRow?.fulfillment_count ?? 0) },
     total,
     pagination: { page, pageSize, totalPages: Math.ceil(total / pageSize) }
@@ -1734,7 +1790,7 @@ app.get("/api/orders/:id", async (c) => {
   const row = await c.env.DB.prepare(`${orderAdminSelect(c.env)} WHERE o.id=?`).bind(c.req.param("id")).first<Record<string, unknown>>();
   if (!row) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
   const audit = await c.env.DB.prepare("SELECT id,action,actor_type,actor_id,metadata_json,created_at FROM audit_log WHERE (entity_type='ORDER' AND entity_id=?) OR (entity_type='PAYMENT' AND entity_id=(SELECT id FROM payments WHERE order_id=?)) ORDER BY created_at DESC LIMIT 100").bind(c.req.param("id"), c.req.param("id")).all();
-  const order = orderView(row, c.env.REFERENCE_REQUESTS_ENABLED === "true");
+  const order = orderView(row, c.env.REFERENCE_REQUESTS_ENABLED === "true", locationValidationV2Enabled(c.env));
   order.trackingNumber = await assignedTrackingNumber(c.env.DB, c.req.param("id")) ?? order.trackingNumber;
   return c.json({ order, items: order.items, receipts: order.receipts, audit: audit.results });
 });
@@ -1875,7 +1931,7 @@ app.post("/api/orders/:id/transition", async (c) => {
   if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
   if (!canTransition(from.data, to.data)) return c.json({ error: "INVALID_STATE_TRANSITION" }, 409);
   if (!c.env.DB) return c.json({ ok: true, simulated: true });
-  const current = await c.env.DB.prepare("SELECT o.order_number,o.state,o.payment_status,o.archived_at,p.review_state FROM orders o LEFT JOIN payments p ON p.order_id=o.id WHERE o.id=?").bind(c.req.param("id")).first<{ order_number: string; state: OrderState; payment_status: string; review_state: string | null; archived_at: string | null }>();
+  const current = await c.env.DB.prepare("SELECT o.order_number,o.state,o.payment_status,o.archived_at,o.province,c.city,p.review_state FROM orders o JOIN customers c ON c.id=o.customer_id LEFT JOIN payments p ON p.order_id=o.id WHERE o.id=?").bind(c.req.param("id")).first<{ order_number: string; state: OrderState; payment_status: string; review_state: string | null; archived_at: string | null; province: string | null; city: string | null }>();
   if (!current) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
   const codOrder=codV2SchemaEnabled(c.env)?await c.env.DB.prepare("SELECT 1 FROM cod_order_details WHERE order_id=? AND status NOT IN ('COD_METHOD_CHANGED','COD_CANCELLED') LIMIT 1").bind(c.req.param("id")).first():null;
   if(codOrder)return c.json({error:"COD_ORDER_REQUIRES_COD_OPERATIONS"},409);
@@ -1883,6 +1939,7 @@ app.post("/api/orders/:id/transition", async (c) => {
   if (current.order_number === "FS-261019-000001") return c.json({ error: "FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED" }, 409);
   if (current.archived_at != null || current.state !== from.data) return c.json({ error: "STATE_CONFLICT" }, 409);
   if (current.payment_status !== "PAID" && current.review_state !== "APPROVED") return c.json({ error: "FULFILLMENT_PAYMENT_NOT_APPROVED" }, 409);
+  if (to.data === "DISPATCHED" && locationValidationV2Enabled(c.env) && hasCityProvinceMismatch(current.city, current.province)) return c.json({ error: "DELIVERY_LOCATION_REVIEW_REQUIRED", message: "The saved city and province conflict. Keep the original details and ask the customer to correct the province before dispatch." }, 409);
   const tracking = to.data === "DISPATCHED" ? await assignedTrackingNumber(c.env.DB, c.req.param("id")) : null;
   if (to.data === "DISPATCHED" && !tracking) return c.json({ error: "TRACKING_REQUIRED_BEFORE_DISPATCH" }, 409);
   const now = new Date().toISOString();
@@ -1904,8 +1961,8 @@ app.post("/api/cod-orders/:id/transition",async(c)=>{
   let body:{from?:unknown;to?:unknown;confirmation?:unknown};try{body=await c.req.json()}catch{return c.json({error:"INVALID_REQUEST"},400)}
   if(typeof body.from!=="string"||typeof body.to!=="string")return c.json({error:"COD_TRANSITION_INVALID"},400);
   const orderId=c.req.param("id");
-  const current=await c.env.DB.prepare(`SELECT cd.id,cd.attempt,cd.status AS cod_status,cd.total_payable_pkr,o.order_number,o.state,o.payment_status,o.archived_at,p.method,p.review_state
-    FROM cod_order_details cd JOIN orders o ON o.id=cd.order_id JOIN payments p ON p.order_id=o.id WHERE cd.order_id=? ORDER BY cd.attempt DESC LIMIT 1`).bind(orderId).first<{id:string;attempt:number;cod_status:string;total_payable_pkr:number;order_number:string;state:string;payment_status:string;archived_at:string|null;method:string;review_state:string}>();
+  const current=await c.env.DB.prepare(`SELECT cd.id,cd.attempt,cd.status AS cod_status,cd.total_payable_pkr,o.order_number,o.state,o.payment_status,o.archived_at,o.province,c.city,p.method,p.review_state
+    FROM cod_order_details cd JOIN orders o ON o.id=cd.order_id JOIN customers c ON c.id=o.customer_id JOIN payments p ON p.order_id=o.id WHERE cd.order_id=? ORDER BY cd.attempt DESC LIMIT 1`).bind(orderId).first<{id:string;attempt:number;cod_status:string;total_payable_pkr:number;order_number:string;state:string;payment_status:string;archived_at:string|null;province:string|null;city:string|null;method:string;review_state:string}>();
   if(!current)return c.json({error:"COD_ORDER_NOT_FOUND"},404);
   if(body.confirmation!==current.order_number)return c.json({error:"CONFIRMATION_REQUIRED"},400);
   const transitions:Record<string,{to:string;codFrom:string;codTo:string}>={
@@ -1917,12 +1974,13 @@ app.post("/api/cod-orders/:id/transition",async(c)=>{
   if(!transition)return c.json({error:"COD_TRANSITION_INVALID"},409);
   if(current.state===body.to&&current.cod_status===transition.codTo)return c.json({ok:true,alreadyTransitioned:true,orderId,orderNumber:current.order_number,state:current.state,codStatus:current.cod_status,paymentStatus:current.payment_status});
   if(current.state!==body.from||current.cod_status!==transition.codFrom||current.archived_at||current.method!=="COD"||current.payment_status!=="COD_PENDING")return c.json({error:"COD_TRANSITION_INVALID"},409);
+  if(body.to==="DISPATCHED"&&hasCityProvinceMismatch(current.city,current.province))return c.json({error:"DELIVERY_LOCATION_REVIEW_REQUIRED",message:"The saved city and province conflict. Keep the original details and ask the customer to correct the province before dispatch."},409);
   if(body.to==="DISPATCHED"&&!await assignedTrackingNumber(c.env.DB,orderId))return c.json({error:"TRACKING_REQUIRED_BEFORE_DISPATCH"},409);
   const now=new Date().toISOString();
   const result=await c.env.DB.batch([
     c.env.DB.prepare("UPDATE cod_order_details SET status=?,updated_at=? WHERE id=? AND status=? AND EXISTS(SELECT 1 FROM orders WHERE id=? AND state=? AND payment_status='COD_PENDING' AND archived_at IS NULL)").bind(transition.codTo,now,current.id,transition.codFrom,orderId,current.state),
-    c.env.DB.prepare("UPDATE orders SET state=?,updated_at=? WHERE id=? AND state=? AND payment_status='COD_PENDING' AND archived_at IS NULL AND EXISTS(SELECT 1 FROM cod_order_details WHERE id=? AND status=? AND updated_at=?)").bind(transition.to,now,orderId,current.state,current.id,transition.codTo,now),
-    c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM cod_order_details WHERE id=? AND status=? AND updated_at=?)").bind(crypto.randomUUID(),"COD_ORDER_STATE_TRANSITIONED","ADMIN",c.env.ADMIN_EMAIL,"COD_ORDER",orderId,crypto.randomUUID(),JSON.stringify({attempt:Number(current.attempt),from:current.state,to:transition.to,codStatus:transition.codTo,paymentStatusUnchanged:true}),now,current.id,transition.codTo,now)
+    c.env.DB.prepare("UPDATE orders SET state=?,updated_at=? WHERE id=? AND state=? AND payment_status='COD_PENDING' AND archived_at IS NULL AND changes()=1 AND EXISTS(SELECT 1 FROM cod_order_details WHERE id=? AND status=?)").bind(transition.to,now,orderId,current.state,current.id,transition.codTo),
+    c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE changes()=1 AND EXISTS(SELECT 1 FROM cod_order_details WHERE id=? AND status=?)").bind(crypto.randomUUID(),"COD_ORDER_STATE_TRANSITIONED","ADMIN",c.env.ADMIN_EMAIL,"COD_ORDER",orderId,crypto.randomUUID(),JSON.stringify({attempt:Number(current.attempt),from:current.state,to:transition.to,codStatus:transition.codTo,paymentStatusUnchanged:true}),now,current.id,transition.codTo)
   ]);
   if(Number(result[0]?.meta?.changes??0)!==1||Number(result[1]?.meta?.changes??0)!==1)return c.json({error:"COD_STATE_CONFLICT"},409);
   return c.json({ok:true,orderId,orderNumber:current.order_number,state:transition.to,codStatus:transition.codTo,paymentStatus:"COD_PENDING"});
@@ -1947,7 +2005,7 @@ app.post("/api/cod-orders/:id/collection",async(c)=>{
   const now=new Date().toISOString();
   const result=await c.env.DB.batch([
     c.env.DB.prepare("UPDATE cod_order_details SET status='COLLECTED',collection_amount_pkr=?,collection_reference_hash=?,collected_at=?,collected_by=?,updated_at=? WHERE id=? AND status='COLLECTION_PENDING'").bind(amount,referenceHash,now,c.env.ADMIN_EMAIL,now,current.id),
-    c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM cod_order_details WHERE id=? AND status='COLLECTED' AND collection_reference_hash=? AND updated_at=?)").bind(crypto.randomUUID(),"COD_CASH_COLLECTED","ADMIN",c.env.ADMIN_EMAIL,"COD_ORDER",orderId,crypto.randomUUID(),JSON.stringify({attempt:Number(current.attempt),amountPkr:amount,collectionReferenceHash:referenceHash,paid:false}),now,current.id,referenceHash,now)
+    c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE changes()=1 AND EXISTS(SELECT 1 FROM cod_order_details WHERE id=? AND status='COLLECTED' AND collection_reference_hash=?)").bind(crypto.randomUUID(),"COD_CASH_COLLECTED","ADMIN",c.env.ADMIN_EMAIL,"COD_ORDER",orderId,crypto.randomUUID(),JSON.stringify({attempt:Number(current.attempt),amountPkr:amount,collectionReferenceHash:referenceHash,paid:false}),now,current.id,referenceHash)
   ]);
   if(Number(result[0]?.meta?.changes??0)!==1)return c.json({error:"COD_COLLECTION_CONFLICT"},409);
   return c.json({ok:true,orderId,collectionStatus:"COLLECTED",paymentStatus:"COD_PENDING",paid:false});
@@ -1971,10 +2029,10 @@ app.post("/api/cod-orders/:id/reconcile",async(c)=>{
   if(amount!==Number(current.total_payable_pkr))return c.json({error:"COD_REMITTANCE_AMOUNT_MISMATCH"},409);
   const now=new Date().toISOString();
   const result=await c.env.DB.batch([
-    c.env.DB.prepare("UPDATE cod_order_details SET status='RECONCILED',remittance_reference_hash=?,reconciled_at=?,reconciled_by=?,updated_at=? WHERE id=? AND status='COLLECTED' AND collection_amount_pkr=total_payable_pkr AND collection_reference_hash IS NOT NULL").bind(referenceHash,now,c.env.ADMIN_EMAIL,now,current.id),
-    c.env.DB.prepare("UPDATE orders SET payment_status='PAID',updated_at=? WHERE id=? AND state='DELIVERED' AND payment_status='COD_PENDING' AND EXISTS(SELECT 1 FROM cod_order_details WHERE id=? AND status='RECONCILED' AND remittance_reference_hash=? AND updated_at=?) AND EXISTS(SELECT 1 FROM payments WHERE order_id=? AND method='COD' AND review_state='COD_PENDING')").bind(now,orderId,current.id,referenceHash,now,orderId),
-    c.env.DB.prepare("UPDATE payments SET review_state='APPROVED',approved_amount=?,approved_by=?,approved_at=?,updated_at=? WHERE id=? AND method='COD' AND review_state='COD_PENDING' AND EXISTS(SELECT 1 FROM orders WHERE id=? AND payment_status='PAID')").bind(amount,c.env.ADMIN_EMAIL,now,now,current.payment_id,orderId),
-    c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM cod_order_details WHERE id=? AND status='RECONCILED' AND remittance_reference_hash=? AND updated_at=?) AND EXISTS(SELECT 1 FROM orders WHERE id=? AND payment_status='PAID')").bind(crypto.randomUUID(),"COD_REMITTANCE_RECONCILED","ADMIN",c.env.ADMIN_EMAIL,"COD_ORDER",orderId,crypto.randomUUID(),JSON.stringify({attempt:Number(current.attempt),amountPkr:amount,collectionReferenceHash:current.collection_reference_hash,remittanceReferenceHash:referenceHash,paid:true}),now,current.id,referenceHash,now,orderId)
+    c.env.DB.prepare("UPDATE cod_order_details SET status='RECONCILED',remittance_reference_hash=?,reconciled_at=?,reconciled_by=?,updated_at=? WHERE id=? AND status='COLLECTED' AND collection_amount_pkr=total_payable_pkr AND collection_reference_hash IS NOT NULL AND NOT EXISTS(SELECT 1 FROM cod_order_details other WHERE other.id<>? AND other.remittance_reference_hash=?)").bind(referenceHash,now,c.env.ADMIN_EMAIL,now,current.id,current.id,referenceHash),
+    c.env.DB.prepare("UPDATE orders SET payment_status='PAID',updated_at=? WHERE id=? AND state='DELIVERED' AND payment_status='COD_PENDING' AND changes()=1 AND EXISTS(SELECT 1 FROM cod_order_details WHERE id=? AND status='RECONCILED' AND remittance_reference_hash=?) AND EXISTS(SELECT 1 FROM payments WHERE order_id=? AND method='COD' AND review_state='COD_PENDING')").bind(now,orderId,current.id,referenceHash,orderId),
+    c.env.DB.prepare("UPDATE payments SET review_state='APPROVED',approved_amount=?,approved_by=?,approved_at=?,updated_at=? WHERE id=? AND method='COD' AND review_state='COD_PENDING' AND changes()=1 AND EXISTS(SELECT 1 FROM orders WHERE id=? AND payment_status='PAID')").bind(amount,c.env.ADMIN_EMAIL,now,now,current.payment_id,orderId),
+    c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE changes()=1 AND EXISTS(SELECT 1 FROM cod_order_details WHERE id=? AND status='RECONCILED' AND remittance_reference_hash=?) AND EXISTS(SELECT 1 FROM orders WHERE id=? AND payment_status='PAID')").bind(crypto.randomUUID(),"COD_REMITTANCE_RECONCILED","ADMIN",c.env.ADMIN_EMAIL,"COD_ORDER",orderId,crypto.randomUUID(),JSON.stringify({attempt:Number(current.attempt),amountPkr:amount,collectionReferenceHash:current.collection_reference_hash,remittanceReferenceHash:referenceHash,paid:true}),now,current.id,referenceHash,orderId)
   ]);
   if(Number(result[0]?.meta?.changes??0)!==1||Number(result[1]?.meta?.changes??0)!==1||Number(result[2]?.meta?.changes??0)!==1)return c.json({error:"COD_REMITTANCE_CONFLICT"},409);
   return c.json({ok:true,orderId,collectionStatus:"RECONCILED",paymentStatus:"PAID",paid:true});
@@ -2032,7 +2090,7 @@ async function shippingLabelResponse(c: AdminContext) {
   if (!format) return c.json({ error: "SHIPPING_LABEL_FORMAT_INVALID" }, 400);
   const row = await c.env.DB.prepare(`${orderAdminSelect(c.env)} WHERE o.id=?`).bind(c.req.param("id")).first<Record<string, unknown>>();
   if (!row) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
-  const order = orderView(row);
+  const order = orderView(row, false, locationValidationV2Enabled(c.env));
   if (!order.canPrintShippingLabel) return c.json({ error: "SHIPPING_LABEL_NOT_READY" }, 409);
   const tracking = await assignedTrackingNumber(c.env.DB, c.req.param("id") ?? "");
   const html = renderShippingLabelHtml(order, format, tracking);
@@ -2165,7 +2223,10 @@ app.post("/api/payments/:id/approve", async (c) => {
     }
     if(confirmationV2Enabled)try{await c.env.EVENTS?.send({kind:"WHATSAPP_PAYMENT_CONFIRMATION",idempotencyKey:`payment_confirmation_v2_${c.req.param("id")}`,entityId:current.order_id,schemaVersion:1});await c.env.DB.prepare("UPDATE outbox_jobs SET status='QUEUED',available_at=?,updated_at=? WHERE idempotency_key=? AND status='PENDING'").bind(new Date(Date.now()+5*60_000).toISOString(),new Date().toISOString(),`payment_confirmation_v2_${c.req.param("id")}`).run()}catch{/* Durable outbox remains available for relay. */}
     return c.json({ ok: true, paymentStatus: "PAID", capiQueue: event ? queued ? "QUEUED" : "DEFERRED" : "DISABLED" });
-   } catch { return c.json({ error:"APPROVAL_FAILED",message:"Payment remains under review. Reload and verify the saved reference, verified method, receipt and receiving-account credit." },400); }
+   } catch (error) {
+     if (/UNIQUE constraint failed/i.test(error instanceof Error ? error.message : String(error))) return c.json({ error:"TRANSACTION_REFERENCE_DUPLICATE",message:"That genuine transaction reference is already linked to another payment for this method. Keep this order under review and verify the reference in the provider history." },409);
+     return c.json({ error:"APPROVAL_FAILED",message:"Payment remains under review. Reload and verify the saved reference, verified method, receipt and receiving-account credit." },400);
+   }
 });
 
 app.post("/api/payments/:id/reject", async (c) => {
@@ -2262,7 +2323,7 @@ app.get("/api/payment-instructions/:method", async (c) => {
   return c.json(paymentInstructions(normalizePaymentMethodRow(row as Record<string, unknown>)));
 });
 
-app.get("/tariff", (c) => c.html(tariffPageHtml()));
+app.get("/tariff", (c) => c.html(tariffPageHtml(issueCsrfToken(c))));
 
 app.all("*", (c) => c.json({ error: "NOT_FOUND" }, 404));
 export default app;

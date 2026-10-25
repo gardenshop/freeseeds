@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-25: GFS-212 Targeted Repair and Honest Release Gates
+
+- Execute confirmed defects on PR #9 without another planning confirmation: distinguish COD intake from obligations already persisted; make CMS copy/media availability-consistent; condition customer/Admin COD mutations on the winning transition; preserve exact D1 quote components; flag known location conflicts without silently rewriting details.
+- Simplify only the V2 payment-review experience. Independent receiving-account credit remains mandatory; supplementary settlement-reference entry is optional, while genuine unique transaction reference, method/amount/receipt association, Access/CSRF, audit, conditional PAID and idempotency remain required. Never approve the reported real order from a screenshot, checkbox, synthetic fixture, or source test.
+- Current V2-branch protected rules take precedence over stale default-branch onboarding notes; neither historical success nor release-state wording changes canonical account identities, immutable V1, Hoja isolation, tester/sender verification or production authorization.
+- Chrome MCP recovery diagnosis: configured local server is connected according to Kilo CLI and existing Chrome/profile are running, but browser tools are absent from this agent's tool schema. This is `PLATFORM_BLOCKED` for authenticated browser/deployment acceptance. Do not replace MCP with raw CDP or weaken authentication; continue local source/tests and PR updates.
+- Keep COD/provider/automation/payment-confirmation activation disabled. No new resource, paid plan, CMS publish, shared migration or production deployment is required by these source repairs. Missing courier/credit/tariff/key/Meta/release evidence remains a separate external gate.
+
 ## 2026-10-24: GFS-211 Canonical COD Policy and Fail-Closed Legacy Handling
 
 - Keep V1 frozen. COD is isolated to the V2 branch and stays disabled by both Admin policy and `COD_V2_ENABLED=false` until full isolated acceptance plus explicit release authorization.

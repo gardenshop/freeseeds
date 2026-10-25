@@ -15,9 +15,13 @@ class CodOperationsDb {
   remittanceHash:string|null=null;
   audits:string[]=[];
   trackingNumber:string|null=null;
+  loseNextTransition=false;
+  loseNextCollection=false;
+  loseNextReconcile=false;
+  lastChanges=0;
 
   prepare(sql:string):D1PreparedStatement{return this.statement(sql,[]) as unknown as D1PreparedStatement}
-  async batch<T=unknown>(statements:D1PreparedStatement[]):Promise<D1Result<T>[]>{return (statements as unknown as Statement[]).map((statement)=>({meta:{changes:this.execute(statement)}})) as unknown as D1Result<T>[]}
+  async batch<T=unknown>(statements:D1PreparedStatement[]):Promise<D1Result<T>[]>{return (statements as unknown as Statement[]).map((statement)=>{const changes=this.execute(statement);this.lastChanges=changes;return{meta:{changes}}}) as unknown as D1Result<T>[]}
   private statement(sql:string,args:unknown[]):Statement{return{sql,args,bind:(...next)=>this.statement(sql,next),first:async<T>()=>this.first(sql) as T|null,all:async<T>()=>({results:[] as T[]}),run:async()=>({meta:{changes:this.execute({sql,args})}})}}
 
   private first(sql:string):Record<string,unknown>|null{
@@ -31,30 +35,36 @@ class CodOperationsDb {
   private execute(statement:{sql:string;args:unknown[]}):number{
     const {sql,args}=statement;
     if(sql.startsWith("UPDATE cod_order_details SET status=?")){
+      if(this.loseNextTransition){this.loseNextTransition=false;this.codStatus=String(args[0]);return 0}
       if(this.codStatus!==String(args[3])||this.state!==String(args[5])||this.paymentStatus!=="COD_PENDING")return 0;
       this.codStatus=String(args[0]);return 1;
     }
     if(sql.startsWith("UPDATE orders SET state=?")){
+      if(sql.includes("changes()=1")&&this.lastChanges!==1)return 0;
       if(this.state!==String(args[3])||this.paymentStatus!=="COD_PENDING")return 0;
       this.state=String(args[0]);return 1;
     }
     if(sql.startsWith("UPDATE cod_order_details SET status='COLLECTED'")){
+      if(this.loseNextCollection){this.loseNextCollection=false;this.codStatus="COLLECTED";return 0}
       if(this.codStatus!=="COLLECTION_PENDING")return 0;
       this.codStatus="COLLECTED";this.collectionAmount=Number(args[0]);this.collectionHash=String(args[1]);return 1;
     }
     if(sql.startsWith("UPDATE cod_order_details SET status='RECONCILED'")){
+      if(this.loseNextReconcile){this.loseNextReconcile=false;this.codStatus="RECONCILED";return 0}
       if(this.codStatus!=="COLLECTED"||this.collectionAmount!==this.total)return 0;
       this.codStatus="RECONCILED";this.remittanceHash=String(args[0]);return 1;
     }
     if(sql.startsWith("UPDATE orders SET payment_status='PAID'")){
+      if(sql.includes("changes()=1")&&this.lastChanges!==1)return 0;
       if(this.codStatus!=="RECONCILED"||this.state!=="DELIVERED"||this.paymentStatus!=="COD_PENDING")return 0;
       this.paymentStatus="PAID";return 1;
     }
     if(sql.startsWith("UPDATE payments SET review_state='APPROVED'")){
+      if(sql.includes("changes()=1")&&this.lastChanges!==1)return 0;
       if(this.paymentStatus!=="PAID"||this.reviewState!=="COD_PENDING")return 0;
       this.reviewState="APPROVED";return 1;
     }
-    if(sql.includes("INSERT INTO audit_log")){this.audits.push(String(args[1]));return 1}
+    if(sql.includes("INSERT INTO audit_log")){if(sql.includes("changes()=1")&&this.lastChanges!==1)return 0;this.audits.push(String(args[1]));return 1}
     return 0;
   }
 }
@@ -92,5 +102,34 @@ describe("V2 COD Admin fulfillment and reconciliation",()=>{
     response=await post(db,csrf,"/api/cod-orders/order-1/reconcile",{remittanceAmountPkr:625,remittanceReference:"SYNTHETIC-REMITTANCE-1",remittanceConfirmed:true,confirmation:db.orderNumber});
     expect(response.status).toBe(200);expect((await response.json() as {alreadyReconciled:boolean}).alreadyReconciled).toBe(true);
     expect(db.audits).toEqual(["COD_ORDER_STATE_TRANSITIONED","COD_ORDER_STATE_TRANSITIONED","COD_ORDER_STATE_TRANSITIONED","COD_CASH_COLLECTED","COD_REMITTANCE_RECONCILED"]);
+  });
+
+  it("does not update the order or audit when another request wins the COD CAS",async()=>{
+    const db=new CodOperationsDb(),csrf=await session(db);
+    db.loseNextTransition=true;
+    const response=await post(db,csrf,"/api/cod-orders/order-1/transition",{from:"COD_PENDING",to:"PACKING",confirmation:db.orderNumber});
+    expect(response.status).toBe(409);
+    expect(db.state).toBe("COD_PENDING");
+    expect(db.codStatus).toBe("PACKING");
+    expect(db.audits).toEqual([]);
+  });
+
+  it("does not audit a losing collection CAS",async()=>{
+    const db=new CodOperationsDb(),csrf=await session(db);
+    db.state="DELIVERED";db.codStatus="COLLECTION_PENDING";db.loseNextCollection=true;
+    const response=await post(db,csrf,"/api/cod-orders/order-1/collection",{collectionAmountPkr:db.total,collectionReference:"SYNTHETIC-COLLECTION-RACE",collectionConfirmed:true,confirmation:db.orderNumber});
+    expect(response.status).toBe(409);
+    expect(db.paymentStatus).toBe("COD_PENDING");
+    expect(db.audits).toEqual([]);
+  });
+
+  it("does not mark PAID or audit when another request wins remittance reconciliation",async()=>{
+    const db=new CodOperationsDb(),csrf=await session(db);
+    db.state="DELIVERED";db.codStatus="COLLECTED";db.collectionAmount=db.total;db.collectionHash="existing-collection-hash";db.loseNextReconcile=true;
+    const response=await post(db,csrf,"/api/cod-orders/order-1/reconcile",{remittanceAmountPkr:db.total,remittanceReference:"SYNTHETIC-REMITTANCE-RACE",remittanceConfirmed:true,confirmation:db.orderNumber});
+    expect(response.status).toBe(409);
+    expect(db.paymentStatus).toBe("COD_PENDING");
+    expect(db.reviewState).toBe("COD_PENDING");
+    expect(db.audits).toEqual([]);
   });
 });

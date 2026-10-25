@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-25 (GFS-212 repair execution)
+
+- Verified local/remote PR #9 baseline, immutable V1 and PR #8/#10, preserved `images/`, and reconciled newer V2 protocol precedence without changing account identities or release gates.
+- Diagnosed Chrome MCP recovery to an exact `PLATFORM_BLOCKED` tool-exposure boundary: enabled local bridge reports connected through Kilo CLI, existing Chrome/profile present, but no Chrome tool namespace is exposed to the current agent. No raw-browser substitute or external deployment; local repairs continue.
+- Fixed verified source defects: COD kill-switch no longer reclassifies historical COD obligations; mismatched negative COD OFFER copy suppresses its versioned image; COD customer/admin transitions and PAID updates require a winning CAS; known location conflicts require customer correction without rewriting history; V2 Admin uses a single gated Confirm Paid action retaining genuine reference/receipt/method/amount/account-credit safeguards.
+- Added 7-tariff synthetic coverage, including fertilizer250 + Balochistan delivery350 = advance600/COD725, no-fertilizer and EN/UR paths. Read-only tariff snapshot never becomes production defaults.
+- Read-only GFS D1 primary/recovery integrity/migration and masked real order checks pass. Final validation `npm ci`, 257/257 tests, lint/build, audit0, V2 Wrangler dry-runs and `git diff --check` pass; V1 worktree176/176 + lint/build/dry-runs pass. No real payment approval, shared migration, resource creation or financial/customer mutation. See STATUS/FINAL_REPORT for external gates.
+
 ## 2026-10-24 (GFS-211, isolated source/acceptance)
 
 - Reproduced and consolidated duplicate COD implementation: one shared strict versioned policy format, one API policy loader, and one Admin GET/POST settings pair. Unknown legacy/unversioned or unprovenanced settings fail closed.

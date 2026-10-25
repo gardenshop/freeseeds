@@ -1,5 +1,15 @@
 # Get Free Seeds Binding Rules
 
+## GFS-212 Repair Authority and Protocol Precedence (2026-10-25)
+
+- GFS-212 authorizes targeted repairs, local regressions and PR #9 updates on `codex/gfs-v2-payments-reminders-001`; it is not authority to change frozen V1 `d816ba1`, approve real funds, enable COD, migrate shared V1 D1, spend, or release to production. Preserve `images/`, receipts, financial/audit history, rollback versions and the incident hold.
+- Newer verified rules on this V2 branch supersede historical default-branch onboarding/number instructions. Do not merge old rules over them. Canonical GFS identities, the new-number WhatsApp lock, Hoja zero-connection rule, signed webhook, Access, service-window, beneficiary and release gates are unchanged. Dated status observations are evidence at that time, not permission or a current health guarantee.
+- `COD_V2_ENABLED` controls new COD intake only. Persisted COD obligations must remain recognizable when intake is disabled: no advance QR/receipt/reminder path; collection and remittance remain separately verified, audited and conditional. Intake requires valid policy, enabled D1 province, courier collection/remittance approval, secret readiness and explicit enablement/release gates.
+- OFFER text and media must agree with actual payment availability. A compatibility fallback must suppress its unverified/stale media; compatible published CMS content remains authoritative. Never infer an image's payment claim from its filename, and never advertise disabled COD or promise unverified shipment.
+- Prices come from D1 snapshots: seed + selected fertilizer + province delivery + configured COD collection fee. PKR125 is the COD setting default, not a provincial tariff. Keep delivery and collection fees distinct. Flag known city/province conflicts and request correction without rewriting addresses or changing a historical quote.
+- V2 Admin presents one `Confirm Paid` action only after authenticated independent receiving-account credit verification. The genuine unique transaction reference, exact method/amount/receipt/order binding, Access/CSRF, audit, atomicity and idempotency remain mandatory; a supplementary settlement-reference field is optional. A receipt, button, checkbox or fabricated reference never proves actual credit. Real order `FS-261025-000001` remains read-only absent that evidence.
+- Source-only and synthetic acceptance are not live fixes, Meta WAMID evidence, credit or shipment. Mandatory browser acceptance uses exposed Chrome DevTools MCP tools and verified existing identities; do not replace missing tools with raw CDP, another profile, or unauthenticated dashboard requests. Continue safe source/test/PR work when external gates are blocked.
+
 ## GFS-210 Payment Review and Fulfillment (2026-10-24)
 
 - Reverified WhatsApp **You > View Profile**, canonical GFS **Contact Info**, Admin Access and Cloudflare account. Current tester and GFS sender match the approved identities. Do not use display-name-only matches or any Hoja asset.

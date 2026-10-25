@@ -18,12 +18,18 @@ let failNextSend: boolean;
 let queueSend: ReturnType<typeof vi.fn>;
 let receiptBucketGet: ReturnType<typeof vi.fn>;
 let receiptBucketPut: ReturnType<typeof vi.fn>;
+let beforeFirstReturn: ((sql: string) => Promise<void>) | undefined;
+let batchTail: Promise<void>;
 
 function statement(sql: string) {
   let values: SQLInputValue[] = [];
   const prepared = {
     bind: (...args: SQLInputValue[]) => { values = args; return prepared; },
-    first: async () => sqlite.prepare(sql).get(...values) ?? null,
+    first: async () => {
+      const row = sqlite.prepare(sql).get(...values) ?? null;
+      await beforeFirstReturn?.(sql);
+      return row;
+    },
     all: async () => ({ results: sqlite.prepare(sql).all(...values), success: true }),
     run: async () => ({ meta: { changes: Number(sqlite.prepare(sql).run(...values).changes) }, success: true })
   };
@@ -48,16 +54,16 @@ function buttons() {
   return (sends.at(-1)?.interactive as { action?: { buttons?: Array<{ reply: { id: string } }> } } | undefined)?.action?.buttons?.map((button) => button.reply.id) ?? [];
 }
 
-function env(paymentConfirmationEnabled = "false", paymentRemindersEnabled = "false", paymentAutomationEnabled = "false", utilityTemplatesApproved = "false", orderStatusNotificationsEnabled = "false", metaProviderEnabled = "true", codV2Enabled = "false") {
-  return { DB: db, RECEIPTS: { get: receiptBucketGet, put: receiptBucketPut }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: metaProviderEnabled, PAYMENT_CONFIRMATION_V2_ENABLED: paymentConfirmationEnabled, PAYMENT_REMINDERS_V2_ENABLED: paymentRemindersEnabled, PAYMENT_AUTOMATION_V2_ENABLED: paymentAutomationEnabled, PAYMENT_UTILITY_TEMPLATES_APPROVED: utilityTemplatesApproved, ORDER_STATUS_NOTIFICATIONS_V2_ENABLED: orderStatusNotificationsEnabled, COD_V2_ENABLED: codV2Enabled, META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided" } as never;
+function env(paymentConfirmationEnabled = "false", paymentRemindersEnabled = "false", paymentAutomationEnabled = "false", utilityTemplatesApproved = "false", orderStatusNotificationsEnabled = "false", metaProviderEnabled = "true", codV2Enabled = "false", codPolicyHmacKey = codV2Enabled === "true" ? "synthetic-cod-policy-key-with-sufficient-entropy" : undefined) {
+  return { DB: db, RECEIPTS: { get: receiptBucketGet, put: receiptBucketPut }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: metaProviderEnabled, PAYMENT_CONFIRMATION_V2_ENABLED: paymentConfirmationEnabled, PAYMENT_REMINDERS_V2_ENABLED: paymentRemindersEnabled, PAYMENT_AUTOMATION_V2_ENABLED: paymentAutomationEnabled, PAYMENT_UTILITY_TEMPLATES_APPROVED: utilityTemplatesApproved, ORDER_STATUS_NOTIFICATIONS_V2_ENABLED: orderStatusNotificationsEnabled, COD_V2_ENABLED: codV2Enabled, COD_POLICY_HMAC_KEY: codPolicyHmacKey, META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided" } as never;
 }
 
-async function callback(messages: Record<string, unknown>[], extraChanges: unknown[] = [], paymentRemindersEnabled = false, codV2Enabled = false) {
+async function callback(messages: Record<string, unknown>[], extraChanges: unknown[] = [], paymentRemindersEnabled = false, codV2Enabled = false, codPolicyHmacKey = codV2Enabled ? "synthetic-cod-policy-key-with-sufficient-entropy" : undefined) {
   const payload = JSON.stringify({ object: "whatsapp_business_account", entry: [{ changes: [{ field: "messages", value: { metadata: { phone_number_id: phoneId }, messages } }, ...extraChanges] }] });
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const digest = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
   const signature = [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-  return api.fetch(new Request("https://api.example.test/webhooks/whatsapp", { method: "POST", headers: { "content-type": "application/json", "x-hub-signature-256": `sha256=${signature}` }, body: payload }), env("false",String(paymentRemindersEnabled),String(paymentRemindersEnabled),"false","false","true",String(codV2Enabled)));
+  return api.fetch(new Request("https://api.example.test/webhooks/whatsapp", { method: "POST", headers: { "content-type": "application/json", "x-hub-signature-256": `sha256=${signature}` }, body: payload }), env("false",String(paymentRemindersEnabled),String(paymentRemindersEnabled),"false","false","true",String(codV2Enabled),codPolicyHmacKey));
 }
 
 async function adminPost(path: string, body: Record<string, unknown>, referenceRequestsEnabled = "true", paymentConfirmationEnabled = "false", paymentRemindersEnabled = "false", paymentAutomationEnabled = "false", orderStatusNotificationsEnabled = "false", events: { send: typeof queueSend } = { send: vi.fn(async () => undefined) },codAdminUiEnabled="false") {
@@ -83,16 +89,16 @@ async function deliverLastSyntheticOrderNotice() {
   return {queued,ack,retry,before,after:sends.length,text:body()};
 }
 
-async function inbound(input: string | Record<string, unknown>, id = `synthetic-inbound-${++sequence}`, waId = sender, paymentRemindersEnabled = false, codV2Enabled = false) {
+async function inbound(input: string | Record<string, unknown>, id = `synthetic-inbound-${++sequence}`, waId = sender, paymentRemindersEnabled = false, codV2Enabled = false, codPolicyHmacKey?: string) {
   const message = { from: waId, id, timestamp: "1792497600", ...(typeof input === "string" ? { type: "text", text: { body: input } } : { type: "interactive", interactive: input }) };
-  const response = await callback([message],[],paymentRemindersEnabled,codV2Enabled);
+  const response = await callback([message],[],paymentRemindersEnabled,codV2Enabled,codPolicyHmacKey ?? (codV2Enabled ? "synthetic-cod-policy-key-with-sufficient-entropy" : undefined));
   expect(response.status).toBe(200);
   return message;
 }
 
 const tap = (id: string) => ({ type: "button_reply", button_reply: { id, title: "Synthetic button" } });
 
-async function reachReview(locale: "en" | "ur", fertilizer = false, province="Synthetic Province",waId=sender) {
+async function reachReview(locale: "en" | "ur", fertilizer = false, province="Synthetic Province",waId=sender,city=`Synthetic City ${waId.slice(-3)}`) {
   await inbound("START",undefined,waId);
   expect(buttons()).toEqual(["LANG_UR", "LANG_EN"]);
   await inbound(tap(locale === "ur" ? "LANG_UR" : "LANG_EN"),undefined,waId);
@@ -107,7 +113,7 @@ async function reachReview(locale: "en" | "ur", fertilizer = false, province="Sy
   await inbound({ type: "list_reply", list_reply: { id: provinceId, title: province } },undefined,waId);
   const contactNumber=`0300${waId.slice(-7)}`;
   const householdSuffix=waId.slice(-3);
-  for (const value of ["Synthetic Customer", `123 Synthetic Street ${householdSuffix}`, `Synthetic Park ${householdSuffix}`, `Synthetic City ${householdSuffix}`, contactNumber]) await inbound(value,undefined,waId);
+  for (const value of ["Synthetic Customer", `123 Synthetic Street ${householdSuffix}`, `Synthetic Park ${householdSuffix}`, city, contactNumber]) await inbound(value,undefined,waId);
   expect(conversation(waId)?.state).toBe("REVIEW");
 }
 
@@ -146,6 +152,14 @@ function configureSyntheticCodPolicy(enabled = true,eligibleProvinces=["Syntheti
   sqlite.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?,?)").run("synthetic-cod-policy-audit","COD_POLICY_UPDATED","TEST","TEST_FIXTURE","SYSTEM_CONFIG","COD_V2_POLICY","synthetic-cod-policy",JSON.stringify({version:1}),timestamp);
 }
 
+function configureOfferMedia(id = "synthetic-offer-media") {
+  const now = "2026-01-01T00:00:00.000Z";
+  sqlite.prepare("INSERT OR IGNORE INTO whatsapp_content_version_action_labels(template_key,version,action_id,label_en,label_ur,created_at,created_by) VALUES('OFFER',1,'CONTINUE_ORDER','Continue Order','آرڈر جاری رکھیں',?,'TEST_FIXTURE'),('OFFER',1,'CANCEL_ORDER','Cancel Order','آرڈر منسوخ کریں',?,'TEST_FIXTURE')").run(now,now);
+  sqlite.prepare(`INSERT INTO whatsapp_content_media(id,template_key,r2_key,master_r2_key,mime_type,size_bytes,sha256,master_mime_type,master_size_bytes,master_sha256,enabled,active,sort_order,created_at,created_by,updated_at,updated_by)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(id,"OFFER",`whatsapp-content/images/offer/${id}.jpg`,`whatsapp-content/images/offer/${id}-master.jpg`,"image/jpeg",4,"d".repeat(64),"image/jpeg",4,"e".repeat(64),1,1,0,now,"TEST_FIXTURE",now,"TEST_FIXTURE");
+  sqlite.prepare("INSERT INTO whatsapp_content_version_media(template_key,version,media_id,active,sort_order,created_at,created_by) VALUES('OFFER',1,?,1,0,?,'TEST_FIXTURE')").run(id,now);
+}
+
 function listRows() {
   return (sends.at(-1)?.interactive as { action?: { sections?: Array<{ rows: Array<{id:string;title:string;description?:string}> }> } } | undefined)?.action?.sections?.[0]?.rows ?? [];
 }
@@ -156,9 +170,14 @@ beforeEach(() => {
   sqlite.exec("INSERT INTO products(id,code,name,price_pkr,enabled,created_at,updated_at) VALUES('synthetic-seeds','FREE_5_PACK_VEGETABLE_SEEDS','Synthetic seeds',0,1,'2026-01-01','2026-01-01'),('synthetic-fertilizer','MICRO_NUTRIENTS_FERTILIZER','Synthetic fertilizer',75,1,'2026-01-01','2026-01-01');");
   sqlite.exec("INSERT INTO province_delivery_rates(province,delivery_fee_pkr,enabled,created_at,updated_at) VALUES('Synthetic Province',125,1,'2026-01-01','2026-01-01');");
   db = { prepare: statement, batch: async (statements: Array<{ run: () => Promise<unknown> }>) => {
-    sqlite.exec("BEGIN");
-    try { const results = []; for (const item of statements) results.push(await item.run()); sqlite.exec("COMMIT"); return results; }
-    catch (error) { sqlite.exec("ROLLBACK"); throw error; }
+    const execute = async () => {
+      sqlite.exec("BEGIN");
+      try { const results = []; for (const item of statements) results.push(await item.run()); sqlite.exec("COMMIT"); return results; }
+      catch (error) { sqlite.exec("ROLLBACK"); throw error; }
+    };
+    const pending = batchTail.then(execute, execute);
+    batchTail = pending.then(() => undefined, () => undefined);
+    return pending;
   } } as unknown as D1Database;
   sequence = 0;
   sends = [];
@@ -166,6 +185,8 @@ beforeEach(() => {
   queueSend = vi.fn(async () => undefined);
   receiptBucketGet = vi.fn(async () => null);
   receiptBucketPut=vi.fn(async()=>undefined);
+  beforeFirstReturn = undefined;
+  batchTail = Promise.resolve();
   vi.stubGlobal("fetch", vi.fn(async (input: unknown, init?: RequestInit) => {
     const url=String(input);
     if(url.includes("/synthetic-late-media"))return Response.json({url:"https://synthetic-media.test/receipt",mime_type:"image/png",file_size:4});
@@ -1011,12 +1032,21 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sqlite.prepare("SELECT event_name,send_status FROM capi_events").all()).toEqual([{ event_name: "Lead", send_status: "PENDING" }]);
   });
 
-  it.each([{fertilizer:true,total:625},{fertilizer:false,total:375}] as const)("offers COD as a separate list choice and confirms a PKR $total delivery order",async({fertilizer,total})=>{
+  it.each([
+    {locale:"en",fertilizer:true,advanceTotal:600,total:725},
+    {locale:"ur",fertilizer:true,advanceTotal:600,total:725},
+    {locale:"en",fertilizer:false,advanceTotal:350,total:475},
+    {locale:"ur",fertilizer:false,advanceTotal:350,total:475}
+  ] as const)("offers all four $locale payment choices and itemizes a PKR $total COD snapshot",async({locale,fertilizer,advanceTotal,total})=>{
     configureSyntheticCodPolicy();
     sqlite.prepare("UPDATE products SET price_pkr=250 WHERE code='MICRO_NUTRIENTS_FERTILIZER'").run();
-    sqlite.prepare("UPDATE province_delivery_rates SET delivery_fee_pkr=250 WHERE province='Synthetic Province'").run();
+    sqlite.prepare("UPDATE province_delivery_rates SET delivery_fee_pkr=350 WHERE province='Synthetic Province'").run();
     for(const method of ["JAZZCASH","EASYPAISA","BANK_TRANSFER"]){verifySyntheticPaymentMethod(method);configureSyntheticPaymentMethodCopy(method)}
-    await reachReview("en",fertilizer);
+    await reachReview(locale,fertilizer);
+    expect(body()).toContain(`PKR ${advanceTotal}`);
+    expect(body()).toContain(locale==="ur"?"بیج":"Seeds");
+    expect(body()).toContain(locale==="ur"?"کھاد":"Fertilizer");
+    expect(body()).toContain(locale==="ur"?"ڈیلیوری":"Delivery");
     await inbound(tap("PLACE_ORDER"),"synthetic-cod-place",sender,true,true);
     expect(conversation()?.state).toBe("PAYMENT_METHOD");
     expect(listRows().map((row)=>row.id).sort()).toEqual(["PAY_BANK_TRANSFER","PAY_COD","PAY_EASYPAISA","PAY_JAZZCASH"].sort());
@@ -1024,11 +1054,13 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     const codSelection=await inbound({type:"list_reply",list_reply:{id:"PAY_COD",title:"Cash on Delivery"}},"synthetic-cod-select",sender,true,true);
     expect(conversation()?.state).toBe("COD_PENDING_CONFIRMATION");
     expect(body()).toContain(`PKR ${total}`);
+    expect(body()).toContain(locale==="ur"?"COD فیس":"COD fee");
+    for(const amount of [0,fertilizer?250:0,350,125,total])expect(body()).toContain(`PKR ${amount}`);
     expect(buttons()).toEqual(["COD_CONFIRM","COD_CHANGE_PAYMENT","COD_CANCEL"]);
     const order=sqlite.prepare("SELECT state,payment_status,total_payable FROM orders").get();
-    expect(order).toMatchObject({state:"COD_PENDING_CONFIRMATION",payment_status:"COD_PENDING",total_payable:fertilizer?500:250});
+    expect(order).toMatchObject({state:"COD_PENDING_CONFIRMATION",payment_status:"COD_PENDING",total_payable:advanceTotal});
     expect(sqlite.prepare("SELECT method,expected_amount,review_state FROM payments").get()).toEqual({method:"COD",expected_amount:total,review_state:"COD_PENDING"});
-    expect(sqlite.prepare("SELECT seed_total_pkr,fertilizer_total_pkr,delivery_fee_pkr,cod_fee_pkr,total_payable_pkr,status FROM cod_order_details").get()).toEqual({seed_total_pkr:0,fertilizer_total_pkr:fertilizer?250:0,delivery_fee_pkr:250,cod_fee_pkr:125,total_payable_pkr:total,status:"COD_PENDING"});
+    expect(sqlite.prepare("SELECT seed_total_pkr,fertilizer_total_pkr,delivery_fee_pkr,cod_fee_pkr,total_payable_pkr,status FROM cod_order_details").get()).toEqual({seed_total_pkr:0,fertilizer_total_pkr:fertilizer?250:0,delivery_fee_pkr:350,cod_fee_pkr:125,total_payable_pkr:total,status:"COD_PENDING"});
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_reminder_v2_schedules").get()).toEqual({count:0});
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_reminder_v2_stages").get()).toEqual({count:0});
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts").get()).toEqual({count:0});
@@ -1050,10 +1082,23 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:1});
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_ORDER_CONFIRMED'").get()).toEqual({count:1});
     const storedBefore=sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts").get();
-    await callback([{from:sender,id:"synthetic-cod-receipt",timestamp:"1792497600",type:"image",image:{id:"synthetic-cod-media"},context:{id:"synthetic-stale-advance-wamid"}}],[],true,true);
-    expect(body()).toContain("No advance receipt is needed");
+    const sendsBeforeReceipt=sends.length;
+    await callback([{from:sender,id:"synthetic-cod-receipt",timestamp:"1792497600",type:"image",image:{id:"synthetic-cod-media"},context:{id:"synthetic-stale-advance-wamid"}}],[],true,false);
+    expect(sends).toHaveLength(sendsBeforeReceipt+1);
+    expect(body()).toContain(locale==="ur"?"پیشگی رسید درکار نہیں":"No advance receipt is needed");
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts").get()).toEqual(storedBefore);
     expect(receiptBucketPut).not.toHaveBeenCalled();
+    const staleKey=`synthetic-historical-cod-payment-${locale}-${fertilizer}`;
+    const staleAt=new Date().toISOString();
+    const historicalOrder=sqlite.prepare("SELECT id,order_number FROM orders").get() as {id:string;order_number:string};
+    sqlite.prepare("INSERT INTO outbox_jobs(id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES(?,?,?,?,?,'PENDING',?,?,?)").run(staleKey,staleKey,"WHATSAPP_PAYMENT_INSTRUCTIONS",historicalOrder.id,JSON.stringify({orderId:historicalOrder.id,orderNumber:historicalOrder.order_number,amount:advanceTotal,method:"JAZZCASH",locale,recipient:sender,message:"Synthetic stale advance instructions",requestKey:staleKey}),staleAt,staleAt,staleAt);
+    const staleSendCount=sends.length;
+    const staleMessage={body:{kind:"WHATSAPP_PAYMENT_INSTRUCTIONS",idempotencyKey:staleKey,entityId:historicalOrder.id,schemaVersion:1 as const},attempts:1,ack:vi.fn(),retry:vi.fn()};
+    await api.queue({messages:[staleMessage]} as never,env("false","true","true","false","false","true","false"));
+    expect(staleMessage.ack).toHaveBeenCalledOnce();
+    expect(staleMessage.retry).not.toHaveBeenCalled();
+    expect(sends).toHaveLength(staleSendCount);
+    expect(sqlite.prepare("SELECT status,last_error FROM outbox_jobs WHERE idempotency_key=?").get(staleKey)).toEqual({status:"PERMANENT_FAILURE",last_error:"COD_PAYMENT_INSTRUCTIONS_BLOCKED"});
   });
 
   it("fails closed when COD settings are approved but the V2 runtime switch is off",async()=>{
@@ -1065,8 +1110,9 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:0});
   });
 
-  it.each([["en","Cash on Delivery","eligible provinces"],["ur","کیش آن ڈیلیوری","اہل صوبوں"]] as const)("uses the active bilingual OFFER text without the old COD-unavailable notice ($0)",async(locale,expected,phrase)=>{
+  it.each([["en","Cash on Delivery","eligible provinces"],["ur","کیش آن ڈیلیوری","اہل صوبوں"]] as const)("fails closed on stale bilingual OFFER copy and its versioned media ($0)",async(locale,expected,phrase)=>{
     configureSyntheticCodPolicy();
+    configureOfferMedia();
     sqlite.prepare("UPDATE whatsapp_content_template_versions SET content_en_json=?,content_ur_json=? WHERE template_key='OFFER' AND version=1").run(JSON.stringify({text:"Cash on delivery is not available."}),JSON.stringify({text:"COD دستیاب نہیں ہے۔"}));
     await inbound("START","synthetic-cod-offer-start",sender,false,true);
     await inbound(tap(locale==="ur"?"LANG_UR":"LANG_EN"),`synthetic-cod-offer-${locale}`,sender,false,true);
@@ -1075,6 +1121,103 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(body()).toContain(phrase);
     expect(body()).not.toMatch(/COD.{0,30}(not available|unavailable)/i);
     expect(buttons()).toEqual(["CONTINUE_ORDER","CANCEL_ORDER"]);
+    expect(receiptBucketGet).not.toHaveBeenCalled();
+  });
+
+  it("keeps truthful COD-unavailable OFFER copy but suppresses its potentially contradictory published image",async()=>{
+    configureSyntheticCodPolicy(false);
+    configureOfferMedia("synthetic-stale-offer-cod-disabled");
+    const en="Cash on delivery is not available.";
+    const ur="کیش آن ڈیلیوری دستیاب نہیں ہے۔";
+    sqlite.prepare("UPDATE whatsapp_content_template_versions SET content_en_json=?,content_ur_json=? WHERE template_key='OFFER' AND version=1").run(JSON.stringify({text:en}),JSON.stringify({text:ur}));
+    await inbound("START","synthetic-cod-disabled-offer-start",sender,false,false);
+    await inbound(tap("LANG_EN"),"synthetic-cod-disabled-offer-language",sender,false,false);
+    expect(body()).toBe(en);
+    expect(receiptBucketGet).not.toHaveBeenCalled();
+    const urWaId="923000000779";
+    await inbound("START","synthetic-cod-disabled-offer-start-ur",urWaId,false,false);
+    await inbound(tap("LANG_UR"),"synthetic-cod-disabled-offer-language-ur",urWaId,false,false);
+    expect(body()).toBe(ur);
+    expect(receiptBucketGet).not.toHaveBeenCalled();
+  });
+
+  it.each(["en","ur"] as const)("uses compatible published $0 OFFER copy and its matching media snapshot",async(locale)=>{
+    configureSyntheticCodPolicy();
+    configureOfferMedia(`synthetic-compatible-offer-${locale}`);
+    const published=locale==="ur"?"اہل صوبوں میں کیش آن ڈیلیوری دستیاب ہے۔":"Published offer: Cash on Delivery is available in eligible provinces.";
+    sqlite.prepare(`UPDATE whatsapp_content_template_versions SET ${locale==="ur"?"content_ur_json":"content_en_json"}=? WHERE template_key='OFFER' AND version=1`).run(JSON.stringify({text:published}));
+    await inbound("START",`synthetic-compatible-start-${locale}`,sender,false,true);
+    await inbound(tap(locale==="ur"?"LANG_UR":"LANG_EN"),`synthetic-compatible-language-${locale}`,sender,false,true);
+    expect(body()).toBe(published);
+    expect(receiptBucketGet).toHaveBeenCalledWith(`whatsapp-content/images/offer/synthetic-compatible-offer-${locale}.jpg`);
+  });
+
+  it("requires API HMAC readiness in addition to a published COD policy hash",async()=>{
+    configureSyntheticCodPolicy();
+    await reachReview("en");
+    await inbound(tap("PLACE_ORDER"),"synthetic-cod-no-hmac",sender,false,true,"");
+    expect(conversation()?.state).toBe("COMPLETE");
+    expect(listRows()).toEqual([]);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:0});
+  });
+
+  it("keeps receipt handling safe on a V1 schema without the COD table",async()=>{
+    sqlite.exec("DROP TABLE cod_order_details");
+    const response=await callback([{from:sender,id:"synthetic-v1-schema-media",timestamp:"1792497600",type:"image",image:{id:"synthetic-v1-media"}}],[],false,false);
+    expect(response.status).toBe(200);
+    expect(receiptBucketPut).not.toHaveBeenCalled();
+  });
+
+  it.each([["COD_CONFIRM","COD_CHANGE_PAYMENT"],["COD_CONFIRM","COD_CANCEL"],["COD_CHANGE_PAYMENT","COD_CANCEL"]] as const)("allows exactly one winning transition across distinct COD callbacks %s/%s",async(firstAction,secondAction)=>{
+    configureSyntheticCodPolicy();
+    verifySyntheticPaymentMethod("JAZZCASH");configureSyntheticPaymentMethodCopy("JAZZCASH");
+    await reachReview("en");
+    await inbound(tap("PLACE_ORDER"),"synthetic-cod-race-place",sender,false,true);
+    await inbound({type:"list_reply",list_reply:{id:"PAY_COD",title:"Cash on Delivery"}},"synthetic-cod-race-select",sender,false,true);
+    let transitionReads=0;
+    let release!:()=>void;
+    const gate=new Promise<void>((resolve)=>{release=resolve});
+    beforeFirstReturn=async(sql)=>{
+      if(!sql.includes("FROM cod_order_details cd")||!sql.includes("cd.status='COD_PENDING'"))return;
+      transitionReads+=1;
+      if(transitionReads===2)release();
+      await gate;
+    };
+    const first={from:sender,id:`synthetic-race-${firstAction}`,timestamp:"1792497600",type:"interactive",interactive:tap(firstAction)};
+    const second={from:sender,id:`synthetic-race-${secondAction}`,timestamp:"1792497600",type:"interactive",interactive:tap(secondAction)};
+    await Promise.all([callback([first],[],false,true),callback([second],[],false,true)]);
+    beforeFirstReturn=undefined;
+    const audits=sqlite.prepare("SELECT action FROM audit_log WHERE action IN ('COD_ORDER_CONFIRMED','COD_ORDER_METHOD_CHANGED','COD_ORDER_CANCELLED')").all();
+    expect(audits).toHaveLength(1);
+    const row=sqlite.prepare("SELECT cd.status,o.state,o.payment_status,p.method,p.review_state FROM cod_order_details cd JOIN orders o ON o.id=cd.order_id JOIN payments p ON p.order_id=o.id").get() as Record<string,unknown>|undefined;
+    const coherent=Boolean(row)&&(row!.status==="COD_CONFIRMED"&&row!.state==="COD_PENDING"&&row!.payment_status==="COD_PENDING"&&row!.method==="COD"&&row!.review_state==="COD_PENDING"
+      ||row!.status==="COD_METHOD_CHANGED"&&row!.state==="PAYMENT_PENDING"&&row!.payment_status==="PENDING"&&row!.method===null&&row!.review_state==="PENDING"
+      ||row!.status==="COD_CANCELLED"&&row!.state==="CANCELLED"&&row!.payment_status==="PENDING"&&row!.method==="COD"&&row!.review_state==="COD_CANCELLED");
+    expect(coherent).toBe(true);
+  });
+
+  it("requires customer province correction for a known city mismatch without editing delivery fields",async()=>{
+    sqlite.prepare("INSERT INTO province_delivery_rates(id,province,delivery_fee_pkr,enabled,created_at,updated_at) VALUES('synthetic-punjab','Punjab',250,1,'2026-01-01','2026-01-01'),('synthetic-balochistan','Balochistan',350,1,'2026-01-01','2026-01-01')").run();
+    await reachReview("en",true,"Balochistan",sender,"Lahore");
+    const before=conversation()?.data;
+    await inbound(tap("PLACE_ORDER"),"synthetic-location-mismatch");
+    expect(conversation()?.state).toBe("PROVINCE");
+    expect(body()).toContain("Lahore");
+    expect(body()).toContain("Punjab");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({count:0});
+    expect(conversation()?.data).toMatchObject({fullName:before?.fullName,deliveryAddress:before?.deliveryAddress,nearbyPlace:before?.nearbyPlace,city:"Lahore",contactNumber:before?.contactNumber});
+    await inbound({type:"list_reply",list_reply:{id:"PROVINCE_PUNJAB",title:"Punjab"}},"synthetic-location-corrected");
+    expect(conversation()?.state).toBe("REVIEW");
+    await inbound(tap("PLACE_ORDER"),"synthetic-location-place");
+    expect(sqlite.prepare("SELECT province FROM orders").get()).toEqual({province:"Punjab"});
+    expect(sqlite.prepare("SELECT city,delivery_address FROM customers").get()).toEqual({city:"Lahore",delivery_address:before?.deliveryAddress});
+  });
+
+  it("does not guess a province for an unknown city",async()=>{
+    sqlite.prepare("INSERT INTO province_delivery_rates(id,province,delivery_fee_pkr,enabled,created_at,updated_at) VALUES('synthetic-balochistan','Balochistan',350,1,'2026-01-01','2026-01-01')").run();
+    await reachReview("en",false,"Balochistan",sender,"Unmapped Test City");
+    await inbound(tap("PLACE_ORDER"),"synthetic-unknown-city-place");
+    expect(sqlite.prepare("SELECT province FROM orders").get()).toEqual({province:"Balochistan"});
   });
 
   it("allows a customer to switch COD back to advance payment and starts a fresh reminder cycle",async()=>{
@@ -1113,19 +1256,25 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sqlite.prepare("SELECT method,expected_amount,review_state FROM payments").get()).toEqual({method:"COD",expected_amount:275,review_state:"COD_PENDING"});
   });
 
-  it("uses each enabled province delivery-rate snapshot in the COD order quote",async()=>{
-    const provinceRates=[["Punjab",250],["Islamabad",275],["Sindh",300],["KPK",325],["Balochistan",350],["AJK",375],["Gilgit Baltistan",400]] as const;
+  it("uses all seven enabled province snapshots with fertilizer yes/no, EN/UR and all four payment choices",async()=>{
+    const provinceRates=[["AJK",350],["Balochistan",350],["Gilgit Baltistan",350],["Islamabad",250],["KPK",300],["Punjab",250],["Sindh",300]] as const;
     for(const [province,deliveryFee] of provinceRates)sqlite.prepare("INSERT INTO province_delivery_rates(id,province,delivery_fee_pkr,enabled,created_at,updated_at) VALUES(?,?,?,1,?,?)").run(`synthetic-rate-${province.toLowerCase().replace(/ /g,"-")}`,province,deliveryFee,"2026-01-01","2026-01-01");
     configureSyntheticCodPolicy(true,provinceRates.map(([province])=>province));
     sqlite.prepare("UPDATE products SET price_pkr=250 WHERE code='MICRO_NUTRIENTS_FERTILIZER'").run();
-    for(const [index,[province,deliveryFee]] of provinceRates.entries()){
-      const waId=`923000000${String(index+1).padStart(3,"0")}`;
-      await reachReview("en",true,province,waId);
-      await inbound(tap("PLACE_ORDER"),`synthetic-cod-all-province-place-${index}`,waId,false,true);
-      expect(listRows().map((row)=>row.id),`COD options missing for ${province}`).toContain("PAY_COD");
-      await inbound({type:"list_reply",list_reply:{id:"PAY_COD",title:"Cash on Delivery"}},`synthetic-cod-all-province-select-${index}`,waId,false,true);
+    for(const method of ["JAZZCASH","EASYPAISA","BANK_TRANSFER"]){verifySyntheticPaymentMethod(method);configureSyntheticPaymentMethodCopy(method)}
+    let journey=0;
+    for(const locale of ["en","ur"] as const)for(const fertilizer of [false,true])for(const [province,deliveryFee] of provinceRates){
+      journey+=1;
+      const waId=`9230000${String(journey).padStart(5,"0")}`;
+      const fertilizerFee=fertilizer?250:0;
+      await reachReview(locale,fertilizer,province,waId);
+      expect(body()).toContain(`PKR ${fertilizerFee+deliveryFee}`);
+      await inbound(tap("PLACE_ORDER"),`synthetic-cod-all-province-place-${journey}`,waId,false,true);
+      expect(listRows().map((row)=>row.id).sort(),`payment choices missing for ${locale}/${province}/${fertilizer}`).toEqual(["PAY_BANK_TRANSFER","PAY_COD","PAY_EASYPAISA","PAY_JAZZCASH"].sort());
+      await inbound({type:"list_reply",list_reply:{id:"PAY_COD",title:"Cash on Delivery"}},`synthetic-cod-all-province-select-${journey}`,waId,false,true);
       const order=sqlite.prepare("SELECT o.province,o.delivery_fee,o.fertilizer_fee,o.total_payable,cd.cod_fee_pkr,cd.total_payable_pkr FROM orders o JOIN cod_order_details cd ON cd.order_id=o.id WHERE o.customer_id=(SELECT id FROM customers WHERE wa_id=?)").get(waId);
-      expect(order).toEqual({province,delivery_fee:deliveryFee,fertilizer_fee:250,total_payable:250+deliveryFee,cod_fee_pkr:125,total_payable_pkr:375+deliveryFee});
+      expect(order).toEqual({province,delivery_fee:deliveryFee,fertilizer_fee:fertilizerFee,total_payable:fertilizerFee+deliveryFee,cod_fee_pkr:125,total_payable_pkr:fertilizerFee+deliveryFee+125});
+      expect(body()).toContain(`PKR ${fertilizerFee+deliveryFee+125}`);
       expect(conversation(waId)?.state).toBe("COD_PENDING_CONFIRMATION");
     }
   });

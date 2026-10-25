@@ -12,6 +12,8 @@
     "producers": [{ "binding": "EVENTS", "queue": "getfreeseeds-v2-events-staging" }],
     "consumers": [{ "queue": "getfreeseeds-v2-events-staging", "max_batch_size": 10, "max_batch_timeout": 5, "max_retries": 5, "dead_letter_queue": "getfreeseeds-v2-events-staging-dlq" }]
   },
+  // COD_POLICY_HMAC_KEY is a dedicated Wrangler secret, never a vars value.
+  // Provision only through the verified-account release workflow; absent key blocks new COD intake.
   "vars": {
     "DEPLOYMENT_STATE": "V2_ISOLATED_STAGING",
     "WHATSAPP_PROVIDER": "meta",

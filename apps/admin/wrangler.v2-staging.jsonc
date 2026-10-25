@@ -8,6 +8,8 @@
   "d1_databases": [{ "binding": "DB", "database_name": "getfreeseeds-v2-staging", "database_id": "6f26ba71-3c10-4b6e-97ab-5df7473c21c7" }],
   "r2_buckets": [{ "binding": "RECEIPTS", "bucket_name": "getfreeseeds-v2-receipts-staging" }],
   "queues": { "producers": [{ "binding": "EVENTS", "queue": "getfreeseeds-v2-events-staging" }] },
+  // COD_POLICY_HMAC_KEY must be a dedicated Wrangler secret shared with the isolated API.
+  // No plaintext verification reference or key belongs in vars; COD stays OFF pending release approval.
   "vars": {
     "DEPLOYMENT_STATE": "V2_ISOLATED_STAGING",
     "ADMIN_EMAIL": "gisupp@gmail.com",

@@ -1,5 +1,24 @@
 # Final Report
 
+## GFS-212 Repairs and Launch Readiness (2026-10-25)
+
+**Result: local/source PASS; live COD/payment/production NO-GO.** No source files from GFS212 have yet been deployed, no real money/status changed, no shared CMS/R2 modified, and no Meta message/asset changed.
+
+| Assigned requirement | Result | Evidence / limit |
+|---|---|---|
+| P0 inspect/preserve branches and work | PASS | Verified GitHub `gardenshop`, PRs8/9/10, PR9 head34d8104, V1 frozen d816ba1, PR10 cf01f44; clean at start except preserved images; no checkout/reset/force-push |
+| P0 protected protocol/accounts | PASS READ-ONLY | Read rules/docs; current GFS identity cb5066a6d71ecdee0bd7ed8aacb4d3c2 verified; no external mutation in GFS212 |
+| P1 historical COD after kill switch | PASS SYNTHETIC | Existing COD remains non-advance for receipts/reminders and Admin ops even with new-intake flag false; V1 no-COD table fallback tested |
+| P1 CMS OFFER/media consistency | PASS SYNTHETIC / LIVE IMAGE NOT VERIFIED | Published content negative-COD text suppresses attached image while preserving the truthful message; compatible COD version can bind its versioned media. Shared live CMS v6 reads no-COD text + one active media row; image bytes not inspected or mutated |
+| P1 concurrency/location/quote | PASS SYNTHETIC | Conditional CAS/audit for confirm/change/cancel; duplicate winner, exact D1 snapshot, seven tariffs, Balochistan600 advance/725 COD; Lahore/Balochistan flags for customer correction, no silent rewrite |
+| P2 Admin Confirm Paid | PASS LOCAL SOURCE / LIVE BLOCKED | One V2 Confirm Paid action; genuine unique transaction ref, receipt/method/order/amount, Access/CSRF, actual-credit attestation, atomic PAID/audit/idempotency; settlement evidence optional. The real order remains REVIEW/PENDING absent actual receiving-account credit |
+| P3 regression/security | PASS LOCAL | `npm ci`; full 257/257 across24 test files; lint/build/audit0; API/Admin V2 dry-runs; PR10 V1 compatibility worktree176/176/lint/build/dry-runs; no GitHub checks available |
+| P4 staged deployment/E2E | BLOCKED PLATFORM/EXTERNAL | Chrome tools absent from this agent though Kilo reports server connected; no raw CDP. Live V2 rates0, COD policy disabled, HMAC secret absent, courier collection/remittance unverified; Meta/webhook has no authorized new deployment. No API/Admin deploy or staging writes |
+| P4 lead-only fallback | NOT RELEASED | No ad campaign/spend/lead form/message. Historical staging lead-only GO is not current acceptance; require existing consent/sender/Meta gates and authenticated browser verification |
+| P5 docs/PR | PASS | rules, STATUS, TEST_MATRIX, DECISIONS, RESOURCE_REGISTRY, CHANGELOG and this report updated and pushed with source/tests on PR #9 |
+
+**Estimates:** P0 100%; P1 100% source/synthetic; P2 90% source only; P3 95%; P4 60%; P5 95%; overall about 88%. **Public-launch readiness: ~25% / NO-GO** (unverified live customer path, tariffs, courier, HMAC and external authorizations). V1 preservation GO; COD NO-GO; real payment approval NO-GO; lead-only public launch BLOCKED. No supported claim of live fix or financial acceptance.
+
 ## GFS-211 COD Consolidation (2026-10-24)
 
 **Overall: IMPLEMENTED / ISOLATED ADMIN ACCEPTANCE PASS / CUSTOMER COD NO-GO.** Duplicate code, hash-only policy, guided COD journey, Admin controls, migration-backed fulfillment and isolated disabled-settings acceptance are complete. COD remains OFF. This report does not authorize enabling COD, public launch, payment approval, shipment, or production rollout.

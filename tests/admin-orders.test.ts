@@ -148,6 +148,15 @@ describe("GFS-139 orders dashboard API", () => {
     expect(JSON.stringify(body)).not.toContain("r2_object_key");
   });
 
+  it("flags a known city/province conflict without changing saved delivery details", async () => {
+    const db = new OrdersDb();
+    db.codOrder = { ...syntheticOrder, city: "Quetta", province: "Punjab" };
+    const response = await app.fetch(new Request("https://admin.example.test/api/orders/synthetic-order-newest", { headers: auth }), environment(db, true));
+    const body = await response.json() as { order: Record<string, unknown> };
+    expect(response.status).toBe(200);
+    expect(body.order).toMatchObject({ city: "Quetta", province: "Punjab", locationIssue: "CITY_PROVINCE_MISMATCH", expectedProvince: "Balochistan", canPrintShippingLabel: false });
+  });
+
   it("displays COD status and total in pending, packing, dispatch, and delivered Orders views",async()=>{
     const states=[
       {state:"COD_PENDING",cod_status:"COD_CONFIRMED",filter:"COD_PENDING"},
