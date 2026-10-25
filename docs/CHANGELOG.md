@@ -5,6 +5,7 @@
 - Added first-step Advance/COD choice, verified three-method advance selection, COD fee warning, itemized confirmation summary and final confirmation over the existing provisional order; Back/Advance has a fresh timer cycle and no COD fee/duplicate order.
 - Decoupled V2 Confirm Paid UI visibility from disabled outbound payment notifications. Confirm Paid remains bound to authenticated actual-credit attestation and existing genuine reference/receipt/amount/method/order checks.
 - Synthetic fixture proves shared tariff snapshot PKR600 advance/PKR725 COD Balochistan350 + fertilizer250; final 261 tests, lint/build/audit0, V2 dry-runs pass. No Worker deployment or external data/CMS/R2/Meta mutation; browser MCP unavailable, all public payment/COD gates remain OFF.
+- Source commit `6da973d` and GFS-214 evidence/docs were pushed to PR #9. PR base remains the frozen V1 release branch and is explicitly not merge-approved.
 
 ## 2026-10-25 (GFS-212 repair execution)
 

@@ -6,15 +6,15 @@
 
 | Stage | Result | Evidence / limit |
 |---|---|---|
-| P0 branches/protocols | PASS | PRs8/9/10 verified; V1 frozen tag d816ba1 and branch tree unchanged; images preserved. PR9 remains targeted at the frozen V1 release branch, so DO NOT MERGE it while it carries V2 changes |
+| P0 branches/protocols | PASS | PRs8/9/10 verified; V1 frozen tag d816ba1 and branch tree unchanged; images preserved. Source commit `6da973d` pushed to PR9. PR9 remains targeted at the frozen V1 release branch, so DO NOT MERGE it while it carries V2 changes |
 | P1 two-step payment UX | PASS SYNTHETIC | Review reuses one provisional order; Advance/COD choice→3 advance methods or COD warning→itemized quote→confirm; fee persists only after final COD order; Back/Advance removes fee and starts a fresh reminder cycle |
 | P1 price/copy/location | PASS SYNTHETIC / LIVE COPY UNVERIFIED | Seven D1 tariff snapshots as fixtures, seed0/fertilizer250; Balochistan350 gives advance600/COD725. Negative COD text keeps text but suppresses bound media; mismatches block completion without rewriting address |
 | P2 full COD customer path | PASS LOCAL API | Signed webhook/SQLite full path for EN/UR, fertilizer yes/no, seven tariffs, callbacks/duplicates, COD unpaid status, no receipt/QR/reminders and collection/remittance gates. This is synthetic SQLite/API acceptance, NOT isolated remote D1 or live WhatsApp |
 | P3 Confirm Paid/Admin E2E | PASS LOCAL APP / LIVE UI BLOCKED | V2 UI-only flag separated from disabled notification flag. Synthetic Admin Hono/SQLite flow: Confirm Paid→Confirm Order→Packing→Dispatch→Delivered; genuine-reference uniqueness, credit attestation and audit. No actual account credit/order updated |
 | P4 isolated browser/deploy/release | PLATFORM/EXTERNAL BLOCKED | Chrome MCP tools absent from exposed schema; no raw CDP. Admin/API not redeployed with new code, no screenshot/WAMID, Meta lead release or customer acceptance. V2 D1 has rates0, HMAC secret/courier proof absent; target real order remains REVIEW/PENDING |
-| P5 docs/PR | PASS PENDING PUSH | Protocol/status/test/resource/report docs updated locally; push tested commits to PR9, but no merge/base change |
+| P5 docs/PR | PASS | Protocol/status/test/resource/report docs updated and pushed to PR9; no merge/base change |
 
-**Final gates:** `npm ci`; **261/261 tests across24 files**; lint/build; audit0; API/Admin V2 dry-runs; V1 PR10 worktree176/176/lint/build/dry-runs. No CI jobs ran; PR8 verify failed before steps and PR9 has no checks. **P0 100%, P1 100% source/synthetic, P2 100% synthetic/0% live, P3 95% source/0% browser, P4 60% preparation/0% release, P5 95%; overall implementation ~90%. Public-launch readiness ~20%/NO-GO.** V1 preservation GO; real payment/PAID NO-GO without bank credit; COD NO-GO without actual courier/rates/HMAC/authorization; lead-only launch BLOCKED pending browser/Meta gates.
+**Final gates:** `npm ci`; **261/261 tests across24 files**; lint/build; audit0; API/Admin V2 dry-runs; V1 PR10 worktree176/176/lint/build/dry-runs. No CI jobs ran; PR8 verify failed before steps and PR9 has no checks. **P0 100%, P1 100% source/synthetic, P2 100% synthetic/0% live, P3 95% source/0% browser, P4 60% preparation/0% release, P5 100%; overall implementation ~90%. Public-launch readiness ~20%/NO-GO.** V1 preservation GO; real payment/PAID NO-GO without bank credit; COD NO-GO without actual courier/rates/HMAC/authorization; lead-only launch BLOCKED pending browser/Meta gates.
 
 ## GFS-212 Repairs and Launch Readiness (2026-10-25)
 

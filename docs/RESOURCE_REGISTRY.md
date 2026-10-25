@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-214 Source Push / No Live Mutation (2026-10-25)
+
+- GFS-214 source commit `6da973d` is pushed to PR #9. PR #9 still targets the immutable V1 release branch and must not be merged without an explicitly reviewed V2-safe base. V1 tag/release tree remains unchanged.
+- Source config separates `PAYMENT_CONFIRMATION_V2_UI_ENABLED=true` from notification flag `PAYMENT_CONFIRMATION_V2_ENABLED=false`; this flag is not present in deployed Admin version `5a7af6ce-2bac-435b-aa52-4aae14e1ee68`. Isolated COD intake remains false. API/Admin versions, bindings, secrets, CMS, R2, D1 and Meta state were not changed in GFS-214.
+- Chrome DevTools MCP server is CLI-connected but browser actions are not exposed; no screenshot, WAMID, live synthetic order or production API route. Current isolated V2 D1 still has tariffs0, disabled PKR125 policy/null hash, and no COD attempts. V2 API/Admin browser acceptance, courier proof, HMAC secret and lead-only release remain blocked.
+
 ## GFS-212 Read-only Resource/Identity Preflight (2026-10-25)
 
 - Verified GitHub `gardenshop`; PRs8/9/10 remain open at `d816ba1` / `34d8104` / `cf01f44` at baseline. Frozen tag d816 and release branch head4129e15 have identical trees (read-only diff empty); neither was changed. Wrangler authenticated as `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no account switching or scope widening.
