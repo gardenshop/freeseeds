@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-25: GFS-220 Select Backward-Compatible COD Candidate
+
+- User explicitly authorized staging Approach A: an additive COD-only shared-D1 schema change and backward-compatible release based on the active legacy Worker, preserving the existing signed webhook, advance payment, history and rollback. No authorization to merge PR #9 into frozen V1 or promote production.
+- Select A over V2 cutover because it avoids introducing protected Meta credentials, a new public callback and Meta webhook migration. The V2 COD source/schema is not directly deployable on the legacy database; only a compatibility-reviewed minimal backport is acceptable.
+- Implementation/deployment is not yet safe: official Chrome DevTools MCP tools are not exposed, so current bindings, authenticated dashboard identity, backup/integrity, canonical sender, permitted test ability and actual contract/remittance records were not verified. No migration, Worker, secret, Meta or customer mutation occurred.
+- Wrangler read-only identity matched GFS (`gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`) but is insufficient mutation preflight. User's existing-contract report remains uncorroborated by a retrieved authorized record. Keep COD flags false.
+- Rejected/In Review display name is not automatically a messaging failure; GFS-178 records prior delivered/read controlled messaging while declined. Recheck current permitted test capability and separate that from public-brand approval.
+
 ## 2026-10-25: GFS-219 Active Webhook Compatibility
 
 - Compared release options. Approach A cannot safely host V2 COD on the active Worker because shared D1 lacks `cod_order_details`; additive migration or source deployment would touch frozen V1-era history. Approach B requires a new signed public V2 route, protected Meta credentials and Meta webhook update; V2 currently has none.

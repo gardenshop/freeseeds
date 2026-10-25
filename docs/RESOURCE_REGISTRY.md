@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-220 Authorized staging scope (2026-10-25)
+
+- The user authorized a future staging-only Approach A: additive COD-specific schema plus backward-compatible active legacy Worker release. No resource, binding, route, D1, secret, callback, or Worker version was changed in this execution.
+- Read-only Wrangler identity: `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Official Chrome DevTools MCP actions were unavailable; dashboard identity and live binding/version state were not reverified. Do not treat the identity check as deploy authorization evidence.
+- The user reports an existing courier collection contract; its authorized record/details were not visible/retrieved. No courier/remittance policy or HMAC provenance was created or enabled.
+- Existing recorded Worker versions/rollback remain historical observations until checked in authenticated dashboard before mutation. No active version, D1 integrity, backup, rollback execution or cost observation is newly claimed.
+- Retain all existing V1/V2 rollback resources and histories. No temporary resource was created; no deletion or cost change occurred.
+
 ## GFS-219 Active Integration State (2026-10-25)
 
 - Active callback: legacy `getfreeseeds-api-staging`, latest known version `21a3d74c-3979-432c-9190-1848362592a4`, workers.dev, shared D1 `getfreeseeds-staging`, protected Meta secret names. Shared D1 has no `cod_order_details`; do not migrate it.

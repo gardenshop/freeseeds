@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-220 Integration Release Gate (2026-10-25)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Git / frozen release preservation | PASS | HEAD and remote PR #9 both `ec0a793d08c5c403a59183c4e2e341a6dadd16aa`; PR #8/#9/#10 open; frozen V1 tag remains `d816ba1`; no merge/reset; untracked `images/` untouched. |
+| Proposed approach authorization | PASS | User explicitly authorized staging-only additive COD schema and backward-compatible active-Worker release; no PR #9 merge or production promotion. |
+| Approach A deployment compatibility | BLOCKED | Candidate not yet backported to active Worker; active bindings/version and backup/rollback cannot be browser-verified; no migration/deploy. V2 migration is not applied to shared D1. |
+| Account identity | PASS READ-ONLY / MUTATION PREFLIGHT BLOCKED | `wrangler whoami`: `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Chrome MCP tools not exposed, so no dashboard verification. |
+| Collector/remittance | BLOCKED | User reports existing contract; underlying authorized record/details not retrieved. No guessed evidence/settings. |
+| Meta status/test capability | BLOCKED CURRENT CHECK | Display name rejected/In Review; that alone does not establish messaging failure (GFS-178 prior delivered/read evidence). Current phone/subscription/permissions/test capability not inspected. |
+| Source regression | PASS | Full Vitest 24 files / 261 tests; build, lint and `npm audit --omit=dev` all pass (0 production vulnerabilities). |
+| Live COD / rollback / D1 integrity | NOT RUN | No authorized browser preflight; no migration, deploy, test order, WhatsApp message, WAMID, screenshot or rollback execution. |
+
 ## GFS-219 Active Webhook Compatibility (2026-10-25)
 
 | Requirement | Result | Evidence / blocker |

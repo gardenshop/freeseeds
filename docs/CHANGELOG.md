@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-25 (GFS-220 authorized integration path)
+
+- Verified current PR #9 HEAD/remote `ec0a793`, PR #8/#9/#10 state, frozen V1 tag `d816ba1`, and preserved untracked `images/`.
+- User authorized staging Approach A: additive COD-only schema and backward-compatible active-Worker release; do not merge V2 PR #9 into frozen V1. No implementation was deployed or external mutation performed.
+- Confirmed source regression remains green: 261/261 tests, build, lint and production dependency audit0.
+- Recorded exact blocker: official Chrome DevTools MCP actions are absent, preventing authenticated dashboard/binding/Meta checks, backup/migration/deploy/rollback, contract retrieval and live tester acceptance. Wrangler read-only identity was verified but is not sufficient for mutation.
+- Clarified that rejected/In Review display name alone does not prove API messaging is blocked; prior GFS-178 delivery evidence exists. Current permitted capability remains unverified.
+
 ## 2026-10-25 (GFS-219 active webhook compatibility)
 
 - Identified active legacy webhook `getfreeseeds-api-staging` and verified its shared-D1 incompatibility with V2 COD schema. No shared migration or route switch performed.

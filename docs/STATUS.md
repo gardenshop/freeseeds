@@ -1,5 +1,15 @@
 # Status
 
+## GFS-220 Authorized Approach A / Live Integration (2026-10-25)
+
+- **P0 PASS identification / authorized staging scope; execution BLOCKED at authenticated preflight.** Current checkout source is on PR #9 HEAD `ec0a793d08c5c403a59183c4e2e341a6dadd16aa`. PR #9 is open and still targets frozen V1 `d816ba1`; PR #8 and #10 remain open. Do not merge #9 into V1. Working tree contains pre-existing untracked `images/`; preserved untouched.
+- **Approach A selected, not implemented/deployed.** User explicitly authorized staging-only additive COD-specific shared-D1 schema plus a backward-compatible release based on the active legacy Worker, preserving advance checkout/history and rollback. It is smaller than B because it retains the existing signed callback/configuration; do not deploy V2 wholesale. B would require protected V2 credentials, a public signed route and Meta callback cutover.
+- **Blocking execution dependency:** official Chrome DevTools MCP actions (`list_pages` and page-scoped actions) are not exposed in this session. Therefore no authenticated dashboard preflight, active binding/version check, current canonical sender/tester check, current Meta messaging eligibility test, backup/migration, Worker deploy/rollback test, or live WhatsApp send was possible. Do not substitute Wrangler/HTTP/raw CDP for mandatory browser checks.
+- Wrangler read-only identity returned `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. This is not dashboard mutation identity verification. The user reports an existing collection contract, but no authorized contract/collector/remittance record was retrievable in this session. No protected value was read or copied.
+- Meta rejected/In Review display name is **not established as the cause of messaging failure**: GFS-178 records controlled delivered/read messaging with a declined name. Current messaging ability was not rechecked. Treat name as public-brand gate; determine test eligibility only from current authenticated Meta state and permitted authorized tester capability.
+- **No shared D1/Worker/Meta/CMS/secret/customer/payment mutation, no message, WAMID, screenshot, order or rollback test occurred. Runtime COD remains disabled.** Existing V2 checkout is source/synthetic only.
+- **P0–P5:** P0 60% (scope approved, live MCP identity checks outstanding); P1 65% (source journey passes, active integration absent); P2 15% (authorization received, contract/config not verified); P3 0% (no live test); P4 45% (local tests only, no current remote integrity/Admin regression); P5 70% (branch/doc evidence updated, no push from this run). Overall estimate **~39% complete / 61% remaining**; public COD launch **NO-GO**.
+
 ## GFS-219 Active Webhook Compatibility / Production Launch (2026-10-25)
 
 - **P0 PASS identification, release BLOCKED.** Active Meta WABA is Get Free Seeds with one connected/high-quality canonical phone; display name remains rejected/In Review. Existing active callback is `getfreeseeds-api-staging`, latest known version `21a3d74c-3979-432c-9190-1848362592a4`, shared V1-era D1/secrets.
