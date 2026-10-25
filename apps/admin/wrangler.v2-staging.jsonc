@@ -16,6 +16,7 @@
     "CF_ACCESS_TEAM_DOMAIN": "soft-scene-0bc2.cloudflareaccess.com",
     "META_PROVIDER_ENABLED": "false",
     "PAYMENT_CONFIRMATION_V2_ENABLED": "false",
+    "PAYMENT_CONFIRMATION_V2_UI_ENABLED": "true",
     "ORDER_STATUS_NOTIFICATIONS_V2_ENABLED": "false",
     "COD_V2_ENABLED": "false",
     "COD_ADMIN_UI_ENABLED": "true",

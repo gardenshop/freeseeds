@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import { canTransition, createMetaActivationService, createWhatsAppProvider, customerTransactionReferenceHash, getLatestOrderForWaId, hashV2CodVerificationReference, isInsideWhatsAppServiceWindow, MetaActivationAction, normalizeCustomerTransactionReference, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, hasPaymentMessagePlaceholders, isPaymentMethodComplete, isPaymentMethodLocaleComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseV2CodPolicy, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, publishedWhatsAppContent, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, V2CodPolicy, V2CodPolicySchema, WhatsAppActionId, whatsAppActionIdsForTemplate, whatsAppActionLabel, WhatsAppContent, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
 
-  type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; CF_ACCESS_TEAM_DOMAIN?: string; META_CAPI_ENABLED?: string; REFERENCE_REQUESTS_ENABLED?: string; ORDER_STATUS_NOTIFICATIONS_V2_ENABLED?: string; COD_V2_ENABLED?: string; COD_ADMIN_UI_ENABLED?:string;COD_POLICY_HMAC_KEY?: string; PAYMENT_CONFIRMATION_V2_ENABLED?: string; PAYMENT_AUTOMATION_V2_ENABLED?: string; PAYMENT_REMINDERS_V2_ENABLED?: string; PAYMENT_UTILITY_TEMPLATES_APPROVED?: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
+  type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; CF_ACCESS_TEAM_DOMAIN?: string; META_CAPI_ENABLED?: string; REFERENCE_REQUESTS_ENABLED?: string; ORDER_STATUS_NOTIFICATIONS_V2_ENABLED?: string; COD_V2_ENABLED?: string; COD_ADMIN_UI_ENABLED?:string;COD_POLICY_HMAC_KEY?: string; PAYMENT_CONFIRMATION_V2_UI_ENABLED?:string;PAYMENT_CONFIRMATION_V2_ENABLED?: string; PAYMENT_AUTOMATION_V2_ENABLED?: string; PAYMENT_REMINDERS_V2_ENABLED?: string; PAYMENT_UTILITY_TEMPLATES_APPROVED?: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
 const app = new Hono<Env>();
 let accessJwkCache: { expiresAt: number; keys: JsonWebKey[] } | undefined;
 app.use("/orders", async (c, next) => { c.header("Cache-Control", "no-store, max-age=0"); c.header("X-Content-Type-Options", "nosniff"); await next(); });
@@ -446,7 +446,7 @@ const v2ConfirmPaidActions=addActions;addActions=(order)=>{v2ConfirmPaidActions(
 }
 
 function paymentConfirmationV2UiEnabled(env: Env["Bindings"]): boolean {
-  return env.PAYMENT_CONFIRMATION_V2_ENABLED === "true" && (env.DEPLOYMENT_STATE === "V2_ISOLATED_STAGING" || env.DEPLOYMENT_STATE === "LOCAL");
+  return env.PAYMENT_CONFIRMATION_V2_UI_ENABLED === "true" && (env.DEPLOYMENT_STATE === "V2_ISOLATED_STAGING" || env.DEPLOYMENT_STATE === "LOCAL");
 }
 
 function locationValidationV2Enabled(env: Env["Bindings"]): boolean {

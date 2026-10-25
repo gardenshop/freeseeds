@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-25: GFS-214 Two-step V2 Payment Choice
+
+- Reuse the existing REVIEW provisional order. First choice is Advance Payment or eligible COD; advance reveals the three verified methods, while COD requires a fee warning, itemized refreshed quote and separate final confirmation. Saving COD adds one unique attempt snapshot to the existing order; Back/Advance clears COD pricing and starts a fresh timer cycle. No extra orders/receipts/reminders for a COD preview.
+- The Admin-only `PAYMENT_CONFIRMATION_V2_UI_ENABLED` gate is distinct from payment-confirmation/outbound notification activation. Real `PAID` still requires an authenticated Admin's attestation of independently checked receiving-account credit, genuine unique reference, exact order/method/amount/receipt binding, atomic audit and idempotency. Supplemental settlement evidence remains optional.
+- COD stays unavailable unless policy/provenance, HMAC secret, eligible enabled D1 province and courier collection/remittance verification all pass. Synthetic tests may simulate these values only in local fixtures; they do not authorize staging/production COD.
+- Do not merge PR #9 into frozen V1 release, change its base, deploy or send messages while Chrome MCP is unavailable and release gates remain unverified. No API/Admin deployment or external CMS/R2 update occurred in GFS-214.
+
 ## 2026-10-25: GFS-212 Targeted Repair and Honest Release Gates
 
 - Execute confirmed defects on PR #9 without another planning confirmation: distinguish COD intake from obligations already persisted; make CMS copy/media availability-consistent; condition customer/Admin COD mutations on the winning transition; preserve exact D1 quote components; flag known location conflicts without silently rewriting details.

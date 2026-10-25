@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import app from "../apps/admin/src/index";
 
 const env = { ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL" } as Parameters<typeof app.fetch>[1];
-const v2Env = { ...env, PAYMENT_CONFIRMATION_V2_ENABLED: "true" } as Parameters<typeof app.fetch>[1];
+const v2Env = { ...env, PAYMENT_CONFIRMATION_V2_UI_ENABLED: "true", PAYMENT_CONFIRMATION_V2_ENABLED: "false" } as NonNullable<Parameters<typeof app.fetch>[1]> & { PAYMENT_CONFIRMATION_V2_ENABLED: string };
 const access = { "cf-access-authenticated-user-email": "admin@example.test" };
 
 async function csrfHeaders(contentType = "application/json") {
@@ -25,7 +25,7 @@ describe("admin payment configuration", () => {
     expect(html).toContain("data.message==='string'");
   });
 
-  it("renders one V2 Confirm Paid flow without a mandatory settlement control", async () => {
+  it("renders V2 Confirm Paid UI while payment notifications remain disabled", async () => {
     const response = await app.fetch(new Request("https://admin.example.test/orders", { headers: access }), v2Env);
     const html = await response.text();
     expect(response.status).toBe(200);
@@ -35,9 +35,18 @@ describe("admin payment configuration", () => {
     expect(html).toContain("Supplementary evidence (optional)");
     expect(html).not.toContain("singlePaymentConfirmation=addActions");
     expect(html).not.toContain("data-settlement-confirm");
+    expect(v2Env.PAYMENT_CONFIRMATION_V2_ENABLED).toBe("false");
     const script = html.match(/<script>([\s\S]*)<\/script>/)?.[1];
     expect(script).toBeTruthy();
     expect(() => new Function(script as string)).not.toThrow();
+  });
+
+  it("does not expose the V2 Confirm Paid UI without the isolated UI flag", async () => {
+    const response=await app.fetch(new Request("https://admin.example.test/orders",{headers:access}),{...env,PAYMENT_CONFIRMATION_V2_ENABLED:"true"} as Parameters<typeof app.fetch>[1]);
+    const html=await response.text();
+    expect(response.status).toBe(200);
+    expect(html).not.toContain("data-v2-confirm-paid");
+    expect(html).toContain("singlePaymentConfirmation=addActions");
   });
 
   it("leaves the existing V1 Orders source unchanged when the V2 flag is off", async () => {

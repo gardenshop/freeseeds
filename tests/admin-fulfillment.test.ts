@@ -67,7 +67,7 @@ class FulfillmentDb {
 }
 
 const auth = { "cf-access-authenticated-user-email": "admin@example.test" };
-const env = (db: FulfillmentDb, v2 = false) => ({ DB: db as unknown as D1Database, ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL", ...(v2 ? { PAYMENT_CONFIRMATION_V2_ENABLED: "true" } : {}) }) as never;
+const env = (db: FulfillmentDb, v2 = false) => ({ DB: db as unknown as D1Database, ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL", ...(v2 ? { PAYMENT_CONFIRMATION_V2_UI_ENABLED: "true", PAYMENT_CONFIRMATION_V2_ENABLED: "false" } : {}) }) as never;
 
 async function csrf(db: FulfillmentDb) {
   const response = await app.fetch(new Request("https://admin.example.test/api/csrf", { headers: auth }), env(db));

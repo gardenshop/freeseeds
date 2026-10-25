@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-214 Two-step checkout / Admin simulation (2026-10-25)
+
+| Requirement | Result | Evidence / limit |
+|---|---|---|
+| Two-step payment selection | PASS SYNTHETIC | Review creates one provisional order; shows Advance/COD only when eligible; Advance→3 methods; COD warning→summary→Confirm Order; warning advance/back avoids COD fees and duplicate order |
+| COD amounts/locales/provinces | PASS SYNTHETIC | EN/UR, seed-only/fertilizer, all7 actual tariff snapshots as fixtures; PKR600 advance / PKR725 COD in Balochistan350; no production tariff constants |
+| COD prerequisites/fail-safe | PASS SYNTHETIC / LIVE BLOCKED | No option with COD disabled, invalid rate, missing courier/hash/key; historical COD still rejects receipts when intake kill-switch off; no advance QR/receipt/reminder |
+| Admin Confirm Paid visible/credit gate | PASS SOURCE / BROWSER BLOCKED | Separate V2 UI flag independent of notification flag; source renders one Confirm Paid action with actual-credit attestation and unique reference; synthetic Hono/SQLite Admin route test. V2 Admin Worker not redeployed with new UI flag |
+| Synthetic advance Admin lifecycle | PASS SQLITE | Synthetic receipt/reference + simulated credited-account attestation →PAID→Confirm Order→PACKING→DISPATCHED→DELIVERED with audit; no real payment/order modified |
+| Actual real target | PASS READ-ONLY / PAID BLOCKED | REVIEW/PENDING, receipt present, no saved reference, location conflict; independent receiving-account credit absent |
+| CMS mismatch | PASS SOURCE / LIVE BLOCKED | Text/media fallback couples availability and suppresses media with negative COD text; shared OFFER6 has one media row but bytes not viewed; no CMS/R2 mutation |
+| Full quality gates | PASS LOCAL | `npm ci`+final full suite261/261, lint, build, audit0, both V2 Wrangler dry-runs; V1 worktree176/176/lint/build/dry-runs |
+| Browser/release | PLATFORM/EXTERNAL BLOCKED | Chrome MCP namespace absent despite CLI connected; no raw CDP, live screenshot/WAMID, deployed API/Admin, courier proof, HMAC secret, active V2 tariff or release authorization |
+
 ## GFS-212 Repair Matrix (2026-10-25)
 
 | Requirement | Result | Evidence / limit |
@@ -16,7 +30,7 @@
 | Real target-order inspection | PASS READ-ONLY / CREDIT BLOCKED | Reported real order masked REVIEW/PENDING, JazzCash, one receipt, no reference, city/province conflict. No receiving-account credit evidence |
 | Migration/D1 integrity | PASS READ-ONLY | Isolated primary0034, recovery0033, quick checks ok/FK empty; no GFS212 migration/data write |
 | COD/lead release gates | BLOCKED SAFELY | COD off; isolated tariffs0, policy disabled125/null HMAC, no HMAC secret or courier proof; API/Meta registration and browser review blocked |
-| Browser/CI | PLATFORM/REMOTE BLOCKED | Kilo MCP bridge reports connected but Chrome tools not exposed; no raw CDP. `gh pr checks` reports none; no branch-protection bypass |
+| Browser/CI | PLATFORM/REMOTE BLOCKED | Kilo MCP bridge reports connected but Chrome tools not exposed; no raw CDP. PR #8 `verify` run39939337015 failed before any steps; PR #9 has no checks; no billing/branch-protection bypass |
 
 Final GFS-212 local gate: `npm ci`, 257/257 tests, lint, build, audit0, both isolated V2 Wrangler dry-runs. Source/synthetic success is not live customer acceptance. Historical GFS-211 Admin screenshot below is not a GFS-212 browser retest.
 
