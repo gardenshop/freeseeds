@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-218 Live COD Launch Gate (2026-10-25)
+
+- The active Meta integration is WABA `Get Free Seeds` with one connected/high-quality canonical phone, but Meta currently shows its display name as rejected/In Review. Treat this as a release gate, not as permission to send. The active webhook is the legacy `getfreeseeds-api-staging` Worker bound to shared V1-era D1/secrets; do not swap it to V2 or bind it to isolated D1 without an approved route migration that preserves all history.
+- The smallest safe comparison is: (a) new V2 route requires protected Meta credentials, public signed callback, canonical sender verification and a controlled Meta update; (b) legacy webhook integration requires changing the active shared Worker/D1. Because neither can be completed without violating the frozen/shared-D1 boundary or exposing unavailable secrets, leave COD/provider flags false and do not send.
+- A user-supplied contract assertion is not a record of collector/remittance identity. If authorized records are not visible in Admin/Meta/D1, do not invent merchant, collector, remittance or HMAC evidence. Preserve the simple checkout source repair and continue only after the external records and route are independently available.
+
 ## GFS-217 Approved COD / Simple Checkout Boundary (2026-10-25)
 
 - The approved customer-flow change is now: `PAY_COD` emits one itemized COD summary with `Confirm COD Order` and `Advance Payment`; the latter enters the three advance methods directly. Existing order/idempotency/COD snapshot safeguards remain authoritative. Legacy `COD_FEE_WARNING` handling remains only for already-open conversations and must not be entered by new sessions.

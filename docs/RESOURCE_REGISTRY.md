@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-218 Live Integration State (2026-10-25)
+
+- Active Meta WABA is `Get Free Seeds`; one canonical phone is connected/high quality, but Meta display name is rejected/In Review. No Hoja asset was opened or used. Canonical sender values remain masked/private.
+- Active callback family is legacy `getfreeseeds-api-staging` with workers.dev exposure, shared V1-era D1 and protected secret values. V2 API `getfreeseeds-v2-api-staging` is isolated, `workers_dev=false`, no route, no Meta secrets and provider/COD/payment flags false.
+- No route cutover, secret copy, Meta setting, CMS publish, D1/R2/Queue mutation, customer message or WAMID occurred. Existing V1/history/rollback resources remain protected.
+- Release blocker is external: protected Meta credentials/public signed callback, approved sender display state, and authenticated collector/remittance record are unavailable in this execution. Review after those records are supplied through authorized interfaces.
+
 ## GFS-217 Current State (2026-10-25)
 
 - Tested checkout source is deployed to V2 API `4122f2e1-f068-4846-9244-d4612cdedad6`; Admin remains `57b8c78c-953d-44b4-8c1b-39343c406e4f`. V2 API `workers_dev=false`, no route, and no Meta/COD/payment secret or provider enablement. Rollback API remains `5fc102a8-74df-415d-8515-64bb7e1a12be`.

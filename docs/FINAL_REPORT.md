@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-218 Live COD Activation (2026-10-25)
+
+**Result: BLOCKED safely before live mutation. The approved source flow is deployed, but the active Meta integration cannot be cut over without protected external gates.**
+
+| Requirement | Result | Evidence |
+|---|---|---|
+| P0 active integration | **PASS IDENTIFICATION / FAIL RELEASE GATE** | Meta WhatsApp Manager shows WABA `Get Free Seeds`, one connected/high-quality canonical phone, and no Hoja asset. Display name is rejected/In Review. Legacy `getfreeseeds-api-staging` is the active workers.dev/shared-D1 callback family. |
+| P1 V2 connection | **BLOCKED** | V2 API `4122f2e1-f068-4846-9244-d4612cdedad6` has no public route and zero Meta secrets; provider/COD/payment flags remain false. Legacy cutover would alter shared V1-era Worker/D1 history. |
+| P2 COD enablement | **BLOCKED** | User authorization recorded, but authenticated collector/remittance contract/provenance was not visible in Admin/Meta/D1. No production tariff, HMAC, COD flag or sender setting was fabricated or enabled. |
+| P3 live WhatsApp order | **NOT RUN** | No signed public V2 webhook, WAMID, screenshot, customer order or outbound message. Tester Profile identity passed; sender display/release state did not. |
+| P4 checkout | **PASS SOURCE/ISOLATED** | GFS-217 flow remains deployed/tested: one itemized COD summary, Confirm COD Order, direct Advance Payment methods, no COD fee on advance. |
+| P5 quality/preservation | **PASS** | 261/261 tests, focused73/73, lint/build/audit0, Wrangler dry-runs/deploy. V1 `d816ba1`, images, orders, receipts, payment history and rollback preserved. |
+
+**Approach decision:** V2 release requires protected Meta credential provisioning, a public signed callback and Meta webhook update. Legacy reuse requires changing the active shared Worker/D1 or migrating shared history. Neither is safe/authorized with current visible evidence, so no routing or production mutation occurred.
+
+**Completion:** P0 70%, P1 30%, P2 0%, P3 0%, P4 40%, P5 90%. Overall **~35% complete; 65% remaining**. Public COD/WhatsApp readiness **~10% / NO-GO**. No screenshots/WAMIDs/order number can be claimed because no live customer test was authorized by the satisfied gates.
+
 ## GFS-217 Approved COD / Simple Checkout / Live WhatsApp (2026-10-25)
 
 **Result: checkout repair PASS; live COD/WhatsApp launch BLOCKED by missing protected integration gates.**

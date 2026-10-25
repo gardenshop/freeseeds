@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-25 (GFS-218 live COD activation gate)
+
+- Identified the active Meta WABA/sender and legacy signed callback through read-only WhatsApp Manager inspection. Sender is connected/high quality but display name is rejected/In Review.
+- Compared V2 route migration versus legacy callback reuse. Neither was activated: V2 lacks protected Meta secrets/public route, while legacy reuse would alter shared V1-era Worker/D1 history. No external mutation or live message.
+- Retained GFS-217 simple COD checkout repair and isolated API deployment with provider/COD/payment flags false. Full 261/261 and focused73/73 tests remain green.
+- Recorded exact launch blockers, rollback and preservation evidence in required documentation.
+
 ## 2026-10-25 (GFS-217 approved COD/simple checkout)
 
 - Simplified new COD sessions to one itemized COD summary with `Confirm COD Order` and `Advance Payment`; advance selection now goes directly to JazzCash/Easypaisa/Bank Transfer without COD fee. Updated EN/UR guided-flow expectations and retained idempotency/CAS safeguards.

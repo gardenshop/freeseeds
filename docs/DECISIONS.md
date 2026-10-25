@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-25: GFS-218 Live COD Route Decision
+
+- Meta read-only inspection identified the active WABA and callback family: `Get Free Seeds`, one connected/high-quality canonical phone, legacy `getfreeseeds-api-staging` Worker, shared V1-era D1 and protected secrets. Meta currently shows the sender display name rejected/In Review.
+- Chosen approach: do not switch the active legacy callback to V2. A V2 release requires a new public signed route, protected Meta credentials and Meta webhook update; legacy reuse would alter shared Worker/D1 history or require an unsafe migration. No external route, secret, sender, CMS, D1 or message mutation occurred.
+- User COD authorization is recorded, but no authenticated collector/remittance contract record or D1 provenance was visible. Keep `COD_V2_ENABLED`, provider, payment and outbound flags false; do not hardcode tariffs or fabricate HMAC/contract evidence.
+- GFS-217 simple checkout source remains the only applied change: one itemized COD summary and direct Advance Payment methods. Isolated deployment/API version and rollback remain valid.
+
 ## 2026-10-25: GFS-217 Approved COD and Simple Checkout
 
 - Implemented the approved minimal customer change: new COD selection goes directly to one itemized summary with `Confirm COD Order` and `Advance Payment`; advance returns directly to the three verified methods. No COD fee is applied to the advance path. Existing provisional-order CAS, idempotency, COD snapshot, receipt blocking and EN/UR safeguards remain.

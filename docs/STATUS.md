@@ -1,5 +1,14 @@
 # Status
 
+## GFS-218 Live COD Activation Attempt (2026-10-25)
+
+- **P0 PASS / external gate FAIL.** Fresh Meta WhatsApp Manager inspection identified WABA `Get Free Seeds`, one connected/high-quality canonical phone (masked in evidence), and no Hoja asset. Meta currently reports the sender display name as rejected/In Review. WhatsApp tester Profile and Admin Access remain verified.
+- **Active integration identified.** Existing callback is the legacy `getfreeseeds-api-staging` Worker with `META_PROVIDER_ENABLED=true`, workers.dev exposure, shared V1-era D1 and protected Meta secrets. V2 API `4122f2e1-f068-4846-9244-d4612cdedad6` is isolated, `workers_dev=false`, no route, zero secrets and all provider/COD/payment flags false.
+- **Approach decision:** V2 release would require a new signed public callback, protected credential provisioning and a Meta webhook update. Reusing the legacy callback would require changing the active shared Worker/D1 or migrating shared history. The latter violates frozen V1/shared-data rules; the former cannot be completed without the missing protected credentials. No route, secret, Meta setting, CMS, D1, sender or message was changed.
+- **P2/P3 BLOCKED SAFELY.** User authorization and contract assertion were recorded, but no visible collector/remittance contract record or COD provenance exists in Admin/Meta/shared/V2 D1. No HMAC, production tariff, COD flag, live WAMID, customer order or screenshot was created. Public COD remains disabled.
+- **Source/runtime PASS.** GFS-217 simple checkout remains deployed to isolated API; full 261/261, focused73/73, lint/build/audit0 and Wrangler dry-runs pass. Frozen V1, images, orders, receipts, payment history and rollback remain intact.
+- **GFS-218 completion:** P0 70% (MCP/identity, sender display gate fail); P1 30%; P2 0%; P3 0%; P4 40%; P5 90%. Overall **~35%**, remaining **~65%**. Public COD/WhatsApp readiness **~10% / NO-GO**.
+
 ## GFS-217 Approved COD / Simple Checkout / WhatsApp Launch (2026-10-25)
 
 - **P0 PASS.** Current Codex host remains `CODEX_HOME=D:\AI-Tools\Codex\home`; fresh official Chrome MCP sessions expose `list_pages`, snapshots, identity checks and visible actions. WhatsApp Profile now matches the authorized tester exactly. Admin Access identity matches `gisupp@gmail.com`. No Hoja tab/asset used.

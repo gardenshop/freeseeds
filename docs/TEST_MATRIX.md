@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-218 Live COD Activation (2026-10-25)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Active Meta webhook | PASS IDENTIFICATION | Legacy `getfreeseeds-api-staging` Worker is workers.dev/public, provider-enabled and shared-D1 bound; existing secret values remain protected. |
+| Canonical sender | PASS PARTIAL / RELEASE BLOCKED | WABA `Get Free Seeds`, one connected/high-quality phone. Display name is rejected/In Review; canonical Contact Info/approved display state is not releasable. |
+| V2 connection | BLOCKED | V2 API has no public route, no Meta secrets, and provider/COD flags false. New route would require protected credential provisioning and Meta webhook update. |
+| Legacy integration option | BLOCKED SAFELY | Reusing legacy callback would change active shared Worker/D1 or require shared migration, violating frozen V1/history preservation. |
+| COD contract/tariffs | BLOCKED | No visible authenticated collector/remittance contract or COD provenance record in Admin/Meta/D1. No rates/HMAC/runtime enablement performed. |
+| Real WhatsApp order | NOT RUN | No public signed V2 callback, WAMID, screenshot, order number or customer message. |
+| Checkout source | PASS | Existing simple COD flow remains deployed/tested: 73/73 focused, 261/261 full. |
+| Quality/rollback | PASS | Lint/build/audit0, V2 dry-runs and API deploy pass; V1/images/history/rollback preserved. |
+
 ## GFS-217 Approved COD / Simple Checkout (2026-10-25)
 
 | Requirement | Result | Evidence / blocker |
