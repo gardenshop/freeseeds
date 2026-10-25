@@ -5,6 +5,7 @@
 | Requirement | Result | Evidence / limit |
 |---|---|---|
 | Local/remote/V1 preservation | PASS | PR9 baseline34d8104; frozen V1 tag d816ba1; no checkout/reset/force-push; images preserved; separate PR10 tree clean |
+| PR base/merge safety | BLOCKED FOR MERGE | PR #9 remains based on `release/gfs-v1-frozen-20261023` while containing V2-specific worker/migration code; no base edit/merge/bypass attempted |
 | V1 regression | PASS LOCAL | Untouched cf01f44:176/176, lint/build and V1 API/Admin dry-runs |
 | Historical COD recognition with intake OFF | PASS SYNTHETIC | COD receipt/image never reaches advance receipt store even when new COD gate off; reminder worker handles persisted COD; V1 schema w/o COD table passes |
 | CMS OFFER text/media compatibility | PASS SYNTHETIC | Negative/stale COD copy retains truthful no-COD body but suppresses attached media; compatible COD copy may use matching published version media. Shared OFFER v6 is read-only text-negative with one active media row; image bytes not inspected, no CMS/R2 write |
