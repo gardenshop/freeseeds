@@ -4,6 +4,7 @@ import { PaymentMethod } from "./domain";
 export async function selectPaymentMethod(db: D1Database, orderId: string, method: PaymentMethod, locale: "en" | "ur" = "en", recipient?: string, requestId?: string): Promise<{ orderNumber: string; amount: number; config: PaymentMethodConfig; message: string; idempotencyKey: string }> {
   const row = await db.prepare("SELECT o.order_number,o.total_payable,o.state,p.id AS payment_id,pm.* FROM orders o JOIN payments p ON p.order_id=o.id JOIN payment_methods pm ON pm.method=? AND pm.enabled=1 AND pm.qr_owner_verified=1 JOIN payment_qr_assets qa ON qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref IS NOT NULL AND TRIM(qa.independent_evidence_ref)<>'' WHERE o.id=?").bind(method, orderId).first<Record<string, unknown>>();
   if (!row) throw new Error("PAYMENT_METHOD_NOT_ELIGIBLE");
+  if (row.state !== "DETAILS_COMPLETED" && !(row.state === "PAYMENT_PENDING" && row.method === method)) throw new Error("ORDER_NOT_ACCEPTING_ADVANCE_PAYMENT");
   const config = normalizePaymentMethodRow(row);
   if (!isPaymentMethodComplete(config)) throw new Error("PAYMENT_METHOD_NOT_CONFIGURED");
   if (row.state !== "DETAILS_COMPLETED" && row.state !== "PAYMENT_PENDING") throw new Error("ORDER_NOT_ACCEPTING_PAYMENT_METHOD");

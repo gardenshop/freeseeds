@@ -12,6 +12,7 @@ export * from "./webhook";
 export * from "./quote";
 export * from "./meta-flow";
 export * from "./catalog";
+export * from "./cod";
 export * from "./order-interaction";
 export * from "./meta-activation";
 export * from "./order-number";

@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { canTransition, createMetaActivationService, createWhatsAppProvider, customerTransactionReferenceHash, getLatestOrderForWaId, isInsideWhatsAppServiceWindow, MetaActivationAction, normalizeCustomerTransactionReference, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, hasPaymentMessagePlaceholders, isPaymentMethodComplete, isPaymentMethodLocaleComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, publishedWhatsAppContent, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, WhatsAppActionId, whatsAppActionIdsForTemplate, whatsAppActionLabel, WhatsAppContent, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
+import { canTransition, codReferenceHmac, createMetaActivationService, createWhatsAppProvider, customerTransactionReferenceHash, getLatestOrderForWaId, isInsideWhatsAppServiceWindow, MetaActivationAction, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, hasPaymentMessagePlaceholders, isPaymentMethodComplete, isPaymentMethodLocaleComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, publishedWhatsAppContent, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, WhatsAppActionId, whatsAppActionIdsForTemplate, whatsAppActionLabel, WhatsAppContent, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
 
-  type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_CAPI_ENABLED?: string; REFERENCE_REQUESTS_ENABLED?: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
+  type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_CAPI_ENABLED?: string; REFERENCE_REQUESTS_ENABLED?: string; COD_REFERENCE_HMAC_KEY?: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
 const app = new Hono<Env>();
 app.use("/orders", async (c, next) => { c.header("Cache-Control", "no-store, max-age=0"); c.header("X-Content-Type-Options", "nosniff"); await next(); });
 type AdminContext = Context<Env>;
@@ -154,7 +154,14 @@ function orderView(row: Record<string, unknown>, referenceRequestDispatchEnabled
     fulfillmentHold,
     fulfillmentHoldReason: fulfillmentHold ? "Independent bank settlement and customer transaction reference are missing." : null,
     paymentStatus: String(row.payment_status),
-    fulfillmentStatus: ["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(state) ? state : "NOT_READY",
+    codOrder: row.cod_status != null,
+    codStatus: row.cod_status == null ? null : String(row.cod_status),
+    codFeePkr: row.cod_fee_pkr == null ? null : Number(row.cod_fee_pkr),
+    codBaseAmountPkr: row.cod_base_amount_pkr == null ? null : Number(row.cod_base_amount_pkr),
+    codQuotedTotalPkr: row.cod_quoted_total_pkr == null ? null : Number(row.cod_quoted_total_pkr),
+    codCollectionRecorded: row.cod_collection_at != null,
+    codRemittanceRecorded: row.cod_remittance_at != null,
+    fulfillmentStatus: row.cod_status != null ? String(row.cod_status) : ["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(state) ? state : "NOT_READY",
     province: row.province == null ? null : String(row.province),
     customerName: row.full_name == null ? null : String(row.full_name),
     deliveryAddress: row.delivery_address == null ? null : String(row.delivery_address),
@@ -167,12 +174,12 @@ function orderView(row: Record<string, unknown>, referenceRequestDispatchEnabled
     normalizedWhatsappNumber: row.normalized_whatsapp_number == null ? null : String(row.normalized_whatsapp_number),
     lastInboundAt: row.last_inbound_at == null ? null : String(row.last_inbound_at),
     paymentId: row.payment_id == null ? null : String(row.payment_id),
-    paymentMethod: row.method == null ? null : String(row.method),
+    paymentMethod: row.cod_status != null ? "COD" : row.method == null ? null : String(row.method),
     paymentMethodVerified: Number(row.payment_method_verified ?? 0) === 1,
     referenceRequestDispatchEnabled,
-    paymentReviewState: row.review_state == null ? null : String(row.review_state),
+    paymentReviewState: row.cod_status != null ? String(row.cod_status) === "PAID" ? "COD_PAID" : "COD_PENDING" : row.review_state == null ? null : String(row.review_state),
     transactionReferenceRequestSent: Number(row.reference_request_sent ?? 0) === 1,
-    expectedAmountPkr: row.expected_amount == null ? null : Number(row.expected_amount),
+    expectedAmountPkr: row.cod_quoted_total_pkr == null ? row.expected_amount == null ? null : Number(row.expected_amount) : Number(row.cod_quoted_total_pkr),
     approvedAmountPkr: row.approved_amount == null ? null : Number(row.approved_amount),
     paymentReviewedBy: row.approved_by == null ? null : String(row.approved_by),
     paymentRejectionReason: row.rejection_reason == null ? null : String(row.rejection_reason),
@@ -181,7 +188,7 @@ function orderView(row: Record<string, unknown>, referenceRequestDispatchEnabled
     paymentCreatedAt: row.payment_created_at == null ? null : String(row.payment_created_at),
     paymentUpdatedAt: row.payment_updated_at == null ? null : String(row.payment_updated_at),
     customerTransactionReference: row.customer_transaction_reference == null ? null : String(row.customer_transaction_reference),
-    totalPayablePkr: Number(row.total_payable ?? 0),
+    totalPayablePkr: row.cod_quoted_total_pkr == null ? Number(row.total_payable ?? 0) : Number(row.cod_quoted_total_pkr),
     receiptCount,
     itemSummary: items.map((item) => `${item.description} x ${item.quantity}`).join(", "),
     items,
@@ -197,7 +204,9 @@ function orderView(row: Record<string, unknown>, referenceRequestDispatchEnabled
     archivedBy: row.archived_by == null ? null : String(row.archived_by),
     archiveReason: row.archive_reason == null ? null : String(row.archive_reason),
     canConfirmOrder: !fulfillmentHold && ["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(state) && row.order_confirmed_at == null && row.archived_at == null,
-    canPrintShippingLabel: !fulfillmentHold && ["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(state) && row.archived_at == null,
+    canPrintShippingLabel: !fulfillmentHold && row.archived_at == null && (row.cod_status == null
+      ? ["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(state)
+      : ["PACKING", "DISPATCHED"].includes(String(row.cod_status)) && Number(row.has_tracking_number ?? 0) === 1),
     canCancel: !financial && receiptCount === 0 && state !== "CANCELLED" && unpaidState && row.archived_at == null,
     canArchive: !financial && receiptCount === 0 && unpaidState && row.archived_at == null
   };
@@ -276,7 +285,7 @@ function showActionError(error){const node=detail.querySelector('.action-status'
 async function mutate(path,body){return json(await fetch(path,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(body)}))}
 async function run(path,body){await mutate(path,body);await load()}
 function confirmAction(order,label){return confirm(label+' for '+order.orderNumber+'? This action is audited.')}
-function addActions(order){const root=detail.querySelector('.actions');if(!root||order.archivedAt)return;if(order.paymentId&&order.state==='PAYMENT_REVIEW'&&order.paymentReviewState==='REVIEW'&&order.receiptCount>0){root.append(actionButton('Approve payment',async()=>{if(confirmAction(order,'Approve the reviewed payment'))await run('/api/payments/'+encodeURIComponent(order.paymentId)+'/approve',{orderId:order.id,confirmation:order.orderNumber})},'primary'));root.append(actionButton('Reject payment',async()=>{const reason=prompt('Rejection reason');if(reason&&confirmAction(order,'Reject the payment'))await run('/api/payments/'+encodeURIComponent(order.paymentId)+'/reject',{orderId:order.id,reason,confirmation:order.orderNumber})},'danger'));root.append(actionButton('Request clearer receipt',async()=>{if(confirmAction(order,'Request a clearer receipt'))await run('/api/payments/'+encodeURIComponent(order.paymentId)+'/request-clearer-receipt',{orderId:order.id,confirmation:order.orderNumber})}))}const next={PAID:['PACKING','Mark packing'],PACKING:['DISPATCHED','Mark dispatched'],DISPATCHED:['DELIVERED','Mark delivered']}[order.state];if(next)root.append(actionButton(next[1],async()=>{if(confirmAction(order,next[1]))await run('/api/orders/'+encodeURIComponent(order.id)+'/transition',{from:order.state,to:next[0],confirmation:order.orderNumber})},'primary'));if(order.canCancel)root.append(actionButton('Cancel order',async()=>{const reason=prompt('Cancellation reason');if(reason&&confirmAction(order,'Cancel order'))await run('/api/orders/'+encodeURIComponent(order.id)+'/cancel',{reason,confirmation:order.orderNumber})},'danger'));if(order.canArchive)root.append(actionButton('Archive order',async()=>{const reason=prompt('Archive reason');if(reason&&confirmAction(order,'Archive order'))await run('/api/orders/'+encodeURIComponent(order.id)+'/archive',{reason,confirmation:order.orderNumber})}));root.insertAdjacentHTML('beforeend','<p class="action-status muted" role="status"></p>')}
+function addActions(order){const root=detail.querySelector('.actions');if(!root||order.archivedAt)return;if(order.codOrder){root.insertAdjacentHTML('beforeend','<p class="muted">COD only. Advance-payment approval, receipts, QR delivery, and reminders are unavailable. PAID is conditional on separate collection and exact remittance reconciliation.</p>');if(order.codStatus==='COD_PENDING'&&!order.codCollectionRecorded)root.append(actionButton('Record courier collection',async()=>{const amount=Number(prompt('Exact amount collected in PKR'));const reference=prompt('Opaque collection evidence reference');if(Number.isSafeInteger(amount)&&reference&&confirmAction(order,'Record exact COD collection'))await run('/api/orders/'+encodeURIComponent(order.id)+'/cod-collection',{confirmation:order.orderNumber,amountPkr:amount,evidenceReference:reference})},'primary'));if(order.codStatus==='COD_PENDING'&&!order.codRemittanceRecorded)root.append(actionButton('Reconcile exact remittance',async()=>{const amount=Number(prompt('Exact remitted amount in PKR'));const reference=prompt('Opaque remittance evidence reference');if(Number.isSafeInteger(amount)&&reference&&confirmAction(order,'Reconcile exact COD remittance'))await run('/api/orders/'+encodeURIComponent(order.id)+'/cod-remittance',{confirmation:order.orderNumber,amountPkr:amount,evidenceReference:reference})},'primary'));root.insertAdjacentHTML('beforeend','<p class="action-status muted" role="status"></p>');return}if(order.paymentId&&order.state==='PAYMENT_REVIEW'&&order.paymentReviewState==='REVIEW'&&order.receiptCount>0){root.append(actionButton('Approve payment',async()=>{if(confirmAction(order,'Approve the reviewed payment'))await run('/api/payments/'+encodeURIComponent(order.paymentId)+'/approve',{orderId:order.id,confirmation:order.orderNumber})},'primary'));root.append(actionButton('Reject payment',async()=>{const reason=prompt('Rejection reason');if(reason&&confirmAction(order,'Reject payment'))await run('/api/payments/'+encodeURIComponent(order.paymentId)+'/reject',{orderId:order.id,reason,confirmation:order.orderNumber})},'danger'));root.append(actionButton('Request clearer receipt',async()=>{if(confirmAction(order,'Request a clearer receipt'))await run('/api/payments/'+encodeURIComponent(order.paymentId)+'/request-clearer-receipt',{orderId:order.id,confirmation:order.orderNumber})}))}const next={PAID:['PACKING','Mark packing'],PACKING:['DISPATCHED','Mark dispatched'],DISPATCHED:['DELIVERED','Mark delivered']}[order.state];if(next)root.append(actionButton(next[1],async()=>{if(confirmAction(order,next[1]))await run('/api/orders/'+encodeURIComponent(order.id)+'/transition',{from:order.state,to:next[0],confirmation:order.orderNumber})},'primary'));if(order.canCancel)root.append(actionButton('Cancel order',async()=>{const reason=prompt('Cancellation reason');if(reason&&confirmAction(order,'Cancel order'))await run('/api/orders/'+encodeURIComponent(order.id)+'/cancel',{reason,confirmation:order.orderNumber})},'danger'));if(order.canArchive)root.append(actionButton('Archive order',async()=>{const reason=prompt('Archive reason');if(reason&&confirmAction(order,'Archive order'))await run('/api/orders/'+encodeURIComponent(order.id)+'/archive',{reason,confirmation:order.orderNumber})}));root.insertAdjacentHTML('beforeend','<p class="action-status muted" role="status"></p>')}
 function renderDetail(data){const order=data.order,items=data.items||order.items||[],receipts=data.receipts||order.receipts||[],audit=data.audit||[];const itemHtml=items.length?items.map((item)=>'<li><div class="item-line"><span><strong>'+text(item.description)+'</strong> × '+text(item.quantity)+'</span><span>'+money(item.lineTotalPkr)+'</span></div><small class="muted">'+text(item.productCode)+' · '+money(item.unitPricePkr)+' each</small></li>').join(''):'<li class="muted">No items recorded.</li>';const receiptHtml=receipts.length?receipts.map((receipt,index)=>'<li><a href="'+esc(receipt.previewUrl)+'" target="_blank" rel="noreferrer">Open private receipt '+(index+1)+'</a><br><small class="muted">'+text(receipt.mimeType)+' · '+Number(receipt.sizeBytes||0).toLocaleString('en-PK')+' bytes · '+esc(when(receipt.submittedAt))+'</small></li>').join(''):'<li class="muted">No receipts submitted.</li>';const auditHtml=audit.length?audit.map((entry)=>'<li><strong>'+text(entry.action)+'</strong><br><small class="muted">'+esc(when(entry.created_at))+' · '+text(entry.actor_id||entry.actor_type)+'</small></li>').join(''):'<li class="muted">No audit entries.</li>';detail.innerHTML='<header class="detail-header"><div><h2>'+esc(order.orderNumber)+'</h2><span class="badge">'+esc(order.state)+'</span> '+badge(order)+(order.archivedAt?' <span class="badge">Archived</span>':'')+'</div><div class="amount"><span class="muted">Order total</span><strong>'+money(order.totalPayablePkr)+'</strong><small>'+esc(when(order.createdAt))+'</small></div></header><div class="grid"><section class="card"><h3>Customer & delivery</h3>'+facts([['Name',text(order.customerName)],['Phone',text(order.contactNumber)],['Normalized phone',text(order.normalizedContactNumber)],['WhatsApp',text(order.whatsappNumber)],['Meta wa_id',text(order.waId)],['Address',text(order.deliveryAddress)],['Landmark',text(order.landmark)],['City',text(order.city)],['Province',text(order.province)]])+'</section><section class="card"><h3>Payment record</h3>'+facts([['Method',text(order.paymentMethod)],['Status',text(order.paymentReviewState||order.paymentStatus)],['Expected',money(order.expectedAmountPkr)],['Approved',money(order.approvedAmountPkr)],['Reviewer',text(order.paymentReviewedBy)],['Submitted',esc(when(order.paymentSubmittedAt))],['Approved at',esc(when(order.paymentApprovedAt))],['Reference',text(order.customerTransactionReference)],['Rejection reason',text(order.paymentRejectionReason)]])+'</section><section class="card"><h3>Fulfillment & retention</h3>'+facts([['Stage',text(order.fulfillmentStatus)],['Last updated',esc(when(order.updatedAt))],['Cancelled at',esc(when(order.cancelledAt))],['Cancelled by',text(order.cancelledBy)],['Cancellation reason',text(order.cancellationReason)],['Archived at',esc(when(order.archivedAt))],['Archived by',text(order.archivedBy)],['Archive reason',text(order.archiveReason)]])+'</section><section class="card"><h3>Receipts</h3><ul class="receipts">'+receiptHtml+'</ul></section><section class="card wide"><h3>Items</h3><ul class="items">'+itemHtml+'</ul></section><section class="card wide"><details><summary><strong>Audit trail</strong> <span class="muted">('+audit.length+')</span></summary><ul class="timeline">'+auditHtml+'</ul></details></section></div><div class="actions"></div>';addActions(order)}
 async function show(id){selectedId=id;for(const node of ordersRoot.querySelectorAll('[data-order-id]'))node.classList.toggle('active',node.dataset.orderId===id);detail.innerHTML='<div class="skeleton">Loading full order record…</div>';try{const data=await json(await fetch('/api/orders/'+encodeURIComponent(id),{cache:'no-store'}));if(selectedId===id)renderDetail(data)}catch(error){detail.innerHTML='<div class="empty error"><p>'+esc(error instanceof Error?error.message:'Order unavailable')+'</p></div>'}}
 filters.onsubmit=(event)=>{event.preventDefault();page=1;load().catch(fail)};document.querySelector('#clear').onclick=()=>{filters.reset();tab='all';page=1;selectedId='';load().catch(fail)};document.querySelector('#refresh').onclick=()=>load().catch(fail);document.querySelector('#previous').onclick=()=>{if(page>1){page-=1;selectedId='';load().catch(fail)}};document.querySelector('#next').onclick=()=>{if(page<totalPages){page+=1;selectedId='';load().catch(fail)}};for(const button of document.querySelectorAll('[data-tab]'))button.onclick=()=>{tab=button.dataset.tab;page=1;selectedId='';load().catch(fail)};
@@ -534,10 +543,98 @@ load().catch(error=>document.querySelector('#methods').textContent=error.message
 </script></body></html>`;
 }
 
-app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav><a href='/payment-settings'>Payment Settings</a> | <a href='/payment-beneficiary-review'>Payment Verification</a> | <a href='/whatsapp-content'>WhatsApp Content</a> | <a href='/payment-amount'>Legacy Advance Amount</a> | <a href='/tariff'>Tariff Management</a> | <a href='/meta-activation'>Meta Activation</a> | <a href='/orders'>Orders</a> | <a href='/test-controls'>Test Controls</a> | Dashboard | Leads | Meta Instant Form | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
+app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav><a href='/payment-settings'>Payment Settings</a> | <a href='/cod-settings'>COD Settings</a> | <a href='/payment-beneficiary-review'>Payment Verification</a> | <a href='/whatsapp-content'>WhatsApp Content</a> | <a href='/payment-amount'>Legacy Advance Amount</a> | <a href='/tariff'>Tariff Management</a> | <a href='/meta-activation'>Meta Activation</a> | <a href='/orders'>Orders</a> | <a href='/test-controls'>Test Controls</a> | Dashboard | Leads | Meta Instant Form | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
 
 app.get("/api/csrf", (c) => c.json({ csrfToken: issueCsrfToken(c) }));
-app.get("/orders", (c) => c.html(professionalOrdersPageHtml(issueCsrfToken(c)).replace("Request the transaction reference in the customer's selected language", "Request a transaction reference in the selected language")));
+
+app.get("/api/cod-configuration", async (c) => {
+  if (!c.env.DB) return c.json({ error: "COD_CONFIGURATION_UNAVAILABLE" }, 503);
+  try {
+    const row = await c.env.DB.prepare("SELECT enabled,fee_pkr,collection_policy_hash,remittance_policy_hash,updated_at FROM cod_configuration WHERE id='default'").first<{ enabled: number; fee_pkr: number; collection_policy_hash: string | null; remittance_policy_hash: string | null; updated_at: string }>();
+    if (!row) return c.json({ error: "COD_CONFIGURATION_MISSING" }, 503);
+    return c.json({ enabled: Number(row.enabled) === 1, feePkr: Number(row.fee_pkr), collectionPolicyConfigured: Boolean(row.collection_policy_hash), remittancePolicyConfigured: Boolean(row.remittance_policy_hash), updatedAt: row.updated_at });
+  } catch {
+    return c.json({ error: "COD_MIGRATION_REQUIRED" }, 503);
+  }
+});
+
+app.post("/api/cod-configuration", async (c) => {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  if (!c.env.DB) return c.json({ error: "COD_CONFIGURATION_UNAVAILABLE" }, 503);
+  if (!c.env.COD_REFERENCE_HMAC_KEY?.trim() || c.env.COD_REFERENCE_HMAC_KEY.trim().length < 32) return c.json({ error: "COD_REFERENCE_HMAC_KEY_REQUIRED" }, 503);
+  let body: { enabled?: unknown; feePkr?: unknown; collectionPolicyReference?: unknown; remittancePolicyReference?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
+  if (typeof body.enabled !== "boolean" || !Number.isSafeInteger(body.feePkr) || Number(body.feePkr) < 0 || Number(body.feePkr) > 100000) return c.json({ error: "COD_CONFIGURATION_INVALID" }, 400);
+  const collectionReference = normalizeCodEvidenceReference(body.collectionPolicyReference);
+  const remittanceReference = normalizeCodEvidenceReference(body.remittancePolicyReference);
+  if (body.enabled && (!collectionReference || !remittanceReference)) return c.json({ error: "COD_POLICY_EVIDENCE_REQUIRED" }, 409);
+  const collectionHash = collectionReference ? await codReferenceHmac(collectionReference, c.env.COD_REFERENCE_HMAC_KEY) : null;
+  const remittanceHash = remittanceReference ? await codReferenceHmac(remittanceReference, c.env.COD_REFERENCE_HMAC_KEY) : null;
+  const previous = await c.env.DB.prepare("SELECT updated_at FROM cod_configuration WHERE id='default'").first<{ updated_at: string }>();
+  if (!previous) return c.json({ error: "COD_CONFIGURATION_MISSING" }, 503);
+  const previousTime = Date.parse(previous.updated_at);
+  const now = new Date(Math.max(Date.now(), Number.isFinite(previousTime) ? previousTime + 1 : Date.now())).toISOString();
+  try {
+    const results = await c.env.DB.batch([
+      c.env.DB.prepare("UPDATE cod_configuration SET enabled=?,fee_pkr=?,collection_policy_hash=?,remittance_policy_hash=?,updated_by=?,updated_at=? WHERE id='default'").bind(body.enabled ? 1 : 0, Number(body.feePkr), collectionHash, remittanceHash, c.env.ADMIN_EMAIL, now),
+      c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM cod_configuration WHERE id='default' AND updated_by=? AND updated_at=?)").bind(crypto.randomUUID(), "COD_CONFIGURATION_UPDATED", "ADMIN", c.env.ADMIN_EMAIL, "COD_CONFIGURATION", "default", crypto.randomUUID(), JSON.stringify({ enabled: body.enabled, feePkr: Number(body.feePkr), collectionPolicyHash: collectionHash, remittancePolicyHash: remittanceHash }), now, c.env.ADMIN_EMAIL, now)
+    ]);
+    if (Number(results[0].meta?.changes ?? 0) !== 1 || Number(results[1].meta?.changes ?? 0) !== 1) return c.json({ error: "COD_CONFIGURATION_SAVE_FAILED" }, 409);
+    return c.json({ ok: true, enabled: body.enabled, feePkr: Number(body.feePkr), collectionPolicyConfigured: Boolean(collectionHash), remittancePolicyConfigured: Boolean(remittanceHash) });
+  } catch {
+    return c.json({ error: "COD_MIGRATION_REQUIRED" }, 503);
+  }
+});
+
+async function reconcileCodEvidence(c: AdminContext, kind: "collection" | "remittance") {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  if (!c.env.DB) return c.json({ error: "COD_RECONCILIATION_UNAVAILABLE" }, 503);
+  if (!c.env.COD_REFERENCE_HMAC_KEY?.trim() || c.env.COD_REFERENCE_HMAC_KEY.trim().length < 32) return c.json({ error: "COD_REFERENCE_HMAC_KEY_REQUIRED" }, 503);
+  let body: { confirmation?: unknown; amountPkr?: unknown; evidenceReference?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
+  const orderId = c.req.param("id");
+  const current = await c.env.DB.prepare("SELECT o.order_number,o.state,o.archived_at,o.total_payable,cod.base_amount_pkr,cod.status,cod.quoted_total_pkr,cod.collection_ref_hmac,cod.collection_amount_pkr,cod.remittance_ref_hmac,cod.remittance_amount_pkr,cfg.collection_policy_hash,cfg.remittance_policy_hash FROM orders o JOIN cod_order_details cod ON cod.order_id=o.id JOIN cod_configuration cfg ON cfg.id='default' WHERE o.id=?").bind(orderId).first<{ order_number: string; state: string; archived_at: string | null; total_payable: number; base_amount_pkr: number; status: string; quoted_total_pkr: number; collection_ref_hmac: string | null; collection_amount_pkr: number | null; remittance_ref_hmac: string | null; remittance_amount_pkr: number | null; collection_policy_hash: string | null; remittance_policy_hash: string | null }>();
+  if (!current) return c.json({ error: "COD_ORDER_NOT_FOUND" }, 404);
+  if (current.order_number === "FS-261019-000001") return c.json({ error: "FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED" }, 409);
+  if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+  const isCollection = kind === "collection";
+  const referenceColumn = isCollection ? "collection_ref_hmac" : "remittance_ref_hmac";
+  const amountColumn = isCollection ? "collection_amount_pkr" : "remittance_amount_pkr";
+  const actorColumn = isCollection ? "collection_actor" : "remittance_actor";
+  const timeColumn = isCollection ? "collection_at" : "remittance_at";
+  const action = isCollection ? "COD_COLLECTION_RECONCILED" : "COD_REMITTANCE_RECONCILED";
+  if (current.archived_at) return c.json({ error: "COD_ORDER_NOT_PENDING" }, 409);
+  const policyHash = kind === "collection" ? current.collection_policy_hash : current.remittance_policy_hash;
+  if (!/^[a-f0-9]{64}$/.test(policyHash ?? "")) return c.json({ error: "COD_POLICY_NOT_CONFIGURED" }, 409);
+  if (!Number.isSafeInteger(body.amountPkr) || Number(body.amountPkr) !== Number(current.quoted_total_pkr) || Number(current.total_payable) !== Number(current.base_amount_pkr)) return c.json({ error: kind === "collection" ? "COD_COLLECTION_AMOUNT_MISMATCH" : "COD_REMITTANCE_AMOUNT_MISMATCH" }, 409);
+  const reference = normalizeCodEvidenceReference(body.evidenceReference);
+  if (!reference) return c.json({ error: "COD_EVIDENCE_REFERENCE_INVALID" }, 400);
+  const evidenceHash = await codReferenceHmac(reference, c.env.COD_REFERENCE_HMAC_KEY);
+  const existingHash = isCollection ? current.collection_ref_hmac : current.remittance_ref_hmac;
+  const existingAmount = isCollection ? current.collection_amount_pkr : current.remittance_amount_pkr;
+  if (existingHash) return existingHash === evidenceHash && Number(existingAmount) === Number(body.amountPkr) ? c.json({ ok: true, alreadyRecorded: true, status: current.status }) : c.json({ error: "COD_EVIDENCE_ALREADY_RECORDED" }, 409);
+  if (current.status !== "COLLECTION_PENDING" || current.state !== "COLLECTION_PENDING") return c.json({ error: "COD_ORDER_NOT_READY_FOR_COLLECTION_RECONCILIATION" }, 409);
+  const now = new Date().toISOString();
+  const result = await c.env.DB.batch([
+    c.env.DB.prepare(`UPDATE cod_order_details SET ${referenceColumn}=?,${amountColumn}=?,${actorColumn}=?,${timeColumn}=?,updated_at=? WHERE order_id=? AND status='COLLECTION_PENDING' AND ${referenceColumn} IS NULL AND quoted_total_pkr=? AND EXISTS(SELECT 1 FROM orders o WHERE o.id=cod_order_details.order_id AND o.state='COLLECTION_PENDING' AND o.payment_status='COD_PENDING' AND o.total_payable=cod_order_details.base_amount_pkr)`).bind(evidenceHash, Number(body.amountPkr), c.env.ADMIN_EMAIL, now, now, orderId, current.quoted_total_pkr),
+    c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE changes()=1").bind(crypto.randomUUID(), action, "ADMIN", c.env.ADMIN_EMAIL, "ORDER", orderId, crypto.randomUUID(), JSON.stringify({ orderId, amountPkr: Number(body.amountPkr), evidenceReferenceHmac: evidenceHash }), now),
+    c.env.DB.prepare("UPDATE cod_order_details SET status='PAID',updated_at=? WHERE order_id=? AND status='COLLECTION_PENDING' AND collection_ref_hmac IS NOT NULL AND collection_amount_pkr=quoted_total_pkr AND remittance_ref_hmac IS NOT NULL AND remittance_amount_pkr=quoted_total_pkr AND EXISTS(SELECT 1 FROM orders o WHERE o.id=cod_order_details.order_id AND o.state='COLLECTION_PENDING' AND o.payment_status='COD_PENDING' AND o.total_payable=cod_order_details.base_amount_pkr)").bind(now, orderId),
+    c.env.DB.prepare("UPDATE payments SET review_state='COD_PAID',approved_amount=?,approved_by=?,approved_at=?,updated_at=? WHERE order_id=? AND review_state='COD_PENDING' AND approved_amount IS NULL AND EXISTS(SELECT 1 FROM cod_order_details cod JOIN orders o ON o.id=cod.order_id WHERE cod.order_id=payments.order_id AND o.state='COLLECTION_PENDING' AND cod.status='PAID' AND cod.collection_amount_pkr=cod.quoted_total_pkr AND cod.remittance_amount_pkr=cod.quoted_total_pkr)").bind(current.quoted_total_pkr, c.env.ADMIN_EMAIL, now, now, orderId),
+    c.env.DB.prepare("UPDATE orders SET state='PAID',payment_status='PAID',updated_at=? WHERE id=? AND state='COLLECTION_PENDING' AND payment_status='COD_PENDING' AND total_payable=? AND EXISTS(SELECT 1 FROM cod_order_details cod JOIN payments p ON p.order_id=cod.order_id WHERE cod.order_id=orders.id AND cod.status='PAID' AND p.review_state='COD_PAID' AND p.approved_amount=cod.quoted_total_pkr AND cod.collection_amount_pkr=cod.quoted_total_pkr AND cod.remittance_amount_pkr=cod.quoted_total_pkr)").bind(now, orderId, current.base_amount_pkr),
+    c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM orders o JOIN cod_order_details cod ON cod.order_id=o.id WHERE o.id=? AND o.state='PAID' AND o.payment_status='PAID' AND cod.status='PAID')").bind(crypto.randomUUID(), "COD_PAYMENT_RECONCILED", "ADMIN", c.env.ADMIN_EMAIL, "ORDER", orderId, crypto.randomUUID(), JSON.stringify({ orderId, amountPkr: Number(current.quoted_total_pkr), collectionReferenceHmac: isCollection ? evidenceHash : current.collection_ref_hmac, remittanceReferenceHmac: isCollection ? current.remittance_ref_hmac : evidenceHash }), now, orderId)
+  ]);
+  if (Number(result[0].meta?.changes ?? 0) !== 1 || Number(result[1].meta?.changes ?? 0) !== 1) return c.json({ error: "COD_RECONCILIATION_STALE" }, 409);
+  return c.json({ ok: true, recorded: true, paid: Number(result[4].meta?.changes ?? 0) === 1, status: Number(result[4].meta?.changes ?? 0) === 1 ? "PAID" : "COLLECTION_PENDING" });
+}
+
+app.post("/api/orders/:id/cod-collection", (c) => reconcileCodEvidence(c, "collection"));
+app.post("/api/orders/:id/cod-remittance", (c) => reconcileCodEvidence(c, "remittance"));
+app.get("/cod-settings", (c) => {
+  const csrf = issueCsrfToken(c);
+  return c.html(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>COD Settings</title><style>body{font:16px system-ui;max-width:760px;margin:2rem auto;padding:0 1rem;color:#17231c}label{display:block;margin:1rem 0}input,button{font:inherit;padding:.55rem}input[type=text],input[type=number],input[type=password]{display:block;width:100%;box-sizing:border-box}button{cursor:pointer}.muted{color:#59635a}.error{color:#a40019}</style></head><body><nav><a href="/">Admin home</a> | <a href="/orders">Orders</a></nav><h1>Cash on Delivery</h1><p class="muted">COD is disabled unless explicitly enabled with verified collection and remittance policy references. Evidence references are HMACed before storage; raw references are not persisted.</p><p id="status" role="status" class="muted">Loading settings…</p><form id="form"><label><input name="enabled" type="checkbox"> Enable COD intake</label><label>COD fee (PKR)<input name="feePkr" type="number" min="0" max="100000" step="1" value="125" required></label><label>Verified courier collection policy evidence reference<input name="collectionPolicyReference" type="password" autocomplete="off"></label><label>Verified exact-remittance policy evidence reference<input name="remittancePolicyReference" type="password" autocomplete="off"></label><button>Save audited settings</button></form><script>const csrf=${JSON.stringify(csrf)};const form=document.querySelector('#form'),status=document.querySelector('#status');async function json(r){const d=await r.json();if(!r.ok)throw new Error(d.error||'Request failed');return d}async function load(){const d=await json(await fetch('/api/cod-configuration',{cache:'no-store'}));form.elements.enabled.checked=d.enabled;form.elements.feePkr.value=d.feePkr;status.textContent='COD '+(d.enabled?'enabled in D1 (runtime flag still separately required)':'disabled')+'; collection policy '+(d.collectionPolicyConfigured?'configured':'missing')+'; remittance policy '+(d.remittancePolicyConfigured?'configured':'missing')+'.'}form.onsubmit=async(e)=>{e.preventDefault();status.className='muted';status.textContent='Saving…';try{await json(await fetch('/api/cod-configuration',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify({enabled:form.elements.enabled.checked,feePkr:Number(form.elements.feePkr.value),collectionPolicyReference:form.elements.collectionPolicyReference.value,remittancePolicyReference:form.elements.remittancePolicyReference.value})}));form.elements.collectionPolicyReference.value='';form.elements.remittancePolicyReference.value='';status.textContent='Saved. Policy hashes only were retained; runtime intake still requires its independent false-by-default flag.';await load()}catch(error){status.className='error';status.textContent=error.message||'Save failed'}};load().catch(error=>{status.className='error';status.textContent=error.message||'COD settings unavailable'});</script></body></html>`);
+});
+const COD_ORDERS_SCRIPT = String.raw`const addOrdinaryCodActions=addActions;addActions=(order)=>{addOrdinaryCodActions(order);if(!order.codOrder||order.archivedAt)return;const root=detail.querySelector('.actions');if(!root)return;const notice=[...root.querySelectorAll('p')].find((node)=>node.textContent.startsWith('COD only.'));if(notice)notice.textContent='COD only. Stored V1 advance amount '+money(order.codBaseAmountPkr)+' is unchanged; COD amount due '+money(order.codQuotedTotalPkr)+' includes fee '+money(order.codFeePkr)+'. COD collection and exact remittance are separately reconciled; COD is not advance approval.';for(const button of root.querySelectorAll('button'))if(['Record courier collection','Reconcile exact remittance'].includes(button.textContent.trim()))button.remove();const next={COD_PENDING:['PACKING','Mark packing'],PACKING:['DISPATCHED','Mark dispatched'],DISPATCHED:['DELIVERED','Mark delivered'],DELIVERED:['COLLECTION_PENDING','Move to collection pending']}[order.state];if(next&&(order.state!=='PACKING'||order.trackingNumber))root.append(actionButton(next[1],async()=>{if(confirmAction(order,next[1]))await run('/api/orders/'+encodeURIComponent(order.id)+'/transition',{from:order.state,to:next[0],confirmation:order.orderNumber})},'primary'));if(order.state==='COD_PENDING'&&!order.trackingNumber&&!root.querySelector('[data-cod-tracking]')){const button=actionButton('Assign Tracking',async()=>{const value=prompt('Tracking number');if(value&&confirmAction(order,'Assign tracking number'))await run('/api/orders/'+encodeURIComponent(order.id)+'/tracking',{trackingNumber:value,confirmation:order.orderNumber})});button.dataset.codTracking='true';root.append(button)}if(order.state==='COLLECTION_PENDING'){if(!order.codCollectionRecorded)root.append(actionButton('Record courier collection',async()=>{const amount=Number(prompt('Exact amount collected in PKR; expected '+Number(order.codQuotedTotalPkr)));const reference=prompt('Opaque collection evidence reference');if(Number.isSafeInteger(amount)&&reference&&confirmAction(order,'Record exact COD collection'))await run('/api/orders/'+encodeURIComponent(order.id)+'/cod-collection',{confirmation:order.orderNumber,amountPkr:amount,evidenceReference:reference})},'primary'));if(!order.codRemittanceRecorded)root.append(actionButton('Reconcile exact remittance',async()=>{const amount=Number(prompt('Exact amount remitted in PKR; expected '+Number(order.codQuotedTotalPkr)));const reference=prompt('Opaque remittance evidence reference');if(Number.isSafeInteger(amount)&&reference&&confirmAction(order,'Reconcile exact COD remittance'))await run('/api/orders/'+encodeURIComponent(order.id)+'/cod-remittance',{confirmation:order.orderNumber,amountPkr:amount,evidenceReference:reference})},'primary'))}};`;
+app.get("/orders", (c) => c.html(professionalOrdersPageHtml(issueCsrfToken(c)).replace("function renderDetail(data){", `${COD_ORDERS_SCRIPT}\nfunction renderDetail(data){`).replace('<option value="REJECTED">Rejected</option>', '<option value="REJECTED">Rejected</option><option value="COD_PENDING">COD pending</option><option value="COD_PAID">COD paid</option>').replace('<option value="NOT_STARTED">Ready to pack</option>', '<option value="NOT_STARTED">Ready to pack</option><option value="COD_PENDING">COD pending</option><option value="COLLECTION_PENDING">Collection pending</option>').replace("Request the transaction reference in the customer's selected language", "Request a transaction reference in the selected language")));
 app.get("/test-controls", (c) => c.html(testControlsPageHtml(issueCsrfToken(c))));
 app.get("/whatsapp-content", (c) => c.html(whatsappContentJourneyPageHtml(issueCsrfToken(c))));
 app.get("/payment-settings", (c) => {
@@ -1341,19 +1438,22 @@ const ORDER_ADMIN_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,
   (SELECT last_inbound_at FROM whatsapp_conversations wc WHERE wc.wa_id=c.wa_id) AS last_inbound_at,
   c.full_name,c.delivery_address,c.nearby_place,c.city,c.contact_number,c.normalized_phone,c.normalized_contact_number,c.whatsapp_number,c.normalized_whatsapp_number,c.wa_id,
   p.id AS payment_id,p.method,p.expected_amount,p.approved_amount,p.review_state,p.submitted_at,p.approved_by,p.approved_at,p.rejection_reason,p.customer_transaction_reference,p.created_at AS payment_created_at,p.updated_at AS payment_updated_at,
+  cod.status AS cod_status,cod.base_amount_pkr AS cod_base_amount_pkr,cod.cod_fee_pkr,cod.quoted_total_pkr AS cod_quoted_total_pkr,cod.collection_at AS cod_collection_at,cod.remittance_at AS cod_remittance_at,
   EXISTS(SELECT 1 FROM payment_methods pm JOIN payment_qr_assets qa ON qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.derivative_sha256=pm.qr_sha256 AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref IS NOT NULL AND trim(qa.independent_evidence_ref)<>'' WHERE pm.method=p.method AND pm.enabled=1 AND pm.qr_owner_verified=1) AS payment_method_verified,
   EXISTS(SELECT 1 FROM outbox_jobs ref_request WHERE ref_request.entity_id=p.id AND ref_request.kind='WHATSAPP_TRANSACTION_REFERENCE_REQUEST' AND ref_request.status IN ('SENT','PENDING','RETRY')) AS reference_request_sent,
+  EXISTS(SELECT 1 FROM audit_log tracking WHERE tracking.entity_type='ORDER' AND tracking.entity_id=o.id AND tracking.action='ORDER_TRACKING_ASSIGNED') AS has_tracking_number,
   (SELECT COUNT(*) FROM payment_receipts receipt_count WHERE receipt_count.order_id=o.id) AS receipt_count,
   COALESCE((SELECT json_group_array(json_object('id',items.id,'itemType',items.item_type,'productCode',items.product_code,'description',items.description,'quantity',items.quantity,'unitPricePkr',items.unit_price_pkr,'lineTotalPkr',items.line_total_pkr,'createdAt',items.created_at)) FROM order_items items WHERE items.order_id=o.id),'[]') AS items_json,
   COALESCE((SELECT json_group_array(json_object('id',receipts.id,'paymentId',receipts.payment_id,'objectKey',receipts.r2_object_key,'mimeType',receipts.mime_type,'sizeBytes',receipts.size_bytes,'submittedAt',receipts.submitted_at,'createdAt',receipts.created_at)) FROM payment_receipts receipts WHERE receipts.order_id=o.id),'[]') AS receipts_json
   FROM orders o JOIN customers c ON c.id=o.customer_id
-  LEFT JOIN payments p ON p.order_id=o.id`;
+  LEFT JOIN payments p ON p.order_id=o.id
+  LEFT JOIN cod_order_details cod ON cod.order_id=o.id`;
 
 const ORDER_TAB_SQL: Record<string, string> = {
   all: "1=1",
   verify: "o.state='PAYMENT_REVIEW' AND p.review_state='REVIEW'",
-  confirmed: "(p.review_state='APPROVED' OR o.payment_status='PAID')",
-  fulfillment: "o.state IN ('PAID','PACKING','DISPATCHED','DELIVERED')"
+  confirmed: "(p.review_state='APPROVED' OR o.payment_status='PAID') AND NOT EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id)",
+  fulfillment: "o.state IN ('COD_PENDING','PAID','PACKING','DISPATCHED','DELIVERED','COLLECTION_PENDING')"
 };
 
 app.get("/api/orders", async (c) => {
@@ -1363,9 +1463,9 @@ app.get("/api/orders", async (c) => {
   const archived = c.req.query("archived") ?? "active";
   if (!["active", "only", "all"].includes(archived)) return c.json({ error: "ARCHIVED_FILTER_INVALID" }, 400);
   const paymentStatus = c.req.query("paymentStatus")?.trim();
-  if (paymentStatus && !["PENDING", "REVIEW", "APPROVED", "REJECTED"].includes(paymentStatus)) return c.json({ error: "PAYMENT_STATUS_INVALID" }, 400);
+  if (paymentStatus && !["PENDING", "REVIEW", "APPROVED", "REJECTED", "COD_PENDING", "COD_PAID"].includes(paymentStatus)) return c.json({ error: "PAYMENT_STATUS_INVALID" }, 400);
   const fulfillment = c.req.query("fulfillment")?.trim();
-  if (fulfillment && !["NOT_STARTED", "PACKING", "DISPATCHED", "DELIVERED", "CANCELLED"].includes(fulfillment)) return c.json({ error: "FULFILLMENT_FILTER_INVALID" }, 400);
+  if (fulfillment && !["NOT_STARTED", "COD_PENDING", "PACKING", "DISPATCHED", "DELIVERED", "COLLECTION_PENDING", "CANCELLED"].includes(fulfillment)) return c.json({ error: "FULFILLMENT_FILTER_INVALID" }, 400);
   const date = c.req.query("date")?.trim();
   if (date && !validOrderDate(date)) return c.json({ error: "ORDER_DATE_INVALID" }, 400);
   const page = Number(c.req.query("page") ?? "1");
@@ -1377,8 +1477,10 @@ app.get("/api/orders", async (c) => {
   const commonBindings: unknown[] = [];
   if (paymentStatus === "PENDING") commonWhere.push("p.review_state='PENDING'");
   if (paymentStatus === "REVIEW") commonWhere.push("p.review_state='REVIEW'");
-  if (paymentStatus === "APPROVED") commonWhere.push("(p.review_state='APPROVED' OR o.payment_status='PAID')");
+  if (paymentStatus === "APPROVED") commonWhere.push("(p.review_state='APPROVED' OR o.payment_status='PAID') AND NOT EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id)");
   if (paymentStatus === "REJECTED") commonWhere.push("(p.review_state='REJECTED' OR o.payment_status='REJECTED')");
+  if (paymentStatus === "COD_PENDING") commonWhere.push("o.payment_status='COD_PENDING' AND EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id AND cod.status<>'PAID')");
+  if (paymentStatus === "COD_PAID") commonWhere.push("p.review_state='COD_PAID' AND o.payment_status='PAID' AND EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id AND cod.status='PAID')");
   if (fulfillment === "NOT_STARTED") commonWhere.push("o.state='PAID'");
   if (fulfillment && fulfillment !== "NOT_STARTED") { commonWhere.push("o.state=?"); commonBindings.push(fulfillment); }
   if (date) { commonWhere.push("substr(o.created_at,1,10)=?"); commonBindings.push(date); }
@@ -1554,20 +1656,32 @@ app.post("/api/orders/:id/transition", async (c) => {
   if (!from.success || !to.success) return c.json({ error: "ORDER_STATE_INVALID" }, 400);
   const fulfillmentTransition = from.data === "PAID" && to.data === "PACKING"
     || from.data === "PACKING" && to.data === "DISPATCHED"
-    || from.data === "DISPATCHED" && to.data === "DELIVERED";
+    || from.data === "DISPATCHED" && to.data === "DELIVERED"
+    || from.data === "COD_PENDING" && to.data === "PACKING"
+    || from.data === "DELIVERED" && to.data === "COLLECTION_PENDING";
   if (!fulfillmentTransition) return c.json({ error: to.data === "CANCELLED" ? "USE_EXPLICIT_CANCELLATION" : "FULFILLMENT_TRANSITION_INVALID" }, 409);
   if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
   if (!canTransition(from.data, to.data)) return c.json({ error: "INVALID_STATE_TRANSITION" }, 409);
   if (!c.env.DB) return c.json({ ok: true, simulated: true });
-  const current = await c.env.DB.prepare("SELECT o.order_number,o.state,o.payment_status,o.archived_at,p.review_state FROM orders o LEFT JOIN payments p ON p.order_id=o.id WHERE o.id=?").bind(c.req.param("id")).first<{ order_number: string; state: OrderState; payment_status: string; review_state: string | null; archived_at: string | null }>();
+  const current = await c.env.DB.prepare("SELECT o.order_number,o.state,o.payment_status,o.archived_at,p.review_state,cod.status AS cod_status FROM orders o LEFT JOIN payments p ON p.order_id=o.id LEFT JOIN cod_order_details cod ON cod.order_id=o.id WHERE o.id=?").bind(c.req.param("id")).first<{ order_number: string; state: OrderState; payment_status: string; review_state: string | null; archived_at: string | null; cod_status: string | null }>();
   if (!current) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
   if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
   if (current.order_number === "FS-261019-000001") return c.json({ error: "FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED" }, 409);
   if (current.archived_at != null || current.state !== from.data) return c.json({ error: "STATE_CONFLICT" }, 409);
-  if (current.payment_status !== "PAID" && current.review_state !== "APPROVED") return c.json({ error: "FULFILLMENT_PAYMENT_NOT_APPROVED" }, 409);
+  const cod = current.cod_status != null;
+  const codTransition = (from.data === "COD_PENDING" && to.data === "PACKING")
+    || (from.data === "PACKING" && to.data === "DISPATCHED")
+    || (from.data === "DISPATCHED" && to.data === "DELIVERED")
+    || (from.data === "DELIVERED" && to.data === "COLLECTION_PENDING");
+  if (cod && (!codTransition || current.cod_status !== from.data || current.payment_status !== "COD_PENDING")) return c.json({ error: "COD_STATE_CONFLICT" }, 409);
+  if (!cod && (from.data === "COD_PENDING" || to.data === "COLLECTION_PENDING" || current.payment_status !== "PAID" && current.review_state !== "APPROVED")) return c.json({ error: "FULFILLMENT_PAYMENT_NOT_APPROVED" }, 409);
+  if (cod && from.data === "PACKING" && to.data === "DISPATCHED" && !(await assignedTrackingNumber(c.env.DB, c.req.param("id")))) return c.json({ error: "COD_TRACKING_REQUIRED_BEFORE_DISPATCH" }, 409);
   const now = new Date().toISOString();
+  const update = cod
+    ? c.env.DB.prepare("UPDATE orders SET state=?,updated_at=? WHERE id=? AND state=? AND payment_status='COD_PENDING' AND archived_at IS NULL AND EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=orders.id AND cod.status=?)").bind(to.data, now, c.req.param("id"), from.data, from.data)
+    : c.env.DB.prepare("UPDATE orders SET state=?,updated_at=? WHERE id=? AND state=? AND archived_at IS NULL").bind(to.data, now, c.req.param("id"), from.data);
   const result = await c.env.DB.batch([
-    c.env.DB.prepare("UPDATE orders SET state=?,updated_at=? WHERE id=? AND state=? AND archived_at IS NULL").bind(to.data, now, c.req.param("id"), from.data),
+    update,
     c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE changes()=1").bind(crypto.randomUUID(), "ORDER_STATE_TRANSITIONED", "ADMIN", c.env.ADMIN_EMAIL, "ORDER", c.req.param("id"), crypto.randomUUID(), JSON.stringify({ from: from.data, to: to.data, orderNumber: current.order_number }), now)
   ]);
   return result[0].meta.changes === 1 ? c.json({ ok: true, from: from.data, to: to.data }) : c.json({ error: "STATE_CONFLICT" }, 409);
@@ -1606,7 +1720,7 @@ app.post("/api/orders/:id/tracking", async (c) => {
   if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
   if (current.order_number === "FS-261019-000001") return c.json({ error: "FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED" }, 409);
   if (current.archived_at != null) return c.json({ error: "ORDER_ARCHIVED" }, 409);
-  if (!["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(current.state)) return c.json({ error: "TRACKING_NOT_READY" }, 409);
+  if (!["PAID", "PACKING", "DISPATCHED", "DELIVERED", "COD_PENDING"].includes(current.state)) return c.json({ error: "TRACKING_NOT_READY" }, 409);
   const now = new Date().toISOString();
   await c.env.DB.batch([
     auditStatement(c.env.DB, "ORDER_TRACKING_ASSIGNED", "ORDER", c.req.param("id"), { orderNumber: current.order_number, trackingNumber: value }, now, c.env.ADMIN_EMAIL)
@@ -1700,9 +1814,10 @@ app.post("/api/payments/:id/approve", async (c) => {
   try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
   if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
   try {
-    const current = await c.env.DB.prepare("SELECT p.review_state,p.method,p.expected_amount,p.approved_amount,p.customer_transaction_reference,o.id AS order_id,o.order_number,o.state,o.archived_at,o.total_payable,c.id AS customer_id,ma.ctwa_clid,COUNT(pr.id) AS receipt_count,(SELECT pm.qr_sha256 FROM payment_methods pm WHERE pm.method=p.method) AS qr_sha256,EXISTS(SELECT 1 FROM payment_methods pm JOIN payment_qr_assets qa ON qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.derivative_sha256=pm.qr_sha256 AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref IS NOT NULL AND trim(qa.independent_evidence_ref)<>'' WHERE pm.method=p.method AND pm.enabled=1 AND pm.qr_owner_verified=1) AS payment_method_verified FROM payments p JOIN orders o ON o.id=p.order_id JOIN customers c ON c.id=o.customer_id LEFT JOIN meta_attribution ma ON ma.order_id=o.id LEFT JOIN payment_receipts pr ON pr.payment_id=p.id AND pr.order_id=o.id AND pr.r2_object_key<>'' AND pr.sha256<>'' WHERE p.id=? AND o.id=? GROUP BY p.id,o.id,c.id,ma.id").bind(c.req.param("id"), body.orderId).first<{ review_state: string;method:string|null;expected_amount: number; approved_amount: number | null; customer_transaction_reference: string | null; order_id: string; order_number: string; state: OrderState; archived_at: string | null;total_payable:number; customer_id: string; ctwa_clid?: string; receipt_count: number;qr_sha256:string|null;payment_method_verified:number }>();
+    const current = await c.env.DB.prepare("SELECT p.review_state,p.method,p.expected_amount,p.approved_amount,p.customer_transaction_reference,o.id AS order_id,o.order_number,o.state,o.archived_at,o.total_payable,c.id AS customer_id,ma.ctwa_clid,COUNT(pr.id) AS receipt_count,(SELECT pm.qr_sha256 FROM payment_methods pm WHERE pm.method=p.method) AS qr_sha256,EXISTS(SELECT 1 FROM payment_methods pm JOIN payment_qr_assets qa ON qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.derivative_sha256=pm.qr_sha256 AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref IS NOT NULL AND trim(qa.independent_evidence_ref)<>'' WHERE pm.method=p.method AND pm.enabled=1 AND pm.qr_owner_verified=1) AS payment_method_verified,EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id) AS cod_order FROM payments p JOIN orders o ON o.id=p.order_id JOIN customers c ON c.id=o.customer_id LEFT JOIN meta_attribution ma ON ma.order_id=o.id LEFT JOIN payment_receipts pr ON pr.payment_id=p.id AND pr.order_id=o.id AND pr.r2_object_key<>'' AND pr.sha256<>'' WHERE p.id=? AND o.id=? GROUP BY p.id,o.id,c.id,ma.id").bind(c.req.param("id"), body.orderId).first<{ review_state: string;method:string|null;expected_amount: number; approved_amount: number | null; customer_transaction_reference: string | null; order_id: string; order_number: string; state: OrderState; archived_at: string | null;total_payable:number; customer_id: string; ctwa_clid?: string; receipt_count: number;qr_sha256:string|null;payment_method_verified:number;cod_order:number }>();
     if (!current) return c.json({ error: "PAYMENT_NOT_FOUND" }, 404);
     if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+    if (Number(current.cod_order)) return c.json({ error: "COD_REQUIRES_COLLECTION_REMITTANCE_RECONCILIATION" }, 409);
     if (current.review_state === "APPROVED" && current.state === "PAID") return c.json({ ok: true, alreadyApproved: true });
     if (current.archived_at != null || current.review_state !== "REVIEW" || current.state !== "PAYMENT_REVIEW") return c.json({ error: "PAYMENT_NOT_IN_REVIEW" }, 409);
     if (current.order_number === "FS-261019-000001") return c.json({ error:"FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED",message:"This payment is on the protected incident hold." },409);
@@ -1748,9 +1863,10 @@ app.post("/api/payments/:id/reject", async (c) => {
   const reason = requiredReason(body.reason);
   if (!reason) return c.json({ error: "REJECTION_REASON_REQUIRED" }, 400);
   if (!c.env.DB) return c.json({ ok: true, simulated: true });
-  const current = await c.env.DB.prepare("SELECT p.review_state,o.id AS order_id,o.order_number,o.state,o.archived_at FROM payments p JOIN orders o ON o.id=p.order_id WHERE p.id=? AND o.id=?").bind(c.req.param("id"), body.orderId).first<{ review_state: string; order_id: string; order_number: string; state: OrderState; archived_at: string | null }>();
+  const current = await c.env.DB.prepare("SELECT p.review_state,o.id AS order_id,o.order_number,o.state,o.archived_at,EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id) AS cod_order FROM payments p JOIN orders o ON o.id=p.order_id WHERE p.id=? AND o.id=?").bind(c.req.param("id"), body.orderId).first<{ review_state: string; order_id: string; order_number: string; state: OrderState; archived_at: string | null; cod_order: number }>();
   if (!current) return c.json({ error: "PAYMENT_NOT_FOUND" }, 404);
   if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+  if (Number(current.cod_order)) return c.json({ error: "COD_REQUIRES_COLLECTION_REMITTANCE_RECONCILIATION" }, 409);
   if (current.archived_at != null || current.review_state !== "REVIEW" || current.state !== "PAYMENT_REVIEW") return c.json({ error: "PAYMENT_NOT_IN_REVIEW" }, 409);
   const now = new Date().toISOString();
   const result = await c.env.DB.batch([

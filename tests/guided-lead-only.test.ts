@@ -3,7 +3,7 @@ import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import api from "../apps/api/src/index";
 import admin from "../apps/admin/src/index";
-import { formatPaymentMessage, getLatestOrderForWaId, MockWhatsAppProvider, persistFlowSubmission, selectPaymentMethod, storeReceipt } from "@gfs/core";
+import { codReferenceHmac, formatPaymentMessage, getLatestOrderForWaId, MockWhatsAppProvider, persistFlowSubmission, selectPaymentMethod, storeReceipt } from "@gfs/core";
 
 // Synthetic fixtures only. SQLite executes the real migrations and journey SQL.
 const sender = "923001234567";
@@ -16,6 +16,9 @@ let sends: Array<Record<string, unknown>>;
 let failNextSend: boolean;
 let queueSend: ReturnType<typeof vi.fn>;
 let receiptPuts: number;
+let codEnabled: boolean;
+const codHmacKey = "synthetic-guided-cod-hmac-key-v1-2026-synthetic";
+let codRuntimeHmacKey = codHmacKey;
 
 function statement(sql: string) {
   let values: SQLInputValue[] = [];
@@ -47,7 +50,7 @@ function buttons() {
 }
 
 function env() {
-  return { DB: db, RECEIPTS: { get: vi.fn(async () => null), put: vi.fn(async () => { receiptPuts++; }), delete: vi.fn(async () => undefined) }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: "true", META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided" } as never;
+  return { DB: db, RECEIPTS: { get: vi.fn(async () => null), put: vi.fn(async () => { receiptPuts++; }), delete: vi.fn(async () => undefined) }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: "true", META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided", COD_V1_ENABLED: codEnabled ? "true" : "false", COD_REFERENCE_HMAC_KEY: codRuntimeHmacKey } as never;
 }
 
 async function callback(messages: Record<string, unknown>[], extraChanges: unknown[] = []) {
@@ -90,6 +93,14 @@ async function reachReview(locale: "en" | "ur", fertilizer = false) {
   await inbound({ type: "list_reply", list_reply: { id: "PROVINCE_SYNTHETIC_PROVINCE", title: "Synthetic Province" } });
   for (const value of ["Synthetic Customer", "123 Synthetic Street", "Synthetic Park", "Synthetic City", "03001234567"]) await inbound(value);
   expect(conversation()?.state).toBe("REVIEW");
+}
+
+async function enableAuditedCodPolicy(feePkr = 125) {
+  const collectionPolicyHash = await codReferenceHmac("SYNTHETIC-COURIER-POLICY", codHmacKey);
+  const remittancePolicyHash = await codReferenceHmac("SYNTHETIC-REMITTANCE-POLICY", codHmacKey);
+  const updatedAt = new Date(Date.now() + 1).toISOString();
+  sqlite.prepare("UPDATE cod_configuration SET enabled=1,fee_pkr=?,collection_policy_hash=?,remittance_policy_hash=?,updated_by=?,updated_at=? WHERE id='default'").run(feePkr, collectionPolicyHash, remittancePolicyHash, "admin@example.test", updatedAt);
+  sqlite.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?,?)").run(crypto.randomUUID(), "COD_CONFIGURATION_UPDATED", "ADMIN", "admin@example.test", "COD_CONFIGURATION", "default", crypto.randomUUID(), JSON.stringify({ enabled: true, feePkr, collectionPolicyHash, remittancePolicyHash }), updatedAt);
 }
 
 async function createSyntheticPaymentReviewOrder(waId: string, idempotencyKey: string) {
@@ -185,6 +196,130 @@ describe("frozen V1 receipt hotfix", () => {
   });
 });
 
+describe("GFS-221 additive V1-compatible COD path", () => {
+  it("quotes COD on the existing order, confirms once, and refuses advance receipts", async () => {
+    await enableAuditedCodPolicy();
+    codEnabled = true;
+    await reachReview("en", true);
+    const countBefore = Number((sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get() as { count: number }).count);
+    await inbound(tap("PLACE_ORDER"));
+    const orderData = conversation()?.data as { orderId: string; orderNumber: string; amountPkr: number };
+    expect(conversation()?.state).toBe("PAYMENT_METHOD");
+    expect(buttons()).toEqual(["ADVANCE_PAYMENT", "COD"]);
+    await inbound(tap("COD"));
+    expect(conversation()?.state).toBe("COD_CONFIRM");
+    expect(body()).toContain("Delivery: PKR 125");
+    expect(body()).toContain("Original order total (Advance Payment): PKR 200");
+    expect(body()).toContain("COD collection fee: PKR 125");
+    expect(body()).toContain("Total due on collection: PKR 325");
+    expect(buttons()).toEqual(["CONFIRM_COD_ORDER", "ADVANCE_PAYMENT"]);
+    expect(sqlite.prepare("SELECT state,total_payable FROM orders WHERE id=?").get(orderData.orderId)).toEqual({ state: "DETAILS_COMPLETED", total_payable: 200 });
+    const sendCountBeforeConfirmation = sends.length;
+
+    const confirmedEvent = await inbound(tap("CONFIRM_COD_ORDER"), "synthetic-cod-confirmation-retry");
+
+    expect(conversation()?.state).toBe("COD_PENDING");
+    expect(body()).toContain("confirmed for COD");
+    expect(sends).toHaveLength(sendCountBeforeConfirmation + 1);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: countBefore + 1 });
+    expect(sqlite.prepare("SELECT state,payment_status,total_payable FROM orders WHERE id=?").get(orderData.orderId)).toEqual({ state: "COD_PENDING", payment_status: "COD_PENDING", total_payable: 200 });
+    expect(sqlite.prepare("SELECT method,review_state,expected_amount FROM payments WHERE order_id=?").get(orderData.orderId)).toEqual({ method: null, review_state: "COD_PENDING", expected_amount: 200 });
+    expect(sqlite.prepare("SELECT base_amount_pkr,cod_fee_pkr,quoted_total_pkr,status FROM cod_order_details WHERE order_id=?").get(orderData.orderId)).toEqual({ base_amount_pkr: 200, cod_fee_pkr: 125, quoted_total_pkr: 325, status: "COD_PENDING" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(orderData.orderId)).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE entity_id=? AND kind LIKE '%PAYMENT%'").get(orderData.orderId)).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE entity_id=? AND (kind LIKE '%REMINDER%' OR kind LIKE '%QR%')").get(orderData.orderId)).toEqual({ count: 0 });
+    const audit = sqlite.prepare("SELECT metadata_json FROM audit_log WHERE action='COD_ORDER_CONFIRMED' AND entity_id=?").get(orderData.orderId) as { metadata_json: string };
+    expect(audit.metadata_json).toContain('"codFeePkr":125');
+    expect(audit.metadata_json).not.toContain(codHmacKey);
+
+    const adminResponse = await admin.fetch(new Request("https://admin.example.test/api/orders?tab=all", { headers: { "cf-access-authenticated-user-email": "admin@example.test" } }), { DB: db, ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL" } as never);
+    const adminOrders = await adminResponse.json() as { orders: Array<{ id: string; paymentStatus: string; paymentReviewState: string; expectedAmountPkr: number; totalPayablePkr: number; codBaseAmountPkr: number; codQuotedTotalPkr: number }> };
+    const adminOrder = adminOrders.orders.find((item) => item.id === orderData.orderId)!;
+    expect(adminOrder).toMatchObject({ paymentMethod: "COD", paymentStatus: "COD_PENDING", paymentReviewState: "COD_PENDING", expectedAmountPkr: 325, totalPayablePkr: 325, codBaseAmountPkr: 200, codQuotedTotalPkr: 325 });
+
+    const sendsAfterConfirmation = sends.length;
+    await callback([confirmedEvent]);
+    expect(sends).toHaveLength(sendsAfterConfirmation);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details WHERE order_id=?").get(orderData.orderId)).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT base_amount_pkr,cod_fee_pkr,quoted_total_pkr FROM cod_order_details WHERE order_id=?").get(orderData.orderId)).toEqual({ base_amount_pkr: 200, cod_fee_pkr: 125, quoted_total_pkr: 325 });
+
+    await inbound(tap("CHECK_ORDER"));
+    expect(body()).toContain("Order status: COD_PENDING");
+    expect(body()).toContain("Exact COD amount due: PKR 325");
+
+    const image = { from: sender, id: "synthetic-cod-receipt-image", timestamp: "1792497600", type: "image", image: { id: "synthetic-cod-media-id", mime_type: "image/png" } };
+    const sentBeforeImage = sends.length;
+    expect((await callback([image])).status).toBe(200);
+    expect(sends).toHaveLength(sentBeforeImage);
+    expect(receiptPuts).toBe(0);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(orderData.orderId)).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(orderData.orderId)).toEqual({ state: "COD_PENDING", payment_status: "COD_PENDING" });
+
+    const adminEnv = { DB: db, ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL" } as never;
+    const identity = { "cf-access-authenticated-user-email": "admin@example.test" };
+    const detailBefore = await admin.fetch(new Request(`https://admin.example.test/api/orders/${orderData.orderId}`, { headers: identity }), adminEnv);
+    expect((await detailBefore.json() as { order: { canPrintShippingLabel: boolean } }).order.canPrintShippingLabel).toBe(false);
+    expect((await admin.fetch(new Request(`https://admin.example.test/api/orders/${orderData.orderId}/shipping-label?format=4x6`, { headers: identity }), adminEnv)).status).toBe(409);
+    expect((await adminPost(`/api/orders/${orderData.orderId}/transition`, { from: "COD_PENDING", to: "PACKING", confirmation: orderData.orderNumber })).status).toBe(200);
+    expect((await admin.fetch(new Request(`https://admin.example.test/api/orders/${orderData.orderId}/shipping-label?format=4x6`, { headers: identity }), adminEnv)).status).toBe(409);
+    expect((await adminPost(`/api/orders/${orderData.orderId}/tracking`, { trackingNumber: "SYNTHETIC-TRACK-001", confirmation: orderData.orderNumber })).status).toBe(200);
+    const detailWithTracking = await admin.fetch(new Request(`https://admin.example.test/api/orders/${orderData.orderId}`, { headers: identity }), adminEnv);
+    expect((await detailWithTracking.json() as { order: { paymentMethod: string; expectedAmountPkr: number; codBaseAmountPkr: number; canPrintShippingLabel: boolean } }).order).toMatchObject({ paymentMethod: "COD", expectedAmountPkr: 325, codBaseAmountPkr: 200, canPrintShippingLabel: true });
+    expect((await admin.fetch(new Request(`https://admin.example.test/api/orders/${orderData.orderId}/shipping-label?format=4x6`, { headers: identity }), adminEnv)).status).toBe(200);
+  });
+
+  it("drops the previewed COD fee when the customer selects Advance Payment", async () => {
+    await enableAuditedCodPolicy();
+    codEnabled = true;
+    await reachReview("en", true);
+    await inbound(tap("PLACE_ORDER"));
+    const orderId = (conversation()?.data as { orderId: string }).orderId;
+    await inbound(tap("COD"));
+    expect(body()).toContain("Total due on collection: PKR 325");
+    await inbound(tap("ADVANCE_PAYMENT"));
+    expect(sqlite.prepare("SELECT state,payment_status,total_payable FROM orders WHERE id=?").get(orderId)).toEqual({ state: "DETAILS_COMPLETED", payment_status: "PENDING", total_payable: 200 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details WHERE order_id=?").get(orderId)).toEqual({ count: 0 });
+  });
+
+  it("localizes the itemized Urdu COD quote and includes the base, fee, and total exactly once", async () => {
+    await enableAuditedCodPolicy();
+    codEnabled = true;
+    await reachReview("ur", true);
+    await inbound(tap("PLACE_ORDER"));
+    await inbound(tap("COD"));
+    expect(body()).toContain("اشیاء:");
+    expect(body()).toContain("آئٹم: بیج");
+    expect(body()).toContain("ترسیل کے اخراجات: PKR 125");
+    expect(body()).toContain("اصل آرڈر کی کل رقم (ایڈوانس ادائیگی): PKR 200");
+    expect(body()).toContain("کیش آن ڈیلیوری وصولی فیس: PKR 125");
+    expect(body()).toContain("وصولی پر کل واجب الادا رقم: PKR 325");
+    expect(body().match(/کیش آن ڈیلیوری وصولی فیس/g)).toHaveLength(1);
+    expect(buttons()).toEqual(["CONFIRM_COD_ORDER", "ADVANCE_PAYMENT"]);
+  });
+
+  it("fails closed for a short API HMAC key even with an audited enabled setting", async () => {
+    await enableAuditedCodPolicy();
+    codRuntimeHmacKey = "short-api-key";
+    codEnabled = true;
+    await reachReview("en", true);
+    await inbound(tap("PLACE_ORDER"));
+    expect(buttons()).not.toContain("COD");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({ count: 0 });
+  });
+
+  it("fails closed when D1 COD settings are enabled without matching latest audit provenance", async () => {
+    const collectionPolicyHash = await codReferenceHmac("SYNTHETIC-COURIER-POLICY", codHmacKey);
+    const remittancePolicyHash = await codReferenceHmac("SYNTHETIC-REMITTANCE-POLICY", codHmacKey);
+    const updatedAt = new Date().toISOString();
+    sqlite.prepare("UPDATE cod_configuration SET enabled=1,fee_pkr=125,collection_policy_hash=?,remittance_policy_hash=?,updated_by=?,updated_at=? WHERE id='default'").run(collectionPolicyHash, remittancePolicyHash, "admin@example.test", updatedAt);
+    codEnabled = true;
+    await reachReview("en", true);
+    await inbound(tap("PLACE_ORDER"));
+    expect(buttons()).not.toContain("COD");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({ count: 0 });
+  });
+});
+
 beforeEach(() => {
   sqlite = new DatabaseSync(":memory:");
   for (const file of readdirSync("migrations").filter((name) => /^\d+.*\.sql$/.test(name)).sort()) sqlite.exec(readFileSync(`migrations/${file}`, "utf8"));
@@ -199,6 +334,8 @@ beforeEach(() => {
   sends = [];
   failNextSend = false;
   receiptPuts = 0;
+  codEnabled = false;
+  codRuntimeHmacKey = codHmacKey;
   queueSend = vi.fn(async () => undefined);
   vi.stubGlobal("fetch", vi.fn(async (_url: unknown, init: RequestInit) => {
     if (failNextSend) { failNextSend = false; return new Response("{}", { status: 503 }); }

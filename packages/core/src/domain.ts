@@ -5,7 +5,7 @@ export const PaymentMethod = z.enum(["JAZZCASH", "EASYPAISA", "BANK_TRANSFER"]);
 export type PaymentMethod = z.infer<typeof PaymentMethod>;
 export const LeadSource = z.enum(["META_INSTANT_FORM", "WHATSAPP", "FACEBOOK_MESSENGER", "INSTAGRAM_DM"]);
 export type LeadSource = z.infer<typeof LeadSource>;
-export const OrderState = z.enum(["NEW", "DETAILS_COMPLETED", "PAYMENT_PENDING", "RECEIPT_SUBMITTED", "PAYMENT_REVIEW", "PAYMENT_REJECTED", "PAID", "PACKING", "DISPATCHED", "DELIVERED", "CANCELLED"]);
+export const OrderState = z.enum(["NEW", "DETAILS_COMPLETED", "PAYMENT_PENDING", "RECEIPT_SUBMITTED", "PAYMENT_REVIEW", "PAYMENT_REJECTED", "COD_PENDING", "PAID", "PACKING", "DISPATCHED", "DELIVERED", "COLLECTION_PENDING", "CANCELLED"]);
 export type OrderState = z.infer<typeof OrderState>;
 
 export const FlowSubmission = z.object({
@@ -55,10 +55,12 @@ export const transitions: Record<OrderState, readonly OrderState[]> = {
   RECEIPT_SUBMITTED: ["PAYMENT_REVIEW"],
   PAYMENT_REVIEW: ["PAID", "PAYMENT_REJECTED"],
   PAYMENT_REJECTED: ["PAYMENT_PENDING", "RECEIPT_SUBMITTED", "CANCELLED"],
+  COD_PENDING: ["PACKING"],
   PAID: ["PACKING"],
   PACKING: ["DISPATCHED"],
   DISPATCHED: ["DELIVERED"],
-  DELIVERED: [],
+  DELIVERED: ["COLLECTION_PENDING"],
+  COLLECTION_PENDING: [],
   CANCELLED: []
 };
 
