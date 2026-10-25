@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-25: GFS-215 Chrome MCP Exposure and Isolated Acceptance Boundary
+
+- The supported MCP configuration is present and valid: global Kilo config enables `chrome_devtools` with `npx -y chrome-devtools-mcp@latest --autoConnect`; a direct official `1.12.0` startup connected to the existing Chrome and emitted no authentication/profile mutation. The active Codex agent still has no Chrome tool namespace, so this is a platform/tool-schema exposure blocker. Do not use raw CDP, direct dashboard HTTP, a new profile, or shell-driven browser automation as a substitute.
+- Because mandatory `list_pages` and authenticated identity checks cannot run through exposed Chrome tools, do not deploy current PR #9 API/Admin code, attach Access, populate tariffs, enable COD, send WhatsApp, publish CMS, or approve any payment in this execution. Existing isolated Worker versions and data-plane resources remain rollback assets.
+- Read-only Cloudflare preflight passed under `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`: isolated V2 dry-runs bind the V2 D1/R2/Queue, primary D1 is migration34/empty/healthy, recovery is migration33/empty/healthy, and Worker secret-name lists are empty. The failed compound-count query (`too many terms in compound SELECT`) was replaced with a scalar-count query that passed; no SQL write occurred.
+- Added explicit V2-only package commands while preserving legacy V1 commands. This prevents a future acceptance operator from accidentally deploying the shared V1 config when selecting the V2 task.
+- Required browser evidence remains unproven: no current screenshot, URL inventory, customer COD order, Admin payment transition, WAMID, or real credit. V1 freeze, new-number lock, Hoja zero-connection rule, private assets, customer/payment history and rollback resources remain preserved.
+
 ## 2026-10-25: GFS-214 Two-step V2 Payment Choice
 
 - Reuse the existing REVIEW provisional order. First choice is Advance Payment or eligible COD; advance reveals the three verified methods, while COD requires a fee warning, itemized refreshed quote and separate final confirmation. Saving COD adds one unique attempt snapshot to the existing order; Back/Advance clears COD pricing and starts a fresh timer cycle. No extra orders/receipts/reminders for a COD preview.

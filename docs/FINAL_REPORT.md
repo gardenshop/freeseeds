@@ -1,5 +1,24 @@
 # Final Report
 
+## GFS-215 Real Chrome MCP E2E Acceptance (2026-10-25)
+
+**Overall result: BLOCKED for browser acceptance; independent local/data-plane checks PASS.** No real COD, real WhatsApp, real payment, Access, CMS, shared D1, customer, receipt, order, Meta, or production mutation occurred.
+
+| Stage | Result | Evidence / exact blocker |
+|---|---|---|
+| P0 Chrome MCP / preservation | **BLOCKED PLATFORM** | Global Kilo config enables `chrome_devtools`; official `chrome-devtools-mcp@1.12.0 --autoConnect` logged a connection to existing Chrome. The active Codex agent exposes no Chrome MCP actions, so `list_pages` and all authenticated browser checks are unavailable. PR #9 HEAD `74222ef`; PR #8/#10 open; frozen V1 `d816ba1` and release tree identical; `images/` untouched. |
+| P1 isolated V2 deploy | **PASS PREFLIGHT / NOT REDEPLOYED** | Wrangler identity `gisupp@gmail.com` / Get Free Seeds account verified. V2 dry-runs bind only isolated D1 `6f26ba71-3c10-4b6e-97ab-5df7473c21c7`, private R2, Queue/DLQ; API provider/COD/payment flags false; Admin UI flag true. Existing versions remain API `5fc102a8-74df-415d-8515-64bb7e1a12be`, Admin `5a7af6ce-2bac-435b-aa52-4aae14e1ee68`. Current HEAD was not deployed because mandatory browser retest is unavailable. |
+| P2 COD customer E2E | **BLOCKED** | No browser URL inventory, screenshot, API response, order ID, D1 COD row, or customer button/message from this run. COD remains disabled; isolated province rates, HMAC secret, courier collection/remittance approval and release authorization are absent. Synthetic 261-test coverage is not real acceptance. |
+| P3 WhatsApp tester | **BLOCKED** | No authenticated tester Profile, canonical sender Contact Info, signed webhook/service-window/routing verification, WAMID or screenshot. No message was sent; no Meta/Hoja tab was operated. |
+| P4 Admin payment / real order | **BLOCKED SAFELY** | No Access-protected browser action, synthetic remote receipt/order, PAID transition, audit approval or fulfillment mutation. `FS-261025-000001` was not inspected or approved in this run. No independent receiving-account credit evidence exists. |
+| P5 repair/quality/docs | **PASS LOCAL** | Clean `npm ci`; 261/261 tests across24 files; lint/build; audit0; isolated V2 Wrangler dry-runs; D1 primary/recovery quick/FK checks. Added explicit V2-only package commands and recorded exact platform blocker. |
+
+**D1 evidence:** primary quick check `ok`, foreign-key check empty, migration count34, zero customers/orders/payments/receipts/province rates/COD details; recovery quick check `ok`, foreign-key check empty, migration count33, zero customers/orders/payments/receipts/province rates. A first compound count query hit Cloudflare `too many terms in compound SELECT`; the read-only scalar-count retry passed and no write occurred.
+
+**Required evidence not available:** current sanitized screenshots, actual URLs/tab inventory, real versus synthetic WAMIDs, browser-driven COD/Admin order IDs, unique remote audit records, and real payment/WhatsApp state changes. Historical screenshots/WAMIDs remain private and are not reused as GFS-215 evidence. Cleanup is complete because no synthetic remote rows/resources were created; retained V2 D1/recovery/R2/Queue/DLQ/Workers remain rollback assets with review date 2026-11-23.
+
+**Completion:** P0 70% (MCP connected but tool exposure blocked), P1 90% preflight (current HEAD deployment outstanding), P2 45% synthetic/source only, P3 0% live browser, P4 60% preparation/0% real funds, P5 95% local/docs. Overall **~60% complete; 40% remaining**. Public launch **~15% / NO-GO**. Frozen V1 preservation **GO**; real COD, real PAID, customer WhatsApp and production release **NO-GO**.
+
 ## GFS-214 Two-step COD Checkout / Admin Visibility (2026-10-25)
 
 **Result: source/synthetic acceptance PASS; live/browser/launch acceptance BLOCKED.** PR9 baseline was `09a5a41`. No real order/payment/CMS/R2/Meta or shared D1 state was changed. COD, notifications, and production remain disabled.

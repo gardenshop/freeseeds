@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-215 Real Chrome MCP Acceptance (2026-10-25)
+
+| Requirement | Result | Evidence / exact limit |
+|---|---|---|
+| Chrome MCP startup/config | PASS DIAGNOSIS / PLATFORM BLOCKED | Global `chrome_devtools` config is enabled with official `chrome-devtools-mcp@1.12.0 --autoConnect`; server log says connected to existing Chrome. Current Codex schema exposes no Chrome MCP actions, so `list_pages` cannot be called through the agent. No raw CDP or shell browser substitute used. |
+| Git/V1/PR preservation | PASS | HEAD `74222ef`; PR #8/#9/#10 open; V1 tag/release `d816ba1` tree-identical; `images/` untouched. |
+| Isolated V2 config | PASS DRY-RUN | V2 API/Admin configs bind only V2 D1/R2/Queue; API provider/COD/payment flags false; Admin UI flag true and outbound automation/payment flags false. Legacy shared-V1 scripts were retained and explicit V2 scripts added. |
+| D1/backup health | PASS READ-ONLY | Primary quick_check `ok`, FK empty, migration34, masked data counts zero; recovery quick_check `ok`, FK empty, migration33, masked data counts zero. No writes. |
+| Browser COD E2E | BLOCKED | No `list_pages`, authenticated Admin/customer URL, screenshot, API response, COD order, or D1 order/payment/COD state from this run. COD remains disabled and isolated rates/courier/HMAC gates are absent. |
+| Browser Admin payment E2E | BLOCKED | No Access-protected browser action or screenshot; no synthetic receipt/reference/credit row was created; no PAID or fulfillment mutation. |
+| Real WhatsApp tester | BLOCKED | Tester Profile, canonical sender Contact Info, signed webhook, WAMID, service window and routing were not browser-verified; no message sent. |
+| Real payment / reported order | BLOCKED SAFELY | No independent receiving-account credit evidence was available or inspected; `FS-261025-000001` was not mutated or approved. |
+| Local quality | PASS | `npm ci`; 261/261 tests across24 files; lint/build; audit0; isolated V2 Wrangler dry-runs. |
+
 ## GFS-214 Two-step checkout / Admin simulation (2026-10-25)
 
 | Requirement | Result | Evidence / limit |

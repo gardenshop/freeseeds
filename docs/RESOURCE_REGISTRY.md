@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-215 Read-only Acceptance Preflight (2026-10-25)
+
+- Current source/PR: `74222ef` on `codex/gfs-v2-payments-reminders-001`, PR #9; PR #8 and PR #10 remain open. Frozen V1 `d816ba1` and its release branch remain tree-identical; `images/` is preserved.
+- Authorized Cloudflare identity: `gisupp@gmail.com`, Get Free Seeds, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` (Wrangler read-only verification). No identity switch or scope change.
+- Official Chrome MCP package `chrome-devtools-mcp@1.12.0` connected to the existing Chrome under `--autoConnect`; the active Codex schema exposed no Chrome actions. No browser profile/tab, Access policy, CMS, Meta asset, customer, receipt, payment or WAMID mutation occurred. This is a platform tool-exposure blocker.
+- Isolated V2 dry-runs resolve to API/Admin Workers `getfreeseeds-v2-api-staging` / `getfreeseeds-v2-admin-staging`, D1 `6f26ba71-3c10-4b6e-97ab-5df7473c21c7`, private R2 `getfreeseeds-v2-receipts-staging`, and V2 Queue/DLQ. API provider/COD/payment flags are false; Admin `PAYMENT_CONFIRMATION_V2_UI_ENABLED=true`; outbound automation remains disabled. Existing deployed versions remain API `5fc102a8-74df-415d-8515-64bb7e1a12be` and Admin `5a7af6ce-2bac-435b-aa52-4aae14e1ee68`; no new version was created.
+- Primary D1 read-only evidence: `quick_check=ok`, foreign-key check empty, migration count34, zero customers/orders/payments/receipts/province-rate/COD-detail rows. Recovery D1: `quick_check=ok`, foreign-key check empty, migration count33, zero customers/orders/payments/receipts/province-rate rows. No D1 writes; retain both for acceptance/rollback and review 2026-11-23.
+- Package scripts now expose explicit V2 commands while legacy V1 commands remain unchanged. No new hosted resource, paid plan, secret value, Queue message, Cron, R2 object or Access destination was created or deleted.
+
 ## GFS-214 Source Push / No Live Mutation (2026-10-25)
 
 - GFS-214 source commit `6da973d` is pushed to PR #9. PR #9 still targets the immutable V1 release branch and must not be merged without an explicitly reviewed V2-safe base. V1 tag/release tree remains unchanged.

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-25 (GFS-215 Chrome MCP acceptance boundary)
+
+- Diagnosed the supported Chrome DevTools MCP path: global Kilo config is enabled, official `chrome-devtools-mcp@1.12.0 --autoConnect` connected to the existing Chrome, but Chrome actions remain absent from the active Codex tool schema. No raw CDP, alternate profile, dashboard HTTP substitute, browser mutation, screenshot or WAMID was used.
+- Reverified `74222ef`, PR #8/#9/#10, frozen V1 tree identity and protected `images/`. Read-only Wrangler identity is the authorized GFS account; isolated V2 primary/recovery D1 health and masked zero-data checks pass.
+- Added explicit `dev:api:v2`, `dev:admin:v2`, `deploy:api:v2`, `deploy:admin:v2`, and dry-run package commands. Existing V1 scripts remain unchanged to preserve the frozen/shared path.
+- Full local gate remains green: `npm ci`, 261/261 tests, lint, build, audit0 and isolated V2 dry-runs. No current-head deployment, migration, CMS/R2/Queue/Access mutation, COD enablement, WhatsApp message or financial transition was performed because exposed Chrome MCP actions are mandatory.
+
 ## 2026-10-25 (GFS-214 two-step payment selection)
 
 - Added first-step Advance/COD choice, verified three-method advance selection, COD fee warning, itemized confirmation summary and final confirmation over the existing provisional order; Back/Advance has a fresh timer cycle and no COD fee/duplicate order.

@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-215 Chrome MCP Acceptance Boundary (2026-10-25)
+
+- The supported Chrome MCP configuration is enabled through Kilo's global `chrome_devtools` server using `npx -y chrome-devtools-mcp@latest --autoConnect`. A direct diagnostic start of official `chrome-devtools-mcp@1.12.0` connected to the existing Chrome, but the active Codex agent exposed no Chrome MCP action namespace. Until a fresh MCP-enabled agent exposes `list_pages` and page-scoped actions, browser acceptance is `PLATFORM_BLOCKED`; never substitute raw CDP, direct dashboard HTTP, shell browser automation, a new profile, or unauthenticated requests.
+- The mandatory recovery procedure is: verify loaded Kilo MCP config, package/version, Chrome process and endpoint; restart only the official MCP bridge; verify initialization, `list_pages`, and a read-only page inspection in a fresh MCP-enabled session. Reuse existing authenticated tabs and verify the visible account before every mutation. This execution reached bridge connection but not action exposure, so no browser mutation or live evidence is valid.
+- Use the explicit V2 package commands (`dev:api:v2`, `dev:admin:v2`, `deploy:api:v2`, `deploy:admin:v2`, and `dry-run:*:v2`) for isolated V2 work. Existing V1 commands remain bound to the shared/frozen path and must not be used for PR #9 acceptance. V2 current-head deployment still requires the browser retest and release gates.
+
 ## GFS-212 Repair Authority and Protocol Precedence (2026-10-25)
 
 - GFS-212 authorizes targeted repairs, local regressions and PR #9 updates on `codex/gfs-v2-payments-reminders-001`; it is not authority to change frozen V1 `d816ba1`, approve real funds, enable COD, migrate shared V1 D1, spend, or release to production. Preserve `images/`, receipts, financial/audit history, rollback versions and the incident hold.
