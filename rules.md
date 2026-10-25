@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-216 Final COD/WhatsApp Acceptance (2026-10-25)
+
+- The active Codex host is `CODEX_HOME=D:\\AI-Tools\\Codex\\home`; `codex mcp list` is authoritative for this environment. Replace stale `chrome_devtools` registrations rather than adding duplicates. The supported `chrome-devtools` server now exposes `list_pages`, page snapshots, read-only identity checks, visible UI actions, dialogs, and network status through a fresh Codex process. Do not use raw CDP or direct dashboard HTTP as a browser substitute.
+- The correct isolated Admin URL is `https://getfreeseeds-v2-admin-staging.get-free-seeds.workers.dev`; the similarly named legacy `getfreeseeds-admin-staging` URL is not V2 and must never be used for V2 fixtures. If a V2 page reports `PRODUCTION_INTEGRATION_READY`, stop and audit target selection before any write.
+- GFS-216 isolated COD and payment fixtures are test-only and must be removed after evidence capture. COD runtime is now disabled, the dedicated test HMAC secret is deleted, and no public COD/WhatsApp launch is authorized without genuine courier collection/remittance and Meta sender/webhook gates.
+
 ## GFS-215 Chrome MCP Acceptance Boundary (2026-10-25)
 
 - The supported Chrome MCP configuration is enabled through Kilo's global `chrome_devtools` server using `npx -y chrome-devtools-mcp@latest --autoConnect`. A direct diagnostic start of official `chrome-devtools-mcp@1.12.0` connected to the existing Chrome, but the active Codex agent exposed no Chrome MCP action namespace. Until a fresh MCP-enabled agent exposes `list_pages` and page-scoped actions, browser acceptance is `PLATFORM_BLOCKED`; never substitute raw CDP, direct dashboard HTTP, shell browser automation, a new profile, or unauthenticated requests.

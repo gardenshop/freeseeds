@@ -1,5 +1,26 @@
 # Final Report
 
+## GFS-216 Final COD Activation / WhatsApp Launch (2026-10-25)
+
+**Overall result: Chrome and isolated Admin acceptance PASS; real COD/WhatsApp/public launch NO-GO.**
+
+| Stage | Result | Evidence |
+|---|---|---|
+| P0 Codex Chrome MCP | **PASS** | Active host `CODEX_HOME=D:\AI-Tools\Codex\home`; stale `chrome_devtools` replaced with one official `chrome-devtools` registration. Fresh Codex exposed `list_pages`, snapshots, read-only Access identity, UI actions, dialogs and network status. WhatsApp Profile matched authorized tester; no send. |
+| P1 isolated V2 | **PASS** | Correct URL `https://getfreeseeds-v2-admin-staging.get-free-seeds.workers.dev`; final API `6f6124f7-1fce-44f4-8dfd-37ec9a50b994`, Admin `57b8c78c-953d-44b4-8c1b-39343c406e4f`; D1 migration34/healthy/empty; no public API route; flags false after cleanup. |
+| P2 test COD | **PASS TEST-ONLY / REAL BLOCKED** | Admin UI saved PKR125 and labeled test province/rate, with effective status observed. Correct V2 API has no public route, Meta provider/webhook disabled, and no courier approval. No real customer COD button, order, COD row, WAMID or public advertising. Runtime/policy/fixtures cleaned. |
+| P3 WhatsApp | **BLOCKED** | Tester Profile identity matched, but canonical GFS sender Contact Info, signed webhook/service window, visible Meta GFS identity and release gates were not independently confirmed. No real conversation/message/WAMID. |
+| P4 Admin payment | **PASS SYNTHETIC / REAL FUNDS BLOCKED** | Correct Access Admin showed Confirm Paid for labeled PAYMENT_REVIEW. `SIM-GFS216-PAID-000001` passed REVIEW→PAID→PACKING→DISPATCHED→DELIVERED with one synthetic receipt, PKR500 expected/approved, unique reference, tracking and audit. Wrong amount disabled; duplicate reference returned HTTP409 and remained REVIEW. Screenshots were captured in the MCP transcript; safety rejected a duplicate-page screenshot because page output could expose customer data. All synthetic fixtures were removed. |
+| P5/P6 quality/release | **PASS LOCAL / NO-GO PUBLIC** | 261/261 tests, lint, build, audit0, Wrangler dry-runs, D1 quick/FK checks. Docs and rules updated. Frozen V1/images/history preserved. |
+
+**Target incident:** an initial fixture attempt used legacy `getfreeseeds-admin-staging`; its health state was `PRODUCTION_INTEGRATION_READY`. Policy mutation was stopped before save. Exact two shared test rows/audits were removed; no shared customer/order/payment history was changed. Correct V2 target was then used for all subsequent work.
+
+**COD amount evidence:** isolated synthetic setup used product PKR150 + delivery PKR350 = advance PKR500, then COD fee PKR125 = PKR625. Repository authoritative-flow tests independently verify seed-only PKR475 and fertilizer PKR725 (seed price0, fertilizer250, delivery350, COD125). No real browser customer quote was possible because the V2 API has no public route.
+
+**Cleanup/rollback:** isolated test orders, customers, payments, receipts, product/rate, audit records, QR/R2 objects and dedicated HMAC secret are gone; D1 synthetic counts are zero. COD runtime is false. Rollback assets remain prior API `5fc102a8-74df-415d-8515-64bb7e1a12be` and Admin `5a7af6ce-2bac-435b-aa52-4aae14e1ee68`. `FS-261025-000001` was never inspected or mutated.
+
+**Completion:** P0 100%; P1 100%; P2 55%; P3 20%; P4 90% synthetic/0% genuine credit; P5/P6 95%. Overall **~72% complete; ~28% remaining**. Public COD **NO-GO**; real WhatsApp **NO-GO**; advance/lead launch remains separately releasable only after canonical sender, webhook, CMS, consent, Access and rollback gates pass.
+
 ## GFS-215 Real Chrome MCP E2E Acceptance (2026-10-25)
 
 **Overall result: BLOCKED for browser acceptance; independent local/data-plane checks PASS.** No real COD, real WhatsApp, real payment, Access, CMS, shared D1, customer, receipt, order, Meta, or production mutation occurred.

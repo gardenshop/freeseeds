@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-25: GFS-216 Runtime Acceptance, Target Repair, and Safe Shutdown
+
+- The active Codex host is `D:\\AI-Tools\\Codex\\home`; `C:\\Users\\Nazim\\.codex` was not authoritative. Replaced the stale underscore/WS endpoint registration with one official `chrome-devtools` `--autoConnect` registration. Fresh Codex tool exposure is proven by `list_pages`, read-only snapshots, Access identity fetch, visible Admin UI actions, dialog handling and network status.
+- A legacy Admin URL was initially mistaken for V2. `/health` returned `PRODUCTION_INTEGRATION_READY`; all work stopped. Exact labeled product/rate rows and audit entries were removed from shared staging. The correct V2 URL is `getfreeseeds-v2-admin-staging.get-free-seeds.workers.dev`; V2 `/health` returns `V2_ISOLATED_STAGING`.
+- V2 Admin COD policy was tested only with PKR125, a labeled synthetic province and synthetic courier evidence. V2 API has no public route and Meta/provider flags are disabled, so no real customer COD or WhatsApp launch was authorized. COD policy, fixtures, HMAC secret and R2 objects were cleaned and runtime flags redeployed false.
+- Synthetic Admin payment acceptance is valid only as an isolated test: one labeled order passed through PAID and fulfillment, duplicate reference was rejected HTTP409, wrong amount disabled Confirm Paid, and all fixtures were deleted. No genuine credit, courier approval or production payment is implied.
+- Keep public COD and real WhatsApp launch NO-GO until canonical sender Contact Info, signed webhook/service window, real courier collection/remittance, receiving-account ownership and an authorized public route are independently confirmed.
+
 ## 2026-10-25: GFS-215 Chrome MCP Exposure and Isolated Acceptance Boundary
 
 - The supported MCP configuration is present and valid: global Kilo config enables `chrome_devtools` with `npx -y chrome-devtools-mcp@latest --autoConnect`; a direct official `1.12.0` startup connected to the existing Chrome and emitted no authentication/profile mutation. The active Codex agent still has no Chrome tool namespace, so this is a platform/tool-schema exposure blocker. Do not use raw CDP, direct dashboard HTTP, a new profile, or shell-driven browser automation as a substitute.

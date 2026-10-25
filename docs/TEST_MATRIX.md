@@ -1,5 +1,21 @@
 # Test Matrix
 
+## GFS-216 Final Runtime Acceptance (2026-10-25)
+
+| Requirement | Result | Sanitized evidence |
+|---|---|---|
+| Codex Chrome MCP | PASS | Active `CODEX_HOME` corrected; one official `chrome-devtools` registration. Fresh Codex exposed `list_pages`, snapshots, dialogs, UI actions and network status. |
+| Correct staging target | PASS AFTER REPAIR | Legacy Admin URL reported `PRODUCTION_INTEGRATION_READY`; setup stopped and exact accidental shared fixtures were removed. V2 URL reports `V2_ISOLATED_STAGING`. |
+| V2 deployment | PASS | API `6f6124f7-1fce-44f4-8dfd-37ec9a50b994`; Admin `57b8c78c-953d-44b4-8c1b-39343c406e4f`; D1 schema/migration34; no public API route; COD/provider/payment runtime disabled after cleanup. |
+| Isolated COD policy UI | PASS TEST-ONLY / CLEANED | Admin UI saved PKR125, Balochistan TEST PKR350, synthetic courier labels and bilingual copy; effective status was observed. Policy/fixtures/secret/R2 objects removed afterward. |
+| Real customer COD E2E | BLOCKED | Correct V2 API has no public route and Meta provider/webhook is disabled. No real customer session, order ID, COD row, WAMID or screenshot is claimed. |
+| COD amount | PASS UNIT / NOT BROWSER-REAL | Repository tests verify seed-only PKR475 and fertilizer PKR725 from authoritative seed price0, fertilizer250, delivery350, COD125. The synthetic Admin example used product150 + delivery350 = advance500 and COD625, but no customer route was available. |
+| Admin Confirm Paid | PASS SYNTHETIC | Correct V2 Admin UI showed enabled Confirm Paid; synthetic order transitioned REVIEW→PAID→PACKING→DISPATCHED→DELIVERED. Screenshots were captured in the MCP transcript; no real data screenshot was retained. |
+| Negative payment guards | PASS SYNTHETIC | Wrong amount kept Confirm Paid disabled; duplicate reference returned HTTP409 and remained REVIEW. Native browser confirm dialog supplied the explicit synthetic attestation; no checkbox workaround used. |
+| Real payment / target order | BLOCKED SAFELY | No genuine receiving-account credit; `FS-261025-000001` untouched. |
+| WhatsApp | BLOCKED | Authorized tester Profile matched; canonical sender, signed webhook/service window and Meta business identity were not sufficiently verified. No WAMID/message. |
+| Cleanup/rollback | PASS | Synthetic D1 rows/audits, product/rate, QR/receipts, test secret and R2 objects removed. COD runtime false. V1 `d816ba1`, images, existing data and rollback versions preserved. |
+
 ## GFS-215 Real Chrome MCP Acceptance (2026-10-25)
 
 | Requirement | Result | Evidence / exact limit |

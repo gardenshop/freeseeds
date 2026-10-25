@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-25 (GFS-216 final runtime acceptance)
+
+- Corrected Codex MCP host discovery: active `CODEX_HOME` is `D:\AI-Tools\Codex\home`; replaced stale duplicate Chrome registration. Fresh Codex exposes official Chrome MCP actions and verified WhatsApp tester Profile plus protected V2 Admin actions.
+- Deployed isolated V2 API/Admin final versions `6f6124f7-1fce-44f4-8dfd-37ec9a50b994` / `57b8c78c-953d-44b4-8c1b-39343c406e4f`, with COD/provider/payment runtime disabled after test cleanup.
+- Ran labeled isolated COD policy setup and Admin synthetic payment/fulfillment E2E. Confirm Paid and fulfillment passed; wrong amount and duplicate reference guards passed. Synthetic D1/R2/secret fixtures were removed.
+- Diagnosed and repaired a wrong-target fixture attempt: legacy Admin URL was stopped before COD policy mutation; exact accidental shared test rows/audits were removed, with no customer/order/payment history changes.
+- Real customer COD and WhatsApp launch remain blocked by absent public V2 API route, disabled Meta webhook/provider, missing canonical sender verification and genuine courier/receiving-account gates.
+
 ## 2026-10-25 (GFS-215 Chrome MCP acceptance boundary)
 
 - Diagnosed the supported Chrome DevTools MCP path: global Kilo config is enabled, official `chrome-devtools-mcp@1.12.0 --autoConnect` connected to the existing Chrome, but Chrome actions remain absent from the active Codex tool schema. No raw CDP, alternate profile, dashboard HTTP substitute, browser mutation, screenshot or WAMID was used.

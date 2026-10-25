@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-216 Final Runtime State (2026-10-25)
+
+- Active Codex host: `CODEX_HOME=D:\AI-Tools\Codex\home`; exactly one official `chrome-devtools` MCP registration with `--autoConnect`. Fresh Codex exposed `list_pages`, snapshots, visible UI, dialogs and network status. WhatsApp tester Profile matched the authorized tester; no outbound message.
+- Correct isolated Admin URL: `https://getfreeseeds-v2-admin-staging.get-free-seeds.workers.dev`; legacy similarly named Admin URL is not V2 and must not be used for fixtures. Correct V2 `/health` is `V2_ISOLATED_STAGING`.
+- Final isolated Worker versions: API `6f6124f7-1fce-44f4-8dfd-37ec9a50b994`; Admin `57b8c78c-953d-44b4-8c1b-39343c406e4f`. API has no workers.dev route; Admin is Access-protected. COD/provider/payment flags are false; Admin COD UI remains visible for safe configuration review; outbound automation false.
+- Isolated D1 `6f26ba71-3c10-4b6e-97ab-5df7473c21c7`: quick_check `ok`, FK check empty, migration34, zero orders/customers/payments/receipts/products/province rates after cleanup. Recovery D1 remains the prior migration33 rollback check. No test HMAC secret remains on either Worker.
+- GFS-216 synthetic product/rate/orders/payments/receipts/QR/R2/secret were deleted after evidence. Bank Transfer is disabled and restored to a safe text-only draft; COD policy is disabled with no eligible provinces. Shared V1 D1 has no GFS216 rows after exact cleanup.
+- Public COD and real WhatsApp release resources remain unapproved. No Hoja asset, customer data, real receipt, real WAMID, Meta mutation, Access policy mutation or production route was created.
+
 ## GFS-215 Read-only Acceptance Preflight (2026-10-25)
 
 - Current source/PR: `74222ef` on `codex/gfs-v2-payments-reminders-001`, PR #9; PR #8 and PR #10 remain open. Frozen V1 `d816ba1` and its release branch remain tree-identical; `images/` is preserved.
