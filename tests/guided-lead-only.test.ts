@@ -3,7 +3,8 @@ import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import api from "../apps/api/src/index";
 import admin from "../apps/admin/src/index";
-import { formatPaymentMessage, getLatestOrderForWaId, MockWhatsAppProvider, persistFlowSubmission, selectPaymentMethod, storeReceipt } from "@gfs/core";
+import { formatPaymentMessage, getLatestOrderForWaId, MockWhatsAppProvider, normalizePaymentMethodRow, persistFlowSubmission, selectPaymentMethod, storeReceipt } from "@gfs/core";
+import { createPaymentV2Schedule, enqueueDuePaymentV2Stages } from "../apps/api/src/payment-reminders-v2";
 
 // Synthetic fixtures only. SQLite executes the real migrations and journey SQL.
 const sender = "923001234567";
@@ -15,12 +16,20 @@ let sequence: number;
 let sends: Array<Record<string, unknown>>;
 let failNextSend: boolean;
 let queueSend: ReturnType<typeof vi.fn>;
+let receiptBucketGet: ReturnType<typeof vi.fn>;
+let receiptBucketPut: ReturnType<typeof vi.fn>;
+let beforeFirstReturn: ((sql: string) => Promise<void>) | undefined;
+let batchTail: Promise<void>;
 
 function statement(sql: string) {
   let values: SQLInputValue[] = [];
   const prepared = {
     bind: (...args: SQLInputValue[]) => { values = args; return prepared; },
-    first: async () => sqlite.prepare(sql).get(...values) ?? null,
+    first: async () => {
+      const row = sqlite.prepare(sql).get(...values) ?? null;
+      await beforeFirstReturn?.(sql);
+      return row;
+    },
     all: async () => ({ results: sqlite.prepare(sql).all(...values), success: true }),
     run: async () => ({ meta: { changes: Number(sqlite.prepare(sql).run(...values).changes) }, success: true })
   };
@@ -45,20 +54,20 @@ function buttons() {
   return (sends.at(-1)?.interactive as { action?: { buttons?: Array<{ reply: { id: string } }> } } | undefined)?.action?.buttons?.map((button) => button.reply.id) ?? [];
 }
 
-function env() {
-  return { DB: db, RECEIPTS: { get: vi.fn(async () => null) }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: "true", META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided" } as never;
+function env(paymentConfirmationEnabled = "false", paymentRemindersEnabled = "false", paymentAutomationEnabled = "false", utilityTemplatesApproved = "false", orderStatusNotificationsEnabled = "false", metaProviderEnabled = "true", codV2Enabled = "false", codPolicyHmacKey = codV2Enabled === "true" ? "synthetic-cod-policy-key-with-sufficient-entropy" : undefined) {
+  return { DB: db, RECEIPTS: { get: receiptBucketGet, put: receiptBucketPut }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: metaProviderEnabled, PAYMENT_CONFIRMATION_V2_ENABLED: paymentConfirmationEnabled, PAYMENT_REMINDERS_V2_ENABLED: paymentRemindersEnabled, PAYMENT_AUTOMATION_V2_ENABLED: paymentAutomationEnabled, PAYMENT_UTILITY_TEMPLATES_APPROVED: utilityTemplatesApproved, ORDER_STATUS_NOTIFICATIONS_V2_ENABLED: orderStatusNotificationsEnabled, COD_V2_ENABLED: codV2Enabled, COD_POLICY_HMAC_KEY: codPolicyHmacKey, META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided" } as never;
 }
 
-async function callback(messages: Record<string, unknown>[], extraChanges: unknown[] = []) {
+async function callback(messages: Record<string, unknown>[], extraChanges: unknown[] = [], paymentRemindersEnabled = false, codV2Enabled = false, codPolicyHmacKey = codV2Enabled ? "synthetic-cod-policy-key-with-sufficient-entropy" : undefined) {
   const payload = JSON.stringify({ object: "whatsapp_business_account", entry: [{ changes: [{ field: "messages", value: { metadata: { phone_number_id: phoneId }, messages } }, ...extraChanges] }] });
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const digest = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
   const signature = [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-  return api.fetch(new Request("https://api.example.test/webhooks/whatsapp", { method: "POST", headers: { "content-type": "application/json", "x-hub-signature-256": `sha256=${signature}` }, body: payload }), env());
+  return api.fetch(new Request("https://api.example.test/webhooks/whatsapp", { method: "POST", headers: { "content-type": "application/json", "x-hub-signature-256": `sha256=${signature}` }, body: payload }), env("false",String(paymentRemindersEnabled),String(paymentRemindersEnabled),"false","false","true",String(codV2Enabled),codPolicyHmacKey));
 }
 
-async function adminPost(path: string, body: Record<string, unknown>, referenceRequestsEnabled = "true") {
-  const adminEnv = { DB: db, ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL", REFERENCE_REQUESTS_ENABLED: referenceRequestsEnabled, EVENTS: { send: vi.fn(async () => undefined) } } as never;
+async function adminPost(path: string, body: Record<string, unknown>, referenceRequestsEnabled = "true", paymentConfirmationEnabled = "false", paymentRemindersEnabled = "false", paymentAutomationEnabled = "false", orderStatusNotificationsEnabled = "false", events: { send: typeof queueSend } = { send: vi.fn(async () => undefined) },codAdminUiEnabled="false") {
+  const adminEnv = { DB: db, ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL", REFERENCE_REQUESTS_ENABLED: referenceRequestsEnabled, PAYMENT_CONFIRMATION_V2_ENABLED: paymentConfirmationEnabled, PAYMENT_REMINDERS_V2_ENABLED:paymentRemindersEnabled, PAYMENT_AUTOMATION_V2_ENABLED:paymentAutomationEnabled, ORDER_STATUS_NOTIFICATIONS_V2_ENABLED:orderStatusNotificationsEnabled,COD_ADMIN_UI_ENABLED:codAdminUiEnabled,COD_POLICY_HMAC_KEY:"synthetic-cod-policy-key-with-sufficient-entropy", EVENTS: events } as never;
   const identity = { "cf-access-authenticated-user-email": "admin@example.test" };
   const csrfResponse = await admin.fetch(new Request("https://admin.example.test/api/csrf", { headers: identity }), adminEnv);
   const csrf = await csrfResponse.json() as { csrfToken: string };
@@ -66,34 +75,51 @@ async function adminPost(path: string, body: Record<string, unknown>, referenceR
   return admin.fetch(new Request(`https://admin.example.test${path}`, { method: "POST", headers: { ...identity, origin:"https://admin.example.test", cookie, "x-csrf-token": csrf.csrfToken, "content-type": "application/json" }, body: JSON.stringify(body) }), adminEnv);
 }
 
-async function inbound(input: string | Record<string, unknown>, id = `synthetic-inbound-${++sequence}`, waId = sender) {
+async function adminPostCod(path:string,body:Record<string,unknown>){return adminPost(path,body,"true","false","false","false","false",{send:vi.fn(async()=>undefined)},"true")}
+
+async function adminPostWithOrderNotices(path: string, body: Record<string, unknown>) {
+  return adminPost(path,body,"true","false","false","false","true",{send:queueSend});
+}
+
+async function deliverLastSyntheticOrderNotice() {
+  const queued=queueSend.mock.calls.at(-1)?.[0] as {kind:string;idempotencyKey:string;entityId:string;schemaVersion:1}|undefined;
+  if(!queued||queued.kind!=="WHATSAPP_ORDER_STATUS")throw new Error("SYNTHETIC_ORDER_NOTICE_QUEUE_MISSING");
+  const ack=vi.fn(),retry=vi.fn(),before=sends.length;
+  await api.queue({messages:[{body:queued,attempts:1,ack,retry}]} as never,env("false","false","false","false","true"));
+  return {queued,ack,retry,before,after:sends.length,text:body()};
+}
+
+async function inbound(input: string | Record<string, unknown>, id = `synthetic-inbound-${++sequence}`, waId = sender, paymentRemindersEnabled = false, codV2Enabled = false, codPolicyHmacKey?: string) {
   const message = { from: waId, id, timestamp: "1792497600", ...(typeof input === "string" ? { type: "text", text: { body: input } } : { type: "interactive", interactive: input }) };
-  const response = await callback([message]);
+  const response = await callback([message],[],paymentRemindersEnabled,codV2Enabled,codPolicyHmacKey ?? (codV2Enabled ? "synthetic-cod-policy-key-with-sufficient-entropy" : undefined));
   expect(response.status).toBe(200);
   return message;
 }
 
 const tap = (id: string) => ({ type: "button_reply", button_reply: { id, title: "Synthetic button" } });
 
-async function reachReview(locale: "en" | "ur", fertilizer = false) {
-  await inbound("START");
+async function reachReview(locale: "en" | "ur", fertilizer = false, province="Synthetic Province",waId=sender,city=`Synthetic City ${waId.slice(-3)}`) {
+  await inbound("START",undefined,waId);
   expect(buttons()).toEqual(["LANG_UR", "LANG_EN"]);
-  await inbound(tap(locale === "ur" ? "LANG_UR" : "LANG_EN"));
-  expect(conversation()?.state).toBe("OFFER");
+  await inbound(tap(locale === "ur" ? "LANG_UR" : "LANG_EN"),undefined,waId);
+  expect(conversation(waId)?.state).toBe("OFFER");
   expect(buttons()).toEqual(["CONTINUE_ORDER", "CANCEL_ORDER"]);
-  await inbound(tap("CONTINUE_ORDER"));
-  expect(conversation()?.state).toBe("FERTILIZER");
+  await inbound(tap("CONTINUE_ORDER"),undefined,waId);
+  expect(conversation(waId)?.state).toBe("FERTILIZER");
   expect(buttons()).toEqual(["ADD_FERTILIZER", "SEEDS_ONLY"]);
-  await inbound(tap(fertilizer ? "ADD_FERTILIZER" : "SEEDS_ONLY"));
-  expect(sends.at(-1)).toMatchObject({ interactive: { type: "list", action: { sections: [{ rows: [{ id: "PROVINCE_SYNTHETIC_PROVINCE", title: "Synthetic Province" }] }] } } });
-  await inbound({ type: "list_reply", list_reply: { id: "PROVINCE_SYNTHETIC_PROVINCE", title: "Synthetic Province" } });
-  for (const value of ["Synthetic Customer", "123 Synthetic Street", "Synthetic Park", "Synthetic City", "03001234567"]) await inbound(value);
-  expect(conversation()?.state).toBe("REVIEW");
+  await inbound(tap(fertilizer ? "ADD_FERTILIZER" : "SEEDS_ONLY"),undefined,waId);
+  const provinceId=`PROVINCE_${province.toUpperCase().replace(/ /g,"_")}`;
+  expect(listRows().some((row)=>row.id===provinceId&&row.title===province)).toBe(true);
+  await inbound({ type: "list_reply", list_reply: { id: provinceId, title: province } },undefined,waId);
+  const contactNumber=`0300${waId.slice(-7)}`;
+  const householdSuffix=waId.slice(-3);
+  for (const value of ["Synthetic Customer", `123 Synthetic Street ${householdSuffix}`, `Synthetic Park ${householdSuffix}`, city, contactNumber]) await inbound(value,undefined,waId);
+  expect(conversation(waId)?.state).toBe("REVIEW");
 }
 
-async function createSyntheticPaymentReviewOrder(waId: string, idempotencyKey: string) {
+async function createSyntheticPaymentReviewOrder(waId: string, idempotencyKey: string, paymentReminderV2Enabled = false) {
   sqlite.prepare("INSERT OR IGNORE INTO cooldown_exemptions(wa_id,reason,created_by,created_at) VALUES(?,?,?,?)").run(waId,"SYNTHETIC_TEST_ONLY","TEST_FIXTURE",new Date().toISOString());
-  const order = await persistFlowSubmission(db, { fullName: "NON-PAYABLE Synthetic", deliveryAddress: `SYNTHETIC ${idempotencyKey}`, nearbyPlace: `SYNTHETIC ${idempotencyKey}`, city: "Synthetic City", contactNumber: "03001234567", productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: "Synthetic Province", fertilizerSelected: false }, undefined, idempotencyKey, waId);
+  const order = await persistFlowSubmission(db, { fullName: "NON-PAYABLE Synthetic", deliveryAddress: `SYNTHETIC ${idempotencyKey}`, nearbyPlace: `SYNTHETIC ${idempotencyKey}`, city: "Synthetic City", contactNumber: "03001234567", productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: "Synthetic Province", fertilizerSelected: false }, undefined, idempotencyKey, waId, paymentReminderV2Enabled);
   if(!order.quote)throw new Error("SYNTHETIC_QUOTE_MISSING");
   const payment = sqlite.prepare("SELECT id FROM payments WHERE order_id=?").get(order.orderId) as { id: string };
   sqlite.prepare("UPDATE payments SET method='JAZZCASH',review_state='REVIEW',expected_amount=? WHERE id=?").run(order.quote.totalPayablePkr,payment.id);
@@ -105,23 +131,68 @@ async function createSyntheticPaymentReviewOrder(waId: string, idempotencyKey: s
   return {order,paymentId:payment.id,amount:order.quote.totalPayablePkr};
 }
 
+function verifySyntheticPaymentMethod(method = "JAZZCASH") {
+  const digest = "a".repeat(64);
+  const qrKey = `synthetic/${method.toLowerCase()}-verified.png`;
+  const now = new Date().toISOString();
+  sqlite.prepare("UPDATE payment_methods SET recipient_name='Synthetic recipient',till_id='SYNTHETIC-DESTINATION',updated_at=? WHERE method=?").run(now,method);
+  sqlite.prepare(`INSERT INTO payment_qr_assets (id,method,source_r2_key,source_sha256,source_mime_type,source_size_bytes,derivative_r2_key,derivative_sha256,derivative_mime_type,derivative_size_bytes,derivative_width,derivative_height,payload_sha256,decoder_agreement,payload_match,scan_pass,decoder_versions,extractor_version,independent_ownership_verified,independent_evidence_ref,active,created_at,created_by)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(`asset-${method}`,method,`source-${method}`,digest,"image/png",8,qrKey,digest,"image/png",8,8,8,digest,1,1,1,"synthetic-test","synthetic-test",1,"SYNTHETIC-OWNERSHIP-EVIDENCE",1,now,"TEST_FIXTURE");
+  sqlite.prepare(`UPDATE payment_methods SET qr_r2_key=?,qr_sha256=?,qr_mime_type='image/png',qr_size_bytes=8,enabled=1,qr_owner_verified=1,updated_at=? WHERE method=?`).run(qrKey,digest,now,method);
+}
+
+function configureSyntheticPaymentMethodCopy(method = "JAZZCASH") {
+  sqlite.prepare(`UPDATE payment_methods SET instructions='Pay PKR {amount} to {recipientName} for {orderNumber}, destination {tillId}',reference_instruction='Reference {orderNumber} PKR {amount} {recipientName} {tillId}',receipt_instructions='Send receipt for {orderNumber}',heading_ur='ادائیگی',instructions_ur='PKR {amount} {recipientName} {orderNumber} {tillId}',reference_instruction_ur='حوالہ PKR {amount} {recipientName} {orderNumber} {tillId}',receipt_instructions_ur='رسید {orderNumber}' WHERE method=?`).run(method);
+}
+
+function configureSyntheticCodPolicy(enabled = true,eligibleProvinces=["Synthetic Province"]) {
+  const policy={version:1,feePkr:125,enabled,eligibleProvinces,courierProvider:"Synthetic Courier",collectionSupported:true,remittanceSupported:true,verificationReferenceHash:"c".repeat(64),instructionsEn:"Pay the order total to the courier on delivery.",instructionsUr:"ڈیلیوری کے وقت کورئیر کو کل رقم ادا کریں۔"};
+  const timestamp="2026-01-01T00:00:00.000Z";
+  sqlite.prepare("INSERT INTO configuration(key,value,environment,is_secret,updated_by,updated_at) VALUES('COD_V2_POLICY',?,'V2_ISOLATED_STAGING',0,'TEST_FIXTURE',?)").run(JSON.stringify(policy),timestamp);
+  sqlite.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?,?)").run("synthetic-cod-policy-audit","COD_POLICY_UPDATED","TEST","TEST_FIXTURE","SYSTEM_CONFIG","COD_V2_POLICY","synthetic-cod-policy",JSON.stringify({version:1}),timestamp);
+}
+
+function configureOfferMedia(id = "synthetic-offer-media") {
+  const now = "2026-01-01T00:00:00.000Z";
+  sqlite.prepare("INSERT OR IGNORE INTO whatsapp_content_version_action_labels(template_key,version,action_id,label_en,label_ur,created_at,created_by) VALUES('OFFER',1,'CONTINUE_ORDER','Continue Order','آرڈر جاری رکھیں',?,'TEST_FIXTURE'),('OFFER',1,'CANCEL_ORDER','Cancel Order','آرڈر منسوخ کریں',?,'TEST_FIXTURE')").run(now,now);
+  sqlite.prepare(`INSERT INTO whatsapp_content_media(id,template_key,r2_key,master_r2_key,mime_type,size_bytes,sha256,master_mime_type,master_size_bytes,master_sha256,enabled,active,sort_order,created_at,created_by,updated_at,updated_by)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(id,"OFFER",`whatsapp-content/images/offer/${id}.jpg`,`whatsapp-content/images/offer/${id}-master.jpg`,"image/jpeg",4,"d".repeat(64),"image/jpeg",4,"e".repeat(64),1,1,0,now,"TEST_FIXTURE",now,"TEST_FIXTURE");
+  sqlite.prepare("INSERT INTO whatsapp_content_version_media(template_key,version,media_id,active,sort_order,created_at,created_by) VALUES('OFFER',1,?,1,0,?,'TEST_FIXTURE')").run(id,now);
+}
+
+function listRows() {
+  return (sends.at(-1)?.interactive as { action?: { sections?: Array<{ rows: Array<{id:string;title:string;description?:string}> }> } } | undefined)?.action?.sections?.[0]?.rows ?? [];
+}
+
 beforeEach(() => {
   sqlite = new DatabaseSync(":memory:");
   for (const file of readdirSync("migrations").filter((name) => /^\d+.*\.sql$/.test(name)).sort()) sqlite.exec(readFileSync(`migrations/${file}`, "utf8"));
   sqlite.exec("INSERT INTO products(id,code,name,price_pkr,enabled,created_at,updated_at) VALUES('synthetic-seeds','FREE_5_PACK_VEGETABLE_SEEDS','Synthetic seeds',0,1,'2026-01-01','2026-01-01'),('synthetic-fertilizer','MICRO_NUTRIENTS_FERTILIZER','Synthetic fertilizer',75,1,'2026-01-01','2026-01-01');");
   sqlite.exec("INSERT INTO province_delivery_rates(province,delivery_fee_pkr,enabled,created_at,updated_at) VALUES('Synthetic Province',125,1,'2026-01-01','2026-01-01');");
   db = { prepare: statement, batch: async (statements: Array<{ run: () => Promise<unknown> }>) => {
-    sqlite.exec("BEGIN");
-    try { const results = []; for (const item of statements) results.push(await item.run()); sqlite.exec("COMMIT"); return results; }
-    catch (error) { sqlite.exec("ROLLBACK"); throw error; }
+    const execute = async () => {
+      sqlite.exec("BEGIN");
+      try { const results = []; for (const item of statements) results.push(await item.run()); sqlite.exec("COMMIT"); return results; }
+      catch (error) { sqlite.exec("ROLLBACK"); throw error; }
+    };
+    const pending = batchTail.then(execute, execute);
+    batchTail = pending.then(() => undefined, () => undefined);
+    return pending;
   } } as unknown as D1Database;
   sequence = 0;
   sends = [];
   failNextSend = false;
   queueSend = vi.fn(async () => undefined);
-  vi.stubGlobal("fetch", vi.fn(async (_url: unknown, init: RequestInit) => {
-    if (failNextSend) { failNextSend = false; return new Response("{}", { status: 503 }); }
-    sends.push(JSON.parse(String(init.body)) as Record<string, unknown>);
+  receiptBucketGet = vi.fn(async () => null);
+  receiptBucketPut=vi.fn(async()=>undefined);
+  beforeFirstReturn = undefined;
+  batchTail = Promise.resolve();
+  vi.stubGlobal("fetch", vi.fn(async (input: unknown, init?: RequestInit) => {
+    const url=String(input);
+    if(url.includes("/synthetic-late-media"))return Response.json({url:"https://synthetic-media.test/receipt",mime_type:"image/png",file_size:4});
+    if(url==="https://synthetic-media.test/receipt")return new Response(new Uint8Array([137,80,78,71]),{headers:{"content-type":"image/png"}});
+    if (failNextSend&&init?.method==="POST") { failNextSend = false; return new Response("{}", { status: 503 }); }
+    if(init?.body)sends.push(JSON.parse(String(init.body)) as Record<string, unknown>);
     return Response.json({ messages: [{ id: `synthetic-outbound-${sends.length}` }] });
   }));
 });
@@ -170,7 +241,7 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sqlite.prepare("SELECT customer_transaction_reference,review_state FROM payments WHERE id=?").get(second.paymentId)).toEqual({customer_transaction_reference:null,review_state:"REVIEW"});
     expect(sqlite.prepare("SELECT state FROM orders WHERE id=?").get(second.order.orderId)).toEqual({state:"PAYMENT_REVIEW"});
     expect(sqlite.prepare("SELECT count(*) AS count FROM capi_events WHERE event_name='Purchase'").get()).toEqual({count:0});
-  });
+  },10_000);
 
   it("saves Admin reference with a hash audit, keeps REVIEW, and blocks PAID without verified settlement method", async () => {
     const testOrder=await createSyntheticPaymentReviewOrder(sender,"admin-reference-order");
@@ -200,6 +271,522 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(await request.json()).toMatchObject({error:"TRANSACTION_REFERENCE_ALREADY_SAVED"});
     expect(sqlite.prepare("SELECT count(*) AS count FROM outbox_jobs WHERE kind='WHATSAPP_TRANSACTION_REFERENCE_REQUEST'").get()).toEqual({count:0});
     expect(sqlite.prepare("SELECT count(*) AS count FROM capi_events WHERE event_name='Purchase'").get()).toEqual({count:0});
+  });
+
+  it("confirms a verified payment once, atomically saves the reference and queues the gated acknowledgement", async () => {
+    const testOrder=await createSyntheticPaymentReviewOrder(sender,"single-confirm-order",true);
+    verifySyntheticPaymentMethod();
+    sqlite.prepare("UPDATE payments SET customer_transaction_reference=? WHERE id=?").run("SYNTHETIC-TXN-193001",testOrder.paymentId);
+    const path=`/api/payments/${testOrder.paymentId}/approve`;
+    const bodyData={orderId:testOrder.order.orderId,confirmation:testOrder.order.orderNumber,settlementConfirmed:true};
+    const missingAttestation=await adminPost(path,{orderId:testOrder.order.orderId,confirmation:testOrder.order.orderNumber},"true","true","true","true");
+    expect(missingAttestation.status).toBe(409);
+    expect(await missingAttestation.json()).toMatchObject({error:"CREDIT_ATTESTATION_REQUIRED"});
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(testOrder.order.orderId)).toEqual({state:"PAYMENT_REVIEW",payment_status:"PENDING"});
+    const approval=await adminPost(path,bodyData,"true","true","false","true");
+    expect(approval.status,JSON.stringify(await approval.clone().json())).toBe(200);
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(testOrder.order.orderId)).toEqual({state:"PAID",payment_status:"PAID"});
+    expect(sqlite.prepare("SELECT review_state,customer_transaction_reference,approved_amount FROM payments WHERE id=?").get(testOrder.paymentId)).toEqual({review_state:"APPROVED",customer_transaction_reference:"SYNTHETIC-TXN-193001",approved_amount:testOrder.amount});
+    expect(sqlite.prepare("SELECT kind,status,idempotency_key FROM outbox_jobs WHERE kind='WHATSAPP_PAYMENT_CONFIRMATION'").get()).toEqual({kind:"WHATSAPP_PAYMENT_CONFIRMATION",status:"QUEUED",idempotency_key:`payment_confirmation_v2_${testOrder.paymentId}`});
+    const audit=sqlite.prepare("SELECT metadata_json FROM audit_log WHERE action='PAYMENT_APPROVED'").get() as {metadata_json:string};
+    expect(audit.metadata_json).toContain('"transactionReferenceHash"');
+    expect(audit.metadata_json).toContain('"creditConfirmedByAdmin":true');
+    expect(audit.metadata_json).not.toContain("SYNTHETIC-TXN-193001");
+    expect(audit.metadata_json).toContain('"settlementEvidenceReferenceHash":null');
+    expect(sqlite.prepare("SELECT status,phase,stop_reason FROM payment_reminder_v2_schedules WHERE order_id=?").get(testOrder.order.orderId)).toEqual({status:"STOPPED",phase:"STOPPED",stop_reason:"PAYMENT_CONFIRMED"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_reminder_v2_stages WHERE schedule_id=(SELECT id FROM payment_reminder_v2_schedules WHERE order_id=?) AND status IN ('PENDING','QUEUED')").get(testOrder.order.orderId)).toEqual({count:0});
+
+    const lastInboundAt=new Date().toISOString();
+    sqlite.prepare("UPDATE whatsapp_conversations SET last_inbound_message_id=?,last_inbound_at=?,state_data=? WHERE wa_id=?").run("synthetic-confirmation-window",lastInboundAt,JSON.stringify({language:"en"}),sender);
+    const queueMessage={body:{kind:"WHATSAPP_PAYMENT_CONFIRMATION",idempotencyKey:`payment_confirmation_v2_${testOrder.paymentId}`,entityId:testOrder.order.orderId,schemaVersion:1 as const},attempts:1,ack:vi.fn(),retry:vi.fn()};
+    failNextSend=true;
+    await api.queue({messages:[queueMessage]} as never,env("true"));
+    expect(queueMessage.retry).toHaveBeenCalledWith({delaySeconds:expect.any(Number)});
+    expect(sqlite.prepare("SELECT state FROM orders WHERE id=?").get(testOrder.order.orderId)).toEqual({state:"PAID"});
+    expect(sqlite.prepare("SELECT status FROM outbox_jobs WHERE idempotency_key=?").get(`payment_confirmation_v2_${testOrder.paymentId}`)).toEqual({status:"RETRY"});
+    await api.queue({messages:[queueMessage]} as never,env("true"));
+    expect(queueMessage.ack).toHaveBeenCalledOnce();
+    expect(queueMessage.retry).toHaveBeenCalledOnce();
+    expect(sends.at(-1)).toMatchObject({to:sender,type:"text",text:{body:`Payment of PKR ${testOrder.amount} received and verified for order ${testOrder.order.orderNumber}. Your order is confirmed.`}});
+    const sentMessage=sqlite.prepare("SELECT provider_message_id,status FROM outbound_messages WHERE idempotency_key=?").get(`payment_confirmation_v2_${testOrder.paymentId}:whatsapp`) as {provider_message_id:string;status:string};
+    expect(sentMessage).toMatchObject({status:"SENT",provider_message_id:`synthetic-outbound-${sends.length}`});
+    expect(sqlite.prepare("SELECT status FROM outbox_jobs WHERE idempotency_key=?").get(`payment_confirmation_v2_${testOrder.paymentId}`)).toEqual({status:"SENT"});
+    await callback([], [{field:"messages",value:{metadata:{phone_number_id:phoneId},statuses:[{id:sentMessage.provider_message_id,status:"read"},{id:sentMessage.provider_message_id,status:"delivered"}]}}]);
+    expect(sqlite.prepare("SELECT status FROM outbound_messages WHERE idempotency_key=?").get(`payment_confirmation_v2_${testOrder.paymentId}:whatsapp`)).toEqual({status:"READ"});
+    const duplicateQueueMessage={...queueMessage,ack:vi.fn(),retry:vi.fn()};
+    const sendCount=sends.length;
+    await api.queue({messages:[duplicateQueueMessage]} as never,env("true"));
+    expect(duplicateQueueMessage.ack).toHaveBeenCalledOnce();
+    expect(sends).toHaveLength(sendCount);
+
+    const retry=await adminPost(path,bodyData,"true","true","true","true");
+    expect(retry.status).toBe(200);
+    expect(await retry.json()).toMatchObject({alreadyApproved:true});
+    expect(sqlite.prepare("SELECT count(*) AS count FROM outbox_jobs WHERE kind='WHATSAPP_PAYMENT_CONFIRMATION'").get()).toEqual({count:1});
+    expect(sqlite.prepare("SELECT count(*) AS count FROM audit_log WHERE action='PAYMENT_APPROVED'").get()).toEqual({count:1});
+
+    const confirmed=await adminPost(`/api/orders/${testOrder.order.orderId}/confirm`,{confirmation:testOrder.order.orderNumber});
+    expect(confirmed.status).toBe(200);
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(testOrder.order.orderId)).toEqual({state:"PAID",payment_status:"PAID"});
+    const transition=(from:string,to:string)=>adminPost(`/api/orders/${testOrder.order.orderId}/transition`,{from,to,confirmation:testOrder.order.orderNumber});
+    expect((await transition("PAID","PACKING")).status).toBe(200);
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(testOrder.order.orderId)).toEqual({state:"PACKING",payment_status:"PAID"});
+    const tracking=await adminPost(`/api/orders/${testOrder.order.orderId}/tracking`,{trackingNumber:"SIM-GFS214-DO-NOT-SHIP",confirmation:testOrder.order.orderNumber});
+    expect(tracking.status).toBe(200);
+    expect((await transition("PACKING","DISPATCHED")).status).toBe(200);
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(testOrder.order.orderId)).toEqual({state:"DISPATCHED",payment_status:"PAID"});
+    expect((await transition("DISPATCHED","DELIVERED")).status).toBe(200);
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(testOrder.order.orderId)).toEqual({state:"DELIVERED",payment_status:"PAID"});
+  });
+
+  it("confirms a historical payment without retro-enrolling a reminder schedule", async () => {
+    const testOrder=await createSyntheticPaymentReviewOrder("923001234565","historical-order-paid",false);
+    verifySyntheticPaymentMethod();
+    sqlite.prepare("UPDATE payments SET customer_transaction_reference=? WHERE id=?").run("SYNTHETIC-HISTORICAL-TXN-194",testOrder.paymentId);
+    const response=await adminPost(`/api/payments/${testOrder.paymentId}/approve`,{orderId:testOrder.order.orderId,confirmation:testOrder.order.orderNumber,settlementConfirmed:true},"true","true","true","true");
+    expect(response.status,JSON.stringify(await response.clone().json())).toBe(200);
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(testOrder.order.orderId)).toEqual({state:"PAID",payment_status:"PAID"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_reminder_v2_schedules WHERE order_id=?").get(testOrder.order.orderId)).toEqual({count:0});
+    expect(sqlite.prepare("SELECT status FROM outbox_jobs WHERE idempotency_key=?").get(`payment_confirmation_v2_${testOrder.paymentId}`)).toEqual({status:"QUEUED"});
+  });
+
+  it.each(["en","ur"] as const)("runs the isolated V2 lifecycle with TEST ONLY localized notices in %s", async (locale) => {
+    const fixture=await createSyntheticPaymentReviewOrder(sender,`gfs210-lifecycle-${locale}`,false);
+    const orderNumber=`SIM-GFS210-${locale.toUpperCase()}`;
+    const now=new Date().toISOString();
+    sqlite.prepare("UPDATE orders SET order_number=?,state='PAID',payment_status='PAID',updated_at=? WHERE id=?").run(orderNumber,now,fixture.order.orderId);
+    sqlite.prepare("UPDATE payments SET review_state='APPROVED',approved_amount=?,approved_by='SYNTHETIC_FIXTURE',approved_at=?,customer_transaction_reference='SYNTHETIC-GFS210-REFERENCE',updated_at=? WHERE id=?").run(fixture.amount,now,now,fixture.paymentId);
+    const inboundId=`synthetic-lifecycle-window-${locale}`;
+    sqlite.prepare("UPDATE whatsapp_conversations SET state='ORDER_CONFIRMED',state_data=?,last_inbound_message_id=?,last_inbound_at=?,updated_at=? WHERE wa_id=?").run(JSON.stringify({language:locale,orderId:fixture.order.orderId,orderNumber}),inboundId,now,now,sender);
+    sqlite.prepare("INSERT INTO whatsapp_events(id,provider_event_id,event_type,payload_hash,status,correlation_id,created_at) VALUES(?,?,?,?,?,?,?)").run(`event-lifecycle-${locale}`,`message:${inboundId}`,"MESSAGE","synthetic-lifecycle-payload","RECEIVED",`correlation-lifecycle-${locale}`,now);
+    sqlite.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?)").run(`audit-synthetic-${locale}`,"SYNTHETIC_FIXTURE_CREATED","TEST","ORDER",fixture.order.orderId,`correlation-fixture-${locale}`,JSON.stringify({simulationOnly:true,noFunds:true,noShipment:true}),now);
+    const postNotice=(path:string,payload:Record<string,unknown>)=>adminPost(path,payload,"true","false","false","false","true",{send:queueSend});
+    const deliverLast=async(expected:string)=>{const queued=queueSend.mock.calls.at(-1)?.[0] as {kind:string;idempotencyKey:string;entityId:string;schemaVersion:1};expect(queued.kind).toBe("WHATSAPP_ORDER_STATUS");const ack=vi.fn(),retry=vi.fn(),before=sends.length;await api.queue({messages:[{body:queued,attempts:1,ack,retry}]} as never,env("false","false","false","false","true"));expect(ack).toHaveBeenCalledOnce();expect(retry).not.toHaveBeenCalled();expect(sends).toHaveLength(before+1);expect(body()).toContain(locale==="ur"?"ٹیسٹ:":"TEST ONLY:");expect(body()).toContain(expected);expect(sqlite.prepare("SELECT status FROM outbox_jobs WHERE idempotency_key=?").get(queued.idempotencyKey)).toEqual({status:"SENT"});return queued;};
+
+    const confirmed=await postNotice(`/api/orders/${fixture.order.orderId}/confirm`,{confirmation:orderNumber});
+    expect(confirmed.status).toBe(200);
+    const confirmedQueued=await deliverLast(locale==="ur"?"تصدیق ہو گئی":"is confirmed");
+    const confirmationReplay={body:confirmedQueued,attempts:2,ack:vi.fn(),retry:vi.fn()};
+    const sentBeforeReplay=sends.length;
+    await api.queue({messages:[confirmationReplay]} as never,env("false","false","false","false","true"));
+    expect(confirmationReplay.ack).toHaveBeenCalledOnce();
+    expect(sends).toHaveLength(sentBeforeReplay);
+    const confirmedPayload=await confirmed.json() as {notificationStatus:string};
+    expect(confirmedPayload.notificationStatus).toBe("QUEUED");
+
+    const packing=await postNotice(`/api/orders/${fixture.order.orderId}/transition`,{from:"PAID",to:"PACKING",confirmation:orderNumber});
+    expect(packing.status).toBe(200);
+    await deliverLast(locale==="ur"?"پیکنگ ہو رہی":"being packed");
+    const stateAfterPacking=await(await admin.fetch(new Request(`https://admin.example.test/api/orders/${fixture.order.orderId}`,{headers:{"cf-access-authenticated-user-email":"admin@example.test"}}),{DB:db,ADMIN_EMAIL:"admin@example.test",DEPLOYMENT_STATE:"LOCAL"} as never)).json() as {order:{state:string}};
+    expect(stateAfterPacking.order.state).toBe("PACKING");
+
+    const trackingNumber="SIMULATED-GFS210-NOT-SHIPMENT";
+    expect((await postNotice(`/api/orders/${fixture.order.orderId}/tracking`,{trackingNumber,confirmation:orderNumber})).status).toBe(200);
+    const labelResponse=await admin.fetch(new Request(`https://admin.example.test/api/orders/${fixture.order.orderId}/shipping-label?format=A6`,{headers:{"cf-access-authenticated-user-email":"admin@example.test"}}),{DB:db,ADMIN_EMAIL:"admin@example.test",DEPLOYMENT_STATE:"LOCAL"} as never);
+    expect(labelResponse.status).toBe(200);
+    expect(await labelResponse.text()).toContain("TEST ONLY — SIMULATED FULFILLMENT; DO NOT SHIP");
+
+    const dispatched=await postNotice(`/api/orders/${fixture.order.orderId}/transition`,{from:"PACKING",to:"DISPATCHED",confirmation:orderNumber});
+    expect(dispatched.status).toBe(200);
+    const dispatchNotice=await deliverLast(locale==="ur"?"روانہ کر دیا":"dispatched");
+    expect(body()).toContain(trackingNumber);
+    expect(JSON.parse((sqlite.prepare("SELECT payload_json FROM outbox_jobs WHERE idempotency_key=?").get(dispatchNotice.idempotencyKey) as {payload_json:string}).payload_json)).toMatchObject({trackingNumber});
+    const delivered=await postNotice(`/api/orders/${fixture.order.orderId}/transition`,{from:"DISPATCHED",to:"DELIVERED",confirmation:orderNumber});
+    expect(delivered.status).toBe(200);
+    await deliverLast(locale==="ur"?"ڈیلیور شدہ درج کیا گیا":"marked delivered");
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(fixture.order.orderId)).toEqual({state:"DELIVERED",payment_status:"PAID"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE entity_id=? AND kind='WHATSAPP_ORDER_STATUS' AND status='SENT'").get(fixture.order.orderId)).toEqual({count:4});
+    const stale=await postNotice(`/api/orders/${fixture.order.orderId}/transition`,{from:"PACKING",to:"DISPATCHED",confirmation:orderNumber});
+    expect(stale.status).toBe(409);
+    const unsafeCancel=await postNotice(`/api/orders/${fixture.order.orderId}/cancel`,{reason:"SIMULATION ONLY",confirmation:orderNumber});
+    expect(unsafeCancel.status).toBe(409);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(fixture.order.orderId)).toEqual({count:1});
+  });
+
+  it.each(["en","ur"] as const)("keeps synthetic rejection and clearer-receipt notices localized in %s without deleting the receipt", async (locale) => {
+    const rejected=await createSyntheticPaymentReviewOrder(sender,`gfs210-payment-rejected-${locale}`,false);
+    const rejectedNumber=`SIM-GFS210-REJECT-${locale.toUpperCase()}`;
+    const now=new Date().toISOString();
+    sqlite.prepare("UPDATE orders SET order_number=? WHERE id=?").run(rejectedNumber,rejected.order.orderId);
+    sqlite.prepare("UPDATE whatsapp_conversations SET state_data=?,last_inbound_message_id=?,last_inbound_at=?,updated_at=? WHERE wa_id=?").run(JSON.stringify({language:locale,orderId:rejected.order.orderId,orderNumber:rejectedNumber}),`synthetic-reject-window-${locale}`,now,now,sender);
+    const reject=await adminPost(`/api/payments/${rejected.paymentId}/reject`,{orderId:rejected.order.orderId,reason:"TEST_IMAGE_NOT_PAYMENT_PROOF",confirmation:rejectedNumber},"true","false","false","false","true",{send:queueSend});
+    expect(reject.status).toBe(200);
+    const rejectQueue=queueSend.mock.calls.at(-1)?.[0] as {kind:string;idempotencyKey:string;entityId:string;schemaVersion:1};
+    const rejectAck=vi.fn(),rejectRetry=vi.fn();
+    await api.queue({messages:[{body:rejectQueue,attempts:1,ack:rejectAck,retry:rejectRetry}]} as never,env("false","false","false","false","true"));
+    expect(rejectAck).toHaveBeenCalledOnce();
+    expect(rejectRetry).not.toHaveBeenCalled();
+    expect(body()).toContain(locale==="ur"?"تصدیق":`payment`);
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(rejected.order.orderId)).toEqual({state:"PAYMENT_REJECTED",payment_status:"REJECTED"});
+    expect(sqlite.prepare("SELECT review_state FROM payments WHERE id=?").get(rejected.paymentId)).toEqual({review_state:"REJECTED"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(rejected.order.orderId)).toEqual({count:1});
+    expect(sqlite.prepare("SELECT status FROM outbox_jobs WHERE idempotency_key=?").get(rejectQueue.idempotencyKey)).toEqual({status:"SENT"});
+
+    const clearerSender="923001234568";
+    const clearer=await createSyntheticPaymentReviewOrder(clearerSender,`gfs210-clearer-${locale}`,false);
+    const clearerNumber=`SIM-GFS210-CLEARER-${locale.toUpperCase()}`;
+    sqlite.prepare("UPDATE orders SET order_number=? WHERE id=?").run(clearerNumber,clearer.order.orderId);
+    sqlite.prepare("UPDATE whatsapp_conversations SET state='PAYMENT_REVIEW',state_data=?,last_inbound_message_id=?,last_inbound_at=?,updated_at=? WHERE wa_id=?").run(JSON.stringify({language:locale,orderId:clearer.order.orderId,orderNumber:clearerNumber}),`synthetic-clearer-window-${locale}`,new Date().toISOString(),new Date().toISOString(),clearerSender);
+    const receiptId=sqlite.prepare("SELECT id FROM payment_receipts WHERE order_id=?").get(clearer.order.orderId)?.id as string;
+    const request=await adminPost(`/api/payments/${clearer.paymentId}/request-clearer-receipt`,{orderId:clearer.order.orderId,confirmation:clearerNumber,reasonCode:"TEST_IMAGE_NOT_PAYMENT_PROOF"},"true","false","false","false","true",{send:queueSend});
+    expect(request.status).toBe(202);
+    const clearerQueue=queueSend.mock.calls.at(-1)?.[0] as {kind:string;idempotencyKey:string;entityId:string;schemaVersion:1};
+    const clearerAck=vi.fn(),clearerRetry=vi.fn();
+    await api.queue({messages:[{body:clearerQueue,attempts:1,ack:clearerAck,retry:clearerRetry}]} as never,env("false","false","false","false","true"));
+    expect(clearerAck).toHaveBeenCalledOnce();
+    expect(clearerRetry).not.toHaveBeenCalled();
+    expect(body()).toContain(locale==="ur"?"واضح ادائیگی کا ثبوت":"clear payment evidence");
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(clearer.order.orderId)).toEqual({state:"PAYMENT_REVIEW",payment_status:"PENDING"});
+    expect(sqlite.prepare("SELECT review_state FROM payments WHERE id=?").get(clearer.paymentId)).toEqual({review_state:"REVIEW"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE id=?").get(receiptId)).toEqual({count:1});
+    const audit=sqlite.prepare("SELECT metadata_json FROM audit_log WHERE action='REQUEST_CLEARER_RECEIPT' AND entity_id=?").get(clearer.paymentId) as {metadata_json:string};
+    expect(audit.metadata_json).toContain('"reasonCode":"TEST_IMAGE_NOT_PAYMENT_PROOF"');
+  });
+
+  it("archives only a separate cancelled synthetic no-receipt fixture and preserves the row", async () => {
+    const created=await persistFlowSubmission(db,{fullName:"SYNTHETIC ARCHIVE TEST ONLY",deliveryAddress:"SIMULATED ONLY - DO NOT SHIP",nearbyPlace:"SIMULATION",city:"Synthetic City",contactNumber:"03000000001",productCode:"FREE_5_PACK_VEGETABLE_SEEDS",province:"Synthetic Province",fertilizerSelected:false},undefined,"gfs210-archive-only-fixture",sender);
+    if(!created.quote)throw new Error("SYNTHETIC_ARCHIVE_QUOTE_MISSING");
+    const orderNumber="SIM-GFS210-ARCHIVE-ONLY";
+    sqlite.prepare("UPDATE orders SET order_number=?,state='CANCELLED',payment_status='PENDING' WHERE id=?").run(orderNumber,created.orderId);
+    sqlite.prepare("UPDATE payments SET review_state='PENDING' WHERE order_id=?").run(created.orderId);
+    const response=await adminPost(`/api/orders/${created.orderId}/archive`,{confirmation:orderNumber,reason:"SYNTHETIC_TEST_ONLY"});
+    expect(response.status).toBe(200);
+    const row=sqlite.prepare("SELECT state,payment_status,archived_at,archive_reason FROM orders WHERE id=?").get(created.orderId) as {state:string;payment_status:string;archived_at:string|null;archive_reason:string|null};
+    expect(row).toMatchObject({state:"CANCELLED",payment_status:"PENDING",archive_reason:"SYNTHETIC_TEST_ONLY"});
+    expect(row.archived_at).toBeTruthy();
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders WHERE id=?").get(created.orderId)).toEqual({count:1});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(created.orderId)).toEqual({count:0});
+    expect(sqlite.prepare("SELECT action FROM audit_log WHERE entity_type='ORDER' AND entity_id=? ORDER BY created_at DESC LIMIT 1").get(created.orderId)).toEqual({action:"ORDER_ARCHIVED"});
+    expect(queueSend).not.toHaveBeenCalled();
+  });
+
+  it.each(["en","ur"] as const)("cancels only a separate isolated unpaid fixture and queues a simulated %s notice", async (locale) => {
+    const idempotencyKey=`gfs210-unpaid-cancel-fixture-${locale}`;
+    const created=await persistFlowSubmission(db,{fullName:"SYNTHETIC GFS210 — DO NOT CONTACT",deliveryAddress:"SIMULATED ONLY",nearbyPlace:"NO PHYSICAL SHIPMENT",city:"Synthetic City",contactNumber:"03000000001",productCode:"FREE_5_PACK_VEGETABLE_SEEDS",province:"Synthetic Province",fertilizerSelected:false},undefined,idempotencyKey,sender);
+    if(!created.quote)throw new Error("SYNTHETIC_CANCEL_QUOTE_MISSING");
+    const orderNumber=`SIM-GFS210-CANCEL-UNPAID-${locale.toUpperCase()}`;
+    const now=new Date().toISOString();
+    const inboundId="synthetic-cancel-window";
+    sqlite.prepare("UPDATE orders SET order_number=?,state='PAYMENT_PENDING',payment_status='PENDING' WHERE id=?").run(orderNumber,created.orderId);
+    sqlite.prepare("INSERT INTO whatsapp_conversations(id,wa_id,state,state_data,last_inbound_message_id,last_inbound_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)").run(`conversation-gfs210-cancel-${locale}`,sender,"PAYMENT_PENDING",JSON.stringify({language:locale,orderId:created.orderId,orderNumber}),inboundId,now,now,now);
+    const cancel=await adminPost(`/api/orders/${created.orderId}/cancel`,{confirmation:orderNumber,reason:"SYNTHETIC_TEST_ONLY_NO_PAYMENT"},"true","false","false","false","true",{send:queueSend});
+    expect(cancel.status).toBe(200);
+    expect(await cancel.clone().json()).toMatchObject({ok:true,notificationStatus:"QUEUED"});
+    expect(queueSend).toHaveBeenCalledOnce();
+    const queued=queueSend.mock.calls.at(-1)?.[0] as {kind:string;idempotencyKey:string;entityId:string;schemaVersion:1};
+    const ack=vi.fn(),retry=vi.fn();
+    await api.queue({messages:[{body:queued,attempts:1,ack,retry}]} as never,env("false","false","false","false","true"));
+    expect(ack).toHaveBeenCalledOnce();
+    expect(retry).not.toHaveBeenCalled();
+    expect(body()).toContain(locale==="ur"?"ٹیسٹ:":"TEST ONLY:");
+    expect(body()).toContain(locale==="ur"?"منسوخ":"was cancelled");
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(created.orderId)).toEqual({state:"CANCELLED",payment_status:"PENDING"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(created.orderId)).toEqual({count:0});
+    expect(sqlite.prepare("SELECT status FROM outbox_jobs WHERE idempotency_key=?").get(queued.idempotencyKey)).toEqual({status:"SENT"});
+  });
+
+  it("defers V2 status notices when the feature is disabled or the closed-window utility template is not approved", async () => {
+    const target=await createSyntheticPaymentReviewOrder(sender,"gfs210-status-window-gate",false);
+    const orderNumber="SIM-GFS210-WINDOW-GATE",now=new Date().toISOString(),closed=new Date(Date.now()-25*60*60_000).toISOString();
+    sqlite.prepare("UPDATE orders SET order_number=?,state='DISPATCHED',payment_status='PAID' WHERE id=?").run(orderNumber,target.order.orderId);
+    sqlite.prepare("UPDATE payments SET review_state='APPROVED',approved_amount=?,approved_by='SYNTHETIC_FIXTURE',approved_at=? WHERE id=?").run(target.amount,now,target.paymentId);
+    sqlite.prepare("UPDATE whatsapp_conversations SET state_data=?,last_inbound_at=? WHERE wa_id=?").run(JSON.stringify({language:"en",orderId:target.order.orderId}),closed,sender);
+    const key="gfs210-closed-window-order-notice";
+    sqlite.prepare("INSERT INTO outbox_jobs(id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES(?,?,?,?,?,'QUEUED',?,?,?)").run("outbox-gfs210-closed",key,"WHATSAPP_ORDER_STATUS",target.order.orderId,JSON.stringify({orderId:target.order.orderId,orderNumber,noticeName:"DISPATCHED",trackingNumber:"SIMULATED-NO-SHIP",simulation:true}),now,now,now);
+    const event={body:{kind:"WHATSAPP_ORDER_STATUS",idempotencyKey:key,entityId:target.order.orderId,schemaVersion:1 as const},attempts:1,ack:vi.fn(),retry:vi.fn()};
+    const before=sends.length;
+    await api.queue({messages:[event]} as never,env("false","false","false","false","true"));
+    expect(event.ack).toHaveBeenCalledOnce();
+    expect(event.retry).not.toHaveBeenCalled();
+    expect(sends).toHaveLength(before);
+    expect(sqlite.prepare("SELECT status,last_error FROM outbox_jobs WHERE idempotency_key=?").get(key)).toEqual({status:"DEFERRED",last_error:"ORDER_STATUS_UTILITY_TEMPLATE_NOT_APPROVED"});
+
+    const disabledKey="gfs210-v2-disabled-order-notice";
+    sqlite.prepare("UPDATE whatsapp_conversations SET last_inbound_at=? WHERE wa_id=?").run(now,sender);
+    sqlite.prepare("INSERT INTO outbox_jobs(id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES(?,?,?,?,?,'QUEUED',?,?,?)").run("outbox-gfs210-disabled",disabledKey,"WHATSAPP_ORDER_STATUS",target.order.orderId,JSON.stringify({orderId:target.order.orderId,orderNumber,noticeName:"DISPATCHED",trackingNumber:"SIMULATED-NO-SHIP",simulation:true}),now,now,now);
+    const disabled={body:{kind:"WHATSAPP_ORDER_STATUS",idempotencyKey:disabledKey,entityId:target.order.orderId,schemaVersion:1 as const},attempts:1,ack:vi.fn(),retry:vi.fn()};
+    await api.queue({messages:[disabled]} as never,env("false","false","false","false","false","false"));
+    expect(disabled.ack).toHaveBeenCalledOnce();
+    expect(disabled.retry).not.toHaveBeenCalled();
+    expect(sends).toHaveLength(before);
+    expect(sqlite.prepare("SELECT status,last_error FROM outbox_jobs WHERE idempotency_key=?").get(disabledKey)).toEqual({status:"DEFERRED",last_error:"ORDER_STATUS_NOTIFICATIONS_V2_DISABLED"});
+  });
+
+  it("sends the exact Urdu PAID confirmation to the order's stored WhatsApp identity", async () => {
+    const target="923001234563";
+    const testOrder=await createSyntheticPaymentReviewOrder(target,"urdu-confirmation-order",true);
+    verifySyntheticPaymentMethod();
+    const key=`payment_confirmation_v2_${testOrder.paymentId}`;
+    const now=new Date().toISOString();
+    const response=await adminPost(`/api/payments/${testOrder.paymentId}/approve`,{orderId:testOrder.order.orderId,confirmation:testOrder.order.orderNumber,reference:"SYNTHETIC-UR-TXN-193",settlementEvidenceRef:"SYNTHETIC-UR-STATEMENT-193",settlementConfirmed:true},"true","true");
+    expect(response.status).toBe(200);
+    sqlite.prepare("UPDATE whatsapp_conversations SET state_data=?,last_inbound_at=?,last_inbound_message_id=? WHERE wa_id=?").run(JSON.stringify({language:"ur",orderId:testOrder.order.orderId}),now,"synthetic-urdu-confirmation-window",target);
+    const message={body:{kind:"WHATSAPP_PAYMENT_CONFIRMATION",idempotencyKey:key,entityId:testOrder.order.orderId,schemaVersion:1 as const},attempts:1,ack:vi.fn(),retry:vi.fn()};
+    const sendsBefore=sends.length;
+    await api.queue({messages:[message]} as never,env("true"));
+    expect(message.ack).toHaveBeenCalledOnce();
+    expect(sends.at(-1)).toMatchObject({to:target,type:"text",text:{body:`آپ کے آرڈر ${testOrder.order.orderNumber} کی ${testOrder.amount} روپے ادائیگی کی تصدیق ہو گئی ہے۔ آپ کا آرڈر کنفرم ہو گیا ہے۔`}});
+    expect(sqlite.prepare("SELECT provider_message_id,status FROM outbound_messages WHERE idempotency_key=?").get(`${key}:whatsapp`)).toEqual({provider_message_id:`synthetic-outbound-${sendsBefore+1}`,status:"SENT"});
+  });
+
+  it("blocks a PAID acknowledgement outside the service window without an approved utility template", async () => {
+    const testOrder=await createSyntheticPaymentReviewOrder("923001234566","closed-window-paid-confirmation",true);
+    verifySyntheticPaymentMethod();
+    const key=`payment_confirmation_v2_${testOrder.paymentId}`;
+    const approval=await adminPost(`/api/payments/${testOrder.paymentId}/approve`,{orderId:testOrder.order.orderId,confirmation:testOrder.order.orderNumber,reference:"SYNTHETIC-TXN-CLOSED-193",settlementEvidenceRef:"SYNTHETIC-CREDIT-CLOSED-193",settlementConfirmed:true},"true","true");
+    expect(approval.status).toBe(200);
+    sqlite.prepare("UPDATE whatsapp_conversations SET state_data=?,last_inbound_at=? WHERE wa_id=?").run(JSON.stringify({language:"en",orderId:testOrder.order.orderId}),new Date(Date.now()-25*60*60_000).toISOString(),"923001234566");
+    const message={body:{kind:"WHATSAPP_PAYMENT_CONFIRMATION",idempotencyKey:key,entityId:testOrder.order.orderId,schemaVersion:1 as const},attempts:1,ack:vi.fn(),retry:vi.fn()};
+    const sendsBefore=sends.length;
+    await api.queue({messages:[message]} as never,env("true"));
+    expect(message.ack).toHaveBeenCalledOnce();
+    expect(message.retry).not.toHaveBeenCalled();
+    expect(sends).toHaveLength(sendsBefore);
+    expect(sqlite.prepare("SELECT status,last_error FROM outbox_jobs WHERE idempotency_key=?").get(key)).toEqual({status:"PERMANENT_FAILURE",last_error:"PAYMENT_CONFIRMATION_TEMPLATE_NOT_APPROVED"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='WHATSAPP_PAYMENT_CONFIRMATION_BLOCKED'").get()).toEqual({count:1});
+  });
+
+  it("resumes only a scheduled V2 order after Admin rejects its receipt and permits a fresh payment method", async () => {
+    const testOrder=await createSyntheticPaymentReviewOrder(sender,"v2-rejected-review-resume",true);
+    verifySyntheticPaymentMethod();
+    configureSyntheticPaymentMethodCopy();
+    const rejected=await adminPost(`/api/payments/${testOrder.paymentId}/reject`,{orderId:testOrder.order.orderId,reason:"Synthetic mismatch for workflow test",confirmation:testOrder.order.orderNumber},"true","false","true","true");
+    expect(rejected.status).toBe(200);
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(testOrder.order.orderId)).toEqual({state:"PAYMENT_REJECTED",payment_status:"PENDING"});
+    expect(sqlite.prepare("SELECT review_state FROM payments WHERE id=?").get(testOrder.paymentId)).toEqual({review_state:"REJECTED"});
+    expect(sqlite.prepare("SELECT review_state FROM payment_receipts WHERE order_id=?").get(testOrder.order.orderId)).toEqual({review_state:"REJECTED"});
+    expect(sqlite.prepare("SELECT status,phase FROM payment_reminder_v2_schedules WHERE order_id=?").get(testOrder.order.orderId)).toEqual({status:"ACTIVE",phase:"PAYMENT_PENDING"});
+    expect(conversation()?.state).not.toBe("CANCELLED_UNPAID");
+    const selected=await selectPaymentMethod(db,testOrder.order.orderId,"JAZZCASH","en",undefined,"synthetic-v2-rejection-retry",true);
+    expect(selected.orderState).toBe("PAYMENT_PENDING");
+    expect(sqlite.prepare("SELECT state FROM orders WHERE id=?").get(testOrder.order.orderId)).toEqual({state:"PAYMENT_PENDING"});
+    expect(sqlite.prepare("SELECT review_state FROM payments WHERE id=?").get(testOrder.paymentId)).toEqual({review_state:"PENDING"});
+  });
+
+  it("retains late post-cancellation receipt evidence for Admin without marking PAID", async () => {
+    const target="923001234565";
+    const testOrder=await createSyntheticPaymentReviewOrder(target,"late-after-cancelled-order",true);
+    sqlite.prepare("DELETE FROM payment_receipts WHERE order_id=?").run(testOrder.order.orderId);
+    sqlite.prepare("UPDATE orders SET state='CANCELLED_UNPAID',payment_status='CANCELLED_UNPAID' WHERE id=?").run(testOrder.order.orderId);
+    sqlite.prepare("UPDATE payments SET review_state='CANCELLED_UNPAID' WHERE id=?").run(testOrder.paymentId);
+    sqlite.prepare("UPDATE payment_reminder_v2_schedules SET status='TERMINAL',phase='CANCELLED_UNPAID' WHERE order_id=?").run(testOrder.order.orderId);
+    sqlite.prepare("UPDATE whatsapp_conversations SET state='CANCELLED_UNPAID',state_data=? WHERE wa_id=?").run(JSON.stringify({language:"en",orderId:testOrder.order.orderId}),target);
+    const lateMediaId="synthetic-late-media-evidence";
+    const response=await callback([{from:target,id:"synthetic-late-receipt-inbound",timestamp:"1792497600",type:"image",image:{id:lateMediaId,mime_type:"image/png"}}],[],true);
+    expect(response.status).toBe(200);
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(testOrder.order.orderId)).toEqual({state:"CANCELLED_UNPAID",payment_status:"CANCELLED_UNPAID"});
+    expect(sqlite.prepare("SELECT review_state FROM payments WHERE id=?").get(testOrder.paymentId)).toEqual({review_state:"LATE_REVIEW"});
+    expect(sqlite.prepare("SELECT review_state,provider_media_id FROM payment_receipts WHERE order_id=?").get(testOrder.order.orderId)).toEqual({review_state:"LATE_REVIEW",provider_media_id:lateMediaId});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='LATE_PAYMENT_EVIDENCE_RECEIVED'").get()).toEqual({count:1});
+    expect(sends.at(-1)).toMatchObject({to:target,type:"interactive"});
+    expect(sqlite.prepare("SELECT state FROM orders WHERE id=?").get(testOrder.order.orderId)).not.toEqual({state:"PAID"});
+  });
+
+  it("attaches a payment-context image to its exact order and pauses its V2 reminders", async () => {
+    const targetWa="923001234568";
+    const target=await createSyntheticPaymentReviewOrder(targetWa,"receipt-context-target",true);
+    sqlite.prepare("DELETE FROM payment_receipts WHERE order_id=?").run(target.order.orderId);
+    sqlite.prepare("UPDATE orders SET state='PAYMENT_PENDING',payment_status='PENDING' WHERE id=?").run(target.order.orderId);
+    sqlite.prepare("UPDATE payments SET review_state='PENDING' WHERE id=?").run(target.paymentId);
+
+    sqlite.prepare("DELETE FROM whatsapp_conversations WHERE wa_id=?").run(targetWa);
+    const other=await createSyntheticPaymentReviewOrder(targetWa,"receipt-context-other",true);
+    sqlite.prepare("UPDATE whatsapp_conversations SET state='PAYMENT_REFERENCE',state_data=? WHERE wa_id=?")
+      .run(JSON.stringify({language:"en",orderId:other.order.orderId,orderNumber:other.order.orderNumber}),targetWa);
+    sqlite.prepare("INSERT INTO outbound_messages(id,idempotency_key,order_id,kind,provider_message_id,status,attempt_count,created_at,updated_at) VALUES(?,?,?,?,?,'SENT',1,?,?)")
+      .run("receipt-context-payment-instructions","receipt-context-payment-instructions",target.order.orderId,"WHATSAPP_PAYMENT_TEXT","synthetic-payment-instruction-target",new Date().toISOString(),new Date().toISOString());
+
+    const putsBefore=receiptBucketPut.mock.calls.length;
+    await callback([{from:targetWa,id:"synthetic-ambiguous-receipt",timestamp:"1792497600",type:"image",image:{id:"synthetic-ambiguous-media",mime_type:"image/png"}}],[],true);
+    expect(receiptBucketPut).toHaveBeenCalledTimes(putsBefore);
+    const blocked=sqlite.prepare("SELECT correlation_id,metadata_json FROM audit_log WHERE action='RECEIPT_INGESTION_BLOCKED'").get() as {correlation_id:string;metadata_json:string};
+    expect(blocked.metadata_json).toContain('"reason":"ACTIVE_CONVERSATION_ORDER_MISMATCH"');
+    expect(blocked.metadata_json).not.toContain("synthetic-ambiguous-media");
+    expect(blocked.correlation_id).not.toBe("synthetic-ambiguous-receipt");
+    const originalFetch=globalThis.fetch.bind(globalThis);
+    let beginDownload!:()=>void,finishMetadata!: (response:Response)=>void;
+    const downloadStarted=new Promise<void>((resolve)=>{beginDownload=resolve});
+    const metadataResponse=new Promise<Response>((resolve)=>{finishMetadata=resolve});
+    vi.stubGlobal("fetch",vi.fn((input:RequestInfo|URL,init?:RequestInit)=>String(input).includes("synthetic-late-media-context")?(beginDownload(),metadataResponse):originalFetch(input,init)));
+    const ingestion=callback([{from:targetWa,id:"synthetic-context-receipt",timestamp:"1792497601",type:"image",image:{id:"synthetic-late-media-context",mime_type:"image/png"},context:{id:"synthetic-payment-instruction-target"}}],[],true);
+    await downloadStarted;
+    expect(sqlite.prepare("SELECT status,stop_reason FROM payment_reminder_v2_schedules WHERE order_id=?").get(target.order.orderId)).toEqual({status:"PAUSED",stop_reason:"RECEIPT_INGESTION_PENDING"});
+    finishMetadata(Response.json({url:"https://synthetic-media.test/receipt",mime_type:"image/png",file_size:4}));
+    await ingestion;
+
+    expect(sqlite.prepare("SELECT order_id,review_state FROM payment_receipts WHERE provider_media_id='synthetic-late-media-context'").get()).toEqual({order_id:target.order.orderId,review_state:"SUBMITTED"});
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(target.order.orderId)).toEqual({state:"PAYMENT_REVIEW",payment_status:"PENDING"});
+    expect(sqlite.prepare("SELECT status,stop_reason FROM payment_reminder_v2_schedules WHERE order_id=?").get(target.order.orderId)).toEqual({status:"PAUSED",stop_reason:"RECEIPT_SUBMITTED"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(other.order.orderId)).toEqual({count:1});
+  });
+
+  it("uses the unique sender/payment match when a new inbound message recreated the conversation as NEW", async () => {
+    const targetWa="923001234570";
+    const target=await createSyntheticPaymentReviewOrder(targetWa,"receipt-new-conversation",true);
+    sqlite.prepare("DELETE FROM payment_receipts WHERE order_id=?").run(target.order.orderId);
+    sqlite.prepare("UPDATE orders SET state='PAYMENT_PENDING',payment_status='PENDING' WHERE id=?").run(target.order.orderId);
+    sqlite.prepare("UPDATE payments SET review_state='PENDING' WHERE id=?").run(target.paymentId);
+    sqlite.prepare("DELETE FROM whatsapp_conversations WHERE wa_id=?").run(targetWa);
+
+    await callback([{from:targetWa,id:"synthetic-new-conversation-image",timestamp:"1792497602",type:"image",image:{id:"synthetic-late-media-no-context",mime_type:"image/png"}}],[],true);
+
+    expect(sqlite.prepare("SELECT order_id,review_state FROM payment_receipts WHERE provider_media_id='synthetic-late-media-no-context'").get()).toEqual({order_id:target.order.orderId,review_state:"SUBMITTED"});
+    expect(sqlite.prepare("SELECT state,JSON_EXTRACT(state_data,'$.orderId') AS orderId FROM whatsapp_conversations WHERE wa_id=?").get(targetWa)).toEqual({state:"PAYMENT_REFERENCE",orderId:target.order.orderId});
+    const audit=sqlite.prepare("SELECT metadata_json FROM audit_log WHERE action='RECEIPT_SUBMITTED' AND entity_id=?").get(target.paymentId) as {metadata_json:string};
+    expect(audit.metadata_json).toContain('"associationEvidence":"UNIQUE_SENDER_PAYMENT"');
+    expect(audit.metadata_json).toContain('"providerMediaIdHash"');
+    expect(audit.metadata_json).not.toContain("synthetic-late-media-no-context");
+    expect(sqlite.prepare("SELECT status,stop_reason FROM payment_reminder_v2_schedules WHERE order_id=?").get(target.order.orderId)).toEqual({status:"PAUSED",stop_reason:"RECEIPT_SUBMITTED"});
+  });
+
+  it("renders and records a published reminder and advances its delivery stage only on Meta callback", async () => {
+    const testOrder=await createSyntheticPaymentReviewOrder(sender,"reminder-queue-order");
+    sqlite.prepare("DELETE FROM payment_receipts WHERE order_id=?").run(testOrder.order.orderId);
+    sqlite.prepare("UPDATE orders SET state='PAYMENT_PENDING',payment_status='PENDING' WHERE id=?").run(testOrder.order.orderId);
+    sqlite.prepare("UPDATE payments SET review_state='PENDING' WHERE id=?").run(testOrder.paymentId);
+    const order=sqlite.prepare("SELECT created_at FROM orders WHERE id=?").get(testOrder.order.orderId) as {created_at:string};
+    const schedule=await createPaymentV2Schedule(db,testOrder.order.orderId,testOrder.paymentId,new Date(order.created_at));
+    const stageId=`${schedule.scheduleId}:stage:15`;
+    const idempotencyKey=stageId;
+    const now=new Date().toISOString();
+    sqlite.prepare("UPDATE whatsapp_conversations SET state='PAYMENT_PENDING',state_data=?,last_inbound_at=?,last_inbound_message_id=? WHERE wa_id=?").run(JSON.stringify({language:"en",orderId:testOrder.order.orderId}),now,"synthetic-reminder-window",sender);
+    sqlite.prepare("UPDATE payment_v2_template_versions SET body=?,state='PUBLISHED',published_at=?,published_by='SYNTHETIC_TEST' WHERE template_key='REMINDER_15M' AND locale='en' AND version=1").run("Reminder {orderNumber}: PKR {amount}; {remainingMinutes} min left until {deadline}; method {paymentMethod}.",now);
+    sqlite.prepare("UPDATE payment_reminder_v2_stages SET status='QUEUED' WHERE id=?").run(stageId);
+    sqlite.prepare("INSERT INTO outbox_jobs(id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES(?,?,?,?,?,'QUEUED',?,?,?)").run(`outbox-${stageId}`,idempotencyKey,"WHATSAPP_PAYMENT_REMINDER",testOrder.order.orderId,JSON.stringify({scheduleId:schedule.scheduleId,stageId,stageMinutes:15,orderId:testOrder.order.orderId,paymentId:testOrder.paymentId,customerId:sqlite.prepare("SELECT customer_id FROM orders WHERE id=?").get(testOrder.order.orderId)?.customer_id}),now,now,now);
+    const message={body:{kind:"WHATSAPP_PAYMENT_REMINDER",idempotencyKey,entityId:testOrder.order.orderId,schemaVersion:1 as const},attempts:1,ack:vi.fn(),retry:vi.fn()};
+    await api.queue({messages:[message]} as never,env("false","true","true"));
+    expect(message.ack).toHaveBeenCalledOnce();
+    expect(message.retry).not.toHaveBeenCalled();
+    const expectedDeadline=new Date(Date.parse(order.created_at)+240*60_000).toLocaleString("en-PK",{timeZone:"Asia/Karachi"});
+    expect(sends.at(-1)).toMatchObject({to:sender,type:"text",text:{body:`Reminder ${testOrder.order.orderNumber}: PKR ${testOrder.amount}; 225 min left until ${expectedDeadline}; method JAZZCASH.`}});
+    const sent=sqlite.prepare("SELECT provider_message_id,status FROM outbound_messages WHERE idempotency_key=?").get(idempotencyKey) as {provider_message_id:string;status:string};
+    expect(sent).toMatchObject({provider_message_id:`synthetic-outbound-${sends.length}`,status:"SENT"});
+    expect(sqlite.prepare("SELECT locale,template_version,rendered_text,sent_at FROM payment_reminder_v2_stages WHERE id=?").get(stageId)).toMatchObject({locale:"en",template_version:1,rendered_text:`Reminder ${testOrder.order.orderNumber}: PKR ${testOrder.amount}; 225 min left until ${expectedDeadline}; method JAZZCASH.`,sent_at:expect.any(String)});
+    const historyResponse=await admin.fetch(new Request(`https://admin.example.test/api/orders/${testOrder.order.orderId}/payment-reminders`,{headers:{"cf-access-authenticated-user-email":"admin@example.test"}}),{DB:db,ADMIN_EMAIL:"admin@example.test",PAYMENT_REMINDERS_V2_ENABLED:"true"} as never);
+    const history=await historyResponse.json() as {schedule:{status:string};order:{optedOut:boolean};stages:Array<{stage_minutes:number;locale:string;template_version:number;rendered_text:string;wamid:string}>};
+    expect(historyResponse.status).toBe(200);
+    expect(history.order.optedOut).toBe(false);
+    expect(history.stages.find((stage)=>stage.stage_minutes===15)).toMatchObject({locale:"en",template_version:1,rendered_text:`Reminder ${testOrder.order.orderNumber}: PKR ${testOrder.amount}; 225 min left until ${expectedDeadline}; method JAZZCASH.`,wamid:sent.provider_message_id});
+    expect(sqlite.prepare("SELECT status FROM payment_reminder_v2_stages WHERE id=?").get(stageId)).toEqual({status:"SENT"});
+    sqlite.prepare("UPDATE payment_reminder_v2_stages SET due_at='2000-01-01T00:00:00.000Z' WHERE schedule_id=? AND stage_minutes=270").run(schedule.scheduleId);
+    await callback([], [{field:"messages",value:{metadata:{phone_number_id:phoneId},statuses:[{id:sent.provider_message_id,status:"delivered"}]}}]);
+    expect(sqlite.prepare("SELECT status FROM payment_reminder_v2_stages WHERE id=?").get(stageId)).toEqual({status:"DELIVERED"});
+
+    const closedWindowAt=new Date(Date.now()-25*60*60_000).toISOString();
+    sqlite.prepare("UPDATE whatsapp_conversations SET last_inbound_at=? WHERE wa_id=?").run(closedWindowAt,sender);
+    const blockedStage=`${schedule.scheduleId}:stage:30`;
+    sqlite.prepare("UPDATE payment_reminder_v2_stages SET status='QUEUED' WHERE id=?").run(blockedStage);
+    sqlite.prepare("INSERT INTO outbox_jobs(id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES(?,?,?,?,?,'QUEUED',?,?,?)").run(`outbox-${blockedStage}`,blockedStage,"WHATSAPP_PAYMENT_REMINDER",testOrder.order.orderId,JSON.stringify({scheduleId:schedule.scheduleId,stageId:blockedStage,stageMinutes:30,orderId:testOrder.order.orderId,paymentId:testOrder.paymentId,customerId:sqlite.prepare("SELECT customer_id FROM orders WHERE id=?").get(testOrder.order.orderId)?.customer_id}),now,now,now);
+    const sendsBefore=sends.length;
+    const blockedMessage={body:{kind:"WHATSAPP_PAYMENT_REMINDER",idempotencyKey:blockedStage,entityId:testOrder.order.orderId,schemaVersion:1 as const},attempts:1,ack:vi.fn(),retry:vi.fn()};
+    await api.queue({messages:[blockedMessage]} as never,env("false","true","true"));
+    expect(blockedMessage.ack).toHaveBeenCalledOnce();
+    expect(blockedMessage.retry).not.toHaveBeenCalled();
+    expect(sends).toHaveLength(sendsBefore);
+    expect(sqlite.prepare("SELECT status,last_error FROM outbox_jobs WHERE idempotency_key=?").get(blockedStage)).toEqual({status:"PERMANENT_FAILURE",last_error:"PAYMENT_REMINDER_CMS_TEMPLATE_NOT_PUBLISHED"});
+    expect(sqlite.prepare("SELECT status,last_error FROM payment_reminder_v2_stages WHERE id=?").get(blockedStage)).toEqual({status:"BLOCKED_TEMPLATE",last_error:"PAYMENT_REMINDER_CMS_TEMPLATE_NOT_PUBLISHED"});
+
+    const graceStage=`${schedule.scheduleId}:stage:240`;
+    sqlite.prepare("UPDATE payment_reminder_v2_stages SET status='DELIVERED' WHERE schedule_id=? AND stage_minutes IN (60,210)").run(schedule.scheduleId);
+    sqlite.prepare("UPDATE payment_reminder_v2_stages SET status='QUEUED' WHERE id=?").run(graceStage);
+    sqlite.prepare("UPDATE payment_reminder_v2_schedules SET phase='PAYMENT_GRACE' WHERE id=?").run(schedule.scheduleId);
+    sqlite.prepare("UPDATE orders SET state='PAYMENT_GRACE' WHERE id=?").run(testOrder.order.orderId);
+    sqlite.prepare("UPDATE whatsapp_conversations SET last_inbound_at=? WHERE wa_id=?").run(new Date().toISOString(),sender);
+    sqlite.prepare("UPDATE payment_v2_template_versions SET body=?,state='PUBLISHED',published_at=?,published_by='SYNTHETIC_TEST' WHERE template_key='GRACE_NOTICE_240M' AND locale='en' AND version=1").run("Final grace for {orderNumber}, PKR {amount}, until {deadline}: {remainingMinutes} minutes remain.",new Date().toISOString());
+    sqlite.prepare("INSERT INTO outbox_jobs(id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES(?,?,?,?,?,'QUEUED',?,?,?)").run(`outbox-${graceStage}`,graceStage,"WHATSAPP_PAYMENT_REMINDER",testOrder.order.orderId,JSON.stringify({scheduleId:schedule.scheduleId,stageId:graceStage,stageMinutes:240,orderId:testOrder.order.orderId,paymentId:testOrder.paymentId,customerId:sqlite.prepare("SELECT customer_id FROM orders WHERE id=?").get(testOrder.order.orderId)?.customer_id}),now,now,now);
+    const graceMessage={body:{kind:"WHATSAPP_PAYMENT_REMINDER",idempotencyKey:graceStage,entityId:testOrder.order.orderId,schemaVersion:1 as const},attempts:1,ack:vi.fn(),retry:vi.fn()};
+    await api.queue({messages:[graceMessage]} as never,env("false","true","true"));
+    expect(graceMessage.ack).toHaveBeenCalledOnce();
+    expect(sends.at(-1)).toMatchObject({to:sender,type:"text",text:{body:`Final grace for ${testOrder.order.orderNumber}, PKR ${testOrder.amount}, until ${new Date(Date.parse(order.created_at)+270*60_000).toLocaleString("en-PK",{timeZone:"Asia/Karachi"})}: 30 minutes remain.`}});
+    const graceWamid=sqlite.prepare("SELECT provider_message_id FROM outbound_messages WHERE idempotency_key=?").get(graceStage)?.provider_message_id as string;
+    sqlite.prepare("UPDATE payment_reminder_v2_stages SET due_at='2000-01-01T00:00:00.000Z' WHERE schedule_id=? AND stage_minutes=270").run(schedule.scheduleId);
+    await callback([], [{field:"messages",value:{metadata:{phone_number_id:phoneId},statuses:[{id:graceWamid,status:"delivered"}]}}]);
+    expect(sqlite.prepare("SELECT status FROM payment_reminder_v2_stages WHERE id=?").get(graceStage)).toEqual({status:"DELIVERED"});
+    expect(Date.parse(sqlite.prepare("SELECT due_at FROM payment_reminder_v2_stages WHERE schedule_id=? AND stage_minutes=270").get(schedule.scheduleId)?.due_at as string)).toBeGreaterThan(Date.now()+29*60_000);
+  });
+
+  it("previews and explicitly queues one updated reminder with a pinned CMS version", async () => {
+    const testOrder=await createSyntheticPaymentReviewOrder(sender,"explicit-updated-reminder",true);
+    sqlite.prepare("DELETE FROM payment_receipts WHERE order_id=?").run(testOrder.order.orderId);
+    sqlite.prepare("UPDATE orders SET state='PAYMENT_PENDING',payment_status='PENDING' WHERE id=?").run(testOrder.order.orderId);
+    sqlite.prepare("UPDATE payments SET review_state='PENDING' WHERE id=?").run(testOrder.paymentId);
+    sqlite.prepare("UPDATE whatsapp_conversations SET last_inbound_at=?,last_inbound_message_id=? WHERE wa_id=?").run(new Date().toISOString(),"synthetic-updated-reminder-window",sender);
+    const publishedAt=new Date().toISOString();
+    sqlite.prepare("UPDATE payment_v2_template_versions SET body=?,state='PUBLISHED',published_at=?,published_by='SYNTHETIC_TEST' WHERE template_key='REMINDER_15M' AND locale='en' AND version=1")
+      .run("Updated {orderNumber}: PKR {amount}, {remainingMinutes} minutes remain before {deadline} using {paymentMethod}.",publishedAt);
+    const identity={"cf-access-authenticated-user-email":"admin@example.test"};
+    const historyResponse=await admin.fetch(new Request(`https://admin.example.test/api/orders/${testOrder.order.orderId}/payment-reminders`,{headers:identity}),{DB:db,ADMIN_EMAIL:"admin@example.test",PAYMENT_REMINDERS_V2_ENABLED:"true"} as never);
+    const history=await historyResponse.json() as {stages:Array<{stage_minutes:number;preview:{locale:string;version:number;renderedText:string}|null}>};
+    const preview=history.stages.find((stage)=>stage.stage_minutes===15)?.preview;
+    expect(preview).toMatchObject({locale:"en",version:1});
+    expect(preview?.renderedText).toContain(`Updated ${testOrder.order.orderNumber}: PKR ${testOrder.amount}`);
+    const queued=await adminPost(`/api/orders/${testOrder.order.orderId}/payment-reminders/send-updated`,{stageMinutes:15,templateVersion:1,reason:"Synthetic acceptance case",confirmation:testOrder.order.orderNumber},"true","false","true","true");
+    expect(queued.status).toBe(200);
+    expect(sqlite.prepare("SELECT status,locale,template_version FROM payment_reminder_v2_stages WHERE schedule_id=(SELECT id FROM payment_reminder_v2_schedules WHERE order_id=?) AND stage_minutes=15").get(testOrder.order.orderId)).toEqual({status:"QUEUED",locale:"en",template_version:1});
+    expect(sqlite.prepare("SELECT action FROM audit_log WHERE entity_type='ORDER' AND entity_id=? AND action='PAYMENT_REMINDER_UPDATED_NOTICE_QUEUED'").get(testOrder.order.orderId)).toEqual({action:"PAYMENT_REMINDER_UPDATED_NOTICE_QUEUED"});
+    const key=`payment-reminder-v2:${testOrder.order.orderId}:${testOrder.paymentId}:stage:15`;
+    const message={body:{kind:"WHATSAPP_PAYMENT_REMINDER",idempotencyKey:key,entityId:testOrder.order.orderId,schemaVersion:1 as const},attempts:1,ack:vi.fn(),retry:vi.fn()};
+    await api.queue({messages:[message]} as never,env("false","true","true"));
+    expect(message.ack).toHaveBeenCalledOnce();
+    expect(sqlite.prepare("SELECT status,last_error FROM outbox_jobs WHERE idempotency_key=?").get(key)).toEqual({status:"SENT",last_error:null});
+    expect(sends.at(-1)).toMatchObject({to:sender,type:"text",text:{body:preview?.renderedText}});
+    expect(sqlite.prepare("SELECT status,locale,template_version,rendered_text FROM payment_reminder_v2_stages WHERE id=?").get(`${sqlite.prepare("SELECT id FROM payment_reminder_v2_schedules WHERE order_id=?").get(testOrder.order.orderId)?.id}:stage:15`)).toMatchObject({status:"SENT",locale:"en",template_version:1,rendered_text:preview?.renderedText});
+  });
+
+  it("creates milestones only for explicitly V2-enabled new submissions", async () => {
+    const v1=await createSyntheticPaymentReviewOrder("923001234561","v1-order-no-v2-schedule");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_reminder_v2_schedules WHERE order_id=?").get(v1.order.orderId)).toEqual({count:0});
+    const v2=await createSyntheticPaymentReviewOrder("923001234562","v2-order-with-schedule",true);
+    const order=sqlite.prepare("SELECT created_at FROM orders WHERE id=?").get(v2.order.orderId) as {created_at:string};
+    const schedule=sqlite.prepare("SELECT source_created_at,status FROM payment_reminder_v2_schedules WHERE order_id=?").get(v2.order.orderId);
+    expect(schedule).toEqual({source_created_at:order.created_at,status:"ACTIVE"});
+    expect(sqlite.prepare("SELECT stage_minutes,due_at FROM payment_reminder_v2_stages WHERE schedule_id=(SELECT id FROM payment_reminder_v2_schedules WHERE order_id=?) ORDER BY stage_minutes").all(v2.order.orderId)).toEqual([15,30,60,210,240,270].map(minutes=>({stage_minutes:minutes,due_at:new Date(Date.parse(order.created_at)+minutes*60_000).toISOString()})));
+  });
+
+  it("Cron dispatches due outbox jobs once and recovers stale queue claims", async () => {
+    const testOrder=await createSyntheticPaymentReviewOrder(sender,"cron-outbox-recovery",true);
+    sqlite.prepare("DELETE FROM payment_receipts WHERE order_id=?").run(testOrder.order.orderId);
+    sqlite.prepare("UPDATE orders SET state='PAYMENT_PENDING',payment_status='PENDING' WHERE id=?").run(testOrder.order.orderId);
+    sqlite.prepare("UPDATE payments SET review_state='PENDING' WHERE id=?").run(testOrder.paymentId);
+    const schedule=await createPaymentV2Schedule(db,testOrder.order.orderId,testOrder.paymentId,new Date(sqlite.prepare("SELECT created_at FROM orders WHERE id=?").get(testOrder.order.orderId)?.created_at as string));
+    const stageId=`${schedule.scheduleId}:stage:15`,now=new Date().toISOString();
+    sqlite.prepare("UPDATE payment_reminder_v2_stages SET status='QUEUED' WHERE id=?").run(stageId);
+    sqlite.prepare("INSERT INTO outbox_jobs(id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES(?,?,?,?,?,'PENDING',?,?,?)").run(`outbox-${stageId}`,stageId,"WHATSAPP_PAYMENT_REMINDER",testOrder.order.orderId,JSON.stringify({scheduleId:schedule.scheduleId,stageId,stageMinutes:15,orderId:testOrder.order.orderId,paymentId:testOrder.paymentId,customerId:sqlite.prepare("SELECT customer_id FROM orders WHERE id=?").get(testOrder.order.orderId)?.customer_id}),now,now,now);
+    const scheduled=(scheduledTime:number)=>api.scheduled!({scheduledTime} as ScheduledController,env("false","true","true"));
+    await scheduled(Date.now());
+    expect(queueSend).toHaveBeenCalledOnce();
+    expect(sqlite.prepare("SELECT status FROM outbox_jobs WHERE idempotency_key=?").get(stageId)).toEqual({status:"QUEUED"});
+    await scheduled(Date.now()+60_000);
+    expect(queueSend).toHaveBeenCalledOnce();
+    await scheduled(Date.now()+6*60_000);
+    expect(queueSend).toHaveBeenCalledTimes(2);
+  });
+
+  it("honors STOP REMINDERS before an order exists and suppresses later V2 stages", async () => {
+    const target="923001234564";
+    await inbound("STOP REMINDERS","synthetic-stop-before-order",target,true);
+    expect(body()).toContain("opted out of payment reminders");
+    expect(sqlite.prepare("SELECT customer_id,wa_id,source FROM payment_reminder_v2_opt_outs WHERE wa_id=?").get(target)).toEqual({customer_id:null,wa_id:target,source:"WHATSAPP"});
+    const result=await persistFlowSubmission(db,{fullName:"NON-PAYABLE Synthetic",deliveryAddress:"SYNTHETIC opted-out order",nearbyPlace:"SYNTHETIC opted-out order",city:"Synthetic City",contactNumber:"03001234567",productCode:"FREE_5_PACK_VEGETABLE_SEEDS",province:"Synthetic Province",fertilizerSelected:false},undefined,"v2-opted-out-order",target,true);
+    const createdAt=sqlite.prepare("SELECT created_at FROM orders WHERE id=?").get(result.orderId)?.created_at as string;
+    expect(await enqueueDuePaymentV2Stages(db,new Date(Date.parse(createdAt)+5*60*60_000),true)).toMatchObject({queued:0});
+    expect(sqlite.prepare("SELECT status,stop_reason FROM payment_reminder_v2_schedules WHERE order_id=?").get(result.orderId)).toEqual({status:"STOPPED",stop_reason:"OPTED_OUT"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE kind='WHATSAPP_PAYMENT_REMINDER'").get()).toEqual({count:0});
+  });
+
+  it("lets authenticated Admin create and publish a versioned Urdu reminder without approving Meta utility status", async () => {
+    const text="آرڈر {orderNumber} کی PKR {amount} ادائیگی باقی ہے۔ آخری وقت {deadline} ہے۔";
+    const draft=await adminPost("/api/payment-reminder-templates/REMINDER_15M/ur/draft",{body:text,confirmation:"REMINDER_15M:ur"});
+    expect(draft.status).toBe(200);
+    const draftData=await draft.json() as {version:number;state:string};
+    expect(draftData).toEqual({ok:true,version:2,state:"DRAFT"});
+    const invalid=await adminPost("/api/payment-reminder-templates/REMINDER_15M/ur/draft",{body:"Unknown {customerPhone} placeholder must fail safely.",confirmation:"REMINDER_15M:ur"});
+    expect(invalid.status).toBe(400);
+    const publish=await adminPost("/api/payment-reminder-templates/REMINDER_15M/ur/publish",{version:2,confirmation:"REMINDER_15M:ur:2"});
+    expect(publish.status).toBe(200);
+    expect(sqlite.prepare("SELECT version,body,state,utility_template_name,utility_approved_at FROM payment_v2_template_versions WHERE template_key='REMINDER_15M' AND locale='ur' AND version=2").get()).toEqual({version:2,body:text,state:"PUBLISHED",utility_template_name:null,utility_approved_at:null});
+    expect(sqlite.prepare("SELECT state FROM payment_v2_template_versions WHERE template_key='REMINDER_15M' AND locale='ur' AND version=1").get()).toEqual({state:"SUPERSEDED"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action IN ('PAYMENT_REMINDER_TEMPLATE_DRAFT_SAVED','PAYMENT_REMINDER_TEMPLATE_PUBLISHED')").get()).toEqual({count:2});
   });
 
   it("stores trusted inbound receipt time and leaves it unchanged for status-only callbacks", async () => {
@@ -406,6 +993,34 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     }
   });
 
+  it("does not reread or replay payment text/QR already delivered or read", async () => {
+    await reachReview("en");
+    await inbound(tap("PLACE_ORDER"));
+    const order=sqlite.prepare("SELECT id,order_number,total_payable FROM orders").get() as {id:string;order_number:string;total_payable:number};
+    sqlite.prepare("UPDATE orders SET state='PAYMENT_PENDING' WHERE id=?").run(order.id);
+    sqlite.prepare("UPDATE payments SET method='JAZZCASH' WHERE order_id=?").run(order.id);
+    configureSyntheticPaymentMethodCopy();
+    verifySyntheticPaymentMethod();
+    const method=sqlite.prepare("SELECT * FROM payment_methods WHERE method='JAZZCASH'").get() as Record<string,unknown>;
+    const config=normalizePaymentMethodRow(method);
+    const paymentText=formatPaymentMessage(order.order_number,order.total_payable,config,"en");
+    const key="synthetic-already-delivered-payment";
+    const now=new Date().toISOString();
+    sqlite.prepare("UPDATE whatsapp_conversations SET last_inbound_at=?,last_inbound_message_id=? WHERE wa_id=?").run(now,"synthetic-payment-method-choice",sender);
+    sqlite.prepare("INSERT INTO outbox_jobs(id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES(?,?,?,?,?,'PENDING',?,?,?)").run(key,key,"WHATSAPP_PAYMENT_INSTRUCTIONS",order.id,JSON.stringify({orderId:order.id,orderNumber:order.order_number,amount:order.total_payable,method:"JAZZCASH",locale:"en",recipient:sender,message:paymentText,requestKey:key}),now,now,now);
+    sqlite.prepare("INSERT INTO outbound_messages(id,idempotency_key,order_id,kind,provider_message_id,status,attempt_count,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?),(?,?,?,?,?,?,?,?,?)").run("sent-text",`${key}:text`,order.id,"WHATSAPP_PAYMENT_TEXT","synthetic-wamid-payment-text","READ",1,now,now,"sent-qr",`${key}:qr`,order.id,"WHATSAPP_PAYMENT_QR","synthetic-wamid-payment-qr","DELIVERED",1,now,now);
+    await callback([], [{field:"messages",value:{metadata:{phone_number_id:phoneId},statuses:[{id:"synthetic-wamid-payment-text",status:"delivered"},{id:"synthetic-wamid-payment-qr",status:"read"},{id:"synthetic-wamid-payment-text",status:"read"}]}}]);
+    const sentBefore=sends.length;
+    const message={body:{kind:"WHATSAPP_PAYMENT_INSTRUCTIONS",idempotencyKey:key,entityId:order.id,schemaVersion:1 as const},attempts:1,ack:vi.fn(),retry:vi.fn()};
+    await api.queue({messages:[message]} as never,env());
+    expect(message.ack).toHaveBeenCalledOnce();
+    expect(message.retry).not.toHaveBeenCalled();
+    expect(sends).toHaveLength(sentBefore);
+    expect(receiptBucketGet).not.toHaveBeenCalled();
+    expect(sqlite.prepare("SELECT status FROM outbox_jobs WHERE idempotency_key=?").get(key)).toEqual({status:"SENT"});
+    expect(sqlite.prepare("SELECT status FROM outbound_messages WHERE idempotency_key IN (?,?) ORDER BY idempotency_key").all(`${key}:qr`,`${key}:text`)).toEqual([{status:"READ"},{status:"READ"}]);
+  });
+
   it("fails closed on legacy queued payment work with all methods disabled", async () => {
     await reachReview("en"); await inbound(tap("PLACE_ORDER"));
     const order = sqlite.prepare("SELECT id,order_number,total_payable FROM orders").get()!;
@@ -428,5 +1043,389 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sqlite.prepare("SELECT * FROM orders").get()).toEqual(beforeOrder);
     expect(sqlite.prepare("SELECT * FROM payments").get()).toEqual(beforePayment);
     expect(sqlite.prepare("SELECT event_name,send_status FROM capi_events").all()).toEqual([{ event_name: "Lead", send_status: "PENDING" }]);
+  });
+
+  it.each([
+    {locale:"en",fertilizer:true,advanceTotal:600,total:725},
+    {locale:"ur",fertilizer:true,advanceTotal:600,total:725},
+    {locale:"en",fertilizer:false,advanceTotal:350,total:475},
+    {locale:"ur",fertilizer:false,advanceTotal:350,total:475}
+  ] as const)("uses the signed $locale two-step COD confirmation flow for PKR $total",async({locale,fertilizer,advanceTotal,total})=>{
+    configureSyntheticCodPolicy();
+    sqlite.prepare("UPDATE products SET price_pkr=250 WHERE code='MICRO_NUTRIENTS_FERTILIZER'").run();
+    sqlite.prepare("UPDATE province_delivery_rates SET delivery_fee_pkr=350 WHERE province='Synthetic Province'").run();
+    for(const method of ["JAZZCASH","EASYPAISA","BANK_TRANSFER"]){verifySyntheticPaymentMethod(method);configureSyntheticPaymentMethodCopy(method)}
+    await reachReview(locale,fertilizer);
+    expect(body()).toContain(`PKR ${advanceTotal}`);
+    expect(body()).toContain(locale==="ur"?"بیج":"Seeds");
+    expect(body()).toContain(locale==="ur"?"کھاد":"Fertilizer");
+    expect(body()).toContain(locale==="ur"?"ڈیلیوری":"Delivery");
+    await inbound(tap("PLACE_ORDER"),"synthetic-cod-place",sender,true,true);
+    expect(conversation()?.state).toBe("PAYMENT_CHOICE");
+    expect(buttons()).toEqual(["PAY_ADVANCE","PAY_COD"]);
+    expect(listRows()).toEqual([]);
+    const codSelection=await inbound(tap("PAY_COD"),"synthetic-cod-select",sender,true,true);
+    expect(conversation()?.state).toBe("COD_ORDER_REVIEW");
+    expect(body()).toContain("PKR 125");
+    expect(body()).toContain(locale==="ur"?"ڈیلیوری":"Delivery");
+    expect(buttons()).toEqual(["COD_CONFIRM_ORDER","COD_BACK_TO_PAYMENT"]);
+    const order=sqlite.prepare("SELECT state,payment_status,total_payable FROM orders").get();
+    expect(order).toMatchObject({state:"DETAILS_COMPLETED",payment_status:"PENDING",total_payable:advanceTotal});
+    expect(sqlite.prepare("SELECT method,expected_amount,review_state FROM payments").get()).toEqual({method:null,expected_amount:advanceTotal,review_state:"PENDING"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:0});
+    expect(body()).toContain(`PKR ${total}`);
+    expect(body()).toContain(locale==="ur"?"COD فیس":"COD fee");
+    for(const amount of [0,fertilizer?250:0,350,125,total])expect(body()).toContain(`PKR ${amount}`);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:0});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_reminder_v2_schedules").get()).toEqual({count:0});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_reminder_v2_stages").get()).toEqual({count:0});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts").get()).toEqual({count:0});
+    const sendsAfterSelection=sends.length;
+    await callback([codSelection],[],true,true);
+    expect(sends).toHaveLength(sendsAfterSelection);
+    const confirmation=await inbound(tap("COD_CONFIRM_ORDER"),"synthetic-cod-confirm-order",sender,true,true);
+    expect(conversation()?.state).toBe("COD_PENDING");
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders").get()).toEqual({state:"COD_PENDING",payment_status:"COD_PENDING"});
+    expect(sqlite.prepare("SELECT method,expected_amount,review_state FROM payments").get()).toEqual({method:"COD",expected_amount:total,review_state:"COD_PENDING"});
+    expect(sqlite.prepare("SELECT seed_total_pkr,fertilizer_total_pkr,delivery_fee_pkr,cod_fee_pkr,total_payable_pkr,status FROM cod_order_details").get()).toEqual({seed_total_pkr:0,fertilizer_total_pkr:fertilizer?250:0,delivery_fee_pkr:350,cod_fee_pkr:125,total_payable_pkr:total,status:"COD_CONFIRMED"});
+    const reminders=await enqueueDuePaymentV2Stages(db,new Date("2030-01-01T00:00:00Z"),true);
+    expect(reminders.queued).toBe(0);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE kind LIKE 'WHATSAPP_PAYMENT_REMINDER%'").get()).toEqual({count:0});
+    await callback([confirmation],[],true,true);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:1});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_ORDER_CONFIRMED'").get()).toEqual({count:1});
+    const storedBefore=sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts").get();
+    const sendsBeforeReceipt=sends.length;
+    await callback([{from:sender,id:"synthetic-cod-receipt",timestamp:"1792497600",type:"image",image:{id:"synthetic-cod-media"},context:{id:"synthetic-stale-advance-wamid"}}],[],true,false);
+    expect(sends).toHaveLength(sendsBeforeReceipt+1);
+    expect(body()).toContain(locale==="ur"?"پیشگی رسید درکار نہیں":"No advance receipt is needed");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts").get()).toEqual(storedBefore);
+    expect(receiptBucketPut).not.toHaveBeenCalled();
+    const staleKey=`synthetic-historical-cod-payment-${locale}-${fertilizer}`;
+    const staleAt=new Date().toISOString();
+    const historicalOrder=sqlite.prepare("SELECT id,order_number FROM orders").get() as {id:string;order_number:string};
+    sqlite.prepare("INSERT INTO outbox_jobs(id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES(?,?,?,?,?,'PENDING',?,?,?)").run(staleKey,staleKey,"WHATSAPP_PAYMENT_INSTRUCTIONS",historicalOrder.id,JSON.stringify({orderId:historicalOrder.id,orderNumber:historicalOrder.order_number,amount:advanceTotal,method:"JAZZCASH",locale,recipient:sender,message:"Synthetic stale advance instructions",requestKey:staleKey}),staleAt,staleAt,staleAt);
+    const staleSendCount=sends.length;
+    const staleMessage={body:{kind:"WHATSAPP_PAYMENT_INSTRUCTIONS",idempotencyKey:staleKey,entityId:historicalOrder.id,schemaVersion:1 as const},attempts:1,ack:vi.fn(),retry:vi.fn()};
+    await api.queue({messages:[staleMessage]} as never,env("false","true","true","false","false","true","false"));
+    expect(staleMessage.ack).toHaveBeenCalledOnce();
+    expect(staleMessage.retry).not.toHaveBeenCalled();
+    expect(sends).toHaveLength(staleSendCount);
+    expect(sqlite.prepare("SELECT status,last_error FROM outbox_jobs WHERE idempotency_key=?").get(staleKey)).toEqual({status:"PERMANENT_FAILURE",last_error:"COD_PAYMENT_INSTRUCTIONS_BLOCKED"});
+  });
+
+  it.each(["warning","summary"] as const)("starts a fresh advance reminder cycle after COD %s Back/Advance choice",async(path)=>{
+    configureSyntheticCodPolicy();
+    sqlite.prepare("UPDATE products SET price_pkr=250 WHERE code='MICRO_NUTRIENTS_FERTILIZER'").run();
+    sqlite.prepare("UPDATE province_delivery_rates SET delivery_fee_pkr=350 WHERE province='Synthetic Province'").run();
+    verifySyntheticPaymentMethod("JAZZCASH");configureSyntheticPaymentMethodCopy("JAZZCASH");
+    await reachReview("en",true);
+    await inbound(tap("PLACE_ORDER"),`synthetic-cod-back-place-${path}`,sender,true,true);
+    const provisional=sqlite.prepare("SELECT id,created_at,total_payable FROM orders").get() as {id:string;created_at:string;total_payable:number};
+    expect(conversation()?.state).toBe("PAYMENT_CHOICE");
+    await inbound(tap("PAY_COD"),`synthetic-cod-back-cod-${path}`,sender,true,true);
+    expect(conversation()?.state).toBe("COD_ORDER_REVIEW");
+    await inbound(tap("COD_BACK_TO_PAYMENT"),`synthetic-cod-back-to-choice-${path}`,sender,true,true);
+    expect(conversation()?.state).toBe("PAYMENT_METHOD");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:0});
+    expect(sqlite.prepare("SELECT total_payable,payment_status FROM orders WHERE id=?").get(provisional.id)).toEqual({total_payable:600,payment_status:"PENDING"});
+    const selectionTime=Date.now();
+    await inbound(tap("PAY_JAZZCASH"),`synthetic-cod-back-jazz-${path}`,sender,true,true);
+    expect(conversation()?.state).toBe("PAYMENT_PENDING");
+    expect(sqlite.prepare("SELECT method,expected_amount,review_state FROM payments WHERE order_id=?").get(provisional.id)).toEqual({method:"JAZZCASH",expected_amount:600,review_state:"PENDING"});
+    expect(sqlite.prepare("SELECT cycle,status,source_created_at FROM payment_reminder_v2_schedules WHERE order_id=?").get(provisional.id)).toMatchObject({cycle:1,status:"ACTIVE"});
+    const schedule=sqlite.prepare("SELECT source_created_at FROM payment_reminder_v2_schedules WHERE order_id=?").get(provisional.id) as {source_created_at:string};
+    expect(Date.parse(schedule.source_created_at)).toBeGreaterThanOrEqual(selectionTime);
+  });
+
+  it("fails closed when COD settings are approved but the V2 runtime switch is off",async()=>{
+    configureSyntheticCodPolicy();
+    await reachReview("ur");
+    await inbound(tap("PLACE_ORDER"));
+    expect(conversation()?.state).toBe("COMPLETE");
+    expect(listRows()).toEqual([]);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:0});
+  });
+
+  it.each([["en","Cash on Delivery","eligible provinces"],["ur","کیش آن ڈیلیوری","اہل صوبوں"]] as const)("fails closed on stale bilingual OFFER copy and its versioned media ($0)",async(locale,expected,phrase)=>{
+    configureSyntheticCodPolicy();
+    configureOfferMedia();
+    sqlite.prepare("UPDATE whatsapp_content_template_versions SET content_en_json=?,content_ur_json=? WHERE template_key='OFFER' AND version=1").run(JSON.stringify({text:"Cash on delivery is not available."}),JSON.stringify({text:"COD دستیاب نہیں ہے۔"}));
+    await inbound("START","synthetic-cod-offer-start",sender,false,true);
+    await inbound(tap(locale==="ur"?"LANG_UR":"LANG_EN"),`synthetic-cod-offer-${locale}`,sender,false,true);
+    expect(conversation()?.state).toBe("OFFER");
+    expect(body()).toContain(expected);
+    expect(body()).toContain(phrase);
+    expect(body()).not.toMatch(/COD.{0,30}(not available|unavailable)/i);
+    expect(buttons()).toEqual(["CONTINUE_ORDER","CANCEL_ORDER"]);
+    expect(receiptBucketGet).not.toHaveBeenCalled();
+  });
+
+  it("keeps truthful COD-unavailable OFFER copy but suppresses its potentially contradictory published image",async()=>{
+    configureSyntheticCodPolicy(false);
+    configureOfferMedia("synthetic-stale-offer-cod-disabled");
+    const en="Cash on delivery is not available.";
+    const ur="کیش آن ڈیلیوری دستیاب نہیں ہے۔";
+    sqlite.prepare("UPDATE whatsapp_content_template_versions SET content_en_json=?,content_ur_json=? WHERE template_key='OFFER' AND version=1").run(JSON.stringify({text:en}),JSON.stringify({text:ur}));
+    await inbound("START","synthetic-cod-disabled-offer-start",sender,false,false);
+    await inbound(tap("LANG_EN"),"synthetic-cod-disabled-offer-language",sender,false,false);
+    expect(body()).toBe(en);
+    expect(receiptBucketGet).not.toHaveBeenCalled();
+    const urWaId="923000000779";
+    await inbound("START","synthetic-cod-disabled-offer-start-ur",urWaId,false,false);
+    await inbound(tap("LANG_UR"),"synthetic-cod-disabled-offer-language-ur",urWaId,false,false);
+    expect(body()).toBe(ur);
+    expect(receiptBucketGet).not.toHaveBeenCalled();
+  });
+
+  it.each(["en","ur"] as const)("uses compatible published $0 OFFER copy and its matching media snapshot",async(locale)=>{
+    configureSyntheticCodPolicy();
+    configureOfferMedia(`synthetic-compatible-offer-${locale}`);
+    const published=locale==="ur"?"اہل صوبوں میں کیش آن ڈیلیوری دستیاب ہے۔":"Published offer: Cash on Delivery is available in eligible provinces.";
+    sqlite.prepare(`UPDATE whatsapp_content_template_versions SET ${locale==="ur"?"content_ur_json":"content_en_json"}=? WHERE template_key='OFFER' AND version=1`).run(JSON.stringify({text:published}));
+    await inbound("START",`synthetic-compatible-start-${locale}`,sender,false,true);
+    await inbound(tap(locale==="ur"?"LANG_UR":"LANG_EN"),`synthetic-compatible-language-${locale}`,sender,false,true);
+    expect(body()).toBe(published);
+    expect(receiptBucketGet).toHaveBeenCalledWith(`whatsapp-content/images/offer/synthetic-compatible-offer-${locale}.jpg`);
+  });
+
+  it("requires API HMAC readiness in addition to a published COD policy hash",async()=>{
+    configureSyntheticCodPolicy();
+    await reachReview("en");
+    await inbound(tap("PLACE_ORDER"),"synthetic-cod-no-hmac",sender,false,true,"");
+    expect(conversation()?.state).toBe("COMPLETE");
+    expect(listRows()).toEqual([]);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:0});
+  });
+
+  it.each([
+    {name:"invalid policy",configure:()=>sqlite.prepare("INSERT INTO configuration(key,value,environment,is_secret,updated_by,updated_at) VALUES('COD_V2_POLICY',?,'V2_ISOLATED_STAGING',0,'TEST_FIXTURE','2026-01-01')").run(JSON.stringify({version:1,feePkr:0,enabled:true,eligibleProvinces:["Synthetic Province"]}))},
+    {name:"ineligible province",configure:()=>configureSyntheticCodPolicy(true,["Other Synthetic Province"])}
+  ])("keeps COD unavailable for $name while preserving verified advance methods",async({configure})=>{
+    configure();
+    for(const method of ["JAZZCASH","EASYPAISA","BANK_TRANSFER"]){verifySyntheticPaymentMethod(method);configureSyntheticPaymentMethodCopy(method)}
+    await reachReview("en");
+    await inbound(tap("PLACE_ORDER"),"synthetic-cod-unavailable-place",sender,false,true);
+    expect(conversation()?.state).toBe("PAYMENT_METHOD");
+    expect(buttons().sort()).toEqual(["PAY_BANK_TRANSFER","PAY_EASYPAISA","PAY_JAZZCASH"].sort());
+    expect(buttons()).not.toContain("PAY_COD");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:0});
+  });
+
+  it("keeps receipt handling safe on a V1 schema without the COD table",async()=>{
+    sqlite.exec("DROP TABLE cod_order_details");
+    const response=await callback([{from:sender,id:"synthetic-v1-schema-media",timestamp:"1792497600",type:"image",image:{id:"synthetic-v1-media"}}],[],false,false);
+    expect(response.status).toBe(200);
+    expect(receiptBucketPut).not.toHaveBeenCalled();
+  });
+
+  it("allows exactly one winning finalization across distinct Confirm Order callbacks",async()=>{
+    configureSyntheticCodPolicy();
+    await reachReview("en");
+    await inbound(tap("PLACE_ORDER"),"synthetic-cod-race-place",sender,false,true);
+    await inbound(tap("PAY_COD"),"synthetic-cod-race-select",sender,false,true);
+    let transitionReads=0;
+    let release!:()=>void;
+    const gate=new Promise<void>((resolve)=>{release=resolve});
+    beforeFirstReturn=async(sql)=>{
+      if(!sql.includes("COALESCE(MAX(cd.attempt),0)+1"))return;
+      transitionReads+=1;
+      if(transitionReads===2)release();
+      await gate;
+    };
+    const first={from:sender,id:"synthetic-race-confirm-order-1",timestamp:"1792497600",type:"interactive",interactive:tap("COD_CONFIRM_ORDER")};
+    const second={from:sender,id:"synthetic-race-confirm-order-2",timestamp:"1792497600",type:"interactive",interactive:tap("COD_CONFIRM_ORDER")};
+    await Promise.all([callback([first],[],false,true),callback([second],[],false,true)]);
+    beforeFirstReturn=undefined;
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_ORDER_CONFIRMED'").get()).toEqual({count:1});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:1});
+    expect(sqlite.prepare("SELECT cd.status,o.state,o.payment_status,p.method,p.review_state FROM cod_order_details cd JOIN orders o ON o.id=cd.order_id JOIN payments p ON p.order_id=o.id").get()).toEqual({status:"COD_CONFIRMED",state:"COD_PENDING",payment_status:"COD_PENDING",method:"COD",review_state:"COD_PENDING"});
+  });
+
+  it("CASes simultaneous Back to Payment and Confirm Order without a second order or fee",async()=>{
+    configureSyntheticCodPolicy();
+    verifySyntheticPaymentMethod("JAZZCASH");configureSyntheticPaymentMethodCopy("JAZZCASH");
+    await reachReview("en");
+    await inbound(tap("PLACE_ORDER"),"synthetic-cod-back-race-place",sender,false,true);
+    await inbound(tap("PAY_COD"),"synthetic-cod-back-race-select",sender,false,true);
+    let conversationReads=0;
+    let release!:()=>void;
+    const gate=new Promise<void>((resolve)=>{release=resolve});
+    beforeFirstReturn=async(sql)=>{
+      if(!sql.includes("SELECT state,state_data,last_inbound_message_id FROM whatsapp_conversations"))return;
+      conversationReads+=1;
+      if(conversationReads===2)release();
+      await gate;
+    };
+    const confirm={from:sender,id:"synthetic-back-race-confirm",timestamp:"1792497600",type:"interactive",interactive:tap("COD_CONFIRM_ORDER")};
+    const back={from:sender,id:"synthetic-back-race-back",timestamp:"1792497600",type:"interactive",interactive:tap("COD_BACK_TO_PAYMENT")};
+    await Promise.all([callback([confirm],[],false,true),callback([back],[],false,true)]);
+    beforeFirstReturn=undefined;
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({count:1});
+    const details=sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()?.count as number;
+    if(details===0){
+      expect(conversation()?.state).toBe("PAYMENT_METHOD");
+      await inbound(tap("PAY_JAZZCASH"),"synthetic-back-race-method",sender,false,true);
+      expect(sqlite.prepare("SELECT method,expected_amount FROM payments").get()).toEqual({method:"JAZZCASH",expected_amount:125});
+      expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:0});
+    }else{
+      expect(details).toBe(1);
+      expect(conversation()?.state).toBe("COD_PENDING");
+      expect(sqlite.prepare("SELECT status,cod_fee_pkr FROM cod_order_details").get()).toEqual({status:"COD_CONFIRMED",cod_fee_pkr:125});
+    }
+  });
+
+  it("requires customer province correction for a known city mismatch without editing delivery fields",async()=>{
+    sqlite.prepare("INSERT INTO province_delivery_rates(id,province,delivery_fee_pkr,enabled,created_at,updated_at) VALUES('synthetic-punjab','Punjab',250,1,'2026-01-01','2026-01-01'),('synthetic-balochistan','Balochistan',350,1,'2026-01-01','2026-01-01')").run();
+    await reachReview("en",true,"Balochistan",sender,"Lahore");
+    const before=conversation()?.data;
+    await inbound(tap("PLACE_ORDER"),"synthetic-location-mismatch");
+    expect(conversation()?.state).toBe("PROVINCE");
+    expect(body()).toContain("Lahore");
+    expect(body()).toContain("Punjab");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({count:0});
+    expect(conversation()?.data).toMatchObject({fullName:before?.fullName,deliveryAddress:before?.deliveryAddress,nearbyPlace:before?.nearbyPlace,city:"Lahore",contactNumber:before?.contactNumber});
+    await inbound({type:"list_reply",list_reply:{id:"PROVINCE_PUNJAB",title:"Punjab"}},"synthetic-location-corrected");
+    expect(conversation()?.state).toBe("REVIEW");
+    await inbound(tap("PLACE_ORDER"),"synthetic-location-place");
+    expect(sqlite.prepare("SELECT province FROM orders").get()).toEqual({province:"Punjab"});
+    expect(sqlite.prepare("SELECT city,delivery_address FROM customers").get()).toEqual({city:"Lahore",delivery_address:before?.deliveryAddress});
+  });
+
+  it("does not guess a province for an unknown city",async()=>{
+    sqlite.prepare("INSERT INTO province_delivery_rates(id,province,delivery_fee_pkr,enabled,created_at,updated_at) VALUES('synthetic-balochistan','Balochistan',350,1,'2026-01-01','2026-01-01')").run();
+    await reachReview("en",false,"Balochistan",sender,"Unmapped Test City");
+    await inbound(tap("PLACE_ORDER"),"synthetic-unknown-city-place");
+    expect(sqlite.prepare("SELECT province FROM orders").get()).toEqual({province:"Balochistan"});
+  });
+
+  it("returns from COD review to all three advance methods without charging a COD fee",async()=>{
+    configureSyntheticCodPolicy();
+    sqlite.prepare("UPDATE products SET price_pkr=250 WHERE code='MICRO_NUTRIENTS_FERTILIZER'").run();
+    sqlite.prepare("UPDATE province_delivery_rates SET delivery_fee_pkr=250 WHERE province='Synthetic Province'").run();
+    for(const method of ["JAZZCASH","EASYPAISA","BANK_TRANSFER"]){verifySyntheticPaymentMethod(method);configureSyntheticPaymentMethodCopy(method)}
+    await reachReview("en",true);
+    await inbound(tap("PLACE_ORDER"),"synthetic-cod-switch-place",sender,true,true);
+    await inbound(tap("PAY_COD"),"synthetic-cod-switch-select",sender,true,true);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:0});
+    await inbound(tap("COD_BACK_TO_PAYMENT"),"synthetic-cod-switch-back",sender,true,true);
+    expect(conversation()?.state).toBe("PAYMENT_METHOD");
+    expect(buttons().sort()).toEqual(["PAY_BANK_TRANSFER","PAY_EASYPAISA","PAY_JAZZCASH"].sort());
+    expect(sqlite.prepare("SELECT method,expected_amount,review_state FROM payments").get()).toEqual({method:null,expected_amount:500,review_state:"PENDING"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:0});
+    await inbound(tap("PAY_JAZZCASH"),"synthetic-cod-switch-jazzcash",sender,true,true);
+    expect(conversation()?.state).toBe("PAYMENT_PENDING");
+    expect(sqlite.prepare("SELECT method,expected_amount,review_state FROM payments").get()).toEqual({method:"JAZZCASH",expected_amount:500,review_state:"PENDING"});
+    expect(sqlite.prepare("SELECT cycle,status FROM payment_reminder_v2_schedules ORDER BY cycle").all()).toEqual([{cycle:1,status:"ACTIVE"}]);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:0});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts").get()).toEqual({count:0});
+  });
+
+  it("refreshes a changed COD fee before creating the single final snapshot",async()=>{
+    configureSyntheticCodPolicy();
+    await reachReview("en");
+    await inbound(tap("PLACE_ORDER"),"synthetic-cod-reprice-place",sender,false,true);
+    await inbound(tap("PAY_COD"),"synthetic-cod-reprice-first",sender,false,true);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:0});
+    const policy=JSON.parse(String(sqlite.prepare("SELECT value FROM configuration WHERE key='COD_V2_POLICY'").get()?.value)) as Record<string,unknown>;
+    policy.feePkr=150;
+    sqlite.prepare("UPDATE configuration SET value=? WHERE key='COD_V2_POLICY'").run(JSON.stringify(policy));
+    await inbound(tap("COD_CONFIRM_ORDER"),"synthetic-cod-reprice-refresh",sender,false,true);
+    expect(conversation()?.state).toBe("COD_ORDER_REVIEW");
+    expect(body()).toContain("PKR 150");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:0});
+    await inbound(tap("COD_CONFIRM_ORDER"),"synthetic-cod-reprice-final",sender,false,true);
+    expect(sqlite.prepare("SELECT attempt,cod_fee_pkr,total_payable_pkr,status FROM cod_order_details ORDER BY attempt").all()).toEqual([{attempt:1,cod_fee_pkr:150,total_payable_pkr:275,status:"COD_CONFIRMED"}]);
+    expect(sqlite.prepare("SELECT method,expected_amount,review_state FROM payments").get()).toEqual({method:"COD",expected_amount:275,review_state:"COD_PENDING"});
+  });
+
+  it("uses all seven synthetic D1 tariffs with fertilizer yes/no, EN/UR and the two-step COD buttons",async()=>{
+    const provinceRates=[["AJK",350],["Balochistan",350],["Gilgit Baltistan",350],["Islamabad",250],["KPK",300],["Punjab",250],["Sindh",300]] as const;
+    for(const [province,deliveryFee] of provinceRates)sqlite.prepare("INSERT INTO province_delivery_rates(id,province,delivery_fee_pkr,enabled,created_at,updated_at) VALUES(?,?,?,1,?,?)").run(`synthetic-rate-${province.toLowerCase().replace(/ /g,"-")}`,province,deliveryFee,"2026-01-01","2026-01-01");
+    configureSyntheticCodPolicy(true,provinceRates.map(([province])=>province));
+    sqlite.prepare("UPDATE products SET price_pkr=250 WHERE code='MICRO_NUTRIENTS_FERTILIZER'").run();
+    for(const method of ["JAZZCASH","EASYPAISA","BANK_TRANSFER"]){verifySyntheticPaymentMethod(method);configureSyntheticPaymentMethodCopy(method)}
+    let journey=0;
+    for(const locale of ["en","ur"] as const)for(const fertilizer of [false,true])for(const [province,deliveryFee] of provinceRates){
+      journey+=1;
+      const waId=`9230000${String(journey).padStart(5,"0")}`;
+      const fertilizerFee=fertilizer?250:0;
+      await reachReview(locale,fertilizer,province,waId);
+      expect(body()).toContain(`PKR ${fertilizerFee+deliveryFee}`);
+      await inbound(tap("PLACE_ORDER"),`synthetic-cod-all-province-place-${journey}`,waId,false,true);
+      expect(buttons(),`payment choices missing for ${locale}/${province}/${fertilizer}`).toEqual(["PAY_ADVANCE","PAY_COD"]);
+      await inbound(tap("PAY_COD"),`synthetic-cod-all-province-select-${journey}`,waId,false,true);
+      expect(buttons()).toEqual(["COD_CONFIRM_ORDER","COD_BACK_TO_PAYMENT"]);
+      expect(body()).toContain(`PKR ${fertilizerFee+deliveryFee+125}`);
+      await inbound(tap("COD_CONFIRM_ORDER"),`synthetic-cod-all-province-confirm-${journey}`,waId,false,true);
+      const order=sqlite.prepare("SELECT o.province,o.delivery_fee,o.fertilizer_fee,o.total_payable,cd.cod_fee_pkr,cd.total_payable_pkr FROM orders o JOIN cod_order_details cd ON cd.order_id=o.id WHERE o.customer_id=(SELECT id FROM customers WHERE wa_id=?)").get(waId);
+      expect(order).toEqual({province,delivery_fee:deliveryFee,fertilizer_fee:fertilizerFee,total_payable:fertilizerFee+deliveryFee,cod_fee_pkr:125,total_payable_pkr:fertilizerFee+deliveryFee+125});
+      if(province==="Balochistan"&&fertilizer)expect(order).toMatchObject({total_payable:600,total_payable_pkr:725});
+      expect(conversation(waId)?.state).toBe("COD_PENDING");
+    }
+  });
+
+  it("runs a COD order through actual D1 packing, delivery, collection and paid reconciliation gates",async()=>{
+    configureSyntheticCodPolicy();
+    sqlite.prepare("UPDATE products SET price_pkr=250 WHERE code='MICRO_NUTRIENTS_FERTILIZER'").run();
+    sqlite.prepare("UPDATE province_delivery_rates SET delivery_fee_pkr=250 WHERE province='Synthetic Province'").run();
+    const waId="923000000777";
+    await reachReview("en",true,"Synthetic Province",waId);
+    await inbound(tap("PLACE_ORDER"),"synthetic-cod-admin-place",waId,false,true);
+    await inbound(tap("PAY_COD"),"synthetic-cod-admin-select",waId,false,true);
+    await inbound(tap("COD_CONFIRM_ORDER"),"synthetic-cod-admin-confirm",waId,false,true);
+    const order=sqlite.prepare("SELECT o.id,o.order_number FROM orders o JOIN customers c ON c.id=o.customer_id WHERE c.wa_id=?").get(waId) as {id:string;order_number:string};
+    const transition=async(from:string,to:string)=>adminPostCod(`/api/cod-orders/${order.id}/transition`,{from,to,confirmation:order.order_number});
+    let response=await transition("COD_PENDING","PACKING");
+    expect(response.status).toBe(200);
+    response=await transition("COD_PENDING","PACKING");
+    expect((await response.json() as {alreadyTransitioned:boolean}).alreadyTransitioned).toBe(true);
+    response=await transition("PACKING","DELIVERED");
+    expect(response.status).toBe(409);
+    expect(sqlite.prepare("SELECT status FROM cod_order_details WHERE order_id=?").get(order.id)).toEqual({status:"PACKING"});
+    response=await adminPostCod(`/api/orders/${order.id}/tracking`,{trackingNumber:"SYNTHETIC-TRACKING-777",confirmation:order.order_number});
+    expect(response.status).toBe(200);
+    expect((await transition("PACKING","DISPATCHED")).status).toBe(200);
+    expect((await transition("DISPATCHED","DELIVERED")).status).toBe(200);
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(order.id)).toEqual({state:"DELIVERED",payment_status:"COD_PENDING"});
+    expect(sqlite.prepare("SELECT status FROM cod_order_details WHERE order_id=?").get(order.id)).toEqual({status:"COLLECTION_PENDING"});
+    const collectionReference="SYNTHETIC-COURIER-COLLECTION-777";
+    response=await adminPostCod(`/api/cod-orders/${order.id}/collection`,{collectionAmountPkr:624,collectionReference,collectionConfirmed:true,confirmation:order.order_number});
+    expect(response.status).toBe(409);
+    expect(sqlite.prepare("SELECT status FROM cod_order_details WHERE order_id=?").get(order.id)).toEqual({status:"COLLECTION_PENDING"});
+    response=await adminPostCod(`/api/cod-orders/${order.id}/collection`,{collectionAmountPkr:625,collectionReference,collectionConfirmed:true,confirmation:order.order_number});
+    expect(response.status).toBe(200);
+    expect(sqlite.prepare("SELECT status,payment_status FROM cod_order_details cd JOIN orders o ON o.id=cd.order_id WHERE cd.order_id=?").get(order.id)).toMatchObject({status:"COLLECTED",payment_status:"COD_PENDING"});
+    response=await adminPostCod(`/api/cod-orders/${order.id}/reconcile`,{remittanceAmountPkr:624,remittanceReference:"SYNTHETIC-BANK-REMITTANCE-777",remittanceConfirmed:true,confirmation:order.order_number});
+    expect(response.status).toBe(409);
+    expect(sqlite.prepare("SELECT payment_status FROM orders WHERE id=?").get(order.id)).toEqual({payment_status:"COD_PENDING"});
+    response=await adminPostCod(`/api/cod-orders/${order.id}/reconcile`,{remittanceAmountPkr:625,remittanceReference:"SYNTHETIC-BANK-REMITTANCE-777",remittanceConfirmed:true,confirmation:order.order_number});
+    expect(response.status).toBe(200);
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(order.id)).toEqual({state:"DELIVERED",payment_status:"PAID"});
+    expect(sqlite.prepare("SELECT status,collection_amount_pkr FROM cod_order_details WHERE order_id=?").get(order.id)).toEqual({status:"RECONCILED",collection_amount_pkr:625});
+    const codAudit=sqlite.prepare("SELECT metadata_json FROM audit_log WHERE action IN ('COD_CASH_COLLECTED','COD_REMITTANCE_RECONCILED')").all() as Array<{metadata_json:string}>;
+    expect(JSON.stringify(codAudit)).not.toContain(collectionReference);
+    expect(JSON.stringify(codAudit)).not.toContain("SYNTHETIC-BANK-REMITTANCE-777");
+  });
+
+  it("saves only a keyed courier-reference hash and fails closed before runtime approval",async()=>{
+    const reference="SYNTHETIC-COURIER-REFERENCE-SETTINGS-1";
+    let response=await adminPostCod("/api/cod-settings",{feePkr:125,enabled:false,eligibleProvinces:[],courierProvider:"",collectionSupported:false,remittanceSupported:false,verificationReference:reference,instructionsEn:"Pay the order total to the courier on delivery.",instructionsUr:"ڈیلیوری پر کورئیر کو پوری رقم ادا کریں۔"});
+    expect(response.status).toBe(200);
+    const stored=String(sqlite.prepare("SELECT value FROM configuration WHERE key='COD_V2_POLICY' AND environment='LOCAL'").get()?.value);
+    const policy=JSON.parse(stored) as {version:number;feePkr:number;enabled:boolean;verificationReferenceHash:string|null};
+    expect(policy).toMatchObject({version:1,feePkr:125,enabled:false});
+    expect(policy.verificationReferenceHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(stored).not.toContain(reference);
+    const adminEnv={DB:db,ADMIN_EMAIL:"admin@example.test",DEPLOYMENT_STATE:"LOCAL",COD_ADMIN_UI_ENABLED:"true",COD_V2_ENABLED:"false",COD_POLICY_HMAC_KEY:"synthetic-cod-policy-key-with-sufficient-entropy"} as never;
+    response=await admin.fetch(new Request("https://admin.example.test/api/cod-settings",{headers:{"cf-access-authenticated-user-email":"admin@example.test"}}),adminEnv);
+    expect(response.status).toBe(200);
+    const safeRead=await response.json() as {policy:Record<string,unknown>;effectiveEnabled:boolean};
+    expect(safeRead.effectiveEnabled).toBe(false);
+    expect(safeRead.policy).not.toHaveProperty("verificationReferenceHash");
+    response=await adminPostCod("/api/cod-settings",{feePkr:125,enabled:true,eligibleProvinces:["Synthetic Province"],courierProvider:"Synthetic Courier",collectionSupported:true,remittanceSupported:true,verificationReference:"",confirmation:"ENABLE_COD",instructionsEn:"Pay the order total to the courier on delivery.",instructionsUr:"ڈیلیوری پر کورئیر کو پوری رقم ادا کریں۔"});
+    expect(response.status).toBe(409);
+    expect(JSON.parse(String(sqlite.prepare("SELECT value FROM configuration WHERE key='COD_V2_POLICY' AND environment='LOCAL'").get()?.value)).enabled).toBe(false);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_POLICY_UPDATED'").get()).toEqual({count:1});
   });
 });

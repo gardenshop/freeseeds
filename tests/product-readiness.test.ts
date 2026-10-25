@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import { applyFertilizerDecision, isAllowedInstantFormLead, LeadSource, MetaWhatsAppProvider, MetaCapiProvider, configuredPaymentMethodNames, formatPaymentMessage, isPaymentMethodComplete, isTerminalOutboxStatus, parseMetaInstantFormLead, parseWebhookRecords, paymentInstructions, persistWebhookRecords, quoteOrder, retryDelaySeconds, selectPaymentMethod, shouldDeadLetter, storePaymentQr, storeReceipt, validatePaymentQr, verifyPaymentQr, verifyPaymentQrAsset } from "@gfs/core";
-import api from "../apps/api/src/index";
+import api, { isSuccessfulPaymentDelivery } from "../apps/api/src/index";
 
 describe("product readiness safeguards", () => {
   it("verifies Meta signatures and keeps the disabled provider closed", async () => {
@@ -76,6 +76,15 @@ describe("product readiness safeguards", () => {
     } finally {
       sqlite.close();
     }
+  });
+
+  it.each(["SENT", "DELIVERED", "READ"])("treats %s payment parts as completed and never eligible for resend", (status) => {
+    expect(isSuccessfulPaymentDelivery(status, "synthetic-provider-message-id")).toBe(true);
+  });
+
+  it("does not treat failed or unclaimed payment parts as completed", () => {
+    expect(isSuccessfulPaymentDelivery("FAILED", null)).toBe(false);
+    expect(isSuccessfulPaymentDelivery("PENDING", null)).toBe(false);
   });
 
   it("normalizes a Meta Instant Form lead into the shared five-field model", () => {

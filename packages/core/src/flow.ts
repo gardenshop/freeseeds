@@ -57,19 +57,19 @@ export function isAllowedInstantFormLead(input: { page_id?: unknown; form_id?: u
 }
 
 type Attribution = { ctwaClid?: string; campaignId?: string; adSetId?: string; adId?: string };
-type PersistOptions = { source: LeadSource; attribution?: Attribution; providerLeadId?: string; formId?: string; pageId?: string; createdTime?: string; idempotencyKey?: string };
+type PersistOptions = { source: LeadSource; attribution?: Attribution; providerLeadId?: string; formId?: string; pageId?: string; createdTime?: string; idempotencyKey?: string; paymentReminderV2Enabled?: boolean };
 export type PersistLeadResult = { customerId: string; leadId: string; orderId: string; orderNumber: string; duplicate: boolean; quote?: OrderQuote };
 
 export class OrderCooldownError extends Error {
   constructor(readonly orderNumber: string, readonly nextEligibleAt: string) { super("ORDER_COOLDOWN_ACTIVE"); }
 }
 
-export async function persistFlowSubmission(db: D1Database, submission: FlowSubmission, attribution?: Attribution, idempotencyKey?: string, trustedWaId?: string): Promise<PersistLeadResult> {
-  return persistLeadSubmission(db, submission, { source: "WHATSAPP", attribution, idempotencyKey }, trustedWaId);
+export async function persistFlowSubmission(db: D1Database, submission: FlowSubmission, attribution?: Attribution, idempotencyKey?: string, trustedWaId?: string, paymentReminderV2Enabled = false): Promise<PersistLeadResult> {
+  return persistLeadSubmission(db, submission, { source: "WHATSAPP", attribution, idempotencyKey, paymentReminderV2Enabled }, trustedWaId);
 }
 
-export async function persistInstantFormSubmission(db: D1Database, submission: InstantFormSubmission): Promise<PersistLeadResult> {
-  return persistLeadSubmission(db, submission, { source: "META_INSTANT_FORM", providerLeadId: submission.leadId, formId: submission.formId, pageId: submission.pageId, createdTime: submission.createdTime, idempotencyKey: `META_INSTANT_FORM:${submission.leadId}`, attribution: { campaignId: submission.campaignId, adSetId: submission.adSetId, adId: submission.adId } });
+export async function persistInstantFormSubmission(db: D1Database, submission: InstantFormSubmission, paymentReminderV2Enabled = false): Promise<PersistLeadResult> {
+  return persistLeadSubmission(db, submission, { source: "META_INSTANT_FORM", providerLeadId: submission.leadId, formId: submission.formId, pageId: submission.pageId, createdTime: submission.createdTime, idempotencyKey: `META_INSTANT_FORM:${submission.leadId}`, attribution: { campaignId: submission.campaignId, adSetId: submission.adSetId, adId: submission.adId }, paymentReminderV2Enabled });
 }
 
 async function persistLeadSubmission(db: D1Database, submission: FlowSubmission, options: PersistOptions, trustedWaId?: string): Promise<PersistLeadResult> {
@@ -126,7 +126,11 @@ async function persistLeadSubmission(db: D1Database, submission: FlowSubmission,
     db.prepare("INSERT INTO meta_attribution (id,order_id,customer_id,ctwa_clid,campaign_id,ad_set_id,ad_id,minimized_referral_json,created_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(attributionId, orderId, customerId, options.attribution?.ctwaClid ?? null, options.attribution?.campaignId ?? null, options.attribution?.adSetId ?? null, options.attribution?.adId ?? null, JSON.stringify({ source: options.source, ...options.attribution }), now),
     db.prepare("INSERT INTO lead_sources (id,lead_id,order_id,source,provider_lead_id,meta_form_id,provider_created_time,campaign_id,ad_set_id,ad_id,created_at,page_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), leadId, orderId, options.source, options.providerLeadId ?? null, options.formId ?? null, options.createdTime ?? null, options.attribution?.campaignId ?? null, options.attribution?.adSetId ?? null, options.attribution?.adId ?? null, now, options.pageId ?? null),
     ...(options.idempotencyKey ? [db.prepare("INSERT INTO order_requests (idempotency_key,order_id,source,created_at) VALUES (?,?,?,?)").bind(options.idempotencyKey, orderId, options.source, now)] : []),
-    ...(options.source === "META_INSTANT_FORM" ? [db.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), `whatsapp_order_confirmation_${orderId}`, "WHATSAPP_ORDER_CONFIRMATION", orderId, JSON.stringify({ orderId, customerId }), "PENDING", now, now, now)] : []),
+     ...(options.source === "META_INSTANT_FORM" ? [db.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), `whatsapp_order_confirmation_${orderId}`, "WHATSAPP_ORDER_CONFIRMATION", orderId, JSON.stringify({ orderId, customerId }), "PENDING", now, now, now)] : []),
+     ...(options.paymentReminderV2Enabled ? [
+       db.prepare("INSERT INTO payment_reminder_v2_schedules (id,order_id,payment_id,cycle,source_created_at,phase,status,created_at,updated_at) VALUES (?,?,?,?,?,'PAYMENT_PENDING','ACTIVE',?,?)").bind(`payment-reminder-v2:${orderId}:${paymentId}`,orderId,paymentId,0,now,now,now),
+       ...([15,30,60,210,240,270] as const).map((stageMinutes) => db.prepare("INSERT INTO payment_reminder_v2_stages (id,schedule_id,stage_minutes,due_at,action,status,idempotency_key,created_at,updated_at) VALUES (?,?,?,?,?,'PENDING',?,?,?)").bind(`payment-reminder-v2:${orderId}:${paymentId}:stage:${stageMinutes}`,`payment-reminder-v2:${orderId}:${paymentId}`,stageMinutes,new Date(nowDate.getTime()+stageMinutes*60_000).toISOString(),stageMinutes===270?"CANCEL_UNPAID":"REMINDER",`payment-reminder-v2:${orderId}:${paymentId}:stage:${stageMinutes}`,now,now))
+     ] : []),
     db.prepare("INSERT INTO capi_events (id,event_id,event_name,order_id,customer_id,send_status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), leadEventId, "Lead", orderId, customerId, "PENDING", now, now),
     db.prepare("INSERT INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(outboxId, leadEventId, "CAPI_LEAD", orderId, JSON.stringify(leadEvent), "PENDING", now, now, now),
       db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), `${options.source}_SUBMITTED`, "CUSTOMER", "ORDER", orderId, correlationId, JSON.stringify({ orderNumber, source: options.source }), now),

@@ -57,6 +57,7 @@ class OrdersDb {
   calls: Array<{ sql: string; args: unknown[] }> = [];
   batches = 0;
   approvalRow: Record<string, unknown> | null = null;
+  codOrder: Record<string,unknown>|null=null;
 
   prepare(sql: string): D1PreparedStatement {
     return this.statement(sql, []) as unknown as D1PreparedStatement;
@@ -83,20 +84,20 @@ class OrdersDb {
     if (sql.startsWith("SELECT COUNT(*) AS all_count")) return { all_count: 58, verify_count: 7, confirmed_count: 19, fulfillment_count: 14 };
     if (sql.startsWith("SELECT COUNT(*) AS total")) return { total: 58 };
     if (sql.startsWith("SELECT p.review_state")) return this.approvalRow;
-    if (sql.startsWith("SELECT o.id") && sql.includes("WHERE o.id=?")) return syntheticOrder;
+    if (sql.startsWith("SELECT o.id") && sql.includes("WHERE o.id=?")) return this.codOrder??syntheticOrder;
     return null;
   }
 
   private all(sql: string, args: unknown[]): Record<string, unknown>[] {
     this.calls.push({ sql, args });
-    if (sql.startsWith("SELECT o.id") && sql.includes("ORDER BY o.created_at DESC,o.id DESC")) return [syntheticOrder];
+    if (sql.startsWith("SELECT o.id") && sql.includes("ORDER BY o.created_at DESC,o.id DESC")) return [this.codOrder??syntheticOrder];
     if (sql.startsWith("SELECT id,action")) return [{ id: "synthetic-audit", action: "RECEIPT_SUBMITTED", actor_type: "CUSTOMER", actor_id: null, metadata_json: "{}", created_at: "2026-10-16T12:20:00.000Z" }];
     return [];
   }
 }
 
 const auth = { "cf-access-authenticated-user-email": "admin@example.test" };
-const environment = (db?: OrdersDb) => ({ ...(db ? { DB: db as unknown as D1Database } : {}), ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL" }) as never;
+const environment = (db?: OrdersDb,codAdmin=false) => ({ ...(db ? { DB: db as unknown as D1Database } : {}), ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL",COD_ADMIN_UI_ENABLED:codAdmin?"true":"false" }) as never;
 
 async function csrf(db: OrdersDb) {
   const response = await app.fetch(new Request("https://admin.example.test/api/csrf", { headers: auth }), environment(db));
@@ -145,6 +146,40 @@ describe("GFS-139 orders dashboard API", () => {
     expect(body.items[0]).toMatchObject({ description: "Synthetic seed packs", quantity: 5, lineTotalPkr: 0 });
     expect(body.receipts[0]).toMatchObject({ mimeType: "image/png", previewUrl: "/api/orders/synthetic-order-newest/receipts/synthetic-receipt/preview" });
     expect(JSON.stringify(body)).not.toContain("r2_object_key");
+  });
+
+  it("flags a known city/province conflict without changing saved delivery details", async () => {
+    const db = new OrdersDb();
+    db.codOrder = { ...syntheticOrder, city: "Quetta", province: "Punjab" };
+    const response = await app.fetch(new Request("https://admin.example.test/api/orders/synthetic-order-newest", { headers: auth }), environment(db, true));
+    const body = await response.json() as { order: Record<string, unknown> };
+    expect(response.status).toBe(200);
+    expect(body.order).toMatchObject({ city: "Quetta", province: "Punjab", locationIssue: "CITY_PROVINCE_MISMATCH", expectedProvince: "Balochistan", canPrintShippingLabel: false });
+  });
+
+  it("displays COD status and total in pending, packing, dispatch, and delivered Orders views",async()=>{
+    const states=[
+      {state:"COD_PENDING",cod_status:"COD_CONFIRMED",filter:"COD_PENDING"},
+      {state:"PACKING",cod_status:"PACKING",filter:"PACKING"},
+      {state:"DISPATCHED",cod_status:"DISPATCHED",filter:"DISPATCHED"},
+      {state:"DELIVERED",cod_status:"COLLECTION_PENDING",filter:"DELIVERED"}
+    ];
+    const db=new OrdersDb();
+    for(const stage of states){
+      db.codOrder={...syntheticOrder,state:stage.state,payment_status:"COD_PENDING",total_payable:625,method:"COD",expected_amount:625,cod_status:stage.cod_status,cod_fee_pkr:125,cod_total_payable_pkr:625,cod_seed_pkr:0,cod_fertilizer_pkr:250,cod_delivery_fee_pkr:250};
+      const response=await app.fetch(new Request(`https://admin.example.test/api/orders?tab=fulfillment&fulfillment=${stage.filter}`,{headers:auth}),environment(db,true));
+      expect(response.status,`COD view ${stage.filter}: ${JSON.stringify(await response.clone().json())}`).toBe(200);
+      const body=await response.json() as {orders:Array<Record<string,unknown>>};
+      expect(body.orders[0]).toMatchObject({codOrder:true,codStatus:stage.cod_status,totalPayablePkr:625,codFeePkr:125,codTotalPayablePkr:625});
+      expect(db.calls.at(-1)?.sql).toContain("cod_order_details");
+    }
+    const page=await app.fetch(new Request("https://admin.example.test/orders",{headers:auth}),environment(db,true));
+    expect(page.status).toBe(200);
+    const html=await page.text();
+    expect(html).toContain("COD ·");
+    expect(html).toContain("Mark COD packing");
+    expect(html).toContain("Record COD collection");
+    expect(html).toContain("Reconcile COD remittance");
   });
 
   it("blocks approval without a receipt or with a non-positive expected amount", async () => {

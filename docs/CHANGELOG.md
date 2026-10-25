@@ -1,5 +1,128 @@
 # Changelog
 
+## 2026-10-25 (GFS-220 authorized integration path)
+
+- Verified current PR #9 HEAD/remote `ec0a793`, PR #8/#9/#10 state, frozen V1 tag `d816ba1`, and preserved untracked `images/`.
+- User authorized staging Approach A: additive COD-only schema and backward-compatible active-Worker release; do not merge V2 PR #9 into frozen V1. No implementation was deployed or external mutation performed.
+- Confirmed source regression remains green: 261/261 tests, build, lint and production dependency audit0.
+- Recorded exact blocker: official Chrome DevTools MCP actions are absent, preventing authenticated dashboard/binding/Meta checks, backup/migration/deploy/rollback, contract retrieval and live tester acceptance. Wrangler read-only identity was verified but is not sufficient for mutation.
+- Clarified that rejected/In Review display name alone does not prove API messaging is blocked; prior GFS-178 delivery evidence exists. Current permitted capability remains unverified.
+
+## 2026-10-25 (GFS-219 active webhook compatibility)
+
+- Identified active legacy webhook `getfreeseeds-api-staging` and verified its shared-D1 incompatibility with V2 COD schema. No shared migration or route switch performed.
+- Compared V2 promotion versus legacy additive integration; both remain blocked by missing protected V2 credentials/public route and frozen shared-history constraints.
+- Reverified Meta WABA/sender state: connected/high quality, display name rejected/In Review. No live message, WAMID, customer order or financial mutation.
+- Preserved tested GFS-217 checkout and recorded final launch gate evidence.
+
+## 2026-10-25 (GFS-218 live COD activation gate)
+
+- Identified the active Meta WABA/sender and legacy signed callback through read-only WhatsApp Manager inspection. Sender is connected/high quality but display name is rejected/In Review.
+- Compared V2 route migration versus legacy callback reuse. Neither was activated: V2 lacks protected Meta secrets/public route, while legacy reuse would alter shared V1-era Worker/D1 history. No external mutation or live message.
+- Retained GFS-217 simple COD checkout repair and isolated API deployment with provider/COD/payment flags false. Full 261/261 and focused73/73 tests remain green.
+- Recorded exact launch blockers, rollback and preservation evidence in required documentation.
+
+## 2026-10-25 (GFS-217 approved COD/simple checkout)
+
+- Simplified new COD sessions to one itemized COD summary with `Confirm COD Order` and `Advance Payment`; advance selection now goes directly to JazzCash/Easypaisa/Bank Transfer without COD fee. Updated EN/UR guided-flow expectations and retained idempotency/CAS safeguards.
+- Deployed tested API source to isolated V2 version `4122f2e1-f068-4846-9244-d4612cdedad6`; provider/COD/payment flags remain disabled because V2 has no public route or Meta secrets.
+- Reverified the authorized WhatsApp tester and Admin Access identity. No canonical sender Contact Info, signed webhook proof, contract record, WAMID, customer order, or live message was claimed.
+- Full regression remains green: 261/261 tests, focused guided flow 73/73, lint, build, audit0 and Wrangler dry-runs.
+
+## 2026-10-25 (GFS-216 final runtime acceptance)
+
+- Corrected Codex MCP host discovery: active `CODEX_HOME` is `D:\AI-Tools\Codex\home`; replaced stale duplicate Chrome registration. Fresh Codex exposes official Chrome MCP actions and verified WhatsApp tester Profile plus protected V2 Admin actions.
+- Deployed isolated V2 API/Admin final versions `6f6124f7-1fce-44f4-8dfd-37ec9a50b994` / `57b8c78c-953d-44b4-8c1b-39343c406e4f`, with COD/provider/payment runtime disabled after test cleanup.
+- Ran labeled isolated COD policy setup and Admin synthetic payment/fulfillment E2E. Confirm Paid and fulfillment passed; wrong amount and duplicate reference guards passed. Synthetic D1/R2/secret fixtures were removed.
+- Diagnosed and repaired a wrong-target fixture attempt: legacy Admin URL was stopped before COD policy mutation; exact accidental shared test rows/audits were removed, with no customer/order/payment history changes.
+- Real customer COD and WhatsApp launch remain blocked by absent public V2 API route, disabled Meta webhook/provider, missing canonical sender verification and genuine courier/receiving-account gates.
+
+## 2026-10-25 (GFS-215 Chrome MCP acceptance boundary)
+
+- Diagnosed the supported Chrome DevTools MCP path: global Kilo config is enabled, official `chrome-devtools-mcp@1.12.0 --autoConnect` connected to the existing Chrome, but Chrome actions remain absent from the active Codex tool schema. No raw CDP, alternate profile, dashboard HTTP substitute, browser mutation, screenshot or WAMID was used.
+- Reverified `74222ef`, PR #8/#9/#10, frozen V1 tree identity and protected `images/`. Read-only Wrangler identity is the authorized GFS account; isolated V2 primary/recovery D1 health and masked zero-data checks pass.
+- Added explicit `dev:api:v2`, `dev:admin:v2`, `deploy:api:v2`, `deploy:admin:v2`, and dry-run package commands. Existing V1 scripts remain unchanged to preserve the frozen/shared path.
+- Full local gate remains green: `npm ci`, 261/261 tests, lint, build, audit0 and isolated V2 dry-runs. No current-head deployment, migration, CMS/R2/Queue/Access mutation, COD enablement, WhatsApp message or financial transition was performed because exposed Chrome MCP actions are mandatory.
+
+## 2026-10-25 (GFS-214 two-step payment selection)
+
+- Added first-step Advance/COD choice, verified three-method advance selection, COD fee warning, itemized confirmation summary and final confirmation over the existing provisional order; Back/Advance has a fresh timer cycle and no COD fee/duplicate order.
+- Decoupled V2 Confirm Paid UI visibility from disabled outbound payment notifications. Confirm Paid remains bound to authenticated actual-credit attestation and existing genuine reference/receipt/amount/method/order checks.
+- Synthetic fixture proves shared tariff snapshot PKR600 advance/PKR725 COD Balochistan350 + fertilizer250; final 261 tests, lint/build/audit0, V2 dry-runs pass. No Worker deployment or external data/CMS/R2/Meta mutation; browser MCP unavailable, all public payment/COD gates remain OFF.
+- Source commit `6da973d` and GFS-214 evidence/docs were pushed to PR #9. PR base remains the frozen V1 release branch and is explicitly not merge-approved.
+
+## 2026-10-25 (GFS-212 repair execution)
+
+- Verified local/remote PR #9 baseline, immutable V1 and PR #8/#10, preserved `images/`, and reconciled newer V2 protocol precedence without changing account identities or release gates.
+- Diagnosed Chrome MCP recovery to an exact `PLATFORM_BLOCKED` tool-exposure boundary: enabled local bridge reports connected through Kilo CLI, existing Chrome/profile present, but no Chrome tool namespace is exposed to the current agent. No raw-browser substitute or external deployment; local repairs continue.
+- Fixed verified source defects: COD kill-switch no longer reclassifies historical COD obligations; mismatched negative COD OFFER copy suppresses its versioned image; COD customer/admin transitions and PAID updates require a winning CAS; known location conflicts require customer correction without rewriting history; V2 Admin uses a single gated Confirm Paid action retaining genuine reference/receipt/method/amount/account-credit safeguards.
+- Added 7-tariff synthetic coverage, including fertilizer250 + Balochistan delivery350 = advance600/COD725, no-fertilizer and EN/UR paths. Read-only tariff snapshot never becomes production defaults.
+- Read-only GFS D1 primary/recovery integrity/migration and masked real order checks pass. Final validation `npm ci`, 257/257 tests, lint/build, audit0, V2 Wrangler dry-runs and `git diff --check` pass; V1 worktree176/176 + lint/build/dry-runs pass. No real payment approval, shared migration, resource creation or financial/customer mutation. See STATUS/FINAL_REPORT for external gates.
+
+## 2026-10-24 (GFS-211, isolated source/acceptance)
+
+- Reproduced and consolidated duplicate COD implementation: one shared strict versioned policy format, one API policy loader, and one Admin GET/POST settings pair. Unknown legacy/unversioned or unprovenanced settings fail closed.
+- Added HMAC-SHA-256 hashing of courier verification references using a dedicated key, Admin explicit enable confirmation/audit, default PKR125 fee, and editable EN/UR customer instructions/previews. No plaintext reference is persisted or logged.
+- Added additive V2 migration 0034 and applied only to isolated V2 primary after verified account identity, empty-data/quick/FK/recovery preflight. Shared/V1 D1 unchanged.
+- Completed local V2 guided COD selection, dynamic total snapshot, explicit confirmation, no advance receipt/timer behavior, advance switching, Admin fulfillment/collection/remittance reconciliation, V1 schema/UI gates, and dynamic bilingual active OFFER copy. Full synthetic seven-province matrix and SQLite-backed COD lifecycle pass.
+- `npm ci`; 238 tests, lint/build/audit0 and V2 Wrangler dry-runs pass; COD flags remain OFF. Deployed the protected V2 Admin Worker for isolated acceptance; verified Access identity, Save/Reload status, default Rs125, disabled policy and screenshot (private temp path). V2 API/webhook remains undeployed; live tariffs, HMAC secret and courier collection/remittance proof are absent. No CMS/R2/Queue change or customer message. Source and documentation commits were pushed to PR #9.
+
+## 2026-10-24 (GFS-210)
+
+- V1: added an audited `TEST_IMAGE_NOT_PAYMENT_PROOF` Request Clearer Receipt outbox path with service-window validation, Queue publication/retry, localized notice, idempotency and a worker consumer. The real test order kept its JPEG and REVIEW/PENDING state; actual notice WAMID status READ.
+- V2 PR #9: added localized outbox notices for PAYMENT_REJECTED, REQUEST_CLEARER_RECEIPT, ORDER_CONFIRMED, PACKING, DISPATCHED, DELIVERED and ORDER_CANCELLED; PAYMENT_CONFIRMED remains on the existing confirmation path. Added optional-credit-evidence UI under Admin attestation, V2-only flags remain OFF, simulation watermarks and synthetic regressions.
+- V1 staging deployments: Admin `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`; API `21a3d74c-3979-432c-9190-1848362592a4`. V2 isolated staging deployments: Admin `99423a28-2da7-40b3-9a37-10a4d82e4d71`; API `5fc102a8-259b-4219-a1a9-177a5647e6c7`. V2 sends remain held; no live V2 WAMIDs.
+- V2 Admin synthetic lifecycle and separate unpaid cancellation were screenshot-tested with TEST ONLY/DO NOT SHIP labels, then all synthetic V2 D1 rows were cleaned. No genuine payment was confirmed, no physical shipment represented, and no Meta template/provider flag was enabled.
+- V1/V2 full regression suites pass, lint/build/audit0 and Worker dry-runs pass. PR #10/PR #9 remain open with no protection bypass.
+- Added a separate synthetic archive case for a canceled/unpaid/no-receipt fixture; the order and audit trail are retained rather than deleted.
+
+## 2026-10-24 (GFS-206, historical snapshot superseded by GFS-210)
+
+- Diagnosed both priority orders read-only: valid payment/order links, pending, zero receipt/reference/audit, no linked conversation/last-inbound event and no order-prefix R2 object. Outbound payment text/QR WAMIDs are READ but are not inbound receipt proof. Tester Profile mismatch and Hoja-associated Meta tabs blocked chat/media attribution.
+- Added privacy-safe hashed receipt-association/download/R2/D1 diagnostics and V1-compatible association for exact payment-reply WAMID or unique sender/payment even when the conversation is NEW/missing. Ambiguous associations reject. R2 object is removed if D1 receipt commit fails. No source code touches PAID from image alone.
+- Prepared separate V1-baseline hotfix commit `bdef700` on branch `codex/gfs206-v1-receipt-hotfix`, PR #10; no schema migration or checkout-flow changes. It is not merged/deployed pending tester/sender/active Worker preflight.
+- V2 privacy-hashed receipt diagnostics and synthetic tests are separately committed as `582cc16` and pushed to PR #9; no active shared Worker deployment. GFS-206 docs commits `f2fa23a` and `359f1ca` are also on PR #9; GitHub reports no checks.
+- Isolated API diagnostics version `c714ac55-ef19-46b3-a803-e672460abc93` is deployed with Queue only and all send/provider flags OFF; the active shared API remains unchanged.
+- Reused existing isolated V2 resources, kept flags OFF, API Cron removed. Deleted only the synthetic no-receipt timeline fixture; recovery D1/R2/Queue/DLQ and Workers retained. No paid feature/resource was created.
+- Main V2 passed 205 tests/lint/build/audit0; V1 baseline hotfix passed 170 tests/lint/build with its four inherited dependency audit findings unchanged. No live receipt/WhatsApp message/WAMID or PAID transition.
+
+## 2026-10-24 (GFS-205)
+
+- Added permanent cost/resource inventory and cleanup rules. Account review found Workers Free, existing R2 Paid usage-based subscription with current billable usage $0, D1 shared read quota at 4.55M/5M, and V2 queue/backlog/R2 buckets empty. Removed the isolated API per-minute Cron; kept the recovery D1, private bucket, idle Queue/DLQ and Workers for V2 acceptance.
+- Traced the new order read-only: payment link valid, pending JazzCash PKR600; no receipt/reference/audit, no related conversation/last inbound ID, no R2 object. Admin count agrees. The WhatsApp tester Profile mismatch and hash-only webhook event record block attribution of the screenshot image to a sender/order; no image was fabricated, reassociated, or sent.
+- Fixed the V2 media path for a NEW/missing conversation only when there is exactly one eligible payment for the sender; exact payment reply context takes precedence and multiple matches remain rejected. Synthetic test verifies route and cleanup. Shared API/active webhook/V1 untouched.
+- Attached V2 Admin to the existing restricted Access app and confirmed `gisupp@gmail.com` login. V2 Orders navigation/timeline and CMS Save/Preview/Publish/Reload are now usable. In isolated staging, EN/UR `REMINDER_15M` and `PAYMENT_CONFIRMED` test copies were published and reloaded; no provider approval or messages sent. A no-receipt synthetic order produced a six-stage PENDING timeline screenshot, then was fully removed.
+- Security: upgraded Zod to 4.6.7 and pinned vulnerable transitive Undici to 7.30.1; `npm audit` is clean. No shared-order payment action, live Media upload, real reminder or WAMID occurred.
+## 2026-10-23 (GFS-204)
+
+- Final follow-up `7938dd2e153ffd9920e902f2b2971079f5a73899` is pushed. PAID suppression is schema-aware and stops pending V2 jobs even when reminder delivery is OFF; full tests remain 204/204. Latest Admin Worker is `d725396b-4bbc-4542-b42b-5c0fba9abe6e`.
+
+- Follow-up: PAID transition stops existing schedule/stage/outbox jobs when V2 tables exist even if the reminder sending feature flag is OFF. The V1/no-migration case does not query missing tables. Latest isolated Admin version `d725396b-4bbc-4542-b42b-5c0fba9abe6e` was redeployed with this fix, flags OFF; unauthenticated retest remained 401.
+- Simplified V2 Confirm Payment to one explicit credit-attestation checkbox and one primary “Confirm Payment and Mark PAID” action. Saved reference/receipt, verified method, exact amount, order/payment association and REVIEW remain required; separate settlement evidence is optional and hashed. Atomic PAID audit/reminder stop and one idempotent PAID outbox notification are covered by synthetic tests. Real order left REVIEW because no actual account credit was verified.
+- Added cryptographic Cloudflare Access JWT enforcement for the V2 Admin Worker and styled responsive Admin Home links. V2 Admin unauthenticated route returns 401. No existing Admin Access app change.
+- Added migration 0033 to rename the 210/240/270-minute CMS keys while preserving locale/version/state/text history. Created isolated V2 D1, private R2, dedicated Queue/DLQ and restore-check D1; migrations 0001-0033 now exist only on isolated D1s, with zero orders/customers/receipts. Shared staging and active webhook untouched.
+- Deployed isolated API version `e43e23dd-22a6-4338-b77a-c48bbcee6cad` and Admin version `92809f45-9bcb-403c-9bd8-7e481d6ad3d0`; flags OFF. Admin Access attachment and authenticated UI test remain blocked by Cloudflare Workers outage/editor behavior. Wrong WhatsApp tester identity blocked real messaging. No actual Meta WAMID.
+- Validation: `npm ci`; 204/204 tests; lint/build; audit 0; isolated Wrangler dry-runs. Commit `c8c4edd2d60fe72771c9282d392f1f167ead5a7` pushed to PR #9; GitHub reports no checks.
+
+## 2026-10-23 (GFS-202)
+
+- Reconciled Admin evidence without conflating orders: FS-261023-000016 is PAYMENT_PENDING with zero receipt rows; FS-261023-000007 is a separate PAYMENT_REVIEW with one receipt and saved reference. Actual WhatsApp event/sender/context/R2 association remains unverified; no reassociation was made.
+- Fixed receipt ingestion association in source: exact reply-to payment WAMID plus sender, or a unique eligible current payment only; allow REVIEW/reference-stage receipt processing, reject ambiguous/unrelated association, preserve late review, and pause V2 reminders in the receipt transaction.
+- Added Admin per-receipt status/upload-time/count display, private reminder history endpoint/panel, PKT schedule/countdown, six stages, due/blocked/review/grace/cancelled/PAID filters and exact successful delivery metadata.
+- Added audited selected-order “Send Updated Notice” with exact locale/version preview, CSRF/eligibility/opt-out/session/template/idempotency gates; CMS publish does not bulk-resend. Migration 0032 stores locale/version/rendered text/sent time for new successful sends.
+- Synthetic regression confirms exact-order image association, ambiguous-media rejection, immediate review/pause, per-order history and preview-version-pinned queue delivery. No real Meta send/WAMID or financial transition.
+- Validation: `npm ci`, 200 tests, lint, build, audit 0 vulnerabilities, API/Admin Wrangler dry-runs and diff-check. Commit `046565478bea5a4d49c286b83364f48457a792bd` pushed to open PR #9; GitHub reports no CI checks. No D1 migration/deploy/CMS publish. Shared staging binding, tester/Meta identity, settlement evidence and isolated backup/deployment remain blockers. V1 frozen and `images/` preserved.
+
+## 2026-10-23 (GFS-201)
+
+- Continued on V2 branch based on frozen V1 SHA `d816ba17e6ef14e15400141ea34e734ac9d0a9c8`; V1 branch/tag and PR #8 were not changed.
+- Added one-step Admin Confirm Payment controls/API with reference + settlement evidence, transactional PAID/audit/outbox behavior, feature-gated bilingual acknowledgement, correct-customer `wa_id` verification and synthetic WAMID/retry coverage.
+- Added new-order-only D1 V2 schedules, ordered Cron/Queue outbox, published EN/UR CMS editor, service-window/template fail-closed behavior, four-hour grace, delivered-notice cancellation gate, review/rejection resume, opt-out and late-payment review paths.
+- Preserved `SENT`/`DELIVERED`/`READ` retry and QR no-R2-read fixes; added delayed/duplicate callback, 503, terminal job and QR no-replay tests.
+- Validation: npm ci,198 tests,lint,build,audit0,API/Admin dry-runs,D1 quick_check ok and foreign_key_check empty. No deployment, migration apply, CMS publication, template submission, real payment, WhatsApp send or financial-state mutation.
+- Pushed `codex/gfs-v2-payments-reminders-001` implementation commit `2c404d17f1b01a0da0201da93b2e1078d96af045` and a separate docs handoff. Opened separate PR #9 against frozen V1. PR #8 unchanged; no CI checks reported. PR is not approval to merge or deploy.
+- Release remains NO-GO: current own WhatsApp Profile mismatches the authorized tester; REVIEW payment lacks actual credit evidence; shared staging D1 reports all migrations pending; utility-template approval and isolated V2 staging are unavailable. All V2 flags remain false.
+
 ## 2026-10-23 (GFS-199)
 
 - Resolved false tester-mismatch diagnosis by opening You > View Profile; exact own phone and canonical recipient verified without account switch.

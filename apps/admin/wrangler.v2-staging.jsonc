@@ -1,0 +1,26 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "getfreeseeds-v2-admin-staging",
+  "account_id": "cb5066a6d71ecdee0bd7ed8aacb4d3c2",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-27",
+  "workers_dev": true,
+  "d1_databases": [{ "binding": "DB", "database_name": "getfreeseeds-v2-staging", "database_id": "6f26ba71-3c10-4b6e-97ab-5df7473c21c7" }],
+  "r2_buckets": [{ "binding": "RECEIPTS", "bucket_name": "getfreeseeds-v2-receipts-staging" }],
+  "queues": { "producers": [{ "binding": "EVENTS", "queue": "getfreeseeds-v2-events-staging" }] },
+  // COD_POLICY_HMAC_KEY must be a dedicated Wrangler secret shared with the isolated API.
+  // No plaintext verification reference or key belongs in vars; COD stays OFF pending release approval.
+  "vars": {
+    "DEPLOYMENT_STATE": "V2_ISOLATED_STAGING",
+    "ADMIN_EMAIL": "gisupp@gmail.com",
+    "CF_ACCESS_TEAM_DOMAIN": "soft-scene-0bc2.cloudflareaccess.com",
+    "META_PROVIDER_ENABLED": "false",
+    "PAYMENT_CONFIRMATION_V2_ENABLED": "false",
+    "PAYMENT_CONFIRMATION_V2_UI_ENABLED": "true",
+    "ORDER_STATUS_NOTIFICATIONS_V2_ENABLED": "false",
+    "COD_V2_ENABLED": "false",
+    "COD_ADMIN_UI_ENABLED": "true",
+    "PAYMENT_AUTOMATION_V2_ENABLED": "false",
+    "PAYMENT_REMINDERS_V2_ENABLED": "true"
+  }
+}

@@ -102,6 +102,15 @@ function mutationHeaders(session: { token: string; cookie: string }, origin = "h
 }
 
 describe("GFS-109 admin controls", () => {
+  it("renders responsive Admin Home navigation for Orders and Payment Reminders", async () => {
+    const response=await app.fetch(new Request("https://admin.example.test/",{headers:auth}),env(new AdminMemoryDb()));
+    const html=await response.text();
+    expect(response.status).toBe(200);
+    expect(html).toContain("href=\"/orders\"");
+    expect(html).toContain("href=\"/payment-reminders\"");
+    expect(html).toContain("@media(max-width:600px)");
+  });
+
   it("Access-protects both pages and APIs", async () => {
     const db = new AdminMemoryDb();
     for (const path of ["/orders", "/test-controls", "/api/orders", "/api/test-controls/cooldown-exemptions"]) {
@@ -110,11 +119,36 @@ describe("GFS-109 admin controls", () => {
     }
   });
 
+  it("requires a cryptographically signed Cloudflare Access JWT on isolated V2", async () => {
+    const bindings={DB:new AdminMemoryDb() as unknown as D1Database,ADMIN_EMAIL:"admin@example.test",DEPLOYMENT_STATE:"V2_ISOLATED_STAGING",CF_ACCESS_TEAM_DOMAIN:"soft-scene-0bc2.cloudflareaccess.com"} as never;
+    const response=await app.fetch(new Request("https://admin.example.test/",{headers:auth}),bindings);
+    expect(response.status).toBe(401);
+    expect(await response.json()).toMatchObject({error:"ACCESS_JWT_REQUIRED"});
+  });
+
+  it("shows the required numeric reminder stage keys in the Admin template editor", async () => {
+    const response=await app.fetch(new Request("https://admin.example.test/payment-reminders",{headers:auth}),env(new AdminMemoryDb()));
+    const html=await response.text();
+    expect(response.status).toBe(200);
+    expect(html).toContain("FINAL_WARNING_210M");
+    expect(html).toContain("GRACE_NOTICE_240M");
+    expect(html).toContain("CANCELLATION_270M");
+    expect(html).not.toContain("REMINDER_3H30");
+    expect(html).toContain("Synthetic sample values only");
+    expect(html).toContain("id=\"preview-draft\"");
+    expect(html).toContain("id=\"preview-text\"");
+    expect(html).toContain("white-space:pre-wrap;overflow-wrap:anywhere");
+    const previewScript=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].at(-1)?.[1];
+    expect(previewScript).toBeTruthy();
+    expect(() => new Script(previewScript!)).not.toThrow();
+  });
+
   it("renders the tabbed, URL-hydrated split-pane order workspace", async () => {
     const response = await app.fetch(new Request("https://admin.example.test/orders?q=synthetic&paymentStatus=REVIEW&archived=all", { headers: auth }), env(new AdminMemoryDb()));
     expect(response.status).toBe(200);
     const html = await response.text();
     expect(html).toContain("new URLSearchParams(location.search)");
+    expect(html).toContain('href="/payment-reminders">Payment Reminders');
     for (const tab of ["All Orders", "Verify Payments", "Confirmed Payments", "Fulfillment"]) expect(html).toContain(tab);
     for (const size of ["25", "50", "100"]) expect(html).toContain(`<option>${size}</option>`);
     expect(html).toContain("selectedId=list[0].id");
@@ -122,6 +156,12 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("/api/payments/'");
     expect(html).toContain("request-clearer-receipt");
     expect(html).toContain("Preview private receipt");
+    expect(html).toContain("payment-reminder-panel");
+    expect(html).toContain("Send Updated Notice");
+    expect(html).toContain("Reminder queue");
+    expect(html).toContain("preview.renderedText");
+    expect(html).toContain("I checked the Garden Shop wallet/bank account and confirmed receipt of PKR ");
+    expect(html).toContain("Confirm Payment and Mark PAID");
     expect(html).toContain("order.receiptCount>0");
     expect(html).toContain("Mark Packing");
     expect(html).toContain("Mark Dispatched");
@@ -137,7 +177,7 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("if(listController)listController.abort()");
     expect(html).toContain("if(generation!==listGeneration||isAbort(error))return");
     expect(html).toContain("Orders could not be loaded. Use Refresh to try again.");
-    expect(html).toContain("hydrate();setTabs({});load();");
+    expect(html).toContain("hydrate();reminderFilter.querySelector('select').value");
   });
 
   it("keeps the professional startup script parseable with all queues and auto-selection", async () => {

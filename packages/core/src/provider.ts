@@ -11,7 +11,7 @@ export interface WhatsAppProvider {
   sendImage(to: string, body: string, image: OutboundImage): Promise<{ providerMessageId: string }>;
   sendInteractive(to: string, body: string, buttons: InteractiveButton[], image?: OutboundImage): Promise<{ providerMessageId: string }>;
   sendList(to: string, body: string, buttonText: string, rows: Array<{ id: string; title: string; description?: string }>, image?: OutboundImage): Promise<{ providerMessageId: string }>;
-  sendTemplate(to: string, template: string, parameters: string[]): Promise<{ providerMessageId: string }>;
+  sendTemplate(to: string, template: string, parameters: string[], locale?: "en" | "ur"): Promise<{ providerMessageId: string }>;
   sendFlow(to: string, flowId: string, flowToken: string): Promise<{ providerMessageId: string }>;
   sendPaymentInstructions(to: string, body: string, qr?: { body: ArrayBuffer; mimeType: string }): Promise<{ providerMessageId: string }>;
   sendPaymentQr(to: string, qr: { body: ArrayBuffer; mimeType: string }): Promise<{ providerMessageId: string }>;
@@ -28,7 +28,7 @@ export class MockWhatsAppProvider implements WhatsAppProvider {
   async sendImage(to: string, body: string, _image: OutboundImage) { this.sent.push({ to, kind: "image", body }); return { providerMessageId: `mock_${this.sent.length}` }; }
   async sendInteractive(to: string, body: string, _buttons: InteractiveButton[] = [], image?: OutboundImage) { this.sent.push({ to, kind: image ? "interactive-image" : "interactive", body }); return { providerMessageId: `mock_${this.sent.length}` }; }
   async sendList(to: string, body: string, _buttonText: string, _rows: Array<{ id: string; title: string; description?: string }>, image?: OutboundImage) { this.sent.push({ to, kind: image ? "list-image" : "list", body }); return { providerMessageId: `mock_${this.sent.length}` }; }
-  async sendTemplate(to: string, template: string, _parameters: string[] = []) { this.sent.push({ to, kind: "template", body: template }); return { providerMessageId: `mock_${this.sent.length}` }; }
+  async sendTemplate(to: string, template: string, _parameters: string[] = [], _locale: "en" | "ur" = "en") { this.sent.push({ to, kind: "template", body: template }); return { providerMessageId: `mock_${this.sent.length}` }; }
   async sendFlow(to: string, flowId: string, _flowToken: string) { this.sent.push({ to, kind: "flow", body: flowId }); return { providerMessageId: `mock_${this.sent.length}` }; }
   async sendPaymentInstructions(to: string, body: string, qr?: { body: ArrayBuffer; mimeType: string }) { const text = await this.sendText(to, body); return qr ? this.sendPaymentQr(to, qr) : text; }
   async sendPaymentQr(to: string, _qr: { body: ArrayBuffer; mimeType: string }) { this.sent.push({ to, kind: "payment-qr", body: "Payment QR" }); return { providerMessageId: `mock_${this.sent.length}` }; }
@@ -76,7 +76,7 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
   async sendImage(to: string, body: string, image: OutboundImage) { const id = await this.uploadMedia(image); return this.send({ messaging_product: "whatsapp", to, type: "image", image: { id, caption: body.slice(0, 1024) } }); }
   async sendInteractive(to: string, body: string, buttons: InteractiveButton[], image?: OutboundImage) { const header = image ? { type: "image", image: { id: await this.uploadMedia(image) } } : undefined; return this.send({ messaging_product: "whatsapp", to, type: "interactive", ...(header ? { interactive: { type: "button", header, body: { text: body }, action: { buttons: buttons.slice(0, 3).map((button) => ({ type: "reply", reply: button })) } } } : { interactive: { type: "button", body: { text: body }, action: { buttons: buttons.slice(0, 3).map((button) => ({ type: "reply", reply: button })) } } }) }); }
   async sendList(to: string, body: string, buttonText: string, rows: Array<{ id: string; title: string; description?: string }>, image?: OutboundImage) { const header = image ? { type: "image", image: { id: await this.uploadMedia(image) } } : undefined; return this.send({ messaging_product: "whatsapp", to, type: "interactive", interactive: { type: "list", ...(header ? { header } : {}), body: { text: body }, action: { button: buttonText, sections: [{ title: buttonText, rows: rows.slice(0, 10) }] } } }); }
-  async sendTemplate(to: string, template: string, parameters: string[]) { return this.send({ messaging_product: "whatsapp", to, type: "template", template: { name: template, language: { code: "en_US" }, components: parameters.length ? [{ type: "body", parameters: parameters.map((text) => ({ type: "text", text })) }] : undefined } }); }
+  async sendTemplate(to: string, template: string, parameters: string[], locale: "en" | "ur" = "en") { return this.send({ messaging_product: "whatsapp", to, type: "template", template: { name: template, language: { code: locale === "ur" ? "ur" : "en_US" }, components: parameters.length ? [{ type: "body", parameters: parameters.map((text) => ({ type: "text", text })) }] : undefined } }); }
   async sendFlow(to: string, flowId: string, flowToken: string) {
     return this.send({
       messaging_product: "whatsapp",

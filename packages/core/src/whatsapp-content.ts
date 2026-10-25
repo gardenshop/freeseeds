@@ -71,7 +71,7 @@ const contentSchema = z.object({
   buttonLabel: z.string().trim().min(1).max(80).optional(),
   listButtonLabel: z.string().trim().min(1).max(20).optional(),
   listDescription: z.string().trim().min(1).max(72).optional(),
-  actionLabels: z.record(WhatsAppActionId, z.string().trim().min(1).max(20)).optional()
+  actionLabels: z.partialRecord(WhatsAppActionId, z.string().trim().min(1).max(20)).optional()
 }).strict();
 
 function validatePlaceholders(value: string): void {

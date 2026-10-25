@@ -1,5 +1,156 @@
 # Resource Registry
 
+## GFS-220 Authorized staging scope (2026-10-25)
+
+- The user authorized a future staging-only Approach A: additive COD-specific schema plus backward-compatible active legacy Worker release. No resource, binding, route, D1, secret, callback, or Worker version was changed in this execution.
+- Read-only Wrangler identity: `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Official Chrome DevTools MCP actions were unavailable; dashboard identity and live binding/version state were not reverified. Do not treat the identity check as deploy authorization evidence.
+- The user reports an existing courier collection contract; its authorized record/details were not visible/retrieved. No courier/remittance policy or HMAC provenance was created or enabled.
+- Existing recorded Worker versions/rollback remain historical observations until checked in authenticated dashboard before mutation. No active version, D1 integrity, backup, rollback execution or cost observation is newly claimed.
+- Retain all existing V1/V2 rollback resources and histories. No temporary resource was created; no deletion or cost change occurred.
+
+## GFS-219 Active Integration State (2026-10-25)
+
+- Active callback: legacy `getfreeseeds-api-staging`, latest known version `21a3d74c-3979-432c-9190-1848362592a4`, workers.dev, shared D1 `getfreeseeds-staging`, protected Meta secret names. Shared D1 has no `cod_order_details`; do not migrate it.
+- Isolated V2 API: `4122f2e1-f068-4846-9244-d4612cdedad6`, no workers.dev route, no Meta secrets, provider/COD/payment flags false. Admin remains `57b8c78c-953d-44b4-8c1b-39343c406e4f`.
+- Meta WABA `Get Free Seeds`: one connected/high-quality phone; display-name status rejected/In Review. No Hoja assets, route cutover, secret copy, CMS/D1/R2/Queue/customer/financial mutation.
+- Rollback and frozen V1 resources remain retained; review after protected callback/contract records become available.
+
+## GFS-218 Live Integration State (2026-10-25)
+
+- Active Meta WABA is `Get Free Seeds`; one canonical phone is connected/high quality, but Meta display name is rejected/In Review. No Hoja asset was opened or used. Canonical sender values remain masked/private.
+- Active callback family is legacy `getfreeseeds-api-staging` with workers.dev exposure, shared V1-era D1 and protected secret values. V2 API `getfreeseeds-v2-api-staging` is isolated, `workers_dev=false`, no route, no Meta secrets and provider/COD/payment flags false.
+- No route cutover, secret copy, Meta setting, CMS publish, D1/R2/Queue mutation, customer message or WAMID occurred. Existing V1/history/rollback resources remain protected.
+- Release blocker is external: protected Meta credentials/public signed callback, approved sender display state, and authenticated collector/remittance record are unavailable in this execution. Review after those records are supplied through authorized interfaces.
+
+## GFS-217 Current State (2026-10-25)
+
+- Tested checkout source is deployed to V2 API `4122f2e1-f068-4846-9244-d4612cdedad6`; Admin remains `57b8c78c-953d-44b4-8c1b-39343c406e4f`. V2 API `workers_dev=false`, no route, and no Meta/COD/payment secret or provider enablement. Rollback API remains `5fc102a8-74df-415d-8515-64bb7e1a12be`.
+- Active Codex host is `D:\AI-Tools\Codex\home`; official Chrome MCP actions work. WhatsApp Profile matches authorized tester; Admin Access matches `gisupp@gmail.com`. Meta top-level labels are Free Seeds/Creeper Seeds; canonical sender Contact Info is not verified.
+- Shared and V2 read-only policy/audit queries contain no visible COD contract/remittance record. Do not create or copy a credential, route, sender, tariff or contract record until independently authorized records are visible.
+- No new Worker route, secret, D1 policy, R2 object, Queue message, Meta asset, CMS publish, WAMID, customer order or financial state was created in GFS-217. V1 `d816ba1`, `images/`, customer/order/receipt/payment history and rollback remain preserved.
+
+## GFS-216 Final Runtime State (2026-10-25)
+
+- Active Codex host: `CODEX_HOME=D:\AI-Tools\Codex\home`; exactly one official `chrome-devtools` MCP registration with `--autoConnect`. Fresh Codex exposed `list_pages`, snapshots, visible UI, dialogs and network status. WhatsApp tester Profile matched the authorized tester; no outbound message.
+- Correct isolated Admin URL: `https://getfreeseeds-v2-admin-staging.get-free-seeds.workers.dev`; legacy similarly named Admin URL is not V2 and must not be used for fixtures. Correct V2 `/health` is `V2_ISOLATED_STAGING`.
+- Final isolated Worker versions: API `6f6124f7-1fce-44f4-8dfd-37ec9a50b994`; Admin `57b8c78c-953d-44b4-8c1b-39343c406e4f`. API has no workers.dev route; Admin is Access-protected. COD/provider/payment flags are false; Admin COD UI remains visible for safe configuration review; outbound automation false.
+- Isolated D1 `6f26ba71-3c10-4b6e-97ab-5df7473c21c7`: quick_check `ok`, FK check empty, migration34, zero orders/customers/payments/receipts/products/province rates after cleanup. Recovery D1 remains the prior migration33 rollback check. No test HMAC secret remains on either Worker.
+- GFS-216 synthetic product/rate/orders/payments/receipts/QR/R2/secret were deleted after evidence. Bank Transfer is disabled and restored to a safe text-only draft; COD policy is disabled with no eligible provinces. Shared V1 D1 has no GFS216 rows after exact cleanup.
+- Public COD and real WhatsApp release resources remain unapproved. No Hoja asset, customer data, real receipt, real WAMID, Meta mutation, Access policy mutation or production route was created.
+
+## GFS-215 Read-only Acceptance Preflight (2026-10-25)
+
+- Current source/PR: `74222ef` on `codex/gfs-v2-payments-reminders-001`, PR #9; PR #8 and PR #10 remain open. Frozen V1 `d816ba1` and its release branch remain tree-identical; `images/` is preserved.
+- Authorized Cloudflare identity: `gisupp@gmail.com`, Get Free Seeds, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` (Wrangler read-only verification). No identity switch or scope change.
+- Official Chrome MCP package `chrome-devtools-mcp@1.12.0` connected to the existing Chrome under `--autoConnect`; the active Codex schema exposed no Chrome actions. No browser profile/tab, Access policy, CMS, Meta asset, customer, receipt, payment or WAMID mutation occurred. This is a platform tool-exposure blocker.
+- Isolated V2 dry-runs resolve to API/Admin Workers `getfreeseeds-v2-api-staging` / `getfreeseeds-v2-admin-staging`, D1 `6f26ba71-3c10-4b6e-97ab-5df7473c21c7`, private R2 `getfreeseeds-v2-receipts-staging`, and V2 Queue/DLQ. API provider/COD/payment flags are false; Admin `PAYMENT_CONFIRMATION_V2_UI_ENABLED=true`; outbound automation remains disabled. Existing deployed versions remain API `5fc102a8-74df-415d-8515-64bb7e1a12be` and Admin `5a7af6ce-2bac-435b-aa52-4aae14e1ee68`; no new version was created.
+- Primary D1 read-only evidence: `quick_check=ok`, foreign-key check empty, migration count34, zero customers/orders/payments/receipts/province-rate/COD-detail rows. Recovery D1: `quick_check=ok`, foreign-key check empty, migration count33, zero customers/orders/payments/receipts/province-rate rows. No D1 writes; retain both for acceptance/rollback and review 2026-11-23.
+- Package scripts now expose explicit V2 commands while legacy V1 commands remain unchanged. No new hosted resource, paid plan, secret value, Queue message, Cron, R2 object or Access destination was created or deleted.
+
+## GFS-214 Source Push / No Live Mutation (2026-10-25)
+
+- GFS-214 source commit `6da973d` is pushed to PR #9. PR #9 still targets the immutable V1 release branch and must not be merged without an explicitly reviewed V2-safe base. V1 tag/release tree remains unchanged.
+- Source config separates `PAYMENT_CONFIRMATION_V2_UI_ENABLED=true` from notification flag `PAYMENT_CONFIRMATION_V2_ENABLED=false`; this flag is not present in deployed Admin version `5a7af6ce-2bac-435b-aa52-4aae14e1ee68`. Isolated COD intake remains false. API/Admin versions, bindings, secrets, CMS, R2, D1 and Meta state were not changed in GFS-214.
+- Chrome DevTools MCP server is CLI-connected but browser actions are not exposed; no screenshot, WAMID, live synthetic order or production API route. Current isolated V2 D1 still has tariffs0, disabled PKR125 policy/null hash, and no COD attempts. V2 API/Admin browser acceptance, courier proof, HMAC secret and lead-only release remain blocked.
+
+## GFS-212 Read-only Resource/Identity Preflight (2026-10-25)
+
+- Verified GitHub `gardenshop`; PRs8/9/10 remain open at `d816ba1` / `34d8104` / `cf01f44` at baseline. Frozen tag d816 and release branch head4129e15 have identical trees (read-only diff empty); neither was changed. Wrangler authenticated as `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no account switching or scope widening.
+- PR #9 remains based on frozen release branch `release/gfs-v1-frozen-20261023` while carrying V2 worker/migration changes. No base edit/merge occurred; do not merge until a reviewed V2 target branch is selected.
+- PR #8 CI verify run39939337015 failed before any steps; PR #9 reports no checks. No GitHub billing lock or branch protection was bypassed.
+- Isolated API current `5fc102a8-74df-415d-8515-64bb7e1a12be`, rollback `c714ac55-ef19-46b3-a803-e672460abc93`; Admin current `5a7af6ce-2bac-435b-aa52-4aae14e1ee68`, preceding `62dadc05-5e76-40d8-9ae0-af262d4a36ab`. Verified with read-only Wrangler deployments list; GFS-212 creates no deployment.
+- Primary D1 `6f26ba71-3c10-4b6e-97ab-5df7473c21c7` has migration0034, no pending migration, quick-check ok/no FK errors, zero orders/receipts/enabled rates and disabled125 COD policy/null hash. Recovery `0a9ae021-64c9-4591-ac3c-aadd29ce13b6` remains0033/no COD table, quick-check ok/no FK errors. API/Admin secret-name lists both empty (no values requested).
+- Shared D1 inspected read-only for the exact reported order and current tariff/product amounts; no shared migration or data write. No new hosted resource, object, Queue message, cron, secret, Access policy, CMS version, Meta mutation or paid spend. Private R2, incident hold, financial history, V1 and `images/` untouched.
+- Current browser bridge config is enabled and CLI-connected, but Chrome tools are not exposed in this agent. No new browser profile/tab/session or raw CDP access. No new screenshot/WAMID; earlier GFS-211 screenshots are historical only. Keep existing rollback resources; review retained isolated resources2026-11-23. Cost/billing was not reverified; no zero-cost claim.
+
+## GFS-214 isolated source configuration (2026-10-25)
+
+- PR #9 source/config now separates `PAYMENT_CONFIRMATION_V2_UI_ENABLED=true` from outbound `PAYMENT_CONFIRMATION_V2_ENABLED=false` for Admin visibility tests. This flag has not been deployed; Admin remains version `5a7af6ce-2bac-435b-aa52-4aae14e1ee68`, API remains `5fc102a8-74df-415d-8515-64bb7e1a12be`. V2 COD/notification send flags remain off; no D1/R2/Meta/Access/secret mutation.
+- Two-step customer and synthetic Admin lifecycle tests exercise application handlers with local SQLite. They are not isolated-remote-D1 or browser acceptance. Chrome DevTools MCP actions unavailable; no live Confirm Paid button, customer E2E, screenshot, or WAMID is claimed.
+
+## GFS-211 COD Inventory (2026-10-24)
+
+- Initial local/remote PR #9 head was `276765b`; source commits `5125338`/`1ecffe1` and documentation follow-up are pushed. No checkout/reset; `images/` remains untouched. Frozen V1 source and bindings are unchanged.
+- Wrangler and same-origin Cloudflare Access identity were reverified as `gisupp@gmail.com` / Get Free Seeds (`cb5066a6d71ecdee0bd7ed8aacb4d3c2`) before the isolated migration. Primary/recovery D1 `quick_check=ok`, foreign-key checks empty. Masked primary counts: customers/orders/payments/receipts/COD policy/province-rate rows all 0.
+- `0034_cod_orders_v2.sql` is applied only to primary isolated `getfreeseeds-v2-staging`. Recovery `getfreeseeds-v2-restore-check` is verified at migration 0033 with no COD table; primary/recovery quick checks passed. Shared/V1 D1 untouched. Additive migration remains; do not drop it or restore over subsequent data.
+- V2 Admin Worker `getfreeseeds-v2-admin-staging` deployed version `5a7af6ce-2bac-435b-aa52-4aae14e1ee68` (previous active version `99423a28-6469-46c6-bb03-63d42d816eba`) with Access/JWT enforcement intact; API Worker remains at its existing release and was not deployed. Browser Access identity returned `gisupp@gmail.com`. `/api/cod-settings` returns 200 only on V2 Admin.
+- Browser Save/Reload wrote exactly one canonical disabled PKR125 policy row and audit entry (two audit writes total from one initial save and one final status retest); `enabled=0`, `verificationReferenceHash=NULL`, no plaintext reference, zero enabled province rates and zero COD orders/customers/orders/payments/receipts. `COD_V2_ENABLED=false`; no secret key provisioned. Screenshot saved outside Git at `D:\Temp\kilo\gfs211-cod-admin-settings.png`.
+- Courier collection/remittance remains unverified; no CMS publish, R2/Queue/Access change, customer message or real payment/order mutation. No new resource or paid plan; D1 size after migration/settings write 647,168 bytes. Retain V2 D1/recovery D1/private R2/Queue/DLQ/Workers; next review 2026-11-23. `images/` and Hoja assets untouched.
+
+## GFS-210 Staging and Cleanup (2026-10-24)
+
+- V1 Admin `getfreeseeds-admin-staging`: active `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`, rollback `701b3142-47e6-45da-b5e9-c0eddb20892c`. V1 API: active `21a3d74c-3979-432c-9190-1848362592a4`, rollback `76084318-69c7-46b3-bfa0-886610971133`. These carry the PR #10 clearer-receipt outbox fix.
+- Isolated V2 Admin `getfreeseeds-v2-admin-staging`: active `99423a28-6469-46c6-bb03-63d42d816eba`, rollback `d7898150-a54e-4e49-8e85-5a602a6866e6`. V2 API `getfreeseeds-v2-api-staging`: active `5fc102a8-74df-415d-8515-64bb7e1a12be`, rollback `c714ac55-ef19-46b3-a803-e672460abc93`. Existing bindings only; no migration, cron or new resource.
+- V2 `META_PROVIDER_ENABLED`, status-notification, payment-confirmation, automation, reminders and utility-template approval remain OFF; V2 API secret list is empty. No V2 outgoing provider message was attempted; status outbox jobs stayed DEFERRED.
+- V2 staging synthetic records (`gfs210v2-synth-*`) were created only in isolated D1 to test Admin state transitions, then deleted along with associated outbox/items/payments/orders/customers/audit rows. Final order/customer/payment/receipt/outbox/outbound/synthetic-audit counts are zero; D1 size returned to baseline 626,688 bytes. No R2 object or Queue message was created.
+- Local screenshots remain private in `D:\Temp\kilo\` (`gfs210-clearer-request-admin.png`, `gfs210-clearer-whatsapp.png`, `gfs210-v2-confirmed.png`, `gfs210-v2-packing.png`, `gfs210-v2-tracking.png`, `gfs210-v2-simulated-label.png`, `gfs210-v2-dispatched.png`, `gfs210-v2-delivered.png`, `gfs210-v2-cancelled.png`). No screenshot contains a real customer contact card.
+- No paid resource purchase or new Cloudflare resource. D1 preflight was limited to supported quick/FK checks and exact fixture queries. Existing `images/` and Hoja assets were not touched.
+
+## GFS-206 Receipt Hotfix and Resource Review (2026-10-24, historical snapshot superseded by GFS-210)
+
+- No Cloudflare/Meta resource was created or deleted in GFS-206. Existing Get Free Seeds V2 resource ownership, cost, quota, and cleanup-deadline table below remains current. V2 Cron remains OFF/removed; V2 Queue consumer stays idle. No paid plan was purchased.
+- Active shared Workers remain API `9b5f13ae-f023-4fa8-befe-2085bb24cbda` and Admin `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0`; no shared DB/R2 writes and no active webhook deployment. Shared Admin Access and `images/` unchanged.
+- Active receipt hotfix proposal is branch `codex/gfs206-v1-receipt-hotfix` at `bdef700`, PR #10 against `release/gfs-v1-frozen-20261023`. It is not merged/deployed.
+- V2 privacy-safe diagnostics/test commit `582cc16` and GFS-206 docs commits `f2fa23a`/`359f1ca` are pushed to PR #9, not deployed to shared API; active API/Admin versions remain unchanged. GitHub reports no CI checks.
+- Latest isolated V2 API is `c714ac55-ef19-46b3-a803-e672460abc93` with Queue producer/consumer, no Cron or public route, provider/send flags OFF; previous no-Cron version is `4891cf76-fc75-42ef-b0bb-c208c2bf724c`. Shared V1 API remains `9b5f13ae`.
+- Read-only reconciliation: both priority orders are pending with no exact receipt row/reference/audit, no linked conversation/inbound event, and no R2 object under their receipt prefix. Their outbound QR/text messages have WAMIDs and READ statuses; do not confuse those with inbound image evidence. WhatsApp profile mismatch prevents chat-level attribution.
+- Isolated V2 resources remain necessary: primary/recovery D1, private empty R2, idle Queue/DLQ, API with Cron removed, Access-protected Admin. No cleanup of backups or customer resources. All retained test resources remain due for review by 2026-11-23.
+- Billing observation remains Workers Free, existing R2 Paid usage-based plan at $0 current billable usage; account D1 shared read quota was 4.55M/5M, writes21.5K/100K, storage4.56MB/5GB. Avoid further shared-D1 reads; do not assert future R2 overage cost is zero.
+
+## GFS-205 Cost/Resource Register (2026-10-24)
+
+Owner for temporary V2 assets: Get Free Seeds (`gisupp@gmail.com`). No new hosted resource or paid plan was created in GFS-205; the existing protected Admin Access app was reused for V2. Required isolated assets and disposition:
+
+| Resource | Created/purpose | Current usage/cost risk | Cleanup/review |
+|---|---|---|---|
+| `getfreeseeds-v2-staging` D1, `6f26ba71-3c10-4b6e-97ab-5df7473c21c7` | 2026-10-23 ~23:23 PKT; isolated V2 schema/test environment | 626.69KB, migrations 0001-0033, 0 customer/order/receipt rows after cleanup; D1 free-tier quota is account-shared | Retain for V2 acceptance; review 2026-11-23 |
+| `getfreeseeds-v2-restore-check` D1, `0a9ae021-64c9-4591-ac3c-aadd29ce13b6` | 2026-10-23 ~23:46 PKT; restored backup/recovery check | 626.69KB, 33 migrations, no customers/orders; rollback asset | Retain until V2 acceptance/backup sign-off; review 2026-11-23 |
+| `getfreeseeds-v2-receipts-staging` R2 | 2026-10-23; private V2 receipt preview/upload target | Public access disabled; 0 objects/0B; current R2 billing $0, usage-based plan remains active | Retain for genuine receipt acceptance; review 2026-11-23 |
+| `getfreeseeds-v2-events-staging` + `getfreeseeds-v2-events-staging-dlq` | 2026-10-23; durable V2 send/retry pipeline | 0 V2 messages/backlog/billable operations; queue consumer only runs on message | Retain for acceptance; review 2026-11-23 |
+| V2 API `getfreeseeds-v2-api-staging`, `f11e391b-5ce0-4849-8973-9c958a652ea8` | 2026-10-23; isolated API/Queue consumer | No public workers.dev route; per-minute Cron removed; provider and send flags OFF; Workers Free | Retain for accepted V2 webhook/runtime tests; review 2026-11-23 |
+| V2 Admin `getfreeseeds-v2-admin-staging`, `d7898150-a54e-4e49-8e85-5a602a6866e6` | 2026-10-23; Access-protected isolated Admin | Access enforced; only reminder-view flag enabled, automation/payment/provider flags OFF; Workers Free | Retain for acceptance; review 2026-11-23 |
+| Existing Get Free Seeds Admin Access app | Predates GFS-205; existing `gisupp@gmail.com` policy; V2 Worker added 2026-10-24 without removing V1/Admin destination | No new Access app/plan cost; protects V2 Admin JWT identity; Access route verified authenticated | Retain for V2 Admin; review 2026-11-23 |
+| Existing Access app / shared Workers/D1/R2 | Predates GFS-205; existing production integration and receipt data | Workers Free, R2 Paid usage-based subscription; observed billing total $0. D1 account-wide 4.55M/5M rows read, 21.5K/100K writes, 4.56MB/5GB, 4/10 DBs | Preserve; no deletion/plan change. Avoid additional shared D1 reads. |
+
+- Queue dashboard showed 84/10K operations across the account; V2 queue itself was empty. Shared staging R2 remained 22 existing objects/12.98MB and was not changed. R2 account showed 79 Class A/1.05K Class B/12.98MB aggregate, billable $0. Workers subscription Free; R2 Paid already existed and was not purchased in this task. Cost at present measured usage is $0; future R2 overages remain variable and are not guaranteed zero.
+- Cleanup completed: removed the V2 API per-minute Cron trigger; removed the explicitly labeled synthetic no-receipt order, payment, item, conversation, reminder schedule and six stages; subsequent isolated-D1 count check returned zero for all. No genuine data, receipt object, audit, Queue message or financial transition was deleted.
+- No other resource was safely deletable: recovery D1, V2 D1, private R2, Queue/DLQ and V2 Workers remain necessary for acceptance and rollback. No resource deletion/purchase occurred. Next cost/dependency review: 2026-11-23.
+
+## GFS-204 Deployed Isolated V2 Resources (2026-10-23)
+
+- Latest follow-up commit `7938dd2e153ffd9920e902f2b2971079f5a73899` is pushed to PR #9. Current API Worker is `e43e23dd-22a6-4338-b77a-c48bbcee6cad`, Admin Worker is `d725396b-4bbc-4542-b42b-5c0fba9abe6e`; flags remain OFF; latest unauthenticated Admin retest is 401. Access app and real messaging remain blocked.
+
+- Latest follow-up Admin Worker is `d725396b-4bbc-4542-b42b-5c0fba9abe6e`; its unauthenticated route still returns `401 ACCESS_JWT_REQUIRED`. API remains `e43e23dd-22a6-4338-b77a-c48bbcee6cad`. Schema-aware PAID job-stop fix deployed; all V2 flags remain OFF.
+- Core code commit `c8c4edd2d60fe72771c9282d392f1f167ead5a7` and docs commit `da47f81b3334717850489240958625e7ae144e3f` are pushed. The final schema-aware reminder-stop code/test follow-up is not yet committed. GitHub reports no checks.
+
+- V2 source starts at `8796bdb` on `codex/gfs-v2-payments-reminders-001`; GFS-204 commit `c8c4edd2d60fe72771c9282d392f1f167ead5a7` is pushed to PR #9 only. Frozen V1 `d816ba1`, PR #8 and untracked `images/` untouched. GitHub reports no CI checks.
+- Cloudflare account verified as Get Free Seeds / `gisupp@gmail.com`, account ID `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- Isolated primary D1 `getfreeseeds-v2-staging`, ID `6f26ba71-3c10-4b6e-97ab-5df7473c21c7`; recovery D1 `getfreeseeds-v2-restore-check`, ID `0a9ae021-64c9-4591-ac3c-aadd29ce13b6`. Both ledger counts 33, no customers/orders/receipts. Schema dump restored at migration 0032, then 0033 applied/verified on both. Shared D1 `getfreeseeds-staging` was not accessed or changed. Native `PRAGMA integrity_check` denied by D1 (`SQLITE_AUTH`).
+- V2 private R2 bucket `getfreeseeds-v2-receipts-staging`; no public domain configured. Queue `getfreeseeds-v2-events-staging` and DLQ `getfreeseeds-v2-events-staging-dlq` are dedicated to V2.
+- API Worker `getfreeseeds-v2-api-staging`: latest version `e43e23dd-22a6-4338-b77a-c48bbcee6cad`, previous `a42c6d65-adca-410e-baf8-e94887cf3df5`, cron `* * * * *`, isolated Queue consumer, workers.dev disabled. Provider and payment/reminder/automation/utility flags false. No active webhook binding/route.
+- Admin Worker `getfreeseeds-v2-admin-staging`: latest version `92809f45-9bcb-403c-9bd8-7e481d6ad3d0`, previous signed-JWT-gated `0644d8ec-d85f-495c-9bfc-256915cc085e`; earlier no-public-route version `9fa96aa8-3e7b-4a2c-ae0d-721fe1cc76be`. Admin has workers.dev URL guarded by signed Access JWT; unauthenticated GET returned `401 ACCESS_JWT_REQUIRED`. Existing Access app remains unchanged; V2 destination attachment is blocked by dashboard outage/editor issue.
+- Live Admin GET verified the reported review still PENDING with receipt/reference/method verified; no financial POST. No Meta sends/WAMIDs. Current WhatsApp tester Profile mismatch persists; do not access chats or send.
+
+## GFS-202 Source Inventory (2026-10-23)
+
+- V2 source starts at fetched HEAD `695748e`; receipt/reminder implementation is commit `046565478bea5a4d49c286b83364f48457a792bd`, pushed to open PR #9 on `codex/gfs-v2-payments-reminders-001`. No Worker/D1 deployment; GitHub reports no CI checks.
+- Frozen V1 remains `d816ba17e6ef14e15400141ea34e734ac9d0a9c8`; no V1 checkout/source changes. Existing untracked `images/` remains untouched.
+- Current Admin read: one PAYMENT_PENDING order has 0 receipts; a separate PAYMENT_REVIEW order has 1 receipt/reference. No raw webhook/message association or R2 object read in this run; do not treat these records as the same customer/image.
+- Wrangler API and Admin dry-runs bind `getfreeseeds-staging` D1 (shared), events queue and private receipt R2; reminders, automation, confirmation and utility-template flags remain false. Migration 0032 is local-only; no isolated V2 D1, backup, restore or deployment was verified.
+- `npm ci`, tests 200/200, lint/build, audit 0 and both Wrangler dry-runs pass. No actual Meta WAMIDs, real account credit, real receipt processing or live screenshot exists for GFS-202.
+- New-number WhatsApp lock, Hoja Seeds zero-connection boundary, held incident and private `images/`/R2 remain unchanged.
+
+## GFS-201 V2 Branch and Live Release Inventory (2026-10-23)
+
+- Frozen V1 branch/tag: `release/gfs-v1-frozen-20261023` at `d816ba17e6ef14e15400141ea34e734ac9d0a9c8`. V2 branch `codex/gfs-v2-payments-reminders-001` starts at the same SHA; implementation commit `2c404d17f1b01a0da0201da93b2e1078d96af045` plus docs handoff are pushed. PR #9 is open against frozen V1; PR #8 unchanged. No CI checks reported at verification.
+- Cloudflare account `Get Free Seeds`, account ID `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; authenticated Wrangler identity `gisupp@gmail.com`. Admin Access identity also `gisupp@gmail.com`.
+- Active staging API `9b5f13ae-f023-4fa8-befe-2085bb24cbda`; previous API rollback `8da54b28-4bec-45b2-9a3f-672225dba843`. Active Admin `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0`; previous Admin rollback `132f5ea9-324f-482d-b350-f52bc6907758`. No V2 version deployed.
+- Active existing CMS versions recorded by GFS-199: OFFER5, RECEIPT2, PAYMENT2, FERTILIZER7. V2 template versions are only local migration seeds/DRAFT; no utility template approval/status is recorded.
+- Shared configured DB is `getfreeseeds-staging` / ID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; it is bound to active staging, not an isolated V2 DB. Quick check `ok`, foreign-key check empty. Wrangler reports migrations 0001-0031 pending against a legacy empty ledger; do not apply or replay. V2 migrations 0030/0031 are source-only.
+- Flags in source Wrangler vars: `PAYMENT_AUTOMATION_V2_ENABLED=false`, `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_CONFIRMATION_V2_ENABLED=false`, `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`. No current V2 outbox, Cron, CMS or template approval has been deployed.
+- Current Chrome own WhatsApp Profile does not match the approved tester in `rules.md`; no contact/chat opened or message sent. Canonical sender Contact Info was not freshly rechecked after this mismatch. Do not switch numbers/accounts.
+- `images/` and private R2 remain untouched. Protected incident `FS-261019-000001` remains held. Hoja Seeds has zero runtime integration.
+
 ## GFS-199 Current Runtime (2026-10-23)
 
 - API `9b5f13ae-f023-4fa8-befe-2085bb24cbda`; rollback `8da54b28-4bec-45b2-9a3f-672225dba843`. Admin unchanged `9482bd56-ca4c-4d81-b2e3-6bfe59162ac0`; request queue flagfalse.

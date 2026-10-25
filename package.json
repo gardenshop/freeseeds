@@ -9,11 +9,17 @@
     "lint": "eslint .",
     "extract:payment-qr": "node extract-payment-qr.mjs",
     "dev:api": "wrangler dev --config apps/api/wrangler.jsonc",
-    "dev:admin": "wrangler dev --config apps/admin/wrangler.jsonc"
+    "dev:admin": "wrangler dev --config apps/admin/wrangler.jsonc",
+    "dev:api:v2": "wrangler dev --config apps/api/wrangler.v2-staging.jsonc",
+    "dev:admin:v2": "wrangler dev --config apps/admin/wrangler.v2-staging.jsonc",
+    "deploy:api:v2": "wrangler deploy --config apps/api/wrangler.v2-staging.jsonc",
+    "deploy:admin:v2": "wrangler deploy --config apps/admin/wrangler.v2-staging.jsonc",
+    "dry-run:api:v2": "wrangler deploy --dry-run --config apps/api/wrangler.v2-staging.jsonc",
+    "dry-run:admin:v2": "wrangler deploy --dry-run --config apps/admin/wrangler.v2-staging.jsonc"
   },
   "dependencies": {
     "hono": "^4.7.11",
-    "zod": "^3.25.76"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260927.1",
@@ -27,5 +33,8 @@
     "typescript": "^5.9.2",
     "vitest": "^5.0.2",
     "wrangler": "^4.149.0"
+  },
+  "overrides": {
+    "undici": "7.30.1"
   }
 }

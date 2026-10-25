@@ -5,7 +5,7 @@ export const PaymentMethod = z.enum(["JAZZCASH", "EASYPAISA", "BANK_TRANSFER"]);
 export type PaymentMethod = z.infer<typeof PaymentMethod>;
 export const LeadSource = z.enum(["META_INSTANT_FORM", "WHATSAPP", "FACEBOOK_MESSENGER", "INSTAGRAM_DM"]);
 export type LeadSource = z.infer<typeof LeadSource>;
-export const OrderState = z.enum(["NEW", "DETAILS_COMPLETED", "PAYMENT_PENDING", "RECEIPT_SUBMITTED", "PAYMENT_REVIEW", "PAYMENT_REJECTED", "PAID", "PACKING", "DISPATCHED", "DELIVERED", "CANCELLED"]);
+export const OrderState = z.enum(["NEW", "DETAILS_COMPLETED", "PAYMENT_PENDING", "PAYMENT_GRACE", "RECEIPT_SUBMITTED", "PAYMENT_REVIEW", "PAYMENT_REJECTED", "PAID", "PACKING", "DISPATCHED", "DELIVERED", "CANCELLED", "CANCELLED_UNPAID"]);
 export type OrderState = z.infer<typeof OrderState>;
 
 export const FlowSubmission = z.object({
@@ -50,16 +50,18 @@ export type InstantFormSubmission = z.infer<typeof InstantFormSubmission>;
 
 export const transitions: Record<OrderState, readonly OrderState[]> = {
   NEW: ["DETAILS_COMPLETED", "CANCELLED"],
-  DETAILS_COMPLETED: ["PAYMENT_PENDING", "CANCELLED"],
-  PAYMENT_PENDING: ["RECEIPT_SUBMITTED", "PAYMENT_REJECTED", "CANCELLED"],
+  DETAILS_COMPLETED: ["PAYMENT_PENDING", "PAYMENT_GRACE", "CANCELLED"],
+  PAYMENT_PENDING: ["RECEIPT_SUBMITTED", "PAYMENT_REJECTED", "PAYMENT_GRACE", "CANCELLED"],
+  PAYMENT_GRACE: ["PAYMENT_PENDING", "RECEIPT_SUBMITTED", "PAYMENT_REVIEW", "PAYMENT_REJECTED", "PAID", "CANCELLED_UNPAID"],
   RECEIPT_SUBMITTED: ["PAYMENT_REVIEW"],
   PAYMENT_REVIEW: ["PAID", "PAYMENT_REJECTED"],
-  PAYMENT_REJECTED: ["PAYMENT_PENDING", "RECEIPT_SUBMITTED", "CANCELLED"],
+  PAYMENT_REJECTED: ["PAYMENT_PENDING", "PAYMENT_GRACE", "RECEIPT_SUBMITTED", "CANCELLED"],
   PAID: ["PACKING"],
   PACKING: ["DISPATCHED"],
   DISPATCHED: ["DELIVERED"],
   DELIVERED: [],
-  CANCELLED: []
+  CANCELLED: [],
+  CANCELLED_UNPAID: []
 };
 
 export function canTransition(from: OrderState, to: OrderState): boolean {
