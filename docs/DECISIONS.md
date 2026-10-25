@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-25: GFS-217 Approved COD and Simple Checkout
+
+- Implemented the approved minimal customer change: new COD selection goes directly to one itemized summary with `Confirm COD Order` and `Advance Payment`; advance returns directly to the three verified methods. No COD fee is applied to the advance path. Existing provisional-order CAS, idempotency, COD snapshot, receipt blocking and EN/UR safeguards remain.
+- Deployed tested API source to isolated V2 version `4122f2e1-f068-4846-9244-d4612cdedad6` with provider/COD/payment flags still false. This is intentional: the V2 Worker has no public route and no Meta secrets; the legacy Worker exposes secret names only, never values.
+- User authorization to reuse the COD contract was recorded, but no visible contract/remittance record or `COD_POLICY_UPDATED` provenance exists in shared or V2 D1. Do not fabricate or copy credentials, add a route without signed verification, or enable live outbound traffic.
+- Exact WhatsApp tester identity matches the authorized record. Meta top-level labels are compatible with Free Seeds/Creeper Seeds and no Hoja asset was used, but canonical sender Contact Info and signed webhook routing remain unverified. Live WAMID/send is therefore blocked.
+
 ## 2026-10-25: GFS-216 Runtime Acceptance, Target Repair, and Safe Shutdown
 
 - The active Codex host is `D:\\AI-Tools\\Codex\\home`; `C:\\Users\\Nazim\\.codex` was not authoritative. Replaced the stale underscore/WS endpoint registration with one official `chrome-devtools` `--autoConnect` registration. Fresh Codex tool exposure is proven by `list_pages`, read-only snapshots, Access identity fetch, visible Admin UI actions, dialog handling and network status.

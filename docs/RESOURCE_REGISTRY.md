@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-217 Current State (2026-10-25)
+
+- Tested checkout source is deployed to V2 API `4122f2e1-f068-4846-9244-d4612cdedad6`; Admin remains `57b8c78c-953d-44b4-8c1b-39343c406e4f`. V2 API `workers_dev=false`, no route, and no Meta/COD/payment secret or provider enablement. Rollback API remains `5fc102a8-74df-415d-8515-64bb7e1a12be`.
+- Active Codex host is `D:\AI-Tools\Codex\home`; official Chrome MCP actions work. WhatsApp Profile matches authorized tester; Admin Access matches `gisupp@gmail.com`. Meta top-level labels are Free Seeds/Creeper Seeds; canonical sender Contact Info is not verified.
+- Shared and V2 read-only policy/audit queries contain no visible COD contract/remittance record. Do not create or copy a credential, route, sender, tariff or contract record until independently authorized records are visible.
+- No new Worker route, secret, D1 policy, R2 object, Queue message, Meta asset, CMS publish, WAMID, customer order or financial state was created in GFS-217. V1 `d816ba1`, `images/`, customer/order/receipt/payment history and rollback remain preserved.
+
 ## GFS-216 Final Runtime State (2026-10-25)
 
 - Active Codex host: `CODEX_HOME=D:\AI-Tools\Codex\home`; exactly one official `chrome-devtools` MCP registration with `--autoConnect`. Fresh Codex exposed `list_pages`, snapshots, visible UI, dialogs and network status. WhatsApp tester Profile matched the authorized tester; no outbound message.

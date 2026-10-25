@@ -1065,21 +1065,17 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(buttons()).toEqual(["PAY_ADVANCE","PAY_COD"]);
     expect(listRows()).toEqual([]);
     const codSelection=await inbound(tap("PAY_COD"),"synthetic-cod-select",sender,true,true);
-    expect(conversation()?.state).toBe("COD_FEE_WARNING");
+    expect(conversation()?.state).toBe("COD_ORDER_REVIEW");
     expect(body()).toContain("PKR 125");
-    expect(body()).toContain(locale==="ur"?"اضافی":"additional");
-    expect(body()).toContain(locale==="ur"?"ڈیلیوری":"delivery");
-    expect(buttons()).toEqual(["COD_CONFIRM","COD_ADVANCE_PAYMENT"]);
+    expect(body()).toContain(locale==="ur"?"ڈیلیوری":"Delivery");
+    expect(buttons()).toEqual(["COD_CONFIRM_ORDER","COD_BACK_TO_PAYMENT"]);
     const order=sqlite.prepare("SELECT state,payment_status,total_payable FROM orders").get();
     expect(order).toMatchObject({state:"DETAILS_COMPLETED",payment_status:"PENDING",total_payable:advanceTotal});
     expect(sqlite.prepare("SELECT method,expected_amount,review_state FROM payments").get()).toEqual({method:null,expected_amount:advanceTotal,review_state:"PENDING"});
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:0});
-    await inbound(tap("COD_CONFIRM"),"synthetic-cod-review",sender,true,true);
-    expect(conversation()?.state).toBe("COD_ORDER_REVIEW");
     expect(body()).toContain(`PKR ${total}`);
     expect(body()).toContain(locale==="ur"?"COD فیس":"COD fee");
     for(const amount of [0,fertilizer?250:0,350,125,total])expect(body()).toContain(`PKR ${amount}`);
-    expect(buttons()).toEqual(["COD_CONFIRM_ORDER","COD_BACK_TO_PAYMENT"]);
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:0});
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_reminder_v2_schedules").get()).toEqual({count:0});
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_reminder_v2_stages").get()).toEqual({count:0});
@@ -1128,16 +1124,8 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     const provisional=sqlite.prepare("SELECT id,created_at,total_payable FROM orders").get() as {id:string;created_at:string;total_payable:number};
     expect(conversation()?.state).toBe("PAYMENT_CHOICE");
     await inbound(tap("PAY_COD"),`synthetic-cod-back-cod-${path}`,sender,true,true);
-    expect(conversation()?.state).toBe("COD_FEE_WARNING");
-    if(path==="warning"){
-      await inbound(tap("COD_ADVANCE_PAYMENT"),`synthetic-cod-back-advance-${path}`,sender,true,true);
-    }else{
-      await inbound(tap("COD_CONFIRM"),`synthetic-cod-back-review-${path}`,sender,true,true);
-      expect(conversation()?.state).toBe("COD_ORDER_REVIEW");
-      await inbound(tap("COD_BACK_TO_PAYMENT"),`synthetic-cod-back-to-choice-${path}`,sender,true,true);
-      expect(conversation()?.state).toBe("PAYMENT_CHOICE");
-      await inbound(tap("PAY_ADVANCE"),`synthetic-cod-back-advance-${path}`,sender,true,true);
-    }
+    expect(conversation()?.state).toBe("COD_ORDER_REVIEW");
+    await inbound(tap("COD_BACK_TO_PAYMENT"),`synthetic-cod-back-to-choice-${path}`,sender,true,true);
     expect(conversation()?.state).toBe("PAYMENT_METHOD");
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:0});
     expect(sqlite.prepare("SELECT total_payable,payment_status FROM orders WHERE id=?").get(provisional.id)).toEqual({total_payable:600,payment_status:"PENDING"});
@@ -1236,7 +1224,6 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     await reachReview("en");
     await inbound(tap("PLACE_ORDER"),"synthetic-cod-race-place",sender,false,true);
     await inbound(tap("PAY_COD"),"synthetic-cod-race-select",sender,false,true);
-    await inbound(tap("COD_CONFIRM"),"synthetic-cod-race-review",sender,false,true);
     let transitionReads=0;
     let release!:()=>void;
     const gate=new Promise<void>((resolve)=>{release=resolve});
@@ -1261,7 +1248,6 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     await reachReview("en");
     await inbound(tap("PLACE_ORDER"),"synthetic-cod-back-race-place",sender,false,true);
     await inbound(tap("PAY_COD"),"synthetic-cod-back-race-select",sender,false,true);
-    await inbound(tap("COD_CONFIRM"),"synthetic-cod-back-race-review",sender,false,true);
     let conversationReads=0;
     let release!:()=>void;
     const gate=new Promise<void>((resolve)=>{release=resolve});
@@ -1278,8 +1264,7 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({count:1});
     const details=sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()?.count as number;
     if(details===0){
-      expect(conversation()?.state).toBe("PAYMENT_CHOICE");
-      await inbound(tap("PAY_ADVANCE"),"synthetic-back-race-advance",sender,false,true);
+      expect(conversation()?.state).toBe("PAYMENT_METHOD");
       await inbound(tap("PAY_JAZZCASH"),"synthetic-back-race-method",sender,false,true);
       expect(sqlite.prepare("SELECT method,expected_amount FROM payments").get()).toEqual({method:"JAZZCASH",expected_amount:125});
       expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:0});
@@ -1322,12 +1307,8 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     await reachReview("en",true);
     await inbound(tap("PLACE_ORDER"),"synthetic-cod-switch-place",sender,true,true);
     await inbound(tap("PAY_COD"),"synthetic-cod-switch-select",sender,true,true);
-    await inbound(tap("COD_CONFIRM"),"synthetic-cod-switch-review",sender,true,true);
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:0});
     await inbound(tap("COD_BACK_TO_PAYMENT"),"synthetic-cod-switch-back",sender,true,true);
-    expect(conversation()?.state).toBe("PAYMENT_CHOICE");
-    expect(buttons()).toEqual(["PAY_ADVANCE","PAY_COD"]);
-    await inbound(tap("PAY_ADVANCE"),"synthetic-cod-switch-advance",sender,true,true);
     expect(conversation()?.state).toBe("PAYMENT_METHOD");
     expect(buttons().sort()).toEqual(["PAY_BANK_TRANSFER","PAY_EASYPAISA","PAY_JAZZCASH"].sort());
     expect(sqlite.prepare("SELECT method,expected_amount,review_state FROM payments").get()).toEqual({method:null,expected_amount:500,review_state:"PENDING"});
@@ -1345,7 +1326,6 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     await reachReview("en");
     await inbound(tap("PLACE_ORDER"),"synthetic-cod-reprice-place",sender,false,true);
     await inbound(tap("PAY_COD"),"synthetic-cod-reprice-first",sender,false,true);
-    await inbound(tap("COD_CONFIRM"),"synthetic-cod-reprice-review",sender,false,true);
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({count:0});
     const policy=JSON.parse(String(sqlite.prepare("SELECT value FROM configuration WHERE key='COD_V2_POLICY'").get()?.value)) as Record<string,unknown>;
     policy.feePkr=150;
@@ -1375,8 +1355,6 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
       await inbound(tap("PLACE_ORDER"),`synthetic-cod-all-province-place-${journey}`,waId,false,true);
       expect(buttons(),`payment choices missing for ${locale}/${province}/${fertilizer}`).toEqual(["PAY_ADVANCE","PAY_COD"]);
       await inbound(tap("PAY_COD"),`synthetic-cod-all-province-select-${journey}`,waId,false,true);
-      expect(buttons()).toEqual(["COD_CONFIRM","COD_ADVANCE_PAYMENT"]);
-      await inbound(tap("COD_CONFIRM"),`synthetic-cod-all-province-review-${journey}`,waId,false,true);
       expect(buttons()).toEqual(["COD_CONFIRM_ORDER","COD_BACK_TO_PAYMENT"]);
       expect(body()).toContain(`PKR ${fertilizerFee+deliveryFee+125}`);
       await inbound(tap("COD_CONFIRM_ORDER"),`synthetic-cod-all-province-confirm-${journey}`,waId,false,true);
@@ -1395,7 +1373,6 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     await reachReview("en",true,"Synthetic Province",waId);
     await inbound(tap("PLACE_ORDER"),"synthetic-cod-admin-place",waId,false,true);
     await inbound(tap("PAY_COD"),"synthetic-cod-admin-select",waId,false,true);
-    await inbound(tap("COD_CONFIRM"),"synthetic-cod-admin-review",waId,false,true);
     await inbound(tap("COD_CONFIRM_ORDER"),"synthetic-cod-admin-confirm",waId,false,true);
     const order=sqlite.prepare("SELECT o.id,o.order_number FROM orders o JOIN customers c ON c.id=o.customer_id WHERE c.wa_id=?").get(waId) as {id:string;order_number:string};
     const transition=async(from:string,to:string)=>adminPostCod(`/api/cod-orders/${order.id}/transition`,{from,to,confirmation:order.order_number});

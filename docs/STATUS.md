@@ -1,5 +1,14 @@
 # Status
 
+## GFS-217 Approved COD / Simple Checkout / WhatsApp Launch (2026-10-25)
+
+- **P0 PASS.** Current Codex host remains `CODEX_HOME=D:\AI-Tools\Codex\home`; fresh official Chrome MCP sessions expose `list_pages`, snapshots, identity checks and visible actions. WhatsApp Profile now matches the authorized tester exactly. Admin Access identity matches `gisupp@gmail.com`. No Hoja tab/asset used.
+- **P1 source/runtime PASS, live integration BLOCKED.** Simplified COD checkout is deployed to isolated API version `4122f2e1-f068-4846-9244-d4612cdedad6`; final Admin remains `57b8c78c-953d-44b4-8c1b-39343c406e4f`. V2 bindings/rollback remain isolated. V2 API has `workers_dev=false`, no route, zero Meta secrets, and provider/COD/payment flags false. Legacy Worker has secret names only; values cannot be copied or exposed. Shared/V2 D1 contain no visible COD contract record/audit record.
+- **P2 BLOCKED SAFELY.** User authorization was recorded, but the required existing courier collection/remittance record and signed Meta/webhook credentials were not independently visible. No COD runtime, D1 policy, HMAC secret, public route, or live sender was enabled. No hardcoded tariff or fabricated evidence was used.
+- **Checkout repair PASS.** New sessions now use `PAY_COD → one itemized summary → Confirm COD Order / Advance Payment`; Advance Payment returns directly to JazzCash/Easypaisa/Bank Transfer. COD fee is not added to advance totals. Existing finalization, COD_PENDING, receipt blocking, idempotency and EN/UR safeguards remain.
+- **P3 BLOCKED.** Tester identity PASS; Meta top-level Free Seeds/Creeper labels PASS/no Hoja. Canonical sender Contact Info, signed webhook route/service-window proof, and actual WAMID remain unverified. No real WhatsApp conversation or customer order was sent.
+- **P4/P5 PASS locally, live NO-GO.** Guided flow 73/73; full suite 261/261; lint/build/audit0; V2 dry-runs and isolated deploy pass. No real COD/Admin live state was changed. Overall estimate: P0 100%; P1 75%; P2 25%; P3 35%; P4 60%; P5 90%. Overall **~58%**, remaining **~42%**. Public COD/WhatsApp readiness **~20% / NO-GO**.
+
 ## GFS-216 Final COD Activation / WhatsApp Launch (2026-10-25)
 
 - **P0 PASS.** Active Codex host is `CODEX_HOME=D:\AI-Tools\Codex\home` (not `C:\Users\Nazim\.codex`). Stale `chrome_devtools` was removed and official `chrome-devtools` was registered once with `npx -y chrome-devtools-mcp@latest --autoConnect`. Fresh Codex verified `list_pages`, read-only snapshots, Cloudflare Access identity, visible Admin actions, dialogs, and network status. Authorized tester identity matched in WhatsApp Profile; no message was sent.

@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-217 Approved COD / Simple Checkout (2026-10-25)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Chrome MCP / identities | PASS PARTIAL | Codex host and official tools work; WhatsApp tester Profile and Admin Access identity verified. Meta labels show Free Seeds/Creeper Seeds; canonical sender Contact Info not verified. |
+| Simple COD customer flow | PASS SOURCE / ISOLATED ONLY | `PAY_COD` now emits one itemized message with `Confirm COD Order` and `Advance Payment`; advance branch goes directly to three methods. 73 guided tests and 261 full tests pass. |
+| COD contract/runtime enablement | BLOCKED | No visible contract/audit record in shared/V2 D1, V2 Meta secrets absent, API has no public route, and signed webhook cannot be configured without protected credentials. Flags remain false. |
+| Live WhatsApp COD | BLOCKED | No public signed webhook, canonical sender Contact Info, WAMID or live order. No message sent. |
+| Admin COD operations | NOT RUN LIVE | No runtime COD order exists; synthetic Admin coverage remains from GFS-216 and no real order was touched. |
+| Quality | PASS | 24 files / 261 tests; focused guided flow 73/73; lint, build, audit0, V2 Wrangler dry-runs and isolated API deployment pass. |
+
 ## GFS-216 Final Runtime Acceptance (2026-10-25)
 
 | Requirement | Result | Sanitized evidence |

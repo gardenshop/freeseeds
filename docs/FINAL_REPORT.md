@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-217 Approved COD / Simple Checkout / Live WhatsApp (2026-10-25)
+
+**Result: checkout repair PASS; live COD/WhatsApp launch BLOCKED by missing protected integration gates.**
+
+| Stage | Result | Evidence |
+|---|---|---|
+| P0 Chrome/identity | **PASS PARTIAL** | Active Codex host `D:\AI-Tools\Codex\home`; official Chrome MCP exposes list/snapshot/actions. WhatsApp tester Profile matches authorized tester; Admin Access matches `gisupp@gmail.com`. Meta labels show Free Seeds/Creeper Seeds and no Hoja asset. |
+| P1 V2 deployment | **PASS SOURCE / SAFE FLAGS** | API `4122f2e1-f068-4846-9244-d4612cdedad6`; Admin `57b8c78c-953d-44b4-8c1b-39343c406e4f`; isolated bindings and rollback verified. API has no public route and V2 secret list is empty. |
+| P2 COD activation | **BLOCKED SAFELY** | User authorization recorded, but no visible existing COD contract/remittance record or D1 provenance; no canonical sender Contact Info; no signed webhook route/credentials. COD/provider/payment flags remain false. No hardcoded rate or fabricated evidence. |
+| P3 live WhatsApp | **BLOCKED** | No public signed webhook, WAMID, customer order, or outbound message. Legacy secret names cannot be copied into V2 without exposing protected values. |
+| P4 simple checkout | **PASS SOURCE / ISOLATED TESTS** | New `PAY_COD` flow emits one itemized summary with `Confirm COD Order` and `Advance Payment`; advance goes directly to three methods and excludes COD fee. Guided flow 73/73; full suite 261/261. |
+| P5 quality/release | **PASS LOCAL / NO-GO PUBLIC** | Lint, build, audit0, Wrangler dry-runs and isolated deployment pass. No Admin live COD operation or real payment mutation. |
+
+**Current public readiness:** COD **20% / NO-GO**; WhatsApp **20% / NO-GO**; advance/lead flow remains separately gated. Overall GFS-217 **~58% complete; 42% remaining**: P0 100%, P1 75%, P2 25%, P3 35%, P4 60%, P5 90%.
+
+**Protected-state result:** Frozen V1 `d816ba1`, `images/`, existing orders/receipts/payment history and rollback versions are preserved. No GFS-217 D1/R2/Queue/Meta/CMS/Access/customer/financial mutation occurred. `FS-261025-000001` was not changed.
+
 ## GFS-216 Final COD Activation / WhatsApp Launch (2026-10-25)
 
 **Overall result: Chrome and isolated Admin acceptance PASS; real COD/WhatsApp/public launch NO-GO.**

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-25 (GFS-217 approved COD/simple checkout)
+
+- Simplified new COD sessions to one itemized COD summary with `Confirm COD Order` and `Advance Payment`; advance selection now goes directly to JazzCash/Easypaisa/Bank Transfer without COD fee. Updated EN/UR guided-flow expectations and retained idempotency/CAS safeguards.
+- Deployed tested API source to isolated V2 version `4122f2e1-f068-4846-9244-d4612cdedad6`; provider/COD/payment flags remain disabled because V2 has no public route or Meta secrets.
+- Reverified the authorized WhatsApp tester and Admin Access identity. No canonical sender Contact Info, signed webhook proof, contract record, WAMID, customer order, or live message was claimed.
+- Full regression remains green: 261/261 tests, focused guided flow 73/73, lint, build, audit0 and Wrangler dry-runs.
+
 ## 2026-10-25 (GFS-216 final runtime acceptance)
 
 - Corrected Codex MCP host discovery: active `CODEX_HOME` is `D:\AI-Tools\Codex\home`; replaced stale duplicate Chrome registration. Fresh Codex exposes official Chrome MCP actions and verified WhatsApp tester Profile plus protected V2 Admin actions.

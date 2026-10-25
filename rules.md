@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-217 Approved COD / Simple Checkout Boundary (2026-10-25)
+
+- The approved customer-flow change is now: `PAY_COD` emits one itemized COD summary with `Confirm COD Order` and `Advance Payment`; the latter enters the three advance methods directly. Existing order/idempotency/COD snapshot safeguards remain authoritative. Legacy `COD_FEE_WARNING` handling remains only for already-open conversations and must not be entered by new sessions.
+- A user authorization to reuse an existing COD contract does not substitute for an independently visible contract record, signed Meta credentials, canonical sender Contact Info, or a public signed webhook. This execution found no COD contract row/audit record in shared or V2 D1, no Meta secrets on V2, and `workers_dev=false` with no API route. Do not copy secret values from another Worker, expose an unauthenticated API, enable provider/COD flags, or send live messages until those existing records are visibly verified.
+- The exact tester identity was reverified in WhatsApp Profile against the authorized record. Meta top-level labels showed Free Seeds/Creeper Seeds and no Hoja asset, but canonical sender Contact Info and signed webhook routing were not independently confirmed. No WAMID or live launch is valid from this execution.
+
 ## GFS-216 Final COD/WhatsApp Acceptance (2026-10-25)
 
 - The active Codex host is `CODEX_HOME=D:\\AI-Tools\\Codex\\home`; `codex mcp list` is authoritative for this environment. Replace stale `chrome_devtools` registrations rather than adding duplicates. The supported `chrome-devtools` server now exposes `list_pages`, page snapshots, read-only identity checks, visible UI actions, dialogs, and network status through a fresh Codex process. Do not use raw CDP or direct dashboard HTTP as a browser substitute.

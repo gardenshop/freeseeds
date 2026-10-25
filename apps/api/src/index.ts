@@ -545,10 +545,11 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
     if(!current){
       codSelectable=false;reply=data.language==="ur"?"یہ آرڈر COD کے لیے اہل نہیں ہے۔ کوئی COD فیس یا ادائیگی ریکارڈ نہیں کی گئی۔":"This order is not eligible for COD. No COD fee or payment was recorded.";
     }else{
-      delete data.codPreview;nextState="COD_FEE_WARNING";
+      data.codPreview=current.preview;nextState="COD_ORDER_REVIEW";
+      const breakdown=priceBreakdown(data.language??"en",current.preview.seedPkr,current.preview.fertilizerPkr,current.preview.deliveryFeePkr,current.preview.totalPayablePkr,current.preview.province,current.preview.codFeePkr);
       reply=data.language==="ur"
-        ?`کیش آن ڈیلیوری پر ڈیلیوری چارجز کے علاوہ اضافی PKR ${codPolicy.feePkr} COD فیس لاگو ہوگی۔ پیشگی ادائیگی درکار نہیں۔`
-        :`Cash on Delivery has an additional PKR ${codPolicy.feePkr} COD fee plus delivery charges. No advance payment is required.`;
+        ?`COD آرڈر ${current.orderNumber} کا خلاصہ:\n${breakdown}`
+        :`COD order ${current.orderNumber} summary:\n${breakdown}`;
     }
   }
   else if(state==="COD_FEE_WARNING"&&normalized==="COD_ADVANCE_PAYMENT"&&advanceSelectable){
@@ -565,8 +566,8 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
     }
   }
   else if(state==="COD_ORDER_REVIEW"&&normalized==="COD_BACK_TO_PAYMENT"){
-    delete data.codPreview;data.codChangedToAdvance=true;nextState="PAYMENT_CHOICE";
-    reply=data.language==="ur"?"ادائیگی کی قسم منتخب کریں۔ COD فیس پیشگی ادائیگی پر لاگو نہیں ہوگی۔":"Choose a payment type. The COD fee will not apply to advance payment.";
+    delete data.codPreview;data.codChangedToAdvance=true;nextState="PAYMENT_METHOD";
+    reply=data.language==="ur"?"پیشگی ادائیگی کا تصدیق شدہ طریقہ منتخب کریں۔ COD فیس لاگو نہیں ہوگی۔":"Choose a verified advance payment method. The COD fee will not apply.";
   }
   else if(state==="COD_ORDER_REVIEW"&&normalized==="COD_CONFIRM_ORDER"&&codSelectable&&codPolicy&&data.orderId){
     const current=await eligibleCodOrder(db,data.orderId,event.from,codPolicy.eligibleProvinces,codPolicy.feePkr);
@@ -727,7 +728,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   } else if(nextState==="COD_FEE_WARNING"){
     options={buttons:[{id:"COD_CONFIRM",title:data.language==="ur"?"COD کی تصدیق":"Confirm COD"},...(advanceSelectable?[{id:"COD_ADVANCE_PAYMENT",title:data.language==="ur"?"پیشگی ادائیگی":"Advance Payment"}]:[])]};
   } else if(nextState==="COD_ORDER_REVIEW"){
-    options={buttons:[{id:"COD_CONFIRM_ORDER",title:data.language==="ur"?"آرڈر کی تصدیق":"Confirm Order"},{id:"COD_BACK_TO_PAYMENT",title:data.language==="ur"?"ادائیگی پر واپس":"Back to Payment"}]};
+    options={buttons:[{id:"COD_CONFIRM_ORDER",title:data.language==="ur"?"COD آرڈر کی تصدیق":"Confirm COD Order"},{id:"COD_BACK_TO_PAYMENT",title:data.language==="ur"?"پیشگی ادائیگی":"Advance Payment"}]};
   } else if(nextState==="COD_PENDING_CONFIRMATION"){
     options={buttons:[{id:"COD_CONFIRM",title:data.language==="ur"?"COD آرڈر کی تصدیق":"Confirm COD Order"},{id:"COD_CHANGE_PAYMENT",title:data.language==="ur"?"ادائیگی تبدیل کریں":"Change Payment"},{id:"COD_CANCEL",title:data.language==="ur"?"منسوخ":"Cancel COD"}]};
   } else if (["PAYMENT_PENDING", "PAYMENT_GRACE", "PAYMENT_REFERENCE", "PAYMENT_REVIEW","COD_PENDING"].includes(state) || nextState === "PAYMENT_REVIEW" || nextState === "COD_PENDING" || nextState === "COMPLETE") {
