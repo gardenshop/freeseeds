@@ -7,9 +7,9 @@
 - **P2 BLOCKED.** Official MCP registration/config is healthy and `list_pages` was exposed from a fresh Codex CLI, but the subsequent authenticated Cloudflare navigation was canceled. No current dashboard identity, Worker/D1 binding, backup/integrity/ledger, Meta canonical sender/tester, or actual courier/remittance record was verified. No HMAC secret was provisioned; no migration applied.
 - **P3 NOT RUN.** No live tester WhatsApp order, screenshot, WAMID, order ID or Admin COD_PENDING record. Do not claim live acceptance.
 - **P4 PASS LOCAL ONLY.** Focused COD/advance tests 42/42; full 186/186 across 21 files; build, lint, offline audit (zero vulnerabilities), API/Admin Wrangler dry-runs, and `git diff --check` pass. No shared D1 integrity result or runtime advance regression is claimed.
-- **P5 PARTIAL.** Required GFS-221 records updated in this candidate and to be pushed to its new branch; no deployment, runtime change, production change, or PR #9 merge. Production promotion is explicitly outside authorization.
+- **P5 PASS (candidate branch).** Required GFS-221 records and tested source are committed and pushed to `origin/codex/gfs221-cod-compat-001` (`0ce3dac` source, `f404b73` docs). No deployment, runtime change, production change, or PR #9 merge. Production promotion is explicitly outside authorization.
 - **Runtime state:** COD disabled in candidate Wrangler config. Live runtime enablement state/version not checked. Latest historical V1 version evidence from GFS-209 is not a fresh GFS-221 observation.
-- **Completion estimate:** P0 55%, P1 70%, P2 15%, P3 0%, P4 65%, P5 80%; overall ~47% complete / 53% remaining. Controlled development candidate **PASS LOCAL**; staging rollout **BLOCKED**; public/production launch **NO-GO**.
+- **Completion estimate:** P0 55%, P1 70%, P2 15%, P3 0%, P4 65%, P5 100%; overall ~51% complete / 49% remaining. Controlled development candidate **PASS LOCAL**; staging rollout **BLOCKED**; public/production launch **NO-GO**.
 
 ## GFS-209 Real Receipt Acceptance (2026-10-24)
 
