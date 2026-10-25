@@ -1,5 +1,13 @@
 # Status
 
+## GFS-219 Active Webhook Compatibility / Production Launch (2026-10-25)
+
+- **P0 PASS identification, release BLOCKED.** Active Meta WABA is Get Free Seeds with one connected/high-quality canonical phone; display name remains rejected/In Review. Existing active callback is `getfreeseeds-api-staging`, latest known version `21a3d74c-3979-432c-9190-1848362592a4`, shared V1-era D1/secrets.
+- **Approach A rejected safely.** Shared D1 has orders/payments/province rates but no `cod_order_details`; adding V2 schema or binding current COD source would violate frozen V1/history rules. **Approach B remains blocked:** V2 API `4122f2e1-f068-4846-9244-d4612cdedad6` has no public route and zero Meta secrets. No route cutover or secret extraction occurred.
+- **P1/P2/P3 BLOCKED.** No authenticated collector/remittance record or protected V2 credentials were visible. COD/provider/payment flags remain false. No live WAMID, customer order, screenshot, sender setting, CMS publish or financial mutation.
+- **P4/P5 PASS SOURCE/SAFE DATA.** Existing simple COD checkout remains deployed and tested (261/261, focused73/73, lint/build/audit0). V2 D1 integrity is `quick_check=ok`, FK clean, zero orders/payments/receipts. Frozen V1, images, history and rollback preserved.
+- **GFS-219 completion:** P0 70%; P1 20%; P2 0%; P3 0%; P4 40%; P5 90%. Overall **~32%**, remaining **~68%**. Production COD/WhatsApp readiness **~10% / NO-GO**.
+
 ## GFS-218 Live COD Activation Attempt (2026-10-25)
 
 - **P0 PASS / external gate FAIL.** Fresh Meta WhatsApp Manager inspection identified WABA `Get Free Seeds`, one connected/high-quality canonical phone (masked in evidence), and no Hoja asset. Meta currently reports the sender display name as rejected/In Review. WhatsApp tester Profile and Admin Access remain verified.

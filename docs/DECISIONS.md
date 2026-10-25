@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-25: GFS-219 Active Webhook Compatibility
+
+- Compared release options. Approach A cannot safely host V2 COD on the active Worker because shared D1 lacks `cod_order_details`; additive migration or source deployment would touch frozen V1-era history. Approach B requires a new signed public V2 route, protected Meta credentials and Meta webhook update; V2 currently has none.
+- Keep active legacy webhook, shared D1, V2 API route, provider/COD/payment flags and secrets unchanged. Do not copy protected secrets or use connected Meta status as approval while display name is rejected/In Review.
+- Preserve GFS-217 source repair and isolated deployment; no live COD/WAMID/order claim is valid in this execution.
+
 ## 2026-10-25: GFS-218 Live COD Route Decision
 
 - Meta read-only inspection identified the active WABA and callback family: `Get Free Seeds`, one connected/high-quality canonical phone, legacy `getfreeseeds-api-staging` Worker, shared V1-era D1 and protected secrets. Meta currently shows the sender display name rejected/In Review.

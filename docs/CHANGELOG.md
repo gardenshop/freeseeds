@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-25 (GFS-219 active webhook compatibility)
+
+- Identified active legacy webhook `getfreeseeds-api-staging` and verified its shared-D1 incompatibility with V2 COD schema. No shared migration or route switch performed.
+- Compared V2 promotion versus legacy additive integration; both remain blocked by missing protected V2 credentials/public route and frozen shared-history constraints.
+- Reverified Meta WABA/sender state: connected/high quality, display name rejected/In Review. No live message, WAMID, customer order or financial mutation.
+- Preserved tested GFS-217 checkout and recorded final launch gate evidence.
+
 ## 2026-10-25 (GFS-218 live COD activation gate)
 
 - Identified the active Meta WABA/sender and legacy signed callback through read-only WhatsApp Manager inspection. Sender is connected/high quality but display name is rejected/In Review.

@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-219 Active Webhook Compatibility (2026-10-25)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Active webhook identification | PASS | Legacy `getfreeseeds-api-staging`, latest known version `21a3d74c-3979-432c-9190-1848362592a4`, workers.dev/shared-D1 binding, protected Meta secret names. |
+| Approach A additive release | BLOCKED SAFELY | Shared D1 lacks `cod_order_details`; migration would modify frozen/shared history. |
+| Approach B V2 cutover | BLOCKED | V2 has no public route and no Meta secrets; signed callback/cutover cannot be configured safely. |
+| Meta sender | PASS PARTIAL | WABA and connected/high-quality phone visible; display name rejected/In Review. No live send. |
+| Real COD E2E | NOT RUN | No public signed route, WAMID, order number or screenshot. |
+| Source regression | PASS | Existing simple checkout 261/261, focused73/73, lint/build/audit0. |
+| Preservation | PASS | V1/images/history/rollback intact; no D1/R2/Queue/Meta/customer/financial writes. |
+
 ## GFS-218 Live COD Activation (2026-10-25)
 
 | Requirement | Result | Evidence / blocker |

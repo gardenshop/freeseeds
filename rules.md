@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-219 Active Webhook Compatibility Decision (2026-10-25)
+
+- Read-only compatibility check: active `getfreeseeds-api-staging` uses shared V1-era D1; it has orders/payments/province rates but no `cod_order_details`. Its latest known Worker is `21a3d74c-3979-432c-9190-1848362592a4` and its protected Meta secret names remain on that Worker. Do not apply V2 migrations or copy those secret values into it.
+- The isolated V2 API has the tested COD source but no public route and no Meta secrets. Approach A is incompatible without shared-D1 migration; Approach B is blocked until a protected V2 callback/credentials/cutover are independently authorized. Keep COD/provider/payment flags false.
+- Meta WhatsApp Manager read-only evidence identifies WABA `Get Free Seeds` and one connected/high-quality canonical phone, but the display name is rejected/In Review. This is an external release gate; do not send or claim launch from connected status alone.
+
 ## GFS-218 Live COD Launch Gate (2026-10-25)
 
 - The active Meta integration is WABA `Get Free Seeds` with one connected/high-quality canonical phone, but Meta currently shows its display name as rejected/In Review. Treat this as a release gate, not as permission to send. The active webhook is the legacy `getfreeseeds-api-staging` Worker bound to shared V1-era D1/secrets; do not swap it to V2 or bind it to isolated D1 without an approved route migration that preserves all history.
