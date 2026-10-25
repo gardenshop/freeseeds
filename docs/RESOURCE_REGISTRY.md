@@ -2,7 +2,7 @@
 
 ## GFS-221 Candidate Resources / Non-Mutation Record (2026-10-25)
 
-- Git branch `codex/gfs221-cod-compat-001` is based on V1 source commit `cf01f44`; tested source `0ce3dac` and GFS-221 docs `f404b73` were pushed to the new remote branch. Active Worker byte identity was not verified. PR #9/V2, frozen V1 tag, primary checkout, `images/`, and prior rollback versions were not changed.
+- Git branch `codex/gfs221-cod-compat-001` is based on V1 source commit `cf01f44`; tested source and GFS-221 docs were pushed to the new remote branch and stacked review PR #11 targets PR #10's V1 branch. Active Worker byte identity was not verified. PR #9/V2, frozen V1 tag, primary checkout, `images/`, and prior rollback versions were not changed.
 - API/Admin Wrangler configs list staging resource names and canonical GFS IDs. Local Wrangler dry-runs resolved the configured API and Admin bundles and show API `COD_V1_ENABLED=false`; these are **config observations only**, not authenticated live account/binding verification.
 - Migration `0030_cod_v1_compat.sql` is locally tested against synthetic V1 schema. It creates COD-specific configuration/detail tables and guards. It has not been applied to D1; existing shared customer/payment/order history is unchanged.
 - No new Cloudflare resource, binding, queue, R2 object, secret, Meta callback, policy, D1 row, WhatsApp message, tester order, screenshot, or WAMID was created. No backup, rollback execution, active version check or remote integrity result is claimed.
