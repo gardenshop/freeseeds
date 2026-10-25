@@ -1,5 +1,16 @@
 # Status
 
+## GFS-221 V1-Compatible COD Candidate (2026-10-25)
+
+- **P0 PARTIAL / staging operations blocked.** PR #9 source HEAD at start was `0ede8eff`; PR #8/#9/#10 were open; PR #9 still targets frozen V1 `d816ba1`. New isolated compatibility branch `codex/gfs221-cod-compat-001` starts at V1 PR #10 commit `cf01f44`. That source baseline is not freshly verified against deployed Worker bytes. Frozen tag, PR #9, primary worktree, `images/`, customer/payment records and rollback were untouched.
+- **P1 PASS local candidate / rollout not executed.** Source commit `0ce3dac` adds bilingual advance/COD selector, itemized amount with base total + PKR125 exactly once, existing-order COD confirmation, COD_PENDING, Admin fulfillment/reconciliation and strict non-advance settlement. Migration `0030_cod_v1_compat.sql` is additive COD-only; existing V1 order/payment rows remain unchanged in the candidate. `COD_V1_ENABLED=false` remains the configured default.
+- **P2 BLOCKED.** Official MCP registration/config is healthy and `list_pages` was exposed from a fresh Codex CLI, but the subsequent authenticated Cloudflare navigation was canceled. No current dashboard identity, Worker/D1 binding, backup/integrity/ledger, Meta canonical sender/tester, or actual courier/remittance record was verified. No HMAC secret was provisioned; no migration applied.
+- **P3 NOT RUN.** No live tester WhatsApp order, screenshot, WAMID, order ID or Admin COD_PENDING record. Do not claim live acceptance.
+- **P4 PASS LOCAL ONLY.** Focused COD/advance tests 42/42; full 186/186 across 21 files; build, lint, offline audit (zero vulnerabilities), API/Admin Wrangler dry-runs, and `git diff --check` pass. No shared D1 integrity result or runtime advance regression is claimed.
+- **P5 PARTIAL.** Required GFS-221 records updated in this candidate and to be pushed to its new branch; no deployment, runtime change, production change, or PR #9 merge. Production promotion is explicitly outside authorization.
+- **Runtime state:** COD disabled in candidate Wrangler config. Live runtime enablement state/version not checked. Latest historical V1 version evidence from GFS-209 is not a fresh GFS-221 observation.
+- **Completion estimate:** P0 55%, P1 70%, P2 15%, P3 0%, P4 65%, P5 80%; overall ~47% complete / 53% remaining. Controlled development candidate **PASS LOCAL**; staging rollout **BLOCKED**; public/production launch **NO-GO**.
+
 ## GFS-209 Real Receipt Acceptance (2026-10-24)
 
 - **PRIMARY ACCEPTANCE PASS.** Exact target `FS-261024-000005`, Easypaisa PKR500, is `PAYMENT_REVIEW`; payment status remains `PENDING`. No financial contents were authenticated, no funds/wallet credit checked, and no `PAID` or fulfillment action taken.

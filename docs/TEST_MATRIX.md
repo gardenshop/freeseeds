@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-221 V1-Compatible COD Candidate (2026-10-25)
+
+| Requirement | Result | Evidence / remaining scope |
+|---|---|---|
+| Candidate baseline / V1 preservation | PASS LOCAL | Isolated branch `codex/gfs221-cod-compat-001` starts at `cf01f44`; deployed-byte identity remains unverified. Frozen tag and PR #9 unchanged. |
+| Additive migration compatibility | PASS SYNTHETIC | `0030_cod_v1_compat.sql` runs against synthetic V1 schema/history; only COD tables/triggers are added. Not applied to shared D1; backup, ledger, quick/FK checks remain operational gates. |
+| EN/UR COD pricing | PASS SYNTHETIC | Both locales show item lines, original advance total, PKR125 COD fee once, final collection total. Advance selection before confirmation creates no COD record/fee. |
+| COD confirmation/idempotency | PASS SYNTHETIC | One pre-existing order becomes COD_PENDING; webhook retry does not duplicate record; no advance receipt, QR/payment instruction or reminder. |
+| Admin COD lifecycle | PASS SYNTHETIC | COD status and final amount visible; audited COD fulfillment requires tracking before dispatch; exact collection and remittance required before COD_PAID/PAID. Ordinary approval/rejection and receipt guards reject COD. |
+| Advance regression | PASS LOCAL | Existing V1 payment/receipt regression suite passes; full suite 186/186, focused COD/advance 42/42. Running staging Worker not tested. |
+| Build/security | PASS LOCAL | Typecheck/build, lint, offline `npm audit` zero vulnerabilities, `git diff --check` pass. |
+| API/Admin Wrangler | PASS DRY-RUN ONLY | Configured staging bindings bundle; API reports `COD_V1_ENABLED=false`. Dry-run does not verify actual account/bindings, secrets, deployment or callback. |
+| MCP/account/Meta/courier preflight | BLOCKED | Official MCP config/doctor healthy; fresh CLI exposes `list_pages`; Cloudflare navigation was canceled. No current account/sender/tester/contract record verified. |
+| Remote migration/deploy/rollback/live tester | NOT RUN | No backup, D1 migration, Worker deploy, rollback, genuine tester E2E, screenshot, WAMID or test order. |
+
 ## GFS-209 Real Receipt E2E (2026-10-24)
 
 | Requirement | Result | Evidence / remaining scope |

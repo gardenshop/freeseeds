@@ -1,5 +1,24 @@
 # Final Report
 
+## GFS-221 | Execute Approved Approach A and Test COD (2026-10-25)
+
+**Overall: local compatibility candidate PASS; authenticated staging rollout and live WhatsApp test BLOCKED. No external mutation occurred. No synthetic result is presented as live acceptance.**
+
+| Assignment | Result | Supporting evidence |
+|---|---|---|
+| P0 Chrome MCP | **PARTIAL / BLOCKED** | `CODEX_HOME` MCP list and `codex doctor` show official `chrome-devtools-mcp@1.12.0` configured/healthy; a fresh Codex CLI exec exposed `list_pages`. The subsequent authenticated Cloudflare navigation was canceled. Dashboard identity, current bindings, canonical sender/tester were not verified; no screenshot captured. No retry/raw CDP/HTTP bypass. |
+| P1 Approach A | **PASS LOCAL / NOT DEPLOYED** | Separate `codex/gfs221-cod-compat-001` branch from V1 PR #10 source base `cf01f44`; candidate source commit `0ce3dac`. PR #9 was not merged into frozen V1 `d816ba1`. Candidate migration `0030_cod_v1_compat.sql` is COD-only/additive, with SQL guards; no existing records are rewritten. Active deployed-byte/source parity remains unverified. |
+| P2 configuration and rollout | **BLOCKED** | User authorized staging Approach A. But no authenticated Cloudflare preflight, live binding/ledger/backup/Time Travel/quick/FK inspection, HMAC provisioning, courier/remittance record verification, or rollout. No migration/deploy/rollback was attempted. Local configs/dry-run are not live verification. |
+| P3 real WhatsApp E2E | **NOT RUN** | No tester/sender verification, real callback, buttons, final fee message, order ID, Admin COD_PENDING row, WAMID, or screenshot. No COD intake/live runtime change. No order shipped. |
+| P4 repair/regression | **PASS LOCAL ONLY** | Focused COD/advance 42/42; full 186/186 across 21 files; build/typecheck, lint, `npm audit --offline` (zero vulnerabilities), API/Admin Wrangler dry-runs and `git diff --check` pass. Tests use synthetic data/local SQLite. No running staging advance checkout/D1 integrity was tested. |
+| P5 docs/push | **PASS DOCS / PUSH PENDING** | `rules.md`, STATUS, TEST_MATRIX, DECISIONS, CHANGELOG, RESOURCE_REGISTRY and this report updated on compatibility branch. Code commit `0ce3dac`; documentation commit and push remain to be completed/verified. |
+
+**COD and advance state:** candidate API Wrangler flag is explicitly `COD_V1_ENABLED=false`. No protected HMAC secret was provisioned. No migration or Worker version was created/deployed; active version not freshly verified. No COD order, Admin status, screenshots or WAMIDs exist for GFS-221. Existing advance checkout regression is synthetic/local only. No production promotion authorization was requested or used.
+
+**Source behavior covered locally:** bilingual price summary shows original total + PKR125 once + final amount; advance fallback creates no COD record/fee; confirmation changes one existing V1 order to COD_PENDING; no advance QR/receipt/payment-instruction/reminder is created; retries do not duplicate. Admin stages and exact collection/remittance gates are covered. This does not establish live pricing, policy, D1, webhook, Admin or courier behavior.
+
+**Readiness estimate:** P0 55%, P1 70%, P2 15%, P3 0%, P4 65%, P5 80%; overall ~47% complete / 53% remaining. Controlled development candidate is **PASS LOCAL**; staging acceptance remains **BLOCKED**; production/public COD remains **NO-GO**. Remaining exact gate: restore/continue authorized Chrome MCP access without repeating the canceled navigation, verify account/bindings/tester/sender and actual collection/remittance evidence, perform backup/integrity/ledger/rollback preflight, provision the protected key only if authorized, then apply only migration 0030 and stage the disabled candidate before separately authorized live test acceptance.
+
 ## GFS-209 Real Receipt Upload Acceptance (2026-10-24)
 
 **PRIMARY ACCEPTANCE: PASS (REAL).** A newly generated non-payment JPEG, sent from the verified tester as a photo in direct reply to the Easypaisa instructions, reached the correct live Admin receipt panel. The customer received the exact receipt-under-review acknowledgement. No financial evidence was authenticated and no payment was marked `PAID`.

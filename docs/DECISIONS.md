@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-25: GFS-221 Implement Separate V1-Compatible Candidate
+
+- Implement the user's already-authorized staging-only Approach A on a new branch from V1 PR #10 commit `cf01f44`, not on PR #9 and not on the frozen V1 branch. This is the smallest local candidate; active deployed-source identity still needs dashboard verification.
+- Add only a COD-specific table/config and SQL guards via `0030_cod_v1_compat.sql`; do not apply shared D1 until identity, binding, ledger, backup/Time Travel, quick/FK and rollback preflight all pass. Do not invoke broad migration ledger replay.
+- Store original V1 advance amount/history unchanged; keep COD fee and final collection amount in the COD sidecar. Require matching audited policy, runtime flag, and protected HMAC key. COD intake remains false by default. Do not enable from an unverifiable policy reference.
+- COD Admin reconciliation is distinct from advance approval. Order/payment can become PAID only after exact collection and exact remittance evidence are independently verified; ordinary advance receipt, payment approve/reject, QR and reminder paths remain blocked for COD.
+- Local acceptance is not staging/live acceptance. `list_pages` was exposed through fresh Codex CLI, but requested Cloudflare navigation was canceled. Do not retry the canceled navigation. No external mutation or production promotion.
+
 ## 2026-10-24: GFS-209 Media E2E Passed, Preserve Settlement Gate
 
 The exact order has both `customers.wa_id` and `normalized_whatsapp_number` NULL; only its stored `whatsapp_number` matches the authenticated tester. Extend the receipt association fallback to that field only when `wa_id IS NULL`, with exact reply-to-payment WAMID or unique eligible order required. A non-NULL mismatch and ambiguous matches remain fail closed. Do not write/backfill live identity data.

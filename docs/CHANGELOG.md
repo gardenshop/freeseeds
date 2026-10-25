@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-25 (GFS-221 V1-compatible COD candidate)
+
+- Added a separate V1 compatibility branch from PR #10 source base `cf01f44`; source commit `0ce3dac` implements COD choice, bilingual itemized quote, same-order COD_PENDING confirmation, Admin fulfillment/reconciliation and fail-closed financial guards.
+- Added `0030_cod_v1_compat.sql`, strictly additive COD-only schema/triggers; no shared migration was applied. Candidate retains original advance amount/history and explicitly sets staging COD runtime flag false.
+- Focused COD/advance suite 42/42 and full suite 186/186 pass; build, lint, zero-vulnerability offline audit, API/Admin Wrangler dry-runs pass. Synthetic-only/local evidence.
+- MCP config/doctor passed and fresh Codex CLI exposed `list_pages`; subsequent authenticated Cloudflare navigation was canceled. No account/binding/Meta/courier record or live tester was verified; no secret, migration, deploy, rollback, message or order mutation.
+- No production promotion or PR #9 merge. Independent operational preflight and live acceptance remain blocked.
+
 ## 2026-10-24 (GFS-209)
 
 - Completed a real V1 receipt E2E. A first new sticker was correctly classified as `MESSAGE` and ignored. A distinct, clearly labeled JPEG photo replying to the target Easypaisa instruction was classified `MEDIA`, persisted to private R2/D1, and appeared in the authenticated Admin Receipts preview.
