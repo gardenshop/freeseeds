@@ -6,7 +6,7 @@
 
 | Assigned requirement | Result | Evidence / limit |
 |---|---|---|
-| P0 inspect/preserve branches and work | PASS | Verified GitHub `gardenshop`, PRs8/9/10, PR9 head34d8104, V1 frozen d816ba1, PR10 cf01f44; clean at start except preserved images; no checkout/reset/force-push |
+| P0 inspect/preserve branches and work | PASS | Verified GitHub `gardenshop`, PRs8/9/10, PR9 baseline34d8104, V1 frozen tag d816ba1, PR10 cf01f44; release branch head4129e15 is tree-identical to frozen tag; source commit b55e478 pushed; no checkout/reset/force-push |
 | P0 protected protocol/accounts | PASS READ-ONLY | Read rules/docs; current GFS identity cb5066a6d71ecdee0bd7ed8aacb4d3c2 verified; no external mutation in GFS212 |
 | P1 historical COD after kill switch | PASS SYNTHETIC | Existing COD remains non-advance for receipts/reminders and Admin ops even with new-intake flag false; V1 no-COD table fallback tested |
 | P1 CMS OFFER/media consistency | PASS SYNTHETIC / LIVE IMAGE NOT VERIFIED | Published content negative-COD text suppresses attached image while preserving the truthful message; compatible COD version can bind its versioned media. Shared live CMS v6 reads no-COD text + one active media row; image bytes not inspected or mutated |

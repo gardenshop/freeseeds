@@ -2,7 +2,7 @@
 
 ## GFS-212 Read-only Resource/Identity Preflight (2026-10-25)
 
-- Verified GitHub `gardenshop`; PRs8/9/10 remain open at `d816ba1` / `34d8104` / `cf01f44` at baseline. Wrangler authenticated as `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no account switching or scope widening.
+- Verified GitHub `gardenshop`; PRs8/9/10 remain open at `d816ba1` / `34d8104` / `cf01f44` at baseline. Frozen tag d816 and release branch head4129e15 have identical trees (read-only diff empty); neither was changed. Wrangler authenticated as `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no account switching or scope widening.
 - Isolated API current `5fc102a8-74df-415d-8515-64bb7e1a12be`, rollback `c714ac55-ef19-46b3-a803-e672460abc93`; Admin current `5a7af6ce-2bac-435b-aa52-4aae14e1ee68`, preceding `62dadc05-5e76-40d8-9ae0-af262d4a36ab`. Verified with read-only Wrangler deployments list; GFS-212 creates no deployment.
 - Primary D1 `6f26ba71-3c10-4b6e-97ab-5df7473c21c7` has migration0034, no pending migration, quick-check ok/no FK errors, zero orders/receipts/enabled rates and disabled125 COD policy/null hash. Recovery `0a9ae021-64c9-4591-ac3c-aadd29ce13b6` remains0033/no COD table, quick-check ok/no FK errors. API/Admin secret-name lists both empty (no values requested).
 - Shared D1 inspected read-only for the exact reported order and current tariff/product amounts; no shared migration or data write. No new hosted resource, object, Queue message, cron, secret, Access policy, CMS version, Meta mutation or paid spend. Private R2, incident hold, financial history, V1 and `images/` untouched.
