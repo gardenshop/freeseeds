@@ -12,7 +12,7 @@
 | Province/itemized price | PASS SYNTHETIC / LIVE BLOCKED | Seven observed shared-D1 tariff fixtures, seed0/fertilizer250; Balochistan350 gives advance600/COD725; actual D1 remains source of rates, isolated rates=0 |
 | Lahore/Balochistan correction | PASS SYNTHETIC | Recognized Lahore→Punjab mismatch is flagged; no silent data rewrite/order/dispatch; unknown city is not guessed |
 | Confirm Paid/Admin COD | PASS LOCAL / LIVE BLOCKED | Single Confirm Paid action, authentic unique reference, receipt/method/amount/order match, credit attestation, CSRF/Access/audit/CAS/idempotency; supplementary evidence optional. COD stays pending through remittance. No real order mutation |
-| Real target-order inspection | PASS READ-ONLY / CREDIT BLOCKED | FS-261025-000001 masked REVIEW/PENDING, JazzCash600, one receipt, no reference, city/province conflict. No receiving-account credit evidence |
+| Real target-order inspection | PASS READ-ONLY / CREDIT BLOCKED | Reported real order masked REVIEW/PENDING, JazzCash, one receipt, no reference, city/province conflict. No receiving-account credit evidence |
 | Migration/D1 integrity | PASS READ-ONLY | Isolated primary0034, recovery0033, quick checks ok/FK empty; no GFS212 migration/data write |
 | COD/lead release gates | BLOCKED SAFELY | COD off; isolated tariffs0, policy disabled125/null HMAC, no HMAC secret or courier proof; API/Meta registration and browser review blocked |
 | Browser/CI | PLATFORM/REMOTE BLOCKED | Kilo MCP bridge reports connected but Chrome tools not exposed; no raw CDP. `gh pr checks` reports none; no branch-protection bypass |
