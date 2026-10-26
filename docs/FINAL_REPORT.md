@@ -14,7 +14,7 @@
 | P5 repair/regression | **PASS LOCAL ONLY** | Focused100/full244, build/lint/audit0, API/Admin dry-runs. Settlement still cannot mark PAID without actual cash evidence/HMAC. No running staging regression. |
 | P6 docs/push | **PASS AFTER PUSH** | Seven records updated; source `046426e` pushed to PR #11. |
 
-**Answers:** COD code ready for isolated staging review: **yes, not deployed**. Staging COD enabled: **no**. Real WhatsApp COD PASS: **no**. Public COD: **no**. P0–P6 completed/remaining: **70/30, 75/25, 15/85, 75/25, 0/100, 70/30, 100/0**; overall ~58%. Launch estimate is indefinite until approved Chrome tabs/tester/Meta identity, D1 authorization/ledger-safe rehearsal and active Worker source parity are resolved; then staging requires separate controlled deployment and live E2E. Production needs separate authorization.
+**Answers:** COD code ready for isolated staging review: **yes, not deployed**. Staging COD enabled: **no**. Real WhatsApp COD PASS: **no**. Public COD: **no**. P0–P6 completed/remaining: **70/30, 75/25, 15/85, 0/100, 0/100, 70/30, 100/0**; overall ~47%. Launch estimate is indefinite until approved Chrome tabs/tester/Meta identity, D1 authorization/ledger-safe rehearsal and active Worker source parity are resolved; then staging requires separate controlled deployment and live E2E. Production needs separate authorization.
 
 ## GFS-227 | Final COD Blocker Resolution and Live Acceptance (2026-10-26)
 

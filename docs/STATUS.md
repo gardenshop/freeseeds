@@ -5,11 +5,11 @@
 - **P0 PARTIAL / BLOCKED.** Cloudflare/Admin Access identity remains verified from prior safe claims; GitHub `gardenshop` CLI identity verified. Chrome MCP `list_pages` still fails/returns no tabs in approved-review. No Admin Test Controls/WhatsApp own Profile comparison; tester mismatch and Meta operator verification remain. No send.
 - **P1 BLOCKED REMOTE D1.** D1 has populated schema and empty legacy migration ledger. Latest authorized query returned API7403; no retries, scope broadening, account switching, export or migration. Idempotent COD-only 0030 remains unapplied.
 - **P2 BLOCKED DEPLOY.** Active API v90/Admin v82 source parity unknown; no deployment or rollback. PR #11 adds source `046426e` only.
-- **P3 PASS LOCAL CODE / NOT ENABLED.** COD customer intake no longer requires HMAC/collection/remittance reference automation; it requires audited toggle, fixed PKR125, valid D1 province price, exact same-order quote and confirmation. Candidate runtime remains `COD_V1_ENABLED=false`. Optional COD PAID remains guarded by verified cash/HMAC reconciliation.
+- **P3 BLOCKED ENABLE / LOCAL FLOW PASS.** COD customer intake code no longer requires HMAC/collection/remittance reference automation; it requires audited toggle, fixed PKR125, valid D1 province price, exact same-order quote and confirmation. Candidate runtime remains `COD_V1_ENABLED=false`. Optional COD PAID remains guarded by verified cash/HMAC reconciliation.
 - **P4 NOT RUN LIVE.** No verified tester, actual buttons/WAMID/order/amount/Admin COD_PENDING screenshot. No shipment/cash/PAID.
 - **P5 PASS LOCAL.** Focused100/100, full244/244, build/lint/audit0, Wrangler API/Admin dry-runs. Advance/receipt/webhook source unchanged and covered by local regression; active Worker regression not run.
 - **P6 PASS AFTER PUSH.** Source `046426e` pushed to PR #11; GFS-228 records follow.
-- **Completed/remaining:** P0 70/30; P1 75/25; P2 15/85; P3 75/25; P4 0/100; P5 70/30; P6 100/0. Overall ~58%; staging/public launch **NO-GO**.
+- **Completed/remaining:** P0 70/30; P1 75/25; P2 15/85; P3 0/100; P4 0/100; P5 70/30; P6 100/0. Overall ~47%; staging/public launch **NO-GO**.
 
 ## GFS-227 Final Release Gate (2026-10-26)
 
