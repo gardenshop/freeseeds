@@ -1,5 +1,25 @@
 # Final Report
 
+## GFS-223 | Finish COD Staging Activation and Live WhatsApp Test (2026-10-26)
+
+**Result: local candidate is validated and pushed; staging COD activation/live test did not pass the preflight gates and was not attempted. No customer or production mutations occurred.**
+
+| Assignment | Result | Evidence |
+|---|---|---|
+| P0 — Chrome / identities | **PARTIAL / BLOCKED** | Diagnosed cancellation: former Codex `-s read-only` meant `approval_policy=never`, evaluator `read_only_hint:false`; fresh official MCP via approved-review mode listed pages and made sanitized existing-tab reads. Two Meta tabs + WhatsApp Web only; no Cloudflare/GitHub/Admin tabs. GitHub CLI `gardenshop`, Wrangler CLI `gisupp@gmail.com` / expected account. Meta sender identity visible, canonical WABA absent, authorized tester match false. No navigation/mutation. |
+| P1 — source parity / migration / rollback | **BLOCKED** | Active API v90 `21a3d74c-3979-432c-9190-1848362592a4`; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`; shared D1 binding matches expected ID. No Git source annotation; API deployment time predates PR #10 commit `cf01f44`, so parity is not established. Remote D1 ledger is empty and Wrangler lists all 30 migrations pending despite legacy tables/data. No replay or 0030 application. Quick/FK checks pass; Time Travel bookmark available. No actual rollback performed. |
+| P2 — enable COD | **BLOCKED** | Active API has no COD enable variable or COD HMAC binding/name; no value read. Candidate COD remains false. Courier/remittance record and canonical WABA/tester were not verified. No secret/policy provisioned. |
+| P3 — customer journey | **PASS LOCAL ONLY** | GFS-222 code/tests cover bilingual payment choice, tariff snapshot + PKR125 once, fresh quote confirmation, COD_PENDING same order, no advance outbox, and advance fallback. No current UI or deployed runtime journey verified. |
+| P4 — actual tester/Admin | **NOT RUN** | No real tester message, buttons, WAMID, order number/amount, shared D1 COD_PENDING/Admin row, screenshot, live advance switch, or remote Admin reconciliation. No cash collected, PAID, or shipment. |
+| P5 — regression/security | **PASS LOCAL / REMOTE INCOMPLETE** | Last clean run: 124 focused/244 full tests, baseline176, old-source retained-schema4; build/lint/zero-vulnerability audit; API/Admin dry-runs. Remote D1 quick/FK read-only checks pass. No remote checkout, signed callback test, rollback execution or current staging E2E. |
+| P6 — docs/push | **PASS AFTER PUSH** | Updated rules, STATUS, TEST_MATRIX, DECISIONS, CHANGELOG, RESOURCE_REGISTRY and this report; push to existing PR #11 branch is the only repository write. |
+
+**Resource/evidence details:** API config names `getfreeseeds-api-staging`, Admin `getfreeseeds-admin-staging`, D1 `getfreeseeds-staging` ID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, account ID `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. These match Wrangler's verified account metadata but not an authenticated dashboard tab. Active version IDs above are Cloudflare metadata only. Meta sender ID/canonical WABA binding in current version metadata do not prove the visible Meta session is subscribed or approved for messaging.
+
+**D1/backup:** `quick_check=ok`, no FK violations, zero rows written. `d1_migrations` exists with zero recorded migrations while the legacy database contains its tables/data; Wrangler would replay 0001–0030. This is an explicit stop gate, not approval to repair ledger history. A Time Travel bookmark was available at 2026-10-26T11:45Z; opaque restore token is intentionally omitted from Git. Migration 0030 remains unapplied.
+
+**Completion:** P0 60%/40%; P1 60%/40%; P2 0%/100%; P3 80%/20% local-only; P4 0%/100%; P5 65%/35%; P6 100%/0%. Overall approximately 48% complete; **real live acceptance 0%**. Staging and public launch **NO-GO**. Conditional staging estimate: 1–2 business days after authenticated service tabs, source parity, migration-ledger resolution, tester and courier evidence are available; otherwise blocked indefinitely. Production requires separate authorization and its own release gate.
+
 ## GFS-222 | Finish Approved COD Staging Release and Live Test (2026-10-26)
 
 **Primary objective NOT MET: no real WhatsApp COD order. Local source defects were reproduced and repaired, not deployed. Staging/production remain unchanged.**

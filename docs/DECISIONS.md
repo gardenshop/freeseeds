@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-26: GFS-223 Stop Migration/Launch at Remote Ledger and Identity Gates
+
+- MCP DOM cancellation was an approval configuration failure, not a dead bridge: old noninteractive read-only exec forced `approval_policy=never` for `evaluate_script` (`read_only_hint:false`). Fresh approved-review mode successfully performed limited existing-tab reads; no bypass or navigation. No Cloudflare/Admin/GitHub UI tabs, no canonical WABA visibility, tester profile mismatch.
+- Wrangler and GitHub CLI identities match expected GFS accounts, but browser/dashboard identity remains unverified. Live API/Admin version IDs and D1 bindings were read from Cloudflare metadata. No Git commit annotation proves deployed source parity; active API version v90 predates PR #10 commit `cf01f44`, so do not assume parity.
+- Shared D1 has `d1_migrations` table with zero rows while V1 schema/data is populated and Wrangler shows every migration pending. Integrity passes and Time Travel bookmark is available; this is insufficient to replay. Do not run Wrangler migrations apply. Do not apply 0030 until the ledger gap/source parity/operational gates are resolved.
+- No active COD HMAC secret binding/name, canonical WABA UI verification, approved tester, or actual collector/remittance record. Keep candidate COD flag false. No migration, deploy, secrets, or message changes. Production remains outside staging authorization.
+
 ## 2026-10-26: GFS-222 Repair Reproduced Release Defects Before Staging
 
 - Two new diagnostic tests reproduced fee drift between quote and confirmation and COD admission after a province was disabled. User resumed after the repair-diagnosis question. Repair these and related transaction/policy/hold defects locally before any staging attempt; do not deploy the previously passing-but-insufficiently-tested candidate.

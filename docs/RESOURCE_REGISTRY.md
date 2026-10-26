@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-223 Authenticated Resource Preflight (2026-10-26)
+
+- CLI identity: GitHub `gardenshop`; Wrangler `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Existing MCP tabs lacked Cloudflare/GitHub/Admin UIs. No current dashboard session identity verified through browser.
+- Cloudflare metadata: API `getfreeseeds-api-staging` v90 `21a3d74c-3979-432c-9190-1848362592a4`; Admin `getfreeseeds-admin-staging` v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`. Shared D1 `getfreeseeds-staging` / `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; R2 and Queue match candidate config. Versions have no source Git commit annotation; active-source parity unverified. API has no COD HMAC binding; candidate flag false.
+- Remote D1 `d1_migrations` has zero entries while legacy schema/data exists; all local migrations show pending. Remote `quick_check` ok, FK check empty, 0 rows written. No COD sidecar tables. Time Travel bookmark available at 2026-10-26T11:45Z (opaque bookmark not recorded here). No backup restore exercised. No migration applied.
+- Meta current tabs exposed sender identity but not canonical WABA; approved tester profile did not match. No authenticated courier/remittance evidence found. HMAC secret value never read. No WAMID/screenshot/test order or external mutation.
+
 ## GFS-222 Local Resources and Protected Runtime (2026-10-26)
 
 - Target remains PR #11 branch `codex/gfs221-cod-compat-001`, stacked on PR #10 `cf01f44`. No change to frozen V1 tag, PR #9, primary checkout or `images/`.

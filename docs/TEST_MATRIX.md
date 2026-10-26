@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-223 Remote Staging Preflight (2026-10-26; read-only)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Browser tool/cancellation | PASS partial | Fresh approved-review Codex session listed pages and ran sanitized visible-DOM checks. Root cause: former `-s read-only` invocation had `approval_policy=never`; `evaluate_script` declared `read_only_hint:false`, producing runtime cancellation. No bypass used. |
+| Existing authenticated tabs | BLOCKED | Two Meta business pages + WhatsApp Web; no Cloudflare/GitHub/Admin tab. Sender identity visible; canonical WABA not visible; authorized tester match false. No navigation, new tab, screenshot, conversation or mutation. |
+| CLI identities | PASS CLI ONLY | `gh api user` = `gardenshop`; `wrangler whoami` = `gisupp@gmail.com`, expected account. Not dashboard UI verification. |
+| Live Workers/bindings | PASS METADATA / SOURCE PARITY BLOCKED | API v90 `21a3d74c-3979-432c-9190-1848362592a4`; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`; both bind the expected shared staging D1 ID. No Git commit annotation; API version predates PR #10 source commit timestamp. |
+| D1 migration ledger | BLOCKED RELEASE | `d1_migrations` exists with zero rows; Wrangler lists all migrations 0001–0030 pending while populated V1 schema/history exists. Do not use Wrangler migrations apply. COD tables absent; migration 0030 unapplied. |
+| D1 integrity | PASS READ ONLY | `PRAGMA quick_check` = `ok`; `foreign_key_check` = no rows; metadata reports zero writes. |
+| Backup / Time Travel | PASS AVAILABILITY | Wrangler returned a Time Travel bookmark for 2026-10-26T11:45Z; bookmark token kept out of Git. No backup restore/write tested. |
+| HMAC/runtime | FAIL ENABLE GATE | Active API metadata has no COD flag or COD HMAC binding; secret list has no COD HMAC name. Candidate flag false. No secret values accessed/provisioned. |
+| Collection/Meta/tester | BLOCKED | No authenticated current WABA/courier record; WABA absent in existing tabs; tester profile does not match authorized tester. |
+| Remote migration/deploy/live | NOT RUN | No migration, Worker, secret, policy, callback or order mutation; no WAMID/screenshot/live order. |
+
 ## GFS-222 Release-Defect Regression and Acceptance (2026-10-26)
 
 | Requirement | Result | Evidence / boundary |

@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-223 Current Staging Preflight Findings (2026-10-26)
+
+- Official Chrome bridge is enabled. The earlier `user cancelled MCP tool call` was caused by a Codex exec started `-s read-only` (`approval_policy=never`) while the DOM evaluator was declared `read_only_hint:false`; the evaluator had no approved execution path. The fresh approved review-mode session succeeded without bypass and was read-only. It listed only two Meta business tabs and WhatsApp Web; no Cloudflare/GitHub/Admin tab. Current visible Meta checks: GFS sender identity visible, canonical WABA not visible, approved tester match false. Do not navigate/open a different tab without required host approval.
+- GitHub CLI account `gardenshop` and Wrangler OAuth identity `gisupp@gmail.com` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` were read-only verified. Wrangler configs, remote Worker version metadata, and actual shared D1 ID agree. No authenticated dashboard UI was available; CLI evidence does not replace UI verification before mutation.
+- Active API version v90 `21a3d74c-3979-432c-9190-1848362592a4`, Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`. API version metadata timestamp precedes PR #10 source commit `cf01f44`; Cloudflare provides no Git commit annotation, so parity is unverified. Current API metadata has no COD enable var or COD HMAC secret binding; API secret listing has no `COD_REFERENCE_HMAC_KEY`. Values were never read.
+- Remote `d1_migrations` exists but has zero rows; Wrangler consequently lists every migration 0001–0030 pending despite populated V1 schema/history. **Never run Wrangler migration apply**. Remote COD tables do not exist. `quick_check=ok`, `foreign_key_check` empty, and a Time Travel bookmark was returned at 2026-10-26T11:45Z. These read-only checks made zero writes. Do not apply 0030 until the migration-ledger discrepancy is safely resolved, deployed-source parity is proven, and authenticated operations/collector gates pass.
+- Source candidate remains COD disabled; no secret, migration, Worker, callback, payment, customer, audit, Meta, courier-policy, or production change occurred. Local tests are not live acceptance. Preserve current backup/rollback, and never restore over new order history.
+
 ## GFS-222 Compatibility and Staging-Only Release Protocol (2026-10-26)
 
 - GFS-220 staging Approach A authorization remains valid; do not ask for it again or treat it as production promotion. Continue only on PR #11's compatibility branch. Frozen V1, PR #9, customer/payment/receipt/audit history, `images/`, Meta config, and existing secret values are protected.

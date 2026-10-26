@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-26 (GFS-223 staging preflight)
+
+- Diagnosed Chrome MCP `user cancelled`: previous CLI used `approval_policy=never` for an evaluator marked potentially mutating. Fresh approved-review mode exposed/listed pages and sanitized existing-tab inspection without bypass.
+- Verified only GitHub/Cloudflare CLI identities; no service UI tab for Cloudflare/GitHub/Admin. Meta canonical WABA absent from tabs, tester match false.
+- Verified read-only Worker versions and shared D1 binding. Remote D1 integrity passes and a Time Travel bookmark is available, but `d1_migrations` has zero rows and Wrangler shows all migrations pending against populated legacy schema. Do not replay; do not apply COD migration.
+- No live source-parity proof, HMAC binding, courier record, migration, deploy, WhatsApp test, order or production change. Candidate source remains fail-closed.
+
 ## 2026-10-26 (GFS-222 release-defect repair and acceptance boundaries)
 
 - Reproduced undisplayed COD fee changes and disabled-province admission with two failing diagnostic tests before source repair.
