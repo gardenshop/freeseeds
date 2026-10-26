@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-233 Verified Support/Deployment State (2026-10-26)
+
+- Wrangler principal/account confirmed immediately before Support: `gisupp@gmail.com`, expected GFS account, `d1:write`. This does not grant proven D1 query permission.
+- One approved Chrome MCP execution called `list_pages` then reached Support. Cloudflare Free Support classified API7403 for staging D1 as ineligible (Free case topics only billing/account/registrar); no case ID/submission. A later fresh execution lost `list_pages` again. No D1 query/retry or cloud change.
+- Latest 100% Worker history remains API v90 `21a3d74c-3979-432c-9190-1848362592a4`, Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`; source SHA absent. API/Admin dry-runs pass with expected bindings, candidate `COD_V1_ENABLED=false`. Active flag/bindings unqueried.
+
 ## GFS-232 Current Access/Runtime State (2026-10-26)
 
 - Wrangler confirms expected GFS account/email and `d1:write`; this grants no proven D1 query authorization. No D1 query, support case/reference, scope/identity change or hosted mutation occurred.

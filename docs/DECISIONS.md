@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-26: GFS-233 Free Support Eligibility and MCP Session
+
+- One same-execution approved Codex session successfully called official `list_pages` and reached Cloudflare Support; a later separate session failed to expose the tool. Keep browser actions in one initialized session, do not repeat retries or change MCP config/profile.
+- The verified Free account Support UI explicitly says the D1 API7403 issue on `getfreeseeds-staging` is ineligible; Free cases limited to billing/account/registrar topics. No case/ref. Owner must escalate via a genuinely eligible account-support channel or obtain separate paid-support approval. Do not reclassify deceptively, pay, or alter permissions/scopes.
+- No direct/indirect D1 operation after the prior unavailable Test Controls result. No migration/deploy/flag/customer message; keep COD off. Latest API/Admin histories and dry-run/test results are recorded in GFS-233 STATUS/FINAL_REPORT.
+
 ## 2026-10-26: GFS-232 MCP Exposure Is the Immediate Gate
 
 - Wrangler identity and account were freshly verified, with `d1:write`; no D1 query was sent and no scope/account change is justified. Do not mistake the top-level grant for D1 SQL/query authorization.

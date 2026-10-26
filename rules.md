@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-233 Approved Session and Support Gate (2026-10-26)
+
+- Same-root approved Codex0.164.0 execution (`CODEX_HOME=D:\AI-Tools\Codex\home`, cwd `D:\free seeds`, `--approve-for-me`) called official `chrome-devtools/list_pages` successfully, then used that SAME execution to reach Cloudflare Support. A later separate fresh execution again lacked callable `list_pages`; exposure is intermittent. Do not repeat MCP retries in this run; use one MCP-enabled session from inventory through browser actions.
+- Wrangler principal/account verified immediately before support flow: `gisupp@gmail.com`, GFS account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, `d1:write`. Cloudflare's Free-plan UI states cases are limited to billing/account/registrar and the D1 API7403 issue on `getfreeseeds-staging` is ineligible. No case was submitted and no case ID exists. Do not reclassify to evade eligibility or buy/upgrade support without separate approval. Exact owner action: escalate this account-level D1 authorization through an eligible Cloudflare account-support channel or an explicitly authorized paid support plan; no scope/account changes.
+- No D1 query/retry, migration, backup/integrity/Time Travel, or direct/indirect Admin read in GFS-233. Prior `/test-controls` exemptions read remains UNAVAILABLE; D1 access was not restored, so do not retry. Prior tester Profile mismatch remains; no sender/operator/tester recheck or WhatsApp message.
+- Read-only Wrangler deployment histories show API v90 `21a3d74c-3979-432c-9190-1848362592a4` and Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` at 100%, source SHA unknown. Both candidate dry-runs pass; API candidate `COD_V1_ENABLED=false`. Dry-run is not live evidence. No migration/deploy/rollback/flag change.
+- Local checks pass focused27/27, full244/244, retained V1 harness4/4, build/lint/audit0. No order, WAMID, screenshot, customer/payment mutation. Preserve frozen V1, PR #9/#10, `images/`, all financial history, and signed webhook.
+- Keep staging/live acceptance NO-GO. Production remains separately gated.
+
 ## GFS-232 Approved MCP Exposure Gate (2026-10-26)
 
 - Fresh `wrangler whoami` authoritatively reconfirmed `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, with `d1:write`. This is not D1 query authorization. Do not retry D1 or change scopes/accounts.

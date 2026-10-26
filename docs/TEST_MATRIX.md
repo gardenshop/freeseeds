@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-233 Support/MCP and Release Checks (2026-10-26)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Official Chrome MCP | PASS PARTIAL | Same approved execution: `list_pages` PASS, then Cloudflare Support UI reached. A later separate execution lost the tool; intermittent. |
+| D1 support case | BLOCKED / NONE | Verified principal/account and `d1:write`; Free plan says API7403 D1 case ineligible (only billing/account/registrar topics). No case ID/submission; no D1 query. |
+| D1/Test Controls | NOT RUN | No D1 query. Prior Test Controls exemptions read UNAVAILABLE; not retried. No migration/backup/integrity/Time Travel. |
+| Active Worker metadata | PASS READ-ONLY | API v90 `21a3d74c-3979-432c-9190-1848362592a4`; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`, both 100%; source SHA unknown. |
+| API/Admin dry-runs | PASS CONFIG ONLY | Both bundles pass with expected staging D1/R2/Queue; candidate API `COD_V1_ENABLED=false`. No deployment/live flag proof. |
+| Regression/security | PASS LOCAL | Focused27/27; full244/244; V1 harness4/4; build/lint/audit0. |
+| Live COD/Advance | NOT RUN | No tester/message/order/WAMID/Admin evidence/screenshot; no real runtime verification. |
+
 ## GFS-232 Local/Access Recheck (2026-10-26)
 
 | Check | Result | Evidence / boundary |

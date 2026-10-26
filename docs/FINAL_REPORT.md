@@ -1,5 +1,23 @@
 # Final Report
 
+## GFS-233 | Support Eligibility, Staging and Live Test (2026-10-26)
+
+**Result: approved MCP browser action worked in one execution; Cloudflare Free Support rejected the D1 case. Local COD candidate passes, but staging deployment/live WhatsApp test are blocked.**
+
+| Assignment | Result | Evidence |
+|---|---|---|
+| P0 — Chrome MCP | **PARTIAL PASS / INTERMITTENT** | In one approved Codex0.164.0 execution from `D:\free seeds`, `list_pages` succeeded and that same session reached Support. A later fresh execution again lacked `list_pages`. No config/profile/identity change. |
+| P0 — D1 authorization/support | **BLOCKED / NO CASE** | Wrangler verified `gisupp@gmail.com`, expected account, `d1:write`. Cloudflare Free Support says only billing/account/registrar topics are eligible and this D1 API7403 is ineligible. No support case/reference and no D1 query. Exact owner step: use an eligible account-support route or separately authorize a paid support entitlement; no scope/account change. |
+| P0 — tester/sender | **BLOCKED** | Prior Test Controls exemptions returned UNAVAILABLE; no retry because D1 authorization did not recover. Last verified own WhatsApp Profile mismatch remains. No current WABA/operator/tester check and no send. |
+| P1 — D1/schema/rollback | **NOT RUN** | Migration0030 unapplied; no Time Travel, backup, integrity, rehearsal, or remote rollback. Empty legacy ledger untouched. |
+| P2 — staging release | **NOT RUN** | Current histories API v90 `21a3d74c-3979-432c-9190-1848362592a4`, Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`, both at100%, source SHA unknown. API/Admin dry-runs pass; no deploy/runtime rollback. |
+| P3 — COD flag | **NOT ENABLED** | Candidate dry-run says `COD_V1_ENABLED=false`; active flag unknown. |
+| P4 — live WhatsApp | **NOT RUN** | No genuine buttons/order/total/WAMIDs/Admin COD_PENDING/screenshot or live Advance check. No shipment/cash/PAID. |
+| P5 — regression | **PASS LOCAL ONLY** | Focused27/27, full244/244, V1 compatibility harness4/4, build/lint/audit0 and API/Admin dry-runs. No live D1/webhook/Advance checks. |
+| P6 — docs/push | **PENDING PUSH** | Seven records contain new Support eligibility, same-session MCP and current Worker/dry-run evidence. |
+
+**Percent complete:** P0 70%; P1 75%; P2 15%; P3 0%; P4 0%; P5 100% local; P6 100% after push. Overall source readiness ~50%; live acceptance0%; staging/public readiness NO-GO. No support case/reference, migration, COD activation, order ID/amount, WAMID or screenshot exists. Do not buy a support plan or reclassify the ineligible case without separate authorization. Production remains separately gated.
+
 ## GFS-232 | COD Activation Gate (2026-10-26)
 
 **Result: local candidate PASS; actual staging release and live WhatsApp test BLOCKED. No cloud or customer mutation.**

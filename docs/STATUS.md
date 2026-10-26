@@ -1,5 +1,17 @@
 # Status
 
+## GFS-233 Support Eligibility and Staging Preflight (2026-10-26)
+
+- **P0 MCP PASS IN ONE EXEC / INTERMITTENT.** One approved Codex0.164.0 execution from `D:\free seeds` called official `list_pages`, then reached Support in the same execution. A later separate execution lost `list_pages` again. Use a single initialized session; no further retry/reconnect in this run.
+- **P0 D1 SUPPORT BLOCKED.** Wrangler verified `gisupp@gmail.com`, expected account, `d1:write`. Cloudflare Free-plan Support UI said only billing/account/registrar categories are eligible and API7403 for `getfreeseeds-staging` is ineligible. No case was filed/reference does not exist. Owner must escalate through an eligible account-support route or obtain separate authorization for paid support; no scope/identity/resource changes. D1 was not queried.
+- **P0 TESTER BLOCKED.** `/test-controls` last returned UNAVAILABLE; D1 access did not recover, so no retry. Last own WhatsApp Profile mismatch remains; no fresh Meta operator/WABA/tester verification and no message.
+- **P1 DATABASE NOT RUN.** Migration0030 unapplied; no backup, Time Travel, integrity, rehearsal, migration or rollback. Empty historical `d1_migrations` preserved.
+- **P2 DEPLOY NOT RUN.** Current 100% histories: API v90 `21a3d74c-3979-432c-9190-1848362592a4`; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`; source SHA unknown. API/Admin dry-runs pass with candidate COD flag false; active flag remains unknown. No deploy.
+- **P3/P4 NOT RUN.** No COD enablement, live checkout, order, total, WAMID, Admin COD_PENDING or screenshot. No shipment/cash/PAID.
+- **P5 PASS LOCAL ONLY.** Focused27/27; full244/244; V1 compatibility harness4/4; build/lint/audit0; API/Admin dry-runs. No live D1/API/Admin/webhook/Advance verification.
+- **P6 PASS after push** of this new support/MCP evidence. No application source change. V1/PR #9/#10/images/history/webhook unchanged.
+- **Completed/remaining:** P0 70/30; P1 75/25; P2 15/85; P3 0/100; P4 0/100; P5 100/0 local (live0); P6 100/0 after push. Overall source readiness ~50%; live acceptance0%; NO-GO. ETA depends on eligible owner-side Cloudflare support and restored tester/D1 gates.
+
 ## GFS-232 COD Activation Preflight (2026-10-26)
 
 - **P0 PARTIAL / SUPPORT BLOCKED.** Fresh Wrangler identity matches `gisupp@gmail.com` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, scope `d1:write`; this does not prove query access. Codex0.164.0 MCP config shows official `chrome-devtools` enabled, Codex doctor/config/network pass, Chrome process active, but approved `exec` did not expose callable `list_pages`. No support UI/case/ID. Do not change scopes/identity or retry D1.

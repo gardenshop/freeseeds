@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-26 (GFS-233 support eligibility and MCP recovery)
+
+- One approved same-execution Chrome MCP `list_pages` succeeded and reached Cloudflare Support. A subsequent fresh exec again lacked the tool; intermittent session exposure remains.
+- Cloudflare Free Support rejected D1 API7403 for `getfreeseeds-staging` as ineligible; no case/reference, D1 query, scope or account change. Owner-side eligible support/paid-plan route required.
+- Refreshed actual API v90/Admin v82 deployment history and API/Admin dry-runs; no deploy. Focused27/full244/V1 rollback4/build/lint/audit0 pass. No live WhatsApp evidence.
+
 ## 2026-10-26 (GFS-232 activation preflight)
 
 - Fresh Wrangler identity/account check passed with `d1:write`; D1 was not queried. Codex0.164.0 official Chrome MCP is configured/enabled and doctor healthy, but approved execution did not expose `list_pages`; no support case/reference. No scope or identity change.
