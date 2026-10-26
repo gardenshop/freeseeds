@@ -7,7 +7,7 @@
 | `getfreeseeds-api-staging` | `21a3d74c-3979-432c-9190-1848362592a4` /100% | `2026-10-24T12:47:42Z` | `0a306eaaeb2b40b236cec7cfdbab4ae07baee5abb9aaaf47f73f040d9995bb02` | Not exposed |
 | `getfreeseeds-admin-staging` | `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` /100% | `2026-10-24T12:55:05Z` | `ba0f365047e5e3568260b4b6d25f15ad4cc032f1b2962b16c8c11134e0ed1c43` | Not exposed |
 
-- API binding metadata matches staging D1/R2/Queue and canonical GFS Meta IDs; secret names only. Active API v90 binding inventory has no `COD_V1_ENABLED`, so fail-closed COD intake is off; candidate dry-run also false. Binding metadata does not prove Meta operator or current phone review.
+- API binding metadata matches staging D1/R2/Queue and canonical GFS Meta IDs; secret names only. Active API v90 binding inventory has no `COD_V1_ENABLED`; its runtime behavior is unknown without source. Candidate dry-run has the flag false. Binding metadata does not prove Meta operator or current phone review.
 - Both deployment times precede PR10 commit cf01f44 (17:54:21Z); source may still have been deployed from an uncommitted tree, so exact parity remains UNKNOWN. Dashboard code view provided no script/hash; no edit/deploy. Callback remains untouched.
 - Original D1 unchanged, COD0030 unapplied. GFS234 isolated synthetic DB unbound; retained for cleanup review Oct28. No active Worker/binding/Meta/customer mutation.
 
