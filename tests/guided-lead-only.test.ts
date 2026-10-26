@@ -103,12 +103,10 @@ async function reachReview(locale: "en" | "ur", fertilizer = false) {
 }
 
 async function enableAuditedCodPolicy(feePkr = 125) {
-  const collectionPolicyHash = await codReferenceHmac("SYNTHETIC-COURIER-POLICY", codHmacKey);
-  const remittancePolicyHash = await codReferenceHmac("SYNTHETIC-REMITTANCE-POLICY", codHmacKey);
   const updatedAt = new Date(Date.now() + 1).toISOString();
   const revision = crypto.randomUUID();
-  sqlite.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?,?)").run(revision, "COD_CONFIGURATION_UPDATED", "ADMIN", "admin@example.test", "COD_CONFIGURATION", "default", crypto.randomUUID(), JSON.stringify({ enabled: true, feePkr, collectionPolicyHash, remittancePolicyHash }), updatedAt);
-  sqlite.prepare("UPDATE cod_configuration SET enabled=1,fee_pkr=?,collection_policy_hash=?,remittance_policy_hash=?,revision=?,updated_by=?,updated_at=? WHERE id='default'").run(feePkr, collectionPolicyHash, remittancePolicyHash, revision, "admin@example.test", updatedAt);
+  sqlite.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?,?)").run(revision, "COD_CONFIGURATION_UPDATED", "ADMIN", "admin@example.test", "COD_CONFIGURATION", "default", crypto.randomUUID(), JSON.stringify({ enabled: true, feePkr, collectionPolicyHash: null, remittancePolicyHash: null }), updatedAt);
+  sqlite.prepare("UPDATE cod_configuration SET enabled=1,fee_pkr=?,collection_policy_hash=NULL,remittance_policy_hash=NULL,revision=?,updated_by=?,updated_at=? WHERE id='default'").run(feePkr, revision, "admin@example.test", updatedAt);
 }
 
 async function enableSyntheticPaymentMethod(method: "JAZZCASH" | "EASYPAISA" | "BANK_TRANSFER" = "JAZZCASH") {
@@ -261,7 +259,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     if (!intakeEnabled) codRuntimeHmacKey = "";
     expect((await callback([confirmation])).status).toBe(200);
     expect(sends).toHaveLength(sendsBeforeConfirmation + 1);
-    expect(body()).toContain(locale === "en" ? "is confirmed for COD" : "COD کے لیے تصدیق ہو گیا");
+    expect(body()).toContain(locale === "en" ? "confirmed for Cash on Delivery" : "وصولی پر ادائیگی کے لیے تصدیق ہو گیا");
     expect(body()).toContain(orderNumber);
     expect(body()).toContain("PKR 325");
     expect(body()).not.toContain("SYNTHETIC-STALE-DISPLAY");
@@ -289,15 +287,15 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     const orderId = (conversation()?.data as { orderId: string }).orderId;
     await inbound(tap("COD"));
     expect(body()).toContain("Total due on collection: PKR 325");
-    await enableAuditedCodPolicy(150);
+    await enableAuditedCodPolicy(); // Same fee; a new audited revision invalidates the displayed quote.
     await inbound(tap("CONFIRM_COD_ORDER"));
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details WHERE order_id=?").get(orderId)).toEqual({ count: 0 });
     expect(sqlite.prepare("SELECT state FROM orders WHERE id=?").get(orderId)).toEqual({ state: "DETAILS_COMPLETED" });
     expect(body()).toContain("fresh quote");
     await inbound(tap("COD"));
-    expect(body()).toContain("Total due on collection: PKR 350");
+    expect(body()).toContain("Total due on collection: PKR 325");
     await inbound(tap("CONFIRM_COD_ORDER"));
-    expect(sqlite.prepare("SELECT quoted_total_pkr FROM cod_order_details WHERE order_id=?").get(orderId)).toEqual({ quoted_total_pkr: 350 });
+    expect(sqlite.prepare("SELECT quoted_total_pkr FROM cod_order_details WHERE order_id=?").get(orderId)).toEqual({ quoted_total_pkr: 325 });
   });
 
   it("does not admit COD after the order's province is disabled", async () => {
@@ -368,7 +366,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     expect(conversation()?.state).toBe("COD_PENDING");
     expect(sends).toHaveLength(sentBefore + 1);
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_ORDER_CONFIRMED'").get()).toEqual({ count: 1 });
-    expect(sqlite.prepare("SELECT policy_revision,collection_policy_hash,remittance_policy_hash,test_hold FROM cod_order_details").get()).toEqual({ policy_revision: quote.policyRevision, collection_policy_hash: quote.collectionPolicyHash, remittance_policy_hash: quote.remittancePolicyHash, test_hold: 1 });
+    expect(sqlite.prepare("SELECT policy_revision,collection_policy_hash,remittance_policy_hash,test_hold FROM cod_order_details").get()).toEqual({ policy_revision: quote.policyRevision, collection_policy_hash: null, remittance_policy_hash: null, test_hold: 1 });
   });
 
   it("does not let a stale Advance Payment back callback overwrite a COD winner", async () => {
@@ -485,7 +483,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     const confirmedEvent = await inbound(tap("CONFIRM_COD_ORDER"), "synthetic-cod-confirmation-retry");
 
     expect(conversation()?.state).toBe("COD_PENDING");
-    expect(body()).toContain("confirmed for COD");
+    expect(body()).toContain("confirmed for Cash on Delivery");
     expect(body()).toContain(orderData.orderNumber);
     expect(sends).toHaveLength(sendCountBeforeConfirmation + 1);
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: countBefore + 1 });
@@ -566,14 +564,19 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     expect(buttons()).toEqual(["CONFIRM_COD_ORDER", "ADVANCE_PAYMENT"]);
   });
 
-  it("fails closed for a short API HMAC key even with an audited enabled setting", async () => {
+  it("accepts COD_PENDING with fixed PKR 125 and no collection HMAC secret", async () => {
     await enableAuditedCodPolicy();
-    codRuntimeHmacKey = "short-api-key";
+    codRuntimeHmacKey = "";
     codEnabled = true;
     await reachReview("en", true);
     await inbound(tap("PLACE_ORDER"));
-    expect(buttons()).not.toContain("COD");
-    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({ count: 0 });
+    const orderId = (conversation()?.data as { orderId: string }).orderId;
+    await inbound(tap("COD"));
+    expect(body()).toContain("COD collection fee: PKR 125");
+    await inbound(tap("CONFIRM_COD_ORDER"));
+    expect(body()).toContain("Pay PKR 325 on delivery");
+    expect(sqlite.prepare("SELECT state,payment_status,total_payable FROM orders WHERE id=?").get(orderId)).toEqual({ state: "COD_PENDING", payment_status: "COD_PENDING", total_payable: 200 });
+    expect(sqlite.prepare("SELECT cod_fee_pkr,quoted_total_pkr,test_hold,collection_policy_hash,remittance_policy_hash FROM cod_order_details WHERE order_id=?").get(orderId)).toEqual({ cod_fee_pkr: 125, quoted_total_pkr: 325, test_hold: 1, collection_policy_hash: null, remittance_policy_hash: null });
   });
 
   it("fails closed when D1 COD settings are enabled without matching latest audit provenance", async () => {

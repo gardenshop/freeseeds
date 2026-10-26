@@ -549,6 +549,16 @@ app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and f
 
 app.get("/api/csrf", (c) => c.json({ csrfToken: issueCsrfToken(c) }));
 
+app.get("/cod-settings", (c) => {
+  const csrf = issueCsrfToken(c);
+  return c.html(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cash on Delivery</title></head><body><nav><a href="/">Admin home</a> | <a href="/orders">Orders</a></nav><h1>Cash on Delivery</h1><p>COD adds PKR 125 once to the existing province-priced order. Confirmed orders stay COD_PENDING and TEST ONLY / DO NOT SHIP. COD is never marked paid at confirmation.</p><p id="status" role="status">Loading…</p><form id="form"><label><input name="enabled" type="checkbox"> Enable COD intake</label><p>COD collection fee: PKR 125</p><button>Save audited setting</button></form><script>
+const csrf=${JSON.stringify(csrf)};const form=document.querySelector('#form'),status=document.querySelector('#status');let expectedRevision='';
+async function json(r){const d=await r.json();if(!r.ok)throw new Error(d.error||'Request failed');return d}
+async function load(){const d=await json(await fetch('/api/cod-configuration',{cache:'no-store'}));expectedRevision=d.revision;form.elements.enabled.checked=d.enabled;status.textContent='COD intake is '+(d.enabled?'enabled in D1':'disabled in D1')+'; the Worker intake flag is separately controlled.'}
+form.onsubmit=async(e)=>{e.preventDefault();if(form.elements.enabled.checked&&!confirm('Enable COD intake with the fixed PKR 125 fee? TEST ONLY / DO NOT SHIP remains enforced.'))return;const button=form.querySelector('button');button.disabled=true;try{await json(await fetch('/api/cod-configuration',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify({enabled:form.elements.enabled.checked,feePkr:125,expectedRevision})}));await load()}catch(error){status.textContent=error.message||'Save failed'}finally{button.disabled=false}};load().catch(error=>{status.textContent=error.message||'Settings unavailable'});
+</script></body></html>`);
+});
+
 app.get("/api/cod-configuration", async (c) => {
   if (!c.env.DB) return c.json({ error: "COD_CONFIGURATION_UNAVAILABLE" }, 503);
   try {
@@ -563,19 +573,17 @@ app.get("/api/cod-configuration", async (c) => {
 app.post("/api/cod-configuration", async (c) => {
   if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
   if (!c.env.DB) return c.json({ error: "COD_CONFIGURATION_UNAVAILABLE" }, 503);
-  if (!c.env.COD_REFERENCE_HMAC_KEY?.trim() || c.env.COD_REFERENCE_HMAC_KEY.trim().length < 32) return c.json({ error: "COD_REFERENCE_HMAC_KEY_REQUIRED" }, 503);
-  let body: { enabled?: unknown; feePkr?: unknown; collectionPolicyReference?: unknown; remittancePolicyReference?: unknown; expectedRevision?: unknown };
+  let body: { enabled?: unknown; feePkr?: unknown; expectedRevision?: unknown };
   try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
-  if (typeof body.enabled !== "boolean" || !Number.isSafeInteger(body.feePkr) || Number(body.feePkr) < 0 || Number(body.feePkr) > 100000) return c.json({ error: "COD_CONFIGURATION_INVALID" }, 400);
+  if (typeof body.enabled !== "boolean" || Number(body.feePkr) !== 125) return c.json({ error: "COD_CONFIGURATION_INVALID" }, 400);
   if (typeof body.expectedRevision !== "string" || !body.expectedRevision) return c.json({ error: "COD_CONFIGURATION_CONFLICT" }, 409);
   const previous = await c.env.DB.prepare("SELECT revision,collection_policy_hash,remittance_policy_hash FROM cod_configuration WHERE id='default'").first<{ revision: string; collection_policy_hash: string | null; remittance_policy_hash: string | null }>();
   if (!previous) return c.json({ error: "COD_CONFIGURATION_MISSING" }, 503);
   if (body.expectedRevision !== previous.revision) return c.json({ error: "COD_CONFIGURATION_CONFLICT" }, 409);
-  const collectionReference = normalizeCodEvidenceReference(body.collectionPolicyReference);
-  const remittanceReference = normalizeCodEvidenceReference(body.remittancePolicyReference);
-  if (body.enabled && (!collectionReference || !remittanceReference)) return c.json({ error: "COD_POLICY_EVIDENCE_REQUIRED" }, 409);
-  const collectionHash = collectionReference ? await codReferenceHmac(collectionReference, c.env.COD_REFERENCE_HMAC_KEY) : previous.collection_policy_hash;
-  const remittanceHash = remittanceReference ? await codReferenceHmac(remittanceReference, c.env.COD_REFERENCE_HMAC_KEY) : previous.remittance_policy_hash;
+  // Basic COD checkout records an audited intake toggle and the fixed fee only.
+  // Optional cash evidence/reconciliation remains a separate financial operation.
+  const collectionHash = previous.collection_policy_hash;
+  const remittanceHash = previous.remittance_policy_hash;
   const now = new Date().toISOString();
   const revision = crypto.randomUUID();
   try {

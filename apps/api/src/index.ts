@@ -28,7 +28,6 @@ type Env = {
     META_INSTANT_FORM_ID?: string;
     FLOW_PRIVATE_KEY?: string;
     COD_V1_ENABLED?: string;
-    COD_REFERENCE_HMAC_KEY?: string;
   };
 };
 
@@ -39,7 +38,7 @@ function decodeBase64Url(value: string): Uint8Array { const padded = value.repla
 async function createFlowToken(waId: string, inboundId: string, secret: string): Promise<string> { const payload = base64Url(new TextEncoder().encode(JSON.stringify({ waId, inboundId, exp: Date.now() + 60 * 60 * 1000 }))); const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]); const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload)); return `${payload}.${base64Url(new Uint8Array(signature))}`; }
 async function verifyFlowToken(token: string, secret: string): Promise<string | null> { const [payload, signature] = token.split("."); if (!payload || !signature) return null; try { const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["verify"]); if (!(await crypto.subtle.verify("HMAC", key, decodeBase64Url(signature), new TextEncoder().encode(payload)))) return null; const data = JSON.parse(new TextDecoder().decode(decodeBase64Url(payload))) as { waId?: string; exp?: number }; return typeof data.waId === "string" && typeof data.exp === "number" && data.exp > Date.now() ? data.waId : null; } catch { return null; } }
 
-type CodQuoteSnapshot = { baseAmountPkr: number; feePkr: number; totalPkr: number; policyRevision: string; collectionPolicyHash: string; remittancePolicyHash: string };
+type CodQuoteSnapshot = { baseAmountPkr: number; feePkr: number; totalPkr: number; policyRevision: string; collectionPolicyHash: string | null; remittancePolicyHash: string | null };
 type ConversationData = { language?: "en" | "ur"; fullName?: string; deliveryAddress?: string; nearbyPlace?: string; city?: string; contactNumber?: string; province?: string; fertilizerSelected?: boolean; orderId?: string; orderNumber?: string; amountPkr?: number; codQuote?: CodQuoteSnapshot };
 
 type ConversationReplyOptions = { buttons?: InteractiveButton[]; list?: { buttonText: string; rows: Array<{ id: string; title: string; description?: string }> }; image?: OutboundImage; flow?: { id: string; token: string } };
@@ -313,16 +312,15 @@ type CodPolicyRow = { enabled: number; fee_pkr: number; revision: string; collec
 const codAuditMatch = `a.id=cfg.revision AND a.action='COD_CONFIGURATION_UPDATED' AND a.entity_type='COD_CONFIGURATION' AND a.entity_id='default'
   AND a.actor_type='ADMIN' AND a.actor_id=cfg.updated_by AND a.created_at=cfg.updated_at
   AND json_extract(a.metadata_json,'$.enabled')=1 AND json_extract(a.metadata_json,'$.feePkr')=cfg.fee_pkr
-  AND json_extract(a.metadata_json,'$.collectionPolicyHash')=cfg.collection_policy_hash
-  AND json_extract(a.metadata_json,'$.remittancePolicyHash')=cfg.remittance_policy_hash`;
+  AND json_extract(a.metadata_json,'$.collectionPolicyHash') IS cfg.collection_policy_hash
+  AND json_extract(a.metadata_json,'$.remittancePolicyHash') IS cfg.remittance_policy_hash`;
 
-async function codPolicy(db: D1Database, secret?: string): Promise<CodPolicyRow | null> {
-  if (!secret?.trim() || secret.trim().length < 32) return null;
+async function codPolicy(db: D1Database): Promise<CodPolicyRow | null> {
   try {
     const row = await db.prepare(`SELECT cfg.enabled,cfg.fee_pkr,cfg.revision,cfg.collection_policy_hash,cfg.remittance_policy_hash,cfg.updated_by,cfg.updated_at,
       EXISTS(SELECT 1 FROM audit_log a WHERE ${codAuditMatch}) AS audited
       FROM cod_configuration cfg WHERE cfg.id='default'`).first<CodPolicyRow>();
-    if (!row || Number(row.enabled) !== 1 || Number(row.audited) !== 1 || !row.updated_by?.trim() || !row.updated_at || !Number.isSafeInteger(Number(row.fee_pkr)) || Number(row.fee_pkr) < 0 || !/^[a-f0-9]{64}$/.test(row.collection_policy_hash ?? "") || !/^[a-f0-9]{64}$/.test(row.remittance_policy_hash ?? "")) return null;
+    if (!row || Number(row.enabled) !== 1 || Number(row.audited) !== 1 || !row.updated_by?.trim() || !row.updated_at || Number(row.fee_pkr) !== 125) return null;
     return row;
   } catch {
     return null;
@@ -340,7 +338,7 @@ async function finalizeCodOrder(db: D1Database, orderId: string, quote: CodQuote
       FROM orders o JOIN payments p ON p.order_id=o.id JOIN province_delivery_rates province ON province.province=o.province AND province.enabled=1
       JOIN cod_configuration cfg ON cfg.id='default' AND cfg.enabled=1 JOIN audit_log a ON ${codAuditMatch}
       WHERE o.id=? AND o.state='DETAILS_COMPLETED' AND o.payment_status='PENDING' AND o.total_payable=?
-      AND cfg.revision=? AND cfg.fee_pkr=? AND cfg.collection_policy_hash=? AND cfg.remittance_policy_hash=?
+      AND cfg.revision=? AND cfg.fee_pkr=? AND cfg.collection_policy_hash IS ? AND cfg.remittance_policy_hash IS ?
       AND p.method IS NULL AND p.review_state='PENDING' AND p.approved_amount IS NULL AND p.approved_by IS NULL AND p.approved_at IS NULL AND p.submitted_at IS NULL AND p.customer_transaction_reference IS NULL
       AND NOT EXISTS(SELECT 1 FROM payment_receipts r WHERE r.order_id=o.id)
       AND NOT EXISTS(SELECT 1 FROM audit_log h WHERE h.entity_id IN (o.id,p.id) AND h.action IN ('PAYMENT_METHOD_SELECTED','PAYMENT_APPROVED','PAYMENT_CONFIRMED','RECEIPT_SUBMITTED'))
@@ -353,7 +351,7 @@ async function finalizeCodOrder(db: D1Database, orderId: string, quote: CodQuote
   return results.every((result) => Number(result.meta?.changes ?? 0) === 1) ? "CREATED" : "NOT_ELIGIBLE";
 }
 
-async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }, flowId: string, flowTokenSecret?: string, checkoutMode: string = "guided", events?: Queue, codEnabled = false, codHmacKey?: string): Promise<boolean> {
+async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }, flowId: string, flowTokenSecret?: string, checkoutMode: string = "guided", events?: Queue, codEnabled = false): Promise<boolean> {
   const sessionContent = (key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; amount?: string | number; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string } = {}) => contentFor(db, key, fallback, values, `CHAT:${event.from}`, data.language ?? "en");
   const message = event.payload && typeof event.payload === "object" ? event.payload as { text?: { body?: string }; interactive?: { button_reply?: { id?: string; title?: string }; list_reply?: { id?: string; title?: string }; nfm_reply?: { response_json?: string } }; button?: { payload?: string; text?: string } } : {};
   const interaction = message.interactive?.button_reply ?? message.interactive?.list_reply;
@@ -374,7 +372,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   const originalStateData = row?.state_data ?? "{}";
   let data: ConversationData = {};
   try { data = row?.state_data ? JSON.parse(row.state_data) as ConversationData : {}; } catch { data = {}; }
-  const codConfirmationReply = (orderNumber: string, total: number) => data.language === "ur" ? `آرڈر ${orderNumber} COD کے لیے تصدیق ہو گیا۔ وصولی پر رقم PKR ${total} ہے۔ ادائیگی وصول ہونے تک زیرِ التوا رہے گی۔ رسید، QR یا ایڈوانس ادائیگی کی ضرورت نہیں۔` : `Order ${orderNumber} is confirmed for COD. Exact amount due on collection: PKR ${total}. Payment remains pending until collection and remittance are reconciled. No receipt, QR, or advance payment is required.`;
+  const codConfirmationReply = (orderNumber: string, total: number) => data.language === "ur" ? `آرڈر ${orderNumber} وصولی پر ادائیگی کے لیے تصدیق ہو گیا۔ ڈیلیوری پر PKR ${total} ادا کریں۔` : `Order ${orderNumber} is confirmed for Cash on Delivery. Pay PKR ${total} on delivery.`;
   if (state === "COD_PENDING" && normalized === "CONFIRM_COD_ORDER" && data.orderId) {
     // Only the winning event can recover its reply; this never reopens COD intake or changes the winning state.
     const confirmed = await db.prepare(`SELECT o.order_number,cod.quoted_total_pkr FROM orders o
@@ -394,7 +392,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
       return true;
     }
   }
-  const codSettings = codEnabled ? await codPolicy(db, codHmacKey) : null;
+  const codSettings = codEnabled ? await codPolicy(db) : null;
   const codAvailable = Boolean(codSettings);
   if (checkoutMode !== "guided" && state === "FLOW_ACTIVE" && message.interactive?.nfm_reply?.response_json) {
     try {
@@ -487,7 +485,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
       const summary = await getPersistedOrderSummary(db, data.orderId);
       const feePkr = Number(codSettings!.fee_pkr);
       const total = codQuote(summary.totalPayablePkr, feePkr);
-      data.codQuote = { baseAmountPkr: summary.totalPayablePkr, feePkr, totalPkr: total, policyRevision: codSettings!.revision, collectionPolicyHash: codSettings!.collection_policy_hash!, remittancePolicyHash: codSettings!.remittance_policy_hash! };
+      data.codQuote = { baseAmountPkr: summary.totalPayablePkr, feePkr, totalPkr: total, policyRevision: codSettings!.revision, collectionPolicyHash: codSettings!.collection_policy_hash, remittancePolicyHash: codSettings!.remittance_policy_hash };
       const itemLines = data.language === "ur"
         ? summary.items.map((item) => `آئٹم: ${item.type === "FERTILIZER" ? "کھاد" : "بیج"} (${item.name}) × ${item.quantity}: PKR ${item.lineTotalPkr}`)
         : summary.items.map((item) => `Item: ${item.name} × ${item.quantity}: PKR ${item.lineTotalPkr}`);
@@ -731,7 +729,7 @@ app.post("/webhooks/whatsapp", async (c) => {
   let autoReplies = 0;
   for (const event of inbound) {
     if (event.kind === "media") { if (c.env.DB && await processReceiptMedia(c.env.DB, c.env.RECEIPTS, provider, event)) continue; else continue; }
-    if (c.env.DB && await processGuidedConversation(c.env.DB, c.env.RECEIPTS, provider, event, c.env.META_FLOW_ID ?? "1133458765899784", c.env.META_APP_SECRET, c.env.WHATSAPP_CHECKOUT_MODE ?? "guided", c.env.EVENTS, c.env.COD_V1_ENABLED === "true", c.env.COD_REFERENCE_HMAC_KEY)) continue;
+    if (c.env.DB && await processGuidedConversation(c.env.DB, c.env.RECEIPTS, provider, event, c.env.META_FLOW_ID ?? "1133458765899784", c.env.META_APP_SECRET, c.env.WHATSAPP_CHECKOUT_MODE ?? "guided", c.env.EVENTS, c.env.COD_V1_ENABLED === "true")) continue;
     const activeConversation = c.env.DB ? await c.env.DB.prepare("SELECT state FROM whatsapp_conversations WHERE wa_id=?").bind(event.from).first<{ state: string }>() : null;
     if (activeConversation) continue;
     const idempotencyKey = `welcome_reply:${event.id}`;

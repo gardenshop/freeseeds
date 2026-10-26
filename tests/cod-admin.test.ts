@@ -95,12 +95,16 @@ function reconcile(kind: string, evidenceReference = `SYNTHETIC-${kind.toUpperCa
 }
 
 describe("COD Admin configuration and reconciliation", () => {
-  it("fails closed when the dedicated HMAC key is shorter than 32 characters", async () => {
+  it("enables basic COD intake at PKR 125 without collection HMAC or remittance policy references", async () => {
     await expect(codReferenceHmac("SYNTHETIC-EVIDENCE", "short-key")).rejects.toThrow("COD_REFERENCE_HMAC_KEY_REQUIRED");
     const session = await csrf();
-    const response = await app.fetch(new Request("https://admin.example.test/api/cod-configuration", { method: "POST", headers: mutationHeaders(session), body: JSON.stringify({ enabled: true, feePkr: 125, collectionPolicyReference: "SYNTHETIC-COLLECTION-POLICY", remittancePolicyReference: "SYNTHETIC-REMITTANCE-POLICY" }) }), env("short-key"));
-    expect(response.status).toBe(503);
-    expect(sqlite.prepare("SELECT enabled FROM cod_configuration WHERE id='default'").get()).toEqual({ enabled: 0 });
+    const response = await app.fetch(new Request("https://admin.example.test/api/cod-configuration", { method: "POST", headers: mutationHeaders(session), body: JSON.stringify({ enabled: true, feePkr: 125, expectedRevision: "unconfigured" }) }), env(""));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ ok: true, enabled: true, feePkr: 125 });
+    expect(sqlite.prepare("SELECT enabled,fee_pkr,collection_policy_hash,remittance_policy_hash FROM cod_configuration WHERE id='default'").get()).toEqual({ enabled: 1, fee_pkr: 125, collection_policy_hash: null, remittance_policy_hash: null });
+    const settlement = await app.fetch(new Request("https://admin.example.test/api/orders/order-1/cod-collection", { method: "POST", headers: mutationHeaders(session), body: JSON.stringify({ confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, evidenceReference: "SYNTHETIC-SETTLEMENT-EVIDENCE" }) }), env(""));
+    expect(settlement.status).toBe(503);
+    expect(await settlement.json()).toEqual({ error: "COD_REFERENCE_HMAC_KEY_REQUIRED" });
   });
 
   it("starts disabled with the additive PKR 125 default", async () => {
@@ -113,8 +117,8 @@ describe("COD Admin configuration and reconciliation", () => {
     vi.setSystemTime(new Date("2026-01-01T00:00:00.000Z"));
     const session = await csrf();
     expect((await post("/api/cod-configuration", { enabled: false, feePkr: 125 }, session)).status).toBe(409);
-    const body = { enabled: true, feePkr: 125, collectionPolicyReference: "SYNTHETIC-COLLECTION-POLICY", remittancePolicyReference: "SYNTHETIC-REMITTANCE-POLICY", expectedRevision: "unconfigured" };
-    const responses = await Promise.all([post("/api/cod-configuration", body, session), post("/api/cod-configuration", { ...body, feePkr: 150 }, session)]);
+    const body = { enabled: true, feePkr: 125, expectedRevision: "unconfigured" };
+    const responses = await Promise.all([post("/api/cod-configuration", body, session), post("/api/cod-configuration", { ...body, enabled: false }, session)]);
     expect(responses.map((response) => response.status).sort()).toEqual([200, 409]);
     const current = sqlite.prepare("SELECT revision,fee_pkr FROM cod_configuration").get() as { revision: string; fee_pkr: number };
     const audits = sqlite.prepare("SELECT id,metadata_json FROM audit_log WHERE action='COD_CONFIGURATION_UPDATED'").all() as { id: string; metadata_json: string }[];
@@ -129,20 +133,22 @@ describe("COD Admin configuration and reconciliation", () => {
     expect(sqlite.prepare("SELECT COUNT(DISTINCT created_at) AS count FROM audit_log WHERE action='COD_CONFIGURATION_UPDATED'").get()).toEqual({ count: 1 });
     const page = await (await app.fetch(new Request("https://admin.example.test/cod-settings", { headers: auth }), env())).text();
     expect(page).toContain("expectedRevision=d.revision");
-    expect(page).toContain("remittancePolicyReference.value,expectedRevision");
+    expect(page).toContain("COD collection fee: PKR 125");
+    expect(page).not.toContain("remittance policy");
+    expect(page).not.toContain("collectionPolicyReference");
   });
 
-  it("preserves disabled intake policy hashes and reconciles historical snapshots after policies change", async () => {
+  it("preserves prior reconciliation hashes and settles historical COD after intake is disabled", async () => {
     const initial = await post("/api/cod-configuration", { enabled: true, feePkr: 125, collectionPolicyReference: "SYNTHETIC-OLD-COLLECTION", remittancePolicyReference: "SYNTHETIC-OLD-REMITTANCE", expectedRevision: "unconfigured" });
     const { revision } = await initial.json() as { revision: string };
     const original = sqlite.prepare("SELECT collection_policy_hash,remittance_policy_hash FROM cod_configuration").get();
     seedCod();
-    const disabled = await post("/api/cod-configuration", { enabled: false, feePkr: 999, expectedRevision: revision });
+    const disabled = await post("/api/cod-configuration", { enabled: false, feePkr: 125, expectedRevision: revision });
     expect(disabled.status).toBe(200);
     expect(sqlite.prepare("SELECT collection_policy_hash,remittance_policy_hash FROM cod_configuration").get()).toEqual(original);
     const next = await disabled.json() as { revision: string };
     expect((await reconcile("collection")).status).toBe(200);
-    expect((await post("/api/cod-configuration", { enabled: false, feePkr: 999, collectionPolicyReference: "SYNTHETIC-NEW-COLLECTION", remittancePolicyReference: "SYNTHETIC-NEW-REMITTANCE", expectedRevision: next.revision })).status).toBe(200);
+    expect((await post("/api/cod-configuration", { enabled: false, feePkr: 125, expectedRevision: next.revision })).status).toBe(200);
     expect((await reconcile("remittance")).status).toBe(200);
     expect(sqlite.prepare("SELECT state,payment_status,total_payable FROM orders").get()).toEqual({ state: "PAID", payment_status: "PAID", total_payable: 200 });
     expect(sqlite.prepare("SELECT policy_revision,collection_policy_hash,remittance_policy_hash FROM cod_order_details").get()).toEqual({ policy_revision: "synthetic-policy-revision", collection_policy_hash: "a".repeat(64), remittance_policy_hash: "b".repeat(64) });
@@ -300,16 +306,21 @@ describe("COD Admin configuration and reconciliation", () => {
     expect(readFileSync("apps/api/wrangler.jsonc", "utf8")).toContain('"COD_V1_ENABLED": "false"');
   });
 
-  it("stores only keyed hashes for explicitly enabled courier policy references", async () => {
+  it("keeps the intake toggle simple and fixed at PKR 125 without collecting courier references", async () => {
     const session = await csrf();
-    const response = await app.fetch(new Request("https://admin.example.test/api/cod-configuration", { method: "POST", headers: mutationHeaders(session), body: JSON.stringify({ enabled: true, feePkr: 150, collectionPolicyReference: "SYNTHETIC-COURIER-POLICY", remittancePolicyReference: "SYNTHETIC-REMITTANCE-POLICY", expectedRevision: "unconfigured" }) }), env());
+    const wrongFee = await app.fetch(new Request("https://admin.example.test/api/cod-configuration", { method: "POST", headers: mutationHeaders(session), body: JSON.stringify({ enabled: true, feePkr: 150, expectedRevision: "unconfigured" }) }), env(""));
+    expect(wrongFee.status).toBe(400);
+    const response = await app.fetch(new Request("https://admin.example.test/api/cod-configuration", { method: "POST", headers: mutationHeaders(session), body: JSON.stringify({ enabled: true, feePkr: 125, expectedRevision: "unconfigured" }) }), env(""));
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ enabled: true, feePkr: 150, collectionPolicyConfigured: true, remittancePolicyConfigured: true });
+    expect(await response.json()).toMatchObject({ enabled: true, feePkr: 125, collectionPolicyConfigured: false, remittancePolicyConfigured: false });
     const config = sqlite.prepare("SELECT enabled,fee_pkr,collection_policy_hash,remittance_policy_hash FROM cod_configuration WHERE id='default'").get() as { enabled: number; fee_pkr: number; collection_policy_hash: string; remittance_policy_hash: string };
-    expect(config).toEqual({ enabled: 1, fee_pkr: 150, collection_policy_hash: await codReferenceHmac("SYNTHETIC-COURIER-POLICY", hmacKey), remittance_policy_hash: await codReferenceHmac("SYNTHETIC-REMITTANCE-POLICY", hmacKey) });
+    expect(config).toEqual({ enabled: 1, fee_pkr: 125, collection_policy_hash: null, remittance_policy_hash: null });
     const audits = JSON.stringify(sqlite.prepare("SELECT metadata_json FROM audit_log").all());
-    expect(audits).not.toContain("SYNTHETIC-COURIER-POLICY");
-    expect(audits).not.toContain("SYNTHETIC-REMITTANCE-POLICY");
+    expect(audits).not.toContain("PolicyReference");
+    const page = await (await app.fetch(new Request("https://admin.example.test/cod-settings", { headers: auth }), env(""))).text();
+    expect(page).toContain("COD collection fee: PKR 125");
+    expect(page).not.toContain("remittance");
+    expect(page).not.toContain("evidence reference");
   });
 
   it("guards advance settlement, enforces COD fulfillment, and reaches COD_PAID only after exact collection and remittance", async () => {
