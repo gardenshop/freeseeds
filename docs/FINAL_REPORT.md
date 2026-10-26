@@ -12,7 +12,7 @@
 | P3 COD enablement | **BLOCKED** | Candidate `COD_V1_ENABLED=false`; active API lacks COD HMAC binding/name. No secret provisioned, no authenticated collector/remittance evidence, and Meta operator/tester not verified. |
 | P4 one real order | **NOT RUN** | No authorized tester, buttons, order number/amount, WAMID, D1 COD_PENDING, Admin hold, or screenshot. No advance-switch live test. No real funds/shipping. |
 | P5 regression/launch | **PASS LOCAL / LIVE BLOCKED** | Focused100, full244, V1 baseline176, retained-schema old-source4; build/lint/audit0; API/Admin Wrangler dry-runs. D1 quick/FK read-only pass. No remote rollback, running checkout, signed webhook or Admin acceptance. |
-| P6 docs/push | **PASS AFTER PUSH** | Seven required files updated; current tested source/migration commit remains `217e2a0`; docs will be committed/pushed to PR #11. No force-push or merge. |
+| P6 docs/push | **PASS** | Seven required files and the GFS-225 record are pushed to PR #11. Source/migration commit `217e2a0`; documentation commit `6c3682f`. No force-push or merge. |
 
 **Required confirmations:** (1) COD code ready for isolated review: **yes, not deployment-ready**. (2) Staging COD enabled: **no**. (3) Real tester order PASS: **no**. (4) Public COD enabled: **no**. The existing advance Worker and signed callback were not modified; runtime advance regression remains untested in this session.
 

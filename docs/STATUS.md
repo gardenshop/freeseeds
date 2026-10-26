@@ -8,7 +8,7 @@
 - **P2/P3 BLOCKED.** No Worker/Admin deployment, HMAC, COD policy, courier/remittance evidence, Meta operator/tester verification, migration, WAMID/order/screenshot. Staging COD not enabled by this run; current API feature state not reported by health endpoint. Public COD is not accepting orders.
 - **P4 live tester NOT RUN.** No actual COD or advance UI journey; no paid/ship/cash action. Existing advance and signed webhook were not changed; active runtime regression was not tested.
 - **P5 PASS LOCAL ONLY.** Existing clean GFS-224 results remain: focused100, full244, baseline176, retained-schema4; build/lint/audit0 and API/Admin dry-runs. No new code changed this turn; no live D1/admin/webhook/E2E acceptance.
-- **P6 PASS after push.** GFS-225 protocol and evidence updates are being pushed to PR #11; source/migration commit remains `217e2a0`, migration blob `05e7c0012ad3ed6677bc691a3f937f15b7d20c50`.
+- **P6 PASS.** Source/migration commit `217e2a0` and GFS-225 documentation commit `6c3682f` are pushed to PR #11; migration blob `05e7c0012ad3ed6677bc691a3f937f15b7d20c50` is not applied remotely.
 - **Complete/remaining:** P0 70/30; P1 75/25; P2 15/85; P3 0/100; P4 0/100; P5 70/30; P6 100/0. Overall ~47%. Staging/public readiness **NO-GO**.
 
 ## GFS-224 Urgent COD Activation (2026-10-26)
