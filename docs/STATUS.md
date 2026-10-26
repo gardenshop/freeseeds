@@ -6,7 +6,7 @@
 - **P0 TESTER BLOCKED.** Test Controls' last scoped exemptions read was UNAVAILABLE; not retried. Last verified own WhatsApp Profile mismatch remains. Meta operator/canonical sender not reverified this run. No message.
 - **P1–P4 BLOCKED/NOT RUN.** Migration0030 unapplied; no Time Travel/integrity/backup/rehearsal, deploy/rollback, flag change, live advance or COD journey, order, total, WAMID, Admin state or screenshot. Latest known versions API v90 `21a3d74c-3979-432c-9190-1848362592a4`, Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`, source SHA unavailable. Candidate COD off; active flag unknown.
 - **P5 PASS LOCAL ONLY.** Focused27/27; full244/244; V1 compatibility harness4/4; build/lint/audit0. No staging/D1/webhook/Advance runtime verification.
-- **P6 PASS after push** of this GFS-232 report. No source change. Protected V1, PR #9/#10, `images/`, orders/payments and signed webhook untouched.
+- **P6 PASS.** GFS-232 records pushed in commit `24c8030`. No source change. Protected V1, PR #9/#10, `images/`, orders/payments and signed webhook untouched.
 - **Completed/remaining:** P0 50/50; P1 75/25; P2 15/85; P3 0/100; P4 0/100; P5 100/0 local (live0); P6 100/0 after push. Overall source readiness ~50%; live acceptance0%; NO-GO. Exact platform action: reinitialize/expose the registered official Chrome MCP in an approved Codex session so `list_pages` is callable; then use existing verified principal for the already-authorized support case and proceed only after query access recovers. ETA indefinite.
 
 ## GFS-231 Support and Tester Preflight (2026-10-26)

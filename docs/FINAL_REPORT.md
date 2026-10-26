@@ -13,7 +13,7 @@
 | P3 — COD flag | **NOT ENABLED** | Candidate is COD-off; active runtime value unknown. No admin toggle/flag change. |
 | P4 — live COD/Advance | **NOT RUN** | No real order, total, WAMID, Admin COD_PENDING, screenshot or running Advance/webhook evidence. No shipment/cash/PAID. |
 | P5 — regression | **PASS LOCAL ONLY** | Focused27/27, full244/244, V1 compatibility harness4/4, build/lint/audit0. No D1 or running-service verification. |
-| P6 — documentation/push | **PENDING PUSH** | Seven required records updated for GFS-232; commit/remote verification follows. |
+| P6 — documentation/push | **PASS** | Seven required records pushed in commit `24c8030`; remote ref verified. |
 
 **Completion:** P0 50%; P1 75%; P2 15%; P3 0%; P4 0%; P5 100% local only; P6 100% after push. Overall source readiness ~50%; live acceptance0%; staging/public NO-GO. No support reference, migration, COD flag, test order, WAMID or screenshot exists. The single immediate platform action is to reinitialize/expose the registered official Chrome MCP to an approved Codex session until `list_pages` is callable. With Wrangler identity already verified, then file the authorized no-cost support case; proceed only after D1 query access and the tester/Meta gates recover. Production remains separately gated.
 
