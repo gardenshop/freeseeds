@@ -1,5 +1,23 @@
 # Final Report
 
+## GFS-238 | Admin Health Smoke Blocked at MCP Preflight (2026-10-27)
+
+**Result: local repaired-source checks PASS; the approved Admin 0%-traffic smoke did not start because official Chrome MCP inventory was not callable. No cloud or customer mutation occurred.**
+
+| Assignment | Result | Evidence |
+|---|---|---|
+| P0 — restore official MCP / verify identity | **BLOCKED BEFORE INVENTORY** | Codex0.164.0 and enabled `chrome-devtools` registration under the requested CODEX_HOME are present. Current Kilo turn has no callable Chrome namespace. The requested GPT-5.6 CLI model was rejected before initialization; one configured-model approved attempt did not reach `list_pages` and was stopped. No browser identity or tab state was read. |
+| P1 — Admin repaired health test | **NOT RUN** | No Admin upload, candidate version, 0%-traffic deployment, endpoint request, or Version URL toggle. Last recorded v82 remains sole100%; `paymentConfigured=true` is expected from GFS-237 stored eligibility, not verified live. |
+| P2 — compatible staging release | **LOCAL PREPARATION PASS / LIVE BLOCKED** | API/Admin dry-runs pass; API candidate config has `COD_V1_ENABLED=false`. No migration, deployment, signed valid callback, running Advance test, traffic switch, or runtime rollback. Original D1 GFS-237 quick/FK/schema/bookmark evidence stands; original COD0030 remains unapplied and legacy ledger0. |
+| P3 — enable COD | **NOT ENABLED** | No setting, tariff, or feature-flag mutation. Candidate flag remains false; active runtime flag/menu behavior not freshly verified. |
+| P4 — genuine WhatsApp test | **BLOCKED / NOT RUN** | Prior tester Profile mismatch remains; not repeated. No sender verification, chat, message, WAMID, real order/total, Admin COD_PENDING screenshot, shipping, collection, or PAID. Existing order `FS-261027-000001` was not touched and no duplicate was created. |
+| P5 — zero regressions | **PASS LOCAL ONLY** | Focused32/32; full276/276; TypeScript build/lint; dependency audit0; API/Admin dry-runs; old-source rollback harness4/4 against clean PR10 baseline after setting its required root. Initial harness attempt failed only its missing-environment precondition and was rerun successfully. |
+| P6 — required records | **PASS** | Updated rules, STATUS, TEST_MATRIX, DECISIONS, CHANGELOG, RESOURCE_REGISTRY and this FINAL_REPORT; the resulting branch HEAD records the push. |
+
+**Runtime/database:** no version was uploaded. Last recorded API v90 `21a3d74c-3979-432c-9190-1848362592a4` and Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` are historical, not freshly checked in this run. No live COD flag or menu claim. COD0030 remains unapplied to original D1. The isolated SQL rehearsal is synthetic only. No active data, migration marker, recipient, QR, financial record, or callback was changed.
+
+**Completion / remaining estimates:** P0 25/75; P1 Admin health smoke 0/100; P2 75/25 local preparation/live release; P3 0/100; P4 0/100; P5 100/0 local (live0); P6 100/0 after records are pushed. Engineering readiness remains approximately80%; genuine live acceptance0%; staging/public NO-GO. Exact next action: a supported approved Codex session must expose official `list_pages`; then visibly verify Cloudflare/Admin identity and Access protection before the authorized zero-traffic Admin test, keep v82 at100%, verify aggregate health true, and restore/verify old-only v82. The registered tester owner must separately provide the unchanged tester-controlled profile matching Admin before any WhatsApp test. No production promotion is authorized.
+
 ## GFS-237 | Payment Health Repaired; Conditional Release Alternative Approved (2026-10-26)
 
 **Result: genuine pre-existing diagnostic defect fixed/tested; no payment configuration repair was necessary from this finding. Active COD/live WhatsApp acceptance still BLOCKED.**

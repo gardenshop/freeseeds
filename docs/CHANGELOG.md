@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-27 (GFS-238 Admin smoke preflight stop)
+
+- Verified requested PR11 worktree/head and official Codex 0.164.0 host registration. Current Kilo session has no callable Chrome MCP tools; approved Codex attempts did not reach `list_pages`. No unsupported reconnect, dashboard substitute, or config change.
+- Revalidated health-focused32/32, full276/276, PR10-source rollback4/4, build/lint/audit0 and API/Admin dry-runs. No deployed Admin fix or live health result is claimed; no Cloudflare/D1/Meta/WhatsApp/customer/payment mutation.
+- Updated all protected run records. Next step is the authorized Admin-only zero-traffic smoke after official MCP inventory and visible identity/Access preflight succeed.
+
 ## 2026-10-26 (GFS-237 payment health diagnostic repair)
 
 - Fixed pre-existing Admin health dependency on legacy fixed advance. Reuse verified method helper with same-method EN/UR eligibility; preserve existing callers/defaults and ANY-method semantics. No checkout/recipient/QR/receipt/ownership configuration changed.

@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-238 Repaired Admin Health Smoke (2026-10-27)
+
+| Check | Result | Evidence / scope |
+|---|---|---|
+| Official MCP host | BLOCKED | Codex0.164.0/configured `chrome-devtools` registration verified; current Kilo turn exposes no callable Chrome tools. Requested GPT-5.6 was rejected by host; one configured-model attempt stopped before `list_pages`. No browser action or host config change. |
+| Access identity / page inventory | NOT VERIFIED | No `list_pages`, visible account identity, Admin Access check, or tab mutation. |
+| Admin 0%-traffic candidate | NOT RUN | No dry-run upload, version creation/deploy, endpoint override, or health request. v82 remains last known100%; no new candidate. |
+| Repaired predicate | PASS LOCAL | Focused32/32 and full276/276; synthetic tests exercise the health fix and eligibility/privacy guards. Not live Admin evidence. |
+| API/Admin dry-runs | PASS CONFIG ONLY | Existing staging D1/R2/Queue bindings render; API COD flag remains false in candidate config. No live binding validation. |
+| Rollback compatibility | PASS LOCAL | Harness4/4 against unchanged PR10 baseline `cf01f444500415b1f22a64730674caca1c286006`, including advance read, COD hold, receipt blocking and schema integrity. Not a running Worker rollback. |
+| Build/security | PASS LOCAL | TypeScript build, ESLint, `npm audit --audit-level=high` (0 vulnerabilities). |
+| D1/WhatsApp/COD | NOT RUN | Original D1 unchanged; COD0030 unapplied; no tester match, live signed event, Advance journey, COD order, WAMID or Admin evidence. |
+
 ## GFS-237 Health Repair / Payment Readiness (2026-10-26)
 
 | Check | Result | Evidence / scope |

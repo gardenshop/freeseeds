@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-27: GFS-238 Stop Admin Smoke at MCP Inventory Gate
+
+- The requested Admin-only 0%-traffic smoke is already authorized but remains strictly preflight-first. Codex 0.164.0 and its official Chrome DevTools registration are present/enabled; the current Kilo turn has no callable `list_pages`. Codex rejected the requested GPT-5.6 model before MCP initialization. The approved configured-model attempt did not reach MCP inventory and was stopped before any Cloudflare action. No MCP workaround, raw CDP, alternate profile, direct dashboard call, or config repair was used.
+- No Admin candidate upload/deploy, version URL toggle, health request, API/D1/Meta/WhatsApp change, or payment setting mutation occurred. Preserve Admin v82 at its last-recorded100%; do not call `paymentConfigured=true` live until the repaired candidate's Access-protected health result is observed.
+- GFS-237 establishes stored eligible payment-method configuration and a pre-existing diagnostic-only defect. Do not reintroduce a fixed advance or change recipients, QR, or ownership. Continue only when one approved Codex session can expose official `list_pages`, verify the existing Cloudflare/Admin identity and Access guard, then execute the exact 0%-traffic test and restore v82.
+
 ## 2026-10-26: GFS-237 Correct Health, Not Payment Destinations
 
 - Six hypotheses considered: fixed-amount diagnostic coupling, missing/disabled recipients, QR/beneficiary failures, localization/placeholders, wrong binding/version, PR11 regression. Original boolean-only configuration and unchanged PR10 predicate establish a pre-existing health defect. All three stored methods meet eligibility; fixed global advance is not guided order amount authority. Withdraw GFS-236's inference that `paymentConfigured=false` requires restoration of receiving configuration. No ownership/financial evidence was invented or changed.

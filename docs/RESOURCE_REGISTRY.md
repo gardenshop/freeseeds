@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-238 No Runtime Resource Changes (2026-10-27)
+
+- No Cloudflare resource, Worker version, traffic percentage, Version URL setting, binding, secret, D1 schema/row, migration, Meta asset, or WhatsApp state changed. No candidate version was uploaded. Last recorded active API v90/Admin v82 remain historical observations pending an authenticated current recheck; no new version IDs are claimed.
+- Local host diagnosis confirms Codex0.164.0 and one enabled official `chrome-devtools` MCP registration under `CODEX_HOME=D:\AI-Tools\Codex\home`; current Kilo turn could not call `list_pages`. No browser profile/session or host configuration was modified. No new resource or cost was incurred.
+- Existing synthetic-only `getfreeseeds-cod-compat-check` remains unbound with its previously scheduled 2026-10-28 dependency review. Original GFS D1 remains untouched; COD0030 remains unapplied there. Preserve existing API/Admin rollback resources and old-only traffic until the approved Admin smoke can complete.
+
 ## GFS-237 Payment Readiness and Unchanged Runtime (2026-10-26)
 
 - Verified CLI principal `gisupp@gmail.com` / GFS account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Read-only stored configuration: legacy fixed row present/amountPositive0; all three methods enabled, recipient present, owner/current-independent-QR-provenance flags true, bilingual copy/placeholders complete. No destination/account/QR/evidence values exported, no payment settings/approval edits. These are stored eligibility flags, not new provider/ownership evidence.
