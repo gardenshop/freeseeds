@@ -26,6 +26,8 @@ beforeEach(() => {
   for (const file of readdirSync("migrations").filter((name) => /^00(?:0[1-9]|[12]\d)_.*\.sql$/.test(name)).sort()) {
     db.exec(readFileSync(`migrations/${file}`, "utf8"));
   }
+  // Wrangler's legacy ledger exists remotely but has no applied rows; model that exact anomaly.
+  db.exec("CREATE TABLE d1_migrations (name TEXT PRIMARY KEY)");
   db.exec("PRAGMA foreign_keys=ON");
   db.prepare(`INSERT INTO customers(id,full_name,delivery_address,nearby_place,city,contact_number,
     normalized_phone,normalized_address_hash,created_at,updated_at)
@@ -54,6 +56,8 @@ describe("additive COD migration against populated legacy schema", () => {
     for (const definition of schema) expect(afterSchema).toContainEqual(definition);
     expect(db.prepare("SELECT enabled,fee_pkr,collection_policy_hash,remittance_policy_hash FROM cod_configuration").get())
       .toEqual({ enabled: 0, fee_pkr: 125, collection_policy_hash: null, remittance_policy_hash: null });
+    expect(db.prepare("SELECT version FROM cod_schema_migrations").all()).toEqual([{ version: "0030" }]);
+    expect(db.prepare("SELECT COUNT(*) AS count FROM d1_migrations").get()).toEqual({ count: 0 });
     expect(db.prepare("PRAGMA quick_check").all()).toEqual([{ quick_check: "ok" }]);
     expect(db.prepare("PRAGMA foreign_key_check").all()).toEqual([]);
   });
@@ -69,11 +73,16 @@ describe("additive COD migration against populated legacy schema", () => {
     expect(db.prepare("PRAGMA foreign_key_check").all()).toEqual([]);
   });
 
-  it("fails safely on accidental replay and does not rewrite populated history", () => {
+  it("is idempotent and separately tracks only COD without inventing the legacy ledger", () => {
     db.exec(migration);
     const before = legacySnapshot();
-    expect(() => db.exec(migration)).toThrow(/already exists/);
+    const sidecarSchema = db.prepare("SELECT type,name,sql FROM sqlite_schema WHERE name LIKE 'cod_%' ORDER BY type,name").all();
+    const marker = db.prepare("SELECT * FROM cod_schema_migrations WHERE version='0030'").get();
+    db.exec(migration);
     expect(legacySnapshot()).toEqual(before);
+    expect(db.prepare("SELECT type,name,sql FROM sqlite_schema WHERE name LIKE 'cod_%' ORDER BY type,name").all()).toEqual(sidecarSchema);
+    expect(db.prepare("SELECT * FROM cod_schema_migrations WHERE version='0030'").get()).toEqual(marker);
+    expect(db.prepare("SELECT COUNT(*) AS count FROM d1_migrations").get()).toEqual({ count: 0 });
   });
 
   it("rolls back all additive schema when a local migration transaction fails", () => {
