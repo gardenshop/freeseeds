@@ -6,8 +6,8 @@
 |---|---|---|
 | Official Chrome MCP inventory | PASS PARTIAL | First list timed out; same official list operation succeeded on retry; 11 existing page IDs/origins. No page mutation. |
 | Cloudflare support identity | BLOCKED | Existing dashboard UI did not expose expected email or account ID. Stopped before navigation/ticket. No support case/reference. No D1 retry or scope change. |
-| Tester verification | BLOCKED | Broad snapshot of existing Orders page was rejected for potential customer/order exposure. No data read, navigation or message; prior authorized WhatsApp own-Profile mismatch remains a hard stop. |
-| D1/deploy/live COD | NOT RUN | No schema/integrity/backup/migration/deployment/rollback/flag or customer interaction. |
+| Tester verification | BLOCKED | Broad Orders snapshot rejected for potential PII exposure. After explicit user approval, same Admin tab navigated to `/test-controls`; narrowly scoped `#exemptions` read returned UNAVAILABLE. Stopped before WhatsApp Profile, no chat/message; prior own-Profile mismatch remains. |
+| D1/deploy/live COD | BLOCKED | Admin Test Controls auto-loaded exemptions and returned UNAVAILABLE; no direct Wrangler/raw D1 query or subsequent retry. No schema/integrity/backup/migration/deployment/rollback/flag or customer interaction. |
 | Local regression | LAST PASS GFS-230 | Focused27/27; full244/244; rollback4/4; build/lint/audit0; dry-runs. No code changed in GFS-231. |
 
 ## GFS-230 Staging Gate Recheck (2026-10-26)

@@ -2,8 +2,8 @@
 
 ## GFS-231 Owner/Tester Gate Attempt (2026-10-26)
 
-- Cloudflare account/Wrangler identity remains known, but existing dashboard UI did not expose visible email or account ID at pre-submission check. No support ticket or reference; no account switch, OAuth change, D1 query or mutation.
-- Official Chrome inventory completed after one timeout; Orders snapshot was rejected for customer-data exposure risk. No customer/order data was read. Admin `/test-controls`/WhatsApp comparison unresolved; last own Profile mismatch remains. No chat/message.
+- Cloudflare account/Wrangler identity remains known, but existing dashboard UI did not expose visible email or account ID at pre-submission check. No support ticket or reference; no account switch, OAuth change, or direct Wrangler/raw D1 query. Admin Test Controls' auto-loaded exemptions list returned UNAVAILABLE; no subsequent read or mutation.
+- Official Chrome inventory completed after one timeout; Orders snapshot was rejected for customer-data exposure risk. With explicit user approval, reused Admin tab navigated to same-origin `/test-controls`; scoped tester/exemptions read returned UNAVAILABLE. Stopped before WhatsApp Profile; no customer/order data, chat or message read. Last own Profile mismatch remains.
 - API v90/Admin v82 latest history unchanged, no source SHA. No active bindings, flags or D1 schema were refreshed. No resource changed.
 
 ## GFS-230 Read-Only Staging Inventory (2026-10-26)

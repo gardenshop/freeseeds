@@ -3,8 +3,8 @@
 ## 2026-10-26: GFS-231 Stop on Unverifiable Cloudflare UI and PII Risk
 
 - Fresh approved MCP page list succeeded after one timeout. The existing Cloudflare tab did not visibly verify email/account ID, so no support navigation or ticket was made. User-authorized next step remains one no-cost owner/support case only after the existing UI shows `gisupp@gmail.com` and expected GFS account; do not switch identity or change scopes.
-- The Admin/WhatsApp comparison did not complete. MCP rejected a broad snapshot on Orders because of customer/order PII risk. Do not repeat that snapshot, navigate indirectly, or use raw APIs. Last own Profile result is mismatched. Only a user-approved, same-origin `/test-controls` view plus own `You > View Profile` can clear the tester gate; no messaging before exact match.
-- No D1 query/migration, Worker, Admin, secret, Meta, COD setting, order/payment or message mutation. Source stays unchanged. Keep staging COD off and public launch NO-GO.
+- The Admin/WhatsApp comparison did not complete. MCP rejected a broad snapshot on Orders because of customer/order PII risk. After explicit user approval, the same Admin tab navigated to same-origin `/test-controls`, but the narrowly scoped tester/exemptions read returned UNAVAILABLE; stopped before WhatsApp Profile. Do not repeat the broad snapshot, use raw APIs, or seek another route. Last own Profile result is mismatched; no messaging before exact match.
+- The scoped Admin Test Controls page auto-loaded its exemptions list and returned UNAVAILABLE. No direct Wrangler/raw D1 query or subsequent read, migration, Worker, secret, Meta, COD setting, order/payment or message mutation. Source stays unchanged. Keep staging COD off and public launch NO-GO.
 
 ## 2026-10-26: GFS-230 Do Not Deploy or Message Until Gates Clear
 
