@@ -9,7 +9,7 @@
 - **P2 DEPLOY NOT RUN.** Current 100% histories: API v90 `21a3d74c-3979-432c-9190-1848362592a4`; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`; source SHA unknown. API/Admin dry-runs pass with candidate COD flag false; active flag remains unknown. No deploy.
 - **P3/P4 NOT RUN.** No COD enablement, live checkout, order, total, WAMID, Admin COD_PENDING or screenshot. No shipment/cash/PAID.
 - **P5 PASS LOCAL ONLY.** Focused27/27; full244/244; V1 compatibility harness4/4; build/lint/audit0; API/Admin dry-runs. No live D1/API/Admin/webhook/Advance verification.
-- **P6 PASS after push** of this new support/MCP evidence. No application source change. V1/PR #9/#10/images/history/webhook unchanged.
+- **P6 PASS.** New GFS-233 support/MCP evidence pushed in commit `9e7fa14`. No application source change. V1/PR #9/#10/images/history/webhook unchanged.
 - **Completed/remaining:** P0 70/30; P1 75/25; P2 15/85; P3 0/100; P4 0/100; P5 100/0 local (live0); P6 100/0 after push. Overall source readiness ~50%; live acceptance0%; NO-GO. ETA depends on eligible owner-side Cloudflare support and restored tester/D1 gates.
 
 ## GFS-232 COD Activation Preflight (2026-10-26)

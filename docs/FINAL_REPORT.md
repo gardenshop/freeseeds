@@ -14,7 +14,7 @@
 | P3 — COD flag | **NOT ENABLED** | Candidate dry-run says `COD_V1_ENABLED=false`; active flag unknown. |
 | P4 — live WhatsApp | **NOT RUN** | No genuine buttons/order/total/WAMIDs/Admin COD_PENDING/screenshot or live Advance check. No shipment/cash/PAID. |
 | P5 — regression | **PASS LOCAL ONLY** | Focused27/27, full244/244, V1 compatibility harness4/4, build/lint/audit0 and API/Admin dry-runs. No live D1/webhook/Advance checks. |
-| P6 — docs/push | **PENDING PUSH** | Seven records contain new Support eligibility, same-session MCP and current Worker/dry-run evidence. |
+| P6 — docs/push | **PASS** | Seven records pushed in commit `9e7fa14`; remote branch verified. |
 
 **Percent complete:** P0 70%; P1 75%; P2 15%; P3 0%; P4 0%; P5 100% local; P6 100% after push. Overall source readiness ~50%; live acceptance0%; staging/public readiness NO-GO. No support case/reference, migration, COD activation, order ID/amount, WAMID or screenshot exists. Do not buy a support plan or reclassify the ineligible case without separate authorization. Production remains separately gated.
 
