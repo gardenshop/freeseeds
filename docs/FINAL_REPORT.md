@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-232 | COD Activation Gate (2026-10-26)
+
+**Result: local candidate PASS; actual staging release and live WhatsApp test BLOCKED. No cloud or customer mutation.**
+
+| Assignment | Result | Evidence |
+|---|---|---|
+| P0 — Cloudflare/support/MCP | **BLOCKED AT MCP EXPOSURE** | Fresh `wrangler whoami` verified `gisupp@gmail.com`, expected GFS account, `d1:write`. Codex0.164.0 config shows `chrome-devtools` enabled; doctor reports config/MCP/network healthy and Chrome processes active, but approved `exec` did not expose callable `list_pages`. No support UI submission or case/reference. Do not use raw CDP or alter scopes/identity. |
+| P0 — Test Controls/tester | **BLOCKED** | Prior same-origin Test Controls exemptions read returned UNAVAILABLE; not retried pending query access. Last verified own WhatsApp Profile mismatch remains; no own Profile recheck, no Meta operator/WABA check this turn, no message. |
+| P1 — D1/migration | **NOT RUN** | API7403 remains unresolved. No D1 query, Time Travel, integrity, backup, isolated migration rehearsal or rollback. Migration0030 unapplied; legacy ledger untouched. |
+| P2 — staging API/Admin | **NOT RUN** | Latest known API v90 `21a3d74c-3979-432c-9190-1848362592a4`; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`, no source SHA. No deploy or runtime rollback; latest active source parity not proven. |
+| P3 — COD flag | **NOT ENABLED** | Candidate is COD-off; active runtime value unknown. No admin toggle/flag change. |
+| P4 — live COD/Advance | **NOT RUN** | No real order, total, WAMID, Admin COD_PENDING, screenshot or running Advance/webhook evidence. No shipment/cash/PAID. |
+| P5 — regression | **PASS LOCAL ONLY** | Focused27/27, full244/244, V1 compatibility harness4/4, build/lint/audit0. No D1 or running-service verification. |
+| P6 — documentation/push | **PENDING PUSH** | Seven required records updated for GFS-232; commit/remote verification follows. |
+
+**Completion:** P0 50%; P1 75%; P2 15%; P3 0%; P4 0%; P5 100% local only; P6 100% after push. Overall source readiness ~50%; live acceptance0%; staging/public NO-GO. No support reference, migration, COD flag, test order, WAMID or screenshot exists. The single immediate platform action is to reinitialize/expose the registered official Chrome MCP to an approved Codex session until `list_pages` is callable. With Wrangler identity already verified, then file the authorized no-cost support case; proceed only after D1 query access and the tester/Meta gates recover. Production remains separately gated.
+
 ## GFS-231 | Owner Support and Tester Gates (2026-10-26)
 
 **Result: blocked before any cloud or messaging mutation; local release candidate unchanged. No live test is claimed.**

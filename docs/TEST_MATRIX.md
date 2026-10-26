@@ -1,5 +1,15 @@
 # Test Matrix
 
+## GFS-232 Local/Access Recheck (2026-10-26)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Cloudflare identity | PASS | Fresh Wrangler identity/email/account ID match; `d1:write`. Not evidence of D1 query grant. |
+| Official Chrome MCP | BLOCKED | Codex0.164.0 config registered/enabled; doctor reports config/MCP/network healthy and Chrome process active. Approved exec did not expose callable `list_pages`; no support UI/case. No raw CDP/bypass. |
+| D1/support/Test Controls | BLOCKED / NOT RETRIED | No D1 query. No support case/reference. Last scoped Admin exemptions read remains UNAVAILABLE; not retried pending restored access. |
+| Staging/WhatsApp | NOT RUN | No deployment, migration, rollback, flag change, tester match, WAMID, COD_PENDING, screenshot or live advance check. |
+| Local regression | PASS | Focused27/27; full244/244; rollback4/4; build/lint/audit0. |
+
 ## GFS-231 Identity/Support Gate (2026-10-26)
 
 | Check | Result | Evidence / boundary |

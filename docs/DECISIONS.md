@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-26: GFS-232 MCP Exposure Is the Immediate Gate
+
+- Wrangler identity and account were freshly verified, with `d1:write`; no D1 query was sent and no scope/account change is justified. Do not mistake the top-level grant for D1 SQL/query authorization.
+- Official Codex0.164.0 Chrome MCP registration is enabled and doctor reports config/network healthy with Chrome processes running, but the approved exec could not call `list_pages`. No support ticket was attempted without the mandatory UI bridge. Required platform/session action: reinitialize/expose this registered server to an approved session. Do not use raw CDP or bypass.
+- Test Controls last returned UNAVAILABLE; no retry. Last own WhatsApp Profile mismatch remains. No send, deployment, migration, COD flag, order, WAMID or screenshot. Keep candidate off and staging blocked.
+- Full local regressions and safety checks pass; these do not replace live D1/API/Admin/webhook/Advance checks.
+
 ## 2026-10-26: GFS-231 Stop on Unverifiable Cloudflare UI and PII Risk
 
 - Fresh approved MCP page list succeeded after one timeout. The existing Cloudflare tab did not visibly verify email/account ID, so no support navigation or ticket was made. User-authorized next step remains one no-cost owner/support case only after the existing UI shows `gisupp@gmail.com` and expected GFS account; do not switch identity or change scopes.

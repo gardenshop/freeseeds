@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-26 (GFS-232 activation preflight)
+
+- Fresh Wrangler identity/account check passed with `d1:write`; D1 was not queried. Codex0.164.0 official Chrome MCP is configured/enabled and doctor healthy, but approved execution did not expose `list_pages`; no support case/reference. No scope or identity change.
+- Prior Test Controls UNAVAILABLE/own-Profile mismatch remain; no further checks, message, deploy, migration, flag or real order. Local focused27/full244/rollback4/build/lint/audit0 pass.
+- No application code changed. Seven reports track the exact MCP/session recovery step and live blockers.
+
 ## 2026-10-26 (GFS-231 hard-gate preflight)
 
 - Official page inventory succeeded after a transient list timeout. Cloudflare dashboard identity was not visible, so no support ticket/navigation; no case reference. D1 was not retried.

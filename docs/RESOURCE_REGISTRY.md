@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-232 Current Access/Runtime State (2026-10-26)
+
+- Wrangler confirms expected GFS account/email and `d1:write`; this grants no proven D1 query authorization. No D1 query, support case/reference, scope/identity change or hosted mutation occurred.
+- Codex `D:\AI-Tools\Codex\home` v0.164.0: official `chrome-devtools` entry enabled; `codex doctor` reports valid config/MCP/network, Chrome processes are active, but the approved invocation did not expose callable `list_pages`. No new page inventory; no tab navigation/message in GFS-232.
+- API v90 `21a3d74c-3979-432c-9190-1848362592a4` and Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` remain latest known metadata, no source SHA. No deploy, active flag/bindings or D1 schema refresh. Migration0030 unapplied; candidate COD false.
+
 ## GFS-231 Owner/Tester Gate Attempt (2026-10-26)
 
 - Cloudflare account/Wrangler identity remains known, but existing dashboard UI did not expose visible email or account ID at pre-submission check. No support ticket or reference; no account switch, OAuth change, or direct Wrangler/raw D1 query. Admin Test Controls' auto-loaded exemptions list returned UNAVAILABLE; no subsequent read or mutation.

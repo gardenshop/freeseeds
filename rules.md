@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-232 Approved MCP Exposure Gate (2026-10-26)
+
+- Fresh `wrangler whoami` authoritatively reconfirmed `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, with `d1:write`. This is not D1 query authorization. Do not retry D1 or change scopes/accounts.
+- Official Codex0.164.0 `CODEX_HOME=D:\AI-Tools\Codex\home` is configured: `codex mcp list` shows `chrome-devtools` enabled; `codex doctor` reports valid config/MCP/network; Chrome processes are active. However the approved Codex execution did not expose callable `list_pages`, so no Cloudflare Support UI action/case was possible. The stdio row's `Auth Unsupported` is not proof of an auth failure. Do not use raw CDP, another identity, or bypass. Exact platform/session action: reinitialize/expose the already-registered official Chrome MCP in an approved Codex session until `list_pages` is callable.
+- No support case/reference was created. Once the approved UI is callable, use the verified Wrangler principal/account and existing Cloudflare tab to submit one no-cost least-privilege D1 API7403 case; no permission/identity changes. Prior Admin `/test-controls` exemptions read returned UNAVAILABLE; do not retry until authorized D1 access is restored. The prior WhatsApp own-Profile mismatch remains a no-send stop; no current tester/Meta/WABA check is claimed.
+- PR #11 source is unchanged. Latest test run: focused27/27, full244/244, V1 old-source rollback harness4/4, build/lint/audit0. API v90/Admin v82 IDs remain historical latest known; no source SHA. Candidate COD off; active flag unknown. No migration, backup/integrity query, Worker deployment/rollback, order, WAMID, screenshot, message or payment mutation.
+- Keep staging/public launch NO-GO until MCP, D1, tester, active source parity and rollback gates pass. Preserve V1, PR #9/#10, `images/`, all orders/payments and signed webhook.
+
 ## GFS-231 Support/Tester Identity Stop (2026-10-26)
 
 - Fresh approved-review official MCP returned the existing page inventory after one initial `list_pages` timeout; no page was changed. Cloudflare existing tab's visible UI exposed neither signed-in email nor account ID. Stop before support navigation/submission; do not click Switch Account, change identity, or file under an unverifiable account. No case/reference exists. Required owner action: authenticate the existing Cloudflare dashboard as the already-authorized `gisupp@gmail.com` principal and make its expected account ID visibly verifiable in the existing tab; then file one no-cost support diagnosis for D1 API7403/minimum existing-principal query access only. No OAuth scope or identity change.
