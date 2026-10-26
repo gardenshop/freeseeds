@@ -1,5 +1,16 @@
 # Status
 
+## GFS-224 Urgent COD Activation (2026-10-26)
+
+- **P0 PARTIAL.** Updated official Codex CLI 0.147→0.164; official MCP is now exposed in approved-review sessions. The former cancellation was approval-policy `never`, not a dead bridge. Browser Cloudflare account menu/email and account route ID match GFS. `gh api user` is `gardenshop`, but GitHub browser login does not match. Admin Orders UI loads but expected identity is absent from header. Canonical GFS business/WABA/phone links are present in Meta tabs, but Meta operator Saeed is not visible; authorized WhatsApp tester Profile mismatch remains a hard stop. No messaging.
+- **P1 SAFE FALLBACK PREPARED / APPLICATION BLOCKED.** API v90 `21a3d74c-3979-432c-9190-1848362592a4`, Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`; no source commit annotations. API version predates PR #10 source `cf01f44`, so source parity is not proven. The populated remote D1's migration ledger has zero rows; Wrangler would replay all 30 migrations. No replay, hand-written ledger history, D1 copy, or migration applied.
+- Remote read-only `quick_check=ok`, FK check empty, schema DDL matches expected legacy V1 columns, COD tables absent, and Time Travel bookmark exists. Official Cloudflare docs say D1 Time Travel cannot clone/fork; no backup clone capability. Schema-only export returned API auth 10000; no data was exported. `0030_cod_v1_compat.sql` is now idempotent, independently marks `cod_schema_migrations`, and leaves `d1_migrations` unchanged. This alternate change is local-tested but **not safe to apply without verified clone/equivalent and source-parity gate**.
+- **P2 BLOCKED.** Active HMAC secret name is absent; candidate `COD_V1_ENABLED=false`. No verified collection/remittance record, canonical WABA operator, tester or Admin email. No config/secret provision, Worker deployment or COD enable.
+- **P3 NOT RUN LIVE.** No real tester journey, WAMIDs, order, final amount, COD_PENDING Admin record or screenshot. No order shipped/collected/paid.
+- **P4 PASS LOCAL / LIVE BLOCKED.** Focused 100/100; full 244/244; baseline 176/176; actual old-source retained-schema 4/4. Build, lint, audit zero vulnerabilities, API/Admin Wrangler dry-runs pass. Dry-run shows candidate COD false. No actual Worker/API/Admin acceptance or rollback deployment.
+- **P6 PASS AFTER PUSH.** Source migration hardening commit `217e2a0` pushed; GFS-224 docs are being recorded on the same PR #11 branch.
+- **Completion:** P0 70%/30% remaining; P1 75%/25%; P2 15%/85%; P3 0%/100%; P4 70%/30%; P5 70%/30%; P6 100%/0%. Overall ~57%. Staging and production launch **NO-GO**; production authorization remains separate.
+
 ## GFS-223 Final Staging Activation / Live Test Gate (2026-10-26)
 
 - **P0 PARTIAL / action gate BLOCKED.** Official MCP root cause found: prior `-s read-only` exec used `approval_policy=never`; DOM evaluation was tagged potentially mutating, so the runtime returned `user cancelled` without a host review path. Fresh Codex approved-review mode succeeded for existing tabs; no bypass. Inventory: two Meta business tabs + WhatsApp Web only; no authenticated Cloudflare, GitHub UI or staging Admin tab. Visible Meta check: GFS sender identity visible, canonical WABA not visible, tester match false. No navigation or mutation.

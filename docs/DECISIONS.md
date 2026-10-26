@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-26: GFS-224 Preserve Empty Legacy Ledger; Do Not Activate Yet
+
+- Official Codex CLI 0.147 lacked reliable browser-tool exposure; update to 0.164 restored the official MCP. `approval_policy=never` caused evaluator cancellation; use approved review. Never use bypass. Cloudflare identity verified via UI menu/email and account route ID, but Admin identity is absent, GitHub UI unauthenticated, Meta operator unverified, and tester profile mismatch persists.
+- Remote D1 schema is populated and validates; `d1_migrations` has zero entries. All 30 Wrangler migrations appear pending. Never run bulk apply or invent rows. Official Cloudflare docs say D1 clone/fork is not available; Time Travel restore overwrites the original. Schema-only export returned auth error, so no safe clone was proved.
+- Implemented the user-requested separately tracked idempotent COD-only alternative in 0030 with a `cod_schema_migrations` marker; preserve existing `d1_migrations` untouched. Local synthetic tests show repeated execution preserves populated legacy rows/receipt/audit and empty legacy ledger. Do not apply remotely until a verified backup clone/equivalent plus source parity and operational gates exist.
+- No code/runtime mismatch can be inferred solely from Worker version dates. API v90 predates PR #10 commit `cf01f44`; source parity unverified. Do not deploy PR #11 source or allow an active signed webhook to receive new flow until this is resolved.
+- COD is not enabled. No protected secret, COD policy, callback, D1, Worker, financial, customer or Meta mutation; no real acceptance. Production remains separately authorized.
+
 ## 2026-10-26: GFS-223 Stop Migration/Launch at Remote Ledger and Identity Gates
 
 - MCP DOM cancellation was an approval configuration failure, not a dead bridge: old noninteractive read-only exec forced `approval_policy=never` for `evaluate_script` (`read_only_hint:false`). Fresh approved-review mode successfully performed limited existing-tab reads; no bypass or navigation. No Cloudflare/Admin/GitHub UI tabs, no canonical WABA visibility, tester profile mismatch.

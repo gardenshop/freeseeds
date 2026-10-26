@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-26 (GFS-224 bridge repair and D1 safe fallback)
+
+- Updated official Codex CLI 0.147→0.164, diagnosed prior MCP cancellation, and performed approved read-only service checks. Cloudflare identity matches; GitHub CLI matches, UI does not; Meta operator/tester and Admin header identity remain unverified.
+- Verified remote API/Admin versions and legacy D1 metadata. The D1 ledger is empty although legacy tables exist; all Wrangler migrations appear pending. D1 quick/FK checks pass. Official Cloudflare docs confirm no clone/fork; Time Travel restore is destructive in-place. Schema-only export failed auth, no data copied.
+- Converted COD 0030 to an idempotent COD-only sidecar marker that preserves `d1_migrations`, with populated-schema/replay/empty-ledger regressions. Still unapplied pending source parity and backup-clone/equivalent.
+- Full test/build/lint/audit/dry-run validation passed; COD flag false. No Worker/migration/secret/Meta/message/order change; live WAMID/screenshot none.
+
 ## 2026-10-26 (GFS-223 staging preflight)
 
 - Diagnosed Chrome MCP `user cancelled`: previous CLI used `approval_policy=never` for an evaluator marked potentially mutating. Fresh approved-review mode exposed/listed pages and sanitized existing-tab inspection without bypass.

@@ -1,5 +1,22 @@
 # Test Matrix
 
+## GFS-224 Cloudflare / Schema / Release Gates (2026-10-26)
+
+| Requirement | Result | Evidence |
+|---|---|---|
+| Chrome MCP | PASS | Official Codex CLI updated to 0.164.0; `list_pages` and narrowly scoped approved DOM reads work. Never use `approval_policy=never` for evaluator or bypass host review. |
+| Cloudflare identity | PASS PARTIAL UI | Cloudflare header/account menu has `gisupp@gmail.com`; account route/link contains exact expected account ID. No mutation. D1 dashboard route rendered no D1 content. |
+| GitHub identity | PASS CLI / UI BLOCKED | `gh api user` `gardenshop`; browser PR page unauthenticated. PR #11 branch/head checked via GitHub CLI. |
+| Admin/Meta/tester identity | BLOCKED | Admin Orders host opened but expected email not in header; Meta operator Saeed not visible. GFS resource links present, but no WABA route interaction. WhatsApp tester profile mismatches approved record; no chat/message. |
+| Active Worker/source parity | BLOCKED | API v90 `21a3d74c-3979-432c-9190-1848362592a4`, Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`. No Git SHA annotations; API version predates PR #10 `cf01f44`. No deployment. |
+| Remote migration ledger | FAIL/STOP | `d1_migrations` is present but empty; all 0001–0030 pending while populated legacy schema exists. Wrangler bulk apply prohibited. No ledger repair/fabrication. |
+| D1 integrity/backup | PASS READ ONLY / CLONE UNAVAILABLE | `quick_check=ok`, foreign-key check empty, COD tables absent. Time Travel bookmark available. Official Cloudflare docs say clone/fork unsupported; Time Travel restore is in-place. `d1 export --no-data` failed Authentication 10000; no file/data exported. |
+| COD-only fallback | PASS LOCAL DESIGN / NOT APPLIED | Revised 0030 is idempotent, records only `cod_schema_migrations`, preserves empty `d1_migrations`. Must wait for verified clone/equivalent and source parity; not run remotely. |
+| Local regression/build | PASS | Focused 100/100; full 244/244; legacy baseline176; retained-schema old-source4; build/lint/audit0; API/Admin Wrangler dry-runs pass, COD false. |
+| Staging activation/live E2E | NOT RUN | No HMAC, migration, deploy, flag, tester journey, order, WAMID or screenshot. No regression claim for running staging checkout. |
+
+GFS-224 source commit `217e2a0dfb6d445fab205115f2121ce6277bbb61`; migration Git blob `05e7c0012ad3ed6677bc691a3f937f15b7d20c50`. No test contains real customer data; live schema inspection returned DDL only. The Git blob identifies code only; migration is unapplied.
+
 ## GFS-223 Remote Staging Preflight (2026-10-26; read-only)
 
 | Check | Result | Evidence |

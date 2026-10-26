@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-224 Current Runtime/Backup Inventory (2026-10-26)
+
+- Verified Cloudflare browser user-menu identity `gisupp@gmail.com`; exact account ID present in route/link, expected GFS ID. Wrangler CLI agrees. GitHub CLI authenticated `gardenshop`; GitHub UI is unauthenticated. Staging Admin Access page did not expose expected email; no order rows inspected.
+- Read-only active versions remain API v90 `21a3d74c-3979-432c-9190-1848362592a4`, Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`; source commit IDs unavailable. API version predates PR #10 source `cf01f44`; don't infer parity. Config IDs: account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, WABA `2616648355452496`, phone asset `1323932417479627`. Meta current operator and WABA association not authenticated; asset IDs are configuration references only.
+- D1 `quick_check=ok`, FK clean, `d1_migrations` exists empty, no COD sidecar tables; Time Travel bookmark available at 2026-10-26T11:45Z. This bookmark token is not saved in Git. Official D1 cloning unsupported. Schema-only export failed auth; no customer rows or database file were copied. `0030` source commit `217e2a0`, Git blob `05e7c0012ad3ed6677bc691a3f937f15b7d20c50`, idempotent sidecar marker only tested locally, unapplied.
+- Candidate COD `false`; active API lacks COD HMAC binding/name, no secret provisioned. No courier record, WAMID, test order, screenshot, migration, deployment, restored D1, or Cloudflare write. Only this Git branch/PR was written.
+
 ## GFS-223 Authenticated Resource Preflight (2026-10-26)
 
 - CLI identity: GitHub `gardenshop`; Wrangler `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Existing MCP tabs lacked Cloudflare/GitHub/Admin UIs. No current dashboard session identity verified through browser.
