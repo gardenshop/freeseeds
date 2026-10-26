@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-26: GFS-227 Stop on Explicit D1 Authorization Error
+
+- Admin Access email/hostname match from GFS-226 remains verified. Fresh Chrome MCP `list_pages` failed twice; do not retry, switch tester profile, impersonate or send.
+- Wrangler D1 query returned API 7403. Do not change account, broaden token scopes, or retry; request the GFS Cloudflare account owner to restore/confirm least-privileged D1 query authorization through the supported account channel.
+- No remote D1 schema/backup/clone rehearsal or migration this run. Preserve empty legacy ledger, do not bulk replay, and keep 0030 unapplied. Local synthetic idempotent COD migration tests remain valid but are not live equivalent.
+- No source parity, collector evidence, Meta operator/tester or HMAC. No Worker/deploy/config/order mutation; COD remains false. Production remains separate authorization.
+
 ## 2026-10-26: GFS-226 Access Identity Passed, Tester/DB Gates Remain
 
 - Same-origin Cloudflare Access identity endpoint on the exact Admin staging origin returned HTTP success, expected email, and exact hostname. It did not expose `iss`/`aud`; no JWT or headers were read/output. This verifies Admin identity without relying on absent header UI.

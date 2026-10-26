@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-227 D1 Permission and Tester Stop (2026-10-26)
+
+- GFS-226 same-origin Admin Cloudflare Access identity check remains valid for email/host. A new official Chrome MCP session failed `list_pages` twice; stop and do not retry in this execution. Admin Test Controls/WhatsApp Profile not cross-matched. Last observed tester mismatch remains a hard stop; Meta operator remains unverified. No messages or account switching.
+- Official Wrangler D1 query against the already verified GFS account/database returned Cloudflare API **7403 (not authorized)**. Do not switch accounts, broaden scopes, retry under another identity, or treat past `quick_check` success as current authorization. Use only the already verified redacted/synthetic local fixtures until the Cloudflare account owner restores least-privileged D1 read access through approved support; any required permission change needs account-owner approval.
+- The populated shared D1 still has an empty `d1_migrations` ledger; never bulk apply or fabricate entries. Do not directly execute 0030 on production/staging while schema/parity/backup checks are blocked. Local synthetic 0030 remains idempotent and separately marks `cod_schema_migrations`.
+- Deployed API v90/Admin v82 source parity remains unproven; version metadata lacks commit annotations. No Worker, Admin, D1, HMAC, Meta, courier-policy, callback, or order mutation. Keep COD intake false. Production remains separately authorized.
+
 ## GFS-226 Admin Access Claim and Tester Gate (2026-10-26)
 
 - Admin identity is now verified through its exact staging origin's same-origin Cloudflare Access `get-identity` response: HTTP succeeded, hostname matched, and email claim matched the authorized GFS identity. No JWT, cookie, header or identity JSON was output; issuer/audience were not exposed by the endpoint. This supersedes GFS-225's “identity not visible in header” only for Admin Access email verification.

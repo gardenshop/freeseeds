@@ -1,5 +1,15 @@
 # Status
 
+## GFS-227 Final Release Gate (2026-10-26)
+
+- **P0 PARTIAL.** Admin same-origin Cloudflare Access identity was verified in GFS-226 (email/hostname match); Cloudflare and GitHub CLI identities remain verified. Meta operator and current tester record/profile are not verified. Fresh approved Chrome MCP session failed `list_pages` twice. Stopped; no retries, profile switch or message.
+- **P1 BLOCKED REMOTE D1.** Current official Wrangler D1 SELECT returned API **7403 not authorized** for the expected account/database. Do not switch accounts, widen scopes or retry. The empty ledger/pending 0001–0030 finding stands; no bulk apply or ledger fabrication. 0030 remains an idempotent local-only fallback, not applied. No current schema read/clone/backup rehearsal.
+- **P2 BLOCKED.** API v90 `21a3d74c-3979-432c-9190-1848362592a4`, Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`; no source commit annotation, active source parity unproven. No deploy or rollback execution.
+- **P3/P4 BLOCKED.** No verified courier/remittance record, Meta operator/tester, COD HMAC, policy or enabled runtime. Candidate flag false. No order, buttons, amount, Admin COD_PENDING, WAMID or screenshot.
+- **P5 PASS LOCAL ONLY.** Focused100, full244/22; build/lint/audit0; both Wrangler dry-runs. `quick_check`/FK results are historical GFS-224 read-only checks, not refreshed after current 7403. No new source changes.
+- **P6 PASS after push.** Seven GFS-227 records updated on PR #11. Source/migration remains `217e2a0`.
+- **Complete/remaining:** P0 80/20; P1 70/30; P2 15/85; P3 0/100; P4 0/100; P5 70/30; P6 100/0. Overall ~48%. Staging/public launch **NO-GO**.
+
 ## GFS-226 Access Claim Verification / COD Still Blocked (2026-10-26)
 
 - **P0 PARTIAL.** On the exact staging Admin origin, same-origin Cloudflare Access `get-identity` returned success; hostname and email claim matched expected Admin identity. No JWT/cookie/header or identity JSON exposed; `iss`/`aud` fields were absent. Cloudflare account and GitHub CLI identities remain verified. GitHub browser login remains absent.

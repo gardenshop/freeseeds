@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-227 Final Verification (2026-10-26)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Admin Access identity | PASS from GFS-226 | Same-origin Access identity email/hostname matched; no JWT/claims retained. |
+| Approved tester/Meta operator | BLOCKED | Fresh official MCP `list_pages` failed twice; Admin Test Controls/Profile not cross-matched. Last tester mismatch remains. No message. |
+| Remote D1 authorization | BLOCKED | Current official Wrangler schema query returned API7403 for expected account/database. No scope change/account switch/retry. No schema data disclosed. |
+| Migration fallback | PASS LOCAL / NOT APPLIED | COD-only 0030 is idempotent, sidecar-marked and keeps legacy ledger untouched; synthetic populated-schema/replay/rollback tests pass. No remote rehearsal or migration. |
+| Deployed-source parity | BLOCKED | API v90/Admin v82 version metadata has no Git source hash; API predates PR #10 source. No deploy. |
+| Regression/security | PASS LOCAL | Focused100/100, full244/244, build/lint/audit0. API/Admin Wrangler dry-runs pass with COD false. |
+| Live COD/Advance acceptance | NOT RUN | No browser buttons, authorized tester, order, WAMID, Admin COD_PENDING or screenshot; no live advance path/receipt retest. |
+
 ## GFS-226 Access Claim and Release Gate (2026-10-26)
 
 | Check | Result | Evidence / boundary |

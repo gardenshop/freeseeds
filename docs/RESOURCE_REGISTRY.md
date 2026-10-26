@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-227 Permission and Resource Status (2026-10-26)
+
+- Cloudflare account/Access identity and GitHub CLI identity remain verified from prior same-session evidence. Current Wrangler D1 query returned API7403; no scope/account changes. Remote D1 state is not refreshed this run.
+- Existing API v90/Admin v82 IDs unchanged; source parity unverified. No service version deployed or secret provisioned. Candidate COD remains false.
+- D1 migration 0030 remains unapplied; empty legacy ledger is preserved. No remote clone, customer-data export, backup restore, Meta callback, tester order, WAMID or screenshot created.
+- Official Chrome MCP page listing failed twice in approved review; no tester/Admin Test Controls or Meta operator inspection completed. Stop until supported session/permission restoration; no account switch or message.
+
 ## GFS-226 Access/Runtime Follow-up (2026-10-26)
 
 - Admin Access identity verified through exact staging origin's same-origin identity endpoint: email and hostname matched. No JWT, cookie, claim JSON or token saved. Admin Test Controls not read after MCP `list_pages` failed twice.
