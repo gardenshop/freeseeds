@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { canTransition, codReferenceHmac, createMetaActivationService, createWhatsAppProvider, customerTransactionReferenceHash, getLatestOrderForWaId, isInsideWhatsAppServiceWindow, MetaActivationAction, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, hasPaymentMessagePlaceholders, isPaymentMethodComplete, isPaymentMethodLocaleComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, publishedWhatsAppContent, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, WhatsAppActionId, whatsAppActionIdsForTemplate, whatsAppActionLabel, WhatsAppContent, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
+import { canTransition, configuredPaymentMethodNames, codReferenceHmac, createMetaActivationService, createWhatsAppProvider, customerTransactionReferenceHash, getLatestOrderForWaId, isInsideWhatsAppServiceWindow, MetaActivationAction, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, hasPaymentMessagePlaceholders, isPaymentMethodComplete, isPaymentMethodLocaleComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, publishedWhatsAppContent, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, WhatsAppActionId, whatsAppActionIdsForTemplate, whatsAppActionLabel, WhatsAppContent, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
 
   type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_CAPI_ENABLED?: string; REFERENCE_REQUESTS_ENABLED?: string; COD_REFERENCE_HMAC_KEY?: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
 const app = new Hono<Env>();
@@ -507,8 +507,8 @@ app.use("*", async (c, next) => {
 });
 
 app.get("/health", async (c) => {
-  const configured = c.env.DB ? await c.env.DB.prepare("SELECT COUNT(*) AS count FROM payment_methods WHERE enabled=1 AND recipient_name IS NOT NULL AND instructions IS NOT NULL AND EXISTS (SELECT 1 FROM payment_configuration WHERE id=1 AND advance_amount_pkr > 0)").first<{ count: number }>() : null;
-  return c.json({ ok: true, service: "getfreeseeds-admin", state: c.env.DEPLOYMENT_STATE, paymentConfigured: Number(configured?.count ?? 0) > 0 });
+  const configured = c.env.DB ? await configuredPaymentMethodNames(c.env.DB, undefined, ["en", "ur"]) : [];
+  return c.json({ ok: true, service: "getfreeseeds-admin", state: c.env.DEPLOYMENT_STATE, paymentConfigured: configured.length > 0 });
 });
 const paymentReviewColumns = ["method", "recipient_name", "till_id", "qr_r2_key", "qr_sha256", "qr_mime_type", "qr_size_bytes", "enabled", "qr_owner_verified", "instructions", "instructions_ur", "reference_instruction", "reference_instruction_ur", "heading", "heading_ur", "short_instructions", "short_instructions_ur", "receipt_instructions", "receipt_instructions_ur", "payment_help_copy", "payment_help_copy_ur", "status_copy", "status_copy_ur", "updated_at"];
 

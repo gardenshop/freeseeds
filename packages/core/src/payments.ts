@@ -98,12 +98,12 @@ export function hasCompleteEnabledPaymentMethod(configs: PaymentMethodConfig[]):
   return configs.some((config) => isPaymentMethodComplete(config) && isPaymentMethodLocaleComplete(config, "en"));
 }
 
-export async function configuredPaymentMethodNames(db: D1Database, payableAmount?: number): Promise<string[]> {
+export async function configuredPaymentMethodNames(db: D1Database, payableAmount?: number, requiredLocales: readonly ("en" | "ur")[] = ["en"]): Promise<string[]> {
   if (payableAmount !== undefined && (!Number.isSafeInteger(payableAmount) || payableAmount <= 0)) return [];
   const methods = await db.prepare("SELECT pm.* FROM payment_methods pm JOIN payment_qr_assets qa ON qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref IS NOT NULL AND TRIM(qa.independent_evidence_ref)<>'' WHERE pm.enabled=1 AND pm.qr_owner_verified=1 ORDER BY pm.sort_order, pm.method").all<Record<string, unknown>>();
   return (methods.results ?? [])
     .map((row) => normalizePaymentMethodRow(row))
-    .filter((method) => method.qrOwnerVerified && isPaymentMethodComplete(method) && isPaymentMethodLocaleComplete(method, "en"))
+    .filter((method) => method.qrOwnerVerified && isPaymentMethodComplete(method) && requiredLocales.every((locale) => isPaymentMethodLocaleComplete(method, locale)))
     .map((method) => String(method.displayName).trim())
     .filter(Boolean);
 }
