@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-225 Identity, Artifact and Acceptance Stop (2026-10-26)
+
+- Current UI/CLI findings supersede neither GFS-224's hard gates nor the tester lock. Cloudflare UI `gisupp@gmail.com` and expected account route ID match; GitHub CLI `gardenshop`, but browser PR page remains logged out. Admin Orders host returns content but expected Access identity is not exposed in header/banner or link labels; do not assume identity. Meta Business links include authorized business/WABA IDs but no profile control identifies Saeed and phone ID link was absent. WhatsApp Profile remains a mismatch to the authorized tester. No identity switch, impersonation, unrelated chat, or message.
+- Active API v90 and Admin v82 remain unchanged. API health endpoint returned HTTP 200 and only service `getfreeseeds-api`; no deployment state, COD flag, or D1 health field was returned. Treat those values as unknown, not enabled/healthy. Candidate COD flag remains false; active API secret list lacks `COD_REFERENCE_HMAC_KEY`.
+- Exact deployed source parity is still unavailable: version metadata has no Git commit annotation and API v90 predates PR #10 commit `cf01f44`. No remote code editor/source artifact exposed a source checksum. Do not deploy PR #11 onto the active signed callback until actual parity is independently proven.
+- D1 is populated; `d1_migrations` has zero entries, Wrangler would replay 0001–0030. Preserve this ledger. Reviewed COD-only 0030 is idempotent and writes a separate marker, but is unapplied. Remote quick/FK checks and Time Travel availability do not substitute for a safe isolated rehearsal/rollback. Official D1 clone/fork is unsupported; do not export customer data to manufacture a clone.
+- Do not change API/Admin/Meta/secret/D1 state. Existing advance, receipt/webhook paths remain as deployed; they were not changed, but no live advance regression was run. No live COD tester order, WAMID, screenshot, or Admin COD_PENDING proof exists. Public production remains separately authorized and NO-GO.
+
 ## GFS-224 Verified Browser / D1 Ledger Gates (2026-10-26)
 
 - Codex MCP repair: CLI `0.147.0` lacked stable tool exposure; update the official Codex CLI to `0.164.0`. The earlier cancellation also came from exec `approval_policy=never` paired with Chrome `evaluate_script` `read_only_hint:false`. For supported read-only DOM inspection use the normal approved-review path; never use bypass flags. Never inspect broad Meta/Ads/WhatsApp page bodies, leads, customer/payment rows, tokens, storage, or unrelated chats. Inspect exact elements/headers only.

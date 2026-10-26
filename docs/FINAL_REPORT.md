@@ -1,5 +1,23 @@
 # Final Report
 
+## GFS-225 | Resolve Blockers and Complete COD Staging Launch (2026-10-26)
+
+**Staging COD was not enabled; no genuine WhatsApp COD order was completed. Browser/CLI identity work and safe local migration/regression work are complete. No cloud resource, customer, payment, Meta callback or production mutation occurred.**
+
+| Assignment | Result | Evidence |
+|---|---|---|
+| P0 access/identity | **PARTIAL / BLOCKED** | Official Codex 0.164 and approved-review Chrome MCP are operational. Cloudflare UI user menu/account route match expected identity; GitHub CLI is `gardenshop` but browser session is logged out. Admin Orders host is reachable but expected Access email is absent from header controls. Meta pages link GFS business/WABA but operator and canonical phone link are unverified. Approved tester Profile mismatches; no message. |
+| P1 D1/migration/rollback | **BLOCKED APPLY** | D1 is populated, `d1_migrations` empty, Wrangler lists 0001–0030 pending. Never bulk applied or fabricated history. Quick/FK checks pass; Time Travel bookmark exists. Official D1 clone/fork unsupported; no customer-data export. Reviewed idempotent COD-only migration 0030 preserves the legacy ledger with a separate marker and passed local tests, but remains unapplied due no safe clone/equivalent rehearsal and no active source parity. |
+| P2 compatible staging Workers | **BLOCKED** | Active API v90 `21a3d74c-3979-432c-9190-1848362592a4`, Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`; no source SHA annotations. API v90 predates PR #10 commit `cf01f44`. Health GET is HTTP200/service only; it does not report deployment source/COD/DB state. No deployment. |
+| P3 COD enablement | **BLOCKED** | Candidate `COD_V1_ENABLED=false`; active API lacks COD HMAC binding/name. No secret provisioned, no authenticated collector/remittance evidence, and Meta operator/tester not verified. |
+| P4 one real order | **NOT RUN** | No authorized tester, buttons, order number/amount, WAMID, D1 COD_PENDING, Admin hold, or screenshot. No advance-switch live test. No real funds/shipping. |
+| P5 regression/launch | **PASS LOCAL / LIVE BLOCKED** | Focused100, full244, V1 baseline176, retained-schema old-source4; build/lint/audit0; API/Admin Wrangler dry-runs. D1 quick/FK read-only pass. No remote rollback, running checkout, signed webhook or Admin acceptance. |
+| P6 docs/push | **PASS AFTER PUSH** | Seven required files updated; current tested source/migration commit remains `217e2a0`; docs will be committed/pushed to PR #11. No force-push or merge. |
+
+**Required confirmations:** (1) COD code ready for isolated review: **yes, not deployment-ready**. (2) Staging COD enabled: **no**. (3) Real tester order PASS: **no**. (4) Public COD enabled: **no**. The existing advance Worker and signed callback were not modified; runtime advance regression remains untested in this session.
+
+**P0–P6 complete/remaining:** P0 70/30; P1 75/25; P2 15/85; P3 0/100; P4 0/100; P5 70/30; P6 100/0. Overall approximately **47%**; live acceptance **0%**. Conditional staging estimate: at least 1–2 business days after matching Admin/Meta/tester identity, verified collector record, deployed source parity and a supported safe clone/equivalent are available; otherwise blocked indefinitely. Production requires separate authorization and post-staging gates.
+
 ## GFS-224 | Urgent COD Activation and WhatsApp Live Acceptance (2026-10-26)
 
 **Outcome: no staging activation or genuine WhatsApp acceptance. Local fixes and evidence are pushed; external release gates remain unsatisfied. No D1/Worker/Meta/customer/payment mutation.**

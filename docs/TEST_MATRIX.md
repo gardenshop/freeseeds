@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-225 Final Identity and Artifact Checks (2026-10-26)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Chrome MCP approved-review | PASS | Codex 0.164.0; list_pages and narrow supported browser actions work. No bypass. |
+| Cloudflare / GitHub | PASS PARTIAL | Cloudflare user menu/account route match expected GFS account; GitHub CLI `gardenshop`, browser session not authenticated. |
+| Admin / Meta / tester | BLOCKED | Admin host loads but no expected identity visible in header labels. Meta has GFS business/WABA links but Saeed/operator and canonical phone link not established. WhatsApp Profile mismatch; no sending. |
+| Active API behavior | PASS HEALTH ONLY | Chrome GET `/health` returned 200 and `service=getfreeseeds-api`; no deployment/COD/D1 state fields present. No flow POST or webhook received. |
+| Source parity | BLOCKED | API v90/Admin v82 metadata contains no Git commit annotation; API version predates PR #10 source `cf01f44`. |
+| D1 safe change | BLOCKED REMOTELY | Populated legacy schema, empty `d1_migrations`; all 30 Wrangler migrations pending. Quick/FK checks pass, Time Travel available, but D1 clone unsupported. 0030 is idempotent/separately marked and local tested; no clone/rehearsal on live data and no application. |
+| COD/HMAC state | NOT ENABLED | Candidate `COD_V1_ENABLED=false`; active health does not report state and HMAC binding/name absent. No secret values read or written. |
+| Tester E2E | NOT RUN | No authorized profile match, WAMID, COD order/total/Admin status/screenshot or advance live regression. |
+| Local regression | PASS | Focused100, full244, V1 baseline176, old-source retained-schema4; build/lint/audit0; both Wrangler dry-runs. |
+
 ## GFS-224 Cloudflare / Schema / Release Gates (2026-10-26)
 
 | Requirement | Result | Evidence |

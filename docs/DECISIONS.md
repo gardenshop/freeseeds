@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-26: GFS-225 Do Not Activate Without Identity/Parity/Clone
+
+- Codex/MCP is repaired and approved-review tools work. Cloudflare UI and GitHub CLI identities match their allowed accounts, but Admin identity is not exposed, GitHub browser is logged out, Meta operator is unverified and approved tester profile mismatches. Never force login, switch accounts, impersonate, or message.
+- Active API v90 health GET is HTTP200/service only; it reports no version/COD/database health. It does not prove route, webhook, COD, or source parity. API v90 predates PR #10 commit and no commit annotation is available. Do not deploy PR #11 over live traffic.
+- Preserve the populated D1 with empty legacy ledger. Do not run bulk Wrangler migrations or fabricate rows. Idempotent COD-only 0030 is a local fallback; no supported D1 clone/fork exists and no customer-data export is permitted. No application until an accepted schema-safe rehearsal and rollback path exist.
+- Staging COD remains disabled. No secret, policy, migration, callback, Worker, tester message/order, payment or production change. Existing advance path remains unmodified; live regression still needed after any future release.
+
 ## 2026-10-26: GFS-224 Preserve Empty Legacy Ledger; Do Not Activate Yet
 
 - Official Codex CLI 0.147 lacked reliable browser-tool exposure; update to 0.164 restored the official MCP. `approval_policy=never` caused evaluator cancellation; use approved review. Never use bypass. Cloudflare identity verified via UI menu/email and account route ID, but Admin identity is absent, GitHub UI unauthenticated, Meta operator unverified, and tester profile mismatch persists.

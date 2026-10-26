@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-26 (GFS-225 activation blockers)
+
+- Confirmed Codex 0.164/MCP approved-review access and Cloudflare identity; Admin header identity, GitHub browser login, Meta operator, phone link and authorized tester remain unverified/mismatched.
+- Read-only active API health GET returned 200/service only, without deployment/COD/D1 state. No source parity claim.
+- Reconfirmed empty D1 migration ledger, populated schema, clean quick/FK, available Time Travel, no D1 clone/fork support. Idempotent COD 0030 remains unapplied; no bulk replay or ledger fabrication.
+- No API/Admin/Meta/D1/secret/test-order mutation, live WAMID, screenshot, or public launch. Candidate remains COD disabled.
+
 ## 2026-10-26 (GFS-224 bridge repair and D1 safe fallback)
 
 - Updated official Codex CLI 0.147→0.164, diagnosed prior MCP cancellation, and performed approved read-only service checks. Cloudflare identity matches; GitHub CLI matches, UI does not; Meta operator/tester and Admin header identity remain unverified.

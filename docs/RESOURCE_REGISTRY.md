@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-225 Final Runtime/Identity Snapshot (2026-10-26)
+
+- Cloudflare UI `gisupp@gmail.com` and expected account ID route verified. GitHub CLI `gardenshop`; browser PR session unauthenticated. Staging Admin host/API loads, but Access identity not visible in header attributes. No identity change.
+- Meta existing tabs show allowed GFS business/WABA links; operator Saeed and phone asset identity unverified. Authorized WhatsApp tester profile mismatches approved record. Do not message or use Hoja assets.
+- API v90 `21a3d74c-3979-432c-9190-1848362592a4`, Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`; no Git SHA metadata. Chrome health GET returned HTTP200/service-only. Candidate COD flag false; active HMAC binding absent.
+- D1 still populated, ledger empty, COD tables absent; quick/FK clean, Time Travel bookmark available. No official clone/fork or schema-only export; do not copy customer data. Migration blob `05e7c0012ad3ed6677bc691a3f937f15b7d20c50` remains unapplied. No secret, D1 row, Worker, callback, order, WAMID, screenshot or spend change.
+
 ## GFS-224 Current Runtime/Backup Inventory (2026-10-26)
 
 - Verified Cloudflare browser user-menu identity `gisupp@gmail.com`; exact account ID present in route/link, expected GFS ID. Wrangler CLI agrees. GitHub CLI authenticated `gardenshop`; GitHub UI is unauthenticated. Staging Admin Access page did not expose expected email; no order rows inspected.

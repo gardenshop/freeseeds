@@ -1,5 +1,16 @@
 # Status
 
+## GFS-225 Blockers and Live Acceptance (2026-10-26)
+
+- **P0 PARTIAL.** Official Codex 0.164/MCP approved-review path is operational. Cloudflare `gisupp@gmail.com`/account route ID and GitHub CLI `gardenshop` verified; GitHub browser still logged out. Admin Orders host is reachable but authorized email not visible in header/banner/link attributes. Meta shows GFS business/WABA links but no Saeed identity; phone asset link is absent. WhatsApp tester profile remains mismatched. No identity switch/message.
+- **P1 BLOCKED APPLY.** API v90 `21a3d74c-3979-432c-9190-1848362592a4`, Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`; no source annotations. API version predates PR #10 base `cf01f44`; exact source parity unavailable. D1 populated, ledger empty, all 0001–0030 pending; never replay/fabricate. COD-only migration 0030 is idempotent/separately marked and local-tested but unapplied. Official D1 clone unsupported; safe backup clone/equivalent rehearsal remains unresolved.
+- Read-only active API health GET returned 200/service `getfreeseeds-api`; no runtime version, COD flag or database health fields were present. This is not a signed webhook, checkout or source-parity test. Cloudflare account version metadata says no COD HMAC binding; secret listing has no COD HMAC name. Candidate flag false.
+- **P2/P3 BLOCKED.** No Worker/Admin deployment, HMAC, COD policy, courier/remittance evidence, Meta operator/tester verification, migration, WAMID/order/screenshot. Staging COD not enabled by this run; current API feature state not reported by health endpoint. Public COD is not accepting orders.
+- **P4 live tester NOT RUN.** No actual COD or advance UI journey; no paid/ship/cash action. Existing advance and signed webhook were not changed; active runtime regression was not tested.
+- **P5 PASS LOCAL ONLY.** Existing clean GFS-224 results remain: focused100, full244, baseline176, retained-schema4; build/lint/audit0 and API/Admin dry-runs. No new code changed this turn; no live D1/admin/webhook/E2E acceptance.
+- **P6 PASS after push.** GFS-225 protocol and evidence updates are being pushed to PR #11; source/migration commit remains `217e2a0`, migration blob `05e7c0012ad3ed6677bc691a3f937f15b7d20c50`.
+- **Complete/remaining:** P0 70/30; P1 75/25; P2 15/85; P3 0/100; P4 0/100; P5 70/30; P6 100/0. Overall ~47%. Staging/public readiness **NO-GO**.
+
 ## GFS-224 Urgent COD Activation (2026-10-26)
 
 - **P0 PARTIAL.** Updated official Codex CLI 0.147→0.164; official MCP is now exposed in approved-review sessions. The former cancellation was approval-policy `never`, not a dead bridge. Browser Cloudflare account menu/email and account route ID match GFS. `gh api user` is `gardenshop`, but GitHub browser login does not match. Admin Orders UI loads but expected identity is absent from header. Canonical GFS business/WABA/phone links are present in Meta tabs, but Meta operator Saeed is not visible; authorized WhatsApp tester Profile mismatch remains a hard stop. No messaging.
