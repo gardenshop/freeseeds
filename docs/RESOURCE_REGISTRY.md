@@ -1,5 +1,22 @@
 # Resource Registry
 
+## GFS-234 Explicitly Approved Disposable Diagnostic D1 (2026-10-26)
+
+| Field | Verified record |
+|---|---|
+| Name / ID | `getfreeseeds-cod-compat-check` / `b29df6ba-e5c3-47bd-ac59-f6b0d47861a1` |
+| Owner/account | Get Free Seeds, `gisupp@gmail.com`, `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; browser identity matched and Wrangler rechecked before synthetic mutations |
+| Authority/purpose | User explicitly approved this one <=5MB synthetic-only DB, <=10k reads/1k writes, no paid plan, traffic, active binding or customer copying; independent of prior V2 permission |
+| Created / size | `2026-10-26T20:39:38.852Z`;569344 bytes;38 tables;account now5 DBs |
+| Schema/data |63 V1 schema definitions only (from compatibility0001–0029), one synthetic fixture, exact0030; normal NEW ledger3. No real customer/receipt/payment-method records exported; config COD disabled125. Synthetic SQL order `SIM-GFS234-DO-NOT-SHIP`,250+125=375,COD_PENDING/hold1; no outbox/receipt |
+| Dependencies | No Worker, Meta callback, Queue, R2 or Access binding; not a production/rollback DB. Temporary config/artifacts only in `D:\Temp\kilo\gfs234-rehearsal`; never deploy the failed C3 scaffold under `D:\Temp\kilo\getfreeseeds-api-staging` |
+| Cost/quota | Before creation UI:4/10 DBs,4.56MB/5GB,88k/5M daily reads,29/100k writes,$0 observed billable usage. Final D1 info:33 read queries/77 write queries,546 rows read/223 written in24h,within approved caps; no new plan,Cron or consumers. Post-change invoice not inspected; do not guarantee future zero charges |
+| Cleanup | Retained only for test evidence. Review/delete by2026-10-28 after dependency/no-real-data checks. Wakeup scheduled2026-10-28T12:00Z; no automated blind deletion. All four original DBs retained |
+
+- Original D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`: metadata3,055,616 bytes. Explicitly approved bounded SELECT1/metadata preflight PASS, quick_check ok,FK0, all63 V1 objects match, legacy ledger0. No original schema/data write; COD0030 remains unapplied. List API's `num_tables:0` is not a reliable schema-empty signal; schema preflight establishes actual objects. D1 `version:production` is storage metadata, not a production traffic promotion.
+- Time Travel bookmark original `0000026d-00000000-00005110-fef2d3498b8cc0fbb06b6df66727b08d`; diagnostic `00000002-00000000-00005110-f5e6931b1cdda1c7644203b7753afe30`. No restore. COD file SHA256 `72d1c00c4c3bfeabc391f538530c2bc974a60d37ab33f01b5ba672253ec052db`; schema-only SHA256 `4bf7ca14aad2f69423ee92ab50afc5d556f3620408a70c5cb1c59ccc04265221`.
+- API v90 `21a3d74c-3979-432c-9190-1848362592a4` and Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` remain at100%; no deploy/secret/Meta/canonical routing or binding change. Active flag unknown; candidate API false. Admin Access matches; Test Controls recovered; current exact WhatsApp tester MISMATCH, no send.
+
 ## GFS-233 Verified Support/Deployment State (2026-10-26)
 
 - Wrangler principal/account confirmed immediately before Support: `gisupp@gmail.com`, expected GFS account, `d1:write`. This does not grant proven D1 query permission.

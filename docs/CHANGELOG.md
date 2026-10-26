@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-26 (GFS-234 clean D1 works; original reads recovered)
+
+- Created separately approved synthetic-only diagnostic D1; SELECT1, schema-only V1 baseline + COD0030, quick/FK, same-order SQL persistence, replay and DO NOT SHIP checks pass. No V2 schema/customer export, Worker binding or Meta change.
+- User-authorized bounded original-D1 comparison now passes SELECT1, quick/FK and all63 expected V1 definitions; original empty migration ledger untouched. Historical API7403 cause remains unknown and is not reproduced; technical support ineligibility never implied corruption.
+- Admin Access matches and Test Controls is available. After owner opened Profile and approved recheck, tester MISMATCH remains; no WhatsApp message/live order. Active deployed-source download failed; no rollout.
+- Full244/focused27/V1 harness4/build/lint/audit0/dry-runs pass; public health200,unsigned webhook403,unauthenticated Admin302. Registered diagnostic resource/review deadline, safe single-DB decision and public escalation routes. No application source/runtime change.
+
 ## 2026-10-26 (GFS-233 support eligibility and MCP recovery)
 
 - One approved same-execution Chrome MCP `list_pages` succeeded and reached Cloudflare Support. A subsequent fresh exec again lacked the tool; intermittent session exposure remains.

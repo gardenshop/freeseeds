@@ -1,5 +1,22 @@
 # Test Matrix
 
+## GFS-234 Permitted Alternative and Original Comparison (2026-10-26)
+
+| Check | Result | Actual evidence / boundary |
+|---|---|---|
+| Official Chrome identity/quota | PASS | Same approved execution listed pages, reused Cloudflare tab7, email/account match. Usage before creation:4/10 DBs,88k/5M reads,29/100k writes,4.56MB/5GB,$0 billable usage shown. Help-created tabs closed; unrelated tabs untouched. |
+| Clean remote D1 | PASS | Explicit user approval; new ID `b29df6ba-e5c3-47bd-ac59-f6b0d47861a1`; SELECT1 succeeds under unchanged principal/grant; no active binding. |
+| V1 schema rehearsal | PASS | Schema-only63 definitions from compatibility migrations0001–0029, no exported seed/customer/payment rows; local fixture column error fixed before remote. New normal ledger:0001_v1_schema_only,0002_synthetic_fixture,0030_cod_v1_compat. |
+| Isolated confirmation/idempotency | PASS SQL-ONLY | Synthetic original order250, fee125, due375, COD_PENDING/hold1; one detail/payment/audit; receipt/outbox0. Confirmation replay writes0; exact0030 replay writes0. Not application/browser confirmation. |
+| Hold enforcement | PASS | Intentional synthetic PACKING rejected `COD_TEST_HOLD_DO_NOT_SHIP`,7500/SQLITE_CONSTRAINT_TRIGGER; final state unchanged. CLI emitted a Windows assertion after this expected error; next independent read passed. Not API7403. |
+| Original bounded comparison | PASS READ-ONLY | User expressly overrode prior no-retry rule for one SELECT1; PASS. One conditional metadata preflight:quick_check ok,FK0; all63 V1 definitions exact; only `_cf_KV`/ledger extra; ledger0. No original write/data export. |
+| Recovery | BOOKMARKS ONLY | Both D1s return Time Travel bookmarks. No actual restore or runtime rollback. V1 old-source harness4/4 remains local-only; COD-compatible intake-OFF version still required after intake. |
+| Admin/tester | BLOCKED | Admin Access MATCH; Test Controls AVAILABLE. Initial own Profile lookup timeout; user-approved recheck from opened own Profile=MISMATCH. No chat/message/reset/number substitution/screenshot. |
+| Source artifact | FAILED RETRIEVAL | Supported `wrangler init --from-dash` delegated C3 and failed with Windows assertion; generated Hello World scaffold is NOT active source. Never deploy it. |
+| Regression/build/security | PASS LOCAL | Focused27/27; full244/244; build/lint/audit0; API/Admin COD-off dry-runs. No live signed webhook/Advance evidence. |
+| Public runtime negative boundaries | PASS LIMITED | `/health`200, service getfreeseeds-api, whatsapp enabled; unsigned `/webhooks/whatsapp`POST403; unauthenticated Admin302. No signed valid event, customer journey or COD flag evidence. |
+| Live acceptance | BLOCKED | No real order/WAMID/Admin COD_PENDING/screenshot; no Worker or Meta route change. |
+
 ## GFS-233 Support/MCP and Release Checks (2026-10-26)
 
 | Check | Result | Evidence / boundary |
