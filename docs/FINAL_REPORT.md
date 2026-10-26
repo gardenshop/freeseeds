@@ -1,5 +1,31 @@
 # Final Report
 
+## GFS-222 | Finish Approved COD Staging Release and Live Test (2026-10-26)
+
+**Primary objective NOT MET: no real WhatsApp COD order. Local source defects were reproduced and repaired, not deployed. Staging/production remain unchanged.**
+
+| Assignment | Result | Evidence / completed vs remaining |
+|---|---|---|
+| P0 Chrome / authenticated preflight | BLOCKED | Fresh official MCP exposed page listing, but read-only snapshot/DOM inspections were canceled, including after explicit reauthorization. No current service identities/bindings/sender/tester/callback verified. 40% complete / 60% remaining. |
+| P1 reviewed migration / compatible staging release | PASS LOCAL / BLOCKED ROLLOUT | Separate PR #11 retains V1 receipt fixes; revised COD-only 0030 has local compatibility/financial/hold guards. No active-source parity check, remote ledger/backup/Time Travel/integrity, migration, deployment or rollback execution. 65% / 35%. |
+| P2 operational COD configuration | BLOCKED | No actual authenticated collector/remittance record retrieved; no HMAC secret provisioned or real policy configured. Candidate COD flag false; no live runtime enablement verified. 0% / 100%. |
+| P3 customer journey | PASS LOCAL ONLY | EN/UR Advance Payment/Cash on Delivery selector, original tariff snapshot + fee once, exact persisted confirmation quote, same order, no advance work, no duplicate success audits, advance fallback and three methods covered locally. No running staging behavior verified. 80% / 20%. |
+| P4 one real tester | NOT RUN | No real COD order/amount/number/Admin status, WAMID, received tester message or screenshot; no shipment/collection/PAID. No real advance switching E2E. 0% / 100%. |
+| P5 repair / regression | PASS LOCAL / REMOTE BLOCKED | Fee/province and failed-confirmation reply failures reproduced then repaired. Focused 124/124, full 244/244, four actual-old-source retained-schema checks, build/lint/audit0, both Wrangler dry-runs pass. Remote D1/runtime/Admin/browser regression remains blocked. 65% / 35%. |
+| P6 documentation / push | PASS | Tested source `bf3a231` pushed to existing PR #11 branch, GitHub CLI identity `gardenshop` verified; required seven protocol/report documents updated on the same branch. 100% / 0%. |
+
+**Source / migration / bindings:** tested source `bf3a231c585982badcf55b43dece351f92c8d60d`; revised migration Git blob `4993557afd135c7cb778f565b95ca95eb4431ffd`. Source-only configurations name API `getfreeseeds-api-staging`, Admin `getfreeseeds-admin-staging`, shared D1 `getfreeseeds-staging` / `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, WABA `2616648355452496`, phone asset `1323932417479627`, and the existing `/webhooks/whatsapp` staging callback. These are **not freshly verified live bindings/assets**. Historical `PRODUCTION_INTEGRATION_READY` config text is not release/production acceptance.
+
+**Final local validation:** clean `npm ci`; 124/124 focused and 244/244 full tests (22 files); build/typecheck, lint and online `npm audit` zero vulnerabilities; API/Admin Wrangler dry-runs pass with COD false; diff-check passes with informational line-ending warnings only. Untouched baseline `cf01f44` independently passed 176/176 tests; its actual-source retained-schema harness passed four checks. Four failed-confirmation transport cases (EN/UR × intake ON/OFF) were reproduced and fixed, without state/financial replay. No counts are live E2E evidence.
+
+**Protected execution boundary:** no Cloudflare/Meta/customer/payment mutation, no customer/receipt export, no credentials copied, no Hoja asset used, no advertising spend. GitHub branch push is the only external write. Existing frozen V1, PR #9, `images/`, orders, receipts, audit and rollback are preserved. Staging-only approval does not cover production promotion.
+
+**Rollback protocol:** local old-source harness uses exact `cf01f44` API/Admin against retained synthetic additive schema, plus local quick/FK checks. This does not prove actual Cloudflare rollback. Old V1 cannot represent COD totals/reconciliation; after COD intake, retain a verified COD-compatible intake-OFF rollback version. Never drop the sidecar/restore over subsequent order history to roll code back.
+
+**Actual live evidence:** API/Admin Worker versions **not freshly verified/no deployment**; migration **not applied**; remote backup/Time Travel/D1 integrity **not run**; real test order/amount/Admin status **none**; WAMIDs **none**; screenshots **none**; candidate COD flag **false**; live runtime state **unverified**. These are not missing synthetic evidence—they are unperformed operational steps.
+
+**Readiness:** improved local development candidate; staging rollout/live acceptance **BLOCKED**; production/public launch **NO-GO**. Exact remaining gate: authorized official MCP account/binding/sender/tester/callback and collector-record inspection, then deployed-source parity and migration/backup/integrity/rollback preflight, protected HMAC provision, staging release and controlled tester acceptance. No duplicate request for previously granted staging authorization is required.
+
 ## GFS-221 | Execute Approved Approach A and Test COD (2026-10-25)
 
 **Overall: local compatibility candidate PASS; authenticated staging rollout and live WhatsApp test BLOCKED. No external mutation occurred. No synthetic result is presented as live acceptance.**

@@ -1,5 +1,14 @@
 # Decisions
 
+## 2026-10-26: GFS-222 Repair Reproduced Release Defects Before Staging
+
+- Two new diagnostic tests reproduced fee drift between quote and confirmation and COD admission after a province was disabled. User resumed after the repair-diagnosis question. Repair these and related transaction/policy/hold defects locally before any staging attempt; do not deploy the previously passing-but-insufficiently-tested candidate.
+- Bind COD to an explicit immutable policy revision and quote; use current-province/config predicates inside the winning statement and revision CAS for policy saves. Preserve historical policy evidence across intake disablement. Protect DO NOT SHIP in database/server, not just operator instructions.
+- Preserve and test existing advance checkout, including successful SENT/DELIVERED/READ child retry handling and completed QR no-read behavior. Gate all race-loser writes/outbox/audits and protect winning conversation state.
+- Added populated legacy migration/schema/history preservation tests and atomic audit-failure rollback checks. An unchanged local `cf01f44` checkout runs actual old API/Admin handlers against additive COD schema. Its financial/hold checks are local only; old V1 does not implement full COD presentation/reconciliation and is not a valid full rollback target after COD intake.
+- Remote staging remains blocked by canceled authenticated MCP inspection. Official page listing is available in a fresh CLI, but no dashboard identity/binding/sender/tester/collector verification followed. No remote D1 query/migration/deploy/secret provision, live order or WhatsApp send is claimed. Production promotion remains outside staging authorization.
+- Final tested source `bf3a231` is pushed to PR #11; local focused124/full244 and actual-old-source rollback4 pass. A failed COD reply is recoverable only through its original event/audit and persisted snapshot, including intake OFF; no new confirmation or audit is performed. Never equate these synthetic checks or configured deployment-state strings with staging/live acceptance.
+
 ## 2026-10-25: GFS-221 Implement Separate V1-Compatible Candidate
 
 - Implement the user's already-authorized staging-only Approach A on a new branch from V1 PR #10 commit `cf01f44`, not on PR #9 and not on the frozen V1 branch. This is the smallest local candidate; active deployed-source identity still needs dashboard verification.

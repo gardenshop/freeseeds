@@ -1,5 +1,32 @@
 # Test Matrix
 
+## GFS-222 Release-Defect Regression and Acceptance (2026-10-26)
+
+| Requirement | Result | Evidence / boundary |
+|---|---|---|
+| Diagnosis before source repair | PASS LOCAL | Two tests initially failed: changed fee was confirmed without being displayed; disabled province still admitted COD. Targeted repairs follow those reproductions. |
+| Quote/availability races | PASS LOCAL | Persisted base/fee/total + exact audited revision; final INSERT rechecks province/config; concurrent advance/back/confirm and duplicate audit guards. No authorized D1 tariff is altered. |
+| Configuration/reconciliation | PASS LOCAL | Revision CAS, stale-save conflict, immutable per-order policies, intake disable preserves evidence, exact persisted collection/remittance metadata, winner-only audit and audit-failure rollback. All evidence is synthetic/HMAC-only. |
+| Test fulfillment hold | PASS LOCAL | New COD defaults immutable DO NOT SHIP; UI and server deny transition/tracking/labels/reconciliation; retained SQL guards protect old-Worker writes. No hold-clearing endpoint. |
+| Advance/receipt regression | PASS LOCAL ONLY | Original three methods and receipt flow retained; SENT/DELIVERED/READ and completed QR retries corrected; no losing callback outbox or conversation overwrite. Running staging Worker not tested. |
+| Additive migration | PASS LOCAL ONLY | Populated V1 rows/schema/receipts/audit remain identical; default disabled; local quick_check/FK pass; replay fails without rewriting history; local transaction failure rolls back schema. No remote backup/ledger/integrity result. |
+| Actual legacy source against retained schema | PASS LIMITED LOCAL | `npm run test:rollback:v1` with exact unchanged `cf01f44` checkout exercises old API/Admin; four checks cover legacy reads, held COD fulfillment/labels and signed receipt suppression, local quick/FK. Not an actual Worker rollback. Old V1 remains unsuitable for full post-intake COD presentation/reconciliation. |
+| MCP/authenticated/live acceptance | BLOCKED / NOT RUN | Official page listing succeeds; protected read-only inspections canceled. No account/bindings, Meta sender/tester/callback, collector/remittance, migration/deploy, real order, WAMID or screenshots verified. |
+
+Final validated source: `bf3a231c585982badcf55b43dece351f92c8d60d`; migration Git blob `4993557afd135c7cb778f565b95ca95eb4431ffd` (not applied remotely).
+
+| Executed command / evidence | Result |
+|---|---|
+| `npm ci` | Clean install; zero vulnerabilities |
+| `npm test -- --run tests/guided-lead-only.test.ts tests/cod-admin.test.ts tests/cod-migration-compat.test.ts tests/product-readiness.test.ts` | 124/124 pass, four files |
+| `npm test` | 244/244 pass, 22 files |
+| `npm run build`; `npm run lint`; `npm audit` | PASS / PASS / zero vulnerabilities |
+| `npx wrangler deploy --dry-run --config apps/api/wrangler.jsonc`; Admin equivalent | Both bundles PASS; API COD flag false. No deployment/version creation. |
+| `npm run test:rollback:v1` with `GFS_LEGACY_ROOT` set to clean detached `cf01f44` | Four local actual-source checks pass. Temporary checkout removed after acceptance; recreate from exact commit to rerun. |
+| Baseline `npm test` at unchanged `cf01f44` | 176/176 pass, 20 files |
+| Failed-confirmation recovery diagnostic then retest | Four original failures reproduced, then 4/4 pass (EN/UR × intake ON/OFF); exact original-event retry recovers stored confirmation without new order/fee/audit. |
+| `git diff --check` | PASS; informational LF/CRLF warnings only, no Git configuration changed |
+
 ## GFS-221 V1-Compatible COD Candidate (2026-10-25)
 
 | Requirement | Result | Evidence / remaining scope |

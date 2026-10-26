@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-222 Local Resources and Protected Runtime (2026-10-26)
+
+- Target remains PR #11 branch `codex/gfs221-cod-compat-001`, stacked on PR #10 `cf01f44`. No change to frozen V1 tag, PR #9, primary checkout or `images/`.
+- No remote Worker/version, D1 migration/bookmark/backup, R2 object, Queue, secret, policy, Meta callback, WhatsApp message, tester order, WAMID or screenshot was created. Configured staging binding IDs remain source observations, not fresh dashboard verification. Active API/Admin versions and current remote COD state remain unverified; candidate COD flag stays false.
+- Added then removed a clean detached local rollback-source checkout at `D:\Temp\kilo\gfs222-rollback-v1`, exactly `cf01f444500415b1f22a64730674caca1c286006`, after baseline176 and old-source rollback4 acceptance. No customer/receipt export or credentials were used; no cloud resource created. Recreate from preserved Git commit and set `GFS_LEGACY_ROOT` to rerun `npm run test:rollback:v1`.
+- GitHub CLI identity verified `gardenshop`; remote is `https://github.com/gardenshop/freeseeds.git`. Tested source `bf3a231c585982badcf55b43dece351f92c8d60d` pushed to PR #11 branch. Reviewed migration Git blob `4993557afd135c7cb778f565b95ca95eb4431ffd` remains unapplied.
+- API/Admin source configurations both name shared D1 `getfreeseeds-staging` ID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, R2 `getfreeseeds-receipts-staging`, Queue `getfreeseeds-events-staging`, WABA `2616648355452496`, phone asset `1323932417479627` and existing signed staging callback. Dry-run confirms configured bundles only; no actual bindings/versions/callback were checked in authenticated dashboards.
+- Existing collector/remittance arrangement remains user-reported but unverified through an authenticated record. No policy evidence is fabricated, no HMAC secret is provisioned, no account switched, and no paid resource/spend action occurred. Cloud billing was not inspected, so no new cost observation is claimed.
+
 ## GFS-221 Candidate Resources / Non-Mutation Record (2026-10-25)
 
 - Git branch `codex/gfs221-cod-compat-001` is based on V1 source commit `cf01f44`; tested source and GFS-221 docs were pushed to the new remote branch and stacked review PR #11 targets PR #10's V1 branch. Active Worker byte identity was not verified. PR #9/V2, frozen V1 tag, primary checkout, `images/`, and prior rollback versions were not changed.

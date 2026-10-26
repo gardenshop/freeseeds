@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-26 (GFS-222 release-defect repair and acceptance boundaries)
+
+- Reproduced undisplayed COD fee changes and disabled-province admission with two failing diagnostic tests before source repair.
+- Added populated V1 migration/schema/history preservation, safe replay-failure and migration-transaction rollback checks; corrected Admin test adapter to model atomic D1 batches and injected audit-write failure rollback.
+- Added `npm run test:rollback:v1` to exercise actual unchanged V1 API/Admin source against synthetic retained COD schema. This is not a remote Worker rollback or full old-V1 COD compatibility claim.
+- Repaired quote/revision/province admission, advance/COD race-loser side effects and conversation CAS, policy-disable historical reconciliation, duplicate/stale financial audits, staging DO NOT SHIP enforcement, and inherited advance delivery/QR retry defects. Same-event failed confirmation now recovers the persisted reply without repeating financial writes.
+- Source `bf3a231` pushed to PR #11; migration blob `4993557afd135c7cb778f565b95ca95eb4431ffd` remains unapplied. Clean-install validation: focused124/full244, baseline176 and old-source rollback4; build/lint/online audit0 and both Wrangler dry-runs pass.
+- Recorded continued staging-only authority and exact MCP blocker: page listing succeeded, but authenticated read-only snapshot/DOM checks were canceled. No external migration/deployment/secret/policy/message/order change or production promotion.
+
 ## 2026-10-25 (GFS-221 V1-compatible COD candidate)
 
 - Added a separate V1 compatibility branch from PR #10 source base `cf01f44`; source commit `0ce3dac` implements COD choice, bilingual itemized quote, same-order COD_PENDING confirmation, Admin fulfillment/reconciliation and fail-closed financial guards.
