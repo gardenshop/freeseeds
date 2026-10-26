@@ -6,7 +6,7 @@
 
 | Assignment | Result | Evidence |
 |---|---|---|
-| P0 — Chrome MCP | **PARTIAL** | `CODEX_HOME=D:\AI-Tools\Codex\home`, Codex 0.164.0, official enabled `chrome-devtools` registration. Fresh isolated read-only Codex exec returned 11 existing page IDs/origins. No current account/profile/page identity was read; prior empty inventory is intermittent, not proof of missing bridge. |
+| P0 — Chrome MCP/identity | **PARTIAL / WHATSAPP STOP** | Correct Codex 0.164.0 host/registration. Narrow supported inspection: Admin Access identity matched; Cloudflare account ID visible/email unavailable; GitHub UI page absent but CLI account `gardenshop`; Meta operator unavailable; canonical WABA/sender evidenced in WhatsApp Manager; WhatsApp own Profile mismatched authorized tester. No navigation/chat/message/mutation. |
 | P0 — D1 API7403 | **BLOCKED / DIAGNOSIS NARROWED** | `wrangler whoami` returned expected `gisupp@gmail.com` / Get Free Seeds / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; permission summary includes `d1:write`. Thus wrong account or absent top-level D1 scope is not supported. Resource-specific grant/API authorization remains unknown. Latest GFS-228 stop rule forbids retry/scope/account changes; no query was sent. |
 | P1 — COD implementation/schema | **PASS LOCAL / REMOTE BLOCKED** | Existing minimal COD candidate `046426e` is unchanged and pushed on PR #11. No migration or D1 change. Empty legacy ledger, backup/rehearsal and source parity remain unresolved. |
 | P2 — compatible staging deploy | **BLOCKED** | API/Admin dry-runs pass against configured staging bindings with COD false; no actual active versions/bindings/identity were refreshed and no Worker deployed or rollback tested. |
@@ -17,7 +17,7 @@
 
 **Current state:** no order number, total, WAMID, screenshot, D1 migration, staging deployment, rollback or live status can be reported. Existing advance payment, signed webhook, V1 freeze, PR #9, `images/`, customers, receipts, payments and audit history were not changed. The API dry-run is not evidence of deployed COD runtime state.
 
-**Readiness estimate:** P0 70%, P1 75%, P2 15%, P3 0%, P4 0%, P5 100% local only, P6 100%. Overall source readiness ~50%; live acceptance 0%. Exact external action: Cloudflare account owner/support must diagnose and restore the existing principal's minimum D1 query authorization through an approved interface; do not broaden scopes or switch accounts. Then authenticated browser identity, safe schema rehearsal/rollback, source parity and tester gates remain. ETA is indefinite until these dependencies clear; staging then needs controlled deploy and one live tester journey. Production authorization remains separate.
+**Readiness estimate:** P0 70%, P1 75%, P2 15%, P3 0%, P4 0%, P5 100% local only, P6 100%. Overall source readiness ~50%; live acceptance 0%. Exact external action: Cloudflare account owner/support must diagnose and restore the existing principal's minimum D1 query authorization through an approved interface; the user confirmed this diagnosis path. Do not broaden scopes or switch accounts. Remaining gates include authenticated Meta operator/tester identity (tester currently mismatches), safe schema rehearsal/rollback, source parity and verified deployment. ETA is indefinite until these dependencies clear; staging then needs controlled deploy and one live tester journey. Production authorization remains separate.
 
 ## GFS-228 | Minimal COD Checkout (2026-10-26)
 

@@ -3,7 +3,7 @@
 ## GFS-229 Read-Only Tool/Account Check (2026-10-26)
 
 - No hosted resource, binding, account, secret, route, D1 row, Worker, Meta asset or customer state changed. Candidate source remains PR #11 `codex/gfs221-cod-compat-001`; API/Admin dry-runs only.
-- Codex host `D:\AI-Tools\Codex\home`, version 0.164.0; one enabled official `chrome-devtools` stdio MCP. Fresh read-only Codex exec listed 11 existing browser pages. Identities/content were not inspected; no screenshot or WAMID.
+- Codex host `D:\AI-Tools\Codex\home`, version 0.164.0; one enabled official `chrome-devtools` stdio MCP. Existing tabs were inspected narrowly: Admin Access matched; Cloudflare account ID visible/email unavailable; GitHub browser absent, CLI gardenshop; Meta operator unavailable; canonical WABA/sender evidenced in WhatsApp Manager; WhatsApp tester mismatch. No screenshot, chat, message, or WAMID.
 - `wrangler whoami`: `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; permission summary includes `d1:write`. Prior D1 API7403 not retried; resource-level authorization remains unresolved. No scope or account change.
 - Candidate API dry-run reports `COD_V1_ENABLED=false`; this is source config, not a fresh active Worker state. Existing active API v90/Admin v82 and D1/migration evidence remain historical, not refreshed.
 

@@ -2,7 +2,7 @@
 
 ## 2026-10-26: GFS-229 Stop After Read-Only MCP/D1 Diagnosis
 
-- Correct Codex host/config and enabled official Chrome MCP registration are confirmed; fresh isolated read-only Codex invocation returned 11 existing pages. Previous empty/failing `list_pages` is intermittent, not proof that the Chrome server/profile is absent. Do not claim identity verification from an origin inventory.
+- Correct Codex host/config and enabled official Chrome MCP registration are confirmed; fresh approved-review execution listed existing tabs and performed narrow reads. Admin Access identity matched; Cloudflare account ID visible/email unavailable; GitHub UI absent but CLI identity verified; Meta operator unavailable; canonical WABA/sender evidenced in WhatsApp Manager; tester Profile mismatched. Do not message, switch identities, or infer identity from page inventory.
 - Wrangler identity is the expected Get Free Seeds account and its current permission summary includes `d1:write`. The earlier API7403 is not explained by account mismatch or missing top-level D1 scope; resource-level binding/grant/API authorization is still unknown. Do not retry, switch identity, or broaden/change scopes under GFS-228. Account owner/support must investigate the already-authorized principal using approved least-privilege controls.
 - Candidate COD code remains local/reviewable only. 27 focused, 244 full and 4 local legacy rollback checks pass; no staging D1/Worker/Admin/secret/policy/Meta/customer mutation. Keep COD disabled and preserve the existing ledger/history.
 
