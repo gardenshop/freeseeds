@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-230 COD Staging Stop (2026-10-26)
+
+- Fresh official Chrome MCP `list_pages` succeeded in Codex 0.164.0 at the configured `CODEX_HOME` and returned the existing 11 page IDs/origins. This restores page inventory, not tester identity. The last targeted own-WhatsApp-Profile check mismatched the approved tester; do not message or switch identities.
+- Read-only Wrangler deployment history currently ends at API `21a3d74c-3979-432c-9190-1848362592a4` (v90) and Admin `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` (v82), both 2026-10-24; metadata has no source commit. Do not infer source parity or deploy the candidate to the active signed callback without the D1/schema and rollback gates.
+- Do not retry D1 API7403 from Wrangler or an indirect Admin/D1 route. The user-approved next step remains account-owner/Cloudflare-support diagnosis of the existing principal's minimum query authorization; no support ticket/grant was performed here and no OAuth scope or identity was changed.
+- PR #11 source remains local/reviewable: focused27/27, full244/244, unchanged V1-source rollback harness4/4, build/lint/audit0, and API/Admin dry-runs pass. Candidate flag is false. No D1 read/write/migration, Worker deployment, Meta change, order, message, WAMID, or screenshot occurred in GFS-230.
+- Do not enable COD or claim staging acceptance until the D1 authorization/rehearsal/rollback and tester identity gates pass. Preserve V1, PR #9/#10, `images/`, all financial history, and the signed webhook.
+
 ## GFS-229 MCP and D1 Authorization Diagnosis (2026-10-26)
 
 - A fresh approved-review Codex 0.164.0 exec using `CODEX_HOME=D:\AI-Tools\Codex\home` listed existing pages through official Chrome MCP and completed narrowly scoped identity checks. Cloudflare account ID was visible but email unavailable; exact staging Admin Access identity matched; GitHub UI page was absent (CLI identity remains `gardenshop`); Meta operator was unavailable; canonical GFS WABA/sender was evidenced only in WhatsApp Manager; WhatsApp own Profile mismatched the authorized tester. No chat/message, navigation, screenshot, or mutation occurred. Stop WhatsApp work until tester profile matches; never switch identities.

@@ -1,5 +1,23 @@
 # Final Report
 
+## GFS-230 | Priority COD Staging Release and Live Test (2026-10-26)
+
+**Result: local candidate and regressions PASS; staging release and genuine WhatsApp test BLOCKED. No cloud, order, payment or messaging mutation occurred.**
+
+| Assignment | Result | Evidence |
+|---|---|---|
+| P0 — Chrome/account/tester/D1 | **PARTIAL / BLOCKED** | Fresh official Chrome MCP `list_pages` succeeded and returned11 existing tabs. Prior scoped checks: Admin Access matched; Cloudflare ID/email via prior CLI matched expected GFS; GitHub CLI `gardenshop`; Meta operator unavailable; WhatsApp tester Profile mismatched. API7403 was not retried; owner/support minimum-query authorization diagnosis remains pending. |
+| P1 — COD schema/rehearsal | **BLOCKED REMOTE** | Existing PR #11 COD-only migration0030 remains unapplied. No D1 query/backup/integrity/rehearsal this turn. Never bulk replay/fabricate `d1_migrations`; current remote schema/source compatibility remains unproven. |
+| P2 — compatible staging deploy | **BLOCKED** | Latest Wrangler history API v90 `21a3d74c-3979-432c-9190-1848362592a4`, Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`, both from 2026-10-24 with no source SHA. No deployment or rollback. API/Admin dry-runs pass against configured bindings only. |
+| P3 — enable COD | **NOT ENABLED** | Candidate `COD_V1_ENABLED=false`; active flag unknown. No settings, policy, province rate or secret changed. |
+| P4 — genuine tester journey | **NOT RUN** | Tester mismatch blocks messaging. No COD or advance live journey, order number, total, WAMID, Admin COD_PENDING or screenshot. No shipment, collection or PAID. |
+| P5 — regression | **PASS LOCAL ONLY** | Focused27/27; full244/244; V1 rollback harness4/4; build/lint/audit0; API/Admin dry-runs. No running staging/D1/webhook regression. |
+| P6 — docs/push | **PENDING PUSH** | Seven required records updated for GFS-230; commit and remote ref will be recorded after push verification. |
+
+**Answers:** COD code ready for isolated review: **yes**. Staging COD enabled: **no (active state not freshly reported)**. Real WhatsApp test: **no**. Public COD enabled: **no**. No order/WAMID/screenshot exists for this run.
+
+**Completion estimates:** P0 70%; P1 75%; P2 15%; P3 0%; P4 0%; P5 100% local; P6 100% after push. Overall source readiness ~50%; live acceptance0%. Exact external blockers are (1) account owner/support must diagnose the existing principal's D1 query authorization through the already-approved least-privilege route, without scope/identity change; (2) WhatsApp Profile must match the authorized tester; (3) safe D1 rehearsal/rollback and active source parity must pass. Until then staging ETA is indefinite. Production promotion remains separate.
+
 ## GFS-229 | Diagnose Access Blockers and Revalidate Candidate (2026-10-26)
 
 **Result: read-only tool diagnosis and local candidate validation PASS; external authorization and live COD release remain BLOCKED. No external mutation was made.**

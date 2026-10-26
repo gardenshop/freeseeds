@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-26: GFS-230 Do Not Deploy or Message Until Gates Clear
+
+- Official Chrome MCP page inventory now succeeds (11 existing pages), but the last own WhatsApp Profile result is still a mismatch. No send or profile switch. Admin identity remains matched from the prior exact-origin Access check; Meta operator remains unverified.
+- Wrangler's latest deployment histories are API v90 `21a3d74c-3979-432c-9190-1848362592a4` and Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`, 2026-10-24, with no Git source annotation. Configured dry-run bindings do not prove live source or binding compatibility.
+- No D1 query was retried: the user-approved owner/support diagnostic has not been performed and no access grant was changed. Preserve populated D1 and its empty legacy migration ledger. No migration, deploy, rollback, flag, secret, order or payment mutation.
+- Revalidated 27 focused/244 full/4 rollback tests, build, lint, audit0 and API/Admin dry-runs. Keep candidate COD false. GFS-228 staging authorization does not override outstanding identity/schema/backup gates; production remains separate.
+
 ## 2026-10-26: GFS-229 Stop After Read-Only MCP/D1 Diagnosis
 
 - Correct Codex host/config and enabled official Chrome MCP registration are confirmed; fresh approved-review execution listed existing tabs and performed narrow reads. Admin Access identity matched; Cloudflare account ID visible/email unavailable; GitHub UI absent but CLI identity verified; Meta operator unavailable; canonical WABA/sender evidenced in WhatsApp Manager; tester Profile mismatched. Do not message, switch identities, or infer identity from page inventory.

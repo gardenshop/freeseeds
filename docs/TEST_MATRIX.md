@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-230 Staging Gate Recheck (2026-10-26)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Chrome MCP inventory | PASS | Codex0.164.0 official MCP listed11 existing page IDs/origins. No additional page inspection, navigation, chat or mutation. Prior authorized tester Profile mismatch remains the no-send gate. |
+| Active API/Admin | PASS METADATA ONLY | Latest histories API v90 `21a3d74c-3979-432c-9190-1848362592a4`, Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`. No source annotation; no deployment. |
+| D1 API7403/schema | BLOCKED / NOT RETRIED | No D1 query, backup, integrity or migration. Empty legacy ledger and populated schema remain historical evidence; no ledger rewrite. |
+| COD / advance tests | PASS LOCAL ONLY | Focused27/27; full244/244; V1 old-source rollback harness4/4. No running Worker or live advance test. |
+| Build/security/dry-runs | PASS CONFIG ONLY | Build/lint pass; audit0; API/Admin bundles dry-run with candidate COD false and expected configured bindings. Not live bindings/deploy. |
+| Live COD / Admin / WAMIDs | NOT RUN | No matching tester, message, COD_PENDING order, amount, screenshot or WAMID. |
+
 ## GFS-229 Local Revalidation and Access Diagnosis (2026-10-26)
 
 | Check | Result | Evidence / boundary |

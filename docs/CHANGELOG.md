@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-26 (GFS-230 priority staging gate recheck)
+
+- Official Chrome MCP page inventory recovered (11 existing tabs); prior tester mismatch remains a hard no-send stop. Admin Access identity is matched; Meta operator remains unverified.
+- Read-only Wrangler metadata confirms current API v90/Admin v82 but no source SHA. No D1 retry, migration, deployment, secret/flag change, order, screenshot or WAMID. The approved Cloudflare owner/support D1 diagnosis remains pending.
+- Focused27/full244/rollback4, build/lint/audit0 and API/Admin dry-runs pass; local candidate COD remains false and no live acceptance is claimed.
+
 ## 2026-10-26 (GFS-229 access diagnosis and local revalidation)
 
 - Fresh approved-review Codex 0.164.0 execution listed existing tabs and performed narrow identity checks: Admin Access match, Cloudflare account ID visible/email unavailable, GitHub UI absent/CLI gardenshop, Meta operator unavailable, canonical WABA/sender visible in WhatsApp Manager, tester Profile mismatch. No navigation, message, or mutation.

@@ -1,5 +1,15 @@
 # Status
 
+## GFS-230 Priority COD Release (2026-10-26)
+
+- **P0 PARTIAL / LIVE SEND STOP.** Official MCP `list_pages` works again in Codex0.164.0 and lists11 existing tabs. Prior scoped identity findings stand: Admin Access matched; Cloudflare account ID visible with CLI identity `gisupp@gmail.com`; GitHub CLI `gardenshop`; Meta operator unavailable; canonical WABA/sender only evidenced in WhatsApp Manager; authorized tester's own Profile mismatches. No message/profile switch.
+- **D1 API7403 remains BLOCKED.** No D1 retry/query was made, consistent with GFS-229/rules. The already approved owner/support least-privilege diagnostic has not been completed by the agent; no support case/grant occurred. No permission/scope/account switch. Schema/backup/integrity remain unrefreshed.
+- **P1/P2 BLOCKED.** Latest Wrangler deployment history: API v90 `21a3d74c-3979-432c-9190-1848362592a4`; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`. Both were deployed 2026-10-24 and have no source annotation. No deployment, migration or rollback. Candidate dry-run config retains expected staging D1/R2/Queue bindings, but these are not live-binding verification.
+- **P3/P4 NOT RUN.** Candidate `COD_V1_ENABLED=false`; active runtime flag is unknown. No current authorized tester, live buttons, advance path, COD order, amount, WAMID, Admin COD_PENDING or screenshot. No order was shipped/collected/paid.
+- **P5 PASS LOCAL ONLY.** Focused27/27; full244/244; old-source compatibility harness4/4 against clean `cf01f44`; build/lint/audit0; API/Admin dry-runs. No running API/Admin/webhook/advance regression or D1 integrity check.
+- **P6 PASS after push** when GFS-230 records are pushed to PR #11. No source change in this execution; V1, PR #9/#10, `images/`, financial history and signed webhook untouched.
+- **Completed/remaining:** P0 70/30; P1 75/25; P2 15/85; P3 0/100; P4 0/100; P5 100/0 local (live 0); P6 100/0 after push. Overall source readiness ~50%; genuine live acceptance0%; staging/public launch NO-GO. ETA indefinite until owner/support resolves D1 authorization and approved tester identity matches; then safe schema rehearsal, deployment, and live journey remain.
+
 ## GFS-229 Access Diagnosis and Local Revalidation (2026-10-26)
 
 - **P0 PARTIAL / WHATSAPP HARD STOP.** Official Chrome MCP returned the existing page list and completed targeted reads. Exact staging Admin Access identity matched. Cloudflare account ID was visible, email unavailable; GitHub browser tab absent (CLI `gardenshop`); Meta operator unavailable; canonical WABA/sender evidenced only in WhatsApp Manager. WhatsApp own Profile mismatched the approved tester. No navigation/chat/message/screenshot/mutation. Do not send or switch account.

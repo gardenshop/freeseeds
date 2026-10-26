@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-230 Read-Only Staging Inventory (2026-10-26)
+
+- No Cloudflare/Meta/GitHub resource or configuration changed. Fresh official Chrome MCP inventory lists11 existing page IDs/origins; no additional navigation or content change.
+- Latest Wrangler API history: `getfreeseeds-api-staging`, v90 `21a3d74c-3979-432c-9190-1848362592a4`; Admin: `getfreeseeds-admin-staging`, v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`. Both history records date 2026-10-24 and have no source commit annotation. Active source parity unproven.
+- D1 `getfreeseeds-staging` was not queried or mutated; API7403 diagnosis via account-owner/support is pending. Migration0030 remains unapplied; no backup or integrity result is newly claimed.
+- API/Admin dry-runs use expected configured D1/R2/Queue; API candidate has `COD_V1_ENABLED=false`. Dry-run is not evidence of live bindings or flag state. No deployment or test resources created.
+
 ## GFS-229 Read-Only Tool/Account Check (2026-10-26)
 
 - No hosted resource, binding, account, secret, route, D1 row, Worker, Meta asset or customer state changed. Candidate source remains PR #11 `codex/gfs221-cod-compat-001`; API/Admin dry-runs only.
