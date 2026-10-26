@@ -62,6 +62,11 @@ export async function getLatestOrderForWaId(db: D1Database, trustedWaId: string,
 }
 
 export function formatCustomerOrderStatus(order: CurrentOrderDetails, locale: "en" | "ur" = "en"): string {
+  if (order.codQuotedTotalPkr != null && (order.state === "PAID" || order.paymentStatus === "PAID" || order.paymentReviewState === "COD_PAID")) {
+    return locale === "ur"
+      ? `آرڈر ${order.orderNumber}\nآرڈر کی حالت: PAID\nCOD رقم: PKR ${order.codQuotedTotalPkr}\nآرڈر ڈیلیور ہو چکا ہے؛ کوریئر کی وصولی اور مکمل ترسیل کی تصدیق ہو گئی ہے۔ ایڈوانس ادائیگی یا رسید نہ بھیجیں۔`
+      : `Order ${order.orderNumber}\nOrder status: PAID\nReconciled COD amount: PKR ${order.codQuotedTotalPkr}.\nDelivered; courier collection and exact remittance are reconciled. Do not send an advance payment or receipt.`;
+  }
   if (order.codQuotedTotalPkr != null && ["COD_PENDING", "PACKING", "DISPATCHED", "DELIVERED", "COLLECTION_PENDING"].includes(order.state)) {
     return locale === "ur"
       ? `آرڈر ${order.orderNumber}\nآرڈر کی حالت: ${order.state}\nوصولی پر COD رقم: PKR ${order.codQuotedTotalPkr}\nکوریئر سے وصولی اور مکمل رقم کی ترسیل کی تصدیق ابھی باقی ہے۔ رسید یا ایڈوانس ادائیگی نہ بھیجیں۔`

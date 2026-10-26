@@ -168,7 +168,7 @@ describe("product readiness safeguards", () => {
   it("selects only a complete configured method and creates idempotent payment work", async () => {
     const statements: unknown[] = [];
     const row = { order_number: "FS-100001", total_payable: 250, state: "DETAILS_COMPLETED", payment_id: "synthetic-payment", id: "synthetic-method", method: "JAZZCASH", display_name: "JazzCash", recipient_name: "Synthetic recipient", instructions: "Pay {amount} to {recipientName}.", reference_instruction: "Reference {orderNumber}.", receipt_instructions: "Share your receipt here.", qr_owner_verified: 1, enabled: 1, sort_order: 10 };
-    const db = { prepare: (_sql: string) => { const statement = { bind: (...args: unknown[]) => { statements.push(args); return statement; }, first: async () => row }; return statement; }, batch: async (batchStatements: unknown[]) => { statements.push(batchStatements); return []; } } as unknown as D1Database;
+    const db = { prepare: (_sql: string) => { const statement = { bind: (...args: unknown[]) => { statements.push(args); return statement; }, first: async () => row }; return statement; }, batch: async (batchStatements: unknown[]) => { statements.push(batchStatements); return batchStatements.map(() => ({ meta: { changes: 1 } })); } } as unknown as D1Database;
     const result = await selectPaymentMethod(db, "synthetic-order", "JAZZCASH", "en", "synthetic-recipient", "synthetic-inbound-1");
     expect(result.message).toContain("Pay 250 to Synthetic recipient.");
     expect(result.message).not.toContain("Amount due:");
@@ -220,7 +220,7 @@ describe("product readiness safeguards", () => {
   it("uses the persisted payable total instead of global payment configuration", async () => {
     const statements: string[] = [];
     const row = { order_number: "FS-100002", total_payable: 500, province: "Punjab", state: "DETAILS_COMPLETED", payment_id: "synthetic-payment", id: "synthetic-method", method: "JAZZCASH", display_name: "JazzCash", recipient_name: "Synthetic recipient", instructions: "Pay {amount} to {recipientName}.", reference_instruction: "Reference {orderNumber}.", receipt_instructions: "Share your receipt here.", qr_owner_verified: 1, enabled: 1, sort_order: 10 };
-    const db = { prepare: (sql: string) => { statements.push(sql); const statement = { bind: (..._args: unknown[]) => statement, first: async () => row }; return statement; }, batch: async () => [] } as unknown as D1Database;
+    const db = { prepare: (sql: string) => { statements.push(sql); const statement = { bind: (..._args: unknown[]) => statement, first: async () => row }; return statement; }, batch: async () => [{ meta: { changes: 1 } }] } as unknown as D1Database;
     const result = await selectPaymentMethod(db, "synthetic-order", "JAZZCASH");
     expect(result.amount).toBe(500);
     expect(statements.join(" ")).not.toContain("payment_configuration");
@@ -251,7 +251,7 @@ describe("product readiness safeguards", () => {
 
   it("keeps legacy zero-seed orders payable by their persisted delivery total", async () => {
     const row = { order_number: "FS-100003", seed_price: 0, delivery_fee: 250, fertilizer_fee: 0, total_payable: 250, province: null, state: "DETAILS_COMPLETED", payment_id: "synthetic-payment", id: "synthetic-method", method: "JAZZCASH", display_name: "JazzCash", recipient_name: "Synthetic recipient", instructions: "Pay {amount} to {recipientName}.", reference_instruction: "Reference {orderNumber}.", receipt_instructions: "Share your receipt here.", qr_owner_verified: 1, enabled: 1, sort_order: 10 };
-    const db = { prepare: (_sql: string) => { const statement = { bind: (..._args: unknown[]) => statement, first: async () => row }; return statement; }, batch: async () => [] } as unknown as D1Database;
+    const db = { prepare: (_sql: string) => { const statement = { bind: (..._args: unknown[]) => statement, first: async () => row }; return statement; }, batch: async () => [{ meta: { changes: 1 } }] } as unknown as D1Database;
     await expect(selectPaymentMethod(db, "synthetic-order", "JAZZCASH")).resolves.toMatchObject({ amount: 250 });
   });
 

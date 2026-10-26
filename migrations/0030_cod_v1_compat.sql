@@ -4,6 +4,7 @@ CREATE TABLE cod_configuration (
   fee_pkr INTEGER NOT NULL DEFAULT 125 CHECK(fee_pkr >= 0),
   collection_policy_hash TEXT,
   remittance_policy_hash TEXT,
+  revision TEXT NOT NULL DEFAULT 'unconfigured',
   updated_by TEXT,
   updated_at TEXT NOT NULL
 );
@@ -16,6 +17,10 @@ CREATE TABLE cod_order_details (
   base_amount_pkr INTEGER NOT NULL CHECK(base_amount_pkr >= 0),
   cod_fee_pkr INTEGER NOT NULL CHECK(cod_fee_pkr >= 0),
   quoted_total_pkr INTEGER NOT NULL CHECK(quoted_total_pkr = base_amount_pkr + cod_fee_pkr),
+  policy_revision TEXT,
+  collection_policy_hash TEXT,
+  remittance_policy_hash TEXT,
+  test_hold INTEGER NOT NULL DEFAULT 1 CHECK(test_hold IN (0,1)),
   status TEXT NOT NULL DEFAULT 'COD_PENDING' CHECK(status IN ('COD_PENDING','PACKING','DISPATCHED','DELIVERED','COLLECTION_PENDING','PAID')),
   collection_ref_hmac TEXT,
   collection_amount_pkr INTEGER,
@@ -28,6 +33,85 @@ CREATE TABLE cod_order_details (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+
+CREATE TRIGGER cod_snapshot_immutable
+BEFORE UPDATE ON cod_order_details
+WHEN NEW.order_id IS NOT OLD.order_id OR NEW.base_amount_pkr IS NOT OLD.base_amount_pkr
+ OR NEW.cod_fee_pkr IS NOT OLD.cod_fee_pkr OR NEW.quoted_total_pkr IS NOT OLD.quoted_total_pkr
+ OR NEW.policy_revision IS NOT OLD.policy_revision OR NEW.collection_policy_hash IS NOT OLD.collection_policy_hash
+ OR NEW.remittance_policy_hash IS NOT OLD.remittance_policy_hash OR NEW.test_hold IS NOT OLD.test_hold
+BEGIN
+  SELECT RAISE(ABORT,'COD_SNAPSHOT_IMMUTABLE');
+END;
+
+CREATE TRIGGER cod_snapshot_replacement_guard
+BEFORE INSERT ON cod_order_details
+WHEN EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=NEW.order_id)
+BEGIN
+  SELECT RAISE(ABORT,'COD_SNAPSHOT_IMMUTABLE');
+END;
+
+CREATE TRIGGER cod_snapshot_delete_guard
+BEFORE DELETE ON cod_order_details
+BEGIN
+  SELECT RAISE(ABORT,'COD_SNAPSHOT_IMMUTABLE');
+END;
+
+CREATE TRIGGER cod_test_hold_details_guard
+BEFORE UPDATE ON cod_order_details
+WHEN OLD.test_hold<>0 AND (NEW.status IS NOT OLD.status
+ OR NEW.collection_ref_hmac IS NOT OLD.collection_ref_hmac OR NEW.collection_amount_pkr IS NOT OLD.collection_amount_pkr
+ OR NEW.remittance_ref_hmac IS NOT OLD.remittance_ref_hmac OR NEW.remittance_amount_pkr IS NOT OLD.remittance_amount_pkr)
+BEGIN
+  SELECT RAISE(ABORT,'COD_TEST_HOLD_DO_NOT_SHIP');
+END;
+
+CREATE TRIGGER cod_test_hold_order_guard
+BEFORE UPDATE OF state,payment_status ON orders
+WHEN EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=OLD.id AND cod.test_hold<>0)
+ AND (NEW.state IS NOT OLD.state OR NEW.payment_status IS NOT OLD.payment_status)
+ AND NOT (OLD.state='DETAILS_COMPLETED' AND NEW.state='COD_PENDING' AND NEW.payment_status='COD_PENDING')
+BEGIN
+  SELECT RAISE(ABORT,'COD_TEST_HOLD_DO_NOT_SHIP');
+END;
+
+CREATE TRIGGER cod_test_hold_audit_guard
+BEFORE INSERT ON audit_log
+WHEN NEW.entity_type='ORDER' AND NEW.action IN ('ORDER_TRACKING_ASSIGNED','ORDER_CONFIRMED','ORDER_STATE_TRANSITIONED','COD_COLLECTION_RECONCILED','COD_REMITTANCE_RECONCILED','COD_PAYMENT_RECONCILED')
+ AND EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=NEW.entity_id AND cod.test_hold<>0)
+BEGIN
+  SELECT RAISE(ABORT,'COD_TEST_HOLD_DO_NOT_SHIP');
+END;
+
+CREATE TRIGGER cod_evidence_immutable
+BEFORE UPDATE ON cod_order_details
+WHEN (OLD.collection_ref_hmac IS NOT NULL AND (NEW.collection_ref_hmac IS NOT OLD.collection_ref_hmac
+ OR NEW.collection_amount_pkr IS NOT OLD.collection_amount_pkr OR NEW.collection_actor IS NOT OLD.collection_actor OR NEW.collection_at IS NOT OLD.collection_at))
+ OR (OLD.remittance_ref_hmac IS NOT NULL AND (NEW.remittance_ref_hmac IS NOT OLD.remittance_ref_hmac
+ OR NEW.remittance_amount_pkr IS NOT OLD.remittance_amount_pkr OR NEW.remittance_actor IS NOT OLD.remittance_actor OR NEW.remittance_at IS NOT OLD.remittance_at))
+BEGIN
+  SELECT RAISE(ABORT,'COD_EVIDENCE_IMMUTABLE');
+END;
+
+CREATE TRIGGER cod_order_amount_guard
+BEFORE UPDATE OF total_payable ON orders
+WHEN NEW.total_payable IS NOT OLD.total_payable AND EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=OLD.id)
+BEGIN
+  SELECT RAISE(ABORT,'COD_SNAPSHOT_IMMUTABLE');
+END;
+
+CREATE TRIGGER cod_order_payment_status_guard
+BEFORE UPDATE OF payment_status ON orders
+WHEN EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=OLD.id)
+ AND NEW.payment_status IS NOT OLD.payment_status
+ AND NOT (OLD.state='DETAILS_COMPLETED' AND NEW.state='COD_PENDING' AND NEW.payment_status='COD_PENDING')
+ AND NOT (OLD.state='COLLECTION_PENDING' AND NEW.state='PAID' AND NEW.payment_status='PAID'
+  AND EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=OLD.id AND cod.status='PAID' AND cod.test_hold=0
+   AND cod.collection_ref_hmac IS NOT NULL AND cod.collection_amount_pkr=cod.quoted_total_pkr
+   AND cod.remittance_ref_hmac IS NOT NULL AND cod.remittance_amount_pkr=cod.quoted_total_pkr))
+BEGIN
+  SELECT RAISE(ABORT,'COD_COLLECTION_AND_EXACT_REMITTANCE_REQUIRED');
+END;
 
 CREATE TRIGGER cod_payment_approval_guard
 BEFORE UPDATE OF review_state,approved_amount,approved_by,approved_at ON payments
@@ -62,7 +146,16 @@ END;
 
 CREATE TRIGGER cod_receipt_guard
 BEFORE INSERT ON payment_receipts
-WHEN EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=NEW.order_id)
+WHEN EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=NEW.order_id
+ OR cod.order_id=(SELECT p.order_id FROM payments p WHERE p.id=NEW.payment_id))
+BEGIN
+  SELECT RAISE(ABORT,'COD_DOES_NOT_ACCEPT_ADVANCE_RECEIPTS');
+END;
+
+CREATE TRIGGER cod_receipt_reassignment_guard
+BEFORE UPDATE OF order_id,payment_id ON payment_receipts
+WHEN EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=NEW.order_id
+ OR cod.order_id=(SELECT p.order_id FROM payments p WHERE p.id=NEW.payment_id))
 BEGIN
   SELECT RAISE(ABORT,'COD_DOES_NOT_ACCEPT_ADVANCE_RECEIPTS');
 END;
@@ -70,7 +163,9 @@ END;
 CREATE TRIGGER cod_paid_status_guard
 BEFORE UPDATE OF status ON cod_order_details
 WHEN NEW.status='PAID'
- AND (NEW.collection_ref_hmac IS NULL OR NEW.collection_amount_pkr IS NOT NEW.quoted_total_pkr
+ AND (NEW.test_hold<>0 OR NEW.policy_revision IS NULL OR NEW.policy_revision='unconfigured'
+      OR length(NEW.collection_policy_hash) IS NOT 64 OR length(NEW.remittance_policy_hash) IS NOT 64
+      OR NEW.collection_ref_hmac IS NULL OR NEW.collection_amount_pkr IS NOT NEW.quoted_total_pkr
       OR NEW.remittance_ref_hmac IS NULL OR NEW.remittance_amount_pkr IS NOT NEW.quoted_total_pkr)
 BEGIN
   SELECT RAISE(ABORT,'COD_COLLECTION_AND_EXACT_REMITTANCE_REQUIRED');

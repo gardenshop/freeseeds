@@ -39,7 +39,8 @@ function decodeBase64Url(value: string): Uint8Array { const padded = value.repla
 async function createFlowToken(waId: string, inboundId: string, secret: string): Promise<string> { const payload = base64Url(new TextEncoder().encode(JSON.stringify({ waId, inboundId, exp: Date.now() + 60 * 60 * 1000 }))); const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]); const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload)); return `${payload}.${base64Url(new Uint8Array(signature))}`; }
 async function verifyFlowToken(token: string, secret: string): Promise<string | null> { const [payload, signature] = token.split("."); if (!payload || !signature) return null; try { const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["verify"]); if (!(await crypto.subtle.verify("HMAC", key, decodeBase64Url(signature), new TextEncoder().encode(payload)))) return null; const data = JSON.parse(new TextDecoder().decode(decodeBase64Url(payload))) as { waId?: string; exp?: number }; return typeof data.waId === "string" && typeof data.exp === "number" && data.exp > Date.now() ? data.waId : null; } catch { return null; } }
 
-type ConversationData = { language?: "en" | "ur"; fullName?: string; deliveryAddress?: string; nearbyPlace?: string; city?: string; contactNumber?: string; province?: string; fertilizerSelected?: boolean; orderId?: string; orderNumber?: string; amountPkr?: number };
+type CodQuoteSnapshot = { baseAmountPkr: number; feePkr: number; totalPkr: number; policyRevision: string; collectionPolicyHash: string; remittancePolicyHash: string };
+type ConversationData = { language?: "en" | "ur"; fullName?: string; deliveryAddress?: string; nearbyPlace?: string; city?: string; contactNumber?: string; province?: string; fertilizerSelected?: boolean; orderId?: string; orderNumber?: string; amountPkr?: number; codQuote?: CodQuoteSnapshot };
 
 type ConversationReplyOptions = { buttons?: InteractiveButton[]; list?: { buttonText: string; rows: Array<{ id: string; title: string; description?: string }> }; image?: OutboundImage; flow?: { id: string; token: string } };
 type ConversationOutboundAssociation = { orderId?: string; customerId?: string; kind?: string };
@@ -201,12 +202,14 @@ type PaymentDeliveryResult = { textSent: boolean; qrStatus: PaymentPartStatus };
 
 async function sendPaymentPart(db: D1Database, to: string, orderId: string, key: string, kind: string, send: () => Promise<{ providerMessageId: string }>): Promise<PaymentPartStatus> {
   const existing = await db.prepare("SELECT id,status,provider_message_id,updated_at FROM outbound_messages WHERE idempotency_key=?").bind(key).first<{ id: string; status: string; provider_message_id: string | null; updated_at?: string }>();
-  if (existing?.status === "SENT" || existing?.status === "SKIPPED") return existing.status;
+  if (existing?.provider_message_id || (existing && ["SENT", "DELIVERED", "READ"].includes(existing.status))) return "SENT";
+  if (existing?.status === "SKIPPED") return "SKIPPED";
   const now = new Date().toISOString();
   if (!existing) await db.prepare("INSERT OR IGNORE INTO outbound_messages (id,idempotency_key,order_id,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), key, orderId, kind, "PENDING", 0, now, now).run();
   const row = await db.prepare("SELECT id,status,provider_message_id,updated_at FROM outbound_messages WHERE idempotency_key=?").bind(key).first<{ id: string; status: string; provider_message_id: string | null; updated_at?: string }>();
   const staleSending = row?.status === "SENDING" && row.updated_at && Date.now() - Date.parse(row.updated_at) > 5 * 60 * 1000;
-  if (!row || row.provider_message_id || (!staleSending && !["PENDING", "FAILED", "RETRY"].includes(row.status))) return row?.status === "SENT" ? "SENT" : "FAILED";
+  if (row?.provider_message_id || (row && ["SENT", "DELIVERED", "READ"].includes(row.status))) return "SENT";
+  if (!row || (!staleSending && !["PENDING", "FAILED", "RETRY"].includes(row.status))) return "FAILED";
   const claim = await db.prepare("UPDATE outbound_messages SET status='SENDING',attempt_count=attempt_count+1,updated_at=? WHERE id=? AND provider_message_id IS NULL AND (status IN ('PENDING','FAILED','RETRY') OR (status='SENDING' AND updated_at<?))").bind(now, row.id, new Date(Date.now() - 5 * 60 * 1000).toISOString()).run();
   if (!claim.meta.changes) return "FAILED";
   try {
@@ -279,8 +282,15 @@ async function deliverPaymentInstructions(db: D1Database, bucket: R2Bucket, prov
     return { textSent: false, qrStatus: "SKIPPED" };
   }
   const textStatus = await sendPaymentPart(db, to, orderId, textKey, "WHATSAPP_PAYMENT_TEXT", () => provider.sendText(to, currentMessage));
+  const completedQr = await db.prepare("SELECT status,provider_message_id FROM outbound_messages WHERE idempotency_key=?").bind(qrKey).first<{ status: string; provider_message_id: string | null }>();
   let qrStatus: PaymentPartStatus;
-  if (!currentConfig.qrR2Key) {
+  if (completedQr?.provider_message_id || (completedQr && ["SENT", "DELIVERED", "READ"].includes(completedQr.status))) {
+    qrStatus = "SENT";
+  } else if (completedQr?.status === "SKIPPED") {
+    qrStatus = "SKIPPED";
+  } else if (completedQr && isTerminalOutboxStatus(completedQr.status)) {
+    qrStatus = "FAILED";
+  } else if (!currentConfig.qrR2Key) {
     qrStatus = await markPaymentPartSkipped(db, orderId, qrKey, "WHATSAPP_PAYMENT_QR", "PAYMENT_QR_NOT_CONFIGURED");
   } else {
     try {
@@ -289,26 +299,28 @@ async function deliverPaymentInstructions(db: D1Database, bucket: R2Bucket, prov
     } catch (error) {
       const reason = error instanceof Error ? error.message.slice(0, 160) : "PAYMENT_QR_DELIVERY_BLOCKED";
       qrStatus = await markPaymentPartSkipped(db, orderId, qrKey, "WHATSAPP_PAYMENT_QR", reason);
-      await db.prepare("UPDATE outbound_messages SET status='FAILED',last_error=?,updated_at=? WHERE idempotency_key=? AND status='SKIPPED'").bind(reason, reason, new Date().toISOString(), qrKey).run();
+      await db.prepare("UPDATE outbound_messages SET status='FAILED',last_error=?,updated_at=? WHERE idempotency_key=? AND status='SKIPPED'").bind(reason, new Date().toISOString(), qrKey).run();
       qrStatus = "FAILED";
       await db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_QR_DELIVERY_BLOCKED", "SYSTEM", "ORDER", orderId, crypto.randomUUID(), JSON.stringify({ method, orderNumber, reason }), new Date().toISOString()).run();
     }
   }
-  await db.prepare("UPDATE outbox_jobs SET status=?,last_error=?,updated_at=? WHERE idempotency_key=? AND status NOT IN ('SENT','DEAD_LETTER')").bind(textStatus === "SENT" && qrStatus !== "FAILED" ? "SENT" : "RETRY", qrStatus === "FAILED" ? "PAYMENT_QR_DELIVERY_BLOCKED" : null, new Date().toISOString(), `payment_instructions_${orderId}_${method}_${locale}`).run();
+  await db.prepare("UPDATE outbox_jobs SET status=?,last_error=?,updated_at=? WHERE idempotency_key=? AND status NOT IN ('SENT','SUCCEEDED','PERMANENT_FAILURE','DEAD_LETTER')").bind(textStatus === "SENT" && qrStatus !== "FAILED" ? "SENT" : "RETRY", qrStatus === "FAILED" ? "PAYMENT_QR_DELIVERY_BLOCKED" : null, new Date().toISOString(), requestKey).run();
   return { textSent: textStatus === "SENT", qrStatus };
 }
 
-type CodPolicyRow = { enabled: number; fee_pkr: number; collection_policy_hash: string | null; remittance_policy_hash: string | null; updated_by: string | null; updated_at: string; audited: number };
+type CodPolicyRow = { enabled: number; fee_pkr: number; revision: string; collection_policy_hash: string | null; remittance_policy_hash: string | null; updated_by: string | null; updated_at: string; audited: number };
+
+const codAuditMatch = `a.id=cfg.revision AND a.action='COD_CONFIGURATION_UPDATED' AND a.entity_type='COD_CONFIGURATION' AND a.entity_id='default'
+  AND a.actor_type='ADMIN' AND a.actor_id=cfg.updated_by AND a.created_at=cfg.updated_at
+  AND json_extract(a.metadata_json,'$.enabled')=1 AND json_extract(a.metadata_json,'$.feePkr')=cfg.fee_pkr
+  AND json_extract(a.metadata_json,'$.collectionPolicyHash')=cfg.collection_policy_hash
+  AND json_extract(a.metadata_json,'$.remittancePolicyHash')=cfg.remittance_policy_hash`;
 
 async function codPolicy(db: D1Database, secret?: string): Promise<CodPolicyRow | null> {
   if (!secret?.trim() || secret.trim().length < 32) return null;
   try {
-    const row = await db.prepare(`SELECT cfg.enabled,cfg.fee_pkr,cfg.collection_policy_hash,cfg.remittance_policy_hash,cfg.updated_by,cfg.updated_at,
-      EXISTS(SELECT 1 FROM audit_log a WHERE a.id=(SELECT latest.id FROM audit_log latest WHERE latest.action='COD_CONFIGURATION_UPDATED' AND latest.entity_type='COD_CONFIGURATION' AND latest.entity_id='default' ORDER BY latest.created_at DESC,latest.id DESC LIMIT 1)
-        AND a.actor_id=cfg.updated_by AND a.created_at=cfg.updated_at
-        AND json_extract(a.metadata_json,'$.enabled')=1 AND json_extract(a.metadata_json,'$.feePkr')=cfg.fee_pkr
-        AND json_extract(a.metadata_json,'$.collectionPolicyHash')=cfg.collection_policy_hash
-        AND json_extract(a.metadata_json,'$.remittancePolicyHash')=cfg.remittance_policy_hash) AS audited
+    const row = await db.prepare(`SELECT cfg.enabled,cfg.fee_pkr,cfg.revision,cfg.collection_policy_hash,cfg.remittance_policy_hash,cfg.updated_by,cfg.updated_at,
+      EXISTS(SELECT 1 FROM audit_log a WHERE ${codAuditMatch}) AS audited
       FROM cod_configuration cfg WHERE cfg.id='default'`).first<CodPolicyRow>();
     if (!row || Number(row.enabled) !== 1 || Number(row.audited) !== 1 || !row.updated_by?.trim() || !row.updated_at || !Number.isSafeInteger(Number(row.fee_pkr)) || Number(row.fee_pkr) < 0 || !/^[a-f0-9]{64}$/.test(row.collection_policy_hash ?? "") || !/^[a-f0-9]{64}$/.test(row.remittance_policy_hash ?? "")) return null;
     return row;
@@ -317,25 +329,28 @@ async function codPolicy(db: D1Database, secret?: string): Promise<CodPolicyRow 
   }
 }
 
-async function finalizeCodOrder(db: D1Database, orderId: string, feePkr: number, correlationId: string): Promise<"CREATED" | "ALREADY_COD" | "NOT_ELIGIBLE"> {
-  const current = await db.prepare("SELECT o.id,o.order_number,o.state,o.payment_status,o.total_payable,p.id AS payment_id,p.review_state,p.approved_amount,p.approved_by,p.approved_at FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=?").bind(orderId).first<{ id: string; order_number: string; state: string; payment_status: string; total_payable: number; payment_id: string; review_state: string; approved_amount: number | null; approved_by: string | null; approved_at: string | null }>();
-  if (!current) return "NOT_ELIGIBLE";
-  const existing = await db.prepare("SELECT status FROM cod_order_details WHERE order_id=?").bind(orderId).first<{ status: string }>();
-  if (existing) return existing.status === "COD_PENDING" ? "ALREADY_COD" : "NOT_ELIGIBLE";
-  if (current.state !== "DETAILS_COMPLETED" || current.payment_status !== "PENDING" || current.review_state !== "PENDING" || current.approved_amount != null || current.approved_by != null || current.approved_at != null) return "NOT_ELIGIBLE";
-  const baseAmount = Number(current.total_payable);
-  const total = codQuote(baseAmount, feePkr);
+async function finalizeCodOrder(db: D1Database, orderId: string, quote: CodQuoteSnapshot | undefined, correlationId: string, waId: string, stateData: string): Promise<"CREATED" | "NOT_ELIGIBLE"> {
+  if (!quote || codQuote(quote.baseAmountPkr, quote.feePkr) !== quote.totalPkr) return "NOT_ELIGIBLE";
   const now = new Date().toISOString();
   const correlationHash = await customerTransactionReferenceHash(correlationId);
+  const auditId = crypto.randomUUID();
   const results = await db.batch([
-    db.prepare("INSERT INTO cod_order_details(order_id,base_amount_pkr,cod_fee_pkr,quoted_total_pkr,status,created_at,updated_at) SELECT ?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=? AND o.state='DETAILS_COMPLETED' AND o.payment_status='PENDING' AND o.total_payable=? AND p.review_state='PENDING' AND p.approved_amount IS NULL AND p.approved_by IS NULL AND p.approved_at IS NULL)").bind(orderId, baseAmount, feePkr, total, "COD_PENDING", now, now, orderId, baseAmount),
-    db.prepare("UPDATE orders SET state='COD_PENDING',payment_status='COD_PENDING',updated_at=? WHERE id=? AND state='DETAILS_COMPLETED' AND payment_status='PENDING' AND total_payable=? AND EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=orders.id AND cod.status='COD_PENDING' AND cod.quoted_total_pkr=?)").bind(now, orderId, baseAmount, total),
-    db.prepare("UPDATE payments SET review_state='COD_PENDING',updated_at=? WHERE order_id=? AND review_state='PENDING' AND approved_amount IS NULL AND approved_by IS NULL AND approved_at IS NULL AND EXISTS(SELECT 1 FROM orders o JOIN cod_order_details cod ON cod.order_id=o.id WHERE o.id=payments.order_id AND o.state='COD_PENDING' AND o.payment_status='COD_PENDING' AND cod.status='COD_PENDING')").bind(now, orderId),
-    db.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM orders o JOIN cod_order_details cod ON cod.order_id=o.id WHERE o.id=? AND o.state='COD_PENDING' AND cod.quoted_total_pkr=?)").bind(crypto.randomUUID(), "COD_ORDER_CONFIRMED", "CUSTOMER", "ORDER", orderId, correlationHash, JSON.stringify({ orderId, baseAmountPkr: baseAmount, codFeePkr: feePkr, totalPkr: total }), now, orderId, total)
+    db.prepare(`INSERT OR IGNORE INTO cod_order_details(order_id,base_amount_pkr,cod_fee_pkr,quoted_total_pkr,policy_revision,collection_policy_hash,remittance_policy_hash,status,created_at,updated_at)
+      SELECT o.id,o.total_payable,cfg.fee_pkr,?,?,cfg.collection_policy_hash,cfg.remittance_policy_hash,'COD_PENDING',?,?
+      FROM orders o JOIN payments p ON p.order_id=o.id JOIN province_delivery_rates province ON province.province=o.province AND province.enabled=1
+      JOIN cod_configuration cfg ON cfg.id='default' AND cfg.enabled=1 JOIN audit_log a ON ${codAuditMatch}
+      WHERE o.id=? AND o.state='DETAILS_COMPLETED' AND o.payment_status='PENDING' AND o.total_payable=?
+      AND cfg.revision=? AND cfg.fee_pkr=? AND cfg.collection_policy_hash=? AND cfg.remittance_policy_hash=?
+      AND p.method IS NULL AND p.review_state='PENDING' AND p.approved_amount IS NULL AND p.approved_by IS NULL AND p.approved_at IS NULL AND p.submitted_at IS NULL AND p.customer_transaction_reference IS NULL
+      AND NOT EXISTS(SELECT 1 FROM payment_receipts r WHERE r.order_id=o.id)
+      AND NOT EXISTS(SELECT 1 FROM audit_log h WHERE h.entity_id IN (o.id,p.id) AND h.action IN ('PAYMENT_METHOD_SELECTED','PAYMENT_APPROVED','PAYMENT_CONFIRMED','RECEIPT_SUBMITTED'))
+      AND NOT EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS')
+      AND EXISTS(SELECT 1 FROM whatsapp_conversations c WHERE c.wa_id=? AND c.state='COD_CONFIRM' AND c.state_data=?)`).bind(quote.totalPkr, quote.policyRevision, now, now, orderId, quote.baseAmountPkr, quote.policyRevision, quote.feePkr, quote.collectionPolicyHash, quote.remittancePolicyHash, waId, stateData),
+    db.prepare("UPDATE orders SET state='COD_PENDING',payment_status='COD_PENDING',updated_at=? WHERE id=? AND changes()=1").bind(now, orderId),
+    db.prepare("UPDATE payments SET review_state='COD_PENDING',updated_at=? WHERE order_id=? AND changes()=1").bind(now, orderId),
+    db.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,? WHERE changes()=1").bind(auditId, "COD_ORDER_CONFIRMED", "CUSTOMER", "ORDER", orderId, correlationHash, JSON.stringify({ orderId, baseAmountPkr: quote.baseAmountPkr, codFeePkr: quote.feePkr, totalPkr: quote.totalPkr, policyRevision: quote.policyRevision }), now)
   ]);
-  if (Number(results[0].meta?.changes ?? 0) === 1 && Number(results[1].meta?.changes ?? 0) === 1 && Number(results[2].meta?.changes ?? 0) === 1) return "CREATED";
-  const after = await db.prepare("SELECT status FROM cod_order_details WHERE order_id=?").bind(orderId).first<{ status: string }>();
-  return after?.status === "COD_PENDING" ? "ALREADY_COD" : "NOT_ELIGIBLE";
+  return results.every((result) => Number(result.meta?.changes ?? 0) === 1) ? "CREATED" : "NOT_ELIGIBLE";
 }
 
 async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }, flowId: string, flowTokenSecret?: string, checkoutMode: string = "guided", events?: Queue, codEnabled = false, codHmacKey?: string): Promise<boolean> {
@@ -359,6 +374,26 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   const originalStateData = row?.state_data ?? "{}";
   let data: ConversationData = {};
   try { data = row?.state_data ? JSON.parse(row.state_data) as ConversationData : {}; } catch { data = {}; }
+  const codConfirmationReply = (orderNumber: string, total: number) => data.language === "ur" ? `آرڈر ${orderNumber} COD کے لیے تصدیق ہو گیا۔ وصولی پر رقم PKR ${total} ہے۔ ادائیگی وصول ہونے تک زیرِ التوا رہے گی۔ رسید، QR یا ایڈوانس ادائیگی کی ضرورت نہیں۔` : `Order ${orderNumber} is confirmed for COD. Exact amount due on collection: PKR ${total}. Payment remains pending until collection and remittance are reconciled. No receipt, QR, or advance payment is required.`;
+  if (state === "COD_PENDING" && normalized === "CONFIRM_COD_ORDER" && data.orderId) {
+    // Only the winning event can recover its reply; this never reopens COD intake or changes the winning state.
+    const confirmed = await db.prepare(`SELECT o.order_number,cod.quoted_total_pkr FROM orders o
+      JOIN cod_order_details cod ON cod.order_id=o.id JOIN payments p ON p.order_id=o.id
+      JOIN whatsapp_conversations c ON c.wa_id=? AND c.state='COD_PENDING' AND json_extract(c.state_data,'$.orderId')=o.id
+      JOIN audit_log a ON a.entity_type='ORDER' AND a.entity_id=o.id AND a.action='COD_ORDER_CONFIRMED' AND a.actor_type='CUSTOMER'
+      WHERE o.id=? AND a.correlation_id=? AND o.state='COD_PENDING' AND o.payment_status='COD_PENDING'
+      AND p.review_state='COD_PENDING' AND cod.status='COD_PENDING' AND cod.test_hold=1
+      AND json_extract(a.metadata_json,'$.baseAmountPkr')=cod.base_amount_pkr
+      AND json_extract(a.metadata_json,'$.codFeePkr')=cod.cod_fee_pkr
+      AND json_extract(a.metadata_json,'$.totalPkr')=cod.quoted_total_pkr
+      AND json_extract(a.metadata_json,'$.policyRevision')=cod.policy_revision`)
+      .bind(event.from, data.orderId, await customerTransactionReferenceHash(event.id)).first<{ order_number: string; quoted_total_pkr: number }>();
+    if (confirmed) {
+      const status = await sessionContent("ORDER_STATUS", "Use Check Order to see the current order and payment status.");
+      await sendConversationReply(db, provider, event.from, event.id, codConfirmationReply(confirmed.order_number, Number(confirmed.quoted_total_pkr)), { buttons: [{ id: "CHECK_ORDER", title: whatsAppActionLabel(status, "CHECK_ORDER") }] });
+      return true;
+    }
+  }
   const codSettings = codEnabled ? await codPolicy(db, codHmacKey) : null;
   const codAvailable = Boolean(codSettings);
   if (checkoutMode !== "guided" && state === "FLOW_ACTIVE" && message.interactive?.nfm_reply?.response_json) {
@@ -452,6 +487,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
       const summary = await getPersistedOrderSummary(db, data.orderId);
       const feePkr = Number(codSettings!.fee_pkr);
       const total = codQuote(summary.totalPayablePkr, feePkr);
+      data.codQuote = { baseAmountPkr: summary.totalPayablePkr, feePkr, totalPkr: total, policyRevision: codSettings!.revision, collectionPolicyHash: codSettings!.collection_policy_hash!, remittancePolicyHash: codSettings!.remittance_policy_hash! };
       const itemLines = data.language === "ur"
         ? summary.items.map((item) => `آئٹم: ${item.type === "FERTILIZER" ? "کھاد" : "بیج"} (${item.name}) × ${item.quantity}: PKR ${item.lineTotalPkr}`)
         : summary.items.map((item) => `Item: ${item.name} × ${item.quantity}: PKR ${item.lineTotalPkr}`);
@@ -465,18 +501,22 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
     }
   }
   else if (state === "COD_CONFIRM" && normalized === "ADVANCE_PAYMENT" && data.orderId) {
+    delete data.codQuote;
     nextState = "PAYMENT_METHOD";
     showAdvanceMethods = true;
     reply = (await sessionContent("PAYMENT", "Choose an enabled advance payment method for order {orderNumber}.", { orderNumber: data.orderNumber ?? "", amount: data.amountPkr })).text;
   }
-  else if (state === "COD_CONFIRM" && normalized === "CONFIRM_COD_ORDER" && data.orderId && codAvailable) {
-    const finalized = await finalizeCodOrder(db, data.orderId, Number(codSettings!.fee_pkr), event.id);
-    if (finalized === "CREATED" || finalized === "ALREADY_COD") {
+  else if (state === "COD_CONFIRM" && normalized === "CONFIRM_COD_ORDER" && data.orderId) {
+    const finalized = codAvailable ? await finalizeCodOrder(db, data.orderId, data.codQuote, event.id, event.from, originalStateData) : "NOT_ELIGIBLE";
+    if (finalized === "CREATED") {
       nextState = "COD_PENDING";
-      const total = finalized === "CREATED" ? codQuote(Number(data.amountPkr), Number(codSettings!.fee_pkr)) : Number((await db.prepare("SELECT quoted_total_pkr FROM cod_order_details WHERE order_id=?").bind(data.orderId).first<{ quoted_total_pkr: number }>())?.quoted_total_pkr ?? 0);
-      reply = data.language === "ur" ? `آرڈر ${data.orderNumber} COD کے لیے تصدیق ہو گیا۔ وصولی پر رقم PKR ${total} ہے۔ ادائیگی وصول ہونے تک زیرِ التوا رہے گی۔ رسید، QR یا ایڈوانس ادائیگی کی ضرورت نہیں۔` : `Order ${data.orderNumber} is confirmed for COD. Exact amount due on collection: PKR ${total}. Payment remains pending until collection and remittance are reconciled. No receipt, QR, or advance payment is required.`;
+      const total = data.codQuote!.totalPkr;
+      reply = codConfirmationReply(data.orderNumber ?? "", total);
     } else {
-      reply = data.language === "ur" ? "آرڈر کی حالت تبدیل ہو چکی ہے؛ کوئی COD آرڈر جمع نہیں ہوا۔ آرڈر چیک کریں۔" : "The order state changed; no COD confirmation was applied. Check the existing order.";
+      delete data.codQuote;
+      nextState = "PAYMENT_METHOD";
+      showPaymentChoice = codAvailable;
+      reply = data.language === "ur" ? "کوٹ یا آرڈر کی حالت تبدیل ہو چکی ہے؛ کوئی COD آرڈر جمع نہیں ہوا۔ نیا کوٹ دیکھ کر دوبارہ تصدیق کریں۔" : "The quote or order eligibility changed; no COD confirmation was applied. Request a fresh quote and confirm it again.";
     }
   }
   else if (["PAYMENT_METHOD", "PAYMENT_PENDING"].includes(state) && paymentMethodFromAction(normalized) && data.orderId) { const selectedMethod = paymentMethodFromAction(normalized)!; try { const selected = await selectPaymentMethod(db, data.orderId, selectedMethod, data.language ?? "en", event.from, event.id); nextState = "PAYMENT_PENDING"; reply = selected.message; paymentSelection = { orderId: data.orderId, orderNumber: selected.orderNumber, amount: selected.amount, method: selectedMethod, locale: data.language ?? "en", message: selected.message, idempotencyKey: selected.idempotencyKey, config: selected.config }; } catch { reply = data.language === "ur" ? "یہ ادائیگی کا طریقہ فی الحال دستیاب نہیں؛ کوئی ادائیگی کی درخواست نہیں بھیجی گئی۔" : "That payment method is not currently available; no payment request was sent."; } }
@@ -530,7 +570,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   }
   if (nextState === "PAYMENT_METHOD") {
     completePaymentMethods = await completeEnabledPaymentMethods(db, data.language ?? "en");
-    if (state === "REVIEW" && codAvailable) {
+    if (showPaymentChoice || (state === "REVIEW" && codAvailable)) {
       showPaymentChoice = true;
       reply = `${reply}\n${data.language === "ur" ? "ادائیگی منتخب کریں: ایڈوانس ادائیگی یا وصولی پر ادائیگی۔" : "Choose payment: Advance Payment or Cash on Delivery (COD)."}`;
     } else if (!completePaymentMethods.length) {
@@ -555,7 +595,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   } else if (state === "CONTACT" && nextState === "REVIEW") {
     options = { buttons: [{ id: "PLACE_ORDER", title: whatsAppActionLabel(review, "PLACE_ORDER") }, { id: "BACK", title: whatsAppActionLabel(review, "BACK") }] };
   } else if (showPaymentChoice) {
-    options = { buttons: [{ id: "ADVANCE_PAYMENT", title: data.language === "ur" ? "ایڈوانس ادائیگی" : "Advance Payment" }, { id: "COD", title: "COD" }] };
+    options = { buttons: [{ id: "ADVANCE_PAYMENT", title: data.language === "ur" ? "ایڈوانس ادائیگی" : "Advance Payment" }, { id: "COD", title: data.language === "ur" ? "وصولی پر ادائیگی" : "Cash on Delivery" }] };
   } else if (nextState === "COD_CONFIRM") {
     options = { buttons: [{ id: "CONFIRM_COD_ORDER", title: data.language === "ur" ? "COD آرڈر کی تصدیق" : "Confirm COD Order" }, { id: "ADVANCE_PAYMENT", title: data.language === "ur" ? "ایڈوانس ادائیگی" : "Advance Payment" }] };
   } else if (nextState === "PAYMENT_METHOD" && paymentOptions.length) {
@@ -567,7 +607,13 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   // Payment images must come only from the selected method's verified private asset.
   if (mediaKey && mediaKey !== "PAYMENT") options.image = await contentImageFor(db, bucket, mediaKey, `CHAT:${event.from}`);
   const now = new Date().toISOString();
-  await db.prepare("INSERT INTO whatsapp_conversations (id,wa_id,state,state_data,last_inbound_message_id,created_at,updated_at) VALUES (?,?,?,?,?,?,?) ON CONFLICT(wa_id) DO UPDATE SET state=excluded.state,state_data=excluded.state_data,last_inbound_message_id=excluded.last_inbound_message_id,updated_at=excluded.updated_at").bind(crypto.randomUUID(), event.from, nextState, JSON.stringify(data), event.id, now, now).run();
+  const statusReply = /^(STATUS|CHECK_ORDER|HELP|SUPPORT)$/.test(normalized) || (normalized === "START" && ["PAYMENT_PENDING", "COMPLETE"].includes(state));
+  const savedConversation = await db.prepare(`INSERT INTO whatsapp_conversations (id,wa_id,state,state_data,last_inbound_message_id,created_at,updated_at) VALUES (?,?,?,?,?,?,?)
+    ON CONFLICT(wa_id) DO UPDATE SET state=excluded.state,state_data=excluded.state_data,last_inbound_message_id=excluded.last_inbound_message_id,updated_at=excluded.updated_at
+    WHERE whatsapp_conversations.state=? AND whatsapp_conversations.state_data=?
+    AND (? IS NULL OR ?='COD_PENDING' OR ?=1 OR NOT EXISTS(SELECT 1 FROM orders o WHERE o.id=? AND o.payment_status IN ('COD_PENDING','PAID')))`)
+    .bind(crypto.randomUUID(), event.from, nextState, JSON.stringify(data), event.id, now, now, state, originalStateData, data.orderId ?? null, nextState, statusReply ? 1 : 0, data.orderId ?? null).run();
+  if (!savedConversation.meta.changes) return true;
   if (paymentSelection) {
     const delivery = await deliverPaymentInstructions(db, bucket, provider, event.from, paymentSelection.orderId, paymentSelection.orderNumber, paymentSelection.amount, paymentSelection.method, paymentSelection.locale, paymentSelection.message, paymentSelection.idempotencyKey, paymentSelection.config);
     try { if (events) await events.send({ kind: "WHATSAPP_PAYMENT_INSTRUCTIONS", idempotencyKey: paymentSelection.idempotencyKey, entityId: paymentSelection.orderId, schemaVersion: 1 }); } catch { /* the durable outbox remains authoritative */ }
@@ -575,11 +621,11 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
       return true;
     }
     if (delivery.textSent) return true;
-    await db.prepare("UPDATE whatsapp_conversations SET state=?,state_data=?,updated_at=? WHERE wa_id=? AND last_inbound_message_id=?").bind(state, originalStateData, new Date().toISOString(), event.from, event.id).run();
+    await db.prepare("UPDATE whatsapp_conversations SET state=?,state_data=?,updated_at=? WHERE wa_id=? AND last_inbound_message_id=? AND state=? AND state_data=? AND NOT EXISTS(SELECT 1 FROM orders o WHERE o.id=? AND o.payment_status IN ('COD_PENDING','PAID'))").bind(state, originalStateData, new Date().toISOString(), event.from, event.id, nextState, JSON.stringify(data), paymentSelection.orderId).run();
     return true;
   }
   const sent = await sendConversationReply(db, provider, event.from, event.id, reply, options);
-  if (!sent.sent) await db.prepare("UPDATE whatsapp_conversations SET state=?,state_data=?,updated_at=? WHERE wa_id=? AND last_inbound_message_id=?").bind(state, originalStateData, new Date().toISOString(), event.from, event.id).run();
+  if (!sent.sent && nextState !== "COD_PENDING") await db.prepare("UPDATE whatsapp_conversations SET state=?,state_data=?,updated_at=? WHERE wa_id=? AND last_inbound_message_id=? AND state=? AND state_data=? AND (? IS NULL OR NOT EXISTS(SELECT 1 FROM orders o WHERE o.id=? AND o.payment_status IN ('COD_PENDING','PAID')))").bind(state, originalStateData, new Date().toISOString(), event.from, event.id, nextState, JSON.stringify(data), data.orderId ?? null, data.orderId ?? null).run();
   return true;
 }
 
@@ -860,7 +906,8 @@ const paymentSelectionHandler = async (c: Context<Env>) => {
     const orderSummary = await getPersistedOrderSummary(c.env.DB, orderId);
     return c.json({ ok: true, orderNumber: result.orderNumber, amount: result.amount, method: result.config.method, message: result.message, qrAvailable: Boolean(result.config.qrR2Key), orderSummary, paymentMethods: orderSummary.paymentMethods, paymentMethodOptions: orderSummary.paymentMethods.map((name) => ({ id: name, title: name })) });
   } catch (error) {
-    return c.json({ error: error instanceof Error ? error.message : "PAYMENT_METHOD_SELECTION_FAILED" }, 400);
+    const code = error instanceof Error ? error.message : "PAYMENT_METHOD_SELECTION_FAILED";
+    return c.json({ error: code }, code === "PAYMENT_SELECTION_CONFLICT" ? 409 : 400);
   }
 };
 app.post("/payments/:orderId/select", paymentSelectionHandler);

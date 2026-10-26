@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc --noEmit",
     "test": "vitest run",
+    "test:rollback:v1": "node --test scripts/test-v1-cod-rollback.mjs",
     "test:watch": "vitest",
     "lint": "eslint .",
     "extract:payment-qr": "node extract-payment-qr.mjs",

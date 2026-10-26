@@ -3,7 +3,7 @@ import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import api from "../apps/api/src/index";
 import admin from "../apps/admin/src/index";
-import { codReferenceHmac, formatPaymentMessage, getLatestOrderForWaId, MockWhatsAppProvider, persistFlowSubmission, selectPaymentMethod, storeReceipt } from "@gfs/core";
+import { codReferenceHmac, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, MockWhatsAppProvider, persistFlowSubmission, selectPaymentMethod, storeReceipt } from "@gfs/core";
 
 // Synthetic fixtures only. SQLite executes the real migrations and journey SQL.
 const sender = "923001234567";
@@ -19,14 +19,21 @@ let receiptPuts: number;
 let codEnabled: boolean;
 const codHmacKey = "synthetic-guided-cod-hmac-key-v1-2026-synthetic";
 let codRuntimeHmacKey = codHmacKey;
+let beforeBatch: ((sql: string[]) => Promise<void> | void) | undefined;
+let beforeRun: ((sql: string) => Promise<void> | void) | undefined;
+let qrAvailable: boolean;
+let qrReads: number;
+// NON-PAYABLE PNG signature only, not an encoded or scannable payment QR.
+const syntheticQrBytes = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
 
 function statement(sql: string) {
   let values: SQLInputValue[] = [];
   const prepared = {
+    sql,
     bind: (...args: SQLInputValue[]) => { values = args; return prepared; },
     first: async () => sqlite.prepare(sql).get(...values) ?? null,
     all: async () => ({ results: sqlite.prepare(sql).all(...values), success: true }),
-    run: async () => ({ meta: { changes: Number(sqlite.prepare(sql).run(...values).changes) }, success: true })
+    run: async () => { await beforeRun?.(sql); return { meta: { changes: Number(sqlite.prepare(sql).run(...values).changes) }, success: true }; }
   };
   return prepared;
 }
@@ -50,7 +57,7 @@ function buttons() {
 }
 
 function env() {
-  return { DB: db, RECEIPTS: { get: vi.fn(async () => null), put: vi.fn(async () => { receiptPuts++; }), delete: vi.fn(async () => undefined) }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: "true", META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided", COD_V1_ENABLED: codEnabled ? "true" : "false", COD_REFERENCE_HMAC_KEY: codRuntimeHmacKey } as never;
+  return { DB: db, RECEIPTS: { get: vi.fn(async () => { qrReads++; return qrAvailable ? { httpMetadata: { contentType: "image/png" }, arrayBuffer: async () => syntheticQrBytes.buffer } : null; }), put: vi.fn(async () => { receiptPuts++; }), delete: vi.fn(async () => undefined) }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: "true", META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided", COD_V1_ENABLED: codEnabled ? "true" : "false", COD_REFERENCE_HMAC_KEY: codRuntimeHmacKey } as never;
 }
 
 async function callback(messages: Record<string, unknown>[], extraChanges: unknown[] = []) {
@@ -99,8 +106,34 @@ async function enableAuditedCodPolicy(feePkr = 125) {
   const collectionPolicyHash = await codReferenceHmac("SYNTHETIC-COURIER-POLICY", codHmacKey);
   const remittancePolicyHash = await codReferenceHmac("SYNTHETIC-REMITTANCE-POLICY", codHmacKey);
   const updatedAt = new Date(Date.now() + 1).toISOString();
-  sqlite.prepare("UPDATE cod_configuration SET enabled=1,fee_pkr=?,collection_policy_hash=?,remittance_policy_hash=?,updated_by=?,updated_at=? WHERE id='default'").run(feePkr, collectionPolicyHash, remittancePolicyHash, "admin@example.test", updatedAt);
-  sqlite.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?,?)").run(crypto.randomUUID(), "COD_CONFIGURATION_UPDATED", "ADMIN", "admin@example.test", "COD_CONFIGURATION", "default", crypto.randomUUID(), JSON.stringify({ enabled: true, feePkr, collectionPolicyHash, remittancePolicyHash }), updatedAt);
+  const revision = crypto.randomUUID();
+  sqlite.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?,?)").run(revision, "COD_CONFIGURATION_UPDATED", "ADMIN", "admin@example.test", "COD_CONFIGURATION", "default", crypto.randomUUID(), JSON.stringify({ enabled: true, feePkr, collectionPolicyHash, remittancePolicyHash }), updatedAt);
+  sqlite.prepare("UPDATE cod_configuration SET enabled=1,fee_pkr=?,collection_policy_hash=?,remittance_policy_hash=?,revision=?,updated_by=?,updated_at=? WHERE id='default'").run(feePkr, collectionPolicyHash, remittancePolicyHash, revision, "admin@example.test", updatedAt);
+}
+
+async function enableSyntheticPaymentMethod(method: "JAZZCASH" | "EASYPAISA" | "BANK_TRANSFER" = "JAZZCASH") {
+  const key = `synthetic-nonpayable/${method}.png`;
+  const digest = await crypto.subtle.digest("SHA-256", syntheticQrBytes);
+  const hash = [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  sqlite.prepare("UPDATE payment_methods SET recipient_name=?,till_id=?,qr_r2_key=?,qr_sha256=?,qr_mime_type='image/png',qr_size_bytes=8,instructions=?,instructions_ur=?,reference_instruction=?,reference_instruction_ur=?,heading_ur=?,receipt_instructions=?,receipt_instructions_ur=? WHERE method=?")
+    .run(`NON-PAYABLE ${method}`, `TEST-ONLY-${method}`, key, hash, "NON-PAYABLE TEST {amount} {recipientName} {tillId}", "NON-PAYABLE TEST {amount} {recipientName} {tillId}", "TEST {orderNumber}", "TEST {orderNumber}", "NON-PAYABLE TEST", "NON-PAYABLE TEST RECEIPT", "NON-PAYABLE TEST RECEIPT", method);
+  sqlite.prepare(`INSERT INTO payment_qr_assets(id,method,source_r2_key,source_sha256,source_mime_type,source_size_bytes,derivative_r2_key,derivative_sha256,derivative_mime_type,derivative_size_bytes,derivative_width,derivative_height,payload_sha256,decoder_agreement,payload_match,scan_pass,decoder_versions,extractor_version,independent_ownership_verified,independent_evidence_ref,created_at,created_by)
+    VALUES(?,?,?,?,'image/png',8,?,?,'image/png',8,1,1,?,1,1,1,'SYNTHETIC-NOT-SCANNABLE','SYNTHETIC',1,'SYNTHETIC-NON-PAYABLE',?,'TEST_FIXTURE')`).run(crypto.randomUUID(), method, key, hash, key, hash, hash, new Date().toISOString());
+  sqlite.prepare("UPDATE payment_methods SET qr_owner_verified=1,enabled=1 WHERE method=?").run(method);
+}
+
+async function pendingPaymentFixture(method: "JAZZCASH" | "EASYPAISA" | "BANK_TRANSFER" = "JAZZCASH", locale: "en" | "ur" = "en") {
+  await enableSyntheticPaymentMethod(method);
+  const order = await persistFlowSubmission(db, { fullName: "NON-PAYABLE Synthetic", deliveryAddress: "SYNTHETIC PAYMENT DELIVERY TEST", nearbyPlace: "SYNTHETIC ONLY", city: "Synthetic City", contactNumber: "03001234567", productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: "Synthetic Province", fertilizerSelected: false }, undefined, "SYNTHETIC-PAYMENT-DELIVERY", sender);
+  const now = new Date().toISOString();
+  sqlite.prepare("INSERT INTO whatsapp_conversations(id,wa_id,state,state_data,last_inbound_at,created_at,updated_at) VALUES('SYNTHETIC-PAYMENT-CONVERSATION',?,'PAYMENT_PENDING',?,?,?,?)").run(sender, JSON.stringify({ language: locale, orderId: order.orderId, orderNumber: order.orderNumber }), now, now, now);
+  return { order, selected: await selectPaymentMethod(db, order.orderId, method, locale, sender, "SYNTHETIC-PAYMENT-DELIVERY-REQUEST") };
+}
+
+async function runPaymentJob(orderId: string, idempotencyKey: string) {
+  const message = { body: { kind: "WHATSAPP_PAYMENT_INSTRUCTIONS", idempotencyKey, entityId: orderId, schemaVersion: 1 as const }, attempts: 1, ack: vi.fn(), retry: vi.fn() };
+  await api.queue({ messages: [message] } as unknown as MessageBatch<typeof message.body>, env());
+  return message;
 }
 
 async function createSyntheticPaymentReviewOrder(waId: string, idempotencyKey: string) {
@@ -197,6 +230,238 @@ describe("frozen V1 receipt hotfix", () => {
 });
 
 describe("GFS-221 additive V1-compatible COD path", () => {
+  it.each([
+    { locale: "en", intakeEnabled: true },
+    { locale: "en", intakeEnabled: false },
+    { locale: "ur", intakeEnabled: true },
+    { locale: "ur", intakeEnabled: false }
+  ] as const)("recovers the same failed COD confirmation reply in $locale with intake $intakeEnabled", async ({ locale, intakeEnabled }) => {
+    await enableAuditedCodPolicy();
+    codEnabled = true;
+    await reachReview(locale, true);
+    await inbound(tap("PLACE_ORDER"));
+    const orderId = String(conversation()?.data.orderId);
+    const orderNumber = String(conversation()?.data.orderNumber);
+    await inbound(tap("COD"));
+    const sendsBeforeConfirmation = sends.length;
+    failNextSend = true;
+    const confirmation = await inbound(tap("CONFIRM_COD_ORDER"), `synthetic-failed-cod-confirmation-${locale}-${intakeEnabled}`);
+    expect(sends).toHaveLength(sendsBeforeConfirmation);
+    expect(conversation()?.state).toBe("COD_PENDING");
+    const persistedCod = sqlite.prepare("SELECT * FROM cod_order_details WHERE order_id=?").get(orderId);
+    const confirmationAudit = sqlite.prepare("SELECT * FROM audit_log WHERE action='COD_ORDER_CONFIRMED' AND entity_id=?").get(orderId);
+    expect(sqlite.prepare("SELECT status,attempt_count,provider_message_id FROM outbound_messages WHERE idempotency_key=?").get(`conversation_reply:${confirmation.id}`)).toEqual({ status: "FAILED", attempt_count: 1, provider_message_id: null });
+
+    // Recovery must use the immutable saved order/quote, not stale conversation display fields.
+    const cachedData: Record<string, unknown> = { ...conversation()!.data, orderNumber: "SYNTHETIC-STALE-DISPLAY", amountPkr: 1 };
+    delete cachedData.codQuote;
+    sqlite.prepare("UPDATE whatsapp_conversations SET state_data=? WHERE wa_id=?").run(JSON.stringify(cachedData), sender);
+    const winningConversation = conversation();
+    codEnabled = intakeEnabled;
+    if (!intakeEnabled) codRuntimeHmacKey = "";
+    expect((await callback([confirmation])).status).toBe(200);
+    expect(sends).toHaveLength(sendsBeforeConfirmation + 1);
+    expect(body()).toContain(locale === "en" ? "is confirmed for COD" : "COD کے لیے تصدیق ہو گیا");
+    expect(body()).toContain(orderNumber);
+    expect(body()).toContain("PKR 325");
+    expect(body()).not.toContain("SYNTHETIC-STALE-DISPLAY");
+    expect(buttons()).toEqual(["CHECK_ORDER"]);
+    expect(conversation()).toEqual(winningConversation);
+    expect(sqlite.prepare("SELECT * FROM cod_order_details WHERE order_id=?").get(orderId)).toEqual(persistedCod);
+    expect(sqlite.prepare("SELECT * FROM audit_log WHERE action='COD_ORDER_CONFIRMED' AND entity_id=?").get(orderId)).toEqual(confirmationAudit);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_ORDER_CONFIRMED'").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT status,attempt_count FROM outbound_messages WHERE idempotency_key=?").get(`conversation_reply:${confirmation.id}`)).toEqual({ status: "SENT", attempt_count: 2 });
+
+    expect((await callback([confirmation])).status).toBe(200);
+    expect(sends).toHaveLength(sendsBeforeConfirmation + 1);
+    await inbound(tap("CONFIRM_COD_ORDER"), "synthetic-unrelated-confirmation-event");
+    expect(body()).not.toContain(locale === "en" ? "is confirmed for COD" : "COD کے لیے تصدیق ہو گیا");
+    expect(conversation()).toEqual(winningConversation);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_ORDER_CONFIRMED'").get()).toEqual({ count: 1 });
+  });
+
+  it("does not confirm an undisplayed COD fee after the policy changes", async () => {
+    await enableAuditedCodPolicy();
+    codEnabled = true;
+    await reachReview("en", true);
+    await inbound(tap("PLACE_ORDER"));
+    const orderId = (conversation()?.data as { orderId: string }).orderId;
+    await inbound(tap("COD"));
+    expect(body()).toContain("Total due on collection: PKR 325");
+    await enableAuditedCodPolicy(150);
+    await inbound(tap("CONFIRM_COD_ORDER"));
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details WHERE order_id=?").get(orderId)).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT state FROM orders WHERE id=?").get(orderId)).toEqual({ state: "DETAILS_COMPLETED" });
+    expect(body()).toContain("fresh quote");
+    await inbound(tap("COD"));
+    expect(body()).toContain("Total due on collection: PKR 350");
+    await inbound(tap("CONFIRM_COD_ORDER"));
+    expect(sqlite.prepare("SELECT quoted_total_pkr FROM cod_order_details WHERE order_id=?").get(orderId)).toEqual({ quoted_total_pkr: 350 });
+  });
+
+  it("does not admit COD after the order's province is disabled", async () => {
+    await enableAuditedCodPolicy();
+    codEnabled = true;
+    await reachReview("en", true);
+    await inbound(tap("PLACE_ORDER"));
+    const orderId = (conversation()?.data as { orderId: string }).orderId;
+    await inbound(tap("COD"));
+    sqlite.prepare("UPDATE province_delivery_rates SET enabled=0 WHERE province='Synthetic Province'").run();
+    await inbound(tap("CONFIRM_COD_ORDER"));
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details WHERE order_id=?").get(orderId)).toEqual({ count: 0 });
+  });
+
+  it.each(["policy revision", "province"])("rechecks %s inside the winning COD INSERT, after the pre-read", async (change) => {
+    await enableAuditedCodPolicy();
+    codEnabled = true;
+    await reachReview("en", true);
+    await inbound(tap("PLACE_ORDER"));
+    await inbound(tap("COD"));
+    const orderId = String(conversation()?.data.orderId);
+    beforeBatch = async (sql) => {
+      if (!sql[0]?.startsWith("INSERT OR IGNORE INTO cod_order_details")) return;
+      beforeBatch = undefined;
+      if (change === "province") sqlite.prepare("UPDATE province_delivery_rates SET enabled=0").run();
+      else await enableAuditedCodPolicy(); // Same price, different authorization revision.
+    };
+    await inbound(tap("CONFIRM_COD_ORDER"));
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_ORDER_CONFIRMED'").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT state FROM orders WHERE id=?").get(orderId)).toEqual({ state: "DETAILS_COMPLETED" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE kind LIKE '%PAYMENT%'").get()).toEqual({ count: 0 });
+  });
+
+  it.each(["advance method", "advance audit", "receipt", "approval"])("refuses COD over inherited %s history", async (history) => {
+    await enableAuditedCodPolicy();
+    codEnabled = true;
+    await reachReview("en");
+    await inbound(tap("PLACE_ORDER"));
+    await inbound(tap("COD"));
+    const orderId = String(conversation()?.data.orderId);
+    const paymentId = String(sqlite.prepare("SELECT id FROM payments WHERE order_id=?").get(orderId)!.id);
+    if (history === "advance method") sqlite.prepare("UPDATE payments SET method='JAZZCASH' WHERE id=?").run(paymentId);
+    if (history === "approval") sqlite.prepare("UPDATE payments SET approved_amount=125,approved_by='SYNTHETIC',approved_at='2026-01-01' WHERE id=?").run(paymentId);
+    if (history === "advance audit") sqlite.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,'PAYMENT_METHOD_SELECTED','CUSTOMER','ORDER',?,'SYNTHETIC','{}','2026-01-01')").run(crypto.randomUUID(), orderId);
+    if (history === "receipt") sqlite.prepare("INSERT INTO payment_receipts(id,order_id,payment_id,provider_media_id,r2_object_key,mime_type,size_bytes,sha256,submitted_at,created_at) VALUES('SYNTHETIC-RECEIPT',?,?,'SYNTHETIC-MEDIA','NON-PAYABLE','image/png',8,?,'2026-01-01','2026-01-01')").run(orderId, paymentId, "a".repeat(64));
+    await inbound(tap("CONFIRM_COD_ORDER"));
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_ORDER_CONFIRMED'").get()).toEqual({ count: 0 });
+    expect(receiptPuts).toBe(0);
+  });
+
+  it("has exactly one confirmation winner and terminal audit under concurrent confirmations", async () => {
+    await enableAuditedCodPolicy();
+    codEnabled = true;
+    await reachReview("en");
+    await inbound(tap("PLACE_ORDER"));
+    await inbound(tap("COD"));
+    const quote = conversation()?.data.codQuote as Record<string, unknown>;
+    expect(quote).toMatchObject({ baseAmountPkr: 125, feePkr: 125, totalPkr: 250 });
+    const sentBefore = sends.length;
+    beforeBatch = async (sql) => {
+      if (!sql[0]?.startsWith("INSERT OR IGNORE INTO cod_order_details")) return;
+      beforeBatch = undefined;
+      await inbound(tap("CONFIRM_COD_ORDER"), "synthetic-winning-confirmation");
+    };
+    await inbound(tap("CONFIRM_COD_ORDER"), "synthetic-losing-confirmation");
+    expect(conversation()?.state).toBe("COD_PENDING");
+    expect(sends).toHaveLength(sentBefore + 1);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_ORDER_CONFIRMED'").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT policy_revision,collection_policy_hash,remittance_policy_hash,test_hold FROM cod_order_details").get()).toEqual({ policy_revision: quote.policyRevision, collection_policy_hash: quote.collectionPolicyHash, remittance_policy_hash: quote.remittancePolicyHash, test_hold: 1 });
+  });
+
+  it("does not let a stale Advance Payment back callback overwrite a COD winner", async () => {
+    await enableAuditedCodPolicy();
+    await enableSyntheticPaymentMethod();
+    codEnabled = true;
+    await reachReview("en");
+    await inbound(tap("PLACE_ORDER"));
+    await inbound(tap("COD"));
+    beforeRun = async (sql) => {
+      if (!sql.includes("WHERE whatsapp_conversations.state=?")) return;
+      beforeRun = undefined;
+      await inbound(tap("CONFIRM_COD_ORDER"), "synthetic-cod-wins-back-race");
+    };
+    await inbound(tap("ADVANCE_PAYMENT"), "synthetic-stale-back");
+    expect(conversation()?.state).toBe("COD_PENDING");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE kind='WHATSAPP_PAYMENT_INSTRUCTIONS'").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_ORDER_CONFIRMED'").get()).toEqual({ count: 1 });
+  });
+
+  it("makes advance selection lose atomically to COD without payment writes, outbox, QR or audit", async () => {
+    await enableAuditedCodPolicy();
+    await enableSyntheticPaymentMethod();
+    codEnabled = true;
+    await reachReview("en");
+    await inbound(tap("PLACE_ORDER"));
+    await inbound(tap("COD"));
+    const orderId = String(conversation()?.data.orderId);
+    beforeBatch = async (sql) => {
+      if (!sql[0]?.startsWith("UPDATE payments SET method=")) return;
+      beforeBatch = undefined;
+      await inbound(tap("CONFIRM_COD_ORDER"));
+    };
+    await expect(selectPaymentMethod(db, orderId, "JAZZCASH", "en", sender, "SYNTHETIC-LOSING-ADVANCE")).rejects.toThrow("PAYMENT_SELECTION_CONFLICT");
+    expect(sqlite.prepare("SELECT method,review_state FROM payments WHERE order_id=?").get(orderId)).toEqual({ method: null, review_state: "COD_PENDING" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_METHOD_SELECTED'").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE kind='WHATSAPP_PAYMENT_INSTRUCTIONS'").get()).toEqual({ count: 0 });
+    expect(qrReads).toBe(0);
+  });
+
+  it("makes COD lose atomically to an advance selection", async () => {
+    await enableAuditedCodPolicy();
+    await enableSyntheticPaymentMethod();
+    codEnabled = true;
+    await reachReview("en");
+    await inbound(tap("PLACE_ORDER"));
+    await inbound(tap("COD"));
+    const orderId = String(conversation()?.data.orderId);
+    beforeBatch = async (sql) => {
+      if (!sql[0]?.startsWith("INSERT OR IGNORE INTO cod_order_details")) return;
+      beforeBatch = undefined;
+      await selectPaymentMethod(db, orderId, "JAZZCASH", "en", sender, "SYNTHETIC-WINNING-ADVANCE");
+    };
+    await inbound(tap("CONFIRM_COD_ORDER"));
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT state FROM orders WHERE id=?").get(orderId)).toEqual({ state: "PAYMENT_PENDING" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_ORDER_CONFIRMED'").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE kind='WHATSAPP_PAYMENT_INSTRUCTIONS'").get()).toEqual({ count: 1 });
+    expect(qrReads).toBe(0);
+  });
+
+  it("retains COD obligation status and blocks advance/receipt when intake is disabled", async () => {
+    await enableAuditedCodPolicy();
+    await enableSyntheticPaymentMethod();
+    codEnabled = true;
+    await reachReview("en");
+    await inbound(tap("PLACE_ORDER"));
+    await inbound(tap("COD"));
+    await inbound(tap("CONFIRM_COD_ORDER"));
+    codEnabled = false;
+    await inbound(tap("CHECK_ORDER"));
+    expect(body()).toContain("Exact COD amount due: PKR 250");
+    await inbound(tap("PAY_JAZZCASH"));
+    await callback([{ from: sender, id: "synthetic-disabled-cod-receipt", type: "image", image: { id: "synthetic-media", mime_type: "image/png" } }]);
+    expect(conversation()?.state).toBe("COD_PENDING");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE kind='WHATSAPP_PAYMENT_INSTRUCTIONS'").get()).toEqual({ count: 0 });
+    expect(receiptPuts).toBe(0);
+    expect(qrReads).toBe(0);
+  });
+
+  it("uses the audit referenced by the revision rather than the latest timestamp", async () => {
+    await enableAuditedCodPolicy();
+    sqlite.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,'COD_CONFIGURATION_UPDATED','ADMIN','admin@example.test','COD_CONFIGURATION','default','SYNTHETIC','{}','2099-01-01')").run(crypto.randomUUID());
+    codEnabled = true;
+    await reachReview("en");
+    await inbound(tap("PLACE_ORDER"));
+    expect(buttons()).toContain("COD");
+    await inbound(tap("COD"));
+    await inbound(tap("CONFIRM_COD_ORDER"));
+    expect(conversation()?.state).toBe("COD_PENDING");
+  });
+
   it("quotes COD on the existing order, confirms once, and refuses advance receipts", async () => {
     await enableAuditedCodPolicy();
     codEnabled = true;
@@ -206,6 +471,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     const orderData = conversation()?.data as { orderId: string; orderNumber: string; amountPkr: number };
     expect(conversation()?.state).toBe("PAYMENT_METHOD");
     expect(buttons()).toEqual(["ADVANCE_PAYMENT", "COD"]);
+    expect((sends.at(-1)?.interactive as { action: { buttons: Array<{ reply: { title: string } }> } }).action.buttons.map((button) => button.reply.title)).toEqual(["Advance Payment", "Cash on Delivery"]);
     await inbound(tap("COD"));
     expect(conversation()?.state).toBe("COD_CONFIRM");
     expect(body()).toContain("Delivery: PKR 125");
@@ -220,6 +486,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
 
     expect(conversation()?.state).toBe("COD_PENDING");
     expect(body()).toContain("confirmed for COD");
+    expect(body()).toContain(orderData.orderNumber);
     expect(sends).toHaveLength(sendCountBeforeConfirmation + 1);
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: countBefore + 1 });
     expect(sqlite.prepare("SELECT state,payment_status,total_payable FROM orders WHERE id=?").get(orderData.orderId)).toEqual({ state: "COD_PENDING", payment_status: "COD_PENDING", total_payable: 200 });
@@ -260,12 +527,13 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     const detailBefore = await admin.fetch(new Request(`https://admin.example.test/api/orders/${orderData.orderId}`, { headers: identity }), adminEnv);
     expect((await detailBefore.json() as { order: { canPrintShippingLabel: boolean } }).order.canPrintShippingLabel).toBe(false);
     expect((await admin.fetch(new Request(`https://admin.example.test/api/orders/${orderData.orderId}/shipping-label?format=4x6`, { headers: identity }), adminEnv)).status).toBe(409);
-    expect((await adminPost(`/api/orders/${orderData.orderId}/transition`, { from: "COD_PENDING", to: "PACKING", confirmation: orderData.orderNumber })).status).toBe(200);
+    expect(sqlite.prepare("SELECT test_hold FROM cod_order_details WHERE order_id=?").get(orderData.orderId)).toEqual({ test_hold: 1 });
+    expect((await adminPost(`/api/orders/${orderData.orderId}/transition`, { from: "COD_PENDING", to: "PACKING", confirmation: orderData.orderNumber })).status).toBe(409);
     expect((await admin.fetch(new Request(`https://admin.example.test/api/orders/${orderData.orderId}/shipping-label?format=4x6`, { headers: identity }), adminEnv)).status).toBe(409);
-    expect((await adminPost(`/api/orders/${orderData.orderId}/tracking`, { trackingNumber: "SYNTHETIC-TRACK-001", confirmation: orderData.orderNumber })).status).toBe(200);
+    expect((await adminPost(`/api/orders/${orderData.orderId}/tracking`, { trackingNumber: "SYNTHETIC-TRACK-001", confirmation: orderData.orderNumber })).status).toBe(409);
     const detailWithTracking = await admin.fetch(new Request(`https://admin.example.test/api/orders/${orderData.orderId}`, { headers: identity }), adminEnv);
-    expect((await detailWithTracking.json() as { order: { paymentMethod: string; expectedAmountPkr: number; codBaseAmountPkr: number; canPrintShippingLabel: boolean } }).order).toMatchObject({ paymentMethod: "COD", expectedAmountPkr: 325, codBaseAmountPkr: 200, canPrintShippingLabel: true });
-    expect((await admin.fetch(new Request(`https://admin.example.test/api/orders/${orderData.orderId}/shipping-label?format=4x6`, { headers: identity }), adminEnv)).status).toBe(200);
+    expect((await detailWithTracking.json() as { order: { paymentMethod: string; expectedAmountPkr: number; codBaseAmountPkr: number; canPrintShippingLabel: boolean } }).order).toMatchObject({ paymentMethod: "COD", expectedAmountPkr: 325, codBaseAmountPkr: 200, canPrintShippingLabel: false });
+    expect((await admin.fetch(new Request(`https://admin.example.test/api/orders/${orderData.orderId}/shipping-label?format=4x6`, { headers: identity }), adminEnv)).status).toBe(409);
   });
 
   it("drops the previewed COD fee when the customer selects Advance Payment", async () => {
@@ -286,6 +554,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     codEnabled = true;
     await reachReview("ur", true);
     await inbound(tap("PLACE_ORDER"));
+    expect((sends.at(-1)?.interactive as { action: { buttons: Array<{ reply: { title: string } }> } }).action.buttons.map((button) => button.reply.title)).toEqual(["ایڈوانس ادائیگی", "وصولی پر ادائیگی"]);
     await inbound(tap("COD"));
     expect(body()).toContain("اشیاء:");
     expect(body()).toContain("آئٹم: بیج");
@@ -325,7 +594,8 @@ beforeEach(() => {
   for (const file of readdirSync("migrations").filter((name) => /^\d+.*\.sql$/.test(name)).sort()) sqlite.exec(readFileSync(`migrations/${file}`, "utf8"));
   sqlite.exec("INSERT INTO products(id,code,name,price_pkr,enabled,created_at,updated_at) VALUES('synthetic-seeds','FREE_5_PACK_VEGETABLE_SEEDS','Synthetic seeds',0,1,'2026-01-01','2026-01-01'),('synthetic-fertilizer','MICRO_NUTRIENTS_FERTILIZER','Synthetic fertilizer',75,1,'2026-01-01','2026-01-01');");
   sqlite.exec("INSERT INTO province_delivery_rates(province,delivery_fee_pkr,enabled,created_at,updated_at) VALUES('Synthetic Province',125,1,'2026-01-01','2026-01-01');");
-  db = { prepare: statement, batch: async (statements: Array<{ run: () => Promise<unknown> }>) => {
+  db = { prepare: statement, batch: async (statements: Array<{ sql: string; run: () => Promise<unknown> }>) => {
+    await beforeBatch?.(statements.map((item) => item.sql));
     sqlite.exec("BEGIN");
     try { const results = []; for (const item of statements) results.push(await item.run()); sqlite.exec("COMMIT"); return results; }
     catch (error) { sqlite.exec("ROLLBACK"); throw error; }
@@ -336,15 +606,140 @@ beforeEach(() => {
   receiptPuts = 0;
   codEnabled = false;
   codRuntimeHmacKey = codHmacKey;
+  beforeBatch = undefined;
+  beforeRun = undefined;
+  qrAvailable = false;
+  qrReads = 0;
   queueSend = vi.fn(async () => undefined);
   vi.stubGlobal("fetch", vi.fn(async (_url: unknown, init: RequestInit) => {
     if (failNextSend) { failNextSend = false; return new Response("{}", { status: 503 }); }
+    if (init.body instanceof FormData) return Response.json({ id: "synthetic-nonpayable-media" });
     sends.push(JSON.parse(String(init.body)) as Record<string, unknown>);
     return Response.json({ messages: [{ id: `synthetic-outbound-${sends.length}` }] });
   }));
 });
 
 afterEach(() => { sqlite.close(); vi.unstubAllGlobals(); });
+
+describe("GFS-222 local advance and payment delivery repairs", () => {
+  it("gates a concurrent same-method loser by the winning selection audit", async () => {
+    const { order, selected } = await pendingPaymentFixture();
+    beforeBatch = async (sql) => {
+      if (!sql[0]?.startsWith("UPDATE payments SET method=")) return;
+      beforeBatch = undefined;
+      await selectPaymentMethod(db, order.orderId, "JAZZCASH", "en", sender, "SYNTHETIC-CONCURRENT-WINNER");
+    };
+    await expect(selectPaymentMethod(db, order.orderId, "JAZZCASH", "en", sender, "SYNTHETIC-CONCURRENT-LOSER")).rejects.toThrow("PAYMENT_SELECTION_CONFLICT");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_METHOD_SELECTED'").get()).toEqual({ count: 2 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE kind='WHATSAPP_PAYMENT_INSTRUCTIONS'").get()).toEqual({ count: 2 });
+    expect(sqlite.prepare("SELECT status FROM outbox_jobs WHERE idempotency_key=?").get(selected.idempotencyKey)).toEqual({ status: "PENDING" });
+    expect(sends).toHaveLength(0);
+  });
+
+  it("returns HTTP409 without partial selection when review wins the race", async () => {
+    const { order } = await pendingPaymentFixture();
+    beforeBatch = (sql) => {
+      if (!sql[0]?.startsWith("UPDATE payments SET method=")) return;
+      beforeBatch = undefined;
+      sqlite.prepare("UPDATE payments SET review_state='REVIEW',submitted_at='2026-01-01' WHERE order_id=?").run(order.orderId);
+      sqlite.prepare("UPDATE orders SET state='PAYMENT_REVIEW' WHERE id=?").run(order.orderId);
+    };
+    const response = await api.fetch(new Request(`https://api.example.test/payments/${order.orderId}/select`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ method: "JAZZCASH" }) }), env());
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: "PAYMENT_SELECTION_CONFLICT" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_METHOD_SELECTED'").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT state FROM orders WHERE id=?").get(order.orderId)).toEqual({ state: "PAYMENT_REVIEW" });
+  });
+
+  it("rolls back the advance claim if the winner audit fails", async () => {
+    const { order } = await pendingPaymentFixture();
+    await enableSyntheticPaymentMethod("EASYPAISA");
+    beforeRun = (sql) => {
+      if (!sql.startsWith("INSERT INTO audit_log") || !sql.includes("changes()=1")) return;
+      beforeRun = undefined;
+      throw new Error("SYNTHETIC_AUDIT_FAILURE");
+    };
+    await expect(selectPaymentMethod(db, order.orderId, "EASYPAISA", "en", sender, "SYNTHETIC-FAILED-AUDIT")).rejects.toThrow("SYNTHETIC_AUDIT_FAILURE");
+    expect(sqlite.prepare("SELECT method FROM payments WHERE order_id=?").get(order.orderId)).toEqual({ method: "JAZZCASH" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_METHOD_SELECTED'").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE kind='WHATSAPP_PAYMENT_INSTRUCTIONS'").get()).toEqual({ count: 1 });
+  });
+
+  it.each(["SENT", "DELIVERED", "READ", "PROVIDER_ID_ONLY"])("treats %s children as delivered success without provider replay or R2 reads", async (status) => {
+    const { order, selected } = await pendingPaymentFixture();
+    for (const part of ["text", "qr"]) sqlite.prepare("INSERT INTO outbound_messages(id,idempotency_key,order_id,kind,provider_message_id,status,attempt_count,created_at,updated_at) VALUES(?,?,?,?,?,?,1,'2026-01-01','2026-01-01')").run(`synthetic-${part}`, `${selected.idempotencyKey}:${part}`, order.orderId, part === "qr" ? "WHATSAPP_PAYMENT_QR" : "WHATSAPP_PAYMENT_TEXT", `synthetic-provider-${part}`, status === "PROVIDER_ID_ONLY" ? "FAILED" : status);
+    const message = await runPaymentJob(order.orderId, selected.idempotencyKey);
+    expect(message.ack).toHaveBeenCalledOnce();
+    expect(message.retry).not.toHaveBeenCalled();
+    expect(sends).toHaveLength(0);
+    expect(qrReads).toBe(0);
+    expect(sqlite.prepare("SELECT status,last_error FROM outbox_jobs WHERE idempotency_key=?").get(selected.idempotencyKey)).toEqual({ status: "SENT", last_error: null });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_QR_DELIVERY_BLOCKED'").get()).toEqual({ count: 0 });
+  });
+
+  it("records a missing QR error with correct SQL bindings and does not resend the successful text", async () => {
+    const { order, selected } = await pendingPaymentFixture();
+    const first = await runPaymentJob(order.orderId, selected.idempotencyKey);
+    expect(first.retry).toHaveBeenCalledOnce();
+    expect(sends).toHaveLength(1);
+    expect(sqlite.prepare("SELECT status,last_error FROM outbound_messages WHERE idempotency_key=?").get(`${selected.idempotencyKey}:qr`)).toEqual({ status: "FAILED", last_error: "PAYMENT_QR_NOT_FOUND" });
+    expect(sqlite.prepare("SELECT last_error FROM outbox_jobs WHERE idempotency_key=?").get(selected.idempotencyKey)).toEqual({ last_error: "PAYMENT_QR_DELIVERY_BLOCKED" });
+    qrAvailable = true;
+    const retry = await runPaymentJob(order.orderId, selected.idempotencyKey);
+    expect(retry.ack).toHaveBeenCalledOnce();
+    expect(sends).toHaveLength(2);
+    expect(sends[1]?.type).toBe("image");
+    expect(sqlite.prepare("SELECT status FROM outbox_jobs WHERE idempotency_key=?").get(selected.idempotencyKey)).toEqual({ status: "SENT" });
+  });
+
+  it.each(["JAZZCASH", "EASYPAISA", "BANK_TRANSFER"] as const)("preserves %s legacy text and QR delivery in both locales", async (method) => {
+    const { order, selected } = await pendingPaymentFixture(method, "ur");
+    qrAvailable = true;
+    const message = await runPaymentJob(order.orderId, selected.idempotencyKey);
+    expect(message.ack).toHaveBeenCalledOnce();
+    expect(sends).toHaveLength(2);
+    expect(sends[0]).toMatchObject({ type: "text", text: { body: selected.message } });
+    expect(sends[1]?.type).toBe("image");
+    expect(selected.message).toContain("125");
+    expect(selected.message).toContain(`NON-PAYABLE ${method}`);
+    await selectPaymentMethod(db, order.orderId, method, "en", sender, "SYNTHETIC-EN-METHOD-RESELECT");
+    expect(sqlite.prepare("SELECT method,review_state,expected_amount FROM payments WHERE order_id=?").get(order.orderId)).toEqual({ method, review_state: "PENDING", expected_amount: 125 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({ count: 0 });
+  });
+
+  it.each(["SENT", "SUCCEEDED", "PERMANENT_FAILURE", "DEAD_LETTER"])("does not replay a terminal %s payment job", async (status) => {
+    const { order, selected } = await pendingPaymentFixture();
+    sqlite.prepare("UPDATE outbox_jobs SET status=? WHERE idempotency_key=?").run(status, selected.idempotencyKey);
+    const message = await runPaymentJob(order.orderId, selected.idempotencyKey);
+    expect(message.ack).toHaveBeenCalledOnce();
+    expect(message.retry).not.toHaveBeenCalled();
+    expect(qrReads).toBe(0);
+    expect(sends).toHaveLength(0);
+    expect(sqlite.prepare("SELECT status FROM outbox_jobs WHERE idempotency_key=?").get(selected.idempotencyKey)).toEqual({ status });
+  });
+
+  it.each(["en", "ur"] as const)("formats reconciled COD PAID with the quoted amount and delivered context in %s", async (locale) => {
+    const { order } = await pendingPaymentFixture();
+    const details = (await getLatestOrderForWaId(db, sender, order.orderId))!;
+    const formatted = formatCustomerOrderStatus({ ...details, state: "PAID", paymentStatus: "PAID", paymentReviewState: "COD_PAID", codQuotedTotalPkr: 250 }, locale);
+    expect(formatted).toContain("PKR 250");
+    expect(formatted).not.toContain("PKR 125");
+    expect(formatted).not.toMatch(/packing has not started|پیکنگ شروع نہیں ہوئی/);
+    expect(formatted).toContain(locale === "en" ? "Delivered; courier collection and exact remittance are reconciled" : "ڈیلیور ہو چکا ہے");
+  });
+
+  it("keeps legacy PAID status replies available without reopening payment selection", async () => {
+    const { order } = await pendingPaymentFixture();
+    sqlite.prepare("UPDATE orders SET state='PAID',payment_status='PAID' WHERE id=?").run(order.orderId);
+    sqlite.prepare("UPDATE payments SET review_state='APPROVED',approved_amount=125,approved_by='SYNTHETIC',approved_at='2026-01-01' WHERE order_id=?").run(order.orderId);
+    await inbound(tap("CHECK_ORDER"));
+    expect(body()).toContain("Payment approved");
+    expect(body()).toContain("Amount: PKR 125");
+    expect(buttons()).toEqual(["CHECK_ORDER"]);
+    expect(conversation()?.state).toBe("PAYMENT_PENDING");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_METHOD_SELECTED'").get()).toEqual({ count: 1 });
+  });
+});
 
 describe("GFS-178 simulated signed-webhook lead-only journey", () => {
   it.each(["en", "ur"] as const)("offers bilingual Continue/Cancel and safely restarts after $language cancellation", async (language) => {

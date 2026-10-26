@@ -145,14 +145,16 @@ function orderView(row: Record<string, unknown>, referenceRequestDispatchEnabled
   const receiptCount = Number(row.receipt_count ?? receipts.length);
   const financial = String(row.state) === "PAID" || String(row.payment_status) === "PAID" || String(row.review_state ?? "") === "APPROVED" || row.approved_at != null || row.approved_amount != null;
   const state = String(row.state);
-  const fulfillmentHold = String(row.order_number) === "FS-261019-000001";
+  const codTestHold = row.cod_status != null && Number(row.cod_test_hold) !== 0;
+  const fulfillmentHold = String(row.order_number) === "FS-261019-000001" || codTestHold;
   const unpaidState = ["NEW", "DETAILS_COMPLETED", "PAYMENT_PENDING", "PAYMENT_REJECTED", "CANCELLED"].includes(state);
   return {
     id: String(row.id),
     orderNumber: String(row.order_number),
     state,
     fulfillmentHold,
-    fulfillmentHoldReason: fulfillmentHold ? "Independent bank settlement and customer transaction reference are missing." : null,
+    fulfillmentHoldReason: codTestHold ? "TEST ONLY / DO NOT SHIP. Candidate COD orders are held; no hold-clearing endpoint is available." : fulfillmentHold ? "Independent bank settlement and customer transaction reference are missing." : null,
+    codTestHold,
     paymentStatus: String(row.payment_status),
     codOrder: row.cod_status != null,
     codStatus: row.cod_status == null ? null : String(row.cod_status),
@@ -550,9 +552,9 @@ app.get("/api/csrf", (c) => c.json({ csrfToken: issueCsrfToken(c) }));
 app.get("/api/cod-configuration", async (c) => {
   if (!c.env.DB) return c.json({ error: "COD_CONFIGURATION_UNAVAILABLE" }, 503);
   try {
-    const row = await c.env.DB.prepare("SELECT enabled,fee_pkr,collection_policy_hash,remittance_policy_hash,updated_at FROM cod_configuration WHERE id='default'").first<{ enabled: number; fee_pkr: number; collection_policy_hash: string | null; remittance_policy_hash: string | null; updated_at: string }>();
+    const row = await c.env.DB.prepare("SELECT enabled,fee_pkr,collection_policy_hash,remittance_policy_hash,revision,updated_at FROM cod_configuration WHERE id='default'").first<{ enabled: number; fee_pkr: number; collection_policy_hash: string | null; remittance_policy_hash: string | null; revision: string; updated_at: string }>();
     if (!row) return c.json({ error: "COD_CONFIGURATION_MISSING" }, 503);
-    return c.json({ enabled: Number(row.enabled) === 1, feePkr: Number(row.fee_pkr), collectionPolicyConfigured: Boolean(row.collection_policy_hash), remittancePolicyConfigured: Boolean(row.remittance_policy_hash), updatedAt: row.updated_at });
+    return c.json({ enabled: Number(row.enabled) === 1, feePkr: Number(row.fee_pkr), collectionPolicyConfigured: Boolean(row.collection_policy_hash), remittancePolicyConfigured: Boolean(row.remittance_policy_hash), revision: row.revision, updatedAt: row.updated_at });
   } catch {
     return c.json({ error: "COD_MIGRATION_REQUIRED" }, 503);
   }
@@ -562,25 +564,27 @@ app.post("/api/cod-configuration", async (c) => {
   if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
   if (!c.env.DB) return c.json({ error: "COD_CONFIGURATION_UNAVAILABLE" }, 503);
   if (!c.env.COD_REFERENCE_HMAC_KEY?.trim() || c.env.COD_REFERENCE_HMAC_KEY.trim().length < 32) return c.json({ error: "COD_REFERENCE_HMAC_KEY_REQUIRED" }, 503);
-  let body: { enabled?: unknown; feePkr?: unknown; collectionPolicyReference?: unknown; remittancePolicyReference?: unknown };
+  let body: { enabled?: unknown; feePkr?: unknown; collectionPolicyReference?: unknown; remittancePolicyReference?: unknown; expectedRevision?: unknown };
   try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
   if (typeof body.enabled !== "boolean" || !Number.isSafeInteger(body.feePkr) || Number(body.feePkr) < 0 || Number(body.feePkr) > 100000) return c.json({ error: "COD_CONFIGURATION_INVALID" }, 400);
+  if (typeof body.expectedRevision !== "string" || !body.expectedRevision) return c.json({ error: "COD_CONFIGURATION_CONFLICT" }, 409);
+  const previous = await c.env.DB.prepare("SELECT revision,collection_policy_hash,remittance_policy_hash FROM cod_configuration WHERE id='default'").first<{ revision: string; collection_policy_hash: string | null; remittance_policy_hash: string | null }>();
+  if (!previous) return c.json({ error: "COD_CONFIGURATION_MISSING" }, 503);
+  if (body.expectedRevision !== previous.revision) return c.json({ error: "COD_CONFIGURATION_CONFLICT" }, 409);
   const collectionReference = normalizeCodEvidenceReference(body.collectionPolicyReference);
   const remittanceReference = normalizeCodEvidenceReference(body.remittancePolicyReference);
   if (body.enabled && (!collectionReference || !remittanceReference)) return c.json({ error: "COD_POLICY_EVIDENCE_REQUIRED" }, 409);
-  const collectionHash = collectionReference ? await codReferenceHmac(collectionReference, c.env.COD_REFERENCE_HMAC_KEY) : null;
-  const remittanceHash = remittanceReference ? await codReferenceHmac(remittanceReference, c.env.COD_REFERENCE_HMAC_KEY) : null;
-  const previous = await c.env.DB.prepare("SELECT updated_at FROM cod_configuration WHERE id='default'").first<{ updated_at: string }>();
-  if (!previous) return c.json({ error: "COD_CONFIGURATION_MISSING" }, 503);
-  const previousTime = Date.parse(previous.updated_at);
-  const now = new Date(Math.max(Date.now(), Number.isFinite(previousTime) ? previousTime + 1 : Date.now())).toISOString();
+  const collectionHash = collectionReference ? await codReferenceHmac(collectionReference, c.env.COD_REFERENCE_HMAC_KEY) : previous.collection_policy_hash;
+  const remittanceHash = remittanceReference ? await codReferenceHmac(remittanceReference, c.env.COD_REFERENCE_HMAC_KEY) : previous.remittance_policy_hash;
+  const now = new Date().toISOString();
+  const revision = crypto.randomUUID();
   try {
     const results = await c.env.DB.batch([
-      c.env.DB.prepare("UPDATE cod_configuration SET enabled=?,fee_pkr=?,collection_policy_hash=?,remittance_policy_hash=?,updated_by=?,updated_at=? WHERE id='default'").bind(body.enabled ? 1 : 0, Number(body.feePkr), collectionHash, remittanceHash, c.env.ADMIN_EMAIL, now),
-      c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM cod_configuration WHERE id='default' AND updated_by=? AND updated_at=?)").bind(crypto.randomUUID(), "COD_CONFIGURATION_UPDATED", "ADMIN", c.env.ADMIN_EMAIL, "COD_CONFIGURATION", "default", crypto.randomUUID(), JSON.stringify({ enabled: body.enabled, feePkr: Number(body.feePkr), collectionPolicyHash: collectionHash, remittancePolicyHash: remittanceHash }), now, c.env.ADMIN_EMAIL, now)
+      c.env.DB.prepare("UPDATE cod_configuration SET enabled=?,fee_pkr=?,collection_policy_hash=?,remittance_policy_hash=?,updated_by=?,updated_at=?,revision=? WHERE id='default' AND revision=?").bind(body.enabled ? 1 : 0, Number(body.feePkr), collectionHash, remittanceHash, c.env.ADMIN_EMAIL, now, revision, body.expectedRevision),
+      c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE changes()=1 AND EXISTS(SELECT 1 FROM cod_configuration WHERE id='default' AND revision=?)").bind(revision, "COD_CONFIGURATION_UPDATED", "ADMIN", c.env.ADMIN_EMAIL, "COD_CONFIGURATION", "default", crypto.randomUUID(), JSON.stringify({ enabled: body.enabled, feePkr: Number(body.feePkr), collectionPolicyHash: collectionHash, remittancePolicyHash: remittanceHash }), now, revision)
     ]);
-    if (Number(results[0].meta?.changes ?? 0) !== 1 || Number(results[1].meta?.changes ?? 0) !== 1) return c.json({ error: "COD_CONFIGURATION_SAVE_FAILED" }, 409);
-    return c.json({ ok: true, enabled: body.enabled, feePkr: Number(body.feePkr), collectionPolicyConfigured: Boolean(collectionHash), remittancePolicyConfigured: Boolean(remittanceHash) });
+    if (Number(results[0].meta?.changes ?? 0) !== 1 || Number(results[1].meta?.changes ?? 0) !== 1) return c.json({ error: "COD_CONFIGURATION_CONFLICT" }, 409);
+    return c.json({ ok: true, enabled: body.enabled, feePkr: Number(body.feePkr), collectionPolicyConfigured: Boolean(collectionHash), remittancePolicyConfigured: Boolean(remittanceHash), revision });
   } catch {
     return c.json({ error: "COD_MIGRATION_REQUIRED" }, 503);
   }
@@ -593,9 +597,10 @@ async function reconcileCodEvidence(c: AdminContext, kind: "collection" | "remit
   let body: { confirmation?: unknown; amountPkr?: unknown; evidenceReference?: unknown };
   try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
   const orderId = c.req.param("id");
-  const current = await c.env.DB.prepare("SELECT o.order_number,o.state,o.archived_at,o.total_payable,cod.base_amount_pkr,cod.status,cod.quoted_total_pkr,cod.collection_ref_hmac,cod.collection_amount_pkr,cod.remittance_ref_hmac,cod.remittance_amount_pkr,cfg.collection_policy_hash,cfg.remittance_policy_hash FROM orders o JOIN cod_order_details cod ON cod.order_id=o.id JOIN cod_configuration cfg ON cfg.id='default' WHERE o.id=?").bind(orderId).first<{ order_number: string; state: string; archived_at: string | null; total_payable: number; base_amount_pkr: number; status: string; quoted_total_pkr: number; collection_ref_hmac: string | null; collection_amount_pkr: number | null; remittance_ref_hmac: string | null; remittance_amount_pkr: number | null; collection_policy_hash: string | null; remittance_policy_hash: string | null }>();
+  const current = await c.env.DB.prepare("SELECT o.order_number,o.state,o.archived_at,o.total_payable,cod.base_amount_pkr,cod.status,cod.quoted_total_pkr,cod.collection_ref_hmac,cod.collection_amount_pkr,cod.remittance_ref_hmac,cod.remittance_amount_pkr,cod.policy_revision,cod.collection_policy_hash,cod.remittance_policy_hash,cod.test_hold FROM orders o JOIN cod_order_details cod ON cod.order_id=o.id WHERE o.id=?").bind(orderId).first<{ order_number: string; state: string; archived_at: string | null; total_payable: number; base_amount_pkr: number; status: string; quoted_total_pkr: number; collection_ref_hmac: string | null; collection_amount_pkr: number | null; remittance_ref_hmac: string | null; remittance_amount_pkr: number | null; policy_revision: string | null; collection_policy_hash: string | null; remittance_policy_hash: string | null; test_hold: number }>();
   if (!current) return c.json({ error: "COD_ORDER_NOT_FOUND" }, 404);
   if (current.order_number === "FS-261019-000001") return c.json({ error: "FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED" }, 409);
+  if (Number(current.test_hold) !== 0) return c.json({ error: "COD_TEST_HOLD_DO_NOT_SHIP" }, 409);
   if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
   const isCollection = kind === "collection";
   const referenceColumn = isCollection ? "collection_ref_hmac" : "remittance_ref_hmac";
@@ -604,8 +609,7 @@ async function reconcileCodEvidence(c: AdminContext, kind: "collection" | "remit
   const timeColumn = isCollection ? "collection_at" : "remittance_at";
   const action = isCollection ? "COD_COLLECTION_RECONCILED" : "COD_REMITTANCE_RECONCILED";
   if (current.archived_at) return c.json({ error: "COD_ORDER_NOT_PENDING" }, 409);
-  const policyHash = kind === "collection" ? current.collection_policy_hash : current.remittance_policy_hash;
-  if (!/^[a-f0-9]{64}$/.test(policyHash ?? "")) return c.json({ error: "COD_POLICY_NOT_CONFIGURED" }, 409);
+  if (!current.policy_revision || current.policy_revision === "unconfigured" || !/^[a-f0-9]{64}$/.test(current.collection_policy_hash ?? "") || !/^[a-f0-9]{64}$/.test(current.remittance_policy_hash ?? "")) return c.json({ error: "COD_POLICY_SNAPSHOT_REQUIRED" }, 409);
   if (!Number.isSafeInteger(body.amountPkr) || Number(body.amountPkr) !== Number(current.quoted_total_pkr) || Number(current.total_payable) !== Number(current.base_amount_pkr)) return c.json({ error: kind === "collection" ? "COD_COLLECTION_AMOUNT_MISMATCH" : "COD_REMITTANCE_AMOUNT_MISMATCH" }, 409);
   const reference = normalizeCodEvidenceReference(body.evidenceReference);
   if (!reference) return c.json({ error: "COD_EVIDENCE_REFERENCE_INVALID" }, 400);
@@ -615,14 +619,20 @@ async function reconcileCodEvidence(c: AdminContext, kind: "collection" | "remit
   if (existingHash) return existingHash === evidenceHash && Number(existingAmount) === Number(body.amountPkr) ? c.json({ ok: true, alreadyRecorded: true, status: current.status }) : c.json({ error: "COD_EVIDENCE_ALREADY_RECORDED" }, 409);
   if (current.status !== "COLLECTION_PENDING" || current.state !== "COLLECTION_PENDING") return c.json({ error: "COD_ORDER_NOT_READY_FOR_COLLECTION_RECONCILIATION" }, 409);
   const now = new Date().toISOString();
-  const result = await c.env.DB.batch([
-    c.env.DB.prepare(`UPDATE cod_order_details SET ${referenceColumn}=?,${amountColumn}=?,${actorColumn}=?,${timeColumn}=?,updated_at=? WHERE order_id=? AND status='COLLECTION_PENDING' AND ${referenceColumn} IS NULL AND quoted_total_pkr=? AND EXISTS(SELECT 1 FROM orders o WHERE o.id=cod_order_details.order_id AND o.state='COLLECTION_PENDING' AND o.payment_status='COD_PENDING' AND o.total_payable=cod_order_details.base_amount_pkr)`).bind(evidenceHash, Number(body.amountPkr), c.env.ADMIN_EMAIL, now, now, orderId, current.quoted_total_pkr),
-    c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE changes()=1").bind(crypto.randomUUID(), action, "ADMIN", c.env.ADMIN_EMAIL, "ORDER", orderId, crypto.randomUUID(), JSON.stringify({ orderId, amountPkr: Number(body.amountPkr), evidenceReferenceHmac: evidenceHash }), now),
-    c.env.DB.prepare("UPDATE cod_order_details SET status='PAID',updated_at=? WHERE order_id=? AND status='COLLECTION_PENDING' AND collection_ref_hmac IS NOT NULL AND collection_amount_pkr=quoted_total_pkr AND remittance_ref_hmac IS NOT NULL AND remittance_amount_pkr=quoted_total_pkr AND EXISTS(SELECT 1 FROM orders o WHERE o.id=cod_order_details.order_id AND o.state='COLLECTION_PENDING' AND o.payment_status='COD_PENDING' AND o.total_payable=cod_order_details.base_amount_pkr)").bind(now, orderId),
-    c.env.DB.prepare("UPDATE payments SET review_state='COD_PAID',approved_amount=?,approved_by=?,approved_at=?,updated_at=? WHERE order_id=? AND review_state='COD_PENDING' AND approved_amount IS NULL AND EXISTS(SELECT 1 FROM cod_order_details cod JOIN orders o ON o.id=cod.order_id WHERE cod.order_id=payments.order_id AND o.state='COLLECTION_PENDING' AND cod.status='PAID' AND cod.collection_amount_pkr=cod.quoted_total_pkr AND cod.remittance_amount_pkr=cod.quoted_total_pkr)").bind(current.quoted_total_pkr, c.env.ADMIN_EMAIL, now, now, orderId),
-    c.env.DB.prepare("UPDATE orders SET state='PAID',payment_status='PAID',updated_at=? WHERE id=? AND state='COLLECTION_PENDING' AND payment_status='COD_PENDING' AND total_payable=? AND EXISTS(SELECT 1 FROM cod_order_details cod JOIN payments p ON p.order_id=cod.order_id WHERE cod.order_id=orders.id AND cod.status='PAID' AND p.review_state='COD_PAID' AND p.approved_amount=cod.quoted_total_pkr AND cod.collection_amount_pkr=cod.quoted_total_pkr AND cod.remittance_amount_pkr=cod.quoted_total_pkr)").bind(now, orderId, current.base_amount_pkr),
-    c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM orders o JOIN cod_order_details cod ON cod.order_id=o.id WHERE o.id=? AND o.state='PAID' AND o.payment_status='PAID' AND cod.status='PAID')").bind(crypto.randomUUID(), "COD_PAYMENT_RECONCILED", "ADMIN", c.env.ADMIN_EMAIL, "ORDER", orderId, crypto.randomUUID(), JSON.stringify({ orderId, amountPkr: Number(current.quoted_total_pkr), collectionReferenceHmac: isCollection ? evidenceHash : current.collection_ref_hmac, remittanceReferenceHmac: isCollection ? current.remittance_ref_hmac : evidenceHash }), now, orderId)
-  ]);
+  // Every later write is gated by the preceding winner, within the same D1 transaction.
+  let result: D1Result[];
+  try {
+    result = await c.env.DB.batch([
+      c.env.DB.prepare(`UPDATE cod_order_details SET ${referenceColumn}=?,${amountColumn}=?,${actorColumn}=?,${timeColumn}=?,updated_at=? WHERE order_id=? AND status='COLLECTION_PENDING' AND test_hold=0 AND ${referenceColumn} IS NULL AND quoted_total_pkr=? AND policy_revision=? AND collection_policy_hash=? AND remittance_policy_hash=? AND EXISTS(SELECT 1 FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=cod_order_details.order_id AND o.archived_at IS NULL AND o.state='COLLECTION_PENDING' AND o.payment_status='COD_PENDING' AND o.total_payable=cod_order_details.base_amount_pkr AND p.review_state='COD_PENDING' AND p.approved_amount IS NULL AND p.expected_amount=cod_order_details.base_amount_pkr AND p.method IS NULL)`).bind(evidenceHash, Number(body.amountPkr), c.env.ADMIN_EMAIL, now, now, orderId, current.quoted_total_pkr, current.policy_revision, current.collection_policy_hash, current.remittance_policy_hash),
+      c.env.DB.prepare(`INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,json_object('orderId',order_id,'amountPkr',${amountColumn},'evidenceReferenceHmac',${referenceColumn},'policyRevision',policy_revision),? FROM cod_order_details WHERE order_id=? AND changes()=1`).bind(`cod_${kind}_${orderId}`, action, "ADMIN", c.env.ADMIN_EMAIL, "ORDER", orderId, crypto.randomUUID(), now, orderId),
+      c.env.DB.prepare("UPDATE cod_order_details SET status='PAID',updated_at=? WHERE order_id=? AND changes()=1 AND status='COLLECTION_PENDING' AND test_hold=0 AND collection_ref_hmac IS NOT NULL AND collection_amount_pkr=quoted_total_pkr AND remittance_ref_hmac IS NOT NULL AND remittance_amount_pkr=quoted_total_pkr").bind(now, orderId),
+      c.env.DB.prepare("UPDATE payments SET review_state='COD_PAID',approved_amount=?,approved_by=?,approved_at=?,updated_at=? WHERE order_id=? AND changes()=1 AND review_state='COD_PENDING' AND approved_amount IS NULL AND EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=payments.order_id AND cod.status='PAID')").bind(current.quoted_total_pkr, c.env.ADMIN_EMAIL, now, now, orderId),
+      c.env.DB.prepare("UPDATE orders SET state='PAID',payment_status='PAID',updated_at=? WHERE id=? AND changes()=1 AND state='COLLECTION_PENDING' AND payment_status='COD_PENDING' AND total_payable=? AND archived_at IS NULL AND EXISTS(SELECT 1 FROM cod_order_details cod JOIN payments p ON p.order_id=cod.order_id WHERE cod.order_id=orders.id AND cod.status='PAID' AND p.review_state='COD_PAID' AND p.approved_amount=cod.quoted_total_pkr)").bind(now, orderId, current.base_amount_pkr),
+      c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,json_object('orderId',cod.order_id,'amountPkr',cod.quoted_total_pkr,'collectionReferenceHmac',cod.collection_ref_hmac,'remittanceReferenceHmac',cod.remittance_ref_hmac,'policyRevision',cod.policy_revision),? FROM cod_order_details cod JOIN orders o ON o.id=cod.order_id WHERE o.id=? AND changes()=1 AND o.state='PAID' AND o.payment_status='PAID' AND cod.status='PAID' AND cod.collection_amount_pkr=cod.quoted_total_pkr AND cod.remittance_amount_pkr=cod.quoted_total_pkr").bind(`cod_paid_${orderId}`, "COD_PAYMENT_RECONCILED", "ADMIN", c.env.ADMIN_EMAIL, "ORDER", orderId, crypto.randomUUID(), now, orderId)
+    ]);
+  } catch {
+    return c.json({ error: "COD_RECONCILIATION_FAILED" }, 409);
+  }
   if (Number(result[0].meta?.changes ?? 0) !== 1 || Number(result[1].meta?.changes ?? 0) !== 1) return c.json({ error: "COD_RECONCILIATION_STALE" }, 409);
   return c.json({ ok: true, recorded: true, paid: Number(result[4].meta?.changes ?? 0) === 1, status: Number(result[4].meta?.changes ?? 0) === 1 ? "PAID" : "COLLECTION_PENDING" });
 }
@@ -631,10 +641,25 @@ app.post("/api/orders/:id/cod-collection", (c) => reconcileCodEvidence(c, "colle
 app.post("/api/orders/:id/cod-remittance", (c) => reconcileCodEvidence(c, "remittance"));
 app.get("/cod-settings", (c) => {
   const csrf = issueCsrfToken(c);
-  return c.html(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>COD Settings</title><style>body{font:16px system-ui;max-width:760px;margin:2rem auto;padding:0 1rem;color:#17231c}label{display:block;margin:1rem 0}input,button{font:inherit;padding:.55rem}input[type=text],input[type=number],input[type=password]{display:block;width:100%;box-sizing:border-box}button{cursor:pointer}.muted{color:#59635a}.error{color:#a40019}</style></head><body><nav><a href="/">Admin home</a> | <a href="/orders">Orders</a></nav><h1>Cash on Delivery</h1><p class="muted">COD is disabled unless explicitly enabled with verified collection and remittance policy references. Evidence references are HMACed before storage; raw references are not persisted.</p><p id="status" role="status" class="muted">Loading settings…</p><form id="form"><label><input name="enabled" type="checkbox"> Enable COD intake</label><label>COD fee (PKR)<input name="feePkr" type="number" min="0" max="100000" step="1" value="125" required></label><label>Verified courier collection policy evidence reference<input name="collectionPolicyReference" type="password" autocomplete="off"></label><label>Verified exact-remittance policy evidence reference<input name="remittancePolicyReference" type="password" autocomplete="off"></label><button>Save audited settings</button></form><script>const csrf=${JSON.stringify(csrf)};const form=document.querySelector('#form'),status=document.querySelector('#status');async function json(r){const d=await r.json();if(!r.ok)throw new Error(d.error||'Request failed');return d}async function load(){const d=await json(await fetch('/api/cod-configuration',{cache:'no-store'}));form.elements.enabled.checked=d.enabled;form.elements.feePkr.value=d.feePkr;status.textContent='COD '+(d.enabled?'enabled in D1 (runtime flag still separately required)':'disabled')+'; collection policy '+(d.collectionPolicyConfigured?'configured':'missing')+'; remittance policy '+(d.remittancePolicyConfigured?'configured':'missing')+'.'}form.onsubmit=async(e)=>{e.preventDefault();status.className='muted';status.textContent='Saving…';try{await json(await fetch('/api/cod-configuration',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify({enabled:form.elements.enabled.checked,feePkr:Number(form.elements.feePkr.value),collectionPolicyReference:form.elements.collectionPolicyReference.value,remittancePolicyReference:form.elements.remittancePolicyReference.value})}));form.elements.collectionPolicyReference.value='';form.elements.remittancePolicyReference.value='';status.textContent='Saved. Policy hashes only were retained; runtime intake still requires its independent false-by-default flag.';await load()}catch(error){status.className='error';status.textContent=error.message||'Save failed'}};load().catch(error=>{status.className='error';status.textContent=error.message||'COD settings unavailable'});</script></body></html>`);
+  return c.html(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>COD Settings</title><style>body{font:16px system-ui;max-width:760px;margin:2rem auto;padding:0 1rem;color:#17231c}label{display:block;margin:1rem 0}input,button{font:inherit;padding:.55rem}input[type=text],input[type=number],input[type=password]{display:block;width:100%;box-sizing:border-box}button{cursor:pointer}.muted{color:#59635a}.error{color:#a40019}</style></head><body><nav><a href="/">Admin home</a> | <a href="/orders">Orders</a></nav><h1>Cash on Delivery</h1><p class="muted">COD is disabled unless explicitly enabled with verified collection and remittance policy references. Evidence references are HMACed before storage; raw references are not persisted.</p><p id="status" role="status" class="muted">Loading settings…</p><form id="form"><label><input name="enabled" type="checkbox"> Enable COD intake</label><label>COD fee (PKR)<input name="feePkr" type="number" min="0" max="100000" step="1" value="125" required></label><label>Verified courier collection policy evidence reference<input name="collectionPolicyReference" type="password" autocomplete="off"></label><label>Verified exact-remittance policy evidence reference<input name="remittancePolicyReference" type="password" autocomplete="off"></label><button>Save audited settings</button></form><script>
+const csrf=${JSON.stringify(csrf)};
+const form=document.querySelector('#form'),status=document.querySelector('#status');let expectedRevision='';
+async function json(r){const d=await r.json();if(!r.ok)throw new Error(d.error||'Request failed');return d}
+async function load(){const d=await json(await fetch('/api/cod-configuration',{cache:'no-store'}));expectedRevision=d.revision;form.elements.enabled.checked=d.enabled;form.elements.feePkr.value=d.feePkr;status.textContent='COD '+(d.enabled?'enabled in D1 (runtime flag still separately required)':'disabled')+'; collection policy '+(d.collectionPolicyConfigured?'configured':'missing')+'; remittance policy '+(d.remittancePolicyConfigured?'configured':'missing')+'. TEST ONLY / DO NOT SHIP: all new candidate COD orders remain held.'}
+form.onsubmit=async(e)=>{e.preventDefault();if(form.elements.enabled.checked&&!confirm('Enable COD intake using the independently verified collection and remittance policies? Candidate orders remain TEST ONLY / DO NOT SHIP.'))return;const save=form.querySelector('button');save.disabled=true;status.className='muted';status.textContent='Saving...';try{await json(await fetch('/api/cod-configuration',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify({enabled:form.elements.enabled.checked,feePkr:Number(form.elements.feePkr.value),collectionPolicyReference:form.elements.collectionPolicyReference.value,remittancePolicyReference:form.elements.remittancePolicyReference.value,expectedRevision})}));form.elements.collectionPolicyReference.value='';form.elements.remittancePolicyReference.value='';await load()}catch(error){status.className='error';status.textContent=(error.message||'Save failed')+'. Reload saved settings before retrying a conflict.'}finally{save.disabled=false}};load().catch(error=>{status.className='error';status.textContent=error.message||'COD settings unavailable'});
+</script></body></html>`);
 });
 const COD_ORDERS_SCRIPT = String.raw`const addOrdinaryCodActions=addActions;addActions=(order)=>{addOrdinaryCodActions(order);if(!order.codOrder||order.archivedAt)return;const root=detail.querySelector('.actions');if(!root)return;const notice=[...root.querySelectorAll('p')].find((node)=>node.textContent.startsWith('COD only.'));if(notice)notice.textContent='COD only. Stored V1 advance amount '+money(order.codBaseAmountPkr)+' is unchanged; COD amount due '+money(order.codQuotedTotalPkr)+' includes fee '+money(order.codFeePkr)+'. COD collection and exact remittance are separately reconciled; COD is not advance approval.';for(const button of root.querySelectorAll('button'))if(['Record courier collection','Reconcile exact remittance'].includes(button.textContent.trim()))button.remove();const next={COD_PENDING:['PACKING','Mark packing'],PACKING:['DISPATCHED','Mark dispatched'],DISPATCHED:['DELIVERED','Mark delivered'],DELIVERED:['COLLECTION_PENDING','Move to collection pending']}[order.state];if(next&&(order.state!=='PACKING'||order.trackingNumber))root.append(actionButton(next[1],async()=>{if(confirmAction(order,next[1]))await run('/api/orders/'+encodeURIComponent(order.id)+'/transition',{from:order.state,to:next[0],confirmation:order.orderNumber})},'primary'));if(order.state==='COD_PENDING'&&!order.trackingNumber&&!root.querySelector('[data-cod-tracking]')){const button=actionButton('Assign Tracking',async()=>{const value=prompt('Tracking number');if(value&&confirmAction(order,'Assign tracking number'))await run('/api/orders/'+encodeURIComponent(order.id)+'/tracking',{trackingNumber:value,confirmation:order.orderNumber})});button.dataset.codTracking='true';root.append(button)}if(order.state==='COLLECTION_PENDING'){if(!order.codCollectionRecorded)root.append(actionButton('Record courier collection',async()=>{const amount=Number(prompt('Exact amount collected in PKR; expected '+Number(order.codQuotedTotalPkr)));const reference=prompt('Opaque collection evidence reference');if(Number.isSafeInteger(amount)&&reference&&confirmAction(order,'Record exact COD collection'))await run('/api/orders/'+encodeURIComponent(order.id)+'/cod-collection',{confirmation:order.orderNumber,amountPkr:amount,evidenceReference:reference})},'primary'));if(!order.codRemittanceRecorded)root.append(actionButton('Reconcile exact remittance',async()=>{const amount=Number(prompt('Exact amount remitted in PKR; expected '+Number(order.codQuotedTotalPkr)));const reference=prompt('Opaque remittance evidence reference');if(Number.isSafeInteger(amount)&&reference&&confirmAction(order,'Reconcile exact COD remittance'))await run('/api/orders/'+encodeURIComponent(order.id)+'/cod-remittance',{confirmation:order.orderNumber,amountPkr:amount,evidenceReference:reference})},'primary'))}};`;
-app.get("/orders", (c) => c.html(professionalOrdersPageHtml(issueCsrfToken(c)).replace("function renderDetail(data){", `${COD_ORDERS_SCRIPT}\nfunction renderDetail(data){`).replace('<option value="REJECTED">Rejected</option>', '<option value="REJECTED">Rejected</option><option value="COD_PENDING">COD pending</option><option value="COD_PAID">COD paid</option>').replace('<option value="NOT_STARTED">Ready to pack</option>', '<option value="NOT_STARTED">Ready to pack</option><option value="COD_PENDING">COD pending</option><option value="COLLECTION_PENDING">Collection pending</option>').replace("Request the transaction reference in the customer's selected language", "Request a transaction reference in the selected language")));
+const COD_HOLD_SCRIPT = String.raw`const addUnheldOrderActions=addActions;
+addActions=(order)=>{
+  if(order.fulfillmentHold){
+    const root=detail.querySelector('.actions');
+    if(root){const notice=document.createElement('p');notice.className='error';notice.textContent=order.fulfillmentHoldReason||'DO NOT SHIP. Fulfillment hold.';root.replaceChildren(notice)}
+    return;
+  }
+  addUnheldOrderActions(order);
+};`;
+app.get("/orders", (c) => c.html(professionalOrdersPageHtml(issueCsrfToken(c)).replace("function renderDetail(data){", `${COD_ORDERS_SCRIPT}\n${COD_HOLD_SCRIPT}\nfunction renderDetail(data){`).replace('<option value="REJECTED">Rejected</option>', '<option value="REJECTED">Rejected</option><option value="COD_PENDING">COD pending</option><option value="COD_PAID">COD paid</option>').replace('<option value="NOT_STARTED">Ready to pack</option>', '<option value="NOT_STARTED">Ready to pack</option><option value="COD_PENDING">COD pending</option><option value="COLLECTION_PENDING">Collection pending</option>').replace("Request the transaction reference in the customer's selected language", "Request a transaction reference in the selected language")));
 app.get("/test-controls", (c) => c.html(testControlsPageHtml(issueCsrfToken(c))));
 app.get("/whatsapp-content", (c) => c.html(whatsappContentJourneyPageHtml(issueCsrfToken(c))));
 app.get("/payment-settings", (c) => {
@@ -1438,7 +1463,7 @@ const ORDER_ADMIN_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,
   (SELECT last_inbound_at FROM whatsapp_conversations wc WHERE wc.wa_id=c.wa_id) AS last_inbound_at,
   c.full_name,c.delivery_address,c.nearby_place,c.city,c.contact_number,c.normalized_phone,c.normalized_contact_number,c.whatsapp_number,c.normalized_whatsapp_number,c.wa_id,
   p.id AS payment_id,p.method,p.expected_amount,p.approved_amount,p.review_state,p.submitted_at,p.approved_by,p.approved_at,p.rejection_reason,p.customer_transaction_reference,p.created_at AS payment_created_at,p.updated_at AS payment_updated_at,
-  cod.status AS cod_status,cod.base_amount_pkr AS cod_base_amount_pkr,cod.cod_fee_pkr,cod.quoted_total_pkr AS cod_quoted_total_pkr,cod.collection_at AS cod_collection_at,cod.remittance_at AS cod_remittance_at,
+  cod.status AS cod_status,cod.test_hold AS cod_test_hold,cod.base_amount_pkr AS cod_base_amount_pkr,cod.cod_fee_pkr,cod.quoted_total_pkr AS cod_quoted_total_pkr,cod.collection_at AS cod_collection_at,cod.remittance_at AS cod_remittance_at,
   EXISTS(SELECT 1 FROM payment_methods pm JOIN payment_qr_assets qa ON qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.derivative_sha256=pm.qr_sha256 AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref IS NOT NULL AND trim(qa.independent_evidence_ref)<>'' WHERE pm.method=p.method AND pm.enabled=1 AND pm.qr_owner_verified=1) AS payment_method_verified,
   EXISTS(SELECT 1 FROM outbox_jobs ref_request WHERE ref_request.entity_id=p.id AND ref_request.kind='WHATSAPP_TRANSACTION_REFERENCE_REQUEST' AND ref_request.status IN ('SENT','PENDING','RETRY')) AS reference_request_sent,
   EXISTS(SELECT 1 FROM audit_log tracking WHERE tracking.entity_type='ORDER' AND tracking.entity_id=o.id AND tracking.action='ORDER_TRACKING_ASSIGNED') AS has_tracking_number,
@@ -1663,10 +1688,11 @@ app.post("/api/orders/:id/transition", async (c) => {
   if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
   if (!canTransition(from.data, to.data)) return c.json({ error: "INVALID_STATE_TRANSITION" }, 409);
   if (!c.env.DB) return c.json({ ok: true, simulated: true });
-  const current = await c.env.DB.prepare("SELECT o.order_number,o.state,o.payment_status,o.archived_at,p.review_state,cod.status AS cod_status FROM orders o LEFT JOIN payments p ON p.order_id=o.id LEFT JOIN cod_order_details cod ON cod.order_id=o.id WHERE o.id=?").bind(c.req.param("id")).first<{ order_number: string; state: OrderState; payment_status: string; review_state: string | null; archived_at: string | null; cod_status: string | null }>();
+  const current = await c.env.DB.prepare("SELECT o.order_number,o.state,o.payment_status,o.archived_at,p.review_state,cod.status AS cod_status,cod.test_hold FROM orders o LEFT JOIN payments p ON p.order_id=o.id LEFT JOIN cod_order_details cod ON cod.order_id=o.id WHERE o.id=?").bind(c.req.param("id")).first<{ order_number: string; state: OrderState; payment_status: string; review_state: string | null; archived_at: string | null; cod_status: string | null; test_hold: number | null }>();
   if (!current) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
   if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
   if (current.order_number === "FS-261019-000001") return c.json({ error: "FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED" }, 409);
+  if (current.cod_status != null && Number(current.test_hold) !== 0) return c.json({ error: "COD_TEST_HOLD_DO_NOT_SHIP" }, 409);
   if (current.archived_at != null || current.state !== from.data) return c.json({ error: "STATE_CONFLICT" }, 409);
   const cod = current.cod_status != null;
   const codTransition = (from.data === "COD_PENDING" && to.data === "PACKING")
@@ -1678,7 +1704,7 @@ app.post("/api/orders/:id/transition", async (c) => {
   if (cod && from.data === "PACKING" && to.data === "DISPATCHED" && !(await assignedTrackingNumber(c.env.DB, c.req.param("id")))) return c.json({ error: "COD_TRACKING_REQUIRED_BEFORE_DISPATCH" }, 409);
   const now = new Date().toISOString();
   const update = cod
-    ? c.env.DB.prepare("UPDATE orders SET state=?,updated_at=? WHERE id=? AND state=? AND payment_status='COD_PENDING' AND archived_at IS NULL AND EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=orders.id AND cod.status=?)").bind(to.data, now, c.req.param("id"), from.data, from.data)
+    ? c.env.DB.prepare("UPDATE orders SET state=?,updated_at=? WHERE id=? AND state=? AND payment_status='COD_PENDING' AND archived_at IS NULL AND EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=orders.id AND cod.status=? AND cod.test_hold=0)").bind(to.data, now, c.req.param("id"), from.data, from.data)
     : c.env.DB.prepare("UPDATE orders SET state=?,updated_at=? WHERE id=? AND state=? AND archived_at IS NULL").bind(to.data, now, c.req.param("id"), from.data);
   const result = await c.env.DB.batch([
     update,
@@ -1692,10 +1718,11 @@ app.post("/api/orders/:id/confirm", async (c) => {
   if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
   let body: { confirmation?: unknown };
   try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
-  const current = await c.env.DB.prepare("SELECT o.order_number,o.state,o.payment_status,o.archived_at,p.review_state FROM orders o LEFT JOIN payments p ON p.order_id=o.id WHERE o.id=?").bind(c.req.param("id")).first<{ order_number: string; state: OrderState; payment_status: string; review_state: string | null; archived_at: string | null }>();
+  const current = await c.env.DB.prepare("SELECT o.order_number,o.state,o.payment_status,o.archived_at,p.review_state,EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id AND cod.test_hold<>0) AS cod_test_hold FROM orders o LEFT JOIN payments p ON p.order_id=o.id WHERE o.id=?").bind(c.req.param("id")).first<{ order_number: string; state: OrderState; payment_status: string; review_state: string | null; archived_at: string | null; cod_test_hold: number }>();
   if (!current) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
   if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
   if (current.order_number === "FS-261019-000001") return c.json({ error: "FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED" }, 409);
+  if (Number(current.cod_test_hold)) return c.json({ error: "COD_TEST_HOLD_DO_NOT_SHIP" }, 409);
   if (current.archived_at != null) return c.json({ error: "ORDER_ARCHIVED" }, 409);
   if (current.payment_status !== "PAID" && current.review_state !== "APPROVED") return c.json({ error: "ORDER_CONFIRMATION_REQUIRES_APPROVED_PAYMENT" }, 409);
   if (!["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(current.state)) return c.json({ error: "ORDER_CONFIRMATION_NOT_READY" }, 409);
@@ -1715,10 +1742,11 @@ app.post("/api/orders/:id/tracking", async (c) => {
   try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
   const value = trackingNumber(body.trackingNumber);
   if (!value) return c.json({ error: "TRACKING_NUMBER_INVALID" }, 400);
-  const current = await c.env.DB.prepare("SELECT order_number,state,archived_at FROM orders WHERE id=?").bind(c.req.param("id")).first<{ order_number: string; state: OrderState; archived_at: string | null }>();
+  const current = await c.env.DB.prepare("SELECT order_number,state,archived_at,EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=orders.id AND cod.test_hold<>0) AS cod_test_hold FROM orders WHERE id=?").bind(c.req.param("id")).first<{ order_number: string; state: OrderState; archived_at: string | null; cod_test_hold: number }>();
   if (!current) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
   if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
   if (current.order_number === "FS-261019-000001") return c.json({ error: "FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED" }, 409);
+  if (Number(current.cod_test_hold)) return c.json({ error: "COD_TEST_HOLD_DO_NOT_SHIP" }, 409);
   if (current.archived_at != null) return c.json({ error: "ORDER_ARCHIVED" }, 409);
   if (!["PAID", "PACKING", "DISPATCHED", "DELIVERED", "COD_PENDING"].includes(current.state)) return c.json({ error: "TRACKING_NOT_READY" }, 409);
   const now = new Date().toISOString();
@@ -1730,6 +1758,8 @@ app.post("/api/orders/:id/tracking", async (c) => {
 
 async function shippingLabelResponse(c: AdminContext) {
   if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
+  const hold = await c.env.DB.prepare("SELECT test_hold FROM cod_order_details WHERE order_id=?").bind(c.req.param("id")).first<{ test_hold: number }>();
+  if (hold && Number(hold.test_hold) !== 0) return c.json({ error: "COD_TEST_HOLD_DO_NOT_SHIP" }, 409);
   const format = parseShippingLabelFormat(c.req.query("format") ?? c.req.query("size") ?? "4x6");
   if (!format) return c.json({ error: "SHIPPING_LABEL_FORMAT_INVALID" }, 400);
   const row = await c.env.DB.prepare(`${ORDER_ADMIN_SELECT} WHERE o.id=?`).bind(c.req.param("id")).first<Record<string, unknown>>();
