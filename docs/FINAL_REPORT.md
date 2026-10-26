@@ -13,7 +13,7 @@
 | P3 — minimum COD | **PASS SOURCE/SQL ONLY** | Existing bilingual two-button logic, same-order COD_PENDING, PKR125/hold/idempotency pass synthetic tests. Active COD runtime flag unknown; no customer rate/quote evidence. |
 | P4 — one live test | **BLOCKED: TESTER** | Prior user-approved exact Tester Controls/Profile check=MISMATCH. Not repeated. No message, WAMID, order ID/amount, Admin COD_PENDING screenshot, shipment/cash/PAID.
 | P5 — regressions | **PASS LOCAL ONLY** | Targeted122/122; full244/244; V1 harness4/4; build/lint/audit0; API/Admin dry-runs. Prior health200,unsigned webhook403,unauthenticated Admin302. No live signed webhook/Advance check.
-| P6 — records/push | **PASS** | Seven required records pushed in GFS-235 commit `2408f9d`; current GFS-235 runtime-binding correction is being pushed separately. GitHub identity `gardenshop` and PR #11 remote ref were verified. |
+| P6 — records/push | **PASS** | All seven required records, including current active COD-off binding evidence, are pushed to PR #11 (`03df781`); GitHub identity `gardenshop` and remote ref verified. |
 
 **Runtime state:** active Worker IDs remain API v90/Admin v82 at100%. API v90 binding inventory has no `COD_V1_ENABLED`; code is fail-closed unless exactly `true`, so active COD intake is off. Candidate flag is also false. No original D1 migration, Worker deployment, source edit, secret, Meta/callback, order, WAMID or screenshot. GitHub/Cloudflare identities were previously verified; canonical Meta config IDs appear in Worker metadata, but current Meta operator/tester not reverified. No Hoja asset accessed.
 
