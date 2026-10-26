@@ -5,7 +5,7 @@
 - **P0 PASS DATA; historical7403 not reproduced.** GFS-234 original SELECT/quick/FK/all63 V1 schema checks stand; ledger0. No repeated query.
 - **P1 BLOCKED SOURCE PARITY.** API v90 `21a3d74c-3979-432c-9190-1848362592a4`,etag `0a306eaa…`,100% since12:47:42Z; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`,etag `ba0f3650…`,100% since12:55:05Z. Both precede PR10 commit cf01f44 at17:54:21Z; no source SHA. Official UI source view returned unavailable/hash null. No edit/deploy. Chronology alone proves neither source equality nor mismatch.
 - **P2 NOT DEPLOYED.** Original migration0030 unapplied; Time Travel bookmarks exist, no restore. Candidate intake-OFF artifact is local/dry-run only; no running rollback. Bare V1 cannot handle COD totals.
-- **P3 CODE PASS / RUNTIME OFF UNKNOWN.** Two-choice EN/UR source and SQL tests pass. Candidate flag false; active flag unknown.
+- **P3 CODE PASS / ACTIVE INTAKE OFF.** Active API v90 binding list has no `COD_V1_ENABLED`; fail-closed code therefore leaves COD intake off. Candidate flag false. No runtime customer menu verified.
 - **P4 BLOCKED.** GFS-234 exact Tester Profile comparison is MISMATCH; not retried. No live WABA/chat/message/order/WAMID/Admin screenshot.
 - **P5 PASS LOCAL ONLY.** Targeted122/122; full244/244; V1 harness4/4; build/lint/audit0; API/Admin dry-runs. No live webhook/Advance verification.
 - **P6 PASS.** GFS-235 records pushed in commit `f66973f`; PR #11 remote ref verified. New timestamps/ETags/source-view limitation recorded; no app code changed. V1, PR#9/#10, images, history and signed webhook untouched.
