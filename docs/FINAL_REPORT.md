@@ -14,7 +14,7 @@
 | P3 — enable COD | **BLOCKED** | No flag/settings/migration mutation. Candidate remains COD off; live flag unknown. |
 | P4 — live journey | **NOT RUN** | No order, amount, WAMID, Admin evidence, screenshot or live Advance test. No shipment/cash/PAID. |
 | P5 — regression | **PASS LAST GFS-230 LOCAL RUN** | Focused27/27, full244/244, rollback4/4, build/lint/audit0 and dry-runs. No code change since. No runtime/D1 regression. |
-| P6 — records/push | **PENDING FINAL PUSH** | Seven required GFS-231 records updated for the latest identity-check result. |
+| P6 — records/push | **PASS** | Seven required GFS-231 records pushed in commit `35374e4`; remote ref verified. |
 
 **Completion:** P0 65%; P1 75%; P2 15%; P3 0%; P4 0%; P5 100% local only; P6 100% after final push. Overall source readiness ~50%, live acceptance0%, public readiness NO-GO. No test order/WAMID/screenshot exists. The Cloudflare owner must restore visible verification of the existing expected dashboard identity before support can be contacted; then obtain D1 query authorization through the approved least-privilege support route. The authorized tester record was unavailable in scoped Test Controls, and the last own Profile mismatch remains; no message until an exact safe comparison passes. Staging ETA indefinite; production is separately gated.
 

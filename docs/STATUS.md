@@ -6,7 +6,7 @@
 - **P0 TESTER CHECK BLOCKED.** After explicit user approval, reused the same Admin tab and navigated same-origin to `/test-controls`; the narrowly scoped authorized tester/exemptions read returned UNAVAILABLE. Stopped before opening WhatsApp Profile. The earlier broad Orders snapshot was rejected for possible customer/order exposure. Last verified own Profile mismatch remains; no chat, reset, substitute profile/number or send.
 - **P1–P4 BLOCKED/NOT RUN.** The authorized Admin Test Controls view auto-loaded exemptions and returned UNAVAILABLE; no direct Wrangler/raw D1 query or subsequent read, schema/backup/integrity/migration, Worker deployment/rollback/flag, live journey, order, total, WAMID, Admin COD_PENDING or screenshot. Active latest history remains API v90 `21a3d74c-3979-432c-9190-1848362592a4` and Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`, with no source SHA.
 - **P5 LAST LOCAL PASS (GFS-230).** Focused27/27; full244/244; V1 compatibility harness4/4; build/lint/audit0 and dry-runs. No source change since. Not running-staging evidence.
-- **P6 PASS after final GFS-231 report push.** No source change. Preserve V1, PR #9/#10, `images/`, orders/payments and signed webhook.
+- **P6 PASS.** Final GFS-231 evidence is pushed in commit `35374e4`. No source change. Preserve V1, PR #9/#10, `images/`, orders/payments and signed webhook.
 - **Completed/remaining:** P0 65/35; P1 75/25; P2 15/85; P3 0/100; P4 0/100; P5 100/0 local (live0); P6 100/0 after push. Overall source readiness ~50%; live acceptance0%; NO-GO. ETA indefinite until owner-visible Cloudflare identity/support diagnostic, safe D1 rehearsal and tester match.
 
 ## GFS-230 Priority COD Release (2026-10-26)
