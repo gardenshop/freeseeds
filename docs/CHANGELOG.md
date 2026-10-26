@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-26 (GFS-237 payment health diagnostic repair)
+
+- Fixed pre-existing Admin health dependency on legacy fixed advance. Reuse verified method helper with same-method EN/UR eligibility; preserve existing callers/defaults and ANY-method semantics. No checkout/recipient/QR/receipt/ownership configuration changed.
+- Added32 synthetic health/eligibility/Access/privacy regression cases;26 failed before fix, all pass after.145focused/276full/build/lint/audit0/V1harness4/COD-off dry-runs pass.
+- Authenticated boolean-only original-D1 diagnostics show all three methods eligible despite old health false; corrected prior configuration-restoration claim. Current integrity/FK/ledger and recovery pass, COD0030 unapplied.
+- User approved a scoped staging behavior-based compatibility alternative. Separately approved repaired Admin0% smoke stopped before upload at unavailable MCP inventory; no traffic/schema/setting/Meta change or live test.
+
 ## 2026-10-26 (GFS-236 0%-traffic runtime smoke)
 
 - Uploaded PR11 API v91/Admin v83 as COD-off versions, tested them only at0% with public Version URLs disabled, then restored original API v90/Admin v82 to sole100% deployments. No live route promotion, source edit, DB write/migration or Meta event.

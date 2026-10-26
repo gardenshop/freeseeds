@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-237 Health Repair / Payment Readiness (2026-10-26)
+
+| Check | Result | Evidence / scope |
+|---|---|---|
+| Regression classification | PASS | PR10/candidate identical fixed-advance health predicate, originated8c882a4 before PR11. Guided amount authority remains orders.total_payable. Not a demonstrated checkout regression. |
+| Redacted original config | PASS CONFIG ONLY | All3 enabled/recipient present/QR ownership+current provenance/ENURcopy/placeholders true; legacy amount positive false,old health false. No raw destinations/evidence/QR/customer data, no config changes. Not a bank/R2/provider/delivery proof. |
+| Health red/green | PASS | New32 synthetic real-SQLite tests:26 fail before repair;32 pass after. NULL/absent fixed config allowed when same method has both locales; ANY-method meaning retained. |
+| Fail-closed regressions | PASS | Missing/stale method-key asset, decoder/payload/scan/ownership/evidence, empty recipient/copy/placeholders/UR, cross-method locale mismatch reject; no DB false; Access403 before query; no writes/R2 calls/sensitive response. Default English helper/explicit amount validation unchanged. |
+| Focused/full/build | PASS LOCAL |145 focused,276 full across23 files,build/lint,audit0,V1 harness4/4; API/Admin COD-off dry-runs. |
+| Original D1 safety | PASS |quick_check ok,FK0,legacy ledger0,COD schema absent,reviewed0030 unchanged; current recovery bookmark,no restore. SELECT file-mode returned summary rows_written0/platform import metadata changed; command-mode results no changes. No application data/schema writes. |
+| Alternative release gate | APPROVED CONDITIONAL | User approved exact-SHA replacement only for staged behavior evidence; runtime/financial/tester checks not waived. |
+| Repaired Admin0% | BLOCKED BEFORE UPLOAD | Explicitly approved preflight-first test stopped at official MCP list_pages unavailable. No browser request/upload/manifest or preview setting change; no new version. |
+| Current public boundaries | PASS LIMITED |health200,unsigned webhook403,unauthenticated Admin302; no valid signed-event/Advance/COD journey. |
+| Live tester | BLOCKED | Last private Profile mismatch unchanged, not retried. No message/WAMID/order/Admin COD_PENDING/screenshot/PAID. |
+
 ## GFS-236 Zero-Traffic Candidate Runtime Checks (2026-10-26)
 
 | Check | Result | Evidence / boundary |

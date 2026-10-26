@@ -1,5 +1,24 @@
 # Final Report
 
+## GFS-237 | Payment Health Repaired; Conditional Release Alternative Approved (2026-10-26)
+
+**Result: genuine pre-existing diagnostic defect fixed/tested; no payment configuration repair was necessary from this finding. Active COD/live WhatsApp acceptance still BLOCKED.**
+
+| Assignment | Result | Actual evidence |
+|---|---|---|
+| P0 — Advance readiness/regression | **PASS DIAGNOSIS + SOURCE FIX; NOT LIVE ACCEPTANCE** | Old health requires positive legacy fixed advance; guided checkout uses positive order.total_payable instead. Predicate identical in PR10/current source and originated8c882a4 before PR11. Boolean-only original data:fixed amount positive0,oldhealth0; all3 methods enabled/recipient present/verified current QR provenance/ENURcopy/placeholders true. No destinations/ownership/config changes. Source2221f0c makes health use same-method bilingual verified eligibility; ANY-method semantics retained. |
+| P1 — release gate | **APPROVED SCOPED ALTERNATIVE; EXECUTION INCOMPLETE** | User explicitly replaced exact historical SHA prerequisite with pinned bindings/versions/ETags, current D1/recovery/reviewedCOD, full protected tests, isolated proof,0% smoke,running Advance/signed callback and COD-compatible intake-OFF rollback. Tester/financial/production gates remain. Separately approved repaired Admin0% test failed inventory preflight (`list_pages` unavailable), so no upload/request/deployment. Historical source SHA is no longer a standalone approval blocker; remaining runtime checks are. |
+| P2 — original-D1 migration | **PRECHECK PASS / NOT APPLIED** | Current quick_check ok,FK0,ledger0,COD schema absent; reviewed0030 unchanged; Time Travel bookmark available,no restore. No migration or financial/application-row write. File-mode SELECT returned summary only/rows_written0 with platform import metadata changed; command-mode SELECT booleans reported no changes. |
+| P3 — minimal COD | **NOT ACTIVATED** | Existing125/same-order/idempotency/hold source unchanged. Candidate API flag false; activev90 behavior unknown. Original0030 unapplied; no audited toggle or customer menu proof. |
+| P4 — genuine acceptance | **BLOCKED TESTER / NOT RUN** | Last own-Profile exact comparison MISMATCH; not retried and no substitute/relink/registration edit. No new sender/operator verification,chat,message,WAMID,real order/amount,Admin COD_PENDING screenshot,shipping,cash or PAID. |
+| P5 — regression/completion | **PASS LOCAL + READ-ONLY DATA; LIVE INCOMPLETE** | New32tests:26failed before fix/all32pass after;145focused,276full,build/lint,audit0,V1harness4,API/Admin dry-runs. Current health200,unsigned callback403,unauthenticated Admin302; integrity/FK pass. No valid live signed callback,private R2 delivery,three-method customer checkout or post-intake rollback. Seven records updated; final pushed HEAD is reported in execution response. |
+
+**Actual versions/rollback:** API v90 `21a3d74c-3979-432c-9190-1848362592a4`/deployment `9cc279f1-dc6d-463b-9047-8311d1229945`; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`/deployment `cbc4233d-9100-45cf-aa8e-7f42eb44e982`,100% each. No new upload,restore/promotion or flag/secret/binding/Meta change in GFS237. Priorv91/v83 are not this health fix. COD-compatible intake-OFF artifact is locally built; do not use bareV1 after realCOD obligations. No live WAMIDs/order/Admin evidence exists.
+
+**Protected corrections:** withdraw the prior request to restore verified receiving configuration solely because health wasfalse. No guessed amount/wallet/QR/evidence/credit. Existing stored approvals stayed unchanged. Current runtime comparison was blocked by unavailable official MCP; do not turn SQL or unit tests into browser/live evidence. Canonical GFS mapping remains unchanged, no Hoja access. Original financial/customer/receipt history, V1/PR9/PR10/images/signed callback preserved. Diagnostic review remains scheduledOct28 after dependency checks.
+
+**Complete/remaining estimates:** P0 95/5 diagnostic+source/runtime;P1 80/20 conditional authorization/smoke;P2 70/30;P3 80/20 source but0%active;P4 0/100;P5 90/10(localcomplete/liveincomplete). Overall engineering~80%; genuine live acceptance0%; staging/public NO-GO. Exact next execution gate: registered official Chrome MCP must expose callable list_pages in the approved Codex session for authenticated smoke. Exact external tester action: owner makes the unchanged registered tester-controlled WhatsApp session available for private Profile match; no agent account-switching. After both pass, complete behavior-gated migration/rollout/Advance/signed-callback/rollback before COD enablement and one genuine journey. No fixed launch date before prerequisites; production separate.
+
 ## GFS-236 Final COD Release Preparation and 0%-Traffic Test (2026-10-26)
 
 **Result: candidate runtime smoke PASS at 0%; release and live acceptance BLOCKED. Original production staging traffic was restored unchanged.**

@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-26: GFS-237 Correct Health, Not Payment Destinations
+
+- Six hypotheses considered: fixed-amount diagnostic coupling, missing/disabled recipients, QR/beneficiary failures, localization/placeholders, wrong binding/version, PR11 regression. Original boolean-only configuration and unchanged PR10 predicate establish a pre-existing health defect. All three stored methods meet eligibility; fixed global advance is not guided order amount authority. Withdraw GFS-236's inference that `paymentConfigured=false` requires restoration of receiving configuration. No ownership/financial evidence was invented or changed.
+- User confirmed diagnostic-only fix: health reuses verified method helper with both locales; helper defaults unchanged. Existential boolean is not three-method, QR delivery, real credit or launch proof. Reproduced failing tests before fixing; source commit2221f0c.
+- User explicitly approved a staging-only equivalent to exact historical SHA: pinned versions/ETags/bindings, preserved callback/history/secrets, current D1/recovery/reviewed0030, full protected regressions and isolatedCOD, version-specific smoke, running Advance/valid signed callback, and COD-compatible intake-OFF rollback before admission. This supersedes ONLY the exact-SHA prerequisite from GFS235. It does not waive tester/ownership/data/production gates or itself promote traffic/apply migration.
+- Separately authorized repaired Admin0% smoke is strictly preflight-first. Approved Codex execution lacked callable list_pages, so no upload, version deployment or endpoint request. Preserve v90/v82 sole100%, no new runtime version. Do not bypass official MCP/Access to label this fixed live.
+- Current original quick/FK/ledger and recovery checks pass; no application data/schema writes. Retain synthetic diagnostic DB until Oct28 dependency review. Tester mismatch remains untouched; next acceptance requires its owner-controlled matching session.
+
 ## 2026-10-26: GFS-236 Use Authorized 0%-Traffic Version Smoke
 
 - User explicitly authorized PR11 API/Admin versions at0%, old API v90/Admin v82 at100%, preview URLs disabled, only health and unsigned webhook rejection, no D1/order/customer writes. Official Wrangler upload/versions plus version override were used; API v91 health200/unsigned webhook403; Admin v83 Access health200 with `paymentConfigured=false` aggregate.

@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-237 Payment Readiness and Unchanged Runtime (2026-10-26)
+
+- Verified CLI principal `gisupp@gmail.com` / GFS account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Read-only stored configuration: legacy fixed row present/amountPositive0; all three methods enabled, recipient present, owner/current-independent-QR-provenance flags true, bilingual copy/placeholders complete. No destination/account/QR/evidence values exported, no payment settings/approval edits. These are stored eligibility flags, not new provider/ownership evidence.
+- Source repair `2221f0c52886a45c2610e50c129ac470616fb5e7` is not deployed. Active API remains v90 `21a3d74c-3979-432c-9190-1848362592a4`/deployment `9cc279f1-dc6d-463b-9047-8311d1229945`; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`/deployment `cbc4233d-9100-45cf-aa8e-7f42eb44e982`, sole100% each. Prior v91/v83 remain unpromoted, old health code. No repaired-version upload: approved preflight lacked list_pages. Preview/Access/Meta/canonical bindings unchanged; no current browser/Meta identity evidence claimed.
+- Original D1 quick_check ok/FK0,ledger0,COD sidecar absent; exact reviewed0030 remains unchanged/unapplied. Current Time Travel bookmark `00000270-00000000-00005110-c8927632763953e717675d5f3f871521`, no restore. Boolean SELECT diagnostics reported rows_written0; first file-execution summary also reported platform import metadata changed_db true, subsequent command-mode results changed_db false. No application rows/schema/financial history changed.
+- Approved synthetic-only `getfreeseeds-cod-compat-check` remains unbound and retained; Oct28T12:00Z review wakeup `wku_17a06b30e001SmbMRUP1jlT5Mv` still pending. Do not delete original or diagnostic before dependency checks. No new Worker/resource/support plan created.
+
 ## GFS-236 Non-Traffic Version Smoke / Restore
 
 | Worker | Candidate version / ETag | Active deployment after restore |
