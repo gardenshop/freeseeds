@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-242 Authorized Migration and Candidate Repair (2026-10-27)
+
+| Check | Result | Evidence / scope |
+|---|---|---|
+| COD0030 checksum and preflight | PASS | SHA256 matched reviewed file; fresh Time Travel bookmark; bounded schema, ledger, aggregate-history, quick-check and FK checks passed. |
+| Remote migration | PASS | Only `0030_cod_v1_compat.sql` applied; marker `0030`; no legacy migration replay; COD disabled and fee default PKR125. |
+| Post-migration preservation | PASS | Orders/payments remained 52/52; COD sidecar rows 0; `quick_check=ok`; FK violations 0. |
+| Admin candidate post-migration repair | PASS | Existing candidate re-staged at0% beside v82 at100%; supported override health HTTP200 with `paymentConfigured=true`. |
+| API COD-OFF candidate | PASS | API candidate at0% beside v90 at100%; health HTTP200; unsigned webhook HTTP403; flag false. |
+| Full regressions/rollback | PASS | 276/276, build, lint, offline audit, rollback4/4. |
+| Running Advance and valid signed callback | BLOCKED | Requires authorized tester-controlled session and live runtime acceptance. |
+| Genuine COD journey | NOT RUN | No tester identity confirmation; no WAMID/order/Admin COD_PENDING evidence. |
+
 ## GFS-241 COD-OFF Staging (2026-10-27)
 
 | Check | Result | Evidence / scope |

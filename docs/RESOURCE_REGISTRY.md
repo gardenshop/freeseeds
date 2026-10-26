@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-242 Authorized Migration and Runtime State (2026-10-27)
+
+- Original staging D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`: reviewed COD0030 SHA256 matched; pre-migration Time Travel bookmark `00000271-000000f0-00005110-143fdc2d1bb24f77b235a14fa0897202`; post-migration bookmark `00000273-0000000a-00005110-25b2fce4a4bba26a177e0f2fadd7a452`. Only targeted SQL executed; `d1_migrations` remains untouched/0.
+- Post-state: `cod_schema_migrations` contains0030; `cod_configuration` default is disabled with fee125; `cod_order_details` count0; original orders/payments counts remain52/52; quick_check ok and FK violations0. No customer values exported.
+- API: candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` at0%, v90 `21a3d74c-3979-432c-9190-1848362592a4` at100%, COD false. Admin: candidate `091f1a3f-595b-4530-b54a-d7253af60664` at0%, v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` at100%; candidate health true after re-staging.
+- All three payment eligibility/provenance checks remained true; no recipient, QR, payment setting, receipt or history mutation. No live tester identity, WAMID, order, Admin COD_PENDING or screenshot exists. Hoja excluded.
+
 ## GFS-241 COD-OFF Staging Evidence (2026-10-27)
 
 - API candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` is staged at0% with API v90 `21a3d74c-3979-432c-9190-1848362592a4` at100%; upload metadata confirms `COD_V1_ENABLED=false`, existing bindings, callback and canonical GFS Meta IDs. Candidate health HTTP200 and unsigned webhook HTTP403 passed through the official version override. No valid event or D1 write.

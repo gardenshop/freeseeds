@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-27 (GFS-242 authorized COD0030 and candidate repair)
+
+- Applied only reviewed COD0030 to original staging D1 after checksum, Time Travel, schema, aggregate-preservation and integrity checks. Marker0030 exists; COD remains disabled; no legacy migrations replayed.
+- Diagnosed a post-migration Admin health false result as candidate absence from the current deployment, re-staged the existing candidate at0% with v82 at100%, and retested `paymentConfigured=true`.
+- Revalidated API health200/unsigned403, full276, build/lint/offline audit and rollback4/4. COD activation and real WhatsApp testing remain held for running Advance/signed callback and private tester identity confirmation.
+
 ## 2026-10-27 (GFS-241 COD-OFF staging)
 
 - Staged API candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` at0% with v90 at100%; verified COD OFF, candidate health200 and unsigned webhook403 through the supported browser version override. Existing Admin candidate remains0% with v82 at100%.

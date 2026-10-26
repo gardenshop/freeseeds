@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-242 Authorized COD0030 Migration and Tester Gate (2026-10-27)
+
+- Owner authorized staging-only application of exactly `migrations/0030_cod_v1_compat.sql`. Checksum `72d1c00c4c3bfeabc391f538530c2bc974a60d37ab33f01b5ba672253ec052db` matched. Fresh Time Travel bookmark was recorded before mutation; preflight schema/integrity passed. Remote execution wrote only the reviewed sidecar objects/marker and never invoked legacy migration apply.
+- Post-migration checks pass: marker `0030`, default COD fee `125`, COD disabled, zero COD orders, unchanged 52 orders/payments, `quick_check=ok`, no foreign-key violations. Latest post-migration bookmark is `00000273-0000000a-00005110-25b2fce4a4bba26a177e0f2fadd7a452`.
+- The first post-migration Admin health request returned false because the existing Admin candidate was no longer in the current deployment after its prior original-only restore; payment eligibility itself remained valid for all three methods. Repair: re-staged existing Admin candidate `091f1a3f-595b-4530-b54a-d7253af60664` at0% beside v82 at100%; version-override health then returned HTTP200 `paymentConfigured=true`.
+- API candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` remains COD-OFF at0% beside API v90 at100%, with health200 and unsigned webhook403. Do not promote or enable COD until verified running Advance/signed callback/rollback gates and private tester identity pass.
+- Owner-controlled tester identity remains unresolved. Do not infer a replacement, edit registration, switch accounts or message the mismatched profile. Preserve DO NOT SHIP and all existing orders/history.
+
 ## GFS-241 COD-OFF Staging and Authorization Stop (2026-10-27)
 
 - Native official Chrome MCP remains callable in the approved session. Cloudflare dashboard identity is verified as `gisupp@gmail.com` on GFS account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical GFS Meta assets only. No Hoja resource, account switch, raw CDP or tester substitution.

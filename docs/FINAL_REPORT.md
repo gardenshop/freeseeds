@@ -1,5 +1,26 @@
 # Final Report
 
+## GFS-242 | Authorized COD0030 Applied; Live Acceptance Held (2026-10-27)
+
+**Result: authorized additive migration and COD-OFF candidate staging PASS. Admin candidate health was repaired and PASS. COD activation/live WhatsApp acceptance remain BLOCKED by unverified tester identity and incomplete live Advance/signed-callback gates.**
+
+| Task | Result | Evidence |
+|---|---|---|
+| P0 preserve verified work | PASS | Official MCP, GFS identity, Admin Access and prior payment health preserved. |
+| P1 migration/recovery | PASS LIMITED | Reviewed SHA256 matched; pre/post Time Travel bookmarks recorded; only COD0030 applied. Marker0030, fee125/COD disabled, zero COD rows, unchanged52 orders/payments, quick_check ok/FK0. |
+| P1 compatible staging | PASS COD-OFF | API candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` 0% / v90 `21a3d74c-3979-432c-9190-1848362592a4` 100%; Admin candidate `091f1a3f-595b-4530-b54a-d7253af60664` 0% / v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` 100%. API health200/unsigned403; Admin health200/`paymentConfigured=true`. |
+| P2 running Advance/signed callback | BLOCKED | No authorized tester-controlled session available for live customer-path acceptance. Synthetic/local coverage remains distinct. |
+| P2 COD activation | NOT DONE | `COD_V1_ENABLED=false`; D1 COD configuration remains disabled. |
+| P3 tester verification | BLOCKED | Previous profile mismatch remains; no owner-confirmed replacement identity in Admin/Meta controls. |
+| P4 genuine COD order | NOT RUN | No WAMIDs, order number, amount, Admin COD_PENDING result or screenshot. DO NOT SHIP preserved. |
+| P5 regressions | PASS LOCAL | 276/276, build, lint, offline audit, rollback4/4. |
+
+**Rollback:** COD-compatible intake-OFF code and local rollback4/4 remain ready; no runtime rollback was required because COD was not activated. Production/public promotion remains unauthorized.
+
+**Completion:** P0 100%; P1 100% migration/COD-OFF staging; P2 60% (migration/local gates complete, live Advance/signed/activation remaining); P3 0% live; P4 0%; P5 90% local. Overall staging preparation approximately80%; genuine acceptance0%; public launch NO-GO.
+
+**Exact remaining action:** privately confirm the registered tester-controlled WhatsApp session in authorized Admin/Meta controls, or have the owner privately confirm one specific replacement identity before supported registration. Then run live Advance/signed checks, promote the tested candidate with `COD_V1_ENABLED=true`, and execute exactly one DO NOT SHIP COD journey.
+
 ## GFS-241 | COD-OFF Staging and Authorization Stop (2026-10-27)
 
 **Result: compatible COD-OFF staging and all local release gates passed. Remote migration, COD activation, candidate promotion and genuine WhatsApp acceptance are BLOCKED only by missing precise authorization and tester identity.**

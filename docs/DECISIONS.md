@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-27: GFS-242 Apply Only COD0030; Hold Activation at Tester Gate
+
+- Owner authorization was received for one original-D1 mutation. SHA256 of reviewed `0030_cod_v1_compat.sql` matched `72d1c00c4c3bfeabc391f538530c2bc974a60d37ab33f01b5ba672253ec052db`. A fresh Time Travel bookmark and bounded integrity/history checks passed. Only that file was executed remotely; Wrangler legacy migration apply was not used.
+- Post-migration marker `0030`, default fee125/COD disabled, zero COD sidecar rows, unchanged 52 orders/payments, quick_check ok and FK0 prove additive preservation. Latest recovery bookmark is recorded in STATUS/RESOURCE_REGISTRY. No restore was performed because no failure occurred.
+- Admin false health after migration was a deployment-selection failure: the old candidate was absent from the current deployment, so the override fell back to v82. Re-staging the existing candidate at0% repaired the test; candidate health is now true. Payment eligibility reads remain all three eligible; no settings were edited.
+- API/Admin remain COD-OFF candidates at0% with originals100%. Do not promote or set `COD_V1_ENABLED=true` until live Advance, valid signed callback, rollback and authorized tester identity pass. No WhatsApp message was sent.
+
 ## 2026-10-27: GFS-241 Stage COD-OFF; Stop at Missing Authorizations
 
 - API candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` was uploaded from the tested branch and deployed at0% beside API v90 at100%; config explicitly contains `COD_V1_ENABLED=false`. Supported version-override health passed HTTP200 and unsigned webhook rejection passed HTTP403. Existing Admin GFS-240 candidate remains0% beside v82 at100%.

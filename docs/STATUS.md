@@ -1,5 +1,15 @@
 # Status
 
+## GFS-242 COD0030 Applied; COD Activation Held for Tester/Runtime Gates (2026-10-27)
+
+- **P0 PASS.** Verified native MCP, GFS Cloudflare identity, Admin Access and prior payment-health work preserved.
+- **P1 MIGRATION PASS.** Reviewed checksum matched. Fresh Time Travel bookmark and bounded preflight passed: 35-table schema, ledger0, 52 orders/payments, `quick_check=ok`, FK0. Applied only `0030_cod_v1_compat.sql`; marker is `0030`, default fee PKR125, COD disabled, zero COD orders. No legacy migrations replayed.
+- **P1 CANDIDATE REPAIR PASS.** Initial post-migration Admin health false was traced to the candidate not being in the current deployment, not payment data. Re-staged Admin candidate `091f1a3f-595b-4530-b54a-d7253af60664` at0% with v82 at100%; override health returned HTTP200/`paymentConfigured=true`. API candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` remains0% with v90 at100%, health200/unsigned403/COD OFF.
+- **P2 BLOCKED.** Full276/276, build, lint, offline audit and rollback4/4 pass, but running Advance and valid signed callback remain unverified without the authorized tester. Do not enable COD or promote traffic yet.
+- **P3 BLOCKED.** Registered tester mismatch remains. No replacement identity has been privately confirmed by the owner in Admin/Meta controls; no message or registration edit occurred.
+- **P4 NOT RUN.** No WAMIDs, new order number, amount, COD_PENDING/Admin evidence or screenshot. DO NOT SHIP remains enforced.
+- **Completion:** P0 100%; P1 100% migration/COD-OFF staging; P2 80% local/60% staging/0% activation; P3 80% source/0% active; P4 0%; P5 90% local/records pending. Public launch NO-GO.
+
 ## GFS-241 COD-OFF Staging Complete; Migration/Tester Gates Remain (2026-10-27)
 
 - **P0 PASS PRESERVED.** Official Chrome MCP, same-session page inventory, Cloudflare identity, Admin Access and repaired Admin health remain verified. No investigation reopened.
