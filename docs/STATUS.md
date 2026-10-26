@@ -6,7 +6,7 @@
 - **P0 TESTER CHECK BLOCKED.** Last verified WhatsApp own Profile mismatched the approved tester. Current attempt to inspect an Orders page snapshot was rejected for possible customer/order exposure; no navigation, chat, reset or send. `/test-controls` and own Profile comparison remains UNAVAILABLE until the user is informed and explicitly approves a safer same-origin scoped inspection. No substitute profile/number.
 - **P1–P4 BLOCKED/NOT RUN.** No D1 retry/schema/backup/integrity/migration, Worker deployment/rollback/flag, live journey, order, total, WAMID, Admin COD_PENDING or screenshot. Active latest history remains API v90 `21a3d74c-3979-432c-9190-1848362592a4` and Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`, with no source SHA.
 - **P5 LAST LOCAL PASS (GFS-230).** Focused27/27; full244/244; V1 compatibility harness4/4; build/lint/audit0 and dry-runs. No source change since. Not running-staging evidence.
-- **P6 PASS after this report is pushed.** No source change. Preserve V1, PR #9/#10, `images/`, orders/payments and signed webhook.
+- **P6 PASS.** GFS-231 records pushed in commit `0858c48`. No source change. Preserve V1, PR #9/#10, `images/`, orders/payments and signed webhook.
 - **Completed/remaining:** P0 65/35; P1 75/25; P2 15/85; P3 0/100; P4 0/100; P5 100/0 local (live0); P6 100/0 after push. Overall source readiness ~50%; live acceptance0%; NO-GO. ETA indefinite until owner-visible Cloudflare identity/support diagnostic, safe D1 rehearsal and tester match.
 
 ## GFS-230 Priority COD Release (2026-10-26)
