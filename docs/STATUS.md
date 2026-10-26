@@ -1,5 +1,14 @@
 # Status
 
+## GFS-240 Chrome Bridge Recovered; Admin Health Smoke Passed (2026-10-27)
+
+- **P0 PASS.** One native approved Codex session recovered the official Chrome DevTools MCP: `list_pages` and authenticated Admin/Cloudflare snapshots worked in the same session. Identity matched `gisupp@gmail.com` and the GFS Cloudflare account; Admin Access remained present. No raw CDP, Kilo, account switch or security bypass.
+- **P1 PASS LIMITED.** Admin candidate `091f1a3f-595b-4530-b54a-d7253af60664` was uploaded and deployed at0% beside v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` at100%. Supported version override `/health` returned HTTP200 with `paymentConfigured=true`. Candidate was not exposed through a Version URL. v82 was restored alone at100% and deployment history verified.
+- **P2 PASS LOCAL / RUNTIME INCOMPLETE.** Focused release checks 124/124 and intake-OFF rollback harness4/4 pass; prior full276/276, build, lint and offline audit pass. Original D1 integrity, reviewed COD0030 rehearsal, backup/recovery and historical source-SHA alternative remain approved prior evidence. No migration, API v90 change, signed live callback or Advance customer checkout was performed.
+- **P3 SOURCE PASS / NOT ENABLED.** Local tests verify exactly two payment buttons, EN/UR copy, D1 province fee plus PKR125 once, same-order `COD_PENDING`, Advance fee removal, no receipt/QR/reminder/duplicate and no unpaid-COD `PAID`. Runtime `COD_V1_ENABLED` remains false; no live COD setting or intake mutation.
+- **P4 BLOCKED.** Canonical GFS Meta/WABA assets were observed in the authenticated manager, but the prior WhatsApp profile is not the registered tester. No message was sent, no account was substituted, and no WAMID/order/Admin COD_PENDING evidence exists. A genuinely owner-controlled replacement tester requires explicit authorization if the registered session is unavailable.
+- **P5 LOCAL PASS / LIVE INCOMPLETE.** No source change was needed. Protected records are being updated with the candidate, health, restore and identity evidence. Overall engineering/staging readiness is approximately90%; genuine WhatsApp acceptance0%; public launch NO-GO and production promotion remains separately authorized.
+
 ## GFS-238 Admin Smoke Host Gate (2026-10-27)
 
 - **P0 MCP/identity: BLOCKED BEFORE INVENTORY.** Codex 0.164.0 and the enabled official `chrome-devtools` registration were verified in `D:\AI-Tools\Codex\home\config.toml`; this Kilo turn has no callable Chrome MCP tool namespace. The requested GPT-5.6 Codex model was rejected before initialization; one configured-model approved session did not reach `list_pages` and was stopped. No raw CDP, alternate profile, HTTP/dashboard substitute, or config change.

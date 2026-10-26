@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-240 Runtime Evidence (2026-10-27)
+
+- Native approved Codex session used the official Chrome DevTools MCP. `list_pages`, authenticated Admin Test Controls and Cloudflare snapshots passed in the same session. Dashboard identity was `gisupp@gmail.com` on GFS account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; existing Admin Access remained present. No raw CDP, account switch or alternate tester profile.
+- Admin candidate `091f1a3f-595b-4530-b54a-d7253af60664` was uploaded by Wrangler and placed at0% with original v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` at100%. Existing authenticated Admin origin plus Cloudflare's supported version-override header returned HTTP200 `/health` and `paymentConfigured=true`. Version URLs remained disabled.
+- Original Admin v82 was restored alone at100% after identity recheck; read-only deployment history confirms the candidate remains at0%. Candidate remains in version history only. No D1/schema/ledger/customer/payment/Meta/WhatsApp mutation occurred.
+- Local release evidence: targeted124/124, rollback4/4, prior full276/276, build/lint/offline audit pass. Original D1 and reviewed COD0030 rehearsal remain unchanged; COD0030 is not applied to original D1 and `COD_V1_ENABLED` remains false.
+- Canonical GFS Meta/WABA assets were read in the authenticated manager; no asset or callback mutation. The previous WhatsApp profile is not the registered tester; no send, WAMID or live COD order is recorded. Hoja resources remain excluded.
+
 ## GFS-238 No Runtime Resource Changes (2026-10-27)
 
 - No Cloudflare resource, Worker version, traffic percentage, Version URL setting, binding, secret, D1 schema/row, migration, Meta asset, or WhatsApp state changed. No candidate version was uploaded. Last recorded active API v90/Admin v82 remain historical observations pending an authenticated current recheck; no new version IDs are claimed.

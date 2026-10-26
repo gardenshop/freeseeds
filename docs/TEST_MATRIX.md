@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-240 Chrome Bridge and Admin Health Smoke (2026-10-27)
+
+| Check | Result | Evidence / scope |
+|---|---|---|
+| Official MCP same-session proof | PASS | Native approved session: `list_pages`, authenticated Admin snapshot and authenticated Cloudflare snapshot all succeeded. No raw CDP/Kilo/account switch. |
+| Cloudflare identity and Access | PASS | Dashboard showed `gisupp@gmail.com`, GFS account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, Admin Worker and existing Access protection before mutation and restoration. |
+| Admin candidate split | PASS | Candidate `091f1a3f-595b-4530-b54a-d7253af60664` at0%; original v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` at100%; Version URLs stayed disabled. |
+| Repaired Admin `/health` | PASS | Authenticated existing Admin origin plus supported `Cloudflare-Workers-Version-Overrides` header: HTTP200, `ok:true`, `paymentConfigured:true`. No D1/customer/payment write. |
+| Restore | PASS | v82 restored as the sole100% deployment; read-only Wrangler deployment history confirms candidate0%. |
+| Signed webhook / Advance / COD recovery checks | PASS LOCAL | Targeted124/124 and rollback4/4; prior full276/276, build/lint/offline audit and D1/COD0030/recovery evidence. No live signed callback or customer checkout. |
+| Genuine WhatsApp COD acceptance | BLOCKED | Registered tester mismatch remains; no substitute authorization, send, WAMID, order or Admin COD_PENDING evidence. |
+
 ## GFS-238 Repaired Admin Health Smoke (2026-10-27)
 
 | Check | Result | Evidence / scope |

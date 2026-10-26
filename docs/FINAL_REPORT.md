@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-240 | Chrome Bridge Recovered; Admin Health Smoke PASS (2026-10-27)
+
+**Result: P0 and the approved repaired Admin smoke passed. Original-only staging was restored. COD live acceptance remains blocked by tester authorization and unperformed live behavior gates; public production remains NO-GO.**
+
+| Assignment | Result | Evidence |
+|---|---|---|
+| P0 — official Chrome MCP and identity | **PASS** | One native approved session provided `list_pages`, authenticated Admin snapshot and authenticated Cloudflare snapshot. Identity matched `gisupp@gmail.com` / GFS account; Admin Access remained. No raw CDP, Kilo, account switch or bypass. |
+| P1 — repaired Admin 0%-traffic health | **PASS** | Candidate `091f1a3f-595b-4530-b54a-d7253af60664` at0%, v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` at100%. Supported version override returned HTTP200 and `paymentConfigured=true`. Version URLs stayed disabled; v82 was restored alone at100% and verified. |
+| P2 — compatible staging release | **PASS LOCAL / BLOCKED RUNTIME** | Targeted124/124, rollback4/4, prior full276/276, build/lint/offline audit pass. D1/COD0030/recovery evidence remains approved. No migration, live signed callback, Advance customer checkout, API v90 change or COD flag enablement. |
+| P3 — exact COD behavior | **PASS SOURCE / NOT ENABLED** | Local tests cover exactly two buttons, EN/UR, D1 delivery plus PKR125 once, same-order COD_PENDING, Advance fee removal, no duplicate/receipt/QR/reminder and no unpaid PAID. No live menu or order is claimed. |
+| P4 — one genuine WhatsApp test | **BLOCKED** | Previous profile is not the authorized tester. No account substitution or send. No WAMIDs, order ID, total, Admin COD_PENDING screenshot or shipment evidence. Explicit owner authorization is required to register a replacement tester if the registered session is unavailable. |
+| P5 — records and regression | **PASS LOCAL / LIVE INCOMPLETE** | Protected records updated with runtime evidence; no code change required. Local 276+ suite and focused release checks pass. |
+
+**Runtime state:** Admin v82 is original-only at100%; the GFS-240 candidate remains at0% in history. API v90 remains unchanged at100%; API candidate was not deployed in this run. `COD_V1_ENABLED=false`; original D1 migration ledger remains untouched and COD0030 was not replayed/applied. No live WAMID, COD order, order amount or Admin COD_PENDING result exists.
+
+**Completion:** P0 100%; P1 100%; P2 approximately80% (local/staging checks, live behavior remaining); P3 approximately80% source /0% active; P4 0%; P5 approximately90% local /0% genuine live acceptance. Overall engineering/staging readiness approximately90%; production launch0% authorized. Remaining gates are one authorized owner-controlled tester session, one real DO NOT SHIP WhatsApp journey, live signed callback/Advance verification, and any specifically approved migration or traffic promotion. Public production promotion requires separate authorization.
+
 ## GFS-238 | Admin Health Smoke Blocked at MCP Preflight (2026-10-27)
 
 **Result: local repaired-source checks PASS; the approved Admin 0%-traffic smoke did not start because official Chrome MCP inventory was not callable. No cloud or customer mutation occurred.**

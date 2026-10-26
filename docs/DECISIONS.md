@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-27: GFS-240 Official MCP Recovery and Repaired Admin Health PASS
+
+- The transport-closed condition was resolved by using one native approved Codex session with the existing official Chrome DevTools registration. `list_pages` and authenticated Admin/Cloudflare snapshots worked in the same session. Cloudflare identity matched `gisupp@gmail.com` / GFS account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no raw CDP, Kilo host, account switch or security bypass was used.
+- The approved Admin-only smoke uploaded candidate `091f1a3f-595b-4530-b54a-d7253af60664`, kept it at0% beside v82 at100%, and used the documented `Cloudflare-Workers-Version-Overrides` header on the existing authenticated Admin origin. `/health` passed HTTP200 with aggregate `paymentConfigured=true`. Version URLs were not enabled or visited.
+- Identity was reverified before the restore. Original Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` was restored as sole100%; deployment history confirms the candidate remains at0%. No D1, schema, customer, payment, Meta or WhatsApp write occurred.
+- This resolves the GFS-238 host gate and the repaired Admin health gate only. It does not authorize COD flag enablement, original-D1 migration, live traffic promotion, tester substitution, or production release. Registered tester mismatch remains the P4 stop.
+
 ## 2026-10-27: GFS-238 Stop Admin Smoke at MCP Inventory Gate
 
 - The requested Admin-only 0%-traffic smoke is already authorized but remains strictly preflight-first. Codex 0.164.0 and its official Chrome DevTools registration are present/enabled; the current Kilo turn has no callable `list_pages`. Codex rejected the requested GPT-5.6 model before MCP initialization. The approved configured-model attempt did not reach MCP inventory and was stopped before any Cloudflare action. No MCP workaround, raw CDP, alternate profile, direct dashboard call, or config repair was used.

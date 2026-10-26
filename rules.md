@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-240 Chrome Bridge Recovery and Admin Health Smoke (2026-10-27)
+
+- The native approved Codex session recovered the official `chrome-devtools` MCP after the earlier transport-closed state. In that same session, `list_pages` succeeded and authenticated snapshots succeeded for Admin Test Controls and the Cloudflare Worker dashboard. Cloudflare showed `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, the Get Free Seeds Admin Worker and its existing Access protection. No raw CDP, Kilo host, account switch, alternate profile or security bypass was used.
+- Before the approved mutation, Admin candidate `091f1a3f-595b-4530-b54a-d7253af60664` was uploaded and deployed at `0%` with original Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` at `100%`. The supported Cloudflare `Cloudflare-Workers-Version-Overrides` header was used from the authenticated Admin tab; `/health` returned HTTP200 and aggregate `paymentConfigured=true`. Version URLs remained disabled and no D1/customer/payment write occurred.
+- Cloudflare identity was reverified immediately before restoration. Admin v82 was restored alone at100%; read-only deployment history confirms the candidate remains at0% and original-only is active. Preserve this protocol: inventory and identity first, candidate at0%, version override only, no customer-path writes, immediate original-only restore and deployment verification.
+- P2/P4 remain gated: original D1/COD0030 evidence and local behavior checks pass, but no live signed customer callback, Advance customer checkout, COD enablement, registered tester match, WAMID, COD_PENDING order or production promotion is claimed. COD remains disabled and the original D1 migration ledger remains untouched.
+
 ## GFS-238 Admin Smoke Platform Stop (2026-10-27)
 
 - PR #11 remains `codex/gfs221-cod-compat-001` at `ed657d538721029c1e49541e5799166a8d62003f`; source fix `2221f0c` is present. The official Codex 0.164.0 host config under `CODEX_HOME=D:\AI-Tools\Codex\home` has one enabled `chrome-devtools` registration, but this Kilo session exposes no callable Chrome MCP tools. A requested `gpt-5.6` Codex CLI launch was rejected by the ChatGPT-backed host before MCP initialization; a configured-model approved session did not reach `list_pages` and was stopped without browser/cloud action. Do not claim inventory, identity, or Admin health evidence from this.

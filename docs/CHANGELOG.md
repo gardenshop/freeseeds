@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-27 (GFS-240 Chrome bridge recovery and Admin health smoke)
+
+- Recovered the official Chrome DevTools MCP in one native approved Codex session; same-session `list_pages`, authenticated Admin and Cloudflare snapshots passed with the expected account identity and Access protection.
+- Uploaded Admin candidate `091f1a3f-595b-4530-b54a-d7253af60664`, tested it at0% beside v82 at100% through the supported version-override header, and observed HTTP200 `/health` with `paymentConfigured=true`. Version URLs stayed disabled.
+- Restored original Admin v82 alone at100% and verified deployment history. No customer, D1, migration, Meta or WhatsApp mutation.
+- Re-ran targeted124 and rollback4 checks: PASS. Live signed callback, Advance customer checkout and genuine WhatsApp COD remain unclaimed because the registered tester profile is still unavailable/mismatched.
+
 ## 2026-10-27 (GFS-238 Admin smoke preflight stop)
 
 - Verified requested PR11 worktree/head and official Codex 0.164.0 host registration. Current Kilo session has no callable Chrome MCP tools; approved Codex attempts did not reach `list_pages`. No unsupported reconnect, dashboard substitute, or config change.
