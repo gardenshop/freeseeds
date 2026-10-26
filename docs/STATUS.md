@@ -8,7 +8,7 @@
 - **P3 CODE PASS / RUNTIME OFF UNKNOWN.** Two-choice EN/UR source and SQL tests pass. Candidate flag false; active flag unknown.
 - **P4 BLOCKED.** GFS-234 exact Tester Profile comparison is MISMATCH; not retried. No live WABA/chat/message/order/WAMID/Admin screenshot.
 - **P5 PASS LOCAL ONLY.** Targeted122/122; full244/244; V1 harness4/4; build/lint/audit0; API/Admin dry-runs. No live webhook/Advance verification.
-- **P6 PASS after evidence push.** New timestamps/ETags/source-view limitation recorded; no app code changed. V1, PR#9/#10, images, history and signed webhook untouched.
+- **P6 PASS.** GFS-235 records pushed in commit `f66973f`; PR #11 remote ref verified. New timestamps/ETags/source-view limitation recorded; no app code changed. V1, PR#9/#10, images, history and signed webhook untouched.
 - **Progress estimates:** P0 95/5; P1 65/35; P2 50/50; P3 80/20; P4 0/100; P5 100/0 local (live0); P6 100/0 after push. Source/rehearsal readiness~70%; live acceptance0%; staging NO-GO. Exact tester owner action: provide the existing registered tester-controlled profile matching Admin, with no agent identity switch or registration edit. Active source parity remains a separate engineering gate.
 
 ## GFS-234 Clean D1 Alternative Tested; Original Reads Recovered (2026-10-26)
