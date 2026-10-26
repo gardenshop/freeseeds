@@ -7,7 +7,7 @@
 - **P1/P2 BLOCKED.** Latest Wrangler deployment history: API v90 `21a3d74c-3979-432c-9190-1848362592a4`; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`. Both were deployed 2026-10-24 and have no source annotation. No deployment, migration or rollback. Candidate dry-run config retains expected staging D1/R2/Queue bindings, but these are not live-binding verification.
 - **P3/P4 NOT RUN.** Candidate `COD_V1_ENABLED=false`; active runtime flag is unknown. No current authorized tester, live buttons, advance path, COD order, amount, WAMID, Admin COD_PENDING or screenshot. No order was shipped/collected/paid.
 - **P5 PASS LOCAL ONLY.** Focused27/27; full244/244; old-source compatibility harness4/4 against clean `cf01f44`; build/lint/audit0; API/Admin dry-runs. No running API/Admin/webhook/advance regression or D1 integrity check.
-- **P6 PASS after push** when GFS-230 records are pushed to PR #11. No source change in this execution; V1, PR #9/#10, `images/`, financial history and signed webhook untouched.
+- **P6 PASS.** GFS-230 documentation commit `5647da3` is pushed to PR #11. No source change in this execution; V1, PR #9/#10, `images/`, financial history and signed webhook untouched.
 - **Completed/remaining:** P0 70/30; P1 75/25; P2 15/85; P3 0/100; P4 0/100; P5 100/0 local (live 0); P6 100/0 after push. Overall source readiness ~50%; genuine live acceptance0%; staging/public launch NO-GO. ETA indefinite until owner/support resolves D1 authorization and approved tester identity matches; then safe schema rehearsal, deployment, and live journey remain.
 
 ## GFS-229 Access Diagnosis and Local Revalidation (2026-10-26)
