@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-241 COD-OFF Staging Evidence (2026-10-27)
+
+- API candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` is staged at0% with API v90 `21a3d74c-3979-432c-9190-1848362592a4` at100%; upload metadata confirms `COD_V1_ENABLED=false`, existing bindings, callback and canonical GFS Meta IDs. Candidate health HTTP200 and unsigned webhook HTTP403 passed through the official version override. No valid event or D1 write.
+- Admin candidate `091f1a3f-595b-4530-b54a-d7253af60664` remains0% with v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` at100%. No candidate customer traffic.
+- Reviewed COD0030 checksum/evidence and local recovery are ready; original D1 ledger remains0 and migration remains unapplied. No migration, fee, flag, receipt, order, customer, Meta or WhatsApp state changed.
+- Canonical GFS Meta/Cloudflare identity was verified in the native session. Previous tester mismatch remains; no WAMID/order/screenshot is recorded. Hoja resources remain excluded.
+
 ## GFS-240 Runtime Evidence (2026-10-27)
 
 - Native approved Codex session used the official Chrome DevTools MCP. `list_pages`, authenticated Admin Test Controls and Cloudflare snapshots passed in the same session. Dashboard identity was `gisupp@gmail.com` on GFS account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; existing Admin Access remained present. No raw CDP, account switch or alternate tester profile.

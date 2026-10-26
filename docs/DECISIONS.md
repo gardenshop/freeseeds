@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-27: GFS-241 Stage COD-OFF; Stop at Missing Authorizations
+
+- API candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` was uploaded from the tested branch and deployed at0% beside API v90 at100%; config explicitly contains `COD_V1_ENABLED=false`. Supported version-override health passed HTTP200 and unsigned webhook rejection passed HTTP403. Existing Admin GFS-240 candidate remains0% beside v82 at100%.
+- The approved compatibility alternative and current user request authorize preparation/staging, but prior decisions explicitly do not authorize remote original-D1 0030 application or active candidate promotion. Do not use Wrangler legacy migrations or fabricate `d1_migrations`; request only explicit approval for one reviewed 0030 mutation plus backup/recovery, then separate staging promotion approval.
+- Full276, build/lint/audit, targeted COD behavior and rollback4/4 pass. No source repair is indicated. COD flag, migration, customer data, callback, receipts, payment history and Meta assets remain unchanged.
+- Previous registered tester mismatch remains a hard P4 stop. Do not send, switch accounts or register a replacement without explicit owner authorization and the specific owner-controlled tester identity.
+
 ## 2026-10-27: GFS-240 Official MCP Recovery and Repaired Admin Health PASS
 
 - The transport-closed condition was resolved by using one native approved Codex session with the existing official Chrome DevTools registration. `list_pages` and authenticated Admin/Cloudflare snapshots worked in the same session. Cloudflare identity matched `gisupp@gmail.com` / GFS account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no raw CDP, Kilo host, account switch or security bypass was used.

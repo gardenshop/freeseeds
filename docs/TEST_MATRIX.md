@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-241 COD-OFF Staging (2026-10-27)
+
+| Check | Result | Evidence / scope |
+|---|---|---|
+| API COD-OFF candidate | PASS | `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` at0%; API v90 at100%; config upload confirms `COD_V1_ENABLED=false`. |
+| API candidate runtime boundary | PASS | Supported version override `/health` HTTP200; unsigned WhatsApp webhook HTTP403. No valid signed event or D1 write. |
+| Admin compatible candidate | PASS PRESERVED | GFS-240 Admin candidate `091f1a3f-595b-4530-b54a-d7253af60664` at0%; v82 at100%; repaired health already HTTP200/`paymentConfigured=true`. |
+| Local protected regressions | PASS | Full276/276, build, lint, offline audit, targeted COD behavior and rollback4/4. |
+| Remote reviewed COD0030 | BLOCKED | Checksum/rehearsal ready; original D1 migration ledger untouched. Explicit single-migration/backup approval is missing. |
+| Candidate promotion / COD flag | BLOCKED | `COD_V1_ENABLED` remains false; precise staging traffic approval is missing. |
+| Genuine tester journey | BLOCKED | Registered tester mismatch remains; no send, WAMID, order or Admin COD_PENDING result. |
+
 ## GFS-240 Chrome Bridge and Admin Health Smoke (2026-10-27)
 
 | Check | Result | Evidence / scope |

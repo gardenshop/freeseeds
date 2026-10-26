@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-27 (GFS-241 COD-OFF staging)
+
+- Staged API candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` at0% with v90 at100%; verified COD OFF, candidate health200 and unsigned webhook403 through the supported browser version override. Existing Admin candidate remains0% with v82 at100%.
+- Revalidated full276, build, lint, offline audit and rollback4/4. No source repair or customer/D1/Meta mutation.
+- Stopped before remote COD0030, `COD_V1_ENABLED=true`, traffic promotion and WhatsApp messaging because prior approval does not cover those mutations and the registered tester remains mismatched.
+
 ## 2026-10-27 (GFS-240 Chrome bridge recovery and Admin health smoke)
 
 - Recovered the official Chrome DevTools MCP in one native approved Codex session; same-session `list_pages`, authenticated Admin and Cloudflare snapshots passed with the expected account identity and Access protection.

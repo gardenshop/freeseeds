@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-241 COD-OFF Staging and Authorization Stop (2026-10-27)
+
+- Native official Chrome MCP remains callable in the approved session. Cloudflare dashboard identity is verified as `gisupp@gmail.com` on GFS account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical GFS Meta assets only. No Hoja resource, account switch, raw CDP or tester substitution.
+- API candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` is staged at0% beside API v90 `21a3d74c-3979-432c-9190-1848362592a4` at100%, with `COD_V1_ENABLED=false`. Candidate health HTTP200 and unsigned webhook HTTP403 passed through the supported version override. Existing Admin candidate `091f1a3f-595b-4530-b54a-d7253af60664` remains0% beside Admin v82 at100%; no real customer traffic was routed to candidates.
+- Full276/276, build, lint, offline audit, targeted COD/recovery checks and intake-OFF rollback4/4 pass. No code repair was required. Original D1, customers, receipts, callback, advance methods and history remain protected.
+- The reviewed `0030_cod_v1_compat.sql` checksum/evidence is ready but remains unapplied. Do not run Wrangler's legacy ledger or replay 0001–0030. Before any remote 0030 mutation, obtain explicit approval for exactly that single original-D1 migration plus its backup/recovery protocol. Before any candidate promotion or `COD_V1_ENABLED=true`, obtain explicit staging traffic approval. P4 still requires the registered tester session or explicit authorization and identity for a genuine owner-controlled replacement tester.
+
 ## GFS-240 Chrome Bridge Recovery and Admin Health Smoke (2026-10-27)
 
 - The native approved Codex session recovered the official `chrome-devtools` MCP after the earlier transport-closed state. In that same session, `list_pages` succeeded and authenticated snapshots succeeded for Admin Test Controls and the Cloudflare Worker dashboard. Cloudflare showed `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, the Get Free Seeds Admin Worker and its existing Access protection. No raw CDP, Kilo host, account switch, alternate profile or security bypass was used.

@@ -1,5 +1,26 @@
 # Final Report
 
+## GFS-241 | COD-OFF Staging and Authorization Stop (2026-10-27)
+
+**Result: compatible COD-OFF staging and all local release gates passed. Remote migration, COD activation, candidate promotion and genuine WhatsApp acceptance are BLOCKED only by missing precise authorization and tester identity.**
+
+| Task | Result | Evidence |
+|---|---|---|
+| P0 preserve prior MCP/Admin PASS | PASS | Official MCP and identity remain valid; no repeated investigation or account switch. |
+| P1 stage compatible API/Admin | PASS LIMITED | API `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` at0% / v90 `21a3d74c-3979-432c-9190-1848362592a4` at100%; Admin candidate `091f1a3f-595b-4530-b54a-d7253af60664` at0% / v82 at100%. API candidate health200 and unsigned webhook403. |
+| P1 local release engineering | PASS | Full276/276, build, lint, offline audit and rollback4/4. |
+| P2 reviewed COD0030 | BLOCKED | Checksum/rehearsal ready, but original D1 mutation and backup/recovery authorization are not covered by prior decisions. Legacy migrations were not replayed. |
+| P2 COD enablement/promotion | BLOCKED | `COD_V1_ENABLED=false`; separate staging traffic approval is missing. |
+| P3 tester authorization | BLOCKED | Registered tester mismatch remains; no replacement registration or unverified message. |
+| P4 genuine WhatsApp acceptance | NOT RUN | No WAMIDs, new order number, amount, Admin COD_PENDING result or screenshot. |
+| P5 documentation/push | IN PROGRESS | Protected records updated locally; push follows final verification. |
+
+**Current runtime:** API v90 and Admin v82 retain100% traffic. COD flag is false. COD0030 is unapplied; original D1 ledger is untouched. No migration, customer/order/payment/receipt/Meta/WhatsApp mutation occurred.
+
+**Completion:** P0 100%; P1 100% staging/local; P2 80% preparation /0% activation; P3 80% source /0% active; P4 0%; P5 90% local. Public production launch remains NO-GO and requires separate authorization.
+
+**Exact missing approvals:** authorize one remote original-D1 application of only reviewed COD0030 with backup/recovery and no legacy replay; authorize staging promotion of the tested COD candidate and `COD_V1_ENABLED=true`; and, if the registered tester session is unavailable, explicitly authorize registration of one named owner-controlled replacement WhatsApp tester through supported Admin/Meta controls.
+
 ## GFS-240 | Chrome Bridge Recovered; Admin Health Smoke PASS (2026-10-27)
 
 **Result: P0 and the approved repaired Admin smoke passed. Original-only staging was restored. COD live acceptance remains blocked by tester authorization and unperformed live behavior gates; public production remains NO-GO.**

@@ -1,5 +1,14 @@
 # Status
 
+## GFS-241 COD-OFF Staging Complete; Migration/Tester Gates Remain (2026-10-27)
+
+- **P0 PASS PRESERVED.** Official Chrome MCP, same-session page inventory, Cloudflare identity, Admin Access and repaired Admin health remain verified. No investigation reopened.
+- **P1 PASS LIMITED.** API candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` is at0% with API v90 `21a3d74c-3979-432c-9190-1848362592a4` at100%; `COD_V1_ENABLED=false`. Candidate `/health` returned HTTP200 and unsigned webhook returned HTTP403 through supported version override. Admin candidate `091f1a3f-595b-4530-b54a-d7253af60664` remains0% with v82 at100%. No customer traffic or writes.
+- **P2 BLOCKED AUTHORIZATION.** Full276/276, build, lint, offline audit and rollback4/4 pass. Reviewed COD0030 checksum/evidence is ready; original D1 migration ledger remains untouched. Remote single-migration application and candidate traffic promotion require precise new approval under the existing decisions.
+- **P3 NOT ENABLED.** COD flag remains false; no fee setting or migration was changed. Local exact-flow behavior remains covered by tests.
+- **P4 BLOCKED.** Prior registered tester mismatch remains unresolved. No unverified message, WAMID, order, Admin COD_PENDING state or replacement registration occurred. A replacement requires explicit owner authorization and a specific owner-controlled identity.
+- **P5 PASS LOCAL / LIVE INCOMPLETE.** 276 tests and all local release checks pass. Public launch remains NO-GO. Completion: P0 100%, P1 100%, P2 80% local/0% migration-promotion, P3 80% source/0% active, P4 0%, P5 90% local/0% live.
+
 ## GFS-240 Chrome Bridge Recovered; Admin Health Smoke Passed (2026-10-27)
 
 - **P0 PASS.** One native approved Codex session recovered the official Chrome DevTools MCP: `list_pages` and authenticated Admin/Cloudflare snapshots worked in the same session. Identity matched `gisupp@gmail.com` and the GFS Cloudflare account; Admin Access remained present. No raw CDP, Kilo, account switch or security bypass.
