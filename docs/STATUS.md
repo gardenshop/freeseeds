@@ -1,5 +1,16 @@
 # Status
 
+## GFS-226 Access Claim Verification / COD Still Blocked (2026-10-26)
+
+- **P0 PARTIAL.** On the exact staging Admin origin, same-origin Cloudflare Access `get-identity` returned success; hostname and email claim matched expected Admin identity. No JWT/cookie/header or identity JSON exposed; `iss`/`aud` fields were absent. Cloudflare account and GitHub CLI identities remain verified. GitHub browser login remains absent.
+- A new approved-review MCP session failed `list_pages` twice. Stopped without retry. Admin Test Controls/WhatsApp Profile comparison therefore not completed; last verified tester profile mismatch remains. Meta operator/WABA phone association is not verified. Do not message, switch profile, or bypass.
+- **P1 BLOCKED APPLY / P2 BLOCKED DEPLOY.** Active API v90 `21a3d74c-3979-432c-9190-1848362592a4`, Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`; no Git source annotation and API version predates PR #10 commit `cf01f44`. D1 populated, migration ledger empty, all 0001–0030 pending; COD-only 0030 remains idempotent/local/unapplied. No safe clone/rehearsal or source parity.
+- Current API health GET returned 200/service only; no COD, deployment or DB fields. Candidate `COD_V1_ENABLED=false`; active HMAC absent. No Worker, Admin, D1, secret, policy, Meta or callback change.
+- **P3/P4 NOT RUN.** No authorized tester-record comparison, actual buttons/order/amount, WAMID, Admin COD_PENDING, screenshot, advance switching, receipt regression or PAID. Public COD remains off.
+- **P5 PASS LOCAL ONLY:** full244/22, focused100, baseline176, rollback4; build/lint/audit0; API/Admin dry-runs. D1 read-only checks remain `quick_check=ok`, FK empty. No running-staging regression/rollback test.
+- **P6 PASS after push.** GFS-226 records updated on PR #11; source/migration commit `217e2a0`, current tested source unchanged.
+- **Complete/remaining:** P0 80/20; P1 75/25; P2 15/85; P3 0/100; P4 0/100; P5 70/30; P6 100/0. Overall ~49%; staging/public launch **NO-GO**.
+
 ## GFS-225 Blockers and Live Acceptance (2026-10-26)
 
 - **P0 PARTIAL.** Official Codex 0.164/MCP approved-review path is operational. Cloudflare `gisupp@gmail.com`/account route ID and GitHub CLI `gardenshop` verified; GitHub browser still logged out. Admin Orders host is reachable but authorized email not visible in header/banner/link attributes. Meta shows GFS business/WABA links but no Saeed identity; phone asset link is absent. WhatsApp tester profile remains mismatched. No identity switch/message.

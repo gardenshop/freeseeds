@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-226 Access/Runtime Follow-up (2026-10-26)
+
+- Admin Access identity verified through exact staging origin's same-origin identity endpoint: email and hostname matched. No JWT, cookie, claim JSON or token saved. Admin Test Controls not read after MCP `list_pages` failed twice.
+- Last verified tester Profile mismatch remains; no profile change/chat/message. Meta operator and actual WABA phone association not verified. No new resource/secret or callback.
+- Active API v90/Admin v82 IDs unchanged; no source SHA. API health returned only service/200. D1 remains healthy/read-only, ledger empty and all Wrangler migrations pending; 0030 unapplied. No backup clone, data export or resource mutation.
+
 ## GFS-225 Final Runtime/Identity Snapshot (2026-10-26)
 
 - Cloudflare UI `gisupp@gmail.com` and expected account ID route verified. GitHub CLI `gardenshop`; browser PR session unauthenticated. Staging Admin host/API loads, but Access identity not visible in header attributes. No identity change.

@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-226 Admin Access Claim and Tester Gate (2026-10-26)
+
+- Admin identity is now verified through its exact staging origin's same-origin Cloudflare Access `get-identity` response: HTTP succeeded, hostname matched, and email claim matched the authorized GFS identity. No JWT, cookie, header or identity JSON was output; issuer/audience were not exposed by the endpoint. This supersedes GFS-225's “identity not visible in header” only for Admin Access email verification.
+- The next approved-review MCP session failed `list_pages` twice. Do not retry again in this execution or use direct APIs/CDP. Therefore Admin Test Controls and current WhatsApp own Profile could not be compared. The last verified tester Profile mismatch remains a stop; do not send, switch numbers, impersonate, or open unrelated chats. Meta operator remains unverified; no WABA changes.
+- Current PR #11 HEAD at start `b993d596`; PR #10 base `cf01f44`; PR #9 and frozen V1 `d816ba1` remain protected. No source change in GFS-226.
+- Active API v90/Admin v82 and exact source parity unchanged/unproven. Active API health GET returns HTTP200 but service only; it does not report COD/runtime/D1 state. Do not interpret a successful health response or `PRODUCTION_INTEGRATION_READY` config string as source/release verification.
+- D1 remains populated with empty migration ledger. Do not replay migrations. Idempotent 0030 remains local-only, with separate marker and no legacy ledger writes. No approved isolated clone/equivalent rehearsal or active-source parity, so do not apply/deploy.
+- No HMAC/collection verification, D1/Worker/Meta/CMS/customer/payment mutation, tester order, WAMID, screenshot, or production launch occurred. Preserve signed webhook, advance path, all history and rollback.
+
 ## GFS-225 Identity, Artifact and Acceptance Stop (2026-10-26)
 
 - Current UI/CLI findings supersede neither GFS-224's hard gates nor the tester lock. Cloudflare UI `gisupp@gmail.com` and expected account route ID match; GitHub CLI `gardenshop`, but browser PR page remains logged out. Admin Orders host returns content but expected Access identity is not exposed in header/banner or link labels; do not assume identity. Meta Business links include authorized business/WABA IDs but no profile control identifies Saeed and phone ID link was absent. WhatsApp Profile remains a mismatch to the authorized tester. No identity switch, impersonation, unrelated chat, or message.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-26 (GFS-226 Access identity follow-up)
+
+- Verified staging Admin Cloudflare Access identity via the exact same-origin `get-identity` endpoint: expected email and hostname matched; no identity JSON/JWT retained.
+- New Chrome MCP session failed list_pages twice. Stopped without retry; approved tester/Meta operator comparison remains blocked; no message/order.
+- Reconfirmed active Worker source parity and D1 clone/empty-ledger blockers. No migration, secret, policy, Worker or customer mutation. Local 244-test and build/security results remain valid.
+
 ## 2026-10-26 (GFS-225 activation blockers)
 
 - Confirmed Codex 0.164/MCP approved-review access and Cloudflare identity; Admin header identity, GitHub browser login, Meta operator, phone link and authorized tester remain unverified/mismatched.

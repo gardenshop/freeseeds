@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-26: GFS-226 Access Identity Passed, Tester/DB Gates Remain
+
+- Same-origin Cloudflare Access identity endpoint on the exact Admin staging origin returned HTTP success, expected email, and exact hostname. It did not expose `iss`/`aud`; no JWT or headers were read/output. This verifies Admin identity without relying on absent header UI.
+- Fresh official Chrome MCP session then failed `list_pages` twice. Stop; do not retry, raw-CDP, use APIs, or switch profile. Admin Test Controls and WhatsApp Profile couldn't be cross-matched; tester mismatch from last verified session remains. No sending.
+- No source/D1/Worker change is safe: exact source parity absent, D1 ledger empty while tables populated, clone/fork unsupported. Keep COD off and migration unapplied.
+- Existing tests/dry-runs still pass locally; current health endpoint returns only HTTP200/service. This is not customer-path or runtime COD acceptance. No public promotion.
+
 ## 2026-10-26: GFS-225 Do Not Activate Without Identity/Parity/Clone
 
 - Codex/MCP is repaired and approved-review tools work. Cloudflare UI and GitHub CLI identities match their allowed accounts, but Admin identity is not exposed, GitHub browser is logged out, Meta operator is unverified and approved tester profile mismatches. Never force login, switch accounts, impersonate, or message.

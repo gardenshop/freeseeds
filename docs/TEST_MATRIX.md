@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-226 Access Claim and Release Gate (2026-10-26)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Admin Access identity | PASS email/host only | Official MCP same-origin Access identity endpoint returned HTTP success; exact staging hostname and expected email match. Issuer/audience not exposed. No token/claim JSON retained. |
+| Chrome MCP / tester | BLOCKED | Fresh approved-review session failed list_pages twice; stopped. No Admin Test Controls read or WhatsApp Profile match. Last verified tester remains mismatched. |
+| Meta identity | BLOCKED | No current operator identity; no callback/WABA change or message. |
+| API behavior | PASS HEALTH ONLY | API health GET 200/service-only. No version/flag/database-state fields; not a flow/webhook test. |
+| Source parity/D1 | BLOCKED | API v90 source annotation absent; predates cf01f44. D1 ledger empty/pending all30; idempotent 0030 unapplied; no clone/equivalent. |
+| Regression | PASS LOCAL | Full244/22, focused100, V1 baseline176, old-source rollback4; build/lint/audit0; Wrangler dryruns. No live staging checkout/admin/rollback acceptance. |
+| Live COD | NOT RUN | No tester match/order/amount/Admin state/WAMID/screenshot; no secret, deployment or migration. |
+
 ## GFS-225 Final Identity and Artifact Checks (2026-10-26)
 
 | Check | Result | Evidence |
