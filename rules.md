@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-236 Authorized 0%-Traffic Version Smoke (2026-10-26)
+
+- User explicitly approved a no-traffic PR11 version smoke: upload API/Admin COD-off candidates, deploy each at0% with original v90/v82 at100%, disable only public Version URLs, test existing URLs via version override, no D1/order/payment/customer writes, no Meta changes, then restore original-only deployments. Before each mutation `wrangler whoami` verified `gisupp@gmail.com` / GFS account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- Uploaded API v91 `6db59e0d-0ab5-4535-8937-f7cf9100032b` ETag `cc6a6ebf6e97de0c5b55edd09f10732fe98796ccb99308e8e846a1835515a219`, `COD_V1_ENABLED=false`; Admin v83 `d9eff614-00a8-4ea7-a9f0-45f7c9df6b4e` ETag `9a218d21e06fb7e6d4e6f9d4cd13d5e112331807b6106b8b9d7265901a4db5b1`. Version URLs were disabled in Cloudflare UI for both; ordinary workers.dev stayed enabled and Admin Access policy remained present. A version metadata `has_preview:true` marker remains, but the Dashboard route toggle was off; no preview URL was visited.
+- 0%-traffic version override smoke: API v91 `/health` HTTP200 (`getfreeseeds-api`, WhatsApp enabled); unsigned `/webhooks/whatsapp` POST HTTP403 `Forbidden`. Admin v83 was reached only on existing Access-protected URL after `list_pages`; Access email matched. `/health` returned HTTP200, `ok:true`, `paymentConfigured:false` (aggregate only). No customer/payment details. This means candidate cannot yet verify the required three Advance methods/amount; do not promote it or enable COD until verified config is restored.
+- Restored API v90 `21a3d74c-3979-432c-9190-1848362592a4` alone at100%, deployment `9cc279f1-dc6d-463b-9047-8311d1229945`; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` alone at100%, deployment `cbc4233d-9100-45cf-aa8e-7f42eb44e982`. Candidate v91/v83 remain in history but no current traffic; version URLs off. Public API health200. No source/D1/Meta/secret/schema write; COD0030 unapplied.
+- One later fresh Admin identity-only check did not match, so no health request followed; no switch/retry. Prior successful v83 Access health check stands. Prior own WhatsApp Profile/tester mismatch remains; no sender, chat, message, order, WAMID or screenshot. Stop live acceptance.
+- Full244, targeted128, build/lint/audit0, old-source harness4/4. This is runtime smoke, not valid signed callback, Advance checkout, D1 order persistence, COD activation, source-parity proof, or rollback after COD obligations. Keep current release NO-GO.
+
 ## GFS-235 Source Provenance and Live Tester Gate (2026-10-26)
 
 - GFS-234 D1 evidence remains current: bounded original SELECT/schema/quick/FK pass; COD0030 remains unapplied there. Clean synthetic DB remains unbound and scheduled for review Oct28. Do not reopen historical API7403 investigation absent a new failure.

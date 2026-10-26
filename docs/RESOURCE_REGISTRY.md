@@ -1,5 +1,16 @@
 # Resource Registry
 
+## GFS-236 Non-Traffic Version Smoke / Restore
+
+| Worker | Candidate version / ETag | Active deployment after restore |
+|---|---|---|
+| API | v91 `6db59e0d-0ab5-4535-8937-f7cf9100032b` / `cc6a6ebf6e97de0c5b55edd09f10732fe98796ccb99308e8e846a1835515a219` | v90 `21a3d74c-3979-432c-9190-1848362592a4` alone100%, deployment `9cc279f1-dc6d-463b-9047-8311d1229945` |
+| Admin | v83 `d9eff614-00a8-4ea7-a9f0-45f7c9df6b4e` / `9a218d21e06fb7e6d4e6f9d4cd13d5e112331807b6106b8b9d7265901a4db5b1` | v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` alone100%, deployment `cbc4233d-9100-45cf-aa8e-7f42eb44e982` |
+
+- Explicit zero-traffic approval. API v91 COD false; Admin/ API used original staging bindings; no user traffic was promoted. Dashboard Version URLs disabled on both Workers; ordinary workers.dev kept enabled; Admin Access remains. Candidate metadata still carries `has_preview` marker, but no preview URL was opened/shared.
+- API candidate health200, unsigned webhook403; Admin candidate Access health200/`paymentConfigured:false`. This is an aggregate only, no recipient/order/payment rows. Last active v90 source still has no SHA; v91/v83 ETags are candidate-only.
+- GFS-236 current deployment state restored to v90/v82; candidate artifacts remain in account version history. Original D1 and synthetic diagnostic resource unchanged; migration0030 unapplied; diagnostic cleanup review remains Oct28.
+
 ## GFS-235 Active Worker Source/Binding Evidence (2026-10-26)
 
 | Worker | Active version / traffic | Deployed at | Script ETag | Source SHA |

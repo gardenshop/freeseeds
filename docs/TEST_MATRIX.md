@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-236 Zero-Traffic Candidate Runtime Checks (2026-10-26)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| API candidate v91 | PASS LIMITED | At0% only; COD flag false. Version override `/health`200; unsigned WhatsApp POST403. No valid signature or D1 write. |
+| Admin candidate v83 | PASS LIMITED / ADVANCE FAIL | At0% only, existing Access identity MATCH. `/health`200, `ok:true`, `paymentConfigured:false`. No payment data/rows read. |
+| Version URL safety | PASS | Dashboard Version URLs disabled on API/Admin; ordinary workers.dev stays enabled; Access application remains. Version IDs only tested through existing URLs/override. |
+| Traffic restoration | PASS | API v90 sole100%, deployment `9cc279f1-dc6d-463b-9047-8311d1229945`; Admin v82 sole100%, deployment `cbc4233d-9100-45cf-aa8e-7f42eb44e982`. Candidate v91/v83 remain uploaded history only. |
+| Original D1/migration | PASS PRESERVED | No D1 write/migration. One explicitly authorized Admin `/health` aggregate read returned `paymentConfigured:false`; no payment recipient, order or customer rows read. COD0030 remains unapplied; GFS-234 schema/integrity evidence retained. |
+| Tester/live COD | BLOCKED | Last registered Profile mismatch; no same-session retry/message/order/WAMID/Admin screenshot. Later Admin identity-only mismatch stopped before health; earlier candidate Access check matched. |
+| Regression/build | PASS LOCAL | Focused128/128, full244/244, V1 rollback harness4/4, build/lint/audit0. |
+
 ## GFS-235 Provenance and Compatibility Checks (2026-10-26)
 
 | Check | Result | Evidence / boundary |

@@ -1,5 +1,25 @@
 # Final Report
 
+## GFS-236 Final COD Release Preparation and 0%-Traffic Test (2026-10-26)
+
+**Result: candidate runtime smoke PASS at 0%; release and live acceptance BLOCKED. Original production staging traffic was restored unchanged.**
+
+| Assignment | Result | Actual evidence |
+|---|---|---|
+| P0 — preserve D1 success | **PASS** | GFS-234 original SELECT/schema63/quick/FK evidence remains; no repeated API7403. Original COD0030 unapplied. Isolated COD0030/PKR125/idempotency/hold evidence retained; review Oct28. |
+| P1 — source compatibility/rollback | **PARTIAL** | Uploaded API v91/Admin v83 candidate ETags and exact code built from PR11; current source was exercised at0%. Active v90/v82 source SHA still unknown. Candidates tested at0%, then removed from deployment; original-only versions restored. No post-intake runtime rollback performed. |
+| P2 — staging release | **NOT PROMOTED** | API deployment `9cc279f1-dc6d-463b-9047-8311d1229945`: v90 100% only. Admin deployment `cbc4233d-9100-45cf-aa8e-7f42eb44e982`: v82 100% only. Candidate versions remain in version history but not in either current deployment; Version URLs disabled. No DB write/migration/flag change. |
+| P3 — minimum COD | **NOT ENABLED** | Candidate v91 binding `COD_V1_ENABLED=false`; active v90 runtime semantics unknown. COD0030 unapplied on original D1. |
+| P4 — genuine WhatsApp test | **BLOCKED** | Prior exact Admin/own-Profile mismatch remains; no repeated WhatsApp check. No WAMID/order/amount/Admin COD_PENDING/screenshot/message. |
+| P5 — release checks | **PASS LOCAL / LIMITED RUNTIME** | Focused128/128; full244/244; V1 harness4/4; build/lint/audit0. API v91 health200,unsigned callback403; Admin v83 Access health200/`paymentConfigured:false`. No valid signed callback, actual Advance flow, COD D1 persistence through app, receipt, or live tester. |
+| P6 — records/push | **PENDING PUSH** | Seven records updated with zero-traffic version IDs/ETags, restored traffic, preview URL state and Advance configuration failure. |
+
+**Advance/checkout blocker:** candidate Admin health on original D1 returns `paymentConfigured:false` (aggregate only). Do not promote a candidate or claim JazzCash/Easypaisa/Bank Transfer operational until an authorized verified payment configuration is restored. Active v82 itself was not queried after a later Admin identity check failed; prior candidate health was access-authenticated. No recipient/account values were read or changed.
+
+**Safety:** Cloudflare identity verified before uploads/deployments. API/Admin Preview URLs were disabled in Dashboard; normal workers.dev routes remained on and Admin Access remained. API/Admin candidates were briefly deployed at0% with originals at100%, then original-only deployments were restored. No preview URL was visited/shared. No D1/customer/order/payment write, valid webhook, Meta message, COD setting, COD migration, shipment/cash/PAID, or production change occurred.
+
+**Completion estimates:** P0 100%; P1 80% candidate smoke/60% active parity; P2 75% non-traffic prep/0% release; P3 80% source/0% active; P4 0%; P5 100% local/60% runtime smoke; P6 100% after push. Overall engineering readiness~80%; real live acceptance0%, launch NO-GO. Exact remaining owner actions: provide the already-registered tester-controlled WhatsApp Profile matching Admin, and restore/verify legitimate Advance amount/recipient configuration. Exact active source provenance remains unavailable; no production authorization implied.
+
 ## GFS-235 Final COD Release Preparation (2026-10-26)
 
 **Result: D1/schema/synthetic COD evidence PASS; exact deployed-source parity and tester gates BLOCK release. No staging/production mutation.**

@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-26: GFS-236 Use Authorized 0%-Traffic Version Smoke
+
+- User explicitly authorized PR11 API/Admin versions at0%, old API v90/Admin v82 at100%, preview URLs disabled, only health and unsigned webhook rejection, no D1/order/customer writes. Official Wrangler upload/versions plus version override were used; API v91 health200/unsigned webhook403; Admin v83 Access health200 with `paymentConfigured=false` aggregate.
+- Both original-only deployments restored immediately after smoke and verified via `deployments status`: API v90100% / Admin v82 100%. Candidate versions remain in version history, preview URLs disabled; workers.dev and Access preserved. No active user request routed to candidate by percentage.
+- Advance release remains blocked: candidate health shows Advance not configured. Do not write payment recipients, enable COD, apply COD0030 or promote candidate until payment settings/source/rollback gates and correct tester pass. Admin v83 mismatch later caused no health request; no same-session tester retry.
+- No valid signed webhook/receipt customer request was sent. The candidate's source SHA problem remains; version ETags identify uploaded candidates, not active v90/v82 source.
+
 ## 2026-10-26: GFS-235 Do Not Deploy Without Active Source Provenance
 
 - API v90/Admin v82 metadata confirms 100% traffic, timestamps/ETags and GFS author/bindings, but not source SHA. Both versions predate PR10 commit cf01f44; source could have been deployed from uncommitted code, so chronology is not proof of content. Cloudflare UI source view returned unavailable/null hash; prior Wrangler init failed and is not repeated. Exact source parity remains unproven.

@@ -1,5 +1,16 @@
 # Status
 
+## GFS-236 0%-Traffic Candidate Smoke and Restore (2026-10-26)
+
+- **P0 PASS PRESERVED.** Original D1 schema/SELECT/quick/FK checks and isolated COD0030 evidence from GFS-234 remain. No additional D1 migration/write. Diagnostic DB remains unbound and held for Oct28 review.
+- **P1 VERSION-SPECIFIC EVIDENCE; SOURCE SHA STILL UNKNOWN.** Uploaded API v91 `6db59e0d-0ab5-4535-8937-f7cf9100032b` ETag `cc6a6ebf…` and Admin v83 `d9eff614-00a8-4ea7-a9f0-45f7c9df6b4e` ETag `9a218d21…` with COD off. Both tested at0% with old versions at100%. Version URLs disabled in Cloudflare UI for both; ordinary workers.dev remained enabled, Admin Access policy present. v91 health200, unsigned webhook403; v83 Access health200/ok, `paymentConfigured=false` aggregate. No customer/recipient detail.
+- **P2 PASS ZERO-TRAFFIC TEST; NO RELEASE.** Restored sole original API v90 `21a3d74c-3979-432c-9190-1848362592a4` at100% deployment `9cc279f1-dc6d-463b-9047-8311d1229945`; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` at100% deployment `cbc4233d-9100-45cf-aa8e-7f42eb44e982`. Candidates remain in version history but no current traffic. No D1 migration, active binding, secret, route, callback or COD flag change. COD0030 remains unapplied.
+- **P3 COD NOT ENABLED.** Candidate v91 `COD_V1_ENABLED=false`; active v90 source/flag semantics unknown. Candidate Admin health says Advance `paymentConfigured=false`; do not promote or claim all three methods are working.
+- **P4 LIVE ACCEPTANCE BLOCKED.** Prior exact tester/Profile mismatch remains; do not repeat same session. A later Admin identity-only probe mismatched and stopped before `/health`; the earlier v83 Access health check had matched and passed. No WhatsApp sender/tester chat/message/order/WAMID/Admin COD_PENDING evidence. No shipment/cash/PAID.
+- **P5 PASS LOCAL + ZERO-TRAFFIC SMOKE.** Focused128/128; full244/244; V1 harness4/4; build/lint/audit0. API/Admin version-specific health/signed-boundary smoke passed as above. No valid signed webhook, live Advance, COD persistence through Worker, or runtime post-intake rollback.
+- **P6 PASS after push** of these version IDs, deployment restorations, Version URL setting, `paymentConfigured=false`, and tester block.
+- **Progress estimates:** P0 100%; P1 75%; P2 75%; P3 80% source/0% active; P4 0%; P5 100% local / 50% staging smoke; P6 100% after push. Live acceptance0%, launch NO-GO. Immediate owner work: restore a verified Advance payment configuration using legitimate approved recipient/amount data and provide the registered tester-controlled WhatsApp profile matching Admin. Exact active Worker source parity also remains unproven.
+
 ## GFS-235 Source Provenance and Tester Gate (2026-10-26)
 
 - **P0 PASS DATA; historical7403 not reproduced.** GFS-234 original SELECT/quick/FK/all63 V1 schema checks stand; ledger0. No repeated query.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-26 (GFS-236 0%-traffic runtime smoke)
+
+- Uploaded PR11 API v91/Admin v83 as COD-off versions, tested them only at0% with public Version URLs disabled, then restored original API v90/Admin v82 to sole100% deployments. No live route promotion, source edit, DB write/migration or Meta event.
+- API v91 health200/unsigned webhook403; Admin v83 Access health200, paymentConfigured=false. This blocks claiming Advance ready.
+- Full244/focused128/V1 harness4/build/lint/audit0 pass. Tester mismatch remains; no live test/WAMIDs/order.
+
 ## 2026-10-26 (GFS-235 source provenance and tester gate)
 
 - Read-only history provides active API v90/Admin v82 timestamps/ETags but no SHA; both predate PR10 commit. Dashboard source retrieval unavailable; no edit/deploy. This proves a source-provenance gap, not a specific runtime defect.
