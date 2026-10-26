@@ -12,7 +12,7 @@
 | P3 — minimum COD | **NOT ENABLED** | Candidate v91 binding `COD_V1_ENABLED=false`; active v90 runtime semantics unknown. COD0030 unapplied on original D1. |
 | P4 — genuine WhatsApp test | **BLOCKED** | Prior exact Admin/own-Profile mismatch remains; no repeated WhatsApp check. No WAMID/order/amount/Admin COD_PENDING/screenshot/message. |
 | P5 — release checks | **PASS LOCAL / LIMITED RUNTIME** | Focused128/128; full244/244; V1 harness4/4; build/lint/audit0. API v91 health200,unsigned callback403; Admin v83 Access health200/`paymentConfigured:false`. No valid signed callback, actual Advance flow, COD D1 persistence through app, receipt, or live tester. |
-| P6 — records/push | **PENDING PUSH** | Seven records updated with zero-traffic version IDs/ETags, restored traffic, preview URL state and Advance configuration failure. |
+| P6 — records/push | **PASS** | Seven GFS-236 records pushed in commit `0d3671b`; GitHub `gardenshop` and PR #11 remote ref verified. |
 
 **Advance/checkout blocker:** candidate Admin health on original D1 returns `paymentConfigured:false` (aggregate only). Do not promote a candidate or claim JazzCash/Easypaisa/Bank Transfer operational until an authorized verified payment configuration is restored. Active v82 itself was not queried after a later Admin identity check failed; prior candidate health was access-authenticated. No recipient/account values were read or changed.
 

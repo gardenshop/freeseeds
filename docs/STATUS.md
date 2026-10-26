@@ -8,7 +8,7 @@
 - **P3 COD NOT ENABLED.** Candidate v91 `COD_V1_ENABLED=false`; active v90 source/flag semantics unknown. Candidate Admin health says Advance `paymentConfigured=false`; do not promote or claim all three methods are working.
 - **P4 LIVE ACCEPTANCE BLOCKED.** Prior exact tester/Profile mismatch remains; do not repeat same session. A later Admin identity-only probe mismatched and stopped before `/health`; the earlier v83 Access health check had matched and passed. No WhatsApp sender/tester chat/message/order/WAMID/Admin COD_PENDING evidence. No shipment/cash/PAID.
 - **P5 PASS LOCAL + ZERO-TRAFFIC SMOKE.** Focused128/128; full244/244; V1 harness4/4; build/lint/audit0. API/Admin version-specific health/signed-boundary smoke passed as above. No valid signed webhook, live Advance, COD persistence through Worker, or runtime post-intake rollback.
-- **P6 PASS after push** of these version IDs, deployment restorations, Version URL setting, `paymentConfigured=false`, and tester block.
+- **P6 PASS.** GFS-236 version-smoke evidence pushed in commit `0d3671b`; branch/PR ref verified.
 - **Progress estimates:** P0 100%; P1 75%; P2 75%; P3 80% source/0% active; P4 0%; P5 100% local / 50% staging smoke; P6 100% after push. Live acceptance0%, launch NO-GO. Immediate owner work: restore a verified Advance payment configuration using legitimate approved recipient/amount data and provide the registered tester-controlled WhatsApp profile matching Admin. Exact active Worker source parity also remains unproven.
 
 ## GFS-235 Source Provenance and Tester Gate (2026-10-26)
