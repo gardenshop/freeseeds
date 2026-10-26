@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-229 Local Revalidation and Access Diagnosis (2026-10-26)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Official Chrome MCP | PASS inventory only | Correct Codex 0.164.0 host/config; fresh read-only exec returned 11 existing page IDs/origins. No page identity/content inspection or browser mutation. |
+| Cloudflare identity/scope | PASS CLI identity only | `wrangler whoami` = expected GFS account; reports `d1:write`. Does not establish D1 resource authorization; prior API7403 unresolved. No query retry/scope change. |
+| Focused COD/Admin/migration | PASS | 27/27 tests in `cod-admin.test.ts` and `cod-migration-compat.test.ts`. |
+| Full PR #11 suite | PASS | 244/244 across22 files. |
+| V1 rollback source | PASS LOCAL ONLY | 4/4 checks against clean, unchanged `cf01f44`; in-memory synthetic SQLite, no live Worker rollback. |
+| Build/lint/audit | PASS | TypeScript build and ESLint pass; `npm audit --omit=dev` reports 0 vulnerabilities. |
+| API/Admin dry-run | PASS CONFIGURATION ONLY | Bundles build with expected staging names/bindings; API `COD_V1_ENABLED=false`. No live binding/version/secret verification. |
+| D1/migration/deploy/live E2E | NOT RUN | Do not retry API7403 or mutate due GFS-228 stop rule. No migration, deploy, tester identity, order, WAMID or screenshot. |
+
 ## GFS-228 Minimal COD Checkout Regression (2026-10-26)
 
 | Requirement | Result | Evidence |

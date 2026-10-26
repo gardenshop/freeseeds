@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-26: GFS-229 Stop After Read-Only MCP/D1 Diagnosis
+
+- Correct Codex host/config and enabled official Chrome MCP registration are confirmed; fresh isolated read-only Codex invocation returned 11 existing pages. Previous empty/failing `list_pages` is intermittent, not proof that the Chrome server/profile is absent. Do not claim identity verification from an origin inventory.
+- Wrangler identity is the expected Get Free Seeds account and its current permission summary includes `d1:write`. The earlier API7403 is not explained by account mismatch or missing top-level D1 scope; resource-level binding/grant/API authorization is still unknown. Do not retry, switch identity, or broaden/change scopes under GFS-228. Account owner/support must investigate the already-authorized principal using approved least-privilege controls.
+- Candidate COD code remains local/reviewable only. 27 focused, 244 full and 4 local legacy rollback checks pass; no staging D1/Worker/Admin/secret/policy/Meta/customer mutation. Keep COD disabled and preserve the existing ledger/history.
+
 ## 2026-10-26: GFS-228 Minimal COD Does Not Require Courier Reconciliation
 
 - User narrowed COD intake to a simple PKR125 quote and COD_PENDING acceptance on the existing V1 order. Remove collection/remittance HMAC/reference requirements from intake and Admin enable toggle. Preserve audit/revision, fixed fee, province pricing, idempotency, payment security and DO NOT SHIP hold.

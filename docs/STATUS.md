@@ -1,5 +1,14 @@
 # Status
 
+## GFS-229 Access Diagnosis and Local Revalidation (2026-10-26)
+
+- **P0 PARTIAL.** Official Chrome MCP registration is enabled in the correct Codex 0.164.0 host. A fresh isolated read-only Codex exec successfully called `list_pages` and returned 11 existing origins/pages; page identities were not inspected, so Admin/GitHub/Meta/tester identity is not newly verified. Wrangler confirms the expected GFS account and reports `d1:write`.
+- **D1 API7403 unresolved.** Correct account and top-level D1 scope make wrong-account/missing-scope explanations unlikely; neither proves resource-level API authorization. Per GFS-228 stop rules, no D1 retry, account switch, permission change, or migration was attempted. Owner/support must diagnose existing D1 query authorization.
+- **P1–P4 BLOCKED/NOT RUN.** No safe rehearsal, remote D1 query/backup/integrity, deployed-source parity, Worker deploy/rollback, operational COD record, secret/policy, authorized tester match, live API/Admin journey, COD order, WAMID or screenshot. Candidate COD remains false; no external mutation.
+- **P5 PASS LOCAL.** Focused COD tests 27/27; full suite 244/244; old-source rollback harness 4/4 against clean `cf01f44`; build, lint, `npm audit --omit=dev` (0 vulnerabilities), API/Admin dry-runs and diff check pass. This does not verify the running Worker or advance behavior live.
+- **P6 PASS AFTER PUSH** when this record is committed to the PR #11 branch. Frozen V1, PR #9, `images/`, customer/payment history and deployed resources remain untouched.
+- **Completed/remaining:** P0 70/30; P1 75/25; P2 15/85; P3 0/100; P4 0/100; P5 100/0; P6 100/0. Overall source readiness ~50%; staging COD/live acceptance 0%, NO-GO. ETA remains indefinite pending owner-resolved D1 authorization plus authenticated identities, safe migration/source-parity/rollback and tester gates.
+
 ## GFS-228 Minimal COD Intake (2026-10-26)
 
 - **P0 PARTIAL / BLOCKED.** Cloudflare/Admin Access identity remains verified from prior safe claims; GitHub `gardenshop` CLI identity verified. Chrome MCP `list_pages` still fails/returns no tabs in approved-review. No Admin Test Controls/WhatsApp own Profile comparison; tester mismatch and Meta operator verification remain. No send.

@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-229 MCP and D1 Authorization Diagnosis (2026-10-26)
+
+- A fresh Codex 0.164.0 `exec --ephemeral --sandbox read-only` using `CODEX_HOME=D:\AI-Tools\Codex\home` successfully invoked official `chrome-devtools/list_pages` and returned 11 existing page IDs/origins. This establishes intermittent bridge/tool availability only; it does not verify any page's authenticated identity. Do not inspect unrelated tabs or repeat a failed/canceled action without the required approval.
+- The selected Codex config contains one enabled official `chrome-devtools` stdio registration (`npx -y chrome-devtools-mcp@latest --autoConnect`). No configuration repair, profile change, or browser mutation was made.
+- `npx --no-install wrangler whoami` confirms `gisupp@gmail.com` / Get Free Seeds / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Wrangler reports `d1:write`. The prior API7403 is therefore not explained by a wrong account or absent top-level D1 scope. Its resource/API authorization cause remains unresolved. Per the existing GFS-227/228 stop rule, do not retry D1, switch accounts, or alter scopes; the Cloudflare account owner must diagnose/restore the existing principal's least-privilege D1 query access via an approved support channel.
+- Local PR #11 validation: focused COD/Admin/migration 27/27, full 244/244, V1 compatibility rollback harness 4/4 against clean `cf01f44`, build, lint, production audit (0 vulnerabilities), API/Admin dry-runs, and diff check pass. Dry-runs are not deployment evidence. No staging identity, D1, Worker, secret, policy, Meta, tester, customer, order, payment, screenshot, or WAMID was changed or verified in this turn; COD remains disabled.
+- Do not deploy or enable COD based on this diagnostic. Resume only after authorized account access and all existing GFS-228 gates pass.
+
 ## GFS-228 Simple COD Checkout Scope (2026-10-26)
 
 - User-authorized staging scope is a minimal cash-on-delivery customer path, not courier accounting. COD intake requires the runtime flag, audited Admin toggle, authorized province tariff, fixed PKR125 fee, and exact confirmation/idempotency checks. It does **not** require `COD_REFERENCE_HMAC_KEY`, collection/remittance references, courier onboarding automation, packing, or dispatch to create a COD_PENDING order.

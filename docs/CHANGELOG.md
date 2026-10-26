@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-26 (GFS-229 access diagnosis and local revalidation)
+
+- Fresh approved-scope Codex 0.164.0 read-only exec successfully listed 11 existing pages through official Chrome MCP; no identity/content inspection or mutation. Wrangler verifies the expected GFS account and `d1:write`; historical API7403 remains an unresolved D1 resource/API authorization issue. No retry, scope change, identity switch or external write.
+- Revalidated PR #11: focused COD 27/27, full 244/244, clean V1-source rollback 4/4, build/lint, production audit0, API/Admin dry-runs. Candidate remains COD OFF; no migration, deployment, secret, order, WAMID or screenshot.
+- Updated release status and mandatory stop criteria; staging remains blocked.
+
 ## 2026-10-26 (GFS-228 scope simplification)
 
 - Simplified COD Admin settings to an audited toggle and fixed PKR125 fee; COD_PENDING intake no longer requires collection/remittance references or collection HMAC.
