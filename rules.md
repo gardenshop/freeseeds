@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-231 Support/Tester Identity Stop (2026-10-26)
+
+- Fresh approved-review official MCP returned the existing page inventory after one initial `list_pages` timeout; no page was changed. Cloudflare existing tab's visible UI exposed neither signed-in email nor account ID. Stop before support navigation/submission; do not click Switch Account, change identity, or file under an unverifiable account. No case/reference exists. Required owner action: authenticate the existing Cloudflare dashboard as the already-authorized `gisupp@gmail.com` principal and make its expected account ID visibly verifiable in the existing tab; then file one no-cost support diagnosis for D1 API7403/minimum existing-principal query access only. No OAuth scope or identity change.
+- Admin/Test Controls ↔ WhatsApp own Profile comparison is currently UNAVAILABLE. The scoped MCP run encountered an Orders page; a broad snapshot was rejected because it could expose customer/order data. No navigation, chat, reset or message followed. Last verified own-Profile result remains MISMATCH. After the user is informed/approves the safer scoped route, inspect only the same-origin `/test-controls` authorized record and own `You > View Profile`; compare internally and output no personal data. Do not message until exact match.
+- Do not use another MCP execution, raw CDP, API, or broad snapshot to bypass this rejection. The present live test remains blocked.
+- Wrangler shows latest API v90 `21a3d74c-3979-432c-9190-1848362592a4` and Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`, no source SHA. No D1 retry, migration, deploy, rollback, flag, order, payment, Meta or WhatsApp mutation occurred. PR #11 source unchanged; local tests remain the last GFS-230 27/27, 244/244, rollback4/4, build/lint/audit0.
+
 ## GFS-230 COD Staging Stop (2026-10-26)
 
 - Fresh official Chrome MCP `list_pages` succeeded in Codex 0.164.0 at the configured `CODEX_HOME` and returned the existing 11 page IDs/origins. This restores page inventory, not tester identity. The last targeted own-WhatsApp-Profile check mismatched the approved tester; do not message or switch identities.

@@ -1,5 +1,14 @@
 # Status
 
+## GFS-231 Support and Tester Preflight (2026-10-26)
+
+- **P0 PARTIAL / SUPPORT CASE NOT FILED.** Official Chrome MCP page inventory succeeded after one initial timeout. Existing Cloudflare tab did not expose the required email or account ID; support navigation/submission was stopped before action. No support case/reference. Exact owner step: restore/verify the expected `gisupp@gmail.com` + GFS account identity visibly in the existing dashboard tab, then owner/support may diagnose minimum D1 query authorization without scope changes.
+- **P0 TESTER CHECK BLOCKED.** Last verified WhatsApp own Profile mismatched the approved tester. Current attempt to inspect an Orders page snapshot was rejected for possible customer/order exposure; no navigation, chat, reset or send. `/test-controls` and own Profile comparison remains UNAVAILABLE until the user is informed and explicitly approves a safer same-origin scoped inspection. No substitute profile/number.
+- **P1–P4 BLOCKED/NOT RUN.** No D1 retry/schema/backup/integrity/migration, Worker deployment/rollback/flag, live journey, order, total, WAMID, Admin COD_PENDING or screenshot. Active latest history remains API v90 `21a3d74c-3979-432c-9190-1848362592a4` and Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`, with no source SHA.
+- **P5 LAST LOCAL PASS (GFS-230).** Focused27/27; full244/244; V1 compatibility harness4/4; build/lint/audit0 and dry-runs. No source change since. Not running-staging evidence.
+- **P6 PASS after this report is pushed.** No source change. Preserve V1, PR #9/#10, `images/`, orders/payments and signed webhook.
+- **Completed/remaining:** P0 65/35; P1 75/25; P2 15/85; P3 0/100; P4 0/100; P5 100/0 local (live0); P6 100/0 after push. Overall source readiness ~50%; live acceptance0%; NO-GO. ETA indefinite until owner-visible Cloudflare identity/support diagnostic, safe D1 rehearsal and tester match.
+
 ## GFS-230 Priority COD Release (2026-10-26)
 
 - **P0 PARTIAL / LIVE SEND STOP.** Official MCP `list_pages` works again in Codex0.164.0 and lists11 existing tabs. Prior scoped identity findings stand: Admin Access matched; Cloudflare account ID visible with CLI identity `gisupp@gmail.com`; GitHub CLI `gardenshop`; Meta operator unavailable; canonical WABA/sender only evidenced in WhatsApp Manager; authorized tester's own Profile mismatches. No message/profile switch.

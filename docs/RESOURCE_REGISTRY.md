@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-231 Owner/Tester Gate Attempt (2026-10-26)
+
+- Cloudflare account/Wrangler identity remains known, but existing dashboard UI did not expose visible email or account ID at pre-submission check. No support ticket or reference; no account switch, OAuth change, D1 query or mutation.
+- Official Chrome inventory completed after one timeout; Orders snapshot was rejected for customer-data exposure risk. No customer/order data was read. Admin `/test-controls`/WhatsApp comparison unresolved; last own Profile mismatch remains. No chat/message.
+- API v90/Admin v82 latest history unchanged, no source SHA. No active bindings, flags or D1 schema were refreshed. No resource changed.
+
 ## GFS-230 Read-Only Staging Inventory (2026-10-26)
 
 - No Cloudflare/Meta/GitHub resource or configuration changed. Fresh official Chrome MCP inventory lists11 existing page IDs/origins; no additional navigation or content change.

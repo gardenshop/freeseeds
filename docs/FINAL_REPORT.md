@@ -1,5 +1,23 @@
 # Final Report
 
+## GFS-231 | Owner Support and Tester Gates (2026-10-26)
+
+**Result: blocked before any cloud or messaging mutation; local release candidate unchanged. No live test is claimed.**
+
+| Assignment | Result | Evidence |
+|---|---|---|
+| P0 — Official MCP | **PARTIAL PASS** | Codex0.164.0, configured `CODEX_HOME`, official MCP. `list_pages` timed out once then succeeded; existing page inventory returned. No other pages modified. |
+| P0 — D1 owner/support | **BLOCKED** | Cloudflare visible UI lacked expected email/account ID, so pre-mutation rule required stopping. No support case/reference, no D1 retry. Exact owner step: show the existing `gisupp@gmail.com`/expected GFS identity in the existing Cloudflare tab, then open one no-cost support case diagnosing the existing principal's minimum D1 query grant. Do not alter scopes/identity. |
+| P0 — tester/Meta | **BLOCKED** | Attempted scoped comparison stopped when broad Orders-page snapshot was rejected for potential PII exposure. No page navigation/data read/message. Last verified own WhatsApp Profile mismatch remains; Meta operator unverified. Need user approval, after this risk notice, for same-origin `/test-controls` and own-profile-only inspection. |
+| P1 — schema/migration | **NOT RUN** | D1 not queried. `0030` unapplied; no backup/integrity/rehearsal. Legacy ledger/data untouched. |
+| P2 — staging deploy | **NOT RUN** | API v90 `21a3d74c-3979-432c-9190-1848362592a4`; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` remain latest metadata, source SHA unavailable. No deploy/rollback. |
+| P3 — enable COD | **BLOCKED** | No flag/settings/migration mutation. Candidate remains COD off; live flag unknown. |
+| P4 — live journey | **NOT RUN** | No order, amount, WAMID, Admin evidence, screenshot or live Advance test. No shipment/cash/PAID. |
+| P5 — regression | **PASS LAST GFS-230 LOCAL RUN** | Focused27/27, full244/244, rollback4/4, build/lint/audit0 and dry-runs. No code change since. No runtime/D1 regression. |
+| P6 — records/push | **PENDING PUSH** | Seven required GFS-231 records updated; remote verification follows commit. |
+
+**Completion:** P0 65%; P1 75%; P2 15%; P3 0%; P4 0%; P5 100% local only; P6 100% after push. Overall source readiness ~50%, live acceptance0%, public readiness NO-GO. No test order/WAMID/screenshot exists. The Cloudflare owner must restore visible verification of the existing expected dashboard identity before support can be contacted; then obtain D1 query authorization through the approved least-privilege support route. The authorized tester must be verified through the safely scoped Admin/own-Profile view before any message. Staging ETA indefinite; production is separately gated.
+
 ## GFS-230 | Priority COD Staging Release and Live Test (2026-10-26)
 
 **Result: local candidate and regressions PASS; staging release and genuine WhatsApp test BLOCKED. No cloud, order, payment or messaging mutation occurred.**
