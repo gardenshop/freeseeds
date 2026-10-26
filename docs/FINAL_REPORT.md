@@ -1,5 +1,21 @@
 # Final Report
 
+## GFS-228 | Minimal COD Checkout (2026-10-26)
+
+**Implemented and pushed the requested minimal COD intake; staging activation/live test remain blocked. No external infrastructure/payment/order mutation.**
+
+| Assignment | Result | Evidence |
+|---|---|---|
+| P0 Access/tester | **PARTIAL / BLOCKED** | Admin Access identity previously verified; Cloudflare/GitHub CLI identities retained. Chrome MCP `list_pages` unavailable; no Admin Test Controls/WhatsApp Profile match or current Meta operator confirmation. No message. |
+| P1 persistence | **PASS LOCAL DESIGN / BLOCKED REMOTE** | Existing order/advance history preserved; COD sidecar retains quote/fee/status. 0030 remains unapplied. D1 API7403 and empty legacy ledger unresolved. |
+| P2 compatible Worker | **BLOCKED** | API v90/Admin v82 unchanged; source parity unproven. No deployment or rollback. |
+| P3 minimal COD | **PASS LOCAL / NOT ENABLED** | Audited toggle/fee125 can work without COD HMAC or courier/remittance references; COD_PENDING same order, exact total, no advance artifacts. Runtime flag stays false. |
+| P4 real WhatsApp test | **NOT RUN** | No authorized current tester/WABA; no WAMID/order/amount/Admin COD_PENDING/screenshot. |
+| P5 repair/regression | **PASS LOCAL ONLY** | Focused100/full244, build/lint/audit0, API/Admin dry-runs. Settlement still cannot mark PAID without actual cash evidence/HMAC. No running staging regression. |
+| P6 docs/push | **PASS AFTER PUSH** | Seven records updated; source `046426e` pushed to PR #11. |
+
+**Answers:** COD code ready for isolated staging review: **yes, not deployed**. Staging COD enabled: **no**. Real WhatsApp COD PASS: **no**. Public COD: **no**. P0–P6 completed/remaining: **70/30, 75/25, 15/85, 75/25, 0/100, 70/30, 100/0**; overall ~58%. Launch estimate is indefinite until approved Chrome tabs/tester/Meta identity, D1 authorization/ledger-safe rehearsal and active Worker source parity are resolved; then staging requires separate controlled deployment and live E2E. Production needs separate authorization.
+
 ## GFS-227 | Final COD Blocker Resolution and Live Acceptance (2026-10-26)
 
 **No staging activation or live COD acceptance. Admin Access identity remains verified, but browser, D1 permission, source-parity, Meta/tester and operations gates prevented safe release. No cloud/order/payment mutation occurred.**

@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-228 Simple COD Checkout Scope (2026-10-26)
+
+- User-authorized staging scope is a minimal cash-on-delivery customer path, not courier accounting. COD intake requires the runtime flag, audited Admin toggle, authorized province tariff, fixed PKR125 fee, and exact confirmation/idempotency checks. It does **not** require `COD_REFERENCE_HMAC_KEY`, collection/remittance references, courier onboarding automation, packing, or dispatch to create a COD_PENDING order.
+- Keep the existing single V1 order and advance payment row/history; COD-specific detail remains tied to that same order and snapshots base amount, fee, final due total, policy revision and DO NOT SHIP hold. No QR, receipt, advance outbox/reminder or duplicate. Switching to Advance before confirmation removes the fee. Existing Advance methods and signed webhook remain unchanged.
+- COD confirmation never marks PAID. The optional Admin settlement path remains separate and may mark COD PAID only after exact actual cash collection is independently verified; it still fails closed without the required evidence/HMAC. No COD test cash, shipment or manual payment approval.
+- Admin COD settings UI is simplified to audited enable/disable with a fixed PKR125 fee; no collection/remittance reference inputs. The API accepts a null policy hash snapshot for COD_PENDING only. Keep the `COD_V1_ENABLED` staging flag false until release gates pass.
+- D1 and deployment gates still control staging: populated D1's empty `d1_migrations`, API7403, missing backup clone/equivalent, source parity, and Chrome MCP `list_pages` failure are unresolved. Do not apply/deploy, change scopes/accounts, or contact WhatsApp until those gates and authorized tester/Meta identity pass.
+- GFS-228 source commit `046426e` is local candidate code pushed to PR #11. Tests/dry-runs are not live acceptance. Production promotion remains separate.
+
 ## GFS-227 D1 Permission and Tester Stop (2026-10-26)
 
 - GFS-226 same-origin Admin Cloudflare Access identity check remains valid for email/host. A new official Chrome MCP session failed `list_pages` twice; stop and do not retry in this execution. Admin Test Controls/WhatsApp Profile not cross-matched. Last observed tester mismatch remains a hard stop; Meta operator remains unverified. No messages or account switching.

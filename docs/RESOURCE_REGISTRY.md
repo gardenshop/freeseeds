@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-228 COD Scope/Resource State (2026-10-26)
+
+- No resource/binding/account changed. Source commit `046426e` changes only Admin/API COD intake logic and tests; PR #11 branch receives it. Existing D1/API/Admin/Meta/callback IDs and rollback remain unchanged.
+- COD settings use audited revision and fee125 with no HMAC/references for intake. Optional settlement still requires independent cash evidence/HMAC. Runtime COD remains off; active Worker versions unchanged.
+- Remote D1 API7403 and Chrome `list_pages` failure left tester, source parity and staging bindings unverified this run. No D1 write, secret, Meta action, test order, WAMID or screenshot.
+
 ## GFS-227 Permission and Resource Status (2026-10-26)
 
 - Cloudflare account/Access identity and GitHub CLI identity remain verified from prior same-session evidence. Current Wrangler D1 query returned API7403; no scope/account changes. Remote D1 state is not refreshed this run.

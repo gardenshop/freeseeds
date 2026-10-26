@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-26: GFS-228 Minimal COD Does Not Require Courier Reconciliation
+
+- User narrowed COD intake to a simple PKR125 quote and COD_PENDING acceptance on the existing V1 order. Remove collection/remittance HMAC/reference requirements from intake and Admin enable toggle. Preserve audit/revision, fixed fee, province pricing, idempotency, payment security and DO NOT SHIP hold.
+- COD_PENDING is never PAID at confirmation. Optional Admin settlement remains separate and cannot mark PAID without verified exact cash collection and its financial evidence. Advance payment methods/receipts and signed callback remain unchanged.
+- Local focused/full validation passes; source commit `046426e` pushed to PR #11. This does not resolve D1 API7403, empty legacy ledger, unavailable clone/rehearsal, source parity, Chrome MCP page-list failure, tester/Meta identity, or deployment. Do not enable or claim live.
+
 ## 2026-10-26: GFS-227 Stop on Explicit D1 Authorization Error
 
 - Admin Access email/hostname match from GFS-226 remains verified. Fresh Chrome MCP `list_pages` failed twice; do not retry, switch tester profile, impersonate or send.

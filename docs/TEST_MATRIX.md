@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-228 Minimal COD Checkout Regression (2026-10-26)
+
+| Requirement | Result | Evidence |
+|---|---|---|
+| Minimal audited enable | PASS LOCAL | Fixed PKR125 toggle enables with no collection/remittance references or COD HMAC; wrong fee is rejected; stale revision conflicts. |
+| COD quote/confirm | PASS LOCAL | EN/UR existing-order quote adds PKR125 once; same order becomes COD_PENDING with exact total and DO NOT SHIP; final message is order number/total, no remittance prose. |
+| No advance work | PASS LOCAL | COD path creates no receipt, QR, payment-instruction outbox or reminder; COD→Advance removes fee and original methods continue. |
+| COD PAID security | PASS LOCAL | Optional settlement still returns HMAC-required error without key and cannot set paid early; no COD confirmation marks PAID. |
+| Existing advance regression | PASS LOCAL ONLY | Full244/22, focused100, baseline176, rollback4; build/lint/audit0. Active Worker not retested. |
+| Staging gates | BLOCKED | D1 API7403/empty ledger; Chrome MCP page inventory unavailable; tester/Meta operator unresolved; Worker source parity not proven. No migration/deploy/live order. |
+
 ## GFS-227 Final Verification (2026-10-26)
 
 | Check | Result | Evidence |

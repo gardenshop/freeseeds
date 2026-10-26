@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-26 (GFS-228 scope simplification)
+
+- Simplified COD Admin settings to an audited toggle and fixed PKR125 fee; COD_PENDING intake no longer requires collection/remittance references or collection HMAC.
+- Preserved audit revision, province quote, same-order COD_PENDING, no advance receipt/QR/outbox/reminder, DO NOT SHIP and separate verified-cash settlement gate.
+- Focused100/full244, build/lint/audit0, dry-runs passed; source `046426e` pushed to PR #11. Staging remains blocked by D1 API7403/ledger, source parity, Chrome/tester/Meta identity.
+
 ## 2026-10-26 (GFS-227 final gate)
 
 - Reconfirmed Admin Access identity from GFS-226; fresh Chrome MCP page listing failed twice, so tester/Meta checks were stopped without retry or send.
