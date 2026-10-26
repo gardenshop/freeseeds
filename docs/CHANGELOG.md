@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-26 (GFS-235 source provenance and tester gate)
+
+- Read-only history provides active API v90/Admin v82 timestamps/ETags but no SHA; both predate PR10 commit. Dashboard source retrieval unavailable; no edit/deploy. This proves a source-provenance gap, not a specific runtime defect.
+- Candidate webhook-signature path unchanged; receipt/outbox/COD diffs pass focused122/full244, V1 harness4, build/lint/audit0 and dry-runs.
+- Prior tester mismatch remains; no recheck/message. No D1 migration, flag or Worker mutation.
+
 ## 2026-10-26 (GFS-234 clean D1 works; original reads recovered)
 
 - Created separately approved synthetic-only diagnostic D1; SELECT1, schema-only V1 baseline + COD0030, quick/FK, same-order SQL persistence, replay and DO NOT SHIP checks pass. No V2 schema/customer export, Worker binding or Meta change.

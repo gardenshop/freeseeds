@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-235 Provenance and Compatibility Checks (2026-10-26)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Active versions | PASS READ-ONLY | API v90 `21a3d74c…`/etag `0a306eaa…`100%; Admin v82 `b840f5a4…`/etag `ba0f3650…`100%. No SHA; both predate cf01f44 commit. |
+| Source artifact | BLOCKED | Wrangler metadata lacks source; prior init C3 failure not repeated. Official UI view returned unavailable/null hash. No save/deploy. |
+| Candidate vs PR10 | PASS STATIC REVIEW ONLY | COD/payment outbox/idempotency differences; webhook signature verification route unchanged. Timestamp does not establish active-source parity. |
+| Targeted receipt/payment/webhook | PASS | 5 test files,122/122. |
+| Full/build/security | PASS LOCAL | 244/244; build/lint; audit0. |
+| Rollback | PASS LOCAL ONLY | V1 harness4/4; bare V1 cannot render COD totals. Candidate flag-off build dry-runs; no runtime rollback. |
+| Runtime smoke | PASS LIMITED | Prior health200,unsigned webhook403,unauthenticated Admin302. No valid signed event/customer journey. |
+| Tester/WhatsApp | BLOCKED | Prior exact profile mismatch unchanged; no retry/send/WAMID/order/Admin screenshot. |
+
 ## GFS-234 Permitted Alternative and Original Comparison (2026-10-26)
 
 | Check | Result | Actual evidence / boundary |

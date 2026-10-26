@@ -1,5 +1,24 @@
 # Final Report
 
+## GFS-235 Final COD Release Preparation (2026-10-26)
+
+**Result: D1/schema/synthetic COD evidence PASS; exact deployed-source parity and tester gates BLOCK release. No staging/production mutation.**
+
+| Assignment | Result | Evidence |
+|---|---|---|
+| P0 — D1 success preservation | **PASS** | GFS-234 original SELECT1/quick/FK/all63 V1 schema checks pass; ledger0,COD0030 unapplied. No repeated API7403 probe. Synthetic D1 evidence retained for Oct28 review. |
+| P1 — active source compatibility | **BLOCKED: SOURCE PROVENANCE** | Active API v90 `21a3d74c-3979-432c-9190-1848362592a4`,etag `0a306eaa…`,100% at12:47:42Z; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`,etag `ba0f3650…`,100% at12:55:05Z. Both predate PR10 commit cf01f44 at17:54:21Z; neither has source SHA. Official UI source view returned unavailable/null hash; prior Wrangler init failed and was not repeated. Times do not prove incompatibility, but exact parity is unproven. |
+| P1 — candidate/rollback | **PASS LOCAL ONLY** | PR11 is based on PR10. Webhook signature route unchanged in candidate diff; targeted122 receipt/payment/webhook tests pass. COD-off candidate build exists. V1 harness4/4 protects legacy history/hold but cannot render COD totals; after intake, rollback must be COD-compatible code with intake off. No live rollback. |
+| P2 — targeted staging | **NOT DEPLOYED** | Candidate API/Admin dry-runs pass expected original D1/R2/Queue, COD false. Original migration0030 unapplied. Time Travel bookmarks available, no restore. Source parity release gate not met. |
+| P3 — minimum COD | **PASS SOURCE/SQL ONLY** | Existing bilingual two-button logic, same-order COD_PENDING, PKR125/hold/idempotency pass synthetic tests. Active COD runtime flag unknown; no customer rate/quote evidence. |
+| P4 — one live test | **BLOCKED: TESTER** | Prior user-approved exact Tester Controls/Profile check=MISMATCH. Not repeated. No message, WAMID, order ID/amount, Admin COD_PENDING screenshot, shipment/cash/PAID.
+| P5 — regressions | **PASS LOCAL ONLY** | Targeted122/122; full244/244; V1 harness4/4; build/lint/audit0; API/Admin dry-runs. Prior health200,unsigned webhook403,unauthenticated Admin302. No live signed webhook/Advance check.
+| P6 — records/push | **PENDING PUSH** | Seven required records updated with new exact version times/ETags and unavailable source evidence; remote result follows.
+
+**Runtime state:** active Worker IDs remain API v90/Admin v82 at100%; candidate COD flag false; active flag unknown. No original D1 migration, Worker deployment, source edit, secret, Meta/callback, order, WAMID or screenshot. GitHub/Cloudflare identities were previously verified; canonical Meta config IDs appear in Worker metadata, but current Meta operator/tester not reverified. No Hoja asset accessed.
+
+**Progress:** P0 95%; P1 65%; P2 50%; P3 80%; P4 0%; P5 100% local only; P6 100% after push. Overall source/rehearsal readiness~70%; live acceptance0%; staging/public NO-GO. Exact tester-owner action: provide the existing registered tester-controlled WhatsApp profile matching unchanged Admin registration. Independent engineering blocker: obtain an authoritative source artifact/SHA for active versions or otherwise prove the release bundle, then deploy COD-off, verify Advance/signed callback/runtime rollback, and only then enable COD. No fixed launch date before these gates. Production requires separate authorization.
+
 ## GFS-234 | Clean Diagnostic Works; Original D1 Reads Pass (2026-10-26)
 
 **Result: a permitted alternative was actually created/tested, and an expressly approved original-D1 comparison now passes. Live COD acceptance remains BLOCKED by exact tester mismatch and deployed-source/rollout gates.**

@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-26: GFS-235 Do Not Deploy Without Active Source Provenance
+
+- API v90/Admin v82 metadata confirms 100% traffic, timestamps/ETags and GFS author/bindings, but not source SHA. Both versions predate PR10 commit cf01f44; source could have been deployed from uncommitted code, so chronology is not proof of content. Cloudflare UI source view returned unavailable/null hash; prior Wrangler init failed and is not repeated. Exact source parity remains unproven.
+- Candidate diff leaves webhook signature verification route unchanged and includes COD/payment-outbox changes; targeted122/full244/build/lint/audit and dry-runs pass. These local tests cannot identify active source or replace live runtime acceptance.
+- Keep original D1 COD0030 unapplied. Candidate COD-off release is the required rollback; bare V1 is unsafe after COD intake. No deploy due source artifact and tester gates.
+- GFS-234 exact tester comparison confirmed MISMATCH. No repeat of unchanged identity; no send or number/profile substitution.
+
 ## 2026-10-26: GFS-234 Successful Clean Probe and Bounded Original Read
 
 - API7403 is a historical authorization-class error, not proof of corruption. Considered wrong account/resource, absent scope, session/token/edge failure, SQL-layer unsupported PRAGMA, quota/service issue and resource-specific grant. Current correct identity, resource metadata, below-limit quota, and successful SQL on BOTH D1s disprove a present blanket denial; no root cause for the historical error is established. No token/account/scope changed. SQLITE_AUTH from unsupported integrity_check and expected COD business error7500 are distinct.

@@ -1,5 +1,16 @@
 # Status
 
+## GFS-235 Source Provenance and Tester Gate (2026-10-26)
+
+- **P0 PASS DATA; historical7403 not reproduced.** GFS-234 original SELECT/quick/FK/all63 V1 schema checks stand; ledger0. No repeated query.
+- **P1 BLOCKED SOURCE PARITY.** API v90 `21a3d74c-3979-432c-9190-1848362592a4`,etag `0a306eaa…`,100% since12:47:42Z; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`,etag `ba0f3650…`,100% since12:55:05Z. Both precede PR10 commit cf01f44 at17:54:21Z; no source SHA. Official UI source view returned unavailable/hash null. No edit/deploy. Chronology alone proves neither source equality nor mismatch.
+- **P2 NOT DEPLOYED.** Original migration0030 unapplied; Time Travel bookmarks exist, no restore. Candidate intake-OFF artifact is local/dry-run only; no running rollback. Bare V1 cannot handle COD totals.
+- **P3 CODE PASS / RUNTIME OFF UNKNOWN.** Two-choice EN/UR source and SQL tests pass. Candidate flag false; active flag unknown.
+- **P4 BLOCKED.** GFS-234 exact Tester Profile comparison is MISMATCH; not retried. No live WABA/chat/message/order/WAMID/Admin screenshot.
+- **P5 PASS LOCAL ONLY.** Targeted122/122; full244/244; V1 harness4/4; build/lint/audit0; API/Admin dry-runs. No live webhook/Advance verification.
+- **P6 PASS after evidence push.** New timestamps/ETags/source-view limitation recorded; no app code changed. V1, PR#9/#10, images, history and signed webhook untouched.
+- **Progress estimates:** P0 95/5; P1 65/35; P2 50/50; P3 80/20; P4 0/100; P5 100/0 local (live0); P6 100/0 after push. Source/rehearsal readiness~70%; live acceptance0%; staging NO-GO. Exact tester owner action: provide the existing registered tester-controlled profile matching Admin, with no agent identity switch or registration edit. Active source parity remains a separate engineering gate.
+
 ## GFS-234 Clean D1 Alternative Tested; Original Reads Recovered (2026-10-26)
 
 - **P0 PASS CURRENT READ ACCESS / HISTORICAL CAUSE UNKNOWN.** Official MCP same-execution inventory/account reads succeeded; Cloudflare principal/account and `d1:write` matched. Metadata inventory4/10; user-authorized clean SQL probe passed. User then explicitly authorized one original SELECT1 + conditional schema preflight: PASS, quick_check ok, FK0, all63 V1 objects exact, only Cloudflare/ledger extra; legacy ledger0. No original writes. API7403 not reproduced; no permission/token/account change and no corruption evidence. Community/Discord/Workers-SDK escalation researched; no case/post needed or submitted.
