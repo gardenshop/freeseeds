@@ -3271,7 +3271,7 @@ Active live version observed read-only: API staging deployment at 0% traffic; so
 | P1 one-action Admin | **PASS local** | Single non-COD `Confirm PAID`; saved reference reuse; exact settlement evidence required; secure endpoint, audit, conditional writes, and duplicate protection retained |
 | P2 migrations/recovery | **BLOCKED** | 0035/0036 only rehearsed; Wrangler OAuth expired/unreachable and no supported current D1 recovery bookmark/backup |
 | P3 live release | **BLOCKED** | API `428defd5` 100%; Admin `b840f5a4` 13% / `615e1156` 87%; GFS-266 not deployed and traffic not changed |
-| P4 tests/push | **PASS local / PUSH PENDING** | 290/290, focused tests, build, lint, rollback 4/4 pass; audit blocked by registry endpoint; source push awaits commit |
+| P4 tests/push | **PASS** | 290/290, focused tests, build, lint, rollback 4/4 pass; commit `9b06f55` pushed to the verified PR branch; audit blocked by registry endpoint |
 | COD/Advance preservation | **PASS read-only/local** | PUBLIC COD config preserved, PKR125 and three Advance methods unchanged; no live payment mutation |
 | New random reference/two-tap/COD hold | **PASS local / live pending** | Existing GFS-265 implementation remains intact; no fabricated live order or customer message |
 | Receipt acceptance | **PENDING** | No authorized settled-payment customer-device evidence available; no receipt/PAID fabrication |
@@ -3293,6 +3293,6 @@ Active live version observed read-only: API staging deployment at 0% traffic; so
 | Regression/build/lint | **PASS** | Full 290/290, focused repair suites 116/116, build, lint |
 | Dependency audit | **BLOCKED** | npm advisory endpoint unavailable; no audit PASS claimed |
 | Receipt/device acceptance | **PENDING** | No authorized customer-device standalone/replied receipt evidence; no receipt or PAID fabrication |
-| Push/docs | **IN PROGRESS** | Reviewed source/docs updated; commit and push are the remaining local handoff step |
+| Push/docs | **PASS** | Reviewed source/docs committed as `9b06f55` and pushed to `codex/gfs221-cod-compat-001` |
 
 **Active Worker IDs/traffic:** API `24d72438-72a1-4544-80df-4b9b90c297e5` 100%, rollback `428defd5-e7aa-4800-b001-976f403c735e` 0%; Admin `cd155f20-c848-4e4e-9fde-970e62b0a4ea` 100%, rollback `82a52106-0d84-4c84-ad1d-7d16daa80cbb` 0%. **PUBLIC:** COD remains enabled with PKR125; Advance remains operational. **Completion:** 90%; remaining 10% is independent settled-payment/device acceptance and registry audit availability, plus final push if not yet recorded.
