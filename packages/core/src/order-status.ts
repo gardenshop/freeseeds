@@ -64,13 +64,14 @@ export async function getLatestOrderForWaId(db: D1Database, trustedWaId: string,
 export function formatCustomerOrderStatus(order: CurrentOrderDetails, locale: "en" | "ur" = "en"): string {
   if (order.codQuotedTotalPkr != null && (order.state === "PAID" || order.paymentStatus === "PAID" || order.paymentReviewState === "COD_PAID")) {
     return locale === "ur"
-      ? `آرڈر ${order.orderNumber}\nآرڈر کی حالت: PAID\nCOD رقم: PKR ${order.codQuotedTotalPkr}\nآرڈر ڈیلیور ہو چکا ہے؛ کوریئر کی وصولی اور مکمل ترسیل کی تصدیق ہو گئی ہے۔ ایڈوانس ادائیگی یا رسید نہ بھیجیں۔`
-      : `Order ${order.orderNumber}\nOrder status: PAID\nReconciled COD amount: PKR ${order.codQuotedTotalPkr}.\nDelivered; courier collection and exact remittance are reconciled. Do not send an advance payment or receipt.`;
+      ? `آرڈر نمبر: ${order.orderNumber}\nادائیگی کا طریقہ: COD\nآرڈر کی حالت: COD ادا ہو گیا\nڈیلیوری پر کل واجب الادا: PKR ${order.codQuotedTotalPkr}`
+      : `Order Number: ${order.orderNumber}\nPayment Method: COD\nOrder Status: COD Paid\nTotal Due on Delivery: PKR ${order.codQuotedTotalPkr}`;
   }
   if (order.codQuotedTotalPkr != null && ["COD_PENDING", "PACKING", "DISPATCHED", "DELIVERED", "COLLECTION_PENDING"].includes(order.state)) {
+    const status = order.state === "COD_PENDING" ? "COD Confirmed/Pending Dispatch" : order.state === "PACKING" ? "COD Confirmed/Packing" : order.state === "DISPATCHED" ? "COD Confirmed/Dispatched" : order.state === "DELIVERED" ? "COD Confirmed/Delivered" : "COD Confirmed/Collection Pending";
     return locale === "ur"
-      ? `آرڈر ${order.orderNumber}\nآرڈر کی حالت: ${order.state}\nوصولی پر COD رقم: PKR ${order.codQuotedTotalPkr}\nکوریئر سے وصولی اور مکمل رقم کی ترسیل کی تصدیق ابھی باقی ہے۔ رسید یا ایڈوانس ادائیگی نہ بھیجیں۔`
-      : `Order ${order.orderNumber}\nOrder status: ${order.state}\nExact COD amount due: PKR ${order.codQuotedTotalPkr}.\nCourier collection and exact remittance are still pending; do not submit an advance-payment receipt.`;
+      ? `آرڈر نمبر: ${order.orderNumber}\nادائیگی کا طریقہ: COD\nآرڈر کی حالت: ${order.state === "COD_PENDING" ? "COD کی تصدیق ہو گئی/روانگی زیر التوا" : status.replace("COD Confirmed/", "COD کی تصدیق/")}\nڈیلیوری پر کل واجب الادا: PKR ${order.codQuotedTotalPkr}`
+      : `Order Number: ${order.orderNumber}\nPayment Method: COD\nOrder Status: ${status}\nTotal Due on Delivery: PKR ${order.codQuotedTotalPkr}`;
   }
   if (locale === "ur") {
     const payment = order.state === "PAID" || order.paymentStatus === "PAID" || order.paymentReviewState === "APPROVED" ? "ادائیگی منظور ہو گئی ہے۔"

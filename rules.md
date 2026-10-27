@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-250 Polished COD Acceptance (2026-10-27)
+
+- Independent read-only D1/Admin verification confirms one target order (identifier masked) in `COD_PENDING`, one COD detail row and one confirmation audit. The audited COD fee is PKR125 once; exact customer-order amounts are retained only in private evidence and are not persisted here.
+- Genuine inbound/outbound WhatsApp WAMIDs were verified privately for the authorized tester and are intentionally masked and excluded from source, logs and documentation. No duplicate order was created for evidence; historical records remain preserved.
+- Polished API `ba15b8ba-e3b3-4581-9b23-c2e688797132` is active100% in `TESTER_ONLY`; prior API `64594da5-6a97-4167-835f-cbd5987bd876` is0%. COD-OFF API `2500e268-8985-4fd4-a141-68633f16315d` remains a protected versioned rollback target. Admin `615e1156-2747-457a-8623-11d1e967f911` remains active100%; Admin v82 is retained.
+- COD summaries are dynamic, seeds-first and contain item price, D1 delivery fee, PKR125 COD fee and prominent total. COD status text is customer-facing only; stale Advance buttons cannot mutate a confirmed COD order. Local 282/282, build, lint, offline audit and rollback4/4 pass.
+- TESTER_ONLY acceptance is not public acceptance. PUBLIC remains disabled until a live polished Advance regression, security/rollback gates and the owner-authorized public promotion are verified. Keep DO NOT SHIP and do not collect cash.
+
 ## GFS-249 Controlled TESTER_ONLY Activation (2026-10-27)
 
 - Cloudflare identity was reverified in the official dashboard as `gisupp@gmail.com` on the GFS account before each Worker mutation. No Hoja resource, raw CDP, account switch, Version URL, or public-production change was used.

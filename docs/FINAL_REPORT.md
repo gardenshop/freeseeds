@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-250 | Polished COD Flow and Public Release Check (2026-10-27)
+
+**Overall: COD acceptance PASS; polished TESTER_ONLY staging PASS; public release BLOCKED pending live post-polish Advance verification and final public gate.**
+
+| Stage | Result | Evidence |
+|---|---|---|
+| P0 independent live verification | PASS | D1/Admin read-only evidence confirms one masked target order, `COD_PENDING`, one COD confirmation/detail, audited PKR125 fee once, test hold/DO NOT SHIP and no duplicate. Exact customer-order amounts are retained only in private evidence. |
+| P1 customer UX polish | PASS | Dynamic seeds-first EN/UR summary; exact COD status copy; stale Advance action is non-mutating. Full 282/282, build, lint, offline audit, rollback4/4. |
+| P2 protected staged deployment | PASS | API `ba15b8ba-e3b3-4581-9b23-c2e688797132` at100% with `COD_V1_ENABLED=true`, `COD_ROLLOUT_MODE=TESTER_ONLY`; prior `64594da5-6a97-4167-835f-cbd5987bd876` at0%; COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` retained as rollback. Admin `615e1156-2747-457a-8623-11d1e967f911` at100%. |
+| P3 genuine COD evidence | PASS | Customer evidence plus independent D1/Admin verification show two-option COD flow and COD_PENDING. Genuine inbound/outbound WAMIDs were verified privately; raw IDs are intentionally not recorded. |
+| P4 regression and rollback | PASS LIMITED | Local regression and rollback pass; API health200/unsigned callback403 and authenticated Admin health200/`paymentConfigured=true`. No duplicate live order was created merely to retest the already-verified customer acceptance. |
+| P5 PUBLIC release | BLOCKED / NO-GO | PUBLIC was not enabled. A live post-polish Advance regression and final authorized public verification remain. |
+
+**Runtime and data:** COD policy enabled with audited PKR125; Admin target state COD_PENDING; no receipt, advance approval or PAID transition; DO NOT SHIP. WAMIDs are genuine and privately verified but masked. Migration unchanged: reviewed COD0030 already applied; no replay. Public availability: **No**.
+
+**Completion:** independent COD evidence 100%; UX engineering 100%; TESTER_ONLY staging 100%; post-polish live Advance/public verification pending; public launch 0% and not authorized by this report.
+
 ## GFS-249 | Controlled TESTER_ONLY Activation (2026-10-27)
 
 **Result: controlled staging activation PASS; genuine START PASS; full COD journey and public release BLOCKED pending the tester's next device reply.**

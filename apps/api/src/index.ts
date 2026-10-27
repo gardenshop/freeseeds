@@ -343,6 +343,22 @@ async function codPolicy(db: D1Database): Promise<CodPolicyRow | null> {
   }
 }
 
+function codItemLabel(item: { type: string; code: string; name: string }, locale: "en" | "ur"): string {
+  if (item.type === "PRODUCT" && item.code === "FREE_5_PACK_VEGETABLE_SEEDS") return locale === "ur" ? "بیج (5 مفت پیکٹ)" : "Seeds (5 free packs)";
+  if (item.type === "FERTILIZER" && item.code === "MICRO_NUTRIENTS_FERTILIZER") return locale === "ur" ? "مائیکرو نیوٹرینٹس کھاد (25 گرام)" : "Micro Nutrients Fertilizer (25 g)";
+  return item.name;
+}
+
+function codQuoteLines(summary: Awaited<ReturnType<typeof getPersistedOrderSummary>>, feePkr: number, total: number, locale: "en" | "ur"): string[] {
+  const items = [...summary.items].sort((a, b) => Number(a.type === "FERTILIZER") - Number(b.type === "FERTILIZER"));
+  if (locale === "ur") {
+    const itemLines = items.map((item) => `${codItemLabel(item, locale)}: PKR ${item.lineTotalPkr}`);
+    return ["اشیاء:", ...itemLines, `ڈیلیوری فیس: PKR ${summary.deliveryPkr}`, `کیش آن ڈیلیوری وصولی فیس: PKR ${feePkr}`, `ڈیلیوری پر کل قابل ادائیگی: PKR ${total}`, "اگر آپ مکمل رقم ڈیلیوری پر ادا کرنے سے متفق ہیں تو ایک بار تصدیق کریں۔"];
+  }
+  const itemLines = items.map((item) => `${codItemLabel(item, locale)}: PKR ${item.lineTotalPkr}`);
+  return ["Items:", ...itemLines, `Delivery Fee: PKR ${summary.deliveryPkr}`, `COD Cash Collection Fee: PKR ${feePkr}`, `TOTAL PAYABLE ON DELIVERY: PKR ${total}`, "Confirm once only if you agree to pay this full amount on delivery."];
+}
+
 async function finalizeCodOrder(db: D1Database, orderId: string, quote: CodQuoteSnapshot | undefined, correlationId: string, waId: string, stateData: string): Promise<"CREATED" | "NOT_ELIGIBLE"> {
   if (!quote || codQuote(quote.baseAmountPkr, quote.feePkr) !== quote.totalPkr) return "NOT_ELIGIBLE";
   const now = new Date().toISOString();
@@ -442,7 +458,8 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
     || (state === "REVIEW" && /^(CONFIRM|PLACE_ORDER|BACK)$/.test(normalized))
     || (["PAYMENT_METHOD", "PAYMENT_PENDING"].includes(state) && Boolean(paymentMethodFromAction(normalized)))
     || (state === "PAYMENT_METHOD" && /^(ADVANCE_PAYMENT|COD)$/.test(normalized))
-    || (state === "COD_CONFIRM" && /^(CONFIRM_COD_ORDER|ADVANCE_PAYMENT)$/.test(normalized));
+    || (state === "COD_CONFIRM" && /^(CONFIRM_COD_ORDER|ADVANCE_PAYMENT)$/.test(normalized))
+    || (state === "COD_PENDING" && normalized === "ADVANCE_PAYMENT");
   const semanticAction = /^(START|GET_FREE_PACKS|LANG_.*|PAY_.*|PAYMENT_HELP|PROVINCE_.*|ADD_FERTILIZER|SEEDS_ONLY|PLACE_ORDER|CONFIRM|BACK|CONTINUE_ORDER|CANCEL_ORDER|FLOW_SUBMIT|ADVANCE_PAYMENT|COD|CONFIRM_COD_ORDER)$/.test(normalized) || Boolean(paymentMethodFromAction(normalized));
   const invalidAction = Boolean(message.interactive || message.button || semanticAction) && !actionAllowed;
   let paymentSelection: { orderId: string; orderNumber: string; amount: number; method: PaymentMethod; locale: "en" | "ur"; message: string; idempotencyKey: string; config: ReturnType<typeof normalizePaymentMethodRow> } | undefined;
@@ -450,6 +467,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   let showPaymentChoice = false;
   let showAdvanceMethods = false;
   if (invalidAction) { reply = (await sessionContent("VALIDATION", "Please choose one of the listed options.")).text; }
+  else if (state === "COD_PENDING" && normalized === "ADVANCE_PAYMENT") { reply = data.language === "ur" ? "یہ آرڈر پہلے ہی کیش آن ڈیلیوری کے لیے تصدیق ہو چکا ہے۔ اس کی حالت دیکھنے کے لیے Check Order استعمال کریں۔" : "This order is already confirmed for Cash on Delivery. Use Check Order to view its status."; }
   else if (normalized === "CANCEL") { nextState = "CANCELLED"; data = { language: data.language }; reply = data.language === "ur" ? "یہ غیر جمع شدہ آرڈر منسوخ کر دیا گیا ہے۔ کوئی آرڈر یا ادائیگی نہیں بنائی گئی۔ دوبارہ شروع کرنے کے لیے START لکھیں۔" : "This unsubmitted order entry is cancelled. No order or payment was created. Reply START to begin again."; }
   else if (normalized === "BACK" && state === "REVIEW") { nextState = "CONTACT"; reply = (await sessionContent("FIELD_CONTACT_NUMBER", "Please reply with your contact number.")).text; }
   else if (/^(STATUS|CHECK_ORDER)$/i.test(normalized)) { const locale = data.language ?? "en"; const order = await getLatestOrderForWaId(db, event.from, data.orderId); const status = await sessionContent("ORDER_STATUS", "Use Check Order to see the current order and payment status."); const paymentStatusCopy = order ? await paymentCopyForOrder(db, order.id, "status_copy", locale) : undefined; reply = order ? `${paymentStatusCopy ?? status.text}\n${formatCustomerOrderStatus(order, locale)}` : locale === "ur" ? "اس واٹس ایپ گفتگو کے لیے کوئی آرڈر نہیں ملا۔" : "No order was found for this WhatsApp conversation."; }
@@ -502,12 +520,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
       const feePkr = Number(codSettings!.fee_pkr);
       const total = codQuote(summary.totalPayablePkr, feePkr);
       data.codQuote = { baseAmountPkr: summary.totalPayablePkr, feePkr, totalPkr: total, policyRevision: codSettings!.revision, collectionPolicyHash: codSettings!.collection_policy_hash, remittancePolicyHash: codSettings!.remittance_policy_hash };
-      const itemLines = data.language === "ur"
-        ? summary.items.map((item) => `آئٹم: ${item.type === "FERTILIZER" ? "کھاد" : "بیج"} (${item.name}) × ${item.quantity}: PKR ${item.lineTotalPkr}`)
-        : summary.items.map((item) => `Item: ${item.name} × ${item.quantity}: PKR ${item.lineTotalPkr}`);
-      const quoteLines = data.language === "ur"
-        ? [`اشیاء:`, ...itemLines, `ترسیل کے اخراجات: PKR ${summary.deliveryPkr}`, `اصل آرڈر کی کل رقم (ایڈوانس ادائیگی): PKR ${summary.totalPayablePkr}`, `کیش آن ڈیلیوری وصولی فیس: PKR ${feePkr}`, `وصولی پر کل واجب الادا رقم: PKR ${total}`, "اگر آپ پوری رقم سے متفق ہیں تو ایک بار تصدیق کریں۔"]
-        : [`Items:`, ...itemLines, `Delivery: PKR ${summary.deliveryPkr}`, `Original order total (Advance Payment): PKR ${summary.totalPayablePkr}`, `COD collection fee: PKR ${feePkr}`, `Total due on collection: PKR ${total}`, "Confirm once only if you agree to pay this full amount on delivery."];
+      const quoteLines = codQuoteLines(summary, feePkr, total, data.language ?? "en");
       nextState = "COD_CONFIRM";
       reply = quoteLines.join("\n");
     } catch {

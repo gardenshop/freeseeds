@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-27: GFS-250 Polish and Preserve Verified COD Acceptance
+
+- Treat the supplied customer evidence and independent D1/Admin read-only evidence as completed COD acceptance for the masked target order; do not repeat it by creating a duplicate order. One COD confirmation/detail was verified and the audited PKR125 fee was applied once; exact customer amounts remain private.
+- Keep WAMIDs private: genuine inbound/outbound IDs were verified but are masked and not copied into repository records. No raw customer phone or chat data may enter source, tests, logs, screenshots or documentation.
+- Approve the seeds-first dynamic summary and customer-only COD status copy. A stale Advance action after COD confirmation is a no-op with the safe guidance message; it cannot reset the method, create a duplicate or mark COD paid.
+- Promote only the fresh polished API version in controlled TESTER_ONLY staging. Preserve the prior version at0% and the explicit COD-OFF version as the supported rollback target. PUBLIC is not implied by tester evidence.
+- Do not enable PUBLIC until the live post-polish Advance regression, security/rollback checks and final authorized public verification pass.
+
 ## 2026-10-27: GFS-249 Controlled Tester Activation; Awaiting Journey Continuation
 
 - Owner-authorized staging activation was performed only after identity, candidate health, signed-callback rejection, Admin payment health and rollback version checks. The protected tester secret was entered through supported controls; its value is intentionally absent from source, logs and documents.

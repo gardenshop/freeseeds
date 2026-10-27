@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-250 polished staging resources (2026-10-27)
+
+- API active polished TESTER_ONLY version: `ba15b8ba-e3b3-4581-9b23-c2e688797132` at100%; prior TESTER_ONLY `64594da5-6a97-4167-835f-cbd5987bd876` at0%; COD-OFF versioned rollback target `2500e268-8985-4fd4-a141-68633f16315d`. Original D1, Queue, R2 and Meta bindings/secrets are preserved; secret values are not recorded.
+- Admin `615e1156-2747-457a-8623-11d1e967f911` remains active100%; Admin v82 retained. No Version URL or public route enabled.
+- Original D1 target evidence: one masked target order, `COD_PENDING`, one confirmation audit, audited PKR125 fee once, test hold; historical orders/payments preserved. No migration replay.
+- Canonical GFS Meta callback only. Genuine WAMIDs were checked privately and masked. No Hoja resources or unrelated WhatsApp profile used.
+
 ## GFS-249 controlled staging resources (2026-10-27)
 
 - API active TESTER_ONLY version: `64594da5-6a97-4167-835f-cbd5987bd876` at100%; API COD-OFF rollback: `2500e268-8985-4fd4-a141-68633f16315d` at0%. Both preserve the existing staging D1, Queue, private receipt R2 and original Meta secret bindings. Protected tester secret is present but its value is not recorded.

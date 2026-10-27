@@ -1,5 +1,14 @@
 # Status
 
+## GFS-250 Polished COD Flow / Public Check (2026-10-27)
+
+- **P0 PASS.** Existing live evidence is independently verified without creating a duplicate: one target order (identifier masked) is `COD_PENDING`; one COD detail/confirmation audit records the audited PKR125 fee once. Exact customer-order amounts are retained only in private evidence. Test hold/DO NOT SHIP remains set and historical orders/payments remain preserved.
+- **P1 PASS.** Dynamic seeds-first EN/UR COD summary, exact customer status copy and stale Advance-button protection were implemented. Focused tests passed after repair, then full suite **282/282**, build, lint, offline production audit and rollback **4/4** passed.
+- **P2 PASS.** API `ba15b8ba-e3b3-4581-9b23-c2e688797132` is active100% on the staging callback with `COD_V1_ENABLED=true`, `COD_ROLLOUT_MODE=TESTER_ONLY`; prior API `64594da5-6a97-4167-835f-cbd5987bd876` is0%. COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` is retained as the versioned rollback target. Admin `615e1156-2747-457a-8623-11d1e967f911` remains active100%, authenticated health200 and `paymentConfigured=true`; unsigned callback403.
+- **P3 PASS LIMITED.** Existing genuine customer evidence plus D1/Admin evidence prove the completed COD acceptance and correct private amount/fee calculation. The polished code is active, but no duplicate/new order was created solely to repeat already-proven acceptance. Existing Advance behavior is covered by local regression; live post-polish Advance acceptance remains the remaining runtime gate.
+- **P4 BLOCKED / NO-GO.** PUBLIC was not enabled. Remaining gate is a live authorized Advance regression and final public promotion verification; do not silently switch `TESTER_ONLY` to `PUBLIC`.
+- **Completion:** evidence and engineering 100%; polished staged activation100%; independent COD acceptance100%; post-polish live Advance/public verification pending; public launch **NO-GO**.
+
 ## GFS-249 Controlled TESTER_ONLY Activation / Awaiting Customer Reply (2026-10-27)
 
 - **P0 PASS.** Official Chrome MCP `list_pages` and authenticated Admin/Cloudflare snapshots worked in one native session. Cloudflare identity was reverified as `gisupp@gmail.com` on the GFS account before mutations; canonical Meta sender remained the verified GFS asset.

@@ -1,5 +1,21 @@
 # Test Matrix
 
+## GFS-250 Polished COD Acceptance (2026-10-27)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Independent target verification | PASS | Original D1/Admin read-only check found one target order (identifier masked), `COD_PENDING`, one COD detail and one confirmation audit; no duplicate. |
+| Amount and fee | PASS PRIVATE | Audited PKR125 fee was applied once and the exact customer-order total was verified privately; it is not persisted in repository documentation. |
+| No premature payment artifacts | PASS | Test hold/DO NOT SHIP; no receipt row, advance approval or PAID transition; historical records preserved. |
+| Genuine WAMIDs | PASS PRIVATE | Inbound/outbound WAMIDs verified privately and masked; no raw customer identifiers recorded. |
+| Seeds-first dynamic summary | PASS | EN/UR code and focused/full tests verify free seeds first, dynamic item/D1 fees, audited COD fee and prominent total; misleading Advance wording removed. |
+| Stale Advance action | PASS | Focused test proves the exact safe response and unchanged `COD_PENDING`/single COD row. |
+| Customer status copy | PASS | Focused status test removes courier/remittance internals and renders order number, COD method, status and total due. |
+| Runtime deployment | PASS | API `ba15b8ba-e3b3-4581-9b23-c2e688797132` 100% TESTER_ONLY; prior `64594da5-6a97-4167-835f-cbd5987bd876` 0%; COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` retained for rollback. |
+| Runtime smoke/Admin | PASS | API health200, unsigned callback403; authenticated Admin health200, `paymentConfigured=true`, target found `COD_PENDING`. |
+| Quality gates | PASS | Full 282/282, build, lint, offline audit, rollback4/4 and `git diff --check`. |
+| Live post-polish Advance/public check | BLOCKED | No duplicate order was created; live Advance regression and any final public promotion verification remain before PUBLIC. |
+
 ## GFS-249 Controlled TESTER_ONLY Runtime (2026-10-27)
 
 | Requirement | Result | Evidence / blocker |

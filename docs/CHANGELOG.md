@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-27 (GFS-250 polished COD flow)
+
+- Replaced the COD quote with a dynamic seeds-first itemized summary in EN/UR: item rows, D1 Delivery Fee, audited COD Cash Collection Fee and TOTAL PAYABLE ON DELIVERY. Removed the misleading Advance-total wording.
+- Added safe handling for stale Advance buttons after COD confirmation and simplified COD Check Order status text without courier/remittance internals.
+- Focused tests, full **282/282**, build, lint, offline audit and rollback **4/4** passed. No D1 migration or customer data write was performed.
+- Uploaded and activated API `ba15b8ba-e3b3-4581-9b23-c2e688797132` at100% TESTER_ONLY; retained prior API and COD-OFF versioned rollback. PUBLIC remains off.
+
 ## 2026-10-27 (GFS-249 controlled TESTER_ONLY activation)
 
 - Provisioned the approved tester secret through supported protected controls without recording its value; restored the unexpected auto-promoted secret version and uploaded current HEAD with preserved secrets/bindings.
