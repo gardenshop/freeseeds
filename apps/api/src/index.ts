@@ -121,6 +121,30 @@ function guidedFieldIsValid(state: string, value: string): boolean {
   return true;
 }
 
+function comparableDigits(value: string | undefined): string {
+  return (value ?? "").replace(/\D/g, "").replace(/^00/, "");
+}
+
+async function recoverPendingGuidedOrder(db: D1Database, waId: string, data: ConversationData): Promise<{ customerId: string; leadId: string; orderId: string; orderNumber: string; duplicate: true } | undefined> {
+  const normalizedWaId = normalizeWhatsAppWaId(waId);
+  if (!normalizedWaId || !data.fullName || !data.deliveryAddress || !data.nearbyPlace || !data.city || !data.contactNumber || !data.province) return undefined;
+  const row = await db.prepare(`SELECT o.id AS order_id,o.order_number,o.total_payable,o.province,o.fertilizer_selected,
+      c.id AS customer_id,c.full_name,c.delivery_address,c.nearby_place,c.city,c.contact_number,
+      l.id AS lead_id
+    FROM orders o JOIN customers c ON c.id=o.customer_id JOIN leads l ON l.order_id=o.id
+    JOIN payments p ON p.order_id=o.id
+    WHERE (c.wa_id IN (?,?) OR c.normalized_whatsapp_number=? OR c.whatsapp_number=? )
+      AND o.state='DETAILS_COMPLETED' AND o.payment_status='PENDING'
+      AND p.method IS NULL AND p.review_state='PENDING' AND p.approved_amount IS NULL
+      AND NOT EXISTS(SELECT 1 FROM payment_receipts r WHERE r.order_id=o.id)
+      AND o.created_at >= datetime('now','-30 minutes')
+    ORDER BY o.created_at DESC,o.id DESC LIMIT 1`).bind(normalizedWaId, `+${normalizedWaId}`, `+${normalizedWaId}`, normalizedWaId).first<Record<string, unknown>>();
+  if (!row || String(row.full_name).trim() !== data.fullName.trim() || String(row.delivery_address).trim() !== data.deliveryAddress.trim() || String(row.nearby_place).trim() !== data.nearbyPlace.trim() || String(row.city).trim() !== data.city.trim() || comparableDigits(String(row.contact_number)) !== comparableDigits(data.contactNumber) || String(row.province) !== data.province || Number(row.fertilizer_selected) !== (data.fertilizerSelected ? 1 : 0)) return undefined;
+  const quote = await quoteOrder(db, { productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: data.province, fertilizerSelected: data.fertilizerSelected ?? false });
+  if (Number(row.total_payable) !== quote.totalPayablePkr) return undefined;
+  return { customerId: String(row.customer_id), leadId: String(row.lead_id), orderId: String(row.order_id), orderNumber: String(row.order_number), duplicate: true };
+}
+
 function webhookPhoneNumberIds(payload: unknown): string[] {
   const root = payload && typeof payload === "object" ? payload as { entry?: Array<{ changes?: Array<{ value?: { metadata?: { phone_number_id?: unknown } } }> }> } : {};
   return (root.entry ?? []).flatMap((entry) => (entry.changes ?? []).map((change) => change.value?.metadata?.phone_number_id).map((id) => typeof id === "string" ? id.trim() : ""));
@@ -495,9 +519,9 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
     } else {
       const submission = { fullName: data.fullName, deliveryAddress: data.deliveryAddress, nearbyPlace: data.nearbyPlace, city: data.city, contactNumber: data.contactNumber, productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: data.province, fertilizerSelected: data.fertilizerSelected ?? false, whatsappNumber: event.from };
       try {
-        const result = await persistFlowSubmission(db, submission, undefined, `WHATSAPP:${event.id}`, event.from);
+        const result = await recoverPendingGuidedOrder(db, event.from, data) ?? await persistFlowSubmission(db, submission, undefined, `WHATSAPP:${event.id}`, event.from);
         data.orderId = result.orderId; data.orderNumber = result.orderNumber;
-        const summary = result.quote ?? await getPersistedOrderSummary(db, result.orderId);
+        const summary = ("quote" in result ? result.quote : undefined) ?? await getPersistedOrderSummary(db, result.orderId);
         data.amountPkr = summary.totalPayablePkr;
         nextState = "PAYMENT_METHOD";
         reply = (await sessionContent("CONFIRMATION", "Order {orderNumber} created. Total: PKR {totalPkr}.", { orderNumber: result.orderNumber, totalPkr: summary.totalPayablePkr })).text;
@@ -622,7 +646,9 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   } else if (state === "CONTACT" && nextState === "REVIEW") {
     options = { buttons: [{ id: "PLACE_ORDER", title: whatsAppActionLabel(review, "PLACE_ORDER") }, { id: "BACK", title: whatsAppActionLabel(review, "BACK") }] };
   } else if (showPaymentChoice) {
-    options = { buttons: [{ id: "ADVANCE_PAYMENT", title: data.language === "ur" ? "ایڈوانس ادائیگی" : "Advance Payment" }, { id: "COD", title: data.language === "ur" ? "کیش آن ڈیلیوری (COD)" : "Cash on Delivery (COD)" }] };
+    // Meta reply-button titles are limited to 20 characters. Keep the COD
+    // abbreviation in the payment notice while using the valid button label.
+    options = { buttons: [{ id: "ADVANCE_PAYMENT", title: data.language === "ur" ? "ایڈوانس ادائیگی" : "Advance Payment" }, { id: "COD", title: data.language === "ur" ? "کیش آن ڈیلیوری" : "Cash on Delivery" }] };
   } else if (nextState === "COD_CONFIRM") {
     options = { buttons: [{ id: "CONFIRM_COD_ORDER", title: data.language === "ur" ? "COD آرڈر کی تصدیق" : "Confirm COD Order" }, { id: "ADVANCE_PAYMENT", title: data.language === "ur" ? "ایڈوانس ادائیگی" : "Advance Payment" }] };
   } else if (nextState === "PAYMENT_METHOD" && paymentOptions.length) {

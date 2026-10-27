@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-257 Review-to-Payment Repair (2026-10-27)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Fresh Place Order trace | PASS | Signed inbound was received and persisted as one pending order; outbound reply failed with Meta HTTP400. |
+| Meta reply-button constraint | PASS | COD button is now `Cash on Delivery` (valid short label); payment notice retains `(COD)` and PKR125 wording. |
+| Duplicate-safe retry | PASS | Focused test proves a distinct retry reuses one matching pending order and reaches payment-method state. |
+| Review EN/UR copy | PASS | Published Admin content version 6 uses Place Order consistently for text and actions. |
+| Candidate boundary smoke | PASS | API `4d218abf…` at0% returned health200 and unsigned webhook403. |
+| Controlled runtime | PASS limited | API `4d218abf…` active100% TESTER_ONLY; Admin `615e1156…`100%; PUBLIC unchanged. |
+| Fresh genuine payment menu | BLOCKED | Awaiting one authenticated approved-tester tap on the existing Place Order button; no fabricated inbound permitted. |
+| Public promotion | BLOCKED | Depends on genuine repaired menu, COD-to-Advance, Advance methods, and public-eligible verification. |
+| Regression gates | PASS | Focused79/79, full283/283, build, lint, audit0, rollback4/4. |
+
 ## GFS-254 Final Public Gate (2026-10-27)
 
 | Requirement | Result | Evidence / blocker |

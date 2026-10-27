@@ -1,5 +1,13 @@
 # Status
 
+## GFS-257 Review-to-Payment Repair (2026-10-27)
+
+- **P0 PASS.** Official Admin/Cloudflare identity and MCP access were reverified. The fresh signed Place Order event was found and traced to one safe pending order; outbound Meta HTTP400 caused the missing reply.
+- **P1 PASS engineering / BLOCKED live retry.** The invalid overlong COD button label was replaced with `Cash on Delivery`, duplicate-safe pending-order recovery was added, and Review EN/UR content was published as version 6 with Place Order consistency. The approved tester must tap the existing button once from the authenticated device to produce genuine post-repair menu evidence.
+- **P2 PASS limited.** Candidate `4d218abf-7262-4d04-b8a3-3baa6fae1879` passed 0%-traffic health200/unsigned403 and is now100% TESTER_ONLY; `a5722925-650c-42db-bc75-a8c3242e8a4b` is0%. Admin `615e1156-2747-457a-8623-11d1e967f911` is100%; COD-OFF rollback retained. PUBLIC remains disabled.
+- **Quality PASS.** Focused79/79, full283/283, build, lint, audit0, and protected rollback4/4 pass. No migration, duplicate order, payment, receipt, customer-history, Meta-secret, or Hoja change occurred.
+- **Completion:** P0 100/0; P1 engineering100/0 and live acceptance75/25; P2 90/10; P3 100/0. Overall controlled staging readiness~90%; genuine repaired-menu acceptance~75%; PUBLIC launch **NO-GO** pending the single authenticated tester tap and resulting payment/COD-switch evidence.
+
 ## GFS-254 Final Public Gate (2026-10-27)
 
 - **P0 PASS.** GFS-253 copy, controlled deployment, prior COD acceptance, D1/Admin state, history, PKR125 policy and rollback remain preserved.

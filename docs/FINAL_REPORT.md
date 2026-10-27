@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-257 | Review-to-Payment Repair (2026-10-27)
+
+**Overall: engineering PASS; controlled TESTER_ONLY runtime PASS; public release BLOCKED on one genuine tester-device action.**
+
+| Stage | Result | Evidence |
+|---|---|---|
+| P0 trace existing event | PASS | Signed Place Order received; one pending order persisted; outbound Meta HTTP400 identified; no duplicate or payment mutation. |
+| P1 repair | PASS | Valid short COD button, duplicate-safe retry, and Review EN/UR Place Order copy published. |
+| P2 runtime | PASS limited | API `4d218abf…` active100% TESTER_ONLY; Admin `615e1156…`100%; prior API0%; COD-OFF rollback retained. |
+| P3 live acceptance | BLOCKED | Approved tester must tap the existing Place Order once from the authenticated device; no fabricated inbound or unrelated profile. |
+| PUBLIC COD | BLOCKED | No public promotion or public menu claim made. |
+| Quality | PASS | Focused79/79; full283/283; build/lint/audit0; rollback4/4. |
+
+The root cause was the Meta reply-button title length, not webhook receipt or order persistence. The payment notice retains PKR125 COD wording; the actual button is the provider-valid `Cash on Delivery`. The pending order remains unsubmitted with no method, receipt, or PAID state. WAMIDs and customer/order identifiers remain private and are not reproduced here.
+
+Completion: P0 100%, P1 engineering100% / live25% remaining, P2 90% / 10% remaining, P3 75% / 25% remaining. PUBLIC readiness is not claimed until the genuine retry visibly returns the two-option menu and the remaining Advance/COD switching checks pass.
+
 ## GFS-254 | Final WhatsApp COD Public Release (2026-10-27)
 
 **Overall: controlled copy/runtime PASS; PUBLIC release BLOCKED by missing post-deploy genuine tester evidence.**

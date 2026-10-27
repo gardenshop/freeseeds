@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-257 controlled repair state (2026-10-27)
+
+- API `4d218abf-7262-4d04-b8a3-3baa6fae1879`: current repaired TESTER_ONLY version,100% traffic. Prior API `a5722925-650c-42db-bc75-a8c3242e8a4b`:0%. Admin `615e1156-2747-457a-8623-11d1e967f911`:100%. COD-OFF rollback `2500e268-8985-4fd4-a141-68633f16315d` retained.
+- Cloudflare identity verified as `gisupp@gmail.com` on Get Free Seeds before Worker and Admin mutations. Canonical GFS Meta assets only; no Hoja resource used.
+- Published Review content version6 has Place Order text/action consistency. Protected D1, R2, Queue, signed callback, payment settings, history and secrets were preserved.
+- Live proof remains limited to the traced pending order until the approved tester performs one authenticated retry. No raw phone, WAMID, order number or secret is recorded.
+
 ## GFS-254 final-gate state (2026-10-27)
 
 - API `a5722925-650c-42db-bc75-a8c3242e8a4b` remains100% TESTER_ONLY; Admin `615e1156-2747-457a-8623-11d1e967f911` remains100%; COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` remains rollback.

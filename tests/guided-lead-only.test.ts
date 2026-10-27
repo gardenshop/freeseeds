@@ -529,7 +529,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     expect(conversation()?.state).toBe("PAYMENT_METHOD");
     expect(buttons()).toEqual(["ADVANCE_PAYMENT", "COD"]);
     expect(body()).toContain("Choose payment method: Advance Payment or Cash on Delivery (COD). COD orders include an additional PKR 125 cash collection fee.");
-    expect((sends.at(-1)?.interactive as { action: { buttons: Array<{ reply: { title: string } }> } }).action.buttons.map((button) => button.reply.title)).toEqual(["Advance Payment", "Cash on Delivery (COD)"]);
+    expect((sends.at(-1)?.interactive as { action: { buttons: Array<{ reply: { title: string } }> } }).action.buttons.map((button) => button.reply.title)).toEqual(["Advance Payment", "Cash on Delivery"]);
     await inbound(tap("COD"));
     expect(conversation()?.state).toBe("COD_CONFIRM");
     expect(body()).toContain("Seeds (5 free packs): PKR 0");
@@ -622,7 +622,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     await reachReview("ur", true);
     await inbound(tap("PLACE_ORDER"));
     expect(body()).toContain("ادائیگی کا طریقہ منتخب کریں: ایڈوانس پیمنٹ یا کیش آن ڈیلیوری (COD)۔ COD آرڈر پر PKR 125 اضافی کیش کلیکشن فیس لاگو ہوگی۔");
-    expect((sends.at(-1)?.interactive as { action: { buttons: Array<{ reply: { title: string } }> } }).action.buttons.map((button) => button.reply.title)).toEqual(["ایڈوانس ادائیگی", "کیش آن ڈیلیوری (COD)"]);
+    expect((sends.at(-1)?.interactive as { action: { buttons: Array<{ reply: { title: string } }> } }).action.buttons.map((button) => button.reply.title)).toEqual(["ایڈوانس ادائیگی", "کیش آن ڈیلیوری"]);
     await inbound(tap("COD"));
     expect(body()).toContain("اشیاء:");
     expect(body()).toContain("بیج (5 مفت پیکٹ): PKR 0");
@@ -1058,6 +1058,21 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(body()).not.toContain("configured tariff");
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 1 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM capi_events").get()).toEqual({ count: 1 });
+  });
+
+  it("reuses the exact pending order when a new Place Order tap retries a failed reply", async () => {
+    await enableAuditedCodPolicy();
+    codEnabled = true;
+    await reachReview("en");
+    failNextSend = true;
+    await inbound(tap("PLACE_ORDER"), "synthetic-place-order-send-failure");
+    expect(conversation()?.state).toBe("REVIEW");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 1 });
+    await inbound(tap("PLACE_ORDER"), "synthetic-place-order-retry");
+    expect(conversation()?.state).toBe("PAYMENT_METHOD");
+    expect(body()).toContain("Cash on Delivery (COD)");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM leads").get()).toEqual({ count: 1 });
   });
 
   it("rejects a signed batch containing a callback without its phone identity", async () => {

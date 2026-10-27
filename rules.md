@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-257 Review-to-Payment Repair (2026-10-27)
+
+- The fresh Place Order inbound was genuine and signed: it was received at the reported time, persisted as one new `DETAILS_COMPLETED`/`PENDING` order, and left the conversation in `REVIEW` after the outbound reply failed. The provider response was Meta HTTP400 (`META_MESSAGE_SEND_400`), not a missing inbound.
+- Root cause was the COD reply-button title exceeding Meta's 20-character reply-button limit. The payment notice still contains the bilingual PKR125 COD text; the actual reply button is the valid short label `Cash on Delivery`.
+- Added a narrow retry path that reuses the exact matching recent unpaid, receipt-free pending order on a genuine second Place Order tap. It fails closed on identity, form, province, quote, state, age, or payment mismatches and cannot reuse paid/COD/receipt orders.
+- Published Review content is version 6 with English and Urdu text/actions consistently saying Place Order. No migration or payment-history mutation occurred.
+- Fresh API `4d218abf-7262-4d04-b8a3-3baa6fae1879` passed 0%-traffic health200/unsigned-webhook403 smoke, then became active at100% in TESTER_ONLY. API `a5722925-650c-42db-bc75-a8c3242e8a4b` is0%; Admin `615e1156-2747-457a-8623-11d1e967f911` remains100%; COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` remains rollback.
+- Official Admin Test Controls still shows the same single pending order and `REVIEW`; no duplicate, receipt, method, or PAID state exists. PUBLIC was not changed. The sole remaining live action is one tap by the approved tester on the existing Place Order button from the authenticated device; never fabricate or replay the inbound.
+
 ## GFS-254 Final Public Gate (2026-10-27)
 
 - Current Admin Test Controls still shows the prior genuine Advance interaction in `PAYMENT_REFERENCE`; its latest order is `PAYMENT_REVIEW`/`PENDING` with JazzCash, one receipt and no approval/PAID. No newer tester-originated inbound exists after the GFS-253 copy deployment.

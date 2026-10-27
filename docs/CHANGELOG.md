@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-27 (GFS-257 review-to-payment repair)
+
+- Traced the genuine Place Order event to a Meta HTTP400 caused by an overlong COD reply-button title.
+- Added a valid short COD button label and duplicate-safe retry recovery; corrected and published Review EN/UR Place Order copy.
+- Uploaded and promoted API `4d218abf…` in controlled TESTER_ONLY mode after 0%-traffic health/unsigned-webhook smoke. PUBLIC remains withheld pending one genuine tester retry.
+- Verified focused79/79, full283/283, build, lint, audit0, and rollback4/4. No migration or customer/payment-history mutation.
+
 ## 2026-10-27 (GFS-254 final public gate)
 
 - Rechecked current tester evidence and runtime identity/health. The existing genuine JazzCash receipt-review interaction predates the payment-copy deployment; no newer inbound exists.

@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-27: GFS-257 Repair Before Public Promotion
+
+- Treat the 13:41 Place Order as a real received event, not a missing START or stale button. Preserve its single pending order and do not reset or create another order.
+- Keep the customer-facing COD notice bilingual with PKR125, but use the provider-valid short reply label `Cash on Delivery`; the label and notice need not be identical because Meta constrains reply-button titles.
+- Reuse a matching recent unpaid/receipt-free pending order on a genuine retry only when all trusted form and quote fields match. Fail closed otherwise.
+- Keep repaired API `4d218abf…` at100% TESTER_ONLY, Admin `615e1156…` at100%, prior API at0%, and COD-OFF rollback retained. Do not switch PUBLIC until the approved tester supplies the one missing post-repair device action and all live gates pass.
+
 ## 2026-10-27: GFS-254 Do Not Promote PUBLIC Without Post-Deploy Evidence
 
 - Reuse the existing genuine Advance receipt-review evidence only for unchanged behavior; it predates the GFS-253 copy deployment and cannot prove the new WhatsApp text or all-method acceptance.
