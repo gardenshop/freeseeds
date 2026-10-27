@@ -1113,3 +1113,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - After supported OAuth and a pre-write Time Travel bookmark were verified, apply only targeted 0035/0036 statements. Preserve old order numbers, financial snapshots, payment destinations, Meta routing, and rollback versions.
 - Release only the one legacy COD row with customer-originated confirmation and no tester admission through the authenticated audited endpoint. Keep all other held COD rows protected. A live D1 batch may report zero changes after a trigger commit; re-read authoritative state before returning conflict.
 - Promote tested API/Admin versions only after quoted version-override smoke. Keep the prior versions at 0% as rollback. The cited Advance order remains REVIEW until independent settlement proof is available.
+
+## 2026-10-27: GFS-267 Admin Orders incident
+
+- Treat D1 code7500 as capacity failure. Split the detail-heavy list query and preserve an explicit error response contract.
+- Keep the repair at 0% until authenticated candidate list and detail/receipt HTTP200 smoke passes; keep `cd155f20` at 100% meanwhile.
+- Do not upgrade D1, mutate customer/payment state, enable Observability, replay migrations, or promote traffic without owner approval and fresh identity verification.

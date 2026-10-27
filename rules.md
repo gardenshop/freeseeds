@@ -753,3 +753,10 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - API `24d72438-72a1-4544-80df-4b9b90c297e5` is 100% with GFS-261 `428defd5-e7aa-4800-b001-976f403c735e` at 0%; Admin `cd155f20-c848-4e4e-9fde-970e62b0a4ea` is 100% with `82a52106-0d84-4c84-ad1d-7d16daa80cbb` at 0%. Health and signed-boundary smoke passed; PUBLIC COD configuration is preserved.
 - One authenticated, provenance-verified legacy public COD hold was released once. Its 250/125/375 snapshot stayed unchanged, it remains unpaid `COD_PENDING`, and Admin exposes the authorized `Mark packing` transition. Six other COD rows remain held; no bulk release occurred. The first live response returned a false conflict after committing; the repair re-reads authoritative state and is now live.
 - The cited Advance payment remains REVIEW and unapproved because independent receiving-account settlement proof is unavailable. Never mark it PAID from receipts/reference alone.
+
+## GFS-267 Protected Admin Orders Protocol (2026-10-27)
+
+- D1 error code 7500 (free-tier daily row-read limit) caused the live Orders failure; never convert backend read failures into zero counts.
+- Use a narrow Admin list projection and separate authoritative detail reads. D1 read failures return structured HTTP 503 with no records or counts.
+- Keep candidate `92955132-6917-4cad-895e-d2b89e56d9dd` at 0% until list/detail HTTP200 smoke passes; keep `cd155f20-c848-4e4e-9fde-970e62b0a4ea` at 100%.
+- No capacity, payment, receipt, hold, Meta, or customer-message mutation bypasses the D1 cap.

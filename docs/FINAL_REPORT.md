@@ -3296,3 +3296,18 @@ Active live version observed read-only: API staging deployment at 0% traffic; so
 | Push/docs | **PASS** | Reviewed source/docs committed as `9b06f55` and pushed to `codex/gfs221-cod-compat-001` |
 
 **Active Worker IDs/traffic:** API `24d72438-72a1-4544-80df-4b9b90c297e5` 100%, rollback `428defd5-e7aa-4800-b001-976f403c735e` 0%; Admin `cd155f20-c848-4e4e-9fde-970e62b0a4ea` 100%, rollback `82a52106-0d84-4c84-ad1d-7d16daa80cbb` 0%. **PUBLIC:** COD remains enabled with PKR125; Advance remains operational. **Completion:** 90%; remaining 10% is independent settled-payment/device acceptance and registry audit availability, plus final push if not yet recorded.
+
+## GFS-267 Final Report — 2026-10-27
+
+| Stage | Result | Evidence / blocker |
+|---|---|---|
+| Diagnose | **PASS** | Live HTTP500/plain text correlated to D1 code7500; schema supports 0035/0036 |
+| Repair/tests | **PASS local** | Narrow list projection + JSON503 guard; focused6/6, full291/291, build, lint |
+| Active Orders | **PASS** | HTTP200; counts all67/verify6/confirmed2/fulfillment10; total67; page25/3 |
+| Candidate promotion | **BLOCKED** | Candidate `92955132...`0% JSON503 under quota; active `cd155f20...`100% retained |
+| Detail/receipts/payment | **BLOCKED pending quota** | No PAID mutation; cited Advance remains REVIEW pending independent settlement proof |
+| COD/Advance/rollback | **PASS read-only** | PUBLIC COD/PKR125 and Advance preserved; rollback4/4; no financial mutation |
+| Audit/D1 rerun | **BLOCKED** | npm advisory endpoint and current D1 row reads unavailable |
+| Push/docs | **PENDING** | Commit/docs are local pending verified Git push |
+
+**New reference proof:** live list returned opaque-shaped `FS-XXXX-XXXX-XXXX` values; local sample `FS-8R4K-2X7M-9QPA`; no new live order fabricated. **Completion:** 85%; remaining15% is quota recovery, candidate list/detail/receipt HTTP200 smoke, controlled promotion, and audit availability.

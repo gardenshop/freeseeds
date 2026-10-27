@@ -1069,3 +1069,10 @@ No secrets are stored in this registry.
 - Live versions: API `24d72438-72a1-4544-80df-4b9b90c297e5` 100% / `428defd5-e7aa-4800-b001-976f403c735e` 0%; Admin `cd155f20-c848-4e4e-9fde-970e62b0a4ea` 100% / `82a52106-0d84-4c84-ad1d-7d16daa80cbb` 0%.
 - COD: one provenance-verified public hold released once; unpaid COD_PENDING and financial snapshot preserved; six other COD rows remain held. No test hold was bulk-cleared.
 - Advance: cited payment remains REVIEW; three receipts/reference are visible in Admin, but independent receiving-account proof is unavailable, so no PAID mutation.
+
+## GFS-267 Registry — 2026-10-27
+
+- Source: `D:\free seeds\gfs264-pr11`, commit `cad82e1`; no Hoja assets or customer data added.
+- Cloudflare identity verified before upload/deploy: `gisupp@gmail.com`, Get Free Seeds account; candidate Admin `92955132...`0%, active `cd155f20...`100%.
+- Live schema read-only check supports 0035/0036. Remaining read blocker is D1 code7500; no capacity or financial mutation was made.
+- Active list HTTP200 sanitized counts67/6/2/10; candidate JSON503 under quota exhaustion; detail/receipt acceptance pending.

@@ -1432,3 +1432,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **P0 remains BLOCKED safely:** The cited Advance order is still REVIEW with three receipts and a saved reference, but no independent receiving-account settlement proof. Confirm PAID is live and disabled with the exact missing-proof explanation.
 - **P4/P5:** Full regression after source repair, focused tests, build, lint, and rollback pass; commit `9b06f55` is pushed to the verified PR branch. npm audit remains BLOCKED by registry advisory endpoint failure. No authorized real settled-payment/device acceptance or new live customer order was fabricated.
 - **Completion:** implementation, migration, deployment, COD hold repair, and Admin confirmation are **100%**; live independent settlement/customer-device acceptance remains **0%**. Overall **90% complete / 10% remaining**.
+
+## GFS-267 Live Admin Orders Incident — 2026-10-27
+
+- **Root cause:** `/api/orders` returned plain-text HTTP500 because the full list projection exceeded Cloudflare D1 free-tier daily row-read quota (error7500); live 0035/0036 schema structures are present.
+- **Repair:** list uses a narrow summary projection and D1 read failures return JSON HTTP503; no order, payment, receipt, hold, or migration data changed.
+- **Active smoke:** HTTP200 with sanitized counts `{all:67, verify:6, confirmed:2, fulfillment:10}`, total67, page1/3, 25 rows. Candidate 0% smoke returned structured JSON503 while quota was exhausted; detail smoke is pending.
+- **Traffic:** API `24d72438...`100% / rollback `428defd5...`0%; Admin `cd155f20...`100% / candidate `92955132...`0%.
+- **Remaining blocker:** D1 free-tier row-read quota. Do not promote candidate until authenticated list/detail HTTP200 evidence is complete.

@@ -994,3 +994,9 @@
 - Staged 0% smoke and promoted API `24d72438…` and Admin response-fix `cd155f20…` to 100%, retaining prior versions at 0% rollback. PUBLIC COD and Advance configuration remained intact.
 - Released one verified genuine public COD hold through the authenticated audited workflow; the order remains unpaid COD_PENDING and six other COD rows remain held.
 - Repaired false conflict reporting after trigger-backed COD release by re-reading authoritative D1 state. The cited Advance payment remains REVIEW because settlement proof is missing.
+
+## 2026-10-27 — GFS-267 Admin Orders HTTP500 repair
+
+- Correlated `/api/orders` HTTP500 to D1 free-tier daily row-read limit code7500.
+- Added a narrow list projection and structured JSON503 failure path; no fake counts or financial mutations.
+- Regression: focused6/6, full291/291, build, lint, rollback4/4. Candidate `92955132` is staged0%; active `cd155f20` remains100% pending quota recovery.

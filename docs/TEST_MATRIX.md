@@ -1256,3 +1256,9 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | GFS-266 live Worker/Admin promotion | 0%-traffic smoke then 100% promotion with rollback versions | PASS: API `24d72438…` 100%, Admin `cd155f20…` 100%, prior versions 0% |
 | GFS-266 public COD hold repair | One authenticated provenance release; no bulk/test release; unpaid fulfillment path | PASS: one public row unheld/COD_PENDING/Mark packing; six rows remain held |
 | GFS-266 final Admin response | Committed release cannot return false conflict | PASS: authoritative re-read repair live; idempotent already-released path retained |
+
+| GFS-267 HTTP500/root cause | PASS | Chrome reproduction; D1 code7500 daily row-read limit; live 0035/0036 structures present |
+| GFS-267 list repair | PASS local | Narrow list SELECT, JSON503 on D1 read failure; focused6/6 and full291/291 |
+| GFS-267 active Orders smoke | PASS | HTTP200; counts67/6/2/10; total67; 25-row page; opaque-shaped references/private sequence observed |
+| GFS-267 candidate/detail smoke | BLOCKED | Candidate JSON503 and detail acceptance pending D1 quota recovery; no mutation |
+| GFS-267 rollback/audit/integrity | PARTIAL | Rollback4/4 PASS; npm audit and current D1 integrity rerun blocked by service/registry limits |
