@@ -3392,6 +3392,6 @@ Active live version observed read-only: API staging deployment at 0% traffic; so
 | P4 migration/integrity | **PASS** | 0037 preserved; targeted 0038 applied once; provider/status index used by EXPLAIN; quick_check ok; FK empty |
 | P4 quality | **PASS** | Focused104/104, full292/292, build, lint, rollback4/4; audit not claimed if endpoint unavailable |
 | P4 customer safety | **PASS** | PUBLIC COD/PKR125, Advance methods, signed webhook, receipts/history/holds preserved; no payment approval, receipt, order, webhook, fulfillment, or WhatsApp mutation |
-| P5 docs/push | **PENDING** | Documentation and source changes prepared locally; GitHub push remains the final handoff action |
+| P5 docs/push | **PASS** | Rules/status/test matrix/decisions/changelog/registry/final report updated; commit `683c438` pushed to PR branch |
 
-**Current D1:** Paid capacity is active; 0037/0038 markers and indexes are verified. **Current service:** Admin optimized version is 100%, API unchanged at 100%, Access remains enforced, public Version URLs remain disabled. **Remaining:** push the verified commit and collect natural-traffic after-metrics for outbound status updates; no release blocker remains for Admin operation.
+**Current D1:** Paid capacity is active; 0037/0038 markers and indexes are verified. **Current service:** Admin optimized version is 100%, API unchanged at 100%, Access remains enforced, public Version URLs remain disabled. **Remaining:** collect natural-traffic after-metrics for outbound status updates; no release blocker remains for Admin operation.
