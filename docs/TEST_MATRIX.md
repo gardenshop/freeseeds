@@ -1,5 +1,15 @@
 # Test Matrix
 
+## GFS-245 Approved Tester Registration (2026-10-27)
+
+| Check | Result | Evidence / scope |
+|---|---|---|
+| Supported tester registration | PASS LIMITED | Exact approved customer already exists in Admin Test Controls as an `ADMIN_TEST_EXEMPTION`; no duplicate mutation. |
+| History protection | PASS | Existing order/payment history was inspected only and not reset, reused or modified. |
+| Canonical sender | PASS LIMITED | Meta Phone Manager remains authoritative for the connected GFS sender; unrelated Web profile excluded. |
+| Tester-initiated inbound | BLOCKED | Customer device has not initiated a real message; no synthetic inbound allowed. |
+| Activation/live COD | NOT RUN | Signed/Advance/rollback gates and live acceptance require the tester-initiated inbound. |
+
 ## GFS-244 Tester Resolution (2026-10-27)
 
 | Check | Result | Evidence / scope |

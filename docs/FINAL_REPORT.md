@@ -1,5 +1,23 @@
 # Final Report
 
+## GFS-245 | Approved Tester Entry Verified; Awaiting Inbound (2026-10-27)
+
+| Task | Result | Evidence |
+|---|---|---|
+| P0 approved tester registration | PASS LIMITED | Exact approved customer already exists in supported Admin Test Controls; no duplicate registration mutation. |
+| P0 canonical sender | PASS LIMITED | Meta Phone Manager remains authoritative; unrelated WhatsApp Web profile excluded. |
+| P1 signed/Advance/rollback gates | BLOCKED | No genuine tester-initiated inbound event available; no synthetic inbound permitted. |
+| P2 activation | NOT DONE | COD remains disabled; original-only traffic preserved. |
+| P3 exact flow | NOT RUN | Customer device has not started a real new journey. |
+| P4 COD acceptance | NOT RUN | No WAMIDs, order number, amount, COD_PENDING/Admin evidence or screenshot. |
+| P5 regression/records | PASS LIMITED | No code change; prior local gates remain authoritative and records updated. |
+
+**Versions/traffic:** API candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` 0% / v90 `21a3d74c-3979-432c-9190-1848362592a4` 100%; Admin candidate `091f1a3f-595b-4530-b54a-d7253af60664` 0% / v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` 100%. `COD_V1_ENABLED=false`.
+
+**Completion:** P0 100%; P1 registration 80% / live 0%; P2 preparation 60% / activation 0%; P3 source 80% / active 0%; P4 0%; P5 90% local. Public launch NO-GO.
+
+**Exact action required:** the approved customer sends the initial WhatsApp message from their own authenticated device. Do not use the unrelated Web profile or simulate inbound activity.
+
 ## GFS-244 | Tester Resolution Blocked (2026-10-27)
 
 | Task | Result | Evidence |

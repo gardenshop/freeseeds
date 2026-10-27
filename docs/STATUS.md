@@ -1,5 +1,14 @@
 # Status
 
+## GFS-245 Approved Tester Present; Awaiting Tester-Initiated Inbound (2026-10-27)
+
+- **P0 registration PASS LIMITED.** The explicitly approved customer already exists in supported Admin Test Controls as an `ADMIN_TEST_EXEMPTION`; no duplicate mutation was performed. Prior history remains preserved.
+- **Sender identity PASS LIMITED.** Canonical Meta Phone Manager remains the sender authority. The unrelated WhatsApp Web profile was not used.
+- **P1/P2 BLOCKED.** Tester device/session has not initiated a real inbound message; valid signed callback, running Advance, rollback and controlled activation cannot be claimed.
+- **P3/P4 NOT RUN.** No new WAMIDs, COD order, PKR125 quote, COD_PENDING/Admin evidence or Advance switching evidence.
+- **Completion:** P0 100%; P1 80% registration/0% live; P2 60% preparation/0% activation; P3 80% source/0% active; P4 0%; P5 90% local/records. Public launch NO-GO.
+- **Exact action required:** the authorized customer sends the initial WhatsApp message from their own authenticated device; do not use the unrelated Web profile or simulate the event.
+
 ## GFS-244 Tester Resolution Stop (2026-10-27)
 
 - **P1 BLOCKED.** Admin registration and canonical Meta sender remain verified, but the only available WhatsApp Web owner profile matches neither. No account switch, registration edit, message or reset occurred.

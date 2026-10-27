@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-27 (GFS-245 approved tester present)
+
+- Verified the explicitly approved customer already exists in supported Admin Test Controls; no duplicate registration or history mutation was performed.
+- Reaffirmed canonical Meta sender authority and excluded the unrelated WhatsApp Web profile. Awaiting a real tester-initiated inbound message; no simulation or live deployment occurred.
+
 ## 2026-10-27 (GFS-244 tester resolution stop)
 
 - Reverified Admin tester registration, canonical Meta sender, Cloudflare identity and original-only traffic. The available WhatsApp Web profile still matched neither supplied identity; no account switch, registration, message or runtime mutation occurred.

@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-27: GFS-245 Existing Approved Tester Entry; Await Device Initiation
+
+- The owner explicitly approved the replacement tester. The exact customer is already registered through the supported Admin Test Controls mechanism, so adding a duplicate exemption would be an unnecessary state mutation.
+- Existing history remains protected. The unrelated WhatsApp Web profile is not the tester and must not be used. The customer must initiate the real inbound event from their own authenticated device.
+- Keep COD disabled and original-only traffic until signed callback, Advance, rollback and the genuine tester journey pass.
+
 ## 2026-10-27: GFS-244 Preserve Original-Only at Tester Stop
 
 - Reverified the unchanged Admin tester entry, canonical Meta sender, authenticated Cloudflare identity and current deployments. The available WhatsApp Web profile did not match either supplied identity.

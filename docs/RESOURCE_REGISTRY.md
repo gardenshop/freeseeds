@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-245 Approved Tester Entry (2026-10-27)
+
+- The explicitly approved customer is already present in Admin Test Controls as an `ADMIN_TEST_EXEMPTION`; no duplicate registration was added. Identifiers are omitted and history is protected.
+- Meta Phone Manager remains the canonical GFS sender authority. The unrelated WhatsApp Web profile was not used. No WAMID, new order, COD_PENDING/Admin evidence or live deployment exists.
+- Next external event must be a genuine inbound message from the authorized customer's own authenticated device; synthetic inbound activity is prohibited.
+
 ## GFS-244 Tester Resolution Stop (2026-10-27)
 
 - Admin Test Controls and canonical Meta Phone Manager remain matched to the supplied customer/sender roles; identifiers are omitted. The available WhatsApp Web owner profile matches neither.

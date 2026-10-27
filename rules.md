@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-245 Approved Tester Registration (2026-10-27)
+
+- Owner explicitly approved the replacement customer tester. Admin Test Controls already contains the exact normalized customer entry as an `ADMIN_TEST_EXEMPTION`; no duplicate add or registration mutation was needed. Existing order/history remains untouched.
+- Canonical Meta Phone Manager remains the source of truth for the GFS business sender. The unrelated WhatsApp Web owner profile remains excluded; no QR relink, account switch, OTP handling or impersonation.
+- The tester's own authenticated WhatsApp device must initiate the first inbound message. Do not simulate inbound activity. COD activation, promotion and live acceptance remain held until that message and the remaining signed/Advance gates are observed.
+
 ## GFS-244 Tester Resolution Stop (2026-10-27)
 
 - Official Chrome DevTools MCP, Admin Test Controls, canonical Meta Phone Manager and Cloudflare identity remained available. Cloudflare showed `gisupp@gmail.com` on the GFS account; no mutation was made.
