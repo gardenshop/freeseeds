@@ -3236,7 +3236,7 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 | Existing live public COD hold | **BLOCKED** — read-only Admin confirms the cited order is held; release requires authorized provenance/D1 mutation |
 | Admin fulfillment | **PASS local** — released legacy-public synthetic order reached `PACKING`; test order stayed blocked |
 | Payments/receipts | **PASS local guards** — PKR125 and Advance paths unchanged; live receipt acceptance **PENDING** (no authorized device access) |
-| Migration/deployment/push | **BLOCKED** — migrations staged, no live D1/deploy/push mutation authorized in this run |
+| Migration/deployment/push | **PARTIAL** — migrations staged and commit `37d6198` pushed to PR#11 branch; live D1/deploy remains blocked |
 | Regression | **PASS** — 290/290, focused suites, build, lint, rollback 4/4 |
 | Audit | **BLOCKED** — npm registry advisory endpoint failed; no audit verdict asserted |
 

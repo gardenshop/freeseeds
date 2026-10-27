@@ -1044,3 +1044,4 @@ No secrets are stored in this registry.
 - Additive migrations staged locally: `0035_opaque_order_references.sql`, `0036_cod_hold_release_authorization.sql`. Neither was applied to live D1 in this run.
 - Cloudflare read-only identity/service: authenticated `gisupp` session, `getfreeseeds-api-staging`; active deployment observed at 0% traffic. No version ID was claimed for this un-deployed source.
 - Chrome DevTools MCP: official page inventory and read-only Admin/Cloudflare/Meta identity checks completed. No WhatsApp customer-device interaction, receipt upload, WAMID, or external message was created.
+- Git: commit `37d6198` pushed to `codex/gfs221-cod-compat-001`; no unrelated files included.
