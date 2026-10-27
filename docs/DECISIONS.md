@@ -1,5 +1,10 @@
 # Decisions
 
+## 2026-10-27: GFS-260 Preserve Healthy PUBLIC Release
+
+- Keep PUBLIC active because read-only health, Admin payment configuration, D1 integrity, COD holds, and recent webhook/outbox safety checks pass.
+- Do not create a customer interaction solely to prove the already-active public menu. Record the absence as pending evidence; do not reset, redeploy, or disable COD.
+
 ## 2026-10-27: GFS-259 Authorized PUBLIC Promotion
 
 - Accept the newer genuine COD evidence: one order is COD_PENDING at PKR675 with PKR125 exactly once, no receipt/PAID, and a DO NOT SHIP hold. Do not create or modify another order.

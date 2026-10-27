@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-260 Post-Launch Verification (2026-10-27)
+
+- Read-only post-launch inspection found no new non-tester or other customer interaction after PUBLIC promotion. Do not solicit one, reset state, or disable the healthy release; public customer observation remains pending.
+- Active API `089f5671-2c2b-48cb-8373-b273e28f4177` remains100%; API health200; Admin health200 with `paymentConfigured=true`; prior TESTER_ONLY API remains0%; COD-OFF rollback remains protected.
+- D1 `quick_check=ok`; COD rows remain `COD_PENDING`; recent webhook records are received/sent. Recent outbox failures are pre-launch known Meta400 events; no post-launch outbox failure was observed.
+
 ## GFS-259 Authorized PUBLIC COD Release (2026-10-27)
 
 - New genuine tester evidence is independently confirmed in Admin/D1: one latest order is `COD_PENDING` with quoted total PKR675, base PKR550, exactly one PKR125 COD fee, one confirmation audit, zero receipts, no approved amount, and `test_hold=1`. Historical orders remain preserved.

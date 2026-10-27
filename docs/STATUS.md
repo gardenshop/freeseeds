@@ -1,5 +1,12 @@
 # Status
 
+## GFS-260 Post-Launch Verification (2026-10-27)
+
+- **P0 PASS.** PUBLIC API `089f5671…` remains100%; Admin remains100%; no redeploy or traffic mutation occurred.
+- **P1 PASS limited.** API health200 and Admin health200/`paymentConfigured=true`; existing COD/Advance evidence remains valid. No new legitimate post-promotion customer interaction exists, so public-menu observation is pending.
+- **P2 PASS.** D1 `quick_check=ok`; COD rows remain pending; recent webhook receipt/sent aggregates are healthy. Failed outbox rows are historical pre-launch Meta400 events, with no new post-launch failure.
+- **Completion:** P0 100/0; P1 75/25; P2 100/0; P3 100/0. PUBLIC remains active; customer observation remains the only pending evidence item.
+
 ## GFS-259 Authorized PUBLIC COD Release (2026-10-27)
 
 - **P0 PASS.** New genuine evidence verifies one COD_PENDING order at PKR675: base PKR550 plus one PKR125 fee, no receipt/PAID, one confirmation audit, and DO NOT SHIP hold.

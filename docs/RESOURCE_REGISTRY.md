@@ -1,5 +1,10 @@
 # Resource Registry
 
+## GFS-260 post-launch state (2026-10-27)
+
+- API `089f5671…` remains PUBLIC100%; Admin remains100%; prior TESTER_ONLY and COD-OFF rollback versions remain retained.
+- No new customer, order, payment, receipt, secret, Meta, D1, or traffic mutation. Public customer-menu evidence is pending because no legitimate post-promotion interaction exists.
+
 ## GFS-259 PUBLIC runtime state (2026-10-27)
 
 - API `089f5671-2c2b-48cb-8373-b273e28f4177`: PUBLIC,100% traffic. API `4d218abf…`:0% prior TESTER_ONLY. Admin `615e1156…`:100%. COD-OFF `2500e268…`: protected rollback.

@@ -1,5 +1,15 @@
 # Test Matrix
 
+## GFS-260 Post-Launch Verification (2026-10-27)
+
+| Requirement | Result | Evidence / boundary |
+|---|---|---|
+| PUBLIC deployment preserved | PASS | API `089f5671…`100%; no redeploy or traffic change. |
+| API/Admin health | PASS | API200; Admin200 with `paymentConfigured=true`. |
+| D1/COD safety | PASS | `quick_check=ok`; COD rows remain `COD_PENDING`; no PAID mutation. |
+| Webhook/outbox safety | PASS limited | Recent webhook records received/sent; no post-launch outbox failure. Earlier Meta400 failures predate PUBLIC. |
+| Post-launch public menu | PENDING | No legitimate post-promotion customer interaction exists; no unsolicited message created. |
+
 ## GFS-259 Authorized PUBLIC COD Release (2026-10-27)
 
 | Requirement | Result | Evidence / boundary |
