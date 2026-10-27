@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-259 Authorized PUBLIC COD Release (2026-10-27)
+
+| Requirement | Result | Evidence / boundary |
+|---|---|---|
+| Genuine latest COD acceptance | PASS | Admin/D1: one COD_PENDING order, PKR675 quoted total, base PKR550, PKR125 once, one confirmation, zero receipts, DO NOT SHIP. |
+| Advance eligibility | PASS | Admin payment health `paymentConfigured=true`; JazzCash, Easypaisa, and Bank Transfer enabled with protected QR/instruction surfaces. |
+| Signed callback / event evidence | PASS | Genuine inbound/outbound provider records verified privately; identifiers not recorded. |
+| D1 integrity / rollback | PASS | `quick_check=ok`; protected rollback4/4. |
+| PUBLIC candidate smoke | PASS | `089f5671…` at0% returned health200 and unsigned webhook403. |
+| PUBLIC traffic | PASS | `089f5671…` active100%; prior TESTER_ONLY API0%; rollout mode PUBLIC. |
+| Post-switch eligible menu | NOT OBSERVED | No unsolicited or unauthorized customer interaction was created after promotion; deployment/configuration is verified. |
+| Regression | PASS | Full283/283, build, lint, audit0 vulnerabilities. |
+
 ## GFS-258 Live Retry Gate (2026-10-27)
 
 | Requirement | Result | Evidence / blocker |

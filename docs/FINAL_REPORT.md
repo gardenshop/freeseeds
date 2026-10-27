@@ -1,5 +1,21 @@
 # Final Report
 
+## GFS-259 | Authorized PUBLIC COD Release (2026-10-27)
+
+**Overall: PASS for authorized PUBLIC deployment; post-switch customer-menu observation remains pending because no unsolicited interaction was created.**
+
+| Stage | Result | Evidence |
+|---|---|---|
+| P0 latest genuine acceptance | PASS | One COD_PENDING order at PKR675: base PKR550 + PKR125 once; zero receipts/PAID; one confirmation; DO NOT SHIP. |
+| P1 release gates | PASS | Admin `paymentConfigured=true`; three Advance methods and QR/instructions enabled; D1 quick check; signed event evidence and rollback verified privately. |
+| P2 PUBLIC promotion | PASS | API `089f5671…` passed health200/unsigned403 at0%, then active100% PUBLIC; prior TESTER_ONLY API0%. |
+| P3 quality | PASS | Full283/283, build, lint, audit0 vulnerabilities, rollback4/4. |
+| Post-switch public menu | NOT OBSERVED | No unsolicited customer message or unauthorized order was created after promotion. |
+
+COD policy remains enabled with audited PKR125; Advance payment methods remain enabled. The real acceptance evidence includes the two payment choices and exact PKR675 COD confirmation. Public deployment is actual and active; a fresh post-switch eligible-menu observation is the only unperformed evidence item.
+
+Completion: P0 100%, P1 100%, P2 deployment100% / post-switch observation25% remaining, P3 100%. Public rollout is active with no new regressions.
+
 ## GFS-258 | Live Retry Gate (2026-10-27)
 
 **Overall: repaired runtime PASS; live acceptance and PUBLIC promotion BLOCKED by the missing authenticated tester tap.**

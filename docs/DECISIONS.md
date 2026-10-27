@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-27: GFS-259 Authorized PUBLIC Promotion
+
+- Accept the newer genuine COD evidence: one order is COD_PENDING at PKR675 with PKR125 exactly once, no receipt/PAID, and a DO NOT SHIP hold. Do not create or modify another order.
+- Promote only a fresh version of the repaired current code. Keep the prior repaired TESTER_ONLY version at0% and COD-OFF rollback intact.
+- PUBLIC mode is authorized and active after 0%-traffic boundary smoke, D1/Admin/payment/rollback checks, and full regression. Do not solicit a post-switch customer message solely for evidence; record public menu observation as pending until a legitimately authorized interaction occurs.
+
 ## 2026-10-27: GFS-258 Keep PUBLIC Fail-Closed
 
 - Preserve the existing pending order and conversation exactly; do not reset, create a replacement order, or use the unrelated WhatsApp Web profile.

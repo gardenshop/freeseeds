@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-27 (GFS-259 authorized PUBLIC COD)
+
+- Verified the newer genuine COD_PENDING acceptance: PKR675 total, PKR125 once, no receipt/PAID, one confirmation, and DO NOT SHIP.
+- Uploaded PUBLIC-mode API `089f5671…`, passed 0%-traffic health/unsigned-webhook smoke, and promoted it to100%. The prior repaired TESTER_ONLY API remains0%; COD-OFF rollback retained.
+- Final checks pass:283/283, build, lint, audit0, rollback4/4. No unsolicited post-switch customer traffic was generated.
+
 ## 2026-10-27 (GFS-258 live retry gate)
 
 - Rechecked the preserved conversation and active runtime through official MCP/Admin and read-only API boundaries. No new inbound arrived; no customer/order/payment mutation was made.

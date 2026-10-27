@@ -1,5 +1,13 @@
 # Status
 
+## GFS-259 Authorized PUBLIC COD Release (2026-10-27)
+
+- **P0 PASS.** New genuine evidence verifies one COD_PENDING order at PKR675: base PKR550 plus one PKR125 fee, no receipt/PAID, one confirmation audit, and DO NOT SHIP hold.
+- **P1 PASS.** Admin health is200 with `paymentConfigured=true`; all three Advance methods are enabled with QR/instruction surfaces; D1 `quick_check=ok`; recent WhatsApp provider event IDs have expected lengths and signed inbound/outbound evidence remains private.
+- **P2 PASS deployment.** Fresh PUBLIC API `089f5671-2c2b-48cb-8373-b273e28f4177` passed 0%-traffic health200/unsigned403, then became100% active. Prior API `4d218abf…` is0%; Admin `615e1156…`100%; COD-OFF rollback retained. PUBLIC mode is active; no public customer message was solicited after the switch.
+- **P3 PASS quality.** Full283/283, build, lint, audit0 vulnerabilities, and rollback4/4 pass. No migration, payment-recipient, history, receipt, or secret mutation occurred.
+- **Completion:** P0 100/0; P1 100/0; P2 deployment100/0 and post-switch public-menu observation75/25; P3 100/0. PUBLIC rollout is active; fresh post-switch menu observation remains unperformed to avoid unsolicited customer traffic.
+
 ## GFS-258 Live Retry Gate (2026-10-27)
 
 - **P1 BLOCKED on external action.** Official Admin Test Controls shows no new inbound after GFS-257; the preserved conversation is still `REVIEW` and its one existing order remains unpaid, methodless, receipt-free, and non-PAID.

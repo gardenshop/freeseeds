@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-259 Authorized PUBLIC COD Release (2026-10-27)
+
+- New genuine tester evidence is independently confirmed in Admin/D1: one latest order is `COD_PENDING` with quoted total PKR675, base PKR550, exactly one PKR125 COD fee, one confirmation audit, zero receipts, no approved amount, and `test_hold=1`. Historical orders remain preserved.
+- Admin payment health is HTTP200 with `paymentConfigured=true`; JazzCash, Easypaisa, and Bank Transfer are enabled with protected QR/instruction surfaces. COD intake is enabled in D1 and confirmation never marks COD paid.
+- Fresh PUBLIC-mode API `089f5671-2c2b-48cb-8373-b273e28f4177` passed 0%-traffic health200/unsigned403 smoke and is active100%. Repaired TESTER_ONLY API `4d218abf-7262-4d04-b8a3-3baa6fae1879` is0%; Admin `615e1156-2747-457a-8623-11d1e967f911` remains100%; COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` remains rollback.
+- Owner-authorized PUBLIC promotion is complete with `COD_V1_ENABLED=true`, rollout `PUBLIC`, audited PKR125, original signed callback/bindings, and no migration replay. The genuine acceptance evidence predates the final traffic switch; no unsolicited post-switch customer message was sent.
+
 ## GFS-258 Live Retry Gate (2026-10-27)
 
 - Official MCP/Admin readback found no new tester-originated inbound after the repaired deployment. The preserved conversation remains `REVIEW` with the same single unpaid, receipt-free pending order; no reset or replacement order is permitted.

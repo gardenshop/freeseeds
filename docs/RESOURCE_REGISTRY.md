@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-259 PUBLIC runtime state (2026-10-27)
+
+- API `089f5671-2c2b-48cb-8373-b273e28f4177`: PUBLIC,100% traffic. API `4d218abf…`:0% prior TESTER_ONLY. Admin `615e1156…`:100%. COD-OFF `2500e268…`: protected rollback.
+- GFS Cloudflare identity `gisupp@gmail.com` and account were verified before each Worker mutation. Canonical GFS Meta assets only; no Hoja resource used.
+- D1/Admin acceptance is one COD_PENDING order at PKR675 with PKR125 once; no raw order number, phone, WAMID, receipt, or secret is recorded.
+
 ## GFS-258 live retry state (2026-10-27)
 
 - API `4d218abf…`100% TESTER_ONLY; Admin `615e1156…`100%; COD-OFF `2500e268…` retained. Active health200 and unsigned webhook rejection pass.
