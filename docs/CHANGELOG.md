@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-28 (GFS-275 final live evidence)
+
+- Reverified sanitized Admin Orders counts/statuses, Payment Settings, payment-method API, D1 usage, Query Insights, Admin error metrics, migration0038 and active traffic.
+- Confirmed insufficient period-separated post-index traffic for a valid outbound cost conclusion; retained the existing indexed repair and made no runtime change.
+- Customer-device and receipt acceptance remain pending; no synthetic or financial mutation was used.
+
 ## 2026-10-28 (GFS-274 post-launch evidence)
 
 - Read-only verified Paid D1 capacity, canonical Cloudflare identity, active Admin/API versions, and low-impact authenticated Admin availability.

@@ -1,5 +1,14 @@
 # Status
 
+## GFS-275 Final Live Acceptance + D1 Cost Control (2026-10-28)
+
+- **P0 PASS:** Paid D1, migration0037/0038, Admin `66426d2a` and API `24d72438` were preserved. No redeploy, billing change, migration replay, or payment configuration change occurred.
+- **P1 PASS/PENDING:** Query Insights last-24-hour view: 49.23K total queries, 41.6K reads, 7.63K writes, 8.61M rows read, 188 fingerprints. Outbound status: 1,776 executions / 3.08M rows / approximately 1.76K rows per execution. Migration0038 applied at 18:54:52Z; available chart labels do not isolate a post-index period, so no improvement claim is made. Existing index and prior EXPLAIN evidence remain sufficient; no code repair justified.
+- **P2 PASS/PENDING:** Sanitized authenticated Admin readback: Orders HTTP200 JSON with 68 total and queues 6/2/11; list/detail network requests HTTP200; Payment Settings document HTTP200; `/api/payment-methods` HTTP200. Genuine customer-device/two-tap/receipt evidence was unavailable and remains pending. No customer or financial mutation was performed.
+- **P3 PASS/PENDING:** D1 billing card remained 8.51M/25B reads, 19.12K/50M writes, $0 displayed billable usage. Admin metrics showed 579 invocations and 0 errors in the last 24 hours; API dashboard metrics remained loading. No usage alert mutation was authorized.
+- **P4 PASS:** No runtime code changed. Prior 292/292 tests and rollback4/4 remain preserved; this evidence-only update passes diff check and is the substantive documentation change for this run.
+- **Completion:** P0 100%; P1 90% with period-separated post-index data pending; P2 operational readback 100% / genuine device acceptance 0%; P3 90%; P4 pending push. Overall 90%, with no demonstrated production-health failure.
+
 ## GFS-274 Post-Launch Reliability (2026-10-28)
 
 - **P0 PASS:** Paid D1 and the canonical Cloudflare account were read-only verified. Current billing card: 8.51M/25B rows read, 19.12K/50M rows written, $0 billable usage. Migration0037/0038 and the GFS-273 deployment were preserved.

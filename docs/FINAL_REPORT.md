@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-275 Final Report (2026-10-28)
+
+| Stage | Result | Verified evidence / remaining item |
+|---|---|---|
+| P0 preserve healthy release | PASS | Paid D1, migration0037/0038, Admin/API versions and payment safeguards preserved; no redeploy or billing change. |
+| P1 outbound cost | PASS/PENDING | Query Insights last 24h: 49.23K queries, 8.61M rows; outbound 1,776 executions, 3.08M rows, ~1.76K/update. Migration0038 is live, but timestamps do not isolate a post-index period. |
+| P2 customer acceptance | PENDING | Admin operational readback passes: Orders HTTP200 JSON, 68 total, queues 6/2/11; Payment Settings HTTP200; list/detail HTTP200; payment methods HTTP200. No genuine customer-device or receipt evidence available. |
+| P3 billing/reliability | PASS/PENDING | Paid card 8.51M/25B reads, 19.12K/50M writes, $0 displayed usage. Admin last-24h metrics: 579 invocations, 0 errors. API metrics remained loading; no alerts configured or billing changed. |
+| P4 regression/docs/push | PASS | No runtime code change. Prior 292/292 tests and rollback4/4 preserved; evidence-only documentation commit pushed. |
+
+### Safety and remaining work
+
+- Provider/status index remains justified by migration0038 and prior live EXPLAIN evidence. No narrow repair is justified by current data.
+- No random reference, two-tap journey, COD PKR125 confirmation, three-method device observation, receipt association, payment approval, fulfillment, WhatsApp send, or new customer order was fabricated or initiated.
+- Active Admin: `66426d2a` at 100%; prior Admin `cd155f20` at 0%; API `24d72438` remains active at 100% from preserved release evidence. Cloudflare dashboard API metrics were unavailable while loading; Wrangler auth was expired/unreachable, so no CLI mutation or bypass occurred.
+- Completion: P0 100%; P1 90% (post-index period split pending); P2 operational readback 100%, genuine device acceptance 0%; P3 90%; P4 100% after push. Overall 90%; remaining blockers are evidence availability, not a demonstrated production outage.
+
 ## GFS-274 Final Report (2026-10-28)
 
 | Area | Result | Verified evidence / remaining item |

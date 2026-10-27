@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-275 Evidence (2026-10-28)
+
+- D1 billing period: 8.51M/25B rows read, 19.12K/50M rows written, $0 displayed billable usage. Last-24-hour Query Insights: 49.23K queries, 41.6K reads, 7.63K writes, 8.61M rows read, 188 fingerprints.
+- Outbound status fingerprint: 1,776 executions, 3.08M rows read, approximately 1.76K rows/execution. Post-0038 period is not separately exposed; no fabricated after-metric recorded.
+- Admin evidence: 68 total orders; queue aggregates 6/2/11; Orders list/detail HTTP200; Payment Settings and payment-method API HTTP200. No order rows, customer identifiers, receipt content, or credentials recorded.
+- Admin traffic: `66426d2a` 100%, prior `cd155f20` 0% from the authenticated dashboard read. API `24d72438` remains the preserved active version; its dashboard charts were loading during this read-only session.
+- No external resource, billing alert, Worker, D1, R2, Queue, Access, Meta, payment, customer or receipt state was changed.
+
 ## GFS-274 Post-Launch Evidence (2026-10-28)
 
 - Cloudflare identity: `gisupp@gmail.com`; Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.

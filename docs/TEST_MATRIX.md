@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-275 Final Live Acceptance (2026-10-28)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Release and migrations preserved | PASS | Paid D1 and migration0037/0038 preserved; no redeploy or replay. |
+| Orders/Admin availability | PASS | Sanitized Admin readback: HTTP200 JSON, 68 total, queues 6/2/11; list/detail requests HTTP200. |
+| Payment Settings | PASS | Page HTTP200; `/api/payment-methods` HTTP200. |
+| Outbound post-index cost | PENDING | 1,776 / 3.08M / ~1.76K aggregate; dashboard cannot isolate post-0038 execution period. |
+| Provider-status index | PASS | Migration0038 and prior live EXPLAIN evidence identify `outbound_messages_provider_status_idx`; no speculative repair. |
+| Customer device / receipt acceptance | PENDING | No authorized genuine device evidence; no synthetic order, receipt, payment or message used. |
+| Worker errors | PASS LIMITED | Admin dashboard last-24-hour errors 0; API chart remained loading. |
+| Regression | PASS PRESERVED | Prior 292/292 and rollback4/4 remain valid; no code change this turn. |
+
 ## GFS-274 Post-Launch Evidence (2026-10-28)
 
 | Requirement | Result | Evidence / blocker |

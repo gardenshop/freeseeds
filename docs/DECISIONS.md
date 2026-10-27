@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-28: GFS-275 Evidence-Only Closeout
+
+- Do not change SQL: aggregate outbound data is 1,776 / 3.08M / approximately 1.76K rows per execution, but Query Insights does not expose a period-separated post-0038 total. The existing provider/status index and prior EXPLAIN evidence remain the smallest justified repair.
+- Treat authenticated Admin success as operational evidence, not customer-device acceptance. Orders returned 68 total with queues 6/2/11; Payment Settings and payment-method reads returned HTTP200. No receipt, payment, fulfillment, or WhatsApp mutation was performed.
+- Do not configure usage alerts without an explicit supported alert target/threshold authorization. Record current Paid usage and continue natural-traffic monitoring only.
+- Wrangler read-only auth was expired/unreachable while the Cloudflare dashboard remained authenticated. No credential bypass, reauthentication, deployment change, or billing mutation is permitted.
+
 ## 2026-10-28: GFS-274 Post-Launch Cost Evidence
 
 - Keep the healthy GFS-273 runtime unchanged. The live index0038 EXPLAIN evidence and current aggregate do not justify another SQL repair.
