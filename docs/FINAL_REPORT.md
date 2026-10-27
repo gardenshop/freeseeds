@@ -1,5 +1,25 @@
 # Final Report
 
+## GFS-243 | Tester Identity Gate Held (2026-10-27)
+
+| Task | Result | Evidence |
+|---|---|---|
+| P0 preserve verified work | PASS | Prior D1, COD0030, 276/276 and rollback4/4 evidence preserved; no resolved investigation reopened. |
+| P1 tester identity | BLOCKED | Admin matched supplied customer to registered tester and Meta matched supplied receiver to canonical sender; available WhatsApp Web owner profile matched neither. |
+| P2 runtime gates | PASS LIMITED | Official MCP, Cloudflare identity, API candidate health200 and Admin candidate health200/`paymentConfigured=true`; original-only traffic preserved. |
+| P2 activation | NOT DONE | COD remains disabled; candidates remain0%; no migration or traffic mutation. |
+| P3 exact flow | NOT RUN | No authorized usable WhatsApp tester session. |
+| P4 genuine COD order | NOT RUN | No WAMIDs, order number, amount, COD_PENDING/Admin result or screenshot. |
+| P5 regression/documentation | PASS LIMITED | No code change; protected records updated. Prior 276/276, build, lint, audit and rollback4/4 remain authoritative. |
+
+**Current state:** API candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` 0% / v90 `21a3d74c-3979-432c-9190-1848362592a4` 100%; Admin candidate `091f1a3f-595b-4530-b54a-d7253af60664` 0% / v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` 100%; `COD_V1_ENABLED=false`.
+
+**Evidence absent:** genuine WAMIDs, new order number/amount, Admin COD_PENDING, Advance live checkout and signed live callback. No false acceptance, shipment, cash collection or PAID state.
+
+**Completion:** P0 100%; P1 identity/runtime 70%; P2 staging preparation 60% / activation 0%; P3 source 80% / active 0%; P4 0%; P5 90% local. Public launch NO-GO.
+
+**Exact remaining action:** owner must make the registered tester session available or privately confirm one specific owner-controlled replacement identity for supported registration. Do not substitute the current WhatsApp Web profile.
+
 ## GFS-242 | Authorized COD0030 Applied; Live Acceptance Held (2026-10-27)
 
 **Result: authorized additive migration and COD-OFF candidate staging PASS. Admin candidate health was repaired and PASS. COD activation/live WhatsApp acceptance remain BLOCKED by unverified tester identity and incomplete live Advance/signed-callback gates.**

@@ -1,5 +1,15 @@
 # Test Matrix
 
+## GFS-243 Tester and Sender Verification (2026-10-27)
+
+| Check | Result | Evidence / scope |
+|---|---|---|
+| Admin registered tester | PASS LIMITED | Supplied customer matched the existing Test Controls tester entry; identifier withheld. |
+| Canonical GFS sender | PASS LIMITED | Supplied receiver matched the connected canonical Meta Phone Manager asset; no Meta mutation. |
+| WhatsApp owner profile | BLOCKED | Available WhatsApp Web profile matched neither supplied identity; no chat/message/account switch. |
+| Candidate runtime health | PASS | API override HTTP200; Admin override HTTP200/`paymentConfigured=true`. |
+| COD activation/live acceptance | BLOCKED | No authorized usable tester session; COD remains OFF and no WAMID/order evidence exists. |
+
 ## GFS-242 Authorized Migration and Candidate Repair (2026-10-27)
 
 | Check | Result | Evidence / scope |

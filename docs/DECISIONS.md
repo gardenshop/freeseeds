@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-27: GFS-243 Hold at WhatsApp Identity Gate
+
+- The supplied customer matched the unchanged Admin registered tester privately, and the supplied receiver matched the connected canonical GFS sender in Meta Phone Manager. This did not authorize use of another WhatsApp Web profile.
+- The available WhatsApp Web owner profile matched neither supplied identity. No registration edit, account switch, chat access, message, COD flag, deployment, migration or payment mutation was performed.
+- Preserve API v90/Admin v82 at100% and COD-off candidates at0%. Resume only when the registered tester session is available or the owner privately confirms the exact replacement identity for supported registration.
+
 ## 2026-10-27: GFS-242 Apply Only COD0030; Hold Activation at Tester Gate
 
 - Owner authorization was received for one original-D1 mutation. SHA256 of reviewed `0030_cod_v1_compat.sql` matched `72d1c00c4c3bfeabc391f538530c2bc974a60d37ab33f01b5ba672253ec052db`. A fresh Time Travel bookmark and bounded integrity/history checks passed. Only that file was executed remotely; Wrangler legacy migration apply was not used.

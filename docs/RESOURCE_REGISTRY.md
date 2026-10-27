@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-243 Identity Gate (2026-10-27)
+
+- Admin Test Controls matched the supplied customer to the existing registered tester; Meta Phone Manager matched the supplied receiver to the connected canonical GFS sender. Identifiers are intentionally omitted.
+- The available WhatsApp Web owner profile matched neither supplied identity. No chat, message, account switch, registration edit, Meta mutation, deployment, flag or D1 mutation occurred.
+- Supported candidate checks: API `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` health200 at0%; Admin `091f1a3f-595b-4530-b54a-d7253af60664` health200/`paymentConfigured=true` at0%. Originals remain100%; COD remains disabled.
+
 ## GFS-242 Authorized Migration and Runtime State (2026-10-27)
 
 - Original staging D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`: reviewed COD0030 SHA256 matched; pre-migration Time Travel bookmark `00000271-000000f0-00005110-143fdc2d1bb24f77b235a14fa0897202`; post-migration bookmark `00000273-0000000a-00005110-25b2fce4a4bba26a177e0f2fadd7a452`. Only targeted SQL executed; `d1_migrations` remains untouched/0.
