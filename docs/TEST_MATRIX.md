@@ -1301,3 +1301,10 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | GFS-267 active Orders smoke | PASS | HTTP200; counts67/6/2/10; total67; 25-row page; opaque-shaped references/private sequence observed |
 | GFS-267 candidate/detail smoke | BLOCKED | Candidate JSON503 and detail acceptance pending D1 quota recovery; no mutation |
 | GFS-267 rollback/audit/integrity | PARTIAL | Rollback4/4 PASS; npm audit and current D1 integrity rerun blocked by service/registry limits |
+
+| GFS-271 usage identity/period | **PASS read-only** | Official Chrome MCP; Get Free Seeds; daily 8.06M/5M; cumulative 44.23k vs last-24h 27k |
+| GFS-271 top-query investigation | **PASS read-only** | Redacted Query Insights counts, total rows_read, averages, and code call-site mapping |
+| GFS-271 migration0037/EXPLAIN | **PASS local** | Additive rehearsal; indexed list/count/detail/customer plans; integrity rehearsal passed |
+| GFS-271 fixture benchmark | **PASS local** | Synthetic 20/50/100/1,000 orders; bounded list/detail/settings/lookup and checkout writes |
+| GFS-271 live rows_read after | **BLOCKED** | Daily D1 cap exhausted; no post-deploy metric invented |
+| GFS-271 live Admin release | **BLOCKED safely** | Requires quota recovery/capacity, bookmark, 0% JSON200 smoke, then promotion |

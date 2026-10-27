@@ -781,3 +781,11 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Use a narrow Admin list projection and separate authoritative detail reads. D1 read failures return structured HTTP 503 with no records or counts.
 - Keep candidate `92955132-6917-4cad-895e-d2b89e56d9dd` at 0% until list/detail HTTP200 smoke passes; keep `cd155f20-c848-4e4e-9fde-970e62b0a4ea` at 100%.
 - No capacity, payment, receipt, hold, Meta, or customer-message mutation bypasses the D1 cap.
+
+## GFS-271 D1 Query-Cost Investigation Protocol (2026-10-27)
+
+- Cloudflare read-only metrics are authoritative: account daily rows read 8.06M/5M, rows written 14.96k/100k, and no billable usage. Do not issue production SQL or repeatedly refresh Admin while exhausted.
+- The database-list `44.23k` value is a cumulative query counter; Query Insights separately reports 27k queries and 5M rows read for the last 24 hours.
+- The legacy full Admin list projection is prohibited for list pages: 77 calls read 3.29M rows. Use the narrow indexed list/count path and authoritative detail reads only after selection.
+- D1 failures remain structured HTTP503 with no fabricated zero counts, false payment state, receipt loss, or order confirmation. Never cache approval/payment state.
+- Keep migration0037 additive and targeted; verify identity before mutation, record a recovery bookmark before live writes, require 0% smoke and rollback before promotion, and preserve PUBLIC COD/PKR125, Advance methods, signed webhook, new-number lock, and Hoja isolation.

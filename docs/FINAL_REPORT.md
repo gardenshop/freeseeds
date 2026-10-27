@@ -3364,3 +3364,18 @@ Active live version observed read-only: API staging deployment at 0% traffic; so
 | Push/docs | **PASS** | Source commit `cad82e1` and GFS-267 records `59996d9` pushed to `gardenshop/freeseeds` PR#11 branch |
 
 **New reference proof:** live list returned opaque-shaped `FS-XXXX-XXXX-XXXX` values; local sample `FS-8R4K-2X7M-9QPA`; no new live order fabricated. **Completion:** 85%; remaining15% is quota recovery, candidate list/detail/receipt HTTP200 smoke, controlled promotion, and audit availability.
+
+## GFS-271 Final Report — 2026-10-27
+
+| Stage | Result | Evidence / blocker |
+|---|---|---|
+| P0 read sources | **PASS read-only** | Legacy Admin list 77 calls/3.29M rows (~42.7k/call); webhook status 1.41M/873; four WhatsApp content families 24.12k rows |
+| P0 quota/account | **BLOCKED** | Get Free Seeds / `gisupp@gmail.com`; 8.06M/5M daily rows read, 14.96k/100k written, $0 billable; not reset |
+| P1 optimization | **PASS local** | Existing commits through `19de91d` preserved/pushed; migration0037 and EXPLAIN show indexed bounded paths; no interval polling |
+| P1 production after-metrics | **BLOCKED** | Requires live release and quota recovery; no invented rows_read result |
+| P2 live restore/deploy | **BLOCKED safely** | No production SQL, migration, traffic, billing, payment, receipt, customer, webhook, or COD mutation while exhausted |
+| P3 fixture capacity | **PASS local** | 20/50/100/1,000 orders: list capped 25, one count/detail row, three settings rows, indexed lookup; writes 80/200/400/4,000 |
+| P4 customer safety | **PASS source/read-only; live retest pending** | PUBLIC COD/PKR125, Advance, signed webhook, idempotency, receipts/history/holds preserved; no live order created |
+| Quality/push | **PASS** | Prior focused/full tests, build, lint, migration rehearsal, rollback4/4; clean pushed HEAD `19de91d`; audit endpoint unavailable |
+
+**Orders/Payment Settings:** no repeated live requests during exhaustion; HTTP200 JSON smoke pending. **Versions/traffic:** unchanged live API/Admin; no GFS-271 deployment. **Rollback:** local 4/4 PASS, live staged rollback pending. **Completion:** source/measurement 100%; live recovery/deployment/post-fix metrics 0%; overall **70% complete / 30% remaining**. Blockers: D1 reset/capacity, recovery bookmark, targeted migration0037/integrity, authenticated 0% smoke, promotion/rollback, and 24-hour post-fix measurement.

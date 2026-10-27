@@ -1140,3 +1140,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Treat D1 code7500 as capacity failure. Split the detail-heavy list query and preserve an explicit error response contract.
 - Keep the repair at 0% until authenticated candidate list and detail/receipt HTTP200 smoke passes; keep `cd155f20` at 100% meanwhile.
 - Do not upgrade D1, mutate customer/payment state, enable Observability, replay migrations, or promote traffic without owner approval and fresh identity verification.
+
+## 2026-10-27: GFS-271 D1 query-cost investigation
+
+- Use Query Insights/account usage for production measurement; do not treat the database-list cumulative query counter as daily usage.
+- Preserve the pushed optimization and migration0037. The local plan confirms indexed bounded list/count/detail/lookup paths; no speculative rewrite or production SQL probe is authorized while exhausted.
+- Do not add payment-state caching. Admin failures remain JSON503; a failed read may never become zero counts, false PAID, receipt confirmation, or duplicate order.
+- Do not purchase Workers Paid or alter traffic. If optimized usage still exceeds Free capacity, present current plan/billing evidence and obtain explicit owner approval first.

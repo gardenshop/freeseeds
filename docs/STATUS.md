@@ -1469,3 +1469,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **Active smoke:** HTTP200 with sanitized counts `{all:67, verify:6, confirmed:2, fulfillment:10}`, total67, page1/3, 25 rows. Candidate 0% smoke returned structured JSON503 while quota was exhausted; detail smoke is pending.
 - **Traffic:** API `24d72438...`100% / rollback `428defd5...`0%; Admin `cd155f20...`100% / candidate `92955132...`0%.
 - **Remaining blocker:** D1 free-tier row-read quota. Do not promote candidate until authenticated list/detail HTTP200 evidence is complete.
+
+## GFS-271 D1 Query-Cost Investigation — 2026-10-27
+
+- **P0 PASS read-only:** Get Free Seeds Cloudflare context and staging D1 `17b7…` verified through official Chrome MCP. Account usage: **8.06M/5M rows read**, **14.96k/100k written**, storage **6.44MB/5GB**, billable **$0.00**. Reset is 00:00 UTC / 05:00 PKT.
+- **Period:** database-list `44.23k` is cumulative; Query Insights shows **27k queries / 5M rows read in the last 24 hours** (23.32k read, 4.34k write, WEUR).
+- **Top redacted sources:** legacy Admin list 77 / 3.29M / ~42.7k rows per call; outbound status update 873 / 1.41M / ~1.62k per call; WhatsApp media 4,226 / 7.27k; action labels 3,677 / 6.81k; template version 3,442 / 6.88k; media list 2,308 / 3.16k. Source mapping is parameterized code inference; no customer values recorded.
+- **P1 PASS local:** migration0037 indexes and EXPLAIN plans are indexed/bounded. No uncontrolled Admin interval polling exists; reloads are initial, explicit filter/tab/page/manual/action reloads with bounded client retry.
+- **P3 PASS local:** synthetic 20/50/100/1,000-order fixtures returned bounded 25-row pages, one count row, one detail row, three payment-setting rows, and indexed customer lookups. SQLite cannot expose Cloudflare `rows_read`; production after-metrics remain pending.
+- **P2 BLOCKED safely:** source through `19de91d` is pushed. Live migration, 0% smoke, promotion, HTTP200 Admin/Payment Settings/details/receipts, and post-fix metrics were not run while quota was exhausted. No billing, traffic, customer, receipt, payment, COD, or webhook mutation occurred.

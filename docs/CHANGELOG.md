@@ -1019,3 +1019,9 @@
 - Correlated `/api/orders` HTTP500 to D1 free-tier daily row-read limit code7500.
 - Added a narrow list projection and structured JSON503 failure path; no fake counts or financial mutations.
 - Regression: focused6/6, full291/291, build, lint, rollback4/4. Candidate `92955132` is staged0%; active `cd155f20` remains100% pending quota recovery.
+
+## 2026-10-27 — GFS-271 D1 query-cost investigation
+
+- Captured read-only Cloudflare D1 usage and Query Insights without production SQL probes.
+- Identified the dominant legacy Admin list projection (77 calls, 3.29M rows) and mapped remaining high-cost families to webhook status and WhatsApp content paths.
+- Verified migration0037/index plans and synthetic 20/50/100/1,000-order behavior locally. Live before/after rows-read and release smoke remain blocked by the exhausted daily quota.

@@ -1096,3 +1096,11 @@ No secrets are stored in this registry.
 - Cloudflare identity verified before upload/deploy: `gisupp@gmail.com`, Get Free Seeds account; candidate Admin `92955132...`0%, active `cd155f20...`100%.
 - Live schema read-only check supports 0035/0036. Remaining read blocker is D1 code7500; no capacity or financial mutation was made.
 - Active list HTTP200 sanitized counts67/6/2/10; candidate JSON503 under quota exhaustion; detail/receipt acceptance pending.
+
+## GFS-271 Registry — 2026-10-27
+
+- Source checkout `D:\free seeds\gfs264-pr11`, clean HEAD/remote `19de91d`, branch `codex/gfs221-cod-compat-001`, pushed to PR#11.
+- Cloudflare read-only identity: Get Free Seeds account `cb5066…`, authenticated `gisupp@gmail.com`; staging D1 `17b7…`; no external mutation performed.
+- Metrics: daily 8.06M/5M rows read, 14.96k/100k written, $0 billable; staging cumulative 44.23k, last-24h Query Insights 27k / 5M rows read.
+- Local migration0037 rehearsal/EXPLAIN and synthetic 20/50/100/1,000-order benchmark passed; Cloudflare after-deployment rows_read is not claimed.
+- Live migration, 0% smoke, promotion, rollback verification, and customer retest remain blocked by quota/capacity and protected mutation gates.
