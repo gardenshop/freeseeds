@@ -1,5 +1,20 @@
 # Final Report
 
+## GFS-270 | RESTORE D1 + OPTIMIZE QUERY COST + DEPLOY (2026-10-27)
+
+**Overall: push and local optimization PASS; live recovery/deployment BLOCKED by D1 quota.**
+
+| Stage | Result | Evidence |
+|---|---|---|
+| P0 recover/push | PASS | Preserved `fca32a3`/`834744e`; authenticated Git Credential Manager identity `gardenshop`; remote advanced `7724e7a`→`834744e`. |
+| P1 optimization | PASS LOCAL | Migration0037 extended. Orders list: temp sort removed in local EXPLAIN. Customer status: Orders scan replaced by indexed multi-index OR and customer/order indexes. |
+| P2 live service | BLOCKED | D1 still 8.06M/5M rows read; no bookmark, live migration, deployment, smoke or promotion. Admin old `cd155f20…`100%, candidate `92955132…`0%, API `24d72438…`100%. |
+| P3 rows_read | BLOCKED LIVE | BEFORE ~3.29M/77 old calls (~1.71k per row). AFTER production metadata unavailable until reset/deploy; local EXPLAIN is not substituted. |
+| P4 safety | PASS PRESERVATION / BLOCKED LIVE RECHECK | COD PKR125, Advance, signed webhook, receipts/history, holds, references, WhatsApp lock and Hoja isolation unchanged. |
+| Quality | PASS LOCAL | Focused53/53; full292/292; build; lint; migration rehearsal/EXPLAIN. Rollback rerun pending baseline setup. |
+
+**Remaining:** wait for 00:00 UTC reset, verify quota and recovery bookmark with `gisupp@gmail.com` / GFS identity, apply only migration0037, stage candidate0%, run authenticated HTTP200 JSON smoke and real counts, measure D1 AFTER rows_read, verify rollback, then promote/retest. Workers Paid minimum $5/month remains an owner-approved fallback only if optimized usage still exceeds Free limits.
+
 ## GFS-269 | RECOVER D1 SERVICE + DEPLOY QUERY OPTIMIZATION (2026-10-27)
 
 **Overall: local repair and recovery rehearsal PASS; live recovery/deployment BLOCKED.**

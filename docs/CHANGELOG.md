@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-27 (GFS-270 EXPLAIN-backed indexes)
+
+- Extended migration0037 with order pagination and WhatsApp/customer lookup indexes. Local EXPLAIN changed Orders pagination from temp-sort to indexed ordering and customer status from Orders scan to indexed multi-index lookup.
+- Pushed existing GFS-268/269 commits through authenticated Git Credential Manager as `gardenshop`; no Cloudflare/D1 mutation occurred.
+- Live quota remains 8.06M/5M, so migration application, deployment, runtime smoke and production AFTER rows_read remain pending reset.
+
 ## 2026-10-27 (GFS-269 recovery checkpoint)
 
 - Rechecked Cloudflare D1 analytics read-only: quota remains 8.06M/5M rows read; no production SQL or Admin refresh was performed.

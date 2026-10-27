@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-270 Local EXPLAIN Gate (2026-10-27)
+
+- Migration0037 remains additive and local until post-reset recovery bookmark, integrity, identity, and 0%-traffic gates pass. It now covers audit, receipt, outbox, order pagination, customer WhatsApp lookup, and customer-order ordering indexes.
+- Local EXPLAIN must show bounded/indexed plans before deployment. Production rows_read AFTER remains unclaimed until the optimized Worker is live; do not substitute local plans for live D1 metadata.
+- Preserve the existing GFS-268/269 repair and push history. No duplicated query rewrite, bulk migration replay, payment/customer mutation, test-hold release, Meta action, or Hoja resource is permitted.
+
 ## GFS-269 D1 Recovery and Query Optimization Gate (2026-10-27)
 
 - Cloudflare D1 remains over the Free-tier daily read budget: 8.06M/5M rows read. Do not run production SQL, repeatedly refresh Admin, replay migrations, delete/recreate databases, change billing, or promote traffic until reset or explicit owner-approved capacity action.

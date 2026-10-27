@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-270 query optimization state (2026-10-27)
+
+- Remote PR branch now contains existing local commits through `834744e`, pushed using Git Credential Manager identity `gardenshop`. No token value is recorded.
+- Local migration0037 includes audit, receipt, outbox, order pagination, customer WhatsApp, and customer-order indexes. Rehearsal returned `quick_check=ok`; live schema remains unchanged.
+- Cloudflare D1 remains 8.06M/5M rows read. Admin `cd155f20…`100%, candidate `92955132…`0%, API `24d72438…`100%; no deployment, traffic, billing, customer, payment, receipt, Meta or secret mutation occurred.
+
 ## GFS-269 recovery checkpoint (2026-10-27)
 
 - Cloudflare D1 dashboard remains the authenticated GFS account context (`cb5066…`); analytics show 8.06M/5M rows read, 14.96k/100k writes, 6.44MB/5GB storage, and $0 billable. No D1 mutation or production query was issued.

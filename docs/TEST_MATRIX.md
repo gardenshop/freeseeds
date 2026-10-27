@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-270 Local Query-Cost Gate (2026-10-27)
+
+| Requirement | Result | Evidence / boundary |
+|---|---|---|
+| Existing repair preservation/push | PASS | `fca32a3` and `834744e` pushed via authenticated Git Credential Manager as `gardenshop`; remote now `834744e`. |
+| Orders EXPLAIN | PASS LOCAL | Before temp B-tree sort; after `orders_archived_created_idx`, no temp sort in local plan. |
+| Customer/webhook lookup EXPLAIN | PASS LOCAL | Before Orders scan; after indexed customer multi-index OR plus `orders_customer_created_idx` and receipt index. |
+| Payment/receipt plans | PASS LOCAL | Payment-method/QR and receipt primary/entity indexes used; projections remain bounded. |
+| D1 rows_read AFTER | BLOCKED | Production candidate remains0% and quota is 8.06M/5M; no unsafe probe. |
+| Live restore/migration | BLOCKED | Reset, recovery bookmark, migration application and runtime smoke pending. |
+
 ## GFS-269 Recovery Checkpoint (2026-10-27)
 
 | Requirement | Result | Evidence / boundary |

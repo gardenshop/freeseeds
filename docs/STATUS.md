@@ -1,5 +1,15 @@
 # Status
 
+## GFS-270 Restore D1 + Optimize Query Cost (2026-10-27)
+
+- **P0 PASS.** Existing local commits `fca32a3` and `834744e` were preserved and pushed through Git Credential Manager as `gardenshop` to the correct PR branch; remote advanced from `7724e7a` to `834744e`. No code was duplicated.
+- **P1 PASS LOCAL.** EXPLAIN before: Orders list used `orders_archived_state_idx` plus a temp B-tree sort; customer status used an Orders index scan and temp grouping/sort. EXPLAIN after migration0037: Orders uses `orders_archived_created_idx` with no temp sort; customer lookup uses indexed multi-index OR, `orders_customer_created_idx`, and `payment_receipts_order_submitted_idx`. Payment settings remains bounded to payment methods and indexed QR lookup.
+- **P2 BLOCKED LIVE.** D1 analytics still show 8.06M/5M rows read at 22:50 PKT. Migration0037 was not applied, no recovery bookmark or live integrity check was performed, and Admin/API traffic remains unchanged: Admin `cd155f20…`100%, candidate `92955132…`0%, API `24d72438…`100%.
+- **P3 BLOCKED MEASUREMENT.** BEFORE remains ~3.29M rows-read/77 old detail calls (~1.71k per returned row). AFTER production rows_read cannot be measured until quota reset and candidate deployment; local EXPLAIN is recorded separately and is not claimed as D1 metadata.
+- **P4 PRESERVED.** PUBLIC COD/PKR125, Advance methods, signed webhook, receipts, history, holds, random references, new-number lock and Hoja isolation unchanged. Live new-customer persistence remains unverified during exhaustion.
+- **Quality:** focused53/53, full292/292, build, lint and local migration/integrity checks pass. Rollback is being rerun against its required unchanged baseline checkout.
+- **Completion:** P0 100%; P1 local100%; P2 0%/100% blocked; P3 local plan100%/live rows_read0%; P4 preservation100%/live verification0%.
+
 ## GFS-269 Recover D1 Service + Deploy Query Optimization (2026-10-27)
 
 - **P0 PASS / outage persists.** Read-only Cloudflare D1 analytics still report exactly **8.06M/5M rows read** today, 14.96k/100k writes, 6.44MB/5GB storage, and $0 billable usage. No production SQL, Admin refresh, or D1 probe was run.

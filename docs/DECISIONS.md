@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-27: GFS-270 Add only EXPLAIN-backed indexes
+
+- Extend existing additive migration0037 with `orders_archived_created_idx`, normalized/raw WhatsApp customer indexes, and `orders_customer_created_idx`. Local EXPLAIN confirms removal of the Orders temp sort and the full Orders scan in customer status lookup.
+- Do not claim production rows_read reduction until the candidate is deployed and D1 metadata is read after reset. Keep active Admin100% and candidate0% while exhausted.
+- Push source through the authenticated `gardenshop` Git Credential Manager path; do not reimplement or rewrite the existing GFS-268/269 code.
+
 ## 2026-10-27: GFS-269 Hold deployment until D1 reset and GitHub reauth
 
 - Keep `fca32a3` as the sole local repair commit; remote remains `7724e7a`. Do not recreate or manually duplicate its changes.
