@@ -3241,3 +3241,24 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 | Audit | **BLOCKED** — npm registry advisory endpoint failed; no audit verdict asserted |
 
 Active live version observed read-only: API staging deployment at 0% traffic; source version is not live. PUBLIC COD/Advance live status was not changed. Rollback remains the unchanged V1 baseline plus COD-compatible intake-off procedure. Completion: **80% local implementation/verification; 20% remaining external authorization, D1 migration, deployment, live hold release/proof, receipt-device acceptance, audit endpoint, and push/CI**.
+
+## GFS-265 Final Report — 2026-10-27
+
+| Stage/task | Result | Evidence / exact blocker |
+|---|---|---|
+| Identity and branch parity | PASS | Cloudflare GFS session, canonical GFS Meta tab, GitHub `gardenshop/freeseeds`; branch contains pushed `3ba4ca7` plus this repair |
+| Source preservation | PASS | Candidate now has `COD_V1_ENABLED=true`, `COD_ROLLOUT_MODE=PUBLIC`; Hoja assets untouched |
+| Isolated 0035/0036 rehearsal | PASS | Targeted statements applied; unauthorized hold update rejected; authorized synthetic single-order release consumed; 250/125/375 unchanged |
+| Live D1 preflight | PASS read-only | 65 orders/payments; COD enabled; PKR125; 3 Advance methods; `quick_check=ok`; FK0; live markers only0030 |
+| Live migration | BLOCKED | No current supported recovery bookmark/backup was exposed; live D1 unchanged |
+| Existing cited public COD hold | BLOCKED | Still unpaid `COD_PENDING`, `test_hold=1`; no single-order release performed without the protected deployment/recovery gate |
+| Worker deployment / traffic | BLOCKED | API `428defd5` 100%; Admin `b840f5a4`13% / `615e1156`87%; Wrangler OAuth expired/unreachable; GFS-265 not live |
+| Secure new reference | PASS local / live pending | Local sample `FS-8R4K-2X7M-9QPA`; no live order fabricated |
+| Private Admin sequence | PASS local / live pending | Separate internal fields/rendering tested; no live new order fabricated |
+| Two-tap COD checkout | PASS local / live pending | One provisional order/idempotency tested; no customer-device journey available |
+| Advance/COD/PKR125 | PASS read-only/local | D1 enabled, fee125, three Advance methods; no payment/receipt/PAID mutation |
+| Receipt acceptance | PENDING | No authorized standalone/replied customer-device evidence; not fabricated |
+| Regression | PASS | Full290/290; focused121/121; build; lint; Worker dry-runs; rollback4/4; diff-check |
+| Audit | BLOCKED | npm registry advisory endpoint failed; no audit PASS claimed |
+
+**Active versions/traffic:** API `428defd5` 100%; Admin `b840f5a4` 13% / `615e1156` 87%; no GFS-265 version deployed. **PUBLIC status:** live D1 COD enabled/PKR125 and current API health WhatsApp-enabled; no public traffic mutation occurred. **Rollback:** unchanged COD-compatible intake-off/V1 compatibility harness 4/4; no live rollback run. **Completion:** 80% overall; 20% remaining for supported recovery bookmark/OAuth, targeted live migration, compatible Worker deployment/0%-to-100% promotion, audited single-order release, live customer acceptance, and receipt evidence.

@@ -1095,3 +1095,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Add `0035` columns/index rather than rewriting historical order numbers. Add `0036` single-use release authorization and replace only the snapshot trigger needed for a provenance-gated Admin release.
 - Preserve old `PLACE_ORDER` handling for stale inbound buttons while presenting exactly Advance/COD at the new review step. The stable checkout idempotency key is server-created and shared by concurrent payment-choice taps.
 - Do not release the live held order or apply D1/deployment changes from this run: read-only evidence does not by itself establish the required provenance authorization, and current protected rules forbid unapproved external mutation.
+
+## 2026-10-27: GFS-265 Release Recheck
+
+- Keep the API candidate explicitly PUBLIC so a future authorized deployment cannot accidentally turn COD off; preserve D1’s enabled PKR125 policy and three Advance methods.
+- Treat the isolated D1 database as rehearsal evidence only. Apply `0035`/`0036` live only through the supported targeted console procedure after a current recovery bookmark/backup is visible and recorded.
+- Do not clear the cited live hold, change traffic, deploy Workers, send Meta/WhatsApp messages, upload receipts, or mark PAID while Wrangler OAuth and the current D1 recovery bookmark are unavailable.

@@ -1045,3 +1045,11 @@ No secrets are stored in this registry.
 - Cloudflare read-only identity/service: authenticated `gisupp` session, `getfreeseeds-api-staging`; active deployment observed at 0% traffic. No version ID was claimed for this un-deployed source.
 - Chrome DevTools MCP: official page inventory and read-only Admin/Cloudflare/Meta identity checks completed. No WhatsApp customer-device interaction, receipt upload, WAMID, or external message was created.
 - Git: commit `37d6198` pushed to `codex/gfs221-cod-compat-001`; no unrelated files included.
+
+## GFS-265 Release Recheck Registry — 2026-10-27
+
+- Source: branch `codex/gfs221-cod-compat-001`, post-repair uncommitted changes are limited to API PUBLIC vars, one regression assertion, and required records.
+- Live D1: `getfreeseeds-staging` / configured shared ID; read-only result 65 orders/payments, COD enabled/PKR125, 3 required Advance methods, quick-check ok, FK0, live markers only through0030.
+- Rehearsal D1: `getfreeseeds-cod-compat-check`; targeted0035/0036 pass with synthetic fixture; no customer data used in source or records.
+- Runtime: API `428defd5` 100%; Admin `b840f5a4` 13% and `615e1156` 87%; GFS-265 not deployed.
+- Release evidence: official Chrome MCP identity/read-only checks PASS; Wrangler OAuth refresh and current Time Travel bookmark/backup evidence BLOCKED; customer-device receipt evidence PENDING.

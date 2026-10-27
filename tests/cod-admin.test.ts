@@ -297,13 +297,14 @@ describe("COD Admin configuration and reconciliation", () => {
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_CONFIGURATION_UPDATED'").get()).toEqual({ count: 0 });
   });
 
-  it("renders explicit COD stages while keeping the staging Worker flag off", async () => {
+  it("renders explicit COD stages while preserving the PUBLIC Worker flag", async () => {
     const response = await app.fetch(new Request("https://admin.example.test/orders", { headers: auth }), env());
     const html = await response.text();
     expect(html).toContain("COD_PENDING:['PACKING','Mark packing']");
     expect(html).toContain("DELIVERED:['COLLECTION_PENDING','Move to collection pending']");
     expect(html).toContain('<option value="COD_PENDING">COD pending</option>');
-    expect(readFileSync("apps/api/wrangler.jsonc", "utf8")).toContain('"COD_V1_ENABLED": "false"');
+    expect(readFileSync("apps/api/wrangler.jsonc", "utf8")).toContain('"COD_V1_ENABLED": "true"');
+    expect(readFileSync("apps/api/wrangler.jsonc", "utf8")).toContain('"COD_ROLLOUT_MODE": "PUBLIC"');
   });
 
   it("keeps the intake toggle simple and fixed at PKR 125 without collecting courier references", async () => {

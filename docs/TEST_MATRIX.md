@@ -1243,3 +1243,8 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | GFS-264 fulfillment/financial guard | COD_PENDING to PACKING; no upfront payment; PAID requires verified collection/remittance | PASS locally; no live fulfillment or PAID mutation |
 | GFS-264 rollback/integrity | unchanged baseline rollback, D1 quick/foreign-key checks, historical references | PASS 4/4 local rollback; full synthetic migration integrity pass |
 | GFS-264 external gates | Chrome read-only identity, 0% smoke, deployment, audit endpoint | PARTIAL: read-only identity/0% observation PASS; deploy/audit endpoint BLOCKED |
+| GFS-265 source preservation | PUBLIC vars, stale assertions, Hoja isolation | PASS: API config PUBLIC; no unrelated assets |
+| GFS-265 isolated migration | Targeted 0035/0036, fail-closed trigger, single-use release | PASS: rehearsal only; live schema unchanged |
+| GFS-265 live preflight | D1 counts/config, quick/FK checks, target hold | PASS read-only: 65/65, PKR125, 3 methods, quick ok, FK0, target held |
+| GFS-265 deployment gate | Authenticated Wrangler, recovery bookmark, 0% smoke, promotion | BLOCKED: expired/unreachable OAuth and no current bookmark exposed |
+| GFS-265 customer acceptance | New random ref, two-tap COD, receipt images | BLOCKED/PENDING: no authorized customer device or live deployment |

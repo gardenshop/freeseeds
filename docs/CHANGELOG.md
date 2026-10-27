@@ -975,3 +975,9 @@
 - Added trusted public/test COD classification, additive audited hold release, and retained fail-closed test holds and collection/remittance controls.
 - Reduced the new guided path to review-time Advance/COD choice while retaining stale-button compatibility and one provisional order.
 - Local gates: 290/290 tests, build, lint, rollback 4/4 PASS. npm audit endpoint BLOCKED. No live mutation or deployment performed.
+
+## 2026-10-27: GFS-265 Protected Release Recheck
+
+- Repaired the deployment candidate’s stale COD-OFF vars to preserve `COD_V1_ENABLED=true` and `COD_ROLLOUT_MODE=PUBLIC`; updated the corresponding regression assertion.
+- Re-ran full290/290, focused121/121, build, lint, Worker dry-runs, diff-check, and rollback4/4. Audit remains blocked by registry endpoint failure.
+- Completed isolated targeted 0035/0036 rehearsal and read-only live D1/runtime checks. No live migration, deployment, hold release, customer message, receipt, or financial mutation was made because supported OAuth/recovery gates were unavailable.

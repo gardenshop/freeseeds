@@ -728,3 +728,13 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - COD classification is server-side only: trusted `PUBLIC` admission stores `test_hold=0`; registered `TESTER_ONLY` admission stores `test_hold=1`; unknown runtime mode fails closed. Customer payload flags are never trusted.
 - The 0030 fail-closed default remains. Existing hold release is one-order-at-a-time, authenticated Admin + CSRF, provenance-gated, audited, and protected by a single-use D1 authorization. Registered test orders remain blocked. COD is never marked PAID without exact verified collection and remittance.
 - GFS-264 local release gates passed, but this checkout has no authorization to mutate live D1, deploy Workers, send customer/Meta messages, or change traffic. Preserve PUBLIC COD/Advance and Hoja zero-connection until separately authorized.
+
+## GFS-265 Protected Release Recheck (2026-10-27)
+
+- Branch `codex/gfs221-cod-compat-001` is clean at the pushed GFS-264 source plus the PUBLIC-preservation config repair. The API candidate now explicitly retains `COD_V1_ENABLED=true` and `COD_ROLLOUT_MODE=PUBLIC`; no Worker was deployed from the prior COD-OFF candidate.
+- Official Cloudflare dashboard identity is the GFS account used by `gisupp@gmail.com`; canonical Meta is the GFS WhatsApp account/connected sender. GitHub repository owner is `gardenshop`; no Hoja resource or unrelated asset was touched.
+- Live read-only D1 preflight: 65 orders, 65 payments, 7 COD schema markers, COD enabled, PKR125, three required Advance methods enabled, `quick_check=ok`, and `foreign_key_check` returned zero rows. Live `0035`/`0036` are absent; no live write was made.
+- Isolated D1 rehearsal applied only targeted `0035`/`0036` statements. The direct hold update failed closed with `COD_SNAPSHOT_IMMUTABLE`; one authorized synthetic release consumed its single-use authorization and preserved the 250/125/375 financial snapshot. This is rehearsal evidence, not live customer evidence.
+- The cited legacy public COD order remains unpaid `COD_PENDING` with `test_hold=1`; no release, fulfillment, payment, receipt, customer message, or fabricated order was made. Do not clear it until a supported recovery bookmark/backup and authenticated deployment path are available.
+- Cloudflare currently serves API `428defd5` at100%; Admin rollout is `b840f5a4` at13% and `615e1156` at87%. Neither contains GFS-265. Wrangler OAuth is expired/unreachable and the dashboard Time Travel view did not expose a current bookmark; do not bypass either gate.
+- Local release quality remains 290/290, focused121/121, build, lint, Worker dry-runs, diff-check, and rollback4/4. Registry audit is BLOCKED by the advisory endpoint failure, not a vulnerability PASS.
