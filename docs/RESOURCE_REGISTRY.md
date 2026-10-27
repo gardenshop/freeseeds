@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-276 Live Evidence (2026-10-28)
+
+- Specified genuine JazzCash order: list/detail HTTP200; PKR250 expected; REVIEW/PENDING; transaction reference present; five unique JPEG receipts, one payment association, private previews HTTP200; no PAID audit. Exact order/customer identifiers omitted.
+- Natural public COD order: random public reference format; two items; PKR625 total; PKR125 fee; COD_PENDING/dispatched; `testHold=false`; one COD confirmation; no PAID audit. Identifiers omitted.
+- Current sanitized Admin aggregate: 69 orders, 6 verify, 2 confirmed, 12 fulfillment. Payment methods: JazzCash, Easypaisa, Bank Transfer enabled with instructions and QR references.
+- No external resource, payment status, receipt, customer, Meta, Worker, D1, R2, Queue, Access, billing or migration state was changed.
+
 ## GFS-275 Evidence (2026-10-28)
 
 - D1 billing period: 8.51M/25B rows read, 19.12K/50M rows written, $0 displayed billable usage. Last-24-hour Query Insights: 49.23K queries, 41.6K reads, 7.63K writes, 8.61M rows read, 188 fingerprints.

@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-28: GFS-276 Final Go/No-Go
+
+- Treat the current five-receipt state as persisted genuine evidence requiring reconciliation against the earlier three-receipt note. Do not delete, merge, reject, or approve receipts without authorized evidence; keep payment `REVIEW`/`PENDING`.
+- Accept the natural public COD order as functional evidence: random public reference, two items, exact PKR125 fee, `testHold=false`, COD confirmation, and no PAID audit. No additional customer action is required for this independent check.
+- Set public lead/order intake GO, Advance payments GO with the existing independent-credit approval gate, and PUBLIC COD GO. Device-level two-tap/Advance evidence and period-separated outbound measurement remain optional/pending evidence, not production-health blockers.
+
 ## 2026-10-28: GFS-275 Evidence-Only Closeout
 
 - Do not change SQL: aggregate outbound data is 1,776 / 3.08M / approximately 1.76K rows per execution, but Query Insights does not expose a period-separated post-0038 total. The existing provider/status index and prior EXPLAIN evidence remain the smallest justified repair.

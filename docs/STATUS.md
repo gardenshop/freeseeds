@@ -1,5 +1,15 @@
 # Status
 
+## GFS-276 Final E2E Acceptance (2026-10-28)
+
+- **P0 PASS:** Workers Paid, migration0037/0038, Admin `66426d2a` 100%, API `24d72438` 100%, COD PKR125, Advance methods, 292/292 tests and rollback4/4 remain preserved.
+- **P1 PASS/PENDING:** The specified genuine JazzCash order is HTTP200 in list/detail, PKR250, `PAYMENT_REVIEW`/`PENDING`, reference present, no approved amount or PAID audit. Five unique private JPEG receipts are associated to one payment and all previews return HTTP200. The earlier three-receipt note needs reconciliation; no approval was made.
+- **P2 PASS/PENDING:** A natural persisted public COD order now increases the aggregate to 69 total / 6 verify / 2 confirmed / 12 fulfillment. Sanitized detail shows random reference format, two items, PKR625, exactly PKR125 COD fee, `COD_PENDING`/dispatched, `testHold=false`, one COD confirmation, and zero PAID audits. Advance device/two-tap evidence remains pending; no synthetic action was used.
+- **P3 PASS/PENDING:** Three enabled methods remain present. Outbound Query Insights remains 1,776 / 3.08M / approximately 1.76K aggregate with no isolated post-0038 period; no SQL change is justified. Paid usage and error evidence remain within prior recorded limits.
+- **P4 PASS:** No runtime, payment, receipt, customer, migration, deployment or billing mutation. This material evidence update is documented and pushed.
+- **Decision:** Public leads/order intake **GO**; Advance payments **GO with approval safeguards**; PUBLIC COD **GO**. Remaining non-blocking evidence: receipt-count reconciliation, genuine Advance device/two-tap proof, and period-separated outbound cost measurement.
+- **Completion:** P0 100%; P1 90%; P2 95% functional / device evidence pending; P3 90%; P4 100%. Overall 95%; no production-health failure demonstrated.
+
 ## GFS-275 Final Live Acceptance + D1 Cost Control (2026-10-28)
 
 - **P0 PASS:** Paid D1, migration0037/0038, Admin `66426d2a` and API `24d72438` were preserved. No redeploy, billing change, migration replay, or payment configuration change occurred.

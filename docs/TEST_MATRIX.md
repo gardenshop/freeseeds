@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-276 Final E2E Acceptance (2026-10-28)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Genuine JazzCash order association | PASS/PENDING | HTTP200 list/detail; PKR250, REVIEW/PENDING, reference present, no PAID; five unique receipts linked to one payment, private previews 200 JPEG. Prior three-receipt note requires reconciliation. |
+| Public COD persistence | PASS | Natural order detail HTTP200; random reference format, two items, PKR625, one PKR125 fee, COD_PENDING/dispatched, `testHold=false`, one COD confirmation, zero PAID audits. |
+| Duplicate protection | PASS | Target order match count 1; receipt IDs unique; new COD order has one confirmation audit and no PAID audit. |
+| Advance methods | PASS/PENDING | JazzCash, Easypaisa and Bank Transfer enabled with instructions/QR references; fresh device/two-tap proof unavailable. |
+| Post-0038 outbound cost | PENDING | 1,776 / 3.08M / ~1.76K aggregate; period-separated natural after-metric unavailable. |
+| Launch safety | PASS | No approval, fulfillment mutation, customer message, migration, deployment or billing change. |
+
 ## GFS-275 Final Live Acceptance (2026-10-28)
 
 | Requirement | Result | Evidence / blocker |

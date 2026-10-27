@@ -1,5 +1,23 @@
 # Final Report
 
+## GFS-276 Final Report (2026-10-28)
+
+| Stage | Result | Verified evidence / remaining item |
+|---|---|---|
+| P0 preserve release | PASS | Paid D1, migrations0037/0038, Admin/API versions, COD/Advance, tests and rollback preserved. |
+| P1 genuine receipt/order evidence | PASS/PENDING | Target JazzCash order HTTP200 list/detail, PKR250, REVIEW/PENDING, reference present, five unique private JPEG receipts all preview HTTP200, no PAID. Earlier three-receipt record needs reconciliation. |
+| P2 public customer flow | PASS/PENDING | Natural public COD order: random reference, two items, PKR625, exact PKR125 fee, COD_PENDING/dispatched, `testHold=false`, one confirmation, no PAID. Fresh device/two-tap Advance proof unavailable. |
+| P3 D1 cost/reliability | PASS/PENDING | Outbound 1,776 / 3.08M / ~1.76K aggregate; post-0038 period split unavailable. No SQL repair justified. |
+| P4 quality/protection | PASS | No runtime or financial mutation; prior 292/292 and rollback4/4 preserved; evidence committed/pushed. |
+
+### Explicit launch decision
+
+- **PUBLIC LEADS / ORDER INTAKE: GO.** Natural public COD persistence and fulfillment evidence is present.
+- **ADVANCE PAYMENTS: GO WITH SAFEGUARDS.** Three methods remain enabled; receipts associate correctly and approval remains blocked without independent receiving-account credit.
+- **PUBLIC COD: GO.** Current natural order has `testHold=false`, exact PKR125 fee, COD confirmation, and no PAID audit.
+- Remaining blockers are evidence-only: reconcile why the target order now has five receipts versus the earlier three-receipt note; obtain genuine Advance device/two-tap evidence if required; isolate post-0038 Query Insights traffic when sufficient natural data exists.
+- Completion: P0 100%; P1 90%; P2 95% functional / device evidence pending; P3 90%; P4 100%. Overall 95%. Functional readiness is GO; optional monitoring evidence remains pending.
+
 ## GFS-275 Final Report (2026-10-28)
 
 | Stage | Result | Verified evidence / remaining item |

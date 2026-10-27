@@ -815,3 +815,11 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Keep the provider/status index and do not add speculative SQL. The committed migration and prior live EXPLAIN evidence show `outbound_messages_provider_status_idx` is used. Wait for natural, period-separated Query Insights data.
 - Current Admin dashboard evidence showed 0 Worker errors and 100% traffic on Admin `66426d2a` with the old version at 0%; API dashboard data remained loading and Wrangler read-only auth was expired/unreachable. Do not reauthenticate or mutate deployment state from this evidence-only run.
 - No genuine customer-device journey or receipt was available. Preserve production and mark random-reference, two-tap, COD fee, three-method, receipt association and device acceptance pending; never fabricate them.
+
+## GFS-276 Final E2E Acceptance Gate
+
+- The specified genuine JazzCash order was read-only verified by order search/detail: list and detail HTTP200, expected PKR250, `PAYMENT_REVIEW`/`PENDING`, transaction reference present, no approved amount, and zero PAID audits. Current persisted data contains five unique JPEG receipts, all linked to one payment; each private preview returned HTTP200 `image/jpeg`. The earlier record of three receipts is a reconciliation discrepancy, not evidence to approve payment.
+- A new natural public order was observed without creating traffic: random `FS-XXXX-XXXX-XXXX` format, two items, PKR625 total, exactly PKR125 COD fee, `COD_PENDING`/dispatched, `testHold=false`, one COD confirmation, one WhatsApp submission, tracking/state audits, zero PAID audits. Preserve the order and do not mutate it.
+- Current Admin aggregate is 69 orders / 6 verify / 2 confirmed / 12 fulfillment. This is a natural increase from the prior 68 / 6 / 2 / 11 baseline; do not label it a regression without duplicate or integrity evidence.
+- Payment methods remain exactly JazzCash, Easypaisa, and Bank Transfer, all enabled with instructions and private QR references. Approval still requires fresh independent receiving-account credit; no approval is authorized from receipt/reference alone.
+- Outbound status remains aggregate-only at 1,776 / 3.08M / approximately 1.76K rows per execution; no period-separated post-0038 result exists. Do not add another index or claim failure.
