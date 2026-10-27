@@ -3308,6 +3308,6 @@ Active live version observed read-only: API staging deployment at 0% traffic; so
 | Detail/receipts/payment | **BLOCKED pending quota** | No PAID mutation; cited Advance remains REVIEW pending independent settlement proof |
 | COD/Advance/rollback | **PASS read-only** | PUBLIC COD/PKR125 and Advance preserved; rollback4/4; no financial mutation |
 | Audit/D1 rerun | **BLOCKED** | npm advisory endpoint and current D1 row reads unavailable |
-| Push/docs | **PENDING** | Commit/docs are local pending verified Git push |
+| Push/docs | **PASS** | Source commit `cad82e1` and GFS-267 records `59996d9` pushed to `gardenshop/freeseeds` PR#11 branch |
 
 **New reference proof:** live list returned opaque-shaped `FS-XXXX-XXXX-XXXX` values; local sample `FS-8R4K-2X7M-9QPA`; no new live order fabricated. **Completion:** 85%; remaining15% is quota recovery, candidate list/detail/receipt HTTP200 smoke, controlled promotion, and audit availability.
