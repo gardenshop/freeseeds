@@ -1,5 +1,20 @@
 # Final Report
 
+## GFS-251 | Public Launch Gate (2026-10-27)
+
+**Overall: PASS for preserved staging/runtime preflight; BLOCKED for PUBLIC because the required fresh genuine Advance regression is unavailable.**
+
+| Stage | Result | Evidence |
+|---|---|---|
+| P0 preservation | PASS | Existing COD acceptance, D1/Admin evidence and polished TESTER_ONLY state preserved; no migration/order/payment/history mutation. |
+| P1 final live regression | BLOCKED | API health200, unsigned webhook403 and Admin health200/`paymentConfigured=true` pass. Fresh authenticated tester Advance journey and COD-to-Advance switch cannot be evidenced without the tester device; no simulation or unrelated profile used. |
+| P2 PUBLIC activation | NOT RUN | API remains `ba15b8ba-e3b3-4581-9b23-c2e688797132`100% TESTER_ONLY; prior TESTER_ONLY0%; COD-OFF rollback retained; Admin `615e1156-2747-457a-8623-11d1e967f911`100%. |
+| P3 validation/push | PASS LIMITED | No code repair required; protected gate record prepared. PUBLIC was not claimed. |
+
+**Exact remaining action:** the approved tester must initiate a new authenticated WhatsApp journey, verify the seeds-first EN/UR summary, all three Advance methods/instructions without payment fabrication, and COD-to-Advance switching before confirmation. After that evidence, PUBLIC may be evaluated under the existing conditional authorization.
+
+**Completion:** preserved engineering/runtime preflight100%; live Advance gate0%; PUBLIC activation0%; public availability **NO-GO**.
+
 ## GFS-250 | Polished COD Flow and Public Release Check (2026-10-27)
 
 **Overall: COD acceptance PASS; polished TESTER_ONLY staging PASS; public release BLOCKED pending live post-polish Advance verification and final public gate.**

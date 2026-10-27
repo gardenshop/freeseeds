@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-27: GFS-251 Hold PUBLIC Until Genuine Advance Evidence
+
+- Preserve the verified COD acceptance and polished TESTER_ONLY deployment. Read-only runtime and identity checks passed; no traffic, D1, order, payment, Meta or secret mutation was made.
+- Do not change `COD_ROLLOUT_MODE` to `PUBLIC` while the fresh genuine Advance regression and pre-confirmation COD-to-Advance switch are unavailable. Earlier conditional authorization is gated on those checks.
+- The exact missing action is a new authenticated-device journey by the approved tester: verify seeds-first EN/UR summary, JazzCash/Easypaisa/Bank Transfer instructions and COD-to-Advance switching without fabricating payment or PAID. After evidence, re-run the public eligibility check.
+
 ## 2026-10-27: GFS-250 Polish and Preserve Verified COD Acceptance
 
 - Treat the supplied customer evidence and independent D1/Admin read-only evidence as completed COD acceptance for the masked target order; do not repeat it by creating a duplicate order. One COD confirmation/detail was verified and the audited PKR125 fee was applied once; exact customer amounts remain private.

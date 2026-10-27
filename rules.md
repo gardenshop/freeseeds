@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-251 Public Launch Gate (2026-10-27)
+
+- Read-only identity/runtime verification PASS: official Chrome MCP is callable; Cloudflare shows `gisupp@gmail.com` on the GFS account; authenticated Admin health is200 with `paymentConfigured=true`; COD policy is enabled with audited PKR125; API health is200 and unsigned webhook rejection is403.
+- Current controlled staging remains API `ba15b8ba-e3b3-4581-9b23-c2e688797132` at100% in `TESTER_ONLY`, prior TESTER_ONLY at0%, Admin `615e1156-2747-457a-8623-11d1e967f911` at100%, and COD-OFF version `2500e268-8985-4fd4-a141-68633f16315d` retained for rollback. No PUBLIC mutation occurred.
+- P1 is blocked only on a fresh genuine authorized tester Advance journey and pre-confirmation COD-to-Advance switch from the tester's authenticated WhatsApp device. Do not simulate inbound messages, use the unrelated Web profile, or promote PUBLIC without that evidence.
+- Required tester action: initiate a new authenticated WhatsApp journey, verify the seeds-first EN/UR quote and all three existing Advance methods/instructions without fabricating payment, test COD-to-Advance before confirmation, and provide the private runtime evidence. Then re-run the final public eligibility check.
+
 ## GFS-250 Polished COD Acceptance (2026-10-27)
 
 - Independent read-only D1/Admin verification confirms one target order (identifier masked) in `COD_PENDING`, one COD detail row and one confirmation audit. The audited COD fee is PKR125 once; exact customer-order amounts are retained only in private evidence and are not persisted here.

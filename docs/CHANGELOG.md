@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-27 (GFS-251 public gate hold)
+
+- Reverified official MCP, Cloudflare identity, API/Admin runtime health, signed-webhook rejection and current TESTER_ONLY traffic without changing deployment state.
+- Held PUBLIC because the approved tester's authenticated WhatsApp device is not exposed for a fresh Advance regression and COD-to-Advance pre-confirmation check. No synthetic inbound or unrelated Web profile was used.
+
 ## 2026-10-27 (GFS-250 polished COD flow)
 
 - Replaced the COD quote with a dynamic seeds-first itemized summary in EN/UR: item rows, D1 Delivery Fee, audited COD Cash Collection Fee and TOTAL PAYABLE ON DELIVERY. Removed the misleading Advance-total wording.

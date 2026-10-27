@@ -1,5 +1,13 @@
 # Status
 
+## GFS-251 Public Launch Gate (2026-10-27)
+
+- **P0 PASS.** Prior genuine COD acceptance, D1/Admin integrity and polished TESTER_ONLY evidence remain valid; no migration, order, payment or historical-record mutation was made.
+- **P1 BLOCKED.** Read-only runtime checks pass: API health200, unsigned webhook403, authenticated Admin health200, `paymentConfigured=true`, audited COD enabled/PKR125. The approved session does not expose the tester's authenticated WhatsApp device, so a fresh genuine Advance journey and COD-to-Advance pre-confirmation switch cannot be performed without fabrication.
+- **P2 NOT RUN.** PUBLIC was not enabled. Current API `ba15b8ba-e3b3-4581-9b23-c2e688797132` remains100% TESTER_ONLY; prior TESTER_ONLY remains0%; COD-OFF rollback `2500e268-8985-4fd4-a141-68633f16315d` remains retained; Admin `615e1156-2747-457a-8623-11d1e967f911` remains100%.
+- **P3 PASS LIMITED.** Repository remains clean at commit `6d8cddb`; no code repair was indicated. The exact remaining human action is one fresh tester-device Advance journey with three-method/instruction verification and COD-to-Advance switching before confirmation.
+- **Completion:** preserved acceptance and engineering100%; runtime preflight100%; final live Advance gate0%; PUBLIC activation0%; public launch **NO-GO**.
+
 ## GFS-250 Polished COD Flow / Public Check (2026-10-27)
 
 - **P0 PASS.** Existing live evidence is independently verified without creating a duplicate: one target order (identifier masked) is `COD_PENDING`; one COD detail/confirmation audit records the audited PKR125 fee once. Exact customer-order amounts are retained only in private evidence. Test hold/DO NOT SHIP remains set and historical orders/payments remain preserved.

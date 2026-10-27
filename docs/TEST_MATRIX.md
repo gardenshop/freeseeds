@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-251 Public Launch Gate (2026-10-27)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Official MCP and Cloudflare identity | PASS | `list_pages` and authenticated snapshots work; Cloudflare shows `gisupp@gmail.com` on the GFS account. |
+| API/Admin runtime preflight | PASS | API health200, unsigned webhook403; Admin health200 with `paymentConfigured=true`; COD policy enabled with audited PKR125. |
+| Current traffic safety | PASS | API `ba15b8ba-e3b3-4581-9b23-c2e688797132`100% TESTER_ONLY; prior TESTER_ONLY0%; COD-OFF rollback retained; Admin `615e1156-2747-457a-8623-11d1e967f911`100%. |
+| Fresh genuine Advance journey | BLOCKED | No approved tester-device session is exposed to this execution; no inbound messages were fabricated and unrelated WhatsApp Web was not used. |
+| COD-to-Advance before confirmation | BLOCKED | Requires the same fresh authenticated tester journey; no state mutation was attempted. |
+| PUBLIC activation | NOT RUN | P1 is not PASS; public traffic and rollout mode remain unchanged. |
+
 ## GFS-250 Polished COD Acceptance (2026-10-27)
 
 | Requirement | Result | Evidence / blocker |

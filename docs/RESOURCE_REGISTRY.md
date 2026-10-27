@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-251 public-gate state (2026-10-27)
+
+- API `ba15b8ba-e3b3-4581-9b23-c2e688797132` remains active100% TESTER_ONLY; prior TESTER_ONLY is0%; COD-OFF rollback `2500e268-8985-4fd4-a141-68633f16315d` remains retained. Admin `615e1156-2747-457a-8623-11d1e967f911` remains100%.
+- Cloudflare identity was reverified as `gisupp@gmail.com` in the correct GFS account before read-only inspection. No public route, Version URL, D1, Meta, secret or customer mutation occurred.
+- PUBLIC is held pending the approved tester's fresh authenticated-device Advance journey and COD-to-Advance pre-confirmation switch. No Hoja resource or unrelated WhatsApp profile was used.
+
 ## GFS-250 polished staging resources (2026-10-27)
 
 - API active polished TESTER_ONLY version: `ba15b8ba-e3b3-4581-9b23-c2e688797132` at100%; prior TESTER_ONLY `64594da5-6a97-4167-835f-cbd5987bd876` at0%; COD-OFF versioned rollback target `2500e268-8985-4fd4-a141-68633f16315d`. Original D1, Queue, R2 and Meta bindings/secrets are preserved; secret values are not recorded.
