@@ -1308,3 +1308,11 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | GFS-271 fixture benchmark | **PASS local** | Synthetic 20/50/100/1,000 orders; bounded list/detail/settings/lookup and checkout writes |
 | GFS-271 live rows_read after | **BLOCKED** | Daily D1 cap exhausted; no post-deploy metric invented |
 | GFS-271 live Admin release | **BLOCKED safely** | Requires quota recovery/capacity, bookmark, 0% JSON200 smoke, then promotion |
+
+| GFS-273 Paid entitlement/account | **PASS** | Wrangler identity `gisupp@gmail.com` / Get Free Seeds; 25B reads and 50M writes |
+| GFS-273 version override provenance | **PASS** | Full candidate UUID recorded by Wrangler tail for authenticated requests; no HTTP-only assumption |
+| GFS-273 optimized Admin smoke | **PASS** | Candidate Orders, Payment Settings, payment-methods and detail HTTP200; counts 68/6/2/11, page 1/3 |
+| GFS-273 migration0038/index/integrity | **PASS** | Additive provider/status index; marker present; EXPLAIN uses index; quick/FK checks pass |
+| GFS-273 query-cost after | **PASS/PENDING** | Orders 300/6 (~50/request) vs historical 3.43M/80; outbound post-index natural-traffic metric pending |
+| GFS-273 promotion/rollback | **PASS** | Admin `66426d2a` 100%, `cd155f20` 0%; rollback4/4 PASS |
+| GFS-273 customer/financial mutation safety | **PASS** | No approval, receipt, COD hold, fulfillment, order creation, webhook replay, or customer message |

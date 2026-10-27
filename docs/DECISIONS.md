@@ -1147,3 +1147,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Preserve the pushed optimization and migration0037. The local plan confirms indexed bounded list/count/detail/lookup paths; no speculative rewrite or production SQL probe is authorized while exhausted.
 - Do not add payment-state caching. Admin failures remain JSON503; a failed read may never become zero counts, false PAID, receipt confirmation, or duplicate order.
 - Do not purchase Workers Paid or alter traffic. If optimized usage still exceeds Free capacity, present current plan/billing evidence and obtain explicit owner approval first.
+
+## 2026-10-27: GFS-273 optimized Admin release
+
+- Use the documented version-override dictionary header on the existing Access-protected hostname; require Wrangler tail/version metadata to prove candidate provenance. A successful response without provenance is insufficient.
+- Promote only after candidate Orders, Payment Settings, detail, local financial/COD tests, full regression, integrity, and rollback pass. Retain the previous Admin version at 0% as rollback.
+- Apply migration0038 only because Query Insights measured the provider-message status update scan as a material hotspot and EXPLAIN showed the new index is used. Do not replay0037 or manufacture webhook traffic for measurement.
+- Keep preview URLs disabled and do not enable Observability as a release workaround. Payment state is always read authoritatively before approval; no financial mutation is part of this release.

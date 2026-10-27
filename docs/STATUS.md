@@ -1478,3 +1478,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **P1 PASS local:** migration0037 indexes and EXPLAIN plans are indexed/bounded. No uncontrolled Admin interval polling exists; reloads are initial, explicit filter/tab/page/manual/action reloads with bounded client retry.
 - **P3 PASS local:** synthetic 20/50/100/1,000-order fixtures returned bounded 25-row pages, one count row, one detail row, three payment-setting rows, and indexed customer lookups. SQLite cannot expose Cloudflare `rows_read`; production after-metrics remain pending.
 - **P2 BLOCKED safely:** source through `19de91d` is pushed. Live migration, 0% smoke, promotion, HTTP200 Admin/Payment Settings/details/receipts, and post-fix metrics were not run while quota was exhausted. No billing, traffic, customer, receipt, payment, COD, or webhook mutation occurred.
+
+## GFS-273 Optimized Admin Release — 2026-10-27
+
+- **Paid/D1 PASS:** Get Free Seeds / `gisupp@gmail.com`; Paid allowance 25B reads/50M writes. Current dashboard usage observed at 8.55M reads and 16.96k writes; no billing change.
+- **Schema PASS:** migration0037 remains applied. Targeted migration0038 applied once; provider/status index present, `quick_check=ok`, foreign-key check empty, and recovery bookmark recorded.
+- **Candidate smoke PASS:** version override and Wrangler tail proved candidate `66426d2a-be1c-4e22-b420-1b1559dcbbc5` handled authenticated Orders, Payment Settings, and payment-method requests. Orders returned HTTP200 JSON with 68 total, page 1/3, 25 rows; detail HTTP200.
+- **Promotion PASS:** Admin candidate `66426d2a` is 100%; prior `cd155f20` is 0% rollback. API `24d72438` remains 100%. Access remains enforced and preview URLs remain disabled.
+- **Measured cost PASS:** optimized Orders query is 300 rows/6 executions (~50/request) versus historical 3.43M/80 (~42.9k/request), a measured ~99.88% reduction. Outbound update hotspot remains historical 3.03M/1,730; EXPLAIN now uses `outbound_messages_provider_status_idx`; post-index natural-traffic measurement is pending.
+- **Quality PASS:** focused 104/104, full 292/292, build, lint, and rollback4/4. No payment, receipt, COD hold, fulfillment, customer order, or WhatsApp mutation was performed.

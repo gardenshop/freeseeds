@@ -3379,3 +3379,19 @@ Active live version observed read-only: API staging deployment at 0% traffic; so
 | Quality/push | **PASS** | Prior focused/full tests, build, lint, migration rehearsal, rollback4/4; clean pushed HEAD `19de91d`; audit endpoint unavailable |
 
 **Orders/Payment Settings:** no repeated live requests during exhaustion; HTTP200 JSON smoke pending. **Versions/traffic:** unchanged live API/Admin; no GFS-271 deployment. **Rollback:** local 4/4 PASS, live staged rollback pending. **Completion:** source/measurement 100%; live recovery/deployment/post-fix metrics 0%; overall **70% complete / 30% remaining**. Blockers: D1 reset/capacity, recovery bookmark, targeted migration0037/integrity, authenticated 0% smoke, promotion/rollback, and 24-hour post-fix measurement.
+
+## GFS-273 Final Report — 2026-10-27
+
+| Stage | Result | Evidence |
+|---|---|---|
+| P0 Paid capacity/account | **PASS** | Get Free Seeds / `gisupp@gmail.com`; 25B reads, 50M writes; current observed 8.55M/16.96k; no billing mutation |
+| P1 version testing | **PASS** | Candidate in active deployment; exact override header; Wrangler tail recorded candidate UUID for Orders, Payment Settings, payment-methods |
+| P2 candidate smoke | **PASS** | Orders HTTP200 JSON, total68, counts `{all:68,verify:6,confirmed:2,fulfillment:11}`, page1/3; Payment Settings/payment-methods/detail HTTP200; no mutation |
+| P3 promotion | **PASS** | Admin `66426d2a-be1c-4e22-b420-1b1559dcbbc5` 100%; rollback `cd155f20-c848-4e4e-9fde-970e62b0a4ea` 0%; API `24d72438-72a1-4544-80df-4b9b90c297e5` 100% |
+| P3 query cost | **PASS/PENDING** | Orders 300 rows/6 executions (~50/request) vs historical 3.43M/80 (~42.9k/request), ~99.88% lower; outbound historical 3.03M/1,730 (~1.75k/update), post-index natural metric pending |
+| P4 migration/integrity | **PASS** | 0037 preserved; targeted 0038 applied once; provider/status index used by EXPLAIN; quick_check ok; FK empty |
+| P4 quality | **PASS** | Focused104/104, full292/292, build, lint, rollback4/4; audit not claimed if endpoint unavailable |
+| P4 customer safety | **PASS** | PUBLIC COD/PKR125, Advance methods, signed webhook, receipts/history/holds preserved; no payment approval, receipt, order, webhook, fulfillment, or WhatsApp mutation |
+| P5 docs/push | **PENDING** | Documentation and source changes prepared locally; GitHub push remains the final handoff action |
+
+**Current D1:** Paid capacity is active; 0037/0038 markers and indexes are verified. **Current service:** Admin optimized version is 100%, API unchanged at 100%, Access remains enforced, public Version URLs remain disabled. **Remaining:** push the verified commit and collect natural-traffic after-metrics for outbound status updates; no release blocker remains for Admin operation.

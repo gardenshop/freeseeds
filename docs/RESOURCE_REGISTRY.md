@@ -1104,3 +1104,11 @@ No secrets are stored in this registry.
 - Metrics: daily 8.06M/5M rows read, 14.96k/100k written, $0 billable; staging cumulative 44.23k, last-24h Query Insights 27k / 5M rows read.
 - Local migration0037 rehearsal/EXPLAIN and synthetic 20/50/100/1,000-order benchmark passed; Cloudflare after-deployment rows_read is not claimed.
 - Live migration, 0% smoke, promotion, rollback verification, and customer retest remain blocked by quota/capacity and protected mutation gates.
+
+## GFS-273 Registry — 2026-10-27
+
+- Source checkout: `D:\free seeds\gfs264-pr11`; optimization source through `03dbc87` plus additive migration0038 and preview-URL-disabled config; no Hoja assets or customer data added.
+- Cloudflare identity verified before each live mutation: `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; staging D1 changed only by the targeted index/marker.
+- Live Admin: `66426d2a-be1c-4e22-b420-1b1559dcbbc5` 100%; rollback `cd155f20-c848-4e4e-9fde-970e62b0a4ea` 0%. Live API: `24d72438-72a1-4544-80df-4b9b90c297e5` 100%.
+- D1: Paid 25B reads/50M writes; migration0037 and 0038 markers/indexes verified; quick/FK checks pass. Recovery bookmark is recorded in protected operational output, not repeated here.
+- Evidence: candidate UUID provenance captured by filtered Wrangler tail; Orders/Payment Settings/payment-methods/detail HTTP200; no financial or customer mutation.

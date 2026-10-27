@@ -1025,3 +1025,10 @@
 - Captured read-only Cloudflare D1 usage and Query Insights without production SQL probes.
 - Identified the dominant legacy Admin list projection (77 calls, 3.29M rows) and mapped remaining high-cost families to webhook status and WhatsApp content paths.
 - Verified migration0037/index plans and synthetic 20/50/100/1,000-order behavior locally. Live before/after rows-read and release smoke remain blocked by the exhausted daily quota.
+
+## 2026-10-27 — GFS-273 optimized Admin release
+
+- Verified Paid D1 capacity and applied the existing indexed Admin release without replaying migration0037.
+- Authenticated version-override smoke proved candidate `66426d2a` handled Orders, Payment Settings, payment methods, and detail; promoted it to 100% with `cd155f20` retained at 0% rollback.
+- Measured Orders list cost at ~50 rows/request (300/6) versus historical ~42.9k/request (3.43M/80). Added targeted migration0038 provider/status index for the measured outbound update scan; EXPLAIN confirms index usage.
+- Regression: focused104/104, full292/292, build, lint, rollback4/4. No customer, payment, receipt, COD hold, fulfillment, webhook, or WhatsApp mutation.

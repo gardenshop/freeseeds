@@ -789,3 +789,13 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - The legacy full Admin list projection is prohibited for list pages: 77 calls read 3.29M rows. Use the narrow indexed list/count path and authoritative detail reads only after selection.
 - D1 failures remain structured HTTP503 with no fabricated zero counts, false payment state, receipt loss, or order confirmation. Never cache approval/payment state.
 - Keep migration0037 additive and targeted; verify identity before mutation, record a recovery bookmark before live writes, require 0% smoke and rollback before promotion, and preserve PUBLIC COD/PKR125, Advance methods, signed webhook, new-number lock, and Hoja isolation.
+
+## GFS-273 Protected Optimized Admin Release (2026-10-27)
+
+- Paid capacity is verified on Get Free Seeds: 25B D1 reads and 50M writes per billing cycle. No billing mutation is permitted.
+- Migration0037 is live and must not be replayed. Targeted migration0038 adds only `outbound_messages_provider_status_idx`; verify its marker, index, `quick_check`, and foreign-key integrity after application.
+- For 0%-traffic smoke, use the authenticated production Admin hostname with `Cloudflare-Workers-Version-Overrides: getfreeseeds-admin-staging=\"<full-version-UUID>\"`. The version must be in the active deployment. Prove provenance with Wrangler tail/version metadata, never with HTTP200 alone.
+- Keep Access enforced and public Version URLs disabled. Do not enable Workers Observability merely to complete a release gate.
+- Query Insights measured the optimized Orders list at 300 rows across 6 executions (~50/request), versus the historical detail-list 3.43M/80 (~42.9k/request). Do not reintroduce correlated detail subqueries into list pages.
+- The measured outbound-status scan (3.03M/1,730, ~1.75k/update) is addressed only by the additive provider/status index. Do not mutate webhook/payment/order state to manufacture a benchmark; wait for natural traffic for after-metrics.
+- Payment approval, COD fulfillment, holds, receipts, signed webhook, new-number lock, and Hoja isolation remain protected. No stale payment-state cache, false PAID, duplicate order, or unsolicited WhatsApp action is allowed.
