@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-27 (GFS-258 live retry gate)
+
+- Rechecked the preserved conversation and active runtime through official MCP/Admin and read-only API boundaries. No new inbound arrived; no customer/order/payment mutation was made.
+- Kept repaired API TESTER_ONLY at100%, PUBLIC disabled, and COD-OFF rollback retained. Remaining action is one authenticated tester tap on the existing Place Order button.
+
 ## 2026-10-27 (GFS-257 review-to-payment repair)
 
 - Traced the genuine Place Order event to a Meta HTTP400 caused by an overlong COD reply-button title.

@@ -1,5 +1,10 @@
 # Decisions
 
+## 2026-10-27: GFS-258 Keep PUBLIC Fail-Closed
+
+- Preserve the existing pending order and conversation exactly; do not reset, create a replacement order, or use the unrelated WhatsApp Web profile.
+- Do not promote PUBLIC from configuration or prior evidence. The approved tester must tap the existing Place Order button once from the authenticated device; then inspect the genuine signed inbound/outbound result before continuing.
+
 ## 2026-10-27: GFS-257 Repair Before Public Promotion
 
 - Treat the 13:41 Place Order as a real received event, not a missing START or stale button. Preserve its single pending order and do not reset or create another order.

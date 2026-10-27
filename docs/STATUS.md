@@ -1,5 +1,12 @@
 # Status
 
+## GFS-258 Live Retry Gate (2026-10-27)
+
+- **P1 BLOCKED on external action.** Official Admin Test Controls shows no new inbound after GFS-257; the preserved conversation is still `REVIEW` and its one existing order remains unpaid, methodless, receipt-free, and non-PAID.
+- **Runtime PASS.** Repaired API `4d218abf…` remains100% TESTER_ONLY; Admin `615e1156…`100%; active health200 and unsigned webhook rejection pass; COD-OFF rollback remains retained.
+- **P2/P3 NOT RUN.** No genuine repaired menu, COD-to-Advance switch, or fresh public-eligible menu can be claimed without the approved tester's one authenticated-device Place Order tap. PUBLIC remains disabled.
+- **Completion:** P0 100/0; P1 75/25; P2 0/100; P3 0/100; P4 100/0. Overall controlled readiness~75%; public launch NO-GO.
+
 ## GFS-257 Review-to-Payment Repair (2026-10-27)
 
 - **P0 PASS.** Official Admin/Cloudflare identity and MCP access were reverified. The fresh signed Place Order event was found and traced to one safe pending order; outbound Meta HTTP400 caused the missing reply.

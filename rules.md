@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-258 Live Retry Gate (2026-10-27)
+
+- Official MCP/Admin readback found no new tester-originated inbound after the repaired deployment. The preserved conversation remains `REVIEW` with the same single unpaid, receipt-free pending order; no reset or replacement order is permitted.
+- API `4d218abf-7262-4d04-b8a3-3baa6fae1879` remains100% TESTER_ONLY; Admin `615e1156-2747-457a-8623-11d1e967f911` remains100%; COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` remains rollback. Active API health is200 and unsigned webhook rejection remains enforced.
+- PUBLIC remains fail-closed. The only missing evidence is one genuine tap of the existing Place Order button by the approved tester from the authenticated device; do not use unrelated WhatsApp Web or fabricate inbound events.
+
 ## GFS-257 Review-to-Payment Repair (2026-10-27)
 
 - The fresh Place Order inbound was genuine and signed: it was received at the reported time, persisted as one new `DETAILS_COMPLETED`/`PENDING` order, and left the conversation in `REVIEW` after the outbound reply failed. The provider response was Meta HTTP400 (`META_MESSAGE_SEND_400`), not a missing inbound.

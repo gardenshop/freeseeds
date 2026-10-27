@@ -1,5 +1,19 @@
 # Final Report
 
+## GFS-258 | Live Retry Gate (2026-10-27)
+
+**Overall: repaired runtime PASS; live acceptance and PUBLIC promotion BLOCKED by the missing authenticated tester tap.**
+
+| Stage | Result | Evidence |
+|---|---|---|
+| P0 preserve | PASS | Existing single pending order remains unchanged; no reset or duplicate. |
+| P1 live retry | BLOCKED | No new genuine inbound after repair; tester must tap existing Place Order once. |
+| P2 payment regression | BLOCKED | No repaired menu observation yet; prior unchanged evidence retained but not overstated. |
+| P3 PUBLIC | BLOCKED | API remains100% TESTER_ONLY; PUBLIC was not mutated. |
+| P4 quality | PASS | Prior 283/283, build/lint/audit, rollback4/4 and GFS-257 repair evidence remain valid. |
+
+Current active API is `4d218abf…` at100% TESTER_ONLY; Admin `615e1156…` is100%; COD-OFF rollback `2500e268…` is retained. The sole customer action required is the approved tester tapping the existing Place Order button from the authenticated device. No raw identifiers or WAMIDs are recorded.
+
 ## GFS-257 | Review-to-Payment Repair (2026-10-27)
 
 **Overall: engineering PASS; controlled TESTER_ONLY runtime PASS; public release BLOCKED on one genuine tester-device action.**

@@ -1,5 +1,15 @@
 # Test Matrix
 
+## GFS-258 Live Retry Gate (2026-10-27)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Preserved pending order | PASS | Admin readback shows the same single unpaid, methodless, receipt-free order; no reset or duplicate. |
+| Repaired API boundary | PASS | Active health200; unsigned webhook request rejected; API remains TESTER_ONLY at100%. |
+| Genuine repaired payment menu | BLOCKED | No new tester-originated inbound after repair. |
+| COD/Advance live regression | BLOCKED | Requires the genuine repaired menu and one pre-confirmation switch. |
+| PUBLIC promotion | BLOCKED | Conditional promotion cannot proceed without live P1/P2 evidence. |
+
 ## GFS-257 Review-to-Payment Repair (2026-10-27)
 
 | Requirement | Result | Evidence / blocker |

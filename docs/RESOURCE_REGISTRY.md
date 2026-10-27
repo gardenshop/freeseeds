@@ -1,5 +1,10 @@
 # Resource Registry
 
+## GFS-258 live retry state (2026-10-27)
+
+- API `4d218abf…`100% TESTER_ONLY; Admin `615e1156…`100%; COD-OFF `2500e268…` retained. Active health200 and unsigned webhook rejection pass.
+- No new WAMID, order, receipt, payment, secret, Meta, D1, or traffic mutation. PUBLIC is disabled pending the genuine tester action.
+
 ## GFS-257 controlled repair state (2026-10-27)
 
 - API `4d218abf-7262-4d04-b8a3-3baa6fae1879`: current repaired TESTER_ONLY version,100% traffic. Prior API `a5722925-650c-42db-bc75-a8c3242e8a4b`:0%. Admin `615e1156-2747-457a-8623-11d1e967f911`:100%. COD-OFF rollback `2500e268-8985-4fd4-a141-68633f16315d` retained.
