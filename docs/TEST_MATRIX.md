@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-249 Controlled TESTER_ONLY Runtime (2026-10-27)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Official MCP and dashboard identity | PASS | Same-session `list_pages`, authenticated Admin, Cloudflare account route and visible `gisupp@gmail.com`; no raw CDP or account switch. |
+| Protected secret and bindings | PASS LIMITED | Secret name is present on active API version with original secrets; value is not exposed. D1, Queue, R2 and signed Meta bindings preserved. |
+| COD-OFF compatibility candidate | PASS | API health200, unsigned WhatsApp callback403, Admin health200/`paymentConfigured=true`; COD-OFF rollback retained at0%. |
+| Audited D1 policy | PASS | Policy enabled, fixed PKR125, audited revision; 53 orders/payments preserved; zero COD rows and COD_PENDING orders before live acceptance. |
+| TESTER_ONLY admission | PASS DEPLOYED / E2E INCOMPLETE | Active API version contains enabled flag and TESTER_ONLY mode; exact protected identity gate is fail-closed. Genuine START reached `LANGUAGE`; customer continuation is pending. |
+| Genuine signed callback | PASS INITIAL | Active callback persisted a new inbound WAMID and advanced the authorized tester conversation; raw identifier remains private. |
+| Exact COD journey | BLOCKED | Tester must reply with language, then complete fields and select COD from their authenticated device; no synthetic messages permitted. |
+| COD_PENDING / PKR125 / no duplicate | NOT YET RUN | No new order or COD sidecar row exists yet. |
+| Advance regression / public activation | BLOCKED | Must follow completed tester COD acceptance and rollback checks; PUBLIC mode remains disabled. |
+
 ## GFS-248 Three-State Rollout (2026-10-27)
 
 | Requirement | Result | Evidence / blocker |

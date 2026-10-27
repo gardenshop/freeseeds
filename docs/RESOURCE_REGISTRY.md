@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-249 controlled staging resources (2026-10-27)
+
+- API active TESTER_ONLY version: `64594da5-6a97-4167-835f-cbd5987bd876` at100%; API COD-OFF rollback: `2500e268-8985-4fd4-a141-68633f16315d` at0%. Both preserve the existing staging D1, Queue, private receipt R2 and original Meta secret bindings. Protected tester secret is present but its value is not recorded.
+- Admin active version: `615e1156-2747-457a-8623-11d1e967f911` at100%; Admin v82 retained as rollback. No Version URL or public route was enabled.
+- D1 `cod_configuration`: audited enabled state, fee125, revision recorded remotely; 53 orders, 53 payments, zero COD sidecar rows and zero COD_PENDING orders before continuation. No legacy migration replay.
+- Meta callback: canonical GFS asset only. Genuine START was accepted by the active callback; WAMID remains private. No Hoja resources or unrelated WhatsApp profile used.
+
 ## GFS-248 fresh candidate versions (2026-10-27)
 
 - API fresh current-HEAD version `83e82edf-1921-4180-b10d-da5ca83f807e`, tag `gfs248-api-cod-off`, staged0% beside v90 `21a3d74c-3979-432c-9190-1848362592a4`100%. Bindings preserved; `COD_V1_ENABLED=false`; `COD_ROLLOUT_MODE=OFF`.

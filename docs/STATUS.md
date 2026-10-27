@@ -1,5 +1,15 @@
 # Status
 
+## GFS-249 Controlled TESTER_ONLY Activation / Awaiting Customer Reply (2026-10-27)
+
+- **P0 PASS.** Official Chrome MCP `list_pages` and authenticated Admin/Cloudflare snapshots worked in one native session. Cloudflare identity was reverified as `gisupp@gmail.com` on the GFS account before mutations; canonical Meta sender remained the verified GFS asset.
+- **P1 PASS LIMITED.** Current API `64594da5-6a97-4167-835f-cbd5987bd876` is active100% with `COD_V1_ENABLED=true` and `COD_ROLLOUT_MODE=TESTER_ONLY`; API COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` is retained0%. Admin `615e1156-2747-457a-8623-11d1e967f911` is active100%, with Admin v82 retained as rollback. Candidate/live health200, unsigned callback403, Admin `paymentConfigured=true`, and all original secret names/bindings were preserved.
+- **P2 PASS LIMITED.** Protected tester secret exists by name only and was never printed. D1 policy is audited/enabled at PKR125. Read-only D1 shows 53 orders, 53 payments, zero COD sidecar rows and zero COD_PENDING orders before the live journey. No migration replay occurred.
+- **P3 PARTIAL LIVE PASS.** A genuine inbound START was processed by the active staging callback: Admin shows a new private WAMID and conversation state `LANGUAGE`. This is the first live callback evidence; no order was created yet. The approved tester must reply with the language choice from their own authenticated device.
+- **P4 BLOCKED AT CUSTOMER CONTINUATION.** Do not inject language, inspect chats, use the unrelated Web profile or fabricate an inbound. Remaining live evidence: complete journey, exact two-button menu, PKR125 once, new order, COD_PENDING/Admin confirmation, Advance switch and Advance regression.
+- **P5 NOT SIGNED OFF.** Prior focused78/78, full281/281, build/lint/audit0 and rollback4/4 remain authoritative; no code repair was needed this turn. Documentation records the runtime state. Public mode is not enabled.
+- **Completion:** engineering and controlled activation100%; genuine journey through START~25%; COD_PENDING acceptance0%; public release0%. Staging remains TESTER_ONLY and DO NOT SHIP; public launch NO-GO.
+
 ## GFS-248 Fresh COD-OFF Candidates / Secret Gate (2026-10-27)
 
 - **P0 PASS LIMITED.** Implemented fail-closed `OFF` / `TESTER_ONLY` / `PUBLIC` rollout mode. Focused78/78, full281/281, build/lint/audit0 pass. Fresh API `83e82edf-1921-4180-b10d-da5ca83f807e` and Admin `615e1156-2747-457a-8623-11d1e967f911` are staged at0%; API v90/Admin v82 remain100%. Stale candidates were removed from current deployments.

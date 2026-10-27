@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-27 (GFS-249 controlled TESTER_ONLY activation)
+
+- Provisioned the approved tester secret through supported protected controls without recording its value; restored the unexpected auto-promoted secret version and uploaded current HEAD with preserved secrets/bindings.
+- Promoted API `64594da5-6a97-4167-835f-cbd5987bd876` in TESTER_ONLY mode and Admin `615e1156-2747-457a-8623-11d1e967f911` for controlled staging. Retained API COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` as rollback; public mode untouched.
+- Enabled the audited D1 COD policy at PKR125. A real signed START reached the tester conversation's LANGUAGE state. No COD order, payment, shipment or PAID transition was created.
+- Acceptance remains paused for the tester's own language reply; no synthetic inbound or unrelated Web profile was used.
+
 ## 2026-10-27 (GFS-248 three-state rollout and fresh candidates)
 
 - Added fail-closed `OFF` / `TESTER_ONLY` / `PUBLIC` COD rollout mode and tests. Final local gates: focused78/78, full281/281, build/lint/audit0.

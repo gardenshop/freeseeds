@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-27: GFS-249 Controlled Tester Activation; Awaiting Journey Continuation
+
+- Owner-authorized staging activation was performed only after identity, candidate health, signed-callback rejection, Admin payment health and rollback version checks. The protected tester secret was entered through supported controls; its value is intentionally absent from source, logs and documents.
+- Wrangler's secret command auto-promoted its secret-bearing version once. This was repaired immediately by restoring the prior API to100%, retaining the secret version at0%, uploading current HEAD, and staging/promoting the verified current versions. No COD traffic or customer data mutation occurred during the accidental inert COD-OFF interval.
+- Admin audited the D1 COD toggle at PKR125. API `64594da5-6a97-4167-835f-cbd5987bd876` is now TESTER_ONLY100%; COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` is the rollback0%. Admin `615e1156-2747-457a-8623-11d1e967f911` is active100%. Public mode is forbidden until acceptance.
+- A genuine signed inbound START was observed in the active callback and the tester conversation reached `LANGUAGE`; no WAMID or customer identifier is recorded here. The next required human action is the authorized tester's language reply from their own device. Do not use the unrelated WhatsApp Web profile or fabricate the event.
+- D1 read-only counts after START remain 53 orders, 53 payments, zero COD sidecar rows and zero COD_PENDING orders. Existing history is preserved. DO NOT SHIP remains mandatory.
+
 ## 2026-10-27: GFS-248 Stage Fresh OFF Versions; Stop at Secure Secret Input
 
 - Replace the binary admission assumption with an explicit fail-closed `OFF` / `TESTER_ONLY` / `PUBLIC` mode. Keep the independent `COD_V1_ENABLED` kill switch. PUBLIC is forbidden until genuine tester acceptance and all runtime gates pass.

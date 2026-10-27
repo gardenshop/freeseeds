@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-249 Controlled TESTER_ONLY Activation (2026-10-27)
+
+- Cloudflare identity was reverified in the official dashboard as `gisupp@gmail.com` on the GFS account before each Worker mutation. No Hoja resource, raw CDP, account switch, Version URL, or public-production change was used.
+- The protected tester secret was entered through supported Wrangler secret controls. Its value is never recorded. Wrangler unexpectedly auto-promoted the secret-update version once; it was immediately restored to0% and a fresh current-HEAD version was uploaded with the secret inherited and all original secrets/bindings preserved.
+- Current staging API `64594da5-6a97-4167-835f-cbd5987bd876` is active100% in `TESTER_ONLY` mode with the independent COD flag enabled; COD-OFF API `2500e268-8985-4fd4-a141-68633f16315d` remains0% as rollback. Admin `615e1156-2747-457a-8623-11d1e967f911` is active100%; Admin v82 remains retained as rollback. Public mode is untouched.
+- Audited D1 COD policy is enabled with fixed fee PKR125 and a revision. Read-only verification shows 53 historical orders/payments preserved, zero COD sidecar rows before acceptance, and the latest conversation has a genuine inbound event in `LANGUAGE` state. Do not fabricate the next reply or access an unrelated WhatsApp Web profile.
+- TESTER_ONLY acceptance is not public acceptance. Keep DO NOT SHIP enforced. Public mode requires the complete new journey, same-order COD_PENDING evidence, Advance regression, rollback and separate public-release authorization.
+
 ## GFS-248 Three-State COD Rollout and Protected-Secret Stop (2026-10-27)
 
 - COD admission is now explicitly `OFF`, `TESTER_ONLY`, or `PUBLIC`. `COD_V1_ENABLED=true` is still required. Unknown/missing modes fail closed; `TESTER_ONLY` additionally requires an exact normalized match to protected `COD_TESTER_WA_ID`; `PUBLIC` is permitted only after genuine tester acceptance and release gates pass.

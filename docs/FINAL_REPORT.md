@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-249 | Controlled TESTER_ONLY Activation (2026-10-27)
+
+**Result: controlled staging activation PASS; genuine START PASS; full COD journey and public release BLOCKED pending the tester's next device reply.**
+
+| Stage | Result | Evidence / blocker |
+|---|---|---|
+| P0 identity/protected environment | PASS | Official Chrome MCP worked in one session; Cloudflare identity reverified; protected secret present without value exposure; canonical GFS Meta asset used. |
+| P1 release engineering | PASS LIMITED | API `64594da5-6a97-4167-835f-cbd5987bd876` active100% TESTER_ONLY; Admin `615e1156-2747-457a-8623-11d1e967f911` active100%; API COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` rollback0%; health200, unsigned403, Admin paymentConfigured=true. |
+| P2 D1/COD policy | PASS LIMITED | Audited D1 policy enabled at PKR125; 53 orders/payments preserved; zero COD rows and COD_PENDING orders before acceptance; no migration replay. |
+| P3 genuine WhatsApp | PASS INITIAL / BLOCKED CONTINUATION | Real signed START produced a new private WAMID and `LANGUAGE` state. Tester must reply with language and complete the new journey; no synthetic input or unrelated Web profile. |
+| P4 COD acceptance | NOT YET RUN | No COD menu, PKR125 quote, new order, COD_PENDING Admin proof, Advance switch or final WAMID set yet. |
+| P5 public release | BLOCKED | PUBLIC mode remains disabled. Requires completed tester acceptance, Advance regression, rollback proof and separate public authorization. |
+
+**Current runtime:** API TESTER_ONLY `64594da5-6a97-4167-835f-cbd5987bd876`100%, COD-OFF rollback `2500e268-8985-4fd4-a141-68633f16315d`0%; Admin `615e1156-2747-457a-8623-11d1e967f911`100%; D1 fee PKR125/enabled; DO NOT SHIP. No order amount, COD_PENDING record or public production claim exists.
+
+**Exact remaining action:** the authorized tester replies with the language choice from the same authenticated WhatsApp device, then completes the prescribed journey. Do not simulate or substitute an account.
+
 ## GFS-248 | Final COD Release Attempt (2026-10-27)
 
 **Result: rollout implementation and fresh 0%-candidate smoke PASS; protected-secret provisioning, genuine E2E and public activation BLOCKED.**
