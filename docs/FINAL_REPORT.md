@@ -3223,3 +3223,21 @@ Next single action: obtain a clean Meta WABA test context or submit a Meta suppo
 - Main SHA: `7794b686e942901fc549c1c25a97a4175d9fa663`.
 - STOP_GATE: `WHATSAPP_NUMBER_SLOT_BLOCKED` / pending Business profile; `BACKEND_REALTIME_SYNC_BLOCKED`; `PAYMENT_AMOUNT_NOT_CONFIGURED`.
 - Next action: resolve the pending Business profile/Add Phone restriction through supported Meta Business/WABA support, then delete old/add new only after exact UI confirmation.
+
+## GFS-264 Final Report — 2026-10-27
+
+| Task | Result |
+|---|---|
+| Secure new public references | **PASS local** — sample pattern `FS-8R4K-2X7M-9QPA`; actual local generated values are not customer data |
+| Private Admin sequence | **PASS local** — stored separately and rendered only by Admin; live proof pending deployment |
+| Historical compatibility | **PASS local** — no rewrite; legacy lookup/rollback tests pass |
+| Two-choice checkout | **PASS local** — review shows Advance/COD; COD needs one quote-confirm tap after choice; one provisional order is recovered idempotently |
+| COD hold classification | **PASS local** — public unheld, registered tester held, unknown fail closed |
+| Existing live public COD hold | **BLOCKED** — read-only Admin confirms the cited order is held; release requires authorized provenance/D1 mutation |
+| Admin fulfillment | **PASS local** — released legacy-public synthetic order reached `PACKING`; test order stayed blocked |
+| Payments/receipts | **PASS local guards** — PKR125 and Advance paths unchanged; live receipt acceptance **PENDING** (no authorized device access) |
+| Migration/deployment/push | **BLOCKED** — migrations staged, no live D1/deploy/push mutation authorized in this run |
+| Regression | **PASS** — 290/290, focused suites, build, lint, rollback 4/4 |
+| Audit | **BLOCKED** — npm registry advisory endpoint failed; no audit verdict asserted |
+
+Active live version observed read-only: API staging deployment at 0% traffic; source version is not live. PUBLIC COD/Advance live status was not changed. Rollback remains the unchanged V1 baseline plus COD-compatible intake-off procedure. Completion: **80% local implementation/verification; 20% remaining external authorization, D1 migration, deployment, live hold release/proof, receipt-device acceptance, audit endpoint, and push/CI**.

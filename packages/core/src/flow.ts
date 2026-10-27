@@ -1,6 +1,6 @@
 import { createLeadEvent } from "./capi";
 import { FlowSubmission, InstantFormSubmission, LeadSource, normalizeContactNumber, normalizeMobileContactNumber, normalizeWhatsAppWaId } from "./domain";
-import { allocateOrderNumber } from "./order-number";
+import { allocateOrderIdentity, ORDER_REFERENCE_MAX_ATTEMPTS } from "./order-number";
 import { requirePaymentAmount } from "./payments";
 import { OrderQuote, quoteOrder } from "./quote";
 
@@ -107,18 +107,19 @@ async function persistLeadSubmission(db: D1Database, submission: FlowSubmission,
     }
     cooldownClaimed = true;
   }
-  const orderNumber = await allocateOrderNumber(db, nowDate);
-  const leadEvent = createLeadEvent(orderNumber, options.attribution);
-  const leadEventId = leadEvent.eventId;
+  let identity = await allocateOrderIdentity(db, nowDate);
+  let orderNumber = identity.orderNumber;
+  let leadEvent = createLeadEvent(orderNumber, options.attribution);
   const outboxId = crypto.randomUUID();
   // Retain prior order delivery snapshots; only the first snapshot owns unique wa_id.
   const snapshotWaId = existingWhatsAppCustomer ? undefined : normalizedTrustedWaId;
   const whatsappNumber = existingWhatsAppCustomer ? normalizedTrustedWaId : !normalizedTrustedWaId && "whatsappNumber" in submission && typeof submission.whatsappNumber === "string" ? submission.whatsappNumber : undefined;
   const storedContactNumber = normalizeMobileContactNumber(submission.contactNumber) ?? submission.contactNumber;
-  try {
-    await db.batch([
+  const buildOrderBatch = () => {
+    const leadEventId = leadEvent.eventId;
+    return [
     db.prepare("INSERT INTO customers (id,wa_id,bsuid,bsuid_business_id,whatsapp_username,full_name,delivery_address,nearby_place,city,contact_number,normalized_phone,normalized_address_hash,created_at,updated_at,normalized_contact_number,whatsapp_number,normalized_whatsapp_number) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(customerId, snapshotWaId ?? null, submission.bsuid ?? null, submission.bsuidBusinessId ?? null, submission.whatsappUsername ?? null, submission.fullName, submission.deliveryAddress, submission.nearbyPlace, submission.city, storedContactNumber, normalizeContactNumber(storedContactNumber), addressHash, now, now, normalizeContactNumber(storedContactNumber), whatsappNumber ?? null, whatsappNumber ? normalizeContactNumber(whatsappNumber) : null),
-    db.prepare("INSERT INTO orders (id,order_number,customer_id,offer_code,pack_quantity,seed_price,delivery_fee,fertilizer_fee,total_payable,province,fertilizer_selected,state,payment_status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(orderId, orderNumber, customerId, quote?.productCode ?? "GET_FREE_SEEDS_5_PACKS", quote ? 1 : 5, productItem?.lineTotalPkr ?? 0, quote?.deliveryFeePkr ?? paymentAmount, fertilizerItem?.lineTotalPkr ?? 0, paymentAmount, quote?.province ?? null, quote?.fertilizerSelected ? 1 : 0, "DETAILS_COMPLETED", "PENDING", now, now),
+    db.prepare("INSERT INTO orders (id,order_number,internal_sequence,internal_sequence_date,customer_id,offer_code,pack_quantity,seed_price,delivery_fee,fertilizer_fee,total_payable,province,fertilizer_selected,state,payment_status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(orderId, orderNumber, identity.internalSequence, identity.internalSequenceDate, customerId, quote?.productCode ?? "GET_FREE_SEEDS_5_PACKS", quote ? 1 : 5, productItem?.lineTotalPkr ?? 0, quote?.deliveryFeePkr ?? paymentAmount, fertilizerItem?.lineTotalPkr ?? 0, paymentAmount, quote?.province ?? null, quote?.fertilizerSelected ? 1 : 0, "DETAILS_COMPLETED", "PENDING", now, now),
     ...(quote ? quote.items.map((item) => db.prepare("INSERT INTO order_items (id,order_id,product_id,item_type,product_code,description,quantity,unit_price_pkr,line_total_pkr,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), orderId, item.type === "PRODUCT" ? productRow?.id ?? null : null, item.type, item.code, item.name, item.quantity, item.unitPricePkr, item.lineTotalPkr, now)) : []),
     db.prepare("INSERT INTO payments (id,order_id,expected_amount,review_state,created_at,updated_at) VALUES (?,?,?,?,?,?)").bind(paymentId, orderId, paymentAmount, "PENDING", now, now),
     db.prepare("INSERT INTO leads (id,customer_id,order_id,status,capi_event_id,created_at) VALUES (?,?,?,?,?,?)").bind(leadId, customerId, orderId, "CREATED", leadEventId, now),
@@ -131,14 +132,29 @@ async function persistLeadSubmission(db: D1Database, submission: FlowSubmission,
       db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), `${options.source}_SUBMITTED`, "CUSTOMER", "ORDER", orderId, correlationId, JSON.stringify({ orderNumber, source: options.source }), now),
       ...(cooldownClaimed ? [db.prepare("UPDATE order_eligibility_locks SET order_number=? WHERE household_key=? AND order_id=?").bind(orderNumber, addressHash, orderId)] : []),
       ...(cooldownExempt ? [db.prepare("INSERT INTO order_eligibility_locks (household_key,order_id,order_number,last_order_at) VALUES (?,?,?,?) ON CONFLICT(household_key) DO UPDATE SET order_id=excluded.order_id,order_number=excluded.order_number,last_order_at=excluded.last_order_at").bind(addressHash, orderId, orderNumber, now)] : [])
-    ]);
-  } catch (error) {
-    // A concurrent replay may lose the idempotency-key insert after allocating a number.
-    const replay = await findExistingOrderRequest(db, options);
-    if (replay) return replay;
-    if (cooldownClaimed) await db.prepare("DELETE FROM order_eligibility_locks WHERE household_key=? AND order_id=?").bind(addressHash, orderId).run();
-    throw error;
+    ];
+  };
+  let saved = false;
+  for (let attempt = 0; attempt < ORDER_REFERENCE_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      await db.batch(buildOrderBatch());
+      saved = true;
+      break;
+    } catch (error) {
+      const replay = await findExistingOrderRequest(db, options);
+      if (replay) return replay;
+      const message = error instanceof Error ? error.message : String(error);
+      const collision = /UNIQUE constraint failed/i.test(message) && /(orders\.order_number|capi_events\.event_id|outbox_jobs\.idempotency_key)/i.test(message);
+      if (!collision || attempt === ORDER_REFERENCE_MAX_ATTEMPTS - 1) {
+        if (cooldownClaimed) await db.prepare("DELETE FROM order_eligibility_locks WHERE household_key=? AND order_id=?").bind(addressHash, orderId).run();
+        throw collision ? new Error("ORDER_REFERENCE_ALLOCATION_FAILED") : error;
+      }
+      identity = await allocateOrderIdentity(db, nowDate);
+      orderNumber = identity.orderNumber;
+      leadEvent = createLeadEvent(orderNumber, options.attribution);
+    }
   }
+  if (!saved) throw new Error("ORDER_REFERENCE_ALLOCATION_FAILED");
   return { customerId, leadId, orderId, orderNumber, duplicate: false, ...(quote ? { quote } : {}) };
 }
 

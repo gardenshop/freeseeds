@@ -1088,3 +1088,10 @@ Payment selection is now strictly method-only: complete enabled D1 methods gener
 No live browser or external dashboard evidence was claimed because the active session did not expose Chrome DevTools MCP. No Cloudflare, Meta, GitHub, payment, QR ownership, fulfillment, or financial mutation was attempted in this execution. Local gates passed with 105 tests, build, lint, and zero high-severity audit findings. Launch remains NO-GO for unresolved QR ownership and the paid/packing incident.
 
 PR #8 required CI run `39262725184` was triggered after the push and failed before any recorded job step or downloadable log. This is an external CI failure, not a local test failure; the branch is not mergeable on this evidence and no bypass is permitted.
+
+## GFS-264 Decisions — 2026-10-27
+
+- Keep migration `0030` default `test_hold=1`; classify only from trusted Worker configuration and pass the resulting hold explicitly during COD insertion.
+- Add `0035` columns/index rather than rewriting historical order numbers. Add `0036` single-use release authorization and replace only the snapshot trigger needed for a provenance-gated Admin release.
+- Preserve old `PLACE_ORDER` handling for stale inbound buttons while presenting exactly Advance/COD at the new review step. The stable checkout idempotency key is server-created and shared by concurrent payment-choice taps.
+- Do not release the live held order or apply D1/deployment changes from this run: read-only evidence does not by itself establish the required provenance authorization, and current protected rules forbid unapproved external mutation.

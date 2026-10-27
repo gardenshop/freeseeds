@@ -151,9 +151,11 @@ function orderView(row: Record<string, unknown>, referenceRequestDispatchEnabled
   return {
     id: String(row.id),
     orderNumber: String(row.order_number),
+    internalSequence: row.internal_sequence == null ? null : Number(row.internal_sequence),
+    internalSequenceDate: row.internal_sequence_date == null ? null : String(row.internal_sequence_date),
     state,
     fulfillmentHold,
-    fulfillmentHoldReason: codTestHold ? "TEST ONLY / DO NOT SHIP. Candidate COD orders are held; no hold-clearing endpoint is available." : fulfillmentHold ? "Independent bank settlement and customer transaction reference are missing." : null,
+    fulfillmentHoldReason: codTestHold ? "TEST ONLY / DO NOT SHIP. Release requires authenticated Admin provenance verification; registered test orders remain blocked." : fulfillmentHold ? "Independent bank settlement and customer transaction reference are missing." : null,
     codTestHold,
     paymentStatus: String(row.payment_status),
     codOrder: row.cod_status != null,
@@ -278,7 +280,7 @@ function params(){const result=new URLSearchParams(new FormData(filters));result
 function syncUrl(){history.replaceState(null,'',location.pathname+'?'+params().toString())}
 function setTabs(counts){for(const button of document.querySelectorAll('[data-tab]'))button.classList.toggle('active',button.dataset.tab===tab);for(const [key,value] of Object.entries(counts||{})){const node=document.querySelector('[data-count="'+key+'"]');if(node)node.textContent=Number(value).toLocaleString('en-PK')}document.querySelector('#queue-title').textContent=tabNames[tab]}
 function badge(order){const value=order.paymentReviewState||order.paymentStatus||order.state;const tone=value==='REVIEW'?' review':value==='APPROVED'||value==='PAID'?' paid':'';return '<span class="badge'+tone+'">'+esc(value)+'</span>'}
-function orderCard(order){return '<button class="order '+(order.id===selectedId?'active':'')+'" data-order-id="'+esc(order.id)+'" type="button"><span class="order-top"><span class="order-number">'+esc(order.orderNumber)+'</span>'+badge(order)+'</span><span class="customer">'+text(order.customerName)+'</span><span class="order-bottom"><span>'+esc(order.itemSummary||'No item summary')+'</span><strong>'+money(order.totalPayablePkr)+'</strong></span><span class="order-bottom"><span>'+esc(order.state)+(order.archivedAt?' · Archived':'')+'</span><time>'+esc(when(order.createdAt))+'</time></span></button>'}
+function orderCard(order){return '<button class="order '+(order.id===selectedId?'active':'')+'" data-order-id="'+esc(order.id)+'" type="button"><span class="order-top"><span class="order-number">'+esc(order.orderNumber)+'</span>'+badge(order)+'</span><span class="customer">'+text(order.customerName)+'</span><span class="order-bottom"><span>'+esc(order.itemSummary||'No item summary')+'</span><strong>'+money(order.totalPayablePkr)+'</strong></span><span class="order-bottom"><span>'+esc(order.state)+(order.archivedAt?' · Archived':'')+'</span><span>Admin daily #'+text(order.internalSequence)+'</span><time>'+esc(when(order.createdAt))+'</time></span></button>'}
 function renderList(data){const list=data.orders||[];totalPages=data.pagination.totalPages;listStatus.textContent=Number(data.total).toLocaleString('en-PK')+' total';pageStatus.textContent='Page '+data.pagination.page+' of '+Math.max(1,totalPages);document.querySelector('#previous').disabled=data.pagination.page<=1;document.querySelector('#next').disabled=data.pagination.page>=totalPages;setTabs(data.counts);if(!list.length){ordersRoot.innerHTML='<div class="skeleton">No orders match this queue and filter set.</div>';selectedId='';detail.innerHTML='<div class="empty"><p>No matching order to inspect.</p></div>';return null}if(!list.some((order)=>order.id===selectedId))selectedId=list[0].id;ordersRoot.innerHTML=list.map(orderCard).join('');for(const button of ordersRoot.querySelectorAll('[data-order-id]'))button.onclick=()=>show(button.dataset.orderId);return selectedId}
 async function load(){const current=++loading;listStatus.className='muted';listStatus.textContent='Loading…';ordersRoot.innerHTML='<div class="skeleton">Loading orders…</div>';const data=await json(await fetch('/api/orders?'+params().toString(),{cache:'no-store'}));if(current!==loading)return;const id=renderList(data);syncUrl();if(id)await show(id)}
 function facts(entries){return '<dl class="facts">'+entries.map((entry)=>'<dt>'+esc(entry[0])+'</dt><dd>'+entry[1]+'</dd>').join('')+'</dl>'}
@@ -662,7 +664,7 @@ const COD_HOLD_SCRIPT = String.raw`const addUnheldOrderActions=addActions;
 addActions=(order)=>{
   if(order.fulfillmentHold){
     const root=detail.querySelector('.actions');
-    if(root){const notice=document.createElement('p');notice.className='error';notice.textContent=order.fulfillmentHoldReason||'DO NOT SHIP. Fulfillment hold.';root.replaceChildren(notice)}
+    if(root){const notice=document.createElement('p');notice.className='error';notice.textContent=order.fulfillmentHoldReason||'DO NOT SHIP. Fulfillment hold.';root.replaceChildren(notice);if(order.codOrder&&order.codStatus==='COD_PENDING'){const button=actionButton('Release verified public COD hold',async()=>{const provenanceReference=prompt('Opaque provenance evidence reference');const reason=prompt('Reason for release');if(provenanceReference&&reason&&confirmAction(order,'Release this hold only after verifying public provenance'))await run('/api/orders/'+encodeURIComponent(order.id)+'/cod-hold-release',{confirmation:order.orderNumber,provenanceVerified:true,provenanceReference,reason})},'primary');root.append(button)}}
     return;
   }
   addUnheldOrderActions(order);
@@ -1465,7 +1467,7 @@ app.get("/api/payment-methods/:method/qr", async (c) => {
   return new Response(object.body, { headers: { "Content-Type": row.qr_mime_type ?? "application/octet-stream", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff", "Content-Disposition": "inline" } });
 });
 
-const ORDER_ADMIN_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,o.total_payable,o.province,o.created_at,o.updated_at,
+const ORDER_ADMIN_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,o.internal_sequence,o.internal_sequence_date,o.total_payable,o.province,o.created_at,o.updated_at,
   o.cancelled_at,o.cancelled_by,o.cancellation_reason,o.archived_at,o.archived_by,o.archive_reason,
   (SELECT created_at FROM audit_log confirmation WHERE confirmation.entity_type='ORDER' AND confirmation.entity_id=o.id AND confirmation.action='ORDER_CONFIRMED' ORDER BY confirmation.created_at DESC LIMIT 1) AS order_confirmed_at,
   (SELECT last_inbound_at FROM whatsapp_conversations wc WHERE wc.wa_id=c.wa_id) AS last_inbound_at,
@@ -1523,13 +1525,13 @@ app.get("/api/orders", async (c) => {
     const normalizedPhone = normalizeWhatsAppWaId(search);
     const pattern = `%${search}%`;
     if (normalizedPhone) {
-      commonWhere.push("(o.order_number LIKE ? OR c.full_name LIKE ? OR c.city LIKE ? OR c.wa_id LIKE ? OR c.normalized_phone LIKE ? OR c.normalized_contact_number LIKE ? OR c.normalized_whatsapp_number LIKE ?)");
+      commonWhere.push("(o.order_number LIKE ? OR CAST(o.internal_sequence AS TEXT) LIKE ? OR c.full_name LIKE ? OR c.city LIKE ? OR c.wa_id LIKE ? OR c.normalized_phone LIKE ? OR c.normalized_contact_number LIKE ? OR c.normalized_whatsapp_number LIKE ?)");
       const digitsPattern = `%${normalizedPhone}%`;
       const internationalPattern = `%+${normalizedPhone}%`;
-      commonBindings.push(pattern, pattern, pattern, digitsPattern, internationalPattern, internationalPattern, internationalPattern);
+      commonBindings.push(pattern, pattern, pattern, pattern, digitsPattern, internationalPattern, internationalPattern, internationalPattern);
     } else {
-      commonWhere.push("(o.order_number LIKE ? OR c.full_name LIKE ? OR c.city LIKE ?)");
-      commonBindings.push(pattern, pattern, pattern);
+      commonWhere.push("(o.order_number LIKE ? OR CAST(o.internal_sequence AS TEXT) LIKE ? OR c.full_name LIKE ? OR c.city LIKE ?)");
+      commonBindings.push(pattern, pattern, pattern, pattern);
     }
   }
   const joins = " FROM orders o JOIN customers c ON c.id=o.customer_id LEFT JOIN payments p ON p.order_id=o.id";
@@ -1654,6 +1656,40 @@ app.delete("/api/test-controls/cooldown-exemptions/:waId", async (c) => {
     c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE changes()=1").bind(crypto.randomUUID(), "COOLDOWN_EXEMPTION_REMOVED", "ADMIN", c.env.ADMIN_EMAIL, "COOLDOWN_EXEMPTION", waId, crypto.randomUUID(), JSON.stringify({ waId }), now)
   ]);
   return result[0].meta.changes === 1 ? c.json({ ok: true, waId }) : c.json({ error: "COOLDOWN_EXEMPTION_NOT_FOUND" }, 404);
+});
+
+app.post("/api/orders/:id/cod-hold-release", async (c) => {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  if (!c.env.DB) return c.json({ error: "COD_HOLD_RELEASE_UNAVAILABLE" }, 503);
+  let body: { confirmation?: unknown; provenanceVerified?: unknown; provenanceReference?: unknown; reason?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
+  const reference = settlementEvidenceReference(body.provenanceReference);
+  const reason = requiredReason(body.reason);
+  if (body.provenanceVerified !== true || !reference || !reason) return c.json({ error: "COD_PROVENANCE_CONFIRMATION_REQUIRED" }, 400);
+  const orderId = c.req.param("id");
+  const current = await c.env.DB.prepare(`SELECT o.order_number,o.state,o.payment_status,cod.status AS cod_status,cod.test_hold,
+    EXISTS(SELECT 1 FROM audit_log a WHERE a.entity_type='ORDER' AND a.entity_id=o.id AND a.action='COD_ORDER_CONFIRMED' AND a.actor_type='CUSTOMER') AS customer_confirmation,
+    EXISTS(SELECT 1 FROM audit_log a WHERE a.entity_type='ORDER' AND a.entity_id=o.id AND a.action='COD_ORDER_CONFIRMED' AND json_extract(a.metadata_json,'$.admission')='TESTER_ONLY') AS registered_test
+    FROM orders o JOIN cod_order_details cod ON cod.order_id=o.id WHERE o.id=?`).bind(orderId).first<{ order_number: string; state: string; payment_status: string; cod_status: string; test_hold: number; customer_confirmation: number; registered_test: number }>();
+  if (!current) return c.json({ error: "COD_ORDER_NOT_FOUND" }, 404);
+  if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+  if (Number(current.test_hold) === 0) return c.json({ ok: true, alreadyReleased: true, orderNumber: current.order_number });
+  if (current.state !== "COD_PENDING" || current.payment_status !== "COD_PENDING" || current.cod_status !== "COD_PENDING") return c.json({ error: "COD_HOLD_RELEASE_REQUIRES_PENDING_ORDER" }, 409);
+  if (Number(current.customer_confirmation) !== 1 || Number(current.registered_test) === 1) return c.json({ error: "COD_PROVENANCE_NOT_ELIGIBLE" }, 409);
+  const now = new Date().toISOString();
+  const auditId = crypto.randomUUID();
+  try {
+    const result = await c.env.DB.batch([
+      c.env.DB.prepare("INSERT INTO cod_hold_release_authorizations(order_id,audit_id,actor_id,created_at) VALUES(?,?,?,?)").bind(orderId, auditId, c.env.ADMIN_EMAIL, now),
+      c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?,?)").bind(auditId, "COD_TEST_HOLD_RELEASE_APPROVED", "ADMIN", c.env.ADMIN_EMAIL, "ORDER", orderId, crypto.randomUUID(), JSON.stringify({ orderNumber: current.order_number, provenanceVerified: true, provenanceReference: reference, reason, financialStateUnchanged: true }), now),
+      c.env.DB.prepare("UPDATE cod_order_details SET test_hold=0,updated_at=? WHERE order_id=? AND test_hold=1 AND status='COD_PENDING'").bind(now, orderId),
+      c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE changes()=1").bind(crypto.randomUUID(), "COD_TEST_HOLD_RELEASED", "ADMIN", c.env.ADMIN_EMAIL, "ORDER", orderId, crypto.randomUUID(), JSON.stringify({ orderNumber: current.order_number, previousTestHold: 1, testHold: 0, financialStateUnchanged: true }), now)
+    ]);
+    if (Number(result[2].meta?.changes ?? 0) !== 1) return c.json({ error: "COD_HOLD_RELEASE_CONFLICT" }, 409);
+    return c.json({ ok: true, released: true, orderNumber: current.order_number, status: "COD_PENDING" });
+  } catch {
+    return c.json({ error: "COD_HOLD_RELEASE_FAILED" }, 409);
+  }
 });
 
 async function orderRetentionAction(c: AdminContext, action: "cancel" | "archive") {

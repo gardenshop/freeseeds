@@ -1037,3 +1037,10 @@ No secrets are stored in this registry.
 - Live evidence for GFS-173: **BLOCKED**. Chrome DevTools MCP was not exposed to this session; no list-pages inventory, tab mutation, account verification, screenshot, WAMID, Admin save/publish/reload, or external deployment is claimed.
 - Staging deployment after identity verification: API `4375a7b7-463e-4373-8156-bfb6e1344f49`; Admin `2ab5c27f-30c7-4614-ac89-7ef51d6b73cf`. API `/health` returned `ok` and D1 `payment_methods` exposes `instructions_ur` and `reference_instruction_ur`.
 - Financial incident remains `FS-261019-000001` paid/approved/packing with no independent bank verification; five Purchase CAPI attempts are dead-lettered. Fulfillment hold is required. `FS-261019-000002` remains preserved.
+
+## GFS-264 Local Release Registry — 2026-10-27
+
+- Writable source checkout: `D:\free seeds\gfs264-pr11`, PR#11 branch based on `4073a5c`; no Hoja assets copied.
+- Additive migrations staged locally: `0035_opaque_order_references.sql`, `0036_cod_hold_release_authorization.sql`. Neither was applied to live D1 in this run.
+- Cloudflare read-only identity/service: authenticated `gisupp` session, `getfreeseeds-api-staging`; active deployment observed at 0% traffic. No version ID was claimed for this un-deployed source.
+- Chrome DevTools MCP: official page inventory and read-only Admin/Cloudflare/Meta identity checks completed. No WhatsApp customer-device interaction, receipt upload, WAMID, or external message was created.

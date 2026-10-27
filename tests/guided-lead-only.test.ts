@@ -265,6 +265,47 @@ describe("frozen V1 receipt hotfix", () => {
 });
 
 describe("GFS-221 additive V1-compatible COD path", () => {
+  it("uses two review payment choices and creates one unheld public COD order", async () => {
+    await enableAuditedCodPolicy();
+    codEnabled = true;
+    codRolloutMode = "PUBLIC";
+    await reachReview("en", true);
+    expect(buttons()).toEqual(["PAY_ADVANCE", "PAY_COD"]);
+    expect(body()).toContain("Advance total");
+    expect(body()).toContain("COD fee: PKR 125");
+    expect(body()).toContain("COD total");
+    expect(body()).not.toContain("Place Order");
+    await inbound(tap("PAY_COD"), "synthetic-public-cod-choice");
+    expect(conversation()?.state).toBe("COD_CONFIRM");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 1 });
+    expect(buttons()).toEqual(["CONFIRM_COD_ORDER", "ADVANCE_PAYMENT"]);
+    await inbound(tap("CONFIRM_COD_ORDER"), "synthetic-public-cod-confirm");
+    const order = sqlite.prepare("SELECT order_number,internal_sequence,internal_sequence_date FROM orders").get() as { order_number: string; internal_sequence: number; internal_sequence_date: string };
+    expect(order.order_number).toMatch(/^FS-[0-9A-HJKMNP-TV-Z]{4}(?:-[0-9A-HJKMNP-TV-Z]{4}){2}$/);
+    expect(order.internal_sequence).toBe(1);
+    expect(order.internal_sequence_date).toBe("20261027");
+    expect(sqlite.prepare("SELECT test_hold FROM cod_order_details").get()).toEqual({ test_hold: 0 });
+  });
+
+  it("keeps registered tester COD blocked but permits one audited legacy-public release", async () => {
+    await enableAuditedCodPolicy();
+    codEnabled = true;
+    await reachReview("en");
+    await inbound(tap("PLACE_ORDER"));
+    await inbound(tap("COD"));
+    await inbound(tap("CONFIRM_COD_ORDER"), "synthetic-held-cod-confirm");
+    const held = sqlite.prepare("SELECT id,order_number FROM orders").get() as { id: string; order_number: string };
+    const blocked = await adminPost(`/api/orders/${held.id}/cod-hold-release`, { confirmation: held.order_number, provenanceVerified: true, provenanceReference: "PUBLIC-COD-TEST-001", reason: "Synthetic tester must remain held" });
+    expect(blocked.status).toBe(409);
+    sqlite.prepare("UPDATE audit_log SET metadata_json=json_remove(metadata_json,'$.admission','$.testHold') WHERE entity_type='ORDER' AND entity_id=? AND action='COD_ORDER_CONFIRMED'").run(held.id);
+    const released = await adminPost(`/api/orders/${held.id}/cod-hold-release`, { confirmation: held.order_number, provenanceVerified: true, provenanceReference: "PUBLIC-COD-LEGACY-001", reason: "Synthetic legacy public provenance verified" });
+    expect(released.status).toBe(200);
+    expect(sqlite.prepare("SELECT test_hold FROM cod_order_details WHERE order_id=?").get(held.id)).toEqual({ test_hold: 0 });
+    const packing = await adminPost(`/api/orders/${held.id}/transition`, { from: "COD_PENDING", to: "PACKING", confirmation: held.order_number });
+    expect(packing.status).toBe(200);
+    expect(sqlite.prepare("SELECT state FROM orders WHERE id=?").get(held.id)).toEqual({ state: "PACKING" });
+  });
+
   it("keeps COD off even for the configured tester when rollout mode is OFF", async () => {
     await enableAuditedCodPolicy();
     await enableSyntheticPaymentMethod();

@@ -967,3 +967,11 @@
 - GFS-46 verified native customer WhatsApp data `+923034901810` from the canonical Form lead and added E.164 normalization tests. It remains recipient data, never the GFS sender `+923328883383`.
 - GFS-46 added a safe deferred `WHATSAPP_ORDER_CONFIRMATION` outbox reference after durable lead/order persistence; OTP/App-WABA/provider gates defer it, and payment remains blocked without Garden Shop configuration.
 - GFS-47 separated customer-entered contact and Meta auto-fetched WhatsApp numbers in D1, added E.164 normalization/priority/fallback tests, rejected sender/old CTA recipients, and deployed API `97c038d1-6382-4a3e-9509-2ad2005472b9`. No WhatsApp send was attempted.
+
+## 2026-10-27: GFS-264 Secure References, COD Hold Repair, and Two-Choice Checkout
+
+- Recovered reviewed GFS-263-compatible changes into writable PR#11 without overwriting the read-only V2 checkout.
+- Added opaque cryptographic customer references with bounded collision retry and private daily Admin sequence columns; historical references remain unchanged.
+- Added trusted public/test COD classification, additive audited hold release, and retained fail-closed test holds and collection/remittance controls.
+- Reduced the new guided path to review-time Advance/COD choice while retaining stale-button compatibility and one provisional order.
+- Local gates: 290/290 tests, build, lint, rollback 4/4 PASS. npm audit endpoint BLOCKED. No live mutation or deployment performed.

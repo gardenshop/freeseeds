@@ -1235,3 +1235,11 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | GFS-52 sender migration | exact old-phone confirmation, deletion authorization, new-number slot/OTP | BLOCKED: old number remains In Review; Add Phone disabled by Business profile pending; no destructive deletion performed |
 | GFS-50 pricing authority | form text vs authoritative Garden Shop rules/recipient values | BLOCKED: no authoritative pricing/recipient configuration; payment gate remains active |
 | GFS-50 launch blockers | Messenger ack, D1 lead sync, payment guard | BLOCKED safely: no ack sent, D1 sync external gate, no payment message |
+
+| GFS-264 random reference format | Secure randomness, Crockford alphabet, date/sequence independence | PASS: local tests assert `FS-XXXX-XXXX-XXXX`, no date derivation, private Karachi sequence |
+| GFS-264 collision/idempotency | bounded retry, concurrent allocation, duplicate callback/order suppression | PASS: focused/full tests; no duplicate provisional order in two-choice COD path |
+| GFS-264 COD classification | PUBLIC unheld, registered TESTER_ONLY held, unknown fail closed | PASS locally; live config/database mutation not performed |
+| GFS-264 hold release | authenticated Admin, CSRF, provenance, audit, one-order authorization, test protection | PASS locally; live cited order release pending authorization/provenance mutation gate |
+| GFS-264 fulfillment/financial guard | COD_PENDING to PACKING; no upfront payment; PAID requires verified collection/remittance | PASS locally; no live fulfillment or PAID mutation |
+| GFS-264 rollback/integrity | unchanged baseline rollback, D1 quick/foreign-key checks, historical references | PASS 4/4 local rollback; full synthetic migration integrity pass |
+| GFS-264 external gates | Chrome read-only identity, 0% smoke, deployment, audit endpoint | PARTIAL: read-only identity/0% observation PASS; deploy/audit endpoint BLOCKED |

@@ -720,3 +720,11 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - The authorized tester record exists in Admin Test Controls and has an existing pending order. Preserve that order. WhatsApp Web must be verified as the tester account before using it; a missing chat or unrelated selected contact is not test authorization.
 - Province rows come only from enabled Admin D1 `province_delivery_rates`. Send a WhatsApp interactive LIST with `title` from the D1 province and localized `Delivery Fee: Rs. {fee}` / `ڈلیوری فیس: {fee} روپے` descriptions. Enforce Meta row title 24-character, description 72-character, and 10-row limits. Do not hardcode province names or prices.
 - `REMOTE_CI_UNAVAILABLE_NON_BLOCKING` allows controlled staging work only when local tests/build/lint/audit/Wrangler pass and no actual repository protection rule forbids it. Never bypass a protection rule. Staging-only authorization does not authorize production or Meta mutations.
+
+## GFS-264 Protected Protocol (2026-10-27)
+
+- New public references are cryptographically random Crockford Base32 `FS-XXXX-XXXX-XXXX` values. Karachi-day sequencing remains private in `orders.internal_sequence` and `orders.internal_sequence_date`; Admin may show it, customer-facing WhatsApp/API/QR/receipt/tracking surfaces may not.
+- Existing order numbers and payment history are immutable compatibility data. Never bulk rewrite them, reset the daily counter, or replay legacy migrations.
+- COD classification is server-side only: trusted `PUBLIC` admission stores `test_hold=0`; registered `TESTER_ONLY` admission stores `test_hold=1`; unknown runtime mode fails closed. Customer payload flags are never trusted.
+- The 0030 fail-closed default remains. Existing hold release is one-order-at-a-time, authenticated Admin + CSRF, provenance-gated, audited, and protected by a single-use D1 authorization. Registered test orders remain blocked. COD is never marked PAID without exact verified collection and remittance.
+- GFS-264 local release gates passed, but this checkout has no authorization to mutate live D1, deploy Workers, send customer/Meta messages, or change traffic. Preserve PUBLIC COD/Advance and Hoja zero-connection until separately authorized.
