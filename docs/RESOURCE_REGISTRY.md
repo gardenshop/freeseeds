@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-269 recovery checkpoint (2026-10-27)
+
+- Cloudflare D1 dashboard remains the authenticated GFS account context (`cb5066…`); analytics show 8.06M/5M rows read, 14.96k/100k writes, 6.44MB/5GB storage, and $0 billable. No D1 mutation or production query was issued.
+- Local candidate `fca32a3` is clean and ahead of remote `7724e7a` by one commit. Active Admin `cd155f20…`100%, candidate `92955132…`0%, API `24d72438…`100% remain unchanged.
+- Migration0037 is local-only and rehearsed successfully. No recovery bookmark, live migration, Worker deployment, traffic change, billing change, customer/order/payment/receipt mutation, Meta mutation, or secret action occurred.
+- GitHub CLI account `gardenshop` has an invalid stored token; push is pending owner-authorized reauthentication. No token value is recorded.
+
 ## GFS-268 quota incident and candidate state (2026-10-27)
 
 - Official Chrome DevTools MCP is connected to Cloudflare account `cb5066…`; the visible D1 metrics page for `getfreeseeds-staging` reports 8M/5M rows read today, 44.21k queries, 14.96k/100k rows written, 6.44MB/5GB storage, and $0 billable usage. This is read-only evidence; no SQL probe was executed after confirmation.

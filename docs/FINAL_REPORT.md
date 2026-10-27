@@ -1,5 +1,23 @@
 # Final Report
 
+## GFS-269 | RECOVER D1 SERVICE + DEPLOY QUERY OPTIMIZATION (2026-10-27)
+
+**Overall: local repair and recovery rehearsal PASS; live recovery/deployment BLOCKED.**
+
+| Stage | Result | Evidence |
+|---|---|---|
+| P0 outage/quota | PASS diagnosis / FAIL recovery | Cloudflare analytics still show 8.06M/5M daily rows read; no production SQL or repeated Admin refresh. |
+| P1 finished fix | PASS | `fca32a3` clean, exactly one commit ahead of remote `7724e7a`; changes were not duplicated. |
+| P2 migration/service restore | BLOCKED | Migration0037 local rehearsal passed (`quick_check=ok`, three indexes); quota reset/recovery bookmark/live application/0%-traffic smoke unavailable. |
+| P3 query usage | PASS LOCAL / BLOCKED LIVE | BEFORE: old detail query ~3.29M rows/77 calls (~1.71k per returned row). AFTER production value cannot be measured before deploy/reset. |
+| P4 customer safety | PASS PRESERVATION / BLOCKED RECHECK | PUBLIC COD, PKR125, Advance, signed webhook, history, holds, WhatsApp lock and Hoja isolation unchanged; live persistence/retry health not re-read under exhaustion. |
+| P5 quality | PASS | Focused53/53, full292/292, build, lint, migration rehearsal, rollback4/4. |
+| Push | BLOCKED | `gh auth status`: stored `gardenshop` token invalid. No reauthentication bypass or push. |
+
+**Runtime:** Admin `cd155f20…`100%; candidate `92955132…`0%; API `24d72438…`100%. Orders/Payment Settings live HTTP200 smoke, actual current counts, receipts, customer persistence, and post-deploy rows_read remain unverified.
+
+**Next authorized action:** after 00:00 UTC reset, verify quota/bookmark and visible `gisupp@gmail.com` / Get Free Seeds identity, apply only migration0037, smoke candidate at0%, measure AFTER rows_read, verify rollback, then promote only if all gates pass. Workers Paid minimum $5/month remains a recommendation only if optimized measured usage still exceeds Free limits; no billing change is authorized.
+
 ## GFS-268 | RESTORE D1 + ADMIN / PREVENT QUOTA OUTAGE (2026-10-27)
 
 **Overall: local repair PASS; live Admin restoration BLOCKED by confirmed D1 Free-tier quota exhaustion.**

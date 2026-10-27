@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-269 Recovery Checkpoint (2026-10-27)
+
+| Requirement | Result | Evidence / boundary |
+|---|---|---|
+| Quota verification | PASS / OUTAGE | Cloudflare analytics read-only: 8.06M/5M rows read; no production SQL or repeated Admin refresh. |
+| GFS-268 recovery | PASS | `fca32a3` clean and exactly one commit ahead of remote `7724e7a`; no duplicate repair. |
+| Migration0037 rehearsal | PASS LOCAL | In-memory all-migration rehearsal: `quick_check=ok`; audit, receipt, and outbox indexes present. Not applied live. |
+| Focused regression | PASS | 53/53 Admin/payment/COD/fulfillment tests. |
+| Full regression/build/lint | PASS | 292/292; TypeScript build; ESLint. |
+| Rollback | PASS | Protected V1 rollback4/4 against unchanged baseline. |
+| Production AFTER rows_read | BLOCKED | Candidate is not deployed and quota is exhausted; measure only after reset and 0%-traffic smoke. |
+| GitHub push | BLOCKED | Stored `gardenshop` CLI token invalid; no reauthentication or push attempted. |
+
 ## GFS-268 D1/Admin Quota Repair (2026-10-27)
 
 | Requirement | Result | Evidence / boundary |

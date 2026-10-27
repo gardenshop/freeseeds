@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-269 D1 Recovery and Query Optimization Gate (2026-10-27)
+
+- Cloudflare D1 remains over the Free-tier daily read budget: 8.06M/5M rows read. Do not run production SQL, repeatedly refresh Admin, replay migrations, delete/recreate databases, change billing, or promote traffic until reset or explicit owner-approved capacity action.
+- GFS-268 commit `fca32a3` is the complete local repair and is exactly one commit ahead of remote `7724e7a`; do not duplicate or overwrite it. Migration `0037` is additive and must be rehearsed and applied only as a targeted migration after a recovery bookmark and identity gate.
+- After reset, require authenticated 0%-traffic smoke for Orders real counts/pagination, Payment Settings, detail/receipts, payment review and COD fulfillment before any Admin promotion. Keep financial approval state fresh; quota errors must remain structured JSON503 and never become zero counts or success.
+- GitHub push requires authenticated `gardenshop/freeseeds` credentials. An invalid stored CLI token or logged-out browser is not authorization; request owner reauthentication only and never expose or bypass credentials.
+
 ## GFS-268 D1 Quota and Admin Restore Rules (2026-10-27)
 
 - Cloudflare D1 is currently over the Free-tier daily row-read limit: 8M/5M rows read today. Do not repeat live D1 probes until the 00:00 UTC reset or an owner-approved capacity change.

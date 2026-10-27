@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-27 (GFS-269 recovery checkpoint)
+
+- Rechecked Cloudflare D1 analytics read-only: quota remains 8.06M/5M rows read; no production SQL or Admin refresh was performed.
+- Revalidated local GFS-268 `fca32a3`, migration0037 in-memory integrity, focused53/53, full292/292, build, lint and rollback4/4.
+- Deferred live migration, deployment, 0%-traffic smoke, promotion and AFTER rows_read measurement until quota recovery. GitHub push is pending owner reauthentication because the stored CLI token is invalid.
+
 ## 2026-10-27 (GFS-268 D1 quota-safe Admin repair)
 
 - Confirmed Cloudflare D1 Free-tier exhaustion from the authenticated GFS dashboard: 8M/5M rows read today; the old full Admin order projection accounted for about 3.29M rows-read across 77 calls.

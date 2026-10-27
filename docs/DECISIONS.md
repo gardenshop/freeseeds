@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-27: GFS-269 Hold deployment until D1 reset and GitHub reauth
+
+- Keep `fca32a3` as the sole local repair commit; remote remains `7724e7a`. Do not recreate or manually duplicate its changes.
+- Treat 8.06M/5M as an unresolved capacity outage. The only safe next runtime action is a read-only post-reset bookmark/analytics check, then targeted migration0037 rehearsal/application and 0%-traffic smoke.
+- Do not claim AFTER rows_read, live customer persistence, Payment Settings, receipts, or exact order counts until the candidate is actually deployed and passes the required smoke. Keep active Admin at100% and candidate at0% meanwhile.
+- Do not use invalid GitHub credentials. Owner must reauthenticate the `gardenshop` CLI/browser account before the authorized push; no credentials are exposed or bypassed.
+
 ## 2026-10-27: GFS-268 Treat D1 7500 as a capacity incident
 
 - Treat the Cloudflare D1 8M/5M row-read state and the measured 3.29M-row Admin detail query as the actual blocker. Do not spend more reads proving an already confirmed quota failure.

@@ -1,5 +1,15 @@
 # Status
 
+## GFS-269 Recover D1 Service + Deploy Query Optimization (2026-10-27)
+
+- **P0 PASS / outage persists.** Read-only Cloudflare D1 analytics still report exactly **8.06M/5M rows read** today, 14.96k/100k writes, 6.44MB/5GB storage, and $0 billable usage. No production SQL, Admin refresh, or D1 probe was run.
+- **P1 PASS LOCAL.** `fca32a3` is present, clean, and exactly one commit ahead of remote `7724e7a`; no reconciliation conflict exists. The existing query optimization, JSON503 handling, indexed migration0037, and protected documentation were not duplicated or overwritten.
+- **P2 BLOCKED.** Quota has not reset, so migration0037 was only locally rehearsed (`quick_check=ok`, three indexes present). No recovery bookmark, live schema mutation, deployment, 0%-traffic smoke, or promotion occurred. Active Admin remains `cd155f20…`100%; candidate remains `92955132…`0%; API remains `24d72438…`100%.
+- **P3 BLOCKED LIVE / PASS LOCAL.** Existing measured BEFORE baseline remains the old detail query at ~3.29M rows-read/77 calls (~1.71k rows per returned row); an AFTER production measurement cannot be collected safely before reset/deployment. Local query reduction and error paths pass; no stale financial cache was introduced.
+- **P4 PRESERVED.** PUBLIC COD, PKR125, Advance methods, signed webhook, new-number lock, Hoja zero-connection, order/payment/receipt history and protected holds were not mutated. Customer checkout persistence and failed-event recovery remain unverified live while D1 is exhausted.
+- **P5 PASS LOCAL / PUSH BLOCKED.** Focused53/53, full292/292, build, lint, migration rehearsal, and rollback4/4 pass. `gh auth status` reports the stored `gardenshop` token invalid; no push or credential bypass was attempted.
+- **Completion:** P0 diagnosis100% / recovery0%; P1 100%; P2 0% / blocked100%; P3 local100% / live0%; P4 preservation100% / live recheck0%; P5 local100% / push0%.
+
 ## GFS-268 Restore D1 + Admin / Prevent Quota Outage (2026-10-27)
 
 - **P0 PASS / blocker confirmed.** Official Chrome DevTools MCP readback is on the Cloudflare Get Free Seeds account (`cb5066…`); D1 `getfreeseeds-staging` shows 8M/5M rows read today, 14.96k/100k rows written, 6.44MB/5GB storage, 44.21k queries, and no billable usage. Cloudflare daily reset is 00:00 UTC. The per-query table attributes about 3.29M rows-read to the old full Admin order projection over 77 calls (about 1.71k rows-read/returned row). No further D1 SQL probe was issued.
