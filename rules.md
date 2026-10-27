@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-252 Final Advance Gate (2026-10-27)
+
+- Official Chrome MCP and authenticated Admin/Cloudflare access remain callable. Test Controls shows the approved conversation still in `COD_PENDING` with no newer tester continuation; no unrelated WhatsApp Web profile was used.
+- Read-only runtime checks pass: Admin health200 with `paymentConfigured=true`; audited COD enabled with PKR125; active staged API `ba15b8ba-e3b3-4581-9b23-c2e688797132` remains100% `TESTER_ONLY`; Admin `615e1156-2747-457a-8623-11d1e967f911` remains100%; COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` remains rollback.
+- PUBLIC is still fail-closed. Do not switch rollout mode until a genuine fresh authenticated tester journey verifies all three Advance methods/instructions and COD-to-Advance before confirmation. No inbound, payment, receipt, PAID or order was fabricated.
+- Required owner/tester action is one new authenticated-device journey; after it, rerun the existing public eligibility, signed callback, D1 integrity and rollback gates. Preserve all prior COD evidence and customer history.
+
 ## GFS-251 Public Launch Gate (2026-10-27)
 
 - Read-only identity/runtime verification PASS: official Chrome MCP is callable; Cloudflare shows `gisupp@gmail.com` on the GFS account; authenticated Admin health is200 with `paymentConfigured=true`; COD policy is enabled with audited PKR125; API health is200 and unsigned webhook rejection is403.

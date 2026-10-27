@@ -1,5 +1,20 @@
 # Final Report
 
+## GFS-252 | Final Advance Regression / Public COD (2026-10-27)
+
+**Overall: preserved COD and runtime preflight PASS; final Advance gate BLOCKED; PUBLIC not activated.**
+
+| Stage | Result | Evidence |
+|---|---|---|
+| P0 preservation | PASS | Existing COD/D1/Admin/WAMID/fee/UX/test/rollback evidence preserved; no migration or customer mutation. |
+| P1 genuine Advance regression | BLOCKED | Test Controls shows no newer tester continuation; no authorized authenticated tester session is exposed. Three Advance methods/instructions and COD-to-Advance switching were not simulated. |
+| P2 PUBLIC promotion | NOT RUN | API `ba15b8ba-e3b3-4581-9b23-c2e688797132` remains100% TESTER_ONLY; Admin `615e1156-2747-457a-8623-11d1e967f911` remains100%; COD-OFF rollback retained. |
+| P3 final validation | PASS LIMITED | Admin health200, `paymentConfigured=true`, COD enabled/PKR125, and protected status checks pass. No public menu claim. |
+
+**Single remaining action:** the approved tester must initiate one fresh authenticated WhatsApp journey, verify JazzCash/Easypaisa/Bank Transfer instructions and COD-to-Advance before confirmation, without payment or receipt fabrication. Then PUBLIC eligibility can be re-evaluated.
+
+**Completion:** preserved work/preflight100%; genuine Advance0%; PUBLIC0%; public availability **NO-GO**.
+
 ## GFS-251 | Public Launch Gate (2026-10-27)
 
 **Overall: PASS for preserved staging/runtime preflight; BLOCKED for PUBLIC because the required fresh genuine Advance regression is unavailable.**

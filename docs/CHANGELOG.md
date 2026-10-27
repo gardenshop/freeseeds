@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-27 (GFS-252 final Advance gate)
+
+- Checked Admin Test Controls first; no newer tester-originated continuation was present. Reverified Admin/COD preflight without changing traffic or customer data.
+- Held PUBLIC because the authorized tester device is unavailable for genuine Advance-method and COD-to-Advance verification. No synthetic inbound or fake payment evidence was used.
+
 ## 2026-10-27 (GFS-251 public gate hold)
 
 - Reverified official MCP, Cloudflare identity, API/Admin runtime health, signed-webhook rejection and current TESTER_ONLY traffic without changing deployment state.

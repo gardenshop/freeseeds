@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-252 final-gate state (2026-10-27)
+
+- API `ba15b8ba-e3b3-4581-9b23-c2e688797132` remains100% TESTER_ONLY; Admin `615e1156-2747-457a-8623-11d1e967f911` remains100%; COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` remains the rollback target.
+- Test Controls read-only state remains `COD_PENDING`; no new inbound, order, payment, receipt, Meta, secret or D1 mutation occurred.
+- PUBLIC remains disabled pending the approved tester’s authenticated-device Advance regression and COD-to-Advance-before-confirmation check. No Hoja resources or unrelated WhatsApp profile used.
+
 ## GFS-251 public-gate state (2026-10-27)
 
 - API `ba15b8ba-e3b3-4581-9b23-c2e688797132` remains active100% TESTER_ONLY; prior TESTER_ONLY is0%; COD-OFF rollback `2500e268-8985-4fd4-a141-68633f16315d` remains retained. Admin `615e1156-2747-457a-8623-11d1e967f911` remains100%.

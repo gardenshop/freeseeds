@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-27: GFS-252 Keep PUBLIC Fail-Closed
+
+- Test Controls was checked first and shows no newer tester-originated continuation beyond the verified COD state. Preserve the existing COD acceptance; do not create a duplicate order or fabricate Advance activity.
+- Keep the polished API in TESTER_ONLY and do not enable PUBLIC. The owner’s conditional PUBLIC authorization is gated on genuine Advance verification and COD-to-Advance switching from the authorized tester device.
+- The only remaining action is for the approved tester to initiate a fresh authenticated journey and verify all three existing Advance methods/instructions plus pre-confirmation COD-to-Advance. No payment, receipt or PAID transition is needed.
+
 ## 2026-10-27: GFS-251 Hold PUBLIC Until Genuine Advance Evidence
 
 - Preserve the verified COD acceptance and polished TESTER_ONLY deployment. Read-only runtime and identity checks passed; no traffic, D1, order, payment, Meta or secret mutation was made.

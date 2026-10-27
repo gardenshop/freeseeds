@@ -1,5 +1,13 @@
 # Status
 
+## GFS-252 Final Advance Gate (2026-10-27)
+
+- **P0 PASS.** All prior COD, D1/Admin, WAMID, fee, UX, test and rollback evidence remains preserved; no migration or customer/order/payment mutation occurred.
+- **P1 BLOCKED.** Official MCP and Admin Test Controls are available, but no newer tester-originated inbound exists and no authorized authenticated tester device/session is exposed. Therefore genuine Advance methods/instructions and COD-to-Advance-before-confirmation cannot be verified without fabrication.
+- **P2 NOT RUN.** PUBLIC was not enabled. API `ba15b8ba-e3b3-4581-9b23-c2e688797132` remains100% version-scoped `TESTER_ONLY`; Admin `615e1156-2747-457a-8623-11d1e967f911` remains100%; COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` remains rollback.
+- **P3 PASS LIMITED.** Read-only Admin health200/`paymentConfigured=true`, COD policy enabled/PKR125, and Test Controls state `COD_PENDING` pass. No code repair or public traffic mutation was justified.
+- **Completion:** preserved work and preflight100%; genuine Advance gate0%; PUBLIC activation0%; public launch **NO-GO**.
+
 ## GFS-251 Public Launch Gate (2026-10-27)
 
 - **P0 PASS.** Prior genuine COD acceptance, D1/Admin integrity and polished TESTER_ONLY evidence remain valid; no migration, order, payment or historical-record mutation was made.

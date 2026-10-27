@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-252 Final Advance Gate (2026-10-27)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Newer genuine tester inbound | NOT OBSERVED | Admin Test Controls remains at the previously confirmed `COD_PENDING` state; no newer continuation exists. |
+| Approved authenticated tester session | BLOCKED | No authorized device/session is exposed; unrelated WhatsApp Web remains prohibited. |
+| Advance methods/instructions | BLOCKED | Requires genuine fresh journey; no QR, instruction, receipt or PAID evidence was fabricated. |
+| COD-to-Advance before confirmation | BLOCKED | Requires the same fresh authenticated journey; no state mutation attempted. |
+| Admin/D1/runtime preflight | PASS | Admin health200, `paymentConfigured=true`, audited COD enabled/PKR125, TESTER_ONLY traffic preserved. |
+| PUBLIC activation | NOT RUN | P1 is not PASS; no PUBLIC traffic or rollout mutation occurred. |
+
 ## GFS-251 Public Launch Gate (2026-10-27)
 
 | Requirement | Result | Evidence / blocker |
