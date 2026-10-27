@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-27: GFS-248 Stage Fresh OFF Versions; Stop at Secure Secret Input
+
+- Replace the binary admission assumption with an explicit fail-closed `OFF` / `TESTER_ONLY` / `PUBLIC` mode. Keep the independent `COD_V1_ENABLED` kill switch. PUBLIC is forbidden until genuine tester acceptance and all runtime gates pass.
+- Upload only fresh current-HEAD versions and stage them at0%; do not promote stale API `48d4c590…`. Preserve API v90/Admin v82 at100% while version-targeted smoke runs.
+- Do not move a real customer identifier through clipboard, command history, source, tests, logs or documentation. The execution safety boundary rejected that transfer. Because two historical exemptions exist, never infer the replacement by list position. Require direct owner entry in supported Cloudflare secret controls or another approved secure-input channel.
+- Keep D1 COD disabled/unconfigured, Worker COD OFF and public launch blocked. Aggregate recent-inbound evidence cannot establish the exact authorized tester and is not acceptance.
+
 ## 2026-10-27: GFS-247 Fail-Closed Tester-Only COD Gate
 
 - Add only a runtime admission boundary, not a courier or accounting feature. COD requires the audited global flag/policy plus an exact normalized match to protected secret `COD_TESTER_WA_ID`; absent or malformed configuration denies COD. This is independent of `ADMIN_TEST_EXEMPTION`, which remains cooldown-only.

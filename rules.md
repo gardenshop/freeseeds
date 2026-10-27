@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-248 Three-State COD Rollout and Protected-Secret Stop (2026-10-27)
+
+- COD admission is now explicitly `OFF`, `TESTER_ONLY`, or `PUBLIC`. `COD_V1_ENABLED=true` is still required. Unknown/missing modes fail closed; `TESTER_ONLY` additionally requires an exact normalized match to protected `COD_TESTER_WA_ID`; `PUBLIC` is permitted only after genuine tester acceptance and release gates pass.
+- Fresh current-HEAD versions were uploaded and staged at0% only: API `83e82edf-1921-4180-b10d-da5ca83f807e` with COD flag false/mode OFF beside v90 at100%; Admin `615e1156-2747-457a-8623-11d1e967f911` beside v82 at100%. Never promote stale API `48d4c590…`.
+- Version-targeted smoke passes API health200/unsigned webhook403 and authenticated Admin health200/`paymentConfigured=true`; Admin candidate reads COD disabled/fee125. Original D1 remains healthy with COD0030, 53 orders/payments, zero COD rows, quick-check ok and FK0.
+- Protected tester-secret provisioning stopped because copying a real customer identifier through system clipboard was rejected by the execution safety boundary. Do not bypass it or select among the two historical cooldown exemptions. Owner must enter the approved value directly in supported Cloudflare secret controls or provide an approved secure-input path.
+- Keep originals100%, candidates0%, D1 COD disabled/unconfigured, Worker COD OFF and public release blocked. A privacy-preserving aggregate saw one recent inbound across two exemption records, but this does not prove the approved replacement tester; no WAMID/order acceptance claim.
+
 ## GFS-247 Tester-Only COD Admission (2026-10-27)
 
 - COD admission now requires all of: `COD_V1_ENABLED=true`, the audited D1 COD policy, and an exact normalized match between the inbound WhatsApp identity and the protected runtime secret `COD_TESTER_WA_ID`. A missing or malformed secret fails closed. `ADMIN_TEST_EXEMPTION` remains cooldown-only and is not an admission grant.

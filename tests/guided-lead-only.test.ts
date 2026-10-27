@@ -17,6 +17,7 @@ let failNextSend: boolean;
 let queueSend: ReturnType<typeof vi.fn>;
 let receiptPuts: number;
 let codEnabled: boolean;
+let codRolloutMode: "OFF" | "TESTER_ONLY" | "PUBLIC";
 let codTesterWaId: string;
 const codHmacKey = "synthetic-guided-cod-hmac-key-v1-2026-synthetic";
 let codRuntimeHmacKey = codHmacKey;
@@ -58,7 +59,7 @@ function buttons() {
 }
 
 function env() {
-  return { DB: db, RECEIPTS: { get: vi.fn(async () => { qrReads++; return qrAvailable ? { httpMetadata: { contentType: "image/png" }, arrayBuffer: async () => syntheticQrBytes.buffer } : null; }), put: vi.fn(async () => { receiptPuts++; }), delete: vi.fn(async () => undefined) }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: "true", META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided", COD_V1_ENABLED: codEnabled ? "true" : "false", COD_TESTER_WA_ID: codTesterWaId, COD_REFERENCE_HMAC_KEY: codRuntimeHmacKey } as never;
+  return { DB: db, RECEIPTS: { get: vi.fn(async () => { qrReads++; return qrAvailable ? { httpMetadata: { contentType: "image/png" }, arrayBuffer: async () => syntheticQrBytes.buffer } : null; }), put: vi.fn(async () => { receiptPuts++; }), delete: vi.fn(async () => undefined) }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: "true", META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided", COD_V1_ENABLED: codEnabled ? "true" : "false", COD_ROLLOUT_MODE: codRolloutMode, COD_TESTER_WA_ID: codTesterWaId, COD_REFERENCE_HMAC_KEY: codRuntimeHmacKey } as never;
 }
 
 async function callback(messages: Record<string, unknown>[], extraChanges: unknown[] = []) {
@@ -229,6 +230,27 @@ describe("frozen V1 receipt hotfix", () => {
 });
 
 describe("GFS-221 additive V1-compatible COD path", () => {
+  it("keeps COD off even for the configured tester when rollout mode is OFF", async () => {
+    await enableAuditedCodPolicy();
+    await enableSyntheticPaymentMethod();
+    codEnabled = true;
+    codRolloutMode = "OFF";
+    await reachReview("en");
+    await inbound(tap("PLACE_ORDER"));
+    expect(buttons()).toEqual(["PAY_JAZZCASH"]);
+    expect(body()).not.toContain("Cash on Delivery");
+  });
+
+  it("admits non-testers only when rollout mode is PUBLIC", async () => {
+    await enableAuditedCodPolicy();
+    codEnabled = true;
+    codRolloutMode = "PUBLIC";
+    const nonTester = "923001234568";
+    await reachReview("en", false, nonTester);
+    await inbound(tap("PLACE_ORDER"), "synthetic-public-place-order", nonTester);
+    expect(buttons()).toEqual(["ADVANCE_PAYMENT", "COD"]);
+  });
+
   it("normalizes the configured tester identity before admitting COD", async () => {
     await enableAuditedCodPolicy();
     codTesterWaId = `+${sender}`;
@@ -645,6 +667,7 @@ beforeEach(() => {
   failNextSend = false;
   receiptPuts = 0;
   codEnabled = false;
+  codRolloutMode = "TESTER_ONLY";
   codTesterWaId = sender;
   codRuntimeHmacKey = codHmacKey;
   beforeBatch = undefined;

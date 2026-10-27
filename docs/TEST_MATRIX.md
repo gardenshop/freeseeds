@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-248 Three-State Rollout (2026-10-27)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| OFF / TESTER_ONLY / PUBLIC | PASS LOCAL | OFF denies all; TESTER_ONLY requires normalized protected identity; PUBLIC admits eligible customers; unknown/missing modes fail closed. |
+| Quality gates | PASS | Focused78/78, full281/281, build, lint, offline audit0. |
+| Fresh API 0% smoke | PASS | `83e82edf…` at0% beside v90 at100%; health200, unsigned webhook403; COD flag false/mode OFF. |
+| Fresh Admin 0% smoke | PASS | `615e1156…` at0% beside v82 at100%; authenticated health200/`paymentConfigured=true`; COD disabled/fee125. |
+| D1 integrity | PASS READ-ONLY | COD0030; 53 orders/payments; zero COD rows; quick-check ok; FK0. |
+| Protected tester secret | BLOCKED | Safe execution rejected clipboard transfer of customer identity; two exemption records prevent positional inference. No secret mutation. |
+| Genuine tester E2E/public activation | NOT RUN | Exact inbound identity unproven; no WAMIDs, order, Admin COD_PENDING or PUBLIC mode. |
+
 ## GFS-247 Tester-Only COD Admission (2026-10-27)
 
 | Requirement | Result | Evidence / blocker |

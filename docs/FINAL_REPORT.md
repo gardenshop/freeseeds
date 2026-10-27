@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-248 | Final COD Release Attempt (2026-10-27)
+
+**Result: rollout implementation and fresh 0%-candidate smoke PASS; protected-secret provisioning, genuine E2E and public activation BLOCKED.**
+
+| Stage | Result | Evidence / blocker |
+|---|---|---|
+| P0 fresh deployment | PASS LIMITED | Fresh API `83e82edf…` and Admin `615e1156…` uploaded/staged0%; originals v90/v82 remain100%. API is COD false/OFF. Stale API was not promoted. |
+| P0 release gates | PASS LIMITED | API health200/unsigned403; Admin health200/`paymentConfigured=true`; D1 COD0030/fee125/53 orders+payments/quick+FK pass; prior rollback4/4 retained. No valid live signed callback/Advance checkout yet. |
+| P1 tester activation | BLOCKED | Protected secret not provisioned: host rejected customer-ID clipboard transfer. D1 policy disabled/unconfigured; no traffic promotion or COD enablement. |
+| P2 real WhatsApp | NOT RUN | Aggregate shows one recent inbound across two exemption records, but exact approved tester is unproven. No WAMIDs, new order/total, COD_PENDING/Admin screenshot or Advance switch. |
+| P3 public release | NOT RUN | Preconditions failed; rollout remains OFF. |
+| P4 quality/Git | PASS LOCAL / PUSH PENDING | Focused78/78; full281/281; build/lint/audit0. |
+
+**Current runtime:** API v90 `21a3d74c-3979-432c-9190-1848362592a4`100% + new `83e82edf-1921-4180-b10d-da5ca83f807e`0%; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`100% + new `615e1156-2747-457a-8623-11d1e967f911`0%; Worker COD false/OFF; D1 COD disabled/unconfigured. Public COD is not operational.
+
+**Exact remaining owner action:** enter the already approved tester identity directly as protected API Worker secret `COD_TESTER_WA_ID` using Cloudflare's supported secret control, without exposing it to logs/clipboard, then confirm completion. The authorized tester must initiate a new START from their own device. Resume with signed callback/Advance/rollback gates, TESTER_ONLY acceptance, then PUBLIC only if every gate passes.
+
 ## GFS-247 | Tester-Only COD Admission (2026-10-27)
 
 **Result: implementation and local validation PASS; runtime activation and genuine WhatsApp acceptance BLOCKED.**

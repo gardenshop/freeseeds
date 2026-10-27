@@ -1,5 +1,13 @@
 # Status
 
+## GFS-248 Fresh COD-OFF Candidates / Secret Gate (2026-10-27)
+
+- **P0 PASS LIMITED.** Implemented fail-closed `OFF` / `TESTER_ONLY` / `PUBLIC` rollout mode. Focused78/78, full281/281, build/lint/audit0 pass. Fresh API `83e82edf-1921-4180-b10d-da5ca83f807e` and Admin `615e1156-2747-457a-8623-11d1e967f911` are staged at0%; API v90/Admin v82 remain100%. Stale candidates were removed from current deployments.
+- **Runtime preflight PASS LIMITED.** API candidate health200 and unsigned webhook403; authenticated Admin candidate health200/`paymentConfigured=true`, COD disabled, fee125. Canonical WABA route remains connected/high. D1 COD0030, 53/53 orders/payments, zero COD rows, quick-check ok and FK0; no migration replay or customer/payment mutation.
+- **P1 BLOCKED at protected secret.** The host rejected copying a real customer identifier from Admin to system clipboard. No bypass attempted. Two historical cooldown exemptions exist, so selecting an entry by position would be unsafe. `COD_TESTER_WA_ID` is not provisioned; D1 COD policy remains disabled/unconfigured and Worker COD remains OFF.
+- **P2/P3 NOT RUN.** One recent inbound exists across the two exemption records, but exact approved-tester origin is unproven. No genuine WAMID, new COD order, total, Admin COD_PENDING screenshot, TESTER_ONLY promotion or PUBLIC activation.
+- **Completion:** implementation100%; quality100%; fresh0%-candidate staging100%; protected-secret/activation0%; genuine acceptance0%; public release0%. Public launch NO-GO.
+
 ## GFS-247 Tester-Only COD Gate Implemented (2026-10-27)
 
 - **Engineering PASS.** Added a minimal fail-closed admission boundary: COD is available only when the global audited COD flag/policy is enabled and the inbound identity exactly matches normalized protected runtime secret `COD_TESTER_WA_ID`. Cooldown exemption does not grant COD. The private identity value is not stored in source or records.

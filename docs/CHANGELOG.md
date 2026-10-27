@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-27 (GFS-248 three-state rollout and fresh candidates)
+
+- Added fail-closed `OFF` / `TESTER_ONLY` / `PUBLIC` COD rollout mode and tests. Final local gates: focused78/78, full281/281, build/lint/audit0.
+- Uploaded fresh API `83e82edf…` and Admin `615e1156…`; staged each at0% beside original v90/v82 at100%. Version-targeted API/Admin smoke passed; D1 integrity/COD0030/fee125 passed read-only.
+- Protected tester-secret provisioning stopped at the host privacy boundary; no clipboard workaround, policy enable, traffic promotion, customer mutation or public activation. Genuine acceptance remains blocked.
+
 ## 2026-10-27 (GFS-247 tester-only COD admission)
 
 - Added fail-closed tester-only COD admission using normalized inbound identity and protected runtime secret `COD_TESTER_WA_ID`; cooldown exemptions no longer imply COD eligibility.

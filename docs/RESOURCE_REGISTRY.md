@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-248 fresh candidate versions (2026-10-27)
+
+- API fresh current-HEAD version `83e82edf-1921-4180-b10d-da5ca83f807e`, tag `gfs248-api-cod-off`, staged0% beside v90 `21a3d74c-3979-432c-9190-1848362592a4`100%. Bindings preserved; `COD_V1_ENABLED=false`; `COD_ROLLOUT_MODE=OFF`.
+- Admin fresh current-HEAD version `615e1156-2747-457a-8623-11d1e967f911`, tag `gfs248-admin-cod-off`, staged0% beside v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`100%. Access-authenticated health200/`paymentConfigured=true`.
+- No protected tester secret was created or changed. No D1 write, migration, traffic promotion, Meta mutation, customer/order/payment write or public release. D1 read-only state: COD0030, fee125, COD disabled/unconfigured, 53/53 orders/payments, zero COD rows, integrity PASS.
+
 ## GFS-247 admission boundary (2026-10-27)
 
 - Source now references protected runtime secret `COD_TESTER_WA_ID`; its value is intentionally not recorded. No secret was provisioned or changed in this turn.
