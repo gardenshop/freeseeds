@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-253 controlled copy deployment (2026-10-27)
+
+- API `a5722925-650c-42db-bc75-a8c3242e8a4b` is active100% TESTER_ONLY; prior `ba15b8ba-e3b3-4581-9b23-c2e688797132` is0%; COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` remains the rollback target. Admin `615e1156-2747-457a-8623-11d1e967f911` remains100%.
+- Existing D1, Queue, R2, signed Meta callback, payment history and secrets/bindings are preserved. No migration or customer/order mutation occurred in the copy deployment.
+- Genuine tester Advance evidence is private and pending; no raw phone, WAMID, receipt or order identifier is recorded. PUBLIC remains disabled until fresh post-deploy acceptance.
+
 ## GFS-252 final-gate state (2026-10-27)
 
 - API `ba15b8ba-e3b3-4581-9b23-c2e688797132` remains100% TESTER_ONLY; Admin `615e1156-2747-457a-8623-11d1e967f911` remains100%; COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` remains the rollback target.

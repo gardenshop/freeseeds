@@ -528,7 +528,8 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     const orderData = conversation()?.data as { orderId: string; orderNumber: string; amountPkr: number };
     expect(conversation()?.state).toBe("PAYMENT_METHOD");
     expect(buttons()).toEqual(["ADVANCE_PAYMENT", "COD"]);
-    expect((sends.at(-1)?.interactive as { action: { buttons: Array<{ reply: { title: string } }> } }).action.buttons.map((button) => button.reply.title)).toEqual(["Advance Payment", "Cash on Delivery"]);
+    expect(body()).toContain("Choose payment method: Advance Payment or Cash on Delivery (COD). COD orders include an additional PKR 125 cash collection fee.");
+    expect((sends.at(-1)?.interactive as { action: { buttons: Array<{ reply: { title: string } }> } }).action.buttons.map((button) => button.reply.title)).toEqual(["Advance Payment", "Cash on Delivery (COD)"]);
     await inbound(tap("COD"));
     expect(conversation()?.state).toBe("COD_CONFIRM");
     expect(body()).toContain("Seeds (5 free packs): PKR 0");
@@ -620,7 +621,8 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     codEnabled = true;
     await reachReview("ur", true);
     await inbound(tap("PLACE_ORDER"));
-    expect((sends.at(-1)?.interactive as { action: { buttons: Array<{ reply: { title: string } }> } }).action.buttons.map((button) => button.reply.title)).toEqual(["ایڈوانس ادائیگی", "وصولی پر ادائیگی"]);
+    expect(body()).toContain("ادائیگی کا طریقہ منتخب کریں: ایڈوانس پیمنٹ یا کیش آن ڈیلیوری (COD)۔ COD آرڈر پر PKR 125 اضافی کیش کلیکشن فیس لاگو ہوگی۔");
+    expect((sends.at(-1)?.interactive as { action: { buttons: Array<{ reply: { title: string } }> } }).action.buttons.map((button) => button.reply.title)).toEqual(["ایڈوانس ادائیگی", "کیش آن ڈیلیوری (COD)"]);
     await inbound(tap("COD"));
     expect(body()).toContain("اشیاء:");
     expect(body()).toContain("بیج (5 مفت پیکٹ): PKR 0");

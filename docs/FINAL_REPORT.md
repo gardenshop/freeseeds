@@ -1,5 +1,21 @@
 # Final Report
 
+## GFS-253 | Payment-Choice Copy and Public Gate (2026-10-27)
+
+**Overall: copy PASS, controlled deployment PASS, genuine pre-deploy Advance evidence PASS LIMITED, PUBLIC BLOCKED.**
+
+| Stage | Result | Evidence |
+|---|---|---|
+| P0 preservation | PASS | Existing COD/D1/Admin/history/fee/rollback state preserved; no migration or customer mutation. |
+| P1 copy polish | PASS | Required EN/UR copy added; exactly two COD-capable buttons with `(COD)`; business logic unchanged. |
+| P2 quality/deployment | PASS | Focused78/78, full282/282, build, lint, offline audit, rollback4/4; API `a5722925-650c-42db-bc75-a8c3242e8a4b` active100% TESTER_ONLY after health200/unsigned403 smoke. |
+| P3 live Advance/COD | PASS LIMITED | New genuine Advance interaction reached pending JazzCash receipt review with no PAID. It predates this deployment; post-deploy copy, all three methods and COD-to-Advance remain unverified. |
+| P4 PUBLIC release | BLOCKED / NOT RUN | PUBLIC was not enabled; no public menu proof exists. |
+
+**Current runtime:** API `a5722925-650c-42db-bc75-a8c3242e8a4b`100% TESTER_ONLY; prior `ba15b8ba-e3b3-4581-9b23-c2e688797132`0%; Admin `615e1156-2747-457a-8623-11d1e967f911`100%; COD-OFF rollback retained. Zero regression: **PASS**.
+
+**Remaining:** one fresh authorized post-deploy tester journey verifying EN/UR payment text, JazzCash/Easypaisa/Bank Transfer instructions and COD-to-Advance before confirmation. Completion: copy/local gates100%; controlled staging100%; post-deploy live acceptance0%; PUBLIC0%.
+
 ## GFS-252 | Final Advance Regression / Public COD (2026-10-27)
 
 **Overall: preserved COD and runtime preflight PASS; final Advance gate BLOCKED; PUBLIC not activated.**

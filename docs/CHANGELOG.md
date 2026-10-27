@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-27 (GFS-253 payment-choice copy)
+
+- Updated only the payment-selection EN/UR copy and COD button label to include the audited PKR125 cash-collection fee and `(COD)`.
+- Focused78/78, full282/282, build, lint, offline audit and rollback4/4 pass. Uploaded candidate `a5722925-650c-42db-bc75-a8c3242e8a4b`, smoke-tested it, and activated it100% TESTER_ONLY.
+- A genuine newer tester Advance interaction reached pending JazzCash receipt review without PAID. It predates this deployment; PUBLIC remains withheld pending fresh post-deploy acceptance.
+
 ## 2026-10-27 (GFS-252 final Advance gate)
 
 - Checked Admin Test Controls first; no newer tester-originated continuation was present. Reverified Admin/COD preflight without changing traffic or customer data.

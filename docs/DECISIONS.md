@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-27: GFS-253 Deploy Copy in TESTER_ONLY, Hold PUBLIC
+
+- Apply only the requested payment-choice EN/UR copy and `(COD)` button-label polish. Preserve the existing guided flow, payment methods, receipts, D1, COD fee and idempotency.
+- Upload and activate `a5722925-650c-42db-bc75-a8c3242e8a4b` only in TESTER_ONLY after health200/unsigned403 and local gates. Keep the prior version and COD-OFF rollback available.
+- A genuine newer Advance interaction is evidence of a pending JazzCash receipt workflow, not post-deploy payment-copy proof. Do not approve it, mark PAID, or infer all-method acceptance.
+- PUBLIC remains blocked until the approved tester sends a fresh post-deploy journey and verifies copy, all three Advance methods/instructions and COD-to-Advance before confirmation.
+
 ## 2026-10-27: GFS-252 Keep PUBLIC Fail-Closed
 
 - Test Controls was checked first and shows no newer tester-originated continuation beyond the verified COD state. Preserve the existing COD acceptance; do not create a duplicate order or fabricate Advance activity.

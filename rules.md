@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-253 Payment-Choice Copy / Controlled Runtime (2026-10-27)
+
+- Payment-selection copy now uses the required short EN/UR wording and exactly two COD-capable buttons: Advance Payment and Cash on Delivery (COD). Business logic, order flow, fee policy and receipts were unchanged.
+- Focused78/78 and full282/282 pass; build, lint, offline audit and rollback4/4 pass. The text-only API candidate `a5722925-650c-42db-bc75-a8c3242e8a4b` passed health200/unsigned403 at0% and is active100% in TESTER_ONLY. Prior API `ba15b8ba-e3b3-4581-9b23-c2e688797132` is0%; COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` remains rollback.
+- A newer genuine tester Advance interaction is privately evidenced at PAYMENT_REVIEW/PENDING with JazzCash and one submitted receipt; no approval or PAID transition occurred. It predates the new copy deployment, so it is not claimed as post-deploy text proof or all-method post-deploy acceptance.
+- PUBLIC remains fail-closed until the authorized tester produces a fresh post-deploy payment-selection observation, confirms the three Advance methods/instructions and tests COD-to-Advance before confirmation. Do not fabricate messages or use an unrelated Web profile.
+
 ## GFS-252 Final Advance Gate (2026-10-27)
 
 - Official Chrome MCP and authenticated Admin/Cloudflare access remain callable. Test Controls shows the approved conversation still in `COD_PENDING` with no newer tester continuation; no unrelated WhatsApp Web profile was used.

@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-253 Payment-Choice Copy / Live Gate (2026-10-27)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Required EN/UR copy | PASS LOCAL | Exact requested copy added to the payment-choice branch; no business logic changed. |
+| Exactly two buttons | PASS LOCAL | Advance Payment and Cash on Delivery (COD); Urdu button is localized with `(COD)`. |
+| Focused/full quality | PASS | Focused78/78; full282/282; build, lint, offline audit and rollback4/4. |
+| Candidate runtime | PASS | `a5722925-650c-42db-bc75-a8c3242e8a4b` health200/unsigned403 at0% before activation. |
+| Active controlled runtime | PASS | `a5722925-650c-42db-bc75-a8c3242e8a4b`100% TESTER_ONLY; prior `ba15b8ba-e3b3-4581-9b23-c2e688797132`0%; COD-OFF rollback retained. |
+| New genuine Advance evidence | PASS LIMITED | Fresh tester interaction reached PAYMENT_REVIEW/PENDING with JazzCash and one receipt, no PAID; it predates this copy deployment. |
+| Post-deploy live copy / all Advance methods | BLOCKED | Requires a fresh authorized tester interaction; no fake inbound or unrelated profile used. |
+| PUBLIC release | NOT RUN | Post-deploy live gate is incomplete; PUBLIC remains disabled. |
+
 ## GFS-252 Final Advance Gate (2026-10-27)
 
 | Requirement | Result | Evidence / blocker |

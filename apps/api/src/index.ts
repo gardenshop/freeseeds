@@ -599,7 +599,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
     completePaymentMethods = await completeEnabledPaymentMethods(db, data.language ?? "en");
     if (showPaymentChoice || (state === "REVIEW" && codAvailable)) {
       showPaymentChoice = true;
-      reply = `${reply}\n${data.language === "ur" ? "ادائیگی منتخب کریں: ایڈوانس ادائیگی یا وصولی پر ادائیگی۔" : "Choose payment: Advance Payment or Cash on Delivery (COD)."}`;
+      reply = `${reply}\n${data.language === "ur" ? "ادائیگی کا طریقہ منتخب کریں: ایڈوانس پیمنٹ یا کیش آن ڈیلیوری (COD)۔ COD آرڈر پر PKR 125 اضافی کیش کلیکشن فیس لاگو ہوگی۔" : "Choose payment method: Advance Payment or Cash on Delivery (COD). COD orders include an additional PKR 125 cash collection fee."}`;
     } else if (!completePaymentMethods.length) {
       nextState = "COMPLETE";
       reply = state === "REVIEW" ? `${reply}\n${noPaymentRequest()}` : noPaymentRequest();
@@ -622,7 +622,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   } else if (state === "CONTACT" && nextState === "REVIEW") {
     options = { buttons: [{ id: "PLACE_ORDER", title: whatsAppActionLabel(review, "PLACE_ORDER") }, { id: "BACK", title: whatsAppActionLabel(review, "BACK") }] };
   } else if (showPaymentChoice) {
-    options = { buttons: [{ id: "ADVANCE_PAYMENT", title: data.language === "ur" ? "ایڈوانس ادائیگی" : "Advance Payment" }, { id: "COD", title: data.language === "ur" ? "وصولی پر ادائیگی" : "Cash on Delivery" }] };
+    options = { buttons: [{ id: "ADVANCE_PAYMENT", title: data.language === "ur" ? "ایڈوانس ادائیگی" : "Advance Payment" }, { id: "COD", title: data.language === "ur" ? "کیش آن ڈیلیوری (COD)" : "Cash on Delivery (COD)" }] };
   } else if (nextState === "COD_CONFIRM") {
     options = { buttons: [{ id: "CONFIRM_COD_ORDER", title: data.language === "ur" ? "COD آرڈر کی تصدیق" : "Confirm COD Order" }, { id: "ADVANCE_PAYMENT", title: data.language === "ur" ? "ایڈوانس ادائیگی" : "Advance Payment" }] };
   } else if (nextState === "PAYMENT_METHOD" && paymentOptions.length) {

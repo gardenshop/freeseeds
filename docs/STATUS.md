@@ -1,5 +1,14 @@
 # Status
 
+## GFS-253 Payment-Choice Copy / Controlled Runtime (2026-10-27)
+
+- **P0 PASS.** Existing COD acceptance, D1/Admin state, PKR125 policy, history and rollback remain preserved.
+- **P1 PASS.** Payment choice now uses the required short EN/UR copy and exactly two COD-capable buttons, including `(COD)`. No business logic changed.
+- **P2 PASS.** Focused78/78, full282/282, build, lint, offline audit and rollback4/4 pass. Candidate `a5722925-650c-42db-bc75-a8c3242e8a4b` passed candidate health200/unsigned403 and is active100% TESTER_ONLY; prior `ba15b8ba-e3b3-4581-9b23-c2e688797132` is0%; COD-OFF rollback retained.
+- **P3 PASS LIMITED.** A newer genuine tester Advance interaction reached PAYMENT_REVIEW/PENDING with JazzCash and one submitted receipt, without approval/PAID. It predates this deployment; post-deploy WhatsApp text and all-method confirmation remain unobserved.
+- **P4 BLOCKED / NO-GO.** PUBLIC was not enabled. Remaining gate is one fresh post-deploy authorized tester journey verifying EN/UR copy, all three Advance methods/instructions and COD-to-Advance before confirmation.
+- **Completion:** copy engineering100%; local quality100%; controlled deployment100%; post-deploy live acceptance0%; PUBLIC0%.
+
 ## GFS-252 Final Advance Gate (2026-10-27)
 
 - **P0 PASS.** All prior COD, D1/Admin, WAMID, fee, UX, test and rollback evidence remains preserved; no migration or customer/order/payment mutation occurred.
