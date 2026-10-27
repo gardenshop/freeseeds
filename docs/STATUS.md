@@ -1,5 +1,14 @@
 # Status
 
+## GFS-274 Post-Launch Reliability (2026-10-28)
+
+- **P0 PASS:** Paid D1 and the canonical Cloudflare account were read-only verified. Current billing card: 8.51M/25B rows read, 19.12K/50M rows written, $0 billable usage. Migration0037/0038 and the GFS-273 deployment were preserved.
+- **P1 PASS/PENDING:** Query Insights last-24-hour aggregate: 49.15K queries, 41.53K reads, 7.63K writes, 8.61M rows read, 188 fingerprints. Outbound status: 1,771 executions / 3.08M rows / approximately 1.75K rows per execution versus prior 1,730 / 3.03M / approximately 1.75K. Period-separated post-index improvement is pending; no further code change is justified.
+- **P2 PASS:** Authenticated low-impact smoke returned health 200 JSON, Orders 200 JSON with 68 total records and page size 25, payment methods 200 JSON, Payment Settings 200, and a sampled order detail 200 with order/items/receipts/audit keys. No mutation was performed. Worker metrics charts did not expose numeric error data in this session; Observability remained disabled.
+- **P3 PENDING, non-blocking:** No new genuine customer-device or receipt-acceptance evidence was available. No fake customer event, receipt, PAID state, fulfillment release, or WhatsApp message was created. PUBLIC COD/Advance protections remain preserved.
+- **P4 PASS:** No runtime code, migration, billing, payment configuration, or deployment change was made. This evidence record is the only new change; prior 292/292 tests and rollback4/4 remain preserved.
+- **Completion:** operational release and safety checks 100%; exact period-separated post-index outbound measurement and genuine customer-device/receipt acceptance remain pending. Overall GFS-274 evidence completion: 90%; no production-health blocker demonstrated.
+
 ## GFS-270 Restore D1 + Optimize Query Cost (2026-10-27)
 
 - **P0 PASS.** Existing local commits `fca32a3` and `834744e` were preserved and pushed through Git Credential Manager as `gardenshop` to the correct PR branch; remote advanced from `7724e7a` to `834744e`. No code was duplicated.

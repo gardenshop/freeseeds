@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-274 Post-Launch Evidence (2026-10-28)
+
+- Cloudflare identity: `gisupp@gmail.com`; Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- Paid D1 billing card: 8.51M/25B rows read, 19.12K/50M rows written, 5/50,000 databases, 6.57MB/5GB storage, $0 displayed billable usage.
+- Query Insights last-24-hour chart: 49.15K total queries, 41.53K reads, 7.63K writes, 8.61M rows read, 188 fingerprints. Outbound status: 1,771 executions, 3.08M rows, approximately 1.75K rows/execution.
+- Active deployments: Admin `66426d2a-be1c-4e22-b420-1b1559dcbbc5` at 100%; API `24d72438-72a1-4544-80df-4b9b90c297e5` at 100%. Prior Admin `cd155f20-c848-4e4e-9fde-970e62b0a4ea` at 0%.
+- No customer identifiers, payment recipient values, credentials, receipts, or screenshots were added. No external resource was mutated.
+
 ## GFS-270 query optimization state (2026-10-27)
 
 - Remote PR branch now contains existing local commits through `834744e`, pushed using Git Credential Manager identity `gardenshop`. No token value is recorded.

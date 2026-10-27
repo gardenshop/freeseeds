@@ -1,5 +1,15 @@
 # Test Matrix
 
+## GFS-274 Post-Launch Evidence (2026-10-28)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Paid D1 capacity/account | PASS | `gisupp@gmail.com` / Get Free Seeds verified; 8.51M/25B reads, 19.12K/50M writes, $0 displayed billable usage. |
+| Query Insights cost | PASS/PENDING | Last-24-hour aggregate recorded; outbound 1,771 / 3.08M / approximately 1.75K rows per execution. Exact post-index period comparison unavailable. |
+| Authenticated Admin smoke | PASS | Health 200 JSON; Orders 200 JSON, 68 total, page size 25; payment methods 200 JSON; Payment Settings 200; detail 200. |
+| Runtime mutation safety | PASS | No migration replay, deployment, billing, payment, customer, receipt, PAID, fulfillment, or WhatsApp mutation. |
+| Genuine customer acceptance | PENDING | No new customer-device or receipt evidence in this session; no synthetic substitute used. |
+
 ## GFS-270 Local Query-Cost Gate (2026-10-27)
 
 | Requirement | Result | Evidence / boundary |

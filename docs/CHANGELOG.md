@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-28 (GFS-274 post-launch evidence)
+
+- Read-only verified Paid D1 capacity, canonical Cloudflare identity, active Admin/API versions, and low-impact authenticated Admin availability.
+- Recorded Query Insights billing-period and last-24-hour aggregates, including the outbound status fingerprint, without synthetic traffic or repeated expensive probes.
+- No runtime, migration, billing, payment, customer, receipt, fulfillment, webhook, or deployment mutation was made.
+
 ## 2026-10-27 (GFS-270 EXPLAIN-backed indexes)
 
 - Extended migration0037 with order pagination and WhatsApp/customer lookup indexes. Local EXPLAIN changed Orders pagination from temp-sort to indexed ordering and customer status from Orders scan to indexed multi-index lookup.

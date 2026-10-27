@@ -799,3 +799,11 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Query Insights measured the optimized Orders list at 300 rows across 6 executions (~50/request), versus the historical detail-list 3.43M/80 (~42.9k/request). Do not reintroduce correlated detail subqueries into list pages.
 - The measured outbound-status scan (3.03M/1,730, ~1.75k/update) is addressed only by the additive provider/status index. Do not mutate webhook/payment/order state to manufacture a benchmark; wait for natural traffic for after-metrics.
 - Payment approval, COD fulfillment, holds, receipts, signed webhook, new-number lock, and Hoja isolation remain protected. No stale payment-state cache, false PAID, duplicate order, or unsolicited WhatsApp action is allowed.
+
+## GFS-274 Post-Launch Reliability Protocol
+
+- Preserve the verified GFS-273 release: Workers Paid, migration0037/0038, Admin `66426d2a` at 100%, API `24d72438` at 100%, and protected COD/Advance/payment safeguards. Do not redeploy healthy code, replay migrations, or change billing without explicit authorization.
+- On 2026-10-28, Cloudflare identity was read-only verified as `gisupp@gmail.com` in Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Paid D1 usage showed 8.51M/25B rows read, 19.12K/50M rows written, 5/50,000 databases, 6.57MB/5GB storage, and $0 billable usage for the displayed billing period.
+- Query Insights last-24-hour view showed 49.15K queries, 41.53K read queries, 7.63K write queries, 8.61M rows read, and 188 fingerprints. These are dashboard-period aggregates and must not be conflated with the billing card or represented as a post-index 24-hour result.
+- The outbound status fingerprint showed 1,771 executions, 3.08M rows read, and approximately 1.75K rows per execution. The prior snapshot was 1,730 / 3.03M / approximately 1.75K. Because the dashboard does not separate pre/post-index traffic, treat the delta as preliminary only and wait for natural period-separated evidence before another query change.
+- Use low-impact authenticated smoke and natural traffic only. Do not generate synthetic live traffic, enable unavailable observability merely to obtain a metric, or repeatedly refresh Admin. Record genuine customer-device and receipt acceptance as pending when evidence is unavailable; never fabricate it.

@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-274 Final Report (2026-10-28)
+
+| Area | Result | Verified evidence / remaining item |
+|---|---|---|
+| P0 preserve healthy release | PASS | Paid D1, migration0037/0038, Admin/API traffic, payment safeguards and prior rollback evidence preserved. |
+| P1 query cost | PASS/PENDING | Query Insights: 49.15K queries, 8.61M rows in last-24-hour view; outbound 1,771 / 3.08M / approximately 1.75K rows per execution. Exact post-index period split is unavailable, so no unsupported reduction claim. |
+| P2 reliability | PASS | Authenticated health 200 JSON, Orders 200 JSON (68 records; page size 25), payment methods 200 JSON, Payment Settings 200, and sampled detail 200. Worker chart numerics were unavailable while dashboard data remained loading. |
+| P3 customer acceptance | PENDING, non-blocking | No new genuine customer-device or receipt evidence. No fake event, order, receipt, PAID, fulfillment, or WhatsApp action. Existing COD/Advance protections remain intact. |
+| P4 quality/documentation | PASS | No runtime change. Prior 292/292 tests and rollback4/4 remain the preserved release evidence; this commit records new read-only evidence only. |
+
+### Current capacity and release
+
+- Cloudflare account: `gisupp@gmail.com` / Get Free Seeds, verified read-only. Paid D1 billing card: 8.51M/25B reads, 19.12K/50M writes, $0 displayed billable usage.
+- Active Admin: `66426d2a-be1c-4e22-b420-1b1559dcbbc5` at 100%. Active API: `24d72438-72a1-4544-80df-4b9b90c297e5` at 100%. Previous Admin `cd155f20-c848-4e4e-9fde-970e62b0a4ea` at 0%.
+- No redeploy, migration replay, billing change, payment configuration change, customer mutation, or artificial traffic was performed.
+- Completion: operational release and safety checks 100%; exact period-separated post-index outbound measurement and genuine customer-device/receipt acceptance remain pending. Overall GFS-274 evidence completion: 90%; no production-health blocker demonstrated.
+
 ## GFS-270 | RESTORE D1 + OPTIMIZE QUERY COST + DEPLOY (2026-10-27)
 
 **Overall: push and local optimization PASS; live recovery/deployment BLOCKED by D1 quota.**

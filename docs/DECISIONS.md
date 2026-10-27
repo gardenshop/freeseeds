@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-28: GFS-274 Post-Launch Cost Evidence
+
+- Keep the healthy GFS-273 runtime unchanged. The live index0038 EXPLAIN evidence and current aggregate do not justify another SQL repair.
+- Record outbound status as preliminary aggregate evidence only: 1,771 executions, 3.08M rows read, approximately 1.75K per execution; the prior snapshot was 1,730 / 3.03M / approximately 1.75K. Do not claim a post-index 24-hour reduction until Cloudflare provides separated periods.
+- Use natural traffic and low-impact authenticated smoke for follow-up. Do not create synthetic orders, receipts, payment approvals, fulfillment transitions, webhook messages, or monitoring load.
+- Customer-device and receipt acceptance remains pending rather than being inferred from Admin read success.
+
 ## 2026-10-27: GFS-270 Add only EXPLAIN-backed indexes
 
 - Extend existing additive migration0037 with `orders_archived_created_idx`, normalized/raw WhatsApp customer indexes, and `orders_customer_created_idx`. Local EXPLAIN confirms removal of the Orders temp sort and the full Orders scan in customer status lookup.
