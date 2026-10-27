@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-27: GFS-268 Treat D1 7500 as a capacity incident
+
+- Treat the Cloudflare D1 8M/5M row-read state and the measured 3.29M-row Admin detail query as the actual blocker. Do not spend more reads proving an already confirmed quota failure.
+- Keep order list counts exact but combine queue counts and selected-tab total into one aggregate query. Use bounded narrow list projections; load full financial detail, audit, and private receipts only for the selected order.
+- Keep approval/payment/COD decisions fresh. Do not cache approval state or turn D1 errors into zero counts. Return JSON503 with no success or financial state claim on quota failure.
+- Additive indexes are recorded in migration `0037` for later controlled application. No live schema, D1 data, payment, receipt, traffic, billing, or customer mutation is authorized during exhaustion.
+- Candidate Admin remains0% until post-reset authenticated smoke proves Orders HTTP200 with real counts/pagination, detail/receipts, Payment Settings, payment approval, and COD fulfillment. Active Admin remains100% meanwhile. Workers Paid is not recommended or priced until post-reset measured usage shows optimized reads still exceed Free-tier capacity and owner approval is obtained.
+
 ## 2026-10-27: GFS-261 Mobile and Receipt Safety
 
 - Use strict local mobile validation only for new guided/shared submissions: `03XXXXXXXXX` or `03XX-XXXXXXX`, normalized to 11 digits. Do not apply it to Meta `wa_id` or historical records.

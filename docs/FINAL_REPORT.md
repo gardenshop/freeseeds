@@ -1,5 +1,25 @@
 # Final Report
 
+## GFS-268 | RESTORE D1 + ADMIN / PREVENT QUOTA OUTAGE (2026-10-27)
+
+**Overall: local repair PASS; live Admin restoration BLOCKED by confirmed D1 Free-tier quota exhaustion.**
+
+| Assignment | Result | Evidence |
+|---|---|---|
+| P0 actual blocker | PASS | Authenticated Cloudflare D1 metrics: 8M/5M rows read today; 44.21k queries; 14.96k/100k writes; 6.44MB/5GB storage; $0 billable. Old Admin full-detail query: about 3.29M rows-read/77 calls, 1.71k rows-read per returned row. |
+| P1 quota prevention | PASS LOCAL | One exact aggregate count scan, narrow bounded list projection, additive indexed-read migration `0037`, fresh detail/financial reads, JSON503 fail-closed paths. |
+| P2 Admin restore | BLOCKED | Active Admin `cd155f20…`100%; candidate `92955132…`0%. Admin health HTTP200/`paymentConfigured=true`; Orders HTTP500/non-JSON on active old code. No promotion without quota recovery and real smoke. |
+| Orders / counts | BLOCKED LIVE | Last documented pre-incident counts All67 / Verify6 / Confirmed2 / Fulfillment10; current exact count not re-read under exhausted quota. |
+| Payment Settings / receipts / approval / COD | BLOCKED LIVE | Local fail-closed coverage passes; live endpoint smoke is deferred until D1 reset. No approval, receipt, COD hold, or customer data mutation occurred. |
+| Public customer safety | PASS PRESERVATION / BLOCKED RECHECK | PUBLIC COD, PKR125, Advance methods, signed webhook, history, new-number lock, Hoja zero-connection and protected holds unchanged. Live order-health recheck deferred. |
+| Rollback | PASS | Local protected V1 rollback4/4 against unchanged baseline `cf01f444…`; compatible rollback retained. |
+| Regression | PASS | Focused53/53; full292/292; build; lint. Audit not run. |
+| Push/deploy/traffic | BLOCKED | No external mutation while quota is exhausted; candidate remains0%, active Admin100%, API100%. GitHub tab is visibly logged out, so no push was attempted. |
+
+**Usage status:** Cloudflare resets daily at 00:00 UTC. Do not run D1 SQL probes until reset. If optimized usage still exceeds Free-tier capacity after post-reset measurement, prepare a measured Workers Paid recommendation and exact current price separately; no billing change is authorized.
+
+**Remaining gate:** after reset, reverify visible `gisupp@gmail.com` / Get Free Seeds identity, run authenticated candidate 0%-traffic smoke for Orders real counts/pagination, detail/receipts, Payment Settings, approval, and COD fulfillment; verify rollback; only then consider promotion and repeat public safety smoke. No secrets or real customer data are included.
+
 ## GFS-261 Mobile Validation and Receipt Media (2026-10-27)
 
 **Overall: engineering PASS; PUBLIC COD preserved; live customer receipt acceptance BLOCKED pending an authorized device action.**

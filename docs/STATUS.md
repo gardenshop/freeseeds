@@ -1,5 +1,14 @@
 # Status
 
+## GFS-268 Restore D1 + Admin / Prevent Quota Outage (2026-10-27)
+
+- **P0 PASS / blocker confirmed.** Official Chrome DevTools MCP readback is on the Cloudflare Get Free Seeds account (`cb5066…`); D1 `getfreeseeds-staging` shows 8M/5M rows read today, 14.96k/100k rows written, 6.44MB/5GB storage, 44.21k queries, and no billable usage. Cloudflare daily reset is 00:00 UTC. The per-query table attributes about 3.29M rows-read to the old full Admin order projection over 77 calls (about 1.71k rows-read/returned row). No further D1 SQL probe was issued.
+- **P1 PASS LOCAL.** Candidate code combines exact queue counts and selected-tab total into one aggregate scan, keeps list projection narrow/bounded, adds entity-key indexes in unapplied migration `0037`, and returns structured JSON503 on quota failures for Admin order/detail/receipts/payment configuration and API order/payment paths. No financial approval state is cached.
+- **P2 BLOCKED EXTERNAL.** Active Admin `cd155f20…` remains100%; candidate `92955132…` remains0%. Admin health is HTTP200 with `paymentConfigured=true`, but live Orders is HTTP500/non-JSON on the active old projection. Candidate 0%-traffic detail/list smoke cannot run until D1 quota recovers; no promotion or migration application occurred.
+- **P3 BLOCKED BY QUOTA.** Public COD, audited PKR125, Advance methods, signed webhook, receipts, history, new-number WhatsApp lock, Hoja zero-connection rule and protected holds were not mutated. Current exact live order counts and customer-order health cannot be re-read safely while quota is exhausted; last documented pre-incident counts were All67 / Verify6 / Confirmed2 / Fulfillment10 and are not reasserted as current.
+- **P4 PASS LOCAL / PUSH BLOCKED.** Focused 53/53, full 292/292, build, lint, and rollback4/4 pass. Audit was not run. GitHub is visibly logged out in the existing `gardenshop/freeseeds` tab, so no push was attempted; deploy/promotion also remain pending the quota gate and external identity/mutation record.
+- **Completion:** P0 100%; P1 engineering100%; P2 0% deployment / 100% blocked; P3 0% live recheck / 100% blocked; P4 local quality100% / external push0%. Overall local repair PASS, live restoration BLOCKED by D1 quota exhaustion.
+
 ## GFS-261 Mobile Validation and Receipt Media (2026-10-27)
 
 - **P0 PASS.** Strict new-customer contact validation accepts only the two approved local formats and stores normalized 11-digit values; EN/UR invalid input remains on CONTACT. Meta `wa_id` and historical records are unchanged.

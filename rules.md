@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-268 D1 Quota and Admin Restore Rules (2026-10-27)
+
+- Cloudflare D1 is currently over the Free-tier daily row-read limit: 8M/5M rows read today. Do not repeat live D1 probes until the 00:00 UTC reset or an owner-approved capacity change.
+- The measured hot query is the old Admin full-detail order projection: about 3.29M rows read across 77 calls, about 1.71k rows read per returned row. Admin list reads must use a narrow projection, one aggregate count scan, bounded pagination, and indexed entity lookups; financial detail remains fresh and authoritative.
+- Any D1 quota/read failure must fail closed with structured JSON HTTP503. Never return zero counts, an empty order list, a fake receipt, stale approval state, false PAID, duplicate confirmation, or a successful customer-order response.
+- GFS-268 local candidate `92955132-6917-4cad-895e-d2b89e56d9dd` remains staged at0% until quota recovery and authenticated list/detail/receipt/Payment Settings/approval/COD smoke pass. Active Admin `cd155f20-c848-4e4e-9fde-970e62b0a4ea` remains100%; API `24d72438-...` remains100% until its own gate is complete.
+- No Cloudflare billing, D1 database, schema application, traffic, customer, payment, receipt, COD hold, Meta, or secret mutation is permitted while the quota blocker is unresolved. Verify visible `gisupp@gmail.com` / Get Free Seeds identity before every future external mutation and record the result.
+
 ## GFS-261 Mobile Validation and Receipt Media Protocol (2026-10-27)
 
 - The protected release preserves PUBLIC COD, audited PKR125, all three Advance methods, signed callback, D1/R2/Queue bindings, history, and COD-off rollback. No migration was run.

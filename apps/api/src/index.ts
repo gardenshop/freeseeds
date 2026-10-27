@@ -35,6 +35,16 @@ type Env = {
 
 const app = new Hono<Env>();
 
+function isD1QuotaError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /\b7500\b|row[- ]read|daily.*limit|quota.*exhaust|too many rows/i.test(message);
+}
+
+app.onError((error, c) => {
+  if (isD1QuotaError(error)) return c.json({ error: "D1_QUOTA_EXHAUSTED", message: "D1 is temporarily unavailable. No order confirmation or payment state change was reported; retry after the quota reset." }, 503);
+  return c.json({ error: "API_REQUEST_FAILED" }, 500);
+});
+
 function base64Url(data: Uint8Array): string { return btoa(String.fromCharCode(...data)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, ""); }
 function decodeBase64Url(value: string): Uint8Array { const padded = value.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - value.length % 4) % 4); return Uint8Array.from(atob(padded), (char) => char.charCodeAt(0)); }
 async function createFlowToken(waId: string, inboundId: string, secret: string): Promise<string> { const payload = base64Url(new TextEncoder().encode(JSON.stringify({ waId, inboundId, exp: Date.now() + 60 * 60 * 1000 }))); const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]); const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload)); return `${payload}.${base64Url(new Uint8Array(signature))}`; }
@@ -973,6 +983,7 @@ app.post("/flows/get-free-seeds", async (c) => {
     }
     return c.json({ screen: "PAYMENT_METHOD", data: { accepted: true, orderId: result.orderId, orderNumber: result.orderNumber, orderSummary, paymentMethods: orderSummary.paymentMethods, paymentMethodOptions: orderSummary.paymentMethods.map((name) => ({ id: name, title: name })), capiQueue: queued ? "QUEUED" : "DEFERRED" } });
   } catch (error) {
+    if (isD1QuotaError(error)) return c.json({ error: "D1_QUOTA_EXHAUSTED", message: "D1 is temporarily unavailable. No order confirmation was issued; retry after the quota reset." }, 503);
     return c.json({ error: error instanceof Error ? error.message : "INVALID_FLOW_SUBMISSION" }, 400);
   }
 });
@@ -985,6 +996,7 @@ app.post("/api/orders/quote", async (c) => {
     return c.json({ ...quote, orderSummary, paymentMethodOptions: quote.paymentMethods.map((name) => ({ id: name, title: name })) });
   } catch (error) {
     const code = error instanceof Error ? error.message : "QUOTE_FAILED";
+    if (isD1QuotaError(error)) return c.json({ error: "D1_QUOTA_EXHAUSTED", message: "D1 is temporarily unavailable. No quote or order state was reported; retry after the quota reset." }, 503);
     return c.json({ error: code }, code === "PRODUCT_NOT_FOUND" || code === "PROVINCE_DELIVERY_RATE_NOT_FOUND" ? 404 : 400);
   }
 });
@@ -1013,6 +1025,7 @@ const paymentSelectionHandler = async (c: Context<Env>) => {
     return c.json({ ok: true, orderNumber: result.orderNumber, amount: result.amount, method: result.config.method, message: result.message, qrAvailable: Boolean(result.config.qrR2Key), orderSummary, paymentMethods: orderSummary.paymentMethods, paymentMethodOptions: orderSummary.paymentMethods.map((name) => ({ id: name, title: name })) });
   } catch (error) {
     const code = error instanceof Error ? error.message : "PAYMENT_METHOD_SELECTION_FAILED";
+    if (isD1QuotaError(error)) return c.json({ error: "D1_QUOTA_EXHAUSTED", message: "D1 is temporarily unavailable. No payment selection or confirmation was reported; retry after the quota reset." }, 503);
     return c.json({ error: code }, code === "PAYMENT_SELECTION_CONFLICT" ? 409 : 400);
   }
 };
@@ -1052,6 +1065,7 @@ app.post("/receipts/ingest", async (c) => {
     ]);
     return c.json({ ok: true, reviewState: "REVIEW", receiptKey: stored.objectKey });
   } catch (error) {
+    if (isD1QuotaError(error)) return c.json({ error: "D1_QUOTA_EXHAUSTED", message: "D1 is temporarily unavailable. No receipt or payment confirmation was reported; retry after the quota reset." }, 503);
     return c.json({ error: error instanceof Error ? error.message : "RECEIPT_INGEST_FAILED" }, 400);
   }
 });

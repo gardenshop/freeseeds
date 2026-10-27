@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-268 quota incident and candidate state (2026-10-27)
+
+- Official Chrome DevTools MCP is connected to Cloudflare account `cb5066…`; the visible D1 metrics page for `getfreeseeds-staging` reports 8M/5M rows read today, 44.21k queries, 14.96k/100k rows written, 6.44MB/5GB storage, and $0 billable usage. This is read-only evidence; no SQL probe was executed after confirmation.
+- Active Admin `cd155f20…` is100%; optimized candidate `92955132…` is0%. API `24d72438…` remains100%. Admin health HTTP200/`paymentConfigured=true`; Orders HTTP500/non-JSON on active Admin. Exact current order counts are unavailable while D1 is exhausted.
+- Local candidate includes `0037_quota_safe_admin_reads.sql`, which is not applied. Existing D1, R2 receipts, Queue, signed WhatsApp callback, payment methods, order/payment history, COD PKR125 policy, protected test holds, new-number lock and Hoja zero-connection are preserved.
+- No secrets, customer identifiers, raw receipts, WAMIDs, payment references, or account credentials are recorded. No Cloudflare mutation, billing change, database recreation, migration application, traffic change, or deployment occurred in GFS-268.
+
 ## GFS-261 Protected Runtime State (2026-10-27)
 
 - Cloudflare identity was verified as the authorized GFS account before deployment; canonical GFS Meta assets only. No Hoja resource was opened or used.

@@ -60,6 +60,7 @@ class OrdersDb {
   batches = 0;
   approvalRow: Record<string, unknown> | null = null;
   failOrderReads = false;
+  failOrderDetailReads = false;
 
   prepare(sql: string): D1PreparedStatement {
     return this.statement(sql, []) as unknown as D1PreparedStatement;
@@ -83,9 +84,9 @@ class OrdersDb {
 
   private first(sql: string, args: unknown[]): Record<string, unknown> | null {
     this.calls.push({ sql, args });
-    if (this.failOrderReads && (sql.startsWith("SELECT COUNT(*) AS all_count") || sql.startsWith("SELECT COUNT(*) AS total"))) throw new Error("D1 row read limit exceeded");
-    if (sql.startsWith("SELECT COUNT(*) AS all_count")) return { all_count: 58, verify_count: 7, confirmed_count: 19, fulfillment_count: 14 };
-    if (sql.startsWith("SELECT COUNT(*) AS total")) return { total: 58 };
+    if (this.failOrderReads && sql.startsWith("SELECT COUNT(*) AS all_count")) throw new Error("D1 row read limit exceeded");
+    if (this.failOrderDetailReads && sql.startsWith("SELECT o.id") && sql.includes("WHERE o.id=?")) throw new Error("D1 error 7500: daily row read limit exceeded");
+    if (sql.startsWith("SELECT COUNT(*) AS all_count")) return { all_count: 58, verify_count: 7, confirmed_count: 19, fulfillment_count: 14, total_count: 58 };
     if (sql.startsWith("SELECT p.review_state")) return this.approvalRow;
     if (sql.startsWith("SELECT o.id") && sql.includes("WHERE o.id=?")) return syntheticOrder;
     return null;
@@ -137,6 +138,14 @@ describe("GFS-139 orders dashboard API", () => {
     const response = await app.fetch(new Request("https://admin.example.test/api/orders", { headers: auth }), environment(db));
     expect(response.status).toBe(503);
     expect(await response.json()).toEqual({ error: "ORDER_ADMIN_QUERY_FAILED", message: "Orders are temporarily unavailable. No counts or records were returned; retry shortly." });
+  });
+
+  it("fails closed with JSON503 when D1 rejects authoritative order detail", async () => {
+    const db = new OrdersDb();
+    db.failOrderDetailReads = true;
+    const response = await app.fetch(new Request("https://admin.example.test/api/orders/synthetic-order-newest", { headers: auth }), environment(db));
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({ error: "ORDER_DETAIL_UNAVAILABLE", message: "D1 is temporarily unavailable. No records or counts were returned; retry after the quota reset." });
   });
 
   it("accepts only the supported 25, 50, and 100 row page sizes", async () => {

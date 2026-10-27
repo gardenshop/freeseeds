@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-268 D1/Admin Quota Repair (2026-10-27)
+
+| Requirement | Result | Evidence / boundary |
+|---|---|---|
+| Actual blocker | PASS | Cloudflare D1 readback: 8M/5M rows read today; old Admin detail query about 3.29M rows-read/77 calls. No repeated SQL probe while exhausted. |
+| Orders exact counts / pagination | PASS LOCAL | One aggregate count scan plus bounded 25/50/100-row list projection; no fake zero fallback; quota failure is JSON503. |
+| Detail / receipts | PASS LOCAL | Authoritative detail remains fresh; quota rejection returns JSON503; private receipt path remains no-store. |
+| Payment Settings / approval | PASS LOCAL | Settings reads fail closed on quota; approval state is not cached or inferred from stale data. |
+| API order/payment safety | PASS LOCAL | Quota errors return JSON503 and do not report confirmation, payment, receipt, or PAID success. |
+| Index plan | PASS LOCAL / NOT APPLIED | Additive migration `0037_quota_safe_admin_reads.sql` covers audit, receipt, and outbox entity lookups; live application is blocked pending quota/owner gate. |
+| Focused tests | PASS | 53/53 Admin/payment/COD/fulfillment tests. |
+| Full tests/build/lint | PASS | 292/292; TypeScript build; ESLint. |
+| Rollback | PASS | Protected local V1 rollback harness 4/4 against unchanged baseline `cf01f444…`. |
+| Live Admin restore | BLOCKED | Active Admin remains100%; candidate remains0%; Orders currently HTTP500 and D1 quota is exhausted. |
+
 ## GFS-261 Mobile Validation and Receipt Media (2026-10-27)
 
 | Requirement | Result | Evidence |

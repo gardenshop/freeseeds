@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-27 (GFS-268 D1 quota-safe Admin repair)
+
+- Confirmed Cloudflare D1 Free-tier exhaustion from the authenticated GFS dashboard: 8M/5M rows read today; the old full Admin order projection accounted for about 3.29M rows-read across 77 calls.
+- Reduced order-list scans by combining exact queue/selected-tab counts and preserving bounded lightweight pagination. Added fail-closed JSON503 handling for Admin detail, receipts, Payment Settings, and API order/payment failures; no stale financial decision is cached.
+- Added unapplied additive entity-key indexes in migration `0037_quota_safe_admin_reads.sql`; no live D1/schema, customer, payment, receipt, traffic, billing, Meta, or secret mutation was made.
+- Focused53/53, full292/292, build, lint and rollback4/4 pass. Live Admin promotion and push remain blocked pending quota recovery and authenticated smoke.
+
 ## 2026-10-27 (GFS-261 mobile validation and receipt media)
 
 - Added strict new-customer mobile validation with 11-digit storage normalization and bilingual CONTACT rejection behavior; preserved Meta identifiers and historical records.

@@ -499,6 +499,20 @@ function catalogError(error: unknown): string {
   return error instanceof Error && /^[A-Z0-9_]{3,80}$/.test(error.message) ? error.message : "CATALOG_VALIDATION_FAILED";
 }
 
+function isD1QuotaError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /\b7500\b|row[- ]read|daily.*limit|quota.*exhaust|too many rows/i.test(message);
+}
+
+function d1QuotaResponse(c: AdminContext, errorCode: string, message = "D1 is temporarily unavailable. No records or counts were returned; retry after the quota reset.") {
+  return c.json({ error: errorCode, message }, 503);
+}
+
+app.onError((error, c) => {
+  if (isD1QuotaError(error)) return d1QuotaResponse(c, "D1_QUOTA_EXHAUSTED");
+  return c.json({ error: "ADMIN_REQUEST_FAILED" }, 500);
+});
+
 function metaActivation(c: { env: Env["Bindings"] }) {
   return createMetaActivationService({ accessToken: c.env.META_ACCESS_TOKEN, graphVersion: c.env.META_GRAPH_VERSION, phoneNumberId: c.env.META_PHONE_NUMBER_ID, wabaId: c.env.META_WABA_ID, appId: c.env.META_APP_ID, callbackUrl: c.env.META_CALLBACK_URL, providerEnabled: c.env.META_PROVIDER_ENABLED === "true", webhookVerifyToken: c.env.WEBHOOK_VERIFY_TOKEN, appSecret: c.env.META_APP_SECRET, flowPrivateKey: c.env.FLOW_PRIVATE_KEY, flowPublicKey: c.env.FLOW_PUBLIC_KEY });
 }
@@ -509,7 +523,14 @@ app.use("*", async (c, next) => {
 });
 
 app.get("/health", async (c) => {
-  const configured = c.env.DB ? await configuredPaymentMethodNames(c.env.DB, undefined, ["en", "ur"]) : [];
+  if (!c.env.DB) return c.json({ ok: true, service: "getfreeseeds-admin", state: c.env.DEPLOYMENT_STATE, paymentConfigured: false });
+  let configured: string[];
+  try {
+    configured = await configuredPaymentMethodNames(c.env.DB, undefined, ["en", "ur"]);
+  } catch (error) {
+    if (isD1QuotaError(error)) return d1QuotaResponse(c, "ADMIN_HEALTH_UNAVAILABLE", "D1 is temporarily unavailable. Payment readiness was not reported; retry after the quota reset.");
+    throw error;
+  }
   return c.json({ ok: true, service: "getfreeseeds-admin", state: c.env.DEPLOYMENT_STATE, paymentConfigured: configured.length > 0 });
 });
 const paymentReviewColumns = ["method", "recipient_name", "till_id", "qr_r2_key", "qr_sha256", "qr_mime_type", "qr_size_bytes", "enabled", "qr_owner_verified", "instructions", "instructions_ur", "reference_instruction", "reference_instruction_ur", "heading", "heading_ur", "short_instructions", "short_instructions_ur", "receipt_instructions", "receipt_instructions_ur", "payment_help_copy", "payment_help_copy_ur", "status_copy", "status_copy_ur", "updated_at"];
@@ -1263,25 +1284,40 @@ app.get("/api/leads", async (c) => {
   if (!c.env.DB) return c.json({ leads: [] });
   const source = c.req.query("source");
   const query = "SELECT l.id AS lead_id, l.status, l.capi_event_id, o.id AS order_id, o.order_number, o.state AS order_state, c.full_name, c.city, ls.source, ls.provider_lead_id, ls.meta_form_id, ls.provider_created_time, ls.campaign_id, ls.ad_set_id, ls.ad_id FROM leads l JOIN orders o ON o.id=l.order_id JOIN customers c ON c.id=l.customer_id LEFT JOIN lead_sources ls ON ls.lead_id=l.id" + (source ? " WHERE ls.source=?" : "") + " ORDER BY l.created_at DESC";
-  const result = source ? await c.env.DB.prepare(query).bind(source).all() : await c.env.DB.prepare(query).all();
-  return c.json({ leads: result.results });
+  try {
+    const result = source ? await c.env.DB.prepare(query).bind(source).all() : await c.env.DB.prepare(query).all();
+    return c.json({ leads: result.results });
+  } catch (error) {
+    if (isD1QuotaError(error)) return d1QuotaResponse(c, "LEADS_UNAVAILABLE");
+    throw error;
+  }
 });
 
 app.get("/api/payment-methods", async (c) => {
   if (!c.env.DB) return c.json({ paymentMethods: [] });
   c.header("Cache-Control", "private, no-store");
-  const result = await c.env.DB.prepare("SELECT pm.*,EXISTS(SELECT 1 FROM payment_qr_assets qa WHERE qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref IS NOT NULL AND TRIM(qa.independent_evidence_ref)<>'') AS qr_asset_verified FROM payment_methods pm ORDER BY pm.sort_order, pm.method").all();
-   return c.json({ paymentMethods: await Promise.all(result.results.map(async (row) => { const values = row as Record<string, unknown>; const method = normalizePaymentMethodRow(values); const translationWarnings: string[] = []; const englishCopy = [method.heading, method.instructions, method.referenceInstruction, method.shortInstructions, method.receiptInstructions, method.paymentHelpCopy, method.statusCopy]; if (englishCopy.some((value) => value && /[\u0600-\u06ff]/u.test(value))) translationWarnings.push("PAYMENT_COPY_LANGUAGE_MIXED"); if (!method.instructions?.trim() || !method.receiptInstructions?.trim()) translationWarnings.push("PAYMENT_ENGLISH_TRANSLATION_MISSING"); if (!hasPaymentMessagePlaceholders(method, "en") || !hasPaymentMessagePlaceholders(method, "ur")) translationWarnings.push("PAYMENT_COPY_PLACEHOLDER_MISSING"); if (!method.headingUr?.trim() || !method.instructionsUr?.trim() || !method.referenceInstructionUr?.trim() || !method.receiptInstructionsUr?.trim()) translationWarnings.push("PAYMENT_URDU_TRANSLATION_MISSING"); return { ...method, reviewSnapshot: await paymentReviewSnapshot(values), translationWarnings, qrDeliveryStatus: method.qrR2Key ? (method.qrOwnerVerified && Number(values.qr_asset_verified) === 1 ? "READY" : "BLOCKED_OWNERSHIP_UNVERIFIED") : "TEXT_ONLY" }; })) });
+  try {
+    const result = await c.env.DB.prepare("SELECT pm.*,EXISTS(SELECT 1 FROM payment_qr_assets qa WHERE qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref IS NOT NULL AND TRIM(qa.independent_evidence_ref)<>'') AS qr_asset_verified FROM payment_methods pm ORDER BY pm.sort_order, pm.method").all();
+    return c.json({ paymentMethods: await Promise.all(result.results.map(async (row) => { const values = row as Record<string, unknown>; const method = normalizePaymentMethodRow(values); const translationWarnings: string[] = []; const englishCopy = [method.heading, method.instructions, method.referenceInstruction, method.shortInstructions, method.receiptInstructions, method.paymentHelpCopy, method.statusCopy]; if (englishCopy.some((value) => value && /[\u0600-\u06ff]/u.test(value))) translationWarnings.push("PAYMENT_COPY_LANGUAGE_MIXED"); if (!method.instructions?.trim() || !method.receiptInstructions?.trim()) translationWarnings.push("PAYMENT_ENGLISH_TRANSLATION_MISSING"); if (!hasPaymentMessagePlaceholders(method, "en") || !hasPaymentMessagePlaceholders(method, "ur")) translationWarnings.push("PAYMENT_COPY_PLACEHOLDER_MISSING"); if (!method.headingUr?.trim() || !method.instructionsUr?.trim() || !method.referenceInstructionUr?.trim() || !method.receiptInstructionsUr?.trim()) translationWarnings.push("PAYMENT_URDU_TRANSLATION_MISSING"); return { ...method, reviewSnapshot: await paymentReviewSnapshot(values), translationWarnings, qrDeliveryStatus: method.qrR2Key ? (method.qrOwnerVerified && Number(values.qr_asset_verified) === 1 ? "READY" : "BLOCKED_OWNERSHIP_UNVERIFIED") : "TEXT_ONLY" }; })) });
+  } catch (error) {
+    if (isD1QuotaError(error)) return d1QuotaResponse(c, "PAYMENT_SETTINGS_UNAVAILABLE");
+    throw error;
+  }
 });
 
 app.get("/api/payment-configuration", async (c) => {
   if (!c.env.DB) return c.json({ advanceAmountPkr: null, paymentMethodsConfigured: false });
-  const [configuration, methods] = await Promise.all([
-    c.env.DB.prepare("SELECT advance_amount_pkr FROM payment_configuration WHERE id=1").first<{ advance_amount_pkr?: number | null }>(),
-    c.env.DB.prepare("SELECT pm.* FROM payment_methods pm JOIN payment_qr_assets qa ON qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref IS NOT NULL AND TRIM(qa.independent_evidence_ref)<>'' WHERE pm.enabled=1 AND pm.qr_owner_verified=1 ORDER BY pm.sort_order, pm.method").all()
-  ]);
-  const configs = methods.results.map((row) => normalizePaymentMethodRow(row as Record<string, unknown>));
-  return c.json({ advanceAmountPkr: configuration?.advance_amount_pkr == null ? null : Number(configuration.advance_amount_pkr), paymentMethodsConfigured: hasCompleteEnabledPaymentMethod(configs) });
+  try {
+    const [configuration, methods] = await Promise.all([
+      c.env.DB.prepare("SELECT advance_amount_pkr FROM payment_configuration WHERE id=1").first<{ advance_amount_pkr?: number | null }>(),
+      c.env.DB.prepare("SELECT pm.* FROM payment_methods pm JOIN payment_qr_assets qa ON qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref IS NOT NULL AND TRIM(qa.independent_evidence_ref)<>'' WHERE pm.enabled=1 AND pm.qr_owner_verified=1 ORDER BY pm.sort_order, pm.method").all()
+    ]);
+    const configs = methods.results.map((row) => normalizePaymentMethodRow(row as Record<string, unknown>));
+    return c.json({ advanceAmountPkr: configuration?.advance_amount_pkr == null ? null : Number(configuration.advance_amount_pkr), paymentMethodsConfigured: hasCompleteEnabledPaymentMethod(configs) });
+  } catch (error) {
+    if (isD1QuotaError(error)) return d1QuotaResponse(c, "PAYMENT_CONFIGURATION_UNAVAILABLE");
+    throw error;
+  }
 });
 
 app.post("/api/payment-configuration", async (c) => {
@@ -1349,10 +1385,15 @@ app.post("/api/payment-methods/:method/beneficiary-approval", async (c) => {
 });
 
 app.get("/api/configuration", async (c) => {
-  const methods = c.env.DB ? (await c.env.DB.prepare("SELECT * FROM payment_methods ORDER BY sort_order, method").all()).results.map((row) => normalizePaymentMethodRow(row as Record<string, unknown>)) : [];
-  const amount = c.env.DB ? await c.env.DB.prepare("SELECT advance_amount_pkr FROM payment_configuration WHERE id=1").first<{ advance_amount_pkr?: number | null }>() : null;
-  const advanceAmountPkr = amount?.advance_amount_pkr == null ? null : Number(amount.advance_amount_pkr);
-  return c.json({ advanceAmountPkr, paymentMethods: methods.map((method) => { const instructions = paymentInstructions(method); return advanceAmountPkr && advanceAmountPkr > 0 ? instructions : { ...instructions, configured: false }; }), whatsappState: c.env.DEPLOYMENT_STATE, metaProviderEnabled: false });
+  try {
+    const methods = c.env.DB ? (await c.env.DB.prepare("SELECT * FROM payment_methods ORDER BY sort_order, method").all()).results.map((row) => normalizePaymentMethodRow(row as Record<string, unknown>)) : [];
+    const amount = c.env.DB ? await c.env.DB.prepare("SELECT advance_amount_pkr FROM payment_configuration WHERE id=1").first<{ advance_amount_pkr?: number | null }>() : null;
+    const advanceAmountPkr = amount?.advance_amount_pkr == null ? null : Number(amount.advance_amount_pkr);
+    return c.json({ advanceAmountPkr, paymentMethods: methods.map((method) => { const instructions = paymentInstructions(method); return advanceAmountPkr && advanceAmountPkr > 0 ? instructions : { ...instructions, configured: false }; }), whatsappState: c.env.DEPLOYMENT_STATE, metaProviderEnabled: false });
+  } catch (error) {
+    if (isD1QuotaError(error)) return d1QuotaResponse(c, "PAYMENT_CONFIGURATION_UNAVAILABLE");
+    throw error;
+  }
 });
 
 app.post("/api/payment-methods/:method", async (c) => {
@@ -1460,11 +1501,16 @@ app.post("/api/payment-methods/:method/qr", async (c) => {
 app.get("/api/payment-methods/:method/qr", async (c) => {
   const method = PaymentMethod.parse(c.req.param("method").toUpperCase());
   if (!c.env.DB || !c.env.RECEIPTS) return c.json({ error: "PAYMENT_CONFIGURATION_UNAVAILABLE" }, 503);
-  const row = await c.env.DB.prepare("SELECT qr_r2_key, qr_mime_type FROM payment_methods WHERE method=?").bind(method).first<{ qr_r2_key?: string; qr_mime_type?: string }>();
-  if (!row?.qr_r2_key) return c.json({ error: "PAYMENT_QR_NOT_CONFIGURED" }, 404);
-  const object = await c.env.RECEIPTS.get(row.qr_r2_key);
-  if (!object) return c.json({ error: "PAYMENT_QR_NOT_FOUND" }, 404);
-  return new Response(object.body, { headers: { "Content-Type": row.qr_mime_type ?? "application/octet-stream", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff", "Content-Disposition": "inline" } });
+  try {
+    const row = await c.env.DB.prepare("SELECT qr_r2_key, qr_mime_type FROM payment_methods WHERE method=?").bind(method).first<{ qr_r2_key?: string; qr_mime_type?: string }>();
+    if (!row?.qr_r2_key) return c.json({ error: "PAYMENT_QR_NOT_CONFIGURED" }, 404);
+    const object = await c.env.RECEIPTS.get(row.qr_r2_key);
+    if (!object) return c.json({ error: "PAYMENT_QR_NOT_FOUND" }, 404);
+    return new Response(object.body, { headers: { "Content-Type": row.qr_mime_type ?? "application/octet-stream", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff", "Content-Disposition": "inline" } });
+  } catch (error) {
+    if (isD1QuotaError(error)) return d1QuotaResponse(c, "PAYMENT_QR_UNAVAILABLE");
+    throw error;
+  }
 });
 
 const ORDER_ADMIN_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,o.internal_sequence,o.internal_sequence_date,o.total_payable,o.province,o.created_at,o.updated_at,
@@ -1556,18 +1602,16 @@ app.get("/api/orders", async (c) => {
   const tabSql = ` WHERE ${tabWhere.join(" AND ")}`;
   const offset = (page - 1) * pageSize;
   let countsRow: Record<string, unknown> | null;
-  let totalRow: { total: number } | null;
   let result: D1Result<unknown>;
   try {
-    [countsRow, totalRow, result] = await Promise.all([
-      c.env.DB.prepare(`SELECT COUNT(*) AS all_count,SUM(CASE WHEN ${ORDER_TAB_SQL.verify} THEN 1 ELSE 0 END) AS verify_count,SUM(CASE WHEN ${ORDER_TAB_SQL.confirmed} THEN 1 ELSE 0 END) AS confirmed_count,SUM(CASE WHEN ${ORDER_TAB_SQL.fulfillment} THEN 1 ELSE 0 END) AS fulfillment_count${joins}${commonSql}`).bind(...commonBindings).first<Record<string, unknown>>(),
-      c.env.DB.prepare(`SELECT COUNT(*) AS total${joins}${tabSql}`).bind(...commonBindings).first<{ total: number }>(),
+    [countsRow, result] = await Promise.all([
+      c.env.DB.prepare(`SELECT COUNT(*) AS all_count,SUM(CASE WHEN ${ORDER_TAB_SQL.verify} THEN 1 ELSE 0 END) AS verify_count,SUM(CASE WHEN ${ORDER_TAB_SQL.confirmed} THEN 1 ELSE 0 END) AS confirmed_count,SUM(CASE WHEN ${ORDER_TAB_SQL.fulfillment} THEN 1 ELSE 0 END) AS fulfillment_count,SUM(CASE WHEN ${ORDER_TAB_SQL[tab]} THEN 1 ELSE 0 END) AS total_count${joins}${commonSql}`).bind(...commonBindings).first<Record<string, unknown>>(),
       c.env.DB.prepare(`${ORDER_ADMIN_LIST_SELECT}${tabSql} ORDER BY o.created_at DESC,o.id DESC LIMIT ? OFFSET ?`).bind(...commonBindings, pageSize, offset).all()
     ]);
   } catch {
     return c.json({ error: "ORDER_ADMIN_QUERY_FAILED", message: "Orders are temporarily unavailable. No counts or records were returned; retry shortly." }, 503);
   }
-  const total = Number(totalRow?.total ?? 0);
+  const total = Number(countsRow?.total_count ?? 0);
   return c.json({
     orders: result.results.map((row) => orderView(row as Record<string, unknown>, c.env.REFERENCE_REQUESTS_ENABLED === "true")),
     counts: { all: Number(countsRow?.all_count ?? 0), verify: Number(countsRow?.verify_count ?? 0), confirmed: Number(countsRow?.confirmed_count ?? 0), fulfillment: Number(countsRow?.fulfillment_count ?? 0) },
@@ -1578,12 +1622,17 @@ app.get("/api/orders", async (c) => {
 
 app.get("/api/orders/:id", async (c) => {
   if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
-  const row = await c.env.DB.prepare(`${ORDER_ADMIN_SELECT} WHERE o.id=?`).bind(c.req.param("id")).first<Record<string, unknown>>();
-  if (!row) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
-  const audit = await c.env.DB.prepare("SELECT id,action,actor_type,actor_id,metadata_json,created_at FROM audit_log WHERE (entity_type='ORDER' AND entity_id=?) OR (entity_type='PAYMENT' AND entity_id=(SELECT id FROM payments WHERE order_id=?)) ORDER BY created_at DESC LIMIT 100").bind(c.req.param("id"), c.req.param("id")).all();
-  const order = orderView(row, c.env.REFERENCE_REQUESTS_ENABLED === "true");
-  order.trackingNumber = await assignedTrackingNumber(c.env.DB, c.req.param("id")) ?? order.trackingNumber;
-  return c.json({ order, items: order.items, receipts: order.receipts, audit: audit.results });
+  try {
+    const row = await c.env.DB.prepare(`${ORDER_ADMIN_SELECT} WHERE o.id=?`).bind(c.req.param("id")).first<Record<string, unknown>>();
+    if (!row) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
+    const audit = await c.env.DB.prepare("SELECT id,action,actor_type,actor_id,metadata_json,created_at FROM audit_log WHERE (entity_type='ORDER' AND entity_id=?) OR (entity_type='PAYMENT' AND entity_id=(SELECT id FROM payments WHERE order_id=?)) ORDER BY created_at DESC LIMIT 100").bind(c.req.param("id"), c.req.param("id")).all();
+    const order = orderView(row, c.env.REFERENCE_REQUESTS_ENABLED === "true");
+    order.trackingNumber = await assignedTrackingNumber(c.env.DB, c.req.param("id")) ?? order.trackingNumber;
+    return c.json({ order, items: order.items, receipts: order.receipts, audit: audit.results });
+  } catch (error) {
+    if (isD1QuotaError(error)) return d1QuotaResponse(c, "ORDER_DETAIL_UNAVAILABLE");
+    throw error;
+  }
 });
 
 app.get("/api/test-controls/conversations", async (c) => {
@@ -2021,11 +2070,16 @@ app.post("/api/payments/:id/request-clearer-receipt", async (c) => {
 
 app.get("/api/orders/:id/receipts/:receiptId/preview", async (c) => {
   if (!c.env.DB || !c.env.RECEIPTS) return c.json({ error: "RECEIPT_PREVIEW_UNAVAILABLE" }, 503);
-  const receipt = await c.env.DB.prepare("SELECT r2_object_key,mime_type FROM payment_receipts WHERE id=? AND order_id=?").bind(c.req.param("receiptId"), c.req.param("id")).first<{ r2_object_key: string; mime_type: string }>();
-  if (!receipt) return c.json({ error: "RECEIPT_NOT_FOUND" }, 404);
-  const object = await c.env.RECEIPTS.get(receipt.r2_object_key);
-  if (!object) return c.json({ error: "RECEIPT_NOT_FOUND" }, 404);
-  return new Response(object.body, { headers: { "Content-Type": receipt.mime_type ?? object.httpMetadata?.contentType ?? "application/octet-stream", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff", "Content-Disposition": "inline" } });
+  try {
+    const receipt = await c.env.DB.prepare("SELECT r2_object_key,mime_type FROM payment_receipts WHERE id=? AND order_id=?").bind(c.req.param("receiptId"), c.req.param("id")).first<{ r2_object_key: string; mime_type: string }>();
+    if (!receipt) return c.json({ error: "RECEIPT_NOT_FOUND" }, 404);
+    const object = await c.env.RECEIPTS.get(receipt.r2_object_key);
+    if (!object) return c.json({ error: "RECEIPT_NOT_FOUND" }, 404);
+    return new Response(object.body, { headers: { "Content-Type": receipt.mime_type ?? object.httpMetadata?.contentType ?? "application/octet-stream", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff", "Content-Disposition": "inline" } });
+  } catch (error) {
+    if (isD1QuotaError(error)) return d1QuotaResponse(c, "RECEIPT_PREVIEW_UNAVAILABLE");
+    throw error;
+  }
 });
 
 app.get("/api/receipts/:key{.+}", async (c) => {
@@ -2036,11 +2090,16 @@ app.get("/api/receipts/:key{.+}", async (c) => {
 
 app.get("/api/payment-instructions/:method", async (c) => {
   if (!c.env.DB) return c.json({ error: "PAYMENT_METHOD_NOT_CONFIGURED" }, 503);
-  const row = await c.env.DB.prepare("SELECT * FROM payment_methods WHERE method=?").bind(c.req.param("method").toUpperCase()).first();
-  if (!row) return c.json({ error: "PAYMENT_METHOD_NOT_FOUND" }, 404);
-  const amount = await c.env.DB.prepare("SELECT advance_amount_pkr FROM payment_configuration WHERE id=1").first<{ advance_amount_pkr?: number | null }>();
-  if (amount?.advance_amount_pkr == null || Number(amount.advance_amount_pkr) <= 0) return c.json({ error: "PAYMENT_AMOUNT_NOT_CONFIGURED" }, 503);
-  return c.json(paymentInstructions(normalizePaymentMethodRow(row as Record<string, unknown>)));
+  try {
+    const row = await c.env.DB.prepare("SELECT * FROM payment_methods WHERE method=?").bind(c.req.param("method").toUpperCase()).first();
+    if (!row) return c.json({ error: "PAYMENT_METHOD_NOT_FOUND" }, 404);
+    const amount = await c.env.DB.prepare("SELECT advance_amount_pkr FROM payment_configuration WHERE id=1").first<{ advance_amount_pkr?: number | null }>();
+    if (amount?.advance_amount_pkr == null || Number(amount.advance_amount_pkr) <= 0) return c.json({ error: "PAYMENT_AMOUNT_NOT_CONFIGURED" }, 503);
+    return c.json(paymentInstructions(normalizePaymentMethodRow(row as Record<string, unknown>)));
+  } catch (error) {
+    if (isD1QuotaError(error)) return d1QuotaResponse(c, "PAYMENT_INSTRUCTIONS_UNAVAILABLE");
+    throw error;
+  }
 });
 
 app.get("/tariff", (c) => c.html(tariffPageHtml()));
