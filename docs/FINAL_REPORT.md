@@ -1,5 +1,20 @@
 # Final Report
 
+## GFS-254 | Final WhatsApp COD Public Release (2026-10-27)
+
+**Overall: controlled copy/runtime PASS; PUBLIC release BLOCKED by missing post-deploy genuine tester evidence.**
+
+| Stage | Result | Evidence |
+|---|---|---|
+| P0 preservation | PASS | Prior COD/Advance/D1/Admin/history/fee/rollback evidence preserved; no mutation. |
+| P1 live checks | BLOCKED | Existing genuine Advance evidence is pending JazzCash receipt review with no PAID, but predates GFS-253. No newer inbound exists for post-deploy EN/UR text, all methods or COD-to-Advance proof. |
+| P2 PUBLIC promotion | NOT RUN | API `a5722925-650c-42db-bc75-a8c3242e8a4b` remains100% TESTER_ONLY; Admin `615e1156-2747-457a-8623-11d1e967f911`100%; COD-OFF rollback retained. |
+| P3 final validation | PASS LIMITED | Cloudflare identity, API/Admin health, audited PKR125 policy and protected runtime state pass. No public menu claim. |
+
+**Single remaining action:** the approved tester must initiate one fresh authenticated WhatsApp journey after GFS-253 deployment, verify the new EN/UR copy, all three Advance methods/instructions and COD-to-Advance before confirmation. Public availability remains **NO-GO**.
+
+**Completion:** preserved/preflight100%; post-deploy genuine acceptance0%; PUBLIC0%.
+
 ## GFS-253 | Payment-Choice Copy and Public Gate (2026-10-27)
 
 **Overall: copy PASS, controlled deployment PASS, genuine pre-deploy Advance evidence PASS LIMITED, PUBLIC BLOCKED.**

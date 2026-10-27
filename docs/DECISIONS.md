@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-27: GFS-254 Do Not Promote PUBLIC Without Post-Deploy Evidence
+
+- Reuse the existing genuine Advance receipt-review evidence only for unchanged behavior; it predates the GFS-253 copy deployment and cannot prove the new WhatsApp text or all-method acceptance.
+- Keep `a5722925-650c-42db-bc75-a8c3242e8a4b` at100% TESTER_ONLY. Do not change rollout mode to PUBLIC while the approved tester has not produced a fresh authenticated journey verifying text, three Advance methods and COD-to-Advance before confirmation.
+- No database, customer, payment, Meta, secret or traffic mutation is justified. The missing action is strictly one genuine tester-device interaction.
+
 ## 2026-10-27: GFS-253 Deploy Copy in TESTER_ONLY, Hold PUBLIC
 
 - Apply only the requested payment-choice EN/UR copy and `(COD)` button-label polish. Preserve the existing guided flow, payment methods, receipts, D1, COD fee and idempotency.

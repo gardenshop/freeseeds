@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-254 Final Public Gate (2026-10-27)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Cloudflare identity/runtime | PASS | Wrangler confirms `gisupp@gmail.com` / Get Free Seeds; API health200/unsigned403; Admin health200/`paymentConfigured=true`; COD PKR125 policy enabled. |
+| Post-deploy genuine tester inbound | BLOCKED | No newer tester-originated inbound after GFS-253 deployment. |
+| New EN/UR copy visible in WhatsApp | NOT PROVEN | Code and active version contain the copy, but no post-deploy customer observation exists. |
+| Advance methods and instructions | BLOCKED | Existing JazzCash receipt-review evidence predates copy deployment; all-method post-deploy proof is absent. |
+| COD-to-Advance before confirmation | BLOCKED | Requires fresh authenticated tester journey; no state mutation was fabricated. |
+| PUBLIC promotion | NOT RUN | TESTER_ONLY remains active and no public menu evidence exists. |
+
 ## GFS-253 Payment-Choice Copy / Live Gate (2026-10-27)
 
 | Requirement | Result | Evidence / blocker |

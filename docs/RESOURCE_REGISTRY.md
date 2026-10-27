@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-254 final-gate state (2026-10-27)
+
+- API `a5722925-650c-42db-bc75-a8c3242e8a4b` remains100% TESTER_ONLY; Admin `615e1156-2747-457a-8623-11d1e967f911` remains100%; COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` remains rollback.
+- Cloudflare identity is verified as `gisupp@gmail.com` / Get Free Seeds. Existing Advance receipt-review evidence remains private and predates the copy deployment; no raw customer data is recorded.
+- PUBLIC is disabled pending one fresh authorized tester-device journey. No Hoja resource or unrelated WhatsApp profile used.
+
 ## GFS-253 controlled copy deployment (2026-10-27)
 
 - API `a5722925-650c-42db-bc75-a8c3242e8a4b` is active100% TESTER_ONLY; prior `ba15b8ba-e3b3-4581-9b23-c2e688797132` is0%; COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` remains the rollback target. Admin `615e1156-2747-457a-8623-11d1e967f911` remains100%.

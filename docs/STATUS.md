@@ -1,5 +1,13 @@
 # Status
 
+## GFS-254 Final Public Gate (2026-10-27)
+
+- **P0 PASS.** GFS-253 copy, controlled deployment, prior COD acceptance, D1/Admin state, history, PKR125 policy and rollback remain preserved.
+- **P1 BLOCKED.** Existing genuine Advance evidence is JazzCash/PAYMENT_REVIEW/PENDING with one receipt and no PAID, but it predates the copy deployment. No newer tester inbound exists to prove the new EN/UR text visually, all three Advance methods, or COD-to-Advance before confirmation.
+- **P2 NOT RUN.** Cloudflare identity/runtime preflight passes; API `a5722925-650c-42db-bc75-a8c3242e8a4b` remains100% TESTER_ONLY, Admin `615e1156-2747-457a-8623-11d1e967f911`100%, COD-OFF rollback retained. PUBLIC remains disabled.
+- **P3 PASS LIMITED.** No code change or regression was indicated; only protected release status was updated. The single remaining action is fresh authenticated tester-device evidence.
+- **Completion:** preserved work/preflight100%; post-deploy genuine acceptance0%; PUBLIC0%; public launch **NO-GO**.
+
 ## GFS-253 Payment-Choice Copy / Controlled Runtime (2026-10-27)
 
 - **P0 PASS.** Existing COD acceptance, D1/Admin state, PKR125 policy, history and rollback remain preserved.

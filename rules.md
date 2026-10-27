@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-254 Final Public Gate (2026-10-27)
+
+- Current Admin Test Controls still shows the prior genuine Advance interaction in `PAYMENT_REFERENCE`; its latest order is `PAYMENT_REVIEW`/`PENDING` with JazzCash, one receipt and no approval/PAID. No newer tester-originated inbound exists after the GFS-253 copy deployment.
+- Read-only identity/runtime checks pass: Wrangler is `gisupp@gmail.com` on Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API health200/unsigned403; Admin health200/`paymentConfigured=true`; audited COD enabled with PKR125.
+- Active API `a5722925-650c-42db-bc75-a8c3242e8a4b` remains100% TESTER_ONLY; Admin `615e1156-2747-457a-8623-11d1e967f911` remains100%; COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` remains rollback. PUBLIC was not mutated.
+- Do not claim the new EN/UR copy visually live, all three Advance methods, or COD-to-Advance post-deploy acceptance until the approved tester performs one fresh authenticated journey. No fabricated inbound, receipt, funds, PAID state or public customer order is allowed.
+
 ## GFS-253 Payment-Choice Copy / Controlled Runtime (2026-10-27)
 
 - Payment-selection copy now uses the required short EN/UR wording and exactly two COD-capable buttons: Advance Payment and Cash on Delivery (COD). Business logic, order flow, fee policy and receipts were unchanged.
