@@ -194,7 +194,7 @@ function orderView(row: Record<string, unknown>, referenceRequestDispatchEnabled
     customerTransactionReference: row.customer_transaction_reference == null ? null : String(row.customer_transaction_reference),
     totalPayablePkr: row.cod_quoted_total_pkr == null ? Number(row.total_payable ?? 0) : Number(row.cod_quoted_total_pkr),
     receiptCount,
-    itemSummary: items.map((item) => `${item.description} x ${item.quantity}`).join(", "),
+    itemSummary: items.map((item) => `${item.description} x ${item.quantity}`).join(", ") || (row.item_summary == null ? "" : String(row.item_summary)),
     items,
     receipts,
     trackingNumber: row.tracking_number == null ? null : trackingNumber(row.tracking_number) ?? null,
@@ -1484,6 +1484,22 @@ const ORDER_ADMIN_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,
   LEFT JOIN payments p ON p.order_id=o.id
   LEFT JOIN cod_order_details cod ON cod.order_id=o.id`;
 
+// The list endpoint must not run the detail projection for every row. The detail
+// projection contains correlated audit, receipt, outbox, and JSON subqueries;
+// using it for a 25/50/100-row page can exhaust D1's row-read budget before the
+// response is returned. Detail remains authoritative and is loaded on selection.
+const ORDER_ADMIN_LIST_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,o.internal_sequence,o.internal_sequence_date,o.total_payable,o.province,o.created_at,o.updated_at,
+  o.cancelled_at,o.cancelled_by,o.cancellation_reason,o.archived_at,o.archived_by,o.archive_reason,
+  c.full_name,c.delivery_address,c.nearby_place,c.city,c.contact_number,c.normalized_phone,c.normalized_contact_number,c.whatsapp_number,c.normalized_whatsapp_number,c.wa_id,
+  p.id AS payment_id,p.method,p.expected_amount,p.approved_amount,p.review_state,p.submitted_at,p.approved_by,p.approved_at,p.rejection_reason,p.customer_transaction_reference,p.created_at AS payment_created_at,p.updated_at AS payment_updated_at,
+  cod.status AS cod_status,cod.test_hold AS cod_test_hold,cod.base_amount_pkr AS cod_base_amount_pkr,cod.cod_fee_pkr,cod.quoted_total_pkr AS cod_quoted_total_pkr,cod.collection_at AS cod_collection_at,cod.remittance_at AS cod_remittance_at,
+  COALESCE((SELECT group_concat(items.description || ' x ' || items.quantity, ', ') FROM order_items items WHERE items.order_id=o.id),'') AS item_summary,
+  0 AS payment_method_verified,0 AS reference_request_sent,0 AS has_tracking_number,0 AS receipt_count,
+  '[]' AS items_json,'[]' AS receipts_json
+  FROM orders o JOIN customers c ON c.id=o.customer_id
+  LEFT JOIN payments p ON p.order_id=o.id
+  LEFT JOIN cod_order_details cod ON cod.order_id=o.id`;
+
 const ORDER_TAB_SQL: Record<string, string> = {
   all: "1=1",
   verify: "o.state='PAYMENT_REVIEW' AND p.review_state='REVIEW'",
@@ -1539,11 +1555,18 @@ app.get("/api/orders", async (c) => {
   const tabWhere = [...commonWhere, ORDER_TAB_SQL[tab]];
   const tabSql = ` WHERE ${tabWhere.join(" AND ")}`;
   const offset = (page - 1) * pageSize;
-  const [countsRow, totalRow, result] = await Promise.all([
-    c.env.DB.prepare(`SELECT COUNT(*) AS all_count,SUM(CASE WHEN ${ORDER_TAB_SQL.verify} THEN 1 ELSE 0 END) AS verify_count,SUM(CASE WHEN ${ORDER_TAB_SQL.confirmed} THEN 1 ELSE 0 END) AS confirmed_count,SUM(CASE WHEN ${ORDER_TAB_SQL.fulfillment} THEN 1 ELSE 0 END) AS fulfillment_count${joins}${commonSql}`).bind(...commonBindings).first<Record<string, unknown>>(),
-    c.env.DB.prepare(`SELECT COUNT(*) AS total${joins}${tabSql}`).bind(...commonBindings).first<{ total: number }>(),
-    c.env.DB.prepare(`${ORDER_ADMIN_SELECT}${tabSql} ORDER BY o.created_at DESC,o.id DESC LIMIT ? OFFSET ?`).bind(...commonBindings, pageSize, offset).all()
-  ]);
+  let countsRow: Record<string, unknown> | null;
+  let totalRow: { total: number } | null;
+  let result: D1Result<unknown>;
+  try {
+    [countsRow, totalRow, result] = await Promise.all([
+      c.env.DB.prepare(`SELECT COUNT(*) AS all_count,SUM(CASE WHEN ${ORDER_TAB_SQL.verify} THEN 1 ELSE 0 END) AS verify_count,SUM(CASE WHEN ${ORDER_TAB_SQL.confirmed} THEN 1 ELSE 0 END) AS confirmed_count,SUM(CASE WHEN ${ORDER_TAB_SQL.fulfillment} THEN 1 ELSE 0 END) AS fulfillment_count${joins}${commonSql}`).bind(...commonBindings).first<Record<string, unknown>>(),
+      c.env.DB.prepare(`SELECT COUNT(*) AS total${joins}${tabSql}`).bind(...commonBindings).first<{ total: number }>(),
+      c.env.DB.prepare(`${ORDER_ADMIN_LIST_SELECT}${tabSql} ORDER BY o.created_at DESC,o.id DESC LIMIT ? OFFSET ?`).bind(...commonBindings, pageSize, offset).all()
+    ]);
+  } catch {
+    return c.json({ error: "ORDER_ADMIN_QUERY_FAILED", message: "Orders are temporarily unavailable. No counts or records were returned; retry shortly." }, 503);
+  }
   const total = Number(totalRow?.total ?? 0);
   return c.json({
     orders: result.results.map((row) => orderView(row as Record<string, unknown>, c.env.REFERENCE_REQUESTS_ENABLED === "true")),

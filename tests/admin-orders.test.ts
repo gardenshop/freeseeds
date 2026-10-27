@@ -16,6 +16,8 @@ const syntheticOrder = {
   state: "PAYMENT_REVIEW",
   payment_status: "PENDING",
   total_payable: 300,
+  internal_sequence: 9,
+  internal_sequence_date: "2026-10-16",
   province: "Synthetic Province",
   created_at: "2026-10-16T12:00:00.000Z",
   updated_at: "2026-10-16T12:30:00.000Z",
@@ -57,6 +59,7 @@ class OrdersDb {
   calls: Array<{ sql: string; args: unknown[] }> = [];
   batches = 0;
   approvalRow: Record<string, unknown> | null = null;
+  failOrderReads = false;
 
   prepare(sql: string): D1PreparedStatement {
     return this.statement(sql, []) as unknown as D1PreparedStatement;
@@ -80,6 +83,7 @@ class OrdersDb {
 
   private first(sql: string, args: unknown[]): Record<string, unknown> | null {
     this.calls.push({ sql, args });
+    if (this.failOrderReads && (sql.startsWith("SELECT COUNT(*) AS all_count") || sql.startsWith("SELECT COUNT(*) AS total"))) throw new Error("D1 row read limit exceeded");
     if (sql.startsWith("SELECT COUNT(*) AS all_count")) return { all_count: 58, verify_count: 7, confirmed_count: 19, fulfillment_count: 14 };
     if (sql.startsWith("SELECT COUNT(*) AS total")) return { total: 58 };
     if (sql.startsWith("SELECT p.review_state")) return this.approvalRow;
@@ -125,6 +129,14 @@ describe("GFS-139 orders dashboard API", () => {
     expect(listCall?.args.slice(-2)).toEqual([25, 25]);
     expect(listCall?.args).toContain("%923001234567%");
     expect(listCall?.args).toContain("%+923001234567%");
+  });
+
+  it("returns a JSON error instead of fake counts when D1 rejects the order read", async () => {
+    const db = new OrdersDb();
+    db.failOrderReads = true;
+    const response = await app.fetch(new Request("https://admin.example.test/api/orders", { headers: auth }), environment(db));
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({ error: "ORDER_ADMIN_QUERY_FAILED", message: "Orders are temporarily unavailable. No counts or records were returned; retry shortly." });
   });
 
   it("accepts only the supported 25, 50, and 100 row page sizes", async () => {
