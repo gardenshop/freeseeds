@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-27: GFS-244 Preserve Original-Only at Tester Stop
+
+- Reverified the unchanged Admin tester entry, canonical Meta sender, authenticated Cloudflare identity and current deployments. The available WhatsApp Web profile did not match either supplied identity.
+- No registration, account, message, deployment, migration, D1, payment or COD setting mutation is permitted until the registered tester device/session is available or the owner privately approves a specifically identified replacement.
+- Keep API v90/Admin v82 at100%, candidates at0%, COD disabled and DO NOT SHIP enforced.
+
 ## 2026-10-27: GFS-243 Hold at WhatsApp Identity Gate
 
 - The supplied customer matched the unchanged Admin registered tester privately, and the supplied receiver matched the connected canonical GFS sender in Meta Phone Manager. This did not authorize use of another WhatsApp Web profile.

@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-244 | Tester Resolution Blocked (2026-10-27)
+
+| Task | Result | Evidence |
+|---|---|---|
+| P0 preserve completed work | PASS | Existing D1/COD0030, 52 historical orders/payments, 276/276 and rollback4/4 evidence preserved. |
+| P1 resolve tester | BLOCKED | Admin tester and canonical sender roles verified; available WhatsApp Web profile matched neither. |
+| P2 release gates | BLOCKED | Candidates remain0%, originals100%; COD OFF; signed live callback, running Advance and runtime rollback not completed. |
+| P3 exact flow | NOT RUN | No authorized usable tester device/session. |
+| P4 real COD order | NOT RUN | No WAMIDs, order number, amount, COD_PENDING/Admin evidence or screenshot. |
+| P5 regression/records | PASS LIMITED | No code change; prior local gates remain authoritative and records updated. |
+
+**Versions/traffic:** API candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` 0% / v90 `21a3d74c-3979-432c-9190-1848362592a4` 100%; Admin candidate `091f1a3f-595b-4530-b54a-d7253af60664` 0% / v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` 100%. `COD_V1_ENABLED=false`.
+
+**Completion:** P0 100%; P1 70%; P2 preparation 60% / activation 0%; P3 source 80% / active 0%; P4 0%; P5 90% local. Public launch NO-GO.
+
+**Exact handoff:** provide the registered tester-controlled WhatsApp device/session, or privately approve one specifically identified owner-controlled replacement for supported registration. Do not substitute the current Web profile.
+
 ## GFS-243 | Tester Identity Gate Held (2026-10-27)
 
 | Task | Result | Evidence |

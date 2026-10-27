@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-27 (GFS-244 tester resolution stop)
+
+- Reverified Admin tester registration, canonical Meta sender, Cloudflare identity and original-only traffic. The available WhatsApp Web profile still matched neither supplied identity; no account switch, registration, message or runtime mutation occurred.
+- Preserved COD-OFF candidates at0% and originals at100%; live acceptance remains blocked.
+
 ## 2026-10-27 (GFS-243 tester verification gate)
 
 - Privately matched the supplied customer to the existing Admin tester entry and the supplied receiver to the connected canonical GFS sender asset. The available WhatsApp Web owner profile did not match either; no message or identity mutation was made.

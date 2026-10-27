@@ -1,5 +1,13 @@
 # Status
 
+## GFS-244 Tester Resolution Stop (2026-10-27)
+
+- **P1 BLOCKED.** Admin registration and canonical Meta sender remain verified, but the only available WhatsApp Web owner profile matches neither. No account switch, registration edit, message or reset occurred.
+- **P2 PASS LIMITED.** Cloudflare identity and original-only deployment remain verified; candidates remain0% and originals remain100%. COD remains OFF. Signed live callback, running Advance and intake-OFF runtime rollback were not claimed.
+- **P3/P4 NOT RUN.** No usable authorized tester device/session; no WAMIDs, new order, COD_PENDING/Admin evidence or amount.
+- **P5 RECORD PASS LIMITED.** No code change; prior 276/276, build, lint, audit and rollback4/4 remain authoritative; GFS-244 evidence recorded.
+- **Completion:** P0 100%; P1 70%; P2 60% preparation/0% activation; P3 80% source/0% active; P4 0%; P5 90% local/records. Public launch NO-GO.
+
 ## GFS-243 Tester Verification Held (2026-10-27)
 
 - **P1 identity PARTIAL.** Admin Test Controls matched the supplied customer to the registered tester entry; Meta Phone Manager matched the supplied receiver to the connected canonical GFS sender. The available WhatsApp Web owner profile matched neither, so no message or registration change occurred.

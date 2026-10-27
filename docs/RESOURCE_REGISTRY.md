@@ -1,5 +1,10 @@
 # Resource Registry
 
+## GFS-244 Tester Resolution Stop (2026-10-27)
+
+- Admin Test Controls and canonical Meta Phone Manager remain matched to the supplied customer/sender roles; identifiers are omitted. The available WhatsApp Web owner profile matches neither.
+- API candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` and Admin candidate `091f1a3f-595b-4530-b54a-d7253af60664` remain0%; API v90/Admin v82 remain100%; COD remains disabled. No live WAMID/order/Admin COD_PENDING evidence exists.
+
 ## GFS-243 Identity Gate (2026-10-27)
 
 - Admin Test Controls matched the supplied customer to the existing registered tester; Meta Phone Manager matched the supplied receiver to the connected canonical GFS sender. Identifiers are intentionally omitted.

@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-244 Tester Resolution Stop (2026-10-27)
+
+- Official Chrome DevTools MCP, Admin Test Controls, canonical Meta Phone Manager and Cloudflare identity remained available. Cloudflare showed `gisupp@gmail.com` on the GFS account; no mutation was made.
+- Admin still matches the supplied customer to the registered tester and Meta still shows the supplied receiver as the connected canonical GFS sender. The only available WhatsApp Web owner profile matches neither. Do not account-switch, substitute, register, message or reset.
+- API candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` and Admin candidate `091f1a3f-595b-4530-b54a-d7253af60664` remain0%; API v90/Admin v82 remain100%; COD remains disabled. Live signed/Advance/COD gates cannot be honestly completed without the registered tester device or explicit owner-approved replacement identity.
+
 ## GFS-243 Tester Verification Gate (2026-10-27)
 
 - Official Chrome DevTools MCP remained callable in the authenticated native session. Cloudflare identity was verified as `gisupp@gmail.com` on the GFS account before any prospective mutation; none was made.

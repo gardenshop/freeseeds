@@ -1,5 +1,15 @@
 # Test Matrix
 
+## GFS-244 Tester Resolution (2026-10-27)
+
+| Check | Result | Evidence / scope |
+|---|---|---|
+| Registered tester | PASS LIMITED | Admin Test Controls still matches the supplied customer; no identifier recorded. |
+| Canonical sender | PASS LIMITED | Meta Phone Manager still shows the supplied receiver as connected canonical GFS sender. |
+| Authorized WhatsApp session | BLOCKED | Available Web owner profile matches neither; no account switch or message. |
+| Staging activation | BLOCKED | COD remains OFF; candidates0%, originals100%; signed/Advance/live rollback gates not completed. |
+| Genuine COD acceptance | NOT RUN | No WAMIDs, new order, amount or Admin COD_PENDING evidence. |
+
 ## GFS-243 Tester and Sender Verification (2026-10-27)
 
 | Check | Result | Evidence / scope |
