@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-246 staging readiness review (2026-10-27)
+
+- No resource, binding, secret, D1 schema/row, Worker deployment, traffic percentage, Version URL, Access rule, Meta asset or Queue/R2 state was mutated; no new resource/cost incurred.
+- Read-only Wrangler confirmed `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. API v90 `21a3d74c-3979-432c-9190-1848362592a4` remains100%, candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe`0%; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` remains100%, candidate `091f1a3f-595b-4530-b54a-d7253af60664`0%. Candidate dry-runs resolve existing staging D1/R2/Queue bindings. No current Chrome dashboard identity/browser evidence is claimed.
+- `COD_V1_ENABLED=false`; COD setting remains disabled. Existing original D1 COD0030/health evidence and 52-order/payment preservation from GFS-242 are reused; no D1 operation repeated. No real WAMID/customer record.
+- Static source check: COD has no tester-only admission boundary; the Admin exemption is cooldown-only. Global enablement remains prohibited before live runtime gates and staging traffic approval.
+
 ## GFS-245 Approved Tester Entry (2026-10-27)
 
 - The explicitly approved customer is already present in Admin Test Controls as an `ADMIN_TEST_EXEMPTION`; no duplicate registration was added. Identifiers are omitted and history is protected.

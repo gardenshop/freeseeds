@@ -1,5 +1,28 @@
 # Final Report
 
+## GFS-246 | Final Staging Readiness and Real WhatsApp COD Test (2026-10-27)
+
+**Result: independent local/staging preparation PASS; controlled release/live customer COD acceptance BLOCKED. No customer message, candidate promotion, or COD activation was performed.**
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| P0 tester registration and identity | **PASS LIMITED** | GFS-245's owner-approved tester is already registered as `ADMIN_TEST_EXEMPTION`; no duplicate add/reset. Canonical Meta sender authority reused from GFS-245. Unrelated WhatsApp Web profile excluded. |
+| P1 active versions/bindings | **PASS READ-ONLY / BROWSER PREFLIGHT BLOCKED** | Wrangler identity matches GFS account. Deployment history: API v90 `21a3d74c-3979-432c-9190-1848362592a4`100%, candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe`0%; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`100%, candidate `091f1a3f-595b-4530-b54a-d7253af60664`0%. Both dry-runs resolve expected existing staging D1/R2/Queue. `COD_V1_ENABLED=false`. |
+| P1 signed callback / Advance | **PASS LOCAL SYNTHETIC / LIVE BLOCKED** | Focused tests validate local HMAC-signed/negative callback cases and the EN/UR Advance flow. No authorized non-customer live event mechanism was exposed. No live callback or Advance customer checkout is claimed. |
+| P1 D1 / rollback | **PASS PRIOR EVIDENCE / LOCAL ROLLBACK PASS** | GFS-242 D1 quick_check/FK/COD0030/default125/COD-off/52-order evidence reused, not repeated. Unchanged PR10/V1-source intake-OFF rollback harness4/4 passes with synthetic retained schema; remote rollback not run. |
+| P2 COD admission / promotion | **BLOCKED** | Static source confirms global COD flag/policy/province admission, not a tester allowlist; `ADMIN_TEST_EXEMPTION` is cooldown-only. Keep COD disabled pending live gates and exact staging-traffic authorization. No public authorization inferred. |
+| P3 prescribed journey | **PASS SOURCE / LIVE NOT RUN** | Local suite covers exact two choices, Urdu/English, dynamic province pricing, PKR125 once, same-order COD_PENDING, Advance switch removing fee, no receipt/QR/reminder/duplicate and DO NOT SHIP. No actual customer output/order/admin screenshot. |
+| P4 real tester COD | **BLOCKED ON HUMAN INBOUND** | No genuine WAMIDs, order number/total, COD_PENDING D1/Admin evidence, or screenshot. The approved customer must initiate from their own authenticated WhatsApp device; no unrelated Web profile or synthetic inbound. |
+| P5 validation/records | **PASS LOCAL / PUSH PENDING** | Full276/276; focused100/100; rollback4/4; build, lint, production audit0 and both Wrangler dry-runs pass. This report and required records updated; no source change. |
+
+**Current flags/traffic:** candidate API `48d4c590…`0% / API v90 `21a3d74c…`100%; candidate Admin `091f1a3f…`0% / Admin v82 `b840f5a4…`100%; `COD_V1_ENABLED=false`; COD settings disabled, fee125. These IDs/traffic are read-only Wrangler history in this execution; authenticated Chrome dashboard inspection was unavailable. No runtime health override or live signed callback was newly run.
+
+**WAMIDs/order/total/Admin:** none generated in GFS-246. No real order or COD_PENDING state. The synthetic signed tests are not live acceptance. DO NOT SHIP remains enforced.
+
+**Completion:** P0 100% registration/known identities; P1 90% preparation, 0% live signed+Advance; P2 85% preparation, 0% promotion/enablement; P3 80% source, 0% active; P4 0% genuine; P5 100% local/records, push pending. Overall engineering preparation ~75%; genuine customer acceptance0%. Public launch **NO-GO**.
+
+**Exact next human action:** authorized tester sends the first WhatsApp message from their own authenticated device. The current session cannot send that instruction through an approved channel because official Chrome DevTools MCP actions are not exposed; do not use the unrelated Web profile. After genuine inbound, verify its real signed callback/WAMIDs, complete Advance and intake-OFF rollback checks, obtain/verify controlled staging traffic authorization, and only then promote the compatible candidate/enable COD for one new DO NOT SHIP journey. Public launch requires separate explicit authorization plus all applicable Meta, identity, policy, tariff and operational release gates.
+
 ## GFS-245 | Approved Tester Entry Verified; Awaiting Inbound (2026-10-27)
 
 | Task | Result | Evidence |

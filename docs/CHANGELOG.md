@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-27 (GFS-246 final staging readiness)
+
+- Reused the existing owner-approved tester registration; no duplicate registration/reset or source change.
+- Revalidated by read-only Wrangler: GFS account identity and API/Admin deployment history keep originals v90/v82 at100% and candidates `48d4c590…` / `091f1a3f…` at0%; COD remains off. API/Admin dry-runs bind the expected existing staging resources.
+- Full276/276, focused signed-callback/Advance/COD100/100, actual V1 rollback harness4/4, build/lint/audit0 pass. Prior GFS-242 D1 health/COD0030 evidence reused, not reapplied.
+- Confirmed COD admission is global, not tester-restricted. Live signed event, Advance customer checkout, remote rollback and real COD acceptance remain blocked on official browser/tool exposure and genuine tester-initiated inbound. No messages, WAMIDs, orders, dashboard mutations or traffic promotion.
+
 ## 2026-10-27 (GFS-245 approved tester present)
 
 - Verified the explicitly approved customer already exists in supported Admin Test Controls; no duplicate registration or history mutation was performed.

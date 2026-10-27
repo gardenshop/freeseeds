@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-246 Final Staging Readiness (2026-10-27)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Approved tester registration | PASS LIMITED | Existing owner-approved Admin `ADMIN_TEST_EXEMPTION` retained; no duplicate registration/reset. GFS-245 identity evidence reused. |
+| Staging binding inventory | PASS DRY-RUN / READ-ONLY | API/Admin bundles resolve existing staging D1, receipt R2 and Queue/DLQ; Wrangler account is the authorized GFS principal. Dry-run is not deployment/runtime acceptance. |
+| Worker traffic | PASS READ-ONLY | API v90 `21a3d74c-3979-432c-9190-1848362592a4`100%, candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe`0%; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`100%, candidate `091f1a3f-595b-4530-b54a-d7253af60664`0%. COD flag false. |
+| Signed callback | PASS LOCAL SYNTHETIC / LIVE BLOCKED | Focused tests exercise valid HMAC callbacks and negative signature handling; no authorized non-customer live signed-event facility was exposed. Synthetic test is not live acceptance/WAMID. |
+| Advance regression | PASS LOCAL SYNTHETIC / LIVE BLOCKED | Focused guided tests retain advance payment selection and callback behavior; no real customer Advance checkout was run. |
+| D1 | PASS PRIOR VERIFIED / NOT REPEATED | Reuse GFS-242: COD0030 marker, `quick_check=ok`, FK0, default fee125/COD disabled, 52 historical orders/payments preserved. No migration/read/write repeated. |
+| COD-compatible intake-OFF rollback | PASS LOCAL 4/4 / REMOTE NOT RUN | Actual unchanged PR10/V1 source harness against synthetic retained COD schema. Remote rollback not executed; old V1 cannot represent COD totals, so rollback after obligations must be COD-compatible intake-OFF. |
+| COD admission scope | BLOCKED FOR ENABLEMENT | Static source review: global flag/policy/province gate, not a tester allowlist. `ADMIN_TEST_EXEMPTION` is cooldown-only. Keep globally disabled until required gates and staging-traffic authorization pass. |
+| Exact customer COD | NOT RUN | No genuine inbound, WAMIDs, order number/amount, `COD_PENDING`, Admin evidence or screenshot. Tester device is the remaining human action. |
+| Regression/security | PASS LOCAL | Full276/276, focused100/100, rollback4/4, build, lint, production audit0, both Worker dry-runs. |
+
 ## GFS-245 Approved Tester Registration (2026-10-27)
 
 | Check | Result | Evidence / scope |

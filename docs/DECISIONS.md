@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-27: GFS-246 Keep COD Off Until Live Gates and Traffic Authorization
+
+- Reuse GFS-245's already registered owner-approved tester; no registration/reset. Candidate/API/Admin versions remain 0% beside original v90/v82 at100%. Existing GFS-242 COD0030 and D1 health proof stand; do not repeat migration or alter payment configuration.
+- Local release checks pass: full276/276, relevant signed-webhook/Advance/COD100/100, unchanged V1 rollback harness4/4, build/lint/audit0 and API/Admin dry-runs. These are local/synthetic or read-only checks, not live signed callback, Advance checkout or remote rollback acceptance.
+- Source admits COD globally; there is no registered-tester allowlist. Cooldown exemption does not restrict COD eligibility. Keep COD off until signed live callback, running Advance regression, intake-OFF rollback readiness and exact controlled-staging traffic authorization are satisfied.
+- No callable official Chrome DevTools MCP or approved tester messaging channel was exposed in this session. Do not promote, message, enable COD or claim customer acceptance. Next required human event is the registered tester's own authenticated inbound message; production/public promotion remains separately unauthorized.
+
 ## 2026-10-27: GFS-245 Existing Approved Tester Entry; Await Device Initiation
 
 - The owner explicitly approved the replacement tester. The exact customer is already registered through the supported Admin Test Controls mechanism, so adding a duplicate exemption would be an unnecessary state mutation.

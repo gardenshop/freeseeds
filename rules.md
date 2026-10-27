@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-246 Final Staging Readiness / Real COD Test (2026-10-27)
+
+- Preserve GFS-245: the approved tester already exists as `ADMIN_TEST_EXEMPTION`; do not register/reset again. The customer's own authenticated WhatsApp device must initiate the next real inbound. Never use the unrelated WhatsApp Web owner profile or fabricate a customer WAMID.
+- Read-only Wrangler confirms the GFS account `gisupp@gmail.com` / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; candidate dry-runs resolve the existing staging D1/R2/Queue bindings. Deployment history still shows API v90 at100% with candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` at0%, and Admin v82 at100% with candidate `091f1a3f-595b-4530-b54a-d7253af60664` at0%. This is CLI evidence, not authenticated browser identity/release approval.
+- Full local276/276, focused signed-webhook/Advance/COD100/100, build, lint, production audit0, and actual unchanged V1-source COD-compatible rollback harness4/4 pass. The focused signed event is synthetic local HMAC coverage, not live callback acceptance. Existing GFS-242 D1 `quick_check=ok`/FK0/COD0030 evidence is reused; no repeat migration or D1 write.
+- Static review confirms COD admission is **not tester-restricted**: `COD_V1_ENABLED` plus global audited COD configuration and enabled province eligibility govern all customers. `ADMIN_TEST_EXEMPTION` is only an order-cooldown exception. Do not enable COD globally until required runtime gates are complete and explicit staging-traffic authorization is confirmed.
+- The current execution has no callable official Chrome DevTools MCP actions or approved tester messaging channel. No browser dashboard mutation, signed live callback, running Advance customer checkout, traffic promotion, COD flag change, message, order, WAMID or screenshot occurred. Keep API/Admin originals at100%, candidates at0%, COD OFF and DO NOT SHIP. Production/public promotion requires separate authorization.
+
 ## GFS-245 Approved Tester Registration (2026-10-27)
 
 - Owner explicitly approved the replacement customer tester. Admin Test Controls already contains the exact normalized customer entry as an `ADMIN_TEST_EXEMPTION`; no duplicate add or registration mutation was needed. Existing order/history remains untouched.
