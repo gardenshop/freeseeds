@@ -19,6 +19,8 @@ describe("admin payment configuration", () => {
     expect(html).toContain("Request Reference");
     expect(html).toContain("Receiving-account settlement evidence reference");
     expect(html).toContain("I verified the actual credit in the authorized Garden Shop receiving account");
+    expect(html).toContain("Confirm PAID");
+    expect(html).not.toContain("Approve after verified settlement");
     expect(html).toContain("data.message==='string'");
   });
 

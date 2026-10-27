@@ -1053,3 +1053,19 @@ No secrets are stored in this registry.
 - Rehearsal D1: `getfreeseeds-cod-compat-check`; targeted0035/0036 pass with synthetic fixture; no customer data used in source or records.
 - Runtime: API `428defd5` 100%; Admin `b840f5a4` 13% and `615e1156` 87%; GFS-265 not deployed.
 - Release evidence: official Chrome MCP identity/read-only checks PASS; Wrangler OAuth refresh and current Time Travel bookmark/backup evidence BLOCKED; customer-device receipt evidence PENDING.
+
+## GFS-266 Registry — 2026-10-27
+
+- Writable source checkout: `D:\free seeds\gfs264-pr11`; reviewed change limited to Admin payment confirmation UI and synthetic regression assertions; no Hoja assets or customer data added.
+- P0 evidence: authenticated Admin read-only view confirmed the cited Advance order is PAYMENT_REVIEW with three receipt previews and a saved reference; independent receiving-account proof was unavailable, so no approval occurred.
+- Source quality: full 290/290, focused payment tests, build, lint, and rollback 4/4 PASS. npm audit BLOCKED by registry advisory endpoint failure.
+- Live identity/runtime: GitHub `gardenshop`, Cloudflare GFS account via `gisupp@gmail.com`, canonical GFS Meta; API `428defd5` 100%, Admin `b840f5a4` 13% / `615e1156` 87%. No GFS-266 deployment.
+- Protected release blocker: Wrangler OAuth expired/unreachable and current D1 recovery bookmark/backup unavailable in the supported dashboard; no live mutation was attempted.
+
+## GFS-266 Final Registry — 2026-10-27
+
+- Recovery: supported Wrangler identity `gisupp@gmail.com` / GFS account verified; pre-write D1 Time Travel bookmark recorded (private operational recovery record).
+- Live schema: targeted 0035 sequence columns/index and 0036 hold authorization/triggers applied; quick check `ok`, FK check zero rows, 0036 marker present. Legacy migration replay was not used.
+- Live versions: API `24d72438-72a1-4544-80df-4b9b90c297e5` 100% / `428defd5-e7aa-4800-b001-976f403c735e` 0%; Admin `cd155f20-c848-4e4e-9fde-970e62b0a4ea` 100% / `82a52106-0d84-4c84-ad1d-7d16daa80cbb` 0%.
+- COD: one provenance-verified public hold released once; unpaid COD_PENDING and financial snapshot preserved; six other COD rows remain held. No test hold was bulk-cleared.
+- Advance: cited payment remains REVIEW; three receipts/reference are visible in Admin, but independent receiving-account proof is unavailable, so no PAID mutation.

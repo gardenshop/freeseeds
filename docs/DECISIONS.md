@@ -1101,3 +1101,15 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Keep the API candidate explicitly PUBLIC so a future authorized deployment cannot accidentally turn COD off; preserve D1’s enabled PKR125 policy and three Advance methods.
 - Treat the isolated D1 database as rehearsal evidence only. Apply `0035`/`0036` live only through the supported targeted console procedure after a current recovery bookmark/backup is visible and recorded.
 - Do not clear the cited live hold, change traffic, deploy Workers, send Meta/WhatsApp messages, upload receipts, or mark PAID while Wrangler OAuth and the current D1 recovery bookmark are unavailable.
+
+## 2026-10-27: GFS-266 One-action payment confirmation
+
+- Keep the existing secure approval endpoint as the only Advance payment approval path. Rename the visible action to `Confirm PAID`, hide redundant saved-reference controls once a reference exists, and remove the extra browser confirmation prompt; CSRF, order confirmation, settlement attestation, conditional writes, audit, and idempotency remain server-enforced.
+- A receipt plus customer transaction reference is review evidence, not settlement evidence. The cited live order therefore remains REVIEW until an authorized receiving-account record proves exact credit with matching reference, method, and beneficiary.
+- No live deployment or D1 mutation is authorized from this run without supported Wrangler OAuth and a current recovery bookmark/backup. PUBLIC COD, PKR125, Advance methods, history, QR, Meta routing, and rollback remain preserved.
+
+## 2026-10-27: GFS-266 Live release decision
+
+- After supported OAuth and a pre-write Time Travel bookmark were verified, apply only targeted 0035/0036 statements. Preserve old order numbers, financial snapshots, payment destinations, Meta routing, and rollback versions.
+- Release only the one legacy COD row with customer-originated confirmation and no tester admission through the authenticated audited endpoint. Keep all other held COD rows protected. A live D1 batch may report zero changes after a trigger commit; re-read authoritative state before returning conflict.
+- Promote tested API/Admin versions only after quoted version-override smoke. Keep the prior versions at 0% as rollback. The cited Advance order remains REVIEW until independent settlement proof is available.

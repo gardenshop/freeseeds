@@ -159,6 +159,10 @@ describe("GFS-139 orders dashboard API", () => {
     const zeroAmount = await approve();
     expect(zeroAmount.status).toBe(409);
     expect(await zeroAmount.json()).toMatchObject({ error: "PAYMENT_AMOUNT_MISMATCH" });
+    db.approvalRow = { ...db.approvalRow, expected_amount: 300, receipt_count: 1 };
+    const missingSettlementEvidence = await approve();
+    expect(missingSettlementEvidence.status).toBe(409);
+    expect(await missingSettlementEvidence.json()).toMatchObject({ error: "SETTLEMENT_EVIDENCE_REQUIRED" });
     expect(db.batches).toBe(0);
   });
 });

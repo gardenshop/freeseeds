@@ -3262,3 +3262,37 @@ Active live version observed read-only: API staging deployment at 0% traffic; so
 | Audit | BLOCKED | npm registry advisory endpoint failed; no audit PASS claimed |
 
 **Active versions/traffic:** API `428defd5` 100%; Admin `b840f5a4` 13% / `615e1156` 87%; no GFS-265 version deployed. **PUBLIC status:** live D1 COD enabled/PKR125 and current API health WhatsApp-enabled; no public traffic mutation occurred. **Rollback:** unchanged COD-compatible intake-off/V1 compatibility harness 4/4; no live rollback run. **Completion:** 80% overall; 20% remaining for supported recovery bookmark/OAuth, targeted live migration, compatible Worker deployment/0%-to-100% promotion, audited single-order release, live customer acceptance, and receipt evidence.
+
+## GFS-266 Final Report — 2026-10-27
+
+| Stage | Result | Evidence / blocker |
+|---|---|---|
+| P0 existing payment | **BLOCKED safely** | Authenticated Admin read-only state is PAYMENT_REVIEW with three receipts and saved reference; no independent receiving-account proof, so not PAID |
+| P1 one-action Admin | **PASS local** | Single non-COD `Confirm PAID`; saved reference reuse; exact settlement evidence required; secure endpoint, audit, conditional writes, and duplicate protection retained |
+| P2 migrations/recovery | **BLOCKED** | 0035/0036 only rehearsed; Wrangler OAuth expired/unreachable and no supported current D1 recovery bookmark/backup |
+| P3 live release | **BLOCKED** | API `428defd5` 100%; Admin `b840f5a4` 13% / `615e1156` 87%; GFS-266 not deployed and traffic not changed |
+| P4 tests/push | **PASS local / PUSH PENDING** | 290/290, focused tests, build, lint, rollback 4/4 pass; audit blocked by registry endpoint; source push awaits commit |
+| COD/Advance preservation | **PASS read-only/local** | PUBLIC COD config preserved, PKR125 and three Advance methods unchanged; no live payment mutation |
+| New random reference/two-tap/COD hold | **PASS local / live pending** | Existing GFS-265 implementation remains intact; no fabricated live order or customer message |
+| Receipt acceptance | **PENDING** | No authorized settled-payment customer-device evidence available; no receipt/PAID fabrication |
+
+**Exact remaining blocker:** supported Cloudflare OAuth must be restored and a current D1 recovery bookmark/backup made available before targeted live migrations, controlled deployment, hold release, or payment approval. **Completion: 80%; remaining: 20%.**
+
+## GFS-266 Final Report — Final state 2026-10-27
+
+| Stage | Result | Evidence |
+|---|---|---|
+| P0 existing JazzCash payment | **BLOCKED safely** | Live Admin shows PAYMENT_REVIEW, three receipts, saved reference, Confirm PAID disabled; no independent exact receiving-account credit proof |
+| P1 one-action Admin | **PASS LIVE** | `Confirm PAID` is the sole Advance approval action; COD excluded; secure endpoint requires settlement evidence and prevents duplicate approval |
+| P2 recovery/migrations | **PASS** | OAuth/account verified; pre-write Time Travel bookmark recorded; targeted 0035/0036 applied after rehearsal; no legacy replay/fabricated marker |
+| P3 deployment | **PASS LIVE** | API `24d72438…` 100%, Admin `cd155f20…` 100%; API `428defd5…` and Admin `82a52106…` retained at 0%; health/signed-boundary smoke pass |
+| COD hold repair | **PASS** | One authenticated provenance-verified public hold released once; unpaid COD_PENDING, 250/125/375 preserved, Mark packing available; six other COD rows remain held |
+| Secure references/two-tap checkout | **PASS source/live deployment; live customer proof pending** | GFS-265 implementation deployed; no fabricated new order/customer message |
+| Advance/COD health | **PASS** | PUBLIC COD preserved, PKR125 unchanged, three Advance methods/configuration unchanged; cited Advance remains unapproved |
+| D1 integrity/rollback | **PASS** | `quick_check=ok`, FK check zero rows; previous Worker/Admin versions at 0%; rollback harness 4/4 |
+| Regression/build/lint | **PASS** | Full 290/290, focused repair suites 116/116, build, lint |
+| Dependency audit | **BLOCKED** | npm advisory endpoint unavailable; no audit PASS claimed |
+| Receipt/device acceptance | **PENDING** | No authorized customer-device standalone/replied receipt evidence; no receipt or PAID fabrication |
+| Push/docs | **IN PROGRESS** | Reviewed source/docs updated; commit and push are the remaining local handoff step |
+
+**Active Worker IDs/traffic:** API `24d72438-72a1-4544-80df-4b9b90c297e5` 100%, rollback `428defd5-e7aa-4800-b001-976f403c735e` 0%; Admin `cd155f20-c848-4e4e-9fde-970e62b0a4ea` 100%, rollback `82a52106-0d84-4c84-ad1d-7d16daa80cbb` 0%. **PUBLIC:** COD remains enabled with PKR125; Advance remains operational. **Completion:** 90%; remaining 10% is independent settled-payment/device acceptance and registry audit availability, plus final push if not yet recorded.

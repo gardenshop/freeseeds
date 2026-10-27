@@ -981,3 +981,16 @@
 - Repaired the deployment candidate’s stale COD-OFF vars to preserve `COD_V1_ENABLED=true` and `COD_ROLLOUT_MODE=PUBLIC`; updated the corresponding regression assertion.
 - Re-ran full290/290, focused121/121, build, lint, Worker dry-runs, diff-check, and rollback4/4. Audit remains blocked by registry endpoint failure.
 - Completed isolated targeted 0035/0036 rehearsal and read-only live D1/runtime checks. No live migration, deployment, hold release, customer message, receipt, or financial mutation was made because supported OAuth/recovery gates were unavailable.
+## 2026-10-27 — GFS-266
+
+- Simplified Admin Advance payment review to one prominent `Confirm PAID` action while retaining secure settlement and audit guards.
+- Reused saved transaction references and hid duplicate Save/Request controls after a reference exists; COD remains excluded.
+- Confirmed locally that missing settlement evidence is rejected and the payment remains under review.
+- Recorded live P0 evidence as REVIEW/no approval because independent receiving-account settlement proof was unavailable. No live D1, Worker, traffic, receipt, customer-message, or financial mutation was made.
+
+## 2026-10-27 — GFS-266 live release completion
+
+- Restored supported Wrangler OAuth, recorded a D1 Time Travel bookmark, and applied targeted 0035/0036 statements after rehearsal; integrity checks passed.
+- Staged 0% smoke and promoted API `24d72438…` and Admin response-fix `cd155f20…` to 100%, retaining prior versions at 0% rollback. PUBLIC COD and Advance configuration remained intact.
+- Released one verified genuine public COD hold through the authenticated audited workflow; the order remains unpaid COD_PENDING and six other COD rows remain held.
+- Repaired false conflict reporting after trigger-backed COD release by re-reading authoritative D1 state. The cited Advance payment remains REVIEW because settlement proof is missing.

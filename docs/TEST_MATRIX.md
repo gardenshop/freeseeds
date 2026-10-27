@@ -1248,3 +1248,11 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | GFS-265 live preflight | D1 counts/config, quick/FK checks, target hold | PASS read-only: 65/65, PKR125, 3 methods, quick ok, FK0, target held |
 | GFS-265 deployment gate | Authenticated Wrangler, recovery bookmark, 0% smoke, promotion | BLOCKED: expired/unreachable OAuth and no current bookmark exposed |
 | GFS-265 customer acceptance | New random ref, two-tap COD, receipt images | BLOCKED/PENDING: no authorized customer device or live deployment |
+| GFS-266 payment-review inspection | Three stored receipts, saved reference, independent settlement proof | PASS read-only for stored artifacts; BLOCKED for settlement proof, order remains REVIEW |
+| GFS-266 Confirm PAID UI | Single non-COD action, saved reference reuse, disabled without settlement proof | PASS local/source; secure endpoint and COD exclusion retained |
+| GFS-266 approval idempotency | Conditional payment/order/audit writes and duplicate-click behavior | PASS local regression; no live approval attempted |
+| GFS-266 live release | OAuth, D1 recovery bookmark, targeted migration, version consolidation | BLOCKED: OAuth expired/unreachable and supported recovery bookmark/backup unavailable |
+| GFS-266 live migration | Bookmark before write; targeted 0035/0036; no legacy replay | PASS: schema/index/triggers present; 0036 marker present; integrity PASS |
+| GFS-266 live Worker/Admin promotion | 0%-traffic smoke then 100% promotion with rollback versions | PASS: API `24d72438…` 100%, Admin `cd155f20…` 100%, prior versions 0% |
+| GFS-266 public COD hold repair | One authenticated provenance release; no bulk/test release; unpaid fulfillment path | PASS: one public row unheld/COD_PENDING/Mark packing; six rows remain held |
+| GFS-266 final Admin response | Committed release cannot return false conflict | PASS: authoritative re-read repair live; idempotent already-released path retained |

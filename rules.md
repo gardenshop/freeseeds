@@ -738,3 +738,18 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - The cited legacy public COD order remains unpaid `COD_PENDING` with `test_hold=1`; no release, fulfillment, payment, receipt, customer message, or fabricated order was made. Do not clear it until a supported recovery bookmark/backup and authenticated deployment path are available.
 - Cloudflare currently serves API `428defd5` at100%; Admin rollout is `b840f5a4` at13% and `615e1156` at87%. Neither contains GFS-265. Wrangler OAuth is expired/unreachable and the dashboard Time Travel view did not expose a current bookmark; do not bypass either gate.
 - Local release quality remains 290/290, focused121/121, build, lint, Worker dry-runs, diff-check, and rollback4/4. Registry audit is BLOCKED by the advisory endpoint failure, not a vulnerability PASS.
+
+## GFS-266 Protected Payment Confirmation (2026-10-27)
+
+- Admin has one visible `Confirm PAID` action for eligible non-COD Advance orders. It reuses the existing CSRF-protected approval endpoint and stays disabled until the saved transaction reference, receipt integrity, verified destination, exact amount, and independently verified receiving-account credit are present.
+- The endpoint remains authoritative: it rejects COD, missing settlement evidence, stale review state, amount mismatch, missing receipt, unverified destination, and duplicate approval. Conditional updates and the audited reviewer/time/evidence record remain intact.
+- The cited live Advance payment remains `PAYMENT_REVIEW`; receipts and a saved reference do not prove settlement. No approval or PAID mutation is permitted without private receiving-account proof matching exact amount, method, reference, and beneficiary.
+- GFS-265 live migration/deployment and hold release remain blocked until supported Wrangler OAuth and a current D1 recovery bookmark/backup are available. Never bypass permissions, replay legacy migrations, fabricate evidence, or mutate live financial data.
+
+## GFS-266 Release Completion Record (2026-10-27)
+
+- Supported Wrangler identity was restored and verified as `gisupp@gmail.com` on GFS account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. A read-only D1 Time Travel bookmark was recorded before writes: `000002a5-00000462-00005111-1d3103cac36a31fea5f216ba76a250c5`.
+- Targeted live 0035 schema statements and 0036 authorization/trigger statements were applied individually after rehearsal. No legacy migration replay or fabricated 0035 ledger marker was used. Post-write `quick_check=ok`, `foreign_key_check` returned zero rows, and the 0036 marker/triggers/sequence index are present.
+- API `24d72438-72a1-4544-80df-4b9b90c297e5` is 100% with GFS-261 `428defd5-e7aa-4800-b001-976f403c735e` at 0%; Admin `cd155f20-c848-4e4e-9fde-970e62b0a4ea` is 100% with `82a52106-0d84-4c84-ad1d-7d16daa80cbb` at 0%. Health and signed-boundary smoke passed; PUBLIC COD configuration is preserved.
+- One authenticated, provenance-verified legacy public COD hold was released once. Its 250/125/375 snapshot stayed unchanged, it remains unpaid `COD_PENDING`, and Admin exposes the authorized `Mark packing` transition. Six other COD rows remain held; no bulk release occurred. The first live response returned a false conflict after committing; the repair re-reads authoritative state and is now live.
+- The cited Advance payment remains REVIEW and unapproved because independent receiving-account settlement proof is unavailable. Never mark it PAID from receipts/reference alone.
