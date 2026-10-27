@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-247 admission boundary (2026-10-27)
+
+- Source now references protected runtime secret `COD_TESTER_WA_ID`; its value is intentionally not recorded. No secret was provisioned or changed in this turn.
+- No resource, binding, D1 schema/row, Worker deployment, traffic percentage, Version URL, Access rule, Meta asset, Queue/R2 state or customer record was mutated. Known originals/candidates remain v90/v82 at100% and candidates at0%; COD remains off.
+- Runtime activation requires identity verification, supported secret provisioning, precise owner authorization for controlled staging promotion, live signed tester START, running Advance regression and rollback readiness. No WAMID/order/Admin evidence exists.
+
 ## GFS-246 staging readiness review (2026-10-27)
 
 - No resource, binding, secret, D1 schema/row, Worker deployment, traffic percentage, Version URL, Access rule, Meta asset or Queue/R2 state was mutated; no new resource/cost incurred.

@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-247 Tester-Only COD Admission (2026-10-27)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Normalized tester gate | PASS LOCAL | `COD_TESTER_WA_ID` is normalized with the inbound identity before admission; formatted equivalent matches in focused test. |
+| Non-tester isolation | PASS LOCAL | Non-matching identity remains Advance-only and cannot create COD sidecar rows while the global flag/policy are enabled. |
+| Missing protected configuration | PASS LOCAL | Empty/missing tester secret fails closed and leaves Advance checkout unchanged. |
+| EN/UR, fee, same-order and idempotency behavior | PASS PRIOR + REGRESSION | Existing guided COD tests retained; no migration, D1 or payment-history change. |
+| Full regression | PASS | Focused 76/76; full 279/279; build, lint and offline audit pass. |
+| Controlled staging activation | BLOCKED | Requires precise owner authorization, protected secret provisioning, live signed tester START, running Advance and rollback gates. |
+| Genuine acceptance | NOT RUN | No fabricated inbound, WAMID, order, Admin COD_PENDING or screenshot. |
+
 ## GFS-246 Final Staging Readiness (2026-10-27)
 
 | Requirement | Result | Evidence / blocker |

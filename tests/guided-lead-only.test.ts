@@ -17,6 +17,7 @@ let failNextSend: boolean;
 let queueSend: ReturnType<typeof vi.fn>;
 let receiptPuts: number;
 let codEnabled: boolean;
+let codTesterWaId: string;
 const codHmacKey = "synthetic-guided-cod-hmac-key-v1-2026-synthetic";
 let codRuntimeHmacKey = codHmacKey;
 let beforeBatch: ((sql: string[]) => Promise<void> | void) | undefined;
@@ -57,7 +58,7 @@ function buttons() {
 }
 
 function env() {
-  return { DB: db, RECEIPTS: { get: vi.fn(async () => { qrReads++; return qrAvailable ? { httpMetadata: { contentType: "image/png" }, arrayBuffer: async () => syntheticQrBytes.buffer } : null; }), put: vi.fn(async () => { receiptPuts++; }), delete: vi.fn(async () => undefined) }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: "true", META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided", COD_V1_ENABLED: codEnabled ? "true" : "false", COD_REFERENCE_HMAC_KEY: codRuntimeHmacKey } as never;
+  return { DB: db, RECEIPTS: { get: vi.fn(async () => { qrReads++; return qrAvailable ? { httpMetadata: { contentType: "image/png" }, arrayBuffer: async () => syntheticQrBytes.buffer } : null; }), put: vi.fn(async () => { receiptPuts++; }), delete: vi.fn(async () => undefined) }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: "true", META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided", COD_V1_ENABLED: codEnabled ? "true" : "false", COD_TESTER_WA_ID: codTesterWaId, COD_REFERENCE_HMAC_KEY: codRuntimeHmacKey } as never;
 }
 
 async function callback(messages: Record<string, unknown>[], extraChanges: unknown[] = []) {
@@ -86,20 +87,20 @@ async function inbound(input: string | Record<string, unknown>, id = `synthetic-
 
 const tap = (id: string) => ({ type: "button_reply", button_reply: { id, title: "Synthetic button" } });
 
-async function reachReview(locale: "en" | "ur", fertilizer = false) {
-  await inbound("START");
+async function reachReview(locale: "en" | "ur", fertilizer = false, waId = sender) {
+  await inbound("START", undefined, waId);
   expect(buttons()).toEqual(["LANG_UR", "LANG_EN"]);
-  await inbound(tap(locale === "ur" ? "LANG_UR" : "LANG_EN"));
-  expect(conversation()?.state).toBe("OFFER");
+  await inbound(tap(locale === "ur" ? "LANG_UR" : "LANG_EN"), undefined, waId);
+  expect(conversation(waId)?.state).toBe("OFFER");
   expect(buttons()).toEqual(["CONTINUE_ORDER", "CANCEL_ORDER"]);
-  await inbound(tap("CONTINUE_ORDER"));
-  expect(conversation()?.state).toBe("FERTILIZER");
+  await inbound(tap("CONTINUE_ORDER"), undefined, waId);
+  expect(conversation(waId)?.state).toBe("FERTILIZER");
   expect(buttons()).toEqual(["ADD_FERTILIZER", "SEEDS_ONLY"]);
-  await inbound(tap(fertilizer ? "ADD_FERTILIZER" : "SEEDS_ONLY"));
+  await inbound(tap(fertilizer ? "ADD_FERTILIZER" : "SEEDS_ONLY"), undefined, waId);
   expect(sends.at(-1)).toMatchObject({ interactive: { type: "list", action: { sections: [{ rows: [{ id: "PROVINCE_SYNTHETIC_PROVINCE", title: "Synthetic Province" }] }] } } });
-  await inbound({ type: "list_reply", list_reply: { id: "PROVINCE_SYNTHETIC_PROVINCE", title: "Synthetic Province" } });
-  for (const value of ["Synthetic Customer", "123 Synthetic Street", "Synthetic Park", "Synthetic City", "03001234567"]) await inbound(value);
-  expect(conversation()?.state).toBe("REVIEW");
+  await inbound({ type: "list_reply", list_reply: { id: "PROVINCE_SYNTHETIC_PROVINCE", title: "Synthetic Province" } }, undefined, waId);
+  for (const value of ["Synthetic Customer", "123 Synthetic Street", "Synthetic Park", "Synthetic City", "03001234567"]) await inbound(value, undefined, waId);
+  expect(conversation(waId)?.state).toBe("REVIEW");
 }
 
 async function enableAuditedCodPolicy(feePkr = 125) {
@@ -228,6 +229,42 @@ describe("frozen V1 receipt hotfix", () => {
 });
 
 describe("GFS-221 additive V1-compatible COD path", () => {
+  it("normalizes the configured tester identity before admitting COD", async () => {
+    await enableAuditedCodPolicy();
+    codTesterWaId = `+${sender}`;
+    codEnabled = true;
+    await reachReview("en");
+    await inbound(tap("PLACE_ORDER"));
+    expect(buttons()).toEqual(["ADVANCE_PAYMENT", "COD"]);
+  });
+
+  it("fails closed for non-allowlisted customers while preserving Advance checkout", async () => {
+    await enableAuditedCodPolicy();
+    await enableSyntheticPaymentMethod();
+    codEnabled = true;
+    const nonTester = "923001234568";
+    await reachReview("en", false, nonTester);
+    await inbound(tap("PLACE_ORDER"), "synthetic-non-tester-place-order", nonTester);
+    expect(conversation(nonTester)?.state).toBe("PAYMENT_METHOD");
+    expect(buttons()).toEqual(["PAY_JAZZCASH"]);
+    expect(body()).not.toContain("Cash on Delivery");
+    await inbound(tap("COD"), "synthetic-non-tester-cod", nonTester);
+    expect(conversation(nonTester)?.state).toBe("PAYMENT_METHOD");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({ count: 0 });
+  });
+
+  it("fails closed when the protected tester configuration is absent", async () => {
+    await enableAuditedCodPolicy();
+    await enableSyntheticPaymentMethod();
+    codEnabled = true;
+    codTesterWaId = "";
+    await reachReview("en");
+    await inbound(tap("PLACE_ORDER"));
+    expect(buttons()).toEqual(["PAY_JAZZCASH"]);
+    expect(body()).not.toContain("Cash on Delivery");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({ count: 0 });
+  });
+
   it.each([
     { locale: "en", intakeEnabled: true },
     { locale: "en", intakeEnabled: false },
@@ -608,6 +645,7 @@ beforeEach(() => {
   failNextSend = false;
   receiptPuts = 0;
   codEnabled = false;
+  codTesterWaId = sender;
   codRuntimeHmacKey = codHmacKey;
   beforeBatch = undefined;
   beforeRun = undefined;

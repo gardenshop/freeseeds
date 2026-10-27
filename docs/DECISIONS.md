@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-27: GFS-247 Fail-Closed Tester-Only COD Gate
+
+- Add only a runtime admission boundary, not a courier or accounting feature. COD requires the audited global flag/policy plus an exact normalized match to protected secret `COD_TESTER_WA_ID`; absent or malformed configuration denies COD. This is independent of `ADMIN_TEST_EXEMPTION`, which remains cooldown-only.
+- Do not persist the approved tester identifier in source, fixtures, logs or documentation. Provision the protected value only through supported secret controls after private identity verification.
+- Focused 76/76 and full279/279 pass, with build/lint/offline audit pass. Existing D1/COD0030, orders/payments, payment configuration and rollback evidence stand unchanged.
+- No deployment, traffic, COD flag, secret, Meta, WhatsApp, customer or D1 mutation is authorized by this code change alone. Obtain the precise controlled-staging promotion and tester-only activation authorization before runtime mutation; public production remains separately gated.
+
 ## 2026-10-27: GFS-246 Keep COD Off Until Live Gates and Traffic Authorization
 
 - Reuse GFS-245's already registered owner-approved tester; no registration/reset. Candidate/API/Admin versions remain 0% beside original v90/v82 at100%. Existing GFS-242 COD0030 and D1 health proof stand; do not repeat migration or alter payment configuration.

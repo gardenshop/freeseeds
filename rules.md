@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-247 Tester-Only COD Admission (2026-10-27)
+
+- COD admission now requires all of: `COD_V1_ENABLED=true`, the audited D1 COD policy, and an exact normalized match between the inbound WhatsApp identity and the protected runtime secret `COD_TESTER_WA_ID`. A missing or malformed secret fails closed. `ADMIN_TEST_EXEMPTION` remains cooldown-only and is not an admission grant.
+- The tester identity is intentionally absent from source, tests, logs and documentation. Provisioning the protected secret requires the owner-authorized identity check and supported Cloudflare secret controls; do not expose or print its value.
+- Local focused coverage passes normalization, non-tester Advance-only behavior and missing-secret fail-closed behavior. Full regression/build/lint/offline audit pass. No live flag, secret, traffic, D1, Meta, customer, WAMID or order mutation was made.
+- Preserve API v90/Admin v82 at100%, candidates at0%, COD OFF and DO NOT SHIP until exact controlled staging-promotion/COD activation authorization, live signed callback, running Advance checkout and tester-originated inbound are complete. Public production remains separately unauthorized.
+
 ## GFS-246 Final Staging Readiness / Real COD Test (2026-10-27)
 
 - Preserve GFS-245: the approved tester already exists as `ADMIN_TEST_EXEMPTION`; do not register/reset again. The customer's own authenticated WhatsApp device must initiate the next real inbound. Never use the unrelated WhatsApp Web owner profile or fabricate a customer WAMID.

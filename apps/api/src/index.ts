@@ -28,6 +28,7 @@ type Env = {
     META_INSTANT_FORM_ID?: string;
     FLOW_PRIVATE_KEY?: string;
     COD_V1_ENABLED?: string;
+    COD_TESTER_WA_ID?: string;
   };
 };
 
@@ -40,6 +41,12 @@ async function verifyFlowToken(token: string, secret: string): Promise<string | 
 
 type CodQuoteSnapshot = { baseAmountPkr: number; feePkr: number; totalPkr: number; policyRevision: string; collectionPolicyHash: string | null; remittancePolicyHash: string | null };
 type ConversationData = { language?: "en" | "ur"; fullName?: string; deliveryAddress?: string; nearbyPlace?: string; city?: string; contactNumber?: string; province?: string; fertilizerSelected?: boolean; orderId?: string; orderNumber?: string; amountPkr?: number; codQuote?: CodQuoteSnapshot };
+
+function isControlledCodTester(waId: string, configuredTester: string | undefined): boolean {
+  const normalizedInbound = normalizeWhatsAppWaId(waId);
+  const normalizedConfigured = normalizeWhatsAppWaId(configuredTester ?? "");
+  return Boolean(normalizedInbound && normalizedConfigured && normalizedInbound === normalizedConfigured);
+}
 
 type ConversationReplyOptions = { buttons?: InteractiveButton[]; list?: { buttonText: string; rows: Array<{ id: string; title: string; description?: string }> }; image?: OutboundImage; flow?: { id: string; token: string } };
 type ConversationOutboundAssociation = { orderId?: string; customerId?: string; kind?: string };
@@ -351,7 +358,7 @@ async function finalizeCodOrder(db: D1Database, orderId: string, quote: CodQuote
   return results.every((result) => Number(result.meta?.changes ?? 0) === 1) ? "CREATED" : "NOT_ELIGIBLE";
 }
 
-async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }, flowId: string, flowTokenSecret?: string, checkoutMode: string = "guided", events?: Queue, codEnabled = false): Promise<boolean> {
+async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }, flowId: string, flowTokenSecret?: string, checkoutMode: string = "guided", events?: Queue, codEnabled = false, codTesterWaId?: string): Promise<boolean> {
   const sessionContent = (key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; amount?: string | number; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string } = {}) => contentFor(db, key, fallback, values, `CHAT:${event.from}`, data.language ?? "en");
   const message = event.payload && typeof event.payload === "object" ? event.payload as { text?: { body?: string }; interactive?: { button_reply?: { id?: string; title?: string }; list_reply?: { id?: string; title?: string }; nfm_reply?: { response_json?: string } }; button?: { payload?: string; text?: string } } : {};
   const interaction = message.interactive?.button_reply ?? message.interactive?.list_reply;
@@ -392,7 +399,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
       return true;
     }
   }
-  const codSettings = codEnabled ? await codPolicy(db) : null;
+  const codSettings = codEnabled && isControlledCodTester(event.from, codTesterWaId) ? await codPolicy(db) : null;
   const codAvailable = Boolean(codSettings);
   if (checkoutMode !== "guided" && state === "FLOW_ACTIVE" && message.interactive?.nfm_reply?.response_json) {
     try {
@@ -729,7 +736,7 @@ app.post("/webhooks/whatsapp", async (c) => {
   let autoReplies = 0;
   for (const event of inbound) {
     if (event.kind === "media") { if (c.env.DB && await processReceiptMedia(c.env.DB, c.env.RECEIPTS, provider, event)) continue; else continue; }
-    if (c.env.DB && await processGuidedConversation(c.env.DB, c.env.RECEIPTS, provider, event, c.env.META_FLOW_ID ?? "1133458765899784", c.env.META_APP_SECRET, c.env.WHATSAPP_CHECKOUT_MODE ?? "guided", c.env.EVENTS, c.env.COD_V1_ENABLED === "true")) continue;
+    if (c.env.DB && await processGuidedConversation(c.env.DB, c.env.RECEIPTS, provider, event, c.env.META_FLOW_ID ?? "1133458765899784", c.env.META_APP_SECRET, c.env.WHATSAPP_CHECKOUT_MODE ?? "guided", c.env.EVENTS, c.env.COD_V1_ENABLED === "true", c.env.COD_TESTER_WA_ID)) continue;
     const activeConversation = c.env.DB ? await c.env.DB.prepare("SELECT state FROM whatsapp_conversations WHERE wa_id=?").bind(event.from).first<{ state: string }>() : null;
     if (activeConversation) continue;
     const idempotencyKey = `welcome_reply:${event.id}`;

@@ -1,5 +1,13 @@
 # Status
 
+## GFS-247 Tester-Only COD Gate Implemented (2026-10-27)
+
+- **Engineering PASS.** Added a minimal fail-closed admission boundary: COD is available only when the global audited COD flag/policy is enabled and the inbound identity exactly matches normalized protected runtime secret `COD_TESTER_WA_ID`. Cooldown exemption does not grant COD. The private identity value is not stored in source or records.
+- **Validation PASS.** Focused guided suite 76/76; full suite 279/279; build, lint and offline audit pass. New tests cover formatted identity normalization, non-tester Advance-only checkout and missing-secret fail-closed behavior. Existing COD0030/D1, 52-order/payment preservation and prior rollback evidence were not repeated or changed.
+- **Runtime HOLD.** Read-only known state remains API v90 `21a3d74c-3979-432c-9190-1848362592a4` at100% / candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` at0%; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` at100% / candidate `091f1a3f-595b-4530-b54a-d7253af60664` at0%; `COD_V1_ENABLED=false`. No secret provisioning, promotion or flag mutation occurred.
+- **Remaining exact gates.** Owner must authorize controlled staging promotion/COD tester-only activation, then the protected secret must be provisioned through supported controls after identity verification; the authorized customer must send a genuine signed START from their own device. Only then can one new DO NOT SHIP COD journey and Advance switching be run. No WAMIDs/order/Admin COD_PENDING evidence exists.
+- **Completion:** gate implementation 100%; local validation 100%; staging activation 0%; genuine acceptance 0%; public launch NO-GO.
+
 ## GFS-246 Final Staging Readiness / Real COD Test (2026-10-27)
 
 - **P0 PASS LIMITED.** GFS-245's owner-approved tester is already present as `ADMIN_TEST_EXEMPTION`; the canonical sender remained the Meta Phone Manager authority. No duplicate registration or unrelated WhatsApp Web identity was used. Wrangler read-only identity is `gisupp@gmail.com` / GFS account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no authenticated browser identity refresh was possible in this tool session.

@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-247 | Tester-Only COD Admission (2026-10-27)
+
+**Result: implementation and local validation PASS; runtime activation and genuine WhatsApp acceptance BLOCKED.**
+
+| Task | Result | Evidence / blocker |
+|---|---|---|
+| P0 preservation | PASS | No migration, D1, history, payment configuration or courier feature change. Prior COD0030/D1 and rollback evidence retained. |
+| P1 explicit admission | PASS LOCAL | `COD_V1_ENABLED` + audited policy + exact normalized protected `COD_TESTER_WA_ID`; missing/non-matching identity fails closed to Advance-only. |
+| P2 behavior regression | PASS LOCAL | Focused76/76; full279/279; build/lint/offline audit pass. Existing EN/UR, PKR125, same-order/idempotency and Advance-switch tests retained. |
+| P3 runtime gates | BLOCKED | No precise controlled staging-promotion/COD activation authorization, protected secret provisioning or genuine signed tester START in this turn. |
+| P4 live acceptance | NOT RUN | No WAMIDs, new order, amount, COD_PENDING/Admin result or screenshot; no inbound was fabricated. |
+| P5 public readiness | NO-GO | Public production promotion remains separately unauthorized. |
+
+**Runtime state:** API v90 `21a3d74c-3979-432c-9190-1848362592a4` 100%; candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` 0%; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` 100%; candidate `091f1a3f-595b-4530-b54a-d7253af60664` 0%; `COD_V1_ENABLED=false`. No live WAMIDs/order/Admin COD_PENDING evidence.
+
+**Remaining:** obtain the exact controlled-staging authorization, verify identity and provision `COD_TESTER_WA_ID` through supported secret controls, then run live signed callback/Advance/rollback gates and one new DO NOT SHIP tester journey. Public launch still needs separate approval.
+
 ## GFS-246 | Final Staging Readiness and Real WhatsApp COD Test (2026-10-27)
 
 **Result: independent local/staging preparation PASS; controlled release/live customer COD acceptance BLOCKED. No customer message, candidate promotion, or COD activation was performed.**

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-27 (GFS-247 tester-only COD admission)
+
+- Added fail-closed tester-only COD admission using normalized inbound identity and protected runtime secret `COD_TESTER_WA_ID`; cooldown exemptions no longer imply COD eligibility.
+- Added focused coverage for identity normalization, non-tester Advance-only behavior and missing-secret denial. Focused 76/76 and full279/279 pass; build/lint/offline audit pass.
+- No migration, D1, deployment, traffic, secret, Meta, WhatsApp or customer mutation. Live tester acceptance remains blocked pending precise staging authorization, supported secret provisioning and genuine tester-originated inbound.
+
 ## 2026-10-27 (GFS-246 final staging readiness)
 
 - Reused the existing owner-approved tester registration; no duplicate registration/reset or source change.
