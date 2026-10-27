@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-27: GFS-261 Mobile and Receipt Safety
+
+- Use strict local mobile validation only for new guided/shared submissions: `03XXXXXXXXX` or `03XX-XXXXXXX`, normalized to 11 digits. Do not apply it to Meta `wa_id` or historical records.
+- Resolve receipt images by trusted reply association or one unique eligible sender Advance order. A reply to an unrelated message may use the unique-sender fallback; multiple candidates fail closed. Provider media IDs are the deduplication key.
+- Store private media and expose it through the existing Admin receipt path, but never change REVIEW/PENDING to PAID. COD, paid, unrelated and ambiguous orders are rejected.
+- Deploy tested API `428defd5-e7aa-4800-b001-976f403c735e` at100% while retaining PUBLIC COD, the original signed callback and rollback `2500e268-8985-4fd4-a141-68633f16315d`. No migration or Meta mutation was required.
+- Local/runtime gates pass; live receipt acceptance remains pending solely for an authorized customer-device action. Do not substitute the unrelated WhatsApp Web profile or fabricate evidence.
+
 ## 2026-10-27: GFS-260 Preserve Healthy PUBLIC Release
 
 - Keep PUBLIC active because read-only health, Admin payment configuration, D1 integrity, COD holds, and recent webhook/outbox safety checks pass.

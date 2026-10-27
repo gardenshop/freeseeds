@@ -61,7 +61,7 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
   }
 
   parseInboundEvent(payload: unknown): InboundEvent[] {
-    const root = payload as { entry?: Array<{ changes?: Array<{ value?: { messages?: Array<{ id?: string; from?: string; type?: string; image?: { id?: string }; document?: { id?: string }; interactive?: { nfm_reply?: unknown }; referral?: Record<string, string> }> } }> }> };
+    const root = payload as { entry?: Array<{ changes?: Array<{ value?: { messages?: Array<{ id?: string; from?: string; type?: string; image?: { id?: string; mime_type?: string }; document?: { id?: string; mime_type?: string }; context?: { id?: string }; interactive?: { nfm_reply?: unknown }; referral?: Record<string, string> }> } }> }> };
     const result: InboundEvent[] = [];
     for (const entry of root.entry ?? []) for (const change of entry.changes ?? []) for (const message of change.value?.messages ?? []) {
       if (!message.id || !message.from) continue;

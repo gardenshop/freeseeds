@@ -86,7 +86,7 @@ describe("product readiness safeguards", () => {
       { name: "City", values: ["Sahiwal"] },
       { name: "Contact Number", values: ["03001234567"] }
     ] });
-    expect(lead).toMatchObject({ leadId: "synthetic-meta-lead", formId: "synthetic-form", pageId: "synthetic-page", contactNumber: "+923001234567", campaignId: "synthetic-campaign" });
+    expect(lead).toMatchObject({ leadId: "synthetic-meta-lead", formId: "synthetic-form", pageId: "synthetic-page", contactNumber: "03001234567", campaignId: "synthetic-campaign" });
     expect(LeadSource.options).toEqual(["META_INSTANT_FORM", "WHATSAPP", "FACEBOOK_MESSENGER", "INSTAGRAM_DM"]);
     expect(isAllowedInstantFormLead({ page_id: "canonical-page", form_id: "canonical-form" }, "canonical-page", "canonical-form")).toBe(true);
     expect(isAllowedInstantFormLead({ page_id: "other-page", form_id: "canonical-form" }, "canonical-page", "canonical-form")).toBe(false);
@@ -102,7 +102,7 @@ describe("product readiness safeguards", () => {
       { name: "Nearby Famous Place", values: ["Test Park"] },
       { name: "City", values: ["Lahore"] }
     ] });
-    expect(lead.contactNumber).toBe("+923001234567");
+    expect(lead.contactNumber).toBe("03001234567");
     expect(lead.whatsappNumber).toBe("+923034901810");
   });
 

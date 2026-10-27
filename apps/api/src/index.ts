@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { applyFertilizerDecision, codQuote, codReferenceHmac, createWhatsAppProvider, customerTransactionReferenceHash, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isInsideWhatsAppServiceWindow, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, MetaCapiProvider, MetaFlowEnvelope, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizePaymentMethodRow, normalizeWhatsAppWaId, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInboundConversationActivity, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey } from "@gfs/core";
+import { applyFertilizerDecision, codQuote, codReferenceHmac, createWhatsAppProvider, customerTransactionReferenceHash, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isInsideWhatsAppServiceWindow, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, MetaCapiProvider, MetaFlowEnvelope, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeMobileContactNumber, normalizePaymentMethodRow, normalizeWhatsAppWaId, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInboundConversationActivity, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey } from "@gfs/core";
 import { handleMetaFlowPayload } from "./flow-endpoint";
 import { admitWhatsAppSenders } from "./rate-limit";
 
@@ -117,7 +117,7 @@ function guidedFieldIsValid(state: string, value: string): boolean {
   if (state === "FULL_NAME") return length >= 2 && length <= 120;
   if (state === "ADDRESS") return length >= 5 && length <= 500;
   if (state === "NEARBY" || state === "CITY") return length >= 2 && length <= 160;
-  if (state === "CONTACT") return /^\+?\d{7,20}$/.test(value.replace(/[\s().-]/g, ""));
+  if (state === "CONTACT") return normalizeMobileContactNumber(value) !== undefined;
   return true;
 }
 
@@ -631,6 +631,11 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
       reply = `${reply}\n${(await sessionContent("PAYMENT", "Choose a verified payment method for order {orderNumber}.", { orderNumber: data.orderNumber ?? "", amount: data.amountPkr })).text}`;
     }
   }
+  const previousContactNumber = data.contactNumber;
+  const rawContactInput = typeof message.text?.body === "string" ? message.text.body : text;
+  if (state === "CONTACT" && !guidedFieldIsValid(state, rawContactInput)) { nextState = "CONTACT"; delete data.contactNumber; reply = data.language === "ur" ? "\u0628\u0631\u0627\u06c1 \u06a9\u0631\u0645 \u0645\u0648\u0628\u0627\u0626ل \u0646\u0645\u0628\u0631 03XXXXXXXXX \u06cc\u0627 03XX-XXXXXXX \u0641\u0627\u0631\u0645\u06ccٹ \u0645\u06cc\u06ba \u0644\u06a9ھیں۔" : "Please enter a mobile number in 03XXXXXXXXX or 03XX-XXXXXXX format."; }
+  if (state === "CONTACT" && !guidedFieldIsValid(state, rawContactInput) && previousContactNumber) data.contactNumber = previousContactNumber;
+  if (state === "CONTACT" && nextState === "REVIEW" && data.contactNumber) data.contactNumber = normalizeMobileContactNumber(data.contactNumber) ?? data.contactNumber;
   const paymentOptions = completePaymentMethods.map((method) => ({ id: paymentActionId(method.method), title: paymentActionTitle(payment, method) }));
   let options: ConversationReplyOptions = {};
   if ((state === "LANGUAGE" && !/^(LANG_EN|LANG_UR)$/.test(normalized)) || (state === "CANCELLED" && normalized === "START") || (state === "NEW" && normalized !== "GET_FREE_PACKS" && Boolean(text))) {
@@ -706,7 +711,7 @@ async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: R
     AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND o.state IN ('PAYMENT_PENDING','PAYMENT_REVIEW')
     AND p.review_state IN ('PENDING','REJECTED','REVIEW') LIMIT 1`).bind(...senderNumbers,message.context.id)
     .first<{id:string;order_number:string;state:string;payment_id:string;method:string|null;review_state:string;customer_transaction_reference:string|null}>():null;
-  if(message.context?.id&&!record){await recordReceiptMediaDiagnostic(db,event.id,mediaId,"REPLY_TO_PAYMENT_NOT_FOUND","ORDER_ASSOCIATION");return false}
+  const paymentReplyMatched = Boolean(record);
   if(!record){
     const candidates=await db.prepare(`${select} WHERE ${senderMatch} AND o.state IN ('PAYMENT_PENDING','PAYMENT_REVIEW') AND p.review_state IN ('PENDING','REJECTED','REVIEW') ORDER BY o.created_at DESC,o.id DESC LIMIT 2`).bind(...senderNumbers).all<{id:string}>();
     if(candidates.results?.length!==1){await recordReceiptMediaDiagnostic(db,event.id,mediaId,candidates.results?.length?"MULTIPLE_ELIGIBLE_PAYMENT_ORDERS":"NO_ELIGIBLE_PAYMENT_ORDER","ORDER_ASSOCIATION",candidates.results?.length??0);return false}
@@ -716,8 +721,11 @@ async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: R
   }
   if(!record)return false;
   if(record.state!=="PAYMENT_PENDING"&&record.state!=="PAYMENT_REVIEW"){await recordReceiptMediaDiagnostic(db,event.id,mediaId,"ORDER_STATE_NOT_RECEIVABLE","ORDER_ASSOCIATION");return false}
-  const associationEvidence=message.context?.id?"PAYMENT_REPLY_WAMID":data.orderId?"ACTIVE_CONVERSATION_ORDER":"UNIQUE_SENDER_PAYMENT";
-  const existing=await db.prepare("SELECT id FROM payment_receipts WHERE provider_media_id=? AND order_id=?").bind(mediaId,record.id).first<{id:string}>();
+  if(!record.method || !["JAZZCASH","EASYPAISA","BANK_TRANSFER"].includes(record.method)){await recordReceiptMediaDiagnostic(db,event.id,mediaId,record.method === "COD" ? "COD_RECEIPT_REJECTED" : "NON_ADVANCE_RECEIPT_REJECTED","ORDER_ASSOCIATION");return false}
+  const associationEvidence=paymentReplyMatched?"PAYMENT_REPLY_WAMID":message.context?.id?"UNMATCHED_REPLY_UNIQUE_SENDER_PAYMENT":data.orderId?"ACTIVE_CONVERSATION_ORDER":"UNIQUE_SENDER_PAYMENT";
+  const existing=await db.prepare("SELECT id,order_id FROM payment_receipts WHERE provider_media_id=? LIMIT 1").bind(mediaId).first<{id:string;order_id:string}>();
+  if(existing && existing.order_id!==record.id){await recordReceiptMediaDiagnostic(db,event.id,mediaId,"MEDIA_ALREADY_ASSOCIATED","ORDER_ASSOCIATION");return true}
+  if(existing)return true;
   if(!existing){
     let media:Awaited<ReturnType<typeof provider.downloadMedia>>,stored:{objectKey:string;sha256:string};
     try{media=await provider.downloadMedia(mediaId)}catch{await recordReceiptMediaDiagnostic(db,event.id,mediaId,"META_MEDIA_DOWNLOAD_FAILED","MEDIA_DOWNLOAD");throw new Error("RECEIPT_MEDIA_DOWNLOAD_FAILED")}
@@ -737,7 +745,7 @@ async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: R
       throw new Error("RECEIPT_D1_COMMIT_FAILED");
     }
   }
-  const receiptText=`Receipt received for order ${record.order_number}. Your payment is under Admin review. We will notify you after verification.`;
+  const receiptText=data.language === "ur" ? `\u0622\u0631\u0688\u0631 ${record.order_number} \u06a9\u06cc \u0631\u0633\u06cc\u062f \u0645\u0648\u0635\u0648\u0644 \u06c1\u0648 \u06af\u0626\u06cc\u06d4 \u0627\u062f\u0627\u0626\u06cc\u06af\u06cc \u0627\u06cc\u0688\u0645\u0646 \u06a9\u06d2 \u062cا\u0626ز\u06d2 \u0645ی\u06ba \u06c1\u06d2\u06d4 \u062a\u0635\u062f\u06cc\u0642 \u06a9\u06d2 \u0628عد \u0627طلاع \u062f\u06cc \u062c\u0627\u0626\u06d2 \u06af\u06cc\u06d4` : `Receipt received for order ${record.order_number}. Your payment is under Admin review. We will notify you after verification.`;
   const orderStatus=await contentFor(db,"ORDER_STATUS","Use Check Order to see the current order and payment status.",{},`CHAT:${event.from}`,data.language??"en");
   const image=await contentImageFor(db,bucket,"RECEIPT",`CHAT:${event.from}`);
   await sendConversationReply(db,provider,event.from,event.id,receiptText,{image,buttons:[{id:"CHECK_ORDER",title:whatsAppActionLabel(orderStatus,"CHECK_ORDER")}]});

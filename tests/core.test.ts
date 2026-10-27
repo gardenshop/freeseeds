@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FlowSubmission, MetaWhatsAppProvider, MockWhatsAppProvider, canTransition, createLeadEvent, createPurchaseEvent, eventId, formatPaymentMessage, hasCompleteEnabledPaymentMethod, normalizeContactNumber, parseProductInput, parseProvinceDeliveryRateInput, paymentInstructions, provinceDeliveryListRows, requirePaymentAmount, resolveWhatsAppRecipients, validatePaymentAmount, validatePositiveInteger, validateReceipt } from "@gfs/core";
+import { FlowSubmission, MetaWhatsAppProvider, MockWhatsAppProvider, canTransition, createLeadEvent, createPurchaseEvent, eventId, formatPaymentMessage, hasCompleteEnabledPaymentMethod, normalizeContactNumber, normalizeMobileContactNumber, parseProductInput, parseProvinceDeliveryRateInput, paymentInstructions, provinceDeliveryListRows, requirePaymentAmount, resolveWhatsAppRecipients, validatePaymentAmount, validatePositiveInteger, validateReceipt } from "@gfs/core";
 
 describe("Get Free Seeds domain", () => {
   it("requires exactly five Flow fields", () => {
@@ -11,6 +11,15 @@ describe("Get Free Seeds domain", () => {
     expect(normalizeContactNumber("03034901810")).toBe("+923034901810");
     expect(normalizeContactNumber("923034901810")).toBe("+923034901810");
     expect(normalizeContactNumber("+923034901810")).toBe("+923034901810");
+  });
+  it("accepts only the two new-customer mobile formats and stores eleven digits", () => {
+    expect(normalizeMobileContactNumber("03001234567")).toBe("03001234567");
+    expect(normalizeMobileContactNumber("0300-1234567")).toBe("03001234567");
+    for (const value of ["0300 1234567", "+923001234567", "923001234567", "0300123456", "030012345678", "0300-123456", "03AA1234567"]) {
+      expect(normalizeMobileContactNumber(value)).toBeUndefined();
+      expect(() => FlowSubmission.parse({ fullName: "Synthetic Customer", deliveryAddress: "1 Test Street", nearbyPlace: "Test Park", city: "Sahiwal", contactNumber: value })).toThrow();
+    }
+    expect(FlowSubmission.parse({ fullName: "Synthetic Customer", deliveryAddress: "1 Test Street", nearbyPlace: "Test Park", city: "Sahiwal", contactNumber: "0300-1234567" }).contactNumber).toBe("03001234567");
   });
   it("accepts optional scoped BSUID without replacing phone identity fields", () => {
     expect(FlowSubmission.parse({ fullName: "Synthetic Customer", deliveryAddress: "1 Test Street", nearbyPlace: "Test Park", city: "Sahiwal", contactNumber: "03001234567", bsuid: "bsuid-test", bsuidBusinessId: "business-test", whatsappUsername: "customer-test" })).toMatchObject({ bsuid: "bsuid-test", bsuidBusinessId: "business-test" });

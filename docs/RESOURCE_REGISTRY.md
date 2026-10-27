@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-261 Protected Runtime State (2026-10-27)
+
+- Cloudflare identity was verified as the authorized GFS account before deployment; canonical GFS Meta assets only. No Hoja resource was opened or used.
+- API `428defd5-e7aa-4800-b001-976f403c735e` active100%; Admin `615e1156-2747-457a-8623-11d1e967f911` active100%; rollback `2500e268-8985-4fd4-a141-68633f16315d` retained.
+- Existing D1, receipt R2, event Queue, signed callback, payment recipients, customers, receipts, orders and history remain protected. No migration was replayed and no secret value was printed or committed.
+- Runtime policy remains `COD_V1_ENABLED=true`, `COD_ROLLOUT_MODE=PUBLIC`, audited COD fee PKR125. Receipt media remains private and Admin-reviewed.
+- Live receipt acceptance is pending one authorized customer-device action; no WAMID or customer identifier is recorded here.
+
 ## GFS-260 post-launch state (2026-10-27)
 
 - API `089f5671…` remains PUBLIC100%; Admin remains100%; prior TESTER_ONLY and COD-OFF rollback versions remain retained.

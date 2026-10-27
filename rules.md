@@ -1,5 +1,15 @@
 # Get Free Seeds Binding Rules
 
+## GFS-261 Mobile Validation and Receipt Media Protocol (2026-10-27)
+
+- The protected release preserves PUBLIC COD, audited PKR125, all three Advance methods, signed callback, D1/R2/Queue bindings, history, and COD-off rollback. No migration was run.
+- New delivery contact input accepts only `03XXXXXXXXX` or `03XX-XXXXXXX` via `^03[0-9]{2}-?[0-9]{7}$`; accepted values store as 11 digits. Meta `wa_id` and historical contacts are unchanged.
+- Receipt media supports standalone, payment-reply, unrelated-reply, forwarded/shared, and supported image-document inputs. Association is trusted-reply or unique eligible sender only; ambiguity fails closed. Media is type/size checked, private, deduplicated by provider media ID, and remains REVIEW/PENDING until Admin verifies credit. COD, paid, and unrelated orders are excluded.
+- Official Chrome DevTools MCP and authenticated GFS dashboard identity were verified before deployment. Do not use unrelated WhatsApp Web, fabricate inbound events, expose secrets, or print customer identifiers.
+- API `428defd5-e7aa-4800-b001-976f403c735e` is active100%; Admin `615e1156-2747-457a-8623-11d1e967f911` remains active100%; rollback `2500e268-8985-4fd4-a141-68633f16315d` remains retained. `COD_V1_ENABLED=true`, `COD_ROLLOUT_MODE=PUBLIC`.
+- Gates pass: 287/287 tests, build, lint, audit0, rollback4/4; API health200, unsigned webhook403, Admin health200 with `paymentConfigured=true`.
+- A real receipt upload was not performed because no authorized customer-device action was available. Keep PUBLIC COD healthy; do not claim live receipt acceptance or create synthetic WAMIDs/orders. Remaining action: one authorized standalone receipt and one authorized replied receipt.
+
 ## GFS-260 Post-Launch Verification (2026-10-27)
 
 - Read-only post-launch inspection found no new non-tester or other customer interaction after PUBLIC promotion. Do not solicit one, reset state, or disable the healthy release; public customer observation remains pending.

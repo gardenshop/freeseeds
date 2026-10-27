@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-261 Mobile Validation and Receipt Media (2026-10-27)
+
+| Requirement | Result | Evidence |
+|---|---|---|
+| New contact format | PASS | Strict regex coverage for local and hyphenated forms, rejection of spaces/+92/wrong length/letters, EN/UR guided behavior, CONTACT retention, and 11-digit normalization. |
+| Meta identity/history preservation | PASS | Shared Meta `wa_id` normalization and historical persistence paths unchanged. |
+| Receipt input variants | PASS LOCAL | Standalone, payment-reply, unrelated-reply unique fallback, forwarded/shared, and supported image-document fixtures pass. |
+| Receipt association safety | PASS LOCAL | Trusted reply or unique eligible sender only; ambiguous, COD, paid and unrelated cases fail closed. |
+| Receipt storage/dedup/Admin state | PASS LOCAL | Type/size validation, private R2 path, provider media-id deduplication, Admin mapping, REVIEW/PENDING preservation and localized acknowledgement pass. |
+| Full regression | PASS | 287/287 tests; build, lint, audit0; rollback4/4. |
+| Runtime deployment | PASS | API `428defd5-e7aa-4800-b001-976f403c735e` active100%; Admin `615e1156-2747-457a-8623-11d1e967f911` active100%; health200; unsigned webhook403. |
+| Genuine receipt E2E | BLOCKED | No authorized customer device action; no fake inbound, WAMID, receipt or PAID state. Remaining action: one standalone and one reply receipt from an authorized device. |
+
 ## GFS-260 Post-Launch Verification (2026-10-27)
 
 | Requirement | Result | Evidence / boundary |

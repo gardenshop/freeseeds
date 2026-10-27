@@ -8,12 +8,20 @@ export type LeadSource = z.infer<typeof LeadSource>;
 export const OrderState = z.enum(["NEW", "DETAILS_COMPLETED", "PAYMENT_PENDING", "RECEIPT_SUBMITTED", "PAYMENT_REVIEW", "PAYMENT_REJECTED", "COD_PENDING", "PAID", "PACKING", "DISPATCHED", "DELIVERED", "COLLECTION_PENDING", "CANCELLED"]);
 export type OrderState = z.infer<typeof OrderState>;
 
+export const MOBILE_CONTACT_NUMBER_PATTERN = /^03[0-9]{2}-?[0-9]{7}$/;
+
+export function normalizeMobileContactNumber(value: string): string | undefined {
+  return MOBILE_CONTACT_NUMBER_PATTERN.test(value) ? value.replace("-", "") : undefined;
+}
+
+const NewCustomerContactNumber = z.string().refine((value) => normalizeMobileContactNumber(value) !== undefined, { message: "INVALID_MOBILE_CONTACT_NUMBER" }).transform((value) => normalizeMobileContactNumber(value) as string);
+
 export const FlowSubmission = z.object({
   fullName: z.string().trim().min(2).max(120),
   deliveryAddress: z.string().trim().min(5).max(500),
   nearbyPlace: z.string().trim().min(2).max(160),
   city: z.string().trim().min(2).max(100),
-  contactNumber: z.string().trim().min(7).max(30),
+  contactNumber: NewCustomerContactNumber,
   productCode: z.string().trim().min(1).max(100).optional(),
   fertilizerSelected: z.boolean().optional(),
   province: z.string().trim().min(1).max(100).optional(),

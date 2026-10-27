@@ -151,6 +151,20 @@ async function createSyntheticPaymentReviewOrder(waId: string, idempotencyKey: s
 }
 
 describe("frozen V1 receipt hotfix", () => {
+  it.each(["en", "ur"] as const)("keeps CONTACT for invalid mobile input and normalizes a valid hyphenated number (%s)", async (language) => {
+    await inbound("START");
+    await inbound(tap(language === "ur" ? "LANG_UR" : "LANG_EN"));
+    await inbound(tap("CONTINUE_ORDER"));
+    await inbound(tap("SEEDS_ONLY"));
+    await inbound({ type: "list_reply", list_reply: { id: "PROVINCE_SYNTHETIC_PROVINCE", title: "Synthetic Province" } });
+    for (const value of ["Synthetic Customer", "123 Synthetic Street", "Synthetic Park", "Synthetic City"]) await inbound(value);
+    await inbound("0300 1234567");
+    expect(conversation()?.state).toBe("CONTACT");
+    expect(body()).toContain("03XX");
+    await inbound("0300-1234567");
+    expect(conversation()).toMatchObject({ state: "REVIEW", data: { contactNumber: "03001234567" } });
+  });
+
   it("attaches a new inbound image to the sender's only eligible payment when the webhook creates a NEW conversation", async () => {
     const idempotencyKey="gfs206-v1-new-conversation-receipt";
     const order=await persistFlowSubmission(db,{fullName:"NON-PAYABLE Synthetic",deliveryAddress:"SYNTHETIC GFS206 RECEIPT TEST",nearbyPlace:"SYNTHETIC ONLY",city:"Synthetic City",contactNumber:"03001234567",productCode:"FREE_5_PACK_VEGETABLE_SEEDS",province:"Synthetic Province",fertilizerSelected:false},undefined,idempotencyKey,sender);
@@ -181,6 +195,27 @@ describe("frozen V1 receipt hotfix", () => {
     expect(audit.metadata_json).not.toContain("synthetic-v1-image-event");
   });
 
+  it("accepts a supported image document replying to an unrelated message and deduplicates the media id", async () => {
+    const { order } = await pendingPaymentFixture("JAZZCASH", "en");
+    const originalFetch = globalThis.fetch;
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init: RequestInit = {}) => {
+      const url = String(input);
+      if (url.includes("synthetic-document-media")) return Response.json({ url: "https://synthetic-media.test/document.jpg", mime_type: "image/jpeg", file_size: 3 });
+      if (url === "https://synthetic-media.test/document.jpg") return new Response(new Uint8Array([9, 8, 7]), { headers: { "content-type": "image/jpeg" } });
+      return originalFetch(input, init);
+    }));
+    const document = { from: sender, id: "synthetic-document-event", timestamp: "1792497600", type: "document", document: { id: "synthetic-document-media", mime_type: "image/jpeg" }, context: { id: "synthetic-unrelated-chat-message" } };
+    expect((await callback([document])).status).toBe(200);
+    expect(sqlite.prepare("SELECT order_id,mime_type FROM payment_receipts WHERE provider_media_id=?").get("synthetic-document-media")).toEqual({ order_id: order.orderId, mime_type: "image/jpeg" });
+    const audit = sqlite.prepare("SELECT metadata_json FROM audit_log WHERE action='RECEIPT_SUBMITTED' AND entity_id=(SELECT id FROM payments WHERE order_id=?)").get(order.orderId) as { metadata_json: string };
+    expect(audit.metadata_json).toContain('"associationEvidence":"UNMATCHED_REPLY_UNIQUE_SENDER_PAYMENT"');
+    const sendsAfterReceipt = sends.length;
+    expect((await callback([{ ...document, id: "synthetic-document-duplicate-event" }])).status).toBe(200);
+    expect(sends).toHaveLength(sendsAfterReceipt);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(order.orderId)).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(order.orderId)).toEqual({ state: "PAYMENT_REVIEW", payment_status: "PENDING" });
+  });
+
   it.each(["en", "ur"] as const)("accepts an exact payment reply for a customer with no stored Meta wa_id and sends the %s review acknowledgement once", async (language) => {
     const waId="923000000001",idempotencyKey=`gfs208-missing-wa-id-${language}`,paymentMessageId=`synthetic-payment-message-${language}`;
     const order=await persistFlowSubmission(db,{fullName:"NON-PAYABLE Synthetic",deliveryAddress:`SYNTHETIC ${idempotencyKey}`,nearbyPlace:"SYNTHETIC ONLY",city:"Synthetic City",contactNumber:"03000000001",productCode:"FREE_5_PACK_VEGETABLE_SEEDS",province:"Synthetic Province",fertilizerSelected:false},undefined,idempotencyKey,waId);
@@ -201,7 +236,7 @@ describe("frozen V1 receipt hotfix", () => {
     const image={from:waId,id:`synthetic-image-event-${language}`,timestamp:"1792497600",type:"image",image:{id:`synthetic-wamid-media-id-${language}`,mime_type:"image/png"},context:{id:paymentMessageId}};
 
     expect((await callback([image])).status).toBe(200);
-    expect(body()).toBe(`Receipt received for order ${order.orderNumber}. Your payment is under Admin review. We will notify you after verification.`);
+    expect(body()).toBe(language === "ur" ? `آرڈر ${order.orderNumber} کی رسید موصول ہو گئی۔ ادائیگی ایڈمن کے جائزے میں ہے۔ تصدیق کے بعد اطلاع دی جائے گی۔` : `Receipt received for order ${order.orderNumber}. Your payment is under Admin review. We will notify you after verification.`);
     expect(sqlite.prepare("SELECT order_id,payment_id FROM payment_receipts WHERE provider_media_id=?").get(`synthetic-wamid-media-id-${language}`)).toEqual({order_id:order.orderId,payment_id:payment.id});
     expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(order.orderId)).toEqual({state:"PAYMENT_REVIEW",payment_status:"PENDING"});
     expect(sqlite.prepare("SELECT review_state FROM payments WHERE id=?").get(payment.id)).toEqual({review_state:"REVIEW"});

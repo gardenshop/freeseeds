@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-27 (GFS-261 mobile validation and receipt media)
+
+- Added strict new-customer mobile validation with 11-digit storage normalization and bilingual CONTACT rejection behavior; preserved Meta identifiers and historical records.
+- Repaired receipt association for standalone, replied, forwarded/shared and supported image-document media with ambiguity fail-closed behavior, private R2 storage and provider-media deduplication.
+- Preserved Admin REVIEW/PENDING semantics, receipt history, COD exclusion, payment verification and localized acknowledgement.
+- Passed focused101/101, full287/287, build, lint, audit0 and rollback4/4. Deployed API `428defd5-e7aa-4800-b001-976f403c735e` at100%; Admin remains `615e1156-2747-457a-8623-11d1e967f911` at100%; PUBLIC COD retained.
+- No genuine receipt upload was performed because an authorized customer device was unavailable; no synthetic inbound or payment evidence was recorded.
+
 ## 2026-10-27 (GFS-260 post-launch verification)
 
 - Read back PUBLIC deployment, Admin health, D1 integrity, COD state, webhook aggregates, and outbox failures without mutation.

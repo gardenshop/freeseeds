@@ -1,5 +1,14 @@
 # Status
 
+## GFS-261 Mobile Validation and Receipt Media (2026-10-27)
+
+- **P0 PASS.** Strict new-customer contact validation accepts only the two approved local formats and stores normalized 11-digit values; EN/UR invalid input remains on CONTACT. Meta `wa_id` and historical records are unchanged.
+- **P1 PASS ENGINEERING.** Receipt handling covers standalone/replied/forwarded/shared image and supported image-document inputs, trusted or unique-sender association, ambiguity fail-closed behavior, private R2 storage, provider media deduplication, Admin receipt mapping, localized acknowledgement, and REVIEW/PENDING safety. COD and PAID orders are excluded.
+- **P2 PASS.** Focused101/101; full287/287; build, lint, audit0 and rollback4/4 pass. No migration or payment configuration change.
+- **P3 PASS DEPLOYMENT / BLOCKED LIVE RECEIPT ACCEPTANCE.** API `428defd5-e7aa-4800-b001-976f403c735e` active100%; Admin `615e1156-2747-457a-8623-11d1e967f911` active100%; COD PUBLIC/enabled. Authenticated dashboard identity and Admin health verified. A live receipt image could not be sent without an authorized customer-device action; no inbound/WAMID was fabricated.
+- **Safety:** API health200, unsigned webhook403, Admin health200 with `paymentConfigured=true`; original bindings, signed callback, PUBLIC COD and rollback remain protected.
+- **Completion:** P0 100%/0%; P1 100%/0%; P2 100%/0%; P3 deployment100%/0%, live receipt observation0%/100%. Engineering release complete; live receipt acceptance pending. PUBLIC COD remains operational.
+
 ## GFS-260 Post-Launch Verification (2026-10-27)
 
 - **P0 PASS.** PUBLIC API `089f5671…` remains100%; Admin remains100%; no redeploy or traffic mutation occurred.

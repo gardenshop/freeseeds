@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-261 Mobile Validation and Receipt Media (2026-10-27)
+
+**Overall: engineering PASS; PUBLIC COD preserved; live customer receipt acceptance BLOCKED pending an authorized device action.**
+
+| Assignment | Result | Evidence |
+|---|---|---|
+| P0 mobile validation | PASS | Exact approved local formats only, clear EN/UR rejection, CONTACT retention, 11-digit storage normalization; Meta `wa_id`/history untouched. |
+| P1 receipt repair | PASS LOCAL | Standalone/reply/forwarded/shared/document coverage, trusted/unique association, ambiguity fail-closed, private R2, media dedup, Admin mapping and REVIEW/PENDING safety. COD and PAID excluded. |
+| P2 quality | PASS | Focused101/101; full287/287; build, lint, audit0; rollback4/4. |
+| P3 controlled deployment | PASS | API `428defd5-e7aa-4800-b001-976f403c735e` active100%; Admin `615e1156-2747-457a-8623-11d1e967f911` active100%; API health200, unsigned webhook403, Admin health200 with `paymentConfigured=true`. |
+| P3 genuine receipt observation | BLOCKED/PENDING | No authorized customer-device action. No fabricated inbound, WAMID, receipt, duplicate, transfer or PAID state. Exact remaining action: one genuine standalone receipt image and one genuine replied receipt image from the authorized device. |
+| PUBLIC COD safety | PASS | `COD_V1_ENABLED=true`, `COD_ROLLOUT_MODE=PUBLIC`, audited PKR125 retained; signed callback, bindings, Advance methods, order/payment history and COD-off rollback preserved. |
+
+**Live evidence boundary:** this release has no new genuine receipt WAMIDs/order IDs to report. Existing PUBLIC COD and Advance evidence remains valid for unchanged behavior, but it does not substitute for receipt-image live acceptance. Do not use the unrelated WhatsApp Web profile or create a test order solely for evidence.
+
+**Completion:** P0 100%/0%; P1 100%/0%; P2 100%/0%; P3 deployment100%/0%, genuine receipt action0%/100%. Overall engineering completion90%; remaining live receipt acceptance10%. PUBLIC COD remains healthy and active; receipt feature is not declared live-accepted until the authorized device action occurs.
+
 ## GFS-260 | Post-Launch Verification (2026-10-27)
 
 **Overall: PUBLIC remains active and healthy; post-promotion customer observation is PENDING.**
