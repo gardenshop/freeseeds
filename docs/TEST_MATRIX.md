@@ -1646,3 +1646,20 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | Sends-off candidate | PASS | API `17598945-4601-4068-bf8c-9c3223cc8dd8` / Admin `76e33a3d-e96a-4942-a4ec-31910c688c16` staged at 0%; flags OFF |
 | Genuine Meta acceptance | BLOCKED honestly | No authorized eligible live event; no WAMID or delivery is claimed |
 | Full regression | PASS | 318/318 tests, build, lint, diff check |
+
+## GFS-306 final two-reminder release
+
+| Area | Result | Evidence |
+|---|---|---|
+| Identity/bindings | PASS | GitHub `gardenshop`; Cloudflare Get Free Seeds / `gisupp@gmail.com`; bound D1 UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1` |
+| Migrations/integrity | PASS | 0041/0042 markers; `quick_check=ok`; FK violations 0; four PUBLISHED recovery templates |
+| Eligibility/idempotency | PASS | Realistic `DETAILS_COMPLETED` and `PAYMENT_METHOD` fixtures; independent +15/+210; duplicate/method/receipt/COD/paid/hold/archive/opt-out/window suppression |
+| Privacy-safe attribution | PASS | Candidate version + hashed correlation + fixed/numeric results only; no payload, phone, token, customer text or raw WAMID |
+| Genuine sends-off canary | PASS | `3d018265` at 10% recorded five genuine callbacks and one handled inbound; correlated provider-accepted replies reached DELIVERED/READ |
+| Signed webhook | PASS | Candidate preview invalid signature returned 403; full signed integration suite passed |
+| Admin Orders/CMS/CSV | PASS | Candidate override/live HTTP200; four recovery templates PUBLISHED; CSV 18 columns and formula-prefix check clean |
+| Activation cutoff/backfill | PASS | Start `2026-10-28T20:05:20.290Z`; historical stage rows 0 |
+| Natural scheduling/suppression | PASS | Two post-cutoff orders created four rows; both +15 stages suppressed as no longer eligible; historical stages/outbox/messages/WAMIDs 0 |
+| Live recovery delivery | PENDING | No customer remained eligible at +15 due time; both sends correctly skipped, +210 rows pending |
+| Focused/full/build/lint/audit | PASS | 91/91; 319/319; build/lint; npm audit 0 vulnerabilities |
+| Rollback | PASS | 4/4; sends-off API `3d018265` retained at 0%; Admin `f0212429` retained at 0% |

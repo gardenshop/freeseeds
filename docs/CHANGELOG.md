@@ -1236,3 +1236,12 @@
 - Added dedicated internal CMS-backed +15/+210 EN/UR stage copy with dynamic placeholders and safe no-COD fallback; five-stage Advance reminders remain separate and OFF.
 - Owner-authorized 0041/0042 applied once to verified D1 `17b7e9f6…`; post-apply integrity and marker checks PASS. Sends-off API/Admin candidates are staged at 0% with protected baseline traffic unchanged.
 - Quality: focused 95/95, full 318/318, build, lint, and diff check PASS. No historical recovery send, WAMID, delivery, payment mutation, COD conversion or billing change. Genuine acceptance remains pending.
+
+## 2026-10-29 - GFS-306 final two-reminder release
+
+- Added privacy-safe Worker version attribution to the webhook completion path and a version-metadata binding; no customer payload, phone, token or raw WAMID is logged.
+- Proved the sends-off API through a bounded 10% canary with genuine candidate-attributed traffic, one handled inbound, and provider-accepted DELIVERED/READ outcomes.
+- Promoted API/Admin sends-off candidates after health, signed-webhook, Orders, CMS and 18-column CSV checks; retained reversible 0% rollback versions.
+- Activated only `PAYMENT_CHOICE_RECOVERY_ENABLED` at `2026-10-28T20:05:20.290Z`. Advance reminder, automation and utility-template flags remain false.
+- Verified two natural post-cutoff orders scheduled exactly +15/+210. Both +15 due-time rechecks suppressed no-longer-eligible customers with zero Queue jobs/messages/WAMIDs; historical stages remain zero. Live reminder delivery remains PENDING honestly.
+- Quality: focused 91/91, full 319/319, build/lint, audit0, D1 integrity and rollback4/4 PASS.

@@ -1342,3 +1342,14 @@ No secrets are stored in this registry.
 - **D1:** 0041/0042 applied once after owner authorization; markers 0037–0042, recovery tables and four PUBLISHED EN/UR stage templates read back; `quick_check=ok`; FK check empty; recovery bookmark exists and was not created or exposed.
 - **Flags:** recovery false; five-stage reminder false; automation false; utility-template approval false; no activation start time; no schedules, sends, WAMIDs or delivery counts claimed.
 - **Policy:** +15/+210 recovery only for NEW post-activation eligible no-method orders; five Advance stages remain separate; 24-hour service-window only; permanent BLOCKED_WINDOW; no historical backfill, Meta templates or automatic COD conversion; PKR125 only after explicit COD consent.
+
+## GFS-306 active release registry (2026-10-29 PKT)
+
+- **Identity:** GitHub `gardenshop`; Cloudflare Get Free Seeds / `gisupp@gmail.com`; account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical GFS Meta only; Hoja untouched.
+- **API:** active `c1f43455-53fa-47c0-ae63-a32c37b8ee10` 100%; immediate sends-off rollback `3d018265-b38a-469e-82c1-4e4d48b0a4cb` 0%; frozen prior API `45b01d86-65ff-4573-b384-f6be433a83d7` retained.
+- **Admin:** active `76e33a3d-e96a-4942-a4ec-31910c688c16` 100%; rollback `f0212429-ead7-4653-aea9-2ef714c6b4b8` 0%. Orders/CMS/CSV are HTTP200; CSV remains 18 columns.
+- **Bindings:** D1 `getfreeseeds-staging` UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; existing receipts R2, events Queue and minute Cron unchanged. 0041/0042 present; integrity/FK clean.
+- **Flags:** payment-choice recovery true; start `2026-10-28T20:05:20.290Z`; Advance reminders false; Advance automation false; utility templates false.
+- **Observability:** Cloudflare stored Logs/Traces remain disabled. Privacy-safe D1 attribution is active; five candidate events included one handled inbound. Raw correlation hashes, provider IDs and customer data are omitted.
+- **Recovery counts at final checkpoint:** currently eligible 0; scheduled orders 2; stage rows 4; +15 SKIPPED/no-longer-eligible 2; +210 PENDING 2; outbox 0; recovery messages/WAMIDs 0; BLOCKED_WINDOW 0; historical stages 0. Live delivery acceptance PENDING.
+- **Public bot health after activation:** active version audit 372 completions / 115 handled events; ordinary replies with provider IDs were 84 READ, 25 DELIVERED and 1 SENT. No customer identifiers or raw WAMIDs are recorded here.

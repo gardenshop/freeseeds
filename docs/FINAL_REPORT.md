@@ -3932,3 +3932,24 @@ Completion: P0 100%; P1 75% source / 0% live CMS; P2 100% source / 0% live activ
 ### Release decision
 
 **GO to preserve the protected baseline; NO-GO for candidate promotion and recovery activation** until an authorized eligible live event proves inbound → candidate → outbound Meta acceptance. Current completion: P0 100%, P1 100%, P2 100%, P3 100%, P4 55% (staged only), P5 90%; overall **87% source/safety completion, 0% live recovery delivery**. Remaining blocker is genuine authorized acceptance; no false success is reported.
+
+## GFS-306 final report - 2026-10-29 PKT
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 freeze/identity | PASS | Correct GitHub/Cloudflare/GFS bindings; healthy baseline preserved until acceptance; no schema/payment/order mutation |
+| P1 completed reminders | PASS | 0041/0042 markers, integrity/FK clean, four PUBLISHED EN/UR copies, realistic eligibility and independent +15/+210 tests |
+| P2 acceptance | PASS | 10% API `3d018265` canary produced five version-attributed genuine webhooks and one handled inbound; narrow aggregate provider evidence reached DELIVERED/READ |
+| P3 sends-off release | PASS | API `3d018265` and Admin `76e33a3d` passed health/webhook/Orders/CMS/CSV; compatible candidates promoted with rollback retained |
+| P4 activation | PASS scheduling/suppression / PENDING delivery | API `c1f43455` active 100%; two natural orders scheduled four rows; both +15 stages safely skipped after eligibility changed; no recovery WAMID |
+| P5 quality/push | PASS pending final push | Focused 91/91; full 319/319; build/lint; audit0; D1 integrity; rollback4/4 |
+
+### Live state and decision
+
+- Active API `c1f43455-53fa-47c0-ae63-a32c37b8ee10` 100%, rollback `3d018265-b38a-469e-82c1-4e4d48b0a4cb` 0%. Active Admin `76e33a3d-e96a-4942-a4ec-31910c688c16` 100%, rollback `f0212429-ead7-4653-aea9-2ef714c6b4b8` 0%.
+- Flags: payment-choice recovery true; five-stage Advance reminders false; Advance automation false; utility templates false.
+- Final recovery counts: currently eligible 0, scheduled orders 2, stage rows 4, +15 SKIPPED/no-longer-eligible 2, +210 PENDING 2, queued/outbox 0, sent/delivered/read/failed/BLOCKED_WINDOW 0, historical stage rows 0. No recovery WAMID exists yet; genuine delivery acceptance is PENDING.
+- Public bot evidence after activation: 372 sanitized active-version webhook completions, 115 handled events, and ordinary provider-ID-bearing replies at 84 READ / 25 DELIVERED / 1 SENT. Raw WAMIDs are intentionally omitted.
+- Logging: raw Cloudflare Workers Logs remain disabled. The enabled D1 audit contains only version, hashed correlation, fixed result code and numeric counts.
+- Public ordering: **GO**. Two payment-choice reminders: **GO for safe new-order-only configuration; PENDING first legitimate delivery**. Five-stage Advance reminders: **OFF**.
+- Completion: P0 100%, P1 100%, P2 100%, P3 100%, P4 95% (real scheduling/suppression passed; delivery pending), P5 95% before final push; overall **98% operational completion**. The only remaining evidence boundary is the first naturally eligible-at-due-time +15/+210 send.

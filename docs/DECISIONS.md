@@ -1357,3 +1357,11 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Use dedicated 0042 internal CMS rows for +15/+210 copy rather than changing the five-stage Advance reminder templates. Keep utility approval false and use no Meta templates.
 - Treat the protected API/Admin baseline as the production release until an authorized live tester proves candidate inbound-to-outbound behavior. A 0%-traffic preview or HTTP200 is not a genuine message acceptance.
 - 0041/0042 are live and integrity-verified; no historical rows were backfilled. Candidate traffic remains 0% and recovery activation remains off pending genuine acceptance.
+
+## 2026-10-29: GFS-306 activation decision
+
+- Accept a candidate only after version-attributed genuine traffic reaches the candidate and a handled inbound correlates to provider-accepted delivery; traffic percentage and HTTP200 alone are insufficient.
+- Use the existing `audit_log` for bounded privacy-safe attribution instead of enabling raw Workers Logs. Store Worker version, hashed correlation, fixed result code and counts only; never payload/customer/token/raw-WAMID content.
+- Activate only payment-choice recovery with an immutable UTC cutoff. Keep the five-stage Advance reminder engine, its automation flag and utility templates false.
+- Treat zero eligible post-cutoff orders as healthy configuration with live delivery acceptance PENDING. Do not manufacture an order, inbound, WAMID or send to convert PENDING into PASS.
+- The immediate operational rollback is API `3d018265` (same code, recovery OFF) and Admin `f0212429`; do not roll back migrations 0041/0042.
