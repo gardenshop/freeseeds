@@ -103,7 +103,10 @@ const LOCALE_FALLBACKS: Partial<Record<WhatsAppTemplateKey, { en: string; ur: st
   FIELD_CITY: { en: "Please reply with your city.", ur: "براہ کرم اپنا شہر لکھیں۔" },
   FIELD_CONTACT_NUMBER: { en: "Please reply with your contact number.", ur: "براہ کرم اپنا رابطہ نمبر لکھیں۔" },
   VALIDATION: { en: "Please choose one of the listed options.", ur: "براہ کرم دیے گئے اختیارات میں سے انتخاب کریں۔" },
-  REVIEW: { en: "Review your order. Tap Place Order to confirm.", ur: "اپنے آرڈر کا جائزہ لیں۔ تصدیق کے لیے آرڈر کریں دبائیں۔" },
+  REVIEW: {
+    en: "🛒 *Order Summary*\n\n______________________________\n\n{orderSummaryItems}\n\nDelivery Fee: PKR {deliveryFee}\n\n______________________________\n\n*Order Total: PKR {orderTotal}*\n\n=====================\n\nPlease select your payment method below to continue.",
+    ur: "🛒 *آرڈر کا خلاصہ*\n\n______________________________\n\n{orderSummaryItems}\n\nڈیلیوری فیس: PKR {deliveryFee}\n\n______________________________\n\n*کل آرڈر: PKR {orderTotal}*\n\n=====================\n\nجاری رکھنے کے لیے نیچے ادائیگی کا طریقہ منتخب کریں۔"
+  },
   CONFIRMATION: { en: "Order {orderNumber} created. Total: PKR {totalPkr}.", ur: "آرڈر {orderNumber} تیار ہو گیا۔ کل: PKR {totalPkr}۔" },
   ORDER_STATUS: { en: "Use Check Order to see the current order and payment status.", ur: "موجودہ آرڈر اور ادائیگی کی حالت دیکھنے کے لیے آرڈر چیک کریں۔" },
   SUPPORT: { en: "Reply START to begin, STATUS to check an order, or CANCEL to stop the current order entry.", ur: "شروع کرنے کے لیے START، آرڈر دیکھنے کے لیے STATUS، یا روکنے کے لیے CANCEL لکھیں۔" },
@@ -111,7 +114,7 @@ const LOCALE_FALLBACKS: Partial<Record<WhatsAppTemplateKey, { en: string; ur: st
   RECEIPT: { en: "Receipt received for order {orderNumber}. Reply with the transaction/reference ID shown in your payment app. This is not payment confirmation; Garden Shop will verify actual account credit. Payment remains under Admin review.", ur: "آرڈر {orderNumber} کی رسید موصول ہوئی۔ اپنی ادائیگی کی ایپ میں دکھایا گیا ٹرانزیکشن/حوالہ نمبر جواب میں بھیجیں۔ یہ ادائیگی کی تصدیق نہیں؛ گارڈن شاپ اکاؤنٹ میں اصل رقم کی تصدیق کرے گا۔ ادائیگی ایڈمن کے جائزے میں رہے گی۔" }
 };
 
-async function contentFor(db: D1Database, key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; amount?: string | number; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string } = {}, sessionKey?: string, locale: "en" | "ur" = "en") {
+async function contentFor(db: D1Database, key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; amount?: string | number; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string; orderSummaryItems?: string; deliveryFee?: string | number; orderTotal?: string | number } = {}, sessionKey?: string, locale: "en" | "ur" = "en") {
   const content = await publishedWhatsAppContent(db, key, locale, sessionKey);
   const localizedFallback = LOCALE_FALLBACKS[key]?.[locale] ?? fallback;
   return {
@@ -400,16 +403,22 @@ async function codPolicy(db: D1Database): Promise<CodPolicyRow | null> {
 }
 
 function checkoutItemLabel(item: { type: string; code: string; name: string }, locale: "en" | "ur"): string {
-  if (item.type === "PRODUCT" && item.code === "FREE_5_PACK_VEGETABLE_SEEDS") return locale === "ur" ? "مفت بیج (5 پیکٹ)" : "Free Seeds (5 packs)";
+  if (item.type === "PRODUCT" && item.code === "FREE_5_PACK_VEGETABLE_SEEDS") return locale === "ur" ? "مفت سبزیوں کے بیج (5 پیکٹ)" : "Free Vegetables Seeds (5 Packs)";
   if (item.type === "FERTILIZER" && item.code === "MICRO_NUTRIENTS_FERTILIZER") return locale === "ur" ? "مائیکرو نیوٹرینٹس (25 گرام)" : "Micro Nutrients (25g)";
   return item.name;
 }
 
+function checkoutItemLines(items: Array<{ type: string; code: string; name: string; lineTotalPkr: number }>, locale: "en" | "ur"): string[] {
+  return [...items].sort((a, b) => Number(a.type === "FERTILIZER") - Number(b.type === "FERTILIZER")).map((item) => `${checkoutItemLabel(item, locale)}: ${item.lineTotalPkr === 0 ? (locale === "ur" ? "مفت" : "FREE") : `PKR ${item.lineTotalPkr}`}`);
+}
+
+function checkoutReviewLinesFromItems(itemLines: string[], deliveryPkr: number, totalPayablePkr: number, locale: "en" | "ur"): string[] {
+  if (locale === "ur") return ["🛒 *آرڈر کا خلاصہ*", "", "______________________________", "", ...itemLines, "", `ڈیلیوری فیس: PKR ${deliveryPkr}`, "", "______________________________", "", `*کل آرڈر: PKR ${totalPayablePkr}*`, "", "=====================", "", "جاری رکھنے کے لیے نیچے ادائیگی کا طریقہ منتخب کریں۔"];
+  return ["🛒 *Order Summary*", "", "______________________________", "", ...itemLines, "", `Delivery Fee: PKR ${deliveryPkr}`, "", "______________________________", "", `*Order Total: PKR ${totalPayablePkr}*`, "", "=====================", "", "Please select your payment method below to continue."];
+}
+
 function checkoutReviewLines(summary: { items: Array<{ type: string; code: string; name: string; lineTotalPkr: number }>; deliveryPkr: number; totalPayablePkr: number }, locale: "en" | "ur"): string[] {
-  const items = [...summary.items].sort((a, b) => Number(a.type === "FERTILIZER") - Number(b.type === "FERTILIZER"));
-  const itemLines = items.map((item) => `${checkoutItemLabel(item, locale)}: ${item.lineTotalPkr === 0 ? (locale === "ur" ? "مفت" : "FREE") : `PKR ${item.lineTotalPkr}`}`);
-  if (locale === "ur") return ["📦 آرڈر کا خلاصہ", ...itemLines, `ڈیلیوری: PKR ${summary.deliveryPkr}`, `کل: PKR ${summary.totalPayablePkr}`];
-  return ["📦 ORDER SUMMARY", ...itemLines, `Delivery: PKR ${summary.deliveryPkr}`, `TOTAL: PKR ${summary.totalPayablePkr}`];
+  return checkoutReviewLinesFromItems(checkoutItemLines(summary.items, locale), summary.deliveryPkr, summary.totalPayablePkr, locale);
 }
 
 function codConfirmationLines(baseAmountPkr: number, feePkr: number, totalPkr: number, locale: "en" | "ur"): string[] {
@@ -443,7 +452,7 @@ async function finalizeCodOrder(db: D1Database, orderId: string, quote: CodQuote
 }
 
 async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }, flowId: string, flowTokenSecret?: string, checkoutMode: string = "guided", events?: Queue, codEnabled = false, codRolloutMode?: string, codTesterWaId?: string, paymentRemindersV2Enabled = false, paymentAutomationV2Enabled = false): Promise<boolean> {
-  const sessionContent = (key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; amount?: string | number; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string } = {}) => contentFor(db, key, fallback, values, `CHAT:${event.from}`, data.language ?? "en");
+  const sessionContent = (key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; amount?: string | number; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string; orderSummaryItems?: string; deliveryFee?: string | number; orderTotal?: string | number } = {}) => contentFor(db, key, fallback, values, `CHAT:${event.from}`, data.language ?? "en");
   const message = event.payload && typeof event.payload === "object" ? event.payload as { text?: { body?: string }; interactive?: { button_reply?: { id?: string; title?: string }; list_reply?: { id?: string; title?: string }; nfm_reply?: { response_json?: string } }; button?: { payload?: string; text?: string } } : {};
   const interaction = message.interactive?.button_reply ?? message.interactive?.list_reply;
   const interactionId = interaction?.id ?? message.button?.payload;
@@ -572,7 +581,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   else if (state === "ADDRESS") { if (!guidedFieldIsValid(state, text)) reply = (await sessionContent("VALIDATION", "Please enter a complete delivery address.")).text; else { data.deliveryAddress = text; nextState = "NEARBY"; reply = (await sessionContent("FIELD_NEARBY_PLACE", "Please reply with a nearby famous place.")).text; } }
   else if (state === "NEARBY") { if (!guidedFieldIsValid(state, text)) reply = (await sessionContent("VALIDATION", "Please enter a nearby famous place.")).text; else { data.nearbyPlace = text; nextState = "CITY"; reply = (await sessionContent("FIELD_CITY", "Please reply with your city.")).text; } }
   else if (state === "CITY") { if (!guidedFieldIsValid(state, text)) reply = (await sessionContent("VALIDATION", "Please enter a valid city.")).text; else { data.city = text; nextState = "CONTACT"; reply = (await sessionContent("FIELD_CONTACT_NUMBER", "Please reply with your contact number.")).text; } }
-  else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (await sessionContent("VALIDATION", "Please enter a valid contact number.")).text; else { data.contactNumber = text; data.checkoutId ??= crypto.randomUUID(); nextState = "REVIEW"; const quote = await quoteOrder(db, { productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: data.province ?? "", fertilizerSelected: data.fertilizerSelected ?? false }); const locale = data.language ?? "en"; const paymentChoice = locale === "ur" ? "ادائیگی منتخب کریں: ایڈوانس ادائیگی یا کیش آن ڈیلیوری" : "Choose payment: Advance Payment or Cash on Delivery"; const feePkr = Number(codSettings?.fee_pkr ?? 0); const codDisclosure = codAvailable && feePkr > 0 ? (locale === "ur" ? `COD پر اضافی PKR ${feePkr} وصولی فیس ہے۔` : `COD: additional PKR ${feePkr} collection fee.`) : undefined; reply = [...checkoutReviewLines({ items: quote.items, deliveryPkr: quote.deliveryFeePkr, totalPayablePkr: quote.totalPayablePkr }, locale), paymentChoice, ...(codDisclosure ? [codDisclosure] : [])].join("\n"); } }
+else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (await sessionContent("VALIDATION", "Please enter a valid contact number.")).text; else { data.contactNumber = text; data.checkoutId ??= crypto.randomUUID(); nextState = "REVIEW"; const quote = await quoteOrder(db, { productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: data.province ?? "", fertilizerSelected: data.fertilizerSelected ?? false }); const locale = data.language ?? "en"; const summary = { items: quote.items, deliveryPkr: quote.deliveryFeePkr, totalPayablePkr: quote.totalPayablePkr }; const itemLines = checkoutItemLines(quote.items, locale); reply = (await sessionContent("REVIEW", checkoutReviewLinesFromItems(itemLines, quote.deliveryFeePkr, quote.totalPayablePkr, locale).join("\n"), { orderSummaryItems: itemLines.join("\n"), deliveryFee: quote.deliveryFeePkr, orderTotal: quote.totalPayablePkr })).text; } }
   else if (state === "PRODUCT") { if (!/^(YES|SEEDS_ONLY|ADD_FERTILIZER)$/i.test(normalized)) { reply = (await sessionContent("VALIDATION", "Please choose one of the listed options.")).text; } else { data.fertilizerSelected = normalized === "ADD_FERTILIZER"; nextState = "PROVINCE"; reply = (await sessionContent("PROVINCE_DELIVERY", "Choose your province for delivery.")).text; } }
   else if (state === "PROVINCE") { const provinceChoice = normalized.startsWith("PROVINCE_") ? normalized.slice(9).replace(/_/g, " ") : text; try { const quote = await quoteOrder(db, { productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: provinceChoice, fertilizerSelected: data.fertilizerSelected ?? false }); data.province = quote.province; nextState = "FULL_NAME"; reply = (await sessionContent("FIELD_FULL_NAME", "Please reply with your full name.")).text; } catch { reply = (await sessionContent("VALIDATION", "Please choose one of the listed options.")).text; } }
   else if (state === "FERTILIZER") { if (!/^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/i.test(normalized)) reply = (await sessionContent("VALIDATION", "Please choose one of the listed options.")).text; else { data.fertilizerSelected = /^(YES|ADD_FERTILIZER)$/i.test(normalized); nextState = "PROVINCE"; reply = (await sessionContent("PROVINCE_DELIVERY", "Choose your province for delivery.")).text; } }
