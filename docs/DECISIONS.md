@@ -1233,3 +1233,11 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Treat historical payment instruction failures as diagnosis only. Do not replay dead letters or send historical reminders. Admin stage filters are truthful operational evidence and do not override receipt/review/held/opt-out/window eligibility.
 - Promote only the exact candidates that pass 0%-traffic version-override smoke. Keep old versions at 0% as rollback, flags false, and utility-template approval false.
 - Since no post-promotion order is eligible inside a verified 24-hour window, leave reminder activation pending. A future activation requires a new eligible Advance order, explicit authorization, and real Meta acceptance/WAMID evidence; no customer or test recipient may be fabricated.
+
+## 2026-10-28: GFS-287 clean checkout and new-order activation
+
+- Keep the existing V2 reminder engine and make the release decision at the configuration boundary: enable only `PAYMENT_REMINDERS_V2_ENABLED` and `PAYMENT_AUTOMATION_V2_ENABLED`; keep `PAYMENT_UTILITY_TEMPLATES_APPROVED=false` permanently for this flow.
+- Replace the first contact-stage payment display with one dynamic summary. A COD fee is disclosed but its separate payable total is withheld until COD is selected; COD selection then shows only the short consent quote. This prevents contradictory Advance/COD totals without touching financial persistence.
+- Use active Worker binding evidence as database authority: staging D1 UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; do not touch the production-name UUID. Preserve 0039/0040 and all COD guards.
+- Treat zero post-activation orders as zero live eligibility, not as permission to backfill historical orders. The first genuine eligible Advance order must prove inbound ID/timestamp at schedule, claim, and send before any Meta outcome can be recorded.
+- Keep the old API at 0% for rollback and Admin unchanged because no Admin source change was required. No template, billing, credential, customer, payment, or COD mutation was performed during GFS-287.

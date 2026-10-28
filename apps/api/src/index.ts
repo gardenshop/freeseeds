@@ -399,27 +399,22 @@ async function codPolicy(db: D1Database): Promise<CodPolicyRow | null> {
   }
 }
 
-function codItemLabel(item: { type: string; code: string; name: string }, locale: "en" | "ur"): string {
-  if (item.type === "PRODUCT" && item.code === "FREE_5_PACK_VEGETABLE_SEEDS") return locale === "ur" ? "بیج (5 مفت پیکٹ)" : "Seeds (5 free packs)";
-  if (item.type === "FERTILIZER" && item.code === "MICRO_NUTRIENTS_FERTILIZER") return locale === "ur" ? "مائیکرو نیوٹرینٹس کھاد (25 گرام)" : "Micro Nutrients Fertilizer (25 g)";
+function checkoutItemLabel(item: { type: string; code: string; name: string }, locale: "en" | "ur"): string {
+  if (item.type === "PRODUCT" && item.code === "FREE_5_PACK_VEGETABLE_SEEDS") return locale === "ur" ? "مفت بیج (5 پیکٹ)" : "Free Seeds (5 packs)";
+  if (item.type === "FERTILIZER" && item.code === "MICRO_NUTRIENTS_FERTILIZER") return locale === "ur" ? "مائیکرو نیوٹرینٹس (25 گرام)" : "Micro Nutrients (25g)";
   return item.name;
 }
 
-function codQuoteLines(summary: Awaited<ReturnType<typeof getPersistedOrderSummary>>, feePkr: number, total: number, locale: "en" | "ur"): string[] {
+function checkoutReviewLines(summary: { items: Array<{ type: string; code: string; name: string; lineTotalPkr: number }>; deliveryPkr: number; totalPayablePkr: number }, locale: "en" | "ur"): string[] {
   const items = [...summary.items].sort((a, b) => Number(a.type === "FERTILIZER") - Number(b.type === "FERTILIZER"));
-  if (locale === "ur") {
-    const itemLines = items.map((item) => `${codItemLabel(item, locale)}: PKR ${item.lineTotalPkr}`);
-    return ["اشیاء:", ...itemLines, `ڈیلیوری فیس: PKR ${summary.deliveryPkr}`, `کیش آن ڈیلیوری وصولی فیس: PKR ${feePkr}`, `ڈیلیوری پر کل قابل ادائیگی: PKR ${total}`, "اگر آپ مکمل رقم ڈیلیوری پر ادا کرنے سے متفق ہیں تو ایک بار تصدیق کریں۔"];
-  }
-  const itemLines = items.map((item) => `${codItemLabel(item, locale)}: PKR ${item.lineTotalPkr}`);
-  return ["Items:", ...itemLines, `Delivery Fee: PKR ${summary.deliveryPkr}`, `COD Cash Collection Fee: PKR ${feePkr}`, `TOTAL PAYABLE ON DELIVERY: PKR ${total}`, "Confirm once only if you agree to pay this full amount on delivery."];
+  const itemLines = items.map((item) => `${checkoutItemLabel(item, locale)}: ${item.lineTotalPkr === 0 ? (locale === "ur" ? "مفت" : "FREE") : `PKR ${item.lineTotalPkr}`}`);
+  if (locale === "ur") return ["📦 آرڈر کا خلاصہ", ...itemLines, `ڈیلیوری: PKR ${summary.deliveryPkr}`, `کل: PKR ${summary.totalPayablePkr}`];
+  return ["📦 ORDER SUMMARY", ...itemLines, `Delivery: PKR ${summary.deliveryPkr}`, `TOTAL: PKR ${summary.totalPayablePkr}`];
 }
 
-function checkoutReviewLines(summary: { items: Array<{ type: string; code: string; name: string; lineTotalPkr: number }>; deliveryPkr: number; totalPayablePkr: number }, codFeePkr: number, locale: "en" | "ur"): string[] {
-  const items = [...summary.items].sort((a, b) => Number(a.type === "FERTILIZER") - Number(b.type === "FERTILIZER"));
-  const itemLines = items.map((item) => `${codItemLabel(item, locale)}: PKR ${item.lineTotalPkr}`);
-  const labels = locale === "ur" ? { items: "اشیاء:", delivery: "ڈیلیوری فیس", advance: "پیشگی کل", fee: "COD فیس", total: "COD کل" } : { items: "Items:", delivery: "Delivery Fee", advance: "Advance total", fee: "COD fee", total: "COD total" };
-  return [labels.items, ...itemLines, `${labels.delivery}: PKR ${summary.deliveryPkr}`, `${labels.advance}: PKR ${summary.totalPayablePkr}`, `${labels.fee}: PKR ${codFeePkr}`, `${labels.total}: PKR ${codQuote(summary.totalPayablePkr, codFeePkr)}`];
+function codConfirmationLines(baseAmountPkr: number, feePkr: number, totalPkr: number, locale: "en" | "ur"): string[] {
+  if (locale === "ur") return [`ڈیلیوری سمیت آرڈر کی رقم: PKR ${baseAmountPkr}`, `COD وصولی فیس: PKR ${feePkr}`, `ڈیلیوری پر کل: PKR ${totalPkr}`, "مکمل رقم سے اتفاق ہو تو صرف ایک بار تصدیق کریں۔"];
+  return [`Order amount including delivery: PKR ${baseAmountPkr}`, `COD collection fee: PKR ${feePkr}`, `TOTAL ON DELIVERY: PKR ${totalPkr}`, "Confirm only if you agree to pay this full amount on delivery."];
 }
 
 async function finalizeCodOrder(db: D1Database, orderId: string, quote: CodQuoteSnapshot | undefined, correlationId: string, waId: string, stateData: string, testHold: 0 | 1 | undefined): Promise<"CREATED" | "NOT_ELIGIBLE"> {
@@ -577,7 +572,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   else if (state === "ADDRESS") { if (!guidedFieldIsValid(state, text)) reply = (await sessionContent("VALIDATION", "Please enter a complete delivery address.")).text; else { data.deliveryAddress = text; nextState = "NEARBY"; reply = (await sessionContent("FIELD_NEARBY_PLACE", "Please reply with a nearby famous place.")).text; } }
   else if (state === "NEARBY") { if (!guidedFieldIsValid(state, text)) reply = (await sessionContent("VALIDATION", "Please enter a nearby famous place.")).text; else { data.nearbyPlace = text; nextState = "CITY"; reply = (await sessionContent("FIELD_CITY", "Please reply with your city.")).text; } }
   else if (state === "CITY") { if (!guidedFieldIsValid(state, text)) reply = (await sessionContent("VALIDATION", "Please enter a valid city.")).text; else { data.city = text; nextState = "CONTACT"; reply = (await sessionContent("FIELD_CONTACT_NUMBER", "Please reply with your contact number.")).text; } }
-  else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (await sessionContent("VALIDATION", "Please enter a valid contact number.")).text; else { data.contactNumber = text; data.checkoutId ??= crypto.randomUUID(); nextState = "REVIEW"; const quote = await quoteOrder(db, { productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: data.province ?? "", fertilizerSelected: data.fertilizerSelected ?? false }); const review = await sessionContent("REVIEW", "Review your order and choose a payment method."); reply = `${checkoutReviewLines({ items: quote.items, deliveryPkr: quote.deliveryFeePkr, totalPayablePkr: quote.totalPayablePkr }, codSettings?.fee_pkr ?? 125, data.language ?? "en").join("\n")}\n${review.text.replace(/Tap Place Order to confirm\./g, "Choose a payment method to continue.")}`; } }
+  else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (await sessionContent("VALIDATION", "Please enter a valid contact number.")).text; else { data.contactNumber = text; data.checkoutId ??= crypto.randomUUID(); nextState = "REVIEW"; const quote = await quoteOrder(db, { productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: data.province ?? "", fertilizerSelected: data.fertilizerSelected ?? false }); const locale = data.language ?? "en"; const paymentChoice = locale === "ur" ? "ادائیگی منتخب کریں: ایڈوانس ادائیگی یا کیش آن ڈیلیوری" : "Choose payment: Advance Payment or Cash on Delivery"; const feePkr = Number(codSettings?.fee_pkr ?? 0); const codDisclosure = codAvailable && feePkr > 0 ? (locale === "ur" ? `COD پر اضافی PKR ${feePkr} وصولی فیس ہے۔` : `COD: additional PKR ${feePkr} collection fee.`) : undefined; reply = [...checkoutReviewLines({ items: quote.items, deliveryPkr: quote.deliveryFeePkr, totalPayablePkr: quote.totalPayablePkr }, locale), paymentChoice, ...(codDisclosure ? [codDisclosure] : [])].join("\n"); } }
   else if (state === "PRODUCT") { if (!/^(YES|SEEDS_ONLY|ADD_FERTILIZER)$/i.test(normalized)) { reply = (await sessionContent("VALIDATION", "Please choose one of the listed options.")).text; } else { data.fertilizerSelected = normalized === "ADD_FERTILIZER"; nextState = "PROVINCE"; reply = (await sessionContent("PROVINCE_DELIVERY", "Choose your province for delivery.")).text; } }
   else if (state === "PROVINCE") { const provinceChoice = normalized.startsWith("PROVINCE_") ? normalized.slice(9).replace(/_/g, " ") : text; try { const quote = await quoteOrder(db, { productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: provinceChoice, fertilizerSelected: data.fertilizerSelected ?? false }); data.province = quote.province; nextState = "FULL_NAME"; reply = (await sessionContent("FIELD_FULL_NAME", "Please reply with your full name.")).text; } catch { reply = (await sessionContent("VALIDATION", "Please choose one of the listed options.")).text; } }
   else if (state === "FERTILIZER") { if (!/^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/i.test(normalized)) reply = (await sessionContent("VALIDATION", "Please choose one of the listed options.")).text; else { data.fertilizerSelected = /^(YES|ADD_FERTILIZER)$/i.test(normalized); nextState = "PROVINCE"; reply = (await sessionContent("PROVINCE_DELIVERY", "Choose your province for delivery.")).text; } }
@@ -587,7 +582,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
       try {
         const result = await ensureProvisionalOrder();
         if (normalized === "PAY_ADVANCE") { nextState = "PAYMENT_METHOD"; showAdvanceMethods = true; reply = (await sessionContent("PAYMENT", "Choose an enabled advance payment method for order {orderNumber}.", { orderNumber: result.orderNumber, amount: result.quote.totalPayablePkr })).text; }
-        else { const feePkr = Number(codSettings!.fee_pkr); const total = codQuote(result.quote.totalPayablePkr, feePkr); data.codQuote = { baseAmountPkr: result.quote.totalPayablePkr, feePkr, totalPkr: total, policyRevision: codSettings!.revision, collectionPolicyHash: codSettings!.collection_policy_hash, remittancePolicyHash: codSettings!.remittance_policy_hash }; nextState = "COD_CONFIRM"; reply = codQuoteLines(result.quote, feePkr, total, data.language ?? "en").join("\n"); }
+        else { const feePkr = Number(codSettings!.fee_pkr); const total = codQuote(result.quote.totalPayablePkr, feePkr); data.codQuote = { baseAmountPkr: result.quote.totalPayablePkr, feePkr, totalPkr: total, policyRevision: codSettings!.revision, collectionPolicyHash: codSettings!.collection_policy_hash, remittancePolicyHash: codSettings!.remittance_policy_hash }; nextState = "COD_CONFIRM"; reply = codConfirmationLines(result.quote.totalPayablePkr, feePkr, total, data.language ?? "en").join("\n"); }
       } catch (error) { if (error instanceof OrderCooldownError) { nextState = "PAYMENT_PENDING"; data.orderNumber = error.orderNumber; reply = `You already have order ${error.orderNumber}.`; } else throw error; }
     }
   }
@@ -624,9 +619,8 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
       const feePkr = Number(codSettings!.fee_pkr);
       const total = codQuote(summary.totalPayablePkr, feePkr);
       data.codQuote = { baseAmountPkr: summary.totalPayablePkr, feePkr, totalPkr: total, policyRevision: codSettings!.revision, collectionPolicyHash: codSettings!.collection_policy_hash, remittancePolicyHash: codSettings!.remittance_policy_hash };
-      const quoteLines = codQuoteLines(summary, feePkr, total, data.language ?? "en");
       nextState = "COD_CONFIRM";
-      reply = quoteLines.join("\n");
+      reply = codConfirmationLines(summary.totalPayablePkr, feePkr, total, data.language ?? "en").join("\n");
     } catch {
       reply = data.language === "ur" ? "COD کوٹ دستیاب نہیں۔ آپ کا موجودہ آرڈر تبدیل نہیں ہوا۔" : "The COD quote is unavailable. Your existing order is unchanged.";
     }

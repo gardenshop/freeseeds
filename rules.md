@@ -886,3 +886,12 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Payment approval remains settlement-gated with genuine receipt, reference, exact amount, method, receiving-destination credit, explicit confirmation, and evidence reference. Never mark PAID from receipt/reference alone.
 - API `8e670de8-4d89-427b-9fec-dad29dc33f3f` and Admin `c2e87231-9d51-444e-b283-7ab18379280f` are promoted at 100%; prior versions remain at 0% rollback. API Cron is `* * * * *` with Queue producer/consumer attached. Reminder and automation flags remain false; utility-template approval remains false.
 - No legitimate post-promotion eligible recipient exists. Do not activate flags, create historical schedules, send, or claim WAMIDs until a separately authorized new eligible Advance order has a verified inbound identity/timestamp inside 24 hours.
+
+## GFS-287 Clean Checkout and New-Order Reminder Activation (2026-10-28)
+
+- Superseding current state: API `7b662e0d-38ad-4f23-80b2-5c54e4ca64e6` is promoted at 100%; API rollback `8e670de8-4d89-427b-9fec-dad29dc33f3f` remains at 0%; unchanged Admin `c2e87231-9d51-444e-b283-7ab18379280f` remains the verified release.
+- Active API version binds D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, receipts R2, and the `getfreeseeds-events-staging` Queue; handlers are fetch/scheduled/queue and the minute Cron/Queue topology remains attached.
+- Current flags are `PAYMENT_REMINDERS_V2_ENABLED=true`, `PAYMENT_AUTOMATION_V2_ENABLED=true`, and `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`. This activates only new eligible Advance schedules; it does not backfill history or authorize Meta templates.
+- Customer checkout now shows one dynamic bilingual order summary, then a short COD confirmation with the configured fee. COD remains explicit-consent, exact-total, one-order/one-fee, and idempotent; Advance preserves the three verified methods and receipt safeguards.
+- Live D1 markers 0037–0040, reminder schema, COD triggers, `quick_check=ok`, and empty FK check are verified on the active binding. CMS has 10 published internal EN/UR copies and zero utility approvals. Schedules, stages, reminder outbox jobs, WAMIDs, and delivery events are currently zero.
+- No order was created after activation during the verification window, so live Meta acceptance/delivery remains pending. Never fabricate inbound activity, recipients, WAMIDs, or delivery state. Preserve the new-number WhatsApp lock and Hoja Seeds zero-connection rule.

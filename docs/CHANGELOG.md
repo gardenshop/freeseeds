@@ -1108,3 +1108,12 @@
 - Smoke-tested API/Admin candidates through Cloudflare 0%-traffic version overrides, promoted API `8e670de8` and Admin `c2e87231` to 100%, retained prior versions at 0%, and attached the API minute Cron plus Queue producer/consumer.
 - Kept `PAYMENT_REMINDERS_V2_ENABLED`, `PAYMENT_AUTOMATION_V2_ENABLED`, and `PAYMENT_UTILITY_TEMPLATES_APPROVED` false. No post-promotion eligible recipient existed; no reminder schedule, send, WAMID, delivery, COD conversion, or historical replay was performed.
 - Quality gates passed: full 310/310, build, lint, offline audit 0 vulnerabilities, and rollback4/4.
+
+## 2026-10-28 — GFS-287 clean checkout and new-order reminder activation
+
+- Simplified the contact-stage WhatsApp response to one dynamic bilingual order summary with one total and a short configured COD-fee disclosure.
+- Simplified COD selection to a short consent quote: amount including delivery, COD collection fee, total on delivery, and existing Confirm COD Order / Advance Payment buttons.
+- Published all 10 existing internal reminder CMS copies through the authenticated Admin UI; utility approval remains false and no Meta templates were created.
+- Uploaded/staged and then promoted API `7b662e0d`; enabled only the two reminder flags for new eligible Advance orders. Preserved API rollback `8e670de8` at 0% and Admin `c2e87231` unchanged.
+- Verified active D1 schema/markers/integrity and aggregate state: zero schedules, stages, reminder outbox jobs, WAMIDs, and delivery events; zero orders created after activation. No live send or delivery is claimed.
+- Quality gates: focused 104/104, full 310/310, build, lint, offline audit 0 vulnerabilities, rollback4/4.

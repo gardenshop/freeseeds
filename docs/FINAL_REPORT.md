@@ -3574,3 +3574,32 @@ Completion: P0 100%, P1 100% local / 0% live mutation, P2 100% read-only, P3 100
 | P4 reminder activation/delivery | **PENDING / NO-GO safely** | Flags false; zero post-promotion orders and zero legitimate eligible recipients. No schedules, sends, WAMIDs, delivery statuses, retries, or COD conversion were generated or claimed. |
 | P5 quality/documentation | **PASS** | Full 310/310, build, lint, offline audit 0 vulnerabilities, rollback4/4; records updated without secrets/customer data. |
 Policy remains +15/+30/+60/+210/+240 only, no +270 cancellation, strict latest inbound identity/timestamp inside 24 hours, permanent `BLOCKED_WINDOW`, no Meta templates, and explicit PKR125 COD consent with no historical backfill or dead-letter replay. Flags are `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_AUTOMATION_V2_ENABLED=false`, and `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`. Actual WAMIDs: none. Overall safe infrastructure release **95%**; controlled reminder acceptance **0%**; production reminder decision **NO-GO pending a legitimate eligible recipient**.
+
+## GFS-287 Final Report — 2026-10-28
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 release verification | **PASS** | API `7b662e0d-38ad-4f23-80b2-5c54e4ca64e6` active 100%; prior API `8e670de8-4d89-427b-9fec-dad29dc33f3f` 0%; Admin `c2e87231-9d51-444e-b283-7ab18379280f` unchanged. Active API exposes fetch/scheduled/queue and verified D1/R2/Queue bindings. |
+| P1 checkout | **PASS** | Initial contact response is one dynamic bilingual summary: Free Seeds/free item, priced item, delivery, one total, payment choice, and configured COD fee disclosure. COD selection is short: amount including delivery, fee, total on delivery, consent. Focused guided/COD tests pass. |
+| P2 policy/CMS | **PASS** | +15/+30/+60/+210/+240 only; no +270; no Meta templates; all 10 internal EN/UR copies published; utility approval false; strict inbound window/opt-out/state/idempotency guards retained. |
+| P3 activation/delivery | **PASS CONFIG / PENDING LIVE ACCEPTANCE** | Flags are `PAYMENT_REMINDERS_V2_ENABLED=true`, `PAYMENT_AUTOMATION_V2_ENABLED=true`, `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`. No schedules, stages, reminder outbox jobs, WAMIDs, or delivery events exist. No order was created after activation, so no eligible recipient or Meta acceptance was available. |
+| P4 quality/deploy | **PASS** | D1 markers 0037–0040, `quick_check=ok`, FK check empty; full 310/310; build; lint; offline audit 0 vulnerabilities; rollback4/4. API version preview and public health 200; activated version promoted 100%; prior API retained at 0%. |
+
+### Policy and live counts
+
+- Reminder schedule: +15m, +30m, +60m, +210m final warning, +240m grace/COD offer. No +270m cancellation.
+- +210m explains COD and the configured PKR125 collection fee. +240m offers Confirm COD / Keep Advance / Cancel Order. Conversion requires explicit consent to the revised total, adds PKR125 once, preserves the order/reference, stops Advance reminders, and audits consent.
+- Aggregate read on active D1: 138 orders, 2 PAID, 47 COD, 13 receipt/REVIEW, 52 no-method, 26 broad Advance-pending shapes, 0 cancelled in the queried classification. Categories overlap and are not an eligibility grant. Orders created since activation: 0; new eligible count: 0.
+- CMS: 10/10 internal EN/UR copies published; utility approvals: 0. Reminder schedules/stages/outbox: 0/0/0. Meta WAMIDs: 0; SENT/DELIVERED/READ/FAILED: 0; BLOCKED_WINDOW: 0. No send was attempted.
+
+### Before/after checkout contract
+
+- Before: the first response itemized the quote and also displayed separate Advance and COD totals, while COD selection repeated the itemization.
+- After: the first response has one `📦 ORDER SUMMARY`, dynamic item/free/PKR lines, `Delivery`, one `TOTAL`, payment choice, and short COD fee disclosure. COD selection has only `Order amount including delivery`, `COD collection fee`, `TOTAL ON DELIVERY`, and consent buttons. The exact quote/config remains the source of all amounts.
+
+### Rollback and remaining blockers
+
+- Rollback: set API traffic from `7b662e0d` back to `8e670de8` using the authenticated Wrangler version split; both versions retain the compatible active binding. Admin remains `c2e87231`.
+- Completion: P0 100%, P1 100%, P2 100%, P3 configuration 100% / live acceptance 0%, P4 100%; overall safe release readiness **90%**, live reminder acceptance **0% pending a natural eligible order**.
+- Remaining blocker is evidence, not configuration: no natural new eligible Advance recipient occurred during this run, so Meta acceptance/WAMID and eventual delivery/read/failure cannot be claimed. Customer-device screenshot comparison is likewise pending; no synthetic customer or message was created.
+- Decision: **GO for new-order configuration and public operation; NO-GO for claiming live reminder delivery until a legitimate in-window eligible order produces real provider evidence.**

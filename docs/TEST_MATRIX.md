@@ -1407,3 +1407,17 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | GFS-286 promoted Worker/trigger state | **PASS sends-off** | API `8e670de8` / Admin `c2e87231` at 100%; prior versions at 0%; minute Cron and Queue producer/consumer attached; flags false |
 | GFS-286 live reminder activation | **PENDING safely** | Zero post-promotion orders and zero eligible recipients; no schedule, send, WAMID, delivery, or retry was fabricated or attempted |
 | GFS-286 full quality/rollback | **PASS** | Full 310/310, build, lint, offline audit 0 vulnerabilities, rollback4/4 |
+
+## GFS-287 — 2026-10-28
+
+| Area | Result | Evidence |
+|---|---|---|
+| Clean checkout summary | PASS | Dynamic item/free/PKR lines, delivery, one total, payment choice, bilingual output, and no initial COD total duplication covered in guided tests |
+| COD confirmation | PASS | Short base/fee/total-on-delivery copy, exact PKR125 policy fixture, explicit confirmation, Advance fallback, duplicate callback and one-record invariants |
+| Existing reminder engine | PASS | Five stages +15/+30/+60/+210/+240; no +270; strict window, opt-out, state exclusion, idempotency, retry and COD-consent tests retained |
+| Focused suites | PASS | 104/104 guided/reminder/COD compatibility tests |
+| Full suite | PASS | 310/310 tests |
+| Build/lint/audit | PASS | TypeScript build, ESLint, offline audit 0 vulnerabilities |
+| D1 integrity | PASS | Active binding markers 0037–0040, `quick_check=ok`, empty FK check; no write in final verification |
+| Release/rollback | PASS | API candidate preview and health 200; activated version promoted 100%, prior API 0%; rollback4/4 |
+| Live delivery | PENDING | No post-activation eligible order; schedules/outbox/WAMIDs/delivery events all 0; no synthetic recipient used |

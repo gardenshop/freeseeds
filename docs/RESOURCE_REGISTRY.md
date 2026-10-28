@@ -1198,3 +1198,13 @@ No secrets are stored in this registry.
 - **Workers:** API `8e670de8-4d89-427b-9fec-dad29dc33f3f` and Admin `c2e87231-9d51-444e-b283-7ab18379280f` are the promoted sends-off versions. Prior API `24d72438-72a1-4544-80df-4b9b90c297e5` and Admin `66426d2a-be1c-4e22-b420-1b1559dcbbc5` remain rollback versions at 0%. API Cron is `* * * * *`; events Queue producer/consumer are attached.
 - **Reminder state:** five stages +15/+30/+60/+210/+240, strict 24-hour inbound window, no Meta templates, explicit PKR125 COD consent, and no historical backfill. All reminder flags remain false; no WAMIDs or delivery claims exist.
 - **Meta/Hoja:** canonical GFS WABA only; no template mutation. Hoja Seeds remains isolated; new-number lock remains protected. No secrets or customer identifiers are stored in this registry.
+
+## GFS-287 Registry — 2026-10-28
+
+- **Identity:** GitHub repository/PR is `gardenshop/freeseeds` / #11; Cloudflare identity is `gisupp@gmail.com` in Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical GFS Meta only. No Hoja resource was accessed.
+- **Active versions:** API `7b662e0d-38ad-4f23-80b2-5c54e4ca64e6` at 100%, rollback API `8e670de8-4d89-427b-9fec-dad29dc33f3f` at 0%, Admin `c2e87231-9d51-444e-b283-7ab18379280f` unchanged. API is version-inspected with fetch/scheduled/queue handlers and the existing minute Cron/Queue topology.
+- **Bindings:** API D1 `getfreeseeds-staging` / `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, R2 `getfreeseeds-receipts-staging`, Queue `getfreeseeds-events-staging`. Production-name D1 `02b707df-a10c-4645-9516-a2a4541f6fab` was not touched.
+- **Flags/CMS:** reminder and automation flags true; utility-template approval false. Ten internal EN/UR copies are published; zero utility approvals. No Meta template mutation.
+- **Live aggregate:** 138 orders; 2 PAID; 47 COD; 13 receipt/REVIEW; 52 no-method; 26 broad Advance-pending shapes. Orders created since activation: 0. The broad categories overlap and contain no identifiers in this registry.
+- **Reminder evidence:** five stages configured, zero schedules/stages/reminder outbox jobs, zero WAMIDs and delivery events. Live acceptance is pending a genuine eligible new Advance order; no historical backfill or fabricated customer activity.
+- **Integrity:** markers 0037–0040, reminder/COD schema and triggers present; `quick_check=ok`; FK check empty. Focused 104/104, full 310/310, build, lint, offline audit 0 vulnerabilities, rollback4/4.
