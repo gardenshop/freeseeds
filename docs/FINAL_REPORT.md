@@ -3632,7 +3632,7 @@ P0 diagnosis **100%** / customer correlation pending; P1 **40%**; P2 freeze **10
 |---|---|---|
 | P0 emergency rollback | **PASS** | Authenticated Get Free Seeds account; compatible `8e670de8` promoted 100%, `7b662e0d` retained 0%, Admin `c2e87231` unchanged; health HTTP200 |
 | P1 exact failure | **PASS** | GFS-287 reminder activation synchronously called `syncPaymentReminderDeliveryStatuses()` before conversation processing; live D1 rejects old SQL with `ambiguous column name: status` |
-| P2 restore/acceptance | **PASS restoration / PARTIAL complete journey** | Real provider WAMIDs; checkpoint 19 READ, 3 DELIVERED, 1 SENT; LANGUAGE/OFFER/PROVINCE/FULL_NAME reached; zero orders created. Advance/COD/Check Order device acceptance was not forced |
+| P2 restore/acceptance | **PASS restoration / PARTIAL complete journey** | Real provider WAMIDs; final post-push checkpoint 56 READ, 4 DELIVERED, 2 SENT; LANGUAGE/OFFER/PROVINCE/FULL_NAME reached; zero orders created during acceptance. Advance/COD/Check Order device acceptance was not forced |
 | P3 freeze | **PASS** | Healthy API/Admin assignments frozen; D1 migrations0039/0040 and financial/COD safeguards untouched; repaired candidate undeployed |
 | P4 reminders | **PAUSED safely** | Live and source defaults false/false/false; authenticated Admin five stages; 10 internal published copies, zero utility approvals; reminder rows 0/0/0/0 |
 | P5 quality/docs/push | **PASS** | Repair commit `6bc4741`; focused 104/104, full 312/312, build/lint, audit0, rollback4/4; required records updated |

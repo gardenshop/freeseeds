@@ -1445,7 +1445,7 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | Emergency rollback | PASS | `8e670de8` 100%; `7b662e0d` 0%; Admin unchanged; public health HTTP200 |
 | Exact regression | PASS | Live D1 parser returns `ambiguous column name: status` for old reminder reconciliation SQL |
 | Fault-window correlation | PASS | 34 persisted inbound events; 4 pre-rollback replies; 3 delayed post-rollback replies; 27 without direct reply |
-| Genuine post-rollback replies | PASS | Real provider WAMIDs present; checkpoint 19 READ, 3 DELIVERED, 1 SENT; identifiers not stored in docs |
+| Genuine post-rollback replies | PASS | Real provider WAMIDs present; final post-push checkpoint 56 READ, 4 DELIVERED, 2 SENT; identifiers not stored in docs |
 | Conversation progression | PASS restoration | LANGUAGE/OFFER/PROVINCE/FULL_NAME observed; zero new orders |
 | Customer-webhook isolation | PASS | Forced reminder-sync failure cannot block signed START/welcome HTTP200 or state progression |
 | Qualified Cron reconciliation | PASS | Corrected SQL executes from scheduled handler; live D1 EXPLAIN accepted with indexed stage lookup |
