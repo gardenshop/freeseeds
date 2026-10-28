@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-28: GFS-293 hold API summary until genuine proof
+
+- Keep Admin `b4c45278` and healthy API `8e670de8` at100%; keep API candidate `d808a31c` at0%. A health response and CMS readback cannot substitute for an authorized customer-device inbound/outbound proof.
+- Accept the candidate’s local safety evidence: CMS REVIEW v8 dynamic EN/UR placeholders, quote-derived summary, native buttons, separate COD PKR125 consent, and qualified scheduled-only reminder reconciliation.
+- Do not use the open WhatsApp Web or Meta Manager sessions to invent traffic. Do not initiate a synthetic order, customer message, WAMID, receipt, payment, COD transition, or canary without a verified authorized tester interaction.
+- The release remains NO-GO only for the API summary promotion; the live Admin export and healthy public bot remain GO. Reminders stay paused.
+
 ## 2026-10-28: GFS-292 Admin export live; API summary held
 
 - Promote only the corrected Admin export candidate after authenticated live UI/API evidence. The missing live button was in the actual `professionalOrdersPageHtml` template; the smallest fix was deployed as `b4c45278`, retaining `c2e87231` as rollback.

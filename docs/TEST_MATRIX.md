@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-293 summary candidate acceptance hold (2026-10-28)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Preserve Admin export and healthy API | PASS | Admin `b4c45278`100%; API `8e670de8`100%; candidate `d808a31c`0%; reminders false/false/false. |
+| Candidate health/CMS | PASS | Candidate `/health` HTTP200; REVIEW v8 EN/UR readback contains the three approved placeholders and no raw HTML. |
+| Dynamic summary source | PASS LOCAL | CONTACT→REVIEW uses published CMS with dynamic quote/config values, native Advance/COD buttons and separate PKR125 consent screen. |
+| Reminder reconciliation isolation | PASS | Qualified `m.status` SQL; `syncPaymentReminderDeliveryStatuses()` is scheduled-only, not in inbound webhook handling. |
+| Genuine WhatsApp acceptance/canary | BLOCKED SAFELY | No authorized tester interaction, inbound event, outbound WAMID or rendered-message evidence; no traffic mutation performed. |
+| Export preservation | PASS | Existing live Admin export remains operational; no export source or traffic change. |
+| Regression/build/security/rollback | PASS | Focused101/101, full314/314, TypeScript build, ESLint, audit0, rollback4/4. |
+
+
 ## GFS-292 live export release and summary hold (2026-10-28)
 
 | Requirement | Result | Evidence / blocker |

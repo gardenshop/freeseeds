@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-293 summary candidate acceptance hold (2026-10-28)
+
+- Workers: Admin `b4c45278-c7d6-49c5-824c-005afc991ffe`100% with `c2e87231-9d51-444e-b283-7ab18379280f` rollback; API `8e670de8-4d89-427b-9fec-dad29dc33f3f`100% with `d808a31c-ba40-4a02-b3c6-8c6de4cffecf`0%. Reminder flags remain false/false/false.
+- Authenticated Cloudflare identity remains `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta Manager and WhatsApp pages were read-only. Hoja/ThanNow were not used.
+- Candidate evidence: `/health` HTTP200; Admin CMS `REVIEW` version8, bilingual dynamic placeholders, no raw HTML. No genuine tester event, outbound WAMID, rendered customer message, traffic mutation or external financial/customer state change was recorded.
+- Source safety evidence: reminder delivery reconciliation is qualified and scheduled-only; inbound webhook path remains free of that query. Remaining resource requirement is one authorized tester session with real inbound/outbound correlation.
+
 ## GFS-292 live export release and summary hold (2026-10-28)
 
 - Cloudflare identity before Admin upload/traffic changes: `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Hoja/ThanNow were not used.

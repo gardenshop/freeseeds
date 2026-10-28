@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-293 summary candidate acceptance hold (2026-10-28)
+
+- Preserve Admin `b4c45278-c7d6-49c5-824c-005afc991ffe` at100% and its export contract; preserve healthy API `8e670de8-4d89-427b-9fec-dad29dc33f3f` at100% and candidate `d808a31c-ba40-4a02-b3c6-8c6de4cffecf` at0%. Reminders remain `false/false/false`.
+- Candidate health returned HTTP200. Authenticated CMS readback confirmed `REVIEW` published version8 in EN/UR with only `{orderSummaryItems}`, `{deliveryFee}`, and `{orderTotal}` used by the summary path; no raw HTML was present. The source renders the dynamic quote/config summary and native payment buttons, with separate PKR125 COD consent.
+- `syncPaymentReminderDeliveryStatuses()` uses qualified `m.status` and is called only by the scheduled handler; inbound webhook processing does not call reconciliation. Do not move it back onto customer webhooks.
+- WhatsApp Web and canonical Meta Manager sessions were present, but no authorized tester interaction or genuine inbound-to-outbound Meta event was available. Do not canary, promote, fabricate WAMIDs, or claim the new summary is live. A supported guarded canary remains the only blocker.
+
 ## GFS-292 live export release and summary hold (2026-10-28)
 
 - Cloudflare identity was reverified as `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` before each Admin upload/traffic mutation. Admin `b4c45278-c7d6-49c5-824c-005afc991ffe` is active100%; rollback `c2e87231-9d51-444e-b283-7ab18379280f` is0%. API healthy `8e670de8-4d89-427b-9fec-dad29dc33f3f` remains100%; candidate `d808a31c-ba40-4a02-b3c6-8c6de4cffecf` remains0%.
