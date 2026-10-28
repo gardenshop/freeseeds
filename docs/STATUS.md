@@ -1,5 +1,13 @@
 # Status
 
+## GFS-290 Admin-editable order summary (2026-10-28)
+
+- **P0 PASS:** Healthy production was preserved: API `8e670de8`100%, faulty `7b662e0d`0%, Admin `c2e87231`100%; D1 migrations0039/0040, payments, webhook and reminder state were not changed. Cloudflare identity was reverified as `gisupp@gmail.com` / Get Free Seeds before each Cloudflare/CMS mutation; canonical Meta identity and Hoja isolation were preserved.
+- **P1 PASS:** Existing `REVIEW` CMS architecture was reused. Admin CMS published bilingual version8 with safe `{orderSummaryItems}`, `{deliveryFee}`, `{orderTotal}` placeholders. API source now renders the published template once and falls back to the same dynamic layout when unavailable; no raw HTML or unresolved placeholder is accepted.
+- **P2 PASS LIMITED:** API candidate `e914f77e` and Admin candidate `783a9480` are uploaded at0%; supported override health checks passed (`ok:true`, Admin `paymentConfigured:true`). Active traffic remains on the healthy baseline. No genuine new customer device flow was available in this run, so no WAMID or delivery claim is made.
+- **P3 PASS LOCAL / BLOCKED LIVE ACCEPTANCE:** Full312/312, build, lint and rollback4/4 pass. Genuine CONTACT→summary→Advance/COD device acceptance and candidate promotion remain pending; no customer order, payment, receipt, COD conversion, or message was fabricated.
+- **P4 NO-GO SAFELY:** Reminders remain paused (`false/false/false`), five-stage engine/migrations remain intact, and the release is not frozen as a new production version until an authorized real inbound→outbound proof is captured.
+
 ## GFS-278 Orders Audit and Reminder Gate (2026-10-28)
 
 - **P0 PASS / PUSH BLOCKED:** The correct clean PR #11 checkout is `codex/gfs221-cod-compat-001` at `ba65684`; only the date-stability test correction is pending locally. Cloudflare identity is `gisupp@gmail.com` / Get Free Seeds and Meta shows the canonical Get Free Seeds WABA. GitHub browser is logged out and the stored `gardenshop` CLI token is invalid, so no push or PR mutation was attempted.

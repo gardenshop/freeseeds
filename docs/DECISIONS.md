@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-28: GFS-290 editable Order Summary
+
+- Reuse the existing `REVIEW` CMS key rather than adding a second template engine or migration. Version8 is the published bilingual source of layout; the API fallback is identical and remains quote/config driven.
+- Allow only `{orderSummaryItems}`, `{deliveryFee}`, and `{orderTotal}` for the summary. Reject raw HTML and unknown placeholders so CMS content cannot emit unsafe markup or unresolved customer-facing tokens.
+- Keep API `8e670de8` and Admin `c2e87231` at100%; stage `e914f77e` and `783a9480` at0%. Do not promote or claim live WhatsApp rendering without genuine authorized inbound/outbound evidence.
+- Keep reminders paused and preserve migrations0039/0040, COD PKR125 consent, Advance safeguards, webhook isolation, and the existing rollback baseline.
+
 ## 2026-10-28: GFS-278 Orders and Reminder Audit
 
 - Treat the historical Orders network failure as the already-recorded D1 row-read exhaustion incident (code7500) in the old full-detail list projection. Do not port the unrelated V2 `internal_sequence` workaround; live schema has both private-sequence columns and the current narrow list/detail path is HTTP200.

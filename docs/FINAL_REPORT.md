@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-290 Final Report (2026-10-28)
+
+| Stage | Result | Evidence / remaining item |
+|---|---|---|
+| P0 protect production | PASS | Healthy API `8e670de8`100%, faulty API `7b662e0d`0%, Admin `c2e87231`100%; no D1/payment/webhook/reminder mutation. |
+| P1 Admin CMS | PASS | Existing `REVIEW` key; bilingual version8 published and read back with safe dynamic placeholders. |
+| P2 API/Admin candidate | PASS LIMITED | API `e914f77e` and Admin `783a9480` uploaded at0%; override health checks passed; traffic was not promoted. |
+| P3 WhatsApp rendering | PASS LOCAL / BLOCKED LIVE | Source tests prove one dynamic summary and existing buttons/COD path. No genuine new authorized device flow was available; no WAMID/delivery claim. |
+| P4 release/freeze | NO-GO SAFELY | Reminders remain false/false/false; candidate promotion and freeze await real inbound→outbound proof. |
+| P5 quality/push | PASS PENDING PUSH | Full312/312, build, lint, rollback4/4 pass; this source/docs update is ready for PR #11 push. |
+
+### Policy and evidence
+
+- First summary layout is CMS-editable and quote/config-driven: item rows, delivery fee, and order total are rendered once. COD fee and total remain only in the separate explicit-consent confirmation; PKR125 is not silently added.
+- No Meta template, out-of-window send, reminder activation, historical backfill, customer-data export, payment mutation, order creation, or WAMID was performed in this run.
+- Remaining blocker is narrow: one authorized genuine device acceptance through the 0%-traffic candidate, with actual inbound→outbound Meta evidence, before promoting or freezing the candidate. Production GO: **NO-GO until that proof**.
+
 ## GFS-278 Final Report (2026-10-28)
 
 | Stage | Result | Evidence / remaining item |

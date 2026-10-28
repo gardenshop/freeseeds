@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-290 Admin-editable order summary (2026-10-28)
+
+- Source: `gardenshop/freeseeds`, PR #11 branch `codex/gfs221-cod-compat-001`, implementation commit `ae3b69e` (docs follow-up pending). Hoja/ThanNow resources were not used.
+- Cloudflare: authenticated `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; shared D1 binding remains `getfreeseeds-staging` UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`.
+- Workers: API healthy `8e670de8`100%, candidate `e914f77e-8f68-44aa-b0c4-7276742b4c75`0%; Admin healthy `c2e87231`100%, candidate `783a9480-daa4-4e86-91e4-903044edcd77`0%. Candidate health was checked through the supported override.
+- CMS: existing `REVIEW`, published version8, bilingual dynamic placeholders only; no media or private customer data changed. Meta WABA remains canonical GFS; no WAMID was generated in this run.
+- Feature state: reminder/automation/utility flags remain false; five-stage reminder engine and migrations0039/0040 remain preserved; no live activation or historical send.
+
 ## GFS-278 Orders and Reminder Audit (2026-10-28)
 
 - Correct resource: `gardenshop/freeseeds` PR #11 branch `codex/gfs221-cod-compat-001`, local HEAD `ba65684` before the pending date-stability test correction. The unrelated V2 checkout and its compatibility patch remain separate.

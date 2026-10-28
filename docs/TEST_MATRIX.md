@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-290 Admin-editable order summary (2026-10-28)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Protected healthy production | PASS | API `8e670de8`100%, API `7b662e0d`0%, Admin `c2e87231`100%; no traffic/schema/payment/reminder mutation. |
+| REVIEW CMS draft/save/readback | PASS | Authenticated Admin candidate saved EN/UR draft; published version8 read back via `/api/whatsapp-content/REVIEW`. |
+| CMS safety | PASS | Placeholder allowlist includes only summary item/delivery/total fields; unknown placeholders and raw HTML are rejected. |
+| Dynamic summary source path | PASS LOCAL | CONTACT→REVIEW uses quote item rows and persisted delivery/total values; seeds-only and fertilizer expectations pass; no duplicate payment totals or COD fee in the first message. |
+| API zero-traffic candidate | PASS LIMITED | `e914f77e-8f68-44aa-b0c4-7276742b4c75` at0%; supported override `/health` HTTP200. |
+| Admin zero-traffic candidate | PASS LIMITED | `783a9480-daa4-4e86-91e4-903044edcd77` at0%; supported override `/health` HTTP200 with `paymentConfigured:true`. |
+| Genuine device CONTACT→summary proof | BLOCKED | No new authorized tester inbound was available; no WAMID, delivery, or customer screenshot was claimed. |
+| Reminders | PASS PAUSED | All three flags false; no activation, historical send, template, or WAMID mutation. |
+| Regression/build/lint/rollback | PASS | 312/312 tests, TypeScript build, ESLint, and verified gfs273-v1 rollback4/4. |
+
 ## GFS-278 Orders and Reminder Audit (2026-10-28)
 
 | Requirement | Result | Evidence / blocker |

@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-290 Admin-editable order summary (2026-10-28)
+
+- Preserve the verified production baseline: API `8e670de8-4d89-427b-9fec-dad29dc33f3f` at100%, faulty `7b662e0d-38ad-4f23-80b2-5c54e4ca64e6` at0%, Admin `c2e87231-9d51-444e-b283-7ab18379280f` at100%, and reminder flags `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_AUTOMATION_V2_ENABLED=false`, `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`. Do not change traffic, schema, payments, webhooks, or reminder state without a new gate.
+- Reuse the existing `REVIEW` CMS key. Published version8 is the bilingual dynamic Order Summary; only `{orderSummaryItems}`, `{deliveryFee}`, and `{orderTotal}` are permitted for this screen. Reject unknown placeholders and raw HTML before persistence.
+- The API candidate `e914f77e-8f68-44aa-b0c4-7276742b4c75` and Admin candidate `783a9480-daa4-4e86-91e4-903044edcd77` were uploaded and assigned0% beside the healthy versions. Candidate health passed through the supported version override; no candidate promotion or customer message was performed without genuine device evidence.
+- The first CONTACT→REVIEW message is one CMS-rendered summary with quote/config-derived item rows, delivery fee, and total, plus the existing Advance/COD buttons. COD confirmation remains a separate consent screen with the existing PKR125 safeguards. No reminders were enabled or sent.
+
 ## GFS-278 Orders and Reminder Audit Gate (2026-10-28)
 
 - The authoritative checkout is `codex/gfs221-cod-compat-001` at the PR #11 line ending at `ba65684`; preserve unrelated V2 worktrees and the separate `internal_sequence` compatibility patch.

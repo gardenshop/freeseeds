@@ -1,5 +1,12 @@
 # Changelog
 
+## GFS-290 (2026-10-28)
+
+- Added a safe CMS-backed dynamic Order Summary on the existing `REVIEW` key with bilingual EN/UR copy, quote/config-derived item rows, delivery fee, total, native bold formatting, and raw-HTML/placeholder validation.
+- Connected the actual guided CONTACT→REVIEW response to the published CMS content with a deterministic local fallback; removed duplicate first-message payment totals and COD-fee disclosure while preserving the existing buttons and COD confirmation.
+- Published Admin CMS `REVIEW` version8 through the authenticated GFS Admin candidate. Uploaded API `e914f77e` and Admin `783a9480` at0% beside the healthy production baseline; no customer traffic, payment, order, reminder, or schema mutation was performed.
+- Focused101/101, full312/312, build, lint, and rollback4/4 pass. Genuine device acceptance/WAMID and candidate promotion remain pending.
+
 ## GFS-278 (2026-10-28)
 
 - Confirmed PR #11 is the authoritative `codex/gfs221-cod-compat-001` checkout; preserved the unrelated V2 worktree and its uncommitted compatibility patch separately.
