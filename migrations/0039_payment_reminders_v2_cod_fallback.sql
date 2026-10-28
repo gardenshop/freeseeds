@@ -73,3 +73,12 @@ INSERT OR IGNORE INTO payment_v2_template_versions(template_key,locale,version,b
  ('FINAL_WARNING_210M','ur',1,'آرڈر {orderNumber} کے لیے آخری ایڈوانس ادائیگی تنبیہ: PKR {amount} باقی ہے۔ اگلے مرحلے میں PKR {codFee} اضافی وصولی فیس کے ساتھ COD پیش کی جا سکتی ہے؛ آپ کی تصدیق کے بغیر COD تبدیل نہیں ہوگی۔','DRAFT',datetime('now'),'gfs279-bootstrap'),
  ('GRACE_NOTICE_240M','en',1,'Payment grace notice for order {orderNumber}: items {items}; delivery PKR {delivery}; COD collection fee PKR {codFee}; total on delivery PKR {codTotal}. Choose Confirm COD, Keep Advance, or Cancel Order. COD requires explicit confirmation.','DRAFT',datetime('now'),'gfs279-bootstrap'),
  ('GRACE_NOTICE_240M','ur',1,'آرڈر {orderNumber}: اشیاء {items}؛ ڈیلیوری PKR {delivery}؛ COD وصولی فیس PKR {codFee}؛ ڈیلیوری پر کل PKR {codTotal}۔ COD کی تصدیق، ایڈوانس برقرار، یا آرڈر منسوخ کریں۔ COD کے لیے واضح تصدیق ضروری ہے۔','DRAFT',datetime('now'),'gfs279-bootstrap');
+
+UPDATE payment_v2_template_versions
+SET utility_template_name=CASE template_key
+  WHEN 'REMINDER_15M' THEN 'gfs_payment_reminder_15m'
+  WHEN 'REMINDER_30M' THEN 'gfs_payment_reminder_30m'
+  WHEN 'REMINDER_60M' THEN 'gfs_payment_reminder_60m'
+  WHEN 'FINAL_WARNING_210M' THEN 'gfs_payment_final_warning_210m'
+  WHEN 'GRACE_NOTICE_240M' THEN 'gfs_payment_grace_240m' END
+WHERE version=1 AND locale IN ('en','ur');

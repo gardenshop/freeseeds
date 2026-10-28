@@ -98,6 +98,34 @@ describe("Get Free Seeds domain", () => {
     }
   });
 
+  it("sends localized utility templates with deterministic quick-reply consent payloads", async () => {
+    const originalFetch = globalThis.fetch;
+    let payload: Record<string, unknown> | undefined;
+    globalThis.fetch = async (_input, init) => {
+      payload = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      return new Response(JSON.stringify({ messages: [{ id: "synthetic-template-message" }] }), { status: 200 });
+    };
+    try {
+      const provider = new MetaWhatsAppProvider({ enabled: true, graphVersion: "v26.0", phoneNumberId: "synthetic-phone", accessToken: "synthetic-token" });
+      await provider.sendTemplate("synthetic-recipient", "payment_grace_240m", ["SYN-ORDER", "7000", "125", "7125"], "ur", ["CONFIRM_COD", "KEEP_ADVANCE", "CANCEL_ORDER"]);
+      expect(payload).toMatchObject({
+        type: "template",
+        template: {
+          name: "payment_grace_240m",
+          language: { policy: "deterministic", code: "ur" },
+          components: [
+            { type: "body", parameters: [{ type: "text", text: "SYN-ORDER" }, { type: "text", text: "7000" }, { type: "text", text: "125" }, { type: "text", text: "7125" }] },
+            { type: "button", sub_type: "quick_reply", index: "0", parameters: [{ type: "payload", payload: "CONFIRM_COD" }] },
+            { type: "button", sub_type: "quick_reply", index: "1", parameters: [{ type: "payload", payload: "KEEP_ADVANCE" }] },
+            { type: "button", sub_type: "quick_reply", index: "2", parameters: [{ type: "payload", payload: "CANCEL_ORDER" }] }
+          ]
+        }
+      });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it("sends province rows as a Meta LIST with localized descriptions", async () => {
     const originalFetch = globalThis.fetch;
     let payload: Record<string, unknown> | undefined;

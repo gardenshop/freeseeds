@@ -718,10 +718,11 @@ app.post("/api/payment-reminders/:key/draft", async (c) => {
   const body = await c.req.json<{ locale?: string; body?: string }>();
   if ((body.locale !== "en" && body.locale !== "ur") || typeof body.body !== "string" || body.body.trim().length < 20 || body.body.length > 1200) return c.json({ error: "PAYMENT_REMINDER_DRAFT_INVALID" }, 400);
   const now = new Date().toISOString();
+  const utilityTemplateName = ({ REMINDER_15M: "gfs_payment_reminder_15m", REMINDER_30M: "gfs_payment_reminder_30m", REMINDER_60M: "gfs_payment_reminder_60m", FINAL_WARNING_210M: "gfs_payment_final_warning_210m", GRACE_NOTICE_240M: "gfs_payment_grace_240m" } as const)[key as "REMINDER_15M" | "REMINDER_30M" | "REMINDER_60M" | "FINAL_WARNING_210M" | "GRACE_NOTICE_240M"];
   const latest = await c.env.DB.prepare("SELECT COALESCE(MAX(version),0) AS version FROM payment_v2_template_versions WHERE template_key=? AND locale=?").bind(key, body.locale).first<{ version:number }>();
   const version = Number(latest?.version ?? 0) + 1;
   await c.env.DB.batch([
-    c.env.DB.prepare("INSERT INTO payment_v2_template_versions(template_key,locale,version,body,state,created_at,created_by) VALUES(?,?,?,?,?,?,?)").bind(key, body.locale, version, body.body.trim(), "DRAFT", now, c.env.ADMIN_EMAIL),
+    c.env.DB.prepare("INSERT INTO payment_v2_template_versions(template_key,locale,version,body,state,utility_template_name,created_at,created_by) VALUES(?,?,?,?,?,?,?,?)").bind(key, body.locale, version, body.body.trim(), "DRAFT", utilityTemplateName, now, c.env.ADMIN_EMAIL),
     c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_REMINDER_DRAFT_SAVED", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT_REMINDER_TEMPLATE", `${key}:${body.locale}`, crypto.randomUUID(), JSON.stringify({ key, locale: body.locale, version }), now)
   ]);
   return c.json({ ok: true, version });
