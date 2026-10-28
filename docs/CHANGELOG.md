@@ -1079,3 +1079,10 @@
 - Added service-window checks at schedule creation, due-stage claiming, and immediately before provider send. Missing or expired inbound identity/timestamps permanently block the schedule and prevent backlog delivery.
 - Kept the existing five stages, local CMS EN/UR copy, +240 explicit COD consent, PKR125 fee guard, opt-out, and no-silence-conversion safeguards.
 - Reverified Workers Paid and Cloudflare identity. Production D1 marker/integrity query remains blocked by the documented safety gate; no migration, deployment, template mutation, or customer send occurred.
+
+## 2026-10-28 — GFS-282 D1 gate diagnosis and release hold
+
+- Verified `gisupp@gmail.com`, Get Free Seeds, Workers Paid, the production D1 binding, and read-only Studio schema visibility.
+- Recorded that the bounded marker query was rejected before execution by the local/tool over-quota safety gate requiring owner capacity approval; no alternative path was used.
+- Kept migrations0039/0040, candidate deployment, reminder flags, Cron/Queue activation, customer sends, WAMIDs, delivery claims, and COD conversions unchanged and unclaimed.
+- Local strict-window quality remains green: 309/309, build, lint, offline audit 0 vulnerabilities, rollback4/4.

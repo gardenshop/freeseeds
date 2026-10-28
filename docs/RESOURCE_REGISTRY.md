@@ -1169,3 +1169,10 @@ No secrets are stored in this registry.
 - Reminder source: strict 24-hour service-window-only delivery; local CMS EN/UR copy; no Meta template submission, approval, fallback, or WAMID.
 - Code verification: focused 16/16, full 309/309, build, lint, offline audit 0 vulnerabilities, and rollback4/4 pass after the final repair.
 - Live versions are unchanged: API `24d72438-72a1-4544-80df-4b9b90c297e5` and Admin `66426d2a-be1c-4e22-b420-1b1559dcbbc5`, both 100%; no GFS-281 deployment.
+
+## GFS-282 Registry — 2026-10-28
+
+- Cloudflare: `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; production D1 `getfreeseeds-prod` / `02b707df-a10c-4645-9516-a2a4541f6fab`. Paid subscription was read-only verified.
+- D1 safety: the bounded marker query was rejected before execution by the local/tool safety reviewer due to the documented over-quota owner-approval gate. No marker, recovery bookmark, integrity result, write, or migration is claimed.
+- Release state: strict 24-hour source is local-tested; no Meta templates, live reminder activation, customer send, WAMID, delivery status, or COD conversion occurred. All three reminder flags remain false.
+- Live versions are unchanged: API `24d72438-72a1-4544-80df-4b9b90c297e5` and Admin `66426d2a-be1c-4e22-b420-1b1559dcbbc5`, both 100%. Hoja isolation, new-number lock, public COD/PKR125, three Advance methods, and signed webhook safeguards remain protected.

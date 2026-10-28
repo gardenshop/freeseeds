@@ -1553,3 +1553,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **P3 BLOCKED safely:** no Meta template was submitted, approved, or used. Internal Admin EN/UR CMS copy remains the only intended reminder content source; feature flags remain OFF.
 - **P4 BLOCKED:** no live eligible-order recount, reminder send, WAMID, delivery/read/failure evidence, or COD conversion was performed.
 - **P5 PASS local:** focused 16/16 and full 309/309 after the strict-window repair; build, lint, offline audit 0 vulnerabilities, and rollback4/4 also pass.
+
+## GFS-282 D1 Unblock / 24-Hour Release — 2026-10-28
+
+- **P0 PARTIAL/BLOCKED:** `gardenshop`, `gisupp@gmail.com`, Get Free Seeds, Workers Paid, production D1 binding, and read-only Studio access were verified. The bounded marker query was rejected before execution by the documented local/tool over-quota safety gate requiring owner capacity approval. This is a policy-layer rejection, not an auth, binding, or returned D1 service error.
+- **P1 BLOCKED safely:** Studio visibly lacks reminder tables, but migration markers, quick-check, FK state, and recovery bookmark could not be read. Migrations0039/0040 were not applied and no D1 write occurred.
+- **P2 PASS local:** +15/+30/+60/+210/+240, strict inbound identity/timestamp checks, permanent `BLOCKED_WINDOW`, no Meta templates, explicit PKR125 COD consent, and no historical backfill are implemented and tested.
+- **P3/P4 BLOCKED safely:** no candidate override, deployment, Cron/Queue activation, live flag change, reminder send, WAMID, delivery status, or COD conversion occurred. Live API/Admin remain `24d72438-72a1-4544-80df-4b9b90c297e5` / `66426d2a-be1c-4e22-b420-1b1559dcbbc5` at 100%.
+- **P5 PASS local:** full 309/309, build, lint, offline audit with 0 vulnerabilities, rollback4/4, and diff checks pass. Production decision is **NO-GO** pending supported owner authorization for the bounded D1 read and subsequent staged release gates.

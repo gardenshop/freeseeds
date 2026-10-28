@@ -1381,3 +1381,9 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | GFS-281 queue/send window gate | **PASS local** | Queue rechecks the latest window immediately before send; closed-window jobs stop the schedule and cannot use a template fallback |
 | GFS-281 no Meta template path | **PASS source/build** | Worker sends only local CMS text or +240 interactive buttons inside the verified window; utility approval flag is not used to authorize sending |
 | GFS-281 live D1/Paid verification | **PARTIAL/BLOCKED** | Workers Paid and account identity verified; production schema visible, but bounded SQL marker/integrity read rejected by safety gate |
+
+| GFS-282 D1 rejection layer | **PARTIAL/BLOCKED** | Paid entitlement, account, production binding, and Studio access verified; bounded marker read rejected before execution by the local/tool quota safety reviewer |
+| GFS-282 migration0039/0040 | **BLOCKED safely** | No marker/FK/quick-check/recovery read; no D1 write, replay, backfill, or live migration |
+| GFS-282 strict 24-hour policy | **PASS local** | Identity/timestamp checked at schedule, claim, and send; expired/unknown windows permanently block; no Meta template fallback |
+| GFS-282 release/activation | **BLOCKED safely** | No candidate deployment, flag change, Cron/Queue activation, live send, WAMID, delivery, or COD conversion |
+| GFS-282 regression gates | **PASS local** | Full 309/309, build, lint, offline audit 0 vulnerabilities, rollback4/4, diff check |

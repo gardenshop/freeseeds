@@ -1204,3 +1204,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Treat the internal Admin EN/UR copy as ordinary service-window text, not a Meta template. Keep the utility approval flag false and do not submit or publish Meta templates for this feature.
 - When a due stage has no valid window, stop the schedule and mark all pending/queued stages `BLOCKED_WINDOW`; a future inbound can support future customer interactions but cannot revive missed reminder stages.
 - Paid entitlement is verified, but the production D1 SQL gate remains unresolved. Do not convert dashboard capacity into permission to query or write; require supported owner authorization before migration0039/0040 preflight or apply.
+
+## 2026-10-28: GFS-282 D1 gate diagnosis and strict release hold
+
+- Classify the rejected production SQL as a local/tool safety-policy rejection before execution. Workers Paid, authentication, account, and D1 binding were independently verified; do not misclassify this as a Cloudflare service failure.
+- Keep migrations0039/0040 unapplied until a supported owner-authorized bounded read verifies markers, schema identity, recovery bookmark, quick-check, FK state, indexes, and triggers. Never disable the quota guard globally or use a workaround path.
+- Keep `PAYMENT_REMINDERS_V2_ENABLED`, `PAYMENT_AUTOMATION_V2_ENABLED`, and `PAYMENT_UTILITY_TEMPLATES_APPROVED` false. The current live API/Admin versions remain the rollback-safe production baseline.
+- The strict 24-hour local implementation is releasable only after the D1 and staged deployment gates pass. No current live eligibility count, reminder queue count, WAMID, or delivery result may be inferred from the blocked read.

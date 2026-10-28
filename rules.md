@@ -855,3 +855,10 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - A closed, null, invalid, future, or expired window permanently marks the schedule and pending stages `BLOCKED_WINDOW`; a later inbound never backfills missed reminder stages.
 - Internal Admin EN/UR CMS copy is local service-window copy only. +240 remains Confirm COD / Keep Advance / Cancel Order with the exact PKR125 fee and explicit consent; silence never converts COD.
 - Workers Paid and the GFS Cloudflare identity were read-only verified. Production D1 Studio is reachable, but its visible schema lacks reminder tables; the documented over-quota safety gate rejected a bounded marker query. Do not apply migrations or deploy until that gate is explicitly resolved through supported authorization.
+
+## GFS-282 D1 Gate Diagnosis (2026-10-28)
+
+- Cloudflare identity is `gisupp@gmail.com`, account is Get Free Seeds, and Workers Paid is active. The production D1 binding is `getfreeseeds-prod` / `02b707df-a10c-4645-9516-a2a4541f6fab` under account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- The bounded production marker query was rejected before execution by the local/tool safety reviewer because the existing quota rule requires explicit owner capacity approval. This was not a Cloudflare authentication failure, D1 binding failure, or returned D1 service error. Do not bypass it with Wrangler, raw HTTP, or alternate UI paths.
+- Read-only D1 Studio schema visibility showed the pre-reminder schema and no reminder tables. Migration markers, quick-check, foreign-key state, and recovery bookmark remain unverified; migrations0039/0040 are not applied.
+- GFS-282 remains NO-GO for live migration, deployment, activation, and sends. Feature flags remain false. Resolve the bounded-read authorization through a supported owner path before any D1 mutation.
