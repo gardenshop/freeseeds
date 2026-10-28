@@ -6,8 +6,8 @@
 |---|---|---|
 | Account/version/binding verification | PASS | Cloudflare `gisupp@gmail.com`; Admin `b4c45278`100%/`c2e87231` rollback; API `8e670de8`100%/`d808a31c`0%; staging D1 UUID recorded. |
 | CMS REVIEW v8 | PASS | Authenticated readback confirmed EN/UR published content and `{orderSummaryItems}`, `{deliveryFee}`, `{orderTotal}`. |
-| Live export UI/download | PASS | Authenticated `/orders` button visible; export HTTP200, CSV attachment, private/no-store; 144 rows and 18 columns. |
-| Export filter completeness | PASS | All active total 144 matched export; REVIEW10, PENDING79 and PACKING1 matched filtered API totals; export is not page-limited. |
+| Live export UI/download | PASS | Authenticated `/orders` button visible; export HTTP200, CSV attachment, private/no-store; 145 quote-aware parsed records and 18 columns. |
+| Export filter completeness | PASS | All active total 145 matched export; REVIEW10, PENDING79 and PACKING1 matched filtered API totals; embedded newlines were parsed correctly and export is not page-limited. |
 | Export safety/coverage | PASS | Five delivery fields, province/items/quantities/fees/total/payment/fulfillment/hold columns; no sensitive fields; local tests cover Unicode, leading-zero, formula and access control. |
 | API summary live acceptance | BLOCKED SAFELY | Candidate health passed, but no genuine authorized inbound/outbound Meta proof or WAMID; API stayed on healthy version. |
 | Reminder/payment safety | PASS PAUSED | All three flags false; no sends, backfill, payment, order, receipt, COD or schema mutation. |

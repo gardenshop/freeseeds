@@ -3,7 +3,7 @@
 ## GFS-292 live export release and summary hold (2026-10-28)
 
 - **P0 PASS:** Cloudflare `gisupp@gmail.com` / Get Free Seeds identity and the staging D1 binding were reverified. Admin `b4c45278` is active100% with `c2e87231` retained at0%; API `8e670de8` remains healthy at100% and `d808a31c` remains0%.
-- **P1 PASS:** Authenticated live Orders UI now exposes `Download Excel (CSV)`. Export HTTP200 returned 144 rows, matching the unpaged API total, with 18 columns; REVIEW, PENDING and PACKING filter parity also passed. No sensitive fields were present.
+- **P1 PASS:** Authenticated live Orders UI now exposes `Download Excel (CSV)`. Quote-aware CSV parsing returned 145 records, matching the unpaged API total, with 18 columns; REVIEW10, PENDING79 and PACKING1 filter parity also passed. Embedded newlines were handled as CSV content, not extra records; no sensitive fields were present.
 - **P2 BLOCKED SAFELY:** API candidate health passed, but no genuine authorized WhatsApp inbound-to-outbound acceptance/WAMID was available. The new summary was not promoted; live customer rendering is not claimed.
 - **P3 PASS PAUSED:** `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_AUTOMATION_V2_ENABLED=false`, `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`; no schedules, sends, WAMIDs, historical backfill or COD mutation.
 - **P4 PASS:** Existing migrations0039/0040, payment/COD safeguards and webhook isolation remain intact; no schema or customer-state mutation was made.
