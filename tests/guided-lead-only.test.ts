@@ -267,25 +267,56 @@ describe("frozen V1 receipt hotfix", () => {
 });
 
 describe("GFS-221 additive V1-compatible COD path", () => {
+  it("separates review confirmation from payment choice and advance methods", async () => {
+    await enableAuditedCodPolicy();
+    await enableSyntheticPaymentMethod();
+    codEnabled = true;
+    codRolloutMode = "PUBLIC";
+    await reachReview("en");
+    expect(buttons()).toEqual(["CONFIRM_ORDER", "CANCEL_ORDER"]);
+    const before = Number((sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get() as { count: number }).count);
+    await inbound(tap("CONFIRM_ORDER"));
+    expect(conversation()?.state).toBe("PAYMENT_METHOD");
+    expect(buttons()).toEqual(["ADVANCE_PAYMENT", "COD"]);
+    expect(Number((sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get() as { count: number }).count)).toBe(before + 1);
+    await inbound(tap("ADVANCE_PAYMENT"));
+    expect(conversation()?.state).toBe("PAYMENT_METHOD");
+    expect(buttons()).not.toContain("ADVANCE_PAYMENT");
+    expect(buttons()).not.toContain("COD");
+    expect(buttons()).toContain("PAY_JAZZCASH");
+    expect(body()).not.toContain("Choose payment method: Advance Payment or Cash on Delivery");
+  });
+
+  it("cancels from review without creating an order or payment", async () => {
+    await reachReview("en");
+    expect(buttons()).toEqual(["CONFIRM_ORDER", "CANCEL_ORDER"]);
+    await inbound(tap("CANCEL_ORDER"));
+    expect(conversation()?.state).toBe("CANCELLED");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payments").get()).toEqual({ count: 0 });
+  });
+
   it("uses two review payment choices and creates one unheld public COD order", async () => {
     await enableAuditedCodPolicy();
     codEnabled = true;
     codRolloutMode = "PUBLIC";
     await reachReview("en", true);
-    expect(buttons()).toEqual(["PAY_ADVANCE", "PAY_COD"]);
+    expect(buttons()).toEqual(["CONFIRM_ORDER", "CANCEL_ORDER"]);
     expect(body()).toContain("🛒 *Order Summary*");
     expect(body()).toContain("Free Vegetables Seeds (5 Packs): FREE");
     expect(body()).toContain("Micro Nutrients (25g): PKR 75");
     expect(body()).toContain("Delivery Fee: PKR 125");
     expect(body()).toContain("*Order Total: PKR 200*");
-    expect(body()).toContain("Please select your payment method below to continue.");
+    expect(body()).toContain("Please confirm or cancel your order.");
     expect(body()).not.toContain("Choose payment:");
     expect(body()).not.toContain("additional PKR 125 collection fee");
     expect(body()).not.toContain("Advance total");
     expect(body()).not.toContain("COD fee: PKR 125");
     expect(body()).not.toContain("COD total");
     expect(body()).not.toContain("Place Order");
-    await inbound(tap("PAY_COD"), "synthetic-public-cod-choice");
+    await inbound(tap("CONFIRM_ORDER"), "synthetic-public-confirm-order");
+    expect(buttons()).toEqual(["ADVANCE_PAYMENT", "COD"]);
+    await inbound(tap("COD"), "synthetic-public-cod-choice");
     expect(conversation()?.state).toBe("COD_CONFIRM");
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 1 });
     expect(buttons()).toEqual(["CONFIRM_COD_ORDER", "ADVANCE_PAYMENT"]);
@@ -614,7 +645,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     expect(body()).toContain("Micro Nutrients (25g): PKR 75");
     expect(body()).toContain("Delivery Fee: PKR 125");
     expect(body()).toContain("*Order Total: PKR 200*");
-    expect(body()).toContain("Please select your payment method below to continue.");
+    expect(body()).toContain("Please confirm or cancel your order.");
     expect(body()).not.toContain("Choose payment:");
     expect(body()).not.toContain("additional PKR 125 collection fee");
     expect(body()).not.toContain("COD total");

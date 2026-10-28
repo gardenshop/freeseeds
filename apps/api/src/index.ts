@@ -117,8 +117,13 @@ const LOCALE_FALLBACKS: Partial<Record<WhatsAppTemplateKey, { en: string; ur: st
 async function contentFor(db: D1Database, key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; amount?: string | number; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string; orderSummaryItems?: string; deliveryFee?: string | number; orderTotal?: string | number } = {}, sessionKey?: string, locale: "en" | "ur" = "en") {
   const content = await publishedWhatsAppContent(db, key, locale, sessionKey);
   const localizedFallback = LOCALE_FALLBACKS[key]?.[locale] ?? fallback;
+  const renderedText = renderWhatsAppContent(content?.text ?? localizedFallback, values);
+  const reviewText = key === "REVIEW"
+    ? renderedText.replace("Please select your payment method below to continue.", "Please confirm or cancel your order.")
+      .replace("\u062c\u0627\u0631\u06cc \u0631\u06a9\u06be\u0646\u06d2 \u06a9\u06d2 \u0644\u06cc\u06d2 \u0646\u06cc\u0686\u06d2 \u0627\u062f\u0627\u0626\u06cc\u06af\u06cc \u06a9\u0627 \u0637\u0631\u06cc\u0642\u06c1 \u0645\u0646\u062a\u062e\u0628 \u06a9\u0631\u06cc\u06ba\u06d4", "\u0627\u067e\u0646\u06d2 \u0622\u0631\u0688\u0631 \u06a9\u06cc \u062a\u0635\u062f\u06cc\u0642 \u06a9\u0631\u06cc\u06ba \u06cc\u0627 \u0627\u0633\u06d2 \u0645\u0646\u0633\u0648\u062e \u06a9\u0631\u06cc\u06ba\u06d4")
+    : renderedText;
   return {
-    text: renderWhatsAppContent(content?.text ?? localizedFallback, values),
+    text: reviewText,
     buttonLabel: content?.buttonLabel,
     listButtonLabel: content?.listButtonLabel,
     listDescription: content?.listDescription,
@@ -534,8 +539,10 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
     }
   };
   const preSubmitStates = ["NEW", "LANGUAGE", "OFFER", "FERTILIZER", "PRODUCT", "PROVINCE", "FULL_NAME", "ADDRESS", "NEARBY", "CITY", "CONTACT", "REVIEW"];
+  // The new Review button is an alias for the existing safe unsubmitted-cancel path.
+  if (normalized === "CANCEL_ORDER" && preSubmitStates.includes(state)) normalized = "CANCEL";
   const actionAllowed = /^(STATUS|CHECK_ORDER|HELP|SUPPORT)$/.test(normalized)
-    || (normalized === "CANCEL" && preSubmitStates.includes(state))
+    || (/^(CANCEL|CANCEL_ORDER)$/.test(normalized) && preSubmitStates.includes(state))
     || (state === "OFFER" && /^(CONTINUE_ORDER|CANCEL_ORDER)$/.test(normalized))
     || (state === "NEW" && normalized === "GET_FREE_PACKS")
     || (state === "CANCELLED" && normalized === "START")
@@ -543,13 +550,13 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
     || (state === "LANGUAGE" && /^(LANG_EN|LANG_UR)$/.test(normalized))
     || (["FERTILIZER", "PRODUCT"].includes(state) && /^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/.test(normalized))
     || (state === "PROVINCE" && normalized.startsWith("PROVINCE_"))
-    || (state === "REVIEW" && (/^(CONFIRM|PLACE_ORDER|BACK)$/.test(normalized) || normalized === "PAY_ADVANCE" || (normalized === "PAY_COD" && codAvailable)))
+    || (state === "REVIEW" && (/^(CONFIRM|CONFIRM_ORDER|PLACE_ORDER|BACK|CANCEL_ORDER)$/.test(normalized) || normalized === "PAY_ADVANCE" || (normalized === "PAY_COD" && codAvailable)))
     || (["PAYMENT_METHOD", "PAYMENT_PENDING"].includes(state) && Boolean(paymentMethodFromAction(normalized)))
     || (state === "PAYMENT_METHOD" && /^(ADVANCE_PAYMENT|COD)$/.test(normalized))
     || (state === "COD_CONFIRM" && /^(CONFIRM_COD_ORDER|ADVANCE_PAYMENT)$/.test(normalized))
     || (state === "COD_PENDING" && normalized === "ADVANCE_PAYMENT")
     || (state === "PAYMENT_GRACE" && Boolean(data.orderId) && /^(CONFIRM_COD|KEEP_ADVANCE|CANCEL_ORDER)$/.test(normalized));
-  const semanticAction = /^(START|GET_FREE_PACKS|LANG_.*|PAY_.*|PAYMENT_HELP|PROVINCE_.*|ADD_FERTILIZER|SEEDS_ONLY|PLACE_ORDER|CONFIRM|BACK|CONTINUE_ORDER|CANCEL_ORDER|FLOW_SUBMIT|ADVANCE_PAYMENT|COD|CONFIRM_COD_ORDER|KEEP_ADVANCE|CONFIRM_COD)$/.test(normalized) || Boolean(paymentMethodFromAction(normalized));
+  const semanticAction = /^(START|GET_FREE_PACKS|LANG_.*|PAY_.*|PAYMENT_HELP|PROVINCE_.*|ADD_FERTILIZER|SEEDS_ONLY|PLACE_ORDER|CONFIRM(_ORDER)?|BACK|CONTINUE_ORDER|CANCEL(_ORDER)?|FLOW_SUBMIT|ADVANCE_PAYMENT|COD|CONFIRM_COD_ORDER|KEEP_ADVANCE|CONFIRM_COD)$/.test(normalized) || Boolean(paymentMethodFromAction(normalized));
   const invalidAction = Boolean(message.interactive || message.button || semanticAction) && !actionAllowed;
   let paymentSelection: { orderId: string; orderNumber: string; amount: number; method: PaymentMethod; locale: "en" | "ur"; message: string; idempotencyKey: string; config: ReturnType<typeof normalizePaymentMethodRow> } | undefined;
   let completePaymentMethods: Awaited<ReturnType<typeof completeEnabledPaymentMethods>> = [];
@@ -596,7 +603,7 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
     }
   }
   else if (state === "REVIEW") {
-    if (!/^(CONFIRM|PLACE_ORDER)$/i.test(normalized)) reply = (await sessionContent("REVIEW", "Review your order. Tap Place Order to confirm.")).text;
+    if (!/^(CONFIRM|CONFIRM_ORDER|PLACE_ORDER)$/i.test(normalized)) reply = (await sessionContent("REVIEW", "Review your order. Tap Confirm Order to continue or Cancel Order to stop.")).text;
     else if (!data.fullName || !data.deliveryAddress || !data.nearbyPlace || !data.city || !data.contactNumber || !data.province) {
       nextState = "FULL_NAME"; data = { language: data.language };
       reply = (await sessionContent("FIELD_FULL_NAME", "I need to restart safely. Please reply with your full name.")).text;
@@ -608,6 +615,7 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
         const summary = ("quote" in result ? result.quote : undefined) ?? await getPersistedOrderSummary(db, result.orderId);
         data.amountPkr = summary.totalPayablePkr;
         nextState = "PAYMENT_METHOD";
+        showPaymentChoice = codAvailable;
         reply = (await sessionContent("CONFIRMATION", "Order {orderNumber} created. Total: PKR {totalPkr}.", { orderNumber: result.orderNumber, totalPkr: summary.totalPayablePkr })).text;
       } catch (error) {
         if (!(error instanceof OrderCooldownError)) throw error;
@@ -704,7 +712,7 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
   }
   if (nextState === "PAYMENT_METHOD") {
     completePaymentMethods = await completeEnabledPaymentMethods(db, data.language ?? "en");
-    if (showPaymentChoice || (state === "REVIEW" && codAvailable)) {
+    if (showPaymentChoice) {
       showPaymentChoice = true;
       reply = `${reply}\n${data.language === "ur" ? "ادائیگی کا طریقہ منتخب کریں: ایڈوانس پیمنٹ یا کیش آن ڈیلیوری (COD)۔ COD آرڈر پر PKR 125 اضافی کیش کلیکشن فیس لاگو ہوگی۔" : "Choose payment method: Advance Payment or Cash on Delivery (COD). COD orders include an additional PKR 125 cash collection fee."}`;
     } else if (!completePaymentMethods.length) {
@@ -732,7 +740,7 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
   } else if ((state === "FERTILIZER" || state === "PRODUCT") && /^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/i.test(normalized) && nextState === "PROVINCE" && provinceRows.length) {
     options = { list: { buttonText: province.listButtonLabel!, rows: provinceRows } };
   } else if (state === "CONTACT" && nextState === "REVIEW") {
-    options = { buttons: [{ id: "PAY_ADVANCE", title: data.language === "ur" ? "پیشگی ادائیگی" : "Advance Payment" }, ...(codAvailable ? [{ id: "PAY_COD", title: data.language === "ur" ? "کیش آن ڈیلیوری" : "Cash on Delivery" }] : [])] };
+    options = { buttons: [{ id: "CONFIRM_ORDER", title: data.language === "ur" ? "\u0622\u0631\u0688\u0631 \u06a9\u06cc \u062a\u0635\u062f\u06cc\u0642" : "Confirm Order" }, { id: "CANCEL_ORDER", title: data.language === "ur" ? "\u0622\u0631\u0688\u0631 \u0645\u0646\u0633\u0648\u062e" : "Cancel Order" }] };
   } else if (showPaymentChoice) {
     // Meta reply-button titles are limited to 20 characters. Keep the COD
     // abbreviation in the payment notice while using the valid button label.
