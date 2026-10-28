@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-304 two-follow-up release decision (2026-10-29)
+
+| Requirement | Result | Evidence / boundary |
+|---|---|---|
+| Frozen production and rollback | PASS | API `45b01d86`/Admin `f0212429` remain 100%; rollback versions retained; no traffic mutation. |
+| +15/+210 implementation | PASS | Existing four published EN/UR rows, real no-method state eligibility, dynamic values, independent stage/idempotency and exclusion tests. |
+| Tester recovery | BLOCKED | Connected WhatsApp profile is business sender; exact authorized tester conversation was not found. |
+| Candidate rollout | NO-GO | API `17598945` and Admin `76e33a3d` remain 0%; no candidate-specific WAMID proof. |
+| Activation | NO-GO | Recovery start time unset; all reminder/template automation flags remain false. |
+| Quality | PASS | 318/318, build, lint, audit0, D1 integrity and rollback4/4. |
+
 ## GFS-303 two-stage recovery gate (2026-10-29)
 
 | Requirement | Result | Evidence / boundary |

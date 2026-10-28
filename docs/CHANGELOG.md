@@ -1,5 +1,11 @@
 # Changelog
 
+## GFS-304 (2026-10-29)
+
+- Rechecked the frozen production pair, candidate provenance, published +15/+210 EN/UR templates, real-state eligibility, D1 integrity and rollback path.
+- Searched the connected WhatsApp profile for the authorized tester without finding the tester conversation; confirmed it is the business-sender session. No traffic, flag, customer, payment or reminder mutation was performed.
+- Re-ran 318/318, build, lint, audit0 and rollback4/4. Candidate deployment and two-follow-up activation remain NO-GO/PENDING genuine tester access.
+
 ## GFS-303 (2026-10-29)
 
 - Reverified the frozen API/Admin pair, GFS Cloudflare identity, active D1 binding, live health, Admin CSV endpoint and existing +15/+210 recovery implementation without changing traffic or flags.

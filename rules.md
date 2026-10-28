@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-304 two-follow-up release decision (2026-10-29)
+
+- Owner scope remains limited to the existing +15/+210 payment-choice recovery stages for new confirmed-but-no-method orders. Five-stage Advance reminders, general automation and utility templates remain disabled.
+- The authenticated WhatsApp profile was searched for the previously authorized tester identity and matching conversation; none was available. The open chat is the GFS business-sender account. No inbound was sent, spoofed or inferred from display names.
+- No Cloudflare traffic or flag mutation was performed. Frozen API `45b01d86` and Admin `f0212429` remain 100%; sends-off candidates remain 0%; recovery start time is unset.
+- GFS-304 gates pass locally and read-only: four published internal EN/UR templates, real-state eligibility/idempotency, D1 integrity, full 318/318, build/lint, audit0 and rollback4/4. Live candidate acceptance and activation remain NO-GO pending the exact tester session.
+
 ## GFS-303 frozen baseline and two-stage recovery gate (2026-10-29)
 
 - Read-only identity and binding verification: GitHub `gardenshop`, Cloudflare Get Free Seeds account `gisupp@gmail.com`, canonical GFS Meta, and D1 `getfreeseeds-staging` UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`. Hoja/ThanNow resources were not accessed.

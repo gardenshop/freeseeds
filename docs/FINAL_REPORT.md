@@ -1,5 +1,23 @@
 # Final Report
 
+## GFS-304 Final Report — two-follow-up release decision (2026-10-29)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 freeze/identity | **PASS** | Frozen API `45b01d86` and Admin `f0212429` remain 100%; rollback, D1, signed webhook, COD/payment safeguards and CSV are preserved. |
+| P1 implementation | **PASS** | Existing +15/+210 bilingual stages, four published internal templates, real no-method eligibility and idempotency verified. |
+| P2 tester recovery | **BLOCKED** | Connected WhatsApp profile is the business sender; authorized tester profile/conversation was not found. |
+| P3 candidate deployment | **NO-GO** | API `17598945` and Admin `76e33a3d` remain 0%; no live candidate WAMID/reply evidence. |
+| P4 activation | **NO-GO/PENDING** | Recovery flag false, start time unset, five-stage/utility flags false; no historical sends. |
+| P5 quality | **PASS** | 318/318, build, lint, audit0, D1 integrity and rollback4/4. |
+
+### Final state
+
+- Recovery scheduled/queued/sent/delivered/read/failed/BLOCKED_WINDOW: **0**. No real recovery WAMID exists.
+- The four published messages remain internal EN/UR +15/+210 copy with dynamic order/amount/delivery/COD values and Advance/COD buttons; no Meta templates are approved.
+- **PUBLIC BOT GO:** protected frozen release. **TWO-FOLLOW-UP GO:** NO-GO pending tester-attributed canary. **FIVE-STAGE ADVANCE REMINDERS:** PAUSED.
+- Completion: P0 100%, P1 100%, P2 0%, P3 0%, P4 0%, P5 100%; overall **60%**, with the exact remaining blocker being authenticated access to the authorized tester profile.
+
 ## GFS-303 Final Report — frozen bot and two-stage recovery gate (2026-10-29)
 
 | Gate | Result | Evidence |

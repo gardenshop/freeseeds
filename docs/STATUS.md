@@ -1,5 +1,14 @@
 # Status
 
+## GFS-304 two-follow-up release decision (2026-10-29)
+
+- **P0 PASS:** Frozen API `45b01d86` and Admin `f0212429` remain 100%, with rollback versions and verified GFS identities/binding preserved. No production mutation occurred.
+- **P1 PASS:** Existing migrations0041/0042, four published internal EN/UR stage messages, dynamic placeholders, real `DETAILS_COMPLETED`/`PENDING` eligibility, independent +15/+210 idempotency and exclusion guards verified.
+- **P2 BLOCKED precisely:** Official WhatsApp Web search found no authorized tester profile/conversation; the connected session is the GFS business sender. No fabricated inbound or guessed credential was used.
+- **P3 NO-GO:** API `17598945` and Admin `76e33a3d` remain 0%; no guarded candidate promotion was performed without genuine reply attribution.
+- **P4 NO-GO/PENDING:** recovery flag remains false and start time unset; five-stage Advance flags and utility approval remain false. Recovery scheduled/sent/delivered/blocked counts remain zero.
+- **P5 PASS:** 318/318, build, lint, audit0 and rollback4/4 pass. Remaining blocker is the exact authorized tester session for nonfinancial canary proof.
+
 ## GFS-303 frozen baseline and two-stage recovery release gate (2026-10-29)
 
 - **P0 PASS read-only:** Cloudflare identity is the Get Free Seeds account (`gisupp@gmail.com`); active API `45b01d86` and Admin `f0212429` remain 100%. API rollback `8e670de8` and Admin rollback `b4c45278` remain available. D1 binding is the verified staging UUID recorded in the Resource Registry; no production mutation occurred.

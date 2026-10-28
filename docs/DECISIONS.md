@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-29: do not promote or activate without tester attribution
+
+- Keep the owner-approved scope limited to the existing +15/+210 payment-choice recovery path. Do not enable five-stage Advance reminders, utility templates or unrelated payment automation.
+- The official browser search did not recover the authorized tester profile/conversation; the connected profile is the GFS business sender. Treat this as a real acceptance blocker, not as permission to use the sender account or fabricate inbound traffic.
+- Keep API `45b01d86`/Admin `f0212429` at 100%, candidates `17598945`/`76e33a3d` at 0%, recovery flag false and no activation start timestamp. Resume only after bounded tester-attributed canary proof and immediate rollback readiness.
+
 ## 2026-10-29: keep two-stage recovery frozen pending tester connection
 
 - Accept the existing +15/+210 implementation and additive 0041/0042 schema after read-only D1 verification. The scheduler and Queue path must continue using real `DETAILS_COMPLETED`/`PENDING` plus `PAYMENT_METHOD` state, with independent stage idempotency and immediate eligibility/window rechecks.

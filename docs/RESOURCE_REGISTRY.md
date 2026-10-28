@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-304 two-follow-up release decision (2026-10-29)
+
+- **Workers:** frozen API `45b01d86` and Admin `f0212429` remain 100%; rollback versions retained. API `17598945` and Admin `76e33a3d` remain 0%.
+- **Flags:** `PAYMENT_CHOICE_RECOVERY_ENABLED=false`; `PAYMENT_CHOICE_RECOVERY_START_AT` unset; `PAYMENT_REMINDERS_V2_ENABLED=false`; `PAYMENT_AUTOMATION_V2_ENABLED=false`; `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`.
+- **Acceptance:** connected WhatsApp session is the GFS business sender; authorized tester profile/conversation was not found. No WAMID, delivery or live recovery send is claimed.
+- **Quality:** 318/318, build, lint, audit0, D1 integrity and rollback4/4 pass. Four internal published EN/UR stage templates and no recovery backlog remain recorded under GFS-303.
+
 ## GFS-303 frozen release gate (2026-10-29)
 
 - **Identity:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / Get Free Seeds account; canonical GFS Meta only. Hoja/ThanNow were not accessed.
