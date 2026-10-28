@@ -1,5 +1,14 @@
 # Status
 
+## GFS-297 live button repair and guarded release (2026-10-28)
+
+- **P0 PASS:** Root cause was version attribution, not CMS text: baseline `d808a31c` served CMS v9 but its legacy button branch; corrected `45b01d86` was at 0%.
+- **P1 PASS live / boundary recorded:** Candidate `45b01d86` at 100% delivered the dynamic one-total summary with exactly `CONFIRM_ORDER`/`CANCEL_ORDER`. Genuine `CANCEL_ORDER` ended the unsubmitted flow with zero order/payment mutation. Confirm/payment/COD was not clicked because production COD is PUBLIC and no protected test hold exists.
+- **P2 PASS automated / English live partial:** Full 316/316 covers EN/UR, seeds/fertilizer, provinces, payment methods, receipt/review, COD, retries, stale callbacks, Check Order and idempotency. Live English reached WELCOME→LANGUAGE→OFFER→FERTILIZER→PROVINCE→fields→REVIEW/CANCEL; live Urdu and payment/COD remain unexercised boundaries.
+- **P3 PASS guarded release:** Cloudflare account identity was verified before promotion. Candidate is active 100%; `d808a31c` is 0% rollback. Candidate health is HTTP200/PRODUCTION_INTEGRATION_READY and no reply regression was observed.
+- **P4 PASS:** Admin export is authenticated HTTP200 `text/csv` with download disposition; prior 18-column/145-record validation remains preserved. Reminders remain false/false/false; D1 migrations0039/0040 and payment safeguards are unchanged.
+- **P5 PASS local / pending push record:** build, lint, audit 0 vulnerabilities, rollback4/4 pass. Remaining release boundary is a protected test/hold or separately authorized live payment/COD acceptance; no full payment E2E claim is made.
+
 ## GFS-296 routing repair and guarded canary (2026-10-28)
 
 - **P0 PASS:** GitHub `gardenshop`, Cloudflare `gisupp@gmail.com` / Get Free Seeds, and canonical GFS Meta identities were reverified. Active API is `d808a31c` at 100%; routing candidate `45b01d86` is 0%; Admin `b4c45278` is 100%.

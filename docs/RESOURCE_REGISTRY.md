@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-297 live routing release (2026-10-28)
+
+- **Identity:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / Get Free Seeds; canonical GFS Meta. Hoja resources untouched.
+- **Workers:** API `45b01d86` active 100%; rollback `d808a31c` 0%; Admin `b4c45278` 100%. Candidate health is HTTP200 and reports `PRODUCTION_INTEGRATION_READY`.
+- **Genuine evidence:** authorized tester identity was verified in the existing conversation. Candidate served the dynamic summary with exact Confirm/Cancel buttons; safe cancellation returned no-order/no-payment confirmation. Raw customer identifiers and WAMIDs are intentionally omitted.
+- **Protected boundary:** no production Confirm Order, Advance method, receipt, COD, settlement or dispatch action was performed. Production COD is PUBLIC and has no protected test hold.
+- **Features:** reminders false/false/false; utility approval false; migrations0039/0040 and D1 binding preserved; Admin CSV export verified HTTP200 CSV and prior 18-column validation remains intact.
+
 ## GFS-296 guarded routing release (2026-10-28)
 
 - **Accounts:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / Get Free Seeds; canonical GFS Meta only. Hoja resources were not accessed.

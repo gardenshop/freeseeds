@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-297 live routing release (2026-10-28)
+
+- Root cause of GFS-296 live mismatch: CMS v9 was shared by both API versions, but the old API `d808a31c` remained at 100% and still generated legacy Advance/COD buttons. Corrected source was at 0%, so a health check and CMS text could not prove button logic.
+- After identity verification and all local gates, candidate `45b01d86-65ff-4573-b384-f6be433a83d7` was promoted to 100%; `d808a31c` is retained at 0% rollback. The genuine authorized tester received the corrected `Confirm Order`/`Cancel Order` buttons and `CANCEL_ORDER` safely returned the no-order/no-payment response.
+- No Confirm Order, payment method, COD confirmation, receipt, settlement, dispatch, or customer charge was performed. Production `COD_ROLLOUT_MODE=PUBLIC` has no protected test/hold path; live payment/COD acceptance must remain a separately authorized boundary.
+- Automated full flow coverage remains authoritative for EN/UR, fertilizer variants, province quotes, payment methods, receipts, COD consent, retries, stale callbacks, Check Order, and idempotency. Reminders stay false/false/false; migrations0039/0040, signed webhook, Admin export, and financial safeguards remain protected.
+
 ## GFS-296 current operational state (2026-10-28)
 
 - Cloudflare identity was reverified as `gisupp@gmail.com` in Get Free Seeds before the traffic restore. The authenticated GitHub/Meta accounts remain `gardenshop` and canonical GFS only; Hoja remains isolated.

@@ -1,5 +1,14 @@
 # Test Matrix
 
+## GFS-297 live routing acceptance (2026-10-28)
+
+- Full automated suite: **316/316 PASS**; build, lint, audit `0 vulnerabilities`, rollback4/4: **PASS**.
+- Candidate attribution: API `45b01d86` was explicitly assigned 100% during the tester journey; baseline `d808a31c` retained 0% rollback.
+- Live English: START/welcome, language, offer, fertilizer, province, five fields, dynamic one-total summary, exact `CONFIRM_ORDER`/`CANCEL_ORDER`, and safe cancellation: **PASS**.
+- Live Urdu: **automated PASS; device run not performed**. Confirm→payment, all three Advance methods, receipt/review, COD confirmation and return-to-Advance: **automated PASS; live blocked** because production has PUBLIC COD and no protected test/hold path.
+- Duplicate taps/retries/stale callbacks/idempotency/legacy callbacks/Check Order: **automated PASS**. No live order, payment, receipt, COD, dispatch, or settlement mutation.
+- Admin CSV: authenticated HTTP200, `text/csv`, downloadable disposition; preserved 18-column contract and prior 145-record validation.
+
 ## GFS-296 routing repair (2026-10-28)
 
 - Focused guided-flow/CMS tests: **103/103 PASS**; full suite: **316/316 PASS**.

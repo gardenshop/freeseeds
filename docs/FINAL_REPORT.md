@@ -1,5 +1,31 @@
 # Final Report
 
+## GFS-297 Final Report — live button repair and guarded release (2026-10-28)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 regression diagnosis | **PASS** | CMS v9 was common to both versions; baseline `d808a31c` remained 100% and generated legacy Advance/COD buttons while corrected `45b01d86` was 0%. |
+| P1 required routing | **PASS live through Cancel** | Candidate at 100% produced dynamic one-total summary with exact `CONFIRM_ORDER`/`CANCEL_ORDER`; `CANCEL_ORDER` returned no-order/no-payment confirmation. |
+| P2 automated E2E | **PASS** | 316/316 covers EN/UR, variants, province quotes, payment methods, receipts, COD, retries, stale callbacks, Check Order and idempotency. |
+| P2 live payment boundary | **BLOCKED safely** | Confirm/payment/COD was not clicked: production COD is PUBLIC and no protected TEST/hold path exists. No financial mutation was authorized. |
+| P3 release | **PASS guarded** | API `45b01d86` 100%, rollback `d808a31c` 0%, Admin `b4c45278` 100%; candidate health HTTP200 and genuine candidate reply observed. |
+| P4 protections | **PASS** | Admin export HTTP200 CSV; 18-column/145-record validation preserved; reminders OFF; migrations, signed webhook and financial safeguards unchanged. |
+| P5 quality | **PASS local** | Build, lint, audit0, rollback4/4 and documentation updates pass. |
+
+### Flow result
+
+- Live English: WELCOME → Language → OFFER → Fertilizer → Province → five fields → REVIEW → corrected Confirm/Cancel → safe Cancel: **PASS**.
+- Live Urdu: **not run on device**; automated coverage **PASS**.
+- Confirm → one order → Advance/COD → three Advance methods → receipt/review → COD/return-to-Advance: **automated PASS; live acceptance BLOCKED** by the absent protected hold path.
+- No live order, payment, receipt, COD conversion, dispatch, settlement or reminder send was performed. Raw WAMIDs/customer identifiers are withheld; no reminder WAMID is claimed.
+
+### Current release
+
+- API `45b01d86` is active at 100%; `d808a31c` is retained at 0% rollback. Admin `b4c45278` remains 100%.
+- Reminder flags: `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_AUTOMATION_V2_ENABLED=false`, `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`.
+- Completion: P0 100%; P1 100%; P2 automated 100% / live payment boundary 0%; P3 100%; P4 100%; P5 100%. Overall **90%**.
+- Decision: **GO for corrected live button routing and safe public operation; NO-GO for claiming full live payment/COD E2E** until a protected test/hold or separately authorized controlled financial test is available.
+
 ## GFS-296 Final Report — REVIEW/payment routing (2026-10-28)
 
 | Gate | Result | Evidence |

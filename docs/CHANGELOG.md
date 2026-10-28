@@ -1,5 +1,12 @@
 # Changelog
 
+## GFS-297 (2026-10-28)
+
+- Identified the live button defect as API version attribution: shared CMS v9 text masked the old API’s legacy button generator while the corrected API remained at 0%.
+- Promoted API candidate `45b01d86` to 100% with `d808a31c` retained at 0% rollback. Genuine tester proof showed exact Confirm Order/Cancel Order buttons and safe cancellation.
+- Preserved Admin `b4c45278`, CSV export HTTP200/18-column contract, D1 migrations0039/0040, signed webhook, COD/Advance safeguards and reminders OFF.
+- Full 316/316, build, lint, audit0 and rollback4/4 passed. Live payment/COD was not attempted because no protected hold path exists.
+
 ## GFS-296 (2026-10-28)
 
 - Repaired REVIEW/payment routing so the CMS summary is followed by Confirm Order/Cancel Order, confirmation creates/reuses one order before payment choice, Advance goes directly to methods, and legacy callbacks remain supported.

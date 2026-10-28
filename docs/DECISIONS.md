@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-28: GFS-297 promote corrected routing with payment boundary explicit
+
+- Promoted `45b01d86` to 100% after 316/316, build, lint, audit, rollback4/4 and health gates passed. Keep `d808a31c` at 0% rollback.
+- Candidate-specific genuine tester evidence proves the prior mismatch was version traffic: corrected `Confirm Order`/`Cancel Order` buttons appeared only after the candidate received 100% traffic; safe cancellation created no order/payment.
+- Do not click Confirm Order in production. `COD_ROLLOUT_MODE=PUBLIC` means no established TESTER_ONLY hold; live payment/COD/receipt acceptance requires a separate protected environment or explicit authorization for a real controlled order.
+- Treat automated tests as the proof for unexercised payment branches; do not describe them as live customer acceptance. Reminders remain paused and no unrelated traffic or schema change is allowed.
+
 ## 2026-10-28: GFS-296 keep candidate at 0% pending candidate-specific proof
 
 - Accepted the minimal source repair in `6a70d52`: REVIEW is a confirmation step; PAYMENT_METHOD is the two-choice step; Advance method selection cannot fall through to the two-choice renderer.
