@@ -1536,7 +1536,7 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 
 ## GFS-280 Push and Safe Activation — 2026-10-28
 
-- **P0 PASS:** GCM browser login restored the `gardenshop` credential. The branch was pushed at `2a0d1a0`; the follow-up locale/consent repair is `02231cb` and is pending this documentation push.
+- **P0 PASS:** GCM browser login restored the `gardenshop` credential. The branch now contains base `2a0d1a0`, locale/consent repair `02231cb`, and documentation commit `df78067`; remote SHA verification passed.
 - **P1 PASS local:** the recovered engine has +15/+30/+60/+210/+240 only. The provider now preserves Urdu utility sends and sends deterministic +240 quick-reply consent payloads. No automatic +270 cancellation exists.
 - **P2 BLOCKED safely:** Cloudflare identity, Get Free Seeds D1 identity, current schema0038 inventory, and a recovery bookmark were read-only verified. The bounded SQL preflight was rejected by the existing over-quota safety gate; migrations0039/0040 were not applied and no live integrity/count claim is made.
 - **P3 BLOCKED safely:** canonical GFS WABA identity was verified. `gfs_payment_reminder_15m` English and `gfs_payment_reminder_30m` Urdu are In review; no template is approved. The remaining stage/language variants were not submitted. Candidate flags and live reminder activation remain OFF.

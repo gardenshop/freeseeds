@@ -1155,7 +1155,7 @@ No secrets are stored in this registry.
 
 ## GFS-280 Registry — 2026-10-28
 
-- Repository identity: `gardenshop/freeseeds`; branch `codex/gfs221-cod-compat-001`; pushed base `2a0d1a0`; local repair commit `02231cb` pending documentation push.
+- Repository identity: `gardenshop/freeseeds`; branch `codex/gfs221-cod-compat-001`; pushed base `2a0d1a0`, repair `02231cb`, and documentation `df78067`; remote SHA verified.
 - Git identity: supported Credential Manager entry for `gardenshop` verified before push. The prohibited ai-photo-studio credential and identity were not used.
 - Cloudflare read-only identity: `gisupp@gmail.com` / Get Free Seeds. D1 dashboard identity and schema0038 inventory were read-only checked; protected recovery bookmark is not repeated here.
 - Canonical Meta: GFS WABA was verified in WhatsApp Manager. Two Utility submissions are In review; no approved template, recipient, WAMID, or customer data is recorded.
