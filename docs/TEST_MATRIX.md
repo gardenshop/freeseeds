@@ -1387,3 +1387,8 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | GFS-282 strict 24-hour policy | **PASS local** | Identity/timestamp checked at schedule, claim, and send; expired/unknown windows permanently block; no Meta template fallback |
 | GFS-282 release/activation | **BLOCKED safely** | No candidate deployment, flag change, Cron/Queue activation, live send, WAMID, delivery, or COD conversion |
 | GFS-282 regression gates | **PASS local** | Full 309/309, build, lint, offline audit 0 vulnerabilities, rollback4/4, diff check |
+
+| GFS-284 owner-approved D1 identity | **PASS read-only** | `gisupp@gmail.com` / Get Free Seeds / `getfreeseeds-prod` / production database ID verified; canonical GFS WABA rechecked |
+| GFS-284 schema/markers/triggers | **PASS read-only / mismatch** | No reminder/COD sidecar/ledger objects and zero trigger rows; pre-reminder schema only |
+| GFS-284 integrity/recovery | **PASS read-only** | `quick_check=ok`, FK result empty, existing Time Travel bookmark returned without creating/changing one |
+| GFS-284 migration readiness | **BLOCKED safely** | 0039/0040 local rehearsal passes, but verified production schema lacks required COD lifecycle objects; no live apply authorized |

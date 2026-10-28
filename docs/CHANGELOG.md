@@ -1086,3 +1086,9 @@
 - Recorded that the bounded marker query was rejected before execution by the local/tool over-quota safety gate requiring owner capacity approval; no alternative path was used.
 - Kept migrations0039/0040, candidate deployment, reminder flags, Cron/Queue activation, customer sends, WAMIDs, delivery claims, and COD conversions unchanged and unclaimed.
 - Local strict-window quality remains green: 309/309, build, lint, offline audit 0 vulnerabilities, rollback4/4.
+
+## 2026-10-28 — GFS-284 owner-approved D1 preflight
+
+- Executed one bounded, read-only preflight against production `getfreeseeds-prod` under explicit owner authorization.
+- Verified identity/Paid/WABA, pre-reminder schema, absent reminder/COD sidecar/ledger objects, zero trigger rows, `quick_check=ok`, empty FK check, and an existing protected Time Travel bookmark.
+- Did not create a bookmark, apply migrations, deploy Workers, change flags, send reminders, or mutate customer/payment/COD state. Migration readiness is held on the production schema/binding mismatch.

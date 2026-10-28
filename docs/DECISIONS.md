@@ -1211,3 +1211,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Keep migrations0039/0040 unapplied until a supported owner-authorized bounded read verifies markers, schema identity, recovery bookmark, quick-check, FK state, indexes, and triggers. Never disable the quota guard globally or use a workaround path.
 - Keep `PAYMENT_REMINDERS_V2_ENABLED`, `PAYMENT_AUTOMATION_V2_ENABLED`, and `PAYMENT_UTILITY_TEMPLATES_APPROVED` false. The current live API/Admin versions remain the rollback-safe production baseline.
 - The strict 24-hour local implementation is releasable only after the D1 and staged deployment gates pass. No current live eligibility count, reminder queue count, WAMID, or delivery result may be inferred from the blocked read.
+
+## 2026-10-28: GFS-284 owner-approved D1 preflight
+
+- Accept the bounded read as authorized and complete: identity, production database, Paid entitlement, canonical WABA, schema metadata, `quick_check`, FK check, trigger inventory, and existing recovery metadata were read without mutation.
+- Treat the verified production schema mismatch as a hard stop. It lacks `cod_order_details`, both expected migration-ledger tables, reminder tables, and triggers; do not apply 0039/0040 merely because local rehearsal passes or because a similarly named staging binding exists.
+- Keep all reminder flags false and do not request migration/deployment approval until the owner-supported production binding is reconciled with the intended current PUBLIC COD schema and the exact 0037/0038 state is proven.
+- The next approval, once reconciliation passes, must be one scoped authorization for one-time 0039/0040 apply plus sends-off staged Worker smoke/promotion. Reminder activation and any customer send require a later separate authorization.

@@ -862,3 +862,11 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - The bounded production marker query was rejected before execution by the local/tool safety reviewer because the existing quota rule requires explicit owner capacity approval. This was not a Cloudflare authentication failure, D1 binding failure, or returned D1 service error. Do not bypass it with Wrangler, raw HTTP, or alternate UI paths.
 - Read-only D1 Studio schema visibility showed the pre-reminder schema and no reminder tables. Migration markers, quick-check, foreign-key state, and recovery bookmark remain unverified; migrations0039/0040 are not applied.
 - GFS-282 remains NO-GO for live migration, deployment, activation, and sends. Feature flags remain false. Resolve the bounded-read authorization through a supported owner path before any D1 mutation.
+
+## GFS-284 Owner-Approved D1 Preflight (2026-10-28)
+
+- The owner authorized one bounded, read-only preflight only. It verified `gisupp@gmail.com` / Get Free Seeds, Workers Paid, production `getfreeseeds-prod` / `02b707df-a10c-4645-9516-a2a4541f6fab`, and canonical GFS WABA identity. No write, migration, bookmark creation, traffic, billing, or customer scan occurred.
+- Production metadata currently shows the pre-reminder schema: `orders`, `payments`, and existing operational tables; no `payment_reminder_v2_*`, `payment_v2_*`, `cod_order_details`, `d1_migrations`, or `cod_schema_migrations` objects. No triggers were returned. Existing indexes include `orders_state_idx` and SQLite autoindexes.
+- Integrity reads passed: `quick_check=ok`, `foreign_key_check` returned zero rows. Supported Wrangler Time Travel info returned an existing recovery bookmark; its opaque value remains protected and is not stored in Git or logs. No new bookmark was created.
+- Do not apply 0039/0040 to this database until the production-binding/schema mismatch is resolved and the existing PUBLIC COD lifecycle is independently present and verified. The repository Wrangler configs currently define staging D1, not this production database; never query the wrong binding to compensate.
+- No next mutation approval is actionable yet. After identity/schema reconciliation, request one separate approval covering only one-time 0039/0040 apply, staged sends-off Workers smoke/promotion, and a later separately authorized 24-hour activation/send window.

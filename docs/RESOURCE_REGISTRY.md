@@ -1176,3 +1176,10 @@ No secrets are stored in this registry.
 - D1 safety: the bounded marker query was rejected before execution by the local/tool safety reviewer due to the documented over-quota owner-approval gate. No marker, recovery bookmark, integrity result, write, or migration is claimed.
 - Release state: strict 24-hour source is local-tested; no Meta templates, live reminder activation, customer send, WAMID, delivery status, or COD conversion occurred. All three reminder flags remain false.
 - Live versions are unchanged: API `24d72438-72a1-4544-80df-4b9b90c297e5` and Admin `66426d2a-be1c-4e22-b420-1b1559dcbbc5`, both 100%. Hoja isolation, new-number lock, public COD/PKR125, three Advance methods, and signed webhook safeguards remain protected.
+
+## GFS-284 Registry — 2026-10-28
+
+- Authorized read-only resource: Cloudflare `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, production D1 `getfreeseeds-prod` / `02b707df-a10c-4645-9516-a2a4541f6fab`; Workers Paid visible. Canonical GFS WABA was rechecked; no Meta template mutation occurred.
+- Production schema evidence: pre-reminder tables only; no reminder tables, COD sidecar, migration ledgers, or triggers. `orders_state_idx` and SQLite autoindexes are present. `quick_check=ok`; FK result empty.
+- Recovery: supported Wrangler returned an existing Time Travel bookmark; opaque value is intentionally omitted from Git/logs and was not changed or recreated.
+- Release: migrations0039/0040, candidate deployment, reminder flags, Cron/Queue activation, sends, WAMIDs, delivery, and COD conversion remain untouched. Hoja isolation and protected financial/COD safeguards remain unchanged.

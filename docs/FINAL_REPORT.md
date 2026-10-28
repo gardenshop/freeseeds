@@ -3532,3 +3532,20 @@ Policy is +15m/+30m/+60m/+210m/+240m only. At +210m the local copy explains the 
 Flags remain `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_AUTOMATION_V2_ENABLED=false`, and `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`. Cron/Queue exists only in the unactivated candidate configuration. Eligible orders, queued/sent/delivered WAMIDs, skips, and live automation counts are **unavailable/unproven**, not zero-count production aggregates; no live feature event was generated in this run.
 
 Stage completion: P0 70% (identity/Paid/binding/schema visibility pass; bounded read unresolved), P1 0%, P2 100% local, P3 0%, P4 0%, P5 100%; local implementation 100%, live release 0%. Overall **NO-GO**. Remaining blocker is supported owner authorization/resolution of the bounded D1 safety gate, followed by marker/integrity verification, one-time migrations, 0%-traffic staged provenance/smoke, promotion, and separately authorized in-window delivery proof. No secrets, customer data, WAMIDs, or live sends are fabricated.
+
+## GFS-284 Final Report — 2026-10-28
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 authorized D1 preflight | **PASS read-only** | Explicit owner scope honored; Cloudflare `gisupp@gmail.com` / Get Free Seeds / Workers Paid, production D1 identity, and canonical GFS WABA verified |
+| P1 schema/markers/triggers | **PASS read-only / BLOCKED readiness** | Pre-reminder schema only; no reminder tables, `cod_order_details`, `d1_migrations`, `cod_schema_migrations`, or triggers; existing indexes read back |
+| P1 integrity/recovery | **PASS read-only** | `quick_check=ok`, FK result empty, existing protected Time Travel bookmark returned; no bookmark created or changed |
+| P1 local migration rehearsal | **PASS local / not live** | COD/reminder compatibility tests 20/20; no production migration performed |
+| P2–P3 deployment/reminders | **BLOCKED safely** | No Worker staging/promotion, flag change, Cron/Queue activation, reminder send, WAMID, delivery, or COD conversion |
+| P4 quality | **PASS** | Full 309/309, build, lint, offline audit 0 vulnerabilities, rollback4/4 |
+
+The current production D1 schema is not compatible enough to approve 0039/0040: the expected COD sidecar/lifecycle and migration-ledger objects are absent. The repository Wrangler configs define staging D1, so no command was redirected to that binding. This is a schema/binding reconciliation blocker, not a quota or authorization failure.
+
+Flags remain `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_AUTOMATION_V2_ENABLED=false`, and `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`. Live API/Admin remain `24d72438` / `66426d2a` at 100%. Schedule/COD policy remains +15/+30/+60/+210/+240, no +270, strict 24-hour inbound window, explicit COD consent, PKR125 exactly once, and no historical backfill.
+
+Completion: P0 100% read-only, P1 45% (integrity/recovery/local rehearsal pass; schema compatibility/apply blocked), P2 0%, P3 100% local policy / 0% live, P4 100% local quality / 0% live, overall release readiness **55%**, production **NO-GO**. No next mutation approval is requested until the verified production binding/schema mismatch is reconciled. After that, request one scoped approval for one-time 0039/0040 apply and sends-off staged Worker smoke/promotion; request reminder activation and any customer sending separately.
