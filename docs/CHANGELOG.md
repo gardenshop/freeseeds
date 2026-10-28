@@ -1065,3 +1065,10 @@
 - Added explicit Confirm COD / Keep Advance / Cancel Order handling with PKR125 exactly-once safeguards, consent audit, reminder stop, Queue retry/idempotency, opt-out, locale/template/window, and delivery-status gates.
 - Added Admin Payment Reminders CMS/timeline endpoints and additive migrations 0039/0040. Local focused tests 10/10, full tests 302/302, build, lint, offline audit, rollback4/4 passed.
 - No live migration, template publication, reminder send, WAMID, COD conversion, or deployment was performed; GitHub authentication and release gates remain blocked.
+
+## 2026-10-28 — GFS-280 push and safe activation gate
+
+- Restored the supported `gardenshop` Git Credential Manager identity and pushed the existing reminder branch; added a narrow locale/consent payload repair in `02231cb`.
+- Utility template names are now persisted from the migration and future Admin drafts. Meta sends preserve `en_US`/`ur` and +240 sends carry the three consent payloads.
+- Local verification is 303/303 with build, lint, offline audit, Worker dry-runs, and rollback4/4 passing. No live migration, deployment, send, WAMID, or COD conversion was performed.
+- Two canonical GFS Utility templates are In review; no template is approved. Production activation remains NO-GO.

@@ -1189,3 +1189,11 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Replace the old +270 cancellation with a +240 grace notice and explicit customer choice. No consent means the order remains unpaid/pending and is not dispatched.
 - Keep reminder automation disabled by default until canonical GFS WABA templates, authenticated account identity, staged provenance, migration/integrity, and real delivery evidence are verified.
 - Reuse the existing order/payment/COD records for confirmation. PKR125 is checked and persisted once; duplicate callbacks return the recorded outcome and cannot create a second COD detail, QR, receipt request, or order.
+
+## 2026-10-28: GFS-280 push and activation gate
+
+- Push the reviewed repair as a follow-up commit on the existing PR branch. Do not merge the older V2 branch or create a second reminder engine.
+- Keep migrations0039/0040 unapplied until a supported bounded D1 preflight is authorized after the over-quota safety rejection is resolved. Dashboard capacity numbers alone do not prove live migration safety.
+- Keep all three reminder flags false and do not deploy a GFS-280 Worker while no utility template is approved and no authorized eligible-recipient delivery is available.
+- The two submitted templates are canonical-name Utility templates and remain In review. Do not create locale-suffixed names: the Worker calls the canonical name with a language code, and Meta's create flow rejects duplicate names where the language must be added through the existing-template workflow.
+- The local candidate is releasable for a future staged run, but production status is NO-GO until D1 preflight/integrity, required template approvals, staged Cron/Queue verification, and real authorized delivery evidence are complete.

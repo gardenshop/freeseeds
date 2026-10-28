@@ -839,3 +839,11 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Current Admin aggregate is 69 orders / 6 verify / 2 confirmed / 12 fulfillment. This is a natural increase from the prior 68 / 6 / 2 / 11 baseline; do not label it a regression without duplicate or integrity evidence.
 - Payment methods remain exactly JazzCash, Easypaisa, and Bank Transfer, all enabled with instructions and private QR references. Approval still requires fresh independent receiving-account credit; no approval is authorized from receipt/reference alone.
 - Outbound status remains aggregate-only at 1,776 / 3.08M / approximately 1.76K rows per execution; no period-separated post-0038 result exists. Do not add another index or claim failure.
+
+## GFS-280 Safe Reminder Release (2026-10-28)
+
+- GitHub identity for this release is `gardenshop`; Cloudflare identity is `gisupp@gmail.com` in Get Free Seeds; canonical Meta is the verified GFS WABA only. Never use the ai-photo-studio identity or touch Hoja resources.
+- The candidate preserves the five-stage +15/+30/+60/+210/+240 schedule, no +270 cancellation, Advance-only eligibility, exact PKR125 COD fee, explicit Confirm COD/Keep Advance/Cancel Order consent, existing order/reference, idempotency, and the new-number lock.
+- Utility template sends use deterministic `en_US`/`ur` language and +240 quick-reply payloads. Automation remains OFF until all required templates are approved, live schema/integrity is verified, staged provenance passes, and an authorized delivery is observed.
+- A bounded live D1 preflight was not run because the existing over-quota safety gate rejected it. Do not bypass that gate or infer current counts, migration markers, reminder rows, or integrity from dashboard aggregates.
+- No GFS-280 migration, Worker deployment, reminder send, WAMID, COD conversion, or traffic change is proven by this record. Keep `PAYMENT_AUTOMATION_V2_ENABLED`, `PAYMENT_REMINDERS_V2_ENABLED`, and `PAYMENT_UTILITY_TEMPLATES_APPROVED` false until the gates pass.

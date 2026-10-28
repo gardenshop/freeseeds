@@ -1533,3 +1533,14 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **Live audit read-only:** 83 current orders: 19 Advance pending/no receipt, 6 receipt/review, 37 no-method/incomplete, 16 COD lifecycle, 2 paid, 2 other Advance, 1 cancelled/archived; no reminder outbox/outbound rows.
 - **Quality PASS local:** focused reminder tests 10/10, full 302/302, build, lint, offline audit 0 vulnerabilities, rollback4/4, diff check clean.
 - **Release BLOCKED:** no live migration/template/send/deployment occurred. GitHub gardenshop authentication is unavailable (gh token invalid / browser logged out); canonical Meta template approval and authenticated staged Cloudflare release remain unverified. Do not report WAMIDs, delivery, or automation as active.
+
+## GFS-280 Push and Safe Activation — 2026-10-28
+
+- **P0 PASS:** GCM browser login restored the `gardenshop` credential. The branch was pushed at `2a0d1a0`; the follow-up locale/consent repair is `02231cb` and is pending this documentation push.
+- **P1 PASS local:** the recovered engine has +15/+30/+60/+210/+240 only. The provider now preserves Urdu utility sends and sends deterministic +240 quick-reply consent payloads. No automatic +270 cancellation exists.
+- **P2 BLOCKED safely:** Cloudflare identity, Get Free Seeds D1 identity, current schema0038 inventory, and a recovery bookmark were read-only verified. The bounded SQL preflight was rejected by the existing over-quota safety gate; migrations0039/0040 were not applied and no live integrity/count claim is made.
+- **P3 BLOCKED safely:** canonical GFS WABA identity was verified. `gfs_payment_reminder_15m` English and `gfs_payment_reminder_30m` Urdu are In review; no template is approved. The remaining stage/language variants were not submitted. Candidate flags and live reminder activation remain OFF.
+- **P4 BLOCKED:** no eligible-recipient send, WAMID, delivery/read/failure evidence, COD confirmation, or live acceptance was performed.
+- **Local gates PASS:** focused 30/30 after repair, full 303/303, build, lint, offline audit with 0 vulnerabilities, rollback4/4, Worker dry-runs, and diff check. Active live versions remain API `24d72438-72a1-4544-80df-4b9b90c297e5` 100% and Admin `66426d2a-be1c-4e22-b420-1b1559dcbbc5` 100%; no GFS-280 version is deployed.
+- **Counts:** the latest verified prior audit remains 83 total / 19 Advance pending-no-receipt / 6 review / 37 no-method / 16 COD / 2 paid / 2 other Advance / 1 cancelled-archived. A fresh recount was blocked and must not be represented as current. Feature reminder queued/sent/delivered/read/failed/duplicate-suppressed counts remain unproven; no GFS-280 send was made.
+- **D1 dashboard context only:** the displayed last-24-hour aggregate was approximately 9.02M rows read and 33.24K written; this is not a migration or eligibility result.

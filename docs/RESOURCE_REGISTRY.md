@@ -1152,3 +1152,12 @@ No secrets are stored in this registry.
 - Read-only live audit: 83 current orders in sanitized categories; no reminder outbox/outbound rows. No historical schedule backfill or customer send occurred.
 - Cloudflare read-only identity previously verified as gisupp@gmail.com / Get Free Seeds; canonical GFS WABA read-only identity is recorded as WABA 2616648355452496. Reverification is required before mutation.
 - Release status: local tests/build/lint/audit/rollback pass; GitHub gardenshop authentication, canonical template approval, staged deployment, and WAMID evidence remain unavailable.
+
+## GFS-280 Registry — 2026-10-28
+
+- Repository identity: `gardenshop/freeseeds`; branch `codex/gfs221-cod-compat-001`; pushed base `2a0d1a0`; local repair commit `02231cb` pending documentation push.
+- Git identity: supported Credential Manager entry for `gardenshop` verified before push. The prohibited ai-photo-studio credential and identity were not used.
+- Cloudflare read-only identity: `gisupp@gmail.com` / Get Free Seeds. D1 dashboard identity and schema0038 inventory were read-only checked; protected recovery bookmark is not repeated here.
+- Canonical Meta: GFS WABA was verified in WhatsApp Manager. Two Utility submissions are In review; no approved template, recipient, WAMID, or customer data is recorded.
+- Active live versions remain API `24d72438-72a1-4544-80df-4b9b90c297e5` and Admin `66426d2a-be1c-4e22-b420-1b1559dcbbc5`, both at 100%; no GFS-280 deployment exists.
+- Protected scope: new-number WhatsApp lock, PUBLIC COD/PKR125, three Advance methods, signed webhook safeguards, Workers Paid, and Hoja zero-connection rule remain unchanged.

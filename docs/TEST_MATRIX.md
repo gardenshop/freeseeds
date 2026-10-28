@@ -1368,3 +1368,10 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | GFS-279 duplicate/clock behavior | **PASS local** | Duplicate schedule/queue/confirmation paths remain idempotent; stage boundary tests pass |
 | GFS-279 worker/template delivery | **PASS source/build** | Queue retry/dead-letter, published-template, locale/window, WAMID/status paths compile and lint; live delivery not run |
 | GFS-279 live release and WAMIDs | **BLOCKED safely** | No authenticated template verification, migration, staged deployment, or customer send; no WAMIDs fabricated |
+
+| GFS-280 provider locale and consent payload | **PASS** | Meta payload test verifies deterministic `en_US`/`ur` selection, body parameters, and `CONFIRM_COD`/`KEEP_ADVANCE`/`CANCEL_ORDER` quick replies |
+| GFS-280 focused reminder regression | **PASS** | 30/30 after provider repair; stage, suppression, consent, duplicate, retry, locale, and boundary coverage |
+| GFS-280 full regression/build/lint/audit | **PASS** | 303/303, build, lint, offline audit 0 vulnerabilities |
+| GFS-280 rollback and Worker dry-runs | **PASS local** | rollback4/4; API/Admin dry-runs preserve D1/R2/Queue bindings and all reminder flags false |
+| GFS-280 live D1 migration0039/0040 | **BLOCKED safely** | Over-quota safety gate rejected bounded SQL preflight; no live write or integrity claim |
+| GFS-280 Meta templates and WAMID | **BLOCKED safely** | Two Utility templates In review, no approved template, remaining variants absent; no customer message or WAMID |
