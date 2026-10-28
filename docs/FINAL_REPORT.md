@@ -1,5 +1,30 @@
 # Final Report
 
+## GFS-303 Final Report — frozen bot and two-stage recovery gate (2026-10-29)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 freeze and identity | **PASS read-only** | API `45b01d86` and Admin `f0212429` remain 100%; rollback IDs retained; GFS Cloudflare identity, canonical Meta and verified D1 binding rechecked. |
+| P1 recovery implementation | **PASS** | Existing +15/+210 bilingual stages, real `DETAILS_COMPLETED`/`PENDING` + `PAYMENT_METHOD` eligibility, independent idempotency and exclusion checks are covered; no second engine added. |
+| P2 sends-off deployment | **BLOCKED safely** | API `17598945` and Admin `76e33a3d` remain 0% because the authenticated WhatsApp session is the business sender, not the authorized tester. |
+| P3 activation | **NO-GO** | Recovery, five-stage Advance and utility-template flags remain false; no activation timestamp or historical backfill. |
+| P4 genuine acceptance | **PENDING** | Cron/Queue are present, but there are zero stages/outbox/sends/deliveries and no genuine WAMID. No live message was fabricated. |
+| P5 quality | **PASS local** | 318/318, build, lint, D1 integrity, rollback4/4 and diff check pass. |
+
+### Operational state
+
+- Frozen production: API `45b01d86` 100%, Admin `f0212429` 100%; rollbacks API `8e670de8`, Admin `b4c45278`. D1 is the verified `getfreeseeds-staging` binding recorded in the Resource Registry.
+- Published internal copy: +15 EN/UR is the friendly payment-choice reminder; +210 EN/UR is the distinct final payment-choice reminder with COD fee/help wording. Placeholders are dynamic and no Meta templates are approved.
+- Recovery counts: scheduled 0, queued 0, sent 0, delivered/read 0, failed 0, BLOCKED_WINDOW 0. These are honest inactive-release counts; no historical eligibility scan or send occurred.
+- Flags: `PAYMENT_CHOICE_RECOVERY_ENABLED=false`, `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_AUTOMATION_V2_ENABLED=false`, `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`. Activation timestamp: none.
+- Separate decisions: **PUBLIC BOT GO remains protected on the frozen version; TWO-REMINDER GO is NO-GO/PENDING tester access; FIVE-STAGE ADVANCE REMINDERS remain PAUSED.**
+
+### Remaining blocker and rollback
+
+The exact remaining blocker is an authenticated WhatsApp session for the already authorized tester, distinct from the GFS business-sender session. After that bounded nonfinancial smoke proves candidate attribution and inbound→webhook→outbound WAMID/reply, the owner-authorized guarded deployment can proceed. Rollback is the supported version reassignment to API `8e670de8`/Admin `b4c45278` with recovery flags left false; no schema rollback is required for this sends-off gate.
+
+Completion: P0 100%, P1 100%, P2 0% live deployment, P3 0% activation, P4 0% genuine delivery, P5 100%; overall **65% with NO-GO for reminder activation**.
+
 ## GFS-297 Final Report — live button repair and guarded release (2026-10-28)
 
 | Gate | Result | Evidence |

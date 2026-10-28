@@ -1,5 +1,14 @@
 # Status
 
+## GFS-303 frozen baseline and two-stage recovery release gate (2026-10-29)
+
+- **P0 PASS read-only:** Cloudflare identity is the Get Free Seeds account (`gisupp@gmail.com`); active API `45b01d86` and Admin `f0212429` remain 100%. API rollback `8e670de8` and Admin rollback `b4c45278` remain available. D1 binding is the verified staging UUID recorded in the Resource Registry; no production mutation occurred.
+- **P1 PASS source/schema:** Existing +15/+210 recovery logic accepts real `DETAILS_COMPLETED`/`PENDING` orders with `PAYMENT_METHOD` conversation state, requires no method/receipt/COD/PAID/hold/cancel/opt-out, and keeps stages independent. D1 has four published EN/UR templates, `quick_check=ok`, zero FK violations, and no recovery rows/outbox/sends.
+- **P2 BLOCKED safely:** Sends-off API `17598945` and Admin `76e33a3d` remain at 0%. The authorized browser session is the GFS business sender rather than the tester profile, so no candidate-specific inbound/outbound acceptance was attempted or claimed.
+- **P3 NO-GO activation:** `PAYMENT_CHOICE_RECOVERY_ENABLED=false`; `PAYMENT_CHOICE_RECOVERY_START_AT` is unset. `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_AUTOMATION_V2_ENABLED=false`, and `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`. Cron/Queue topology is present but no recovery work is active.
+- **P4 PENDING genuine delivery:** scheduled, sent, delivered/read, failed and BLOCKED_WINDOW recovery counts are all zero; no WAMID exists for this flow. The zero is an inactive-release result, not a mass eligibility scan.
+- **P5 PASS local:** 318/318, build, lint, rollback4/4 and D1 integrity pass. Audit endpoint was not used for this read-only gate. Remaining blocker is exact tester-profile access for guarded candidate smoke; public bot remains protected and the five-stage Advance engine remains paused.
+
 ## GFS-297 live button repair and guarded release (2026-10-28)
 
 - **P0 PASS:** Root cause was version attribution, not CMS text: baseline `d808a31c` served CMS v9 but its legacy button branch; corrected `45b01d86` was at 0%.

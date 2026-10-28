@@ -1,5 +1,12 @@
 # Changelog
 
+## GFS-303 (2026-10-29)
+
+- Reverified the frozen API/Admin pair, GFS Cloudflare identity, active D1 binding, live health, Admin CSV endpoint and existing +15/+210 recovery implementation without changing traffic or flags.
+- Read back four published internal EN/UR recovery templates; confirmed realistic `DETAILS_COMPLETED`/`PENDING` and `PAYMENT_METHOD` eligibility coverage, independent +15/+210 stages, and zero recovery backlog/outbox/sends.
+- Corrected a timezone-sensitive synthetic order-date assertion to use the canonical Karachi order-date helper. Full 318/318, build, lint, D1 integrity and rollback4/4 pass.
+- Kept candidate deployment and activation NO-GO because the authenticated WhatsApp session is the business sender, not the authorized tester. No live WAMID or delivery claim was made.
+
 ## GFS-297 (2026-10-28)
 
 - Identified the live button defect as API version attribution: shared CMS v9 text masked the old API’s legacy button generator while the corrected API remained at 0%.

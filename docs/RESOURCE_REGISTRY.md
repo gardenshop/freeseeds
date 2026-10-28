@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-303 frozen release gate (2026-10-29)
+
+- **Identity:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / Get Free Seeds account; canonical GFS Meta only. Hoja/ThanNow were not accessed.
+- **Workers:** API `45b01d86-65ff-4573-b384-f6be433a83d7` 100%, rollback `8e670de8-4d89-427b-9fec-dad29dc33f3f`; Admin `f0212429-ead7-4653-aea9-2ef714c6b4b8` 100%, rollback `b4c45278-c7d6-49c5-824c-005afc991ffe`. Sends-off candidates API `17598945-4601-4068-bf8c-9c3223cc8dd8` and Admin `76e33a3d-e96a-4942-a4ec-31910c688c16` remain 0%.
+- **Binding/topology:** API/Admin bind to D1 `getfreeseeds-staging` UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; API minute Cron and Queue consumer are present. No traffic or flag mutation was performed.
+- **Flags:** `PAYMENT_CHOICE_RECOVERY_ENABLED=false`, `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_AUTOMATION_V2_ENABLED=false`, `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`; no recovery activation timestamp.
+- **D1 readback:** 0041/0042 tables present; `quick_check=ok`; zero FK violations; four published internal recovery template rows; recovery stage/outbox/outbound counts all zero. No recovery WAMID exists.
+- **Acceptance boundary:** authenticated WhatsApp session is the GFS business-sender account, not the authorized tester profile. Candidate promotion and recovery activation are pending exact tester connection; no raw phone number, customer data, WAMID or provider payload is recorded.
+
 ## GFS-297 live routing release (2026-10-28)
 
 - **Identity:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / Get Free Seeds; canonical GFS Meta. Hoja resources untouched.

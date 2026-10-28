@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-303 frozen baseline and two-stage recovery gate (2026-10-29)
+
+- Read-only identity and binding verification: GitHub `gardenshop`, Cloudflare Get Free Seeds account `gisupp@gmail.com`, canonical GFS Meta, and D1 `getfreeseeds-staging` UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`. Hoja/ThanNow resources were not accessed.
+- Frozen production remains API `45b01d86-65ff-4573-b384-f6be433a83d7` at 100% with API rollback `8e670de8-4d89-427b-9fec-dad29dc33f3f`; Admin `f0212429-ead7-4653-aea9-2ef714c6b4b8` at 100% with Admin rollback `b4c45278-c7d6-49c5-824c-005afc991ffe`. Sends-off candidates remain API `17598945-4601-4068-bf8c-9c3223cc8dd8` and Admin `76e33a3d-e96a-4942-a4ec-31910c688c16`, both 0%.
+- Production traffic, flags, D1, orders, payments, COD, Meta state and reminders were not mutated. All recovery flags remain false, including `PAYMENT_CHOICE_RECOVERY_ENABLED`; no activation start time is set. Five-stage Advance reminders remain paused and utility templates remain false.
+- D1 read-only integrity after 0041/0042: `quick_check=ok`, zero foreign-key violations, recovery tables present, four PUBLISHED internal EN/UR stage rows, and zero recovery stage/outbox/outbound rows. No historical backlog was scheduled or sent.
+- The authenticated WhatsApp browser is the GFS business-sender session, not the authorized tester profile. Do not use it as inbound test traffic. Candidate promotion and recovery activation remain blocked until the existing tester profile/connection is re-established or separately authorized through the supported path.
+- Local full suite is 318/318, build/lint pass, rollback4/4 pass, and the timezone-sensitive order-date assertion now uses the canonical Karachi order-date helper. No customer data, WAMID, secret or raw provider payload is recorded.
+
 ## GFS-297 live routing release (2026-10-28)
 
 - Root cause of GFS-296 live mismatch: CMS v9 was shared by both API versions, but the old API `d808a31c` remained at 100% and still generated legacy Advance/COD buttons. Corrected source was at 0%, so a health check and CMS text could not prove button logic.

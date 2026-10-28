@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-303 two-stage recovery gate (2026-10-29)
+
+| Requirement | Result | Evidence / boundary |
+|---|---|---|
+| Frozen production attribution | PASS | API `45b01d86`/Admin `f0212429` at 100%; API `8e670de8`/Admin `b4c45278` retained as rollback; candidates remain 0%. |
+| D1 integrity and schema | PASS | Read-only `quick_check=ok`, zero FK violations, recovery tables present, no writes in this gate. |
+| Published recovery copy | PASS | Four PUBLISHED internal rows: +15/+210 in EN/UR; distinct copy, dynamic placeholders, no Meta templates. |
+| Real-state eligibility | PASS | Automated realistic `DETAILS_COMPLETED` + `PENDING` + `PAYMENT_METHOD` fixture covers independent +15/+210 queueing and idempotency; exclusion checks remain in the full suite. |
+| Local quality | PASS | Full 318/318, build, lint, rollback4/4, and diff check pass. |
+| Genuine tester smoke | BLOCKED | Browser is authenticated as the GFS business sender, not the authorized tester; no inbound, WAMID or customer-visible recovery proof was fabricated. |
+| Activation | NO-GO | Recovery and five-stage reminder flags remain false; no start timestamp, historical send, or live recovery row exists. |
+
 ## GFS-297 live routing acceptance (2026-10-28)
 
 - Full automated suite: **316/316 PASS**; build, lint, audit `0 vulnerabilities`, rollback4/4: **PASS**.

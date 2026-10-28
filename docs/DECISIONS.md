@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-29: keep two-stage recovery frozen pending tester connection
+
+- Accept the existing +15/+210 implementation and additive 0041/0042 schema after read-only D1 verification. The scheduler and Queue path must continue using real `DETAILS_COMPLETED`/`PENDING` plus `PAYMENT_METHOD` state, with independent stage idempotency and immediate eligibility/window rechecks.
+- Do not promote API `17598945` or Admin `76e33a3d`, and do not set `PAYMENT_CHOICE_RECOVERY_ENABLED`, while the authenticated browser is the business-sender account rather than the authorized tester. A 0% preview or HTTP200 health response is not Meta acceptance evidence.
+- Keep production API `45b01d86` and Admin `f0212429` at 100%, all reminder flags false, utility templates false, and five-stage Advance reminders paused. No customer/order/payment/COD/D1 mutation was performed.
+- The next supported gate is one bounded nonfinancial tester smoke with candidate attribution, webhook success, outbound WAMID and visible reply. If no tester connection is restored, report activation as pending rather than sending to historical orders or creating synthetic live traffic.
+
 ## 2026-10-28: GFS-297 promote corrected routing with payment boundary explicit
 
 - Promoted `45b01d86` to 100% after 316/316, build, lint, audit, rollback4/4 and health gates passed. Keep `d808a31c` at 0% rollback.
