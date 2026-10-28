@@ -9,7 +9,7 @@
 | P2 API/Admin candidate | PASS LIMITED | API `e914f77e` and Admin `783a9480` uploaded at0%; override health checks passed; traffic was not promoted. |
 | P3 WhatsApp rendering | PASS LOCAL / BLOCKED LIVE | Source tests prove one dynamic summary and existing buttons/COD path. No genuine new authorized device flow was available; no WAMID/delivery claim. |
 | P4 release/freeze | NO-GO SAFELY | Reminders remain false/false/false; candidate promotion and freeze await real inbound→outbound proof. |
-| P5 quality/push | PASS PENDING PUSH | Full312/312, build, lint, rollback4/4 pass; this source/docs update is ready for PR #11 push. |
+| P5 quality/push | PASS | Full312/312, build, lint, audit0, rollback4/4 pass; source/docs commits `ae3b69e` and `6b8f97e` are pushed to PR #11. |
 
 ### Policy and evidence
 
