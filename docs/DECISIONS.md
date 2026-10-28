@@ -1241,3 +1241,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Use active Worker binding evidence as database authority: staging D1 UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; do not touch the production-name UUID. Preserve 0039/0040 and all COD guards.
 - Treat zero post-activation orders as zero live eligibility, not as permission to backfill historical orders. The first genuine eligible Advance order must prove inbound ID/timestamp at schedule, claim, and send before any Meta outcome can be recorded.
 - Keep the old API at 0% for rollback and Admin unchanged because no Admin source change was required. No template, billing, credential, customer, payment, or COD mutation was performed during GFS-287.
+
+## 2026-10-28: GFS-288 emergency WhatsApp restore and freeze
+
+- Do not roll back API `7b662e0d`: active health is HTTP200, read-only D1 contains inbound and read-status traffic, and no runtime exception evidence is available. Preserve `8e670de8` at 0% as the rollback.
+- Treat the two incident-window Admin conversation resets and the current authorized conversation's `NEW`/null-last-inbound state as observed evidence that prevents correlation, not proof that Meta or the API dropped all replies. Do not reset, replay, or fabricate a customer flow.
+- Keep the existing five-stage reminder engine and current flags. `PAYMENT_UTILITY_TEMPLATES_APPROVED=false` remains mandatory. Historical Meta Activity Log template-creation entries are not approval or send evidence and must not be used by this release.
+- Freeze API/Admin traffic and versions at the verified assignments. Any future repair requires a new incident proof, 0%-traffic test, and explicit release decision; no unrelated checkout, migration, or reminder redesign is allowed.

@@ -1421,3 +1421,18 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | D1 integrity | PASS | Active binding markers 0037–0040, `quick_check=ok`, empty FK check; no write in final verification |
 | Release/rollback | PASS | API candidate preview and health 200; activated version promoted 100%, prior API 0%; rollback4/4 |
 | Live delivery | PENDING | No post-activation eligible order; schedules/outbox/WAMIDs/delivery events all 0; no synthetic recipient used |
+
+## GFS-288 Emergency WhatsApp Restore — 2026-10-28
+
+| Area | Result | Evidence |
+|---|---|---|
+| Runtime health/rollback decision | PASS / no rollback | Active API health HTTP200; API `7b662e0d` 100%, rollback `8e670de8` 0%, Admin `c2e87231` 100%; no production mutation |
+| Incident D1 correlation | PARTIAL | 25 inbound MESSAGE, 5 INTERACTIVE, 5 sent-status, 1 delivered-status, 1 read-status, 9 outbound READ; no customer correlation/WAMID claim |
+| Admin reminder visibility | PASS | All five stages visible; timeline truthfully reports no schedules or deliveries |
+| COD_CONFIRM START guard | PASS local / not causal | Invalid action receives validation reply; incident conversation was NEW, not COD_CONFIRM |
+| Focused webhook/reminder/window tests | PASS | 102/102 |
+| Full regression | PASS | 310/310 |
+| Build/lint | PASS | TypeScript build and ESLint |
+| Audit | BLOCKED | npm advisory endpoint unavailable; no vulnerability result claimed |
+| Rollback4/4 | BLOCKED | `GFS_LEGACY_ROOT` is not configured in this worktree |
+| Genuine tester acceptance | PENDING | Admin reset overlapped incident; no correlated inbound→outbound device evidence |

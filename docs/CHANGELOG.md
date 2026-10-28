@@ -1117,3 +1117,11 @@
 - Uploaded/staged and then promoted API `7b662e0d`; enabled only the two reminder flags for new eligible Advance orders. Preserved API rollback `8e670de8` at 0% and Admin `c2e87231` unchanged.
 - Verified active D1 schema/markers/integrity and aggregate state: zero schedules, stages, reminder outbox jobs, WAMIDs, and delivery events; zero orders created after activation. No live send or delivery is claimed.
 - Quality gates: focused 104/104, full 310/310, build, lint, offline audit 0 vulnerabilities, rollback4/4.
+
+## 2026-10-28 — GFS-288 emergency WhatsApp restore / freeze
+
+- Performed bounded read-only incident diagnostics across the active API, D1, Admin reminder timeline, Cloudflare deployment view, and canonical Meta activity view.
+- Kept API `7b662e0d` at 100%, rollback `8e670de8` at 0%, and Admin `c2e87231` at 100%; no rollback, deployment, traffic, schema, order, payment, or customer mutation.
+- Recorded incident-window aggregate evidence and Admin reset overlap without storing customer identifiers, screenshots, secrets, or uncorrelated WAMIDs.
+- Reconfirmed five stages, strict 24-hour service-window policy, no +270 cancellation, explicit PKR125 COD consent, and utility-template approval false.
+- Quality: focused 102/102, full 310/310, build/lint PASS; npm audit and rollback4/4 remain environment-blocked as documented.

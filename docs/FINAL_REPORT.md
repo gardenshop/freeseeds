@@ -3603,3 +3603,25 @@ Policy remains +15/+30/+60/+210/+240 only, no +270 cancellation, strict latest i
 - Completion: P0 100%, P1 100%, P2 100%, P3 configuration 100% / live acceptance 0%, P4 100%; overall safe release readiness **90%**, live reminder acceptance **0% pending a natural eligible order**.
 - Remaining blocker is evidence, not configuration: no natural new eligible Advance recipient occurred during this run, so Meta acceptance/WAMID and eventual delivery/read/failure cannot be claimed. Customer-device screenshot comparison is likewise pending; no synthetic customer or message was created.
 - Decision: **GO for new-order configuration and public operation; NO-GO for claiming live reminder delivery until a legitimate in-window eligible order produces real provider evidence.**
+
+## GFS-288 Final Report — 2026-10-28
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 restore/diagnosis | **PASS / no rollback** | GitHub/Cloudflare/Meta identities and active D1 binding reverified; API health HTTP200; 25 MESSAGE + 5 INTERACTIVE received, 5 sent-status, 1 delivered-status, 1 read-status, and 9 outbound READ aggregate rows. Cloudflare Observability is disabled, so no incident-specific exception/HTTP log correlation is claimed. |
+| P1 genuine flow acceptance | **PENDING** | Admin test conversation was reset during the incident window and is now NEW with no persisted last inbound. No authorized correlated Hello/Start, COD recovery, button action, or WAMID/device delivery proof was available; no message was fabricated or sent. |
+| P2 freeze | **PASS** | API `7b662e0d` 100%, rollback `8e670de8` 0%, Admin `c2e87231` 100%; D1 migrations0039/0040 remain intact; no rollback or mutation performed. |
+| P3 reminders | **ACTIVE CONFIG / NO LIVE DELIVERY** | Flags true/true/false; Cron/Queue topology and five-stage policy retained; Admin `/payment-reminders` shows all five stages and no schedules/deliveries. No WAMID, send, or delivery is claimed. |
+| P4 quality/push readiness | **PARTIAL** | Focused 102/102, full 310/310, build PASS, lint PASS. npm audit is blocked by registry advisory endpoint failure; rollback4/4 is blocked by missing `GFS_LEGACY_ROOT`. |
+
+### Frozen release and policy
+
+- Frozen API: `7b662e0d-38ad-4f23-80b2-5c54e4ca64e6` at 100%; rollback: `8e670de8-4d89-427b-9fec-dad29dc33f3f` at 0%; Admin: `c2e87231-9d51-444e-b283-7ab18379280f` at 100%.
+- Active D1 binding: `getfreeseeds-staging` / `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; no production-name database access or mutation in this run.
+- Reminder policy remains +15m/+30m/+60m/+210m/+240m, no +270m cancellation, strict verified inbound 24-hour window, permanent `BLOCKED_WINDOW` outside it, no historical replay, and no Meta template fallback. At +240m COD requires explicit revised-total consent and PKR125 exactly once.
+- Actual WAMIDs: none correlated to this incident. Eligible orders: no verified new eligible recipient. Queued/sent/delivered/blocked counts: no new reminder records; no customer-data scan or bulk send was performed.
+- Meta Activity Log displayed historical creation entries for two reminder-named assets; this is not approval or send evidence. `PAYMENT_UTILITY_TEMPLATES_APPROVED=false` remains enforced. Assets were not deleted or changed.
+
+### Completion and decision
+
+P0 diagnosis **100%** / customer correlation pending; P1 **40%**; P2 freeze **100%**; P3 configuration **100%** / live delivery **0%**; P4 **85%** with audit and rollback environment blockers. Overall incident handling **80%**. Production decision: **GO to preserve the frozen healthy release and public ordering; NO-GO to claim genuine tester acceptance or reminder delivery until a real authorized conversation correlates inbound, HTTP success, provider acceptance/WAMID, and delivery/read status.**

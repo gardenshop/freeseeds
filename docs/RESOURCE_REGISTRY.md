@@ -1199,6 +1199,14 @@ No secrets are stored in this registry.
 - **Reminder state:** five stages +15/+30/+60/+210/+240, strict 24-hour inbound window, no Meta templates, explicit PKR125 COD consent, and no historical backfill. All reminder flags remain false; no WAMIDs or delivery claims exist.
 - **Meta/Hoja:** canonical GFS WABA only; no template mutation. Hoja Seeds remains isolated; new-number lock remains protected. No secrets or customer identifiers are stored in this registry.
 
+## GFS-288 Registry — 2026-10-28
+
+- **Identity/binding:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / Get Free Seeds account; canonical GFS Meta only. Active API D1 is staging UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; production-name D1 was not touched. Hoja isolation and new-number lock preserved.
+- **Frozen versions:** API `7b662e0d-38ad-4f23-80b2-5c54e4ca64e6` 100%; API rollback `8e670de8-4d89-427b-9fec-dad29dc33f3f` 0%; Admin `c2e87231-9d51-444e-b283-7ab18379280f` 100%. No version or traffic mutation in this incident run.
+- **Runtime evidence:** `/health` HTTP200; D1 incident-window aggregates were 25 inbound MESSAGE, 5 inbound INTERACTIVE, 5 sent-status, 1 delivered-status, 1 read-status, and 9 outbound READ. No correlated customer identity or WAMID is recorded.
+- **Reminder state:** flags true/true/false; five stages +15/+30/+60/+210/+240; internal Admin page shows all stages and no schedules/deliveries. No live reminder send is claimed. Meta activity showed historical creation entries for two reminder-named assets; approval/use is not inferred and assets were not mutated.
+- **Validation:** focused 102/102, full 310/310, build/lint PASS; audit blocked by advisory endpoint access; rollback4/4 blocked by missing `GFS_LEGACY_ROOT`. Release is frozen with genuine device acceptance pending.
+
 ## GFS-287 Registry — 2026-10-28
 
 - **Identity:** GitHub repository/PR is `gardenshop/freeseeds` / #11; Cloudflare identity is `gisupp@gmail.com` in Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical GFS Meta only. No Hoja resource was accessed.

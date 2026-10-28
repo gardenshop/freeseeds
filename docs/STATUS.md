@@ -1500,6 +1500,15 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **P4/P5:** Full regression after source repair, focused tests, build, lint, and rollback pass; commit `9b06f55` is pushed to the verified PR branch. npm audit remains BLOCKED by registry advisory endpoint failure. No authorized real settled-payment/device acceptance or new live customer order was fabricated.
 - **Completion:** implementation, migration, deployment, COD hold repair, and Admin confirmation are **100%**; live independent settlement/customer-device acceptance remains **0%**. Overall **90% complete / 10% remaining**.
 
+## GFS-288 Emergency WhatsApp Restore / Freeze — 2026-10-28
+
+- **Runtime:** API `7b662e0d` remains active at 100%; API `8e670de8` remains the compatible rollback at 0%; Admin `c2e87231` remains active at 100%. `/health` returned HTTP200. No rollback or production mutation was required by the observed evidence.
+- **Incident evidence:** the active D1 read-only window contained 25 inbound message records, 5 interactive records, 5 sent-status records, 1 delivered-status record, 1 read-status record, and 9 outbound records at READ. Two Admin conversation resets overlapped the reported time; the authorized test conversation is currently NEW with no last inbound. This is insufficient to claim a correlated tester reply or delivery WAMID.
+- **Admin:** `/payment-reminders` is reachable and exposes REMINDER_15M, REMINDER_30M, REMINDER_60M, FINAL_WARNING_210M, and GRACE_NOTICE_240M; it reports no schedules or deliveries. Cloudflare Workers Observability is disabled, so incident-specific log correlation is unavailable.
+- **Flags:** reminder and automation flags are true; utility-template approval is false. The service remains five-stage, 24-hour-window-only, no-template, no-backfill, no-silent-COD. Live schedules/sends/WAMIDs remain unclaimed.
+- **Quality:** focused 102/102, full 310/310, build PASS, lint PASS. npm audit is BLOCKED by registry advisory endpoint access; rollback4/4 is BLOCKED by missing `GFS_LEGACY_ROOT`.
+- **Decision:** freeze the currently verified API/Admin versions and preserve rollback. Public ordering and payment/COD safeguards are unchanged. Genuine inbound-to-outbound customer acceptance remains **PENDING**, not fabricated.
+
 ## GFS-267 Live Admin Orders Incident — 2026-10-27
 
 - **Root cause:** `/api/orders` returned plain-text HTTP500 because the full list projection exceeded Cloudflare D1 free-tier daily row-read quota (error7500); live 0035/0036 schema structures are present.
