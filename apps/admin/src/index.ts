@@ -568,7 +568,7 @@ load().catch(error=>document.querySelector('#methods').textContent=error.message
 </script></body></html>`;
 }
 
-app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav><a href='/payment-settings'>Payment Settings</a> | <a href='/cod-settings'>COD Settings</a> | <a href='/payment-beneficiary-review'>Payment Verification</a> | <a href='/whatsapp-content'>WhatsApp Content</a> | <a href='/payment-amount'>Legacy Advance Amount</a> | <a href='/tariff'>Tariff Management</a> | <a href='/meta-activation'>Meta Activation</a> | <a href='/orders'>Orders</a> | <a href='/test-controls'>Test Controls</a> | Dashboard | Leads | Meta Instant Form | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
+app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav><a href='/payment-settings'>Payment Settings</a> | <a href='/cod-settings'>COD Settings</a> | <a href='/payment-beneficiary-review'>Payment Verification</a> | <a href='/whatsapp-content'>WhatsApp Content</a> | <a href='/payment-reminders'>Payment Reminders</a> | <a href='/payment-amount'>Legacy Advance Amount</a> | <a href='/tariff'>Tariff Management</a> | <a href='/meta-activation'>Meta Activation</a> | <a href='/orders'>Orders</a> | <a href='/test-controls'>Test Controls</a> | Dashboard | Leads | Meta Instant Form | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
 
 app.get("/api/csrf", (c) => c.json({ csrfToken: issueCsrfToken(c) }));
 
@@ -691,6 +691,58 @@ addActions=(order)=>{
   addUnheldOrderActions(order);
 };`;
 app.get("/orders", (c) => c.html(professionalOrdersPageHtml(issueCsrfToken(c)).replace("function renderDetail(data){", `${COD_ORDERS_SCRIPT}\n${COD_HOLD_SCRIPT}\nfunction renderDetail(data){`).replace('<option value="REJECTED">Rejected</option>', '<option value="REJECTED">Rejected</option><option value="COD_PENDING">COD pending</option><option value="COD_PAID">COD paid</option>').replace('<option value="NOT_STARTED">Ready to pack</option>', '<option value="NOT_STARTED">Ready to pack</option><option value="COD_PENDING">COD pending</option><option value="COLLECTION_PENDING">Collection pending</option>').replace("Request the transaction reference in the customer's selected language", "Request a transaction reference in the selected language")));
+app.get("/payment-reminders", (c) => {
+  const csrf = issueCsrfToken(c);
+  return c.html(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Payment reminders</title><style>body{font:15px/1.5 system-ui,sans-serif;max-width:1100px;margin:2rem auto;padding:0 1rem;color:#17231c}.card{border:1px solid #ccd5cc;border-radius:10px;padding:1rem;margin:1rem 0}label{display:block;margin:.6rem 0}select,textarea,button{font:inherit;padding:.5rem;box-sizing:border-box;width:100%}textarea{min-height:9rem}.grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.muted{color:#59635a}.error{color:#a40019}.ok{color:#176b36}@media(max-width:700px){.grid{grid-template-columns:1fr}}</style></head><body><nav><a href="/">Admin home</a> | <a href="/orders">Orders</a></nav><h1>Payment reminder CMS / timeline</h1><p class="muted">Synthetic previews only in source. Publishing requires an approved EN/UR service copy; Meta utility approval is recorded separately and never inferred by this page. No historical schedule backfill is available here.</p><section class="card"><div class="grid"><label>Stage<select id="key"><option>REMINDER_15M</option><option>REMINDER_30M</option><option>REMINDER_60M</option><option>FINAL_WARNING_210M</option><option>GRACE_NOTICE_240M</option></select></label><label>Locale<select id="locale"><option value="en">English</option><option value="ur">Urdu</option></select></label></div><textarea id="body" placeholder="Draft body"></textarea><button id="save">Save draft</button><button id="publish">Publish selected draft</button><p id="result" role="status"></p></section><section class="card"><h2>Schedule / delivery timeline</h2><div id="timeline">Loading…</div></section><script>
+const csrf=${JSON.stringify(csrf)},key=document.querySelector('#key'),locale=document.querySelector('#locale'),body=document.querySelector('#body'),result=document.querySelector('#result'),timeline=document.querySelector('#timeline');let selected;
+const esc=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function load(){const r=await fetch('/api/payment-reminders',{cache:'no-store'}),d=await r.json();if(!r.ok)throw new Error(d.error||'Payment reminders unavailable');selected=d.templates.find(x=>x.templateKey===key.value&&x.locale===locale.value);body.value=selected?.body||'';timeline.innerHTML=(d.timeline||[]).length?'<table><tr><th>Order</th><th>Stage</th><th>Status</th><th>Updated</th></tr>'+(d.timeline||[]).map(x=>'<tr><td>'+esc(x.orderNumber)+'</td><td>'+esc(x.stageMinutes)+'m</td><td>'+esc(x.status)+'</td><td>'+esc(x.updatedAt)+'</td></tr>').join('')+'</table>':'<p class="muted">No reminder schedules or deliveries.</p>'}
+async function save(path, payload){const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(payload)}),d=await r.json();if(!r.ok)throw new Error(d.error||'Save failed');return d}
+key.onchange=locale.onchange=()=>load().catch(e=>result.textContent=e.message);document.querySelector('#save').onclick=async()=>{try{await save('/api/payment-reminders/'+encodeURIComponent(key.value)+'/draft',{locale:locale.value,body:body.value});result.className='ok';result.textContent='Draft saved';await load()}catch(e){result.className='error';result.textContent=e.message}};document.querySelector('#publish').onclick=async()=>{try{await save('/api/payment-reminders/'+encodeURIComponent(key.value)+'/publish',{locale:locale.value,version:selected?.version});result.className='ok';result.textContent='Draft published; utility approval remains separate';await load()}catch(e){result.className='error';result.textContent=e.message}};load().catch(e=>result.textContent=e.message);
+</script></body></html>`);
+});
+
+app.get("/api/payment-reminders", async (c) => {
+  if (!c.env.DB) return c.json({ templates: [], timeline: [] });
+  const templates = await c.env.DB.prepare("SELECT template_key,locale,version,body,state,utility_template_name,utility_approved_at,created_at,created_by FROM payment_v2_template_versions ORDER BY template_key,locale,version DESC").all<Record<string, unknown>>();
+  const timeline = await c.env.DB.prepare(`SELECT o.order_number,st.stage_minutes,st.status,st.updated_at
+    FROM payment_reminder_v2_stages st JOIN payment_reminder_v2_schedules s ON s.id=st.schedule_id JOIN orders o ON o.id=s.order_id
+    ORDER BY st.updated_at DESC LIMIT 200`).all<{ order_number:string; stage_minutes:number; status:string; updated_at:string }>();
+  return c.json({ templates: (templates.results ?? []).map((row) => ({ templateKey: String(row.template_key), locale: String(row.locale), version: Number(row.version), body: String(row.body), state: String(row.state), utilityTemplateName: row.utility_template_name == null ? null : String(row.utility_template_name), utilityApprovedAt: row.utility_approved_at == null ? null : String(row.utility_approved_at) })), timeline: (timeline.results ?? []).map((row) => ({ orderNumber: row.order_number, stageMinutes: Number(row.stage_minutes), status: row.status, updatedAt: row.updated_at })) });
+});
+
+app.post("/api/payment-reminders/:key/draft", async (c) => {
+  if (!validCsrf(c) || !c.env.DB) return c.json({ error: !validCsrf(c) ? "CSRF_VALIDATION_FAILED" : "PAYMENT_REMINDERS_UNAVAILABLE" }, 403);
+  const key = c.req.param("key");
+  if (!["REMINDER_15M","REMINDER_30M","REMINDER_60M","FINAL_WARNING_210M","GRACE_NOTICE_240M"].includes(key)) return c.json({ error: "PAYMENT_REMINDER_TEMPLATE_INVALID" }, 400);
+  const body = await c.req.json<{ locale?: string; body?: string }>();
+  if ((body.locale !== "en" && body.locale !== "ur") || typeof body.body !== "string" || body.body.trim().length < 20 || body.body.length > 1200) return c.json({ error: "PAYMENT_REMINDER_DRAFT_INVALID" }, 400);
+  const now = new Date().toISOString();
+  const latest = await c.env.DB.prepare("SELECT COALESCE(MAX(version),0) AS version FROM payment_v2_template_versions WHERE template_key=? AND locale=?").bind(key, body.locale).first<{ version:number }>();
+  const version = Number(latest?.version ?? 0) + 1;
+  await c.env.DB.batch([
+    c.env.DB.prepare("INSERT INTO payment_v2_template_versions(template_key,locale,version,body,state,created_at,created_by) VALUES(?,?,?,?,?,?,?)").bind(key, body.locale, version, body.body.trim(), "DRAFT", now, c.env.ADMIN_EMAIL),
+    c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_REMINDER_DRAFT_SAVED", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT_REMINDER_TEMPLATE", `${key}:${body.locale}`, crypto.randomUUID(), JSON.stringify({ key, locale: body.locale, version }), now)
+  ]);
+  return c.json({ ok: true, version });
+});
+
+app.post("/api/payment-reminders/:key/publish", async (c) => {
+  if (!validCsrf(c) || !c.env.DB) return c.json({ error: !validCsrf(c) ? "CSRF_VALIDATION_FAILED" : "PAYMENT_REMINDERS_UNAVAILABLE" }, 403);
+  const key = c.req.param("key");
+  const body = await c.req.json<{ locale?: string; version?: number }>();
+  if (!["REMINDER_15M","REMINDER_30M","REMINDER_60M","FINAL_WARNING_210M","GRACE_NOTICE_240M"].includes(key) || (body.locale !== "en" && body.locale !== "ur") || !Number.isInteger(body.version)) return c.json({ error: "PAYMENT_REMINDER_PUBLISH_INVALID" }, 400);
+  const now = new Date().toISOString();
+  const target = await c.env.DB.prepare("SELECT body FROM payment_v2_template_versions WHERE template_key=? AND locale=? AND version=? AND state='DRAFT'").bind(key, body.locale, body.version).first<{ body:string }>();
+  if (!target) return c.json({ error: "PAYMENT_REMINDER_DRAFT_NOT_FOUND" }, 404);
+  await c.env.DB.batch([
+    c.env.DB.prepare("UPDATE payment_v2_template_versions SET state='SUPERSEDED' WHERE template_key=? AND locale=? AND state='PUBLISHED'").bind(key, body.locale),
+    c.env.DB.prepare("UPDATE payment_v2_template_versions SET state='PUBLISHED',published_at=?,published_by=? WHERE template_key=? AND locale=? AND version=? AND state='DRAFT'").bind(now, c.env.ADMIN_EMAIL, key, body.locale, body.version),
+    c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_REMINDER_TEMPLATE_PUBLISHED", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT_REMINDER_TEMPLATE", `${key}:${body.locale}`, crypto.randomUUID(), JSON.stringify({ key, locale: body.locale, version: body.version }), now)
+  ]);
+  return c.json({ ok: true, version: body.version });
+});
+
 app.get("/test-controls", (c) => c.html(testControlsPageHtml(issueCsrfToken(c))));
 app.get("/whatsapp-content", (c) => c.html(whatsappContentJourneyPageHtml(issueCsrfToken(c))));
 app.get("/payment-settings", (c) => {

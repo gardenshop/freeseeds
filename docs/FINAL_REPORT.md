@@ -3464,3 +3464,18 @@ Active live version observed read-only: API staging deployment at 0% traffic; so
 | P5 docs/push | **PASS** | Rules/status/test matrix/decisions/changelog/registry/final report updated; commit `683c438` pushed to PR branch |
 
 **Current D1:** Paid capacity is active; 0037/0038 markers and indexes are verified. **Current service:** Admin optimized version is 100%, API unchanged at 100%, Access remains enforced, public Version URLs remain disabled. **Remaining:** collect natural-traffic after-metrics for outbound status updates; no release blocker remains for Admin operation.
+
+## GFS-279 Final Report — 2026-10-28
+
+| Area | Result | Evidence |
+|---|---|---|
+| P0 recovered implementation | **PASS local** | Existing V2 pattern selectively ported; five stages only; no +270 cancellation; additive 0039/0040 |
+| P1 COD fallback | **PASS local** | Explicit confirm/keep/cancel; existing order/reference; PKR125 once; stop/audit/idempotent duplicate path |
+| P2 eligibility/messaging | **PASS local** | Advance-only guards, no-method separation, opt-out, EN/UR, template/window gate, Queue/retry/status logic |
+| P3 live audit | **PASS read-only** | 83 orders: 19 Advance pending/no receipt, 6 review, 37 no-method, 16 COD, 2 paid, 2 other Advance, 1 cancelled/archived; reminder rows zero |
+| P4 local quality | **PASS** | Focused10/10, full302/302, build, lint, offline audit0, rollback4/4, diff check |
+| P4 live sends/deploy | **BLOCKED safely** | No live migration, template publish, send, WAMID, COD conversion, or deployment; GitHub auth and release gates unavailable |
+
+**Schedule/policy:** +15m, +30m, +60m, +210m warning, +240m grace/COD choice; no automatic cancellation. COD adds exactly PKR125 only after explicit consent or documented exact opt-in, which was not used for any live order.
+
+**Automation state:** disabled by default in the candidate configuration; live automation is not claimed. **WAMIDs:** queued 0, sent 0, delivered/read 0, failed 0 observed for this feature. **Deployment:** none for GFS-279; prior known API/Admin versions remain unchanged. **Completion:** local implementation/tests 100%; live identity/template/migration/stage/send/deploy gates 0%; overall 70%, remaining 30%.

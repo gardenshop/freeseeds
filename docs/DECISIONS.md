@@ -1182,3 +1182,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Promote only after candidate Orders, Payment Settings, detail, local financial/COD tests, full regression, integrity, and rollback pass. Retain the previous Admin version at 0% as rollback.
 - Apply migration0038 only because Query Insights measured the provider-message status update scan as a material hotspot and EXPLAIN showed the new index is used. Do not replay0037 or manufacture webhook traffic for measurement.
 - Keep preview URLs disabled and do not enable Observability as a release workaround. Payment state is always read authoritatively before approval; no financial mutation is part of this release.
+
+## 2026-10-28: GFS-279 reminder recovery and COD fallback
+
+- Port only compatible, tested V2 behavior. Because live schema markers reach 0038 and current 0030 is COD V1, use additive 0039/0040 migrations and retain current guards/policies.
+- Replace the old +270 cancellation with a +240 grace notice and explicit customer choice. No consent means the order remains unpaid/pending and is not dispatched.
+- Keep reminder automation disabled by default until canonical GFS WABA templates, authenticated account identity, staged provenance, migration/integrity, and real delivery evidence are verified.
+- Reuse the existing order/payment/COD records for confirmation. PKR125 is checked and persisted once; duplicate callbacks return the recorded outcome and cannot create a second COD detail, QR, receipt request, or order.

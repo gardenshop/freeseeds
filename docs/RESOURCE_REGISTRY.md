@@ -1144,3 +1144,11 @@ No secrets are stored in this registry.
 - Live Admin: `66426d2a-be1c-4e22-b420-1b1559dcbbc5` 100%; rollback `cd155f20-c848-4e4e-9fde-970e62b0a4ea` 0%. Live API: `24d72438-72a1-4544-80df-4b9b90c297e5` 100%.
 - D1: Paid 25B reads/50M writes; migration0037 and 0038 markers/indexes verified; quick/FK checks pass. Recovery bookmark is recorded in protected operational output, not repeated here.
 - Evidence: candidate UUID provenance captured by filtered Wrangler tail; Orders/Payment Settings/payment-methods/detail HTTP200; no financial or customer mutation.
+
+## GFS-279 Registry — 2026-10-28
+
+- Source checkout: D:\\free seeds\\gfs264-pr11; GFS-279 implementation commit beef29f; no Hoja assets or customer data added.
+- Recovered source: prior V2 engine pattern reviewed from codex/gfs-v2-payments-reminders-001; only compatible current-branch code was ported. Additive migrations are 0039/0040.
+- Read-only live audit: 83 current orders in sanitized categories; no reminder outbox/outbound rows. No historical schedule backfill or customer send occurred.
+- Cloudflare read-only identity previously verified as gisupp@gmail.com / Get Free Seeds; canonical GFS WABA read-only identity is recorded as WABA 2616648355452496. Reverification is required before mutation.
+- Release status: local tests/build/lint/audit/rollback pass; GitHub gardenshop authentication, canonical template approval, staged deployment, and WAMID evidence remain unavailable.

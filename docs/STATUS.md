@@ -1525,3 +1525,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **Promotion PASS:** Admin candidate `66426d2a` is 100%; prior `cd155f20` is 0% rollback. API `24d72438` remains 100%. Access remains enforced and preview URLs remain disabled.
 - **Measured cost PASS:** optimized Orders query is 300 rows/6 executions (~50/request) versus historical 3.43M/80 (~42.9k/request), a measured ~99.88% reduction. Outbound update hotspot remains historical 3.03M/1,730; EXPLAIN now uses `outbound_messages_provider_status_idx`; post-index natural-traffic measurement is pending.
 - **Quality/P5 PASS:** focused 104/104, full 292/292, build, lint, rollback4/4; docs and commit `683c438` pushed to the PR branch. No payment, receipt, COD hold, fulfillment, customer order, or WhatsApp mutation was performed.
+
+## GFS-279 Reminder Recovery + COD Fallback — 2026-10-28
+
+- **P0 PASS local:** selectively recovered the existing V2 engine into additive migrations 0039/0040 and current API/Admin paths; no old 270-minute cancellation or whole-branch merge.
+- **P1/P2 PASS local:** five-stage schedule, explicit three-choice COD fallback, exact PKR125 fee-once guard, one existing order/reference, reminder stop/audit, eligibility/opt-out/locale/template gates, Queue retries and delivery-status reconciliation.
+- **Live audit read-only:** 83 current orders: 19 Advance pending/no receipt, 6 receipt/review, 37 no-method/incomplete, 16 COD lifecycle, 2 paid, 2 other Advance, 1 cancelled/archived; no reminder outbox/outbound rows.
+- **Quality PASS local:** focused reminder tests 10/10, full 302/302, build, lint, offline audit 0 vulnerabilities, rollback4/4, diff check clean.
+- **Release BLOCKED:** no live migration/template/send/deployment occurred. GitHub gardenshop authentication is unavailable (gh token invalid / browser logged out); canonical Meta template approval and authenticated staged Cloudflare release remain unverified. Do not report WAMIDs, delivery, or automation as active.

@@ -1058,3 +1058,10 @@
 - Authenticated version-override smoke proved candidate `66426d2a` handled Orders, Payment Settings, payment methods, and detail; promoted it to 100% with `cd155f20` retained at 0% rollback.
 - Measured Orders list cost at ~50 rows/request (300/6) versus historical ~42.9k/request (3.43M/80). Added targeted migration0038 provider/status index for the measured outbound update scan; EXPLAIN confirms index usage.
 - Regression: focused104/104, full292/292, build, lint, rollback4/4. No customer, payment, receipt, COD hold, fulfillment, webhook, or WhatsApp mutation.
+
+## 2026-10-28 — GFS-279 reminder recovery + COD fallback
+
+- Recovered the compatible V2 reminder engine with +15/+30/+60/+210/+240 stages and removed the legacy +270 cancellation path.
+- Added explicit Confirm COD / Keep Advance / Cancel Order handling with PKR125 exactly-once safeguards, consent audit, reminder stop, Queue retry/idempotency, opt-out, locale/template/window, and delivery-status gates.
+- Added Admin Payment Reminders CMS/timeline endpoints and additive migrations 0039/0040. Local focused tests 10/10, full tests 302/302, build, lint, offline audit, rollback4/4 passed.
+- No live migration, template publication, reminder send, WAMID, COD conversion, or deployment was performed; GitHub authentication and release gates remain blocked.

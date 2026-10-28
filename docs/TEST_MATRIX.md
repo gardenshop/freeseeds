@@ -1361,3 +1361,10 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | GFS-273 query-cost after | **PASS/PENDING** | Orders 300/6 (~50/request) vs historical 3.43M/80; outbound post-index natural-traffic metric pending |
 | GFS-273 promotion/rollback | **PASS** | Admin `66426d2a` 100%, `cd155f20` 0%; rollback4/4 PASS |
 | GFS-273 customer/financial mutation safety | **PASS** | No approval, receipt, COD hold, fulfillment, order creation, webhook replay, or customer message |
+
+| GFS-279 recovered schedule | **PASS local** | Exactly +15/+30/+60/+210/+240; anchored to Advance selection; idempotent; no +270 stage |
+| GFS-279 eligibility and suppression | **PASS local** | Paid/opt-out suppression, no-method separation, receipt/review/COD/terminal guards |
+| GFS-279 COD fallback | **PASS local** | Confirm/keep/cancel; existing order/reference; PKR125 exactly once; reminder stop and consent audit |
+| GFS-279 duplicate/clock behavior | **PASS local** | Duplicate schedule/queue/confirmation paths remain idempotent; stage boundary tests pass |
+| GFS-279 worker/template delivery | **PASS source/build** | Queue retry/dead-letter, published-template, locale/window, WAMID/status paths compile and lint; live delivery not run |
+| GFS-279 live release and WAMIDs | **BLOCKED safely** | No authenticated template verification, migration, staged deployment, or customer send; no WAMIDs fabricated |

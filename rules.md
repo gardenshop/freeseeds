@@ -824,6 +824,14 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Current Admin dashboard evidence showed 0 Worker errors and 100% traffic on Admin `66426d2a` with the old version at 0%; API dashboard data remained loading and Wrangler read-only auth was expired/unreachable. Do not reauthenticate or mutate deployment state from this evidence-only run.
 - No genuine customer-device journey or receipt was available. Preserve production and mark random-reference, two-tap, COD fee, three-method, receipt association and device acceptance pending; never fabricate them.
 
+## GFS-279 Reminder Recovery and COD Fallback
+
+- Reuse the recovered V2 reminder design selectively. The only schedule stages are +15, +30, +60, +210, and +240 minutes; the old +270 automatic cancellation is not part of this flow.
+- Reminders are fail-closed to unpaid Advance orders with a valid customer WhatsApp identity, no receipt/review/PAID/COD/cancelled/archived/held/opt-out state, an approved locale/template, and an authorized messaging window or approved utility template.
+- At +240, a customer may explicitly Confirm COD, Keep Advance, or Cancel Order. COD conversion must preserve the existing order/reference, add exactly PKR125 once, stop Advance reminders, audit consent, and never create a duplicate QR, receipt request, COD record, or order.
+- Do not backfill history or mass-send. Verify eligibility per order, preserve the new-number WhatsApp lock and Hoja Seeds zero-connection rule, and record WAMID/status outcomes without customer data.
+- GFS-279 local verification passed, but no live reminder was sent and no production schema, template, traffic, or deployment mutation was made. Do not claim operating reminders until authenticated GitHub/Cloudflare/Meta identities, canonical templates, migration/integrity, staged release, and genuine delivery evidence are reverified.
+
 ## GFS-276 Final E2E Acceptance Gate
 
 - The specified genuine JazzCash order was read-only verified by order search/detail: list and detail HTTP200, expected PKR250, `PAYMENT_REVIEW`/`PENDING`, transaction reference present, no approved amount, and zero PAID audits. Current persisted data contains five unique JPEG receipts, all linked to one payment; each private preview returned HTTP200 `image/jpeg`. The earlier record of three receipts is a reconciliation discrepancy, not evidence to approve payment.
