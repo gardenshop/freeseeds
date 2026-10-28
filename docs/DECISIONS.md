@@ -1248,3 +1248,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Treat the two incident-window Admin conversation resets and the current authorized conversation's `NEW`/null-last-inbound state as observed evidence that prevents correlation, not proof that Meta or the API dropped all replies. Do not reset, replay, or fabricate a customer flow.
 - Keep the existing five-stage reminder engine and current flags. `PAYMENT_UTILITY_TEMPLATES_APPROVED=false` remains mandatory. Historical Meta Activity Log template-creation entries are not approval or send evidence and must not be used by this release.
 - Freeze API/Admin traffic and versions at the verified assignments. Any future repair requires a new incident proof, 0%-traffic test, and explicit release decision; no unrelated checkout, migration, or reminder redesign is allowed.
+
+## 2026-10-28: GFS-289 rollback and customer-webhook isolation
+
+- Supersede the GFS-288 no-rollback decision. Freeze production on API `8e670de8` 100%, API `7b662e0d` 0%, and Admin `c2e87231` 100% because genuine post-rollback provider delivery/read evidence proves recovery.
+- Treat the exact regression as synchronous reminder reconciliation on the customer webhook path plus ambiguous D1 target columns. Customer replies must never await reminder delivery reconciliation.
+- Run reminder delivery reconciliation only from Cron, with qualified target columns. Keep repository and live reminder/automation defaults false and utility-template approval false until a separately staged candidate proves noninterference.
+- Do not replay the 27 uncorrelated fault-window events, reset conversations, create test orders, expose raw WAMIDs, or infer payment/COD state. Preserve migrations0039/0040, financial holds, explicit COD consent, and the existing order reference.

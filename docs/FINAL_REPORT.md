@@ -3625,3 +3625,30 @@ Policy remains +15/+30/+60/+210/+240 only, no +270 cancellation, strict latest i
 ### Completion and decision
 
 P0 diagnosis **100%** / customer correlation pending; P1 **40%**; P2 freeze **100%**; P3 configuration **100%** / live delivery **0%**; P4 **85%** with audit and rollback environment blockers. Overall incident handling **80%**. Production decision: **GO to preserve the frozen healthy release and public ordering; NO-GO to claim genuine tester acceptance or reminder delivery until a real authorized conversation correlates inbound, HTTP success, provider acceptance/WAMID, and delivery/read status.**
+
+## GFS-289 Final Report — 2026-10-28
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 emergency rollback | **PASS** | Authenticated Get Free Seeds account; compatible `8e670de8` promoted 100%, `7b662e0d` retained 0%, Admin `c2e87231` unchanged; health HTTP200 |
+| P1 exact failure | **PASS** | GFS-287 reminder activation synchronously called `syncPaymentReminderDeliveryStatuses()` before conversation processing; live D1 rejects old SQL with `ambiguous column name: status` |
+| P2 restore/acceptance | **PASS restoration / PARTIAL complete journey** | Real provider WAMIDs; checkpoint 19 READ, 3 DELIVERED, 1 SENT; LANGUAGE/OFFER/PROVINCE/FULL_NAME reached; zero orders created. Advance/COD/Check Order device acceptance was not forced |
+| P3 freeze | **PASS** | Healthy API/Admin assignments frozen; D1 migrations0039/0040 and financial/COD safeguards untouched; repaired candidate undeployed |
+| P4 reminders | **PAUSED safely** | Live and source defaults false/false/false; authenticated Admin five stages; 10 internal published copies, zero utility approvals; reminder rows 0/0/0/0 |
+| P5 quality/docs/push | **PASS pending commit SHA** | Focused 104/104, full 312/312, build/lint, audit0, rollback4/4; required records updated |
+
+### Root cause and repair
+
+During the faulty version window, 34 customer inbound events persisted but only 4 produced replies before rollback. Three stalled events produced replies only after rollback, while 27 were left unreplayed. The fault occurred after webhook persistence and before conversation processing: reminder activation made every inbound await an invalid `UPDATE ... FROM` whose target `status` reference was ambiguous. Admin resets were incidental, not the root cause.
+
+The repair qualifies target-stage fields, moves reconciliation to the minute reminder Cron, and removes it from customer webhooks. A forced-sync-failure test proves signed `START` still returns HTTP200, sends welcome, and advances state. Corrected SQL passes the live D1 parser via read-only EXPLAIN. Deployment defaults are OFF/OFF/FALSE, and the candidate remains undeployed.
+
+### Frozen production baseline
+
+- API `8e670de8-4d89-427b-9fec-dad29dc33f3f`: 100%.
+- Faulty API `7b662e0d-38ad-4f23-80b2-5c54e4ca64e6`: 0% diagnostic rollback.
+- Admin `c2e87231-9d51-444e-b283-7ab18379280f`: 100% unchanged.
+- Active D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; migrations0039/0040 intact.
+- Reminders **PAUSED**; +15/+30/+60/+210/+240 policy retained, no +270, templates, backfill, or silent COD conversion.
+
+Completion: P0 100%, P1 100%, P2 restoration 100% / extended payment journey 60%, P3 100%, P4 100%, P5 95% pending pushed SHA. Overall **95%**. Production customer replies are restored and provider-verified. Remaining work is optional controlled acceptance of Advance/COD/Check Order and a separately authorized staged deployment of the repaired candidate; neither blocks the restored public bot.

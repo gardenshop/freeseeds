@@ -1216,3 +1216,13 @@ No secrets are stored in this registry.
 - **Live aggregate:** 138 orders; 2 PAID; 47 COD; 13 receipt/REVIEW; 52 no-method; 26 broad Advance-pending shapes. Orders created since activation: 0. The broad categories overlap and contain no identifiers in this registry.
 - **Reminder evidence:** five stages configured, zero schedules/stages/reminder outbox jobs, zero WAMIDs and delivery events. Live acceptance is pending a genuine eligible new Advance order; no historical backfill or fabricated customer activity.
 - **Integrity:** markers 0037–0040, reminder/COD schema and triggers present; `quick_check=ok`; FK check empty. Focused 104/104, full 310/310, build, lint, offline audit 0 vulnerabilities, rollback4/4.
+
+## GFS-289 Restored Operational Baseline — 2026-10-28
+
+- **Cloudflare:** authenticated `gisupp@gmail.com` / Get Free Seeds. API `8e670de8-4d89-427b-9fec-dad29dc33f3f` 100%; faulty API `7b662e0d-38ad-4f23-80b2-5c54e4ca64e6` 0%; Admin `c2e87231-9d51-444e-b283-7ab18379280f` 100%.
+- **Bindings:** active D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, receipts R2 and events Queue unchanged. Migrations0039/0040 untouched. Production-name D1 and Hoja resources untouched.
+- **Incident:** old SQL failed live parsing with ambiguous `status`; 34 inbound events persisted in the fault window, only 4 replied before rollback, 3 replied after rollback, and 27 remain unreplayed. No customer identifiers are stored.
+- **Acceptance:** genuine post-rollback replies contain real provider WAMIDs; checkpoint 19 READ, 3 DELIVERED, 1 SENT. Conversations reached FULL_NAME and zero orders were created. Raw IDs are intentionally omitted.
+- **Reminders:** PAUSED, flags false/false/false. Admin has five stages, 5 EN + 5 UR PUBLISHED, zero utility approvals; schedules/stages/jobs/outbound reminder rows 0/0/0/0.
+- **Source candidate:** qualified reconciliation SQL, Cron-only execution, customer-webhook isolation, deployment defaults OFF. Candidate undeployed; production remains on proven `8e670de8`.
+- **Quality:** focused 104/104, full 312/312, build/lint, online audit0, rollback4/4 using existing `D:\free seeds\gfs273-v1` at `cf01f44`.

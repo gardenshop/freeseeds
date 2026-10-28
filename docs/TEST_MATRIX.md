@@ -1436,3 +1436,21 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | Audit | BLOCKED | npm advisory endpoint unavailable; no vulnerability result claimed |
 | Rollback4/4 | BLOCKED | `GFS_LEGACY_ROOT` is not configured in this worktree |
 | Genuine tester acceptance | PENDING | Admin reset overlapped incident; no correlated inbound→outbound device evidence |
+
+## GFS-289 Emergency WhatsApp Restoration — 2026-10-28
+
+| Area | Result | Evidence |
+|---|---|---|
+| Version compatibility | PASS | `8e670de8` and `7b662e0d` share D1/R2/Queue/Meta/COD bindings and fetch/scheduled/queue handlers |
+| Emergency rollback | PASS | `8e670de8` 100%; `7b662e0d` 0%; Admin unchanged; public health HTTP200 |
+| Exact regression | PASS | Live D1 parser returns `ambiguous column name: status` for old reminder reconciliation SQL |
+| Fault-window correlation | PASS | 34 persisted inbound events; 4 pre-rollback replies; 3 delayed post-rollback replies; 27 without direct reply |
+| Genuine post-rollback replies | PASS | Real provider WAMIDs present; checkpoint 19 READ, 3 DELIVERED, 1 SENT; identifiers not stored in docs |
+| Conversation progression | PASS restoration | LANGUAGE/OFFER/PROVINCE/FULL_NAME observed; zero new orders |
+| Customer-webhook isolation | PASS | Forced reminder-sync failure cannot block signed START/welcome HTTP200 or state progression |
+| Qualified Cron reconciliation | PASS | Corrected SQL executes from scheduled handler; live D1 EXPLAIN accepted with indexed stage lookup |
+| Reminder/Admin state | PASS PAUSED | Flags false/false/false; authenticated five-stage Admin; 10 published internal copies; 0/0/0/0 reminder rows |
+| Focused regression | PASS | 104/104 |
+| Full regression | PASS | 312/312 |
+| Build/lint/audit | PASS | TypeScript, ESLint, online audit 0 vulnerabilities |
+| Rollback4/4 | PASS | Existing clean `gfs273-v1` worktree at exact `cf01f44` |

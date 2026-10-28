@@ -50,13 +50,13 @@ app.onError((error, c) => {
 });
 
 async function syncPaymentReminderDeliveryStatuses(db: D1Database): Promise<void> {
-  await db.prepare(`UPDATE payment_reminder_v2_stages SET
-    status=CASE WHEN m.status IN ('DELIVERED','READ') THEN m.status WHEN m.status='FAILED' THEN 'DEAD_LETTER' ELSE status END,
-    last_error=CASE WHEN m.status='FAILED' THEN COALESCE(m.last_error,'META_DELIVERY_FAILED') ELSE last_error END,
-    completed_at=CASE WHEN m.status IN ('DELIVERED','READ','FAILED') THEN COALESCE(completed_at,m.updated_at) ELSE completed_at END,
+  await db.prepare(`UPDATE payment_reminder_v2_stages AS s SET
+    status=CASE WHEN m.status IN ('DELIVERED','READ') THEN m.status WHEN m.status='FAILED' THEN 'DEAD_LETTER' ELSE s.status END,
+    last_error=CASE WHEN m.status='FAILED' THEN COALESCE(m.last_error,'META_DELIVERY_FAILED') ELSE s.last_error END,
+    completed_at=CASE WHEN m.status IN ('DELIVERED','READ','FAILED') THEN COALESCE(s.completed_at,m.updated_at) ELSE s.completed_at END,
     updated_at=m.updated_at
     FROM outbound_messages m
-    WHERE m.kind='WHATSAPP_PAYMENT_REMINDER' AND m.idempotency_key=payment_reminder_v2_stages.idempotency_key
+    WHERE m.kind='WHATSAPP_PAYMENT_REMINDER' AND m.idempotency_key=s.idempotency_key
       AND m.status IN ('DELIVERED','READ','FAILED')`).run();
 }
 
@@ -868,7 +868,6 @@ app.post("/webhooks/whatsapp", async (c) => {
     return c.json({ error: "WHATSAPP_SENDER_RATE_LIMITED", retryAfterSeconds: 60 }, 429);
   }
   const eventCount = c.env.DB ? await persistWebhookRecords(c.env.DB, payload, raw, correlationId) : 0;
-  if (c.env.DB && c.env.PAYMENT_REMINDERS_V2_ENABLED === "true") await syncPaymentReminderDeliveryStatuses(c.env.DB);
   if (c.env.DB) await persistInboundConversationActivity(c.env.DB, inbound);
   let autoReplies = 0;
   for (const event of inbound) {
@@ -1116,6 +1115,7 @@ export default {
   fetch: app.fetch,
   async scheduled(controller: ScheduledController, env: Env["Bindings"]): Promise<void> {
     if (env.PAYMENT_REMINDERS_V2_ENABLED !== "true" || env.PAYMENT_AUTOMATION_V2_ENABLED !== "true") return;
+    await syncPaymentReminderDeliveryStatuses(env.DB);
     const now = new Date(controller.scheduledTime).toISOString();
     await enqueueDuePaymentV2Stages(env.DB, new Date(controller.scheduledTime), true);
     const stale = new Date(Date.parse(now) - 5 * 60_000).toISOString();

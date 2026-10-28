@@ -25,6 +25,8 @@ let beforeBatch: ((sql: string[]) => Promise<void> | void) | undefined;
 let beforeRun: ((sql: string) => Promise<void> | void) | undefined;
 let qrAvailable: boolean;
 let qrReads: number;
+let remindersEnabled: boolean;
+let reminderAutomationEnabled: boolean;
 // NON-PAYABLE PNG signature only, not an encoded or scannable payment QR.
 const syntheticQrBytes = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
 
@@ -59,7 +61,7 @@ function buttons() {
 }
 
 function env() {
-  return { DB: db, RECEIPTS: { get: vi.fn(async () => { qrReads++; return qrAvailable ? { httpMetadata: { contentType: "image/png" }, arrayBuffer: async () => syntheticQrBytes.buffer } : null; }), put: vi.fn(async () => { receiptPuts++; }), delete: vi.fn(async () => undefined) }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: "true", META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided", COD_V1_ENABLED: codEnabled ? "true" : "false", COD_ROLLOUT_MODE: codRolloutMode, COD_TESTER_WA_ID: codTesterWaId, COD_REFERENCE_HMAC_KEY: codRuntimeHmacKey } as never;
+  return { DB: db, RECEIPTS: { get: vi.fn(async () => { qrReads++; return qrAvailable ? { httpMetadata: { contentType: "image/png" }, arrayBuffer: async () => syntheticQrBytes.buffer } : null; }), put: vi.fn(async () => { receiptPuts++; }), delete: vi.fn(async () => undefined) }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: "true", META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided", COD_V1_ENABLED: codEnabled ? "true" : "false", COD_ROLLOUT_MODE: codRolloutMode, COD_TESTER_WA_ID: codTesterWaId, COD_REFERENCE_HMAC_KEY: codRuntimeHmacKey, PAYMENT_REMINDERS_V2_ENABLED: remindersEnabled ? "true" : "false", PAYMENT_AUTOMATION_V2_ENABLED: reminderAutomationEnabled ? "true" : "false", PAYMENT_UTILITY_TEMPLATES_APPROVED: "false" } as never;
 }
 
 async function callback(messages: Record<string, unknown>[], extraChanges: unknown[] = []) {
@@ -773,6 +775,8 @@ beforeEach(() => {
   beforeRun = undefined;
   qrAvailable = false;
   qrReads = 0;
+  remindersEnabled = false;
+  reminderAutomationEnabled = false;
   queueSend = vi.fn(async () => undefined);
   vi.stubGlobal("fetch", vi.fn(async (_url: unknown, init: RequestInit) => {
     if (failNextSend) { failNextSend = false; return new Response("{}", { status: 503 }); }
@@ -985,6 +989,31 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     const recordedAt = lastInboundAt();
     await callback([], [{ field: "messages", value: { metadata: { phone_number_id: phoneId }, statuses: [{ id: "synthetic-provider-status", status: "delivered" }] } }]);
     expect(lastInboundAt()).toBe(recordedAt);
+  });
+
+  it("keeps reminder delivery reconciliation off the customer webhook path", async () => {
+    remindersEnabled = true;
+    reminderAutomationEnabled = true;
+    let syncAttempts = 0;
+    beforeRun = async (sql) => {
+      if (!sql.startsWith("UPDATE payment_reminder_v2_stages")) return;
+      syncAttempts++;
+      throw new Error("SYNTHETIC_REMINDER_SYNC_UNAVAILABLE");
+    };
+
+    await inbound("START", "synthetic-reminder-isolation-inbound");
+    expect(conversation()?.state).toBe("LANGUAGE");
+    expect(sends).toHaveLength(1);
+    expect(syncAttempts).toBe(0);
+
+    await expect(api.scheduled({ scheduledTime: Date.now(), cron: "* * * * *", noRetry: vi.fn() } as unknown as ScheduledController, env())).rejects.toThrow("SYNTHETIC_REMINDER_SYNC_UNAVAILABLE");
+    expect(syncAttempts).toBe(1);
+  });
+
+  it("runs the qualified reminder delivery reconciliation from Cron", async () => {
+    remindersEnabled = true;
+    reminderAutomationEnabled = true;
+    await expect(api.scheduled({ scheduledTime: Date.now(), cron: "* * * * *", noRetry: vi.fn() } as unknown as ScheduledController, env())).resolves.toBeUndefined();
   });
 
   it("permanently blocks a free-form reply retry after the original inbound event leaves the 24-hour window", async () => {

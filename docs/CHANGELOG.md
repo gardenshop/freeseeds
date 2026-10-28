@@ -1125,3 +1125,11 @@
 - Recorded incident-window aggregate evidence and Admin reset overlap without storing customer identifiers, screenshots, secrets, or uncorrelated WAMIDs.
 - Reconfirmed five stages, strict 24-hour service-window policy, no +270 cancellation, explicit PKR125 COD consent, and utility-template approval false.
 - Quality: focused 102/102, full 310/310, build/lint PASS; npm audit and rollback4/4 remain environment-blocked as documented.
+
+## 2026-10-28 — GFS-289 emergency WhatsApp restoration
+
+- Authenticated and executed the owner-authorized traffic rollback: API `8e670de8` is 100%, faulty `7b662e0d` is 0%, Admin unchanged.
+- Proved the GFS-287 regression: enabled reminder flags synchronously invoked reminder delivery reconciliation on inbound webhooks, and live D1 rejects its unqualified `status` expression as ambiguous.
+- Qualified target columns, moved reconciliation to Cron, removed it from customer webhooks, and restored deployment defaults to reminder/automation OFF with utility templates false.
+- Verified genuine post-rollback provider delivery/read traffic and conversation progression without creating an order, replaying messages, resetting state, or mutating payments/COD.
+- Quality gates passed: focused 104/104, full 312/312, build, lint, audit0, rollback4/4.
