@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-291 staged Admin export and summary release (2026-10-28)
+
+- Source: PR #11 branch `codex/gfs221-cod-compat-001`; local source/tests/docs changes are the GFS-291 delta. Hoja/ThanNow resources were not used.
+- Cloudflare identity before external mutation: `gisupp@gmail.com`, account `Get Free Seeds`, account ID `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- D1/R2/Queue bindings: both staged Workers use `getfreeseeds-staging`, D1 UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; no production-name database was accessed or written.
+- Workers: healthy API `8e670de8`100%; staged API `d808a31c-ba40-4a02-b3c6-8c6de4cffecf`0%; healthy Admin `c2e87231`100%; staged Admin `2b1609d5-588f-4bd0-97c3-50a8b6e1be03`0%. Active API health was HTTP200. No genuine customer message or WAMID was recorded.
+- Export: authenticated `/api/orders/export`, UTF-8 CSV with BOM, private/no-store headers, exact Orders filters, 100-row keyset pagination, and no receipts/QR/secrets/settlement evidence.
+- Feature state: `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_AUTOMATION_V2_ENABLED=false`, `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`; five reminder stages and migrations0039/0040 remain preserved and paused.
+
 ## GFS-290 Admin-editable order summary (2026-10-28)
 
 - Source: `gardenshop/freeseeds`, PR #11 branch `codex/gfs221-cod-compat-001`, implementation commit `ae3b69e`, documentation commit `6b8f97e`. Hoja/ThanNow resources were not used.

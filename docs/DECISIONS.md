@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-28: GFS-291 staged Admin export
+
+- Keep the GFS-290 `REVIEW` CMS summary and API rendering unchanged; this task does not create a second summary engine or alter checkout/payment/COD/reminder behavior.
+- Use an Excel-compatible UTF-8 CSV fallback rather than adding a spreadsheet dependency to the Worker. The route is protected by existing Admin authorization, shares the Orders filter contract, uses bounded keyset pages of 100, and exports persisted order/item quote values without private receipt or settlement fields.
+- Keep Admin `2b1609d5-588f-4bd0-97c3-50a8b6e1be03` and API `d808a31c-ba40-4a02-b3c6-8c6de4cffecf` at0%, with healthy Admin `c2e87231-9d51-444e-b283-7ab18379280f` and API `8e670de8-4d89-427b-9fec-dad29dc33f3f` at100%. No full promotion is justified without genuine authenticated CONTACT→REVIEW device proof.
+- Cloudflare identity `gisupp@gmail.com` / Get Free Seeds was verified before upload/deployment; D1 binding remained staging UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`. No migration, D1 write, billing, customer, payment, receipt, COD, Meta, or reminder mutation was made.
+
 ## 2026-10-28: GFS-290 editable Order Summary
 
 - Reuse the existing `REVIEW` CMS key rather than adding a second template engine or migration. Version8 is the published bilingual source of layout; the API fallback is identical and remains quote/config driven.

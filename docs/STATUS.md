@@ -1,5 +1,15 @@
 # Status
 
+## GFS-291 Admin export and staged summary release (2026-10-28)
+
+- **P0 PASS:** Healthy production remains API `8e670de8`100%, faulty API `7b662e0d`0%, Admin `c2e87231`100%. Existing summary/CMS, migrations0039/0040, payments, signed webhook, COD PKR125 and reminders were preserved; reminder flags remain false/false/false.
+- **P1 PASS LOCAL / BLOCKED LIVE ACCEPTANCE:** Existing GFS-290 summary implementation remains the source path and was not duplicated. The current branch still renders the published bilingual `REVIEW` CMS content once with dynamic quote/config values and a local fallback. No genuine authorized device flow was available; no WAMID or delivery is claimed.
+- **P2 PASS:** Admin export is an authenticated UTF-8 CSV (Excel-compatible) route and button. It uses the existing Orders filters, fixed bounded 100-row keyset pagination, persisted order/item quote values, duplicate-free output, formula-injection protection, private/no-store headers, and no sensitive payment/receipt/secret fields. XLSX was not added because the Worker has no spreadsheet runtime dependency; the requested optional CSV path is implemented.
+- **P3 PASS STAGED / NO PROMOTION:** Cloudflare identity `gisupp@gmail.com` / Get Free Seeds was verified before mutation. Admin candidate `2b1609d5` and API candidate `d808a31c` are staged at0%; healthy Admin `c2e87231` and API `8e670de8` remain100%. Active API `/health` returned HTTP200. No full promotion was performed without genuine WhatsApp evidence.
+- **P4 PASS PAUSED:** Reminders remain paused; no templates, sends, historical backfill, COD conversion, or new schedules were performed. Five-stage policy and existing Admin reminder state remain intact.
+- **P5 PASS:** Focused9/9, full314/314, build, lint, audit0, and verified rollback4/4 pass. Git working changes are source/tests/docs only and are pending commit/push through the correct GitHub identity.
+- **Completion:** P0 100%; P1 local100% / live device0%; P2 100%; P3 staged100% / promoted0%; P4 100% safely paused; P5 local100% / push pending. Overall **90%**, production summary/export promotion **NO-GO pending genuine device acceptance**.
+
 ## GFS-290 Admin-editable order summary (2026-10-28)
 
 - **P0 PASS:** Healthy production was preserved: API `8e670de8`100%, faulty `7b662e0d`0%, Admin `c2e87231`100%; D1 migrations0039/0040, payments, webhook and reminder state were not changed. Cloudflare identity was reverified as `gisupp@gmail.com` / Get Free Seeds before each Cloudflare/CMS mutation; canonical Meta identity and Hoja isolation were preserved.

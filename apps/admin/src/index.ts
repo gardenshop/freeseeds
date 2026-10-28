@@ -263,7 +263,7 @@ function ordersDashboardPageHtml(csrfToken: string): string {
 <title>Orders | Get Free Seeds</title>
 <style>
 :root{color-scheme:light;--ink:#17231c;--muted:#657269;--line:#dbe3dc;--paper:#fff;--wash:#f4f7f4;--green:#174d31;--green-2:#dcecdf;--amber:#e8a72f;--danger:#a32929;--shadow:0 12px 32px rgba(23,35,28,.08)}*{box-sizing:border-box}body{margin:0;background:#edf2ed;color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select{font:inherit}button{cursor:pointer}.shell{max-width:1500px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:20px}.eyebrow{color:var(--green);font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.top h1{font-family:Georgia,serif;font-size:34px;line-height:1;margin:5px 0 7px}.top p{margin:0;color:var(--muted)}nav a{color:var(--green);text-decoration:none;font-weight:700}.refresh{border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:9px 14px;box-shadow:var(--shadow)}.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.tab{border:1px solid var(--line);border-radius:13px;background:var(--paper);padding:15px;text-align:left;box-shadow:0 5px 16px rgba(23,35,28,.04)}.tab span{display:block;color:var(--muted);font-size:12px;font-weight:700}.tab strong{display:block;margin-top:4px;color:var(--green);font:700 27px Georgia,serif}.tab.active{border-color:var(--green);background:var(--green);color:#fff}.tab.active span,.tab.active strong{color:#fff}.filters{display:grid;grid-template-columns:minmax(230px,2fr) repeat(4,minmax(130px,1fr)) auto auto;gap:9px;align-items:end;background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:13px;margin-bottom:14px}.filters label{color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.03em;text-transform:uppercase}.filters input,.filters select{display:block;width:100%;margin-top:5px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px;color:var(--ink)}.filters button{height:38px;border-radius:8px;padding:0 14px}.apply{border:0;background:var(--green);color:#fff;font-weight:750}.clear{border:1px solid var(--line);background:#fff}.workspace{display:grid;grid-template-columns:minmax(370px,440px) minmax(0,1fr);height:calc(100vh - 285px);min-height:560px;background:var(--paper);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}.master{display:flex;min-height:0;flex-direction:column;border-right:1px solid var(--line);background:#f8faf8}.list-head{display:flex;justify-content:space-between;gap:10px;padding:13px 15px;border-bottom:1px solid var(--line);background:#fff}.muted{color:var(--muted)}.error{color:var(--danger)}.ok{color:#176b36}.orders{overflow:auto;flex:1}.order{width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;padding:14px 15px;text-align:left}.order:hover{background:#f0f5f0}.order.active{background:var(--green-2);box-shadow:inset 4px 0 var(--green)}.order-top,.order-bottom{display:flex;justify-content:space-between;gap:12px;align-items:center}.order-number{font-weight:850}.customer{margin:5px 0;color:#344139}.order-bottom{color:var(--muted);font-size:12px}.badge{display:inline-flex;align-items:center;border-radius:999px;background:#e7ede8;padding:3px 8px;font-size:10px;font-weight:850;letter-spacing:.04em}.badge.review{background:#fff0cf;color:#7a5200}.badge.paid{background:#dcecdf;color:#174d31}.pager{display:flex;justify-content:space-between;align-items:center;padding:10px 13px;border-top:1px solid var(--line);background:#fff}.pager button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 10px}.pager button:disabled{opacity:.4;cursor:not-allowed}.detail{overflow:auto;padding:23px 26px}.empty{height:100%;display:grid;place-items:center;color:var(--muted);text-align:center}.detail-header{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;padding-bottom:17px;border-bottom:1px solid var(--line)}.detail-header h2{font:700 29px Georgia,serif;margin:0 0 5px}.amount{text-align:right}.amount strong{display:block;color:var(--green);font:700 25px Georgia,serif}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:16px 0}.card{border:1px solid var(--line);border-radius:11px;padding:15px;background:#fff}.card h3{margin:0 0 11px;color:var(--green);font-size:12px;letter-spacing:.08em;text-transform:uppercase}.facts{display:grid;grid-template-columns:minmax(110px,.7fr) 1.3fr;gap:7px 12px;margin:0}.facts dt{color:var(--muted)}.facts dd{margin:0;overflow-wrap:anywhere}.wide{grid-column:1/-1}.items,.receipts,.timeline{list-style:none;padding:0;margin:0}.items li,.receipts li,.timeline li{padding:8px 0;border-top:1px solid var(--wash)}.items li:first-child,.receipts li:first-child,.timeline li:first-child{border-top:0}.item-line{display:flex;justify-content:space-between;gap:12px}.receipts a{color:var(--green);font-weight:750}.actions{display:flex;flex-wrap:wrap;gap:8px;position:sticky;bottom:-23px;margin:18px -26px -23px;padding:13px 26px;background:rgba(255,255,255,.96);border-top:1px solid var(--line);backdrop-filter:blur(8px)}.actions button{border:1px solid var(--green);border-radius:8px;padding:8px 12px;background:#fff;color:var(--green);font-weight:750}.actions .primary{background:var(--green);color:#fff}.actions .danger{border-color:#d8adad;color:var(--danger)}.action-status{flex-basis:100%;margin:0}.skeleton{padding:22px;color:var(--muted)}@media(max-width:1050px){.filters{grid-template-columns:repeat(3,minmax(0,1fr))}.filters label:first-child{grid-column:span 2}}@media(max-width:760px){.shell{padding:14px}.top{align-items:center}.top h1{font-size:28px}.tabs{grid-template-columns:1fr 1fr}.filters{grid-template-columns:1fr 1fr}.filters label:first-child{grid-column:1/-1}.workspace{grid-template-columns:1fr;grid-template-rows:minmax(280px,42vh) minmax(430px,1fr);height:auto;min-height:850px}.master{border-right:0;border-bottom:1px solid var(--line)}.detail{padding:18px}.grid{grid-template-columns:1fr}.wide{grid-column:auto}.actions{bottom:-18px;margin:18px -18px -18px;padding:12px 18px}.amount strong{font-size:20px}}@media(max-width:430px){.filters{grid-template-columns:1fr}.filters label:first-child{grid-column:auto}.tabs{gap:7px}.tab{padding:11px}.tab strong{font-size:23px}.detail-header{display:block}.amount{text-align:left;margin-top:10px}}
-</style></head><body><main class="shell"><header class="top"><div><div class="eyebrow">Operations console</div><h1>Orders</h1><p>Payment review and fulfillment from one protected workspace.</p><nav><a href="/">Admin home</a> &nbsp;·&nbsp; <a href="/test-controls">Test controls</a></nav></div><button id="refresh" class="refresh" type="button">Refresh</button></header>
+</style></head><body><main class="shell"><header class="top"><div><div class="eyebrow">Operations console</div><h1>Orders</h1><p>Payment review and fulfillment from one protected workspace.</p><nav><a href="/">Admin home</a> &nbsp;·&nbsp; <a href="/test-controls">Test controls</a></nav></div><div class="actions"><button id="download-export" class="refresh" type="button">Download Excel (CSV)</button><button id="refresh" class="refresh" type="button">Refresh</button></div></header>
 <section class="tabs" aria-label="Order queues"><button class="tab" data-tab="all" type="button"><span>All Orders</span><strong data-count="all">—</strong></button><button class="tab" data-tab="verify" type="button"><span>Verify Payments</span><strong data-count="verify">—</strong></button><button class="tab" data-tab="confirmed" type="button"><span>Confirmed Payments</span><strong data-count="confirmed">—</strong></button><button class="tab" data-tab="fulfillment" type="button"><span>Fulfillment</span><strong data-count="fulfillment">—</strong></button></section>
 <form id="filters" class="filters"><label>Search<input name="q" type="search" autocomplete="off" placeholder="Order, customer, 03xx, +92, wa_id"></label><label>Order date<input name="date" type="date"></label><label>Payment<select name="paymentStatus"><option value="">Any payment</option><option value="PENDING">Pending</option><option value="REVIEW">In review</option><option value="APPROVED">Approved</option><option value="REJECTED">Rejected</option></select></label><label>Fulfillment<select name="fulfillment"><option value="">Any stage</option><option value="NOT_STARTED">Ready to pack</option><option value="PACKING">Packing</option><option value="DISPATCHED">Dispatched</option><option value="DELIVERED">Delivered</option><option value="CANCELLED">Cancelled</option></select></label><label>Archive<select name="archived"><option value="active">Active only</option><option value="all">Active + archived</option><option value="only">Archived only</option></select></label><label>Rows<select name="pageSize"><option>25</option><option>50</option><option>100</option></select></label><button class="apply" type="submit">Apply</button><button id="clear" class="clear" type="button">Clear</button></form>
 <section class="workspace"><aside class="master"><div class="list-head"><strong id="queue-title">All Orders</strong><span id="list-status" class="muted" role="status" aria-live="polite">Loading…</span></div><div id="orders" class="orders"><div class="skeleton">Loading orders…</div></div><div class="pager"><button id="previous" type="button">Previous</button><span id="page-status" class="muted">Page 1</span><button id="next" type="button">Next</button></div></aside><article id="detail" class="detail"><div class="empty"><p>Select an order to inspect its full record.</p></div></article></section></main>
@@ -336,6 +336,7 @@ function badge(order){const value=order.paymentReviewState||order.paymentStatus|
 function orderCard(order){return '<button class="order '+(order.id===selectedId?'active':'')+'" data-order-id="'+esc(order.id)+'" type="button"><span class="order-top"><span class="order-number">'+esc(order.orderNumber)+'</span>'+badge(order)+'</span><span class="customer">'+text(order.customerName)+'</span><span class="order-bottom"><span>'+esc(order.itemSummary||'No item summary')+'</span><strong>'+money(order.totalPayablePkr)+'</strong></span><span class="order-bottom"><span>'+esc(order.state)+(order.archivedAt?' · Archived':'')+'</span><time>'+esc(when(order.createdAt))+'</time></span></button>'}
 function renderList(data){const list=data.orders||[];totalPages=data.pagination.totalPages;listStatus.textContent=Number(data.total).toLocaleString('en-PK')+' total';pageStatus.textContent='Page '+data.pagination.page+' of '+Math.max(1,totalPages);document.querySelector('#previous').disabled=data.pagination.page<=1;document.querySelector('#next').disabled=data.pagination.page>=totalPages;setTabs(data.counts);if(!list.length){ordersRoot.innerHTML='<div class="skeleton">No orders match this queue and filter set.</div>';selectedId='';detail.innerHTML='<div class="empty"><p>No matching order to inspect.</p></div>';return null}if(!list.some((order)=>order.id===selectedId))selectedId=list[0].id;ordersRoot.innerHTML=list.map(orderCard).join('');for(const button of ordersRoot.querySelectorAll('[data-order-id]'))button.onclick=()=>show(button.dataset.orderId);return selectedId}
 async function load(){const generation=++listGeneration;if(listController)listController.abort();listController=new AbortController();const controller=listController;listStatus.className='muted';listStatus.textContent='Loading orders...';ordersRoot.innerHTML='<div class="skeleton">Loading orders...</div>';try{const data=await requestJson('/api/orders?'+params().toString(),{cache:'no-store'},controller.signal,true);if(generation!==listGeneration)return;const id=renderList(data);syncUrl();if(id)await show(id)}catch(error){if(generation!==listGeneration||isAbort(error))return;fail(error)}}
+async function downloadExport(){const button=document.querySelector('#download-export');button.disabled=true;try{const response=await fetch('/api/orders/export?'+params().toString(),{cache:'no-store'});if(!response.ok){let message='Export failed (HTTP '+response.status+').';try{const data=await response.json();message=data.message||data.error||message}catch{}throw new Error(message)}const blob=await response.blob();const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='orders-export.csv';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}catch(error){listStatus.className='error';listStatus.textContent=error instanceof Error?error.message:'Export failed'}finally{button.disabled=false}}
 function facts(entries){return '<dl class="facts">'+entries.map((entry)=>'<dt>'+esc(entry[0])+'</dt><dd>'+entry[1]+'</dd>').join('')+'</dl>'}
  function actionButton(label,handler,className){const button=document.createElement('button');button.type='button';button.className=className||'';button.textContent=label==='Request clearer receipt'?'Request Clearer Receipt':label;const held=document.querySelector('.detail-header h2')?.textContent.trim()==='FS-261019-000001';if(held){button.disabled=true;button.title='Fulfillment held pending independent settlement verification and transaction reference.';const actions=detail.querySelector('.actions');if(actions&&!detail.querySelector('.fulfillment-hold'))actions.insertAdjacentHTML('beforebegin','<p class="error fulfillment-hold" role="alert">Fulfillment is on hold pending independent bank settlement verification and the customer transaction reference.</p>');return button}if(label==='Approve payment'){button.disabled=true;button.title='Use the settlement-confirmation panel; direct approval is disabled.';return button}button.onclick=async()=>{button.disabled=true;try{await handler()}catch(error){showActionError(error)}finally{button.disabled=false}};return button}
 function showActionError(error){const node=detail.querySelector('.action-status');if(node){node.className='action-status error';node.textContent=error instanceof Error?error.message:'Request failed'}}
@@ -351,6 +352,7 @@ const gateReferenceRequestUntilApiDeploy=addActions;addActions=(order)=>{gateRef
 const appendPaymentReferenceControls=addActions;addActions=(order)=>{appendPaymentReferenceControls(order);if(!order.paymentId||order.state!=='PAYMENT_REVIEW'||order.paymentReviewState!=='REVIEW'||Number(order.receiptCount)<1||order.archivedAt||order.fulfillmentHold)return;const root=detail.querySelector('.actions');if(!root)return;for(const button of root.querySelectorAll('button'))if(button.textContent.trim()==='Approve payment')button.remove();const reference=String(order.customerTransactionReference||'');const windowAge=order.lastInboundAt?Date.now()-Date.parse(order.lastInboundAt):Infinity;const windowOpen=Number.isFinite(windowAge)&&windowAge>=0&&windowAge<24*60*60*1000;const panel=document.createElement('section');panel.className='card payment-reference-panel';panel.innerHTML='<h3>Payment review safeguards</h3><p class="muted">Amount: '+money(order.expectedAmountPkr)+' · Method: '+esc(order.paymentMethod)+' · Receipts: '+Number(order.receiptCount)+'</p><p class="muted">Save the genuine transaction/reference ID from the customer receipt or provider history. Never use the order number. Saving a reference does not mark payment PAID.</p><label>Transaction Reference<input data-transaction-reference type="text" maxlength="80" autocomplete="off"></label><button type="button" data-save-reference>Save Reference</button><button type="button" data-request-reference>Request Reference</button><p data-reference-status class="muted" role="status"></p><label>Receiving-account settlement evidence reference<input data-settlement-reference type="text" maxlength="128" autocomplete="off" placeholder="Opaque provider/bank credit record ID"></label><label><input data-settlement-confirm type="checkbox"> I verified the actual credit in the authorized Garden Shop receiving account and matched its method, transaction reference and exact order amount.</label><p class="muted">Confirm PAID stays disabled until the saved reference, verified method, receipt, exact total and independent receiving-account credit all match. COD orders never use this action.</p><button type="button" data-settlement-approve class="primary">Confirm PAID</button>';
 const refInput=panel.querySelector('[data-transaction-reference]');refInput.value=reference;refInput.readOnly=Boolean(reference);const settlementInput=panel.querySelector('[data-settlement-reference]');const confirmBox=panel.querySelector('[data-settlement-confirm]');const save=panel.querySelector('[data-save-reference]');const request=panel.querySelector('[data-request-reference]');const approve=panel.querySelector('[data-settlement-approve]');const status=panel.querySelector('[data-reference-status]');const refPattern=/^[A-Za-z0-9][A-Za-z0-9._:/-]{3,79}$/;const evidencePattern=/^[A-Za-z][A-Za-z0-9._:-]{5,127}$/;const orderRef=String(order.orderNumber||'').replace(/\s+/g,'').toUpperCase();const inputRef=()=>String(refInput.value||'').trim().replace(/\s+/g,'');const evidenceRef=()=>String(settlementInput.value||'').trim();const ready=()=>Boolean(reference&&order.paymentMethodVerified&&Number(order.expectedAmountPkr)===Number(order.totalPayablePkr)&&Number(order.receiptCount)>0&&evidencePattern.test(evidenceRef())&&confirmBox.checked);approve.disabled=!ready();save.disabled=Boolean(reference);save.hidden=Boolean(reference);request.disabled=Boolean(reference||order.transactionReferenceRequestSent||!windowOpen);request.hidden=Boolean(reference);if(!reference)status.textContent=windowOpen?'Reference missing. Save the genuine reference or request it within the customer service window.':'Reference missing. Messaging window is closed; an approved utility template is required before contacting the customer.';else if(!order.paymentMethodVerified)status.textContent='The receiving method is not independently verified; payment approval stays blocked.';else status.textContent='Settlement proof missing. Confirm PAID remains disabled until the exact receiving-account credit is independently verified.';save.onclick=async()=>{const value=inputRef();if(!refPattern.test(value)||value.toUpperCase()===orderRef){status.className='error';status.textContent='Enter a valid transaction reference different from the order number.';return}save.disabled=true;try{const result=await mutate('/api/payments/'+encodeURIComponent(order.paymentId)+'/transaction-reference',{orderId:order.id,confirmation:order.orderNumber,reference:value});status.className='ok';status.textContent=result.alreadySaved?'Reference was already saved.':'Reference saved; payment remains under review.';await show(order.id)}catch(error){status.className='error';status.textContent=error instanceof Error?error.message:'Reference was not saved.';save.disabled=false}};request.onclick=async()=>{if(!windowOpen){status.className='error';status.textContent='No open 24-hour window; use only an approved utility template.';return}if(!confirmAction(order,'Request the transaction reference in the customer\'s selected language'))return;request.disabled=true;try{const result=await mutate('/api/payments/'+encodeURIComponent(order.paymentId)+'/request-transaction-reference',{orderId:order.id,confirmation:order.orderNumber});status.className='ok';status.textContent=result.dispatch==='DEFERRED'?'Request is safely queued but not yet delivered.':'Localized reference request queued once.';await show(order.id)}catch(error){status.className='error';status.textContent=error instanceof Error?error.message:'Reference request was not sent.';request.disabled=false}};confirmBox.onchange=()=>{approve.disabled=!ready()};settlementInput.oninput=()=>{approve.disabled=!ready()};approve.onclick=async()=>{if(!ready()){status.className='error';status.textContent='Save the customer reference and confirm the actual receiving-account credit first.';return}approve.disabled=true;try{await mutate('/api/payments/'+encodeURIComponent(order.paymentId)+'/approve',{orderId:order.id,confirmation:order.orderNumber,settlementEvidenceRef:evidenceRef(),settlementConfirmed:true});status.className='ok';status.textContent='Payment approved after settlement evidence was recorded.';await show(order.id)}catch(error){status.className='error';status.textContent=error instanceof Error?error.message:'Payment remains under review.';approve.disabled=!ready()}};root.before(panel)};
 filters.onsubmit=(event)=>{event.preventDefault();page=1;load()};document.querySelector('#clear').onclick=()=>{filters.reset();tab='all';page=1;selectedId='';load()};document.querySelector('#refresh').onclick=()=>load();document.querySelector('#previous').onclick=()=>{if(page>1){page-=1;selectedId='';load()}};document.querySelector('#next').onclick=()=>{if(page<totalPages){page+=1;selectedId='';load()}};for(const button of document.querySelectorAll('[data-tab]'))button.onclick=()=>{tab=button.dataset.tab;page=1;selectedId='';load()};
+document.querySelector('#download-export').onclick=()=>downloadExport();
 const addActionsWithoutClearerReason=addActions;addActions=(order)=>{addActionsWithoutClearerReason(order);const button=[...detail.querySelectorAll('.actions button')].find(item=>item.textContent.trim().toLowerCase()==='request clearer receipt');if(!button)return;button.onclick=async()=>{button.disabled=true;try{const reasonCode=prompt('Reason code: TEST_IMAGE_NOT_PAYMENT_PROOF or INSUFFICIENT_OR_UNCLEAR_RECEIPT');if(!reasonCode)return;if(!['TEST_IMAGE_NOT_PAYMENT_PROOF','INSUFFICIENT_OR_UNCLEAR_RECEIPT'].includes(reasonCode)){showActionError(new Error('CLEARER_RECEIPT_REASON_INVALID'));return}if(confirmAction(order,'Request a clearer receipt'))await run('/api/payments/'+encodeURIComponent(order.paymentId)+'/request-clearer-receipt',{orderId:order.id,confirmation:order.orderNumber,reasonCode})}catch(error){showActionError(error)}finally{button.disabled=false}}};hydrate();setTabs({});load();
 </script></body></html>`;
 }
@@ -1605,6 +1607,15 @@ const ORDER_ADMIN_LIST_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_st
   LEFT JOIN payments p ON p.order_id=o.id
   LEFT JOIN cod_order_details cod ON cod.order_id=o.id`;
 
+const ORDER_ADMIN_EXPORT_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,o.pack_quantity,o.delivery_fee,o.fertilizer_fee,o.total_payable,o.province,o.created_at,o.archived_at,
+  c.full_name,c.delivery_address,c.nearby_place,c.city,c.contact_number,
+  p.method,p.approved_amount,p.review_state,
+  cod.status AS cod_status,cod.test_hold AS cod_test_hold,cod.cod_fee_pkr,cod.quoted_total_pkr AS cod_quoted_total_pkr,
+  COALESCE((SELECT json_group_array(json_object('itemType',items.item_type,'description',items.description,'quantity',items.quantity,'unitPricePkr',items.unit_price_pkr)) FROM order_items items WHERE items.order_id=o.id),'[]') AS items_json
+  FROM orders o JOIN customers c ON c.id=o.customer_id
+  LEFT JOIN payments p ON p.order_id=o.id
+  LEFT JOIN cod_order_details cod ON cod.order_id=o.id`;
+
 const ORDER_TAB_SQL: Record<string, string> = {
   all: "1=1",
   verify: "o.state='PAYMENT_REVIEW' AND p.review_state='REVIEW'",
@@ -1619,6 +1630,106 @@ const PAYMENT_STAGE_SQL: Record<string, string> = {
   "delivery-failed": `${ADVANCE_UNPAID_SQL} AND (EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS' AND j.status IN ('DEAD_LETTER','PERMANENT_FAILURE')) OR EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status IN ('FAILED','PERMANENT_FAILURE')))` ,
   "unpaid-after-delivery": `${ADVANCE_UNPAID_SQL} AND EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status IN ('DELIVERED','READ'))`
 };
+
+type OrderFilterPlan = {
+  tab: string;
+  commonWhere: string[];
+  commonBindings: unknown[];
+  commonSql: string;
+  tabSql: string;
+  page: number;
+  pageSize: number;
+};
+
+function parseOrderFilterPlan(c: AdminContext): OrderFilterPlan | { error: string } {
+  const tab = c.req.query("tab")?.trim() || "all";
+  if (!ORDER_TAB_SQL[tab]) return { error: "ORDER_TAB_INVALID" };
+  const archived = c.req.query("archived") ?? "active";
+  if (!["active", "only", "all"].includes(archived)) return { error: "ARCHIVED_FILTER_INVALID" };
+  const paymentStatus = c.req.query("paymentStatus")?.trim();
+  if (paymentStatus && !["PENDING", "REVIEW", "APPROVED", "REJECTED", "COD_PENDING", "COD_PAID"].includes(paymentStatus)) return { error: "PAYMENT_STATUS_INVALID" };
+  const paymentStage = c.req.query("paymentStage")?.trim();
+  if (paymentStage && !PAYMENT_STAGE_SQL[paymentStage]) return { error: "PAYMENT_STAGE_INVALID" };
+  const fulfillment = c.req.query("fulfillment")?.trim();
+  if (fulfillment && !["NOT_STARTED", "COD_PENDING", "PACKING", "DISPATCHED", "DELIVERED", "COLLECTION_PENDING", "CANCELLED"].includes(fulfillment)) return { error: "FULFILLMENT_FILTER_INVALID" };
+  const date = c.req.query("date")?.trim();
+  if (date && !validOrderDate(date)) return { error: "ORDER_DATE_INVALID" };
+  const page = Number(c.req.query("page") ?? "1");
+  const pageSize = Number(c.req.query("pageSize") ?? "25");
+  if (!Number.isInteger(page) || page < 1) return { error: "PAGE_INVALID" };
+  if (![25, 50, 100].includes(pageSize)) return { error: "PAGE_SIZE_INVALID" };
+  const search = c.req.query("q")?.trim().slice(0, 100);
+  const commonWhere: string[] = [];
+  const commonBindings: unknown[] = [];
+  if (paymentStatus === "PENDING") commonWhere.push("p.review_state='PENDING'");
+  if (paymentStatus === "REVIEW") commonWhere.push("p.review_state='REVIEW'");
+  if (paymentStatus === "APPROVED") commonWhere.push("(p.review_state='APPROVED' OR o.payment_status='PAID') AND NOT EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id)");
+  if (paymentStatus === "REJECTED") commonWhere.push("(p.review_state='REJECTED' OR o.payment_status='REJECTED')");
+  if (paymentStatus === "COD_PENDING") commonWhere.push("o.payment_status='COD_PENDING' AND EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id AND cod.status<>'PAID')");
+  if (paymentStatus === "COD_PAID") commonWhere.push("p.review_state='COD_PAID' AND o.payment_status='PAID' AND EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id AND cod.status='PAID')");
+  if (paymentStage) commonWhere.push(PAYMENT_STAGE_SQL[paymentStage]);
+  if (fulfillment === "NOT_STARTED") commonWhere.push("o.state='PAID'");
+  if (fulfillment && fulfillment !== "NOT_STARTED") { commonWhere.push("o.state=?"); commonBindings.push(fulfillment); }
+  if (date) { commonWhere.push("substr(o.created_at,1,10)=?"); commonBindings.push(date); }
+  if (archived === "active") commonWhere.push("o.archived_at IS NULL");
+  if (archived === "only") commonWhere.push("o.archived_at IS NOT NULL");
+  if (search) {
+    const normalizedPhone = normalizeWhatsAppWaId(search);
+    const pattern = `%${search}%`;
+    if (normalizedPhone) {
+      commonWhere.push("(o.order_number LIKE ? OR CAST(o.internal_sequence AS TEXT) LIKE ? OR c.full_name LIKE ? OR c.city LIKE ? OR c.wa_id LIKE ? OR c.normalized_phone LIKE ? OR c.normalized_contact_number LIKE ? OR c.normalized_whatsapp_number LIKE ?)");
+      const digitsPattern = `%${normalizedPhone}%`;
+      const internationalPattern = `%+${normalizedPhone}%`;
+      commonBindings.push(pattern, pattern, pattern, pattern, digitsPattern, internationalPattern, internationalPattern, internationalPattern);
+    } else {
+      commonWhere.push("(o.order_number LIKE ? OR CAST(o.internal_sequence AS TEXT) LIKE ? OR c.full_name LIKE ? OR c.city LIKE ?)");
+      commonBindings.push(pattern, pattern, pattern, pattern);
+    }
+  }
+  const commonSql = commonWhere.length ? ` WHERE ${commonWhere.join(" AND ")}` : "";
+  const tabSql = ` WHERE ${[...commonWhere, ORDER_TAB_SQL[tab]].join(" AND ")}`;
+  return { tab, commonWhere, commonBindings, commonSql, tabSql, page, pageSize };
+}
+
+const ORDER_EXPORT_HEADERS = [
+  "Order Reference/ID", "Order Date", "Customer Name", "Full Delivery Address", "Nearby Landmark", "City", "Contact Number", "Province",
+  "Seeds Product/Quantity", "Fertilizer Product/Quantity/Price", "Delivery Charges PKR", "COD Collection Fee PKR", "Total Payable PKR",
+  "Payment Type", "Payment Method", "Payment State", "Independently Approved Paid Amount PKR", "Fulfillment/Hold Status"
+];
+
+function exportCsvCell(value: unknown): string {
+  const text = value == null ? "" : String(value);
+  const safe = /^\s*[=+\-@]/u.test(text) ? `'${text}` : text;
+  return `"${safe.replaceAll('"', '""')}"`;
+}
+
+function exportItemText(row: Record<string, unknown>, itemType: string, includePrice: boolean): string {
+  const items = jsonRecords(row.items_json).filter((item) => String(item.itemType) === itemType);
+  return items.map((item) => {
+    const value = `${String(item.description ?? "")} x ${Number(item.quantity ?? 0)}`;
+    return includePrice ? `${value} @ PKR ${Number(item.unitPricePkr ?? 0)}` : value;
+  }).join("; ");
+}
+
+function orderExportRow(row: Record<string, unknown>): unknown[] {
+  const cod = row.cod_status != null;
+  const paymentType = cod ? "COD" : row.method == null ? "Not Selected" : "Advance";
+  const methodMap: Record<string, string> = { JAZZCASH: "JazzCash", EASYPAISA: "Easypaisa", BANK_TRANSFER: "Bank" };
+  const paymentMethod = cod ? "COD" : row.method == null ? "" : methodMap[String(row.method)] ?? String(row.method);
+  const paymentState = cod && String(row.cod_status) !== "PAID" ? "COD Pending" : String(row.payment_status) === "PAID" || String(row.review_state) === "APPROVED" ? "PAID" : String(row.review_state) === "REVIEW" ? "Review" : "Pending";
+  const hold = Number(row.cod_test_hold ?? 0) !== 0;
+  return [
+    row.order_number ?? row.id, row.created_at, row.full_name, row.delivery_address, row.nearby_place, row.city, row.contact_number, row.province,
+    exportItemText(row, "PRODUCT", false) || `Free Seeds x ${Number(row.pack_quantity ?? 0)}`,
+    exportItemText(row, "FERTILIZER", true), row.delivery_fee, cod ? row.cod_fee_pkr ?? 0 : 0,
+    cod ? row.cod_quoted_total_pkr ?? row.total_payable : row.total_payable, paymentType, paymentMethod, paymentState,
+    row.approved_amount, `${String(row.state)}${hold ? " / HOLD" : ""}${row.archived_at ? " / ARCHIVED" : ""}`
+  ];
+}
+
+function exportCsv(rows: Record<string, unknown>[]): string {
+  return `\uFEFF${[ORDER_EXPORT_HEADERS, ...rows.map(orderExportRow)].map((row) => row.map(exportCsvCell).join(",")).join("\r\n")}\r\n`;
+}
 
 app.get("/api/orders", async (c) => {
   if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
@@ -1687,6 +1798,39 @@ app.get("/api/orders", async (c) => {
     counts: { all: Number(countsRow?.all_count ?? 0), verify: Number(countsRow?.verify_count ?? 0), confirmed: Number(countsRow?.confirmed_count ?? 0), fulfillment: Number(countsRow?.fulfillment_count ?? 0), noMethod: Number(countsRow?.no_method_count ?? 0), paymentNotSent: Number(countsRow?.payment_not_sent_count ?? 0), deliveryFailed: Number(countsRow?.delivery_failed_count ?? 0), unpaidAfterDelivery: Number(countsRow?.unpaid_after_delivery_count ?? 0) },
     total,
     pagination: { page, pageSize, totalPages: Math.ceil(total / pageSize) }
+  });
+});
+
+app.get("/api/orders/export", async (c) => {
+  if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
+  const plan = parseOrderFilterPlan(c);
+  if ("error" in plan) return c.json({ error: plan.error }, 400);
+  const rows: Record<string, unknown>[] = [];
+  let cursor: { createdAt: string; id: string } | undefined;
+  const exportPageSize = 100;
+  try {
+    while (true) {
+      const cursorSql = cursor ? " AND (o.created_at < ? OR (o.created_at=? AND o.id<?))" : "";
+      const cursorBindings = cursor ? [cursor.createdAt, cursor.createdAt, cursor.id] : [];
+      const result = await c.env.DB.prepare(`${ORDER_ADMIN_EXPORT_SELECT}${plan.tabSql}${cursorSql} ORDER BY o.created_at DESC,o.id DESC LIMIT ?`).bind(...plan.commonBindings, ...cursorBindings, exportPageSize).all<Record<string, unknown>>();
+      rows.push(...result.results);
+      if (result.results.length < exportPageSize) break;
+      const last = result.results[result.results.length - 1];
+      if (last.created_at == null || last.id == null) break;
+      cursor = { createdAt: String(last.created_at), id: String(last.id) };
+    }
+  } catch {
+    return c.json({ error: "ORDER_EXPORT_QUERY_FAILED", message: "Orders are temporarily unavailable. No export was returned; retry shortly." }, 503);
+  }
+  return new Response(exportCsv(rows), {
+    headers: {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": "attachment; filename=\"orders-export.csv\"",
+      "Cache-Control": "private, no-store",
+      "X-Content-Type-Options": "nosniff",
+      "Content-Security-Policy": "default-src 'none'",
+      "Referrer-Policy": "no-referrer"
+    }
   });
 });
 

@@ -1,5 +1,21 @@
 # Test Matrix
 
+## GFS-291 Admin export and staged summary release (2026-10-28)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Healthy production preserved | PASS | API `8e670de8`100%, Admin `c2e87231`100%, faulty API `7b662e0d`0%; reminders false/false/false. |
+| Existing dynamic summary reused | PASS LOCAL | Existing published `REVIEW` CMS key, dynamic quote/config placeholders, fallback and separate COD confirmation preserved; no second engine. |
+| Protected Orders export | PASS | `/api/orders/export`, existing Admin authorization, same tab/payment-stage/payment/date/search/archive filters, private/no-store response. |
+| Complete filtered export | PASS | 101 synthetic matching rows returned once through two bounded 100-row keyset reads; no duplicate references. |
+| Required data safety | PASS | Exactly five customer-delivery fields; item/fee/total fields are persisted quote values; no receipts, QR, WAMIDs, secrets, or settlement credentials. |
+| CSV safety/locale | PASS | UTF-8 BOM, quoted cells, formula-prefix neutralization, Urdu-safe text and leading-zero contact preservation. |
+| Unauthorized export | PASS | Unauthenticated request returns HTTP403 `ADMIN_ACCESS_REQUIRED`. |
+| UI path | PASS LOCAL | Orders page includes `Download Excel (CSV)` and exports current filter state; no duplicate customer summary content changed. |
+| Candidate staging | PASS | Admin `2b1609d5` and API `d808a31c` at0%; healthy versions remain100%; API health HTTP200. |
+| Genuine WhatsApp acceptance | BLOCKED SAFELY | No authorized device inbound/outbound proof; no WAMID, delivery or customer screenshot claimed. |
+| Regression/build/security/rollback | PASS | Focused9/9, full314/314, TypeScript build, ESLint, npm audit0, rollback4/4. |
+
 ## GFS-290 Admin-editable order summary (2026-10-28)
 
 | Requirement | Result | Evidence / blocker |

@@ -1,5 +1,24 @@
 # Final Report
 
+## GFS-291 Final Report (2026-10-28)
+
+| Stage | Result | Evidence / remaining item |
+|---|---|---|
+| P0 protect healthy bot | PASS | API `8e670de8`100%, faulty API `7b662e0d`0%, Admin `c2e87231`100%; existing summary, migrations0039/0040, payments, webhook and reminders preserved. |
+| P1 summary | PASS LOCAL / BLOCKED LIVE | Existing GFS-290 CMS-backed dynamic summary remains one-rendered message with separate explicit COD confirmation. No genuine authorized device proof was available. |
+| P2 Excel export | PASS | Protected `/api/orders/export` returns all matching filtered orders as UTF-8 CSV compatible with Excel; 18 operational columns, exactly five customer-delivery fields, persisted quote/item values, no sensitive storage or settlement fields. |
+| P3 staged release | PASS STAGED / NO-GO PROMOTION | Admin `2b1609d5` and API `d808a31c` staged at0%; healthy versions remain100%. Active API health HTTP200. Full promotion awaits real inbound→outbound proof and rollback evidence. |
+| P4 reminders | PASS PAUSED | `false/false/false`; no templates, schedules, sends, WAMIDs, historical replay, or COD conversion. |
+| P5 quality | PASS | Focused9/9, full314/314, build, lint, audit0, rollback4/4. Docs updated; GitHub push remains to be completed through authenticated `gardenshop`. |
+
+### Export contract
+
+The download is `orders-export.csv` with UTF-8 BOM and private/no-store headers. It respects the Orders tab, payment status/stage, fulfillment, date, archive, search, and page-size query state while exporting every matching row through 100-row keyset pages. It includes order reference/date, five customer-delivery fields, province, seed and fertilizer item summaries, delivery/COD fees, total payable, payment type/method/state, independently approved paid amount, and fulfillment/hold status. Formula-like text is prefixed safely; contact numbers remain strings.
+
+### Release decision
+
+Production remains safe and unchanged. No customer traffic, customer data extraction, payment approval, order/receipt/COD mutation, D1 migration, reminder activation, Meta template, outbound message, WAMID, delivery status, or fabricated acceptance was performed. **GO for local implementation and 0%-traffic staging; NO-GO for 100% promotion until an authorized genuine WhatsApp CONTACT→REVIEW flow proves the candidate.**
+
 ## GFS-290 Final Report (2026-10-28)
 
 | Stage | Result | Evidence / remaining item |

@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-291 Admin export and staged summary release (2026-10-28)
+
+- Preserve healthy production: API `8e670de8-4d89-427b-9fec-dad29dc33f3f` and Admin `c2e87231-9d51-444e-b283-7ab18379280f` remain at100%; faulty API `7b662e0d-38ad-4f23-80b2-5c54e4ca64e6` remains0%. Reminders remain `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_AUTOMATION_V2_ENABLED=false`, and `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`.
+- The existing CMS-backed Order Summary and dynamic quote/config rendering remain unchanged and are included in the staged API `d808a31c-ba40-4a02-b3c6-8c6de4cffecf` at0%. No CONTACT→REVIEW device proof, WAMID, customer message, order, payment, receipt, COD, or reminder mutation may be inferred from local tests.
+- Admin `2b1609d5-588f-4bd0-97c3-50a8b6e1be03` adds only a protected Excel-compatible UTF-8 CSV export on `/api/orders/export` and a matching Orders button. It inherits Admin authorization and the exact Orders filters, uses keyset pagination in bounded 100-row reads, exports all matching rows once, and never includes secrets, receipts, QR data, WAMIDs, or settlement credentials.
+- Export fields contain exactly the five customer-delivery fields (name, address, landmark, city, contact) plus the approved operational columns. CSV cells are quoted, formula-prefixed text is neutralized, Urdu and Pakistani leading-zero contacts are preserved, and responses are private/no-store.
+- Cloudflare identity was verified as `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; both staged Workers bind only `getfreeseeds-staging` D1 UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`. No live D1 migration or write was performed. Do not promote either candidate until authenticated genuine WhatsApp CONTACT→REVIEW acceptance and rollback proof are available.
+
 ## GFS-290 Admin-editable order summary (2026-10-28)
 
 - Preserve the verified production baseline: API `8e670de8-4d89-427b-9fec-dad29dc33f3f` at100%, faulty `7b662e0d-38ad-4f23-80b2-5c54e4ca64e6` at0%, Admin `c2e87231-9d51-444e-b283-7ab18379280f` at100%, and reminder flags `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_AUTOMATION_V2_ENABLED=false`, `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`. Do not change traffic, schema, payments, webhooks, or reminder state without a new gate.

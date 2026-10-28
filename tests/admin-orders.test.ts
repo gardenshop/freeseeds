@@ -58,6 +58,7 @@ const syntheticOrder = {
 class OrdersDb {
   calls: Array<{ sql: string; args: unknown[] }> = [];
   batches = 0;
+  exportRows: Record<string, unknown>[] = [];
   approvalRow: Record<string, unknown> | null = null;
   failOrderReads = false;
   failOrderDetailReads = false;
@@ -94,6 +95,9 @@ class OrdersDb {
 
   private all(sql: string, args: unknown[]): Record<string, unknown>[] {
     this.calls.push({ sql, args });
+    if (sql.includes("o.pack_quantity") && sql.includes("ORDER BY o.created_at DESC,o.id DESC")) {
+      return this.exportRows.slice(sql.includes("o.created_at < ?") ? 100 : 0, sql.includes("o.created_at < ?") ? 200 : 100);
+    }
     if (sql.startsWith("SELECT o.id") && sql.includes("ORDER BY o.created_at DESC,o.id DESC")) return [syntheticOrder];
     if (sql.startsWith("SELECT id,action")) return [{ id: "synthetic-audit", action: "RECEIPT_SUBMITTED", actor_type: "CUSTOMER", actor_id: null, metadata_json: "{}", created_at: "2026-10-16T12:20:00.000Z" }];
     return [];
@@ -156,6 +160,41 @@ describe("GFS-139 orders dashboard API", () => {
     }
     const invalid = await app.fetch(new Request("https://admin.example.test/api/orders?pageSize=10", { headers: auth }), environment(new OrdersDb()));
     expect(invalid.status).toBe(400);
+  });
+
+  it("exports every filtered order once with protected CSV cells and leading-zero contacts", async () => {
+    const db = new OrdersDb();
+    db.exportRows = Array.from({ length: 101 }, (_, index) => ({
+      ...syntheticOrder,
+      id: `synthetic-export-${index}`,
+      order_number: `FS-EXPORT-${String(index).padStart(3, "0")}`,
+      created_at: `2026-10-16T12:${String(index % 60).padStart(2, "0")}:00.000Z`,
+      full_name: index === 0 ? "=UNSAFE" : syntheticOrder.full_name,
+      contact_number: "03001234567",
+      delivery_fee: 250,
+      fertilizer_fee: 250,
+      pack_quantity: 5,
+      items_json: JSON.stringify([{ itemType: "PRODUCT", description: "Free Seeds", quantity: 5, unitPricePkr: 0 }, { itemType: "FERTILIZER", description: "Micro Nutrients", quantity: 1, unitPricePkr: 250 }])
+    }));
+    const response = await app.fetch(new Request("https://admin.example.test/api/orders/export?tab=verify&paymentStatus=REVIEW&archived=all&q=03001234567&pageSize=100", { headers: auth }), environment(db));
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/csv");
+    expect(response.headers.get("content-disposition")).toContain("orders-export.csv");
+    const csv = await response.text();
+    const lines = csv.split("\r\n").filter(Boolean);
+    expect(lines).toHaveLength(102);
+    expect(lines[0]).toContain("Order Reference/ID");
+    expect(lines.join("\n")).toContain("'=UNSAFE");
+    expect(lines.join("\n")).toContain("03001234567");
+    expect(new Set(lines.slice(1).map((line) => line.match(/FS-EXPORT-[0-9]{3}/)?.[0])).size).toBe(101);
+    expect(db.calls.filter((call) => call.sql.includes("o.pack_quantity")).length).toBe(2);
+    expect(db.calls.filter((call) => call.sql.includes("o.pack_quantity"))[1].sql).toContain("o.created_at < ?");
+  });
+
+  it("does not expose the export to an unauthenticated request", async () => {
+    const response = await app.fetch(new Request("https://admin.example.test/api/orders/export"), environment(new OrdersDb()));
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({ error: "ADMIN_ACCESS_REQUIRED" });
   });
 
   it("returns complete delivery, payment, item, and private receipt detail", async () => {

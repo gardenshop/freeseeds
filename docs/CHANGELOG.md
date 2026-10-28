@@ -1,5 +1,12 @@
 # Changelog
 
+## GFS-291 (2026-10-28)
+
+- Added an authenticated Admin Orders export as Excel-compatible UTF-8 CSV with the existing filters, bounded keyset pagination across all matching rows, duplicate suppression, formula-injection protection, Urdu/leading-zero preservation, and no private receipt/QR/settlement data.
+- Added the Orders-page `Download Excel (CSV)` action; it downloads the current filter set rather than only the visible page.
+- Staged Admin `2b1609d5` and API `d808a31c` at0% while retaining healthy Admin `c2e87231` and API `8e670de8` at100%. Reminders remain paused and no genuine customer traffic, WAMID, payment, order, receipt, COD, migration, or Meta message was created.
+- Focused9/9, full314/314, build, lint, audit0, and rollback4/4 pass. Genuine WhatsApp device acceptance remains pending, so no full promotion claim is made.
+
 ## GFS-290 (2026-10-28)
 
 - Added a safe CMS-backed dynamic Order Summary on the existing `REVIEW` key with bilingual EN/UR copy, quote/config-derived item rows, delivery fee, total, native bold formatting, and raw-HTML/placeholder validation.
