@@ -1,5 +1,14 @@
 # Status
 
+## GFS-294 real WhatsApp test gate (2026-10-28)
+
+- **P0 PASS:** API `8e670de8`100% remains healthy; candidate `d808a31c`0%; Admin `b4c45278`100% and CSV export preserved; reminders false/false/false.
+- **P1 PASS:** Cloudflare identity and staging D1 binding verified. Active and candidate `/health` both HTTP200. REVIEW v8 EN/UR readback contains all three dynamic placeholders and no raw HTML; source confirms qualified Cron-only reconciliation and no legacy mixed first-message totals.
+- **P2 BLOCKED PRECISELY:** WhatsApp Web is connected (`appShell=true`, no QR/error) and Meta Activity Log is authenticated with 24 rows, but no identifiable GFS/tester conversation or authorized recipient exists in the session. No canary or customer message was sent.
+- **P3 NO-GO:** Candidate remains0%; healthy API remains100%; no inbound/outbound WAMID or customer-visible summary proof exists. Admin and rollback remain unchanged.
+- **P4 PASS:** Existing full314/314, focused101/101, build, lint, audit0 and rollback4/4 remain passing; no source changes were required.
+- **Completion:** P0 100%; P1 100%; P2 35% connection inspected / 0% journey; P3 0% promotion; P4 100%. Overall **70%**. Remaining blocker: one authorized GFS tester identity/conversation or authenticated test device.
+
 ## GFS-293 summary candidate acceptance hold (2026-10-28)
 
 - **P0 PASS:** Admin `b4c45278` remains100% with export operational; API healthy `8e670de8` remains100%, candidate `d808a31c` remains0%. D1 binding, migrations0039/0040, payment safeguards and Admin state were preserved.

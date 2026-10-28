@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-294 real WhatsApp test gate (2026-10-28)
+
+- Preserve healthy API `8e670de8-4d89-427b-9fec-dad29dc33f3f`100%, candidate `d808a31c-ba40-4a02-b3c6-8c6de4cffecf`0%, Admin `b4c45278-c7d6-49c5-824c-005afc991ffe`100%, and export behavior. Reminder flags remain false/false/false.
+- Cloudflare identity was reverified as `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; repository API config confirms staging D1 UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`. No external mutation was performed.
+- Candidate and active health both returned HTTP200. CMS REVIEW v8 readback remains bilingual with `{orderSummaryItems}`, `{deliveryFee}`, `{orderTotal}` and no raw HTML. Qualified reminder reconciliation remains Cron-only.
+- WhatsApp Web is logged in with an app shell and composer, and canonical Meta Activity Log is authenticated, but the session has no identifiable GFS/tester conversation or authorized recipient. Do not guess a recipient, send fabricated traffic, canary blindly, or claim WAMID/rendered-summary acceptance. The exact remaining requirement is an owner-authorized tester identity/conversation or an authenticated test device opened to the GFS WhatsApp number.
+
 ## GFS-293 summary candidate acceptance hold (2026-10-28)
 
 - Preserve Admin `b4c45278-c7d6-49c5-824c-005afc991ffe` at100% and its export contract; preserve healthy API `8e670de8-4d89-427b-9fec-dad29dc33f3f` at100% and candidate `d808a31c-ba40-4a02-b3c6-8c6de4cffecf` at0%. Reminders remain `false/false/false`.

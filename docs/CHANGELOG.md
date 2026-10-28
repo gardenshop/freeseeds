@@ -1,5 +1,11 @@
 # Changelog
 
+## GFS-294 (2026-10-28)
+
+- Inspected the authenticated WhatsApp Web and canonical Meta Manager connections without exposing message/customer data. WhatsApp Web is connected, but no authorized GFS/tester conversation or recipient is identifiable.
+- Reverified active/candidate API health, Cloudflare account/D1 configuration, REVIEW v8 dynamic placeholders and Cron-only reminder reconciliation. No traffic, reminder, customer, payment, order, Meta or schema mutation occurred.
+- Kept the candidate at0% and healthy API at100%; the remaining blocker is one owner-authorized tester identity/conversation or authenticated test device.
+
 ## GFS-293 (2026-10-28)
 
 - Verified the staged API candidate health and published bilingual REVIEW v8 dynamic summary contract without changing the live healthy API or Admin export.

@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-28: GFS-294 exact canary blocker
+
+- The candidate is technically ready for guarded testing: health200, published REVIEW v8 dynamic EN/UR content, and scheduled-only qualified reminder reconciliation all pass. Keep traffic unchanged until customer-visible proof.
+- The authenticated WhatsApp Web session is connected but does not expose a verifiable GFS/tester conversation or recipient. Meta Activity Log is authenticated, but historical activity rows do not prove this candidate handled a new journey.
+- Do not guess a phone number, use unrelated WhatsApp, create synthetic inbound events, reset conversations, or perform a blind Cloudflare split. Request one owner-authorized tester identity/conversation or an authenticated test device opened to the canonical GFS WhatsApp number.
+
 ## 2026-10-28: GFS-293 hold API summary until genuine proof
 
 - Keep Admin `b4c45278` and healthy API `8e670de8` at100%; keep API candidate `d808a31c` at0%. A health response and CMS readback cannot substitute for an authorized customer-device inbound/outbound proof.

@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-294 real WhatsApp test gate (2026-10-28)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Production preservation | PASS | API `8e670de8`100%, candidate `d808a31c`0%, Admin `b4c45278`100%; export and reminders unchanged. |
+| Account/D1 verification | PASS | Wrangler identity `gisupp@gmail.com` / Get Free Seeds; config binding staging D1 UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`. |
+| Candidate/CMS verification | PASS | Active and candidate health HTTP200; REVIEW v8 EN/UR has the three dynamic placeholders and no raw HTML. |
+| SQL/reconciliation safety | PASS | Qualified `m.status`; reconciliation is called only in `scheduled()`, not webhook handling. |
+| WhatsApp connection inspection | PASS LIMITED | WhatsApp Web app shell/composer present, QR/error absent; Meta Activity Log authenticated with 24 rows. |
+| Authorized genuine journey | BLOCKED PRECISELY | No identifiable GFS/tester conversation or authorized recipient; no message, canary, WAMID or order mutation performed. |
+| Regression/build/security/rollback | PASS | Focused101/101, full314/314, build, lint, audit0, rollback4/4. |
+
+
 ## GFS-293 summary candidate acceptance hold (2026-10-28)
 
 | Requirement | Result | Evidence / blocker |

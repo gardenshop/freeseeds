@@ -1,5 +1,19 @@
 # Final Report
 
+## GFS-294 Final Report (2026-10-28)
+
+| Stage | Result | Evidence / remaining item |
+|---|---|---|
+| P0 preserve production | PASS | API `8e670de8`100%, candidate `d808a31c`0%, Admin `b4c45278`100%; export and reminders unchanged. |
+| P1 candidate | PASS | Active/candidate health HTTP200; REVIEW v8 EN/UR dynamic placeholders verified; qualified reconciliation is Cron-only and source has no mixed first-message totals. |
+| P2 real test | BLOCKED PRECISELY | WhatsApp Web app shell/composer is connected and Meta Activity Log authenticated, but no identifiable authorized GFS/tester conversation or recipient exists. No canary, WAMID, customer message, order or financial mutation was performed. |
+| P3 promotion/freeze | NO-GO | Candidate remains0%; healthy API remains100%; no customer-visible new summary proof exists. |
+| P4 quality | PASS | Focused101/101, full314/314, build, lint, audit0 and rollback4/4. |
+
+### Exact remaining authorization
+
+Provide one owner-authorized GFS tester identity/conversation in the authenticated WhatsApp Web session, or an authenticated test device opened to the canonical GFS WhatsApp number. Without that connection, a canary would be blind and no WAMID/rendered-summary claim is valid.
+
 ## GFS-293 Final Report (2026-10-28)
 
 | Stage | Result | Evidence / remaining item |

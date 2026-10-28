@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-294 real WhatsApp test gate (2026-10-28)
+
+- Cloudflare Wrangler identity: `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API config D1 binding `getfreeseeds-staging` UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`. No mutation performed.
+- Workers: API `8e670de8`100%, candidate `d808a31c`0%; Admin `b4c45278`100%; reminders false/false/false. Active and candidate health HTTP200.
+- CMS: REVIEW published version8, EN/UR dynamic placeholder checks passed, no raw HTML. Meta Manager canonical Activity Log authenticated with 24 generic rows; no WAMID was attributed to this candidate.
+- WhatsApp Web is connected at the app-shell level, but no authorized GFS/tester conversation or recipient is identifiable. Required next resource is an owner-authorized tester identity/conversation or authenticated test device; no unrelated session may be used.
+
 ## GFS-293 summary candidate acceptance hold (2026-10-28)
 
 - Workers: Admin `b4c45278-c7d6-49c5-824c-005afc991ffe`100% with `c2e87231-9d51-444e-b283-7ab18379280f` rollback; API `8e670de8-4d89-427b-9fec-dad29dc33f3f`100% with `d808a31c-ba40-4a02-b3c6-8c6de4cffecf`0%. Reminder flags remain false/false/false.
