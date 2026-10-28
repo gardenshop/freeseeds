@@ -1,5 +1,13 @@
 # Changelog
 
+## GFS-278 (2026-10-28)
+
+- Confirmed PR #11 is the authoritative `codex/gfs221-cod-compat-001` checkout; preserved the unrelated V2 worktree and its uncommitted compatibility patch separately.
+- Reproduced the current live Orders path read-only: list/detail, tabs, filters, search, archive modes, pagination and refresh all returned HTTP200 JSON. Confirmed `internal_sequence` and `internal_sequence_date` exist in live D1; no runtime repair or deployment was justified.
+- Audited current D1 using masked aggregates and found no reminder outbox or outbound-message rows. Reminder sending remains safely blocked because this V1 branch has no reminder engine or approved out-of-window template path.
+- Replaced one stale hard-coded private-sequence-date test expectation with a date-derived assertion. Focused84/84, full292/292, build, lint, offline audit0 and rollback4/4 pass; the registry audit endpoint was unavailable without authorized external metadata upload.
+- No external mutation, message send, deployment, migration replay, billing change, customer/payment/receipt change, or GitHub push occurred; GitHub authentication is pending supported `gardenshop` reauthentication.
+
 ## 2026-10-28 (GFS-276 final E2E evidence)
 
 - Read-only reconciled the specified genuine JazzCash order: HTTP200 list/detail, pending review, reference, five unique private JPEG receipts, and no PAID audit.

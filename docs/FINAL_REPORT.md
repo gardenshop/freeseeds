@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-278 Final Report (2026-10-28)
+
+| Stage | Result | Evidence / remaining item |
+|---|---|---|
+| P0 correct branch/identity | PASS / PUSH BLOCKED | PR #11 branch `codex/gfs221-cod-compat-001`, HEAD `ba65684`; Cloudflare `gisupp@gmail.com` / Get Free Seeds and canonical Meta WABA verified read-only. GitHub browser logged out and CLI token invalid. |
+| P1 Orders failure | PASS | Historical code7500 D1 row-read exhaustion in the old full-detail list projection; live private-sequence columns exist. Current list/detail/tabs/filters/search/pagination/refresh all HTTP200 JSON; no runtime repair needed. |
+| P2 live audit | PASS READ-ONLY | Advance pending/no receipt 19 / PKR7,000; review/receipt 6 / PKR2,550; no method 37 / PKR13,050; COD 16 / PKR6,500; paid 2 / PKR1,100; cancelled/archived 1 / PKR600. Six COD rows are test-held. |
+| P3 reminders | BLOCKED SAFELY | Reminder jobs 0 and reminder outbound messages 0. No send, WAMID, delivery, read or failure claim. PR #11 has no supported reminder engine/template path. |
+| P4 automation | BLOCKED | Existing Queue handles current V1 events, but no reminder flag/engine/Cron/claim key exists in this branch. Do not create a duplicate or broadcast. |
+| P5 quality/release | PASS LOCAL / PUSH BLOCKED | Focused84/84, full292/292, build, lint, offline audit0, rollback4/4. Registry audit endpoint was unavailable without authorized external metadata upload. One date-stability test assertion changed; no external mutation or deployment. |
+
+### Decision
+
+- Orders current release: **GO** based on authenticated read-only live HTTP200 smoke and schema verification.
+- Reminder production send/automation: **NO-GO** until the owner provides supported `gardenshop` GitHub authentication and a dedicated approved reminder implementation/template path; no one-time sends were attempted from an unsupported channel.
+- Active Admin/API and D1 release state remain preserved; no Worker promotion, migration replay, billing change, payment approval, receipt mutation, customer message, or Meta mutation occurred.
+
 ## GFS-276 Final Report (2026-10-28)
 
 | Stage | Result | Verified evidence / remaining item |

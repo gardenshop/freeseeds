@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-278 Orders and Reminder Audit (2026-10-28)
+
+- Correct resource: `gardenshop/freeseeds` PR #11 branch `codex/gfs221-cod-compat-001`, local HEAD `ba65684` before the pending date-stability test correction. The unrelated V2 checkout and its compatibility patch remain separate.
+- Cloudflare read-only identity: `gisupp@gmail.com`, Get Free Seeds account; Meta read-only identity: canonical Get Free Seeds WhatsApp Manager/WABA. Hoja and ThanNow were not opened or used.
+- Live Orders evidence: current `orders` schema has `internal_sequence` and `internal_sequence_date`; Orders list/detail and tested filters/tabs/search/pagination returned HTTP200 JSON. Historical cause is D1 code7500/read exhaustion in the old full-detail projection.
+- Masked D1 audit: Advance pending/no receipt 19 / PKR7,000; Advance review/receipt 6 / PKR2,550; no method 37 / PKR13,050; COD lifecycle 16 / PKR6,500; paid 2 / PKR1,100; cancelled/archived 1 / PKR600. Reminder jobs 0; reminder outbound messages 0.
+- Existing outbound status readback was aggregate-only and contained no reminder kind: conversation replies, payment text/QR, and clearer-receipt records only. No WAMID, customer identifier, raw receipt, token, or secret was recorded.
+- GitHub browser is logged out and stored `gardenshop` CLI auth is invalid. No push, deployment, traffic, D1, Meta, payment, receipt, billing, or customer mutation occurred.
+
 ## GFS-276 Live Evidence (2026-10-28)
 
 - Specified genuine JazzCash order: list/detail HTTP200; PKR250 expected; REVIEW/PENDING; transaction reference present; five unique JPEG receipts, one payment association, private previews HTTP200; no PAID audit. Exact order/customer identifiers omitted.

@@ -283,7 +283,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     const order = sqlite.prepare("SELECT order_number,internal_sequence,internal_sequence_date FROM orders").get() as { order_number: string; internal_sequence: number; internal_sequence_date: string };
     expect(order.order_number).toMatch(/^FS-[0-9A-HJKMNP-TV-Z]{4}(?:-[0-9A-HJKMNP-TV-Z]{4}){2}$/);
     expect(order.internal_sequence).toBe(1);
-    expect(order.internal_sequence_date).toBe("20261027");
+    expect(order.internal_sequence_date).toBe(new Date().toISOString().slice(0, 10).replaceAll("-", ""));
     expect(sqlite.prepare("SELECT test_hold FROM cod_order_details").get()).toEqual({ test_hold: 0 });
   });
 

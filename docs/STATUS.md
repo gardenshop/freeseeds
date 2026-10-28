@@ -1,5 +1,15 @@
 # Status
 
+## GFS-278 Orders Audit and Reminder Gate (2026-10-28)
+
+- **P0 PASS / PUSH BLOCKED:** The correct clean PR #11 checkout is `codex/gfs221-cod-compat-001` at `ba65684`; only the date-stability test correction is pending locally. Cloudflare identity is `gisupp@gmail.com` / Get Free Seeds and Meta shows the canonical Get Free Seeds WABA. GitHub browser is logged out and the stored `gardenshop` CLI token is invalid, so no push or PR mutation was attempted.
+- **P1 PASS:** The live historical failure is explained by D1 code7500/free-tier row-read exhaustion against the old full-detail Orders list projection, not missing `internal_sequence`. Current `orders` schema contains `internal_sequence INTEGER` and `internal_sequence_date TEXT`; current Admin Orders list/detail and all tested tabs, filters, searches, page sizes and archive modes returned JSON HTTP200. No runtime repair or deployment was needed.
+- **P2 PASS, READ-ONLY:** Current D1 audit classified 19 Advance/PENDING/no-receipt orders totaling PKR7,000; 6 Advance/PAYMENT_REVIEW-with-receipt totaling PKR2,550; 37 no-method/incomplete totaling PKR13,050; 16 COD lifecycle totaling PKR6,500, including 6 test-held; 2 paid totaling PKR1,100; and 1 cancelled/archived totaling PKR600. No customer identifiers were recorded.
+- **P3 BLOCKED SAFELY:** No reminder outbox jobs or reminder outbound-message rows exist. No reminder was sent; WAMID, delivery, read and failure counts are therefore zero/not applicable. Existing receipt-review, payment-instruction, and conversation-reply records were not replayed.
+- **P4 BLOCKED / V1 SCOPE:** PR #11 contains Queue delivery for existing event kinds but no `PAYMENT_AUTOMATION_V2_ENABLED`, reminder engine, Cron schedule, reminder claim key, or approved out-of-window utility template. Do not create a duplicate engine or broadcast.
+- **P5 LOCAL PASS / EXTERNAL PUSH BLOCKED:** Focused guided flow 84/84, full suite 292/292, build, lint, offline audit0 and rollback4/4 pass. The registry audit endpoint was unavailable in the sandbox; no external audit upload was authorized. The only code change is a dynamic private-sequence-date test assertion. No Worker, D1, payment, receipt, Meta, traffic, billing or customer mutation occurred.
+- **Stage completion:** P0 100% local / push 0%; P1 100%; P2 100% read-only; P3 0% sent / 100% safely blocked; P4 100% inspected / 0% enabled; P5 100% local / push 0%. Production reminder GO: **NO-GO**; Orders health: **GO** on the current deployed release.
+
 ## GFS-276 Final E2E Acceptance (2026-10-28)
 
 - **P0 PASS:** Workers Paid, migration0037/0038, Admin `66426d2a` 100%, API `24d72438` 100%, COD PKR125, Advance methods, 292/292 tests and rollback4/4 remain preserved.

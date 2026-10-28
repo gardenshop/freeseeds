@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-28: GFS-278 Orders and Reminder Audit
+
+- Treat the historical Orders network failure as the already-recorded D1 row-read exhaustion incident (code7500) in the old full-detail list projection. Do not port the unrelated V2 `internal_sequence` workaround; live schema has both private-sequence columns and the current narrow list/detail path is HTTP200.
+- Keep the current Admin `66426d2a` / API `24d72438` release and migrations0035-0038 unchanged. The read-only smoke and D1 audit found no proven runtime defect requiring deploy, migration replay, traffic change, or payment/customer mutation.
+- Do not send reminders from PR #11: it is V1-compatible and has no reminder engine, Cron schedule, reminder outbox kind, or approved out-of-window utility template. Existing payment-instruction/receipt/reply paths are not a general reminder channel.
+- Record the live audit as aggregate evidence only: 19 Advance/PENDING/no receipt, 6 Advance/REVIEW with receipt, 37 no-method/incomplete, 16 COD lifecycle, 2 paid, 1 cancelled/archived; no reminder rows exist. No customer identifiers or raw message data may enter source or docs.
+- The dynamic private-sequence-date test correction is safe and local. Commit/push is deferred until supported GitHub authentication visibly identifies `gardenshop`.
+
 ## 2026-10-28: GFS-276 Final Go/No-Go
 
 - Treat the current five-receipt state as persisted genuine evidence requiring reconciliation against the earlier three-receipt note. Do not delete, merge, reject, or approve receipts without authorized evidence; keep payment `REVIEW`/`PENDING`.

@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-278 Orders and Reminder Audit Gate (2026-10-28)
+
+- The authoritative checkout is `codex/gfs221-cod-compat-001` at the PR #11 line ending at `ba65684`; preserve unrelated V2 worktrees and the separate `internal_sequence` compatibility patch.
+- The historical Orders failure was the D1 row-read limit against the old full-detail list projection, not missing `internal_sequence`. Keep the narrow indexed list projection, authoritative detail reads, structured JSON503 failure path, migrations0035-0038, and the existing Admin/API releases.
+- Read-only identity was verified in the official Cloudflare dashboard as `gisupp@gmail.com` in the Get Free Seeds account and in Meta WhatsApp Manager as the canonical Get Free Seeds WABA. Hoja and ThanNow resources remain out of scope.
+- This V1-compatible PR has no payment-reminder engine, reminder outbox kind, Cron schedule, or approved out-of-window reminder template. Do not send reminders through WhatsApp Web, fabricate WAMIDs, or enable/broadcast automation; only a supported, independently authorized implementation may do so.
+- GitHub browser access is logged out and the stored `gardenshop` CLI token is invalid. Do not push or mutate PR state until `gardenshop` authentication is restored through a supported path.
+
 ## GFS-270 Local EXPLAIN Gate (2026-10-27)
 
 - Migration0037 remains additive and local until post-reset recovery bookmark, integrity, identity, and 0%-traffic gates pass. It now covers audit, receipt, outbox, order pagination, customer WhatsApp lookup, and customer-order ordering indexes.

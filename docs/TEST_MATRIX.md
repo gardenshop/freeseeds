@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-278 Orders and Reminder Audit (2026-10-28)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Correct branch and protected identity | PASS / PUSH BLOCKED | PR #11 checkout `codex/gfs221-cod-compat-001` at `ba65684`; Cloudflare `gisupp@gmail.com` / Get Free Seeds and canonical Meta WABA verified read-only; GitHub browser logged out and CLI token invalid. |
+| Orders root cause | PASS | Historical D1 code7500 row-read exhaustion against the old full-detail list projection; live `orders` schema contains both private-sequence columns. |
+| Orders live smoke | PASS | List/detail, all four tabs, payment/fulfillment/archive filters, search, page sizes 25/50/100 and pagination returned JSON HTTP200; no console errors. |
+| Live audit | PASS READ-ONLY | 19 unpaid Advance/no receipt; 6 REVIEW/receipt; 37 no method; 16 COD; 2 paid; 1 cancelled/archived. Aggregates only; no PII. |
+| Reminder safety | PASS / NO SEND | No reminder engine/outbox rows/template path in PR #11; no reminder, WAMID, delivery, read or failure was fabricated or sent. |
+| Regression | PASS LIMITED | Focused84/84, full292/292, build, lint, offline audit0 and rollback4/4; registry audit endpoint unavailable without authorized external metadata upload. |
+
 ## GFS-276 Final E2E Acceptance (2026-10-28)
 
 | Requirement | Result | Evidence / blocker |
