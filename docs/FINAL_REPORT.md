@@ -3635,7 +3635,7 @@ P0 diagnosis **100%** / customer correlation pending; P1 **40%**; P2 freeze **10
 | P2 restore/acceptance | **PASS restoration / PARTIAL complete journey** | Real provider WAMIDs; checkpoint 19 READ, 3 DELIVERED, 1 SENT; LANGUAGE/OFFER/PROVINCE/FULL_NAME reached; zero orders created. Advance/COD/Check Order device acceptance was not forced |
 | P3 freeze | **PASS** | Healthy API/Admin assignments frozen; D1 migrations0039/0040 and financial/COD safeguards untouched; repaired candidate undeployed |
 | P4 reminders | **PAUSED safely** | Live and source defaults false/false/false; authenticated Admin five stages; 10 internal published copies, zero utility approvals; reminder rows 0/0/0/0 |
-| P5 quality/docs/push | **PASS pending commit SHA** | Focused 104/104, full 312/312, build/lint, audit0, rollback4/4; required records updated |
+| P5 quality/docs/push | **PASS** | Repair commit `6bc4741`; focused 104/104, full 312/312, build/lint, audit0, rollback4/4; required records updated |
 
 ### Root cause and repair
 
@@ -3651,4 +3651,4 @@ The repair qualifies target-stage fields, moves reconciliation to the minute rem
 - Active D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; migrations0039/0040 intact.
 - Reminders **PAUSED**; +15/+30/+60/+210/+240 policy retained, no +270, templates, backfill, or silent COD conversion.
 
-Completion: P0 100%, P1 100%, P2 restoration 100% / extended payment journey 60%, P3 100%, P4 100%, P5 95% pending pushed SHA. Overall **95%**. Production customer replies are restored and provider-verified. Remaining work is optional controlled acceptance of Advance/COD/Check Order and a separately authorized staged deployment of the repaired candidate; neither blocks the restored public bot.
+Completion: P0 100%, P1 100%, P2 restoration 100% / extended payment journey 60%, P3 100%, P4 100%, P5 100%. Overall **96%**. Production customer replies are restored and provider-verified. Remaining work is optional controlled acceptance of Advance/COD/Check Order and a separately authorized staged deployment of the repaired candidate; neither blocks the restored public bot.

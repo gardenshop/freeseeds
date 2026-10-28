@@ -1224,5 +1224,5 @@ No secrets are stored in this registry.
 - **Incident:** old SQL failed live parsing with ambiguous `status`; 34 inbound events persisted in the fault window, only 4 replied before rollback, 3 replied after rollback, and 27 remain unreplayed. No customer identifiers are stored.
 - **Acceptance:** genuine post-rollback replies contain real provider WAMIDs; checkpoint 19 READ, 3 DELIVERED, 1 SENT. Conversations reached FULL_NAME and zero orders were created. Raw IDs are intentionally omitted.
 - **Reminders:** PAUSED, flags false/false/false. Admin has five stages, 5 EN + 5 UR PUBLISHED, zero utility approvals; schedules/stages/jobs/outbound reminder rows 0/0/0/0.
-- **Source candidate:** qualified reconciliation SQL, Cron-only execution, customer-webhook isolation, deployment defaults OFF. Candidate undeployed; production remains on proven `8e670de8`.
+- **Source candidate:** commit `6bc4741`; qualified reconciliation SQL, Cron-only execution, customer-webhook isolation, deployment defaults OFF. Candidate undeployed; production remains on proven `8e670de8`.
 - **Quality:** focused 104/104, full 312/312, build/lint, online audit0, rollback4/4 using existing `D:\free seeds\gfs273-v1` at `cf01f44`.
