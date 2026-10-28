@@ -179,6 +179,7 @@ function orderView(row: Record<string, unknown>, referenceRequestDispatchEnabled
     lastInboundAt: row.last_inbound_at == null ? null : String(row.last_inbound_at),
     paymentId: row.payment_id == null ? null : String(row.payment_id),
     paymentMethod: row.cod_status != null ? "COD" : row.method == null ? null : String(row.method),
+    paymentInstructionStatus: row.payment_instruction_status == null ? "NOT_SENT" : String(row.payment_instruction_status),
     paymentMethodVerified: Number(row.payment_method_verified ?? 0) === 1,
     referenceRequestDispatchEnabled,
     paymentReviewState: row.cod_status != null ? String(row.cod_status) === "PAID" ? "COD_PAID" : "COD_PENDING" : row.review_state == null ? null : String(row.review_state),
@@ -690,7 +691,7 @@ addActions=(order)=>{
   }
   addUnheldOrderActions(order);
 };`;
-app.get("/orders", (c) => c.html(professionalOrdersPageHtml(issueCsrfToken(c)).replace("function renderDetail(data){", `${COD_ORDERS_SCRIPT}\n${COD_HOLD_SCRIPT}\nfunction renderDetail(data){`).replace('<option value="REJECTED">Rejected</option>', '<option value="REJECTED">Rejected</option><option value="COD_PENDING">COD pending</option><option value="COD_PAID">COD paid</option>').replace('<option value="NOT_STARTED">Ready to pack</option>', '<option value="NOT_STARTED">Ready to pack</option><option value="COD_PENDING">COD pending</option><option value="COLLECTION_PENDING">Collection pending</option>').replace("Request the transaction reference in the customer's selected language", "Request a transaction reference in the selected language")));
+app.get("/orders", (c) => c.html(professionalOrdersPageHtml(issueCsrfToken(c)).replace("function renderDetail(data){", `${COD_ORDERS_SCRIPT}\n${COD_HOLD_SCRIPT}\nfunction renderDetail(data){`).replace('<option value="REJECTED">Rejected</option>', '<option value="REJECTED">Rejected</option><option value="COD_PENDING">COD pending</option><option value="COD_PAID">COD paid</option>').replace('<option value="NOT_STARTED">Ready to pack</option>', '<option value="NOT_STARTED">Ready to pack</option><option value="COD_PENDING">COD pending</option><option value="COLLECTION_PENDING">Collection pending</option>').replace('<label>Archive<select name="archived">', '<label>Payment stage<select name="paymentStage"><option value="">Any payment stage</option><option value="no-method">No method selected</option><option value="payment-not-sent">Instructions not sent</option><option value="delivery-failed">Delivery failed</option><option value="unpaid-after-delivery">Unpaid after delivery</option></select></label><label>Archive<select name="archived">').replace("['q','date','paymentStatus','fulfillment','archived','pageSize']", "['q','date','paymentStatus','paymentStage','fulfillment','archived','pageSize']").replace("listStatus.textContent=Number(data.total).toLocaleString('en-PK')+' total';", "listStatus.textContent=Number(data.total).toLocaleString('en-PK')+' total · no method '+Number(data.counts?.noMethod||0).toLocaleString('en-PK')+' · failed '+Number(data.counts?.deliveryFailed||0).toLocaleString('en-PK')+' · unpaid after delivery '+Number(data.counts?.unpaidAfterDelivery||0).toLocaleString('en-PK');").replace("['Status',text(order.paymentReviewState||order.paymentStatus)]", "['Status',text(order.paymentReviewState||order.paymentStatus)],['Instruction delivery',text(order.paymentInstructionStatus)]").replace("Request the transaction reference in the customer's selected language", "Request a transaction reference in the selected language")));
 app.get("/payment-reminders", (c) => {
   const csrf = issueCsrfToken(c);
   return c.html(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Payment reminders</title><style>body{font:15px/1.5 system-ui,sans-serif;max-width:1100px;margin:2rem auto;padding:0 1rem;color:#17231c}.card{border:1px solid #ccd5cc;border-radius:10px;padding:1rem;margin:1rem 0}label{display:block;margin:.6rem 0}select,textarea,button{font:inherit;padding:.5rem;box-sizing:border-box;width:100%}textarea{min-height:9rem}.grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.muted{color:#59635a}.error{color:#a40019}.ok{color:#176b36}@media(max-width:700px){.grid{grid-template-columns:1fr}}</style></head><body><nav><a href="/">Admin home</a> | <a href="/orders">Orders</a></nav><h1>Payment reminder CMS / timeline</h1><p class="muted">Synthetic previews only in source. Publishing requires an approved EN/UR service copy; Meta utility approval is recorded separately and never inferred by this page. No historical schedule backfill is available here.</p><section class="card"><div class="grid"><label>Stage<select id="key"><option>REMINDER_15M</option><option>REMINDER_30M</option><option>REMINDER_60M</option><option>FINAL_WARNING_210M</option><option>GRACE_NOTICE_240M</option></select></label><label>Locale<select id="locale"><option value="en">English</option><option value="ur">Urdu</option></select></label></div><textarea id="body" placeholder="Draft body"></textarea><button id="save">Save draft</button><button id="publish">Publish selected draft</button><p id="result" role="status"></p></section><section class="card"><h2>Schedule / delivery timeline</h2><div id="timeline">Loading…</div></section><script>
@@ -1573,6 +1574,7 @@ const ORDER_ADMIN_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,
   o.cancelled_at,o.cancelled_by,o.cancellation_reason,o.archived_at,o.archived_by,o.archive_reason,
   (SELECT created_at FROM audit_log confirmation WHERE confirmation.entity_type='ORDER' AND confirmation.entity_id=o.id AND confirmation.action='ORDER_CONFIRMED' ORDER BY confirmation.created_at DESC LIMIT 1) AS order_confirmed_at,
   (SELECT last_inbound_at FROM whatsapp_conversations wc WHERE wc.wa_id=c.wa_id) AS last_inbound_at,
+  CASE WHEN cod.order_id IS NOT NULL THEN 'NOT_APPLICABLE' WHEN EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS' AND j.status IN ('DEAD_LETTER','PERMANENT_FAILURE')) THEN 'FAILED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status='READ') THEN 'READ' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status='DELIVERED') THEN 'DELIVERED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status IN ('SENT','SENDING')) OR EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS' AND j.status='SENT') THEN 'SENT' ELSE 'NOT_SENT' END AS payment_instruction_status,
   c.full_name,c.delivery_address,c.nearby_place,c.city,c.contact_number,c.normalized_phone,c.normalized_contact_number,c.whatsapp_number,c.normalized_whatsapp_number,c.wa_id,
   p.id AS payment_id,p.method,p.expected_amount,p.approved_amount,p.review_state,p.submitted_at,p.approved_by,p.approved_at,p.rejection_reason,p.customer_transaction_reference,p.created_at AS payment_created_at,p.updated_at AS payment_updated_at,
   cod.status AS cod_status,cod.test_hold AS cod_test_hold,cod.base_amount_pkr AS cod_base_amount_pkr,cod.cod_fee_pkr,cod.quoted_total_pkr AS cod_quoted_total_pkr,cod.collection_at AS cod_collection_at,cod.remittance_at AS cod_remittance_at,
@@ -1595,6 +1597,7 @@ const ORDER_ADMIN_LIST_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_st
   c.full_name,c.delivery_address,c.nearby_place,c.city,c.contact_number,c.normalized_phone,c.normalized_contact_number,c.whatsapp_number,c.normalized_whatsapp_number,c.wa_id,
   p.id AS payment_id,p.method,p.expected_amount,p.approved_amount,p.review_state,p.submitted_at,p.approved_by,p.approved_at,p.rejection_reason,p.customer_transaction_reference,p.created_at AS payment_created_at,p.updated_at AS payment_updated_at,
   cod.status AS cod_status,cod.test_hold AS cod_test_hold,cod.base_amount_pkr AS cod_base_amount_pkr,cod.cod_fee_pkr,cod.quoted_total_pkr AS cod_quoted_total_pkr,cod.collection_at AS cod_collection_at,cod.remittance_at AS cod_remittance_at,
+  CASE WHEN cod.order_id IS NOT NULL THEN 'NOT_APPLICABLE' WHEN EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS' AND j.status IN ('DEAD_LETTER','PERMANENT_FAILURE')) THEN 'FAILED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status='READ') THEN 'READ' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status='DELIVERED') THEN 'DELIVERED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status IN ('SENT','SENDING')) OR EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS' AND j.status='SENT') THEN 'SENT' ELSE 'NOT_SENT' END AS payment_instruction_status,
   COALESCE((SELECT group_concat(items.description || ' x ' || items.quantity, ', ') FROM order_items items WHERE items.order_id=o.id),'') AS item_summary,
   0 AS payment_method_verified,0 AS reference_request_sent,0 AS has_tracking_number,0 AS receipt_count,
   '[]' AS items_json,'[]' AS receipts_json
@@ -1609,6 +1612,14 @@ const ORDER_TAB_SQL: Record<string, string> = {
   fulfillment: "o.state IN ('COD_PENDING','PAID','PACKING','DISPATCHED','DELIVERED','COLLECTION_PENDING')"
 };
 
+const ADVANCE_UNPAID_SQL = "o.archived_at IS NULL AND o.state NOT IN ('PAID','CANCELLED') AND o.payment_status NOT IN ('PAID','COD_PENDING','COD_PAID') AND p.method IS NOT 'COD' AND NOT EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id)";
+const PAYMENT_STAGE_SQL: Record<string, string> = {
+  "no-method": `${ADVANCE_UNPAID_SQL} AND p.method IS NULL`,
+  "payment-not-sent": `${ADVANCE_UNPAID_SQL} AND p.method IS NOT NULL AND NOT EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS' AND j.status IN ('SENT','DEAD_LETTER','PERMANENT_FAILURE')) AND NOT EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR'))`,
+  "delivery-failed": `${ADVANCE_UNPAID_SQL} AND (EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS' AND j.status IN ('DEAD_LETTER','PERMANENT_FAILURE')) OR EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status IN ('FAILED','PERMANENT_FAILURE')))` ,
+  "unpaid-after-delivery": `${ADVANCE_UNPAID_SQL} AND EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status IN ('DELIVERED','READ'))`
+};
+
 app.get("/api/orders", async (c) => {
   if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
   const tab = c.req.query("tab")?.trim() || "all";
@@ -1617,6 +1628,8 @@ app.get("/api/orders", async (c) => {
   if (!["active", "only", "all"].includes(archived)) return c.json({ error: "ARCHIVED_FILTER_INVALID" }, 400);
   const paymentStatus = c.req.query("paymentStatus")?.trim();
   if (paymentStatus && !["PENDING", "REVIEW", "APPROVED", "REJECTED", "COD_PENDING", "COD_PAID"].includes(paymentStatus)) return c.json({ error: "PAYMENT_STATUS_INVALID" }, 400);
+  const paymentStage = c.req.query("paymentStage")?.trim();
+  if (paymentStage && !PAYMENT_STAGE_SQL[paymentStage]) return c.json({ error: "PAYMENT_STAGE_INVALID" }, 400);
   const fulfillment = c.req.query("fulfillment")?.trim();
   if (fulfillment && !["NOT_STARTED", "COD_PENDING", "PACKING", "DISPATCHED", "DELIVERED", "COLLECTION_PENDING", "CANCELLED"].includes(fulfillment)) return c.json({ error: "FULFILLMENT_FILTER_INVALID" }, 400);
   const date = c.req.query("date")?.trim();
@@ -1634,6 +1647,7 @@ app.get("/api/orders", async (c) => {
   if (paymentStatus === "REJECTED") commonWhere.push("(p.review_state='REJECTED' OR o.payment_status='REJECTED')");
   if (paymentStatus === "COD_PENDING") commonWhere.push("o.payment_status='COD_PENDING' AND EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id AND cod.status<>'PAID')");
   if (paymentStatus === "COD_PAID") commonWhere.push("p.review_state='COD_PAID' AND o.payment_status='PAID' AND EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id AND cod.status='PAID')");
+  if (paymentStage) commonWhere.push(PAYMENT_STAGE_SQL[paymentStage]);
   if (fulfillment === "NOT_STARTED") commonWhere.push("o.state='PAID'");
   if (fulfillment && fulfillment !== "NOT_STARTED") { commonWhere.push("o.state=?"); commonBindings.push(fulfillment); }
   if (date) { commonWhere.push("substr(o.created_at,1,10)=?"); commonBindings.push(date); }
@@ -1661,7 +1675,7 @@ app.get("/api/orders", async (c) => {
   let result: D1Result<unknown>;
   try {
     [countsRow, result] = await Promise.all([
-      c.env.DB.prepare(`SELECT COUNT(*) AS all_count,SUM(CASE WHEN ${ORDER_TAB_SQL.verify} THEN 1 ELSE 0 END) AS verify_count,SUM(CASE WHEN ${ORDER_TAB_SQL.confirmed} THEN 1 ELSE 0 END) AS confirmed_count,SUM(CASE WHEN ${ORDER_TAB_SQL.fulfillment} THEN 1 ELSE 0 END) AS fulfillment_count,SUM(CASE WHEN ${ORDER_TAB_SQL[tab]} THEN 1 ELSE 0 END) AS total_count${joins}${commonSql}`).bind(...commonBindings).first<Record<string, unknown>>(),
+      c.env.DB.prepare(`SELECT COUNT(*) AS all_count,SUM(CASE WHEN ${ORDER_TAB_SQL.verify} THEN 1 ELSE 0 END) AS verify_count,SUM(CASE WHEN ${ORDER_TAB_SQL.confirmed} THEN 1 ELSE 0 END) AS confirmed_count,SUM(CASE WHEN ${ORDER_TAB_SQL.fulfillment} THEN 1 ELSE 0 END) AS fulfillment_count,SUM(CASE WHEN ${ORDER_TAB_SQL[tab]} THEN 1 ELSE 0 END) AS total_count${Object.entries(PAYMENT_STAGE_SQL).map(([key,sql]) => `,SUM(CASE WHEN ${sql} THEN 1 ELSE 0 END) AS ${key.replaceAll('-', '_')}_count`).join('')}${joins}${commonSql}`).bind(...commonBindings).first<Record<string, unknown>>(),
       c.env.DB.prepare(`${ORDER_ADMIN_LIST_SELECT}${tabSql} ORDER BY o.created_at DESC,o.id DESC LIMIT ? OFFSET ?`).bind(...commonBindings, pageSize, offset).all()
     ]);
   } catch {
@@ -1670,7 +1684,7 @@ app.get("/api/orders", async (c) => {
   const total = Number(countsRow?.total_count ?? 0);
   return c.json({
     orders: result.results.map((row) => orderView(row as Record<string, unknown>, c.env.REFERENCE_REQUESTS_ENABLED === "true")),
-    counts: { all: Number(countsRow?.all_count ?? 0), verify: Number(countsRow?.verify_count ?? 0), confirmed: Number(countsRow?.confirmed_count ?? 0), fulfillment: Number(countsRow?.fulfillment_count ?? 0) },
+    counts: { all: Number(countsRow?.all_count ?? 0), verify: Number(countsRow?.verify_count ?? 0), confirmed: Number(countsRow?.confirmed_count ?? 0), fulfillment: Number(countsRow?.fulfillment_count ?? 0), noMethod: Number(countsRow?.no_method_count ?? 0), paymentNotSent: Number(countsRow?.payment_not_sent_count ?? 0), deliveryFailed: Number(countsRow?.delivery_failed_count ?? 0), unpaidAfterDelivery: Number(countsRow?.unpaid_after_delivery_count ?? 0) },
     total,
     pagination: { page, pageSize, totalPages: Math.ceil(total / pageSize) }
   });

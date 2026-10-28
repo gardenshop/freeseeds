@@ -82,3 +82,6 @@ SET utility_template_name=CASE template_key
   WHEN 'FINAL_WARNING_210M' THEN 'gfs_payment_final_warning_210m'
   WHEN 'GRACE_NOTICE_240M' THEN 'gfs_payment_grace_240m' END
 WHERE version=1 AND locale IN ('en','ur');
+
+INSERT OR IGNORE INTO cod_schema_migrations(version,applied_at)
+VALUES('0039',strftime('%Y-%m-%dT%H:%M:%fZ','now'));

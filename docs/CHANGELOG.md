@@ -1099,3 +1099,12 @@
 - Hardened the active Admin page builder so any legacy direct payment approval button is disabled; settlement confirmation remains the only approval path and sends both required backend fields.
 - Added truthful reminder-schema failure handling with `REMINDERS_NOT_DEPLOYED` instead of an empty timeline when the deployed schema/route is absent.
 - Performed bounded Admin aggregate reads only: 125 total, 8 review, 2 approved/paid, 45 fulfillment; no customer data was stored. No live payment approval, migration, deployment, activation, send, WAMID, or COD conversion occurred.
+
+## 2026-10-28 - GFS-286 diagnosis and sends-off release
+
+- Identified the active D1 by API/Admin binding evidence, not the database name; preserved the production-name database untouched.
+- Audited the unpaid Advance funnel using bounded aggregate evidence and repaired Admin visibility with payment-stage filters/counts and truthful instruction-delivery status. Settlement approval remains evidence-gated.
+- Applied migrations0039/0040 once to the verified active D1 after rehearsal; repaired and reconciled the missing 0039 custom marker. `quick_check=ok` and FK check empty.
+- Smoke-tested API/Admin candidates through Cloudflare 0%-traffic version overrides, promoted API `8e670de8` and Admin `c2e87231` to 100%, retained prior versions at 0%, and attached the API minute Cron plus Queue producer/consumer.
+- Kept `PAYMENT_REMINDERS_V2_ENABLED`, `PAYMENT_AUTOMATION_V2_ENABLED`, and `PAYMENT_UTILITY_TEMPLATES_APPROVED` false. No post-promotion eligible recipient existed; no reminder schedule, send, WAMID, delivery, COD conversion, or historical replay was performed.
+- Quality gates passed: full 310/310, build, lint, offline audit 0 vulnerabilities, and rollback4/4.

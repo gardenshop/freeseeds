@@ -877,3 +877,12 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Payment approval must remain settlement-gated. Any legacy direct approval control fails closed; only the explicit settlement-confirmation panel may submit the backend approval fields.
 - If reminder routes or tables are absent, display `REMINDERS NOT DEPLOYED`; never render an empty state as proof of zero schedules, sends, WAMIDs, or deliveries.
 - Read-only Admin aggregates do not authorize D1 writes, deployment, flag activation, customer sends, or COD conversion. Preserve Hoja isolation, the new-number lock, and all existing financial safeguards.
+
+## GFS-286 live binding, payment funnel, and sends-off release (2026-10-28)
+
+- Active API/Admin provenance is authoritative: both current Workers bind Get Free Seeds staging D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; the production-name UUID `02b707df-a10c-4645-9516-a2a4541f6fab` is not active.
+- The owner-authorized bounded D1 writes were limited to applying 0039/0040 once and adding the missing 0039 custom-ledger marker idempotently. Live markers are 0037, 0038, 0039, 0040; `quick_check=ok`; foreign-key check is empty. No replay, reset, backfill, or new bookmark occurred.
+- Payment delivery diagnosis is aggregate-only: stale historical instruction failures were `GFS177_PAYMENT_METHODS_DISABLED` and `PAYMENT_TEXT_DELIVERY_FAILED`; no historical retry or mass send is allowed. Current Admin stage counts are operational visibility, not eligibility approval.
+- Payment approval remains settlement-gated with genuine receipt, reference, exact amount, method, receiving-destination credit, explicit confirmation, and evidence reference. Never mark PAID from receipt/reference alone.
+- API `8e670de8-4d89-427b-9fec-dad29dc33f3f` and Admin `c2e87231-9d51-444e-b283-7ab18379280f` are promoted at 100%; prior versions remain at 0% rollback. API Cron is `* * * * *` with Queue producer/consumer attached. Reminder and automation flags remain false; utility-template approval remains false.
+- No legitimate post-promotion eligible recipient exists. Do not activate flags, create historical schedules, send, or claim WAMIDs until a separately authorized new eligible Advance order has a verified inbound identity/timestamp inside 24 hours.

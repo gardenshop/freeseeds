@@ -1399,3 +1399,11 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | GFS-285 reminder deployment truthfulness | **PASS local / BLOCKED live** | Deployed reminder route is 404; local missing-schema API returns `REMINDERS_NOT_DEPLOYED` 503 instead of an empty success |
 | GFS-285 focused regression | **PASS** | Admin payment, reminder, and guided payment tests 105/105 |
 | GFS-285 full quality gates | **PASS local** | Full 310/310, build, lint, offline audit 0 vulnerabilities, rollback4/4, diff check |
+
+| GFS-286 bounded funnel audit | **PASS read-only** | Durable aggregate buckets: 48 stopped before method, 11 instruction failures, 20 delivered/read without receipt, 4 unclassified; no customer fields retained |
+| GFS-286 payment-stage Admin filters | **PASS** | New no-method/instructions-not-sent/delivery-failed/unpaid-after-delivery filters and counts; truthful `NOT_SENT`/`FAILED`/delivery status; protected settlement panel retained |
+| GFS-286 migrations0039/0040 | **PASS live** | Rehearsed and applied once to active D1; markers 0037–0040, reminder tables, `quick_check=ok`, empty FK check; no backfill/reset/replay |
+| GFS-286 version-override smoke | **PASS** | API health, Admin Orders/filter/settlement, and reminder CMS/timeline passed through 0%-traffic candidate overrides |
+| GFS-286 promoted Worker/trigger state | **PASS sends-off** | API `8e670de8` / Admin `c2e87231` at 100%; prior versions at 0%; minute Cron and Queue producer/consumer attached; flags false |
+| GFS-286 live reminder activation | **PENDING safely** | Zero post-promotion orders and zero eligible recipients; no schedule, send, WAMID, delivery, or retry was fabricated or attempted |
+| GFS-286 full quality/rollback | **PASS** | Full 310/310, build, lint, offline audit 0 vulnerabilities, rollback4/4 |

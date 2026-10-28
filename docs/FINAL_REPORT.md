@@ -3564,3 +3564,13 @@ Completion: P0 100% read-only, P1 45% (integrity/recovery/local rehearsal pass; 
 Policy remains +15m/+30m/+60m/+210m/+240m, no +270m cancellation, strict verified 24-hour inbound window, no Meta templates, and explicit PKR125 COD consent only. No WAMID or delivery evidence exists. Production decision is **NO-GO** pending separately approved sends-off deployment, then separately approved reminder activation and controlled eligible-recipient delivery.
 
 Completion: P0 100%, P1 100% local / 0% live mutation, P2 100% read-only, P3 100% truthful local display / 0% live, P4 0% mutation, P5 50% focused quality. Overall GFS-285 execution is **70% complete; live release 0%**. No secrets or customer data were added to the report.
+## GFS-286 Final Report - 2026-10-28
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 live database/payment diagnosis | **PASS** | Active Get Free Seeds API/Admin bindings verified; active D1 is staging UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`. Bounded audit: 83 active unpaid Advance orders; 48 stopped before method, 11 instruction failures, 20 delivered/read without receipt, 4 unclassified. |
+| P1 payment funnel/Admin repair | **PASS** | Payment destination/QR safeguards and settlement evidence checks preserved; Admin stage filters/counts and truthful delivery status verified. |
+| P2 D1 migrations | **PASS** | 0039/0040 rehearsed/applied once; markers 0037–0040, reminder tables/templates, `quick_check=ok`, and empty FK check verified. |
+| P3 sends-off deployment | **PASS** | API `8e670de8-4d89-427b-9fec-dad29dc33f3f` and Admin `c2e87231-9d51-444e-b283-7ab18379280f` passed 0%-traffic override smoke and are 100%; prior versions remain 0% rollback. API Cron `* * * * *` and Queue producer/consumer attached. |
+| P4 reminder activation/delivery | **PENDING / NO-GO safely** | Flags false; zero post-promotion orders and zero legitimate eligible recipients. No schedules, sends, WAMIDs, delivery statuses, retries, or COD conversion were generated or claimed. |
+| P5 quality/documentation | **PASS** | Full 310/310, build, lint, offline audit 0 vulnerabilities, rollback4/4; records updated without secrets/customer data. |
+Policy remains +15/+30/+60/+210/+240 only, no +270 cancellation, strict latest inbound identity/timestamp inside 24 hours, permanent `BLOCKED_WINDOW`, no Meta templates, and explicit PKR125 COD consent with no historical backfill or dead-letter replay. Flags are `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_AUTOMATION_V2_ENABLED=false`, and `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`. Actual WAMIDs: none. Overall safe infrastructure release **95%**; controlled reminder acceptance **0%**; production reminder decision **NO-GO pending a legitimate eligible recipient**.

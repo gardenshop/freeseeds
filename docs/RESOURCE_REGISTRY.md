@@ -1190,3 +1190,11 @@ No secrets are stored in this registry.
 - Live topology evidence: API is a Queue producer; deployed API/Admin showed no Cron trigger or Queue consumer. Deployed Admin reminder URL returned 404; no reminder deployment or delivery is claimed.
 - Admin audit evidence: current read-only aggregate 125 total, 8 REVIEW, 2 APPROVED/PAID, 45 fulfillment; no customer identifiers or row data are stored here.
 - Local changes: direct legacy approval control fails closed; settlement panel remains explicit and backend-compatible. Missing reminder schema returns `REMINDERS_NOT_DEPLOYED`/503. No external mutation, migration, deployment, send, WAMID, or COD conversion occurred.
+
+## GFS-286 Registry - 2026-10-28
+
+- **Cloudflare:** Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, authenticated email `gisupp@gmail.com`, Workers Paid verified. Active API/Admin D1 binding is `getfreeseeds-staging` / `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; production-name D1 `02b707df-a10c-4645-9516-a2a4541f6fab` was not mutated.
+- **D1:** migrations 0039/0040 applied once after rehearsal; custom markers 0037–0040 present; reminder tables/templates present; `quick_check=ok`; FK check empty. Existing recovery metadata was read but its opaque value is intentionally not recorded.
+- **Workers:** API `8e670de8-4d89-427b-9fec-dad29dc33f3f` and Admin `c2e87231-9d51-444e-b283-7ab18379280f` are the promoted sends-off versions. Prior API `24d72438-72a1-4544-80df-4b9b90c297e5` and Admin `66426d2a-be1c-4e22-b420-1b1559dcbbc5` remain rollback versions at 0%. API Cron is `* * * * *`; events Queue producer/consumer are attached.
+- **Reminder state:** five stages +15/+30/+60/+210/+240, strict 24-hour inbound window, no Meta templates, explicit PKR125 COD consent, and no historical backfill. All reminder flags remain false; no WAMIDs or delivery claims exist.
+- **Meta/Hoja:** canonical GFS WABA only; no template mutation. Hoja Seeds remains isolated; new-number lock remains protected. No secrets or customer identifiers are stored in this registry.
