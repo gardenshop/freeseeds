@@ -3810,3 +3810,23 @@ Completion: P0 100%, P1 100%, P2 restoration 100% / extended payment journey 60%
 - Remaining release blocker: a fresh authorized tester interaction that reaches confirmation and safely cancels. No production order/payment/receipt/COD mutation was performed.
 
 Completion: P0 100%, P1 90% (validated, not live), P2 100%, P3 75% local / 0% fresh-device confirmation, P4 75%, P5 100%. Overall **82%**. Production decision: **GO to preserve the healthy baseline; NO-GO to promote the new confirmation until genuine acceptance evidence exists.**
+## GFS-299 Final Report - Payment Drop-off and Recovery (2026-10-28)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 real funnel audit | PASS / attribution blocked | Admin read-only: 184 active, 67 no-method, 0 instruction sends in the no-method slice; generic historical replies are uncorrelated, so A-G causes remain unproven |
+| P1 proven conversion defect | PASS source | Future confirmation choice replies are associated with the existing order; no duplicate order/payment path added |
+| P2 no-method recovery | PASS source / BLOCKED live | 0041, one-time outbox, 24-hour rechecks, opt-out/receipt/payment exclusions, retry bounds; migration and flag remain disabled |
+| P3 reminders | PASS paused | Five stages retained; reminder flags false/false/false; no +270, templates, backfill, sends, or WAMIDs |
+| P4 Admin operations | PASS source / pending deployment | Payment-choice status and pending filter/read model added; owner-controlled CSRF recovery endpoint; no live request |
+| P5 quality | PASS | Focused 117/117, full 316/316, build, lint; audit remains blocked where previously recorded |
+
+### Funnel result
+
+The mutually exclusive A-G outcome cannot be safely assigned for the current legacy no-method population: 67 orders remain **UNRESOLVED_LEGACY_CORRELATION** because existing generic conversation replies have no order linkage. No failed choice, delivered choice without selection, ignored callback, unavailable method, instruction failure, or unassociated receipt is claimed.
+
+### Release decision
+
+Production remains **GO to preserve the healthy baseline; NO-GO for migration, recovery sends, and reminder activation**. Required next gate: separately authorize and stage migration 0041 plus the recovery-disabled Worker, verify rollback, then enable recovery only through the supported owner-controlled action. No recovery WAMID or customer message was fabricated.
+
+Completion: P0 100%; P1 100% source / 0% live deployment; P2 100% source / 0% live activation; P3 100% paused; P4 100% source / 0% live deployment; P5 100%. Overall **70% operational release completion**; remaining blocker is scoped production approval/migration/deployment and genuine in-window recipient evidence.

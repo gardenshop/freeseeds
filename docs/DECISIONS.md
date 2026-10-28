@@ -1317,3 +1317,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Keep CMS published version 3 while API baseline `45b01d86` is active; validated version 4 remains draft. This avoids serving a `{codFee}` CMS payload to an API whose deployed validator predates that placeholder.
 - Promote only the compatible pair together after guarded acceptance. Preserve API `45b01d86` and Admin `b4c45278` as rollback references.
 - Keep reminder flags false/false/false and utility-template approval false. No reminder or Meta delivery evidence is inferred from this task.
+## 2026-10-28: GFS-299 payment-choice correlation and recovery
+
+- Treat the current no-method population as an observability gap, not a payment failure. Generic `CONVERSATION_REPLY` rows without `order_id` cannot prove choice send, delivery, callback, or method availability; do not classify or message those records automatically.
+- Associate only future confirmation/payment-choice replies with the existing order. Do not backfill generic historical rows by phone, timestamp, or payment-instruction status alone.
+- Add migration 0041 and a separate owner-requested recovery outbox path, but keep it unapplied and disabled until a supported production approval, staged Worker proof, and rollback check are complete. The recovery path never changes payment/order status and never converts to COD automatically.
+- Keep the healthy API/Admin baseline, reminder flags false/false/false, no Meta templates, explicit PKR125 consent, new-number lock, and Hoja isolation unchanged.

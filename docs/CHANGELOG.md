@@ -1196,3 +1196,10 @@
 - Uploaded API candidate `c4908cb5` and Admin validator candidate `f0212429`; staged and guarded-tested them without leaving the new API live.
 - Published CMS Confirmation version 4, verified both locales/placeholders, then restored published version 3 to maintain compatibility with the active API baseline while genuine fresh tester acceptance is pending.
 - Quality: focused 103/103, full 316/316, build/lint PASS, rollback4/4 PASS; registry audit unavailable. No order, payment, D1, reminder, Meta, or billing mutation occurred.
+## 2026-10-28 - GFS-299 payment funnel and gated recovery
+
+- Added order-linked `PAYMENT_CHOICE` correlation for future confirmation replies; generic historical conversation rows are not backfilled.
+- Added unapplied migration 0041 and a disabled-by-default, owner-requested 24-hour payment-choice recovery outbox path with eligibility rechecks, idempotency, retries, and permanent window blocking.
+- Added Admin payment-choice status/read-model filtering and a CSRF-protected recovery request endpoint; no live recovery request was made.
+- Read-only Admin evidence: 184 active orders, 67 no-method; no method-level A-G attribution was proven. Reminder flags stayed false/false/false and no WAMIDs were claimed.
+- Quality: focused 117/117, full 316/316, build/lint PASS. Production migration, deployment, recovery sends, and reminder activation remain NO-GO pending separate approval.

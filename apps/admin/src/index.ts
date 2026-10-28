@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import { canTransition, configuredPaymentMethodNames, codReferenceHmac, createMetaActivationService, createWhatsAppProvider, customerTransactionReferenceHash, getLatestOrderForWaId, isInsideWhatsAppServiceWindow, MetaActivationAction, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, hasPaymentMessagePlaceholders, isPaymentMethodComplete, isPaymentMethodLocaleComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, publishedWhatsAppContent, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, WhatsAppActionId, whatsAppActionIdsForTemplate, whatsAppActionLabel, WhatsAppContent, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
 
-  type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_CAPI_ENABLED?: string; REFERENCE_REQUESTS_ENABLED?: string; COD_REFERENCE_HMAC_KEY?: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
+  type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_CAPI_ENABLED?: string; REFERENCE_REQUESTS_ENABLED?: string; PAYMENT_CHOICE_RECOVERY_ENABLED?: string; COD_REFERENCE_HMAC_KEY?: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
 const app = new Hono<Env>();
 app.use("/orders", async (c, next) => { c.header("Cache-Control", "no-store, max-age=0"); c.header("X-Content-Type-Options", "nosniff"); await next(); });
 type AdminContext = Context<Env>;
@@ -177,6 +177,7 @@ function orderView(row: Record<string, unknown>, referenceRequestDispatchEnabled
     whatsappNumber: row.whatsapp_number == null ? null : String(row.whatsapp_number),
     normalizedWhatsappNumber: row.normalized_whatsapp_number == null ? null : String(row.normalized_whatsapp_number),
     lastInboundAt: row.last_inbound_at == null ? null : String(row.last_inbound_at),
+    paymentChoiceStatus: row.payment_choice_status == null ? "UNKNOWN" : String(row.payment_choice_status),
     paymentId: row.payment_id == null ? null : String(row.payment_id),
     paymentMethod: row.cod_status != null ? "COD" : row.method == null ? null : String(row.method),
     paymentInstructionStatus: row.payment_instruction_status == null ? "NOT_SENT" : String(row.payment_instruction_status),
@@ -1576,6 +1577,7 @@ const ORDER_ADMIN_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,
   o.cancelled_at,o.cancelled_by,o.cancellation_reason,o.archived_at,o.archived_by,o.archive_reason,
   (SELECT created_at FROM audit_log confirmation WHERE confirmation.entity_type='ORDER' AND confirmation.entity_id=o.id AND confirmation.action='ORDER_CONFIRMED' ORDER BY confirmation.created_at DESC LIMIT 1) AS order_confirmed_at,
   (SELECT last_inbound_at FROM whatsapp_conversations wc WHERE wc.wa_id=c.wa_id) AS last_inbound_at,
+  CASE WHEN cod.order_id IS NOT NULL OR p.method IS NOT NULL THEN 'SELECTED' WHEN EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_CHOICE_RECOVERY' AND j.status IN ('DEAD_LETTER','PERMANENT_FAILURE')) OR EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('PAYMENT_CHOICE','PAYMENT_CHOICE_RECOVERY') AND m.status IN ('FAILED','PERMANENT_FAILURE')) THEN 'FAILED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('PAYMENT_CHOICE','PAYMENT_CHOICE_RECOVERY') AND m.status='READ') THEN 'READ' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('PAYMENT_CHOICE','PAYMENT_CHOICE_RECOVERY') AND m.status='DELIVERED') THEN 'DELIVERED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('PAYMENT_CHOICE','PAYMENT_CHOICE_RECOVERY') AND m.status IN ('SENT','SENDING')) OR EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_CHOICE_RECOVERY' AND j.status='SENT') THEN 'SENT' WHEN EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_CHOICE_RECOVERY' AND j.status IN ('PENDING','RETRY','QUEUED')) THEN 'PENDING' ELSE 'UNKNOWN' END AS payment_choice_status,
   CASE WHEN cod.order_id IS NOT NULL THEN 'NOT_APPLICABLE' WHEN EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS' AND j.status IN ('DEAD_LETTER','PERMANENT_FAILURE')) THEN 'FAILED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status='READ') THEN 'READ' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status='DELIVERED') THEN 'DELIVERED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status IN ('SENT','SENDING')) OR EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS' AND j.status='SENT') THEN 'SENT' ELSE 'NOT_SENT' END AS payment_instruction_status,
   c.full_name,c.delivery_address,c.nearby_place,c.city,c.contact_number,c.normalized_phone,c.normalized_contact_number,c.whatsapp_number,c.normalized_whatsapp_number,c.wa_id,
   p.id AS payment_id,p.method,p.expected_amount,p.approved_amount,p.review_state,p.submitted_at,p.approved_by,p.approved_at,p.rejection_reason,p.customer_transaction_reference,p.created_at AS payment_created_at,p.updated_at AS payment_updated_at,
@@ -1599,6 +1601,7 @@ const ORDER_ADMIN_LIST_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_st
   c.full_name,c.delivery_address,c.nearby_place,c.city,c.contact_number,c.normalized_phone,c.normalized_contact_number,c.whatsapp_number,c.normalized_whatsapp_number,c.wa_id,
   p.id AS payment_id,p.method,p.expected_amount,p.approved_amount,p.review_state,p.submitted_at,p.approved_by,p.approved_at,p.rejection_reason,p.customer_transaction_reference,p.created_at AS payment_created_at,p.updated_at AS payment_updated_at,
   cod.status AS cod_status,cod.test_hold AS cod_test_hold,cod.base_amount_pkr AS cod_base_amount_pkr,cod.cod_fee_pkr,cod.quoted_total_pkr AS cod_quoted_total_pkr,cod.collection_at AS cod_collection_at,cod.remittance_at AS cod_remittance_at,
+  CASE WHEN cod.order_id IS NOT NULL OR p.method IS NOT NULL THEN 'SELECTED' WHEN EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_CHOICE_RECOVERY' AND j.status IN ('DEAD_LETTER','PERMANENT_FAILURE')) OR EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('PAYMENT_CHOICE','PAYMENT_CHOICE_RECOVERY') AND m.status IN ('FAILED','PERMANENT_FAILURE')) THEN 'FAILED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('PAYMENT_CHOICE','PAYMENT_CHOICE_RECOVERY') AND m.status='READ') THEN 'READ' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('PAYMENT_CHOICE','PAYMENT_CHOICE_RECOVERY') AND m.status='DELIVERED') THEN 'DELIVERED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('PAYMENT_CHOICE','PAYMENT_CHOICE_RECOVERY') AND m.status IN ('SENT','SENDING')) OR EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_CHOICE_RECOVERY' AND j.status='SENT') THEN 'SENT' WHEN EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_CHOICE_RECOVERY' AND j.status IN ('PENDING','RETRY','QUEUED')) THEN 'PENDING' ELSE 'UNKNOWN' END AS payment_choice_status,
   CASE WHEN cod.order_id IS NOT NULL THEN 'NOT_APPLICABLE' WHEN EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS' AND j.status IN ('DEAD_LETTER','PERMANENT_FAILURE')) THEN 'FAILED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status='READ') THEN 'READ' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status='DELIVERED') THEN 'DELIVERED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status IN ('SENT','SENDING')) OR EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS' AND j.status='SENT') THEN 'SENT' ELSE 'NOT_SENT' END AS payment_instruction_status,
   COALESCE((SELECT group_concat(items.description || ' x ' || items.quantity, ', ') FROM order_items items WHERE items.order_id=o.id),'') AS item_summary,
   0 AS payment_method_verified,0 AS reference_request_sent,0 AS has_tracking_number,0 AS receipt_count,
@@ -1626,6 +1629,7 @@ const ORDER_TAB_SQL: Record<string, string> = {
 const ADVANCE_UNPAID_SQL = "o.archived_at IS NULL AND o.state NOT IN ('PAID','CANCELLED') AND o.payment_status NOT IN ('PAID','COD_PENDING','COD_PAID') AND p.method IS NOT 'COD' AND NOT EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id)";
 const PAYMENT_STAGE_SQL: Record<string, string> = {
   "no-method": `${ADVANCE_UNPAID_SQL} AND p.method IS NULL`,
+  "payment-choice-pending": `${ADVANCE_UNPAID_SQL} AND p.method IS NULL`,
   "payment-not-sent": `${ADVANCE_UNPAID_SQL} AND p.method IS NOT NULL AND NOT EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS' AND j.status IN ('SENT','DEAD_LETTER','PERMANENT_FAILURE')) AND NOT EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR'))`,
   "delivery-failed": `${ADVANCE_UNPAID_SQL} AND (EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS' AND j.status IN ('DEAD_LETTER','PERMANENT_FAILURE')) OR EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status IN ('FAILED','PERMANENT_FAILURE')))` ,
   "unpaid-after-delivery": `${ADVANCE_UNPAID_SQL} AND EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status IN ('DELIVERED','READ'))`
@@ -1795,7 +1799,7 @@ app.get("/api/orders", async (c) => {
   const total = Number(countsRow?.total_count ?? 0);
   return c.json({
     orders: result.results.map((row) => orderView(row as Record<string, unknown>, c.env.REFERENCE_REQUESTS_ENABLED === "true")),
-    counts: { all: Number(countsRow?.all_count ?? 0), verify: Number(countsRow?.verify_count ?? 0), confirmed: Number(countsRow?.confirmed_count ?? 0), fulfillment: Number(countsRow?.fulfillment_count ?? 0), noMethod: Number(countsRow?.no_method_count ?? 0), paymentNotSent: Number(countsRow?.payment_not_sent_count ?? 0), deliveryFailed: Number(countsRow?.delivery_failed_count ?? 0), unpaidAfterDelivery: Number(countsRow?.unpaid_after_delivery_count ?? 0) },
+    counts: { all: Number(countsRow?.all_count ?? 0), verify: Number(countsRow?.verify_count ?? 0), confirmed: Number(countsRow?.confirmed_count ?? 0), fulfillment: Number(countsRow?.fulfillment_count ?? 0), noMethod: Number(countsRow?.no_method_count ?? 0), paymentChoicePending: Number(countsRow?.payment_choice_pending_count ?? 0), paymentNotSent: Number(countsRow?.payment_not_sent_count ?? 0), deliveryFailed: Number(countsRow?.delivery_failed_count ?? 0), unpaidAfterDelivery: Number(countsRow?.unpaid_after_delivery_count ?? 0) },
     total,
     pagination: { page, pageSize, totalPages: Math.ceil(total / pageSize) }
   });
@@ -1832,6 +1836,45 @@ app.get("/api/orders/export", async (c) => {
       "Referrer-Policy": "no-referrer"
     }
   });
+});
+
+app.post("/api/orders/:id/payment-choice-recovery", async (c) => {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  if (!c.env.DB || !c.env.EVENTS) return c.json({ error: "PAYMENT_CHOICE_RECOVERY_UNAVAILABLE" }, 503);
+  if (c.env.PAYMENT_CHOICE_RECOVERY_ENABLED !== "true") return c.json({ error: "PAYMENT_CHOICE_RECOVERY_DISABLED", message: "Recovery is not enabled; no customer message was queued." }, 409);
+  const orderId = c.req.param("id");
+  try {
+    const current = await c.env.DB.prepare(`SELECT o.id,o.order_number,o.state,o.payment_status,o.archived_at,p.method,p.review_state,c.id AS customer_id,c.wa_id,wc.state_data,wc.last_inbound_message_id,wc.last_inbound_at,
+        EXISTS(SELECT 1 FROM payment_receipts r WHERE r.order_id=o.id AND r.payment_id=p.id) AS has_receipt,
+        EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id) AS is_cod,
+        EXISTS(SELECT 1 FROM payment_reminder_v2_opt_outs x WHERE x.customer_id=c.id OR x.wa_id=c.wa_id) AS opted_out
+      FROM orders o JOIN payments p ON p.order_id=o.id JOIN customers c ON c.id=o.customer_id
+      LEFT JOIN whatsapp_conversations wc ON wc.wa_id=c.wa_id
+      WHERE o.id=?`).bind(orderId).first<{ id:string;order_number:string;state:string;payment_status:string;archived_at:string|null;method:string|null;review_state:string;customer_id:string;wa_id:string|null;state_data:string|null;last_inbound_message_id:string|null;last_inbound_at:string|null;has_receipt:number;is_cod:number;opted_out:number }>();
+    if (!current) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
+    if (current.archived_at || current.state === "PAID" || current.state === "CANCELLED" || current.payment_status !== "PENDING" || current.method != null || current.review_state !== "PENDING" || Number(current.has_receipt) === 1 || Number(current.is_cod) === 1 || Number(current.opted_out) === 1) return c.json({ error: "PAYMENT_CHOICE_RECOVERY_NOT_ELIGIBLE" }, 409);
+    const recipient = current.wa_id ? normalizeWhatsAppWaId(current.wa_id) : "";
+    if (!recipient || !current.last_inbound_message_id || !isInsideWhatsAppServiceWindow(current.last_inbound_at)) return c.json({ error: "PAYMENT_CHOICE_RECOVERY_WINDOW_CLOSED" }, 409);
+    const existing = await c.env.DB.prepare("SELECT status FROM payment_choice_recoveries WHERE order_id=?").bind(orderId).first<{ status:string }>();
+    if (existing) return c.json({ error: "PAYMENT_CHOICE_RECOVERY_ALREADY_REQUESTED", status: existing.status }, 409);
+    const existingChoice = await c.env.DB.prepare("SELECT status FROM outbound_messages WHERE order_id=? AND kind IN ('PAYMENT_CHOICE','PAYMENT_CHOICE_RECOVERY') AND status IN ('SENT','DELIVERED','READ','SENDING') LIMIT 1").bind(orderId).first<{ status:string }>();
+    if (existingChoice) return c.json({ error: "PAYMENT_CHOICE_ALREADY_SENT" }, 409);
+    let locale: "en" | "ur" = "en";
+    try { locale = JSON.parse(current.state_data ?? "{}").language === "ur" ? "ur" : "en"; } catch { /* default to English */ }
+    const now = new Date().toISOString();
+    const idempotencyKey = `payment_choice_recovery:${orderId}`;
+    const result = await c.env.DB.batch([
+      c.env.DB.prepare("INSERT OR IGNORE INTO payment_choice_recoveries(order_id,status,locale,inbound_message_id,inbound_at,outbound_idempotency_key,requested_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)").bind(orderId, "PENDING", locale, current.last_inbound_message_id, current.last_inbound_at, idempotencyKey, c.env.ADMIN_EMAIL, now, now),
+      c.env.DB.prepare("INSERT OR IGNORE INTO outbox_jobs(id,idempotency_key,kind,entity_id,payload_json,status,attempts,available_at,created_at,updated_at) VALUES(?,?,?,?,?,'PENDING',0,?,?,?)").bind(crypto.randomUUID(), idempotencyKey, "WHATSAPP_PAYMENT_CHOICE_RECOVERY", orderId, JSON.stringify({ orderId, orderNumber: current.order_number, locale }), now, now, now),
+      c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_CHOICE_RECOVERY_REQUESTED", "ADMIN", c.env.ADMIN_EMAIL, "ORDER", orderId, crypto.randomUUID(), JSON.stringify({ stage: "PAYMENT_CHOICE_PENDING", locale }), now)
+    ]);
+    if (Number(result[0].meta?.changes ?? 0) !== 1) return c.json({ error: "PAYMENT_CHOICE_RECOVERY_ALREADY_REQUESTED" }, 409);
+    try { await c.env.EVENTS.send({ kind: "WHATSAPP_PAYMENT_CHOICE_RECOVERY", idempotencyKey, entityId: orderId, schemaVersion: 1 }); } catch { /* durable outbox remains authoritative */ }
+    return c.json({ ok: true, status: "PENDING" }, 202);
+  } catch (error) {
+    if (/no such table|PAYMENT_CHOICE_RECOVER/i.test(error instanceof Error ? error.message : String(error))) return c.json({ error: "PAYMENT_CHOICE_RECOVERY_NOT_DEPLOYED", message: "Recovery migration is not deployed; no customer message was queued." }, 503);
+    throw error;
+  }
 });
 
 app.get("/api/orders/:id", async (c) => {

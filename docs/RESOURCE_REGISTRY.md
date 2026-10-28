@@ -1295,3 +1295,10 @@ No secrets are stored in this registry.
 - **Admin:** validator candidate `f0212429` 100%; rollback `b4c45278` 0%. CMS published version 3 is compatible with baseline; validated version 4 is retained in draft.
 - **Flags:** reminder false/false/false and utility-template approval false. No schedules, sends, WAMIDs, delivery/read events, or historical replay were created by GFS-298.
 - **Acceptance:** no genuine new confirmation WAMID is claimed. The existing authorized browser session was not reset or reused for duplicate-order creation.
+## GFS-299 Payment Recovery Registry (2026-10-28)
+
+- **Production baseline:** API `45b01d86` 100%; GFS-298 API candidate 0%; Admin `f0212429` 100%. No GFS-299 deployment or traffic change.
+- **Bounded Admin evidence:** 184 active orders; 67 no-method; no raw customer identifiers, phone numbers, receipts, or WAMIDs recorded. Three detail samples expose only submission audit, so legacy payment-choice delivery is unresolved.
+- **Source candidate:** migration `0041_payment_choice_recovery.sql`; future `PAYMENT_CHOICE` order association; gated `WHATSAPP_PAYMENT_CHOICE_RECOVERY` queue. Migration is not live and `PAYMENT_CHOICE_RECOVERY_ENABLED` is false/unset.
+- **Reminders:** false/false/false; +15/+30/+60/+210/+240 retained; no templates, historical replay, recovery sends, or WAMIDs.
+- **Identity:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / Get Free Seeds account previously verified; canonical GFS Meta only; Hoja untouched.

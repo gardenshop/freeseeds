@@ -1695,3 +1695,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **P2 PASS local:** Duplicate appended payment copy was removed; configured COD fee is passed from D1 policy; stale confirmation content fails closed; COD-unavailable rendering removes COD option/note. No hardcoded business amount was added.
 - **P3 PASS:** Focused 103/103, full 316/316, build, lint, and rollback4/4 against verified `D:\free seeds\gfs273-v1` baseline `cf01f444500415b1f22a64730674caca1c286006`.
 - **P4 BLOCKED:** `npm audit --omit=dev` could not reach the registry advisory endpoint. Fresh authorized tester confirmation proof is pending. Production is **NO-GO for new confirmation promotion** and **GO to preserve the compatible baseline**.
+## GFS-299 Payment Funnel / Recovery (2026-10-28)
+
+- **P0 PASS read-only:** Authenticated Admin currently reports 184 active orders, 67 with no selected method, and 0 payment-instruction sends within that no-method filter. Three bounded details show `WHATSAPP_SUBMITTED` only. Existing generic conversation replies cannot be correlated to an order, so no A-G failure cause is asserted; 67 are unresolved legacy correlation.
+- **P1 PASS source / pending deployment:** Confirmation replies now write an order-linked `PAYMENT_CHOICE` outbound record. Existing order references and payment/recipient safeguards remain unchanged. No historical rows are repaired or backfilled.
+- **P2 PASS source / NO-GO live:** Additive migration 0041 and the one-time `WHATSAPP_PAYMENT_CHOICE_RECOVERY` queue path are gated by `PAYMENT_CHOICE_RECOVERY_ENABLED=false`. No migration or recovery send was performed.
+- **P3 PASS paused:** Reminder flags remain false/false/false; Cron/Queue reminder topology and five-stage policy are preserved. No reminder or recovery WAMID exists from this task.
+- **P4 PASS source / pending deployment:** Admin read model exposes payment-choice status and a payment-choice-pending filter; recovery requests require CSRF/authenticated Admin, a live inbound window, and one-time idempotency. Production Admin/API remain unchanged.
+- **P5 PASS:** Focused guided 88/88 plus Admin/CMS 29/29; full 316/316; build and lint PASS. Production decision: **GO to preserve baseline; NO-GO for migration, recovery sends, or reminder activation until separately approved and staged.**

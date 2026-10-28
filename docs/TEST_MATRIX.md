@@ -1573,3 +1573,15 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | Build/lint | PASS | TypeScript and ESLint |
 | Audit | BLOCKED | Registry advisory endpoint unavailable |
 | Rollback4/4 | PASS | Verified clean `D:\free seeds\gfs273-v1` at `cf01f44` |
+## GFS-299 Payment Funnel / Recovery
+
+| Area | Result | Evidence |
+|---|---|---|
+| Bounded live order aggregate | PASS | Authenticated Admin: 184 active orders; 67 no-method; no raw customer data recorded |
+| Drop-off attribution | BLOCKED honestly | Generic legacy conversation replies lack order linkage; three bounded details show submission audit only; no A-G bucket is claimed |
+| Future choice correlation | PASS local | Guided confirmation test records `PAYMENT_CHOICE` with the existing order reference |
+| Recovery eligibility | PASS source | 24-hour inbound, no method/receipt/opt-out/paid/COD/hold/archive/cancel checks at request and send |
+| Recovery idempotency/retry | PASS source/build | One order key, durable outbox, bounded retry/dead-letter path; full suite/build pass |
+| Migration/live recovery | BLOCKED safely | 0041 unapplied; recovery flag false; no customer send or WAMID |
+| Reminder isolation | PASS | Existing five-stage reminder engine untouched and flags false/false/false |
+| Focused/full/build/lint | PASS | Focused 117/117; full 316/316; build and lint |

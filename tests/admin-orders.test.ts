@@ -125,7 +125,7 @@ describe("GFS-139 orders dashboard API", () => {
     const response = await app.fetch(new Request("https://admin.example.test/api/orders?tab=verify&page=2&pageSize=25&q=03001234567&date=2026-10-16&paymentStatus=REVIEW&archived=all", { headers: auth }), environment(db));
     expect(response.status).toBe(200);
     const body = await response.json() as { counts: Record<string, number>; total: number; pagination: Record<string, number>; orders: Array<Record<string, unknown>> };
-    expect(body.counts).toEqual({ all: 58, verify: 7, confirmed: 19, fulfillment: 14, noMethod: 0, paymentNotSent: 0, deliveryFailed: 0, unpaidAfterDelivery: 0 });
+    expect(body.counts).toEqual({ all: 58, verify: 7, confirmed: 19, fulfillment: 14, noMethod: 0, paymentChoicePending: 0, paymentNotSent: 0, deliveryFailed: 0, unpaidAfterDelivery: 0 });
     expect(body.total).toBe(58);
     expect(body.pagination).toEqual({ page: 2, pageSize: 25, totalPages: 3 });
     expect(body.orders[0]).toMatchObject({ id: "synthetic-order-newest", itemSummary: "Synthetic seed packs x 5", receiptCount: 1 });

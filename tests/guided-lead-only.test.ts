@@ -279,6 +279,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     expect(conversation()?.state).toBe("PAYMENT_METHOD");
     expect(buttons()).toEqual(["ADVANCE_PAYMENT", "COD"]);
     expect(Number((sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get() as { count: number }).count)).toBe(before + 1);
+    expect(sqlite.prepare("SELECT kind,order_id,status FROM outbound_messages WHERE kind='PAYMENT_CHOICE' ORDER BY created_at DESC LIMIT 1").get()).toMatchObject({ kind: "PAYMENT_CHOICE", order_id: expect.any(String), status: "SENT" });
     await inbound(tap("ADVANCE_PAYMENT"));
     expect(conversation()?.state).toBe("PAYMENT_METHOD");
     expect(buttons()).not.toContain("ADVANCE_PAYMENT");
