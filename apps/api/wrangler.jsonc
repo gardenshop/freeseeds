@@ -5,6 +5,7 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-09-27",
   "workers_dev": true,
+  "version_metadata": { "binding": "CF_VERSION_METADATA" },
   "triggers": { "crons": ["* * * * *"] },
   "d1_databases": [{ "binding": "DB", "database_name": "getfreeseeds-staging", "database_id": "17b7e9f6-e08b-4bff-a756-10de30b49ab1", "migrations_dir": "../../migrations" }],
   "r2_buckets": [{ "binding": "RECEIPTS", "bucket_name": "getfreeseeds-receipts-staging" }],

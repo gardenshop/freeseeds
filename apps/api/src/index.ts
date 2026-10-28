@@ -37,6 +37,7 @@ type Env = {
     PAYMENT_UTILITY_TEMPLATES_APPROVED?: string;
     PAYMENT_CHOICE_RECOVERY_ENABLED?: string;
     PAYMENT_CHOICE_RECOVERY_START_AT?: string;
+    CF_VERSION_METADATA?: { id: string; tag?: string; timestamp?: string };
   };
 };
 
@@ -45,6 +46,18 @@ const app = new Hono<Env>();
 function isD1QuotaError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
   return /\b7500\b|row[- ]read|daily.*limit|quota.*exhaust|too many rows/i.test(message);
+}
+
+async function recordWebhookRuntimeObservation(db: D1Database | undefined, version: { id: string } | undefined, correlationId: string, eventCount: number, handledEvents: number, autoReplies: number): Promise<void> {
+  if (!db || !version?.id) return;
+  try {
+    const correlationHash = await customerTransactionReferenceHash(correlationId);
+    const now = new Date().toISOString();
+    await db.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?)")
+      .bind(crypto.randomUUID(), "WHATSAPP_WEBHOOK_RUNTIME_OBSERVED", "SYSTEM", "WORKER_VERSION", version.id, correlationHash, JSON.stringify({ workerVersion: version.id, resultCode: "ACCEPTED", eventCount, handledEvents, autoReplies }), now).run();
+  } catch {
+    // Release diagnostics must never alter webhook success or expose request data.
+  }
 }
 
 app.onError((error, c) => {
@@ -904,9 +917,10 @@ app.post("/webhooks/whatsapp", async (c) => {
   const eventCount = c.env.DB ? await persistWebhookRecords(c.env.DB, payload, raw, correlationId) : 0;
   if (c.env.DB) await persistInboundConversationActivity(c.env.DB, inbound);
   let autoReplies = 0;
+  let handledEvents = 0;
   for (const event of inbound) {
-    if (event.kind === "media") { if (c.env.DB && await processReceiptMedia(c.env.DB, c.env.RECEIPTS, provider, event)) continue; else continue; }
-    if (c.env.DB && await processGuidedConversation(c.env.DB, c.env.RECEIPTS, provider, event, c.env.META_FLOW_ID ?? "1133458765899784", c.env.META_APP_SECRET, c.env.WHATSAPP_CHECKOUT_MODE ?? "guided", c.env.EVENTS, c.env.COD_V1_ENABLED === "true", c.env.COD_ROLLOUT_MODE, c.env.COD_TESTER_WA_ID, c.env.PAYMENT_REMINDERS_V2_ENABLED === "true", c.env.PAYMENT_AUTOMATION_V2_ENABLED === "true")) continue;
+    if (event.kind === "media") { if (c.env.DB && await processReceiptMedia(c.env.DB, c.env.RECEIPTS, provider, event)) handledEvents += 1; continue; }
+    if (c.env.DB && await processGuidedConversation(c.env.DB, c.env.RECEIPTS, provider, event, c.env.META_FLOW_ID ?? "1133458765899784", c.env.META_APP_SECRET, c.env.WHATSAPP_CHECKOUT_MODE ?? "guided", c.env.EVENTS, c.env.COD_V1_ENABLED === "true", c.env.COD_ROLLOUT_MODE, c.env.COD_TESTER_WA_ID, c.env.PAYMENT_REMINDERS_V2_ENABLED === "true", c.env.PAYMENT_AUTOMATION_V2_ENABLED === "true")) { handledEvents += 1; continue; }
     const activeConversation = c.env.DB ? await c.env.DB.prepare("SELECT state FROM whatsapp_conversations WHERE wa_id=?").bind(event.from).first<{ state: string }>() : null;
     if (activeConversation) continue;
     const idempotencyKey = `welcome_reply:${event.id}`;
@@ -930,11 +944,13 @@ app.post("/webhooks/whatsapp", async (c) => {
       const sent = await provider.sendInteractive(event.from, welcome.text, [{ id: "GET_FREE_PACKS", title: welcome.buttonLabel ?? "Get 5 Free Packs" }], image);
       if (c.env.DB) await c.env.DB.prepare("UPDATE outbound_messages SET provider_message_id=?,status='SENT',attempt_count=1,updated_at=? WHERE idempotency_key=?").bind(sent.providerMessageId, new Date().toISOString(), idempotencyKey).run();
       autoReplies += 1;
+      handledEvents += 1;
     } catch (error) {
       const safeError = error instanceof Error ? error.message.slice(0, 160) : "META_AUTO_REPLY_FAILED";
       if (c.env.DB) await c.env.DB.prepare("UPDATE outbound_messages SET status='FAILED',attempt_count=1,last_error=?,updated_at=? WHERE idempotency_key=?").bind(safeError, new Date().toISOString(), idempotencyKey).run();
     }
   }
+  await recordWebhookRuntimeObservation(c.env.DB, c.env.CF_VERSION_METADATA, correlationId, eventCount, handledEvents, autoReplies);
   return c.json({ accepted: true, eventCount, autoReplies });
 });
 

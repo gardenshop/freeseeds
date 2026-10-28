@@ -62,7 +62,7 @@ function buttons() {
 }
 
 function env() {
-  return { DB: db, RECEIPTS: { get: vi.fn(async () => { qrReads++; return qrAvailable ? { httpMetadata: { contentType: "image/png" }, arrayBuffer: async () => syntheticQrBytes.buffer } : null; }), put: vi.fn(async () => { receiptPuts++; }), delete: vi.fn(async () => undefined) }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: "true", META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided", COD_V1_ENABLED: codEnabled ? "true" : "false", COD_ROLLOUT_MODE: codRolloutMode, COD_TESTER_WA_ID: codTesterWaId, COD_REFERENCE_HMAC_KEY: codRuntimeHmacKey, PAYMENT_REMINDERS_V2_ENABLED: remindersEnabled ? "true" : "false", PAYMENT_AUTOMATION_V2_ENABLED: reminderAutomationEnabled ? "true" : "false", PAYMENT_UTILITY_TEMPLATES_APPROVED: "false" } as never;
+  return { DB: db, RECEIPTS: { get: vi.fn(async () => { qrReads++; return qrAvailable ? { httpMetadata: { contentType: "image/png" }, arrayBuffer: async () => syntheticQrBytes.buffer } : null; }), put: vi.fn(async () => { receiptPuts++; }), delete: vi.fn(async () => undefined) }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: "true", META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided", COD_V1_ENABLED: codEnabled ? "true" : "false", COD_ROLLOUT_MODE: codRolloutMode, COD_TESTER_WA_ID: codTesterWaId, COD_REFERENCE_HMAC_KEY: codRuntimeHmacKey, PAYMENT_REMINDERS_V2_ENABLED: remindersEnabled ? "true" : "false", PAYMENT_AUTOMATION_V2_ENABLED: reminderAutomationEnabled ? "true" : "false", PAYMENT_UTILITY_TEMPLATES_APPROVED: "false", CF_VERSION_METADATA: { id: "synthetic-worker-version" } } as never;
 }
 
 async function callback(messages: Record<string, unknown>[], extraChanges: unknown[] = []) {
@@ -1271,6 +1271,17 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_events").get()).toEqual({ count: 0 });
     expect(sqlite.prepare("SELECT action FROM audit_log").all()).toEqual([{ action: "WHATSAPP_CALLBACK_REJECTED" }]);
     expect(sends).toHaveLength(0);
+  });
+
+  it("records only privacy-safe version-attributed webhook outcomes", async () => {
+    await inbound("START", "synthetic-version-observation");
+    const row = sqlite.prepare("SELECT entity_id,correlation_id,metadata_json FROM audit_log WHERE action='WHATSAPP_WEBHOOK_RUNTIME_OBSERVED'").get() as { entity_id: string; correlation_id: string; metadata_json: string };
+    const metadata = JSON.parse(row.metadata_json) as Record<string, unknown>;
+    expect(row.entity_id).toBe("synthetic-worker-version");
+    expect(row.correlation_id).toMatch(/^[0-9a-f]{64}$/);
+    expect(metadata).toEqual({ workerVersion: "synthetic-worker-version", resultCode: "ACCEPTED", eventCount: 1, handledEvents: 1, autoReplies: 0 });
+    expect(JSON.stringify(row)).not.toContain(sender);
+    expect(JSON.stringify(row)).not.toContain("synthetic-version-observation");
   });
 
   it("keeps invalid contact input and stale review buttons from advancing the entry", async () => {
