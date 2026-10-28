@@ -1161,3 +1161,11 @@ No secrets are stored in this registry.
 - Canonical Meta: GFS WABA was verified in WhatsApp Manager. Two Utility submissions are In review; no approved template, recipient, WAMID, or customer data is recorded.
 - Active live versions remain API `24d72438-72a1-4544-80df-4b9b90c297e5` and Admin `66426d2a-be1c-4e22-b420-1b1559dcbbc5`, both at 100%; no GFS-280 deployment exists.
 - Protected scope: new-number WhatsApp lock, PUBLIC COD/PKR125, three Advance methods, signed webhook safeguards, Workers Paid, and Hoja zero-connection rule remain unchanged.
+
+## GFS-281 Registry — 2026-10-28
+
+- Cloudflare identity: `gisupp@gmail.com` / Get Free Seeds verified by Wrangler and dashboard. Workers Paid subscription is visible; D1 production Studio is reachable at the configured production database and shows the pre-reminder schema only.
+- D1 safety: no production SQL marker/integrity query or write was completed because the over-quota safety gate rejected the action. No recovery bookmark was changed or exposed.
+- Reminder source: strict 24-hour service-window-only delivery; local CMS EN/UR copy; no Meta template submission, approval, fallback, or WAMID.
+- Code verification: focused 16/16, full 309/309, build, lint, offline audit 0 vulnerabilities, and rollback4/4 pass after the final repair.
+- Live versions are unchanged: API `24d72438-72a1-4544-80df-4b9b90c297e5` and Admin `66426d2a-be1c-4e22-b420-1b1559dcbbc5`, both 100%; no GFS-281 deployment.

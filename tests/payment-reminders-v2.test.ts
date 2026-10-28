@@ -42,7 +42,7 @@ function setup(state = "PAYMENT_PENDING", paymentStatus = "PENDING", reviewState
     INSERT INTO customers(id,wa_id) VALUES('customer-test-1','923000000001');
     INSERT INTO orders(id,customer_id,order_number,created_at,updated_at,state,payment_status,total_payable,delivery_fee) VALUES('order-test-1','customer-test-1','SYN-ORDER-1','2026-10-23T10:00:00.000Z','2026-10-23T10:00:00.000Z','${state}','${paymentStatus}',7000,200);
     INSERT INTO payments(id,order_id,method,review_state,expected_amount,updated_at) VALUES('payment-test-1','order-test-1','JAZZCASH','${reviewState}',7000,'2026-10-23T10:00:00.000Z');
-    INSERT INTO whatsapp_conversations(wa_id,state,state_data,updated_at,last_inbound_at) VALUES('923000000001','PAYMENT_PENDING','{"orderId":"order-test-1","language":"en"}','2026-10-23T10:00:00.000Z','2026-10-23T10:00:00.000Z');
+    INSERT INTO whatsapp_conversations(wa_id,state,state_data,updated_at,last_inbound_message_id,last_inbound_at) VALUES('923000000001','PAYMENT_PENDING','{"orderId":"order-test-1","language":"en"}','2026-10-23T10:00:00.000Z','synthetic-inbound-1','2026-10-23T10:00:00.000Z');
     INSERT INTO order_items(id,order_id,item_type,product_code,description,quantity,unit_price_pkr,line_total_pkr,created_at) VALUES('item-test-1','order-test-1','PRODUCT','FREE_5_PACK_VEGETABLE_SEEDS','Seeds',1,0,0,'2026-10-23T10:00:00.000Z');
   `);
   sqlite.exec(readFileSync("migrations/0039_payment_reminders_v2_cod_fallback.sql", "utf8"));
@@ -66,6 +66,19 @@ describe("recovered payment reminder V2", () => {
     expect(sqlite.prepare("SELECT COUNT(*) AS n FROM payment_reminder_v2_stages WHERE stage_minutes=270").get()).toEqual({ n: 0 });
   });
 
+  it.each([null, "invalid", "2026-10-23T10:00:01.000Z", "2026-10-22T09:59:59.999Z"] as const)("does not create a schedule without a valid open 24-hour window (%s)", async (lastInboundAt) => {
+    const db = setup();
+    sqlite.prepare("UPDATE whatsapp_conversations SET last_inbound_at=?").run(lastInboundAt);
+    await expect(createPaymentV2Schedule(db, "order-test-1", "payment-test-1", t0)).rejects.toThrow("PAYMENT_REMINDER_SERVICE_WINDOW_CLOSED");
+    expect(sqlite.prepare("SELECT COUNT(*) AS n FROM payment_reminder_v2_schedules").get()).toEqual({ n: 0 });
+  });
+
+  it("requires the persisted inbound message identity as well as its timestamp", async () => {
+    const db = setup();
+    sqlite.prepare("UPDATE whatsapp_conversations SET last_inbound_message_id=NULL").run();
+    await expect(createPaymentV2Schedule(db, "order-test-1", "payment-test-1", t0)).rejects.toThrow("PAYMENT_REMINDER_SERVICE_WINDOW_CLOSED");
+  });
+
   it.each([15, 30, 60, 210, 240] as const)("queues one ordered stage at +%dm and duplicate Cron does not duplicate it", async (minutes) => {
     const db = setup();
     await createPaymentV2Schedule(db, "order-test-1", "payment-test-1", t0);
@@ -74,6 +87,18 @@ describe("recovered payment reminder V2", () => {
     expect((await enqueueDuePaymentV2Stages(db, new Date(t0.getTime() + minutes * 60_000), true)).queued).toBe(0);
     expect(sqlite.prepare("SELECT status FROM payment_reminder_v2_stages WHERE stage_minutes=?").get(minutes)).toEqual({ status: "QUEUED" });
     expect(sqlite.prepare("SELECT COUNT(*) AS n FROM outbox_jobs WHERE kind='WHATSAPP_PAYMENT_REMINDER'").get()).toEqual({ n: 1 });
+  });
+
+  it("permanently blocks an expired stage and never backfills it after a later inbound", async () => {
+    const db = setup();
+    await createPaymentV2Schedule(db, "order-test-1", "payment-test-1", t0);
+    sqlite.prepare("UPDATE whatsapp_conversations SET last_inbound_at=?").run("2026-10-22T09:59:59.999Z");
+    expect((await enqueueDuePaymentV2Stages(db, new Date(t0.getTime() + 15 * 60_000), true)).blocked).toBe(1);
+    expect(sqlite.prepare("SELECT status,phase,stop_reason FROM payment_reminder_v2_schedules").get()).toEqual({ status: "STOPPED", phase: "STOPPED", stop_reason: "BLOCKED_WINDOW" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS n FROM payment_reminder_v2_stages WHERE status='BLOCKED_WINDOW'").get()).toEqual({ n: 5 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS n FROM outbox_jobs").get()).toEqual({ n: 0 });
+    sqlite.prepare("UPDATE whatsapp_conversations SET last_inbound_at=?").run(new Date(t0.getTime() + 16 * 60_000).toISOString());
+    expect((await enqueueDuePaymentV2Stages(db, new Date(t0.getTime() + 16 * 60_000), true)).queued).toBe(0);
   });
 
   it("enters grace at 240m, presents the fallback state, and never creates a 270m cancellation", async () => {

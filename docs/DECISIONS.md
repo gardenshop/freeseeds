@@ -1197,3 +1197,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Keep all three reminder flags false and do not deploy a GFS-280 Worker while no utility template is approved and no authorized eligible-recipient delivery is available.
 - The two submitted templates are canonical-name Utility templates and remain In review. Do not create locale-suffixed names: the Worker calls the canonical name with a language code, and Meta's create flow rejects duplicate names where the language must be added through the existing-template workflow.
 - The local candidate is releasable for a future staged run, but production status is NO-GO until D1 preflight/integrity, required template approvals, staged Cron/Queue verification, and real authorized delivery evidence are complete.
+
+## 2026-10-28: GFS-281 no-template service-window release
+
+- Adopt the owner’s final policy: reminder sends are permitted only while the persisted latest customer inbound message identity and timestamp prove an open 24-hour service window. Remove all utility-template fallback behavior.
+- Treat the internal Admin EN/UR copy as ordinary service-window text, not a Meta template. Keep the utility approval flag false and do not submit or publish Meta templates for this feature.
+- When a due stage has no valid window, stop the schedule and mark all pending/queued stages `BLOCKED_WINDOW`; a future inbound can support future customer interactions but cannot revive missed reminder stages.
+- Paid entitlement is verified, but the production D1 SQL gate remains unresolved. Do not convert dashboard capacity into permission to query or write; require supported owner authorization before migration0039/0040 preflight or apply.

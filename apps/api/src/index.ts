@@ -3,7 +3,7 @@ import type { Context } from "hono";
 import { applyFertilizerDecision, codQuote, codReferenceHmac, createWhatsAppProvider, customerTransactionReferenceHash, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isInsideWhatsAppServiceWindow, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, MetaCapiProvider, MetaFlowEnvelope, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeMobileContactNumber, normalizePaymentMethodRow, normalizeWhatsAppWaId, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInboundConversationActivity, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey } from "@gfs/core";
 import { handleMetaFlowPayload } from "./flow-endpoint";
 import { admitWhatsAppSenders } from "./rate-limit";
-import { createPaymentV2Schedule, enqueueDuePaymentV2Stages, resolvePaymentReminderCodFallback, setPaymentReminderV2OptOut } from "./payment-reminders-v2";
+import { createPaymentV2Schedule, enqueueDuePaymentV2Stages, isPaymentReminderV2ServiceWindowOpen, resolvePaymentReminderCodFallback, setPaymentReminderV2OptOut } from "./payment-reminders-v2";
 
 type Env = {
   Bindings: {
@@ -1174,13 +1174,19 @@ export default {
           }
         }
         if (message.body.kind === "WHATSAPP_PAYMENT_REMINDER") {
-          const blockReminder = async (reason: string, stageStatus: "BLOCKED_TEMPLATE" | "BLOCKED_WINDOW" | "SKIPPED") => {
+          const blockReminder = async (reason: string, stageStatus: "BLOCKED_TEMPLATE" | "BLOCKED_WINDOW" | "SKIPPED", stopSchedule = false) => {
             const blockedAt = new Date().toISOString();
-            await env.DB.batch([
+            const statements = [
               env.DB.prepare("UPDATE outbox_jobs SET status='PERMANENT_FAILURE',attempts=?,last_error=?,updated_at=? WHERE idempotency_key=? AND status NOT IN ('SENT','DEAD_LETTER')").bind(nextAttempt, reason, blockedAt, message.body.idempotencyKey),
-              env.DB.prepare("UPDATE payment_reminder_v2_stages SET status=?,last_error=?,completed_at=?,updated_at=? WHERE idempotency_key=? AND status='QUEUED'").bind(stageStatus, reason, blockedAt, blockedAt, message.body.idempotencyKey),
+              ...(stopSchedule ? [
+                env.DB.prepare("UPDATE payment_reminder_v2_schedules SET status='STOPPED',phase='STOPPED',stop_reason=?,updated_at=? WHERE id IN (SELECT schedule_id FROM payment_reminder_v2_stages WHERE idempotency_key=?) AND status IN ('ACTIVE','PAUSED')").bind(reason, blockedAt, message.body.idempotencyKey),
+                env.DB.prepare("UPDATE payment_reminder_v2_stages SET status='BLOCKED_WINDOW',last_error=?,completed_at=COALESCE(completed_at,?),updated_at=? WHERE schedule_id IN (SELECT schedule_id FROM payment_reminder_v2_stages WHERE idempotency_key=?) AND status IN ('PENDING','CLAIMED','QUEUED')").bind(reason, blockedAt, blockedAt, message.body.idempotencyKey)
+              ] : [
+                env.DB.prepare("UPDATE payment_reminder_v2_stages SET status=?,last_error=?,completed_at=?,updated_at=? WHERE idempotency_key=? AND status='QUEUED'").bind(stageStatus, reason, blockedAt, blockedAt, message.body.idempotencyKey)
+              ]),
               env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "WHATSAPP_PAYMENT_REMINDER_BLOCKED", "SYSTEM", "ORDER", message.body.entityId, crypto.randomUUID(), JSON.stringify({ reason }), blockedAt)
-            ]);
+            ];
+            await env.DB.batch(statements);
             message.ack();
           };
           try {
@@ -1190,14 +1196,14 @@ export default {
             if (!payload?.stageId || !payload.scheduleId || payload.orderId !== message.body.entityId || payload.stageId !== message.body.idempotencyKey) { await blockReminder("PAYMENT_REMINDER_PAYLOAD_INVALID", "SKIPPED"); continue; }
             const current = await env.DB.prepare(`SELECT st.id,st.stage_minutes,st.status AS stage_status,st.locale AS pinned_locale,st.template_version AS pinned_template_version,
                 s.status AS schedule_status,s.phase,s.source_created_at,o.order_number,o.state,o.archived_at,o.payment_status,o.total_payable,
-                p.id AS payment_id,p.review_state,p.method,c.id AS customer_id,c.wa_id,wc.last_inbound_at,wc.state_data,
+                p.id AS payment_id,p.review_state,p.method,c.id AS customer_id,c.wa_id,wc.last_inbound_message_id,wc.last_inbound_at,wc.state_data,
                 EXISTS(SELECT 1 FROM payment_receipts r WHERE r.order_id=o.id AND r.payment_id=p.id) AS has_receipt,
                 EXISTS(SELECT 1 FROM payment_reminder_v2_opt_outs x WHERE x.customer_id=c.id OR x.wa_id=c.wa_id) AS opted_out
               FROM payment_reminder_v2_stages st JOIN payment_reminder_v2_schedules s ON s.id=st.schedule_id
               JOIN orders o ON o.id=s.order_id JOIN payments p ON p.id=s.payment_id JOIN customers c ON c.id=o.customer_id
               LEFT JOIN whatsapp_conversations wc ON wc.wa_id=c.wa_id
               WHERE st.id=? AND s.id=? AND o.id=? AND p.id=? AND c.id=?`).bind(payload.stageId, payload.scheduleId, payload.orderId, payload.paymentId, payload.customerId ?? "")
-              .first<{ id:string; stage_minutes:number; stage_status:string; pinned_locale:string|null; pinned_template_version:number|null; schedule_status:string; phase:string; source_created_at:string; order_number:string; state:string; archived_at:string|null; payment_status:string; total_payable:number; payment_id:string; review_state:string; method:string|null; customer_id:string; wa_id:string|null; last_inbound_at:string|null; state_data:string|null; has_receipt:number; opted_out:number }>();
+              .first<{ id:string; stage_minutes:number; stage_status:string; pinned_locale:string|null; pinned_template_version:number|null; schedule_status:string; phase:string; source_created_at:string; order_number:string; state:string; archived_at:string|null; payment_status:string; total_payable:number; payment_id:string; review_state:string; method:string|null; customer_id:string; wa_id:string|null; last_inbound_message_id:string|null; last_inbound_at:string|null; state_data:string|null; has_receipt:number; opted_out:number }>();
             if (!current || current.stage_status !== "QUEUED" || Number(current.stage_minutes) !== Number(payload.stageMinutes)) { await blockReminder("PAYMENT_REMINDER_STATE_MISMATCH", "SKIPPED"); continue; }
             const eligible = current.schedule_status === "ACTIVE" && current.payment_status === "PENDING" && current.review_state === "PENDING" && current.has_receipt === 0 && current.state === "PAYMENT_PENDING" && (Number(payload.stageMinutes) < 240 || current.phase === "PAYMENT_GRACE");
             if (!eligible || current.archived_at || current.opted_out || !current.wa_id || !/^\d{7,20}$/.test(current.wa_id)) { await blockReminder(current.opted_out ? "PAYMENT_REMINDER_OPTED_OUT" : "PAYMENT_REMINDER_NO_LONGER_ELIGIBLE", "SKIPPED"); continue; }
@@ -1206,23 +1212,21 @@ export default {
             catch { await blockReminder("PAYMENT_REMINDER_LOCALE_UNVERIFIED", "SKIPPED"); continue; }
             const templateKey: Record<number,string> = { 15:"REMINDER_15M", 30:"REMINDER_30M", 60:"REMINDER_60M", 210:"FINAL_WARNING_210M", 240:"GRACE_NOTICE_240M" };
             const key = templateKey[Number(payload.stageMinutes)];
-            const template = key ? await env.DB.prepare(`SELECT version,body,utility_template_name,utility_approved_at FROM payment_v2_template_versions
-              WHERE template_key=? AND locale=? AND state='PUBLISHED' ORDER BY version DESC LIMIT 1`).bind(key, locale).first<{ version:number; body:string; utility_template_name:string|null; utility_approved_at:string|null }>() : null;
+            if (!isPaymentReminderV2ServiceWindowOpen(current.last_inbound_message_id, current.last_inbound_at)) { await blockReminder("PAYMENT_REMINDER_BLOCKED_WINDOW", "BLOCKED_WINDOW", true); continue; }
+            const template = key ? await env.DB.prepare(`SELECT version,body FROM payment_v2_template_versions
+              WHERE template_key=? AND locale=? AND state='PUBLISHED' ORDER BY version DESC LIMIT 1`).bind(key, locale).first<{ version:number; body:string }>() : null;
             if (!template?.body) { await blockReminder("PAYMENT_REMINDER_CMS_TEMPLATE_NOT_PUBLISHED", "BLOCKED_TEMPLATE"); continue; }
-            const serviceWindow = isInsideWhatsAppServiceWindow(current.last_inbound_at);
-            if (!serviceWindow && (env.PAYMENT_UTILITY_TEMPLATES_APPROVED !== "true" || !template.utility_template_name || !template.utility_approved_at)) { await blockReminder("PAYMENT_REMINDER_UTILITY_TEMPLATE_NOT_APPROVED", "BLOCKED_TEMPLATE"); continue; }
             const itemRows = await env.DB.prepare("SELECT description,line_total_pkr FROM order_items WHERE order_id=? ORDER BY item_type,product_code").bind(payload.orderId).all<{ description:string; line_total_pkr:number }>();
             const items = (itemRows.results ?? []).map((item) => `${item.description} PKR ${Number(item.line_total_pkr)}`).join("; ") || `order total PKR ${Number(current.total_payable)}`;
             const values: Record<string,string> = { orderNumber: current.order_number, amount: String(current.total_payable), items, delivery: String((await env.DB.prepare("SELECT delivery_fee FROM orders WHERE id=?").bind(payload.orderId).first<{ delivery_fee:number }>())?.delivery_fee ?? 0), codFee: "125", codTotal: String(Number(current.total_payable) + 125) };
             const rendered = template.body.replace(/\{(orderNumber|amount|items|delivery|codFee|codTotal)\}/g, (_match, name: string) => values[name] ?? "");
-            const parameters = [...template.body.matchAll(/\{(orderNumber|amount|items|delivery|codFee|codTotal)\}/g)].map((match) => values[match[1]] ?? "");
             const provider = createWhatsAppProvider("meta", { enabled: env.META_PROVIDER_ENABLED === "true", graphVersion: env.META_GRAPH_VERSION ?? "v26.0", accessToken: env.META_ACCESS_TOKEN, phoneNumberId: env.META_PHONE_NUMBER_ID, verifyToken: env.WEBHOOK_VERIFY_TOKEN, appSecret: env.META_APP_SECRET });
-            const send = serviceWindow ? () => Number(payload.stageMinutes) === 240 ? provider.sendInteractive(current.wa_id!, rendered, [{ id:"CONFIRM_COD", title: locale === "ur" ? "COD کی تصدیق" : "Confirm COD" }, { id:"KEEP_ADVANCE", title: locale === "ur" ? "ایڈوانس برقرار" : "Keep Advance" }, { id:"CANCEL_ORDER", title: locale === "ur" ? "آرڈر منسوخ" : "Cancel Order" }]) : provider.sendText(current.wa_id!, rendered) : () => provider.sendTemplate(current.wa_id!, template.utility_template_name!, parameters, locale === "ur" ? "ur" : "en_US", Number(payload.stageMinutes) === 240 ? ["CONFIRM_COD", "KEEP_ADVANCE", "CANCEL_ORDER"] : []);
+            const send = Number(payload.stageMinutes) === 240 ? () => provider.sendInteractive(current.wa_id!, rendered, [{ id:"CONFIRM_COD", title: locale === "ur" ? "COD کی تصدیق" : "Confirm COD" }, { id:"KEEP_ADVANCE", title: locale === "ur" ? "ایڈوانس برقرار" : "Keep Advance" }, { id:"CANCEL_ORDER", title: locale === "ur" ? "آرڈر منسوخ" : "Cancel Order" }]) : () => provider.sendText(current.wa_id!, rendered);
             const delivered = await sendPaymentPart(env.DB, current.wa_id, payload.orderId!, message.body.idempotencyKey, "WHATSAPP_PAYMENT_REMINDER", send);
             if (delivered !== "SENT") throw new Error("PAYMENT_REMINDER_SEND_FAILED");
             const sentAt = new Date().toISOString();
             await env.DB.batch([
-              env.DB.prepare("UPDATE payment_reminder_v2_stages SET status='SENT',template_name=?,locale=?,template_version=?,rendered_text=?,sent_at=?,last_error=NULL,updated_at=? WHERE id=? AND status='QUEUED'").bind(template.utility_template_name ?? "SERVICE_WINDOW", locale, template.version, rendered, sentAt, sentAt, payload.stageId),
+              env.DB.prepare("UPDATE payment_reminder_v2_stages SET status='SENT',template_name='SERVICE_WINDOW',locale=?,template_version=?,rendered_text=?,sent_at=?,last_error=NULL,updated_at=? WHERE id=? AND status='QUEUED'").bind(locale, template.version, rendered, sentAt, sentAt, payload.stageId),
               env.DB.prepare("UPDATE outbox_jobs SET status='SENT',attempts=?,last_error=NULL,updated_at=? WHERE idempotency_key=?").bind(nextAttempt, sentAt, message.body.idempotencyKey)
             ]);
             message.ack();

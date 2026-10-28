@@ -847,3 +847,11 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Utility template sends use deterministic `en_US`/`ur` language and +240 quick-reply payloads. Automation remains OFF until all required templates are approved, live schema/integrity is verified, staged provenance passes, and an authorized delivery is observed.
 - A bounded live D1 preflight was not run because the existing over-quota safety gate rejected it. Do not bypass that gate or infer current counts, migration markers, reminder rows, or integrity from dashboard aggregates.
 - No GFS-280 migration, Worker deployment, reminder send, WAMID, COD conversion, or traffic change is proven by this record. Keep `PAYMENT_AUTOMATION_V2_ENABLED`, `PAYMENT_REMINDERS_V2_ENABLED`, and `PAYMENT_UTILITY_TEMPLATES_APPROVED` false until the gates pass.
+
+## GFS-281 Strict 24-Hour Reminder Policy (2026-10-28)
+
+- Reminder delivery is service-window-only: no Meta templates, no out-of-window fallback, and no 72-hour pricing exception. `PAYMENT_UTILITY_TEMPLATES_APPROVED` remains permanently false for this feature.
+- A reminder schedule requires a valid recipient, no opt-out, a persisted latest inbound message identity, and a valid latest inbound timestamp strictly inside 24 hours. The same checks run when due stages are claimed and immediately before provider send.
+- A closed, null, invalid, future, or expired window permanently marks the schedule and pending stages `BLOCKED_WINDOW`; a later inbound never backfills missed reminder stages.
+- Internal Admin EN/UR CMS copy is local service-window copy only. +240 remains Confirm COD / Keep Advance / Cancel Order with the exact PKR125 fee and explicit consent; silence never converts COD.
+- Workers Paid and the GFS Cloudflare identity were read-only verified. Production D1 Studio is reachable, but its visible schema lacks reminder tables; the documented over-quota safety gate rejected a bounded marker query. Do not apply migrations or deploy until that gate is explicitly resolved through supported authorization.

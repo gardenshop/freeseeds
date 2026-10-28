@@ -1544,3 +1544,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **Local gates PASS:** focused 30/30 after repair, full 303/303, build, lint, offline audit with 0 vulnerabilities, rollback4/4, Worker dry-runs, and diff check. Active live versions remain API `24d72438-72a1-4544-80df-4b9b90c297e5` 100% and Admin `66426d2a-be1c-4e22-b420-1b1559dcbbc5` 100%; no GFS-280 version is deployed.
 - **Counts:** the latest verified prior audit remains 83 total / 19 Advance pending-no-receipt / 6 review / 37 no-method / 16 COD / 2 paid / 2 other Advance / 1 cancelled-archived. A fresh recount was blocked and must not be represented as current. Feature reminder queued/sent/delivered/read/failed/duplicate-suppressed counts remain unproven; no GFS-280 send was made.
 - **D1 dashboard context only:** the displayed last-24-hour aggregate was approximately 9.02M rows read and 33.24K written; this is not a migration or eligibility result.
+
+## GFS-281 Strict 24-Hour Reminders — 2026-10-28
+
+- **P0 PASS/blocked:** `gardenshop`, `gisupp@gmail.com`, and canonical GFS Meta identities were rechecked. Wrangler confirms Workers Paid and D1/Queue write scopes. Production D1 Studio is reachable and visibly lacks reminder tables; bounded SQL marker/integrity reads were rejected by the existing over-quota safety gate.
+- **P1 PASS local:** all reminder template-send fallbacks were removed. Scheduling, due-stage claiming, and queue send require a persisted latest inbound message ID plus a timestamp strictly inside 24 hours. Invalid/future/expired/null windows permanently block the schedule and prevent later backlog sends.
+- **P2 BLOCKED safely:** migrations0039/0040 were not applied, no D1 write occurred, and no Worker was staged or deployed. Existing live0038 compatibility and integrity remain unclaimed pending supported D1 authorization.
+- **P3 BLOCKED safely:** no Meta template was submitted, approved, or used. Internal Admin EN/UR CMS copy remains the only intended reminder content source; feature flags remain OFF.
+- **P4 BLOCKED:** no live eligible-order recount, reminder send, WAMID, delivery/read/failure evidence, or COD conversion was performed.
+- **P5 PASS local:** focused 16/16 and full 309/309 after the strict-window repair; build, lint, offline audit 0 vulnerabilities, and rollback4/4 also pass.

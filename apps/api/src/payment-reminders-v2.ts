@@ -1,3 +1,5 @@
+import { isInsideWhatsAppServiceWindow } from "@gfs/core";
+
 type ReminderStageMinutes = 15 | 30 | 60 | 210 | 240;
 
 export type PaymentReminderV2Delivery = {
@@ -19,6 +21,10 @@ export type PaymentReminderCodPolicy = {
   testHold?: 0 | 1;
 };
 
+export function isPaymentReminderV2ServiceWindowOpen(lastInboundMessageId: string | null | undefined, lastInboundAt: string | null | undefined, now = Date.now()): boolean {
+  return Boolean(lastInboundMessageId?.trim()) && isInsideWhatsAppServiceWindow(lastInboundAt, now);
+}
+
 const STAGES: readonly ReminderStageMinutes[] = [15, 30, 60, 210, 240];
 const TERMINAL_ORDER_STATES = new Set(["CANCELLED", "CANCELLED_UNPAID", "PAID", "PACKING", "DISPATCHED", "DELIVERED", "ARCHIVED"]);
 
@@ -33,13 +39,16 @@ function stageId(scheduleId: string, stage: number): string { return `${schedule
 /** Explicitly creates a schedule for a newly selected unpaid Advance payment; never backfills history. */
 export async function createPaymentV2Schedule(db: D1Database, orderId: string, paymentId: string, now: Date, cycle = 0, anchorAtOrderCreation = true): Promise<{ scheduleId: string; created: boolean }> {
   if (!Number.isInteger(cycle) || cycle < 0) throw new Error("INVALID_PAYMENT_REMINDER_CYCLE");
-  const current = await db.prepare(`SELECT o.created_at
-    FROM orders o JOIN payments p ON p.order_id=o.id
+  const current = await db.prepare(`SELECT o.created_at,c.wa_id,wc.last_inbound_message_id,wc.last_inbound_at
+    FROM orders o JOIN payments p ON p.order_id=o.id JOIN customers c ON c.id=o.customer_id
+    JOIN whatsapp_conversations wc ON wc.wa_id=c.wa_id
     WHERE o.id=? AND p.id=? AND o.payment_status='PENDING'
       AND o.state IN ('PAYMENT_PENDING','PAYMENT_GRACE') AND p.review_state='PENDING'
       AND p.method IS NOT NULL AND p.method<>'COD'
-      AND NOT EXISTS(SELECT 1 FROM payment_receipts r WHERE r.order_id=o.id AND r.payment_id=p.id)`).bind(orderId, paymentId).first<{ created_at: string }>();
-  if (!current || !Number.isFinite(Date.parse(current.created_at))) throw new Error("PAYMENT_REMINDER_ORDER_NOT_ELIGIBLE");
+      AND NOT EXISTS(SELECT 1 FROM payment_reminder_v2_opt_outs x WHERE x.customer_id=c.id OR x.wa_id=c.wa_id)
+      AND NOT EXISTS(SELECT 1 FROM payment_receipts r WHERE r.order_id=o.id AND r.payment_id=p.id)`).bind(orderId, paymentId).first<{ created_at: string; wa_id: string; last_inbound_message_id: string | null; last_inbound_at: string | null }>();
+  if (!current || !Number.isFinite(Date.parse(current.created_at)) || !/^\d{7,20}$/.test(current.wa_id)) throw new Error("PAYMENT_REMINDER_ORDER_NOT_ELIGIBLE");
+  if (!isPaymentReminderV2ServiceWindowOpen(current.last_inbound_message_id, current.last_inbound_at, now.getTime())) throw new Error("PAYMENT_REMINDER_SERVICE_WINDOW_CLOSED");
   const timestamp = asIso(now);
   const id = cycle === 0 ? `payment-reminder-v2:${orderId}:${paymentId}` : `payment-reminder-v2:${orderId}:${paymentId}:cycle:${cycle}`;
   const source = cycle === 0 && anchorAtOrderCreation ? current.created_at : timestamp;
@@ -66,6 +75,14 @@ async function stopSchedule(db: D1Database, id: string, reason: string, now: str
   ]);
 }
 
+async function blockScheduleForWindow(db: D1Database, id: string, now: string): Promise<void> {
+  await db.batch([
+    db.prepare("UPDATE payment_reminder_v2_schedules SET status='STOPPED',phase='STOPPED',stop_reason='BLOCKED_WINDOW',updated_at=? WHERE id=? AND status IN ('ACTIVE','PAUSED')").bind(now, id),
+    db.prepare("UPDATE payment_reminder_v2_stages SET status='BLOCKED_WINDOW',completed_at=COALESCE(completed_at,?),last_error='BLOCKED_WINDOW',updated_at=? WHERE schedule_id=? AND status IN ('PENDING','CLAIMED','QUEUED')").bind(now, now, id),
+    db.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_REMINDER_WINDOW_BLOCKED", "SYSTEM", "PAYMENT_REMINDER_SCHEDULE", id, crypto.randomUUID(), JSON.stringify({ reason: "BLOCKED_WINDOW" }), now)
+  ]);
+}
+
 /** Claims at most one due stage per schedule and writes its durable Queue job atomically. */
 export async function enqueueDuePaymentV2Stages(db: D1Database, now: Date, enabled: boolean): Promise<PaymentReminderV2EnqueueResult> {
   const timestamp = asIso(now);
@@ -73,12 +90,14 @@ export async function enqueueDuePaymentV2Stages(db: D1Database, now: Date, enabl
   if (!enabled) return result;
   const schedules = await db.prepare(`SELECT s.id,s.order_id,s.payment_id,s.held_at,o.customer_id,o.state AS order_state,
       o.payment_status,p.review_state,p.method,c.wa_id,
+      wc.last_inbound_message_id,wc.last_inbound_at,
       EXISTS(SELECT 1 FROM payment_receipts r WHERE r.order_id=o.id AND r.payment_id=p.id) AS has_receipt,
       EXISTS(SELECT 1 FROM payment_reminder_v2_opt_outs x WHERE x.customer_id=o.customer_id OR x.wa_id=c.wa_id) AS opted_out,
       EXISTS(SELECT 1 FROM cod_order_details cd WHERE cd.order_id=o.id) AS is_cod
     FROM payment_reminder_v2_schedules s JOIN orders o ON o.id=s.order_id JOIN payments p ON p.id=s.payment_id JOIN customers c ON c.id=o.customer_id
+      JOIN whatsapp_conversations wc ON wc.wa_id=c.wa_id
     WHERE s.status='ACTIVE' ORDER BY s.created_at,s.id`).all<{
-      id: string; order_id: string; payment_id: string; held_at: string | null; customer_id: string; wa_id: string;
+      id: string; order_id: string; payment_id: string; held_at: string | null; customer_id: string; wa_id: string; last_inbound_message_id: string | null; last_inbound_at: string | null;
       order_state: string; payment_status: string; review_state: string; method: string | null; has_receipt: number; opted_out: number; is_cod: number;
     }>();
   for (const schedule of schedules.results ?? []) {
@@ -96,6 +115,11 @@ export async function enqueueDuePaymentV2Stages(db: D1Database, now: Date, enabl
         AND prior.status NOT IN ('SENT','DELIVERED','SKIPPED','BLOCKED_TEMPLATE','BLOCKED_WINDOW','DEAD_LETTER','CANCELLED'))
       ORDER BY stage_minutes LIMIT 1`).bind(schedule.id, timestamp, schedule.id).first<{ id: string; stage_minutes: ReminderStageMinutes; idempotency_key: string }>();
     if (!due) continue;
+    if (!isPaymentReminderV2ServiceWindowOpen(schedule.last_inbound_message_id, schedule.last_inbound_at, now.getTime())) {
+      await blockScheduleForWindow(db, schedule.id, timestamp);
+      result.blocked += 1;
+      continue;
+    }
     const claimed = await db.prepare(`UPDATE payment_reminder_v2_stages SET status='CLAIMED',updated_at=? WHERE id=? AND status='PENDING' AND EXISTS(
       SELECT 1 FROM payment_reminder_v2_schedules s JOIN orders o ON o.id=s.order_id JOIN payments p ON p.order_id=o.id
       WHERE s.id=? AND s.status='ACTIVE' AND s.held_at IS NULL AND o.payment_status='PENDING' AND o.state IN ('PAYMENT_PENDING','PAYMENT_GRACE')

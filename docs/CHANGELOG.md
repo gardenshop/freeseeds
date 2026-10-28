@@ -1072,3 +1072,10 @@
 - Utility template names are now persisted from the migration and future Admin drafts. Meta sends preserve `en_US`/`ur` and +240 sends carry the three consent payloads.
 - Local verification is 303/303 with build, lint, offline audit, Worker dry-runs, and rollback4/4 passing. No live migration, deployment, send, WAMID, or COD conversion was performed.
 - Two canonical GFS Utility templates are In review; no template is approved. Production activation remains NO-GO.
+
+## 2026-10-28 — GFS-281 strict 24-hour-only reminders
+
+- Removed the reminder queue’s Meta utility-template fallback and kept `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`.
+- Added service-window checks at schedule creation, due-stage claiming, and immediately before provider send. Missing or expired inbound identity/timestamps permanently block the schedule and prevent backlog delivery.
+- Kept the existing five stages, local CMS EN/UR copy, +240 explicit COD consent, PKR125 fee guard, opt-out, and no-silence-conversion safeguards.
+- Reverified Workers Paid and Cloudflare identity. Production D1 marker/integrity query remains blocked by the documented safety gate; no migration, deployment, template mutation, or customer send occurred.

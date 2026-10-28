@@ -1375,3 +1375,9 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | GFS-280 rollback and Worker dry-runs | **PASS local** | rollback4/4; API/Admin dry-runs preserve D1/R2/Queue bindings and all reminder flags false |
 | GFS-280 live D1 migration0039/0040 | **BLOCKED safely** | Over-quota safety gate rejected bounded SQL preflight; no live write or integrity claim |
 | GFS-280 Meta templates and WAMID | **BLOCKED safely** | Two Utility templates In review, no approved template, remaining variants absent; no customer message or WAMID |
+
+| GFS-281 schedule creation window gate | **PASS** | Rejects null, invalid, future, expired, missing-message-identity, opted-out, and invalid-recipient schedules |
+| GFS-281 due claim window gate | **PASS** | Due stages require the latest persisted inbound identity/timestamp; expired schedules become permanently `BLOCKED_WINDOW` |
+| GFS-281 queue/send window gate | **PASS local** | Queue rechecks the latest window immediately before send; closed-window jobs stop the schedule and cannot use a template fallback |
+| GFS-281 no Meta template path | **PASS source/build** | Worker sends only local CMS text or +240 interactive buttons inside the verified window; utility approval flag is not used to authorize sending |
+| GFS-281 live D1/Paid verification | **PARTIAL/BLOCKED** | Workers Paid and account identity verified; production schema visible, but bounded SQL marker/integrity read rejected by safety gate |
