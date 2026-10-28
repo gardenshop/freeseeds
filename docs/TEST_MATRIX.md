@@ -1556,3 +1556,20 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | Full regression | PASS | 312/312 |
 | Build/lint/audit | PASS | TypeScript, ESLint, online audit 0 vulnerabilities |
 | Rollback4/4 | PASS | Existing clean `gfs273-v1` worktree at exact `cf01f44` |
+
+## GFS-298 Bilingual Confirmation Candidate (2026-10-28)
+
+| Area | Result | Evidence |
+|---|---|---|
+| `{codFee}` validator/rendering | PASS | New semantic field accepted and synthetic dynamic rendering passed |
+| Duplicate confirmation/payment copy | PASS | Guided journey proves no hardcoded appended payment paragraph and one COD phrase |
+| EN/UR and COD fee | PASS local | Synthetic EN/UR confirmation/COD tests; fee comes from configured policy |
+| COD unavailable fallback | PASS local | Invalid policy suppresses COD button/copy and leaves no unresolved `{codFee}` |
+| Admin CMS draft/publish | PASS then rolled back | Version 4 validated both locales/placeholders/no HTML; version 3 restored pending compatible API acceptance |
+| API preview health | PASS | Candidate preview returned production-integration-ready / WhatsApp enabled |
+| Genuine fresh WhatsApp confirmation | BLOCKED | Existing authorized session already contained an order/payment interaction; no reset or duplicate order permitted |
+| Focused tests | PASS | 103/103 |
+| Full regression | PASS | 316/316 |
+| Build/lint | PASS | TypeScript and ESLint |
+| Audit | BLOCKED | Registry advisory endpoint unavailable |
+| Rollback4/4 | PASS | Verified clean `D:\free seeds\gfs273-v1` at `cf01f44` |

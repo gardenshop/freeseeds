@@ -1310,3 +1310,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Treat the exact regression as synchronous reminder reconciliation on the customer webhook path plus ambiguous D1 target columns. Customer replies must never await reminder delivery reconciliation.
 - Run reminder delivery reconciliation only from Cron, with qualified target columns. Keep repository and live reminder/automation defaults false and utility-template approval false until a separately staged candidate proves noninterference.
 - Do not replay the 27 uncorrelated fault-window events, reset conversations, create test orders, expose raw WAMIDs, or infer payment/COD state. Preserve migrations0039/0040, financial holds, explicit COD consent, and the existing order reference.
+
+## 2026-10-28: GFS-298 confirmation CMS safety decision
+
+- Keep the GFS-298 API candidate at 0% until a fresh authorized tester can safely reach confirmation and cancel without touching the existing order/payment-method session.
+- Keep CMS published version 3 while API baseline `45b01d86` is active; validated version 4 remains draft. This avoids serving a `{codFee}` CMS payload to an API whose deployed validator predates that placeholder.
+- Promote only the compatible pair together after guarded acceptance. Preserve API `45b01d86` and Admin `b4c45278` as rollback references.
+- Keep reminder flags false/false/false and utility-template approval false. No reminder or Meta delivery evidence is inferred from this task.

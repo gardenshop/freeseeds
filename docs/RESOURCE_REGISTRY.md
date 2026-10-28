@@ -1287,3 +1287,11 @@ No secrets are stored in this registry.
 - **Reminders:** PAUSED, flags false/false/false. Admin has five stages, 5 EN + 5 UR PUBLISHED, zero utility approvals; schedules/stages/jobs/outbound reminder rows 0/0/0/0.
 - **Source candidate:** commit `6bc4741`; qualified reconciliation SQL, Cron-only execution, customer-webhook isolation, deployment defaults OFF. Candidate undeployed; production remains on proven `8e670de8`.
 - **Quality:** focused 104/104, full 312/312, build/lint, online audit0, rollback4/4 using existing `D:\free seeds\gfs273-v1` at `cf01f44`.
+
+## GFS-298 Confirmation Candidate Registry (2026-10-28)
+
+- **Identity:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical GFS Meta only. Narrow Wrangler token used only user-read and Workers-scripts-write; Hoja was not accessed.
+- **API:** baseline `45b01d86` 100%; candidate `c4908cb5` 0%. Candidate preview health passed. Active D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, R2, Queue, Cron topology and migrations 0039/0040 unchanged.
+- **Admin:** validator candidate `f0212429` 100%; rollback `b4c45278` 0%. CMS published version 3 is compatible with baseline; validated version 4 is retained in draft.
+- **Flags:** reminder false/false/false and utility-template approval false. No schedules, sends, WAMIDs, delivery/read events, or historical replay were created by GFS-298.
+- **Acceptance:** no genuine new confirmation WAMID is claimed. The existing authorized browser session was not reset or reused for duplicate-order creation.

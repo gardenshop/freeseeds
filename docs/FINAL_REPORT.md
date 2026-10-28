@@ -3790,3 +3790,23 @@ The repair qualifies target-stage fields, moves reconciliation to the minute rem
 - Reminders **PAUSED**; +15/+30/+60/+210/+240 policy retained, no +270, templates, backfill, or silent COD conversion.
 
 Completion: P0 100%, P1 100%, P2 restoration 100% / extended payment journey 60%, P3 100%, P4 100%, P5 100%. Overall **96%**. Production customer replies are restored and provider-verified. Remaining work is optional controlled acceptance of Advance/COD/Check Order and a separately authorized staged deployment of the repaired candidate; neither blocks the restored public bot.
+
+## GFS-298 Final Report - Bilingual Order Confirmation Candidate (2026-10-28)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 preserve live release | PASS | API baseline `45b01d86` 100%; Admin validator `f0212429` 100%; rollback versions retained; reminders OFF |
+| P1 CMS confirmation | PASS validation / BLOCKED live promotion | Version 4 EN/UR draft has dynamic `{orderNumber}`, `{totalPkr}`, `{codFee}` and no HTML; version 3 restored for baseline compatibility |
+| P2 runtime routing | PASS local | Duplicate appended payment paragraph removed; payment buttons remain runtime-generated; COD fee is not hardcoded |
+| P3 testing | PASS local / BLOCKED genuine fresh device | 103 focused, 316 full, build, lint; existing session already had an order/payment interaction so no reset or duplicate order was attempted |
+| P4 guarded release | PASS safety rollback / NO-GO new candidate | API preview healthy and briefly canaried 25%, then restored to baseline; candidate now 0% |
+| P5 records | PASS | Required rules/status/matrix/decision/changelog/registry/report records updated |
+
+### Current production state
+
+- API `45b01d86`: 100%; GFS-298 candidate `c4908cb5`: 0%.
+- Admin validator `f0212429`: 100%; Admin rollback `b4c45278`: 0%.
+- CMS Confirmation: published version 3; validated version 4 retained as draft. Reminders `false/false/false`; no new WAMIDs or reminder outcomes.
+- Remaining release blocker: a fresh authorized tester interaction that reaches confirmation and safely cancels. No production order/payment/receipt/COD mutation was performed.
+
+Completion: P0 100%, P1 90% (validated, not live), P2 100%, P3 75% local / 0% fresh-device confirmation, P4 75%, P5 100%. Overall **82%**. Production decision: **GO to preserve the healthy baseline; NO-GO to promote the new confirmation until genuine acceptance evidence exists.**

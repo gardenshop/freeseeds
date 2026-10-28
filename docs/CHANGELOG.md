@@ -1188,3 +1188,11 @@
 - Qualified target columns, moved reconciliation to Cron, removed it from customer webhooks, and restored deployment defaults to reminder/automation OFF with utility templates false.
 - Verified genuine post-rollback provider delivery/read traffic and conversation progression without creating an order, replaying messages, resetting state, or mutating payments/COD.
 - Quality gates passed: focused 104/104, full 312/312, build, lint, audit0, rollback4/4.
+
+## 2026-10-28 - GFS-298 bilingual confirmation candidate
+
+- Added safe `{codFee}` CMS placeholder validation/rendering and the exact EN/UR confirmation fallback.
+- Removed the duplicate hardcoded payment-choice/COD-fee paragraph after confirmation while preserving generated payment buttons and payment/COD safeguards.
+- Uploaded API candidate `c4908cb5` and Admin validator candidate `f0212429`; staged and guarded-tested them without leaving the new API live.
+- Published CMS Confirmation version 4, verified both locales/placeholders, then restored published version 3 to maintain compatibility with the active API baseline while genuine fresh tester acceptance is pending.
+- Quality: focused 103/103, full 316/316, build/lint PASS, rollback4/4 PASS; registry audit unavailable. No order, payment, D1, reminder, Meta, or billing mutation occurred.

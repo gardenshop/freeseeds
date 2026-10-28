@@ -107,17 +107,29 @@ const LOCALE_FALLBACKS: Partial<Record<WhatsAppTemplateKey, { en: string; ur: st
     en: "🛒 *Order Summary*\n\n______________________________\n\n{orderSummaryItems}\n\nDelivery Fee: PKR {deliveryFee}\n\n______________________________\n\n*Order Total: PKR {orderTotal}*\n\n=====================\n\nPlease select your payment method below to continue.",
     ur: "🛒 *آرڈر کا خلاصہ*\n\n______________________________\n\n{orderSummaryItems}\n\nڈیلیوری فیس: PKR {deliveryFee}\n\n______________________________\n\n*کل آرڈر: PKR {orderTotal}*\n\n=====================\n\nجاری رکھنے کے لیے نیچے ادائیگی کا طریقہ منتخب کریں۔"
   },
-  CONFIRMATION: { en: "Order {orderNumber} created. Total: PKR {totalPkr}.", ur: "آرڈر {orderNumber} تیار ہو گیا۔ کل: PKR {totalPkr}۔" },
+  CONFIRMATION: { en: "✅ *Your Order Has Been Received!*\n\n____________________________\n\nOrder: {orderNumber}\n*Total Payable: PKR {totalPkr}*\n\n____________________________\n\nPlease choose your payment method:\nAdvance Payment or Cash on Delivery (COD).\n\n*Note:* *COD orders include an additional PKR {codFee} Cash Collection Fee.*", ur: "✅ *آپ کا آرڈر موصول ہو گیا ہے!*\n\n____________________________\n\nآرڈر نمبر: {orderNumber}\n*کل قابلِ ادائیگی رقم: PKR {totalPkr}*\n\n____________________________\n\nبراہِ کرم ادائیگی کا طریقہ منتخب کریں:\nپیشگی ادائیگی یا کیش آن ڈیلیوری (COD)۔\n\n*نوٹ:* *کیش آن ڈیلیوری پر اضافی PKR {codFee} کیش کلیکشن فیس لاگو ہوگی۔*" },
   ORDER_STATUS: { en: "Use Check Order to see the current order and payment status.", ur: "موجودہ آرڈر اور ادائیگی کی حالت دیکھنے کے لیے آرڈر چیک کریں۔" },
   SUPPORT: { en: "Reply START to begin, STATUS to check an order, or CANCEL to stop the current order entry.", ur: "شروع کرنے کے لیے START، آرڈر دیکھنے کے لیے STATUS، یا روکنے کے لیے CANCEL لکھیں۔" },
   PAYMENT: { en: "For order {orderNumber}, the payable amount is PKR {amount}. Select an enabled payment method below.", ur: "آرڈر {orderNumber} کی قابلِ ادائیگی رقم PKR {amount} ہے۔ نیچے سے فعال ادائیگی کا طریقہ منتخب کریں۔" },
   RECEIPT: { en: "Receipt received for order {orderNumber}. Reply with the transaction/reference ID shown in your payment app. This is not payment confirmation; Garden Shop will verify actual account credit. Payment remains under Admin review.", ur: "آرڈر {orderNumber} کی رسید موصول ہوئی۔ اپنی ادائیگی کی ایپ میں دکھایا گیا ٹرانزیکشن/حوالہ نمبر جواب میں بھیجیں۔ یہ ادائیگی کی تصدیق نہیں؛ گارڈن شاپ اکاؤنٹ میں اصل رقم کی تصدیق کرے گا۔ ادائیگی ایڈمن کے جائزے میں رہے گی۔" }
 };
 
-async function contentFor(db: D1Database, key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; amount?: string | number; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string; orderSummaryItems?: string; deliveryFee?: string | number; orderTotal?: string | number } = {}, sessionKey?: string, locale: "en" | "ur" = "en") {
+async function contentFor(db: D1Database, key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; amount?: string | number; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string; orderSummaryItems?: string; deliveryFee?: string | number; orderTotal?: string | number; codFee?: string | number } = {}, sessionKey?: string, locale: "en" | "ur" = "en") {
   const content = await publishedWhatsAppContent(db, key, locale, sessionKey);
   const localizedFallback = LOCALE_FALLBACKS[key]?.[locale] ?? fallback;
-  const renderedText = renderWhatsAppContent(content?.text ?? localizedFallback, values);
+  const confirmationTemplate = key === "CONFIRMATION" && (!content?.text.includes("{codFee}") || !content?.text.includes("{orderNumber}") || !content?.text.includes("{totalPkr}"))
+    ? localizedFallback
+    : content?.text ?? localizedFallback;
+  const codAvailable = values.codFee !== undefined && values.codFee !== null && String(values.codFee).trim() !== "";
+  const codSafeTemplate = key === "CONFIRMATION" && !codAvailable
+    ? confirmationTemplate.split(/\r?\n/).map((line) => {
+      if (line.includes("Advance Payment or Cash on Delivery (COD).")) return line.replace("Advance Payment or Cash on Delivery (COD).", "Advance Payment.");
+      if (line.includes("پیشگی ادائیگی یا کیش آن ڈیلیوری (COD)۔")) return line.replace("پیشگی ادائیگی یا کیش آن ڈیلیوری (COD)۔", "صرف پیشگی ادائیگی۔");
+      if (line.includes("{codFee}") || line.includes("COD orders include") || line.includes("کیش آن ڈیلیوری پر اضافی")) return null;
+      return line;
+    }).filter((line): line is string => line !== null).join("\n")
+    : confirmationTemplate;
+  const renderedText = renderWhatsAppContent(codSafeTemplate, values);
   const reviewText = key === "REVIEW"
     ? renderedText.replace("Please select your payment method below to continue.", "Please confirm or cancel your order.")
       .replace("\u062c\u0627\u0631\u06cc \u0631\u06a9\u06be\u0646\u06d2 \u06a9\u06d2 \u0644\u06cc\u06d2 \u0646\u06cc\u0686\u06d2 \u0627\u062f\u0627\u0626\u06cc\u06af\u06cc \u06a9\u0627 \u0637\u0631\u06cc\u0642\u06c1 \u0645\u0646\u062a\u062e\u0628 \u06a9\u0631\u06cc\u06ba\u06d4", "\u0627\u067e\u0646\u06d2 \u0622\u0631\u0688\u0631 \u06a9\u06cc \u062a\u0635\u062f\u06cc\u0642 \u06a9\u0631\u06cc\u06ba \u06cc\u0627 \u0627\u0633\u06d2 \u0645\u0646\u0633\u0648\u062e \u06a9\u0631\u06cc\u06ba\u06d4")
@@ -457,7 +469,7 @@ async function finalizeCodOrder(db: D1Database, orderId: string, quote: CodQuote
 }
 
 async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }, flowId: string, flowTokenSecret?: string, checkoutMode: string = "guided", events?: Queue, codEnabled = false, codRolloutMode?: string, codTesterWaId?: string, paymentRemindersV2Enabled = false, paymentAutomationV2Enabled = false): Promise<boolean> {
-  const sessionContent = (key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; amount?: string | number; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string; orderSummaryItems?: string; deliveryFee?: string | number; orderTotal?: string | number } = {}) => contentFor(db, key, fallback, values, `CHAT:${event.from}`, data.language ?? "en");
+  const sessionContent = (key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; amount?: string | number; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string; orderSummaryItems?: string; deliveryFee?: string | number; orderTotal?: string | number; codFee?: string | number } = {}) => contentFor(db, key, fallback, values, `CHAT:${event.from}`, data.language ?? "en");
   const message = event.payload && typeof event.payload === "object" ? event.payload as { text?: { body?: string }; interactive?: { button_reply?: { id?: string; title?: string }; list_reply?: { id?: string; title?: string }; nfm_reply?: { response_json?: string } }; button?: { payload?: string; text?: string } } : {};
   const interaction = message.interactive?.button_reply ?? message.interactive?.list_reply;
   const interactionId = interaction?.id ?? message.button?.payload;
@@ -616,7 +628,7 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
         data.amountPkr = summary.totalPayablePkr;
         nextState = "PAYMENT_METHOD";
         showPaymentChoice = codAvailable;
-        reply = (await sessionContent("CONFIRMATION", "Order {orderNumber} created. Total: PKR {totalPkr}.", { orderNumber: result.orderNumber, totalPkr: summary.totalPayablePkr })).text;
+        reply = (await sessionContent("CONFIRMATION", "Order {orderNumber} created. Total: PKR {totalPkr}.", { orderNumber: result.orderNumber, totalPkr: summary.totalPayablePkr, codFee: codSettings?.fee_pkr })).text;
       } catch (error) {
         if (!(error instanceof OrderCooldownError)) throw error;
         nextState = "PAYMENT_PENDING"; data.orderNumber = error.orderNumber;
@@ -714,7 +726,6 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
     completePaymentMethods = await completeEnabledPaymentMethods(db, data.language ?? "en");
     if (showPaymentChoice) {
       showPaymentChoice = true;
-      reply = `${reply}\n${data.language === "ur" ? "ادائیگی کا طریقہ منتخب کریں: ایڈوانس پیمنٹ یا کیش آن ڈیلیوری (COD)۔ COD آرڈر پر PKR 125 اضافی کیش کلیکشن فیس لاگو ہوگی۔" : "Choose payment method: Advance Payment or Cash on Delivery (COD). COD orders include an additional PKR 125 cash collection fee."}`;
     } else if (!completePaymentMethods.length) {
       nextState = "COMPLETE";
       reply = state === "REVIEW" ? `${reply}\n${noPaymentRequest()}` : noPaymentRequest();

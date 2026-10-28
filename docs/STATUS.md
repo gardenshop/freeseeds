@@ -1687,3 +1687,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **P3 PASS:** Production frozen on API `8e670de8` 100% and Admin `c2e87231` 100%; `7b662e0d` remains diagnostic rollback at 0%. The repaired source candidate is intentionally undeployed.
 - **P4 PAUSED safely:** Live flags are reminder false, automation false, utility-template approval false. Internal CMS is 5 EN + 5 UR PUBLISHED, zero utility approvals; reminder schedules/stages/jobs/outbound are 0/0/0/0.
 - **P5 PASS:** Repair commit `6bc4741` qualifies D1 target columns and moves reconciliation to Cron. Focused 104/104, full 312/312, build/lint, audit0, rollback4/4. Repository deployment defaults are OFF/OFF/FALSE.
+
+## GFS-298 Bilingual Order Confirmation - superseding current state (2026-10-28)
+
+- **P0 PASS:** API baseline `45b01d86-65ff-4573-b384-f6be433a83d7` is 100%; API candidate `c4908cb5-bb96-4348-8587-d9067b4dab1c` is 0%. Admin validator candidate `f0212429-ead7-4653-aea9-2ef714c6b4b8` is 100%; Admin rollback `b4c45278-c7d6-49c5-824c-005afc991ffe` is 0%. Active D1 and migrations remain unchanged.
+- **P1 PASS local / BLOCKED live CMS:** Source supports the exact bilingual confirmation and dynamic `{codFee}`. Admin draft/publish version 4 validated both locales/placeholders/no HTML; published version 3 was restored pending compatible API acceptance.
+- **P2 PASS local:** Duplicate appended payment copy was removed; configured COD fee is passed from D1 policy; stale confirmation content fails closed; COD-unavailable rendering removes COD option/note. No hardcoded business amount was added.
+- **P3 PASS:** Focused 103/103, full 316/316, build, lint, and rollback4/4 against verified `D:\free seeds\gfs273-v1` baseline `cf01f444500415b1f22a64730674caca1c286006`.
+- **P4 BLOCKED:** `npm audit --omit=dev` could not reach the registry advisory endpoint. Fresh authorized tester confirmation proof is pending. Production is **NO-GO for new confirmation promotion** and **GO to preserve the compatible baseline**.

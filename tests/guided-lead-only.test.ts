@@ -654,7 +654,9 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     const orderData = conversation()?.data as { orderId: string; orderNumber: string; amountPkr: number };
     expect(conversation()?.state).toBe("PAYMENT_METHOD");
     expect(buttons()).toEqual(["ADVANCE_PAYMENT", "COD"]);
-    expect(body()).toContain("Choose payment method: Advance Payment or Cash on Delivery (COD). COD orders include an additional PKR 125 cash collection fee.");
+    expect(body()).not.toContain("Choose payment method: Advance Payment or Cash on Delivery (COD). COD orders include an additional PKR 125 cash collection fee.");
+    expect(body()).toContain("Your Order Has Been Received");
+    expect(body().match(/Cash on Delivery/g)).toHaveLength(1);
     expect((sends.at(-1)?.interactive as { action: { buttons: Array<{ reply: { title: string } }> } }).action.buttons.map((button) => button.reply.title)).toEqual(["Advance Payment", "Cash on Delivery"]);
     await inbound(tap("COD"));
     expect(conversation()?.state).toBe("COD_CONFIRM");
@@ -746,7 +748,8 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     codEnabled = true;
     await reachReview("ur", true);
     await inbound(tap("PLACE_ORDER"));
-    expect(body()).toContain("ادائیگی کا طریقہ منتخب کریں: ایڈوانس پیمنٹ یا کیش آن ڈیلیوری (COD)۔ COD آرڈر پر PKR 125 اضافی کیش کلیکشن فیس لاگو ہوگی۔");
+    expect(body()).toContain("آپ کا آرڈر موصول ہو گیا ہے");
+    expect(body()).toContain("کیش آن ڈیلیوری پر اضافی PKR 125 کیش کلیکشن فیس لاگو ہوگی۔");
     expect((sends.at(-1)?.interactive as { action: { buttons: Array<{ reply: { title: string } }> } }).action.buttons.map((button) => button.reply.title)).toEqual(["ایڈوانس ادائیگی", "کیش آن ڈیلیوری"]);
     await inbound(tap("COD"));
     expect(body()).toContain("ڈیلیوری سمیت آرڈر کی رقم: PKR 200");
@@ -782,6 +785,8 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     await reachReview("en", true);
     await inbound(tap("PLACE_ORDER"));
     expect(buttons()).not.toContain("COD");
+    expect(body()).not.toContain("Cash on Delivery");
+    expect(body()).not.toContain("{codFee}");
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({ count: 0 });
   });
 });
@@ -1220,7 +1225,8 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 1 });
     await inbound(tap("PLACE_ORDER"), "synthetic-place-order-retry");
     expect(conversation()?.state).toBe("PAYMENT_METHOD");
-    expect(body()).toContain("Cash on Delivery (COD)");
+    expect(body()).toContain("Your Order Has Been Received");
+    expect(body().match(/Cash on Delivery/g)).toHaveLength(1);
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 1 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM leads").get()).toEqual({ count: 1 });
   });
