@@ -3953,3 +3953,22 @@ Completion: P0 100%; P1 75% source / 0% live CMS; P2 100% source / 0% live activ
 - Logging: raw Cloudflare Workers Logs remain disabled. The enabled D1 audit contains only version, hashed correlation, fixed result code and numeric counts.
 - Public ordering: **GO**. Two payment-choice reminders: **GO for safe new-order-only configuration; PENDING first legitimate delivery**. Five-stage Advance reminders: **OFF**.
 - Completion: P0 100%, P1 100%, P2 100%, P3 100%, P4 95% (real scheduling/suppression passed; delivery pending), P5 100%; overall **99% operational completion**. The only remaining evidence boundary is the first naturally eligible-at-due-time +15/+210 send.
+
+## GFS-307 final report - 2026-10-29 PKT
+
+| Order | Method | +15 | +210 | Recovery WAMID | Admin | Exact reason/action |
+|---|---|---|---|---|---|---|
+| FS-STWA-Y3GZ-47DV | NULL; `COD_CONFIRM` | NOT SCHEDULED | NOT SCHEDULED | None | Live aggregate was misleadingly `DELIVERED`; source corrected | Conversation is already COD confirmation; no recovery stage/outbox/send; no backfill |
+| FS-0D0G-4080-R1RA | `EASYPAISA` | `SKIPPED` | `PENDING` until due recheck | None | `SELECTED`; stage detail pending live deployment | Advance selected before +15 due; +210 has no send evidence and will recheck at due time |
+| FS-2YE9-A85J-54FQ | `JAZZCASH` | `SKIPPED` | `PENDING` until due recheck | None | `SELECTED`; stage detail pending live deployment | Advance selected before +15 due; +210 has no send evidence and will recheck at due time |
+
+### GFS-307 gates
+
+- **P0 PASS with blocker:** Get Free Seeds identity, D1 binding, API health, flags, Cron, Queue and templates verified. Current Cloudflare Admin traffic disagrees with the prior registry (`f0212429` shown at 100%; `76e33a3d` at 0%); no mutation was made.
+- **P1 PASS:** the first two orders match the two GFS-306 post-activation orders; the third is a later `COD_CONFIRM` order. No recovery outbox, outbound recovery row, or WAMID exists.
+- **P2 PASS:** no scheduler/Queue/window defect. The two +15 skips are legitimate state changes; +210 remains pending before due-time evaluation. No historical backfill or forced send.
+- **P3 PASS source / BLOCKED live:** Admin source no longer counts ordinary `PAYMENT_CHOICE` as recovery delivery and adds durable stage metadata to the timeline. Live Admin needs guarded deployment.
+- **P4 PASS:** recovery true; Advance five-stage and automation flags false; utility approval false; public ordering and payment safeguards preserved.
+- **P5 PASS local / PENDING production:** focused 14/14; full 319/319; build/lint/diff PASS. No WAMID or delivery is claimed.
+
+**Decision:** Public ordering **GO**. Two-stage recovery **GO for safe new-order eligibility**, live delivery **PENDING** (0 sends/WAMIDs). Admin visibility correction **NO-GO until guarded deployment**. Five-stage Advance reminders **OFF**. Completion: P0 90%, P1 100%, P2 100%, P3 65%, P4 100%, P5 90%; overall 87%. Remaining blockers: reconcile Admin traffic/version, deploy the tested Admin fix, and await a legitimate due eligible order for delivery evidence.

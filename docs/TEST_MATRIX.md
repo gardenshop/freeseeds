@@ -1663,3 +1663,16 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | Live recovery delivery | PENDING | No customer remained eligible at +15 due time; both sends correctly skipped, +210 rows pending |
 | Focused/full/build/lint/audit | PASS | 91/91; 319/319; build/lint; npm audit 0 vulnerabilities |
 | Rollback | PASS | 4/4; sends-off API `3d018265` retained at 0%; Admin `f0212429` retained at 0% |
+
+## GFS-307 order audit and Admin visibility
+
+| Check | Result | Evidence |
+|---|---|---|
+| Exact three-order bounded audit | PASS | Creation, method/state, inbound/window, stage, outbox and recovery-message evidence read without customer profile extraction |
+| GFS-306 order identity comparison | PASS | Two orders match prior post-activation stage timestamps; third is a later `COD_CONFIRM` order with no stages |
+| +15 suppression correctness | PASS | Two `SKIPPED/PAYMENT_CHOICE_RECOVERY_NO_LONGER_ELIGIBLE`; both had selected Advance methods before due time |
+| +210 behavior | PASS | Two durable rows remain `PENDING` before due-time recheck; no send inferred |
+| Recovery WAMID/provider evidence | PASS | Zero recovery outbound rows and zero recovery WAMIDs; no fabricated delivery state |
+| Admin status correction | PASS source | Ordinary `PAYMENT_CHOICE` excluded from recovery status; 15/210 timeline metadata added |
+| Focused/full/build/lint | PASS | 14/14 focused Admin, 319/319 full, build and lint |
+| Production Admin visibility | BLOCKED | Source fix requires guarded deployment; current live Admin still lacks the new timeline response |

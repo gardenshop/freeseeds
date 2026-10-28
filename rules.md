@@ -1042,3 +1042,9 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Privacy-safe version attribution records only Worker version, a hashed correlation, fixed result code, and numeric event/reply counts. Cloudflare stored Logs remain disabled; never persist payloads, phone numbers, tokens, raw WAMIDs, or customer text.
 - GFS-306 acceptance used a genuine candidate-attributed handled inbound plus provider-ID-bearing replies reaching DELIVERED/READ. Raw identifiers are intentionally omitted. Two natural post-cutoff no-method orders scheduled four rows; both +15 stages safely became `SKIPPED/PAYMENT_CHOICE_RECOVERY_NO_LONGER_ELIGIBLE` before send, with zero recovery WAMIDs. Live recovery delivery remains PENDING for the first customer who is still eligible at due time.
 - Quality baseline: focused 91/91, full 319/319, build/lint PASS, audit 0 vulnerabilities, D1 `quick_check=ok`/FK clean, rollback4/4 PASS.
+
+## GFS-307 bounded audit rule
+
+- The order-linked `PAYMENT_CHOICE` is ordinary checkout interaction, not a payment-choice recovery send. Admin recovery labels and delivery evidence must use only `PAYMENT_CHOICE_RECOVERY`/stage records and genuine provider acknowledgements.
+- Do not backfill or force the three audited orders: two +15 skips are valid after Advance selection, both +210 rows are pending until due-time recheck, and the `COD_CONFIRM` order has no recovery schedule by design.
+- Public ordering remains protected. Recovery is true only from the recorded activation cutoff; five-stage Advance reminders, automation, and utility approval remain false. Source fixes require focused/full tests and guarded deployment before live claims.

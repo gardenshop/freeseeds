@@ -1245,3 +1245,9 @@
 - Activated only `PAYMENT_CHOICE_RECOVERY_ENABLED` at `2026-10-28T20:05:20.290Z`. Advance reminder, automation and utility-template flags remain false.
 - Verified two natural post-cutoff orders scheduled exactly +15/+210. Both +15 due-time rechecks suppressed no-longer-eligible customers with zero Queue jobs/messages/WAMIDs; historical stages remain zero. Live reminder delivery remains PENDING honestly.
 - Quality: focused 91/91, full 319/319, build/lint, audit0, D1 integrity and rollback4/4 PASS.
+
+## 2026-10-29 - GFS-307 bounded audit and Admin recovery-status correction
+
+- Audited the three specified orders with bounded read-only D1 evidence; found no missing-send or window defect and performed no catch-up sends.
+- Corrected Admin source so ordinary `PAYMENT_CHOICE` checkout messages cannot masquerade as recovery delivery; exposed recovery stage due/reason/provider-presence fields in the reminder timeline.
+- Verified focused Admin 14/14, full 319/319, build, lint and diff check. Live Admin deployment remains pending guarded authorization; no recovery WAMID is claimed.

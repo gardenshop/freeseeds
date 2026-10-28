@@ -1353,3 +1353,12 @@ No secrets are stored in this registry.
 - **Observability:** Cloudflare stored Logs/Traces remain disabled. Privacy-safe D1 attribution is active; five candidate events included one handled inbound. Raw correlation hashes, provider IDs and customer data are omitted.
 - **Recovery counts at final checkpoint:** currently eligible 0; scheduled orders 2; stage rows 4; +15 SKIPPED/no-longer-eligible 2; +210 PENDING 2; outbox 0; recovery messages/WAMIDs 0; BLOCKED_WINDOW 0; historical stages 0. Live delivery acceptance PENDING.
 - **Public bot health after activation:** active version audit 372 completions / 115 handled events; ordinary replies with provider IDs were 84 READ, 25 DELIVERED and 1 SENT. No customer identifiers or raw WAMIDs are recorded here.
+
+## GFS-307 audit checkpoint (2026-10-29 PKT)
+
+- **Read-only identity:** GitHub `gardenshop`; Cloudflare Get Free Seeds / `gisupp@gmail.com`; canonical GFS Meta; Hoja isolated. No secrets, phone numbers, raw WAMIDs, or customer profile data recorded.
+- **Binding:** D1 `getfreeseeds-staging` UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; Queue `getfreeseeds-events-staging`; minute Cron present.
+- **Traffic reconciliation:** prior registry recorded Admin `76e33a3d` active, but current authenticated Cloudflare deployment view shows `f0212429` at 100% and `76e33a3d` at 0%. Treat Admin version as unresolved until reconciled; no traffic change was made.
+- **Flags:** recovery true from `2026-10-28T20:05:20.290Z`; five-stage reminders false; automation false; utility approval false.
+- **Audit:** two prior post-cutoff orders have +15 skipped after Advance selection and +210 pending before due recheck; the COD-confirmation order has no recovery stages. Recovery outbox/messages/WAMIDs are zero.
+- **Source-only correction:** Admin recovery status now excludes normal `PAYMENT_CHOICE`; timeline exposes stage due/reason/provider-presence without exposing provider IDs. Deployment is not claimed.

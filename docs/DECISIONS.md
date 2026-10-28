@@ -1365,3 +1365,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Activate only payment-choice recovery with an immutable UTC cutoff. Keep the five-stage Advance reminder engine, its automation flag and utility templates false.
 - Treat zero eligible post-cutoff orders as healthy configuration with live delivery acceptance PENDING. Do not manufacture an order, inbound, WAMID or send to convert PENDING into PASS.
 - The immediate operational rollback is API `3d018265` (same code, recovery OFF) and Admin `f0212429`; do not roll back migrations 0041/0042.
+
+## 2026-10-29: GFS-307 audit truth and Admin labeling
+
+- Treat `payment_choice_recovery_stages` as the authoritative +15/+210 status source. Ordinary order-linked `PAYMENT_CHOICE` is checkout interaction, never recovery delivery evidence.
+- Do not backfill or force the three audited orders: two +15 skips are valid after Advance selection, both +210 rows are pending until due-time recheck, and the `COD_CONFIRM` order has no recovery schedule by design.
+- Preserve public ordering while the source fix awaits guarded deployment. Recovery delivery has zero WAMIDs; Admin stage visibility is source-fixed but not yet live.
