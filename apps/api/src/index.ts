@@ -4,7 +4,7 @@ import { applyFertilizerDecision, codQuote, codReferenceHmac, createWhatsAppProv
 import { handleMetaFlowPayload } from "./flow-endpoint";
 import { admitWhatsAppSenders } from "./rate-limit";
 import { createPaymentV2Schedule, enqueueDuePaymentV2Stages, isPaymentReminderV2ServiceWindowOpen, resolvePaymentReminderCodFallback, setPaymentReminderV2OptOut } from "./payment-reminders-v2";
-import { enqueueDuePaymentChoiceRecoveryStages } from "./payment-choice-recovery";
+import { enqueueDuePaymentChoiceRecoveryStages, paymentChoiceRecoveryCopy } from "./payment-choice-recovery";
 
 type Env = {
   Bindings: {
@@ -1305,31 +1305,33 @@ export default {
             const payload = outbox ? JSON.parse(outbox.payload_json) as { orderId?: string; orderNumber?: string; stageMinutes?: number } : undefined;
             if (!payload?.orderId || payload.orderId !== message.body.entityId) { await failRecovery("PAYMENT_CHOICE_RECOVERY_PAYLOAD_INVALID", "SKIPPED"); continue; }
             recoveryStageMinutes = payload.stageMinutes === 15 || payload.stageMinutes === 210 ? payload.stageMinutes : undefined;
-            const current = await env.DB.prepare(`SELECT o.id AS order_id,o.order_number,o.state,o.payment_status,o.archived_at,o.total_payable,
+            const current = await env.DB.prepare(`SELECT o.id AS order_id,o.order_number,o.state,o.payment_status,o.archived_at,o.total_payable,o.delivery_fee,
                 p.id AS payment_id,p.method,p.review_state,c.id AS customer_id,c.wa_id,wc.state AS conversation_state,wc.state_data,wc.last_inbound_message_id,wc.last_inbound_at,
                 EXISTS(SELECT 1 FROM payment_receipts r WHERE r.order_id=o.id AND r.payment_id=p.id) AS has_receipt,
                 EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id) AS is_cod,
                 EXISTS(SELECT 1 FROM payment_reminder_v2_opt_outs x WHERE x.customer_id=c.id OR x.wa_id=c.wa_id) AS opted_out
               FROM orders o JOIN payments p ON p.order_id=o.id JOIN customers c ON c.id=o.customer_id
               LEFT JOIN whatsapp_conversations wc ON wc.wa_id=c.wa_id
-              WHERE o.id=?`).bind(payload.orderId).first<{ order_id:string;order_number:string;state:string;payment_status:string;archived_at:string|null;total_payable:number;payment_id:string;method:string|null;review_state:string;customer_id:string;wa_id:string|null;conversation_state:string|null;state_data:string|null;last_inbound_message_id:string|null;last_inbound_at:string|null;has_receipt:number;is_cod:number;opted_out:number }>();
+              WHERE o.id=?`).bind(payload.orderId).first<{ order_id:string;order_number:string;state:string;payment_status:string;archived_at:string|null;total_payable:number;delivery_fee:number;payment_id:string;method:string|null;review_state:string;customer_id:string;wa_id:string|null;conversation_state:string|null;state_data:string|null;last_inbound_message_id:string|null;last_inbound_at:string|null;has_receipt:number;is_cod:number;opted_out:number }>();
             const recipient = current?.wa_id ? normalizeWhatsAppWaId(current.wa_id) : "";
             if (!current || current.archived_at || !recipient || !current.last_inbound_message_id || !isInsideWhatsAppServiceWindow(current.last_inbound_at)) { await failRecovery("WHATSAPP_SERVICE_WINDOW_CLOSED", "BLOCKED_WINDOW"); continue; }
-            const ineligible = current.state === "PAID" || current.state === "CANCELLED" || current.payment_status !== "PENDING" || current.method != null || current.review_state !== "PENDING" || Number(current.has_receipt) === 1 || Number(current.is_cod) === 1 || Number(current.opted_out) === 1;
+            const ineligible = !["DETAILS_COMPLETED", "PAYMENT_PENDING"].includes(current.state) || !["PAYMENT_METHOD", "PAYMENT_PENDING"].includes(current.conversation_state ?? "") || current.payment_status !== "PENDING" || current.method != null || current.review_state !== "PENDING" || Number(current.has_receipt) === 1 || Number(current.is_cod) === 1 || Number(current.opted_out) === 1;
             if (ineligible) { await failRecovery("PAYMENT_CHOICE_RECOVERY_NO_LONGER_ELIGIBLE", "SKIPPED"); continue; }
             const existingRecovery = await env.DB.prepare("SELECT status FROM outbound_messages WHERE order_id=? AND kind='PAYMENT_CHOICE_RECOVERY' AND status IN ('SENT','DELIVERED','READ','SENDING') LIMIT 1").bind(current.order_id).first<{ status:string }>();
             if (existingRecovery && !recoveryStageMinutes) { await failRecovery("PAYMENT_CHOICE_RECOVERY_ALREADY_SENT", "SKIPPED"); continue; }
             let locale: "en" | "ur" = "en";
             try { const parsed = JSON.parse(current.state_data ?? "{}"); locale = parsed.language === "ur" ? "ur" : "en"; } catch { /* default to English */ }
             const codSettings = isCodAdmitted(recipient, env.COD_V1_ENABLED === "true", env.COD_ROLLOUT_MODE, env.COD_TESTER_WA_ID) ? await codPolicy(env.DB) : null;
-            const payment = await contentFor(env.DB, "PAYMENT", "Your order details have been saved. To process order {orderNumber} for PKR {amount}, please choose Advance Payment or Cash on Delivery below.{codFee}", { orderNumber: current.order_number, amount: current.total_payable, codFee: codSettings ? ` COD orders include an additional PKR ${codSettings.fee_pkr} cash collection fee.` : "" }, `CHAT:${recipient}`, locale);
+            const payment = recoveryStageMinutes
+              ? await paymentChoiceRecoveryCopy(env.DB, recoveryStageMinutes as 15 | 210, locale, { orderNumber: current.order_number, amount: current.total_payable, deliveryFee: current.delivery_fee, codFee: codSettings?.fee_pkr })
+              : await contentFor(env.DB, "PAYMENT", "Your order details have been saved. To process order {orderNumber} for PKR {amount}, please choose Advance Payment or Cash on Delivery below.{codFee}", { orderNumber: current.order_number, amount: current.total_payable, codFee: codSettings ? ` COD orders include an additional PKR ${codSettings.fee_pkr} cash collection fee.` : "" }, `CHAT:${recipient}`, locale);
             const provider = createWhatsAppProvider("meta", { enabled: env.META_PROVIDER_ENABLED === "true", graphVersion: env.META_GRAPH_VERSION ?? "v26.0", accessToken: env.META_ACCESS_TOKEN, phoneNumberId: env.META_PHONE_NUMBER_ID, verifyToken: env.WEBHOOK_VERIFY_TOKEN, appSecret: env.META_APP_SECRET });
             const status = recoveryStageMinutes
               ? await env.DB.prepare("UPDATE payment_choice_recovery_stages SET status='SENDING',updated_at=? WHERE order_id=? AND stage_minutes=? AND status='QUEUED'").bind(new Date().toISOString(), current.order_id, recoveryStageMinutes).run()
               : await env.DB.prepare("UPDATE payment_choice_recoveries SET status='SENDING',updated_at=? WHERE order_id=? AND status='PENDING'").bind(new Date().toISOString(), current.order_id).run();
             if (Number(status.meta?.changes ?? 0) !== 1) { message.ack(); continue; }
-            const buttons: InteractiveButton[] = [{ id: "ADVANCE_PAYMENT", title: locale === "ur" ? "Advance Payment" : "Advance Payment" }];
-            if (codSettings) buttons.push({ id: "COD", title: locale === "ur" ? "Cash on Delivery" : "Cash on Delivery" });
+            const buttons: InteractiveButton[] = [{ id: "ADVANCE_PAYMENT", title: locale === "ur" ? "پیشگی ادائیگی" : "Advance Payment" }];
+            if (codSettings) buttons.push({ id: "COD", title: locale === "ur" ? "کیش آن ڈیلیوری" : "Cash on Delivery" });
             const sent = await sendConversationReply(env.DB, provider, recipient, current.last_inbound_message_id, payment.text, { buttons }, message.body.idempotencyKey, { orderId: current.order_id, customerId: current.customer_id, kind: "PAYMENT_CHOICE_RECOVERY" });
             if (sent.sent) {
               const sentAt = new Date().toISOString();

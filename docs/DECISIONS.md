@@ -1330,3 +1330,11 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - The existing order-linked `PAYMENT_CHOICE` is the original confirmation, not a recovery duplicate. Recovery suppression therefore checks only `PAYMENT_CHOICE_RECOVERY` outcomes and each stage's idempotency key.
 - Keep the recovery scheduler independent from the five Advance reminder stages. It may run while reminder flags remain false, but only when its own flag and activation start time are explicitly configured.
 - Do not apply 0041/0042, deploy, publish CMS, enable recovery, or send until supported owner approval covers those exact mutations and sends-off staging. No genuine recipient, WAMID, conversion improvement, payment, COD conversion, or dispatch is claimed from local tests.
+
+## 2026-10-28: GFS-302 frozen baseline and eligibility correction
+
+- Use binding evidence as D1 authority: `getfreeseeds-staging` UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; never migrate the production-name UUID without independent binding proof.
+- Correct the recovery gate to the actual persisted lifecycle (`DETAILS_COMPLETED`/`PAYMENT_PENDING` order, `PAYMENT_METHOD`/`PAYMENT_PENDING` conversation, pending payment with NULL method). Keep all receipt/COD/hold/cancel/archive/opt-out and 24-hour checks fail-closed at discovery, claim, and send.
+- Use dedicated 0042 internal CMS rows for +15/+210 copy rather than changing the five-stage Advance reminder templates. Keep utility approval false and use no Meta templates.
+- Treat the protected API/Admin baseline as the production release until an authorized live tester proves candidate inbound-to-outbound behavior. A 0%-traffic preview or HTTP200 is not a genuine message acceptance.
+- 0041/0042 are live and integrity-verified; no historical rows were backfilled. Candidate traffic remains 0% and recovery activation remains off pending genuine acceptance.

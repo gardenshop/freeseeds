@@ -703,8 +703,15 @@ const esc=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':
 async function load(){const r=await fetch('/api/payment-reminders',{cache:'no-store'}),d=await r.json();if(!r.ok)throw new Error(d.error||'Payment reminders unavailable');selected=d.templates.find(x=>x.templateKey===key.value&&x.locale===locale.value);body.value=selected?.body||'';timeline.innerHTML=(d.timeline||[]).length?'<table><tr><th>Order</th><th>Stage</th><th>Status</th><th>Updated</th></tr>'+(d.timeline||[]).map(x=>'<tr><td>'+esc(x.orderNumber)+'</td><td>'+esc(x.stageMinutes)+'m</td><td>'+esc(x.status)+'</td><td>'+esc(x.updatedAt)+'</td></tr>').join('')+'</table>':'<p class="muted">No reminder schedules or deliveries.</p>'}
 async function save(path, payload){const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(payload)}),d=await r.json();if(!r.ok)throw new Error(d.error||'Save failed');return d}
 key.onchange=locale.onchange=()=>load().catch(e=>result.textContent=e.message);document.querySelector('#save').onclick=async()=>{try{await save('/api/payment-reminders/'+encodeURIComponent(key.value)+'/draft',{locale:locale.value,body:body.value});result.className='ok';result.textContent='Draft saved';await load()}catch(e){result.className='error';result.textContent=e.message}};document.querySelector('#publish').onclick=async()=>{try{await save('/api/payment-reminders/'+encodeURIComponent(key.value)+'/publish',{locale:locale.value,version:selected?.version});result.className='ok';result.textContent='Draft published; utility approval remains separate';await load()}catch(e){result.className='error';result.textContent=e.message}};load().catch(e=>result.textContent=e.message);
-</script></body></html>`);
+</script></body></html>`.replace('<option>GRACE_NOTICE_240M</option>', '<option>GRACE_NOTICE_240M</option><option>PAYMENT_CHOICE_15M</option><option>PAYMENT_CHOICE_210M</option>'));
 });
+
+function recoveryTemplateStage(key: string): 15 | 210 | null {
+  return key === "PAYMENT_CHOICE_15M" ? 15 : key === "PAYMENT_CHOICE_210M" ? 210 : null;
+}
+function validRecoveryTemplateBody(value: string): boolean {
+  return value.trim().length >= 20 && value.length <= 1200 && !/<\/?[A-Za-z][^>]*>/i.test(value) && [...value.matchAll(/\{([^{}]+)\}/g)].every((match) => ["orderNumber", "amount", "deliveryFee", "codFee"].includes(match[1]));
+}
 
 app.get("/api/payment-reminders", async (c) => {
   if (!c.env.DB) return c.json({ error: "REMINDERS_NOT_DEPLOYED", message: "Reminder migrations are not deployed on this database; no schedules, templates, or deliveries are available." }, 503);
@@ -713,7 +720,12 @@ app.get("/api/payment-reminders", async (c) => {
     const timeline = await c.env.DB.prepare(`SELECT o.order_number,st.stage_minutes,st.status,st.updated_at
       FROM payment_reminder_v2_stages st JOIN payment_reminder_v2_schedules s ON s.id=st.schedule_id JOIN orders o ON o.id=s.order_id
       ORDER BY st.updated_at DESC LIMIT 200`).all<{ order_number:string; stage_minutes:number; status:string; updated_at:string }>();
-    return c.json({ templates: (templates.results ?? []).map((row) => ({ templateKey: String(row.template_key), locale: String(row.locale), version: Number(row.version), body: String(row.body), state: String(row.state), utilityTemplateName: row.utility_template_name == null ? null : String(row.utility_template_name), utilityApprovedAt: row.utility_approved_at == null ? null : String(row.utility_approved_at) })), timeline: (timeline.results ?? []).map((row) => ({ orderNumber: row.order_number, stageMinutes: Number(row.stage_minutes), status: row.status, updatedAt: row.updated_at })) });
+    let recoveryTemplates: Record<string, unknown>[] = [];
+    try {
+      const recovery = await c.env.DB.prepare("SELECT stage_minutes,locale,version,body,state,created_at,created_by FROM payment_choice_recovery_template_versions ORDER BY stage_minutes,locale,version DESC").all<Record<string, unknown>>();
+      recoveryTemplates = (recovery.results ?? []).map((row) => ({ templateKey: `PAYMENT_CHOICE_${row.stage_minutes}M`, locale: String(row.locale), version: Number(row.version), body: String(row.body), state: String(row.state), utilityTemplateName: null, utilityApprovedAt: null }));
+    } catch { /* 0042 is not deployed; preserve the truthful legacy response */ }
+    return c.json({ templates: [...(templates.results ?? []).map((row) => ({ templateKey: String(row.template_key), locale: String(row.locale), version: Number(row.version), body: String(row.body), state: String(row.state), utilityTemplateName: row.utility_template_name == null ? null : String(row.utility_template_name), utilityApprovedAt: row.utility_approved_at == null ? null : String(row.utility_approved_at) })), ...recoveryTemplates], timeline: (timeline.results ?? []).map((row) => ({ orderNumber: row.order_number, stageMinutes: Number(row.stage_minutes), status: row.status, updatedAt: row.updated_at })) });
   } catch {
     return c.json({ error: "REMINDERS_NOT_DEPLOYED", message: "Reminder migrations are not deployed on this database; no schedules, templates, or deliveries are available." }, 503);
   }
@@ -722,10 +734,20 @@ app.get("/api/payment-reminders", async (c) => {
 app.post("/api/payment-reminders/:key/draft", async (c) => {
   if (!validCsrf(c) || !c.env.DB) return c.json({ error: !validCsrf(c) ? "CSRF_VALIDATION_FAILED" : "PAYMENT_REMINDERS_UNAVAILABLE" }, 403);
   const key = c.req.param("key");
-  if (!["REMINDER_15M","REMINDER_30M","REMINDER_60M","FINAL_WARNING_210M","GRACE_NOTICE_240M"].includes(key)) return c.json({ error: "PAYMENT_REMINDER_TEMPLATE_INVALID" }, 400);
+  const recoveryStage = recoveryTemplateStage(key);
+  if (recoveryStage == null && !["REMINDER_15M","REMINDER_30M","REMINDER_60M","FINAL_WARNING_210M","GRACE_NOTICE_240M"].includes(key)) return c.json({ error: "PAYMENT_REMINDER_TEMPLATE_INVALID" }, 400);
   const body = await c.req.json<{ locale?: string; body?: string }>();
-  if ((body.locale !== "en" && body.locale !== "ur") || typeof body.body !== "string" || body.body.trim().length < 20 || body.body.length > 1200) return c.json({ error: "PAYMENT_REMINDER_DRAFT_INVALID" }, 400);
+  if ((body.locale !== "en" && body.locale !== "ur") || typeof body.body !== "string" || (recoveryStage != null ? !validRecoveryTemplateBody(body.body) : body.body.trim().length < 20 || body.body.length > 1200)) return c.json({ error: "PAYMENT_REMINDER_DRAFT_INVALID" }, 400);
   const now = new Date().toISOString();
+  if (recoveryStage != null) {
+    const latest = await c.env.DB.prepare("SELECT COALESCE(MAX(version),0) AS version FROM payment_choice_recovery_template_versions WHERE stage_minutes=? AND locale=?").bind(recoveryStage, body.locale).first<{ version:number }>();
+    const version = Number(latest?.version ?? 0) + 1;
+    await c.env.DB.batch([
+      c.env.DB.prepare("INSERT INTO payment_choice_recovery_template_versions(stage_minutes,locale,version,body,state,created_at,created_by) VALUES(?,?,?,?,?,?,?)").bind(recoveryStage, body.locale, version, body.body.trim(), "DRAFT", now, c.env.ADMIN_EMAIL),
+      c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_CHOICE_RECOVERY_TEMPLATE_DRAFT_SAVED", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT_CHOICE_RECOVERY_TEMPLATE", `${key}:${body.locale}`, crypto.randomUUID(), JSON.stringify({ key, locale: body.locale, version }), now)
+    ]);
+    return c.json({ ok: true, version });
+  }
   const latest = await c.env.DB.prepare("SELECT COALESCE(MAX(version),0) AS version FROM payment_v2_template_versions WHERE template_key=? AND locale=?").bind(key, body.locale).first<{ version:number }>();
   const version = Number(latest?.version ?? 0) + 1;
   await c.env.DB.batch([
@@ -739,8 +761,19 @@ app.post("/api/payment-reminders/:key/publish", async (c) => {
   if (!validCsrf(c) || !c.env.DB) return c.json({ error: !validCsrf(c) ? "CSRF_VALIDATION_FAILED" : "PAYMENT_REMINDERS_UNAVAILABLE" }, 403);
   const key = c.req.param("key");
   const body = await c.req.json<{ locale?: string; version?: number }>();
-  if (!["REMINDER_15M","REMINDER_30M","REMINDER_60M","FINAL_WARNING_210M","GRACE_NOTICE_240M"].includes(key) || (body.locale !== "en" && body.locale !== "ur") || !Number.isInteger(body.version)) return c.json({ error: "PAYMENT_REMINDER_PUBLISH_INVALID" }, 400);
+  const recoveryStage = recoveryTemplateStage(key);
+  if ((recoveryStage == null && !["REMINDER_15M","REMINDER_30M","REMINDER_60M","FINAL_WARNING_210M","GRACE_NOTICE_240M"].includes(key)) || (body.locale !== "en" && body.locale !== "ur") || !Number.isInteger(body.version)) return c.json({ error: "PAYMENT_REMINDER_PUBLISH_INVALID" }, 400);
   const now = new Date().toISOString();
+  if (recoveryStage != null) {
+    const target = await c.env.DB.prepare("SELECT body FROM payment_choice_recovery_template_versions WHERE stage_minutes=? AND locale=? AND version=? AND state='DRAFT'").bind(recoveryStage, body.locale, body.version).first<{ body:string }>();
+    if (!target) return c.json({ error: "PAYMENT_REMINDER_DRAFT_NOT_FOUND" }, 404);
+    await c.env.DB.batch([
+      c.env.DB.prepare("UPDATE payment_choice_recovery_template_versions SET state='SUPERSEDED' WHERE stage_minutes=? AND locale=? AND state='PUBLISHED'").bind(recoveryStage, body.locale),
+      c.env.DB.prepare("UPDATE payment_choice_recovery_template_versions SET state='PUBLISHED',published_at=?,published_by=? WHERE stage_minutes=? AND locale=? AND version=? AND state='DRAFT'").bind(now, c.env.ADMIN_EMAIL, recoveryStage, body.locale, body.version),
+      c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_CHOICE_RECOVERY_TEMPLATE_PUBLISHED", "ADMIN", c.env.ADMIN_EMAIL, "PAYMENT_CHOICE_RECOVERY_TEMPLATE", `${key}:${body.locale}`, crypto.randomUUID(), JSON.stringify({ key, locale: body.locale, version: body.version }), now)
+    ]);
+    return c.json({ ok: true, version: body.version });
+  }
   const target = await c.env.DB.prepare("SELECT body FROM payment_v2_template_versions WHERE template_key=? AND locale=? AND version=? AND state='DRAFT'").bind(key, body.locale, body.version).first<{ body:string }>();
   if (!target) return c.json({ error: "PAYMENT_REMINDER_DRAFT_NOT_FOUND" }, 404);
   await c.env.DB.batch([
@@ -1852,7 +1885,7 @@ app.post("/api/orders/:id/payment-choice-recovery", async (c) => {
       LEFT JOIN whatsapp_conversations wc ON wc.wa_id=c.wa_id
       WHERE o.id=?`).bind(orderId).first<{ id:string;order_number:string;state:string;payment_status:string;archived_at:string|null;method:string|null;review_state:string;customer_id:string;wa_id:string|null;state_data:string|null;last_inbound_message_id:string|null;last_inbound_at:string|null;has_receipt:number;is_cod:number;opted_out:number }>();
     if (!current) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
-    if (current.archived_at || current.state === "PAID" || current.state === "CANCELLED" || current.payment_status !== "PENDING" || current.method != null || current.review_state !== "PENDING" || Number(current.has_receipt) === 1 || Number(current.is_cod) === 1 || Number(current.opted_out) === 1) return c.json({ error: "PAYMENT_CHOICE_RECOVERY_NOT_ELIGIBLE" }, 409);
+    if (current.archived_at || !["DETAILS_COMPLETED", "PAYMENT_PENDING"].includes(current.state) || current.payment_status !== "PENDING" || current.method != null || current.review_state !== "PENDING" || Number(current.has_receipt) === 1 || Number(current.is_cod) === 1 || Number(current.opted_out) === 1) return c.json({ error: "PAYMENT_CHOICE_RECOVERY_NOT_ELIGIBLE" }, 409);
     const recipient = current.wa_id ? normalizeWhatsAppWaId(current.wa_id) : "";
     if (!recipient || !current.last_inbound_message_id || !isInsideWhatsAppServiceWindow(current.last_inbound_at)) return c.json({ error: "PAYMENT_CHOICE_RECOVERY_WINDOW_CLOSED" }, 409);
     const existing = await c.env.DB.prepare("SELECT status FROM payment_choice_recoveries WHERE order_id=?").bind(orderId).first<{ status:string }>();

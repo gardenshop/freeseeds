@@ -3847,3 +3847,25 @@ Completion: P0 100%; P1 100% source / 0% live deployment; P2 100% source / 0% li
 The safe production decision is **GO to preserve the healthy baseline; NO-GO for remote migration, deployment, activation, or customer recovery sends**. The exact remaining approval is: apply 0041/0042 once to the verified bound D1, stage API/Admin with sends off, prove rollback and controlled acceptance, then separately authorize bounded +15/+210 recovery sends for new eligible orders only. No WAMID, delivery, recovery, payment completion, COD conversion, or conversion lift is claimed.
 
 Completion: P0 100%; P1 75% source / 0% live CMS; P2 100% source / 0% live activation; P3 100% automated / 0% live payment boundary; P4 100% source / 0% live deployment; P5 100%. Overall **68% operational release completion**; remaining blocker is supported production authorization and genuine controlled recipient evidence.
+
+## GFS-302 final report — 2026-10-28
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 freeze | PASS | API `45b01d86` / Admin `f0212429` remain 100%; rollback API `8e670de8`, Admin `b4c45278`; D1 binding UUID `17b7e9f6…`; Cron/Queue and health verified |
+| P1 eligibility | PASS | Discovery and Queue dispatch now accept actual `DETAILS_COMPLETED`/`PAYMENT_PENDING` + `PAYMENT_METHOD`/`PAYMENT_PENDING` no-method lifecycle, with all suppression gates |
+| P2 copy | PASS | Distinct +15 “Your Free Seeds Order Is Almost Ready!” and +210 “Your Free Seeds Order Is Still Awaiting Your Choice” in EN/UR; dynamic order/amount/delivery/COD values; no-COD omission |
+| P3 migrations | PASS | Owner-authorized 0041/0042 applied once; markers/tables/templates read back; `quick_check=ok`; FK check empty; no historical backfill |
+| P4 guarded activation | BLOCKED honestly | API `17598945-4601-4068-bf8c-9c3223cc8dd8` and Admin `76e33a3d-e96a-4942-a4ec-31910c688c16` staged 0%; flags remain false; no genuine eligible tester event/WAMID/delivery proof |
+| P5 quality/push | PASS local / PENDING push | Focused 95/95; full 318/318; build/lint/diff PASS; audit only if advisory endpoint is reachable |
+
+### Policy and live outcomes
+
+- Recovery schedule is exactly +15/+210 minutes for new post-activation eligible no-method orders. The existing Advance reminder schedule remains +15/+30/+60/+210/+240 and OFF. There is no +270 cancellation.
+- Eligibility requires one non-archived order, no selected method, pending payment/review, payment-choice conversation, no receipt/COD/hold/cancellation/opt-out, and a verified inbound inside 24 hours at schedule/claim/send. Outside-window stages are permanently `BLOCKED_WINDOW`.
+- No customer rows were extracted or mutated beyond the additive schema apply. No historical 67-order backfill, schedule, send, WAMID, delivery/read/failure event, payment mutation, COD conversion, billing change or dispatch is claimed.
+- Live flags: `PAYMENT_CHOICE_RECOVERY_ENABLED=false`, `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_AUTOMATION_V2_ENABLED=false`, `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`.
+
+### Release decision
+
+**GO to preserve the protected baseline; NO-GO for candidate promotion and recovery activation** until an authorized eligible live event proves inbound → candidate → outbound Meta acceptance. Current completion: P0 100%, P1 100%, P2 100%, P3 100%, P4 55% (staged only), P5 90%; overall **87% source/safety completion, 0% live recovery delivery**. Remaining blocker is genuine authorized acceptance; no false success is reported.

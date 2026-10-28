@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import api from "../apps/api/src/index";
 import admin from "../apps/admin/src/index";
 import { codReferenceHmac, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, MockWhatsAppProvider, persistFlowSubmission, selectPaymentMethod, storeReceipt } from "@gfs/core";
-import { enqueueDuePaymentChoiceRecoveryStages } from "../apps/api/src/payment-choice-recovery";
+import { defaultPaymentChoiceRecoveryCopy, enqueueDuePaymentChoiceRecoveryStages, paymentChoiceRecoveryCopy } from "../apps/api/src/payment-choice-recovery";
 
 // Synthetic fixtures only. SQLite executes the real migrations and journey SQL.
 const sender = "923001234567";
@@ -272,7 +272,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     const base = new Date(Date.now() - 16 * 60_000);
     const order = await persistFlowSubmission(db, { fullName: "NON-PAYABLE Synthetic", deliveryAddress: "SYNTHETIC RECOVERY", nearbyPlace: "SYNTHETIC ONLY", city: "Synthetic City", contactNumber: "03001234567", productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: "Synthetic Province", fertilizerSelected: false }, undefined, "SYNTHETIC-PAYMENT-CHOICE-RECOVERY", sender);
     const payment = sqlite.prepare("SELECT id FROM payments WHERE order_id=?").get(order.orderId) as { id: string };
-    sqlite.prepare("UPDATE orders SET created_at=?,state='PAYMENT_PENDING',payment_status='PENDING' WHERE id=?").run(base.toISOString(), order.orderId);
+    sqlite.prepare("UPDATE orders SET created_at=?,state='DETAILS_COMPLETED',payment_status='PENDING' WHERE id=?").run(base.toISOString(), order.orderId);
     sqlite.prepare("UPDATE payments SET method=NULL,review_state='PENDING' WHERE id=?").run(payment.id);
     sqlite.prepare("INSERT INTO whatsapp_conversations(id,wa_id,state,state_data,last_inbound_message_id,last_inbound_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)").run("synthetic-recovery-conversation", sender, "PAYMENT_METHOD", JSON.stringify({ language: "en", orderId: order.orderId, orderNumber: order.orderNumber }), "synthetic-recovery-inbound", base.toISOString(), base.toISOString(), base.toISOString());
     const first = await enqueueDuePaymentChoiceRecoveryStages(db, new Date(base.getTime() + 16 * 60_000), true, new Date(base.getTime() - 60_000).toISOString());
@@ -282,6 +282,22 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     expect(second.queued).toBe(1);
     expect(sqlite.prepare("SELECT stage_minutes,status FROM payment_choice_recovery_stages WHERE order_id=? ORDER BY stage_minutes").all(order.orderId)).toEqual([{ stage_minutes: 15, status: "QUEUED" }, { stage_minutes: 210, status: "QUEUED" }]);
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE kind='WHATSAPP_PAYMENT_CHOICE_RECOVERY' AND entity_id=?").get(order.orderId)).toEqual({ count: 2 });
+  });
+
+  it("keeps the +15 and +210 recovery copy distinct in both locales and renders only approved values", async () => {
+    const values = { orderNumber: "SYNTHETIC-302", amount: 500, deliveryFee: 250, codFee: 125 };
+    const firstEn = await paymentChoiceRecoveryCopy(db, 15, "en", values);
+    const finalEn = await paymentChoiceRecoveryCopy(db, 210, "en", values);
+    const finalUr = await paymentChoiceRecoveryCopy(db, 210, "ur", values);
+    const noCod = await paymentChoiceRecoveryCopy(db, 210, "en", { orderNumber: "SYNTHETIC-302", amount: 500, deliveryFee: 250 });
+    expect(firstEn.text).toContain("Your Free Seeds Order Is Almost Ready");
+    expect(finalEn.text).toContain("Your Free Seeds Order Is Still Awaiting Your Choice");
+    expect(finalEn.text).toContain("PKR 125");
+    expect(finalUr.text).toContain("آپ کے مفت بیجوں کے آرڈر");
+    expect(noCod.text).not.toContain("COD adds");
+    expect(firstEn.text).not.toBe(finalEn.text);
+    expect(firstEn.text).not.toContain("{orderNumber}");
+    expect(defaultPaymentChoiceRecoveryCopy(15, "en")).toContain("{deliveryFee}");
   });
 
   it("separates review confirmation from payment choice and advance methods", async () => {

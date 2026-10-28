@@ -1210,3 +1210,10 @@
 - Reused the existing Queue path and preserved the original order/payment/COD records; initial `PAYMENT_CHOICE` confirmation no longer falsely suppresses recovery.
 - Added explicit next-action fallback copy with dynamic order amount/COD fee and an explicit recovery-off Wrangler default.
 - Quality: focused 89/89, full 317/317, build/lint PASS; local migration rehearsal PASS. No remote mutation or customer send.
+
+## 2026-10-28 - GFS-302 eligibility repair and bounded release
+
+- Fixed recovery discovery/dispatch to recognize actual no-method `DETAILS_COMPLETED`/`PAYMENT_PENDING` orders and `PAYMENT_METHOD`/`PAYMENT_PENDING` conversations; preserved all payment, receipt, COD, hold, opt-out and 24-hour suppression gates.
+- Added dedicated internal CMS-backed +15/+210 EN/UR stage copy with dynamic placeholders and safe no-COD fallback; five-stage Advance reminders remain separate and OFF.
+- Owner-authorized 0041/0042 applied once to verified D1 `17b7e9f6…`; post-apply integrity and marker checks PASS. Sends-off API/Admin candidates are staged at 0% with protected baseline traffic unchanged.
+- Quality: focused 95/95, full 318/318, build, lint, and diff check PASS. No historical recovery send, WAMID, delivery, payment mutation, COD conversion or billing change. Genuine acceptance remains pending.

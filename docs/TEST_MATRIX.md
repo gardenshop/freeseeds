@@ -1598,3 +1598,17 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | Remote migration/deployment | BLOCKED safely | 0041/0042 not applied remotely; recovery false; active Admin lacks the new status read model |
 | Genuine recovery delivery | BLOCKED honestly | No authorized in-window recipient/send was used; no WAMID or conversion lift claimed |
 | Focused/full/build/lint | PASS | Focused 89/89; full 317/317; build and lint |
+
+### GFS-302 release gate
+
+| Case | Result | Evidence |
+|---|---|---|
+| Realistic no-method eligibility | PASS | `DETAILS_COMPLETED` order + `PENDING` payment + NULL method + `PAYMENT_METHOD` conversation is discovered and due-claimed |
+| +15 / +210 independence | PASS | Separate durable rows, due times, outbox keys, and no duplicate rows on repeat scheduler runs |
+| Suppression lifecycle | PASS | Receipt, selected method, COD, terminal, archive, opt-out, invalid conversation state and closed window are excluded/blocked |
+| Distinct EN/UR copy | PASS | Four published stage rows; title and body differ by stage; dynamic placeholders render; no-COD fallback omits COD text |
+| Recovery CMS safety | PASS | Dedicated stage table; body length, placeholder allowlist and HTML rejection in Admin path |
+| D1 0041/0042 | PASS | Applied once to verified UUID; markers, tables, quick_check and FK readback pass |
+| Sends-off candidate | PASS | API `17598945-4601-4068-bf8c-9c3223cc8dd8` / Admin `76e33a3d-e96a-4942-a4ec-31910c688c16` staged at 0%; flags OFF |
+| Genuine Meta acceptance | BLOCKED honestly | No authorized eligible live event; no WAMID or delivery is claimed |
+| Full regression | PASS | 318/318 tests, build, lint, diff check |

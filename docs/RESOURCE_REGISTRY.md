@@ -1310,3 +1310,12 @@ No secrets are stored in this registry.
 - **Local evidence:** 0042 applied in local D1 only; focused 89/89, full 317/317, build/lint PASS. No remote migration, deployment, CMS publish, flag change, Meta send, WAMID, payment, COD or billing mutation.
 - **Protected policy:** recovery stages are +15/+210 only; five Advance stages remain separate; 24-hour service window, no templates, no backfill, explicit PKR125 consent, new-number lock, and Hoja zero-connection remain mandatory.
 - **Next authority:** one supported owner approval for 0041/0042 remote apply, sends-off staging, guarded deployment, then a separate bounded recovery-send gate with genuine recipient evidence.
+
+## GFS-302 frozen release registry (2026-10-28)
+
+- **Identity/binding:** Cloudflare Get Free Seeds account / `gisupp@gmail.com`; verified API/Admin D1 binding `getfreeseeds-staging` UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; canonical GFS Meta only; Hoja isolated; no secrets or customer identifiers recorded.
+- **Baseline:** API `45b01d86` 100%; Admin `f0212429` 100%; rollback API `8e670de8` and Admin `b4c45278` retained. API minute Cron and Queue consumer attached.
+- **Candidate:** API `17598945-4601-4068-bf8c-9c3223cc8dd8` 0%; Admin `76e33a3d-e96a-4942-a4ec-31910c688c16` 0%; API preview health HTTP200. No candidate promotion claimed.
+- **D1:** 0041/0042 applied once after owner authorization; markers 0037–0042, recovery tables and four PUBLISHED EN/UR stage templates read back; `quick_check=ok`; FK check empty; recovery bookmark exists and was not created or exposed.
+- **Flags:** recovery false; five-stage reminder false; automation false; utility-template approval false; no activation start time; no schedules, sends, WAMIDs or delivery counts claimed.
+- **Policy:** +15/+210 recovery only for NEW post-activation eligible no-method orders; five Advance stages remain separate; 24-hour service-window only; permanent BLOCKED_WINDOW; no historical backfill, Meta templates or automatic COD conversion; PKR125 only after explicit COD consent.
