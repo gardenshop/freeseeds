@@ -9,7 +9,7 @@
 | P2 Excel export | PASS | Protected `/api/orders/export` returns all matching filtered orders as UTF-8 CSV compatible with Excel; 18 operational columns, exactly five customer-delivery fields, persisted quote/item values, no sensitive storage or settlement fields. |
 | P3 staged release | PASS STAGED / NO-GO PROMOTION | Admin `2b1609d5` and API `d808a31c` staged at0%; healthy versions remain100%. Active API health HTTP200. Full promotion awaits real inbound→outbound proof and rollback evidence. |
 | P4 reminders | PASS PAUSED | `false/false/false`; no templates, schedules, sends, WAMIDs, historical replay, or COD conversion. |
-| P5 quality | PASS | Focused9/9, full314/314, build, lint, audit0, rollback4/4. Docs updated; GitHub push remains to be completed through authenticated `gardenshop`. |
+| P5 quality | PASS | Focused9/9, full314/314, build, lint, audit0, rollback4/4. Docs updated; source/tests/docs commit `a964fd5` is pushed to PR #11 branch. |
 
 ### Export contract
 

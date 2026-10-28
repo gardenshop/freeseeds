@@ -7,7 +7,7 @@
 - **P2 PASS:** Admin export is an authenticated UTF-8 CSV (Excel-compatible) route and button. It uses the existing Orders filters, fixed bounded 100-row keyset pagination, persisted order/item quote values, duplicate-free output, formula-injection protection, private/no-store headers, and no sensitive payment/receipt/secret fields. XLSX was not added because the Worker has no spreadsheet runtime dependency; the requested optional CSV path is implemented.
 - **P3 PASS STAGED / NO PROMOTION:** Cloudflare identity `gisupp@gmail.com` / Get Free Seeds was verified before mutation. Admin candidate `2b1609d5` and API candidate `d808a31c` are staged at0%; healthy Admin `c2e87231` and API `8e670de8` remain100%. Active API `/health` returned HTTP200. No full promotion was performed without genuine WhatsApp evidence.
 - **P4 PASS PAUSED:** Reminders remain paused; no templates, sends, historical backfill, COD conversion, or new schedules were performed. Five-stage policy and existing Admin reminder state remain intact.
-- **P5 PASS:** Focused9/9, full314/314, build, lint, audit0, and verified rollback4/4 pass. Git working changes are source/tests/docs only and are pending commit/push through the correct GitHub identity.
+- **P5 PASS:** Focused9/9, full314/314, build, lint, audit0, and verified rollback4/4 pass. Source/tests/docs are committed at `a964fd5` and pushed to the correct PR #11 branch through the configured remote.
 - **Completion:** P0 100%; P1 local100% / live device0%; P2 100%; P3 staged100% / promoted0%; P4 100% safely paused; P5 local100% / push pending. Overall **90%**, production summary/export promotion **NO-GO pending genuine device acceptance**.
 
 ## GFS-290 Admin-editable order summary (2026-10-28)
