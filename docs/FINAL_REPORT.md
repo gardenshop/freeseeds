@@ -3942,7 +3942,7 @@ Completion: P0 100%; P1 75% source / 0% live CMS; P2 100% source / 0% live activ
 | P2 acceptance | PASS | 10% API `3d018265` canary produced five version-attributed genuine webhooks and one handled inbound; narrow aggregate provider evidence reached DELIVERED/READ |
 | P3 sends-off release | PASS | API `3d018265` and Admin `76e33a3d` passed health/webhook/Orders/CMS/CSV; compatible candidates promoted with rollback retained |
 | P4 activation | PASS scheduling/suppression / PENDING delivery | API `c1f43455` active 100%; two natural orders scheduled four rows; both +15 stages safely skipped after eligibility changed; no recovery WAMID |
-| P5 quality/push | PASS pending final push | Focused 91/91; full 319/319; build/lint; audit0; D1 integrity; rollback4/4 |
+| P5 quality/push | PASS | Focused 91/91; full 319/319; build/lint; audit0; D1 integrity; rollback4/4; verified commits pushed to PR #11 branch |
 
 ### Live state and decision
 
@@ -3952,4 +3952,4 @@ Completion: P0 100%; P1 75% source / 0% live CMS; P2 100% source / 0% live activ
 - Public bot evidence after activation: 372 sanitized active-version webhook completions, 115 handled events, and ordinary provider-ID-bearing replies at 84 READ / 25 DELIVERED / 1 SENT. Raw WAMIDs are intentionally omitted.
 - Logging: raw Cloudflare Workers Logs remain disabled. The enabled D1 audit contains only version, hashed correlation, fixed result code and numeric counts.
 - Public ordering: **GO**. Two payment-choice reminders: **GO for safe new-order-only configuration; PENDING first legitimate delivery**. Five-stage Advance reminders: **OFF**.
-- Completion: P0 100%, P1 100%, P2 100%, P3 100%, P4 95% (real scheduling/suppression passed; delivery pending), P5 95% before final push; overall **98% operational completion**. The only remaining evidence boundary is the first naturally eligible-at-due-time +15/+210 send.
+- Completion: P0 100%, P1 100%, P2 100%, P3 100%, P4 95% (real scheduling/suppression passed; delivery pending), P5 100%; overall **99% operational completion**. The only remaining evidence boundary is the first naturally eligible-at-due-time +15/+210 send.
