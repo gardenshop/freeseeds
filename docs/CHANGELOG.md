@@ -1,5 +1,12 @@
 # Changelog
 
+## GFS-295 (2026-10-28)
+
+- Recovered and verified the prior authorized tester and canonical business conversation by exact phone identity without storing identifiers in the repository.
+- Ran a reversible 25%→33% API canary, captured genuine new-versus-old summary behavior, then promoted `d808a31c` to100% with `8e670de8` retained0%.
+- Verified genuine English and Urdu customer-visible CMS summaries, payment buttons and READ Meta delivery. Reused legitimate prior fields; zero orders/payments were created and reminders stayed off.
+- Reverified API health, Admin CSV HTTP200/154 records/18 columns, focused101/101, full314/314, build, lint, audit0 and rollback4/4.
+
 ## GFS-294 (2026-10-28)
 
 - Inspected the authenticated WhatsApp Web and canonical Meta Manager connections without exposing message/customer data. WhatsApp Web is connected, but no authorized GFS/tester conversation or recipient is identifiable.

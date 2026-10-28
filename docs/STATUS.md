@@ -1,5 +1,14 @@
 # Status
 
+## GFS-295 verified summary release (2026-10-28)
+
+- **P0 PASS:** Exact phone identities verified for the authorized tester and canonical business sender; GitHub remote, Cloudflare account, D1 UUID and canonical Meta resources remained correct. No private identifiers are recorded here.
+- **P1 PASS:** Candidate provenance, REVIEW v8, dynamic placeholders, qualified Cron-only reconciliation and false/false/false reminder flags verified. Admin export remained unchanged.
+- **P2 PASS:** Genuine tester CONTACT produced the new English summary during canary, while a healthy-version hit produced the old format, proving split attribution. Real Meta replies were visible and READ; no fabricated webhook or reset was used.
+- **P3 PASS:** API `d808a31c` promoted100%, `8e670de8` retained0%. Post-promotion English and Urdu summaries each showed one PKR500 total, dynamic nutrients/delivery, correct Advance/COD buttons and no initial PKR125. Customer-authorized unsubmitted CANCEL/START enabled the Urdu run; aggregate D1 proof is zero new orders/payments.
+- **P4 PASS:** Focused101/101, full314/314, build, lint, audit0 and rollback4/4. Admin `b4c45278` export HTTP200 returned 154 parsed records/18 columns. Records updated and push pending.
+- **Completion:** P0–P4 100% for the summary release. Payment-button transitions were not clicked because that would create an order/payment; existing focused regression covers Advance instructions, COD fee/consent and duplicate safeguards.
+
 ## GFS-294 real WhatsApp test gate (2026-10-28)
 
 - **P0 PASS:** API `8e670de8`100% remains healthy; candidate `d808a31c`0%; Admin `b4c45278`100% and CSV export preserved; reminders false/false/false.

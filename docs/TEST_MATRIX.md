@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-295 verified summary release (2026-10-28)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Authorized identities | PASS | Exact phone checks matched the connected tester self-profile and canonical GFS business conversation; identifiers redacted from records. |
+| Candidate provenance/safety | PASS | `d808a31c`; REVIEW v8 EN/UR placeholders, no raw HTML, qualified Cron-only reconciliation, reminders false/false/false. |
+| Guarded canary | PASS | 25% then33% split; new candidate summary and old healthy summary both observed, proving differential attribution without errors. |
+| English live summary | PASS | Genuine CONTACT reply: free seeds, optional nutrients, delivery, exactly one PKR500 total, Advance/COD buttons, no initial PKR125; Meta status READ. |
+| Urdu live summary | PASS | Genuine post-promotion Urdu journey rendered equivalent one-total summary/buttons; Meta status READ. |
+| No financial/order mutation | PASS | Bounded D1 aggregate after test: zero new orders and zero new payments. Payment buttons were rendered but intentionally not clicked. |
+| Final traffic/health | PASS | API `d808a31c`100%, rollback `8e670de8`0%, active health HTTP200; Admin `b4c45278` unchanged. |
+| Excel export | PASS | Authenticated HTTP200 CSV; 154 quote-aware records, 18 columns, no sensitive header fields. |
+| Regression/build/security/rollback | PASS | Focused101/101, full314/314, build, lint, audit0, rollback4/4. |
+
+
 ## GFS-294 real WhatsApp test gate (2026-10-28)
 
 | Requirement | Result | Evidence / blocker |

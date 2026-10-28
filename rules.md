@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-295 verified summary release (2026-10-28)
+
+- Exact phone-number checks confirmed the connected WhatsApp Web account is the previously authorized tester and the target conversation is the canonical GFS business sender. Keep both numbers and full WAMIDs out of source, tests, screenshots and documentation.
+- Cloudflare `gisupp@gmail.com` / Get Free Seeds account was verified before each traffic mutation. API `d808a31c-ba40-4a02-b3c6-8c6de4cffecf` is active100%; prior healthy API `8e670de8-4d89-427b-9fec-dad29dc33f3f` is retained0% rollback. Admin `b4c45278-c7d6-49c5-824c-005afc991ffe` remains100%.
+- A 25%, then 33%, reversible canary proved the version split behavior: candidate CONTACT rendered the new CMS summary while healthy-version CONTACT rendered the known old format. After promotion, both English and Urdu genuine tester journeys rendered one PKR500 total, dynamic fertilizer/delivery lines, Advance/COD buttons and no PKR125 in the initial message. Final Meta WAMIDs were persisted and READ.
+- The test reused prior legitimate delivery responses, used only the customer-authorized unsubmitted CANCEL/START path, and created zero orders and zero payments. Do not click payment-method buttons in acceptance tests unless an order/payment mutation is separately authorized. Reminders remain false/false/false; qualified reconciliation remains Cron-only.
+- Live Admin CSV remains HTTP200 with 18 columns and 154 quote-aware parsed active records at final verification. Preserve the export, migrations0039/0040, signed webhook, COD PKR125 consent and rollback.
+
 ## GFS-294 real WhatsApp test gate (2026-10-28)
 
 - Preserve healthy API `8e670de8-4d89-427b-9fec-dad29dc33f3f`100%, candidate `d808a31c-ba40-4a02-b3c6-8c6de4cffecf`0%, Admin `b4c45278-c7d6-49c5-824c-005afc991ffe`100%, and export behavior. Reminder flags remain false/false/false.

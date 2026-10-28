@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-28: GFS-295 promote genuinely verified summary
+
+- Accept exact phone-number profile checks as authorization evidence while keeping the values out of repository records. The connected account was the prior tester; the target conversation was the canonical GFS sender.
+- Use a reversible 25%→33% canary. The same CONTACT step visibly alternated between the candidate’s new summary and the healthy version’s old format, establishing candidate attribution before promotion.
+- Promote `d808a31c` only after genuine visible summary and READ WAMID evidence; retain `8e670de8` at0% rollback. Freeze reminders false/false/false and preserve Admin `b4c45278`.
+- Use the customer’s normal unsubmitted CANCEL/START path for Urdu verification and reuse prior legitimate fields. Do not click Advance/COD in this acceptance because those actions create persisted order/payment state; rely on the passing focused regression for downstream financial safeguards.
+
 ## 2026-10-28: GFS-294 exact canary blocker
 
 - The candidate is technically ready for guarded testing: health200, published REVIEW v8 dynamic EN/UR content, and scheduled-only qualified reminder reconciliation all pass. Keep traffic unchanged until customer-visible proof.

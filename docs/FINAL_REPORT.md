@@ -1,5 +1,19 @@
 # Final Report
 
+## GFS-295 Final Report (2026-10-28)
+
+| Stage | Result | Evidence / remaining item |
+|---|---|---|
+| P0 tester recovery | PASS | Connected account and canonical GFS conversation matched the documented tester/business phones exactly; identifiers redacted from repository records. |
+| P1 production/candidate protection | PASS | Cloudflare/D1/Meta provenance verified; Admin `b4c45278` preserved; reminder flags false/false/false; candidate contained REVIEW v8 and Cron-only qualified reconciliation. |
+| P2 genuine acceptance | PASS | 25%→33% reversible canary; candidate new summary and healthy old summary both observed. Genuine English summary and buttons visible; outbound WAMID persisted READ. No fabricated traffic. |
+| P3 promote/freeze | PASS | API `d808a31c`100%, rollback `8e670de8`0%. Post-promotion English and Urdu one-total summaries visible with correct buttons and no initial PKR125. Zero orders/payments created. |
+| P4 quality/release | PASS | Focused101/101, full314/314, build, lint, audit0, rollback4/4; Admin export HTTP200, 154 records/18 columns. |
+
+### Release decision
+
+New Order Summary is **LIVE and GO**. The working API/Admin versions are frozen, rollback is retained, reminders remain off, and no financial/order mutation occurred during acceptance. Full WAMIDs and phone identifiers remain in protected operational systems and are omitted from repository documentation.
+
 ## GFS-294 Final Report (2026-10-28)
 
 | Stage | Result | Evidence / remaining item |

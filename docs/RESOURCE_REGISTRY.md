@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-295 verified summary release (2026-10-28)
+
+- GitHub: `gardenshop/freeseeds`, PR #11 branch `codex/gfs221-cod-compat-001`. Cloudflare: `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. D1: `getfreeseeds-staging`, UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`. Hoja/ThanNow unused.
+- Workers: API `d808a31c-ba40-4a02-b3c6-8c6de4cffecf`100%; rollback `8e670de8-4d89-427b-9fec-dad29dc33f3f`0%; Admin `b4c45278-c7d6-49c5-824c-005afc991ffe`100%.
+- Canonical Meta/WhatsApp: configured phone-number ID and WABA remained unchanged; exact tester/business phones were verified but are redacted here. Genuine English and Urdu summary WAMIDs are stored in D1 with READ status; full identifiers are intentionally omitted.
+- Feature state: reminder/automation/template flags false/false/false; migrations0039/0040 intact; zero test-created orders/payments. Admin export final check: HTTP200, 154 parsed active records, 18 columns.
+
 ## GFS-294 real WhatsApp test gate (2026-10-28)
 
 - Cloudflare Wrangler identity: `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API config D1 binding `getfreeseeds-staging` UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`. No mutation performed.
