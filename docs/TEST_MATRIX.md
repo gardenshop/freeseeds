@@ -1392,3 +1392,10 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | GFS-284 schema/markers/triggers | **PASS read-only / mismatch** | No reminder/COD sidecar/ledger objects and zero trigger rows; pre-reminder schema only |
 | GFS-284 integrity/recovery | **PASS read-only** | `quick_check=ok`, FK result empty, existing Time Travel bookmark returned without creating/changing one |
 | GFS-284 migration readiness | **BLOCKED safely** | 0039/0040 local rehearsal passes, but verified production schema lacks required COD lifecycle objects; no live apply authorized |
+
+| GFS-285 active Worker binding | **PASS read-only** | API/Admin production environments both bind staging D1 UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; production-name UUID `02b707df-a10c-4645-9516-a2a4541f6fab` is not active |
+| GFS-285 Admin payment approval guard | **PASS** | Live route exposes settlement-gated Confirm PAID only; local legacy approval button is disabled and settlement payload requires both confirmation and evidence reference |
+| GFS-285 current order aggregate | **PASS read-only** | Admin API returned 125 total, 8 REVIEW, 2 APPROVED/PAID, 45 fulfillment; bounded classification did not persist customer fields |
+| GFS-285 reminder deployment truthfulness | **PASS local / BLOCKED live** | Deployed reminder route is 404; local missing-schema API returns `REMINDERS_NOT_DEPLOYED` 503 instead of an empty success |
+| GFS-285 focused regression | **PASS** | Admin payment, reminder, and guided payment tests 105/105 |
+| GFS-285 full quality gates | **PASS local** | Full 310/310, build, lint, offline audit 0 vulnerabilities, rollback4/4, diff check |

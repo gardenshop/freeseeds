@@ -1092,3 +1092,10 @@
 - Executed one bounded, read-only preflight against production `getfreeseeds-prod` under explicit owner authorization.
 - Verified identity/Paid/WABA, pre-reminder schema, absent reminder/COD sidecar/ledger objects, zero trigger rows, `quick_check=ok`, empty FK check, and an existing protected Time Travel bookmark.
 - Did not create a bookmark, apply migrations, deploy Workers, change flags, send reminders, or mutate customer/payment/COD state. Migration readiness is held on the production schema/binding mismatch.
+
+## 2026-10-28 - GFS-285 binding and Admin safety repair
+
+- Verified active API/Admin Worker provenance and corrected the authoritative D1 identity to staging UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; the production-name database was not touched.
+- Hardened the active Admin page builder so any legacy direct payment approval button is disabled; settlement confirmation remains the only approval path and sends both required backend fields.
+- Added truthful reminder-schema failure handling with `REMINDERS_NOT_DEPLOYED` instead of an empty timeline when the deployed schema/route is absent.
+- Performed bounded Admin aggregate reads only: 125 total, 8 review, 2 approved/paid, 45 fulfillment; no customer data was stored. No live payment approval, migration, deployment, activation, send, WAMID, or COD conversion occurred.

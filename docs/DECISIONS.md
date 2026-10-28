@@ -1218,3 +1218,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Treat the verified production schema mismatch as a hard stop. It lacks `cod_order_details`, both expected migration-ledger tables, reminder tables, and triggers; do not apply 0039/0040 merely because local rehearsal passes or because a similarly named staging binding exists.
 - Keep all reminder flags false and do not request migration/deployment approval until the owner-supported production binding is reconciled with the intended current PUBLIC COD schema and the exact 0037/0038 state is proven.
 - The next approval, once reconciliation passes, must be one scoped authorization for one-time 0039/0040 apply plus sends-off staged Worker smoke/promotion. Reminder activation and any customer send require a later separate authorization.
+
+## 2026-10-28: GFS-285 active binding and Admin safety
+
+- Treat active Worker binding evidence as authoritative: API/Admin both use staging D1 UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; do not migrate or query `02b707df-a10c-4645-9516-a2a4541f6fab` merely because its name says production.
+- Keep backend payment settlement validation unchanged. Direct legacy approval controls must fail closed; only the settlement-confirmation panel may submit `settlementConfirmed:true` with a non-sensitive `settlementEvidenceRef`.
+- Treat deployed Admin `66426d2a` `/payment-reminders` 404 as **REMINDERS NOT DEPLOYED**, not as zero schedules or zero sends. Local Admin returns an explicit 503 when reminder tables are unavailable.
+- Current Admin order aggregates are read-only operational evidence only. No D1 SQL write, migration, deployment, flag activation, reminder send, WAMID, or COD conversion is authorized by this run.

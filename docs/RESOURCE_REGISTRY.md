@@ -1183,3 +1183,10 @@ No secrets are stored in this registry.
 - Production schema evidence: pre-reminder tables only; no reminder tables, COD sidecar, migration ledgers, or triggers. `orders_state_idx` and SQLite autoindexes are present. `quick_check=ok`; FK result empty.
 - Recovery: supported Wrangler returned an existing Time Travel bookmark; opaque value is intentionally omitted from Git/logs and was not changed or recreated.
 - Release: migrations0039/0040, candidate deployment, reminder flags, Cron/Queue activation, sends, WAMIDs, delivery, and COD conversion remain untouched. Hoja isolation and protected financial/COD safeguards remain unchanged.
+
+## GFS-285 Registry - 2026-10-28
+
+- Active binding evidence: API `24d72438` and Admin `66426d2a` both bind `getfreeseeds-staging` / D1 UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; the inspected production-name UUID `02b707df-a10c-4645-9516-a2a4541f6fab` is not active. Cloudflare account remains Get Free Seeds / `gisupp@gmail.com`.
+- Live topology evidence: API is a Queue producer; deployed API/Admin showed no Cron trigger or Queue consumer. Deployed Admin reminder URL returned 404; no reminder deployment or delivery is claimed.
+- Admin audit evidence: current read-only aggregate 125 total, 8 REVIEW, 2 APPROVED/PAID, 45 fulfillment; no customer identifiers or row data are stored here.
+- Local changes: direct legacy approval control fails closed; settlement panel remains explicit and backend-compatible. Missing reminder schema returns `REMINDERS_NOT_DEPLOYED`/503. No external mutation, migration, deployment, send, WAMID, or COD conversion occurred.

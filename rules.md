@@ -870,3 +870,10 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Integrity reads passed: `quick_check=ok`, `foreign_key_check` returned zero rows. Supported Wrangler Time Travel info returned an existing recovery bookmark; its opaque value remains protected and is not stored in Git or logs. No new bookmark was created.
 - Do not apply 0039/0040 to this database until the production-binding/schema mismatch is resolved and the existing PUBLIC COD lifecycle is independently present and verified. The repository Wrangler configs currently define staging D1, not this production database; never query the wrong binding to compensate.
 - No next mutation approval is actionable yet. After identity/schema reconciliation, request one separate approval covering only one-time 0039/0040 apply, staged sends-off Workers smoke/promotion, and a later separately authorized 24-hour activation/send window.
+
+## GFS-285 binding and Admin truthfulness (2026-10-28)
+
+- The authoritative live database is determined by active API/Admin Worker binding evidence. Current active services bind staging D1 UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; never migrate the production-name UUID `02b707df-a10c-4645-9516-a2a4541f6fab` without new binding proof.
+- Payment approval must remain settlement-gated. Any legacy direct approval control fails closed; only the explicit settlement-confirmation panel may submit the backend approval fields.
+- If reminder routes or tables are absent, display `REMINDERS NOT DEPLOYED`; never render an empty state as proof of zero schedules, sends, WAMIDs, or deliveries.
+- Read-only Admin aggregates do not authorize D1 writes, deployment, flag activation, customer sends, or COD conversion. Preserve Hoja isolation, the new-number lock, and all existing financial safeguards.

@@ -11,6 +11,15 @@ async function csrfHeaders(contentType = "application/json") {
 }
 
 describe("admin payment configuration", () => {
+  it("reports reminders as not deployed when the reminder schema is unavailable", async () => {
+    const response = await app.fetch(new Request("https://admin.example.test/api/payment-reminders", { headers: access }), env);
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({
+      error: "REMINDERS_NOT_DEPLOYED",
+      message: "Reminder migrations are not deployed on this database; no schedules, templates, or deliveries are available."
+    });
+  });
+
   it("renders transaction-reference, reference-request and settlement-confirmation controls", async () => {
     const response = await app.fetch(new Request("https://admin.example.test/orders", { headers: access }), env);
     const html = await response.text();
@@ -20,6 +29,8 @@ describe("admin payment configuration", () => {
     expect(html).toContain("Receiving-account settlement evidence reference");
     expect(html).toContain("I verified the actual credit in the authorized Garden Shop receiving account");
     expect(html).toContain("Confirm PAID");
+    expect(html).toContain("Use the settlement-confirmation panel; direct approval is disabled.");
+    expect(html).toContain("settlementEvidenceRef:evidenceRef(),settlementConfirmed:true");
     expect(html).not.toContain("Approve after verified settlement");
     expect(html).toContain("data.message==='string'");
   });
