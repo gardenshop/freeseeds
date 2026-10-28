@@ -1,5 +1,13 @@
 # Test Matrix
 
+## GFS-296 routing repair (2026-10-28)
+
+- Focused guided-flow/CMS tests: **103/103 PASS**; full suite: **316/316 PASS**.
+- Covered REVIEW `CONFIRM_ORDER`/`CANCEL_ORDER`, legacy `PLACE_ORDER`/`BACK`, idempotent confirm/cancel, direct Advance-method routing, duplicate taps, and no repeated payment-choice buttons after Advance selection.
+- Build: **PASS**. Lint: **PASS**. Rollback4/4 against verified `D:\free seeds\gfs273-v1`: **PASS**. `git diff --check`: **PASS**.
+- Genuine tester: identity verified by exact phone identity in the existing authorized conversation; START/welcome, guided fields, CMS v9 summary and safe unsubmitted cancellation were observed. Candidate-specific button/WAMID correlation: **PENDING**, not fabricated.
+- Reminder flags: **false/false/false**. No reminder schedules, sends, or delivery WAMIDs were created or claimed.
+
 ## GFS-295 verified summary release (2026-10-28)
 
 | Requirement | Result | Evidence / blocker |

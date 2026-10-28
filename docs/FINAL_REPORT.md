@@ -1,5 +1,24 @@
 # Final Report
 
+## GFS-296 Final Report — REVIEW/payment routing (2026-10-28)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 preserve production | **PASS** | Cloudflare identity reverified; API `d808a31c` restored 100%, candidate `45b01d86` 0%, Admin `b4c45278` 100%; reminders remain OFF. |
+| P1 routing repair | **PASS local / PENDING live** | Commit `6a70d52` separates REVIEW confirmation, payment choice, and Advance methods; CMS REVIEW v9 uses confirm/cancel wording; focused tests prove exact local transitions. |
+| P2 genuine tester | **PARTIAL** | Existing authorized tester identity was verified; genuine START/welcome, guided fields, CMS-driven one-total summary and safe unsubmitted cancellation were observed. The split journey returned baseline Advance/COD buttons, not candidate-specific Confirm/Cancel. |
+| P3 guarded release | **PASS rollback / NO-GO promotion** | Candidate was staged and briefly canaried with supported traffic controls; no candidate-specific acceptance proof was obtained, so healthy API was restored immediately. |
+| P4 quality/docs | **PASS** | 103/103 focused, 316/316 full, build, lint, rollback4/4 and diff check pass; required records updated without customer identifiers or raw WAMIDs. |
+
+### Before/after and release decision
+
+- Before: REVIEW could fall through to the Advance/COD choice, and Advance selection could re-render the same choice.
+- After source repair: REVIEW emits `CONFIRM_ORDER`/`CANCEL_ORDER`; confirmation reaches one idempotent payment-choice step; Advance reaches the three verified methods directly; COD remains explicit-consent with PKR125 safeguards. Local tests confirm no duplicate payment choices.
+- Live result: CMS v9 wording and one dynamic total were visible in the genuine tester conversation, but the observed split request used the healthy baseline button pair. This is not proof that candidate `45b01d86` handled the request.
+- Current traffic: API `d808a31c` 100%, candidate `45b01d86` 0%, Admin `b4c45278` 100%. D1 migrations0039/0040, existing orders, payments, COD safeguards, CSV export, and reminders were unchanged.
+- Reminder state: `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_AUTOMATION_V2_ENABLED=false`, `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`; five-stage 24-hour-only policy remains paused. No reminder WAMID or delivery is claimed.
+- Completion: P0 100%; P1 100% local / 75% live; P2 100% restoration / 60% candidate journey; P3 100% rollback / 0% promotion; P4 100%. Overall **88%**. Decision: **GO to preserve healthy public production; NO-GO to promote the routing candidate** until a supported canary proves the exact live button sequence and provider correlation.
+
 ## GFS-295 Final Report (2026-10-28)
 
 | Stage | Result | Evidence / remaining item |

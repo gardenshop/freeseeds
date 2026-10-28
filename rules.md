@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-296 current operational state (2026-10-28)
+
+- Cloudflare identity was reverified as `gisupp@gmail.com` in Get Free Seeds before the traffic restore. The authenticated GitHub/Meta accounts remain `gardenshop` and canonical GFS only; Hoja remains isolated.
+- Source commit `6a70d52` separates REVIEW confirmation from payment choice, accepts `CONFIRM_ORDER`/`CANCEL_ORDER`, preserves legacy callbacks, and prevents Advance-method selection from rendering the Advance/COD choice again. Local full suite is 316/316, build/lint pass, and rollback4/4 pass against the verified existing legacy root.
+- API candidate `45b01d86-65ff-4573-b384-f6be433a83d7` was staged and briefly canaried only through supported version splitting. The genuine tester reached the published CMS v9 one-total summary, but the observed button pair was the baseline `Advance Payment`/`Cash on Delivery` pair; candidate-specific `Confirm Order`/`Cancel Order` proof was not obtained.
+- The canary was ended safely: API `d808a31c-ba40-4a02-b3c6-8c6de4cffecf` is restored to 100% and candidate `45b01d86` is 0%; Admin `b4c45278` remains 100%. No order, payment, COD conversion, dispatch, schema, or reminder mutation occurred.
+- CMS REVIEW v9 remains published with confirmation/cancellation wording. Reminders remain `false/false/false`; no Meta templates, historical replay, or reminder WAMID/delivery claim is permitted. Do not promote the candidate until a new controlled canary proves the exact button sequence and inbound-to-reply correlation.
+
 ## GFS-295 verified summary release (2026-10-28)
 
 - Exact phone-number checks confirmed the connected WhatsApp Web account is the previously authorized tester and the target conversation is the canonical GFS business sender. Keep both numbers and full WAMIDs out of source, tests, screenshots and documentation.

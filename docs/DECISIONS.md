@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-28: GFS-296 keep candidate at 0% pending candidate-specific proof
+
+- Accepted the minimal source repair in `6a70d52`: REVIEW is a confirmation step; PAYMENT_METHOD is the two-choice step; Advance method selection cannot fall through to the two-choice renderer.
+- Published CMS REVIEW v9 uses confirmation/cancellation wording while retaining compatible action keys. Runtime normalization remains defensive for older sessions/content.
+- Rejected promotion of `45b01d86` because the genuine split journey rendered the baseline Advance/COD buttons. Restored API `d808a31c` to 100% and retained `45b01d86` at 0%.
+- No payment, order, COD, dispatch, reminder, migration, or customer-record mutation was authorized or performed. Next release gate requires a supported canary with the exact candidate button sequence and real provider correlation.
+
 ## 2026-10-28: GFS-295 promote genuinely verified summary
 
 - Accept exact phone-number profile checks as authorization evidence while keeping the values out of repository records. The connected account was the prior tester; the target conversation was the canonical GFS sender.

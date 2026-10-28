@@ -1,5 +1,12 @@
 # Changelog
 
+## GFS-296 (2026-10-28)
+
+- Repaired REVIEW/payment routing so the CMS summary is followed by Confirm Order/Cancel Order, confirmation creates/reuses one order before payment choice, Advance goes directly to methods, and legacy callbacks remain supported.
+- Published CMS REVIEW v9 confirmation/cancellation wording; dynamic totals and bilingual rendering remain intact.
+- Staged candidate `45b01d86`, ran a bounded genuine tester canary, and restored healthy API `d808a31c` to 100% when candidate-specific live button proof was not established. Admin `b4c45278` and reminders OFF were preserved.
+- Quality gates passed: 103/103 focused, 316/316 full, build, lint, rollback4/4, and diff check. No live order/payment/reminder mutation.
+
 ## GFS-295 (2026-10-28)
 
 - Recovered and verified the prior authorized tester and canonical business conversation by exact phone identity without storing identifiers in the repository.

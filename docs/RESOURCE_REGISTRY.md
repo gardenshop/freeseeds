@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-296 guarded routing release (2026-10-28)
+
+- **Accounts:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / Get Free Seeds; canonical GFS Meta only. Hoja resources were not accessed.
+- **Workers:** API `d808a31c` restored at 100%; API routing candidate `45b01d86` retained at 0%; Admin `b4c45278` remains 100%. Candidate provenance is source commit `6a70d52`.
+- **CMS:** REVIEW v9 published internally with “confirm or cancel” wording and compatible action mapping. No raw customer content or WAMID is recorded here.
+- **Live evidence:** existing authorized tester identity was checked by exact phone identity. START/welcome, guided checkout and the published one-total summary were observed; the split request showed baseline Advance/COD buttons, so candidate-specific routing acceptance remains pending.
+- **Safety:** no order/payment/COD/dispatch or D1 mutation occurred. Reminder flags are false/false/false; no reminder schedule/send/delivery WAMID is claimed. Existing migrations0039/0040 and the staging D1 binding remain intact.
+
 ## GFS-295 verified summary release (2026-10-28)
 
 - GitHub: `gardenshop/freeseeds`, PR #11 branch `codex/gfs221-cod-compat-001`. Cloudflare: `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. D1: `getfreeseeds-staging`, UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`. Hoja/ThanNow unused.

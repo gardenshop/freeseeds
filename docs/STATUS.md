@@ -1,5 +1,13 @@
 # Status
 
+## GFS-296 routing repair and guarded canary (2026-10-28)
+
+- **P0 PASS:** GitHub `gardenshop`, Cloudflare `gisupp@gmail.com` / Get Free Seeds, and canonical GFS Meta identities were reverified. Active API is `d808a31c` at 100%; routing candidate `45b01d86` is 0%; Admin `b4c45278` is 100%.
+- **P1 PASS local / PENDING live:** source commit `6a70d52` fixes REVIEW→PAYMENT precedence, adds `CONFIRM_ORDER`/`CANCEL_ORDER`, preserves legacy mappings, and keeps Advance method selection direct. CMS REVIEW v9 is published with “confirm or cancel” wording. A genuine authorized tester saw the CMS-driven one-total summary, but the split request returned the baseline Advance/COD buttons, so candidate-specific live routing is not claimed.
+- **P2 PASS safely:** the monitored canary was ended through supported Cloudflare controls and healthy API traffic restored to 100%. Admin, D1 migrations0039/0040, payment safeguards, COD policy, and existing orders were untouched. The safe unsubmitted cancel probe created no order or payment.
+- **P3 PASS local / NO-GO live promotion:** exact local button/transition tests pass; no candidate promotion occurred without genuine candidate-specific proof. Reminder flags remain false/false/false and reminders are paused.
+- **P4 PASS:** full 316/316, build, lint, and rollback4/4 pass. Remaining blocker is a new controlled canary showing `Confirm Order`/`Cancel Order` from the candidate with real provider correlation; no production GO is claimed for the candidate.
+
 ## GFS-295 verified summary release (2026-10-28)
 
 - **P0 PASS:** Exact phone identities verified for the authorized tester and canonical business sender; GitHub remote, Cloudflare account, D1 UUID and canonical Meta resources remained correct. No private identifiers are recorded here.
