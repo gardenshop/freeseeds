@@ -1,5 +1,25 @@
 # Final Report
 
+## GFS-305 Final Report — inconclusive canary, frozen release restored (2026-10-29)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 baseline | **PASS** | Correct GFS identity/D1 and protected API/Admin pair verified; frozen versions restored. |
+| P1 implementation | **PASS** | Existing 0041/0042 +15/+210 implementation, four published EN/UR messages, eligibility and idempotency remain valid. |
+| P2 diagnostics | **BLOCKED** | 1% canary produced no candidate-attributed inbound/WAMID/reply; Workers Logs are disabled. |
+| P3 deployment | **PASS safely / NO-GO promotion** | API/Admin briefly 1%/99%, then restored to candidate 0% / frozen 100%. |
+| P4 activation | **NO-GO** | Recovery flag false, start timestamp unset, five-stage and utility flags false. |
+| P5 quality | **PASS** | 318/318, build, lint, audit0, D1 integrity and rollback4/4. |
+
+### Final operational state
+
+- API `45b01d86` 100%; Admin `f0212429` 100%; candidates `17598945` and `76e33a3d` 0%.
+- `PAYMENT_CHOICE_RECOVERY_ENABLED=false`; no activation timestamp. `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_AUTOMATION_V2_ENABLED=false`, `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`.
+- Scheduled/queued/sent/delivered/read/failed/BLOCKED_WINDOW: **0**. No real WAMID exists.
+- **Public ordering:** GO on frozen release. **Two payment-choice reminders:** NO-GO/PENDING candidate-attributed tester proof. **Five-stage Advance reminders:** OFF.
+- Remaining action: connect the previously authorized tester profile to the supported authenticated browser session. No source, health or synthetic-event substitute is acceptable.
+- Completion: P0 100%, P1 100%, P2 50% (canary without attribution), P3 100% rollback-safe / 0% promotion, P4 0%, P5 100%; overall **65%**.
+
 ## GFS-304 Final Report — two-follow-up release decision (2026-10-29)
 
 | Gate | Result | Evidence |

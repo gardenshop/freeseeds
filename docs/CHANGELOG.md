@@ -1,5 +1,11 @@
 # Changelog
 
+## GFS-305 (2026-10-29)
+
+- Ran the owner-authorized reversible 1%/99% sends-off canary for API and Admin, then restored the frozen API `45b01d86` and Admin `f0212429` to 100%.
+- API health and Admin CSV remained successful; no candidate-attributed natural webhook, WAMID or customer-visible reply was available. Recovery counts remained zero and all flags stayed false.
+- Final release is protected but two-follow-up activation remains pending one supported connection to the authorized tester profile.
+
 ## GFS-304 (2026-10-29)
 
 - Rechecked the frozen production pair, candidate provenance, published +15/+210 EN/UR templates, real-state eligibility, D1 integrity and rollback path.

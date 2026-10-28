@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-305 canary result (2026-10-29)
+
+- The owner-authorized bounded canary used supported Cloudflare version splitting: API candidate `17598945`/baseline `45b01d86` at 1%/99%, then restored to 0%/100%; Admin candidate `76e33a3d`/baseline `f0212429` followed the same split and was restored to 0%/100%.
+- The canary was sends-off. Health returned HTTP200, Admin CSV returned HTTP200, no errors were exposed, and D1 recovery counts remained stages 0/outbox 0/sent 0. No customer message, payment, order, COD or reminder mutation occurred.
+- No candidate-attributed webhook, natural inbound, outbound WAMID or customer-visible reply was available. Cloudflare Workers Logs are disabled, so health cannot substitute for version attribution.
+- Recovery activation remains prohibited: `PAYMENT_CHOICE_RECOVERY_ENABLED=false`, no start time, five-stage Advance flags false, and utility templates false. The single remaining owner action is to connect the previously authorized tester profile to the authenticated browser through the supported path for one attributable nonfinancial smoke.
+
 ## GFS-304 two-follow-up release decision (2026-10-29)
 
 - Owner scope remains limited to the existing +15/+210 payment-choice recovery stages for new confirmed-but-no-method orders. Five-stage Advance reminders, general automation and utility templates remain disabled.

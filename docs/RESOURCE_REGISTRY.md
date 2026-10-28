@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-305 canary result (2026-10-29)
+
+- **Traffic:** API candidate `17598945` and Admin candidate `76e33a3d` were each briefly 1%/99% against API `45b01d86` and Admin `f0212429`, then restored to candidates 0% and frozen versions 100%.
+- **Observability:** API health was HTTP200 in bounded probes; Admin CSV was HTTP200. Cloudflare Workers Logs are disabled. No candidate-attributed inbound, webhook, outbound WAMID or delivery evidence exists.
+- **Safety:** D1 recovery stages/outbox/outbound counts remained 0; no customer/order/payment/COD mutation; flags and activation timestamp unchanged.
+- **Next gate:** supported authenticated connection of the existing authorized tester profile. No public identifiers, WAMIDs, secrets or customer data recorded.
+
 ## GFS-304 two-follow-up release decision (2026-10-29)
 
 - **Workers:** frozen API `45b01d86` and Admin `f0212429` remain 100%; rollback versions retained. API `17598945` and Admin `76e33a3d` remain 0%.

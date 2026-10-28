@@ -1,5 +1,14 @@
 # Status
 
+## GFS-305 canary result (2026-10-29)
+
+- **P0 PASS:** Frozen API `45b01d86` and Admin `f0212429` were restored to 100%; candidates `17598945` and `76e33a3d` are 0%. D1, rollback, signed webhook, payments, COD and CSV remain protected.
+- **P1 PASS:** Four published internal EN/UR +15/+210 templates and real-state eligibility remain intact; no migrations were reapplied.
+- **P2 BLOCKED precisely:** A supported 1%/99% API and Admin canary was exercised, but no candidate-attributed inbound/webhook/outbound WAMID appeared. Workers Logs are disabled; no natural event can be attributed from available diagnostics.
+- **P3 PASS safely / NO-GO promotion:** Canary responses were healthy, then both services were rolled back to the frozen pair. No unverified 100% promotion occurred.
+- **P4 NO-GO:** Recovery flag false, activation time unset, five-stage and utility flags false. Recovery stages/outbox/sends remain 0; no historical or out-of-window send occurred.
+- **P5 PASS:** 318/318, build, lint, audit0, D1 integrity and rollback4/4 pass. Single remaining owner action: connect the authorized tester profile in the supported authenticated browser session.
+
 ## GFS-304 two-follow-up release decision (2026-10-29)
 
 - **P0 PASS:** Frozen API `45b01d86` and Admin `f0212429` remain 100%, with rollback versions and verified GFS identities/binding preserved. No production mutation occurred.

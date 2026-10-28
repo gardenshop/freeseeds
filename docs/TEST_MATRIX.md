@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-305 canary result (2026-10-29)
+
+| Requirement | Result | Evidence / boundary |
+|---|---|---|
+| Guarded traffic control | PASS safely | API and Admin candidates each ran at 1% against frozen 99%, then were restored to 0%/100%. |
+| Candidate health | PASS limited | API health HTTP200 x12; Admin CSV HTTP200; no exposed errors. This is not candidate Meta acceptance. |
+| Version-attributed inbound/reply | BLOCKED | No candidate event/WAMID; Workers Logs disabled and connected browser is not the tester profile. |
+| Recovery mutation safety | PASS | D1 stages/outbox/sends remained 0; flags stayed false; no order/payment/COD mutation. |
+| Final release state | PASS protected | API `45b01d86`/Admin `f0212429` 100%; candidates 0%. |
+| Quality | PASS | 318/318, build, lint, audit0, D1 integrity and rollback4/4. |
+
 ## GFS-304 two-follow-up release decision (2026-10-29)
 
 | Requirement | Result | Evidence / boundary |

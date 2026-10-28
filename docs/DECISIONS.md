@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-29: rollback inconclusive canary; require tester connection
+
+- Use the owner-authorized 1%/99% split only as a bounded observation. Health and Admin CSV passed, but no candidate-attributed inbound or WAMID appeared and Workers Logs were disabled; therefore do not promote or activate.
+- Restore API `45b01d86` and Admin `f0212429` to 100%, candidates to 0%, and leave all recovery/Advance/template flags false. No schema rollback is needed and no D1/customer mutation occurred.
+- The exact next action is one supported browser/profile connection for the already authorized tester. Do not replace that evidence with a synthetic event, business-sender message, or health check.
+
 ## 2026-10-29: do not promote or activate without tester attribution
 
 - Keep the owner-approved scope limited to the existing +15/+210 payment-choice recovery path. Do not enable five-stage Advance reminders, utility templates or unrelated payment automation.
