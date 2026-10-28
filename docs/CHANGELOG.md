@@ -1,5 +1,12 @@
 # Changelog
 
+## GFS-292 (2026-10-28)
+
+- Fixed the actual production Orders template so the existing protected Excel-compatible CSV export button is visible; promoted Admin `b4c45278` to100% with `c2e87231` retained as rollback.
+- Verified authenticated live export HTTP200, 144-row unpaged/filter parity, 18-column contract, private/no-store response and no sensitive fields. No API, D1, payment, customer, Meta or reminder mutation was made.
+- Kept API `8e670de8` at100% and summary candidate `d808a31c` at0% because genuine authorized WhatsApp inbound/outbound/WAMID proof was unavailable. Reminders remain paused.
+- Final gates: focused18/18, full314/314, build, lint, audit0 and rollback4/4.
+
 ## GFS-291 (2026-10-28)
 
 - Added an authenticated Admin Orders export as Excel-compatible UTF-8 CSV with the existing filters, bounded keyset pagination across all matching rows, duplicate suppression, formula-injection protection, Urdu/leading-zero preservation, and no private receipt/QR/settlement data.

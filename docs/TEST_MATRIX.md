@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-292 live export release and summary hold (2026-10-28)
+
+| Requirement | Result | Evidence / blocker |
+|---|---|---|
+| Account/version/binding verification | PASS | Cloudflare `gisupp@gmail.com`; Admin `b4c45278`100%/`c2e87231` rollback; API `8e670de8`100%/`d808a31c`0%; staging D1 UUID recorded. |
+| CMS REVIEW v8 | PASS | Authenticated readback confirmed EN/UR published content and `{orderSummaryItems}`, `{deliveryFee}`, `{orderTotal}`. |
+| Live export UI/download | PASS | Authenticated `/orders` button visible; export HTTP200, CSV attachment, private/no-store; 144 rows and 18 columns. |
+| Export filter completeness | PASS | All active total 144 matched export; REVIEW10, PENDING79 and PACKING1 matched filtered API totals; export is not page-limited. |
+| Export safety/coverage | PASS | Five delivery fields, province/items/quantities/fees/total/payment/fulfillment/hold columns; no sensitive fields; local tests cover Unicode, leading-zero, formula and access control. |
+| API summary live acceptance | BLOCKED SAFELY | Candidate health passed, but no genuine authorized inbound/outbound Meta proof or WAMID; API stayed on healthy version. |
+| Reminder/payment safety | PASS PAUSED | All three flags false; no sends, backfill, payment, order, receipt, COD or schema mutation. |
+| Regression/build/security/rollback | PASS | Focused18/18 after fix, full314/314, TypeScript build, ESLint, audit0, rollback4/4. |
+
+
 ## GFS-291 Admin export and staged summary release (2026-10-28)
 
 | Requirement | Result | Evidence / blocker |

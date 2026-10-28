@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-292 live export release and summary hold (2026-10-28)
+
+- Cloudflare identity before Admin upload/traffic changes: `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Hoja/ThanNow were not used.
+- Workers: Admin `b4c45278-c7d6-49c5-824c-005afc991ffe`100%, rollback `c2e87231-9d51-444e-b283-7ab18379280f`0%; API `8e670de8-4d89-427b-9fec-dad29dc33f3f`100%, candidate `d808a31c-ba40-4a02-b3c6-8c6de4cffecf`0%. Both configs bind staging D1 UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`.
+- Live Admin export evidence: authenticated `/orders` button, HTTP200 CSV attachment, 144 all-active rows, filtered parity REVIEW10/PENDING79/PACKING1, 18 columns, no sensitive fields. CMS `REVIEW` published version8 remains bilingual/dynamic.
+- Feature state: reminder/automation/utility flags false/false/false; no reminder schedules, WAMIDs, customer messages, payment/order/receipt/COD mutation, migration, billing or Meta mutation. API summary live proof remains pending.
+
 ## GFS-291 staged Admin export and summary release (2026-10-28)
 
 - Source: PR #11 branch `codex/gfs221-cod-compat-001`; local source/tests/docs changes are the GFS-291 delta. Hoja/ThanNow resources were not used.

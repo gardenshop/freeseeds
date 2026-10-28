@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-28: GFS-292 Admin export live; API summary held
+
+- Promote only the corrected Admin export candidate after authenticated live UI/API evidence. The missing live button was in the actual `professionalOrdersPageHtml` template; the smallest fix was deployed as `b4c45278`, retaining `c2e87231` as rollback.
+- Treat the live export as an Excel-compatible CSV contract: all matching rows through bounded keyset pages, the existing filters, 18 approved columns, formula protection, private/no-store headers, and no receipt/QR/settlement secrets.
+- Keep API `8e670de8` at100% and candidate `d808a31c` at0% until a genuine authorized WhatsApp CONTACT-to-REVIEW inbound/outbound proof supplies real Meta acceptance/WAMID evidence. Do not infer it from health200, local tests or CMS readback.
+- Keep reminder flags false/false/false and preserve migrations0039/0040, payment/COD safeguards, signed webhook and new-number/Hoja isolation. No customer or financial mutation was authorized or performed.
+
 ## 2026-10-28: GFS-291 staged Admin export
 
 - Keep the GFS-290 `REVIEW` CMS summary and API rendering unchanged; this task does not create a second summary engine or alter checkout/payment/COD/reminder behavior.

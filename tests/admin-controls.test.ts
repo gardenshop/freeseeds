@@ -115,6 +115,8 @@ describe("GFS-109 admin controls", () => {
     expect(response.status).toBe(200);
     const html = await response.text();
     expect(html).toContain("new URLSearchParams(location.search)");
+    expect(html).toContain('id="download-export"');
+    expect(html).toContain("/api/orders/export?");
     for (const tab of ["All Orders", "Verify Payments", "Confirmed Payments", "Fulfillment"]) expect(html).toContain(tab);
     for (const size of ["25", "50", "100"]) expect(html).toContain(`<option>${size}</option>`);
     expect(html).toContain("selectedId=list[0].id");
