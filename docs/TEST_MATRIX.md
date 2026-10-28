@@ -1585,3 +1585,16 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | Migration/live recovery | BLOCKED safely | 0041 unapplied; recovery flag false; no customer send or WAMID |
 | Reminder isolation | PASS | Existing five-stage reminder engine untouched and flags false/false/false |
 | Focused/full/build/lint | PASS | Focused 117/117; full 316/316; build and lint |
+
+## GFS-301 payment-choice recovery
+
+| Area | Result | Evidence |
+|---|---|---|
+| Current bounded funnel | PASS read-only | Authenticated Admin aggregate: 192 active, 67 no-method; no customer identifiers recorded |
+| Two-stage schedule | PASS local | Synthetic order creates exactly +15 and +210 stage rows and distinct outbox keys; no historical rows |
+| Window/eligibility gate | PASS source/local | Due-time inbound identity/window, no-method, pending, receipt, COD, opt-out, archive and terminal checks |
+| Initial choice vs recovery duplicate | PASS local | Existing `PAYMENT_CHOICE` does not suppress recovery; prior recovery sends remain idempotently suppressed |
+| Advance/COD protection | PASS | Existing 317-test suite covers three Advance methods, receipt/review and explicit PKR125 COD consent; no real payment/dispatch |
+| Remote migration/deployment | BLOCKED safely | 0041/0042 not applied remotely; recovery false; active Admin lacks the new status read model |
+| Genuine recovery delivery | BLOCKED honestly | No authorized in-window recipient/send was used; no WAMID or conversion lift claimed |
+| Focused/full/build/lint | PASS | Focused 89/89; full 317/317; build and lint |

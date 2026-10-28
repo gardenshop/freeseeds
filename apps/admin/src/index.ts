@@ -1857,8 +1857,8 @@ app.post("/api/orders/:id/payment-choice-recovery", async (c) => {
     if (!recipient || !current.last_inbound_message_id || !isInsideWhatsAppServiceWindow(current.last_inbound_at)) return c.json({ error: "PAYMENT_CHOICE_RECOVERY_WINDOW_CLOSED" }, 409);
     const existing = await c.env.DB.prepare("SELECT status FROM payment_choice_recoveries WHERE order_id=?").bind(orderId).first<{ status:string }>();
     if (existing) return c.json({ error: "PAYMENT_CHOICE_RECOVERY_ALREADY_REQUESTED", status: existing.status }, 409);
-    const existingChoice = await c.env.DB.prepare("SELECT status FROM outbound_messages WHERE order_id=? AND kind IN ('PAYMENT_CHOICE','PAYMENT_CHOICE_RECOVERY') AND status IN ('SENT','DELIVERED','READ','SENDING') LIMIT 1").bind(orderId).first<{ status:string }>();
-    if (existingChoice) return c.json({ error: "PAYMENT_CHOICE_ALREADY_SENT" }, 409);
+    const existingRecovery = await c.env.DB.prepare("SELECT status FROM outbound_messages WHERE order_id=? AND kind='PAYMENT_CHOICE_RECOVERY' AND status IN ('SENT','DELIVERED','READ','SENDING') LIMIT 1").bind(orderId).first<{ status:string }>();
+    if (existingRecovery) return c.json({ error: "PAYMENT_CHOICE_RECOVERY_ALREADY_SENT" }, 409);
     let locale: "en" | "ur" = "en";
     try { locale = JSON.parse(current.state_data ?? "{}").language === "ur" ? "ur" : "en"; } catch { /* default to English */ }
     const now = new Date().toISOString();

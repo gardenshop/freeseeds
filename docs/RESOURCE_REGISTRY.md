@@ -1302,3 +1302,11 @@ No secrets are stored in this registry.
 - **Source candidate:** migration `0041_payment_choice_recovery.sql`; future `PAYMENT_CHOICE` order association; gated `WHATSAPP_PAYMENT_CHOICE_RECOVERY` queue. Migration is not live and `PAYMENT_CHOICE_RECOVERY_ENABLED` is false/unset.
 - **Reminders:** false/false/false; +15/+30/+60/+210/+240 retained; no templates, historical replay, recovery sends, or WAMIDs.
 - **Identity:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / Get Free Seeds account previously verified; canonical GFS Meta only; Hoja untouched.
+
+## GFS-301 Payment-choice recovery registry (2026-10-28)
+
+- **Live read-only checkpoint:** API `45b01d86` 100%, candidate `c4908cb5` 0%, API health HTTP200; authenticated Admin aggregate 192 active / 67 no-method. Exact customer identifiers and provider IDs are intentionally omitted.
+- **Source additions:** `migrations/0042_payment_choice_recovery_stages.sql`, `apps/api/src/payment-choice-recovery.ts`, API scheduled/Queue wiring, dynamic fallback copy, and recovery-off config.
+- **Local evidence:** 0042 applied in local D1 only; focused 89/89, full 317/317, build/lint PASS. No remote migration, deployment, CMS publish, flag change, Meta send, WAMID, payment, COD or billing mutation.
+- **Protected policy:** recovery stages are +15/+210 only; five Advance stages remain separate; 24-hour service window, no templates, no backfill, explicit PKR125 consent, new-number lock, and Hoja zero-connection remain mandatory.
+- **Next authority:** one supported owner approval for 0041/0042 remote apply, sends-off staging, guarded deployment, then a separate bounded recovery-send gate with genuine recipient evidence.

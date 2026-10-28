@@ -1323,3 +1323,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Associate only future confirmation/payment-choice replies with the existing order. Do not backfill generic historical rows by phone, timestamp, or payment-instruction status alone.
 - Add migration 0041 and a separate owner-requested recovery outbox path, but keep it unapplied and disabled until a supported production approval, staged Worker proof, and rollback check are complete. The recovery path never changes payment/order status and never converts to COD automatically.
 - Keep the healthy API/Admin baseline, reminder flags false/false/false, no Meta templates, explicit PKR125 consent, new-number lock, and Hoja isolation unchanged.
+
+## 2026-10-28: GFS-301 bounded payment-choice recovery
+
+- A one-shot recovery record cannot represent the required +15/+210 policy. Additive migration 0042 supplies two durable stage rows per newly-created eligible order; the activation boundary is explicit and no historical order can be scheduled.
+- The existing order-linked `PAYMENT_CHOICE` is the original confirmation, not a recovery duplicate. Recovery suppression therefore checks only `PAYMENT_CHOICE_RECOVERY` outcomes and each stage's idempotency key.
+- Keep the recovery scheduler independent from the five Advance reminder stages. It may run while reminder flags remain false, but only when its own flag and activation start time are explicitly configured.
+- Do not apply 0041/0042, deploy, publish CMS, enable recovery, or send until supported owner approval covers those exact mutations and sends-off staging. No genuine recipient, WAMID, conversion improvement, payment, COD conversion, or dispatch is claimed from local tests.

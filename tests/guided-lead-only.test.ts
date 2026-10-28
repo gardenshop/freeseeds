@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import api from "../apps/api/src/index";
 import admin from "../apps/admin/src/index";
 import { codReferenceHmac, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, MockWhatsAppProvider, persistFlowSubmission, selectPaymentMethod, storeReceipt } from "@gfs/core";
+import { enqueueDuePaymentChoiceRecoveryStages } from "../apps/api/src/payment-choice-recovery";
 
 // Synthetic fixtures only. SQLite executes the real migrations and journey SQL.
 const sender = "923001234567";
@@ -267,6 +268,22 @@ describe("frozen V1 receipt hotfix", () => {
 });
 
 describe("GFS-221 additive V1-compatible COD path", () => {
+  it("creates only the bounded +15/+210 recovery stages for a new no-method order", async () => {
+    const base = new Date(Date.now() - 16 * 60_000);
+    const order = await persistFlowSubmission(db, { fullName: "NON-PAYABLE Synthetic", deliveryAddress: "SYNTHETIC RECOVERY", nearbyPlace: "SYNTHETIC ONLY", city: "Synthetic City", contactNumber: "03001234567", productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: "Synthetic Province", fertilizerSelected: false }, undefined, "SYNTHETIC-PAYMENT-CHOICE-RECOVERY", sender);
+    const payment = sqlite.prepare("SELECT id FROM payments WHERE order_id=?").get(order.orderId) as { id: string };
+    sqlite.prepare("UPDATE orders SET created_at=?,state='PAYMENT_PENDING',payment_status='PENDING' WHERE id=?").run(base.toISOString(), order.orderId);
+    sqlite.prepare("UPDATE payments SET method=NULL,review_state='PENDING' WHERE id=?").run(payment.id);
+    sqlite.prepare("INSERT INTO whatsapp_conversations(id,wa_id,state,state_data,last_inbound_message_id,last_inbound_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)").run("synthetic-recovery-conversation", sender, "PAYMENT_METHOD", JSON.stringify({ language: "en", orderId: order.orderId, orderNumber: order.orderNumber }), "synthetic-recovery-inbound", base.toISOString(), base.toISOString(), base.toISOString());
+    const first = await enqueueDuePaymentChoiceRecoveryStages(db, new Date(base.getTime() + 16 * 60_000), true, new Date(base.getTime() - 60_000).toISOString());
+    expect(first.queued).toBe(1);
+    expect(sqlite.prepare("SELECT stage_minutes,status FROM payment_choice_recovery_stages WHERE order_id=? ORDER BY stage_minutes").all(order.orderId)).toEqual([{ stage_minutes: 15, status: "QUEUED" }, { stage_minutes: 210, status: "PENDING" }]);
+    const second = await enqueueDuePaymentChoiceRecoveryStages(db, new Date(base.getTime() + 211 * 60_000), true, new Date(base.getTime() - 60_000).toISOString());
+    expect(second.queued).toBe(1);
+    expect(sqlite.prepare("SELECT stage_minutes,status FROM payment_choice_recovery_stages WHERE order_id=? ORDER BY stage_minutes").all(order.orderId)).toEqual([{ stage_minutes: 15, status: "QUEUED" }, { stage_minutes: 210, status: "QUEUED" }]);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE kind='WHATSAPP_PAYMENT_CHOICE_RECOVERY' AND entity_id=?").get(order.orderId)).toEqual({ count: 2 });
+  });
+
   it("separates review confirmation from payment choice and advance methods", async () => {
     await enableAuditedCodPolicy();
     await enableSyntheticPaymentMethod();

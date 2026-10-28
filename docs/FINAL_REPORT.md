@@ -3830,3 +3830,20 @@ The mutually exclusive A-G outcome cannot be safely assigned for the current leg
 Production remains **GO to preserve the healthy baseline; NO-GO for migration, recovery sends, and reminder activation**. Required next gate: separately authorize and stage migration 0041 plus the recovery-disabled Worker, verify rollback, then enable recovery only through the supported owner-controlled action. No recovery WAMID or customer message was fabricated.
 
 Completion: P0 100%; P1 100% source / 0% live deployment; P2 100% source / 0% live activation; P3 100% paused; P4 100% source / 0% live deployment; P5 100%. Overall **70% operational release completion**; remaining blocker is scoped production approval/migration/deployment and genuine in-window recipient evidence.
+
+## GFS-301 Final Report - Payment-choice recovery and both-flow gate (2026-10-28)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 live funnel | PASS read-only | Cloudflare Get Free Seeds account; API `45b01d86` 100%, `c4908cb5` 0%, health200; Admin aggregate 192 active / 67 no-method |
+| P1 conversion copy | PASS source / pending CMS | Dynamic next-action fallback and COD fee; no live CMS mutation; active Admin lacks new recovery read model |
+| P2 recovery release | PASS local / BLOCKED live | 0042 +15/+210 durable stages, bounded start boundary, window/eligibility recheck, idempotency; 0041/0042 remote unapplied and flag false |
+| P3 Advance/COD flows | PASS automated / BLOCKED live boundary | 317 regression tests preserve Advance/receipt/COD safeguards; no real payment, dispatch, settlement, or unprotected test order |
+| P4 dashboard | PASS source / BLOCKED live | Source read model remains available for a future compatible deployment; current live response does not expose payment-choice status |
+| P5 quality | PASS local | Focused 89/89, full 317/317, build/lint; local migration rehearsal PASS |
+
+### Release decision
+
+The safe production decision is **GO to preserve the healthy baseline; NO-GO for remote migration, deployment, activation, or customer recovery sends**. The exact remaining approval is: apply 0041/0042 once to the verified bound D1, stage API/Admin with sends off, prove rollback and controlled acceptance, then separately authorize bounded +15/+210 recovery sends for new eligible orders only. No WAMID, delivery, recovery, payment completion, COD conversion, or conversion lift is claimed.
+
+Completion: P0 100%; P1 75% source / 0% live CMS; P2 100% source / 0% live activation; P3 100% automated / 0% live payment boundary; P4 100% source / 0% live deployment; P5 100%. Overall **68% operational release completion**; remaining blocker is supported production authorization and genuine controlled recipient evidence.

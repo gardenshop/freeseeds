@@ -1203,3 +1203,10 @@
 - Added Admin payment-choice status/read-model filtering and a CSRF-protected recovery request endpoint; no live recovery request was made.
 - Read-only Admin evidence: 184 active orders, 67 no-method; no method-level A-G attribution was proven. Reminder flags stayed false/false/false and no WAMIDs were claimed.
 - Quality: focused 117/117, full 316/316, build/lint PASS. Production migration, deployment, recovery sends, and reminder activation remain NO-GO pending separate approval.
+
+## 2026-10-28 - GFS-301 bounded payment-choice recovery
+
+- Added additive 0042 stage storage for exactly +15/+210 recovery, with explicit activation boundary, bounded due claims, service-window blocking, and distinct idempotency keys.
+- Reused the existing Queue path and preserved the original order/payment/COD records; initial `PAYMENT_CHOICE` confirmation no longer falsely suppresses recovery.
+- Added explicit next-action fallback copy with dynamic order amount/COD fee and an explicit recovery-off Wrangler default.
+- Quality: focused 89/89, full 317/317, build/lint PASS; local migration rehearsal PASS. No remote mutation or customer send.

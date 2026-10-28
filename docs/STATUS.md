@@ -1703,3 +1703,13 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **P3 PASS paused:** Reminder flags remain false/false/false; Cron/Queue reminder topology and five-stage policy are preserved. No reminder or recovery WAMID exists from this task.
 - **P4 PASS source / pending deployment:** Admin read model exposes payment-choice status and a payment-choice-pending filter; recovery requests require CSRF/authenticated Admin, a live inbound window, and one-time idempotency. Production Admin/API remain unchanged.
 - **P5 PASS:** Focused guided 88/88 plus Admin/CMS 29/29; full 316/316; build and lint PASS. Production decision: **GO to preserve baseline; NO-GO for migration, recovery sends, or reminder activation until separately approved and staged.**
+
+## GFS-301 Payment-choice recovery and two-flow gate (2026-10-28)
+
+- **P0 PASS read-only:** authenticated Cloudflare UI is the Get Free Seeds account; active API `45b01d86` is 100% and candidate `c4908cb5` is 0%. API `/health` is HTTP200. Admin `/api/orders` is HTTP200 with 192 active orders, 67 no-method, and 22 delivery-failed rows in the current aggregate response; no raw customer data was recorded.
+- **P1 PASS source / CMS pending:** recovery fallback copy now makes the next action explicit and passes the configured COD fee dynamically. Live CMS publication was not changed. The live Admin response lacks the new payment-choice status field, so GFS-299 Admin deployment remains pending.
+- **P2 PASS local / BLOCKED live:** additive 0042 stage storage and bounded +15/+210 scheduling are implemented. Local rehearsal passed; 0041/0042 remain unapplied remotely. Recovery flag is false and reminders remain false/false/false.
+- **P3 PASS automated / BLOCKED genuine live payment boundary:** existing guided tests cover Advance methods, QR/instructions, receipt/review, COD fee/consent and duplicate safeguards. No real payment, dispatch, settlement, or unprotected production test order was performed.
+- **P4 PENDING source deployment:** current source has the recovery status/read-model path, but the active Admin does not expose it. No before/after conversion metric or WAMID is claimed.
+- **P5 PASS local:** focused guided 89/89, full 317/317, build and lint pass; local 0042 migration rehearsal succeeded. Audit and remote release were not claimed.
+- **Decision:** preserve healthy production. **NO-GO** for remote migration, Worker/Admin deployment, recovery activation, and sends until the supported owner approval and staged sends-off/guarded rollout are complete.
