@@ -1,5 +1,26 @@
 # Resource Registry
 
+## GFS-318 guarded release checkpoint (2026-10-29)
+
+- **GitHub:** target `gardenshop/freeseeds`, PR #11, remote HEAD `04d06bc9672d68821fd769646a1d0ad351544697`; connected identity `ai-photo-studio`; repository permission `push=false`. No credential mutation or alternate-account attempt was made. Local commit is the next safe step; owner write access is required before push.
+- **Cloudflare:** read-only identity is `gisupp@gmail.com`; frozen API/Admin are `b426ba47`/`494a3dce` at 100%, with `9af8991d`/`76e33a3d` retained. No Worker, D1, traffic, flag, Cron, Queue, payment, COD or Meta mutation occurred. Migration0043 is not remotely applied.
+- **D1 measurement boundary:** staging last-24-hour usage is 494M rows read. The largest visible fingerprints are Admin counts 135.42M/209.64M, recovery candidate 68.91M, and old Admin list 33.3M. The dashboard exposed no query IDs or direct route attribution; no live after-savings value is registered.
+- **Isolation:** canonical GFS only; Hoja Seeds/ThanNow were not connected or accessed. No customer data, secrets, phone identifiers, WAMIDs or provider payloads are recorded.
+
+## GFS-317 authenticated read-cost checkpoint (2026-10-29)
+
+- **Cloudflare identity:** official browser read returned `gisupp@gmail.com` in the Get Free Seeds account. No mutation was made. Active API `b426ba47` is 100% with `9af8991d` rollback; active Admin `494a3dce` is 100% with `76e33a3d` rollback.
+- **D1 usage:** current billing-period account card: 534.3M rows read, 226.53k written, 21.85MB storage, $0 billable. Last-24-hour database metrics: `getfreeseeds-staging` 494M rows/286.12k queries/141k writes/20.54MB; `getfreeseeds-prod` 100 rows/2 queries; `getfreeseeds-cod-compat-check`, `getfreeseeds-v2-restore-check`, and `getfreeseeds-v2-staging` 0 rows. No cross-window sum is implied.
+- **Top visible staging fingerprints:** count aggregates 135.42M/86 and 209.64M/244; recovery candidate 68.91M/650; old Admin list 33.3M/240; CMS media/template lookups account for the remaining material top-ten entries. The visible dashboard does not expose query IDs or direct Worker attribution. No raw customer data, WAMID, secret or provider payload was recorded.
+- **Release status:** the live Admin Orders page is the pre-delta UI (no Full reload control), proving local GFS-316 is not deployed. Migration0043 remains local/unapplied. GitHub connector identity is `ai-photo-studio` with `push=false`; no commit/push was attempted.
+
+## GFS-316 local read-path evidence (2026-10-29)
+
+- **No new external resource:** no Cloudflare identity, D1, Worker, traffic split, flag, migration, billing, Meta, Queue, Cron or Chrome resource was mutated. The prior verified GFS account/binding and rollback records remain authoritative; Hoja/ThanNow were not accessed.
+- **Local schema:** additive `0043_admin_cron_read_paths.sql` defines `orders_updated_id_idx`, `outbound_messages_order_kind_status_idx`, `outbound_messages_kind_status_key_idx`, `outbox_jobs_kind_status_available_idx`, and `payment_reminder_v2_stage_schedule_status_due_idx`. It is not recorded as remotely applied.
+- **Measured local plans:** before 0043, outbound reconciliation and outbox claim were table scans and the order-tail cursor used a scan/temp sort; after 0043 they use the new covering/indexed paths. These are plan observations, not Cloudflare rows-read or savings measurements.
+- **External evidence status:** official authenticated Analytics/Query Insights and Chrome MCP were unavailable in this run. Do not record a 534.3M TOP10 attribution, account trend, duration or percentage reduction until those read-only connections are available.
+
 ## GFS-305 canary result (2026-10-29)
 
 - **Traffic:** API candidate `17598945` and Admin candidate `76e33a3d` were each briefly 1%/99% against API `45b01d86` and Admin `f0212429`, then restored to candidates 0% and frozen versions 100%.

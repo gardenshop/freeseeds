@@ -28,6 +28,7 @@ let qrAvailable: boolean;
 let qrReads: number;
 let remindersEnabled: boolean;
 let reminderAutomationEnabled: boolean;
+let recoveryEnabled: boolean;
 // NON-PAYABLE PNG signature only, not an encoded or scannable payment QR.
 const syntheticQrBytes = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
 
@@ -62,7 +63,7 @@ function buttons() {
 }
 
 function env() {
-  return { DB: db, RECEIPTS: { get: vi.fn(async () => { qrReads++; return qrAvailable ? { httpMetadata: { contentType: "image/png" }, arrayBuffer: async () => syntheticQrBytes.buffer } : null; }), put: vi.fn(async () => { receiptPuts++; }), delete: vi.fn(async () => undefined) }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: "true", META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided", COD_V1_ENABLED: codEnabled ? "true" : "false", COD_ROLLOUT_MODE: codRolloutMode, COD_TESTER_WA_ID: codTesterWaId, COD_REFERENCE_HMAC_KEY: codRuntimeHmacKey, PAYMENT_REMINDERS_V2_ENABLED: remindersEnabled ? "true" : "false", PAYMENT_AUTOMATION_V2_ENABLED: reminderAutomationEnabled ? "true" : "false", PAYMENT_UTILITY_TEMPLATES_APPROVED: "false", CF_VERSION_METADATA: { id: "synthetic-worker-version" } } as never;
+  return { DB: db, RECEIPTS: { get: vi.fn(async () => { qrReads++; return qrAvailable ? { httpMetadata: { contentType: "image/png" }, arrayBuffer: async () => syntheticQrBytes.buffer } : null; }), put: vi.fn(async () => { receiptPuts++; }), delete: vi.fn(async () => undefined) }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: "true", META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided", COD_V1_ENABLED: codEnabled ? "true" : "false", COD_ROLLOUT_MODE: codRolloutMode, COD_TESTER_WA_ID: codTesterWaId, COD_REFERENCE_HMAC_KEY: codRuntimeHmacKey, PAYMENT_REMINDERS_V2_ENABLED: remindersEnabled ? "true" : "false", PAYMENT_AUTOMATION_V2_ENABLED: reminderAutomationEnabled ? "true" : "false", PAYMENT_UTILITY_TEMPLATES_APPROVED: "false", PAYMENT_CHOICE_RECOVERY_ENABLED: recoveryEnabled ? "true" : "false", CF_VERSION_METADATA: { id: "synthetic-worker-version" } } as never;
 }
 
 async function callback(messages: Record<string, unknown>[], extraChanges: unknown[] = []) {
@@ -859,6 +860,7 @@ beforeEach(() => {
   qrReads = 0;
   remindersEnabled = false;
   reminderAutomationEnabled = false;
+  recoveryEnabled = false;
   queueSend = vi.fn(async () => undefined);
   vi.stubGlobal("fetch", vi.fn(async (_url: unknown, init: RequestInit) => {
     if (failNextSend) { failNextSend = false; return new Response("{}", { status: 503 }); }
@@ -1101,6 +1103,7 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
   it("reconciles recovery delivery from Cron while five-stage reminders are disabled", async () => {
     remindersEnabled = false;
     reminderAutomationEnabled = false;
+    recoveryEnabled = true;
     let recoverySyncAttempts = 0;
     beforeRun = async (sql) => {
       if (sql.startsWith("UPDATE payment_choice_recovery_stages")) recoverySyncAttempts++;

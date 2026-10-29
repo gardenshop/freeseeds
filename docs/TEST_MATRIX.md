@@ -1,5 +1,43 @@
 # Test Matrix
 
+## GFS-318 guarded release gate (2026-10-29)
+
+| Requirement | Result | Evidence / boundary |
+|---|---|---|
+| Frozen production protection | PASS read-only | API `b426ba47`/Admin `494a3dce` remain 100%; rollbacks retained; no external mutation. |
+| GitHub identity and push | BLOCKED safely | Connector is `ai-photo-studio`; target repository reports `push=false`; no cross-account auth or force-push. |
+| Local source/migration package | PASS | Expected source, tests, docs and additive migration0043 are present; no unrelated files. |
+| Admin delta correctness | PASS local | Orders, payments, COD details, outbound and outbox sources; equal timestamp/id keyset ordering; filter/page changes reload authoritatively. |
+| Unchanged Refresh read behavior | PASS local / live reads pending | Bounded indexed change probe avoids full counts/list on no change; actual D1 rows-read saving is not measured before deployment. |
+| Cron/recovery safety | PASS local | Delivery reconciliation is independently gated/no-op aware; +15/+210 recovery remains separate from five-stage reminders; no sends or backfill. |
+| Integrity and rollback | PASS | Migration rehearsal `quick_check=ok`, zero FK violations, rollback4/4. |
+| Regression gates | PASS | Focused121/121, full324/324, build, lint, offline audit0, diff check. |
+| Migration/deployment/release | NO-GO | Migration0043 unapplied; no candidate staged; no traffic promotion; separate authorization remains required. |
+
+## GFS-317 authenticated release gate (2026-10-29)
+
+| Requirement | Result | Evidence / boundary |
+|---|---|---|
+| Cloudflare identity and database scope | PASS read-only | Browser `/api/v4/user` returned `gisupp@gmail.com`; staging UUID matched the protected registry. No mutation. |
+| Account/database attribution | PASS | Current period 534.3M account rows; staging last 24h 494M; prod 100; three other databases 0. Windows are not combined. |
+| Top query attribution | PASS bounded | Ten visible staging fingerprints total approximately 447.55M; query IDs and direct Worker attribution are not exposed by the UI. |
+| Delta source completeness | PASS local | New cursor probe covers orders, payments, COD details, outbound and outbox updates; equal timestamp/id ordering remains keyset-based. |
+| Live optimized savings | BLOCKED | Active API/Admin are still b426ba47/494a3dce; local code and migration0043 are unreleased. |
+| GitHub push | BLOCKED safely | Authenticated connector is `ai-photo-studio` with repository `push=false`; no credential change or alternate account used. |
+| Final local gates | PASS | Focused 121/121; full 324/324; build, lint, offline audit 0 vulnerabilities, migration quick_check/FK, rollback 4/4 and diff check pass. |
+
+## GFS-316 read-cost optimization (2026-10-29)
+
+| Requirement | Result | Evidence / boundary |
+|---|---|---|
+| External identity and 534.3M attribution | BLOCKED | Official authenticated Cloudflare Analytics/Query Insights and Chrome MCP were unavailable; no live mutation or invented attribution. |
+| Admin unchanged Refresh | PASS local | Indexed `(updated_at,id)` change probe; changed/removed rows force authoritative reload; no-change response avoids counts/list/detail rerun; Full reload remains explicit. |
+| Admin privacy/concurrency | PASS local | Access middleware preserved; `/api/orders*` is private/no-store; active list requests abort; detail remains selection-only; no polling added. |
+| Cron/recovery read paths | PASS local | Reminder/recovery reconciliation is independently flag-gated and no-op aware; recovery candidates use keyed stage exclusion; five-stage Advance remains OFF. |
+| Local EXPLAIN | PASS | 0043 changes outbound/outbox/order-cursor scans to indexed searches; date range uses existing archived/created index. No live rows-read reduction inferred. |
+| Focused/full regressions | PASS | Admin/Cron/recovery focused tests 120/120; full suite 323/323; build, lint, offline audit (0 vulnerabilities), rollback 4/4, migration `quick_check=ok`, zero FK violations and diff check pass. |
+| GitHub push | BLOCKED safely | Read-only `gh auth status` reports the configured token invalid; no credential change, commit or push was attempted. |
+
 ## GFS-305 canary result (2026-10-29)
 
 | Requirement | Result | Evidence / boundary |

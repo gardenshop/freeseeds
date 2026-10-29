@@ -1,5 +1,23 @@
 # Changelog
 
+## GFS-318 (2026-10-29)
+
+- Completed the local guarded-release package: multi-source Admin delta invalidation, explicit full reload, indexed date/cursor/recovery/Cron paths, regression coverage and migration0043 rehearsal are ready for owner-authorized release.
+- Recorded bounded live attribution without claiming savings: staging was 494M rows read in the last 24 hours; the two Admin count aggregates were 135.42M and 209.64M, recovery candidate scanning 68.91M, and the old Admin list 33.3M.
+- Local release gates pass (focused121/121, full324/324, build, lint, audit0, integrity, rollback4/4). Push is blocked by the authenticated GitHub connector (`ai-photo-studio`, repository `push=false`); migration0043 and traffic remain unapplied/unpromoted.
+
+## GFS-317 (2026-10-29)
+
+- Captured official read-only D1 attribution: 534.3M current-period account rows, 494M staging rows in the last 24 hours, and a ranked visible top-ten fingerprint set led by two Admin count aggregates.
+- Repaired the local delta cursor so payment, COD-detail, outbound delivery and outbox changes invalidate Admin state even when the parent order timestamp is unchanged. Added covering updated-time indexes and an indexed recovery candidate path to migration0043.
+- Verified active API/Admin versions and rollbacks read-only; no deployment, migration, traffic, flag, Meta, payment, COD, customer or Hoja mutation. GitHub push remains blocked by read-only connector permission.
+
+## GFS-316 (2026-10-29)
+
+- Added a local-only Admin/Cron read-path optimization: indexed order sync cursor, bounded `/api/orders/changes`, explicit Full reload, private/no-store API responses, range-based date filtering, and overlap-safe unchanged Refresh behavior.
+- Added additive migration `0043_admin_cron_read_paths.sql` for order cursor, outbound, outbox and recovery-stage lookup paths. It was locally rehearsed only; no remote migration or deployment was performed.
+- Gated Cron delivery reconciliation by the enabled reminder/recovery paths, avoided no-op status updates, and changed recovery candidate exclusion to the keyed recovery-stage table. Focused tests pass 120/120; live 534.3M attribution remains blocked pending official authenticated Cloudflare diagnostics.
+
 ## GFS-305 (2026-10-29)
 
 - Ran the owner-authorized reversible 1%/99% sends-off canary for API and Admin, then restored the frozen API `45b01d86` and Admin `f0212429` to 100%.

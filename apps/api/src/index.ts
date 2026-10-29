@@ -65,22 +65,28 @@ app.onError((error, c) => {
   return c.json({ error: "API_REQUEST_FAILED" }, 500);
 });
 
-export async function syncPaymentReminderDeliveryStatuses(db: D1Database): Promise<void> {
-  await db.prepare(`UPDATE payment_reminder_v2_stages AS s SET
+export async function syncPaymentReminderDeliveryStatuses(db: D1Database, options: { reminders?: boolean; recovery?: boolean } = {}): Promise<void> {
+  const reminders = options.reminders ?? true;
+  const recovery = options.recovery ?? true;
+  if (reminders) await db.prepare(`UPDATE payment_reminder_v2_stages AS s SET
     status=CASE WHEN m.status IN ('DELIVERED','READ') THEN m.status WHEN m.status='FAILED' THEN 'DEAD_LETTER' ELSE s.status END,
     last_error=CASE WHEN m.status='FAILED' THEN COALESCE(m.last_error,'META_DELIVERY_FAILED') ELSE s.last_error END,
     completed_at=CASE WHEN m.status IN ('DELIVERED','READ','FAILED') THEN COALESCE(s.completed_at,m.updated_at) ELSE s.completed_at END,
     updated_at=m.updated_at
     FROM outbound_messages m
     WHERE m.kind='WHATSAPP_PAYMENT_REMINDER' AND m.idempotency_key=s.idempotency_key
-      AND m.status IN ('DELIVERED','READ','FAILED')`).run();
-  await db.prepare(`UPDATE payment_choice_recovery_stages AS s SET
+      AND m.status IN ('DELIVERED','READ','FAILED')
+      AND (s.status<>CASE WHEN m.status IN ('DELIVERED','READ') THEN m.status WHEN m.status='FAILED' THEN 'DEAD_LETTER' ELSE s.status END
+        OR (m.status='FAILED' AND COALESCE(s.last_error,'')<>COALESCE(m.last_error,'META_DELIVERY_FAILED')))`).run();
+  if (recovery) await db.prepare(`UPDATE payment_choice_recovery_stages AS s SET
     status=CASE WHEN m.status IN ('DELIVERED','READ') THEN m.status WHEN m.status='FAILED' THEN 'FAILED' ELSE s.status END,
     last_error=CASE WHEN m.status='FAILED' THEN COALESCE(m.last_error,'META_DELIVERY_FAILED') ELSE s.last_error END,
     updated_at=m.updated_at
     FROM outbound_messages m
     WHERE m.kind='PAYMENT_CHOICE_RECOVERY' AND m.idempotency_key=s.outbound_idempotency_key
-      AND m.status IN ('DELIVERED','READ','FAILED')`).run();
+      AND m.status IN ('DELIVERED','READ','FAILED')
+      AND (s.status<>CASE WHEN m.status IN ('DELIVERED','READ') THEN m.status WHEN m.status='FAILED' THEN 'FAILED' ELSE s.status END
+        OR (m.status='FAILED' AND COALESCE(s.last_error,'')<>COALESCE(m.last_error,'META_DELIVERY_FAILED')))`).run();
 }
 
 function base64Url(data: Uint8Array): string { return btoa(String.fromCharCode(...data)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, ""); }
@@ -1172,9 +1178,13 @@ export default {
   fetch: app.fetch,
   async scheduled(controller: ScheduledController, env: Env["Bindings"]): Promise<void> {
     const remindersEnabled = env.PAYMENT_REMINDERS_V2_ENABLED === "true" && env.PAYMENT_AUTOMATION_V2_ENABLED === "true";
+    const recoveryEnabled = env.PAYMENT_CHOICE_RECOVERY_ENABLED === "true";
     const now = new Date(controller.scheduledTime).toISOString();
     const stale = new Date(Date.parse(now) - 5 * 60_000).toISOString();
-    await syncPaymentReminderDeliveryStatuses(env.DB);
+    // The five-stage reminder ledger is disabled in the current release. Do not
+    // rescan its outbound history on every minute tick; recovery reconciliation
+    // remains independent and is still run when its flag is enabled.
+    if (remindersEnabled || recoveryEnabled) await syncPaymentReminderDeliveryStatuses(env.DB, { reminders: remindersEnabled, recovery: recoveryEnabled });
     if (remindersEnabled) {
       await enqueueDuePaymentV2Stages(env.DB, new Date(controller.scheduledTime), true);
     const jobs = await env.DB.prepare(`SELECT idempotency_key,entity_id FROM outbox_jobs
@@ -1189,7 +1199,7 @@ export default {
       catch { await env.DB.prepare("UPDATE outbox_jobs SET status='RETRY',last_error='QUEUE_DISPATCH_FAILED',available_at=?,updated_at=? WHERE idempotency_key=? AND status='QUEUED'").bind(new Date(Date.parse(now) + 60_000).toISOString(), now, job.idempotency_key).run(); }
     }
     }
-    if (env.PAYMENT_CHOICE_RECOVERY_ENABLED === "true") {
+    if (recoveryEnabled) {
       await enqueueDuePaymentChoiceRecoveryStages(env.DB, new Date(controller.scheduledTime), true, env.PAYMENT_CHOICE_RECOVERY_START_AT);
       const recoveryJobs = await env.DB.prepare(`SELECT idempotency_key,entity_id FROM outbox_jobs
         WHERE kind='WHATSAPP_PAYMENT_CHOICE_RECOVERY' AND ((status IN ('PENDING','RETRY') AND available_at<=?) OR (status='QUEUED' AND updated_at<=?))

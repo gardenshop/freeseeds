@@ -96,7 +96,7 @@ export async function enqueueDuePaymentChoiceRecoveryStages(
       AND NOT EXISTS(SELECT 1 FROM payment_receipts r WHERE r.order_id=o.id AND r.payment_id=p.id)
       AND NOT EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id)
       AND NOT EXISTS(SELECT 1 FROM payment_reminder_v2_opt_outs x WHERE x.customer_id=c.id OR x.wa_id=c.wa_id)
-      AND NOT EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind='PAYMENT_CHOICE_RECOVERY')
+      AND NOT EXISTS(SELECT 1 FROM payment_choice_recovery_stages existing_stage WHERE existing_stage.order_id=o.id)
     ORDER BY o.created_at,o.id LIMIT 100`).bind(activationAt, timestamp).all<{
       id: string; created_at: string; payment_id: string; wa_id: string; last_inbound_message_id: string | null; last_inbound_at: string | null; locale: "en" | "ur";
     }>();

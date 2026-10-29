@@ -1,5 +1,25 @@
 # Decisions
 
+## 2026-10-29: GFS-318 preserve local release until owner restores GitHub write access
+
+- Keep the tested GFS-316/317 source, tests, documentation and additive migration0043 local and commit them without external mutation. The official connector is authenticated as `ai-photo-studio` and has `push=false` on `gardenshop/freeseeds`; do not cross accounts, alter credentials, force-push or retry authentication in a loop.
+- Do not add a distributed count snapshot: the measured dominant sources are the two Admin count aggregates, and an in-memory cache would risk stale counts across Worker isolates and after payment, COD, fulfillment or archive actions. First release the bounded unchanged-Refresh path, then remeasure actual `meta.rows_read` before considering an aggregate redesign.
+- Do not apply migration0043, stage a candidate, change flags or promote traffic in this checkpoint. The exact owner action is to grant the authorized `gardenshop` identity write access (or reconnect an approved write-enabled integration), after which the preserved commit can be pushed and separately reviewed for guarded release.
+- Keep frozen production and rollback versions unchanged. Public ordering remains operationally GO on the frozen release; optimized release remains NO-GO. Recovery remains the existing +15/+210 policy, while five-stage Advance reminders, automation and utility templates remain OFF.
+
+## 2026-10-29: GFS-317 attribute reads before release; repair all delta sources
+
+- Accept the authenticated read-only Cloudflare evidence: current billing period is 534.3M rows read across five databases, while staging alone is 494M in the last-24-hour view. The top ten visible staging fingerprints total approximately 447.55M; the largest two Admin count fingerprints total approximately 345.06M. Do not mix windows or claim a percentage reduction from this baseline.
+- Treat the largest causes as repeated Admin count aggregates, the minute recovery candidate query, the old Admin list projection, and separate CMS media/template lookups. Query IDs and direct Worker/route attribution are not exposed in the visible dashboard table; preserve SQL fingerprints, run counts and rows-read only.
+- Extend the local delta cursor to orders, payments, COD details, outbound delivery records and outbox records. Payment reference, COD evidence/hold, delivery acknowledgement and outbox status changes must invalidate the Admin view even when `orders.updated_at` is unchanged. Add only the measured covering indexes in migration0043.
+- Keep API b426ba47/Admin 494a3dce at 100% and rollbacks 9af8991d/76e33a3d at 0%. Do not apply migration0043, deploy local changes, promote traffic, enable five-stage reminders, alter recovery, touch Meta, or connect Hoja/ThanNow. GitHub push is blocked by the authenticated connector's read-only permission.
+
+## 2026-10-29: GFS-316 keep read optimization local pending live attribution
+
+- Treat the 534.3M D1 rows-read figure as account-wide evidence requiring authenticated per-database/query attribution. Do not assign it to the 245 Admin orders from source inspection alone. Cloudflare Analytics/Query Insights and Chrome MCP were unavailable in this execution, so no live TOP10, `meta.rows_read`, duration or savings percentage is recorded.
+- Accept the additive local repair: date predicates use half-open ranges; Admin has an indexed `(updated_at,id)` change probe with tombstones and authoritative-reload fallback; unchanged Refresh avoids count/list/detail reruns; Cron delivery reconciliation is independently flag-gated and no-op aware; recovery candidate exclusion uses the keyed recovery-stage table.
+- Keep migration `0043_admin_cron_read_paths.sql` local and unapplied remotely until identity, backup/rollback, D1 quick/FK and release gates are re-established. Preserve private/no-store Admin responses, the new-number WhatsApp lock, Hoja Seeds zero-connection rule, +15/+210 recovery behavior and five-stage Advance reminders OFF.
+
 ## 2026-10-29: rollback inconclusive canary; require tester connection
 
 - Use the owner-authorized 1%/99% split only as a bounded observation. Health and Admin CSV passed, but no candidate-attributed inbound or WAMID appeared and Workers Logs were disabled; therefore do not promote or activate.

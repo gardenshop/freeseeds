@@ -62,6 +62,8 @@ class OrdersDb {
   approvalRow: Record<string, unknown> | null = null;
   failOrderReads = false;
   failOrderDetailReads = false;
+  syncCursor = false;
+  changedRows: Array<{ id: string; updated_at: string }> = [];
 
   prepare(sql: string): D1PreparedStatement {
     return this.statement(sql, []) as unknown as D1PreparedStatement;
@@ -87,6 +89,7 @@ class OrdersDb {
     this.calls.push({ sql, args });
     if (this.failOrderReads && sql.startsWith("SELECT COUNT(*) AS all_count")) throw new Error("D1 row read limit exceeded");
     if (this.failOrderDetailReads && sql.startsWith("SELECT o.id") && sql.includes("WHERE o.id=?")) throw new Error("D1 error 7500: daily row read limit exceeded");
+    if (sql.startsWith("SELECT updated_at,id FROM (")) return this.syncCursor ? { updated_at: syntheticOrder.updated_at, id: syntheticOrder.id } : null;
     if (sql.startsWith("SELECT COUNT(*) AS all_count")) return { all_count: 58, verify_count: 7, confirmed_count: 19, fulfillment_count: 14, total_count: 58 };
     if (sql.startsWith("SELECT p.review_state")) return this.approvalRow;
     if (sql.startsWith("SELECT o.id") && sql.includes("WHERE o.id=?")) return syntheticOrder;
@@ -95,6 +98,8 @@ class OrdersDb {
 
   private all(sql: string, args: unknown[]): Record<string, unknown>[] {
     this.calls.push({ sql, args });
+    if (sql.startsWith("SELECT id,MAX(updated_at) AS updated_at")) return this.changedRows;
+    if (sql.startsWith("SELECT o.id") && sql.includes("o.id IN (")) return this.changedRows.length ? [syntheticOrder] : [];
     if (sql.includes("o.pack_quantity") && sql.includes("ORDER BY o.created_at DESC,o.id DESC")) {
       return this.exportRows.slice(sql.includes("o.created_at < ?") ? 100 : 0, sql.includes("o.created_at < ?") ? 200 : 100);
     }
@@ -124,6 +129,7 @@ describe("GFS-139 orders dashboard API", () => {
     const db = new OrdersDb();
     const response = await app.fetch(new Request("https://admin.example.test/api/orders?tab=verify&page=2&pageSize=25&q=03001234567&date=2026-10-16&paymentStatus=REVIEW&archived=all", { headers: auth }), environment(db));
     expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toContain("private, no-store");
     const body = await response.json() as { counts: Record<string, number>; total: number; pagination: Record<string, number>; orders: Array<Record<string, unknown>> };
     expect(body.counts).toEqual({ all: 58, verify: 7, confirmed: 19, fulfillment: 14, noMethod: 0, paymentChoicePending: 0, paymentNotSent: 0, deliveryFailed: 0, unpaidAfterDelivery: 0 });
     expect(body.total).toBe(58);
@@ -134,6 +140,43 @@ describe("GFS-139 orders dashboard API", () => {
     expect(listCall?.args.slice(-2)).toEqual([25, 25]);
     expect(listCall?.args).toContain("%923001234567%");
     expect(listCall?.args).toContain("%+923001234567%");
+    expect(listCall?.sql).not.toContain("substr(o.created_at");
+    expect(listCall?.args).toContain("2026-10-16T00:00:00.000Z");
+    expect(listCall?.args).toContain("2026-10-17T00:00:00.000Z");
+  });
+
+  it("returns a bounded no-change response for an authenticated sync cursor", async () => {
+    const db = new OrdersDb();
+    db.syncCursor = true;
+    const response = await app.fetch(new Request("https://admin.example.test/api/orders/changes?sinceUpdatedAt=2026-10-16T12:30:00.000Z&sinceId=synthetic-order-newest", { headers: auth }), environment(db));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ changed: [], removedIds: [], requiresFullReload: false, syncCursor: { updatedAt: syntheticOrder.updated_at, id: syntheticOrder.id } });
+    const changeProbe = db.calls.find((call) => call.sql.startsWith("SELECT id,MAX(updated_at) AS updated_at"));
+    expect(changeProbe?.sql).toContain("FROM payments");
+    expect(changeProbe?.sql).toContain("FROM cod_order_details");
+    expect(changeProbe?.sql).toContain("FROM outbound_messages");
+    expect(changeProbe?.sql).toContain("FROM outbox_jobs");
+  });
+
+  it("returns changed rows when a payment or delivery-side record advances the cursor", async () => {
+    const db = new OrdersDb();
+    db.syncCursor = true;
+    db.changedRows = [{ id: syntheticOrder.id, updated_at: "2026-10-16T12:31:00.000Z" }];
+    const response = await app.fetch(new Request("https://admin.example.test/api/orders/changes?sinceUpdatedAt=2026-10-16T12:30:00.000Z&sinceId=synthetic-order-newest", { headers: auth }), environment(db));
+    expect(response.status).toBe(200);
+    const body = await response.json() as { changed: Array<Record<string, unknown>>; removedIds: string[]; requiresFullReload: boolean; syncCursor: Record<string, string> };
+    expect(body.changed).toHaveLength(1);
+    expect(body.removedIds).toEqual([]);
+    expect(body.requiresFullReload).toBe(true);
+    expect(body.syncCursor).toEqual({ updatedAt: "2026-10-16T12:31:00.000Z", id: syntheticOrder.id });
+  });
+
+  it("rejects incomplete sync cursors before querying order rows", async () => {
+    const db = new OrdersDb();
+    const response = await app.fetch(new Request("https://admin.example.test/api/orders/changes?sinceUpdatedAt=2026-10-16T12:30:00.000Z", { headers: auth }), environment(db));
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "ORDER_SYNC_CURSOR_INVALID" });
+    expect(db.calls).toHaveLength(0);
   });
 
   it("returns a JSON error instead of fake counts when D1 rejects the order read", async () => {

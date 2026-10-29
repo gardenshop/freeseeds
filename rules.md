@@ -1,5 +1,29 @@
 # Get Free Seeds Binding Rules
 
+## GFS-318 guarded release checkpoint (2026-10-29)
+
+- The frozen production pair remains API `b426ba47` at 100% with `9af8991d` retained for rollback, and Admin `494a3dce` at 100% with `76e33a3d` retained for rollback. Recovery remains the existing +15/+210 path; five-stage Advance reminders, automation and utility templates remain OFF. No external dashboard, D1, Worker, traffic, flag, Meta, payment, COD, Queue, Cron or customer mutation was made for GFS-318.
+- Official Cloudflare read-only identity remains `gisupp@gmail.com` in the Get Free Seeds account; the measured staging D1 is `17b7e9f6-e08b-4bff-a756-10de30b49ab1`. The connected GitHub identity is `ai-photo-studio`, and `gardenshop/freeseeds` reports `push=false`; do not cross accounts, loop authentication, force-push, reset or discard changes.
+- The completed local repair is preserved for owner-authorized release: Admin unchanged Refresh uses a bounded indexed multi-source change probe, full reload is explicit, equal timestamp/id ordering is keyset-safe, and Cron delivery reconciliation/recovery remain independently gated. Migration0043 is additive, locally rehearsed and unapplied remotely.
+- Measured staging evidence is attribution only: 494M rows read in the last 24 hours; top visible fingerprints include Admin count aggregates at 135.42M and 209.64M, recovery candidate scanning at 68.91M, and the old Admin list projection at 33.3M. No live after-deployment rows-read, duration or percentage saving may be claimed.
+- Local gates pass: focused 121/121, full 324/324, build, lint, offline audit with zero vulnerabilities, migration `quick_check=ok`/zero foreign-key violations, rollback4/4 and diff check. The exact external blocker is one owner action: grant the authorized `gardenshop` GitHub identity write access to `gardenshop/freeseeds` (or reconnect an approved GitHub integration as that identity with contents write), then push the preserved local commit.
+
+## GFS-317 authenticated read-cost evidence (2026-10-29)
+
+- Read-only Cloudflare browser identity was verified as `gisupp@gmail.com` in the Get Free Seeds account, with staging D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`. No dashboard mutation, SQL execution, migration, deployment, traffic, flag, billing, Meta, Queue, Cron, payment, COD or customer mutation was made.
+- The current billing-period dashboard shows 534.3M rows read across five D1 databases. In the last-24-hour staging view, `getfreeseeds-staging` shows 494M rows read and 286.12k queries; the other four databases show 100 rows read on `getfreeseeds-prod` and zero on the three compatibility/restore databases. These windows must not be added as if identical periods.
+- The authenticated Admin/API release remains API `b426ba47` at 100% with `9af8991d` rollback and Admin `494a3dce` at 100% with `76e33a3d` rollback. The live Admin page does not contain the local Full reload/delta UI, so GFS-316 is not deployed.
+- Query Insights exposes SQL fingerprints, counts and rows-read but no query IDs in the visible table. Record fingerprints and exact dashboard windows instead of inventing IDs. Never record customer names, phone numbers, order numbers, WAMIDs, tokens, receipts or raw payloads.
+- The new-number WhatsApp lock, Hoja Seeds zero-connection rule, COD PKR125, Advance flow, +15/+210 recovery, Queue/webhook safeguards and five-stage Advance reminders OFF remain binding. Do not apply migration0043 or promote traffic without separate scoped authorization.
+
+## GFS-316 read-cost optimization protocol (2026-10-29)
+
+- This work is local-only unless a separately approved, identity-verified release is performed. No Cloudflare dashboard, D1, Worker, traffic, flag, reminder, Meta, billing or customer mutation was made in this run; the official authenticated Cloudflare/Chrome diagnostic connections were not available here, so no live 534.3M attribution or savings claim is permitted.
+- Local EXPLAIN evidence supports additive migration `0043_admin_cron_read_paths.sql`: indexed `(updated_at,id)` order cursors, outbound reconciliation keys, outbox due/status claims and recovery-stage due/status lookups. Never apply it remotely without the existing backup, identity, rollback and D1 integrity gates.
+- Admin order data remains Access-protected and private/no-store. Unchanged Refresh may use only the bounded indexed change probe; detected changes require an authoritative reload. Full reload remains explicit. No global PII/payment caching, synthetic customer data, N+1 detail loading, or hidden polling is allowed.
+- Cron delivery-status reconciliation must remain flag-gated and no-op aware. Recovery remains independently gated; +15/+210 accuracy, the new-number WhatsApp lock, Hoja Seeds zero-connection rule, payment/COD safeguards and five-stage Advance reminders OFF are unchanged.
+- Report local query plans as local evidence only. Do not convert EXPLAIN output into Cloudflare `meta.rows_read`, account-wide TOP10 attribution, duration, or percentage savings without authenticated Analytics/Query Insights evidence.
+
 ## GFS-305 canary result (2026-10-29)
 
 - The owner-authorized bounded canary used supported Cloudflare version splitting: API candidate `17598945`/baseline `45b01d86` at 1%/99%, then restored to 0%/100%; Admin candidate `76e33a3d`/baseline `f0212429` followed the same split and was restored to 0%/100%.

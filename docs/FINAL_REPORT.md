@@ -1,5 +1,82 @@
 # Final Report
 
+## GFS-318 final guarded-release report — local commit pending push authorization (2026-10-29)
+
+| Requested item | Result |
+|---|---|
+| 1. GitHub identity / remote | Connected identity is `ai-photo-studio`; `gardenshop/freeseeds` is readable but reports `push=false`. Remote remains PR #11 HEAD `04d06bc`; local tested state is preserved for commit. |
+| 2. Migration / Worker status | Migration0043 is locally rehearsed and **unapplied**. Active API/Admin remain `b426ba47`/`494a3dce` at 100%; no candidate staged and no traffic promoted. |
+| 3. Costliest measured queries | Admin count aggregates: 135.42M + 209.64M rows; recovery candidate scan: 68.91M; old Admin list projection: 33.3M; visible top ten total ~447.55M of staging's 494M last-24-hour rows. |
+| 4. Reads saved per unchanged Refresh / Cron | **Not measured live.** Local behavior is bounded indexed change probing for unchanged Refresh; Cron reconciliation is skipped when both reminder/recovery paths are disabled and recovery remains independently gated. |
+| 5. Remaining reads | The largest measured remaining source is the two Admin count aggregates. Separate CMS media/template fingerprints are also material; direct route attribution is not exposed. |
+| 6. Tests / rollback / release proof | Focused121/121; full324/324; build; lint; offline audit0; migration quick/FK clean; rollback4/4; diff check. Live after-deploy proof is unavailable because push, migration and staging were blocked. |
+| 7. Completion / blocker / next action | P0 100%, P1 75%, P2 85%, P3 90%, P4 45%, P5 30%, P6 70%. Exact next action: owner grants `gardenshop` write access or reconnects a write-enabled authorized GitHub integration; then push and verify remote SHA/files. |
+| 8. Public bot / recovery | Frozen public ordering GO. Existing +15/+210 recovery policy GO; no new send is claimed. Optimized release and migration are NO-GO. Five-stage Advance reminders, automation and utility templates remain OFF. |
+
+### Release boundary
+
+Cloudflare identity was verified read-only as `gisupp@gmail.com` in the Get Free Seeds account before this release decision; no external mutation was made. The new-number WhatsApp lock and Hoja Seeds zero-connection rule remain intact. Do not apply migration0043 or promote a Worker until the GitHub provenance blocker, separate release authorization, candidate 0% staging, live identity checks, and post-deploy D1 measurement are complete. Never report unmeasured live savings.
+
+## GFS-317 Final Report — authenticated attribution, local repair, release blocked (2026-10-29)
+
+| Gate | Result | Evidence / boundary |
+|---|---|---|
+| P0 source/frozen production | **PASS read-only** | Local GFS-316 changes are uncommitted against remote HEAD `04d06bc`. Cloudflare browser verified `gisupp@gmail.com`; API b426ba47/Admin 494a3dce are 100%; rollbacks 9af8991d/76e33a3d are 0%. |
+| P1 access/identity | **PARTIAL** | Cloudflare identity and D1 binding verified. GitHub connector is `ai-photo-studio` with push=false; Meta was not mutated/read broadly and Hoja/ThanNow stayed isolated. |
+| P2 D1 attribution | **PASS bounded** | Current account card: 534.3M rows read, 226.53k written, 21.85MB storage, $0 billable. Staging last 24h: 494M rows/286.12k queries/141k writes/20.54MB; prod 100 rows/2 queries; three other databases 0. |
+| P3 top ten | **PASS bounded** | Top ten visible fingerprints total approximately 447.55M staging rows (90.6% of staging's last-24-hour figure). Largest: two Admin count aggregates 135.42M and 209.64M; recovery candidate 68.91M; old Admin list 33.3M. Query IDs are not exposed. |
+| P4 local repair | **PASS local** | Delta cursor now includes orders, payments, COD details, outbound and outbox timestamps. Migration0043 adds updated-time indexes and recovery candidate indexing. |
+| P5 before/after live measurement | **BLOCKED** | No optimized deployment or migration occurred, so live after rows/read, duration, freshness and savings percentage cannot be claimed. Local EXPLAIN is recorded separately and is not live savings. |
+| P6 push/release | **BLOCKED safely** | GitHub connector lacks push permission. Migration0043 and local source remain uncommitted/unreleased; no candidate staging, migration application or traffic promotion. |
+| P7 tests/docs | **PASS local** | Focused delta/recovery 121/121; full 324/324; build, lint, offline audit 0 vulnerabilities, migration quick_check/FK, rollback 4/4 and diff check pass. |
+
+### TOP10 visible staging fingerprints — last 24 hours
+
+| Rank | Fingerprint | Query ID | Runs | Rows read | Rows/run | Share |
+|---:|---|---|---:|---:|---:|---:|
+| 1 | Admin count aggregate A | not exposed | 86 | 135.42M | 1.57M | 18.88% |
+| 2 | Admin count aggregate B | not exposed | 244 | 209.64M | 859.18k | 11.22% |
+| 3 | CMS media selection | not exposed | 44,040 | 74.96k | 1.70 | 11.13% |
+| 4 | Payment-choice recovery candidate scan | not exposed | 650 | 68.91M | 106.02k | 10.63% |
+| 5 | Published template version lookup | not exposed | 38,277 | 76.55k | 2.00 | 6.14% |
+| 6 | Published version-media lookup | not exposed | 25,291 | 32.99k | 1.30 | 6.11% |
+| 7 | Action-label lookup | not exposed | 37,938 | 68.05k | 1.79 | 5.24% |
+| 8 | CMS media-selection delete | not exposed | 25,148 | 97 | 0.004 | 3.09% |
+| 9 | Published-version lookup | not exposed | 23,415 | 23.41k | 1.00 | 2.87% |
+| 10 | Old Admin list projection | not exposed | 240 | 33.30M | 138.75k | 2.52% |
+
+The visible top ten total approximately 447.55M rows. The dashboard did not expose query IDs or direct Worker/route attribution for these fingerprints; the source mapping is therefore bounded by SQL shape. The 494M staging value is a last-24-hour window, while 534.3M is the current billing-period account card.
+
+### Local plan evidence
+
+- Before migration0043, the expanded delta source would scan orders, payments, COD details, outbound messages and outbox jobs; after it uses updated-time covering indexes for each source, followed only by bounded grouping/order temp work.
+- Recovery exclusion changed from an outbound-message scan to the keyed `payment_choice_recovery_stage_order_idx`; the candidate index is additive and remains unapplied remotely.
+- No live after-release percentage is reported. The release gate is **NO-GO** until GitHub write authorization, candidate provenance, final local gates, migration review/approval and separate traffic/migration authorization exist. Public ordering remains on the frozen release; five-stage Advance reminders remain OFF.
+
+## GFS-316 Final Report — local read-path repair, live attribution blocked (2026-10-29)
+
+| Gate | Result | Evidence / boundary |
+|---|---|---|
+| P0 Freeze/access | **BLOCKED external** | No official authenticated Cloudflare Analytics/Query Insights or Chrome connector was available in this execution. No dashboard, D1, deployment, traffic, flag, reminder, Meta or customer mutation occurred. |
+| P1 Cost attribution | **BLOCKED** | Source/local plans identify repeatable scan risks but cannot attribute account-wide 534.3M rows, rank TOP10, or claim Orders caused the total. |
+| P2 Existing optimization audit | **PASS local** | Admin count/list/detail/export and Cron/recovery paths were inspected; date `substr`, correlated probes, OFFSET and minute scans were addressed only where measured locally. |
+| P3 Admin repeated reads | **PASS local** | Cursor/tombstone change endpoint, no-change Refresh, explicit Full reload, abort-safe overlap handling, selection-only detail and private/no-store responses are implemented. |
+| P4 Background reads | **PASS local** | Flag-gated, no-op-aware delivery reconciliation and keyed recovery-stage exclusion preserve +15/+210 semantics; five-stage Advance remains OFF. |
+| P5 Before/after measurement | **PARTIAL** | Local EXPLAIN: outbound/outbox/order cursor changed from scans to indexed searches after 0043; date range uses the existing index. Live rows/run, duration, frequency, cumulative reads and savings % remain unavailable. |
+| P6 Guard release | **PASS local / external blocked** | Focused 120/120, full 323/323, build, lint, offline audit (0 vulnerabilities), migration `quick_check=ok`, zero FK violations, rollback 4/4 and diff check pass; 0043 is not remotely applied. |
+| P7 Documentation/push | **PARTIAL / push blocked** | Required documentation records measured local findings and blocked external evidence without secrets or customer data. Read-only GitHub auth is invalid, so no commit/push or credential change was attempted. |
+
+### Ranked findings
+
+1. Admin count aggregate: repeated multi-category `COUNT/SUM(CASE...)` with correlated status probes; optimize via bounded unchanged Refresh and indexed lookup paths.
+2. Admin list status probes: outbound/outbox correlated lookups; add entity/kind/status indexes and retain narrow list projection.
+3. Order sync tail: cursorless/offset refresh work; add `(updated_at,id)` keyset probe and authoritative reload fallback.
+4. Date filter: `substr(created_at,1,10)` prevented range use; use a half-open UTC date range.
+5. Cron delivery reconciliation: unconditional reminder/recovery update scans; run only enabled paths and avoid no-op writes.
+6. Recovery candidate exclusion: outbound anti-join repeated historical status work; use the keyed recovery-stage table.
+
+No exact live TOP10, query IDs, Cloudflare `meta.rows_read`, duration, daily trend, per-refresh row counts or percentage savings may be reported until official authenticated diagnostics are available. The local 0043 migration is additive and remains unapplied remotely. Release is **NO-GO for external deployment/migration** pending identity, attribution and final gates; source repair is ready for local review.
+
 ## GFS-305 Final Report — inconclusive canary, frozen release restored (2026-10-29)
 
 | Gate | Result | Evidence |

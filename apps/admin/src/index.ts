@@ -5,6 +5,7 @@ import { canTransition, configuredPaymentMethodNames, codReferenceHmac, createMe
   type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_CAPI_ENABLED?: string; REFERENCE_REQUESTS_ENABLED?: string; PAYMENT_CHOICE_RECOVERY_ENABLED?: string; COD_REFERENCE_HMAC_KEY?: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
 const app = new Hono<Env>();
 app.use("/orders", async (c, next) => { c.header("Cache-Control", "no-store, max-age=0"); c.header("X-Content-Type-Options", "nosniff"); await next(); });
+app.use("/api/orders", async (c, next) => { c.header("Cache-Control", "private, no-store, max-age=0"); c.header("X-Content-Type-Options", "nosniff"); await next(); });
 type AdminContext = Context<Env>;
 const CSRF_COOKIE = "__Host-gfs_admin_csrf";
 
@@ -320,7 +321,8 @@ function professionalOrdersPageHtml(csrfToken: string): string {
 <script>
 const csrf=${csrf};
 const filters=document.querySelector('#filters'),ordersRoot=document.querySelector('#orders'),detail=document.querySelector('#detail'),listStatus=document.querySelector('#list-status'),pageStatus=document.querySelector('#page-status');
-const tabNames={all:'All Orders',verify:'Verify Payments',confirmed:'Confirmed Payments',fulfillment:'Fulfillment'};let tab='all',page=1,totalPages=0,selectedId='',listController=null,detailController=null,listGeneration=0,detailGeneration=0;
+const tabNames={all:'All Orders',verify:'Verify Payments',confirmed:'Confirmed Payments',fulfillment:'Fulfillment'};let tab='all',page=1,totalPages=0,selectedId='',listController=null,detailController=null,listGeneration=0,detailGeneration=0,syncCursor=null,refreshInFlight=false;
+document.querySelector('#refresh').insertAdjacentHTML('afterend','<button id="full-reload" class="refresh" type="button">Full reload</button>');
 const esc=(value)=>String(value??'').replace(/[&<>"']/g,(character)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
 const text=(value)=>value===null||value===undefined||value===''?'-':esc(value);const money=(value)=>value===null||value===undefined?'-':'PKR '+Number(value).toLocaleString('en-PK');const when=(value)=>value?new Date(value).toLocaleString('en-PK',{dateStyle:'medium',timeStyle:'short'}):'-';
 class RequestError extends Error{constructor(message,status=0,retryable=false){super(message);this.name='RequestError';this.status=status;this.retryable=retryable}}
@@ -336,7 +338,8 @@ function setTabs(counts){for(const button of document.querySelectorAll('[data-ta
 function badge(order){const value=order.paymentReviewState||order.paymentStatus||order.state;return '<span class="badge '+(value==='REVIEW'?'review':value==='APPROVED'||value==='PAID'?'paid':'')+'">'+esc(value)+'</span>'}
 function orderCard(order){return '<button class="order '+(order.id===selectedId?'active':'')+'" data-order-id="'+esc(order.id)+'" type="button"><span class="order-top"><span class="order-number">'+esc(order.orderNumber)+'</span>'+badge(order)+'</span><span class="customer">'+text(order.customerName)+'</span><span class="order-bottom"><span>'+esc(order.itemSummary||'No item summary')+'</span><strong>'+money(order.totalPayablePkr)+'</strong></span><span class="order-bottom"><span>'+esc(order.state)+(order.archivedAt?' · Archived':'')+'</span><time>'+esc(when(order.createdAt))+'</time></span></button>'}
 function renderList(data){const list=data.orders||[];totalPages=data.pagination.totalPages;listStatus.textContent=Number(data.total).toLocaleString('en-PK')+' total';pageStatus.textContent='Page '+data.pagination.page+' of '+Math.max(1,totalPages);document.querySelector('#previous').disabled=data.pagination.page<=1;document.querySelector('#next').disabled=data.pagination.page>=totalPages;setTabs(data.counts);if(!list.length){ordersRoot.innerHTML='<div class="skeleton">No orders match this queue and filter set.</div>';selectedId='';detail.innerHTML='<div class="empty"><p>No matching order to inspect.</p></div>';return null}if(!list.some((order)=>order.id===selectedId))selectedId=list[0].id;ordersRoot.innerHTML=list.map(orderCard).join('');for(const button of ordersRoot.querySelectorAll('[data-order-id]'))button.onclick=()=>show(button.dataset.orderId);return selectedId}
-async function load(){const generation=++listGeneration;if(listController)listController.abort();listController=new AbortController();const controller=listController;listStatus.className='muted';listStatus.textContent='Loading orders...';ordersRoot.innerHTML='<div class="skeleton">Loading orders...</div>';try{const data=await requestJson('/api/orders?'+params().toString(),{cache:'no-store'},controller.signal,true);if(generation!==listGeneration)return;const id=renderList(data);syncUrl();if(id)await show(id)}catch(error){if(generation!==listGeneration||isAbort(error))return;fail(error)}}
+async function load(){const generation=++listGeneration;if(listController)listController.abort();listController=new AbortController();const controller=listController;listStatus.className='muted';listStatus.textContent='Loading orders...';ordersRoot.innerHTML='<div class="skeleton">Loading orders...</div>';try{const data=await requestJson('/api/orders?'+params().toString(),{cache:'no-store'},controller.signal,true);if(generation!==listGeneration)return;syncCursor=data.syncCursor||syncCursor;const id=renderList(data);syncUrl();if(id)await show(id)}catch(error){if(generation!==listGeneration||isAbort(error))return;fail(error)}}
+async function refreshOrders(){if(refreshInFlight)return;if(!syncCursor)return load();refreshInFlight=true;const generation=++listGeneration;if(listController)listController.abort();listController=new AbortController();const controller=listController;const query=params();query.set('sinceUpdatedAt',syncCursor.updatedAt);query.set('sinceId',syncCursor.id);try{const data=await requestJson('/api/orders/changes?'+query.toString(),{cache:'no-store'},controller.signal,true);if(generation!==listGeneration)return;syncCursor=data.syncCursor||syncCursor;if((data.changed&&data.changed.length)|| (data.removedIds&&data.removedIds.length)||data.hasMore||data.requiresFullReload){await load()}else{listStatus.textContent=listStatus.textContent.replace(/ · No changes$/,'')+' · No changes'}}catch(error){if(generation!==listGeneration||isAbort(error))return;fail(error)}finally{refreshInFlight=false}}
 async function downloadExport(){const button=document.querySelector('#download-export');button.disabled=true;try{const response=await fetch('/api/orders/export?'+params().toString(),{cache:'no-store'});if(!response.ok){let message='Export failed (HTTP '+response.status+').';try{const data=await response.json();message=data.message||data.error||message}catch{}throw new Error(message)}const blob=await response.blob();const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='orders-export.csv';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}catch(error){listStatus.className='error';listStatus.textContent=error instanceof Error?error.message:'Export failed'}finally{button.disabled=false}}
 function facts(entries){return '<dl class="facts">'+entries.map((entry)=>'<dt>'+esc(entry[0])+'</dt><dd>'+entry[1]+'</dd>').join('')+'</dl>'}
  function actionButton(label,handler,className){const button=document.createElement('button');button.type='button';button.className=className||'';button.textContent=label==='Request clearer receipt'?'Request Clearer Receipt':label;const held=document.querySelector('.detail-header h2')?.textContent.trim()==='FS-261019-000001';if(held){button.disabled=true;button.title='Fulfillment held pending independent settlement verification and transaction reference.';const actions=detail.querySelector('.actions');if(actions&&!detail.querySelector('.fulfillment-hold'))actions.insertAdjacentHTML('beforebegin','<p class="error fulfillment-hold" role="alert">Fulfillment is on hold pending independent bank settlement verification and the customer transaction reference.</p>');return button}if(label==='Approve payment'){button.disabled=true;button.title='Use the settlement-confirmation panel; direct approval is disabled.';return button}button.onclick=async()=>{button.disabled=true;try{await handler()}catch(error){showActionError(error)}finally{button.disabled=false}};return button}
@@ -352,7 +355,7 @@ function fail(error){listStatus.className='error';listStatus.textContent=error i
 const gateReferenceRequestUntilApiDeploy=addActions;addActions=(order)=>{gateReferenceRequestUntilApiDeploy(order);const panel=detail.querySelector('.payment-reference-panel');const request=panel?.querySelector('[data-request-reference]');if(request&&!order.referenceRequestDispatchEnabled){request.disabled=true;if(!order.customerTransactionReference){const status=panel.querySelector('[data-reference-status]');status.className='error';status.textContent='Reference request is disabled until the matching API queue is deployed; no customer message was sent.';}}};
 const appendPaymentReferenceControls=addActions;addActions=(order)=>{appendPaymentReferenceControls(order);if(!order.paymentId||order.state!=='PAYMENT_REVIEW'||order.paymentReviewState!=='REVIEW'||Number(order.receiptCount)<1||order.archivedAt||order.fulfillmentHold)return;const root=detail.querySelector('.actions');if(!root)return;for(const button of root.querySelectorAll('button'))if(button.textContent.trim()==='Approve payment')button.remove();const reference=String(order.customerTransactionReference||'');const windowAge=order.lastInboundAt?Date.now()-Date.parse(order.lastInboundAt):Infinity;const windowOpen=Number.isFinite(windowAge)&&windowAge>=0&&windowAge<24*60*60*1000;const panel=document.createElement('section');panel.className='card payment-reference-panel';panel.innerHTML='<h3>Payment review safeguards</h3><p class="muted">Amount: '+money(order.expectedAmountPkr)+' · Method: '+esc(order.paymentMethod)+' · Receipts: '+Number(order.receiptCount)+'</p><p class="muted">Save the genuine transaction/reference ID from the customer receipt or provider history. Never use the order number. Saving a reference does not mark payment PAID.</p><label>Transaction Reference<input data-transaction-reference type="text" maxlength="80" autocomplete="off"></label><button type="button" data-save-reference>Save Reference</button><button type="button" data-request-reference>Request Reference</button><p data-reference-status class="muted" role="status"></p><label>Receiving-account settlement evidence reference<input data-settlement-reference type="text" maxlength="128" autocomplete="off" placeholder="Opaque provider/bank credit record ID"></label><label><input data-settlement-confirm type="checkbox"> I verified the actual credit in the authorized Garden Shop receiving account and matched its method, transaction reference and exact order amount.</label><p class="muted">Confirm PAID stays disabled until the saved reference, verified method, receipt, exact total and independent receiving-account credit all match. COD orders never use this action.</p><button type="button" data-settlement-approve class="primary">Confirm PAID</button>';
 const refInput=panel.querySelector('[data-transaction-reference]');refInput.value=reference;refInput.readOnly=Boolean(reference);const settlementInput=panel.querySelector('[data-settlement-reference]');const confirmBox=panel.querySelector('[data-settlement-confirm]');const save=panel.querySelector('[data-save-reference]');const request=panel.querySelector('[data-request-reference]');const approve=panel.querySelector('[data-settlement-approve]');const status=panel.querySelector('[data-reference-status]');const refPattern=/^[A-Za-z0-9][A-Za-z0-9._:/-]{3,79}$/;const evidencePattern=/^[A-Za-z][A-Za-z0-9._:-]{5,127}$/;const orderRef=String(order.orderNumber||'').replace(/\s+/g,'').toUpperCase();const inputRef=()=>String(refInput.value||'').trim().replace(/\s+/g,'');const evidenceRef=()=>String(settlementInput.value||'').trim();const ready=()=>Boolean(reference&&order.paymentMethodVerified&&Number(order.expectedAmountPkr)===Number(order.totalPayablePkr)&&Number(order.receiptCount)>0&&evidencePattern.test(evidenceRef())&&confirmBox.checked);approve.disabled=!ready();save.disabled=Boolean(reference);save.hidden=Boolean(reference);request.disabled=Boolean(reference||order.transactionReferenceRequestSent||!windowOpen);request.hidden=Boolean(reference);if(!reference)status.textContent=windowOpen?'Reference missing. Save the genuine reference or request it within the customer service window.':'Reference missing. Messaging window is closed; an approved utility template is required before contacting the customer.';else if(!order.paymentMethodVerified)status.textContent='The receiving method is not independently verified; payment approval stays blocked.';else status.textContent='Settlement proof missing. Confirm PAID remains disabled until the exact receiving-account credit is independently verified.';save.onclick=async()=>{const value=inputRef();if(!refPattern.test(value)||value.toUpperCase()===orderRef){status.className='error';status.textContent='Enter a valid transaction reference different from the order number.';return}save.disabled=true;try{const result=await mutate('/api/payments/'+encodeURIComponent(order.paymentId)+'/transaction-reference',{orderId:order.id,confirmation:order.orderNumber,reference:value});status.className='ok';status.textContent=result.alreadySaved?'Reference was already saved.':'Reference saved; payment remains under review.';await show(order.id)}catch(error){status.className='error';status.textContent=error instanceof Error?error.message:'Reference was not saved.';save.disabled=false}};request.onclick=async()=>{if(!windowOpen){status.className='error';status.textContent='No open 24-hour window; use only an approved utility template.';return}if(!confirmAction(order,'Request the transaction reference in the customer\'s selected language'))return;request.disabled=true;try{const result=await mutate('/api/payments/'+encodeURIComponent(order.paymentId)+'/request-transaction-reference',{orderId:order.id,confirmation:order.orderNumber});status.className='ok';status.textContent=result.dispatch==='DEFERRED'?'Request is safely queued but not yet delivered.':'Localized reference request queued once.';await show(order.id)}catch(error){status.className='error';status.textContent=error instanceof Error?error.message:'Reference request was not sent.';request.disabled=false}};confirmBox.onchange=()=>{approve.disabled=!ready()};settlementInput.oninput=()=>{approve.disabled=!ready()};approve.onclick=async()=>{if(!ready()){status.className='error';status.textContent='Save the customer reference and confirm the actual receiving-account credit first.';return}approve.disabled=true;try{await mutate('/api/payments/'+encodeURIComponent(order.paymentId)+'/approve',{orderId:order.id,confirmation:order.orderNumber,settlementEvidenceRef:evidenceRef(),settlementConfirmed:true});status.className='ok';status.textContent='Payment approved after settlement evidence was recorded.';await show(order.id)}catch(error){status.className='error';status.textContent=error instanceof Error?error.message:'Payment remains under review.';approve.disabled=!ready()}};root.before(panel)};
-filters.onsubmit=(event)=>{event.preventDefault();page=1;load()};document.querySelector('#clear').onclick=()=>{filters.reset();tab='all';page=1;selectedId='';load()};document.querySelector('#refresh').onclick=()=>load();document.querySelector('#previous').onclick=()=>{if(page>1){page-=1;selectedId='';load()}};document.querySelector('#next').onclick=()=>{if(page<totalPages){page+=1;selectedId='';load()}};for(const button of document.querySelectorAll('[data-tab]'))button.onclick=()=>{tab=button.dataset.tab;page=1;selectedId='';load()};
+filters.onsubmit=(event)=>{event.preventDefault();page=1;load()};document.querySelector('#clear').onclick=()=>{filters.reset();tab='all';page=1;selectedId='';load()};document.querySelector('#refresh').onclick=()=>refreshOrders();document.querySelector('#full-reload').onclick=()=>load();document.querySelector('#previous').onclick=()=>{if(page>1){page-=1;selectedId='';load()}};document.querySelector('#next').onclick=()=>{if(page<totalPages){page+=1;selectedId='';load()}};for(const button of document.querySelectorAll('[data-tab]'))button.onclick=()=>{tab=button.dataset.tab;page=1;selectedId='';load()};
 document.querySelector('#download-export').onclick=()=>downloadExport();
 const addActionsWithoutClearerReason=addActions;addActions=(order)=>{addActionsWithoutClearerReason(order);const button=[...detail.querySelectorAll('.actions button')].find(item=>item.textContent.trim().toLowerCase()==='request clearer receipt');if(!button)return;button.onclick=async()=>{button.disabled=true;try{const reasonCode=prompt('Reason code: TEST_IMAGE_NOT_PAYMENT_PROOF or INSUFFICIENT_OR_UNCLEAR_RECEIPT');if(!reasonCode)return;if(!['TEST_IMAGE_NOT_PAYMENT_PROOF','INSUFFICIENT_OR_UNCLEAR_RECEIPT'].includes(reasonCode)){showActionError(new Error('CLEARER_RECEIPT_REASON_INVALID'));return}if(confirmAction(order,'Request a clearer receipt'))await run('/api/payments/'+encodeURIComponent(order.paymentId)+'/request-clearer-receipt',{orderId:order.id,confirmation:order.orderNumber,reasonCode})}catch(error){showActionError(error)}finally{button.disabled=false}}};hydrate();setTabs({});load();
 </script></body></html>`;
@@ -1713,7 +1716,12 @@ function parseOrderFilterPlan(c: AdminContext): OrderFilterPlan | { error: strin
   if (paymentStage) commonWhere.push(PAYMENT_STAGE_SQL[paymentStage]);
   if (fulfillment === "NOT_STARTED") commonWhere.push("o.state='PAID'");
   if (fulfillment && fulfillment !== "NOT_STARTED") { commonWhere.push("o.state=?"); commonBindings.push(fulfillment); }
-  if (date) { commonWhere.push("substr(o.created_at,1,10)=?"); commonBindings.push(date); }
+  if (date) {
+    const nextDate = new Date(`${date}T00:00:00.000Z`);
+    nextDate.setUTCDate(nextDate.getUTCDate() + 1);
+    commonWhere.push("o.created_at>=? AND o.created_at<?");
+    commonBindings.push(`${date}T00:00:00.000Z`, nextDate.toISOString());
+  }
   if (archived === "active") commonWhere.push("o.archived_at IS NULL");
   if (archived === "only") commonWhere.push("o.archived_at IS NOT NULL");
   if (search) {
@@ -1774,63 +1782,46 @@ function exportCsv(rows: Record<string, unknown>[]): string {
   return `\uFEFF${[ORDER_EXPORT_HEADERS, ...rows.map(orderExportRow)].map((row) => row.map(exportCsvCell).join(",")).join("\r\n")}\r\n`;
 }
 
+const ORDER_ADMIN_JOINS = " FROM orders o JOIN customers c ON c.id=o.customer_id LEFT JOIN payments p ON p.order_id=o.id";
+
+async function readOrderCounts(db: D1Database, plan: OrderFilterPlan): Promise<Record<string, unknown> | null> {
+  const countsSql = `SELECT COUNT(*) AS all_count,SUM(CASE WHEN ${ORDER_TAB_SQL.verify} THEN 1 ELSE 0 END) AS verify_count,SUM(CASE WHEN ${ORDER_TAB_SQL.confirmed} THEN 1 ELSE 0 END) AS confirmed_count,SUM(CASE WHEN ${ORDER_TAB_SQL.fulfillment} THEN 1 ELSE 0 END) AS fulfillment_count,SUM(CASE WHEN ${ORDER_TAB_SQL[plan.tab]} THEN 1 ELSE 0 END) AS total_count${Object.entries(PAYMENT_STAGE_SQL).map(([key, sql]) => `,SUM(CASE WHEN ${sql} THEN 1 ELSE 0 END) AS ${key.replaceAll('-', '_')}_count`).join('')}${ORDER_ADMIN_JOINS}${plan.commonSql}`;
+  return db.prepare(countsSql).bind(...plan.commonBindings).first<Record<string, unknown>>();
+}
+
+async function readOrderSyncCursor(db: D1Database): Promise<{ updatedAt: string; id: string } | null> {
+  const row = await db.prepare(`SELECT updated_at,id FROM (
+    SELECT updated_at,id FROM orders
+    UNION ALL SELECT updated_at,order_id AS id FROM payments
+    UNION ALL SELECT updated_at,order_id AS id FROM cod_order_details
+    UNION ALL SELECT updated_at,order_id AS id FROM outbound_messages WHERE order_id IS NOT NULL
+    UNION ALL SELECT updated_at,entity_id AS id FROM outbox_jobs WHERE entity_id IS NOT NULL
+  ) sync_events ORDER BY updated_at DESC,id DESC LIMIT 1`).first<{ updated_at: string; id: string }>();
+  return row?.updated_at && row.id ? { updatedAt: String(row.updated_at), id: String(row.id) } : null;
+}
+
+function parseOrderSyncCursor(c: AdminContext): { updatedAt: string; id: string } | { error: string } | null {
+  const updatedAt = c.req.query("sinceUpdatedAt")?.trim();
+  const id = c.req.query("sinceId")?.trim();
+  if (!updatedAt && !id) return null;
+  if (!updatedAt || !id || updatedAt.length > 40 || id.length > 128 || !Number.isFinite(Date.parse(updatedAt))) return { error: "ORDER_SYNC_CURSOR_INVALID" };
+  return { updatedAt, id };
+}
+
 app.get("/api/orders", async (c) => {
   if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
-  const tab = c.req.query("tab")?.trim() || "all";
-  if (!ORDER_TAB_SQL[tab]) return c.json({ error: "ORDER_TAB_INVALID" }, 400);
-  const archived = c.req.query("archived") ?? "active";
-  if (!["active", "only", "all"].includes(archived)) return c.json({ error: "ARCHIVED_FILTER_INVALID" }, 400);
-  const paymentStatus = c.req.query("paymentStatus")?.trim();
-  if (paymentStatus && !["PENDING", "REVIEW", "APPROVED", "REJECTED", "COD_PENDING", "COD_PAID"].includes(paymentStatus)) return c.json({ error: "PAYMENT_STATUS_INVALID" }, 400);
-  const paymentStage = c.req.query("paymentStage")?.trim();
-  if (paymentStage && !PAYMENT_STAGE_SQL[paymentStage]) return c.json({ error: "PAYMENT_STAGE_INVALID" }, 400);
-  const fulfillment = c.req.query("fulfillment")?.trim();
-  if (fulfillment && !["NOT_STARTED", "COD_PENDING", "PACKING", "DISPATCHED", "DELIVERED", "COLLECTION_PENDING", "CANCELLED"].includes(fulfillment)) return c.json({ error: "FULFILLMENT_FILTER_INVALID" }, 400);
-  const date = c.req.query("date")?.trim();
-  if (date && !validOrderDate(date)) return c.json({ error: "ORDER_DATE_INVALID" }, 400);
-  const page = Number(c.req.query("page") ?? "1");
-  const pageSize = Number(c.req.query("pageSize") ?? "25");
-  if (!Number.isInteger(page) || page < 1) return c.json({ error: "PAGE_INVALID" }, 400);
-  if (![25, 50, 100].includes(pageSize)) return c.json({ error: "PAGE_SIZE_INVALID" }, 400);
-  const search = c.req.query("q")?.trim().slice(0, 100);
-  const commonWhere: string[] = [];
-  const commonBindings: unknown[] = [];
-  if (paymentStatus === "PENDING") commonWhere.push("p.review_state='PENDING'");
-  if (paymentStatus === "REVIEW") commonWhere.push("p.review_state='REVIEW'");
-  if (paymentStatus === "APPROVED") commonWhere.push("(p.review_state='APPROVED' OR o.payment_status='PAID') AND NOT EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id)");
-  if (paymentStatus === "REJECTED") commonWhere.push("(p.review_state='REJECTED' OR o.payment_status='REJECTED')");
-  if (paymentStatus === "COD_PENDING") commonWhere.push("o.payment_status='COD_PENDING' AND EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id AND cod.status<>'PAID')");
-  if (paymentStatus === "COD_PAID") commonWhere.push("p.review_state='COD_PAID' AND o.payment_status='PAID' AND EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id AND cod.status='PAID')");
-  if (paymentStage) commonWhere.push(PAYMENT_STAGE_SQL[paymentStage]);
-  if (fulfillment === "NOT_STARTED") commonWhere.push("o.state='PAID'");
-  if (fulfillment && fulfillment !== "NOT_STARTED") { commonWhere.push("o.state=?"); commonBindings.push(fulfillment); }
-  if (date) { commonWhere.push("substr(o.created_at,1,10)=?"); commonBindings.push(date); }
-  if (archived === "active") commonWhere.push("o.archived_at IS NULL");
-  if (archived === "only") commonWhere.push("o.archived_at IS NOT NULL");
-  if (search) {
-    const normalizedPhone = normalizeWhatsAppWaId(search);
-    const pattern = `%${search}%`;
-    if (normalizedPhone) {
-      commonWhere.push("(o.order_number LIKE ? OR CAST(o.internal_sequence AS TEXT) LIKE ? OR c.full_name LIKE ? OR c.city LIKE ? OR c.wa_id LIKE ? OR c.normalized_phone LIKE ? OR c.normalized_contact_number LIKE ? OR c.normalized_whatsapp_number LIKE ?)");
-      const digitsPattern = `%${normalizedPhone}%`;
-      const internationalPattern = `%+${normalizedPhone}%`;
-      commonBindings.push(pattern, pattern, pattern, pattern, digitsPattern, internationalPattern, internationalPattern, internationalPattern);
-    } else {
-      commonWhere.push("(o.order_number LIKE ? OR CAST(o.internal_sequence AS TEXT) LIKE ? OR c.full_name LIKE ? OR c.city LIKE ?)");
-      commonBindings.push(pattern, pattern, pattern, pattern);
-    }
-  }
-  const joins = " FROM orders o JOIN customers c ON c.id=o.customer_id LEFT JOIN payments p ON p.order_id=o.id";
-  const commonSql = commonWhere.length ? ` WHERE ${commonWhere.join(" AND ")}` : "";
-  const tabWhere = [...commonWhere, ORDER_TAB_SQL[tab]];
-  const tabSql = ` WHERE ${tabWhere.join(" AND ")}`;
+  const plan = parseOrderFilterPlan(c);
+  if ("error" in plan) return c.json({ error: plan.error }, 400);
+  const { page, pageSize } = plan;
   const offset = (page - 1) * pageSize;
   let countsRow: Record<string, unknown> | null;
   let result: D1Result<unknown>;
+  let syncCursor: { updatedAt: string; id: string } | null;
   try {
-    [countsRow, result] = await Promise.all([
-      c.env.DB.prepare(`SELECT COUNT(*) AS all_count,SUM(CASE WHEN ${ORDER_TAB_SQL.verify} THEN 1 ELSE 0 END) AS verify_count,SUM(CASE WHEN ${ORDER_TAB_SQL.confirmed} THEN 1 ELSE 0 END) AS confirmed_count,SUM(CASE WHEN ${ORDER_TAB_SQL.fulfillment} THEN 1 ELSE 0 END) AS fulfillment_count,SUM(CASE WHEN ${ORDER_TAB_SQL[tab]} THEN 1 ELSE 0 END) AS total_count${Object.entries(PAYMENT_STAGE_SQL).map(([key,sql]) => `,SUM(CASE WHEN ${sql} THEN 1 ELSE 0 END) AS ${key.replaceAll('-', '_')}_count`).join('')}${joins}${commonSql}`).bind(...commonBindings).first<Record<string, unknown>>(),
-      c.env.DB.prepare(`${ORDER_ADMIN_LIST_SELECT}${tabSql} ORDER BY o.created_at DESC,o.id DESC LIMIT ? OFFSET ?`).bind(...commonBindings, pageSize, offset).all()
+    [countsRow, result, syncCursor] = await Promise.all([
+      readOrderCounts(c.env.DB, plan),
+      c.env.DB.prepare(`${ORDER_ADMIN_LIST_SELECT}${plan.tabSql} ORDER BY o.created_at DESC,o.id DESC LIMIT ? OFFSET ?`).bind(...plan.commonBindings, pageSize, offset).all(),
+      readOrderSyncCursor(c.env.DB)
     ]);
   } catch {
     return c.json({ error: "ORDER_ADMIN_QUERY_FAILED", message: "Orders are temporarily unavailable. No counts or records were returned; retry shortly." }, 503);
@@ -1840,8 +1831,54 @@ app.get("/api/orders", async (c) => {
     orders: result.results.map((row) => orderView(row as Record<string, unknown>, c.env.REFERENCE_REQUESTS_ENABLED === "true")),
     counts: { all: Number(countsRow?.all_count ?? 0), verify: Number(countsRow?.verify_count ?? 0), confirmed: Number(countsRow?.confirmed_count ?? 0), fulfillment: Number(countsRow?.fulfillment_count ?? 0), noMethod: Number(countsRow?.no_method_count ?? 0), paymentChoicePending: Number(countsRow?.payment_choice_pending_count ?? 0), paymentNotSent: Number(countsRow?.payment_not_sent_count ?? 0), deliveryFailed: Number(countsRow?.delivery_failed_count ?? 0), unpaidAfterDelivery: Number(countsRow?.unpaid_after_delivery_count ?? 0) },
     total,
-    pagination: { page, pageSize, totalPages: Math.ceil(total / pageSize) }
+    pagination: { page, pageSize, totalPages: Math.ceil(total / pageSize) },
+    syncCursor
   });
+});
+
+// Refresh probes only the indexed updated_at/id tail. If anything changed, the
+// response includes the changed rows/tombstones and asks the client to perform
+// one authoritative reload so page boundaries and counts cannot go stale.
+app.get("/api/orders/changes", async (c) => {
+  if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
+  const plan = parseOrderFilterPlan(c);
+  if ("error" in plan) return c.json({ error: plan.error }, 400);
+  const cursor = parseOrderSyncCursor(c);
+  if (cursor && "error" in cursor) return c.json({ error: cursor.error }, 400);
+  if (!cursor) return c.json({ error: "ORDER_SYNC_CURSOR_REQUIRED" }, 400);
+  try {
+    const changed = await c.env.DB.prepare(`SELECT id,MAX(updated_at) AS updated_at FROM (
+      SELECT id,updated_at FROM orders WHERE updated_at>? OR (updated_at=? AND id>?)
+      UNION ALL SELECT order_id AS id,updated_at FROM payments WHERE updated_at>? OR (updated_at=? AND order_id>?)
+      UNION ALL SELECT order_id AS id,updated_at FROM cod_order_details WHERE updated_at>? OR (updated_at=? AND order_id>?)
+      UNION ALL SELECT order_id AS id,updated_at FROM outbound_messages WHERE order_id IS NOT NULL AND (updated_at>? OR (updated_at=? AND order_id>?))
+      UNION ALL SELECT entity_id AS id,updated_at FROM outbox_jobs WHERE entity_id IS NOT NULL AND (updated_at>? OR (updated_at=? AND entity_id>?))
+    ) sync_events GROUP BY id ORDER BY updated_at ASC,id ASC LIMIT 101`).bind(
+      cursor.updatedAt,cursor.updatedAt,cursor.id,
+      cursor.updatedAt,cursor.updatedAt,cursor.id,
+      cursor.updatedAt,cursor.updatedAt,cursor.id,
+      cursor.updatedAt,cursor.updatedAt,cursor.id,
+      cursor.updatedAt,cursor.updatedAt,cursor.id
+    ).all<{ id: string; updated_at: string }>();
+    const changedRows = changed.results ?? [];
+    if (changedRows.length === 0) return c.json({ changed: [], removedIds: [], requiresFullReload: false, syncCursor: await readOrderSyncCursor(c.env.DB) });
+    const limited = changedRows.slice(0, 100);
+    const ids = limited.map((row) => String(row.id));
+    const placeholders = ids.map(() => "?").join(",");
+    const visible = await c.env.DB.prepare(`${ORDER_ADMIN_LIST_SELECT} WHERE o.id IN (${placeholders}) AND ${[...plan.commonWhere, ORDER_TAB_SQL[plan.tab]].join(" AND ")}`).bind(...ids, ...plan.commonBindings).all<Record<string, unknown>>();
+    const visibleIds = new Set((visible.results ?? []).map((row) => String(row.id)));
+    const removedIds = ids.filter((id) => !visibleIds.has(id));
+    const next = limited[limited.length - 1];
+    return c.json({
+      changed: (visible.results ?? []).map((row) => orderView(row, c.env.REFERENCE_REQUESTS_ENABLED === "true")),
+      removedIds,
+      requiresFullReload: true,
+      hasMore: changedRows.length > 100,
+      syncCursor: next ? { updatedAt: String(next.updated_at), id: String(next.id) } : await readOrderSyncCursor(c.env.DB)
+    });
+  } catch {
+    return c.json({ error: "ORDER_SYNC_QUERY_FAILED", message: "Order changes are temporarily unavailable; use Full reload to retry." }, 503);
+  }
 });
 
 app.get("/api/orders/export", async (c) => {
