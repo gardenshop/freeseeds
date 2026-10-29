@@ -1741,3 +1741,8 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 - **GFS-314 access recovery:** BLOCKED — one official Wrangler login timed out; token still lacks D1 scope; no Chrome DevTools/Cloudflare Access connector is available. No repeated attempt made.
 - **GFS-314 exact D1/Admin evidence:** BLOCKED — scheduler-JOIN audit and authenticated UI comparison remain unperformed; no classification or screenshot fabricated.
 - **GFS-314 quality:** PASS — full 321/321, build, lint, offline audit 0 vulnerabilities, rollback4/4 against clean `cf01f444` root.
+- **GFS-315 D1 access:** PASS — official Wrangler account `gisupp@gmail.com` / Get Free Seeds with D1 scope; bounded remote reads reported zero writes.
+- **GFS-315 exact eligibility:** PASS — 44 post-activation orders; 9 Advance, 15 COD, 2 receipt/review, 7 eligible no-method, 11 ineligible no-method. Scheduler-first method-null reasons: 15 `COD_PENDING`, 11 `COD_CONFIRM`; no opt-outs; 7 open-window eligible.
+- **GFS-315 recovery delivery:** PASS — +15 DELIVERED3/READ4/PENDING1/SKIPPED15; +210 DELIVERED1/READ1/PENDING11/SKIPPED10; pending not due; no overdue eligible no-send; no FAILED/QUEUED/BLOCKED_WINDOW.
+- **GFS-315 integrity/templates:** PASS — quick_check ok, FK empty, markers 0037–0042, four published recovery templates; ordinary `PAYMENT_CHOICE` excluded from recovery evidence.
+- **GFS-315 Admin visual:** BLOCKED — no Chrome DevTools MCP/browser connector or authenticated Access session; no screenshot or UI claim fabricated.

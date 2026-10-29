@@ -4135,3 +4135,18 @@ Public ordering: **GO**. Two-stage recovery: **GO and stable**. Five-stage Advan
 **Final state:** Public ordering GO; two-stage recovery preserved; five-stage Advance reminders, automation, and utility templates OFF. Latest authoritative reminder evidence remains GFS-312; no new D1 classification or Admin visual evidence was fabricated.
 
 **Single next required action:** Owner completes the official Cloudflare consent granting least-privilege D1 read scope and connects the existing authenticated Cloudflare Access Chrome profile to MCP. Completion: product readiness 100% protected/operational; diagnostic verification 65%; remaining blocker is external authenticated evidence access only.
+- **GFS-315 final report — 2026-10-29 (authorized D1 audit)**
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 frozen production | PASS | API `b426ba47`/Admin `494a3dce` 100%; rollbacks retained; no mutation |
+| P1 D1 access | PASS | Official Wrangler `gisupp@gmail.com` / Get Free Seeds account with D1 scope |
+| P2 exact live audit | PASS | 44 post-cutoff: 9 Advance, 15 COD, 2 receipt/review, 7 eligible no-method, 11 ineligible; exact method-null reasons 15 `COD_PENDING`, 11 `COD_CONFIRM`, 7 eligible |
+| P2 recovery delivery | PASS | +15 DELIVERED3/READ4/PENDING1/SKIPPED15; +210 DELIVERED1/READ1/PENDING11/SKIPPED10; all pending not due; no overdue eligible no-send |
+| P2 integrity/policy | PASS | quick_check ok, FK empty, markers 0037–0042, four published templates, zero no-method opt-outs |
+| P3 Admin visual | BLOCKED | Chrome DevTools MCP/browser connector and authenticated Access session unavailable |
+| P4/P5 quality | PASS carried forward | rollback4/4, full321/321, build, lint, offline audit0; no code change |
+
+**Current flags:** Last verified live configuration remains recovery ON from `2026-10-28T20:05:20.290Z`; five-stage Advance reminders, automation, and utility-template approval remain OFF. No flag mutation occurred in this audit.
+
+**Readiness:** Product/ordering readiness 100% protected; diagnostic verification 90%. Public ordering GO; two-stage recovery GO; five-stage Advance reminders OFF. The only remaining blocker is authenticated Admin visual evidence, requiring the existing Access browser profile to be connected to Chrome DevTools MCP.
