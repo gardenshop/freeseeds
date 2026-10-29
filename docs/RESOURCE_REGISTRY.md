@@ -1377,6 +1377,13 @@ No secrets are stored in this registry.
 - **Reconciliation:** Cron-only recovery status update is live. Existing provider-backed stages are READ, DELIVERED and SENT with no failure or downgrade. Raw WAMIDs/customer data are not recorded.
 - **Evidence boundary:** Admin is deployed, but authenticated Access/Chrome UI readback was unavailable; no screenshot or UI success is claimed. Public ordering remains GO.
 
+## GFS-311 acceptance registry (2026-10-29 UTC)
+
+- **Frozen release:** API `b426ba47` 100% / `9af8991d` rollback; Admin `494a3dce` 100% / `76e33a3d` rollback. Recovery ON; Advance five-stage, automation and utility-template flags OFF.
+- **Current audit:** 32 post-cutoff orders: 8 Advance, 14 COD, 10 no-method ineligible, zero eligible. +15 recipients 3 with READ 1/DELIVERED 2; +210 recipients 2 with SENT 1/DELIVERED 1.
+- **Conversion:** +15 0/3 selected/receipt/paid and +210 0/2; all remain no-method/PENDING. No causal conversion claim; raw WAMIDs and customer data omitted.
+- **Admin evidence:** live `/orders`, `/payment-reminders`, and API routes are Access-protected; authenticated visual readback remains pending.
+
 ## GFS-310 frozen registry (2026-10-29 UTC)
 
 - **Frozen traffic:** API `b426ba47-1ead-4c4a-85ba-0a0b85d3e415` 100%, rollback `9af8991d-d17c-4d3f-806f-7f6642849b7b` 0%; Admin `494a3dce-5d52-4b66-b3ff-bef64b31b406` 100%, rollback `76e33a3d-e96a-4942-a4ec-31910c688c16` 0%.

@@ -1390,3 +1390,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Freeze the deployed API/Admin versions after D1 stage/provider agreement and all regression gates passed. Do not make an Admin-only change because no display defect was demonstrated.
 - Report Admin visual verification as PENDING, not PASS: the protected Access session was unavailable. D1 is sufficient for delivery truth but not for claiming a screenshot or rendered UI.
 - Keep the two-stage recovery active, keep five-stage Advance reminders OFF, and do not add sends, backfill, payment conversion, migration, or feature work.
+
+## 2026-10-29: GFS-311 acceptance decision
+
+- Accept the operational recovery evidence: five genuine recipients, provider-backed statuses, no overdue eligible no-send, and no false `PAYMENT_CHOICE` attribution.
+- Record conversion as observed zero: +15 0/3 and +210 0/2. Because no dedicated method-selection timestamp exists, this is not evidence that reminders caused or failed to cause conversion.
+- Keep the release frozen. Do not redeploy or change eligibility solely to improve conversion. Admin visual acceptance remains pending the supported authenticated Access session.

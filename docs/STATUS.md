@@ -1791,3 +1791,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **P2 PASS:** Current post-cutoff audit has 29 orders: 7 Advance, 13 COD, 9 no-method ineligible, 0 eligible, 0 PAID/REVIEW, 0 held/cancelled. +15 has READ 1, DELIVERED 1, SKIPPED 10; +210 has SENT 1, PENDING 4, SKIPPED 7. No overdue eligible no-send or recovery-attributed payment conversion was found.
 - **P3 PASS:** No Admin defect was proven; no further deployment or API change was made. Cron reconciliation and eligibility remain unchanged.
 - **P4/P5 PASS:** Full 321/321, build, lint, npm audit 0 vulnerabilities, rollback4/4, D1 `quick_check=ok`, FK clean. Release is frozen; remaining item is authenticated Admin visual evidence only.
+
+## GFS-311 final acceptance and conversion audit - 2026-10-29 UTC
+
+- **P0 PASS:** API `b426ba47` and Admin `494a3dce` remain 100%; `9af8991d` and `76e33a3d` remain rollback versions. Recovery is enabled and all five-stage flags remain false.
+- **P1 PASS D1 / PENDING Admin UI:** 32 post-cutoff orders: 8 Advance, 14 COD, 10 no-method ineligible, 0 eligible. +15: READ 1/DELIVERED 2/SKIPPED 12. +210: SENT 1/DELIVERED 1/PENDING 4/SKIPPED 9. No failed, queued, or blocked-window rows.
+- **P2 PASS observed outcome:** +15 recipients 3, payment selections 0, COD 0, receipts/paid 0, still no-method 3; +210 recipients 2, payment selections 0, COD 0, receipts/paid 0, still no-method 2. No causal conversion claim is made.
+- **P3/P4 PASS:** No defect was proven; no code or production mutation was performed. D1 quick-check/FK remain clean; protected Admin routes return Access sign-in without an authenticated session.
+- **P5 PASS carried forward:** GFS-310 quality gates remain valid: 321/321, build, lint, audit0, rollback4/4. Release remains frozen; only authenticated Admin visual evidence is pending.

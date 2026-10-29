@@ -1070,3 +1070,10 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Current read-only audit: 29 post-cutoff orders, 7 Advance-selected, 13 COD, 9 no-method ineligible, and zero currently eligible, PAID/REVIEW, or held/cancelled. No recovery-attributed payment conversion is proven.
 - Recovery stage truth remains +15 READ 1/DELIVERED 1/SKIPPED 10 and +210 SENT 1/PENDING 4/SKIPPED 7; all skips are `PAYMENT_CHOICE_RECOVERY_NO_LONGER_ELIGIBLE`, with no failed, queued, or blocked-window rows.
 - Admin deployment is frozen, but authenticated UI screenshot/readback is PENDING because Chrome DevTools MCP/Access session is unavailable. D1 is authoritative; never infer UI evidence.
+
+## GFS-311 final acceptance and conversion audit (2026-10-29 UTC)
+
+- Current bounded D1 audit contains 32 post-cutoff orders: 8 Advance-selected, 14 COD, 10 no-method ineligible, and zero currently eligible, PAID/REVIEW, or held/cancelled.
+- Five genuine `PAYMENT_CHOICE_RECOVERY` recipients are present: +15 has 3 recipients (READ 1, DELIVERED 2); +210 has 2 recipients (SENT 1, DELIVERED 1). Ordinary `PAYMENT_CHOICE` remains excluded.
+- No order-linked payment selection, COD selection, receipt, or PAID transition was observed after either recovery stage: +15 conversion 0/3; +210 conversion 0/2. This is an observed non-conversion result, not a causal claim.
+- Admin visual verification remains PENDING because live routes return Cloudflare Access sign-in without the authenticated Chrome session. No screenshot or UI label is inferred from D1.

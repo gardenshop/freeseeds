@@ -1714,3 +1714,16 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | Five-stage protection | PASS | Advance reminder, automation and utility-template flags remain false |
 | Regression/security | PASS | 321/321, build, lint, npm audit 0 vulnerabilities, rollback4/4, D1 quick/FK clean |
 | Authenticated Admin visual proof | PENDING | Access-protected Chrome session/MCP unavailable; no screenshot or inferred UI status |
+
+## GFS-311 final acceptance/conversion audit
+
+| Check | Result | Evidence |
+|---|---|---|
+| Frozen versions/flags | PASS | API `b426ba47` and Admin `494a3dce` 100%; recovery ON; five-stage/automation/templates OFF |
+| Current order audit | PASS | 32 post-cutoff: 8 Advance, 14 COD, 10 no-method ineligible, zero eligible |
+| +15 recovery | PASS | 3 provider-backed recipients: READ 1, DELIVERED 2; 12 skipped; no failures/queue/window blocks |
+| +210 recovery | PASS | 2 provider-backed recipients: SENT 1, DELIVERED 1; 4 pending, 9 skipped; no failures/queue/window blocks |
+| Conversion after +15 | PASS observed zero | 0 Advance, 0 COD, 0 receipt/paid; 3 still no-method |
+| Conversion after +210 | PASS observed zero | 0 Advance, 0 COD, 0 receipt/paid; 2 still no-method |
+| Admin HTTP/UI | PENDING | `/orders`, `/payment-reminders`, and API route return Access sign-in without authenticated session |
+| Integrity/quality | PASS carried forward | 321/321, build, lint, audit0, rollback4/4, quick/FK clean |

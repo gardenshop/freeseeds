@@ -4068,3 +4068,22 @@ Other +210 pending stages: `…B30W`, `…KSQW`, `…5HD5`; all remain subject t
 ### Final decision
 
 Public ordering: **GO**. Two-stage recovery: **GO and frozen**. Five-stage Advance reminders: **OFF**. Admin deployment: **GO**, authenticated visual proof: **PENDING**. Completion: P0 100%, P1 75% (D1 PASS/UI pending), P2 100%, P3 100%, P4 100%, P5 95%; overall 95%. Remaining blocker is only an authenticated Admin UI session/screenshot; no production defect is currently demonstrated.
+
+## GFS-311 final acceptance and conversion audit - 2026-10-29 UTC
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 frozen release | PASS | API `b426ba47` / Admin `494a3dce` 100%; rollbacks retained; recovery ON; five-stage flags OFF |
+| P1 current reminder audit | PASS D1 / PENDING UI | 32 orders; +15 READ 1/DELIVERED 2/SKIPPED 12; +210 SENT 1/DELIVERED 1/PENDING 4/SKIPPED 9 |
+| P2 conversion audit | PASS observed zero | +15: 0/3 Advance/COD/receipt/paid; +210: 0/2; all recipients remain no-method/PENDING |
+| P3 defect review | PASS | No false label, overdue eligible no-send, or reconciliation defect found; no mutation made |
+| P4 regression/integrity | PASS carried forward | 321/321, build, lint, audit0, rollback4/4, quick_check/FK clean |
+| P5 freeze/report | PASS with UI pending | Release remains frozen; authenticated Admin visual proof unavailable |
+
+### Conversion interpretation
+
+The +15 denominator is 3 distinct provider-backed recipients; observed selection/COD/receipt/paid conversion is 0, with 3 still no-method. The +210 denominator is 2; observed conversion is 0, with 2 still no-method. Payment records have no dedicated method-selection timestamp, so these are timestamped outcome observations, not causal attribution.
+
+### Decision
+
+Public ordering: **GO**. Two-stage recovery: **GO and stable**. Five-stage Advance reminders: **OFF**. Admin deployment: **GO**; authenticated Admin UI acceptance: **PENDING** due Access/session availability. Completion: P0 100%, P1 85% (D1 pass, UI pending), P2 100%, P3 100%, P4 100%, P5 100%; overall 97%. No optional improvement or feature work is authorized by this audit.
