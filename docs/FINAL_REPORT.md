@@ -4121,3 +4121,17 @@ Public ordering: **GO**. Two-stage recovery: **GO and stable**. Five-stage Advan
 **Exact remaining owner actions:** (1) complete one official Cloudflare reauthentication for `gisupp@gmail.com` granting least-privilege D1 read scope; (2) connect the existing authenticated Cloudflare Access Chrome profile to the supported DevTools MCP. Until then, exact no-method reasons and Admin visual acceptance are PENDING, not PASS.
 
 **Decision:** Public ordering GO; two-stage recovery protected but final audit GO/PENDING evidence; five-stage Advance reminders OFF. Completion: P0 100%, P1 40%, P2 25%, P3 0%, P4 100%, P5 100%; overall 61%. No technical defect or unnecessary deployment was found.
+- **GFS-314 final report — 2026-10-29 (access closure and freeze)**
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 production protection | PASS | API `b426ba47`/Admin `494a3dce` 100%; rollbacks retained; no traffic/flag mutation |
+| P1 official access recovery | BLOCKED | One Wrangler login attempt timed out; `whoami` still lacks D1 scope; no Chrome DevTools/Access connector exists |
+| P2 exact live D1 audit | BLOCKED | Scheduler-JOIN query and authoritative no-method reasons could not be read; no historical replay/backfill/send |
+| P3 Admin visual | BLOCKED | Authenticated Access browser unavailable; no screenshot or UI status inferred |
+| P4 local rollback | PASS | Clean trusted `D:\free seeds\gfs273-v1` at `cf01f444`; rollback4/4 |
+| P5 quality/freeze | PASS | Full321/321, build, lint, offline audit0; no runtime change |
+
+**Final state:** Public ordering GO; two-stage recovery preserved; five-stage Advance reminders, automation, and utility templates OFF. Latest authoritative reminder evidence remains GFS-312; no new D1 classification or Admin visual evidence was fabricated.
+
+**Single next required action:** Owner completes the official Cloudflare consent granting least-privilege D1 read scope and connects the existing authenticated Cloudflare Access Chrome profile to MCP. Completion: product readiness 100% protected/operational; diagnostic verification 65%; remaining blocker is external authenticated evidence access only.

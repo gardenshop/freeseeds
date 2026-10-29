@@ -1737,3 +1737,7 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 - **GFS-313 Admin visual acceptance:** BLOCKED — no Chrome DevTools MCP connector and no authenticated Cloudflare Access browser session are available; no screenshot or UI label inferred.
 - **GFS-313 rollback:** PASS — clean documented `D:\free seeds\gfs273-v1` at `cf01f444500415b1f22a64730674caca1c286006`; rollback harness 4/4.
 - **GFS-313 local recovery regression:** PASS — recovery/interactive suites 109/109; no source change required.
+- **GFS-314 deployment protection:** PASS — read-only Worker assignments remain API `b426ba47`/Admin `494a3dce` at 100%; rollbacks retained; no mutation.
+- **GFS-314 access recovery:** BLOCKED — one official Wrangler login timed out; token still lacks D1 scope; no Chrome DevTools/Cloudflare Access connector is available. No repeated attempt made.
+- **GFS-314 exact D1/Admin evidence:** BLOCKED — scheduler-JOIN audit and authenticated UI comparison remain unperformed; no classification or screenshot fabricated.
+- **GFS-314 quality:** PASS — full 321/321, build, lint, offline audit 0 vulnerabilities, rollback4/4 against clean `cf01f444` root.
