@@ -1251,3 +1251,9 @@
 - Audited the three specified orders with bounded read-only D1 evidence; found no missing-send or window defect and performed no catch-up sends.
 - Corrected Admin source so ordinary `PAYMENT_CHOICE` checkout messages cannot masquerade as recovery delivery; exposed recovery stage due/reason/provider-presence fields in the reminder timeline.
 - Verified focused Admin 14/14, full 319/319, build, lint and diff check. Live Admin deployment remains pending guarded authorization; no recovery WAMID is claimed.
+
+## 2026-10-29 - GFS-308 recovery delivery reconciliation
+
+- Audited every post-activation order with bounded read-only D1 queries: 28 orders, 12 scheduled rows per stage, 3 genuine recovery provider acknowledgements, and no overdue eligible no-send.
+- Fixed the narrow delivery reconciliation gap so `PAYMENT_CHOICE_RECOVERY` provider states update their stage rows; ordinary `PAYMENT_CHOICE` remains excluded.
+- Added regression coverage; full 320/320, build, lint and D1 integrity checks pass. No production deployment, backfill, forced send, payment mutation or COD conversion was performed.

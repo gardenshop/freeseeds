@@ -3972,3 +3972,53 @@ Completion: P0 100%; P1 75% source / 0% live CMS; P2 100% source / 0% live activ
 - **P5 PASS local / PENDING production:** focused 14/14; full 319/319; build/lint/diff PASS. No WAMID or delivery is claimed.
 
 **Decision:** Public ordering **GO**. Two-stage recovery **GO for safe new-order eligibility**, live delivery **PENDING** (0 sends/WAMIDs). Admin visibility correction **NO-GO until guarded deployment**. Five-stage Advance reminders **OFF**. Completion: P0 90%, P1 100%, P2 100%, P3 65%, P4 100%, P5 90%; overall 87%. Remaining blockers: reconcile Admin traffic/version, deploy the tested Admin fix, and await a legitimate due eligible order for delivery evidence.
+
+## GFS-308 final report - 2026-10-29 UTC
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 production verification | PASS | API `c1f43455` and Admin `76e33a3d` active 100%; verified Get Free Seeds account, D1, Cron and Queue |
+| P1 complete order audit | PASS | 28 post-activation orders audited with bounded indexed reads; 7 Advance, 12 COD, 2 eligible no-method, 7 ineligible no-method |
+| P2 exact stage counts | PASS | +15: 12 scheduled, 2 eligible, 2 SENT, 10 SKIPPED, 0 blocked-window; +210: 12 scheduled, 2 eligible, 7 not-yet-due, 1 SENT, 4 SKIPPED, 0 blocked-window |
+| P3 defect repair | PASS source / PENDING live | Three genuine recovery provider acknowledgements (READ, DELIVERED, SENT); recovery stage reconciliation fixed and tested; no overdue eligible no-send |
+| P4 Admin visibility | BLOCKED live | Admin source correction is ready but not deployed; live labels are not claimed as corrected |
+| P5 quality/integrity | PASS local | 320/320, build, lint, `quick_check=ok`, FK empty, recovery indexes present |
+
+### Masked per-order outcome
+
+`—` means no recovery stage was created. IDs are masked to the final four characters.
+
+| Order | Method/class | +15 | +210 | Delivery proof | Reason/action |
+|---|---|---|---|---|---|
+| `…54FQ` | Advance | SKIPPED | SKIPPED | None | Method selected before due; no send |
+| `…R1RA` | Advance | SKIPPED | SKIPPED | None | Method selected before due; no send |
+| `…47DV` | No method/ineligible | — | — | None | `COD_CONFIRM`; outside recovery state |
+| `…X77Y` | COD | — | — | None | COD order; suppressed |
+| `…09XT` | COD | — | — | None | COD order; suppressed |
+| `…F6RF` | COD | — | — | None | COD order; suppressed |
+| `…5ESM` | Advance | SKIPPED | SKIPPED | None | Method selected before due; no send |
+| `…60YH` | COD | — | — | None | COD order; suppressed |
+| `…22P3` | COD | — | — | None | COD order; suppressed |
+| `…TBXJ` | COD | SKIPPED | SKIPPED | None | COD transition before due; no send |
+| `…BDYE` | No method/ineligible | — | PENDING | None | `COD_CONFIRM`; +210 future recheck |
+| `…XDQW` | No method/eligible | SENT | SENT | WAMIDs; READ / SENT | Legitimate recovery sends; stage reconciliation pending deployment |
+| `…XSQV` | Advance | — | — | None | Method selected; no recovery rows |
+| `…J5PZ` | COD | — | — | None | COD order; suppressed |
+| `…YXM8` | No method/ineligible | SKIPPED | PENDING | None | `COD_CONFIRM`; +210 future recheck |
+| `…13MR` | COD | — | — | None | COD order; suppressed |
+| `…MZX5` | COD | SKIPPED | PENDING | None | COD transition; +210 future recheck |
+| `…NKF1` | COD | — | — | None | COD order; suppressed |
+| `…9B9B` | No method/ineligible | SKIPPED | PENDING | None | `COD_CONFIRM`; +210 future recheck |
+| `…XE9F` | No method/eligible | SENT | PENDING | WAMID; DELIVERED | +15 delivered; +210 not yet due |
+| `…B30W` | Advance | SKIPPED | PENDING | None | Method selected; +210 future recheck |
+| `…CTYK` | COD | — | — | None | COD order; suppressed |
+| `…K855` | No method/ineligible | — | — | None | `COD_CONFIRM`; no recovery rows |
+| `…KSQW` | Advance | SKIPPED | PENDING | None | Method selected; +210 future recheck |
+| `…GHCF` | Advance | — | — | None | Method selected; no recovery rows |
+| `…H731` | No method/ineligible | — | — | None | `COD_CONFIRM`; no recovery rows |
+| `…5HD5` | COD | SKIPPED | PENDING | None | COD transition; +210 future recheck |
+| `…DHS9` | No method/ineligible | — | — | None | `COD_CONFIRM`; no recovery rows |
+
+### Decision
+
+Public ordering: **GO**. Two-stage recovery: **GO for configured, evidenced new-order operation; live stage-label correction PENDING deployment**. Five-stage Advance reminders: **OFF**. No historical backfill, out-of-window send, fake WAMID, payment mutation or COD conversion occurred. Completion: P0 100%, P1 100%, P2 100%, P3 80% (source fixed, deployment pending), P4 50% (source ready, live pending), P5 100%; overall 86%. Remaining blockers are guarded deployment of the tested API/Admin source and subsequent confirmation that live Admin reflects provider acknowledgements.

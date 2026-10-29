@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import api from "../apps/api/src/index";
+import api, { syncPaymentReminderDeliveryStatuses } from "../apps/api/src/index";
 import admin from "../apps/admin/src/index";
 import { codReferenceHmac, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, karachiOrderDate, MockWhatsAppProvider, persistFlowSubmission, selectPaymentMethod, storeReceipt } from "@gfs/core";
 import { defaultPaymentChoiceRecoveryCopy, enqueueDuePaymentChoiceRecoveryStages, paymentChoiceRecoveryCopy } from "../apps/api/src/payment-choice-recovery";
@@ -282,6 +282,15 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     expect(second.queued).toBe(1);
     expect(sqlite.prepare("SELECT stage_minutes,status FROM payment_choice_recovery_stages WHERE order_id=? ORDER BY stage_minutes").all(order.orderId)).toEqual([{ stage_minutes: 15, status: "QUEUED" }, { stage_minutes: 210, status: "QUEUED" }]);
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE kind='WHATSAPP_PAYMENT_CHOICE_RECOVERY' AND entity_id=?").get(order.orderId)).toEqual({ count: 2 });
+  });
+
+  it("reconciles recovery stage delivery from the order-linked provider status", async () => {
+    const order = await persistFlowSubmission(db, { fullName: "NON-PAYABLE Synthetic", deliveryAddress: "SYNTHETIC DELIVERY SYNC", nearbyPlace: "SYNTHETIC ONLY", city: "Synthetic City", contactNumber: "03001234567", productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: "Synthetic Province", fertilizerSelected: false }, undefined, "SYNTHETIC-RECOVERY-DELIVERY-SYNC", sender);
+    const now = new Date().toISOString();
+    sqlite.prepare("INSERT INTO payment_choice_recovery_stages(order_id,stage_minutes,status,due_at,locale,outbound_idempotency_key,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)").run(order.orderId, 15, "SENT", now, "en", "payment-choice-recovery:synthetic:15", now, now);
+    sqlite.prepare("INSERT INTO outbound_messages(id,idempotency_key,order_id,kind,provider_message_id,status,attempt_count,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)").run("synthetic-recovery-outbound", "payment-choice-recovery:synthetic:15", order.orderId, "PAYMENT_CHOICE_RECOVERY", "synthetic-provider-wamid", "READ", 0, now, now);
+    await syncPaymentReminderDeliveryStatuses(db);
+    expect(sqlite.prepare("SELECT status,last_error FROM payment_choice_recovery_stages WHERE order_id=? AND stage_minutes=15").get(order.orderId)).toEqual({ status: "READ", last_error: null });
   });
 
   it("keeps the +15 and +210 recovery copy distinct in both locales and renders only approved values", async () => {

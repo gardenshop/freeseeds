@@ -65,7 +65,7 @@ app.onError((error, c) => {
   return c.json({ error: "API_REQUEST_FAILED" }, 500);
 });
 
-async function syncPaymentReminderDeliveryStatuses(db: D1Database): Promise<void> {
+export async function syncPaymentReminderDeliveryStatuses(db: D1Database): Promise<void> {
   await db.prepare(`UPDATE payment_reminder_v2_stages AS s SET
     status=CASE WHEN m.status IN ('DELIVERED','READ') THEN m.status WHEN m.status='FAILED' THEN 'DEAD_LETTER' ELSE s.status END,
     last_error=CASE WHEN m.status='FAILED' THEN COALESCE(m.last_error,'META_DELIVERY_FAILED') ELSE s.last_error END,
@@ -73,6 +73,13 @@ async function syncPaymentReminderDeliveryStatuses(db: D1Database): Promise<void
     updated_at=m.updated_at
     FROM outbound_messages m
     WHERE m.kind='WHATSAPP_PAYMENT_REMINDER' AND m.idempotency_key=s.idempotency_key
+      AND m.status IN ('DELIVERED','READ','FAILED')`).run();
+  await db.prepare(`UPDATE payment_choice_recovery_stages AS s SET
+    status=CASE WHEN m.status IN ('DELIVERED','READ') THEN m.status WHEN m.status='FAILED' THEN 'FAILED' ELSE s.status END,
+    last_error=CASE WHEN m.status='FAILED' THEN COALESCE(m.last_error,'META_DELIVERY_FAILED') ELSE s.last_error END,
+    updated_at=m.updated_at
+    FROM outbound_messages m
+    WHERE m.kind='PAYMENT_CHOICE_RECOVERY' AND m.idempotency_key=s.outbound_idempotency_key
       AND m.status IN ('DELIVERED','READ','FAILED')`).run();
 }
 

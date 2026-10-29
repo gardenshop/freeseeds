@@ -1362,3 +1362,10 @@ No secrets are stored in this registry.
 - **Flags:** recovery true from `2026-10-28T20:05:20.290Z`; five-stage reminders false; automation false; utility approval false.
 - **Audit:** two prior post-cutoff orders have +15 skipped after Advance selection and +210 pending before due recheck; the COD-confirmation order has no recovery stages. Recovery outbox/messages/WAMIDs are zero.
 - **Source-only correction:** Admin recovery status now excludes normal `PAYMENT_CHOICE`; timeline exposes stage due/reason/provider-presence without exposing provider IDs. Deployment is not claimed.
+
+## GFS-308 audited recovery checkpoint (2026-10-29 UTC)
+
+- **Live identity/versions:** Cloudflare `gisupp@gmail.com`, API `c1f43455` 100% with rollback `3d018265`; Admin `76e33a3d` 100% with rollback `f0212429`; D1 `getfreeseeds-staging` UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; minute Cron and Queue attached.
+- **Flags:** `PAYMENT_CHOICE_RECOVERY_ENABLED=true` from `2026-10-28T20:05:20.290Z`; `PAYMENT_REMINDERS_V2_ENABLED=false`; `PAYMENT_AUTOMATION_V2_ENABLED=false`; `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`.
+- **Audit:** 28 post-cutoff orders; 7 Advance-selected, 12 COD, 2 eligible no-method, 7 ineligible no-method. +15 has 12 scheduled, 2 eligible, 2 sent and 10 skipped. +210 has 12 scheduled, 2 eligible, 7 not-yet-due, 1 sent and 4 skipped. Three recovery provider IDs are present with READ/DELIVERED/SENT acknowledgement states; raw IDs are intentionally omitted.
+- **Integrity/quality:** D1 `quick_check=ok`, FK empty, recovery indexes present; full 320/320, build and lint pass. Source reconciliation fix is un-deployed; Admin live visibility remains pending guarded authorization.

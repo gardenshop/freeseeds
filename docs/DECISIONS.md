@@ -1366,6 +1366,13 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Treat zero eligible post-cutoff orders as healthy configuration with live delivery acceptance PENDING. Do not manufacture an order, inbound, WAMID or send to convert PENDING into PASS.
 - The immediate operational rollback is API `3d018265` (same code, recovery OFF) and Admin `f0212429`; do not roll back migrations 0041/0042.
 
+## 2026-10-29: GFS-308 all-new-order recovery audit
+
+- The authoritative post-cutoff dataset contains 28 orders, not 30+: 7 Advance-selected, 12 COD, 2 eligible no-method and 7 ineligible no-method. No PAID/REVIEW or held/cancelled row was included.
+- Recovery delivery evidence is limited to three `PAYMENT_CHOICE_RECOVERY` outbounds with provider acknowledgements. Ordinary `PAYMENT_CHOICE` records remain excluded. No overdue eligible order was found without a send, so no catch-up or backfill is authorized.
+- A source defect was proven: provider status updates did not reconcile recovery stage rows. The minimal fix is covered by a regression test and does not alter eligibility or send behavior. Guarded API/Admin deployment is still required before live status claims.
+- Public ordering remains GO; recovery remains configured with genuine delivery evidence; five-stage Advance reminders, automation, and utility templates remain OFF.
+
 ## 2026-10-29: GFS-307 audit truth and Admin labeling
 
 - Treat `payment_choice_recovery_stages` as the authoritative +15/+210 status source. Ordinary order-linked `PAYMENT_CHOICE` is checkout interaction, never recovery delivery evidence.

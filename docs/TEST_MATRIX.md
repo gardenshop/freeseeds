@@ -1676,3 +1676,16 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | Admin status correction | PASS source | Ordinary `PAYMENT_CHOICE` excluded from recovery status; 15/210 timeline metadata added |
 | Focused/full/build/lint | PASS | 14/14 focused Admin, 319/319 full, build and lint |
 | Production Admin visibility | BLOCKED | Source fix requires guarded deployment; current live Admin still lacks the new timeline response |
+
+## GFS-308 full new-order audit and reconciliation
+
+| Check | Result | Evidence |
+|---|---|---|
+| Post-activation order coverage | PASS | 28 orders audited from indexed D1 query; no page-only sampling |
+| Mutually exclusive categories | PASS | 7 Advance-selected, 12 COD, 2 eligible no-method, 7 ineligible no-method, 0 PAID/REVIEW, 0 held/cancelled |
+| +15/+210 stage totals | PASS | +15 12 scheduled/2 eligible/2 SENT/10 SKIPPED; +210 12 scheduled/2 eligible/7 not-yet-due/1 SENT/4 SKIPPED; zero blocked-window |
+| Provider acknowledgement proof | PASS | 3 recovery provider IDs: READ, DELIVERED, SENT; ordinary `PAYMENT_CHOICE` excluded |
+| Delivery-stage reconciliation | PASS local | Recovery outbound acknowledgement now updates `payment_choice_recovery_stages`; focused regression included |
+| D1 integrity | PASS | `quick_check=ok`, foreign-key check empty, recovery indexes present |
+| Admin live visibility | BLOCKED | Tested Admin source correction is not deployed; no live false SENT/DELIVERED claim |
+| Full quality | PASS | 320/320, build, lint |
