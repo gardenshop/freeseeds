@@ -5,6 +5,7 @@
 - Completed the local guarded-release package: multi-source Admin delta invalidation, explicit full reload, indexed date/cursor/recovery/Cron paths, regression coverage and migration0043 rehearsal are ready for owner-authorized release.
 - Recorded bounded live attribution without claiming savings: staging was 494M rows read in the last 24 hours; the two Admin count aggregates were 135.42M and 209.64M, recovery candidate scanning 68.91M, and the old Admin list 33.3M.
 - Local release gates pass (focused121/121, full324/324, build, lint, audit0, integrity, rollback4/4). Push is blocked by the authenticated GitHub connector (`ai-photo-studio`, repository `push=false`); migration0043 and traffic remain unapplied/unpromoted.
+- Secured the tested package locally as commit `e198e50`; remote remains `04d06bc` until the single owner permission action is completed.
 
 ## GFS-317 (2026-10-29)
 

@@ -4,7 +4,7 @@
 
 | Requested item | Result |
 |---|---|
-| 1. GitHub identity / remote | Connected identity is `ai-photo-studio`; `gardenshop/freeseeds` is readable but reports `push=false`. Remote remains PR #11 HEAD `04d06bc`; local tested state is preserved for commit. |
+| 1. GitHub identity / remote | Connected identity is `ai-photo-studio`; `gardenshop/freeseeds` is readable but reports `push=false`. Remote remains PR #11 HEAD `04d06bc`; local tested source commit is `e198e50` and is one commit ahead. |
 | 2. Migration / Worker status | Migration0043 is locally rehearsed and **unapplied**. Active API/Admin remain `b426ba47`/`494a3dce` at 100%; no candidate staged and no traffic promoted. |
 | 3. Costliest measured queries | Admin count aggregates: 135.42M + 209.64M rows; recovery candidate scan: 68.91M; old Admin list projection: 33.3M; visible top ten total ~447.55M of staging's 494M last-24-hour rows. |
 | 4. Reads saved per unchanged Refresh / Cron | **Not measured live.** Local behavior is bounded indexed change probing for unchanged Refresh; Cron reconciliation is skipped when both reminder/recovery paths are disabled and recovery remains independently gated. |
