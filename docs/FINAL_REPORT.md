@@ -4105,3 +4105,19 @@ Public ordering: **GO**. Two-stage recovery: **GO and stable**. Five-stage Advan
 **Access blocker:** The exact remaining live evidence action is to restore the supported authenticated GFS Admin/Chrome DevTools session and a least-privilege Cloudflare token with D1 read scope. The present token identity is correct (`gisupp@gmail.com`) but D1 calls return Cloudflare authentication error 10000. Do not bypass Access or loop login attempts.
 
 **Decision:** Public ordering **GO**; two-stage recovery **GO/stable on available evidence**; five-stage Advance reminders **OFF**. Admin visual verification and fresh exact scheduler-join readback **PENDING/BLOCKED**. No historical sends, force-send, callback replay, payment mutation, COD conversion, or customer-data export occurred. Completion estimate: P0 100%, P1 85%, P2 100%, P3 100%, P4 35%, P5 100%; overall 84%. Remaining blocker is authenticated live evidence, not a demonstrated product defect.
+- **GFS-313 final report — 2026-10-29 (diagnostic access and rollback)**
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 frozen production | PASS | API `b426ba47`/Admin `494a3dce` 100%; rollbacks `9af8991d`/`76e33a3d`; GFS Cloudflare identity verified; no mutation |
+| P1 access recovery | BLOCKED | OAuth identity is correct but token lacks D1 scope and Cloudflare returns error 10000; no Chrome DevTools connector or authenticated Access session is available |
+| P2 exact D1 audit | BLOCKED | The actual scheduler JOIN and exclusions could not be reread live; GFS-312 provisional 7/3 grouping remains non-authoritative; no backfill or manual send |
+| P3 Admin visual | BLOCKED | No authenticated `/orders` or `/payment-reminders` UI readback/screenshot; no label inferred |
+| P4 rollback harness | PASS | Trusted clean `D:\free seeds\gfs273-v1`, commit `cf01f444`; rollback4/4 passed |
+| P5 local quality/protection | PASS | Focused recovery/interactive 109/109; no runtime or production change; prior full321/build/lint/audit/D1 evidence retained |
+
+**Current operational result:** Frozen public bot remains protected. Latest authoritative reminder evidence remains GFS-312: 32 post-activation orders, 8 Advance, 14 COD, 10 no-method/ineligible; +15 READ1/DELIVERED2 and +210 SENT1/DELIVERED1 across five genuine recovery recipients. No five-stage Advance reminders, automation, or utility templates were enabled.
+
+**Exact remaining owner actions:** (1) complete one official Cloudflare reauthentication for `gisupp@gmail.com` granting least-privilege D1 read scope; (2) connect the existing authenticated Cloudflare Access Chrome profile to the supported DevTools MCP. Until then, exact no-method reasons and Admin visual acceptance are PENDING, not PASS.
+
+**Decision:** Public ordering GO; two-stage recovery protected but final audit GO/PENDING evidence; five-stage Advance reminders OFF. Completion: P0 100%, P1 40%, P2 25%, P3 0%, P4 100%, P5 100%; overall 61%. No technical defect or unnecessary deployment was found.

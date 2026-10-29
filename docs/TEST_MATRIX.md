@@ -1732,3 +1732,8 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 - **GFS-312 callback regression:** PASS — focused guided/state-machine suite 93/93; `ADVANCE_PAYMENT` and `COD` IDs, direct Advance method routing, explicit `CONFIRM_COD_ORDER`, duplicate safeguards, and protected COD flow remain covered. No source change was required.
 - **GFS-312 live evidence boundary:** BLOCKED — Chrome DevTools/Cloudflare Access session unavailable; protected Admin routes return sign-in HTML. Available Wrangler OAuth is `gisupp@gmail.com` but lacks `d1` scope and D1 API returns 10000. No screenshot, callback attribution, or new D1 read is claimed past this boundary.
 - **GFS-312 quality rerun:** PASS — full 321/321, build, and lint. Rollback4/4 current execution BLOCKED by unset `GFS_LEGACY_ROOT`; prior verified rollback4/4 is retained and no path was guessed.
+- **GFS-313 frozen deployment readback:** PASS — API `b426ba47`/Admin `494a3dce` remain 100%; rollbacks `9af8991d`/`76e33a3d` remain available; no traffic or flag mutation.
+- **GFS-313 exact live D1 audit:** BLOCKED — current OAuth identity is correct but lacks `d1` scope and Cloudflare returns error 10000; no unsupported reauthentication or broad query attempted.
+- **GFS-313 Admin visual acceptance:** BLOCKED — no Chrome DevTools MCP connector and no authenticated Cloudflare Access browser session are available; no screenshot or UI label inferred.
+- **GFS-313 rollback:** PASS — clean documented `D:\free seeds\gfs273-v1` at `cf01f444500415b1f22a64730674caca1c286006`; rollback harness 4/4.
+- **GFS-313 local recovery regression:** PASS — recovery/interactive suites 109/109; no source change required.
