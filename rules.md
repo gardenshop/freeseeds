@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-325 final production preflight (2026-10-29)
+
+- Read-only Cloudflare identity is verified as `gisupp@gmail.com` in the Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Staging D1 is `getfreeseeds-staging`, UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; canonical GFS Meta is the only Meta scope and Hoja/ThanNow remain isolated.
+- Read-only deployment history confirms API `b426ba47` at 100% with `9af8991d` at 0%, and Admin `494a3dce` at 100% with `76e33a3d` at 0%. Recovery +15/+210 remains ON by the protected baseline; five-stage Advance reminders, automation and utility templates remain OFF. No live migration, Worker, traffic, flag, Meta, payment, COD, Queue, Cron or customer mutation was made.
+- Migration0043 is additive and compatible with the existing 0037–0042 schema: every index name is new, `IF NOT EXISTS` is used, and only an idempotent `0043` marker insert is present. New indexes add write-maintenance cost on affected tables; that cost is not quantified here. Local EXPLAIN evidence shows the repaired cursor/reconciliation paths use indexed range searches instead of the prior source scans, with bounded grouping/order work remaining.
+- The two Admin count aggregates remain the largest measured live source (345.06M rows of the 494M staging 24-hour baseline). Unchanged Refresh avoids rerunning them; initial/full reload still performs authoritative counts. No cross-isolate count cache was added because payment, COD, fulfillment, archive and concurrent Worker updates could make it stale. Live after `meta.rows_read` remains unmeasured until authorized migration/deployment.
+- Final preflight checks: remote source commit `1df681e` is verified on PR #11; focused 121/121 and rollback4/4 pass; prior full324/324, build/lint/audit0, migration integrity and source regression evidence remain valid. Release sequence is migration after backup/integrity gate → candidate at 0% → health/signed-webhook/Admin acceptance → attributable canary → before/after rows-read monitor → promote or immediate rollback. Separate scoped owner authorization is mandatory for every live step.
+
 ## GFS-319 zero-regression release gate (2026-10-29)
 
 - Protected baseline remains API `b426ba47` and Admin `494a3dce` at 100%, with `9af8991d` and `76e33a3d` retained for rollback. Recovery remains ON for the existing +15/+210 path; five-stage Advance reminders, automation and utility templates remain OFF. No external D1, Worker, traffic, flag, Meta, payment, COD, Queue, Cron or customer mutation was made.

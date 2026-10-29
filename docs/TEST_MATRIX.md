@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-325 final production preflight (2026-10-29)
+
+| Requirement | Result | Evidence / boundary |
+|---|---|---|
+| GitHub remote/source | PASS | PR #11 remote SHA matches `1df681e`; required source, migration, tests, rules and docs present. |
+| Cloudflare/GFS identity and frozen versions | PASS read-only | `gisupp@gmail.com` / Get Free Seeds / staging D1 UUID verified; API/Admin frozen pair and rollbacks confirmed. |
+| Migration0043 compatibility | PASS local | Distinct additive indexes, existing schema targets, `IF NOT EXISTS`, idempotent marker; no application-row writes. |
+| Local query plans | PASS | Repaired cursor/reconciliation paths use intended indexed range searches; bounded temp grouping/order remains. |
+| Live D1 before/after | BLOCKED honestly | 494M/24h baseline is measured; migration/Worker not deployed, so no after `meta.rows_read` or savings claim. |
+| Regression smoke | PASS | Focused121/121 and rollback4/4; full324/324, build/lint/audit0 and integrity carried forward. |
+| Production release | NO-GO | Separate owner authorization required for migration, candidate, canary, monitoring and promotion. |
+
 ## GFS-319 zero-regression comparison (2026-10-29)
 
 | Requirement | Frozen remote `04d06bc` | Optimized source `e198e50` | Boundary |

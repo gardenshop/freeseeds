@@ -1,5 +1,24 @@
 # Final Report
 
+## GFS-325 final production preflight — release-ready, not deployed (2026-10-29)
+
+| Gate | Result | Evidence / boundary |
+|---|---|---|
+| P0 live protection | PASS read-only | Cloudflare `gisupp@gmail.com` / Get Free Seeds verified; API `b426ba47` and Admin `494a3dce` remain 100%; rollbacks retained; +15/+210 ON; five-stage/automation/utility OFF. |
+| P1 GitHub/environment | PASS | PR #11 remote SHA is `1df681e3729d60fa211d826260586408d7292df6`; staging D1 UUID and required remote files verified; Hoja/ThanNow isolated. |
+| P2 migration | PASS local / unapplied | Migration0043 has ten distinct additive indexes over existing schema, `IF NOT EXISTS`, and an idempotent marker. No live migration or application-row change. |
+| P3 D1 optimization | PARTIAL honestly | Baseline: 494M staging rows/24h; Admin counts 345.06M, recovery 68.91M, old list 33.3M. Local plans improve repeated delta/recovery paths; initial/full count aggregates remain authoritative and live after rows are unavailable. |
+| P4 zero regression | PASS | Focused121/121, full324/324, build/lint/audit0, integrity and rollback4/4. No source change to checkout/webhook/payment/COD/Queue/DLQ/customer flow. |
+| P5 controlled release | READY / NO-GO to deploy | Sequence prepared: migration + integrity → 0% candidate → health/signature/Admin acceptance → attributable canary → rows-read monitor → promote/rollback. Separate owner authorization required. |
+
+### GFS-315 through GFS-325
+
+GFS-315 PASS live audit; GFS-316 PASS local optimization; GFS-317 PASS bounded attribution/local repair; GFS-318 PASS local package; GFS-319 PASS zero-regression comparison; GFS-320–323 BLOCKED on GitHub authorization; GFS-324 PASS pushed/verified commits; GFS-325 PASS preflight with deployment intentionally pending.
+
+### Completion and release decision
+
+Source 100%; GitHub synchronization 100%; preflight preparation 100%; production deployment 0%; live savings 0% claimed. Frozen public ordering and existing recovery are GO. Optimized production release is NO-GO until the owner separately authorizes migration0043, candidate staging, canary/traffic changes and live D1 monitoring.
+
 ## GFS-319 zero-regression release gate — production preserved (2026-10-29)
 
 | Gate | Result | Evidence / boundary |

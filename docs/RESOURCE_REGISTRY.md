@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-325 final preflight checkpoint (2026-10-29)
+
+- **Cloudflare/GFS:** read-only Wrangler identity `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, staging D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; API `b426ba47`/Admin `494a3dce` are 100%, rollbacks `9af8991d`/`76e33a3d` are 0%. No live mutation.
+- **GitHub:** PR #11 branch and remote source SHA `1df681e3729d60fa211d826260586408d7292df6` verified through the authorized `gardenshop` host session. Required source/migration/tests/rules/docs are present remotely.
+- **Migration:** 0043 references existing 0037–0042 tables and columns, has ten distinct additive indexes plus an idempotent marker, and does not update application rows. The local plan evidence is not a live D1 rows-read measurement.
+- **Measurement boundary:** staging baseline remains 494M rows read/24h; Admin aggregates 345.06M, recovery scan 68.91M, old list 33.3M. No after-deployment value or savings percentage is registered. Hoja/ThanNow and non-GFS Meta resources remain isolated.
+
 ## GFS-319 zero-regression checkpoint (2026-10-29)
 
 - **GitHub readback:** MCP login `ai-photo-studio`; repository `gardenshop/freeseeds` permissions `pull=true`, `push=false`; PR #11 head `04d06bc9672d68821fd769646a1d0ad351544697`. Collaborator permission lookup returned integration HTTP403. No mutation or credential change.

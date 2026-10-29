@@ -1,5 +1,11 @@
 # Changelog
 
+## GFS-325 (2026-10-29)
+
+- Completed final read-only preflight: Cloudflare/GFS identity, D1 binding, frozen Worker versions, GitHub PR SHA, migration compatibility and rollback path verified without production mutation.
+- Confirmed migration0043 is additive with distinct indexes and acknowledged index write-maintenance cost; local plans improve cursor/reconciliation scans, while live after-read savings remain unmeasured.
+- Reconfirmed focused121/121 and rollback4/4; full324/324, build/lint/audit0 and integrity remain valid. Added the guarded migration→candidate→canary→monitor→rollback sequence; no deployment or flag change.
+
 ## GFS-319 (2026-10-29)
 
 - Compared the frozen remote baseline (`04d06bc`: 321/321, build/lint) with optimized source commit `e198e50` (324/324, build/lint); the extra tests cover Admin/Cron/recovery safety.

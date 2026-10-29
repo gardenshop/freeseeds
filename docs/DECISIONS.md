@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-29: GFS-325 keep count aggregates authoritative and release migration separately
+
+- Accept migration0043 as additive and backward-compatible for preflight: its ten indexes target existing tables/columns from migrations0037–0042, use new names and `IF NOT EXISTS`, and do not rewrite application rows. Account for additional index-maintenance writes after deployment; no live write-cost estimate is permitted.
+- Do not introduce a count snapshot/cache at this stage. The two Admin count aggregates are the largest measured source, but initial/full reload must remain authoritative after payment, COD, fulfillment, archive and concurrent updates. The safe measured win is avoiding those aggregates on unchanged Refresh.
+- Treat local EXPLAIN/index evidence as readiness proof only. No Cloudflare `meta.rows_read` after value, duration or percentage saving exists before migration and optimized Worker deployment.
+- Keep API/Admin frozen and all five-stage/automation/utility flags OFF. A separately authorized release must perform migration, 0% candidate staging, health/signature/Admin acceptance, attributable canary, rows-read monitoring and immediate rollback checks in that order.
+
 ## 2026-10-29: GFS-319 accept frozen-versus-optimized local comparison; keep release frozen
 
 - Accept the remote frozen baseline comparison: HEAD `04d06bc` passes 321/321, build and lint; optimized source commit `e198e50` passes 324/324, build and lint. The additional tests are optimization safety coverage, not evidence of a changed WhatsApp checkout contract.

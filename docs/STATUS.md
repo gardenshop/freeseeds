@@ -1,5 +1,15 @@
 # Status
 
+## GFS-325 final production preflight (2026-10-29)
+
+- **P0 PASS read-only:** Cloudflare identity `gisupp@gmail.com`, Get Free Seeds account, canonical staging D1 UUID and frozen Worker history were verified. API `b426ba47`/Admin `494a3dce` remain 100%; rollbacks `9af8991d`/`76e33a3d` remain 0%. Recovery +15/+210 remains ON; five-stage/automation/utility remain OFF; no live mutation occurred.
+- **P1 PASS:** PR #11 remote source commit `1df681e3729d60fa211d826260586408d7292df6` matches local HEAD. Required Admin delta, migration0043, Cron/recovery source, tests, rules and protected docs are present remotely. Hoja/ThanNow were not accessed.
+- **P2 PASS local / live migration pending:** Migration0043 has distinct additive indexes over existing 0037–0042 tables, no destructive statements, and an idempotent marker. Local integrity/EXPLAIN evidence remains clean; index write overhead is acknowledged but not measured. No production migration was applied.
+- **P3 PARTIAL honestly:** Baseline is staging 494M rows/24h, including Admin aggregates 345.06M, recovery scan 68.91M and old list 33.3M. Local plans improve repeated delta/recovery paths; unchanged Refresh avoids count/list reruns. Initial/full count aggregates remain expensive and live before/after `meta.rows_read` is BLOCKED until deployment.
+- **P4 PASS local:** Focused 121/121 and rollback4/4 pass; full324/324, build/lint/audit0 and D1 integrity remain carried-forward evidence. EN/UR order, payment/COD, signed webhook, Queue/DLQ and +15/+210 recovery paths were not changed in source.
+- **P5 NO-GO deployment:** Candidate staging, migration, traffic, flag, Meta and customer actions were not performed. Release-ready checklist is migration→0% candidate→health/signature/Admin acceptance→attributable canary→rows-read monitor→promotion/rollback, each requiring separate owner authorization.
+- **Completion:** source100%; GitHub synchronization100%; local preflight100%; production deployment0%; live savings0% claimed. Product on frozen release GO; optimized production release NO-GO pending scoped authorization and live measurement.
+
 ## GFS-319 zero-regression release gate (2026-10-29)
 
 - **P0 PASS / protected:** API `b426ba47` and Admin `494a3dce` remain at 100%; rollbacks `9af8991d`/`76e33a3d` remain available. Recovery +15/+210 remains enabled; five-stage Advance reminders, automation and utility templates remain OFF. No external mutation occurred.
