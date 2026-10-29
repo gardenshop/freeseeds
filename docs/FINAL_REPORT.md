@@ -4044,3 +4044,27 @@ Public ordering: **GO**. Two-stage recovery: **GO for configured, evidenced new-
 ### Decision
 
 Public ordering: **GO**. Two-stage recovery status fix: **GO**, deployed and provider-reconciled. Five-stage Advance reminders: **OFF**. No historical backfill, manual send, out-of-window message, payment mutation, COD conversion or normal `PAYMENT_CHOICE` misclassification occurred. Completion: P0 100%, P1 100%, P2 100%, P3 90% (D1 PASS; UI evidence blocked), P4 100%, P5 100%; overall 98%. Remaining evidence blocker: authenticated Chrome/Admin screenshot and UI readback, which must be obtained before claiming visual acceptance.
+
+## GFS-310 final report - 2026-10-29 UTC
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 production/identity | PASS | API `b426ba47` 100%, Admin `494a3dce` 100%; rollbacks retained; GFS identities and D1 verified |
+| P1 Admin reminder visibility | PENDING | D1 truth verified; +15 READ/DELIVERED and +210 SENT present; authenticated Access/Chrome UI unavailable |
+| P2 current order audit | PASS | 29 orders: 7 Advance, 13 COD, 9 no-method ineligible; zero eligible, PAID/REVIEW, held/cancelled |
+| P3 repair gate | PASS | No display/runtime defect proven; no mutation made |
+| P4 regression | PASS | 321/321, build, lint, npm audit 0 vulnerabilities, rollback4/4, quick_check/FK clean |
+| P5 freeze | PASS with UI evidence pending | Versions and protocols frozen; no new features or sends |
+
+### D1-backed reminder evidence
+
+| Masked order | +15 | +210 | Provider evidence | Next due |
+|---|---|---|---|---|
+| `…XDQW` | READ | SENT | Present for both | None for completed stages |
+| `…XE9F` | DELIVERED | PENDING | Present for +15 | +210 due `2026-10-29T05:07:53.692Z` |
+
+Other +210 pending stages: `…B30W`, `…KSQW`, `…5HD5`; all remain subject to normal eligibility/window recheck. Skip reason for all skipped rows is `PAYMENT_CHOICE_RECOVERY_NO_LONGER_ELIGIBLE`. No FAILED, QUEUED, BLOCKED_WINDOW, overdue eligible no-send, or recovery-attributed payment conversion was found.
+
+### Final decision
+
+Public ordering: **GO**. Two-stage recovery: **GO and frozen**. Five-stage Advance reminders: **OFF**. Admin deployment: **GO**, authenticated visual proof: **PENDING**. Completion: P0 100%, P1 75% (D1 PASS/UI pending), P2 100%, P3 100%, P4 100%, P5 95%; overall 95%. Remaining blocker is only an authenticated Admin UI session/screenshot; no production defect is currently demonstrated.

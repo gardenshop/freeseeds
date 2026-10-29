@@ -1384,3 +1384,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Promote the tested API/Admin versions after the first deployment exposed and reproduced a gate defect: reconciliation was nested under the disabled five-stage flag. Move that call to the common minute Cron path; keep customer webhook processing unchanged.
 - Treat D1 stage/provider agreement as PASS: +15 READ, +15 DELIVERED, +210 SENT. Do not claim an authenticated Admin screenshot because the Access-protected Chrome session was unavailable.
 - Keep recovery enabled, all five-stage/automation/utility flags false, and preserve API/Admin rollback versions. No backfill, manual send, schema change, payment mutation or COD conversion is authorized.
+
+## 2026-10-29: GFS-310 freeze decision
+
+- Freeze the deployed API/Admin versions after D1 stage/provider agreement and all regression gates passed. Do not make an Admin-only change because no display defect was demonstrated.
+- Report Admin visual verification as PENDING, not PASS: the protected Access session was unavailable. D1 is sufficient for delivery truth but not for claiming a screenshot or rendered UI.
+- Keep the two-stage recovery active, keep five-stage Advance reminders OFF, and do not add sends, backfill, payment conversion, migration, or feature work.

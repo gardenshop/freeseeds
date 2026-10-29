@@ -1702,3 +1702,15 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | Current order/stage audit | PASS | 28 orders; 7 Advance, 12 COD, 9 no-method ineligible; no current eligible overdue no-send |
 | D1 integrity/rollback | PASS | `quick_check=ok`, FK empty, rollback4/4 |
 | Authenticated Admin screenshot/UI readback | BLOCKED SAFELY | Chrome DevTools MCP/session unavailable; no UI evidence fabricated |
+
+## GFS-310 freeze and current Admin comparison
+
+| Check | Result | Evidence |
+|---|---|---|
+| Frozen traffic/identity | PASS | API `b426ba47` 100% / `9af8991d` rollback; Admin `494a3dce` 100% / `76e33a3d` rollback; GFS account verified |
+| D1/Admin comparison | PASS D1 / PENDING UI | Masked `…XDQW`: +15 READ, +210 SENT; `…XE9F`: +15 DELIVERED; provider evidence present |
+| Current audit | PASS | 29 post-cutoff orders: 7 Advance, 13 COD, 9 no-method ineligible, zero currently eligible |
+| Recovery conversion | PASS negative evidence | No recovery-attributed payment selection/credit conversion proven; no payment state changed |
+| Five-stage protection | PASS | Advance reminder, automation and utility-template flags remain false |
+| Regression/security | PASS | 321/321, build, lint, npm audit 0 vulnerabilities, rollback4/4, D1 quick/FK clean |
+| Authenticated Admin visual proof | PENDING | Access-protected Chrome session/MCP unavailable; no screenshot or inferred UI status |

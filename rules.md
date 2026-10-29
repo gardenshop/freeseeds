@@ -1063,3 +1063,10 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Recovery reconciliation runs on the minute Cron independently of the five-stage reminder flag. It remains absent from the customer webhook path and only matches `PAYMENT_CHOICE_RECOVERY` by stage idempotency key.
 - After deployment, the three existing records read back as +15 READ, +15 DELIVERED and +210 SENT, matching provider acknowledgements. No downgrade, false failure, duplicate update, normal `PAYMENT_CHOICE` match, or payment mutation occurred.
 - Live Admin browser evidence remains unavailable because the authenticated Chrome session/MCP is not connected; the deployed version and D1 truth are verified, but no screenshot or authenticated UI claim may be fabricated.
+
+## GFS-310 frozen stable release (2026-10-29 UTC)
+
+- Freeze API `b426ba47-1ead-4c4a-85ba-0a0b85d3e415` and Admin `494a3dce-5d52-4b66-b3ff-bef64b31b406` at 100%; retain API `9af8991d-d17c-4d3f-806f-7f6642849b7b` and Admin `76e33a3d-e96a-4942-a4ec-31910c688c16` at 0% rollback.
+- Current read-only audit: 29 post-cutoff orders, 7 Advance-selected, 13 COD, 9 no-method ineligible, and zero currently eligible, PAID/REVIEW, or held/cancelled. No recovery-attributed payment conversion is proven.
+- Recovery stage truth remains +15 READ 1/DELIVERED 1/SKIPPED 10 and +210 SENT 1/PENDING 4/SKIPPED 7; all skips are `PAYMENT_CHOICE_RECOVERY_NO_LONGER_ELIGIBLE`, with no failed, queued, or blocked-window rows.
+- Admin deployment is frozen, but authenticated UI screenshot/readback is PENDING because Chrome DevTools MCP/Access session is unavailable. D1 is authoritative; never infer UI evidence.

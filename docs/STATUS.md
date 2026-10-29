@@ -1783,3 +1783,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **P3 PASS D1 / BLOCKED UI evidence:** Existing stage rows now show +15 READ, +15 DELIVERED and +210 SENT, matching provider acknowledgements. The protected Admin host requires authenticated Access; Chrome DevTools MCP was unavailable, so live screenshot/UI readback is not claimed.
 - **P4 PASS:** Current 28-order audit is 7 Advance-selected, 12 COD, 9 no-method ineligible, 0 currently eligible, 0 PAID/REVIEW and 0 held/cancelled. Stages: +15 READ 1, DELIVERED 1, SKIPPED 10; +210 SENT 1, PENDING 5, SKIPPED 6; queued/failed/blocked-window 0.
 - **P5 PASS:** Full 321/321, focused 93/93, build, lint, rollback4/4, D1 `quick_check=ok`, FK clean. Public ordering GO; recovery status fix deployed; five-stage Advance reminders remain OFF.
+
+## GFS-310 stable release freeze - 2026-10-29 UTC
+
+- **P0 PASS:** Verified GitHub remote `gardenshop/freeseeds`, Cloudflare Get Free Seeds `gisupp@gmail.com`, canonical GFS bindings, API `b426ba47` 100% / `9af8991d` rollback, Admin `494a3dce` 100% / `76e33a3d` rollback. Recovery remains enabled; five-stage, automation and utility-template flags remain false.
+- **P1 PENDING UI evidence:** D1-backed rows are accurate: masked `…XDQW` is +15 READ and +210 SENT; masked `…XE9F` is +15 DELIVERED; provider evidence is present. Admin is deployed, but Access-protected authenticated UI could not be opened in this session. No screenshot was fabricated.
+- **P2 PASS:** Current post-cutoff audit has 29 orders: 7 Advance, 13 COD, 9 no-method ineligible, 0 eligible, 0 PAID/REVIEW, 0 held/cancelled. +15 has READ 1, DELIVERED 1, SKIPPED 10; +210 has SENT 1, PENDING 4, SKIPPED 7. No overdue eligible no-send or recovery-attributed payment conversion was found.
+- **P3 PASS:** No Admin defect was proven; no further deployment or API change was made. Cron reconciliation and eligibility remain unchanged.
+- **P4/P5 PASS:** Full 321/321, build, lint, npm audit 0 vulnerabilities, rollback4/4, D1 `quick_check=ok`, FK clean. Release is frozen; remaining item is authenticated Admin visual evidence only.

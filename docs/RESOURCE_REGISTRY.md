@@ -1376,3 +1376,10 @@ No secrets are stored in this registry.
 - **Flags:** recovery true from `2026-10-28T20:05:20.290Z`; five-stage Advance, automation and utility-template approval false. D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, minute Cron and Queue unchanged.
 - **Reconciliation:** Cron-only recovery status update is live. Existing provider-backed stages are READ, DELIVERED and SENT with no failure or downgrade. Raw WAMIDs/customer data are not recorded.
 - **Evidence boundary:** Admin is deployed, but authenticated Access/Chrome UI readback was unavailable; no screenshot or UI success is claimed. Public ordering remains GO.
+
+## GFS-310 frozen registry (2026-10-29 UTC)
+
+- **Frozen traffic:** API `b426ba47-1ead-4c4a-85ba-0a0b85d3e415` 100%, rollback `9af8991d-d17c-4d3f-806f-7f6642849b7b` 0%; Admin `494a3dce-5d52-4b66-b3ff-bef64b31b406` 100%, rollback `76e33a3d-e96a-4942-a4ec-31910c688c16` 0%.
+- **Current D1:** 29 post-cutoff orders; 7 Advance, 13 COD, 9 no-method ineligible, 0 eligible/PAID/REVIEW/held. +15 READ 1, DELIVERED 1, SKIPPED 10; +210 SENT 1, PENDING 4, SKIPPED 7.
+- **Flags:** recovery true from `2026-10-28T20:05:20.290Z`; five-stage, automation and utility-template flags false. D1 quick/FK clean; Cron/Queue unchanged.
+- **Evidence boundary:** D1/provider truth is verified; authenticated Admin visual evidence is PENDING because Chrome DevTools MCP/Access session was unavailable. No raw WAMIDs or customer data stored.
