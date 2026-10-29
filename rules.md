@@ -1056,3 +1056,10 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Stage totals are +15: 12 scheduled, 2 eligible, 2 SENT, 10 SKIPPED, 0 blocked-window; +210: 12 scheduled, 2 eligible, 7 not-yet-due, 1 SENT, 4 SKIPPED, 0 blocked-window. Three provider IDs are genuine: two +15 and one +210; provider states are READ, DELIVERED, and SENT. No overdue eligible no-send was found.
 - The scoped source repair makes `syncPaymentReminderDeliveryStatuses()` reconcile `PAYMENT_CHOICE_RECOVERY` outbound acknowledgements into `payment_choice_recovery_stages`. It does not send, backfill, mutate payment state, or bypass the 24-hour gate. Focused and full tests must pass before guarded deployment.
 - Live Admin still requires the tested status-view deployment; until that supported promotion occurs, do not claim the live Admin stage labels are corrected. Preserve public ordering GO, recovery configuration GO with delivery evidenced, and five-stage Advance reminders OFF.
+
+## GFS-309 final deployed reconciliation (2026-10-29 UTC)
+
+- Guarded deployment is complete: API `b426ba47-1ead-4c4a-85ba-0a0b85d3e415` and Admin `494a3dce-5d52-4b66-b3ff-bef64b31b406` are 100%; API `9af8991d-d17c-4d3f-806f-7f6642849b7b` and Admin `76e33a3d-e96a-4942-a4ec-31910c688c16` are retained at 0% rollback.
+- Recovery reconciliation runs on the minute Cron independently of the five-stage reminder flag. It remains absent from the customer webhook path and only matches `PAYMENT_CHOICE_RECOVERY` by stage idempotency key.
+- After deployment, the three existing records read back as +15 READ, +15 DELIVERED and +210 SENT, matching provider acknowledgements. No downgrade, false failure, duplicate update, normal `PAYMENT_CHOICE` match, or payment mutation occurred.
+- Live Admin browser evidence remains unavailable because the authenticated Chrome session/MCP is not connected; the deployed version and D1 truth are verified, but no screenshot or authenticated UI claim may be fabricated.

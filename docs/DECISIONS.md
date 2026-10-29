@@ -1378,3 +1378,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Treat `payment_choice_recovery_stages` as the authoritative +15/+210 status source. Ordinary order-linked `PAYMENT_CHOICE` is checkout interaction, never recovery delivery evidence.
 - Do not backfill or force the three audited orders: two +15 skips are valid after Advance selection, both +210 rows are pending until due-time recheck, and the `COD_CONFIRM` order has no recovery schedule by design.
 - Preserve public ordering while the source fix awaits guarded deployment. Recovery delivery has zero WAMIDs; Admin stage visibility is source-fixed but not yet live.
+
+## 2026-10-29: GFS-309 final deployment decision
+
+- Promote the tested API/Admin versions after the first deployment exposed and reproduced a gate defect: reconciliation was nested under the disabled five-stage flag. Move that call to the common minute Cron path; keep customer webhook processing unchanged.
+- Treat D1 stage/provider agreement as PASS: +15 READ, +15 DELIVERED, +210 SENT. Do not claim an authenticated Admin screenshot because the Access-protected Chrome session was unavailable.
+- Keep recovery enabled, all five-stage/automation/utility flags false, and preserve API/Admin rollback versions. No backfill, manual send, schema change, payment mutation or COD conversion is authorized.

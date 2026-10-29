@@ -1689,3 +1689,16 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | D1 integrity | PASS | `quick_check=ok`, foreign-key check empty, recovery indexes present |
 | Admin live visibility | BLOCKED | Tested Admin source correction is not deployed; no live false SENT/DELIVERED claim |
 | Full quality | PASS | 320/320, build, lint |
+
+## GFS-309 deployment and live reconciliation
+
+| Check | Result | Evidence |
+|---|---|---|
+| Source regression | PASS | Focused 93/93, full 321/321, build, lint, diff check |
+| Candidate staging | PASS | API `b426ba47` and Admin `494a3dce` health/source gates; both staged 0% first |
+| Guarded promotion | PASS | API `b426ba47` 100% / `9af8991d` 0%; Admin `494a3dce` 100% / `76e33a3d` 0% |
+| Cron-only reconciliation | PASS | Recovery update moved outside five-stage flag block; no webhook call |
+| Existing delivery readback | PASS | +15 READ, +15 DELIVERED, +210 SENT; provider acknowledgements match |
+| Current order/stage audit | PASS | 28 orders; 7 Advance, 12 COD, 9 no-method ineligible; no current eligible overdue no-send |
+| D1 integrity/rollback | PASS | `quick_check=ok`, FK empty, rollback4/4 |
+| Authenticated Admin screenshot/UI readback | BLOCKED SAFELY | Chrome DevTools MCP/session unavailable; no UI evidence fabricated |

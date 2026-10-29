@@ -1775,3 +1775,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **P3 PASS source / PENDING live:** Three recovery outbounds have genuine provider IDs: two +15 and one +210. Provider states are READ, DELIVERED and SENT; no overdue eligible order lacks a send. The source fix now reconciles provider states into recovery stage rows. No backfill or forced send occurred.
 - **P4 BLOCKED live:** Admin source visibility correction remains not deployed; live labels must not be treated as corrected until guarded promotion. Five-stage Advance and utility-template flags remain false.
 - **P5 PASS local:** Full 320/320, build and lint pass. D1 `quick_check=ok`, foreign-key check empty, and recovery indexes present. Public ordering remains GO; two-stage recovery is configured and evidenced for legitimate sends; Admin visibility correction is NO-GO pending authorized deployment.
+
+## GFS-309 deployed recovery status correction - 2026-10-29 UTC
+
+- **P0/P1 PASS:** Correct Get Free Seeds identity, D1 binding, frozen flags, Cron/Queue and existing recovery records were verified. The fix matches only `PAYMENT_CHOICE_RECOVERY`; reconciliation remains Cron-only and webhook-independent.
+- **P2 PASS:** API `b426ba47` and Admin `494a3dce` were staged at 0%, health/source gates passed, then promoted to 100%. API `9af8991d` and Admin `76e33a3d` remain 0% rollback. No migrations or data writes outside normal Cron reconciliation occurred.
+- **P3 PASS D1 / BLOCKED UI evidence:** Existing stage rows now show +15 READ, +15 DELIVERED and +210 SENT, matching provider acknowledgements. The protected Admin host requires authenticated Access; Chrome DevTools MCP was unavailable, so live screenshot/UI readback is not claimed.
+- **P4 PASS:** Current 28-order audit is 7 Advance-selected, 12 COD, 9 no-method ineligible, 0 currently eligible, 0 PAID/REVIEW and 0 held/cancelled. Stages: +15 READ 1, DELIVERED 1, SKIPPED 10; +210 SENT 1, PENDING 5, SKIPPED 6; queued/failed/blocked-window 0.
+- **P5 PASS:** Full 321/321, focused 93/93, build, lint, rollback4/4, D1 `quick_check=ok`, FK clean. Public ordering GO; recovery status fix deployed; five-stage Advance reminders remain OFF.

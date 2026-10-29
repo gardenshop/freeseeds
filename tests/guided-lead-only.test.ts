@@ -1098,6 +1098,17 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     await expect(api.scheduled({ scheduledTime: Date.now(), cron: "* * * * *", noRetry: vi.fn() } as unknown as ScheduledController, env())).resolves.toBeUndefined();
   });
 
+  it("reconciles recovery delivery from Cron while five-stage reminders are disabled", async () => {
+    remindersEnabled = false;
+    reminderAutomationEnabled = false;
+    let recoverySyncAttempts = 0;
+    beforeRun = async (sql) => {
+      if (sql.startsWith("UPDATE payment_choice_recovery_stages")) recoverySyncAttempts++;
+    };
+    await expect(api.scheduled({ scheduledTime: Date.now(), cron: "* * * * *", noRetry: vi.fn() } as unknown as ScheduledController, env())).resolves.toBeUndefined();
+    expect(recoverySyncAttempts).toBe(1);
+  });
+
   it("permanently blocks a free-form reply retry after the original inbound event leaves the 24-hour window", async () => {
     const oldAt = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
     const inboundId = "synthetic-stale-reply";

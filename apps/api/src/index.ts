@@ -1174,8 +1174,8 @@ export default {
     const remindersEnabled = env.PAYMENT_REMINDERS_V2_ENABLED === "true" && env.PAYMENT_AUTOMATION_V2_ENABLED === "true";
     const now = new Date(controller.scheduledTime).toISOString();
     const stale = new Date(Date.parse(now) - 5 * 60_000).toISOString();
+    await syncPaymentReminderDeliveryStatuses(env.DB);
     if (remindersEnabled) {
-      await syncPaymentReminderDeliveryStatuses(env.DB);
       await enqueueDuePaymentV2Stages(env.DB, new Date(controller.scheduledTime), true);
     const jobs = await env.DB.prepare(`SELECT idempotency_key,entity_id FROM outbox_jobs
       WHERE kind='WHATSAPP_PAYMENT_REMINDER' AND ((status IN ('PENDING','RETRY') AND available_at<=?) OR (status='QUEUED' AND updated_at<=?))

@@ -4022,3 +4022,25 @@ Completion: P0 100%; P1 75% source / 0% live CMS; P2 100% source / 0% live activ
 ### Decision
 
 Public ordering: **GO**. Two-stage recovery: **GO for configured, evidenced new-order operation; live stage-label correction PENDING deployment**. Five-stage Advance reminders: **OFF**. No historical backfill, out-of-window send, fake WAMID, payment mutation or COD conversion occurred. Completion: P0 100%, P1 100%, P2 100%, P3 80% (source fixed, deployment pending), P4 50% (source ready, live pending), P5 100%; overall 86%. Remaining blockers are guarded deployment of the tested API/Admin source and subsequent confirmation that live Admin reflects provider acknowledgements.
+
+## GFS-309 final report - 2026-10-29 UTC
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 baseline/identity | PASS | Get Free Seeds `gisupp@gmail.com`; D1 `17b7e9f6…`; recovery true; other reminder flags false |
+| P1 existing fix | PASS | `PAYMENT_CHOICE_RECOVERY`-only association; Cron-only reconciliation; webhook path unchanged |
+| P2 guarded deployment | PASS | API `b426ba47` 100% / `9af8991d` rollback; Admin `494a3dce` 100% / `76e33a3d` rollback; API health HTTP200 |
+| P3 live status | PASS D1 / BLOCKED UI evidence | +15 READ, +15 DELIVERED, +210 SENT match provider acknowledgements; Access-protected Admin UI could not be authenticated in this session |
+| P4 current audit | PASS | 28 orders: 7 Advance, 12 COD, 9 no-method ineligible, 0 eligible/PAID/REVIEW/held; no overdue eligible no-send |
+| P5 quality | PASS | Focused 93/93, full 321/321, build, lint, rollback4/4, D1 quick_check/FK clean |
+
+### Current stage counts
+
+| Stage | Scheduled | Queued | Sent | Delivered | Read | Pending/not due | Skipped | Failed | BLOCKED_WINDOW |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| +15 | 12 | 0 | 2 | 1 | 1 | 0 | 10 | 0 | 0 |
+| +210 | 12 | 0 | 1 | 0 | 0 | 5 | 6 | 0 | 0 |
+
+### Decision
+
+Public ordering: **GO**. Two-stage recovery status fix: **GO**, deployed and provider-reconciled. Five-stage Advance reminders: **OFF**. No historical backfill, manual send, out-of-window message, payment mutation, COD conversion or normal `PAYMENT_CHOICE` misclassification occurred. Completion: P0 100%, P1 100%, P2 100%, P3 90% (D1 PASS; UI evidence blocked), P4 100%, P5 100%; overall 98%. Remaining evidence blocker: authenticated Chrome/Admin screenshot and UI readback, which must be obtained before claiming visual acceptance.

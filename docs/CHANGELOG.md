@@ -1257,3 +1257,9 @@
 - Audited every post-activation order with bounded read-only D1 queries: 28 orders, 12 scheduled rows per stage, 3 genuine recovery provider acknowledgements, and no overdue eligible no-send.
 - Fixed the narrow delivery reconciliation gap so `PAYMENT_CHOICE_RECOVERY` provider states update their stage rows; ordinary `PAYMENT_CHOICE` remains excluded.
 - Added regression coverage; full 320/320, build, lint and D1 integrity checks pass. No production deployment, backfill, forced send, payment mutation or COD conversion was performed.
+
+## 2026-10-29 - GFS-309 deployed recovery status fix
+
+- Deployed API `b426ba47` and Admin `494a3dce` through 0%-traffic staging and guarded promotion; retained API `9af8991d` and Admin `76e33a3d` as rollback.
+- Moved recovery delivery reconciliation outside the disabled five-stage reminder block so the minute Cron updates recovery stages while Advance reminders remain OFF.
+- Verified D1 stage/provider agreement: READ, DELIVERED and SENT. Focused 93/93, full 321/321, build/lint, rollback4/4 and D1 integrity pass. Authenticated Admin UI screenshot remains unavailable, not claimed.

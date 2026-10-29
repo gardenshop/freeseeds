@@ -1369,3 +1369,10 @@ No secrets are stored in this registry.
 - **Flags:** `PAYMENT_CHOICE_RECOVERY_ENABLED=true` from `2026-10-28T20:05:20.290Z`; `PAYMENT_REMINDERS_V2_ENABLED=false`; `PAYMENT_AUTOMATION_V2_ENABLED=false`; `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`.
 - **Audit:** 28 post-cutoff orders; 7 Advance-selected, 12 COD, 2 eligible no-method, 7 ineligible no-method. +15 has 12 scheduled, 2 eligible, 2 sent and 10 skipped. +210 has 12 scheduled, 2 eligible, 7 not-yet-due, 1 sent and 4 skipped. Three recovery provider IDs are present with READ/DELIVERED/SENT acknowledgement states; raw IDs are intentionally omitted.
 - **Integrity/quality:** D1 `quick_check=ok`, FK empty, recovery indexes present; full 320/320, build and lint pass. Source reconciliation fix is un-deployed; Admin live visibility remains pending guarded authorization.
+
+## GFS-309 deployed registry (2026-10-29 UTC)
+
+- **Versions:** API `b426ba47-1ead-4c4a-85ba-0a0b85d3e415` 100%, rollback `9af8991d-d17c-4d3f-806f-7f6642849b7b` 0%; Admin `494a3dce-5d52-4b66-b3ff-bef64b31b406` 100%, rollback `76e33a3d-e96a-4942-a4ec-31910c688c16` 0%.
+- **Flags:** recovery true from `2026-10-28T20:05:20.290Z`; five-stage Advance, automation and utility-template approval false. D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, minute Cron and Queue unchanged.
+- **Reconciliation:** Cron-only recovery status update is live. Existing provider-backed stages are READ, DELIVERED and SENT with no failure or downgrade. Raw WAMIDs/customer data are not recorded.
+- **Evidence boundary:** Admin is deployed, but authenticated Access/Chrome UI readback was unavailable; no screenshot or UI success is claimed. Public ordering remains GO.
