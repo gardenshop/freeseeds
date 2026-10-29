@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-330 coexistence and release audit (2026-10-30)
+
+- **Meta evidence:** official Chrome DevTools MCP inventory reused the existing authenticated tabs. Ads Manager showed Business `568026370701542` with the specified GFS ad-account context. The known Business Suite tab contained a Hoja-linked asset and was not opened; clean ancestry is unverified. No candidate phone, WABA, BSP, provider, app-version, permission, or isolated Phone Number ID was recorded.
+- **Meta verdict:** candidate coexistence eligibility **UNVERIFIED**. Official reference: `https://developers.facebook.com/documentation/business-messaging/whatsapp/embedded-signup/onboarding-business-app-users/`. The documented general requirements and effects are not candidate-specific evidence.
+- **Authorization:** read-only research only. Candidate number remains prohibited for CTA/runtime/onboarding/migration and cannot replace canonical GFS sender `+923044429933`; no QR, OTP, registration, subscription, history sync, message, or production mutation occurred.
+- **Cloudflare/GFS:** account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, GFS Workers/D1 context, and frozen/candidate routing were read-only checked. No Cloudflare mutation occurred. GitHub local PR #11 checkout was clean at `9682e2a` before this docs-only update; the connected `gardenshop` token is currently invalid, so no push was attempted.
+- **Release state:** API/Admin frozen 100%, candidates 0%, rollback versions retained; migration0043 marker, ten indexes, quick check, and FK evidence remain registered; two Meta 500s remain aggregate-only/deferred. No raw token, customer data, WAMID, receipt, payload, or secret was recorded.
+
 ## GFS-329 post-canary registry (2026-10-29)
 
 - **Routing:** API `b426ba47` 100% / `6ef27f02` 0%; Admin `494a3dce` 100% / `c2321eab` 0%; rollback versions retained.

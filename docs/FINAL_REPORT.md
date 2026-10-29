@@ -1,5 +1,42 @@
 # Final Report
 
+## GFS-330 coexistence and release audit (2026-10-30)
+
+### A. Coexistence verdict
+
+- **Meta:** **UNVERIFIED** for `+923124093162`. Meta's official coexistence documentation confirms a general Embedded Signup path with supported Business App version/country, Solution Partner or Tech Provider, Cloud API/webhook readiness, session logging, history synchronization, and linked-device effects. It does not prove this number's eligibility. Candidate-specific Business App activity/version, country/provider status, WABA/BSP ownership, permissions, and isolated Phone Number ID were not accessible without starting the prohibited flow. The web reader also received HTTP 429 for the official page, so no unsupported inference was made.
+- **Project:** read-only research **AUTHORIZED** by GFS-330; runtime/CTA/onboarding/migration/QR/OTP/history-sync/subscription/message use of the candidate and any replacement of canonical `+923044429933` remain **PROHIBITED**. The new-number lock is unchanged.
+- **Business ancestry:** **UNVERIFIED**. Ads Manager showed the specified Business/ad-account context, but the existing Business Suite tab was known to contain a Hoja-linked asset and was not opened. Hoja remains zero-connection.
+
+### B. Original sender and public service
+
+Canonical sender `+923044429933`, frozen API/Admin at 100%, optimized candidates at 0%, retained rollbacks, recovery +15/+210, signed webhooks, payment/COD PKR125, D1/R2, Queue/DLQ and customer data remain preserved. No Meta, Cloudflare, customer, message, migration, flag, or production mutation occurred.
+
+### C. Task state
+
+- **DONE:** read-only MCP/page inventory; rules/plan/status/registry/decisions and GFS-268–329 reconciliation; PR #11/local worktree review; migration0037/0038/0043 record reconciliation; frozen public-service/recovery audit; docs-only protected-record update.
+- **PENDING:** full optimization promotion and comparable live savings measurement; request-level Meta 500 attribution; any candidate-specific coexistence evidence.
+- **BLOCKED:** candidate eligibility and clean Business ancestry until an owner-controlled, supported Meta flow exposes evidence without violating the Hoja/new-number boundaries. GitHub push is also blocked by invalid `gardenshop` authentication; no push was attempted.
+
+### D. Tests, Git and live state
+
+- No source repair was justified. Existing carried-forward results remain focused121/121, full324/324, build/lint/audit0, and rollback4/4; this docs-only patch requires `git diff --check` and reference validation.
+- Local PR #11 HEAD before this documentation commit was `9682e2a` and matched its upstream branch. The root worktree's dirty files and separate historical worktrees were preserved. No push was attempted because read-only GitHub authentication reports the `gardenshop` token invalid.
+- Live state remains the recorded frozen release: API/Admin 100%, candidates 0%, migration0043 integrity PASS, two aggregate Meta 500s deferred, public bot/recovery GO, optimization/coexistence NO-GO.
+
+### E. Completion
+
+- **Lead-only/public frozen surface: 100% audited and preserved** (basis: GFS-329 frozen routing, recovery, integrity, delivery-correlation and regression evidence; this is not a claim that the whole product is complete).
+- **Coexistence research: 100% of safely executable read-only audit; 0% enabled** (basis: candidate and ancestry remain UNVERIFIED; no onboarding or production use authorized).
+- **Optimization release: 100% safety/reconciliation package; 0% promotion/live-savings claim** (basis: candidates remain 0%, timing/observability boundaries remain open).
+- **Scoped GFS-330 audit: 90% complete** (evidence and protected records reconciled; remaining 10% is external candidate eligibility/ancestry evidence and any separately authorized release action).
+
+### F. Highest-priority next action and blockers
+
+The next release action is to obtain fresh owner authorization and an owner-controlled, supported Meta Embedded Signup evidence session for the candidate—only after clean Business ancestry and provider/permission prerequisites can be verified without touching Hoja assets. Until then, keep the frozen public service at 100%, candidates at 0%, and the candidate number locked. The current GitHub authentication must also be restored before any documentation push is needed.
+
+Official Meta reference: `https://developers.facebook.com/documentation/business-messaging/whatsapp/embedded-signup/onboarding-business-app-users/`.
+
 ## GFS-329 post-canary acceptance and Meta 5xx triage (2026-10-29)
 
 | Gate | Result | Evidence / boundary |

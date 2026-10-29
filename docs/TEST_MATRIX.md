@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-330 documentation and release-audit verification (2026-10-30)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Official browser inventory | PASS | Chrome DevTools MCP `list_pages` used; existing authenticated tabs reused; known Hoja-linked Business Suite tab not opened |
+| Meta coexistence verdict | UNVERIFIED | Official documentation describes the general path; candidate-specific app/version/country/provider/WABA/Phone ID evidence unavailable |
+| Canonical sender/public service | PASS | Frozen API/Admin 100%; candidates 0%; no sender, message, customer, Meta, Cloudflare or flag mutation |
+| Hoja/new-number protections | PASS | Hoja zero-connection and `+923124093162` runtime/CTA/onboarding prohibition preserved |
+| Release records | PASS | GFS-268–329, migrations0037/0038/0043, D1 integrity and 500/Observability limits reconciled without replay |
+| Documentation validation | PASS | `git diff --check` and privacy-safe reference checks passed |
+| Source regression | NOT RERUN | No source defect was proven; carried-forward focused121/121, full324/324, build/lint/audit0, rollback4/4 remain the applicable evidence |
+| Push/deploy | NOT RUN | Local PR #11 branch is correct; `gardenshop` authentication is invalid; no push or deployment attempted |
+
 ## GFS-329 post-canary verification (2026-10-29)
 
 | Check | Result | Evidence / boundary |

@@ -1,5 +1,15 @@
 # Status
 
+## GFS-330 coexistence and release audit (2026-10-30)
+
+- **Coexistence verdict: UNVERIFIED.** Official Meta documentation confirms the general coexistence path through Embedded Signup, but the candidate number's Business App version/activity, supported country, WABA/BSP/provider ownership, permissions, and isolated Phone Number ID were not available in the authorized read-only session. The official page was also not directly fetchable by the web reader (HTTP 429), so no candidate-specific eligibility claim is made.
+- **Project authorization:** read-only eligibility research was authorized by this request; runtime use, CTA use, registration, migration, QR/OTP, history synchronization, subscription change, message sending, and replacement of canonical `+923044429933` remain **PROHIBITED**. The new-number lock is preserved.
+- **Identity/ancestry boundary:** official Chrome DevTools MCP inventory was used. Ads Manager exposed the specified Business/ad-account context; the existing Business Suite tab contained a known Hoja-linked asset and was deliberately left untouched. Clean Business `568026370701542` ancestry remains **UNVERIFIED**. Cloudflare GFS account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` and GFS resource context were read-only verified; no mutation occurred.
+- **Release preservation:** API `b426ba47` and Admin `494a3dce` remain 100%; optimized candidates `6ef27f02` and `c2321eab` remain 0%; rollbacks remain available; migration0043 marker/index/integrity evidence remains PASS. The two aggregate Meta 500s remain deferred because Observability is disabled and no delivery failure correlation was found. Public bot/recovery **GO** on frozen Workers; optimization promotion and coexistence enablement **NO-GO**.
+- **Task reconciliation:** GFS-268 fail-closed quota handling and the 0037/0038 additive migration work are recorded as completed historical work; GFS-328/329 candidate safety and post-canary audit are complete, while full optimization promotion, live savings measurement, request-level Meta attribution, and candidate coexistence verification remain pending/blocked. No terminal job, migration, or canary was replayed.
+- **Default-OFF design only:** if separately authorized and later proven eligible, use a separate Phone Number ID, WABA/provider credentials, sender-to-route mapping, signed webhook verification, isolated queue/outbox/idempotency namespace, explicit history/linked-device acceptance matrix, separate billing/routing controls, and a disable-only rollback. Do not share payment/order state or activate this design in GFS-330.
+- **Validation:** no source defect was proven; this update is documentation-only. `git diff --check` and privacy-safe reference checks passed. Existing carried-forward evidence remains focused121/121, full324/324, build/lint/audit0, and rollback4/4.
+
 ## GFS-329 post-canary acceptance and Meta 5xx triage (2026-10-29)
 
 - **P0 PASS:** Frozen API `b426ba47` and Admin `494a3dce` remain 100%; candidates `6ef27f02`/`c2321eab` remain 0%; rollbacks remain available. Recovery +15/+210 is ON; five-stage Advance, Automation V2 and utility templates are OFF.

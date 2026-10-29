@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-10-30: GFS-330 keep coexistence research read-only and release frozen
+
+- Classify `+923124093162` coexistence eligibility as **UNVERIFIED**. Meta's official documentation establishes the general Embedded Signup/coexistence workflow and requirements, but the authorized session did not expose candidate-specific app version, country support, provider/partner status, WABA, permissions, or Phone Number ID evidence.
+- Keep the project decision separate: read-only research is authorized for this audit; use as CTA/runtime sender, registration, migration, QR/OTP, history sync, Meta subscription change, message sending, or canonical-number replacement remains prohibited. Preserve `+923044429933` and the new-number lock.
+- Do not infer clean ownership of Business `568026370701542` from Ads Manager visibility. Because the existing Business Suite tab was known to contain a Hoja-linked asset and was not inspected, current clean ancestry remains unverified. Preserve Hoja zero-connection.
+- Keep API/Admin frozen at 100% and optimized candidates at 0%. Do not replay migrations/jobs, resend messages, change flags, enable Observability, promote optimization, or modify Meta/Cloudflare. The two aggregate Meta 500s remain deferred without request-level evidence.
+- If a future owner-authorized review proves eligibility, the implementation must remain default-OFF and isolated: separate sender ID/WABA/provider credentials, route and signed-webhook separation, namespaced dedupe/outbox, explicit history/linked-device and billing acceptance, and disable-only rollback. This is a design record, not activation authorization.
+
 ## 2026-10-29: GFS-329 defer uncorrelated Meta 5xx and stop traffic changes
 
 - Keep both optimized Workers at 0% and the frozen pair at 100%. No new canary is justified without fresh owner authorization and an enforced absolute deadline.

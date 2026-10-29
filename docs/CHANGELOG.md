@@ -1,5 +1,12 @@
 # Changelog
 
+## GFS-330 (2026-10-30)
+
+- Completed the read-only coexistence and release audit using official Chrome DevTools MCP inventory and existing authenticated tabs; no dashboard mutation, candidate onboarding, QR/OTP, subscription change, message, migration replay, traffic change, or deployment occurred.
+- Recorded Meta coexistence as **UNVERIFIED** for the candidate number and clean Business ancestry as **UNVERIFIED** because candidate-specific evidence was unavailable and the known Hoja-linked Business Suite asset was not opened.
+- Preserved canonical sender, new-number lock, Hoja zero-connection, frozen public service, 100%/0% routing, migration0043 integrity, payment/COD safeguards, and deferred Meta 500 handling.
+- Added only privacy-safe documentation. Local PR #11 was at `9682e2a` before this update; push was not attempted because the `gardenshop` GitHub token is invalid.
+
 ## GFS-329 (2026-10-29)
 
 - Reverified frozen API/Admin routing at 100% and optimized candidates at 0%; migration0043 marker/indexes and D1 integrity remain clean.

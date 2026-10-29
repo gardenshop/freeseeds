@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-330 coexistence and release audit (2026-10-30)
+
+- The read-only audit of candidate WhatsApp Business App number `+923124093162` is **UNVERIFIED**, not eligible or ineligible. The official Meta coexistence documentation describes Embedded Signup, supported app version/country, Solution Partner or Tech Provider status, Cloud API/webhook readiness, session logging, history synchronization, and linked-device effects; no candidate-specific Business App, country, provider, WABA, Phone Number ID, or permission evidence was available without starting the prohibited flow. No registration, migration, QR/OTP, subscription change, message, or production switch occurred.
+- This request authorizes research only. `+923124093162` remains prohibited as a runtime sender, CTA, onboarding target, migration target, or replacement for canonical `+923044429933`. The new-number lock is unchanged.
+- Business `568026370701542` remains ancestry-sensitive. The existing Ads Manager tab showed the specified GFS ad-account context, while the existing Business Suite tab was known to contain a Hoja-linked asset and was not opened or inspected. Clean current ownership/ancestry is therefore **UNVERIFIED**; the Meta-only exception does not permit Hoja connection or asset reuse.
+- Browser evidence was collected through the official Chrome DevTools MCP `list_pages` and existing authenticated tabs only. Cloudflare account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` and the GFS resource context were read-only verified; no dashboard mutation was made. The Hoja zero-connection rule, signed webhook, payment/COD PKR125, D1/R2, queue, and rollback protections remain binding.
+- GFS-330 is documentation-only: frozen API/Admin remain 100%, optimized candidates remain 0%, migration0043 and its integrity evidence remain accepted, and the two uncorrelated Meta 500s remain deferred. No source defect was proven and no source repair, migration replay, traffic change, resend, or deployment is authorized by this audit.
+
 ## GFS-329 post-canary acceptance and Meta 5xx triage (2026-10-29)
 
 - Post-canary readback confirms API `b426ba47` and Admin `494a3dce` at 100%, candidates `6ef27f02` and `c2321eab` at 0%, and the retained rollback versions available. Recovery +15/+210 remains ON; five-stage Advance reminders, automation V2 and utility templates remain OFF.
