@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-319 zero-regression comparison (2026-10-29)
+
+| Requirement | Frozen remote `04d06bc` | Optimized source `e198e50` | Boundary |
+|---|---:|---:|---|
+| Full tests | 321/321 | 324/324 | Three additional optimization/recovery guards pass. |
+| Build | PASS | PASS | Typecheck passes both builds. |
+| Lint | PASS | PASS | ESLint passes both builds. |
+| Focused Admin/Cron/recovery | baseline coverage | 121/121 | Optimized delta and recovery paths pass. |
+| WhatsApp checkout contract | preserved | preserved | No checkout/rendering/webhook/payment/COD flow source changed. |
+| Migration0043 | absent | local, additive, integrity-clean | Unapplied remotely; live write cost not measured. |
+| Live D1 savings | not applicable | BLOCKED | No optimized deployment; no `meta.rows_read` after value. |
+| GitHub synchronization | remote | BLOCKED | Connected identity `ai-photo-studio`, repository `push=false`. |
+
 ## GFS-318 guarded release gate (2026-10-29)
 
 | Requirement | Result | Evidence / boundary |

@@ -1,5 +1,15 @@
 # Status
 
+## GFS-319 zero-regression release gate (2026-10-29)
+
+- **P0 PASS / protected:** API `b426ba47` and Admin `494a3dce` remain at 100%; rollbacks `9af8991d`/`76e33a3d` remain available. Recovery +15/+210 remains enabled; five-stage Advance reminders, automation and utility templates remain OFF. No external mutation occurred.
+- **P1 PASS local:** Remote baseline `04d06bc` and optimized source commit `e198e50` were inspected. Source changes are limited to Admin delta/read paths, Cron delivery reconciliation gating, recovery-stage indexing/lookup, tests and additive documentation/migration. No checkout WhatsApp business-flow path changed.
+- **P2 PASS:** Frozen baseline run: 24 files/321 tests/build/lint. Optimized run: 24 files/324 tests/build/lint. Focused optimized suite is 121/121. The three additional tests cover multi-source cursor changes, recovery gating and delivery reconciliation while existing EN/UR, payment, COD, receipt, retry/idempotency and order-flow coverage remains green.
+- **P3 PASS local / live pending:** Migration0043 is additive and locally integrity-clean; `/api/orders/changes` covers order/payment/COD/outbound/outbox updates, equal timestamps and full-reload fallback. No customer state or cross-session cache was introduced. Live `meta.rows_read` savings remain unmeasured.
+- **P4 BLOCKED:** Official GitHub login is `ai-photo-studio`; repository metadata reports `push=false`; collaborator permission lookup is forbidden with HTTP403. No push was attempted.
+- **P5 NO-GO safely:** Cloudflare identity and frozen versions remain recorded; migration, Worker staging, flags, traffic and canary were not touched. Candidate and rollback procedures are prepared but not executed.
+- **P6 completion:** P0 100%, P1 100% local / 0% push, P2 100%, P3 90%, P4 75%, P5 30%, P6 80%. Exact next action: owner grants the authorized `gardenshop` GitHub write permission/connection, then push and verify remote contents before any separately authorized release.
+
 ## GFS-318 guarded release checkpoint (2026-10-29)
 
 - **P0 PASS / frozen:** API `b426ba47` and Admin `494a3dce` remain at 100%; rollbacks `9af8991d` and `76e33a3d` remain retained. Recovery is the existing +15/+210 path; five-stage Advance reminders, automation and utility templates remain OFF. No external mutation occurred.

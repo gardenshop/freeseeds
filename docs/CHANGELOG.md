@@ -1,5 +1,11 @@
 # Changelog
 
+## GFS-319 (2026-10-29)
+
+- Compared the frozen remote baseline (`04d06bc`: 321/321, build/lint) with optimized source commit `e198e50` (324/324, build/lint); the extra tests cover Admin/Cron/recovery safety.
+- Rechecked the source boundary: checkout WhatsApp business behavior is unchanged; only Admin delta paths, recovery-stage lookup, Cron reconciliation, additive indexes, tests and release records differ.
+- Official GitHub MCP still reports `ai-photo-studio` with repository `push=false`; no push, deployment, migration, traffic or flag mutation was attempted.
+
 ## GFS-318 (2026-10-29)
 
 - Completed the local guarded-release package: multi-source Admin delta invalidation, explicit full reload, indexed date/cursor/recovery/Cron paths, regression coverage and migration0043 rehearsal are ready for owner-authorized release.

@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-319 zero-regression release gate (2026-10-29)
+
+- Protected baseline remains API `b426ba47` and Admin `494a3dce` at 100%, with `9af8991d` and `76e33a3d` retained for rollback. Recovery remains ON for the existing +15/+210 path; five-stage Advance reminders, automation and utility templates remain OFF. No external D1, Worker, traffic, flag, Meta, payment, COD, Queue, Cron or customer mutation was made.
+- Official GitHub MCP readback confirms authenticated login `ai-photo-studio`, target `gardenshop/freeseeds`, PR #11 head `04d06bc`, and repository `push=false`. The collaborator-permission endpoint returned integration HTTP403; do not infer write access, cross accounts or retry authentication. The tested source commit is `e198e50`; subsequent local documentation records remain unpushed.
+- Frozen remote baseline passed 24 files/321 tests, build and lint. Optimized local HEAD passed 24 files/324 tests, build and lint. The three-test delta is new Admin/Cron/recovery coverage; source review found no checkout message rendering, signed-webhook, payment method, receipt, COD confirmation, Queue/DLQ or customer-state path change. Recovery lookup/Cron delivery reconciliation changes are independently tested.
+- Migration0043 remains additive and locally rehearsed only. It adds indexes and a migration marker; no existing rows are rewritten. Index write overhead and live rows-read savings remain unmeasured until an authorized staging release.
+- The exact remaining owner action is one GitHub permission/connection repair: authorize the `gardenshop` identity or an approved write-enabled integration for `gardenshop/freeseeds`, then push and independently verify the remote SHA and migration/API files.
+
 ## GFS-318 guarded release checkpoint (2026-10-29)
 
 - The frozen production pair remains API `b426ba47` at 100% with `9af8991d` retained for rollback, and Admin `494a3dce` at 100% with `76e33a3d` retained for rollback. Recovery remains the existing +15/+210 path; five-stage Advance reminders, automation and utility templates remain OFF. No external dashboard, D1, Worker, traffic, flag, Meta, payment, COD, Queue, Cron or customer mutation was made for GFS-318.

@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-319 zero-regression checkpoint (2026-10-29)
+
+- **GitHub readback:** MCP login `ai-photo-studio`; repository `gardenshop/freeseeds` permissions `pull=true`, `push=false`; PR #11 head `04d06bc9672d68821fd769646a1d0ad351544697`. Collaborator permission lookup returned integration HTTP403. No mutation or credential change.
+- **Local provenance:** source commit `e198e50` and documentation commit `809d457`; local branch is two commits ahead of remote. Local `api/orders/changes` and migration0043 are present; remote migration0043 is absent until push.
+- **Regression evidence:** remote baseline 321 tests/build/lint; optimized local 324 tests/build/lint; focused 121/121; rollback4/4. No customer data, secrets, phone identifiers, WAMIDs or provider payloads recorded.
+- **Release isolation:** Cloudflare/GFS remains read-only for this gate; Hoja/ThanNow were not connected or accessed. Active Worker pair and flags remain unchanged.
+
 ## GFS-318 guarded release checkpoint (2026-10-29)
 
 - **GitHub:** target `gardenshop/freeseeds`, PR #11, remote HEAD `04d06bc9672d68821fd769646a1d0ad351544697`; connected identity `ai-photo-studio`; repository permission `push=false`. Local source commit `e198e50` is one commit ahead. No credential mutation or alternate-account attempt was made; owner write access is required before push.

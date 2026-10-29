@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-29: GFS-319 accept frozen-versus-optimized local comparison; keep release frozen
+
+- Accept the remote frozen baseline comparison: HEAD `04d06bc` passes 321/321, build and lint; optimized source commit `e198e50` passes 324/324, build and lint. The additional tests are optimization safety coverage, not evidence of a changed WhatsApp checkout contract.
+- Treat the source review boundary as precise: no incoming signed-webhook routing, welcome/language, guided offer, payment method/instructions, receipt/PAID, COD PKR125 confirmation, Queue/DLQ, fulfillment or customer conversation state code changed. Only recovery-stage candidate lookup, Cron delivery reconciliation gating/no-op updates, Admin read paths, indexes and tests changed.
+- Keep migration0043, Worker deployment and traffic frozen. Local index rehearsal proves additive schema/integrity only; it does not prove live write overhead or D1 rows-read savings.
+- Official GitHub MCP confirms the connected login is `ai-photo-studio` and repository `push=false`; collaborator permissions are unavailable to the integration. The owner action remains one write-enabled `gardenshop` authorization/connection, with no authentication loop or alternate account.
+
 ## 2026-10-29: GFS-318 preserve local release until owner restores GitHub write access
 
 - Keep the tested GFS-316/317 source, tests, documentation and additive migration0043 local and commit them without external mutation. The official connector is authenticated as `ai-photo-studio` and has `push=false` on `gardenshop/freeseeds`; do not cross accounts, alter credentials, force-push or retry authentication in a loop.

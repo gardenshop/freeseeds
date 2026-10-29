@@ -1,5 +1,25 @@
 # Final Report
 
+## GFS-319 zero-regression release gate — production preserved (2026-10-29)
+
+| Gate | Result | Evidence / boundary |
+|---|---|---|
+| P0 protected baseline | PASS | API `b426ba47`/Admin `494a3dce` remain 100%; rollbacks retained; recovery +15/+210 ON; five-stage/automation/utility OFF; no external mutation. |
+| P1 local completion | PASS | Remote frozen HEAD `04d06bc`; optimized source commit `e198e50` is present locally with subsequent unpushed documentation records; Admin delta, Cron/recovery and migration0043 are present locally. |
+| P2 WhatsApp zero-regression | PASS local | Frozen baseline 321/321 and optimized 324/324; build/lint pass both. No checkout message-flow, signed webhook, payment, receipt or COD logic changed; recovery/Cron changes are covered. |
+| P3 optimization safety | PASS local / live pending | Multi-source cursor, full reload, equal timestamp and status-change tests pass; migration is additive/integrity-clean. Live D1 savings and index write cost are not measured. |
+| P4 GitHub access | BLOCKED | MCP login `ai-photo-studio`; repository `push=false`; collaborator permission endpoint HTTP403. No push attempted. |
+| P5 guarded release | NO-GO safely | No migration, Worker candidate, traffic, flag, Meta, D1 or customer mutation. |
+| P6 documentation | PASS | Rules, status, matrix, decisions, changelog, registry and report updated with new evidence. |
+
+### Protected versus optimized
+
+The frozen baseline and optimized build both preserve the tested EN/UR guided lead, payment, receipt, COD, recovery, queue and Admin contracts. The optimized build adds three safety tests and changes only Admin read paths, indexed Cron/recovery lookup and no-op delivery reconciliation. No live customer/WAMID or post-deployment D1 saving claim is made.
+
+### Remaining blocker
+
+Exact owner action: authorize the `gardenshop` GitHub identity, or reconnect an approved write-enabled GitHub integration for `gardenshop/freeseeds`. Then push and independently verify remote HEAD, `/api/orders/changes`, migration0043 and the two completed commits. Keep production frozen until separate migration/canary authorization.
+
 ## GFS-318 final guarded-release report — local commit pending push authorization (2026-10-29)
 
 | Requested item | Result |
