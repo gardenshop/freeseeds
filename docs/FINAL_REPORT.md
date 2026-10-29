@@ -4087,3 +4087,21 @@ The +15 denominator is 3 distinct provider-backed recipients; observed selection
 ### Decision
 
 Public ordering: **GO**. Two-stage recovery: **GO and stable**. Five-stage Advance reminders: **OFF**. Admin deployment: **GO**; authenticated Admin UI acceptance: **PENDING** due Access/session availability. Completion: P0 100%, P1 85% (D1 pass, UI pending), P2 100%, P3 100%, P4 100%, P5 100%; overall 97%. No optional improvement or feature work is authorized by this audit.
+- **GFS-312 final report — 2026-10-29 (payment conversion investigation)**
+
+| Gate | Result | Evidence |
+|---|---|---|
+| P0 frozen baseline | PASS | API `b426ba47`/Admin `494a3dce` 100%; rollbacks retained; D1 binding verified; recovery ON; five-stage/automation/templates OFF; `quick_check=ok`, FK clean |
+| P1 customer-behavior audit | PASS bounded / current reread pending | 32 orders: 8 Advance, 14 COD, 10 no-method/ineligible; five genuine `PAYMENT_CHOICE_RECOVERY` recipients; ordinary `PAYMENT_CHOICE` excluded |
+| P2 interactive recovery | PASS source/focused | `ADVANCE_PAYMENT` and `COD` are valid callbacks; Advance routes directly to verified methods; COD uses explicit `CONFIRM_COD_ORDER` and PKR125 consent; focused 93/93 |
+| P3 conversion result | PASS observed zero, non-causal | +15: 0/3 selection/COD/receipt/PAID; +210: 0/2; no recovery provider failure or callback error proven; D1 cannot correlate interactive payloads to orders |
+| P4 Admin verification | BLOCKED | Chrome DevTools MCP/Access session unavailable; protected Admin routes return sign-in HTML; no screenshot or UI claim fabricated |
+| P5 quality/protection | PASS with rollback harness pending | Fresh full 321/321, build, lint pass; GFS-311 audit0/rollback4/4 and D1 integrity remain carried-forward protected evidence. Current rollback harness is blocked by unset `GFS_LEGACY_ROOT`; no path was guessed |
+
+**Recovery evidence:** +15 has three distinct provider-backed recipients (READ 1, DELIVERED 2); +210 has two (SENT 1, DELIVERED 1). All observed recipients remain no-method/PENDING with no order-linked selection, COD confirmation, receipt, or independently verified PAID transition. This establishes non-conversion in the observed records only; it does not establish customer reluctance or a failed callback.
+
+**Technical conclusion:** No proven technical callback defect. Source/tests cover `ADVANCE_PAYMENT`, `COD`, direct Advance method choices, and explicit COD confirmation. No recovery outbound FAILED/RETRY/provider-error evidence was found. `whatsapp_events` stores event type/status/hash/correlation but not an order-linked interactive payload, so click-versus-abandonment cannot be proven from D1. No copy, timing, stage, or deployment change is authorized by this investigation.
+
+**Access blocker:** The exact remaining live evidence action is to restore the supported authenticated GFS Admin/Chrome DevTools session and a least-privilege Cloudflare token with D1 read scope. The present token identity is correct (`gisupp@gmail.com`) but D1 calls return Cloudflare authentication error 10000. Do not bypass Access or loop login attempts.
+
+**Decision:** Public ordering **GO**; two-stage recovery **GO/stable on available evidence**; five-stage Advance reminders **OFF**. Admin visual verification and fresh exact scheduler-join readback **PENDING/BLOCKED**. No historical sends, force-send, callback replay, payment mutation, COD conversion, or customer-data export occurred. Completion estimate: P0 100%, P1 85%, P2 100%, P3 100%, P4 35%, P5 100%; overall 84%. Remaining blocker is authenticated live evidence, not a demonstrated product defect.

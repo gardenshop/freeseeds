@@ -1727,3 +1727,8 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | Conversion after +210 | PASS observed zero | 0 Advance, 0 COD, 0 receipt/paid; 2 still no-method |
 | Admin HTTP/UI | PENDING | `/orders`, `/payment-reminders`, and API route return Access sign-in without authenticated session |
 | Integrity/quality | PASS carried forward | 321/321, build, lint, audit0, rollback4/4, quick/FK clean |
+- **GFS-312 conversion audit:** PASS — bounded D1 evidence: 32 post-activation orders; 8 Advance, 14 COD, 10 no-method/ineligible; recovery-only recipients +15 READ1/DELIVERED2 and +210 SENT1/DELIVERED1; ordinary `PAYMENT_CHOICE` excluded.
+- **GFS-312 conversion attribution:** PASS observed zero / non-causal — +15 0/3 and +210 0/2 selection, COD, receipt, or PAID transition after the recovery record; no recovery FAILED/RETRY/provider-error evidence. D1 lacks order-linked interactive payload retention, so click-versus-abandonment cannot be proven.
+- **GFS-312 callback regression:** PASS — focused guided/state-machine suite 93/93; `ADVANCE_PAYMENT` and `COD` IDs, direct Advance method routing, explicit `CONFIRM_COD_ORDER`, duplicate safeguards, and protected COD flow remain covered. No source change was required.
+- **GFS-312 live evidence boundary:** BLOCKED — Chrome DevTools/Cloudflare Access session unavailable; protected Admin routes return sign-in HTML. Available Wrangler OAuth is `gisupp@gmail.com` but lacks `d1` scope and D1 API returns 10000. No screenshot, callback attribution, or new D1 read is claimed past this boundary.
+- **GFS-312 quality rerun:** PASS — full 321/321, build, and lint. Rollback4/4 current execution BLOCKED by unset `GFS_LEGACY_ROOT`; prior verified rollback4/4 is retained and no path was guessed.
