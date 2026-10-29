@@ -1,5 +1,14 @@
 # Decisions
 
+## 2026-10-29: GFS-328 stop at 0% after bounded canaries
+
+- Apply additive migration0043 once and retain it after Worker rollback; all expected indexes and integrity checks passed.
+- Keep authoritative Admin counts on initial/full reload. Use `/api/orders/changes` for unchanged Refresh, which measured 25 rows read and avoids the repeated full-count path. Do not add a stale cross-isolate payment/fulfillment cache.
+- Accept the exact PR candidate as technically healthy, but classify the release procedure as partial because API and cumulative Admin 1% exposure slightly exceeded the 15-minute cap. Zero Worker errors and clean invariants do not erase that scope deviation.
+- Restore and hold API/Admin candidates at 0%. Do not auto-promote. A new owner authorization must name the next traffic percentage/window and monitoring/rollback limits.
+- Treat 99.91% recovery and 99.88% minute-Cron reductions as preliminary cross-window query evidence only. Do not claim full-traffic, billing-period or 24-hour savings until an authorized observation window provides comparable live `rows_read`.
+- Preserve +15/+210 recovery, signed webhook, Queue/DLQ, COD/Advance safeguards, new-number lock, and Hoja zero-connection. Five-stage Advance reminders, automation and utility templates stay OFF.
+
 ## 2026-10-29: GFS-325 keep count aggregates authoritative and release migration separately
 
 - Accept migration0043 as additive and backward-compatible for preflight: its ten indexes target existing tables/columns from migrations0037–0042, use new names and `IF NOT EXISTS`, and do not rewrite application rows. Account for additional index-maintenance writes after deployment; no live write-cost estimate is permitted.

@@ -1,5 +1,23 @@
 # Test Matrix
 
+## GFS-328 limited release verification (2026-10-29)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Identity and scope | PASS | GitHub `gardenshop`, Cloudflare `gisupp@gmail.com` / Get Free Seeds, canonical GFS Meta; exact D1 and PR HEAD; Hoja/ThanNow isolated |
+| Migration preflight/apply | PASS | Existing columns present; marker absent before; exact 0043 applied once; marker plus 10 indexes after; no destructive SQL |
+| D1 integrity/compatibility | PASS | `quick_check=ok`, FK violations 0; frozen API/Admin health 200 after additive schema |
+| API candidate | PASS | Exact-source `6ef27f02`; health 200; unsigned webhook 403; bindings and recovery/feature flags match frozen baseline |
+| Admin candidate | PASS | Exact-source `c2321eab`; authenticated initial orders 200; 25/266 records, authoritative counts, cursor present |
+| Admin delta/concurrency | PASS | Unchanged delta 200/0 changes/fullReload false; two concurrent calls matched; invalid cursor 400 |
+| Filters/export | PASS | Empty search total0; archived-only total1; CSV 200, quote-aware 266 records, 18 columns |
+| Worker metrics | PASS | API candidate 40 invocations/0 errors; Admin candidate 14 invocations/0 errors |
+| Recovery/Cron safety | PASS bounded | Repeated checks: overdue eligible0, duplicate recovery outbox0; natural recovery lifecycle progressed without duplicate/failure/downgrade evidence |
+| Canary timing | PARTIAL | API about15m40s; Admin cumulative about15m03s at1%, slightly beyond max15m due monitoring/control-plane latency; both restored0% |
+| Customer-flow mutation | NOT RUN by design | No live order, payment, COD, Meta, customer message or synthetic inbound was authorized |
+| Existing regression suite | PASS carried forward | Focused121/121; full324/324; build/lint/audit0; rollback4/4; no release source change |
+| Final traffic/flags | PASS | API/Admin frozen versions100%, candidates0%; recovery ON; five-stage/automation/utility OFF |
+
 ## GFS-325 final production preflight (2026-10-29)
 
 | Requirement | Result | Evidence / boundary |

@@ -1,5 +1,15 @@
 # Resource Registry
 
+## GFS-328 controlled-release registry (2026-10-29)
+
+- **GitHub:** `gardenshop/freeseeds`, PR #11, release source `4e0055148842756d1c2df601aea9919578338457`; authenticated write identity `gardenshop`.
+- **Cloudflare:** `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- **D1:** `getfreeseeds-staging`, UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; migration marker0043 and ten indexes present; quick check ok; zero FK violations; final observed size 25,985,024 bytes.
+- **API:** frozen `b426ba47-1ead-4c4a-85ba-0a0b85d3e415` 100%; rollback `9af8991d-d17c-4d3f-806f-7f6642849b7b` retained; GFS-328 candidate `6ef27f02-23ac-46c0-a291-157e246a8dbc` 0%.
+- **Admin:** frozen `494a3dce-5d52-4b66-b3ff-bef64b31b406` 100%; rollback `76e33a3d-e96a-4942-a4ec-31910c688c16` retained; GFS-328 candidate `c2321eab-6c24-4327-a8d9-6fee9ac550e0` 0%.
+- **Topology/flags:** D1/R2/Queue bindings and minute Cron retained; payment-choice recovery true from existing cutoff; five-stage Advance reminders false; automation false; utility-template approval false; COD public/guided and canonical Meta unchanged.
+- **Isolation/privacy:** canonical GFS Meta app only; Hoja/ThanNow untouched. No phone, customer, raw WAMID, receipt, token, payload or recovery bookmark is recorded.
+
 ## GFS-325 final preflight checkpoint (2026-10-29)
 
 - **Cloudflare/GFS:** read-only Wrangler identity `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, staging D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; API `b426ba47`/Admin `494a3dce` are 100%, rollbacks `9af8991d`/`76e33a3d` are 0%. No live mutation.

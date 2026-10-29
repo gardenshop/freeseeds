@@ -1,5 +1,14 @@
 # Changelog
 
+## GFS-328 (2026-10-29)
+
+- Applied additive migration0043 once to authorized GFS staging D1; created ten indexes and marker0043; post-apply quick/FK checks passed.
+- Uploaded exact PR HEAD API `6ef27f02` and Admin `c2321eab`, staged both at 0%, ran bounded 1% canaries, then restored both to 0%. Frozen API `b426ba47` and Admin `494a3dce` remain 100%.
+- Verified candidate API health/webhook rejection and authenticated Admin initial, delta, concurrent, filter, cursor and CSV behavior without customer-state mutation.
+- Recorded zero Worker errors (API40 invocations; Admin14), clean recovery/duplicate invariants, and transparent canary timing deviations (API about15m40s; Admin cumulative about15m03s).
+- Measured unchanged Refresh at 25 D1 rows and indexed recovery at 127 rows; retained explicit boundaries against claiming full-day/live-total savings.
+- No source, customer journey, reminder flag, Meta asset, payment, COD, Queue or customer message was changed.
+
 ## GFS-325 (2026-10-29)
 
 - Completed final read-only preflight: Cloudflare/GFS identity, D1 binding, frozen Worker versions, GitHub PR SHA, migration compatibility and rollback path verified without production mutation.

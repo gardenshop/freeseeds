@@ -1,5 +1,16 @@
 # Status
 
+## GFS-328 limited D1 release (2026-10-29)
+
+- **P0 PASS:** API `b426ba47` and Admin `494a3dce` are restored/confirmed at 100%; API `6ef27f02` and Admin `c2321eab` are 0%. Rollbacks are retained. Recovery +15/+210 is ON; five-stage Advance reminders, automation and utility templates are OFF.
+- **P1 PASS:** GitHub `gardenshop`/write, Cloudflare `gisupp@gmail.com`/Get Free Seeds/D1 write, and canonical GFS Meta were verified. Release source was exact PR #11 HEAD `4e0055148842756d1c2df601aea9919578338457`; Hoja/ThanNow were not touched.
+- **P2 PASS:** Migration0043 applied once to the authorized D1. All ten indexes and marker0043 exist; `quick_check=ok`, FK check empty. Size changed from about 22.65 MB to 25.60 MB. No application-row backfill or destructive schema operation ran.
+- **P3 PASS:** Exact-source API/Admin candidates uploaded and staged at 0%. API health 200/unsigned webhook 403; authenticated Admin initial load, unchanged/concurrent delta, filters, invalid cursor and 266-record/18-column CSV checks passed. No customer, order, payment, COD, Meta or flag mutation.
+- **P4 PARTIAL process / PASS product:** API candidate logged 40 invocations and Admin 14, both with zero Worker errors. D1 checks found zero overdue eligible recovery rows and zero duplicate recovery outbox/order-number conditions. API exposure was about 15m40s and cumulative Admin exposure about 15m03s, exceeding the 15-minute owner limit because of monitoring/control-plane latency. Admin's first segment stopped on a monitor transport failure; immediate read-only retry was clean and the bounded continuation completed. Both candidates are 0%; no promotion occurred.
+- **P5 PARTIAL measured:** unchanged Refresh read 25 rows total versus the current count fingerprint average of about 1,710,265 rows/call, a bounded repeated-path reduction of at least 99.9985%. Indexed recovery read 127 rows versus 145 for the post-index legacy shape (12.41%). A cross-window baseline comparison suggests 99.91% recovery-scan reduction and about 99.88% minute-Cron query-level reduction, but these are preliminary, not 24-hour live savings. Initial/full authoritative counts remain the largest known source.
+- **P6 PASS:** Existing source evidence remains focused121/121, full324/324, build/lint/audit0, integrity, rollback4/4. Source was unchanged during release. Documentation records only privacy-safe aggregates.
+- **Completion:** source100%; migration100%; candidate staging100%; zero-regression checks100%; strict canary timing95%; full deployment0% (not authorized); full-day savings measurement pending. Public bot/recovery **GO** on frozen versions. Further optimization promotion **NO-GO** without new scoped owner authorization.
+
 ## GFS-325 final production preflight (2026-10-29)
 
 - **P0 PASS read-only:** Cloudflare identity `gisupp@gmail.com`, Get Free Seeds account, canonical staging D1 UUID and frozen Worker history were verified. API `b426ba47`/Admin `494a3dce` remain 100%; rollbacks `9af8991d`/`76e33a3d` remain 0%. Recovery +15/+210 remains ON; five-stage/automation/utility remain OFF; no live mutation occurred.

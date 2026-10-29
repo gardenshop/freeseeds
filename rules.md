@@ -1,5 +1,16 @@
 # Get Free Seeds Binding Rules
 
+## GFS-328 controlled D1 optimization release (2026-10-29)
+
+- Owner scope covered migration0043 on D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, exact PR #11 source `4e0055148842756d1c2df601aea9919578338457`, 0% staging, and at most 1% API/Admin canaries. It did not authorize 100% promotion, flag changes, Meta/customer actions, or five-stage reminders.
+- Mutation identities were verified as GitHub `gardenshop`, Cloudflare `gisupp@gmail.com` / Get Free Seeds account, and canonical GFS Meta. Hoja/ThanNow stayed isolated. Before and after release, API `b426ba47` and Admin `494a3dce` are 100%; candidates API `6ef27f02` and Admin `c2321eab` are 0%; rollback versions remain retained.
+- Migration0043 was applied once. It wrote the `0043` marker and created all ten expected additive indexes. Post-apply `quick_check=ok`, foreign-key violations are zero, and old Workers remained healthy. Never try to remove these indexes as an application rollback; Worker rollback and additive schema recovery are separate.
+- Recovery remains ON from its existing cutoff. Five-stage Advance reminders, automation V2, and utility templates remain OFF. The +15/+210 scheduler and Cron reconciliation must not be disabled to reduce reads.
+- Candidate acceptance was read-only: API health 200, unsigned webhook 403, authenticated Admin initial/delta/concurrent/filter/cursor/CSV checks passed, and unchanged delta returned zero changes. No order, payment, COD, customer, Meta, or synthetic message mutation was used.
+- Cloudflare metrics recorded API candidate 40 invocations/zero errors and Admin candidate 14 invocations/zero errors. API 1% exposure lasted about 15m40s and cumulative Admin 1% exposure about 15m03s because monitor/control-plane work extended wall time beyond the 15-minute limit. Treat this as a procedural deviation even though health, D1 invariants, and customer state remained clean; do not continue or promote automatically.
+- Measured direct D1 evidence is bounded: unchanged Refresh used 25 rows read versus a current Admin count fingerprint averaging about 1,710,265 rows/call (at least 99.9985% fewer on the repeated unchanged path). Indexed recovery SQL read 127 rows; the same post-index legacy shape read 145 rows (12.41% fewer). Cross-window comparison with the pre-migration recovery fingerprint suggests about 99.91% fewer rows/call, but is preliminary and must not be reported as full-traffic or 24-hour savings.
+- Full/initial Admin count aggregates remain authoritative and expensive. Rolling 24-hour totals changed while the window moved and are not attributable to the brief canaries. A separately scoped promotion and observation window is required before claiming total live savings.
+
 ## GFS-325 final production preflight (2026-10-29)
 
 - Read-only Cloudflare identity is verified as `gisupp@gmail.com` in the Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Staging D1 is `getfreeseeds-staging`, UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; canonical GFS Meta is the only Meta scope and Hoja/ThanNow remain isolated.

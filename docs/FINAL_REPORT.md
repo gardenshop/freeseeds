@@ -1,5 +1,34 @@
 # Final Report
 
+## GFS-328 controlled D1 release - migration complete, candidates back at 0% (2026-10-29)
+
+| Gate | Result | Evidence / boundary |
+|---|---|---|
+| P0 freeze/identity | PASS | GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / GFS; canonical Meta. API `b426ba47` and Admin `494a3dce` end100%; rollbacks retained; protected flags unchanged. |
+| P1 package | PASS | Exact PR #11 source `4e0055148842756d1c2df601aea9919578338457`; migration0043, Admin delta/full reload, Cron optimization and regression tests matched. |
+| P2 migration | PASS | Applied once to D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; 10 indexes+marker present; quick ok/FK0; old Workers healthy. |
+| P3 0% acceptance | PASS | API `6ef27f02` and Admin `c2321eab`; health/signature and authenticated Admin initial/delta/concurrency/filter/cursor/CSV checks passed. |
+| P4 canary | PARTIAL process / PASS product | API40 and Admin14 candidate invocations, zero Worker errors; recovery/duplicate invariants clean. API ran about15m40s and cumulative Admin about15m03s, slightly exceeding max15m. Both candidates restored0%; no promotion. |
+| P5 savings | PARTIAL measured | Unchanged Refresh25 rows vs current count fingerprint avg1,710,265: at least1,710,240 rows saved/call, >=99.9985%. Recovery127 vs post-index legacy145:18 rows/12.41%. Cross-window recovery/Cron estimates99.91%/99.88% are preliminary, not full-traffic savings. |
+| P6 regression/docs | PASS | Existing focused121/121, full324/324, build/lint/audit0, integrity and rollback4/4 retained; source unchanged; privacy-safe evidence recorded. |
+
+### Cost and remaining reads
+
+The current 24-hour dashboard snapshot was 567.76M rows (a moving window, distinct from the earlier 494M baseline). The largest fingerprint remained the authoritative Admin count at 193.26M rows/113 calls, about 1.71M rows/call; an older count variant was 170.27M/186. The old recovery fingerprint was 113.31M/815, about139,031/call. Full/initial Admin loads still run authoritative counts, so they are the largest known remaining source; CSV/search/full reload and CMS lookups also remain. The brief 1% canaries cannot support a total 24-hour or billing saving claim.
+
+Direct post-migration D1 measurements: unchanged sync cursor15 rows plus delta10 rows =25 rows/1.2996ms. Recovery candidate SQL read127 rows/1.2377ms; the equivalent legacy shape after indexes read145/1.2875ms. A read-only minute-Cron model was about170 rows candidate versus139,075 using the earlier recovery fingerprint, but that comparison spans different windows and is only release-readiness evidence.
+
+### GFS-325 through GFS-328
+
+- GFS-325 **PASS** preflight; deployment intentionally gated.
+- GFS-326 **PASS as authorization gate / BLOCKED release** because live approval was absent.
+- GFS-327 **PASS as controlled-release preparation / BLOCKED execution** pending scoped approval.
+- GFS-328 **PASS migration and product safety; PARTIAL canary process** because 1% wall time slightly exceeded the owner cap; full promotion and full-day measurement remain unperformed.
+
+### Final decision
+
+Source100%; GitHub synchronization100%; migration100%; staging/acceptance100%; zero-regression evidence100%; strict canary execution95%; production promotion0% (not authorized); comparable 24-hour savings measurement pending. Public WhatsApp ordering and +15/+210 recovery are **GO** on frozen versions. Five-stage Advance reminders remain **OFF**. Further traffic promotion is **NO-GO** until a new scoped owner authorization defines percentage, duration, comparable `rows_read` observation and rollback limits. No 100% deployment occurred.
+
 ## GFS-325 final production preflight — release-ready, not deployed (2026-10-29)
 
 | Gate | Result | Evidence / boundary |
