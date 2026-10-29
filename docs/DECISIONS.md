@@ -1,5 +1,14 @@
 # Decisions
 
+## 2026-10-29: GFS-329 defer uncorrelated Meta 5xx and stop traffic changes
+
+- Keep both optimized Workers at 0% and the frozen pair at 100%. No new canary is justified without fresh owner authorization and an enforced absolute deadline.
+- Classify the two graph.facebook.com HTTP500 subrequests as transient/nonurgent for now: Worker errors are zero, delivery/outbox/audit aggregates show no correlated failure or exhausted retry, and provider-backed outbound states remain successful. Defer exact route/code attribution until request-level Observability is deliberately enabled under separate authorization or an equivalent supported log source becomes available.
+- Do not force-resend, replay webhooks, alter Meta, or repair source based only on the aggregate 5xx count.
+- Record natural activity honestly: two WhatsApp submissions and one COD confirmation occurred during the canary window, with no version attribution and no PAID/approval transition. This limits the claim to zero proven regression, not zero customer activity.
+- Use an operational canary controller with an absolute deadline and safety margin, bounded monitoring calls, immediate restore on timeout/error, and a final 100%/0% readback. This remains a design until separately authorized and implemented.
+- Preserve D1 migration0043, +15/+210 recovery, signed webhook, Queue/DLQ, COD/Advance protections, new-number lock, and Hoja zero-connection.
+
 ## 2026-10-29: GFS-328 stop at 0% after bounded canaries
 
 - Apply additive migration0043 once and retain it after Worker rollback; all expected indexes and integrity checks passed.

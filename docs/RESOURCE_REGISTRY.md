@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-329 post-canary registry (2026-10-29)
+
+- **Routing:** API `b426ba47` 100% / `6ef27f02` 0%; Admin `494a3dce` 100% / `c2321eab` 0%; rollback versions retained.
+- **D1:** `getfreeseeds-staging` UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; project ledger `cod_schema_migrations` contains 0030, 0036–0043; all ten 0043 indexes present; quick check ok; FK check empty. Legacy `d1_migrations` remains empty by design.
+- **Meta/observability:** canonical GFS Meta only; Cloudflare metric aggregate graph.facebook.com `500:2), approximately6k 2xx; Workers Observability disabled, so no request-level identifiers or error code are registered.
+- **Flags/privacy:** +15/+210 recovery ON; five-stage Advance, Automation V2 and utility templates OFF; Hoja/ThanNow isolated. No customer identifier, raw WAMID, secret, receipt or payload recorded.
+- **Activity boundary:** two submissions, one reset and one COD confirmation observed in the canary interval; no PAID/approval/failure/retry/dead-letter aggregate and no baseline/candidate attribution.
+
 ## GFS-328 controlled-release registry (2026-10-29)
 
 - **GitHub:** `gardenshop/freeseeds`, PR #11, release source `4e0055148842756d1c2df601aea9919578338457`; authenticated write identity `gardenshop`.

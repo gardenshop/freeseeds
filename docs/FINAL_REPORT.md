@@ -1,5 +1,40 @@
 # Final Report
 
+## GFS-329 post-canary acceptance and Meta 5xx triage (2026-10-29)
+
+| Gate | Result | Evidence / boundary |
+|---|---|---|
+| P0 frozen production | PASS | API `b426ba47` 100%, Admin `494a3dce` 100%; candidates `6ef27f02`/`c2321eab` 0%; rollbacks retained; +15/+210 ON; five-stage/Automation/utility OFF |
+| P1 migration/routing | PASS | `cod_schema_migrations` marker0043=1, all ten indexes, `quick_check=ok`, FK empty, exact 100%/0% routing |
+| P2 Meta 5xx | NONURGENT / DEFERRED | Current Cloudflare moving 24-hour aggregate: graph.facebook.com HTTP500=2, approximately6k 2xx. Worker errors=0. Observability disabled, so exact time/route/Meta code cannot be correlated |
+| P2 delivery impact | NO PROVEN LOSS | Canary-window D1 has no outbound FAILED, outbox RETRY/DEAD_LETTER, or failure/error audit action; successful READ/DELIVERED/SENT rows remain. Exact 5xx-to-message recovery is not provable |
+| P3 activity/regression | PASS bounded with caveat | Two WhatsApp submissions, one reset and one COD confirmation occurred naturally; resulting aggregate states include COD_PENDING/COD_PENDING and DETAILS_COMPLETED/PENDING. No PAID/approval transition; no version attribution |
+| P4 D1 acceptance | PASS measured / partial total | Unchanged Refresh remains 25 rows versus approximately1.71M legacy count rows/call. This is query-level evidence; candidates are 0%, so no daily savings claim |
+| P5 safeguard | DESIGNED | Absolute deadline plus safety margin, bounded polls, immediate restore on monitor failure/deadline, and final routing readback |
+| P6 tests/release | PASS carried forward / NO-GO promotion | Focused121/121, full324/324, build/lint/audit0, rollback4/4; no source change, new canary or promotion |
+
+### Meta 5xx conclusion
+
+The two 500s are provider subrequest aggregates, not Worker invocation failures. The authorized one-time audit found no matching failed outbound, retry/dead-letter, or failure/error audit record in 12:32:00–13:05:00 UTC. Classify them transient/nonurgent with no proven lost message and defer exact investigation. Do not claim automatic recovery of those exact requests because request-level Observability is disabled.
+
+The canary was not activity-free: D1 recorded two WhatsApp submissions, one conversation reset and one COD confirmation. No customer identifiers are retained here. The resulting states were safe pending/COD states, with no observed PAID or approval transition. Since audit rows lack Worker-version attribution for those actions, no baseline-versus-candidate causal claim is made.
+
+### Hard deadline design
+
+Before any future authorized canary: record a monotonic absolute deadline earlier than the owner cap by a safety margin; bound every health/D1/metrics poll; restore immediately on timeout, monitor transport failure, or deadline proximity; and require a final control-plane readback of baseline100%/candidate0%. This design is not implemented or executed in GFS-329.
+
+### GFS-325 through GFS-329
+
+- GFS-325 **PASS** preflight.
+- GFS-326 **PASS gate / BLOCKED release** pending authorization.
+- GFS-327 **PASS preparation / BLOCKED execution** pending authorization.
+- GFS-328 **PASS migration/product safety; PARTIAL canary timing**.
+- GFS-329 **PASS post-canary acceptance; NONURGENT/DEFERRED Meta attribution; NO-GO further traffic**.
+
+### Decision
+
+Public bot and existing +15/+210 recovery: **GO** on frozen Workers. Optimization promotion and any new canary: **NO-GO** until new scoped authorization and the hard-deadline controller are in place. Source100%; migration100%; current routing100%; post-canary acceptance100%; Meta request-level attribution80%; safeguard design100%; full release0%.
+
 ## GFS-328 controlled D1 release - migration complete, candidates back at 0% (2026-10-29)
 
 | Gate | Result | Evidence / boundary |

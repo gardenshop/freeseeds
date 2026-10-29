@@ -1,5 +1,21 @@
 # Test Matrix
 
+## GFS-329 post-canary verification (2026-10-29)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Frozen routing | PASS | API baseline100% / candidate0%; Admin baseline100% / candidate0%; rollback versions retained |
+| Migration state | PASS | `cod_schema_migrations` marker0043=1; ten migration indexes; `quick_check=ok`; FK check empty |
+| Feature flags | PASS carried forward | Recovery +15/+210 ON; five-stage Advance, Automation V2 and utility templates OFF |
+| Meta subrequest aggregate | PARTIAL | graph.facebook.com `500:2`, approximately6k 2xx; no request-level timestamp/route/code because Observability is disabled |
+| Worker runtime errors | PASS | Frozen/candidate Worker error rate 0; invocation-status error categories 0 |
+| Delivery correlation | PASS bounded | Window has no outbound FAILED, outbox RETRY/DEAD_LETTER, or failure/error audit action; exact 5xx-to-message correlation unavailable |
+| Natural activity audit | PASS with caveat | Two WhatsApp submissions, one reset, one COD confirmation; aggregate states COD_PENDING/COD_PENDING and DETAILS_COMPLETED/PENDING; no PAID/approval |
+| Unchanged Refresh | PASS measured | 25 D1 rows versus legacy count fingerprint approximately1.71M rows/call; query-level only |
+| Control-plane safeguard | DESIGNED, NOT DEPLOYED | Absolute deadline, safety margin, bounded polling, fail-safe restore, and final routing readback |
+| Regression suite | PASS carried forward | Focused121/121; full324/324; build/lint/audit0; rollback4/4; no source change |
+| Further release | BLOCKED | New scoped owner authorization required; no new canary or promotion |
+
 ## GFS-328 limited release verification (2026-10-29)
 
 | Check | Result | Evidence / boundary |

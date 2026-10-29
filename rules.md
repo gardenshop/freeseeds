@@ -1,5 +1,15 @@
 # Get Free Seeds Binding Rules
 
+## GFS-329 post-canary acceptance and Meta 5xx triage (2026-10-29)
+
+- Post-canary readback confirms API `b426ba47` and Admin `494a3dce` at 100%, candidates `6ef27f02` and `c2321eab` at 0%, and the retained rollback versions available. Recovery +15/+210 remains ON; five-stage Advance reminders, automation V2 and utility templates remain OFF.
+- Migration0043 is verified through the project ledger `cod_schema_migrations` (not the legacy empty `d1_migrations` table): marker `0043` is present, all ten new indexes exist, `quick_check=ok`, and foreign-key check is empty. Never infer migration state from `d1_migrations` for this legacy-compatible binding.
+- Cloudflare shows exactly two `500` subrequests to `graph.facebook.com` in the current 24-hour aggregate, alongside approximately 6k 2xx subrequests. Worker invocation errors are zero for the frozen API and candidate. Workers Observability is disabled, so timestamps, route, Meta error code, and request trace cannot be correlated; do not invent them or enable Observability as part of this audit.
+- D1 delivery correlation in the canary window found no outbound FAILED rows, no outbox RETRY/DEAD_LETTER rows, no failure/error audit action, and provider-backed outbound rows in READ/DELIVERED/SENT states. Classify the two 5xx as transient/nonurgent with no proven lost message, defer exact attribution, and do not force-resend.
+- Intentional synthetic/customer mutation was not used, but read-only post-canary audit found natural activity during the window: two WhatsApp submissions and one COD confirmation. Aggregate resulting states were one COD_PENDING/COD_PENDING and one DETAILS_COMPLETED/PENDING; no PAID or approval transition was observed. Audit records do not attribute these events to baseline versus candidate, so do not claim candidate causality or a zero-activity canary.
+- The control-plane timing deviation is operational: the split/monitor/restore sequence had wall-time and one monitor transport failure. Future canaries require an absolute monotonic deadline, a safety margin before the owner cap, bounded poll timeouts, immediate restore on missed/failed monitoring, and final split verification. This is a release-controller safeguard design only; no new canary or source repair is authorized by GFS-329.
+- The measured unchanged Refresh remains 25 D1 rows versus the current legacy count fingerprint average of approximately 1.71M rows/call. This is query-level evidence only; candidates remain at 0%, so no daily savings claim is permitted.
+
 ## GFS-328 controlled D1 optimization release (2026-10-29)
 
 - Owner scope covered migration0043 on D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, exact PR #11 source `4e0055148842756d1c2df601aea9919578338457`, 0% staging, and at most 1% API/Admin canaries. It did not authorize 100% promotion, flag changes, Meta/customer actions, or five-stage reminders.

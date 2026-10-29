@@ -1,5 +1,15 @@
 # Status
 
+## GFS-329 post-canary acceptance and Meta 5xx triage (2026-10-29)
+
+- **P0 PASS:** Frozen API `b426ba47` and Admin `494a3dce` remain 100%; candidates `6ef27f02`/`c2321eab` remain 0%; rollbacks remain available. Recovery +15/+210 is ON; five-stage Advance, Automation V2 and utility templates are OFF.
+- **P1 PASS:** D1 `cod_schema_migrations` marker0043 is present; all ten migration indexes exist; `quick_check=ok`; foreign-key check is empty. The legacy `d1_migrations` ledger remains intentionally irrelevant/empty for this binding.
+- **P2 NONURGENT/DEFERRED:** Cloudflare reports graph.facebook.com subrequests `500:2` and approximately 6k 2xx in the moving 24-hour window. Worker runtime errors are zero. Workers Observability is disabled, so exact request time, route, sanitized Meta code and trace are unavailable. D1 shows no outbound FAILED, outbox RETRY/DEAD_LETTER, or failure/error audit action in 12:32:00–13:05:00 UTC. No forced resend or repair is justified.
+- **P3 ACCEPTANCE WITH NATURAL-ACTIVITY CAVEAT:** During that window D1 records two WhatsApp submissions, one conversation reset and one COD confirmation. Resulting aggregate states were one COD_PENDING/COD_PENDING and one DETAILS_COMPLETED/PENDING; no PAID or approval transition, failed send, retry or dead letter was observed. These events have no baseline/candidate version attribution; they are not claimed as candidate-caused or candidate-free.
+- **P4 PASS bounded:** Migration and Worker compatibility remain clean; exact 100%/0% routing is confirmed. No new canary, promotion, flag, migration removal, resend or production code deployment occurred. Proposed hard deadline: absolute start-plus-cap deadline with a safety margin, per-poll timeout, immediate restore on monitor failure/deadline, and final split readback.
+- **P5 PASS docs / no source change:** Existing focused121/121, full324/324, build/lint/audit0 and rollback4/4 remain valid. No source defect was proven, so no repair or exhaustive rerun was performed. GFS-329 is documentation-only and requires a new owner authorization before any further traffic change.
+- **Completion:** post-canary acceptance100%; Meta triage80% (aggregate classified, request-level attribution unavailable); safeguard design100%; source100%; migration100%; canary remains0% current traffic; full release0%. Frozen public bot/recovery **GO**; optimization promotion **NO-GO**.
+
 ## GFS-328 limited D1 release (2026-10-29)
 
 - **P0 PASS:** API `b426ba47` and Admin `494a3dce` are restored/confirmed at 100%; API `6ef27f02` and Admin `c2321eab` are 0%. Rollbacks are retained. Recovery +15/+210 is ON; five-stage Advance reminders, automation and utility templates are OFF.

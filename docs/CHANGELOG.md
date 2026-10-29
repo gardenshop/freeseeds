@@ -1,5 +1,13 @@
 # Changelog
 
+## GFS-329 (2026-10-29)
+
+- Reverified frozen API/Admin routing at 100% and optimized candidates at 0%; migration0043 marker/indexes and D1 integrity remain clean.
+- Triaged the current Cloudflare aggregate: graph.facebook.com returned two HTTP500 subrequests among approximately6k 2xx; Worker runtime errors remain zero.
+- Found no correlated outbound FAILED status, outbox retry/dead-letter, or failure/error audit action in the canary window. Exact request-level Meta route/code/timestamp remains unavailable because Workers Observability is disabled; no resend or source repair was performed.
+- Corrected the activity boundary: two WhatsApp submissions, one conversation reset and one COD confirmation occurred naturally during the window; no PAID/approval transition was observed and baseline/candidate attribution is unavailable.
+- Designed, but did not deploy, a hard canary deadline with safety margin, bounded monitor timeouts, immediate restore, and final split verification.
+
 ## GFS-328 (2026-10-29)
 
 - Applied additive migration0043 once to authorized GFS staging D1; created ten indexes and marker0043; post-apply quick/FK checks passed.
