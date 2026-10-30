@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-333: stop after fail-closed canary adapter failure (2026-10-30)
+
+- Do not attempt another traffic mutation after the live route command and compensating restore both returned failure. The safety boundary is not established for the current invocation path.
+- Treat final 100%/0% readback and unchanged deployment IDs as recovery evidence, not as a successful canary. No candidate exposure, D1 savings, Worker health, WhatsApp regression, or customer-flow acceptance is claimed.
+- Require a tested, sequential, error-reporting Cloudflare control-plane adapter and a fresh owner approval before any future canary. Existing +15/+210, flags, payment/COD, webhook, Queue/DLQ, new-number lock and Hoja isolation remain binding.
+
 ## GFS-332: treat API10007 as a resource-name mismatch (2026-10-30)
 
 - **Decision:** Use only discovered actual scripts `getfreeseeds-api-staging` and `getfreeseeds-admin-staging` for read-only verification. Do not create, rename, replace, redeploy or reroute Workers to make configured unsuffixed names resolve.

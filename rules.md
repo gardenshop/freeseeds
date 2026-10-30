@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-333 canary fail-closed stop (2026-10-30)
+
+- Owner authorization was limited to API `getfreeseeds-api-staging` candidate `6ef27f02` and Admin `getfreeseeds-admin-staging` candidate `c2321eab`, at most 1% for 15 minutes, with at least a 60-second restoration margin. No 100% promotion, flag, migration, Meta, payment or customer action was authorized.
+- Identity, exact scripts/versions, bindings, flags, migration0043 marker, ten indexes, quick check and FK check passed read-only. Focused local checks passed 64/64 and controller safety remained 9/9.
+- The live controller attempt failed closed before any candidate deployment became active: the first Windows `.cmd` read adapter returned `EINVAL`; after a shell-safe adapter fix, Wrangler returned exit code1 during the route operation and the compensating command also failed. Final readback remains API `b426ba47` 100% / `6ef27f02` 0% and Admin `494a3dce` 100% / `c2321eab` 0%, with original deployment IDs unchanged.
+- Do not retry traffic mutation through a workaround. GFS-333 is BLOCKED pending owner-approved remediation of the Cloudflare control-plane invocation/rollback path and a fresh explicit canary approval if the scope or controller changes.
+
 ## GFS-332 Cloudflare resource discovery (2026-10-30)
 
 - Read-only official Wrangler/dashboard verification confirmed `gisupp@gmail.com` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Configured `getfreeseeds-api` and `getfreeseeds-admin` are absent; API10007 is a stale/wrong resource-name lookup, not permission evidence.

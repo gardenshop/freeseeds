@@ -1,5 +1,13 @@
 # Status
 
+## GFS-333 limited canary fail-closed stop (2026-10-30)
+
+- **Preflight PASS read-only:** Authorized identity/account, actual Worker names, frozen/candidate versions, bindings, flags, D1 marker0043, ten migration indexes, `quick_check=ok` and empty FK check matched scope.
+- **Local acceptance PASS:** Focused protected-flow checks passed 64/64; existing controller safety suite remains 9/9. No source change was made.
+- **Canary BLOCKED:** First controller invocation failed at Windows `.cmd` readback with `EINVAL` before exposure. A shell-safe adapter then reached the route operation, but Wrangler returned exit code1 and automatic restoration also failed. The safety gate rejected another live mutation attempt.
+- **Final routing PASS read-only:** API `b426ba47` 100% / `6ef27f02` 0%; Admin `494a3dce` 100% / `c2321eab` 0%; original deployment IDs unchanged. No candidate exposure or customer mutation is claimed.
+- **NO-GO:** Do not retry or promote until the control-plane command/rollback path is repaired and separately reauthorized.
+
 ## GFS-332 Cloudflare resource discovery (2026-10-30)
 
 - **Identity PASS read-only:** Official Wrangler/dashboard verified `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, and D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; migration0043 marker/index/integrity evidence remains clean.

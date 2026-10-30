@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-333 canary gate (2026-10-30)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Authorized identity/version preflight | PASS | Correct account, actual scripts, frozen/candidate versions and bindings |
+| D1 migration/integrity | PASS | Marker0043, ten migration indexes, `quick_check=ok`, FK check empty |
+| Focused protected flows | PASS | 64/64 local checks; no source change |
+| Deadline-controller safety | PASS | Synthetic 9/9; live adapter failed closed |
+| Candidate exposure | BLOCKED | Wrangler exit code1 during route operation; no active deployment observed |
+| Final routing | PASS read-only | API/Admin frozen 100%, candidates 0%, original deployment IDs unchanged |
+| Canary acceptance | NO-GO | Control-plane invocation/rollback path requires repair and fresh approval |
+
+No D1 savings or customer-flow acceptance may be inferred from this blocked attempt.
+
 ## GFS-332 read-only production-resource gate (2026-10-30)
 
 | Check | Result | Evidence / boundary |

@@ -1,5 +1,29 @@
 # Final Report
 
+## GFS-333 limited D1 canary — fail-closed result (2026-10-30)
+
+### Result
+
+- **Preflight PASS read-only:** Authorized Cloudflare identity/account, actual Worker names, exact versions, bindings, flags, D1 marker0043, ten indexes, `quick_check=ok` and empty FK check matched the owner scope.
+- **Local checks PASS:** Focused protected-flow checks 64/64; existing controller safety suite 9/9. No source change.
+- **Canary BLOCKED:** The first controller attempt failed on Windows `.cmd` readback with `EINVAL` before exposure. After a shell-safe adapter fix, Wrangler returned exit code1 during route execution and the automatic restore also failed. The safety gate rejected another live mutation attempt.
+- **Final routing PASS read-only:** API frozen `b426ba47` 100% / candidate `6ef27f02` 0%; Admin frozen `494a3dce` 100% / candidate `c2321eab` 0%. Original deployment IDs/annotations are unchanged. No candidate exposure or customer mutation is claimed.
+
+### GFS-328–333 status
+
+| Task | Result |
+|---|---|
+| GFS-328 | PASS product / PARTIAL timing; canary authorization exhausted |
+| GFS-329 | PASS acceptance; Meta attribution deferred |
+| GFS-330 | PASS local deadline controller |
+| GFS-331 | PASS synchronization/controller package |
+| GFS-332 | PASS resource discovery/read-only routing |
+| GFS-333 | BLOCKED; live route/restore adapter failed closed |
+
+### Completion and next action
+
+Source 100%; migration/integrity 100%; preflight 100%; canary 0%; full rollout 0%; measured savings 0%. Do not claim strict canary timing, Worker health, WhatsApp acceptance or D1 savings. Repair and independently test the Cloudflare control-plane invocation/rollback adapter, then obtain fresh owner authorization before retrying. Frozen WhatsApp/recovery state remains unchanged and full promotion remains NO-GO.
+
 ## GFS-332 Cloudflare 10007 resolution and release gate (2026-10-30)
 
 ### Findings

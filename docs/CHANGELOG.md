@@ -1,5 +1,11 @@
 # Changelog
 
+## GFS-333 (2026-10-30)
+
+- Performed authorized preflight and focused 64/64 acceptance; migration0043/integrity and controller9/9 evidence remained clean.
+- Stopped the limited canary fail-closed after Windows command-adapter and Wrangler route/restore failures. Final readback verified frozen API/Admin at 100% and candidates at 0%; no canary or customer mutation is claimed.
+- Recorded the release blocker; no retry, promotion, migration replay, flag change or live D1 savings claim was made.
+
 ## GFS-332 (2026-10-30)
 
 - Resolved the meaning of Cloudflare API10007 through read-only official discovery: configured unsuffixed Worker names are absent; actual scripts are `getfreeseeds-api-staging` and `getfreeseeds-admin-staging`.

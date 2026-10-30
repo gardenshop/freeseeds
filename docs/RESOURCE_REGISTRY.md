@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-333 canary boundary (2026-10-30)
+
+- **Authorization scope:** API `getfreeseeds-api-staging` candidate `6ef27f02`; Admin `getfreeseeds-admin-staging` candidate `c2321eab`; maximum 1%/15 minutes; no promotion.
+- **Final readback:** API `b426ba47` 100% / `6ef27f02` 0%; Admin `494a3dce` 100% / `c2321eab` 0%; original deployment IDs and annotations unchanged.
+- **Failure evidence:** First adapter failed with `EINVAL` before exposure; corrected shell adapter reached route execution but Wrangler returned exit code1 and compensating restore failed. A further live workaround was rejected by the safety gate.
+- **Boundary:** No candidate exposure, customer data, message, payment, Meta, D1, flag or migration mutation is claimed. Logs contain no customer identifiers or secrets.
+
 ## GFS-332 actual Cloudflare resource registry (2026-10-30)
 
 - **Cloudflare identity:** `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; official Wrangler/dashboard read-only verification.
