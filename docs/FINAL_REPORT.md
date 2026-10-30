@@ -1,5 +1,37 @@
 # Final Report
 
+## GFS-339 inbound analytics and abandoned checkout reporting (2026-10-30)
+
+### Outcome
+
+Admin inbound analytics and conservative abandoned-checkout reporting are implemented locally and tested. The feature is read-only, aggregate-only, and does not send messages or mutate orders, payments, D1, Meta, flags, or traffic. GFS-338 was not repeated.
+
+### Verified staging evidence — 2026-10-30 UTC
+
+| Metric | Result |
+|---|---:|
+| Customer inbound | 1,970 = MESSAGE933 + INTERACTIVE1,029 + MEDIA8 |
+| Status callbacks | 1,954, excluded from inbound |
+| Latest-inbound contacts | 356 = new315 / returning41 |
+| Submitted / completed orders | 49 / 0 |
+| Advance-selected / pending | 6 / 6 |
+| COD-confirmed | 32 |
+| Inbound-to-order conversion | 2.49% = 49 / 1,970 |
+| Abandoned PRE_ORDER / POST_ORDER | 0 / 0 |
+| Active / Advance-pending / COD snapshot | 247 / 5 / 32 |
+
+Recovery stage rows updated in-window were +15 DELIVERED5, READ3, SKIPPED15 and +210 READ4, PENDING8, SKIPPED13. No send or state write occurred.
+
+### Query cost and boundaries
+
+Direct staging D1 measurements were event aggregate 28,442 rows/18.954ms, contacts 1,992/1.472ms, orders 424/1.021ms, recovery 188/0.390ms. The original abandonment classification read 11,099 rows/6.485ms; the bounded order/customer/conversation shape reads 5,857 rows/4.370ms. These are point-in-time query measurements, not 24-hour savings.
+
+Exact inbound event deduplication is supported by unique provider event IDs. Historical unique sender attribution is not: `whatsapp_events` has no wa_id, so contact/new/returning metrics use the latest-inbound conversation snapshot. INTERACTIVE includes historical Flow callbacks. Advance pending is never labelled abandoned; COD, PAID, cancelled and active states remain separate.
+
+### Release and tests
+
+Admin implementation: **PASS locally**. Focused analytics tests3/3; full329/329; build/lint/audit0; rollback4/4; diff check PASS. Proposed migration0044 is additive and local-only; it was not applied. Frozen API `b426ba47` and Admin `494a3dce` remain100%, repair candidate0%, and GFS-338 canary remains BLOCKED. Public bot/recovery GO on frozen evidence; analytics release is source-ready but deployment PENDING separate authorization.
+
 ## GFS-338 complete WhatsApp-flow verification and limited API repair gate (2026-10-30)
 
 ### Outcome

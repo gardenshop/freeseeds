@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-339 analytics release decision (2026-10-30)
+
+- Keep the Admin dashboard aggregate-only and read-only. Do not expose identifiers or reconstruct historical funnel transitions that the schema does not store.
+- Define inbound as distinct `MESSAGE`, `INTERACTIVE`, and `MEDIA` webhook IDs; exclude `STATUS`. Treat interactive as including Flow for historical data. Define contact counts as the latest-inbound conversation snapshot, not a complete historical unique-contact series.
+- Use a 24-hour inactivity threshold for PRE_ORDER and POST_ORDER. Keep Advance pending, COD confirmed, PAID, cancelled, and active states separate; never call Advance pending abandoned or trigger an automated message.
+- Keep migration0044 local/unapplied until separate migration authorization. The measured classification improvement is staging query evidence, not a 24-hour production savings claim.
+- GFS-338 remains BLOCKED; GFS-339 must not retry the canary or change production routing.
+
 ## GFS-338 API-only candidate release decision (2026-10-30)
 
 - Approve the uploaded API candidate only as a **0% staged artifact**: version `b0e883cd-16b8-4f8e-8fd8-c12bd46c4428` is frozen-source `901f3f6` plus the tested GFS-337 acknowledgement repair. Recovery and protected flags were preserved.

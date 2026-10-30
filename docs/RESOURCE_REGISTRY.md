@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-339 analytics evidence and local migration proposal (2026-10-30)
+
+- **Authorized D1 read-only:** Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, identity `gisupp@gmail.com`; analytics reconciliation returned `rows_written=0`.
+- **2026-10-30 UTC aggregates:** inbound MESSAGE933 / INTERACTIVE1029 / MEDIA8 / STATUS1954; snapshot contacts356 (new315/returning41); submitted49 / completed0 / Advance6 / COD32 / Advance-pending6; conversion2.49%.
+- **Recovery:** +15 DELIVERED5 / READ3 / SKIPPED15; +210 READ4 / PENDING8 / SKIPPED13. These are stage rows updated in the window, not synthetic sends.
+- **Query measurements:** event28442 rows; contacts1992; orders424; recovery188; classification old11099 versus optimized5857. Durations: 18.954ms, 1.472ms, 1.021ms, 0.390ms, old6.485ms, optimized4.370ms. No daily savings claim.
+- **Local assets:** `apps/admin/src/analytics.ts`, Admin route/UI additions, `tests/admin-analytics.test.ts`, and proposed `migrations/0044_inbound_analytics_indexes.sql`. Migration is not applied remotely.
+- **Privacy boundary:** no raw event payload, provider ID, wa_id, order ID, customer data, credential, or secret registered. Contact metrics are latest-inbound snapshots because historical event sender attribution is not stored.
+
 ## GFS-338 API-only candidate and canary boundary (2026-10-30)
 
 - **Cloudflare identity:** verified `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API candidate `b0e883cd-16b8-4f8e-8fd8-c12bd46c4428` version118 uploaded at0%. Frozen API/Admin readback is `b426ba47`/`494a3dce` at100%; prior candidates `6ef27f02`/`c2321eab` at0%.

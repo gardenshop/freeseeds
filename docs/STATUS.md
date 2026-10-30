@@ -1,5 +1,14 @@
 # Status
 
+## GFS-339 inbound analytics and abandoned checkout reporting (2026-10-30)
+
+- **Admin implementation PASS locally:** Added protected read-only `/analytics`, `/api/analytics`, and privacy-safe summary CSV with UTC range, Today/Yesterday/Last7, and checkout status filters. No identifiers or raw payloads are returned.
+- **Exact staging aggregate for 2026-10-30 UTC:** inbound `1,970` (`MESSAGE`933, `INTERACTIVE`1,029, `MEDIA`8); status callbacks `1,954`; latest-inbound contact snapshot `356` (`315` new conversations, `41` returning); submitted `49`, completed `0`, Advance-selected `6`, COD-confirmed `32`, Advance-pending `6`, conversion `2.49%`.
+- **Recovery evidence:** +15 updated rows DELIVERED5, READ3, SKIPPED15; +210 READ4, PENDING8, SKIPPED13. Delivered/accepted counts are +15 `8`, +210 `4`; no send or state write occurred.
+- **Abandonment:** current conservative classification found PRE_ORDER `0`, POST_ORDER `0`, ACTIVE snapshot `247`, Advance-pending snapshot `5`, COD-confirmed snapshot `32`. The Advance/order difference is intentional: order metrics count orders, classification metrics count contact snapshots. No historical stage transition was invented.
+- **Measured read cost:** event aggregate `28,442` rows/`18.954ms`; contacts `1,992`/`1.472ms`; orders `424`/`1.021ms`; recovery `188`/`0.390ms`; old classification `11,099`/`6.485ms`; optimized classification `5,857`/`4.370ms`. These are point-in-time staging reads, not daily savings.
+- **Release:** proposed additive migration0044 is local and unapplied. API `b426ba47` and Admin `494a3dce` remain frozen at100%; repair candidate remains0%; GFS-338 canary remains BLOCKED and was not retried.
+
 ## GFS-338 API-only acknowledgement candidate and canary gate (2026-10-30)
 
 - **Candidate upload PASS, traffic unchanged:** Under verified `gisupp@gmail.com` / Get Free Seeds account, API candidate `b0e883cd-16b8-4f8e-8fd8-c12bd46c4428` (version118) was uploaded at 0% from frozen-source `901f3f6` plus only the GFS-337 acknowledgement repair. API remains `b426ba47`100% / `6ef27f02`0%; Admin remains `494a3dce`100% / `c2321eab`0%.

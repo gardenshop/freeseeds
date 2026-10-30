@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-339 inbound analytics and abandoned checkout reporting (2026-10-30)
+
+- Added a protected, read-only Admin `/analytics` page and `/api/analytics` plus privacy-safe summary CSV. It reports UTC windows, Today/Yesterday/Last7 presets, checkout status filters, inbound event classes, contact snapshots, submitted/completed orders, Advance/COD state, recovery-stage delivery, definitions, and D1 `rows_read` metadata when supplied.
+- Exact staging D1 reconciliation for 2026-10-30 UTC: customer inbound `1,970` (`MESSAGE`933 + `INTERACTIVE`1,029 + `MEDIA`8); STATUS callbacks `1,954` excluded; latest-inbound contact snapshot `356` (`315` new / `41` returning); submitted orders `49`; completed `0`; Advance-selected `6`; COD-confirmed `32`; Advance-pending `6`; inbound-to-order `2.49%`.
+- Abandonment is conservative: PRE_ORDER and POST_ORDER require a reliable current snapshot and 24 hours of inactivity; ADVANCE_PENDING is never called abandoned; COD, PAID, cancelled and active states are excluded. Historical sender attribution is unavailable because `whatsapp_events` stores no `wa_id`; contact metrics are snapshot-based.
+- The first classification shape read `11,099` rows; the bounded order/customer/conversation shape read `5,857` rows (`6.485ms` to `4.3702ms`). Event aggregate read `28,442` rows, contacts `1,992`, orders `424`, recovery stages `188`; all writes were zero. Proposed migration0044 is local only and unapplied.
+- No API runtime, WhatsApp journey, payment/COD, webhook, Queue/DLQ, Cron, reminder, Meta, customer state, traffic, or migration was changed. GFS-338 remains blocked; no canary was attempted in GFS-339.
+
 ## GFS-338 API-only acknowledgement candidate gate (2026-10-30)
 
 - Owner-scoped candidate upload completed read-only identity checks under `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`: API candidate `b0e883cd-16b8-4f8e-8fd8-c12bd46c4428` (version118), based on frozen source `901f3f6`, contains only the tested post-provider D1 acknowledgement repair. Recovery remained enabled; five-stage Advance, Automation V2 and utility templates remained disabled.

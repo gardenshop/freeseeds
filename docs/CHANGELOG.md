@@ -1,5 +1,11 @@
 # Changelog
 
+## GFS-339 inbound analytics and abandoned checkout reporting (2026-10-30)
+
+- Added protected Admin inbound analytics with UTC presets, status filtering, aggregate CSV, event/contact/order/recovery metrics, conservative abandonment classes, definitions, and D1 read-cost metadata.
+- Added local-only proposed migration0044 indexes for `whatsapp_events`, conversation snapshots, orders, and leads. No remote migration was applied.
+- Reconciled staging 2026-10-30 UTC counts and measured the optimized abandonment query at 5,857 rows versus 11,099 for the original JSON order join. Full329/329, build/lint/audit0 and rollback4/4 pass; no production mutation.
+
 ## GFS-338 API-only candidate gate (2026-10-30)
 
 - Added tested API-only scope to the local deadline controller and Cloudflare adapter; Admin remains frozen and is included in final readback.

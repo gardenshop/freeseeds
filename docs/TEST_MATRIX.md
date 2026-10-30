@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-339 inbound analytics and abandonment (2026-10-30)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Admin auth and read-only route | PASS | `/analytics`, `/api/analytics`, and CSV are behind existing Admin authorization; no write route added |
+| Event definitions | PASS | Distinct provider event IDs; MESSAGE/INTERACTIVE/MEDIA inbound; STATUS excluded; interactive includes historical Flow |
+| Contact definitions | PASS with boundary | Latest-inbound conversation snapshot; new/returning use conversation `created_at`; historical sender attribution unavailable |
+| Abandonment exclusions | PASS | 24h inactivity; pre/post separate; Advance pending separate; COD/PAID/cancelled excluded; no stage history invented |
+| CSV/privacy | PASS | Aggregate summary only; no wa_id, provider_event_id, order_id, payload, secret, or customer detail |
+| D1 query cost | MEASURED | Event 28,442; contacts 1,992; orders 424; recovery 188; classification 11,099 to 5,857 rows |
+| Local proposed indexes | PASS review | migration0044 additive only; not applied remotely |
+| Focused analytics tests | PASS | 3/3 |
+| Full regression/build/lint/audit/rollback | PASS | 329/329; build; lint; audit0; rollback4/4; diff check |
+| Production deployment/canary | NOT RUN | No GFS-338 retry, migration, traffic, flag, Meta, customer or payment mutation |
+
 ## GFS-338 API-only candidate and release controller (2026-10-30)
 
 | Check | Result | Evidence / boundary |
