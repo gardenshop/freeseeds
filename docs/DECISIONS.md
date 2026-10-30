@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-30: push verified package, stop on Cloudflare resource mismatch
+
+- Push the tested package through the authenticated `gardenshop` host session using fast-forward only; remote PR #11 now resolves to `64023f1c72b70786432b14fca0589d302b0d3498`.
+- Accept read-only staging D1 evidence: migration0043 marker and ten indexes are present, quick check is `ok`, and foreign-key check is empty.
+- Do not infer production routing or promote from the configured Worker names because both API and Admin deployment lookups returned Cloudflare API10007 (`Worker does not exist on your account`) under the otherwise correct `gisupp@gmail.com` account. Resolve resource/account naming with the owner before any release action.
+- Keep API/Admin production mutation, candidate canary, flags, Meta, reminders, payment, customer and message state untouched. Require a new scoped authorization after production resources are reconciled.
+
 ## 2026-10-30: implement local fail-closed canary deadline controller
 
 - Implement the GFS-328 timing repair as local release tooling only. Do not put deadline or polling logic in customer-facing Workers and do not rerun a canary in this task.

@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-331 push and final release-gate verification (2026-10-30)
+
+- GitHub host verification succeeded as `gardenshop` with repository push permission true. The branch advanced fast-forward only from remote `9682e2a` to `64023f1c72b70786432b14fca0589d302b0d3498`; no force-push or history replacement occurred. Controller, test, migration0043 and Admin source paths were read back at that SHA.
+- Cloudflare read-only identity is `gisupp@gmail.com` in Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Remote staging D1 readback returned marker0043=1, ten indexes, `quick_check=ok`, and zero foreign-key rows; no D1 write occurred.
+- The configured production Worker deployment lookups for `getfreeseeds-api` and `getfreeseeds-admin` both returned Cloudflare API10007, `Worker does not exist on your account`. Do not infer current production traffic or versions from the prior record while this control-plane/resource mismatch remains unresolved.
+- Local controller9/9 and targeted Admin/recovery/payment/COD tests56/56 pass; prior full324/324, focused121/121, build/lint/audit0 and rollback4/4 remain valid because no source changed after `64023f1`.
+- Keep the release NO-GO until the correct production Worker resource names/account scope are read-only verified and a separate owner authorization names candidate versions, exposure, deadline, thresholds and rollback.
+
 ## GFS-330 canary deadline controller implementation (2026-10-30)
 
 - Added only a local release-controller module and synthetic Node test harness under `scripts/`; no customer-facing Worker, Cloudflare, D1, Meta, flag, traffic, payment, Queue, Cron or reminder code was changed.

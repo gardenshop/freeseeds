@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-331 synchronization and release-gate verification (2026-10-30)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| GitHub identity/write | PASS | Host `gardenshop`; repository push permission true |
+| Fast-forward push | PASS | Remote advanced `9682e2a` → `64023f1c72b70786432b14fca0589d302b0d3498`; no force-push |
+| Remote package readback | PASS | Controller, controller tests, migration0043 and Admin source paths present at pushed SHA |
+| Cloudflare identity | PASS | `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` |
+| D1 migration/integrity | PASS read-only | Marker0043=1, ten indexes, `quick_check=ok`, foreign-key result empty |
+| Production Worker lookup | BLOCKED | Both configured names returned API10007 `Worker does not exist on your account`; traffic/version state not inferred |
+| Deadline controller | PASS | 9/9 scenarios |
+| Targeted safety tests | PASS | 56/56 Admin/recovery/payment/COD tests |
+| Full/source regression | PASS carried forward | 324/324, focused121/121, build/lint/audit0, rollback4/4; no source changed after push |
+| New canary/promotion | NOT RUN | Existing authorization consumed; new scoped owner approval required |
+
 ## GFS-330 deadline-controller verification (2026-10-30)
 
 | Check | Result | Evidence / boundary |

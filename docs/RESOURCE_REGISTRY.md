@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-331 push and release-gate evidence (2026-10-30)
+
+- **GitHub:** Authenticated host identity `gardenshop`, repository push permission true; PR #11 branch fast-forwarded from `9682e2a` to `64023f1c72b70786432b14fca0589d302b0d3498`. Controller, test, migration0043 and Admin source paths were confirmed at that SHA.
+- **Cloudflare:** Read-only identity `gisupp@gmail.com`; account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no dashboard or Worker mutation.
+- **D1:** Staging UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; marker0043=1; exact ten migration indexes; `quick_check=ok`; foreign-key result empty.
+- **Production lookup boundary:** `getfreeseeds-api` and `getfreeseeds-admin` deployment history requests both returned API10007 (`Worker does not exist on your account`). Historical frozen versions remain recorded but are not freshly confirmed by this lookup.
+- **Quality:** Controller9/9, targeted safety56/56, carried-forward full324/324, focused121/121, build/lint/audit0 and rollback4/4. No customer data, secret, Meta, payment, message, flag, traffic or production record was changed.
+
 ## GFS-330 deadline-controller evidence (2026-10-30)
 
 - **Local source:** `scripts/canary-deadline-controller.mjs`; local-only release tooling, not imported by API/Admin Workers. Synthetic coverage is `scripts/test-canary-deadline-controller.mjs`; package command is `test:canary:deadline`.

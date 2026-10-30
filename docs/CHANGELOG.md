@@ -1,5 +1,12 @@
 # Changelog
 
+## GFS-331 (2026-10-30)
+
+- Fast-forward pushed the verified local package from remote `9682e2a` to `64023f1c72b70786432b14fca0589d302b0d3498` using authenticated `gardenshop` GitHub access; remote controller, tests, migration0043 and Admin paths were read back.
+- Read-only Cloudflare identity/D1 verification passed for `gisupp@gmail.com`: marker0043=1, ten indexes, quick check ok, foreign-key check empty.
+- Production API/Admin deployment lookups returned API10007 because the configured Worker names do not exist in the authenticated account. No live version, traffic, canary or promotion claim was made; release remains blocked pending resource reconciliation.
+- Controller9/9 and targeted safety56/56 pass; prior full324/324, focused121/121, build/lint/audit0 and rollback4/4 remain valid. No customer or production mutation occurred.
+
 ## GFS-330 deadline-controller implementation (2026-10-30)
 
 - Added local-only `scripts/canary-deadline-controller.mjs` and its 9-scenario synthetic test harness; added `test:canary:deadline` without changing Worker runtime behavior.

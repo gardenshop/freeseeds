@@ -1,5 +1,13 @@
 # Status
 
+## GFS-331 push and final release-gate verification (2026-10-30)
+
+- **GitHub PASS:** Existing authenticated Windows host session is `gardenshop` with repository push permission true. Fast-forward push advanced PR #11 branch from `9682e2a` to `64023f1c72b70786432b14fca0589d302b0d3498`; GitHub readback confirmed the controller, test, migration0043 and Admin source paths.
+- **Cloudflare/D1 PASS read-only:** `gisupp@gmail.com` is authenticated to Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Staging D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1` returned marker0043=1, index_count=10, `quick_check=ok`, and empty foreign-key results.
+- **Production deployment BLOCKED:** Wrangler lookups for configured production Workers `getfreeseeds-api` and `getfreeseeds-admin` both returned Cloudflare API10007 (`Worker does not exist on your account`). The prior recorded API/Admin versions and 100%/0% routing are retained as historical evidence, not freshly reverified in this context.
+- **Regression PASS:** Controller9/9 and targeted Admin/recovery/payment/COD56/56 pass. Full324/324, focused121/121, build/lint/audit0 and rollback4/4 remain valid; no source changed after the pushed commit.
+- **Release:** No new canary, traffic, migration, flag, Meta, customer, payment or message mutation occurred. Release remains NO-GO pending resource-name/account reconciliation and new scoped owner authorization.
+
 ## GFS-330 deadline-controller repair (2026-10-30)
 
 - **P1 PASS local:** Implemented `scripts/canary-deadline-controller.mjs`, isolated from Worker runtime. It uses `process.hrtime.bigint()` timing, a configurable early restore margin, bounded command/readback timeouts, exclusive lock protection, interruption compensation, immediate restore on monitor errors/5xx/deadline, and final verified 100%/0% routing.

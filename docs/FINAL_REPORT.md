@@ -1,5 +1,32 @@
 # Final Report
 
+## GFS-331 push and final D1 release gate (2026-10-30)
+
+### Synchronization
+
+- **PASS:** Authenticated Windows host GitHub identity `gardenshop` had repository push permission. PR #11 was advanced fast-forward only from `9682e2a` to `64023f1c72b70786432b14fca0589d302b0d3498`; remote readback confirmed the deadline controller, tests, migration0043 and Admin source paths.
+- **PASS read-only:** Cloudflare identity `gisupp@gmail.com` and Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` were verified. Staging D1 returned marker0043=1, ten indexes, `quick_check=ok`, and empty foreign-key results.
+
+### Release gate
+
+- **BLOCKED:** Wrangler deployment lookups for both configured production names, `getfreeseeds-api` and `getfreeseeds-admin`, returned API10007: `Worker does not exist on your account`. Therefore current production versions and traffic cannot be freshly asserted from this authenticated control plane; prior recorded API `b426ba47` / Admin `494a3dce` at 100% and candidates `6ef27f02` / `c2321eab` at 0% remain historical protection evidence only.
+- **PASS local:** Controller9/9 and targeted Admin/recovery/payment/COD56/56 pass. Prior full324/324, focused121/121, build/lint/audit0 and rollback4/4 remain valid because no source changed after the pushed commit.
+- **NO-GO:** No new canary, staging, traffic promotion, flag change, migration action, Meta action, customer test, payment action or message occurred. Existing GFS-328 authorization is not reused.
+
+### Completion and exact next action
+
+| Stage | Completion |
+|---|---:|
+| Source/controller | 100% |
+| GitHub synchronization | 100% |
+| Migration/integrity | 100% read-only verified |
+| Live Worker/version verification | BLOCKED |
+| New canary | 0% |
+| Full deployment | 0% |
+| 24h D1 savings | 0% claimed |
+
+Exact next action: owner reconciles the production Worker names/account scope so authenticated read-only deployment and traffic readback resolves API/Admin; then provides new scoped authorization naming candidate versions, exposure percentage, duration, hard deadline/margin, error/read thresholds and rollback/promotion limits. WhatsApp and recovery remain protected; no resend or customer mutation is authorized.
+
 ## GFS-330 deadline-controller implementation (2026-10-30)
 
 ### Result
