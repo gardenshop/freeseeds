@@ -4795,7 +4795,7 @@ The current event/contact plans scan their tables under migration0043. No produc
 - GFS-340: PASS for source/tests/Admin0%; NO-GO for promotion.
 
 Exact next authorization: approve a separately scoped Admin-only canary or 100% promotion with candidate/version, traffic, duration, error/latency/order/payment/reminder thresholds, rollback version, and confirmation that migration0044/API/flags/Meta/customer sends remain out of scope. Current public bot and +15/+210 recovery remain GO; five-stage Advance reminders remain OFF.
-\n+## GFS-343 final report — Admin analytics and conversations release (2026-10-30 UTC)
+## GFS-343 final report — Admin analytics and conversations release (2026-10-30 UTC)
 
 | Gate | Result | Evidence |
 |---|---|---|
@@ -4821,3 +4821,22 @@ One candidate analytics request returned rows_read 48,128; 9,157; 848; 48,156; 2
 - GFS-343: BLOCKED for promotion — candidate acceptance passed, but the live control-plane timeout forced verified rollback.
 
 **Operational decision:** public bot and +15/+210 recovery remain GO; five-stage Advance reminders, Automation V2, and utility templates remain OFF. Full Admin release is NO-GO. Next action is to prove a supported host-context timeout/readback repair and obtain fresh scoped authorization for one new bounded Admin canary; do not reuse this authorization.
+## GFS-344 final report — controller repair and safe canary gate (2026-10-30 UTC)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Timeout root cause/fix | PASS | GFS-343 deployment-status readback exceeded15s; repaired with explicit health, 30s bounded commands/readbacks, late-completion verification and lock retention |
+| Genuine 5xx monitoring | PASS read-only | Cloudflare GraphQL API94/0 errors and Admin22/0 errors, GraphQL errors0; no zero fabricated by adapter |
+| Fault tests | PASS | controller13/13, adapter6/6, observability3/3; full334/334; build/lint/audit0; rollback4/4 |
+| Admin canary | BLOCKED SAFELY | No exposure: host Admin /health returned302; authenticated Chrome returned200 but cannot be safely bridged into the host controller |
+| Final routing | PASS read-only | API b426ba47 100% / candidate0%; Admin 494a3dce 100% / candidate 19188b21 0% |
+| WhatsApp/API protection | PASS | No API, customer, order, payment, COD, Meta, D1, Queue, Cron, flag or reminder mutation |
+| Git synchronization | PASS | Remote SHA bd8e59e |
+
+### GFS-338–344 disposition
+
+- GFS-338 BLOCKED; GFS-339 PASS local; GFS-340 PASS source/staging; GFS-341 PASS local; GFS-342 PASS staging; GFS-343 BLOCKED by control-plane timeout; GFS-344 PASS for repair/tests but BLOCKED safely for live canary.
+
+### Remaining gate
+
+Completion: controller/source100%; tests100%; docs/synchronization pending final docs commit; migration preserved100%; live canary0%; full Admin deployment0%; 24-hour D1 savings0% measured. Exact next action: provide an official host-side authenticated Admin health path (or equivalent Cloudflare-supported continuous monitor), then obtain fresh scoped canary approval. No automatic promotion.

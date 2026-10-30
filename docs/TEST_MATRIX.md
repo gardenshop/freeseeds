@@ -2052,7 +2052,7 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 
 Measured read-only D1 shapes: today events2059/24692 rows/10.5666ms, contacts368/2004/1.4008ms, orders53/347/0.5633ms; 7d events11081/24692/12.0104ms, contacts1822/2004/1.1254ms, orders303/347/0.4167ms; 31d event read24677 rows. These are query measurements, not 24-hour savings.
 ## GFS-343 Admin-only release evidence (2026-10-30 UTC)
-\n+| Check | Result | Evidence |
+| Check | Result | Evidence |
 |---|---|---|
 | Controller adapter | PASS | Admin scope 10% test 6/6 |
 | Deadline controller | PASS local / FAIL live gate | Admin simulation 11/11; live gate failed closed on control-plane `command_timeout`; restoration verified |
@@ -2063,3 +2063,16 @@ Measured read-only D1 shapes: today events2059/24692 rows/10.5666ms, contacts368
 | Promotion/monitor | NOT RUN | All live gate conditions were not satisfied |
 
 Candidate analytics rows_read sample: 48,128 + 9,157 + 848 + 48,156 + 2,050 + 328 = 108,667 for one request. This is not a 24-hour saving claim; no latency field was returned.
+## GFS-344 controller and monitoring tests (2026-10-30 UTC)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Timeout/late completion | PASS | Controller fault tests cover command timeout, late remote rollback completion and bounded retry |
+| Health honesty | PASS | Missing/malformed metrics are UNKNOWN; adapter never emits fabricated 5xx zeroes |
+| Provider/HTTP health | PASS local | Genuine GraphQL metrics plus independent HTTP status required; 302 Admin health blocks exposure |
+| Rollback/lock | PASS | Failed/unverified rollback leaves the exclusive lock; interruption, overlap and failed rollback covered |
+| Focused tests | PASS | controller13/13, adapter6/6, observability3/3 |
+| Full quality | PASS | full334/334, build, lint, offline audit0, rollback4/4 |
+| GFS-344 live canary | BLOCKED SAFELY | No exposure because host Admin health was302; authenticated Chrome health200 could not be safely supplied to the host controller |
+
+Read-only monitoring sample: API GraphQL 94 requests/0 errors, Admin 22/0, GraphQL errors0; API HTTP200 in0.821s, Admin host HTTP302 in0.409s. No candidate rows_read or canary latency exists because no traffic was exposed.

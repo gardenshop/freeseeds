@@ -1572,3 +1572,8 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Accept candidate read-only acceptance, but reject promotion: the candidate passed feature checks while the live controller failed closed on a control-plane `command_timeout` before the authorized 10-minute cap.
 - Automatic restoration is authoritative: API `b426ba47` 100% / candidate 0%; Admin `494a3dce` 100% / candidate `19188b21` 0%. No retry, promotion, API deployment, migration, flag, customer, payment, or Meta action is permitted under this authorization.
 - The next release must prove a supported host-context command/readback timeout fix and obtain fresh scoped approval. Do not claim Admin 100% service or 15-minute post-promotion monitoring from this run.
+## GFS-344 decision (2026-10-30 UTC)
+
+- Accept the controller repair as PASS locally and push it, but keep the live canary BLOCKED. The host execution context cannot authenticate the Admin /health endpoint; treating its302 as healthy would violate the no-fabricated-health rule.
+- Do not use a browser-cookie copy, token extraction, bypass, workaround, or indirect traffic mutation. The authenticated Chrome check is valid evidence for manual acceptance only, not a safe continuous controller health source.
+- Keep API/Admin frozen at100%, candidates0%, +15/+210 recovery ON, five-stage/Automation/utility OFF. A new canary requires an official host-side authenticated health/metrics path and fresh scoped approval.

@@ -1570,3 +1570,10 @@ No secrets are stored in this registry.
 - **Release tooling:** remote SHA `10527d589ad8c5545a4a50be3c2704b951a0ce47`; controller logs contain no secrets or customer data.
 - **D1:** binding `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; migration0043 retained; 0044/0045 unapplied. Candidate analytics sample was 108,667 rows_read across six query shapes; not a daily-savings claim.
 - **Flags/policy:** +15/+210 recovery ON; five-stage Advance reminders, Automation V2, and utility templates OFF; no customer send or payment/Meta mutation.
+## GFS-344 verified controller resources (2026-10-30 UTC)
+
+- Identity: GitHub gardenshop; Cloudflare gisupp@gmail.com / account cb5066a6d71ecdee0bd7ed8aacb4d3c2; canonical GFS Meta only; Hoja/ThanNow isolated.
+- Source: controller/adapter/observability repair commit bd8e59e, remote-verified on PR #11.
+- Workers: API b426ba47 100% / 6ef27f02 0%; Admin 494a3dce 100% / 19188b21 0%; no mutation in GFS-344.
+- Monitoring: GraphQL 10-minute sample API94/0 errors, Admin22/0 errors, GraphQL errors0; API HTTP200; host Admin HTTP302; authenticated Chrome Admin health200.
+- Policy: +15/+210 recovery ON; five-stage Advance, Automation V2 and utility templates OFF; migration0043 retained; 0044/0045 unapplied.

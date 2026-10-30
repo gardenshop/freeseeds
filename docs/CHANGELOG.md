@@ -1428,3 +1428,8 @@
 - Added and tested Admin-only bounded canary support with configurable percentage, API-frozen guard, restoration margin, lock, timeout, and verified final readback. Pushed as `10527d589ad8c5545a4a50be3c2704b951a0ce47`.
 - Authorized Admin 10% candidate checks passed for analytics, CSV, conversations, Orders, payment configuration, and COD configuration. The controller then hit a host control-plane `command_timeout`; restoration was automatic and verified before the cap.
 - Final state remained frozen API/Admin 100%, candidates 0%. No customer, payment, Meta, migration, flag, or API mutation occurred; Admin 100% promotion was not attempted.
+## 2026-10-30 — GFS-344 release-controller repair
+
+- Repaired the Admin-only controller after GFS-343's deployment-status readback timeout: genuine HTTP/GraphQL health is mandatory, command/readback bounds are extended, late remote completion is verified before success, and an unverified rollback retains the lock.
+- Added observability and fault tests: controller13/13, adapter6/6, observability3/3, full334/334, build/lint/audit0, rollback4/4.
+- Host preflight correctly refused exposure because Admin HTTP health was302 without the authenticated Access session. No canary, promotion, customer/payment/Meta action, migration, or flag change occurred. Source is pushed at bd8e59e.
