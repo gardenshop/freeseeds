@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-341 conversation viewer assets (2026-10-30)
+
+- **Local source:** `apps/admin/src/conversations.ts`, Admin route wiring in `apps/admin/src/index.ts`, `tests/admin-conversations.test.ts`.
+- **Local proposal:** `migrations/0045_admin_message_history.sql`; separate from0044 and unapplied. No live D1 resource was written.
+- **Historical storage boundary:** `whatsapp_events` stores deduplicated provider metadata/status; `outbound_messages` stores delivery metadata. Neither is a transcript store. No raw IDs, payloads, customer data, secrets, payment references, or media were registered.
+- **Protected environment:** Existing verified Get Free Seeds/Cloudflare and canonical Meta boundaries remain unchanged; no dashboard mutation was performed in GFS-341. Hoja/ThanNow remain isolated.
+
 ## GFS-339 analytics evidence and local migration proposal (2026-10-30)
 
 - **Authorized D1 read-only:** Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, identity `gisupp@gmail.com`; analytics reconciliation returned `rows_written=0`.

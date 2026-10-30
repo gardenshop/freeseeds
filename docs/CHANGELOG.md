@@ -1,5 +1,11 @@
 # Changelog
 
+## GFS-341 customer conversation viewer (2026-10-30)
+
+- Added protected read-only Admin conversation list/detail APIs and mobile viewer with masked references, bounded pagination, linked order/payment/recovery state, and explicit legacy transcript-unavailable messaging.
+- Added local-only proposed migration0045 for future sanitized message history with idempotency indexes and monotonic provider status protection. It was not applied or activated.
+- Added 4 focused tests; full334/334, build and lint pass. No production or customer-facing mutation occurred.
+
 ## GFS-339 inbound analytics and abandoned checkout reporting (2026-10-30)
 
 - Added protected Admin inbound analytics with UTC presets, status filtering, aggregate CSV, event/contact/order/recovery metrics, conservative abandonment classes, definitions, and D1 read-cost metadata.

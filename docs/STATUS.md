@@ -1,5 +1,12 @@
 # Status
 
+## GFS-341 customer conversation viewer and message-history proposal (2026-10-30)
+
+- **Local implementation PASS:** Added protected read-only `/conversations`, `/api/conversations`, and paginated detail APIs. The UI masks customer references, links orders/payment state and +15/+210 timeline, and has no reply, send, reset, or status-changing control.
+- **Historical availability boundary PASS:** Existing storage contains WhatsApp event type/status and outbound delivery metadata, but no inbound/outbound message bodies or interactive labels. Legacy details are explicitly `LEGACY_METADATA_ONLY`; no transcript is invented. STATUS callbacks and CAPI remain excluded from customer message history.
+- **Future capture proposal:** Added local-only `migrations/0045_admin_message_history.sql` with bounded sanitized fields, unique provider/idempotency indexes, conversation-time index, and monotonic status trigger. It is separate from proposed0044 and unapplied; encryption/protected media, retention, access audit, and activation remain future authorization gates.
+- **Regression PASS:** Focused conversation tests4/4; full suite334/334; build/lint pass. No production deployment, D1 write, migration, Meta/customer/payment action, flag, traffic, or message send occurred. Frozen API/Admin and +15/+210 recovery remain unchanged; GFS-338 remains blocked.
+
 ## GFS-340 analytics accuracy and Admin-only 0% staging (2026-10-30)
 
 - **P0/P1 PASS:** Protected API `b426ba47` remains100%; Admin frozen `494a3dce` remains100%; API repair candidate remains0%; +15/+210 recovery policy is unchanged and five-stage Advance, Automation V2, and utility templates remain OFF. Migration0043 is intact; proposed0044 remains unapplied.

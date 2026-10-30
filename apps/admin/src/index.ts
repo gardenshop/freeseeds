@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import { canTransition, configuredPaymentMethodNames, codReferenceHmac, createMetaActivationService, createWhatsAppProvider, customerTransactionReferenceHash, getLatestOrderForWaId, isInsideWhatsAppServiceWindow, MetaActivationAction, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, hasPaymentMessagePlaceholders, isPaymentMethodComplete, isPaymentMethodLocaleComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, publishedWhatsAppContent, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, WhatsAppActionId, whatsAppActionIdsForTemplate, whatsAppActionLabel, WhatsAppContent, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
 import { analyticsCsv, AnalyticsInputError, parseAnalyticsFilters, readInboundAnalytics } from "./analytics";
+import { conversationPageHtml, ConversationInputError, parseConversationFilters, readConversation, readConversations } from "./conversations";
 
   type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_CAPI_ENABLED?: string; REFERENCE_REQUESTS_ENABLED?: string; PAYMENT_CHOICE_RECOVERY_ENABLED?: string; COD_REFERENCE_HMAC_KEY?: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
 const app = new Hono<Env>();
@@ -589,9 +590,26 @@ form.onsubmit=(event)=>{event.preventDefault();load()};const setRange=(daysBack)
 </script></body></html>`;
 }
 
-app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav><a href='/payment-settings'>Payment Settings</a> | <a href='/cod-settings'>COD Settings</a> | <a href='/payment-beneficiary-review'>Payment Verification</a> | <a href='/whatsapp-content'>WhatsApp Content</a> | <a href='/payment-reminders'>Payment Reminders</a> | <a href='/payment-amount'>Legacy Advance Amount</a> | <a href='/tariff'>Tariff Management</a> | <a href='/meta-activation'>Meta Activation</a> | <a href='/orders'>Orders</a> | <a href='/analytics'>Inbound Analytics</a> | <a href='/test-controls'>Test Controls</a> | Dashboard | Leads | Meta Instant Form | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
+app.get("/", (c) => c.html("<h1>Get Free Seeds Admin</h1><p>Payment review and fulfillment console.</p><nav><a href='/payment-settings'>Payment Settings</a> | <a href='/cod-settings'>COD Settings</a> | <a href='/payment-beneficiary-review'>Payment Verification</a> | <a href='/whatsapp-content'>WhatsApp Content</a> | <a href='/payment-reminders'>Payment Reminders</a> | <a href='/payment-amount'>Legacy Advance Amount</a> | <a href='/tariff'>Tariff Management</a> | <a href='/meta-activation'>Meta Activation</a> | <a href='/orders'>Orders</a> | <a href='/analytics'>Inbound Analytics</a> | <a href='/conversations'>Conversations</a> | <a href='/test-controls'>Test Controls</a> | Dashboard | Leads | Meta Instant Form | Paid Orders | Packing | Dispatch | Delivered | Cancelled | Customers | Meta CAPI | WhatsApp Status | Audit Log | Configuration Summary</nav>"));
 
 app.get("/analytics", (c) => c.html(analyticsPageHtml()));
+app.get("/conversations", (c) => c.html(conversationPageHtml()));
+
+async function conversationsResponse(c: AdminContext, detailId?: string) {
+  if (!c.env.DB) return c.json({ error: "CONVERSATIONS_UNAVAILABLE" }, 503);
+  try {
+    if (detailId !== undefined) return c.json(await readConversation(c.env.DB, detailId), 200, { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" });
+    const result = await readConversations(c.env.DB, parseConversationFilters({ q: c.req.query("q"), state: c.req.query("state"), paymentStatus: c.req.query("paymentStatus"), page: c.req.query("page"), pageSize: c.req.query("pageSize") }));
+    return c.json(result, 200, { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" });
+  } catch (error) {
+    if (error instanceof ConversationInputError) return c.json({ error: error.message }, error.message === "CONVERSATION_NOT_FOUND" ? 404 : 400);
+    if (isD1QuotaError(error)) return d1QuotaResponse(c, "CONVERSATIONS_UNAVAILABLE");
+    throw error;
+  }
+}
+
+app.get("/api/conversations", (c) => conversationsResponse(c));
+app.get("/api/conversations/:id", (c) => conversationsResponse(c, c.req.param("id")));
 
 async function analyticsResponse(c: AdminContext, exportResponse = false) {
   if (!c.env.DB) return c.json({ error: "ANALYTICS_UNAVAILABLE" }, 503);

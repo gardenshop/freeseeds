@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-341 conversation viewer (2026-10-30)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Admin auth and read-only routes | PASS | Existing global Admin authorization protects page and GET APIs; no write/reply/send/reset route |
+| Legacy transcript honesty | PASS | Synthetic legacy schema returns metadata-only messages and explicitly unavailable bodies; raw wa/provider identifiers absent |
+| Future history proposal | PASS | Synthetic migration fixture returns captured text/interactive fields; media is placeholder-only; status regression trigger tested |
+| Pagination/filter/privacy | PASS | Page size bounded to 50, parameterized search, masked customer reference, bounded orders/history |
+| Order/payment/recovery links | PASS | Synthetic order method/status and +15 stage exposed without changing state |
+| Focused tests | PASS | `tests/admin-conversations.test.ts` 4/4 |
+| Full regression/build/lint | PASS | 334/334; TypeScript build; ESLint |
+| Production migration/deployment | NOT RUN | Proposed0045 unapplied; no D1, Worker, Meta, customer, payment, flag, traffic, or reminder mutation |
+
 ## GFS-339 inbound analytics and abandonment (2026-10-30)
 
 | Check | Result | Evidence / boundary |

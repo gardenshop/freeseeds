@@ -1,5 +1,18 @@
 # Final Report
 
+## GFS-341 customer conversation viewer (2026-10-30)
+
+### Outcome
+
+Local source and tests PASS. Admin now has a protected read-only conversation viewer with bounded list/detail APIs, masked customer references, linked order/payment/COD state, +15/+210 timeline, and explicit historical-body availability. No production deployment, migration, message capture activation, customer send, Meta, payment, flag, traffic, or D1 mutation occurred.
+
+### Evidence and release boundary
+
+- Existing legacy storage does not contain historical message bodies or interactive labels. The viewer reports `LEGACY_METADATA_ONLY`; current inbound/outbound metadata is shown only as metadata, and STATUS/CAPI events are not treated as customer messages.
+- Proposed `0045_admin_message_history.sql` is additive and local only. It adds bounded sanitized future fields, unique provider/idempotency keys, indexed conversation time, and monotonic status protection. Encryption/protected media, retention, access audit, and activation require new owner authorization.
+- Focused4/4, full334/334, build PASS, lint PASS. Frozen API/Admin, +15/+210 recovery, five-stage/Automation/utility flags, payment/COD, webhook, Queue/DLQ, Cron, Meta, and existing orders were not changed.
+- Completion: source100% local, migration proposal100% local/0% applied, tests100%, production activation0%, historical transcript availability0% for legacy bodies. GO for local review; NO-GO for migration or message-history activation until separate scoped authorization.
+
 ## GFS-339 inbound analytics and abandoned checkout reporting (2026-10-30)
 
 ### Outcome

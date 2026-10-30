@@ -1,5 +1,12 @@
 # Decisions
 
+## GFS-341 conversation viewer decision (2026-10-30)
+
+- Keep the viewer Admin-only, GET-only, privacy-safe, and read-only. Search is limited to authorized references and never uses message bodies for unbounded scans.
+- Treat current message storage as metadata-only. Do not reconstruct historical transcripts from webhook event types, state, outbound kinds, or provider callbacks.
+- Keep proposed0045 separate from proposed0044 and unapplied. Any future capture must add protected/encrypted content handling, bounded retention, least-privilege access audit, idempotent inserts, monotonic provider status updates, and acknowledgement-safe no-resend behavior under a new scoped authorization.
+- Keep analytics aggregates and conversation history distinct; do not alter the active WhatsApp flow, payment/COD, signed webhook, Queue/DLQ, Cron, or +15/+210 recovery.
+
 ## GFS-339 analytics release decision (2026-10-30)
 
 - Keep the Admin dashboard aggregate-only and read-only. Do not expose identifiers or reconstruct historical funnel transitions that the schema does not store.

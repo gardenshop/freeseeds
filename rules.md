@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-341 customer conversation viewer (2026-10-30)
+
+- The new Admin `/conversations` page and GET APIs are protected by the existing Admin Access identity check, read-only, paginated, bounded, and privacy-safe. Customer WhatsApp IDs, provider IDs, raw payloads, payment references, credentials, and private media are not returned.
+- Legacy `whatsapp_events` and `outbound_messages` retain metadata but not message bodies. The viewer reports `LEGACY_METADATA_ONLY` and never reconstructs historical text or interactive labels. STATUS callbacks and CAPI events remain outside customer-inbound history.
+- Proposed `migrations/0045_admin_message_history.sql` is local and unapplied. It is additive, idempotency-indexed, status-monotonic, text-bounded, and requires separately authorized encrypted/protected capture, retention, access audit, and acknowledgement handling before activation.
+- Focused viewer tests pass4/4; full suite334/334; build and lint pass. No Worker, D1, migration, Meta, payment, customer, flag, traffic, Queue, Cron, or reminder mutation occurred. API/Admin production routing and +15/+210 recovery remain unchanged.
+
 ## GFS-340 analytics accuracy and Admin-only 0% staging (2026-10-30)
 
 - Corrected Admin analytics semantics: contacts are explicitly `SNAPSHOT_ESTIMATE`; conversion is submitted orders divided by distinct non-STATUS inbound messages, not unique-lead conversion; paid/fulfilled and COD lifecycle values are named separately; reminder `SENT`, `DELIVERED`, and `READ` are separate counters.
