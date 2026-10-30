@@ -14,7 +14,7 @@ Meta eligibility remains **UNVERIFIED**. The GFS-330 official-documentation resu
 
 ### C. Git and protected documentation
 
-PR #11 is `gardenshop/freeseeds`, branch `codex/gfs221-cod-compat-001`. Local commit `6b22c7254259ee5348b41012087191341a3b66b8` is one commit ahead of remote `9682e2a`. The non-force push attempt was denied before changing the ref. GFS-331 updates were made only to protected rules/status/decisions/changelog/registry/final-report/test records; no dirty root files were overwritten.
+PR #11 is `gardenshop/freeseeds`, branch `codex/gfs221-cod-compat-001`. Local commit `6b22c7254259ee5348b41012087191341a3b66b8` was the attempted push target; current local HEAD additionally contains blocker-record commit `4583200`, while remote remains `9682e2a`. The non-force push attempt was denied before changing the ref. GFS-331 updates were made only to protected rules/status/decisions/changelog/registry/final-report/test records; no dirty root files were overwritten.
 
 ### D. PUBLIC service and regression
 
