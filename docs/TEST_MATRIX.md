@@ -1,5 +1,22 @@
 # Test Matrix
 
+## GFS-330 deadline-controller verification (2026-10-30)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Monotonic absolute deadline | PASS | Controller uses injected monotonic clock; production implementation uses `process.hrtime.bigint()` and an early restore margin |
+| Bounded commands/readback | PASS | Route, poll, restore and final readback calls have independent command/poll budgets and abort signals |
+| Slow routing / timeout | PASS | Synthetic slow route and hanging command fail closed and attempt rollback |
+| Failed rollback | PASS | Synthetic restore failure returns `rollback_failed`; no success is reported |
+| Interruption | PASS | Synthetic abort restores with a separate compensation signal and verifies baseline routing |
+| 5xx / delayed routing | PASS | Provider 5xx restores immediately; candidate routing not observed before margin returns failure |
+| Overlap protection | PASS | Exclusive lock rejects the second run without invoking route or rollback commands |
+| Sanitized audit | PASS | Allowlisted event/timing/reason/code fields; no command, token, customer or provider payload fields |
+| Focused controller suite | PASS | 9/9 via `npm run test:canary:deadline` |
+| Full regression | PASS | 324/324; build, lint and offline audit 0 vulnerabilities |
+| Legacy rollback | PASS | 4/4 using clean `gfs273-v1` at exact `cf01f444` |
+| Live canary/deployment | NOT RUN | No new authorization; candidates remain 0%, frozen pair remains 100% |
+
 ## GFS-331 blocker verification (2026-10-30)
 
 | Check | Result | Evidence / boundary |

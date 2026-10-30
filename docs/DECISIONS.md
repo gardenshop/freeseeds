@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-10-30: implement local fail-closed canary deadline controller
+
+- Implement the GFS-328 timing repair as local release tooling only. Do not put deadline or polling logic in customer-facing Workers and do not rerun a canary in this task.
+- Use an absolute monotonic deadline with an early restoration margin, bounded route/monitor/readback operations, exclusive lock ownership, interruption-safe compensation, immediate restore on errors/5xx, and final verified baseline100%/candidate0% routing.
+- Treat a late route, delayed control-plane readback or failed rollback as a release failure. The controller must fail closed and expose the limitation rather than claim that a local timer guarantees platform exposure duration.
+- Keep live routing and customer safeguards unchanged: API/Admin 100%, candidates0%, migration0043 retained, +15/+210 recovery ON, five-stage Advance/Automation V2/utility OFF, and no Meta resend or customer mutation.
+
 ## 2026-10-30: GFS-331 preserve release while supported access remains blocked
 
 - Accept the GitHub identity and branch as correct, but keep commit `6b22c7254259ee5348b41012087191341a3b66b8` local until a write-enabled `gardenshop` integration is available. The supported fast-forward attempt was denied with `FORBIDDEN: Resource not accessible by integration`; do not retry with force, merge, alternate refs, or credentials.

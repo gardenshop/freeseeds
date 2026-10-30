@@ -1,5 +1,31 @@
 # Final Report
 
+## GFS-330 deadline-controller implementation (2026-10-30)
+
+### Result
+
+- **PASS local:** Added a local-only release controller and synthetic harness. It uses a monotonic absolute deadline, early restoration margin, bounded commands/readbacks, exclusive overlap lock, interruption-safe compensation, immediate rollback on timeout/5xx/monitor failure, and final verified baseline100%/candidate0% routing.
+- **PASS tests:** Controller scenarios 9/9; full suite 324/324; build PASS; lint PASS; offline audit 0 vulnerabilities; validated legacy rollback 4/4 against clean `D:\free seeds\gfs273-v1` at `cf01f444500415b1f22a64730674caca1c286006`; `git diff --check` PASS.
+- **FAIL-CLOSED boundary:** Synthetic slow routing, delayed routing, timeout and failed rollback never produce a success result. A monotonic local timer cannot prove exact provider/control-plane exposure; the controller requires final readback and returns failure if the cap cannot be verified.
+
+### Protected live state
+
+No live canary, Worker deployment, migration replay/removal, flag, traffic, Meta, payment, customer, message or D1 mutation occurred. The recorded state remains API `b426ba47` and Admin `494a3dce` at 100%, optimized candidates `6ef27f02`/`c2321eab` at 0%, migration0043 integrity-clean, +15/+210 ON, five-stage Advance/Automation V2/utility OFF, and public WhatsApp/recovery **GO** on frozen Workers.
+
+### GFS-330 gate and completion
+
+| Area | Result |
+|---|---|
+| Local source safeguard | PASS / 100% |
+| Local regression and rollback | PASS / 100% |
+| Migration | PASS retained / 100%; no new migration action |
+| New canary | NO-GO / 0%; no fresh scoped authorization |
+| Full deployment | NO-GO / 0% |
+| 24h/live D1 savings | 0% claimed; candidates remain0% |
+| Meta 500 attribution | Deferred; prior aggregate-only, nonurgent classification retained |
+
+Next action is one new scoped owner authorization naming the candidate versions, exposure percentage/window, hard deadline/margin, authenticated Admin checks, live `meta.rows_read`/latency thresholds and immediate rollback authority. Until then, keep the frozen pair at 100%, candidates at 0%, and do not resend or mutate customer state.
+
 ## GFS-331 remaining blocker resolution (2026-10-30)
 
 ### A. Previous tasks

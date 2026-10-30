@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-330 deadline-controller evidence (2026-10-30)
+
+- **Local source:** `scripts/canary-deadline-controller.mjs`; local-only release tooling, not imported by API/Admin Workers. Synthetic coverage is `scripts/test-canary-deadline-controller.mjs`; package command is `test:canary:deadline`.
+- **Safety behavior:** monotonic absolute deadline, early restore margin, bounded route/monitor/restore calls, exclusive lock, interruption compensation, fail-closed 5xx/delayed-routing handling and final baseline100%/candidate0% verification.
+- **Evidence:** focused controller 9/9; full 324/324; build/lint PASS; offline audit 0 vulnerabilities; legacy rollback4/4 with clean `D:\free seeds\gfs273-v1` at `cf01f444500415b1f22a64730674caca1c286006`; diff check PASS.
+- **External boundary:** no new Cloudflare/Meta/D1/GitHub mutation was performed for this implementation. Frozen versions, migration0043 integrity, recovery flags, new-number lock and Hoja isolation remain as previously registered. Live `rows_read`, strict platform exposure and promotion remain unmeasured/NO-GO.
+
 ## GFS-331 remaining blocker resolution (2026-10-30)
 
 - **GitHub:** PR #11 and branch `codex/gfs221-cod-compat-001` resolve to `gardenshop/freeseeds`; remote branch readback remains `9682e2a`. Local commit `6b22c7254259ee5348b41012087191341a3b66b8` was the attempted push target; current local HEAD additionally contains `4583200`. Supported `update_ref` with `force=false` and expected remote SHA was denied with `Resource not accessible by integration`; no ref changed.

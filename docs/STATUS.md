@@ -1,5 +1,13 @@
 # Status
 
+## GFS-330 deadline-controller repair (2026-10-30)
+
+- **P1 PASS local:** Implemented `scripts/canary-deadline-controller.mjs`, isolated from Worker runtime. It uses `process.hrtime.bigint()` timing, a configurable early restore margin, bounded command/readback timeouts, exclusive lock protection, interruption compensation, immediate restore on monitor errors/5xx/deadline, and final verified 100%/0% routing.
+- **P1/P3 PASS synthetic:** `npm run test:canary:deadline` passes 9/9, covering normal completion, slow routing, timeout, failed rollback, interruption, 5xx, delayed routing, overlap and audit sanitization. Failed restoration or late final readback returns fail-closed status; the harness never claims strict compliance from a timer alone.
+- **P3 PASS:** Full `npm test` is 324/324; build and lint pass; offline audit reports 0 vulnerabilities; `npm run test:rollback:v1` is 4/4 against clean detached `D:\free seeds\gfs273-v1` at `cf01f444500415b1f22a64730674caca1c286006`. `git diff --check` passes.
+- **P0/P4 unchanged:** No live canary, migration, Worker deployment, traffic, flag, Meta, customer, payment or message mutation occurred. Recorded frozen state remains API `b426ba47`/Admin `494a3dce` at 100%, candidates `6ef27f02`/`c2321eab` at 0%, +15/+210 ON, five-stage Advance/Automation V2/utility OFF, and migration0043 integrity-clean.
+- **Release boundary:** The controller is release-ready locally, but strict platform cap compliance, live `meta.rows_read` savings, request-level Meta 500 attribution and any promotion remain unverified/NO-GO without new scoped owner authorization.
+
 ## GFS-331 remaining blocker resolution (2026-10-30)
 
 - **GitHub identity PASS / push BLOCKED:** PR #11 and branch `codex/gfs221-cod-compat-001` were read-only verified as `gardenshop/freeseeds`; remote head is still `9682e2a`. The attempted docs commit `6b22c7254259ee5348b41012087191341a3b66b8` was one fast-forward ahead at push time; current local HEAD additionally contains blocker record `4583200`. Supported GitHub MCP `update_ref` was attempted with `force=false` and the exact expected SHA, but returned `FORBIDDEN: Resource not accessible by integration`. No remote ref changed.

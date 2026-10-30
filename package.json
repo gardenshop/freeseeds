@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc --noEmit",
     "test": "vitest run",
+    "test:canary:deadline": "node --test scripts/test-canary-deadline-controller.mjs",
     "test:rollback:v1": "node --test scripts/test-v1-cod-rollback.mjs",
     "test:watch": "vitest",
     "lint": "eslint .",

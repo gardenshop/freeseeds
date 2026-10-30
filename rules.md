@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-330 canary deadline controller implementation (2026-10-30)
+
+- Added only a local release-controller module and synthetic Node test harness under `scripts/`; no customer-facing Worker, Cloudflare, D1, Meta, flag, traffic, payment, Queue, Cron or reminder code was changed.
+- The controller uses a monotonic absolute deadline, restores before the owner cap by a safety margin, bounds route/readback/poll commands, fails closed on timeout/5xx/interruption/overlap, and requires a final baseline100%/candidate0% readback. A failed or unverified rollback is an explicit failure; no timer-only strict-compliance claim is permitted.
+- The lock is exclusive and interruption-safe: a live overlap is rejected; an interrupted lock is not silently removed. Audit events are allowlisted and sanitized to timing/reason/code fields only. Rollback ignores the cancelled monitoring signal so an interruption cannot cancel compensation.
+- Synthetic deadline suite passes 9/9: normal restore, slow routing, command timeout, failed rollback, interruption, provider 5xx, delayed routing, overlap and sanitized audit. Full suite remains 324/324; build, lint and offline audit remain clean; validated legacy rollback is 4/4 against `cf01f444`.
+- No live canary was rerun. Frozen API/Admin, candidates0%, migration0043 integrity, +15/+210 recovery, payment/COD, signed webhook, Queue/DLQ, new-number lock and Hoja zero-connection remain binding. Exact platform exposure compliance remains unproven until a newly authorized live run uses this controller and readback.
+
 ## GFS-331 remaining blocker resolution (2026-10-30)
 
 - GitHub identity was read-only verified against `gardenshop/freeseeds` PR #11 and branch `codex/gfs221-cod-compat-001`; remote head remained `9682e2a` before and after the supported push attempt. The exact local commit `6b22c7254259ee5348b41012087191341a3b66b8` is a direct fast-forward candidate, but GitHub MCP `update_ref` returned `FORBIDDEN: Resource not accessible by integration`. No force-push, merge, unrelated ref, or credential exposure occurred.

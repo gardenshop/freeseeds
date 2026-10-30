@@ -1,5 +1,12 @@
 # Changelog
 
+## GFS-330 deadline-controller implementation (2026-10-30)
+
+- Added local-only `scripts/canary-deadline-controller.mjs` and its 9-scenario synthetic test harness; added `test:canary:deadline` without changing Worker runtime behavior.
+- Verified monotonic deadline, early restore, bounded commands/readbacks, overlap/interruption protection, immediate rollback, 5xx/delayed-routing fail-closed behavior, final routing readback and sanitized audit output.
+- Passed focused9/9, full324/324, build, lint, offline audit0 and legacy rollback4/4. No live canary, deployment, migration, flag, Meta, customer, payment or message mutation occurred.
+- Kept live-savings and strict platform-cap claims unmade; candidates remain0% pending new scoped owner authorization.
+
 ## GFS-331 (2026-10-30)
 
 - Reverified PR #11 identity and branch through supported GitHub MCP. Attempted the authorized non-force fast-forward of local commit `6b22c7254259ee5348b41012087191341a3b66b8`; GitHub denied it with `Resource not accessible by integration`, and branch readback confirmed no remote change.
