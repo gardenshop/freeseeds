@@ -8,6 +8,7 @@
 - **Root cause:** API10007 applies to configured `getfreeseeds-api` and `getfreeseeds-admin`, which are absent from the account. Actual scripts are `getfreeseeds-api-staging` and `getfreeseeds-admin-staging`, dashboard `Production`, workers.dev-only, with no custom routes. This is understood without renaming or redeploying.
 - **Actual routing:** API `b426ba47` 100% / `6ef27f02` 0% / rollback `9af8991d`; Admin `494a3dce` 100% / `c2321eab` 0% / rollback `76e33a3d`. V2 scripts have no active route. These values were read-only verified on actual names.
 - **Protected state:** +15/+210 recovery ON; five-stage Advance, Automation V2 and utility templates OFF; D1, Queue/DLQ, Cron, signed webhook, payment/COD and WhatsApp flow unchanged. No production, Meta, customer, payment, flag, route or migration mutation occurred.
+- **Health read-only:** The displayed 24-hour dashboard aggregate shows API about 11.28k invocations/1 error and Admin 250 frozen-version plus 14 candidate-version invocations/zero errors for both. Logs/Traces are disabled; this is not request-level or customer-impact attribution.
 
 ### Gate and evidence
 

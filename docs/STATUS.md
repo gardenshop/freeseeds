@@ -6,6 +6,7 @@
 - **10007 root cause PASS:** `getfreeseeds-api` and `getfreeseeds-admin` are absent. Actual scripts are `getfreeseeds-api-staging` and `getfreeseeds-admin-staging`, dashboard `Production`, workers.dev-only with no custom route. This is a configured-name/resource mismatch, not an authenticated-account failure.
 - **Routing PASS read-only:** API `b426ba47` 100% / candidate `6ef27f02` 0%; Admin `494a3dce` 100% / candidate `c2321eab` 0%. Rollbacks `9af8991d` and `76e33a3d` remain available. V2 scripts have no active route. No mutation occurred.
 - **Topology/flags PASS read-only:** API owns minute Cron, staging D1, R2 and Queue consumer; Admin has no Cron/consumer. +15/+210 recovery is ON; five-stage Advance, Automation V2 and utility templates are OFF. Payment, COD, webhook, Queue/DLQ and customer-state protections remain unchanged.
+- **Health read-only:** Current dashboard aggregate shows API about 11.28k invocations and 1 error in the displayed 24-hour period; Admin shows 250 frozen-version and 14 candidate-version invocations with zero errors for both. Worker Logs/Traces are disabled, so no request-level attribution is claimed.
 - **Release NO-GO:** No new canary or deployment is authorized. Owner must approve the discovered names and issue one new scoped authorization with versions, exposure/window, hard deadline/margin, thresholds, final readback and rollback/promotion limits.
 
 ## GFS-331 push and final release-gate verification (2026-10-30)
