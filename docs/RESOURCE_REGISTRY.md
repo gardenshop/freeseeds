@@ -1577,3 +1577,11 @@ No secrets are stored in this registry.
 - Workers: API b426ba47 100% / 6ef27f02 0%; Admin 494a3dce 100% / 19188b21 0%; no mutation in GFS-344.
 - Monitoring: GraphQL 10-minute sample API94/0 errors, Admin22/0 errors, GraphQL errors0; API HTTP200; host Admin HTTP302; authenticated Chrome Admin health200.
 - Policy: +15/+210 recovery ON; five-stage Advance, Automation V2 and utility templates OFF; migration0043 retained; 0044/0045 unapplied.
+
+## GFS-345 verified decline-audit resources (2026-10-30 UTC / PKT)
+
+- **Identities:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / Get Free Seeds; canonical GFS Meta Ads Manager read-only session; Hoja/ThanNow isolated.
+- **Workers:** API `b426ba47` 100% / `6ef27f02` 0%; Admin `494a3dce` 100% / `19188b21` 0%; no GFS-345 deployment or traffic mutation.
+- **D1:** UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; migration0043 marker and ten indexes; quick-check ok; FK empty; 0044/0045 unapplied.
+- **Measured:** first abnormal interval 17:30Z/22:30 PKT; main/late inbound and orders 874/30 then 90/2 on 30-Oct; prior-seven-day exact-window aggregate 1,727/43 then 282/10. No sender IDs, raw payloads, or customer data recorded.
+- **Telemetry/policy:** Cloudflare API 3,131/0 and 401/0 errors; Admin 155/0 and 155/0; GraphQL errors0; Admin/D1 full-date parity68/68. +15/+210 ON; five-stage Advance, Automation V2, utility templates OFF; no new Admin canary.

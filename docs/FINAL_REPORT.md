@@ -4840,3 +4840,61 @@ One candidate analytics request returned rows_read 48,128; 9,157; 848; 48,156; 2
 ### Remaining gate
 
 Completion: controller/source100%; tests100%; docs/synchronization pending final docs commit; migration preserved100%; live canary0%; full Admin deployment0%; 24-hour D1 savings0% measured. Exact next action: provide an official host-side authenticated Admin health path (or equivalent Cloudflare-supported continuous monitor), then obtain fresh scoped canary approval. No automatic promotion.
+
+## GFS-345 final report - evening order decline (2026-10-30 UTC / PKT)
+
+### 15-minute target funnel
+
+| UTC / PKT | Inbound | Contact snapshot | New-conversation snapshot | Orders |
+|---|---:|---:|---:|---:|
+| 14:00 / 19:00 | 34 | 6 | 10 | 0 |
+| 14:15 / 19:15 | 40 | 9 | 5 | 1 |
+| 14:30 / 19:30 | 54 | 10 | 10 | 2 |
+| 14:45 / 19:45 | 67 | 9 | 10 | 2 |
+| 15:00 / 20:00 | 43 | 9 | 9 | 1 |
+| 15:15 / 20:15 | 140 | 12 | 13 | 6 |
+| 15:30 / 20:30 | 64 | 16 | 10 | 1 |
+| 15:45 / 20:45 | 53 | 11 | 11 | 1 |
+| 16:00 / 21:00 | 65 | 10 | 11 | 2 |
+| 16:15 / 21:15 | 71 | 11 | 7 | 5 |
+| 16:30 / 21:30 | 42 | 9 | 9 | 1 |
+| 16:45 / 21:45 | 33 | 6 | 8 | 0 |
+| 17:00 / 22:00 | 101 | 11 | 11 | 3 |
+| 17:15 / 22:15 | 67 | 9 | 3 | 5 |
+| **17:30 / 22:30** | **29** | **3** | **4** | **1** |
+| 17:45 / 22:45 | 24 | 7 | 5 | 0 |
+| 18:00 / 23:00 | 9 | 3 | 4 | 0 |
+| 18:15 / 23:15 | 28 | 5 | 3 | 1 |
+
+Inbound excludes STATUS callbacks. Contact values are snapshot estimates because `whatsapp_events` has no sender ID. Payment-choice rows were only SENT/DELIVERED/READ; none were FAILED.
+
+### Same-hour comparison
+
+| Date | 19:00–22:30 PKT inbound/orders | Rate | 22:30–23:30 PKT inbound/orders | Rate |
+|---|---:|---:|---:|---:|
+| 23-Oct | 30 / 1 | 3.33% | 17 / 1 | 5.88% |
+| 24-Oct | 2 / 0 | 0% | 0 / 0 | n/a |
+| 25-Oct | 0 / 0 | n/a | 0 / 0 | n/a |
+| 26-Oct | 0 / 0 | n/a | 0 / 0 | n/a |
+| 27-Oct | 166 / 1 | 0.60% | 4 / 0 | 0% |
+| 28-Oct | 725 / 21 | 2.90% | 189 / 7 | 3.70% |
+| 29-Oct | 804 / 20 | 2.49% | 72 / 2 | 2.78% |
+| **30-Oct** | **874 / 30** | **3.43%** | **90 / 2** | **2.22%** |
+
+Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) after. These are not unique-lead conversions.
+
+### Root-cause and protected-state findings
+
+- First abnormal interval: 17:30Z/22:30 PKT, where inbound fell 67→29 and orders 5→1. A (inbound/acquisition decline) is the leading measured explanation, but advertising causation is unverified. B, D, and a Worker/D1 failure are not supported.
+- Cloudflare Workers Analytics: API 3,131 requests/0 errors before 17:30Z and 401/0 after; Admin 155/0 and 155/0; GraphQL errors0. One API exception was in the prior-day late comparison only.
+- D1/Admin parity: 68 orders on the full date in both read-only D1 and authenticated Admin. Migration0043 and ten indexes present; 0044/0045 absent; quick-check ok; FK empty. No saved-but-undisplayed order evidence.
+- Deployment timeline: Admin 0%-traffic upload 17:47Z; GFS-343 10%/restore 18:01Z/18:07Z, after the break. API `b426ba47` and Admin `494a3dce` remain 100%; candidates 0%; +15/+210 ON; five-stage Advance, Automation V2, utility templates OFF.
+- Meta Ads Manager showed active campaign/day delivery and aggregate messaging activity, but hourly spend/impressions/CPM/clicks and verified reporting timezone were unavailable. Meta attribution is BLOCKED; no ad edit occurred.
+
+### GFS-344/345 status and next action
+
+- GFS-344: PASS controller repair/tests; BLOCKED safely for live Admin canary.
+- GFS-345: PASS read-only funnel/telemetry correlation; Meta hourly attribution BLOCKED; no source defect/fix required; no live mutation.
+- Completion: evidence/source decision100%; D1/Worker correlation100%; Meta hourly attribution60%; source repair100% (not required); deployment/canary0% (out of scope); 24-hour causal proof0%.
+- GO: frozen public bot and +15/+210 recovery. NO-GO: new canary, ad edit, production deployment, customer send, or payment/flag change.
+- Exact next action: obtain an owner-authorized Meta Ads Reporting export with account timezone and hourly delivery metrics for 14:00–18:30Z, then compare it to this D1 break. Do not resend or change ads based on this audit alone.

@@ -2019,3 +2019,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - P3 BLOCKED SAFELY: No traffic was exposed. Host API health is200, host Admin health is302, authenticated Chrome Admin health is200. The controller has no safe supported way to use the browser's Access session, so it correctly refuses before mutation.
 - P4 NO-GO: No GFS-344 canary, promotion, customer/payment/Meta action, migration, flag, or reminder change occurred. Exact next action is a supported authenticated host-side Admin health bridge or equivalent official monitoring path, followed by fresh owner approval; do not bypass Access or reuse the authorization.
 - Remote: bd8e59e is pushed to PR #11; final live routing remains API/Admin100% with candidates0%.
+
+## GFS-345 evening order-decline audit (2026-10-30 UTC / PKT)
+
+- **PASS read-only:** identities, frozen routing, migration0043 marker/ten indexes, 0044/0045 absence, D1 quick/FK integrity, and unchanged +15/+210 / five-stage-off policy verified.
+- **Funnel:** 30-Oct 19:00–22:30 PKT = 874 inbound, 127 new-conversation snapshots, 138 unique-contact snapshots, 30 orders (3.43%); 22:30–23:30 = 90, 16, 18, 2 (2.22%). First abnormal bucket is 17:30Z/22:30 PKT. Prior-seven-day exact-window aggregate is 1,727/43 then 282/10.
+- **Reliability:** target events/payment-choice rows were normal RECEIVED/SENT/DELIVERED/READ states; no failed webhook, rate-limit action, WhatsApp outbox failure, or recovery-stage failure. Cloudflare API 3,131/0 then 401/0; Admin 155/0 then 155/0; GraphQL errors0. D1/Admin full-date order parity 68/68.
+- **Correlation:** 0%-traffic Admin upload 17:47Z and GFS-343 10%/restore 18:01Z/18:07Z occurred after the break; API remained frozen. Meta read-only view showed active campaign/day delivery, but hourly delivery/timezone evidence was unavailable, so Meta attribution is BLOCKED.
+- **Disposition:** inbound/acquisition decline is the leading explanation; no source defect was proven and no repair, deploy, canary, D1 write, ad edit, customer, payment, Meta, or flag mutation occurred. Frozen bot/recovery GO; new canary NO-GO.

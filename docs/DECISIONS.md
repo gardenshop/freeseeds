@@ -1577,3 +1577,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Accept the controller repair as PASS locally and push it, but keep the live canary BLOCKED. The host execution context cannot authenticate the Admin /health endpoint; treating its302 as healthy would violate the no-fabricated-health rule.
 - Do not use a browser-cookie copy, token extraction, bypass, workaround, or indirect traffic mutation. The authenticated Chrome check is valid evidence for manual acceptance only, not a safe continuous controller health source.
 - Keep API/Admin frozen at100%, candidates0%, +15/+210 recovery ON, five-stage/Automation/utility OFF. A new canary requires an official host-side authenticated health/metrics path and fresh scoped approval.
+
+## GFS-345 decision (2026-10-30 UTC / PKT)
+
+- Classify the decline as an inbound-volume break beginning 17:30Z/22:30 PKT; acquisition/advertising is the leading hypothesis, not a proven Meta cause.
+- Do not blame D1, Admin, Worker errors, rate limiting, webhook rejection, payment-choice delivery, Queue, Cron, or recovery: read-only evidence does not support those causes and Admin/D1 full-date counts are equal at 68.
+- Meta hourly attribution is BLOCKED because the authenticated report exposed active campaign/day aggregates but not the required hourly delivery fields or verified reporting timezone. Do not edit ads or infer spend changes.
+- No source repair is justified. Keep API `b426ba47` and Admin `494a3dce` at100%, candidates0%, migration0043 intact, 0044/0045 unapplied, and do not retry an Admin canary under GFS-345.

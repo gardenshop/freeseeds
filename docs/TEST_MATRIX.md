@@ -2076,3 +2076,18 @@ Candidate analytics rows_read sample: 48,128 + 9,157 + 848 + 48,156 + 2,050 + 32
 | GFS-344 live canary | BLOCKED SAFELY | No exposure because host Admin health was302; authenticated Chrome health200 could not be safely supplied to the host controller |
 
 Read-only monitoring sample: API GraphQL 94 requests/0 errors, Admin 22/0, GraphQL errors0; API HTTP200 in0.821s, Admin host HTTP302 in0.409s. No candidate rows_read or canary latency exists because no traffic was exposed.
+
+## GFS-345 decline-audit matrix (read-only)
+
+| Check | Result | Evidence |
+|---|---|---|
+| 15-minute inbound/order break | PASS | First abnormal bucket 17:30Z: inbound 67→29 and orders 5→1 |
+| Provider/webhook/payment-choice failure | PASS | Normal RECEIVED/SENT/DELIVERED/READ states; no target failure rows |
+| API/Admin Worker errors | PASS | API 3,131/0 then 401/0; Admin 155/0 then 155/0; GraphQL errors0 |
+| Queue/Cron/recovery safety | PASS | No WhatsApp outbox or recovery-stage failure; no writes |
+| Admin visibility parity | PASS | D1 full-date orders 68 equals authenticated Admin count 68 |
+| D1 integrity/migrations | PASS | 0043 + ten indexes; 0044/0045 absent; quick-check ok; FK empty |
+| Meta hourly attribution | BLOCKED | Active campaign/day aggregate visible; hourly fields/timezone unavailable |
+| Source repair | NOT REQUIRED | No code defect or runtime cause proven |
+
+Investigation query costs only (not production savings): representative `rows_read` event 27,411; order 442; same-hour event 31,339; same-hour order 582; contact snapshot 5,087; payment-choice 335; recovery 227. No D1 writes.

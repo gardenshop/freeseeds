@@ -1433,3 +1433,9 @@
 - Repaired the Admin-only controller after GFS-343's deployment-status readback timeout: genuine HTTP/GraphQL health is mandatory, command/readback bounds are extended, late remote completion is verified before success, and an unverified rollback retains the lock.
 - Added observability and fault tests: controller13/13, adapter6/6, observability3/3, full334/334, build/lint/audit0, rollback4/4.
 - Host preflight correctly refused exposure because Admin HTTP health was302 without the authenticated Access session. No canary, promotion, customer/payment/Meta action, migration, or flag change occurred. Source is pushed at bd8e59e.
+
+## 2026-10-30 - GFS-345 evening order-decline audit
+
+- Added read-only D1/Cloudflare/Meta correlation evidence. The first abnormal bucket was 17:30Z/22:30 PKT, where inbound events and orders fell together; no webhook, payment-choice, Queue/Cron, Worker, D1, or Admin-display defect was proven.
+- Verified D1/Admin full-date parity 68/68, migration0043 plus ten indexes, quick-check/FK integrity, frozen Worker routing and unchanged reminder policy. No source repair, deployment, canary, D1 write, ad edit, customer send, payment, or flag mutation occurred.
+- Meta hourly attribution remains blocked by unavailable hourly report fields/timezone; active campaign/day delivery is not causal proof.
