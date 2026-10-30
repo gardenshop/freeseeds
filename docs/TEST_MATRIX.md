@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-337 payment-choice incident and acknowledgement persistence
+
+| Check | Result | Evidence |
+|---|---|---|
+| Frozen routing/flags | PASS read-only | API/Admin100%, candidates0%; +15/+210 ON; five-stage/automation/utility OFF |
+| Reported saved order | PASS delivery | `PAYMENT_METHOD`; original choice READ/provider-backed; +15 DELIVERED; no selection callback |
+| Newest no-method cohort | PASS bounded | 30/30 original choices accepted; 0 failed/missing/unresolved |
+| Frozen-version choice health | PASS bounded | 150/150 provider-backed: READ142, DELIVERED8 |
+| Provider success + transient D1 ack failure | PASS local | acknowledgement retry reaches SENT; conversation preserved; one send |
+| Provider success + persistent D1 ack failure | PASS local | three bounded retries; fail-closed SENDING marker; no rollback or duplicate |
+| Existing protected journey | PASS | full326/326 covers send failure, callback replay, Advance/COD PKR125, recovery, receipts and PAID guards |
+| Safety/integrity | PASS read-only | overdue eligible recovery0; duplicate recovery0; false PAID0; malformed COD0; quick_check ok |
+| Build/security/rollback | PASS | build, lint, offline audit0, rollback4/4, diff check |
+| Production repair deployment | NOT RUN | Separate scoped authorization required |
+
 ## GFS-336 benchmark validity and corrected A/B (2026-10-30)
 
 | Check | Result | Evidence / boundary |

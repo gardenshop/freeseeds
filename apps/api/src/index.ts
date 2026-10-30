@@ -285,15 +285,25 @@ async function sendConversationReply(db: D1Database, provider: ReturnType<typeof
   }
   const claim = await db.prepare("UPDATE outbound_messages SET status='SENDING',attempt_count=attempt_count+1,updated_at=? WHERE idempotency_key=? AND provider_message_id IS NULL AND status IN ('PENDING','FAILED','RETRY')").bind(now, key).run();
   if (!claim.meta.changes) return { sent: false };
+  let sent: { providerMessageId: string };
   try {
-    const sent = options.flow ? await provider.sendFlow(to, options.flow.id, options.flow.token) : options.list ? await provider.sendList(to, body, options.list.buttonText, options.list.rows, options.image) : options.buttons?.length ? await provider.sendInteractive(to, body, options.buttons, options.image) : options.image ? await provider.sendImage(to, body, options.image) : await provider.sendText(to, body);
-    await db.prepare("UPDATE outbound_messages SET provider_message_id=?,status='SENT',updated_at=? WHERE idempotency_key=?").bind(sent.providerMessageId, new Date().toISOString(), key).run();
-    return { sent: true, messageId: sent.providerMessageId };
+    sent = options.flow ? await provider.sendFlow(to, options.flow.id, options.flow.token) : options.list ? await provider.sendList(to, body, options.list.buttonText, options.list.rows, options.image) : options.buttons?.length ? await provider.sendInteractive(to, body, options.buttons, options.image) : options.image ? await provider.sendImage(to, body, options.image) : await provider.sendText(to, body);
   } catch (error) {
     const safe = error instanceof Error ? error.message.slice(0, 160) : "META_CONVERSATION_REPLY_FAILED";
-    await db.prepare("UPDATE outbound_messages SET status='FAILED',last_error=?,updated_at=? WHERE idempotency_key=?").bind(safe, new Date().toISOString(), key).run();
+    try { await db.prepare("UPDATE outbound_messages SET status='FAILED',last_error=?,updated_at=? WHERE idempotency_key=?").bind(safe, new Date().toISOString(), key).run(); } catch { /* The provider failure remains safe to retry from the prior conversation state. */ }
     return { sent: false };
   }
+  // Provider acceptance is the irreversible boundary. Retry only its D1
+  // acknowledgement; never classify an accepted send as failed or resend it.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const saved = await db.prepare("UPDATE outbound_messages SET provider_message_id=?,status='SENT',last_error=NULL,updated_at=? WHERE idempotency_key=?").bind(sent.providerMessageId, new Date().toISOString(), key).run();
+      if (saved.meta.changes) return { sent: true, messageId: sent.providerMessageId };
+      const current = await db.prepare("SELECT provider_message_id FROM outbound_messages WHERE idempotency_key=?").bind(key).first<{ provider_message_id: string | null }>();
+      if (current?.provider_message_id === sent.providerMessageId) return { sent: true, messageId: sent.providerMessageId };
+    } catch { /* bounded retry below */ }
+  }
+  return { sent: true, messageId: sent.providerMessageId };
 }
 
 async function saveCustomerTransactionReference(db: D1Database, waId: string, orderId: string, submitted: unknown, inboundId: string): Promise<"SAVED" | "ALREADY_SAVED" | "INVALID_REFERENCE" | "REFERENCE_ALREADY_SAVED" | "REFERENCE_DUPLICATE" | "PAYMENT_NOT_IN_REVIEW"> {

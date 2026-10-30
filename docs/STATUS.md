@@ -1,5 +1,14 @@
 # Status
 
+## GFS-337 saved-order/payment-choice incident (2026-10-30)
+
+- **P0 PASS read-only:** Correct Cloudflare identity/account; API `b426ba47`100% / candidate `6ef27f02`0%; Admin `494a3dce`100% / candidate `c2321eab`0%. +15/+210 recovery ON; five-stage Advance, Automation V2 and utility templates OFF. Marker0043=1, ten indexes and `quick_check=ok`. No live mutation.
+- **Reported order PASS delivery / customer no-response:** Submission audit1, `PAYMENT_METHOD`, original choice `READ` with provider evidence, +15 `DELIVERED`, +210 pending, method/COD callback0. `NOT_SENT` payment instructions are normal because no method was selected.
+- **Bounded cohort PASS:** newest30 no-method orders have original choice accepted30, failed0, missing0, unresolved0. Since frozen API upload: `PAYMENT_CHOICE` READ142/DELIVERED8, all150 provider-backed. Current safety: overdue eligible recovery0, duplicate recovery sends0, false PAID0, malformed COD quote0.
+- **Traffic comparison:** last24h versus prior24h: inbound2438/3830, submitted orders55/108, accepted choices79/109, failed choices0/0, Advance selections9/20, COD confirmations35/55, created orders still no-method14/32. Volume declined, but choice delivery did not fail; no causal acquisition or customer-flow claim is made.
+- **Proven local defect repaired:** provider acceptance and its D1 status write were in one catch block. A synthetic post-acceptance D1 failure rolled back to REVIEW. Provider success is now irreversible, acknowledgement persistence retries three times, and persistent write failure remains fail-closed without duplicate send.
+- **Tests PASS:** acknowledgement-focused4/4, full326/326, build/lint, offline audit0 and rollback4/4. Source is not deployed; production remains frozen. GO public bot/recovery on current baseline; NO-GO repair deployment without separate authorization.
+
 ## GFS-336 reliable stress correction and D1 regression ruling (2026-10-30)
 
 - **Harness defect proven:** GFS-335 measured completed work over completion time, so a one-request target1 run could report 10.89 RPS. Its fixture also omitted real baseline indexes and added a non-production opt-out index.

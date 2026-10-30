@@ -1,5 +1,12 @@
 # Changelog
 
+## GFS-337 payment-choice acknowledgement safeguard (2026-10-30)
+
+- Added bounded, read-only incident correlation for the reported order, newest30 no-method orders, matched24h funnels and frozen-version payment-choice health; no customer identifiers or provider IDs were recorded.
+- Split provider-send failure from post-acceptance D1 acknowledgement failure in `sendConversationReply`. Accepted sends now retry only status persistence three times and cannot roll the conversation back or trigger duplicate resend.
+- Added synthetic tests for transient and persistent post-provider D1 acknowledgement failures, conversation-state preservation and exact-once send behavior.
+- Verified full326/326, build/lint, offline audit0, rollback4/4, marker0043/ten indexes/integrity, and zero overdue recovery/duplicate recovery/false PAID/malformed COD quote. No production deployment or state mutation.
+
 ## GFS-336 (2026-10-30)
 
 - Corrected the D1 stress harness denominator, pacing, warmup, A/B ordering, baseline schema indexes, `ANALYZE` setup, read-only/mixed separation, lock metrics, and bounded late-work handling.

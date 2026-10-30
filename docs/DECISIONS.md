@@ -1,5 +1,12 @@
 # Decisions
 
+## GFS-337 payment-choice delivery decision (2026-10-30)
+
+- Classify the owner-reported order as **provider-delivered/customer non-response**, not order-save or payment-choice-send failure. A null method plus `payment_instruction_status=NOT_SENT` is expected until Advance/COD selection.
+- Do not resend or mutate the 30-order cohort: every original choice has provider acceptance and there is no failed, missing or unresolved choice row.
+- Repair the independently proven local acknowledgement hazard only: after Meta returns a provider message ID, never route a later D1 status-write exception through provider-failure compensation. Retry the acknowledgement three times and preserve the advanced conversation; if persistence remains unavailable, fail closed against resend.
+- Do not infer a live incident from the latent defect. Frozen-version evidence is 150/150 provider-backed payment choices and zero manifestation rows. Deployment of the repair requires separate owner authorization; current public bot and two-stage recovery remain GO on frozen Workers.
+
 ## GFS-336: supersede GFS-335 slowdown as benchmark artifact (2026-10-30)
 
 - Do not remove or alter migration0043 indexes. The apparent 50k post-index recovery regression came from an invalid denominator and an incomplete baseline fixture. After restoring `orders_archived_created_idx` and the other repository baseline indexes, both pre/post recovery plans use the archived/created index and remain about 5–8ms locally.

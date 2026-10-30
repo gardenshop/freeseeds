@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-337 incident evidence and source repair (2026-10-30)
+
+- **Cloudflare read-only:** `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API `b426ba47`100% / `6ef27f02`0%; Admin `494a3dce`100% / `c2321eab`0%. No mutation.
+- **D1:** `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; marker0043=1; exact ten migration indexes; quick check ok. Read-only incident queries wrote zero rows.
+- **Flags/topology:** payment-choice recovery true from existing cutoff; five-stage reminder, automation and utility-template flags false; minute Cron and Queue topology retained.
+- **Sanitized evidence:** reported order original choice READ and +15 DELIVERED; newest30 original choices accepted30/failed0/missing0/unresolved0; frozen-version choices READ142/DELIVERED8. No customer identifier, raw provider ID, payload, receipt or secret is registered.
+- **Local repair assets:** `apps/api/src/index.ts` and `tests/guided-lead-only.test.ts`; bounded acknowledgement retry after provider acceptance, no deployment. Quality: focused4/4, full326/326, build/lint/audit0, rollback4/4.
+
 ## GFS-336 corrected benchmark and failure evidence (2026-10-30)
 
 - **Local harness:** `scripts/d1-capacity-stress.mjs` now uses repository baseline indexes, deterministic snapshots, `ANALYZE`, randomized repeated A/B, fixed offered-rate windows, warmup, read-only/mixed modes, four workers, lock counts, CPU metadata, and bounded late-work reporting. No remote bindings or credentials.

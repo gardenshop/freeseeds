@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-337 payment-choice incident ruling and acknowledgement safeguard (2026-10-30)
+
+- Fresh read-only identity/routing is `gisupp@gmail.com` / Get Free Seeds account: API `b426ba47` 100% and `6ef27f02` 0%; Admin `494a3dce` 100% and `c2321eab` 0%. Recovery +15/+210 is true; five-stage Advance reminders, Automation V2 and utility templates are false. Marker0043, all ten indexes and `quick_check=ok` remain intact. No live write, resend, deployment, migration, flag or traffic mutation occurred.
+- The owner-reported order did not stop after save: submission audit exists, conversation reached `PAYMENT_METHOD`, original `PAYMENT_CHOICE` is provider-backed `READ`, +15 recovery is `DELIVERED`, and no Advance/COD callback followed. `payment_instruction_status=NOT_SENT` is expected before a method is selected.
+- In the newest 30 no-method orders, all 30 original choices were provider-accepted; zero were failed, missing or unresolved. Since frozen API deployment, all 150 `PAYMENT_CHOICE` rows are provider-backed (`READ`142, `DELIVERED`8). Do not classify no-method alone as a send failure or resend.
+- A separate local fault is proven in deployed-source lineage and PR source: a successful Meta send followed by a D1 acknowledgement-write error was caught as provider failure and rolled the conversation back. The source now separates the irreversible provider-acceptance boundary, retries only the D1 acknowledgement three times, preserves `PAYMENT_METHOD`, and fails closed against duplicate resend when persistence remains unavailable.
+- Safety readback is zero overdue eligible recovery, zero duplicate recovery idempotency keys, zero PAID rows without independent approval and zero malformed PKR125 COD quotes. Regression is fault-focused4/4 and full326/326; build/lint/audit0 and validated legacy rollback4/4 pass.
+- This source repair is not deployed. Keep frozen Workers and all reminder/customer/payment state unchanged until a separately scoped production deployment authorization.
+
 ## GFS-336 benchmark correction and D1 regression ruling (2026-10-30)
 
 - Supersede the GFS-335 local slowdown claim. The original harness divided completions by the time of the last completion, used one-second tiny quotas, omitted real baseline indexes such as `orders_archived_created_idx` and `payment_choice_recovery_stage_order_idx`, and added a non-production opt-out index. Its 50k post0043 recovery p50 of about 1665ms was a harness artifact.

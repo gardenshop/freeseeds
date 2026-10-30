@@ -1288,6 +1288,46 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM leads").get()).toEqual({ count: 1 });
   });
 
+  it("does not roll back or duplicate a payment choice when Meta accepts before the D1 acknowledgement write retries", async () => {
+    await enableAuditedCodPolicy();
+    codEnabled = true;
+    await reachReview("en");
+    const sentBefore = sends.length;
+    beforeRun = async (sql) => {
+      if (!sql.startsWith("UPDATE outbound_messages SET provider_message_id=")) return;
+      beforeRun = undefined;
+      throw new Error("SYNTHETIC_D1_ACK_WRITE_FAILURE");
+    };
+    const confirmation = await inbound(tap("PLACE_ORDER"), "synthetic-provider-accepted-d1-ack-failure");
+    expect(conversation()?.state).toBe("PAYMENT_METHOD");
+    expect(sends).toHaveLength(sentBefore + 1);
+    expect(sqlite.prepare("SELECT kind,status,provider_message_id FROM outbound_messages WHERE kind='PAYMENT_CHOICE'").get()).toMatchObject({ kind: "PAYMENT_CHOICE", status: "SENT", provider_message_id: expect.any(String) });
+    await callback([confirmation]);
+    expect(conversation()?.state).toBe("PAYMENT_METHOD");
+    expect(sends).toHaveLength(sentBefore + 1);
+  });
+
+  it("fails closed against duplicate sends when all payment-choice acknowledgement retries fail after provider acceptance", async () => {
+    await enableAuditedCodPolicy();
+    codEnabled = true;
+    await reachReview("en");
+    const sentBefore = sends.length;
+    let failures = 0;
+    beforeRun = async (sql) => {
+      if (!sql.startsWith("UPDATE outbound_messages SET provider_message_id=") || failures >= 3) return;
+      failures++;
+      throw new Error("SYNTHETIC_PERSISTENT_D1_ACK_WRITE_FAILURE");
+    };
+    const confirmation = await inbound(tap("PLACE_ORDER"), "synthetic-provider-accepted-persistent-d1-ack-failure");
+    expect(failures).toBe(3);
+    expect(conversation()?.state).toBe("PAYMENT_METHOD");
+    expect(sends).toHaveLength(sentBefore + 1);
+    expect(sqlite.prepare("SELECT kind,status,provider_message_id FROM outbound_messages WHERE kind='PAYMENT_CHOICE'").get()).toEqual({ kind: "PAYMENT_CHOICE", status: "SENDING", provider_message_id: null });
+    await callback([confirmation]);
+    expect(conversation()?.state).toBe("PAYMENT_METHOD");
+    expect(sends).toHaveLength(sentBefore + 1);
+  });
+
   it("rejects a signed batch containing a callback without its phone identity", async () => {
     const response = await callback([], [{ field: "messages", value: { messages: [{ from: sender, id: "synthetic-missing-phone", type: "text", text: { body: "START" } }] } }]);
     expect(response.status).toBe(403);

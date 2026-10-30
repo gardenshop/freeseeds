@@ -1,5 +1,39 @@
 # Final Report
 
+## GFS-337 urgent saved-order/payment-flow audit (2026-10-30)
+
+### Outcome
+
+The reported order was saved and its payment flow continued correctly: the submission audit exists, the conversation reached `PAYMENT_METHOD`, the original payment-choice message is provider-backed `READ`, and the +15 recovery is `DELIVERED`. No Advance method or COD confirmation callback followed. Therefore `payment_instruction_status=NOT_SENT` is expected and the exact observed stop point is customer non-response after reading the choice, not a failed send.
+
+The newest30 no-method orders show the same delivery health: original choice accepted30, failed0, missing0, unresolved0. Since frozen API `b426ba47` was uploaded, all150 payment choices have provider evidence (`READ`142, `DELIVERED`8). No live manifestation of a payment-choice delivery outage was found.
+
+### Proven preventative repair
+
+Fault injection proved a separate source bug present in the frozen-source lineage and PR source: Meta acceptance and the following D1 acknowledgement write shared one catch block, so a D1 exception after a successful provider send could mark the send failed and roll the conversation back. The minimal repair separates that irreversible boundary, retries acknowledgement persistence three times, preserves `PAYMENT_METHOD`, and fails closed against duplicate resend even when all retries fail. No production deployment occurred.
+
+### Evidence
+
+| Area | Result |
+|---|---|
+| Routing | API `b426ba47`100% / `6ef27f02`0%; Admin `494a3dce`100% / `c2321eab`0% |
+| Flags | +15/+210 ON; five-stage Advance, Automation V2, utility templates OFF |
+| D1 | marker0043, ten indexes, quick check ok |
+| Last24h / prior24h | inbound2438/3830; orders55/108; accepted choices79/109; failed choices0/0; Advance9/20; COD35/55 |
+| Safety | overdue eligible recovery0; duplicate recovery0; false PAID0; malformed COD quote0 |
+| Local gates | acknowledgement4/4; full326/326; build/lint/audit0; rollback4/4 |
+
+### GFS-334–337 verdict
+
+| Task | Result |
+|---|---|
+| GFS-334 | PARTIAL funnel attribution; controller repair PASS; release NO-GO |
+| GFS-335 | PASS audit/harness delivery; original slowdown later superseded |
+| GFS-336 | PASS corrected methodology; migration regression not proven |
+| GFS-337 | PASS incident audit and local repair; production deployment BLOCKED by authorization |
+
+Completion: incident correlation100%; source/tests100%; production synchronization pending push; production deployment0%; 24-hour post-deploy evidence0%. Public bot and two-stage recovery are **GO on frozen Workers**. The repair is **NO-GO for deployment** until separately authorized; no resend, live test, flag, migration or traffic change is justified.
+
 ## GFS-336 reliable stress correction and D1 regression ruling (2026-10-30)
 
 ### Method correction
