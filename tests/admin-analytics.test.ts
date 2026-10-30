@@ -84,6 +84,7 @@ describe("GFS-339 inbound analytics", () => {
     insertInbound.run("event-2", "provider-2", "INTERACTIVE", "2026-10-29T02:00:00.000Z");
     insertInbound.run("event-3", "provider-3", "MEDIA", "2026-10-30T01:00:00.000Z");
     insertInbound.run("event-4", "provider-4", "STATUS", "2026-10-29T03:00:00.000Z");
+    insertInbound.run("event-boundary", "provider-boundary", "MESSAGE", "2026-10-31T00:00:00.000Z");
     const conversations = [
       ["conversation-pre", "wa-pre", "OFFER", "{}", "2026-10-28T00:00:00.000Z", "2026-10-28T00:00:00.000Z", "2026-10-29T00:00:00.000Z"],
       ["conversation-post", "wa-post", "REVIEW", "{}", "2026-10-29T00:00:00.000Z", "2026-10-29T00:00:00.000Z", "2026-10-29T01:00:00.000Z"],
@@ -127,6 +128,9 @@ describe("GFS-339 inbound analytics", () => {
       expect(result.reminders).toMatchObject({ sent15: 0, delivered15: 1, read15: 0, sent210: 0, delivered210: 0, read210: 1 });
       expect(result.definitions.join(" ")).toMatch(/UTC/);
       expect(result.definitions.join(" ")).toMatch(/not mutually exclusive/);
+      const historical = await readInboundAnalytics(db, parseAnalyticsFilters({ from: "2026-10-29", to: "2026-10-29", now: new Date("2026-10-31T12:00:00.000Z") }));
+      expect(historical.inbound.customerMessages).toBe(2);
+      expect(historical.abandonment.postOrder).toBe(1);
     } finally {
       sqlite.close();
     }
