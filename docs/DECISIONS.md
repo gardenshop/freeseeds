@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-342 release readiness decision (2026-10-30)
+
+- Stage one combined Admin candidate only. Keep frozen Admin `494a3dce` at100%, candidate `19188b21-60da-4b03-bd89-72cb49468100` at0%, and API routing unchanged.
+- Release Analytics and metadata-only Conversations without migrations0044/0045. Keep body capture, media preview, reply/send/reset actions and new reminders out of scope.
+- Treat restricted-agent failures as execution-context isolation, not a Cloudflare control-plane defect: supported host Wrangler readback and local fail-closed simulations pass. Any live candidate traffic requires a fresh scoped authorization and the tested deadline controller.
+- Treat 29 conversation-reply failures and 32 payment-instruction dead letters as historical backlog because the last24h reply-failure count is zero, payment-choice failures are zero and recovery has no overdue pending stage. CAPI361 pending/2 failed is separate from WhatsApp and must not be replayed without authorization.
+- Do not infer migration savings or production acceptance from 0% candidate evidence. Preserve public WhatsApp, +15/+210 recovery, COD/Advance/payment safeguards and Hoja/ThanNow isolation.
+
 ## GFS-341 conversation viewer decision (2026-10-30)
 
 - Keep the viewer Admin-only, GET-only, privacy-safe, and read-only. Search is limited to authorized references and never uses message bodies for unbounded scans.

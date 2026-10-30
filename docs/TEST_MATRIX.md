@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-342 Analytics + Conversations release gate (2026-10-30)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Identity/frozen routing | PASS | `gisupp@gmail.com`; API `b426ba47`100%; Admin `494a3dce`100% before/after |
+| Schema independence | PASS | 0043 present/integrity clean; 0044/0045 absent; candidate endpoints HTTP200 |
+| Admin auth/privacy | PASS | Existing Access session; masked references; exact-order search isolates one conversation; no provider identifier values or legacy bodies |
+| Analytics/CSV | PASS | Candidate page/API/export HTTP200; CSV excludes customer/provider fields |
+| Conversations | PASS | List/detail HTTP200; `LEGACY_METADATA_ONLY`; linked order and recovery metadata; no write controls |
+| Legacy Admin parity | PASS | Orders HTTP200 (25 rows), payment configuration HTTP200/configured, COD HTTP200/PKR125 |
+| D1 read evidence | MEASURED | Analytics selected-day queries total69115 rows; conversation page count2361 + list6758 rows; detail `first()` metadata unavailable, not claimed zero |
+| Focused/full/local gates | PASS | Focused201/201; full334/334; build/lint/audit0; Admin dry-run; rollback4/4; adapter5/5; deadline10/10 |
+| Candidate staging | PASS | Version `19188b21...`0%, deployment `00566a27...`; frozen Admin100%; API unchanged |
+| Canary/promotion/migrations | NOT RUN | No candidate traffic, migration0044/0045, API deployment, flag, customer, Meta or payment mutation |
+
 ## GFS-341 conversation viewer (2026-10-30)
 
 | Check | Result | Evidence / boundary |

@@ -1,5 +1,41 @@
 # Final Report
 
+## GFS-342 Analytics + Conversations release readiness (2026-10-30)
+
+### Outcome
+
+PASS for the authorized scope. One combined Admin candidate was uploaded and staged at0%; production traffic remains entirely on the frozen Admin and API. Analytics, privacy-safe CSV, Conversations, metadata-only details, Orders, payments and COD passed authenticated version-targeted acceptance without migrations0044/0045.
+
+| Area | Result |
+|---|---|
+| Admin candidate | `19188b21-60da-4b03-bd89-72cb49468100` (version104), 0% |
+| Admin deployment | `00566a27-064e-4bd0-b3e2-079efe69cffd`; frozen `494a3dce`100% |
+| API | Unchanged: `b426ba47`100% / `6ef27f02`0% |
+| Migrations | 0043 live/integrity clean; proposed0044/0045 unapplied and not required |
+| Tests | Focused201/201; full334/334; build/lint/audit0; dry-run; rollback4/4; adapter5/5; deadline10/10 |
+| Candidate acceptance | Analytics/API/CSV, Conversations list/detail/search, Orders, payment configuration and COD PKR125 PASS |
+
+### Current health and D1 cost
+
+- At `2026-10-30T17:43:59.762Z`: inbound2576/24h, unique-contact snapshot451, new conversations406, orders70, orders/inbound conversion2.72%, paid/fulfilled created in window0.
+- Conservative current inactive snapshots: pre-order1132, post-order29; Advance pending64. These are current lifecycle snapshots, not reconstructed historical funnels.
+- Conversation replies FAILED29 historical and0 in the last24h; payment-choice FAILED0; payment-instruction dead-letter32 historical; receipt-ingestion blocks2. Recovery has no overdue pending stage. No new customer-impacting WhatsApp defect is proven.
+- +15 totals: DELIVERED11, READ18, SENT2, SKIPPED51. +210: DELIVERED4, READ11, SENT2, PENDING19, SKIPPED46; none of the pending rows is overdue.
+- CAPI is separate: events PENDING361/FAILED2; outbox CAPI_LEAD PENDING361 and CAPI_PURCHASE DEAD_LETTER2. Nothing was replayed.
+- Candidate selected-day Analytics read costs: orders467, event aggregate30130, contacts2047, daily events30134, classification6101, recovery236 rows (69115 total). Conversation page: count2361 + list6758 rows. Detail `first()` metadata was unavailable and is not claimed as zero.
+
+### Blocker and task comparison
+
+- GFS-338: API repair source/candidate PASS; live canary remains BLOCKED pending new authorization.
+- GFS-339: PASS, superseded by GFS-340 semantic corrections.
+- GFS-340: PASS for corrected analytics and previous0% candidate; superseded by combined GFS-342 candidate.
+- GFS-341: PASS for local/pushed read-only Conversations; no body capture activation.
+- GFS-342: PASS for source, tests, health audit and Admin0% staging; live canary/promotion BLOCKED by authorization.
+
+Restricted-context readback failed because its socket/credential environment is isolated; supported Windows host Wrangler readback succeeds. The remaining action is a new owner authorization naming Admin candidate `19188b21...`, traffic percentage, duration/deadline, stop thresholds and rollback to `494a3dce`. No migration, API candidate, customer send, Meta/payment/flag change or automatic promotion is implied.
+
+Completion: source100%, tests100%, Admin staging100%, candidate acceptance100%, live traffic validation0%, promotion0%. Public WhatsApp and +15/+210 recovery remain GO on frozen Workers; the Admin candidate is NO-GO for traffic until separately authorized.
+
 ## GFS-341 customer conversation viewer (2026-10-30)
 
 ### Outcome

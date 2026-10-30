@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-342 release candidate and evidence (2026-10-30)
+
+- **Cloudflare identity/account:** `gisupp@gmail.com`, Get Free Seeds `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`.
+- **Routing:** API deployment `10f43f2e-9c95-4fd2-8bfc-99ccd890fee1`, frozen `b426ba47`100% / candidate `6ef27f02`0%. Admin deployment `00566a27-064e-4bd0-b3e2-079efe69cffd`, frozen `494a3dce`100% / GFS-342 candidate `19188b21-60da-4b03-bd89-72cb49468100`0%.
+- **Candidate provenance:** Admin version104, tag `gfs342-admin-analytics-conversations`, message names source `ae05a234`; D1/R2/Queue/Admin identity and canonical GFS Meta bindings match frozen Admin. No secret values were recorded.
+- **D1 state:** marker0043 applied `2026-10-29T12:23:43.802Z`; quick_check ok; FK rows0; proposed0044/0045 indexes/table absent; all verification rows_written0.
+- **Aggregate health:** inbound2576/24h, contacts451, orders70; historical reply failures29/last24h0, payment-choice failures0, receipt blocks2, recovery overdue0, CAPI pending361/failed2. No customer identifiers or payloads registered.
+- **Isolation:** Chrome authenticated GFS Admin and official Wrangler host context used; canonical GFS Meta unchanged; Hoja/ThanNow remain unconnected.
+
 ## GFS-341 conversation viewer assets (2026-10-30)
 
 - **Local source:** `apps/admin/src/conversations.ts`, Admin route wiring in `apps/admin/src/index.ts`, `tests/admin-conversations.test.ts`.

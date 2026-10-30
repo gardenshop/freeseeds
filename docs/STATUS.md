@@ -1,5 +1,14 @@
 # Status
 
+## GFS-342 Analytics + Conversations release readiness (2026-10-30)
+
+- **P0 PASS:** Cloudflare `gisupp@gmail.com` / Get Free Seeds account and D1 binding verified. API `b426ba47` remains100% / `6ef27f02`0%; Admin `494a3dce` remains100%. Recovery is ON; five-stage Advance, Automation V2 and utility templates remain OFF. Marker0043 is present, quick_check is ok, FK check empty; proposed0044/0045 objects are absent.
+- **P1 PASS:** Combined Admin source contains corrected `/analytics`, privacy-safe CSV, protected `/conversations`, masked list/search, metadata-only legacy detail, linked order/payment/COD and +15/+210 timeline. It runs without0044/0045. Added cross-customer isolation coverage; no chat capture/send/reset/reminder feature was added.
+- **P2 PASS diagnosis / live canary BLOCKED by authorization:** supported Windows host Wrangler authentication/readback works; restricted agent sockets/credential context do not. Adapter5/5 and deadline controller10/10 pass. No canary was attempted; new owner scope remains required for any candidate traffic.
+- **P3 PASS at0%:** uploaded Admin version `19188b21-60da-4b03-bd89-72cb49468100` and deployment `00566a27-064e-4bd0-b3e2-079efe69cffd`; final routing is frozen Admin `494a3dce`100% / candidate0%, API unchanged. Authenticated version-targeted Analytics, CSV, Conversations, Orders, payments and COD acceptance passed.
+- **P4 current aggregate health:** at `2026-10-30T17:43:59.762Z`, inbound2576/24h, unique contacts snapshot451, new conversations406, orders70, orders/inbound2.72%; pre-order inactive snapshot1132, post-order inactive29, Advance pending64. Conversation-reply FAILED29 total/0 last24h; payment-choice FAILED0; payment-instruction dead-letter32 historical; receipt blocks2; overdue recovery0. CAPI pending361 plus failed/dead-letter2 is separate and no replay occurred.
+- **P5 PASS:** focused201/201, full334/334, build/lint, audit0, Admin bundle dry-run and rollback4/4. No live customer, API, migration, D1 write, traffic, flag, Meta or payment mutation.
+
 ## GFS-341 customer conversation viewer and message-history proposal (2026-10-30)
 
 - **Local implementation PASS:** Added protected read-only `/conversations`, `/api/conversations`, and paginated detail APIs. The UI masks customer references, links orders/payment state and +15/+210 timeline, and has no reply, send, reset, or status-changing control.

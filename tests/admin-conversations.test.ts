@@ -46,17 +46,28 @@ describe("GFS-341 read-only conversation viewer", () => {
 
   it("masks customer references, paginates, and exposes legacy metadata without inventing bodies", async () => {
     const db = fixture();
+    db.sqlite.prepare("INSERT INTO whatsapp_conversations VALUES(?,?,?,?,?,?,?,?)").run("conv-2", "923009999999", "OFFER", "{}", "in-2", "2026-10-30T00:00:00Z", "2026-10-30T02:00:00Z", "2026-10-30T02:00:00Z");
+    db.sqlite.prepare("INSERT INTO customers VALUES(?,?)").run("customer-2", "923009999999");
+    db.sqlite.prepare("INSERT INTO orders VALUES(?,?,?,?,?,?,?)").run("order-2", "FS-TEST-0002", "customer-2", "CREATED", "PENDING", "2026-10-30T01:30:00Z", "2026-10-30T02:00:00Z");
+    db.sqlite.prepare("INSERT INTO payments VALUES(?,?,?,?)").run("payment-2", "order-2", null, "PENDING");
     const response = await app.fetch(new Request("https://admin.example.test/api/conversations?pageSize=1", { headers: auth }), env(db));
     expect(response.status).toBe(200);
     const list = await response.json() as { conversations: Array<Record<string, unknown>>; pagination: Record<string, number> };
-    expect(list.conversations[0]).toMatchObject({ customerRef: "***4567", orderCount: 1, historyAvailable: false });
+    expect(list.conversations[0]).toMatchObject({ customerRef: "***9999", orderCount: 1, historyAvailable: false });
+    expect(list.pagination).toMatchObject({ page: 1, pageSize: 1, total: 2, totalPages: 2 });
     expect(JSON.stringify(list)).not.toContain("923001234567");
+    expect(JSON.stringify(list)).not.toContain("923009999999");
     const detail = await app.fetch(new Request("https://admin.example.test/api/conversations/conv-1", { headers: auth }), env(db));
     const body = await detail.json() as { historyAvailability: Record<string, unknown>; messages: Array<Record<string, unknown>>; recoveryTimeline: Array<Record<string, unknown>> };
     expect(body.historyAvailability).toMatchObject({ mode: "LEGACY_METADATA_ONLY", inboundBodyStored: false, outboundBodyStored: false });
     expect(body.messages).toEqual(expect.arrayContaining([expect.objectContaining({ direction: "INBOUND", text: null }), expect.objectContaining({ direction: "OUTBOUND", status: "DELIVERED", text: null })]));
     expect(body.recoveryTimeline[0]).toMatchObject({ stageMinutes: 15, status: "DELIVERED" });
     expect(JSON.stringify(body)).not.toContain("wamid-test");
+    expect(JSON.stringify(body)).not.toContain("FS-TEST-0002");
+    const filtered = await app.fetch(new Request("https://admin.example.test/api/conversations?q=FS-TEST-0002", { headers: auth }), env(db));
+    const filteredBody = await filtered.json() as { conversations: Array<{ customerRef: string; latestOrder: { orderNumber: string } }> };
+    expect(filteredBody.conversations).toEqual([expect.objectContaining({ customerRef: "***9999", latestOrder: expect.objectContaining({ orderNumber: "FS-TEST-0002" }) })]);
+    expect(JSON.stringify(filteredBody)).not.toContain("FS-TEST-0001");
   });
 
   it("returns only captured future fields and enforces monotonic status", async () => {

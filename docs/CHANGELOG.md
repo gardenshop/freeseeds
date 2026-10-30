@@ -1,5 +1,12 @@
 # Changelog
 
+## GFS-342 Analytics + Conversations release readiness (2026-10-30)
+
+- Added cross-customer isolation assertions to the conversation regression fixture; no Admin runtime source change was required after GFS-341.
+- Verified focused201/201, full334/334, build/lint/audit0, Admin dry-run, rollback4/4, adapter5/5 and deadline10/10.
+- Uploaded combined Admin candidate `19188b21-60da-4b03-bd89-72cb49468100` and staged it at0% in deployment `00566a27-064e-4bd0-b3e2-079efe69cffd`; frozen Admin remains100% and API is unchanged.
+- Passed authenticated version-targeted Analytics, CSV, Conversations, Orders, payments and COD read-only acceptance. No migration, canary, promotion, customer/Meta/payment/flag or API mutation occurred.
+
 ## GFS-341 customer conversation viewer (2026-10-30)
 
 - Added protected read-only Admin conversation list/detail APIs and mobile viewer with masked references, bounded pagination, linked order/payment/recovery state, and explicit legacy transcript-unavailable messaging.

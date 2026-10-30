@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-342 Analytics + Conversations release readiness (2026-10-30)
+
+- Verified Cloudflare mutation identity `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` immediately before upload. API remains `b426ba47`100% / `6ef27f02`0%; frozen Admin remains `494a3dce`100%; the combined Admin candidate is `19188b21-60da-4b03-bd89-72cb49468100`0% in deployment `00566a27-064e-4bd0-b3e2-079efe69cffd`.
+- Candidate version-targeted acceptance passed authenticated Analytics, aggregate CSV, Conversations, masked exact-order search, metadata-only detail, Orders, payment configuration and COD PKR125. No raw WhatsApp/provider ID or historical body was returned. Migrations0044/0045 are not required and remain unapplied.
+- Current aggregate health at `2026-10-30T17:43:59.762Z`: inbound2576/24h, unique-contact snapshot451, submitted orders70 (orders/inbound2.72%), payment-choice failures0, recovery overdue pending0. Historical conversation-reply failures are29 with zero in24h; receipt-ingestion blocks remain2. CAPI pending361 and failed/dead-letter2 are separate from WhatsApp delivery and were not replayed.
+- Restricted-context readback failure is execution-context isolation: restricted sockets/credential store are unavailable, while the supported Windows host context authenticated and read exact routing. Shell-free adapter5/5 and deadline controller10/10 pass. No live canary is authorized; a future traffic test still requires a new scoped owner approval.
+- Focused release tests201/201, full334/334, build/lint, offline audit0, Admin dry-run and validated rollback4/4 pass. No API deployment, D1 migration/write, live traffic exposure, customer/Meta/payment/flag/message mutation, or Hoja/ThanNow connection occurred.
+
 ## GFS-341 customer conversation viewer (2026-10-30)
 
 - The new Admin `/conversations` page and GET APIs are protected by the existing Admin Access identity check, read-only, paginated, bounded, and privacy-safe. Customer WhatsApp IDs, provider IDs, raw payloads, payment references, credentials, and private media are not returned.
