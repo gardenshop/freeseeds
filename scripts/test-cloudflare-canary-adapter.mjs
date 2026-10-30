@@ -53,6 +53,20 @@ test("API scope deploys only API while retaining Admin readback", async () => {
   assert.equal(traffic.adminBaselinePercent, 100);
 });
 
+test("Admin scope supports a bounded 10 percent canary while retaining API frozen", async () => {
+  const calls = [];
+  const adapter = createCloudflareCanaryAdapter({ scope: "admin", targetCandidatePercent: 10, workers, runCommand: async (args) => {
+    calls.push(args);
+    if (args[0] === "deployments") return status(args[3] === "api" ? workers.api : workers.admin, args[3] === "api" ? 100 : 90, args[3] === "api" ? 0 : 10);
+    return "";
+  } });
+  await adapter.execute("expose_candidate");
+  assert.deepEqual(calls[0], ["versions", "deploy", "admin-base@90", "admin-candidate@10", "--name", "admin", "--message", "GFS-334 admin 10 percent canary", "--yes"]);
+  const traffic = await adapter.readTraffic();
+  assert.equal(traffic.apiCandidatePercent, 0);
+  assert.equal(traffic.adminCandidatePercent, 10);
+});
+
 test("reads exact version percentages and keeps health fields fail-closed", async () => {
   const adapter = createCloudflareCanaryAdapter({ workers, runCommand: async (args) => {
     if (args[0] !== "deployments") return "";

@@ -92,7 +92,9 @@ function trafficIsBaseline(traffic, scope = "all") {
 function trafficHasCandidate(traffic, target, scope = "all") {
   const apiCandidate = traffic.apiCandidatePercent >= target && traffic.apiBaselinePercent <= 100 - target;
   const adminFrozen = traffic.adminCandidatePercent === 0 && traffic.adminBaselinePercent === 100;
-  return (scope === "api" ? apiCandidate && adminFrozen : apiCandidate && traffic.adminCandidatePercent >= target) &&
+  const adminCandidate = traffic.adminCandidatePercent >= target && traffic.adminBaselinePercent <= 100 - target;
+  const apiFrozen = traffic.apiCandidatePercent === 0 && traffic.apiBaselinePercent === 100;
+  return (scope === "api" ? apiCandidate && adminFrozen : scope === "admin" ? adminCandidate && apiFrozen : apiCandidate && adminCandidate) &&
     traffic.api5xx === 0 && traffic.admin5xx === 0;
 }
 
@@ -127,7 +129,7 @@ async function acquireLock(lockPath, metadata, audit) {
 
 export async function runCanary(options = {}) {
   const config = { ...DEFAULTS, ...options };
-  if (config.scope !== "all" && config.scope !== "api") throw new TypeError("invalid canary scope");
+  if (config.scope !== "all" && config.scope !== "api" && config.scope !== "admin") throw new TypeError("invalid canary scope");
   const now = config.now ?? monotonicMs;
   const sleep = config.sleep ?? ((ms, signal) => bounded((sleepSignal) => new Promise((resolve, reject) => {
     const timer = setTimeout(resolve, ms);

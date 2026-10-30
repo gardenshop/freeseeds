@@ -36,9 +36,10 @@ function statusFromJson(raw, worker) {
   return { baseline: versions.get(worker.baseline), candidate: versions.get(worker.candidate) };
 }
 
-export function createCloudflareCanaryAdapter({ workers = DEFAULT_WORKERS, runCommand = runWrangler, messagePrefix = "GFS-334", scope = "all" } = {}) {
-  if (scope !== "all" && scope !== "api") throw new TypeError("invalid canary scope");
-  const targetWorkers = scope === "api" ? [workers.api] : [workers.api, workers.admin];
+export function createCloudflareCanaryAdapter({ workers = DEFAULT_WORKERS, runCommand = runWrangler, messagePrefix = "GFS-334", scope = "all", targetCandidatePercent = 1 } = {}) {
+  if (scope !== "all" && scope !== "api" && scope !== "admin") throw new TypeError("invalid canary scope");
+  if (!Number.isInteger(targetCandidatePercent) || targetCandidatePercent <= 0 || targetCandidatePercent >= 100) throw new TypeError("invalid candidate percentage");
+  const targetWorkers = scope === "api" ? [workers.api] : scope === "admin" ? [workers.admin] : [workers.api, workers.admin];
   const deploy = async (worker, specs, message, signal) => {
     await runCommand([
       "versions", "deploy", ...specs, "--name", worker.name,
@@ -56,10 +57,11 @@ export function createCloudflareCanaryAdapter({ workers = DEFAULT_WORKERS, runCo
       const exposing = action === "expose_candidate";
       const restoring = action === "restore_baseline";
       if (!exposing && !restoring) throw new Error("unknown_action");
+      const baselinePercent = 100 - targetCandidatePercent;
       const specs = (worker) => exposing
-        ? [`${worker.baseline}@99`, `${worker.candidate}@1`]
+        ? [`${worker.baseline}@${baselinePercent}`, `${worker.candidate}@${targetCandidatePercent}`]
         : [`${worker.baseline}@100`, `${worker.candidate}@0`];
-      const suffix = exposing ? "1 percent canary" : "restore baseline";
+      const suffix = exposing ? `${targetCandidatePercent} percent canary` : "restore baseline";
       for (const worker of targetWorkers) {
         await deploy(worker, specs(worker), `${messagePrefix} ${worker.name} ${suffix}`, signal);
       }

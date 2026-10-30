@@ -76,6 +76,21 @@ test("API-only scope exposes and restores API while requiring Admin to remain fr
   assert.equal(result.rollbackVerified, true);
 }));
 
+test("Admin-only scope exposes and restores Admin while requiring API to remain frozen", async () => withLock(async (lockPath) => {
+  const clock = fakeClock();
+  let exposed = false;
+  const result = await runCanary({
+    ...baseOptions(clock, lockPath, { scope: "admin", targetCandidatePercent: 10 }),
+    execute: async (action) => { if (action === "expose_candidate") exposed = true; if (action === "restore_baseline") exposed = false; },
+    readTraffic: async () => exposed
+      ? { apiCandidatePercent: 0, apiBaselinePercent: 100, adminCandidatePercent: 10, adminBaselinePercent: 90, api5xx: 0, admin5xx: 0 }
+      : traffic()
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.strictCapCompliant, true);
+  assert.equal(result.rollbackVerified, true);
+}));
+
 test("slow routing fails closed and still attempts rollback", async () => withLock(async (lockPath) => {
   const clock = fakeClock();
   const options = baseOptions(clock, lockPath, {
