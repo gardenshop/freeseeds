@@ -1,5 +1,11 @@
 # Changelog
 
+## GFS-335 (2026-10-30)
+
+- Added a local-only deterministic D1 capacity harness and isolation test covering 245/1k/10k/50k synthetic orders, pre/post0043 variants, Admin/delta/recovery paths, mixed writes, and 1–100 RPS ramps.
+- Recorded actual read-only staging D1 integrity, query-plan, duration, and `rows_read` evidence. The remaining observed production scan is the payment-reminder opt-out anti-join; no schema change was made.
+- Recorded the isolated 50k post-index contention warning without presenting it as production capacity or authorizing a migration/remediation.
+
 ## GFS-334 (2026-10-30)
 
 - Added a shell-free Cloudflare canary adapter and four tests after proving Windows `shell:true` split spaced Wrangler messages during GFS-333.

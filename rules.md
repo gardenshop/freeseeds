@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-335 D1 audit and isolated capacity benchmark (2026-10-30)
+
+- The stress harness is local SQLite only: synthetic data, isolated files, deterministic clocks/IDs, mocked provider behavior, no Wrangler bindings, no Cloudflare endpoints, no Meta/JazzCash/Easypaisa credentials, and no customer data. Local throughput is not production capacity.
+- Current authorized D1 read-only audit: `quick_check=ok`, foreign-key rows `0`, migration0043 marker `1`, ten expected indexes, bounded recovery query `21` rows / `2.385ms` / `574` rows read, and bounded delta query `101` rows / `8.553ms` / `14,538` rows read. All writes were zero.
+- Actual production recovery EXPLAIN uses `orders_archived_created_idx` and scans `payment_reminder_v2_opt_outs` for the correlated opt-out anti-join. The migration index is not proven to be the production bottleneck. Do not add or remove indexes without a fresh measured workload and scoped authorization.
+- Isolated 50k mixed read/write stress found post-0043 local SQLite contention and index overhead: at a 100-RPS target, pre-0043 achieved `38.58` RPS with p95 `124.292ms`; post-0043 achieved `2.12` RPS with p95 `1704.837ms` and p99 `5703.024ms`. This is a capacity warning, not proof of a live D1 defect; no production remediation is authorized from it.
+- Current 7-day failure aggregates remain sanitized: 16 outbound conversation failures, 19 payment-instruction dead letters, 304 pending CAPI outbox/events, two receipt-ingestion blocked audit rows, and 16,224 runtime-observation rows. Do not resend or mutate customer/payment state.
+
 ## GFS-334 order-health investigation and controller repair (2026-10-30)
 
 - Read-only 7-day evidence shows inbound activity and submitted orders declined after the migration window, but no exact stage-funnel attribution is permitted: historical offer/fertilizer/province/review transitions are not stored. Report the decline as observed, not as a proven customer-flow defect.

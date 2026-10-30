@@ -1,5 +1,56 @@
 # Final Report
 
+## GFS-335 D1 error audit, isolated stress, and capacity report (2026-10-30)
+
+### Production read-only evidence
+
+- D1 integrity: `quick_check=ok`, FK violations 0, migration0043 marker present, all ten indexes present, zero writes.
+- Recovery candidate query: 21 rows, 2.385ms, `meta.rows_read=574`.
+- Order delta query: 101 rows, 8.553ms, `meta.rows_read=14,538`.
+- Recovery EXPLAIN uses `orders_archived_created_idx`; the correlated `payment_reminder_v2_opt_outs` anti-join is a remaining read-path concern. The migration index is not proven to be the cause.
+- Current seven-day sanitized health: 16 failed conversation replies, 19 payment-instruction dead letters, 304 CAPI pending rows, two receipt-ingestion-blocked audit rows, 16,224 runtime observations. No resend, customer/payment mutation, or provider call occurred.
+
+### Local benchmark
+
+The harness is local SQLite-only with synthetic IDs, deterministic timestamps, temporary files, no Wrangler/Cloudflare/Meta/provider bindings, and four-worker mixed read/write load. It is not production capacity evidence.
+
+| Dataset | Variant | Admin page p50 ms | Counts p50 ms | Delta p50 ms | Recovery p50 ms |
+|---:|---|---:|---:|---:|---:|
+| 245 | pre0043 | 0.106 | 0.178 | 0.294 | 0.543 |
+| 245 | post0043 | 0.484 | 0.435 | 0.539 | 0.871 |
+| 1,000 | pre0043 | 0.100 | 0.596 | 0.960 | 0.623 |
+| 1,000 | post0043 | 0.497 | 0.746 | 0.741 | 2.885 |
+| 10,000 | pre0043 | 0.090 | 8.716 | 14.461 | 3.049 |
+| 10,000 | post0043 | 3.286 | 10.421 | 6.758 | 218.160 |
+| 50,000 | pre0043 | 0.095 | 48.698 | 73.303 | 5.667 |
+| 50,000 | post0043 | 49.190 | 444.253 | 35.158 | 1664.988 |
+
+50k mixed-load matrix:
+
+| Target RPS | Workers | Pre achieved / p95 / p99 ms | Post achieved / p95 / p99 ms | Errors |
+|---:|---:|---:|---:|---:|
+| 1 | 1 | 10.89 / 57.431 / 57.431 | 1.86 / 499.133 / 499.133 | 0 / 0 |
+| 5 | 4 | 12.44 / 95.851 / 133.821 | 3.31 / 67.796 / 2299.484 | 0 / 0 |
+| 10 | 4 | 17.20 / 99.351 / 135.625 | 1.39 / 2022.131 / 6470.744 | 0 / 0 |
+| 25 | 4 | 30.44 / 111.071 / 137.370 | 1.52 / 1868.653 / 8461.495 | 0 / 0 |
+| 50 | 4 | 41.51 / 95.931 / 196.731 | 2.12 / 1696.280 / 5396.360 | 0 / 0 |
+| 100 | 4 | 38.58 / 124.292 / 233.170 | 2.12 / 1704.837 / 5703.024 | 0 / 0 |
+
+The local post0043 50k run did not establish a stable sustainable RPS: tail latency degraded from the first multi-worker level and achieved throughput stayed near 1–3 RPS. This is a warning requiring production D1 write/lock measurements, not a live defect claim. The 10k run separately saw intermittent lock errors at target50, showing local variability; no monotonic production breakpoint is inferred.
+
+### GFS-335 verdict
+
+| Area | Result |
+|---|---|
+| D1 integrity/index presence | PASS read-only |
+| Production query measurement | PASS, point-in-time only |
+| Migration0043 defect | NOT PROVEN |
+| Local stress harness | PASS; isolated warning recorded |
+| WhatsApp/checkout/recovery regression | PASS retained; no live traffic used |
+| Production stress/canary/release | NO-GO |
+
+Tests: stress 1/1, full 324/324, adapter 4/4, deadline 9/9, build/lint/audit clean, rollback 4/4. Completion: indexing/integrity 100%; harness/code 100%; stress matrix 100%; live monitoring 0%; release 0%. Exact blocker: obtain separately authorized D1 before/after write, lock/contention, and Cron timing evidence; only then consider an opt-out index or other migration change. Keep public frozen routing and +15/+210 recovery unchanged.
+
 ## GFS-334 order decline and live health investigation (2026-10-30)
 
 ### Outcome

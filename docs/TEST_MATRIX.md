@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-335 D1 audit and stress gate (2026-10-30)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Remote D1 integrity | PASS read-only | `quick_check=ok`, FK rows 0, marker0043=1, ten indexes, zero writes |
+| Production recovery query | MEASURED | 21 rows, 2.385ms, 574 rows read; EXPLAIN shows opt-out anti-join scan |
+| Production delta query | MEASURED | 101 rows, 8.553ms, 14,538 rows read |
+| Synthetic datasets | PASS | 245 / 1k / 10k / 50k orders, pre/post variants |
+| Local load levels | PASS | Target levels 1 / 5 / 10 / 25 / 50 / 100 RPS; four-worker mixed read/write model |
+| Local 50k capacity | WARNING | Post0043 target100 achieved 2.12 RPS, p95 1704.837ms, p99 5703.024ms; pre achieved 38.58 RPS, p95 124.292ms |
+| Checkout/recovery source regression | PASS retained | Full 324/324 and protected-flow tests; harness uses no provider or customer traffic |
+| Production stress/canary | NOT RUN | No remote bindings, deployment, traffic, flag, migration, Meta, payment, message, or customer mutation |
+
 ## GFS-334 investigation and controller adapter (2026-10-30)
 
 | Check | Result | Evidence / boundary |

@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-335 D1 audit and local harness (2026-10-30)
+
+- **Remote D1:** Authorized staging UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; read-only marker0043=1, ten indexes, `quick_check=ok`, FK rows=0. Bounded recovery: 21 result rows / 2.385ms / 574 rows read. Bounded delta: 101 result rows / 8.553ms / 14,538 rows read.
+- **Remaining plan signal:** Production recovery EXPLAIN uses `orders_archived_created_idx` and scans `payment_reminder_v2_opt_outs` for its correlated anti-join. No index was created or removed.
+- **Local-only assets:** `scripts/d1-capacity-stress.mjs` and `scripts/test-d1-capacity-stress.mjs`; synthetic SQLite files are temporary and provider-free. No remote binding or credential is read by the harness.
+- **Health aggregate:** 16 failed outbound conversation rows, 19 payment-instruction dead letters, 304 pending CAPI rows, two receipt-ingestion-blocked audit rows, and 16,224 runtime observation rows in the current seven-day read-only window.
+
 ## GFS-334 read-only evidence (2026-10-30)
 
 - **Cloudflare routing:** Official readback via `getfreeseeds-api-staging` / `getfreeseeds-admin-staging`; API `b426ba47` 100% and `6ef27f02` 0%; Admin `494a3dce` 100% and `c2321eab` 0%. Readback reported zero 5xx. No mutation.

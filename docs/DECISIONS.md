@@ -1,5 +1,12 @@
 # Decisions
 
+## GFS-335: isolate local index warning; do not alter live schema (2026-10-30)
+
+- The local 50k mixed read/write benchmark shows materially worse post0043 SQLite throughput and tail latency under four concurrent file-backed workers. Treat this as a reproducible local capacity warning, not production causation: D1 engine, cache, limits, and workload are not equivalent.
+- The actual staging D1 recovery plan uses `orders_archived_created_idx`, not `orders_recovery_candidate_idx`, and scans the opt-out table in a correlated anti-join. The query returned 21 rows in 2.385ms / 574 rows read. Review the opt-out access path before proposing another migration; do not add an index or replay migration under this task.
+- Actual staging delta returned 101 rows in 8.553ms / 14,538 rows read. This is the current measured source of delta reads; it is not a 24-hour total and does not prove savings.
+- No proven 0043 insert/update failure, D1 integrity defect, missed recovery, duplicate send, or order-volume causal link was found. Keep the existing migration and frozen routing unchanged pending authorized production write/lock evidence.
+
 ## GFS-334: classify order decline as observed, not causally proven (2026-10-30)
 
 - Use equal 24-hour UTC windows around migration0043 for the only defensible comparison. Inbound 3991→2525 and new conversations 627→403 fell more than submitted orders 113→60; conversion also fell from 2.83% to 2.38%. This supports an acquisition/volume decline plus a smaller conversion decline, not a proven WhatsApp or migration regression.

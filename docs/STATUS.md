@@ -1,5 +1,15 @@
 # Status
 
+## GFS-335 D1 audit and isolated capacity benchmark (2026-10-30)
+
+- **Production D1 integrity PASS read-only:** `quick_check=ok`, FK rows `0`, marker0043 present, ten indexes present, no writes.
+- **Actual bounded D1 measurements:** recovery candidates returned 21 rows in 2.385ms / 574 rows read; delta returned 101 rows in 8.553ms / 14,538 rows read. These are point-in-time query measurements, not daily savings.
+- **Actual plan finding:** recovery EXPLAIN uses `orders_archived_created_idx` and performs a correlated scan of `payment_reminder_v2_opt_outs`; migration0043 is not proven to cause this scan. This is the leading remaining query-review item.
+- **Local stress:** deterministic SQLite fixtures covered 245, 1k, 10k, and 50k synthetic orders, pre/post index variants, Admin/page/count/filter/export, delta, recovery, writes, and 1/5/10/25/50/100 target RPS with four-worker mixed read/write load. At 50k and target100, pre achieved 38.58 RPS (p95 124.292ms); post achieved 2.12 RPS (p95 1704.837ms, p99 5703.024ms). This is isolated contention evidence only; production D1 write overhead is unverified.
+- **Operational health:** Current 7-day read-only aggregates show 16 failed conversation replies, 19 historical payment-instruction dead letters, 304 pending CAPI rows, two receipt-ingestion-blocked audit rows, and 16,224 runtime observations. No customer mutation or resend occurred.
+- **Regression PASS:** stress isolation 1/1, full 324/324, adapter 4/4, deadline 9/9, build/lint/audit clean, rollback 4/4. No production deployment or canary was run.
+- **Verdict:** Indexing/integrity PASS; local capacity warning PARTIAL; production release NO-GO. No migration change is justified until an authorized before/after D1 write/lock measurement confirms impact.
+
 ## GFS-334 order decline, live health, and adapter repair (2026-10-30)
 
 - **Routing PASS read-only:** Fresh official adapter readback is API `b426ba47` 100% / `6ef27f02` 0% and Admin `494a3dce` 100% / `c2321eab` 0%; both reported zero 5xx in the readback. No canary was run.
