@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-331 blocker verification (2026-10-30)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| GitHub identity/branch | PASS | PR #11 is `gardenshop/freeseeds`; branch and expected remote head `9682e2a` verified |
+| GitHub push | BLOCKED | Supported non-force `update_ref` denied `Resource not accessible by integration`; remote readback unchanged |
+| Chrome DevTools MCP | BLOCKED | `list_pages` unavailable; no alternate browser/CDP/HTTP/MFA path used |
+| Meta eligibility/ancestry | UNVERIFIED | GFS-330 result retained; no repeated audit or prohibited asset inspection |
+| PUBLIC/release state | PASS carried forward | Frozen API/Admin 100%, candidates 0%, rollback and safeguards retained; no new mutation |
+| Documentation validation | PASS | `git diff --check` and protected-reference consistency checks passed |
+| Source regression | NOT RUN | No source defect found; carried-forward focused121/121, full324/324, build/lint/audit0, rollback4/4 |
+
 ## GFS-330 documentation and release-audit verification (2026-10-30)
 
 | Check | Result | Evidence / boundary |

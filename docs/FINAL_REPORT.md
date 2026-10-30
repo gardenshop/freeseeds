@@ -1,5 +1,42 @@
 # Final Report
 
+## GFS-331 remaining blocker resolution (2026-10-30)
+
+### A. Previous tasks
+
+- **DONE:** GFS-330 protected documentation, local commit `6b22c72`, PR #11/branch identity verification, remote branch readback, worktree preservation, and blocker recording.
+- **BLOCKED:** Push of `6b22c7254259ee5348b41012087191341a3b66b8`; supported GitHub MCP returned `FORBIDDEN: Resource not accessible by integration`, and remote remains `9682e2a`.
+- **BLOCKED/PENDING:** New Meta ancestry and candidate eligibility evidence; Chrome DevTools MCP `list_pages` was unavailable, so no alternate access path was used.
+
+### B. Coexistence and project authorization
+
+Meta eligibility remains **UNVERIFIED**. The GFS-330 official-documentation result is retained; no candidate-specific evidence was obtained in GFS-331. Project authorization remains read-only research only. Candidate runtime/CTA/onboarding/migration/QR/OTP/history-sync/subscription/message use remains **PROHIBITED**.
+
+### C. Git and protected documentation
+
+PR #11 is `gardenshop/freeseeds`, branch `codex/gfs221-cod-compat-001`. Local commit `6b22c7254259ee5348b41012087191341a3b66b8` is one commit ahead of remote `9682e2a`. The non-force push attempt was denied before changing the ref. GFS-331 updates were made only to protected rules/status/decisions/changelog/registry/final-report/test records; no dirty root files were overwritten.
+
+### D. PUBLIC service and regression
+
+Canonical `+923044429933`, frozen API/Admin 100%, optimized candidates 0%, rollback, COD PKR125, Advance methods, signed webhook, D1/R2, customer records and PUBLIC leads remain preserved. No new health probe was run without the required browser MCP; GFS-329 evidence remains authoritative. No source issue was found. Documentation `git diff --check` and consistency validation pass for this update; carried-forward tests remain focused121/121, full324/324, build/lint/audit0, rollback4/4.
+
+### E. GFS-268–331 issues
+
+- **DONE:** GFS-268 fail-closed quota handling, migrations0037/0038/0043 record/integrity work, GFS-328 bounded candidate safety, GFS-329 post-canary classification, and GFS-330 documentation/audit.
+- **PENDING:** comparable live optimization savings, request-level Meta500 attribution, and any separately authorized promotion.
+- **BLOCKED:** GitHub write integration; Chrome DevTools MCP access; candidate-specific Meta eligibility and clean Business ancestry.
+
+### F. Completion
+
+- Lead-only/public frozen service: **100% preserved/audited**.
+- Coexistence: **100% of safely executable audit complete; 0% enabled**, with eligibility still UNVERIFIED.
+- Optimization: **100% safety package; 0% promotion/live-savings claim**.
+- Overall scoped GFS-331: **90%**, with remaining work external-access dependent.
+
+### G. Highest-value next action
+
+Restore a write-enabled `gardenshop` GitHub integration and official Chrome DevTools MCP access. Then push the isolated docs commit and perform one owner-authorized, read-only Meta evidence session. Until both are available, keep all production and Meta state unchanged.
+
 ## GFS-330 coexistence and release audit (2026-10-30)
 
 ### A. Coexistence verdict

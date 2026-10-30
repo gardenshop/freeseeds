@@ -1,5 +1,11 @@
 # Decisions
 
+## 2026-10-30: GFS-331 preserve release while supported access remains blocked
+
+- Accept the GitHub identity and branch as correct, but keep commit `6b22c7254259ee5348b41012087191341a3b66b8` local until a write-enabled `gardenshop` integration is available. The supported fast-forward attempt was denied with `FORBIDDEN: Resource not accessible by integration`; do not retry with force, merge, alternate refs, or credentials.
+- Treat Chrome DevTools MCP unavailability as a platform blocker for new Meta evidence. Do not use raw CDP, direct HTTP, another profile, or owner-device/MFA bypass. Retain the prior UNVERIFIED coexistence/ancestry verdict and all number/Hoja protections.
+- Keep frozen public routing and recovery unchanged. Do not repeat GFS-329 audits, migration0043, expensive D1 queries, Meta500 resends, traffic changes, or savings claims. No source repair is indicated.
+
 ## 2026-10-30: GFS-330 keep coexistence research read-only and release frozen
 
 - Classify `+923124093162` coexistence eligibility as **UNVERIFIED**. Meta's official documentation establishes the general Embedded Signup/coexistence workflow and requirements, but the authorized session did not expose candidate-specific app version, country support, provider/partner status, WABA, permissions, or Phone Number ID evidence.
