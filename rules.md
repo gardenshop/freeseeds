@@ -1298,3 +1298,10 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Fresh observability: API health200/211ms, GraphQL28 requests/0 errors; Admin host health302/110ms because Access is unauthenticated, GraphQL9 requests/0 errors. Authenticated Chrome Admin `/health` returned200. No supported host-side Access bridge is available; live Admin canary remains blocked.
 - Bounded D1 health window `2026-10-30T18:00Z`–`2026-10-31T19:00Z` returned counts only: MESSAGE41, INTERACTIVE39, status sent81/delivered1/read2; no payment-choice/recovery failure rows; recovery 210-minute delivered2/sent2/skipped2; CAPI pending1; unique inbound conversation snapshots19. Aggregate query reads were 26,094, 188 and 4,341; investigation costs only.
 - Controller13/13, adapter6/6 and observability3/3 pass unchanged. No source repair is justified. Public bot and +15/+210 recovery remain GO; Admin canary, ad edit and deployment remain NO-GO.
+
+## GFS-347 Admin monitoring unblock (2026-10-31 UTC)
+
+- P0 read-only routing remains API `b426ba47` 100% / candidate0% and Admin `494a3dce` 100% / candidate `19188b21` 0%; GitHub `gardenshop`, Cloudflare `gisupp@gmail.com`, migration0043 and protected flags remain unchanged.
+- The precise blocker is host-side Cloudflare Access authentication: Admin `/health` is302 without Access, Chrome’s existing authenticated session is200, but no approved service-token environment binding or Worker Access credential exists. Worker secret names are only `FLOW_PUBLIC_KEY` and `META_ACCESS_TOKEN`. Do not inspect secret-bearing Access pages, copy cookies, bypass policy or change Access configuration.
+- GFS-347 canary was not exposed because monitoring P1 failed. Final traffic remains frozen; no rollback, customer, payment, Meta, D1, migration or flag mutation occurred. Public bot and +15/+210 recovery remain GO; Admin release remains NO-GO.
+- Meta account overview still does not expose the authoritative timezone. Keep attribution PARTIAL and do not remap the 22:30 PKT decline or edit ads.

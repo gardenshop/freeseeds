@@ -1593,3 +1593,11 @@ No secrets are stored in this registry.
 - **Meta evidence:** 30-Oct hourly report uses advertiser-account-time-zone breakdown; displayed 22:00-23:00 row 581 impressions / Rs30.46 / 28 clicks / 24 conversations. Date control displayed Etc/UTC; account timezone value unavailable.
 - **Monitoring:** API host HTTP200; Admin host HTTP302 Access; authenticated Chrome Admin HTTP200; GraphQL API28/0 and Admin9/0. Host-side Admin monitor remains unsupported.
 - **D1/policy:** read-only bounded counts only; no writes. +15/+210 ON; five-stage Advance, Automation V2 and utility templates OFF; migration0043 retained; 0044/0045 unapplied.
+
+## GFS-347 verified resources (2026-10-31 UTC)
+
+- **Identity:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta account `1198439777611633`; Hoja/ThanNow isolated.
+- **Workers:** API `b426ba47`100% / `6ef27f02`0%; Admin `494a3dce`100% / `19188b21`0%; no traffic mutation.
+- **Access blocker:** host Admin HTTP302; authenticated Chrome HTTP200; no Access environment binding; Admin Worker secret names only `FLOW_PUBLIC_KEY` and `META_ACCESS_TOKEN`. Do not record secret values.
+- **Meta:** account overview `creeper seeds (1198439777611633)`, one active campaign; authoritative account timezone unavailable; attribution remains PARTIAL.
+- **Release:** canary not run; controller/adapter/observability prior evidence remains PASS; migration0043 retained and 0044/0045 unapplied.

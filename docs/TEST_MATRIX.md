@@ -2106,3 +2106,16 @@ Investigation query costs only (not production savings): representative `rows_re
 | Bounded D1 operational health | PASS | Counts-only query reads 26,094 + 188 + 4,341; no target failure row |
 | Controller/adapter/observability | PASS | 13/13, 6/6, 3/3 |
 | Live canary or deployment | NOT RUN | GFS-346 forbids canary; Admin monitoring gate blocked |
+
+## GFS-347 gate matrix (read-only)
+
+| Check | Result | Evidence |
+|---|---|---|
+| GitHub/Cloudflare identity | PASS | `gardenshop`; `gisupp@gmail.com` / Get Free Seeds |
+| Frozen API/Admin routing | PASS | API `b426ba47`100%, Admin `494a3dce`100%; candidates0% |
+| Host Admin authentication | BLOCKED | HTTP302 Cloudflare Access |
+| Browser Admin authentication | PASS LIMITED | Existing authenticated Chrome `/health` HTTP200; not a controller credential source |
+| Approved host Access credential | BLOCKED | No Access environment binding; Worker secret names contain only app secrets |
+| Admin canary | NOT RUN | Monitoring prerequisite failed; no traffic mutation |
+| Meta timezone | PARTIAL | Account overview has no authoritative timezone value |
+| Source repair | NOT REQUIRED | No proven defect |

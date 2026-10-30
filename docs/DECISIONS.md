@@ -1585,6 +1585,13 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Keep Admin release **BLOCKED**. API host health is200 and Admin host health is302 under Access; authenticated Chrome health is200 but cannot be safely reused by the host controller. Do not extract cookies, bypass Access or change policy.
 - No source defect, migration issue, D1 failure, payment/recovery failure or customer-flow regression was proven. Keep API/Admin frozen, candidates0%, +15/+210 ON, five-stage/Automation/utility OFF, and do not run a canary under GFS-346.
 
+## GFS-347 decision (2026-10-31 UTC)
+
+- Stop the release attempt at P1. Host Admin HTTP302 is caused by Cloudflare Access; browser HTTP200 is valid manual evidence but cannot be transferred to the controller. No approved service-token binding exists, and the Worker secret list contains no Access credential.
+- Do not inspect secret-bearing Access credential pages, extract cookies/tokens, bypass Access, alter policy, or use an unsupported browser bridge. The exact owner action is to provide an official host-side Access service credential/bridge or supported authenticated Windows execution path.
+- Do not run the authorized Admin canary, because its monitoring prerequisite failed. Keep API/Admin frozen at100%, candidates0%, +15/+210 ON, five-stage/Automation/utility OFF. No source repair is justified.
+- Meta timezone remains unavailable from the read-only account overview; retain PARTIAL attribution and do not edit ads.
+
 ## GFS-345 decision (2026-10-30 UTC / PKT)
 
 - Classify the decline as an inbound-volume break beginning 17:30Z/22:30 PKT; acquisition/advertising is the leading hypothesis, not a proven Meta cause.

@@ -4900,6 +4900,16 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - GFS-345 PASS read-only / GFS-346 Meta PARTIAL / Admin BLOCKED safely / source repair not required / deployment and canary not run. Controller13/13, adapter6/6, observability3/3, full334/334, focused121/121, build/lint/audit0 and rollback4/4 remain PASS. API `b426ba47` and Admin `494a3dce` remain100%; candidates0%; +15/+210 ON; five-stage Advance, Automation V2 and utility templates OFF.
 - Next safe action: obtain an official host-side Cloudflare Access monitoring path and authoritative Meta account timezone readout, then request fresh scoped Admin-canary authorization. No canary, promotion, ad edit, migration or customer-facing change under GFS-346.
 
+## GFS-347 final report — Admin monitoring unblock attempt (2026-10-31 UTC)
+
+- **P0 PASS read-only:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / Get Free Seeds account; API `b426ba47` 100% / candidate `6ef27f02` 0%; Admin `494a3dce` 100% / candidate `19188b21` 0%. API repair `b0e883cd` remains 0%; migration0043 is retained and 0044/0045 remain unapplied; +15/+210 ON and five-stage/Automation/utility OFF.
+- **P1 BLOCKED precisely:** host Admin `/health` remains HTTP302 Cloudflare Access while the authenticated Chrome session returns HTTP200. No Access-token environment binding exists, and the Admin Worker secret-name list contains only `FLOW_PUBLIC_KEY` and `META_ACCESS_TOKEN`; no approved host-side Access service credential is available to the controller. The Access service-credentials UI was not inspected for secret metadata. No cookie/token extraction or policy bypass occurred.
+- **P2 NOT RUN:** the authorized 10%/8-minute Admin canary was not exposed because its required monitoring gate failed. Final routing remains frozen Admin100% / candidate0%, API100% / candidate0%; no rollback was needed.
+- **P3 NOT RUN:** Analytics, CSV, Conversations, Orders, payment configuration and COD acceptance were not repeated after the blocker; prior local acceptance and GFS-346 authenticated browser health evidence remain unchanged. No synthetic order/message was created.
+- **P4 PARTIAL:** Meta Ads account overview confirmed `creeper seeds (1198439777611633)` and one active campaign, but no authoritative account timezone was displayed. GFS-346 hourly attribution remains PARTIAL; no ad setting was changed.
+- **GFS-345/346/347:** GFS-345 read-only decline audit PASS with Meta attribution blocked; GFS-346 Meta PARTIAL/Admin BLOCKED; GFS-347 monitoring unblock BLOCKED safely, canary not run, source repair not required. Existing controller13/13, adapter6/6, observability3/3, full334/334, focused121/121, build/lint/audit0 and rollback4/4 remain PASS.
+- **Exact next action:** owner supplies an approved host-side Cloudflare Access service credential/official monitoring bridge, or runs the controller from a supported authenticated Windows host. Then obtain fresh canary authorization if still desired; do not expose traffic under GFS-347.
+
 ### GFS-344/345 status and next action
 
 - GFS-344: PASS controller repair/tests; BLOCKED safely for live Admin canary.

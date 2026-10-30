@@ -2029,6 +2029,15 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **Tests retained PASS:** controller13/13, adapter6/6, observability3/3, full334/334, focused121/121, build/lint/audit0, rollback4/4. No source change or repair.
 - **Disposition:** Meta attribution PARTIAL; supported Admin monitoring BLOCKED; production and canary NO-GO. Next safe action is an official host-side Access monitoring path plus fresh scoped canary authorization.
 
+## GFS-347 monitoring gate (2026-10-31 UTC)
+
+- **P0 PASS:** identities and frozen routing reverified. API `b426ba47` 100% / `6ef27f02` 0%; Admin `494a3dce` 100% / `19188b21` 0%; migration0043 retained; protected reminder flags unchanged.
+- **P1 BLOCKED:** Admin host `/health` HTTP302; authenticated Chrome `/health` HTTP200. No `CF-Access` credential environment binding exists; Admin Worker secret names are only `FLOW_PUBLIC_KEY` and `META_ACCESS_TOKEN`. No supported host-side authenticated bridge is available.
+- **P2 NOT RUN:** no Admin canary exposure, candidate routing change, rollback or promotion. Final split remains API/Admin100% frozen and candidates0%.
+- **P3 NOT RUN:** acceptance was intentionally stopped at the monitoring gate; no synthetic customer data or writes.
+- **P4 PARTIAL:** Meta `creeper seeds (1198439777611633)` account overview showed one active campaign but no authoritative timezone. Attribution remains PARTIAL.
+- **Disposition:** GFS-347 BLOCKED safely; source repair not required. Exact owner action is to provide an approved host-side Access service credential/bridge or supported authenticated Windows execution path.
+
 ## GFS-345 evening order-decline audit (2026-10-30 UTC / PKT)
 
 - **PASS read-only:** identities, frozen routing, migration0043 marker/ten indexes, 0044/0045 absence, D1 quick/FK integrity, and unchanged +15/+210 / five-stage-off policy verified.

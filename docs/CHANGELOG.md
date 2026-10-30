@@ -1445,3 +1445,9 @@
 - Verified official Meta Ads Reporting hourly delivery for 30-Oct and 23-29 Oct in read-only mode. Displayed 22:00-23:00: 581 impressions, Rs30.46 spend, 28 link clicks and 24 messaging conversations; exact UTC mapping remains unavailable because the report exposes `Etc/UTC` on the date control but no authoritative account timezone value.
 - Reverified API HTTP200 and Admin HTTP302 Access from host, authenticated Chrome Admin HTTP200, and genuine Cloudflare GraphQL API28/0 and Admin9/0 samples. No Access bypass, canary or deployment occurred.
 - Recorded bounded D1 counts-only health evidence and retained controller13/13, adapter6/6 and observability3/3. No source change was needed.
+
+## 2026-10-31 - GFS-347 Admin monitoring gate
+
+- Reverified GitHub `gardenshop`, Cloudflare `gisupp@gmail.com`, API/Admin frozen routing and Admin candidate `19188b21` at0%. No production mutation occurred.
+- Checked the supported Cloudflare surfaces read-only. Host Admin remains HTTP302; Chrome Access session remains HTTP200. No Access credential environment binding exists; Worker secret-name list contains only `FLOW_PUBLIC_KEY` and `META_ACCESS_TOKEN`. Canary was not attempted.
+- Meta account overview confirmed the authorized ad account and one active campaign but did not expose the authoritative timezone. Attribution remains PARTIAL. No source repair or general audit rerun was performed.
