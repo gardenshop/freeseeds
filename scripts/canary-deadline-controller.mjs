@@ -21,6 +21,7 @@ const CONTROL_EVENTS = new Set([
   "restore_started",
   "restore_failed",
   "restore_verified",
+  "health_unknown",
   "deadline_reached",
   "release_complete",
   "release_failed"
@@ -86,7 +87,7 @@ function trafficIsBaseline(traffic, scope = "all") {
   const apiBaseline = traffic.apiCandidatePercent === 0 && traffic.apiBaselinePercent === 100;
   const adminBaseline = traffic.adminCandidatePercent === 0 && traffic.adminBaselinePercent === 100;
   return apiBaseline && adminBaseline &&
-    (traffic.api5xx ?? 0) === 0 && (traffic.admin5xx ?? 0) === 0;
+    healthIsSafe(traffic);
 }
 
 function trafficHasCandidate(traffic, target, scope = "all") {
@@ -95,7 +96,22 @@ function trafficHasCandidate(traffic, target, scope = "all") {
   const adminCandidate = traffic.adminCandidatePercent >= target && traffic.adminBaselinePercent <= 100 - target;
   const apiFrozen = traffic.apiCandidatePercent === 0 && traffic.apiBaselinePercent === 100;
   return (scope === "api" ? apiCandidate && adminFrozen : scope === "admin" ? adminCandidate && apiFrozen : apiCandidate && adminCandidate) &&
-    traffic.api5xx === 0 && traffic.admin5xx === 0;
+    healthIsSafe(traffic);
+}
+
+function healthIsSafe(traffic) {
+  const health = traffic?.health;
+  const api = health?.api;
+  const admin = health?.admin;
+  return health?.source === "cloudflare_graphql_http" &&
+    api?.httpStatus === 200 && admin?.httpStatus === 200 &&
+    Number.isInteger(api.errors) && api.errors >= 0 &&
+    Number.isInteger(admin.errors) && admin.errors >= 0 &&
+    Number.isInteger(api.requests) && api.requests >= 0 &&
+    Number.isInteger(admin.requests) && admin.requests >= 0 &&
+    Number.isFinite(api.latencyMs) && api.latencyMs >= 0 &&
+    Number.isFinite(admin.latencyMs) && admin.latencyMs >= 0 &&
+    api.errors === 0 && admin.errors === 0;
 }
 
 async function acquireLock(lockPath, metadata, audit) {
@@ -154,6 +170,7 @@ export async function runCanary(options = {}) {
   let lockRejected = false;
   let rollbackVerified = false;
   let rollbackAttempted = false;
+  let routeMayHaveChanged = false;
 
   const result = (ok, code, extra = {}) => ({
     ok,
@@ -170,25 +187,39 @@ export async function runCanary(options = {}) {
   async function restore(reason) {
     rollbackAttempted = true;
     safeAudit(audit, "restore_started", { reason, elapsedMs: now() - startedAt, remainingMs: hardDeadline - now() });
+    let commandError = null;
     try {
       // A cancellation must stop exposure but never cancel the compensating rollback.
       await invoke("restore_baseline", hardDeadline, null);
     } catch (error) {
+      commandError = error;
       safeAudit(audit, "restore_failed", { reason: "command", code: error?.code ?? "restore_error" });
-      throw new ControllerError("rollback_failed");
     }
+    let retryIssued = false;
     while (now() <= hardDeadline) {
       let traffic;
       try {
         traffic = await read(hardDeadline, null);
       } catch (error) {
         safeAudit(audit, "restore_failed", { reason: "readback", code: error?.code ?? "readback_error" });
-        throw new ControllerError("rollback_unverified");
+        if (now() >= hardDeadline) break;
+        await sleep(Math.min(config.pollIntervalMs, remaining(hardDeadline)), null);
+        continue;
       }
       if (trafficIsBaseline(traffic)) {
         rollbackVerified = true;
         safeAudit(audit, "restore_verified", { elapsedMs: now() - startedAt, remainingMs: hardDeadline - now() });
         return;
+      }
+      if (commandError && !retryIssued) {
+        retryIssued = true;
+        commandError = null;
+        try {
+          await invoke("restore_baseline", hardDeadline, null);
+        } catch (error) {
+          commandError = error;
+          safeAudit(audit, "restore_failed", { reason: "retry_command", code: error?.code ?? "restore_error" });
+        }
       }
       if (now() >= hardDeadline) break;
       await sleep(Math.min(config.pollIntervalMs, remaining(hardDeadline)), null);
@@ -208,8 +239,12 @@ export async function runCanary(options = {}) {
       lockHeld = true;
     }
     const initial = await read(restoreDeadline);
-    if (!trafficIsBaseline(initial, config.scope)) throw new ControllerError("initial_readback_failed");
+    if (!trafficIsBaseline(initial, config.scope)) {
+      safeAudit(audit, "health_unknown", { reason: initial?.health ? "unhealthy" : "unavailable", code: "initial_readback_failed" });
+      throw new ControllerError(initial?.health ? "initial_readback_failed" : "health_unavailable");
+    }
     safeAudit(audit, "route_started", { remainingMs: restoreDeadline - now() });
+    routeMayHaveChanged = true;
     await invoke("expose_candidate", restoreDeadline);
     if (now() >= restoreDeadline) {
       safeAudit(audit, "deadline_reached", { reason: "route_timeout", elapsedMs: now() - startedAt });
@@ -219,7 +254,11 @@ export async function runCanary(options = {}) {
     let candidateObserved = false;
     while (now() < restoreDeadline) {
       const traffic = await read(restoreDeadline);
-      if ((traffic.api5xx ?? 0) > 0 || (traffic.admin5xx ?? 0) > 0) {
+      if (!healthIsSafe(traffic)) {
+        safeAudit(audit, "health_unknown", { reason: traffic?.health ? "unhealthy" : "unavailable", code: "health_unavailable" });
+        throw new ControllerError(traffic?.health ? "provider_5xx" : "health_unavailable");
+      }
+      if (traffic.health.api.errors > 0 || traffic.health.admin.errors > 0) {
         safeAudit(audit, "monitor_failed", { reason: "provider_5xx", code: "provider_5xx" });
         throw new ControllerError("provider_5xx");
       }
@@ -243,7 +282,7 @@ export async function runCanary(options = {}) {
       safeAudit(audit, "release_failed", { reason: "lock", code });
       return result(false, code, { rollbackVerified, rollbackAttempted });
     }
-    if (!rollbackVerified) {
+    if (routeMayHaveChanged && !rollbackVerified) {
       try {
         await restore(code);
       } catch (rollbackError) {
@@ -254,7 +293,7 @@ export async function runCanary(options = {}) {
     safeAudit(audit, "release_failed", { reason: "guard", code });
     return result(false, code, { rollbackVerified, rollbackAttempted });
   } finally {
-    if (lockHeld) {
+    if (lockHeld && (rollbackVerified || !routeMayHaveChanged)) {
       try {
         await unlink(lockPath);
       } catch {

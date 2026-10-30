@@ -36,7 +36,13 @@ function statusFromJson(raw, worker) {
   return { baseline: versions.get(worker.baseline), candidate: versions.get(worker.candidate) };
 }
 
-export function createCloudflareCanaryAdapter({ workers = DEFAULT_WORKERS, runCommand = runWrangler, messagePrefix = "GFS-334", scope = "all", targetCandidatePercent = 1 } = {}) {
+function validateHealth(worker, health, metrics) {
+  if (!health || !Number.isInteger(health.httpStatus) || !Number.isFinite(health.latencyMs) || health.latencyMs < 0) throw new Error(`health_unavailable:${worker.name}`);
+  if (!metrics || metrics.source !== "cloudflare_graphql" || !Number.isInteger(metrics.requests) || metrics.requests < 0 || !Number.isInteger(metrics.errors) || metrics.errors < 0) throw new Error(`metrics_unavailable:${worker.name}`);
+  return { httpStatus: health.httpStatus, latencyMs: health.latencyMs, requests: metrics.requests, errors: metrics.errors };
+}
+
+export function createCloudflareCanaryAdapter({ workers = DEFAULT_WORKERS, runCommand = runWrangler, readHealth, readMetrics, messagePrefix = "GFS-334", scope = "all", targetCandidatePercent = 1 } = {}) {
   if (scope !== "all" && scope !== "api" && scope !== "admin") throw new TypeError("invalid canary scope");
   if (!Number.isInteger(targetCandidatePercent) || targetCandidatePercent <= 0 || targetCandidatePercent >= 100) throw new TypeError("invalid candidate percentage");
   const targetWorkers = scope === "api" ? [workers.api] : scope === "admin" ? [workers.admin] : [workers.api, workers.admin];
@@ -50,6 +56,11 @@ export function createCloudflareCanaryAdapter({ workers = DEFAULT_WORKERS, runCo
   const readWorker = async (worker, signal) => {
     const raw = await runCommand(["deployments", "status", "--name", worker.name, "--json"], { signal });
     return statusFromJson(raw, worker);
+  };
+  const readWorkerHealth = async (worker, signal) => {
+    if (typeof readHealth !== "function" || typeof readMetrics !== "function") return null;
+    const [health, metrics] = await Promise.all([readHealth(worker, { signal }), readMetrics(worker, { signal })]);
+    return validateHealth(worker, health, metrics);
   };
 
   return {
@@ -67,17 +78,22 @@ export function createCloudflareCanaryAdapter({ workers = DEFAULT_WORKERS, runCo
       }
     },
     async readTraffic({ signal } = {}) {
-      const [api, admin] = await Promise.all([
+      const [api, admin, apiHealth, adminHealth] = await Promise.all([
         readWorker(workers.api, signal),
-        readWorker(workers.admin, signal)
+        readWorker(workers.admin, signal),
+        readWorkerHealth(workers.api, signal),
+        readWorkerHealth(workers.admin, signal)
       ]);
       return {
         apiBaselinePercent: api.baseline,
         apiCandidatePercent: api.candidate,
         adminBaselinePercent: admin.baseline,
         adminCandidatePercent: admin.candidate,
-        api5xx: 0,
-        admin5xx: 0
+        health: apiHealth && adminHealth ? {
+          source: "cloudflare_graphql_http",
+          api: apiHealth,
+          admin: adminHealth
+        } : undefined
       };
     }
   };

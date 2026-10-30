@@ -14,9 +14,14 @@ function status(worker, baseline, candidate) {
   ] });
 }
 
+const measured = {
+  readHealth: async () => ({ httpStatus: 200, latencyMs: 12 }),
+  readMetrics: async () => ({ source: "cloudflare_graphql", requests: 10, errors: 0 })
+};
+
 test("uses shell-free argv and preserves spaced deployment messages", async () => {
   const calls = [];
-  const adapter = createCloudflareCanaryAdapter({ workers, runCommand: async (args) => {
+  const adapter = createCloudflareCanaryAdapter({ ...measured, workers, runCommand: async (args) => {
     calls.push(args);
     if (args[0] === "deployments") return status(args[3] === "api" ? workers.api : workers.admin, 100, 0);
     return "";
@@ -29,7 +34,7 @@ test("uses shell-free argv and preserves spaced deployment messages", async () =
 
 test("deploys API then Admin sequentially for expose and restore", async () => {
   const order = [];
-  const adapter = createCloudflareCanaryAdapter({ workers, runCommand: async (args) => {
+  const adapter = createCloudflareCanaryAdapter({ ...measured, workers, runCommand: async (args) => {
     if (args[0] === "versions") order.push(`${args[5]}:${args[3]}`);
     return args[0] === "deployments" ? status(args[3] === "api" ? workers.api : workers.admin, 100, 0) : "";
   } });
@@ -40,7 +45,7 @@ test("deploys API then Admin sequentially for expose and restore", async () => {
 
 test("API scope deploys only API while retaining Admin readback", async () => {
   const calls = [];
-  const adapter = createCloudflareCanaryAdapter({ scope: "api", workers, runCommand: async (args) => {
+  const adapter = createCloudflareCanaryAdapter({ ...measured, scope: "api", workers, runCommand: async (args) => {
     calls.push(args);
     if (args[0] === "deployments") return status(args[3] === "api" ? workers.api : workers.admin, args[3] === "api" ? 99 : 100, 0);
     return "";
@@ -55,7 +60,7 @@ test("API scope deploys only API while retaining Admin readback", async () => {
 
 test("Admin scope supports a bounded 10 percent canary while retaining API frozen", async () => {
   const calls = [];
-  const adapter = createCloudflareCanaryAdapter({ scope: "admin", targetCandidatePercent: 10, workers, runCommand: async (args) => {
+  const adapter = createCloudflareCanaryAdapter({ ...measured, scope: "admin", targetCandidatePercent: 10, workers, runCommand: async (args) => {
     calls.push(args);
     if (args[0] === "deployments") return status(args[3] === "api" ? workers.api : workers.admin, args[3] === "api" ? 100 : 90, args[3] === "api" ? 0 : 10);
     return "";
@@ -68,18 +73,18 @@ test("Admin scope supports a bounded 10 percent canary while retaining API froze
 });
 
 test("reads exact version percentages and keeps health fields fail-closed", async () => {
-  const adapter = createCloudflareCanaryAdapter({ workers, runCommand: async (args) => {
+  const adapter = createCloudflareCanaryAdapter({ ...measured, workers, runCommand: async (args) => {
     if (args[0] !== "deployments") return "";
     return status(args[3] === "api" ? workers.api : workers.admin, 99, 1);
   } });
   await assert.doesNotReject(async () => {
     const traffic = await adapter.readTraffic();
-    assert.deepEqual(traffic, { apiBaselinePercent: 99, apiCandidatePercent: 1, adminBaselinePercent: 99, adminCandidatePercent: 1, api5xx: 0, admin5xx: 0 });
+    assert.deepEqual(traffic, { apiBaselinePercent: 99, apiCandidatePercent: 1, adminBaselinePercent: 99, adminCandidatePercent: 1, health: { source: "cloudflare_graphql_http", api: { httpStatus: 200, latencyMs: 12, requests: 10, errors: 0 }, admin: { httpStatus: 200, latencyMs: 12, requests: 10, errors: 0 } } });
   });
 });
 
 test("rejects unknown deployed versions", async () => {
-  const adapter = createCloudflareCanaryAdapter({ workers, runCommand: async (args) => {
+  const adapter = createCloudflareCanaryAdapter({ ...measured, workers, runCommand: async (args) => {
     if (args[0] !== "deployments") return "";
     return JSON.stringify({ versions: [{ version_id: "unknown", percentage: 100 }] });
   } });

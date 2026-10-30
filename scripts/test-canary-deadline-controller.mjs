@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -14,9 +15,13 @@ function fakeClock() {
   };
 }
 
-function traffic(kind = "baseline") {
-  if (kind === "candidate") return { apiCandidatePercent: 1, adminCandidatePercent: 1, apiBaselinePercent: 99, adminBaselinePercent: 99, api5xx: 0, admin5xx: 0 };
-  return { apiCandidatePercent: 0, adminCandidatePercent: 0, apiBaselinePercent: 100, adminBaselinePercent: 100, api5xx: 0, admin5xx: 0 };
+function health(apiErrors = 0, adminErrors = 0, apiStatus = 200, adminStatus = 200) {
+  return { source: "cloudflare_graphql_http", api: { httpStatus: apiStatus, latencyMs: 10, requests: 10, errors: apiErrors }, admin: { httpStatus: adminStatus, latencyMs: 10, requests: 10, errors: adminErrors } };
+}
+
+function traffic(kind = "baseline", measuredHealth = health()) {
+  if (kind === "candidate") return { apiCandidatePercent: 1, adminCandidatePercent: 1, apiBaselinePercent: 99, adminBaselinePercent: 99, health: measuredHealth };
+  return { apiCandidatePercent: 0, adminCandidatePercent: 0, apiBaselinePercent: 100, adminBaselinePercent: 100, health: measuredHealth };
 }
 
 async function withLock(testBody) {
@@ -68,7 +73,7 @@ test("API-only scope exposes and restores API while requiring Admin to remain fr
     ...baseOptions(clock, lockPath, { scope: "api" }),
     execute: async (action) => { if (action === "expose_candidate") exposed = true; if (action === "restore_baseline") exposed = false; },
     readTraffic: async () => exposed
-      ? { apiCandidatePercent: 1, apiBaselinePercent: 99, adminCandidatePercent: 0, adminBaselinePercent: 100, api5xx: 0, admin5xx: 0 }
+      ? { apiCandidatePercent: 1, apiBaselinePercent: 99, adminCandidatePercent: 0, adminBaselinePercent: 100, health: health() }
       : traffic()
   });
   assert.equal(result.ok, true);
@@ -83,7 +88,7 @@ test("Admin-only scope exposes and restores Admin while requiring API to remain 
     ...baseOptions(clock, lockPath, { scope: "admin", targetCandidatePercent: 10 }),
     execute: async (action) => { if (action === "expose_candidate") exposed = true; if (action === "restore_baseline") exposed = false; },
     readTraffic: async () => exposed
-      ? { apiCandidatePercent: 0, apiBaselinePercent: 100, adminCandidatePercent: 10, adminBaselinePercent: 90, api5xx: 0, admin5xx: 0 }
+      ? { apiCandidatePercent: 0, apiBaselinePercent: 100, adminCandidatePercent: 10, adminBaselinePercent: 90, health: health() }
       : traffic()
   });
   assert.equal(result.ok, true);
@@ -117,6 +122,36 @@ test("command timeout rolls back and does not leave the lock", async () => withL
   assert.equal(second.ok, true);
 }));
 
+test("unknown health fails before exposure and never fabricates zero errors", async () => withLock(async (lockPath) => {
+  const clock = fakeClock();
+  let exposed = false;
+  const result = await runCanary(baseOptions(clock, lockPath, {
+    execute: async (action) => { if (action === "expose_candidate") exposed = true; },
+    readTraffic: async () => ({ ...traffic(), health: undefined })
+  }));
+  assert.equal(result.ok, false);
+  assert.equal(result.code, "health_unavailable");
+  assert.equal(exposed, false);
+  assert.equal(result.rollbackAttempted, false);
+}));
+
+test("late remote rollback completion is accepted only after baseline readback", async () => withLock(async (lockPath) => {
+  const clock = fakeClock();
+  let exposed = false;
+  let restoreCalls = 0;
+  const result = await runCanary(baseOptions(clock, lockPath, {
+    execute: async (action) => {
+      if (action === "expose_candidate") exposed = true;
+      if (action === "restore_baseline") { restoreCalls += 1; exposed = false; const error = new Error("remote operation completed after local timeout"); error.code = "command_timeout"; throw error; }
+    },
+    readTraffic: async () => exposed ? traffic("candidate") : traffic()
+  }));
+  assert.equal(result.ok, true);
+  assert.equal(result.code, "complete");
+  assert.equal(result.rollbackVerified, true);
+  assert.equal(restoreCalls, 1);
+}));
+
 test("failed rollback is surfaced as a fail-closed result", async () => withLock(async (lockPath) => {
   const clock = fakeClock();
   let reads = 0;
@@ -130,7 +165,9 @@ test("failed rollback is surfaced as a fail-closed result", async () => withLock
     }
   }));
   assert.equal(result.ok, false);
-  assert.equal(result.code, "rollback_failed");
+  assert.equal(result.code, "rollback_unverified");
+  assert.equal(result.rollbackVerified, false);
+  assert.equal(existsSync(lockPath), true);
 }));
 
 test("process interruption invokes bounded rollback and verifies it", async () => withLock(async (lockPath) => {
@@ -162,7 +199,7 @@ test("a monitored provider 5xx triggers immediate restore", async () => withLock
       if (restored) return traffic("baseline");
       if (reads === 1) return traffic("baseline");
       if (reads === 2) return traffic("candidate");
-      return { ...traffic("candidate"), admin5xx: 1 };
+      return traffic("candidate", health(0, 1));
     }
   }));
   assert.equal(result.ok, false);
