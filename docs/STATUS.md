@@ -1,5 +1,14 @@
 # Status
 
+## GFS-334 order decline, live health, and adapter repair (2026-10-30)
+
+- **Routing PASS read-only:** Fresh official adapter readback is API `b426ba47` 100% / `6ef27f02` 0% and Admin `494a3dce` 100% / `c2321eab` 0%; both reported zero 5xx in the readback. No canary was run.
+- **Order trend PARTIAL:** Equal 24-hour windows around migration0043 show inbound 3991→2525 (-36.7%), new conversations 627→403 (-35.7%), submitted orders 113→60 (-46.9%), payment selections 20→9 (-55.0%), and submitted/inbound conversion 2.83%→2.38% (-0.45pp). The larger measured signal is reduced inbound volume; exact funnel-stage cause is UNVERIFIED because stage history is not retained.
+- **Health evidence PARTIAL:** 16 outbound conversation replies were classified as Meta/provider failures in the last 7 days; 19 payment-instruction outbox dead letters were confined to 2026-10-23—25, before the post-migration window; none occurred afterward. No unexpected WhatsApp event status was found. 302 CAPI events remain pending; request-level provider acknowledgement and customer impact are not available from current read-only evidence.
+- **D1 PASS read-only:** `/api/orders/changes` uses covering indexes on orders, payments, COD, outbound, and outbox branches; recovery due-stage scan uses `payment_choice_recovery_stage_due_idx`. EXPLAIN reported 0 rows read for both bounded plans; temp grouping/order is expected. No 24-hour savings claim is made.
+- **Controller repair PASS local:** Replaced Windows shell-mediated `.cmd` invocation with shell-free `process.execPath` → Wrangler JS entrypoint. Adapter tests 4/4, deadline tests 9/9, full 324/324, build/lint/audit clean, and rollback 4/4 passed. No live canary retry.
+- **Verdict:** Public frozen service remains GO on preserved evidence; GFS-334 live-flow acceptance and optimization release remain NO-GO/PENDING until provider logs explain the 16 failures and 302 pending CAPI rows, and any remediation receives separate authorization.
+
 ## GFS-333 limited canary fail-closed stop (2026-10-30)
 
 - **Preflight PASS read-only:** Authorized identity/account, actual Worker names, frozen/candidate versions, bindings, flags, D1 marker0043, ten migration indexes, `quick_check=ok` and empty FK check matched scope.

@@ -1,5 +1,11 @@
 # Changelog
 
+## GFS-334 (2026-10-30)
+
+- Added a shell-free Cloudflare canary adapter and four tests after proving Windows `shell:true` split spaced Wrangler messages during GFS-333.
+- Completed read-only 7-day order, outbox, WhatsApp-event, CAPI, and equal pre/post migration measurements. Recorded the decline and funnel-data limitation without inventing causation or daily D1 savings.
+- Captured live D1 EXPLAIN plans for Admin delta and recovery due-stage paths; no production or customer state changed and no canary was retried.
+
 ## GFS-333 (2026-10-30)
 
 - Performed authorized preflight and focused 64/64 acceptance; migration0043/integrity and controller9/9 evidence remained clean.

@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-334 read-only evidence (2026-10-30)
+
+- **Cloudflare routing:** Official readback via `getfreeseeds-api-staging` / `getfreeseeds-admin-staging`; API `b426ba47` 100% and `6ef27f02` 0%; Admin `494a3dce` 100% and `c2321eab` 0%. Readback reported zero 5xx. No mutation.
+- **D1 plans:** `/api/orders/changes` searched `orders_updated_id_idx`, `payments_updated_order_idx`, `cod_order_details_updated_order_idx`, `outbound_messages_updated_order_idx`, and `outbox_jobs_updated_entity_kind_idx`; recovery scan used `payment_choice_recovery_stage_due_idx`. Wrangler EXPLAIN metadata reported `rows_read:0` and `changes:0` for each explain call.
+- **Sanitized health:** 16 outbound conversation failures classified as Meta/provider failures; 19 payment-instruction dead letters were pre-window only; 302 CAPI send rows remain pending. No raw provider error, customer identifier, secret, or payload is registered.
+- **Local repair:** `scripts/cloudflare-canary-adapter.mjs`, `scripts/test-cloudflare-canary-adapter.mjs`, and `test:canary:adapter`; shell-free Wrangler entrypoint. No Worker runtime import.
+
 ## GFS-333 canary boundary (2026-10-30)
 
 - **Authorization scope:** API `getfreeseeds-api-staging` candidate `6ef27f02`; Admin `getfreeseeds-admin-staging` candidate `c2321eab`; maximum 1%/15 minutes; no promotion.

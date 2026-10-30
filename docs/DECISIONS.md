@@ -1,5 +1,17 @@
 # Decisions
 
+## GFS-334: classify order decline as observed, not causally proven (2026-10-30)
+
+- Use equal 24-hour UTC windows around migration0043 for the only defensible comparison. Inbound 3991→2525 and new conversations 627→403 fell more than submitted orders 113→60; conversion also fell from 2.83% to 2.38%. This supports an acquisition/volume decline plus a smaller conversion decline, not a proven WhatsApp or migration regression.
+- Do not reconstruct offer/fertilizer/province/review funnel conversion from current conversation states; those are latest snapshots, not historical transitions. Keep the stage-funnel conclusion UNVERIFIED.
+- Treat 16 recent Meta/provider-classified reply failures and 302 pending CAPI rows as operational follow-up items with unverified customer impact. Do not force resend, alter messages, or mutate payment/order state. The 19 payment-instruction dead letters are historical pre-window evidence; no post-window dead letters were found.
+
+## GFS-334: repair Windows Wrangler argument transport, do not rerun canary (2026-10-30)
+
+- Root cause is proven: `shell:true` split the spaced release message, so Wrangler interpreted `API` / `authorized` as version-path arguments. Use `process.execPath` with the Wrangler JS entrypoint and `shell:false`, with bounded timeout and exact-name/version checks.
+- Adapter 4/4, deadline 9/9, full 324/324, build/lint/audit and rollback 4/4 passed. This repairs local invocation only; it does not prove platform timing or authorize another canary.
+- Keep current routing frozen and require a new scoped owner authorization before any traffic mutation.
+
 ## GFS-333: stop after fail-closed canary adapter failure (2026-10-30)
 
 - Do not attempt another traffic mutation after the live route command and compensating restore both returned failure. The safety boundary is not established for the current invocation path.

@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-334 order-health investigation and controller repair (2026-10-30)
+
+- Read-only 7-day evidence shows inbound activity and submitted orders declined after the migration window, but no exact stage-funnel attribution is permitted: historical offer/fertilizer/province/review transitions are not stored. Report the decline as observed, not as a proven customer-flow defect.
+- Equal 24-hour UTC windows around migration0043: inbound events 3991 to 2525 (-36.7%), new conversations 627 to 403 (-35.7%), submitted orders 113 to 60 (-46.9%), payment-method selections 20 to 9 (-55.0%), and submitted/inbound conversion 2.83% to 2.38% (-0.45 percentage points; about -15.8% relative). Acquisition decline is the larger measured component; causation remains unverified.
+- Last-7-day operational evidence is sanitized: 16 failed outbound conversation replies classified as Meta/provider failures; 19 payment-instruction dead letters occurred only before migration on 2026-10-23 through 2026-10-25; none occurred in the post window. No unexpected WhatsApp event statuses, duplicate-send proof, or lost-order proof was found. CAPI has 302 pending rows and needs authorized provider-log follow-up; customer impact is unverified.
+- The GFS-333 live adapter defect is proven locally: Windows `shell:true` split a spaced Wrangler message into positional arguments, producing invalid version paths ending in `/versions/API` and `/versions/authorized`. The adapter now invokes Wrangler's JavaScript entrypoint through `process.execPath` with `shell:false`, preserves one message argument, validates exact Worker identities, and remains fail-closed. No canary is retried in GFS-334.
+- Fresh read-only routing remains API `b426ba47` 100% / candidate `6ef27f02` 0% and Admin `494a3dce` 100% / candidate `c2321eab` 0%. +15/+210 recovery stays ON; five-stage Advance, Automation V2 and utility templates stay OFF. No live mutation or customer test is allowed.
+
 ## GFS-333 canary fail-closed stop (2026-10-30)
 
 - Owner authorization was limited to API `getfreeseeds-api-staging` candidate `6ef27f02` and Admin `getfreeseeds-admin-staging` candidate `c2321eab`, at most 1% for 15 minutes, with at least a 60-second restoration margin. No 100% promotion, flag, migration, Meta, payment or customer action was authorized.

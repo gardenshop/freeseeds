@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-334 investigation and controller adapter (2026-10-30)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Frozen routing readback | PASS read-only | API `b426ba47` 100% / candidate `6ef27f02` 0%; Admin `494a3dce` 100% / candidate `c2321eab` 0% |
+| D1 query plans | PASS read-only | Delta branches use five covering indexes; due recovery scan uses status/due index; no writes |
+| Order decline measurement | PARTIAL | Equal 24h inbound/orders/conversion comparison; historical stage transitions unavailable |
+| Meta/outbox health | PARTIAL | 16 sanitized Meta-classified outbound failures; 19 pre-window payment dead letters; 302 CAPI pending; impact unverified |
+| Shell-free canary adapter | PASS | 4/4 tests; spaced Wrangler message remains one argument; exact Worker identity validation |
+| Deadline controller | PASS retained | 9/9 synthetic safety cases |
+| Regression/build/rollback | PASS | Full 324/324; build/lint/audit clean; legacy rollback 4/4 |
+| Live canary / production mutation | NOT RUN | No traffic, flag, migration, Meta, payment, message, or customer mutation |
+
 ## GFS-333 canary gate (2026-10-30)
 
 | Check | Result | Evidence / boundary |

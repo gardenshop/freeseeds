@@ -1,5 +1,29 @@
 # Final Report
 
+## GFS-334 order decline and live health investigation (2026-10-30)
+
+### Outcome
+
+- **Routing:** PASS read-only. API `b426ba47` 100% / `6ef27f02` 0%; Admin `494a3dce` 100% / `c2321eab` 0%; readback 5xx fields were zero. No live canary, deployment, flag, migration, Meta, payment, message, or customer mutation occurred.
+- **Order trend:** In equal 24-hour UTC windows around migration0043, inbound events fell 3991→2525 (-36.7%), new conversations 627→403 (-35.7%), submitted orders 113→60 (-46.9%), payment selections 20→9 (-55.0%), and submitted/inbound conversion 2.83%→2.38% (-0.45pp, about -15.8% relative). The primary measured signal is lower inbound volume; conversion decline is also present but causation is UNVERIFIED.
+- **Funnel caveat:** The database retains latest conversation state, not stage-transition history. Offer/fertilizer/province/review drop-off cannot be calculated honestly from this evidence.
+- **Operational health:** Last 7 days contain 16 sanitized Meta/provider-classified outbound conversation failures and 302 pending CAPI rows. There were 19 payment-instruction dead letters only on Oct23–25, before the post window, and none afterward. No unexpected WhatsApp event statuses or proven duplicate/lost-order signal was found. Request-level Meta acknowledgement and customer impact remain UNVERIFIED.
+- **Controller:** GFS-333's failure is repaired locally: Windows `shell:true` split the spaced Wrangler message and generated invalid `/versions/API` and `/versions/authorized` paths. The shell-free Node/Wrangler adapter passes 4/4; deadline suite 9/9; full suite 324/324; build/lint/audit clean; rollback 4/4. No canary retry is permitted under this task.
+- **D1:** EXPLAIN confirms covering-index searches for all five delta branches and an indexed `status,due_at` recovery scan. These are query-plan/readiness results, not live 24-hour savings. Historical 494M/day, 25-row unchanged refresh, and 12.41% equivalent recovery comparison remain non-production-wide evidence.
+
+### GFS-334 gate
+
+| Area | Result |
+|---|---|
+| Read-only identity/routing/flags | PASS |
+| Order trend measurement | PARTIAL; decline observed, cause unverified |
+| Meta/outbox/CAPI health | PARTIAL; provider follow-up required |
+| Local controller repair | PASS |
+| Customer-flow zero-regression proof | PENDING; no new live test authorized |
+| Canary/full optimization release | NO-GO |
+
+Completion: source/controller repair 100%; migration/integrity 100% retained; read-only investigation 85%; live canary 0%; full release 0%; measured 24-hour savings 0%. Public frozen service remains GO on existing protections. Exact next action: owner/provider operators must use authorized request-level logs to correlate the 16 failed replies and 302 pending CAPI rows, then separately authorize any remediation; do not resend, change flags, or rerun canary from this report.
+
 ## GFS-333 limited D1 canary — fail-closed result (2026-10-30)
 
 ### Result
