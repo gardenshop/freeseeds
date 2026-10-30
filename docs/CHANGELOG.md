@@ -1423,3 +1423,8 @@
 - Fixed abandonment SQL to exclude customers with any submitted order from PRE_ORDER/ACTIVE and terminal/cancelled orders from POST_ORDER. Added real node:sqlite D1-compatible fixtures for lifecycle, duplicate callback, UTC-boundary, later-activity, and reminder-status cases.
 - Verified full330/330, focused analytics4/4, build/lint/audit0, and legacy rollback4/4. Read-only D1 measurements recorded; migration0044 remains unapplied and its unqueried leads index was removed from the local proposal.
 - Verified `gisupp@gmail.com` / Get Free Seeds account, uploaded Admin-only version `c7e984d1-74a8-47d8-9277-fd7c8b41e329`, and routed it at0% against frozen Admin `494a3dce`100%. API remained frozen; no customer, payment, Meta, D1, migration, or API canary action occurred.
+## 2026-10-30 — GFS-343 Admin canary fail-closed
+
+- Added and tested Admin-only bounded canary support with configurable percentage, API-frozen guard, restoration margin, lock, timeout, and verified final readback. Pushed as `10527d589ad8c5545a4a50be3c2704b951a0ce47`.
+- Authorized Admin 10% candidate checks passed for analytics, CSV, conversations, Orders, payment configuration, and COD configuration. The controller then hit a host control-plane `command_timeout`; restoration was automatic and verified before the cap.
+- Final state remained frozen API/Admin 100%, candidates 0%. No customer, payment, Meta, migration, flag, or API mutation occurred; Admin 100% promotion was not attempted.

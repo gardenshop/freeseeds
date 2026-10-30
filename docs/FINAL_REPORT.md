@@ -4795,3 +4795,29 @@ The current event/contact plans scan their tables under migration0043. No produc
 - GFS-340: PASS for source/tests/Admin0%; NO-GO for promotion.
 
 Exact next authorization: approve a separately scoped Admin-only canary or 100% promotion with candidate/version, traffic, duration, error/latency/order/payment/reminder thresholds, rollback version, and confirmation that migration0044/API/flags/Meta/customer sends remain out of scope. Current public bot and +15/+210 recovery remain GO; five-stage Advance reminders remain OFF.
+\n+## GFS-343 final report — Admin analytics and conversations release (2026-10-30 UTC)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Identity and freeze | PASS | Cloudflare `gisupp@gmail.com` / Get Free Seeds; API `b426ba47` 100%; Admin `494a3dce` 100% final; candidates 0% |
+| Candidate acceptance | PASS | Analytics/API/CSV, conversations, Orders, payment config, COD PKR125; masked metadata-only conversation output |
+| Authorized canary | FAIL-CLOSED | Start `18:00:55Z`; candidate observed `18:01:11Z`; `command_timeout` around `18:07:10Z`; restoration verified `18:07:21Z`; under 10-minute cap |
+| Promotion | NOT RUN | Candidate was not promoted; 15-minute post-promotion monitor was not started |
+| WhatsApp/order protection | PASS | No customer flow, payment, COD, webhook, Queue, Cron, reminder, Meta, D1, or flag mutation |
+| Tests | PASS | adapter6/6, controller11/11, focused8/8, full334/334, build/lint/audit0, rollback4/4 |
+| Git synchronization | PASS | remote `10527d589ad8c5545a4a50be3c2704b951a0ce47` |
+
+### D1 evidence
+
+One candidate analytics request returned rows_read 48,128; 9,157; 848; 48,156; 2,050; and 328, totaling 108,667. These are request-level observations without latency and do not establish a 24-hour saving. No production-wide reduction is claimed.
+
+### GFS-338–343 disposition
+
+- GFS-338: BLOCKED — prior API-only canary failed closed.
+- GFS-339: PASS locally — inbound analytics/reporting delivered.
+- GFS-340: PASS source/accuracy/Admin0%; promotion NO-GO.
+- GFS-341: PASS locally — read-only metadata conversation viewer and future-history proposal.
+- GFS-342: PASS staging — Admin candidate at0%; execution pending authorization.
+- GFS-343: BLOCKED for promotion — candidate acceptance passed, but the live control-plane timeout forced verified rollback.
+
+**Operational decision:** public bot and +15/+210 recovery remain GO; five-stage Advance reminders, Automation V2, and utility templates remain OFF. Full Admin release is NO-GO. Next action is to prove a supported host-context timeout/readback repair and obtain fresh scoped authorization for one new bounded Admin canary; do not reuse this authorization.

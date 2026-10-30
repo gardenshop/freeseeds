@@ -1563,3 +1563,10 @@ No secrets are stored in this registry.
 - **D1:** `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; migration0043 marker and ten indexes verified; `quick_check=ok`, FK empty; migration0044 remains local/unapplied.
 - **Read-only measurements:** today events2059/24692 rows/10.5666ms, contacts368/2004/1.4008ms, orders53/347/0.5633ms; 7d events11081/24692/12.0104ms, contacts1822/2004/1.1254ms, orders303/347/0.4167ms; 31d events24677 rows. No identifiers or raw payloads recorded.
 - **Source/test:** commit `14c310c` contains semantic fixes and real SQL fixtures; full330/330, focused4/4, build/lint/audit0, rollback4/4.
+## GFS-343 verified release resources (2026-10-30 UTC)
+
+- **Identity:** GitHub `gardenshop` push verified; Cloudflare `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical GFS Meta only; Hoja/ThanNow isolated.
+- **Workers:** API `b426ba47` 100% / `6ef27f02` 0%; Admin `494a3dce` 100% / `19188b21` 0% after verified fail-closed restoration; rollback versions remain available.
+- **Release tooling:** remote SHA `10527d589ad8c5545a4a50be3c2704b951a0ce47`; controller logs contain no secrets or customer data.
+- **D1:** binding `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; migration0043 retained; 0044/0045 unapplied. Candidate analytics sample was 108,667 rows_read across six query shapes; not a daily-savings claim.
+- **Flags/policy:** +15/+210 recovery ON; five-stage Advance reminders, Automation V2, and utility templates OFF; no customer send or payment/Meta mutation.

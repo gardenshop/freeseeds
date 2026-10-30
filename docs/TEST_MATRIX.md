@@ -2051,3 +2051,15 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 | API/canary | BLOCKED/UNCHANGED | API `b426ba47`100%; no GFS-338 retry or API deployment |
 
 Measured read-only D1 shapes: today events2059/24692 rows/10.5666ms, contacts368/2004/1.4008ms, orders53/347/0.5633ms; 7d events11081/24692/12.0104ms, contacts1822/2004/1.1254ms, orders303/347/0.4167ms; 31d event read24677 rows. These are query measurements, not 24-hour savings.
+## GFS-343 Admin-only release evidence (2026-10-30 UTC)
+\n+| Check | Result | Evidence |
+|---|---|---|
+| Controller adapter | PASS | Admin scope 10% test 6/6 |
+| Deadline controller | PASS local / FAIL live gate | Admin simulation 11/11; live gate failed closed on control-plane `command_timeout`; restoration verified |
+| Candidate acceptance | PASS | Analytics/API/CSV, conversations, Orders, payment config, and COD config read-only checks passed at 10% |
+| API protection | PASS | `b426ba47` remained 100%; candidate 0% |
+| Final Admin routing | PASS | `494a3dce` 100%; `19188b21` 0% after restoration |
+| Full quality | PASS | 334/334; build; lint; offline audit 0 vulnerabilities; rollback4/4 |
+| Promotion/monitor | NOT RUN | All live gate conditions were not satisfied |
+
+Candidate analytics rows_read sample: 48,128 + 9,157 + 848 + 48,156 + 2,050 + 328 = 108,667 for one request. This is not a 24-hour saving claim; no latency field was returned.

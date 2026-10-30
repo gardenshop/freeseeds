@@ -1567,3 +1567,8 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Treat PAID/fulfilled, COD lifecycle, Advance pending, and active/pre/post snapshots as labeled states with possible overlap; never present them as mutually exclusive abandonment totals. Exclude any customer with an order from PRE_ORDER/ACTIVE and terminal/cancelled orders from POST_ORDER.
 - Keep migration0044 local-only. Its event/conversation/order indexes may be reconsidered only with measured query benefit; remove the unqueried leads index to avoid write overhead. Do not apply without separate authorization.
 - Owner authorization permits one Admin-only candidate at0%, not API deployment, canary, migration, flags, Meta, payment, customer sends, or 100% promotion. Candidate `c7e984d1-74a8-47d8-9277-fd7c8b41e329` is staged against frozen Admin `494a3dce`100%; API remains frozen.
+## GFS-343 release decision (2026-10-30 UTC)
+
+- Accept candidate read-only acceptance, but reject promotion: the candidate passed feature checks while the live controller failed closed on a control-plane `command_timeout` before the authorized 10-minute cap.
+- Automatic restoration is authoritative: API `b426ba47` 100% / candidate 0%; Admin `494a3dce` 100% / candidate `19188b21` 0%. No retry, promotion, API deployment, migration, flag, customer, payment, or Meta action is permitted under this authorization.
+- The next release must prove a supported host-context command/readback timeout fix and obtain fresh scoped approval. Do not claim Admin 100% service or 15-minute post-promotion monitoring from this run.
