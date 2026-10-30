@@ -4709,3 +4709,40 @@ Public ordering: **GO**. Two-stage recovery: **GO and stable**. Five-stage Advan
 **Current flags:** Last verified live configuration remains recovery ON from `2026-10-28T20:05:20.290Z`; five-stage Advance reminders, automation, and utility-template approval remain OFF. No flag mutation occurred in this audit.
 
 **Readiness:** Product/ordering readiness 100% protected; diagnostic verification 90%. Public ordering GO; two-stage recovery GO; five-stage Advance reminders OFF. The only remaining blocker is authenticated Admin visual evidence, requiring the existing Access browser profile to be connected to Chrome DevTools MCP.
+# GFS-340 final report — analytics accuracy and Admin-only 0% staging (2026-10-30)
+
+## Outcome
+
+GFS-340 is PASS for local accuracy repair, real SQL regression, protected staging, and Admin-only 0% candidate preparation. It is NO-GO for 100% promotion, API deployment, migration0044, canary, and customer-facing changes.
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Live protection | PASS | API `b426ba47`100%; Admin `494a3dce`100%; API candidate `6ef27f02`0%; recovery unchanged; five-stage/automation/utility OFF |
+| Analytics semantics | PASS | Snapshot estimate contacts; inbound-message conversion denominator; PAID/fulfilled; COD lifecycle; separate reminder SENT/DELIVERED/READ |
+| Abandonment SQL | PASS | Real node:sqlite fixtures; pre/post/active, Advance, COD, PAID, cancelled, duplicate callbacks, UTC and later activity covered |
+| Quality | PASS | focused4/4; full330/330; build/lint/audit0; rollback4/4 |
+| D1 | PASS read-only | marker0043, ten indexes, quick_check ok, FK empty; proposed0044 unapplied |
+| Admin candidate | PASS | `c7e984d1-74a8-47d8-9277-fd7c8b41e329` uploaded and deployment `6e1a3016-a4d1-4674-be82-0f4109603ccd` read back at0% |
+| Full release | NO-GO | Requires new scoped owner authorization for any promotion or live measurement |
+
+## Actual query evidence
+
+| Window / shape | Result | D1 rows_read | Duration |
+|---|---:|---:|---:|
+| Today inbound events | 2059 | 24692 | 10.5666ms |
+| Today contacts | 368 | 2004 | 1.4008ms |
+| Today orders | 53 | 347 | 0.5633ms |
+| 7d inbound events | 11081 | 24692 | 12.0104ms |
+| 7d contacts | 1822 | 2004 | 1.1254ms |
+| 7d orders | 303 | 347 | 0.4167ms |
+| 31d event table | 24677 | 24677 | 10.5329ms |
+
+The current event/contact plans scan their tables under migration0043. No production-wide savings or 0044 benefit is claimed; the proposed event/conversation/order indexes remain local-only and the unqueried leads index was removed.
+
+## Task comparison and next gate
+
+- GFS-338: BLOCKED — API-only canary failed closed before exposure; not retried.
+- GFS-339: PASS locally — initial analytics/reporting delivered, with GFS-340 semantic corrections superseding ambiguous labels.
+- GFS-340: PASS for source/tests/Admin0%; NO-GO for promotion.
+
+Exact next authorization: approve a separately scoped Admin-only canary or 100% promotion with candidate/version, traffic, duration, error/latency/order/payment/reminder thresholds, rollback version, and confirmation that migration0044/API/flags/Meta/customer sends remain out of scope. Current public bot and +15/+210 recovery remain GO; five-stage Advance reminders remain OFF.

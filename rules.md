@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-340 analytics accuracy and Admin-only 0% staging (2026-10-30)
+
+- Corrected Admin analytics semantics: contacts are explicitly `SNAPSHOT_ESTIMATE`; conversion is submitted orders divided by distinct non-STATUS inbound messages, not unique-lead conversion; paid/fulfilled and COD lifecycle values are named separately; reminder `SENT`, `DELIVERED`, and `READ` are separate counters.
+- Corrected abandonment classification so PRE_ORDER/ACTIVE exclude any customer with a submitted order and POST_ORDER excludes cancelled, paid, packing, dispatched, and delivered orders. Historical stage transitions remain unavailable; a same-day zero is not proof of zero drop-off and lifecycle snapshots are not mutually exclusive.
+- Added real `node:sqlite` D1-compatible fixtures covering duplicate provider callbacks, pre/post/active, Advance pending, COD, PAID, cancelled, later activity, UTC boundaries, and reminder status separation. Full330/330, build, lint, offline audit0, diff check, and validated legacy rollback4/4 pass.
+- Read-only D1 evidence under verified `gisupp@gmail.com` / Get Free Seeds account: today events2059/24692 rows/10.5666ms, contacts368/2004/1.4008ms, orders53/347/0.5633ms; 7-day events11081/24692/12.0104ms, contacts1822/2004/1.1254ms, orders303/347/0.4167ms; 31-day event table read24677 rows. Current event/contact plans scan their tables because proposed0044 is unapplied; no daily saving claim is made.
+- Reviewed local migration0044: event, conversation, and order indexes remain only a proposal; the unused leads index was removed to avoid write overhead. Migration0043 marker and ten indexes are live; D1 quick_check is `ok` and foreign_key_check is empty. No migration0044 or D1 write occurred.
+- After final identity recheck, authorized Admin-only staging upload created `c7e984d1-74a8-47d8-9277-fd7c8b41e329` (version103) and deployment `6e1a3016-a4d1-4674-be82-0f4109603ccd` routes frozen Admin `494a3dce`100% / analytics candidate0%. API remains `b426ba47`100% with `6ef27f02`0% and rollback `9af8991d`; no API, Meta, payment, reminder, customer, Queue, Cron, or traffic promotion occurred.
+
 ## GFS-339 inbound analytics and abandoned checkout reporting (2026-10-30)
 
 - Added a protected, read-only Admin `/analytics` page and `/api/analytics` plus privacy-safe summary CSV. It reports UTC windows, Today/Yesterday/Last7 presets, checkout status filters, inbound event classes, contact snapshots, submitted/completed orders, Advance/COD state, recovery-stage delivery, definitions, and D1 `rows_read` metadata when supplied.

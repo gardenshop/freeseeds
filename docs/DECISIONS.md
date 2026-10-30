@@ -1545,3 +1545,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Accept the local quality checkpoint: full321/321, build, lint, offline audit0, and rollback4/4 pass. No source repair or deployment is justified.
 - **GFS-315 (2026-10-29):** Accept the bounded live D1 audit as authoritative. The prior provisional 7/3 grouping is superseded by the actual scheduler join: 15 no-method rows are already `COD_PENDING`, 11 are in `COD_CONFIRM`, and 7 are eligible now. Do not backfill or send catch-up messages; no overdue eligible no-send exists.
 - Keep Admin visual acceptance pending until the existing authenticated Cloudflare Access browser profile is connected to Chrome DevTools MCP. D1 success does not substitute for UI evidence. No runtime defect or deployment is justified.
+## GFS-340 analytics accuracy and Admin-only candidate (2026-10-30)
+
+- Keep contact/new/returning metrics explicitly `SNAPSHOT_ESTIMATE`; `whatsapp_events` has no sender identifier for historical attribution.
+- Define conversion as submitted orders divided by distinct non-STATUS inbound messages. Do not publish it as unique-lead conversion.
+- Treat PAID/fulfilled, COD lifecycle, Advance pending, and active/pre/post snapshots as labeled states with possible overlap; never present them as mutually exclusive abandonment totals. Exclude any customer with an order from PRE_ORDER/ACTIVE and terminal/cancelled orders from POST_ORDER.
+- Keep migration0044 local-only. Its event/conversation/order indexes may be reconsidered only with measured query benefit; remove the unqueried leads index to avoid write overhead. Do not apply without separate authorization.
+- Owner authorization permits one Admin-only candidate at0%, not API deployment, canary, migration, flags, Meta, payment, customer sends, or 100% promotion. Candidate `c7e984d1-74a8-47d8-9277-fd7c8b41e329` is staged against frozen Admin `494a3dce`100%; API remains frozen.

@@ -1540,3 +1540,10 @@ No secrets are stored in this registry.
 - **Quality:** clean V1 root `D:\free seeds\gfs273-v1` at `cf01f444`; rollback4/4 PASS; full321/321, build, lint, offline audit0 PASS. Exact live D1 no-method reasons and Admin visual evidence remain pending owner-supported access.
 - **GFS-315 live D1 checkpoint (2026-10-29):** Official Wrangler `gisupp@gmail.com` / Get Free Seeds access has D1 scope. Active API `b426ba47` and Admin `494a3dce` remain 100%; rollbacks unchanged; D1 `17b7e9f6…` returned quick_check ok and FK empty. Current 44-order audit: 9 Advance, 15 COD, 2 receipt/review, 7 eligible no-method, 11 ineligible; method-null reasons 15 `COD_PENDING` / 11 `COD_CONFIRM` / 7 eligible. Recovery stages: +15 DELIVERED3/READ4/PENDING1/SKIPPED15; +210 DELIVERED1/READ1/PENDING11/SKIPPED10; no overdue eligible no-send. Four recovery templates published; no opt-outs.
 - **Admin evidence:** visual verification remains pending because no Chrome DevTools MCP or authenticated Cloudflare Access browser session is connected. No screenshot or UI status was recorded.
+# GFS-340 verified resources and measurements (2026-10-30)
+
+- **Cloudflare identity:** `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no Hoja/ThanNow access.
+- **Workers:** API `b426ba47`100% / `6ef27f02`0% / rollback `9af8991d`; Admin `494a3dce`100% / GFS-340 candidate `c7e984d1-74a8-47d8-9277-fd7c8b41e329`0% / rollback `76e33a3d` retained. Deployment `6e1a3016-a4d1-4674-be82-0f4109603ccd`.
+- **D1:** `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; migration0043 marker and ten indexes verified; `quick_check=ok`, FK empty; migration0044 remains local/unapplied.
+- **Read-only measurements:** today events2059/24692 rows/10.5666ms, contacts368/2004/1.4008ms, orders53/347/0.5633ms; 7d events11081/24692/12.0104ms, contacts1822/2004/1.1254ms, orders303/347/0.4167ms; 31d events24677 rows. No identifiers or raw payloads recorded.
+- **Source/test:** commit `14c310c` contains semantic fixes and real SQL fixtures; full330/330, focused4/4, build/lint/audit0, rollback4/4.

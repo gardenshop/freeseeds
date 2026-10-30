@@ -1,5 +1,14 @@
 # Status
 
+## GFS-340 analytics accuracy and Admin-only 0% staging (2026-10-30)
+
+- **P0/P1 PASS:** Protected API `b426ba47` remains100%; Admin frozen `494a3dce` remains100%; API repair candidate remains0%; +15/+210 recovery policy is unchanged and five-stage Advance, Automation V2, and utility templates remain OFF. Migration0043 is intact; proposed0044 remains unapplied.
+- **Analytics accuracy PASS:** Contacts/new/returning are labeled snapshot estimates; 2.49%-style conversion means submitted orders / distinct inbound messages; PAID/fulfilled, COD lifecycle, and reminder SENT/DELIVERED/READ are separate. PRE_ORDER/ACTIVE now exclude customers with any order; POST_ORDER excludes terminal/cancelled orders. Historical stage transitions remain unavailable, so zero is not proof of zero drop-off and lifecycle rows are not exclusive.
+- **Real SQL regression PASS:** node:sqlite fixtures cover duplicate callback deduplication, UTC boundaries, pre/post/active, Advance pending, COD, PAID, cancelled, later activity, and reminder status separation. Focused analytics4/4; full330/330; build/lint/audit0; rollback4/4.
+- **Read-only D1 measurements:** today events2059/24692 rows/10.5666ms, contacts368/2004/1.4008ms, orders53/347/0.5633ms; 7d events11081/24692/12.0104ms, contacts1822/2004/1.1254ms, orders303/347/0.4167ms; 31d event read24677 rows. Plans show event/conversation scans under existing indexes; no production-wide savings are claimed and migration0044 was not applied.
+- **Admin staging PASS:** verified Cloudflare `gisupp@gmail.com` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; uploaded Admin-only version `c7e984d1-74a8-47d8-9277-fd7c8b41e329` and read back deployment `6e1a3016-a4d1-4674-be82-0f4109603ccd`: frozen `494a3dce`100%, candidate0%. No API/canary/Meta/payment/customer/D1 write occurred.
+- **GFS-340 decision:** source and local quality PASS; Admin-only candidate safely staged at0%; full rollout NO-GO pending separate owner authorization. GFS-338 remains blocked; GFS-339 analytics delivery is superseded by these semantic corrections.
+
 ## GFS-339 inbound analytics and abandoned checkout reporting (2026-10-30)
 
 - **Admin implementation PASS locally:** Added protected read-only `/analytics`, `/api/analytics`, and privacy-safe summary CSV with UTC range, Today/Yesterday/Last7, and checkout status filters. No identifiers or raw payloads are returned.

@@ -2008,3 +2008,18 @@ No funds, transaction reference, customer acknowledgement, or receipt record was
 - **GFS-315 recovery delivery:** PASS — +15 DELIVERED3/READ4/PENDING1/SKIPPED15; +210 DELIVERED1/READ1/PENDING11/SKIPPED10; pending not due; no overdue eligible no-send; no FAILED/QUEUED/BLOCKED_WINDOW.
 - **GFS-315 integrity/templates:** PASS — quick_check ok, FK empty, markers 0037–0042, four published recovery templates; ordinary `PAYMENT_CHOICE` excluded from recovery evidence.
 - **GFS-315 Admin visual:** BLOCKED — no Chrome DevTools MCP/browser connector or authenticated Access session; no screenshot or UI claim fabricated.
+# GFS-340 analytics accuracy and staging evidence (2026-10-30)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Analytics semantics | PASS | Snapshot estimate labels; inbound-message denominator; PAID/fulfilled and COD separated; SENT/DELIVERED/READ separated |
+| Real SQL abandonment fixtures | PASS | `node:sqlite` D1-compatible fixtures; duplicate callbacks, UTC boundaries, order lifecycle exclusions, later activity |
+| Focused analytics | PASS | 4/4 |
+| Full regression | PASS | 330/330 |
+| Build/lint/audit | PASS | build PASS; lint PASS; offline audit 0 vulnerabilities |
+| Legacy rollback | PASS | 4/4 using clean `D:\free seeds\gfs273-v1` at `cf01f444` |
+| D1 integrity | PASS | migration0043 marker, ten indexes, `quick_check=ok`, empty FK check; no0044 write |
+| Admin candidate | PASS | version `c7e984d1-74a8-47d8-9277-fd7c8b41e329` at0%; frozen `494a3dce`100% |
+| API/canary | BLOCKED/UNCHANGED | API `b426ba47`100%; no GFS-338 retry or API deployment |
+
+Measured read-only D1 shapes: today events2059/24692 rows/10.5666ms, contacts368/2004/1.4008ms, orders53/347/0.5633ms; 7d events11081/24692/12.0104ms, contacts1822/2004/1.1254ms, orders303/347/0.4167ms; 31d event read24677 rows. These are query measurements, not 24-hour savings.
