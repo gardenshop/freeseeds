@@ -2119,3 +2119,15 @@ Investigation query costs only (not production savings): representative `rows_re
 | Admin canary | NOT RUN | Monitoring prerequisite failed; no traffic mutation |
 | Meta timezone | PARTIAL | Account overview has no authoritative timezone value |
 | Source repair | NOT REQUIRED | No proven defect |
+
+### GFS-348 Access gate
+
+| Check | Result | Evidence / disposition |
+|---|---|---|
+| Access application/policy inventory | PASS | App `ea91b1bf-02c1-46d3-921a-ea2f507fb150`; policy `b3acdd4f-9767-4d28-a55d-0a8e771d476c`; read-only |
+| Host Admin health without Access | BLOCKED | HTTP302, expected protection |
+| Existing authenticated browser health | PASS LIMITED | HTTP200; browser session is not a controller credential |
+| Approved machine-authenticated health | BLOCKED | No safe Service Auth credential or supported host bridge |
+| Access isolation/configuration | PASS | No policy, route, Worker, secret, or user-auth change |
+| Admin canary | NOT RUN | Monitoring prerequisite failed |
+| WhatsApp/API protection | PASS | API frozen; no customer, payment, Meta, D1, or reminder mutation |

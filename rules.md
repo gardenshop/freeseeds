@@ -1305,3 +1305,9 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - The precise blocker is host-side Cloudflare Access authentication: Admin `/health` is302 without Access, Chrome’s existing authenticated session is200, but no approved service-token environment binding or Worker Access credential exists. Worker secret names are only `FLOW_PUBLIC_KEY` and `META_ACCESS_TOKEN`. Do not inspect secret-bearing Access pages, copy cookies, bypass policy or change Access configuration.
 - GFS-347 canary was not exposed because monitoring P1 failed. Final traffic remains frozen; no rollback, customer, payment, Meta, D1, migration or flag mutation occurred. Public bot and +15/+210 recovery remain GO; Admin release remains NO-GO.
 - Meta account overview still does not expose the authoritative timezone. Keep attribution PARTIAL and do not remap the 22:30 PKT decline or edit ads.
+
+## GFS-348 Access monitoring gate (2026-10-31 UTC)
+
+- Read-only Zero Trust inventory confirmed staging Admin app `ea91b1bf-02c1-46d3-921a-ea2f507fb150`, policy `b3acdd4f-9767-4d28-a55d-0a8e771d476c`, destinations `getfreeseeds-admin-staging` and `getfreeseeds-v2-admin-staging`, and the sole owner-email allow rule. Cloudflare One Client auth is off.
+- No approved machine-authenticated Access credential or host bridge was available. No token, cookie, policy, Worker, route, flag, traffic, D1, Meta, customer, payment, or reminder mutation occurred.
+- Host Admin health remains HTTP302 without Access while the existing authenticated browser health is HTTP200. Admin canary remains blocked; owner must provision a short-lived least-privilege Access Service Auth credential in approved host storage or provide a supported authenticated Windows monitoring bridge.

@@ -2038,6 +2038,13 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **P4 PARTIAL:** Meta `creeper seeds (1198439777611633)` account overview showed one active campaign but no authoritative timezone. Attribution remains PARTIAL.
 - **Disposition:** GFS-347 BLOCKED safely; source repair not required. Exact owner action is to provide an approved host-side Access service credential/bridge or supported authenticated Windows execution path.
 
+## GFS-348 Access monitoring gate (2026-10-31 UTC)
+
+- **Read-only inventory:** staging Admin app `ea91b1bf-02c1-46d3-921a-ea2f507fb150`, policy `b3acdd4f-9767-4d28-a55d-0a8e771d476c`, destinations `getfreeseeds-admin-staging` and `getfreeseeds-v2-admin-staging`; owner email is the only allow rule and Cloudflare One Client auth is off.
+- **Result:** host Admin `/health` is HTTP302 without Access; authenticated browser `/health` is HTTP200. No safe approved machine credential or host bridge was available, and no Access configuration or secret changed.
+- **Release:** P1 blocked, so the Admin canary was not run. API `b426ba47` and Admin `494a3dce` remain 100%; candidates remain 0%; protected flags and WhatsApp flow are unchanged.
+- **Exact owner action:** provision one short-lived least-privilege Access Service Auth credential in approved host secret storage, or provide a supported authenticated Windows execution bridge. Never send credentials in chat or commit them.
+
 ## GFS-345 evening order-decline audit (2026-10-30 UTC / PKT)
 
 - **PASS read-only:** identities, frozen routing, migration0043 marker/ten indexes, 0044/0045 absence, D1 quick/FK integrity, and unchanged +15/+210 / five-stage-off policy verified.

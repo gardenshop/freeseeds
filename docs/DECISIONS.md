@@ -1592,6 +1592,12 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Do not run the authorized Admin canary, because its monitoring prerequisite failed. Keep API/Admin frozen at100%, candidates0%, +15/+210 ON, five-stage/Automation/utility OFF. No source repair is justified.
 - Meta timezone remains unavailable from the read-only account overview; retain PARTIAL attribution and do not edit ads.
 
+## GFS-348 decision (2026-10-31 UTC)
+
+- The existing staging Admin Access app is user-authenticated only: app `ea91b1bf-02c1-46d3-921a-ea2f507fb150`, policy `b3acdd4f-9767-4d28-a55d-0a8e771d476c`, owner-email allow rule, and Cloudflare One Client auth off.
+- Do not create or inspect secret-bearing credentials from an unsafe path. No approved machine-authenticated Service Auth credential or host bridge was available, so the canary remains blocked and no Access policy was weakened.
+- Require one owner-provisioned short-lived least-privilege Access credential in approved host storage, or an official authenticated Windows execution path, before the single bounded Admin canary. Keep API/Admin frozen at100% with candidates0%.
+
 ## GFS-345 decision (2026-10-30 UTC / PKT)
 
 - Classify the decline as an inbound-volume break beginning 17:30Z/22:30 PKT; acquisition/advertising is the leading hypothesis, not a proven Meta cause.

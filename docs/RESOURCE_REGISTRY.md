@@ -1601,3 +1601,6 @@ No secrets are stored in this registry.
 - **Access blocker:** host Admin HTTP302; authenticated Chrome HTTP200; no Access environment binding; Admin Worker secret names only `FLOW_PUBLIC_KEY` and `META_ACCESS_TOKEN`. Do not record secret values.
 - **Meta:** account overview `creeper seeds (1198439777611633)`, one active campaign; authoritative account timezone unavailable; attribution remains PARTIAL.
 - **Release:** canary not run; controller/adapter/observability prior evidence remains PASS; migration0043 retained and 0044/0045 unapplied.
+
+- **GFS-348 Access:** staging Admin app `ea91b1bf-02c1-46d3-921a-ea2f507fb150`; policy `b3acdd4f-9767-4d28-a55d-0a8e771d476c`; destinations `getfreeseeds-admin-staging` and `getfreeseeds-v2-admin-staging`; owner-email allow rule only. No secret values recorded.
+- **Release:** automated host health remains blocked by Cloudflare Access (302 without Access, browser 200). No service credential was created and no canary/traffic/configuration mutation occurred. Dependency is an owner-provisioned least-privilege Access credential in approved host storage or supported authenticated Windows bridge.
