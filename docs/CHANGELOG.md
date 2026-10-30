@@ -1439,3 +1439,9 @@
 - Added read-only D1/Cloudflare/Meta correlation evidence. The first abnormal bucket was 17:30Z/22:30 PKT, where inbound events and orders fell together; no webhook, payment-choice, Queue/Cron, Worker, D1, or Admin-display defect was proven.
 - Verified D1/Admin full-date parity 68/68, migration0043 plus ten indexes, quick-check/FK integrity, frozen Worker routing and unchanged reminder policy. No source repair, deployment, canary, D1 write, ad edit, customer send, payment, or flag mutation occurred.
 - Meta hourly attribution remains blocked by unavailable hourly report fields/timezone; active campaign/day delivery is not causal proof.
+
+## 2026-10-31 - GFS-346 Meta/Admin release gate
+
+- Verified official Meta Ads Reporting hourly delivery for 30-Oct and 23-29 Oct in read-only mode. Displayed 22:00-23:00: 581 impressions, Rs30.46 spend, 28 link clicks and 24 messaging conversations; exact UTC mapping remains unavailable because the report exposes `Etc/UTC` on the date control but no authoritative account timezone value.
+- Reverified API HTTP200 and Admin HTTP302 Access from host, authenticated Chrome Admin HTTP200, and genuine Cloudflare GraphQL API28/0 and Admin9/0 samples. No Access bypass, canary or deployment occurred.
+- Recorded bounded D1 counts-only health evidence and retained controller13/13, adapter6/6 and observability3/3. No source change was needed.

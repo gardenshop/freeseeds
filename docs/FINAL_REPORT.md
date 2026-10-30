@@ -4891,6 +4891,15 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - Deployment timeline: Admin 0%-traffic upload 17:47Z; GFS-343 10%/restore 18:01Z/18:07Z, after the break. API `b426ba47` and Admin `494a3dce` remain 100%; candidates 0%; +15/+210 ON; five-stage Advance, Automation V2, utility templates OFF.
 - Meta Ads Manager showed active campaign/day delivery and aggregate messaging activity, but hourly spend/impressions/CPM/clicks and verified reporting timezone were unavailable. Meta attribution is BLOCKED; no ad edit occurred.
 
+## GFS-346 final report — Meta hourly attribution and Admin monitoring (2026-10-31 UTC)
+
+- Meta Ads Reporting (read-only account `1198439777611633`, business `568026370701542`) returned a genuine `Time of day (ad account time zone)` breakdown. 30-Oct total: 12,604 impressions, Rs751.14, 659 link clicks and 392 messaging conversations. Displayed 22:00–23:00: 581 impressions, Rs30.46, 28 clicks and 24 conversations. The preceding 23–29 Oct aggregate was 75,070 impressions, Rs8,584.40, 3,386 clicks and 1,581 conversations.
+- The date control displayed `Etc/UTC`, but no authoritative account timezone value was exposed; therefore Meta attribution is **PARTIAL**, not confirmed. Delivery continued in the displayed 22:00–23:00 hour, but it cannot be safely mapped to 17:30Z.
+- Host API `/health` was HTTP200/211ms; host Admin `/health` was HTTP302/110ms due to Cloudflare Access; authenticated Chrome Admin `/health` was HTTP200. Genuine GraphQL sample: API28 requests/0 errors, Admin9/0. Host-side Admin monitoring remains **BLOCKED**; no bypass, credential extraction or canary occurred.
+- Bounded D1 counts-only window `2026-10-30T18:00Z`–`2026-10-31T19:00Z`: MESSAGE41, INTERACTIVE39, status sent81/delivered1/read2, one DETAILS_COMPLETED/PENDING order, 210-minute recovery delivered2/sent2/skipped2, no target payment/recovery failure row, CAPI pending1, and 19 unique inbound conversation snapshots. Query reads were 26,094, 188 and 4,341; not savings claims.
+- GFS-345 PASS read-only / GFS-346 Meta PARTIAL / Admin BLOCKED safely / source repair not required / deployment and canary not run. Controller13/13, adapter6/6, observability3/3, full334/334, focused121/121, build/lint/audit0 and rollback4/4 remain PASS. API `b426ba47` and Admin `494a3dce` remain100%; candidates0%; +15/+210 ON; five-stage Advance, Automation V2 and utility templates OFF.
+- Next safe action: obtain an official host-side Cloudflare Access monitoring path and authoritative Meta account timezone readout, then request fresh scoped Admin-canary authorization. No canary, promotion, ad edit, migration or customer-facing change under GFS-346.
+
 ### GFS-344/345 status and next action
 
 - GFS-344: PASS controller repair/tests; BLOCKED safely for live Admin canary.

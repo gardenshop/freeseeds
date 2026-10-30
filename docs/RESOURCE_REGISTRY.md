@@ -1585,3 +1585,11 @@ No secrets are stored in this registry.
 - **D1:** UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; migration0043 marker and ten indexes; quick-check ok; FK empty; 0044/0045 unapplied.
 - **Measured:** first abnormal interval 17:30Z/22:30 PKT; main/late inbound and orders 874/30 then 90/2 on 30-Oct; prior-seven-day exact-window aggregate 1,727/43 then 282/10. No sender IDs, raw payloads, or customer data recorded.
 - **Telemetry/policy:** Cloudflare API 3,131/0 and 401/0 errors; Admin 155/0 and 155/0; GraphQL errors0; Admin/D1 full-date parity68/68. +15/+210 ON; five-stage Advance, Automation V2, utility templates OFF; no new Admin canary.
+
+## GFS-346 verified resources (2026-10-31 UTC)
+
+- **Identities:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta Ads Manager account `1198439777611633` / business `568026370701542`; Hoja/ThanNow isolated.
+- **Workers:** API `b426ba47` 100% / `6ef27f02` 0%; Admin `494a3dce` 100% / `19188b21` 0%; no mutation.
+- **Meta evidence:** 30-Oct hourly report uses advertiser-account-time-zone breakdown; displayed 22:00-23:00 row 581 impressions / Rs30.46 / 28 clicks / 24 conversations. Date control displayed Etc/UTC; account timezone value unavailable.
+- **Monitoring:** API host HTTP200; Admin host HTTP302 Access; authenticated Chrome Admin HTTP200; GraphQL API28/0 and Admin9/0. Host-side Admin monitor remains unsupported.
+- **D1/policy:** read-only bounded counts only; no writes. +15/+210 ON; five-stage Advance, Automation V2 and utility templates OFF; migration0043 retained; 0044/0045 unapplied.

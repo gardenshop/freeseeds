@@ -2020,6 +2020,15 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - P4 NO-GO: No GFS-344 canary, promotion, customer/payment/Meta action, migration, flag, or reminder change occurred. Exact next action is a supported authenticated host-side Admin health bridge or equivalent official monitoring path, followed by fresh owner approval; do not bypass Access or reuse the authorization.
 - Remote: bd8e59e is pushed to PR #11; final live routing remains API/Admin100% with candidates0%.
 
+## GFS-346 Meta/Admin gate (2026-10-31 UTC)
+
+- **P0 PASS read-only:** GitHub `gardenshop`, Cloudflare `gisupp@gmail.com`, Meta account `1198439777611633`; API `b426ba47` 100% / candidate0%; Admin `494a3dce` 100% / candidate `19188b21` 0%; migration0043 intact; 0044/0045 absent; +15/+210 ON and five-stage/Automation/utility OFF.
+- **P1 PARTIAL:** Meta hourly report shows 30-Oct 22:00-23:00 delivery: 581 impressions, Rs30.46, 28 clicks, 24 messaging conversations. Date control says Etc/UTC but no authoritative account timezone was exposed, so UTC alignment and causal attribution remain unconfirmed.
+- **P2 BLOCKED SAFELY:** API host `/health` 200; Admin host `/health` 302 Access; authenticated Chrome Admin `/health` 200. Genuine GraphQL samples API28/0-error and Admin9/0-error. No cookie/token extraction or Access bypass; no canary.
+- **P3 PASS read-only:** bounded D1 counts showed MESSAGE41, INTERACTIVE39, status sent81/delivered1/read2, recovery 210 delivered2/sent2/skipped2, CAPI pending1 and 19 unique inbound conversation snapshots; no target payment/recovery failure row.
+- **Tests retained PASS:** controller13/13, adapter6/6, observability3/3, full334/334, focused121/121, build/lint/audit0, rollback4/4. No source change or repair.
+- **Disposition:** Meta attribution PARTIAL; supported Admin monitoring BLOCKED; production and canary NO-GO. Next safe action is an official host-side Access monitoring path plus fresh scoped canary authorization.
+
 ## GFS-345 evening order-decline audit (2026-10-30 UTC / PKT)
 
 - **PASS read-only:** identities, frozen routing, migration0043 marker/ten indexes, 0044/0045 absence, D1 quick/FK integrity, and unchanged +15/+210 / five-stage-off policy verified.

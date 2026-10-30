@@ -2091,3 +2091,18 @@ Read-only monitoring sample: API GraphQL 94 requests/0 errors, Admin 22/0, Graph
 | Source repair | NOT REQUIRED | No code defect or runtime cause proven |
 
 Investigation query costs only (not production savings): representative `rows_read` event 27,411; order 442; same-hour event 31,339; same-hour order 582; contact snapshot 5,087; payment-choice 335; recovery 227. No D1 writes.
+
+## GFS-346 evidence matrix (read-only)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Meta 30-Oct hourly report | PASS | 22:00-23:00 = 581 impressions / Rs30.46 / 28 clicks / 24 messaging conversations |
+| Meta timezone alignment | PARTIAL | Date control displays Etc/UTC; authoritative account timezone unavailable |
+| Meta causation | PARTIAL | Delivery continued; exact UTC mapping and causal attribution not proven |
+| Host API health | PASS | HTTP200, 211ms |
+| Host Admin health | BLOCKED SAFELY | HTTP302 Cloudflare Access; no supported host credential bridge |
+| Authenticated browser Admin health | PASS | Chrome Access session `/health` HTTP200; manual evidence only |
+| Genuine Cloudflare metrics | PASS | API28/0 errors; Admin9/0 errors |
+| Bounded D1 operational health | PASS | Counts-only query reads 26,094 + 188 + 4,341; no target failure row |
+| Controller/adapter/observability | PASS | 13/13, 6/6, 3/3 |
+| Live canary or deployment | NOT RUN | GFS-346 forbids canary; Admin monitoring gate blocked |

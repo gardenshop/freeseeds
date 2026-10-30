@@ -1578,6 +1578,13 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Do not use a browser-cookie copy, token extraction, bypass, workaround, or indirect traffic mutation. The authenticated Chrome check is valid evidence for manual acceptance only, not a safe continuous controller health source.
 - Keep API/Admin frozen at100%, candidates0%, +15/+210 recovery ON, five-stage/Automation/utility OFF. A new canary requires an official host-side authenticated health/metrics path and fresh scoped approval.
 
+## GFS-346 decision (2026-10-31 UTC)
+
+- Classify Meta attribution as **PARTIAL**. The official report exposes hourly delivery, but only the breakdown label says advertiser account time zone; the date control says Etc/UTC and no authoritative account timezone value was available. The displayed 30-Oct 22:00-23:00 row still shows 581 impressions, Rs30.46, 28 clicks and 24 messaging conversations.
+- Keep the evening decline as an inbound-volume break with advertising causation unconfirmed. Do not map the Meta row to 17:30Z without the missing timezone value, and do not edit ads.
+- Keep Admin release **BLOCKED**. API host health is200 and Admin host health is302 under Access; authenticated Chrome health is200 but cannot be safely reused by the host controller. Do not extract cookies, bypass Access or change policy.
+- No source defect, migration issue, D1 failure, payment/recovery failure or customer-flow regression was proven. Keep API/Admin frozen, candidates0%, +15/+210 ON, five-stage/Automation/utility OFF, and do not run a canary under GFS-346.
+
 ## GFS-345 decision (2026-10-30 UTC / PKT)
 
 - Classify the decline as an inbound-volume break beginning 17:30Z/22:30 PKT; acquisition/advertising is the leading hypothesis, not a proven Meta cause.
