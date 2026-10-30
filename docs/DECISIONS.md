@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-338 API-only candidate release decision (2026-10-30)
+
+- Approve the uploaded API candidate only as a **0% staged artifact**: version `b0e883cd-16b8-4f8e-8fd8-c12bd46c4428` is frozen-source `901f3f6` plus the tested GFS-337 acknowledgement repair. Recovery and protected flags were preserved.
+- The controller scope repair is valid locally: API-only execution changes only the API route, while readback requires both API and Admin to be baseline. The restricted-agent attempt failed before exposure; final host readback remained frozen.
+- Do not claim canary success, customer-flow acceptance, or D1 savings. The execution safety gate blocked the host-context 1% retry. Next action is one permitted host-context run of the exact API candidate with the 15-minute cap, early restore margin, monitoring, and verified baseline restoration; no promotion beyond 1% is authorized.
+
 ## GFS-337 payment-choice delivery decision (2026-10-30)
 
 - Classify the owner-reported order as **provider-delivered/customer non-response**, not order-save or payment-choice-send failure. A null method plus `payment_instruction_status=NOT_SENT` is expected until Advance/COD selection.

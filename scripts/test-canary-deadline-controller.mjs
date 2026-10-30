@@ -61,6 +61,21 @@ test("normal run restores before the absolute cap and verifies final routing", a
   assert.ok(options._events.some((event) => event.event === "restore_verified"));
 }));
 
+test("API-only scope exposes and restores API while requiring Admin to remain frozen", async () => withLock(async (lockPath) => {
+  const clock = fakeClock();
+  let exposed = false;
+  const result = await runCanary({
+    ...baseOptions(clock, lockPath, { scope: "api" }),
+    execute: async (action) => { if (action === "expose_candidate") exposed = true; if (action === "restore_baseline") exposed = false; },
+    readTraffic: async () => exposed
+      ? { apiCandidatePercent: 1, apiBaselinePercent: 99, adminCandidatePercent: 0, adminBaselinePercent: 100, api5xx: 0, admin5xx: 0 }
+      : traffic()
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.strictCapCompliant, true);
+  assert.equal(result.rollbackVerified, true);
+}));
+
 test("slow routing fails closed and still attempts rollback", async () => withLock(async (lockPath) => {
   const clock = fakeClock();
   const options = baseOptions(clock, lockPath, {

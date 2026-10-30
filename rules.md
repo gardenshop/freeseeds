@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-338 API-only acknowledgement candidate gate (2026-10-30)
+
+- Owner-scoped candidate upload completed read-only identity checks under `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`: API candidate `b0e883cd-16b8-4f8e-8fd8-c12bd46c4428` (version118), based on frozen source `901f3f6`, contains only the tested post-provider D1 acknowledgement repair. Recovery remained enabled; five-stage Advance, Automation V2 and utility templates remained disabled.
+- Candidate preview health returned HTTP200/`PRODUCTION_INTEGRATION_READY`; D1 binding, Queue, R2, scheduled handler and flags matched the protected API configuration. No Admin candidate, migration replay, flag change, customer send, payment mutation or Meta change occurred.
+- The first controller invocation failed closed during restricted-agent Wrangler readback before route exposure. Host-context readback then confirmed API `b426ba47`100% / old candidate `6ef27f02`0% and Admin `494a3dce`100% / old candidate `c2321eab`0%. The safety gate blocked a host-context retry; no canary PASS, candidate exposure or live savings claim is recorded.
+- API-only scope is implemented and locally tested in the deadline controller/Cloudflare adapter. Keep all live routing frozen; do not treat the uploaded candidate as released until a separately permitted host-context canary completes with verified restoration.
+
 ## GFS-337 payment-choice incident ruling and acknowledgement safeguard (2026-10-30)
 
 - Fresh read-only identity/routing is `gisupp@gmail.com` / Get Free Seeds account: API `b426ba47` 100% and `6ef27f02` 0%; Admin `494a3dce` 100% and `c2321eab` 0%. Recovery +15/+210 is true; five-stage Advance reminders, Automation V2 and utility templates are false. Marker0043, all ten indexes and `quick_check=ok` remain intact. No live write, resend, deployment, migration, flag or traffic mutation occurred.

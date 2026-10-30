@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-338 API-only candidate and canary boundary (2026-10-30)
+
+- **Cloudflare identity:** verified `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API candidate `b0e883cd-16b8-4f8e-8fd8-c12bd46c4428` version118 uploaded at0%. Frozen API/Admin readback is `b426ba47`/`494a3dce` at100%; prior candidates `6ef27f02`/`c2321eab` at0%.
+- **Candidate bindings:** D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, staging Queue/R2, fetch/scheduled/queue handlers, recovery true from existing cutoff, five-stage/automation/utility false. Preview health was successful.
+- **Controller assets:** API-only scope changes only the API route and retains dual-worker baseline readback; local adapter5/5 and controller10/10. No customer data, provider IDs, secrets or raw payloads registered.
+- **Canary boundary:** first restricted-agent invocation failed before exposure; host readback confirmed frozen routing; host-context live retry was blocked by execution safety review. Candidate exposure and D1 savings remain unmeasured.
+
 ## GFS-337 incident evidence and source repair (2026-10-30)
 
 - **Cloudflare read-only:** `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API `b426ba47`100% / `6ef27f02`0%; Admin `494a3dce`100% / `c2321eab`0%. No mutation.

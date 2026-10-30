@@ -1,5 +1,13 @@
 # Status
 
+## GFS-338 API-only acknowledgement candidate and canary gate (2026-10-30)
+
+- **Candidate upload PASS, traffic unchanged:** Under verified `gisupp@gmail.com` / Get Free Seeds account, API candidate `b0e883cd-16b8-4f8e-8fd8-c12bd46c4428` (version118) was uploaded at 0% from frozen-source `901f3f6` plus only the GFS-337 acknowledgement repair. API remains `b426ba47`100% / `6ef27f02`0%; Admin remains `494a3dce`100% / `c2321eab`0%.
+- **Preflight PASS:** Candidate health/flow endpoints returned success; D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1` marker0043=1, ten indexes and `quick_check=ok`; recovery is ON and five-stage Advance/Automation V2/utility flags are OFF. Sanitized 24h snapshot: inbound2411, orders55, submitted55, accepted choices79, Advance9, COD35, recovery accepted18; no customer identifiers were recorded.
+- **Local regression PASS:** controller10/10, adapter5/5, full326/326, build/lint, offline audit0 and rollback4/4. API-only adapter scope deploys only API and still verifies both API/Admin frozen readbacks.
+- **Canary BLOCKED fail-closed:** The first invocation failed during restricted-agent Wrangler initial readback before exposure; a host-context readback succeeded. The safety gate rejected the authorized host-context retry because it classified live 1% traffic as requiring an additional execution approval. No candidate exposure, customer mutation or D1 savings claim is made.
+- **Decision:** frozen public bot, payments, COD, signed webhook, Queue/DLQ, +15/+210 recovery and five-stage-OFF policy remain protected. Candidate release is **NO-GO/BLOCKED** pending a permitted host-context API-only canary and verified 100%/0% restoration.
+
 ## GFS-337 saved-order/payment-choice incident (2026-10-30)
 
 - **P0 PASS read-only:** Correct Cloudflare identity/account; API `b426ba47`100% / candidate `6ef27f02`0%; Admin `494a3dce`100% / candidate `c2321eab`0%. +15/+210 recovery ON; five-stage Advance, Automation V2 and utility templates OFF. Marker0043=1, ten indexes and `quick_check=ok`. No live mutation.

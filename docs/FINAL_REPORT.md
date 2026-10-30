@@ -1,5 +1,26 @@
 # Final Report
 
+## GFS-338 complete WhatsApp-flow verification and limited API repair gate (2026-10-30)
+
+### Outcome
+
+The tested acknowledgement repair was packaged as an API-only candidate and uploaded at 0%; the frozen API/Admin routes were verified unchanged afterward. The canary did not pass: the first invocation failed closed in the restricted execution context before exposure, and the authorized host-context retry was blocked by the execution safety gate. No customer, payment, Meta, migration, flag, or traffic mutation beyond the authorized 0% upload occurred.
+
+### Verified evidence
+
+| Area | Result |
+|---|---|
+| Identity/account | PASS: `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` |
+| Candidate | PASS at 0%: API `b0e883cd-16b8-4f8e-8fd8-c12bd46c4428` version118; based on frozen `901f3f6` plus only GFS-337 acknowledgement repair |
+| Frozen routing | PASS read-only: API `b426ba47`100% / `6ef27f02`0%; Admin `494a3dce`100% / `c2321eab`0% |
+| Flags/schema | PASS read-only: +15/+210 ON; five-stage Advance/Automation V2/utility OFF; marker0043, ten indexes and quick check clean |
+| Regression | PASS: controller10/10, adapter5/5, full326/326, build/lint/audit0, rollback4/4 |
+| Limited canary | BLOCKED before exposure; no candidate health/5xx or savings claim |
+
+### Release decision
+
+Public frozen service and recovery remain GO on existing evidence. API repair candidate release is **NO-GO/BLOCKED** until the exact host-context 1% canary can run under permitted execution, monitor protected flow and D1 read metrics, and restore/verify API100% with Admin100% and both candidates0%. Full promotion is not authorized.
+
 ## GFS-337 urgent saved-order/payment-flow audit (2026-10-30)
 
 ### Outcome

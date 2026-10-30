@@ -2,6 +2,7 @@ import { open, readFile, unlink } from "node:fs/promises";
 import process from "node:process";
 
 const DEFAULTS = Object.freeze({
+  scope: "all",
   durationMs: 15 * 60 * 1000,
   restoreMarginMs: 60 * 1000,
   pollIntervalMs: 1000,
@@ -81,14 +82,17 @@ async function bounded(operation, timeoutMs, parentSignal) {
   }
 }
 
-function trafficIsBaseline(traffic) {
-  return traffic.apiCandidatePercent === 0 && traffic.adminCandidatePercent === 0 &&
-    traffic.apiBaselinePercent === 100 && traffic.adminBaselinePercent === 100 &&
+function trafficIsBaseline(traffic, scope = "all") {
+  const apiBaseline = traffic.apiCandidatePercent === 0 && traffic.apiBaselinePercent === 100;
+  const adminBaseline = traffic.adminCandidatePercent === 0 && traffic.adminBaselinePercent === 100;
+  return apiBaseline && adminBaseline &&
     (traffic.api5xx ?? 0) === 0 && (traffic.admin5xx ?? 0) === 0;
 }
 
-function trafficHasCandidate(traffic, target) {
-  return traffic.apiCandidatePercent >= target && traffic.adminCandidatePercent >= target &&
+function trafficHasCandidate(traffic, target, scope = "all") {
+  const apiCandidate = traffic.apiCandidatePercent >= target && traffic.apiBaselinePercent <= 100 - target;
+  const adminFrozen = traffic.adminCandidatePercent === 0 && traffic.adminBaselinePercent === 100;
+  return (scope === "api" ? apiCandidate && adminFrozen : apiCandidate && traffic.adminCandidatePercent >= target) &&
     traffic.api5xx === 0 && traffic.admin5xx === 0;
 }
 
@@ -123,6 +127,7 @@ async function acquireLock(lockPath, metadata, audit) {
 
 export async function runCanary(options = {}) {
   const config = { ...DEFAULTS, ...options };
+  if (config.scope !== "all" && config.scope !== "api") throw new TypeError("invalid canary scope");
   const now = config.now ?? monotonicMs;
   const sleep = config.sleep ?? ((ms, signal) => bounded((sleepSignal) => new Promise((resolve, reject) => {
     const timer = setTimeout(resolve, ms);
@@ -201,7 +206,7 @@ export async function runCanary(options = {}) {
       lockHeld = true;
     }
     const initial = await read(restoreDeadline);
-    if (!trafficIsBaseline(initial)) throw new ControllerError("initial_readback_failed");
+    if (!trafficIsBaseline(initial, config.scope)) throw new ControllerError("initial_readback_failed");
     safeAudit(audit, "route_started", { remainingMs: restoreDeadline - now() });
     await invoke("expose_candidate", restoreDeadline);
     if (now() >= restoreDeadline) {
@@ -216,7 +221,7 @@ export async function runCanary(options = {}) {
         safeAudit(audit, "monitor_failed", { reason: "provider_5xx", code: "provider_5xx" });
         throw new ControllerError("provider_5xx");
       }
-      if (trafficHasCandidate(traffic, config.targetCandidatePercent)) {
+      if (trafficHasCandidate(traffic, config.targetCandidatePercent, config.scope)) {
         if (!candidateObserved) safeAudit(audit, "candidate_observed", { elapsedMs: now() - startedAt });
         candidateObserved = true;
       }

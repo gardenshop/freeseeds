@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-338 API-only candidate and release controller (2026-10-30)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Frozen routing and flags | PASS read-only | API `b426ba47`100% / old candidate `6ef27f02`0%; Admin `494a3dce`100% / old candidate `c2321eab`0%; +15/+210 ON; five-stage/automation/utility OFF |
+| Candidate package | PASS at 0% | API `b0e883cd-16b8-4f8e-8fd8-c12bd46c4428`, version118; frozen-source `901f3f6` plus only acknowledgement repair; D1/Queue/R2/handlers verified |
+| API-only adapter/controller | PASS local | adapter5/5; deadline controller10/10; API-only route target and dual frozen readback |
+| Protected flow regression | PASS retained | full326/326, build/lint/audit0, rollback4/4; no synthetic live customer/payment activity |
+| Canary exposure | BLOCKED before exposure | Restricted-agent initial readback failed; host readback succeeded; host mutation retry rejected by execution safety gate |
+| Live D1 savings | NOT MEASURED | Candidate remained at0%; historical measurements are not reclassified as live savings |
+
 ## GFS-337 payment-choice incident and acknowledgement persistence
 
 | Check | Result | Evidence |

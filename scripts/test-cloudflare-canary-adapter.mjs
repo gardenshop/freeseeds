@@ -38,6 +38,21 @@ test("deploys API then Admin sequentially for expose and restore", async () => {
   assert.deepEqual(order, ["api:api-candidate@1", "admin:admin-candidate@1", "api:api-candidate@0", "admin:admin-candidate@0"]);
 });
 
+test("API scope deploys only API while retaining Admin readback", async () => {
+  const calls = [];
+  const adapter = createCloudflareCanaryAdapter({ scope: "api", workers, runCommand: async (args) => {
+    calls.push(args);
+    if (args[0] === "deployments") return status(args[3] === "api" ? workers.api : workers.admin, args[3] === "api" ? 99 : 100, 0);
+    return "";
+  } });
+  await adapter.execute("expose_candidate");
+  assert.equal(calls.filter((args) => args[0] === "versions").length, 1);
+  assert.equal(calls[0][5], "api");
+  const traffic = await adapter.readTraffic();
+  assert.equal(traffic.apiBaselinePercent, 99);
+  assert.equal(traffic.adminBaselinePercent, 100);
+});
+
 test("reads exact version percentages and keeps health fields fail-closed", async () => {
   const adapter = createCloudflareCanaryAdapter({ workers, runCommand: async (args) => {
     if (args[0] !== "deployments") return "";

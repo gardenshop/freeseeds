@@ -1,5 +1,11 @@
 # Changelog
 
+## GFS-338 API-only candidate gate (2026-10-30)
+
+- Added tested API-only scope to the local deadline controller and Cloudflare adapter; Admin remains frozen and is included in final readback.
+- Uploaded API acknowledgement-repair candidate `b0e883cd-16b8-4f8e-8fd8-c12bd46c4428` at 0% after identity, binding, flag and integrity checks.
+- Recorded a fail-closed canary attempt: restricted-agent readback failed before exposure, host readback verified frozen routing, and the live retry was blocked by the execution safety gate. No live savings or canary PASS is claimed.
+
 ## GFS-337 payment-choice acknowledgement safeguard (2026-10-30)
 
 - Added bounded, read-only incident correlation for the reported order, newest30 no-method orders, matched24h funnels and frozen-version payment-choice health; no customer identifiers or provider IDs were recorded.
