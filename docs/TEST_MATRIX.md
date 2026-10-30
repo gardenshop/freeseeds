@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-332 read-only production-resource gate (2026-10-30)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Cloudflare identity/account | PASS | Official Wrangler/dashboard: `gisupp@gmail.com`, Get Free Seeds account |
+| Worker resource discovery | PASS | Actual scripts `getfreeseeds-api-staging` / `getfreeseeds-admin-staging`; unsuffixed names return API10007 |
+| API/Admin routing | PASS read-only | `b426ba47`/`494a3dce` 100%; `6ef27f02`/`c2321eab` 0% |
+| D1 migration/integrity | PASS retained | D1 UUID verified; marker0043, ten indexes, quick check and FK check clean |
+| Release mutation guard | PASS | No deployment, route, flag, migration, Meta, customer or payment mutation |
+| Regression suite | PASS retained | Controller9/9, targeted56/56, full324/324, focused121/121, build/lint/audit0, rollback4/4 |
+| New canary | NO-GO | Requires fresh scoped owner authorization using discovered names |
+
+Prior tests were not rerun because this investigation changed no source. Historical query-level D1 results remain non-daily evidence only.
+
 ## GFS-331 synchronization and release-gate verification (2026-10-30)
 
 | Check | Result | Evidence / boundary |

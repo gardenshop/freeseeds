@@ -1,5 +1,13 @@
 # Status
 
+## GFS-332 Cloudflare resource discovery (2026-10-30)
+
+- **Identity PASS read-only:** Official Wrangler/dashboard verified `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, and D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; migration0043 marker/index/integrity evidence remains clean.
+- **10007 root cause PASS:** `getfreeseeds-api` and `getfreeseeds-admin` are absent. Actual scripts are `getfreeseeds-api-staging` and `getfreeseeds-admin-staging`, dashboard `Production`, workers.dev-only with no custom route. This is a configured-name/resource mismatch, not an authenticated-account failure.
+- **Routing PASS read-only:** API `b426ba47` 100% / candidate `6ef27f02` 0%; Admin `494a3dce` 100% / candidate `c2321eab` 0%. Rollbacks `9af8991d` and `76e33a3d` remain available. V2 scripts have no active route. No mutation occurred.
+- **Topology/flags PASS read-only:** API owns minute Cron, staging D1, R2 and Queue consumer; Admin has no Cron/consumer. +15/+210 recovery is ON; five-stage Advance, Automation V2 and utility templates are OFF. Payment, COD, webhook, Queue/DLQ and customer-state protections remain unchanged.
+- **Release NO-GO:** No new canary or deployment is authorized. Owner must approve the discovered names and issue one new scoped authorization with versions, exposure/window, hard deadline/margin, thresholds, final readback and rollback/promotion limits.
+
 ## GFS-331 push and final release-gate verification (2026-10-30)
 
 - **GitHub PASS:** Existing authenticated Windows host session is `gardenshop` with repository push permission true. Fast-forward push advanced PR #11 branch from `9682e2a` to `64023f1c72b70786432b14fca0589d302b0d3498`; GitHub readback confirmed the controller, test, migration0043 and Admin source paths.

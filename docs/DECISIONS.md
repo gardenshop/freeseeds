@@ -1,5 +1,12 @@
 # Decisions
 
+## GFS-332: treat API10007 as a resource-name mismatch (2026-10-30)
+
+- **Decision:** Use only discovered actual scripts `getfreeseeds-api-staging` and `getfreeseeds-admin-staging` for read-only verification. Do not create, rename, replace, redeploy or reroute Workers to make configured unsuffixed names resolve.
+- **Evidence:** Correct Cloudflare identity/account verified; both unsuffixed names return “Worker does not exist on your account”; staging-named scripts hold the observed versions, bindings and workers.dev-only topology.
+- **Safety:** Existing frozen/candidate routing, migration0043, +15/+210 recovery, payment/COD, signed webhook, Queue/DLQ, new-number lock and Hoja zero-connection remain unchanged.
+- **Gate:** No new canary or promotion until owner accepts the mapping and separately authorizes exact versions, exposure, duration, hard deadline/margin, stop thresholds and rollback/final-readback rules.
+
 ## 2026-10-30: push verified package, stop on Cloudflare resource mismatch
 
 - Push the tested package through the authenticated `gardenshop` host session using fast-forward only; remote PR #11 now resolves to `64023f1c72b70786432b14fca0589d302b0d3498`.

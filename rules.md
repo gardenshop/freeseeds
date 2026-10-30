@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-332 Cloudflare resource discovery (2026-10-30)
+
+- Read-only official Wrangler/dashboard verification confirmed `gisupp@gmail.com` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Configured `getfreeseeds-api` and `getfreeseeds-admin` are absent; API10007 is a stale/wrong resource-name lookup, not permission evidence.
+- Actual deployed scripts are `getfreeseeds-api-staging` and `getfreeseeds-admin-staging`, each dashboard `Production`, workers.dev-only, with no custom routes. V2 staging scripts have no active route. No rename, replacement, binding, route, deployment or traffic mutation occurred.
+- Actual-name readback: API `b426ba47` 100%, candidate `6ef27f02` 0%, rollback `9af8991d`; Admin `494a3dce` 100%, candidate `c2321eab` 0%, rollback `76e33a3d`. API has minute Cron, staging D1/R2/Queue consumer; Admin has staging D1/R2/Queue producer and no Cron/consumer.
+- Deployed API flags read-only: payment-choice recovery true (+15/+210 retained), five-stage/payment-reminder V2 false, automation V2 false, utility templates false, COD public, guided WhatsApp and Meta provider enabled. No customer, Meta, payment, D1, flag or production mutation occurred.
+- Release remains NO-GO until the owner accepts the discovered names and grants a new scoped canary authorization naming versions, exposure/window, deadline/margin, stop thresholds, final 100%/0% readback and rollback/promotion limits. Do not claim 24-hour D1 savings from historical query evidence.
+
 ## GFS-331 push and final release-gate verification (2026-10-30)
 
 - GitHub host verification succeeded as `gardenshop` with repository push permission true. The branch advanced fast-forward only from remote `9682e2a` to `64023f1c72b70786432b14fca0589d302b0d3498`; no force-push or history replacement occurred. Controller, test, migration0043 and Admin source paths were read back at that SHA.

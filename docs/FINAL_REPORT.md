@@ -1,5 +1,32 @@
 # Final Report
 
+## GFS-332 Cloudflare 10007 resolution and release gate (2026-10-30)
+
+### Findings
+
+- **PASS read-only:** Cloudflare identity `gisupp@gmail.com` and account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` were verified through official Wrangler/dashboard tools. D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1` remains migration0043/integrity-clean.
+- **Root cause:** API10007 applies to configured `getfreeseeds-api` and `getfreeseeds-admin`, which are absent from the account. Actual scripts are `getfreeseeds-api-staging` and `getfreeseeds-admin-staging`, dashboard `Production`, workers.dev-only, with no custom routes. This is understood without renaming or redeploying.
+- **Actual routing:** API `b426ba47` 100% / `6ef27f02` 0% / rollback `9af8991d`; Admin `494a3dce` 100% / `c2321eab` 0% / rollback `76e33a3d`. V2 scripts have no active route. These values were read-only verified on actual names.
+- **Protected state:** +15/+210 recovery ON; five-stage Advance, Automation V2 and utility templates OFF; D1, Queue/DLQ, Cron, signed webhook, payment/COD and WhatsApp flow unchanged. No production, Meta, customer, payment, flag, route or migration mutation occurred.
+
+### Gate and evidence
+
+| Area | Result |
+|---|---|
+| GFS-328 | PASS product / PARTIAL timing; prior canary exhausted |
+| GFS-329 | PASS acceptance; Meta 500 attribution deferred/nonurgent |
+| GFS-330 | PASS local deadline controller; no live rerun |
+| GFS-331 | PASS source synchronization and controller evidence |
+| GFS-332 resource discovery | PASS read-only; API10007 root cause understood |
+| New canary / promotion | NO-GO pending fresh owner authorization |
+| 24-hour D1 savings | 0% claimed; only bounded historical query evidence |
+
+Carried-forward evidence is controller9/9, targeted56/56, full324/324, focused121/121, build/lint/audit0, D1 integrity and rollback4/4. No source changed, so exhaustive tests were not repeated.
+
+### One exact next authorization
+
+Owner approval must explicitly name `getfreeseeds-api-staging` / `getfreeseeds-admin-staging`, the frozen and candidate versions above, proposed exposure (for example 1%), maximum window (15 minutes), controller early-restore margin (60 seconds), stop thresholds for any Worker error/5xx, latency, order/payment/COD state, webhook, Queue/DLQ or +15/+210 recovery anomaly, final verified API/Admin 100% frozen and 0% candidate readback, and whether promotion beyond canary is allowed. Until that approval, public WhatsApp is GO on the frozen pair and optimization release is NO-GO.
+
 ## GFS-331 push and final D1 release gate (2026-10-30)
 
 ### Synchronization

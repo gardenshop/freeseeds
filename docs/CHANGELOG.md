@@ -1,5 +1,11 @@
 # Changelog
 
+## GFS-332 (2026-10-30)
+
+- Resolved the meaning of Cloudflare API10007 through read-only official discovery: configured unsuffixed Worker names are absent; actual scripts are `getfreeseeds-api-staging` and `getfreeseeds-admin-staging`.
+- Reverified actual-name API/Admin versions and 100%/0% routing, D1/Queue/R2/Cron topology, protected reminder flags and rollback availability. No production or customer-facing mutation occurred.
+- Kept release NO-GO pending one new owner authorization tied to the discovered names and tested deadline controller. No live D1 savings claim was added.
+
 ## GFS-331 (2026-10-30)
 
 - Fast-forward pushed the verified local package from remote `9682e2a` to `64023f1c72b70786432b14fca0589d302b0d3498` using authenticated `gardenshop` GitHub access; remote controller, tests, migration0043 and Admin paths were read back.

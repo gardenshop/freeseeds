@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-332 actual Cloudflare resource registry (2026-10-30)
+
+- **Cloudflare identity:** `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; official Wrangler/dashboard read-only verification.
+- **Actual API Worker:** `getfreeseeds-api-staging`, dashboard `Production`, workers.dev-only; `b426ba47` 100%, `6ef27f02` 0%, rollback `9af8991d` retained. D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, R2 staging, Queue staging producer/consumer, Cron `* * * * *`.
+- **Actual Admin Worker:** `getfreeseeds-admin-staging`, dashboard `Production`, workers.dev-only; `494a3dce` 100%, `c2321eab` 0%, rollback `76e33a3d` retained. D1/R2/Queue staging bindings; no Cron or queue consumer.
+- **Unsupported lookup:** configured `getfreeseeds-api` / `getfreeseeds-admin` do not exist in this account and return API10007. V2 staging scripts have no active route. No route or binding was changed.
+- **Flags/privacy:** +15/+210 recovery ON; five-stage Advance, Automation V2 and utility templates OFF; payment/COD/webhook/Queue/DLQ protections unchanged. No customer identifiers, secrets, payloads or provider credentials recorded.
+
 ## GFS-331 push and release-gate evidence (2026-10-30)
 
 - **GitHub:** Authenticated host identity `gardenshop`, repository push permission true; PR #11 branch fast-forwarded from `9682e2a` to `64023f1c72b70786432b14fca0589d302b0d3498`. Controller, test, migration0043 and Admin source paths were confirmed at that SHA.
