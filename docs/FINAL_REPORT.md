@@ -1,5 +1,43 @@
 # Final Report
 
+## GFS-336 reliable stress correction and D1 regression ruling (2026-10-30)
+
+### Method correction
+
+GFS-335’s 10.89-RPS target1 result was invalid because it divided completed requests by the time of the last completion. The fixture also omitted real baseline indexes (`orders_archived_created_idx`, recovery-stage order, receipt, and outbox entity indexes) and added a non-production opt-out index. The corrected harness restores those shapes and uses identical deterministic snapshots, `ANALYZE`, randomized A/B order, two repeats, 25 query samples, 300ms warmup, fixed 1s windows, controlled arrivals, separate read-only/mixed modes, four workers, 50ms busy timeout, CPU metadata, lock counts, and a 300ms late-work cutoff.
+
+### Corrected 50k query results
+
+| Repeat | Variant | Counts p50 ms | Delta p50 ms | Recovery p50 / p95 ms |
+|---:|---|---:|---:|---:|
+| 1 | pre0043 | 814.89 | 99.23 | 6.41 / 8.21 |
+| 1 | post0043 | 519.76 | 37.57 | 5.81 / 7.19 |
+| 2 | pre0043 | 954.77 | 81.39 | 5.53 / 7.36 |
+| 2 | post0043 | 532.40 | 38.92 | 6.33 / 9.14 |
+
+The original post0043 recovery p50 near 1665ms is therefore ruled out as a benchmark artifact. Corrected local plans use `orders_archived_created_idx` for recovery in both variants. Post0043 was faster for the synthetic counts and delta shapes; no live migration defect is proven.
+
+### Capacity result
+
+The corrected fixed-window load ramp offered 1/5/10/25/50/100 RPS in both read-only and mixed modes. At 50k, 100-RPS offers saturated the local four-worker SQLite fixture and dropped work; the run did not establish a reproducible sustainable local level, and no production-equivalent maximum is claimed. The harness now reports offered, completed, dropped, errors, lock errors, p50/p95/p99, and CPU rather than extending the measurement window.
+
+### Live failure evidence
+
+- Outbound conversation failures: 16 total — Oct24=1, Oct27=3, Oct28=10, Oct29=2.
+- Payment-instruction dead letters: 19 total — Oct23=12, Oct24=6, Oct25=1.
+- CAPI events and `CAPI_LEAD` outbox jobs: 305 pending each; oldest created Oct23.
+- No raw provider trace, final acknowledgement, retry correlation, or customer/order attribution is available. CAPI pending is not classified as WhatsApp delivery failure. No resend or state mutation occurred.
+
+### GFS-334–336 verdict
+
+| Task | Result |
+|---|---|
+| GFS-334 | PARTIAL investigation; controller repair PASS; release NO-GO |
+| GFS-335 | PASS audit/harness delivery; original slowdown evidence superseded |
+| GFS-336 | PASS methodology correction; production defect NOT PROVEN; capacity maximum NOT MEASURED |
+
+Tests: stress isolation 1/1, full 324/324, adapter 4/4, deadline 9/9, build/lint/audit clean, rollback 4/4. Completion: harness/code 100%; D1 integrity/query audit 100%; repeat stress 100%; provider attribution 30%; live release 0%. Exact next action: obtain authorized request-level Cloudflare/Meta trace correlation for the 16 failures and 305 pending CAPI rows; do not change indexes, resend, deploy, or run a canary from this report.
+
 ## GFS-335 D1 error audit, isolated stress, and capacity report (2026-10-30)
 
 ### Production read-only evidence

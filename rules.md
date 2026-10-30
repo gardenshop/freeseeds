@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-336 benchmark correction and D1 regression ruling (2026-10-30)
+
+- Supersede the GFS-335 local slowdown claim. The original harness divided completions by the time of the last completion, used one-second tiny quotas, omitted real baseline indexes such as `orders_archived_created_idx` and `payment_choice_recovery_stage_order_idx`, and added a non-production opt-out index. Its 50k post0043 recovery p50 of about 1665ms was a harness artifact.
+- The corrected harness uses the real baseline index shapes, identical deterministic snapshots, `ANALYZE`, randomized repeated A/B order, fixed offered-rate windows, 300ms warmup, 1s measurement windows in the recorded run, 25 query samples, separate read-only/mixed modes, four workers, 50ms busy timeout, CPU metadata, lock/error counts, and a 300ms late-work cutoff. Offered RPS is scheduled requests/window; achieved RPS is completed/window. Dropped work is reported, not hidden in an extended completion time.
+- Corrected 50k repeated A/B: recovery p50 pre0043 `5.23–8.18ms`, post0043 `5.81–6.33ms`; post counts p50 `519.76–532.40ms` versus pre `814.89–954.77ms`; post delta p50 `37.57–38.92ms` versus pre `81.39–99.23ms`. Migration0043 production regression is not proven.
+- Production read-only failure evidence is now aged: 16 failed conversation replies (1 on Oct24, 3 Oct27, 10 Oct28, 2 Oct29); 19 payment-instruction dead letters (12 Oct23, 6 Oct24, 1 Oct25); 305 CAPI rows/outbox jobs remain PENDING, oldest Oct23. No provider trace correlates these to customer impact. Do not resend or mutate.
+
 ## GFS-335 D1 audit and isolated capacity benchmark (2026-10-30)
 
 - The stress harness is local SQLite only: synthetic data, isolated files, deterministic clocks/IDs, mocked provider behavior, no Wrangler bindings, no Cloudflare endpoints, no Meta/JazzCash/Easypaisa credentials, and no customer data. Local throughput is not production capacity.

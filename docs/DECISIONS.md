@@ -1,5 +1,12 @@
 # Decisions
 
+## GFS-336: supersede GFS-335 slowdown as benchmark artifact (2026-10-30)
+
+- Do not remove or alter migration0043 indexes. The apparent 50k post-index recovery regression came from an invalid denominator and an incomplete baseline fixture. After restoring `orders_archived_created_idx` and the other repository baseline indexes, both pre/post recovery plans use the archived/created index and remain about 5–8ms locally.
+- Keep the corrected harness as local evidence only. Fixed-window saturation and dropped work identify a machine/SQLite limit, not a Cloudflare D1 limit. No maximum production-equivalent RPS is established.
+- Treat 305 pending CAPI rows as a reporting backlog until provider acknowledgements are available; do not classify them as WhatsApp delivery failure. Treat the 16 outbound failures and 19 historical dead letters as aged operational evidence with no forced resend.
+- The exact missing live evidence is request-level Worker/Meta trace correlation: provider status/error, retry outcome, final acknowledgement, and order/conversation attribution. Observability/log access is unavailable in the supported read-only path.
+
 ## GFS-335: isolate local index warning; do not alter live schema (2026-10-30)
 
 - The local 50k mixed read/write benchmark shows materially worse post0043 SQLite throughput and tail latency under four concurrent file-backed workers. Treat this as a reproducible local capacity warning, not production causation: D1 engine, cache, limits, and workload are not equivalent.

@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-336 corrected benchmark and failure evidence (2026-10-30)
+
+- **Local harness:** `scripts/d1-capacity-stress.mjs` now uses repository baseline indexes, deterministic snapshots, `ANALYZE`, randomized repeated A/B, fixed offered-rate windows, warmup, read-only/mixed modes, four workers, lock counts, CPU metadata, and bounded late-work reporting. No remote bindings or credentials.
+- **Corrected 50k query ranges:** recovery pre0043 5.23–8.18ms p50 / post0043 5.81–6.33ms; counts pre 814.89–954.77ms / post 519.76–532.40ms; delta pre 81.39–99.23ms / post 37.57–38.92ms.
+- **Aged D1 failures:** outbound conversation failures: Oct24=1, Oct27=3, Oct28=10, Oct29=2. Payment-instruction dead letters: Oct23=12, Oct24=6, Oct25=1. CAPI and CAPI_LEAD pending: 305 each; oldest created Oct23.
+- **Trace boundary:** No raw provider errors, customer identifiers, secrets, or request-level Meta/Worker traces are registered. Customer impact is unverified.
+
 ## GFS-335 D1 audit and local harness (2026-10-30)
 
 - **Remote D1:** Authorized staging UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; read-only marker0043=1, ten indexes, `quick_check=ok`, FK rows=0. Bounded recovery: 21 result rows / 2.385ms / 574 rows read. Bounded delta: 101 result rows / 8.553ms / 14,538 rows read.

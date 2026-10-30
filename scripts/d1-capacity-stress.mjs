@@ -1,6 +1,6 @@
 import { DatabaseSync } from "node:sqlite";
 import { performance } from "node:perf_hooks";
-import { tmpdir } from "node:os";
+import { tmpdir, cpus, totalmem, freemem } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { unlinkSync } from "node:fs";
@@ -8,7 +8,12 @@ import { isMainThread, parentPort, workerData, Worker } from "node:worker_thread
 
 const DATASETS = [245, 1_000, 10_000, 50_000];
 const LOAD_LEVELS = [1, 5, 10, 25, 50, 100];
-const LOAD_MS = 1_000;
+const WARMUP_MS = Number(process.env.GFS336_WARMUP_MS || 1_000);
+const LOAD_MS = Number(process.env.GFS336_MEASURE_MS || 3_000);
+const SAMPLE_COUNT = Number(process.env.GFS336_SAMPLE_COUNT || 25);
+const REPEATS = Number(process.env.GFS336_REPEATS || 2);
+const BUSY_TIMEOUT_MS = Number(process.env.GFS336_BUSY_TIMEOUT_MS || 50);
+const MAX_LATE_MS = Number(process.env.GFS336_MAX_LATE_MS || 1_000);
 const SYNTHETIC_NOW = "2026-10-30T12:00:00.000Z";
 const MIGRATION_INDEXES = [
   "CREATE INDEX IF NOT EXISTS orders_updated_id_idx ON orders(updated_at DESC,id DESC)",
@@ -36,7 +41,7 @@ CREATE TABLE cod_order_details(order_id TEXT PRIMARY KEY,updated_at TEXT NOT NUL
 CREATE TABLE outbound_messages(id TEXT PRIMARY KEY,order_id TEXT,kind TEXT NOT NULL,status TEXT NOT NULL,updated_at TEXT NOT NULL,idempotency_key TEXT NOT NULL);
 CREATE TABLE outbox_jobs(id TEXT PRIMARY KEY,idempotency_key TEXT NOT NULL UNIQUE,entity_id TEXT,kind TEXT NOT NULL,status TEXT NOT NULL,payload_json TEXT NOT NULL,attempts INTEGER NOT NULL DEFAULT 0,available_at TEXT NOT NULL,last_error TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
 CREATE TABLE payment_choice_recovery_stages(order_id TEXT NOT NULL,stage_minutes INTEGER NOT NULL,status TEXT NOT NULL,due_at TEXT NOT NULL,PRIMARY KEY(order_id,stage_minutes));
-CREATE TABLE payment_receipts(order_id TEXT NOT NULL,payment_id TEXT NOT NULL,PRIMARY KEY(order_id,payment_id));
+CREATE TABLE payment_receipts(id TEXT PRIMARY KEY,order_id TEXT NOT NULL,payment_id TEXT NOT NULL,submitted_at TEXT NOT NULL);
 CREATE TABLE payment_reminder_v2_opt_outs(customer_id TEXT,wa_id TEXT);
 CREATE TABLE payment_reminder_v2_stages(schedule_id TEXT NOT NULL,status TEXT NOT NULL,due_at TEXT NOT NULL,stage_minutes INTEGER NOT NULL);
 CREATE INDEX payment_choice_recovery_stage_due_idx ON payment_choice_recovery_stages(status,due_at,order_id);
@@ -45,7 +50,11 @@ CREATE INDEX payments_order_idx ON payments(order_id);
 CREATE INDEX customers_wa_idx ON customers(wa_id);
 CREATE INDEX cod_order_idx ON cod_order_details(order_id);
 CREATE INDEX receipts_order_idx ON payment_receipts(order_id,payment_id);
-CREATE INDEX opts_customer_wa_idx ON payment_reminder_v2_opt_outs(customer_id,wa_id);
+CREATE INDEX orders_archived_created_idx ON orders(archived_at,created_at DESC,id DESC);
+CREATE INDEX orders_customer_created_idx ON orders(customer_id,created_at DESC,id DESC);
+CREATE INDEX payment_receipts_order_submitted_idx ON payment_receipts(order_id,submitted_at DESC,id DESC);
+CREATE INDEX outbox_jobs_entity_kind_status_idx ON outbox_jobs(entity_id,kind,status);
+CREATE INDEX payment_choice_recovery_stage_order_idx ON payment_choice_recovery_stages(order_id,stage_minutes);
 CREATE TABLE cod_schema_migrations(version TEXT PRIMARY KEY,applied_at TEXT NOT NULL);
 `;
 
@@ -124,6 +133,14 @@ function addMigration0043(db) {
   db.prepare("INSERT INTO cod_schema_migrations VALUES('0043',?)").run(SYNTHETIC_NOW);
 }
 
+function prepareDatabase(path, count, indexed) {
+  const db = dbOpen(path);
+  seed(db, count);
+  if (indexed) addMigration0043(db);
+  db.exec("ANALYZE");
+  return db;
+}
+
 function timed(db, sql, args = []) {
   const start = performance.now();
   const rows = db.prepare(sql).all(...args);
@@ -156,12 +173,13 @@ function benchmark(db, count) {
   for (const [name, [sql, args]] of Object.entries(cases)) {
     const samples = [];
     let rows = 0;
-    for (let i = 0; i < (count >= 50_000 ? 5 : 10); i += 1) {
+    for (let i = 0; i < 5; i += 1) timed(db, sql, args);
+    for (let i = 0; i < SAMPLE_COUNT; i += 1) {
       const result = timed(db, sql, args);
       samples.push(result.ms);
       rows = result.rows;
     }
-    results[name] = { p50Ms: percentile(samples, 0.50), p95Ms: percentile(samples, 0.95), rows, samples: samples.length };
+    results[name] = { p50Ms: percentile(samples, 0.50), p95Ms: percentile(samples, 0.95), p99Ms: percentile(samples, 0.99), rows, samples: samples.length };
   }
   results.plans = { orderChanges: planDetails(db, DELTA_SQL.replaceAll("?", "'2026-10-29T00:00:00Z'")), recoveryCandidates: planDetails(db, RECOVERY_SQL.replaceAll("?", "'2026-10-30T12:00:00Z'")) };
   return results;
@@ -176,77 +194,120 @@ function runLocalSafetyChecks(db) {
   payment.run(SYNTHETIC_NOW, "order-000000");
   db.exec("COMMIT");
   const after = db.prepare("SELECT COUNT(*) AS n FROM orders").get().n;
-  return { orderCountStable: Number(before) === Number(after), syntheticStateUpdate: true };
+  const integrity = db.prepare("PRAGMA integrity_check").get();
+  const duplicateOrders = db.prepare("SELECT COUNT(*) AS n FROM (SELECT id FROM orders GROUP BY id HAVING COUNT(*)>1)").get().n;
+  const duplicateOutbound = db.prepare("SELECT COUNT(*) AS n FROM (SELECT idempotency_key FROM outbound_messages GROUP BY idempotency_key HAVING COUNT(*)>1)").get().n;
+  return { orderCountStable: Number(before) === Number(after), syntheticStateUpdate: true, integrity: String(integrity.integrity_check), duplicateOrders: Number(duplicateOrders), duplicateOutbound: Number(duplicateOutbound) };
+}
+
+function executeWork(db, sequence, mode, orderCount) {
+  if (mode === "readonly") {
+    if (sequence % 4 === 0) return db.prepare(COUNT_SQL).all();
+    if (sequence % 4 === 1) return db.prepare(DELTA_SQL).all(...Array(5).fill(["2026-10-29T00:00:00.000Z", "2026-10-29T00:00:00.000Z", "order-"]).flat());
+    if (sequence % 4 === 2) return db.prepare(RECOVERY_SQL).all("2026-10-01T00:00:00.000Z", SYNTHETIC_NOW);
+    return db.prepare(PAGE_SQL).all();
+  }
+  if (sequence % 4 === 0) return db.prepare(COUNT_SQL).all();
+  if (sequence % 4 === 1) return db.prepare(DELTA_SQL).all(...Array(5).fill(["2026-10-29T00:00:00.000Z", "2026-10-29T00:00:00.000Z", "order-"]).flat());
+  if (sequence % 4 === 2) return db.prepare(RECOVERY_SQL).all("2026-10-01T00:00:00.000Z", SYNTHETIC_NOW);
+  const id = `order-${String(sequence % orderCount).padStart(6, "0")}`;
+  db.exec("BEGIN");
+  try {
+    db.prepare("UPDATE orders SET updated_at=? WHERE id=?").run(SYNTHETIC_NOW, id);
+    db.prepare("UPDATE payments SET updated_at=? WHERE order_id=?").run(SYNTHETIC_NOW, id);
+    db.exec("COMMIT");
+  } catch (error) {
+    try { db.exec("ROLLBACK"); } catch {}
+    throw error;
+  }
 }
 
 async function loadWorker() {
   const db = new DatabaseSync(workerData.path);
-  db.exec("PRAGMA busy_timeout=250; PRAGMA journal_mode=WAL;");
+  db.exec(`PRAGMA busy_timeout=${workerData.busyTimeoutMs}; PRAGMA journal_mode=WAL;`);
   const latencies = [];
   let errors = 0;
-  const started = performance.now();
+  let lockErrors = 0;
+  let dropped = 0;
+  const cpuStart = process.cpuUsage();
   for (let i = 0; i < workerData.quota; i += 1) {
-    const due = workerData.startedAt + (i / Math.max(1, workerData.quota)) * workerData.durationMs;
+    const sequence = workerData.offset + i;
+    const due = workerData.startedAt + (sequence / Math.max(1, workerData.totalRequests)) * workerData.durationMs;
     const wait = due - performance.now();
     if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+    if (performance.now() > workerData.startedAt + workerData.durationMs + workerData.maxLateMs) {
+      dropped += workerData.quota - i;
+      break;
+    }
     const t = performance.now();
     try {
-      if (i % 4 === 0) db.prepare(COUNT_SQL).all();
-      else if (i % 4 === 1) db.prepare(DELTA_SQL).all(...Array(5).fill(["2026-10-29T00:00:00.000Z", "2026-10-29T00:00:00.000Z", "order-"]).flat());
-      else if (i % 4 === 2) db.prepare(RECOVERY_SQL).all("2026-10-01T00:00:00.000Z", SYNTHETIC_NOW);
-      else {
-        db.exec("BEGIN");
-        db.prepare("UPDATE orders SET updated_at=? WHERE id=?").run(SYNTHETIC_NOW, `order-${String(i % workerData.orderCount).padStart(6, "0")}`);
-        db.prepare("UPDATE payments SET updated_at=? WHERE order_id=?").run(SYNTHETIC_NOW, `order-${String(i % workerData.orderCount).padStart(6, "0")}`);
-        db.exec("COMMIT");
-      }
+      executeWork(db, sequence, workerData.mode, workerData.orderCount);
       latencies.push(performance.now() - t);
-    } catch {
+    } catch (error) {
       errors += 1;
+      if (String(error).toLowerCase().includes("locked")) lockErrors += 1;
     }
   }
+  const cpu = process.cpuUsage(cpuStart);
   db.close();
-  parentPort.postMessage({ latencies, errors, elapsedMs: performance.now() - started });
+  parentPort.postMessage({ latencies, errors, lockErrors, dropped, cpuMicros: cpu.user + cpu.system });
 }
 
-async function loadRamp(path, orderCount, targetRps) {
-  const workers = Math.min(4, Math.max(1, targetRps));
-  const quota = Math.ceil((targetRps * LOAD_MS / 1_000) / workers);
-  const startedAt = performance.now() + 25;
-  const results = await Promise.all(Array.from({ length: workers }, () => new Promise((resolve, reject) => {
-    const worker = new Worker(new URL(import.meta.url), { workerData: { path, orderCount, quota, startedAt, durationMs: LOAD_MS } });
+async function loadRamp(path, orderCount, targetRps, mode) {
+  const totalRequests = Math.max(1, Math.round(targetRps * LOAD_MS / 1_000));
+  const workers = Math.min(4, totalRequests);
+  const baseQuota = Math.floor(totalRequests / workers);
+  const remainder = totalRequests % workers;
+  const startedAt = performance.now() + 250;
+  const results = await Promise.all(Array.from({ length: workers }, (_, workerIndex) => new Promise((resolve, reject) => {
+    const offset = workerIndex * baseQuota + Math.min(workerIndex, remainder);
+    const quota = baseQuota + (workerIndex < remainder ? 1 : 0);
+    const worker = new Worker(new URL(import.meta.url), { workerData: { path, orderCount, quota, offset, totalRequests, startedAt, durationMs: LOAD_MS, maxLateMs: MAX_LATE_MS, mode, busyTimeoutMs: BUSY_TIMEOUT_MS } });
     worker.once("message", resolve);
     worker.once("error", reject);
   })));
   const latencies = results.flatMap((r) => r.latencies);
   const errors = results.reduce((sum, r) => sum + r.errors, 0);
-  const elapsedMs = Math.max(1, performance.now() - startedAt);
-  return { targetRps, concurrency: workers, attempted: latencies.length + errors, achievedRps: Number(((latencies.length / elapsedMs) * 1_000).toFixed(2)), p50Ms: Number(percentile(latencies, 0.50).toFixed(3)), p95Ms: Number(percentile(latencies, 0.95).toFixed(3)), p99Ms: Number(percentile(latencies, 0.99).toFixed(3)), errors, errorRate: Number((errors / Math.max(1, latencies.length + errors)).toFixed(4)) };
+  const lockErrors = results.reduce((sum, r) => sum + r.lockErrors, 0);
+  const dropped = results.reduce((sum, r) => sum + r.dropped, 0);
+  return { mode, targetRps, offeredRps: Number((totalRequests / (LOAD_MS / 1_000)).toFixed(2)), concurrency: workers, durationMs: LOAD_MS, warmupMs: WARMUP_MS, maxLateMs: MAX_LATE_MS, attempted: totalRequests, completed: latencies.length, achievedRps: Number((latencies.length / (LOAD_MS / 1_000)).toFixed(2)), p50Ms: Number(percentile(latencies, 0.50).toFixed(3)), p95Ms: Number(percentile(latencies, 0.95).toFixed(3)), p99Ms: Number(percentile(latencies, 0.99).toFixed(3)), errors, lockErrors, dropped, errorRate: Number((errors / Math.max(1, totalRequests)).toFixed(4)), cpuMicros: results.reduce((sum, r) => sum + r.cpuMicros, 0) };
 }
 
-async function runVariant(count, indexed) {
-  const path = join(tmpdir(), `gfs335-${process.pid}-${randomUUID()}.sqlite`);
-  const db = dbOpen(path);
-  seed(db, count);
-  if (indexed) addMigration0043(db);
-  const benchmarkResult = benchmark(db, count);
-  const safety = runLocalSafetyChecks(db);
+async function runLoadMode(count, indexed, mode) {
+  const path = join(tmpdir(), `gfs336-${process.pid}-${randomUUID()}.sqlite`);
+  const db = prepareDatabase(path, count, indexed);
+  for (let i = 0; i < 20; i += 1) executeWork(db, i, "readonly", count);
   db.close();
   const load = [];
-  for (const target of LOAD_LEVELS) load.push(await loadRamp(path, count, target));
+  for (const target of LOAD_LEVELS) load.push(await loadRamp(path, count, target, mode));
   const cleanup = new DatabaseSync(path);
   cleanup.close();
   try { unlinkSync(path); } catch {}
-  return { dataset: count, variant: indexed ? "post0043" : "pre0043", benchmark: benchmarkResult, safety, load };
+  return load;
+}
+
+async function runVariant(count, indexed, repeat, modeList) {
+  const path = join(tmpdir(), `gfs336-${process.pid}-${randomUUID()}.sqlite`);
+  const db = prepareDatabase(path, count, indexed);
+  const benchmarkResult = benchmark(db, count);
+  const safety = runLocalSafetyChecks(db);
+  db.close();
+  try { unlinkSync(path); } catch {}
+  const load = {};
+  for (const mode of modeList) load[mode] = await runLoadMode(count, indexed, mode);
+  return { dataset: count, variant: indexed ? "post0043" : "pre0043", repeat, benchmark: benchmarkResult, safety, load };
 }
 
 async function main() {
-  const requested = Number(process.env.GFS335_DATASET || 0);
+  const requested = Number(process.env.GFS336_DATASET || process.env.GFS335_DATASET || 0);
   const datasets = requested && DATASETS.includes(requested) ? [requested] : DATASETS;
-  const output = { harness: "local-sqlite-only", remoteBindings: false, realProviders: false, generatedAt: new Date().toISOString(), datasets: [] };
+  const modeList = String(process.env.GFS336_MODES || "readonly,mixed").split(",").map((mode) => mode.trim()).filter((mode) => mode === "readonly" || mode === "mixed");
+  const output = { harness: "local-sqlite-only", remoteBindings: false, realProviders: false, methodology: { warmupMs: WARMUP_MS, measureMs: LOAD_MS, sampleCount: SAMPLE_COUNT, repeats: REPEATS, busyTimeoutMs: BUSY_TIMEOUT_MS, randomizedVariantOrder: true, analyze: true, modes: modeList }, environment: { node: process.version, platform: process.platform, arch: process.arch, cpus: cpus().length, totalMemoryBytes: totalmem(), freeMemoryBytes: freemem() }, generatedAt: new Date().toISOString(), datasets: [] };
   for (const count of datasets) {
-    output.datasets.push(await runVariant(count, false));
-    output.datasets.push(await runVariant(count, true));
+    for (let repeat = 1; repeat <= REPEATS; repeat += 1) {
+      const variantOrder = (repeat + count) % 2 === 0 ? [false, true] : [true, false];
+      for (const indexed of variantOrder) output.datasets.push(await runVariant(count, indexed, repeat, modeList));
+    }
   }
   console.log(JSON.stringify(output, null, 2));
 }

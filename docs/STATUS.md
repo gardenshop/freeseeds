@@ -1,5 +1,14 @@
 # Status
 
+## GFS-336 reliable stress correction and D1 regression ruling (2026-10-30)
+
+- **Harness defect proven:** GFS-335 measured completed work over completion time, so a one-request target1 run could report 10.89 RPS. Its fixture also omitted real baseline indexes and added a non-production opt-out index.
+- **Harness repaired PASS:** Fixed-window offered/completed accounting, controlled pacing, warmup, `ANALYZE`, randomized repeated A/B, real baseline indexes, read-only/mixed modes, CPU metadata, lock counts, and late-work cutoff. Isolation test passes 1/1.
+- **Corrected 50k query results:** Two repeats show recovery p50 pre0043 5.23–8.18ms versus post0043 5.81–6.33ms; counts p50 pre 814.89–954.77ms versus post 519.76–532.40ms; delta p50 pre 81.39–99.23ms versus post 37.57–38.92ms.
+- **Capacity conclusion:** Fixed-window 100-RPS offers saturated both variants and dropped work on 50k; no reproducible sustainable production-equivalent RPS was established. Local throughput is not D1 capacity. The original post recovery regression is ruled out as a fixture artifact.
+- **Failure aging:** 16 failed conversation replies are dated Oct24/27/28/29; 19 payment-instruction dead letters are dated Oct23/24/25; 305 CAPI events and CAPI_LEAD outbox jobs remain pending, oldest Oct23. Request-level provider acknowledgement and customer impact remain unavailable.
+- **Verdict:** D1 migration/integrity PASS; corrected benchmark PASS; production migration defect NOT PROVEN; live release NO-GO. No index or Worker change was made.
+
 ## GFS-335 D1 audit and isolated capacity benchmark (2026-10-30)
 
 - **Production D1 integrity PASS read-only:** `quick_check=ok`, FK rows `0`, marker0043 present, ten indexes present, no writes.

@@ -1,5 +1,11 @@
 # Changelog
 
+## GFS-336 (2026-10-30)
+
+- Corrected the D1 stress harness denominator, pacing, warmup, A/B ordering, baseline schema indexes, `ANALYZE` setup, read-only/mixed separation, lock metrics, and bounded late-work handling.
+- Repeated corrected 50k measurements rule out the GFS-335 1.7-second recovery result as a fixture artifact; no production migration or index change was made.
+- Added aged, sanitized failure evidence for outbound replies, payment-instruction dead letters, and the CAPI backlog. Provider/customer impact remains unverified.
+
 ## GFS-335 (2026-10-30)
 
 - Added a local-only deterministic D1 capacity harness and isolation test covering 245/1k/10k/50k synthetic orders, pre/post0043 variants, Admin/delta/recovery paths, mixed writes, and 1–100 RPS ramps.

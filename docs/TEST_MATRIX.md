@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-336 benchmark validity and corrected A/B (2026-10-30)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Original rate accounting | FAIL corrected | Completion-time denominator inflated tiny-quota rates; fixed-window denominator now used |
+| Synthetic schema fidelity | PASS corrected | Real baseline order/recovery/receipt/outbox index shapes restored; non-production opt-out index removed |
+| A/B methodology | PASS | Same deterministic snapshot, `ANALYZE`, randomized variant order, two repeats, 25 query samples |
+| Load methodology | PASS | 300ms warmup, fixed 1s window, controlled arrivals, read-only/mixed modes, four workers, 300ms late cutoff |
+| Corrected 50k recovery | PASS | Pre 5.23–8.18ms p50; post 5.81–6.33ms p50 |
+| Corrected 50k counts/delta | PASS | Post faster than pre in both repeated query samples |
+| Local capacity threshold | NOT MEASURED | 100-RPS offers saturated and dropped work; no production-equivalent sustainable RPS claim |
+| Provider/customer impact | UNVERIFIED | D1 status ages available; request-level Meta/Worker traces unavailable |
+
 ## GFS-335 D1 audit and stress gate (2026-10-30)
 
 | Check | Result | Evidence / boundary |
