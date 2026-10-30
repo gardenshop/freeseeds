@@ -9,5 +9,5 @@ CREATE INDEX IF NOT EXISTS whatsapp_conversations_last_inbound_created_idx
 CREATE INDEX IF NOT EXISTS orders_created_id_idx
   ON orders(created_at, id);
 
-CREATE INDEX IF NOT EXISTS leads_created_id_idx
-  ON leads(created_at, id);
+-- No leads index is proposed: the protected analytics path does not query leads,
+-- so adding its write overhead would not improve a measured query.
