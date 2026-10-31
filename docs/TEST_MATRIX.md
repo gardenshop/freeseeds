@@ -2331,3 +2331,18 @@ Investigation query costs only (not production savings): representative `rows_re
 | Approval G mutation | NOT RUN | Stopped before first deployment stage |
 | WhatsApp/API regression | PASS frozen | API and operational routing unchanged; no customer or D1 mutation |
 | Required next gate | BLOCKED | Scoped owner correction required before any staged exposure |
+
+### GFS-375 direct Admin cutover (2026-10-31)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Approval H / identity | PASS | Fresh Wrangler identity/account and exact approved versions |
+| Direct routing | PASS | Deployment `a98d5e55…`: candidate100%, bridge0%; API `b426ba47`100% |
+| Watchdog | PASS | Detached five-minute rollback watchdog armed before cutover; disarmed after final readback |
+| Health/security | PASS | Valid Service Auth health200; invalid403; monitoring credential protected routes302 |
+| Operator UI/API | PASS | Analytics, CSV, Conversations, Orders, Payment Settings HTTP200 |
+| D1/Admin parity | PASS | D1 total405/active404; Admin active404; review13, approved2, COD pending199; PKR125 fee count199 |
+| Telemetry | PASS | GraphQL45 requests/0 errors; browser latencies measured; no attributable 5xx/404 |
+| Write safety | PASS | D1 changed_db=false, rows_written0; no mutation endpoints invoked |
+| WhatsApp/recovery | PASS read-only | API100%; inbound statuses valid; recovery FAILED0; +15/+210 present |
+| Final state | PASS | Candidate100%, bridge0%, API100%; no absolute-zero claim beyond measured coverage |

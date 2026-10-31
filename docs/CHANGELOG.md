@@ -1542,3 +1542,9 @@
 - Reverified Cloudflare identity, HEAD, current Admin/API routing and approved versions.
 - Stopped before mutation after confirming the bridge returns404 for candidate-only Analytics/Conversations while the candidate returns200. Wrangler percentage deployment exposes no supported session-affinity/path-routing control.
 - No staged Admin promotion, API deployment, customer, WhatsApp, payment, Meta, D1, Access, flag, migration, Queue or Cron mutation occurred. Requested one scoped correction before retry.
+
+## 2026-10-31 - GFS-375 Approval H direct Admin cutover
+
+- Executed the approved direct Admin cutover: candidate `4fe564a6`100%, health bridge `3bbf5cf6`0%; API `b426ba47` remained100%.
+- Armed a detached five-minute Windows rollback watchdog before mutation and disarmed it only after independent final routing and acceptance readback.
+- Verified health/security, Analytics, CSV, Conversations, Orders, Payment Settings, D1/Admin parity, GraphQL45/0, valid inbound states, recovery FAILED0 and zero D1 writes. No API, WhatsApp, customer, payment, Meta, migration, flag, Queue or Cron mutation occurred.

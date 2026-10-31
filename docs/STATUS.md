@@ -2175,3 +2175,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **BLOCKED before mutation:** Candidate `4fe564a6` supports Analytics/Conversations, but bridge `3bbf5cf6` returns404 on those routes. Wrangler percentage deployment exposes only version percentages and provides no supported session-affinity/path-routing control. Staged mixed traffic could produce real authenticated 404s.
 - **No deployment occurred:** no 10%, 25%, 50% or 100% Admin stage; API, WhatsApp, D1, customer, payment, Meta, flags, Access and migration state are unchanged.
 - **Next action:** owner must approve one minimum correction that prevents mixed-version 404s—supported affinity/path routing, or an explicitly scoped direct candidate cutover with an independently armed bridge rollback watchdog. Do not reuse Approval G until that correction is approved.
+
+## GFS-375 Approval H direct Admin cutover (2026-10-31 UTC)
+
+- **PASS:** Fresh identity/routing preflight and candidate health passed. Deployment `a98d5e55-3d95-4f9a-b687-ffbc617fd4d1` now serves candidate `4fe564a6`100% / bridge `3bbf5cf6`0%; API `b426ba47` remains100%.
+- **PASS:** Detached Windows watchdog armed before mutation with a five-minute deadline and exact bridge100%/candidate0% rollback. Final routing was independently read back before disarm; watchdog result was `disarmed`.
+- **PASS:** Monitoring bridge returned authenticated candidate health200, invalid health403, protected `/orders`, `/analytics`, `/conversations`302, and GraphQL45/0 errors.
+- **PASS:** Candidate Analytics, CSV, Conversations, Orders and Payment Settings all returned HTTP200. CSV retained expected header and 19 rows; Conversations total2318 with masked references; Orders total404 active; three payment methods enabled; responsive Analytics/Conversations had no horizontal overflow.
+- **PASS:** D1 read-only aggregate: total405, active404, payment review13, approved2, COD pending199, COD fee PKR125 on199 rows; Admin active total404. D1 query reported `changed_db=false`, `rows_written=0`. Recovery FAILED=0; inbound statuses were only RECEIVED/sent/delivered/read.
+- **Decision:** direct Admin release PASS with measured evidence. No absolute zero-regression claim; API/WhatsApp remained unchanged and no customer/payment/Meta/D1 write was performed.

@@ -1702,3 +1702,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Approval G is conditional and remains unused. Fresh identity and frozen routing passed, but staged exposure is unsafe: the bridge lacks candidate-only Analytics/Conversations and returns404, while the candidate returns200 under exact version targeting.
 - Wrangler supports percentage splitting only; no supported session-affinity or path-routing control was available in the release interface. Do not expose a mixed-version split that can break authenticated sessions.
 - Request one scoped owner correction before any mutation: approve a supported anti-404 mechanism, or explicitly approve a direct candidate100% cutover with bridge100% emergency rollback/watchdog. No API promotion is included.
+
+## GFS-375 decision (2026-10-31 UTC)
+
+- Approval H was consumed for one direct Admin-only cutover after all preconditions passed. Candidate `4fe564a6` is now100%; bridge `3bbf5cf6` remains0% as executable rollback; API `b426ba47` remained100%.
+- A detached five-minute Windows rollback watchdog was armed before mutation and disarmed only after independent final routing, health, Access, operator, parity, telemetry, and recovery readback. No rollback was required.
+- Release acceptance is PASS on measured evidence: candidate UI/API/CSV/Conversations/Orders/Payment Settings200, valid health200, invalid403, monitoring credential denied protected routes302, GraphQL45/0, D1/Admin totals consistent, and D1 changed_db=false/rows_written=0.
+- Preserve separate API acknowledgement repair, Meta timezone, historical CAPI, blocked receipts, optional D1 optimization, and full chat history. Do not promote API or change customer/payment/Meta state under this release.

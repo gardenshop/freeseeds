@@ -1691,3 +1691,10 @@ No secrets are stored in this registry.
 - **Identity/readback:** fresh Wrangler identity `gisupp@gmail.com` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; HEAD `fb04d8a`; Admin current `3bbf5cf6`100% + `4fe564a6`0%; API `b426ba47`100% + candidate0%.
 - **Compatibility blocker:** bridge candidate-only Analytics/Conversations requests return404; exact candidate override returns200. `wrangler versions deploy --help` exposes percentage version specs only; no session-affinity/path-routing option was available.
 - **Disposition:** Approval G not consumed; no deployment or watchdog was started. Minimum correction approval is required before staged exposure. No secrets or customer data recorded.
+
+## GFS-375 direct Admin release resources
+
+- **Deployment:** `a98d5e55-3d95-4f9a-b687-ffbc617fd4d1`; candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`100%, bridge `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1`0%; API deployment `10f43f2e-9c95-4fd2-8bfc-99ccd890fee1` remains `b426ba47`100% / candidate0%.
+- **Watchdog:** detached Windows process armed before cutover with five-minute deadline and rollback target bridge100%/candidate0%; final result `disarmed` after verified readback. No rollback was invoked.
+- **Acceptance:** monitoring health200, invalid403, protected routes302, GraphQL45/0; browser Analytics/CSV/Conversations/Orders/Payment Settings200; D1 total405/active404, review13, approved2, COD pending199, fee125 count199, changed_db=false, rows_written0.
+- **WhatsApp/recovery:** bounded inbound statuses were RECEIVED/sent/delivered/read; recovery FAILED0; +15/+210 aggregate rows remained present. No payloads, identifiers, secrets or customer data recorded.

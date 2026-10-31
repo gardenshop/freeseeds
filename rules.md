@@ -1421,3 +1421,11 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Approval G was **not executed**. The exact candidate serves Analytics/Conversations, while the bridge returns404 for those candidate-only routes. Wrangler's supported percentage deployment has no session-affinity or path-routing control. A 10/25/50% split can therefore produce authenticated 404s or broken mixed-version sessions.
 - Stop before mutation. Do not add routing rules, silently change the bridge, or expose staged traffic. Request one scoped correction: an owner-approved release method that prevents mixed-version 404s (for example a supported affinity/path mechanism or an explicitly approved direct candidate cutover with watchdog rollback).
 - API, WhatsApp, customer, payment, Meta, D1, migration, Queue, Cron, flag, Access, and Worker routing remain unchanged.
+
+## GFS-375 Approval H direct Admin cutover (2026-10-31 UTC)
+
+- Approval H was executed only after fresh identity/routing, candidate health, operator acceptance, D1 parity, and rollback dry-run gates passed. Cloudflare identity is `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API remained `b426ba47`100%.
+- Admin deployment `a98d5e55-3d95-4f9a-b687-ffbc617fd4d1` serves candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`100% and bridge `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1`0%. No gradual split or unrelated mutation occurred.
+- A detached Windows watchdog armed a five-minute rollback deadline before cutover. It was independently disarmed only after final candidate/API routing readback and acceptance; result was `disarmed`, not a fabricated rollback.
+- Acceptance measured health200 with valid Service Auth, invalid health403, protected Admin routes302 for the monitoring credential, GraphQL45 requests/0 errors, Analytics/CSV/Conversations/Orders/Payment Settings HTTP200, D1/Admin aggregate parity, `changed_db=false`, and `rows_written=0`. No customer identifiers, payloads, secrets, cookies, or payment data were recorded.
+- WhatsApp read-only aggregates remained valid: inbound states were RECEIVED/sent/delivered/read only, recovery FAILED=0, +15/+210 rows remained known, and the API deployment stayed frozen100%. Do not claim absolute zero regression; measured coverage is the recorded evidence.

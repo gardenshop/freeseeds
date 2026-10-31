@@ -5118,3 +5118,18 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - **Regression/security:** no new customer, WhatsApp, D1, payment, Meta, Queue, Cron, flag, migration or Access mutation. Existing operator/security/health evidence remains retained; no claim of new zero-regression exposure is made.
 - **Required scoped approval:** approve one correction preventing mixed-version 404s—supported version affinity/path routing, or a direct candidate100% cutover with independently armed bridge100% rollback/watchdog. Do not add routing rules or retry Approval G without this correction.
 - **Remaining:** Admin promotion UNKNOWN/100%; API acknowledgement repair UNKNOWN/100%; Meta timezone/hourly attribution UNKNOWN; historical CAPI UNKNOWN; blocked receipts UNKNOWN. Optional D1 optimization/full chat history deferred.
+
+## GFS-375 final report — direct Admin 100% cutover (2026-10-31 UTC)
+
+- **GFS-372:** PASS bounded canary/restoration; customer-flow acceptance was INCONCLUSIVE.
+- **GFS-373:** PASS authenticated operator acceptance for exact candidate; no promotion under that task.
+- **GFS-374:** BLOCKED safely because mixed-version percentage traffic could produce bridge404 for candidate-only routes.
+- **GFS-375:** **PASS.** Approval H direct cutover deployment `a98d5e55-3d95-4f9a-b687-ffbc617fd4d1` serves Admin candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`100% and bridge `3bbf5cf6`0%. API `b426ba47` remains100%.
+- **Watchdog/rollback:** detached Windows watchdog armed before mutation with a five-minute automatic bridge rollback deadline. Final Admin/API routing was independently read back; watchdog reported `disarmed` after acceptance. No rollback was required.
+- **Health/security:** protected credential candidate `/health` HTTP200; invalid credentials403; monitoring credential on `/orders`, `/analytics`, `/conversations`302. GraphQL telemetry measured45 requests/0 errors; no attributable 5xx or unexpected404.
+- **Admin acceptance:** Analytics page/API200; CSV200 with expected header and19 rows; Conversations200 with2,318 total and masked references; Orders200 with404 active total; Payment Settings200 with three enabled methods. Reduced-width Analytics/Conversations had no horizontal overflow.
+- **D1/payment parity:** read-only D1 returned total405, active404, review13, approved2, COD pending199, COD fee PKR125 on199 rows; Admin active total404. Query metadata reported `changed_db=false`, `rows_written=0`. No write endpoints were invoked.
+- **WhatsApp/recovery:** API remained100%; bounded inbound statuses were only RECEIVED/sent/delivered/read; recovery FAILED0; +15/+210 rows remained present. No messages, orders, payments, Meta, migration, flag, Queue or Cron mutation occurred. This is measured zero-detected-regression coverage, not an absolute guarantee.
+- **Tests:** deployment-only acceptance and rollback readiness PASS. No source changed; retained gates remain full335/335, build/lint/audit0, controller17/17, adapter6/6, observability4/4, rollback4/4. Temporary watchdog/monitor harness files were removed.
+- **Git:** HEAD before release and pushed docs remains `510cf836e690dc60e1e0ef2fbf98044faca669fc`; release was configuration-only and did not alter source.
+- **Remaining:** API acknowledgement repair live activation UNKNOWN/100%; Meta timezone/hourly attribution UNKNOWN/100%; historical CAPI reconciliation UNKNOWN/100%; blocked receipts UNKNOWN/100%. Optional D1 optimization and full chat history remain deferred.
