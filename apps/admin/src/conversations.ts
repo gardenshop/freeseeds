@@ -49,6 +49,23 @@ export async function readConversations(db: D1Like, filters: ConversationFilters
   return { conversations: rows.map((row) => ({ conversationId: String(value(row, "conversation_id")), customerRef: maskWaId(text(row, "wa_id")), lastActivityAt: String(value(row, "last_activity_at") ?? ""), state: String(value(row, "state") ?? ""), latestOrder: value(row, "order_number") == null ? null : { orderNumber: String(value(row, "order_number")), state: String(value(row, "order_state") ?? ""), paymentStatus: String(value(row, "order_payment") ?? "") }, orderCount: num(row, "order_count"), historyAvailable: false })), pagination: { page: filters.page, pageSize: filters.pageSize, total, totalPages: Math.ceil(total / filters.pageSize) }, queryCosts: costs };
 }
 
+export async function readConversationSummary(db: D1Like, now = new Date()): Promise<{ summary: { total: number; activeLast24Hours: number; paymentReviewPending: number; codPending: number; asOf: string }; queryCosts: Cost[] }> {
+  const costs: Cost[] = [];
+  const run = async (sql: string, args: unknown[]): Promise<Row | null> => {
+    const result = await db.prepare(sql).bind(...args).all<Row>() as unknown as Query;
+    costs.push({ query: queryName(sql), rowsRead: rowsRead(result) });
+    return (result.results ?? [])[0] ?? null;
+  };
+  const since = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  const [total, activeLast24Hours, paymentReviewPending, codPending] = await Promise.all([
+    run("SELECT COUNT(*) AS total FROM whatsapp_conversations", []),
+    run("SELECT COUNT(*) AS total FROM whatsapp_conversations WHERE COALESCE(last_inbound_at,updated_at)>=?", [since]),
+    run("SELECT COUNT(DISTINCT wc.id) AS total FROM whatsapp_conversations wc JOIN customers c ON c.wa_id=wc.wa_id JOIN orders o ON o.customer_id=c.id JOIN payments p ON p.order_id=o.id WHERE o.state='PAYMENT_REVIEW' AND p.review_state='REVIEW'", []),
+    run("SELECT COUNT(DISTINCT wc.id) AS total FROM whatsapp_conversations wc JOIN customers c ON c.wa_id=wc.wa_id JOIN orders o ON o.customer_id=c.id WHERE o.payment_status='COD_PENDING'", [])
+  ]);
+  return { summary: { total: num(total ?? undefined, "total"), activeLast24Hours: num(activeLast24Hours ?? undefined, "total"), paymentReviewPending: num(paymentReviewPending ?? undefined, "total"), codPending: num(codPending ?? undefined, "total"), asOf: now.toISOString() }, queryCosts: costs };
+}
+
 async function all<T extends Row>(db: D1Like, costs: Cost[], sql: string, args: unknown[]): Promise<T[]> { const result = await db.prepare(sql).bind(...args).all<T>() as unknown as Query; costs.push({ query: queryName(sql), rowsRead: rowsRead(result) }); return (result.results ?? []) as T[]; }
 async function first<T extends Row>(db: D1Like, costs: Cost[], sql: string, args: unknown[]): Promise<T | null> { const statement = db.prepare(sql).bind(...args) as unknown as { first: <R>() => Promise<R | null> }; const row = await statement.first<T>(); costs.push({ query: queryName(sql), rowsRead: 0 }); return row; }
 

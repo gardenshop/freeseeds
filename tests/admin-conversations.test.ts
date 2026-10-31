@@ -2,7 +2,8 @@ import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import app from "../apps/admin/src/index";
-import { conversationPageHtml, parseConversationFilters, readConversation } from "../apps/admin/src/conversations";
+import { conversationPageHtml, parseConversationFilters, readConversation, readConversationSummary } from "../apps/admin/src/conversations";
+import { conversationsDashboardPageHtml } from "../apps/admin/src/conversations-dashboard";
 
 type Statement = { bind: (...args: unknown[]) => Statement; all: <T>() => Promise<{ results: T[]; meta: { rows_read: number } }>; first: <T>() => Promise<T | null> };
 class SqliteD1 {
@@ -86,6 +87,27 @@ describe("GFS-341 read-only conversation viewer", () => {
     expect(html).toContain("/api/conversations");
     expect(html).toContain("read-only");
     expect(html).toContain("Historical content unavailable");
+    expect(html).not.toContain("method:'POST'");
+    expect(html).not.toContain("/send");
+  });
+
+  it("returns server-side dashboard aggregates without exposing identifiers", async () => {
+    const db = fixture();
+    const body = await readConversationSummary(db as unknown as D1Database, new Date("2026-10-30T02:00:00Z"));
+    expect(body.summary).toMatchObject({ total: 1, activeLast24Hours: 1, paymentReviewPending: 0, codPending: 0 });
+    expect(JSON.stringify(body)).not.toContain("923001234567");
+    const response = await app.fetch(new Request("https://admin.example.test/api/conversations/summary", { headers: auth }), env(db));
+    expect(response.status).toBe(200);
+    expect((await response.json() as { summary: Record<string, unknown> }).summary).toHaveProperty("activeLast24Hours");
+  });
+
+  it("renders the stale-safe automatic dashboard without write controls", () => {
+    const html = conversationsDashboardPageHtml();
+    expect(html).toContain("/api/conversations/summary");
+    expect(html).toContain("setTimeout(()=>refresh('automatic'),30000)");
+    expect(html).toContain("document.hidden");
+    expect(html).toContain("Update failed; showing the last successful data.");
+    expect(html).toContain("prefers-reduced-motion");
     expect(html).not.toContain("method:'POST'");
     expect(html).not.toContain("/send");
   });

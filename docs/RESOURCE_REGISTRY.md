@@ -1784,3 +1784,10 @@ No secrets are stored in this registry.
 - Sanitized live resource evidence: authorized Admin Orders page returned HTTP200 for `/api/orders`, detail, `/api/orders/changes`, Refresh, and reload; no customer fields, cookies, tokens, screenshots, or credential values registered.
 - Runtime resources unchanged: API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. D1 aggregate read had `changed_db=false`, `rows_written=0`.
 - Protected protocols retained: no deployment, API canary, customer message, order/payment write, Meta, migration, flag, Queue, Cron, or WhatsApp mutation; GFS-386 API release remains blocked.
+
+## GFS-388 Admin auto-refresh and Conversations dashboard (2026-10-31)
+
+- Changed source resources: `apps/admin/src/conversations.ts`, new `apps/admin/src/conversations-dashboard.ts`, `apps/admin/src/index.ts`, and `tests/admin-conversations.test.ts`. No migration or Worker/WhatsApp API source changed.
+- New read-only endpoint: `/api/conversations/summary`; aggregate fields are total, activeLast24Hours, paymentReviewPending, codPending, asOf, and queryCosts. No identifiers or message bodies are returned.
+- Browser resource evidence is synthetic/local only; no customer data, cookies, tokens, secrets, screenshots, or credential values were registered. Remote preview was blocked by missing `cloudflared` Access integration.
+- Runtime resources unchanged: API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%; no D1 writes, deployment, customer message, payment, Meta, migration, flag, Queue, or Cron mutation.

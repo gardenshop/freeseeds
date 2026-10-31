@@ -5295,3 +5295,13 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - **WhatsApp:** no mutation or customer-flow claim; API, Queue, Cron, webhook, flags, migrations, Meta, payments, and D1 writes were untouched. The reported WhatsApp ordering question remains separate and not resolved by this Admin-only task.
 - **GFS-386 comparison:** monitoring repair tests remain PASS, but API release remains BLOCKED pending fresh approval and a new canary; GFS-387 does not change that boundary.
 - **Next action:** push this tested Admin resilience fix; keep API canary blocked until its separately approved monitoring gate is met.
+
+## GFS-388 final report - Admin auto-refresh and Conversations dashboard
+
+1. **Orders:** PASS source integration. Existing `/api/orders/changes` and GFS-387 stale-safe behavior remain; no automatic state mutation or duplicate records.
+2. **Conversations:** PASS source/tests. New `/api/conversations/summary` returns server aggregates; dashboard polls every30s only while visible, pauses hidden tabs, resumes on return, retries once after bounded timeout/backoff, retains last success, and refreshes selected detail only when its row changes.
+3. **Metrics:** PASS definition. Total conversations, active24h, payment-review pending, and COD pending are distinct server counts; query costs are returned for measurement. No page-slice-derived global counts.
+4. **Browser:** PASS synthetic/local acceptance. Chrome MCP verified metrics, synthetic state-change highlight, reduced-motion Auto OFF, and no whole-page horizontal overflow at requested responsive emulations. **Live-data acceptance BLOCKED**: local D1 was empty; remote Wrangler preview failed because Access-protected preview requires unavailable `cloudflared`.
+5. **Tests:** PASS focused18/18, full341/341, build, lint, dependency audit0 vulnerabilities. No deployment or source change to API/WhatsApp/payment/Meta/migrations/flags/Queue/Cron.
+6. **Routing:** read-only Cloudflare identity `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%.
+7. **Approval:** NOT REQUESTED/NOT READY. First resolve the precise live-data browser gate, then request one Admin-only 0% validation/direct cutover approval with watchdog and rollback to `ceb3e680`100%. GFS-386 API monitoring remains BLOCKED.

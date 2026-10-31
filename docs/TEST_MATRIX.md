@@ -2504,4 +2504,18 @@ Investigation query costs only (not production savings): representative `rows_re
 | Release-control regression | PASS | Controller18/18; adapter8/8; observability5/5 |
 | D1 safety | PASS | Aggregate-only read; `changed_db=false`; `rows_written=0` |
 | Production mutation | PASS | No deployment, API canary, WhatsApp/customer/payment/Meta/D1/migration/flag/Queue/Cron mutation |
+
+## GFS-388 Admin auto-refresh and Conversations dashboard
+
+| Area | Result | Evidence |
+|---|---|---|
+| Summary metrics | PASS | Server-side total, active24h, payment-review pending, and COD-pending aggregates; no page-derived global counts |
+| Orders auto-refresh | PASS | Reuses `/api/orders/changes`; existing bounded retry, stale retention, filters, selection, pagination, and manual/full reload preserved |
+| Conversations polling | PASS | 30s visible-tab timer, hidden pause/resume, one in-flight cycle, 12s timeout, one retry/backoff, stale-safe generation guard |
+| Conversation security | PASS | Read-only GETs, masked references, no send/reset/status controls, detail refresh only on detected selected-row change |
+| Browser synthetic acceptance | PASS | Chrome MCP metrics/highlight/reduced-motion/no-overflow checks at requested responsive emulations |
+| Live-data browser acceptance | BLOCKED | Remote preview requires `cloudflared`; local D1 had no schema/data; no live PASS claimed |
+| Focused tests | PASS | 18/18 Admin controls/conversations |
+| Full quality | PASS | 341/341; build; lint; dependency audit0 vulnerabilities |
+| Production mutation | PASS | No deployment; API/Admin/WhatsApp/D1/payment/Meta/migration/flag/Queue/Cron unchanged |
 | Next gate | PENDING APPROVAL | Exact-source upload → 0% override acceptance → conditional1%/8-minute canary → restore baseline100% |

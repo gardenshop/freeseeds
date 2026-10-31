@@ -1789,3 +1789,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Classify the reported Orders network failure as **not reproduced live**: sanitized authorized Chrome requests for list, detail, changes, Refresh, and reload all returned HTTP200. The separate source risk was real because transient failure cleared the last successful list.
 - Accept the minimal stale-safe UI repair: preserve visible order cards, show explicit stale/refresh failure feedback, retain bounded retry, timeout, cancellation, and race protection, and leave backend SQL, payment/order mutations, authentication, and API/WhatsApp behavior unchanged.
 - Accept focused12/12, full339/339, build/lint, dependency audit0, controller18/18, adapter8/8, and observability5/5. Keep routing frozen and do not claim a WhatsApp outage is solved by this Admin-only change.
+
+## GFS-388 decision (2026-10-31)
+
+- Accept the source design for read-only Admin updates: server-side summary aggregates, 30-second visible-tab polling, hidden pause/resume, bounded timeout/retry, one-cycle concurrency, generation guards, stale retention, and no automatic state mutation.
+- Accept the Conversations dashboard definitions: total is all stored conversations; active24h is last inbound or conversation update within24h; payment review pending is distinct conversations linked to `PAYMENT_REVIEW` orders with payment `REVIEW`; COD pending is distinct conversations linked to orders with `COD_PENDING` payment status.
+- Accept focused18/18, full341/341, build/lint/audit0, and synthetic Chrome responsive evidence. Real live-data browser acceptance remains BLOCKED by missing `cloudflared` for the Access-protected remote preview; no fabricated live PASS.
+- Do not deploy under GFS-388. Prepare one exact Admin-only approval after any owner-provided `cloudflared`/remote-preview path or equivalent authorized live acceptance, with 0% validation, detached watchdog, and rollback to Admin `ceb3e680`100%. API remains frozen.

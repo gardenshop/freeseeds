@@ -2276,3 +2276,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **PASS repair:** the Orders dashboard now preserves visible last-successful cards during transient load/refresh failure and labels the state as stale; existing bounded retry, timeout, cancellation, race, filters, pagination, selection, and business/auth logic remain intact.
 - **PASS gates:** focused12/12, full339/339, build, lint, dependency audit0 vulnerabilities, controller18/18, adapter8/8, observability5/5. No production mutation or deployment.
 - **Frozen routing:** API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. WhatsApp health was not altered; no customer-flow recovery claim is made from this Admin-only evidence.
+
+## GFS-388 Admin auto-refresh and Conversations dashboard (2026-10-31)
+
+- **PASS source:** Orders retains GFS-387 stale-safe behavior. Conversations now has server aggregate cards, visible-tab 30-second polling, hidden pause/resume, bounded retry/timeout, stale-safe updates, manual Refresh, Auto ON/OFF, selected-detail refresh on change, and temporary reduced-motion-safe highlights.
+- **PASS tests:** focused18/18, full341/341, build, lint, dependency audit0 vulnerabilities. No schema, API, WhatsApp, payment, Meta, migration, flag, Queue, Cron, or D1 write change.
+- **PASS synthetic browser:** Chrome MCP verified metrics, synthetic state-change highlight, reduced-motion toggle, and no page overflow across requested responsive emulations.
+- **BLOCKED live-data acceptance:** local D1 had no schema/data; remote Wrangler preview could not start because `cloudflared` is unavailable for the Access-protected preview. No real live-data PASS is claimed.
+- **Frozen routing:** API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. Deployment approval remains pending; rollback target is Admin `ceb3e680`100%.
