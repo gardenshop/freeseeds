@@ -5157,3 +5157,16 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - **Final routing:** Admin `4fe564a6`100% / bridge `3bbf5cf6`0%; API `b426ba47`100% / old slot `6ef27f02`0%. No production/API/WhatsApp/Meta/payment/D1/Queue/Cron/migration/flag mutation occurred.
 - **Next action:** push tested source/docs in PR #11. Separately obtain approval before deploying this Admin UI source; separately obtain GFS-376 exact API upload/0%-attachment/conditional1%-canary approval. Never combine those releases.
 - **Remaining:** Admin UI deployment UNKNOWN/100%; API replacement upload/acceptance/canary UNKNOWN/100%; API full promotion UNKNOWN/100%; Meta timezone, historical CAPI, and blocked receipts UNKNOWN; optional D1 optimization/full chat history deferred.
+
+## GFS-378 final report — Admin Orders layout and Refresh (2026-10-31)
+
+- **GFS-375:** PASS direct Admin candidate100% cutover with measured acceptance; API unchanged.
+- **GFS-376:** PASS API repair diagnosis/local replacement preparation; upload and canary remain approval-gated.
+- **GFS-377:** PASS Admin home source repair and protected-route matrix; new home was not deployed.
+- **GFS-378:** PASS diagnosis and source repair; post-fix live visual acceptance NOT RUN because deployment was prohibited.
+- **Exact root causes:** live Chrome measured the first Orders card at472.5px from `minmax(280px,42vh)`, expanding the workspace to3509px. The reported right strip was symmetric max-width gutter; body/client widths matched and no horizontal overflow existed. Refresh transport returned HTTP200 from `/api/orders/changes` with unchanged state, but its no-change feedback was not visibly time-stamped or guarded at the UI boundary.
+- **Fix:** Orders source now uses a 1700px desktop shell, viewport-bounded workspace, flex scroll list with content-sized cards, mobile list cap, and a single-flight Refresh wrapper with Checking/Checked/Updated/error status. Filters, pagination, selected order, details, auth and backend endpoint are unchanged.
+- **Evidence:** live 1675x900 diagnosis, Refresh HTTP200, focused Admin PASS, full338/338, build/lint/audit0. Chrome rejected unsanitized live order screenshot capture due customer-data exposure; no screenshot is claimed.
+- **Final routing:** Admin `4fe564a6`100% / bridge0%; API `b426ba47`100%. No deployment, API upload, customer message, payment, Meta, D1, Queue, Cron, migration, flag, or WhatsApp mutation occurred.
+- **Next approval:** approve one Admin-only deployment of the exact pushed source commit, with fresh Cloudflare identity/routing readback, watchdog, independent desktop/mobile/Refresh acceptance, and rollback to Admin `4fe564a6`100%. Keep API frozen and its GFS-376 approval separate.
+- **Remaining:** GFS-378 Admin deployment/acceptance 0%/100%; API replacement upload/acceptance/canary 0%/100%; API full promotion UNKNOWN/100%; Meta timezone, CAPI, receipts UNKNOWN; optional D1/full history deferred.

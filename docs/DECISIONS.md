@@ -1723,3 +1723,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Accept the source-only repair: responsive 4/2/1-column static Admin home using existing routes, with no customer data reads, no new permissions, and no business-logic changes. Focused3/3 and full337/337 plus build/lint/audit passed.
 - Live browser acceptance is limited to unchanged protected routes: all four requested viewport emulations for Orders, Analytics, Conversations, and Payment Settings had no horizontal overflow or console errors. The new root is not live because deployment was not authorized; require separate deployment approval and fresh readback before calling it production-ready.
 - Keep Admin `4fe564a6`100% and API `b426ba47`100%. Preserve the GFS-376 API release approval boundary; do not upload, attach, or canary the API under GFS-377.
+
+## GFS-378 decision (2026-10-31 UTC)
+
+- Accept the measured layout diagnosis: the first Orders card was stretched by the 42vh grid row, while the apparent right-side strip was a symmetric max-width gutter rather than an overflow defect.
+- Accept the source-only repair: 1700px desktop shell, viewport-bounded workspace, flex/scrollable content-sized order list, mobile height cap, and no changes to order data, filters, pagination, selection, detail, or authorization.
+- Accept the Refresh repair: retain `/api/orders/changes`, add a single-flight feedback wrapper, preserve no-change behavior, and keep Full reload explicit. The live HTTP200 no-change result does not prove a live post-fix UI PASS.
+- Do not deploy under GFS-378. Request one exact Admin-only deployment approval after the source commit is pushed, with watchdog, independent acceptance, and rollback to `4fe564a6`100%. API release remains separate and frozen.

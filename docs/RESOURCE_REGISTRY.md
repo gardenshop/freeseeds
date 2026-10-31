@@ -1714,3 +1714,11 @@ No secrets are stored in this registry.
 - **Browser evidence:** authorized live page3 checked Orders, Analytics, Conversations, and Payment Settings at 1440x900, 1280x800, 768x1024, and 390x844 emulations; no horizontal overflow or console errors. No customer data was recorded.
 - **Deployment state:** Admin `4fe564a6`100% / bridge `3bbf5cf6`0%; API `b426ba47`100% / old slot `6ef27f02`0%. New root is not deployed; no Cloudflare version ID exists for this source change.
 - **Limit:** local Wrangler preview was not reachable long enough for an after-deployment screenshot. Do not treat the live pre-change root or failed local preview as new-home production evidence.
+
+## GFS-378 Admin Orders resources
+
+- **Live diagnosis:** authorized Chrome page3 at 1675x900; first Orders card472.5px, workspace3509px, body/client widths matched, no horizontal overflow or console errors.
+- **Refresh evidence:** `/api/orders/changes` returned HTTP200 after authorized Refresh; no customer/order fields were recorded.
+- **Source:** `apps/admin/src/index.ts` professional Orders page now has 1700px shell, viewport-bounded workspace, flex/scroll list, content-sized cards, mobile cap, and guarded visible Refresh feedback.
+- **Tests:** `tests/admin-controls.test.ts`; focused Admin PASS, full338/338, build/lint/audit0. No new dependency, binding, secret, permission, or production resource.
+- **Deployment:** Admin `4fe564a6`100% / bridge `3bbf5cf6`0%; API `b426ba47`100%. Source is not deployed; live post-fix visual acceptance and screenshot remain pending approval.

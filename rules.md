@@ -1446,3 +1446,11 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Source acceptance: focused Admin checks 3/3, full suite 337/337, build, lint, and offline audit with 0 high vulnerabilities passed. Prior controller17/17, adapter6/6, observability4/4, and rollback4/4 evidence remains carried forward; no API source was changed here.
 - Local Wrangler preview was not valid after-deployment browser proof because the process did not remain reachable under host permissions. Never fabricate an after screenshot. Production deployment requires separate authorization and fresh identity/routing readback.
 - Preserve GFS-376 API correction boundary: exact replacement source SHA-256 `462e6f6ecc70d592ce7da38e7df2ce6f8c03e2628776436ff7693dcbdfde4c50` remains local-only; upload, 0% attachment, and 1% canary require the specified owner approval.
+
+## GFS-378 Admin Orders layout and Refresh (2026-10-31 UTC)
+
+- Production remains frozen: Admin `4fe564a6`100% / bridge `3bbf5cf6`0%; API `b426ba47`100%. No deployment, API upload, customer message, payment, Meta, D1, Queue, Cron, migration, flag, or WhatsApp mutation occurred.
+- Live Chrome diagnosis at 1675x900 found the first Orders card stretched to 472.5 CSS px by `grid-template-rows:minmax(280px,42vh)`; the workspace expanded to 3509px. Body/client widths matched, so the right blank area was a centered max-width gutter, not horizontal overflow.
+- Source-only fix bounds the desktop workspace to the viewport, changes the order list to a scrollable flex column with content-sized cards, caps the mobile list, and widens the desktop shell to 1700px. Existing filters, pagination, selected order, authorization, and detail behavior are preserved.
+- Live Refresh click reached `/api/orders/changes` with HTTP200 and preserved the current aggregate/list state. The source now adds a guarded single-flight wrapper with visible Checking, Checked/No changes, Updated, and error feedback; Full reload remains explicit.
+- Focused Admin tests, full suite338/338, build, lint, and offline audit0 passed. No post-fix live browser PASS is claimed because deployment is prohibited; after-source visual screenshots were not captured because Chrome rejected unsanitized live order capture containing customer data.

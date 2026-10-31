@@ -2374,4 +2374,18 @@ Investigation query costs only (not production savings): representative `rows_re
 | Orders layout | PASS | Desktop split pane retained; mobile stacked grid retained; no Orders source changed |
 | Live root after source | NOT RUN | No deployment authorized; deployed root remains pre-change plain HTML |
 | Production mutation | NOT RUN | Cloudflare/API/WhatsApp/Meta/payment/D1/Queue/Cron/migration/flag state unchanged |
+
+### GFS-378 Admin Orders layout and Refresh (2026-10-31)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Live root cause | PASS | 1675x900 Chrome metrics: first card472.5px from42vh row; workspace3509px; widths matched with no overflow |
+| Live Refresh transport | PASS | Authorized click reached `/api/orders/changes` HTTP200; aggregate/list state unchanged |
+| Layout source fix | PASS local | Viewport-bounded workspace; flex scroll list; content-sized cards; 1700px desktop shell; capped mobile list |
+| Refresh source fix | PASS local | Guarded wrapper prevents overlap and reports Checking/Checked/Updated/error feedback |
+| Focused Admin | PASS | New layout/Refresh assertions plus existing Orders checks |
+| Full regression | PASS | 338/338 |
+| Build/lint/audit | PASS | Build and lint pass; offline audit0 |
+| Post-fix live visual | NOT RUN | No deployment authorized; Chrome rejected unsanitized customer-bearing screenshot |
+| Production mutation | NOT RUN | Admin/API/WhatsApp/Meta/payment/D1/Queue/Cron/migration/flags unchanged |
 | Next gate | PENDING APPROVAL | Exact-source upload → 0% override acceptance → conditional1%/8-minute canary → restore baseline100% |

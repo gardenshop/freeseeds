@@ -132,7 +132,7 @@ describe("GFS-109 admin controls", () => {
     for (const tab of ["All Orders", "Verify Payments", "Confirmed Payments", "Fulfillment"]) expect(html).toContain(tab);
     for (const size of ["25", "50", "100"]) expect(html).toContain(`<option>${size}</option>`);
     expect(html).toContain("selectedId=list[0].id");
-    expect(html).toContain("grid-template-rows:minmax(280px,42vh)");
+    expect(html).toContain(".orders{display:flex;flex-direction:column;gap:8px;overflow:auto;min-height:0}");
     expect(html).toContain("/api/payments/'");
     expect(html).toContain("request-clearer-receipt");
     expect(html).toContain("Reason code: TEST_IMAGE_NOT_PAYMENT_PROOF or INSUFFICIENT_OR_UNCLEAR_RECEIPT");
@@ -166,6 +166,18 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("setTabs(data.counts)");
     expect(html).toContain("selectedId=list[0].id");
     expect(html).toContain("if(id)await show(id)");
+  });
+
+  it("bounds order cards and gives Refresh visible safe feedback", async () => {
+    const response = await app.fetch(new Request("https://admin.example.test/orders", { headers: auth }), env(new AdminMemoryDb()));
+    expect(response.status).toBe(200);
+    const html = await response.text();
+    expect(html).toContain("height:calc(100vh - 285px)");
+    expect(html).toContain(".orders{display:flex;flex-direction:column;gap:8px;overflow:auto;min-height:0}");
+    expect(html).toContain("max-height:42vh");
+    expect(html).toContain("Checking latest orders...");
+    expect(html).toContain("· Checked ");
+    expect(html).toContain("const refreshWithoutFeedback=refreshOrders");
   });
 
   it("requires CSRF for payment and fulfillment detail mutations", async () => {

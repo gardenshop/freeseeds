@@ -1561,3 +1561,9 @@
 - Replaced the plain Admin root with a static responsive operations home and added privacy-safe navigation coverage.
 - Verified focused3/3, full337/337, build, lint, and offline audit0. Read-only Chrome checks of unchanged Admin routes across four viewport emulations found no horizontal overflow or console errors.
 - No Cloudflare deployment or production mutation occurred. GFS-376 API replacement remains local-only and approval-gated.
+
+## 2026-10-31 - GFS-378 Admin Orders layout and Refresh
+
+- Diagnosed the live 1675x900 Orders view: 42vh grid sizing stretched the first card and the centered shell produced the reported blank gutter.
+- Repaired the source with a bounded workspace, scrollable content-sized order cards, wider desktop shell, mobile cap, and visible guarded Refresh feedback.
+- Live Refresh reached the changes endpoint with HTTP200; focused checks, full338/338, build, lint, and audit0 passed. No deployment or customer-bearing screenshot occurred.

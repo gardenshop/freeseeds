@@ -2200,3 +2200,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **PASS live route matrix:** authorized browser checks of Orders, Analytics, Conversations, and Payment Settings at the four requested emulations reported no horizontal overflow and no console errors. Orders retained desktop two-column and mobile stacked layouts.
 - **LIMIT:** deployed live root is still the pre-change plain page because no Cloudflare deployment was authorized. Local Wrangler preview could not remain reachable, so no after-deployment screenshot or live-home PASS is claimed.
 - **Frozen routing:** Admin `4fe564a6`100% / bridge `3bbf5cf6`0%; API `b426ba47`100% / old slot `6ef27f02`0%. GFS-376 API upload/attachment/canary remains pending exact owner approval.
+
+## GFS-378 Admin Orders layout and Refresh (2026-10-31)
+
+- **PASS diagnosis:** live Chrome at 1675x900 measured first-card height 472.5px from the 42vh grid row and workspace height 3509px. Client/body widths matched; no horizontal overflow was present, and the blank side area was symmetric shell gutter.
+- **PASS live Refresh probe:** authorized click reached `/api/orders/changes` with HTTP200; aggregate/list state remained unchanged, consistent with no detected changes. No customer fields were recorded.
+- **PASS source repair:** Orders now uses a viewport-bounded desktop workspace, scrollable flex list, content-sized cards, 1700px desktop shell, and capped mobile list. Refresh feedback is guarded against overlap and visibly reports checking/result time while preserving state.
+- **PASS tests:** focused Admin coverage passed; full suite 338/338; build, lint, offline audit0. No production deployment occurred, so post-fix live visual acceptance remains pending a separate Admin deployment approval.
+- **Screenshot limit:** Chrome rejected an unsanitized live Orders screenshot because it could expose customer details; no screenshot was stored or documented as after-fix evidence.
