@@ -1631,3 +1631,8 @@ No secrets are stored in this registry.
 
 - Approved candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec` remains staged0%; baseline Admin `494a3dce`100%; API `b426ba47`100%.
 - Controller result: `initial_readback_failed` / `health_unknown` before exposure. No secret, customer, payment, Meta, D1, Queue, Cron, or flag values were recorded or changed.
+## GFS-367 baseline monitor evidence
+
+- **Baseline:** Admin `494a3dce` version-pinned health returned HTTP403 / `ADMIN_ACCESS_REQUIRED` under the existing Service Auth credential.
+- **Candidate:** `4fe564a6-bcd7-4106-82ee-00f7b14c4bec` remains0%; no new candidate or credential created.
+- **Frozen routing:** API `b426ba47`100%, Admin `494a3dce`100%. No secrets or customer data recorded.

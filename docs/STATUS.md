@@ -2106,3 +2106,9 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **Cause:** baseline Admin `494a3dce` does not return a healthy authenticated Service Auth `/health` result. The exact combined candidate still passes isolated override monitoring, but candidate-only success cannot substitute for baseline monitoring.
 - **Final routing PASS:** API `b426ba47`100% / candidate0%; Admin `494a3dce`100% / candidate `4fe564a6…`0%. No customer-facing traffic or mutation occurred.
 - **Next action:** obtain separate scoped authorization to make baseline monitoring compatible or provide an equivalent approved baseline monitor, then request a fresh bounded canary approval. No promotion.
+## GFS-367 baseline monitoring diagnosis (2026-10-31 UTC)
+
+- **PASS diagnosis:** baseline `494a3dce` under the existing Service Auth credential returned HTTP403 with body classification `ADMIN_ACCESS_REQUIRED`; the rejection is the legacy Worker owner-email authorization check, not an origin failure.
+- **BLOCKED monitor:** the dedicated `/health` Access application is Service Auth-only and the existing browser session also receives Access403. No supported operator-authenticated baseline health path is available; GraphQL telemetry alone is insufficient.
+- **NO MUTATION:** API `b426ba47`100%, Admin `494a3dce`100%, candidate `4fe564a6…`0%; no controller, Access, Worker, customer, payment, Meta, D1, Queue, Cron, migration, or flag mutation.
+- **Next owner action:** approve the minimum baseline-compatible health repair before any new canary. Do not reuse GFS-366 Approval D.

@@ -1361,3 +1361,8 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Approval D was explicit for candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec` at10% for8 minutes. The supported controller failed closed before exposure because baseline `494a3dce` authenticated `/health` was unhealthy for the Service Auth monitor.
 - No candidate traffic, rollback, customer request, payment, Meta, D1, Queue, Cron, or flag mutation occurred. Do not bypass the baseline monitoring failure or treat candidate-only HTTP200 as a canary PASS.
 - Final readback remains API `b426ba47`100%, Admin `494a3dce`100%, combined candidate0%. Next action requires a separate scoped decision to make baseline monitoring compatible or provide an equivalent approved baseline monitor, then fresh canary approval.
+## GFS-367 baseline monitoring diagnosis (2026-10-31 UTC)
+
+- Baseline version `494a3dce` with the existing Service Auth headers returns HTTP403 and the exact allowlisted Worker body classification `ADMIN_ACCESS_REQUIRED`. This proves the legacy owner-email authorization gate, not a Worker failure; Service Auth has no human email claim.
+- The dedicated `/health` Access application also returns Cloudflare Access403 to the existing browser session, so no trustworthy operator-authenticated baseline monitor is available through that app. Do not accept GraphQL zero errors alone or treat the protected403 as application-health PASS.
+- Do not alter routing, Access policy, token, Worker, API, WhatsApp, D1, Meta, payment, Queue, Cron, migration, or flags without a new scoped approval. Keep the canary blocked and fail closed.

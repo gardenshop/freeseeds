@@ -1494,3 +1494,6 @@
 ## 2026-10-31 - GFS-366 canary stopped safely
 
 - Updated the Admin canary runner to target the verified combined candidate. The approved run failed closed during baseline health preflight before any exposure because baseline Service Auth monitoring was unhealthy; routing remained unchanged.
+## 2026-10-31 - GFS-367 baseline monitor diagnosis
+
+- Confirmed the Admin baseline's HTTP403 is the legacy owner-email authorization gate under Service Auth. No routing or production mutation occurred; canary remains blocked pending a separately approved baseline-compatible repair.

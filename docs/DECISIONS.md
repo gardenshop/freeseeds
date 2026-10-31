@@ -1649,3 +1649,8 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Stop the canary before exposure when baseline `494a3dce` failed authenticated Service Auth health readback. This is a monitoring prerequisite failure, not a candidate failure and not evidence for promotion.
 - Do not route 10% traffic while baseline monitoring is blind. Candidate override health and GraphQL evidence remain useful readiness evidence only.
 - Keep API/Admin frozen at100%. Request a separate scoped owner decision for baseline monitoring compatibility or an equivalent supported baseline monitor before requesting another canary.
+## GFS-367 decision (2026-10-31 UTC)
+
+- Keep the canary blocked. Baseline Service Auth HTTP403 is the legacy owner-email gate, and the browser session cannot authenticate through the dedicated `/health` application. Accepting that response as health PASS would hide an application failure.
+- Do not modify the controller to treat GraphQL0 or protected403 as sufficient. Do not weaken Access or recreate credentials.
+- Request one new scoped owner approval for the minimum baseline-compatible health repair; after it is deployed and independently tested, request a fresh Admin canary approval. GFS-366 approval is not reused.

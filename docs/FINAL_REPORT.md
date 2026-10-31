@@ -5016,3 +5016,12 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - **Final routing:** API `b426ba47`100%, Admin `494a3dce`100%, candidate `4fe564a6…`0%. No WhatsApp, order, payment, D1, Queue, Cron, migration, Meta, or flag mutation occurred. Real customer-flow zero-regression evidence is not applicable because exposure was zero.
 - **Release decision:** NO-GO for Admin promotion. Baseline Service Auth monitoring must be made compatible or replaced by an equivalent approved monitor, followed by fresh scoped canary approval. API acknowledgement repair, Meta timezone, historical CAPI/receipts remain separate; optional D1 optimization and full chat history remain deferred.
 - **Git:** canary-runner/docs change is pending final tests and push; current pre-run source was `7e2db8c…`.
+## GFS-367 final report — baseline monitor diagnosis (2026-10-31 UTC)
+
+- **GFS-364:** PASS — Access 403 cause and candidate health repair established.
+- **GFS-365:** PASS — credential-failure simulations, rollback, and combined candidate readiness passed.
+- **GFS-366:** BLOCKED safely — canary stopped before exposure because baseline monitoring was unhealthy.
+- **GFS-367:** BLOCKED at the same gate, now with root cause proven: version-pinned baseline `494a3dce` returns HTTP403 with exact `ADMIN_ACCESS_REQUIRED`, caused by its legacy owner-email authorization check when called with Service Auth. The dedicated `/health` Access app also returns Access403 to the existing browser session.
+- No reliable non-disruptive baseline monitor exists. GraphQL0 alone is rejected as insufficient; controller/Access/routing were not changed. Final routing remains API `b426ba47`100%, Admin `494a3dce`100%, candidate `4fe564a6…`0%.
+- **Single required approval:** approve the minimum baseline-compatible health repair (no Access weakening, token recreation, API/WhatsApp/customer/payment/Meta/D1/migration/flag changes). After deployment and independent baseline/candidate tests, request fresh Approval D; do not reuse GFS-366 authorization.
+- Tests retained: full335/335, build/lint, audit0, controller17/17, adapter6/6, observability4/4, rollback4/4. No canary or customer-flow acceptance claimed.

@@ -2216,3 +2216,12 @@ Investigation query costs only (not production savings): representative `rows_re
 | Candidate override monitoring | PASS | Combined candidate health200 x3, invalid/missing denied, isolated paths denied, GraphQL0 errors |
 | Restoration | PASS / NOT NEEDED | Routing never changed; independent readback baseline100% / candidate0% |
 | Zero regression | NOT EXPOSED | No real customer traffic reached candidate; customer-flow regression is not claimed |
+### GFS-367 baseline monitor diagnosis (2026-10-31 UTC)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Baseline root cause | PASS | Version-pinned `494a3dce` returned HTTP403 with exact `ADMIN_ACCESS_REQUIRED` classification |
+| Operator browser monitor | BLOCKED | Dedicated `/health` app returned Cloudflare Access403 to existing session |
+| Candidate monitor | PASS carried forward | Candidate override HTTP200, negative auth and isolation tests remain valid |
+| Reliable baseline monitor | BLOCKED | No operator-authenticated path; GraphQL-only evidence rejected |
+| Canary | NOT RUN | Frozen routing preserved; fresh Approval D not requested |
