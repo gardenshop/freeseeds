@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-385 API canary disposition (2026-10-31 UTC)
+
+- Approval L authorized one API-only `d603f077-cc44-4882-af9b-9985adb53424` canary at1% for8 minutes with restoration byminute6. Preflight used the protected Windows Credential Manager bridge; API `b426ba47`/candidate and Admin `ceb3e680`/rollback were read back100%/0%, health was HTTP200 and GraphQL errors were0. Candidate version119 metadata identifies the approved GFS-383 corrected acknowledgement repair and no API source was changed.
+- A detached watchdog was armed before exposure with a 6.5-minute deadline. The controller observed the candidate at1% after13.9s, then encountered an unrecoverable monitoring/controller read failure at109.7s and fail-closed. It restored API baseline100%/candidate0% and verified restoration at123.5s. Watchdog was disarmed only after independent API/Admin baseline, health and metrics readback.
+- This is **FAIL-SAFE / INCONCLUSIVE**, not a canary PASS: the exact underlying failing Cloudflare call/response is unavailable because the controller emitted only sanitized `controller_error` and no raw error is permitted. No customer test event was generated; candidate-attributed customer traffic and business-flow acceptance are UNKNOWN. Do not repeat exposure until the monitor records a safe diagnostic classification and passes isolated transient/persistent failure tests.
+- Final verified routing is API `b426ba47`100% / `d603f077`0%, Admin `ceb3e680`100% / `72cff93f`0%. No promotion, source/API candidate change, customer message/order/payment, Meta, migration, flag, Queue/Cron or manual D1 mutation occurred. Preserve the new-number lock and Hoja/ThanNow zero-connection rule.
+
 ## GFS-372 Admin canary disposition (2026-10-31)
 
 - Fresh Approval D exposed candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec` at10% beside bridge `3bbf5cf6`90% for approximately53 seconds, then restored before minute6. Restoration deployment `e907d94f-45e0-4f59-98dc-2f1fb3f7a685` is bridge100% + candidate0%; API remains `b426ba47`100%.

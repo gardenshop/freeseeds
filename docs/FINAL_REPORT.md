@@ -1,5 +1,28 @@
 # Final Report
 
+## GFS-385 API canary disposition (2026-10-31 UTC)
+
+### Result
+
+**FAIL-SAFE / INCONCLUSIVE.** Approval L authorized one API-only1% canary of `d603f077`. Preflight verified the protected credential bridge, exact API/Admin routing, candidate version119 provenance, HTTP200 health and zero GraphQL errors. A detached rollback watchdog was armed before exposure.
+
+The controller observed1% candidate routing after13.9s. At109.7s it received an unclassified monitoring/controller error and immediately restored. Restoration was verified at123.5s; independent post-rollback readback showed API `b426ba47`100%/candidate0%, Admin `ceb3e680`100%/`72cff93f`0%, both health HTTP200 and GraphQL errors0. The watchdog was disarmed only afterward. The exact failing call/response is UNKNOWN because only sanitized events were retained. No customer test events were generated, so customer-flow and candidate-attributed request evidence are UNKNOWN.
+
+Post-rollback D1 aggregate read was read-only: orders428, payments428, inbound30430, outbound15143, recovery stages236, `changed_db=false`, `rows_written=0`. These aggregate counts are not customer-attributed canary evidence.
+
+### Comparison
+
+| Task | Result |
+|---|---|
+| GFS-382 | PASS carried forward: Admin mobile release |
+| GFS-383 | FAIL-SAFE/INCONCLUSIVE: monitoring/readback failure restored automatically |
+| GFS-384 | PASS for bounded monitor retry repair and tests; no canary |
+| GFS-385 | FAIL-SAFE/INCONCLUSIVE: 1% exposure restored safely; monitoring reliability remains unresolved |
+
+### Routing and next action
+
+Final routing is API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. Do not repeat the canary or promote. Next action is to add safe diagnostic classification for the monitor failure, test transient/persistent/timeout recovery in isolation, and request a fresh scoped API canary approval only after PASS.
+
 ## GFS-363 secure monitoring gate (2026-10-31)
 
 ### Result

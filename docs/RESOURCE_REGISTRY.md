@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-385 API canary evidence (2026-10-31)
+
+- **Approved API candidate:** `d603f077-cc44-4882-af9b-9985adb53424`, version119, existing uploaded version; no source or binding mutation.
+- **Canary control:** detached watchdog armed before the authorized1% API exposure; API restoration was verified and watchdog disarmed. Temporary sanitized controller/watchdog files were removed after evidence capture.
+- **Final routing:** API `b426ba47`100% / candidate0%; Admin `ceb3e680`100% / `72cff93f`0%. No new resource, secret, token, Access policy, Meta asset, D1 write or customer data was created.
+- **Evidence boundary:** exact monitor failure response is UNKNOWN; do not treat the canary as PASS or claim candidate-attributed customer-flow evidence.
+
 ## GFS-363 secure monitoring evidence (2026-10-31)
 
 - **Credential storage:** existing `GFS-Admin-Health-Monitor` generic credential is readable only from the authorized Windows host context through native `CredRead`; no Client ID/Secret value is registered here.

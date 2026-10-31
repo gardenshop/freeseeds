@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-385 API canary decision (2026-10-31 UTC)
+
+- Approval L was used only for one API-only1% exposure of approved candidate `d603f077`; Admin remained `ceb3e680`100% and no customer test traffic was generated.
+- The repaired adapter’s bounded retry did not produce a canary PASS: at109.7s the controller received an unclassified monitoring failure, failed closed, and restored API baseline. Since the exact Cloudflare call/response was not retained, classify the result FAIL-SAFE/INCONCLUSIVE rather than attributing the fault to the Worker.
+- Restoration was independently verified at123.5s and the detached watchdog was disarmed afterward. Keep API baseline frozen and do not repeat the canary or promote until monitoring diagnostics classify transient control-plane failures without exposing secrets or accepting stale data.
+
 ## GFS-363 secure monitoring decision (2026-10-31)
 
 - Keep production frozen: API `b426ba47`100%, Admin `494a3dce`100%, candidates0%; no canary or promotion while the monitoring application readback has no policy.

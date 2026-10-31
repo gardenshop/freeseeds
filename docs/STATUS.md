@@ -1,5 +1,13 @@
 # Status
 
+## GFS-385 API canary disposition (2026-10-31 UTC)
+
+- **Preflight PASS:** protected host credential bridge succeeded; exact routing API `b426ba47`100%/`d603f077`0%, Admin `ceb3e680`100%/`72cff93f`0%; API/Admin health HTTP200 and GraphQL errors0. Candidate version119 metadata matches the approved GFS-383 corrected repair; no candidate source change.
+- **Canary FAIL-SAFE / INCONCLUSIVE:** Approval L exposure reached1% and candidate observation at13.9s. At109.7s the controller entered generic `controller_error`; it restored at123.5s and independently verified baseline. Exact underlying monitor call/response is UNKNOWN because only sanitized events were recorded.
+- **Watchdog PASS:** detached watchdog armed before exposure, remained independent, and was disarmed only after verified API/Admin100%/0% restoration. No repeat canary is authorized by this task.
+- **Post-rollback read-only:** API/Admin health remained HTTP200 with GraphQL errors0; D1 aggregate query reported `changed_db=false`, `rows_written=0`. Counts were orders428/payments428/inbound30430/outbound15143/recovery stages236; no synthetic events were generated and customer attribution is UNKNOWN.
+- **Next gate:** repair and test monitor failure classification/diagnostics in isolation, then request a fresh API canary approval. No API promotion.
+
 ## GFS-363 secure monitoring gate (2026-10-31 UTC)
 
 - **Credential bridge PASS:** Approval C is granted. Native Windows Credential Manager `CredRead` succeeded in the authorized host context without exposing or logging values; the controller receives only in-memory Access headers. Restricted sandbox access remains unavailable.

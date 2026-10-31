@@ -1,5 +1,11 @@
 # Changelog
 
+## GFS-385 API canary disposition (2026-10-31)
+
+- Executed the separately approved one-time API1% canary for candidate `d603f077`; no synthetic customer event, order, payment, message or Meta action was performed.
+- Candidate was observed at13.9s. The monitor/controller failed safely at109.7s; API baseline restoration was verified at123.5s. Detached watchdog was armed before exposure and disarmed after independent readback.
+- Result is FAIL-SAFE/INCONCLUSIVE because the original controller emitted only sanitized `controller_error`; no raw error or secret was retained. Final routing is API `b426ba47`100%/candidate0%, Admin `ceb3e680`100%/rollback0%. No promotion.
+
 ## GFS-363 secure monitoring gate (2026-10-31)
 
 - Added a minimal native Windows Credential Manager bridge and fail-closed Access-header injection for the existing monitoring controller; no credential value is recorded.

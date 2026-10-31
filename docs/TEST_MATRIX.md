@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-385 API canary (2026-10-31 UTC)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Protected preflight | PASS | API `b426ba47`100%/candidate0%; Admin `ceb3e680`100%/rollback0%; health HTTP200; GraphQL errors0 |
+| Approved candidate provenance | PASS | API version119 `d603f077`; Wrangler metadata message identifies GFS-383 corrected acknowledgement repair |
+| Detached rollback watchdog | PASS | Armed before exposure; restoration fallback deadline 6.5 minutes; disarmed after independent readback |
+| 1% API exposure | FAIL-SAFE / INCONCLUSIVE | Candidate observed after13.9s; controller monitoring error at109.7s; no customer event generated |
+| Restoration | PASS | Controller restored and verified API baseline100%/candidate0% at123.5s; independent post-readback matched |
+| Monitoring reliability | FAIL | Generic `controller_error`; exact underlying call/response unavailable; no stale data accepted |
+| Post-rollback health/security | PASS | API/Admin HTTP200, GraphQL errors0; protected host context only; no secret output |
+| D1 write protection | PASS | Aggregate read-only query: `changed_db=false`, `rows_written=0` |
+| Full promotion | NOT RUN | Explicitly unauthorized; fresh approval required after monitor repair |
+
 ## GFS-363 secure monitoring gate (2026-10-31 UTC)
 
 | Check | Result | Evidence / boundary |
