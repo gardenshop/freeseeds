@@ -1478,3 +1478,12 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Source/test gates PASS: focused16/16, full339/339, build, lint, and offline audit0. Chrome DOM acceptance at CSS1920/1440/1280/768/430/390/360/320 found no page overflow; mobile tables scroll independently and desktop/tablet tables do not need scrolling. ArrowRight advanced the focused daily table scroll position.
 - This is source-only. Do not alter live routing without separate scoped approval. Planned Admin deployment must use the new version with rollback to `72cff93f-d589-4046-9bce-45477f53f829`100% / candidate0%; API remains `b426ba47`100%.
 - No API, customer, WhatsApp, payment, Meta, D1, migration, flag, Queue, Cron, or production deployment mutation occurred. Preserve the new-number WhatsApp lock and Hoja Seeds zero-connection rule.
+
+## GFS-382 Admin mobile release (2026-10-31 UTC)
+
+- Approval J was applied only to tested Analytics mobile UI source at HEAD `7ab2addfc2d9722ec4a7351d18daad2b81e76084`; Cloudflare identity was `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- Admin `ceb3e680-96f6-4218-b5a5-cadfca20a629` was uploaded, validated at 0%, then cut over to 100%. Previous Admin `72cff93f-d589-4046-9bce-45477f53f829` remains rollback at 0%. API `b426ba47-1ead-4c4a-85ba-0a0b85d3e415` remained 100%.
+- A detached five-minute rollback watchdog was armed before exposure and stopped only after independent final routing readback. No rollback was needed.
+- Protected monitor evidence: authenticated `/health` returned 200 three times; missing and invalid credentials returned 403; monitoring credentials redirected on `/orders`, `/analytics`, and `/conversations` (302). No secrets were recorded.
+- Official Chrome aggregate acceptance at CSS widths 1920/1440/1280/768/430/390/360/320 found no whole-page overflow. Daily and abandoned tables were independently scrollable on mobile, keyboard-focusable, and desktop/tablet presentation remained non-scrolling. Today, Refresh, CSV, routes, auth, and console-error checks passed without private data capture.
+- No API, WhatsApp, customer, payment, Meta, D1, migration, flag, Queue, or Cron mutation occurred. Preserve the new-number WhatsApp lock, Hoja Seeds zero-connection rule, and separate API repair approval boundary.

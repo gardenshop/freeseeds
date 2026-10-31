@@ -5204,3 +5204,16 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - Browser evidence: CSS1920/1440/1280/768/430/390/360/320 had no page overflow; mobile tables scrolled independently; desktop/tablet remained unchanged; Today/Refresh/CSV and ArrowRight were verified. No private data was recorded.
 - Tests: focused16/16, full339/339, build/lint/audit0. No production deployment occurred.
 - Final routing: Admin `72cff93f`100% / rollback `4fe564a6`0%; API `b426ba47`100%. Next action is separate Approval J for Admin-only upload/0% validation/cutover, rollback to `72cff93f`100%. API repair remains separate.
+
+## GFS-382 final report - Admin mobile release
+
+- GFS-379: PASS - approved Admin UI release baseline.
+- GFS-380: PASS - stale emulation/DPR diagnosis; homepage preserved.
+- GFS-381: PASS - Analytics mobile table overflow source fix and pre-release gates.
+- GFS-382: PASS - Approval J Admin-only deployment and live acceptance.
+- Actual release: Admin `ceb3e680-96f6-4218-b5a5-cadfca20a629` 100%; rollback `72cff93f-d589-4046-9bce-45477f53f829` 0%; API `b426ba47` 100%. Final Wrangler readback independently matched.
+- Browser evidence: sanitized aggregate checks at CSS 1920/1440/1280/768/430/390/360/320 showed no whole-page overflow; mobile Daily/Abandoned tables scrolled independently and keyboard focus worked; Today/Refresh/CSV, homepage, Orders, Conversations, and Payment Settings passed; no console errors were observed.
+- Security evidence: protected monitor health 200 x3; missing/invalid credentials 403; monitoring-only probes on Orders/Analytics/Conversations 302. No private data or secrets were captured.
+- Rollback: detached five-minute watchdog was armed before exposure and disarmed after readback; no rollback was needed. No absolute zero-regression claim is made; measured checks found no detected WhatsApp/API regression, with API unchanged 100%.
+- Tests: focused 16/16, full 339/339, build, lint, and offline audit 0. No source changes after the deployed tested commit.
+- Next highest-value release is corrected API acknowledgement repair readiness, separately approval-gated; unsafe `b0e883cd` must not be released. Meta timezone, historical CAPI, blocked receipts, optional D1 optimization, and full chat history remain separate/deferred.

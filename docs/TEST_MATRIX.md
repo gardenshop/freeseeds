@@ -2425,4 +2425,17 @@ Investigation query costs only (not production savings): representative `rows_re
 | Keyboard access | PASS | Region focusable; ArrowRight advanced daily table scrollLeft to50 |
 | Regression | PASS | Focused16/16; full339/339; build/lint/audit0 |
 | Production deployment | NOT RUN | Separate Admin deployment approval required; current routing unchanged |
+
+## GFS-382 Admin mobile deployment
+
+| Area | Result | Evidence |
+|---|---|---|
+| Admin deployment | PASS | `ceb3e680` 100%; prior `72cff93f` 0%; independent readback |
+| API protection | PASS | `b426ba47` 100%; no API mutation |
+| Analytics responsive | PASS | CSS 1920/1440/1280/768/430/390/360/320; no page overflow |
+| Mobile tables | PASS | Daily and abandoned regions independently scrollable; keyboard ArrowRight advanced focus |
+| Controls/routes | PASS | Today, Refresh, CSV, homepage, Orders, Conversations, Payment Settings; no console errors |
+| Access isolation | PASS | Health 200 x3; missing/invalid 403; protected monitoring probes 302 |
+| Rollback | PASS | Watchdog armed before cutover; final readback passed; watchdog stopped |
+| Source gates | PASS | Focused 16/16; full 339/339; build/lint/audit 0 |
 | Next gate | PENDING APPROVAL | Exact-source upload → 0% override acceptance → conditional1%/8-minute canary → restore baseline100% |

@@ -2230,3 +2230,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **PASS source repair:** Orders now uses a viewport-bounded desktop workspace, scrollable flex list, content-sized cards, 1700px desktop shell, and capped mobile list. Refresh feedback is guarded against overlap and visibly reports checking/result time while preserving state.
 - **PASS tests:** focused Admin coverage passed; full suite 338/338; build, lint, offline audit0. No production deployment occurred, so post-fix live visual acceptance remains pending a separate Admin deployment approval.
 - **Screenshot limit:** Chrome rejected an unsanitized live Orders screenshot because it could expose customer details; no screenshot was stored or documented as after-fix evidence.
+
+## GFS-382 Admin mobile release (2026-10-31)
+
+- **PASS deployment:** Approval J uploaded Admin `ceb3e680-96f6-4218-b5a5-cadfca20a629`, validated at 0%, and cut it over directly to 100%; rollback `72cff93f` is retained at 0%. API `b426ba47` remained 100%.
+- **PASS live acceptance:** Chrome aggregate checks at CSS 1920/1440/1280/768/430/390/360/320 found no page overflow; mobile Analytics tables scroll independently and keyboard scrolling works; Today, Refresh, CSV, homepage, Orders, Conversations, and Payment Settings passed without console errors or private screenshots.
+- **PASS security/monitoring:** health 200 x3, missing/invalid 403, and monitoring-token protected-route checks returned 302 for Orders, Analytics, and Conversations. No secrets were recorded.
+- **PASS rollback protection:** detached five-minute watchdog was armed before exposure and stopped after independent routing readback; no rollback was needed. No API/WhatsApp/customer/payment/Meta/D1/migration/flag mutation occurred.
+- **NEXT:** corrected API acknowledgement repair is the next release candidate, but requires separate owner approval; unsafe `b0e883cd` remains prohibited.

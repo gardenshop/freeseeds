@@ -1743,3 +1743,10 @@ No secrets are stored in this registry.
 - Test coverage: `tests/admin-controls.test.ts`; focused16/16 and full339/339, build/lint/audit0.
 - Deployment: no Cloudflare version created. Future Admin version must retain rollback `72cff93f-d589-4046-9bce-45477f53f829`100% / candidate0%; API `b426ba47` remains100%.
 - No secret, customer field, screenshot, credential, binding, or production resource was added.
+
+## GFS-382 Admin mobile deployment (2026-10-31)
+
+- Admin source HEAD: `7ab2addfc2d9722ec4a7351d18daad2b81e76084`; uploaded version `ceb3e680-96f6-4218-b5a5-cadfca20a629`; serving 100%; rollback `72cff93f-d589-4046-9bce-45477f53f829` 0%.
+- API resource unchanged: `b426ba47-1ead-4c4a-85ba-0a0b85d3e415` 100%; old slot 0%. No API candidate or secret resource changed.
+- Evidence is sanitized aggregate DOM/HTTP status only. No customer fields, cookies, tokens, screenshots, or credential values were registered.
+- Watchdog was armed before cutover and stopped after readback. Protected WhatsApp, Meta, payment, D1, migration, flag, Queue, and Cron resources were unchanged.

@@ -1745,6 +1745,13 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Keep the separate Analytics table overflow at true CSS390px explicitly open. Fixing it would be a new source change and requires its own focused tests and Admin deployment approval; it is not silently bundled into GFS-380.
 - API, WhatsApp, customer, payment, Meta, D1, migration, flag, Queue, and Cron release boundaries remain unchanged.
 
+## GFS-382 decision (2026-10-31)
+
+- Approval J authorized the exact tested Analytics mobile fix. Deploy Admin `ceb3e680` 100% with `72cff93f` retained as rollback at 0%; API `b426ba47` remains 100%.
+- Accept browser evidence: no whole-page overflow at CSS 1920/1440/1280/768/430/390/360/320; mobile tables scroll independently and remain keyboard accessible; desktop/tablet presentation and protected routes remain intact.
+- Accept deployment safety evidence: health 200 x3, missing/invalid 403, protected monitoring probes 302, no console errors, and independent final routing readback. Watchdog was disarmed only after readback.
+- Do not bundle corrected API acknowledgement repair or release unsafe `b0e883cd`; request separate API approval before any API mutation.
+
 ## GFS-381 decision (2026-10-31)
 
 - Accept the Analytics overflow diagnosis and minimal repair: keep full tables, place overflow on the existing daily/classification containers, and make those regions touch- and keyboard-scrollable.

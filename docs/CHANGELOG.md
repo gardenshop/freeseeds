@@ -1585,3 +1585,9 @@
 - Added a minimal focusable/touch-scrollable boundary around the existing Analytics daily inbound and abandoned checkout tables.
 - Verified CSS1920/1440/1280/768/430/390/360/320, focused16/16, full339/339, build, lint, and audit0.
 - No production deployment or API/WhatsApp/customer/payment/Meta/D1/migration/flag mutation. Separate Admin deployment approval remains required.
+
+## 2026-10-31 - GFS-382 Admin mobile release
+
+- Uploaded and directly deployed the tested Analytics mobile UI fix as Admin `ceb3e680` 100%, retaining `72cff93f` as rollback at 0%.
+- Verified sanitized Chrome acceptance at CSS 1920/1440/1280/768/430/390/360/320: no page overflow, mobile table scrolling, controls/routes, and no console errors.
+- Verified protected monitoring and independent routing readback; API `b426ba47` stayed 100%. No WhatsApp, customer, payment, Meta, D1, migration, flag, Queue, or Cron mutation.
