@@ -2451,4 +2451,18 @@ Investigation query costs only (not production savings): representative `rows_re
 | API canary | INCONCLUSIVE / FAIL-SAFE | Candidate observed at1%; monitoring/readback error at ~154s; restoration verified at ~176s |
 | Final routing | PASS | API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0% |
 | Customer acceptance | NOT CLAIMED | No customer events generated or replayed; candidate-attributable live traffic insufficient |
+
+## GFS-384 monitoring repair
+
+| Area | Result | Evidence |
+|---|---|---|
+| Failure diagnosis | PASS / bounded | Historical API GraphQL metrics read transiently returned HTTP200 with GraphQL error/empty rows; immediate retry succeeded; original exception text unavailable because GFS-383 log was removed |
+| Adapter repair | PASS | One 250 ms complete-read retry; no stale data; cancellation/unknown-version/failure remain fail-closed |
+| Adapter tests | PASS | 8/8, including transient recovery and exhausted retry |
+| Controller/observability | PASS | 17/17 and 4/4 |
+| Full regression | PASS | 339/339; build/lint/audit0 |
+| Legacy rollback | PASS | 4/4 against clean `gfs273-v1` at `cf01f444` |
+| Runtime health/security | PASS | API/Admin200; GraphQL0 errors; no/invalid Access403; monitoring paths302 |
+| D1 parity/read safety | PASS | Aggregate read only; changed_db=false; rows_written=0 |
+| New canary | NOT RUN | Fresh Approval L required; routing frozen |
 | Next gate | PENDING APPROVAL | Exact-source upload → 0% override acceptance → conditional1%/8-minute canary → restore baseline100% |

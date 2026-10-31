@@ -1757,6 +1757,13 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Accept the exact corrected source hash and 0% validation. The candidate preserves provider acceptance, D1 acknowledgement retry/fail-closed duplicate protection, Cron recovery reconciliation, Queue/DLQ, Advance, COD PKR125, and payment-state safeguards in isolated tests.
 - The 1% API canary was executed only under Approval K with Admin frozen. A monitoring/readback error caused fail-closed restoration; routing restoration passed, but no customer-attributable candidate acceptance was available. Classify the canary INCONCLUSIVE, not PASS.
 - Keep API `b426ba47`100% and candidate `d603f077`0%; Admin `ceb3e680`100%. Do not promote API or repeat a canary until the transient monitoring/readback error is diagnosed and separately approved.
+
+## GFS-384 decision (2026-10-31)
+
+- Classify GFS-383’s failure as a transient Cloudflare GraphQL/control-plane read failure inside the combined adapter read: one historical API metrics request returned HTTP200 with GraphQL error/empty rows, then an identical read succeeded. The deleted controller log prevents recovery of the original error text and exact timestamp.
+- Accept the minimal adapter repair: one bounded complete-read retry, no stale result, cancellation propagation, and fail-closed exhaustion/unknown-version behavior. Candidate API source/version remains unchanged.
+- Accept local and read-only gates: adapter8/8, controller17/17, observability4/4, rollback4/4, full339/339, build/lint/audit0, health/security and D1 no-write evidence.
+- Do not run another canary under GFS-384. Request fresh Approval L for the exact `d603f077` API-only maximum1%/8-minute canary, restoration by minute6, Admin unchanged, and final API baseline100%.
 - Unsafe `b0e883cd` remains prohibited. No customer message, order, payment, Meta, D1 migration, flag, Queue, or Cron mutation was made.
 
 ## GFS-381 decision (2026-10-31)

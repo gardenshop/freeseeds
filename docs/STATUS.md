@@ -2246,3 +2246,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **FAIL-SAFE / INCONCLUSIVE canary:** API candidate was exposed at1% with Admin frozen at `ceb3e680`100%. Candidate routing was observed, then a monitoring/readback error caused immediate restoration after approximately154 seconds. Restoration verified at approximately176 seconds. No customer events were generated or replayed; customer-attributable acceptance is not claimed.
 - **PASS final protection:** API `b426ba47`100% / candidate `d603f077`0%; Admin `ceb3e680`100% / rollback `72cff93f`0%. Post-restore API/Admin health was200 with0 observed errors. No API promotion or WhatsApp/customer/payment/Meta/D1/migration/flag mutation occurred.
 - **NEXT:** diagnose the transient monitoring/readback error before any new API canary; full API promotion remains unauthorized.
+
+## GFS-384 API canary monitoring repair (2026-10-31)
+
+- **PASS diagnosis boundary:** Cloudflare retained GFS-383 deployment start `16:36:53.946Z` and restoration `16:39:25.329Z`; the original controller log was deleted after restoration, so its exact exception text/timestamp is unavailable. Historical GraphQL showed one HTTP200 API metrics response with GraphQL error/empty rows, followed by a successful identical read; Admin rows were successful.
+- **PASS repair:** adapter now performs one bounded 250 ms retry of the complete routing/health/GraphQL read, never accepts stale data, and remains fail-closed on exhausted retries, unknown versions, cancellation, or unhealthy metrics. Candidate `d603f077` was untouched.
+- **PASS tests:** adapter8/8, controller17/17, observability4/4, legacy rollback4/4, full339/339, build, lint, audit0.
+- **PASS read-only runtime:** API/Admin health200; GraphQL errors0; Admin no-token/invalid-token403; monitoring token on Orders/Analytics/Conversations302; D1 aggregate read `changed_db=false`, `rows_written=0`. Routing remains API `b426ba47`100% / `d603f077`0%, Admin `ceb3e680`100% / `72cff93f`0%.
+- **NEXT:** fresh Approval L is required before one new API-only maximum1%/8-minute canary with restoration by minute6. No canary was executed in GFS-384.

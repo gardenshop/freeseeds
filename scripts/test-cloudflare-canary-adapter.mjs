@@ -90,3 +90,35 @@ test("rejects unknown deployed versions", async () => {
   } });
   await assert.rejects(() => adapter.readTraffic(), /unexpected_version/);
 });
+
+test("retries one transient monitoring read without using stale data", async () => {
+  let metricReads = 0;
+  const adapter = createCloudflareCanaryAdapter({
+    ...measured,
+    workers,
+    monitorRetryDelayMs: 0,
+    readMetrics: async () => {
+      metricReads += 1;
+      if (metricReads === 1) throw new Error("transient_graphql_error");
+      return { source: "cloudflare_graphql", requests: 11, errors: 0 };
+    },
+    runCommand: async (args) => args[0] === "deployments" ? status(args[3] === "api" ? workers.api : workers.admin, 100, 0) : ""
+  });
+  const traffic = await adapter.readTraffic();
+  assert.equal(metricReads, 4);
+  assert.equal(traffic.health.api.requests, 11);
+  assert.equal(traffic.health.admin.requests, 11);
+});
+
+test("fails closed after bounded monitoring retries are exhausted", async () => {
+  let reads = 0;
+  const adapter = createCloudflareCanaryAdapter({
+    ...measured,
+    workers,
+    monitorRetryDelayMs: 0,
+    readMetrics: async () => { reads += 1; throw new Error("persistent_graphql_error"); },
+    runCommand: async (args) => args[0] === "deployments" ? status(args[3] === "api" ? workers.api : workers.admin, 100, 0) : ""
+  });
+  await assert.rejects(() => adapter.readTraffic(), /persistent_graphql_error/);
+  assert.equal(reads, 4);
+});

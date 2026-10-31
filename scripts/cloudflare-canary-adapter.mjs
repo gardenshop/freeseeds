@@ -42,9 +42,10 @@ function validateHealth(worker, health, metrics) {
   return { httpStatus: health.httpStatus, latencyMs: health.latencyMs, requests: metrics.requests, errors: metrics.errors };
 }
 
-export function createCloudflareCanaryAdapter({ workers = DEFAULT_WORKERS, runCommand = runWrangler, readHealth, readMetrics, messagePrefix = "GFS-334", scope = "all", targetCandidatePercent = 1 } = {}) {
+export function createCloudflareCanaryAdapter({ workers = DEFAULT_WORKERS, runCommand = runWrangler, readHealth, readMetrics, messagePrefix = "GFS-334", scope = "all", targetCandidatePercent = 1, monitorRetryCount = 1, monitorRetryDelayMs = 250 } = {}) {
   if (scope !== "all" && scope !== "api" && scope !== "admin") throw new TypeError("invalid canary scope");
   if (!Number.isInteger(targetCandidatePercent) || targetCandidatePercent <= 0 || targetCandidatePercent >= 100) throw new TypeError("invalid candidate percentage");
+  if (!Number.isInteger(monitorRetryCount) || monitorRetryCount < 0 || !Number.isInteger(monitorRetryDelayMs) || monitorRetryDelayMs < 0) throw new TypeError("invalid monitor retry settings");
   const targetWorkers = scope === "api" ? [workers.api] : scope === "admin" ? [workers.admin] : [workers.api, workers.admin];
   const deploy = async (worker, specs, message, signal) => {
     await runCommand([
@@ -63,6 +64,32 @@ export function createCloudflareCanaryAdapter({ workers = DEFAULT_WORKERS, runCo
     return validateHealth(worker, health, metrics);
   };
 
+  const readTrafficOnce = async (signal) => {
+    const [api, admin, apiHealth, adminHealth] = await Promise.all([
+      readWorker(workers.api, signal),
+      readWorker(workers.admin, signal),
+      readWorkerHealth(workers.api, signal),
+      readWorkerHealth(workers.admin, signal)
+    ]);
+    return {
+      apiBaselinePercent: api.baseline,
+      apiCandidatePercent: api.candidate,
+      adminBaselinePercent: admin.baseline,
+      adminCandidatePercent: admin.candidate,
+      health: apiHealth && adminHealth ? {
+        source: "cloudflare_graphql_http",
+        api: apiHealth,
+        admin: adminHealth
+      } : undefined
+    };
+  };
+  const waitForMonitorRetry = (signal) => new Promise((resolve, reject) => {
+    if (signal?.aborted) return reject(signal.reason ?? new Error("monitor_read_aborted"));
+    const onAbort = () => { clearTimeout(timer); reject(signal.reason ?? new Error("monitor_read_aborted")); };
+    const timer = setTimeout(() => { signal?.removeEventListener("abort", onAbort); resolve(); }, monitorRetryDelayMs);
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
+
   return {
     async execute(action, { signal } = {}) {
       const exposing = action === "expose_candidate";
@@ -78,23 +105,16 @@ export function createCloudflareCanaryAdapter({ workers = DEFAULT_WORKERS, runCo
       }
     },
     async readTraffic({ signal } = {}) {
-      const [api, admin, apiHealth, adminHealth] = await Promise.all([
-        readWorker(workers.api, signal),
-        readWorker(workers.admin, signal),
-        readWorkerHealth(workers.api, signal),
-        readWorkerHealth(workers.admin, signal)
-      ]);
-      return {
-        apiBaselinePercent: api.baseline,
-        apiCandidatePercent: api.candidate,
-        adminBaselinePercent: admin.baseline,
-        adminCandidatePercent: admin.candidate,
-        health: apiHealth && adminHealth ? {
-          source: "cloudflare_graphql_http",
-          api: apiHealth,
-          admin: adminHealth
-        } : undefined
-      };
+      let lastError;
+      for (let attempt = 0; attempt <= monitorRetryCount; attempt += 1) {
+        try { return await readTrafficOnce(signal); }
+        catch (error) {
+          lastError = error;
+          if (attempt >= monitorRetryCount) throw error;
+          await waitForMonitorRetry(signal);
+        }
+      }
+      throw lastError;
     }
   };
 }

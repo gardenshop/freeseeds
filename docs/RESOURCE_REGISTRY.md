@@ -1757,3 +1757,10 @@ No secrets are stored in this registry.
 - API deployment readback: `b426ba47`100% / `d603f077`0%. Admin resource unchanged at `ceb3e680`100% / `72cff93f`0%.
 - Version metadata verified existing D1 `17b7e9f6...`, R2, Queue producer/consumer, Cron handler, flags, and secret names; secret values were never read or recorded.
 - Canary controller output was allowlisted only. Candidate routing was observed; monitoring/readback failed closed and restoration was verified. No customer event, WAMID, payload, order, payment, or private field was registered.
+
+## GFS-384 monitoring repair (2026-10-31)
+
+- Changed source resources: `scripts/cloudflare-canary-adapter.mjs` and its isolated test. The API candidate artifact/version and bindings were not changed.
+- Repair contract: one 250 ms retry of the complete routing + HTTP health + GraphQL metrics read; no cached result; abort/unknown-version/persistent failure remains fail-closed.
+- Evidence resource: historical interval query bounded the failure to a transient API GraphQL metrics read; original controller log was not retained, so exact exception text remains unavailable.
+- Runtime resources unchanged: API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. D1 aggregate query reported `changed_db=false`, `rows_written=0`; no secrets/customer fields registered.

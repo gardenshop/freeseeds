@@ -1597,3 +1597,9 @@
 - Verified approved corrected source SHA256 `462e6f6e...de4c50`; uploaded API candidate `d603f077` and validated it at0% with health200 x3 and unsigned webhook403.
 - Ran one Approval K API-only 1% canary with detached rollback control. A monitoring/readback error triggered fail-closed restoration after approximately154 seconds; final API baseline100%/candidate0% was independently verified.
 - No customer events were generated or replayed. Admin `ceb3e680`100% and WhatsApp/API baseline protections remained in place; no full API promotion occurred.
+
+## 2026-10-31 - GFS-384 API canary monitoring repair
+
+- Diagnosed the GFS-383 fail-safe as a transient GraphQL metrics/control-plane read failure; the original controller exception text was unavailable after its temporary log was removed.
+- Added one bounded complete-read retry to the canary adapter, preserving cancellation, stale-data prohibition, unknown-version rejection, and fail-closed rollback behavior.
+- Verified adapter8/8, controller17/17, observability4/4, rollback4/4, full339/339, build/lint/audit0, runtime health/security, and D1 read-only no-write evidence. No new canary or production deployment was run.

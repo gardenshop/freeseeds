@@ -5230,3 +5230,14 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - Final routing: API `b426ba47`100% / candidate `d603f077`0%; Admin `ceb3e680`100% / rollback `72cff93f`0%. Post-restore read-only health was200 for API/Admin with0 observed errors.
 - No API100% promotion, WhatsApp message, order, payment, Meta, D1 migration/write, flag, Queue, or Cron mutation was made. The transient readback cause is UNKNOWN and must be diagnosed before another canary.
 - Next action: read-only diagnosis/repair of monitoring attribution, then request fresh scoped API canary approval. Meta timezone, historical CAPI, and blocked receipts remain separate; optional D1 optimization and full chat history remain deferred.
+
+## GFS-384 final report - API canary monitoring repair
+
+- GFS-381: PASS carried forward - Analytics responsive repair unchanged.
+- GFS-382: PASS carried forward - Admin mobile release remains live100%.
+- GFS-383: FAIL-SAFE / INCONCLUSIVE - API canary restored baseline after monitoring/readback failure; no customer-attributable acceptance claimed.
+- Root cause: historical Cloudflare evidence identified one HTTP200 API GraphQL metrics response containing a GraphQL error/empty rows during the GFS-383 interval; an immediate identical read succeeded and Admin metrics were successful. The temporary controller log was removed after restoration, so exact original error text and timestamp are UNKNOWN. No Worker runtime error was evidenced.
+- Repair: canary adapter now retries the complete routing/health/GraphQL read once after250ms, without stale data, and preserves cancellation and fail-closed behavior. API candidate `d603f077` was not modified.
+- Tests: adapter8/8, controller17/17, observability4/4, legacy rollback4/4, full339/339, build/lint/audit0. Runtime API/Admin health200, GraphQL0 errors, Access no/invalid403, monitor paths302, D1 aggregate read changed_db=false/rows_written=0.
+- Final routing: API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. No production deployment or canary occurred in GFS-384.
+- Next action: request fresh Approval L for one API-only `d603f077` canary, maximum1%/8 minutes, restoration by minute6, final API baseline100%, Admin unchanged. No automatic promotion.
