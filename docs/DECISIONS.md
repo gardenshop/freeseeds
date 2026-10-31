@@ -1689,3 +1689,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Execute exactly one bounded canary under Approval D. The 10% routing and early restoration were successful; no attributable fault, privacy exposure, payment discrepancy, monitoring loss or rollback uncertainty occurred.
 - Treat candidate feature responses as monitor evidence only. Because no candidate request can be attributed to real customer traffic, customer-flow acceptance remains INCONCLUSIVE.
 - Keep bridge100% + candidate0% and API100%. Do not request or execute full Admin promotion until a separately approved canary has meaningful attributable traffic or an owner accepts this evidence limitation.
+
+## GFS-373 decision (2026-10-31 UTC)
+
+- Authenticated operator acceptance is **PASS** for exact combined candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec` at 0% via the supported structured version override. Analytics, CSV, Conversations, Orders, Payment Settings, privacy masking, responsive rendering, latency, and read-only behavior were checked in the authorized browser session.
+- The frozen bridge intentionally returned 404 for candidate-only Analytics/Conversations routes without the override; this is positive version-selection evidence, not a regression. Existing bridge baseline and API routing were not changed.
+- Fresh independent D1 and Cloudflare control-plane identity readback are unverified because Wrangler OAuth/network access failed. Prior verified account/routing evidence is retained; no mutation is authorized until control-plane authentication is restored.
+- Prepare, but do not execute, separate owner approval for staged full Admin promotion of the exact candidate to100%, with bridge `3bbf5cf6`100% rollback, explicit stop thresholds, monitoring, and independent final routing readback. API `b426ba47` remains100%.

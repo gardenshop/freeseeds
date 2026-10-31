@@ -2304,3 +2304,18 @@ Investigation query costs only (not production savings): representative `rows_re
 | WhatsApp/recovery | PASS read-only | inbound413, latest16:44:37 PKT; +15/+210 no FAILED |
 | Restoration | PASS | Bridge100%, candidate0%, API100%; independent readback; watchdog disarmed |
 | Customer-flow acceptance | INCONCLUSIVE | Candidate hits were controlled monitoring probes, not attributable customer traffic |
+
+### GFS-373 authenticated Admin operator acceptance (2026-10-31)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Exact candidate selection | PASS | Structured version override selected `4fe564a6`; candidate-only Analytics/Conversations200, bridge control404 without override |
+| Analytics and filters | PASS | Authenticated operator page/API200; date/status controls rendered; aggregate read-only response and latency recorded |
+| CSV | PASS | Export200, `text/csv`, expected Metric/Value/Definition header, 19 data rows; contents not retained |
+| Conversations/privacy | PASS | API200, 2,314 total, masked references; read-only detail not exposed; no identifiers/bodies retained |
+| Orders/payment settings | PASS | Orders API/UI200 with404 active total; Payment Settings200 with three configured/enabled methods; no mutation controls invoked |
+| Responsive UI | PASS | Reduced-width Analytics and Conversations rendered without horizontal overflow; desktop pages also rendered |
+| D1/API parity | LIMITED | Admin UI/API readback matched; fresh independent D1 query unavailable due expired/unreachable Wrangler OAuth |
+| GraphQL/error telemetry | PASS carried forward | GFS-372 retained telemetry API93/0 and Admin16/0; no new GraphQL mutation or error probe |
+| Routing and writes | PASS | Bridge100%, candidate0%, API100% preserved; no deployment, D1, customer, payment, Meta or flag write |
+| Full Admin promotion | NOT RUN | Requires separate owner approval and restored control-plane authentication |

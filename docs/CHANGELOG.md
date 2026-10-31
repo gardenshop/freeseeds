@@ -1530,3 +1530,9 @@
 - Ran one Approval D canary at bridge90% + candidate10% for approximately53 seconds, with an interruption watchdog.
 - Observed candidate-only Analytics/Conversations responses, health/security PASS, GraphQL errors0, Admin/D1 parity and continued WhatsApp inbound.
 - Restored bridge100% + candidate0% before minute6 and independently verified API100%. Customer-flow acceptance remains INCONCLUSIVE because traffic was monitoring-generated.
+
+## 2026-10-31 - GFS-373 authenticated Admin operator acceptance
+
+- Used the existing authorized Chrome session with the supported structured Cloudflare version override to exercise exact candidate `4fe564a6` at0%; no deployment or production traffic changed.
+- Verified read-only Analytics, CSV, Conversations with masking, Orders, Payment Settings, responsive layouts, latency and candidate-versus-bridge version selection. No secrets, cookies, customer identifiers, message bodies or write actions were retained.
+- Recorded the fresh D1/control-plane limitation: Wrangler OAuth was expired/unreachable and GitHub remote readback was unavailable. Full Admin promotion remains pending separate owner approval and fresh control-plane authentication.

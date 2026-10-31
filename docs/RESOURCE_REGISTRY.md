@@ -1678,3 +1678,10 @@ No secrets are stored in this registry.
 - **Read-only evidence:** candidate-only Analytics3/20 and Conversations2/20 HTTP200; Orders/payment settings20/20 HTTP200; health/security and GraphQL errors0. No secrets or customer payloads recorded.
 - **Post-canary aggregate:** D1 total404/active403; Admin403; review13, approved2, COD199; COD fee PKR125; inbound413, latest16:44:37 PKT; no failed recovery stage.
 - **Disposition:** restoration PASS; customer-flow acceptance INCONCLUSIVE because the candidate evidence came from controlled monitoring, not attributable customer traffic.
+
+## GFS-373 operator acceptance resources
+
+- **Exact candidate:** `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`; targeted at0% through the structured Cloudflare version-override header in the authorized Admin browser session. No deployment membership or traffic changed.
+- **Frozen serving state:** Admin bridge `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1`100% / candidate0%; API baseline `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100%. Existing restoration readback remains `e907d94f-45e0-4f59-98dc-2f1fb3f7a685`.
+- **Operator evidence:** candidate Analytics/Conversations/Orders/Payment Settings and read-only APIs succeeded; candidate-only Analytics/Conversations without override returned404 on the bridge. CSV shape, masked conversation references, responsive layouts, latency and zero-write behavior were recorded only as aggregates/booleans.
+- **Evidence boundary:** current fresh D1 query and Cloudflare control-plane account readback are unavailable because Wrangler OAuth expired/unreachable. No secret, customer identifier, message body, receipt, cookie or token was recorded.
