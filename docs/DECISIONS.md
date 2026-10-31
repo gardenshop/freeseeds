@@ -1669,3 +1669,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Do not call the bridge live-compatible yet. Cloudflare version overrides require the target version in the current deployment; the upload alone cannot prove production-host Access context.
 - Request Approval E for a 0%-traffic deployment swap only: legacy baseline100% + bridge0%, with API frozen. Restore the current legacy100% + combined-candidate0% deployment immediately on any mismatch or after testing if baseline replacement is not separately approved.
 - Baseline replacement and a revised canary rollback target are separate material decisions. Do not reuse GFS-366 Approval D and do not run a canary until the bridge serves100% under a separately approved replacement and passes real monitoring.
+
+## GFS-370 decision (2026-10-31 UTC)
+
+- Approval E is consumed and complete. The health-only bridge passed real Access-context HTTP, isolation, latency, telemetry and version-selection checks at0%; the exact prior version pair was restored.
+- Do not repeat the0% validation or reuse Approval E. The next release mutation is a separately approved baseline replacement: `3bbf5cf6`100% + `4fe564a6`0%. Its rollback is `494a3dce`100% + `4fe564a6`0%.
+- Do not run the Admin canary until the replacement baseline passes serving health, human-login, Access isolation, telemetry and deterministic rollback. A canary then needs fresh Approval D and must roll back to the healthy bridge baseline.
+- Continued WhatsApp inbound and two additional aggregate orders were observed without bot changes. Preserve GFS-368's earlier E/INCONCLUSIVE attribution.

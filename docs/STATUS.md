@@ -2132,3 +2132,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **Live bridge gate BLOCKED pending approval:** a direct override probe did not select the uploaded version because it is absent from the active deployment. Cloudflare supports overrides only for versions in the current deployment and only two versions per deployment. No live bridge HTTP200 is claimed.
 - **Approval E requested:** authorize one zero-traffic Admin deployment change: `494a3dce`100% + `3bbf5cf6`0%, temporarily replacing `4fe564a6`0% in the active deployment. API remains unchanged. Rollback immediately to current deployment `5587e875-9eb7-4379-874f-fa46e6a1587c` (`494a3dce`100% + `4fe564a6`0%).
 - **No release yet:** after Approval E, run exact version override security/monitoring tests, then request a separate approval to replace the baseline with the bridge. Only after that replacement passes may a fresh Admin canary approval be requested with a revised rollback target. No WhatsApp, D1, Meta, payment, customer, migration, Queue, Cron, flag or Access mutation occurred.
+
+## GFS-370 Approval E bridge validation (2026-10-31 UTC / PKT)
+
+- **PASS temporary attachment:** deployment `f99ec808-48c7-4f60-ab83-de535749034e` attached baseline `494a3dce`100% + bridge `3bbf5cf6`0%; API stayed `b426ba47`100%. A restoration watchdog was armed.
+- **PASS live bridge:** exact structured override returned authenticated health200 x3 at 544–609ms. Missing/invalid credentials returned403; Service Auth received302/denied on Orders, Analytics and Conversations. Human Admin `/orders` remained200.
+- **PASS telemetry/security:** GraphQL measured API62 requests/0 errors and Admin4/0; controller17/17, adapter6/6, observability4/4 and rollback4/4 pass.
+- **PASS restoration:** deployment `ef31f177-d0ef-446e-93c8-2b39d244b50b` restored Admin `494a3dce`100% + combined candidate `4fe564a6`0%; API remains `b426ba47`100% + candidate0%.
+- **WhatsApp read-only evidence:** D1 total402 / active401, latest order 16:17:15 PKT and latest inbound 16:18:35 PKT; Admin aggregate401. Queries wrote zero rows. This proves current processing, not GFS-368 causal attribution.
+- **Next approval:** baseline replacement only, bridge100% + candidate0%, with exact rollback to legacy baseline100% + candidate0%. No canary is approved.

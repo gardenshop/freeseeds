@@ -2258,3 +2258,17 @@ Investigation query costs only (not production savings): representative `rows_re
 | Production routing | PASS unchanged | API `b426ba47`100%; Admin `494a3dce`100%; combined candidate0% |
 | Approval E | REQUESTED | Stage bridge0% beside legacy100%; exact rollback restores current two-version deployment |
 | Admin canary | NOT AUTHORIZED | Requires bridge live validation, separate baseline replacement approval, then fresh Approval D |
+
+### GFS-370 health-bridge live validation (2026-10-31)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Approved temporary deployment | PASS | `f99ec808…`: legacy baseline100% + bridge0%; watchdog armed; API unchanged |
+| Exact bridge execution | PASS | Structured override to `3bbf5cf6…`; authenticated health200 x3, 544–609ms |
+| Negative authentication | PASS | Missing and invalid credentials HTTP403 |
+| Service-token isolation | PASS | Orders, Analytics and Conversations HTTP302/denied |
+| Human Admin | PASS | Authorized browser `/orders` HTTP200 before/after restoration; aggregate API HTTP200 |
+| Telemetry | PASS | API62/0 errors; Admin4/0 errors; genuine GraphQL source |
+| Controller faults/rollback | PASS | deadline17/17, adapter6/6, observability4/4, legacy rollback4/4 |
+| Mandatory restoration | PASS | `ef31f177…`: Admin `494a3dce`100% + `4fe564a6`0%; API `b426ba47`100% |
+| D1/WhatsApp integrity | PASS read-only | total402/active401, latest order16:17:15 PKT, latest inbound16:18:35 PKT; rows_written0 |

@@ -1510,3 +1510,10 @@
 - Uploaded version `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1` without deploying it or changing traffic. Confirmed it is distinct from both serving baseline and combined candidate.
 - Verified focused33/33, bridge full321/321, current full335/335, build/lint/audit0, controller17/17, adapter6/6, observability4/4 and rollback4/4.
 - Live override testing remains blocked until owner-approved 0% attachment to the active deployment; API/Admin routing and WhatsApp remain unchanged.
+
+## GFS-370 Approval E validation and restoration (2026-10-31)
+
+- Temporarily deployed legacy Admin baseline100% plus health bridge0%, validated the exact bridge with authenticated version override, then restored legacy baseline100% plus combined candidate0%.
+- Verified health200 x3, missing/invalid403, monitoring-token isolation, human Admin continuity, GraphQL errors0 and exact routing.
+- Re-ran controller17/17, adapter6/6, observability4/4 and rollback4/4. No source, Access, token, API, WhatsApp, payment, Meta, D1, migration, flag, Queue or Cron change was made.
+- Aggregate-only D1/Admin evidence showed continued inbound/order processing; no customer identifiers or payloads were retained.

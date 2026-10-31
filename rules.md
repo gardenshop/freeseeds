@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-370 validated Admin health bridge (2026-10-31)
+
+- Approval E covered only temporary deployment `f99ec808-48c7-4f60-ab83-de535749034e`: Admin baseline `494a3dce-5d52-4b66-b3ff-bef64b31b406`100% plus health bridge `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1`0%. The combined candidate remained uploaded and received no traffic.
+- Structured version override proved the bridge executed: authenticated `GET /health` returned HTTP200 three times (544–609ms); missing/invalid credentials returned403; the monitor was denied from Orders, Analytics and Conversations. Existing human Admin `/orders` remained HTTP200.
+- Restoration is mandatory. Deployment `ef31f177-d0ef-446e-93c8-2b39d244b50b` restored `494a3dce`100% + `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`0%; API remains `b426ba47`100% + candidate0%.
+- No Access, token, API, WhatsApp, customer, payment, Meta, D1, migration, Queue, Cron or flag mutation was authorized or made. Aggregate readback observed active WhatsApp processing and new orders; customer identifiers and payloads remain prohibited.
+- The next mutation requires separate owner approval for baseline replacement only: bridge `3bbf5cf6`100% + combined candidate `4fe564a6`0%, with rollback to `494a3dce`100% + `4fe564a6`0%. A new Approval D is required afterward for any canary.
+
 ## GFS-369 Admin baseline health bridge gate (2026-10-31)
 
 - The actual serving Admin baseline `494a3dce-5d52-4b66-b3ff-bef64b31b406` remains100% and cannot authenticate the existing Service Auth monitor: its `/health` response remains `ADMIN_ACCESS_REQUIRED`. Do not reinterpret that 403 or GraphQL0 as healthy.

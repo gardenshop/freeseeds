@@ -1654,3 +1654,11 @@ No secrets are stored in this registry.
 - **Rejected bridge candidate:** `7e0b0549` has script etag `389010...`, equal to combined candidate `4fe564a6`; not a minimal repair.
 - **Local bridge worktree:** `D:\free seeds\gfs369-health-bridge`, detached at `901f3f6` with only Admin authorization source/test changes. No secret values stored.
 - **Approval dependency:** attach `3bbf5cf6` at0% beside `494a3dce`100% for production-host override testing; current combined candidate remains uploaded but must temporarily leave the two-version deployment. No traffic impact is authorized yet.
+
+## GFS-370 verified bridge resources
+
+- **Temporary deployment:** `f99ec808-48c7-4f60-ab83-de535749034e`, `494a3dce`100% + `3bbf5cf6`0%, author `gisupp@gmail.com`.
+- **Restored deployment:** `ef31f177-d0ef-446e-93c8-2b39d244b50b`, `494a3dce`100% + `4fe564a6`0%. API deployment remains `10f43f2e-9c95-4fd2-8bfc-99ccd890fee1`, `b426ba47`100% + `6ef27f02`0%.
+- **Live acceptance:** bridge health200 x3; missing/invalid403; protected paths denied; human Orders page200; API/Admin GraphQL errors0. No credential value was recorded.
+- **D1 aggregate readback:** binding `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; total402/active401, latest order16:17:15 PKT, latest inbound16:18:35 PKT; changed_db=false and rows_written=0.
+- **Next dependency:** explicit baseline-replacement approval for bridge100% + combined candidate0%; no canary authorization exists.

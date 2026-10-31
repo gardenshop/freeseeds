@@ -5051,3 +5051,16 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - **Approval E requested:** approve one 0%-traffic Admin deployment change to `494a3dce`100% + bridge `3bbf5cf6`0%, temporarily replacing the current 0% combined-candidate slot. Immediate rollback restores deployment `5587e875-9eb7-4379-874f-fa46e6a1587c` (`494a3dce`100% + `4fe564a6`0%). API remains unchanged.
 - **After Approval E:** run real bridge HTTP200×3, missing/invalid denial, Orders/Analytics/Conversations isolation, GraphQL/latency/version readback and controller fault tests. If PASS, request a separate baseline-replacement approval for bridge100% + combined candidate0%, then request fresh Approval D with rollback to bridge100%, not legacy `494a3dce`.
 - **Remaining stages:** bridge live validation0% complete /100% remaining; baseline replacement0%/100%; Admin canary0%/100%; Admin full promotion0%/100%; API acknowledgement repair live activation0%/100%; Meta timezone attribution UNKNOWN; historical CAPI/blocked receipts UNKNOWN. Optional D1 optimization and full chat history remain deferred.
+
+## GFS-370 final report — Approval E bridge validation (2026-10-31 UTC / PKT)
+
+- **GFS-367:** PASS diagnosis / BLOCKED release: legacy baseline Service Auth incompatibility proven.
+- **GFS-368:** PASS for disproving a complete WhatsApp stop; E/INCONCLUSIVE for the earlier low-order cause. No bot repair.
+- **GFS-369:** PASS preparation / BLOCKED live pending Approval E: minimal bridge uploaded and locally tested.
+- **GFS-370:** **PASS.** Deployment `f99ec808-48c7-4f60-ab83-de535749034e` attached legacy baseline100% + bridge0%. Structured override proved bridge execution with health200 x3 (544–609ms); missing/invalid403; Orders/Analytics/Conversations denied; human Orders page200; GraphQL API62/0 and Admin4/0.
+- **Restoration PASS:** deployment `ef31f177-d0ef-446e-93c8-2b39d244b50b` reads Admin `494a3dce`100% + `4fe564a6`0%. API remains `b426ba47`100% + candidate0%. Ordinary bridge traffic was0%; exposure was version-overridden health requests only.
+- **WhatsApp/zero regression:** no customer, message, payment, order, Meta, API, D1, Access, token, migration, flag, Queue or Cron mutation was performed. Aggregate readback observed total402/active401, latest order16:17:15 PKT, latest inbound16:18:35 PKT and Admin total401; D1 reads wrote0 rows. This is current health evidence, not GFS-368 attribution.
+- **Tests:** live Access/security/routing/restoration PASS; controller17/17, adapter6/6, observability4/4, rollback4/4. No source changed; retained GFS-369 gates are bridge33/33 + full321/321 and PR full335/335/build/lint/audit0.
+- **Git before evidence update:** `ce41b58c7c1183429938d0045edd63fd2183d0d2`; final pushed SHA follows verification.
+- **Remaining:** bridge validation100%/0%; baseline replacement0%/100%; fresh Admin canary0%/100%; Admin full promotion0%/100%; API repair activation0%/100%; Meta timezone UNKNOWN; historical CAPI/blocked receipts UNKNOWN. Optional D1/full history deferred.
+- **Next approval request:** approve baseline replacement only: bridge `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1`100% + combined candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`0%, API unchanged, rollback to `494a3dce`100% + `4fe564a6`0%. This does not authorize a canary or promotion.
