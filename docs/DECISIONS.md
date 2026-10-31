@@ -1604,6 +1604,12 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Do not create a token through an unverified path, inspect secret-bearing metadata, copy cookies, or weaken the owner-email policy. The single Admin canary remains unconsumed and blocked before exposure.
 - The one required owner action is to provision a short-lived least-privilege Access Service Auth credential through the official Zero Trust interface into approved host secret storage. Re-run security/isolation/rollback checks only after that capability exists.
 
+## GFS-350 decision (2026-10-31 UTC)
+
+- Fresh deployment readback confirms the frozen Admin/API versions and 100%/0% routing; no live mutation occurred.
+- The authorized token creation cannot be safely performed because the official Zero Trust interface/Chrome DevTools MCP is unavailable and Wrangler lacks Access-management scope. Do not use Worker secrets, browser cookies, or an unrestricted token.
+- Keep the single Admin canary blocked until the owner provisions the least-privilege Access Service Auth credential through the official Zero Trust interface into approved host storage.
+
 ## GFS-345 decision (2026-10-30 UTC / PKT)
 
 - Classify the decline as an inbound-volume break beginning 17:30Z/22:30 PKT; acquisition/advertising is the leading hypothesis, not a proven Meta cause.

@@ -2143,3 +2143,15 @@ Investigation query costs only (not production savings): representative `rows_re
 | Host Admin health | BLOCKED | HTTP302 without Access; no approved machine credential |
 | Admin canary | NOT RUN | P1/P2 monitoring gate failed; no traffic mutation |
 | Production protection | PASS | API/Admin frozen; WhatsApp, D1, Meta, payment and reminder state unchanged |
+
+### GFS-350 provisioning gate
+
+| Check | Result | Evidence / disposition |
+|---|---|---|
+| Remote HEAD and repository | PASS | PR #11 branch verified at `d952611dcb584cd13e13616a118ddc5285af4bc4` in `gardenshop/freeseeds` |
+| Cloudflare account identity | PASS | `gisupp@gmail.com`; account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` |
+| Official Access management capability | BLOCKED | No Chrome DevTools/Zero Trust connector available |
+| Wrangler Access scope | BLOCKED | OAuth scopes do not include Access management |
+| Host credential transfer | BLOCKED | No approved Access credential or host secret binding present |
+| Admin canary | NOT RUN | Secure P1/P2 gate failed; no traffic mutation |
+| Frozen production protection | PASS | API/Admin versions and protected flags unchanged |

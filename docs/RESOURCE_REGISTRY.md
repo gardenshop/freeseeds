@@ -1607,3 +1607,6 @@ No secrets are stored in this registry.
 
 - **GFS-349 Access:** identity checks passed, but the execution context exposes no official Chrome DevTools/Zero Trust management connector and Wrangler OAuth lacks Access-management scope. No service credential or policy change was attempted.
 - **Release:** host health remains 302 without Access; Admin canary was not run. Exact dependency is one owner-provisioned short-lived least-privilege Access Service Auth credential in approved host secret storage.
+
+- **GFS-350 readback:** remote PR HEAD `d952611dcb584cd13e13616a118ddc5285af4bc4`; Admin `494a3dce`100% / `19188b21`0%; API `b426ba47`100% / candidate0%. No traffic mutation.
+- **Access dependency:** official Zero Trust/Chrome DevTools capability and Wrangler Access-management scope are unavailable; no credential was created or recorded. Canary remains blocked.
