@@ -1722,3 +1722,10 @@ No secrets are stored in this registry.
 - **Source:** `apps/admin/src/index.ts` professional Orders page now has 1700px shell, viewport-bounded workspace, flex/scroll list, content-sized cards, mobile cap, and guarded visible Refresh feedback.
 - **Tests:** `tests/admin-controls.test.ts`; focused Admin PASS, full338/338, build/lint/audit0. No new dependency, binding, secret, permission, or production resource.
 - **Deployment:** Admin `4fe564a6`100% / bridge `3bbf5cf6`0%; API `b426ba47`100%. Source is not deployed; live post-fix visual acceptance and screenshot remain pending approval.
+
+## GFS-379 Admin UI release resources (2026-10-31)
+
+- Admin active: `72cff93f-d589-4046-9bce-45477f53f829`100%; rollback: `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`0%.
+- API unchanged: `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100%; old slot `6ef27f02-23ac-46c0-a291-157e246a8dbc`0%.
+- Deployment evidence: Cloudflare deployment `95f3ec12-1e5b-4891-850e-b42932f4ad43`; Wrangler identity `gisupp@gmail.com` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- Protection: detached five-minute watchdog was armed before cutover and disarmed after independent readback. No credential value, cookie, customer field, or screenshot is registered here.

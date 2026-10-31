@@ -5170,3 +5170,15 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - **Final routing:** Admin `4fe564a6`100% / bridge0%; API `b426ba47`100%. No deployment, API upload, customer message, payment, Meta, D1, Queue, Cron, migration, flag, or WhatsApp mutation occurred.
 - **Next approval:** approve one Admin-only deployment of the exact pushed source commit, with fresh Cloudflare identity/routing readback, watchdog, independent desktop/mobile/Refresh acceptance, and rollback to Admin `4fe564a6`100%. Keep API frozen and its GFS-376 approval separate.
 - **Remaining:** GFS-378 Admin deployment/acceptance 0%/100%; API replacement upload/acceptance/canary 0%/100%; API full promotion UNKNOWN/100%; Meta timezone, CAPI, receipts UNKNOWN; optional D1/full history deferred.
+
+## GFS-379 final report — Admin UI deployment
+
+- GFS-375: PASS — prior Admin candidate release; API remained frozen.
+- GFS-376: PASS preparation / NOT RELEASED — API acknowledgement repair remains separate and approval-gated.
+- GFS-377: PASS — Admin home source repair and responsive route coverage.
+- GFS-378: PASS — Orders layout and Refresh source repair; pre-deployment diagnosis was correct.
+- GFS-379: PASS — Approval I exact Admin version uploaded, validated at0%, directly cut over, and independently read back at100%.
+- Exact release: Admin `72cff93f-d589-4046-9bce-45477f53f829`100%; rollback `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`0%; API `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100%.
+- Acceptance: protected credential health200x3; missing/invalid403; monitoring path isolation; Chrome route checks at requested viewport classes; no horizontal overflow or console errors; Orders Refresh feedback and `/api/orders/changes`200. No private fields or customer-bearing screenshots recorded.
+- Rollback: detached five-minute watchdog armed before exposure and independently disarmed after final readback; no rollback triggered. Independent D1 parity was not re-queried; no unexpected write was observed.
+- Remaining: API repair upload/canary, full API promotion, Meta timezone attribution, historical CAPI, and blocked receipts remain approval-gated or UNKNOWN. Optional D1 optimization and full chat history remain deferred. Next approval is the separate API repair release.

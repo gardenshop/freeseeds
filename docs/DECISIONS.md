@@ -1730,3 +1730,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Accept the source-only repair: 1700px desktop shell, viewport-bounded workspace, flex/scrollable content-sized order list, mobile height cap, and no changes to order data, filters, pagination, selection, detail, or authorization.
 - Accept the Refresh repair: retain `/api/orders/changes`, add a single-flight feedback wrapper, preserve no-change behavior, and keep Full reload explicit. The live HTTP200 no-change result does not prove a live post-fix UI PASS.
 - Do not deploy under GFS-378. Request one exact Admin-only deployment approval after the source commit is pushed, with watchdog, independent acceptance, and rollback to `4fe564a6`100%. API release remains separate and frozen.
+
+## GFS-379 decision (2026-10-31)
+
+- Approval I covered the exact tested Admin UI source only. Cloudflare identity/account were reverified before mutation; API, WhatsApp, Meta, payments, migrations, flags, Queue, Cron, and D1 were outside scope.
+- Accept direct Admin cutover: version `72cff93f-d589-4046-9bce-45477f53f829`100%, exact rollback `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`0%. The detached watchdog requirement was met and independently disarmed after readback.
+- Accept measured live operator evidence for responsive layouts and Refresh. Chrome rejected customer-bearing capture; screenshots are not claimed, and aggregate DOM/network evidence is used.
+- Keep API candidate `b0e883cd` approval-gated and never combine it with Admin UI releases.

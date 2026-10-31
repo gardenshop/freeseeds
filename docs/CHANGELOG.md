@@ -1567,3 +1567,9 @@
 - Diagnosed the live 1675x900 Orders view: 42vh grid sizing stretched the first card and the centered shell produced the reported blank gutter.
 - Repaired the source with a bounded workspace, scrollable content-sized order cards, wider desktop shell, mobile cap, and visible guarded Refresh feedback.
 - Live Refresh reached the changes endpoint with HTTP200; focused checks, full338/338, build, lint, and audit0 passed. No deployment or customer-bearing screenshot occurred.
+
+## 2026-10-31 - GFS-379 Admin UI deployment
+
+- Uploaded and directly activated approved Admin UI version `72cff93f-d589-4046-9bce-45477f53f829`; retained `4fe564a6` as the exact rollback version at0%.
+- Verified protected monitoring, responsive operator routes, bounded Orders layout, visible Refresh result, and `/api/orders/changes` HTTP200 through authorized tools. No private data or secrets were recorded.
+- API stayed `b426ba47`100%; no WhatsApp, Meta, payment, D1, migration, Queue, Cron, or flag mutation occurred.

@@ -2193,6 +2193,14 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **P3 PENDING APPROVAL:** no replacement upload, 0% attachment or1% canary occurred. Next gate is one explicit approval for exact-source upload, 0% replacement of active slot `6ef27f02`, targeted acceptance, then conditional1%/8-minute public API canary with automatic restoration to `b426ba47`100% beginning by minute6. Admin remains100%.
 - **Other work:** Meta hourly timezone attribution, historical CAPI pending/failures and blocked receipts remain UNKNOWN/unreconciled; optional D1 optimization/full chat history remain deferred.
 
+## GFS-379 Admin UI deployment (2026-10-31)
+
+- PASS: Approval I Admin-only release. Uploaded `72cff93f-d589-4046-9bce-45477f53f829` from exact tested commit `e1b56a890a15cb2e88658b8dddf6c826cfe0c6ac`, validated at0%, then cut over directly to100% with rollback `4fe564a6` at0%.
+- PASS: Detached five-minute rollback watchdog was alive before exposure and stopped only after independent final readback. No rollback was triggered.
+- PASS: Secure monitoring returned health200 three times; missing/invalid credentials403; monitoring credentials were denied/redirected from protected Admin paths. No secret values were recorded.
+- PASS: Authorized Chrome operator checks at requested viewport classes showed responsive Admin home/routes, bounded Orders list, no horizontal overflow, no console errors, and visible Refresh feedback with `/api/orders/changes` HTTP200. Evidence is aggregate-only; no customer screenshot was retained.
+- PASS: API remained `b426ba47`100% (old slot0%). WhatsApp/API/Meta/payment/D1/migration/flag state was not changed. Independent D1 parity was not re-queried in this deployment task; no unexpected write was observed.
+
 ## GFS-377 Admin desktop view (2026-10-31)
 
 - **PASS source repair:** `apps/admin/src/index.ts` replaces the plain root HTML with a static responsive Admin home. It uses existing protected routes only, performs no database reads, and does not change Orders, API, auth, WhatsApp, payment, or release logic.

@@ -2388,4 +2388,17 @@ Investigation query costs only (not production savings): representative `rows_re
 | Build/lint/audit | PASS | Build and lint pass; offline audit0 |
 | Post-fix live visual | NOT RUN | No deployment authorized; Chrome rejected unsanitized customer-bearing screenshot |
 | Production mutation | NOT RUN | Admin/API/WhatsApp/Meta/payment/D1/Queue/Cron/migration/flags unchanged |
+
+## GFS-379 Admin UI deployment
+
+| Check | Result | Evidence |
+|---|---|---|
+| Exact source/version | PASS | Commit `e1b56a8`; Admin version `72cff93f-d589-4046-9bce-45477f53f829` |
+| Protected monitoring | PASS | Authenticated health 200x3; missing/invalid 403; protected paths redirected |
+| Desktop/tablet/mobile UI | PASS | Authorized Chrome aggregate DOM checks at requested viewport classes; no horizontal overflow |
+| Orders layout / Refresh | PASS | Bounded workspace, scrollable list, content-sized cards; visible result and `/api/orders/changes` HTTP200 |
+| Routes/security | PASS | Home, Analytics, Conversations, Payment Settings loaded; no console errors; human Access retained |
+| Watchdog/rollback | PASS | Detached five-minute watchdog armed before cutover and disarmed after readback; no rollback needed |
+| Final routing | PASS | Admin `72cff93f`100% / `4fe564a6`0%; API `b426ba47`100% |
+| Customer/D1 mutation | PASS/limited | No customer message/order/payment/D1 mutation; independent D1 parity query not repeated |
 | Next gate | PENDING APPROVAL | Exact-source upload → 0% override acceptance → conditional1%/8-minute canary → restore baseline100% |
