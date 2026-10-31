@@ -1676,3 +1676,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Do not repeat the0% validation or reuse Approval E. The next release mutation is a separately approved baseline replacement: `3bbf5cf6`100% + `4fe564a6`0%. Its rollback is `494a3dce`100% + `4fe564a6`0%.
 - Do not run the Admin canary until the replacement baseline passes serving health, human-login, Access isolation, telemetry and deterministic rollback. A canary then needs fresh Approval D and must roll back to the healthy bridge baseline.
 - Continued WhatsApp inbound and two additional aggregate orders were observed without bot changes. Preserve GFS-368's earlier E/INCONCLUSIVE attribution.
+
+## GFS-371 decision (2026-10-31 UTC)
+
+- Approval F is consumed. Keep health bridge `3bbf5cf6` as the serving Admin baseline100% and combined candidate `4fe564a6` at0%; keep API `b426ba47`100%.
+- Accept the bridge as the new rollback baseline for the next canary because direct serving health, Access isolation, human Admin, telemetry and aggregate data parity passed. Retain legacy `494a3dce` only as the emergency baseline-replacement rollback target.
+- Do not characterize Analytics/Conversations404 as a new regression: the health bridge intentionally matches the legacy baseline; those features remain isolated in candidate0%.
+- Require fresh Approval D before any candidate exposure: maximum10% for8 minutes, restoration beginning by minute6 to bridge100% + candidate0%. No automatic promotion.

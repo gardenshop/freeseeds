@@ -2141,3 +2141,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **PASS restoration:** deployment `ef31f177-d0ef-446e-93c8-2b39d244b50b` restored Admin `494a3dce`100% + combined candidate `4fe564a6`0%; API remains `b426ba47`100% + candidate0%.
 - **WhatsApp read-only evidence:** D1 total402 / active401, latest order 16:17:15 PKT and latest inbound 16:18:35 PKT; Admin aggregate401. Queries wrote zero rows. This proves current processing, not GFS-368 causal attribution.
 - **Next approval:** baseline replacement only, bridge100% + candidate0%, with exact rollback to legacy baseline100% + candidate0%. No canary is approved.
+
+## GFS-371 Approval F baseline replacement (2026-10-31 UTC / PKT)
+
+- **PASS deployment:** `5587e7cb-3546-4ac0-834f-b0484f78574d` serves bridge `3bbf5cf6`100% + combined candidate `4fe564a6`0%. API remains deployment `10f43f2e`, baseline `b426ba47`100%.
+- **PASS serving monitor:** direct authenticated health200 x3 at 258–313ms; missing/invalid403; monitor denied from Orders/Analytics/Conversations; GraphQL API51/0 errors and Admin24/0.
+- **PASS Admin/data parity:** human Orders and payment settings200; Admin active401, payment review13, approved2 and COD pending198 match D1 aggregates. D1 total402/active401 and COD198 at PKR125 were unchanged pre/post. No Admin audit write.
+- **PASS WhatsApp isolation:** API routing unchanged; inbound aggregate advanced330→341 and latest inbound reached16:28:37 PKT. +15/+210 recovery rows showed no FAILED state. Read queries wrote0 rows.
+- **Known boundary:** Analytics/Conversations return404 on bridge exactly as legacy baseline; candidate0% contains them. This is not a new regression or promotion.
+- **Rollback ready/not invoked:** hidden watchdog could restore legacy `494a3dce`100% + candidate0% after interruption and was disarmed only after exact readback. Next step needs fresh Approval D; no canary ran.

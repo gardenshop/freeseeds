@@ -1517,3 +1517,10 @@
 - Verified health200 x3, missing/invalid403, monitoring-token isolation, human Admin continuity, GraphQL errors0 and exact routing.
 - Re-ran controller17/17, adapter6/6, observability4/4 and rollback4/4. No source, Access, token, API, WhatsApp, payment, Meta, D1, migration, flag, Queue or Cron change was made.
 - Aggregate-only D1/Admin evidence showed continued inbound/order processing; no customer identifiers or payloads were retained.
+
+## GFS-371 health-compatible Admin baseline activation (2026-10-31)
+
+- Replaced the legacy Admin baseline with tested health bridge `3bbf5cf6`100%, retaining combined candidate `4fe564a6`0% and API baseline100%.
+- Verified direct serving health, Access denial/isolation, human Admin Orders/payment settings, GraphQL telemetry, matched D1/Admin payment/COD/order aggregates and continued WhatsApp inbound.
+- Armed an independent interruption rollback watchdog and disarmed it only after exact serving readback. No rollback was required.
+- No source, API, Access, token, customer, payment, Meta, D1, migration, flag, Queue or Cron mutation was made.

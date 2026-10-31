@@ -5064,3 +5064,17 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - **Git before evidence update:** `ce41b58c7c1183429938d0045edd63fd2183d0d2`; final pushed SHA follows verification.
 - **Remaining:** bridge validation100%/0%; baseline replacement0%/100%; fresh Admin canary0%/100%; Admin full promotion0%/100%; API repair activation0%/100%; Meta timezone UNKNOWN; historical CAPI/blocked receipts UNKNOWN. Optional D1/full history deferred.
 - **Next approval request:** approve baseline replacement only: bridge `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1`100% + combined candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`0%, API unchanged, rollback to `494a3dce`100% + `4fe564a6`0%. This does not authorize a canary or promotion.
+
+## GFS-371 final report — Approval F baseline replacement (2026-10-31 UTC / PKT)
+
+- **GFS-369:** PASS bridge preparation; live use was blocked pending Approval E.
+- **GFS-370:** PASS bridge0% validation and mandatory restoration.
+- **GFS-371:** **PASS.** Approval F deployment `5587e7cb-3546-4ac0-834f-b0484f78574d` now serves bridge `3bbf5cf6`100% with combined candidate `4fe564a6`0%. API remains `b426ba47`100%.
+- **Health/security:** direct serving health200 x3 at258–313ms; missing/invalid403; Service Auth denied from Orders/Analytics/Conversations; human Orders and payment settings200; GraphQL API51/0 and Admin24/0.
+- **Admin/data:** active Orders401 matched D1; review13, approved2 and COD pending198 matched D1 payment/COD aggregates; COD fee remains PKR125. Pre/post total402/active401 and payment/COD groupings were unchanged; no Admin audit action or query write occurred.
+- **WhatsApp:** API routing stayed100%; inbound advanced330→341 with latest16:28:37 PKT; +15/+210 stage aggregates had no FAILED state. No message/order/payment replay or mutation was performed.
+- **Boundary:** Analytics/Conversations remain404 on the bridge, matching legacy baseline; candidate0% contains those features. No customer traffic reached the candidate.
+- **Rollback:** interruption watchdog targeted legacy `494a3dce`100% + candidate0% and was disarmed only after exact readback. No rollback was required. Legacy remains the emergency replacement rollback; the verified bridge is the future canary rollback baseline.
+- **Tests:** configuration acceptance PASS. No source changed; retained source gates remain bridge33/33/full321/321 and PR full335/335/build/lint/audit0, controller17/17, adapter6/6, observability4/4, rollback4/4.
+- **Remaining:** baseline replacement100%/0%; fresh Admin canary0%/100%; Admin full promotion0%/100%; API repair activation0%/100%; Meta timezone UNKNOWN; historical CAPI/blocked receipts UNKNOWN. Optional D1/full history deferred.
+- **Fresh Approval D request:** approve one Admin-only canary of candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`, maximum10% for8 minutes, restoration beginning by minute6 to bridge `3bbf5cf6`100% + candidate0%, while API remains `b426ba47`100%? No full promotion.

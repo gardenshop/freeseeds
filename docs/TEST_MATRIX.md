@@ -2272,3 +2272,20 @@ Investigation query costs only (not production savings): representative `rows_re
 | Controller faults/rollback | PASS | deadline17/17, adapter6/6, observability4/4, legacy rollback4/4 |
 | Mandatory restoration | PASS | `ef31f177…`: Admin `494a3dce`100% + `4fe564a6`0%; API `b426ba47`100% |
 | D1/WhatsApp integrity | PASS read-only | total402/active401, latest order16:17:15 PKT, latest inbound16:18:35 PKT; rows_written0 |
+
+### GFS-371 baseline replacement (2026-10-31)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Approval F / identity | PASS | `gisupp@gmail.com`, Get Free Seeds account; exact approved versions only |
+| Binding/source compatibility | PASS | Same compatibility date and binding signature across legacy, bridge and candidate |
+| Serving health | PASS | Direct health200 x3, 258–313ms; no version override |
+| Negative auth/isolation | PASS | Missing/invalid403; Service Auth denied on Orders/Analytics/Conversations |
+| Human Admin | PASS | Orders200, payment settings200; active total401 |
+| Admin/D1 parity | PASS | active401, review13, approved2, COD pending198; D1 COD fee PKR125 |
+| Telemetry | PASS | API51/0 errors; Admin24/0 errors |
+| D1 write safety | PASS | Pre/post aggregates unchanged; no Admin audit action; read queries rows_written0 |
+| WhatsApp/recovery | PASS | inbound330→341; latest16:28:37 PKT; +15/+210 no FAILED state |
+| Final routing | PASS | bridge100%, candidate0%, API `b426ba47`100% |
+| Rollback readiness | PASS / NOT INVOKED | Watchdog armed; legacy100% + candidate0% executable; disarmed after acceptance |
+| Analytics/Conversations | BASELINE BOUNDARY | 404 unchanged from legacy baseline; features remain in candidate0% |

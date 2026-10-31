@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-371 health-compatible Admin baseline (2026-10-31)
+
+- Approval F activated Admin deployment `5587e7cb-3546-4ac0-834f-b0484f78574d`: health bridge `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1`100% and combined candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`0%. API remains `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100%.
+- The bridge has the same runtime date and binding manifest as the legacy baseline/candidate. Serving acceptance without override is health200 x3, missing/invalid403, Service Auth denied from Orders/Analytics/Conversations, human Orders/payment settings200, GraphQL errors0 and exact routing readback.
+- Preserve rollback target `494a3dce-5d52-4b66-b3ff-bef64b31b406`100% + candidate0%. The interruption watchdog was armed before replacement and disarmed only after all gates passed. No rollback was required.
+- Pre/post D1 payment/COD/order aggregates matched; Admin active401, review13, approved2 and COD pending198 matched D1. COD fee remains PKR125. No Admin audit write occurred; inbound continued. No customer, payment, API, Access, token, Meta, migration, flag, Queue or Cron mutation.
+- Analytics and Conversations remain absent on the bridge exactly as on the legacy baseline; they remain isolated in candidate0%. A fresh Approval D is required for a maximum10%/8-minute canary, restoring bridge100% beginning by minute6.
+
 ## GFS-370 validated Admin health bridge (2026-10-31)
 
 - Approval E covered only temporary deployment `f99ec808-48c7-4f60-ab83-de535749034e`: Admin baseline `494a3dce-5d52-4b66-b3ff-bef64b31b406`100% plus health bridge `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1`0%. The combined candidate remained uploaded and received no traffic.

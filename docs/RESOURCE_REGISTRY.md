@@ -1662,3 +1662,11 @@ No secrets are stored in this registry.
 - **Live acceptance:** bridge health200 x3; missing/invalid403; protected paths denied; human Orders page200; API/Admin GraphQL errors0. No credential value was recorded.
 - **D1 aggregate readback:** binding `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; total402/active401, latest order16:17:15 PKT, latest inbound16:18:35 PKT; changed_db=false and rows_written=0.
 - **Next dependency:** explicit baseline-replacement approval for bridge100% + combined candidate0%; no canary authorization exists.
+
+## GFS-371 active Admin baseline resources
+
+- **Admin deployment:** `5587e7cb-3546-4ac0-834f-b0484f78574d`; bridge `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1`100%, candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`0%.
+- **API deployment:** `10f43f2e-9c95-4fd2-8bfc-99ccd890fee1`; `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100%, candidate0%.
+- **Emergency rollback:** legacy Admin `494a3dce-5d52-4b66-b3ff-bef64b31b406`100% + combined candidate0%. Watchdog validated executable; not invoked.
+- **Runtime evidence:** health200 x3; missing/invalid403; protected Service Auth paths denied; human Orders/payment settings200; GraphQL API/Admin errors0; no credential values recorded.
+- **Aggregate integrity:** D1 total402/active401; Admin active401; review13, approved2, COD pending198; COD details198 at PKR125; inbound latest16:28:37 PKT; no Admin audit write or D1 query write.
