@@ -15,6 +15,7 @@ let db: D1Database;
 let sequence: number;
 let sends: Array<Record<string, unknown>>;
 let failNextSend: boolean;
+let timeoutNextSend: boolean;
 let queueSend: ReturnType<typeof vi.fn>;
 let receiptPuts: number;
 let codEnabled: boolean;
@@ -849,6 +850,7 @@ beforeEach(() => {
   sequence = 0;
   sends = [];
   failNextSend = false;
+  timeoutNextSend = false;
   receiptPuts = 0;
   codEnabled = false;
   codRolloutMode = "TESTER_ONLY";
@@ -863,6 +865,7 @@ beforeEach(() => {
   recoveryEnabled = false;
   queueSend = vi.fn(async () => undefined);
   vi.stubGlobal("fetch", vi.fn(async (_url: unknown, init: RequestInit) => {
+    if (timeoutNextSend) { timeoutNextSend = false; throw new DOMException("Synthetic timeout", "AbortError"); }
     if (failNextSend) { failNextSend = false; return new Response("{}", { status: 503 }); }
     if (init.body instanceof FormData) return Response.json({ id: "synthetic-nonpayable-media" });
     sends.push(JSON.parse(String(init.body)) as Record<string, unknown>);
@@ -1270,6 +1273,20 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(body()).not.toContain("configured tariff");
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 1 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM capi_events").get()).toEqual({ count: 1 });
+  });
+
+  it("treats a Meta timeout before acceptance as retryable without duplicating the order or send", async () => {
+    await reachReview("en");
+    const sentBefore = sends.length;
+    timeoutNextSend = true;
+    const confirmation = await inbound(tap("PLACE_ORDER"), "synthetic-meta-timeout");
+    expect(conversation()?.state).toBe("REVIEW");
+    expect(sends).toHaveLength(sentBefore);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 1 });
+    await callback([confirmation]);
+    expect(conversation()?.state).toBe("COMPLETE");
+    expect(sends).toHaveLength(sentBefore + 1);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 1 });
   });
 
   it("reuses the exact pending order when a new Place Order tap retries a failed reply", async () => {

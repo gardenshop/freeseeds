@@ -2356,9 +2356,9 @@ Investigation query costs only (not production savings): representative `rows_re
 | `b0e883cd` baseline equivalence | FAIL | Omits GFS-309 Cron recovery reconciliation; not safe to attach/canary |
 | Versioned bindings | PASS | Serving and prepared upload definitions equal27/27; no values or secrets logged |
 | Exact replacement composition | PASS | Base `901f3f6` + only runtime patches `bb52f1d` and `b9d52c4`; Wrangler config unchanged |
-| Replacement focused faults | PASS | 5/5: Cron recovery, transient/persistent D1 ack failure, provider failure/retry and duplicate suppression |
-| Replacement regression/static | PASS | 323/323, build, lint, offline audit0 |
-| Current PR regression | PASS | focused6/6, full335/335, build/lint/audit0 |
+| Replacement focused faults | PASS | 6/6: Cron recovery, transient/persistent D1 ack failure, provider HTTP503, provider timeout/retry and duplicate suppression |
+| Replacement regression/static | PASS | 324/324, build, lint, offline audit0 |
+| Current PR regression | PASS | focused7/7, full336/336, build/lint/audit0 |
 | Release controls | PASS local | controller17/17, adapter6/6, observability4/4, legacy rollback4/4 |
 | Production mutation | NOT RUN | No upload, 0% attachment, canary, traffic, flag, D1, Meta, payment or customer mutation |
 | Next gate | PENDING APPROVAL | Exact-source upload → 0% override acceptance → conditional1%/8-minute canary → restore baseline100% |
