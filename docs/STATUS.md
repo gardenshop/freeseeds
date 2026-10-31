@@ -2112,3 +2112,13 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **BLOCKED monitor:** the dedicated `/health` Access application is Service Auth-only and the existing browser session also receives Access403. No supported operator-authenticated baseline health path is available; GraphQL telemetry alone is insufficient.
 - **NO MUTATION:** API `b426ba47`100%, Admin `494a3dce`100%, candidate `4fe564a6…`0%; no controller, Access, Worker, customer, payment, Meta, D1, Queue, Cron, migration, or flag mutation.
 - **Next owner action:** approve the minimum baseline-compatible health repair before any new canary. Do not reuse GFS-366 Approval D.
+
+## GFS-368 urgent WhatsApp ordering diagnosis (2026-10-31 UTC / PKT)
+
+- **P0 PASS:** verified HEAD `87866a5dd0a763c9e9915d968a07f30c59dc1bad`, GitHub `gardenshop`, Cloudflare `gisupp@gmail.com` / Get Free Seeds, canonical Meta Ads account `1198439777611633`; API `b426ba47`100%, Admin `494a3dce`100%, candidates0%. No mutation occurred.
+- **Not stopped:** after 14:17 PKT, bounded D1 evidence recorded 103 inbound events, 32 unique-contact snapshots, and activity through 15:49:50 PKT. Events were RECEIVED; no `WHATSAPP_CALLBACK_REJECTED` audit rows appeared.
+- **Orders/Admin:** latest D1 order creation was 14:17:21 PKT; D1 total400 includes one archived row and active count399. Authenticated Admin `/api/orders` returned HTTP200, total399 and the identical latest timestamp. No identifier is recorded.
+- **Funnel evidence:** post-cutoff snapshots included LANGUAGE, FERTILIZER, PROVINCE, FULL_NAME, ADDRESS, NEARBY, OFFER, PAYMENT_METHOD, PAYMENT_REVIEW and COD_PENDING; these are snapshots, not historical transition counts. Payment choice was READ and outbound replies were DELIVERED/READ.
+- **Reliability:** +15/+210 recovery had no failure evidence; Cloudflare GraphQL API/Admin errors0; candidate override security checks remained health200×3, invalid/missing403 and restricted paths denied. Baseline Admin Service Auth `/health` remains the known GFS-367 legacy blocker.
+- **Disposition:** **E / INCONCLUSIVE for causal classification**, while the alleged complete outage is disproven. Lower order count (1 versus 3 in the equal preceding window; 26 across seven matching-hour prior-day windows) is not a proven software defect. No repair approval requested.
+- **Meta:** canonical Ads Manager identity/date range was confirmed read-only, but aligned impression/click/messaging values and authoritative timezone were unavailable from the safe surface; attribution UNKNOWN.

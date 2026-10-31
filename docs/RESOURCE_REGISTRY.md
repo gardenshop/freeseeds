@@ -1636,3 +1636,12 @@ No secrets are stored in this registry.
 - **Baseline:** Admin `494a3dce` version-pinned health returned HTTP403 / `ADMIN_ACCESS_REQUIRED` under the existing Service Auth credential.
 - **Candidate:** `4fe564a6-bcd7-4106-82ee-00f7b14c4bec` remains0%; no new candidate or credential created.
 - **Frozen routing:** API `b426ba47`100%, Admin `494a3dce`100%. No secrets or customer data recorded.
+
+## GFS-368 WhatsApp incident evidence
+
+- **Identity/freeze:** HEAD `87866a5dd0a763c9e9915d968a07f30c59dc1bad`; GitHub `gardenshop`; Cloudflare `gisupp@gmail.com`; canonical Meta account `1198439777611633`; API `b426ba47`100%, Admin `494a3dce`100%, candidates0%.
+- **D1 read-only:** binding `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; incident aggregates returned 103 inbound events, 32 contact snapshots, one order, and no webhook-rejection audit rows. D1 active399 / total400 including one archived; latest order timestamp14:17:21 PKT; no identifiers or payloads retained.
+- **Admin read-only:** authenticated `/api/orders` HTTP200, total399 and latest-created timestamp14:17:21 PKT, matching D1 active data. No broad customer snapshot taken.
+- **Runtime:** candidate override security check health200×3, invalid/missing403, restricted paths denied, GraphQL API/Admin errors0; production routing frozen. Baseline Admin `/health` remains GFS-367's legacy incompatibility.
+- **Meta:** canonical Ads Manager page read-only and date-aligned to 31-Oct-2026; requested hourly delivery metrics/timezone unavailable. No ad or WhatsApp mutation.
+- **Disposition:** complete stop disproven; causal classification E/INCONCLUSIVE; no repair, replay, send, payment, migration, flag, Queue, Cron, or canary action.

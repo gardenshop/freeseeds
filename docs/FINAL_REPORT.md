@@ -5025,3 +5025,16 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - No reliable non-disruptive baseline monitor exists. GraphQL0 alone is rejected as insufficient; controller/Access/routing were not changed. Final routing remains API `b426ba47`100%, Admin `494a3dce`100%, candidate `4fe564a6…`0%.
 - **Single required approval:** approve the minimum baseline-compatible health repair (no Access weakening, token recreation, API/WhatsApp/customer/payment/Meta/D1/migration/flag changes). After deployment and independent baseline/candidate tests, request fresh Approval D; do not reuse GFS-366 authorization.
 - Tests retained: full335/335, build/lint, audit0, controller17/17, adapter6/6, observability4/4, rollback4/4. No canary or customer-flow acceptance claimed.
+
+## GFS-368 final report — urgent WhatsApp ordering diagnosis (2026-10-31 UTC / PKT)
+
+- **GFS-366:** BLOCKED SAFELY; Admin canary stopped before exposure because baseline monitoring was unhealthy.
+- **GFS-367:** BLOCKED; baseline `494a3dce` Service Auth `/health` returns legacy `ADMIN_ACCESS_REQUIRED`; no health repair or canary.
+- **GFS-368:** **PASS for disproving a complete ordering stop; E/INCONCLUSIVE for causal root cause.** D1 recorded 103 inbound events and 32 contact snapshots after 14:17 PKT, latest inbound 15:49:50 PKT. All inbound rows were RECEIVED; no bounded-window webhook-rejection audit row existed.
+- **Last order/parity:** latest D1 order creation 14:17:21 PKT. D1 total400, including one archived row; active399. Admin `/api/orders` HTTP200, active total399 and identical latest timestamp. Order identifier omitted.
+- **Funnel/drop-off:** post-cutoff snapshots reached language, fertilizer, province, identity/address, offer, payment and COD_PENDING; one COD_PENDING order was created at the cutoff boundary; payment choice READ; replies DELIVERED/READ; +15/+210 showed no failure. These are snapshots, not transition counts, so no software drop-off point is proven.
+- **Telemetry/security:** candidate override health200×3; missing/invalid403; protected paths denied; GraphQL API/Admin errors0. Production routing stayed API `b426ba47`100%, Admin `494a3dce`100%, candidates0%. No source/configuration/customer/payment/Meta/D1 write or canary.
+- **Meta:** canonical account/date range confirmed read-only, but aligned impressions/clicks/messaging values and authoritative timezone unavailable; attribution UNKNOWN.
+- **Classification:** not B (webhook/queue stop), not C proven (flow/order-write regression), not D (Admin parity), and not a complete A lead outage (inbound continued). Final causal classification **E / INCONCLUSIVE**; one order versus three in the preceding equal window and 26 across seven matching-hour prior-day windows is observed, not a proven defect.
+- **Approvals/next action:** no repair approval and no Approval D requested. Keep GFS-367's separate scoped health-repair approval pending; do not expose the Admin candidate. If attribution is needed, obtain an authorized aligned Meta hourly report and longer read-only funnel sample.
+- **Tests/SHA:** read-only D1/Admin/Chrome/Cloudflare checks completed; no source tests required because no source changed. Documentation must be diff-checked, committed, pushed to PR #11, and remote SHA independently verified.

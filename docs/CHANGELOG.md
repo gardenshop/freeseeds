@@ -1497,3 +1497,9 @@
 ## 2026-10-31 - GFS-367 baseline monitor diagnosis
 
 - Confirmed the Admin baseline's HTTP403 is the legacy owner-email authorization gate under Service Auth. No routing or production mutation occurred; canary remains blocked pending a separately approved baseline-compatible repair.
+
+## GFS-368 urgent WhatsApp ordering diagnosis (2026-10-31)
+
+- Performed bounded read-only D1, Admin, Cloudflare telemetry, Chrome DevTools and canonical Meta identity checks; no source or production configuration changed.
+- Verified inbound activity continued after 14:17 PKT, D1/Admin active-order parity at399, latest order timestamp14:17:21 PKT, active checkout snapshots, successful outbound statuses, zero bounded webhook-rejection rows, and GraphQL errors0.
+- Classified the alleged stop as disproven but causal attribution **E / INCONCLUSIVE**; no repair or canary was authorized. Meta hourly values/timezone remain unavailable.

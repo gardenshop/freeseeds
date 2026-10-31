@@ -1654,3 +1654,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Keep the canary blocked. Baseline Service Auth HTTP403 is the legacy owner-email gate, and the browser session cannot authenticate through the dedicated `/health` application. Accepting that response as health PASS would hide an application failure.
 - Do not modify the controller to treat GraphQL0 or protected403 as sufficient. Do not weaken Access or recreate credentials.
 - Request one new scoped owner approval for the minimum baseline-compatible health repair; after it is deployed and independently tested, request a fresh Admin canary approval. GFS-366 approval is not reused.
+
+## GFS-368 decision (2026-10-31 UTC)
+
+- Do not declare a WhatsApp outage: D1 recorded inbound traffic through 15:49:50 PKT, one new COD_PENDING order at 14:17:21 PKT, and active checkout states after the reported cutoff.
+- Classify the causal question **E / INCONCLUSIVE**. The bounded data rules out a complete webhook stop, queue-wide failure, obvious order-write failure, and Admin active-count mismatch, but cannot distinguish demand/funnel behavior from a conversion issue because historical transitions and aligned Meta hourly attribution are unavailable.
+- Preserve frozen production: API `b426ba47`100%, Admin `494a3dce`100%, candidates0%; no replay, resend, order/payment mutation, ad edit, migration, flag change, deployment, or canary.
+- Keep GFS-367 baseline Admin Service Auth health incompatibility separate. Any health repair still requires scoped owner approval; no Approval D is requested from this incident.

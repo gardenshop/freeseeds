@@ -2225,3 +2225,18 @@ Investigation query costs only (not production savings): representative `rows_re
 | Candidate monitor | PASS carried forward | Candidate override HTTP200, negative auth and isolation tests remain valid |
 | Reliable baseline monitor | BLOCKED | No operator-authenticated path; GraphQL-only evidence rejected |
 | Canary | NOT RUN | Frozen routing preserved; fresh Approval D not requested |
+
+### GFS-368 WhatsApp ordering incident diagnosis (2026-10-31)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Inbound continuity | PASS | 103 post-cutoff MESSAGE/INTERACTIVE/MEDIA events; statuses RECEIVED; latest inbound 15:49:50 PKT |
+| Unique-contact activity | PASS | 32 incident-window contact snapshots; no raw WhatsApp identifier retained |
+| Webhook rejection | PASS | Zero bounded-window `WHATSAPP_CALLBACK_REJECTED` audit rows |
+| D1/Admin order parity | PASS | D1 active399 / total400 including one archived; Admin total399; latest timestamp14:17:21 PKT |
+| Checkout progress | OBSERVED | Post-cutoff snapshots reached checkout/payment/COD_PENDING; historical transitions unavailable |
+| Outbound/recovery | PASS | Conversation replies DELIVERED/READ; payment choice READ; +15/+210 records protected |
+| Runtime telemetry | PASS | Cloudflare GraphQL API/Admin errors0; routing baseline100% / candidates0% |
+| Meta hourly attribution | UNKNOWN | Canonical account/date range confirmed, values/timezone not safely exposed |
+| Incident classification | E / INCONCLUSIVE | Ordering was not stopped; quiet order rate has no proven software root cause |
+| Production repair/canary | NOT RUN | No defect proven; no customer-facing mutation or Admin canary |

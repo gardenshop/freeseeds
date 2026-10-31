@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-368 WhatsApp ordering incident (2026-10-31)
+
+- Read-only diagnosis: ordering did not stop after 14:17 PKT. From 14:17:00–15:49:18 PKT, D1 recorded 103 inbound customer events (62 INTERACTIVE, 38 MESSAGE, 3 MEDIA), all RECEIVED, with 32 unique-contact snapshots; latest inbound observed was 15:49:50 PKT. No webhook-rejection audit rows were found in the bounded window.
+- D1/Admin active-view parity is PASS: D1 has 400 total orders including one archived row, 399 active; Admin returned total399 and the same latest order timestamp, 14:17:21 PKT. The identifier is intentionally withheld from chat and documentation. This is not an Admin count defect.
+- Runtime evidence is PASS read-only: outbound replies were DELIVERED/READ, payment choice was READ, +15/+210 recovery remained protected, Cloudflare GraphQL reported API/Admin errors0, and API/Admin routing remained100% baseline with candidates0%.
+- Classification is **E / INCONCLUSIVE for cause**, not a confirmed webhook, queue, order-write, or Admin defect. The interval had one new COD_PENDING order versus three in the equal preceding window and 26 over seven matching-hour prior-day windows; state snapshots show active checkout progress, but historical transitions and Meta hourly attribution are unavailable.
+- Keep API `b426ba47`100%, Admin `494a3dce`100%, candidates0%; no repair, replay, customer message, payment, Meta, migration, flag, Queue, Cron, or canary mutation is authorized by this diagnosis. GFS-367 baseline Admin `/health` remains separate.
+
 ## GFS-363 secure monitoring gate (2026-10-31)
 
 - Approval C is granted. The native Windows Credential Manager bridge uses `CredRead` in the authorized host context, keeps Client ID/Secret in process memory, injects only the two Cloudflare Access headers into the child controller, and restores the process environment. No credential value is recorded.
