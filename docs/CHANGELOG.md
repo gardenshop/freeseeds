@@ -1548,3 +1548,10 @@
 - Executed the approved direct Admin cutover: candidate `4fe564a6`100%, health bridge `3bbf5cf6`0%; API `b426ba47` remained100%.
 - Armed a detached five-minute Windows rollback watchdog before mutation and disarmed it only after independent final routing and acceptance readback.
 - Verified health/security, Analytics, CSV, Conversations, Orders, Payment Settings, D1/Admin parity, GraphQL45/0, valid inbound states, recovery FAILED0 and zero D1 writes. No API, WhatsApp, customer, payment, Meta, migration, flag, Queue or Cron mutation occurred.
+
+## 2026-10-31 - GFS-376 API acknowledgement release readiness
+
+- Reverified authorized identities and frozen routing: API `b426ba47`100% + `6ef27f02`0%; Admin `4fe564a6`100% + bridge0%.
+- Found and blocked a release regression in uploaded version `b0e883cd`: it contains the acknowledgement repair but omits the serving Cron-only recovery reconciliation.
+- Prepared a local exact replacement from base `901f3f6` with only the GFS-309 Cron patch and acknowledgement patch; config unchanged. Focused5/5, exact-tree323/323, build/lint/audit0 and current PR335/335/control/rollback gates pass.
+- No Worker upload, active-deployment membership, traffic, D1, customer, payment, Meta, migration, flag, Queue or Cron change occurred. Exact upload/0%-attachment/conditional1%-canary approval remains pending.

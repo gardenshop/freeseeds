@@ -1698,3 +1698,11 @@ No secrets are stored in this registry.
 - **Watchdog:** detached Windows process armed before cutover with five-minute deadline and rollback target bridge100%/candidate0%; final result `disarmed` after verified readback. No rollback was invoked.
 - **Acceptance:** monitoring health200, invalid403, protected routes302, GraphQL45/0; browser Analytics/CSV/Conversations/Orders/Payment Settings200; D1 total405/active404, review13, approved2, COD pending199, fee125 count199, changed_db=false, rows_written0.
 - **WhatsApp/recovery:** bounded inbound statuses were RECEIVED/sent/delivered/read; recovery FAILED0; +15/+210 aggregate rows remained present. No payloads, identifiers, secrets or customer data recorded.
+
+## GFS-376 API acknowledgement release resources
+
+- **Serving state:** API deployment `10f43f2e-9c95-4fd2-8bfc-99ccd890fee1` is `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100% + `6ef27f02-23ac-46c0-a291-157e246a8dbc`0%; Admin deployment `a98d5e55-3d95-4f9a-b687-ffbc617fd4d1` is `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`100% + `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1`0%.
+- **Rejected upload:** API version118 `b0e883cd-16b8-4f8e-8fd8-c12bd46c4428`; 27 binding definitions equal the serving API, but runtime source lacks GFS-309 Cron recovery reconciliation. Keep uploaded but do not attach or delete without approval.
+- **Local replacement:** `D:\free seeds\gfs338-api-candidate`, base `901f3f6fbde01adc8ef48b13f70eebdeba5baa4f`; exact runtime union `bb52f1d` + `b9d52c4`; source git blob `be9789a2c5223326c2b6d0af6442a46436aba9fd`; SHA-256 `462e6f6ecc70d592ce7da38e7df2ce6f8c03e2628776436ff7693dcbdfde4c50`; config unchanged.
+- **Quality:** replacement focused5/5, full323/323, build/lint/audit0; main PR focused6/6, full335/335, build/lint/audit0; controller17/17, adapter6/6, observability4/4, rollback4/4.
+- **Approval boundary:** replacement is local-only and has no Cloudflare version ID. Upload, assigned-version readback, 0% attachment and1% canary are all pending explicit authorization. No secrets or customer data recorded.

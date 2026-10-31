@@ -1709,3 +1709,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - A detached five-minute Windows rollback watchdog was armed before mutation and disarmed only after independent final routing, health, Access, operator, parity, telemetry, and recovery readback. No rollback was required.
 - Release acceptance is PASS on measured evidence: candidate UI/API/CSV/Conversations/Orders/Payment Settings200, valid health200, invalid403, monitoring credential denied protected routes302, GraphQL45/0, D1/Admin totals consistent, and D1 changed_db=false/rows_written=0.
 - Preserve separate API acknowledgement repair, Meta timezone, historical CAPI, blocked receipts, optional D1 optimization, and full chat history. Do not promote API or change customer/payment/Meta state under this release.
+
+## GFS-376 decision (2026-10-31 UTC)
+
+- Reject prepared version `b0e883cd` for release despite its correct acknowledgement repair and matching binding manifest. It omits the serving GFS-309 Cron-only recovery reconciliation, so it is not an acknowledgement-only delta and could regress +15/+210 delivery-state reconciliation.
+- Accept the local replacement composition for approval: frozen base `901f3f6` plus exact runtime patches `bb52f1d` (Cron reconciliation) and `b9d52c4` (provider-acceptance boundary), with unchanged API Wrangler config. Tests pass; the source is not uploaded.
+- Require one explicit owner approval before any Cloudflare mutation. Sequence: upload exact SHA-256 `462e6f6ecc70d592ce7da38e7df2ce6f8c03e2628776436ff7693dcbdfde4c50`; read back the assigned version/bindings; attach at0% replacing only active0% `6ef27f02`; run targeted override/security/recovery checks; only if all pass, run one1% API canary for at most8 minutes and begin restoration by minute6.
+- The canary carries real public risk: up to1% of WhatsApp/webhook/Queue/Cron traffic can execute the candidate and may send normal customer replies. Restore `b426ba47`100% immediately on duplicate send, acknowledgement mismatch, attributable5xx, webhook/Queue/Cron/recovery fault, payment/order drift, monitoring loss or rollback uncertainty. No automatic promotion.

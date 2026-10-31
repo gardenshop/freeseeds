@@ -2346,3 +2346,19 @@ Investigation query costs only (not production savings): representative `rows_re
 | Write safety | PASS | D1 changed_db=false, rows_written0; no mutation endpoints invoked |
 | WhatsApp/recovery | PASS read-only | API100%; inbound statuses valid; recovery FAILED0; +15/+210 present |
 | Final state | PASS | Candidate100%, bridge0%, API100%; no absolute-zero claim beyond measured coverage |
+
+### GFS-376 API acknowledgement readiness (2026-10-31)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Identity/routing | PASS | Cloudflare `gisupp@gmail.com` / GFS account; API `b426ba47`100% + `6ef27f02`0%; Admin `4fe564a6`100% |
+| `b0e883cd` acknowledgement boundary | PASS | Provider acceptance separated from D1 acknowledgement; three bounded persistence attempts; accepted sends never classified as failed |
+| `b0e883cd` baseline equivalence | FAIL | Omits GFS-309 Cron recovery reconciliation; not safe to attach/canary |
+| Versioned bindings | PASS | Serving and prepared upload definitions equal27/27; no values or secrets logged |
+| Exact replacement composition | PASS | Base `901f3f6` + only runtime patches `bb52f1d` and `b9d52c4`; Wrangler config unchanged |
+| Replacement focused faults | PASS | 5/5: Cron recovery, transient/persistent D1 ack failure, provider failure/retry and duplicate suppression |
+| Replacement regression/static | PASS | 323/323, build, lint, offline audit0 |
+| Current PR regression | PASS | focused6/6, full335/335, build/lint/audit0 |
+| Release controls | PASS local | controller17/17, adapter6/6, observability4/4, legacy rollback4/4 |
+| Production mutation | NOT RUN | No upload, 0% attachment, canary, traffic, flag, D1, Meta, payment or customer mutation |
+| Next gate | PENDING APPROVAL | Exact-source upload → 0% override acceptance → conditional1%/8-minute canary → restore baseline100% |
