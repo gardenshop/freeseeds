@@ -2179,3 +2179,17 @@ Investigation query costs only (not production savings): representative `rows_re
 | Secure credential transfer | NOT RUN | No approved credential or host secret path available |
 | Admin canary | NOT RUN | P1 permission gate failed |
 | Production/WhatsApp protection | PASS | No live mutation; frozen routing retained |
+
+### GFS-364 Access 403 repair and monitoring acceptance (2026-10-31 UTC)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Access app/policy/token readback | PASS | Exact staging `/health` app, existing Service Auth policy, enabled existing token; Admin Operator unchanged |
+| 403 root cause | PASS | Version override was JSON, so the 0%-traffic repair was not invoked; baseline returned its own `ADMIN_ACCESS_REQUIRED` JSON |
+| Authenticated health | PASS | Protected Windows controller returned HTTP200 three times against repair version `7e0b0549…` at0% |
+| Unauthenticated/invalid | PASS | Both denied HTTP403 |
+| Monitoring isolation | PASS | Orders, Analytics and Conversations denied HTTP302; no customer data returned |
+| GraphQL/latency/routing | PASS | API/Admin GraphQL readback 0 errors; three health latencies recorded; API100%, Admin baseline100%, repair0% |
+| Local regression | PASS | Focused33/33, full335/335, build and lint |
+| Expiry/revocation simulation | PENDING | Active token was not disabled or rotated; safe fail-closed procedure remains owner-confirmation gate |
+| Admin canary | NOT RUN | Separate Approval D not yet granted; production routing frozen |

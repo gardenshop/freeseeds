@@ -2085,3 +2085,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **Reliability:** target events/payment-choice rows were normal RECEIVED/SENT/DELIVERED/READ states; no failed webhook, rate-limit action, WhatsApp outbox failure, or recovery-stage failure. Cloudflare API 3,131/0 then 401/0; Admin 155/0 then 155/0; GraphQL errors0. D1/Admin full-date order parity 68/68.
 - **Correlation:** 0%-traffic Admin upload 17:47Z and GFS-343 10%/restore 18:01Z/18:07Z occurred after the break; API remained frozen. Meta read-only view showed active campaign/day delivery, but hourly delivery/timezone evidence was unavailable, so Meta attribution is BLOCKED.
 - **Disposition:** inbound/acquisition decline is the leading explanation; no source defect was proven and no repair, deploy, canary, D1 write, ad edit, customer, payment, Meta, or flag mutation occurred. Frozen bot/recovery GO; new canary NO-GO.
+
+## GFS-364 Access 403 repair and monitoring gate (2026-10-31 UTC)
+
+- **PASS:** Cloudflare identity/readback and policy attachment; existing enabled monitoring token; no duplicate token/policy/app; Admin Operator unchanged.
+- **PASS:** Root cause was the test harness sending `Cloudflare-Workers-Version-Overrides` as JSON, so the 0%-traffic fix was not selected. Correct structured header plus 0%-traffic deployment selected the repair.
+- **PASS:** Real protected monitoring: authenticated `/health` 200 x3; missing/invalid 403; monitoring credential denied Orders/Analytics/Conversations (302); GraphQL API/Admin readback 0 errors; routing API `b426ba47`100%, Admin `494a3dce`100%, repair 0%.
+- **PASS:** focused33/33, full335/335, build, lint and diff-check. Browser Orders snapshot was intentionally not taken because it could expose customer data; human Admin login remains protected by unchanged email authorization and source regression coverage.
+- **PENDING:** live expiry/revocation simulation was not performed because it would require disabling or rotating the active credential. Approval D is requested only after owner confirms this safe-procedure gate or provides a non-production expired test credential; no canary has run.

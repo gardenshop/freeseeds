@@ -1633,3 +1633,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Mark Approval A **PASS**: the visible Cloudflare policy Include rule selects only the existing enabled Service Token named `GFS-Admin-Health-Monitor`; the Service Tokens inventory contains exactly one token with that name. Existing Admin Operator `Allow` remains unchanged. No token was created or exposed.
 - Approval B is required before saving a dedicated Self-hosted application limited to `getfreeseeds-admin-staging.get-free-seeds.workers.dev` and `/health`, with only `GFS-Admin-Health-Monitor` attached. Keep the existing Admin login and every other endpoint protected by the existing application/policy.
 - The create control was not safely actionable in this session, and no workaround is permitted. No Access app, policy, token, Worker, route, secret, D1, customer, payment, Meta, Queue, Cron, reminder, WhatsApp, or canary mutation occurred. Approval C remains a separate gate for secure host credential connection.
+
+## GFS-364 decision (2026-10-31 UTC)
+
+- The live 403 was not an Access-policy failure: the version-override smoke test used invalid JSON syntax, so Cloudflare served the 100% baseline Worker. Correct the harness and place the Worker repair at0% only; never promote it during monitoring validation.
+- Keep the Worker authorization narrow: Access `ctx.access` is accepted only for `GET /health`; human email authorization remains required for all other Admin routes. Do not weaken Access, create a Bypass rule, add a wildcard, or expose secrets.
+- Monitoring is PASS for authenticated health, negative auth, path isolation, observability and frozen routing. Do not run the Admin canary until the non-disruptive expiry/revocation procedure is confirmed and separate Approval D is granted.

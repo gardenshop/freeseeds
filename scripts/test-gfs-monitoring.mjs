@@ -41,14 +41,16 @@ async function routing(worker) {
 
 const credentials = readAccessCredentials(process.env, { required: true });
 const headers = accessHeaders(credentials);
-const health = await Promise.all([1, 2, 3].map(() => request(`${ADMIN}/health`, headers)));
+const versionOverride = process.env.GFS_ADMIN_VERSION_OVERRIDE;
+const adminHeaders = versionOverride ? { ...headers, "Cloudflare-Workers-Version-Overrides": `getfreeseeds-admin-staging="${versionOverride}"` } : headers;
+const health = await Promise.all([1, 2, 3].map(() => request(`${ADMIN}/health`, adminHeaders)));
 assert.ok(health.every((result) => result.status === 200), "authenticated_health_not_200");
 const unauthenticated = await request(`${ADMIN}/health`);
 const invalid = await request(`${ADMIN}/health`, { "CF-Access-Client-Id": "invalid", "CF-Access-Client-Secret": "invalid" });
 assert.ok(denied(unauthenticated.status), "unauthenticated_health_not_denied");
 assert.ok(denied(invalid.status), "invalid_health_not_denied");
 
-const isolatedPaths = await Promise.all(["/orders", "/analytics", "/conversations"].map((path) => request(`${ADMIN}${path}`, headers)));
+const isolatedPaths = await Promise.all(["/orders", "/analytics", "/conversations"].map((path) => request(`${ADMIN}${path}`, adminHeaders)));
 assert.ok(isolatedPaths.every((result) => denied(result.status)), "monitoring_token_reached_admin_path");
 
 const observability = createCloudflareObservability({ accountTag: "cb5066a6d71ecdee0bd7ed8aacb4d3c2", accessCredentials: credentials });

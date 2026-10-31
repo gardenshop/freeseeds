@@ -1343,3 +1343,11 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - P0 identity/read-only checks PASS: GitHub `gardenshop`, Cloudflare `gisupp@gmail.com` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; frozen API/Admin remain 100% and candidates0%; migration0043 and protected flags remain unchanged.
 - P1 BLOCKED: no Chrome DevTools/Cloudflare Zero Trust connector is available in this execution context, and Wrangler OAuth has no Access-management scope. Do not create a token, inspect secret-bearing credential metadata, extract browser cookies, or weaken the existing owner-email policy.
 - The host Admin health remains HTTP302 without Access; the existing browser session is HTTP200. No canary, Access, Worker, route, D1, Meta, payment, customer, or reminder mutation occurred. Keep the public bot and +15/+210 recovery GO; Admin release NO-GO.
+
+## GFS-364 verified Access monitoring repair (2026-10-31 UTC)
+
+- Cloudflare readback: `GFS-Admin-Health-Monitoring` is limited to the staging Admin `/health` destination and has the existing `GFS-Admin-Health-Monitor` Service Auth policy; the existing Admin Operator policy was not changed. The token is enabled; no token or secret value is recorded.
+- Proven 403 cause: the smoke test's version-override header used JSON instead of Cloudflare's required structured-dictionary syntax, so the 0%-traffic repair was not invoked and the baseline Worker returned `ADMIN_ACCESS_REQUIRED`.
+- Repair: the Admin Worker permits Cloudflare's authenticated `ctx.access` only for `GET /health`; human Admin email authorization and all other Admin paths remain unchanged. The corrected version is deployed at 0% beside baseline `494a3dce`100%. API remains `b426ba47`100%; canary remains 0%.
+- Real acceptance: protected controller returned three HTTP200 health responses; missing/invalid credentials returned403; Orders, Analytics and Conversations returned302/denied; GraphQL readback returned API/Admin requests with0 errors. No customer, payment, Meta, D1, Queue, Cron, reminder, or WhatsApp mutation occurred.
+- Never log, export, screenshot, or commit Access credentials. Do not simulate revocation by disabling the active token; use fail-closed invalid/missing-credential tests and documented rollback only.

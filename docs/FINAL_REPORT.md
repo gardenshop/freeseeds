@@ -4987,3 +4987,13 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - Completion: evidence/source decision100%; D1/Worker correlation100%; Meta hourly attribution60%; source repair100% (not required); deployment/canary0% (out of scope); 24-hour causal proof0%.
 - GO: frozen public bot and +15/+210 recovery. NO-GO: new canary, ad edit, production deployment, customer send, or payment/flag change.
 - Exact next action: obtain an owner-authorized Meta Ads Reporting export with account timezone and hourly delivery metrics for 14:00–18:30Z, then compare it to this D1 break. Do not resend or change ads based on this audit alone.
+
+## GFS-364 final report — Access 403 repair (2026-10-31 UTC)
+
+- **GFS-361:** PASS for native Windows protected credential bridge and source/controller preparation; live Access health remained blocked at the prior gate.
+- **GFS-362:** PASS for bridge implementation and local security/regression coverage; no secret exposure or routing mutation.
+- **GFS-363:** PARTIAL: credential entry and bridge were present, but the first live test was HTTP403.
+- **GFS-364:** PASS for proven root cause and repair: the version-override header was JSON, so the 0%-traffic version was not selected. Correct structured syntax and a 0%-traffic deployment selected the repair. Real results: authenticated health 200 x3; missing/invalid 403; Orders/Analytics/Conversations denied; GraphQL API/Admin 0 errors; latency readback; routing API100%, Admin baseline100%, repair0%.
+- **Tests:** focused33/33, full335/335, build and lint PASS. No customer, payment, Meta, D1, Queue, Cron, reminder, WhatsApp, migration, or flag mutation. Existing Admin login authorization remains unchanged; a live Orders-page snapshot was not taken because it could expose customer data.
+- **Approval D:** NOT YET GRANTED. Canary NOT RUN. Expiry/revocation simulation remains pending because disabling/rotating the active credential would be disruptive; no fabricated PASS.
+- **Next action:** owner confirm the safe non-disruptive expiry/revocation procedure (or provide a non-production expired test credential), then explicitly approve one Admin-only canary: candidate `19188b21-60da-4b03-bd89-72cb49468100`, maximum10% for8 minutes, restoration starts by minute6; restore Admin `494a3dce`100%, candidate0%, API `b426ba47`100%. No full promotion.

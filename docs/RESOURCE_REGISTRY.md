@@ -1619,3 +1619,6 @@ No secrets are stored in this registry.
 
 - **GFS-351 capability:** MCP registry has no Cloudflare Zero Trust/Chrome DevTools connector. A relevant browser connector is available only as unconnected discovery; no credentials or account data were accessed.
 - **Permission dependency:** Access Service Tokens Write and Apps/Policies Write remain unavailable/unverified. Required scope is least-privilege staging `/health` monitoring only.
+
+- **GFS-364 verified Access resources:** application `GFS-Admin-Health-Monitoring` targets only `getfreeseeds-admin-staging.get-free-seeds.workers.dev/health`; attached policy is existing `GFS-Admin-Health-Monitor` Service Auth; existing token is enabled. No Client ID/Secret value is recorded.
+- **GFS-364 Worker state:** Admin repair version `7e0b0549-ceaa-4b67-83cb-4e96a41c6bee` is deployed at0% with baseline `494a3dce-5d52-4b66-b3ff-bef64b31b406`100%; API remains `b426ba47`100%. Candidate canary remains0% and was not run.

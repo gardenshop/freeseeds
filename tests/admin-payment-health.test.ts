@@ -145,4 +145,13 @@ describe("Admin payment health uses bilingual verified dynamic configuration", (
     expect(prepare).not.toHaveBeenCalled();
     expect(getQr).not.toHaveBeenCalled();
   });
+
+  it("allows Cloudflare Service Auth only for GET health and not Admin paths", async () => {
+    const accessExecution = { access: { getIdentity: async () => ({}) } } as unknown as ExecutionContext;
+    const healthResponse = await app.fetch(new Request("https://admin.example.test/health"), env, accessExecution);
+    expect(healthResponse.status).toBe(200);
+    const ordersResponse = await app.fetch(new Request("https://admin.example.test/orders"), env, accessExecution);
+    expect(ordersResponse.status).toBe(403);
+    expect(await ordersResponse.json()).toEqual({ error: "ADMIN_ACCESS_REQUIRED" });
+  });
 });

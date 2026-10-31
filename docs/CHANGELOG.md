@@ -1482,3 +1482,8 @@
 
 - Checked available MCP registrations once; no Cloudflare Zero Trust/Chrome DevTools connector is present. A relevant browser connector was discoverable but remains unconnected and unused.
 - Access-management permissions could not be verified or granted. No token, policy, credential transfer, production mutation, or Admin canary occurred.
+
+## 2026-10-31 - GFS-364 Access 403 repair
+
+- Corrected the monitoring smoke-test version override to Cloudflare's structured-dictionary header syntax and added a narrow Service Auth `GET /health` Worker gate using `ctx.access`.
+- Uploaded/deployed the repair at0% beside Admin baseline100%; real protected health, denial, isolation, GraphQL, routing and regression checks passed. No canary or promotion occurred.

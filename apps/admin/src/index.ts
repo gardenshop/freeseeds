@@ -15,6 +15,13 @@ function authorized(c: { req: { header(name: string): string | undefined }; env:
   return c.req.header("cf-access-authenticated-user-email") === c.env.ADMIN_EMAIL;
 }
 
+function authorizedForAdmin(c: AdminContext): boolean {
+  if (authorized(c)) return true;
+  let accessAuthenticated = false;
+  try { accessAuthenticated = Boolean((c.executionCtx as unknown as { access?: unknown }).access); } catch { /* unit/test requests may not provide an execution context */ }
+  return c.req.path === "/health" && c.req.method === "GET" && accessAuthenticated;
+}
+
 function cookieValue(header: string | undefined, name: string): string | undefined {
   for (const part of (header ?? "").split(";")) {
     const [key, ...value] = part.trim().split("=");
@@ -527,7 +534,7 @@ function metaActivation(c: { env: Env["Bindings"] }) {
 }
 
 app.use("*", async (c, next) => {
-  if (!authorized(c)) return c.json({ error: "ADMIN_ACCESS_REQUIRED" }, 403);
+  if (!authorizedForAdmin(c)) return c.json({ error: "ADMIN_ACCESS_REQUIRED" }, 403);
   await next();
 });
 
