@@ -5337,6 +5337,16 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 8. **Next action:** owner supplies an approved D1 row-read budget/threshold and separately decides whether to authorize an index/migration or accept paid overage. Then repeat only the bounded cost/monitoring gate; do not enable auto polling or promote Admin before it passes.
 8. **Next action:** owner must provide the approved D1 budget/row threshold and complete bounded 60-second hidden/multi-tab/interruption acceptance. Only then reassess a separately gated Admin100% cutover; API release remains separate and blocked.
 
+## GFS-393 final report - Admin release blockers
+
+1. **Identity/entitlement:** PASS read-only. Cloudflare is `gisupp@gmail.com` / Get Free Seeds / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; active monthly Workers Paid subscription. Official Paid D1 included amounts are 25B rows read/month and 50M written/month; the prior 5M/day comparison value was the Free column.
+2. **Usage:** PASS read-only, bounded. Staging billing-period window (2026-10-27 00:00 to 2026-11-01 00:31 PKT) showed approximately700M rows read and906k written; production-name D1 showed393/0; v2 staging and restore-check0/0. Full-account historical cumulative usage and remaining monthly headroom are UNKNOWN.
+3. **Rollback/audit:** legacy rollback/security4/4 PASS using documented clean `D:\free seeds\gfs273-v1` at `cf01f444`. npm audit remains BLOCKED because the registry advisory endpoint errored; a writable temp log directory was used and no package change was made.
+4. **Approval O:** BLOCKED at tooling, not executed. Wrangler stored auth is expired and could not refresh because the Cloudflare auth server was unreachable. No unsupported browser or credential bypass was used, and no Admin upload/0% attachment/watchdog/cutover occurred.
+5. **Final routing/protection:** Admin `ceb3e680`100% / `ab5be96b`0%; API `b426ba47`100% / `d603f077`0%. No API, WhatsApp, customer, payment, Meta, D1, migration, flag, Queue or Cron mutation. New-number WhatsApp lock and Hoja/ThanNow isolation remain protected.
+6. **Comparison:** GFS-387 PASS resilience; GFS-388 PASS source with live-data limitation; GFS-389 PASS source controls with live release blocked; GFS-390 PASS real-data 0% validation; GFS-391 PASS plan/usage evidence but misclassified entitlement gate; GFS-392 PASS source/test repair with release blocked; GFS-393 PASS entitlement clarification and rollback, BLOCKED npm audit and supported Admin staging authentication.
+7. **Next action:** restore supported Wrangler/Cloudflare authentication, rerun npm audit, then perform only the conditionally approved exact Admin 0% upload/override acceptance. Do not enable automatic polling or change API routing before those gates pass.
+
 ## GFS-392 final report - Admin clipping, active-only updates, and customer fields
 
 1. **Source:** PASS. The active Orders template now constrains desktop grid rows and child min sizes, uses content-sized scrolling cards, and neutralizes header action styling. Existing business, auth, payment, filter, pagination and selection logic was preserved.

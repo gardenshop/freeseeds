@@ -1813,6 +1813,13 @@ No secrets are stored in this registry.
 - Candidate D1 cost metadata: Conversations list10,439 rows, summary5,873 rows, Orders changes equivalent9,042 rows; writes0 and `changed_db=false`. Budget threshold is not registered; no cutover approval is claimed.
 - Harness repair: `scripts/test-gfs-monitoring.mjs` now accepts `GFS_ADMIN_BASELINE_VERSION` with the retired baseline as default, allowing current baseline readback without changing production behavior.
 
+## GFS-393 verified resources and boundaries (2026-11-01)
+
+- Cloudflare identity: `gisupp@gmail.com` / Get Free Seeds / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; active Workers Paid subscription, monthly period 2026-10-27 through 2026-11-27.
+- D1 read-only metrics: staging `17b7e9f6-e08b-4bff-a756-10de30b49ab1` approximately700M rows read/906k written for the observed billing-period window; production-name `02b707df-a10c-4645-9516-a2a4541f6fab`393/0; v2 staging and restore-check0/0. No customer rows or raw query payloads registered.
+- Authorized legacy rollback root: `D:\free seeds\gfs273-v1`, exact clean baseline `cf01f444500415b1f22a64730674caca1c286006`; local rollback/security4/4 PASS.
+- No new Worker version, deployment, route, secret, Access policy, D1 write, migration, Meta asset, payment, customer message, Queue or Cron mutation. Wrangler auth was not recorded or exposed; its expiry is the sole reason Approval O was not attempted.
+
 ## GFS-392 Admin source and verification resources (2026-11-01)
 
 - Source resources changed: `apps/admin/src/index.ts`, `apps/admin/src/conversations-dashboard.ts`; test resources: `tests/admin-controls.test.ts`, `tests/admin-orders.test.ts`, `tests/admin-conversations.test.ts`.

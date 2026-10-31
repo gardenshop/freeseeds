@@ -1647,6 +1647,12 @@
 - Measured live D1 rows: Conversations list10,439, summary5,873, Orders changes equivalent9,042; all writes0. Did not cut over because approved D1 budget and complete auto-cost gate are unavailable.
 - Updated the monitoring harness to accept the current Admin baseline via protected process environment. Full341/341, build, lint, controller18/18, adapter8/8, observability5/5, and audit0 pass.
 
+## 2026-11-01 - GFS-393 entitlement and release-blocker verification
+
+- Verified active Workers Paid subscription and official Paid D1 allowance; measured read-only billing-period usage across the visible account databases.
+- Located the documented clean legacy root and passed rollback/security4/4. npm audit remains blocked by the registry advisory endpoint, with logs safely redirected to writable temp storage.
+- Did not upload or attach the Admin candidate because Wrangler auth expired and could not refresh. API and Admin routing, WhatsApp, D1, Meta, payment, migration, flag, Queue and Cron state were not mutated.
+
 ## 2026-11-01 - GFS-392 Admin clipping and active-only update safety
 
 - Fixed the active Orders template's desktop grid clipping with bounded rows, min-size guards, a content-sized scrollable list, and neutral header actions.

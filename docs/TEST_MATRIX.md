@@ -2546,6 +2546,18 @@ Investigation query costs only (not production savings): representative `rows_re
 | Conditional cutover | BLOCKED | No 100% cutover or watchdog exposure; keep candidate0% until budget and remaining safety gates pass |
 | Regression/security | PASS | full341/341; build/lint; controller18/18; adapter8/8; observability5/5; audit0 |
 
+## GFS-393 verification
+
+| Area | Result | Evidence / boundary |
+|---|---|---|
+| Cloudflare identity/subscription | PASS | Account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, `gisupp@gmail.com`, active Workers Paid monthly subscription |
+| D1 entitlement | PASS | Official Paid allowance 25B rows read/month and 50M rows written/month; comparison-table Free values disambiguated |
+| D1 usage | PASS read-only / incomplete | Billing-period UI: staging ~700M/906k read/write; prod-name393/0; v2 staging0/0; restore-check0/0; full-account cumulative UNKNOWN |
+| Legacy rollback | PASS | Authorized clean `gfs273-v1`, rollback/security4/4 |
+| npm audit | BLOCKED | Registry advisory endpoint error despite writable temp log directory |
+| Admin 0% staging | BLOCKED | Wrangler auth expired/unrefreshable; no upload or routing mutation |
+| Frozen routing | PASS | Admin `ceb3e680`100% / `ab5be96b`0%; API `b426ba47`100% / `d603f077`0% |
+
 ## GFS-392 verification
 
 | Area | Result | Evidence / boundary |

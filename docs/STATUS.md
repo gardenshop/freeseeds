@@ -2308,6 +2308,13 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **Frozen routing:** Admin `ceb3e680`100% / candidate `ab5be96b`0%; API `b426ba47`100% / candidate `d603f077`0%. No deployment, D1 write, WhatsApp/customer/payment/Meta/flag/Queue/Cron mutation occurred.
 - **NEXT:** owner supplies an approved D1 row-read budget/threshold and separately scopes any index/migration or paid-cost decision; only then reassess Admin release.
 
+## GFS-393 Admin release blockers (2026-11-01)
+
+- **PASS entitlement clarification:** Cloudflare account identity is `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; subscription readback is active Workers Paid ($5 monthly, 2026-10-27 to 2026-11-27). Official Paid D1 included capacity is 25B rows read/month and 50M rows written/month; the 5M/day and 100k/day values shown in the comparison table are Free-plan columns.
+- **PASS read-only usage evidence:** staging billing-period window read approximately700M rows and906k written; production-name D1 393/0; v2 staging0/0; restore-check0/0. Full-account historical cumulative usage is not claimed.
+- **PASS legacy rollback:** authorized clean root `D:\free seeds\gfs273-v1` at `cf01f444` passed4/4. **BLOCKED npm audit:** advisory endpoint returned an error even with a writable temporary log directory.
+- **BLOCKED Approval O staging:** no upload/0% attachment occurred because stored Wrangler auth expired and could not refresh due Cloudflare auth-server connectivity. Frozen routing remains Admin `ceb3e680`100% / `ab5be96b`0%, API `b426ba47`100% / `d603f077`0%. No production or D1 mutation.
+
 ## GFS-392 Admin clipping, active-only updates, and customer fields (2026-11-01)
 
 - **PASS source repair:** active Orders CSS now bounds the desktop workspace, keeps grid children within the viewport, and uses a content-sized scrollable list. Header actions no longer inherit the detail sticky positioning.

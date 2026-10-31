@@ -1815,6 +1815,12 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Do not add indexes or migrations under this task. The Conversations list plan scans and temporary-sorts; any schema remedy needs a separately scoped migration approval. No source optimization is claimed.
 - Keep Admin `ceb3e680`100% / `ab5be96b`0% and API `b426ba47`100% / `d603f077`0%. Next action is an owner-approved D1 budget/threshold and an explicit decision on migration/index or paid overage before any Admin release.
 
+## GFS-393 decision (2026-11-01)
+
+- Reclassify the Workers Paid entitlement discrepancy as resolved: the active account subscription is Paid, and official Cloudflare pricing supports 25B D1 rows read/month plus 50M written/month included. Retain measured usage as read-only evidence; do not infer full-period remaining capacity beyond the observed window.
+- Accept legacy rollback4/4 using the authorized clean `gfs273-v1` root. Keep npm audit BLOCKED until the registry advisory endpoint works.
+- Do not execute Approval O's Admin 0% upload while Wrangler authentication is expired/unrefreshable. No unsupported browser/credential bypass is allowed. Keep Admin/API routing frozen and automatic polling disabled pending supported authentication and remaining acceptance gates.
+
 ## GFS-392 decision (2026-11-01)
 
 - Accept the minimal active-template Orders clipping fix and the protected customer-field readback. Do not alter Admin business logic, auth, payment behavior, API, WhatsApp, Meta, D1 schema or production routing.
