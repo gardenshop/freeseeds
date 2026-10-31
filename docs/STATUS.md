@@ -2269,3 +2269,10 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **PASS tests:** adapter8/8, controller17/17, observability4/4, legacy rollback4/4, full339/339, build, lint, audit0.
 - **PASS read-only runtime:** API/Admin health200; GraphQL errors0; Admin no-token/invalid-token403; monitoring token on Orders/Analytics/Conversations302; D1 aggregate read `changed_db=false`, `rows_written=0`. Routing remains API `b426ba47`100% / `d603f077`0%, Admin `ceb3e680`100% / `72cff93f`0%.
 - **NEXT:** fresh Approval L is required before one new API-only maximum1%/8-minute canary with restoration by minute6. No canary was executed in GFS-384.
+
+## GFS-387 Orders network resilience (2026-10-31)
+
+- **PASS diagnosis:** sanitized authorized Chrome probes showed `/api/orders`, detail, `/api/orders/changes`, Refresh, and full reload HTTP200; no Orders API failure or failure text was present. One unrelated 404 resource was observed.
+- **PASS repair:** the Orders dashboard now preserves visible last-successful cards during transient load/refresh failure and labels the state as stale; existing bounded retry, timeout, cancellation, race, filters, pagination, selection, and business/auth logic remain intact.
+- **PASS gates:** focused12/12, full339/339, build, lint, dependency audit0 vulnerabilities, controller18/18, adapter8/8, observability5/5. No production mutation or deployment.
+- **Frozen routing:** API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. WhatsApp health was not altered; no customer-flow recovery claim is made from this Admin-only evidence.

@@ -1783,3 +1783,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Accept the Analytics overflow diagnosis and minimal repair: keep full tables, place overflow on the existing daily/classification containers, and make those regions touch- and keyboard-scrollable.
 - Accept source/browser/test evidence: no whole-page overflow at the required CSS widths, mobile table scroll works, desktop/tablet remain unchanged, and CSV/filter behavior remains present.
 - Do not deploy under GFS-381. Request one exact Admin-only approval for the tested source version, with rollback to Admin `72cff93f`100% and candidate0%. API stays frozen at `b426ba47`100%.
+
+## GFS-387 decision (2026-10-31)
+
+- Classify the reported Orders network failure as **not reproduced live**: sanitized authorized Chrome requests for list, detail, changes, Refresh, and reload all returned HTTP200. The separate source risk was real because transient failure cleared the last successful list.
+- Accept the minimal stale-safe UI repair: preserve visible order cards, show explicit stale/refresh failure feedback, retain bounded retry, timeout, cancellation, and race protection, and leave backend SQL, payment/order mutations, authentication, and API/WhatsApp behavior unchanged.
+- Accept focused12/12, full339/339, build/lint, dependency audit0, controller18/18, adapter8/8, and observability5/5. Keep routing frozen and do not claim a WhatsApp outage is solved by this Admin-only change.

@@ -191,6 +191,8 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("Checking latest orders...");
     expect(html).toContain("· Checked ");
     expect(html).toContain("const refreshWithoutFeedback=refreshOrders");
+    expect(html).toContain("const hasVisibleOrders=Boolean(ordersRoot.querySelector('[data-order-id]'))");
+    expect(html).toContain("Refresh failed; showing the last successful orders.");
   });
 
   it("requires CSRF for payment and fulfillment detail mutations", async () => {

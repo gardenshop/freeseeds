@@ -2492,4 +2492,16 @@ Investigation query costs only (not production savings): representative `rows_re
 | Runtime health/security | PASS | API/Admin200; GraphQL0 errors; no/invalid Access403; monitoring paths302 |
 | D1 parity/read safety | PASS | Aggregate read only; changed_db=false; rows_written=0 |
 | New canary | NOT RUN | Fresh Approval L required; routing frozen |
+
+## GFS-387 Orders network resilience
+
+| Area | Result | Evidence |
+|---|---|---|
+| Live Orders read path | PASS | Sanitized authorized Chrome probes: list, detail, changes, Refresh, and full reload HTTP200; no `/api/orders*` non-200 |
+| Failure handling | PASS | Visible order cards are retained and marked stale on transient load/refresh failure; bounded retry and cancellation preserved |
+| Admin focused | PASS | 12/12 |
+| Full regression | PASS | 339/339; build; lint; dependency audit0 vulnerabilities |
+| Release-control regression | PASS | Controller18/18; adapter8/8; observability5/5 |
+| D1 safety | PASS | Aggregate-only read; `changed_db=false`; `rows_written=0` |
+| Production mutation | PASS | No deployment, API canary, WhatsApp/customer/payment/Meta/D1/migration/flag/Queue/Cron mutation |
 | Next gate | PENDING APPROVAL | Exact-source upload → 0% override acceptance → conditional1%/8-minute canary → restore baseline100% |

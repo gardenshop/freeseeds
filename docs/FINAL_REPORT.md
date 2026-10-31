@@ -5285,3 +5285,13 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - Tests: adapter8/8, controller17/17, observability4/4, legacy rollback4/4, full339/339, build/lint/audit0. Runtime API/Admin health200, GraphQL0 errors, Access no/invalid403, monitor paths302, D1 aggregate read changed_db=false/rows_written=0.
 - Final routing: API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. No production deployment or canary occurred in GFS-384.
 - Next action: request fresh Approval L for one API-only `d603f077` canary, maximum1%/8 minutes, restoration by minute6, final API baseline100%, Admin unchanged. No automatic promotion.
+
+## GFS-387 final report - Orders network resilience
+
+- **Diagnosis:** PASS, bounded. Authorized Chrome read-only evidence showed Orders list, detail, changes, Refresh, and full reload HTTP200; no `/api/orders*` failure reproduced. One unrelated 404 resource was observed. Sanitized DOM showed no failure text and body width1901px within viewport1920px. This does not prove or disprove a historical transient incident.
+- **Repair:** PASS. `apps/admin/src/index.ts` now retains visible last-successful order cards on transient load/refresh failure and reports `Refresh failed; showing the last successful orders.`; the existing bounded retry, timeout, cancellation, race, selection, filters, pagination, backend SQL, auth, payment, and order mutation behavior is preserved.
+- **Tests:** PASS: focused Admin12/12; full339/339; build; lint; dependency audit0 vulnerabilities; controller18/18; adapter8/8; observability5/5. Aggregate D1 read was no-write (`changed_db=false`, `rows_written=0`).
+- **Final routing:** API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. No production deployment or API canary occurred.
+- **WhatsApp:** no mutation or customer-flow claim; API, Queue, Cron, webhook, flags, migrations, Meta, payments, and D1 writes were untouched. The reported WhatsApp ordering question remains separate and not resolved by this Admin-only task.
+- **GFS-386 comparison:** monitoring repair tests remain PASS, but API release remains BLOCKED pending fresh approval and a new canary; GFS-387 does not change that boundary.
+- **Next action:** push this tested Admin resilience fix; keep API canary blocked until its separately approved monitoring gate is met.

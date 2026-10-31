@@ -1777,3 +1777,10 @@ No secrets are stored in this registry.
 - Repair contract: one 250 ms retry of the complete routing + HTTP health + GraphQL metrics read; no cached result; abort/unknown-version/persistent failure remains fail-closed.
 - Evidence resource: historical interval query bounded the failure to a transient API GraphQL metrics read; original controller log was not retained, so exact exception text remains unavailable.
 - Runtime resources unchanged: API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. D1 aggregate query reported `changed_db=false`, `rows_written=0`; no secrets/customer fields registered.
+
+## GFS-387 Orders network resilience (2026-10-31)
+
+- Changed source resource: `apps/admin/src/index.ts` only, plus focused assertion in `tests/admin-controls.test.ts`; no backend or deployment resource changed.
+- Sanitized live resource evidence: authorized Admin Orders page returned HTTP200 for `/api/orders`, detail, `/api/orders/changes`, Refresh, and reload; no customer fields, cookies, tokens, screenshots, or credential values registered.
+- Runtime resources unchanged: API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. D1 aggregate read had `changed_db=false`, `rows_written=0`.
+- Protected protocols retained: no deployment, API canary, customer message, order/payment write, Meta, migration, flag, Queue, Cron, or WhatsApp mutation; GFS-386 API release remains blocked.

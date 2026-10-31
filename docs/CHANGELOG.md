@@ -1615,3 +1615,9 @@
 - Diagnosed the GFS-383 fail-safe as a transient GraphQL metrics/control-plane read failure; the original controller exception text was unavailable after its temporary log was removed.
 - Added one bounded complete-read retry to the canary adapter, preserving cancellation, stale-data prohibition, unknown-version rejection, and fail-closed rollback behavior.
 - Verified adapter8/8, controller17/17, observability4/4, rollback4/4, full339/339, build/lint/audit0, runtime health/security, and D1 read-only no-write evidence. No new canary or production deployment was run.
+
+## 2026-10-31 - GFS-387 Orders network resilience
+
+- Diagnosed the live Admin Orders report with sanitized read-only Chrome/network evidence; Orders list, detail, changes, Refresh, and reload returned HTTP200, with no Orders API failure reproduced.
+- Added a minimal stale-safe behavior so transient refresh/load failure retains the last successful order cards and clearly reports stale data, while existing retry, timeout, cancellation, race, filter, pagination, and selection behavior remains protected.
+- Verified focused12/12, full339/339, build, lint, dependency audit0 vulnerabilities, controller18/18, adapter8/8, and observability5/5. No deployment or WhatsApp/customer/API mutation.
