@@ -110,6 +110,18 @@ describe("GFS-109 admin controls", () => {
     }
   });
 
+  it("renders a responsive, privacy-safe Admin home navigation", async () => {
+    const response = await app.fetch(new Request("https://admin.example.test/", { headers: auth }), env(new AdminMemoryDb()));
+    expect(response.status).toBe(200);
+    const html = await response.text();
+    expect(html).toContain("Get Free Seeds Admin");
+    expect(html).toContain("grid-template-columns:repeat(4,minmax(0,1fr))");
+    expect(html).toContain("@media(max-width:560px)");
+    for (const path of ["/orders", "/analytics", "/conversations", "/payment-settings", "/cod-settings", "/whatsapp-content", "/meta-activation"]) expect(html).toContain(`href=\"${path}\"`);
+    expect(html).not.toContain("SELECT");
+    expect(html).not.toContain("customerName");
+  });
+
   it("renders the tabbed, URL-hydrated split-pane order workspace", async () => {
     const response = await app.fetch(new Request("https://admin.example.test/orders?q=synthetic&paymentStatus=REVIEW&archived=all", { headers: auth }), env(new AdminMemoryDb()));
     expect(response.status).toBe(200);

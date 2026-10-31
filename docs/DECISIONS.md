@@ -1716,3 +1716,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Accept the local replacement composition for approval: frozen base `901f3f6` plus exact runtime patches `bb52f1d` (Cron reconciliation) and `b9d52c4` (provider-acceptance boundary), with unchanged API Wrangler config. Tests pass; the source is not uploaded.
 - Require one explicit owner approval before any Cloudflare mutation. Sequence: upload exact SHA-256 `462e6f6ecc70d592ce7da38e7df2ce6f8c03e2628776436ff7693dcbdfde4c50`; read back the assigned version/bindings; attach at0% replacing only active0% `6ef27f02`; run targeted override/security/recovery checks; only if all pass, run one1% API canary for at most8 minutes and begin restoration by minute6.
 - The canary carries real public risk: up to1% of WhatsApp/webhook/Queue/Cron traffic can execute the candidate and may send normal customer replies. Restore `b426ba47`100% immediately on duplicate send, acknowledgement mismatch, attributable5xx, webhook/Queue/Cron/recovery fault, payment/order drift, monitoring loss or rollback uncertainty. No automatic promotion.
+
+## GFS-377 decision (2026-10-31 UTC)
+
+- The desktop-view defect was a real source defect in the Admin root: unstyled Times-like HTML with an unbounded plain link list. The authorized live Orders route was already responsive and was not rewritten.
+- Accept the source-only repair: responsive 4/2/1-column static Admin home using existing routes, with no customer data reads, no new permissions, and no business-logic changes. Focused3/3 and full337/337 plus build/lint/audit passed.
+- Live browser acceptance is limited to unchanged protected routes: all four requested viewport emulations for Orders, Analytics, Conversations, and Payment Settings had no horizontal overflow or console errors. The new root is not live because deployment was not authorized; require separate deployment approval and fresh readback before calling it production-ready.
+- Keep Admin `4fe564a6`100% and API `b426ba47`100%. Preserve the GFS-376 API release approval boundary; do not upload, attach, or canary the API under GFS-377.

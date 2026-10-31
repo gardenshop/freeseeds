@@ -2361,4 +2361,17 @@ Investigation query costs only (not production savings): representative `rows_re
 | Current PR regression | PASS | focused7/7, full336/336, build/lint/audit0 |
 | Release controls | PASS local | controller17/17, adapter6/6, observability4/4, legacy rollback4/4 |
 | Production mutation | NOT RUN | No upload, 0% attachment, canary, traffic, flag, D1, Meta, payment or customer mutation |
+
+### GFS-377 Admin desktop view (2026-10-31)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Root source | PASS | Static data-free responsive home with existing protected module links; no data queries or customer fields |
+| Focused Admin | PASS | 3/3, including responsive navigation and privacy-safe content assertions |
+| Full regression | PASS | 337/337 |
+| Build/lint/audit | PASS | Build and lint pass; offline audit reports 0 high vulnerabilities |
+| Live 1440/1280/768/390 matrix | PASS | Orders, Analytics, Conversations, Payment Settings: no horizontal overflow or console errors in each emulation |
+| Orders layout | PASS | Desktop split pane retained; mobile stacked grid retained; no Orders source changed |
+| Live root after source | NOT RUN | No deployment authorized; deployed root remains pre-change plain HTML |
+| Production mutation | NOT RUN | Cloudflare/API/WhatsApp/Meta/payment/D1/Queue/Cron/migration/flag state unchanged |
 | Next gate | PENDING APPROVAL | Exact-source upload → 0% override acceptance → conditional1%/8-minute canary → restore baseline100% |

@@ -1555,3 +1555,9 @@
 - Found and blocked a release regression in uploaded version `b0e883cd`: it contains the acknowledgement repair but omits the serving Cron-only recovery reconciliation.
 - Prepared a local exact replacement from base `901f3f6` with only the GFS-309 Cron patch and acknowledgement patch; config unchanged. Added explicit pre-acceptance Meta timeout fault coverage. Focused6/6, exact-tree324/324, build/lint/audit0 and current PR336/336/control/rollback gates pass.
 - No Worker upload, active-deployment membership, traffic, D1, customer, payment, Meta, migration, flag, Queue or Cron change occurred. Exact upload/0%-attachment/conditional1%-canary approval remains pending.
+
+## 2026-10-31 - GFS-377 Admin desktop view
+
+- Replaced the plain Admin root with a static responsive operations home and added privacy-safe navigation coverage.
+- Verified focused3/3, full337/337, build, lint, and offline audit0. Read-only Chrome checks of unchanged Admin routes across four viewport emulations found no horizontal overflow or console errors.
+- No Cloudflare deployment or production mutation occurred. GFS-376 API replacement remains local-only and approval-gated.

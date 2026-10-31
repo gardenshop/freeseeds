@@ -2192,3 +2192,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **Replacement PASS local:** exact source is base `901f3f6` + runtime patches `bb52f1d` and `b9d52c4`, config unchanged, SHA-256 `462e6f6ecc70d592ce7da38e7df2ce6f8c03e2628776436ff7693dcbdfde4c50`. Focused6/6, exact-tree324/324, build, lint and audit0 pass. Main PR gates pass focused7/7, full336/336, build/lint/audit0, controller17/17, adapter6/6, observability4/4 and rollback4/4.
 - **P3 PENDING APPROVAL:** no replacement upload, 0% attachment or1% canary occurred. Next gate is one explicit approval for exact-source upload, 0% replacement of active slot `6ef27f02`, targeted acceptance, then conditional1%/8-minute public API canary with automatic restoration to `b426ba47`100% beginning by minute6. Admin remains100%.
 - **Other work:** Meta hourly timezone attribution, historical CAPI pending/failures and blocked receipts remain UNKNOWN/unreconciled; optional D1 optimization/full chat history remain deferred.
+
+## GFS-377 Admin desktop view (2026-10-31)
+
+- **PASS source repair:** `apps/admin/src/index.ts` replaces the plain root HTML with a static responsive Admin home. It uses existing protected routes only, performs no database reads, and does not change Orders, API, auth, WhatsApp, payment, or release logic.
+- **PASS automated acceptance:** focused Admin test 3/3; full suite 337/337; build, lint, and offline audit (0 high vulnerabilities). New coverage verifies responsive 4/2/1-column navigation and absence of query/customer fields.
+- **PASS live route matrix:** authorized browser checks of Orders, Analytics, Conversations, and Payment Settings at the four requested emulations reported no horizontal overflow and no console errors. Orders retained desktop two-column and mobile stacked layouts.
+- **LIMIT:** deployed live root is still the pre-change plain page because no Cloudflare deployment was authorized. Local Wrangler preview could not remain reachable, so no after-deployment screenshot or live-home PASS is claimed.
+- **Frozen routing:** Admin `4fe564a6`100% / bridge `3bbf5cf6`0%; API `b426ba47`100% / old slot `6ef27f02`0%. GFS-376 API upload/attachment/canary remains pending exact owner approval.

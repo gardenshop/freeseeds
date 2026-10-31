@@ -1706,3 +1706,11 @@ No secrets are stored in this registry.
 - **Local replacement:** `D:\free seeds\gfs338-api-candidate`, base `901f3f6fbde01adc8ef48b13f70eebdeba5baa4f`; exact runtime union `bb52f1d` + `b9d52c4`; source git blob `be9789a2c5223326c2b6d0af6442a46436aba9fd`; SHA-256 `462e6f6ecc70d592ce7da38e7df2ce6f8c03e2628776436ff7693dcbdfde4c50`; config unchanged.
 - **Quality:** replacement focused6/6, full324/324, build/lint/audit0; main PR focused7/7, full336/336, build/lint/audit0; controller17/17, adapter6/6, observability4/4, rollback4/4.
 - **Approval boundary:** replacement is local-only and has no Cloudflare version ID. Upload, assigned-version readback, 0% attachment and1% canary are all pending explicit authorization. No secrets or customer data recorded.
+
+## GFS-377 Admin desktop resources
+
+- **Source:** `apps/admin/src/index.ts` root route now renders a static responsive Admin home; no new external dependency, binding, secret, permission, or data source.
+- **Test:** `tests/admin-controls.test.ts` includes responsive/privacy-safe home assertions; focused3/3 and full337/337 passed.
+- **Browser evidence:** authorized live page3 checked Orders, Analytics, Conversations, and Payment Settings at 1440x900, 1280x800, 768x1024, and 390x844 emulations; no horizontal overflow or console errors. No customer data was recorded.
+- **Deployment state:** Admin `4fe564a6`100% / bridge `3bbf5cf6`0%; API `b426ba47`100% / old slot `6ef27f02`0%. New root is not deployed; no Cloudflare version ID exists for this source change.
+- **Limit:** local Wrangler preview was not reachable long enough for an after-deployment screenshot. Do not treat the live pre-change root or failed local preview as new-home production evidence.
