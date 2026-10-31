@@ -1598,6 +1598,12 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Do not create or inspect secret-bearing credentials from an unsafe path. No approved machine-authenticated Service Auth credential or host bridge was available, so the canary remains blocked and no Access policy was weakened.
 - Require one owner-provisioned short-lived least-privilege Access credential in approved host storage, or an official authenticated Windows execution path, before the single bounded Admin canary. Keep API/Admin frozen at100% with candidates0%.
 
+## GFS-349 decision (2026-10-31 UTC)
+
+- Do not repeat the unauthenticated 302 preflight. This execution context cannot access the official Chrome DevTools/Cloudflare Zero Trust management surface, and the available Wrangler OAuth lacks Access-management scope.
+- Do not create a token through an unverified path, inspect secret-bearing metadata, copy cookies, or weaken the owner-email policy. The single Admin canary remains unconsumed and blocked before exposure.
+- The one required owner action is to provision a short-lived least-privilege Access Service Auth credential through the official Zero Trust interface into approved host secret storage. Re-run security/isolation/rollback checks only after that capability exists.
+
 ## GFS-345 decision (2026-10-30 UTC / PKT)
 
 - Classify the decline as an inbound-volume break beginning 17:30Z/22:30 PKT; acquisition/advertising is the leading hypothesis, not a proven Meta cause.

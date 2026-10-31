@@ -4921,6 +4921,17 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - **Completion:** Access inventory100%; source/WhatsApp protection100%; automated monitoring0%; canary0%; production promotion0%; measured 24-hour savings0%. Release readiness remains BLOCKED.
 - **Exact next action:** owner provisions one short-lived least-privilege Cloudflare Access Service Auth credential for the health/read-only monitoring path in approved host secret storage, or supplies a supported authenticated Windows execution bridge. Do not send credentials in chat, Git, logs, or screenshots. After repeatable authenticated HTTP200, genuine error/version readback, and rollback fault tests pass, use only the existing one-canary authorization; no full promotion is authorized.
 
+## GFS-349 Access resolution gate (2026-10-31 UTC)
+
+- **P0 PASS:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API `b426ba47`100%, Admin `494a3dce`100%, candidates0%; migration0043 retained; 0044/0045 unapplied; +15/+210 ON; five-stage/Automation V2/utility OFF.
+- **P1 BLOCKED precisely:** this execution context has no official Chrome DevTools/Cloudflare Zero Trust connector, and Wrangler OAuth exposes no Access-management scope. Existing host Admin `/health` remains HTTP302; authenticated browser health remains HTTP200. No secure machine-authenticated path could be created or verified.
+- **Security disposition:** no token, cookie, secret, policy, route, Worker, flag, traffic, D1, Meta, customer, payment, or reminder mutation occurred. The existing owner-email Access policy was not weakened.
+- **P2/P3:** controller connection and the authorized 10%/8-minute Admin canary were NOT RUN because P1 failed. No exposure or rollback was attempted; this is a safe NO-GO, not a canary failure.
+- **Evidence retained:** controller13/13, adapter6/6, observability3/3, full334/334, focused121/121, build/lint/audit0 and rollback4/4 remain valid because no source changed. Meta timezone attribution remains PARTIAL.
+- **Comparison:** GFS-346 Meta/Admin work PARTIAL/BLOCKED; GFS-347 BLOCKED safely; GFS-348 Access inventory PASS but automated monitoring BLOCKED; GFS-349 remains BLOCKED at official Access capability.
+- **Completion:** source/WhatsApp protection100%; identity and read-only inventory100%; secure automated monitoring0%; canary0%; Admin promotion0%; production-ready release remains BLOCKED.
+- **Exact next action:** owner provisions one short-lived least-privilege Cloudflare Access Service Auth credential through the official Zero Trust interface into approved host secret storage. Never send it in chat, Git, logs, or screenshots. Only then repeat the security gate and use the single authorized canary; no automatic 100% promotion.
+
 ### GFS-344/345 status and next action
 
 - GFS-344: PASS controller repair/tests; BLOCKED safely for live Admin canary.

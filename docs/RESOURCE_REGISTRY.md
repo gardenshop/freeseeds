@@ -1604,3 +1604,6 @@ No secrets are stored in this registry.
 
 - **GFS-348 Access:** staging Admin app `ea91b1bf-02c1-46d3-921a-ea2f507fb150`; policy `b3acdd4f-9767-4d28-a55d-0a8e771d476c`; destinations `getfreeseeds-admin-staging` and `getfreeseeds-v2-admin-staging`; owner-email allow rule only. No secret values recorded.
 - **Release:** automated host health remains blocked by Cloudflare Access (302 without Access, browser 200). No service credential was created and no canary/traffic/configuration mutation occurred. Dependency is an owner-provisioned least-privilege Access credential in approved host storage or supported authenticated Windows bridge.
+
+- **GFS-349 Access:** identity checks passed, but the execution context exposes no official Chrome DevTools/Zero Trust management connector and Wrangler OAuth lacks Access-management scope. No service credential or policy change was attempted.
+- **Release:** host health remains 302 without Access; Admin canary was not run. Exact dependency is one owner-provisioned short-lived least-privilege Access Service Auth credential in approved host secret storage.

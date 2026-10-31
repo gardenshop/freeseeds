@@ -2131,3 +2131,15 @@ Investigation query costs only (not production savings): representative `rows_re
 | Access isolation/configuration | PASS | No policy, route, Worker, secret, or user-auth change |
 | Admin canary | NOT RUN | Monitoring prerequisite failed |
 | WhatsApp/API protection | PASS | API frozen; no customer, payment, Meta, D1, or reminder mutation |
+
+### GFS-349 resolution gate
+
+| Check | Result | Evidence / disposition |
+|---|---|---|
+| GitHub identity/remote | PASS | `gardenshop`; PR branch remains at verified GFS-348 commit before this docs-only update |
+| Cloudflare identity/account | PASS | `gisupp@gmail.com`; account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` |
+| Official Access management surface | BLOCKED | No Chrome DevTools/Zero Trust connector available in this execution context |
+| Wrangler Access permission | BLOCKED | OAuth token has no Access-management scope |
+| Host Admin health | BLOCKED | HTTP302 without Access; no approved machine credential |
+| Admin canary | NOT RUN | P1/P2 monitoring gate failed; no traffic mutation |
+| Production protection | PASS | API/Admin frozen; WhatsApp, D1, Meta, payment and reminder state unchanged |

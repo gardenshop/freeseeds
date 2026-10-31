@@ -2045,6 +2045,13 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **Release:** P1 blocked, so the Admin canary was not run. API `b426ba47` and Admin `494a3dce` remain 100%; candidates remain 0%; protected flags and WhatsApp flow are unchanged.
 - **Exact owner action:** provision one short-lived least-privilege Access Service Auth credential in approved host secret storage, or provide a supported authenticated Windows execution bridge. Never send credentials in chat or commit them.
 
+## GFS-349 Access resolution gate (2026-10-31 UTC)
+
+- **P0 PASS:** identity and frozen-state checks passed. API `b426ba47` and Admin `494a3dce` remain 100%; candidates remain 0%; migration0043 and protected reminder flags are unchanged.
+- **P1 BLOCKED:** this execution context has no official Chrome DevTools/Cloudflare Zero Trust connector, and Wrangler OAuth lacks Access-management scope. No service token or Access policy change was attempted.
+- **P2/P3 NOT RUN:** the controller cannot obtain authenticated host health, so no Admin canary was exposed. Host `/health` remains HTTP302 without Access; authenticated browser health remains HTTP200.
+- **Exact blocker:** owner must provision one short-lived least-privilege Access Service Auth credential through Cloudflare Zero Trust into approved host secret storage, without sending it to chat, Git, logs, or screenshots.
+
 ## GFS-345 evening order-decline audit (2026-10-30 UTC / PKT)
 
 - **PASS read-only:** identities, frozen routing, migration0043 marker/ten indexes, 0044/0045 absence, D1 quick/FK integrity, and unchanged +15/+210 / five-stage-off policy verified.

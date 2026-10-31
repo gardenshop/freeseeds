@@ -1311,3 +1311,9 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Read-only Zero Trust inventory confirmed staging Admin app `ea91b1bf-02c1-46d3-921a-ea2f507fb150`, policy `b3acdd4f-9767-4d28-a55d-0a8e771d476c`, destinations `getfreeseeds-admin-staging` and `getfreeseeds-v2-admin-staging`, and the sole owner-email allow rule. Cloudflare One Client auth is off.
 - No approved machine-authenticated Access credential or host bridge was available. No token, cookie, policy, Worker, route, flag, traffic, D1, Meta, customer, payment, or reminder mutation occurred.
 - Host Admin health remains HTTP302 without Access while the existing authenticated browser health is HTTP200. Admin canary remains blocked; owner must provision a short-lived least-privilege Access Service Auth credential in approved host storage or provide a supported authenticated Windows monitoring bridge.
+
+## GFS-349 Access resolution gate (2026-10-31 UTC)
+
+- P0 identity/read-only checks PASS: GitHub `gardenshop`, Cloudflare `gisupp@gmail.com` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; frozen API/Admin remain 100% and candidates0%; migration0043 and protected flags remain unchanged.
+- P1 BLOCKED: no Chrome DevTools/Cloudflare Zero Trust connector is available in this execution context, and Wrangler OAuth has no Access-management scope. Do not create a token, inspect secret-bearing credential metadata, extract browser cookies, or weaken the existing owner-email policy.
+- The host Admin health remains HTTP302 without Access; the existing browser session is HTTP200. No canary, Access, Worker, route, D1, Meta, payment, customer, or reminder mutation occurred. Keep the public bot and +15/+210 recovery GO; Admin release NO-GO.
