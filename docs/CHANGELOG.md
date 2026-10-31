@@ -1633,3 +1633,10 @@
 - Added separate Orders and Conversations Auto update switches, default OFF, browser-local persistence, 60-second visible polling, hidden-tab pause, one-in-flight protection, and stale-safe behavior.
 - Capped automatic Conversations summary aggregate refresh at five minutes after measuring remote D1 cost; manual/initial summary reads remain available. Bounded read-only D1 measurements reported zero writes.
 - Verified focused18/18, full341/341, build, lint, and audit0. No deployment or API/WhatsApp/customer/payment/Meta/D1/migration/flag mutation. Live-data acceptance remains blocked by unavailable `cloudflared`.
+
+## 2026-10-31 - GFS-390 Approval M Admin live validation
+
+- Uploaded exact tested Admin HEAD as `ab5be96b-d5fa-42d5-8f5c-1b0bf536bbf2` and attached it at0% beside `ceb3e680`100%; API stayed frozen at `b426ba47`100%.
+- Passed secure health/isolation, real-data Orders/Conversations, manual Refresh, Auto OFF default and local preference persistence checks through authorized Chrome/Windows tools.
+- Measured live D1 rows: Conversations list10,439, summary5,873, Orders changes equivalent9,042; all writes0. Did not cut over because approved D1 budget and complete auto-cost gate are unavailable.
+- Updated the monitoring harness to accept the current Admin baseline via protected process environment. Full341/341, build, lint, controller18/18, adapter8/8, observability5/5, and audit0 pass.

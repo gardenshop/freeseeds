@@ -1803,3 +1803,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Do not run full Conversations summary counts every 60 seconds. Retain the last summary during automatic list polls and refresh aggregates at most every five minutes; manual and initial refresh remain authoritative. Measured remote probes are read-only with zero writes.
 - Cost evidence is recorded as row-read measurements and projections only: one enabled visible tab over eight hours projects approximately4,510,464 Conversations rows and18,240 Orders rows; two/four tabs scale linearly. Default OFF remains required until an owner accepts the cost tradeoff.
 - Live-data acceptance is BLOCKED, not PASS: the new source is un-deployed and the authorized Access-protected preview cannot start without `cloudflared`. No deployment approval or API canary is requested under GFS-389.
+
+## GFS-390 decision (2026-10-31)
+
+- Accept Approval M only for the exact Admin upload and 0% validation. Candidate `ab5be96b` is real-data tested at0%; serving `ceb3e680` remains100% and API remains frozen.
+- Accept the minimal diagnostic harness repair: expected Admin baseline is configurable by protected process environment while the historical default remains unchanged. Credentials still flow only through the native Windows bridge.
+- Do not perform conditional Admin100% cutover. Real D1 costs exceed the earlier projection and the account’s approved budget/threshold is unavailable; 60-second hidden/multi-tab cost and interruption rollback evidence is incomplete. Candidate stays0% until those gates are supplied and pass.

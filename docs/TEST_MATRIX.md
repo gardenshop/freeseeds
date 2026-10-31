@@ -2518,4 +2518,17 @@ Investigation query costs only (not production savings): representative `rows_re
 | Focused tests | PASS | 18/18 Admin controls/conversations |
 | Full quality | PASS | 341/341; build; lint; dependency audit0 vulnerabilities |
 | Production mutation | PASS | No deployment; API/Admin/WhatsApp/D1/payment/Meta/migration/flag/Queue/Cron unchanged |
+
+## GFS-390 Approval M Admin live validation
+
+| Area | Result | Evidence |
+|---|---|---|
+| Exact source/upload | PASS | HEAD `3a0ee3b`; Admin version `ab5be96b`; deployment `04269792`; candidate0% |
+| Secure health/isolation | PASS | health200 x3; missing/invalid403; protected paths302; GraphQL errors0 |
+| Orders/Conversations real data | PASS | Candidate override loaded real dashboards; manual refresh completed; no customer data recorded |
+| Auto controls | PASS | Both default OFF; ON/OFF toggles persisted through reload; hidden/multi-tab timing not yet evidenced |
+| D1 cost | BLOCKED | List10,439; summary5,873; Orders changes equivalent9,042; all writes0; approved budget threshold unavailable |
+| Routing | PASS | Admin candidate0% / `ceb3e680`100%; API `b426ba47`100% / `d603f077`0% |
+| Conditional cutover | BLOCKED | No 100% cutover or watchdog exposure; keep candidate0% until budget and remaining safety gates pass |
+| Regression/security | PASS | full341/341; build/lint; controller18/18; adapter8/8; observability5/5; audit0 |
 | Next gate | PENDING APPROVAL | Exact-source upload → 0% override acceptance → conditional1%/8-minute canary → restore baseline100% |

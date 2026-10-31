@@ -5314,3 +5314,14 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - **Browser/live data:** BLOCKED for the new source. Authorized Chrome reached the existing protected live page, but the source is not deployed and the Access-protected remote preview cannot start without unavailable `cloudflared`. Synthetic/local evidence must not be presented as live acceptance.
 - **Routing/protection:** PASS read-only identity `gisupp@gmail.com` / Get Free Seeds account; API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. No production mutation occurred.
 - **Next approval/action:** obtain an authorized live-data preview path, perform 0% Admin validation with real data, then request one exact Admin-only deployment approval. GFS-386/API monitoring remains separate and blocked; no canary or promotion was run.
+
+## GFS-390 final report - Approval M Admin live validation
+
+1. **0% deployment:** PASS. Exact HEAD `3a0ee3b484ee07a1b494f4f436b5ba7b4060921a` uploaded as `ab5be96b-d5fa-42d5-8f5c-1b0bf536bbf2`; deployment `04269792-f8ef-4573-a4b4-bc273e999a10` routes it0% and `ceb3e680`100%.
+2. **Security/health:** PASS. Secure bridge health200 x3; missing/invalid403; monitoring credential denied protected paths302; GraphQL errors0. Human Admin Orders access remained usable.
+3. **Real browser:** PASS at0%. Orders and Conversations real data rendered; manual Refresh completed; both controls defaulted OFF, toggled ON/OFF, and persisted ON through reload. Analytics and Payment Settings loaded. Sanitized responsive checks had no whole-page overflow at requested widths.
+4. **D1:** PASS read-only/no-write, but cutover gate BLOCKED. Candidate endpoint costs: Conversations list10,439 rows; summary5,873; Orders changes equivalent9,042; all probes wrote0/`changed_db=false`. Account budget/threshold is UNKNOWN, and hidden/multi-tab 60-second cost acceptance is incomplete.
+5. **Tests:** PASS full341/341, build, lint, audit0, controller18/18, adapter8/8, observability5/5. Monitoring harness now accepts current baseline through protected process environment; no secrets were logged.
+6. **Final routing:** API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / candidate `ab5be96b`0%. No cutover, canary, customer, WhatsApp, payment, Meta, migration, flag, Queue, Cron, or D1 mutation occurred.
+7. **GFS comparison:** GFS-387 PASS source/live resilience; GFS-388 PASS source/synthetic but live-data blocked; GFS-389 PASS source/cost controls but live-data blocked; GFS-390 PASS 0% live validation, BLOCKED conditional cutover.
+8. **Next action:** owner must provide the approved D1 budget/row threshold and complete bounded 60-second hidden/multi-tab/interruption acceptance. Only then reassess a separately gated Admin100% cutover; API release remains separate and blocked.

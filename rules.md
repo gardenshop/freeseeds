@@ -8,6 +8,15 @@
 - Cost projection for one continuously visible, enabled tab over 8 hours (480 60-second cycles), excluding selected-detail and full-reload branches: Conversations list shapes 3,947,520 rows plus 96 five-minute summaries 562,944 = **4,510,464 rows read**; Orders no-change path **18,240 rows read**. Two/four identical tabs project 9,020,928/18,041,856 Conversations rows and 36,480/72,960 Orders rows. Default OFF and hidden-tab pause are mandatory safeguards; these are row-read projections, not a claim of billing equivalence.
 - Synthetic/local browser evidence is not live-data evidence. Authorized Chrome reached the existing protected live page, but the new source is not deployed; the Access-protected remote preview remains blocked because Wrangler requires unavailable `cloudflared`. Do not claim live acceptance or request deployment approval until an authorized live-data path is available.
 
+## GFS-390 Approval M Admin validation gate (2026-10-31 UTC)
+
+- Approval M was consumed only for Admin upload and 0% attachment. Exact HEAD `3a0ee3b484ee07a1b494f4f436b5ba7b4060921a` uploaded as Admin version `ab5be96b-d5fa-42d5-8f5c-1b0bf536bbf2`; deployment `04269792-f8ef-4573-a4b4-bc273e999a10` is Admin candidate0% / `ceb3e680`100%. API remains `b426ba47`100% / `d603f077`0%.
+- Fresh identity before mutation was `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Upload bindings matched configured D1/R2/Queue and protected variable names; no secret values were read or recorded.
+- Candidate 0% secure monitoring PASS: Windows Credential Manager bridge, authenticated health200 x3, missing/invalid403, protected Orders/Analytics/Conversations denied302, API/Admin GraphQL errors0, and routing readback API/Admin100%/0% as expected.
+- Authorized Chrome version override PASS for real data: Orders and Conversations rendered, manual refresh completed, both controls defaulted OFF, ON/OFF persisted through reload, and no whole-page overflow occurred at requested responsive widths. Sanitized candidate readback showed Orders25 rows and Conversations summary/list loaded; no customer fields were recorded.
+- Actual candidate D1 read-cost evidence: Conversations list endpoint returned query costs 2,872 + 7,567 = 10,439 rows; summary endpoint 851 + 2,487 + 48 + 2,487 = 5,873 rows; an Orders changes equivalent with current in-query cursor read 9,042 rows and found0 changes. All observed reads wrote0 / `changed_db=false`. The earlier 8-hour projections are superseded for budgeting; account budget was not available, so the 100% cutover gate is **BLOCKED**.
+- Do not cut over. Keep candidate0% and serving Admin100% until the owner supplies the approved D1 budget/threshold and the 60-second, hidden-tab, multi-tab cost/rollback acceptance is complete. No watchdog cutover was armed or disarmed because no traffic exposure occurred.
+
 ## GFS-386 diagnostic repair and canary gate (2026-10-31 UTC)
 
 - No live exposure is authorized under GFS-386. Frozen routing remains API `b426ba47`100% / `d603f077`0% and Admin `ceb3e680`100% / `72cff93f`0%; preserve the new-number WhatsApp lock and Hoja/ThanNow zero-connection rule.

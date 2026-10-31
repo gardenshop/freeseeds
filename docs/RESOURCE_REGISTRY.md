@@ -1798,3 +1798,10 @@ No secrets are stored in this registry.
 - Browser storage keys are `gfs_admin_orders_auto_update` and `gfs_admin_conversations_auto_update`; values are only `on`/`off`. No credentials, customer identifiers, raw message bodies, cookies, or private screenshots were recorded.
 - Read-only D1 evidence: summary query rows read 2,484/2,484/48/848; conversation count/list 2,869/5,355; Orders no-change/cursor 7/31; every probe wrote0 and changed_db=false.
 - Runtime resources unchanged: API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. Live source acceptance remains blocked by unavailable `cloudflared` for the Access-protected remote preview.
+
+## GFS-390 Approval M Admin live validation (2026-10-31)
+
+- Uploaded Admin version `ab5be96b-d5fa-42d5-8f5c-1b0bf536bbf2` from verified HEAD `3a0ee3b`; deployment `04269792-f8ef-4573-a4b4-bc273e999a10` attaches it at0% beside `ceb3e680`100%. API resource remains `b426ba47`100% / `d603f077`0%.
+- Read-only browser/monitor evidence: authenticated health200 x3, denied403/302 security checks, GraphQL errors0, real Orders/Conversations data, manual Refresh, Auto OFF default and local preference persistence. No customer-bearing DOM/screenshot/log or secret was registered.
+- Candidate D1 cost metadata: Conversations list10,439 rows, summary5,873 rows, Orders changes equivalent9,042 rows; writes0 and `changed_db=false`. Budget threshold is not registered; no cutover approval is claimed.
+- Harness repair: `scripts/test-gfs-monitoring.mjs` now accepts `GFS_ADMIN_BASELINE_VERSION` with the retired baseline as default, allowing current baseline readback without changing production behavior.
