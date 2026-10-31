@@ -88,7 +88,7 @@ test("rejects unknown deployed versions", async () => {
     if (args[0] !== "deployments") return "";
     return JSON.stringify({ versions: [{ version_id: "unknown", percentage: 100 }] });
   } });
-  await assert.rejects(() => adapter.readTraffic(), /unexpected_version/);
+  await assert.rejects(() => adapter.readTraffic(), (error) => error.code === "monitor_retry_exhausted" && error.diagnostic.causeCode === "unknown_routing_version");
 });
 
 test("retries one transient monitoring read without using stale data", async () => {
@@ -119,6 +119,6 @@ test("fails closed after bounded monitoring retries are exhausted", async () => 
     readMetrics: async () => { reads += 1; throw new Error("persistent_graphql_error"); },
     runCommand: async (args) => args[0] === "deployments" ? status(args[3] === "api" ? workers.api : workers.admin, 100, 0) : ""
   });
-  await assert.rejects(() => adapter.readTraffic(), /persistent_graphql_error/);
+  await assert.rejects(() => adapter.readTraffic(), (error) => error.code === "monitor_retry_exhausted" && error.diagnostic.causeCode === "controller_exception");
   assert.equal(reads, 4);
 });

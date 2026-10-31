@@ -1,6 +1,7 @@
 import { execFile } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+import { diagnosticError } from "./canary-diagnostics.mjs";
 
 const execFileAsync = promisify(execFile);
 const WRANGLER_ENTRY = fileURLToPath(new URL("../node_modules/wrangler/bin/wrangler.js", import.meta.url));
@@ -19,26 +20,28 @@ const DEFAULT_WORKERS = Object.freeze({
 });
 
 async function runWrangler(args, { signal, timeoutMs = 120_000 } = {}) {
-  const result = await execFileAsync(process.execPath, [WRANGLER_ENTRY, ...args], {
-    shell: false,
-    windowsHide: true,
-    timeout: timeoutMs,
-    maxBuffer: 2 * 1024 * 1024,
-    signal
-  });
-  return result.stdout;
+  try {
+    const result = await execFileAsync(process.execPath, [WRANGLER_ENTRY, ...args], {
+      shell: false, windowsHide: true, timeout: timeoutMs, maxBuffer: 2 * 1024 * 1024, signal
+    });
+    return result.stdout;
+  } catch (error) {
+    const code = signal?.aborted || error?.code === "ETIMEDOUT" || error?.name === "AbortError" ? "wrangler_timeout" : /auth|login|token|credential/i.test(String(error?.code ?? "")) ? "wrangler_authentication" : "wrangler_invalid_response";
+    throw diagnosticError(code, { stage: "wrangler", operation: args[0] === "versions" ? "deploy" : "version_readback", errorClass: error?.name ?? "Error" });
+  }
 }
 
 function statusFromJson(raw, worker) {
-  const state = JSON.parse(raw);
+  let state;
+  try { state = JSON.parse(raw); } catch { throw diagnosticError("wrangler_invalid_response", { stage: "routing", operation: "version_readback" }); }
   const versions = new Map((state.versions ?? []).map((version) => [version.version_id, Number(version.percentage)]));
-  if (!versions.has(worker.baseline) || !versions.has(worker.candidate)) throw new Error("unexpected_version");
+  if (!versions.has(worker.baseline) || !versions.has(worker.candidate)) throw diagnosticError("unknown_routing_version", { stage: "routing", operation: "version_readback" });
   return { baseline: versions.get(worker.baseline), candidate: versions.get(worker.candidate) };
 }
 
 function validateHealth(worker, health, metrics) {
-  if (!health || !Number.isInteger(health.httpStatus) || !Number.isFinite(health.latencyMs) || health.latencyMs < 0) throw new Error(`health_unavailable:${worker.name}`);
-  if (!metrics || metrics.source !== "cloudflare_graphql" || !Number.isInteger(metrics.requests) || metrics.requests < 0 || !Number.isInteger(metrics.errors) || metrics.errors < 0) throw new Error(`metrics_unavailable:${worker.name}`);
+  if (!health || !Number.isInteger(health.httpStatus) || !Number.isFinite(health.latencyMs) || health.latencyMs < 0) throw diagnosticError("health_unavailable", { stage: "health", operation: "health_validate" });
+  if (!metrics || metrics.source !== "cloudflare_graphql" || !Number.isInteger(metrics.requests) || metrics.requests < 0 || !Number.isInteger(metrics.errors) || metrics.errors < 0) throw diagnosticError("graphql_invalid_response", { stage: "metrics", operation: "metrics_validate" });
   return { httpStatus: health.httpStatus, latencyMs: health.latencyMs, requests: metrics.requests, errors: metrics.errors };
 }
 
@@ -109,12 +112,12 @@ export function createCloudflareCanaryAdapter({ workers = DEFAULT_WORKERS, runCo
       for (let attempt = 0; attempt <= monitorRetryCount; attempt += 1) {
         try { return await readTrafficOnce(signal); }
         catch (error) {
-          lastError = error;
-          if (attempt >= monitorRetryCount) throw error;
+          lastError = error?.code ? error : diagnosticError(signal?.aborted ? "cancellation" : "controller_exception", { stage: "monitor", operation: "read_traffic", attempt });
+          if (attempt >= monitorRetryCount) throw diagnosticError("monitor_retry_exhausted", { stage: "monitor", operation: "read_traffic", causeCode: lastError.code, attempt });
           await waitForMonitorRetry(signal);
         }
       }
-      throw lastError;
+      throw diagnosticError("monitor_retry_exhausted", { stage: "monitor", operation: "read_traffic", causeCode: lastError?.code, attempt: monitorRetryCount });
     }
   };
 }

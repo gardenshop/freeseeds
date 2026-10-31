@@ -1,5 +1,11 @@
 # Changelog
 
+## GFS-386 diagnostic repair (2026-10-31)
+
+- Added safe allowlisted diagnostics and bounded persistence across monitor/controller rollback paths. Raw GraphQL bodies, credentials, customer identifiers and payment data remain prohibited.
+- Focused adapter8/8, observability5/5, controller18/18, full339/339, build/lint and audit0 pass. Read-only baseline qualification classified one `graphql_http200_errors` / `monitor_retry_exhausted` event and recovered on the next check.
+- No canary, deployment, API candidate change, customer/Meta/payment/D1/migration/flag/Queue/Cron mutation occurred. Release remains blocked pending monitoring stability.
+
 ## GFS-385 API canary disposition (2026-10-31)
 
 - Executed the separately approved one-time API1% canary for candidate `d603f077`; no synthetic customer event, order, payment, message or Meta action was performed.

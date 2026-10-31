@@ -1,5 +1,6 @@
 import { open, readFile, unlink } from "node:fs/promises";
 import process from "node:process";
+import { appendDiagnostic, errorCode, newCorrelationId } from "./canary-diagnostics.mjs";
 
 const DEFAULTS = Object.freeze({
   scope: "all",
@@ -41,7 +42,7 @@ function monotonicMs() {
 function safeAudit(audit, event, fields = {}) {
   if (!CONTROL_EVENTS.has(event)) return;
   const safe = { event };
-  for (const key of ["elapsedMs", "remainingMs", "reason", "code"]) {
+  for (const key of ["elapsedMs", "remainingMs", "reason", "code", "stage", "operation", "errorClass", "httpStatus", "attempt", "correlationId"]) {
     if (key in fields) {
       if (typeof fields[key] === "number") safe[key] = Math.max(0, Math.round(fields[key]));
       else safe[key] = /^[a-z0-9_:-]{1,40}$/i.test(String(fields[key])) ? String(fields[key]) : "unclassified";
@@ -158,6 +159,8 @@ export async function runCanary(options = {}) {
   const readTraffic = config.readTraffic;
   const audit = config.audit ?? (() => {});
   const signal = config.signal;
+  const correlationId = config.correlationId ?? newCorrelationId();
+  const diagnosticPath = config.diagnosticPath;
   if (typeof execute !== "function" || typeof readTraffic !== "function") throw new TypeError("execute and readTraffic are required");
   if (config.durationMs <= config.restoreMarginMs || config.restoreMarginMs < 1) throw new TypeError("invalid deadline margin");
   if (config.targetCandidatePercent <= 0 || config.targetCandidatePercent >= 100) throw new TypeError("invalid candidate percentage");
@@ -183,6 +186,13 @@ export async function runCanary(options = {}) {
   const remaining = (limit) => Math.max(1, Math.floor(limit - now()));
   const invoke = (action, limit, parentSignal = signal) => bounded((actionSignal) => execute(action, { signal: actionSignal }), Math.min(config.commandTimeoutMs, remaining(limit)), parentSignal);
   const read = (limit, parentSignal = signal) => bounded((readSignal) => readTraffic({ signal: readSignal }), Math.min(config.pollTimeoutMs, remaining(limit)), parentSignal);
+  const recordDiagnostic = async (error, details = {}) => {
+    try {
+      await appendDiagnostic(diagnosticPath, { error, details: { correlationId, elapsedMs: now() - startedAt, ...details } });
+    } catch {
+      // Diagnostics must never prevent a safety rollback.
+    }
+  };
 
   async function restore(reason) {
     rollbackAttempted = true;
@@ -193,7 +203,8 @@ export async function runCanary(options = {}) {
       await invoke("restore_baseline", hardDeadline, null);
     } catch (error) {
       commandError = error;
-      safeAudit(audit, "restore_failed", { reason: "command", code: error?.code ?? "restore_error" });
+      await recordDiagnostic(error, { stage: "rollback", operation: "restore_command" });
+      safeAudit(audit, "restore_failed", { reason: "command", code: errorCode(error, "watchdog_restoration_failed"), stage: "rollback", operation: "restore_command", correlationId });
     }
     let retryIssued = false;
     while (now() <= hardDeadline) {
@@ -201,7 +212,8 @@ export async function runCanary(options = {}) {
       try {
         traffic = await read(hardDeadline, null);
       } catch (error) {
-        safeAudit(audit, "restore_failed", { reason: "readback", code: error?.code ?? "readback_error" });
+        await recordDiagnostic(error, { stage: "rollback", operation: "restore_readback" });
+        safeAudit(audit, "restore_failed", { reason: "readback", code: errorCode(error, "watchdog_restoration_failed"), stage: "rollback", operation: "restore_readback", correlationId });
         if (now() >= hardDeadline) break;
         await sleep(Math.min(config.pollIntervalMs, remaining(hardDeadline)), null);
         continue;
@@ -218,7 +230,8 @@ export async function runCanary(options = {}) {
           await invoke("restore_baseline", hardDeadline, null);
         } catch (error) {
           commandError = error;
-          safeAudit(audit, "restore_failed", { reason: "retry_command", code: error?.code ?? "restore_error" });
+          await recordDiagnostic(error, { stage: "rollback", operation: "restore_retry" });
+          safeAudit(audit, "restore_failed", { reason: "retry_command", code: errorCode(error, "watchdog_restoration_failed"), stage: "rollback", operation: "restore_retry", correlationId });
         }
       }
       if (now() >= hardDeadline) break;
@@ -238,12 +251,17 @@ export async function runCanary(options = {}) {
       }
       lockHeld = true;
     }
-    const initial = await read(restoreDeadline);
+    let initial;
+    try { initial = await read(restoreDeadline); }
+    catch (error) {
+      await recordDiagnostic(error, { stage: "preflight", operation: "initial_readback" });
+      throw error;
+    }
     if (!trafficIsBaseline(initial, config.scope)) {
       safeAudit(audit, "health_unknown", { reason: initial?.health ? "unhealthy" : "unavailable", code: "initial_readback_failed" });
       throw new ControllerError(initial?.health ? "initial_readback_failed" : "health_unavailable");
     }
-    safeAudit(audit, "route_started", { remainingMs: restoreDeadline - now() });
+    safeAudit(audit, "route_started", { remainingMs: restoreDeadline - now(), correlationId });
     routeMayHaveChanged = true;
     await invoke("expose_candidate", restoreDeadline);
     if (now() >= restoreDeadline) {
@@ -253,13 +271,19 @@ export async function runCanary(options = {}) {
 
     let candidateObserved = false;
     while (now() < restoreDeadline) {
-      const traffic = await read(restoreDeadline);
+      let traffic;
+      try { traffic = await read(restoreDeadline); }
+      catch (error) {
+        await recordDiagnostic(error, { stage: "monitor", operation: "candidate_readback" });
+        safeAudit(audit, "monitor_failed", { reason: "readback", code: errorCode(error), stage: "monitor", operation: "candidate_readback", correlationId });
+        throw error;
+      }
       if (!healthIsSafe(traffic)) {
-        safeAudit(audit, "health_unknown", { reason: traffic?.health ? "unhealthy" : "unavailable", code: "health_unavailable" });
+        safeAudit(audit, "health_unknown", { reason: traffic?.health ? "unhealthy" : "unavailable", code: "health_unavailable", stage: "monitor", operation: "health_validate", correlationId });
         throw new ControllerError(traffic?.health ? "provider_5xx" : "health_unavailable");
       }
       if (traffic.health.api.errors > 0 || traffic.health.admin.errors > 0) {
-        safeAudit(audit, "monitor_failed", { reason: "provider_5xx", code: "provider_5xx" });
+        safeAudit(audit, "monitor_failed", { reason: "provider_5xx", code: "provider_5xx", stage: "monitor", operation: "metrics_validate", correlationId });
         throw new ControllerError("provider_5xx");
       }
       if (trafficHasCandidate(traffic, config.targetCandidatePercent, config.scope)) {
@@ -277,20 +301,23 @@ export async function runCanary(options = {}) {
     safeAudit(audit, "release_complete", { elapsedMs: verifiedAt - startedAt });
     return result(true, "complete", { rollbackVerified, rollbackAttempted, verifiedAtMs: verifiedAt, strictCapCompliant: true });
   } catch (error) {
-    const code = error?.code ?? "controller_error";
+    const code = errorCode(error);
+    await recordDiagnostic(error, { stage: routeMayHaveChanged ? "canary" : "preflight", operation: "controller" });
     if (lockRejected) {
-      safeAudit(audit, "release_failed", { reason: "lock", code });
+      safeAudit(audit, "release_failed", { reason: "lock", code, stage: "controller", operation: "lock", correlationId });
       return result(false, code, { rollbackVerified, rollbackAttempted });
     }
     if (routeMayHaveChanged && !rollbackVerified) {
       try {
         await restore(code);
       } catch (rollbackError) {
-        safeAudit(audit, "release_failed", { reason: "rollback", code: rollbackError?.code ?? "rollback_failed" });
-        return result(false, rollbackError?.code ?? "rollback_failed", { rollbackVerified, rollbackAttempted });
+        const rollbackCode = errorCode(rollbackError, "watchdog_restoration_failed");
+        await recordDiagnostic(rollbackError, { stage: "rollback", operation: "rollback_final" });
+        safeAudit(audit, "release_failed", { reason: "rollback", code: rollbackCode, stage: "rollback", operation: "rollback_final", correlationId });
+        return result(false, rollbackCode, { rollbackVerified, rollbackAttempted });
       }
     }
-    safeAudit(audit, "release_failed", { reason: "guard", code });
+    safeAudit(audit, "release_failed", { reason: "guard", code, stage: "controller", operation: "guard", correlationId });
     return result(false, code, { rollbackVerified, rollbackAttempted });
   } finally {
     if (lockHeld && (rollbackVerified || !routeMayHaveChanged)) {

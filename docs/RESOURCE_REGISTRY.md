@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-386 diagnostic evidence (2026-10-31)
+
+- **Monitoring code:** `scripts/canary-diagnostics.mjs` plus adapter/observability/controller integration; bounded sanitized records only, no secret or customer data.
+- **Qualification:** 8 read-only baseline checks scheduled over105 seconds,7 successful and1 classified GraphQL HTTP200/retry exhaustion; final routing remained API/Admin100%/0% with HTTP200 health.
+- **External resources:** no Worker version, deployment, Access policy, token, D1, Meta, Queue, Cron or flag was created or modified. No canary is authorized until monitoring stability passes.
+
 ## GFS-385 API canary evidence (2026-10-31)
 
 - **Approved API candidate:** `d603f077-cc44-4882-af9b-9985adb53424`, version119, existing uploaded version; no source or binding mutation.

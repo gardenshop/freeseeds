@@ -16,8 +16,31 @@ test("aggregates genuine GraphQL rows and preserves zero errors as measured", ()
 });
 
 test("empty or malformed metrics are unavailable, never fabricated as zero", () => {
-  assert.throws(() => sumMetricRows([]), /metrics_unavailable/);
-  assert.throws(() => sumMetricRows([{ sum: { requests: 1, errors: null } }]), /metrics_unavailable/);
+  assert.throws(() => sumMetricRows([]), (error) => error.code === "graphql_empty_rows");
+  assert.throws(() => sumMetricRows([{ sum: { requests: 1, errors: null } }]), (error) => error.code === "graphql_invalid_response");
+});
+
+test("classifies GraphQL HTTP200 errors, HTTP failures, invalid JSON and timeouts", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "gfs-observability-errors-"));
+  const tokenPath = path.join(directory, "wrangler.toml");
+  try {
+    await writeFile(tokenPath, 'oauth_token = "synthetic-token"\n');
+    const cases = [
+      [{ ok: true, status: 200, json: async () => ({ errors: [{ message: "redacted" }] }) }, "graphql_http200_errors"],
+      [{ ok: false, status: 429, json: async () => ({}) }, "graphql_http_failure"],
+      [{ ok: true, status: 200, json: async () => { throw new Error("bad json"); } }, "graphql_invalid_response"],
+      [new DOMException("aborted", "AbortError"), "graphql_timeout"]
+    ];
+    for (const [responseOrError, code] of cases) {
+      const observability = createCloudflareObservability({ accountTag: "account", tokenPath, fetchImpl: async () => {
+        if (responseOrError instanceof Error || responseOrError?.name === "AbortError") throw responseOrError;
+        return responseOrError;
+      } });
+      await assert.rejects(() => observability.readMetrics(worker), (error) => error.code === code);
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test("credential bridge validates both values and creates only Access headers", () => {

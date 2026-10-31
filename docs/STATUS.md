@@ -1,5 +1,12 @@
 # Status
 
+## GFS-386 diagnostic repair and canary gate (2026-10-31 UTC)
+
+- **Source repair PASS:** ordinary errors no longer collapse to generic `controller_error`. Observability and adapter classify GraphQL HTTP200 errors/empty rows, malformed/HTTP/network/timeout/auth failures, Wrangler readback/version errors, health failures, cancellation and bounded retry exhaustion. Controller persists bounded sanitized records with correlation ID and rollback stage; secrets and raw bodies are excluded.
+- **Tests PASS:** adapter8/8, observability5/5, controller18/18, full339/339, build, lint and offline audit0. No API candidate or business logic changed.
+- **Read-only qualification PARTIAL:** 8 baseline checks scheduled over105 seconds; 7 passed and 1 returned `monitor_retry_exhausted` / `graphql_http200_errors`. The following check recovered; final API/Admin routing100%/0%, health HTTP200 and GraphQL errors0.
+- **Release BLOCKED:** the error is now diagnosable and fail-closed, but monitoring stability is not PASS. No fresh canary approval is prepared, no candidate exposure or deployment occurred, and WhatsApp/API/D1/Meta/customer state was not mutated.
+
 ## GFS-385 API canary disposition (2026-10-31 UTC)
 
 - **Preflight PASS:** protected host credential bridge succeeded; exact routing API `b426ba47`100%/`d603f077`0%, Admin `ceb3e680`100%/`72cff93f`0%; API/Admin health HTTP200 and GraphQL errors0. Candidate version119 metadata matches the approved GFS-383 corrected repair; no candidate source change.

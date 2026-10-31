@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-386 diagnostic repair (2026-10-31 UTC)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Safe diagnostic taxonomy | PASS | Allowlisted codes include GraphQL, Wrangler, health, routing, cancellation, retry, controller and watchdog failures |
+| Bounded persistence/privacy | PASS | Controller diagnostic fixture persists sanitized NDJSON; no message, customer, token or raw error body |
+| Adapter | PASS | 8/8; retry exhaustion preserves cause code |
+| Observability | PASS | 5/5; HTTP200 GraphQL errors, HTTP failure, invalid JSON and timeout classified |
+| Deadline/rollback controller | PASS | 18/18; interruption and monitor failure restore safely |
+| Full regression/build/lint/audit | PASS | 339/339; build/lint PASS; offline audit0 vulnerabilities |
+| Baseline read-only qualification | PARTIAL / BLOCKED | 8 checks scheduled over105s:7 PASS,1 `monitor_retry_exhausted` / `graphql_http200_errors`, next check recovered |
+| New API canary | NOT RUN | Monitoring reliability gate not PASS; no fresh approval prepared |
+
 ## GFS-385 API canary (2026-10-31 UTC)
 
 | Check | Result | Evidence / boundary |

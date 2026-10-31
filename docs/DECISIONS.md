@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-386 diagnostic and release decision (2026-10-31 UTC)
+
+- Replace generic controller error collapse with safe allowlisted diagnostics and bounded persistence; preserve fail-closed routing and rollback. Do not expose the API candidate while a baseline qualification can still return monitor retry exhaustion.
+- The 8-check read-only qualification classified one transient Cloudflare GraphQL HTTP200 error after the previous 109.7-second failure point. Recovery on the next check proves no Worker failure, but the 7/8 result is insufficient for release PASS.
+- Keep API `b426ba47`100% and Admin `ceb3e680`100%; no fresh canary approval is requested. Next action is isolated monitor reliability work, not another live canary.
+
 ## GFS-385 API canary decision (2026-10-31 UTC)
 
 - Approval L was used only for one API-only1% exposure of approved candidate `d603f077`; Admin remained `ceb3e680`100% and no customer test traffic was generated.

@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-386 diagnostic repair and canary gate (2026-10-31 UTC)
+
+- No live exposure is authorized under GFS-386. Frozen routing remains API `b426ba47`100% / `d603f077`0% and Admin `ceb3e680`100% / `72cff93f`0%; preserve the new-number WhatsApp lock and Hoja/ThanNow zero-connection rule.
+- Added an allowlisted diagnostic taxonomy and bounded NDJSON persistence for controller/adapter/observability failures. GraphQL HTTP200 errors, empty rows, invalid JSON, HTTP failure, timeout/network, Wrangler auth/timeout/readback, unknown routing, health, cancellation, retry exhaustion, controller exception and watchdog restoration failures now retain safe code, stage, operation, class, status/attempt/elapsed fields and correlation ID only. No raw bodies, secrets, cookies, customer or payment data are retained.
+- Fail-closed behavior and rollback deadlines remain unchanged. Focused adapter8/8, observability5/5, controller18/18, full339/339, build, lint and offline audit0 pass.
+- Read-only baseline qualification ran8 checks over105 seconds:7 success,1 `monitor_retry_exhausted` caused by `graphql_http200_errors`, then recovery on the next check. Final readback was API/Admin100%/0%, health HTTP200 and GraphQL errors0. This is classified and safely recoverable but **monitoring reliability is not yet PASS**; no fresh API canary approval is prepared or requested and no live exposure may be repeated.
+
 ## GFS-385 API canary disposition (2026-10-31 UTC)
 
 - Approval L authorized one API-only `d603f077-cc44-4882-af9b-9985adb53424` canary at1% for8 minutes with restoration byminute6. Preflight used the protected Windows Credential Manager bridge; API `b426ba47`/candidate and Admin `ceb3e680`/rollback were read back100%/0%, health was HTTP200 and GraphQL errors were0. Candidate version119 metadata identifies the approved GFS-383 corrected acknowledgement repair and no API source was changed.

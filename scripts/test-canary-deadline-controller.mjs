@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -294,5 +294,33 @@ test("valid monitoring recovery verifies rollback after credential failure", asy
   }));
   assert.equal(result.ok, false);
   assert.equal(result.code, "provider_5xx");
+  assert.equal(result.rollbackVerified, true);
+}));
+
+test("persists a specific monitor failure without unsafe fields and restores", async () => withLock(async (lockPath) => {
+  const directory = path.dirname(lockPath);
+  const diagnosticPath = path.join(directory, "diagnostics.ndjson");
+  const clock = fakeClock();
+  let reads = 0;
+  const result = await runCanary(baseOptions(clock, lockPath, {
+    diagnosticPath,
+    execute: async (action) => { if (action === "restore_baseline") reads = 99; },
+    readTraffic: async () => {
+      reads += 1;
+      if (reads === 1) return traffic("baseline");
+      if (reads === 100) return traffic("baseline");
+      const error = new Error("redacted raw provider body");
+      error.code = "monitor_retry_exhausted";
+      error.diagnostic = { causeCode: "graphql_http200_errors", stage: "metrics", operation: "graphql_response" };
+      throw error;
+    }
+  }));
+  assert.equal(result.ok, false);
+  assert.equal(result.code, "monitor_retry_exhausted");
+  const records = (await readFile(diagnosticPath, "utf8")).trim().split("\n").map(JSON.parse);
+  assert.equal(records.at(-1).code, "monitor_retry_exhausted");
+  assert.equal(records.at(-1).causeCode, "graphql_http200_errors");
+  assert.equal("message" in records.at(-1), false);
+  assert.equal("customer" in records.at(-1), false);
   assert.equal(result.rollbackVerified, true);
 }));

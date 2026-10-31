@@ -1,5 +1,26 @@
 # Final Report
 
+## GFS-386 diagnostic repair and release gate (2026-10-31 UTC)
+
+### Result
+
+**Diagnostics PASS; live release BLOCKED.** GFS-385 showed generic `controller_error` because ordinary errors lost their classification. GFS-386 adds safe allowlisted codes, correlation IDs, stage/operation/attempt/elapsed/status fields and bounded sanitized persistence through controller failure and rollback. Fail-closed behavior is preserved.
+
+Tests pass: adapter8/8, observability5/5, controller18/18, full339/339, build/lint and offline audit0. No API candidate or business logic changed.
+
+Read-only baseline qualification scheduled8 checks over105 seconds. Seven passed; one failed with `monitor_retry_exhausted` caused by `graphql_http200_errors`; the next check recovered. Final readback was API `b426ba47`100% / `d603f077`0%, Admin `ceb3e680`100% / `72cff93f`0%, health HTTP200 and GraphQL errors0. Monitoring is now diagnosable and fail-closed, but 7/8 stability is not a release PASS.
+
+### Comparison
+
+| Task | Result |
+|---|---|
+| GFS-383 | FAIL-SAFE/INCONCLUSIVE: monitoring fault restored the 1% canary |
+| GFS-384 | PASS: bounded retry repair and tests |
+| GFS-385 | FAIL-SAFE/INCONCLUSIVE: 1% canary restored after monitor failure |
+| GFS-386 | PASS diagnostics/tests; BLOCKED for new canary because read-only stability was 7/8 |
+
+No fresh API canary approval is prepared or requested. No production routing, customer message/order/payment, Meta, migration, flag, Queue/Cron or D1 mutation occurred. Next action is isolated monitoring reliability repair and retest; do not repeat live exposure until the qualification passes.
+
 ## GFS-385 API canary disposition (2026-10-31 UTC)
 
 ### Result
