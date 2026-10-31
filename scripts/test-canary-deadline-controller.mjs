@@ -247,3 +247,52 @@ test("audit output is allowlisted and contains no command or customer data", asy
     assert.equal("token" in event, false);
   }
 }));
+
+test("expired credentials fail closed before candidate exposure", async () => withLock(async (lockPath) => {
+  const events = [];
+  const result = await runCanary(baseOptions(fakeClock(), lockPath, {
+    audit: (event) => events.push(event),
+    readTraffic: async () => traffic("baseline", health(0, 0, 401, 200))
+  }));
+  assert.equal(result.ok, false);
+  assert.equal(result.code, "initial_readback_failed");
+  assert.equal(result.rollbackAttempted, false);
+  assert.ok(events.some((event) => event.event === "health_unknown" && event.reason === "unhealthy"));
+}));
+
+test("revoked credentials fail closed before candidate exposure", async () => withLock(async (lockPath) => {
+  const result = await runCanary(baseOptions(fakeClock(), lockPath, {
+    readTraffic: async () => traffic("baseline", health(0, 0, 200, 403))
+  }));
+  assert.equal(result.ok, false);
+  assert.equal(result.code, "initial_readback_failed");
+  assert.equal(result.rollbackAttempted, false);
+}));
+
+test("unavailable credentials fail closed before candidate exposure", async () => withLock(async (lockPath) => {
+  const result = await runCanary(baseOptions(fakeClock(), lockPath, {
+    readTraffic: async () => ({ ...traffic("baseline"), health: null })
+  }));
+  assert.equal(result.ok, false);
+  assert.equal(result.code, "health_unavailable");
+  assert.equal(result.rollbackAttempted, false);
+}));
+
+test("valid monitoring recovery verifies rollback after credential failure", async () => withLock(async (lockPath) => {
+  const clock = fakeClock();
+  let reads = 0;
+  let restored = false;
+  const result = await runCanary(baseOptions(clock, lockPath, {
+    execute: async (action) => { if (action === "restore_baseline") restored = true; },
+    readTraffic: async () => {
+      reads += 1;
+      if (restored) return traffic("baseline");
+      if (reads === 1) return traffic("baseline");
+      if (reads === 2) return traffic("candidate", health(0, 0, 200, 403));
+      return traffic("candidate", health(0, 0, 200, 403));
+    }
+  }));
+  assert.equal(result.ok, false);
+  assert.equal(result.code, "provider_5xx");
+  assert.equal(result.rollbackVerified, true);
+}));

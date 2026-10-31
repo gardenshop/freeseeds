@@ -1351,3 +1351,8 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Repair: the Admin Worker permits Cloudflare's authenticated `ctx.access` only for `GET /health`; human Admin email authorization and all other Admin paths remain unchanged. The corrected version is deployed at 0% beside baseline `494a3dce`100%. API remains `b426ba47`100%; canary remains 0%.
 - Real acceptance: protected controller returned three HTTP200 health responses; missing/invalid credentials returned403; Orders, Analytics and Conversations returned302/denied; GraphQL readback returned API/Admin requests with0 errors. No customer, payment, Meta, D1, Queue, Cron, reminder, or WhatsApp mutation occurred.
 - Never log, export, screenshot, or commit Access credentials. Do not simulate revocation by disabling the active token; use fail-closed invalid/missing-credential tests and documented rollback only.
+## GFS-365 safety and canary-readiness gate (2026-10-31 UTC)
+
+- Credential expiry, revocation, and unavailable states are tested only with isolated synthetic controller responses. They fail closed before candidate exposure, emit allowlisted health-failure evidence, and recover with valid monitoring after verified restoration. Never disable, rotate, delete, or expire the active provider token for testing.
+- Exact combined Admin candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec` contains the current Analytics, Conversations, and `/health` Service Auth repair. It is staged at0% beside Admin baseline `494a3dce`100%; API `b426ba47` remains100%.
+- Approval D must name this exact tested candidate and authorize only10% for8 minutes, with restoration beginning by minute6. No automatic promotion or customer/payment/Meta mutation.

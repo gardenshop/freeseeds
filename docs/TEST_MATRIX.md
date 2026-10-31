@@ -2193,3 +2193,16 @@ Investigation query costs only (not production savings): representative `rows_re
 | Local regression | PASS | Focused33/33, full335/335, build and lint |
 | Expiry/revocation simulation | PENDING | Active token was not disabled or rotated; safe fail-closed procedure remains owner-confirmation gate |
 | Admin canary | NOT RUN | Separate Approval D not yet granted; production routing frozen |
+### GFS-365 safety, rollback, and combined-candidate acceptance (2026-10-31 UTC)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Expired credential simulation | PASS | Synthetic HTTP401 monitoring fails closed before exposure |
+| Revoked credential simulation | PASS | Synthetic HTTP403 monitoring fails closed before exposure |
+| Unavailable credential simulation | PASS | Missing health/credential state fails closed before exposure |
+| Recovery after valid credentials | PASS | Valid readback after failure verifies baseline restoration |
+| Legacy rollback | PASS | Clean `gfs273-v1` at `cf01f444…`; 4/4 local in-memory tests |
+| Combined candidate identity | PASS | `4fe564a6-bcd7-4106-82ee-00f7b14c4bec` built from current Analytics, Conversations, and health-repair tree |
+| Real combined monitoring | PASS | Auth health200 x3; missing/invalid403; Orders/Analytics/Conversations denied; GraphQL0 errors; baseline100%/candidate0% |
+| Local release quality | PASS | Focused41/41, full335/335, build, lint, audit0; controller17/17, adapter6/6, observability4/4 |
+| Approval D | REQUESTED | One Admin-only10% canary, max8 minutes, restoration by minute6; no execution before owner approval |

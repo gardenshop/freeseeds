@@ -4997,3 +4997,13 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - **Tests:** focused33/33, full335/335, build and lint PASS. No customer, payment, Meta, D1, Queue, Cron, reminder, WhatsApp, migration, or flag mutation. Existing Admin login authorization remains unchanged; a live Orders-page snapshot was not taken because it could expose customer data.
 - **Approval D:** NOT YET GRANTED. Canary NOT RUN. Expiry/revocation simulation remains pending because disabling/rotating the active credential would be disruptive; no fabricated PASS.
 - **Next action:** owner confirm the safe non-disruptive expiry/revocation procedure (or provide a non-production expired test credential), then explicitly approve one Admin-only canary: candidate `19188b21-60da-4b03-bd89-72cb49468100`, maximum10% for8 minutes, restoration starts by minute6; restore Admin `494a3dce`100%, candidate0%, API `b426ba47`100%. No full promotion.
+## GFS-365 final report — safety tests and Approval D request (2026-10-31 UTC)
+
+- **GFS-363:** credential bridge existed; first live monitoring test returned403.
+- **GFS-364:** corrected the invalid version-override header and repaired `/health` Service Auth authorization; real monitoring passed on the repair version.
+- **GFS-365:** PASS. Synthetic expired/revoked/unavailable credentials fail closed before exposure; valid monitoring recovery verifies rollback; active token was not changed. Clean legacy rollback checkout passed4/4.
+- **Exact candidate:** `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`, built from the current tree containing Analytics, Conversations, and the authenticated `/health` repair. Real HTTP health200 x3; missing/invalid403; restricted Admin paths denied; GraphQL API/Admin0 errors; latency recorded; deployment readback baseline100% / candidate0%.
+- **Tests:** focused41/41, full335/335, build, lint, audit0 vulnerabilities, controller17/17, adapter6/6, observability4/4. No customer, payment, Meta, migration, Queue, Cron, or routing exposure.
+- **Final routing:** API `b426ba47`100%; Admin `494a3dce`100%; candidate `4fe564a6…`0%. No canary executed.
+- **Approval D requested:** “Approve ONE Admin-only 10% canary of verified candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`, maximum 8 minutes, restoration beginning by minute6, restoring Admin `494a3dce`100% and candidate0%, while API stays `b426ba47`100%?”
+- **Remaining:** owner approval and one bounded canary; then independent restoration verification. Retain Admin full promotion, API acknowledgement repair, Meta timezone, historical CAPI/receipts; defer optional D1 optimization and full chat history.

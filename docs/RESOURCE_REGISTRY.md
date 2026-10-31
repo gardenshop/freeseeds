@@ -1622,3 +1622,8 @@ No secrets are stored in this registry.
 
 - **GFS-364 verified Access resources:** application `GFS-Admin-Health-Monitoring` targets only `getfreeseeds-admin-staging.get-free-seeds.workers.dev/health`; attached policy is existing `GFS-Admin-Health-Monitor` Service Auth; existing token is enabled. No Client ID/Secret value is recorded.
 - **GFS-364 Worker state:** Admin repair version `7e0b0549-ceaa-4b67-83cb-4e96a41c6bee` is deployed at0% with baseline `494a3dce-5d52-4b66-b3ff-bef64b31b406`100%; API remains `b426ba47`100%. Candidate canary remains0% and was not run.
+## GFS-365 verified release resources
+
+- **Combined Admin candidate:** `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`, current Analytics + Conversations + Service Auth health repair, staged0%.
+- **Frozen routing:** Admin baseline `494a3dce`100%; API `b426ba47`100%; canary candidate0%. No active Access secret values recorded.
+- **Rollback source:** `D:\free seeds\gfs273-v1`, detached clean baseline `cf01f444500415b1f22a64730674caca1c286006`; local rollback4/4.

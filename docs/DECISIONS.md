@@ -1639,3 +1639,8 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - The live 403 was not an Access-policy failure: the version-override smoke test used invalid JSON syntax, so Cloudflare served the 100% baseline Worker. Correct the harness and place the Worker repair at0% only; never promote it during monitoring validation.
 - Keep the Worker authorization narrow: Access `ctx.access` is accepted only for `GET /health`; human email authorization remains required for all other Admin routes. Do not weaken Access, create a Bypass rule, add a wildcard, or expose secrets.
 - Monitoring is PASS for authenticated health, negative auth, path isolation, observability and frozen routing. Do not run the Admin canary until the non-disruptive expiry/revocation procedure is confirmed and separate Approval D is granted.
+## GFS-365 decision (2026-10-31 UTC)
+
+- Treat simulated expiry/revocation/unavailability as PASS only for controller fail-closed behavior; do not claim provider-side revocation. The active token remains enabled and untouched.
+- The prior `19188b21` upload is not the tested health-repair version. The exact combined candidate is `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`; it alone may be named in Approval D.
+- Request, but do not execute, one Admin-only canary at10% for8 minutes with restoration beginning by minute6. Restore `494a3dce`100% and candidate0%; keep API `b426ba47`100%. No full promotion.

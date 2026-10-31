@@ -2093,3 +2093,10 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **PASS:** Real protected monitoring: authenticated `/health` 200 x3; missing/invalid 403; monitoring credential denied Orders/Analytics/Conversations (302); GraphQL API/Admin readback 0 errors; routing API `b426ba47`100%, Admin `494a3dce`100%, repair 0%.
 - **PASS:** focused33/33, full335/335, build, lint and diff-check. Browser Orders snapshot was intentionally not taken because it could expose customer data; human Admin login remains protected by unchanged email authorization and source regression coverage.
 - **PENDING:** live expiry/revocation simulation was not performed because it would require disabling or rotating the active credential. Approval D is requested only after owner confirms this safe-procedure gate or provides a non-production expired test credential; no canary has run.
+## GFS-365 safety tests and Approval D gate (2026-10-31 UTC)
+
+- **PASS:** synthetic expired, revoked, and unavailable credential cases fail closed before candidate exposure; allowlisted failure evidence is emitted; valid credentials recover after rollback. No active-token disable/rotation/deletion occurred.
+- **PASS:** exact clean legacy rollback checkout `D:\free seeds\gfs273-v1` at `cf01f444…`; rollback harness 4/4. Controller safety suite 17/17, adapter 6/6, observability 4/4.
+- **PASS:** combined candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec` contains current Analytics, Conversations, and health repair. Real monitoring: health 200 x3; missing/invalid 403; protected Admin paths denied; GraphQL API/Admin 0 errors; routing baseline100% and candidate0%.
+- **PASS:** focused41/41, full335/335, build, lint, audit0 vulnerabilities. Final routing remains API `b426ba47`100%, Admin `494a3dce`100%, candidate0%.
+- **Approval D:** requested below for exactly the tested combined candidate. Canary has not started.
