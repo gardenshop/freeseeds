@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-372 Admin canary disposition (2026-10-31)
+
+- Fresh Approval D exposed candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec` at10% beside bridge `3bbf5cf6`90% for approximately53 seconds, then restored before minute6. Restoration deployment `e907d94f-45e0-4f59-98dc-2f1fb3f7a685` is bridge100% + candidate0%; API remains `b426ba47`100%.
+- Canary monitoring passed: health200, missing/invalid403, Service Auth isolation, GraphQL errors0, Orders/payment settings200, D1/Admin parity and COD PKR125. Candidate-only Analytics/Conversations responses were observed through the authorized Admin monitor.
+- Candidate-specific customer-flow evidence is INCONCLUSIVE: the observed candidate requests were controlled read-only monitoring probes, not attributable customer traffic. Do not promote Admin based on this canary alone.
+- Watchdog restoration was armed before exposure, mandatory restoration was independently read back, and watchdog was disarmed afterward. No source, API, customer, payment, Meta, migration, flag, Queue or Cron mutation was made.
+
 ## GFS-371 health-compatible Admin baseline (2026-10-31)
 
 - Approval F activated Admin deployment `5587e7cb-3546-4ac0-834f-b0484f78574d`: health bridge `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1`100% and combined candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`0%. API remains `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100%.

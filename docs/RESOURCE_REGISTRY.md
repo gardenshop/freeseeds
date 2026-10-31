@@ -1670,3 +1670,11 @@ No secrets are stored in this registry.
 - **Emergency rollback:** legacy Admin `494a3dce-5d52-4b66-b3ff-bef64b31b406`100% + combined candidate0%. Watchdog validated executable; not invoked.
 - **Runtime evidence:** health200 x3; missing/invalid403; protected Service Auth paths denied; human Orders/payment settings200; GraphQL API/Admin errors0; no credential values recorded.
 - **Aggregate integrity:** D1 total402/active401; Admin active401; review13, approved2, COD pending198; COD details198 at PKR125; inbound latest16:28:37 PKT; no Admin audit write or D1 query write.
+
+## GFS-372 canary resources
+
+- **Canary deployment:** `3deb6d44-01c5-41f1-bd6d-973df6874d2c`, bridge90% + candidate10%, created11:44:52Z.
+- **Restored deployment:** `e907d94f-45e0-4f59-98dc-2f1fb3f7a685`, bridge100% + candidate0%; API deployment `10f43f2e…` remains baseline100%.
+- **Read-only evidence:** candidate-only Analytics3/20 and Conversations2/20 HTTP200; Orders/payment settings20/20 HTTP200; health/security and GraphQL errors0. No secrets or customer payloads recorded.
+- **Post-canary aggregate:** D1 total404/active403; Admin403; review13, approved2, COD199; COD fee PKR125; inbound413, latest16:44:37 PKT; no failed recovery stage.
+- **Disposition:** restoration PASS; customer-flow acceptance INCONCLUSIVE because the candidate evidence came from controlled monitoring, not attributable customer traffic.

@@ -5078,3 +5078,17 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - **Tests:** configuration acceptance PASS. No source changed; retained source gates remain bridge33/33/full321/321 and PR full335/335/build/lint/audit0, controller17/17, adapter6/6, observability4/4, rollback4/4.
 - **Remaining:** baseline replacement100%/0%; fresh Admin canary0%/100%; Admin full promotion0%/100%; API repair activation0%/100%; Meta timezone UNKNOWN; historical CAPI/blocked receipts UNKNOWN. Optional D1/full history deferred.
 - **Fresh Approval D request:** approve one Admin-only canary of candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`, maximum10% for8 minutes, restoration beginning by minute6 to bridge `3bbf5cf6`100% + candidate0%, while API remains `b426ba47`100%? No full promotion.
+
+## GFS-372 final report — bounded Admin canary (2026-10-31 UTC / PKT)
+
+- **GFS-369:** PASS bridge preparation.
+- **GFS-370:** PASS bridge0% validation and restoration.
+- **GFS-371:** PASS bridge baseline replacement100%.
+- **GFS-372:** **PASS bounded operation / INCONCLUSIVE customer-flow acceptance.** Approval D deployment `3deb6d44-01c5-41f1-bd6d-973df6874d2c` served bridge90% + candidate10% from11:44:52Z to11:45:44Z (~53 seconds). This stayed below the8-minute limit and restoration began before minute6.
+- **Monitoring:** health200 x3 at258–320ms; missing/invalid403; protected Service Auth paths denied; API93/0 and Admin16/0 GraphQL errors; no attributed5xx. Orders/payment-settings probes were20/20 HTTP200. Weighted Analytics candidate responses were3/20 and Conversations2/20 HTTP200; remaining bridge responses404.
+- **Parity/zero regression:** post-canary D1 total404/active403, Admin active403; payment review13, approved2, COD199; COD details198 pending +1 dispatched at PKR125. The increase from the prior402/401 snapshot reflects two observed real orders; no synthetic order/payment/message was created. Inbound reached413, latest16:44:37 PKT; +15/+210 had no FAILED state; query writes were0.
+- **Restoration:** deployment `e907d94f-45e0-4f59-98dc-2f1fb3f7a685` independently reads bridge100% + candidate0%; API `b426ba47`100%. Health, isolation, Admin and parity were rechecked before watchdog disarm.
+- **Limitation:** candidate requests were controlled read-only monitoring probes, not attributable customer traffic. Therefore customer-facing canary acceptance is INCONCLUSIVE and full Admin promotion is not recommended yet.
+- **Tests:** configuration-only real health/security/monitoring/restoration PASS. No source changed; retained gates remain full335/335, build/lint/audit0, controller17/17, adapter6/6, observability4/4, rollback4/4.
+- **Remaining:** GFS-372 bounded canary100%/0% operationally complete; attributable candidate acceptance UNKNOWN/100% remaining; full Admin promotion0%/100%; API repair0%/100%; Meta timezone/CAPI/blocked receipts UNKNOWN. Optional D1/full history deferred.
+- **Next action:** obtain a fresh scoped approval for a canary with meaningful attributable traffic, or owner direction to accept this controlled-monitoring evidence. Do not promote automatically.

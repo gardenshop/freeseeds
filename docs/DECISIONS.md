@@ -1683,3 +1683,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Accept the bridge as the new rollback baseline for the next canary because direct serving health, Access isolation, human Admin, telemetry and aggregate data parity passed. Retain legacy `494a3dce` only as the emergency baseline-replacement rollback target.
 - Do not characterize Analytics/Conversations404 as a new regression: the health bridge intentionally matches the legacy baseline; those features remain isolated in candidate0%.
 - Require fresh Approval D before any candidate exposure: maximum10% for8 minutes, restoration beginning by minute6 to bridge100% + candidate0%. No automatic promotion.
+
+## GFS-372 decision (2026-10-31 UTC)
+
+- Execute exactly one bounded canary under Approval D. The 10% routing and early restoration were successful; no attributable fault, privacy exposure, payment discrepancy, monitoring loss or rollback uncertainty occurred.
+- Treat candidate feature responses as monitor evidence only. Because no candidate request can be attributed to real customer traffic, customer-flow acceptance remains INCONCLUSIVE.
+- Keep bridge100% + candidate0% and API100%. Do not request or execute full Admin promotion until a separately approved canary has meaningful attributable traffic or an owner accepts this evidence limitation.

@@ -1524,3 +1524,9 @@
 - Verified direct serving health, Access denial/isolation, human Admin Orders/payment settings, GraphQL telemetry, matched D1/Admin payment/COD/order aggregates and continued WhatsApp inbound.
 - Armed an independent interruption rollback watchdog and disarmed it only after exact serving readback. No rollback was required.
 - No source, API, Access, token, customer, payment, Meta, D1, migration, flag, Queue or Cron mutation was made.
+
+## GFS-372 bounded Admin canary and restoration (2026-10-31)
+
+- Ran one Approval D canary at bridge90% + candidate10% for approximately53 seconds, with an interruption watchdog.
+- Observed candidate-only Analytics/Conversations responses, health/security PASS, GraphQL errors0, Admin/D1 parity and continued WhatsApp inbound.
+- Restored bridge100% + candidate0% before minute6 and independently verified API100%. Customer-flow acceptance remains INCONCLUSIVE because traffic was monitoring-generated.

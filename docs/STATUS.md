@@ -2150,3 +2150,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **PASS WhatsApp isolation:** API routing unchanged; inbound aggregate advanced330→341 and latest inbound reached16:28:37 PKT. +15/+210 recovery rows showed no FAILED state. Read queries wrote0 rows.
 - **Known boundary:** Analytics/Conversations return404 on bridge exactly as legacy baseline; candidate0% contains them. This is not a new regression or promotion.
 - **Rollback ready/not invoked:** hidden watchdog could restore legacy `494a3dce`100% + candidate0% after interruption and was disarmed only after exact readback. Next step needs fresh Approval D; no canary ran.
+
+## GFS-372 Admin canary (2026-10-31 UTC / PKT)
+
+- **PASS bounded exposure:** deployment `3deb6d44-01c5-41f1-bd6d-973df6874d2c` served bridge90% + candidate10% from 11:44:52Z to 11:45:44Z (~53 seconds), below the 8-minute cap. Watchdog PID17712 was armed before exposure.
+- **PASS monitoring:** health200 x3 at258–320ms, missing/invalid403, protected Service Auth paths denied, API93/0 and Admin16/0 GraphQL errors during canary, and no attributed5xx.
+- **PASS read-only Admin:** 20 Orders and 20 payment-settings probes returned200. Weighted Analytics returned200 three times/20 and Conversations200 twice/20; remaining responses were bridge404. Candidate-only functionality was therefore observed.
+- **PASS parity/WhatsApp:** post-canary Admin active403 matched D1 active403; Admin review13, approved2 and COD199 matched D1. D1 total404/active403; COD198 pending +1 dispatched at PKR125. Inbound reached413, latest16:44:37 PKT; +15/+210 showed no FAILED state.
+- **PASS restoration:** deployment `e907d94f-45e0-4f59-98dc-2f1fb3f7a685` restored bridge100% + candidate0%; API remained100%. Health, isolation, Admin and parity were rechecked; watchdog then disarmed.
+- **Acceptance limitation:** no attributable customer traffic was available. Candidate-flow acceptance is **INCONCLUSIVE**, not a full promotion PASS. No full-promotion approval is requested yet.

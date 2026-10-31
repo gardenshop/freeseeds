@@ -2289,3 +2289,18 @@ Investigation query costs only (not production savings): representative `rows_re
 | Final routing | PASS | bridge100%, candidate0%, API `b426ba47`100% |
 | Rollback readiness | PASS / NOT INVOKED | Watchdog armed; legacy100% + candidate0% executable; disarmed after acceptance |
 | Analytics/Conversations | BASELINE BOUNDARY | 404 unchanged from legacy baseline; features remain in candidate0% |
+
+### GFS-372 bounded Admin canary (2026-10-31)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Fresh Approval D | PASS | Candidate10% maximum, bridge rollback, 8-minute cap |
+| Actual canary routing | PASS | Deployment `3deb6d44…`: bridge90% + candidate10% for~53 seconds |
+| Candidate request evidence | PASS / LIMITED | 20 weighted Analytics probes:3 candidate200; 20 Conversations:2 candidate200 |
+| Health/security | PASS | Health200 x3; missing/invalid403; Service Auth isolation |
+| Telemetry | PASS | API93/0 errors; Admin16/0 errors; no attributed5xx |
+| Admin flows | PASS | Orders20/20 and payment-settings20/20 HTTP200; candidate feature routes observed |
+| D1/Admin parity | PASS | D1 active403; Admin active403; review13, approved2, COD199 |
+| WhatsApp/recovery | PASS read-only | inbound413, latest16:44:37 PKT; +15/+210 no FAILED |
+| Restoration | PASS | Bridge100%, candidate0%, API100%; independent readback; watchdog disarmed |
+| Customer-flow acceptance | INCONCLUSIVE | Candidate hits were controlled monitoring probes, not attributable customer traffic |
