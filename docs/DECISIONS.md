@@ -1752,6 +1752,13 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Accept deployment safety evidence: health 200 x3, missing/invalid 403, protected monitoring probes 302, no console errors, and independent final routing readback. Watchdog was disarmed only after readback.
 - Do not bundle corrected API acknowledgement repair or release unsafe `b0e883cd`; request separate API approval before any API mutation.
 
+## GFS-383 decision (2026-10-31)
+
+- Accept the exact corrected source hash and 0% validation. The candidate preserves provider acceptance, D1 acknowledgement retry/fail-closed duplicate protection, Cron recovery reconciliation, Queue/DLQ, Advance, COD PKR125, and payment-state safeguards in isolated tests.
+- The 1% API canary was executed only under Approval K with Admin frozen. A monitoring/readback error caused fail-closed restoration; routing restoration passed, but no customer-attributable candidate acceptance was available. Classify the canary INCONCLUSIVE, not PASS.
+- Keep API `b426ba47`100% and candidate `d603f077`0%; Admin `ceb3e680`100%. Do not promote API or repeat a canary until the transient monitoring/readback error is diagnosed and separately approved.
+- Unsafe `b0e883cd` remains prohibited. No customer message, order, payment, Meta, D1 migration, flag, Queue, or Cron mutation was made.
+
 ## GFS-381 decision (2026-10-31)
 
 - Accept the Analytics overflow diagnosis and minimal repair: keep full tables, place overflow on the existing daily/classification containers, and make those regions touch- and keyboard-scrollable.

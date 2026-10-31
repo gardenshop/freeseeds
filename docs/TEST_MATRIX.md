@@ -2438,4 +2438,17 @@ Investigation query costs only (not production savings): representative `rows_re
 | Access isolation | PASS | Health 200 x3; missing/invalid 403; protected monitoring probes 302 |
 | Rollback | PASS | Watchdog armed before cutover; final readback passed; watchdog stopped |
 | Source gates | PASS | Focused 16/16; full 339/339; build/lint/audit 0 |
+
+## GFS-383 corrected API release test
+
+| Area | Result | Evidence |
+|---|---|---|
+| Exact source | PASS | Approved SHA256 `462e6f6e...de4c50`; baseline901f3f6 + bb52f1d + b9d52c4 |
+| 0% candidate | PASS | `d603f077`0%; `b426ba47`100%; structured health200 x3; unsigned webhook403 |
+| Fault isolation | PASS | Focused96/96; provider timeout, D1 acknowledgement retry/exhaustion, duplicate suppression, Cron, Advance/COD/payment invariants |
+| Full quality | PASS | Full324/324; build; lint; offline audit0 |
+| Release controls | PASS | Controller17/17; adapter6/6; observability4/4; legacy rollback4/4 |
+| API canary | INCONCLUSIVE / FAIL-SAFE | Candidate observed at1%; monitoring/readback error at ~154s; restoration verified at ~176s |
+| Final routing | PASS | API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0% |
+| Customer acceptance | NOT CLAIMED | No customer events generated or replayed; candidate-attributable live traffic insufficient |
 | Next gate | PENDING APPROVAL | Exact-source upload → 0% override acceptance → conditional1%/8-minute canary → restore baseline100% |

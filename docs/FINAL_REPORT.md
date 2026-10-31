@@ -5217,3 +5217,16 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - Rollback: detached five-minute watchdog was armed before exposure and disarmed after readback; no rollback was needed. No absolute zero-regression claim is made; measured checks found no detected WhatsApp/API regression, with API unchanged 100%.
 - Tests: focused 16/16, full 339/339, build, lint, and offline audit 0. No source changes after the deployed tested commit.
 - Next highest-value release is corrected API acknowledgement repair readiness, separately approval-gated; unsafe `b0e883cd` must not be released. Meta timezone, historical CAPI, blocked receipts, optional D1 optimization, and full chat history remain separate/deferred.
+
+## GFS-383 final report - corrected API repair and safe canary
+
+- GFS-376: PASS gate carried forward - unsafe `b0e883cd` remained prohibited and corrected source remained separately approval-gated.
+- GFS-380: PASS carried forward - Admin viewport diagnosis unchanged.
+- GFS-381: PASS carried forward - Analytics source repair unchanged.
+- GFS-382: PASS carried forward - Admin mobile fix remains live100%.
+- GFS-383 source: PASS. Exact approved SHA256 `462e6f6ecc70d592ce7da38e7df2ce6f8c03e2628776436ff7693dcbdfde4c50`; focused96/96, full324/324, build/lint/audit0, controller17/17, adapter6/6, observability4/4, legacy rollback4/4.
+- 0% acceptance: PASS. API candidate `d603f077-cc44-4882-af9b-9985adb53424` health200 three times under structured override; unsigned webhook403; bindings/handlers/flags/secret names read back without secret values.
+- Canary: FAIL-SAFE / INCONCLUSIVE. One approved API-only 1% exposure observed candidate routing, then a monitoring/readback error at approximately154 seconds triggered restoration; restoration was independently verified at approximately176 seconds. No customer traffic was generated or replayed, so no customer-attributable PASS is claimed.
+- Final routing: API `b426ba47`100% / candidate `d603f077`0%; Admin `ceb3e680`100% / rollback `72cff93f`0%. Post-restore read-only health was200 for API/Admin with0 observed errors.
+- No API100% promotion, WhatsApp message, order, payment, Meta, D1 migration/write, flag, Queue, or Cron mutation was made. The transient readback cause is UNKNOWN and must be diagnosed before another canary.
+- Next action: read-only diagnosis/repair of monitoring attribution, then request fresh scoped API canary approval. Meta timezone, historical CAPI, and blocked receipts remain separate; optional D1 optimization and full chat history remain deferred.

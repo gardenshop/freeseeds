@@ -1750,3 +1750,10 @@ No secrets are stored in this registry.
 - API resource unchanged: `b426ba47-1ead-4c4a-85ba-0a0b85d3e415` 100%; old slot 0%. No API candidate or secret resource changed.
 - Evidence is sanitized aggregate DOM/HTTP status only. No customer fields, cookies, tokens, screenshots, or credential values were registered.
 - Watchdog was armed before cutover and stopped after readback. Protected WhatsApp, Meta, payment, D1, migration, flag, Queue, and Cron resources were unchanged.
+
+## GFS-383 API repair release test (2026-10-31)
+
+- Candidate artifact source SHA256: `462e6f6ecc70d592ce7da38e7df2ce6f8c03e2628776436ff7693dcbdfde4c50`; Cloudflare version `d603f077-cc44-4882-af9b-9985adb53424`; no unsafe `b0e883cd` use.
+- API deployment readback: `b426ba47`100% / `d603f077`0%. Admin resource unchanged at `ceb3e680`100% / `72cff93f`0%.
+- Version metadata verified existing D1 `17b7e9f6...`, R2, Queue producer/consumer, Cron handler, flags, and secret names; secret values were never read or recorded.
+- Canary controller output was allowlisted only. Candidate routing was observed; monitoring/readback failed closed and restoration was verified. No customer event, WAMID, payload, order, payment, or private field was registered.

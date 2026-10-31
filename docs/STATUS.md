@@ -2238,3 +2238,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **PASS security/monitoring:** health 200 x3, missing/invalid 403, and monitoring-token protected-route checks returned 302 for Orders, Analytics, and Conversations. No secrets were recorded.
 - **PASS rollback protection:** detached five-minute watchdog was armed before exposure and stopped after independent routing readback; no rollback was needed. No API/WhatsApp/customer/payment/Meta/D1/migration/flag mutation occurred.
 - **NEXT:** corrected API acknowledgement repair is the next release candidate, but requires separate owner approval; unsafe `b0e883cd` remains prohibited.
+
+## GFS-383 corrected API repair and canary (2026-10-31)
+
+- **PASS source gates:** approved source SHA256 `462e6f6ecc70d592ce7da38e7df2ce6f8c03e2628776436ff7693dcbdfde4c50`; focused96/96, full324/324, build, lint, audit0, controller17/17, adapter6/6, observability4/4, and legacy rollback4/4.
+- **PASS 0% acceptance:** API candidate `d603f077` was attached at0% beside `b426ba47`100%. Structured override health was200 x3; unsigned webhook was403; version metadata confirmed existing D1/R2/Queue/Cron bindings, handlers, flags, and secret names without values.
+- **FAIL-SAFE / INCONCLUSIVE canary:** API candidate was exposed at1% with Admin frozen at `ceb3e680`100%. Candidate routing was observed, then a monitoring/readback error caused immediate restoration after approximately154 seconds. Restoration verified at approximately176 seconds. No customer events were generated or replayed; customer-attributable acceptance is not claimed.
+- **PASS final protection:** API `b426ba47`100% / candidate `d603f077`0%; Admin `ceb3e680`100% / rollback `72cff93f`0%. Post-restore API/Admin health was200 with0 observed errors. No API promotion or WhatsApp/customer/payment/Meta/D1/migration/flag mutation occurred.
+- **NEXT:** diagnose the transient monitoring/readback error before any new API canary; full API promotion remains unauthorized.

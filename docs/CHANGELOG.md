@@ -1591,3 +1591,9 @@
 - Uploaded and directly deployed the tested Analytics mobile UI fix as Admin `ceb3e680` 100%, retaining `72cff93f` as rollback at 0%.
 - Verified sanitized Chrome acceptance at CSS 1920/1440/1280/768/430/390/360/320: no page overflow, mobile table scrolling, controls/routes, and no console errors.
 - Verified protected monitoring and independent routing readback; API `b426ba47` stayed 100%. No WhatsApp, customer, payment, Meta, D1, migration, flag, Queue, or Cron mutation.
+
+## 2026-10-31 - GFS-383 corrected API repair test
+
+- Verified approved corrected source SHA256 `462e6f6e...de4c50`; uploaded API candidate `d603f077` and validated it at0% with health200 x3 and unsigned webhook403.
+- Ran one Approval K API-only 1% canary with detached rollback control. A monitoring/readback error triggered fail-closed restoration after approximately154 seconds; final API baseline100%/candidate0% was independently verified.
+- No customer events were generated or replayed. Admin `ceb3e680`100% and WhatsApp/API baseline protections remained in place; no full API promotion occurred.
