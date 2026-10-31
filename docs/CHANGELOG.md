@@ -1536,3 +1536,9 @@
 - Used the existing authorized Chrome session with the supported structured Cloudflare version override to exercise exact candidate `4fe564a6` at0%; no deployment or production traffic changed.
 - Verified read-only Analytics, CSV, Conversations with masking, Orders, Payment Settings, responsive layouts, latency and candidate-versus-bridge version selection. No secrets, cookies, customer identifiers, message bodies or write actions were retained.
 - Recorded the fresh D1/control-plane limitation: Wrangler OAuth was expired/unreachable and GitHub remote readback was unavailable. Full Admin promotion remains pending separate owner approval and fresh control-plane authentication.
+
+## 2026-10-31 - GFS-374 Approval G staged-promotion gate
+
+- Reverified Cloudflare identity, HEAD, current Admin/API routing and approved versions.
+- Stopped before mutation after confirming the bridge returns404 for candidate-only Analytics/Conversations while the candidate returns200. Wrangler percentage deployment exposes no supported session-affinity/path-routing control.
+- No staged Admin promotion, API deployment, customer, WhatsApp, payment, Meta, D1, Access, flag, migration, Queue or Cron mutation occurred. Requested one scoped correction before retry.

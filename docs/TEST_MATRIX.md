@@ -2319,3 +2319,15 @@ Investigation query costs only (not production savings): representative `rows_re
 | GraphQL/error telemetry | PASS carried forward | GFS-372 retained telemetry API93/0 and Admin16/0; no new GraphQL mutation or error probe |
 | Routing and writes | PASS | Bridge100%, candidate0%, API100% preserved; no deployment, D1, customer, payment, Meta or flag write |
 | Full Admin promotion | NOT RUN | Requires separate owner approval and restored control-plane authentication |
+
+### GFS-374 staged Admin promotion gate (2026-10-31)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Fresh identity | PASS | Wrangler `gisupp@gmail.com`, Get Free Seeds account verified |
+| Frozen routing | PASS | Admin bridge100% / candidate0%; API `b426ba47`100% / candidate0% |
+| Mixed-version compatibility | BLOCKED | Bridge candidate-only Analytics/Conversations404; candidate override200 |
+| Session affinity/path routing | UNAVAILABLE | Wrangler percentage deploy interface exposes no supported control |
+| Approval G mutation | NOT RUN | Stopped before first deployment stage |
+| WhatsApp/API regression | PASS frozen | API and operational routing unchanged; no customer or D1 mutation |
+| Required next gate | BLOCKED | Scoped owner correction required before any staged exposure |

@@ -1696,3 +1696,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - The frozen bridge intentionally returned 404 for candidate-only Analytics/Conversations routes without the override; this is positive version-selection evidence, not a regression. Existing bridge baseline and API routing were not changed.
 - Fresh independent D1 and Cloudflare control-plane identity readback are unverified because Wrangler OAuth/network access failed. Prior verified account/routing evidence is retained; no mutation is authorized until control-plane authentication is restored.
 - Prepare, but do not execute, separate owner approval for staged full Admin promotion of the exact candidate to100%, with bridge `3bbf5cf6`100% rollback, explicit stop thresholds, monitoring, and independent final routing readback. API `b426ba47` remains100%.
+
+## GFS-374 decision (2026-10-31 UTC)
+
+- Approval G is conditional and remains unused. Fresh identity and frozen routing passed, but staged exposure is unsafe: the bridge lacks candidate-only Analytics/Conversations and returns404, while the candidate returns200 under exact version targeting.
+- Wrangler supports percentage splitting only; no supported session-affinity or path-routing control was available in the release interface. Do not expose a mixed-version split that can break authenticated sessions.
+- Request one scoped owner correction before any mutation: approve a supported anti-404 mechanism, or explicitly approve a direct candidate100% cutover with bridge100% emergency rollback/watchdog. No API promotion is included.

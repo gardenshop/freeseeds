@@ -5106,3 +5106,15 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - **Tests:** configuration-only browser acceptance PASS; no source changed, so no new source suite was required. Retained gates: full335/335, build/lint/audit0, controller17/17, adapter6/6, observability4/4, rollback4/4. Wrangler/GitHub network readback failures are recorded, not hidden.
 - **Next approval request (not yet granted):** “Approve staged promotion of exact Admin candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec` to100% in controlled steps, with bridge `3bbf5cf6`100% as rollback, API `b426ba47`100% unchanged, stop on any attributable 5xx/auth/privacy/payment/parity/monitoring fault, and independently verify final routing.” Do not execute until explicitly approved and control-plane identity is refreshed.
 - **Remaining:** Admin full promotion UNKNOWN/100% until approval and fresh control-plane auth; API acknowledgement repair live activation UNKNOWN/100%; Meta timezone/hourly attribution UNKNOWN; historical CAPI failures UNKNOWN; blocked receipts UNKNOWN. Optional D1 optimization and full chat history remain deferred.
+
+## GFS-374 final report — staged Admin promotion safely blocked (2026-10-31 UTC)
+
+- **GFS-371:** PASS — bridge baseline activated and verified.
+- **GFS-372:** PASS bounded canary/restoration; customer-flow acceptance remained INCONCLUSIVE.
+- **GFS-373:** PASS — authenticated operator acceptance for exact candidate `4fe564a6`; full promotion not run.
+- **GFS-374:** **BLOCKED before mutation.** Fresh Wrangler identity/account and HEAD `fb04d8a62646659ee9dcf8216a41cdd194a321d6` passed. Current routing remains bridge100% / candidate0% / API `b426ba47`100%.
+- **Actual blocker:** bridge `3bbf5cf6` returns404 for Analytics/Conversations, while candidate `4fe564a6` returns200 under exact override. A percentage split can send authenticated sessions to either version. Wrangler's supported deployment interface exposes percentage splitting but no session-affinity/path-routing mechanism. This fails Approval G's mixed-version safety prerequisite.
+- **Rollout stages:** 10% NOT RUN; 25% NOT RUN; 50% NOT RUN; 100% NOT RUN. Actual Admin traffic remains bridge100%, candidate0%; API remains100%. Watchdog was not armed because no mutation was authorized after the prerequisite failed.
+- **Regression/security:** no new customer, WhatsApp, D1, payment, Meta, Queue, Cron, flag, migration or Access mutation. Existing operator/security/health evidence remains retained; no claim of new zero-regression exposure is made.
+- **Required scoped approval:** approve one correction preventing mixed-version 404s—supported version affinity/path routing, or a direct candidate100% cutover with independently armed bridge100% rollback/watchdog. Do not add routing rules or retry Approval G without this correction.
+- **Remaining:** Admin promotion UNKNOWN/100%; API acknowledgement repair UNKNOWN/100%; Meta timezone/hourly attribution UNKNOWN; historical CAPI UNKNOWN; blocked receipts UNKNOWN. Optional D1 optimization/full chat history deferred.

@@ -1414,3 +1414,10 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Operator acceptance PASS for UI/API availability, read-only privacy masking, CSV shape, payment-settings readback, responsive Analytics/Conversations layouts, latency, and zero-write scope. Candidate-only data was aggregate or masked; no customer identifiers, message bodies, receipts, credentials, or tokens were recorded.
 - Direct fresh D1/Cloudflare control-plane readback was not completed because Wrangler OAuth was expired/unreachable and GitHub network readback was unavailable. Do not describe this as an independent fresh D1 or account-identity proof; retain prior verified identity/routing evidence and require fresh control-plane authentication before any mutation.
 - Do not promote Admin under GFS-373. The next gate is a separate owner approval for staged promotion of the exact tested candidate, with bridge `3bbf5cf6` as the 100% rollback baseline, explicit stop thresholds, and independent readback.
+
+## GFS-374 Approval G staged-promotion gate (2026-10-31 UTC)
+
+- Fresh Wrangler identity PASS: `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; HEAD `fb04d8a` was verified. Current readback remains Admin bridge100% / candidate0% and API `b426ba47`100% / candidate0%.
+- Approval G was **not executed**. The exact candidate serves Analytics/Conversations, while the bridge returns404 for those candidate-only routes. Wrangler's supported percentage deployment has no session-affinity or path-routing control. A 10/25/50% split can therefore produce authenticated 404s or broken mixed-version sessions.
+- Stop before mutation. Do not add routing rules, silently change the bridge, or expose staged traffic. Request one scoped correction: an owner-approved release method that prevents mixed-version 404s (for example a supported affinity/path mechanism or an explicitly approved direct candidate cutover with watchdog rollback).
+- API, WhatsApp, customer, payment, Meta, D1, migration, Queue, Cron, flag, Access, and Worker routing remain unchanged.

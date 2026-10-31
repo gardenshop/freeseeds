@@ -1685,3 +1685,9 @@ No secrets are stored in this registry.
 - **Frozen serving state:** Admin bridge `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1`100% / candidate0%; API baseline `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100%. Existing restoration readback remains `e907d94f-45e0-4f59-98dc-2f1fb3f7a685`.
 - **Operator evidence:** candidate Analytics/Conversations/Orders/Payment Settings and read-only APIs succeeded; candidate-only Analytics/Conversations without override returned404 on the bridge. CSV shape, masked conversation references, responsive layouts, latency and zero-write behavior were recorded only as aggregates/booleans.
 - **Evidence boundary:** current fresh D1 query and Cloudflare control-plane account readback are unavailable because Wrangler OAuth expired/unreachable. No secret, customer identifier, message body, receipt, cookie or token was recorded.
+
+## GFS-374 staged-promotion gate
+
+- **Identity/readback:** fresh Wrangler identity `gisupp@gmail.com` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; HEAD `fb04d8a`; Admin current `3bbf5cf6`100% + `4fe564a6`0%; API `b426ba47`100% + candidate0%.
+- **Compatibility blocker:** bridge candidate-only Analytics/Conversations requests return404; exact candidate override returns200. `wrangler versions deploy --help` exposes percentage version specs only; no session-affinity/path-routing option was available.
+- **Disposition:** Approval G not consumed; no deployment or watchdog was started. Minimum correction approval is required before staged exposure. No secrets or customer data recorded.

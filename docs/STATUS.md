@@ -2168,3 +2168,10 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **PASS:** Actual operator pages rendered Analytics, Conversations, Orders, and Payment Settings. Desktop and reduced-width Analytics/Conversations checks had no horizontal overflow; read-only status text and permissions were visible. Candidate responses measured approximately 179–636ms; no GraphQL errors were observed in retained GFS-372 telemetry.
 - **PASS / LIMIT:** Candidate invocation and UI acceptance are proven, but a fresh independent D1 query and current Cloudflare account readback are **UNVERIFIED**: Wrangler OAuth was expired/unreachable and GitHub remote readback was unavailable. Admin UI/API parity was observed; do not call it a new independent D1 audit.
 - **Decision:** operator acceptance is PASS for release-readiness evidence; full Admin promotion remains NOT RUN. Request separate owner approval for staged 100% promotion of the exact candidate, with bridge100% rollback, stop thresholds, and no API change.
+
+## GFS-374 Approval G staged Admin promotion gate (2026-10-31 UTC)
+
+- **PASS preflight:** Fresh Wrangler identity is `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; HEAD `fb04d8a62646659ee9dcf8216a41cdd194a321d6`; current Admin bridge100% / candidate0%; API `b426ba47`100% / candidate0%.
+- **BLOCKED before mutation:** Candidate `4fe564a6` supports Analytics/Conversations, but bridge `3bbf5cf6` returns404 on those routes. Wrangler percentage deployment exposes only version percentages and provides no supported session-affinity/path-routing control. Staged mixed traffic could produce real authenticated 404s.
+- **No deployment occurred:** no 10%, 25%, 50% or 100% Admin stage; API, WhatsApp, D1, customer, payment, Meta, flags, Access and migration state are unchanged.
+- **Next action:** owner must approve one minimum correction that prevents mixed-version 404s—supported affinity/path routing, or an explicitly scoped direct candidate cutover with an independently armed bridge rollback watchdog. Do not reuse Approval G until that correction is approved.
