@@ -2206,3 +2206,13 @@ Investigation query costs only (not production savings): representative `rows_re
 | Real combined monitoring | PASS | Auth health200 x3; missing/invalid403; Orders/Analytics/Conversations denied; GraphQL0 errors; baseline100%/candidate0% |
 | Local release quality | PASS | Focused41/41, full335/335, build, lint, audit0; controller17/17, adapter6/6, observability4/4 |
 | Approval D | REQUESTED | One Admin-only10% canary, max8 minutes, restoration by minute6; no execution before owner approval |
+### GFS-366 Admin canary result (2026-10-31 UTC)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Approval D | PASS | Explicit approval for exact candidate,10%,8 minutes, restore by minute6 |
+| Pre-exposure controller guard | PASS | Controller stopped at initial readback; no candidate exposure |
+| Canary | BLOCKED SAFELY | `initial_readback_failed` / `health_unknown`; baseline authenticated health unhealthy |
+| Candidate override monitoring | PASS | Combined candidate health200 x3, invalid/missing denied, isolated paths denied, GraphQL0 errors |
+| Restoration | PASS / NOT NEEDED | Routing never changed; independent readback baseline100% / candidate0% |
+| Zero regression | NOT EXPOSED | No real customer traffic reached candidate; customer-flow regression is not claimed |

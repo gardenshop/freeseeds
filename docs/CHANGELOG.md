@@ -1491,3 +1491,6 @@
 
 - Added isolated controller coverage for expired, revoked, unavailable, and recovered monitoring credentials; no active credential was changed.
 - Staged and real-tested combined Admin candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec` at0%; baseline and API remain100%. Approval D is requested, not executed.
+## 2026-10-31 - GFS-366 canary stopped safely
+
+- Updated the Admin canary runner to target the verified combined candidate. The approved run failed closed during baseline health preflight before any exposure because baseline Service Auth monitoring was unhealthy; routing remained unchanged.

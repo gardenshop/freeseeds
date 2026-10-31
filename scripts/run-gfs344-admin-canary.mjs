@@ -8,13 +8,13 @@ import { runCanary } from "./canary-deadline-controller.mjs";
 const startedAt = new Date().toISOString();
 const workers = {
   api: { name: "getfreeseeds-api-staging", healthUrl: "https://getfreeseeds-api-staging.get-free-seeds.workers.dev", baseline: "b426ba47-1ead-4c4a-85ba-0a0b85d3e415", candidate: "6ef27f02-23ac-46c0-a291-157e246a8dbc" },
-  admin: { name: "getfreeseeds-admin-staging", healthUrl: "https://getfreeseeds-admin-staging.get-free-seeds.workers.dev", baseline: "494a3dce-5d52-4b66-b3ff-bef64b31b406", candidate: "19188b21-60da-4b03-bd89-72cb49468100" }
+  admin: { name: "getfreeseeds-admin-staging", healthUrl: "https://getfreeseeds-admin-staging.get-free-seeds.workers.dev", baseline: "494a3dce-5d52-4b66-b3ff-bef64b31b406", candidate: "4fe564a6-bcd7-4106-82ee-00f7b14c4bec" }
 };
 const observability = createCloudflareObservability({ accountTag: "cb5066a6d71ecdee0bd7ed8aacb4d3c2", accessCredentials: readAccessCredentials(process.env, { required: true }) });
 const adapter = createCloudflareCanaryAdapter({
   scope: "admin",
   targetCandidatePercent: 10,
-  messagePrefix: "GFS-344",
+  messagePrefix: "GFS-366",
   workers,
   readHealth: observability.readHealth,
   readMetrics: observability.readMetrics
@@ -28,7 +28,7 @@ const result = await runCanary({
   pollIntervalMs: 5_000,
   pollTimeoutMs: 30_000,
   commandTimeoutMs: 30_000,
-  lockPath: path.join(os.tmpdir(), "gfs344-admin-canary.lock"),
+  lockPath: path.join(os.tmpdir(), "gfs366-admin-canary.lock"),
   execute: adapter.execute,
   readTraffic: adapter.readTraffic,
   audit: (event) => console.log(JSON.stringify(event))

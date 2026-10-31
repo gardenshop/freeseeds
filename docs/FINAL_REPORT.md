@@ -5007,3 +5007,12 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - **Final routing:** API `b426ba47`100%; Admin `494a3dce`100%; candidate `4fe564a6…`0%. No canary executed.
 - **Approval D requested:** “Approve ONE Admin-only 10% canary of verified candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`, maximum 8 minutes, restoration beginning by minute6, restoring Admin `494a3dce`100% and candidate0%, while API stays `b426ba47`100%?”
 - **Remaining:** owner approval and one bounded canary; then independent restoration verification. Retain Admin full promotion, API acknowledgement repair, Meta timezone, historical CAPI/receipts; defer optional D1 optimization and full chat history.
+## GFS-366 final report — Admin canary stopped safely (2026-10-31 UTC)
+
+- **GFS-364:** PASS — corrected Access 403 root cause and repaired Service Auth `/health` path.
+- **GFS-365:** PASS — isolated credential-failure safety, rollback4/4, and exact combined-candidate readiness passed.
+- **GFS-366:** **BLOCKED SAFELY.** Approval D was granted, but the controller stopped at initial baseline readback (`initial_readback_failed`, `health_unknown`) at `2026-10-31T10:24:53Z`; it never exposed candidate traffic. No rollback was needed.
+- **Actual canary:** 0% exposure, approximately3 seconds preflight runtime, 0 customer requests routed to candidate. The combined candidate's separate override monitoring remained HTTP200 x3 with invalid/missing denial, path isolation, and GraphQL0 errors; this is not a canary PASS.
+- **Final routing:** API `b426ba47`100%, Admin `494a3dce`100%, candidate `4fe564a6…`0%. No WhatsApp, order, payment, D1, Queue, Cron, migration, Meta, or flag mutation occurred. Real customer-flow zero-regression evidence is not applicable because exposure was zero.
+- **Release decision:** NO-GO for Admin promotion. Baseline Service Auth monitoring must be made compatible or replaced by an equivalent approved monitor, followed by fresh scoped canary approval. API acknowledgement repair, Meta timezone, historical CAPI/receipts remain separate; optional D1 optimization and full chat history remain deferred.
+- **Git:** canary-runner/docs change is pending final tests and push; current pre-run source was `7e2db8c…`.

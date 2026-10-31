@@ -1627,3 +1627,7 @@ No secrets are stored in this registry.
 - **Combined Admin candidate:** `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`, current Analytics + Conversations + Service Auth health repair, staged0%.
 - **Frozen routing:** Admin baseline `494a3dce`100%; API `b426ba47`100%; canary candidate0%. No active Access secret values recorded.
 - **Rollback source:** `D:\free seeds\gfs273-v1`, detached clean baseline `cf01f444500415b1f22a64730674caca1c286006`; local rollback4/4.
+## GFS-366 canary evidence
+
+- Approved candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec` remains staged0%; baseline Admin `494a3dce`100%; API `b426ba47`100%.
+- Controller result: `initial_readback_failed` / `health_unknown` before exposure. No secret, customer, payment, Meta, D1, Queue, Cron, or flag values were recorded or changed.

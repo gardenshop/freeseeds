@@ -1356,3 +1356,8 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Credential expiry, revocation, and unavailable states are tested only with isolated synthetic controller responses. They fail closed before candidate exposure, emit allowlisted health-failure evidence, and recover with valid monitoring after verified restoration. Never disable, rotate, delete, or expire the active provider token for testing.
 - Exact combined Admin candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec` contains the current Analytics, Conversations, and `/health` Service Auth repair. It is staged at0% beside Admin baseline `494a3dce`100%; API `b426ba47` remains100%.
 - Approval D must name this exact tested candidate and authorize only10% for8 minutes, with restoration beginning by minute6. No automatic promotion or customer/payment/Meta mutation.
+## GFS-366 Admin canary disposition (2026-10-31 UTC)
+
+- Approval D was explicit for candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec` at10% for8 minutes. The supported controller failed closed before exposure because baseline `494a3dce` authenticated `/health` was unhealthy for the Service Auth monitor.
+- No candidate traffic, rollback, customer request, payment, Meta, D1, Queue, Cron, or flag mutation occurred. Do not bypass the baseline monitoring failure or treat candidate-only HTTP200 as a canary PASS.
+- Final readback remains API `b426ba47`100%, Admin `494a3dce`100%, combined candidate0%. Next action requires a separate scoped decision to make baseline monitoring compatible or provide an equivalent approved baseline monitor, then fresh canary approval.

@@ -2100,3 +2100,9 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **PASS:** combined candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec` contains current Analytics, Conversations, and health repair. Real monitoring: health 200 x3; missing/invalid 403; protected Admin paths denied; GraphQL API/Admin 0 errors; routing baseline100% and candidate0%.
 - **PASS:** focused41/41, full335/335, build, lint, audit0 vulnerabilities. Final routing remains API `b426ba47`100%, Admin `494a3dce`100%, candidate0%.
 - **Approval D:** requested below for exactly the tested combined candidate. Canary has not started.
+## GFS-366 Admin canary gate (2026-10-31 UTC)
+
+- **BLOCKED safely:** approved controller started at `2026-10-31T10:24:53Z` and stopped at `10:24:56Z` during initial readback. `health_unknown` / `initial_readback_failed`; no `expose_candidate` action and no rollback were needed.
+- **Cause:** baseline Admin `494a3dce` does not return a healthy authenticated Service Auth `/health` result. The exact combined candidate still passes isolated override monitoring, but candidate-only success cannot substitute for baseline monitoring.
+- **Final routing PASS:** API `b426ba47`100% / candidate0%; Admin `494a3dce`100% / candidate `4fe564a6…`0%. No customer-facing traffic or mutation occurred.
+- **Next action:** obtain separate scoped authorization to make baseline monitoring compatible or provide an equivalent approved baseline monitor, then request a fresh bounded canary approval. No promotion.

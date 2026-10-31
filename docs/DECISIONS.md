@@ -1644,3 +1644,8 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Treat simulated expiry/revocation/unavailability as PASS only for controller fail-closed behavior; do not claim provider-side revocation. The active token remains enabled and untouched.
 - The prior `19188b21` upload is not the tested health-repair version. The exact combined candidate is `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`; it alone may be named in Approval D.
 - Request, but do not execute, one Admin-only canary at10% for8 minutes with restoration beginning by minute6. Restore `494a3dce`100% and candidate0%; keep API `b426ba47`100%. No full promotion.
+## GFS-366 decision (2026-10-31 UTC)
+
+- Stop the canary before exposure when baseline `494a3dce` failed authenticated Service Auth health readback. This is a monitoring prerequisite failure, not a candidate failure and not evidence for promotion.
+- Do not route 10% traffic while baseline monitoring is blind. Candidate override health and GraphQL evidence remain useful readiness evidence only.
+- Keep API/Admin frozen at100%. Request a separate scoped owner decision for baseline monitoring compatibility or an equivalent supported baseline monitor before requesting another canary.
