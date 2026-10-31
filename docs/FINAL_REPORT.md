@@ -5182,3 +5182,14 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - Acceptance: protected credential health200x3; missing/invalid403; monitoring path isolation; Chrome route checks at requested viewport classes; no horizontal overflow or console errors; Orders Refresh feedback and `/api/orders/changes`200. No private fields or customer-bearing screenshots recorded.
 - Rollback: detached five-minute watchdog armed before exposure and independently disarmed after final readback; no rollback triggered. Independent D1 parity was not re-queried; no unexpected write was observed.
 - Remaining: API repair upload/canary, full API promotion, Meta timezone attribution, historical CAPI, and blocked receipts remain approval-gated or UNKNOWN. Optional D1 optimization and full chat history remain deferred. Next approval is the separate API repair release.
+
+## GFS-380 final report — Chrome viewport/layout diagnosis
+
+- GFS-377: PASS — homepage source repair.
+- GFS-378: PASS — Orders layout and Refresh repair.
+- GFS-379: PASS — Admin UI deployed at100% with API unchanged.
+- GFS-380: PASS for homepage/emulation — owner narrow view was stale Chrome device metrics/host DPR0.8, not homepage CSS. Clearing emulation restored clean desktop behavior.
+- Matrix: CSS widths1920/1675/1440/1280 used four columns;768 used two;390/360/320 used one. All12 modules and footer were reachable, with no homepage horizontal overflow. Orders, Analytics, Conversations, and Payment Settings loaded without console errors.
+- Limitation: Analytics has a separate pre-existing table overflow at true CSS390px. No fix or deployment was made for it; a separate approval is required if that route is to be repaired.
+- Final routing: Admin `72cff93f`100% / rollback `4fe564a6`0%; API `b426ba47`100%. WhatsApp production was not changed. Git remains at `c4532b062d3c57d7d160d2e62a7b5750826c48bf` before documentation commit.
+- Remaining: Analytics mobile table repair is separate/UNKNOWN; API repair, Meta attribution, CAPI, and blocked receipts remain approval-gated or UNKNOWN. Optional D1 optimization and full chat history remain deferred.

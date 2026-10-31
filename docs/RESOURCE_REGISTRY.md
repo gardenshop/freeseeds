@@ -1729,3 +1729,10 @@ No secrets are stored in this registry.
 - API unchanged: `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100%; old slot `6ef27f02-23ac-46c0-a291-157e246a8dbc`0%.
 - Deployment evidence: Cloudflare deployment `95f3ec12-1e5b-4891-850e-b42932f4ad43`; Wrangler identity `gisupp@gmail.com` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
 - Protection: detached five-minute watchdog was armed before cutover and disarmed after independent readback. No credential value, cookie, customer field, or screenshot is registered here.
+
+## GFS-380 browser evidence (2026-10-31)
+
+- Clean authorized Chrome tab after emulation reset: CSS `innerWidth`1920, four 300px module columns,1320px shell, footer reachable.
+- Compensated viewport evidence: CSS widths1920/1675/1440/1280/768/390/360/320 produced4/4/4/4/2/1/1/1 homepage columns; twelve modules and footer remained reachable.
+- No screenshot or customer data is registered. Chrome rejected a full live accessibility snapshot as potentially customer-bearing; sanitized DOM measurements were used.
+- No source version, deployment, secret, binding, API, WhatsApp, Meta, payment, D1, migration, Queue, Cron, or flag resource changed.

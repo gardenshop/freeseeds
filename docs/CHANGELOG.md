@@ -1573,3 +1573,9 @@
 - Uploaded and directly activated approved Admin UI version `72cff93f-d589-4046-9bce-45477f53f829`; retained `4fe564a6` as the exact rollback version at0%.
 - Verified protected monitoring, responsive operator routes, bounded Orders layout, visible Refresh result, and `/api/orders/changes` HTTP200 through authorized tools. No private data or secrets were recorded.
 - API stayed `b426ba47`100%; no WhatsApp, Meta, payment, D1, migration, Queue, Cron, or flag mutation occurred.
+
+## 2026-10-31 - GFS-380 Chrome viewport/layout diagnosis
+
+- Reproduced the owner’s narrow Admin homepage as stale Chrome device emulation/host DPR state. Clearing emulation restored the intended desktop dashboard without source or deployment changes.
+- Verified homepage CSS widths1920/1675/1440/1280/768/390/360/320 with4/4/4/4/2/1/1/1 columns; all12 modules and footer were reachable.
+- Recorded the separate pre-existing Analytics mobile table overflow as unmodified follow-up scope. Production Admin/API routing and WhatsApp protections remained unchanged.

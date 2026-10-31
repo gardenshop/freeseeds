@@ -1737,3 +1737,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Accept direct Admin cutover: version `72cff93f-d589-4046-9bce-45477f53f829`100%, exact rollback `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`0%. The detached watchdog requirement was met and independently disarmed after readback.
 - Accept measured live operator evidence for responsive layouts and Refresh. Chrome rejected customer-bearing capture; screenshots are not claimed, and aggregate DOM/network evidence is used.
 - Keep API candidate `b0e883cd` approval-gated and never combine it with Admin UI releases.
+
+## GFS-380 decision (2026-10-31)
+
+- Accept the root cause as test-browser state: stale device metrics and host DPR `0.8` made desktop/tablet checks report distorted CSS widths. Clear emulation and restore the test tab to clean desktop; do not alter Admin CSS or production routing for this report.
+- Accept homepage acceptance: four columns at CSS widths1920/1675/1440/1280, two at768, one at390/360/320; twelve modules and footer are reachable with no homepage horizontal overflow.
+- Keep the separate Analytics table overflow at true CSS390px explicitly open. Fixing it would be a new source change and requires its own focused tests and Admin deployment approval; it is not silently bundled into GFS-380.
+- API, WhatsApp, customer, payment, Meta, D1, migration, flag, Queue, and Cron release boundaries remain unchanged.

@@ -2201,6 +2201,13 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - PASS: Authorized Chrome operator checks at requested viewport classes showed responsive Admin home/routes, bounded Orders list, no horizontal overflow, no console errors, and visible Refresh feedback with `/api/orders/changes` HTTP200. Evidence is aggregate-only; no customer screenshot was retained.
 - PASS: API remained `b426ba47`100% (old slot0%). WhatsApp/API/Meta/payment/D1/migration/flag state was not changed. Independent D1 parity was not re-queried in this deployment task; no unexpected write was observed.
 
+## GFS-380 Chrome viewport/layout diagnosis (2026-10-31)
+
+- PASS: Owner narrow-desktop report reproduced as stale DevTools device metrics/host DPR `0.8`; clearing emulation restored clean desktop CSS width1920 with four columns and a1320px shell. No homepage CSS change was justified.
+- PASS: Compensated real Chrome matrix reached CSS widths1920,1675,1440,1280,768,390,360,320. Homepage columns were4/4/4/4/2/1/1/1; all12 modules and footer were reachable; no homepage horizontal overflow.
+- PASS: Orders, Analytics, Conversations, and Payment Settings loaded read-only without console errors. Analytics has a separate pre-existing narrow-table overflow at true CSS390px; it was not changed or claimed repaired.
+- PASS: Production routing stayed Admin `72cff93f`100% / rollback `4fe564a6`0%, API `b426ba47`100%. No source, deployment, customer, WhatsApp, payment, Meta, D1, migration, Queue, Cron, or flag mutation occurred.
+
 ## GFS-377 Admin desktop view (2026-10-31)
 
 - **PASS source repair:** `apps/admin/src/index.ts` replaces the plain root HTML with a static responsive Admin home. It uses existing protected routes only, performs no database reads, and does not change Orders, API, auth, WhatsApp, payment, or release logic.

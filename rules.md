@@ -1463,3 +1463,11 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - Protected monitoring through the existing Windows Credential Manager bridge returned authenticated health200 three times; missing/invalid credentials403; monitoring credentials were redirected on Orders, Analytics, and Conversations. No values were logged. The repository monitoring assertion still expects the pre-GFS-379 legacy Admin baseline and is not evidence against this deployment.
 - Real authorized Chrome acceptance used aggregate DOM/network evidence only: requested desktop/tablet/mobile layouts had no horizontal overflow or console errors; Orders used bounded scrolling/content-sized cards; Refresh visibly reported its check and `/api/orders/changes` returned200. No customer-bearing screenshot or private field was recorded. Do not expose credentials, cookies, customer data, or order identifiers.
 - GFS-376 API repair remains approval-gated and must not be bundled with Admin UI releases. Preserve the new-number WhatsApp lock and Hoja Seeds zero-connection rule.
+
+## GFS-380 Chrome viewport/layout diagnosis (2026-10-31 UTC)
+
+- The owner-reported narrow desktop homepage was caused by stale Chrome DevTools device metrics plus host DPR `0.8`, not the Admin homepage CSS. Clearing emulation restored a clean authorized desktop (`innerWidth`1920, four 300px columns, 1320px shell); `Control+0` was also issued in the test page.
+- Compensated DevTools checks verified the intended CSS widths: 4 columns at1920/1675/1440/1280, 2 columns at768, and1 column at390/360/320. All12 modules and the footer were reachable at the bottom; homepage document/client widths had no horizontal overflow.
+- The existing production Admin UI was not changed or redeployed. Final routing remains Admin `72cff93f`100% / rollback `4fe564a6`0% and API `b426ba47`100%.
+- Read-only route checks loaded Orders, Analytics, Conversations, and Payment Settings without console errors. A pre-existing Analytics daily table is wider than the true CSS390px content area; it is outside the homepage/emulation repair and remains a separate source/deployment decision. Do not claim it repaired here.
+- No customer, API, WhatsApp, payment, Meta, D1, migration, flag, Queue, or Cron mutation occurred. Preserve protected protocols and never record customer data or credentials.

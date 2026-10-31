@@ -2401,4 +2401,15 @@ Investigation query costs only (not production savings): representative `rows_re
 | Watchdog/rollback | PASS | Detached five-minute watchdog armed before cutover and disarmed after readback; no rollback needed |
 | Final routing | PASS | Admin `72cff93f`100% / `4fe564a6`0%; API `b426ba47`100% |
 | Customer/D1 mutation | PASS/limited | No customer message/order/payment/D1 mutation; independent D1 parity query not repeated |
+
+## GFS-380 Chrome viewport/layout diagnosis
+
+| Check | Result | Evidence |
+|---|---|---|
+| Root cause | PASS | Stale DevTools metrics plus host DPR0.8; clean tab restored CSS innerWidth1920 and four columns |
+| Desktop homepage | PASS | CSS widths1920/1675/1440/1280; four columns, balanced1320px shell, footer reachable |
+| Tablet homepage | PASS | CSS768; two columns, all12 modules and footer reachable |
+| Mobile homepage | PASS | CSS390/360/320; one column, all12 modules and footer reachable, no horizontal overflow |
+| Protected routes | PASS/limited | Orders, Analytics, Conversations, Payment Settings loaded with no console errors; Analytics has separate pre-existing narrow-table overflow |
+| Source/deployment | PASS | No source change or deployment; Admin/API routing unchanged |
 | Next gate | PENDING APPROVAL | Exact-source upload → 0% override acceptance → conditional1%/8-minute canary → restore baseline100% |
