@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-389 D1-safe Admin auto-update controls (2026-10-31 UTC)
+
+- No production mutation is authorized: API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. No deployment, API canary, customer message/order/payment write, Meta, migration, flag, Queue, Cron, or WhatsApp mutation occurred.
+- Orders and Conversations auto-update switches are separate, default **OFF**, persisted only in browser localStorage (`gfs_admin_orders_auto_update` and `gfs_admin_conversations_auto_update`). Enabled polling is 60 seconds, pauses while the tab is hidden, prevents overlapping requests, and retains the last successful data on failure. The expensive Conversations summary aggregates refresh at most every 5 minutes; manual/initial refresh still reads them.
+- Verified remote identity read-only as `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Remote D1 probes were read-only and all reported `rows_written=0`, `changed_db=false`: summary aggregates read 2,484 + 2,484 + 48 + 848 = 5,864 rows; Conversations count/list shapes read 2,869 + 5,355; Orders no-change probe plus cursor read 7 + 31.
+- Cost projection for one continuously visible, enabled tab over 8 hours (480 60-second cycles), excluding selected-detail and full-reload branches: Conversations list shapes 3,947,520 rows plus 96 five-minute summaries 562,944 = **4,510,464 rows read**; Orders no-change path **18,240 rows read**. Two/four identical tabs project 9,020,928/18,041,856 Conversations rows and 36,480/72,960 Orders rows. Default OFF and hidden-tab pause are mandatory safeguards; these are row-read projections, not a claim of billing equivalence.
+- Synthetic/local browser evidence is not live-data evidence. Authorized Chrome reached the existing protected live page, but the new source is not deployed; the Access-protected remote preview remains blocked because Wrangler requires unavailable `cloudflared`. Do not claim live acceptance or request deployment approval until an authorized live-data path is available.
+
 ## GFS-386 diagnostic repair and canary gate (2026-10-31 UTC)
 
 - No live exposure is authorized under GFS-386. Frozen routing remains API `b426ba47`100% / `d603f077`0% and Admin `ceb3e680`100% / `72cff93f`0%; preserve the new-number WhatsApp lock and Hoja/ThanNow zero-connection rule.

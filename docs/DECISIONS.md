@@ -1796,3 +1796,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Accept the Conversations dashboard definitions: total is all stored conversations; active24h is last inbound or conversation update within24h; payment review pending is distinct conversations linked to `PAYMENT_REVIEW` orders with payment `REVIEW`; COD pending is distinct conversations linked to orders with `COD_PENDING` payment status.
 - Accept focused18/18, full341/341, build/lint/audit0, and synthetic Chrome responsive evidence. Real live-data browser acceptance remains BLOCKED by missing `cloudflared` for the Access-protected remote preview; no fabricated live PASS.
 - Do not deploy under GFS-388. Prepare one exact Admin-only approval after any owner-provided `cloudflared`/remote-preview path or equivalent authorized live acceptance, with 0% validation, detached watchdog, and rollback to Admin `ceb3e680`100%. API remains frozen.
+
+## GFS-389 decision (2026-10-31)
+
+- Accept the minimal D1-safe control design: separate Orders/Conversations switches, default OFF, localStorage persistence, 60-second visible polling when explicitly enabled, hidden-tab pause, one in-flight request, bounded existing retry behavior, and stale-data retention. Keep production routing frozen.
+- Do not run full Conversations summary counts every 60 seconds. Retain the last summary during automatic list polls and refresh aggregates at most every five minutes; manual and initial refresh remain authoritative. Measured remote probes are read-only with zero writes.
+- Cost evidence is recorded as row-read measurements and projections only: one enabled visible tab over eight hours projects approximately4,510,464 Conversations rows and18,240 Orders rows; two/four tabs scale linearly. Default OFF remains required until an owner accepts the cost tradeoff.
+- Live-data acceptance is BLOCKED, not PASS: the new source is un-deployed and the authorized Access-protected preview cannot start without `cloudflared`. No deployment approval or API canary is requested under GFS-389.

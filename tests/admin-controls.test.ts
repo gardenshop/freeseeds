@@ -193,6 +193,9 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("const refreshWithoutFeedback=refreshOrders");
     expect(html).toContain("const hasVisibleOrders=Boolean(ordersRoot.querySelector('[data-order-id]'))");
     expect(html).toContain("Refresh failed; showing the last successful orders.");
+    expect(html).toContain('id="orders-auto"');
+    expect(html).toContain("gfs_admin_orders_auto_update");
+    expect(html).toContain("},60000)");
   });
 
   it("requires CSRF for payment and fulfillment detail mutations", async () => {

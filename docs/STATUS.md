@@ -2284,3 +2284,10 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **PASS synthetic browser:** Chrome MCP verified metrics, synthetic state-change highlight, reduced-motion toggle, and no page overflow across requested responsive emulations.
 - **BLOCKED live-data acceptance:** local D1 had no schema/data; remote Wrangler preview could not start because `cloudflared` is unavailable for the Access-protected preview. No real live-data PASS is claimed.
 - **Frozen routing:** API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. Deployment approval remains pending; rollback target is Admin `ceb3e680`100%.
+
+## GFS-389 D1-safe Admin auto-update controls (2026-10-31)
+
+- **PASS source/tests:** Orders and Conversations now expose separate Auto update switches, both default OFF with localStorage persistence, 60-second enabled polling, hidden-tab pause, one in-flight request, stale-safe failure handling, and Conversations summary refresh capped at five minutes. Focused18/18, full341/341, build, lint, and dependency audit0 vulnerabilities pass.
+- **PASS read-only cost evidence:** remote D1 aggregate probes returned 0 writes/`changed_db=false`; summary5,864 rows, conversation count/list8,224 rows, Orders no-change+cursor38 rows. Eight-hour one-tab enabled projection is Conversations4,510,464 rows and Orders18,240 rows; two/four tabs scale linearly. Default OFF remains the safe operating state.
+- **BLOCKED live acceptance:** authorized Chrome can read the existing protected live page, but the new source is not deployed. Wrangler Access remote preview still requires unavailable `cloudflared`; no synthetic fixture is promoted to live PASS.
+- **Frozen routing:** API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. No deployment or customer-facing mutation. Next action: obtain an authorized live-data preview path, then request one Admin-only 0% validation approval.

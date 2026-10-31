@@ -5305,3 +5305,12 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 5. **Tests:** PASS focused18/18, full341/341, build, lint, dependency audit0 vulnerabilities. No deployment or source change to API/WhatsApp/payment/Meta/migrations/flags/Queue/Cron.
 6. **Routing:** read-only Cloudflare identity `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%.
 7. **Approval:** NOT REQUESTED/NOT READY. First resolve the precise live-data browser gate, then request one Admin-only 0% validation/direct cutover approval with watchdog and rollback to `ceb3e680`100%. GFS-386 API monitoring remains BLOCKED.
+
+## GFS-389 final report - D1-safe Admin auto-update controls
+
+- **Source:** PASS. Orders and Conversations have independent Auto update controls, both default OFF and persisted locally. Enabled polling is 60 seconds only while visible; overlapping requests are suppressed. Conversations summary aggregates refresh initially/manually and no more than every five minutes during automatic polling. No backend business logic, authentication, payment, API, WhatsApp, migration, flag, Queue, Cron, Meta, or D1 write path changed.
+- **D1 cost:** PASS read-only measurement. Summary aggregate shapes read 2,484/2,484/48/848 rows; conversation count/list shapes read 2,869/5,355; Orders no-change/cursor shapes read 7/31. All probes reported zero rows written and `changed_db=false`. A continuously visible enabled tab for eight hours projects Conversations4,510,464 and Orders18,240 rows; two/four tabs project linear multiples. These are row-read projections, not billing claims.
+- **Tests:** PASS focused Admin18/18, full341/341, build, lint, and dependency audit0 vulnerabilities.
+- **Browser/live data:** BLOCKED for the new source. Authorized Chrome reached the existing protected live page, but the source is not deployed and the Access-protected remote preview cannot start without unavailable `cloudflared`. Synthetic/local evidence must not be presented as live acceptance.
+- **Routing/protection:** PASS read-only identity `gisupp@gmail.com` / Get Free Seeds account; API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. No production mutation occurred.
+- **Next approval/action:** obtain an authorized live-data preview path, perform 0% Admin validation with real data, then request one exact Admin-only deployment approval. GFS-386/API monitoring remains separate and blocked; no canary or promotion was run.

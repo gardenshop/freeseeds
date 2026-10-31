@@ -1791,3 +1791,10 @@ No secrets are stored in this registry.
 - New read-only endpoint: `/api/conversations/summary`; aggregate fields are total, activeLast24Hours, paymentReviewPending, codPending, asOf, and queryCosts. No identifiers or message bodies are returned.
 - Browser resource evidence is synthetic/local only; no customer data, cookies, tokens, secrets, screenshots, or credential values were registered. Remote preview was blocked by missing `cloudflared` Access integration.
 - Runtime resources unchanged: API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%; no D1 writes, deployment, customer message, payment, Meta, migration, flag, Queue, or Cron mutation.
+
+## GFS-389 D1-safe Admin auto-update controls (2026-10-31)
+
+- Changed source resources: `apps/admin/src/index.ts`, `apps/admin/src/conversations-dashboard.ts`, `tests/admin-controls.test.ts`, and `tests/admin-conversations.test.ts`. No API/WhatsApp source, migration, binding, secret, or Worker deployment resource changed.
+- Browser storage keys are `gfs_admin_orders_auto_update` and `gfs_admin_conversations_auto_update`; values are only `on`/`off`. No credentials, customer identifiers, raw message bodies, cookies, or private screenshots were recorded.
+- Read-only D1 evidence: summary query rows read 2,484/2,484/48/848; conversation count/list 2,869/5,355; Orders no-change/cursor 7/31; every probe wrote0 and changed_db=false.
+- Runtime resources unchanged: API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. Live source acceptance remains blocked by unavailable `cloudflared` for the Access-protected remote preview.

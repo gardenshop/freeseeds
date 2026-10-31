@@ -1627,3 +1627,9 @@
 - Added server-side read-only conversation summary aggregates and a responsive masked Conversations dashboard.
 - Added visible-tab 30-second polling, hidden pause/resume, bounded retry/timeout, stale-safe update guards, manual Refresh, Auto ON/OFF, selected-detail refresh on change, and reduced-motion-safe highlights. Orders continues to use the GFS-387 stale-safe path.
 - Verified focused18/18, full341/341, build, lint, and dependency audit0 vulnerabilities. Synthetic Chrome responsive acceptance passed; live-data browser acceptance remains blocked by the unavailable `cloudflared` remote preview. No production deployment or WhatsApp/API mutation.
+
+## 2026-10-31 - GFS-389 D1-safe Admin auto-update controls
+
+- Added separate Orders and Conversations Auto update switches, default OFF, browser-local persistence, 60-second visible polling, hidden-tab pause, one-in-flight protection, and stale-safe behavior.
+- Capped automatic Conversations summary aggregate refresh at five minutes after measuring remote D1 cost; manual/initial summary reads remain available. Bounded read-only D1 measurements reported zero writes.
+- Verified focused18/18, full341/341, build, lint, and audit0. No deployment or API/WhatsApp/customer/payment/Meta/D1/migration/flag mutation. Live-data acceptance remains blocked by unavailable `cloudflared`.
