@@ -1503,3 +1503,10 @@
 - Performed bounded read-only D1, Admin, Cloudflare telemetry, Chrome DevTools and canonical Meta identity checks; no source or production configuration changed.
 - Verified inbound activity continued after 14:17 PKT, D1/Admin active-order parity at399, latest order timestamp14:17:21 PKT, active checkout snapshots, successful outbound statuses, zero bounded webhook-rejection rows, and GraphQL errors0.
 - Classified the alleged stop as disproven but causal attribution **E / INCONCLUSIVE**; no repair or canary was authorized. Meta hourly values/timezone remain unavailable.
+
+## GFS-369 Admin baseline health bridge preparation (2026-10-31)
+
+- Built and tested a minimal bridge from exact Admin baseline source `901f3f6`, adding only Service Auth authorization for `GET /health`; all other Admin routes retain owner-email authorization.
+- Uploaded version `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1` without deploying it or changing traffic. Confirmed it is distinct from both serving baseline and combined candidate.
+- Verified focused33/33, bridge full321/321, current full335/335, build/lint/audit0, controller17/17, adapter6/6, observability4/4 and rollback4/4.
+- Live override testing remains blocked until owner-approved 0% attachment to the active deployment; API/Admin routing and WhatsApp remain unchanged.

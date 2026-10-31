@@ -2240,3 +2240,21 @@ Investigation query costs only (not production savings): representative `rows_re
 | Meta hourly attribution | UNKNOWN | Canonical account/date range confirmed, values/timezone not safely exposed |
 | Incident classification | E / INCONCLUSIVE | Ordering was not stopped; quiet order rate has no proven software root cause |
 | Production repair/canary | NOT RUN | No defect proven; no customer-facing mutation or Admin canary |
+
+### GFS-369 Admin baseline health bridge gate (2026-10-31)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Baseline incompatibility | CONFIRMED carried forward | Serving `494a3dce` returns application-level `ADMIN_ACCESS_REQUIRED` under Service Auth |
+| Prior repair isolation | FAIL | `7e0b0549` and combined `4fe564a6` share the same script etag; not an isolated baseline repair |
+| Minimal bridge diff | PASS | Exact `901f3f6` baseline plus only `GET /health` `ctx.access`; other routes stay email-only |
+| Bridge focused | PASS | 33/33 health/payment/isolation tests |
+| Bridge regression | PASS | 321/321, build, lint |
+| Current PR regression | PASS | 335/335, build, lint, audit0 |
+| Controller/adapter/observability | PASS | 17/17, 6/6, 4/4 |
+| Legacy rollback | PASS | 4/4 with explicit `GFS_LEGACY_ROOT` |
+| Bridge upload | PASS / NO TRAFFIC | `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1`; not in active deployment |
+| Live Access health | BLOCKED | Version override cannot select a version absent from current deployment |
+| Production routing | PASS unchanged | API `b426ba47`100%; Admin `494a3dce`100%; combined candidate0% |
+| Approval E | REQUESTED | Stage bridge0% beside legacy100%; exact rollback restores current two-version deployment |
+| Admin canary | NOT AUTHORIZED | Requires bridge live validation, separate baseline replacement approval, then fresh Approval D |

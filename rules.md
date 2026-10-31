@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-369 Admin baseline health bridge gate (2026-10-31)
+
+- The actual serving Admin baseline `494a3dce-5d52-4b66-b3ff-bef64b31b406` remains100% and cannot authenticate the existing Service Auth monitor: its `/health` response remains `ADMIN_ACCESS_REQUIRED`. Do not reinterpret that 403 or GraphQL0 as healthy.
+- Versions `7e0b0549-ceaa-4b67-83cb-4e96a41c6bee` and `4fe564a6-bcd7-4106-82ee-00f7b14c4bec` have the same script etag and therefore are not a minimal baseline-only repair. Do not promote `7e0b0549` as if it were isolated from Analytics/Conversations.
+- A distinct health-only bridge was built from exact baseline source `901f3f6fbde01adc8ef48b13f70eebdeba5baa4f` with only the audited `ctx.access` authorization for `GET /health`; all other paths retain owner-email authorization. Uploaded version `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1` has no traffic and is not in the active deployment.
+- Local bridge gates pass: focused33/33, baseline full321/321, build/lint; current PR full335/335, build/lint/audit0, controller17/17, adapter6/6, observability4/4 and rollback4/4. Live Access-context health is unverified because Cloudflare version overrides apply only to versions in the current deployment.
+- **Approval E required before any deployment mutation:** temporarily deploy Admin `494a3dce`100% + bridge `3bbf5cf6`0%, replacing only the current 0% combined-candidate slot. API remains `b426ba47`100%. This routes zero ordinary traffic to the bridge and permits exact override testing. Immediate rollback is the current Admin deployment `494a3dce`100% + `4fe564a6`0%.
+- Do not replace the serving baseline, run a canary, change Access, or change the canary rollback target until the 0% bridge passes real health, denial, isolation, telemetry, latency and version-readback tests and the owner grants a separate baseline-replacement approval. WhatsApp and GFS-368 findings remain untouched.
+
 ## GFS-368 WhatsApp ordering incident (2026-10-31)
 
 - Read-only diagnosis: ordering did not stop after 14:17 PKT. From 14:17:00–15:49:18 PKT, D1 recorded 103 inbound customer events (62 INTERACTIVE, 38 MESSAGE, 3 MEDIA), all RECEIVED, with 32 unique-contact snapshots; latest inbound observed was 15:49:50 PKT. No webhook-rejection audit rows were found in the bounded window.

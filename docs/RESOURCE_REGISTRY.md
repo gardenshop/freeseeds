@@ -1645,3 +1645,12 @@ No secrets are stored in this registry.
 - **Runtime:** candidate override security check health200×3, invalid/missing403, restricted paths denied, GraphQL API/Admin errors0; production routing frozen. Baseline Admin `/health` remains GFS-367's legacy incompatibility.
 - **Meta:** canonical Ads Manager page read-only and date-aligned to 31-Oct-2026; requested hourly delivery metrics/timezone unavailable. No ad or WhatsApp mutation.
 - **Disposition:** complete stop disproven; causal classification E/INCONCLUSIVE; no repair, replay, send, payment, migration, flag, Queue, Cron, or canary action.
+
+## GFS-369 Admin health bridge resources
+
+- **Identity at upload:** `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; GitHub `gardenshop`; canonical Meta account `1198439777611633` unchanged.
+- **Health-only bridge:** Worker `getfreeseeds-admin-staging`, version `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1`, version108, tag `gfs369-admin-health-bridge`, script etag `ae646a...`; source baseline `901f3f6` plus the narrow health patch. Uploaded only; no active deployment membership or traffic.
+- **Current Admin deployment:** `5587e875-9eb7-4379-874f-fa46e6a1587c`, `494a3dce`100% + `4fe564a6`0%. Current API deployment remains `b426ba47`100% + candidate0%.
+- **Rejected bridge candidate:** `7e0b0549` has script etag `389010...`, equal to combined candidate `4fe564a6`; not a minimal repair.
+- **Local bridge worktree:** `D:\free seeds\gfs369-health-bridge`, detached at `901f3f6` with only Admin authorization source/test changes. No secret values stored.
+- **Approval dependency:** attach `3bbf5cf6` at0% beside `494a3dce`100% for production-host override testing; current combined candidate remains uploaded but must temporarily leave the two-version deployment. No traffic impact is authorized yet.

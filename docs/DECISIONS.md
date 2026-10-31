@@ -1661,3 +1661,11 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Classify the causal question **E / INCONCLUSIVE**. The bounded data rules out a complete webhook stop, queue-wide failure, obvious order-write failure, and Admin active-count mismatch, but cannot distinguish demand/funnel behavior from a conversion issue because historical transitions and aligned Meta hourly attribution are unavailable.
 - Preserve frozen production: API `b426ba47`100%, Admin `494a3dce`100%, candidates0%; no replay, resend, order/payment mutation, ad edit, migration, flag change, deployment, or canary.
 - Keep GFS-367 baseline Admin Service Auth health incompatibility separate. Any health repair still requires scoped owner approval; no Approval D is requested from this incident.
+
+## GFS-369 decision (2026-10-31 UTC)
+
+- Reject the apparent `7e0b0549` health-only option: its script etag equals combined candidate `4fe564a6`, so promoting it would release the same Analytics/Conversations code and is not the minimum baseline repair.
+- Use distinct uploaded version `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1` as the only health-bridge candidate. It is based on the exact serving-source lineage `901f3f6` and changes only `GET /health` Service Auth authorization.
+- Do not call the bridge live-compatible yet. Cloudflare version overrides require the target version in the current deployment; the upload alone cannot prove production-host Access context.
+- Request Approval E for a 0%-traffic deployment swap only: legacy baseline100% + bridge0%, with API frozen. Restore the current legacy100% + combined-candidate0% deployment immediately on any mismatch or after testing if baseline replacement is not separately approved.
+- Baseline replacement and a revised canary rollback target are separate material decisions. Do not reuse GFS-366 Approval D and do not run a canary until the bridge serves100% under a separately approved replacement and passes real monitoring.
