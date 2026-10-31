@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-363 secure monitoring evidence (2026-10-31)
+
+- **Credential storage:** existing `GFS-Admin-Health-Monitor` generic credential is readable only from the authorized Windows host context through native `CredRead`; no Client ID/Secret value is registered here.
+- **Access readback:** `GFS-Admin-Health-Monitoring` exists as Self-hosted with destination `getfreeseeds-admin-staging.get-free-seeds.workers.dev/health`; live Policies readback is `--`.
+- **Monitoring result:** three real credential-backed health requests returned HTTP403; Approval D and canary remain unrun. API/Admin routing remains frozen and no external state was changed.
+
 ## GFS-342 release candidate and evidence (2026-10-30)
 
 - **Cloudflare identity/account:** `gisupp@gmail.com`, Get Free Seeds `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`.

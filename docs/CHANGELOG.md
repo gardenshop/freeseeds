@@ -1,5 +1,16 @@
 # Changelog
 
+## GFS-363 secure monitoring gate (2026-10-31)
+
+- Added a minimal native Windows Credential Manager bridge and fail-closed Access-header injection for the existing monitoring controller; no credential value is recorded.
+- Verified focused bridge/observability, adapter, deadline and rollback tests, full334/334, build and lint.
+- Host-context credential read succeeded, but live `/health` returned HTTP403 because the Cloudflare application readback currently shows no attached policy (`--`). No Access, routing, credential, customer, payment, Meta, migration, or canary mutation occurred.
+
+## GFS-357 Access setup and Admin monitoring gate (2026-10-31)
+
+- Read-only Chrome DevTools MCP verification passed for the Get Free Seeds Cloudflare account and the existing `GFS-Admin-Health-Monitor` Service Auth policy: exactly one Include Service Token rule, matching the sole enabled token of that name; existing Admin Operator remains Allow.
+- Prepared the exact Approval B proposal for a dedicated Self-hosted `/health` application on `getfreeseeds-admin-staging.get-free-seeds.workers.dev`. No application save, token creation, policy change, credential transfer, or monitoring/canary action occurred.
+
 ## GFS-342 Analytics + Conversations release readiness (2026-10-30)
 
 - Added cross-customer isolation assertions to the conversation regression fixture; no Admin runtime source change was required after GFS-341.

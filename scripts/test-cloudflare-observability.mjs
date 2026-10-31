@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { createCloudflareObservability, sumMetricRows } from "./cloudflare-observability.mjs";
+import { accessHeaders, readAccessCredentials } from "./cloudflare-access-credentials.mjs";
 
 const worker = { name: "getfreeseeds-admin-staging", healthUrl: "https://admin.example.test" };
 
@@ -19,6 +20,15 @@ test("empty or malformed metrics are unavailable, never fabricated as zero", () 
   assert.throws(() => sumMetricRows([{ sum: { requests: 1, errors: null } }]), /metrics_unavailable/);
 });
 
+test("credential bridge validates both values and creates only Access headers", () => {
+  assert.equal(readAccessCredentials({}), null);
+  assert.throws(() => readAccessCredentials({ GFS_ACCESS_CLIENT_ID: "id" }, { required: true }), /access_credentials_unavailable/);
+  assert.deepEqual(accessHeaders({ clientId: "id", clientSecret: "secret" }), {
+    "CF-Access-Client-Id": "id",
+    "CF-Access-Client-Secret": "secret"
+  });
+});
+
 test("reads HTTP health and authenticated GraphQL metrics without exposing the token", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "gfs-observability-"));
   const tokenPath = path.join(directory, "wrangler.toml");
@@ -28,9 +38,10 @@ test("reads HTTP health and authenticated GraphQL metrics without exposing the t
     const observability = createCloudflareObservability({
       accountTag: "account",
       tokenPath,
+      accessCredentials: { clientId: "access-id", clientSecret: "access-secret" },
       now: () => new Date("2026-10-30T20:02:00Z"),
       fetchImpl: async (url, options) => {
-        calls.push({ url, authorization: options?.headers?.Authorization });
+        calls.push({ url, authorization: options?.headers?.Authorization, accessId: options?.headers?.["CF-Access-Client-Id"], accessSecret: options?.headers?.["CF-Access-Client-Secret"] });
         if (url.endsWith("/health")) return { status: 200 };
         return { ok: true, json: async () => ({ data: { viewer: { accounts: [{ workersInvocationsAdaptive: [{ dimensions: { datetime: "2026-10-30T20:01:00Z" }, sum: { requests: 2, errors: 0 } }] }] } } }) };
       }
@@ -41,6 +52,8 @@ test("reads HTTP health and authenticated GraphQL metrics without exposing the t
     assert.deepEqual(metrics, { source: "cloudflare_graphql", requests: 2, errors: 0, latestAt: "2026-10-30T20:01:00Z" });
     assert.equal(calls.length, 2);
     assert.equal(calls[1].authorization, "Bearer synthetic-secret-not-logged");
+    assert.equal(calls[0].accessId, "access-id");
+    assert.equal(calls[0].accessSecret, "access-secret");
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

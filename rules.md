@@ -1,5 +1,19 @@
 # Get Free Seeds Binding Rules
 
+## GFS-363 secure monitoring gate (2026-10-31)
+
+- Approval C is granted. The native Windows Credential Manager bridge uses `CredRead` in the authorized host context, keeps Client ID/Secret in process memory, injects only the two Cloudflare Access headers into the child controller, and restores the process environment. No credential value is recorded.
+- Focused bridge/observability, adapter, deadline, and rollback tests pass; full334/334, build, and lint pass. The restricted sandbox identity cannot read the host credential, so host-context execution is required.
+- Live read-only Access Applications readback shows `GFS-Admin-Health-Monitoring` with the exact `getfreeseeds-admin-staging.get-free-seeds.workers.dev/health` destination but Policies `--`. Three credential-backed `/health` requests returned HTTP403. Secure monitoring is BLOCKED; do not request Approval D or run a canary.
+- Do not recreate the token, policy, application, or credential. Reconcile the live missing policy only through the official Cloudflare UI and a fresh identity check; until then preserve API `b426ba47`100%, Admin `494a3dce`100%, candidates0%, WhatsApp protections, migration0043, and Hoja/ThanNow isolation.
+
+## GFS-357 Access setup and Admin monitoring gate (2026-10-31)
+
+- **Approval A PASS (read-only):** Cloudflare One is visibly authenticated as `Get Free Seeds` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Reusable policy `GFS-Admin-Health-Monitor` has action `Service Auth` and exactly one Include rule: Service Token `GFS-Admin-Health-Monitor`. The Service Tokens page shows exactly one enabled token with that name; no token was created, rotated, displayed, copied, or logged. Existing `Get Free Seeds Admin Operator` remains `Allow` and unchanged.
+- **Approval B pending:** prepare, but do not save, one dedicated Self-hosted Access application named `GFS-Admin-Health-Monitoring` for the actual staging Admin host `getfreeseeds-admin-staging.get-free-seeds.workers.dev` and exact path `/health` only, with only policy `GFS-Admin-Health-Monitor` attached. The existing Admin application, login policy, API, all other Admin endpoints, API `b426ba47`, Admin `494a3dce`, and candidate routes remain untouched.
+- No Access application was created or modified in this gate. Do not create another token, broaden the Include rule, attach the policy to the existing Admin application, or save the dedicated application until the owner explicitly grants Approval B after reviewing the exact host, path, and policy above.
+- After Approval B, every Cloudflare mutation requires a fresh visible `gisupp@gmail.com` / Get Free Seeds identity check and a recorded result. Approval C remains separate and is required before any secure host credential connection; credentials must stay in approved host secret storage and never appear in chat, Git, logs, or screenshots.
+
 ## GFS-342 Analytics + Conversations release readiness (2026-10-30)
 
 - Verified Cloudflare mutation identity `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` immediately before upload. API remains `b426ba47`100% / `6ef27f02`0%; frozen Admin remains `494a3dce`100%; the combined Admin candidate is `19188b21-60da-4b03-bd89-72cb49468100`0% in deployment `00566a27-064e-4bd0-b3e2-079efe69cffd`.

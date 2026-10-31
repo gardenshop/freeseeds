@@ -1,5 +1,33 @@
 # Final Report
 
+## GFS-363 secure monitoring gate (2026-10-31)
+
+### Result
+
+**BLOCKED at live Access policy readback.** Approval C was granted and the native Windows Credential Manager bridge passed host-context read and focused safety tests without exposing credential values. Full334/334, build, lint, adapter, deadline and rollback tests pass.
+
+The official Cloudflare Applications readback in the authorized Get Free Seeds account shows `GFS-Admin-Health-Monitoring` with the exact staging `/health` destination, but its Policies column is `--`. Three real credential-backed `/health` requests returned HTTP403. Therefore secure monitoring is not PASS, Approval D was not requested, and no canary or routing mutation occurred. API `b426ba47` and Admin `494a3dce` remain at100%; candidates remain0%.
+
+### Task comparison
+
+| Task | Result |
+|---|---|
+| GFS-361 | PASS for Approval C request/host-bridge preparation; monitoring remained pending |
+| GFS-362 | PASS for native bridge implementation and focused/source validation; protected entry required host context |
+| GFS-363 | BLOCKED: live application has no attached policy and real `/health` is HTTP403 |
+
+Next action: reconcile the existing `GFS-Admin-Health-Monitor` attachment through the official Cloudflare UI, then rerun the read-only security/monitoring gate. Approval D and canary remain pending.
+
+## GFS-357 Access setup and Admin monitoring gate (2026-10-31)
+
+### Current result
+
+Approval A: **PASS**. Approval B: **PENDING OWNER APPROVAL**. Approval C: **NOT REQUESTED YET**.
+
+Cloudflare One visibly showed the authorized Get Free Seeds account. The reusable `GFS-Admin-Health-Monitor` policy is `Service Auth` with one Include rule selecting the existing `GFS-Admin-Health-Monitor` Service Token; Service Tokens showed exactly one enabled token with that name. Existing `Get Free Seeds Admin Operator` remains `Allow`. No token was created or exposed.
+
+The unsaved Approval B proposal is a dedicated Self-hosted application named `GFS-Admin-Health-Monitoring`, exact hostname `getfreeseeds-admin-staging.get-free-seeds.workers.dev`, exact path `/health`, and only policy `GFS-Admin-Health-Monitor`. The existing Admin application/login, other endpoints, API/Admin routing, and all protected WhatsApp/Hoja protocols remain unchanged. The application was not saved because the UI control was not safely actionable in this session.
+
 ## GFS-342 Analytics + Conversations release readiness (2026-10-30)
 
 ### Outcome

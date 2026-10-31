@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { accessHeaders, readAccessCredentials } from "./cloudflare-access-credentials.mjs";
 
 const GRAPHQL_URL = "https://api.cloudflare.com/client/v4/graphql";
 const WORKERS_QUERY = `query Workers($accountTag: String!, $start: Time!, $end: Time!, $scriptName: String!) {
@@ -39,7 +40,7 @@ function sumMetricRows(rows) {
   return { source: "cloudflare_graphql", requests, errors, latestAt };
 }
 
-export function createCloudflareObservability({ accountTag, tokenPath = defaultTokenPath(), fetchImpl = fetch, now = () => new Date(), windowMs = 10 * 60 * 1000 } = {}) {
+export function createCloudflareObservability({ accountTag, tokenPath = defaultTokenPath(), fetchImpl = fetch, now = () => new Date(), windowMs = 10 * 60 * 1000, accessCredentials = readAccessCredentials() } = {}) {
   if (!accountTag) throw new TypeError("accountTag is required");
   const readMetrics = async (worker, { signal } = {}) => {
     const token = await readOAuthToken(tokenPath);
@@ -60,7 +61,7 @@ export function createCloudflareObservability({ accountTag, tokenPath = defaultT
   };
   const readHealth = async (worker, { signal } = {}) => {
     const started = performance.now();
-    const response = await fetchImpl(`${worker.healthUrl}/health`, { redirect: "manual", signal });
+    const response = await fetchImpl(`${worker.healthUrl}/health`, { redirect: "manual", headers: accessCredentials ? accessHeaders(accessCredentials) : undefined, signal });
     return { httpStatus: response.status, latencyMs: performance.now() - started };
   };
   return { readHealth, readMetrics };

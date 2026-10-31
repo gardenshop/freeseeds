@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-363 secure monitoring gate (2026-10-31 UTC)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Native Windows credential bridge | PASS | `CredRead` host-context read; values never printed, logged, or stored in files |
+| Focused bridge/observability tests | PASS | credential validation and Access-header injection tests pass |
+| Controller/adapter/rollback | PASS | existing focused adapter/deadline/rollback suites pass |
+| Full regression/build/lint | PASS | full334/334; build and lint pass |
+| Authenticated staging `/health` | FAIL | three real credential-backed requests returned HTTP403 |
+| Access application readback | BLOCKED | exact host/path present; Policies column is `--` |
+| Admin canary | NOT RUN | Approval D not requested; API/Admin routing untouched |
+
 ## GFS-342 Analytics + Conversations release gate (2026-10-30)
 
 | Check | Result | Evidence / boundary |

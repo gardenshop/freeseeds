@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-363 secure monitoring decision (2026-10-31)
+
+- Keep production frozen: API `b426ba47`100%, Admin `494a3dce`100%, candidates0%; no canary or promotion while the monitoring application readback has no policy.
+- The native host credential bridge is acceptable for the approved scope, but HTTP403 from all three authenticated `/health` checks is not a monitoring PASS. Do not infer a bad secret, rotate it, or expose it; reconcile the live Access attachment through the official UI first.
+- Approval D is not requested until authenticated HTTP200, denial/isolation, metrics, version readback, and rollback evidence all pass.
+
 ## GFS-342 release readiness decision (2026-10-30)
 
 - Stage one combined Admin candidate only. Keep frozen Admin `494a3dce` at100%, candidate `19188b21-60da-4b03-bd89-72cb49468100` at0%, and API routing unchanged.
@@ -1622,3 +1628,8 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Do not blame D1, Admin, Worker errors, rate limiting, webhook rejection, payment-choice delivery, Queue, Cron, or recovery: read-only evidence does not support those causes and Admin/D1 full-date counts are equal at 68.
 - Meta hourly attribution is BLOCKED because the authenticated report exposed active campaign/day aggregates but not the required hourly delivery fields or verified reporting timezone. Do not edit ads or infer spend changes.
 - No source repair is justified. Keep API `b426ba47` and Admin `494a3dce` at100%, candidates0%, migration0043 intact, 0044/0045 unapplied, and do not retry an Admin canary under GFS-345.
+# GFS-357 decision (2026-10-31 UTC)
+
+- Mark Approval A **PASS**: the visible Cloudflare policy Include rule selects only the existing enabled Service Token named `GFS-Admin-Health-Monitor`; the Service Tokens inventory contains exactly one token with that name. Existing Admin Operator `Allow` remains unchanged. No token was created or exposed.
+- Approval B is required before saving a dedicated Self-hosted application limited to `getfreeseeds-admin-staging.get-free-seeds.workers.dev` and `/health`, with only `GFS-Admin-Health-Monitor` attached. Keep the existing Admin login and every other endpoint protected by the existing application/policy.
+- The create control was not safely actionable in this session, and no workaround is permitted. No Access app, policy, token, Worker, route, secret, D1, customer, payment, Meta, Queue, Cron, reminder, WhatsApp, or canary mutation occurred. Approval C remains a separate gate for secure host credential connection.

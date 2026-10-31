@@ -1,5 +1,18 @@
 # Status
 
+## GFS-363 secure monitoring gate (2026-10-31 UTC)
+
+- **Credential bridge PASS:** Approval C is granted. Native Windows Credential Manager `CredRead` succeeded in the authorized host context without exposing or logging values; the controller receives only in-memory Access headers. Restricted sandbox access remains unavailable.
+- **Source validation PASS:** focused bridge/observability, adapter, deadline and rollback tests pass; full334/334, build and lint pass.
+- **Monitoring BLOCKED:** live Cloudflare Applications readback shows `GFS-Admin-Health-Monitoring` at the exact staging `/health` destination but Policies `--`. Three credential-backed `/health` requests returned HTTP403. No Access mutation, credential rotation, routing change, or canary occurred.
+- **Approval D:** not requested. Next action is an official readback/reconciliation of the missing existing `GFS-Admin-Health-Monitor` attachment under the original approved scope.
+
+## GFS-357 Access setup and Admin monitoring gate (2026-10-31 UTC)
+
+- **Approval A PASS / Approval B pending.** Read-only Chrome DevTools MCP evidence shows Cloudflare One account `Get Free Seeds` (`cb5066a6d71ecdee0bd7ed8aacb4d3c2`), reusable policy `GFS-Admin-Health-Monitor` with action `Service Auth`, exactly one Include rule for the existing Service Token named `GFS-Admin-Health-Monitor`, and exactly one enabled token with that name. No token mutation occurred. Existing `Get Free Seeds Admin Operator` remains `Allow`.
+- **Proposed unsaved application:** dedicated Self-hosted application `GFS-Admin-Health-Monitoring`; exact HTTPS hostname `getfreeseeds-admin-staging.get-free-seeds.workers.dev`; exact path `/health`; only policy `GFS-Admin-Health-Monitor` (Service Auth). The current Access Applications inventory shows one existing `Get Free Seeds Admin Staging` application covering the legacy and V2 hostnames with `Get Free Seeds Admin Operator`; it was not edited.
+- The Cloudflare UI did not expose a safely verifiable non-mutating create control to this agent, so no application was saved. Do not claim attachment, authenticated health, monitoring, isolation, expiration, rollback, or canary evidence yet. Await owner Approval B, then separately request Approval C for secure host credential connection.
+
 ## GFS-342 Analytics + Conversations release readiness (2026-10-30)
 
 - **P0 PASS:** Cloudflare `gisupp@gmail.com` / Get Free Seeds account and D1 binding verified. API `b426ba47` remains100% / `6ef27f02`0%; Admin `494a3dce` remains100%. Recovery is ON; five-stage Advance, Automation V2 and utility templates remain OFF. Marker0043 is present, quick_check is ok, FK check empty; proposed0044/0045 objects are absent.
