@@ -1318,6 +1318,12 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - P1 remains BLOCKED: no official Chrome DevTools/Zero Trust connector or secure Access-management path is available here; Wrangler OAuth lacks Access-management scope and no Access credential environment is present. Do not create an unrestricted token or repeat 302 checks.
 - No Access, Worker, route, D1, Meta, payment, customer, flag, reminder, or traffic mutation occurred. Keep Admin canary NO-GO and the public bot/recovery GO.
 
+## GFS-351 Access permission gate (2026-10-31 UTC)
+
+- The available MCP registry still has no Cloudflare Zero Trust or Chrome DevTools connector. Plugin discovery found an unconnected cloud-browser option, but it is not connected and cannot be used or treated as authorization.
+- No Access-management permission grant, service token, policy, secret transfer, Worker, route, D1, Meta, payment, customer, flag, reminder, or traffic mutation occurred. Keep the Admin canary blocked and production frozen.
+- Exact external dependency: connect an approved browser/Zero Trust integration or grant the authorized operator Access Service Tokens Write and Apps/Policies Write through official Cloudflare controls, with least-privilege path isolation.
+
 ## GFS-349 Access resolution gate (2026-10-31 UTC)
 
 - P0 identity/read-only checks PASS: GitHub `gardenshop`, Cloudflare `gisupp@gmail.com` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; frozen API/Admin remain 100% and candidates0%; migration0043 and protected flags remain unchanged.

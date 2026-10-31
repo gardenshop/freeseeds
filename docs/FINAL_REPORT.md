@@ -4942,6 +4942,16 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - **Completion:** identity/routing readback100%; source/WhatsApp protection100%; secure credential provisioning0%; automated monitoring0%; canary0%; Admin promotion0%; production-ready release BLOCKED.
 - **Exact next action:** owner provisions one short-lived least-privilege Cloudflare Access Service Auth credential through the official Zero Trust interface into approved host secret storage. Never send it in chat, Git, logs, or screenshots. Then rerun security/isolation/revocation checks before using the single authorized canary; no automatic 100% promotion.
 
+## GFS-351 Access permission gate (2026-10-31 UTC)
+
+- **P0:** PASS. Current protected routing remains API `b426ba47`100% / candidate0% and Admin `494a3dce`100% / candidate `19188b21`0%; identities and production protections unchanged.
+- **P1:** BLOCKED. One-time MCP discovery found no registered Cloudflare Zero Trust/Chrome DevTools connector. A relevant browser connector is unconnected, so no Access interface or credential operation was performed.
+- **Permissions:** Access Service Tokens Write and Access Apps/Policies Write remain unavailable/unverified. No token, policy, secret transfer, Worker, route, D1, Meta, payment, customer, flag, reminder, or traffic mutation occurred.
+- **P2/P3:** NOT RUN. Secure host HTTP200, isolation/revocation, controller connection and the one Admin canary cannot be claimed without the missing official capability.
+- **Comparison:** GFS-349/350 blocked at external Access capability; GFS-351 confirms the same boundary with no false PASS or repeated HTTP302 loop.
+- **Completion:** identity/routing100%; source/WhatsApp protection100%; Access permission/credential0%; secure monitoring0%; canary0%; Admin promotion0%. Remaining release stage is BLOCKED.
+- **Exact next action:** connect an approved browser/Zero Trust integration or grant the authorized operator least-privilege Access Service Tokens Write and Apps/Policies Write through official Cloudflare controls, restricted to staging `/health`. Then perform security/isolation/revocation tests before the single authorized canary.
+
 ### GFS-344/345 status and next action
 
 - GFS-344: PASS controller repair/tests; BLOCKED safely for live Admin canary.

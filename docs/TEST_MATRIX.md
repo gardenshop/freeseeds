@@ -2155,3 +2155,15 @@ Investigation query costs only (not production savings): representative `rows_re
 | Host credential transfer | BLOCKED | No approved Access credential or host secret binding present |
 | Admin canary | NOT RUN | Secure P1/P2 gate failed; no traffic mutation |
 | Frozen production protection | PASS | API/Admin versions and protected flags unchanged |
+
+### GFS-351 permission gate
+
+| Check | Result | Evidence / disposition |
+|---|---|---|
+| MCP registry discovery | PASS | No Cloudflare Zero Trust or Chrome DevTools connector registered |
+| Browser connector availability | PARTIAL | Relevant connector found but unconnected; not used |
+| Access Service Tokens Write | BLOCKED | Permission unavailable/unverified |
+| Access Apps/Policies Write | BLOCKED | Permission unavailable/unverified |
+| Secure credential transfer | NOT RUN | No approved credential or host secret path available |
+| Admin canary | NOT RUN | P1 permission gate failed |
+| Production/WhatsApp protection | PASS | No live mutation; frozen routing retained |

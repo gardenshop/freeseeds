@@ -1610,6 +1610,12 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - The authorized token creation cannot be safely performed because the official Zero Trust interface/Chrome DevTools MCP is unavailable and Wrangler lacks Access-management scope. Do not use Worker secrets, browser cookies, or an unrestricted token.
 - Keep the single Admin canary blocked until the owner provisions the least-privilege Access Service Auth credential through the official Zero Trust interface into approved host storage.
 
+## GFS-351 decision (2026-10-31 UTC)
+
+- Do not treat an unconnected browser connector as an available permission or use it without confirmed connection. No official Cloudflare Access management surface is currently callable.
+- The required one-time grant is least-privilege Access Service Tokens Write plus Access Apps/Policies Write, restricted to the staging `/health` monitoring path. Do not grant broad Admin or Worker access.
+- Until that grant or approved connector is available, do not provision credentials, run the Admin canary, or repeat the same 302 preflight.
+
 ## GFS-345 decision (2026-10-30 UTC / PKT)
 
 - Classify the decline as an inbound-volume break beginning 17:30Z/22:30 PKT; acquisition/advertising is the leading hypothesis, not a proven Meta cause.

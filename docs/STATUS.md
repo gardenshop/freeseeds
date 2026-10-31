@@ -2058,6 +2058,13 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **Blocker unchanged:** official Chrome DevTools/Zero Trust tooling is unavailable in this execution context, Wrangler OAuth lacks Access-management scope, and no Access host credential is present. No token or policy change was attempted.
 - **Canary:** NOT RUN. P1 cannot prove secure authenticated monitoring; live state remains frozen and protected.
 
+## GFS-351 Access permission gate (2026-10-31 UTC)
+
+- **Capability check:** no Cloudflare Zero Trust/Chrome DevTools connector is registered. A browser connector was discovered but remains unconnected; no action was taken through it.
+- **Permission result:** Access Service Tokens Write and Access Apps/Policies Write could not be verified or used. No token, policy, secret, or credential transfer occurred.
+- **Release:** Admin canary remains NOT RUN and NO-GO. API/Admin routing, WhatsApp, D1, payment, Meta, and reminder state remain unchanged.
+- **Exact owner action:** connect an approved browser/Zero Trust integration or grant the authorized operator the two required least-privilege Access permissions through official Cloudflare controls, with `/health` path isolation.
+
 ## GFS-345 evening order-decline audit (2026-10-30 UTC / PKT)
 
 - **PASS read-only:** identities, frozen routing, migration0043 marker/ten indexes, 0044/0045 absence, D1 quick/FK integrity, and unchanged +15/+210 / five-stage-off policy verified.

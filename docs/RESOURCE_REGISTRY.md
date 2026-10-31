@@ -1610,3 +1610,6 @@ No secrets are stored in this registry.
 
 - **GFS-350 readback:** remote PR HEAD `d952611dcb584cd13e13616a118ddc5285af4bc4`; Admin `494a3dce`100% / `19188b21`0%; API `b426ba47`100% / candidate0%. No traffic mutation.
 - **Access dependency:** official Zero Trust/Chrome DevTools capability and Wrangler Access-management scope are unavailable; no credential was created or recorded. Canary remains blocked.
+
+- **GFS-351 capability:** MCP registry has no Cloudflare Zero Trust/Chrome DevTools connector. A relevant browser connector is available only as unconnected discovery; no credentials or account data were accessed.
+- **Permission dependency:** Access Service Tokens Write and Apps/Policies Write remain unavailable/unverified. Required scope is least-privilege staging `/health` monitoring only.
