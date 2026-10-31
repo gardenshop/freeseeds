@@ -16,10 +16,14 @@ describe("GFS-111 WhatsApp content", () => {
     expect(parseWhatsAppContentDraft(draft)).toMatchObject({ mediaR2Key: "whatsapp-content/synthetic-banner.png" });
     expect(() => parseWhatsAppContentDraft({ ...draft, mediaR2Key: "https://public.example.test/banner.png" })).toThrow("WHATSAPP_CONTENT_MEDIA_KEY_INVALID");
     expect(() => parseWhatsAppContentDraft({ ...draft, contentEn: { text: "Hello {customerName}" } })).toThrow("WHATSAPP_CONTENT_PLACEHOLDER_NOT_ALLOWED");
+    expect(() => parseWhatsAppContentDraft({ ...draft, contentEn: { text: "Hello <b>customer</b>" } })).toThrow("WHATSAPP_CONTENT_HTML_NOT_ALLOWED");
   });
 
   it("renders only declared semantic placeholders", () => {
     expect(renderWhatsAppContent("Order {orderNumber}: PKR {totalPkr}", { orderNumber: "FS-SYNTHETIC", totalPkr: 250 })).toBe("Order FS-SYNTHETIC: PKR 250");
+    expect(renderWhatsAppContent("{orderSummaryItems}\nDelivery Fee: PKR {deliveryFee}\n*Order Total: PKR {orderTotal}*", { orderSummaryItems: "Free Vegetables Seeds (5 Packs): FREE", deliveryFee: 250, orderTotal: 500 })).toBe("Free Vegetables Seeds (5 Packs): FREE\nDelivery Fee: PKR 250\n*Order Total: PKR 500*");
+    const confirmation = parseWhatsAppContentDraft({ contentEn: { text: "Order {orderNumber}: PKR {totalPkr}; COD fee PKR {codFee}" }, contentUr: { text: "آرڈر {orderNumber}: PKR {totalPkr}؛ COD فیس PKR {codFee}" } }, "CONFIRMATION");
+    expect(renderWhatsAppContent(confirmation.contentEn.text, { orderNumber: "FS-SYNTHETIC", totalPkr: 500, codFee: 125 })).toBe("Order FS-SYNTHETIC: PKR 500; COD fee PKR 125");
     expect(renderWhatsAppContent("Unknown {customerName}", {})).toBe("Unknown {customerName}");
   });
 

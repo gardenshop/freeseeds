@@ -6,6 +6,7 @@ export type CurrentOrderDetails = {
   state: string;
   paymentStatus: string;
   totalPayablePkr: number;
+  codQuotedTotalPkr: number | null;
   province: string | null;
   createdAt: string;
   updatedAt: string;
@@ -24,13 +25,14 @@ export type CurrentOrderDetails = {
 export async function getLatestOrderForWaId(db: D1Database, trustedWaId: string, preferredOrderId?: string): Promise<CurrentOrderDetails | undefined> {
   const waId = normalizeWhatsAppWaId(trustedWaId);
   if (!waId) return undefined;
-  const row = await db.prepare(`SELECT o.id,o.order_number,o.state,o.payment_status,o.total_payable,o.province,o.created_at,o.updated_at,o.archived_at,
+  const row = await db.prepare(`SELECT o.id,o.order_number,o.state,o.payment_status,o.total_payable,o.province,o.created_at,o.updated_at,o.archived_at,cod.quoted_total_pkr AS cod_quoted_total_pkr,
     p.id AS payment_id,p.method,p.expected_amount,p.approved_amount,p.review_state,p.submitted_at,p.approved_at,
     COUNT(pr.id) AS receipt_count,c.normalized_address_hash
     FROM orders o
     JOIN customers c ON c.id=o.customer_id
     LEFT JOIN payments p ON p.order_id=o.id
     LEFT JOIN payment_receipts pr ON pr.order_id=o.id
+    LEFT JOIN cod_order_details cod ON cod.order_id=o.id
     WHERE c.wa_id IN (?,?) OR c.normalized_whatsapp_number=?
     GROUP BY o.id,p.id
     ORDER BY CASE WHEN o.id=? THEN 0 ELSE 1 END,o.created_at DESC
@@ -42,6 +44,7 @@ export async function getLatestOrderForWaId(db: D1Database, trustedWaId: string,
     state: String(row.state),
     paymentStatus: String(row.payment_status),
     totalPayablePkr: Number(row.total_payable),
+    codQuotedTotalPkr: row.cod_quoted_total_pkr == null ? null : Number(row.cod_quoted_total_pkr),
     province: row.province == null ? null : String(row.province),
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
@@ -59,6 +62,17 @@ export async function getLatestOrderForWaId(db: D1Database, trustedWaId: string,
 }
 
 export function formatCustomerOrderStatus(order: CurrentOrderDetails, locale: "en" | "ur" = "en"): string {
+  if (order.codQuotedTotalPkr != null && (order.state === "PAID" || order.paymentStatus === "PAID" || order.paymentReviewState === "COD_PAID")) {
+    return locale === "ur"
+      ? `آرڈر نمبر: ${order.orderNumber}\nادائیگی کا طریقہ: COD\nآرڈر کی حالت: COD ادا ہو گیا\nڈیلیوری پر کل واجب الادا: PKR ${order.codQuotedTotalPkr}`
+      : `Order Number: ${order.orderNumber}\nPayment Method: COD\nOrder Status: COD Paid\nTotal Due on Delivery: PKR ${order.codQuotedTotalPkr}`;
+  }
+  if (order.codQuotedTotalPkr != null && ["COD_PENDING", "PACKING", "DISPATCHED", "DELIVERED", "COLLECTION_PENDING"].includes(order.state)) {
+    const status = order.state === "COD_PENDING" ? "COD Confirmed/Pending Dispatch" : order.state === "PACKING" ? "COD Confirmed/Packing" : order.state === "DISPATCHED" ? "COD Confirmed/Dispatched" : order.state === "DELIVERED" ? "COD Confirmed/Delivered" : "COD Confirmed/Collection Pending";
+    return locale === "ur"
+      ? `آرڈر نمبر: ${order.orderNumber}\nادائیگی کا طریقہ: COD\nآرڈر کی حالت: ${order.state === "COD_PENDING" ? "COD کی تصدیق ہو گئی/روانگی زیر التوا" : status.replace("COD Confirmed/", "COD کی تصدیق/")}\nڈیلیوری پر کل واجب الادا: PKR ${order.codQuotedTotalPkr}`
+      : `Order Number: ${order.orderNumber}\nPayment Method: COD\nOrder Status: ${status}\nTotal Due on Delivery: PKR ${order.codQuotedTotalPkr}`;
+  }
   if (locale === "ur") {
     const payment = order.state === "PAID" || order.paymentStatus === "PAID" || order.paymentReviewState === "APPROVED" ? "ادائیگی منظور ہو گئی ہے۔"
       : order.receiptCount > 0 || order.state === "PAYMENT_REVIEW" || order.paymentReviewState === "REVIEW" ? "ادائیگی کی رسید موصول ہو گئی ہے اور جائزہ جاری ہے۔"

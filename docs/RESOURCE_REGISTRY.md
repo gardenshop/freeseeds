@@ -1,5 +1,586 @@
 # Resource Registry
 
+## GFS-386 diagnostic evidence (2026-10-31)
+
+- **Monitoring code:** `scripts/canary-diagnostics.mjs` plus adapter/observability/controller integration; bounded sanitized records only, no secret or customer data.
+- **Qualification:** 8 read-only baseline checks scheduled over105 seconds,7 successful and1 classified GraphQL HTTP200/retry exhaustion; final routing remained API/Admin100%/0% with HTTP200 health.
+- **External resources:** no Worker version, deployment, Access policy, token, D1, Meta, Queue, Cron or flag was created or modified. No canary is authorized until monitoring stability passes.
+
+## GFS-385 API canary evidence (2026-10-31)
+
+- **Approved API candidate:** `d603f077-cc44-4882-af9b-9985adb53424`, version119, existing uploaded version; no source or binding mutation.
+- **Canary control:** detached watchdog armed before the authorized1% API exposure; API restoration was verified and watchdog disarmed. Temporary sanitized controller/watchdog files were removed after evidence capture.
+- **Final routing:** API `b426ba47`100% / candidate0%; Admin `ceb3e680`100% / `72cff93f`0%. No new resource, secret, token, Access policy, Meta asset, D1 write or customer data was created.
+- **Evidence boundary:** exact monitor failure response is UNKNOWN; do not treat the canary as PASS or claim candidate-attributed customer-flow evidence.
+
+## GFS-363 secure monitoring evidence (2026-10-31)
+
+- **Credential storage:** existing `GFS-Admin-Health-Monitor` generic credential is readable only from the authorized Windows host context through native `CredRead`; no Client ID/Secret value is registered here.
+- **Access readback:** `GFS-Admin-Health-Monitoring` exists as Self-hosted with destination `getfreeseeds-admin-staging.get-free-seeds.workers.dev/health`; live Policies readback is `--`.
+- **Monitoring result:** three real credential-backed health requests returned HTTP403; Approval D and canary remain unrun. API/Admin routing remains frozen and no external state was changed.
+
+## GFS-342 release candidate and evidence (2026-10-30)
+
+- **Cloudflare identity/account:** `gisupp@gmail.com`, Get Free Seeds `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`.
+- **Routing:** API deployment `10f43f2e-9c95-4fd2-8bfc-99ccd890fee1`, frozen `b426ba47`100% / candidate `6ef27f02`0%. Admin deployment `00566a27-064e-4bd0-b3e2-079efe69cffd`, frozen `494a3dce`100% / GFS-342 candidate `19188b21-60da-4b03-bd89-72cb49468100`0%.
+- **Candidate provenance:** Admin version104, tag `gfs342-admin-analytics-conversations`, message names source `ae05a234`; D1/R2/Queue/Admin identity and canonical GFS Meta bindings match frozen Admin. No secret values were recorded.
+- **D1 state:** marker0043 applied `2026-10-29T12:23:43.802Z`; quick_check ok; FK rows0; proposed0044/0045 indexes/table absent; all verification rows_written0.
+- **Aggregate health:** inbound2576/24h, contacts451, orders70; historical reply failures29/last24h0, payment-choice failures0, receipt blocks2, recovery overdue0, CAPI pending361/failed2. No customer identifiers or payloads registered.
+- **Isolation:** Chrome authenticated GFS Admin and official Wrangler host context used; canonical GFS Meta unchanged; Hoja/ThanNow remain unconnected.
+
+## GFS-341 conversation viewer assets (2026-10-30)
+
+- **Local source:** `apps/admin/src/conversations.ts`, Admin route wiring in `apps/admin/src/index.ts`, `tests/admin-conversations.test.ts`.
+- **Local proposal:** `migrations/0045_admin_message_history.sql`; separate from0044 and unapplied. No live D1 resource was written.
+- **Historical storage boundary:** `whatsapp_events` stores deduplicated provider metadata/status; `outbound_messages` stores delivery metadata. Neither is a transcript store. No raw IDs, payloads, customer data, secrets, payment references, or media were registered.
+- **Protected environment:** Existing verified Get Free Seeds/Cloudflare and canonical Meta boundaries remain unchanged; no dashboard mutation was performed in GFS-341. Hoja/ThanNow remain isolated.
+
+## GFS-339 analytics evidence and local migration proposal (2026-10-30)
+
+- **Authorized D1 read-only:** Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, identity `gisupp@gmail.com`; analytics reconciliation returned `rows_written=0`.
+- **2026-10-30 UTC aggregates:** inbound MESSAGE933 / INTERACTIVE1029 / MEDIA8 / STATUS1954; snapshot contacts356 (new315/returning41); submitted49 / completed0 / Advance6 / COD32 / Advance-pending6; conversion2.49%.
+- **Recovery:** +15 DELIVERED5 / READ3 / SKIPPED15; +210 READ4 / PENDING8 / SKIPPED13. These are stage rows updated in the window, not synthetic sends.
+- **Query measurements:** event28442 rows; contacts1992; orders424; recovery188; classification old11099 versus optimized5857. Durations: 18.954ms, 1.472ms, 1.021ms, 0.390ms, old6.485ms, optimized4.370ms. No daily savings claim.
+- **Local assets:** `apps/admin/src/analytics.ts`, Admin route/UI additions, `tests/admin-analytics.test.ts`, and proposed `migrations/0044_inbound_analytics_indexes.sql`. Migration is not applied remotely.
+- **Privacy boundary:** no raw event payload, provider ID, wa_id, order ID, customer data, credential, or secret registered. Contact metrics are latest-inbound snapshots because historical event sender attribution is not stored.
+
+## GFS-338 API-only candidate and canary boundary (2026-10-30)
+
+- **Cloudflare identity:** verified `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API candidate `b0e883cd-16b8-4f8e-8fd8-c12bd46c4428` version118 uploaded at0%. Frozen API/Admin readback is `b426ba47`/`494a3dce` at100%; prior candidates `6ef27f02`/`c2321eab` at0%.
+- **Candidate bindings:** D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, staging Queue/R2, fetch/scheduled/queue handlers, recovery true from existing cutoff, five-stage/automation/utility false. Preview health was successful.
+- **Controller assets:** API-only scope changes only the API route and retains dual-worker baseline readback; local adapter5/5 and controller10/10. No customer data, provider IDs, secrets or raw payloads registered.
+- **Canary boundary:** first restricted-agent invocation failed before exposure; host readback confirmed frozen routing; host-context live retry was blocked by execution safety review. Candidate exposure and D1 savings remain unmeasured.
+
+## GFS-337 incident evidence and source repair (2026-10-30)
+
+- **Cloudflare read-only:** `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API `b426ba47`100% / `6ef27f02`0%; Admin `494a3dce`100% / `c2321eab`0%. No mutation.
+- **D1:** `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; marker0043=1; exact ten migration indexes; quick check ok. Read-only incident queries wrote zero rows.
+- **Flags/topology:** payment-choice recovery true from existing cutoff; five-stage reminder, automation and utility-template flags false; minute Cron and Queue topology retained.
+- **Sanitized evidence:** reported order original choice READ and +15 DELIVERED; newest30 original choices accepted30/failed0/missing0/unresolved0; frozen-version choices READ142/DELIVERED8. No customer identifier, raw provider ID, payload, receipt or secret is registered.
+- **Local repair assets:** `apps/api/src/index.ts` and `tests/guided-lead-only.test.ts`; bounded acknowledgement retry after provider acceptance, no deployment. Quality: focused4/4, full326/326, build/lint/audit0, rollback4/4.
+
+## GFS-336 corrected benchmark and failure evidence (2026-10-30)
+
+- **Local harness:** `scripts/d1-capacity-stress.mjs` now uses repository baseline indexes, deterministic snapshots, `ANALYZE`, randomized repeated A/B, fixed offered-rate windows, warmup, read-only/mixed modes, four workers, lock counts, CPU metadata, and bounded late-work reporting. No remote bindings or credentials.
+- **Corrected 50k query ranges:** recovery pre0043 5.23–8.18ms p50 / post0043 5.81–6.33ms; counts pre 814.89–954.77ms / post 519.76–532.40ms; delta pre 81.39–99.23ms / post 37.57–38.92ms.
+- **Aged D1 failures:** outbound conversation failures: Oct24=1, Oct27=3, Oct28=10, Oct29=2. Payment-instruction dead letters: Oct23=12, Oct24=6, Oct25=1. CAPI and CAPI_LEAD pending: 305 each; oldest created Oct23.
+- **Trace boundary:** No raw provider errors, customer identifiers, secrets, or request-level Meta/Worker traces are registered. Customer impact is unverified.
+
+## GFS-335 D1 audit and local harness (2026-10-30)
+
+- **Remote D1:** Authorized staging UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; read-only marker0043=1, ten indexes, `quick_check=ok`, FK rows=0. Bounded recovery: 21 result rows / 2.385ms / 574 rows read. Bounded delta: 101 result rows / 8.553ms / 14,538 rows read.
+- **Remaining plan signal:** Production recovery EXPLAIN uses `orders_archived_created_idx` and scans `payment_reminder_v2_opt_outs` for its correlated anti-join. No index was created or removed.
+- **Local-only assets:** `scripts/d1-capacity-stress.mjs` and `scripts/test-d1-capacity-stress.mjs`; synthetic SQLite files are temporary and provider-free. No remote binding or credential is read by the harness.
+- **Health aggregate:** 16 failed outbound conversation rows, 19 payment-instruction dead letters, 304 pending CAPI rows, two receipt-ingestion-blocked audit rows, and 16,224 runtime observation rows in the current seven-day read-only window.
+
+## GFS-334 read-only evidence (2026-10-30)
+
+- **Cloudflare routing:** Official readback via `getfreeseeds-api-staging` / `getfreeseeds-admin-staging`; API `b426ba47` 100% and `6ef27f02` 0%; Admin `494a3dce` 100% and `c2321eab` 0%. Readback reported zero 5xx. No mutation.
+- **D1 plans:** `/api/orders/changes` searched `orders_updated_id_idx`, `payments_updated_order_idx`, `cod_order_details_updated_order_idx`, `outbound_messages_updated_order_idx`, and `outbox_jobs_updated_entity_kind_idx`; recovery scan used `payment_choice_recovery_stage_due_idx`. Wrangler EXPLAIN metadata reported `rows_read:0` and `changes:0` for each explain call.
+- **Sanitized health:** 16 outbound conversation failures classified as Meta/provider failures; 19 payment-instruction dead letters were pre-window only; 302 CAPI send rows remain pending. No raw provider error, customer identifier, secret, or payload is registered.
+- **Local repair:** `scripts/cloudflare-canary-adapter.mjs`, `scripts/test-cloudflare-canary-adapter.mjs`, and `test:canary:adapter`; shell-free Wrangler entrypoint. No Worker runtime import.
+
+## GFS-333 canary boundary (2026-10-30)
+
+- **Authorization scope:** API `getfreeseeds-api-staging` candidate `6ef27f02`; Admin `getfreeseeds-admin-staging` candidate `c2321eab`; maximum 1%/15 minutes; no promotion.
+- **Final readback:** API `b426ba47` 100% / `6ef27f02` 0%; Admin `494a3dce` 100% / `c2321eab` 0%; original deployment IDs and annotations unchanged.
+- **Failure evidence:** First adapter failed with `EINVAL` before exposure; corrected shell adapter reached route execution but Wrangler returned exit code1 and compensating restore failed. A further live workaround was rejected by the safety gate.
+- **Boundary:** No candidate exposure, customer data, message, payment, Meta, D1, flag or migration mutation is claimed. Logs contain no customer identifiers or secrets.
+
+## GFS-332 actual Cloudflare resource registry (2026-10-30)
+
+- **Cloudflare identity:** `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; official Wrangler/dashboard read-only verification.
+- **Actual API Worker:** `getfreeseeds-api-staging`, dashboard `Production`, workers.dev-only; `b426ba47` 100%, `6ef27f02` 0%, rollback `9af8991d` retained. D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, R2 staging, Queue staging producer/consumer, Cron `* * * * *`.
+- **Actual Admin Worker:** `getfreeseeds-admin-staging`, dashboard `Production`, workers.dev-only; `494a3dce` 100%, `c2321eab` 0%, rollback `76e33a3d` retained. D1/R2/Queue staging bindings; no Cron or queue consumer.
+- **Unsupported lookup:** configured `getfreeseeds-api` / `getfreeseeds-admin` do not exist in this account and return API10007. V2 staging scripts have no active route. No route or binding was changed.
+- **Flags/privacy:** +15/+210 recovery ON; five-stage Advance, Automation V2 and utility templates OFF; payment/COD/webhook/Queue/DLQ protections unchanged. No customer identifiers, secrets, payloads or provider credentials recorded.
+
+## GFS-331 push and release-gate evidence (2026-10-30)
+
+- **GitHub:** Authenticated host identity `gardenshop`, repository push permission true; PR #11 branch fast-forwarded from `9682e2a` to `64023f1c72b70786432b14fca0589d302b0d3498`. Controller, test, migration0043 and Admin source paths were confirmed at that SHA.
+- **Cloudflare:** Read-only identity `gisupp@gmail.com`; account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no dashboard or Worker mutation.
+- **D1:** Staging UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; marker0043=1; exact ten migration indexes; `quick_check=ok`; foreign-key result empty.
+- **Production lookup boundary:** `getfreeseeds-api` and `getfreeseeds-admin` deployment history requests both returned API10007 (`Worker does not exist on your account`). Historical frozen versions remain recorded but are not freshly confirmed by this lookup.
+- **Quality:** Controller9/9, targeted safety56/56, carried-forward full324/324, focused121/121, build/lint/audit0 and rollback4/4. No customer data, secret, Meta, payment, message, flag, traffic or production record was changed.
+
+## GFS-330 deadline-controller evidence (2026-10-30)
+
+- **Local source:** `scripts/canary-deadline-controller.mjs`; local-only release tooling, not imported by API/Admin Workers. Synthetic coverage is `scripts/test-canary-deadline-controller.mjs`; package command is `test:canary:deadline`.
+- **Safety behavior:** monotonic absolute deadline, early restore margin, bounded route/monitor/restore calls, exclusive lock, interruption compensation, fail-closed 5xx/delayed-routing handling and final baseline100%/candidate0% verification.
+- **Evidence:** focused controller 9/9; full 324/324; build/lint PASS; offline audit 0 vulnerabilities; legacy rollback4/4 with clean `D:\free seeds\gfs273-v1` at `cf01f444500415b1f22a64730674caca1c286006`; diff check PASS.
+- **External boundary:** no new Cloudflare/Meta/D1/GitHub mutation was performed for this implementation. Frozen versions, migration0043 integrity, recovery flags, new-number lock and Hoja isolation remain as previously registered. Live `rows_read`, strict platform exposure and promotion remain unmeasured/NO-GO.
+
+## GFS-331 remaining blocker resolution (2026-10-30)
+
+- **GitHub:** PR #11 and branch `codex/gfs221-cod-compat-001` resolve to `gardenshop/freeseeds`; remote branch readback remains `9682e2a`. Local commit `6b22c7254259ee5348b41012087191341a3b66b8` was the attempted push target; current local HEAD additionally contains `4583200`. Supported `update_ref` with `force=false` and expected remote SHA was denied with `Resource not accessible by integration`; no ref changed.
+- **Chrome/Meta:** official Chrome DevTools MCP `list_pages` was unavailable in this run. No alternate browser, raw CDP, direct dashboard request, MFA, OTP, QR, or prohibited asset inspection occurred. GFS-330 Meta candidate and ancestry evidence remains UNVERIFIED.
+- **Live boundary:** no new Cloudflare/Meta/D1 health or mutation action was performed; GFS-329 frozen routing, candidate 0%, migration0043 integrity, rollback and aggregate 500 evidence remain authoritative. No new secret, customer data, WAMID, receipt or provider payload was recorded.
+
+## GFS-330 coexistence and release audit (2026-10-30)
+
+- **Meta evidence:** official Chrome DevTools MCP inventory reused the existing authenticated tabs. Ads Manager showed Business `568026370701542` with the specified GFS ad-account context. The known Business Suite tab contained a Hoja-linked asset and was not opened; clean ancestry is unverified. No candidate phone, WABA, BSP, provider, app-version, permission, or isolated Phone Number ID was recorded.
+- **Meta verdict:** candidate coexistence eligibility **UNVERIFIED**. Official reference: `https://developers.facebook.com/documentation/business-messaging/whatsapp/embedded-signup/onboarding-business-app-users/`. The documented general requirements and effects are not candidate-specific evidence.
+- **Authorization:** read-only research only. Candidate number remains prohibited for CTA/runtime/onboarding/migration and cannot replace canonical GFS sender `+923044429933`; no QR, OTP, registration, subscription, history sync, message, or production mutation occurred.
+- **Cloudflare/GFS:** account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, GFS Workers/D1 context, and frozen/candidate routing were read-only checked. No Cloudflare mutation occurred. GitHub local PR #11 checkout was clean at `9682e2a` before this docs-only update; the connected `gardenshop` token is currently invalid, so no push was attempted.
+- **Release state:** API/Admin frozen 100%, candidates 0%, rollback versions retained; migration0043 marker, ten indexes, quick check, and FK evidence remain registered; two Meta 500s remain aggregate-only/deferred. No raw token, customer data, WAMID, receipt, payload, or secret was recorded.
+
+## GFS-329 post-canary registry (2026-10-29)
+
+- **Routing:** API `b426ba47` 100% / `6ef27f02` 0%; Admin `494a3dce` 100% / `c2321eab` 0%; rollback versions retained.
+- **D1:** `getfreeseeds-staging` UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; project ledger `cod_schema_migrations` contains 0030, 0036–0043; all ten 0043 indexes present; quick check ok; FK check empty. Legacy `d1_migrations` remains empty by design.
+- **Meta/observability:** canonical GFS Meta only; Cloudflare metric aggregate graph.facebook.com `500:2), approximately6k 2xx; Workers Observability disabled, so no request-level identifiers or error code are registered.
+- **Flags/privacy:** +15/+210 recovery ON; five-stage Advance, Automation V2 and utility templates OFF; Hoja/ThanNow isolated. No customer identifier, raw WAMID, secret, receipt or payload recorded.
+- **Activity boundary:** two submissions, one reset and one COD confirmation observed in the canary interval; no PAID/approval/failure/retry/dead-letter aggregate and no baseline/candidate attribution.
+
+## GFS-328 controlled-release registry (2026-10-29)
+
+- **GitHub:** `gardenshop/freeseeds`, PR #11, release source `4e0055148842756d1c2df601aea9919578338457`; authenticated write identity `gardenshop`.
+- **Cloudflare:** `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- **D1:** `getfreeseeds-staging`, UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; migration marker0043 and ten indexes present; quick check ok; zero FK violations; final observed size 25,985,024 bytes.
+- **API:** frozen `b426ba47-1ead-4c4a-85ba-0a0b85d3e415` 100%; rollback `9af8991d-d17c-4d3f-806f-7f6642849b7b` retained; GFS-328 candidate `6ef27f02-23ac-46c0-a291-157e246a8dbc` 0%.
+- **Admin:** frozen `494a3dce-5d52-4b66-b3ff-bef64b31b406` 100%; rollback `76e33a3d-e96a-4942-a4ec-31910c688c16` retained; GFS-328 candidate `c2321eab-6c24-4327-a8d9-6fee9ac550e0` 0%.
+- **Topology/flags:** D1/R2/Queue bindings and minute Cron retained; payment-choice recovery true from existing cutoff; five-stage Advance reminders false; automation false; utility-template approval false; COD public/guided and canonical Meta unchanged.
+- **Isolation/privacy:** canonical GFS Meta app only; Hoja/ThanNow untouched. No phone, customer, raw WAMID, receipt, token, payload or recovery bookmark is recorded.
+
+## GFS-325 final preflight checkpoint (2026-10-29)
+
+- **Cloudflare/GFS:** read-only Wrangler identity `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, staging D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; API `b426ba47`/Admin `494a3dce` are 100%, rollbacks `9af8991d`/`76e33a3d` are 0%. No live mutation.
+- **GitHub:** PR #11 branch and remote source SHA `1df681e3729d60fa211d826260586408d7292df6` verified through the authorized `gardenshop` host session. Required source/migration/tests/rules/docs are present remotely.
+- **Migration:** 0043 references existing 0037–0042 tables and columns, has ten distinct additive indexes plus an idempotent marker, and does not update application rows. The local plan evidence is not a live D1 rows-read measurement.
+- **Measurement boundary:** staging baseline remains 494M rows read/24h; Admin aggregates 345.06M, recovery scan 68.91M, old list 33.3M. No after-deployment value or savings percentage is registered. Hoja/ThanNow and non-GFS Meta resources remain isolated.
+
+## GFS-319 zero-regression checkpoint (2026-10-29)
+
+- **GitHub readback:** MCP login `ai-photo-studio`; repository `gardenshop/freeseeds` permissions `pull=true`, `push=false`; PR #11 head `04d06bc9672d68821fd769646a1d0ad351544697`. Collaborator permission lookup returned integration HTTP403. No mutation or credential change.
+- **Local provenance:** source commit `e198e50` and documentation commit `809d457`; local branch is two commits ahead of remote. Local `api/orders/changes` and migration0043 are present; remote migration0043 is absent until push.
+- **Regression evidence:** remote baseline 321 tests/build/lint; optimized local 324 tests/build/lint; focused 121/121; rollback4/4. No customer data, secrets, phone identifiers, WAMIDs or provider payloads recorded.
+- **Release isolation:** Cloudflare/GFS remains read-only for this gate; Hoja/ThanNow were not connected or accessed. Active Worker pair and flags remain unchanged.
+
+## GFS-318 guarded release checkpoint (2026-10-29)
+
+- **GitHub:** target `gardenshop/freeseeds`, PR #11, remote HEAD `04d06bc9672d68821fd769646a1d0ad351544697`; connected identity `ai-photo-studio`; repository permission `push=false`. Local source commit `e198e50` is one commit ahead. No credential mutation or alternate-account attempt was made; owner write access is required before push.
+- **Cloudflare:** read-only identity is `gisupp@gmail.com`; frozen API/Admin are `b426ba47`/`494a3dce` at 100%, with `9af8991d`/`76e33a3d` retained. No Worker, D1, traffic, flag, Cron, Queue, payment, COD or Meta mutation occurred. Migration0043 is not remotely applied.
+- **D1 measurement boundary:** staging last-24-hour usage is 494M rows read. The largest visible fingerprints are Admin counts 135.42M/209.64M, recovery candidate 68.91M, and old Admin list 33.3M. The dashboard exposed no query IDs or direct route attribution; no live after-savings value is registered.
+- **Isolation:** canonical GFS only; Hoja Seeds/ThanNow were not connected or accessed. No customer data, secrets, phone identifiers, WAMIDs or provider payloads are recorded.
+
+## GFS-317 authenticated read-cost checkpoint (2026-10-29)
+
+- **Cloudflare identity:** official browser read returned `gisupp@gmail.com` in the Get Free Seeds account. No mutation was made. Active API `b426ba47` is 100% with `9af8991d` rollback; active Admin `494a3dce` is 100% with `76e33a3d` rollback.
+- **D1 usage:** current billing-period account card: 534.3M rows read, 226.53k written, 21.85MB storage, $0 billable. Last-24-hour database metrics: `getfreeseeds-staging` 494M rows/286.12k queries/141k writes/20.54MB; `getfreeseeds-prod` 100 rows/2 queries; `getfreeseeds-cod-compat-check`, `getfreeseeds-v2-restore-check`, and `getfreeseeds-v2-staging` 0 rows. No cross-window sum is implied.
+- **Top visible staging fingerprints:** count aggregates 135.42M/86 and 209.64M/244; recovery candidate 68.91M/650; old Admin list 33.3M/240; CMS media/template lookups account for the remaining material top-ten entries. The visible dashboard does not expose query IDs or direct Worker attribution. No raw customer data, WAMID, secret or provider payload was recorded.
+- **Release status:** the live Admin Orders page is the pre-delta UI (no Full reload control), proving local GFS-316 is not deployed. Migration0043 remains local/unapplied. GitHub connector identity is `ai-photo-studio` with `push=false`; no commit/push was attempted.
+
+## GFS-316 local read-path evidence (2026-10-29)
+
+- **No new external resource:** no Cloudflare identity, D1, Worker, traffic split, flag, migration, billing, Meta, Queue, Cron or Chrome resource was mutated. The prior verified GFS account/binding and rollback records remain authoritative; Hoja/ThanNow were not accessed.
+- **Local schema:** additive `0043_admin_cron_read_paths.sql` defines `orders_updated_id_idx`, `outbound_messages_order_kind_status_idx`, `outbound_messages_kind_status_key_idx`, `outbox_jobs_kind_status_available_idx`, and `payment_reminder_v2_stage_schedule_status_due_idx`. It is not recorded as remotely applied.
+- **Measured local plans:** before 0043, outbound reconciliation and outbox claim were table scans and the order-tail cursor used a scan/temp sort; after 0043 they use the new covering/indexed paths. These are plan observations, not Cloudflare rows-read or savings measurements.
+- **External evidence status:** official authenticated Analytics/Query Insights and Chrome MCP were unavailable in this run. Do not record a 534.3M TOP10 attribution, account trend, duration or percentage reduction until those read-only connections are available.
+
+## GFS-305 canary result (2026-10-29)
+
+- **Traffic:** API candidate `17598945` and Admin candidate `76e33a3d` were each briefly 1%/99% against API `45b01d86` and Admin `f0212429`, then restored to candidates 0% and frozen versions 100%.
+- **Observability:** API health was HTTP200 in bounded probes; Admin CSV was HTTP200. Cloudflare Workers Logs are disabled. No candidate-attributed inbound, webhook, outbound WAMID or delivery evidence exists.
+- **Safety:** D1 recovery stages/outbox/outbound counts remained 0; no customer/order/payment/COD mutation; flags and activation timestamp unchanged.
+- **Next gate:** supported authenticated connection of the existing authorized tester profile. No public identifiers, WAMIDs, secrets or customer data recorded.
+
+## GFS-304 two-follow-up release decision (2026-10-29)
+
+- **Workers:** frozen API `45b01d86` and Admin `f0212429` remain 100%; rollback versions retained. API `17598945` and Admin `76e33a3d` remain 0%.
+- **Flags:** `PAYMENT_CHOICE_RECOVERY_ENABLED=false`; `PAYMENT_CHOICE_RECOVERY_START_AT` unset; `PAYMENT_REMINDERS_V2_ENABLED=false`; `PAYMENT_AUTOMATION_V2_ENABLED=false`; `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`.
+- **Acceptance:** connected WhatsApp session is the GFS business sender; authorized tester profile/conversation was not found. No WAMID, delivery or live recovery send is claimed.
+- **Quality:** 318/318, build, lint, audit0, D1 integrity and rollback4/4 pass. Four internal published EN/UR stage templates and no recovery backlog remain recorded under GFS-303.
+
+## GFS-303 frozen release gate (2026-10-29)
+
+- **Identity:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / Get Free Seeds account; canonical GFS Meta only. Hoja/ThanNow were not accessed.
+- **Workers:** API `45b01d86-65ff-4573-b384-f6be433a83d7` 100%, rollback `8e670de8-4d89-427b-9fec-dad29dc33f3f`; Admin `f0212429-ead7-4653-aea9-2ef714c6b4b8` 100%, rollback `b4c45278-c7d6-49c5-824c-005afc991ffe`. Sends-off candidates API `17598945-4601-4068-bf8c-9c3223cc8dd8` and Admin `76e33a3d-e96a-4942-a4ec-31910c688c16` remain 0%.
+- **Binding/topology:** API/Admin bind to D1 `getfreeseeds-staging` UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; API minute Cron and Queue consumer are present. No traffic or flag mutation was performed.
+- **Flags:** `PAYMENT_CHOICE_RECOVERY_ENABLED=false`, `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_AUTOMATION_V2_ENABLED=false`, `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`; no recovery activation timestamp.
+- **D1 readback:** 0041/0042 tables present; `quick_check=ok`; zero FK violations; four published internal recovery template rows; recovery stage/outbox/outbound counts all zero. No recovery WAMID exists.
+- **Acceptance boundary:** authenticated WhatsApp session is the GFS business-sender account, not the authorized tester profile. Candidate promotion and recovery activation are pending exact tester connection; no raw phone number, customer data, WAMID or provider payload is recorded.
+
+## GFS-297 live routing release (2026-10-28)
+
+- **Identity:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / Get Free Seeds; canonical GFS Meta. Hoja resources untouched.
+- **Workers:** API `45b01d86` active 100%; rollback `d808a31c` 0%; Admin `b4c45278` 100%. Candidate health is HTTP200 and reports `PRODUCTION_INTEGRATION_READY`.
+- **Genuine evidence:** authorized tester identity was verified in the existing conversation. Candidate served the dynamic summary with exact Confirm/Cancel buttons; safe cancellation returned no-order/no-payment confirmation. Raw customer identifiers and WAMIDs are intentionally omitted.
+- **Protected boundary:** no production Confirm Order, Advance method, receipt, COD, settlement or dispatch action was performed. Production COD is PUBLIC and has no protected test hold.
+- **Features:** reminders false/false/false; utility approval false; migrations0039/0040 and D1 binding preserved; Admin CSV export verified HTTP200 CSV and prior 18-column validation remains intact.
+
+## GFS-296 guarded routing release (2026-10-28)
+
+- **Accounts:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / Get Free Seeds; canonical GFS Meta only. Hoja resources were not accessed.
+- **Workers:** API `d808a31c` restored at 100%; API routing candidate `45b01d86` retained at 0%; Admin `b4c45278` remains 100%. Candidate provenance is source commit `6a70d52`.
+- **CMS:** REVIEW v9 published internally with “confirm or cancel” wording and compatible action mapping. No raw customer content or WAMID is recorded here.
+- **Live evidence:** existing authorized tester identity was checked by exact phone identity. START/welcome, guided checkout and the published one-total summary were observed; the split request showed baseline Advance/COD buttons, so candidate-specific routing acceptance remains pending.
+- **Safety:** no order/payment/COD/dispatch or D1 mutation occurred. Reminder flags are false/false/false; no reminder schedule/send/delivery WAMID is claimed. Existing migrations0039/0040 and the staging D1 binding remain intact.
+
+## GFS-295 verified summary release (2026-10-28)
+
+- GitHub: `gardenshop/freeseeds`, PR #11 branch `codex/gfs221-cod-compat-001`. Cloudflare: `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. D1: `getfreeseeds-staging`, UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`. Hoja/ThanNow unused.
+- Workers: API `d808a31c-ba40-4a02-b3c6-8c6de4cffecf`100%; rollback `8e670de8-4d89-427b-9fec-dad29dc33f3f`0%; Admin `b4c45278-c7d6-49c5-824c-005afc991ffe`100%.
+- Canonical Meta/WhatsApp: configured phone-number ID and WABA remained unchanged; exact tester/business phones were verified but are redacted here. Genuine English and Urdu summary WAMIDs are stored in D1 with READ status; full identifiers are intentionally omitted.
+- Feature state: reminder/automation/template flags false/false/false; migrations0039/0040 intact; zero test-created orders/payments. Admin export final check: HTTP200, 154 parsed active records, 18 columns.
+
+## GFS-294 real WhatsApp test gate (2026-10-28)
+
+- Cloudflare Wrangler identity: `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API config D1 binding `getfreeseeds-staging` UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`. No mutation performed.
+- Workers: API `8e670de8`100%, candidate `d808a31c`0%; Admin `b4c45278`100%; reminders false/false/false. Active and candidate health HTTP200.
+- CMS: REVIEW published version8, EN/UR dynamic placeholder checks passed, no raw HTML. Meta Manager canonical Activity Log authenticated with 24 generic rows; no WAMID was attributed to this candidate.
+- WhatsApp Web is connected at the app-shell level, but no authorized GFS/tester conversation or recipient is identifiable. Required next resource is an owner-authorized tester identity/conversation or authenticated test device; no unrelated session may be used.
+
+## GFS-293 summary candidate acceptance hold (2026-10-28)
+
+- Workers: Admin `b4c45278-c7d6-49c5-824c-005afc991ffe`100% with `c2e87231-9d51-444e-b283-7ab18379280f` rollback; API `8e670de8-4d89-427b-9fec-dad29dc33f3f`100% with `d808a31c-ba40-4a02-b3c6-8c6de4cffecf`0%. Reminder flags remain false/false/false.
+- Authenticated Cloudflare identity remains `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta Manager and WhatsApp pages were read-only. Hoja/ThanNow were not used.
+- Candidate evidence: `/health` HTTP200; Admin CMS `REVIEW` version8, bilingual dynamic placeholders, no raw HTML. No genuine tester event, outbound WAMID, rendered customer message, traffic mutation or external financial/customer state change was recorded.
+- Source safety evidence: reminder delivery reconciliation is qualified and scheduled-only; inbound webhook path remains free of that query. Remaining resource requirement is one authorized tester session with real inbound/outbound correlation.
+
+## GFS-292 live export release and summary hold (2026-10-28)
+
+- Cloudflare identity before Admin upload/traffic changes: `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Hoja/ThanNow were not used.
+- Workers: Admin `b4c45278-c7d6-49c5-824c-005afc991ffe`100%, rollback `c2e87231-9d51-444e-b283-7ab18379280f`0%; API `8e670de8-4d89-427b-9fec-dad29dc33f3f`100%, candidate `d808a31c-ba40-4a02-b3c6-8c6de4cffecf`0%. Both configs bind staging D1 UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`.
+- Live Admin export evidence: authenticated `/orders` button, HTTP200 CSV attachment, 145 quote-aware parsed all-active records, filtered parity REVIEW10/PENDING79/PACKING1, 18 columns, no sensitive fields. CMS `REVIEW` published version8 remains bilingual/dynamic.
+- Feature state: reminder/automation/utility flags false/false/false; no reminder schedules, WAMIDs, customer messages, payment/order/receipt/COD mutation, migration, billing or Meta mutation. API summary live proof remains pending.
+
+## GFS-291 staged Admin export and summary release (2026-10-28)
+
+- Source: PR #11 branch `codex/gfs221-cod-compat-001`; local source/tests/docs changes are the GFS-291 delta. Hoja/ThanNow resources were not used.
+- Cloudflare identity before external mutation: `gisupp@gmail.com`, account `Get Free Seeds`, account ID `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- D1/R2/Queue bindings: both staged Workers use `getfreeseeds-staging`, D1 UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; no production-name database was accessed or written.
+- Workers: healthy API `8e670de8`100%; staged API `d808a31c-ba40-4a02-b3c6-8c6de4cffecf`0%; healthy Admin `c2e87231`100%; staged Admin `2b1609d5-588f-4bd0-97c3-50a8b6e1be03`0%. Active API health was HTTP200. No genuine customer message or WAMID was recorded.
+- Export: authenticated `/api/orders/export`, UTF-8 CSV with BOM, private/no-store headers, exact Orders filters, 100-row keyset pagination, and no receipts/QR/secrets/settlement evidence.
+- Feature state: `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_AUTOMATION_V2_ENABLED=false`, `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`; five reminder stages and migrations0039/0040 remain preserved and paused.
+
+## GFS-290 Admin-editable order summary (2026-10-28)
+
+- Source: `gardenshop/freeseeds`, PR #11 branch `codex/gfs221-cod-compat-001`, implementation commit `ae3b69e`, documentation commit `6b8f97e`. Hoja/ThanNow resources were not used.
+- Cloudflare: authenticated `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; shared D1 binding remains `getfreeseeds-staging` UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`.
+- Workers: API healthy `8e670de8`100%, candidate `e914f77e-8f68-44aa-b0c4-7276742b4c75`0%; Admin healthy `c2e87231`100%, candidate `783a9480-daa4-4e86-91e4-903044edcd77`0%. Candidate health was checked through the supported override.
+- CMS: existing `REVIEW`, published version8, bilingual dynamic placeholders only; no media or private customer data changed. Meta WABA remains canonical GFS; no WAMID was generated in this run.
+- Feature state: reminder/automation/utility flags remain false; five-stage reminder engine and migrations0039/0040 remain preserved; no live activation or historical send.
+
+## GFS-278 Orders and Reminder Audit (2026-10-28)
+
+- Correct resource: `gardenshop/freeseeds` PR #11 branch `codex/gfs221-cod-compat-001`, local HEAD `ba65684` before the pending date-stability test correction. The unrelated V2 checkout and its compatibility patch remain separate.
+- Cloudflare read-only identity: `gisupp@gmail.com`, Get Free Seeds account; Meta read-only identity: canonical Get Free Seeds WhatsApp Manager/WABA. Hoja and ThanNow were not opened or used.
+- Live Orders evidence: current `orders` schema has `internal_sequence` and `internal_sequence_date`; Orders list/detail and tested filters/tabs/search/pagination returned HTTP200 JSON. Historical cause is D1 code7500/read exhaustion in the old full-detail projection.
+- Masked D1 audit: Advance pending/no receipt 19 / PKR7,000; Advance review/receipt 6 / PKR2,550; no method 37 / PKR13,050; COD lifecycle 16 / PKR6,500; paid 2 / PKR1,100; cancelled/archived 1 / PKR600. Reminder jobs 0; reminder outbound messages 0.
+- Existing outbound status readback was aggregate-only and contained no reminder kind: conversation replies, payment text/QR, and clearer-receipt records only. No WAMID, customer identifier, raw receipt, token, or secret was recorded.
+- GitHub browser is logged out and stored `gardenshop` CLI auth is invalid. No push, deployment, traffic, D1, Meta, payment, receipt, billing, or customer mutation occurred.
+
+## GFS-276 Live Evidence (2026-10-28)
+
+- Specified genuine JazzCash order: list/detail HTTP200; PKR250 expected; REVIEW/PENDING; transaction reference present; five unique JPEG receipts, one payment association, private previews HTTP200; no PAID audit. Exact order/customer identifiers omitted.
+- Natural public COD order: random public reference format; two items; PKR625 total; PKR125 fee; COD_PENDING/dispatched; `testHold=false`; one COD confirmation; no PAID audit. Identifiers omitted.
+- Current sanitized Admin aggregate: 69 orders, 6 verify, 2 confirmed, 12 fulfillment. Payment methods: JazzCash, Easypaisa, Bank Transfer enabled with instructions and QR references.
+- No external resource, payment status, receipt, customer, Meta, Worker, D1, R2, Queue, Access, billing or migration state was changed.
+
+## GFS-275 Evidence (2026-10-28)
+
+- D1 billing period: 8.51M/25B rows read, 19.12K/50M rows written, $0 displayed billable usage. Last-24-hour Query Insights: 49.23K queries, 41.6K reads, 7.63K writes, 8.61M rows read, 188 fingerprints.
+- Outbound status fingerprint: 1,776 executions, 3.08M rows read, approximately 1.76K rows/execution. Post-0038 period is not separately exposed; no fabricated after-metric recorded.
+- Admin evidence: 68 total orders; queue aggregates 6/2/11; Orders list/detail HTTP200; Payment Settings and payment-method API HTTP200. No order rows, customer identifiers, receipt content, or credentials recorded.
+- Admin traffic: `66426d2a` 100%, prior `cd155f20` 0% from the authenticated dashboard read. API `24d72438` remains the preserved active version; its dashboard charts were loading during this read-only session.
+- No external resource, billing alert, Worker, D1, R2, Queue, Access, Meta, payment, customer or receipt state was changed.
+
+## GFS-274 Post-Launch Evidence (2026-10-28)
+
+- Cloudflare identity: `gisupp@gmail.com`; Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- Paid D1 billing card: 8.51M/25B rows read, 19.12K/50M rows written, 5/50,000 databases, 6.57MB/5GB storage, $0 displayed billable usage.
+- Query Insights last-24-hour chart: 49.15K total queries, 41.53K reads, 7.63K writes, 8.61M rows read, 188 fingerprints. Outbound status: 1,771 executions, 3.08M rows, approximately 1.75K rows/execution.
+- Active deployments: Admin `66426d2a-be1c-4e22-b420-1b1559dcbbc5` at 100%; API `24d72438-72a1-4544-80df-4b9b90c297e5` at 100%. Prior Admin `cd155f20-c848-4e4e-9fde-970e62b0a4ea` at 0%.
+- No customer identifiers, payment recipient values, credentials, receipts, or screenshots were added. No external resource was mutated.
+
+## GFS-270 query optimization state (2026-10-27)
+
+- Remote PR branch now contains existing local commits through `834744e`, pushed using Git Credential Manager identity `gardenshop`. No token value is recorded.
+- Local migration0037 includes audit, receipt, outbox, order pagination, customer WhatsApp, and customer-order indexes. Rehearsal returned `quick_check=ok`; live schema remains unchanged.
+- Cloudflare D1 remains 8.06M/5M rows read. Admin `cd155f20…`100%, candidate `92955132…`0%, API `24d72438…`100%; no deployment, traffic, billing, customer, payment, receipt, Meta or secret mutation occurred.
+
+## GFS-269 recovery checkpoint (2026-10-27)
+
+- Cloudflare D1 dashboard remains the authenticated GFS account context (`cb5066…`); analytics show 8.06M/5M rows read, 14.96k/100k writes, 6.44MB/5GB storage, and $0 billable. No D1 mutation or production query was issued.
+- Local candidate `fca32a3` is clean and ahead of remote `7724e7a` by one commit. Active Admin `cd155f20…`100%, candidate `92955132…`0%, API `24d72438…`100% remain unchanged.
+- Migration0037 is local-only and rehearsed successfully. No recovery bookmark, live migration, Worker deployment, traffic change, billing change, customer/order/payment/receipt mutation, Meta mutation, or secret action occurred.
+- GitHub CLI account `gardenshop` has an invalid stored token; push is pending owner-authorized reauthentication. No token value is recorded.
+
+## GFS-268 quota incident and candidate state (2026-10-27)
+
+- Official Chrome DevTools MCP is connected to Cloudflare account `cb5066…`; the visible D1 metrics page for `getfreeseeds-staging` reports 8M/5M rows read today, 44.21k queries, 14.96k/100k rows written, 6.44MB/5GB storage, and $0 billable usage. This is read-only evidence; no SQL probe was executed after confirmation.
+- Active Admin `cd155f20…` is100%; optimized candidate `92955132…` is0%. API `24d72438…` remains100%. Admin health HTTP200/`paymentConfigured=true`; Orders HTTP500/non-JSON on active Admin. Exact current order counts are unavailable while D1 is exhausted.
+- Local candidate includes `0037_quota_safe_admin_reads.sql`, which is not applied. Existing D1, R2 receipts, Queue, signed WhatsApp callback, payment methods, order/payment history, COD PKR125 policy, protected test holds, new-number lock and Hoja zero-connection are preserved.
+- No secrets, customer identifiers, raw receipts, WAMIDs, payment references, or account credentials are recorded. No Cloudflare mutation, billing change, database recreation, migration application, traffic change, or deployment occurred in GFS-268.
+
+## GFS-261 Protected Runtime State (2026-10-27)
+
+- Cloudflare identity was verified as the authorized GFS account before deployment; canonical GFS Meta assets only. No Hoja resource was opened or used.
+- API `428defd5-e7aa-4800-b001-976f403c735e` active100%; Admin `615e1156-2747-457a-8623-11d1e967f911` active100%; rollback `2500e268-8985-4fd4-a141-68633f16315d` retained.
+- Existing D1, receipt R2, event Queue, signed callback, payment recipients, customers, receipts, orders and history remain protected. No migration was replayed and no secret value was printed or committed.
+- Runtime policy remains `COD_V1_ENABLED=true`, `COD_ROLLOUT_MODE=PUBLIC`, audited COD fee PKR125. Receipt media remains private and Admin-reviewed.
+- Live receipt acceptance is pending one authorized customer-device action; no WAMID or customer identifier is recorded here.
+
+## GFS-260 post-launch state (2026-10-27)
+
+- API `089f5671…` remains PUBLIC100%; Admin remains100%; prior TESTER_ONLY and COD-OFF rollback versions remain retained.
+- No new customer, order, payment, receipt, secret, Meta, D1, or traffic mutation. Public customer-menu evidence is pending because no legitimate post-promotion interaction exists.
+
+## GFS-259 PUBLIC runtime state (2026-10-27)
+
+- API `089f5671-2c2b-48cb-8373-b273e28f4177`: PUBLIC,100% traffic. API `4d218abf…`:0% prior TESTER_ONLY. Admin `615e1156…`:100%. COD-OFF `2500e268…`: protected rollback.
+- GFS Cloudflare identity `gisupp@gmail.com` and account were verified before each Worker mutation. Canonical GFS Meta assets only; no Hoja resource used.
+- D1/Admin acceptance is one COD_PENDING order at PKR675 with PKR125 once; no raw order number, phone, WAMID, receipt, or secret is recorded.
+
+## GFS-258 live retry state (2026-10-27)
+
+- API `4d218abf…`100% TESTER_ONLY; Admin `615e1156…`100%; COD-OFF `2500e268…` retained. Active health200 and unsigned webhook rejection pass.
+- No new WAMID, order, receipt, payment, secret, Meta, D1, or traffic mutation. PUBLIC is disabled pending the genuine tester action.
+
+## GFS-257 controlled repair state (2026-10-27)
+
+- API `4d218abf-7262-4d04-b8a3-3baa6fae1879`: current repaired TESTER_ONLY version,100% traffic. Prior API `a5722925-650c-42db-bc75-a8c3242e8a4b`:0%. Admin `615e1156-2747-457a-8623-11d1e967f911`:100%. COD-OFF rollback `2500e268-8985-4fd4-a141-68633f16315d` retained.
+- Cloudflare identity verified as `gisupp@gmail.com` on Get Free Seeds before Worker and Admin mutations. Canonical GFS Meta assets only; no Hoja resource used.
+- Published Review content version6 has Place Order text/action consistency. Protected D1, R2, Queue, signed callback, payment settings, history and secrets were preserved.
+- Live proof remains limited to the traced pending order until the approved tester performs one authenticated retry. No raw phone, WAMID, order number or secret is recorded.
+
+## GFS-254 final-gate state (2026-10-27)
+
+- API `a5722925-650c-42db-bc75-a8c3242e8a4b` remains100% TESTER_ONLY; Admin `615e1156-2747-457a-8623-11d1e967f911` remains100%; COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` remains rollback.
+- Cloudflare identity is verified as `gisupp@gmail.com` / Get Free Seeds. Existing Advance receipt-review evidence remains private and predates the copy deployment; no raw customer data is recorded.
+- PUBLIC is disabled pending one fresh authorized tester-device journey. No Hoja resource or unrelated WhatsApp profile used.
+
+## GFS-253 controlled copy deployment (2026-10-27)
+
+- API `a5722925-650c-42db-bc75-a8c3242e8a4b` is active100% TESTER_ONLY; prior `ba15b8ba-e3b3-4581-9b23-c2e688797132` is0%; COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` remains the rollback target. Admin `615e1156-2747-457a-8623-11d1e967f911` remains100%.
+- Existing D1, Queue, R2, signed Meta callback, payment history and secrets/bindings are preserved. No migration or customer/order mutation occurred in the copy deployment.
+- Genuine tester Advance evidence is private and pending; no raw phone, WAMID, receipt or order identifier is recorded. PUBLIC remains disabled until fresh post-deploy acceptance.
+
+## GFS-252 final-gate state (2026-10-27)
+
+- API `ba15b8ba-e3b3-4581-9b23-c2e688797132` remains100% TESTER_ONLY; Admin `615e1156-2747-457a-8623-11d1e967f911` remains100%; COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` remains the rollback target.
+- Test Controls read-only state remains `COD_PENDING`; no new inbound, order, payment, receipt, Meta, secret or D1 mutation occurred.
+- PUBLIC remains disabled pending the approved tester’s authenticated-device Advance regression and COD-to-Advance-before-confirmation check. No Hoja resources or unrelated WhatsApp profile used.
+
+## GFS-251 public-gate state (2026-10-27)
+
+- API `ba15b8ba-e3b3-4581-9b23-c2e688797132` remains active100% TESTER_ONLY; prior TESTER_ONLY is0%; COD-OFF rollback `2500e268-8985-4fd4-a141-68633f16315d` remains retained. Admin `615e1156-2747-457a-8623-11d1e967f911` remains100%.
+- Cloudflare identity was reverified as `gisupp@gmail.com` in the correct GFS account before read-only inspection. No public route, Version URL, D1, Meta, secret or customer mutation occurred.
+- PUBLIC is held pending the approved tester's fresh authenticated-device Advance journey and COD-to-Advance pre-confirmation switch. No Hoja resource or unrelated WhatsApp profile was used.
+
+## GFS-250 polished staging resources (2026-10-27)
+
+- API active polished TESTER_ONLY version: `ba15b8ba-e3b3-4581-9b23-c2e688797132` at100%; prior TESTER_ONLY `64594da5-6a97-4167-835f-cbd5987bd876` at0%; COD-OFF versioned rollback target `2500e268-8985-4fd4-a141-68633f16315d`. Original D1, Queue, R2 and Meta bindings/secrets are preserved; secret values are not recorded.
+- Admin `615e1156-2747-457a-8623-11d1e967f911` remains active100%; Admin v82 retained. No Version URL or public route enabled.
+- Original D1 target evidence: one masked target order, `COD_PENDING`, one confirmation audit, audited PKR125 fee once, test hold; historical orders/payments preserved. No migration replay.
+- Canonical GFS Meta callback only. Genuine WAMIDs were checked privately and masked. No Hoja resources or unrelated WhatsApp profile used.
+
+## GFS-249 controlled staging resources (2026-10-27)
+
+- API active TESTER_ONLY version: `64594da5-6a97-4167-835f-cbd5987bd876` at100%; API COD-OFF rollback: `2500e268-8985-4fd4-a141-68633f16315d` at0%. Both preserve the existing staging D1, Queue, private receipt R2 and original Meta secret bindings. Protected tester secret is present but its value is not recorded.
+- Admin active version: `615e1156-2747-457a-8623-11d1e967f911` at100%; Admin v82 retained as rollback. No Version URL or public route was enabled.
+- D1 `cod_configuration`: audited enabled state, fee125, revision recorded remotely; 53 orders, 53 payments, zero COD sidecar rows and zero COD_PENDING orders before continuation. No legacy migration replay.
+- Meta callback: canonical GFS asset only. Genuine START was accepted by the active callback; WAMID remains private. No Hoja resources or unrelated WhatsApp profile used.
+
+## GFS-248 fresh candidate versions (2026-10-27)
+
+- API fresh current-HEAD version `83e82edf-1921-4180-b10d-da5ca83f807e`, tag `gfs248-api-cod-off`, staged0% beside v90 `21a3d74c-3979-432c-9190-1848362592a4`100%. Bindings preserved; `COD_V1_ENABLED=false`; `COD_ROLLOUT_MODE=OFF`.
+- Admin fresh current-HEAD version `615e1156-2747-457a-8623-11d1e967f911`, tag `gfs248-admin-cod-off`, staged0% beside v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`100%. Access-authenticated health200/`paymentConfigured=true`.
+- No protected tester secret was created or changed. No D1 write, migration, traffic promotion, Meta mutation, customer/order/payment write or public release. D1 read-only state: COD0030, fee125, COD disabled/unconfigured, 53/53 orders/payments, zero COD rows, integrity PASS.
+
+## GFS-247 admission boundary (2026-10-27)
+
+- Source now references protected runtime secret `COD_TESTER_WA_ID`; its value is intentionally not recorded. No secret was provisioned or changed in this turn.
+- No resource, binding, D1 schema/row, Worker deployment, traffic percentage, Version URL, Access rule, Meta asset, Queue/R2 state or customer record was mutated. Known originals/candidates remain v90/v82 at100% and candidates at0%; COD remains off.
+- Runtime activation requires identity verification, supported secret provisioning, precise owner authorization for controlled staging promotion, live signed tester START, running Advance regression and rollback readiness. No WAMID/order/Admin evidence exists.
+
+## GFS-246 staging readiness review (2026-10-27)
+
+- No resource, binding, secret, D1 schema/row, Worker deployment, traffic percentage, Version URL, Access rule, Meta asset or Queue/R2 state was mutated; no new resource/cost incurred.
+- Read-only Wrangler confirmed `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. API v90 `21a3d74c-3979-432c-9190-1848362592a4` remains100%, candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe`0%; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` remains100%, candidate `091f1a3f-595b-4530-b54a-d7253af60664`0%. Candidate dry-runs resolve existing staging D1/R2/Queue bindings. No current Chrome dashboard identity/browser evidence is claimed.
+- `COD_V1_ENABLED=false`; COD setting remains disabled. Existing original D1 COD0030/health evidence and 52-order/payment preservation from GFS-242 are reused; no D1 operation repeated. No real WAMID/customer record.
+- Static source check: COD has no tester-only admission boundary; the Admin exemption is cooldown-only. Global enablement remains prohibited before live runtime gates and staging traffic approval.
+
+## GFS-245 Approved Tester Entry (2026-10-27)
+
+- The explicitly approved customer is already present in Admin Test Controls as an `ADMIN_TEST_EXEMPTION`; no duplicate registration was added. Identifiers are omitted and history is protected.
+- Meta Phone Manager remains the canonical GFS sender authority. The unrelated WhatsApp Web profile was not used. No WAMID, new order, COD_PENDING/Admin evidence or live deployment exists.
+- Next external event must be a genuine inbound message from the authorized customer's own authenticated device; synthetic inbound activity is prohibited.
+
+## GFS-244 Tester Resolution Stop (2026-10-27)
+
+- Admin Test Controls and canonical Meta Phone Manager remain matched to the supplied customer/sender roles; identifiers are omitted. The available WhatsApp Web owner profile matches neither.
+- API candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` and Admin candidate `091f1a3f-595b-4530-b54a-d7253af60664` remain0%; API v90/Admin v82 remain100%; COD remains disabled. No live WAMID/order/Admin COD_PENDING evidence exists.
+
+## GFS-243 Identity Gate (2026-10-27)
+
+- Admin Test Controls matched the supplied customer to the existing registered tester; Meta Phone Manager matched the supplied receiver to the connected canonical GFS sender. Identifiers are intentionally omitted.
+- The available WhatsApp Web owner profile matched neither supplied identity. No chat, message, account switch, registration edit, Meta mutation, deployment, flag or D1 mutation occurred.
+- Supported candidate checks: API `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` health200 at0%; Admin `091f1a3f-595b-4530-b54a-d7253af60664` health200/`paymentConfigured=true` at0%. Originals remain100%; COD remains disabled.
+
+## GFS-242 Authorized Migration and Runtime State (2026-10-27)
+
+- Original staging D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`: reviewed COD0030 SHA256 matched; pre-migration Time Travel bookmark `00000271-000000f0-00005110-143fdc2d1bb24f77b235a14fa0897202`; post-migration bookmark `00000273-0000000a-00005110-25b2fce4a4bba26a177e0f2fadd7a452`. Only targeted SQL executed; `d1_migrations` remains untouched/0.
+- Post-state: `cod_schema_migrations` contains0030; `cod_configuration` default is disabled with fee125; `cod_order_details` count0; original orders/payments counts remain52/52; quick_check ok and FK violations0. No customer values exported.
+- API: candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` at0%, v90 `21a3d74c-3979-432c-9190-1848362592a4` at100%, COD false. Admin: candidate `091f1a3f-595b-4530-b54a-d7253af60664` at0%, v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` at100%; candidate health true after re-staging.
+- All three payment eligibility/provenance checks remained true; no recipient, QR, payment setting, receipt or history mutation. No live tester identity, WAMID, order, Admin COD_PENDING or screenshot exists. Hoja excluded.
+
+## GFS-241 COD-OFF Staging Evidence (2026-10-27)
+
+- API candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` is staged at0% with API v90 `21a3d74c-3979-432c-9190-1848362592a4` at100%; upload metadata confirms `COD_V1_ENABLED=false`, existing bindings, callback and canonical GFS Meta IDs. Candidate health HTTP200 and unsigned webhook HTTP403 passed through the official version override. No valid event or D1 write.
+- Admin candidate `091f1a3f-595b-4530-b54a-d7253af60664` remains0% with v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` at100%. No candidate customer traffic.
+- Reviewed COD0030 checksum/evidence and local recovery are ready; original D1 ledger remains0 and migration remains unapplied. No migration, fee, flag, receipt, order, customer, Meta or WhatsApp state changed.
+- Canonical GFS Meta/Cloudflare identity was verified in the native session. Previous tester mismatch remains; no WAMID/order/screenshot is recorded. Hoja resources remain excluded.
+
+## GFS-240 Runtime Evidence (2026-10-27)
+
+- Native approved Codex session used the official Chrome DevTools MCP. `list_pages`, authenticated Admin Test Controls and Cloudflare snapshots passed in the same session. Dashboard identity was `gisupp@gmail.com` on GFS account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; existing Admin Access remained present. No raw CDP, account switch or alternate tester profile.
+- Admin candidate `091f1a3f-595b-4530-b54a-d7253af60664` was uploaded by Wrangler and placed at0% with original v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` at100%. Existing authenticated Admin origin plus Cloudflare's supported version-override header returned HTTP200 `/health` and `paymentConfigured=true`. Version URLs remained disabled.
+- Original Admin v82 was restored alone at100% after identity recheck; read-only deployment history confirms the candidate remains at0%. Candidate remains in version history only. No D1/schema/ledger/customer/payment/Meta/WhatsApp mutation occurred.
+- Local release evidence: targeted124/124, rollback4/4, prior full276/276, build/lint/offline audit pass. Original D1 and reviewed COD0030 rehearsal remain unchanged; COD0030 is not applied to original D1 and `COD_V1_ENABLED` remains false.
+- Canonical GFS Meta/WABA assets were read in the authenticated manager; no asset or callback mutation. The previous WhatsApp profile is not the registered tester; no send, WAMID or live COD order is recorded. Hoja resources remain excluded.
+
+## GFS-238 No Runtime Resource Changes (2026-10-27)
+
+- No Cloudflare resource, Worker version, traffic percentage, Version URL setting, binding, secret, D1 schema/row, migration, Meta asset, or WhatsApp state changed. No candidate version was uploaded. Last recorded active API v90/Admin v82 remain historical observations pending an authenticated current recheck; no new version IDs are claimed.
+- Local host diagnosis confirms Codex0.164.0 and one enabled official `chrome-devtools` MCP registration under `CODEX_HOME=D:\AI-Tools\Codex\home`; current Kilo turn could not call `list_pages`. No browser profile/session or host configuration was modified. No new resource or cost was incurred.
+- Existing synthetic-only `getfreeseeds-cod-compat-check` remains unbound with its previously scheduled 2026-10-28 dependency review. Original GFS D1 remains untouched; COD0030 remains unapplied there. Preserve existing API/Admin rollback resources and old-only traffic until the approved Admin smoke can complete.
+
+## GFS-237 Payment Readiness and Unchanged Runtime (2026-10-26)
+
+- Verified CLI principal `gisupp@gmail.com` / GFS account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Read-only stored configuration: legacy fixed row present/amountPositive0; all three methods enabled, recipient present, owner/current-independent-QR-provenance flags true, bilingual copy/placeholders complete. No destination/account/QR/evidence values exported, no payment settings/approval edits. These are stored eligibility flags, not new provider/ownership evidence.
+- Source repair `2221f0c52886a45c2610e50c129ac470616fb5e7` is not deployed. Active API remains v90 `21a3d74c-3979-432c-9190-1848362592a4`/deployment `9cc279f1-dc6d-463b-9047-8311d1229945`; Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`/deployment `cbc4233d-9100-45cf-aa8e-7f42eb44e982`, sole100% each. Prior v91/v83 remain unpromoted, old health code. No repaired-version upload: approved preflight lacked list_pages. Preview/Access/Meta/canonical bindings unchanged; no current browser/Meta identity evidence claimed.
+- Original D1 quick_check ok/FK0,ledger0,COD sidecar absent; exact reviewed0030 remains unchanged/unapplied. Current Time Travel bookmark `00000270-00000000-00005110-c8927632763953e717675d5f3f871521`, no restore. Boolean SELECT diagnostics reported rows_written0; first file-execution summary also reported platform import metadata changed_db true, subsequent command-mode results changed_db false. No application rows/schema/financial history changed.
+- Approved synthetic-only `getfreeseeds-cod-compat-check` remains unbound and retained; Oct28T12:00Z review wakeup `wku_17a06b30e001SmbMRUP1jlT5Mv` still pending. Do not delete original or diagnostic before dependency checks. No new Worker/resource/support plan created.
+
+## GFS-236 Non-Traffic Version Smoke / Restore
+
+| Worker | Candidate version / ETag | Active deployment after restore |
+|---|---|---|
+| API | v91 `6db59e0d-0ab5-4535-8937-f7cf9100032b` / `cc6a6ebf6e97de0c5b55edd09f10732fe98796ccb99308e8e846a1835515a219` | v90 `21a3d74c-3979-432c-9190-1848362592a4` alone100%, deployment `9cc279f1-dc6d-463b-9047-8311d1229945` |
+| Admin | v83 `d9eff614-00a8-4ea7-a9f0-45f7c9df6b4e` / `9a218d21e06fb7e6d4e6f9d4cd13d5e112331807b6106b8b9d7265901a4db5b1` | v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` alone100%, deployment `cbc4233d-9100-45cf-aa8e-7f42eb44e982` |
+
+- Explicit zero-traffic approval. API v91 COD false; Admin/ API used original staging bindings; no user traffic was promoted. Dashboard Version URLs disabled on both Workers; ordinary workers.dev kept enabled; Admin Access remains. Candidate metadata still carries `has_preview` marker, but no preview URL was opened/shared.
+- API candidate health200, unsigned webhook403; Admin candidate Access health200/`paymentConfigured:false`. This is an aggregate only, no recipient/order/payment rows. Last active v90 source still has no SHA; v91/v83 ETags are candidate-only.
+- GFS-236 current deployment state restored to v90/v82; candidate artifacts remain in account version history. Original D1 and synthetic diagnostic resource unchanged; migration0030 unapplied; diagnostic cleanup review remains Oct28.
+
+## GFS-235 Active Worker Source/Binding Evidence (2026-10-26)
+
+| Worker | Active version / traffic | Deployed at | Script ETag | Source SHA |
+|---|---|---|---|---|
+| `getfreeseeds-api-staging` | `21a3d74c-3979-432c-9190-1848362592a4` /100% | `2026-10-24T12:47:42Z` | `0a306eaaeb2b40b236cec7cfdbab4ae07baee5abb9aaaf47f73f040d9995bb02` | Not exposed |
+| `getfreeseeds-admin-staging` | `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` /100% | `2026-10-24T12:55:05Z` | `ba0f365047e5e3568260b4b6d25f15ad4cc032f1b2962b16c8c11134e0ed1c43` | Not exposed |
+
+- API binding metadata matches staging D1/R2/Queue and canonical GFS Meta IDs; secret names only. Active API v90 binding inventory has no `COD_V1_ENABLED`; its runtime behavior is unknown without source. Candidate dry-run has the flag false. Binding metadata does not prove Meta operator or current phone review.
+- Both deployment times precede PR10 commit cf01f44 (17:54:21Z); source may still have been deployed from an uncommitted tree, so exact parity remains UNKNOWN. Dashboard code view provided no script/hash; no edit/deploy. Callback remains untouched.
+- Original D1 unchanged, COD0030 unapplied. GFS234 isolated synthetic DB unbound; retained for cleanup review Oct28. No active Worker/binding/Meta/customer mutation.
+
+## GFS-234 Explicitly Approved Disposable Diagnostic D1 (2026-10-26)
+
+| Field | Verified record |
+|---|---|
+| Name / ID | `getfreeseeds-cod-compat-check` / `b29df6ba-e5c3-47bd-ac59-f6b0d47861a1` |
+| Owner/account | Get Free Seeds, `gisupp@gmail.com`, `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; browser identity matched and Wrangler rechecked before synthetic mutations |
+| Authority/purpose | User explicitly approved this one <=5MB synthetic-only DB, <=10k reads/1k writes, no paid plan, traffic, active binding or customer copying; independent of prior V2 permission |
+| Created / size | `2026-10-26T20:39:38.852Z`;569344 bytes;38 tables;account now5 DBs |
+| Schema/data |63 V1 schema definitions only (from compatibility0001–0029), one synthetic fixture, exact0030; normal NEW ledger3. No real customer/receipt/payment-method records exported; config COD disabled125. Synthetic SQL order `SIM-GFS234-DO-NOT-SHIP`,250+125=375,COD_PENDING/hold1; no outbox/receipt |
+| Dependencies | No Worker, Meta callback, Queue, R2 or Access binding; not a production/rollback DB. Temporary config/artifacts only in `D:\Temp\kilo\gfs234-rehearsal`; never deploy the failed C3 scaffold under `D:\Temp\kilo\getfreeseeds-api-staging` |
+| Cost/quota | Before creation UI:4/10 DBs,4.56MB/5GB,88k/5M daily reads,29/100k writes,$0 observed billable usage. Final D1 info:33 read queries/77 write queries,546 rows read/223 written in24h,within approved caps; no new plan,Cron or consumers. Post-change invoice not inspected; do not guarantee future zero charges |
+| Cleanup | Retained only for test evidence. Review/delete by2026-10-28 after dependency/no-real-data checks. Wakeup scheduled2026-10-28T12:00Z; no automated blind deletion. All four original DBs retained |
+
+- Original D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`: metadata3,055,616 bytes. Explicitly approved bounded SELECT1/metadata preflight PASS, quick_check ok,FK0, all63 V1 objects match, legacy ledger0. No original schema/data write; COD0030 remains unapplied. List API's `num_tables:0` is not a reliable schema-empty signal; schema preflight establishes actual objects. D1 `version:production` is storage metadata, not a production traffic promotion.
+- Time Travel bookmark original `0000026d-00000000-00005110-fef2d3498b8cc0fbb06b6df66727b08d`; diagnostic `00000002-00000000-00005110-f5e6931b1cdda1c7644203b7753afe30`. No restore. COD file SHA256 `72d1c00c4c3bfeabc391f538530c2bc974a60d37ab33f01b5ba672253ec052db`; schema-only SHA256 `4bf7ca14aad2f69423ee92ab50afc5d556f3620408a70c5cb1c59ccc04265221`.
+- API v90 `21a3d74c-3979-432c-9190-1848362592a4` and Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` remain at100%; no deploy/secret/Meta/canonical routing or binding change. Active flag unknown; candidate API false. Admin Access matches; Test Controls recovered; current exact WhatsApp tester MISMATCH, no send.
+
+## GFS-233 Verified Support/Deployment State (2026-10-26)
+
+- Wrangler principal/account confirmed immediately before Support: `gisupp@gmail.com`, expected GFS account, `d1:write`. This does not grant proven D1 query permission.
+- One approved Chrome MCP execution called `list_pages` then reached Support. Cloudflare Free Support classified API7403 for staging D1 as ineligible (Free case topics only billing/account/registrar); no case ID/submission. A later fresh execution lost `list_pages` again. No D1 query/retry or cloud change.
+- Latest 100% Worker history remains API v90 `21a3d74c-3979-432c-9190-1848362592a4`, Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`; source SHA absent. API/Admin dry-runs pass with expected bindings, candidate `COD_V1_ENABLED=false`. Active flag/bindings unqueried.
+
+## GFS-232 Current Access/Runtime State (2026-10-26)
+
+- Wrangler confirms expected GFS account/email and `d1:write`; this grants no proven D1 query authorization. No D1 query, support case/reference, scope/identity change or hosted mutation occurred.
+- Codex `D:\AI-Tools\Codex\home` v0.164.0: official `chrome-devtools` entry enabled; `codex doctor` reports valid config/MCP/network, Chrome processes are active, but the approved invocation did not expose callable `list_pages`. No new page inventory; no tab navigation/message in GFS-232.
+- API v90 `21a3d74c-3979-432c-9190-1848362592a4` and Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64` remain latest known metadata, no source SHA. No deploy, active flag/bindings or D1 schema refresh. Migration0030 unapplied; candidate COD false.
+
+## GFS-231 Owner/Tester Gate Attempt (2026-10-26)
+
+- Cloudflare account/Wrangler identity remains known, but existing dashboard UI did not expose visible email or account ID at pre-submission check. No support ticket or reference; no account switch, OAuth change, or direct Wrangler/raw D1 query. Admin Test Controls' auto-loaded exemptions list returned UNAVAILABLE; no subsequent read or mutation.
+- Official Chrome inventory completed after one timeout; Orders snapshot was rejected for customer-data exposure risk. With explicit user approval, reused Admin tab navigated to same-origin `/test-controls`; scoped tester/exemptions read returned UNAVAILABLE. Stopped before WhatsApp Profile; no customer/order data, chat or message read. Last own Profile mismatch remains.
+- API v90/Admin v82 latest history unchanged, no source SHA. No active bindings, flags or D1 schema were refreshed. No resource changed.
+
+## GFS-230 Read-Only Staging Inventory (2026-10-26)
+
+- No Cloudflare/Meta/GitHub resource or configuration changed. Fresh official Chrome MCP inventory lists11 existing page IDs/origins; no additional navigation or content change.
+- Latest Wrangler API history: `getfreeseeds-api-staging`, v90 `21a3d74c-3979-432c-9190-1848362592a4`; Admin: `getfreeseeds-admin-staging`, v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`. Both history records date 2026-10-24 and have no source commit annotation. Active source parity unproven.
+- D1 `getfreeseeds-staging` was not queried or mutated; API7403 diagnosis via account-owner/support is pending. Migration0030 remains unapplied; no backup or integrity result is newly claimed.
+- API/Admin dry-runs use expected configured D1/R2/Queue; API candidate has `COD_V1_ENABLED=false`. Dry-run is not evidence of live bindings or flag state. No deployment or test resources created.
+
+## GFS-229 Read-Only Tool/Account Check (2026-10-26)
+
+- No hosted resource, binding, account, secret, route, D1 row, Worker, Meta asset or customer state changed. Candidate source remains PR #11 `codex/gfs221-cod-compat-001`; API/Admin dry-runs only.
+- Codex host `D:\AI-Tools\Codex\home`, version 0.164.0; one enabled official `chrome-devtools` stdio MCP. Existing tabs were inspected narrowly: Admin Access matched; Cloudflare account ID visible/email unavailable; GitHub browser absent, CLI gardenshop; Meta operator unavailable; canonical WABA/sender evidenced in WhatsApp Manager; WhatsApp tester mismatch. No screenshot, chat, message, or WAMID.
+- `wrangler whoami`: `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; permission summary includes `d1:write`. Prior D1 API7403 not retried; resource-level authorization remains unresolved. No scope or account change.
+- Candidate API dry-run reports `COD_V1_ENABLED=false`; this is source config, not a fresh active Worker state. Existing active API v90/Admin v82 and D1/migration evidence remain historical, not refreshed.
+
+## GFS-228 COD Scope/Resource State (2026-10-26)
+
+- No resource/binding/account changed. Source commit `046426e` changes only Admin/API COD intake logic and tests; PR #11 branch receives it. Existing D1/API/Admin/Meta/callback IDs and rollback remain unchanged.
+- COD settings use audited revision and fee125 with no HMAC/references for intake. Optional settlement still requires independent cash evidence/HMAC. Runtime COD remains off; active Worker versions unchanged.
+- Remote D1 API7403 and Chrome `list_pages` failure left tester, source parity and staging bindings unverified this run. No D1 write, secret, Meta action, test order, WAMID or screenshot.
+
+## GFS-227 Permission and Resource Status (2026-10-26)
+
+- Cloudflare account/Access identity and GitHub CLI identity remain verified from prior same-session evidence. Current Wrangler D1 query returned API7403; no scope/account changes. Remote D1 state is not refreshed this run.
+- Existing API v90/Admin v82 IDs unchanged; source parity unverified. No service version deployed or secret provisioned. Candidate COD remains false.
+- D1 migration 0030 remains unapplied; empty legacy ledger is preserved. No remote clone, customer-data export, backup restore, Meta callback, tester order, WAMID or screenshot created.
+- Official Chrome MCP page listing failed twice in approved review; no tester/Admin Test Controls or Meta operator inspection completed. Stop until supported session/permission restoration; no account switch or message.
+
+## GFS-226 Access/Runtime Follow-up (2026-10-26)
+
+- Admin Access identity verified through exact staging origin's same-origin identity endpoint: email and hostname matched. No JWT, cookie, claim JSON or token saved. Admin Test Controls not read after MCP `list_pages` failed twice.
+- Last verified tester Profile mismatch remains; no profile change/chat/message. Meta operator and actual WABA phone association not verified. No new resource/secret or callback.
+- Active API v90/Admin v82 IDs unchanged; no source SHA. API health returned only service/200. D1 remains healthy/read-only, ledger empty and all Wrangler migrations pending; 0030 unapplied. No backup clone, data export or resource mutation.
+
+## GFS-225 Final Runtime/Identity Snapshot (2026-10-26)
+
+- Cloudflare UI `gisupp@gmail.com` and expected account ID route verified. GitHub CLI `gardenshop`; browser PR session unauthenticated. Staging Admin host/API loads, but Access identity not visible in header attributes. No identity change.
+- Meta existing tabs show allowed GFS business/WABA links; operator Saeed and phone asset identity unverified. Authorized WhatsApp tester profile mismatches approved record. Do not message or use Hoja assets.
+- API v90 `21a3d74c-3979-432c-9190-1848362592a4`, Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`; no Git SHA metadata. Chrome health GET returned HTTP200/service-only. Candidate COD flag false; active HMAC binding absent.
+- D1 still populated, ledger empty, COD tables absent; quick/FK clean, Time Travel bookmark available. No official clone/fork or schema-only export; do not copy customer data. Migration blob `05e7c0012ad3ed6677bc691a3f937f15b7d20c50` remains unapplied. No secret, D1 row, Worker, callback, order, WAMID, screenshot or spend change.
+
+## GFS-224 Current Runtime/Backup Inventory (2026-10-26)
+
+- Verified Cloudflare browser user-menu identity `gisupp@gmail.com`; exact account ID present in route/link, expected GFS ID. Wrangler CLI agrees. GitHub CLI authenticated `gardenshop`; GitHub UI is unauthenticated. Staging Admin Access page did not expose expected email; no order rows inspected.
+- Read-only active versions remain API v90 `21a3d74c-3979-432c-9190-1848362592a4`, Admin v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`; source commit IDs unavailable. API version predates PR #10 source `cf01f44`; don't infer parity. Config IDs: account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, WABA `2616648355452496`, phone asset `1323932417479627`. Meta current operator and WABA association not authenticated; asset IDs are configuration references only.
+- D1 `quick_check=ok`, FK clean, `d1_migrations` exists empty, no COD sidecar tables; Time Travel bookmark available at 2026-10-26T11:45Z. This bookmark token is not saved in Git. Official D1 cloning unsupported. Schema-only export failed auth; no customer rows or database file were copied. `0030` source commit `217e2a0`, Git blob `05e7c0012ad3ed6677bc691a3f937f15b7d20c50`, idempotent sidecar marker only tested locally, unapplied.
+- Candidate COD `false`; active API lacks COD HMAC binding/name, no secret provisioned. No courier record, WAMID, test order, screenshot, migration, deployment, restored D1, or Cloudflare write. Only this Git branch/PR was written.
+
+## GFS-223 Authenticated Resource Preflight (2026-10-26)
+
+- CLI identity: GitHub `gardenshop`; Wrangler `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Existing MCP tabs lacked Cloudflare/GitHub/Admin UIs. No current dashboard session identity verified through browser.
+- Cloudflare metadata: API `getfreeseeds-api-staging` v90 `21a3d74c-3979-432c-9190-1848362592a4`; Admin `getfreeseeds-admin-staging` v82 `b840f5a4-f3c7-4d36-8b66-38a43b5e2d64`. Shared D1 `getfreeseeds-staging` / `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; R2 and Queue match candidate config. Versions have no source Git commit annotation; active-source parity unverified. API has no COD HMAC binding; candidate flag false.
+- Remote D1 `d1_migrations` has zero entries while legacy schema/data exists; all local migrations show pending. Remote `quick_check` ok, FK check empty, 0 rows written. No COD sidecar tables. Time Travel bookmark available at 2026-10-26T11:45Z (opaque bookmark not recorded here). No backup restore exercised. No migration applied.
+- Meta current tabs exposed sender identity but not canonical WABA; approved tester profile did not match. No authenticated courier/remittance evidence found. HMAC secret value never read. No WAMID/screenshot/test order or external mutation.
+
+## GFS-222 Local Resources and Protected Runtime (2026-10-26)
+
+- Target remains PR #11 branch `codex/gfs221-cod-compat-001`, stacked on PR #10 `cf01f44`. No change to frozen V1 tag, PR #9, primary checkout or `images/`.
+- No remote Worker/version, D1 migration/bookmark/backup, R2 object, Queue, secret, policy, Meta callback, WhatsApp message, tester order, WAMID or screenshot was created. Configured staging binding IDs remain source observations, not fresh dashboard verification. Active API/Admin versions and current remote COD state remain unverified; candidate COD flag stays false.
+- Added then removed a clean detached local rollback-source checkout at `D:\Temp\kilo\gfs222-rollback-v1`, exactly `cf01f444500415b1f22a64730674caca1c286006`, after baseline176 and old-source rollback4 acceptance. No customer/receipt export or credentials were used; no cloud resource created. Recreate from preserved Git commit and set `GFS_LEGACY_ROOT` to rerun `npm run test:rollback:v1`.
+- GitHub CLI identity verified `gardenshop`; remote is `https://github.com/gardenshop/freeseeds.git`. Tested source `bf3a231c585982badcf55b43dece351f92c8d60d` pushed to PR #11 branch. Reviewed migration Git blob `4993557afd135c7cb778f565b95ca95eb4431ffd` remains unapplied.
+- API/Admin source configurations both name shared D1 `getfreeseeds-staging` ID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, R2 `getfreeseeds-receipts-staging`, Queue `getfreeseeds-events-staging`, WABA `2616648355452496`, phone asset `1323932417479627` and existing signed staging callback. Dry-run confirms configured bundles only; no actual bindings/versions/callback were checked in authenticated dashboards.
+- Existing collector/remittance arrangement remains user-reported but unverified through an authenticated record. No policy evidence is fabricated, no HMAC secret is provisioned, no account switched, and no paid resource/spend action occurred. Cloud billing was not inspected, so no new cost observation is claimed.
+
+## GFS-221 Candidate Resources / Non-Mutation Record (2026-10-25)
+
+- Git branch `codex/gfs221-cod-compat-001` is based on V1 source commit `cf01f44`; tested source and GFS-221 docs were pushed to the new remote branch and stacked review PR #11 targets PR #10's V1 branch. Active Worker byte identity was not verified. PR #9/V2, frozen V1 tag, primary checkout, `images/`, and prior rollback versions were not changed.
+- API/Admin Wrangler configs list staging resource names and canonical GFS IDs. Local Wrangler dry-runs resolved the configured API and Admin bundles and show API `COD_V1_ENABLED=false`; these are **config observations only**, not authenticated live account/binding verification.
+- Migration `0030_cod_v1_compat.sql` is locally tested against synthetic V1 schema. It creates COD-specific configuration/detail tables and guards. It has not been applied to D1; existing shared customer/payment/order history is unchanged.
+- No new Cloudflare resource, binding, queue, R2 object, secret, Meta callback, policy, D1 row, WhatsApp message, tester order, screenshot, or WAMID was created. No backup, rollback execution, active version check or remote integrity result is claimed.
+- Protected HMAC key and actual courier collection/remittance contract evidence remain unverified/unprovisioned. The user reports an existing contract; no authorized details were retrieved. COD remains disabled.
+
 ## GFS-209 Live Receipt E2E (2026-10-24)
 
 - PR #10 branch `codex/gfs206-v1-receipt-hotfix`, latest code head `d6ca1a5`. V1-only staging Worker `getfreeseeds-api-staging` deployed as `76084318-69c7-46b3-bfa0-886610971133`; immediate rollback `7b957406-c869-4461-b184-da230f4d29e3`. PR #9/V2 reminder runtime untouched.
@@ -769,3 +1350,473 @@ No secrets are stored in this registry.
 - Live evidence for GFS-173: **BLOCKED**. Chrome DevTools MCP was not exposed to this session; no list-pages inventory, tab mutation, account verification, screenshot, WAMID, Admin save/publish/reload, or external deployment is claimed.
 - Staging deployment after identity verification: API `4375a7b7-463e-4373-8156-bfb6e1344f49`; Admin `2ab5c27f-30c7-4614-ac89-7ef51d6b73cf`. API `/health` returned `ok` and D1 `payment_methods` exposes `instructions_ur` and `reference_instruction_ur`.
 - Financial incident remains `FS-261019-000001` paid/approved/packing with no independent bank verification; five Purchase CAPI attempts are dead-lettered. Fulfillment hold is required. `FS-261019-000002` remains preserved.
+
+## GFS-264 Local Release Registry — 2026-10-27
+
+- Writable source checkout: `D:\free seeds\gfs264-pr11`, PR#11 branch based on `4073a5c`; no Hoja assets copied.
+- Additive migrations staged locally: `0035_opaque_order_references.sql`, `0036_cod_hold_release_authorization.sql`. Neither was applied to live D1 in this run.
+- Cloudflare read-only identity/service: authenticated `gisupp` session, `getfreeseeds-api-staging`; active deployment observed at 0% traffic. No version ID was claimed for this un-deployed source.
+- Chrome DevTools MCP: official page inventory and read-only Admin/Cloudflare/Meta identity checks completed. No WhatsApp customer-device interaction, receipt upload, WAMID, or external message was created.
+- Git: commit `37d6198` pushed to `codex/gfs221-cod-compat-001`; no unrelated files included.
+
+## GFS-265 Release Recheck Registry — 2026-10-27
+
+- Source: branch `codex/gfs221-cod-compat-001`, post-repair uncommitted changes are limited to API PUBLIC vars, one regression assertion, and required records.
+- Live D1: `getfreeseeds-staging` / configured shared ID; read-only result 65 orders/payments, COD enabled/PKR125, 3 required Advance methods, quick-check ok, FK0, live markers only through0030.
+- Rehearsal D1: `getfreeseeds-cod-compat-check`; targeted0035/0036 pass with synthetic fixture; no customer data used in source or records.
+- Runtime: API `428defd5` 100%; Admin `b840f5a4` 13% and `615e1156` 87%; GFS-265 not deployed.
+- Release evidence: official Chrome MCP identity/read-only checks PASS; Wrangler OAuth refresh and current Time Travel bookmark/backup evidence BLOCKED; customer-device receipt evidence PENDING.
+
+## GFS-266 Registry — 2026-10-27
+
+- Writable source checkout: `D:\free seeds\gfs264-pr11`; reviewed change limited to Admin payment confirmation UI and synthetic regression assertions; no Hoja assets or customer data added.
+- P0 evidence: authenticated Admin read-only view confirmed the cited Advance order is PAYMENT_REVIEW with three receipt previews and a saved reference; independent receiving-account proof was unavailable, so no approval occurred.
+- Source quality: full 290/290, focused payment tests, build, lint, and rollback 4/4 PASS. npm audit BLOCKED by registry advisory endpoint failure.
+- Live identity/runtime: GitHub `gardenshop`, Cloudflare GFS account via `gisupp@gmail.com`, canonical GFS Meta; API `428defd5` 100%, Admin `b840f5a4` 13% / `615e1156` 87%. No GFS-266 deployment.
+- Protected release blocker: Wrangler OAuth expired/unreachable and current D1 recovery bookmark/backup unavailable in the supported dashboard; no live mutation was attempted.
+
+## GFS-266 Final Registry — 2026-10-27
+
+- Recovery: supported Wrangler identity `gisupp@gmail.com` / GFS account verified; pre-write D1 Time Travel bookmark recorded (private operational recovery record).
+- Live schema: targeted 0035 sequence columns/index and 0036 hold authorization/triggers applied; quick check `ok`, FK check zero rows, 0036 marker present. Legacy migration replay was not used.
+- Live versions: API `24d72438-72a1-4544-80df-4b9b90c297e5` 100% / `428defd5-e7aa-4800-b001-976f403c735e` 0%; Admin `cd155f20-c848-4e4e-9fde-970e62b0a4ea` 100% / `82a52106-0d84-4c84-ad1d-7d16daa80cbb` 0%.
+- COD: one provenance-verified public hold released once; unpaid COD_PENDING and financial snapshot preserved; six other COD rows remain held. No test hold was bulk-cleared.
+- Advance: cited payment remains REVIEW; three receipts/reference are visible in Admin, but independent receiving-account proof is unavailable, so no PAID mutation.
+
+## GFS-267 Registry — 2026-10-27
+
+- Source: `D:\free seeds\gfs264-pr11`, commit `cad82e1`; no Hoja assets or customer data added.
+- Cloudflare identity verified before upload/deploy: `gisupp@gmail.com`, Get Free Seeds account; candidate Admin `92955132...`0%, active `cd155f20...`100%.
+- Live schema read-only check supports 0035/0036. Remaining read blocker is D1 code7500; no capacity or financial mutation was made.
+- Active list HTTP200 sanitized counts67/6/2/10; candidate JSON503 under quota exhaustion; detail/receipt acceptance pending.
+
+## GFS-271 Registry — 2026-10-27
+
+- Source checkout `D:\free seeds\gfs264-pr11`, clean HEAD/remote `19de91d`, branch `codex/gfs221-cod-compat-001`, pushed to PR#11.
+- Cloudflare read-only identity: Get Free Seeds account `cb5066…`, authenticated `gisupp@gmail.com`; staging D1 `17b7…`; no external mutation performed.
+- Metrics: daily 8.06M/5M rows read, 14.96k/100k written, $0 billable; staging cumulative 44.23k, last-24h Query Insights 27k / 5M rows read.
+- Local migration0037 rehearsal/EXPLAIN and synthetic 20/50/100/1,000-order benchmark passed; Cloudflare after-deployment rows_read is not claimed.
+- Live migration, 0% smoke, promotion, rollback verification, and customer retest remain blocked by quota/capacity and protected mutation gates.
+
+## GFS-273 Registry — 2026-10-27
+
+- Source checkout: `D:\free seeds\gfs264-pr11`; optimization source through `03dbc87` plus additive migration0038 and preview-URL-disabled config; no Hoja assets or customer data added.
+- Cloudflare identity verified before each live mutation: `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; staging D1 changed only by the targeted index/marker.
+- Live Admin: `66426d2a-be1c-4e22-b420-1b1559dcbbc5` 100%; rollback `cd155f20-c848-4e4e-9fde-970e62b0a4ea` 0%. Live API: `24d72438-72a1-4544-80df-4b9b90c297e5` 100%.
+- D1: Paid 25B reads/50M writes; migration0037 and 0038 markers/indexes verified; quick/FK checks pass. Recovery bookmark is recorded in protected operational output, not repeated here.
+- Evidence: candidate UUID provenance captured by filtered Wrangler tail; Orders/Payment Settings/payment-methods/detail HTTP200; no financial or customer mutation.
+
+## GFS-279 Registry — 2026-10-28
+
+- Source checkout: D:\\free seeds\\gfs264-pr11; GFS-279 implementation commit beef29f; no Hoja assets or customer data added.
+- Recovered source: prior V2 engine pattern reviewed from codex/gfs-v2-payments-reminders-001; only compatible current-branch code was ported. Additive migrations are 0039/0040.
+- Read-only live audit: 83 current orders in sanitized categories; no reminder outbox/outbound rows. No historical schedule backfill or customer send occurred.
+- Cloudflare read-only identity previously verified as gisupp@gmail.com / Get Free Seeds; canonical GFS WABA read-only identity is recorded as WABA 2616648355452496. Reverification is required before mutation.
+- Release status: local tests/build/lint/audit/rollback pass; GitHub gardenshop authentication, canonical template approval, staged deployment, and WAMID evidence remain unavailable.
+
+## GFS-280 Registry — 2026-10-28
+
+- Repository identity: `gardenshop/freeseeds`; branch `codex/gfs221-cod-compat-001`; pushed base `2a0d1a0`, repair `02231cb`, and documentation `df78067`; remote SHA verified.
+- Git identity: supported Credential Manager entry for `gardenshop` verified before push. The prohibited ai-photo-studio credential and identity were not used.
+- Cloudflare read-only identity: `gisupp@gmail.com` / Get Free Seeds. D1 dashboard identity and schema0038 inventory were read-only checked; protected recovery bookmark is not repeated here.
+- Canonical Meta: GFS WABA was verified in WhatsApp Manager. Two Utility submissions are In review; no approved template, recipient, WAMID, or customer data is recorded.
+- Active live versions remain API `24d72438-72a1-4544-80df-4b9b90c297e5` and Admin `66426d2a-be1c-4e22-b420-1b1559dcbbc5`, both at 100%; no GFS-280 deployment exists.
+- Protected scope: new-number WhatsApp lock, PUBLIC COD/PKR125, three Advance methods, signed webhook safeguards, Workers Paid, and Hoja zero-connection rule remain unchanged.
+
+## GFS-281 Registry — 2026-10-28
+
+- Cloudflare identity: `gisupp@gmail.com` / Get Free Seeds verified by Wrangler and dashboard. Workers Paid subscription is visible; D1 production Studio is reachable at the configured production database and shows the pre-reminder schema only.
+- D1 safety: no production SQL marker/integrity query or write was completed because the over-quota safety gate rejected the action. No recovery bookmark was changed or exposed.
+- Reminder source: strict 24-hour service-window-only delivery; local CMS EN/UR copy; no Meta template submission, approval, fallback, or WAMID.
+- Code verification: focused 16/16, full 309/309, build, lint, offline audit 0 vulnerabilities, and rollback4/4 pass after the final repair.
+- Live versions are unchanged: API `24d72438-72a1-4544-80df-4b9b90c297e5` and Admin `66426d2a-be1c-4e22-b420-1b1559dcbbc5`, both 100%; no GFS-281 deployment.
+
+## GFS-282 Registry — 2026-10-28
+
+- Cloudflare: `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; production D1 `getfreeseeds-prod` / `02b707df-a10c-4645-9516-a2a4541f6fab`. Paid subscription was read-only verified.
+- D1 safety: the bounded marker query was rejected before execution by the local/tool safety reviewer due to the documented over-quota owner-approval gate. No marker, recovery bookmark, integrity result, write, or migration is claimed.
+- Release state: strict 24-hour source is local-tested; no Meta templates, live reminder activation, customer send, WAMID, delivery status, or COD conversion occurred. All three reminder flags remain false.
+- Live versions are unchanged: API `24d72438-72a1-4544-80df-4b9b90c297e5` and Admin `66426d2a-be1c-4e22-b420-1b1559dcbbc5`, both 100%. Hoja isolation, new-number lock, public COD/PKR125, three Advance methods, and signed webhook safeguards remain protected.
+
+## GFS-284 Registry — 2026-10-28
+
+- Authorized read-only resource: Cloudflare `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, production D1 `getfreeseeds-prod` / `02b707df-a10c-4645-9516-a2a4541f6fab`; Workers Paid visible. Canonical GFS WABA was rechecked; no Meta template mutation occurred.
+- Production schema evidence: pre-reminder tables only; no reminder tables, COD sidecar, migration ledgers, or triggers. `orders_state_idx` and SQLite autoindexes are present. `quick_check=ok`; FK result empty.
+- Recovery: supported Wrangler returned an existing Time Travel bookmark; opaque value is intentionally omitted from Git/logs and was not changed or recreated.
+- Release: migrations0039/0040, candidate deployment, reminder flags, Cron/Queue activation, sends, WAMIDs, delivery, and COD conversion remain untouched. Hoja isolation and protected financial/COD safeguards remain unchanged.
+
+## GFS-285 Registry - 2026-10-28
+
+- Active binding evidence: API `24d72438` and Admin `66426d2a` both bind `getfreeseeds-staging` / D1 UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; the inspected production-name UUID `02b707df-a10c-4645-9516-a2a4541f6fab` is not active. Cloudflare account remains Get Free Seeds / `gisupp@gmail.com`.
+- Live topology evidence: API is a Queue producer; deployed API/Admin showed no Cron trigger or Queue consumer. Deployed Admin reminder URL returned 404; no reminder deployment or delivery is claimed.
+- Admin audit evidence: current read-only aggregate 125 total, 8 REVIEW, 2 APPROVED/PAID, 45 fulfillment; no customer identifiers or row data are stored here.
+- Local changes: direct legacy approval control fails closed; settlement panel remains explicit and backend-compatible. Missing reminder schema returns `REMINDERS_NOT_DEPLOYED`/503. No external mutation, migration, deployment, send, WAMID, or COD conversion occurred.
+
+## GFS-286 Registry - 2026-10-28
+
+- **Cloudflare:** Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, authenticated email `gisupp@gmail.com`, Workers Paid verified. Active API/Admin D1 binding is `getfreeseeds-staging` / `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; production-name D1 `02b707df-a10c-4645-9516-a2a4541f6fab` was not mutated.
+- **D1:** migrations 0039/0040 applied once after rehearsal; custom markers 0037–0040 present; reminder tables/templates present; `quick_check=ok`; FK check empty. Existing recovery metadata was read but its opaque value is intentionally not recorded.
+- **Workers:** API `8e670de8-4d89-427b-9fec-dad29dc33f3f` and Admin `c2e87231-9d51-444e-b283-7ab18379280f` are the promoted sends-off versions. Prior API `24d72438-72a1-4544-80df-4b9b90c297e5` and Admin `66426d2a-be1c-4e22-b420-1b1559dcbbc5` remain rollback versions at 0%. API Cron is `* * * * *`; events Queue producer/consumer are attached.
+- **Reminder state:** five stages +15/+30/+60/+210/+240, strict 24-hour inbound window, no Meta templates, explicit PKR125 COD consent, and no historical backfill. All reminder flags remain false; no WAMIDs or delivery claims exist.
+- **Meta/Hoja:** canonical GFS WABA only; no template mutation. Hoja Seeds remains isolated; new-number lock remains protected. No secrets or customer identifiers are stored in this registry.
+
+## GFS-288 Registry — 2026-10-28
+
+- **Identity/binding:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / Get Free Seeds account; canonical GFS Meta only. Active API D1 is staging UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; production-name D1 was not touched. Hoja isolation and new-number lock preserved.
+- **Frozen versions:** API `7b662e0d-38ad-4f23-80b2-5c54e4ca64e6` 100%; API rollback `8e670de8-4d89-427b-9fec-dad29dc33f3f` 0%; Admin `c2e87231-9d51-444e-b283-7ab18379280f` 100%. No version or traffic mutation in this incident run.
+- **Runtime evidence:** `/health` HTTP200; D1 incident-window aggregates were 25 inbound MESSAGE, 5 inbound INTERACTIVE, 5 sent-status, 1 delivered-status, 1 read-status, and 9 outbound READ. No correlated customer identity or WAMID is recorded.
+- **Reminder state:** flags true/true/false; five stages +15/+30/+60/+210/+240; internal Admin page shows all stages and no schedules/deliveries. No live reminder send is claimed. Meta activity showed historical creation entries for two reminder-named assets; approval/use is not inferred and assets were not mutated.
+- **Validation:** focused 102/102, full 310/310, build/lint PASS; audit blocked by advisory endpoint access; rollback4/4 blocked by missing `GFS_LEGACY_ROOT`. Release is frozen with genuine device acceptance pending.
+
+## GFS-287 Registry — 2026-10-28
+
+- **Identity:** GitHub repository/PR is `gardenshop/freeseeds` / #11; Cloudflare identity is `gisupp@gmail.com` in Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical GFS Meta only. No Hoja resource was accessed.
+- **Active versions:** API `7b662e0d-38ad-4f23-80b2-5c54e4ca64e6` at 100%, rollback API `8e670de8-4d89-427b-9fec-dad29dc33f3f` at 0%, Admin `c2e87231-9d51-444e-b283-7ab18379280f` unchanged. API is version-inspected with fetch/scheduled/queue handlers and the existing minute Cron/Queue topology.
+- **Bindings:** API D1 `getfreeseeds-staging` / `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, R2 `getfreeseeds-receipts-staging`, Queue `getfreeseeds-events-staging`. Production-name D1 `02b707df-a10c-4645-9516-a2a4541f6fab` was not touched.
+- **Flags/CMS:** reminder and automation flags true; utility-template approval false. Ten internal EN/UR copies are published; zero utility approvals. No Meta template mutation.
+- **Live aggregate:** 138 orders; 2 PAID; 47 COD; 13 receipt/REVIEW; 52 no-method; 26 broad Advance-pending shapes. Orders created since activation: 0. The broad categories overlap and contain no identifiers in this registry.
+- **Reminder evidence:** five stages configured, zero schedules/stages/reminder outbox jobs, zero WAMIDs and delivery events. Live acceptance is pending a genuine eligible new Advance order; no historical backfill or fabricated customer activity.
+- **Integrity:** markers 0037–0040, reminder/COD schema and triggers present; `quick_check=ok`; FK check empty. Focused 104/104, full 310/310, build, lint, offline audit 0 vulnerabilities, rollback4/4.
+
+## GFS-289 Restored Operational Baseline — 2026-10-28
+
+- **Cloudflare:** authenticated `gisupp@gmail.com` / Get Free Seeds. API `8e670de8-4d89-427b-9fec-dad29dc33f3f` 100%; faulty API `7b662e0d-38ad-4f23-80b2-5c54e4ca64e6` 0%; Admin `c2e87231-9d51-444e-b283-7ab18379280f` 100%.
+- **Bindings:** active D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, receipts R2 and events Queue unchanged. Migrations0039/0040 untouched. Production-name D1 and Hoja resources untouched.
+- **Incident:** old SQL failed live parsing with ambiguous `status`; 34 inbound events persisted in the fault window, only 4 replied before rollback, 3 replied after rollback, and 27 remain unreplayed. No customer identifiers are stored.
+- **Acceptance:** genuine post-rollback replies contain real provider WAMIDs; final post-push checkpoint 56 READ, 4 DELIVERED, 2 SENT. Conversations reached FULL_NAME and zero orders were created during acceptance. Raw IDs are intentionally omitted.
+- **Reminders:** PAUSED, flags false/false/false. Admin has five stages, 5 EN + 5 UR PUBLISHED, zero utility approvals; schedules/stages/jobs/outbound reminder rows 0/0/0/0.
+- **Source candidate:** commit `6bc4741`; qualified reconciliation SQL, Cron-only execution, customer-webhook isolation, deployment defaults OFF. Candidate undeployed; production remains on proven `8e670de8`.
+- **Quality:** focused 104/104, full 312/312, build/lint, online audit0, rollback4/4 using existing `D:\free seeds\gfs273-v1` at `cf01f44`.
+
+## GFS-298 Confirmation Candidate Registry (2026-10-28)
+
+- **Identity:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical GFS Meta only. Narrow Wrangler token used only user-read and Workers-scripts-write; Hoja was not accessed.
+- **API:** baseline `45b01d86` 100%; candidate `c4908cb5` 0%. Candidate preview health passed. Active D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, R2, Queue, Cron topology and migrations 0039/0040 unchanged.
+- **Admin:** validator candidate `f0212429` 100%; rollback `b4c45278` 0%. CMS published version 3 is compatible with baseline; validated version 4 is retained in draft.
+- **Flags:** reminder false/false/false and utility-template approval false. No schedules, sends, WAMIDs, delivery/read events, or historical replay were created by GFS-298.
+- **Acceptance:** no genuine new confirmation WAMID is claimed. The existing authorized browser session was not reset or reused for duplicate-order creation.
+## GFS-299 Payment Recovery Registry (2026-10-28)
+
+- **Production baseline:** API `45b01d86` 100%; GFS-298 API candidate 0%; Admin `f0212429` 100%. No GFS-299 deployment or traffic change.
+- **Bounded Admin evidence:** 184 active orders; 67 no-method; no raw customer identifiers, phone numbers, receipts, or WAMIDs recorded. Three detail samples expose only submission audit, so legacy payment-choice delivery is unresolved.
+- **Source candidate:** migration `0041_payment_choice_recovery.sql`; future `PAYMENT_CHOICE` order association; gated `WHATSAPP_PAYMENT_CHOICE_RECOVERY` queue. Migration is not live and `PAYMENT_CHOICE_RECOVERY_ENABLED` is false/unset.
+- **Reminders:** false/false/false; +15/+30/+60/+210/+240 retained; no templates, historical replay, recovery sends, or WAMIDs.
+- **Identity:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / Get Free Seeds account previously verified; canonical GFS Meta only; Hoja untouched.
+
+## GFS-301 Payment-choice recovery registry (2026-10-28)
+
+- **Live read-only checkpoint:** API `45b01d86` 100%, candidate `c4908cb5` 0%, API health HTTP200; authenticated Admin aggregate 192 active / 67 no-method. Exact customer identifiers and provider IDs are intentionally omitted.
+- **Source additions:** `migrations/0042_payment_choice_recovery_stages.sql`, `apps/api/src/payment-choice-recovery.ts`, API scheduled/Queue wiring, dynamic fallback copy, and recovery-off config.
+- **Local evidence:** 0042 applied in local D1 only; focused 89/89, full 317/317, build/lint PASS. No remote migration, deployment, CMS publish, flag change, Meta send, WAMID, payment, COD or billing mutation.
+- **Protected policy:** recovery stages are +15/+210 only; five Advance stages remain separate; 24-hour service window, no templates, no backfill, explicit PKR125 consent, new-number lock, and Hoja zero-connection remain mandatory.
+- **Next authority:** one supported owner approval for 0041/0042 remote apply, sends-off staging, guarded deployment, then a separate bounded recovery-send gate with genuine recipient evidence.
+
+## GFS-302 frozen release registry (2026-10-28)
+
+- **Identity/binding:** Cloudflare Get Free Seeds account / `gisupp@gmail.com`; verified API/Admin D1 binding `getfreeseeds-staging` UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; canonical GFS Meta only; Hoja isolated; no secrets or customer identifiers recorded.
+- **Baseline:** API `45b01d86` 100%; Admin `f0212429` 100%; rollback API `8e670de8` and Admin `b4c45278` retained. API minute Cron and Queue consumer attached.
+- **Candidate:** API `17598945-4601-4068-bf8c-9c3223cc8dd8` 0%; Admin `76e33a3d-e96a-4942-a4ec-31910c688c16` 0%; API preview health HTTP200. No candidate promotion claimed.
+- **D1:** 0041/0042 applied once after owner authorization; markers 0037–0042, recovery tables and four PUBLISHED EN/UR stage templates read back; `quick_check=ok`; FK check empty; recovery bookmark exists and was not created or exposed.
+- **Flags:** recovery false; five-stage reminder false; automation false; utility-template approval false; no activation start time; no schedules, sends, WAMIDs or delivery counts claimed.
+- **Policy:** +15/+210 recovery only for NEW post-activation eligible no-method orders; five Advance stages remain separate; 24-hour service-window only; permanent BLOCKED_WINDOW; no historical backfill, Meta templates or automatic COD conversion; PKR125 only after explicit COD consent.
+
+## GFS-306 active release registry (2026-10-29 PKT)
+
+- **Identity:** GitHub `gardenshop`; Cloudflare Get Free Seeds / `gisupp@gmail.com`; account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical GFS Meta only; Hoja untouched.
+- **API:** active `c1f43455-53fa-47c0-ae63-a32c37b8ee10` 100%; immediate sends-off rollback `3d018265-b38a-469e-82c1-4e4d48b0a4cb` 0%; frozen prior API `45b01d86-65ff-4573-b384-f6be433a83d7` retained.
+- **Admin:** active `76e33a3d-e96a-4942-a4ec-31910c688c16` 100%; rollback `f0212429-ead7-4653-aea9-2ef714c6b4b8` 0%. Orders/CMS/CSV are HTTP200; CSV remains 18 columns.
+- **Bindings:** D1 `getfreeseeds-staging` UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; existing receipts R2, events Queue and minute Cron unchanged. 0041/0042 present; integrity/FK clean.
+- **Flags:** payment-choice recovery true; start `2026-10-28T20:05:20.290Z`; Advance reminders false; Advance automation false; utility templates false.
+- **Observability:** Cloudflare stored Logs/Traces remain disabled. Privacy-safe D1 attribution is active; five candidate events included one handled inbound. Raw correlation hashes, provider IDs and customer data are omitted.
+- **Recovery counts at final checkpoint:** currently eligible 0; scheduled orders 2; stage rows 4; +15 SKIPPED/no-longer-eligible 2; +210 PENDING 2; outbox 0; recovery messages/WAMIDs 0; BLOCKED_WINDOW 0; historical stages 0. Live delivery acceptance PENDING.
+- **Public bot health after activation:** active version audit 372 completions / 115 handled events; ordinary replies with provider IDs were 84 READ, 25 DELIVERED and 1 SENT. No customer identifiers or raw WAMIDs are recorded here.
+
+## GFS-307 audit checkpoint (2026-10-29 PKT)
+
+- **Read-only identity:** GitHub `gardenshop`; Cloudflare Get Free Seeds / `gisupp@gmail.com`; canonical GFS Meta; Hoja isolated. No secrets, phone numbers, raw WAMIDs, or customer profile data recorded.
+- **Binding:** D1 `getfreeseeds-staging` UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; Queue `getfreeseeds-events-staging`; minute Cron present.
+- **Traffic reconciliation:** prior registry recorded Admin `76e33a3d` active, but current authenticated Cloudflare deployment view shows `f0212429` at 100% and `76e33a3d` at 0%. Treat Admin version as unresolved until reconciled; no traffic change was made.
+- **Flags:** recovery true from `2026-10-28T20:05:20.290Z`; five-stage reminders false; automation false; utility approval false.
+- **Audit:** two prior post-cutoff orders have +15 skipped after Advance selection and +210 pending before due recheck; the COD-confirmation order has no recovery stages. Recovery outbox/messages/WAMIDs are zero.
+- **Source-only correction:** Admin recovery status now excludes normal `PAYMENT_CHOICE`; timeline exposes stage due/reason/provider-presence without exposing provider IDs. Deployment is not claimed.
+
+## GFS-308 audited recovery checkpoint (2026-10-29 UTC)
+
+- **Live identity/versions:** Cloudflare `gisupp@gmail.com`, API `c1f43455` 100% with rollback `3d018265`; Admin `76e33a3d` 100% with rollback `f0212429`; D1 `getfreeseeds-staging` UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; minute Cron and Queue attached.
+- **Flags:** `PAYMENT_CHOICE_RECOVERY_ENABLED=true` from `2026-10-28T20:05:20.290Z`; `PAYMENT_REMINDERS_V2_ENABLED=false`; `PAYMENT_AUTOMATION_V2_ENABLED=false`; `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`.
+- **Audit:** 28 post-cutoff orders; 7 Advance-selected, 12 COD, 2 eligible no-method, 7 ineligible no-method. +15 has 12 scheduled, 2 eligible, 2 sent and 10 skipped. +210 has 12 scheduled, 2 eligible, 7 not-yet-due, 1 sent and 4 skipped. Three recovery provider IDs are present with READ/DELIVERED/SENT acknowledgement states; raw IDs are intentionally omitted.
+- **Integrity/quality:** D1 `quick_check=ok`, FK empty, recovery indexes present; full 320/320, build and lint pass. Source reconciliation fix is un-deployed; Admin live visibility remains pending guarded authorization.
+
+## GFS-309 deployed registry (2026-10-29 UTC)
+
+- **Versions:** API `b426ba47-1ead-4c4a-85ba-0a0b85d3e415` 100%, rollback `9af8991d-d17c-4d3f-806f-7f6642849b7b` 0%; Admin `494a3dce-5d52-4b66-b3ff-bef64b31b406` 100%, rollback `76e33a3d-e96a-4942-a4ec-31910c688c16` 0%.
+- **Flags:** recovery true from `2026-10-28T20:05:20.290Z`; five-stage Advance, automation and utility-template approval false. D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, minute Cron and Queue unchanged.
+- **Reconciliation:** Cron-only recovery status update is live. Existing provider-backed stages are READ, DELIVERED and SENT with no failure or downgrade. Raw WAMIDs/customer data are not recorded.
+- **Evidence boundary:** Admin is deployed, but authenticated Access/Chrome UI readback was unavailable; no screenshot or UI success is claimed. Public ordering remains GO.
+
+## GFS-311 acceptance registry (2026-10-29 UTC)
+
+- **Frozen release:** API `b426ba47` 100% / `9af8991d` rollback; Admin `494a3dce` 100% / `76e33a3d` rollback. Recovery ON; Advance five-stage, automation and utility-template flags OFF.
+- **Current audit:** 32 post-cutoff orders: 8 Advance, 14 COD, 10 no-method ineligible, zero eligible. +15 recipients 3 with READ 1/DELIVERED 2; +210 recipients 2 with SENT 1/DELIVERED 1.
+- **Conversion:** +15 0/3 selected/receipt/paid and +210 0/2; all remain no-method/PENDING. No causal conversion claim; raw WAMIDs and customer data omitted.
+- **Admin evidence:** live `/orders`, `/payment-reminders`, and API routes are Access-protected; authenticated visual readback remains pending.
+
+## GFS-310 frozen registry (2026-10-29 UTC)
+
+- **Frozen traffic:** API `b426ba47-1ead-4c4a-85ba-0a0b85d3e415` 100%, rollback `9af8991d-d17c-4d3f-806f-7f6642849b7b` 0%; Admin `494a3dce-5d52-4b66-b3ff-bef64b31b406` 100%, rollback `76e33a3d-e96a-4942-a4ec-31910c688c16` 0%.
+- **Current D1:** 29 post-cutoff orders; 7 Advance, 13 COD, 9 no-method ineligible, 0 eligible/PAID/REVIEW/held. +15 READ 1, DELIVERED 1, SKIPPED 10; +210 SENT 1, PENDING 4, SKIPPED 7.
+- **Flags:** recovery true from `2026-10-28T20:05:20.290Z`; five-stage, automation and utility-template flags false. D1 quick/FK clean; Cron/Queue unchanged.
+- **Evidence boundary:** D1/provider truth is verified; authenticated Admin visual evidence is PENDING because Chrome DevTools MCP/Access session was unavailable. No raw WAMIDs or customer data stored.
+- **GFS-312 checkpoint (2026-10-29):** Frozen API `b426ba47` 100% / rollback `9af8991d`; Admin `494a3dce` 100% / rollback `76e33a3d`; D1 `getfreeseeds-staging` UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; recovery true from `2026-10-28T20:05:20.290Z`; five-stage Advance, automation, and utility-template flags false. Bounded evidence: 32 post-cutoff orders (8 Advance, 14 COD, 10 no-method/ineligible), five recovery recipients, +15 READ1/DELIVERED2, +210 SENT1/DELIVERED1, observed conversion 0/3 and 0/2. Raw WAMIDs, phone numbers, customer text, and identifiers are intentionally omitted.
+- **Evidence boundary:** Admin routes are Access-protected and Chrome DevTools MCP was unavailable. Wrangler identity is `gisupp@gmail.com`, but the available OAuth token lacks `d1` and Cloudflare returned API 10000; no unsupported refresh or mutation was attempted. Recovery source/focused callback coverage remains verified; no technical defect or live Admin display defect is proven.
+- **GFS-313 checkpoint (2026-10-29):** API `b426ba47` 100% / rollback `9af8991d`; Admin `494a3dce` 100% / rollback `76e33a3d`; GFS Cloudflare identity `gisupp@gmail.com`; D1 binding remains `17b7e9f6…`; no traffic or flag mutation. Trusted local rollback root `D:\free seeds\gfs273-v1` is clean at `cf01f444`; rollback4/4 PASS. Focused recovery/interactive suites 109/109 PASS.
+- **Access boundary:** no Chrome DevTools MCP connector is available; Admin visual evidence remains pending. Wrangler OAuth lacks `d1` scope and D1 API returns 10000; exact live scheduler-join classification is pending owner-supported least-privilege reauthentication. No credentials, customer data, raw WAMIDs, or screenshots recorded.
+- **GFS-314 checkpoint (2026-10-29):** API `b426ba47`/Admin `494a3dce` remain 100%; rollbacks `9af8991d`/`76e33a3d`; GFS identity remains `gisupp@gmail.com`; no traffic or flag change. One supported Wrangler login timed out; token scopes remain insufficient for D1. No Chrome DevTools/Access connector is available.
+- **Quality:** clean V1 root `D:\free seeds\gfs273-v1` at `cf01f444`; rollback4/4 PASS; full321/321, build, lint, offline audit0 PASS. Exact live D1 no-method reasons and Admin visual evidence remain pending owner-supported access.
+- **GFS-315 live D1 checkpoint (2026-10-29):** Official Wrangler `gisupp@gmail.com` / Get Free Seeds access has D1 scope. Active API `b426ba47` and Admin `494a3dce` remain 100%; rollbacks unchanged; D1 `17b7e9f6…` returned quick_check ok and FK empty. Current 44-order audit: 9 Advance, 15 COD, 2 receipt/review, 7 eligible no-method, 11 ineligible; method-null reasons 15 `COD_PENDING` / 11 `COD_CONFIRM` / 7 eligible. Recovery stages: +15 DELIVERED3/READ4/PENDING1/SKIPPED15; +210 DELIVERED1/READ1/PENDING11/SKIPPED10; no overdue eligible no-send. Four recovery templates published; no opt-outs.
+- **Admin evidence:** visual verification remains pending because no Chrome DevTools MCP or authenticated Cloudflare Access browser session is connected. No screenshot or UI status was recorded.
+# GFS-340 verified resources and measurements (2026-10-30)
+
+- **Cloudflare identity:** `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no Hoja/ThanNow access.
+- **Workers:** API `b426ba47`100% / `6ef27f02`0% / rollback `9af8991d`; Admin `494a3dce`100% / GFS-340 candidate `c7e984d1-74a8-47d8-9277-fd7c8b41e329`0% / rollback `76e33a3d` retained. Deployment `6e1a3016-a4d1-4674-be82-0f4109603ccd`.
+- **D1:** `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; migration0043 marker and ten indexes verified; `quick_check=ok`, FK empty; migration0044 remains local/unapplied.
+- **Read-only measurements:** today events2059/24692 rows/10.5666ms, contacts368/2004/1.4008ms, orders53/347/0.5633ms; 7d events11081/24692/12.0104ms, contacts1822/2004/1.1254ms, orders303/347/0.4167ms; 31d events24677 rows. No identifiers or raw payloads recorded.
+- **Source/test:** commit `14c310c` contains semantic fixes and real SQL fixtures; full330/330, focused4/4, build/lint/audit0, rollback4/4.
+## GFS-343 verified release resources (2026-10-30 UTC)
+
+- **Identity:** GitHub `gardenshop` push verified; Cloudflare `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical GFS Meta only; Hoja/ThanNow isolated.
+- **Workers:** API `b426ba47` 100% / `6ef27f02` 0%; Admin `494a3dce` 100% / `19188b21` 0% after verified fail-closed restoration; rollback versions remain available.
+- **Release tooling:** remote SHA `10527d589ad8c5545a4a50be3c2704b951a0ce47`; controller logs contain no secrets or customer data.
+- **D1:** binding `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; migration0043 retained; 0044/0045 unapplied. Candidate analytics sample was 108,667 rows_read across six query shapes; not a daily-savings claim.
+- **Flags/policy:** +15/+210 recovery ON; five-stage Advance reminders, Automation V2, and utility templates OFF; no customer send or payment/Meta mutation.
+## GFS-344 verified controller resources (2026-10-30 UTC)
+
+- Identity: GitHub gardenshop; Cloudflare gisupp@gmail.com / account cb5066a6d71ecdee0bd7ed8aacb4d3c2; canonical GFS Meta only; Hoja/ThanNow isolated.
+- Source: controller/adapter/observability repair commit bd8e59e, remote-verified on PR #11.
+- Workers: API b426ba47 100% / 6ef27f02 0%; Admin 494a3dce 100% / 19188b21 0%; no mutation in GFS-344.
+- Monitoring: GraphQL 10-minute sample API94/0 errors, Admin22/0 errors, GraphQL errors0; API HTTP200; host Admin HTTP302; authenticated Chrome Admin health200.
+- Policy: +15/+210 recovery ON; five-stage Advance, Automation V2 and utility templates OFF; migration0043 retained; 0044/0045 unapplied.
+
+## GFS-345 verified decline-audit resources (2026-10-30 UTC / PKT)
+
+- **Identities:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / Get Free Seeds; canonical GFS Meta Ads Manager read-only session; Hoja/ThanNow isolated.
+- **Workers:** API `b426ba47` 100% / `6ef27f02` 0%; Admin `494a3dce` 100% / `19188b21` 0%; no GFS-345 deployment or traffic mutation.
+- **D1:** UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; migration0043 marker and ten indexes; quick-check ok; FK empty; 0044/0045 unapplied.
+- **Measured:** first abnormal interval 17:30Z/22:30 PKT; main/late inbound and orders 874/30 then 90/2 on 30-Oct; prior-seven-day exact-window aggregate 1,727/43 then 282/10. No sender IDs, raw payloads, or customer data recorded.
+- **Telemetry/policy:** Cloudflare API 3,131/0 and 401/0 errors; Admin 155/0 and 155/0; GraphQL errors0; Admin/D1 full-date parity68/68. +15/+210 ON; five-stage Advance, Automation V2, utility templates OFF; no new Admin canary.
+
+## GFS-346 verified resources (2026-10-31 UTC)
+
+- **Identities:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta Ads Manager account `1198439777611633` / business `568026370701542`; Hoja/ThanNow isolated.
+- **Workers:** API `b426ba47` 100% / `6ef27f02` 0%; Admin `494a3dce` 100% / `19188b21` 0%; no mutation.
+- **Meta evidence:** 30-Oct hourly report uses advertiser-account-time-zone breakdown; displayed 22:00-23:00 row 581 impressions / Rs30.46 / 28 clicks / 24 conversations. Date control displayed Etc/UTC; account timezone value unavailable.
+- **Monitoring:** API host HTTP200; Admin host HTTP302 Access; authenticated Chrome Admin HTTP200; GraphQL API28/0 and Admin9/0. Host-side Admin monitor remains unsupported.
+- **D1/policy:** read-only bounded counts only; no writes. +15/+210 ON; five-stage Advance, Automation V2 and utility templates OFF; migration0043 retained; 0044/0045 unapplied.
+
+## GFS-347 verified resources (2026-10-31 UTC)
+
+- **Identity:** GitHub `gardenshop`; Cloudflare `gisupp@gmail.com` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta account `1198439777611633`; Hoja/ThanNow isolated.
+- **Workers:** API `b426ba47`100% / `6ef27f02`0%; Admin `494a3dce`100% / `19188b21`0%; no traffic mutation.
+- **Access blocker:** host Admin HTTP302; authenticated Chrome HTTP200; no Access environment binding; Admin Worker secret names only `FLOW_PUBLIC_KEY` and `META_ACCESS_TOKEN`. Do not record secret values.
+- **Meta:** account overview `creeper seeds (1198439777611633)`, one active campaign; authoritative account timezone unavailable; attribution remains PARTIAL.
+- **Release:** canary not run; controller/adapter/observability prior evidence remains PASS; migration0043 retained and 0044/0045 unapplied.
+
+- **GFS-348 Access:** staging Admin app `ea91b1bf-02c1-46d3-921a-ea2f507fb150`; policy `b3acdd4f-9767-4d28-a55d-0a8e771d476c`; destinations `getfreeseeds-admin-staging` and `getfreeseeds-v2-admin-staging`; owner-email allow rule only. No secret values recorded.
+- **Release:** automated host health remains blocked by Cloudflare Access (302 without Access, browser 200). No service credential was created and no canary/traffic/configuration mutation occurred. Dependency is an owner-provisioned least-privilege Access credential in approved host storage or supported authenticated Windows bridge.
+
+- **GFS-349 Access:** identity checks passed, but the execution context exposes no official Chrome DevTools/Zero Trust management connector and Wrangler OAuth lacks Access-management scope. No service credential or policy change was attempted.
+- **Release:** host health remains 302 without Access; Admin canary was not run. Exact dependency is one owner-provisioned short-lived least-privilege Access Service Auth credential in approved host secret storage.
+
+- **GFS-350 readback:** remote PR HEAD `d952611dcb584cd13e13616a118ddc5285af4bc4`; Admin `494a3dce`100% / `19188b21`0%; API `b426ba47`100% / candidate0%. No traffic mutation.
+- **Access dependency:** official Zero Trust/Chrome DevTools capability and Wrangler Access-management scope are unavailable; no credential was created or recorded. Canary remains blocked.
+
+- **GFS-351 capability:** MCP registry has no Cloudflare Zero Trust/Chrome DevTools connector. A relevant browser connector is available only as unconnected discovery; no credentials or account data were accessed.
+- **Permission dependency:** Access Service Tokens Write and Apps/Policies Write remain unavailable/unverified. Required scope is least-privilege staging `/health` monitoring only.
+
+- **GFS-364 verified Access resources:** application `GFS-Admin-Health-Monitoring` targets only `getfreeseeds-admin-staging.get-free-seeds.workers.dev/health`; attached policy is existing `GFS-Admin-Health-Monitor` Service Auth; existing token is enabled. No Client ID/Secret value is recorded.
+- **GFS-364 Worker state:** Admin repair version `7e0b0549-ceaa-4b67-83cb-4e96a41c6bee` is deployed at0% with baseline `494a3dce-5d52-4b66-b3ff-bef64b31b406`100%; API remains `b426ba47`100%. Candidate canary remains0% and was not run.
+## GFS-365 verified release resources
+
+- **Combined Admin candidate:** `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`, current Analytics + Conversations + Service Auth health repair, staged0%.
+- **Frozen routing:** Admin baseline `494a3dce`100%; API `b426ba47`100%; canary candidate0%. No active Access secret values recorded.
+- **Rollback source:** `D:\free seeds\gfs273-v1`, detached clean baseline `cf01f444500415b1f22a64730674caca1c286006`; local rollback4/4.
+## GFS-366 canary evidence
+
+- Approved candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec` remains staged0%; baseline Admin `494a3dce`100%; API `b426ba47`100%.
+- Controller result: `initial_readback_failed` / `health_unknown` before exposure. No secret, customer, payment, Meta, D1, Queue, Cron, or flag values were recorded or changed.
+## GFS-367 baseline monitor evidence
+
+- **Baseline:** Admin `494a3dce` version-pinned health returned HTTP403 / `ADMIN_ACCESS_REQUIRED` under the existing Service Auth credential.
+- **Candidate:** `4fe564a6-bcd7-4106-82ee-00f7b14c4bec` remains0%; no new candidate or credential created.
+- **Frozen routing:** API `b426ba47`100%, Admin `494a3dce`100%. No secrets or customer data recorded.
+
+## GFS-368 WhatsApp incident evidence
+
+- **Identity/freeze:** HEAD `87866a5dd0a763c9e9915d968a07f30c59dc1bad`; GitHub `gardenshop`; Cloudflare `gisupp@gmail.com`; canonical Meta account `1198439777611633`; API `b426ba47`100%, Admin `494a3dce`100%, candidates0%.
+- **D1 read-only:** binding `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; incident aggregates returned 103 inbound events, 32 contact snapshots, one order, and no webhook-rejection audit rows. D1 active399 / total400 including one archived; latest order timestamp14:17:21 PKT; no identifiers or payloads retained.
+- **Admin read-only:** authenticated `/api/orders` HTTP200, total399 and latest-created timestamp14:17:21 PKT, matching D1 active data. No broad customer snapshot taken.
+- **Runtime:** candidate override security check health200×3, invalid/missing403, restricted paths denied, GraphQL API/Admin errors0; production routing frozen. Baseline Admin `/health` remains GFS-367's legacy incompatibility.
+- **Meta:** canonical Ads Manager page read-only and date-aligned to 31-Oct-2026; requested hourly delivery metrics/timezone unavailable. No ad or WhatsApp mutation.
+- **Disposition:** complete stop disproven; causal classification E/INCONCLUSIVE; no repair, replay, send, payment, migration, flag, Queue, Cron, or canary action.
+
+## GFS-369 Admin health bridge resources
+
+- **Identity at upload:** `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; GitHub `gardenshop`; canonical Meta account `1198439777611633` unchanged.
+- **Health-only bridge:** Worker `getfreeseeds-admin-staging`, version `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1`, version108, tag `gfs369-admin-health-bridge`, script etag `ae646a...`; source baseline `901f3f6` plus the narrow health patch. Uploaded only; no active deployment membership or traffic.
+- **Current Admin deployment:** `5587e875-9eb7-4379-874f-fa46e6a1587c`, `494a3dce`100% + `4fe564a6`0%. Current API deployment remains `b426ba47`100% + candidate0%.
+- **Rejected bridge candidate:** `7e0b0549` has script etag `389010...`, equal to combined candidate `4fe564a6`; not a minimal repair.
+- **Local bridge worktree:** `D:\free seeds\gfs369-health-bridge`, detached at `901f3f6` with only Admin authorization source/test changes. No secret values stored.
+- **Approval dependency:** attach `3bbf5cf6` at0% beside `494a3dce`100% for production-host override testing; current combined candidate remains uploaded but must temporarily leave the two-version deployment. No traffic impact is authorized yet.
+
+## GFS-370 verified bridge resources
+
+- **Temporary deployment:** `f99ec808-48c7-4f60-ab83-de535749034e`, `494a3dce`100% + `3bbf5cf6`0%, author `gisupp@gmail.com`.
+- **Restored deployment:** `ef31f177-d0ef-446e-93c8-2b39d244b50b`, `494a3dce`100% + `4fe564a6`0%. API deployment remains `10f43f2e-9c95-4fd2-8bfc-99ccd890fee1`, `b426ba47`100% + `6ef27f02`0%.
+- **Live acceptance:** bridge health200 x3; missing/invalid403; protected paths denied; human Orders page200; API/Admin GraphQL errors0. No credential value was recorded.
+- **D1 aggregate readback:** binding `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; total402/active401, latest order16:17:15 PKT, latest inbound16:18:35 PKT; changed_db=false and rows_written=0.
+- **Next dependency:** explicit baseline-replacement approval for bridge100% + combined candidate0%; no canary authorization exists.
+
+## GFS-371 active Admin baseline resources
+
+- **Admin deployment:** `5587e7cb-3546-4ac0-834f-b0484f78574d`; bridge `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1`100%, candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`0%.
+- **API deployment:** `10f43f2e-9c95-4fd2-8bfc-99ccd890fee1`; `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100%, candidate0%.
+- **Emergency rollback:** legacy Admin `494a3dce-5d52-4b66-b3ff-bef64b31b406`100% + combined candidate0%. Watchdog validated executable; not invoked.
+- **Runtime evidence:** health200 x3; missing/invalid403; protected Service Auth paths denied; human Orders/payment settings200; GraphQL API/Admin errors0; no credential values recorded.
+- **Aggregate integrity:** D1 total402/active401; Admin active401; review13, approved2, COD pending198; COD details198 at PKR125; inbound latest16:28:37 PKT; no Admin audit write or D1 query write.
+
+## GFS-372 canary resources
+
+- **Canary deployment:** `3deb6d44-01c5-41f1-bd6d-973df6874d2c`, bridge90% + candidate10%, created11:44:52Z.
+- **Restored deployment:** `e907d94f-45e0-4f59-98dc-2f1fb3f7a685`, bridge100% + candidate0%; API deployment `10f43f2e…` remains baseline100%.
+- **Read-only evidence:** candidate-only Analytics3/20 and Conversations2/20 HTTP200; Orders/payment settings20/20 HTTP200; health/security and GraphQL errors0. No secrets or customer payloads recorded.
+- **Post-canary aggregate:** D1 total404/active403; Admin403; review13, approved2, COD199; COD fee PKR125; inbound413, latest16:44:37 PKT; no failed recovery stage.
+- **Disposition:** restoration PASS; customer-flow acceptance INCONCLUSIVE because the candidate evidence came from controlled monitoring, not attributable customer traffic.
+
+## GFS-373 operator acceptance resources
+
+- **Exact candidate:** `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`; targeted at0% through the structured Cloudflare version-override header in the authorized Admin browser session. No deployment membership or traffic changed.
+- **Frozen serving state:** Admin bridge `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1`100% / candidate0%; API baseline `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100%. Existing restoration readback remains `e907d94f-45e0-4f59-98dc-2f1fb3f7a685`.
+- **Operator evidence:** candidate Analytics/Conversations/Orders/Payment Settings and read-only APIs succeeded; candidate-only Analytics/Conversations without override returned404 on the bridge. CSV shape, masked conversation references, responsive layouts, latency and zero-write behavior were recorded only as aggregates/booleans.
+- **Evidence boundary:** current fresh D1 query and Cloudflare control-plane account readback are unavailable because Wrangler OAuth expired/unreachable. No secret, customer identifier, message body, receipt, cookie or token was recorded.
+
+## GFS-374 staged-promotion gate
+
+- **Identity/readback:** fresh Wrangler identity `gisupp@gmail.com` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; HEAD `fb04d8a`; Admin current `3bbf5cf6`100% + `4fe564a6`0%; API `b426ba47`100% + candidate0%.
+- **Compatibility blocker:** bridge candidate-only Analytics/Conversations requests return404; exact candidate override returns200. `wrangler versions deploy --help` exposes percentage version specs only; no session-affinity/path-routing option was available.
+- **Disposition:** Approval G not consumed; no deployment or watchdog was started. Minimum correction approval is required before staged exposure. No secrets or customer data recorded.
+
+## GFS-375 direct Admin release resources
+
+- **Deployment:** `a98d5e55-3d95-4f9a-b687-ffbc617fd4d1`; candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`100%, bridge `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1`0%; API deployment `10f43f2e-9c95-4fd2-8bfc-99ccd890fee1` remains `b426ba47`100% / candidate0%.
+- **Watchdog:** detached Windows process armed before cutover with five-minute deadline and rollback target bridge100%/candidate0%; final result `disarmed` after verified readback. No rollback was invoked.
+- **Acceptance:** monitoring health200, invalid403, protected routes302, GraphQL45/0; browser Analytics/CSV/Conversations/Orders/Payment Settings200; D1 total405/active404, review13, approved2, COD pending199, fee125 count199, changed_db=false, rows_written0.
+- **WhatsApp/recovery:** bounded inbound statuses were RECEIVED/sent/delivered/read; recovery FAILED0; +15/+210 aggregate rows remained present. No payloads, identifiers, secrets or customer data recorded.
+
+## GFS-376 API acknowledgement release resources
+
+- **Serving state:** API deployment `10f43f2e-9c95-4fd2-8bfc-99ccd890fee1` is `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100% + `6ef27f02-23ac-46c0-a291-157e246a8dbc`0%; Admin deployment `a98d5e55-3d95-4f9a-b687-ffbc617fd4d1` is `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`100% + `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1`0%.
+- **Rejected upload:** API version118 `b0e883cd-16b8-4f8e-8fd8-c12bd46c4428`; 27 binding definitions equal the serving API, but runtime source lacks GFS-309 Cron recovery reconciliation. Keep uploaded but do not attach or delete without approval.
+- **Local replacement:** `D:\free seeds\gfs338-api-candidate`, base `901f3f6fbde01adc8ef48b13f70eebdeba5baa4f`; exact runtime union `bb52f1d` + `b9d52c4`; source git blob `be9789a2c5223326c2b6d0af6442a46436aba9fd`; SHA-256 `462e6f6ecc70d592ce7da38e7df2ce6f8c03e2628776436ff7693dcbdfde4c50`; config unchanged.
+- **Quality:** replacement focused6/6, full324/324, build/lint/audit0; main PR focused7/7, full336/336, build/lint/audit0; controller17/17, adapter6/6, observability4/4, rollback4/4.
+- **Approval boundary:** replacement is local-only and has no Cloudflare version ID. Upload, assigned-version readback, 0% attachment and1% canary are all pending explicit authorization. No secrets or customer data recorded.
+
+## GFS-377 Admin desktop resources
+
+- **Source:** `apps/admin/src/index.ts` root route now renders a static responsive Admin home; no new external dependency, binding, secret, permission, or data source.
+- **Test:** `tests/admin-controls.test.ts` includes responsive/privacy-safe home assertions; focused3/3 and full337/337 passed.
+- **Browser evidence:** authorized live page3 checked Orders, Analytics, Conversations, and Payment Settings at 1440x900, 1280x800, 768x1024, and 390x844 emulations; no horizontal overflow or console errors. No customer data was recorded.
+- **Deployment state:** Admin `4fe564a6`100% / bridge `3bbf5cf6`0%; API `b426ba47`100% / old slot `6ef27f02`0%. New root is not deployed; no Cloudflare version ID exists for this source change.
+- **Limit:** local Wrangler preview was not reachable long enough for an after-deployment screenshot. Do not treat the live pre-change root or failed local preview as new-home production evidence.
+
+## GFS-378 Admin Orders resources
+
+- **Live diagnosis:** authorized Chrome page3 at 1675x900; first Orders card472.5px, workspace3509px, body/client widths matched, no horizontal overflow or console errors.
+- **Refresh evidence:** `/api/orders/changes` returned HTTP200 after authorized Refresh; no customer/order fields were recorded.
+- **Source:** `apps/admin/src/index.ts` professional Orders page now has 1700px shell, viewport-bounded workspace, flex/scroll list, content-sized cards, mobile cap, and guarded visible Refresh feedback.
+- **Tests:** `tests/admin-controls.test.ts`; focused Admin PASS, full338/338, build/lint/audit0. No new dependency, binding, secret, permission, or production resource.
+- **Deployment:** Admin `4fe564a6`100% / bridge `3bbf5cf6`0%; API `b426ba47`100%. Source is not deployed; live post-fix visual acceptance and screenshot remain pending approval.
+
+## GFS-379 Admin UI release resources (2026-10-31)
+
+- Admin active: `72cff93f-d589-4046-9bce-45477f53f829`100%; rollback: `4fe564a6-bcd7-4106-82ee-00f7b14c4bec`0%.
+- API unchanged: `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100%; old slot `6ef27f02-23ac-46c0-a291-157e246a8dbc`0%.
+- Deployment evidence: Cloudflare deployment `95f3ec12-1e5b-4891-850e-b42932f4ad43`; Wrangler identity `gisupp@gmail.com` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- Protection: detached five-minute watchdog was armed before cutover and disarmed after independent readback. No credential value, cookie, customer field, or screenshot is registered here.
+
+## GFS-380 browser evidence (2026-10-31)
+
+- Clean authorized Chrome tab after emulation reset: CSS `innerWidth`1920, four 300px module columns,1320px shell, footer reachable.
+- Compensated viewport evidence: CSS widths1920/1675/1440/1280/768/390/360/320 produced4/4/4/4/2/1/1/1 homepage columns; twelve modules and footer remained reachable.
+- No screenshot or customer data is registered. Chrome rejected a full live accessibility snapshot as potentially customer-bearing; sanitized DOM measurements were used.
+- No source version, deployment, secret, binding, API, WhatsApp, Meta, payment, D1, migration, Queue, Cron, or flag resource changed.
+
+## GFS-381 Analytics source resource (2026-10-31)
+
+- Source: `apps/admin/src/index.ts` Analytics page only; existing `/api/analytics` and CSV paths unchanged.
+- Test coverage: `tests/admin-controls.test.ts`; focused16/16 and full339/339, build/lint/audit0.
+- Deployment: no Cloudflare version created. Future Admin version must retain rollback `72cff93f-d589-4046-9bce-45477f53f829`100% / candidate0%; API `b426ba47` remains100%.
+- No secret, customer field, screenshot, credential, binding, or production resource was added.
+
+## GFS-382 Admin mobile deployment (2026-10-31)
+
+- Admin source HEAD: `7ab2addfc2d9722ec4a7351d18daad2b81e76084`; uploaded version `ceb3e680-96f6-4218-b5a5-cadfca20a629`; serving 100%; rollback `72cff93f-d589-4046-9bce-45477f53f829` 0%.
+- API resource unchanged: `b426ba47-1ead-4c4a-85ba-0a0b85d3e415` 100%; old slot 0%. No API candidate or secret resource changed.
+- Evidence is sanitized aggregate DOM/HTTP status only. No customer fields, cookies, tokens, screenshots, or credential values were registered.
+- Watchdog was armed before cutover and stopped after readback. Protected WhatsApp, Meta, payment, D1, migration, flag, Queue, and Cron resources were unchanged.
+
+## GFS-383 API repair release test (2026-10-31)
+
+- Candidate artifact source SHA256: `462e6f6ecc70d592ce7da38e7df2ce6f8c03e2628776436ff7693dcbdfde4c50`; Cloudflare version `d603f077-cc44-4882-af9b-9985adb53424`; no unsafe `b0e883cd` use.
+- API deployment readback: `b426ba47`100% / `d603f077`0%. Admin resource unchanged at `ceb3e680`100% / `72cff93f`0%.
+- Version metadata verified existing D1 `17b7e9f6...`, R2, Queue producer/consumer, Cron handler, flags, and secret names; secret values were never read or recorded.
+- Canary controller output was allowlisted only. Candidate routing was observed; monitoring/readback failed closed and restoration was verified. No customer event, WAMID, payload, order, payment, or private field was registered.
+
+## GFS-384 monitoring repair (2026-10-31)
+
+- Changed source resources: `scripts/cloudflare-canary-adapter.mjs` and its isolated test. The API candidate artifact/version and bindings were not changed.
+- Repair contract: one 250 ms retry of the complete routing + HTTP health + GraphQL metrics read; no cached result; abort/unknown-version/persistent failure remains fail-closed.
+- Evidence resource: historical interval query bounded the failure to a transient API GraphQL metrics read; original controller log was not retained, so exact exception text remains unavailable.
+- Runtime resources unchanged: API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. D1 aggregate query reported `changed_db=false`, `rows_written=0`; no secrets/customer fields registered.
+
+## GFS-387 Orders network resilience (2026-10-31)
+
+- Changed source resource: `apps/admin/src/index.ts` only, plus focused assertion in `tests/admin-controls.test.ts`; no backend or deployment resource changed.
+- Sanitized live resource evidence: authorized Admin Orders page returned HTTP200 for `/api/orders`, detail, `/api/orders/changes`, Refresh, and reload; no customer fields, cookies, tokens, screenshots, or credential values registered.
+- Runtime resources unchanged: API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. D1 aggregate read had `changed_db=false`, `rows_written=0`.
+- Protected protocols retained: no deployment, API canary, customer message, order/payment write, Meta, migration, flag, Queue, Cron, or WhatsApp mutation; GFS-386 API release remains blocked.
+
+## GFS-388 Admin auto-refresh and Conversations dashboard (2026-10-31)
+
+- Changed source resources: `apps/admin/src/conversations.ts`, new `apps/admin/src/conversations-dashboard.ts`, `apps/admin/src/index.ts`, and `tests/admin-conversations.test.ts`. No migration or Worker/WhatsApp API source changed.
+- New read-only endpoint: `/api/conversations/summary`; aggregate fields are total, activeLast24Hours, paymentReviewPending, codPending, asOf, and queryCosts. No identifiers or message bodies are returned.
+- Browser resource evidence is synthetic/local only; no customer data, cookies, tokens, secrets, screenshots, or credential values were registered. Remote preview was blocked by missing `cloudflared` Access integration.
+- Runtime resources unchanged: API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%; no D1 writes, deployment, customer message, payment, Meta, migration, flag, Queue, or Cron mutation.
+
+## GFS-389 D1-safe Admin auto-update controls (2026-10-31)
+
+- Changed source resources: `apps/admin/src/index.ts`, `apps/admin/src/conversations-dashboard.ts`, `tests/admin-controls.test.ts`, and `tests/admin-conversations.test.ts`. No API/WhatsApp source, migration, binding, secret, or Worker deployment resource changed.
+- Browser storage keys are `gfs_admin_orders_auto_update` and `gfs_admin_conversations_auto_update`; values are only `on`/`off`. No credentials, customer identifiers, raw message bodies, cookies, or private screenshots were recorded.
+- Read-only D1 evidence: summary query rows read 2,484/2,484/48/848; conversation count/list 2,869/5,355; Orders no-change/cursor 7/31; every probe wrote0 and changed_db=false.
+- Runtime resources unchanged: API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. Live source acceptance remains blocked by unavailable `cloudflared` for the Access-protected remote preview.
+
+## GFS-390 Approval M Admin live validation (2026-10-31)
+
+- Uploaded Admin version `ab5be96b-d5fa-42d5-8f5c-1b0bf536bbf2` from verified HEAD `3a0ee3b`; deployment `04269792-f8ef-4573-a4b4-bc273e999a10` attaches it at0% beside `ceb3e680`100%. API resource remains `b426ba47`100% / `d603f077`0%.
+- Read-only browser/monitor evidence: authenticated health200 x3, denied403/302 security checks, GraphQL errors0, real Orders/Conversations data, manual Refresh, Auto OFF default and local preference persistence. No customer-bearing DOM/screenshot/log or secret was registered.
+
+## GFS-391 D1 cost gate and Admin release hold (2026-10-31)
+
+- Read-only evidence resources: Cloudflare Workers Paid plan page; D1 metrics for staging database `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; Wrangler D1 database inventory; bounded EXPLAIN plans. No secret, customer identifier, raw message, cookie or payment reference was registered.
+- Verified plan values: 5,000,000 D1 rows read/day and 100,000 rows written/day included; paid overage pricing displayed by Cloudflare. Staging UI values: 209k queries, 20.77M rows read, 317.81k rows written, 52.36MB, 47 tables in the displayed last24h interval.
+- Source/runtime resources unchanged by GFS-391. Existing auto-update controls remain OFF by default with hidden pause, overlap protection, stale-safe retention, five-minute automatic summary cap and manual refresh. No index/migration resource was created.
+- Runtime remains Admin `ceb3e680`100% / `ab5be96b`0% and API `b426ba47`100% / `d603f077`0%. Other account DB historical usage is UNKNOWN; conflicting Wrangler `num_tables=0` metadata is not registered as proof of emptiness.
+- Candidate D1 cost metadata: Conversations list10,439 rows, summary5,873 rows, Orders changes equivalent9,042 rows; writes0 and `changed_db=false`. Budget threshold is not registered; no cutover approval is claimed.
+- Harness repair: `scripts/test-gfs-monitoring.mjs` now accepts `GFS_ADMIN_BASELINE_VERSION` with the retired baseline as default, allowing current baseline readback without changing production behavior.
+
+## GFS-392 Admin source and verification resources (2026-11-01)
+
+- Source resources changed: `apps/admin/src/index.ts`, `apps/admin/src/conversations-dashboard.ts`; test resources: `tests/admin-controls.test.ts`, `tests/admin-orders.test.ts`, `tests/admin-conversations.test.ts`.
+- Protected data resource: existing customer `whatsapp_username` column only; no new capture source, IP field, secret, cookie, raw message, order identifier or screenshot was registered.
+- Verification resources: focused30/30, full341/341, TypeScript build, ESLint, canary deadline18/18, adapter8/8, observability5/5. npm audit registry/log failure and missing `GFS_LEGACY_ROOT` are registered as blockers, not passes.
+- Cloudflare read-only resources: Workers Paid UI (5M included D1 rows read/day; owner25B monthly claim unverified) and staging D1 UI (approximately20.79M rows read,318.5k written in displayed last24h). No Cloudflare mutation resource was created or used.
+- Frozen release resources: Admin `ceb3e680`100% with candidate `ab5be96b`0%; API `b426ba47`100% with candidate `d603f077`0%. No watchdog or deployment was executed.

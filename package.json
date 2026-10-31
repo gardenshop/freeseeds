@@ -5,6 +5,12 @@
   "scripts": {
     "build": "tsc --noEmit",
     "test": "vitest run",
+    "test:canary:deadline": "node --test scripts/test-canary-deadline-controller.mjs",
+    "test:canary:adapter": "node --test scripts/test-cloudflare-canary-adapter.mjs",
+    "test:canary:observability": "node --test scripts/test-cloudflare-observability.mjs",
+    "test:d1:stress": "node --test scripts/test-d1-capacity-stress.mjs",
+    "bench:d1:stress": "node scripts/d1-capacity-stress.mjs",
+    "test:rollback:v1": "node --test scripts/test-v1-cod-rollback.mjs",
     "test:watch": "vitest",
     "lint": "eslint .",
     "extract:payment-qr": "node extract-payment-qr.mjs",

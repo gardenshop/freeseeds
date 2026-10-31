@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FlowSubmission, MetaWhatsAppProvider, MockWhatsAppProvider, canTransition, createLeadEvent, createPurchaseEvent, eventId, formatPaymentMessage, hasCompleteEnabledPaymentMethod, normalizeContactNumber, parseProductInput, parseProvinceDeliveryRateInput, paymentInstructions, provinceDeliveryListRows, requirePaymentAmount, resolveWhatsAppRecipients, validatePaymentAmount, validatePositiveInteger, validateReceipt } from "@gfs/core";
+import { FlowSubmission, MetaWhatsAppProvider, MockWhatsAppProvider, canTransition, createLeadEvent, createPurchaseEvent, eventId, formatPaymentMessage, hasCompleteEnabledPaymentMethod, normalizeContactNumber, normalizeMobileContactNumber, parseProductInput, parseProvinceDeliveryRateInput, paymentInstructions, provinceDeliveryListRows, requirePaymentAmount, resolveWhatsAppRecipients, validatePaymentAmount, validatePositiveInteger, validateReceipt } from "@gfs/core";
 
 describe("Get Free Seeds domain", () => {
   it("requires exactly five Flow fields", () => {
@@ -11,6 +11,15 @@ describe("Get Free Seeds domain", () => {
     expect(normalizeContactNumber("03034901810")).toBe("+923034901810");
     expect(normalizeContactNumber("923034901810")).toBe("+923034901810");
     expect(normalizeContactNumber("+923034901810")).toBe("+923034901810");
+  });
+  it("accepts only the two new-customer mobile formats and stores eleven digits", () => {
+    expect(normalizeMobileContactNumber("03001234567")).toBe("03001234567");
+    expect(normalizeMobileContactNumber("0300-1234567")).toBe("03001234567");
+    for (const value of ["0300 1234567", "+923001234567", "923001234567", "0300123456", "030012345678", "0300-123456", "03AA1234567"]) {
+      expect(normalizeMobileContactNumber(value)).toBeUndefined();
+      expect(() => FlowSubmission.parse({ fullName: "Synthetic Customer", deliveryAddress: "1 Test Street", nearbyPlace: "Test Park", city: "Sahiwal", contactNumber: value })).toThrow();
+    }
+    expect(FlowSubmission.parse({ fullName: "Synthetic Customer", deliveryAddress: "1 Test Street", nearbyPlace: "Test Park", city: "Sahiwal", contactNumber: "0300-1234567" }).contactNumber).toBe("03001234567");
   });
   it("accepts optional scoped BSUID without replacing phone identity fields", () => {
     expect(FlowSubmission.parse({ fullName: "Synthetic Customer", deliveryAddress: "1 Test Street", nearbyPlace: "Test Park", city: "Sahiwal", contactNumber: "03001234567", bsuid: "bsuid-test", bsuidBusinessId: "business-test", whatsappUsername: "customer-test" })).toMatchObject({ bsuid: "bsuid-test", bsuidBusinessId: "business-test" });
@@ -84,6 +93,34 @@ describe("Get Free Seeds domain", () => {
       const provider = new MetaWhatsAppProvider({ enabled: true, graphVersion: "v26.0", phoneNumberId: "synthetic-phone", accessToken: "synthetic-token" });
       await provider.sendFlow("synthetic-recipient", "synthetic-flow", "synthetic-flow-token");
       expect(payload).toMatchObject({ type: "interactive", interactive: { type: "flow", action: { name: "flow", parameters: { flow_id: "synthetic-flow", flow_token: "synthetic-flow-token", flow_message_version: "3", flow_cta: "Get Free Seeds", mode: "published" } } } });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("sends localized utility templates with deterministic quick-reply consent payloads", async () => {
+    const originalFetch = globalThis.fetch;
+    let payload: Record<string, unknown> | undefined;
+    globalThis.fetch = async (_input, init) => {
+      payload = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      return new Response(JSON.stringify({ messages: [{ id: "synthetic-template-message" }] }), { status: 200 });
+    };
+    try {
+      const provider = new MetaWhatsAppProvider({ enabled: true, graphVersion: "v26.0", phoneNumberId: "synthetic-phone", accessToken: "synthetic-token" });
+      await provider.sendTemplate("synthetic-recipient", "payment_grace_240m", ["SYN-ORDER", "7000", "125", "7125"], "ur", ["CONFIRM_COD", "KEEP_ADVANCE", "CANCEL_ORDER"]);
+      expect(payload).toMatchObject({
+        type: "template",
+        template: {
+          name: "payment_grace_240m",
+          language: { policy: "deterministic", code: "ur" },
+          components: [
+            { type: "body", parameters: [{ type: "text", text: "SYN-ORDER" }, { type: "text", text: "7000" }, { type: "text", text: "125" }, { type: "text", text: "7125" }] },
+            { type: "button", sub_type: "quick_reply", index: "0", parameters: [{ type: "payload", payload: "CONFIRM_COD" }] },
+            { type: "button", sub_type: "quick_reply", index: "1", parameters: [{ type: "payload", payload: "KEEP_ADVANCE" }] },
+            { type: "button", sub_type: "quick_reply", index: "2", parameters: [{ type: "payload", payload: "CANCEL_ORDER" }] }
+          ]
+        }
+      });
     } finally {
       globalThis.fetch = originalFetch;
     }

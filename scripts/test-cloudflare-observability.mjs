@@ -1,0 +1,83 @@
+import assert from "node:assert/strict";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { test } from "node:test";
+import { createCloudflareObservability, sumMetricRows } from "./cloudflare-observability.mjs";
+import { accessHeaders, readAccessCredentials } from "./cloudflare-access-credentials.mjs";
+
+const worker = { name: "getfreeseeds-admin-staging", healthUrl: "https://admin.example.test" };
+
+test("aggregates genuine GraphQL rows and preserves zero errors as measured", () => {
+  assert.deepEqual(sumMetricRows([
+    { dimensions: { datetime: "2026-10-30T20:00:00Z" }, sum: { requests: 3, errors: 0 } },
+    { dimensions: { datetime: "2026-10-30T20:01:00Z" }, sum: { requests: 4, errors: 1 } }
+  ]), { source: "cloudflare_graphql", requests: 7, errors: 1, latestAt: "2026-10-30T20:01:00Z" });
+});
+
+test("empty or malformed metrics are unavailable, never fabricated as zero", () => {
+  assert.throws(() => sumMetricRows([]), (error) => error.code === "graphql_empty_rows");
+  assert.throws(() => sumMetricRows([{ sum: { requests: 1, errors: null } }]), (error) => error.code === "graphql_invalid_response");
+});
+
+test("classifies GraphQL HTTP200 errors, HTTP failures, invalid JSON and timeouts", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "gfs-observability-errors-"));
+  const tokenPath = path.join(directory, "wrangler.toml");
+  try {
+    await writeFile(tokenPath, 'oauth_token = "synthetic-token"\n');
+    const cases = [
+      [{ ok: true, status: 200, json: async () => ({ errors: [{ message: "redacted" }] }) }, "graphql_http200_errors"],
+      [{ ok: false, status: 429, json: async () => ({}) }, "graphql_http_failure"],
+      [{ ok: true, status: 200, json: async () => { throw new Error("bad json"); } }, "graphql_invalid_response"],
+      [new DOMException("aborted", "AbortError"), "graphql_timeout"]
+    ];
+    for (const [responseOrError, code] of cases) {
+      const observability = createCloudflareObservability({ accountTag: "account", tokenPath, fetchImpl: async () => {
+        if (responseOrError instanceof Error || responseOrError?.name === "AbortError") throw responseOrError;
+        return responseOrError;
+      } });
+      await assert.rejects(() => observability.readMetrics(worker), (error) => error.code === code);
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("credential bridge validates both values and creates only Access headers", () => {
+  assert.equal(readAccessCredentials({}), null);
+  assert.throws(() => readAccessCredentials({ GFS_ACCESS_CLIENT_ID: "id" }, { required: true }), /access_credentials_unavailable/);
+  assert.deepEqual(accessHeaders({ clientId: "id", clientSecret: "secret" }), {
+    "CF-Access-Client-Id": "id",
+    "CF-Access-Client-Secret": "secret"
+  });
+});
+
+test("reads HTTP health and authenticated GraphQL metrics without exposing the token", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "gfs-observability-"));
+  const tokenPath = path.join(directory, "wrangler.toml");
+  try {
+    await writeFile(tokenPath, 'oauth_token = "synthetic-secret-not-logged"\n');
+    const calls = [];
+    const observability = createCloudflareObservability({
+      accountTag: "account",
+      tokenPath,
+      accessCredentials: { clientId: "access-id", clientSecret: "access-secret" },
+      now: () => new Date("2026-10-30T20:02:00Z"),
+      fetchImpl: async (url, options) => {
+        calls.push({ url, authorization: options?.headers?.Authorization, accessId: options?.headers?.["CF-Access-Client-Id"], accessSecret: options?.headers?.["CF-Access-Client-Secret"] });
+        if (url.endsWith("/health")) return { status: 200 };
+        return { ok: true, json: async () => ({ data: { viewer: { accounts: [{ workersInvocationsAdaptive: [{ dimensions: { datetime: "2026-10-30T20:01:00Z" }, sum: { requests: 2, errors: 0 } }] }] } } }) };
+      }
+    });
+    const health = await observability.readHealth(worker);
+    const metrics = await observability.readMetrics(worker);
+    assert.equal(health.httpStatus, 200);
+    assert.deepEqual(metrics, { source: "cloudflare_graphql", requests: 2, errors: 0, latestAt: "2026-10-30T20:01:00Z" });
+    assert.equal(calls.length, 2);
+    assert.equal(calls[1].authorization, "Bearer synthetic-secret-not-logged");
+    assert.equal(calls[0].accessId, "access-id");
+    assert.equal(calls[0].accessSecret, "access-secret");
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
