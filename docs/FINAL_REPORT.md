@@ -5193,3 +5193,14 @@ Prior-seven-day aggregate is 1,727/43 (2.49%) before 22:30 and 282/10 (3.55%) af
 - Limitation: Analytics has a separate pre-existing table overflow at true CSS390px. No fix or deployment was made for it; a separate approval is required if that route is to be repaired.
 - Final routing: Admin `72cff93f`100% / rollback `4fe564a6`0%; API `b426ba47`100%. WhatsApp production was not changed. Git remains at `c4532b062d3c57d7d160d2e62a7b5750826c48bf` before documentation commit.
 - Remaining: Analytics mobile table repair is separate/UNKNOWN; API repair, Meta attribution, CAPI, and blocked receipts remain approval-gated or UNKNOWN. Optional D1 optimization and full chat history remain deferred.
+
+## GFS-381 final report — Analytics mobile overflow
+
+- GFS-377: PASS — homepage source repair.
+- GFS-378: PASS — Orders layout/Refresh repair.
+- GFS-379: PASS — Admin UI deployed; API unchanged.
+- GFS-380: PASS — homepage issue diagnosed as stale Chrome emulation/DPR state.
+- GFS-381: PASS source-only — Analytics tables were the remaining true CSS390 overflow. Existing containers now provide max-width, touch scrolling, keyboard focus, and independent horizontal scroll.
+- Browser evidence: CSS1920/1440/1280/768/430/390/360/320 had no page overflow; mobile tables scrolled independently; desktop/tablet remained unchanged; Today/Refresh/CSV and ArrowRight were verified. No private data was recorded.
+- Tests: focused16/16, full339/339, build/lint/audit0. No production deployment occurred.
+- Final routing: Admin `72cff93f`100% / rollback `4fe564a6`0%; API `b426ba47`100%. Next action is separate Approval J for Admin-only upload/0% validation/cutover, rollback to `72cff93f`100%. API repair remains separate.

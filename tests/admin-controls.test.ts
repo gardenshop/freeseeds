@@ -122,6 +122,19 @@ describe("GFS-109 admin controls", () => {
     expect(html).not.toContain("customerName");
   });
 
+  it("bounds Analytics tables inside keyboard-focusable mobile scroll regions", async () => {
+    const response = await app.fetch(new Request("https://admin.example.test/analytics", { headers: auth }), env(new AdminMemoryDb()));
+    expect(response.status).toBe(200);
+    const html = await response.text();
+    expect(html).toContain("container.style.maxWidth='100%'");
+    expect(html).toContain("container.style.overflowX='auto'");
+    expect(html).toContain("container.style.webkitOverflowScrolling='touch'");
+    expect(html).toContain("container.tabIndex=0");
+    expect(html).toContain("Daily inbound events table");
+    expect(html).toContain("Abandoned checkout classification table");
+    expect(html).toContain("/api/analytics/export?");
+  });
+
   it("renders the tabbed, URL-hydrated split-pane order workspace", async () => {
     const response = await app.fetch(new Request("https://admin.example.test/orders?q=synthetic&paymentStatus=REVIEW&archived=all", { headers: auth }), env(new AdminMemoryDb()));
     expect(response.status).toBe(200);

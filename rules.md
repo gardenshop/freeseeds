@@ -1471,3 +1471,10 @@ Expected state for this phase: `META_ASSETS_PENDING`.
 - The existing production Admin UI was not changed or redeployed. Final routing remains Admin `72cff93f`100% / rollback `4fe564a6`0% and API `b426ba47`100%.
 - Read-only route checks loaded Orders, Analytics, Conversations, and Payment Settings without console errors. A pre-existing Analytics daily table is wider than the true CSS390px content area; it is outside the homepage/emulation repair and remains a separate source/deployment decision. Do not claim it repaired here.
 - No customer, API, WhatsApp, payment, Meta, D1, migration, flag, Queue, or Cron mutation occurred. Preserve protected protocols and never record customer data or credentials.
+
+## GFS-381 Analytics mobile overflow fix (2026-10-31 UTC)
+
+- Proven defect: the Analytics `#daily` and `#abandoned` tables exceeded the true CSS390px content width. The minimal source fix makes their existing containers max-width, touch-scrollable, keyboard-focusable regions; table data, CSV, filters, metrics, SQL, auth, and desktop presentation are unchanged.
+- Source/test gates PASS: focused16/16, full339/339, build, lint, and offline audit0. Chrome DOM acceptance at CSS1920/1440/1280/768/430/390/360/320 found no page overflow; mobile tables scroll independently and desktop/tablet tables do not need scrolling. ArrowRight advanced the focused daily table scroll position.
+- This is source-only. Do not alter live routing without separate scoped approval. Planned Admin deployment must use the new version with rollback to `72cff93f-d589-4046-9bce-45477f53f829`100% / candidate0%; API remains `b426ba47`100%.
+- No API, customer, WhatsApp, payment, Meta, D1, migration, flag, Queue, Cron, or production deployment mutation occurred. Preserve the new-number WhatsApp lock and Hoja Seeds zero-connection rule.

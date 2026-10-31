@@ -2412,4 +2412,17 @@ Investigation query costs only (not production savings): representative `rows_re
 | Mobile homepage | PASS | CSS390/360/320; one column, all12 modules and footer reachable, no horizontal overflow |
 | Protected routes | PASS/limited | Orders, Analytics, Conversations, Payment Settings loaded with no console errors; Analytics has separate pre-existing narrow-table overflow |
 | Source/deployment | PASS | No source change or deployment; Admin/API routing unchanged |
+
+## GFS-381 Analytics mobile overflow fix
+
+| Check | Result | Evidence |
+|---|---|---|
+| Root cause | PASS | Analytics daily/classification tables exceeded CSS390 content width |
+| Minimal source fix | PASS | Existing containers receive max-width, overflow-x auto, touch scrolling, focus region |
+| Mobile CSS widths | PASS | 430/390/360/320: no page overflow; both tables independently scrollable |
+| Desktop/tablet CSS widths | PASS | 1920/1440/1280/768: no page overflow; tables not forced to scroll |
+| Controls/data boundaries | PASS | Metrics15, controls7, Today/Refresh loaded, CSV export href preserved |
+| Keyboard access | PASS | Region focusable; ArrowRight advanced daily table scrollLeft to50 |
+| Regression | PASS | Focused16/16; full339/339; build/lint/audit0 |
+| Production deployment | NOT RUN | Separate Admin deployment approval required; current routing unchanged |
 | Next gate | PENDING APPROVAL | Exact-source upload → 0% override acceptance → conditional1%/8-minute canary → restore baseline100% |

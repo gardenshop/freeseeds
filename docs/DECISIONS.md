@@ -1744,3 +1744,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Accept homepage acceptance: four columns at CSS widths1920/1675/1440/1280, two at768, one at390/360/320; twelve modules and footer are reachable with no homepage horizontal overflow.
 - Keep the separate Analytics table overflow at true CSS390px explicitly open. Fixing it would be a new source change and requires its own focused tests and Admin deployment approval; it is not silently bundled into GFS-380.
 - API, WhatsApp, customer, payment, Meta, D1, migration, flag, Queue, and Cron release boundaries remain unchanged.
+
+## GFS-381 decision (2026-10-31)
+
+- Accept the Analytics overflow diagnosis and minimal repair: keep full tables, place overflow on the existing daily/classification containers, and make those regions touch- and keyboard-scrollable.
+- Accept source/browser/test evidence: no whole-page overflow at the required CSS widths, mobile table scroll works, desktop/tablet remain unchanged, and CSV/filter behavior remains present.
+- Do not deploy under GFS-381. Request one exact Admin-only approval for the tested source version, with rollback to Admin `72cff93f`100% and candidate0%. API stays frozen at `b426ba47`100%.

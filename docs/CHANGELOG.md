@@ -1579,3 +1579,9 @@
 - Reproduced the owner’s narrow Admin homepage as stale Chrome device emulation/host DPR state. Clearing emulation restored the intended desktop dashboard without source or deployment changes.
 - Verified homepage CSS widths1920/1675/1440/1280/768/390/360/320 with4/4/4/4/2/1/1/1 columns; all12 modules and footer were reachable.
 - Recorded the separate pre-existing Analytics mobile table overflow as unmodified follow-up scope. Production Admin/API routing and WhatsApp protections remained unchanged.
+
+## 2026-10-31 - GFS-381 Analytics mobile overflow fix
+
+- Added a minimal focusable/touch-scrollable boundary around the existing Analytics daily inbound and abandoned checkout tables.
+- Verified CSS1920/1440/1280/768/430/390/360/320, focused16/16, full339/339, build, lint, and audit0.
+- No production deployment or API/WhatsApp/customer/payment/Meta/D1/migration/flag mutation. Separate Admin deployment approval remains required.

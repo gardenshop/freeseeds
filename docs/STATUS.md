@@ -2208,6 +2208,13 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - PASS: Orders, Analytics, Conversations, and Payment Settings loaded read-only without console errors. Analytics has a separate pre-existing narrow-table overflow at true CSS390px; it was not changed or claimed repaired.
 - PASS: Production routing stayed Admin `72cff93f`100% / rollback `4fe564a6`0%, API `b426ba47`100%. No source, deployment, customer, WhatsApp, payment, Meta, D1, migration, Queue, Cron, or flag mutation occurred.
 
+## GFS-381 Analytics mobile overflow fix (2026-10-31)
+
+- PASS source repair: existing `#daily` and `#abandoned` containers are now max-width, touch-scrollable, keyboard-focusable regions. No backend SQL, data, CSV, filter, auth, or homepage logic changed.
+- PASS browser validation: CSS widths1920/1440/1280/768/430/390/360/320 had no whole-page overflow; both tables independently scrolled at mobile widths and desktop/tablet presentation remained unchanged. Date Today, Refresh state, CSV href, and keyboard ArrowRight were verified with sanitized DOM evidence.
+- PASS tests: focused16/16, full339/339, build, lint, offline audit0. Production remains Admin `72cff93f`100% / rollback `4fe564a6`0%, API `b426ba47`100%; no deployment was made.
+- NEXT: separate scoped Approval J is required to upload/validate and deploy this Admin-only source version with rollback to `72cff93f`100%. API repair remains separate.
+
 ## GFS-377 Admin desktop view (2026-10-31)
 
 - **PASS source repair:** `apps/admin/src/index.ts` replaces the plain root HTML with a static responsive Admin home. It uses existing protected routes only, performs no database reads, and does not change Orders, API, auth, WhatsApp, payment, or release logic.

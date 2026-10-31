@@ -1736,3 +1736,10 @@ No secrets are stored in this registry.
 - Compensated viewport evidence: CSS widths1920/1675/1440/1280/768/390/360/320 produced4/4/4/4/2/1/1/1 homepage columns; twelve modules and footer remained reachable.
 - No screenshot or customer data is registered. Chrome rejected a full live accessibility snapshot as potentially customer-bearing; sanitized DOM measurements were used.
 - No source version, deployment, secret, binding, API, WhatsApp, Meta, payment, D1, migration, Queue, Cron, or flag resource changed.
+
+## GFS-381 Analytics source resource (2026-10-31)
+
+- Source: `apps/admin/src/index.ts` Analytics page only; existing `/api/analytics` and CSV paths unchanged.
+- Test coverage: `tests/admin-controls.test.ts`; focused16/16 and full339/339, build/lint/audit0.
+- Deployment: no Cloudflare version created. Future Admin version must retain rollback `72cff93f-d589-4046-9bce-45477f53f829`100% / candidate0%; API `b426ba47` remains100%.
+- No secret, customer field, screenshot, credential, binding, or production resource was added.
