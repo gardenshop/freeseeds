@@ -37,6 +37,7 @@ const syntheticOrder = {
   whatsapp_number: "+923001234567",
   normalized_whatsapp_number: "+923001234567",
   wa_id: "923001234567",
+  whatsapp_username: "synthetic-profile",
   last_inbound_at: "2026-10-16T12:01:00.000Z",
   payment_id: "synthetic-payment",
   method: "JAZZCASH",
@@ -244,7 +245,7 @@ describe("GFS-139 orders dashboard API", () => {
     const response = await app.fetch(new Request("https://admin.example.test/api/orders/synthetic-order-newest", { headers: auth }), environment(new OrdersDb()));
     expect(response.status).toBe(200);
     const body = await response.json() as { order: Record<string, unknown>; items: Array<Record<string, unknown>>; receipts: Array<Record<string, unknown>> };
-    expect(body.order).toMatchObject({ deliveryAddress: "Synthetic delivery address", landmark: "Synthetic landmark", city: "Synthetic City", province: "Synthetic Province", contactNumber: "03001234567", waId: "923001234567", lastInboundAt: "2026-10-16T12:01:00.000Z", expectedAmountPkr: 300, paymentSubmittedAt: "2026-10-16T12:20:00.000Z", fulfillmentStatus: "NOT_READY" });
+    expect(body.order).toMatchObject({ deliveryAddress: "Synthetic delivery address", landmark: "Synthetic landmark", city: "Synthetic City", province: "Synthetic Province", contactNumber: "03001234567", waId: "923001234567", whatsappUsername: "synthetic-profile", lastInboundAt: "2026-10-16T12:01:00.000Z", expectedAmountPkr: 300, paymentSubmittedAt: "2026-10-16T12:20:00.000Z", fulfillmentStatus: "NOT_READY" });
     expect(body.items[0]).toMatchObject({ description: "Synthetic seed packs", quantity: 5, lineTotalPkr: 0 });
     expect(body.receipts[0]).toMatchObject({ mimeType: "image/png", previewUrl: "/api/orders/synthetic-order-newest/receipts/synthetic-receipt/preview" });
     expect(JSON.stringify(body)).not.toContain("r2_object_key");

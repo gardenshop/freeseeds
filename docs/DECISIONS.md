@@ -1814,5 +1814,12 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Reject Admin automatic polling/cutover for now: under the owner’s <=10% of available included capacity rule, positive available capacity is not verified. Keep both controls OFF and preserve manual refresh.
 - Do not add indexes or migrations under this task. The Conversations list plan scans and temporary-sorts; any schema remedy needs a separately scoped migration approval. No source optimization is claimed.
 - Keep Admin `ceb3e680`100% / `ab5be96b`0% and API `b426ba47`100% / `d603f077`0%. Next action is an owner-approved D1 budget/threshold and an explicit decision on migration/index or paid overage before any Admin release.
+
+## GFS-392 decision (2026-11-01)
+
+- Accept the minimal active-template Orders clipping fix and the protected customer-field readback. Do not alter Admin business logic, auth, payment behavior, API, WhatsApp, Meta, D1 schema or production routing.
+- Accept the source safety controls: both auto-update switches stay OFF by default; explicit polling requires a visible focused tab, one in-flight request, a local-storage lease, 60-second cadence, stale-safe rendering and interruption pause. No background server polling is permitted.
+- Reject conditional Approval O for now. The official Workers Paid UI does not verify the owner-reported25B monthly D1 allowance; it displays5M included rows read/day while staging usage is approximately20.79M rows read in the displayed last24h interval. The <=5% budget gate and live post-fix acceptance therefore remain BLOCKED.
+- Keep Admin `ceb3e680`100% / `ab5be96b`0% and API `b426ba47`100% / `d603f077`0%. Do not upload, attach, watchdog, cut over or enable automatic polling until the owner provides authoritative entitlement/budget evidence and a separate 0% validation approval.
 - Accept the minimal diagnostic harness repair: expected Admin baseline is configurable by protected process environment while the historical default remains unchanged. Credentials still flow only through the native Windows bridge.
 - Do not perform conditional Admin100% cutover. Real D1 costs exceed the earlier projection and the account’s approved budget/threshold is unavailable; 60-second hidden/multi-tab cost and interruption rollback evidence is incomplete. Candidate stays0% until those gates are supplied and pass.

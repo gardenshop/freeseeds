@@ -2307,4 +2307,14 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **PASS control review / NO optimization claim:** existing switches default OFF, pause when hidden, prevent overlap, retain stale data, and cap automatic Conversations summaries at five minutes. Query plans show a Conversations list scan/temp sort; adding an index would require an unauthorized migration, so no source or schema change was made.
 - **Frozen routing:** Admin `ceb3e680`100% / candidate `ab5be96b`0%; API `b426ba47`100% / candidate `d603f077`0%. No deployment, D1 write, WhatsApp/customer/payment/Meta/flag/Queue/Cron mutation occurred.
 - **NEXT:** owner supplies an approved D1 row-read budget/threshold and separately scopes any index/migration or paid-cost decision; only then reassess Admin release.
+
+## GFS-392 Admin clipping, active-only updates, and customer fields (2026-11-01)
+
+- **PASS source repair:** active Orders CSS now bounds the desktop workspace, keeps grid children within the viewport, and uses a content-sized scrollable list. Header actions no longer inherit the detail sticky positioning.
+- **PASS source controls:** Orders and Conversations auto-update remain separate and OFF by default; explicit polling requires visible + focused state, one in-flight request, a local-storage cross-tab lease, 60-second cadence, bounded retry, stale-safe retention, and pause on hidden/blur/pagehide. Manual refresh remains available.
+- **PASS protected field display:** Orders detail reads the existing stored `whatsapp_username` when present and otherwise shows no inferred value. No IP/location capture or API/webhook change was made.
+- **PASS tests:** focused30/30, full341/341, build, lint, controller18/18, adapter8/8, observability5/5.
+- **BLOCKED release gate:** official Workers Paid UI shows5M D1 rows read/day, not the owner-reported25B monthly entitlement; staging showed approximately20.79M rows read and318.5k written in the displayed last24h interval. The <=5% automatic-polling budget and live post-fix acceptance are not verified. No upload, 0% attachment, watchdog or cutover occurred.
+- **BLOCKED audit/legacy rollback:** `npm audit` could not reach the registry and could not write its external npm log; legacy rollback still lacks `GFS_LEGACY_ROOT`. These are recorded as blockers, not PASS results.
+- **Frozen routing:** Admin `ceb3e680`100% / candidate `ab5be96b`0%; API `b426ba47`100% / candidate `d603f077`0%. Next action: owner supplies authoritative Workers Paid entitlement/budget evidence, then a separately authorized 0% Admin validation is required.
 - **BLOCKED conditional cutover:** the account’s approved D1 budget/threshold was not available, and automatic 60-second hidden/multi-tab cost acceptance is not yet evidenced. Candidate remains0%; no watchdog/cutover/canary occurred. Next action: owner supplies budget threshold and approves/observes the bounded cost gate, then a fresh cutover decision is required.

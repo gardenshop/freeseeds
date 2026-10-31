@@ -186,6 +186,8 @@ describe("GFS-109 admin controls", () => {
     expect(response.status).toBe(200);
     const html = await response.text();
     expect(html).toContain("height:calc(100vh - 285px)");
+    expect(html).toContain("grid-template-rows:minmax(0,1fr)");
+    expect(html).toContain("min-width:0;min-height:0;overflow:hidden");
     expect(html).toContain(".orders{display:flex;flex-direction:column;gap:8px;overflow:auto;min-height:0}");
     expect(html).toContain("max-height:42vh");
     expect(html).toContain("Checking latest orders...");
@@ -195,6 +197,9 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("Refresh failed; showing the last successful orders.");
     expect(html).toContain('id="orders-auto"');
     expect(html).toContain("gfs_admin_orders_auto_update");
+    expect(html).toContain("document.hasFocus()");
+    expect(html).toContain("gfs_admin_orders_auto_lock");
+    expect(html).toContain("window.addEventListener('focus',resumeOrdersAuto)");
     expect(html).toContain("},60000)");
   });
 

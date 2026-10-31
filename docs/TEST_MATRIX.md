@@ -2545,4 +2545,20 @@ Investigation query costs only (not production savings): representative `rows_re
 | Production mutation | PASS none | No deployment, D1 write, API/WhatsApp/customer/payment/Meta/flag/Queue/Cron mutation |
 | Conditional cutover | BLOCKED | No 100% cutover or watchdog exposure; keep candidate0% until budget and remaining safety gates pass |
 | Regression/security | PASS | full341/341; build/lint; controller18/18; adapter8/8; observability5/5; audit0 |
+
+## GFS-392 verification
+
+| Area | Result | Evidence / boundary |
+|---|---|---|
+| Orders clipping source fix | PASS | Active professional template has bounded grid rows, min-width/min-height guards, content-sized scroll list, and neutral header actions |
+| Auto-update safety | PASS source | Orders/Conversations independent OFF defaults, visible+focused gate, one-flight guard, local-storage lease, 60s schedule, pause on hidden/blur/pagehide |
+| Customer fields | PASS source | Existing stored name/city/province/WhatsApp/wa_id preserved; optional stored username displayed only when present; no inference |
+| Focused Admin tests | PASS | 30/30 |
+| Full regression | PASS | 341/341 |
+| Build/lint | PASS | `npm run build`; `npm run lint` |
+| Controller/adapter/observability | PASS | 18/18; 8/8; 5/5 |
+| npm audit | BLOCKED | Registry request failed and external npm log path was not writable |
+| Legacy rollback | BLOCKED | Existing `GFS_LEGACY_ROOT` checkout is unavailable |
+| D1 entitlement/budget | BLOCKED | Official UI shows5M rows read/day; owner25B monthly claim is unverified; staging last24h approximately20.79M reads |
+| Deployment/routing | PASS frozen / BLOCKED release | No deployment; Admin `ceb3e680`100% / `ab5be96b`0%; API `b426ba47`100% / `d603f077`0% |
 | Next gate | PENDING APPROVAL | Exact-source upload → 0% override acceptance → conditional1%/8-minute canary → restore baseline100% |

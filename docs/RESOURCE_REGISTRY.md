@@ -1812,3 +1812,11 @@ No secrets are stored in this registry.
 - Runtime remains Admin `ceb3e680`100% / `ab5be96b`0% and API `b426ba47`100% / `d603f077`0%. Other account DB historical usage is UNKNOWN; conflicting Wrangler `num_tables=0` metadata is not registered as proof of emptiness.
 - Candidate D1 cost metadata: Conversations list10,439 rows, summary5,873 rows, Orders changes equivalent9,042 rows; writes0 and `changed_db=false`. Budget threshold is not registered; no cutover approval is claimed.
 - Harness repair: `scripts/test-gfs-monitoring.mjs` now accepts `GFS_ADMIN_BASELINE_VERSION` with the retired baseline as default, allowing current baseline readback without changing production behavior.
+
+## GFS-392 Admin source and verification resources (2026-11-01)
+
+- Source resources changed: `apps/admin/src/index.ts`, `apps/admin/src/conversations-dashboard.ts`; test resources: `tests/admin-controls.test.ts`, `tests/admin-orders.test.ts`, `tests/admin-conversations.test.ts`.
+- Protected data resource: existing customer `whatsapp_username` column only; no new capture source, IP field, secret, cookie, raw message, order identifier or screenshot was registered.
+- Verification resources: focused30/30, full341/341, TypeScript build, ESLint, canary deadline18/18, adapter8/8, observability5/5. npm audit registry/log failure and missing `GFS_LEGACY_ROOT` are registered as blockers, not passes.
+- Cloudflare read-only resources: Workers Paid UI (5M included D1 rows read/day; owner25B monthly claim unverified) and staging D1 UI (approximately20.79M rows read,318.5k written in displayed last24h). No Cloudflare mutation resource was created or used.
+- Frozen release resources: Admin `ceb3e680`100% with candidate `ab5be96b`0%; API `b426ba47`100% with candidate `d603f077`0%. No watchdog or deployment was executed.

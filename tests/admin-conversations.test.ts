@@ -104,11 +104,14 @@ describe("GFS-341 read-only conversation viewer", () => {
   it("renders the stale-safe automatic dashboard without write controls", () => {
     const html = conversationsDashboardPageHtml();
     expect(html).toContain("/api/conversations/summary");
-    expect(html).toContain("setTimeout(()=>refresh('automatic'),60000)");
+    expect(html).toContain("setTimeout(()=>runAutomatic('automatic'),60000)");
     expect(html).toContain("Date.now()-lastSummaryAt>=300000");
     expect(html).toContain("gfs_admin_conversations_auto_update");
     expect(html).toContain("Auto update OFF");
     expect(html).toContain("document.hidden");
+    expect(html).toContain("document.hasFocus()");
+    expect(html).toContain("gfs_admin_conversations_auto_lock");
+    expect(html).toContain("window.addEventListener('focus',resumeAutomatic)");
     expect(html).toContain("Update failed; showing the last successful data.");
     expect(html).toContain("prefers-reduced-motion");
     expect(html).not.toContain("method:'POST'");

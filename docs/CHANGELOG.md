@@ -1646,3 +1646,11 @@
 - Blocked automatic polling and Admin cutover because positive included capacity is not verified under the owner’s <=10% budget rule. Admin/API routing remains frozen at `ceb3e680`100%/`ab5be96b`0% and `b426ba47`100%/`d603f077`0%.
 - Measured live D1 rows: Conversations list10,439, summary5,873, Orders changes equivalent9,042; all writes0. Did not cut over because approved D1 budget and complete auto-cost gate are unavailable.
 - Updated the monitoring harness to accept the current Admin baseline via protected process environment. Full341/341, build, lint, controller18/18, adapter8/8, observability5/5, and audit0 pass.
+
+## 2026-11-01 - GFS-392 Admin clipping and active-only update safety
+
+- Fixed the active Orders template's desktop grid clipping with bounded rows, min-size guards, a content-sized scrollable list, and neutral header actions.
+- Hardened existing Orders/Conversations auto-update controls with visible+focused gating, one-flight protection, local-storage leases, 60-second scheduling, and hidden/blur/pagehide pause. Both remain OFF by default; no server polling was added.
+- Exposed only the existing stored `whatsapp_username` in protected Orders detail when present; no customer IP/location inference or API capture was added.
+- Verified focused30/30, full341/341, build, lint, controller18/18, adapter8/8 and observability5/5. npm audit and legacy rollback remain BLOCKED by external registry/log permissions and missing `GFS_LEGACY_ROOT`.
+- No deployment or production mutation. Official Workers Paid entitlement remains unresolved (UI5M rows read/day versus owner25B monthly claim); Admin/API routing remains frozen.
