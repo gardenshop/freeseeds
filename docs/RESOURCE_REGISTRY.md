@@ -1803,5 +1803,12 @@ No secrets are stored in this registry.
 
 - Uploaded Admin version `ab5be96b-d5fa-42d5-8f5c-1b0bf536bbf2` from verified HEAD `3a0ee3b`; deployment `04269792-f8ef-4573-a4b4-bc273e999a10` attaches it at0% beside `ceb3e680`100%. API resource remains `b426ba47`100% / `d603f077`0%.
 - Read-only browser/monitor evidence: authenticated health200 x3, denied403/302 security checks, GraphQL errors0, real Orders/Conversations data, manual Refresh, Auto OFF default and local preference persistence. No customer-bearing DOM/screenshot/log or secret was registered.
+
+## GFS-391 D1 cost gate and Admin release hold (2026-10-31)
+
+- Read-only evidence resources: Cloudflare Workers Paid plan page; D1 metrics for staging database `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; Wrangler D1 database inventory; bounded EXPLAIN plans. No secret, customer identifier, raw message, cookie or payment reference was registered.
+- Verified plan values: 5,000,000 D1 rows read/day and 100,000 rows written/day included; paid overage pricing displayed by Cloudflare. Staging UI values: 209k queries, 20.77M rows read, 317.81k rows written, 52.36MB, 47 tables in the displayed last24h interval.
+- Source/runtime resources unchanged by GFS-391. Existing auto-update controls remain OFF by default with hidden pause, overlap protection, stale-safe retention, five-minute automatic summary cap and manual refresh. No index/migration resource was created.
+- Runtime remains Admin `ceb3e680`100% / `ab5be96b`0% and API `b426ba47`100% / `d603f077`0%. Other account DB historical usage is UNKNOWN; conflicting Wrangler `num_tables=0` metadata is not registered as proof of emptiness.
 - Candidate D1 cost metadata: Conversations list10,439 rows, summary5,873 rows, Orders changes equivalent9,042 rows; writes0 and `changed_db=false`. Budget threshold is not registered; no cutover approval is claimed.
 - Harness repair: `scripts/test-gfs-monitoring.mjs` now accepts `GFS_ADMIN_BASELINE_VERSION` with the retired baseline as default, allowing current baseline readback without changing production behavior.

@@ -2529,6 +2529,20 @@ Investigation query costs only (not production savings): representative `rows_re
 | Auto controls | PASS | Both default OFF; ON/OFF toggles persisted through reload; hidden/multi-tab timing not yet evidenced |
 | D1 cost | BLOCKED | List10,439; summary5,873; Orders changes equivalent9,042; all writes0; approved budget threshold unavailable |
 | Routing | PASS | Admin candidate0% / `ceb3e680`100%; API `b426ba47`100% / `d603f077`0% |
+
+## GFS-391 D1 cost gate and Admin release
+
+| Area | Result | Evidence |
+|---|---|---|
+| Cloudflare identity | PASS read-only | `gisupp@gmail.com` / Get Free Seeds / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` |
+| D1 included allowance | PASS read-only | Workers Paid UI: 5M rows read/day and 100k rows written/day included; overage pricing displayed |
+| Populated staging usage | PASS evidence / gate BLOCKED | Last24h UI: 209k queries, 20.77M rows read, 317.81k rows written, 52.36MB, 47 tables |
+| All-account usage | UNKNOWN | Five DBs inventoried; four historical metric pages were not fully verified; CLI table metadata conflicts with UI |
+| Query-plan review | PASS diagnostic | Conversations list scans and temp-sorts; joins/count paths use indexes; no migration authorized |
+| Auto-poll cost gate | BLOCKED | Available included read capacity is not verified as positive after observed production usage; <=10% owner policy cannot pass |
+| Safety controls | PASS source | Auto switches OFF by default; hidden pause, in-flight guard, stale-safe behavior, five-minute summary cap, manual refresh retained |
+| Routing/cutover | PASS frozen / BLOCKED release | Admin `ceb3e680`100% / `ab5be96b`0%; API `b426ba47`100% / `d603f077`0%; no watchdog or cutover |
+| Production mutation | PASS none | No deployment, D1 write, API/WhatsApp/customer/payment/Meta/flag/Queue/Cron mutation |
 | Conditional cutover | BLOCKED | No 100% cutover or watchdog exposure; keep candidate0% until budget and remaining safety gates pass |
 | Regression/security | PASS | full341/341; build/lint; controller18/18; adapter8/8; observability5/5; audit0 |
 | Next gate | PENDING APPROVAL | Exact-source upload → 0% override acceptance → conditional1%/8-minute canary → restore baseline100% |

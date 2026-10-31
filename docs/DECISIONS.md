@@ -1807,5 +1807,12 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 ## GFS-390 decision (2026-10-31)
 
 - Accept Approval M only for the exact Admin upload and 0% validation. Candidate `ab5be96b` is real-data tested at0%; serving `ceb3e680` remains100% and API remains frozen.
+
+## GFS-391 decision (2026-10-31)
+
+- Accept the read-only Workers Paid/D1 plan evidence and the populated staging metrics as the current cost gate. The UI displays 5M included rows read/day; staging showed 20.77M rows read and 317.81k written in the last24h. Other database historical usage is UNKNOWN.
+- Reject Admin automatic polling/cutover for now: under the owner’s <=10% of available included capacity rule, positive available capacity is not verified. Keep both controls OFF and preserve manual refresh.
+- Do not add indexes or migrations under this task. The Conversations list plan scans and temporary-sorts; any schema remedy needs a separately scoped migration approval. No source optimization is claimed.
+- Keep Admin `ceb3e680`100% / `ab5be96b`0% and API `b426ba47`100% / `d603f077`0%. Next action is an owner-approved D1 budget/threshold and an explicit decision on migration/index or paid overage before any Admin release.
 - Accept the minimal diagnostic harness repair: expected Admin baseline is configurable by protected process environment while the historical default remains unchanged. Credentials still flow only through the native Windows bridge.
 - Do not perform conditional Admin100% cutover. Real D1 costs exceed the earlier projection and the account’s approved budget/threshold is unavailable; 60-second hidden/multi-tab cost and interruption rollback evidence is incomplete. Candidate stays0% until those gates are supplied and pass.

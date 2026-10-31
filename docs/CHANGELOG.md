@@ -1638,5 +1638,11 @@
 
 - Uploaded exact tested Admin HEAD as `ab5be96b-d5fa-42d5-8f5c-1b0bf536bbf2` and attached it at0% beside `ceb3e680`100%; API stayed frozen at `b426ba47`100%.
 - Passed secure health/isolation, real-data Orders/Conversations, manual Refresh, Auto OFF default and local preference persistence checks through authorized Chrome/Windows tools.
+
+## 2026-10-31 - GFS-391 D1 cost gate and Admin release hold
+
+- Recorded read-only Cloudflare Workers Paid/D1 allowance and populated staging usage: 5M included rows read/day; 20.77M rows read and 317.81k rows written in the displayed last24h interval.
+- Reviewed query plans and retained the existing OFF-by-default, hidden-paused, in-flight-protected polling controls. No migration/index, source, deployment, D1 write, API, WhatsApp, customer, payment, Meta, flag, Queue or Cron change was made.
+- Blocked automatic polling and Admin cutover because positive included capacity is not verified under the owner’s <=10% budget rule. Admin/API routing remains frozen at `ceb3e680`100%/`ab5be96b`0% and `b426ba47`100%/`d603f077`0%.
 - Measured live D1 rows: Conversations list10,439, summary5,873, Orders changes equivalent9,042; all writes0. Did not cut over because approved D1 budget and complete auto-cost gate are unavailable.
 - Updated the monitoring harness to accept the current Admin baseline via protected process environment. Full341/341, build, lint, controller18/18, adapter8/8, observability5/5, and audit0 pass.
