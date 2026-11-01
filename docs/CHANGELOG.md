@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-01 - GFS-406 migration0046 and release readiness
+
+- Added an isolated populated-schema compatibility test proving migration0046 is additive, idempotent, FK-clean and preserves legacy conversation/order/payment rows.
+- Applied only exact migration0046 to canonical staging D1 after identity, hash, history, schema, count and Time Travel gates. Verified two new empty tables, five indexes, three foreign keys, clean integrity and unchanged order/payment signatures; 0044/0045 remain unapplied.
+- Ran the approved bounded retention dry-run twice with zero eligible rows and zero writes. No deletion or schedule was enabled.
+- Prepared API/Admin bundles with Wrangler dry-run only and retained live API/Admin routing unchanged. Full361/361, build/lint, monitoring5/5 + 8/8 + 18/18 and rollback4/4 passed; audit remains10 moderate dev-only findings.
+
 ## 2026-11-01 — GFS-405 secure monitoring and release readiness
 
 - Diagnosed the monitoring gate without changing Cloudflare: the dedicated app already has the exact staging `/health` destination and existing Service Auth policy. Repaired only the local qualification harness account selection and stale Admin baseline.

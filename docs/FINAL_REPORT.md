@@ -1,5 +1,42 @@
 # Final Report
 
+## GFS-406 Approval T migration0046 and release readiness (2026-11-01 UTC)
+
+### Result
+
+**PASS for the exact authorized GFS-406 scope.** Migration0046 was safely applied once; retention was verified without deletion; coordinated GFS-403/404 API/Admin source candidates are locally ready. No Worker upload, canary, promotion, customer message, payment, Meta, flag or unrelated deployment occurred.
+
+### Migration, preservation and recovery
+
+- Fresh mutation identity matched `gisupp@gmail.com` / Get Free Seeds / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; D1 matched `getfreeseeds-staging` / `17b7e9f6-e08b-4bff-a756-10de30b49ab1`. Exact file SHA-256 was `27E8D7AF6C51A034781AD02F72922F6981606FD754C085949CA562AC1ACC613B` and source was unchanged from commit `f6889e6`.
+- Preflight proved 0046 absent and 0044/0045 absent/unapplied. Only `wrangler d1 execute --file migrations/0046_checkout_cancellation_feedback.sql` ran; the pending migration chain did not run.
+- Post-readback found exactly two tables, five indexes and three expected foreign keys. Both new tables had zero rows, `quick_check=ok`, foreign-key check was empty, and 0044/0045 objects remained absent. Migration-history tables were deliberately unchanged by this manual one-file migration.
+- Existing order/payment preservation passed: pre/post counts were521/521 and max-rowid, rowid-sum and ID-length signatures were identical. A populated isolated compatibility test also applied the exact file twice and proved legacy rows unchanged.
+- A Time Travel recovery point was captured before mutation at `2026-11-01T18:06:27.0499017Z` and fingerprinted as `023753A74DF97A9018ED254DEA69956342079A0212A203D8B18DAB115B3D00F5`. No failure occurred, so no restore or destructive full-database rollback ran.
+
+### Monitoring, retention and candidates
+
+- Six bounded monitoring cycles passed (four before, two after): authenticated health200, unauthorized/invalid403, monitoring-token business routes denied302, GraphQL API/Admin errors0, and routing exact. This is bounded qualification, not a claim of perpetual monitoring reliability.
+- Approved live retention dry-run used the expiry predicate and `LIMIT 100`, returned eligible0 twice, rows_written0 and unchanged fact/reason counts. Synthetic tests prove expiry, bounds, idempotency, future-row and reason/fact preservation. Deletion and recurring retention remain unapproved.
+- API/Admin Wrangler dry-run bundles passed with the protected D1, Queue, R2, provider, COD and payment flags. Full regression covers bilingual cancellation, legacy callbacks, optional feedback, duplicate/stale events, restart, GFS-309 Cron/recovery acknowledgements, Admin analytics, existing orders and payment integrity. No candidate was uploaded.
+- Live official Chrome Orders and Conversations reloaded successfully with no horizontal overflow; only the known favicon404 appeared. No customer-bearing screenshot, DOM, payload or log was retained.
+
+### Production routing, tests and comparison
+
+- API: `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100%; `d603f077-cc44-4882-af9b-9985adb53424`0%.
+- Admin: `e8c96c96-ef94-4a33-bed6-7f284984002c`100%; `07e75c15-946e-4cf6-813c-8262ac4dfeff`0%.
+- Tests: migration/Admin/retention focused8/8; full361/361 across30; build; lint; observability5/5; adapter8/8; deadline18/18; legacy rollback4/4. Audit is10 moderate, 0 high, 0 critical in dev tooling; audit0 is not claimed. No traffic watchdog was armed because no deployment/cutover occurred; D1 recovery was ready and unused.
+
+| Work item | Result |
+|---|---|
+| GFS-402 Admin footer/Refresh release | PASS |
+| GFS-403 cancellation/feedback/Admin analytics | PASS source and candidate readiness; live release not authorized |
+| GFS-404 retention/readiness | PASS dry-run and safety; deletion remains BLOCKED pending approval |
+| GFS-405 secure monitoring | PASS bounded qualification |
+| GFS-406 migration0046/readiness | PASS |
+
+Authorized GFS-406 milestone:100%. Migration0046:100%. Retention verification:100%; physical deletion/schedule:0%. Candidate local qualification:100%; upload/override acceptance:0%; traffic release/live cancellation acceptance:0%. **Exact next approval:** Approval U for one API candidate and one Admin candidate upload at0%, authenticated version-override acceptance, binding/security monitoring and independent rollback validation only; no promotion and no retention deletion.
+
 ## GFS-405 Approval S secure monitoring and GFS-403 release readiness (2026-11-01 UTC)
 
 ### Result

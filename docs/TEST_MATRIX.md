@@ -1,5 +1,22 @@
 # Test Matrix
 
+## GFS-406 migration0046 and candidate-readiness matrix (2026-11-01 UTC)
+
+| Area | Evidence | Result |
+|---|---|---|
+| Identity/source | Canonical GitHub; Cloudflare `gisupp@gmail.com` / Get Free Seeds / `cb5066...`; canonical Meta IDs; exact migration SHA-256 `27E8...613B` | PASS |
+| Preflight | 0046 objects0; 0044/0045 objects0; markers0; populated orders/payments521/521; `quick_check=ok`; FK clean; Time Travel point captured | PASS |
+| Isolated migration | Exact file applied twice to populated synthetic legacy schema; legacy rows unchanged; two tables/five indexes/FKs/integrity pass | PASS 1/1 |
+| Production apply | Exact 0046 file only; seven SQL queries; normal pending chain not invoked; 0044/0045 remain absent | PASS |
+| Post-migration | Two tables, five indexes, three FKs; new rows0/0; orders/payments signatures unchanged; integrity clean | PASS |
+| Retention dry-run | Indexed, bounded `LIMIT 100`; eligible0 twice; writes0; fact/reason counts unchanged | PASS; deletion NOT RUN |
+| Monitoring/routing | Four pre + two post cycles; health200, unauthorized/invalid403, business routes302, GraphQL errors0; routing exact | PASS |
+| Candidate bundles | API/Admin Wrangler `--dry-run`; protected bindings/flags present; no upload/version created | PASS local only |
+| Browser smoke | Official Chrome reload of live Orders/Conversations; complete, no horizontal overflow; known favicon404 only | PASS |
+| Regression/security | Focused8/8; full361/361 across30; build/lint; observability5/5; adapter8/8; deadline18/18; rollback4/4 | PASS |
+| Audit | npm audit metadata: 10 moderate, 0 high, 0 critical; dev-tooling minimatch chain | REVIEW; not audit0 |
+| Production boundary | API `b426ba47`100%; Admin `e8c96c96`100%; no deploy/canary/promotion/message/payment/Meta/flag/Cron | PASS |
+
 ## GFS-405 monitoring and release-readiness matrix (2026-11-01 UTC)
 
 | Area | Evidence | Result |

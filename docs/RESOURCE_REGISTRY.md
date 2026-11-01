@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-406 migration0046 and release-readiness resources (2026-11-01 UTC)
+
+- **Identity:** GitHub `gardenshop/freeseeds`, PR #11; Cloudflare `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta Ads Manager account `1198439777611633`, business `568026370701542`. All external identity checks were read-only.
+- **D1:** `getfreeseeds-staging`, ID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`. Migration0046 SHA-256 `27E8D7AF6C51A034781AD02F72922F6981606FD754C085949CA562AC1ACC613B` applied once. New resources: `checkout_cancellation_events`, `checkout_cancellation_feedback_events`, and five `checkout_cancellation_*_idx` indexes. Tables contain zero rows at qualification.
+- **Recovery:** pre-change Time Travel timestamp `2026-11-01T18:06:27.0499017Z`; response SHA-256 `023753A74DF97A9018ED254DEA69956342079A0212A203D8B18DAB115B3D00F5`. Opaque bookmark intentionally omitted. No restore executed.
+- **Unchanged schema:** migration0044 indexes and migration0045 table/indexes/trigger remain absent; `cod_schema_migrations` remains 0030 and 0036-0043; `d1_migrations` remains empty. Existing orders/payments remained521/521 with unchanged signatures.
+- **Workers/routing:** API `b426ba47`100% / `d603f077`0%; Admin `e8c96c96`100% / `07e75c15`0%. API/Admin candidate bundles were local dry-runs; no version, deployment, Access, R2, Queue/DLQ, Cron, secret, flag, payment, Meta, customer or WhatsApp resource changed.
+- **Retention:** two remote read-only bounded dry-runs returned eligible0 and rows_written0. No deletion resource, trigger, schedule or Cron exists.
+
 ## GFS-405 Approval S secure monitoring and GFS-403 release readiness (2026-11-01 UTC)
 
 - **Identity:** Wrangler readback matched `gisupp@gmail.com` / Get Free Seeds / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; GitHub remote is `gardenshop/freeseeds`; canonical Meta Ads Manager was read-only checked.

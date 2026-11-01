@@ -1,5 +1,15 @@
 # Status
 
+## GFS-406 Approval T migration0046 and release readiness (2026-11-01 UTC)
+
+- **Result:** PASS for the authorized milestone. Exact migration0046 was applied once to canonical staging D1; retention was dry-run only; coordinated API/Admin candidates were built and tested locally but not uploaded, canaried or promoted.
+- **Identity/provenance:** GitHub remote is `gardenshop/freeseeds`; Cloudflare was freshly verified as `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; official Chrome showed Meta account `1198439777611633` / business `568026370701542`. Migration SHA-256 `27E8D7AF6C51A034781AD02F72922F6981606FD754C085949CA562AC1ACC613B` matches source commit `f6889e6`; 0044/0045 and all their objects remain absent.
+- **D1 evidence:** pre-change Time Travel point `2026-11-01T18:06:27.0499017Z` was captured and fingerprinted without recording its opaque value. Post-apply schema is exactly two tables plus five indexes with the expected three foreign keys; `quick_check=ok`, FK check empty, and both new tables empty. Orders/payments stayed521/521 with identical bounded pre/post signatures. No full-database restore was needed.
+- **Monitoring/security:** six bounded cycles (four before, two after) passed authenticated health200, missing/invalid403, monitoring-token business-route denial302, GraphQL errors0 and exact routing. Current API is `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100% / `d603f077-cc44-4882-af9b-9985adb53424`0%; Admin is `e8c96c96-ef94-4a33-bed6-7f284984002c`100% / `07e75c15-946e-4cf6-813c-8262ac4dfeff`0%.
+- **Retention/candidates:** live dry-run used the indexed expiry predicate with `LIMIT 100`, returned eligible0 twice, writes0, and preserved fact/reason counts. API/Admin Wrangler dry-run bundles passed with protected bindings/flags; no upload or deployment occurred. GFS-403 bilingual/legacy/feedback/restart/dedupe and GFS-404 retention behavior remain covered by full regression.
+- **Quality:** focused migration/Admin/retention8/8; full361/361 across30; build/lint; observability5/5; adapter8/8; deadline18/18; legacy rollback4/4. Official Chrome live Orders/Conversations reloaded with no horizontal overflow and only the known favicon404. Audit remains10 moderate dev-only findings, not audit0.
+- **Next approval:** Approval U should authorize only API/Admin candidate uploads at0% plus authenticated version-override, binding, monitoring and rollback validation. No traffic promotion or retention deletion should be included.
+
 ## GFS-405 Approval S secure monitoring and GFS-403 release readiness (2026-11-01 UTC)
 
 - **Monitoring result:** PASS without Cloudflare mutation. Fresh Wrangler identity is `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Chrome readback shows `GFS-Admin-Health-Monitoring` with exact staging `/health` destination and one attached `GFS-Admin-Health-Monitor` Service Auth policy (`045ddce6-b41e-4c35-aca8-35375d43f50c`). Existing service credentials were reused through the protected Windows bridge; no credential value was exposed, logged, recorded, rotated or changed.

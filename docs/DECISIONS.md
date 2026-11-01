@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-406 - apply only migration0046; keep release and deletion separate (2026-11-01 UTC)
+
+- Applied only the owner-approved SHA-256-locked `0046_checkout_cancellation_feedback.sql` by `wrangler d1 execute --file`; never used `wrangler d1 migrations apply`. This keeps unapplied 0044/0045 out of production.
+- Accepted the manual one-file provenance model: object/readback evidence is authoritative and migration-history tables remain unchanged. Future automation must not infer that 0046 is absent merely because no marker was inserted.
+- Chose a pre-change D1 Time Travel point plus bounded aggregate signatures instead of a whole-database backup/restore. Automatic full restore is prohibited because it could erase orders created after the bookmark.
+- Retention remains a separately approved action. GFS-406 authorized only two read-only bounded dry-runs; it did not authorize deletion, Cron, Queue, route exposure or a schedule.
+- API/Admin readiness is local bundle/test readiness only. Candidate upload at0%, override acceptance and any later traffic change require Approval U; promotion and retention deletion remain separate decisions.
+
 ## GFS-405 Approval S secure monitoring and GFS-403 release readiness (2026-11-01 UTC)
 
 - Do not mutate Access: fresh account/application readback proves the dedicated monitoring application already has the exact staging `/health` destination and the existing Service Auth policy. Existing credentials return HTTP200; no token rotation, policy edit, bypass or public exposure is justified.
