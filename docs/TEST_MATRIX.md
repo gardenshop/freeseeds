@@ -1,5 +1,21 @@
 # Test Matrix
 
+## GFS-398 Approval Q Admin-only cutover and live acceptance (2026-11-01 UTC)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Fresh Cloudflare identity | PASS | `gisupp@gmail.com` / Get Free Seeds / target account verified immediately before the only mutation; alternate account unused. |
+| Exact candidate and bindings | PASS | Candidate `dfef46ea` unchanged since upload except docs/tests; sanitized binding names/types matched rollback; secret values not read. |
+| Admin single cutover | PASS | Deployment `a1e3dedc`; candidate100% / rollback `ceb3e680`0%. |
+| API preservation | PASS | `b426ba47`100% / `d603f077`0%; no API canary/deploy. |
+| Detached watchdog | PASS | Admin-only five-minute rollback watchdog armed before cutover, no rollback triggered, stopped at PID7064 before deadline after acceptance; final readback followed disarm. |
+| Orders live acceptance | PASS | Sanitized list/detail, `REVIEW` filter15 rows, clear25 rows, page2/Previous, manual Refresh, no visible error; auto update default OFF and ON/OFF control worked. |
+| Conversations live acceptance | PASS | Sanitized list/summary/detail and read-only API requests returned expected success; no customer-bearing capture retained. |
+| Other Admin routes | PASS | Analytics, Payment Settings and COD rendered; read-only document/API requests returned HTTP200 where exercised. Payment guardrail status text is expected policy, not a network error. |
+| Health boundary | PASS LIMITED | Human browser without service-auth bridge returned protected403; no unauthenticated health200 claim. Metrics-only GraphQL observation recorded Admin21/API113 requests and zero errors. |
+| D1/audit risk | ACCEPTED REVIEW | Owner accepted measured Admin cost under25B reads/50M writes monthly and optional polling5% budget; official audit remains10 moderate dev-only `minimatch` advisories with no fix. |
+| Protected scope | PASS | No runtime/source, bindings, D1, migration, flag, payment, Meta, Queue/Cron, WhatsApp or customer mutation; new-number lock and Hoja zero-connection preserved. |
+
 ## GFS-397 desktop regression and candidate revalidation (2026-11-01 UTC)
 
 | Check | Result | Evidence / boundary |

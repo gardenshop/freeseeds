@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-398 Approval Q Admin-only cutover decision (2026-11-01 UTC)
+
+- Consume Approval Q exactly once for Admin: promote candidate `dfef46ea-3358-4f58-9253-3bb046a91d64` from0% to100% and attach rollback `ceb3e680-96f6-4218-b5a5-cadfca20a629` at0%. This completed as deployment `a1e3dedc-f70c-471e-831b-71b842f3ebce`.
+- Keep API frozen at `b426ba47`100% / `d603f077`0%; do not infer Admin approval for API, WhatsApp, Meta, payment, D1, migration, Queue/Cron or customer actions.
+- Accept fresh target identity, exact candidate immutability, unchanged sanitized bindings/access, measured D1 budget, optional polling5% budget and10 moderate dev-only audit advisories as the owner-approved residual risks. Keep automatic updates OFF by default.
+- Accept the independent detached five-minute watchdog record: it was armed before mutation, did not need rollback, and was stopped before deadline only after sanitized acceptance and final routing readback. No API rollback or other external mutation was authorized.
+- Accept live Admin read-only acceptance for Orders, Conversations, Analytics, Payment Settings and COD. Treat human-browser `/health`403 without the service-auth bridge as expected protection; do not claim health200 from that request. Preserve the new-number WhatsApp lock and Hoja/ThanNow zero-connection rule.
+
 ## GFS-397 desktop regression decision (2026-11-01 UTC)
 
 - Classify the reported330px Orders pane as a **browser device-metrics regression**, not an Admin CSS defect: stale mobile/touch emulation constrained the CSS viewport while the desktop window remained wide. Clearing the override and reloading is the repair; no CSS source change is justified.

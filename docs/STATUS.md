@@ -1,5 +1,14 @@
 # Status
 
+## GFS-398 Approval Q Admin-only cutover (2026-11-01 UTC)
+
+- **Cutover PASS:** Admin candidate `dfef46ea-3358-4f58-9253-3bb046a91d64` is100%; rollback `ceb3e680-96f6-4218-b5a5-cadfca20a629` is0%. Deployment `a1e3dedc-f70c-471e-831b-71b842f3ebce` carries the Approval Q cutover annotation.
+- **API frozen:** `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100% / `d603f077-cc44-4882-af9b-9985adb53424`0%. No API canary, deployment, D1 write, migration, feature flag, Meta, payment, Queue/Cron, WhatsApp or customer mutation was performed.
+- **Approval gates PASS:** fresh identity before mutation matched `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; exact candidate was unchanged since upload except protected docs/tests; sanitized candidate/rollback binding names/types matched; owner accepted the measured D1 and optional-polling budget plus10 moderate dev-only audit advisories.
+- **Watchdog PASS:** detached five-minute Admin-only rollback watchdog armed before mutation, remained armed through acceptance, did not roll back, and was stopped at PID7064 before the deadline after final acceptance. Final Admin/API readback was independently obtained after disarm.
+- **Live browser PASS:** Orders filter (`REVIEW`) returned15 rows with no visible error, clear restored25 rows, page2 returned25 and Previous restored page1; manual Refresh and ON/OFF auto-update toggle worked and default state remained OFF. Conversations list/summary/detail, Analytics, Payment Settings and COD loaded under sanitized checks. Human-browser `/health` without service-auth credentials returned expected protected403; this is not a worker 5xx and no health200 claim is made. GraphQL request metadata after cutover: Admin21/API113, errors0.
+- **Residual release boundary:** official npm audit remains REVIEW/BLOCKED with10 moderate unfixed dev-only `minimatch` advisories. API promotion, customer messaging, payment decisions, Meta changes and public production launch remain outside Approval Q. New-number WhatsApp lock and Hoja/ThanNow zero-connection rule remain preserved.
+
 ## GFS-397 Permanent desktop view regression fix (2026-11-01 UTC)
 
 - **Diagnosis PASS:** the owner symptom was reproduced only under the stale Chrome device-metrics override that started at `320x800`, mobile/touch. At approximately1024 CSS pixels, the candidate's ratio split measured approximately410 CSS pixels for Orders (approximately328 physical pixels at DPR0.8), matching the reported330px pane. Clearing the override and reloading restored the real desktop viewport; root CSS zoom and visual viewport scale were1. No source CSS defect reproduced.

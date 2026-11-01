@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-398 Approval Q Admin-only cutover evidence (2026-11-01)
+
+- **Admin final routing:** deployment `a1e3dedc-f70c-471e-831b-71b842f3ebce`; candidate `dfef46ea-3358-4f58-9253-3bb046a91d64`100%; rollback `ceb3e680-96f6-4218-b5a5-cadfca20a629`0%.
+- **API final routing:** unchanged deployment; baseline `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100%; candidate `d603f077-cc44-4882-af9b-9985adb53424`0%.
+- **Identity/access record:** fresh pre-mutation Wrangler identity `gisupp@gmail.com`, target Get Free Seeds, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; alternate account was not used. Candidate and rollback version metadata exposed matching sanitized binding names/types, with no secret values read.
+- **Watchdog record:** detached Admin-only watchdog PID7064 armed for five minutes before cutover, exact rollback configured, no rollback triggered, stopped before deadline after acceptance. No API operation was in its code path. Final readback occurred after disarm.
+- **Acceptance record:** sanitized live Chrome passed Orders list/detail/filter/pagination/Refresh/default-OFF toggle, Conversations list/summary/detail, Analytics, Payment Settings and COD. Protected unauthenticated `/health` returned403 without service-auth credentials; no unauthenticated health200 was recorded. GraphQL metrics-only observation recorded Admin21/API113 requests and zero errors.
+- **Scope record:** no runtime/source change since candidate upload, no binding/access change, no D1/migration/flag/payment/Meta/Queue/Cron/WhatsApp/customer mutation. Owner accepted measured D1 cost under25B reads/50M writes monthly and optional polling5% budget; auto-update defaults remain OFF. New-number WhatsApp lock and Hoja/ThanNow zero-connection remain unchanged.
+
 ## GFS-397 desktop regression evidence (2026-11-01)
 
 - **Authorized browser state:** Chrome DevTools MCP `list_pages` first showed a stale `320x800` mobile/touch device-metrics override. After omitting the viewport setting and clearing extra headers, reload returned the real desktop context. Final browser state has no viewport override and no candidate version header.

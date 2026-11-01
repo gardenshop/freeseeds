@@ -1,5 +1,12 @@
 # Changelog
 
+## GFS-398 Approval Q Admin-only cutover (2026-11-01)
+
+- Promoted exact validated Admin candidate `dfef46ea` to100% and set exact rollback `ceb3e680` to0% in deployment `a1e3dedc`; API stayed `b426ba47`100% / `d603f077`0%.
+- Verified fresh target Cloudflare identity, exact candidate/binding immutability, and owner-approved D1/audit residual risk. No runtime/source, bindings, API, D1, migration, flag, payment, Meta, Queue/Cron, WhatsApp or customer state changed.
+- Armed and independently verified a five-minute Admin-only rollback watchdog; it did not trigger and was stopped before deadline after sanitized live acceptance and final routing readback.
+- Live read-only Admin checks passed Orders filter/pagination/Refresh/default-OFF auto update, Conversations list/summary/detail, Analytics, Payment Settings and COD. Protected unauthenticated health403 was documented without claiming health200. GraphQL metadata was Admin21/API113 with zero errors.
+
 ## GFS-397 Permanent desktop view regression fix (2026-11-01)
 
 - Proved the reported330px Orders pane came from a stale Chrome `320x800` mobile/touch device-metrics override; clearing the override restored the real desktop layout. No runtime CSS change or new Admin upload was made.
