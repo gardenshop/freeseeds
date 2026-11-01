@@ -30,7 +30,7 @@
 
 ### Git and next approval
 
-- Tested source commit: `1a28987` (`fix: repair orders footer and conversation refresh`). Protected documentation commit `0890f461512dd40820c6c1a8472b2e7a979062d5` was pushed and independently verified as the final remote branch SHA.
+- Tested source commit: `1a28987` (`fix: repair orders footer and conversation refresh`). Initial source/docs push commit `0890f461512dd40820c6c1a8472b2e7a979062d5` was independently verified; this final docs-only follow-up is included in the pushed commit series.
 - Completion: source repair/tests100%; candidate0% validation100%; live Admin rollout0% pending a separate approval. Next priority is a fresh scoped Admin-only cutover approval with rollback to `07e75c15`, after which a watchdog and post-cutover browser/security/routing checks may be considered. API/WhatsApp remain frozen.
 
 ## GFS-400 Permanent Admin layout lock and zero WhatsApp regression (2026-11-01 UTC)
