@@ -63,6 +63,14 @@ function buttons() {
   return (sends.at(-1)?.interactive as { action?: { buttons?: Array<{ reply: { id: string } }> } } | undefined)?.action?.buttons?.map((button) => button.reply.id) ?? [];
 }
 
+function buttonTitles() {
+  return (sends.at(-1)?.interactive as { action?: { buttons?: Array<{ reply: { title: string } }> } } | undefined)?.action?.buttons?.map((button) => button.reply.title) ?? [];
+}
+
+function listRows() {
+  return (sends.at(-1)?.interactive as { action?: { sections?: Array<{ rows?: Array<{ id: string; title: string }> }> } } | undefined)?.action?.sections?.flatMap((section) => section.rows ?? []) ?? [];
+}
+
 function env() {
   return { DB: db, RECEIPTS: { get: vi.fn(async () => { qrReads++; return qrAvailable ? { httpMetadata: { contentType: "image/png" }, arrayBuffer: async () => syntheticQrBytes.buffer } : null; }), put: vi.fn(async () => { receiptPuts++; }), delete: vi.fn(async () => undefined) }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: "true", META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided", COD_V1_ENABLED: codEnabled ? "true" : "false", COD_ROLLOUT_MODE: codRolloutMode, COD_TESTER_WA_ID: codTesterWaId, COD_REFERENCE_HMAC_KEY: codRuntimeHmacKey, PAYMENT_REMINDERS_V2_ENABLED: remindersEnabled ? "true" : "false", PAYMENT_AUTOMATION_V2_ENABLED: reminderAutomationEnabled ? "true" : "false", PAYMENT_UTILITY_TEMPLATES_APPROVED: "false", PAYMENT_CHOICE_RECOVERY_ENABLED: recoveryEnabled ? "true" : "false", CF_VERSION_METADATA: { id: "synthetic-worker-version" } } as never;
 }
@@ -98,7 +106,7 @@ async function reachReview(locale: "en" | "ur", fertilizer = false, waId = sende
   expect(buttons()).toEqual(["LANG_UR", "LANG_EN"]);
   await inbound(tap(locale === "ur" ? "LANG_UR" : "LANG_EN"), undefined, waId);
   expect(conversation(waId)?.state).toBe("OFFER");
-  expect(buttons()).toEqual(["CONTINUE_ORDER", "CANCEL_ORDER"]);
+  expect(buttons()).toEqual(["CONTINUE_ORDER", "CANCEL_OFFER"]);
   await inbound(tap("CONTINUE_ORDER"), undefined, waId);
   expect(conversation(waId)?.state).toBe("FERTILIZER");
   expect(buttons()).toEqual(["ADD_FERTILIZER", "SEEDS_ONLY"]);
@@ -1000,7 +1008,7 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     await inbound("START");
     await inbound(tap(language === "ur" ? "LANG_UR" : "LANG_EN"));
     expect(conversation()?.state).toBe("OFFER");
-    expect(buttons()).toEqual(["CONTINUE_ORDER", "CANCEL_ORDER"]);
+    expect(buttons()).toEqual(["CONTINUE_ORDER", "CANCEL_OFFER"]);
     const cancel = await inbound(tap("CANCEL_ORDER"), `synthetic-cancel-${language}`);
     expect(conversation()?.state).toBe("CANCELLED");
     expect(body()).toContain(language === "ur" ? "منسوخ" : "cancelled");
@@ -1498,5 +1506,93 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sqlite.prepare("SELECT * FROM orders").get()).toEqual(beforeOrder);
     expect(sqlite.prepare("SELECT * FROM payments").get()).toEqual(beforePayment);
     expect(sqlite.prepare("SELECT event_name,send_status FROM capi_events").all()).toEqual([{ event_name: "Lead", send_status: "PENDING" }]);
+  });
+});
+
+describe("GFS-403 cancellation reasons, feedback, and immutable stage facts", () => {
+  it.each(["en", "ur"] as const)("uses the distinct OFFER action and completes optional %s feedback without creating an order", async (locale) => {
+    await inbound("START");
+    await inbound(tap(locale === "ur" ? "LANG_UR" : "LANG_EN"));
+    expect(buttons()).toEqual(["CONTINUE_ORDER", "CANCEL_OFFER"]);
+    expect(buttonTitles()[1]).toBe(locale === "ur" ? "آفر منسوخ کریں." : "Cancel Offer");
+
+    await inbound(tap("CANCEL_OFFER"), `gfs403-cancel-${locale}`);
+    expect(conversation()?.state).toBe("CANCELLED");
+    if (locale === "ur") expect(body()).toContain("منسوخ");
+    expect(listRows().map((row) => row.id)).toContain("SKIP_FEEDBACK");
+    expect(sqlite.prepare("SELECT original_stage,language,order_id,masked_conversation_ref FROM checkout_cancellation_events").get()).toEqual({ original_stage: "OFFER", language: locale, order_id: null, masked_conversation_ref: "***4567" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payments").get()).toEqual({ count: 0 });
+
+    await inbound({ type: "list_reply", list_reply: { id: "CANCEL_REASON_COD_FEE", title: "Synthetic reason" } }, `gfs403-reason-${locale}`);
+    expect(buttons()).toEqual(["ADD_SUGGESTION", "SKIP_SUGGESTION"]);
+    expect(body()).toContain("125");
+    await inbound(tap("ADD_SUGGESTION"), `gfs403-add-${locale}`);
+    await inbound("  Please add clearer delivery timing.  ", `gfs403-suggestion-${locale}`);
+    expect((conversation()?.data.cancellationFeedback as { phase?: string }).phase).toBe("COMPLETE");
+    expect(sqlite.prepare("SELECT reason_code FROM checkout_cancellation_feedback_events WHERE event_type='REASON'").get()).toEqual({ reason_code: "COD_COLLECTION_FEE" });
+    expect(sqlite.prepare("SELECT suggestion FROM checkout_cancellation_feedback_events WHERE event_type='SUGGESTION'").get()).toEqual({ suggestion: "Please add clearer delivery timing." });
+    await inbound("START", `gfs403-restart-${locale}`);
+    expect(conversation()?.state).toBe("LANGUAGE");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM checkout_cancellation_events").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM checkout_cancellation_feedback_events WHERE event_type='RESTARTED'").get()).toEqual({ count: 1 });
+  });
+
+  it("accepts legacy OFFER cancellation, classifies REVIEW and other pre-submission stages, and keeps states independent", async () => {
+    await inbound("START");
+    await inbound(tap("LANG_EN"));
+    await inbound(tap("CANCEL_ORDER"), "gfs403-legacy-offer");
+    expect(sqlite.prepare("SELECT original_stage FROM checkout_cancellation_events WHERE provider_event_id='message:gfs403-legacy-offer'").get()).toEqual({ original_stage: "OFFER" });
+
+    const reviewWa = "923001234568";
+    await reachReview("en", false, reviewWa);
+    expect(buttonTitles().at(-1)).toBe("Cancel Order");
+    await inbound(tap("CANCEL_ORDER"), "gfs403-review", reviewWa);
+    expect(sqlite.prepare("SELECT original_stage,order_id FROM checkout_cancellation_events WHERE provider_event_id='message:gfs403-review'").get()).toEqual({ original_stage: "REVIEW", order_id: null });
+
+    const otherWa = "923001234569";
+    await inbound("START", undefined, otherWa);
+    await inbound(tap("LANG_EN"), undefined, otherWa);
+    await inbound(tap("CONTINUE_ORDER"), undefined, otherWa);
+    await inbound("CANCEL", "gfs403-other", otherWa);
+    expect(sqlite.prepare("SELECT original_stage FROM checkout_cancellation_events WHERE provider_event_id='message:gfs403-other'").get()).toEqual({ original_stage: "OTHER_PRE_SUBMISSION" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 0 });
+  });
+
+  it("deduplicates cancellation callbacks, ignores stale cancellation actions, and allows skip without pressure", async () => {
+    await inbound("START");
+    await inbound(tap("LANG_EN"));
+    await inbound(tap("CANCEL_OFFER"), "gfs403-dedupe");
+    await inbound(tap("CANCEL_OFFER"), "gfs403-dedupe");
+    await inbound(tap("CANCEL_OFFER"), "gfs403-stale-cancel");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM checkout_cancellation_events").get()).toEqual({ count: 1 });
+    await inbound({ type: "list_reply", list_reply: { id: "SKIP_FEEDBACK", title: "Skip" } }, "gfs403-skip");
+    expect((conversation()?.data.cancellationFeedback as { phase?: string }).phase).toBe("COMPLETE");
+    await inbound("anything else", "gfs403-no-pressure");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM checkout_cancellation_feedback_events").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT response_outcome FROM checkout_cancellation_feedback_events").get()).toEqual({ response_outcome: "FEEDBACK_SKIPPED" });
+  });
+
+  it("keeps cancellation effective when the original service window is closed", async () => {
+    const oldAt = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
+    const inboundId = "gfs403-old-window";
+    sqlite.prepare("INSERT INTO whatsapp_events(id,provider_event_id,event_type,payload_hash,status,correlation_id,created_at) VALUES(?,?,?,?,?,?,?)").run("gfs403-old-event", `message:${inboundId}`, "INTERACTIVE", "synthetic-old-hash", "RECEIVED", "gfs403-old-correlation", oldAt);
+    sqlite.prepare("INSERT INTO whatsapp_conversations(id,wa_id,state,state_data,last_inbound_message_id,last_inbound_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)").run("gfs403-old-conversation", sender, "OFFER", JSON.stringify({ language: "en" }), inboundId, oldAt, oldAt, oldAt);
+    const response = await callback([{ from: sender, id: inboundId, type: "interactive", interactive: tap("CANCEL_OFFER") }]);
+    expect(response.status).toBe(200);
+    expect(conversation()?.state).toBe("CANCELLED");
+    expect(sqlite.prepare("SELECT original_stage FROM checkout_cancellation_events").get()).toEqual({ original_stage: "OFFER" });
+    expect(sqlite.prepare("SELECT status,last_error FROM outbound_messages WHERE idempotency_key=?").get(`conversation_reply:${inboundId}`)).toEqual({ status: "PERMANENT_FAILURE", last_error: "WHATSAPP_SERVICE_WINDOW_CLOSED" });
+  });
+
+  it("does not alter a confirmed order when a historical cancellation action arrives", async () => {
+    await reachReview("en");
+    await inbound(tap("PLACE_ORDER"), "gfs403-confirm-order");
+    const beforeOrder = sqlite.prepare("SELECT * FROM orders").get();
+    const beforePayment = sqlite.prepare("SELECT * FROM payments").get();
+    await inbound(tap("CANCEL_ORDER"), "gfs403-after-confirm");
+    expect(sqlite.prepare("SELECT * FROM orders").get()).toEqual(beforeOrder);
+    expect(sqlite.prepare("SELECT * FROM payments").get()).toEqual(beforePayment);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM checkout_cancellation_events").get()).toEqual({ count: 0 });
   });
 });

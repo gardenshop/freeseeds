@@ -41,12 +41,12 @@ describe("GFS-111 WhatsApp content", () => {
   });
 
   it("requires editable stable Continue and Cancel OFFER labels in both locales", () => {
-    expect(WHATSAPP_TEMPLATE_ACTION_IDS.OFFER).toEqual(["CONTINUE_ORDER", "CANCEL_ORDER"]);
+    expect(WHATSAPP_TEMPLATE_ACTION_IDS.OFFER).toEqual(["CONTINUE_ORDER", "CANCEL_OFFER"]);
     const offer = parseWhatsAppContentDraft({
-      contentEn: { text: "Choose how to proceed.", actionLabels: { CONTINUE_ORDER: "Continue Order", CANCEL_ORDER: "Cancel Order" } },
-      contentUr: { text: "آگے بڑھنے کا انتخاب کریں۔", actionLabels: { CONTINUE_ORDER: "آرڈر جاری رکھیں", CANCEL_ORDER: "آرڈر منسوخ کریں" } }
+      contentEn: { text: "Choose how to proceed.", actionLabels: { CONTINUE_ORDER: "Continue Order", CANCEL_OFFER: "Cancel Offer" } },
+      contentUr: { text: "آگے بڑھنے کا انتخاب کریں۔", actionLabels: { CONTINUE_ORDER: "آرڈر جاری رکھیں", CANCEL_OFFER: "آفر منسوخ کریں." } }
     }, "OFFER");
-    expect(offer.contentUr.actionLabels).toEqual({ CONTINUE_ORDER: "آرڈر جاری رکھیں", CANCEL_ORDER: "آرڈر منسوخ کریں" });
+    expect(offer.contentUr.actionLabels).toEqual({ CONTINUE_ORDER: "آرڈر جاری رکھیں", CANCEL_OFFER: "آفر منسوخ کریں." });
     expect(() => parseWhatsAppContentDraft({ contentEn: { text: "Offer", actionLabels: { CONTINUE_ORDER: "Continue Order" } }, contentUr: { text: "آفر", actionLabels: { CONTINUE_ORDER: "آرڈر جاری رکھیں" } } }, "OFFER")).toThrow("WHATSAPP_CONTENT_ACTION_LABELS_INVALID");
   });
 

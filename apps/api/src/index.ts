@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { applyFertilizerDecision, codQuote, codReferenceHmac, createWhatsAppProvider, customerTransactionReferenceHash, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isInsideWhatsAppServiceWindow, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, MetaCapiProvider, MetaFlowEnvelope, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeMobileContactNumber, normalizePaymentMethodRow, normalizeWhatsAppWaId, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInboundConversationActivity, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey } from "@gfs/core";
+import { applyFertilizerDecision, cancellationReasonFromAction, cancellationReasonRows, cancellationRecovery, cancellationStageForState, codQuote, codReferenceHmac, createWhatsAppProvider, customerTransactionReferenceHash, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isInsideWhatsAppServiceWindow, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, maskCancellationReference, MetaCapiProvider, MetaFlowEnvelope, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeMobileContactNumber, normalizePaymentMethodRow, normalizeWhatsAppWaId, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInboundConversationActivity, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, sanitizeCancellationSuggestion, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey, type CancellationFeedbackState, type CancellationReasonCode, type CancellationStage } from "@gfs/core";
 import { handleMetaFlowPayload } from "./flow-endpoint";
 import { admitWhatsAppSenders } from "./rate-limit";
 import { createPaymentV2Schedule, enqueueDuePaymentV2Stages, isPaymentReminderV2ServiceWindowOpen, resolvePaymentReminderCodFallback, setPaymentReminderV2OptOut } from "./payment-reminders-v2";
@@ -95,7 +95,32 @@ async function createFlowToken(waId: string, inboundId: string, secret: string):
 async function verifyFlowToken(token: string, secret: string): Promise<string | null> { const [payload, signature] = token.split("."); if (!payload || !signature) return null; try { const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["verify"]); if (!(await crypto.subtle.verify("HMAC", key, decodeBase64Url(signature), new TextEncoder().encode(payload)))) return null; const data = JSON.parse(new TextDecoder().decode(decodeBase64Url(payload))) as { waId?: string; exp?: number }; return typeof data.waId === "string" && typeof data.exp === "number" && data.exp > Date.now() ? data.waId : null; } catch { return null; } }
 
 type CodQuoteSnapshot = { baseAmountPkr: number; feePkr: number; totalPkr: number; policyRevision: string; collectionPolicyHash: string | null; remittancePolicyHash: string | null };
-type ConversationData = { language?: "en" | "ur"; fullName?: string; deliveryAddress?: string; nearbyPlace?: string; city?: string; contactNumber?: string; province?: string; fertilizerSelected?: boolean; checkoutId?: string; orderId?: string; orderNumber?: string; amountPkr?: number; codQuote?: CodQuoteSnapshot };
+type ConversationData = { language?: "en" | "ur"; fullName?: string; deliveryAddress?: string; nearbyPlace?: string; city?: string; contactNumber?: string; province?: string; fertilizerSelected?: boolean; checkoutId?: string; orderId?: string; orderNumber?: string; amountPkr?: number; codQuote?: CodQuoteSnapshot; cancellationFeedback?: CancellationFeedbackState };
+
+type PendingCancellationEvent = { id: string; conversationId: string; maskedRef: string; stage: CancellationStage; language: "en" | "ur" | "UNKNOWN"; providerEventId: string; occurredAt: string };
+type PendingCancellationFeedback = { cancellationEventId: string; eventType: "REASON" | "SUGGESTION" | "SKIPPED" | "OUTCOME" | "RESTARTED"; reasonCode?: CancellationReasonCode; suggestion?: string; recoveryCode?: string; responseOutcome: "REASON_SELECTED" | "FEEDBACK_SKIPPED" | "SUGGESTION_REQUESTED" | "SUGGESTION_PROVIDED" | "SUGGESTION_SKIPPED" | "RESTARTED"; providerEventId: string; occurredAt: string; suggestionExpiresAt?: string };
+
+function cancellationConfirmation(locale: "en" | "ur", stage: CancellationStage): string {
+  if (String(locale) === "ur") return stage === "OFFER" ? "آفر منسوخ کر دی گئی ہے۔ کوئی آرڈر یا ادائیگی نہیں بنائی گئی۔" : "غیر جمع شدہ آرڈر منسوخ کر دیا گیا ہے۔ کوئی آرڈر یا ادائیگی نہیں بنائی گئی۔";
+  if (locale === "ur") return stage === "OFFER" ? "آفر منسوخ کر دی گئی ہے۔ کوئی آرڈر یا ادائیگی نہیں بنائی گئی۔" : "غیر جمع شدہ آرڈر منسوخ کر دیا گیا ہے۔ کوئی آرڈر یا ادائیگی نہیں بنائی گئی۔";
+  return stage === "OFFER" ? "The offer is cancelled. No order or payment was created." : "The unsubmitted order is cancelled. No order or payment was created.";
+}
+
+function cancellationReasonPrompt(locale: "en" | "ur"): string {
+  if (String(locale) === "ur") return "اگر چاہیں تو بہتری کے لیے ایک وجہ بتا دیں۔ یہ اختیاری ہے؛ آپ اسے چھوڑ سکتے ہیں یا کسی بھی وقت START لکھ سکتے ہیں۔";
+  return locale === "ur" ? "اگر چاہیں تو بہتری کے لیے ایک وجہ بتا دیں۔ یہ اختیاری ہے؛ آپ اسے چھوڑ سکتے ہیں یا کسی بھی وقت START لکھ سکتے ہیں۔" : "Optionally tell us one reason so we can improve. You may skip this or reply START at any time.";
+}
+
+function cancellationSuggestionPrompt(locale: "en" | "ur", recovery?: string): string {
+  if (String(locale) === "ur") return recovery ? `${recovery}\n\nاگر چاہیں تو 300 حروف تک ایک تجویز بھی دے سکتے ہیں۔` : "اگر چاہیں تو 300 حروف تک ایک تجویز بھی دے سکتے ہیں۔";
+  const prompt = locale === "ur" ? "اگر چاہیں تو 300 حروف تک ایک تجویز بھی دے سکتے ہیں۔" : "You may also share an optional suggestion of up to 300 characters.";
+  return recovery ? `${recovery}\n\n${prompt}` : prompt;
+}
+
+function cancellationFeedbackComplete(locale: "en" | "ur"): string {
+  if (String(locale) === "ur") return "شکریہ۔ آپ کی منسوخی برقرار ہے۔ دوبارہ شروع کرنے کے لیے جب چاہیں START لکھیں۔";
+  return locale === "ur" ? "شکریہ۔ آپ کی منسوخی برقرار ہے۔ دوبارہ شروع کرنے کے لیے جب چاہیں START لکھیں۔" : "Thank you. Your cancellation remains effective. Reply START whenever you want to begin again.";
+}
 
 function isControlledCodTester(waId: string, configuredTester: string | undefined): boolean {
   const normalizedInbound = normalizeWhatsAppWaId(waId);
@@ -509,7 +534,7 @@ async function finalizeCodOrder(db: D1Database, orderId: string, quote: CodQuote
 
 async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }, flowId: string, flowTokenSecret?: string, checkoutMode: string = "guided", events?: Queue, codEnabled = false, codRolloutMode?: string, codTesterWaId?: string, paymentRemindersV2Enabled = false, paymentAutomationV2Enabled = false): Promise<boolean> {
   const sessionContent = (key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; amount?: string | number; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string; orderSummaryItems?: string; deliveryFee?: string | number; orderTotal?: string | number; codFee?: string | number } = {}) => contentFor(db, key, fallback, values, `CHAT:${event.from}`, data.language ?? "en");
-  const message = event.payload && typeof event.payload === "object" ? event.payload as { text?: { body?: string }; interactive?: { button_reply?: { id?: string; title?: string }; list_reply?: { id?: string; title?: string }; nfm_reply?: { response_json?: string } }; button?: { payload?: string; text?: string } } : {};
+  const message = event.payload && typeof event.payload === "object" ? event.payload as { text?: { body?: string }; interactive?: { button_reply?: { id?: string; title?: string }; list_reply?: { id?: string; title?: string }; nfm_reply?: { response_json?: string } }; button?: { payload?: string; text?: string }; context?: { id?: string } } : {};
   const interaction = message.interactive?.button_reply ?? message.interactive?.list_reply;
   const interactionId = interaction?.id ?? message.button?.payload;
   const text = (typeof message.text?.body === "string" ? message.text.body.trim() : String(interactionId ?? interaction?.title ?? message.button?.text ?? (message.interactive?.nfm_reply ? "FLOW_SUBMIT" : "")).trim()) || (message.interactive || message.button ? "INVALID_CALLBACK" : "");
@@ -517,8 +542,11 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   // Deduplicate before interpreting a replay against a later conversation state.
   const delivered = await db.prepare("SELECT provider_message_id FROM outbound_messages WHERE idempotency_key=?").bind(`conversation_reply:${event.id}`).first<{ provider_message_id: string | null }>();
   if (delivered?.provider_message_id) return true;
+  const recordedCancellationInput = await db.prepare(`SELECT provider_event_id FROM checkout_cancellation_events WHERE provider_event_id=?
+    UNION ALL SELECT provider_event_id FROM checkout_cancellation_feedback_events WHERE provider_event_id=? LIMIT 1`).bind(`message:${event.id}`, `message:${event.id}`).first<{ provider_event_id: string }>();
+  if (recordedCancellationInput) return true;
   let normalized = (interactionId ?? text).toUpperCase().replace(/\s+/g, "_");
-  const row = await db.prepare("SELECT state,state_data FROM whatsapp_conversations WHERE wa_id=?").bind(event.from).first<{ state: string; state_data: string }>();
+  const row = await db.prepare("SELECT id,state,state_data FROM whatsapp_conversations WHERE wa_id=?").bind(event.from).first<{ id: string; state: string; state_data: string }>();
   const state = row?.state ?? "NEW";
   if (/^[12]$/.test(normalized)) {
     if (state === "LANGUAGE") normalized = normalized === "1" ? "LANG_UR" : "LANG_EN";
@@ -528,6 +556,12 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   const originalStateData = row?.state_data ?? "{}";
   let data: ConversationData = {};
   try { data = row?.state_data ? JSON.parse(row.state_data) as ConversationData : {}; } catch { data = {}; }
+  let callbackOrigin: "OFFER" | "REVIEW" | undefined;
+  if (message.context?.id) {
+    const origin = await db.prepare("SELECT kind FROM outbound_messages WHERE provider_message_id=? LIMIT 1").bind(message.context.id).first<{ kind: string }>();
+    if (origin?.kind === "CONVERSATION_OFFER") callbackOrigin = "OFFER";
+    if (origin?.kind === "CONVERSATION_REVIEW") callbackOrigin = "REVIEW";
+  }
   const codConfirmationReply = (orderNumber: string, total: number) => data.language === "ur" ? `آرڈر ${orderNumber} وصولی پر ادائیگی کے لیے تصدیق ہو گیا۔ ڈیلیوری پر PKR ${total} ادا کریں۔` : `Order ${orderNumber} is confirmed for Cash on Delivery. Pay PKR ${total} on delivery.`;
   if (state === "COD_PENDING" && normalized === "CONFIRM_COD_ORDER" && data.orderId) {
     // Only the winning event can recover its reply; this never reopens COD intake or changes the winning state.
@@ -590,13 +624,17 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
     }
   };
   const preSubmitStates = ["NEW", "LANGUAGE", "OFFER", "FERTILIZER", "PRODUCT", "PROVINCE", "FULL_NAME", "ADDRESS", "NEARBY", "CITY", "CONTACT", "REVIEW"];
-  // The new Review button is an alias for the existing safe unsubmitted-cancel path.
-  if (normalized === "CANCEL_ORDER" && preSubmitStates.includes(state)) normalized = "CANCEL";
+  const feedback = state === "CANCELLED" ? data.cancellationFeedback : undefined;
+  const feedbackReason = cancellationReasonFromAction(normalized);
+  const preSubmitCancellation = preSubmitStates.includes(state) && (normalized === "CANCEL" || normalized === "CANCEL_ORDER" || (state === "OFFER" && normalized === "CANCEL_OFFER"));
   const actionAllowed = /^(STATUS|CHECK_ORDER|HELP|SUPPORT)$/.test(normalized)
-    || (/^(CANCEL|CANCEL_ORDER)$/.test(normalized) && preSubmitStates.includes(state))
-    || (state === "OFFER" && /^(CONTINUE_ORDER|CANCEL_ORDER)$/.test(normalized))
+    || preSubmitCancellation
+    || (state === "OFFER" && /^(CONTINUE_ORDER|CANCEL_OFFER|CANCEL_ORDER)$/.test(normalized))
     || (state === "NEW" && normalized === "GET_FREE_PACKS")
-    || (state === "CANCELLED" && normalized === "START")
+    || (state === "CANCELLED" && (normalized === "START"
+      || (feedback?.phase === "REASON" && (Boolean(feedbackReason) || normalized === "SKIP_FEEDBACK"))
+      || (feedback?.phase === "SUGGESTION_DECISION" && /^(ADD_SUGGESTION|SKIP_SUGGESTION)$/.test(normalized))
+      || (feedback?.phase === "SUGGESTION_TEXT" && (normalized === "SKIP_SUGGESTION" || Boolean(message.text?.body?.trim())))))
     || (["NEW", "PAYMENT_PENDING", "COMPLETE"].includes(state) && normalized === "START")
     || (state === "LANGUAGE" && /^(LANG_EN|LANG_UR)$/.test(normalized))
     || (["FERTILIZER", "PRODUCT"].includes(state) && /^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/.test(normalized))
@@ -607,13 +645,67 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
     || (state === "COD_CONFIRM" && /^(CONFIRM_COD_ORDER|ADVANCE_PAYMENT)$/.test(normalized))
     || (state === "COD_PENDING" && normalized === "ADVANCE_PAYMENT")
     || (state === "PAYMENT_GRACE" && Boolean(data.orderId) && /^(CONFIRM_COD|KEEP_ADVANCE|CANCEL_ORDER)$/.test(normalized));
-  const semanticAction = /^(START|GET_FREE_PACKS|LANG_.*|PAY_.*|PAYMENT_HELP|PROVINCE_.*|ADD_FERTILIZER|SEEDS_ONLY|PLACE_ORDER|CONFIRM(_ORDER)?|BACK|CONTINUE_ORDER|CANCEL(_ORDER)?|FLOW_SUBMIT|ADVANCE_PAYMENT|COD|CONFIRM_COD_ORDER|KEEP_ADVANCE|CONFIRM_COD)$/.test(normalized) || Boolean(paymentMethodFromAction(normalized));
+  const semanticAction = /^(START|GET_FREE_PACKS|LANG_.*|PAY_.*|PAYMENT_HELP|PROVINCE_.*|ADD_FERTILIZER|SEEDS_ONLY|PLACE_ORDER|CONFIRM(_ORDER)?|BACK|CONTINUE_ORDER|CANCEL(_ORDER|_OFFER)?|CANCEL_REASON_.*|SKIP_FEEDBACK|ADD_SUGGESTION|SKIP_SUGGESTION|FLOW_SUBMIT|ADVANCE_PAYMENT|COD|CONFIRM_COD_ORDER|KEEP_ADVANCE|CONFIRM_COD)$/.test(normalized) || Boolean(paymentMethodFromAction(normalized));
   const invalidAction = Boolean(message.interactive || message.button || semanticAction) && !actionAllowed;
   let paymentSelection: { orderId: string; orderNumber: string; amount: number; method: PaymentMethod; locale: "en" | "ur"; message: string; idempotencyKey: string; config: ReturnType<typeof normalizePaymentMethodRow> } | undefined;
   let completePaymentMethods: Awaited<ReturnType<typeof completeEnabledPaymentMethods>> = [];
   let showPaymentChoice = false;
   let showAdvanceMethods = false;
+  let feedbackOptions: ConversationReplyOptions | undefined;
+  let pendingCancellationEvent: PendingCancellationEvent | undefined;
+  let pendingCancellationFeedback: PendingCancellationFeedback | undefined;
   if (invalidAction) { reply = (await sessionContent("VALIDATION", "Please choose one of the listed options.")).text; }
+  else if (preSubmitCancellation) {
+    const locale = data.language ?? "en";
+    const occurredAt = new Date().toISOString();
+    const cancellationEventId = crypto.randomUUID();
+    const originalStage = callbackOrigin ?? cancellationStageForState(state);
+    const conversationId = row?.id ?? crypto.randomUUID();
+    pendingCancellationEvent = { id: cancellationEventId, conversationId, maskedRef: maskCancellationReference(event.from), stage: originalStage, language: data.language ?? "UNKNOWN", providerEventId: `message:${event.id}`, occurredAt };
+    nextState = "CANCELLED";
+    data = { language: data.language, cancellationFeedback: { eventId: cancellationEventId, originalStage, phase: "REASON", fertilizerSelected: Boolean(data.fertilizerSelected) } };
+    reply = `${cancellationConfirmation(locale, originalStage)}\n\n${cancellationReasonPrompt(locale)}`;
+    feedbackOptions = { list: { buttonText: locale === "ur" ? "وجہ منتخب کریں" : "Choose a reason", rows: [
+      ...cancellationReasonRows(locale, Boolean(data.cancellationFeedback!.fertilizerSelected)),
+      { id: "SKIP_FEEDBACK", title: locale === "ur" ? "چھوڑیں" : "Skip", description: locale === "ur" ? "وجہ بتانا اختیاری ہے۔" : "Sharing a reason is optional." }
+    ] } };
+  }
+  else if (state === "CANCELLED" && feedback?.phase === "REASON" && feedbackReason) {
+    const locale = data.language ?? "en";
+    const recovery = cancellationRecovery(feedbackReason, locale);
+    data.cancellationFeedback = { ...feedback, phase: "SUGGESTION_DECISION", reasonCode: feedbackReason };
+    pendingCancellationFeedback = { cancellationEventId: feedback.eventId, eventType: "REASON", reasonCode: feedbackReason, recoveryCode: recovery?.code, responseOutcome: "REASON_SELECTED", providerEventId: `message:${event.id}`, occurredAt: new Date().toISOString() };
+    reply = cancellationSuggestionPrompt(locale, recovery?.text);
+    feedbackOptions = { buttons: [{ id: "ADD_SUGGESTION", title: locale === "ur" ? "تجویز دیں" : "Add suggestion" }, { id: "SKIP_SUGGESTION", title: locale === "ur" ? "چھوڑیں" : "Skip" }] };
+  }
+  else if (state === "CANCELLED" && feedback?.phase === "REASON" && normalized === "SKIP_FEEDBACK") {
+    data.cancellationFeedback = { ...feedback, phase: "COMPLETE" };
+    pendingCancellationFeedback = { cancellationEventId: feedback.eventId, eventType: "SKIPPED", responseOutcome: "FEEDBACK_SKIPPED", providerEventId: `message:${event.id}`, occurredAt: new Date().toISOString() };
+    reply = cancellationFeedbackComplete(data.language ?? "en");
+  }
+  else if (state === "CANCELLED" && feedback?.phase === "SUGGESTION_DECISION" && normalized === "ADD_SUGGESTION") {
+    data.cancellationFeedback = { ...feedback, phase: "SUGGESTION_TEXT" };
+    pendingCancellationFeedback = { cancellationEventId: feedback.eventId, eventType: "OUTCOME", reasonCode: feedback.reasonCode, responseOutcome: "SUGGESTION_REQUESTED", providerEventId: `message:${event.id}`, occurredAt: new Date().toISOString() };
+    reply = cancellationSuggestionPrompt(data.language ?? "en");
+    feedbackOptions = { buttons: [{ id: "SKIP_SUGGESTION", title: data.language === "ur" ? "چھوڑیں" : "Skip" }] };
+  }
+  else if (state === "CANCELLED" && ["SUGGESTION_DECISION", "SUGGESTION_TEXT"].includes(feedback?.phase ?? "") && normalized === "SKIP_SUGGESTION") {
+    data.cancellationFeedback = { ...feedback!, phase: "COMPLETE" };
+    pendingCancellationFeedback = { cancellationEventId: feedback!.eventId, eventType: "SKIPPED", reasonCode: feedback!.reasonCode, responseOutcome: "SUGGESTION_SKIPPED", providerEventId: `message:${event.id}`, occurredAt: new Date().toISOString() };
+    reply = cancellationFeedbackComplete(data.language ?? "en");
+  }
+  else if (state === "CANCELLED" && feedback?.phase === "SUGGESTION_TEXT" && message.text?.body?.trim()) {
+    const suggestion = sanitizeCancellationSuggestion(message.text.body);
+    if (!suggestion) {
+      reply = data.language === "ur" ? "براہ کرم 300 حروف تک تجویز دیں، یا چھوڑ دیں۔" : "Please keep the suggestion to 300 characters, or skip it.";
+      feedbackOptions = { buttons: [{ id: "SKIP_SUGGESTION", title: data.language === "ur" ? "چھوڑیں" : "Skip" }] };
+    } else {
+      const occurredAt = new Date().toISOString();
+      data.cancellationFeedback = { ...feedback, phase: "COMPLETE" };
+      pendingCancellationFeedback = { cancellationEventId: feedback.eventId, eventType: "SUGGESTION", reasonCode: feedback.reasonCode, suggestion, responseOutcome: "SUGGESTION_PROVIDED", providerEventId: `message:${event.id}`, occurredAt, suggestionExpiresAt: new Date(Date.parse(occurredAt) + 90 * 24 * 60 * 60 * 1000).toISOString() };
+      reply = cancellationFeedbackComplete(data.language ?? "en");
+    }
+  }
   else if (state === "PAYMENT_GRACE" && data.orderId && /^(CONFIRM_COD|KEEP_ADVANCE|CANCEL_ORDER)$/.test(normalized)) {
     const policy = codAvailable ? { feePkr: Number(codSettings!.fee_pkr), revision: codSettings!.revision, collectionPolicyHash: codSettings!.collection_policy_hash, remittancePolicyHash: codSettings!.remittance_policy_hash, testHold: codTestHoldForAdmission(codRolloutMode) } : undefined;
     const choice = normalized === "CONFIRM_COD" ? "CONFIRMED_COD" : normalized === "KEEP_ADVANCE" ? "KEPT_ADVANCE" : "CANCELLED";
@@ -629,6 +721,13 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   else if (/^(STATUS|CHECK_ORDER)$/i.test(normalized)) { const locale = data.language ?? "en"; const order = await getLatestOrderForWaId(db, event.from, data.orderId); const status = await sessionContent("ORDER_STATUS", "Use Check Order to see the current order and payment status."); const paymentStatusCopy = order ? await paymentCopyForOrder(db, order.id, "status_copy", locale) : undefined; reply = order ? `${paymentStatusCopy ?? status.text}\n${formatCustomerOrderStatus(order, locale)}` : locale === "ur" ? "اس واٹس ایپ گفتگو کے لیے کوئی آرڈر نہیں ملا۔" : "No order was found for this WhatsApp conversation."; }
   else if (/^(HELP|SUPPORT)$/i.test(normalized)) { reply = (await sessionContent("SUPPORT", "Reply START to begin, STATUS to check an order, or CANCEL to stop the current order entry.")).text; }
   else if ((state === "NEW" && normalized === "GET_FREE_PACKS")) { nextState = "OFFER"; reply = (await sessionContent("OFFER", "Choose whether to continue your free seed order or cancel this unsubmitted request.")).text; }
+  else if (state === "CANCELLED" && normalized === "START" && feedback?.eventId) {
+    pendingCancellationFeedback = { cancellationEventId: feedback.eventId, eventType: "RESTARTED", reasonCode: feedback.reasonCode, responseOutcome: "RESTARTED", providerEventId: `message:${event.id}`, occurredAt: new Date().toISOString() };
+    nextState = "LANGUAGE";
+    data = {};
+    const [welcomeUr, welcomeEn] = await Promise.all([contentFor(db, "WELCOME", "Get Free Seeds", {}, `CHAT:${event.from}`, "ur"), contentFor(db, "WELCOME", "Welcome to Get Free Seeds!", {}, `CHAT:${event.from}`, "en")]);
+    reply = `${welcomeUr.text}\n\n${welcomeEn.text}`;
+  }
   else if (state === "CANCELLED" && normalized === "START") { nextState = "LANGUAGE"; data = {}; const [welcomeUr, welcomeEn] = await Promise.all([contentFor(db, "WELCOME", "گٹ فری سیڈز میں خوش آمدید!", {}, `CHAT:${event.from}`, "ur"), contentFor(db, "WELCOME", "Welcome to Get Free Seeds!", {}, `CHAT:${event.from}`, "en")]); reply = `${welcomeUr.text}\n\n${welcomeEn.text}`; }
   else if (state === "NEW" && (normalized === "START" || Boolean(text))) { nextState = "LANGUAGE"; const [welcomeUr, welcomeEn] = await Promise.all([contentFor(db, "WELCOME", "گٹ فری سیڈز میں خوش آمدید!", {}, `CHAT:${event.from}`, "ur"), contentFor(db, "WELCOME", "Welcome to Get Free Seeds!", {}, `CHAT:${event.from}`, "en")]); reply = `${welcomeUr.text}\n\n${welcomeEn.text}`; }
   else if (state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) { data.language = normalized === "LANG_UR" ? "ur" : "en"; nextState = "OFFER"; reply = (await sessionContent("OFFER", "Choose whether to continue your free seed order or cancel this unsubmitted request.")).text; }
@@ -732,6 +831,7 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
     }
   }
   else if (state === "COMPLETE" && normalized === "START") { const order = await getLatestOrderForWaId(db, event.from, data.orderId); reply = order ? `${formatCustomerOrderStatus(order, data.language ?? "en")}\n${noPaymentRequest()}` : noPaymentRequest(); }
+  else if (state === "CANCELLED") { reply = cancellationFeedbackComplete(data.language ?? "en"); }
   if (!reply) {
     const invalidKey: WhatsAppTemplateKey = state === "PAYMENT_METHOD" ? "PAYMENT" : state === "PAYMENT_PENDING" ? "ORDER_STATUS" : state === "LANGUAGE" ? "WELCOME" : "VALIDATION";
     reply = (await sessionContent(invalidKey, invalidKey === "PAYMENT" ? "Choose a verified payment method." : "Please choose one of the listed options.", { orderNumber: data.orderNumber ?? "", amount: data.amountPkr })).text;
@@ -778,17 +878,26 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
   if (state === "CONTACT" && !guidedFieldIsValid(state, rawContactInput) && previousContactNumber) data.contactNumber = previousContactNumber;
   if (state === "CONTACT" && nextState === "REVIEW" && data.contactNumber) data.contactNumber = normalizeMobileContactNumber(data.contactNumber) ?? data.contactNumber;
   const paymentOptions = completePaymentMethods.map((method) => ({ id: paymentActionId(method.method), title: paymentActionTitle(payment, method) }));
-  let options: ConversationReplyOptions = {};
-  if ((state === "LANGUAGE" && !/^(LANG_EN|LANG_UR)$/.test(normalized)) || (state === "CANCELLED" && normalized === "START") || (state === "NEW" && normalized !== "GET_FREE_PACKS" && Boolean(text))) {
+  let options: ConversationReplyOptions = feedbackOptions ?? {};
+  if (feedbackOptions) {
+    // Cancellation is already effective; these controls collect optional feedback only.
+  } else if ((state === "LANGUAGE" && !/^(LANG_EN|LANG_UR)$/.test(normalized)) || (state === "CANCELLED" && normalized === "START") || (state === "NEW" && normalized !== "GET_FREE_PACKS" && Boolean(text))) {
     options = { buttons: [{ id: "LANG_UR", title: whatsAppActionLabel(welcomeUr, "LANG_UR") }, { id: "LANG_EN", title: whatsAppActionLabel(welcomeEn, "LANG_EN") }] };
   } else if (sessionFlowToken) {
     options = { flow: { id: flowId, token: sessionFlowToken } };
+  } else if ((state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) || (state === "NEW" && normalized === "GET_FREE_PACKS")) {
+    options = { buttons: [
+      { id: "CONTINUE_ORDER", title: offer.actionLabels?.CONTINUE_ORDER ?? (data.language === "ur" ? "آرڈر جاری رکھیں" : "Continue Order") },
+      { id: "CANCEL_OFFER", title: data.language === "ur" ? "آفر منسوخ کریں." : "Cancel Offer" }
+    ] };
   } else if ((state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) || (state === "NEW" && normalized === "GET_FREE_PACKS")) {
     options = { buttons: [{ id: "CONTINUE_ORDER", title: offer.actionLabels?.CONTINUE_ORDER ?? (data.language === "ur" ? "آرڈر جاری رکھیں" : "Continue Order") }, { id: "CANCEL_ORDER", title: offer.actionLabels?.CANCEL_ORDER ?? (data.language === "ur" ? "آرڈر منسوخ کریں" : "Cancel Order") }] };
   } else if (state === "OFFER" && normalized === "CONTINUE_ORDER" && nextState === "FERTILIZER") {
     options = { buttons: [{ id: "ADD_FERTILIZER", title: whatsAppActionLabel(fertilizer, "ADD_FERTILIZER") }, { id: "SEEDS_ONLY", title: whatsAppActionLabel(fertilizer, "SEEDS_ONLY") }] };
   } else if ((state === "FERTILIZER" || state === "PRODUCT") && /^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/i.test(normalized) && nextState === "PROVINCE" && provinceRows.length) {
     options = { list: { buttonText: province.listButtonLabel!, rows: provinceRows } };
+  } else if (state === "CONTACT" && nextState === "REVIEW" && data.language === "ur") {
+    options = { buttons: [{ id: "CONFIRM_ORDER", title: "آرڈر کی تصدیق" }, { id: "CANCEL_ORDER", title: "آرڈر منسوخ کریں." }] };
   } else if (state === "CONTACT" && nextState === "REVIEW") {
     options = { buttons: [{ id: "CONFIRM_ORDER", title: data.language === "ur" ? "\u0622\u0631\u0688\u0631 \u06a9\u06cc \u062a\u0635\u062f\u06cc\u0642" : "Confirm Order" }, { id: "CANCEL_ORDER", title: data.language === "ur" ? "\u0622\u0631\u0688\u0631 \u0645\u0646\u0633\u0648\u062e" : "Cancel Order" }] };
   } else if (showPaymentChoice) {
@@ -813,12 +922,32 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
   if (mediaKey && mediaKey !== "PAYMENT") options.image = await contentImageFor(db, bucket, mediaKey, `CHAT:${event.from}`);
   const now = new Date().toISOString();
   const statusReply = /^(STATUS|CHECK_ORDER|HELP|SUPPORT)$/.test(normalized) || (normalized === "START" && ["PAYMENT_PENDING", "COMPLETE"].includes(state));
-  const savedConversation = await db.prepare(`INSERT INTO whatsapp_conversations (id,wa_id,state,state_data,last_inbound_message_id,created_at,updated_at) VALUES (?,?,?,?,?,?,?)
+  const conversationId = row?.id ?? pendingCancellationEvent?.conversationId ?? crypto.randomUUID();
+  const conversationStatement = db.prepare(`INSERT INTO whatsapp_conversations (id,wa_id,state,state_data,last_inbound_message_id,created_at,updated_at) VALUES (?,?,?,?,?,?,?)
     ON CONFLICT(wa_id) DO UPDATE SET state=excluded.state,state_data=excluded.state_data,last_inbound_message_id=excluded.last_inbound_message_id,updated_at=excluded.updated_at
     WHERE whatsapp_conversations.state=? AND whatsapp_conversations.state_data=?
     AND (? IS NULL OR ?='COD_PENDING' OR ?=1 OR NOT EXISTS(SELECT 1 FROM orders o WHERE o.id=? AND o.payment_status IN ('COD_PENDING','PAID')))`)
-    .bind(crypto.randomUUID(), event.from, nextState, JSON.stringify(data), event.id, now, now, state, originalStateData, data.orderId ?? null, nextState, statusReply ? 1 : 0, data.orderId ?? null).run();
+    .bind(conversationId, event.from, nextState, JSON.stringify(data), event.id, now, now, state, originalStateData, data.orderId ?? null, nextState, statusReply ? 1 : 0, data.orderId ?? null);
+  const statements = [conversationStatement];
+  if (pendingCancellationEvent) {
+    statements.push(db.prepare(`INSERT INTO checkout_cancellation_events
+      (id,conversation_id,masked_conversation_ref,original_stage,language,order_id,provider_event_id,occurred_at,created_at)
+      SELECT ?,?,?,?,?,NULL,?,?,? WHERE EXISTS(
+        SELECT 1 FROM whatsapp_conversations WHERE id=? AND wa_id=? AND state='CANCELLED' AND last_inbound_message_id=?
+      )`).bind(pendingCancellationEvent.id, conversationId, pendingCancellationEvent.maskedRef, pendingCancellationEvent.stage, pendingCancellationEvent.language, pendingCancellationEvent.providerEventId, pendingCancellationEvent.occurredAt, now, conversationId, event.from, event.id));
+  }
+  if (pendingCancellationFeedback) {
+    statements.push(db.prepare(`INSERT INTO checkout_cancellation_feedback_events
+      (id,cancellation_event_id,event_type,reason_code,suggestion,recovery_code,response_outcome,provider_event_id,occurred_at,suggestion_expires_at,created_at)
+      SELECT ?,?,?,?,?,?,?,?,?,?,? WHERE EXISTS(
+        SELECT 1 FROM checkout_cancellation_events ce JOIN whatsapp_conversations wc ON wc.id=ce.conversation_id
+        WHERE ce.id=? AND wc.last_inbound_message_id=?
+      )`).bind(crypto.randomUUID(), pendingCancellationFeedback.cancellationEventId, pendingCancellationFeedback.eventType, pendingCancellationFeedback.reasonCode ?? null, pendingCancellationFeedback.suggestion ?? null, pendingCancellationFeedback.recoveryCode ?? null, pendingCancellationFeedback.responseOutcome, pendingCancellationFeedback.providerEventId, pendingCancellationFeedback.occurredAt, pendingCancellationFeedback.suggestionExpiresAt ?? null, now, pendingCancellationFeedback.cancellationEventId, event.id));
+  }
+  const savedResults = pendingCancellationEvent || pendingCancellationFeedback ? await db.batch(statements) : [await conversationStatement.run()];
+  const savedConversation = savedResults[0];
   if (!savedConversation.meta.changes) return true;
+  if ((pendingCancellationEvent || pendingCancellationFeedback) && Number(savedResults[1]?.meta?.changes ?? 0) !== 1) return true;
   if (paymentSelection) {
     const delivery = await deliverPaymentInstructions(db, bucket, provider, event.from, paymentSelection.orderId, paymentSelection.orderNumber, paymentSelection.amount, paymentSelection.method, paymentSelection.locale, paymentSelection.message, paymentSelection.idempotencyKey, paymentSelection.config);
     try { if (events) await events.send({ kind: "WHATSAPP_PAYMENT_INSTRUCTIONS", idempotencyKey: paymentSelection.idempotencyKey, entityId: paymentSelection.orderId, schemaVersion: 1 }); } catch { /* the durable outbox remains authoritative */ }
@@ -829,11 +958,11 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
     await db.prepare("UPDATE whatsapp_conversations SET state=?,state_data=?,updated_at=? WHERE wa_id=? AND last_inbound_message_id=? AND state=? AND state_data=? AND NOT EXISTS(SELECT 1 FROM orders o WHERE o.id=? AND o.payment_status IN ('COD_PENDING','PAID'))").bind(state, originalStateData, new Date().toISOString(), event.from, event.id, nextState, JSON.stringify(data), paymentSelection.orderId).run();
     return true;
   }
-  const association = data.orderId
+  const association: ConversationOutboundAssociation = data.orderId
     ? { orderId: data.orderId, kind: nextState === "PAYMENT_METHOD" ? "PAYMENT_CHOICE" : "CONVERSATION_REPLY" }
-    : {};
+    : { kind: nextState === "OFFER" ? "CONVERSATION_OFFER" : nextState === "REVIEW" ? "CONVERSATION_REVIEW" : nextState === "CANCELLED" ? "CANCELLATION_FEEDBACK" : "CONVERSATION_REPLY" };
   const sent = await sendConversationReply(db, provider, event.from, event.id, reply, options, `conversation_reply:${event.id}`, association);
-  if (!sent.sent && nextState !== "COD_PENDING") await db.prepare("UPDATE whatsapp_conversations SET state=?,state_data=?,updated_at=? WHERE wa_id=? AND last_inbound_message_id=? AND state=? AND state_data=? AND (? IS NULL OR NOT EXISTS(SELECT 1 FROM orders o WHERE o.id=? AND o.payment_status IN ('COD_PENDING','PAID')))").bind(state, originalStateData, new Date().toISOString(), event.from, event.id, nextState, JSON.stringify(data), data.orderId ?? null, data.orderId ?? null).run();
+  if (!sent.sent && nextState !== "COD_PENDING" && !pendingCancellationEvent && !pendingCancellationFeedback) await db.prepare("UPDATE whatsapp_conversations SET state=?,state_data=?,updated_at=? WHERE wa_id=? AND last_inbound_message_id=? AND state=? AND state_data=? AND (? IS NULL OR NOT EXISTS(SELECT 1 FROM orders o WHERE o.id=? AND o.payment_status IN ('COD_PENDING','PAID')))").bind(state, originalStateData, new Date().toISOString(), event.from, event.id, nextState, JSON.stringify(data), data.orderId ?? null, data.orderId ?? null).run();
   return true;
 }
 

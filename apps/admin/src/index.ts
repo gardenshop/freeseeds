@@ -1,9 +1,10 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { canTransition, configuredPaymentMethodNames, codReferenceHmac, createMetaActivationService, createWhatsAppProvider, customerTransactionReferenceHash, getLatestOrderForWaId, isInsideWhatsAppServiceWindow, MetaActivationAction, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, hasPaymentMessagePlaceholders, isPaymentMethodComplete, isPaymentMethodLocaleComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, publishedWhatsAppContent, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, WhatsAppActionId, whatsAppActionIdsForTemplate, whatsAppActionLabel, WhatsAppContent, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
+import { canTransition, configuredPaymentMethodNames, codReferenceHmac, createMetaActivationService, createWhatsAppProvider, customerTransactionReferenceHash, getLatestOrderForWaId, isInsideWhatsAppServiceWindow, MetaActivationAction, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, hasPaymentMessagePlaceholders, isPaymentMethodComplete, isPaymentMethodLocaleComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, publishedWhatsAppContent, runtimeWhatsAppActionId, storedWhatsAppActionId, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, WhatsAppActionId, whatsAppActionIdsForTemplate, whatsAppActionLabel, WhatsAppContent, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
 import { analyticsCsv, AnalyticsInputError, parseAnalyticsFilters, readInboundAnalytics } from "./analytics";
 import { ConversationInputError, parseConversationFilters, readConversation, readConversations, readConversationSummary } from "./conversations";
 import { conversationsDashboardPageHtml } from "./conversations-dashboard";
+import { CancellationInputError, cancellationDashboardPageHtml, parseCancellationFilters, readCancellationReport } from "./cancellations";
 
   type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_CAPI_ENABLED?: string; REFERENCE_REQUESTS_ENABLED?: string; PAYMENT_CHOICE_RECOVERY_ENABLED?: string; COD_REFERENCE_HMAC_KEY?: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
 const app = new Hono<Env>();
@@ -482,7 +483,7 @@ function contentWithoutActionLabels(content: WhatsAppContent): Omit<WhatsAppCont
 }
 
 function actionLabelStatements(db: D1Database, key: ReturnType<typeof WhatsAppTemplateKey.parse>, version: number, contentEn: WhatsAppContent, contentUr: WhatsAppContent, now: string, actor: string) {
-  return whatsAppActionIdsForTemplate(key).map((actionId) => db.prepare("INSERT INTO whatsapp_content_version_action_labels (template_key,version,action_id,label_en,label_ur,created_at,created_by) VALUES (?,?,?,?,?,?,?)").bind(key, version, actionId, contentEn.actionLabels?.[actionId], contentUr.actionLabels?.[actionId], now, actor));
+  return whatsAppActionIdsForTemplate(key).map((actionId) => db.prepare("INSERT INTO whatsapp_content_version_action_labels (template_key,version,action_id,label_en,label_ur,created_at,created_by) VALUES (?,?,?,?,?,?,?)").bind(key, version, storedWhatsAppActionId(key, actionId), contentEn.actionLabels?.[actionId], contentUr.actionLabels?.[actionId], now, actor));
 }
 
 function paymentCopy(value: unknown, previous: unknown): string | undefined {
@@ -611,15 +612,29 @@ form.onsubmit=(event)=>{event.preventDefault();load()};const setRange=(daysBack)
 }
 
 function adminHomePageHtml(): string {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Home | Get Free Seeds</title><style>
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Home | Get Free Seeds</title><style>
 :root{color-scheme:light;--ink:#17231c;--muted:#657269;--line:#dbe3dc;--paper:#fff;--wash:#edf2ed;--green:#174d31;--green-2:#dcecdf;--amber:#8a5b00;--shadow:0 12px 32px rgba(23,35,28,.08)}*{box-sizing:border-box}body{margin:0;background:var(--wash);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.shell{max-width:1320px;margin:auto;padding:clamp(18px,4vw,42px)}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:28px}.eyebrow{color:var(--green);font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}.top h1{font:700 clamp(32px,5vw,54px)/1 Georgia,serif;margin:7px 0 10px}.top p{max-width:650px;color:var(--muted);margin:0}.status{border:1px solid var(--line);border-radius:14px;background:var(--paper);padding:14px 16px;min-width:220px;box-shadow:var(--shadow)}.status strong{display:block;color:var(--green)}.status span{display:block;color:var(--muted);font-size:13px;margin-top:3px}.hero{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,1fr);gap:16px;margin-bottom:30px}.hero-card,.notice,.module{border:1px solid var(--line);border-radius:16px;background:var(--paper);box-shadow:var(--shadow)}.hero-card{padding:clamp(22px,4vw,38px);background:linear-gradient(135deg,#174d31,#286a48);color:#fff}.hero-card h2{font:700 clamp(25px,3vw,38px)/1.1 Georgia,serif;margin:0 0 12px}.hero-card p{max-width:620px;color:#e7f2e9;margin:0 0 22px}.button{display:inline-block;border-radius:9px;padding:10px 15px;background:#fff;color:var(--green);font-weight:800;text-decoration:none}.notice{padding:22px}.notice h2{font-size:18px;margin:0 0 8px}.notice p{color:var(--muted);margin:0}.section-title{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:0 0 12px}.section-title h2{font:700 25px Georgia,serif;margin:0}.section-title span{color:var(--muted);font-size:13px}.modules{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.module{display:block;padding:18px;text-decoration:none;color:inherit;transition:transform .15s ease,box-shadow .15s ease}.module:hover,.module:focus-visible{transform:translateY(-2px);box-shadow:0 16px 36px rgba(23,35,28,.12);outline:2px solid var(--green);outline-offset:2px}.module strong{display:block;color:var(--green);font-size:16px}.module span{display:block;color:var(--muted);font-size:13px;margin-top:5px}.footer{margin-top:28px;color:var(--muted);font-size:12px}@media(max-width:950px){.modules{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{grid-template-columns:1fr}}@media(max-width:560px){.shell{padding:16px}.top{display:block}.status{margin-top:18px;min-width:0}.modules{grid-template-columns:1fr}.hero-card,.notice,.module{border-radius:12px}.section-title{display:block}.section-title span{display:block;margin-top:4px}}
 </style></head><body><main class="shell"><header class="top"><div><div class="eyebrow">Protected operations console</div><h1>Get Free Seeds Admin</h1><p>Payment review, fulfillment, WhatsApp operations and read-only performance insights in one protected workspace.</p></div><div class="status"><strong>Admin workspace</strong><span>Access-controlled · changes require confirmation</span></div></header><section class="hero"><article class="hero-card"><h2>Keep every order moving.</h2><p>Start with Orders for payment review and fulfillment. Use Analytics and Conversations for privacy-safe operational context.</p><a class="button" href="/orders">Open Orders &amp; Fulfillment</a></article><aside class="notice"><h2>Protected workspace</h2><p>Customer data is available only inside authorized modules. This home page performs no data reads and exposes no private records.</p></aside></section><section aria-labelledby="operations-title"><div class="section-title"><h2 id="operations-title">Operations</h2><span>Authorized modules</span></div><div class="modules"><a class="module" href="/orders"><strong>Orders &amp; Fulfillment</strong><span>Review payments, COD and dispatch queues.</span></a><a class="module" href="/analytics"><strong>Inbound Analytics</strong><span>Read-only funnel and recovery aggregates.</span></a><a class="module" href="/conversations"><strong>Conversations</strong><span>Privacy-safe WhatsApp conversation viewer.</span></a><a class="module" href="/payment-settings"><strong>Payment Settings</strong><span>Review configured payment methods.</span></a><a class="module" href="/cod-settings"><strong>COD Settings</strong><span>Review controlled COD policy state.</span></a><a class="module" href="/payment-beneficiary-review"><strong>Payment Verification</strong><span>Review beneficiary and payment controls.</span></a><a class="module" href="/whatsapp-content"><strong>WhatsApp Content</strong><span>Manage approved EN/UR content workflows.</span></a><a class="module" href="/payment-reminders"><strong>Payment Reminders</strong><span>Review recovery templates and delivery state.</span></a><a class="module" href="/catalog"><strong>Catalog &amp; Delivery</strong><span>Review products and province rates.</span></a><a class="module" href="/tariff"><strong>Tariff Management</strong><span>Review authoritative quote inputs.</span></a><a class="module" href="/meta-activation"><strong>Meta Activation</strong><span>Status and controlled activation tools.</span></a><a class="module" href="/test-controls"><strong>Test Controls</strong><span>Authorized operational diagnostics.</span></a></div></section><p class="footer">Get Free Seeds · Protected operations console · No public customer actions are available here.</p></main></body></html>`;
+  return html.replace('<a class="module" href="/payment-settings">', '<a class="module" href="/cancellations"><strong>Cancellation Analytics</strong><span>Offer/order stages, reasons and optional feedback.</span></a><a class="module" href="/payment-settings">');
 }
 
 app.get("/", (c) => c.html(adminHomePageHtml()));
 
 app.get("/analytics", (c) => c.html(analyticsPageHtml()));
 app.get("/conversations", (c) => c.html(conversationsDashboardPageHtml()));
+app.get("/cancellations", (c) => c.html(cancellationDashboardPageHtml()));
+
+app.get("/api/cancellations", async (c) => {
+  if (!c.env.DB) return c.json({ error: "CANCELLATION_ANALYTICS_UNAVAILABLE" }, 503);
+  try {
+    const filters = parseCancellationFilters({ from: c.req.query("from"), to: c.req.query("to"), stage: c.req.query("stage"), reason: c.req.query("reason") });
+    return c.json(await readCancellationReport(c.env.DB, filters), 200, { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" });
+  } catch (error) {
+    if (error instanceof CancellationInputError) return c.json({ error: error.message }, 400);
+    if (isD1QuotaError(error)) return d1QuotaResponse(c, "CANCELLATION_ANALYTICS_UNAVAILABLE");
+    throw error;
+  }
+});
 
 async function conversationsResponse(c: AdminContext, detailId?: string) {
   if (!c.env.DB) return c.json({ error: "CONVERSATIONS_UNAVAILABLE" }, 503);
@@ -897,7 +912,7 @@ app.get("/api/whatsapp-content", async (c) => {
   for (const row of actionLabels.results ?? []) {
     const mapKey = `${row.template_key}:${row.version}`;
     const labels = labelsByVersion.get(mapKey) ?? { en: {}, ur: {} };
-    const actionId = WhatsAppActionId.safeParse(row.action_id).data;
+    const actionId = runtimeWhatsAppActionId(WhatsAppTemplateKey.parse(row.template_key), row.action_id);
     if (!actionId) continue;
     labels.en[actionId] = row.label_en;
     labels.ur[actionId] = row.label_ur;
@@ -1123,7 +1138,7 @@ async function publishWhatsAppContent(c: AdminContext, rollback: boolean) {
   const enActionLabels: Partial<Record<WhatsAppActionId, string>> = {};
   const urActionLabels: Partial<Record<WhatsAppActionId, string>> = {};
   for (const label of targetLabels.results ?? []) {
-    const actionId = WhatsAppActionId.safeParse(label.action_id).data;
+    const actionId = runtimeWhatsAppActionId(key, label.action_id);
     if (!actionId) continue;
     enActionLabels[actionId] = label.label_en;
     urActionLabels[actionId] = label.label_ur;
