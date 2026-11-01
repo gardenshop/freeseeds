@@ -1,5 +1,14 @@
 # Status
 
+## GFS-400 Permanent Admin layout lock (2026-11-01 UTC)
+
+- **Diagnosis/repair PASS:** GFS-399's incomplete `.shell` replacement put `margin:auto`/`padding` outside the CSS rule. Before repair, live CSS1920 measured shell `x=0`; after repair it measures `x=100.5`, width1700, with balanced margins. This is distinct from GFS-397's stale mobile/touch emulation that explained the earlier narrow pane.
+- **Layout tests PASS:** final rendered shell geometry, split proportions, breakpoints, no clipping/root overflow and the malformed-rule regression are protected in `tests/admin-layout.test.ts`; focused4/4. Chrome cleanup rule requires clearing emulation, touch/zoom and version headers, then verifying genuine desktop metrics.
+- **Candidate/release PASS:** Admin `07e75c15-946e-4cf6-813c-8262ac4dfeff` was uploaded and validated at0%, then promoted once to100% in deployment `7b6813c1-5e5e-4926-9fff-be5e105060e4`; GFS-399 rollback `36665bef-1eef-48e8-8788-c6760db0bd63` is0%. API remains `b426ba47`100% / `d603f077`0%.
+- **Browser PASS:** candidate and normal post-cutover checks passed CSS1920/1675/1440/1280, tablet768 and mobile430/390/360/320 with no root/body overflow; normal desktop shell/workspace/master/detail was `100.5/1652/697/941px`. Orders and Conversations controls retained independent saved states, correct ON/OFF labels/ARIA/colors and mobile fit. Only known favicon404 appeared in each page console.
+- **Watchdog/result:** initial PID19860 failed before candidate observation because its temporary Windows path handling was defective; it never changed routing. Corrected PID3872 observed candidate100%, remained through acceptance, and stopped as `stopped_after_acceptance`; no rollback occurred.
+- **Protected scope PASS:** fresh Cloudflare identity matched target account, canonical Meta was read-only checked, API routing stayed frozen, and no D1 write, migration, flag, payment, Queue/Cron, customer, WhatsApp or Hoja/ThanNow action occurred. Full346/346 across27, build, lint and rollback4/4 pass. GitHub push remains blocked until the invalid `gardenshop` token is reauthenticated.
+
 ## GFS-399 Auto Update button colors and Admin-only release (2026-11-01 UTC)
 
 - **Implementation PASS:** Orders `#orders-auto` and Conversations `#auto` use CSS driven by `aria-pressed`. ON computes to green `#17603C` with white text; OFF computes to neutral white with dark text and a subtle border. No polling/storage JavaScript changed.

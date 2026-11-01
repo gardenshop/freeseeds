@@ -1,5 +1,42 @@
 # Final Report
 
+## GFS-400 Permanent Admin layout lock and zero WhatsApp regression (2026-11-01 UTC)
+
+### Result
+
+**PASS with watchdog incident transparently repaired.** The recurring desktop alignment defect was fixed at its source, the approved responsive layout is now guarded by a stronger test contract, and the Admin-only release completed without API or WhatsApp change.
+
+### Root cause and repair
+
+- GFS-397's earlier 330px physical pane was correctly explained by stale Chrome 320x800 mobile/touch metrics. GFS-400 found a separate real source defect introduced by GFS-399: the string replacement closed `.shell` before appending the Auto Update selectors, so `margin:auto` and padding were discarded. At CSS1920 the live shell was x0; after repair it is x100.5 with equal margins.
+- The minimal fix matches the complete shell rule before adding selectors. No polling, localStorage, API, payment, Meta, D1, migration, flag, Queue/Cron, customer or WhatsApp logic changed.
+
+### Layout and functional acceptance
+
+- Candidate and normal Chrome checks passed CSS1920/1675/1440/1280, tablet768 and mobile430/390/360/320. Normal CSS1920 geometry: shell x100.5/width1700, workspace1652, Orders master697, Details941; root/body overflow false.
+- Orders and Conversations Auto Update remained independent and persisted saved states. ON/aria-pressed=true is green `#17603C`/white; OFF/false is neutral white/dark with subtle border. Existing polling pause/lease/single-flight/summary-limit behavior was not changed.
+- Candidate read-only GET smoke returned HTTP200 for Orders, Conversations list/summary, Analytics, Payment Settings and COD. Only the known favicon404 console error appeared. No customer-bearing screenshot or private record was retained.
+
+### Permanent guard and release
+
+- `tests/admin-layout.test.ts`: focused4/4, final shell-rule/centered-geometry guard, responsive/split/overflow contract; full suite346/346 across27, build, lint and legacy rollback4/4 pass.
+- Admin candidate `07e75c15-946e-4cf6-813c-8262ac4dfeff` was uploaded at0%, validated with authenticated version override, then promoted once to100% in deployment `7b6813c1-5e5e-4926-9fff-be5e105060e4`. Exact rollback `36665bef-1eef-48e8-8788-c6760db0bd63` is0%.
+- API remains `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100% / `d603f077-cc44-4882-af9b-9985adb53424`0%. Fresh Cloudflare identity matched `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta Ads Manager was read-only verified. No D1 write, migration, flag, payment, Meta, Queue/Cron, customer or WhatsApp mutation occurred.
+- Initial pre-cutover watchdog PID19860 exited before observation because of a temporary Windows path defect; it made no route change and did not rollback. Corrected independent PID3872 observed candidate100% at `2026-11-01T09:05:19.099Z` UTC, remained through acceptance, and stopped as `stopped_after_acceptance`; no rollback was triggered.
+
+### GFS comparison and remaining work
+
+| Item | Result |
+|---|---|
+| GFS-397 | PASS: stale browser device metrics diagnosed and cleaned; earlier narrow-pane symptom explained. |
+| GFS-398 | PASS: Admin-only release/watchdog protocol established. |
+| GFS-399 | PASS: Auto Update visual state contract released. |
+| GFS-400 | PASS: malformed shell replacement repaired, geometry locked, Admin100 stable, API/WhatsApp untouched. |
+
+- Completion: source/tests100%; Admin candidate/release100%; layout/browser acceptance100%; API protected100%; WhatsApp regression evidence100% for the no-mutation boundary; GitHub synchronization0% for this turn because the stored `gardenshop` CLI token is invalid, so the new source/docs are not yet pushed.
+- Remaining task: reauthenticate the authorized GitHub `gardenshop` identity, commit the tested source/tests/protected records, push PR #11, and independently verify the remote SHA. Next priority is that GitHub synchronization; no further deployment or traffic change is needed.
+- The official audit remains REVIEW with10 moderate dev-only `minimatch` findings and no available fix; audit0 is not claimed. New-number WhatsApp lock and Hoja/ThanNow zero-connection rule remain preserved.
+
 ## GFS-399 Auto Update button colors and Admin-only release (2026-11-01 UTC)
 
 ### Result

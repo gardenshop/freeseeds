@@ -35,6 +35,8 @@ describe("Admin layout regression contract", () => {
     const html = await response.text();
 
     expect(html).toContain(".shell{max-width:1700px");
+    expect(html).toContain(".shell{max-width:1700px;margin:auto;padding:24px}");
+    expect(html).not.toContain(".refresh:focus-visible{outline:3px solid #8cc9a2;outline-offset:2px};margin:auto");
     expect(html).toContain(".workspace{display:grid;grid-template-columns:minmax(360px,1fr) minmax(420px,1.35fr);grid-template-rows:minmax(0,1fr);gap:14px;height:calc(100vh - 285px);min-height:520px;min-width:0}");
     expect(html).toContain(".master{min-width:0;min-height:0;overflow:hidden}");
     expect(html).toContain(".detail{min-width:0;min-height:0}");
@@ -44,6 +46,22 @@ describe("Admin layout regression contract", () => {
     expect(html).toContain("@media(max-width:560px){.shell{padding:14px}.tabs{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr}");
     expect(html).not.toContain("width:330px");
     expect(html).not.toContain("minmax(330px");
+  });
+
+  it("keeps rendered shell geometry centered at the approved desktop widths", async () => {
+    const response = await app.fetch(new Request("https://admin.example.test/orders", { headers: auth }), env);
+    const html = await response.text();
+    const shellRule = html.match(/\.shell\{max-width:(\d+)px;margin:auto;padding:([\d]+)px\}/);
+    expect(shellRule?.[1]).toBe("1700");
+    expect(shellRule?.[2]).toBe("24");
+
+    for (const viewport of [1280, 1440, 1675, 1920]) {
+      const shellWidth = Math.min(viewport, 1700);
+      const leftMargin = (viewport - shellWidth) / 2;
+      expect(leftMargin).toBeGreaterThanOrEqual(0);
+      expect(leftMargin).toBeCloseTo((viewport - shellWidth) / 2, 6);
+      expect(shellWidth - 48).toBeGreaterThanOrEqual(1232);
+    }
   });
 
   it("keeps synthetic desktop dimensions wide enough at both tested DPRs", () => {

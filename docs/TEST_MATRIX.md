@@ -1,5 +1,22 @@
 # Test Matrix
 
+## GFS-400 Permanent Admin layout lock and release (2026-11-01 UTC)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Root-cause diagnosis | PASS | GFS-399 replacement closed `.shell` before margin/padding; pre-repair CSS1920 shell x0, post-repair x100.5. Stale Chrome metrics remain a separate GFS-397 cause. |
+| Rendered geometry guard | PASS | Focused4/4; final shell rule, centered geometry at CSS1280/1440/1675/1920, split and no malformed closed-rule pattern are asserted without customer fixtures. |
+| Chrome desktop/tablet/mobile | PASS | Candidate and normal checks at CSS1920/1675/1440/1280, 768, 430, 390, 360 and 320; correct split/stacking, button fit and root/body overflow false. |
+| Browser cleanup | PASS | Device metrics/touch/zoom override and candidate version headers were cleared before reload; final real desktop reported CSS1920, DPR1, visual scale1. |
+| Auto Update contract | PASS retained | Orders and Conversations remain independent, CSS `aria-pressed` states, ON green/white, OFF neutral/dark, saved state and polling behavior unchanged. |
+| Functional smoke | PASS | Candidate read-only GETs: Orders, Conversations list/summary, Analytics, Payment Settings and COD all HTTP200; no POST/DELETE or D1 write. |
+| Console/security | PASS with known residual | Only favicon404 console error; canonical Meta read-only identity, target Cloudflare identity and protected Admin routes remained intact. |
+| Admin release | PASS | Candidate `07e75c15`100%; exact rollback `36665bef`0%; one Admin-only cutover. |
+| API/WhatsApp boundary | PASS | API `b426ba47`100% / `d603f077`0%; no API, payment, Meta, customer, Queue/Cron, flag, migration, D1 or WhatsApp mutation. |
+| Watchdog | PASS with incident recorded | PID19860 failed before observation without mutation; corrected PID3872 observed candidate100%, stopped after acceptance, rollback not triggered. |
+| Regression gates | PASS | Full346/346 across27, build, lint, legacy rollback4/4. |
+| Dependency audit | REVIEW/BLOCKED | Official10 moderate unfixed dev-only `minimatch` advisories remain; no audit0 claim. |
+
 ## GFS-399 Auto Update visual release and Admin cutover (2026-11-01 UTC)
 
 | Check | Result | Evidence / boundary |

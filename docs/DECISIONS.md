@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-400 Permanent Admin layout lock decision (2026-11-01 UTC)
+
+- Classify the recurring far-left desktop alignment as a real source defect introduced by GFS-399's malformed CSS replacement, while retaining GFS-397's separate stale Chrome emulation diagnosis for the earlier narrow-pane symptom. Repair only the replacement boundary so the shell remains centered with max-width1700px and 24px padding.
+- Require the final rendered layout contract and browser cleanup protocol in the Admin layout test: centered/equal margins, shared boundaries, split proportions, responsive breakpoints, no clipping/overflow, reload/navigation/tab coverage, Auto Update state, DPR0.8/1/1.25 and normal zoom. Keep all business and polling behavior unchanged.
+- Accept Admin candidate `07e75c15-946e-4cf6-813c-8262ac4dfeff` after 0%-traffic authenticated acceptance and one direct Admin-only cutover to100%; retain exact GFS-399 rollback `36665bef-1eef-48e8-8788-c6760db0bd63` at0%. API remains frozen at `b426ba47`100% / `d603f077`0%.
+- Record the watchdog truthfully: PID19860 failed before observation because of temporary Windows path handling and performed no mutation; corrected PID3872 observed candidate100%, stayed through acceptance, and stopped with `stopped_after_acceptance` without rollback. No further traffic change is authorized by this record.
+- Preserve fresh identity, canonical Meta read-only boundary, new-number WhatsApp lock, Hoja/ThanNow zero-connection rule, D1 budget,10 moderate dev-only minimatch findings and no-audit0 claim. GitHub synchronization remains pending owner reauthentication because the stored `gardenshop` CLI token is invalid.
+
 ## GFS-399 Auto Update visual release decision (2026-11-01 UTC)
 
 - Accept the minimal CSS-only `aria-pressed` visual contract: ON `#17603C`/white and OFF white/dark with subtle border, consistent dimensions, focus outline and mobile fit. Keep existing independent localStorage and polling behavior unchanged.

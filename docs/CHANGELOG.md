@@ -1,5 +1,13 @@
 # Changelog
 
+## GFS-400 Permanent Admin layout lock (2026-11-01)
+
+- Fixed the malformed GFS-399 shell CSS replacement that caused the desktop Admin content to start at the far left; `margin:auto` and padding now remain inside the shell rule. Added a rendered-geometry regression guard and browser cleanup requirements.
+- Candidate `07e75c15` passed 0% authenticated desktop/tablet/mobile acceptance and was promoted once to Admin100%; rollback `36665bef` remains0%. API stayed `b426ba47`100% / `d603f077`0%.
+- Normal post-cutover geometry passed: CSS1920 shell x100.5/1700, workspace1652, master/detail697/941; mobile/tablet stacking and root overflow passed. Orders/Conversations Auto Update state behavior was unchanged.
+- Initial watchdog PID19860 failed before observation due a temporary Windows path defect and did not mutate routing. Corrected PID3872 observed candidate100% and stopped after acceptance without rollback. Full346/346, layout4/4, build, lint and rollback4/4 passed.
+- Fresh Cloudflare target identity and canonical Meta read-only identity passed. GitHub remote is correct but push is pending invalid CLI-token reauthentication. Known favicon404 and10 moderate dev-only minimatch advisories remain; no audit0 claim.
+
 ## GFS-399 Auto Update button colors and Admin-only release (2026-11-01)
 
 - Added CSS attribute-selector states for Orders and Conversations Auto Update buttons: ON is green/white, OFF is neutral/dark, with accessible focus styling and unchanged dimensions/storage behavior.

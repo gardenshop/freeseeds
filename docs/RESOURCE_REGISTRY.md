@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-400 Permanent Admin layout lock evidence (2026-11-01)
+
+- **Source/candidate:** local tested repair fixes the complete `.shell{max-width:1500px;margin:auto;padding:24px}` replacement; candidate `07e75c15-946e-4cf6-813c-8262ac4dfeff`, tag `gfs400-admin-layout-lock`, was uploaded from the tested worktree and attached at0% before the single cutover.
+- **Routing:** Admin deployment `7b6813c1-5e5e-4926-9fff-be5e105060e4` is candidate `07e75c15`100% / exact rollback `36665bef-1eef-48e8-8788-c6760db0bd63`0%. API deployment remains `b426ba47`100% / `d603f077`0%.
+- **Root-cause evidence:** pre-repair live CSS1920 shell was `x=0`, width1700, computed margins0 because the replacement closed the rule before `margin:auto`; post-repair shell is `x=100.5`, width1700, workspace1652, master/detail697/941, root/body overflow false. GFS-397 stale device metrics remain a separate earlier cause of the 330px physical symptom.
+- **Browser matrix:** candidate override and normal post-cutover checks covered CSS1920/1675/1440/1280, tablet768 and mobile430/390/360/320; controls, stacking and overflow passed. No customer-bearing screenshot or DOM capture was retained. Console contained only the known favicon404.
+- **Watchdog:** PID19860 initial temporary watchdog exited before observation due a Windows path bug and made no mutation. Corrected PID3872 observed candidate100% at `2026-11-01T09:05:19.099Z` UTC, stopped after acceptance, and recorded no rollback.
+- **Identity/scope:** fresh Wrangler identity was target `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta Ads Manager was read-only verified. No API, D1 write, migration, flag, payment, Meta, Queue/Cron, customer or WhatsApp mutation; Hoja/ThanNow were not accessed. GitHub target URL is correct but CLI credentials were invalid, so push is pending reauthentication.
+
 ## GFS-399 Auto Update visual release evidence (2026-11-01)
 
 - **Source:** exact pushed commit `d208efd104337d5fa2deb7ea09298c8bb23da388`; runtime change is CSS-only for existing `aria-pressed` state, with focused assertions in the two existing Admin UI test files.
