@@ -4,7 +4,7 @@
 
 ### Result
 
-**PKT source verification PASS; release BLOCKED.** The tested local Admin source is commit `5ddb00f3a209a868240cf50a62f41915faaf2f5f`. The exact proof is `2026-11-01T07:14:33Z` -> `01-Nov-2026 12:14:33 PM PKT`; midnight, invalid timestamps and host-timezone invariance also pass. The source is not deployed, so live candidate acceptance is not claimed.
+**PKT source verification PASS; release BLOCKED.** The tested local Admin source repair is parent commit `5ddb00f3a209a868240cf50a62f41915faaf2f5f`; the complete pushed GFS-395 branch is `a1a317d2da1127e77b6f913811fbaa34ded1efb9`, matching the remote and PR #11. The exact proof is `2026-11-01T07:14:33Z` -> `01-Nov-2026 12:14:33 PM PKT`; midnight, invalid timestamps and host-timezone invariance also pass. The source is not deployed, so live candidate acceptance is not claimed.
 
 ### GFS-390 through GFS-395
 
@@ -20,14 +20,14 @@
 ### Evidence and blockers
 
 - Three sanitized browser cycles returned HTTP200 JSON for Orders list, changes, detail, Conversations list and detail. The frozen serving version returned HTTP404 for `/api/conversations/summary` in all three cycles because the GFS-394 source is undeployed. Cloudflare request IDs were present; no customer-bearing screenshot or DOM capture was retained.
-- Official Wrangler OAuth is restored and verified as `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. No Cloudflare mutation followed. GitHub remote readback is `0f3ecadd`; the configured `gardenshop` token is invalid, so the local commit was not pushed.
+- Official Wrangler OAuth is restored and verified as `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. No Cloudflare mutation followed. GitHub authentication was restored through the existing `gardenshop` profile; local and remote SHA readback both equal `a1a317d2da1127e77b6f913811fbaa34ded1efb9` and PR #11 is open.
 - Official npm audit is reachable and reports 10 moderate `minimatch` findings with no available fix. This is REVIEW/BLOCKED, not audit0.
 - Local tests are focused Admin19/19, full342/342 across26 files, build/lint/diff PASS. D1 write evidence is zero because no live mutation or write probe was run. API remains `b426ba47`100% / `d603f077`0%; Admin remains `ceb3e680`100% / `ab5be96b`0% as the protected recorded routing.
 - No WhatsApp regression was detected in this Admin-only, read-only work. The new-number lock and Hoja/ThanNow zero-connection rule remain unchanged; no sends, Meta edits, payment actions, Queue/Cron actions, migrations, flags or D1 writes occurred.
 
 ### Exact next Admin release approval
 
-Approve one exact, materially new Admin candidate upload and 0% attachment only, after GitHub push/auth is independently resolved; require fresh `gisupp@gmail.com` target-account readback immediately before the Cloudflare mutation. Do not approve Admin100% cutover, API canary, WhatsApp/Meta/payment changes or D1 writes under this approval.
+Approve one exact, materially new Admin candidate upload and 0% attachment only; require fresh `gisupp@gmail.com` target-account readback immediately before the Cloudflare mutation. Do not approve Admin100% cutover, API canary, WhatsApp/Meta/payment changes or D1 writes under this approval.
 
 ## GFS-394 Admin refresh reliability and Pakistan time (2026-11-01 UTC)
 

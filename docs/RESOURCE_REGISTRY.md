@@ -2,7 +2,7 @@
 
 ## GFS-395 verification evidence (2026-11-01)
 
-- **Git:** local tested commit `5ddb00f3a209a868240cf50a62f41915faaf2f5f`; read-only `origin` branch readback `0f3ecadd27996577dc2915a4f995b4eb7afeb63d`. No push occurred because the configured GitHub CLI token is invalid.
+- **Git:** source repair parent `5ddb00f3a209a868240cf50a62f41915faaf2f5f`; GFS-395 docs commit `a1a317d2da1127e77b6f913811fbaa34ded1efb9` was pushed and independently read back from `origin` and PR #11.
 - **Cloudflare identity:** official Wrangler OAuth was restored and fresh readback identified `gisupp@gmail.com` on target account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` (`Get Free Seeds`). The separate account `85f6a6181b4653c2a45e69cb7ce8a474` was not selected. No mutation occurred after identity verification.
 - **Live Admin read-only evidence:** three cycles each against Orders list/changes/detail and Conversations list/detail returned HTTP200 JSON with request IDs. Conversations summary returned HTTP404 in all cycles on the frozen older Admin version; no candidate upload or version override was performed.
 - **Security/isolation:** no secrets, tokens, customer payloads, screenshots, Meta assets, WhatsApp sends, D1 writes, migrations, flags, Queue/Cron actions, payment actions or routing changes were recorded or made. New-number and Hoja/ThanNow isolation remain intact.

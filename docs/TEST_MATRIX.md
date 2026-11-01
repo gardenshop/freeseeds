@@ -12,7 +12,7 @@
 | Repeated live Conversations probes | PARTIAL / not reproduced | Three cycles of list/detail HTTP200 JSON; summary HTTP404 each time on frozen pre-GFS-394 Admin |
 | Console/network diagnosis | PARTIAL | No Orders/Conversations transient failure; repeated 404 is the undeployed summary surface, not a fabricated outage root cause |
 | Wrangler identity | PASS | Official OAuth; target `gisupp@gmail.com` / Get Free Seeds account verified before any mutation; none made |
-| GitHub remote ancestry | PASS read-only | Remote branch reads `0f3ecadd`; local tested commit is `5ddb00f`; configured token invalid, so push not run |
+| GitHub push and ancestry | PASS | Existing `gardenshop` profile authenticated; local and remote branch both read `a1a317d2`; PR #11 remains open |
 | npm audit | REVIEW/BLOCKED | Official registry reachable; 10 moderate `minimatch` findings, no available fix |
 | Full regression/build/lint/diff | PASS | 342/342 across26 files; TypeScript build, ESLint and `git diff --check` |
 | Admin release | BLOCKED / NOT RUN | Fresh scoped approval, candidate0% validation, D1 budget/cost, watchdog and rollback evidence remain required |
