@@ -1,5 +1,14 @@
 # Decisions
 
+## GFS-403 cancellation facts and optional feedback (2026-11-01 UTC)
+
+- Use distinct runtime action IDs: OFFER uses `CANCEL_OFFER`; REVIEW uses `CANCEL_ORDER`. Keep a storage adapter to the legacy OFFER `CANCEL_ORDER` CMS key so existing production content rows do not require a destructive rewrite.
+- Make cancellation the atomic first write. Optional feedback is a separate append-only event stream and cannot gate or reverse cancellation. START is always allowed and records restart outcome without deleting history.
+- Classify stage from the replied-to outbound kind when available, then current pre-submission state; never infer unknown historical events as OFFER or REVIEW.
+- Store only masked conversation references and genuine order links. Suggestions are bounded to300 characters and hidden from Admin after90 days. Do not activate production storage until physical deletion is separately designed and approved; no background timer/Cron was added here.
+- Expose analytics only through authenticated read-only Admin GETs. Recovery text may clarify existing Advance/COD/seeds-only choices but cannot introduce discounts, fee waivers or marketing pressure.
+- Keep production frozen under GFS-403. Migration0046 and source `ac52cbe0a9959ab4a53631174a1de86584d12d0c` are reviewable only; no API/Admin deployment or D1 mutation is authorized. API monitoring reliability remains BLOCKED.
+
 ## GFS-402 Approval R: release decision (2026-11-01 UTC)
 
 - **Decision:** PASS and complete the one authorized Admin-only cutover for the already-tested GFS-401 candidate. Do not alter API, WhatsApp/Meta, payment, D1-write, migration, flag, Queue/DLQ, Cron, new-number or Hoja/ThanNow protocols.

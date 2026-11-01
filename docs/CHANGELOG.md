@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-01 — GFS-403 cancellation reasons, feedback and analytics
+
+- Added distinct OFFER `CANCEL_OFFER` labels in EN/UR while preserving REVIEW and legacy callback compatibility.
+- Added cancellation-first optional reason/suggestion/skip/restart handling, append-only provider-deduplicated local schema proposal0046, privacy masking and 90-day Admin visibility boundary.
+- Added authenticated read-only cancellation analytics and exact cancellation stage/history to Conversations.
+- Added synthetic EN/UR, stage, duplicate, stale, service-window, order/payment safety, retention, filter and browser acceptance coverage. Focused127/127, full356/356, build/lint, rollback4/4, diff/secret scan PASS; audit remains10 moderate dev-only findings.
+- Tested source is `ac52cbe0a9959ab4a53631174a1de86584d12d0c`. No migration, deploy, canary, D1 write, customer/payment/Meta/WhatsApp/flag/Queue/Cron mutation occurred; live Admin/API versions remain unchanged.
+
 ## GFS-402 Approval R: Admin footer and Refresh release (2026-11-01)
 
 - Released tested GFS-401 source `1a28987c6327e7ec8695e21b66dc2b08df360df9` as Admin `e8c96c96` at100% in deployment `c7a0eb5b-3a1e-41fb-bf8c-8ac630113418`; exact rollback `07e75c15` is0%; API stayed `b426ba47`100% / `d603f077`0%.

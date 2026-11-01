@@ -1,5 +1,37 @@
 # Final Report
 
+## GFS-403 Cancellation reasons, feedback and Admin analytics (2026-11-01 UTC)
+
+### Result
+
+**PASS locally; production release BLOCKED/not authorized.** Tested source `ac52cbe0a9959ab4a53631174a1de86584d12d0c` implements the requested cancellation contract and read-only Admin analytics. Migration0046 is unapplied, no Worker was deployed, and live monitoring remains blocked.
+
+### Customer and Admin behavior
+
+- OFFER sends `CANCEL_OFFER`, “Cancel Offer” / `آفر منسوخ کریں.`. REVIEW sends legacy-compatible `CANCEL_ORDER`, “Cancel Order” / `آرڈر منسوخ کریں.`. Legacy OFFER callbacks remain accepted; immutable stage is OFFER/REVIEW/OTHER_PRE_SUBMISSION, with UNKNOWN reserved for genuinely unknown history.
+- Cancellation is committed before the optional bilingual reason flow. Skip, bounded suggestion, START and reply/service-window failure cannot undo it. Recovery text only explains existing choices; it adds no discount, waiver or repeated pressure.
+- Unsubmitted cancellation creates no order/payment. Confirmed orders/payment rows remain unchanged. Provider-event dedupe prevents duplicate facts.
+- Authenticated Admin cancellation analytics show totals, OFFER/REVIEW/other/unknown counts, reason counts/percentages, PKT latest records/suggestions and stage/date/reason filters. Conversations list/detail show exact cancellation stage/history. References are masked; expired suggestions are hidden.
+
+### Validation and protected state
+
+- Focused127/127; full356/356 across28 files; build and lint PASS; legacy rollback4/4 against clean `cf01f444`; diff and changed-file secret scan PASS.
+- Official Chrome DevTools synthetic-only acceptance passed desktop1440, tablet768 and mobile390: PKT times/stages rendered, form fields fit, root/body overflow false and console errors0. The first desktop pass found blank date defaults; that defect was repaired and retested.
+- Official npm audit still reports exactly10 moderate dev-only `minimatch` findings with no fix. Audit0 is not claimed.
+- Fresh Cloudflare identity readback matched `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta was read-only verified. Admin remains `e8c96c96-ef94-4a33-bed6-7f284984002c`100% / `07e75c15-946e-4cf6-813c-8262ac4dfeff`0%. API remains `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100% / `d603f077-cc44-4882-af9b-9985adb53424`0%. No watchdog was required because no release occurred.
+- Production D1 evidence is unchanged/not queried for this feature. No migration, D1 write, API/Admin deploy/canary, payment, Meta, flag, Queue/DLQ, Cron, WhatsApp/customer/new-number or Hoja/ThanNow mutation occurred.
+
+### GFS-400/401/402/403 comparison
+
+| Work item | Result |
+|---|---|
+| GFS-400 permanent Admin layout lock | PASS; live historical release stable |
+| GFS-401 Orders footer/Conversations Refresh | PASS; source/candidate subsequently released by GFS-402 |
+| GFS-402 Approval R Admin release | PASS; Admin `e8c96c96` remains100% |
+| GFS-403 cancellation/feedback/analytics | PASS local; production migration/deploy/live monitoring BLOCKED |
+
+Completion: source100%; focused/full regression100%; desktop/tablet/mobile local acceptance100%; docs/Git commit100%; production migration0%; API/Admin release0%; live WhatsApp acceptance0%; API monitoring reliability0%/BLOCKED. Next priority is a separate approval covering physical suggestion retention, migration0046, coordinated API/Admin candidate validation and reliable monitoring. Do not run an API canary under GFS-403.
+
 ## GFS-402 Approval R: Admin footer and Refresh release (2026-11-01 UTC)
 
 ### Result

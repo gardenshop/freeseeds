@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-403 local-only cancellation resources (2026-11-01 UTC)
+
+- **Source:** `packages/core/src/cancellation.ts`, WhatsApp content compatibility, API cancellation state machine, Admin `cancellations.ts`, Conversations stage/history; tested commit `ac52cbe0a9959ab4a53631174a1de86584d12d0c`.
+- **Schema proposal:** `migrations/0046_checkout_cancellation_feedback.sql` creates append-only cancellation/feedback tables and indexes. Status: LOCAL ONLY / UNAPPLIED. Production activation requires separate migration approval and physical deletion for expired suggestions.
+- **Tests:** `tests/admin-cancellations.test.ts`, expanded guided/content/Conversations suites; synthetic data only. Focused127/127, full356/356, build/lint, rollback4/4, diff and secret scan PASS.
+- **Browser evidence:** official Chrome DevTools local Admin shell with injected synthetic aggregate only; desktop/tablet/mobile PKT/fit/overflow/console acceptance. No screenshot or customer-bearing artifact retained.
+- **External resources unchanged:** Cloudflare Get Free Seeds identity read-only verified; canonical Meta identity read-only verified. Admin `e8c96c96`100% / `07e75c15`0%; API `b426ba47`100% / `d603f077`0%. No Worker version, deployment, D1 record/migration, R2 object, Queue/Cron, flag, payment, message, Meta asset or customer resource created/changed.
+- **Security:** no secret/raw WhatsApp ID/provider payload in source or records; masked refs only. Official audit is10 moderate dev-only `minimatch` findings, no fix; do not record audit0.
+
 ## GFS-402 Approval R Admin release evidence (2026-11-01)
 
 - **Source/Admin:** tested source `1a28987c6327e7ec8695e21b66dc2b08df360df9`; candidate `e8c96c96-ef94-4a33-bed6-7f284984002c`, tag `gfs401-admin-footer-refresh`, is100% in deployment `c7a0eb5b-3a1e-41fb-bf8c-8ac630113418`; exact rollback `07e75c15-946e-4cf6-813c-8262ac4dfeff` is0%.

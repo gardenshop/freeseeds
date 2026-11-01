@@ -1,5 +1,14 @@
 # Status
 
+## GFS-403 cancellation feedback and analytics (2026-11-01 UTC)
+
+- **Result:** source/tests/Admin UI PASS locally; production migration/deployment/live acceptance BLOCKED by the explicit no-deploy boundary and by the unapproved physical deletion mechanism for 90-day suggestions.
+- **Tested source:** `ac52cbe0a9959ab4a53631174a1de86584d12d0c`. OFFER now emits `CANCEL_OFFER`; REVIEW retains `CANCEL_ORDER`; legacy OFFER `CANCEL_ORDER` remains accepted and stage-attributed. Cancellation persists before optional reason/skip/suggestion and remains effective through reply failure, closed service windows and restart.
+- **Data/Admin:** local-only migration0046 defines immutable cancellation and feedback events with provider dedupe and masked references. Authenticated read-only cancellation analytics provide stage/date/reason filters, totals/percentages and PKT latest feedback; Conversations show exact stage/history. Production D1 was not read or written for GFS-403.
+- **Quality:** focused127/127, full356/356 across28 files, build/lint, rollback4/4, diff/secret scan PASS. Official Chrome DevTools synthetic desktop/tablet/mobile matrix passed PKT display, fit, zero horizontal overflow and zero console errors. Audit remains10 moderate dev-only `minimatch` findings; no audit0 claim.
+- **Live state unchanged:** Admin `e8c96c96`100% / rollback `07e75c15`0%; API `b426ba47`100% / candidate `d603f077`0%. No deploy/canary/migration/flag/payment/Meta/WhatsApp/Queue/Cron mutation. API monitoring reliability remains BLOCKED.
+- **Next priority:** obtain separate approval for suggestion physical retention, migration0046, coordinated API/Admin candidate validation and live monitoring. Until then release completion is0%; source/tests/docs are100%.
+
 ## GFS-402 Approval R: Admin footer and Refresh release (2026-11-01 UTC)
 
 - **Release PASS:** Admin candidate `e8c96c96-ef94-4a33-bed6-7f284984002c` is100% in deployment `c7a0eb5b-3a1e-41fb-bf8c-8ac630113418`; exact rollback `07e75c15-946e-4cf6-813c-8262ac4dfeff` is0%. API remains `b426ba47`100% / `d603f077`0%.
