@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-402 Approval R Admin release evidence (2026-11-01)
+
+- **Source/Admin:** tested source `1a28987c6327e7ec8695e21b66dc2b08df360df9`; candidate `e8c96c96-ef94-4a33-bed6-7f284984002c`, tag `gfs401-admin-footer-refresh`, is100% in deployment `c7a0eb5b-3a1e-41fb-bf8c-8ac630113418`; exact rollback `07e75c15-946e-4cf6-813c-8262ac4dfeff` is0%.
+- **API/protected resources:** API `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100% / `d603f077-cc44-4882-af9b-9985adb53424`0%. No D1 write, migration, flag, payment, Meta, Queue/DLQ, Cron, customer or WhatsApp action occurred. New-number WhatsApp lock and Hoja/ThanNow isolation remain intact.
+- **Browser evidence:** Chrome DevTools MCP passed Orders25/50/100, page5/5, list/pager/detail bottom reachability, Previous/Next, desktop/tablet/mobile overflow, Auto Update color/ARIA/localStorage independence, Conversations status and exactly one list+summary+detail manual-refresh set. No customer-bearing screenshot/DOM/log retained; known favicon404 only.
+- **Watchdog/identity:** detached five-minute watchdog was armed before cutover, observed baseline then candidate100% with API safe, triggered no rollback and was disarmed after final acceptance. Fresh identity matched target Cloudflare account; canonical Meta Ads Manager remained read-only verified.
+- **Tests:** rollback4/4, deadline18/18, adapter8/8, observability5/5, focused24/24, full347/347, build and lint PASS. Official audit remains10 moderate dev-only `minimatch` findings; no audit0 claim.
+
 ## GFS-401 Orders footer and Conversations Refresh evidence (2026-11-01)
 
 - **Source:** commit `1a28987` changes only the active Admin Orders layout replacement, the read-only Conversations dashboard refresh coordinator, and privacy-safe tests. No backend/API, schema, migration, flag or business protocol changed.

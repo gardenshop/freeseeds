@@ -1,5 +1,12 @@
 # Decisions
 
+## GFS-402 Approval R: release decision (2026-11-01 UTC)
+
+- **Decision:** PASS and complete the one authorized Admin-only cutover for the already-tested GFS-401 candidate. Do not alter API, WhatsApp/Meta, payment, D1-write, migration, flag, Queue/DLQ, Cron, new-number or Hoja/ThanNow protocols.
+- **Evidence:** Admin `e8c96c96`100% / exact rollback `07e75c15`0% in deployment `c7a0eb5b-3a1e-41fb-bf8c-8ac630113418`; API `b426ba47`100% / `d603f077`0%. Candidate source unchanged from tested commit `1a28987c6327e7ec8695e21b66dc2b08df360df9`.
+- **Operational result:** watchdog armed before mutation, observed candidate and API-safe routing, no rollback triggered, then disarmed after independent final readback. Orders footer and detail actions were reachable; Conversations manual Refresh produced one list+summary+detail request set and visible PKT success status.
+- **Residuals:** `/health` without service-auth returned expected403; known favicon404 remains. Official audit remains10 moderate dev-only `minimatch` findings; no audit0 claim. Next stage is ordinary monitoring only; no Admin redesign is authorized absent a verified operational defect.
+
 ## GFS-401 Orders footer and Conversations Refresh decision (2026-11-01 UTC)
 
 - Classify the Orders footer issue as a real active-renderer layout defect: the GFS-400 replacement emitted `.master{min-width:0;min-height:0;overflow:hidden}` and a flex-looking list without a bounded flex parent, so pagination was clipped below the fixed workspace. Do not change order actions, filters, pagination semantics, payment/COD behavior or backend requests.

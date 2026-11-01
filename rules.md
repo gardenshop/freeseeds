@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-402 Approval R: Admin footer and Refresh release (2026-11-01 UTC)
+
+- **Release PASS:** tested GFS-401 source `1a28987c6327e7ec8695e21b66dc2b08df360df9` is live as Admin `e8c96c96-ef94-4a33-bed6-7f284984002c` at100% in deployment `c7a0eb5b-3a1e-41fb-bf8c-8ac630113418`; exact approved rollback `07e75c15-946e-4cf6-813c-8262ac4dfeff` is0%. API stayed `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100% / `d603f077-cc44-4882-af9b-9985adb53424`0%.
+- **Visual/runtime contract:** Orders pagination is reachable below a bounded independently scrolling list and long selected-order details/actions are independently scrollable. Conversations manual Refresh queues one follow-up, updates selected detail, and retains successful data on errors. Auto Update remains independent and CSS-driven by `aria-pressed`: ON `#17603C`/white/`true`, OFF white/dark/subtle border/`false`; polling behavior is unchanged.
+- **Acceptance/tests:** rollback4/4, deadline18/18, adapter8/8, observability5/5, focused24/24, full347/347 across27 files, build and lint PASS. Chrome DevTools MCP passed Orders25/50/100 rows, page5/5, pager/list/detail reachability, desktop/tablet/mobile matrix, Conversations status and one list+summary+detail manual-refresh set, Home, Analytics, Payment Settings and COD. Known favicon404 remains the only Conversations console entry; protected `/health` returned403 and `/api/csrf` returned200.
+- **Watchdog/routing:** detached five-minute watchdog armed before mutation at `2026-11-01T10:40:02Z`, observed baseline then candidate100% with API protected, and was disarmed after acceptance. No rollback triggered. Final readback: Admin candidate100% / `07e75c15`0%; API baseline100% / candidate0%.
+- **Protection/identity:** fresh Cloudflare identity matched `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta Ads Manager remained read-only verified. No API, customer, payment, Meta, D1-write, migration, flag, Queue/DLQ, Cron, new-number WhatsApp or Hoja/ThanNow mutation occurred. Official audit remains10 moderate dev-only `minimatch` findings; never claim audit0.
+
 ## GFS-401 Orders footer and Conversations Refresh (2026-11-01 UTC)
 
 - **Root causes proven:** the active Orders renderer replacement set `.master` to `overflow:hidden` without making it a column flex container, and `.orders` had no flex basis. At normal CSS1920 the live baseline list expanded to about8111px while the 557px master clipped it; pagination was below the clip. Conversations used `refresh(reason){if(inFlight)return}`, so a manual click during an active request produced no visual feedback and no queued follow-up.

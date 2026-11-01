@@ -1,5 +1,21 @@
 # Test Matrix
 
+## GFS-402 Approval R release matrix (2026-11-01 UTC)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Orders footer/list/detail | PASS | Page sizes25/50/100; page5/5; bounded list, reachable pager and long detail/actions at bottom |
+| Conversations Refresh | PASS | Visible success/PKT status; selected detail refreshed; one list+summary+detail GET set; no duplicate |
+| Auto Update | PASS | Independent saved states; ON green/white/true; OFF white/dark/false; polling gates unchanged |
+| Responsive browser | PASS | CSS desktop1920/1675/1440/1280 plus tablet768 and mobile430/390/360/320; no horizontal overflow |
+| Protected surfaces | PASS | Home, Analytics, Payment Settings, COD; `/health` protected403; `/api/csrf`200 |
+| Release safety | PASS | rollback4/4; watchdog deadline18/18, adapter8/8, observability5/5; candidate observed; no rollback |
+| Regression gates | PASS | focused24/24; full347/347; build; lint |
+
+## GFS-402 protected boundaries
+
+Admin `e8c96c96` is live100% with exact rollback `07e75c15`0%; API `b426ba47` remains100% and `d603f077`0%. No API, D1 write, migration, flag, payment, Meta, Queue/Cron, customer, WhatsApp, new-number or Hoja/ThanNow mutation occurred. Preserve the documented10 moderate dev-only `minimatch` findings; do not claim audit0.
+
 ## GFS-401 Orders footer and Conversations Refresh (2026-11-01 UTC)
 
 | Check | Result | Evidence / boundary |

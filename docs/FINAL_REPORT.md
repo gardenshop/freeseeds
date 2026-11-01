@@ -1,5 +1,40 @@
 # Final Report
 
+## GFS-402 Approval R: Admin footer and Refresh release (2026-11-01 UTC)
+
+### Result
+
+**PASS.** The tested GFS-401 Admin candidate is live100%; Orders footer/detail actions are reachable, Conversations Refresh is reliable, and no protected WhatsApp/API regression was detected.
+
+### Release and protected routing
+
+- Source: `1a28987c6327e7ec8695e21b66dc2b08df360df9`; Admin candidate `e8c96c96-ef94-4a33-bed6-7f284984002c` at100% in deployment `c7a0eb5b-3a1e-41fb-bf8c-8ac630113418`; exact rollback `07e75c15-946e-4cf6-813c-8262ac4dfeff` at0%.
+- API unchanged: `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100% / `d603f077-cc44-4882-af9b-9985adb53424`0%. Fresh Cloudflare identity matched the approved Get Free Seeds account; canonical Meta identity was read-only verified.
+- Detached five-minute watchdog was armed before mutation, observed baseline then candidate100% with API safe, triggered no rollback, and was disarmed after final independent readback.
+
+### Acceptance
+
+- Orders: 25/50/100 rows, page5/5, independently scrollable list and long detail/actions, reachable pager and Previous/Next all passed. Desktop/tablet/mobile viewports had no horizontal overflow.
+- Conversations: manual Refresh showed successful PKT status, updated selected detail, and produced exactly one list, one summary and one detail request with no duplicate. Auto Update ON/OFF remained CSS/ARIA/localStorage-correct and independent between pages.
+- Home, Analytics, Payment Settings and COD loaded. Orders had no console warnings/errors; known favicon404 remains. Protected `/health` returned403 without service-auth and `/api/csrf` returned200; no unauthenticated health200 claim is made.
+
+### Tests and scope
+
+rollback4/4; watchdog deadline18/18, adapter8/8, observability5/5; focused24/24; full347/347 across27 files; build and lint PASS. No API, D1 write, migration, flags, payment, Meta, Queue/DLQ, Cron, customer, WhatsApp, new-number or Hoja/ThanNow mutation occurred. Official audit remains10 moderate dev-only `minimatch` findings; no audit0 claim.
+
+### Comparison and completion
+
+| Work item | Result |
+|---|---|
+| GFS-397 | PASS — stale desktop metrics diagnosed |
+| GFS-398 | PASS — historical Admin-only visual cutover |
+| GFS-399 | PASS — Auto Update colors released |
+| GFS-400 | PASS — permanent layout lock released |
+| GFS-401 | PASS — footer/Refresh candidate validated |
+| GFS-402 | PASS — Admin footer/Refresh release completed |
+
+Completion: source/tests100%; rollback/watchdog100%; Admin cutover100%; post-cutover acceptance100%; API/WhatsApp protection100%. Next priority: ordinary monitoring; no redesign or API canary.
+
 ## GFS-401 Orders footer and Conversations Refresh (2026-11-01 UTC)
 
 ### Result

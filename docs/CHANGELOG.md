@@ -1,5 +1,11 @@
 # Changelog
 
+## GFS-402 Approval R: Admin footer and Refresh release (2026-11-01)
+
+- Released tested GFS-401 source `1a28987c6327e7ec8695e21b66dc2b08df360df9` as Admin `e8c96c96` at100% in deployment `c7a0eb5b-3a1e-41fb-bf8c-8ac630113418`; exact rollback `07e75c15` is0%; API stayed `b426ba47`100% / `d603f077`0%.
+- Verified Orders footer/list/detail reachability at25/50/100 rows and responsive desktop/tablet/mobile sizes; verified Conversations queued/manual Refresh status, selected detail update and one list+summary+detail request without duplicates.
+- Watchdog armed before cutover, observed candidate100% with API safe, did not roll back, and was disarmed after acceptance. rollback4/4, full347/347, focused24/24, deadline18/18, adapter8/8, observability5/5, build and lint passed. No protected protocol or WhatsApp regression detected.
+
 ## GFS-401 Orders footer and Conversations Refresh (2026-11-01)
 
 - Fixed the active Orders renderer so the list scrolls within the workspace, pagination stays reachable, and long details/actions scroll independently; added privacy-safe rendered-layout coverage for 25/50/100 rows.

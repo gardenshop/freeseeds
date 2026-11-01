@@ -1,5 +1,13 @@
 # Status
 
+## GFS-402 Approval R: Admin footer and Refresh release (2026-11-01 UTC)
+
+- **Release PASS:** Admin candidate `e8c96c96-ef94-4a33-bed6-7f284984002c` is100% in deployment `c7a0eb5b-3a1e-41fb-bf8c-8ac630113418`; exact rollback `07e75c15-946e-4cf6-813c-8262ac4dfeff` is0%. API remains `b426ba47`100% / `d603f077`0%.
+- **Live acceptance PASS:** Orders25/50/100 rows, page5/5, bounded list, reachable pager, long detail/action scroll, desktop/tablet/mobile overflow and Previous/Next passed. Conversations Refresh showed success in PKT, refreshed selected detail, and made exactly one list, one summary and one detail GET with no duplicate. Home, Analytics, Payment Settings and COD loaded without layout overflow.
+- **Auto Update PASS:** Orders and Conversations remain independent; tested Orders OFF persisted as white/dark/`aria-pressed=false`, ON persisted as `#17603C`/white/`aria-pressed=true`; Conversations retained its independent ON state. No polling or D1 behavior changed.
+- **Gates PASS:** rollback4/4, deadline18/18, adapter8/8, observability5/5, focused24/24, full347/347, build and lint. Watchdog armed before cutover, observed candidate/API-safe routing, triggered no rollback, and was disarmed after final readback. Known favicon404 only; `/health` protected403 was expected.
+- **Protected scope:** fresh target Cloudflare identity and canonical Meta identity passed. No API, payment, Meta, D1 write, migration, flags, Queue/Cron, customer, WhatsApp, new-number or Hoja/ThanNow mutation. Official audit remains10 moderate dev-only `minimatch` findings, not audit0.
+
 ## GFS-401 Orders footer and Conversations Refresh (2026-11-01 UTC)
 
 - **Diagnosis/repair PASS:** active Orders CSS clipped pagination because `.master` was not flex-column and the growing `.orders` list was not flex-bounded; normal CSS1920 baseline measured an approximately8111px list inside a557px master with pagination outside. Conversations silently ignored Refresh while `inFlight`; the candidate visibly queues one manual follow-up and updates the selected detail.
