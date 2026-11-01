@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-401 Orders footer and Conversations Refresh (2026-11-01 UTC)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Orders root cause | PASS | Baseline CSS1920 had `.master` display block, list about8111px and pagination outside the557px master; candidate uses column flex, bounded list and fixed pager. |
+| Conversations root cause | PASS | Baseline `inFlight` click was silently unchanged; candidate queues one manual refresh and changes status immediately. |
+| Focused tests | PASS | 24/24, including rendered CSS, pagination geometry and refresh contract assertions. |
+| Full tests/build/lint | PASS | 347/347 across27 files; TypeScript build and ESLint pass. |
+| Admin candidate | PASS at0% | `e8c96c96` attached beside `07e75c15`100%; exact rollback `36665bef`0%; no cutover/watchdog. |
+| Orders browser matrix | PASS | Requested desktop/tablet/mobile sizes; 25/50/100-row last pages had reachable pagination, independent list scroll and no root horizontal overflow. |
+| Conversations browser matrix | PASS | Queued in-flight click, idle manual Refresh, selected detail and sanitized list/summary/detail GETs returned200; Auto state remained independent. |
+| Protected routing/security | PASS | API `b426ba47`100% / `d603f077`0%; target Cloudflare and canonical Meta identities verified; no D1 write, migration, flag, payment, Meta, Queue/Cron, customer or WhatsApp mutation. |
+| Legacy rollback check | BLOCKED | `GFS_LEGACY_ROOT` is not configured in this workspace; no rollback mutation was attempted. |
+| Console | PASS with known boundary | Only pre-existing favicon404 observed; no application console error. |
+
 ## GFS-400 Permanent Admin layout lock and release (2026-11-01 UTC)
 
 | Check | Result | Evidence / boundary |

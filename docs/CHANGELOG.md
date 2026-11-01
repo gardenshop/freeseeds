@@ -1,5 +1,11 @@
 # Changelog
 
+## GFS-401 Orders footer and Conversations Refresh (2026-11-01)
+
+- Fixed the active Orders renderer so the list scrolls within the workspace, pagination stays reachable, and long details/actions scroll independently; added privacy-safe rendered-layout coverage for 25/50/100 rows.
+- Fixed silent manual Conversations Refresh clicks during an active request by queuing one follow-up, showing immediate queued/checking state, and refreshing selected detail on manual refresh without changing automatic polling or the five-minute summary cap.
+- Full347/347, focused24/24, build and lint passed. Admin candidate `e8c96c96` attached at0%; serving `07e75c15` remains100%, rollback `36665bef`0%; API remained `b426ba47`100% / `d603f077`0%. No cutover, watchdog, API, WhatsApp, Meta, payment, D1 or migration mutation.
+
 ## GFS-400 Permanent Admin layout lock (2026-11-01)
 
 - Fixed the malformed GFS-399 shell CSS replacement that caused the desktop Admin content to start at the far left; `margin:auto` and padding now remain inside the shell rule. Added a rendered-geometry regression guard and browser cleanup requirements.

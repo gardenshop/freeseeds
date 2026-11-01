@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-401 Orders footer and Conversations Refresh evidence (2026-11-01)
+
+- **Source:** commit `1a28987` changes only the active Admin Orders layout replacement, the read-only Conversations dashboard refresh coordinator, and privacy-safe tests. No backend/API, schema, migration, flag or business protocol changed.
+- **Admin versions:** candidate `e8c96c96-ef94-4a33-bed6-7f284984002c`, tag `gfs401-admin-footer-refresh`, attached at0% in deployment `1caa502f-a8a7-4ed3-aba0-2cbea697c4f6`; serving `07e75c15`100%; rollback `36665bef`0%. No cutover/watchdog.
+- **API/protected resources:** API `b426ba47`100% / `d603f077`0%; D1, R2, Queue/DLQ, Cron, migrations, flags, payment, Meta and WhatsApp resources unchanged. No D1 write occurred. New-number WhatsApp lock and Hoja/ThanNow isolation remain intact.
+- **Browser evidence:** candidate override at requested CSS1920/1440/1280/768/390/320 sizes and DPR test coverage kept pagination inside `.master`, list scrolling independent and root overflow false. Last-page checks for25/50/100 rows passed. Conversations queue injection changed status immediately and idle manual Refresh returned sanitized list/summary/detail GETs with HTTP200. No customer-bearing screenshot/DOM/log was retained; favicon404 is known.
+- **Identity:** fresh Wrangler readback matched `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta Ads Manager was read-only verified. GitHub remote is `gardenshop/freeseeds`; final remote SHA will be recorded after push.
+
 ## GFS-400 Permanent Admin layout lock evidence (2026-11-01)
 
 - **Source/candidate:** local tested repair fixes the complete `.shell{max-width:1500px;margin:auto;padding:24px}` replacement; candidate `07e75c15-946e-4cf6-813c-8262ac4dfeff`, tag `gfs400-admin-layout-lock`, was uploaded from the tested worktree and attached at0% before the single cutover.

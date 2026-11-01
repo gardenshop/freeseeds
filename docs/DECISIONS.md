@@ -1,5 +1,12 @@
 # Decisions
 
+## GFS-401 Orders footer and Conversations Refresh decision (2026-11-01 UTC)
+
+- Classify the Orders footer issue as a real active-renderer layout defect: the GFS-400 replacement emitted `.master{min-width:0;min-height:0;overflow:hidden}` and a flex-looking list without a bounded flex parent, so pagination was clipped below the fixed workspace. Do not change order actions, filters, pagination semantics, payment/COD behavior or backend requests.
+- Accept the minimal source repair and queue-at-most-one manual Conversations refresh. Manual refresh may re-read the selected detail; automatic summary reads remain capped at five minutes, single-flight/lease/focus/visibility protections remain unchanged, and stale successful data remains authoritative after failure.
+- Accept candidate `e8c96c96-ef94-4a33-bed6-7f284984002c` only at0% beside Admin `07e75c15`100%, with rollback `36665bef`0%; API remains `b426ba47`100% / `d603f077`0%. Candidate override acceptance is PASS. Do not promote, arm a watchdog, or alter API under this decision.
+- Record GFS-401 as source/candidate PASS but live-release BLOCKED pending separate Admin-only cutover approval. Clearing the override and reloading proved the live baseline remained unchanged. Preserve the identity, audit, new-number WhatsApp and Hoja/ThanNow boundaries.
+
 ## GFS-400 Permanent Admin layout lock decision (2026-11-01 UTC)
 
 - Classify the recurring far-left desktop alignment as a real source defect introduced by GFS-399's malformed CSS replacement, while retaining GFS-397's separate stale Chrome emulation diagnosis for the earlier narrow-pane symptom. Repair only the replacement boundary so the shell remains centered with max-width1700px and 24px padding.

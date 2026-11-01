@@ -1,5 +1,38 @@
 # Final Report
 
+## GFS-401 Orders footer and Conversations Refresh (2026-11-01 UTC)
+
+### Result
+
+**Source and Admin-candidate validation PASS; live release BLOCKED by the explicit no-cutover boundary.**
+
+### Root causes and repair
+
+- Orders: the active renderer’s GFS-400 CSS replacement left `.master` as a clipping block and `.orders` as an unbounded flex list. Normal CSS1920 evidence showed a557px master, an approximately8111px list and pagination below the clip. The repair makes the master a column flex container, gives the list `flex:1 1 auto` and independent scrolling, keeps the pager non-shrinking, and gives detail its own scroll region.
+- Conversations: `refresh(reason)` returned immediately while `inFlight`, so a manual click could be silently ignored. The repair queues at most one manual refresh, immediately reports queued/checking state, preserves the last successful list on errors, refreshes selected detail after manual refresh, and leaves automatic visible/focused polling, lease, single-flight and five-minute summary limits unchanged.
+
+### Validation and release boundary
+
+- Focused24/24; full347/347 across27 files; build, lint and diff check PASS. Legacy rollback test is BLOCKED because `GFS_LEGACY_ROOT` is absent; no rollback or external data action was attempted. The official audit boundary remains10 moderate dev-only `minimatch` findings; audit0 is not claimed.
+- Admin candidate `e8c96c96-ef94-4a33-bed6-7f284984002c` was uploaded and attached at0% in deployment `1caa502f-a8a7-4ed3-aba0-2cbea697c4f6`. Serving Admin `07e75c15-946e-4cf6-813c-8262ac4dfeff` stayed100%; exact rollback `36665bef-1eef-48e8-8788-c6760db0bd63` stayed0%. No Admin cutover or watchdog occurred. API stayed `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100% / `d603f077-cc44-4882-af9b-9985adb53424`0%.
+- Candidate override checks passed requested desktop/tablet/mobile viewports, 25/50/100-row last pages, pagination reachability, detail/action accessibility, independent scrolling and no horizontal overflow. Conversations queued an injected in-flight click, then completed idle manual Refresh with sanitized list/summary/detail GETs at200. Only the known favicon404 appeared. Clearing headers and reloading proved the live serving baseline remained unchanged.
+- Cloudflare identity was freshly verified as `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta Ads Manager identity was read-only verified. No D1 write, migration, flags, payment, Queue/Cron, customer, WhatsApp, new-number or Hoja/ThanNow mutation occurred. No customer data or secret value was recorded.
+
+### GFS-397/398/399/400/401 comparison
+
+| Work item | Result |
+|---|---|
+| GFS-397 stale desktop-metrics diagnosis | PASS; separate browser-emulation cause |
+| GFS-398 Admin-only visual cutover | PASS; historical baseline release |
+| GFS-399 Auto Update colors | PASS; historical Admin visual release |
+| GFS-400 permanent shell/layout lock | PASS; current Admin `07e75c15` |
+| GFS-401 footer/Refresh source and candidate validation | PASS at0%; live cutover BLOCKED |
+
+### Git and next approval
+
+- Tested source commit: `1a28987` (`fix: repair orders footer and conversation refresh`). The final pushed source/docs SHA will be recorded in the follow-up entry after remote verification.
+- Completion: source repair/tests100%; candidate0% validation100%; live Admin rollout0% pending a separate approval. Next priority is a fresh scoped Admin-only cutover approval with rollback to `07e75c15`, after which a watchdog and post-cutover browser/security/routing checks may be considered. API/WhatsApp remain frozen.
+
 ## GFS-400 Permanent Admin layout lock and zero WhatsApp regression (2026-11-01 UTC)
 
 ### Result
