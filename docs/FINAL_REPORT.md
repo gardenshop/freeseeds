@@ -1,5 +1,49 @@
 # Final Report
 
+## GFS-409 — defer cancellation feedback; prioritize measured COD recovery (2026-11-01 UTC)
+
+**Overall: BLOCKED for the requested recovery-ON verification; PASS for the owner deferment and read-only measurement.** No source/runtime/flag/D1/migration/customer/Meta/payment/Queue/DLQ/Cron deployment or send occurred.
+
+Evidence was captured through the verified official Chrome DevTools and Cloudflare D1 console at `2026-11-01T18:58:42.715Z` UTC. Rolling windows were exact 24h (`2026-10-31T18:58:42.715Z` onward) and 7d (`2026-10-25T18:58:42.715Z` onward).
+
+| Measure | 24h | 7d |
+|---|---:|---:|
+| Distinct inbound customer events | 3,886 | 17,948 |
+| Conversations created | 754 | 3,040 |
+| Orders created/submitted | 94 | 477 |
+| Advance selected | 12 | 64 |
+| COD selected | 51 | 265 |
+| Awaiting method | 31 | 148 |
+| Orders/inbound | 2.42% | 2.66% |
+| COD after prior +15/+210 stage | 1/51 | 4/265 |
+
+Recovery stage rows updated were127/354. 24h statuses: +15 `SENT1 DELIVERED2 READ19 PENDING1 SKIPPED35`; +210 `SENT3 DELIVERED5 READ10 PENDING15 SKIPPED36`. Seven-day statuses: +15 `SENT2 DELIVERED11 READ50 PENDING1 SKIPPED113`; +210 `SENT5 DELIVERED15 READ30 PENDING15 SKIPPED112`. Status counts are row-state observations, not additive unique sends. Recovery-eligible snapshot was0 in both windows. No opt-outs, blocked windows, duplicate attempts, failed recovery outbound or overdue recovery/reminder/outbox jobs were found in the bounded readback. Five-stage reminder and legacy recovery rows were0 in-window.
+
+COD without a prior +15/+210 stage was50/51 in 24h and261/265 in 7d. This is temporal association only; it does not prove reminder causation. +15 and +210 tied at the observed association count, so no strongest conversion stage is established. Verified collection/remittance amounts and COD PAID/DELIVERED/CANCELLED/RETURNED rows were0 in-window. No verified courier-cost field exists, so net collection is unavailable rather than zero. COD fee remains PKR125 with one enabled configuration.
+
+### Comparison
+
+| Workstream | Result |
+|---|---|
+| GFS-403 | PASS source/docs preserved; live feedback release deferred |
+| GFS-404 | PASS local retention design preserved; physical deletion/scheduler deferred |
+| GFS-405 | PASS prior identity/monitoring repair evidence retained; no new mutation |
+| GFS-406 | BLOCKED/NOT CONFIRMED by current D1 readback: migration history ends at0043;0044/0045/0046 have no rows, although cancellation objects are present |
+| GFS-407 | PASS: API/Admin candidates remain at0% |
+| GFS-408 | BLOCKED before exposure; no candidate evidence |
+| GFS-409 | BLOCKED overall; deferment and measurement PASS, recovery-ON gate BLOCKED |
+
+### Production and security boundary
+
+Cloudflare identity is `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Meta identity is business `568026370701542`, asset/account `1198439777611633`. API deployment `0df1a5e2-dca8-4830-8da7-a92ce662eb42` is baseline `b426ba47`100% / candidate `e8018f3f`0%. Admin deployment `034c190e-d233-4cab-9fa4-65aa068b1603` is baseline `e8c96c96`100% / candidate `ee9b7baa`0%. Current Cloudflare flags read recovery false, five-stage false, automation false, utility false, COD public/V1 true, CAPI/Instant Form false, guided Meta checkout. This conflicts with earlier candidate metadata that recorded recovery true; no flag change was made.
+
+`PRAGMA integrity_check` was rejected by the console as `SQLITE_AUTH`; no integrity PASS is claimed. Prior full/build/lint/rollback evidence remains the applicable source baseline. GFS-409 changed documentation only, so source regression suites were not rerun; `git diff --check` is required before commit. The known10 moderate dev-only minimatch findings remain documented; audit0 is not claimed.
+
+### Completion and next approval
+
+Deferment/no-mutation100%; read-only measurement100%; cancellation/retention live release0% (deferred); recovery-ON verification0% (flag mismatch); production deployment0%. Exact next approval: a bounded read-only reconciliation of active API version metadata, service-level recovery flag and recent recovery rows. Any subsequent flag change or customer-facing recovery test requires separate approval. Final Git SHA is recorded after the documentation-only commit and remote PR verification.
+
+
 ## GFS-408 Approval V controlled API 1% canary (2026-11-01 UTC)
 
 **BLOCKED safely before exposure; customer acceptance INCONCLUSIVE.** Actual API candidate exposure was0% for0 minutes. API stayed `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100% / `e8018f3f-53d3-4506-9c28-a46881842f8c`0%; Admin stayed `e8c96c96`100% / `ee9b7baa`0%.

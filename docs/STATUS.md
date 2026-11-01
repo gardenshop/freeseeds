@@ -2467,3 +2467,26 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **BLOCKED audit/legacy rollback:** `npm audit` could not reach the registry and could not write its external npm log; legacy rollback still lacks `GFS_LEGACY_ROOT`. These are recorded as blockers, not PASS results.
 - **Frozen routing:** Admin `ceb3e680`100% / candidate `ab5be96b`0%; API `b426ba47`100% / candidate `d603f077`0%. Next action: owner supplies authoritative Workers Paid entitlement/budget evidence, then a separately authorized 0% Admin validation is required.
 - **BLOCKED conditional cutover:** the account’s approved D1 budget/threshold was not available, and automatic 60-second hidden/multi-tab cost acceptance is not yet evidenced. Candidate remains0%; no watchdog/cutover/canary occurred. Next action: owner supplies budget threshold and approves/observes the bounded cost gate, then a fresh cutover decision is required.
+# GFS-409 status — read-only COD recovery measurement (2026-11-01 UTC)
+
+- **Decision:** cancellation feedback and retention scheduling are deferred. GFS-403/404 source/docs remain preserved; API/Admin candidates remain at0%; no feedback, deletion, reminder activation, migration, send or deployment was performed.
+- **Identity/routing:** GitHub `gardenshop/freeseeds` PR #11 and Cloudflare `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` were read-only verified. Canonical Meta Ads Manager remains business `568026370701542`, asset/account `1198439777611633`. API deployment `0df1a5e2-dca8-4830-8da7-a92ce662eb42`: `b426ba47`100% / `e8018f3f`0%. Admin deployment `034c190e-d233-4cab-9fa4-65aa068b1603`: `e8c96c96`100% / `ee9b7baa`0%.
+- **Measured at:** `2026-11-01T18:58:42.715Z` UTC (`2026-11-01 23:58:42` PKT). Rolling windows: 24h from `2026-10-31T18:58:42.715Z`; 7d from `2026-10-25T18:58:42.715Z`.
+
+| Metric | 24h | 7d | Denominator/definition |
+|---|---:|---:|---|
+| Distinct customer inbound events | 3,886 | 17,948 | MESSAGE + INTERACTIVE + MEDIA provider events |
+| Conversations created | 754 | 3,040 | `whatsapp_conversations.created_at` |
+| Orders created/submitted | 94 | 477 | `orders.created_at` |
+| Advance selected | 12 | 64 | Order has payment method and no COD detail |
+| COD selected | 51 | 265 | Order has COD detail; 54.3% / 55.6% of orders |
+| No payment method | 31 | 148 | Non-terminal order with null method and no COD detail |
+| Orders / inbound | 2.42% | 2.66% | Not unique-lead conversion |
+| COD after any +15/+210 stage | 1 / 51 | 4 / 265 | Temporal association only; not causal |
+
+- **Recovery:** stage rows updated were127/354. 24h: +15 `SENT1 DELIVERED2 READ19 PENDING1 SKIPPED35`; +210 `SENT3 DELIVERED5 READ10 PENDING15 SKIPPED36`. 7d: +15 `SENT2 DELIVERED11 READ50 PENDING1 SKIPPED113`; +210 `SENT5 DELIVERED15 READ30 PENDING15 SKIPPED112`. Statuses are current row states observed in-window and are not additive unique-message counts. Recovery-eligible snapshot was0 in both windows.
+- **Controls:** opt-outs, blocked windows, duplicate-attempt recovery outbound, failed recovery outbound and overdue recovery/reminder/outbox jobs were0 in this readback. Five-stage reminder rows were0; legacy recovery rows were0. Current Cloudflare production readback says `PAYMENT_CHOICE_RECOVERY_ENABLED=false`, so the requested recovery-ON verification is **BLOCKED** despite historical +15/+210 rows.
+- **COD economics:** verified collection/remittance totals and COD PAID/DELIVERED/CANCELLED/RETURNED rows were0 in-window. No verified courier-cost field exists in the inspected schema; net collection cannot be calculated. COD fee remains PKR125 with one enabled configuration.
+- **D1/migration:** exact bound D1 records migration history through0043; 0044/0045/0046 have no history rows. Cancellation tables/indexes are present, creating a provenance mismatch; no mutation was attempted. Cloudflare console denied `PRAGMA integrity_check` as `SQLITE_AUTH`.
+- **Priorities:** (1) reconcile recovery flag/version provenance and attribution; (2) obtain COD fulfillment, courier remittance and returned-parcel cost evidence; (3) reconcile Advance receipts/payment states; (4) measure webhook/ack failures; (5) separately assess Meta lead attribution/CAPI, currently disabled. Do not enable five-stage reminders.
+- **Completion:** deferment/no-mutation decision100%; read-only measurement100%; cancellation/retention live release0% (deferred); recovery-ON gate0% (configuration mismatch); production deployment0%. Docs/Git synchronization follows this record. Exact next approval: read-only reconciliation of active API version metadata versus service-level recovery flag, followed by a separate owner approval for any flag change.

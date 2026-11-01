@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-01 - GFS-409 cancellation-feedback deferment and COD recovery measurement
+
+- Deferred GFS-403 cancellation feedback and the proposed retention scheduler; preserved source/docs, held cancellation API/Admin candidates at0%, and performed no production mutation or customer send.
+- Read-only aggregate D1 report measured rolling24h/7d inbound, conversations, orders, Advance/COD/no-method, recovery stage statuses, duplicate/failure/overdue controls and COD temporal association without exporting identifiers or claiming causality.
+- Recorded current production flag mismatch: recovery reads false despite historical stage rows and earlier candidate metadata; did not enable or repair the flag. Recorded D1 migration history through0043 with0044/0045/0046 absent while cancellation objects exist; no migration reconciliation was attempted.
+- Preserved API `b426ba47`100% / `e8018f3f`0%, Admin `e8c96c96`100% / `ee9b7baa`0%, COD PKR125, WhatsApp protections, Meta identity and Hoja/ThanNow isolation.
+
+
 ## 2026-11-01 - GFS-408 canary blocked safely at preflight
 
 - Proved the exact API candidate can store optional free-text suggestions but has no activated physical deletion caller; stopped before traffic because Approval V forbids retention activation.

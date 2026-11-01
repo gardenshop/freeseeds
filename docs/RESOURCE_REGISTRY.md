@@ -1,5 +1,16 @@
 # Resource Registry
 
+## GFS-409 read-only recovery evidence (2026-11-01 UTC)
+
+- **Evidence time/windows:** D1 aggregate-only console read at `2026-11-01T18:58:42.715Z` UTC; rolling24h start `2026-10-31T18:58:42.715Z`, rolling7d start `2026-10-25T18:58:42.715Z`. No customer identifiers, provider IDs, payloads, message bodies or secrets were returned.
+- **Identity:** GitHub `gardenshop/freeseeds` PR #11; Cloudflare `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Meta business `568026370701542`, asset/account `1198439777611633`.
+- **Routing:** API deployment `0df1a5e2-dca8-4830-8da7-a92ce662eb42` baseline `b426ba47`100% / candidate `e8018f3f`0%; Admin deployment `034c190e-d233-4cab-9fa4-65aa068b1603` baseline `e8c96c96`100% / candidate `ee9b7baa`0%.
+- **Flags:** Cloudflare production readback: COD public/V1 true; recovery false; five-stage reminders false; automation false; utility templates false; Meta CAPI/Instant Form false; guided Meta checkout. This conflicts with earlier candidate metadata describing recovery as true; treat current activation as unverified and do not change it.
+- **D1:** database `getfreeseeds-staging` ID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; `cod_schema_migrations` through0043, no0044/0045/0046 history rows; cancellation tables/indexes present. `PRAGMA integrity_check` was denied by console authorization. No write statement, migration, restore or Time Travel action occurred.
+- **Observed aggregates:** 24h inbound3886/conversations754/orders94/Advance12/COD51/no-method31; 7d inbound17948/conversations3040/orders477/Advance64/COD265/no-method148. COD after prior +15/+210 was1 and4 respectively; no causal claim. Collection/remittance verified totals and COD paid/delivered/cancelled/returned rows were0 in-window; fee PKR125.
+- **Disposition:** GFS-403 feedback and GFS-409 retention scheduler deferred; candidates0%; no send/customer/payment/Meta/flag/Queue/DLQ/Cron/D1 mutation. Preserve new-number WhatsApp lock and Hoja/ThanNow zero-connection.
+
+
 ## GFS-408 preflight-only resources (2026-11-01 UTC)
 
 - **Identity/source:** GitHub `gardenshop/freeseeds` PR #11 at `dd3df961c3c326b2cf66f54b6d9d19ab041bfcc3`; runtime source remains identical to candidate commit `ffa9eb4`. Cloudflare `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta account `1198439777611633`, business `568026370701542`.

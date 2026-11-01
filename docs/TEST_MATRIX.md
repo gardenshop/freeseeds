@@ -1,5 +1,22 @@
 # Test Matrix
 
+## GFS-409 read-only COD recovery matrix (2026-11-01 UTC)
+
+| Gate | Evidence | Result |
+|---|---|---|
+| Identity/routing | GitHub PR #11; Cloudflare target account; Meta business/asset identity; API/Admin exact100/0 routing | PASS read-only |
+| Cancellation/retention deferment | Candidates remain0%; no feedback collection/deletion, scheduler, send or migration | PASS |
+| Rolling aggregate report | Exact UTC 24h/7d D1 aggregates; no identifiers/message bodies returned | PASS |
+| COD/recovery association | 1/51 (24h), 4/265 (7d) COD orders followed a prior +15/+210 stage; causal attribution explicitly not claimed | PASS as descriptive evidence |
+| Recovery active flag | Cloudflare production `PAYMENT_CHOICE_RECOVERY_ENABLED=false`; requested ON state not verified | BLOCKED / mismatch |
+| Five-stage/automation/utility | `PAYMENT_REMINDERS_V2_ENABLED=false`, automation false, utility false; no five-stage rows in-window | PASS protected |
+| Duplicate/failure/overdue safety | Opt-outs, blocked, duplicate-attempt, failed outbound and overdue jobs all0 in bounded readback | PASS read-only |
+| COD economics | Fee PKR125; verified collection/remittance and lifecycle outcomes0 in-window; courier cost unavailable | INCOMPLETE evidence, no mutation |
+| Migration | `cod_schema_migrations` through0043;0044/0045/0046 absent from history; cancellation objects present | BLOCKED provenance mismatch |
+| Integrity | Cloudflare console rejected `PRAGMA integrity_check` with `SQLITE_AUTH` | UNVERIFIED |
+| Source regression | No source changes under GFS-409; prior full/build/lint evidence retained | NOT RERUN / docs-only |
+
+
 ## GFS-408 controlled API canary matrix (2026-11-01 UTC)
 
 | Gate | Evidence | Result |

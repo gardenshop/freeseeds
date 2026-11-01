@@ -1,5 +1,15 @@
 # Decisions
 
+## GFS-409 - defer cancellation feedback; measure COD recovery first (2026-11-01 UTC)
+
+- Defer GFS-403 cancellation feedback and the proposed retention scheduler because the owner prioritizes measuring the existing recovery/COD flow. Preserve all completed source/docs and migration0046 source; keep cancellation API/Admin candidates at0%.
+- Do not activate feedback collection, physical deletion, recurring retention, five-stage reminders, new reminders, Meta/CAPI, payment changes or any customer send.
+- Read-only D1 evidence at `2026-11-01T18:58:42.715Z` UTC: orders were94/477 for rolling24h/7d, COD51/265, Advance12/64, no-method31/148. COD temporally after a prior +15/+210 stage was1/4; do not claim causality. +15 and +210 tied; no strongest stage is proven.
+- The current verified Cloudflare production variable says `PAYMENT_CHOICE_RECOVERY_ENABLED=false`, while prior candidate metadata documented true. This is a configuration/provenance mismatch and blocks any claim that recovery is currently ON. No flag repair is authorized.
+- The canonical D1 migration table records through0043 and no0044/0045/0046 rows, while cancellation objects exist. This mismatch is recorded, not reconciled. No D1 mutation or restore is authorized.
+- Exact next approval: bounded read-only reconciliation of active API version metadata, service-level flag state and recent recovery rows; only after that may the owner separately approve a flag change or any customer-facing recovery test.
+
+
 ## GFS-408 - do not expose API candidate (2026-11-01 UTC)
 
 - Stop before the approved1% mutation because optional live suggestion text would be retained without an activated physical deletion caller. A timestamp and hidden Admin rendering are not substitutes for deletion.
