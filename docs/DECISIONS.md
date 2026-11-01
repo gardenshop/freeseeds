@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-397 desktop regression decision (2026-11-01 UTC)
+
+- Classify the reported330px Orders pane as a **browser device-metrics regression**, not an Admin CSS defect: stale mobile/touch emulation constrained the CSS viewport while the desktop window remained wide. Clearing the override and reloading is the repair; no CSS source change is justified.
+- Accept candidate `dfef46ea-3358-4f58-9253-3bb046a91d64` browser revalidation as PASS at CSS1920/1675/1440/1280, tablet768 and mobile430/390/360/320 for DPR0.8/1. Orders/detail split geometry, filters, four desktop summary cards, one-column tablet/mobile reflow, root overflow and header containment passed. Candidate summary HTTP200 versus frozen baseline HTTP404 proves the candidate path separately.
+- Require the synthetic computed-dimension contract in `tests/admin-layout.test.ts` for future layout changes. Tests must clear device emulation after responsive checks and must not retain mobile overrides between runs.
+- Do not upload a new candidate or promote Admin under GFS-397. Keep Admin `ceb3e680`100% / `dfef46ea`0% and API `b426ba47`100% / `d603f077`0%. A separate Admin cutover approval remains required, with five-minute watchdog, rollback, D1 budget and audit-risk acceptance.
+- Preserve the prior10 moderate unfixed dev-only `minimatch` audit findings; the repeat audit endpoint failed and does not change the classification. No API, WhatsApp, Meta, payment, D1, migration, flag, Queue/Cron or customer mutation is included.
+
 ## GFS-396 Approval P decision (2026-11-01 UTC)
 
 - Consume Approval P only for the exact Admin upload and 0% attachment of HEAD `d591ce8`. Accept candidate version `dfef46ea-3358-4f58-9253-3bb046a91d64` at0% beside `ceb3e680`100%; do not promote it under GFS-396.

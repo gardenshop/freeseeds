@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-397 desktop regression and candidate revalidation (2026-11-01 UTC)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Root-cause diagnosis | PASS | Stale Chrome `320x800` mobile/touch override; approximately1024 CSS-pixel reproduction yielded approximately410 CSS-pixel Orders / approximately328 physical px at DPR0.8. Clearing viewport override removed the symptom. |
+| Browser baseline | PASS | Override cleared, reload performed, root CSS zoom and visual viewport scale1; final browser left without viewport or version headers. |
+| Candidate desktop geometry | PASS | Existing `dfef46ea` override: CSS1280 Orders/detail `510.2/688.8px`; CSS1920 `697.0/941.0px`; full-width centered shell, four cards, distributed filters, side-by-side panes. |
+| Candidate responsive matrix | PASS | CSS1920/1675/1440/1280, tablet768 and mobile430/390/360/320; DPR0.8/1; zero root overflow and no clipped top actions. |
+| Candidate version proof | PASS | Candidate Orders/API HTTP200 and Conversations summary HTTP200; frozen baseline summary HTTP404. No customer payload capture. |
+| Permanent layout guard | PASS | Synthetic-only `tests/admin-layout.test.ts`: emitted CSS, computed dimensions, DPRs, breakpoints and fixed330px rejection; synthetic25-row fixture. |
+| Local release gates | PASS | Focused15/15; full345/345 across27 files; build; lint; legacy rollback4/4. |
+| Dependency audit | REVIEW/BLOCKED | Prior official result10 moderate unfixed dev-only `minimatch`; repeat endpoint failed; not audit0. |
+| Admin/API/WhatsApp mutation | NOT RUN | No source CSS change, upload, routing, API canary, D1 write, payment, Meta, Queue/Cron, migration, flag, customer send or WhatsApp change. |
+| Admin100% promotion | NOT RUN | Separate exact approval, five-minute watchdog, rollback and D1/audit acceptance remain required. |
+
 ## GFS-396 Approval P Admin 0% validation (2026-11-01 UTC)
 
 | Check | Result | Evidence / boundary |

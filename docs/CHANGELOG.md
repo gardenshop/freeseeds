@@ -1,5 +1,12 @@
 # Changelog
 
+## GFS-397 Permanent desktop view regression fix (2026-11-01)
+
+- Proved the reported330px Orders pane came from a stale Chrome `320x800` mobile/touch device-metrics override; clearing the override restored the real desktop layout. No runtime CSS change or new Admin upload was made.
+- Revalidated existing candidate `dfef46ea` at CSS1920/1675/1440/1280, tablet768 and mobile430/390/360/320 at DPR0.8/1. Desktop split widths were `697/941px` at CSS1920 and `510/689px` at CSS1280; root overflow and clipped header actions were absent.
+- Added `tests/admin-layout.test.ts` with synthetic computed-dimension, ratio, breakpoint and fixed330px regression assertions. Focused15/15, full345/345, build, lint and rollback4/4 pass.
+- Cleared Chrome emulation and candidate headers after testing. Admin remains100% frozen on `ceb3e680` with `dfef46ea` at0%; API and WhatsApp remain untouched. Prior10 moderate unfixed dev-only `minimatch` findings remain documented; no audit0 claim.
+
 ## GFS-396 Approval P Admin 0% validation (2026-11-01)
 
 - Uploaded exact tested HEAD `d591ce8` as Admin version `dfef46ea-3358-4f58-9253-3bb046a91d64` and attached it at0% beside `ceb3e680`100%; no promotion or API mutation occurred.

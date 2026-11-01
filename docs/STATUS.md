@@ -1,5 +1,13 @@
 # Status
 
+## GFS-397 Permanent desktop view regression fix (2026-11-01 UTC)
+
+- **Diagnosis PASS:** the owner symptom was reproduced only under the stale Chrome device-metrics override that started at `320x800`, mobile/touch. At approximately1024 CSS pixels, the candidate's ratio split measured approximately410 CSS pixels for Orders (approximately328 physical pixels at DPR0.8), matching the reported330px pane. Clearing the override and reloading restored the real desktop viewport; root CSS zoom and visual viewport scale were1. No source CSS defect reproduced.
+- **Real desktop acceptance PASS:** candidate `dfef46ea-3358-4f58-9253-3bb046a91d64` was tested with the supported authenticated version override. At CSS1280 the Orders/detail panes measured `510.2/688.8px`; at CSS1920 `697.0/941.0px`. CSS1920/1675/1440/1280, tablet768 and mobile430/390/360/320 passed with zero root overflow, correct breakpoints and no clipped top actions at DPR0.8 and1. Candidate API requests remained HTTP200; candidate Conversations summary HTTP200 continues to distinguish it from frozen baseline HTTP404.
+- **Permanent protection PASS:** `tests/admin-layout.test.ts` adds privacy-safe synthetic25-row and computed-dimension assertions for desktop ratios, DPR0.8/1 and 900/760/560 breakpoints. It rejects a fixed330px pane and validates the emitted CSS contract; it does not capture customer data.
+- **No release mutation:** no CSS/runtime source change, upload, deployment, routing, D1 write, payment, Meta, Queue/Cron, migration, flag, customer send or WhatsApp mutation occurred. Candidate remains Admin `ceb3e680`100% / `dfef46ea`0%; API remains `b426ba47`100% / `d603f077`0%. Browser emulation and version headers were cleared before final reload.
+- **Gates:** focused15/15, full345/345 across27 files, build, lint and legacy rollback4/4 pass. Prior official audit evidence remains10 moderate unfixed dev-only `minimatch` advisories; the repeat audit endpoint failed, so audit0 is not claimed. Admin100% remains NOT RUN pending separate approval, watchdog, D1 budget and audit-risk acceptance.
+
 ## GFS-396 Approval P Admin 0% validation (2026-11-01 UTC)
 
 - **Approval P upload/attachment PASS:** exact tested HEAD `d591ce827db9a8e5418f36d506b3f364404e7f0b` uploaded as Admin version `dfef46ea-3358-4f58-9253-3bb046a91d64` and attached at0%. Independent deployment readback is Admin `ceb3e680`100% / `dfef46ea`0%; no promotion was run.

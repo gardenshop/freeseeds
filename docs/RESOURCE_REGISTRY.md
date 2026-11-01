@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-397 desktop regression evidence (2026-11-01)
+
+- **Authorized browser state:** Chrome DevTools MCP `list_pages` first showed a stale `320x800` mobile/touch device-metrics override. After omitting the viewport setting and clearing extra headers, reload returned the real desktop context. Final browser state has no viewport override and no candidate version header.
+- **Root-cause measurements:** the candidate at approximately1024 CSS pixels measured approximately410 CSS pixels for the Orders pane; at the observed DPR0.8 this is approximately328 physical pixels. With the override cleared, candidate CSS1280 measured `510.2/688.8px` Orders/detail and CSS1920 measured `697.0/941.0px`; root overflow was0.
+- **Candidate resource unchanged:** existing exact tested source `d591ce827db9a8e5418f36d506b3f364404e7f0b` remains uploaded as `dfef46ea-3358-4f58-9253-3bb046a91d64`, attached at0% beside `ceb3e680`100%. No new upload was needed because the defect was browser configuration only.
+- **Test resource:** `tests/admin-layout.test.ts` contains synthetic-only dimension/breakpoint assertions; no real identifiers, credentials, screenshots or customer payloads are stored. Focused15/15, full345/345, build, lint and rollback4/4 pass.
+- **Audit boundary:** retain prior official result of10 moderate unfixed dev-only `minimatch` advisories. The repeat audit request failed at the advisory endpoint/log path; no audit0 claim or dependency mutation was made.
+
 ## GFS-396 Approval P candidate evidence (2026-11-01)
 
 - **Admin candidate:** exact HEAD `d591ce827db9a8e5418f36d506b3f364404e7f0b`; uploaded version `dfef46ea-3358-4f58-9253-3bb046a91d64`, tag `gfs396-admin-d591ce8`, message `GFS-396 Approval P d591ce8 Admin 0% validation`.

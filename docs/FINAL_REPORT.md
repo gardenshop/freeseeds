@@ -1,5 +1,41 @@
 # Final Report
 
+## GFS-397 Permanent desktop view regression fix (2026-11-01 UTC)
+
+### Result
+
+**PASS — browser configuration repair and candidate revalidation; Admin promotion NOT RUN.** The 330px desktop symptom was proven to be stale Chrome device-metrics emulation, not source CSS. The existing Admin candidate remains at0% and live WhatsApp/API state is untouched.
+
+### Root cause and measurements
+
+- Initial authorized Chrome state reported a stale `320x800` mobile/touch override. At approximately1024 CSS pixels, the candidate split measured approximately410 CSS pixels for Orders, which is approximately328 physical pixels at DPR0.8 and matches the owner screenshot. The desktop outer window remained wide, producing the unused-space appearance.
+- After clearing the viewport override and reloading, candidate CSS1280 measured Orders/detail `510.2/688.8px`; CSS1440 `578.3/780.7px`; CSS1675 `678.3/915.7px`; CSS1920 `697.0/941.0px`. Root overflow was0. Root CSS zoom and visual viewport scale were1. DPR0.8 and1 produced the same CSS geometry.
+- No CSS source repair was needed. The permanent repair is the operator-browser configuration correction plus synthetic computed-dimension assertions in `tests/admin-layout.test.ts`.
+
+### GFS-392 through GFS-397
+
+| Task | Result |
+|---|---|
+| GFS-392 | Historical Admin source safety PASS; promotion remained blocked |
+| GFS-393 | Release blockers documented; no unauthorized upload/cutover |
+| GFS-394 | Source refresh/PKT repair PASS; live failure not reproduced |
+| GFS-395 | PKT verification PASS; release blockers preserved |
+| GFS-396 | Existing candidate upload/0% validation and Admin function acceptance PASS |
+| GFS-397 | Browser root cause PASS; layout guard and candidate matrix PASS; promotion NOT RUN |
+
+### Acceptance and release boundary
+
+- Existing candidate `dfef46ea-3358-4f58-9253-3bb046a91d64` passed CSS1920/1675/1440/1280, tablet768 and mobile430/390/360/320 at DPR0.8/1. Desktop remained a centered full-width split with four cards and distributed filters; tablet/mobile reflowed to one column.
+- Candidate Orders/list/detail and Conversations list/summary/detail remained HTTP200 under the supported version override; candidate summary HTTP200 versus frozen baseline HTTP404 proves candidate execution. Prior GFS-396 PKT, activity ordering, auto-update, D1 read-cost, payment/COD and security evidence remains applicable.
+- No source CSS change, new upload, deployment mutation, Admin100% promotion, API canary, customer send, payment/Meta action, D1 write, migration, flag, Queue/Cron or WhatsApp change occurred. Final routing remains Admin `ceb3e680`100% / `dfef46ea`0% and API `b426ba47`100% / `d603f077`0%.
+- Focused15/15, full345/345 across27 files, build, lint and legacy rollback4/4 passed. Prior official audit evidence remains10 moderate unfixed dev-only `minimatch` advisories; repeat audit endpoint failure means audit0 is not claimed.
+
+### Remaining workstreams
+
+- Admin candidate acceptance: **100% complete for GFS-397 browser/layout scope; 0% production exposure**. A separate exact cutover approval remains, with five-minute watchdog, rollback, D1 budget and audit-risk acceptance.
+- API canary: **0% / BLOCKED**, unchanged.
+- WhatsApp/new-number/Hoja protections: **100% preserved**, no mutation.
+
 ## GFS-396 Approval P Admin 0% validation (2026-11-01 UTC)
 
 ### Result
