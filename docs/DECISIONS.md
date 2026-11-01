@@ -6,6 +6,7 @@
 - Accept the minimal source repair and queue-at-most-one manual Conversations refresh. Manual refresh may re-read the selected detail; automatic summary reads remain capped at five minutes, single-flight/lease/focus/visibility protections remain unchanged, and stale successful data remains authoritative after failure.
 - Accept candidate `e8c96c96-ef94-4a33-bed6-7f284984002c` only at0% beside Admin `07e75c15`100%, with rollback `36665bef`0%; API remains `b426ba47`100% / `d603f077`0%. Candidate override acceptance is PASS. Do not promote, arm a watchdog, or alter API under this decision.
 - Record GFS-401 as source/candidate PASS but live-release BLOCKED pending separate Admin-only cutover approval. Clearing the override and reloading proved the live baseline remained unchanged. Preserve the identity, audit, new-number WhatsApp and Hoja/ThanNow boundaries.
+- The tested source/docs are synchronized to verified PR #11 remote SHA `0890f461512dd40820c6c1a8472b2e7a979062d5`; no force push or unrelated branch action was used.
 
 ## GFS-400 Permanent Admin layout lock decision (2026-11-01 UTC)
 

@@ -14,6 +14,7 @@
 | Protected routing/security | PASS | API `b426ba47`100% / `d603f077`0%; target Cloudflare and canonical Meta identities verified; no D1 write, migration, flag, payment, Meta, Queue/Cron, customer or WhatsApp mutation. |
 | Legacy rollback check | BLOCKED | `GFS_LEGACY_ROOT` is not configured in this workspace; no rollback mutation was attempted. |
 | Console | PASS with known boundary | Only pre-existing favicon404 observed; no application console error. |
+| Git provenance | PASS | Verified `gardenshop/freeseeds` PR #11 branch read back remote SHA `0890f461512dd40820c6c1a8472b2e7a979062d5`; worktree clean. |
 
 ## GFS-400 Permanent Admin layout lock and release (2026-11-01 UTC)
 

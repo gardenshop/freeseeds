@@ -5,6 +5,7 @@
 - Fixed the active Orders renderer so the list scrolls within the workspace, pagination stays reachable, and long details/actions scroll independently; added privacy-safe rendered-layout coverage for 25/50/100 rows.
 - Fixed silent manual Conversations Refresh clicks during an active request by queuing one follow-up, showing immediate queued/checking state, and refreshing selected detail on manual refresh without changing automatic polling or the five-minute summary cap.
 - Full347/347, focused24/24, build and lint passed. Admin candidate `e8c96c96` attached at0%; serving `07e75c15` remains100%, rollback `36665bef`0%; API remained `b426ba47`100% / `d603f077`0%. No cutover, watchdog, API, WhatsApp, Meta, payment, D1 or migration mutation.
+- Tested source commit `1a28987` and protected docs are pushed to PR #11; remote SHA independently verified as `0890f461512dd40820c6c1a8472b2e7a979062d5`.
 
 ## GFS-400 Permanent Admin layout lock (2026-11-01)
 

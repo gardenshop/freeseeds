@@ -6,7 +6,7 @@
 - **Admin versions:** candidate `e8c96c96-ef94-4a33-bed6-7f284984002c`, tag `gfs401-admin-footer-refresh`, attached at0% in deployment `1caa502f-a8a7-4ed3-aba0-2cbea697c4f6`; serving `07e75c15`100%; rollback `36665bef`0%. No cutover/watchdog.
 - **API/protected resources:** API `b426ba47`100% / `d603f077`0%; D1, R2, Queue/DLQ, Cron, migrations, flags, payment, Meta and WhatsApp resources unchanged. No D1 write occurred. New-number WhatsApp lock and Hoja/ThanNow isolation remain intact.
 - **Browser evidence:** candidate override at requested CSS1920/1440/1280/768/390/320 sizes and DPR test coverage kept pagination inside `.master`, list scrolling independent and root overflow false. Last-page checks for25/50/100 rows passed. Conversations queue injection changed status immediately and idle manual Refresh returned sanitized list/summary/detail GETs with HTTP200. No customer-bearing screenshot/DOM/log was retained; favicon404 is known.
-- **Identity:** fresh Wrangler readback matched `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta Ads Manager was read-only verified. GitHub remote is `gardenshop/freeseeds`; final remote SHA will be recorded after push.
+- **Identity/Git:** fresh Wrangler readback matched `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta Ads Manager was read-only verified. GitHub remote is `gardenshop/freeseeds`; remote branch readback matched `0890f461512dd40820c6c1a8472b2e7a979062d5`.
 
 ## GFS-400 Permanent Admin layout lock evidence (2026-11-01)
 

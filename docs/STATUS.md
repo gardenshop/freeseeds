@@ -6,7 +6,7 @@
 - **Tests PASS:** focused24/24, full347/347 across27, build PASS, lint PASS, diff check PASS. Added rendered CSS and privacy-safe pagination geometry assertions for 25/50/100 rows. Legacy rollback is BLOCKED by absent `GFS_LEGACY_ROOT`; official audit remains the documented10 moderate dev-only `minimatch` findings, not audit0.
 - **Candidate validation PASS at0%:** Admin `e8c96c96-ef94-4a33-bed6-7f284984002c` is0%; serving `07e75c15-946e-4cf6-813c-8262ac4dfeff` is100%; rollback `36665bef-1eef-48e8-8788-c6760db0bd63` is0%. Candidate browser override passed requested desktop/tablet/mobile sizes, last pages at25/50/100 rows, pagination/detail reachability and no horizontal overflow. Conversations manual queue and read-only GET flow passed; favicon404 is the only known console issue.
 - **Protected routing:** API remains `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100% / `d603f077-cc44-4882-af9b-9985adb53424`0%. No Admin100 cutover, watchdog, API canary, D1 write, migration, flag, payment, Meta, Queue/Cron, customer, WhatsApp, new-number or Hoja/ThanNow mutation occurred. Without the candidate header, live Admin remains the old clipped baseline by design.
-- **Identity/Git:** Cloudflare target identity and canonical Meta identity passed read-only checks; source commit `1a28987` is the tested implementation. Remote push and final documentation SHA remain pending this record update.
+- **Identity/Git:** Cloudflare target identity and canonical Meta identity passed read-only checks; source commit `1a28987` is the tested implementation. Protected docs were pushed and remote branch readback independently matched `0890f461512dd40820c6c1a8472b2e7a979062d5`.
 
 ## GFS-400 Permanent Admin layout lock (2026-11-01 UTC)
 
