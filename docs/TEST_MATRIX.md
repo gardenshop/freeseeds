@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-410 closure and recovery reconciliation (2026-11-02 PKT)
+
+| Gate | Evidence | Result |
+|---|---|---|
+| Deferred scope | GFS-403 through GFS-409 retained as source/history; cancellation candidates0%; no feedback/retention/Cron/send | PASS |
+| Identity/routing | Official Chrome Cloudflare identity; API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0% | PASS read-only |
+| Effective recovery config | Runtime and checked-in config `PAYMENT_CHOICE_RECOVERY_ENABLED=false`; five-stage/automation/utility false | PASS protected / recovery activation BLOCKED |
+| Source diagnosis | Cron/Queue gates, activation boundary, eligibility, service-window, opt-out and idempotency inspected; no local defect proven | PASS no repair |
+| Focused recovery tests | `tests/guided-lead-only.test.ts` plus `tests/payment-reminders-v2.test.ts` | PASS 118/118 |
+| Full regression | `npm.cmd test`, build and lint | PASS 361/361 across30; build/lint PASS |
+| D1 provenance | History through0043;0044/0045/0046 absent; cancellation objects present; integrity pragma denied | BLOCKED / unverified |
+| Production mutation | No flag, send, migration, D1 write, Meta/payment change, deployment or canary | PASS |
+
 ## GFS-409 read-only COD recovery matrix (2026-11-01 UTC)
 
 | Gate | Evidence | Result |

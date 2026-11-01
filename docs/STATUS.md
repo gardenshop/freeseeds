@@ -1,5 +1,14 @@
 # Status
 
+## GFS-410 cancellation closure and recovery reconciliation (2026-11-02 PKT)
+
+- **Disposition:** GFS-403 through GFS-409 are closed as deferred/blocked, not completed release work. Cancellation source/tests/migrations/docs remain preserved; cancellation API/Admin candidates remain0%.
+- **Live routing:** API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%. Cloudflare identity was read-only verified as `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta identity remains read-only verified.
+- **Recovery gate:** runtime and checked-in config read `PAYMENT_CHOICE_RECOVERY_ENABLED=false`; `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_AUTOMATION_V2_ENABLED=false`, and `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`. The handler remains fail-closed and no local defect was proven. No flag change, deployment, customer send or candidate exposure occurred.
+- **D1 gate:** current canonical D1 read-only history shows through0043, no0044/0045/0046 history rows, cancellation objects present, and console `PRAGMA integrity_check` denied. This provenance mismatch remains unresolved and is not repaired by GFS-410.
+- **Quality:** focused recovery/reminder118/118; full361/361 across30; build and lint PASS. Known10 moderate dev-only minimatch findings remain documented; audit0 is not claimed.
+- **Next approval:** separately approve a bounded read-only runtime/version/D1 provenance reconciliation, then separately approve any recovery flag experiment with customer-send, monitoring, rollback and WhatsApp protections. No retention scheduler or cancellation release is bundled.
+
 ## GFS-408 Approval V controlled API 1% canary (2026-11-01 UTC)
 
 - **Result:** BLOCKED safely at preflight; canary INCONCLUSIVE because exposure was0% for0 minutes and no genuine candidate request/customer flow occurred. API remains `b426ba47`100% / `e8018f3f`0%; Admin remains `e8c96c96`100% / `ee9b7baa`0%.

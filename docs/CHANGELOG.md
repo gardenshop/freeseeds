@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-02 - GFS-410 cancellation closure and recovery reconciliation
+
+- Closed GFS-403 through GFS-409 as deferred/blocked work; retained source, tests, migrations and historical evidence, with cancellation candidates held at0%.
+- Reconciled official Cloudflare routing and runtime configuration read-only: API baseline `b426ba47`100% / candidate `e8018f3f`0%; Admin baseline `e8c96c96`100% / candidate `ee9b7baa`0%; recovery, five-stage, automation and utility flags false.
+- Confirmed the recovery implementation is fail-closed and locally sound; no source repair, production mutation, customer send, migration, retention deletion, Meta/payment change or deployment was performed.
+- Recorded focused118/118 and full361/361 tests, build/lint PASS, and the unresolved D1 provenance/integrity-readback blocker.
+
 ## 2026-11-01 - GFS-409 cancellation-feedback deferment and COD recovery measurement
 
 - Deferred GFS-403 cancellation feedback and the proposed retention scheduler; preserved source/docs, held cancellation API/Admin candidates at0%, and performed no production mutation or customer send.

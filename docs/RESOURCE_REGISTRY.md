@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-410 verified state and deferred scope (2026-11-02 PKT)
+
+- **Identity:** read-only official Chrome Cloudflare identity `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; GitHub remote remains `gardenshop/freeseeds`, PR #11; canonical Meta identity remains read-only verified.
+- **Routing:** API deployment `0df1a5e2-dca8-4830-8da7-a92ce662eb42` baseline `b426ba47`100% / candidate `e8018f3f`0%; Admin deployment `034c190e-d233-4cab-9fa4-65aa068b1603` baseline `e8c96c96`100% / candidate `ee9b7baa`0%.
+- **Effective flags:** recovery false; five-stage reminders false; Automation V2 false; utility templates false; COD public/V1 true; guided Meta checkout; no flag or secret mutation. No new reminder or customer message was sent.
+- **Source/test state:** recovery Cron/Queue gating and immediate eligibility/idempotency checks are present; no local defect was proven. Focused118/118, full361/361, build and lint PASS.
+- **D1:** canonical staging D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1` currently reads history through0043 with no0044/0045/0046 rows while cancellation objects exist. Console integrity pragma returned authorization denial. No migration, restore, deletion, schedule or D1 write occurred.
+- **Disposition:** GFS-403 through GFS-409 cancellation/recovery launch work is deferred or blocked; preserve new-number WhatsApp lock and Hoja/ThanNow zero-connection. Next action requires a separate approval.
+
 ## GFS-409 read-only recovery evidence (2026-11-01 UTC)
 
 - **Evidence time/windows:** D1 aggregate-only console read at `2026-11-01T18:58:42.715Z` UTC; rolling24h start `2026-10-31T18:58:42.715Z`, rolling7d start `2026-10-25T18:58:42.715Z`. No customer identifiers, provider IDs, payloads, message bodies or secrets were returned.

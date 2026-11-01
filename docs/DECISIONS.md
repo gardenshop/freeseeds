@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-410 - close cancellation priority and preserve safe recovery state (2026-11-02 PKT)
+
+- Close GFS-403 through GFS-409 as deferred/blocked work, not completed release work. Preserve source, tests, migration files and evidence; keep cancellation API/Admin candidates at0%.
+- Current official Cloudflare readback is authoritative for the present state: API baseline `b426ba47`100% / candidate `e8018f3f`0%, Admin baseline `e8c96c96`100% / candidate `ee9b7baa`0%, and `PAYMENT_CHOICE_RECOVERY_ENABLED=false`. The checked-in API config also defaults false. Historical activation notes are retained as history, not treated as current runtime proof.
+- The recovery implementation is correctly gated and the focused/full tests pass. No proven local source defect exists; no flag repair or deployment is authorized. Preserve +15/+210 behavior, COD PKR125, payment/order protections, new-number lock and Hoja/ThanNow isolation.
+- D1 provenance remains a blocker: current history through0043, no0044/0045/0046 rows, cancellation objects present, and integrity pragma denied. Do not apply a marker repair, restore, retention deletion or Cron.
+- **Exact next approval:** a separate read-only reconciliation of version bindings, effective runtime variables and D1 provenance; only a later approval may authorize a bounded recovery experiment with explicit customer-send, monitoring and rollback gates.
+
 ## GFS-409 - defer cancellation feedback; measure COD recovery first (2026-11-01 UTC)
 
 - Defer GFS-403 cancellation feedback and the proposed retention scheduler because the owner prioritizes measuring the existing recovery/COD flow. Preserve all completed source/docs and migration0046 source; keep cancellation API/Admin candidates at0%.

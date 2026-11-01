@@ -1,5 +1,28 @@
 # Final Report
 
+## GFS-410 - cancellation closure and COD-recovery priority (2026-11-02 PKT)
+
+**Overall: PASS for safe closure, read-only reconciliation and regression; BLOCKED for recovery activation and D1 provenance repair.** No production mutation occurred.
+
+| Workstream | Result | Evidence |
+|---|---|---|
+| GFS-403 cancellation feedback | DEFERRED | Source/docs preserved; no feedback collection or release |
+| GFS-404 retention | DEFERRED | No deletion, scheduler or Cron |
+| GFS-405 monitoring | PASS retained | Prior verified monitoring evidence retained |
+| GFS-406 migration0046 | BLOCKED/NOT CONFIRMED by current readback | History through0043, no0046 row; cancellation objects present; integrity pragma denied |
+| GFS-407 candidates | PASS at0% | API `e8018f3f`, Admin `ee9b7baa`; no exposure |
+| GFS-408 canary | BLOCKED | No canary or watchdog |
+| GFS-409 measurement | PASS read-only | Existing aggregate metrics retained; no causal reminder claim |
+| GFS-410 recovery priority | BLOCKED activation | Runtime/config recovery false; no proven source defect; separate approval required |
+
+**Current routing:** API baseline `b426ba47`100% / candidate `e8018f3f`0%; Admin baseline `e8c96c96`100% / candidate `ee9b7baa`0%. Cloudflare identity was read-only verified as `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta identity remained read-only verified. Recovery, five-stage, automation and utility flags are false. COD public/V1 remains enabled with PKR125; EN/UR, Advance, payments, Queue/DLQ, Cron, new-number lock and Hoja/ThanNow isolation were not changed.
+
+**Recovery diagnosis:** checked-in config and live service variables both set `PAYMENT_CHOICE_RECOVERY_ENABLED=false`. The scheduled/Queue implementation is fail-closed on that flag and also checks activation boundary, order/payment state, service window, opt-out and idempotency immediately before send. No local defect was proven; no repair or activation was performed. Historical stage rows and prior “true” notes are not current activation evidence.
+
+**Verification:** focused recovery/reminder tests118/118; full suite361/361 across30 files; build PASS; lint PASS. Known10 moderate dev-only minimatch findings remain documented; audit0 is not claimed. No customer identifiers, message bodies, secrets or provider IDs were added to source or reports.
+
+**Remaining completion:** cancellation-feedback release0% deployed / 100% deferred; retention deletion0% authorized; recovery diagnosis100%; recovery activation0% authorized; COD/Advance/webhook/Meta operational prioritization not changed by this task. The highest-value next task is a separately approved, read-only reconciliation of version-bound variables, effective runtime state and D1 migration provenance, followed by a distinct approval for any bounded recovery experiment.
+
 ## GFS-409 — defer cancellation feedback; prioritize measured COD recovery (2026-11-01 UTC)
 
 **Overall: BLOCKED for the requested recovery-ON verification; PASS for the owner deferment and read-only measurement.** No source/runtime/flag/D1/migration/customer/Meta/payment/Queue/DLQ/Cron deployment or send occurred.

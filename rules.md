@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-410 cancellation closure and recovery configuration reconciliation (2026-11-02 PKT)
+
+- **Owner decision:** close GFS-403 through GFS-409 as deferred/blocked work, not completed release work. Preserve their source, tests, migration files and historical evidence; keep cancellation API/Admin candidates at0%; do not activate feedback, retention deletion, a retention Cron, five-stage reminders, Automation V2, utility templates or new customer sends.
+- **Fresh read-only reconciliation:** official Chrome/Cloudflare readback under `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2` shows API baseline `b426ba47`100% and candidate `e8018f3f`0% on deployment `0df1a5e2-dca8-4830-8da7-a92ce662eb42`; Admin remains `e8c96c96`100% / `ee9b7baa`0% on deployment `034c190e-d233-4cab-9fa4-65aa068b1603`. Runtime and checked-in API config both read `PAYMENT_CHOICE_RECOVERY_ENABLED=false`; five-stage, automation and utility flags are also false. Earlier historical “true” notes do not override this current readback.
+- **Source diagnosis:** the API Cron and Queue paths are explicitly gated on the recovery flag, activation timestamp, eligibility, service window, opt-out, idempotency and immediate pre-send checks. Focused tests passed, so no proven local defect exists. Do not repair the live flag or deploy a candidate without a separate approval for the recovery experiment.
+- **D1/provenance stop:** current read-only history is through0043 with no0044/0045/0046 history rows while cancellation objects exist; `PRAGMA integrity_check` is denied by the console. Do not apply a migration to repair a marker, restore the live database, delete retention data or add a schedule under this task.
+- Preserve EN/UR, Advance, COD PKR125, PAID, orders, webhook, Queue/DLQ, Cron, number separation, new-number WhatsApp lock, +15/+210 source behavior and Hoja/ThanNow zero-connection. No production, D1, flag, Meta, payment, message or deployment mutation occurred.
+
 ## GFS-409 COD recovery measurement and cancellation-feedback deferment (2026-11-01 UTC)
 
 - **Owner decision:** defer GFS-403 cancellation-feedback release and the proposed GFS-409 retention scheduler. Keep the cancellation API/Admin candidates at0%; do not activate feedback collection, deletion, Cron or new reminders.
