@@ -8,6 +8,7 @@
 - **Candidate revalidation PASS:** candidate matrix passed CSS1920/1675/1440/1280, tablet768 and mobile430/390/360/320 at DPR0.8/1. Orders/details remained side-by-side on desktop and one-column on tablet/mobile; root overflow was0 in every case. Candidate API/UI and PKT/controls evidence from GFS-396 remains valid; no customer-bearing capture or mutation was used.
 - **Release boundary:** no source CSS change, upload, deployment, routing change or Admin100% promotion was made under GFS-397. Candidate remains `ceb3e680`100% / `dfef46ea`0%; API remains `b426ba47`100% / `d603f077`0%. The browser was left with viewport and version-override headers cleared and reloaded. Do not promote without the separate Admin cutover approval, five-minute watchdog, D1 budget and audit-risk acceptance.
 - **Validation:** focused layout/Admin15/15, full345/345 across27 files, build, lint and legacy rollback4/4 pass. Official prior audit evidence remains10 moderate unfixed dev-only `minimatch` advisories; a repeat audit endpoint request failed and is not claimed as audit0. Preserve the new-number WhatsApp lock and Hoja/ThanNow zero-connection rule.
+- **Git:** target remote is `https://github.com/gardenshop/freeseeds.git`; commit `38ebf66ef66c560ea5915c8174d82d417d4fd25d` pushed to the existing PR branch and independently read back at the same remote SHA. No force push or alternate repository was used.
 
 ## GFS-396 Approval P Admin 0% validation (2026-11-01 UTC)
 

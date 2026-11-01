@@ -7,6 +7,7 @@
 - **Permanent protection PASS:** `tests/admin-layout.test.ts` adds privacy-safe synthetic25-row and computed-dimension assertions for desktop ratios, DPR0.8/1 and 900/760/560 breakpoints. It rejects a fixed330px pane and validates the emitted CSS contract; it does not capture customer data.
 - **No release mutation:** no CSS/runtime source change, upload, deployment, routing, D1 write, payment, Meta, Queue/Cron, migration, flag, customer send or WhatsApp mutation occurred. Candidate remains Admin `ceb3e680`100% / `dfef46ea`0%; API remains `b426ba47`100% / `d603f077`0%. Browser emulation and version headers were cleared before final reload.
 - **Gates:** focused15/15, full345/345 across27 files, build, lint and legacy rollback4/4 pass. Prior official audit evidence remains10 moderate unfixed dev-only `minimatch` advisories; the repeat audit endpoint failed, so audit0 is not claimed. Admin100% remains NOT RUN pending separate approval, watchdog, D1 budget and audit-risk acceptance.
+- **Git PASS:** commit `38ebf66ef66c560ea5915c8174d82d417d4fd25d` was pushed to the existing `gardenshop/freeseeds` PR branch and independently read back from the remote at the same SHA. The normal `gh` profile reports active `gardenshop` but an invalid token; no alternate account or force push was used, and the working tree is clean.
 
 ## GFS-396 Approval P Admin 0% validation (2026-11-01 UTC)
 
