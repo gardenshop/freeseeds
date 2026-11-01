@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-407 - retain baselines at100%; accept exact candidates at0% (2026-11-01 UTC)
+
+- Accept API `e8018f3f-53d3-4506-9c28-a46881842f8c` and Admin `ee9b7baa-722d-406e-9acd-556b447f8d79` as the exact `ffa9eb4` candidates. Keep API `b426ba47` and Admin `e8c96c96` at100%; no canary, promotion or mixed percentage is inferred from 0%-override acceptance.
+- Preserve the active API recovery override (`true` plus its existing start timestamp) because source defaults differ from deployed production. Candidate validation is invalid unless bindings, secret names, handlers and deployed variables match the serving baseline.
+- Treat exact preview/structured version override plus version metadata as candidate attribution. Do not use unfiltered production tailing; the bounded exact-version/IP/method tail exposed no customer data and the exact version preview independently proved API health/rejection behavior.
+- Keep retention read-only. No eligible suggestion exists, and deletion/Cron remain a separate authorization. The matched order/payment increase is ordinary baseline traffic, not candidate evidence.
+- Require the next release step to be separately authorized and API-only first: bounded attributable canary, independent watchdog, strict health/security/GraphQL/D1 gates and restoration. Admin stays100/0 until API compatibility is proven under separately approved traffic.
+
 ## GFS-406 - apply only migration0046; keep release and deletion separate (2026-11-01 UTC)
 
 - Applied only the owner-approved SHA-256-locked `0046_checkout_cancellation_feedback.sql` by `wrangler d1 execute --file`; never used `wrangler d1 migrations apply`. This keeps unapplied 0044/0045 out of production.

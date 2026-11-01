@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-01 - GFS-407 API/Admin 0% candidate validation
+
+- Uploaded exact source `ffa9eb4` as API `e8018f3f` and Admin `ee9b7baa`, preserving deployed variables and strict binding parity, then attached both at0% beside the unchanged100% baselines.
+- Passed exact API preview health/unsigned-webhook rejection, authenticated Admin version-override monitoring, cancellation analytics, protected Admin surface and responsive Chrome acceptance without exposing either candidate to customer traffic.
+- Reverified D1 integrity/zero-write retention, Queue/DLQ, routing and security. No canary, promotion, watchdog, customer message, retention deletion, migration, payment, Meta, flag, Cron or unrelated deployment occurred.
+
 ## 2026-11-01 - GFS-406 migration0046 and release readiness
 
 - Added an isolated populated-schema compatibility test proving migration0046 is additive, idempotent, FK-clean and preserves legacy conversation/order/payment rows.

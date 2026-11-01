@@ -1,5 +1,24 @@
 # Final Report
 
+## GFS-407 Approval U API/Admin 0% validation (2026-11-01 UTC)
+
+**PASS for the authorized milestone; traffic release remains separately gated.** Exact source `ffa9eb4a8a16eb475584812367e53966469fa0d2` is staged as API `e8018f3f-53d3-4506-9c28-a46881842f8c` and Admin `ee9b7baa-722d-406e-9acd-556b447f8d79`, both0%. Serving API `b426ba47` and Admin `e8c96c96` remain100%.
+
+- API exact preview health is200/WhatsApp enabled and unsigned webhook is403. Admin override health is6/6 at200; missing/invalid credentials403; monitoring credentials cannot reach Orders/Analytics/Conversations; GraphQL errors0. Bindings, secret names, handlers, schedules/Queue and active recovery variables match the serving baseline.
+- Official Chrome candidate checks passed cancellation analytics/API with zero rows and 90-day visibility, Orders, Conversations, Analytics, COD and Payment Settings. Desktop/tablet/mobile had no horizontal overflow and console errors0. No customer-bearing screenshot/log/artifact was retained.
+- D1 remained read-only: schema0046=7 objects, 0044/0045=0, cancellation facts/feedback/reasons/eligible=0, quick-check ok, FK0, changed_db false and rows_written0. Orders/payments moved together from523 to524 due ordinary100%-baseline traffic.
+- Regression remains focused235/235, full361/361, build/lint, rollback4/4, observability5/5, adapter8/8 and deadline18/18. Audit is10 moderate dev-only findings, high/critical0; no audit0 claim. No canary or watchdog ran because both candidates remained0%.
+
+| Task | Result |
+|---|---|
+| GFS-403 cancellation/feedback/Admin analytics | PASS source, schema and 0%-candidate acceptance; live customer acceptance not run |
+| GFS-404 retention/readiness | PASS dry-run and zero-write safety; deletion/schedule BLOCKED pending approval |
+| GFS-405 secure monitoring | PASS |
+| GFS-406 migration0046/readiness | PASS |
+| GFS-407 candidate upload/0% validation | PASS |
+
+Completion: GFS-407 authorized scope100%; migration0046 100%; candidate upload/0%-validation100%; retention dry-run100% and deletion0%; API traffic release0%; Admin traffic release0%; genuine WhatsApp cancellation acceptance0%. **Exact next approval:** one bounded attributable API-only canary with an independent rollback watchdog and strict restoration gates; Admin remains `e8c96c96`100% / `ee9b7baa`0%, with no retention deletion, promotion, customer-message solicitation, payment, Meta, flag or unrelated deployment.
+
 ## GFS-406 Approval T migration0046 and release readiness (2026-11-01 UTC)
 
 ### Result

@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-407 Approval U candidate resources (2026-11-01 UTC)
+
+- **Source/identity:** exact candidate source `ffa9eb4a8a16eb475584812367e53966469fa0d2`, GitHub `gardenshop/freeseeds` PR #11; Cloudflare `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta account `1198439777611633`, business `568026370701542` read-only.
+- **API:** candidate version120 `e8018f3f-53d3-4506-9c28-a46881842f8c`, tag `gfs407-api-ffa9eb4`; deployment `0df1a5e2-dca8-4830-8da7-a92ce662eb42` has baseline `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100% and candidate0%. Exact preview URL was used only for health200 and unsigned webhook403.
+- **Admin:** candidate version116 `ee9b7baa-722d-406e-9acd-556b447f8d79`, tag `gfs407-admin-ffa9eb4`; deployment `034c190e-d233-4cab-9fa4-65aa068b1603` has baseline `e8c96c96-ef94-4a33-bed6-7f284984002c`100% and candidate0%.
+- **D1:** `getfreeseeds-staging` ID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; schema0046 objects7, facts/feedback0, retention eligible0, orders/payments524/524, quick-check ok, FK0, rows_written0. Migration0044/0045 objects remain absent.
+- **Unchanged:** Queue consumer `68f4fcc2e52441888877fa588a71a4de` remains batch10/retries5/wait5000ms with `getfreeseeds-events-staging-dlq`. No Access, R2, D1 row, migration, Cron, Queue, secret, flag, payment, Meta, customer, WhatsApp, new-number or Hoja/ThanNow resource changed beyond the two authorized versions/deployments.
+
 ## GFS-406 migration0046 and release-readiness resources (2026-11-01 UTC)
 
 - **Identity:** GitHub `gardenshop/freeseeds`, PR #11; Cloudflare `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta Ads Manager account `1198439777611633`, business `568026370701542`. All external identity checks were read-only.

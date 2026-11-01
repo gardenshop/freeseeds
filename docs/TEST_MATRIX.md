@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-407 API/Admin 0% validation matrix (2026-11-01 UTC)
+
+| Gate | Evidence | Result |
+|---|---|---|
+| Identity/source | GitHub PR #11/local/remote `ffa9eb4`; Cloudflare `gisupp@gmail.com` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta read-only match | PASS |
+| API candidate | `e8018f3f` at0%; exact preview health200/WhatsApp enabled; unsigned webhook403; bindings/handlers/flags match baseline | PASS |
+| Admin candidate | `ee9b7baa` at0%; authenticated override health6/6; missing/invalid403; business paths302; GraphQL errors0 | PASS |
+| Browser acceptance | Cancellation page/API200 and zero rows; protected surfaces200; desktop1440/tablet768/mobile390 no overflow; console errors0 | PASS |
+| D1/retention | schema0046=7; 0044/0045=0; fact/feedback/reason/eligible=0; quick ok; FK0; changed_db false; rows_written0 | PASS / read-only |
+| Orders/payments | Matched524/524 and rowid sums137550/137550; one normal baseline pair arrived during validation | PASS |
+| Queue/DLQ | batch10, retries5, wait5000ms, exact `getfreeseeds-events-staging-dlq` | PASS / unchanged |
+| Regression | focused235, full361, build/lint, rollback4, observability5, adapter8, deadline18 | PASS |
+| Dependency/security | 10 moderate dev-only, high0, critical0; no secret values/customer data recorded | PASS with documented findings |
+| Traffic release | API/Admin baseline100%, candidates0%; no canary, promotion or watchdog | NOT AUTHORIZED / unchanged |
+
 ## GFS-406 migration0046 and candidate-readiness matrix (2026-11-01 UTC)
 
 | Area | Evidence | Result |

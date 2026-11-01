@@ -1,5 +1,14 @@
 # Status
 
+## GFS-407 Approval U API/Admin 0% validation (2026-11-01 UTC)
+
+- **Result:** PASS for the exact authorized 0%-candidate milestone. Source `ffa9eb4a8a16eb475584812367e53966469fa0d2` was clean and matched local/remote PR #11 before upload. API candidate `e8018f3f-53d3-4506-9c28-a46881842f8c` and Admin candidate `ee9b7baa-722d-406e-9acd-556b447f8d79` are attached at0%; no customer traffic, canary or promotion occurred.
+- **Exact routing:** API deployment `0df1a5e2-dca8-4830-8da7-a92ce662eb42` is `b426ba47`100% / `e8018f3f`0%. Admin deployment `034c190e-d233-4cab-9fa4-65aa068b1603` is `e8c96c96`100% / `ee9b7baa`0%. Identity was freshly verified before every mutation as `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta account/business remained read-only verified.
+- **Candidate acceptance:** exact API preview health200 and unsigned webhook403; structured override health200. Admin override monitoring passed health6/6, missing/invalid403, business-route isolation302 and GraphQL errors0. Official Chrome proved cancellation page/API200 with zero rows, 90-day visibility contract, Orders/Conversations/Analytics/COD/Payment Settings200, no desktop/tablet/mobile horizontal overflow and no console errors.
+- **Data/protocol safety:** D1 readback has schema0046 objects7, 0044/0045 objects0, cancellation/feedback/reason/eligible rows0, quick-check ok, FK0 and rows_written0. Orders/payments increased together from523 to524 due normal baseline production traffic during validation. Queue remains batch10/retries5/wait5000ms with the exact DLQ. API/Admin bindings, handler types, secret names and active recovery flags match; no trigger, Cron, Queue, flag, payment, Meta or Access change occurred.
+- **Quality:** focused235/235, full361/361 across30, build/lint, rollback4/4, observability5/5, adapter8/8 and deadline18/18 PASS. Audit remains10 moderate dev-only findings. Watchdog was not armed because traffic stayed0%; baselines are the independently verified immediate rollback targets.
+- **Next approval:** one bounded attributable API-only canary with independent rollback watchdog and immediate restoration conditions; keep Admin `e8c96c96`100% / `ee9b7baa`0%, do not combine retention deletion, promotion, customer messages, Meta/payment/flag changes or unrelated deployment.
+
 ## GFS-406 Approval T migration0046 and release readiness (2026-11-01 UTC)
 
 - **Result:** PASS for the authorized milestone. Exact migration0046 was applied once to canonical staging D1; retention was dry-run only; coordinated API/Admin candidates were built and tested locally but not uploaded, canaried or promoted.
