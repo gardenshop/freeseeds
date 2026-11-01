@@ -2,6 +2,7 @@
 
 ## GFS-404 cancellation feedback retention and release readiness (2026-11-01 UTC)
 
+- **Git provenance:** tested implementation/protected records commit `f6889e6d1a2fea4ac2ec406bc2a946de503c8c58`; final remote synchronization is pending readback after push.
 - **Source:** `packages/core/src/cancellation-retention.ts`; migration0046 expiry index narrowed to expired suggestion rows; `tests/cancellation-retention.test.ts`. The path is dry-run-by-default, aggregate-only, bounded and not wired to a route, Queue/DLQ or Cron.
 - **Synthetic D1 evidence:** isolated schema0046 fixtures only. Expired suggestion rows are physically deleted in D1 batch transactions; future suggestions, cancellation facts, stages/dates and reason rows remain. Repeated execution is idempotent. No production D1 was read or written, and migration0044/0045 were not applied.
 - **Quality:** full360/360 across29, build, lint, rollback4/4, observability5/5, adapter8/8, deadline18/18, diff and changed-file secret scan PASS. Official audit remains10 moderate dev-only `minimatch` findings; no audit0 claim.

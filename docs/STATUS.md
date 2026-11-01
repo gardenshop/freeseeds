@@ -2,6 +2,7 @@
 
 ## GFS-404 Cancellation feedback retention and release readiness (2026-11-01 UTC)
 
+- **Git provenance:** tested implementation and protected-record commit `f6889e6d1a2fea4ac2ec406bc2a946de503c8c58`; final synchronized remote SHA is recorded after push verification.
 - **Result:** source and local retention validation PASS; production retention/migration/deployment/live acceptance BLOCKED exactly as requested. No production automatic deletion, Cron, migration, D1 write, API/Admin deploy, canary or customer test was performed.
 - **Implementation:** `packages/core/src/cancellation-retention.ts` is a separately callable, dry-run-by-default path. It uses the migration0046 expiry index, selects at most the configured bounded batch, deletes only expired `SUGGESTION` rows in a D1 batch transaction, returns aggregate counts only, and is retry-safe/idempotent. `REASON` rows and immutable cancellation stage/date facts remain.
 - **Validation:** retention tests prove dry-run, one-row bounded batches, future-row protection, repeated execution/idempotency, transaction-safe behavior and fact/reason preservation. GFS-403 EN/UR, legacy OFFER, REVIEW, other pre-submission, optional feedback, duplicate/out-of-order, restart, no-order/payment and existing payment/COD/PAID suites remain PASS. Full360/360 across29, build, lint, rollback4/4, monitoring5/5 + 8/8 + 18/18, diff and changed-file secret scan PASS.

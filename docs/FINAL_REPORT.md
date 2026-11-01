@@ -6,6 +6,8 @@
 
 **PASS locally; production release BLOCKED/not authorized.** The 90-day physical-retention design is implemented and tested without enabling migration0046, Cron, automatic deletion, production D1 writes, API canary or deployment.
 
+Tested implementation/protected-record commit: `f6889e6d1a2fea4ac2ec406bc2a946de503c8c58`. Final remote SHA must be independently read back after the PR push.
+
 ### Retention and compatibility
 
 - `runCancellationSuggestionRetention` is dry-run by default, uses the indexed expiry predicate and bounded `LIMIT`, deletes only expired `SUGGESTION` text in D1 batch transactions, returns aggregate counts only, and is retry-safe/idempotent. Cancellation facts, stage/date records, reason events and future suggestions remain.
