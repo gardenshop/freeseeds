@@ -1,5 +1,12 @@
 # Changelog
 
+## GFS-399 Auto Update button colors and Admin-only release (2026-11-01)
+
+- Added CSS attribute-selector states for Orders and Conversations Auto Update buttons: ON is green/white, OFF is neutral/dark, with accessible focus styling and unchanged dimensions/storage behavior.
+- Validated exact candidate `36665bef` at0% across desktop/tablet/mobile, then promoted it once to100%; retained `dfef46ea` as exact rollback at0%. API remained `b426ba47`100% / `d603f077`0%.
+- Detached five-minute watchdog PID18696 armed before cutover, did not trigger, and was stopped after acceptance before deadline. Final routing and canonical identity readbacks passed.
+- Full345/345, focused22/22, build, lint, diff check and rollback4/4 passed. Known favicon404 and10 moderate dev-only `minimatch` advisories remain accurately documented; no audit0 claim.
+
 ## GFS-398 Approval Q Admin-only cutover (2026-11-01)
 
 - Promoted exact validated Admin candidate `dfef46ea` to100% and set exact rollback `ceb3e680` to0% in deployment `a1e3dedc`; API stayed `b426ba47`100% / `d603f077`0%.

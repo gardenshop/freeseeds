@@ -1,5 +1,14 @@
 # Status
 
+## GFS-399 Auto Update button colors and Admin-only release (2026-11-01 UTC)
+
+- **Implementation PASS:** Orders `#orders-auto` and Conversations `#auto` use CSS driven by `aria-pressed`. ON computes to green `#17603C` with white text; OFF computes to neutral white with dark text and a subtle border. No polling/storage JavaScript changed.
+- **Candidate/release PASS:** exact commit `d208efd104337d5fa2deb7ea09298c8bb23da388` uploaded as `36665bef-1eef-48e8-8788-c6760db0bd63`, attached at0% beside `dfef46ea`100%, then promoted once. Final candidate100% / rollback0%; API remains `b426ba47`100% / `d603f077`0%.
+- **Identity/security PASS:** fresh target identity was verified before each Cloudflare mutation. Canonical Meta Ads Manager identity was read-only verified; bindings and secret names remained unchanged and no secret values were read. No API, D1-write, migration, flag, payment, Meta, Queue/Cron, customer or WhatsApp mutation occurred.
+- **Browser PASS:** desktop, tablet and mobile checks showed correct ON/OFF color, text, `aria-pressed`, independent localStorage persistence and zero root overflow. Post-cutover smoke passed Orders/Conversations list/detail, Analytics, COD and Payment Settings. Known favicon404 remains the only console error; no application error was observed.
+- **Watchdog/gates PASS:** detached PID18696 armed for five minutes before cutover, did not trigger, and was stopped after acceptance before deadline. Full345/345, focused22/22, build, lint, diff check and legacy rollback4/4 pass. D1 limits and official10 moderate dev-only `minimatch` findings remain documented; new-number WhatsApp lock and Hoja/ThanNow zero-connection rule are preserved.
+- **D1 evidence:** no write endpoint, migration or schema change was used. The inherited measured Admin read-cost evidence remains approximately11,493 Conversations list rows plus6,556 summary rows per complete refresh and approximately96,926 Analytics rows for the tested window; owner acceptance remains under25B reads/50M writes monthly with optional polling5% budget.
+
 ## GFS-398 Approval Q Admin-only cutover (2026-11-01 UTC)
 
 - **Cutover PASS:** Admin candidate `dfef46ea-3358-4f58-9253-3bb046a91d64` is100%; rollback `ceb3e680-96f6-4218-b5a5-cadfca20a629` is0%. Deployment `a1e3dedc-f70c-471e-831b-71b842f3ebce` carries the Approval Q cutover annotation.

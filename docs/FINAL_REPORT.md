@@ -1,5 +1,34 @@
 # Final Report
 
+## GFS-399 Auto Update button colors and Admin-only release (2026-11-01 UTC)
+
+### Result
+
+**PASS — Admin-only visual release completed.** GFS-397 proved the desktop regression was browser emulation; GFS-398 established the Admin-only release/watchdog path; GFS-399 adds only CSS state visibility for the existing Auto Update controls and promotes the exact validated Admin candidate. No API or WhatsApp release occurred.
+
+### Behavior and acceptance
+
+- Orders `#orders-auto` and Conversations `#auto` render ON as `#17603C` with white text and OFF as neutral white with dark text/subtle border, using `aria-pressed` selectors. Labels, ARIA state, independent localStorage preferences, focus styling and mobile fit passed.
+- Candidate validation through the authenticated version override passed desktop, tablet768 and mobile390. Both controls persisted through reload, stayed independent, remained OFF at handoff, and root overflow was false. Existing polling behavior was unchanged; Conversations retained separate paused/resume status messaging for inactive tabs.
+- After cutover with device emulation and override headers cleared, normal live smoke passed Orders list/detail, Conversations list/summary/detail, Analytics, COD and Payment Settings. The only console error was the known favicon404; no application request failure was observed.
+
+### Release and protected state
+
+- Exact source commit: `d208efd104337d5fa2deb7ea09298c8bb23da388`.
+- Admin candidate `36665bef-1eef-48e8-8788-c6760db0bd63`: **100%**; exact rollback `dfef46ea-3358-4f58-9253-3bb046a91d64`: **0%**.
+- API `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`: **100%**; candidate `d603f077-cc44-4882-af9b-9985adb53424`: **0%**.
+- Fresh Cloudflare identity matched `gisupp@gmail.com` / Get Free Seeds / target account before each Cloudflare mutation. Canonical Meta Ads Manager identity was read-only verified; no Meta change. No D1 write, migration, flag, payment, Queue/Cron, customer, API or WhatsApp mutation occurred.
+- Watchdog PID18696 detached and armed before cutover for five minutes, did not trigger, and was stopped after acceptance before deadline. Final routing readback confirmed the percentages above.
+- Full345/345 across27 files, focused22/22, build, lint, diff check and legacy rollback4/4 passed. Owner-approved D1 limits and the10 moderate dev-only `minimatch` advisories remain documented; audit0 is not claimed.
+- D1 evidence remained read-only: inherited measurements are approximately11,493 Conversations list rows plus6,556 summary rows per complete refresh and approximately96,926 Analytics rows for the tested window. Owner acceptance remains under25B reads/50M writes monthly with optional polling5% budget.
+
+### Completion and next priority
+
+- GFS-397: **100% complete** — desktop regression diagnosis and permanent layout guard.
+- GFS-398: **100% complete** — Admin-only cutover/watchdog foundation.
+- GFS-399: **100% complete** — visual state contract, candidate validation, Admin-only release and records.
+- API canary/public production launch: **0% / not authorized**. Next priority is owner review of the remaining dependency advisory risk before any broader release scope.
+
 ## GFS-398 Approval Q Admin-only cutover (2026-11-01 UTC)
 
 ### Result

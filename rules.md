@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-399 Auto Update button colors and Admin-only release (2026-11-01 UTC)
+
+- **Visual change PASS:** Orders `#orders-auto` and Conversations `#auto` now use CSS attribute selectors on `aria-pressed`: ON is `#17603C` with white text; OFF is white with dark text and a subtle border. Labels, ARIA state, localStorage preferences, focus outlines and mobile sizing remain synchronized.
+- **Behavior boundary:** no polling JavaScript changed. Both controls remain independent and default OFF; existing visible/focused 60-second polling, hidden/blur/pagehide pause, cross-tab lease, single-flight, five-minute Conversations summary cap, manual Refresh, stale retention and D1 limits remain intact. Inactive Conversations status continues to report pause/resume state.
+- **Release PASS:** exact source commit `d208efd104337d5fa2deb7ea09298c8bb23da388` uploaded as Admin version `36665bef-1eef-48e8-8788-c6760db0bd63`, validated at0%, then promoted once to100%. Exact rollback `dfef46ea-3358-4f58-9253-3bb046a91d64` is0%.
+- **Identity/security:** fresh pre-mutation Wrangler checks matched `gisupp@gmail.com` / Get Free Seeds / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; alternate account was unused. Canonical Meta Ads Manager identity remained read-only verified; no API, D1-write, migration, flag, payment, Meta, Queue/Cron, customer or WhatsApp mutation occurred.
+- **Watchdog:** independent detached five-minute Admin-only watchdog PID18696 armed at `2026-11-01T08:44:26.608Z` UTC for rollback to `dfef46ea`100%/candidate0%; no rollback triggered and it was stopped after acceptance before deadline. Final Admin/API readback followed.
+- **Acceptance/tests:** authenticated candidate override passed desktop, tablet and mobile button colors, labels, persistence and zero root overflow; normal live smoke passed Orders/Conversations, Analytics, COD and Payment Settings. Known favicon404 was the only browser console error. Full345/345, focused22/22, build, lint, diff check and legacy rollback4/4 pass. Preserve the new-number WhatsApp lock and Hoja/ThanNow zero-connection rule; do not claim audit0 for the10 moderate dev-only `minimatch` findings.
+
 ## GFS-398 Approval Q Admin-only cutover (2026-11-01 UTC)
 
 - **Single cutover PASS:** exact Admin candidate `dfef46ea-3358-4f58-9253-3bb046a91d64` is now100%; exact rollback `ceb3e680-96f6-4218-b5a5-cadfca20a629` is0%. Final Admin deployment readback is `a1e3dedc-f70c-471e-831b-71b842f3ebce`, annotated `GFS-398 Approval Q Admin100 cutover`.

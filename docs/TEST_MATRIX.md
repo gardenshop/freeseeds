@@ -1,5 +1,22 @@
 # Test Matrix
 
+## GFS-399 Auto Update visual release and Admin cutover (2026-11-01 UTC)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| CSS visual contract | PASS | Existing `aria-pressed` state drives ON `#17603C`/white and OFF white/dark with subtle border; no duplicated JS styling. |
+| Orders/Conversations controls | PASS | Labels, ARIA, computed colors and independent localStorage states matched before/after click and reload; final defaults OFF. |
+| Polling behavior | PASS retained | No polling JS changed; existing 60-second visible/focused gate, hidden/blur/pagehide pause, lease, single-flight, summary cap and stale safety remain covered by source/tests and prior live evidence. |
+| Responsive candidate | PASS | Authenticated override checked desktop, tablet768 and mobile390; zero root overflow, button fit and no visible application errors. |
+| Candidate route smoke | PASS | Orders, Conversations, Analytics, COD and Payment Settings rendered; candidate read-only routes succeeded. Payment guardrail statuses remain policy text, not network failure. |
+| Normal live smoke | PASS | After cutover and cleared emulation/headers, Orders/Conversations list/detail and Analytics/COD/Payment Settings rendered; no application error. Known favicon404 only. |
+| Identity/provenance | PASS | Fresh target Cloudflare identity before each mutation; exact commit `d208efd`; canonical Meta Ads Manager read-only identity verified; bindings/access unchanged. |
+| Admin cutover | PASS | Candidate `36665bef`100%; exact rollback `dfef46ea`0%; one deployment, no mixed percentage. |
+| API/protected scope | PASS | API `b426ba47`100% / `d603f077`0%; no API, D1-write, migration, flag, payment, Meta, Queue/Cron, customer or WhatsApp mutation. |
+| Watchdog | PASS | Detached PID18696 armed before cutover, no rollback needed, stopped after acceptance before deadline; final routing readback passed. |
+| Regression gates | PASS | Focused22/22; full345/345 across27; build; lint; diff check; legacy rollback4/4. |
+| Dependency audit | REVIEW/BLOCKED | Official10 moderate unfixed dev-only `minimatch` advisories remain; no audit0 claim. |
+
 ## GFS-398 Approval Q Admin-only cutover and live acceptance (2026-11-01 UTC)
 
 | Check | Result | Evidence / boundary |

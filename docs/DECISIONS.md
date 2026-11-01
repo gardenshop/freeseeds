@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-399 Auto Update visual release decision (2026-11-01 UTC)
+
+- Accept the minimal CSS-only `aria-pressed` visual contract: ON `#17603C`/white and OFF white/dark with subtle border, consistent dimensions, focus outline and mobile fit. Keep existing independent localStorage and polling behavior unchanged.
+- Accept candidate `36665bef-1eef-48e8-8788-c6760db0bd63` from0% to100% after authenticated desktop/tablet/mobile validation. Keep exact rollback `dfef46ea-3358-4f58-9253-3bb046a91d64` at0%; keep API `b426ba47`100% / `d603f077`0%.
+- Accept fresh Cloudflare identity, source provenance, unchanged bindings/access, canonical read-only Meta identity, known favicon404 boundary and no-write protected scope. No API, payment, Meta, D1, migration, flag, Queue/Cron, customer or WhatsApp mutation is implied.
+- Accept detached watchdog PID18696: it was armed before cutover, did not trigger and was stopped after acceptance before deadline. Final routing readback is authoritative.
+- Preserve the new-number WhatsApp lock, Hoja/ThanNow zero-connection rule, auto-update default OFF and documented D1/audit residual risks.
+
 ## GFS-398 Approval Q Admin-only cutover decision (2026-11-01 UTC)
 
 - Consume Approval Q exactly once for Admin: promote candidate `dfef46ea-3358-4f58-9253-3bb046a91d64` from0% to100% and attach rollback `ceb3e680-96f6-4218-b5a5-cadfca20a629` at0%. This completed as deployment `a1e3dedc-f70c-471e-831b-71b842f3ebce`.

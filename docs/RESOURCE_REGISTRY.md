@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-399 Auto Update visual release evidence (2026-11-01)
+
+- **Source:** exact pushed commit `d208efd104337d5fa2deb7ea09298c8bb23da388`; runtime change is CSS-only for existing `aria-pressed` state, with focused assertions in the two existing Admin UI test files.
+- **Admin/API:** candidate `36665bef-1eef-48e8-8788-c6760db0bd63` tag `gfs399-admin-d208efd` is100%; exact rollback `dfef46ea-3358-4f58-9253-3bb046a91d64` is0%; API `b426ba47`100% / `d603f077`0%.
+- **Identity/bindings:** fresh pre-mutation Wrangler identity was `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; alternate account unused. Candidate metadata retained D1, Queue, R2, vars and secret names; values were not recorded. Canonical Meta Ads Manager identity was read-only verified; no action form was used.
+- **Watchdog:** PID18696 detached five-minute Admin-only rollback protection armed `2026-11-01T08:44:26.608Z` UTC, no rollback triggered, stopped after acceptance before deadline, and temporary artifacts were removed. Final routing readback followed.
+- **Live evidence:** candidate override at desktop/tablet/mobile and normal post-cutover smoke confirmed ON green/white, OFF neutral/dark, labels/ARIA, localStorage persistence, independent controls, Orders/Conversations data, zero root overflow, and Analytics/COD/Payment Settings availability. Only known favicon404 appeared in console; no application failure.
+- **Scope:** no polling behavior, backend, D1 write, migration, flag, payment, Meta, Queue/Cron, API or WhatsApp state changed. D1 budget and official10 moderate dev-only `minimatch` advisories remain as documented REVIEW items.
+
 ## GFS-398 Approval Q Admin-only cutover evidence (2026-11-01)
 
 - **Admin final routing:** deployment `a1e3dedc-f70c-471e-831b-71b842f3ebce`; candidate `dfef46ea-3358-4f58-9253-3bb046a91d64`100%; rollback `ceb3e680-96f6-4218-b5a5-cadfca20a629`0%.
