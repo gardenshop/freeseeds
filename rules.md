@@ -10,6 +10,8 @@
 - **Watchdog:** initial pre-cutover PID19860 exited before observing due a temporary Windows path bug, made no route mutation and triggered no rollback. The corrected independent PID3872 observed candidate100% at `2026-11-01T09:05:19.099Z` UTC, stayed armed through final acceptance, then stopped with `stopped_after_acceptance`; no rollback triggered. This correction is recorded rather than treated as a PASS for the failed first process.
 - **Identity/security/tests:** fresh Wrangler checks matched `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta Ads Manager was read-only verified; GitHub remote is the correct `gardenshop/freeseeds` target, but the stored `gardenshop` CLI token was invalid in this run. Full346/346 across27, focused layout4/4, build, lint and rollback4/4 pass. Known favicon404 and10 moderate dev-only `minimatch` findings remain; never claim audit0. New-number WhatsApp lock and Hoja/ThanNow zero-connection rule remain mandatory.
 
+ - **Git synchronization follow-up:** after the initial `gh auth status` warning, the verified remote push succeeded; PR #11 now independently reads SHA `98af3a56c757a48559147f8a8dd79277b2cbfedf`.
+
 ## GFS-399 Auto Update button colors and Admin-only release (2026-11-01 UTC)
 
 - **Visual change PASS:** Orders `#orders-auto` and Conversations `#auto` now use CSS attribute selectors on `aria-pressed`: ON is `#17603C` with white text; OFF is white with dark text and a subtle border. Labels, ARIA state, localStorage preferences, focus outlines and mobile sizing remain synchronized.

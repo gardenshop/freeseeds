@@ -9,6 +9,8 @@
 - **Watchdog/result:** initial PID19860 failed before candidate observation because its temporary Windows path handling was defective; it never changed routing. Corrected PID3872 observed candidate100%, remained through acceptance, and stopped as `stopped_after_acceptance`; no rollback occurred.
 - **Protected scope PASS:** fresh Cloudflare identity matched target account, canonical Meta was read-only checked, API routing stayed frozen, and no D1 write, migration, flag, payment, Queue/Cron, customer, WhatsApp or Hoja/ThanNow action occurred. Full346/346 across27, build, lint and rollback4/4 pass. GitHub push remains blocked until the invalid `gardenshop` token is reauthenticated.
 
+ - **Git follow-up PASS:** tested source/docs were pushed to PR #11 and remote SHA `98af3a56c757a48559147f8a8dd79277b2cbfedf` was independently verified.
+
 ## GFS-399 Auto Update button colors and Admin-only release (2026-11-01 UTC)
 
 - **Implementation PASS:** Orders `#orders-auto` and Conversations `#auto` use CSS driven by `aria-pressed`. ON computes to green `#17603C` with white text; OFF computes to neutral white with dark text and a subtle border. No polling/storage JavaScript changed.

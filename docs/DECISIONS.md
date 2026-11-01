@@ -8,6 +8,8 @@
 - Record the watchdog truthfully: PID19860 failed before observation because of temporary Windows path handling and performed no mutation; corrected PID3872 observed candidate100%, stayed through acceptance, and stopped with `stopped_after_acceptance` without rollback. No further traffic change is authorized by this record.
 - Preserve fresh identity, canonical Meta read-only boundary, new-number WhatsApp lock, Hoja/ThanNow zero-connection rule, D1 budget,10 moderate dev-only minimatch findings and no-audit0 claim. GitHub synchronization remains pending owner reauthentication because the stored `gardenshop` CLI token is invalid.
 
+ - **Git follow-up PASS:** the tested source/docs were pushed to PR #11 and remote SHA `98af3a56c757a48559147f8a8dd79277b2cbfedf` was independently verified.
+
 ## GFS-399 Auto Update visual release decision (2026-11-01 UTC)
 
 - Accept the minimal CSS-only `aria-pressed` visual contract: ON `#17603C`/white and OFF white/dark with subtle border, consistent dimensions, focus outline and mobile fit. Keep existing independent localStorage and polling behavior unchanged.

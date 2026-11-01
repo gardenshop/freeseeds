@@ -33,8 +33,8 @@
 | GFS-399 | PASS: Auto Update visual state contract released. |
 | GFS-400 | PASS: malformed shell replacement repaired, geometry locked, Admin100 stable, API/WhatsApp untouched. |
 
-- Completion: source/tests100%; Admin candidate/release100%; layout/browser acceptance100%; API protected100%; WhatsApp regression evidence100% for the no-mutation boundary; GitHub synchronization0% for this turn because the stored `gardenshop` CLI token is invalid, so the new source/docs are not yet pushed.
-- Remaining task: reauthenticate the authorized GitHub `gardenshop` identity, commit the tested source/tests/protected records, push PR #11, and independently verify the remote SHA. Next priority is that GitHub synchronization; no further deployment or traffic change is needed.
+- Completion: source/tests100%; Admin candidate/release100%; layout/browser acceptance100%; API protected100%; WhatsApp regression evidence100% for the no-mutation boundary; GitHub synchronization100% after push and independent remote readback.
+- Remaining task: no GFS-400 release action remains. Next priority is ordinary post-release monitoring; no further deployment, traffic, API, WhatsApp or database change is needed.
 - The official audit remains REVIEW with10 moderate dev-only `minimatch` findings and no available fix; audit0 is not claimed. New-number WhatsApp lock and Hoja/ThanNow zero-connection rule remain preserved.
 
 ## GFS-399 Auto Update button colors and Admin-only release (2026-11-01 UTC)

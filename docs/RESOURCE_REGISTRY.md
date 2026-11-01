@@ -9,6 +9,8 @@
 - **Watchdog:** PID19860 initial temporary watchdog exited before observation due a Windows path bug and made no mutation. Corrected PID3872 observed candidate100% at `2026-11-01T09:05:19.099Z` UTC, stopped after acceptance, and recorded no rollback.
 - **Identity/scope:** fresh Wrangler identity was target `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta Ads Manager was read-only verified. No API, D1 write, migration, flag, payment, Meta, Queue/Cron, customer or WhatsApp mutation; Hoja/ThanNow were not accessed. GitHub target URL is correct but CLI credentials were invalid, so push is pending reauthentication.
 
+ - **Git follow-up:** PR #11 remote branch independently reads `98af3a56c757a48559147f8a8dd79277b2cbfedf` after the tested source/docs push.
+
 ## GFS-399 Auto Update visual release evidence (2026-11-01)
 
 - **Source:** exact pushed commit `d208efd104337d5fa2deb7ea09298c8bb23da388`; runtime change is CSS-only for existing `aria-pressed` state, with focused assertions in the two existing Admin UI test files.

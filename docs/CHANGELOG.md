@@ -8,6 +8,8 @@
 - Initial watchdog PID19860 failed before observation due a temporary Windows path defect and did not mutate routing. Corrected PID3872 observed candidate100% and stopped after acceptance without rollback. Full346/346, layout4/4, build, lint and rollback4/4 passed.
 - Fresh Cloudflare target identity and canonical Meta read-only identity passed. GitHub remote is correct but push is pending invalid CLI-token reauthentication. Known favicon404 and10 moderate dev-only minimatch advisories remain; no audit0 claim.
 
+ - Git follow-up: pushed the tested GFS-400 source/docs to PR #11; remote SHA `98af3a56c757a48559147f8a8dd79277b2cbfedf` independently verified.
+
 ## GFS-399 Auto Update button colors and Admin-only release (2026-11-01)
 
 - Added CSS attribute-selector states for Orders and Conversations Auto Update buttons: ON is green/white, OFF is neutral/dark, with accessible focus styling and unchanged dimensions/storage behavior.
