@@ -201,6 +201,8 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("const hasVisibleOrders=Boolean(ordersRoot.querySelector('[data-order-id]'))");
     expect(html).toContain("Refresh failed; showing the last successful orders.");
     expect(html).toContain('id="orders-auto"');
+    expect(html).toContain('.refresh[aria-pressed="true"]{background:#17603C;color:#fff');
+    expect(html).toContain('.refresh[aria-pressed="false"]{background:#fff;color:#17231c');
     expect(html).toContain("gfs_admin_orders_auto_update");
     expect(html).toContain("document.hasFocus()");
     expect(html).toContain("gfs_admin_orders_auto_lock");

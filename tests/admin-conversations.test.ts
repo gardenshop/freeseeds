@@ -119,6 +119,8 @@ describe("GFS-341 read-only conversation viewer", () => {
     expect(html).toContain("Date.now()-lastSummaryAt>=300000");
     expect(html).toContain("gfs_admin_conversations_auto_update");
     expect(html).toContain("Auto update OFF");
+    expect(html).toContain('.controls button[aria-pressed="true"]{background:#17603C;color:#fff');
+    expect(html).toContain('.controls button[aria-pressed="false"]{background:#fff;color:#172018');
     expect(html).toContain("document.hidden");
     expect(html).toContain("document.hasFocus()");
     expect(html).toContain("gfs_admin_conversations_auto_lock");
