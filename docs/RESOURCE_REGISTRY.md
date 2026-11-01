@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-394 read-only release evidence (2026-11-01)
+
+- Frozen recorded routing: API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `ab5be96b`0%. No resource, version, binding, secret, Access policy, D1, R2, Queue, Cron, Meta or WhatsApp mutation occurred.
+- Chrome DevTools MCP reused existing protected Orders and Conversations pages after `list_pages`; four Admin API/data reload paths returned HTTP200 in bounded read-only checks. No private customer fields or screenshots were recorded in this evidence.
+- Wrangler identity refresh is blocked by expired auth and unreachable Cloudflare auth. The documented account remains `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; this was not used for a mutation in GFS-394.
+- Source files changed only in the Admin conversation/order presentation and synthetic tests. No migration, schema, resource or runtime binding changed. Remote branch SHA remains `0f3ecadd27996577dc2915a4f995b4eb7afeb63d`.
+
 ## GFS-386 diagnostic evidence (2026-10-31)
 
 - **Monitoring code:** `scripts/canary-diagnostics.mjs` plus adapter/observability/controller integration; bounded sanitized records only, no secret or customer data.

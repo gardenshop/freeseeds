@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-394 Admin refresh reliability and Pakistan time boundary (2026-11-01 UTC)
+
+- Production remains frozen: API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `ab5be96b`0%. No deployment, canary, D1 write, migration, flag, Queue/Cron, payment, Meta, WhatsApp or customer mutation is authorized by this task.
+- Read-only Chrome DevTools MCP inventory ran first and reused the existing Orders and Conversations tabs. Bounded reloads returned HTTP200 for Orders, order detail, Conversations and summary/list; the reported failures were not reproduced. The only console error was an unrelated favicon404. Do not claim service restoration or a root cause from this evidence.
+- Source-only repair separates `last_customer_message_at` from `last_conversation_updated_at`, computes latest activity from the newer valid UTC value, preserves the last successful Admin data on transient failures, classifies browser/HTTP/Access/timeout failures, and renders timestamps in fixed `Asia/Karachi` PKT. Underlying UTC values and all WhatsApp/payment behavior remain unchanged.
+- Automatic Orders and Conversations updates remain independent, default OFF, visible/focused-tab only, one in-flight request, hidden/blur/pagehide paused, stale-data age explicit, and Conversations summary automatic reads capped at five minutes. No D1 optimization or schema change is authorized.
+- Local validation is source evidence only: focused31/31, full342/342, build/lint PASS, diff check PASS. `npm audit` is BLOCKED by registry advisory endpoint EACCES despite a writable temporary log. Wrangler authentication is expired and could not refresh because the Cloudflare auth server was unreachable; no bypass is permitted.
+- Preserve the new-number WhatsApp lock, Hoja/ThanNow zero-connection rule, API repair approval boundary and candidate0% release hold. No push or live candidate acceptance is claimed.
+
 ## GFS-389 D1-safe Admin auto-update controls (2026-10-31 UTC)
 
 - No production mutation is authorized: API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `72cff93f`0%. No deployment, API canary, customer message/order/payment write, Meta, migration, flag, Queue, Cron, or WhatsApp mutation occurred.

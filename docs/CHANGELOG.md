@@ -1,5 +1,12 @@
 # Changelog
 
+## GFS-394 Admin refresh reliability and Pakistan time (2026-11-01)
+
+- Added source-only stale-safe refresh handling for Orders/Conversations: explicit browser/HTTP/Access/timeout errors, atomic Conversations list/summary commit, last-successful data retention and stale-data age.
+- Corrected conversation activity semantics by exposing last customer message and last conversation update separately; fixed all displayed conversation times to `Asia/Karachi` PKT while keeping UTC storage unchanged.
+- Focused31/31, full342/342, build, lint and diff check pass. Live failures were not reproduced; no deployment, push, D1, Meta, WhatsApp, payment or flag mutation occurred.
+- Wrangler auth and npm audit remain blocked by external auth/registry conditions.
+
 ## GFS-386 diagnostic repair (2026-10-31)
 
 - Added safe allowlisted diagnostics and bounded persistence across monitor/controller rollback paths. Raw GraphQL bodies, credentials, customer identifiers and payment data remain prohibited.

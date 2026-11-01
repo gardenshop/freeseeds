@@ -1,5 +1,12 @@
 # Decisions
 
+## GFS-394 Admin refresh/time decision (2026-11-01 UTC)
+
+- Do not diagnose the owner screenshots as a confirmed Cloudflare/API/WhatsApp failure: supported Chrome read-only reloads returned HTTP200 and no Orders/Conversations failure was reproduced. Keep the exact live root cause UNKNOWN until request-level failure evidence is available.
+- Accept the minimal source repair for review: atomic list/summary refresh, stale-safe retention, classified client errors, and separate UTC activity meanings rendered in fixed `Asia/Karachi` PKT. Do not add a migration, index, polling server, API canary or WhatsApp change.
+- Keep automatic updates separate and default OFF. Visible/focused tab, one request, hidden/blur/pagehide pause and five-minute summary cap remain mandatory because D1 budget evidence and current Wrangler auth are unavailable.
+- Do not upload, attach, deploy or cut over Admin under GFS-394. Request one fresh scoped approval only after supported Cloudflare authentication, D1 budget/threshold, authenticated real-data version override, repeated refresh/hidden/multi-tab checks, and rollback evidence are available.
+
 ## GFS-386 diagnostic and release decision (2026-10-31 UTC)
 
 - Replace generic controller error collapse with safe allowlisted diagnostics and bounded persistence; preserve fail-closed routing and rollback. Do not expose the API candidate while a baseline qualification can still return monitor retry exhaustion.

@@ -101,6 +101,17 @@ describe("GFS-341 read-only conversation viewer", () => {
     expect((await response.json() as { summary: Record<string, unknown> }).summary).toHaveProperty("activeLast24Hours");
   });
 
+  it("uses the newest UTC timestamp for activity while preserving both meanings", async () => {
+    const db = fixture();
+    db.sqlite.prepare("UPDATE whatsapp_conversations SET last_inbound_at=?,updated_at=? WHERE id=?").run("2026-10-29T23:00:00Z", "2026-10-30T02:00:00Z", "conv-1");
+    const list = await (await app.fetch(new Request("https://admin.example.test/api/conversations", { headers: auth }), env(db))).json() as { conversations: Array<Record<string, unknown>> };
+    expect(list.conversations[0]).toMatchObject({ lastCustomerMessageAt: "2026-10-29T23:00:00Z", lastConversationUpdatedAt: "2026-10-30T02:00:00Z", lastActivityAt: "2026-10-30T02:00:00Z" });
+    const summary = await readConversationSummary(db as unknown as D1Database, new Date("2026-10-30T02:30:00Z"));
+    expect(summary.summary.activeLast24Hours).toBe(1);
+    const detail = await readConversation(db as unknown as D1Database, "conv-1");
+    expect(detail.conversation).toMatchObject({ lastCustomerMessageAt: "2026-10-29T23:00:00Z", lastConversationUpdatedAt: "2026-10-30T02:00:00Z", lastActivityAt: "2026-10-30T02:00:00Z" });
+  });
+
   it("renders the stale-safe automatic dashboard without write controls", () => {
     const html = conversationsDashboardPageHtml();
     expect(html).toContain("/api/conversations/summary");
@@ -113,6 +124,12 @@ describe("GFS-341 read-only conversation viewer", () => {
     expect(html).toContain("gfs_admin_conversations_auto_lock");
     expect(html).toContain("window.addEventListener('focus',resumeAutomatic)");
     expect(html).toContain("Update failed; showing the last successful data.");
+    expect(html).toContain("Asia/Karachi");
+    expect(html).toContain("Last customer message:");
+    expect(html).toContain("Last conversation update:");
+    expect(html).toContain("stale-data age");
+    expect(html).toContain("Access session expired or denied.");
+    expect(html).toContain("Browser fetch failed; check connectivity or the Admin session.");
     expect(html).toContain("prefers-reduced-motion");
     expect(html).not.toContain("method:'POST'");
     expect(html).not.toContain("/send");

@@ -155,6 +155,8 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("Mark Packing");
     expect(html).toContain("Mark Dispatched");
     expect(html).toContain("Mark Delivered");
+    expect(html).toContain("gfs_admin_orders_auto_update");
+    expect(html).toContain("document.hasFocus()");
   });
 
   it("renders bounded, stale-safe startup request handling", async () => {
@@ -166,6 +168,9 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("if(listController)listController.abort()");
     expect(html).toContain("if(generation!==listGeneration||isAbort(error))return");
     expect(html).toContain("Orders could not be loaded. Use Refresh to try again.");
+    expect(html).toContain("Browser fetch failed; check connectivity or the Admin session.");
+    expect(html).toContain("Access session expired or denied. Re-authenticate the Admin session.");
+    expect(html).toContain("Asia/Karachi");
     expect(html).toContain("hydrate();setTabs({});load();");
   });
 

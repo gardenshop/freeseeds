@@ -1,5 +1,29 @@
 # Final Report
 
+## GFS-394 Admin refresh reliability and Pakistan time (2026-11-01 UTC)
+
+### Result
+
+**Source repair PASS; live release BLOCKED.** Supported Chrome DevTools MCP read-only reloads did not reproduce the owner-reported Orders or Conversations errors. The exact production root cause is UNKNOWN. Source now preserves last-good data, commits Conversations list/summary atomically, classifies browser/HTTP/Access/timeout failures, and renders conversation activity in fixed `Asia/Karachi` PKT with separate customer-message and conversation-update meanings.
+
+### Gates
+
+| Area | Result |
+|---|---|
+| GFS-387–394 comparison | GFS-387 source resilience PASS; GFS-388 source dashboard PASS; GFS-389 controls PASS; GFS-390 candidate validation historical PASS; GFS-391/392/393 release gates BLOCKED; GFS-394 source PASS/live diagnosis INCONCLUSIVE |
+| Live network acceptance | PASS for bounded HTTP200 reloads; failure reproduction NOT OBSERVED |
+| Pakistan time/activity | PASS locally; UTC storage unchanged; live candidate acceptance BLOCKED |
+| WhatsApp/API routing | No mutation; frozen recorded routing preserved, current fresh control-plane verification BLOCKED by Wrangler auth |
+| D1 rows | Source tests only; no production rows written; live read count not newly queried in this execution |
+| Wrangler auth | BLOCKED: expired auth and unreachable refresh endpoint |
+| npm audit | BLOCKED: registry advisory endpoint EACCES; no vulnerability verdict |
+| Tests | Focused31/31, full342/342, build/lint/diff PASS |
+| Git | Local source changes are uncommitted; remote and HEAD remain `0f3ecadd27996577dc2915a4f995b4eb7afeb63d` |
+
+### Remaining work
+
+Supported Cloudflare login, authenticated Admin 0% version override with real-data repeated refresh/hidden/focus/multi-tab/D1-cost checks, rollback readback, and a fresh exact deployment approval remain required. No Admin100% cutover or API canary is authorized by GFS-394.
+
 ## GFS-386 diagnostic repair and release gate (2026-10-31 UTC)
 
 ### Result

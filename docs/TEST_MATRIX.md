@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-394 Admin refresh and Pakistan time (2026-11-01 UTC)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Chrome MCP inventory and tab reuse | PASS | `list_pages` first; existing Orders and Conversations tabs reused; no unrelated tab changed |
+| Live Orders/Conversations bounded reload | PASS / not reproduced | Orders, detail, Conversations and summary/list returned HTTP200; no failure restoration claim |
+| Older inbound vs newer conversation update | PASS | Synthetic UTC fixture returns separate fields and newest activity |
+| Fixed PKT formatting | PASS locally | `Asia/Karachi`, PKT label, missing/invalid handling, UTC source preserved |
+| Failure classification and stale retention | PASS locally | Browser fetch, HTTP/non-JSON, Access, timeout, atomic commit and last-good-data assertions |
+| Focused Admin tests | PASS | 31/31 |
+| Full regression | PASS | 342/342 across26 files |
+| Build/lint/diff | PASS | TypeScript, ESLint, `git diff --check` |
+| npm audit | BLOCKED | Registry advisory endpoint EACCES; writable verbose log retained, no vulnerability verdict |
+| Wrangler identity/deploy/live candidate | BLOCKED / NOT RUN | Auth expired and refresh endpoint unreachable; no deployment or mutation |
+
 ## GFS-386 diagnostic repair (2026-10-31 UTC)
 
 | Check | Result | Evidence / boundary |

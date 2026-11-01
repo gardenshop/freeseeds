@@ -1,5 +1,14 @@
 # Status
 
+## GFS-394 Admin refresh reliability and Pakistan time (2026-11-01 UTC)
+
+- **Live diagnosis PARTIAL / not reproduced:** Chrome DevTools MCP `list_pages` ran first; existing protected Orders and Conversations tabs were reused. Bounded reloads produced HTTP200 for `/api/orders`, order detail, `/api/conversations`, and `/api/conversations/summary`; no Admin network failure occurred. The only console error was an unrelated favicon404. Exact owner-reported failure cause remains UNKNOWN; no service-restoration claim is made.
+- **Source repair PASS:** Conversations now returns separate last-customer-message and last-conversation-update UTC fields and uses the newer valid timestamp for activity/active counts. Client refreshes commit list + summary atomically, retain last successful records on failure, distinguish browser fetch, HTTP/non-JSON, Access expiration and timeout, and show last successful update plus stale-data age. No SQL schema or write path changed.
+- **PKT repair PASS locally:** Conversation list/detail, message events and +15/+210 timestamps use fixed IANA `Asia/Karachi` and label `PKT`; missing values show `—` and invalid values are explicit. Database timestamps remain UTC. Synthetic coverage proves an older inbound timestamp is not mislabeled as latest activity.
+- **Verification PASS:** focused Admin 31/31; full 342/342 across26 files; TypeScript build; ESLint; `git diff --check` all pass. No production deployment, candidate exposure, D1 write, migration, flag, Meta, WhatsApp, payment, Queue or Cron mutation occurred.
+- **Release blockers:** Wrangler read-only auth reports expired credentials and unreachable Cloudflare auth; no login bypass or alternate credential was used. `npm audit --audit-level=high` is blocked by registry advisory endpoint EACCES; verbose output was written only to the writable temporary log directory and reports no vulnerability result. No push occurred; remote SHA remains `0f3ecadd27996577dc2915a4f995b4eb7afeb63d`.
+- **Routing boundary:** preserve API `b426ba47`100% / `d603f077`0% and Admin `ceb3e680`100% / `ab5be96b`0% as the protected recorded state. Admin 0% validation and any cutover require supported Cloudflare auth, approved D1 budget/threshold, authenticated real-data retest, watchdog and separate approval.
+
 ## GFS-386 diagnostic repair and canary gate (2026-10-31 UTC)
 
 - **Source repair PASS:** ordinary errors no longer collapse to generic `controller_error`. Observability and adapter classify GraphQL HTTP200 errors/empty rows, malformed/HTTP/network/timeout/auth failures, Wrangler readback/version errors, health failures, cancellation and bounded retry exhaustion. Controller persists bounded sanitized records with correlation ID and rollback stage; secrets and raw bodies are excluded.
