@@ -1,5 +1,12 @@
 # Changelog
 
+## GFS-395 live PKT verification and release blockers (2026-11-01)
+
+- Re-ran the fixed PKT formatter against the reported UTC instant, midnight rollover, invalid input and multiple host timezones; local result is stable and source remains UTC-backed.
+- Ran three sanitized browser cycles: Orders list/changes/detail and Conversations list/detail were HTTP200 JSON; the frozen older Admin returned HTTP404 for `/api/conversations/summary`, correctly classified as a version-surface mismatch.
+- Restored and verified official Wrangler identity for the target Get Free Seeds account without making a mutation. GitHub remote SHA was read back, but the existing CLI token remains invalid and no push occurred.
+- Official npm audit now reaches the registry and reports 10 moderate `minimatch` findings with no available fix; audit is not PASS. Full342/342, build/lint and diff checks pass.
+
 ## GFS-394 Admin refresh reliability and Pakistan time (2026-11-01)
 
 - Added source-only stale-safe refresh handling for Orders/Conversations: explicit browser/HTTP/Access/timeout errors, atomic Conversations list/summary commit, last-successful data retention and stale-data age.

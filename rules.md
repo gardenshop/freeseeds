@@ -1,5 +1,15 @@
 # Get Free Seeds Binding Rules
 
+## GFS-395 Live PKT verification and release blockers (2026-11-01 UTC)
+
+- Production remains frozen: API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `ab5be96b`0%. No API canary, customer send, payment, Meta, D1 write, migration, flag, Queue/Cron, WhatsApp, or Admin deployment mutation occurred.
+- The local tested source is commit `5ddb00f3a209a868240cf50a62f41915faaf2f5f`; remote branch remains `0f3ecadd27996577dc2915a4f995b4eb7afeb63d`. GitHub remote readback passed, but the configured `gardenshop` CLI token remains invalid; no alternate account or push bypass is permitted.
+- Official Wrangler OAuth re-authentication completed. Fresh identity readback is `gisupp@gmail.com` / Get Free Seeds / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. The separate account `85f6a6181b4653c2a45e69cb7ce8a474` is not the target and was not used. Identity was verified before any possible mutation; none followed.
+- Three bounded authorized Chrome cycles returned Orders list, `/api/orders/changes`, order detail, Conversations list and detail as HTTP200 JSON with request IDs present. `/api/conversations/summary` returned HTTP404 in all three cycles because the serving frozen Admin is older than GFS-394; this is a version-surface mismatch, not a reproduced fetch outage. No customer-bearing DOM capture or screenshot was retained.
+- PKT source behavior is locally PASS: fixed IANA `Asia/Karachi`, UTC storage preserved, `2026-11-01T07:14:33Z` renders `01-Nov-2026 12:14:33 PM PKT`, midnight rollover renders correctly, invalid values are explicit, and output is unchanged under UTC/New York/Tokyo browser timezones. Live candidate acceptance remains blocked because the source is not deployed.
+- Official `npm audit` is reachable but not PASS: 10 moderate `minimatch` findings were reported with no available fix. Do not claim audit0; verbose logs are confined to the writable workspace log directory.
+- Keep automatic Admin updates OFF by default, visible/focused only when explicitly enabled, 60-second cadence, cross-tab lease, one in-flight request, hidden/blur/pagehide pause, five-minute summary cap and stale-safe last-good rendering. Preserve the new-number WhatsApp lock and Hoja/ThanNow zero-connection rule.
+
 ## GFS-394 Admin refresh reliability and Pakistan time boundary (2026-11-01 UTC)
 
 - Production remains frozen: API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `ab5be96b`0%. No deployment, canary, D1 write, migration, flag, Queue/Cron, payment, Meta, WhatsApp or customer mutation is authorized by this task.

@@ -1,5 +1,14 @@
 # Decisions
 
+## GFS-395 live PKT and release-blocker decision (2026-11-01 UTC)
+
+- Accept the fixed `Asia/Karachi` semantics as locally PASS: the reported UTC instant maps to `01-Nov-2026 12:14:33 PM PKT`; midnight, invalid input and independent browser timezone checks pass. Keep UTC storage and chronological sorting unchanged.
+- Classify the live browser result as **not reproduced / version-surface mismatch**: Orders and Conversations list/detail paths were HTTP200 in three bounded cycles, while the frozen serving version returned HTTP404 for the newer Conversations summary route. Do not call this reliability PASS or infer a Cloudflare root cause.
+- Accept the fresh Wrangler identity readback only as an authorization prerequisite. No Cloudflare mutation is authorized by this record. Keep API `b426ba47`100% / `d603f077`0% and Admin `ceb3e680`100% / `ab5be96b`0%.
+- Keep GitHub push BLOCKED until the existing authorized `gardenshop` profile is interactively re-authenticated; no alternate account, force push or credential bypass is allowed. Remote ancestry was verified read-only.
+- Keep npm audit as **REVIEW/BLOCKED**, not PASS: the official advisory endpoint reported 10 moderate `minimatch` findings with no available fix. Resolve or explicitly accept that dependency risk under separate release authority.
+- Require fresh scoped approval before uploading the materially new Admin candidate. After approval, perform supported 0% validation, repeated real-data timestamp/Refresh/hidden/focus/multi-tab checks, D1-cost readback, watchdog/rollback verification, and only then request separate Admin promotion approval. Do not run an API canary or touch WhatsApp/Meta/payment/D1 state.
+
 ## GFS-394 Admin refresh/time decision (2026-11-01 UTC)
 
 - Do not diagnose the owner screenshots as a confirmed Cloudflare/API/WhatsApp failure: supported Chrome read-only reloads returned HTTP200 and no Orders/Conversations failure was reproduced. Keep the exact live root cause UNKNOWN until request-level failure evidence is available.

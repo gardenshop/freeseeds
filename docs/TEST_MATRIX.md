@@ -1,5 +1,22 @@
 # Test Matrix
 
+## GFS-395 live PKT and release blockers (2026-11-01 UTC)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| PKT proof | PASS locally | `2026-11-01T07:14:33Z` -> `01-Nov-2026 12:14:33 PM PKT` using `Asia/Karachi` |
+| Midnight rollover | PASS locally | `23:59:59Z` -> `11:59:59 PM PKT`; next minute -> `12:00:00 AM PKT` on the next PKT date |
+| Invalid/missing values | PASS locally | `Invalid timestamp` and em dash handling remain explicit |
+| Browser timezone independence | PASS locally | Same output under UTC, America/New_York and Asia/Tokyo host timezone settings |
+| Repeated live Orders probes | PASS / not reproduced | Three cycles of list, changes and detail: HTTP200 JSON; request IDs present; no customer-bearing capture |
+| Repeated live Conversations probes | PARTIAL / not reproduced | Three cycles of list/detail HTTP200 JSON; summary HTTP404 each time on frozen pre-GFS-394 Admin |
+| Console/network diagnosis | PARTIAL | No Orders/Conversations transient failure; repeated 404 is the undeployed summary surface, not a fabricated outage root cause |
+| Wrangler identity | PASS | Official OAuth; target `gisupp@gmail.com` / Get Free Seeds account verified before any mutation; none made |
+| GitHub remote ancestry | PASS read-only | Remote branch reads `0f3ecadd`; local tested commit is `5ddb00f`; configured token invalid, so push not run |
+| npm audit | REVIEW/BLOCKED | Official registry reachable; 10 moderate `minimatch` findings, no available fix |
+| Full regression/build/lint/diff | PASS | 342/342 across26 files; TypeScript build, ESLint and `git diff --check` |
+| Admin release | BLOCKED / NOT RUN | Fresh scoped approval, candidate0% validation, D1 budget/cost, watchdog and rollback evidence remain required |
+
 ## GFS-394 Admin refresh and Pakistan time (2026-11-01 UTC)
 
 | Check | Result | Evidence / boundary |
