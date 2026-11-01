@@ -1,5 +1,37 @@
 # Final Report
 
+## GFS-404 Cancellation feedback retention and release readiness (2026-11-01 UTC)
+
+### Result
+
+**PASS locally; production release BLOCKED/not authorized.** The 90-day physical-retention design is implemented and tested without enabling migration0046, Cron, automatic deletion, production D1 writes, API canary or deployment.
+
+### Retention and compatibility
+
+- `runCancellationSuggestionRetention` is dry-run by default, uses the indexed expiry predicate and bounded `LIMIT`, deletes only expired `SUGGESTION` text in D1 batch transactions, returns aggregate counts only, and is retry-safe/idempotent. Cancellation facts, stage/date records, reason events and future suggestions remain.
+- Synthetic tests pass for dry-run, batch bounds, expiry, future-row protection, transaction rollback boundary, repeat execution and privacy. GFS-403 EN/UR OFFER/REVIEW, legacy OFFER callbacks, other pre-submission, optional reason/skip/suggestion/restart, dedupe/stale callbacks, service-window failure and no-order/payment behavior remain covered. Existing confirmed orders, COD, Advance and PAID paths remain unchanged.
+- Admin analytics remain authenticated/read-only, PKT-rendered and masked; expired suggestion text remains hidden. Schema0046 was exercised only in isolated synthetic fixtures. Existing read-only evidence records migration0044/0045 as absent/unapplied; the normal pending chain was not run.
+
+### Monitoring and protected state
+
+- Monitoring unit gates pass: observability5/5, adapter8/8 and deadline18/18. Live readiness remains BLOCKED because the existing `GFS-Admin-Health-Monitoring` application shows no readable policy attachment (`--`) and prior credential-backed `/health` reads returned403. Smallest repair: separately approved Cloudflare Access policy reconciliation, then fresh read-only health and GraphQL checks. Do not combine API acknowledgement repair or candidate exposure with this feature.
+- Canonical GitHub remote is `gardenshop/freeseeds`; current stored `gardenshop` CLI auth is invalid. Cloudflare auth refresh is currently expired/unreachable and no mutation was attempted. Meta Ads Manager was read-only checked for account `1198439777611633` / business `568026370701542`.
+- Production is unchanged: Admin `e8c96c96`100% / rollback `07e75c15`0%; API `b426ba47`100% / candidate `d603f077`0%. No production migration, D1 deletion/write, deploy, canary, Cron, payment, Meta, flag, Queue/DLQ, customer, WhatsApp, new-number or Hoja/ThanNow mutation occurred. Watchdog/rollback result: no watchdog was armed because no release mutation occurred; legacy rollback4/4 passed.
+
+### Tests, comparison and next approval
+
+- Full regression: 360/360 across29 files, build, lint, focused retention/cancellation suites, rollback4/4, diff and changed-file secret scan PASS. Official audit remains10 moderate dev-only `minimatch` findings; no audit0 claim.
+
+| Work item | Result |
+|---|---|
+| GFS-400 permanent Admin layout lock | PASS; historical Admin release stable |
+| GFS-401 Orders footer/Conversations Refresh | PASS; released by GFS-402 |
+| GFS-402 Admin release | PASS; Admin `e8c96c96` remains100% |
+| GFS-403 cancellation/feedback/analytics | PASS locally; production migration/release BLOCKED |
+| GFS-404 retention/release readiness | PASS locally; physical deletion and production release BLOCKED |
+
+Completion: retention source/tests/docs100%; GFS-403 compatibility100%; production migration/retention execution0%; API/Admin release0%; live WhatsApp acceptance0%; monitoring reliability0%/BLOCKED. **Next priority:** one scoped approval for migration0046, one controlled dry-run then retention execution, Access-policy monitoring repair, independent API candidate/config/Cron/rollback gates, Admin compatibility validation and final live rollback controls.
+
 ## GFS-403 Cancellation reasons, feedback and Admin analytics (2026-11-01 UTC)
 
 ### Result

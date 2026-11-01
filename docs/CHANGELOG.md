@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-01 — GFS-404 cancellation feedback retention and release readiness
+
+- Added a dry-run-by-default, separately gated retention path for physically deleting expired cancellation suggestion text in bounded, indexed D1 batches. Immutable cancellation facts and reason rows are retained; no route, queue, Cron or automatic deletion was added.
+- Added synthetic retention tests for expiry, dry-run, batch bounds, retry/idempotency, future-row protection, transaction behavior and fact/reason preservation. Full360/360 across29, build, lint, rollback4/4 and monitoring unit tests5/5 + 8/8 + 18/18 passed.
+- Kept migration0046 local-only and production frozen. Monitoring remains blocked by the missing Cloudflare Access policy attachment/health403; no API/Admin deploy, migration, D1 write/deletion, canary, payment, Meta, Queue/Cron, customer or WhatsApp mutation occurred.
+
 ## 2026-11-01 — GFS-403 cancellation reasons, feedback and analytics
 
 - Added distinct OFFER `CANCEL_OFFER` labels in EN/UR while preserving REVIEW and legacy callback compatibility.

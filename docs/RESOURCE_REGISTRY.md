@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-404 cancellation feedback retention and release readiness (2026-11-01 UTC)
+
+- **Source:** `packages/core/src/cancellation-retention.ts`; migration0046 expiry index narrowed to expired suggestion rows; `tests/cancellation-retention.test.ts`. The path is dry-run-by-default, aggregate-only, bounded and not wired to a route, Queue/DLQ or Cron.
+- **Synthetic D1 evidence:** isolated schema0046 fixtures only. Expired suggestion rows are physically deleted in D1 batch transactions; future suggestions, cancellation facts, stages/dates and reason rows remain. Repeated execution is idempotent. No production D1 was read or written, and migration0044/0045 were not applied.
+- **Quality:** full360/360 across29, build, lint, rollback4/4, observability5/5, adapter8/8, deadline18/18, diff and changed-file secret scan PASS. Official audit remains10 moderate dev-only `minimatch` findings; no audit0 claim.
+- **Identity/read-only boundary:** canonical GitHub remote is `https://github.com/gardenshop/freeseeds.git`; current `gardenshop` CLI token is invalid. Meta Ads Manager read-only page matched account `1198439777611633` and business `568026370701542`. Cloudflare auth refresh is currently expired/unreachable; no mutation was attempted. The documented target remains `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- **Routing/protection:** Admin `e8c96c96`100% / rollback `07e75c15`0%; API `b426ba47`100% / candidate `d603f077`0%. No version, deployment, migration, D1 deletion, R2, Queue/DLQ, Cron, Access, Meta, payment, flag, customer or WhatsApp resource changed. New-number WhatsApp and Hoja/ThanNow isolation remain intact.
+- **Monitoring blocker:** existing `GFS-Admin-Health-Monitoring` destination/policy evidence remains `getfreeseeds-admin-staging.get-free-seeds.workers.dev/health` with Policies `--`; prior credential-backed health reads returned403. Smallest repair is separately approved Access policy reconciliation, then read-only health/GraphQL revalidation. No canary is authorized.
+
 ## GFS-403 local-only cancellation resources (2026-11-01 UTC)
 
 - **Source:** `packages/core/src/cancellation.ts`, WhatsApp content compatibility, API cancellation state machine, Admin `cancellations.ts`, Conversations stage/history; tested commit `ac52cbe0a9959ab4a53631174a1de86584d12d0c`.

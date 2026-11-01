@@ -30,7 +30,9 @@ CREATE TABLE IF NOT EXISTS checkout_cancellation_feedback_events (
 );
 CREATE INDEX IF NOT EXISTS checkout_cancellation_feedback_event_idx ON checkout_cancellation_feedback_events(cancellation_event_id,event_type,occurred_at DESC,id);
 CREATE INDEX IF NOT EXISTS checkout_cancellation_feedback_reason_idx ON checkout_cancellation_feedback_events(reason_code,cancellation_event_id) WHERE event_type='REASON';
-CREATE INDEX IF NOT EXISTS checkout_cancellation_feedback_expiry_idx ON checkout_cancellation_feedback_events(suggestion_expires_at) WHERE suggestion_expires_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS checkout_cancellation_feedback_expiry_idx ON checkout_cancellation_feedback_events(suggestion_expires_at,id) WHERE event_type='SUGGESTION' AND suggestion_expires_at IS NOT NULL;
 
--- Suggestions become unreadable to Admin after 90 days. A separately approved retention job
--- must physically delete expired suggestion rows before production activation.
+-- Suggestions become unreadable to Admin after 90 days. A separately approved,
+-- dry-run-first retention execution path must physically delete only expired
+-- SUGGESTION rows in bounded batches before production activation. Cancellation
+-- facts and REASON rows are retained for aggregate statistics.

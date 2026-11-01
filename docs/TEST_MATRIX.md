@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-404 retention and release-readiness matrix (2026-11-01 UTC)
+
+| Area | Evidence | Result |
+|---|---|---|
+| Physical retention | Dry-run default; only expired `SUGGESTION` rows; bounded `LIMIT`; indexed expiry predicate; D1 batch transaction | PASS locally |
+| Retention safety | Future text retained; cancellation event/stage/date and `REASON` retained; repeat run deletes zero; aggregate-only result | PASS |
+| Retention gate | No route, queue, Cron, automatic deletion, migration apply or production D1 write | PASS / NOT ENABLED |
+| GFS-403 compatibility | EN/UR OFFER/REVIEW, legacy OFFER callback, other pre-submission, optional reason/skip/suggestion, duplicate/stale/restart/service-window and no-order/payment paths | PASS; full suite |
+| Admin/D1 | Isolated schema0046 synthetic fixtures; migration0044/0045 remain unapplied by recorded read-only evidence; PKT/stage/reason/expiry contract | PASS locally |
+| Browser | Existing official Chrome DevTools synthetic Admin evidence retained; no customer-bearing screenshot/DOM/log; live feature not deployed | PASS locally / live NOT RUN |
+| Monitoring | `test:canary:observability`5/5, adapter8/8, deadline18/18; live Access policy attachment missing/`--`, prior authenticated health403 | UNIT PASS / LIVE BLOCKED |
+| Regression | Full360/360 across29; build; lint; rollback4/4; diff/secret scan | PASS |
+| Production | Admin/API routing, migration, D1 deletion, Cron, canary, WhatsApp, payment, Meta, Queue/DLQ and flags | UNCHANGED / NOT RUN |
+
 ## GFS-403 (2026-11-01 UTC)
 
 | Area | Evidence | Result |

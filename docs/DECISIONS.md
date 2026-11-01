@@ -1,5 +1,14 @@
 # Decisions
 
+## GFS-404 Cancellation feedback retention and release readiness (2026-11-01 UTC)
+
+- Add a standalone retention execution function, not a Worker route or schedule. Default to dry-run; require an explicit caller choice for deletion and bound each D1 batch. Use the existing `suggestion_expires_at` index and delete only `event_type='SUGGESTION'` rows whose text is still present and expired.
+- Treat each D1 batch as the recovery boundary. A failed batch must roll back; successful batches may be retried safely. Never delete cancellation facts, stage/date records or reason events, and return counts only so free text and identifiers cannot enter logs.
+- Keep migration0046 local-only and do not run the normal pending migration chain. The migration0044/0045 absence/unapplied state remains an explicit compatibility gate before any future activation.
+- Accept GFS-403 behavior as unchanged: cancellation is first and irreversible by optional feedback; OFFER/REVIEW IDs, EN/UR, legacy callbacks, stale/deduped callbacks, restart, service-window failure, no pre-confirmation order/payment creation and existing COD/Advance/PAID paths remain protected.
+- Keep API monitoring separate. Unit diagnostics pass, but live readiness is BLOCKED by the missing Access policy attachment (`--`) and prior credential-backed health403. The smallest repair is read-only identity/account reconciliation followed by an independently approved Access policy fix and fresh monitoring readback; no API acknowledgement, candidate exposure or GFS-404 production release is allowed.
+- Preserve Admin `e8c96c96`100% / `07e75c15`0% and API `b426ba47`100% / `d603f077`0%, the new-number WhatsApp lock, Hoja/ThanNow zero-connection rule, exact10 moderate dev-only `minimatch` findings and no-audit0 claim.
+
 ## GFS-403 cancellation facts and optional feedback (2026-11-01 UTC)
 
 - Use distinct runtime action IDs: OFFER uses `CANCEL_OFFER`; REVIEW uses `CANCEL_ORDER`. Keep a storage adapter to the legacy OFFER `CANCEL_ORDER` CMS key so existing production content rows do not require a destructive rewrite.

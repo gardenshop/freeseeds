@@ -1,5 +1,9 @@
 # Get Free Seeds Plan
 
+## GFS-404 retention readiness boundary (2026-11-01 UTC)
+
+The cancellation feedback source is release-ready locally, but production remains frozen. Migration0046 and its indexed 90-day suggestion expiry are local-only until separate migration, retention execution, monitoring and coordinated API/Admin approvals exist. The retention path is dry-run-by-default, bounded, idempotent and not connected to a route, queue or Cron. It deletes only expired free-text suggestion events; cancellation facts, reasons, stage/date aggregates, orders, payments and WhatsApp state are outside its write set. The next scoped approval must independently cover migration0046, one controlled retention run, monitoring Access-policy repair, API candidate provenance, Admin candidate compatibility, rollback and live acceptance.
+
 ## Current Scope and Audit
 
 The repository was empty and had no Git history, source, branch, remote, or legacy architecture at bootstrap. GitHub repository `gardenshop/freeseeds` is the target. The known Cloudflare account `85f6a6181b4653c2a45e69cb7ce8a474` is Hoja-linked and prohibited. The supplied Free Seeds Page is currently connected to a prohibited Meta portfolio and is documented only as a future isolation task.
