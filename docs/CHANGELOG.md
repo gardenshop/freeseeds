@@ -6,7 +6,7 @@
 - Revalidated existing candidate `dfef46ea` at CSS1920/1675/1440/1280, tablet768 and mobile430/390/360/320 at DPR0.8/1. Desktop split widths were `697/941px` at CSS1920 and `510/689px` at CSS1280; root overflow and clipped header actions were absent.
 - Added `tests/admin-layout.test.ts` with synthetic computed-dimension, ratio, breakpoint and fixed330px regression assertions. Focused15/15, full345/345, build, lint and rollback4/4 pass.
 - Cleared Chrome emulation and candidate headers after testing. Admin remains100% frozen on `ceb3e680` with `dfef46ea` at0%; API and WhatsApp remain untouched. Prior10 moderate unfixed dev-only `minimatch` findings remain documented; no audit0 claim.
-- Pushed commit `38ebf66ef66c560ea5915c8174d82d417d4fd25d` to the existing `gardenshop/freeseeds` PR branch and independently verified the remote SHA; no force push or alternate account was used.
+- Pushed layout commit `38ebf66ef66c560ea5915c8174d82d417d4fd25d` and final docs commit `4ca12b5b7a1b379f5751932098d595c65e45e486` to the existing `gardenshop/freeseeds` PR branch; the final remote SHA was independently verified.
 
 ## GFS-396 Approval P Admin 0% validation (2026-11-01)
 
