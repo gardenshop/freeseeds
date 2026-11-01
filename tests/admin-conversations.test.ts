@@ -117,6 +117,11 @@ describe("GFS-341 read-only conversation viewer", () => {
     expect(html).toContain("/api/conversations/summary");
     expect(html).toContain("setTimeout(()=>runAutomatic('automatic'),60000)");
     expect(html).toContain("Date.now()-lastSummaryAt>=300000");
+    expect(html).toContain("manualRefreshQueued");
+    expect(html).toContain("Refresh queued; checking after current update.");
+    expect(html).toContain("requestManualRefresh");
+    expect(html).toContain("reason==='manual'||");
+    expect(html).not.toContain("async function refresh(reason){if(inFlight)return;");
     expect(html).toContain("gfs_admin_conversations_auto_update");
     expect(html).toContain("Auto update OFF");
     expect(html).toContain('.controls button[aria-pressed="true"]{background:#17603C;color:#fff');
