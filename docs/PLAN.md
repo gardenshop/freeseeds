@@ -1,5 +1,9 @@
 # Get Free Seeds Plan
 
+## GFS-405 monitoring qualification and release-readiness boundary (2026-11-01 UTC)
+
+The dedicated monitoring application is correctly configured in the verified Get Free Seeds account: exact staging `/health` destination plus the existing `GFS-Admin-Health-Monitor` Service Auth policy. No Access mutation is required. The actual reproducible qualification defect was local harness ambiguity (two accounts without explicit selection and a stale Admin baseline); the harness now selects account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` and baseline `e8c96c96`. Three read-only cycles passed health/security/GraphQL/routing checks. GFS-403 remains source-ready but production migration, retention execution and API/Admin release require a separate approval; no production action is authorized here.
+
 ## GFS-404 retention readiness boundary (2026-11-01 UTC)
 
 The cancellation feedback source is release-ready locally, but production remains frozen. Migration0046 and its indexed 90-day suggestion expiry are local-only until separate migration, retention execution, monitoring and coordinated API/Admin approvals exist. The retention path is dry-run-by-default, bounded, idempotent and not connected to a route, queue or Cron. It deletes only expired free-text suggestion events; cancellation facts, reasons, stage/date aggregates, orders, payments and WhatsApp state are outside its write set. The next scoped approval must independently cover migration0046, one controlled retention run, monitoring Access-policy repair, API candidate provenance, Admin candidate compatibility, rollback and live acceptance.

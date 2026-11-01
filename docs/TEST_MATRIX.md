@@ -1,5 +1,22 @@
 # Test Matrix
 
+## GFS-405 monitoring and release-readiness matrix (2026-11-01 UTC)
+
+| Area | Evidence | Result |
+|---|---|---|
+| Cloudflare identity | Wrangler `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Chrome account readback matched | PASS |
+| Access application | `GFS-Admin-Health-Monitoring`; exact staging `/health`; one existing `GFS-Admin-Health-Monitor` Service Auth policy, ID `045ddce6-b41e-4c35-aca8-35375d43f50c` | PASS; no mutation |
+| Monitoring auth | Existing credential 3/3 HTTP200; missing/invalid credentials 403; business routes denied302 | PASS |
+| GraphQL/routing | Three cycles; API/Admin GraphQL errors0; API baseline100%/candidate0%; Admin baseline100%/candidate0% | PASS |
+| Controller fault safety | Observability5/5; adapter8/8; deadline18/18; transient/empty/timeout/invalid/fail-closed cases | PASS |
+| D1 preflight | Markers0030,0036–0043; `d1_migrations` empty; 0044/0045/0046 absent; quick_check/FK clean; writes0 | PASS / read-only |
+| Retention/release | Indexed bounded retention tests; migration/deletion/API/Admin release not enabled | PASS locally / BLOCKED production |
+| Regression | Full360/360 across29; build; lint; rollback4/4; diff/secret scan | PASS |
+
+## GFS-405 production boundary
+
+No Access repair, token rotation, API/Admin deployment, canary, migration, retention deletion, payment, Meta, Queue/Cron, flag, customer or WhatsApp mutation occurred. Preserve the documented10 moderate dev-only `minimatch` findings; do not claim audit0.
+
 ## GFS-404 retention and release-readiness matrix (2026-11-01 UTC)
 
 | Area | Evidence | Result |

@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-405 Approval S secure monitoring and GFS-403 release readiness (2026-11-01 UTC)
+
+- Do not mutate Access: fresh account/application readback proves the dedicated monitoring application already has the exact staging `/health` destination and the existing Service Auth policy. Existing credentials return HTTP200; no token rotation, policy edit, bypass or public exposure is justified.
+- Classify the historical monitoring failure narrowly: the reproducible local qualification failures were missing Wrangler account selection and a stale Admin baseline. Repair only the harness defaults to the verified account/current Admin version. The earlier health403 is not reproduced and is not assigned an unsupported root cause.
+- Accept three bounded read-only qualification cycles: authenticated health200, invalid/unauthenticated denial, protected business-route denial, GraphQL errors0 and exact frozen routing. Unit controller/adapter/observability tests remain required and pass. No API canary or watchdog is authorized.
+- Record staging D1 preflight as read-only: markers0030,0036–0043; empty `d1_migrations`; 0044/0045/0046 absent; quick/FK clean; rows_written0. Migration0046 and retention execution require a separate owner approval.
+- Keep GFS-403 source behavior and protected business protocols unchanged. Do not deploy unsafe `b0e883cd`, API candidate, Admin candidate or any production migration under Approval S.
+
 ## GFS-404 Cancellation feedback retention and release readiness (2026-11-01 UTC)
 
 - Add a standalone retention execution function, not a Worker route or schedule. Default to dry-run; require an explicit caller choice for deletion and bound each D1 batch. Use the existing `suggestion_expires_at` index and delete only `event_type='SUGGESTION'` rows whose text is still present and expired.

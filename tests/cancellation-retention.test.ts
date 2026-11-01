@@ -53,6 +53,10 @@ function fixture(): SqliteD1 {
 describe("GFS-404 cancellation suggestion retention", () => {
   it("is dry-run by default and exposes only aggregate counts", async () => {
     const db = fixture();
+    const plan = db.sqlite.prepare(`EXPLAIN QUERY PLAN SELECT id FROM checkout_cancellation_feedback_events
+      WHERE event_type='SUGGESTION' AND suggestion IS NOT NULL AND suggestion_expires_at IS NOT NULL
+        AND suggestion_expires_at <= ? ORDER BY suggestion_expires_at ASC, id ASC LIMIT ?`).all("2026-07-01T00:00:00Z", 1) as Array<{ detail: string }>;
+    expect(plan.some((row) => row.detail.includes("checkout_cancellation_feedback_expiry_idx"))).toBe(true);
     const result = await runCancellationSuggestionRetention(db as never, { now: new Date("2026-07-01T00:00:00Z"), batchSize: 1 });
     expect(result).toMatchObject({ dryRun: true, eligible: 1, deleted: 0, batches: 1, hasMore: true });
     expect(JSON.stringify(result)).not.toContain("Synthetic");

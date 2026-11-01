@@ -10,8 +10,9 @@ const WRANGLER = fileURLToPath(new URL("../node_modules/wrangler/bin/wrangler.js
 const ADMIN = "https://getfreeseeds-admin-staging.get-free-seeds.workers.dev";
 const EXPECTED = {
   api: { name: "getfreeseeds-api-staging", baseline: "b426ba47-1ead-4c4a-85ba-0a0b85d3e415" },
-  admin: { name: "getfreeseeds-admin-staging", baseline: process.env.GFS_ADMIN_BASELINE_VERSION || "494a3dce-5d52-4b66-b3ff-bef64b31b406" }
+  admin: { name: "getfreeseeds-admin-staging", baseline: process.env.GFS_ADMIN_BASELINE_VERSION || "e8c96c96-ef94-4a33-bed6-7f284984002c" }
 };
+const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID || "cb5066a6d71ecdee0bd7ed8aacb4d3c2";
 
 async function request(url, headers, timeoutMs = 15_000) {
   const controller = new AbortController();
@@ -30,7 +31,7 @@ function denied(status) {
 }
 
 async function routing(worker) {
-  const { stdout } = await execFileAsync(process.execPath, [WRANGLER, "deployments", "status", "--name", worker.name, "--json"], { windowsHide: true, timeout: 30_000, maxBuffer: 2 * 1024 * 1024 });
+  const { stdout } = await execFileAsync(process.execPath, [WRANGLER, "deployments", "status", "--name", worker.name, "--json"], { env: { ...process.env, CLOUDFLARE_ACCOUNT_ID }, windowsHide: true, timeout: 30_000, maxBuffer: 2 * 1024 * 1024 });
   const state = JSON.parse(stdout);
   const versions = Array.isArray(state.versions) ? state.versions : [];
   const baseline = versions.find((version) => version.version_id === worker.baseline);

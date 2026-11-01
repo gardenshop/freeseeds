@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-01 — GFS-405 secure monitoring and release readiness
+
+- Diagnosed the monitoring gate without changing Cloudflare: the dedicated app already has the exact staging `/health` destination and existing Service Auth policy. Repaired only the local qualification harness account selection and stale Admin baseline.
+- Passed three read-only health/security/GraphQL/routing cycles: authenticated health200, invalid/unauthenticated denial, business-route isolation, GraphQL errors0 and frozen API/Admin routing. Unit observability/adapter/deadline suites remain5/5, 8/8 and 18/18.
+- Completed read-only D1 preflight through migration0043 with 0044/0045/0046 absent and zero writes. No migration, retention deletion, API/Admin deployment, canary, payment, Meta, Queue/Cron, customer or WhatsApp mutation occurred.
+
 ## 2026-11-01 — GFS-404 cancellation feedback retention and release readiness
 
 - Added a dry-run-by-default, separately gated retention path for physically deleting expired cancellation suggestion text in bounded, indexed D1 batches. Immutable cancellation facts and reason rows are retained; no route, queue, Cron or automatic deletion was added.

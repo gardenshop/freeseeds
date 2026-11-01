@@ -1,5 +1,15 @@
 # Status
 
+## GFS-405 Approval S secure monitoring and GFS-403 release readiness (2026-11-01 UTC)
+
+- **Monitoring result:** PASS without Cloudflare mutation. Fresh Wrangler identity is `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Chrome readback shows `GFS-Admin-Health-Monitoring` with exact staging `/health` destination and one attached `GFS-Admin-Health-Monitor` Service Auth policy (`045ddce6-b41e-4c35-aca8-35375d43f50c`). Existing service credentials were reused through the protected Windows bridge; no credential value was exposed, logged, recorded, rotated or changed.
+- **Root cause/repair:** the real reproducible failure was qualification-harness account ambiguity plus stale Admin baseline `494a3dce`; the prior health403 was not reproduced and is not attributed beyond available evidence. `scripts/test-gfs-monitoring.mjs` now defaults to the verified account and Admin baseline `e8c96c96`. This is a local read-only test repair, not a production change.
+- **Live read-only qualification:** three cycles passed authenticated health 3/3 HTTP200, unauthenticated and invalid credentials 403, monitoring-token access to `/orders`, `/analytics`, `/conversations` denied by302, GraphQL API/Admin errors0, and routing API `b426ba47`100% / `d603f077`0%, Admin `e8c96c96`100% / `07e75c15`0%. No canary, watchdog or promotion was run.
+- **D1 preflight:** staging D1 read-only markers are `0030`, `0036`–`0043`; `d1_migrations` empty; migration0044/0045/0046 tables and cancellation indexes absent; `quick_check=ok`, foreign-key check empty, rows_written0. Retention is source-tested but not enabled.
+- **Release readiness:** GFS-403 compatibility, EN/UR cancellation, legacy callbacks, immediate cancellation, optional feedback, Admin stage/history, COD/Advance/PAID safety and retention remain PASS locally. API/Admin candidates were not deployed. Full360/360 across29, build, lint, rollback4/4, monitoring5/5 + 8/8 + 18/18, diff and changed-file secret scan PASS.
+- **Protected state:** GitHub `gardenshop/freeseeds` and PR #11 identity verified; canonical Meta Ads Manager was read-only verified. No production deployment, migration, D1 write/deletion, payment, Meta edit, Queue/DLQ, Cron, flag or customer message occurred. Audit remains exactly10 moderate dev-only `minimatch` findings; no audit0 claim.
+- **Next gate:** one separate owner approval for migration0046, one controlled retention dry-run/execution, and independently validated API/Admin candidates with rollback/watchdog. Do not release under GFS-405.
+
 ## GFS-404 Cancellation feedback retention and release readiness (2026-11-01 UTC)
 
 - **Git provenance:** tested implementation and protected-record commit `f6889e6d1a2fea4ac2ec406bc2a946de503c8c58`; final synchronized remote SHA is recorded after push verification.

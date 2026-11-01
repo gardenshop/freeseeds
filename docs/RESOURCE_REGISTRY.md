@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-405 Approval S secure monitoring and GFS-403 release readiness (2026-11-01 UTC)
+
+- **Identity:** Wrangler readback matched `gisupp@gmail.com` / Get Free Seeds / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; GitHub remote is `gardenshop/freeseeds`; canonical Meta Ads Manager was read-only checked.
+- **Access application:** Chrome read-only readback of `GFS-Admin-Health-Monitoring` shows application ID `a5c80720-0907-42f8-9b4e-7a55cab5b92d`, destination `getfreeseeds-admin-staging.get-free-seeds.workers.dev/health`, one existing `GFS-Admin-Health-Monitor` Service Auth policy, policy ID `045ddce6-b41e-4c35-aca8-35375d43f50c`, and no unrelated destination. The existing credential was used only through the protected bridge; no Access mutation, token rotation or credential value exposure/recording occurred.
+- **Monitoring evidence:** three bounded cycles each passed authenticated health3/3 at HTTP200, unauthenticated/invalid403, `/orders`/`/analytics`/`/conversations` denied302, GraphQL API/Admin errors0 and exact routing API `b426ba47`100%/`d603f077`0%, Admin `e8c96c96`100%/`07e75c15`0%. Existing credential validity was proven without recording its values.
+- **Root-cause boundary:** the reproducible failure was local qualification account ambiguity and stale Admin baseline `494a3dce`; harness defaults now use account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` and Admin `e8c96c96`. Historical health403 was not reproduced; no unsupported cause is recorded.
+- **D1 preflight:** read-only staging D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1` markers are `0030`, `0036`–`0043`; `d1_migrations` empty; 0044/0045/0046 tables/indexes absent; `quick_check=ok`; foreign-key result empty; all queries `rows_written=0`. No customer rows were exported.
+- **Scope:** no Worker/version, Access policy, token, secret, D1, migration, retention deletion, payment, Meta, Queue/DLQ, Cron, flag, customer message or WhatsApp resource changed. Next gate is separate owner approval for migration0046/retention and coordinated API/Admin release.
+
 ## GFS-404 cancellation feedback retention and release readiness (2026-11-01 UTC)
 
 - **Git provenance:** tested implementation/protected records commit `f6889e6d1a2fea4ac2ec406bc2a946de503c8c58`; final remote synchronization is pending readback after push.

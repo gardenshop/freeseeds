@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-405 Approval S secure monitoring and GFS-403 release readiness (2026-11-01 UTC)
+
+- **Monitoring diagnosis PASS / no Access mutation required:** fresh Cloudflare UI readback in Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` shows application `GFS-Admin-Health-Monitoring`, exact destination `getfreeseeds-admin-staging.get-free-seeds.workers.dev/health`, and one attached `GFS-Admin-Health-Monitor` `Service Auth` policy (`045ddce6-b41e-4c35-aca8-35375d43f50c`). The earlier missing-policy report is stale; no policy repair, token rotation or secret change was made.
+- **Exact reproducible blocker:** the qualification harness had no account selection while two Cloudflare accounts were available and defaulted to stale Admin baseline `494a3dce`. It now defaults to the verified Get Free Seeds account and current Admin baseline `e8c96c96`; this is a local read-only harness repair. The historical health403 was not reproduced with the existing credential, so no unsupported cause is claimed.
+- **Monitoring qualification:** three bounded cycles passed authenticated health 3/3 HTTP200, unauthenticated/invalid health denied403, `/orders`/`/analytics`/`/conversations` denied by302, GraphQL API/Admin errors0, and routing API `b426ba47`100% / `d603f077`0%, Admin `e8c96c96`100% / `07e75c15`0%. Unit observability5/5, adapter8/8 and deadline18/18 also pass. No stale-data PASS or canary occurred.
+- **D1/release boundary:** read-only staging D1 markers are `0030`, `0036`–`0043`; `d1_migrations` is empty; 0044/0045/0046 tables/indexes are absent; `quick_check=ok`, foreign-key check empty, rows_written0. Migration0046 and retention remain unapplied/unenabled. No API/Admin deploy, canary, migration, deletion, payment, Meta, Queue/DLQ, Cron or customer message occurred.
+- **Protection:** EN/UR, Advance, COD PKR125, PAID, orders, webhook, +15/+210, GFS-309 Cron/acknowledgement behavior, number separation, new-number WhatsApp lock and Hoja/ThanNow zero-connection rule remain unchanged. Official audit remains exactly10 moderate dev-only `minimatch` findings; never claim audit0.
+
 ## GFS-404 Cancellation feedback retention and release readiness (2026-11-01 UTC)
 
 - **Source PASS / production BLOCKED:** migration0046 remains a local-only additive proposal. `packages/core/src/cancellation-retention.ts` provides a dry-run-by-default, explicitly gated worker function that selects only expired `SUGGESTION` rows through the indexed expiry path and deletes them in bounded D1 batches. Cancellation facts, stages, dates, reason rows and aggregate-safe records remain retained.
