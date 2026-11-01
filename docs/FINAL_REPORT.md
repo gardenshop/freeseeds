@@ -1,5 +1,27 @@
 # Final Report
 
+## GFS-408 Approval V controlled API 1% canary (2026-11-01 UTC)
+
+**BLOCKED safely before exposure; customer acceptance INCONCLUSIVE.** Actual API candidate exposure was0% for0 minutes. API stayed `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100% / `e8018f3f-53d3-4506-9c28-a46881842f8c`0%; Admin stayed `e8c96c96`100% / `ee9b7baa`0%.
+
+- Retention gate failed: optional free-text suggestions are persisted with a90-day expiry, but the physical deletion function has no operational caller. Approval V forbids retention deletion/new Cron, so live collection could not begin safely.
+- Monitoring gate also failed: one cycle passed, the next failed closed on GraphQL HTTP200 errors, and a later read recovered. The recovery was recorded but did not requalify this run.
+- No watchdog was armed, no routing mutation occurred and no restore command was necessary. Final monitoring independently confirmed100/0 routing, authenticated health200, missing/invalid403 and business-route denial302.
+- Exact candidate preview health200 established version attribution. No genuine candidate request, webhook acknowledgement, delivery, duplicate/retry, cancellation, EN/UR feedback or customer-flow evidence exists; no live acceptance claim is made.
+- D1 remained safe: cancellation facts/feedback/suggestions/eligible0; orders/payments527/527 with matching rowid sums139128; quick-check ok; FK0; changed_db false; rows_written0. Queue/Cron/recovery continuity was not mutated.
+- Tests passed: focused110/110, full361/361, build/lint, monitoring5/5, adapter8/8, deadline18/18 and rollback4/4. Audit remains10 moderate dev-only findings; high/critical0; secret-pattern hits0.
+
+| Task | Result |
+|---|---|
+| GFS-403 cancellation/feedback source | PASS; customer-facing release remains BLOCKED |
+| GFS-404 retention implementation | PASS locally; operational activation BLOCKED |
+| GFS-405 secure monitoring repair | PASS historically; one GFS-408 cycle failed closed |
+| GFS-406 migration0046 | PASS |
+| GFS-407 0%-candidate validation | PASS |
+| GFS-408 1% canary | BLOCKED before exposure; customer evidence INCONCLUSIVE |
+
+Completion: GFS-408 preflight100%; API exposure0%; customer acceptance0%; safe baseline restoration100% because baseline was never left; retention implementation100%/operational activation0%; monitoring recovery observed but this approval requalification0%. **One exact next approval:** operationalize and verify the existing bounded, idempotent90-day physical suggestion deletion path without customer traffic, including dry-run, controlled expiry execution and schedule/readback evidence. A later fresh approval is required for any API canary.
+
 ## GFS-407 Approval U API/Admin 0% validation (2026-11-01 UTC)
 
 **PASS for the authorized milestone; traffic release remains separately gated.** Exact source `ffa9eb4a8a16eb475584812367e53966469fa0d2` is staged as API `e8018f3f-53d3-4506-9c28-a46881842f8c` and Admin `ee9b7baa-722d-406e-9acd-556b447f8d79`, both0%. Serving API `b426ba47` and Admin `e8c96c96` remain100%.

@@ -1,5 +1,14 @@
 # Status
 
+## GFS-408 Approval V controlled API 1% canary (2026-11-01 UTC)
+
+- **Result:** BLOCKED safely at preflight; canary INCONCLUSIVE because exposure was0% for0 minutes and no genuine candidate request/customer flow occurred. API remains `b426ba47`100% / `e8018f3f`0%; Admin remains `e8c96c96`100% / `ee9b7baa`0%.
+- **Primary stop gate:** candidate source can persist optional free-text suggestions for90 days, but the tested physical deletion function has no operational caller or schedule. Approval V forbids retention execution/new Cron. Schema expiry and Admin hiding do not satisfy physical deletion, so no live text collection was allowed.
+- **Independent stop gate:** monitoring cycle1 passed; cycle2 failed closed with Cloudflare GraphQL HTTP200 errors. A bounded recovery observation later returned errors0 and exact100/0 routing, but this run remains disqualified under the stop-on-monitoring-outage rule.
+- **Safe-state evidence:** no watchdog was armed because exposure never became permissible. Exact candidate preview health200; access health/security remained200/403/302. D1 read-only result: schema0046=7 objects, cancellation/feedback/suggestions/eligible=0, orders/payments527/527, sums139128/139128, quick-check ok, FK0, rows_written0. Queue/DLQ and active recovery flags remained unchanged.
+- **Tests:** focused retention/cancellation110/110, full361/361, build/lint, monitoring5/5, adapter8/8, deadline18/18 and rollback4/4 PASS. The rollback harness initially lacked its fixture path and then hit Git ownership protection; it passed with the documented fixture plus a process-local safe-directory override, without global Git mutation. Audit remains10 moderate dev-only findings; secret-pattern hits0.
+- **Next approval:** source/release approval to operationalize and verify bounded, idempotent90-day physical suggestion deletion without customer traffic. Any 1% canary requires a later fresh approval and fresh stable monitoring.
+
 ## GFS-407 Approval U API/Admin 0% validation (2026-11-01 UTC)
 
 - **Result:** PASS for the exact authorized 0%-candidate milestone. Source `ffa9eb4a8a16eb475584812367e53966469fa0d2` was clean and matched local/remote PR #11 before upload. API candidate `e8018f3f-53d3-4506-9c28-a46881842f8c` and Admin candidate `ee9b7baa-722d-406e-9acd-556b447f8d79` are attached at0%; no customer traffic, canary or promotion occurred.

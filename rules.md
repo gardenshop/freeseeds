@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-408 Approval V controlled API canary decision (2026-11-01 UTC)
+
+- **BLOCKED safely before exposure:** API remained `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100% / `e8018f3f-53d3-4506-9c28-a46881842f8c`0%; Admin remained `e8c96c96-ef94-4a33-bed6-7f284984002c`100% / `ee9b7baa-722d-406e-9acd-556b447f8d79`0%. Actual candidate exposure was0% for0 minutes. No watchdog was armed, no traffic deployment was created and no customer-flow evidence exists.
+- **Retention stop gate:** exact candidate source stores optional free-text `SUGGESTION` rows with `suggestion_expires_at`, but `runCancellationSuggestionRetention` is not called by fetch, Queue, Cron or any operational route. Admin hiding after90 days is not physical deletion. Approval V prohibits retention deletion/new Cron, so exposing the candidate could create text that this release cannot physically expire. Do not canary or promote until an independently approved operational retention mechanism is active and verified.
+- **Monitoring stop gate:** first bounded production cycle passed; the second failed closed on `graphql_http200_errors`; one later read recovered with errors0. Approval V requires stopping on a monitoring outage, so recovery does not requalify this run and no second canary attempt is allowed.
+- **Read-only safety evidence:** exact API preview health200; authenticated Admin health passed before and after the transient, missing/invalid credentials403 and protected business routes302. D1 schema0046 objects7, cancellation/feedback/suggestion/eligible rows0, orders/payments527/527 with matching rowid sums139128, `quick_check=ok`, FK0, `changed_db=false`, `rows_written=0`. Queue/DLQ remained batch10/retries5/wait5000ms.
+- **Quality/next authority:** focused110/110, full361/361, build/lint, monitoring5/5, adapter8/8, deadline18/18 and rollback4/4 pass. Audit remains10 moderate dev-only findings and secret-pattern hits0. Next approval must operationalize and validate bounded90-day physical suggestion deletion without customer traffic; a later fresh approval is required for any canary.
+
 ## GFS-407 Approval U API/Admin 0% validation (2026-11-01 UTC)
 
 - **Authorized mutations complete, no traffic release:** exact clean source `ffa9eb4a8a16eb475584812367e53966469fa0d2` was uploaded as API `e8018f3f-53d3-4506-9c28-a46881842f8c` and Admin `ee9b7baa-722d-406e-9acd-556b447f8d79`, then attached only at0%. API deployment `0df1a5e2-dca8-4830-8da7-a92ce662eb42` keeps `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100%; Admin deployment `034c190e-d233-4cab-9fa4-65aa068b1603` keeps `e8c96c96-ef94-4a33-bed6-7f284984002c`100%. Promotion, canary and watchdog are not authorized by GFS-407.

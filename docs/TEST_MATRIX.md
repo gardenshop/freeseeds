@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-408 controlled API canary matrix (2026-11-01 UTC)
+
+| Gate | Evidence | Result |
+|---|---|---|
+| Identity/source | GitHub/PR/local `dd3df96`; runtime source identical to candidate commit `ffa9eb4`; Cloudflare and canonical Meta identities match | PASS |
+| Retention readiness | Suggestions persist with expiry; deletion function has no operational fetch/Queue/Cron caller; task forbids activation | BLOCKED |
+| Monitoring | Cycle1 PASS; cycle2 fail-closed `graphql_http200_errors`; later recovery errors0 does not requalify | BLOCKED |
+| Candidate attribution | API version120/tag `gfs407-api-ffa9eb4`, exact preview health200, source/config readback exact | PASS read-only |
+| Exposure | API candidate0% for0 minutes; no deployment mutation; Admin unchanged100/0 | NOT RUN / INCONCLUSIVE |
+| Customer evidence | No candidate request, cancellation, feedback, acknowledgement or delivery evidence | INCONCLUSIVE |
+| Watchdog/restore | Not armed because exposure gate failed; baseline was never left and final routing is100/0 | SAFE / NOT NEEDED |
+| D1/order/payment | facts/feedback/suggestions0; orders/payments527/527; quick ok; FK0; rows_written0 | PASS read-only |
+| Regression | focused110, full361, build/lint, monitoring5, adapter8, deadline18, rollback4 | PASS |
+| Security/audit | missing/invalid403, business routes302, secret hits0; audit10 moderate/high0/critical0 | PASS with documented findings |
+
 ## GFS-407 API/Admin 0% validation matrix (2026-11-01 UTC)
 
 | Gate | Evidence | Result |

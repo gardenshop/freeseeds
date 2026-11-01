@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-408 - do not expose API candidate (2026-11-01 UTC)
+
+- Stop before the approved1% mutation because optional live suggestion text would be retained without an activated physical deletion caller. A timestamp and hidden Admin rendering are not substitutes for deletion.
+- Treat the subsequent GraphQL HTTP200 monitoring error as a second independent stop condition. The later successful monitoring read proves recovery only; it cannot retroactively qualify this Approval V run.
+- Do not arm the detached watchdog or invoke the canary controller when a pre-exposure gate has already failed. Remaining at baseline100/candidate0 is the safe restoration state, not a canary PASS.
+- Classify customer acceptance as INCONCLUSIVE and GFS-408 as BLOCKED, with no WhatsApp regression detected but also no candidate customer evidence.
+- Require one separate retention-activation approval first. It must create and verify a bounded, idempotent90-day physical deletion process without customer traffic; only a later fresh approval may authorize another canary.
+
 ## GFS-407 - retain baselines at100%; accept exact candidates at0% (2026-11-01 UTC)
 
 - Accept API `e8018f3f-53d3-4506-9c28-a46881842f8c` and Admin `ee9b7baa-722d-406e-9acd-556b447f8d79` as the exact `ffa9eb4` candidates. Keep API `b426ba47` and Admin `e8c96c96` at100%; no canary, promotion or mixed percentage is inferred from 0%-override acceptance.

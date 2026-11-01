@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-408 preflight-only resources (2026-11-01 UTC)
+
+- **Identity/source:** GitHub `gardenshop/freeseeds` PR #11 at `dd3df961c3c326b2cf66f54b6d9d19ab041bfcc3`; runtime source remains identical to candidate commit `ffa9eb4`. Cloudflare `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta account `1198439777611633`, business `568026370701542`.
+- **Routing unchanged:** API deployment remains `0df1a5e2-dca8-4830-8da7-a92ce662eb42`, baseline `b426ba47`100% / candidate `e8018f3f`0%. Admin deployment remains `034c190e-d233-4cab-9fa4-65aa068b1603`, baseline `e8c96c96`100% / candidate `ee9b7baa`0%. No canary deployment or watchdog resource was created.
+- **Retention gate:** source resource `packages/core/src/cancellation-retention.ts` remains tested but unconnected to API fetch/scheduled/queue entrypoints. No deletion route, schedule, Cron or execution resource exists.
+- **D1/Queue:** `getfreeseeds-staging` `17b7e9f6-e08b-4bff-a756-10de30b49ab1` has schema0046 objects7, zero cancellation/feedback/suggestion rows, orders/payments527/527, quick/FK clean and writes0. Queue consumer `68f4fcc2e52441888877fa588a71a4de` and exact DLQ/batch/retry/wait settings are unchanged.
+- **Monitoring:** one GraphQL HTTP200-error cycle failed closed between successful cycles. This transient is recorded as a release blocker for this approval, not erased by recovery.
+
 ## GFS-407 Approval U candidate resources (2026-11-01 UTC)
 
 - **Source/identity:** exact candidate source `ffa9eb4a8a16eb475584812367e53966469fa0d2`, GitHub `gardenshop/freeseeds` PR #11; Cloudflare `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta account `1198439777611633`, business `568026370701542` read-only.

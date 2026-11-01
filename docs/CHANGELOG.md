@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-01 - GFS-408 canary blocked safely at preflight
+
+- Proved the exact API candidate can store optional free-text suggestions but has no activated physical deletion caller; stopped before traffic because Approval V forbids retention activation.
+- Recorded one passing monitoring cycle, one fail-closed GraphQL HTTP200-error cycle and a later recovery observation. No retry was treated as canary qualification.
+- Kept API/Admin routing100/0, did not arm a watchdog, and performed no traffic mutation. Reverified D1 zero cancellation/feedback rows, matched orders/payments, Queue/DLQ, full361 regression and rollback4/4.
+
 ## 2026-11-01 - GFS-407 API/Admin 0% candidate validation
 
 - Uploaded exact source `ffa9eb4` as API `e8018f3f` and Admin `ee9b7baa`, preserving deployed variables and strict binding parity, then attached both at0% beside the unchanged100% baselines.
