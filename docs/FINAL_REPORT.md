@@ -16,7 +16,7 @@
 ### Validation and protected state
 
 - Focused127/127; full356/356 across28 files; build and lint PASS; legacy rollback4/4 against clean `cf01f444`; diff and changed-file secret scan PASS.
-- Official Chrome DevTools synthetic-only acceptance passed desktop1440, tablet768 and mobile390: PKT times/stages rendered, form fields fit, root/body overflow false and console errors0. The first desktop pass found blank date defaults; that defect was repaired and retested.
+- Official Chrome DevTools synthetic report data passed desktop1440 and mobile390 with PKT times/stages, fitted form fields and zero root/body overflow; tablet768 passed layout/overflow only because migration0046 intentionally remained unapplied in local Wrangler D1. The mobile synthetic pass had console errors0. The first desktop pass found blank date defaults; that defect was repaired and retested.
 - Official npm audit still reports exactly10 moderate dev-only `minimatch` findings with no fix. Audit0 is not claimed.
 - Fresh Cloudflare identity readback matched `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta was read-only verified. Admin remains `e8c96c96-ef94-4a33-bed6-7f284984002c`100% / `07e75c15-946e-4cf6-813c-8262ac4dfeff`0%. API remains `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100% / `d603f077-cc44-4882-af9b-9985adb53424`0%. No watchdog was required because no release occurred.
 - Production D1 evidence is unchanged/not queried for this feature. No migration, D1 write, API/Admin deploy/canary, payment, Meta, flag, Queue/DLQ, Cron, WhatsApp/customer/new-number or Hoja/ThanNow mutation occurred.

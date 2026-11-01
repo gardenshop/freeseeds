@@ -10,7 +10,7 @@
 | Ordering/dedupe/window | cancel-first atomic write, provider-event dedupe, stale action suppression, closed-window persistence | PASS |
 | Order/payment safety | no order/payment for unsubmitted cancellation; confirmed order/payment unchanged | PASS |
 | Admin/privacy | authenticated read-only totals/percentages/latest, stage/date/reason filters, masked refs, expired suggestion hidden, Conversations stage/detail | PASS |
-| Browser | official Chrome DevTools synthetic desktop1440, tablet768, mobile390; PKT render, fields fit, root/body overflow false, console clean | PASS |
+| Browser | official Chrome DevTools synthetic data desktop1440/mobile390: PKT/fields/overflow; tablet768: layout/overflow; mobile console clean | PASS |
 | Regression | focused127/127; full356/356 across28; build; lint; diff/secret scan | PASS |
 | Rollback/security | unchanged V1 root `cf01f444` rollback4/4; official audit10 moderate dev-only `minimatch`, no fix | PASS / REVIEW |
 | Production | migration0046, API/Admin deploy, canary, D1 write, live WhatsApp and monitoring | NOT RUN / BLOCKED |
