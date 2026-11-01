@@ -1,5 +1,16 @@
 # Get Free Seeds Binding Rules
 
+## GFS-396 Approval P Admin 0% validation (2026-11-01 UTC)
+
+- Approval P authorized exactly one Admin upload and 0% attachment of tested HEAD `d591ce827db9a8e5418f36d506b3f364404e7f0b`. Upload created Admin version `dfef46ea-3358-4f58-9253-3bb046a91d64`; the deployment readback is Admin `ceb3e680`100% / `dfef46ea`0%. No Admin100% promotion is authorized.
+- Fresh identity was verified immediately before upload and again immediately before the 0% deployment mutation as `gisupp@gmail.com` / Get Free Seeds / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. The separate account `85f6a6181b4653c2a45e69cb7ce8a474` was not used. Bindings matched staging D1/R2/Queue and configured variables; no secret values were read or changed.
+- Candidate-only authenticated Chrome version override passed real-data read-only acceptance: Orders HTML/list/changes/detail, Conversations HTML/list/summary/detail, Analytics, Payment Settings and COD returned expected HTTP200 responses. Three repeated Orders/Conversations API cycles were all HTTP200; summary was HTTP200 on candidate versus HTTP404 on the frozen baseline. No POST/DELETE action, customer message, payment decision, D1 write, migration, flag, Meta, Queue/Cron or WhatsApp mutation occurred.
+- Candidate timestamp semantics PASS: 25/25 conversation rows had separate inbound/update fields and zero latest-activity ordering violations. Candidate DOM showed separate list/detail meanings, PKT labels, recovery timeline and no invalid timestamp. `2026-11-01T07:14:33Z` rendered `01-Nov-2026 12:14:33 PM PKT`; midnight, invalid and host-timezone-independent behavior remains PASS.
+- Auto-update safety PASS in candidate browser: both controls defaulted OFF, manual Refresh succeeded, ON/OFF persisted, visible/focused gating, 60-second cadence, cross-tab lease, hidden/blur/pagehide pause, five-minute summary cap and stale retention were present. Requested desktop/mobile widths had no horizontal overflow and candidate console had no errors.
+- Candidate read-cost evidence is measured, not billing equivalence: Conversations list approximately11,493 rows and summary6,556 rows per complete refresh; Analytics read-cost metadata was approximately96,926 rows for the tested date window. Keep default OFF and require owner acceptance of the D1 budget/threshold before promotion.
+- Dependency audit remains a release review item, not audit0: official npm registry reported 10 moderate `minimatch` advisories with no fix. Installed paths are dev-only ESLint/TypeScript tooling (`minimatch`10.2.6 and3.1.5); runtime dependencies are `hono` and `zod`. Do not force a major upgrade or claim the risk is absent.
+- API remains frozen at `b426ba47`100% / `d603f077`0%. Preserve EN/UR, Advance, COD PKR125, PAID, webhook, Queue/DLQ, Cron, +15/+210, migrations, flags, number separation, the new-number WhatsApp lock and Hoja/ThanNow zero-connection rule.
+
 ## GFS-395 Live PKT verification and release blockers (2026-11-01 UTC)
 
 - Production remains frozen: API `b426ba47`100% / `d603f077`0%; Admin `ceb3e680`100% / `ab5be96b`0%. No API canary, customer send, payment, Meta, D1 write, migration, flag, Queue/Cron, WhatsApp, or Admin deployment mutation occurred.

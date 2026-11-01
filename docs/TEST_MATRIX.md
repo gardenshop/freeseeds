@@ -1,5 +1,24 @@
 # Test Matrix
 
+## GFS-396 Approval P Admin 0% validation (2026-11-01 UTC)
+
+| Check | Result | Evidence / boundary |
+|---|---|---|
+| Exact candidate upload | PASS | HEAD `d591ce8` uploaded as `dfef46ea-3358-4f58-9253-3bb046a91d64`; expected bindings; fresh target identity before upload |
+| 0% attachment/routing | PASS | Admin `ceb3e680`100% / `dfef46ea`0%; API `b426ba47`100% / `d603f077`0%; no promotion |
+| Candidate Orders | PASS | HTML/list/changes/detail HTTP200; three repeated API cycles; filters and page2 HTTP200 |
+| Candidate Conversations | PASS | HTML/list/summary/detail HTTP200; three repeated API cycles; new summary route distinguishes candidate from frozen baseline |
+| Activity ordering | PASS | 25/25 rows checked; zero cases where an older inbound timestamp was shown as latest activity |
+| PKT formatter | PASS | Exact proof `2026-11-01T07:14:33Z` -> `01-Nov-2026 12:14:33 PM PKT`; midnight/invalid/timezone checks pass |
+| Candidate DOM semantics | PASS | Separate list/detail meanings, recovery timeline, 75 list PKT labels and3 detail PKT labels; no invalid timestamps |
+| Auto-update controls | PASS | Both OFF by default; manual Refresh works; ON/OFF persistence; visible/focused, 60s, lease, hidden/blur/pagehide, stale-safe and summary-cap source checks |
+| Responsive layout | PASS | No horizontal overflow at 1920/1440/1280/768/430/390/360/320 checks; no candidate console errors |
+| Analytics/Payment/COD | PASS | Candidate HTML and read-only APIs HTTP200; Analytics15 metrics, Payment methods response, COD form/config response |
+| Candidate D1 read metadata | PASS with budget review | Approximately11,493 Conversations list +6,556 summary rows per complete refresh; Analytics approximately96,926 rows for tested window; no writes issued |
+| Rollback protection | PASS | Legacy `gfs273-v1` root clean at `cf01f444`; rollback test4/4; exact Admin rollback is `ceb3e680` |
+| Dependency audit | REVIEW/BLOCKED | Official registry:10 moderate `minimatch` advisories, no fix; all installed paths dev-only tooling |
+| Admin100% promotion | NOT RUN | Separate approval, five-minute watchdog, D1 budget and audit-risk acceptance required |
+
 ## GFS-395 live PKT and release blockers (2026-11-01 UTC)
 
 | Check | Result | Evidence / boundary |

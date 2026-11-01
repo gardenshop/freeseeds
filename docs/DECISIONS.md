@@ -1,5 +1,14 @@
 # Decisions
 
+## GFS-396 Approval P decision (2026-11-01 UTC)
+
+- Consume Approval P only for the exact Admin upload and 0% attachment of HEAD `d591ce8`. Accept candidate version `dfef46ea-3358-4f58-9253-3bb046a91d64` at0% beside `ceb3e680`100%; do not promote it under GFS-396.
+- Accept genuine candidate read-only acceptance: supported authenticated version override returned the candidate’s new Conversations summary route HTTP200, candidate Orders/Conversations APIs were HTTP200 across three repeated cycles, and Analytics/Payment Settings/COD rendered. No customer, payment, Meta, WhatsApp, Queue/Cron, migration, flag or D1 write occurred.
+- Accept activity semantics and PKT proof: 25/25 candidate rows checked had zero latest-activity ordering violations; exact conversion is `01-Nov-2026 12:14:33 PM PKT` for `2026-11-01T07:14:33Z`. DOM list/detail labels, recovery timeline, missing/invalid behavior and host-timezone independence remain protected.
+- Accept source safety evidence for both auto-update controls: default OFF, explicit visible/focused operation, 60-second cadence, cross-tab lease, hidden/blur/pagehide pause, stale retention and five-minute summary cap. Do not enable them by default or infer billing from query row counts.
+- Record residual D1/audit risk rather than hiding it: observed candidate list/summary reads were approximately11,493/6,556 rows per complete refresh and Analytics approximately96,926 for the tested window; npm audit reports 10 moderate unfixed `minimatch` advisories through dev-only ESLint/TypeScript chains. Require explicit owner acceptance of D1 budget and audit risk before promotion.
+- Prepare one separate Admin100% approval with an independent five-minute watchdog and exact rollback to `ceb3e680`100% / `dfef46ea`0%. Keep API `b426ba47`100% / `d603f077`0%; no API canary or WhatsApp/API mutation is included.
+
 ## GFS-395 live PKT and release-blocker decision (2026-11-01 UTC)
 
 - Accept the fixed `Asia/Karachi` semantics as locally PASS: the reported UTC instant maps to `01-Nov-2026 12:14:33 PM PKT`; midnight, invalid input and independent browser timezone checks pass. Keep UTC storage and chronological sorting unchanged.

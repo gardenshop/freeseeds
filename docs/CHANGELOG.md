@@ -1,5 +1,12 @@
 # Changelog
 
+## GFS-396 Approval P Admin 0% validation (2026-11-01)
+
+- Uploaded exact tested HEAD `d591ce8` as Admin version `dfef46ea-3358-4f58-9253-3bb046a91d64` and attached it at0% beside `ceb3e680`100%; no promotion or API mutation occurred.
+- Passed authenticated candidate override acceptance for Orders, Conversations, Analytics, Payment Settings and COD. Three repeated Orders/Conversations cycles returned HTTP200; candidate summary returned200 versus frozen baseline404.
+- Verified PKT/activity semantics, manual Refresh, default-OFF auto-update controls, visible/focused gating, cross-tab lease, hidden pause, stale retention, responsive widths and console cleanliness using sanitized metrics.
+- Recorded candidate query-cost metadata and audited the residual dependency risk: approximately11,493 list /6,556 summary rows per Conversations refresh, approximately96,926 Analytics rows for the tested window, and 10 moderate unfixed dev-only `minimatch` advisories.
+
 ## GFS-395 live PKT verification and release blockers (2026-11-01)
 
 - Re-ran the fixed PKT formatter against the reported UTC instant, midnight rollover, invalid input and multiple host timezones; local result is stable and source remains UTC-backed.

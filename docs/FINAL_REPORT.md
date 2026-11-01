@@ -1,5 +1,40 @@
 # Final Report
 
+## GFS-396 Approval P Admin 0% validation (2026-11-01 UTC)
+
+### Result
+
+**Candidate 0% validation PASS; Admin promotion NOT RUN.** Exact tested HEAD `d591ce827db9a8e5418f36d506b3f364404e7f0b` was uploaded as Admin version `dfef46ea-3358-4f58-9253-3bb046a91d64` and attached at0% beside `ceb3e680`100%. API remained `b426ba47`100% / `d603f077`0%. No API, WhatsApp, Meta, payment, customer, D1, migration, flag, Queue or Cron mutation occurred.
+
+### GFS-390 through GFS-396
+
+| Task | Result |
+|---|---|
+| GFS-390 | Historical Admin 0% validation PASS; later cost/release gates remained separate |
+| GFS-391 | D1 budget/cost gate BLOCKED |
+| GFS-392 | Source safety and diagnostic harness PASS; promotion BLOCKED |
+| GFS-393 | Paid entitlement/legacy rollback evidence accepted; auth/audit blockers recorded |
+| GFS-394 | Source repair PASS; live failure not reproduced; candidate acceptance pending |
+| GFS-395 | PKT verification PASS; Wrangler/GitHub restored; source pushed; live candidate pending |
+| GFS-396 | Admin candidate upload/0% routing PASS; candidate browser/data acceptance PASS; promotion NOT RUN |
+
+### Exact 0% candidate evidence
+
+- Fresh target identity was verified immediately before both Cloudflare mutations as `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Dry-run/upload bindings matched staging D1/R2/Queue and configured variables; no secret values were read.
+- Supported authenticated Chrome version override targeted only `dfef46ea`. Orders HTML/list/changes/detail, Conversations HTML/list/summary/detail, Analytics, Payment Settings and COD returned expected HTTP200. Three repeated Orders/Conversations cycles were all HTTP200; the candidate summary was HTTP200 while the frozen baseline summary was HTTP404. No customer-bearing screenshot or DOM capture was retained.
+- Candidate activity semantics passed: 25/25 rows had separate inbound/update fields and zero latest-activity ordering violations. List/detail showed separate meanings and recovery timeline. `2026-11-01T07:14:33Z` rendered exactly `01-Nov-2026 12:14:33 PM PKT`; midnight, invalid and browser-timezone-independent behavior passed.
+- Both auto switches were OFF by default. Manual Refresh worked, ON/OFF persisted, source checks confirmed visible/focused-only 60-second polling, cross-tab lease, hidden/blur/pagehide pause, stale-data retention and five-minute summary cap. Responsive checks at 1920/1440/1280/768/430/390/360/320 had no horizontal overflow; candidate console had no errors.
+- Candidate D1 query metadata measured approximately11,493 Conversations list rows and6,556 summary rows per complete refresh and approximately96,926 Analytics rows for the tested date window. These are read measurements, not billing equivalence; no write request was issued.
+
+### Audit and rollback
+
+- Official npm audit reached the registry and reported 10 moderate `minimatch` advisories with no available fix. Exact installed chains are dev-only ESLint/TypeScript tooling: `@typescript-eslint/typescript-estree` -> `minimatch@10.2.6`, and ESLint/config-array/eslintrc -> `minimatch@3.1.5`. Runtime dependencies are `hono` and `zod`; no forced upgrade or lockfile change was made.
+- Focused Admin19/19, full342/342, build, lint, diff check and rollback4/4 pass. Legacy rollback root `gfs273-v1` remains clean at `cf01f444500415b1f22a64730674caca1c286006`.
+
+### Exact next Admin cutover approval
+
+Approve one separate Admin100% cutover of `dfef46ea-3358-4f58-9253-3bb046a91d64`, with `ceb3e680` retained as exact rollback at0%, an independently armed five-minute watchdog, fresh target-account identity immediately before mutation, explicit acceptance of measured D1 cost and the unfixed dev-only audit risk, and final routing/health/security readback. Do not approve an API canary or any WhatsApp/Meta/payment/D1 write under that approval.
+
 ## GFS-395 Live PKT verification and release blockers (2026-11-01 UTC)
 
 ### Result

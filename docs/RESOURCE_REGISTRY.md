@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-396 Approval P candidate evidence (2026-11-01)
+
+- **Admin candidate:** exact HEAD `d591ce827db9a8e5418f36d506b3f364404e7f0b`; uploaded version `dfef46ea-3358-4f58-9253-3bb046a91d64`, tag `gfs396-admin-d591ce8`, message `GFS-396 Approval P d591ce8 Admin 0% validation`.
+- **Deployment:** Admin `ceb3e680-96f6-4218-b5a5-cadfca20a629` at100%; candidate `dfef46ea-3358-4f58-9253-3bb046a91d64` at0%. API remains `b426ba47`100% / `d603f077`0%. No promotion or API deployment occurred.
+- **Identity/bindings:** fresh target identity was verified immediately before both Cloudflare mutations as `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Candidate upload read back staging D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, staging R2 and staging Queue bindings plus configured variable names. Secret values are not registered here.
+- **Read-only candidate evidence:** authenticated version override returned HTTP200 for Orders, changes, detail, Conversations list/summary/detail, Analytics, Payment Settings and COD. Three repeated Orders/Conversations cycles were HTTP200. No screenshots, private fields, customer identifiers, POST/DELETE requests or D1 writes were recorded.
+- **Measured candidate reads:** Conversations list approximately11,493 rows, summary6,556 rows, Analytics approximately96,926 rows for the tested date window. Measurements are query metadata only and do not establish billing equivalence or a full-period budget.
+- **Audit evidence:** official npm registry reports 10 moderate `minimatch` advisories with no fix; installed vulnerable paths are dev-only ESLint/TypeScript tooling. No dependency mutation was made.
+
 ## GFS-395 verification evidence (2026-11-01)
 
 - **Git:** source repair parent `5ddb00f3a209a868240cf50a62f41915faaf2f5f`; GFS-395 docs commit `a1a317d2da1127e77b6f913811fbaa34ded1efb9` was pushed and independently read back from `origin` and PR #11.
