@@ -7,7 +7,7 @@
 - **Candidate resource unchanged:** existing exact tested source `d591ce827db9a8e5418f36d506b3f364404e7f0b` remains uploaded as `dfef46ea-3358-4f58-9253-3bb046a91d64`, attached at0% beside `ceb3e680`100%. No new upload was needed because the defect was browser configuration only.
 - **Test resource:** `tests/admin-layout.test.ts` contains synthetic-only dimension/breakpoint assertions; no real identifiers, credentials, screenshots or customer payloads are stored. Focused15/15, full345/345, build, lint and rollback4/4 pass.
 - **Audit boundary:** retain prior official result of10 moderate unfixed dev-only `minimatch` advisories. The repeat audit request failed at the advisory endpoint/log path; no audit0 claim or dependency mutation was made.
-- **Git resource:** target `gardenshop/freeseeds`, branch `codex/gfs221-cod-compat-001`; layout commit is `38ebf66ef66c560ea5915c8174d82d417d4fd25d`, final docs commit is `4ca12b5b7a1b379f5751932098d595c65e45e486`, and the final SHA was independently read back. No force push or alternate repository was used.
+- **Git resource:** target `gardenshop/freeseeds`, branch `codex/gfs221-cod-compat-001`; layout/test commit is `38ebf66ef66c560ea5915c8174d82d417d4fd25d`, protected-record commits are present, and the final branch SHA was independently read back. No force push or alternate repository was used.
 
 ## GFS-396 Approval P candidate evidence (2026-11-01)
 
