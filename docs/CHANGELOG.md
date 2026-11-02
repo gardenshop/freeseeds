@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 - GFS-444 WhatsApp incident read-only closure
+
+- Converted the reported PKT boundary to UTC and ran one aggregate-only D1 query, authenticated Admin reads, Cloudflare Worker/Queue metrics, public API health and canonical Meta identity checks.
+- Disproved an infrastructure/webhook outage: no customer inbound in adjacent windows, while callbacks/provider status, zero-error Workers, Admin refresh and Queue/DLQ health continued. Kept post-boundary customer E2E UNKNOWN because no natural inbound arrived.
+- No code repair or production mutation; GFS-443 Analytics credential monitoring remains a separate owner-session gate.
+
 ## 2026-11-03 - GFS-443 GraphQL HTTP400 schema repair
 
 - Diagnosed owner-session sample 1's sanitized metrics HTTP400 as uppercase `String!` declarations for `accountTag` and `scriptName`; Cloudflare's official Workers Analytics examples use lowercase `string!`.

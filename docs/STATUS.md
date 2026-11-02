@@ -1,5 +1,14 @@
 # Status
 
+## GFS-444 - WhatsApp incident disproven; quiet period verified (2026-11-03 PKT)
+
+**Disposition: DISPROVEN as an infrastructure/webhook outage; no repair required; post-boundary customer E2E UNKNOWN because no inbound arrived.**
+
+- `00:50:26 PKT = 19:50:26Z`. Latest genuine inbound was `19:36:20.595Z`; both adjacent ten-minute inbound windows were zero. Latest send was `19:50:24.826Z`; provider status updated at `20:15:59.835Z`; a webhook acceptance followed at `20:16:00.220Z`.
+- Post-boundary evidence: two accepted webhook observations, zero callback rejections, API 18/0 and Admin 43/0 requests/errors in the ten-minute sample, active Queue/DLQ backlog 0, API health200/WhatsApp enabled and authenticated Admin summary/list HTTP200 at `20:18Z`.
+- Admin is not stale: its sort timestamp is conversation inbound/update activity, not provider-status updates. Latest created order was `18:50:56.706Z`; no order was created in either adjacent ten-minute window, consistent with no customer inbound.
+- Fresh routing is API `b426ba47`100% / `e8018f3f`0%, Admin `e8c96c96`100% / `ee9b7baa`0%. Payments, WhatsApp, recovery, D1, Queue, Cron and CAPI OFF remain unchanged. GFS-443 owner-session monitoring still awaits its separate retest.
+
 ## GFS-443 - GraphQL HTTP400 repaired; owner retest required (2026-11-03 PKT)
 
 **Disposition: local repair PASS; live qualification WAITING FOR OWNER RETEST; production unchanged.**

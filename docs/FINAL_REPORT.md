@@ -1,5 +1,17 @@
 # Final Report
 
+## GFS-444 - urgent WhatsApp activity and regression check (2026-11-03 PKT)
+
+**Overall: OUTAGE DISPROVEN for WhatsApp/webhook/Worker/Queue infrastructure; normal quiet period supported; no repair or production mutation.**
+
+1. **Timeline:** `00:50:26 PKT = 19:50:26Z`. Latest genuine inbound was `19:36:20.595Z` (00:36:20.595 PKT), latest outbound send `19:50:24.826Z`, provider-status update `20:15:59.835Z`, accepted webhook `20:16:00.220Z`, and latest order `18:50:56.706Z`. The Conversations screenshot timestamp was a recovery send, not a customer message.
+2. **Bounded evidence:** zero genuine inbound before and after the boundary; one outbound before/zero after; zero outbound failures; zero orders in both windows; two accepted post-boundary webhook observations and zero rejections. No natural customer activity exists after the boundary, so bot-reply and checkout E2E there are **UNKNOWN**, not failed.
+3. **Health:** authenticated Cloudflare metrics show API 18→18 and Admin 13→43 requests with zero errors. Active Queue/DLQ backlog is zero; public API health is HTTP200 with WhatsApp enabled; Admin Conversations summary/list returned HTTP200 at `20:18Z`. Admin list sorting is current and intentionally does not treat a provider-status update as conversation activity.
+4. **Protection:** fresh Cloudflare deployment readback is API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%. Canonical Get Free Seeds Cloudflare and Meta context matched. Advance payments, EN/UR, COD PKR125, recovery, orders, D1, Queue/DLQ, Cron and CAPI OFF were untouched.
+5. **GFS-443:** separate, not causal. Its local GraphQL fix remains PASS; dashboard metrics here do not qualify the owner-session Analytics credential. No code changed, so the existing 372/372 local regression remains the latest test evidence.
+6. **Completion:** P0 incident diagnosis 100%; P1 owner-session monitoring 0%/WAITING; P2 GFS-426 local COD/CAPI 100%, production release 0%; post-boundary customer E2E UNKNOWN.
+7. **Next action:** obtain the three sanitized owner-session GFS-443 bridge samples over five minutes. If they pass with rollback evidence, request separate Admin-only GFS-426 0% validation/release approval.
+
 ## GFS-443 - GraphQL HTTP400 repair and monitoring gate (2026-11-03 PKT)
 
 **Overall: local GraphQL repair PASS; live monitoring WAITING FOR OWNER RETEST; GFS-426 remains safely release-blocked.**

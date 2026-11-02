@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-444 - WhatsApp activity and regression read-only check (2026-11-03 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Timestamp conversion | PASS | `00:50:26 PKT` = `19:50:26Z`; all bounded windows use UTC. |
+| Genuine inbound around boundary | PASS / quiet | Last inbound `19:36:20.595Z`; zero customer inbound in both adjacent ten-minute windows. |
+| Webhook/provider status | PASS | Two accepted post-boundary webhook observations, zero callback rejections; latest provider update `20:15:59.835Z`. |
+| Worker traffic/errors | PASS | API 18→18 requests/0 errors; Admin 13→43 requests/0 errors across before/after windows. |
+| Queue/DLQ | PASS | Active staging Queue and DLQ backlog 0. |
+| Admin freshness | PASS | Conversations summary/list HTTP200 at `20:18Z`; latest sort timestamp correctly excludes provider-status-only updates. |
+| Checkout after boundary | UNKNOWN | No customer inbound or newly created order in the sampled period; no synthetic activity created. |
+| API health/routing | PASS | Public health HTTP200/WhatsApp enabled; API `b426ba47`100%/candidate0%, Admin `e8c96c96`100%/candidate0%. |
+| Production mutation | NONE | Aggregate SELECT only; no source, deploy, routing, payment, D1, Meta, CAPI, Queue, Cron or customer action. |
+
 ## GFS-443 - GraphQL HTTP400 repair (2026-11-03 PKT)
 
 | Area | Result | Evidence |

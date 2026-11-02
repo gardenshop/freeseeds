@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-444 live incident evidence (2026-11-03 PKT)
+
+- **Canonical resources:** authenticated Cloudflare Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; active D1 `getfreeseeds-staging`/`17b7e9f6-e08b-4bff-a756-10de30b49ab1`; canonical Meta Get Free Seeds business `568026370701542` with the approved account context.
+- **Sanitized timeline:** last inbound `19:36:20.595Z`; last outbound send `19:50:24.826Z`; latest provider status update `20:15:59.835Z`; latest accepted webhook `20:16:00.220Z`; last order creation `18:50:56.706Z`. No identifiers, payloads, message bodies, customer data or secrets recorded.
+- **Health:** API 18→18 and Admin 13→43 bounded Worker requests with zero errors; active staging Queue/DLQ backlog zero; API health HTTP200/WhatsApp enabled; Admin summary/list HTTP200.
+- **Routing:** API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%. No resource mutation occurred; owner-session Analytics bridge remains separately pending.
+
 ## GFS-443 GraphQL repair resources (2026-11-03 PKT)
 
 - **Query:** `scripts/cloudflare-observability.mjs`; Workers GraphQL variables now declare `accountTag` and `scriptName` as lowercase `string!`, with `Time!` unchanged.

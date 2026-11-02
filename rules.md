@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-444 WhatsApp activity incident boundary (2026-11-03 PKT)
+
+- **Disposition: infrastructure outage DISPROVEN; normal quiet period supported.** The reported boundary `2026-11-03 00:50:26 PKT` is `2026-11-02T19:50:26Z`. The latest genuine customer inbound is `19:36:20.595Z` (00:36:20.595 PKT); bounded inbound counts are zero both before (`19:40:26Z`–`19:50:26Z`) and after (`19:50:26Z`–`20:00:26Z`). No customer trigger exists after the boundary to claim a bot-reply or checkout E2E result.
+- The apparent latest Conversations activity is an outbound `PAYMENT_CHOICE_RECOVERY` send at `19:50:24.826Z`, not a customer inbound. Provider-status processing continued: latest outbound provider update `20:15:59.835Z`, latest accepted webhook `20:16:00.220Z`, two accepted webhook observations and zero callback rejections in the post-boundary ten-minute window.
+- Cloudflare dashboard metrics show API 18 then 18 requests/0 errors and Admin 13 then 43 requests/0 errors in the bounded before/after windows. Active `getfreeseeds-events-staging` Queue and its DLQ both read backlog zero. Public API `/health` returned HTTP200 with WhatsApp enabled; authenticated Admin Conversations summary/list refreshed HTTP200 at `20:18Z` and correctly retained the conversation sort timestamp because provider status does not update that field.
+- Authoritative deployment readback is API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%. Canonical Get Free Seeds Cloudflare/Meta identities matched. No source repair, deployment, routing, flag, D1, payment, Meta, CAPI, Queue, Cron or customer-message mutation occurred.
+- GFS-443 remains separate: its local GraphQL query repair is unchanged; dashboard metrics access is not owner-session Analytics-credential qualification. The three-sample owner bridge gate and separate GFS-426 approval remain required.
+
 ## GFS-443 GraphQL schema repair boundary (2026-11-03 PKT)
 
 - Owner-session evidence superseded GFS-442 waiting status with a sanitized `graphql_http_failure` at metrics fetch, HTTP400. Credentials and the existing bridge reached Cloudflare; no credential investigation or recreation was repeated.

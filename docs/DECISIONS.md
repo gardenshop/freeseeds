@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-444 - close screenshot incident as normal quiet period (2026-11-03 PKT)
+
+**Decision:** no source repair, rollback or deployment. The latest Conversations activity was a recovery send, not customer inbound. Bounded D1 aggregates, zero-error Worker metrics, webhook acceptance, provider-status update, empty active Queue/DLQ, API health and fresh Admin reads disprove a platform outage.
+
+**Evidence boundary:** no genuine customer inbound or new order occurred in the sampled post-boundary window, so bot-reply and checkout E2E after `00:50:26 PKT` remain UNKNOWN rather than failed or passed. Do not manufacture traffic to fill that gap.
+
+**Next gate:** resume GFS-443 only with the corrected owner-session monitoring bridge results. Dashboard GraphQL access in this incident is separate from Analytics-token qualification; GFS-426 still needs those three samples, rollback evidence and separate release approval.
+
 ## GFS-443 - correct GraphQL scalar declarations and hold release for owner retest (2026-11-03 PKT)
 
 **Decision:** change only `accountTag` and `scriptName` from `String!` to the Cloudflare-documented lowercase `string!`. Preserve `Time!`, query filters, identity checks, freshness limits, zero-error checks and fail-closed handling.
