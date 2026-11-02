@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-440 - corrected credential metadata and monitoring gate (2026-11-03 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Credential metadata | PASS / OWNER EVIDENCE | Target username visibly matches `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; password stored; Enterprise persistence. |
+| Runtime bridge acceptance | NOT RUN | Agent has no authorized owner-session executor and did not access the vault from sandbox. |
+| GraphQL/Access/freshness | NOT RUN | Require owner-session bridge result; no HTTP200/errors0/freshness claim. |
+| Five-minute qualification | NOT RUN | Single preflight is insufficient; bounded continuous owner-session monitoring required. |
+| Admin release | NOT RUN | No candidate upload, validation or promotion. |
+| Production protection | PASS | No source, routing, D1, payment, Meta, CAPI, Queue, Cron or customer mutation. |
+
 ## GFS-439 - Analytics credential username correction (2026-11-03 PKT)
 
 | Area | Result | Evidence |

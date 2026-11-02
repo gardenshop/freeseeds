@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-440 corrected Analytics credential evidence (2026-11-03 PKT)
+
+- **Owner metadata evidence:** Generic target `GFS-Cloudflare-Analytics-Monitor`; username `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; password stored; Enterprise persistence. No secret value registered.
+- **Execution boundary:** current agent sandbox has no authorized owner-profile executor. Existing bridge must run only in the credential-owning session; no vault access, export or transfer is permitted.
+- **Qualification state:** runtime bridge, GraphQL, five-minute monitoring and release remain pending. GFS-426 remains local-only; CAPI OFF.
+
 ## GFS-439 Analytics credential identity evidence (2026-11-03 PKT)
 
 - **Bridge result:** owner-session execution reached `GFS-Cloudflare-Analytics-Monitor` and failed closed with `analytics_credential_account_mismatch`.

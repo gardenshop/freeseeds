@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-440 - accept corrected metadata; require host-side runtime evidence (2026-11-03 PKT)
+
+**Decision:** accept the owner screenshot as non-secret evidence that the Analytics credential metadata is now correct. Do not rerun the bridge from the sandbox, which cannot access the owner profile, and do not weaken validation or transfer the token.
+
+**Next gate:** owner executes the existing bridge in the credential-owning session over a five-minute bounded interval and returns sanitized health, denial/isolation, GraphQL errors/freshness and routing results. A single successful run is only preflight. GFS-426 remains undeployed pending that evidence, rollback qualification and separate release approval.
+
 ## GFS-439 - preserve Analytics account validation (2026-11-03 PKT)
 
 **Decision:** retain the existing fail-closed username validation. The owner-session bridge reached the Analytics credential but rejected it because the stored username did not equal the verified Get Free Seeds account ID. The actual value was not extracted or recorded.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 - GFS-440 corrected Analytics credential metadata
+
+- Recorded owner evidence that the Analytics Credential Manager target now has the exact Get Free Seeds account-ID username, stored password and Enterprise persistence.
+- Did not access the owner vault from the sandbox or rerun an invalid sandbox bridge check. GraphQL and five-minute monitoring remain pending owner-session execution.
+- Kept GFS-426 release, CAPI, payments, routing and customer traffic unchanged.
+
 ## 2026-11-03 - GFS-439 Analytics credential identity gate
 
 - Owner-session bridge reached the existing Analytics Credential Manager target but failed closed with `analytics_credential_account_mismatch`.

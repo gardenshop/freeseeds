@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-440 corrected Analytics credential boundary (2026-11-03 PKT)
+
+- Owner-provided Credential Manager evidence supersedes the GFS-439 metadata-correction request: `GFS-Cloudflare-Analytics-Monitor` now has username `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, a stored password, and Enterprise persistence.
+- This agent session has no authorized executor in the credential-owning Windows profile; it must not rerun the bridge from `BI\\codexsandboxoffline` or access the vault. Runtime credential acceptance, GraphQL and monitoring remain unverified until the owner runs the existing bridge in the owner session.
+- One bridge execution is preflight only, not five-minute qualification. Require a bounded owner-session sequence spanning five minutes with GraphQL HTTP200/errors0/freshness, health/denial/isolation, exact routing and rollback evidence before GFS-426 release preparation advances.
+- No deployment, routing, D1, payment, CAPI, Meta, Cron, Queue or customer-message mutation is authorized. CAPI stays OFF and the three working Advance methods remain frozen.
+
 ## GFS-439 Analytics credential identity boundary (2026-11-03 PKT)
 
 - Owner-session bridge execution reached `GFS-Cloudflare-Analytics-Monitor` but failed closed with `analytics_credential_account_mismatch` at the existing account-ID check. The actual stored username was not read, printed, copied or recorded.
