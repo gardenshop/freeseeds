@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-430 monitoring and COD release boundary (2026-11-02 PKT)
+
+- The single approved Analytics credential check found `GFS-Cloudflare-Analytics-Monitor` absent from Windows Credential Manager. GraphQL, five-minute qualification and live Admin release are BLOCKED; do not recreate, transfer or bypass credential safeguards.
+- GFS-429 evidence is carried forward without repetition: local370/370, COD27/27, D1 compatibility, Service Auth health/isolation, exact Wrangler100/0 routing and local rollback controllers passed.
+- GFS-426 remains an undeployed Admin-only candidate. No candidate upload, 0% validation, live PAID action, D1/payment/Meta/routing mutation or customer message is authorized under GFS-430.
+
 ## GFS-429 GFS-426 release preflight boundary (2026-11-02 PKT)
 
 - Candidate source is Admin-only: commit `4395b68` changes `apps/admin/src/index.ts` plus tests/docs; no API source or customer WhatsApp code changed. GFS-426 remains undeployed.

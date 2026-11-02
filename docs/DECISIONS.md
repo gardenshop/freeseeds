@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-430 - preserve release hold when Analytics credential is absent (2026-11-02 PKT)
+
+**Decision:** do not upload, validate or promote GFS-426 because the approved Analytics credential is absent and this prompt is not release approval. Carry forward GFS-429’s passing local and Service Auth evidence without repeating it.
+
+The next owner action is secure installation of the approved least-privilege Analytics-read credential through the protected Windows Credential Manager path. After qualification, a separate Admin-only release approval remains required. Payment methods, API, CAPI, D1 and customer traffic stay frozen.
+
 ## GFS-429 - preflight GFS-426 without release mutation (2026-11-02 PKT)
 
 **Decision:** accept the GFS-426 local candidate as release-ready in source/test scope, but do not upload or promote it. The prompt is not release approval, and Analytics monitoring is unavailable.

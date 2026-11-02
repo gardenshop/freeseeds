@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-430 - monitoring/release resources (2026-11-02 PKT)
+
+- **Analytics monitor:** `GFS-Cloudflare-Analytics-Monitor` absent from Windows Credential Manager; GraphQL/five-minute qualification unavailable.
+- **Candidate:** GFS-426 Admin-only source remains local and undeployed; no candidate version or traffic allocation exists.
+- **Protected evidence:** GFS-429 full regression, Service Auth isolation, exact API/Admin routing and local rollback evidence are carried forward.
+- **Next owner action:** secure protected installation of the approved Analytics-read credential; never record its value.
+
 ## GFS-429 - COD release preflight resources (2026-11-02 PKT)
 
 - **Candidate:** local GFS-426 Admin source at commit `4395b68`; no deployed version or candidate upload.

@@ -1,5 +1,15 @@
 # Test Matrix
 
+## GFS-430 - monitoring and COD release hold (2026-11-02 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Analytics credential | BLOCKED | `GFS-Cloudflare-Analytics-Monitor` absent; no recreation or transfer attempted. |
+| GraphQL/five-minute monitoring | BLOCKED | Cannot claim HTTP200, freshness or five-minute PASS without the approved credential. |
+| GFS-426 local candidate | PASS carried forward | GFS-429 full370/370, COD27/27, build/lint and local safety controllers passed. |
+| Production release | NOT RUN | No owner release approval and monitoring gate unavailable. |
+| Protected operations | PASS | API/Admin exact100/0, payment freeze, CAPI OFF and customer traffic preserved from GFS-429 evidence. |
+
 ## GFS-429 - COD payment release preflight (2026-11-02 PKT)
 
 | Area | Result | Evidence |
