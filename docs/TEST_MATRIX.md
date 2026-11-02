@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-413 — P0 recovery/payment reliability (2026-11-02 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Payment/COD/recovery focused tests | PASS | 5 files,179 tests; payment guards, COD transitions and recovery/terminal-job safety covered. |
+| Full regression | PASS | 30 files,361 tests. |
+| Build/lint | PASS | TypeScript build and ESLint completed without errors. |
+| Recovery live remediation | BLOCKED | Flag true/start recorded; eligible-now0, opt-outs0, fallback rows0; separate approval required. |
+| Payment instruction remediation | BLOCKED | 20 historical text-delivery dead letters and12 historical disabled-method failures; no replay/resend. |
+| COD/Advance operations | BLOCKED | COD settlement evidence absent; Advance amount null and no-receipt pending rows remain. |
+| Mutation safety | PASS | No deployment, flag, D1, migration, payment/order, Meta, Cron, routing or customer-message mutation. |
+
+No customer identifiers, message bodies, secrets or provider credentials were recorded.
+
 ## GFS-412 — authenticated P0 live verification (2026-11-02 PKT)
 
 | Area | Result | Evidence |

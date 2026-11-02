@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-02 — GFS-413 P0 recovery/payment reliability
+
+- Diagnosed live recovery drift and historical payment-instruction terminal failures using bounded authenticated read-only evidence.
+- Confirmed no current recovery eligibility, no opt-out/fallback rows, historical failure dates, COD settlement-policy gap, and missing Advance amount without changing production.
+- Ran focused179/179 and full361/361 tests plus build/lint; no local source defect was proven and no replay/resend or payment/configuration mutation occurred.
+
 ## 2026-11-02 — GFS-412 authenticated P0 verification
 
 - Restored official Chrome DevTools MCP and verified Cloudflare, Admin, D1, Queue and Meta read-only access.

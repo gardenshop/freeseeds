@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-413 P0 recovery/payment reliability boundary (2026-11-02 PKT)
+
+- No production mutation was authorized: no flag, deployment, customer message, payment/order state, D1, migration, Cron, Meta or routing change.
+- Protected targets remain GitHub `gardenshop/freeseeds` PR #11; Cloudflare `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta business `568026370701542`, account `1198439777611633`; API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%.
+- Live recovery reads true with start `2026-10-28T20:05:20.290Z`, while checked-in config is false. Eligible-now0, opt-out/fallback rows0, with historical stage/outbox activity. Do not blindly disable or treat rows as causal conversion; reconcile only under separate approval.
+- Payment-instruction terminal jobs are historical:20 `PAYMENT_TEXT_DELIVERY_FAILED` dead letters last updated2026-10-25 and12 `GFS177_PAYMENT_METHODS_DISABLED` permanent failures last updated2026-10-20. Never replay or resend.
+- COD is enabled at PKR125 but settlement policy hashes/rows are absent. Advance amount is null; no-receipt pending rows are Bank Transfer5, Easypaisa29 and JazzCash41. Do not invent settlements, beneficiaries, amounts or confirmations.
+- Preserve EN/UR, PAID, orders, webhook, Queue/DLQ, Cron, number separation, new-number WhatsApp lock and Hoja/ThanNow zero-connection. Cancellation GFS-403–410 remains deferred; known10 moderate dev-only minimatch findings remain documented.
+
 ## GFS-412 authenticated P0 live-verification boundary (2026-11-02 PKT)
 
 - **Authenticated MCP restored:** official Chrome DevTools MCP reached the existing authenticated Cloudflare, Admin and Meta sessions. Cloudflare readback showed `gisupp@gmail.com` and the Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Meta Ads URL/readback showed business `568026370701542`, account `1198439777611633`; GitHub remains `gardenshop/freeseeds`, PR #11.

@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-413 — bounded P0 reliability evidence (2026-11-02 PKT)
+
+- **Protected target:** GitHub `gardenshop/freeseeds` PR #11; Cloudflare `gisupp@gmail.com` / Get Free Seeds; Meta business `568026370701542`, account `1198439777611633`.
+- **Routing:** API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%. No deployment or routing mutation.
+- **Recovery:** live flag true with start `2026-10-28T20:05:20.290Z`; checked-in default false; eligible-now0; opt-outs/fallback rows0. Historical stage/outbox activity exists. No flag change or customer send.
+- **Payment outbox:** 20 `PAYMENT_TEXT_DELIVERY_FAILED` dead letters last updated2026-10-25;12 `GFS177_PAYMENT_METHODS_DISABLED` permanent failures last updated2026-10-20. No IDs, payloads, message bodies or customer data recorded; no replay.
+- **COD/Advance:** COD enabled/PKR125, settlement policy hashes absent, collection/remittance rows0; Advance amount null; no-receipt pending counts JazzCash41/Easypaisa29/Bank Transfer5. No payment or D1 write.
+- **Validation:** focused179/179, full361/361, build/lint PASS. Known10 moderate dev-only minimatch findings retained; audit0 not claimed. Migration0046 remains no-reapply/no-marker-fabrication.
+
 ## GFS-412 — authenticated live resources (2026-11-02 PKT)
 
 - **Identities:** Cloudflare `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Meta business `568026370701542`, account `1198439777611633`; GitHub `gardenshop/freeseeds`, PR #11.

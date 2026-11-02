@@ -1,5 +1,15 @@
 # Status
 
+## GFS-413 — P0 recovery/payment reliability (2026-11-02 PKT)
+
+**Disposition: PASS for bounded read-only diagnosis and regression; BLOCKED for production remediation. No production mutation.**
+
+- Identity/routing remain protected: GitHub `gardenshop/freeseeds` PR #11; Cloudflare `gisupp@gmail.com` / Get Free Seeds; canonical Meta business/account; API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%.
+- Recovery remains unexpectedly enabled with start `2026-10-28T20:05:20.290Z`, conflicting with checked-in false. Eligible-now0, opt-outs/fallback rows0; historical stage/outbox activity exists. Separate reconciliation approval required; no flag change.
+- Payment-instruction failures are historical:20 `PAYMENT_TEXT_DELIVERY_FAILED` dead letters (last updated2026-10-25) and12 `GFS177_PAYMENT_METHODS_DISABLED` permanent failures (last updated2026-10-20). Current source remains fail-closed and terminal-safe; no source defect proven.
+- COD is PKR125/enabled but collection/remittance policy configuration and rows are absent; live COD detail is306 pending and1 dispatched. Advance amount is null; no-receipt pending rows remain JazzCash41, Easypaisa29 and Bank Transfer5. No payment edit.
+- GFS-412 authenticated Admin/D1/Queue/Meta evidence remains applicable. Migration0046 provenance remains unresolved; no reapply/marker fabrication. Focused179/179, full361/361, build and lint PASS. Known10 moderate dev-only minimatch findings remain documented.
+
 ## GFS-412 — authenticated P0 live verification (2026-11-02 PKT)
 
 **Disposition: PASS for MCP restoration and read-only verification; BLOCKED for production remediation. No production mutation.**

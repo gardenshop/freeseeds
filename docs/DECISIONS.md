@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-413 — stop at recovery/payment configuration gates (2026-11-02 PKT)
+
+**Decision:** complete bounded read-only diagnosis and local regression only. Do not disable recovery, replay payment jobs, edit COD/Advance configuration, confirm payments, send customers, deploy, migrate or change Meta/routing.
+
+Recovery is live-enabled despite the checked-in false baseline, but has no eligible-now rows or opt-outs/fallbacks; historical stage rows do not prove causal conversion. Payment terminal failures are dated historical failures, not a continuing retry storm. COD settlement policy and Advance amount are missing operational evidence, not proven source defects.
+
+**Next approval:** fresh identity-verified recovery reconciliation with serving-version attribution, explicit enable/disable decision, start boundary, five-minute monitoring and immediate rollback. Separately approve COD settlement policy only after verified courier terms, and Advance amount/beneficiary remediation only after verified owner evidence.
+
 ## GFS-412 — restore authenticated read-only verification; stop before remediation (2026-11-02 PKT)
 
 **Decision:** restore the official Chrome MCP and complete the live snapshot, but make no production configuration, payment, flag, deployment, Meta, D1 or customer-data change.

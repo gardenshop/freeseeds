@@ -1,5 +1,36 @@
 # Final Report
 
+## GFS-413 — P0 recovery/payment reliability (2026-11-02 PKT)
+
+**Overall: PASS for safe diagnosis and regression; BLOCKED for production remediation.**
+
+GFS-412 restored authenticated Chrome MCP and found recovery drift, the COD settlement gap and missing Advance amount. GFS-413 added bounded failure classification and current payment/COD configuration evidence, confirmed terminal failures are historical, and found no authorized local source defect. No production mutation occurred.
+
+### Evidence and disposition
+
+- **Recovery:** live `PAYMENT_CHOICE_RECOVERY_ENABLED=true`, start `2026-10-28T20:05:20.290Z`; checked-in default false. Eligible-now0, opt-outs0 and fallback rows0. Historical +15/+210 stage/outbox rows exist but are not causal conversion evidence. Require fresh controlled reconciliation approval with version attribution and rollback.
+- **Payment instructions:** 20 dead letters are `PAYMENT_TEXT_DELIVERY_FAILED`, last updated2026-10-25;12 permanent failures are `GFS177_PAYMENT_METHODS_DISABLED`, last updated2026-10-20. No continuing retry storm was observed. Current code validates service window, method configuration, QR/locale safety, current order context and terminal state; no replay or resend.
+- **COD:** enabled at PKR125; collection/remittance policy configuration is absent, with306 `COD_PENDING`,1 `DISPATCHED`, and zero collection/remittance rows. Courier terms, settlement and costs remain UNKNOWN.
+- **Advance:** runtime amount is null. All three method rows are enabled/owner-verified in D1, while no-receipt pending rows are JazzCash41, Easypaisa29 and Bank Transfer5. No beneficiary, amount, receipt or payment status changed.
+- **Reliability/Admin/Meta:** prior GFS-412 read-only evidence remains applicable for Admin Orders/Conversations/Analytics, Queue backlog/retry health, D1 quick/FK checks and canonical Meta identity. CAPI/Instant Forms remain OFF. Migration0046 provenance remains unresolved; no reapply or marker.
+
+### Tests, routing and safety
+
+Focused payment/COD/recovery tests: **179/179 PASS**. Full suite: **30 files / 361 tests PASS**. TypeScript build and ESLint PASS. API `b426ba47` remains100%; `e8018f3f` remains0%. Admin `e8c96c96` remains100%; `ee9b7baa` remains0%. No flag, deployment, D1, migration, payment/order, Cron, Meta, routing or customer-message mutation occurred. Known10 moderate dev-only minimatch findings remain documented; audit0 is not claimed.
+
+### Completion and next approval
+
+| Workstream | Completion |
+|---|---:|
+| Read-only diagnosis | 100% |
+| Local regression/repair | 100% (no repair required) |
+| Recovery production reconciliation | 0% — blocked on approval/provenance |
+| COD settlement readiness | UNKNOWN — courier evidence absent |
+| Advance payment readiness | BLOCKED — amount/operational evidence absent |
+| Customer-facing release | 0% — intentionally unchanged |
+
+**One highest-value next approval:** authorize a fresh identity-verified, bounded recovery-configuration reconciliation: serving-version attribution, explicit enable/disable decision, start boundary, five-minute monitoring and immediate rollback. Do not bundle COD settlement, Advance configuration, customer messaging or payment-state changes.
+
 ## GFS-412 — restore Chrome MCP and finish P0 live verification (2026-11-02 PKT)
 
 **Overall: PASS for authenticated read-only verification; BLOCKED for production remediation.** No source repair, deployment, flag change, payment edit, D1 write, migration, Meta action or customer message occurred.
