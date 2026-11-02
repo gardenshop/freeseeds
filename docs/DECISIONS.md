@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-433 - classify pending cohorts without runtime change (2026-11-02 PKT)
+
+**Decision:** classify the current no-method and delivery-failed cohorts, but make no source or production repair. The no-method sample shows incomplete payment selection/non-response; the delivery-failed cohort is a payment-instruction retry/dead-letter condition rather than courier delivery failure. Current JazzCash, Easypaisa and Bank Transfer configuration is healthy and owner-frozen.
+
+**Evidence boundary:** current active no-method is 210 (GFS-432 was 209); delivery-failed is 22. A bounded D1 aggregate found 19 five-attempt `PAYMENT_TEXT_DELIVERY_FAILED` dead letters and 8 historical-looking `GFS177_PAYMENT_METHODS_DISABLED` permanent failures, with zero writes. This does not prove a current source defect, customer causation or permission to replay.
+
+**Safety boundary:** do not replay or delete outbox jobs, change payment methods, change customer copy/recovery timing, send messages, activate CAPI, deploy GFS-426 or mutate D1. The next approval should cover only read-only provider/error-eligibility reconciliation for the 19 dead letters; remediation requires separate evidence and approval.
+
 ## GFS-432 - preserve checkout and target the no-method cohort (2026-11-02 PKT)
 
 **Decision:** make no runtime repair. The read-only review proves a measurable operational funnel gap (35 of 116 recent orders had no method; current active no-method queue 209), but it does not prove a defect in checkout, payment instructions, recovery, or WhatsApp delivery. Recent order creation and API health are working, and reminder rows lack causal linkage.

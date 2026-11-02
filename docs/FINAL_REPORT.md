@@ -1,5 +1,20 @@
 # Final Report
 
+## GFS-433 - resolve pending order bottlenecks (2026-11-02 PKT)
+
+**Overall: bounded review PASS; NO DEFECT PROVEN; production unchanged.**
+
+1. **Cohort classification:** GFS-432 reported 209 active no-method orders; the current readback is 210. Five sanitized recent traces were `DETAILS_COMPLETED`, `paymentMethod=NONE`, and `paymentInstructionStatus=NOT_SENT`. Several had +15 `SENT`/`DELIVERED`/`READ` state but no later inbound response in the sampled trace. This is consistent with customer non-response or incomplete state; no reminder causation is claimed.
+2. **Delivery-failed classification:** the current cohort is 22 payment-instruction delivery failures, not courier delivery failures. Selected methods across the cohort were JazzCash12, Easypaisa7 and Bank Transfer3. Current method configuration remains enabled/`READY` with EN/UR instructions.
+3. **Failure evidence:** a bounded read-only D1 aggregate found 19 five-attempt `DEAD_LETTER` jobs with `PAYMENT_TEXT_DELIVERY_FAILED` and 8 zero-attempt `PERMANENT_FAILURE` jobs with `GFS177_PAYMENT_METHODS_DISABLED`; rows written 0. Existing dated evidence places the 19 dead letters on 2026-10-23 through 2026-10-25. The separate elevated-shell age recheck could not use the existing OAuth session, so no newer timing claim is made.
+4. **Defects/repairs:** no reproducible checkout, payment-instruction, WhatsApp or recovery source defect was proven. No source repair, customer-copy change, recovery-timing change, reminder, replay, deletion or payment configuration change was made.
+5. **Protected flows:** JazzCash, Easypaisa and Bank Transfer remained untouched; API health was 200 with WhatsApp enabled; EN/UR, COD PKR125, Advance, PAID, orders, webhook, Queue/DLQ, Cron, D1 bindings and number separation were not mutated.
+6. **COD/CAPI:** GFS-426 manual COD and GFS-431 local CAPI acceptance remain PASS locally and undeployed; live CAPI remains OFF. No real PAID action, Meta event, backfill or customer traffic was generated.
+7. **Monitoring/release:** `GFS-Cloudflare-Analytics-Monitor` remains absent. GraphQL and five-minute monitoring are BLOCKED, and GFS-426 release remains blocked pending secure credential availability, authenticated monitoring and separate owner release approval. No token experiment was repeated.
+8. **Tests/Git:** no source code changed, so prior GFS-431 evidence is carried: full 372/372, focused 29/29, build/lint PASS, observability 6/6, adapter 8/8 and deadline/rollback 18/18. The V1 rollback fixture remains BLOCKED by missing `GFS_LEGACY_ROOT`. Documentation changes are validated with `git diff --check` before commit.
+9. **Routing/completion:** protected routing remains API `b426ba47` 100% / `e8018f3f` 0% and Admin `e8c96c96` 100% / `ee9b7baa` 0%. GFS-433 cohort review 100%; local COD/CAPI 100%; production release 0%/BLOCKED; live monitoring BLOCKED; broader P0/P1/P2 readiness UNKNOWN where live evidence is unavailable.
+10. **Next highest-value task:** approve one bounded read-only provider/error-eligibility reconciliation for the 19 payment-instruction dead letters. Do not replay or alter customer/payment state unless that evidence proves a current defect and receives separate approval.
+
 ## GFS-432 - improve WhatsApp order conversion review (2026-11-02 PKT)
 
 **Overall: read-only conversion review PASS; no proven source defect; production unchanged.**

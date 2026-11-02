@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-02 - GFS-433 bounded pending-order bottleneck review
+
+- Classified the current active no-method cohort as 210 (GFS-432 snapshot 209): five sanitized recent traces showed no method and no payment-instruction send, with some recovery delivery/read states and no sampled follow-up response. No causation was inferred.
+- Distinguished 22 payment-instruction delivery failures from courier delivery failures. A bounded, zero-write D1 aggregate found 19 five-attempt `PAYMENT_TEXT_DELIVERY_FAILED` dead letters and 8 `GFS177_PAYMENT_METHODS_DISABLED` permanent failures; no replay or deletion occurred.
+- Found no reproducible source defect. Preserved all three working Advance methods, EN/UR, COD, WhatsApp, recovery and CAPI OFF. No source code or production behavior changed.
+- Kept monitoring and GFS-426 release blocked by the already recorded absent Analytics credential; no repeated token attempt was made.
+
 ## 2026-11-02 - GFS-432 read-only WhatsApp conversion review
 
 - Captured bounded aggregate funnel evidence: rolling 24h 116 submitted orders (69 COD, 12 Advance, 35 no method); 7-day UTC 21,620 inbound events and 589 submitted orders.

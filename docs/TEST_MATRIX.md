@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-433 - bounded pending-order review (2026-11-02 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| No-method classification | PASS / NONE PROVEN | Current bounded Admin cohort 210; five sanitized recent traces showed `DETAILS_COMPLETED`, no method and no payment-instruction send. Recovery statuses were observed without causal claim. |
+| Delivery-failed classification | PASS / NOT COURIER | Cohort 22; selected Advance methods and failed payment-instruction state. No courier delivery state was used to classify this cohort. |
+| Payment-instruction failure aggregate | PASS READ-ONLY | D1 aggregate: 19 five-attempt `DEAD_LETTER` / `PAYMENT_TEXT_DELIVERY_FAILED`, 8 zero-attempt `PERMANENT_FAILURE` / `GFS177_PAYMENT_METHODS_DISABLED`; rows written 0; no identifiers recorded. |
+| Advance protection | PASS | JazzCash, Easypaisa and Bank Transfer remained enabled/`READY` with EN/UR instructions; no configuration, receipt or payment-state mutation. |
+| WhatsApp/order safety | PASS | API health 200 with WhatsApp enabled; no send, replay, Queue, Cron, D1 or customer mutation. |
+| Source repair | NOT NEEDED | No reproducible customer-impacting source defect was isolated; no runtime code changed. |
+| Existing regression | CARRIED | GFS-431 full 372/372, focused 29/29, build/lint and safety suites remain valid because no source code changed. |
+| Live monitoring | BLOCKED | `GFS-Cloudflare-Analytics-Monitor` remains absent; no token recreation or bypass. |
+
 ## GFS-432 - read-only conversion evidence (2026-11-02 PKT)
 
 | Area | Result | Evidence |

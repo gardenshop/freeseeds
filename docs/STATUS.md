@@ -1,5 +1,15 @@
 # Status
 
+## GFS-433 - bounded pending-order bottleneck review (2026-11-02 PKT)
+
+**Disposition: review PASS; no source defect proven; production and payment methods unchanged.**
+
+- **Cohort classification:** GFS-432 reported 209 active no-method orders; the current bounded Admin readback is 210. Five sanitized recent traces were still `DETAILS_COMPLETED`, method `NONE`, instruction `NOT_SENT`; several showed +15 delivery/read state without a later sampled inbound response. No reminder causation is claimed.
+- **Delivery-failed distinction:** the active cohort is 22 payment-instruction failures, not courier delivery failures. Its selected-method distribution is JazzCash12, Easypaisa7 and Bank Transfer3. Current `/api/payment-methods` remains enabled/`READY` for all three with EN/UR instructions.
+- **D1 evidence:** bounded aggregate returned 19 five-attempt `DEAD_LETTER` jobs with `PAYMENT_TEXT_DELIVERY_FAILED` and 8 zero-attempt `PERMANENT_FAILURE` jobs with `GFS177_PAYMENT_METHODS_DISABLED`; rows written 0. Existing dated evidence places the 19 dead letters on 2026-10-23 through 2026-10-25. No replay, deletion or payment-state edit occurred.
+- **Finding:** no reproducible checkout, payment-instruction, WhatsApp or recovery source defect was isolated. No code repair, copy change, reminder change, payment configuration change or deployment is justified by this evidence.
+- **Protection:** API/Admin remain the verified 100/0 baseline; EN/UR, COD PKR125, Advance, PAID, recovery, webhook, Queue/DLQ, Cron, D1 bindings and number isolation were not mutated. `GFS-Cloudflare-Analytics-Monitor` remains absent; GraphQL/five-minute monitoring and GFS-426 release remain blocked.
+
 ## GFS-432 - read-only WhatsApp conversion review (2026-11-02 PKT)
 
 **Disposition: review PASS; no local source repair justified; production remains frozen.**

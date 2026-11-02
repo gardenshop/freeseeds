@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-433 - pending-order review evidence (2026-11-02 PKT)
+
+- **Identity/routing:** PR11 was read at the protected repository; authoritative prior readback remains API `b426ba47` 100% / `e8018f3f` 0% and Admin `e8c96c96` 100% / `ee9b7baa` 0%. No routing mutation occurred.
+- **Sanitized Admin traces:** current active no-method count 210; five recent traces showed `DETAILS_COMPLETED`, no selected method and `NOT_SENT` payment instructions. Delivery-failed count 22; selected-method distribution was JazzCash12, Easypaisa7 and Bank Transfer3.
+- **Sanitized D1 aggregate:** 19 `DEAD_LETTER`/five-attempt `PAYMENT_TEXT_DELIVERY_FAILED`; 8 `PERMANENT_FAILURE`/zero-attempt `GFS177_PAYMENT_METHODS_DISABLED`; rows written 0. No identifiers, message bodies, payment references, secrets or raw error payloads registered.
+- **Payment boundary:** all three owner-frozen methods remained enabled/`READY` with EN/UR instructions. No outbox replay, payment edit, receipt edit, D1 mutation or customer message occurred.
+- **Monitoring:** `GFS-Cloudflare-Analytics-Monitor` remains absent from Windows Credential Manager; GraphQL/five-minute qualification is unavailable and no replacement token was created.
+
 ## GFS-432 - conversion review evidence (2026-11-02 PKT)
 
 - **Verified identities:** GitHub `gardenshop/freeseeds` PR11 at `3c8bd0be`; Cloudflare `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta app `2354726831735899`. Hoja apps were not used.

@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-433 bounded pending-order review boundary (2026-11-02 PKT)
+
+- GFS-433 used authenticated Admin aggregate reads, five sanitized recent traces per cohort, one bounded D1 aggregate and public API health only. No order, payment, D1, Queue, Cron, flag, routing, Meta, CAPI, reminder or customer-message mutation occurred.
+- The earlier GFS-432 active no-method count was 209; the current readback is 210. Sampled rows are `DETAILS_COMPLETED` with `paymentMethod=NONE` and `paymentInstructionStatus=NOT_SENT`. Some had +15 `SENT`/`DELIVERED`/`READ` records and no later inbound response in the sampled trace. This supports customer non-response or incomplete state, not a source defect or reminder causation.
+- The current delivery-failed cohort is 22. Its bounded rows have a selected Advance method and failed payment-instruction delivery, not courier delivery failure. Cohort distribution is JazzCash12, Easypaisa7 and Bank Transfer3. Current method rows remain enabled/`READY` with EN/UR instructions.
+- A sanitized D1 aggregate returned 19 `DEAD_LETTER` jobs at five attempts with `PAYMENT_TEXT_DELIVERY_FAILED` and 8 `PERMANENT_FAILURE` jobs with `GFS177_PAYMENT_METHODS_DISABLED`; no identifiers or error payloads were recorded and the query wrote zero rows. Existing evidence dates the 19 dead letters to 2026-10-23 through 2026-10-25; no new timing classification is claimed from the failed elevated-shell recheck.
+- No reproducible source defect was proven. Do not replay dead letters, change payment methods, alter copy/recovery timing, add reminders, or deploy GFS-426 without separate evidence and approval. The next safe task is provider/error-eligibility reconciliation for the 19 dead letters before any remediation decision.
+
 ## GFS-432 read-only conversion review boundary (2026-11-02 PKT)
 
 - Identity/routing readback: GitHub PR11 is `3c8bd0be`; Cloudflare is `gisupp@gmail.com` in Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API `b426ba47` 100% / `e8018f3f` 0%; Admin `e8c96c96` 100% / `ee9b7baa` 0%. Canonical Meta app remains Get Free Seeds; Hoja resources remain excluded.
