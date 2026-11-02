@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-427 WhatsApp incident boundary (2026-11-02 PKT)
+
+- The suspected stop at `2026-11-02 22:38:31 PKT` (`17:38:31Z`) is **DISPROVEN** for the active WhatsApp service. Read-only live evidence recorded 24 inbound events after that boundary (latest `17:56:41.614Z`), delivery/read/sent callbacks through `17:56:48.590Z`, zero Worker errors, Queue backlog/retries zero, and a successful Admin Conversations refresh at `22:57:43 PKT` with stale-data age `0s`.
+- The active service is named `getfreeseeds-api-staging` / `getfreeseeds-admin-staging` but is the service carrying the verified live versions/API health and the bound `getfreeseeds-staging` D1 database. The separately configured `getfreeseeds-prod` database does not contain the active WhatsApp tables. Treat this as a documented namespace/provenance boundary; do not reroute, migrate, or change bindings without separate approval.
+- A fresh completed order after the boundary was not observed: latest order creation was `17:36:42.219Z`, while 114 orders exist in the preceding 24 hours. Do not create synthetic customer orders/messages to fill that evidence gap. Continued inbound/outbound activity means this is not evidence of a checkout outage.
+- CAPI Lead outbox records remain intentionally PENDING while CAPI is OFF; historic CAPI Purchase/payment-instruction dead letters are not an active WhatsApp failure and must not be replayed.
+
 ## GFS-426 owner-approved manual COD settlement policy (2026-11-02 PKT)
 
 - **Supersedes GFS-425 courier SOP:** the owner may confirm COD settlement from a genuine courier payment confirmation/list. No courier API, separate evidence upload, complicated reconciliation or invented evidence is required.

@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-427 — WhatsApp incident live verification (2026-11-02 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Meta webhook subscription | PASS | Canonical Get Free Seeds app subscription for `whatsapp_business_account/messages` is enabled against the active API origin. |
+| Inbound/outbound continuity | PASS | 24 post-boundary inbound events; latest inbound `17:56:41.614Z`; outbound callback activity through `17:56:48.590Z`. |
+| Active API health | PASS | `b426ba47`100%, 14.49k last-24h invocations, Worker errors0; `/health` reports WhatsApp enabled. |
+| Queue consumption | PASS | 52 ingested/52 acknowledged, retries0, realtime backlog0, average lag about5.7s. |
+| Admin freshness | PASS | Reloaded Conversations list/summary/detail all HTTP200; success `22:57:43 PKT`, stale age0s. |
+| Fresh completed order after boundary | UNKNOWN | No new order after `17:38:31Z`; latest was `17:36:42.219Z`. No synthetic order/message was authorized. |
+| Production mutation | PASS | None performed. |
+
 ## GFS-426 — manual COD confirmation and CAPI (2026-11-02 PKT)
 
 | Area | Result | Evidence |

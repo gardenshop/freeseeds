@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-427 — live incident resources (2026-11-02 PKT)
+
+- **Active API:** `getfreeseeds-api-staging`, version `b426ba47`100%; `/health` reports `PRODUCTION_INTEGRATION_READY` and WhatsApp enabled.
+- **Active data/queue:** `getfreeseeds-staging` D1 and `getfreeseeds-events-staging` Queue are the bound serving resources. Queue metrics: backlog0/retry0 in this investigation.
+- **Meta:** Get Free Seeds app `2354726831735899`, enabled `whatsapp_business_account/messages` subscription to the active API origin. No Meta mutation.
+- **Boundary:** similarly named `getfreeseeds-prod` does not hold active WhatsApp tables; record only, no binding/routing change.
+
 ## GFS-426 — manual COD and CAPI resources (2026-11-02 PKT)
 
 - **Admin endpoint:** local-only `/api/orders/:id/mark-payment-received`; eligible `COLLECTION_PENDING` COD only; exact quote, CSRF/Admin authorization, atomic PAID and idempotent audit guards.

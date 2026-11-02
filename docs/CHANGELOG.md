@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-02 — GFS-427 WhatsApp production recovery investigation
+
+- Disproved the suspected WhatsApp outage using authenticated, aggregate-only live evidence; no restoration was needed or performed.
+- Documented the active `-staging` service/D1 namespace, live Queue/Admin/API continuity, and the absence of a fresh post-boundary order without manufacturing traffic.
+
 ## 2026-11-02 — GFS-426 manual COD confirmation and CAPI readiness
 
 - Added local Admin-only `Mark Payment Received` for eligible COD orders, with exact amount, authenticated audit, atomic PAID transition and idempotent repeat handling.

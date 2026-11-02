@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-427 — no production restoration for disproven outage (2026-11-02 PKT)
+
+**Decision:** do not roll back, redeploy, replay queues, alter Meta webhook configuration, or change recovery/payment flags. The active API, Meta webhook subscription, Queue, D1 events and Admin refresh all showed activity after the reported timestamp.
+
+The `-staging` service/database names are recorded as the currently serving namespace, not an authorization to change environment bindings. A future owner-approved provenance task may reconcile names/bindings only after an independent rollback plan. CAPI Lead PENDING records remain deferred while CAPI is OFF.
+
 ## GFS-426 — supersede courier SOP with one manual COD confirmation (2026-11-02 PKT)
 
 **Decision:** replace GFS-425’s complex courier-evidence requirement with one authorized Admin confirmation based on genuine courier settlement confirmation or payment list. The local endpoint reuses existing COD state guards and atomically records the exact quoted amount, authenticated operator, timestamp and PAID transition. No courier API, evidence upload or bulk action is introduced.

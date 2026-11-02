@@ -1,5 +1,16 @@
 # Status
 
+## GFS-427 — WhatsApp production recovery investigation (2026-11-02 PKT)
+
+**Disposition: OUTAGE DISPROVEN; no restoration or deployment required.**
+
+- **Ingress/replies:** after `22:38:31 PKT`, active D1 recorded 24 inbound events; latest inbound was `22:56:41.614 PKT`. Status callbacks continued to `22:56:48.590 PKT`; post-boundary outbound rows include SENT, DELIVERED and READ states.
+- **Worker/Queue:** active API `b426ba47` remains 100% with 0 Worker errors across 14.49k last-24h invocations and successful Meta Graph subrequests. Queue had 52 ingested/52 acknowledged, retry0, realtime backlog0 and average consumer lag about5.7s.
+- **Admin:** authenticated Conversations refresh returned API200 for list, summary and selected conversation and reported last success `22:57:43 PKT`, stale-data age0s. The isolated browser 404 has no associated Conversations API failure.
+- **Orders:** latest creation was `22:36:42.219 PKT`, before the reported boundary; 114 orders were created in the preceding24h. This is an observed order lull, not grounds for a synthetic test or production restoration.
+- **Provenance:** live serving resources retain their `-staging` names and bind `getfreeseeds-staging`; the separately named prod database lacks active WhatsApp tables. No drift or outage was proven, and no routing/binding change is authorized.
+- **Protection:** no D1 write, deployment, flag, payment, queue replay, Cron, Meta change or customer message occurred. GFS-426 remains local-only; CAPI remains OFF.
+
 ## GFS-426 — manual COD payment confirmation and Meta CAPI (2026-11-02 PKT)
 
 **Disposition: PASS locally; BLOCKED for production release, PAID mutation and Meta activation.**
