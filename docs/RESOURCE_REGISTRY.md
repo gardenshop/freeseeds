@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-415 — Admin routing read-only evidence (2026-11-02 PKT)
+
+- **Cloudflare:** protected Get Free Seeds account URL verified; Admin active `e8c96c96`97.2% and candidate `ee9b7baa`2.8%; API active `b426ba47`100% and candidate `e8018f3f`0%.
+- **GitHub/Meta:** `gardenshop/freeseeds` PR #11 and Meta business `568026370701542`, account `1198439777611633` matched the protected records.
+- **Monitoring:** Admin Orders and Conversations loaded through Access. Browser `/health`403 was expected; service-auth health200, rollback and five-minute monitoring were not re-established. No rollout control was invoked.
+
 ## GFS-414 — fresh reconciliation and readiness evidence (2026-11-02 PKT)
 
 - **Routing:** API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`97.2% / `ee9b7baa`2.8% on the fresh Cloudflare read. Candidate exposure is not authorized; no correction made.

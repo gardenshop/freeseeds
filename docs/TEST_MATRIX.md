@@ -1,5 +1,15 @@
 # Test Matrix
 
+## GFS-415 — Admin baseline restoration (2026-11-02 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Identity and exact routing read | PASS | GitHub PR11/remote SHA verified; API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`97.2% / `ee9b7baa`2.8%; Meta identifiers matched protected target. |
+| Admin functional read | PASS | Authenticated Orders and Conversations loaded; no customer-bearing data retained. |
+| Authenticated health/rollback monitoring gate | BLOCKED | Browser `/health`403 is Access-protected; service-auth health200, rollback proof and five-minute monitor were unavailable. |
+| Admin routing correction | NOT RUN | Official MCP refused live rollout control without explicit owner confirmation of the exact mutation. |
+| Protected-state safety | PASS | No API, recovery, payment, D1, migration, Meta, Cron, Queue/DLQ or customer-message mutation. |
+
 ## GFS-414 — recovery reconciliation and P0 readiness (2026-11-02 PKT)
 
 | Area | Result | Evidence |

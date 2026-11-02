@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-02 — GFS-415 Admin baseline restoration boundary
+
+- Freshly rechecked Admin drift at `e8c96c96`97.2% / `ee9b7baa`2.8% and API isolation at `b426ba47`100% / `e8018f3f`0%.
+- Confirmed authenticated Orders/Conversations access, but stopped before the live rollout control because service-auth health/monitoring and explicit mutation confirmation were not available. No production mutation.
+
 ## 2026-11-02 — GFS-414 recovery reconciliation and P0 readiness
 
 - Freshly verified API100%/0% and detected Admin97.2%/2.8% candidate exposure; no routing mutation performed.

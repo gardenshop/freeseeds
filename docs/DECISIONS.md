@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-415 — stop before Admin traffic mutation (2026-11-02 PKT)
+
+**Decision:** do not change routing in this session. Fresh read confirms the unexpected Admin `e8c96c96`97.2% / `ee9b7baa`2.8% split and API isolation, but the required service-auth health/monitoring gate is unavailable. The official Chrome MCP also requires explicit confirmation before invoking the live rollout control.
+
+**Next approval:** explicitly authorize exactly one Admin-only correction to `e8c96c96`100% / `ee9b7baa`0%, after service-auth health, Access, bindings and rollback are freshly verified; then monitor authenticated health, Orders, Conversations, Analytics, GraphQL errors and API isolation for five minutes. Do not alter API routing or any protected WhatsApp/payment/D1/Meta state.
+
 ## GFS-414 — preserve effective recovery, stop on Admin traffic drift (2026-11-02 PKT)
 
 **Decision:** do not mutate recovery or routing. The effective recovery ON state remains untouched because read-only evidence shows activity but no owner authorization/provenance for the later setting; it is neither certified safe nor automatically disabled. Admin candidate traffic at2.8% is an unapproved release exposure and blocks product release.

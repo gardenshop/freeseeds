@@ -1,5 +1,13 @@
 # Status
 
+## GFS-415 — restore Admin 100% baseline (2026-11-02 PKT)
+
+**Disposition: BLOCKED safely before mutation.**
+
+- Fresh Cloudflare deployment read confirms Admin `e8c96c96`97.2% / `ee9b7baa`2.8%; API independently reads `b426ba47`100% / `e8018f3f`0%. GitHub PR #11 is open at remote SHA `7dd82687d48a171fffbce4f50d1530f0835e1688`; the protected Cloudflare and Meta account identifiers match the documented targets.
+- Authenticated Admin Orders and Conversations pages loaded. Browser `/health` returned Access403 as expected, but the required service-auth health200 and five-minute monitoring evidence were unavailable. The deployment UI exposed a live traffic control, but the official MCP safety gate refused an unidentified mutation without explicit owner confirmation.
+- No routing, deployment, flag, recovery, payment/order, D1, migration, Meta, Cron, Queue/DLQ or customer-message mutation occurred. Recovery ON/start remains untouched; cancellation and retention remain deferred.
+
 ## GFS-414 — recovery reconciliation and P0 readiness (2026-11-02 PKT)
 
 **Disposition: PASS for read-only reconciliation and local repair; BLOCKED for production release. No production mutation.**

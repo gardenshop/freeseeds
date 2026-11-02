@@ -1,5 +1,14 @@
 # Final Report
 
+## GFS-415 — Admin baseline restoration (2026-11-02 PKT)
+
+**Overall: BLOCKED before production mutation.**
+
+- **Routing:** fresh read is Admin `e8c96c96`97.2% / `ee9b7baa`2.8%; API `b426ba47`100% / `e8018f3f`0%. The Admin candidate exposure remains unapproved and was not corrected.
+- **Gates:** GitHub/Cloudflare/Meta identifiers matched the protected targets; authenticated Orders and Conversations loaded. Browser `/health` returned Access403, but service-auth health200, tested rollback and five-minute monitoring were unavailable. The official MCP refused the live rollout control without explicit mutation confirmation.
+- **Protection:** recovery ON/start, COD/Advance, WhatsApp ordering, D1, migration history, Queue/DLQ, Cron, Meta, API routing and customer traffic were untouched. No source change was made; prior 363-test/build/lint evidence remains valid.
+- **Next exact approval:** explicitly authorize one Admin-only correction to `e8c96c96`100% / `ee9b7baa`0% only after the service-auth health/rollback/monitoring gate is restored; monitor five minutes and stop on any failure.
+
 ## GFS-414 — recovery reconciliation and P0 release readiness (2026-11-02 PKT)
 
 **Overall: PASS for read-only reconciliation and local repair; BLOCKED for production release.**

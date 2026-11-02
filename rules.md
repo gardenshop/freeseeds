@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-415 Admin baseline restoration boundary (2026-11-02 PKT)
+
+- Fresh official Chrome/Cloudflare read: API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`97.2% / `ee9b7baa`2.8%. GitHub readback is `gardenshop/freeseeds` PR #11; Cloudflare account URL is the protected Get Free Seeds account; Meta Ads session remains on business `568026370701542`, account `1198439777611633`.
+- Admin Orders and Conversations loaded through authenticated Access. Browser `/health` returned the expected Access-protected403; no service-auth health200 or five-minute monitoring proof was available in this session. No routing mutation was performed.
+- The rollout percentage control is a live deployment mutation. Do not click or invoke it without explicit owner confirmation of this exact Admin-only correction, verified rollback and authenticated monitoring. API, recovery, payments, D1, Meta, Cron, Queue/DLQ and customer traffic remain untouched.
+
 ## GFS-414 recovery reconciliation and P0 readiness boundary (2026-11-02 PKT)
 
 - **Fresh routing read:** API `b426ba47`100% / `e8018f3f`0%; Admin unexpectedly `e8c96c96`97.2% / `ee9b7baa`2.8%. Do not correct routing without a separate identity-verified routing approval; treat any candidate traffic as unapproved exposure.
