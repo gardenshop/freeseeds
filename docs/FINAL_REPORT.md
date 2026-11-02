@@ -1,5 +1,18 @@
 # Final Report
 
+## GFS-443 - GraphQL HTTP400 repair and monitoring gate (2026-11-03 PKT)
+
+**Overall: local GraphQL repair PASS; live monitoring WAITING FOR OWNER RETEST; GFS-426 remains safely release-blocked.**
+
+1. **Root cause/fix:** owner sample 1 reached Cloudflare and returned sanitized HTTP400 because `accountTag` and `scriptName` were declared as uppercase `String!`. Cloudflare's official Workers Analytics schema examples use lowercase `string!`; only those two declarations changed. `Time!` and all security/freshness/error gates remain unchanged.
+2. **Regression:** HTTP400 mock for the old declarations and successful corrected-query path pass. No token, Authorization header, raw provider body or customer data was recorded.
+3. **Local tests:** observability 8/8; full suite 372/372; build/lint PASS; adapter 8/8; deadline/rollback controller 18/18. V1 fixture remains blocked by missing `GFS_LEGACY_ROOT`.
+4. **Live qualification:** not yet PASS. Owner must rerun the existing credential bridge after this fix and provide three sanitized checkpoints spanning five minutes with GraphQL HTTP200/errors0/freshness, account/Worker identity, health/denial/isolation, exact routing, security/budget and rollback evidence.
+5. **Release:** GFS-426 Mark Payment Received remains local PASS372/372 and undeployed. No candidate upload, promotion, real PAID action, CAPI activation, payment/configuration change, routing change, D1 write or customer message occurred.
+6. **Protection:** API `b426ba47` 100% / `e8018f3f` 0%; Admin `e8c96c96` 100% / `ee9b7baa` 0% carried from verified baseline. Advance methods, WhatsApp EN/UR, COD PKR125, recovery, webhook, Queue/DLQ, Cron and D1 remain untouched.
+7. **Completion:** local repair 100%; live monitoring 0%/WAITING FOR OWNER RETEST; local COD/CAPI 100%; production release 0%; protected production 100%.
+8. **Next action:** owner runs the existing bridge three times at approximately 0/150/300 seconds and returns sanitized results only; if all gates pass, request separate Admin-only GFS-426 0% validation/release approval.
+
 ## GFS-441 - final monitoring assertion hardening and COD readiness (2026-11-03 PKT)
 
 **Overall: local monitoring gates PASS; live qualification WAITING FOR OWNER RUN; GFS-426 remains release-blocked safely.**

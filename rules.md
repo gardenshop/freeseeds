@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-443 GraphQL schema repair boundary (2026-11-03 PKT)
+
+- Owner-session evidence superseded GFS-442 waiting status with a sanitized `graphql_http_failure` at metrics fetch, HTTP400. Credentials and the existing bridge reached Cloudflare; no credential investigation or recreation was repeated.
+- Root cause was the Workers GraphQL variable declaration using uppercase `String!` for `accountTag` and `scriptName`. Cloudflare's official Workers Analytics examples require lowercase `string!`; `Time!` remains unchanged. The query now uses the documented scalar names.
+- Added a regression mock that returns sanitized HTTP400 for the old declarations and passes only for lowercase `string!`. No Authorization header, token, raw provider body, customer data or secret is recorded.
+- Local observability is PASS 8/8; full suite 372/372; build/lint PASS; adapter 8/8; deadline/rollback controller 18/18. Standalone V1 rollback remains unavailable only because `GFS_LEGACY_ROOT` is not configured.
+- Owner must rerun the existing bridge after this source fix and provide three sanitized samples spanning five minutes. HTTP200/errors0, account/Worker identity, freshness, health/denial/isolation, exact routing, security/budget and rollback are required before GFS-426 release approval. No production mutation occurred.
+
 ## GFS-441 monitoring assertion boundary (2026-11-03 PKT)
 
 - Local observability now fails closed unless each GraphQL response has exactly one filtered account, the expected Worker script identity, integer metrics, zero reported Worker errors, and a valid latest timestamp. Freshness is limited to the 10-minute query window plus 5-minute ingestion allowance (15 minutes), with one-minute future skew allowed.

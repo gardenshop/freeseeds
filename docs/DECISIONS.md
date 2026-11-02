@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-443 - correct GraphQL scalar declarations and hold release for owner retest (2026-11-03 PKT)
+
+**Decision:** change only `accountTag` and `scriptName` from `String!` to the Cloudflare-documented lowercase `string!`. Preserve `Time!`, query filters, identity checks, freshness limits, zero-error checks and fail-closed handling.
+
+**Evidence:** owner sample 1 returned sanitized metrics HTTP400 after reaching Cloudflare. Local regression reproduces the schema rejection for uppercase declarations and passes with lowercase declarations. No production resource was changed.
+
+**Release boundary:** owner reruns the existing bridge in the credential-owning session and returns three sanitized checkpoints spanning five minutes. Do not upload, validate, promote GFS-426, activate CAPI or mutate production until all monitoring/rollback gates and separate release approval pass.
+
 ## GFS-441 - accept local monitoring hardening; hold live release for owner run (2026-11-03 PKT)
 
 **Decision:** accept the minimal observability assertions and synthetic tests. The adapter now rejects missing/malformed/stale/future metrics, nonzero Worker errors, wrong account/Worker identity, and non-single-account responses. Freshness is 15 minutes from a 10-minute query plus 5-minute ingestion allowance.

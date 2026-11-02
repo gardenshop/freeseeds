@@ -56,6 +56,27 @@ test("classifies GraphQL HTTP200 errors, HTTP failures, invalid JSON and timeout
   }
 });
 
+test("uses Cloudflare lowercase string scalars and avoids the schema HTTP400", async () => {
+  const now = new Date("2026-11-03T10:01:00Z");
+  const observability = createCloudflareObservability({
+    accountTag: "account",
+    analyticsToken: "synthetic-token",
+    now: () => now,
+    fetchImpl: async (_url, options) => {
+      const { query } = JSON.parse(options.body);
+      if (/\$accountTag: String!|\$scriptName: String!/.test(query)) {
+        return { ok: false, status: 400, json: async () => ({ errors: [{ message: "schema validation failed" }] }) };
+      }
+      assert.match(query, /\$accountTag: string!/);
+      assert.match(query, /\$scriptName: string!/);
+      return { ok: true, status: 200, json: async () => ({ data: { viewer: { accounts: [{ workersInvocationsAdaptive: [{ dimensions: { datetime: "2026-11-03T10:00:00Z", scriptName: worker.name }, sum: { requests: 1, errors: 0 } }] }] } } }) };
+    }
+  });
+  const metrics = await observability.readMetrics(worker);
+  assert.equal(metrics.errors, 0);
+  assert.equal(metrics.worker, worker.name);
+});
+
 test("credential bridge validates both values and creates only Access headers", () => {
   assert.equal(readAccessCredentials({}), null);
   assert.throws(() => readAccessCredentials({ GFS_ACCESS_CLIENT_ID: "id" }, { required: true }), /access_credentials_unavailable/);

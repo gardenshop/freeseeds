@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-443 - GraphQL HTTP400 repair (2026-11-03 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| GraphQL schema correction | PASS | `accountTag`/`scriptName` now use lowercase `string!`; `Time!` unchanged, matching official Cloudflare Workers Analytics examples. |
+| HTTP400 regression | PASS | Sanitized mock rejects old uppercase declarations with HTTP400 and accepts the corrected query. |
+| Observability | PASS 8/8 | Existing fail-closed identity, freshness, zero-error and response-shape tests plus the HTTP400 regression. |
+| Full regression | PASS 372/372 | Vitest suite. |
+| Build/lint | PASS | `npm run build`; `npm run lint`. |
+| Adapter/deadline rollback | PASS | Adapter 8/8; deadline/rollback controller 18/18. |
+| Owner live qualification | WAITING FOR OWNER RETEST | Three sanitized checkpoints over five minutes required after the fix. |
+| V1 rollback fixture | BLOCKED | `GFS_LEGACY_ROOT` unavailable; no protected checkout modified. |
+| Production mutation | NONE | No deployment, routing, payment, D1, Meta, CAPI, Queue, Cron or customer change. |
+
 ## GFS-441 - monitoring assertion hardening (2026-11-03 PKT)
 
 | Area | Result | Evidence |

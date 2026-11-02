@@ -1,5 +1,14 @@
 # Status
 
+## GFS-443 - GraphQL HTTP400 repaired; owner retest required (2026-11-03 PKT)
+
+**Disposition: local repair PASS; live qualification WAITING FOR OWNER RETEST; production unchanged.**
+
+- Owner sample 1 reached Cloudflare and failed at metrics fetch with sanitized HTTP400. Root cause was uppercase `String!` declarations for `accountTag` and `scriptName`; Cloudflare's documented Workers GraphQL schema uses lowercase `string!`. `Time!` was retained.
+- Added a regression test that models HTTP400 for the old scalar declarations and accepts only the corrected query. No secret, header, raw provider body or customer data is retained.
+- Observability 8/8, full 372/372, build/lint, adapter 8/8 and deadline/rollback 18/18 pass. V1 rollback fixture remains blocked by missing `GFS_LEGACY_ROOT`.
+- Three owner-session samples over five minutes are still required. GFS-426 remains local PASS372/372 and undeployed; CAPI, API/Admin routing, payments, WhatsApp, D1, Queue and Cron are unchanged.
+
 ## GFS-441 - monitoring assertions hardened; owner run pending (2026-11-03 PKT)
 
 **Disposition: local monitoring gates PASS; live qualification WAITING FOR OWNER RUN; production unchanged.**

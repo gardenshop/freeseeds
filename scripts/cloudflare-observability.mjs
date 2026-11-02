@@ -9,7 +9,7 @@ const GRAPHQL_URL = "https://api.cloudflare.com/client/v4/graphql";
 const DEFAULT_METRICS_WINDOW_MS = 10 * 60 * 1000;
 const DEFAULT_INGESTION_LATENCY_MS = 5 * 60 * 1000;
 const DEFAULT_FUTURE_SKEW_MS = 60 * 1000;
-const WORKERS_QUERY = `query Workers($accountTag: String!, $start: Time!, $end: Time!, $scriptName: String!) {
+const WORKERS_QUERY = `query Workers($accountTag: string!, $start: Time!, $end: Time!, $scriptName: string!) {
   viewer { accounts(filter: { accountTag: $accountTag }) {
     workersInvocationsAdaptive(limit: 100, filter: { scriptName: $scriptName, datetime_geq: $start, datetime_leq: $end }) {
       dimensions { datetime scriptName status }

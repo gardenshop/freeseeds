@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-443 GraphQL repair resources (2026-11-03 PKT)
+
+- **Query:** `scripts/cloudflare-observability.mjs`; Workers GraphQL variables now declare `accountTag` and `scriptName` as lowercase `string!`, with `Time!` unchanged.
+- **Regression:** `scripts/test-cloudflare-observability.mjs` models the sanitized HTTP400 caused by the old declarations and verifies the corrected request without retaining secrets or raw response data.
+- **Evidence:** owner sample 1 reached Cloudflare and returned metrics HTTP400; local observability 8/8, full 372/372, build/lint, adapter 8/8 and deadline/rollback 18/18 pass.
+- **Live gate:** owner-session bridge retest with three checkpoints over five minutes remains required. GFS-426 is local-only; CAPI OFF; no production resource changed.
+
 ## GFS-441 monitoring qualification resources (2026-11-03 PKT)
 
 - **Local adapter:** `scripts/cloudflare-observability.mjs` now validates account/Worker identity, metric shape, zero Worker errors and timestamp freshness; query window is 10 minutes with 5-minute ingestion allowance.

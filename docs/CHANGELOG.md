@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 - GFS-443 GraphQL HTTP400 schema repair
+
+- Diagnosed owner-session sample 1's sanitized metrics HTTP400 as uppercase `String!` declarations for `accountTag` and `scriptName`; Cloudflare's official Workers Analytics examples use lowercase `string!`.
+- Corrected only those two scalar declarations and added an HTTP400 regression mock. Observability 8/8, full 372/372, build/lint, adapter 8/8 and deadline/rollback 18/18 pass.
+- Live qualification remains pending three sanitized owner-session samples over five minutes. No production, payment, routing, D1, Meta, CAPI, Queue, Cron or customer mutation occurred.
+
 ## 2026-11-03 - GFS-441 monitoring assertions and local qualification
 
 - Added fail-closed GraphQL account/Worker identity, zero-error, metric-presence and freshness checks; freshness uses a 10-minute query plus 5-minute ingestion allowance.
