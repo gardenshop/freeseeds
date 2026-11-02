@@ -6,6 +6,8 @@
 
 The `-staging` service/database names are recorded as the currently serving namespace, not an authorization to change environment bindings. A future owner-approved provenance task may reconcile names/bindings only after an independent rollback plan. CAPI Lead PENDING records remain deferred while CAPI is OFF.
 
+**Routing exception:** final readback found Admin `e8c96c96`97.8% / `ee9b7baa`2.2%. Do not treat its low traffic/rate as a safe or authorized canary. The incident does not authorize correction because WhatsApp remains healthy; request one explicit Admin-only100/0 restoration approval after monitoring and rollback qualification.
+
 ## GFS-426 — supersede courier SOP with one manual COD confirmation (2026-11-02 PKT)
 
 **Decision:** replace GFS-425’s complex courier-evidence requirement with one authorized Admin confirmation based on genuine courier settlement confirmation or payment list. The local endpoint reuses existing COD state guards and atomically records the exact quoted amount, authenticated operator, timestamp and PAID transition. No courier API, evidence upload or bulk action is introduced.

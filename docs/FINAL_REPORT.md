@@ -7,9 +7,9 @@
 1. **Incident:** the asserted boundary was `22:38:31 PKT` (`17:38:31Z`). Last inbound was `22:56:41.614 PKT`; latest outbound status callback was `22:56:48.590 PKT`; Admin refresh completed at `22:57:43 PKT` with stale age0s.
 2. **Root cause:** no WhatsApp/API/Queue/Admin outage was found. The screenshot reflected a selected conversation/order count and an earlier list timestamp, while fresh authenticated reads proved continued traffic. The only root-cause-adjacent finding is the established active-service namespace: serving resources use `-staging` names; no evidence supports changing that binding.
 3. **Recovery/E2E:** none performed or needed. Meta webhook subscription is enabled, API health is WhatsApp-enabled, active version `b426ba47` processed14.49k requests with errors0, and Queue consumed52/52 messages with no retry/backlog. Genuine fresh post-boundary completed-order evidence is UNKNOWN because no new order occurred after the boundary; no synthetic order/message was sent.
-4. **Safety:** API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%. Payments, recovery, D1, Queue, Meta and customer traffic were not mutated. CAPI stays OFF and GFS-426 stays local-only.
-5. **Completion:** incident diagnosis100%; restoration N/A; post-boundary completed-order E2E UNKNOWN; live monitoring credential remains BLOCKED; GFS-426 local manual settlement100% / production release0%.
-6. **Next task:** owner-approved, read-only provenance review of the active `-staging` namespace and a secure monitoring credential; only after those gates, consider the separate Admin-only GFS-426 release.
+4. **Safety/routing:** API `b426ba47`100% / `e8018f3f`0%. Fresh Admin readback is baseline `e8c96c96`97.8% / candidate `ee9b7baa`2.2%, an unapproved exposure unrelated to the WhatsApp incident. Payments, recovery, D1, Queue, Meta and customer traffic were not mutated. CAPI stays OFF and GFS-426 stays local-only.
+5. **Completion:** incident diagnosis100%; restoration N/A; post-boundary completed-order E2E UNKNOWN; live monitoring credential remains BLOCKED; Admin baseline restoration0% pending explicit approval; GFS-426 local manual settlement100% / production release0%.
+6. **Next task:** explicit owner approval for one Admin-only correction to `e8c96c96`100% / `ee9b7baa`0% after authenticated monitoring and rollback qualification. Do not bundle GFS-426 or any payment/CAPI change.
 
 ## GFS-426 — manual COD payment confirmation and Meta CAPI readiness (2026-11-02 PKT)
 

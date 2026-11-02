@@ -9,6 +9,7 @@
 - **Admin:** authenticated Conversations refresh returned API200 for list, summary and selected conversation and reported last success `22:57:43 PKT`, stale-data age0s. The isolated browser 404 has no associated Conversations API failure.
 - **Orders:** latest creation was `22:36:42.219 PKT`, before the reported boundary; 114 orders were created in the preceding24h. This is an observed order lull, not grounds for a synthetic test or production restoration.
 - **Provenance:** live serving resources retain their `-staging` names and bind `getfreeseeds-staging`; the separately named prod database lacks active WhatsApp tables. No drift or outage was proven, and no routing/binding change is authorized.
+- **Routing exception:** API is `b426ba47`100% / `e8018f3f`0%. Fresh Admin readback is `e8c96c96`97.8% / `ee9b7baa`2.2%, not the expected100/0. It is unrelated to the disproven WhatsApp incident, but is an unapproved candidate exposure requiring separate owner-approved restoration after monitoring/rollback gates.
 - **Protection:** no D1 write, deployment, flag, payment, queue replay, Cron, Meta change or customer message occurred. GFS-426 remains local-only; CAPI remains OFF.
 
 ## GFS-426 — manual COD payment confirmation and Meta CAPI (2026-11-02 PKT)

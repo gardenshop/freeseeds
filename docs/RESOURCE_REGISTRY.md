@@ -5,7 +5,8 @@
 - **Active API:** `getfreeseeds-api-staging`, version `b426ba47`100%; `/health` reports `PRODUCTION_INTEGRATION_READY` and WhatsApp enabled.
 - **Active data/queue:** `getfreeseeds-staging` D1 and `getfreeseeds-events-staging` Queue are the bound serving resources. Queue metrics: backlog0/retry0 in this investigation.
 - **Meta:** Get Free Seeds app `2354726831735899`, enabled `whatsapp_business_account/messages` subscription to the active API origin. No Meta mutation.
-- **Boundary:** similarly named `getfreeseeds-prod` does not hold active WhatsApp tables; record only, no binding/routing change.
+- **Routing boundary:** API `b426ba47`100% / `e8018f3f`0%; Admin baseline `e8c96c96`97.8% / candidate `ee9b7baa`2.2%. The Admin split is an unapproved exposure, not an authorized canary or an incident restoration action.
+- **Namespace boundary:** similarly named `getfreeseeds-prod` does not hold active WhatsApp tables; record only, no binding/routing change.
 
 ## GFS-426 — manual COD and CAPI resources (2026-11-02 PKT)
 

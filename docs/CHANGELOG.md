@@ -3,7 +3,7 @@
 ## 2026-11-02 — GFS-427 WhatsApp production recovery investigation
 
 - Disproved the suspected WhatsApp outage using authenticated, aggregate-only live evidence; no restoration was needed or performed.
-- Documented the active `-staging` service/D1 namespace, live Queue/Admin/API continuity, and the absence of a fresh post-boundary order without manufacturing traffic.
+- Documented the active `-staging` service/D1 namespace, live Queue/Admin/API continuity, absence of a fresh post-boundary order without manufacturing traffic, and the separate unapproved Admin97.8/2.2 routing exposure.
 
 ## 2026-11-02 — GFS-426 manual COD confirmation and CAPI readiness
 

@@ -9,6 +9,7 @@
 | Active API health | PASS | `b426ba47`100%, 14.49k last-24h invocations, Worker errors0; `/health` reports WhatsApp enabled. |
 | Queue consumption | PASS | 52 ingested/52 acknowledged, retries0, realtime backlog0, average lag about5.7s. |
 | Admin freshness | PASS | Reloaded Conversations list/summary/detail all HTTP200; success `22:57:43 PKT`, stale age0s. |
+| Admin routing | BLOCKED | Fresh Cloudflare readback: baseline `e8c96c96`97.8%, candidate `ee9b7baa`2.2%; no correction authorized in this incident task. |
 | Fresh completed order after boundary | UNKNOWN | No new order after `17:38:31Z`; latest was `17:36:42.219Z`. No synthetic order/message was authorized. |
 | Production mutation | PASS | None performed. |
 
