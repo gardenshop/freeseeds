@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-02 - GFS-432 read-only WhatsApp conversion review
+
+- Captured bounded aggregate funnel evidence: rolling 24h 116 submitted orders (69 COD, 12 Advance, 35 no method); 7-day UTC 21,620 inbound events and 589 submitted orders.
+- Read +15/+210 status distributions, no-method/delivery-failed/unpaid-after-delivery cohorts, and payment-method readiness without exposing customer records or changing state.
+- Verified API health 200/WhatsApp enabled and authoritative API/Admin 100/0 routing. No source defect was proven; no runtime repair, reminder change, payment change, deployment, CAPI activation or customer send occurred.
+- Carried the absent Analytics credential as the single external monitoring blocker without repeating token experiments.
+
 ## 2026-11-02 - GFS-431 local COD + CAPI acceptance
 
 - Added focused synthetic assertions for the GFS-426 Admin payable/confirmation UI contract.

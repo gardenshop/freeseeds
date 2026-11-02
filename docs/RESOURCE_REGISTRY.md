@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-432 - conversion review evidence (2026-11-02 PKT)
+
+- **Verified identities:** GitHub `gardenshop/freeseeds` PR11 at `3c8bd0be`; Cloudflare `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; canonical Meta app `2354726831735899`. Hoja apps were not used.
+- **Authoritative routing:** API deployment `0df1a5e2d-ca8a-4830-8da7-a92ce662eb42` serves `b426ba47` 100% / `e8018f3f` 0%; Admin deployment `034c190e-d233-4cab-9fa4-65aa068b1603` serves `e8c96c96` 100% / `ee9b7baa` 0%.
+- **Read-only resources:** authenticated Admin staging origin `getfreeseeds-admin-staging.get-free-seeds.workers.dev`; API staging health origin `getfreeseeds-api-staging.get-free-seeds.workers.dev/health`; no D1 write or deployment occurred.
+- **Payment boundary:** `/api/payment-methods` reported JAZZCASH, EASYPAISA and BANK_TRANSFER enabled/`READY` with EN/UR instruction presence. `/api/payment-configuration` reported methods configured and advance amount null; no edit was authorized.
+- **Funnel boundary:** rolling 24h orders were aggregated from UTC yesterday/today pages (page 2 included); 7-day funnel came from bounded analytics. No names, phone numbers, order IDs, message bodies, payment references or secrets were recorded.
+- **Monitoring:** `GFS-Cloudflare-Analytics-Monitor` is absent from Windows Credential Manager. GraphQL/five-minute qualification remains unavailable; no replacement token was created.
+
 ## GFS-431 - local acceptance resources (2026-11-02 PKT)
 
 - **Local Admin acceptance:** `tests/cod-admin.test.ts`; synthetic in-memory SQLite only; no real order or payment data.

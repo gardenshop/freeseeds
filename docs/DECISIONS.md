@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-432 - preserve checkout and target the no-method cohort (2026-11-02 PKT)
+
+**Decision:** make no runtime repair. The read-only review proves a measurable operational funnel gap (35 of 116 recent orders had no method; current active no-method queue 209), but it does not prove a defect in checkout, payment instructions, recovery, or WhatsApp delivery. Recent order creation and API health are working, and reminder rows lack causal linkage.
+
+**Boundary:** preserve +15/+210, EN/UR, COD PKR125 and all three working Advance methods. Do not enable five-stage reminders, change copy, send messages, activate CAPI, deploy GFS-426, or mutate D1. The next highest-value task is a separately approved, bounded cohort review of no-method and delivery-failed orders; only proven customer-impacting behavior may justify a later minimal copy/recovery change.
+
 ## GFS-431 - accept local COD/CAPI evidence, keep live release blocked (2026-11-02 PKT)
 
 **Decision:** close the local GFS-426 acceptance gap with synthetic-only tests and do not deploy. The Admin journey now has explicit UI confirmation assertions in addition to the existing endpoint, transaction, authorization and idempotency tests. The CAPI provider contract is locally verified without sending a real event.

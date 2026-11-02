@@ -1,5 +1,19 @@
 # Final Report
 
+## GFS-432 - improve WhatsApp order conversion review (2026-11-02 PKT)
+
+**Overall: read-only conversion review PASS; no proven source defect; production unchanged.**
+
+1. **Conversion funnel:** Rolling last 24h as of `2026-11-02T18:39Z` contained 116 submitted orders: 69 COD, 12 Advance and 35 without a payment method. Exact rolling inbound-event count is unavailable through the bounded Admin API; 705 conversations were active in the same 24h. The 7-day UTC window contained 21,620 customer inbound events, 589 submitted orders, 76 Advance-selected, 330 COD-confirmed, 74 Advance-pending and 1 PAID/fulfilled. The inbound-event ratio is 2.72%, not unique-lead conversion.
+2. **Recovery:** +15 latest statuses were SKIPPED158, READ66, DELIVERED16, SENT2, PENDING1; +210 were SKIPPED161, READ48, DELIVERED16, SENT4, PENDING14. Status rows are snapshots and do not establish that a reminder caused a later order. No recent recovery failure was observed in the bounded order cohort.
+3. **Current issue:** the highest-value proven operational cohort is payment-method non-selection: 35/116 recent orders and 209 current active orders. Active delivery-failed is 22 and unpaid-after-delivery is 92, with 16 overlapping. These are not proven code defects; no fix was made.
+4. **Payment/WhatsApp safety:** API `/health` returned 200 with WhatsApp enabled. All three owner-frozen Advance methods read enabled/`READY` with EN/UR instructions. No payment, reminder, customer-message, D1, Queue, Cron, Meta or routing mutation occurred.
+5. **COD/CAPI:** GFS-426 manual COD remains locally ready and undeployed. GFS-431 CAPI local acceptance remains PASS372/372; CAPI is OFF and no real Purchase event was sent.
+6. **Monitoring:** `GFS-Cloudflare-Analytics-Monitor` remains absent. GraphQL and five-minute monitoring are BLOCKED; no repeated token experiment was attempted. Direct browser `/health` without service-auth returned expected 403 and was not counted as monitoring evidence.
+7. **Tests/Git:** no source code changed, so GFS-431 evidence remains: full 372/372, focused 29/29, build/lint PASS, observability 6/6, adapter 8/8, deadline/rollback 18/18. V1 fixture remains blocked by missing `GFS_LEGACY_ROOT`. Current PR head is `3c8bd0be320aa1a74fd5abaa9aa4bbf4b50b15b0` before this documentation commit.
+8. **Completion:** GFS-432 read-only review 100%; local COD/CAPI acceptance 100%; production release 0%/BLOCKED; live monitoring UNKNOWN/BLOCKED. Broader P0/P1/P2 readiness remains UNKNOWN where queue-error or exact rolling inbound evidence is not exposed.
+9. **Next highest-value task:** obtain separate approval for a bounded cohort review of the 35 recent/current no-method orders and 22 delivery-failed orders, then approve a minimal copy/recovery change only if a customer-impacting defect is proven. No live change is included.
+
 ## GFS-431 - finish COD + CAPI local acceptance (2026-11-02 PKT)
 
 **Overall: local acceptance PASS; production release BLOCKED safely.**

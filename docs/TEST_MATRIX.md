@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-432 - read-only conversion evidence (2026-11-02 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Admin 7-day funnel | PASS | Authenticated `/api/analytics` 200; 2026-10-27..2026-11-02 aggregate returned without identifiers. |
+| Rolling 24-hour orders | PASS | Bounded UTC yesterday/today order pages, including second page; all responses 200; 116 synthetic-free aggregate rows only. |
+| Recovery review | PASS | +15/+210 latest status distributions read-only; no sends, resends or causal claim. |
+| Payment freeze | PASS | `/api/payment-methods` 200; JazzCash, Easypaisa and Bank Transfer all enabled/`READY` with EN/UR instruction presence. |
+| API health | PASS | Authenticated browser navigation to API `/health` returned 200, WhatsApp enabled. |
+| Admin health bridge | NOT CLAIMED | Direct page fetch without service-auth header returned expected 403; this is not a monitoring qualification. |
+| Current source defect | PASS / NONE PROVEN | Recent orders are created; no bounded evidence isolates a code fault. |
+| GraphQL/five-minute monitoring | BLOCKED | `GFS-Cloudflare-Analytics-Monitor` absent; no credential recreation or bypass. |
+| Existing regression evidence | CARRIED | GFS-431 full 372/372, build/lint and safety suites remain valid; no source code changed in GFS-432. |
+
 ## GFS-431 - local COD + CAPI acceptance (2026-11-02 PKT)
 
 | Area | Result | Evidence |

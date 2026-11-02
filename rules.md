@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-432 read-only conversion review boundary (2026-11-02 PKT)
+
+- Identity/routing readback: GitHub PR11 is `3c8bd0be`; Cloudflare is `gisupp@gmail.com` in Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API `b426ba47` 100% / `e8018f3f` 0%; Admin `e8c96c96` 100% / `ee9b7baa` 0%. Canonical Meta app remains Get Free Seeds; Hoja resources remain excluded.
+- GFS-432 used only authenticated Admin aggregate reads and public API health. No order, payment, D1, Queue, Cron, flag, routing, Meta, CAPI, reminder or customer-message mutation occurred.
+- Read-only Admin payment checks show JazzCash, Easypaisa and Bank Transfer present, enabled and `READY` with EN/UR instructions. Preserve the owner payment freeze. `paymentMethodsConfigured=true`; a null advance amount is an observed configuration value, not authorization to edit it.
+- Conversion metrics are aggregate evidence only. The exact rolling last-24-hour order cohort had 116 submitted orders: 69 COD, 12 Advance and 35 with no method. The 7-day UTC window had 21,620 inbound events and 589 submitted orders (2.72% inbound-event ratio, not unique-lead conversion). Never infer reminder causation from these snapshots.
+- No current source defect was proven. Do not activate new reminders, change copy, enable CAPI, deploy GFS-426 or alter payment methods without separate evidence and approval. The Analytics credential remains absent; do not repeat credential experiments.
+
 ## GFS-431 local COD + CAPI acceptance boundary (2026-11-02 PKT)
 
 - Production remains frozen: API `b426ba47` 100% / `e8018f3f` 0%; Admin `e8c96c96` 100% / `ee9b7baa` 0%. No deployment, routing, D1, payment, Meta, CAPI, flag, Cron, Queue or customer-message mutation occurred.

@@ -1,5 +1,17 @@
 # Status
 
+## GFS-432 - read-only WhatsApp conversion review (2026-11-02 PKT)
+
+**Disposition: review PASS; no local source repair justified; production remains frozen.**
+
+- **Identity/routing:** GitHub PR11 head `3c8bd0be320aa1a74fd5abaa9aa4bbf4b50b15b0`; verified Cloudflare identity/account; Wrangler readback is API `b426ba47` 100% / `e8018f3f` 0% and Admin `e8c96c96` 100% / `ee9b7baa` 0%. API `/health` returned 200 with `whatsapp=enabled` and `PRODUCTION_INTEGRATION_READY`.
+- **Last 24h (rolling, as of 2026-11-02T18:39Z):** 116 submitted orders; 69 COD, 12 Advance, 35 no payment method; 0 yet PAID/fulfilled in this fresh cohort. Exact rolling inbound-event count is not exposed by the bounded Admin API; 705 conversations were active in the last 24h.
+- **Last 7 UTC days (2026-10-27 through 2026-11-02):** 21,620 customer inbound events, 3,680 snapshot contacts, 589 submitted orders, 76 Advance-selected, 330 COD-confirmed, 74 Advance-pending, and 1 PAID/fulfilled. The 2.72% ratio is orders divided by inbound events, not unique-lead conversion.
+- **Recovery:** latest-row snapshots show +15 statuses `SKIPPED158/READ66/DELIVERED16/SENT2/PENDING1` and +210 `SKIPPED161/READ48/DELIVERED16/SENT4/PENDING14` in the 7-day window. No reminder-to-order causation is claimed. The exact recent order cohort had no recovery `FAILED` rows.
+- **Operational queues:** current active no-method queue `209`; delivery-failed `22`; unpaid-after-delivery `92` (16 overlap delivery-failed). These are operational cohorts, not proof of a code defect. No bounded Admin endpoint exposed webhook/Queue error totals, so zero errors are not claimed.
+- **Payment protection:** all three frozen Advance methods read as enabled/`READY` with EN/UR instructions; payment configuration reports methods configured. No payment setting or amount was changed.
+- **Release:** GFS-426 COD Admin and GFS-431 local CAPI work remain ready locally but undeployed. CAPI remains OFF. Analytics credential remains absent and live monitoring/release remains blocked.
+
 ## GFS-431 - local COD + CAPI acceptance and release package (2026-11-02 PKT)
 
 **Disposition: local acceptance PASS; production release BLOCKED by the previously recorded Analytics credential and separate release approval.**
