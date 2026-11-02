@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-434 - historical dead-letter closure (2026-11-02 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Live-start boundary | PASS / OWNER CONFIRMED | Live app began 2026-10-29; the 19 records dated 2026-10-23..25 are pre-live test history. |
+| 19 text-delivery dead letters | CLOSED | `PAYMENT_TEXT_DELIVERY_FAILED`, five attempts, historical and not retry-eligible; no replay or deletion. |
+| 8 permanent failures | CLOSED | `GFS177_PAYMENT_METHODS_DISABLED`, historical pre-live guard; current methods are enabled/`READY`. |
+| Current-vs-historical separation | PASS / LIMITED | Current Admin cohorts remain 210 no-method and 22 payment-instruction-failed; no one-to-one mapping to 19/8 was assumed. |
+| Order progression/pending action | UNKNOWN / NOT ACTIONABLE | Sanitized evidence cannot safely associate later COD/PAID progression or a valid customer action with closed test records. |
+| Present-day source defect | NONE PROVEN | No current reproducible defect, repair or deployment justified. |
+| D1 date split | BLOCKED SAFELY | Attempted read-only query could not use Wrangler OAuth in the current shell; zero writes occurred and no unsupported count is claimed. |
+| Production/payment protection | PASS | No D1, Queue, payment, order, Meta, CAPI, routing or customer-message mutation. |
+| Existing regression | CARRIED | GFS-431 full 372/372, focused 29/29, build/lint and safety suites remain valid; no source code changed. |
+
 ## GFS-433 - bounded pending-order review (2026-11-02 PKT)
 
 | Area | Result | Evidence |

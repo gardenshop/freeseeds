@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-02 - GFS-434 close pre-live payment dead letters
+
+- Closed 19 five-attempt `PAYMENT_TEXT_DELIVERY_FAILED` dead letters dated 2026-10-23 through 2026-10-25 as owner-confirmed pre-live test data; closed 8 historical `GFS177_PAYMENT_METHODS_DISABLED` permanent failures as the same non-production class.
+- Did not replay, delete, queue, message customers or edit payment/order state. Current Admin cohorts remain separate: 210 no-method and 22 payment-instruction-failed.
+- No current source defect was proven. The D1 date-split query was attempted but Wrangler OAuth was unavailable in the current shell; no unsupported post-live count was recorded.
+- Preserved payment freeze, CAPI OFF, GFS-426 undeployed, routing and all WhatsApp protections.
+
 ## 2026-11-02 - GFS-433 bounded pending-order bottleneck review
 
 - Classified the current active no-method cohort as 210 (GFS-432 snapshot 209): five sanitized recent traces showed no method and no payment-instruction send, with some recovery delivery/read states and no sampled follow-up response. No causation was inferred.

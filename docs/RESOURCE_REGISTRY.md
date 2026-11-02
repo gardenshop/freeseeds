@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-434 historical dead-letter closure (2026-11-02 PKT)
+
+- **Runtime boundary:** owner confirms live application start `2026-10-29`; 19 dated `2026-10-23` through `2026-10-25` are pre-live test records.
+- **Closed failure classes:** 19 `PAYMENT_TEXT_DELIVERY_FAILED`/five-attempt dead letters; 8 `GFS177_PAYMENT_METHODS_DISABLED`/permanent failures. No replay, deletion, Queue change or D1 write.
+- **Current separation:** Admin read-only counts are 210 no-method and 22 payment-instruction-failed; no one-to-one mapping to the closed 19/8 records was recorded.
+- **Diagnostics:** authenticated Chrome Admin readback and Meta DevTools canonical app list were read-only. D1 date split was attempted but blocked by unavailable Wrangler OAuth in the current shell; no unsupported post-live aggregate is registered.
+- **Closure state:** historical dead-letter investigation CLOSED pending new post-2026-10-29 evidence. No identifiers, message bodies, payment references, secrets or customer data registered.
+
 ## GFS-433 - pending-order review evidence (2026-11-02 PKT)
 
 - **Identity/routing:** PR11 was read at the protected repository; authoritative prior readback remains API `b426ba47` 100% / `e8018f3f` 0% and Admin `e8c96c96` 100% / `ee9b7baa` 0%. No routing mutation occurred.

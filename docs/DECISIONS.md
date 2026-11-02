@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-434 - close pre-live dead letters (2026-11-02 PKT)
+
+**Decision:** close the 19 `PAYMENT_TEXT_DELIVERY_FAILED` and 8 `GFS177_PAYMENT_METHODS_DISABLED` records as pre-live test history. The owner-provided live-start boundary is 2026-10-29; the 19 records are dated 2026-10-23 through 2026-10-25, exhausted five retries, and are not retryable. The 8 are permanent historical configuration guards.
+
+**Boundary:** do not replay, delete, mutate, queue, message customers, or alter payment configuration for either group. They are not one-to-one evidence for the current 22 delivery-failed Admin cohort. No current source defect or valid pending customer action was proven.
+
+**Closure:** historical dead-letter investigation is CLOSED until new post-2026-10-29 evidence exists. The D1 date split was attempted but the current shell lacked the existing Wrangler OAuth session; this is recorded as an evidence limitation, not a production failure. The next actionable gate is secure Analytics monitoring, then separate GFS-426 Admin release approval.
+
 ## GFS-433 - classify pending cohorts without runtime change (2026-11-02 PKT)
 
 **Decision:** classify the current no-method and delivery-failed cohorts, but make no source or production repair. The no-method sample shows incomplete payment selection/non-response; the delivery-failed cohort is a payment-instruction retry/dead-letter condition rather than courier delivery failure. Current JazzCash, Easypaisa and Bank Transfer configuration is healthy and owner-frozen.

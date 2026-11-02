@@ -1,5 +1,20 @@
 # Final Report
 
+## GFS-434 - close historical payment dead letters (2026-11-02 PKT)
+
+**Overall: historical reconciliation CLOSED; no current defect proven; production unchanged.**
+
+1. **19 dead letters:** owner confirms the live app began on 2026-10-29. The 19 `PAYMENT_TEXT_DELIVERY_FAILED` jobs are dated 2026-10-23 through 2026-10-25, were pre-live test records, exhausted five attempts and are not retry-eligible. They are CLOSED; no replay, deletion or Queue operation occurred.
+2. **8 permanent failures:** `GFS177_PAYMENT_METHODS_DISABLED` records are historical pre-live configuration guards and are CLOSED. Current JazzCash, Easypaisa and Bank Transfer remain enabled/`READY`; no payment configuration, price, receipt or payment-state change occurred.
+3. **Current separation:** current Admin readback is 210 no-method and 22 payment-instruction-failed. The 22 rows have selected methods and failed instructions, not courier delivery states. No one-to-one mapping to the closed 19/8 records was assumed.
+4. **Progression/actionability:** sanitized evidence does not safely establish later COD/PAID progression or a pending customer action for the closed test records. No current source defect was reproduced, so no repair was made.
+5. **Diagnostics/evidence limit:** Chrome Admin readback and Meta DevTools canonical app listing were read-only. The bounded D1 date-split query was attempted but the current shell could not access the existing Wrangler OAuth session; therefore no unsupported post-2026-10-29 D1 count is claimed. No production mutation occurred.
+6. **Protected operations:** API/Admin remain the verified 100/0 baseline; EN/UR, COD PKR125, Advance, PAID, recovery, webhook, Queue/DLQ, Cron, D1 bindings, WhatsApp numbers and Hoja/ThanNow isolation were untouched. CAPI remains OFF and GFS-426 undeployed.
+7. **Tests/regression:** no source code changed. GFS-431 evidence remains full 372/372, focused 29/29, build/lint PASS, observability 6/6, adapter 8/8 and deadline/rollback 18/18; V1 rollback fixture remains blocked by missing `GFS_LEGACY_ROOT`. Documentation validation uses `git diff --check`.
+8. **Monitoring/release:** `GFS-Cloudflare-Analytics-Monitor` remains absent; GraphQL/five-minute monitoring and GFS-426 production release remain BLOCKED. No token experiment or Access bypass was attempted.
+9. **Completion:** historical dead-letter reconciliation 100%/CLOSED; current defect repair N/A because none proven; local COD/CAPI 100%; production release 0%/BLOCKED; live monitoring BLOCKED; broader P0/P1/P2 readiness UNKNOWN where live evidence is unavailable.
+10. **Next milestone:** secure the approved Analytics credential through the protected bridge, qualify monitoring, then request one separate Admin-only GFS-426 release approval. No historical dead-letter work should reopen without post-2026-10-29 evidence.
+
 ## GFS-433 - resolve pending order bottlenecks (2026-11-02 PKT)
 
 **Overall: bounded review PASS; NO DEFECT PROVEN; production unchanged.**

@@ -1,5 +1,16 @@
 # Status
 
+## GFS-434 - close pre-live payment dead letters (2026-11-02 PKT)
+
+**Disposition: historical review CLOSED; no current defect proven; production unchanged.**
+
+- **Runtime boundary:** owner confirms the live app began on 2026-10-29. The 19 `PAYMENT_TEXT_DELIVERY_FAILED` dead letters dated 2026-10-23 through 2026-10-25 were test/pre-live records. They exhausted five attempts and are not retry-eligible.
+- **Permanent failures:** the 8 `GFS177_PAYMENT_METHODS_DISABLED` records are historical pre-live configuration-guard failures. Current JazzCash, Easypaisa and Bank Transfer remain enabled/`READY`; no settings, receipts, prices or payment states changed.
+- **Current cohorts:** the Admin readback remains 210 no-method and 22 payment-instruction-failed. The 22 rows have selected methods and failed instructions, not courier delivery states; they are not assumed to be the same records as the closed 19/8 test jobs.
+- **Classification:** no one-to-one order progression could safely be established from sanitized evidence for the closed test records. No pending customer action, current source defect, retry need or remediation target was proven.
+- **Scope:** Chrome Admin/Meta diagnostics were read-only. The D1 date-split query was attempted but unavailable in the current shell because Wrangler OAuth was not accessible; no D1 write, replay, deletion or Queue change occurred. Historical dead-letter work is now CLOSED unless new post-2026-10-29 evidence appears.
+- **Next gate:** GFS-426 COD/CAPI remains locally PASS and undeployed; CAPI remains OFF. Analytics credential/GraphQL monitoring remains blocked and requires no repeated token work.
+
 ## GFS-433 - bounded pending-order bottleneck review (2026-11-02 PKT)
 
 **Disposition: review PASS; no source defect proven; production and payment methods unchanged.**

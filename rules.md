@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-434 historical payment-dead-letter closure (2026-11-02 PKT)
+
+- Owner-provided runtime boundary: the live application began on 2026-10-29. The 19 `PAYMENT_TEXT_DELIVERY_FAILED` dead letters dated 2026-10-23 through 2026-10-25 are test/pre-live records and are closed as non-production history. The 8 `GFS177_PAYMENT_METHODS_DISABLED` permanent failures are likewise historical and closed; current payment methods remain owner-frozen and enabled/`READY`.
+- The 19 jobs exhausted five retries and are not retry-eligible. The 8 jobs are permanent configuration guards from the pre-live test period. Do not replay, delete, edit, or queue either group, and do not infer a one-to-one mapping to the current 22 Admin delivery-failed cohort.
+- The bounded Admin readback still shows 210 no-method and 22 payment-instruction-failed orders. Those current cohorts are separate from the pre-live test dead letters; no present-day source defect was reproduced and no pending customer action can safely be attributed to the closed test records.
+- GFS-434 used read-only Chrome Admin/Meta diagnostics and attempted the bounded D1 date split. The D1 split could not run in the current shell because its Wrangler OAuth session was unavailable; no unsupported post-2026-10-29 D1 count is claimed. No production or payment mutation occurred.
+- Historical dead-letter investigation is CLOSED. Do not reopen without new post-2026-10-29 failure evidence. The next independent gate remains secure Analytics monitoring followed by separately approved GFS-426 Admin release; no code work is justified now.
+
 ## GFS-433 bounded pending-order review boundary (2026-11-02 PKT)
 
 - GFS-433 used authenticated Admin aggregate reads, five sanitized recent traces per cohort, one bounded D1 aggregate and public API health only. No order, payment, D1, Queue, Cron, flag, routing, Meta, CAPI, reminder or customer-message mutation occurred.
