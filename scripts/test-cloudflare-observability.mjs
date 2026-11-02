@@ -5,6 +5,7 @@ import path from "node:path";
 import { test } from "node:test";
 import { createCloudflareObservability, sumMetricRows } from "./cloudflare-observability.mjs";
 import { accessHeaders, readAccessCredentials } from "./cloudflare-access-credentials.mjs";
+import { readAnalyticsToken } from "./cloudflare-analytics-credentials.mjs";
 
 const worker = { name: "getfreeseeds-admin-staging", healthUrl: "https://admin.example.test" };
 
@@ -50,6 +51,26 @@ test("credential bridge validates both values and creates only Access headers", 
     "CF-Access-Client-Id": "id",
     "CF-Access-Client-Secret": "secret"
   });
+});
+
+test("dedicated Analytics token is process-scoped and preferred over Wrangler OAuth", async () => {
+  assert.equal(readAnalyticsToken({}), null);
+  assert.throws(() => readAnalyticsToken({}, { required: true }), /analytics_credentials_unavailable/);
+  assert.equal(readAnalyticsToken({ GFS_ANALYTICS_API_TOKEN: " dedicated-token " }), "dedicated-token");
+
+  let authorization = null;
+  const observability = createCloudflareObservability({
+    accountTag: "verified-account",
+    analyticsToken: "dedicated-token",
+    tokenPath: "missing-wrangler-config",
+    fetchImpl: async (_url, options) => {
+      authorization = options.headers.Authorization;
+      return { ok: true, status: 200, json: async () => ({ data: { viewer: { accounts: [{ workersInvocationsAdaptive: [{ dimensions: { datetime: "2026-11-02T13:00:00Z" }, sum: { requests: 1, errors: 0 } }] }] } } }) };
+    }
+  });
+  const metrics = await observability.readMetrics(worker);
+  assert.equal(authorization, "Bearer dedicated-token");
+  assert.deepEqual(metrics, { source: "cloudflare_graphql", requests: 1, errors: 0, latestAt: "2026-11-02T13:00:00Z" });
 });
 
 test("reads HTTP health and authenticated GraphQL metrics without exposing the token", async () => {

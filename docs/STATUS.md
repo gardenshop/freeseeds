@@ -1,5 +1,14 @@
 # Status
 
+## GFS-419 — Analytics credential integration and monitoring qualification (2026-11-02 PKT)
+
+**Disposition: PASS for local secure integration; BLOCKED for credential provisioning/live monitoring. No production mutation.**
+
+- Added a dedicated Analytics-token path to the existing observability adapter. A process-only `GFS_ANALYTICS_API_TOKEN` takes precedence over Wrangler OAuth; OAuth fallback remains unchanged. The Windows Credential Manager bridge optionally loads the Analytics record, requires stored account identity `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, injects only for the child process and restores prior environment values.
+- No token was created or stored because GFS-419 contains no independent explicit owner security approval. Official GFS-418 inventories remain empty. Proposed token boundary is Account Analytics:Read only, restricted to Get Free Seeds, short-lived for qualification, with no write permissions.
+- Focused observability6/6, adapter8/8, deadline/rollback18/18, clean detached V1 rollback4/4, full30 files/363 tests, build and lint PASS. No secret value appears in source, test output or documentation.
+- Fresh read-only routing remains API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%. GraphQL HTTP200/freshness and five-minute monitoring remain BLOCKED until the credential is explicitly approved and provisioned.
+
 ## GFS-418 — GraphQL monitoring and P0 unblock (2026-11-02 PKT)
 
 **Disposition: BLOCKED safely at credential authorization. No production mutation.**

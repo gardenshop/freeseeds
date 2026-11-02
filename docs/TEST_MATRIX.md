@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-419 — dedicated Analytics credential integration (2026-11-02 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Dedicated token selection | PASS locally | Process token preferred; missing token retains Wrangler OAuth fallback; observability6/6. |
+| Secure Windows bridge | PASS locally | Optional target, exact account-ID check, child-process injection and environment restoration; PowerShell parse PASS. |
+| Controller/rollback safeguards | PASS | Adapter8/8; deadline/rollback18/18; clean detached baseline rollback4/4. |
+| Full regression/build/lint | PASS | 30 files/363 tests; build and lint pass. |
+| Credential provisioning | BLOCKED | Explicit owner approval and secure credential record absent; no token created. |
+| Live GraphQL/five-minute monitoring | NOT RUN | No approved Analytics credential; HTTP200/errors/freshness unavailable. |
+| Routing/production safety | PASS | API/Admin exact100%/0%; no external mutation. |
+
 ## GFS-418 — GraphQL connector availability (2026-11-02 PKT)
 
 | Area | Result | Evidence |

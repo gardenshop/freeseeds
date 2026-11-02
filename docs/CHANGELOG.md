@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-02 — GFS-419 dedicated Analytics credential integration
+
+- Added process-only dedicated Analytics-token selection to Cloudflare observability while preserving Wrangler OAuth fallback.
+- Extended the protected Windows bridge with optional Analytics credential loading, exact Get Free Seeds account-ID validation and environment restoration; no secret values or credential records were created.
+- Passed observability6/6, adapter8/8, deadline/rollback18/18, clean V1 rollback4/4, full363/363, build and lint. Live monitoring remains blocked pending explicit token approval/provisioning.
+
 ## 2026-11-02 — GFS-418 GraphQL connector boundary
 
 - Reverified protected identities/routing and inspected official Cloudflare user/account token inventories; no existing Analytics-read connector is available.

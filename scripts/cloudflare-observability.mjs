@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { accessHeaders, readAccessCredentials } from "./cloudflare-access-credentials.mjs";
+import { readAnalyticsToken } from "./cloudflare-analytics-credentials.mjs";
 import { diagnosticError } from "./canary-diagnostics.mjs";
 
 const GRAPHQL_URL = "https://api.cloudflare.com/client/v4/graphql";
@@ -41,11 +42,13 @@ function sumMetricRows(rows) {
   return { source: "cloudflare_graphql", requests, errors, latestAt };
 }
 
-export function createCloudflareObservability({ accountTag, tokenPath = defaultTokenPath(), fetchImpl = fetch, now = () => new Date(), windowMs = 10 * 60 * 1000, accessCredentials = readAccessCredentials() } = {}) {
+export function createCloudflareObservability({ accountTag, tokenPath = defaultTokenPath(), analyticsToken = readAnalyticsToken(), fetchImpl = fetch, now = () => new Date(), windowMs = 10 * 60 * 1000, accessCredentials = readAccessCredentials() } = {}) {
   if (!accountTag) throw new TypeError("accountTag is required");
   const readMetrics = async (worker, { signal } = {}) => {
-    let token;
-    try { token = await readOAuthToken(tokenPath); } catch { throw diagnosticError("metrics_auth_unavailable", { stage: "metrics", operation: "oauth_read" }); }
+    let token = analyticsToken;
+    if (!token) {
+      try { token = await readOAuthToken(tokenPath); } catch { throw diagnosticError("metrics_auth_unavailable", { stage: "metrics", operation: "token_read" }); }
+    }
     const end = now();
     const start = new Date(end.getTime() - windowMs);
     let response;

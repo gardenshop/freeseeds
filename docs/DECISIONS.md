@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-419 — prepare secure Analytics bridge, stop before token creation (2026-11-02 PKT)
+
+**Decision:** accept the local least-privilege integration. Monitoring may consume a dedicated token only from a process-scoped environment value populated by the Windows Credential Manager bridge; the stored username must equal the protected account ID. Existing Wrangler OAuth and Access credentials remain untouched and available for their current roles.
+
+Do not create the token from this prompt. Required explicit approval must name: Account Analytics:Read only; resource restricted to Get Free Seeds `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; short qualification lifetime; secure Windows Credential Manager storage; no write permissions. After provisioning, run live GraphQL HTTP200/errors0/freshness, health/denial/isolation, exact routing and bounded five-minute monitoring before any release approval.
+
 ## GFS-418 — stop before GraphQL token creation (2026-11-02 PKT)
 
 **Decision:** do not create or change credentials. Official Cloudflare user and Get Free Seeds account token inventories are empty for existing reusable Analytics-read connectors. The existing Wrangler OAuth and Access service credentials must remain unchanged; GraphQL remains HTTP401 and the monitoring controller remains correctly fail-closed.

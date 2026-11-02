@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-419 — Analytics monitoring integration resources (2026-11-02 PKT)
+
+- **Process input:** `GFS_ANALYTICS_API_TOKEN`, consumed only by local monitoring; no value stored in source/docs. Existing Wrangler OAuth remains fallback.
+- **Secure bridge contract:** optional Windows Credential Manager target; stored username must be Get Free Seeds account ID `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; secret is injected into the child process and prior environment restored.
+- **Proposed token:** account-owned, Account Analytics:Read only, restricted to Get Free Seeds, short-lived for qualification, no write permissions. Not created under GFS-419.
+- **Routing/tests:** API/Admin100%/0%; observability6/6, adapter8/8, deadline/rollback18/18, clean rollback4/4, full363/363, build/lint PASS.
+
 ## GFS-418 — approved monitoring connector status (2026-11-02 PKT)
 
 - **Cloudflare identity:** `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no token values recorded.

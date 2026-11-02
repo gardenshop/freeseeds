@@ -1,5 +1,17 @@
 # Final Report
 
+## GFS-419 — Analytics token and monitoring qualification (2026-11-02 PKT)
+
+**Overall: local integration PASS; live qualification BLOCKED. Production unchanged.**
+
+1. **Credential provisioning:** BLOCKED. No explicit owner security approval exists for token creation, and no secure Analytics credential record is provisioned. No token was created, exposed, logged, committed or pasted.
+2. **Permissions/bridge:** proposed token is Account Analytics:Read only, restricted to Get Free Seeds, short-lived, no writes. Source now consumes a process-only token from the Windows Credential Manager bridge, validates the stored account ID and preserves existing OAuth/Access credentials.
+3. **GraphQL/monitoring:** local Bearer selection and fail-closed behavior PASS. Live HTTP200, errors0, freshness and five-minute monitoring were not run without the credential; GFS-417 HTTP401 remains the last live result.
+4. **Rollback/routing:** clean detached baseline rollback4/4 and deadline/rollback18/18 PASS. Fresh routing is API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%. No deployment/watchdog/rollback mutation.
+5. **Regression:** observability6/6, adapter8/8, full30 files/363 tests, build and lint PASS.
+6. **Completion:** P0 identity/routing protection100%; P1 local credential integration100% / live provisioning0%; P2 local rollback100% / five-minute monitoring0%; P0 release preparation remains blocked. Dynamic-payment Admin source remains ready but undeployed; COD settlement, Advance reconciliation and recovery authorization remain pending.
+7. **Next exact approval:** explicitly approve creation of one short-lived, account-restricted Account Analytics:Read token and storage in the protected Windows Credential Manager bridge. This is a monitoring prerequisite, not production deployment approval.
+
 ## GFS-418 — GraphQL monitoring and P0 unblock (2026-11-02 PKT)
 
 **Overall: BLOCKED safely; production unchanged.**

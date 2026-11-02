@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-419 dedicated Analytics credential boundary (2026-11-02 PKT)
+
+- Monitoring source now prefers a process-scoped `GFS_ANALYTICS_API_TOKEN` supplied by the protected Windows bridge, then preserves the existing Wrangler OAuth fallback. The bridge accepts an Analytics credential target only when its stored username exactly matches Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; it restores prior process variables and never logs values.
+- No Cloudflare token was created: explicit owner security approval and a provisioned secure credential record are absent. Proposed credential is one account-owned token with only Account Analytics:Read, restricted to the verified Get Free Seeds account, short-lived for qualification, stored in Windows Credential Manager with the account ID as username.
+- Production remains API `b426ba47`100% / `e8018f3f`0% and Admin `e8c96c96`100% / `ee9b7baa`0%. Do not claim GraphQL/five-minute monitoring PASS or change routing, credentials, recovery, payment, D1, Meta, Cron, Queue/DLQ or customer traffic before explicit approval and live qualification.
+
 ## GFS-418 GraphQL token provisioning boundary (2026-11-02 PKT)
 
 - Fresh identity/routing read: GitHub `gardenshop/freeseeds` PR #11; Cloudflare `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%. Meta target remains business `568026370701542`, account `1198439777611633`.

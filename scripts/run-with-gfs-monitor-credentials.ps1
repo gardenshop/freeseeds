@@ -2,7 +2,9 @@ param(
   [Parameter(Mandatory = $true)]
   [string] $NodeScript,
   [string[]] $NodeArgs = @(),
-  [string] $Target = "GFS-Admin-Health-Monitor"
+  [string] $Target = "GFS-Admin-Health-Monitor",
+  [string] $AnalyticsTarget = "",
+  [string] $ExpectedAnalyticsAccount = "cb5066a6d71ecdee0bd7ed8aacb4d3c2"
 )
 
 $ErrorActionPreference = "Stop"
@@ -62,14 +64,25 @@ $idName = "GFS_ACCESS_CLIENT_ID"
 $secretName = "GFS_ACCESS_CLIENT_SECRET"
 $oldId = [Environment]::GetEnvironmentVariable($idName, "Process")
 $oldSecret = [Environment]::GetEnvironmentVariable($secretName, "Process")
+$analyticsName = "GFS_ANALYTICS_API_TOKEN"
+$oldAnalytics = [Environment]::GetEnvironmentVariable($analyticsName, "Process")
+$analyticsValues = $null
 try {
     [Environment]::SetEnvironmentVariable($idName, $values[0], "Process")
     [Environment]::SetEnvironmentVariable($secretName, $values[1], "Process")
+    if (-not [string]::IsNullOrWhiteSpace($AnalyticsTarget)) {
+        $analyticsValues = [GfsCredentialManager]::Read($AnalyticsTarget)
+        if ($analyticsValues[0] -ne $ExpectedAnalyticsAccount) { throw "analytics_credential_account_mismatch" }
+        if ([string]::IsNullOrEmpty($analyticsValues[1])) { throw "analytics_credential_incomplete" }
+        [Environment]::SetEnvironmentVariable($analyticsName, $analyticsValues[1], "Process")
+    }
     & node.exe $NodeScript @NodeArgs
     $exitCode = $LASTEXITCODE
 } finally {
     [Environment]::SetEnvironmentVariable($idName, $oldId, "Process")
     [Environment]::SetEnvironmentVariable($secretName, $oldSecret, "Process")
+    [Environment]::SetEnvironmentVariable($analyticsName, $oldAnalytics, "Process")
     $values = $null
+    $analyticsValues = $null
 }
 exit $exitCode
