@@ -2962,3 +2962,4 @@ Investigation query costs only (not production savings): representative `rows_re
 | D1 entitlement/budget | BLOCKED | Official UI shows5M rows read/day; owner25B monthly claim is unverified; staging last24h approximately20.79M reads |
 | Deployment/routing | PASS frozen / BLOCKED release | No deployment; Admin `ceb3e680`100% / `ab5be96b`0%; API `b426ba47`100% / `d603f077`0% |
 | Next gate | PENDING APPROVAL | Exact-source upload → 0% override acceptance → conditional1%/8-minute canary → restore baseline100% |
+- GFS-420 credential scope/expiry review: PASS; secure transfer: BLOCKED by Chrome MCP clipboard guard; token cleanup: PASS; GraphQL/health/freshness/denial/isolation/five-minute monitoring: BLOCKED; no source changed and no GFS-420 regression run claimed.

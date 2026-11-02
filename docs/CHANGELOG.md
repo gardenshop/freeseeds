@@ -1838,3 +1838,4 @@
 - Exposed only the existing stored `whatsapp_username` in protected Orders detail when present; no customer IP/location inference or API capture was added.
 - Verified focused30/30, full341/341, build, lint, controller18/18, adapter8/8 and observability5/5. npm audit and legacy rollback remain BLOCKED by external registry/log permissions and missing `GFS_LEGACY_ROOT`.
 - No deployment or production mutation. Official Workers Paid entitlement remains unresolved (UI5M rows read/day versus owner25B monthly claim); Admin/API routing remains frozen.
+- 2026-11-02 GFS-420: Reviewed and created one account-scoped Analytics:Read token with 24-hour expiry, but secure transfer was rejected by Chrome MCP. Deleted the token; no secret was stored or logged, and no production state changed. Monitoring remains blocked.
