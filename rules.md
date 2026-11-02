@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-426 owner-approved manual COD settlement policy (2026-11-02 PKT)
+
+- **Supersedes GFS-425 courier SOP:** the owner may confirm COD settlement from a genuine courier payment confirmation/list. No courier API, separate evidence upload, complicated reconciliation or invented evidence is required.
+- The local Admin-only `Mark Payment Received` action is the single settlement path: authenticated Admin + CSRF, eligible `COLLECTION_PENDING` COD order, displayed order/quoted amount, explicit confirmation, exact amount match, one atomic PAID transition, operator/timestamp audit and idempotent repeat handling. Never mark PAID merely because an order was booked, packed or dispatched.
+- Existing JazzCash, Easypaisa and Bank Transfer methods, accounts, QR codes, beneficiaries, instructions, amounts, receipts and states remain frozen. Existing EN/UR, WhatsApp, webhook, Queue/DLQ, Cron, recovery, number separation and Hoja/ThanNow protections remain mandatory.
+- When explicitly enabled in a separately approved environment, the action uses the existing idempotent `Purchase` CAPI event/outbox path with event ID derived from the order. CAPI is currently OFF; no Meta send or activation is authorized here.
+
 ## GFS-425 COD courier settlement SOP boundary (2026-11-02 PKT)
 
 - Existing Admin controls are authoritative for COD tracking, `COD_PENDING` → `PACKING` → `DISPATCHED` → `DELIVERED` → `COLLECTION_PENDING` → `PAID`, exact collection/remittance evidence and immutable quoted totals. Do not duplicate them or add live settlement features without owner approval.

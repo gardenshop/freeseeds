@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-426 — manual COD and CAPI resources (2026-11-02 PKT)
+
+- **Admin endpoint:** local-only `/api/orders/:id/mark-payment-received`; eligible `COLLECTION_PENDING` COD only; exact quote, CSRF/Admin authorization, atomic PAID and idempotent audit guards.
+- **CAPI path:** existing `createPurchaseEvent` → `capi_events`/`CAPI_PURCHASE` outbox → Queue consumer; order-derived event ID and duplicate prevention. `META_CAPI_ENABLED` remains OFF.
+- **Supersession:** GFS-425 courier API/evidence-upload requirements are retired by owner decision; genuine courier confirmation/payment list is the manual settlement evidence.
+- **Protection:** Advance methods frozen; API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%; no live mutation.
+
 ## GFS-425 — COD settlement resources (2026-11-02 PKT)
 
 - **Existing controls:** Admin tracking, fulfillment transitions, `COLLECTION_PENDING`, HMACed collection/remittance evidence and exact quoted-total PAID gates. No duplicate implementation added.

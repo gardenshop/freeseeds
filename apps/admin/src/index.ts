@@ -772,8 +772,55 @@ async function reconcileCodEvidence(c: AdminContext, kind: "collection" | "remit
   return c.json({ ok: true, recorded: true, paid: Number(result[4].meta?.changes ?? 0) === 1, status: Number(result[4].meta?.changes ?? 0) === 1 ? "PAID" : "COLLECTION_PENDING" });
 }
 
+async function markCodPaymentReceived(c: AdminContext) {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  if (!c.env.DB) return c.json({ error: "COD_RECONCILIATION_UNAVAILABLE" }, 503);
+  const hmacKey = c.env.COD_REFERENCE_HMAC_KEY?.trim();
+  if (!hmacKey || hmacKey.length < 32) return c.json({ error: "COD_REFERENCE_HMAC_KEY_REQUIRED" }, 503);
+  let body: { confirmation?: unknown; amountPkr?: unknown; confirmed?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
+  const orderId = c.req.param("id");
+  const current = await c.env.DB.prepare("SELECT o.order_number,o.state,o.payment_status,o.archived_at,o.total_payable,cod.base_amount_pkr,cod.status,cod.quoted_total_pkr,cod.test_hold,p.review_state FROM orders o JOIN payments p ON p.order_id=o.id JOIN cod_order_details cod ON cod.order_id=o.id WHERE o.id=?").bind(orderId).first<{ order_number: string; state: string; payment_status: string; archived_at: string | null; total_payable: number; base_amount_pkr: number; status: string; quoted_total_pkr: number; test_hold: number; review_state: string }>();
+  if (!current) return c.json({ error: "COD_ORDER_NOT_FOUND" }, 404);
+  if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+  if (current.state === "PAID" && current.payment_status === "PAID" && current.status === "PAID" && current.review_state === "COD_PAID") return c.json({ ok: true, alreadyPaid: true, paymentStatus: "PAID", capiQueue: "UNCHANGED" });
+  if (current.order_number === "FS-261019-000001") return c.json({ error: "FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED" }, 409);
+  if (Number(current.test_hold) !== 0) return c.json({ error: "COD_TEST_HOLD_DO_NOT_SHIP" }, 409);
+  if (body.confirmed !== true) return c.json({ error: "COD_PAYMENT_CONFIRMATION_REQUIRED" }, 400);
+  if (current.archived_at || current.state !== "COLLECTION_PENDING" || current.status !== "COLLECTION_PENDING" || current.payment_status !== "COD_PENDING" || current.review_state !== "COD_PENDING") return c.json({ error: "COD_PAYMENT_NOT_READY" }, 409);
+  if (!Number.isSafeInteger(body.amountPkr) || Number(body.amountPkr) !== Number(current.quoted_total_pkr) || Number(current.total_payable) !== Number(current.base_amount_pkr)) return c.json({ error: "COD_PAYMENT_AMOUNT_MISMATCH" }, 409);
+  let customer: { customer_id: string; ctwa_clid: string | null } | null = null;
+  const eventEnabled = c.env.META_CAPI_ENABLED === "true";
+  if (eventEnabled) {
+    try { customer = await c.env.DB.prepare("SELECT c.id AS customer_id,ma.ctwa_clid FROM orders o JOIN customers c ON c.id=o.customer_id LEFT JOIN meta_attribution ma ON ma.order_id=o.id WHERE o.id=?").bind(orderId).first<{ customer_id: string; ctwa_clid: string | null }>(); } catch { return c.json({ error: "COD_CAPI_SOURCE_UNAVAILABLE" }, 503); }
+    if (!customer) return c.json({ error: "COD_CAPI_SOURCE_UNAVAILABLE" }, 503);
+  }
+  const amount = Number(current.quoted_total_pkr);
+  const now = new Date().toISOString();
+  const manualSettlementHash = await codReferenceHmac(`MANUAL_COD_PAYMENT_RECEIVED:${orderId}:${amount}:${now}`, hmacKey);
+  const event = eventEnabled ? createPurchaseEvent(current.order_number, approvedPurchaseValue(amount, amount), customer?.ctwa_clid ? { ctwaClid: customer.ctwa_clid } : undefined) : undefined;
+  const statements: D1PreparedStatement[] = [
+    c.env.DB.prepare("UPDATE cod_order_details SET collection_ref_hmac=?,collection_amount_pkr=?,collection_actor=?,collection_at=?,remittance_ref_hmac=?,remittance_amount_pkr=?,remittance_actor=?,remittance_at=?,updated_at=? WHERE order_id=? AND status='COLLECTION_PENDING' AND test_hold=0 AND collection_ref_hmac IS NULL AND remittance_ref_hmac IS NULL AND quoted_total_pkr=?").bind(manualSettlementHash, amount, c.env.ADMIN_EMAIL, now, manualSettlementHash, amount, c.env.ADMIN_EMAIL, now, now, orderId, amount),
+    c.env.DB.prepare("UPDATE cod_order_details SET status='PAID',updated_at=? WHERE order_id=? AND changes()=1 AND status='COLLECTION_PENDING' AND collection_ref_hmac IS NOT NULL AND collection_amount_pkr=quoted_total_pkr AND remittance_ref_hmac IS NOT NULL AND remittance_amount_pkr=quoted_total_pkr").bind(now, orderId),
+    c.env.DB.prepare("UPDATE payments SET review_state='COD_PAID',approved_amount=?,approved_by=?,approved_at=?,updated_at=? WHERE order_id=? AND changes()=1 AND review_state='COD_PENDING' AND approved_amount IS NULL AND expected_amount=? AND EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=payments.order_id AND cod.status='PAID' AND cod.quoted_total_pkr=?)").bind(amount, c.env.ADMIN_EMAIL, now, now, orderId, current.base_amount_pkr, amount),
+    c.env.DB.prepare("UPDATE orders SET state='PAID',payment_status='PAID',updated_at=? WHERE id=? AND changes()=1 AND state='COLLECTION_PENDING' AND payment_status='COD_PENDING' AND total_payable=? AND EXISTS(SELECT 1 FROM payments p JOIN cod_order_details cod ON cod.order_id=p.order_id WHERE p.order_id=orders.id AND p.review_state='COD_PAID' AND p.approved_amount=cod.quoted_total_pkr AND cod.status='PAID')").bind(now, orderId, current.base_amount_pkr),
+    c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,json_object('orderId',o.id,'amountPkr',cod.quoted_total_pkr,'settlementMode','MANUAL_ADMIN_CONFIRMATION','confirmationAt',?),? FROM orders o JOIN cod_order_details cod ON cod.order_id=o.id WHERE o.id=? AND changes()=1 AND o.state='PAID' AND o.payment_status='PAID' AND cod.status='PAID'").bind(`cod_manual_paid_${orderId}`, "COD_PAYMENT_RECONCILED", "ADMIN", c.env.ADMIN_EMAIL, "ORDER", orderId, crypto.randomUUID(), now, now, orderId)
+  ];
+  if (event && customer) {
+    statements.push(c.env.DB.prepare("INSERT OR IGNORE INTO capi_events (id,event_id,event_name,order_id,customer_id,send_status,created_at,updated_at) SELECT ?,?,?,?,?,?,?,? FROM orders o WHERE o.id=? AND changes()=1 AND o.state='PAID'").bind(crypto.randomUUID(), event.eventId, event.eventName, orderId, customer.customer_id, "PENDING", now, now, orderId));
+    statements.push(c.env.DB.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) SELECT ?,?,?,?,?,?,?,?,? FROM orders o WHERE o.id=? AND changes()=1 AND o.state='PAID'").bind(crypto.randomUUID(), event.eventId, "CAPI_PURCHASE", orderId, JSON.stringify(event), "PENDING", now, now, now, orderId));
+  }
+  let result: D1Result[];
+  try { result = await c.env.DB.batch(statements); } catch { return c.json({ error: "COD_PAYMENT_CONFIRMATION_FAILED" }, 409); }
+  if (result.slice(0, 5).some((item) => Number(item.meta?.changes ?? 0) !== 1)) return c.json({ error: "COD_PAYMENT_CONFIRMATION_STALE" }, 409);
+  let queued = false;
+  try { if (event && c.env.EVENTS) { await c.env.EVENTS.send({ kind: "CAPI_PURCHASE", idempotencyKey: event.eventId, entityId: orderId, schemaVersion: 1 }); queued = true; } } catch { /* Durable outbox remains authoritative. */ }
+  return c.json({ ok: true, paymentStatus: "PAID", confirmedAt: now, capiQueue: event ? queued ? "QUEUED" : "DEFERRED" : "DISABLED" });
+}
+
 app.post("/api/orders/:id/cod-collection", (c) => reconcileCodEvidence(c, "collection"));
 app.post("/api/orders/:id/cod-remittance", (c) => reconcileCodEvidence(c, "remittance"));
+app.post("/api/orders/:id/mark-payment-received", markCodPaymentReceived);
 app.get("/cod-settings", (c) => {
   const csrf = issueCsrfToken(c);
   return c.html(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>COD Settings</title><style>body{font:16px system-ui;max-width:760px;margin:2rem auto;padding:0 1rem;color:#17231c}label{display:block;margin:1rem 0}input,button{font:inherit;padding:.55rem}input[type=text],input[type=number],input[type=password]{display:block;width:100%;box-sizing:border-box}button{cursor:pointer}.muted{color:#59635a}.error{color:#a40019}</style></head><body><nav><a href="/">Admin home</a> | <a href="/orders">Orders</a></nav><h1>Cash on Delivery</h1><p class="muted">COD is disabled unless explicitly enabled with verified collection and remittance policy references. Evidence references are HMACed before storage; raw references are not persisted.</p><p id="status" role="status" class="muted">Loading settings…</p><form id="form"><label><input name="enabled" type="checkbox"> Enable COD intake</label><label>COD fee (PKR)<input name="feePkr" type="number" min="0" max="100000" step="1" value="125" required></label><label>Verified courier collection policy evidence reference<input name="collectionPolicyReference" type="password" autocomplete="off"></label><label>Verified exact-remittance policy evidence reference<input name="remittancePolicyReference" type="password" autocomplete="off"></label><button>Save audited settings</button></form><script>
@@ -793,6 +840,15 @@ addActions=(order)=>{
     return;
   }
   addUnheldOrderActions(order);
+  if(order.codOrder&&!order.archivedAt&&order.state==='COLLECTION_PENDING'){
+    const actionRoot=detail.querySelector('.actions');
+    if(actionRoot&&!actionRoot.querySelector('[data-cod-payment-received]')){
+      for(const button of actionRoot.querySelectorAll('button'))if(['Record courier collection','Reconcile exact remittance'].includes(button.textContent.trim()))button.remove();
+      const button=actionButton('Mark Payment Received',async()=>{const amount=Number(order.codQuotedTotalPkr);if(confirm('Mark Payment Received for '+order.orderNumber+'? Original payable amount: PKR '+amount+'. Confirm the actual COD payment was received and courier settlement is complete.'))await run('/api/orders/'+encodeURIComponent(order.id)+'/mark-payment-received',{confirmation:order.orderNumber,amountPkr:amount,confirmed:true})},'primary');
+      button.dataset.codPaymentReceived='true';
+      actionRoot.append(button);
+    }
+  }
 };`;
 app.get("/orders", (c) => c.html(professionalOrdersPageHtml(issueCsrfToken(c)).replace("function renderDetail(data){", `${COD_ORDERS_SCRIPT}\n${COD_HOLD_SCRIPT}\nfunction renderDetail(data){`).replace('<option value="REJECTED">Rejected</option>', '<option value="REJECTED">Rejected</option><option value="COD_PENDING">COD pending</option><option value="COD_PAID">COD paid</option>').replace('<option value="NOT_STARTED">Ready to pack</option>', '<option value="NOT_STARTED">Ready to pack</option><option value="COD_PENDING">COD pending</option><option value="COLLECTION_PENDING">Collection pending</option>').replace('<label>Archive<select name="archived">', '<label>Payment stage<select name="paymentStage"><option value="">Any payment stage</option><option value="no-method">No method selected</option><option value="payment-not-sent">Instructions not sent</option><option value="delivery-failed">Delivery failed</option><option value="unpaid-after-delivery">Unpaid after delivery</option></select></label><label>Archive<select name="archived">').replace("['q','date','paymentStatus','fulfillment','archived','pageSize']", "['q','date','paymentStatus','paymentStage','fulfillment','archived','pageSize']").replace("listStatus.textContent=Number(data.total).toLocaleString('en-PK')+' total';", "listStatus.textContent=Number(data.total).toLocaleString('en-PK')+' total · no method '+Number(data.counts?.noMethod||0).toLocaleString('en-PK')+' · failed '+Number(data.counts?.deliveryFailed||0).toLocaleString('en-PK')+' · unpaid after delivery '+Number(data.counts?.unpaidAfterDelivery||0).toLocaleString('en-PK');").replace("['Status',text(order.paymentReviewState||order.paymentStatus)]", "['Status',text(order.paymentReviewState||order.paymentStatus)],['Instruction delivery',text(order.paymentInstructionStatus)]").replace("Request the transaction reference in the customer's selected language", "Request a transaction reference in the selected language")));
 app.get("/payment-reminders", (c) => {

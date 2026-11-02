@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-426 — manual COD confirmation and CAPI (2026-11-02 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Manual COD PAID action | PASS locally | Eligible collection-pending order requires Admin/CSRF, exact quote and explicit confirmation; atomic audit/state transition. |
+| Duplicate/invalid/unauthorized actions | PASS | Repeat is idempotent; wrong amount, premature state and unauthorized request are rejected. |
+| CAPI Purchase enqueue | PASS locally / OFF live | One order-derived event/outbox record; Queue failure leaves durable retryable PENDING state; Meta activation not enabled. |
+| Advance methods | PASS protected | JazzCash, Easypaisa and Bank Transfer unchanged; existing payment tests pass. |
+| Full regression | PASS | 30 files/370 tests; focused COD 27/27; build/lint pass. |
+| Release safety | PASS locally | Observability6/6, adapter8/8, deadline/rollback18/18; no production mutation. |
+| Live monitoring | BLOCKED | Analytics monitor target absent; no credential experiment repeated. |
+
 ## GFS-425 — COD courier settlement readiness (2026-11-02 PKT)
 
 | Area | Result | Evidence |

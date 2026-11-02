@@ -1,5 +1,18 @@
 # Final Report
 
+## GFS-426 — manual COD payment confirmation and Meta CAPI readiness (2026-11-02 PKT)
+
+**Overall: local implementation PASS; production release/PAID/CAPI activation BLOCKED by separate approval gates.**
+
+1. **GFS-425 comparison:** the complex courier settlement SOP is superseded. Owner-approved policy is one authorized Admin confirmation of genuine courier settlement/payment-list receipt; no courier API, upload or bulk action was added.
+2. **Existing vs new COD:** existing tracking, fulfillment and settlement guards remain. New local `Mark Payment Received` is available only at `COLLECTION_PENDING`, shows the original quote, requires exact amount and explicit confirmation, atomically records both settlement fields/operator/timestamp, moves to PAID and prevents duplicate confirmation.
+3. **Manual PAID:** PASS locally. Unauthorized, wrong amount, premature state and repeated-click cases are covered. No live order was marked PAID.
+4. **CAPI:** PASS locally / OFF live. When explicitly enabled, one order-derived Purchase event is inserted idempotently into `capi_events` and `CAPI_PURCHASE` outbox; Queue failure returns deferred while durable outbox remains retryable. No Meta delivery or activation occurred.
+5. **Advance protection:** JazzCash, Easypaisa and Bank Transfer remain owner-confirmed working and untouched, including accounts, QR codes, instructions, amounts, receipts and states. EN/UR and WhatsApp flow remain unchanged.
+6. **Tests/routing:** focused COD27/27; full30 files/370 tests; build/lint PASS; observability6/6; adapter8/8; deadline/rollback18/18. Routing remains API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%.
+7. **Completion:** P0 local manual settlement100%; CAPI local enqueue100% / live activation0%; Advance protection100%; production deployment0%; live monitoring0% (credential absent). Remaining operational percentages requiring live evidence are UNKNOWN.
+8. **Next approval:** approve one Admin-only release of the tested manual action after secure monitoring qualification, then separately approve Meta CAPI activation/dataset verification. No payment-method changes are bundled.
+
 ## GFS-425 — COD courier settlement readiness (2026-11-02 PKT)
 
 **Overall: SOP ready for owner approval; existing controls preserved; no live mutation.**

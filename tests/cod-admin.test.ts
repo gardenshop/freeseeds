@@ -47,7 +47,7 @@ class D1Adapter {
 
 let sqlite: DatabaseSync;
 let db: D1Adapter;
-const env = (key: string | undefined = hmacKey) => ({ DB: db as unknown as D1Database, ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL", COD_REFERENCE_HMAC_KEY: key }) as never;
+const env = (key: string | undefined = hmacKey, capi = "false", events?: unknown) => ({ DB: db as unknown as D1Database, ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL", COD_REFERENCE_HMAC_KEY: key, META_CAPI_ENABLED: capi, EVENTS: events }) as never;
 
 async function csrf() {
   const response = await app.fetch(new Request("https://admin.example.test/api/csrf", { headers: auth }), env());
@@ -63,9 +63,13 @@ beforeEach(() => {
   sqlite = new DatabaseSync(":memory:");
   sqlite.exec(`
     PRAGMA foreign_keys=ON;
-    CREATE TABLE orders(id TEXT PRIMARY KEY,order_number TEXT NOT NULL,state TEXT NOT NULL,payment_status TEXT NOT NULL,total_payable INTEGER NOT NULL,archived_at TEXT,updated_at TEXT);
+    CREATE TABLE orders(id TEXT PRIMARY KEY,order_number TEXT NOT NULL,customer_id TEXT,state TEXT NOT NULL,payment_status TEXT NOT NULL,total_payable INTEGER NOT NULL,archived_at TEXT,updated_at TEXT);
     CREATE TABLE payments(id TEXT PRIMARY KEY,order_id TEXT NOT NULL,method TEXT,expected_amount INTEGER NOT NULL,review_state TEXT NOT NULL,approved_amount INTEGER,approved_by TEXT,approved_at TEXT,updated_at TEXT);
     CREATE TABLE payment_receipts(id TEXT PRIMARY KEY,order_id TEXT NOT NULL,payment_id TEXT NOT NULL);
+    CREATE TABLE customers(id TEXT PRIMARY KEY);
+    CREATE TABLE meta_attribution(id TEXT PRIMARY KEY,order_id TEXT NOT NULL,ctwa_clid TEXT);
+    CREATE TABLE capi_events(id TEXT PRIMARY KEY,event_id TEXT NOT NULL UNIQUE,event_name TEXT NOT NULL,order_id TEXT NOT NULL,customer_id TEXT NOT NULL,send_status TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+    CREATE TABLE outbox_jobs(id TEXT PRIMARY KEY,idempotency_key TEXT NOT NULL UNIQUE,kind TEXT NOT NULL,entity_id TEXT NOT NULL,payload_json TEXT NOT NULL,status TEXT NOT NULL,available_at TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
     CREATE TABLE audit_log(id TEXT PRIMARY KEY,action TEXT,actor_type TEXT,actor_id TEXT,entity_type TEXT,entity_id TEXT,correlation_id TEXT,metadata_json TEXT,created_at TEXT);
   `);
   sqlite.exec(readFileSync("migrations/0030_cod_v1_compat.sql", "utf8"));
@@ -86,8 +90,8 @@ function seedCod(status = "COLLECTION_PENDING", hold = 0, snapshot = true, order
     .run(status, snapshot ? "synthetic-policy-revision" : null, snapshot ? "a".repeat(64) : null, snapshot ? "b".repeat(64) : null, hold, now, now);
 }
 
-async function post(path: string, body: Record<string, unknown>, session?: Awaited<ReturnType<typeof csrf>>) {
-  return app.fetch(new Request(`https://admin.example.test${path}`, { method: "POST", headers: mutationHeaders(session ?? await csrf()), body: JSON.stringify(body) }), env());
+async function post(path: string, body: Record<string, unknown>, session?: Awaited<ReturnType<typeof csrf>>, runtime = env()) {
+  return app.fetch(new Request(`https://admin.example.test${path}`, { method: "POST", headers: mutationHeaders(session ?? await csrf()), body: JSON.stringify(body) }), runtime);
 }
 
 function reconcile(kind: string, evidenceReference = `SYNTHETIC-${kind.toUpperCase()}-EVIDENCE`, session?: Awaited<ReturnType<typeof csrf>>) {
@@ -236,7 +240,7 @@ describe("COD Admin configuration and reconciliation", () => {
   });
 
   it("defaults to DO NOT SHIP and prevents old-worker SQL tracking, fulfillment and hold clearing", () => {
-    sqlite.exec("INSERT INTO orders VALUES('order-1','SIM-GFS222-DO-NOT-SHIP','COD_PENDING','COD_PENDING',200,NULL,'synthetic'); INSERT INTO payments(id,order_id,expected_amount,review_state) VALUES('payment-1','order-1',200,'COD_PENDING'); INSERT INTO cod_order_details(order_id,base_amount_pkr,cod_fee_pkr,quoted_total_pkr,created_at,updated_at) VALUES('order-1',200,125,325,'synthetic','synthetic')");
+    sqlite.exec("INSERT INTO orders(id,order_number,state,payment_status,total_payable,archived_at,updated_at) VALUES('order-1','SIM-GFS222-DO-NOT-SHIP','COD_PENDING','COD_PENDING',200,NULL,'synthetic'); INSERT INTO payments(id,order_id,expected_amount,review_state) VALUES('payment-1','order-1',200,'COD_PENDING'); INSERT INTO cod_order_details(order_id,base_amount_pkr,cod_fee_pkr,quoted_total_pkr,created_at,updated_at) VALUES('order-1',200,125,325,'synthetic','synthetic')");
     expect(sqlite.prepare("SELECT test_hold FROM cod_order_details").get()).toEqual({ test_hold: 1 });
     expect(() => sqlite.exec("UPDATE orders SET state='PACKING' WHERE id='order-1'")).toThrow(/COD_/);
     expect(() => sqlite.exec("UPDATE cod_order_details SET status='PACKING' WHERE order_id='order-1'")).toThrow(/COD_/);
@@ -263,7 +267,7 @@ describe("COD Admin configuration and reconciliation", () => {
 
   it("blocks advance receipt reassignment by either order or payment association", () => {
     seedCod();
-    sqlite.exec("INSERT INTO orders VALUES('advance','SIM-ADVANCE','PAYMENT_REVIEW','PENDING',200,NULL,'synthetic'); INSERT INTO payments(id,order_id,expected_amount,review_state) VALUES('advance-payment','advance',200,'REVIEW'); INSERT INTO payment_receipts VALUES('advance-receipt','advance','advance-payment')");
+    sqlite.exec("INSERT INTO orders(id,order_number,state,payment_status,total_payable,archived_at,updated_at) VALUES('advance','SIM-ADVANCE','PAYMENT_REVIEW','PENDING',200,NULL,'synthetic'); INSERT INTO payments(id,order_id,expected_amount,review_state) VALUES('advance-payment','advance',200,'REVIEW'); INSERT INTO payment_receipts VALUES('advance-receipt','advance','advance-payment')");
     expect(() => sqlite.exec("UPDATE payment_receipts SET order_id='order-1' WHERE id='advance-receipt'")).toThrow("COD_DOES_NOT_ACCEPT_ADVANCE_RECEIPTS");
     expect(() => sqlite.exec("UPDATE payment_receipts SET payment_id='payment-1' WHERE id='advance-receipt'")).toThrow("COD_DOES_NOT_ACCEPT_ADVANCE_RECEIPTS");
     expect(() => sqlite.exec("INSERT INTO payment_receipts VALUES('wrong-association','advance','payment-1')")).toThrow("COD_DOES_NOT_ACCEPT_ADVANCE_RECEIPTS");
@@ -305,6 +309,58 @@ describe("COD Admin configuration and reconciliation", () => {
     expect(html).toContain('<option value="COD_PENDING">COD pending</option>');
     expect(readFileSync("apps/api/wrangler.jsonc", "utf8")).toContain('"COD_V1_ENABLED": "true"');
     expect(readFileSync("apps/api/wrangler.jsonc", "utf8")).toContain('"COD_ROLLOUT_MODE": "PUBLIC"');
+    expect(html).toContain("Mark Payment Received");
+    expect(html).toContain("/mark-payment-received");
+  });
+
+  it("marks an eligible COD order paid once through one audited manual confirmation", async () => {
+    seedCod();
+    const response = await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, confirmed: true });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ ok: true, paymentStatus: "PAID", capiQueue: "DISABLED" });
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders").get()).toEqual({ state: "PAID", payment_status: "PAID" });
+    expect(sqlite.prepare("SELECT review_state,approved_amount,approved_by FROM payments").get()).toEqual({ review_state: "COD_PAID", approved_amount: 325, approved_by: "admin@example.test" });
+    expect(sqlite.prepare("SELECT status,collection_amount_pkr,remittance_amount_pkr,collection_actor,remittance_actor FROM cod_order_details").get()).toEqual({ status: "PAID", collection_amount_pkr: 325, remittance_amount_pkr: 325, collection_actor: "admin@example.test", remittance_actor: "admin@example.test" });
+    const audit = sqlite.prepare("SELECT action,actor_id,metadata_json FROM audit_log WHERE action='COD_PAYMENT_RECONCILED'").get() as { action: string; actor_id: string; metadata_json: string };
+    expect(audit.actor_id).toBe("admin@example.test");
+    expect(JSON.parse(audit.metadata_json)).toMatchObject({ orderId: "order-1", amountPkr: 325, settlementMode: "MANUAL_ADMIN_CONFIRMATION" });
+    const repeat = await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, confirmed: true });
+    expect(repeat.status).toBe(200);
+    expect(await repeat.json()).toMatchObject({ alreadyPaid: true, paymentStatus: "PAID" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_PAYMENT_RECONCILED'").get()).toEqual({ count: 1 });
+  });
+
+  it("rejects unauthorized, wrong-amount and premature manual COD confirmation", async () => {
+    seedCod();
+    const unauthorized = await app.fetch(new Request("https://admin.example.test/api/orders/order-1/mark-payment-received", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, confirmed: true }) }), env());
+    expect(unauthorized.status).toBe(403);
+    expect((await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 324, confirmed: true })).status).toBe(409);
+    expect((await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, confirmed: false })).status).toBe(400);
+  });
+
+  it("rejects manual payment confirmation before collection pending", async () => {
+    seedCod("COD_PENDING");
+    expect((await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, confirmed: true })).status).toBe(409);
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders").get()).toEqual({ state: "COD_PENDING", payment_status: "COD_PENDING" });
+  });
+
+  it("queues one idempotent Purchase event and keeps payment paid when Queue delivery is unavailable", async () => {
+    seedCod();
+    sqlite.prepare("INSERT INTO customers(id) VALUES('customer-1')").run();
+    sqlite.prepare("UPDATE orders SET customer_id='customer-1' WHERE id='order-1'").run();
+    sqlite.prepare("INSERT INTO meta_attribution(id,order_id,ctwa_clid) VALUES('attribution-1','order-1','synthetic-ctwa')").run();
+    const events = { send: vi.fn(async () => { throw new Error("QUEUE_UNAVAILABLE"); }) };
+    const runtime = env(hmacKey, "true", events);
+    const response = await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, confirmed: true }, undefined, runtime);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ paymentStatus: "PAID", capiQueue: "DEFERRED" });
+    expect(events.send).toHaveBeenCalledTimes(1);
+    expect(sqlite.prepare("SELECT event_id,event_name,send_status FROM capi_events").get()).toMatchObject({ event_id: "purchase_SIM-GFS222-DO-NOT-SHIP", event_name: "Purchase", send_status: "PENDING" });
+    expect(sqlite.prepare("SELECT kind,idempotency_key,status FROM outbox_jobs").get()).toMatchObject({ kind: "CAPI_PURCHASE", idempotency_key: "purchase_SIM-GFS222-DO-NOT-SHIP", status: "PENDING" });
+    const repeat = await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, confirmed: true }, undefined, runtime);
+    expect(repeat.status).toBe(200);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM capi_events WHERE event_name='Purchase'").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE kind='CAPI_PURCHASE'").get()).toEqual({ count: 1 });
   });
 
   it("keeps the intake toggle simple and fixed at PKR 125 without collecting courier references", async () => {

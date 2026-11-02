@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-426 — supersede courier SOP with one manual COD confirmation (2026-11-02 PKT)
+
+**Decision:** replace GFS-425’s complex courier-evidence requirement with one authorized Admin confirmation based on genuine courier settlement confirmation or payment list. The local endpoint reuses existing COD state guards and atomically records the exact quoted amount, authenticated operator, timestamp and PAID transition. No courier API, evidence upload or bulk action is introduced.
+
+The existing CAPI Purchase event/outbox is reused only when `META_CAPI_ENABLED=true`; production CAPI remains OFF. No live order/payment/Meta state may change until separate owner release and Meta activation approvals pass. Advance methods remain frozen and untouched.
+
 ## GFS-425 — approve SOP before COD settlement enhancement (2026-11-02 PKT)
 
 **Decision:** use existing Admin/database controls and document the smallest operational settlement SOP before considering code. The required evidence is order ID/original quote, courier tracking, delivery disposition/date, exact collection and remittance amounts/dates, authorized deductions, opaque evidence references, exception handling and an authorized verifier. PAID remains blocked unless existing exact-quote and evidence gates pass.

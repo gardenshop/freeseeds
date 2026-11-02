@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-02 — GFS-426 manual COD confirmation and CAPI readiness
+
+- Added local Admin-only `Mark Payment Received` for eligible COD orders, with exact amount, authenticated audit, atomic PAID transition and idempotent repeat handling.
+- Reused the existing Purchase CAPI/outbox path behind the existing OFF flag; Queue failure remains durable/retryable and no Meta send was activated.
+- Superseded the GFS-425 complex courier SOP per owner policy. Full370/370, focused COD27/27, build/lint and safety-controller checks pass.
+
 ## 2026-11-02 — GFS-425 COD courier settlement readiness
 
 - Documented the minimal courier settlement SOP using existing Admin/database controls; no duplicate functionality or code was added.

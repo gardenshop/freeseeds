@@ -1,5 +1,16 @@
 # Status
 
+## GFS-426 — manual COD payment confirmation and Meta CAPI (2026-11-02 PKT)
+
+**Disposition: PASS locally; BLOCKED for production release, PAID mutation and Meta activation.**
+
+- **Policy update:** GFS-425’s courier-evidence SOP is superseded by the owner’s simple policy: an authorized Admin confirms genuine courier settlement/payment-list receipt. No courier API or separate evidence upload is required.
+- **Local implementation:** added Admin-only `Mark Payment Received` for eligible `COLLECTION_PENDING` COD orders. It displays the original COD quote, requires explicit confirmation and exact amount, atomically writes both settlement fields, Admin operator/timestamp audit, COD_PAID/payment PAID/order PAID, and safely returns idempotent success on repeat clicks. Booked/dispatched orders remain blocked.
+- **CAPI:** reuses existing `createPurchaseEvent`, `capi_events`, `CAPI_PURCHASE` outbox and Queue path when `META_CAPI_ENABLED=true`; event ID is order-derived and duplicate-safe. Queue failure leaves durable PENDING outbox state. CAPI remains OFF and no Meta send/activation occurred.
+- **Tests:** new manual-COD/CAPI cases cover valid settlement, duplicate click, unauthorized request, amount mismatch, premature transition, Queue-unavailable deferral and one Purchase event. Full suite 30 files/370 tests PASS; focused COD 27/27; build/lint PASS; observability6/6; adapter8/8; deadline/rollback18/18.
+- **Production protection:** identities/routing remain API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%. No deployment, D1 mutation, live PAID marking, payment-method change, Meta send, flag, Cron, Queue or customer-message mutation occurred.
+- **Monitoring:** `GFS-Cloudflare-Analytics-Monitor` remains absent; live monitoring is BLOCKED once. No token experiment was repeated. Separate approval is required before deploying the Admin action or enabling CAPI.
+
 ## GFS-425 — COD courier settlement readiness (2026-11-02 PKT)
 
 **Disposition: PASS for read-only control review and SOP design; BLOCKED pending owner SOP/courier evidence approval. No production mutation.**
