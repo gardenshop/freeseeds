@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-429 - COD release preflight resources (2026-11-02 PKT)
+
+- **Candidate:** local GFS-426 Admin source at commit `4395b68`; no deployed version or candidate upload.
+- **D1:** active bound `getfreeseeds-staging` contains required COD/payment/order/conversation/outbox schema and guard triggers; read-only verification only.
+- **Access:** `GFS-Admin-Health-Monitor` protected bridge returned health200 and business-route302 denial; secret values are not recorded.
+- **Analytics:** `GFS-Cloudflare-Analytics-Monitor` absent; GraphQL/five-minute qualification remains blocked.
+- **Rollback/routing:** Admin `e8c96c96` is exact baseline; Wrangler API/Admin readback remains100/0. No routing mutation.
+
 ## GFS-428 — routing and release resources (2026-11-02 PKT)
 
 - **Authoritative API:** `b426ba47`100% / `e8018f3f`0% via Wrangler.

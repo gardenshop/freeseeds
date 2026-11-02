@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-429 GFS-426 release preflight boundary (2026-11-02 PKT)
+
+- Candidate source is Admin-only: commit `4395b68` changes `apps/admin/src/index.ts` plus tests/docs; no API source or customer WhatsApp code changed. GFS-426 remains undeployed.
+- Local acceptance is PASS: authenticated Admin/CSRF, `COLLECTION_PENDING` COD only, exact quoted payable, explicit confirmation, atomic audit/PAID transition, duplicate/unauthorized/premature/amount-mismatch rejection, and CAPI OFF behavior are covered.
+- Active `getfreeseeds-staging` D1 read-only schema contains orders, payments, COD details, conversations, outbox and COD guard triggers. No D1 write occurred. Existing Advance methods remain frozen.
+- `GFS-Admin-Health-Monitor` returned health200 plus business-route302 denial through the protected bridge. `GFS-Cloudflare-Analytics-Monitor` remains absent; GraphQL/five-minute qualification is BLOCKED.
+- This is preflight only, not release approval. No candidate upload, 0% validation, live PAID action, routing change, D1 write, Meta/CAPI action, customer message or deployment is authorized.
+
 ## GFS-428 Admin routing verification boundary (2026-11-02 PKT)
 
 - Authoritative Wrangler readback for verified Get Free Seeds account reports API `b426ba47`100% / `e8018f3f`0% and Admin `e8c96c96`100% / `ee9b7baa`0%. Admin deployment history identifies the last baseline readback as GFS-407 Approval U; no routing mutation occurred.

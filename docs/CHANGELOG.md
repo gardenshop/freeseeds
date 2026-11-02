@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-02 - GFS-429 GFS-426 COD release preflight
+
+- Verified the Admin-only candidate, active D1 schema compatibility, Service Auth health/isolation, exact Wrangler routing and full local regression.
+- Kept release blocked because Analytics monitoring and explicit owner release approval are absent; no production mutation occurred.
+
 ## 2026-11-02 — GFS-428 routing verification and release readiness
 
 - Closed the Admin 97.8/2.2 discrepancy using authoritative Wrangler 100/0 readback; no routing mutation was needed.

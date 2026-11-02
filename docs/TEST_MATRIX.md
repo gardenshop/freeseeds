@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-429 - COD payment release preflight (2026-11-02 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Candidate scope | PASS | GFS-426 commit changes Admin source/tests/docs only; no API/customer WhatsApp source change. |
+| Manual COD acceptance | PASS locally | Admin/CSRF, COLLECTION_PENDING, exact quote, explicit confirmation, atomic PAID/audit, duplicate and invalid-action guards. |
+| D1 compatibility | PASS read-only | Active getfreeseeds-staging has orders/payments/COD/conversation/outbox tables and COD guard triggers; changes0/writes0. |
+| Access health/isolation | PASS | Protected bridge: /health200; /api/orders302 denial. Browser without service auth: /health403. |
+| Analytics/five-minute monitoring | BLOCKED | GFS-Cloudflare-Analytics-Monitor absent; no credential recreation or bypass. |
+| Release mutation | NOT RUN | No owner release approval; no upload, 0% validation, promotion, PAID action or routing change. |
+| Regression | PASS | Full370/370, focused COD27/27, build/lint, observability6/6, adapter8/8, deadline/rollback18/18. |
+
 ## GFS-428 — routing and release readiness (2026-11-02 PKT)
 
 | Area | Result | Evidence |

@@ -1,5 +1,19 @@
 # Final Report
 
+## GFS-429 - COD payment release preflight (2026-11-02 PKT)
+
+**Overall: candidate preflight PASS; production release BLOCKED.**
+
+1. **Scope:** GFS-426 is Admin-only and undeployed. Commit `4395b68` changes Admin source, tests and docs only; no API or customer WhatsApp source changed.
+2. **COD acceptance:** local PASS for Admin/CSRF, eligible COLLECTION_PENDING, exact original payable amount, explicit operator confirmation, atomic settlement/audit/PAID transition, duplicate click, unauthorized, premature and amount-mismatch protection.
+3. **Schema:** active `getfreeseeds-staging` D1 read-only verification found orders, payments, COD details, conversations, outbox and COD guard triggers. D1 reported changes0/writes0. No migration or live PAID action occurred.
+4. **Monitoring:** existing Service Auth bridge returned /health200 and /api/orders302 denial; unauthenticated browser health returned expected403. Analytics target is absent, so GraphQL and five-minute qualification are BLOCKED. No token experiment was repeated.
+5. **Routing/rollback:** Wrangler confirms API `b426ba47`100% / `e8018f3f`0% and Admin `e8c96c96`100% / `ee9b7baa`0%. Exact Admin rollback is `e8c96c96`; no live correction or deployment was performed.
+6. **Protected operations:** Advance methods, COD PKR125, EN/UR, recovery, webhook, Queue/DLQ, Cron, Meta, CAPI, D1 and customer traffic remain untouched. CAPI remains OFF.
+7. **Tests:** full30/370, focused COD27/27, build/lint, observability6/6, adapter8/8 and deadline/rollback18/18 PASS. V1 rollback fixture remains blocked by missing `GFS_LEGACY_ROOT`.
+8. **Readiness:** local candidate100%; production release0%; monitoring0%/BLOCKED; live PAID action0%. P0 protection100%; live E2E remains UNKNOWN where no genuine new order exists.
+9. **Next approval:** one exact Admin-only GFS-426 0% validation/release approval after a secure Analytics-read credential, authenticated five-minute monitoring, budget/security gates and verified rollback. No API, payment-method or CAPI activation may be bundled.
+
 ## GFS-428 — Admin routing verification and release readiness (2026-11-02 PKT)
 
 **Overall: routing discrepancy CLOSED; GFS-426 production release BLOCKED by missing authenticated monitoring and separate owner release approval.**

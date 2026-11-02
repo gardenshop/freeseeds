@@ -1,5 +1,16 @@
 # Status
 
+## GFS-429 - GFS-426 COD payment release preflight (2026-11-02 PKT)
+
+**Disposition: local candidate preflight PASS; production release BLOCKED by missing Analytics monitoring and separate owner release approval.**
+
+- **Candidate:** GFS-426 is Admin-only and undeployed. Commit `4395b68` changes Admin source, COD tests and docs; API/customer WhatsApp source is unchanged.
+- **Acceptance:** local full370/370 and focused COD27/27 cover Admin/CSRF, `COLLECTION_PENDING`, exact original quote, explicit operator confirmation, atomic audit/PAID, duplicate safety, unauthorized/wrong amount/premature rejection, and CAPI-off behavior.
+- **D1 compatibility:** active bound `getfreeseeds-staging` read-only schema contains required orders/payments/COD/conversation/outbox tables and COD guard triggers. No rows or schema were changed.
+- **Service Auth:** protected bridge returned `/health`200 and `/api/orders`302 denial with no business data. Browser unauthenticated `/health`403 remains expected. Analytics target is absent, so GraphQL and five-minute monitoring remain BLOCKED.
+- **Release gate:** no candidate upload, 0% validation, promotion, live PAID action, payment-method change, D1 write, Meta/CAPI send, routing change or customer message occurred. API/Admin routing remains exact100/0 by Wrangler.
+- **Payment protection:** JazzCash, Easypaisa and Bank Transfer remain owner-frozen and untouched; CAPI remains OFF.
+
 ## GFS-428 — Admin routing verification and GFS-426 readiness (2026-11-02 PKT)
 
 **Disposition: routing discrepancy CLOSED by authoritative readback; GFS-426 release BLOCKED pending monitoring/owner approval.**

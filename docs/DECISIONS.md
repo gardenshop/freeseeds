@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-429 - preflight GFS-426 without release mutation (2026-11-02 PKT)
+
+**Decision:** accept the GFS-426 local candidate as release-ready in source/test scope, but do not upload or promote it. The prompt is not release approval, and Analytics monitoring is unavailable.
+
+The existing Admin Service Auth bridge is sufficient for health/isolation preflight (200 health, 302 business-route denial). A separate least-privilege Analytics credential and explicit Admin-only release approval remain required. Payment methods, API routing, CAPI, D1 and customer traffic stay frozen.
+
 ## GFS-428 — close routing discrepancy; defer Admin release (2026-11-02 PKT)
 
 **Decision:** treat Wrangler’s exact deployment readback as authoritative: API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%. The earlier dashboard 97.8/2.2 display is stale/metrics-derived and does not authorize a routing action.
