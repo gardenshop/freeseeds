@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-425 — COD settlement resources (2026-11-02 PKT)
+
+- **Existing controls:** Admin tracking, fulfillment transitions, `COLLECTION_PENDING`, HMACed collection/remittance evidence and exact quoted-total PAID gates. No duplicate implementation added.
+- **SOP fields:** order/quote, courier tracking, delivery disposition/date, collection amount/date/evidence, remittance amount/date/deductions/evidence, exceptions and authorized verifier.
+- **Missing external resource:** verified courier report/integration and supported returned/undelivered disposition. Do not invent or write settlement data.
+- **Protected resources:** API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%; payment methods frozen; monitor target absent.
+
 ## GFS-424 — protected payment and COD resources (2026-11-02 PKT)
 
 - **Payment freeze:** JazzCash, Easypaisa and Bank Transfer are owner-confirmed working. Their accounts, beneficiaries, QR/bank details, enabled state, instructions, totals, receipts, PAID states and pending orders are immutable under GFS-424.

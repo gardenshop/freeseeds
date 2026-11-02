@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-02 — GFS-425 COD courier settlement readiness
+
+- Documented the minimal courier settlement SOP using existing Admin/database controls; no duplicate functionality or code was added.
+- Defined required tracking, delivery disposition, collection/remittance, evidence, exception and authorized-verifier fields. Owner SOP/courier-source approval remains pending.
+- Reverified payment freeze, routing and monitoring BLOCKED status. No live order, payment, COD, D1, deployment or customer-message mutation occurred.
+
 ## 2026-11-02 — GFS-424 payment freeze and COD operations
 
 - Recorded the owner freeze protecting all three working payment methods and deferred GFS-414 Admin deployment because Admin preview HTTP503 is not customer-checkout evidence.

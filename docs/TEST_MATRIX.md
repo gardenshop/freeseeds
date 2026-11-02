@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-425 — COD courier settlement readiness (2026-11-02 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Existing COD controls | PASS read-only | Tracking, lifecycle transitions, collection/remittance endpoints and exact-quote PAID gates inspected; no duplicate feature added. |
+| Settlement SOP | READY FOR OWNER APPROVAL | Minimal fields and exception/verification rules documented; no code or live setting enabled. |
+| Courier evidence | BLOCKED/UNKNOWN | No verified connector/report, returned/undelivered disposition or settlement record available. |
+| Payment freeze | PASS | All three owner-confirmed working methods untouched; GFS-414 deferred. |
+| Focused regression | PASS | 10 files/128 tests. |
+| Full regression | PASS carried | 30 files/366 tests, build/lint and release-controller checks from unchanged source. |
+| Monitoring | BLOCKED | Analytics monitor target absent; no token recreation or bypass. |
+| Routing/safety | PASS | API/Admin exact100%/0%; no production mutation. |
+
 ## GFS-424 — payment freeze and COD operational readiness (2026-11-02 PKT)
 
 | Area | Result | Evidence |

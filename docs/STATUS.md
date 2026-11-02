@@ -1,5 +1,17 @@
 # Status
 
+## GFS-425 — COD courier settlement readiness (2026-11-02 PKT)
+
+**Disposition: PASS for read-only control review and SOP design; BLOCKED pending owner SOP/courier evidence approval. No production mutation.**
+
+- Identity/routing reverified: GitHub PR #11 at `f1f2542e03b28a9c16db2a65aada668fe6447754`; Cloudflare `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Meta targets unchanged. API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%.
+- Payment freeze preserved: owner-confirmed working JazzCash, Easypaisa and Bank Transfer were not inspected for mutation, reconfigured, deployed or changed. GFS-414 remains deferred; Admin HTTP503 remains a separate preview issue.
+- Existing capability is sufficient for the current boundary: Admin/source supports tracking assignment, packing/dispatch/delivery transitions, `COLLECTION_PENDING`, exact collection and exact remittance evidence, HMACed references and PAID only when both amounts equal the immutable COD quote. No duplicate feature was added.
+- **Minimal SOP:** capture order ID/original COD quote; courier/tracking reference; delivered/returned/undelivered disposition/date; exact collection amount/date/evidence; exact remittance amount/date/authorized deductions/evidence; mismatch, duplicate, missing-evidence and exception handling; and the authorized verifier before PAID.
+- No courier connector, verified courier report, returned/undelivered state or settlement amount was found. This is an evidence/process gap, not proof of failed delivery or collection. Owner approval is required before coding or enabling any settlement change.
+- Monitoring target remains absent; `GFS-Cloudflare-Analytics-Monitor` is BLOCKED once. No token experiment or bypass was repeated.
+- Focused payment/COD/fulfillment suite remains 10 files/128 tests PASS; prior full366/366, build/lint, observability and rollback-controller checks remain valid because no source changed.
+
 ## GFS-424 — protect live payments and advance COD operations (2026-11-02 PKT)
 
 **Disposition: PASS for payment freeze/read-only investigation and local regression; BLOCKED for monitoring. No production mutation.**

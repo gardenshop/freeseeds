@@ -1,5 +1,18 @@
 # Final Report
 
+## GFS-425 — COD courier settlement readiness (2026-11-02 PKT)
+
+**Overall: SOP ready for owner approval; existing controls preserved; no live mutation.**
+
+1. **GFS-424 comparison:** payment freeze remains active; JazzCash, Easypaisa and Bank Transfer were untouched. Admin HTTP503 remains separate from customer payment and GFS-414 remains deferred.
+2. **Existing vs proposed:** existing Admin/source already supports tracking, packing, dispatch, delivery, collection pending, exact collection/remittance evidence and quote-locked PAID. Proposed work is only an operational SOP and approved courier evidence source; no duplicate code is justified.
+3. **Minimal SOP:** record order ID/original COD quote; courier/tracking reference; delivered/returned/undelivered disposition/date; exact collected amount/date/evidence reference; remitted amount/date/authorized deductions/evidence reference; mismatch/duplicate/missing-evidence/exception handling; and the authorized verifier before PAID.
+4. **Advance protection:** owner-confirmed working payment methods, accounts, QR codes, instructions, amounts, receipts and states were not modified. No payment replay or synthetic activity occurred.
+5. **Monitoring:** BLOCKED once; `GFS-Cloudflare-Analytics-Monitor` absent. No token experiment or bypass repeated.
+6. **Tests/safety:** focused 10 files/128 tests PASS; full366/366, build/lint and controller checks remain valid on unchanged source. Routing is API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%.
+7. **Completion:** P0 payment protection100%; COD control review100%; COD courier evidence/SOP activation partial pending owner approval; Advance protection100%; monitoring qualification0%; live settlement change0%. Unsupported courier metrics remain UNKNOWN.
+8. **Next approval:** approve the SOP and provide one genuine courier settlement evidence source. Only then consider the smallest separately approved integration or schema change.
+
 ## GFS-424 — protect live payments and advance COD operations (2026-11-02 PKT)
 
 **Overall: payment freeze PASS; COD readiness advanced read-only; monitoring BLOCKED. Production unchanged.**

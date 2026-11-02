@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-425 — approve SOP before COD settlement enhancement (2026-11-02 PKT)
+
+**Decision:** use existing Admin/database controls and document the smallest operational settlement SOP before considering code. The required evidence is order ID/original quote, courier tracking, delivery disposition/date, exact collection and remittance amounts/dates, authorized deductions, opaque evidence references, exception handling and an authorized verifier. PAID remains blocked unless existing exact-quote and evidence gates pass.
+
+No courier integration or returned/undelivered state is inferred from absent D1 rows. No code, D1 schema, live COD setting, order, payment or courier state changes are authorized. Owner approval of the SOP and a genuine courier evidence source is the next gate.
+
 ## GFS-424 — freeze working payment methods; defer Admin preview deployment (2026-11-02 PKT)
 
 **Decision:** preserve JazzCash, Easypaisa and Bank Transfer exactly as owner-confirmed working. Treat GFS-423 Admin HTTP503 as an Admin-preview/configuration discrepancy until actual customer-checkout failure is proven. Do not deploy the GFS-414 Admin repair solely for this symptom. Preserve EN/UR, verified beneficiary/QR ownership, persisted dynamic totals, receipts, PAID states and pending orders.

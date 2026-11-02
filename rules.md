@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-425 COD courier settlement SOP boundary (2026-11-02 PKT)
+
+- Existing Admin controls are authoritative for COD tracking, `COD_PENDING` → `PACKING` → `DISPATCHED` → `DELIVERED` → `COLLECTION_PENDING` → `PAID`, exact collection/remittance evidence and immutable quoted totals. Do not duplicate them or add live settlement features without owner approval.
+- Minimal SOP record must contain: order ID and original COD quote; courier/tracking reference; delivered/returned/undelivered disposition and date; exact collected amount/date/evidence reference; exact remitted amount/date, authorized deductions if applicable/evidence reference; mismatch/duplicate/missing-evidence/exception handling; and the authorized verifier before PAID.
+- No courier integration, settlement amount, returned/undelivered state or evidence may be invented. Until an owner-approved courier source exists, keep COD operationally read-only and do not mark PAID from unsupported evidence.
+
 ## GFS-424 owner payment freeze and COD boundary (2026-11-02 PKT)
 
 - **OWNER PAYMENT FREEZE:** JazzCash, Easypaisa and Bank Transfer are confirmed by the owner as working and receiving payments. Never disable, suspend, reset, replace, reconfigure or deploy changes to their accounts, beneficiaries, QR codes, bank details, enabled status, amount calculation, instructions, receipts, PAID states or pending orders under this workstream.
