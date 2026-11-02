@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-02 — GFS-418 GraphQL connector boundary
+
+- Reverified protected identities/routing and inspected official Cloudflare user/account token inventories; no existing Analytics-read connector is available.
+- Did not create or alter a token because explicit owner security approval and approved secure storage were not supplied. Kept existing Wrangler OAuth, Access credentials and production routing unchanged.
+- Local observability5/5, adapter8/8 and deadline/rollback18/18 passed; live five-minute monitoring remains blocked by GraphQL HTTP401.
+
 ## 2026-11-02 — GFS-417 GraphQL monitoring boundary
 
 - Diagnosed the exact GraphQL endpoint and HTTP401: the correct, unexpired Wrangler OAuth identity lacks recorded Analytics read scope.

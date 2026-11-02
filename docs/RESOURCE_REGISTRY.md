@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-418 — approved monitoring connector status (2026-11-02 PKT)
+
+- **Cloudflare identity:** `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no token values recorded.
+- **Connector inventory:** official user API-token and account API-token lists contain no existing Analytics-read token. Wrangler OAuth lacks Analytics read; `GFS-Admin-Health-Monitor` remains Access health-only.
+- **Routing:** API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%. No watchdog or mutation.
+- **Gate:** owner security approval plus approved secure storage are required before creating Account Analytics:Read credentials; five-minute monitoring remains blocked.
+
 ## GFS-417 — GraphQL monitoring resources (2026-11-02 PKT)
 
 - **GraphQL:** exact endpoint `https://api.cloudflare.com/client/v4/graphql`; existing Wrangler OAuth selection; HTTP401. Token values are not recorded. Diagnostic scope list lacks Analytics read.

@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-418 — stop before GraphQL token creation (2026-11-02 PKT)
+
+**Decision:** do not create or change credentials. Official Cloudflare user and Get Free Seeds account token inventories are empty for existing reusable Analytics-read connectors. The existing Wrangler OAuth and Access service credentials must remain unchanged; GraphQL remains HTTP401 and the monitoring controller remains correctly fail-closed.
+
+**Required owner action:** explicitly approve one least-privileged Account Analytics:Read token and identify an approved secure host storage path/bridge. After owner-side provisioning, connect only that credential to the existing controller, validate HTTP200/error-free fresh metrics, health/denial/isolation, exact routing, fail-closed behavior and five-minute monitoring. No production release, canary or watchdog before those gates pass.
+
 ## GFS-417 — stop on missing GraphQL Analytics authorization (2026-11-02 PKT)
 
 **Decision:** classify GraphQL HTTP401 as a credential-scope blocker. The Wrangler OAuth token is valid for the protected account and not expired at the check, but its recorded scopes do not include Analytics read. The Access service token is intentionally separate and must not be reused for GraphQL.

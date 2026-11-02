@@ -1,5 +1,16 @@
 # Final Report
 
+## GFS-418 — GraphQL monitoring and P0 unblock (2026-11-02 PKT)
+
+**Overall: BLOCKED safely; production unchanged.**
+
+1. **HTTP401 resolution:** no live resolution is authorized yet. Exact request/classification remains correct and fail-closed; GraphQL HTTP401 is caused by the existing Wrangler OAuth lacking Analytics read. Official user/account token inventories contain no reusable Analytics connector.
+2. **Credential security:** existing Wrangler OAuth and Access credentials were not changed. No token was created, copied, logged, exposed or stored. Required owner security approval and secure storage path are missing.
+3. **Monitoring:** local safeguards pass—observability5/5, adapter8/8, deadline/rollback18/18. Live HTTP200 GraphQL, fresh timestamps, five-minute monitoring and watchdog qualification were not claimed.
+4. **Routing/rollback:** read-only routing remains API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%. No rollback or deployment action occurred. Prior full363/363, build/lint remain valid.
+5. **Remaining P0:** dynamic Advance Admin repair is source-only; COD settlement policy is absent; recovery ON/start provenance remains unresolved; Advance receipt/reconciliation remains pending. No payment, recovery, Meta, migration0046 or customer-message work was performed.
+6. **Next exact approval:** owner approval for one Account Analytics:Read token and an approved secure storage/bridge path. Then rerun the bounded monitoring qualification before any release approval.
+
 ## GFS-417 — GraphQL monitoring and release readiness (2026-11-02 PKT)
 
 **Overall: BLOCKED at GraphQL authentication; production untouched.**

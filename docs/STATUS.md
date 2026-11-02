@@ -1,5 +1,14 @@
 # Status
 
+## GFS-418 — GraphQL monitoring and P0 unblock (2026-11-02 PKT)
+
+**Disposition: BLOCKED safely at credential authorization. No production mutation.**
+
+- Protected identity and routing reverified: GitHub `gardenshop/freeseeds` PR #11; Cloudflare `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%. Meta identifiers remain unchanged.
+- Official Cloudflare browser inspection found no existing user API token and no existing account API token. The existing Wrangler OAuth still lacks Analytics read; the existing Access bridge is separate and health-only. No secure Analytics credential is available to connect.
+- GFS-417’s exact GraphQL endpoint/request/classification remains the validated source path: Bearer OAuth to `https://api.cloudflare.com/client/v4/graphql`, HTTP401, fail-closed. Local observability5/5, adapter8/8 and deadline/rollback18/18 pass.
+- Provisioning the preferred least-privileged Account Analytics:Read token requires explicit owner security approval and an approved secure storage path; neither is present. Five-minute monitoring therefore remains BLOCKED. No token, routing, deployment, flag, recovery, payment/order, D1, Meta, Cron, Queue/DLQ or customer-message mutation occurred.
+
 ## GFS-417 — GraphQL monitoring and release readiness (2026-11-02 PKT)
 
 **Disposition: BLOCKED at authenticated GraphQL metrics. No production mutation.**

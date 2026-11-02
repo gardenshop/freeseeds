@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-418 GraphQL token provisioning boundary (2026-11-02 PKT)
+
+- Fresh identity/routing read: GitHub `gardenshop/freeseeds` PR #11; Cloudflare `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%. Meta target remains business `568026370701542`, account `1198439777611633`.
+- Official Cloudflare user-token and verified account-token inventories contain no existing Analytics-read connector. Existing Wrangler OAuth remains unchanged; existing Access service credentials remain health-only.
+- Do not create, rotate, broaden, expose or store a Cloudflare API token without explicit owner security approval and an approved secure storage path. No GraphQL HTTP401 bypass, mock metrics, routing, deployment, flag, payment, D1, Meta, Cron, Queue/DLQ or customer-message mutation.
+
 ## GFS-417 GraphQL monitoring boundary (2026-11-02 PKT)
 
 - **Root cause boundary:** the existing Wrangler OAuth token is present and unexpired at the check, and `wrangler whoami` matches `gisupp@gmail.com` / Get Free Seeds. Its recorded scopes include account/Workers/D1 access but no Analytics read scope; the exact GraphQL endpoint `https://api.cloudflare.com/client/v4/graphql` returns HTTP401. Do not copy, log, rotate or broaden the token.

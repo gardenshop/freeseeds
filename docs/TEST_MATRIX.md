@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-418 — GraphQL connector availability (2026-11-02 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Protected identity/routing | PASS | GitHub/Cloudflare/Meta targets verified; API/Admin exact100%/0% readback. |
+| Existing Analytics connectors | BLOCKED | Official user-token and account-token inventories empty; Wrangler OAuth lacks Analytics read. |
+| GraphQL request/classification | PASS locally / live BLOCKED | Exact Bearer GraphQL path is fail-closed; prior live HTTP401 remains unresolved. |
+| Secure token provisioning | NOT AUTHORIZED | Explicit owner security approval and secure storage path absent; no token created. |
+| Local safeguards | PASS | Observability5/5, adapter8/8, deadline/rollback18/18. |
+| Five-minute monitoring | NOT RUN | Live GraphQL authentication gate unavailable. |
+| Production safety | PASS | No credential, routing, deployment, flag, payment, D1, Meta, Cron or customer-message mutation. |
+
 ## GFS-417 — GraphQL monitoring qualification (2026-11-02 PKT)
 
 | Area | Result | Evidence |
