@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-439 - preserve Analytics account validation (2026-11-03 PKT)
+
+**Decision:** retain the existing fail-closed username validation. The owner-session bridge reached the Analytics credential but rejected it because the stored username did not equal the verified Get Free Seeds account ID. The actual value was not extracted or recorded.
+
+**Owner action:** edit only the Generic Credential username to `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, preserving the token in place. If Windows requires the token value to edit, use an approved owner-mediated replacement directly in Credential Manager. Do not weaken validation or transfer secrets.
+
+**Release boundary:** monitoring and GFS-426 remain blocked until sanitized bridge, GraphQL, five-minute and rollback results pass. No deployment or production mutation is authorized.
+
 ## GFS-434 - close pre-live dead letters (2026-11-02 PKT)
 
 **Decision:** close the 19 `PAYMENT_TEXT_DELIVERY_FAILED` and 8 `GFS177_PAYMENT_METHODS_DISABLED` records as pre-live test history. The owner-provided live-start boundary is 2026-10-29; the 19 records are dated 2026-10-23 through 2026-10-25, exhausted five retries, and are not retryable. The 8 are permanent historical configuration guards.

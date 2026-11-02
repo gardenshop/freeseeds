@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 - GFS-439 Analytics credential identity gate
+
+- Owner-session bridge reached the existing Analytics Credential Manager target but failed closed with `analytics_credential_account_mismatch`.
+- Preserved the validation and recorded the owner-only metadata correction: set the stored username to the exact Get Free Seeds account ID without exposing or replacing the token unless secure preservation is impossible.
+- Kept GraphQL/five-minute monitoring and GFS-426 release blocked; no production, payment, Meta, CAPI or customer mutation occurred.
+
 ## 2026-11-02 - GFS-434 close pre-live payment dead letters
 
 - Closed 19 five-attempt `PAYMENT_TEXT_DELIVERY_FAILED` dead letters dated 2026-10-23 through 2026-10-25 as owner-confirmed pre-live test data; closed 8 historical `GFS177_PAYMENT_METHODS_DISABLED` permanent failures as the same non-production class.

@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-439 - Analytics credential username correction (2026-11-03 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Owner-session target visibility | PASS | Existing bridge reached `GFS-Cloudflare-Analytics-Monitor` from the owner session. |
+| Account identity validation | BLOCKED | Bridge returned `analytics_credential_account_mismatch`; stored username/token were not exposed. |
+| Bridge safety | PASS | Existing account check remained enabled; no secret read, transfer, log, file or Git write. |
+| GraphQL/five-minute monitoring | NOT RUN | Credential identity gate failed before qualification. |
+| Admin release | NOT RUN | No candidate upload, 0% validation or promotion. |
+| Production protection | PASS | API/Admin baseline, payments, WhatsApp, D1, CAPI and customer traffic unchanged. |
+
 ## GFS-434 - historical dead-letter closure (2026-11-02 PKT)
 
 | Area | Result | Evidence |

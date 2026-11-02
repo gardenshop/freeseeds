@@ -1,5 +1,14 @@
 # Status
 
+## GFS-439 - Analytics credential username mismatch (2026-11-03 PKT)
+
+**Disposition: secure bridge BLOCKED at metadata validation; production unchanged.**
+
+- The owner ran the existing bridge from the credential-owning session. The target was readable, but the bridge returned `analytics_credential_account_mismatch` at its unchanged account-ID check.
+- The agent did not read or record the stored username or token. Required username remains exactly `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- Owner-only correction: edit the target's username in Windows Credential Manager while preserving the token value. If preservation requires the secret, stop and use an approved direct owner-session replacement. No MCP, clipboard, chat, log, file or Git transfer is allowed.
+- GraphQL HTTP200/errors0, freshness, five-minute monitoring, rollback qualification and GFS-426 release were not claimed. No source, routing, payment, D1, Meta, CAPI or customer-message change occurred.
+
 ## GFS-434 - close pre-live payment dead letters (2026-11-02 PKT)
 
 **Disposition: historical review CLOSED; no current defect proven; production unchanged.**

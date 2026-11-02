@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-439 Analytics credential identity boundary (2026-11-03 PKT)
+
+- Owner-session bridge execution reached `GFS-Cloudflare-Analytics-Monitor` but failed closed with `analytics_credential_account_mismatch` at the existing account-ID check. The actual stored username was not read, printed, copied or recorded.
+- Preserve the validation in `scripts/run-with-gfs-monitor-credentials.ps1`; never weaken or remove the expected account check. The required username is exactly `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- Owner-only repair: in the owner Windows Credential Manager session, edit only the Generic Credential username to the exact account ID while preserving the existing token value. If the UI cannot preserve the token without revealing it, stop and create/store one approved replacement directly in that owner session; never transfer it through MCP, chat, clipboard, logs, files or Git.
+- GraphQL, five-minute monitoring, rollback qualification and GFS-426 release remain BLOCKED until the owner reruns the existing bridge and returns sanitized results. No production or payment mutation occurred.
+
 ## GFS-434 historical payment-dead-letter closure (2026-11-02 PKT)
 
 - Owner-provided runtime boundary: the live application began on 2026-10-29. The 19 `PAYMENT_TEXT_DELIVERY_FAILED` dead letters dated 2026-10-23 through 2026-10-25 are test/pre-live records and are closed as non-production history. The 8 `GFS177_PAYMENT_METHODS_DISABLED` permanent failures are likewise historical and closed; current payment methods remain owner-frozen and enabled/`READY`.

@@ -1,5 +1,19 @@
 # Final Report
 
+## GFS-439 - fix Analytics credential identity and qualify monitoring (2026-11-03 PKT)
+
+**Overall: BLOCKED at owner Credential Manager metadata correction; production unchanged.**
+
+1. **Root cause:** owner-session execution reached `GFS-Cloudflare-Analytics-Monitor` but the existing bridge returned `analytics_credential_account_mismatch` at the account-ID check. GFS-437's profile-isolation diagnosis is no longer the immediate blocker.
+2. **Secret safety:** the agent did not read, print, copy or record the stored username or token. The required username is exactly `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+3. **Correction:** preserve the bridge check and edit only the Generic Credential username in the owner session. If Windows cannot preserve the token without revealing it, create/store an approved replacement directly in that session. No MCP, clipboard, chat, log, file or Git transfer.
+4. **Monitoring:** GraphQL HTTP200/errors0, freshness, authenticated health, denial/isolation, five-minute qualification, budget/security and rollback were not claimed because the identity gate failed.
+5. **Release:** no Admin candidate upload, 0% validation, promotion, real PAID action, payment change, CAPI event or customer message occurred. GFS-426 remains local PASS372/372 and undeployed; CAPI remains OFF.
+6. **Protection:** API/Admin remain the verified 100/0 baseline; WhatsApp EN/UR, COD PKR125, Advance methods, recovery, webhook, Queue/DLQ, Cron, D1, orders and PAID states were untouched.
+7. **Regression/Git:** no source code changed, so prior 372/372, build/lint and safety evidence remains valid. No new release test was run. The next documentation update should follow the owner rerun; no release commit was made in this blocked turn.
+8. **Completion:** credential metadata correction 0%/BLOCKED; monitoring 0%/BLOCKED; local COD/CAPI 100%; production release 0%; protected production 100%.
+9. **Next action:** owner sets the credential username to the exact account ID while preserving the token, then reruns the existing bridge and returns sanitized output only.
+
 ## GFS-434 - close historical payment dead letters (2026-11-02 PKT)
 
 **Overall: historical reconciliation CLOSED; no current defect proven; production unchanged.**

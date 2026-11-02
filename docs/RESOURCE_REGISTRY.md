@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-439 Analytics credential identity evidence (2026-11-03 PKT)
+
+- **Bridge result:** owner-session execution reached `GFS-Cloudflare-Analytics-Monitor` and failed closed with `analytics_credential_account_mismatch`.
+- **Required metadata:** stored username must equal Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; actual stored username and token value are intentionally not registered.
+- **Secure repair:** owner must edit only the username in the owner Windows Credential Manager session, preserving the token; if unavailable, use an approved direct replacement. No secret transfer path is permitted.
+- **Qualification:** GraphQL/five-minute monitoring and GFS-426 release remain blocked; no production mutation occurred.
+
 ## GFS-434 historical dead-letter closure (2026-11-02 PKT)
 
 - **Runtime boundary:** owner confirms live application start `2026-10-29`; 19 dated `2026-10-23` through `2026-10-25` are pre-live test records.
