@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-411 — P0 launch operations (2026-11-02 PKT)
+
+| Area | Result | Evidence / boundary |
+|---|---|---|
+| Protected routing and health | PASS / partial | GitHub remote and PR head verified; API health 3/3 HTTP200; unauthenticated Admin health HTTP403; authenticated routing/version attribution requires Chrome MCP. |
+| Recovery readiness | PASS locally; live gate BLOCKED | Source gates cover activation timestamp, state/payment, service window, opt-out, dedupe and immediate pre-send checks. Flag remains false; no send or activation. |
+| COD operations | Local PASS; live UNKNOWN | Admin order/fulfillment/COD guards and PKR125 tests pass. Current real collection, remittance, courier and lifecycle evidence requires authenticated D1/Admin. |
+| Advance operations | Local PASS; live UNKNOWN | EN/UR JazzCash, Easypaisa and Bank Transfer method/receipt/review/duplicate tests pass. No live payment edit. |
+| Webhook and WhatsApp | Local PASS; live UNKNOWN | Webhook acknowledgement, delivery/read reconciliation, retry, Queue/DLQ and Cron tests pass; no production events or messages generated. |
+| Admin and Meta | Local PASS; live UNKNOWN | Admin order/analytics/security and Meta-disabled guard tests pass; CAPI/Instant Forms remain false. |
+| Regression | PASS | `npm.cmd test`: 30 files / 361 tests; `npm.cmd run build`; `npm.cmd run lint`. |
+| Security/documentation | PASS with known findings | No secrets/customer data added. The documented 10 moderate dev-only minimatch findings remain; no audit0 claim. |
+
+Chrome DevTools MCP timed out on bounded retries, so no authenticated dashboard, D1, courier, payment-reconciliation, Queue/DLQ or Meta-delivery assertion is made in this milestone.
+
 ## GFS-410 closure and recovery reconciliation (2026-11-02 PKT)
 
 | Gate | Evidence | Result |

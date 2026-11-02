@@ -1,5 +1,36 @@
 # Final Report
 
+## GFS-411 — complete remaining P0 launch operations (2026-11-02 PKT)
+
+**Overall: PARTIAL / BLOCKED at the authenticated operational-evidence gate.** Safe checks completed; no production mutation, customer send, payment edit, D1 write, migration, deployment, canary or Meta change occurred.
+
+### 1. P0 disposition
+
+| Workstream | Result | Evidence |
+|---|---|---|
+| Freeze and protected scope | PASS | GitHub/PR and remote verified; protected routing API `b426ba47`100% / `e8018f3f`0%, Admin `e8c96c96`100% / `ee9b7baa`0%; API health 3/3 HTTP200; Admin unauthenticated 403. |
+| +15/+210 readiness | PASS locally; activation BLOCKED | Recovery flag remains false. Local gates cover boundary, eligibility, service window, opt-out, state/payment, dedupe and rollback monitoring. Live eligible denominator/version attribution UNKNOWN. |
+| COD fulfillment | Local PASS; live UNKNOWN | PKR125 and Admin/COD guard tests pass. Last available GFS-409 aggregate had no verified collection/remittance or in-window paid/delivered/cancelled/returned COD rows; courier cost unavailable. Fresh records could not be read. |
+| Advance payments | Local PASS; live UNKNOWN | EN/UR three-method, receipt/review and duplicate-protection tests pass. Live pending/reconciliation/recipient evidence unavailable. |
+| Webhook/WhatsApp | Local PASS; live UNKNOWN | Ack, delivery/read, retries, Queue/DLQ and Cron tests pass; no production events/messages generated. |
+| Admin/Meta | Local PASS; live UNKNOWN | Admin workflow/analytics/security and Meta-off guards pass. CAPI/Instant Forms remain OFF; fresh attribution delivery unavailable. |
+| Migration0046 | BLOCKED / unresolved | Do not reapply or manufacture a history marker; prior contradictory evidence remains preserved. |
+
+### 2. Recovery activation readiness
+
+Separate approval would need to authorize only `PAYMENT_CHOICE_RECOVERY_ENABLED=true` with a new UTC `PAYMENT_CHOICE_RECOVERY_START_AT`, while keeping five-stage reminders, Automation V2 and utility templates false. The existing implementation does not backfill; it limits activation to eligible unfinished orders and rechecks state/payment, conversation, receipt/COD, opt-out, service window and idempotency immediately before enqueue/send. The theoretical outbound ceiling is two attempts per eligible order (+15 and +210); the current eligible denominator and cost estimate are UNKNOWN until authenticated D1/Admin access is restored. Required rollback is the flag to false, with version-attributed monitoring of queued/sent/delivered/read/failed/DLQ and no customer send before approval.
+
+### 3. Evidence, tests and routing
+
+Official Chrome DevTools MCP timed out on bounded retries. No authentication bypass was attempted. Full regression: 30 files / 361 tests PASS; build PASS; lint PASS. The known 10 moderate dev-only minimatch findings remain documented; audit0 is not claimed. New-number WhatsApp lock and Hoja/ThanNow zero-connection remain protected.
+
+### 4. Comparison and completion
+
+GFS-403/404 remain deferred; GFS-405/407 remain protected; GFS-406 migration provenance remains unresolved; GFS-408 remains blocked; GFS-409/410 deferment and recovery-off decisions remain intact. Evidence-backed completion: freeze/read-only checks 100%; local recovery readiness 100% but live activation 0%; COD/Advance/webhook/Admin/Meta live operations UNKNOWN; production change 0%. Overall launch readiness is **UNKNOWN**, not rounded up from local tests.
+
+**Highest-value next action:** restore the official authenticated Chrome DevTools path and obtain one bounded read-only Admin/D1 operational snapshot. Any repair or recovery activation requires a separate approval after that evidence.
+
+
 ## GFS-410 - cancellation closure and COD-recovery priority (2026-11-02 PKT)
 
 **Overall: PASS for safe closure, read-only reconciliation and regression; BLOCKED for recovery activation and D1 provenance repair.** No production mutation occurred.

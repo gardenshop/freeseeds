@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-411 P0 launch-operations boundary (2026-11-02 PKT)
+
+- **Freeze confirmed read-only:** GitHub is `gardenshop/freeseeds`, PR #11. The documented Cloudflare identity is `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; the documented Meta identity is business `568026370701542`, account `1198439777611633`. Current protected routing remains API `b426ba47`100% / `e8018f3f`0% and Admin `e8c96c96`100% / `ee9b7baa`0%. No external mutation occurred.
+- **Fresh bounded runtime evidence:** three public API health checks returned HTTP200 with `PRODUCTION_INTEGRATION_READY` and WhatsApp enabled; unauthenticated Admin health returned HTTP403. Official Chrome DevTools MCP timed out repeatedly, so authenticated Admin/D1, live version attribution, courier, payment-reconciliation, Queue/DLQ and Meta-delivery evidence is **UNKNOWN/BLOCKED**, not inferred.
+- **Recovery boundary:** keep `PAYMENT_CHOICE_RECOVERY_ENABLED=false`, `PAYMENT_REMINDERS_V2_ENABLED=false`, `PAYMENT_AUTOMATION_V2_ENABLED=false` and `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`. A future separately approved activation must set only the recovery flag plus a new UTC `PAYMENT_CHOICE_RECOVERY_START_AT`; it must retain eligibility, 24-hour service-window, opt-out, receipt/COD/state, conversation and idempotency checks, observe version-bound sends/delivery/read/failure/DLQ, and have an immediate rollback to false. No customer send or flag change is authorized by GFS-411.
+- **Operations evidence boundary:** last available sanitized D1 aggregate evidence remains the GFS-409 24-hour/7-day snapshot: COD PKR125 configuration was present, verified collection/remittance and COD paid/delivered/cancelled/returned rows were zero in-window, and courier-cost/net-collection evidence was unavailable. Current COD/Advance operational counts and live webhook/Queue/DLQ metrics are not reasserted while the authenticated bridge is unavailable.
+- Preserve EN/UR, Advance, COD PKR125, PAID, orders, webhook, Queue/DLQ, Cron, number separation, new-number WhatsApp lock and Hoja/ThanNow zero-connection. Do not apply or manufacture a migration0046 history marker, enable CAPI/Instant Forms/five-stage reminders/Automation V2, send customers, change payment state, or deploy/canary under GFS-411.
+
 ## GFS-410 cancellation closure and recovery configuration reconciliation (2026-11-02 PKT)
 
 - **Owner decision:** close GFS-403 through GFS-409 as deferred/blocked work, not completed release work. Preserve their source, tests, migration files and historical evidence; keep cancellation API/Admin candidates at0%; do not activate feedback, retention deletion, a retention Cron, five-stage reminders, Automation V2, utility templates or new customer sends.

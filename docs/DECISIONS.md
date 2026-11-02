@@ -1,5 +1,17 @@
 # Decisions
 
+## GFS-411 — complete safe P0 checks; stop at authenticated-evidence boundary (2026-11-02 PKT)
+
+**Decision:** finish all safe local and read-only checks, but do not enable recovery, send messages, edit payment/order state, apply migrations, deploy/canary, or repair source without a proven defect.
+
+**Reasoning:** API health passed three bounded public checks and Admin correctly denied unauthenticated access. The official Chrome DevTools MCP timed out repeatedly, preventing fresh authenticated D1/Admin evidence. Existing GFS-409 aggregate evidence is retained as historical evidence only; it does not establish current COD, Advance, courier, webhook, Queue/DLQ or Meta outcomes.
+
+**Recovery activation contract for a separate approval:** keep all reminder/automation/utility flags false; set `PAYMENT_CHOICE_RECOVERY_ENABLED=true` only with a new UTC `PAYMENT_CHOICE_RECOVERY_START_AT`. No historical backfill. Bound to eligible unfinished orders, 24-hour service-window checks, opt-outs, receipt/COD/state checks, conversation recency and idempotency. Monitor exact active version, queued/sent/delivered/read/failed/DLQ counts and rollback to false immediately on anomaly. Cost ceiling is at most two outbound attempts per eligible order; current eligible denominator is UNKNOWN.
+
+**Operational disposition:** COD and Advance workflows pass local regression guards, but live fulfillment/remittance/receipt evidence is UNKNOWN. No local source defect is proven. Cancellation feedback and retention remain deferred per GFS-410; migration0046 history remains unresolved and must not be manufactured.
+
+**Next approval:** restore the official authenticated Chrome DevTools path and authorize one bounded read-only Admin/D1 operational snapshot. Only after that evidence should the owner separately approve either a minimal operational repair or a bounded recovery activation.
+
 ## GFS-410 - close cancellation priority and preserve safe recovery state (2026-11-02 PKT)
 
 - Close GFS-403 through GFS-409 as deferred/blocked work, not completed release work. Preserve source, tests, migration files and evidence; keep cancellation API/Admin candidates at0%.

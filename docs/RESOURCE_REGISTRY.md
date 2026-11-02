@@ -1,5 +1,15 @@
 # Resource Registry
 
+## GFS-411 — protected operational resources (2026-11-02 PKT)
+
+- **GitHub:** `gardenshop/freeseeds`, PR #11; branch head is `f5344b3bb43058d7b75b367fbaf7a7342329ead1` at the time of this record.
+- **Cloudflare target:** documented identity `gisupp@gmail.com` / Get Free Seeds / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; API baseline `b426ba47`100% / candidate `e8018f3f`0%; Admin baseline `e8c96c96`100% / candidate `ee9b7baa`0%.
+- **Meta target:** business `568026370701542`, account `1198439777611633`; CAPI and Instant Forms remain OFF. No Meta mutation.
+- **Runtime flags:** recovery, five-stage reminders, Automation V2 and utility templates remain false; COD remains public/V1 with PKR125. No flag mutation.
+- **Evidence boundary:** API health 3/3 HTTP200 and unauthenticated Admin health HTTP403 were read-only. Chrome DevTools MCP timed out; authenticated Admin/D1, courier, payment-reconciliation, Queue/DLQ and Meta-delivery resources are not freshly verified.
+- **Protected continuity:** EN/UR, Advance, PAID, webhook, Queue/DLQ, Cron, orders, number separation, new-number lock and Hoja/ThanNow zero-connection remain unchanged. Migration0046 is not re-applied and no history marker is manufactured.
+
+
 ## GFS-410 verified state and deferred scope (2026-11-02 PKT)
 
 - **Identity:** read-only official Chrome Cloudflare identity `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; GitHub remote remains `gardenshop/freeseeds`, PR #11; canonical Meta identity remains read-only verified.

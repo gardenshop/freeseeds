@@ -1,5 +1,18 @@
 # Status
 
+## GFS-411 — P0 launch operations (2026-11-02 PKT)
+
+**Disposition: PARTIAL / BLOCKED on authenticated operational evidence; no production mutation.**
+
+- Freeze: GitHub/PR and remote SHA are verified. Protected routing remains API `b426ba47` 100% / `e8018f3f` 0%; Admin `e8c96c96` 100% / `ee9b7baa` 0%. The documented Cloudflare and Meta identities remain the protected targets. API health passed 3/3 bounded checks; unauthenticated Admin health denied 403.
+- Recovery: checked-in/runtime contract remains recovery false, with five-stage, Automation V2 and utility templates false. Local source and focused tests prove fail-closed eligibility, service-window, opt-out and idempotency gates. Activation is not authorized. Exact future boundary: separately approve `PAYMENT_CHOICE_RECOVERY_ENABLED=true` with a new UTC `PAYMENT_CHOICE_RECOVERY_START_AT`, then monitor version-attributed send/delivery/read/failure/DLQ and retain immediate false rollback; no backfill or extra reminder family.
+- COD: last available sanitized GFS-409 aggregate read showed PKR125 configuration, but no verified collection/remittance or in-window COD paid/delivered/cancelled/returned rows; courier cost/net collection unavailable. Fresh Admin/D1 order evidence is UNKNOWN because Chrome DevTools MCP timed out.
+- Advance: local EN/UR method, receipt/review, duplicate-protection and transition tests pass; current JazzCash/Easypaisa/Bank Transfer pending/receipt/reconciliation counts and recipient-ownership evidence are UNKNOWN pending authenticated Admin/D1 access. No payment status or charge changed.
+- Webhook/Admin/Meta: local webhook, acknowledgement, retry/Queue/DLQ, Admin order/fulfillment/analytics and Meta guard tests pass. Fresh delivery/read, retry/DLQ, Admin workflow and CAPI attribution evidence is UNKNOWN; CAPI and Instant Forms remain off. No proven local defect, so no source repair.
+- Chrome DevTools MCP was unavailable after bounded retries. Do not bypass it or substitute synthetic production evidence. New-number WhatsApp lock and Hoja/ThanNow zero-connection remain protected.
+
+**Verification:** full suite 30 files / 361 tests PASS; build PASS; lint PASS. Known 10 moderate dev-only minimatch findings remain documented; audit0 is not claimed.
+
 ## GFS-410 cancellation closure and recovery reconciliation (2026-11-02 PKT)
 
 - **Disposition:** GFS-403 through GFS-409 are closed as deferred/blocked, not completed release work. Cancellation source/tests/migrations/docs remain preserved; cancellation API/Admin candidates remain0%.
