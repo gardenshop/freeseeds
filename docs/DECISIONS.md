@@ -1,5 +1,16 @@
 # Decisions
 
+## GFS-412 — restore authenticated read-only verification; stop before remediation (2026-11-02 PKT)
+
+**Decision:** restore the official Chrome MCP and complete the live snapshot, but make no production configuration, payment, flag, deployment, Meta, D1 or customer-data change.
+
+**Evidence:** Cloudflare authenticated identity and exact API/Admin routing passed. API recovery is unexpectedly enabled with start `2026-10-28T20:05:20.290Z`; eligible-now is0, opt-outs/fallback rows are0, but stage/outbox history is nonzero. COD settlement policies are absent despite PKR125 intake; Advance runtime amount is null despite payment-method records. These are genuine operational blockers, not safe local code defects.
+
+**D1:** cancellation tables and five indexes exist; migration history ends at0043 with no0044/0045/0046 rows; `quick_check=ok`; foreign-key check empty. GFS-406 direct-apply provenance remains unresolved. No reapply or marker fabrication.
+
+**Next approval:** first authorize a controlled reconciliation of the unexpected recovery flag (preferably disable to the documented safe state, with fresh identity and rollback evidence); separately authorize only verified COD settlement-policy and Advance-amount configuration after owner/payment-beneficiary evidence. Do not bundle customer messaging, payment-state edits or migration work.
+
+
 ## GFS-411 — complete safe P0 checks; stop at authenticated-evidence boundary (2026-11-02 PKT)
 
 **Decision:** finish all safe local and read-only checks, but do not enable recovery, send messages, edit payment/order state, apply migrations, deploy/canary, or repair source without a proven defect.

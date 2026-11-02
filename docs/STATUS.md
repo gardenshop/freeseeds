@@ -1,5 +1,20 @@
 # Status
 
+## GFS-412 — authenticated P0 live verification (2026-11-02 PKT)
+
+**Disposition: PASS for MCP restoration and read-only verification; BLOCKED for production remediation. No production mutation.**
+
+- Chrome DevTools MCP is restored. Cloudflare, Admin Orders/Conversations/Analytics, D1 Console, Queue metrics and Meta Ads are reachable in the authenticated session. No bypass or credential exposure occurred.
+- Routing is API `b426ba47` 100% / `e8018f3f` 0%; Admin `e8c96c96` 100% / `ee9b7baa` 0%. API health returned 200 with WhatsApp enabled. Cloudflare API settings unexpectedly show recovery enabled with start `2026-10-28T20:05:20.290Z`; no flag change was made.
+- Snapshot aggregates: Admin analytics 24h inbound 6,159, new conversations 1,121, submitted orders 169, Advance pending 19, COD confirmed 92, paid/fulfilled 0; 7d inbound 20,453, new conversations 3,463, orders 553, Advance pending 71, COD confirmed 306, paid/fulfilled 1.
+- Recovery: eligible-now 0; opt-outs 0; fallback rows 0. D1 stage status history is +15 delivered13/read63/sent1/skipped144 and +210 delivered17/pending15/read43/sent4/skipped142. These are durable stage rows, not unique causal conversions. Outbox has recovery SENT140 overall.
+- COD: enabled, PKR125, but collection/remittance policy configuration is false; COD detail rows are 306 `COD_PENDING` and 1 `DISPATCHED`, with zero collection/remittance rows and PKR totals. This is a production operations blocker requiring separate approval/evidence.
+- Advance: runtime `advanceAmountPkr=null` and payment methods are not complete in `/api/configuration`. All payment methods are enabled/QR-ready in the verification view, but pending rows without receipts remain: Bank Transfer5, Easypaisa29, JazzCash41. Review rows with receipts exist; no payment edit was made.
+- Reliability: Queue metrics showed 62 ingested, 63 acknowledged, 0 retried, backlog0, delayed backlog0, average lag5.55s. D1 WhatsApp events showed status callbacks but are not one-to-one delivery ratios. Outbox currently includes CAPI lead pending605, CAPI purchase dead-letter2, payment-instruction dead-letter20/permanent-failure12; CAPI and Instant Forms remain OFF.
+- D1: `quick_check=ok`; foreign-key check empty; cancellation objects/indexes present; migration history remains through0043 with no0044/0045/0046 markers. No mutation.
+
+**GFS-412 result:** no source defect was proven; no repair was authorized. The genuine blockers are live recovery flag drift, missing COD settlement-policy configuration, and missing runtime Advance amount. Exact next approval is a read-only-to-controlled production approval to reconcile/disable the unexpected recovery flag and separately approve payment-configuration remediation.
+
 ## GFS-411 — P0 launch operations (2026-11-02 PKT)
 
 **Disposition: PARTIAL / BLOCKED on authenticated operational evidence; no production mutation.**

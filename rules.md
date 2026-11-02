@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-412 authenticated P0 live-verification boundary (2026-11-02 PKT)
+
+- **Authenticated MCP restored:** official Chrome DevTools MCP reached the existing authenticated Cloudflare, Admin and Meta sessions. Cloudflare readback showed `gisupp@gmail.com` and the Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Meta Ads URL/readback showed business `568026370701542`, account `1198439777611633`; GitHub remains `gardenshop/freeseeds`, PR #11.
+- **Routing:** Cloudflare deployment readback shows API `b426ba47`100% / `e8018f3f`0% and Admin `e8c96c96`100% / `ee9b7baa`0%. API `/health` returned `ok=true`, `PRODUCTION_INTEGRATION_READY`, WhatsApp enabled. No routing or deployment mutation occurred.
+- **Unexpected live flag:** API Production variables currently show `PAYMENT_CHOICE_RECOVERY_ENABLED=true` with start `2026-10-28T20:05:20.290Z`, while checked-in config and prior GFS-411 expectation were false. Do not change it under GFS-412. Current bounded read-only evidence found eligible-now0, no opt-out rows, no recovery fallback rows, but recovery stage/outbox history exists. Treat this as an approval/configuration blocker, not proof that customer messages were caused by recovery.
+- **Live P0 blockers:** COD configuration is enabled at PKR125 but collection/remittance policy hashes are unconfigured; all COD detail rows are COD_PENDING except one DISPATCHED and collection/remittance totals are zero. Advance runtime configuration has no advance amount; pending JazzCash/Easypaisa/Bank Transfer rows have no receipts. Do not edit payment configuration or status under GFS-412.
+- **D1/provenance:** exact cancellation tables and five indexes exist; `cod_schema_migrations` ends at0043, 0044/0045/0046 markers are absent, `d1_migrations` is empty. `PRAGMA quick_check` is `ok` and `PRAGMA foreign_key_check` returned no rows. Do not reapply0046 or manufacture a marker.
+- Preserve EN/UR, PAID, orders, webhook, Queue/DLQ, Cron, number separation, new-number WhatsApp lock and Hoja/ThanNow zero-connection. Cancellation GFS-403–410 remains deferred. No customer send, payment edit, D1 write, migration, Meta, flag or deployment mutation occurred.
+
 ## GFS-411 P0 launch-operations boundary (2026-11-02 PKT)
 
 - **Freeze confirmed read-only:** GitHub is `gardenshop/freeseeds`, PR #11. The documented Cloudflare identity is `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; the documented Meta identity is business `568026370701542`, account `1198439777611633`. Current protected routing remains API `b426ba47`100% / `e8018f3f`0% and Admin `e8c96c96`100% / `ee9b7baa`0%. No external mutation occurred.

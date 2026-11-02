@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-02 — GFS-412 authenticated P0 verification
+
+- Restored official Chrome DevTools MCP and verified Cloudflare, Admin, D1, Queue and Meta read-only access.
+- Recorded exact API/Admin routing and the unexpected live recovery flag/start timestamp without changing it.
+- Recorded live COD settlement-policy and Advance-configuration blockers, bounded recovery outcomes, Queue metrics, D1 integrity and migration provenance.
+- No source repair or production mutation; GFS-411 regression baseline remains 361/361, build/lint PASS.
+
+
 ## 2026-11-02 — GFS-411 P0 launch operations
 
 - Added a permanent freeze and evidence boundary for COD, Advance, webhook, Admin and Meta operations.

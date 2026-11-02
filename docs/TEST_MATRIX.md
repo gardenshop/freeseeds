@@ -1,5 +1,21 @@
 # Test Matrix
 
+## GFS-412 — authenticated P0 live verification (2026-11-02 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Chrome MCP/authentication | PASS | Official MCP reached authenticated Cloudflare, Admin, D1, Queue and Meta pages; identities matched protected targets. |
+| Routing/version | PASS | API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%; API health 200. |
+| Recovery | BLOCKED | Live flag is unexpectedly true with a historical start timestamp; eligible-now0, opt-outs0 and fallback rows0, but durable stage/outbox history exists. No flag change. |
+| COD | BLOCKED | PKR125 enabled; 306 pending / 1 dispatched; collection/remittance rows and totals0; settlement policies unconfigured. |
+| Advance | BLOCKED | Runtime advance amount null; pending no-receipt rows remain Bank Transfer5, Easypaisa29, JazzCash41. |
+| Webhook/Queue/DLQ/Cron | PARTIAL | Queue 62 ingested,63 acknowledged,0 retried,backlog0,lag5.55s; outbox dead-letter/permanent-failure counts remain; Cron trigger visible. |
+| Admin/Meta | PASS read-only | Orders, Conversations and Analytics returned protected data/aggregates; Meta identity/provider status read-only; CAPI and Instant Forms OFF. |
+| D1 integrity/provenance | PASS / unresolved history | `quick_check=ok`; FK check empty; cancellation objects/indexes present; history through0043, no0046 marker. |
+| Regression | PASS baseline | GFS-411 full 30 files / 361 tests, build and lint passed; no source changes in GFS-412. |
+
+No customer identifiers, message bodies, secrets or provider credentials were recorded.
+
 ## GFS-411 — P0 launch operations (2026-11-02 PKT)
 
 | Area | Result | Evidence / boundary |

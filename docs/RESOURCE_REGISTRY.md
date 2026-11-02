@@ -1,5 +1,15 @@
 # Resource Registry
 
+## GFS-412 — authenticated live resources (2026-11-02 PKT)
+
+- **Identities:** Cloudflare `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Meta business `568026370701542`, account `1198439777611633`; GitHub `gardenshop/freeseeds`, PR #11.
+- **Workers:** API active `b426ba47`100% with `e8018f3f`0%; Admin active `e8c96c96`100% with `ee9b7baa`0%. No deployment mutation.
+- **API production variables:** recovery unexpectedly `true`, start `2026-10-28T20:05:20.290Z`; five-stage/Automation V2/utility false; CAPI/Instant Forms false; COD public/V1 true; guided Meta checkout. No variable mutation.
+- **D1:** `getfreeseeds-staging` ID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; cancellation objects/indexes present; migration history through0043, no0044/0045/0046 markers; `quick_check=ok`, FK check empty.
+- **Queue:** `getfreeseeds-events-staging`; 62 messages ingested,63 acknowledged,0 retried,backlog0,delayed backlog0,lag5.55s in the visible 24-hour metrics. No queue mutation.
+- **Operational blockers:** COD settlement policies unconfigured and no collection/remittance rows; runtime Advance amount null with pending no-receipt payment rows. No payment mutation.
+
+
 ## GFS-411 — protected operational resources (2026-11-02 PKT)
 
 - **GitHub:** `gardenshop/freeseeds`, PR #11; branch head is `f5344b3bb43058d7b75b367fbaf7a7342329ead1` at the time of this record.
