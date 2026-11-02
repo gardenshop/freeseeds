@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-414 — preserve effective recovery, stop on Admin traffic drift (2026-11-02 PKT)
+
+**Decision:** do not mutate recovery or routing. The effective recovery ON state remains untouched because read-only evidence shows activity but no owner authorization/provenance for the later setting; it is neither certified safe nor automatically disabled. Admin candidate traffic at2.8% is an unapproved release exposure and blocks product release.
+
+**Local repair:** remove only the legacy fixed-amount dependency from Admin dynamic-payment configuration/copy-preview reads. Checkout continues to calculate and use each persisted order total. Focused and full regression pass; source is not deployed.
+
+**Next approval:** one identity-verified routing correction restoring Admin `e8c96c96`100% and `ee9b7baa`0%, with authenticated five-minute monitoring and immediate rollback. Recovery reconciliation and COD settlement/Advance operational configuration require separate approvals.
+
 ## GFS-413 — stop at recovery/payment configuration gates (2026-11-02 PKT)
 
 **Decision:** complete bounded read-only diagnosis and local regression only. Do not disable recovery, replay payment jobs, edit COD/Advance configuration, confirm payments, send customers, deploy, migrate or change Meta/routing.

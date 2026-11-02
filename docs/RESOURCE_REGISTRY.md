@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-414 — fresh reconciliation and readiness evidence (2026-11-02 PKT)
+
+- **Routing:** API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`97.2% / `ee9b7baa`2.8% on the fresh Cloudflare read. Candidate exposure is not authorized; no correction made.
+- **Recovery:** active baseline `b426ba47`; live variables `PAYMENT_CHOICE_RECOVERY_ENABLED=true`, start `2026-10-28T20:05:20.290Z`; checked-in default false. Owner approval/provenance unresolved; eligible-now0, opt-outs/fallbacks0. No flag mutation.
+- **COD:** PKR125/enabled;307 `COD_PENDING`,1 `DISPATCHED`; collection/remittance counts0; policy hashes absent. No settlement or courier evidence invented.
+- **Advance:** `advance_amount_pkr` null. Source diagnosis confirms dynamic checkout uses persisted order totals. Admin read/preview legacy fixed-amount gates were repaired in source only; not deployed.
+- **Validation:** focused68/68, full363/363, build/lint PASS. No customer identifiers, message bodies, secrets or provider credentials recorded. Known10 moderate dev-only minimatch findings retained.
+
 ## GFS-413 — bounded P0 reliability evidence (2026-11-02 PKT)
 
 - **Protected target:** GitHub `gardenshop/freeseeds` PR #11; Cloudflare `gisupp@gmail.com` / Get Free Seeds; Meta business `568026370701542`, account `1198439777611633`.

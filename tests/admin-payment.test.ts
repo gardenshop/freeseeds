@@ -56,6 +56,68 @@ describe("admin payment configuration", () => {
     expect(await valid.json()).toMatchObject({ ok: true, advanceAmountPkr: 250 });
   });
 
+  it("renders a payment-copy preview without requiring a legacy fixed amount", async () => {
+    const sql: string[] = [];
+    const previewEnv = {
+      ...env,
+      DB: {
+        prepare(query: string) {
+          sql.push(query);
+          const statement = {
+            bind: (..._args: unknown[]) => statement,
+            first: async () => ({
+              id: "synthetic-method",
+              method: "JAZZCASH",
+              display_name: "JazzCash",
+              recipient_name: "Synthetic Recipient",
+              till_id: "SYNTHETIC-TILL",
+              instructions: "Pay {amount} to {recipientName}.",
+              reference_instruction: "Include {orderNumber}.",
+              enabled: 1,
+              sort_order: 10
+            })
+          };
+          return statement;
+        }
+      }
+    } as unknown as Parameters<typeof app.fetch>[1];
+    const response = await app.fetch(new Request("https://admin.example.test/api/payment-instructions/JAZZCASH", { headers: access }), previewEnv);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ method: "JAZZCASH", configured: true });
+    expect(sql.some((query) => query.includes("payment_configuration"))).toBe(false);
+  });
+
+  it("reports dynamic payment methods as configured when the legacy amount is null", async () => {
+    const row = {
+      id: "synthetic-method",
+      method: "JAZZCASH",
+      display_name: "JazzCash",
+      recipient_name: "Synthetic Recipient",
+      till_id: "SYNTHETIC-TILL",
+      instructions: "Pay {amount} to {recipientName}.",
+      reference_instruction: "Include {orderNumber}.",
+      enabled: 1,
+      sort_order: 10
+    };
+    const dynamicEnv = {
+      ...env,
+      DEPLOYMENT_STATE: "LOCAL",
+      DB: {
+        prepare(query: string) {
+          const statement = {
+            bind: (..._args: unknown[]) => statement,
+            all: async () => ({ results: query.includes("payment_methods") ? [row] : [] }),
+            first: async () => null
+          };
+          return statement;
+        }
+      }
+    } as unknown as Parameters<typeof app.fetch>[1];
+    const response = await app.fetch(new Request("https://admin.example.test/api/configuration", { headers: access }), dynamicEnv);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ advanceAmountPkr: null, paymentMethods: [{ method: "JAZZCASH", configured: true }] });
+  });
+
   it("protects catalog mutations and validates prices before a write", async () => {
     const unauthorized = await app.fetch(new Request("https://admin.example.test/api/catalog/products", { method: "POST", body: "{}" }), env);
     expect(unauthorized.status).toBe(403);

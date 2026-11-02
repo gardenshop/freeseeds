@@ -1588,7 +1588,7 @@ app.get("/api/configuration", async (c) => {
     const methods = c.env.DB ? (await c.env.DB.prepare("SELECT * FROM payment_methods ORDER BY sort_order, method").all()).results.map((row) => normalizePaymentMethodRow(row as Record<string, unknown>)) : [];
     const amount = c.env.DB ? await c.env.DB.prepare("SELECT advance_amount_pkr FROM payment_configuration WHERE id=1").first<{ advance_amount_pkr?: number | null }>() : null;
     const advanceAmountPkr = amount?.advance_amount_pkr == null ? null : Number(amount.advance_amount_pkr);
-    return c.json({ advanceAmountPkr, paymentMethods: methods.map((method) => { const instructions = paymentInstructions(method); return advanceAmountPkr && advanceAmountPkr > 0 ? instructions : { ...instructions, configured: false }; }), whatsappState: c.env.DEPLOYMENT_STATE, metaProviderEnabled: false });
+    return c.json({ advanceAmountPkr, paymentMethods: methods.map((method) => paymentInstructions(method)), whatsappState: c.env.DEPLOYMENT_STATE, metaProviderEnabled: false });
   } catch (error) {
     if (isD1QuotaError(error)) return d1QuotaResponse(c, "PAYMENT_CONFIGURATION_UNAVAILABLE");
     throw error;
@@ -2523,8 +2523,6 @@ app.get("/api/payment-instructions/:method", async (c) => {
   try {
     const row = await c.env.DB.prepare("SELECT * FROM payment_methods WHERE method=?").bind(c.req.param("method").toUpperCase()).first();
     if (!row) return c.json({ error: "PAYMENT_METHOD_NOT_FOUND" }, 404);
-    const amount = await c.env.DB.prepare("SELECT advance_amount_pkr FROM payment_configuration WHERE id=1").first<{ advance_amount_pkr?: number | null }>();
-    if (amount?.advance_amount_pkr == null || Number(amount.advance_amount_pkr) <= 0) return c.json({ error: "PAYMENT_AMOUNT_NOT_CONFIGURED" }, 503);
     return c.json(paymentInstructions(normalizePaymentMethodRow(row as Record<string, unknown>)));
   } catch (error) {
     if (isD1QuotaError(error)) return d1QuotaResponse(c, "PAYMENT_INSTRUCTIONS_UNAVAILABLE");

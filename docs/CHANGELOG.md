@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-02 — GFS-414 recovery reconciliation and P0 readiness
+
+- Freshly verified API100%/0% and detected Admin97.2%/2.8% candidate exposure; no routing mutation performed.
+- Reconciled effective recovery ON/start against the checked-in false default; authorization/provenance remains unresolved, so no flag change or restart was made.
+- Repaired Admin-only dynamic-payment read/preview gates that incorrectly required a legacy fixed amount; added regression coverage. No checkout, WhatsApp, payment-state or production deployment change.
+- Recorded fresh COD307 pending/1 dispatched with no collection/remittance or settlement-policy evidence. Focused68/68, full363/363, build/lint PASS.
+
 ## 2026-11-02 — GFS-413 P0 recovery/payment reliability
 
 - Diagnosed live recovery drift and historical payment-instruction terminal failures using bounded authenticated read-only evidence.

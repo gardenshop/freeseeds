@@ -1,5 +1,16 @@
 # Status
 
+## GFS-414 — recovery reconciliation and P0 readiness (2026-11-02 PKT)
+
+**Disposition: PASS for read-only reconciliation and local repair; BLOCKED for production release. No production mutation.**
+
+- Fresh Cloudflare read: API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`97.2% / `ee9b7baa`2.8%. This contradicts the protected expected Admin100%/0%; candidate exposure is an immediate release blocker. No routing change was made.
+- Recovery is effectively ON on the serving API, with start `2026-10-28T20:05:20.290Z`; checked-in default is false. Active baseline is `b426ba47`; deployment history identifies it as the GFS-309 Cron reconciliation version, but read-only artifacts do not establish owner approval for the later effective ON setting. Eligible-now remains0 with no opt-out/fallback rows. Decision: preserve effective state untouched; do not certify intentional/safe or disable/restart without explicit approval.
+- COD fresh D1 read: PKR125/enabled,307 `COD_PENDING`,1 `DISPATCHED`, collection/remittance0, settlement-policy hashes absent. Courier terms and actual settlement evidence remain UNKNOWN.
+- Advance null is intentional for dynamic checkout: source and tests use persisted order `total_payable`, not the legacy fixed amount. A local Admin-only repair removes the obsolete fixed-amount gate from `/api/configuration` and `/api/payment-instructions/:method`; no customer/API checkout behavior changed and the repair is not deployed.
+- GFS-413 historical payment failures remain closed; no new failure evidence was found. Migration0046 remains no-reapply/no-marker-fabrication; CAPI, Instant Forms, five-stage reminders and Automation V2 remain OFF.
+- Focused tests:68/68 PASS. Full suite:30 files/363 tests PASS; build/lint PASS. Known10 moderate dev-only minimatch findings remain documented.
+
 ## GFS-413 — P0 recovery/payment reliability (2026-11-02 PKT)
 
 **Disposition: PASS for bounded read-only diagnosis and regression; BLOCKED for production remediation. No production mutation.**

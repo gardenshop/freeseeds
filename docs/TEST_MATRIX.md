@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-414 — recovery reconciliation and P0 readiness (2026-11-02 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Identity/version/routing read | BLOCKED | API100%/0%; Admin observed97.2%/2.8%, not expected100%/0%; no correction performed. |
+| Recovery reconciliation | BLOCKED | Effective ON/start verified on baseline; owner authorization/provenance unresolved; eligible-now0, opt-outs/fallbacks0. |
+| COD readiness | BLOCKED | PKR125 enabled;307 pending/1 dispatched; collection/remittance0; settlement policies absent. |
+| Advance diagnosis | PASS locally / operational approval pending | Dynamic persisted order totals are used; null legacy amount no longer blocks Admin read-only configuration/preview in source. |
+| Local repair tests | PASS | 68 focused tests. |
+| Full regression/build/lint | PASS | 30 files/363 tests; build and lint pass. |
+| Mutation safety | PASS | No flag, routing, deployment, D1, migration, payment/order, Meta, Cron or customer-message mutation. |
+
+Source repair is un-deployed and does not change WhatsApp checkout behavior.
+
 ## GFS-413 — P0 recovery/payment reliability (2026-11-02 PKT)
 
 | Area | Result | Evidence |

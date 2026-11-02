@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-414 recovery reconciliation and P0 readiness boundary (2026-11-02 PKT)
+
+- **Fresh routing read:** API `b426ba47`100% / `e8018f3f`0%; Admin unexpectedly `e8c96c96`97.2% / `ee9b7baa`2.8%. Do not correct routing without a separate identity-verified routing approval; treat any candidate traffic as unapproved exposure.
+- **Recovery decision:** baseline production variables read `PAYMENT_CHOICE_RECOVERY_ENABLED=true` and start `2026-10-28T20:05:20.290Z`; checked-in default remains false. No owner authorization/provenance for the effective ON state was found in read-only artifacts. Do not disable, restart or certify it as intentional under GFS-414; leave effective state untouched pending explicit approval and monitoring/rollback.
+- **Advance source repair:** checkout uses each persisted order `total_payable`; the legacy fixed amount is not used by `selectPaymentMethod` or `configuredPaymentMethodNames`. Admin read-only configuration/preview endpoints were repaired in source to stop falsely blocking on a null legacy amount. This is not deployed under GFS-414.
+- **COD:** current read is307 `COD_PENDING`,1 `DISPATCHED`, collection/remittance counts0, PKR125 enabled, and both settlement-policy hashes absent. Do not invent courier terms, deliveries, collections, remittances or fees.
+- No recovery flag, routing, payment/order, D1, migration, Meta, Cron or customer-message mutation occurred. Cancellation/retention remain deferred; preserve EN/UR, PAID, orders, webhook, Queue/DLQ, number separation and Hoja/ThanNow isolation.
+
 ## GFS-413 P0 recovery/payment reliability boundary (2026-11-02 PKT)
 
 - No production mutation was authorized: no flag, deployment, customer message, payment/order state, D1, migration, Cron, Meta or routing change.

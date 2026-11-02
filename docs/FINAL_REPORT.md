@@ -1,5 +1,40 @@
 # Final Report
 
+## GFS-414 — recovery reconciliation and P0 release readiness (2026-11-02 PKT)
+
+**Overall: PASS for read-only reconciliation and local repair; BLOCKED for production release.**
+
+### 1. Recovery and routing
+
+The active API is `b426ba47` at100% with `e8018f3f` at0%. The effective recovery variables on that baseline are ON with start `2026-10-28T20:05:20.290Z`; checked-in source defaults false. No read-only artifact established owner authorization for the effective ON state. Eligible-now is0 and opt-outs/fallback rows are0. Final decision: preserve the effective state untouched; do not certify it intentional/safe, disable it, or restart its timestamp without explicit approval.
+
+The fresh Admin read is the release blocker: `e8c96c96` is97.2% and candidate `ee9b7baa` is2.8%, contrary to the protected expected100%/0%. No routing correction was made.
+
+### 2. COD and Advance readiness
+
+COD is enabled at PKR125. Fresh D1 shows307 `COD_PENDING`,1 `DISPATCHED`, collection/remittance counts0, and both settlement-policy hashes absent. Courier terms, delivery confirmation, actual collection, remittance and cost evidence remain UNKNOWN; no settlement configuration or status edit is authorized.
+
+Advance `advance_amount_pkr` is null. Source and tests show checkout uses each persisted order `total_payable`; the legacy fixed amount is not required for dynamic payment selection. A minimal Admin-only source repair removes the obsolete fixed-amount gate from `/api/configuration` and `/api/payment-instructions/:method`, so read-only configuration and copy preview no longer falsely report/block dynamic methods. It is not deployed.
+
+GFS-413’s 20 payment-instruction dead letters and12 permanent failures remain historical; no new failure evidence was found and no replay occurred. Migration0046 was not touched; CAPI, Instant Forms, five-stage reminders and Automation V2 remain OFF.
+
+### 3. Tests and safety
+
+Focused tests: **68/68 PASS**. Full suite: **30 files / 363 tests PASS**. Build and lint PASS. No flag, routing, deployment, D1, migration, payment/order, Meta, Cron or customer-message mutation occurred. Known10 moderate dev-only minimatch findings remain documented; audit0 is not claimed.
+
+### 4. Completion and next approval
+
+| Workstream | Completion |
+|---|---:|
+| Recovery read-only reconciliation | 100%; authorization decision BLOCKED |
+| Admin dynamic-payment local repair | 100%; deployment0% |
+| COD settlement readiness | UNKNOWN / blocked on courier evidence |
+| Advance operational readiness | 75%; beneficiary/operational approval remains |
+| Production routing readiness | BLOCKED by Admin97.2%/2.8% drift |
+| Customer-facing release | 0%; safely unchanged |
+
+**One exact next approval:** authorize identity-verified restoration of Admin routing to `e8c96c96`100% / `ee9b7baa`0%, with authenticated five-minute monitoring and immediate rollback. Recovery configuration and COD/Advance changes must remain separate approvals.
+
 ## GFS-413 — P0 recovery/payment reliability (2026-11-02 PKT)
 
 **Overall: PASS for safe diagnosis and regression; BLOCKED for production remediation.**
