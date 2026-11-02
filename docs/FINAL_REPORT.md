@@ -1,5 +1,18 @@
 # Final Report
 
+## GFS-431 - finish COD + CAPI local acceptance (2026-11-02 PKT)
+
+**Overall: local acceptance PASS; production release BLOCKED safely.**
+
+1. **COD Admin local E2E:** PASS with synthetic data. UI contract shows the original payable and explicit confirmation; endpoint enforces authenticated Admin/CSRF, `COLLECTION_PENDING`, exact total and confirmation, then atomically records COD/PAID/audit state. Duplicate, unauthorized, wrong-amount and premature actions are covered.
+2. **CAPI Purchase quality:** PASS locally. Only the genuine COD PAID path is exercised; event ID is stable per order, value/currency are exact, provider payload includes event time/action source/WhatsApp channel and permitted attribution, and Meta rejection/Queue failure remains retryable without undoing PAID. CAPI is OFF live and no event/backfill was sent.
+3. **Defects and repairs:** no production defect was proven. Added only focused acceptance tests; no runtime source, D1, payment, Meta, routing or WhatsApp change.
+4. **Regression:** focused 29/29; full 31 files / 372 tests; build PASS; lint PASS; observability 6/6; adapter 8/8; deadline/rollback 18/18. V1 rollback test BLOCKED because `GFS_LEGACY_ROOT` is unavailable.
+5. **Monitoring/release blocker:** Analytics credential remains absent, so GraphQL HTTP200/freshness and five-minute qualification are not claimed. GFS-426 remains undeployed; verified Admin rollback target is `e8c96c96`.
+6. **Routing/protection:** API `b426ba47` 100% / `e8018f3f` 0%; Admin `e8c96c96` 100% / `ee9b7baa` 0%. Advance methods, COD PKR125, EN/UR, WhatsApp, Queue/DLQ, Cron, webhook, D1 bindings, recovery and number isolation were not mutated.
+7. **Completion:** GFS-431 local COD/CAPI acceptance 100%; release readiness UNKNOWN/BLOCKED pending secure Analytics credential, monitoring and owner release approval. P0 operational launch remains UNKNOWN where live evidence is unavailable.
+8. **Next exact approval:** install the approved least-privilege Analytics-read credential through the protected Windows Credential Manager bridge; after monitoring PASS, issue a separate Admin-only GFS-426 0% validation/promotion approval. No CAPI activation is included.
+
 ## GFS-430 - finish monitoring and unblock COD release (2026-11-02 PKT)
 
 **Overall: monitoring BLOCKED; GFS-426 production release held safely.**

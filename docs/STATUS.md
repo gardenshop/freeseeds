@@ -1,5 +1,15 @@
 # Status
 
+## GFS-431 - local COD + CAPI acceptance and release package (2026-11-02 PKT)
+
+**Disposition: local acceptance PASS; production release BLOCKED by the previously recorded Analytics credential and separate release approval.**
+
+- Synthetic Admin UI/API journey is covered: original COD payable is rendered, confirmation is explicit, only eligible `COLLECTION_PENDING` orders can transition atomically to PAID, audit actor/time are recorded, repeat clicks are idempotent, and unauthorized/wrong/premature requests are rejected.
+- Synthetic CAPI Purchase provider acceptance is covered: stable event ID, exact PKR/value, event time, action source, WhatsApp channel, synthetic `ctwa_clid`, Meta rejection fail-closed, and Queue-unavailable persistence. CAPI remains OFF in live configuration.
+- No source change was made to production behavior; only focused acceptance tests were added. API/Admin routing remains the verified 100/0 baseline from GFS-428. GFS-426 remains undeployed.
+- Verification: `npm test` 31 files / 372 tests PASS; focused COD+CAPI 29/29 PASS; build and lint PASS; observability 6/6, adapter 8/8 and deadline/rollback 18/18 PASS. `test:rollback:v1` remains BLOCKED by missing `GFS_LEGACY_ROOT`.
+- Next gate: owner-secure installation of the approved Analytics-read credential, then separate Admin-only 0% validation/release approval with authenticated monitoring and rollback.
+
 ## GFS-430 - monitoring blocker and COD release hold (2026-11-02 PKT)
 
 **Disposition: monitoring BLOCKED; GFS-426 release not authorized.**

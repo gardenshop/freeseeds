@@ -311,6 +311,10 @@ describe("COD Admin configuration and reconciliation", () => {
     expect(readFileSync("apps/api/wrangler.jsonc", "utf8")).toContain('"COD_ROLLOUT_MODE": "PUBLIC"');
     expect(html).toContain("Mark Payment Received");
     expect(html).toContain("/mark-payment-received");
+    expect(html).toContain("Original payable amount: PKR ");
+    expect(html).toContain("Confirm the actual COD payment was received and courier settlement is complete.");
+    expect(html).toContain("confirmed:true");
+    expect(html).toContain("order.state==='COLLECTION_PENDING'");
   });
 
   it("marks an eligible COD order paid once through one audited manual confirmation", async () => {

@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-431 - accept local COD/CAPI evidence, keep live release blocked (2026-11-02 PKT)
+
+**Decision:** close the local GFS-426 acceptance gap with synthetic-only tests and do not deploy. The Admin journey now has explicit UI confirmation assertions in addition to the existing endpoint, transaction, authorization and idempotency tests. The CAPI provider contract is locally verified without sending a real event.
+
+**Safety boundary:** live CAPI remains OFF, no Meta backfill or customer event is allowed, all three working Advance methods remain frozen, and API/Admin routing remains 100/0. The absent `GFS-Cloudflare-Analytics-Monitor` target continues to block GraphQL/five-minute qualification and any release. The next approval must be separate and exact: secure credential installation, then Admin-only GFS-426 0% validation/promotion approval.
+
 ## GFS-430 - preserve release hold when Analytics credential is absent (2026-11-02 PKT)
 
 **Decision:** do not upload, validate or promote GFS-426 because the approved Analytics credential is absent and this prompt is not release approval. Carry forward GFS-429’s passing local and Service Auth evidence without repeating it.

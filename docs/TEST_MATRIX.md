@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-431 - local COD + CAPI acceptance (2026-11-02 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Admin local UI contract | PASS | Synthetic page asserts original payable, explicit confirmation text, `confirmed:true`, eligible `COLLECTION_PENDING` guard and endpoint. |
+| COD Admin local E2E | PASS | Endpoint tests cover exact amount, atomic PAID/audit, actor/time, duplicate click, unauthorized, wrong amount and premature state. |
+| CAPI Purchase payload | PASS | Synthetic provider test verifies stable event ID, PKR/value, event time, action source, WhatsApp channel and permitted attribution. |
+| CAPI failure/idempotency | PASS | Provider rejects unaccepted events; COD test preserves PAID and one pending outbox event when Queue delivery fails/repeats. |
+| Full regression | PASS | 31 files / 372 Vitest tests. |
+| Build/lint | PASS | `npm run build`; `npm run lint`. |
+| Monitoring safety suites | PASS | Observability 6/6; adapter 8/8; deadline/rollback 18/18. |
+| V1 rollback fixture | BLOCKED | `GFS_LEGACY_ROOT` unavailable; no protected checkout was modified. |
+| Live GraphQL/five-minute monitoring | BLOCKED | Analytics target absent; no token recreation or bypass. |
+
 ## GFS-430 - monitoring and COD release hold (2026-11-02 PKT)
 
 | Area | Result | Evidence |

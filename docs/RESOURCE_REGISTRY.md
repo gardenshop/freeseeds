@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-431 - local acceptance resources (2026-11-02 PKT)
+
+- **Local Admin acceptance:** `tests/cod-admin.test.ts`; synthetic in-memory SQLite only; no real order or payment data.
+- **Local CAPI acceptance:** `tests/capi-provider.test.ts` plus COD Queue-deferred coverage; synthetic dataset/token strings only; no real Meta request.
+- **Live routing:** API `b426ba47` 100% / `e8018f3f` 0%; Admin `e8c96c96` 100% / `ee9b7baa` 0%, carried from authoritative GFS-428 readback.
+- **Monitoring:** `GFS-Cloudflare-Analytics-Monitor` absent; GraphQL and five-minute qualification unavailable. Do not recreate or bypass the secure bridge.
+- **Rollback:** Admin target `e8c96c96`; V1 fixture unavailable because `GFS_LEGACY_ROOT` is not configured.
+
 ## GFS-430 - monitoring/release resources (2026-11-02 PKT)
 
 - **Analytics monitor:** `GFS-Cloudflare-Analytics-Monitor` absent from Windows Credential Manager; GraphQL/five-minute qualification unavailable.

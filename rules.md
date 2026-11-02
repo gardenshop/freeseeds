@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-431 local COD + CAPI acceptance boundary (2026-11-02 PKT)
+
+- Production remains frozen: API `b426ba47` 100% / `e8018f3f` 0%; Admin `e8c96c96` 100% / `ee9b7baa` 0%. No deployment, routing, D1, payment, Meta, CAPI, flag, Cron, Queue or customer-message mutation occurred.
+- GFS-426 local Admin acceptance is PASS using synthetic data: eligible COD `COLLECTION_PENDING`, exact original payable, explicit operator confirmation, atomic PAID/audit transition, duplicate protection, unauthorized/wrong/premature rejection and refresh-safe state.
+- Local CAPI provider acceptance is PASS: stable `purchase_<orderNumber>` event identity, PKR/value, event time, `business_messaging`/WhatsApp payload, permitted synthetic attribution, rejection on `events_received != 1`, and durable retry behavior when Queue/Meta delivery is unavailable. Live CAPI remains OFF; no real Meta event or backfill.
+- JazzCash, Easypaisa and Bank Transfer remain protected and unchanged. EN/UR, COD PKR125, Advance, WhatsApp, recovery, orders, Queue/DLQ, Cron, webhook, D1 bindings and number isolation remain protected.
+- `GFS-Cloudflare-Analytics-Monitor` remains absent. GraphQL/five-minute qualification and production release are BLOCKED; never claim live evidence without the credential. Verified rollback target remains `e8c96c96`; V1 fixture remains unavailable because `GFS_LEGACY_ROOT` is not present.
+
 ## GFS-430 monitoring and COD release boundary (2026-11-02 PKT)
 
 - The single approved Analytics credential check found `GFS-Cloudflare-Analytics-Monitor` absent from Windows Credential Manager. GraphQL, five-minute qualification and live Admin release are BLOCKED; do not recreate, transfer or bypass credential safeguards.

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-02 - GFS-431 local COD + CAPI acceptance
+
+- Added focused synthetic assertions for the GFS-426 Admin payable/confirmation UI contract.
+- Added synthetic Meta CAPI provider tests for Purchase payload quality and fail-closed response handling.
+- Verified 31 test files / 372 tests, build, lint, observability, adapter and deadline/rollback suites. No production source, routing, payment, Meta or customer behavior changed.
+- Kept live CAPI OFF and GFS-426 undeployed because the approved Analytics credential is absent and separate release approval is still required.
+
 ## 2026-11-02 - GFS-430 monitoring hold
 
 - Performed the single approved Analytics credential check; target remains absent.
