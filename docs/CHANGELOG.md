@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-02 — GFS-423 Advance HTTP503 and Admin release readiness
+
+- Added regression coverage for dynamic JazzCash, Easypaisa and Bank Transfer instruction previews, including EN/UR fields, without changing runtime payment behavior.
+- Reverified protected identities and exact API/Admin100%/0% routing. Read-only live Admin still reports null legacy amount, unconfigured methods and HTTP503 instruction endpoints; no payment or deployment mutation was made.
+- Confirmed the monitor target is absent; live GraphQL/five-minute qualification remains blocked. Full366/366, build, lint, observability6/6, adapter8/8 and deadline/rollback18/18 pass. V1 rollback fixture remains unavailable.
+
 ## 2026-11-02 — GFS-419 dedicated Analytics credential integration
 
 - Added process-only dedicated Analytics-token selection to Cloudflare observability while preserving Wrangler OAuth fallback.

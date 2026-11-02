@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-423 — Advance HTTP503 and Admin release readiness (2026-11-02 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Dynamic payment instruction source | PASS locally | GFS-414 route no longer gates on legacy fixed amount; method/ownership safeguards remain. |
+| JazzCash/Easypaisa/Bank Transfer previews | PASS locally | Focused Admin payment suite 10/10 covers all three methods, dynamic null amount and EN/UR fields. |
+| Live payment configuration | BLOCKED | Read-only `/api/configuration` has null amount/all methods unconfigured; all three instruction endpoints return HTTP503. No live fix deployed. |
+| Monitoring credential | BLOCKED | `GFS-Cloudflare-Analytics-Monitor` absent from Windows Credential Manager; no token recreation/transfer attempted. |
+| Full regression/build/lint | PASS | 30 files/366 tests; build and lint pass. |
+| Observability/release controller | PASS locally | Observability6/6, adapter8/8, deadline/rollback18/18. |
+| V1 rollback fixture | BLOCKED | `GFS_LEGACY_ROOT` unavailable; external checkout left untouched. |
+| Routing/production safety | PASS read-only | API/Admin exact100%/0%; no external mutation. |
+
 ## GFS-419 — dedicated Analytics credential integration (2026-11-02 PKT)
 
 | Area | Result | Evidence |

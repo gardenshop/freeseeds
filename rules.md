@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-423 Advance HTTP503 and Admin release boundary (2026-11-02 PKT)
+
+- Fresh read-only identity/routing verification matched GitHub `gardenshop/freeseeds` PR #11, Cloudflare `gisupp@gmail.com` / Get Free Seeds `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, API `b426ba47`100% / `e8018f3f`0% and Admin `e8c96c96`100% / `ee9b7baa`0%. Meta targets remain business `568026370701542` / account `1198439777611633`.
+- Live Admin payment-instruction HTTP503 is not permission to bypass payment controls: the deployed baseline still returns unavailable for all three unconfigured method rows, while checked-in GFS-414 source removes only the obsolete legacy fixed-amount gate. Method existence, beneficiary/QR ownership and bilingual-copy validation remain mandatory.
+- `GFS-Cloudflare-Analytics-Monitor` is absent from Windows Credential Manager. Do not recreate or transfer a token under this milestone; GraphQL/five-minute monitoring is BLOCKED. No deployment, routing, payment, D1, flag, Meta, Cron, Queue/DLQ or customer-message mutation is authorized.
+- Admin release remains a separate approval: validate the tested GFS-414 candidate at0% only after monitoring and rollback gates pass; preserve Admin `e8c96c96` as rollback and keep API frozen. Preserve the new-number WhatsApp lock and Hoja/ThanNow zero-connection rule.
+
 ## GFS-419 dedicated Analytics credential boundary (2026-11-02 PKT)
 
 - Monitoring source now prefers a process-scoped `GFS_ANALYTICS_API_TOKEN` supplied by the protected Windows bridge, then preserves the existing Wrangler OAuth fallback. The bridge accepts an Analytics credential target only when its stored username exactly matches Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; it restores prior process variables and never logs values.

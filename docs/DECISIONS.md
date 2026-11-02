@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-423 — keep live payment configuration fail-closed (2026-11-02 PKT)
+
+**Decision:** classify the live three-method HTTP503 result as an unavailable/unconfigured Admin baseline, not as permission to bypass payment safeguards. Preserve the checked-in GFS-414 repair for a separately approved Admin release. Dynamic persisted order totals remain the source of payable amounts; method existence, beneficiary/QR ownership, bilingual copy and receipt/review controls remain required.
+
+The Analytics monitor target is absent, so do not recreate or transfer credentials under this milestone. GraphQL and five-minute monitoring remain BLOCKED. COD settlement configuration stays unchanged until courier policy and real collection/remittance evidence are approved. No deployment, routing, payment, D1, flag, Meta, Cron, Queue/DLQ or customer-message mutation occurred.
+
+**Next approval:** owner must first install the approved monitor credential through the protected owner-mediated path and authorize read-only live qualification; only after PASS may a separate Admin-only GFS-414 release approval be considered, with `e8c96c96` as rollback and API frozen at100%.
+
 ## GFS-419 — prepare secure Analytics bridge, stop before token creation (2026-11-02 PKT)
 
 **Decision:** accept the local least-privilege integration. Monitoring may consume a dedicated token only from a process-scoped environment value populated by the Windows Credential Manager bridge; the stored username must equal the protected account ID. Existing Wrangler OAuth and Access credentials remain untouched and available for their current roles.

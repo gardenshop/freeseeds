@@ -87,6 +87,49 @@ describe("admin payment configuration", () => {
     expect(sql.some((query) => query.includes("payment_configuration"))).toBe(false);
   });
 
+  it.each([
+    ["JAZZCASH", "JazzCash"],
+    ["EASYPAISA", "Easypaisa"],
+    ["BANK_TRANSFER", "Bank Transfer"]
+  ] as const)("renders the dynamic %s preview with bilingual copy", async (method, displayName) => {
+    const previewEnv = {
+      ...env,
+      DB: {
+        prepare(query: string) {
+          const statement = {
+            bind: (..._args: unknown[]) => statement,
+            first: async () => ({
+              id: `synthetic-${method.toLowerCase()}`,
+              method,
+              display_name: displayName,
+              recipient_name: "Synthetic Recipient",
+              till_id: "SYNTHETIC-TILL",
+              instructions: "Pay {amount} to {recipientName}.",
+              instructions_ur: "{amount} {recipientName} کو ادا کریں۔",
+              reference_instruction: "Include {orderNumber}.",
+              reference_instruction_ur: "{orderNumber} شامل کریں۔",
+              receipt_instructions: "Send the receipt.",
+              receipt_instructions_ur: "رسید بھیجیں۔",
+              enabled: 1,
+              sort_order: 10
+            })
+          };
+          return statement;
+        }
+      }
+    } as unknown as Parameters<typeof app.fetch>[1];
+    const response = await app.fetch(new Request(`https://admin.example.test/api/payment-instructions/${method}`, { headers: access }), previewEnv);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      method,
+      displayName,
+      configured: true,
+      instructions: "Pay {amount} to {recipientName}.",
+      instructionsUr: "{amount} {recipientName} کو ادا کریں۔",
+      referenceInstructionUr: "{orderNumber} شامل کریں۔"
+    });
+  });
+
   it("reports dynamic payment methods as configured when the legacy amount is null", async () => {
     const row = {
       id: "synthetic-method",

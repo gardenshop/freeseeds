@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-423 — payment and release resources (2026-11-02 PKT)
+
+- **Live Admin baseline:** `e8c96c96`100%; candidate `ee9b7baa`0%. The baseline returns HTTP503 for JazzCash, Easypaisa and Bank Transfer instruction reads because live method configuration is unavailable/unconfigured. GFS-414 source repair is local and undeployed.
+- **API baseline:** `b426ba47`100%; candidate `e8018f3f`0%. API, recovery, WhatsApp, Meta, D1, Queue/DLQ and Cron resources were not mutated.
+- **Monitoring:** `GFS-Cloudflare-Analytics-Monitor` is absent from Windows Credential Manager. No secret value or token record is registered; live qualification is blocked.
+- **COD:** PKR125/enabled; collection/remittance policy flags false; exact source workflow requires tracking and real settlement evidence. No courier credentials or settlement records are invented.
+- **Quality:** focused10/10; full366/366; build/lint PASS; observability6/6; adapter8/8; deadline/rollback18/18; V1 rollback fixture unavailable.
+
 ## GFS-419 — Analytics monitoring integration resources (2026-11-02 PKT)
 
 - **Process input:** `GFS_ANALYTICS_API_TOKEN`, consumed only by local monitoring; no value stored in source/docs. Existing Wrangler OAuth remains fallback.

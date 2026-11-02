@@ -1,5 +1,18 @@
 # Status
 
+## GFS-423 — Advance HTTP503 and Admin release readiness (2026-11-02 PKT)
+
+**Disposition: PASS for local repair coverage and protected read-only preflight; BLOCKED for live monitoring and production release. No production mutation.**
+
+- Fresh checks: GitHub `gardenshop/freeseeds` PR #11 is open at `94f0e6cb487b3e5ec08078a48d91b168012d0112`; Cloudflare identity is `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Meta target remains business `568026370701542` / account `1198439777611633`. Routing is API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%.
+- Live Admin read-only evidence remains: `/api/configuration` reports `advanceAmountPkr=null` and all three methods not configured; JazzCash, Easypaisa and Bank Transfer instruction endpoints return HTTP503. This is unavailable/unconfigured live method state, not evidence to bypass recipient, QR ownership, authorization or language checks.
+- GFS-414 source repair remains local/undeployed: it removes the obsolete fixed-amount lookup/gate from `/api/configuration` and `/api/payment-instructions/:method`, while preserving method-row and payment-ownership controls. New regression coverage verifies all three dynamic methods and EN/UR preview fields. No production payment or Admin deployment occurred.
+- Monitoring target `GFS-Cloudflare-Analytics-Monitor` is absent (`cmdkey` reported no stored credential). GraphQL HTTP200/freshness, five-minute monitoring and live rollback qualification remain BLOCKED; no token was recreated or transferred.
+- COD evidence remains `enabled=true`, fee PKR125, collection/remittance policies false; latest bounded Admin snapshot had 615 active orders, including 317 fulfillment, 203 no-method/payment-choice-pending, 22 delivery-failed and 89 unpaid-after-delivery. Source requires tracking before dispatch, exact collection/remittance evidence and quoted-total reconciliation; no courier connector or verified settlement evidence is present.
+- Recovery ON/start and WhatsApp/EN/UR/Advance/COD/PAID/webhook/Queue-DLQ/Cron protections remain untouched. Cancellation/retention, CAPI, Instant Forms and optional reminders remain deferred/off.
+- **Tests:** focused Admin payment 10/10; full 30 files/366 tests; build PASS; lint PASS; observability6/6; adapter8/8; deadline/rollback18/18. V1 rollback harness is BLOCKED because `GFS_LEGACY_ROOT` is not configured; no external checkout was modified. Known10 moderate dev-only minimatch findings remain documented; audit0 is not claimed.
+- **Release boundary:** prepare Admin-only 0% validation and preserve rollback `e8c96c96`, but do not upload, canary or promote until the owner separately approves release, the monitor target is securely installed and live qualification passes.
+
 ## GFS-419 — Analytics credential integration and monitoring qualification (2026-11-02 PKT)
 
 **Disposition: PASS for local secure integration; BLOCKED for credential provisioning/live monitoring. No production mutation.**
