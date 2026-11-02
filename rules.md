@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-428 Admin routing verification boundary (2026-11-02 PKT)
+
+- Authoritative Wrangler readback for verified Get Free Seeds account reports API `b426ba47`100% / `e8018f3f`0% and Admin `e8c96c96`100% / `ee9b7baa`0%. Admin deployment history identifies the last baseline readback as GFS-407 Approval U; no routing mutation occurred.
+- The prior Cloudflare dashboard `97.8%/2.2%` Admin display was stale/metrics-derived and is not the authoritative deployment allocation; it is not reproducible in Wrangler. Do not infer candidate traffic or correct routing from that dashboard view alone.
+- `GFS-Cloudflare-Analytics-Monitor` and `GFS-Admin-Health-Monitor` are absent from Windows Credential Manager. GraphQL/five-minute monitoring remains BLOCKED; Admin health 403 without Access service credentials is expected. Never bypass Access or recreate/transfer tokens under this boundary.
+- GFS-426 remains a local Admin-only candidate. Its release requires separate owner approval, authenticated monitoring, 0% validation, exact rollback to `e8c96c96`, and independent post-release readback. API, payments, D1, Meta, recovery and customer traffic remain frozen.
+
 ## GFS-427 WhatsApp incident boundary (2026-11-02 PKT)
 
 - The suspected stop at `2026-11-02 22:38:31 PKT` (`17:38:31Z`) is **DISPROVEN** for the active WhatsApp service. Read-only live evidence recorded 24 inbound events after that boundary (latest `17:56:41.614Z`), delivery/read/sent callbacks through `17:56:48.590Z`, zero Worker errors, Queue backlog/retries zero, and a successful Admin Conversations refresh at `22:57:43 PKT` with stale-data age `0s`.

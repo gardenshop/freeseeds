@@ -1,5 +1,18 @@
 # Final Report
 
+## GFS-428 — Admin routing verification and release readiness (2026-11-02 PKT)
+
+**Overall: routing discrepancy CLOSED; GFS-426 production release BLOCKED by missing authenticated monitoring and separate owner release approval.**
+
+1. **Routing actual:** authoritative Wrangler readback reports API `b426ba47`100% / `e8018f3f`0% and Admin `e8c96c96`100% / `ee9b7baa`0%. No correction or deployment was performed.
+2. **97.8/2.2 source:** the earlier Cloudflare dashboard view was stale/metrics-derived and conflicted with exact deployment history; it was not reproducible as current allocation. It is closed as a readback discrepancy, not treated as candidate traffic.
+3. **Monitoring/rollback:** `GFS-Cloudflare-Analytics-Monitor` and `GFS-Admin-Health-Monitor` are absent. Admin `/health` returns expected Access403 without service auth. GraphQL/five-minute monitoring is BLOCKED; existing local fail-closed rollback controllers pass, but live rollback qualification is not claimed.
+4. **GFS-426 readiness:** local Admin `Mark Payment Received` remains isolated and ready for 0% validation. Required release sequence is owner approval, authenticated monitor/rollback gate, Admin-only 0% validation, UI and API acceptance, five-minute watch, then explicit promotion or rollback to `e8c96c96`. No API or payment changes are bundled.
+5. **WhatsApp/order protection:** GFS-427 remains disproven; active API, Queue, webhook and Admin freshness evidence remain healthy. Post-incident completed-order E2E remains UNKNOWN; no synthetic customer activity occurred. Advance methods, recovery, CAPI, D1, Meta, Cron and bindings were untouched.
+6. **Tests:** full30/370 PASS; focused COD27/27 PASS; build/lint PASS; observability6/6, adapter8/8, deadline/rollback18/18 PASS. V1 rollback fixture BLOCKED by missing `GFS_LEGACY_ROOT`.
+7. **Completion:** routing verification100%; live monitoring0%/BLOCKED; GFS-426 local implementation100%, production release0%; Admin live release readiness requires monitoring and approval; completed-order E2E UNKNOWN.
+8. **Next approval:** one exact Admin-only GFS-426 0% validation/release approval, conditional on a securely provisioned monitor, authenticated five-minute qualification and verified `e8c96c96` rollback. Do not authorize API, payment, Meta, CAPI or recovery changes with it.
+
 ## GFS-427 — urgent WhatsApp production recovery (2026-11-02 PKT)
 
 **Overall: OUTAGE DISPROVEN; no recovery mutation required.**

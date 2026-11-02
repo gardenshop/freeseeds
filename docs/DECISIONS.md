@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-428 — close routing discrepancy; defer Admin release (2026-11-02 PKT)
+
+**Decision:** treat Wrangler’s exact deployment readback as authoritative: API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%. The earlier dashboard 97.8/2.2 display is stale/metrics-derived and does not authorize a routing action.
+
+Defer GFS-426 deployment because the approved monitoring and Access service credentials are absent. The next release must be Admin-only, validated at0%, monitored with authenticated evidence and independently reversible to `e8c96c96`. Do not bundle API, payment, Meta, CAPI, D1 or recovery changes.
+
 ## GFS-427 — no production restoration for disproven outage (2026-11-02 PKT)
 
 **Decision:** do not roll back, redeploy, replay queues, alter Meta webhook configuration, or change recovery/payment flags. The active API, Meta webhook subscription, Queue, D1 events and Admin refresh all showed activity after the reported timestamp.

@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-428 — routing and release resources (2026-11-02 PKT)
+
+- **Authoritative API:** `b426ba47`100% / `e8018f3f`0% via Wrangler.
+- **Authoritative Admin:** `e8c96c96`100% / `ee9b7baa`0% via Wrangler; previous dashboard97.8/2.2 was stale/metrics-derived.
+- **Rollback:** existing Admin baseline `e8c96c96`; no new candidate or deployment created under GFS-428.
+- **Monitoring:** `GFS-Cloudflare-Analytics-Monitor` and `GFS-Admin-Health-Monitor` absent from Windows Credential Manager; live qualification blocked.
+- **Candidate:** GFS-426 local Admin source/test change only; separate Admin-only 0% validation and release approval required.
+
 ## GFS-427 — live incident resources (2026-11-02 PKT)
 
 - **Active API:** `getfreeseeds-api-staging`, version `b426ba47`100%; `/health` reports `PRODUCTION_INTEGRATION_READY` and WhatsApp enabled.

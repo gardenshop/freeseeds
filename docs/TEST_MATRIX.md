@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-428 — routing and release readiness (2026-11-02 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| API routing | PASS | Wrangler exact readback: `b426ba47`100% / `e8018f3f`0%. |
+| Admin routing | PASS | Wrangler exact readback: `e8c96c96`100% / `ee9b7baa`0%. |
+| Dashboard discrepancy | CLOSED | 97.8/2.2 was stale/metrics-derived and conflicted with authoritative deployment history; no mutation performed. |
+| Access health boundary | PASS | Unauthenticated Admin `/health` returns expected403; no service credential target is installed. |
+| Monitoring qualification | BLOCKED | Analytics and Access credential-manager targets absent; no token recreation or bypass attempted. |
+| GFS-426 local release gates | PASS locally / BLOCKED live | Full370/370, COD27/27, build/lint, observability6/6, adapter8/8, deadline/rollback18/18; live release awaits approval and monitoring. |
+| V1 rollback fixture | BLOCKED | `GFS_LEGACY_ROOT` is not configured; protected worktrees were not modified. |
+
 ## GFS-427 — WhatsApp incident live verification (2026-11-02 PKT)
 
 | Area | Result | Evidence |

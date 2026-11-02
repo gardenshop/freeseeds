@@ -1,5 +1,16 @@
 # Status
 
+## GFS-428 — Admin routing verification and GFS-426 readiness (2026-11-02 PKT)
+
+**Disposition: routing discrepancy CLOSED by authoritative readback; GFS-426 release BLOCKED pending monitoring/owner approval.**
+
+- **Authoritative routing:** Wrangler against the verified account reports API `b426ba47`100% / `e8018f3f`0% and Admin `e8c96c96`100% / `ee9b7baa`0%. No correction was needed or performed.
+- **97.8/2.2 source:** the prior Cloudflare dashboard view was stale/metrics-derived; it conflicted with exact Wrangler deployment history and was not reproduced as current allocation. It is closed as a dashboard-readback discrepancy.
+- **Monitoring:** `GFS-Cloudflare-Analytics-Monitor` and `GFS-Admin-Health-Monitor` targets are absent. Admin `/health` without service auth returned expected Access403; GraphQL/five-minute qualification remains BLOCKED. No credentials were created or transferred.
+- **GFS-426 readiness:** local manual COD action remains isolated and tested; candidate release steps are 0% validation, authenticated monitoring, Orders/Conversations/Analytics checks, five-minute watch, then explicit owner-approved Admin-only promotion with `e8c96c96` rollback. No deployment occurred.
+- **Protection:** API, payment methods, recovery, Meta, CAPI, D1, Queue/DLQ, Cron, WhatsApp traffic and active `-staging` service/D1 bindings were unchanged.
+- **Tests:** full30 files/370 tests, focused COD27/27, build/lint, observability6/6, adapter8/8 and deadline/rollback18/18 PASS. V1 rollback fixture remains BLOCKED by missing `GFS_LEGACY_ROOT`.
+
 ## GFS-427 — WhatsApp production recovery investigation (2026-11-02 PKT)
 
 **Disposition: OUTAGE DISPROVEN; no restoration or deployment required.**

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-02 — GFS-428 routing verification and release readiness
+
+- Closed the Admin 97.8/2.2 discrepancy using authoritative Wrangler 100/0 readback; no routing mutation was needed.
+- Recorded the missing monitoring credentials and the gated Admin-only GFS-426 release plan. Local regression remains green; no production release occurred.
+
 ## 2026-11-02 — GFS-427 WhatsApp production recovery investigation
 
 - Disproved the suspected WhatsApp outage using authenticated, aggregate-only live evidence; no restoration was needed or performed.
