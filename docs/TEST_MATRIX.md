@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-424 — payment freeze and COD operational readiness (2026-11-02 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Payment-method protection | PASS | Owner confirms JazzCash, Easypaisa and Bank Transfer work; no method/account/beneficiary/QR/configuration mutation. |
+| Admin vs customer payment distinction | PASS read-only | API source uses verified current method, EN/UR completeness and persisted `total_payable`; Admin preview is separate. No customer defect proven. |
+| COD workflow safeguards | PASS locally | Tracking-before-dispatch and exact collection/remittance-to-quote gates remain enforced. |
+| COD operational evidence | PARTIAL | Admin workflow visible; courier integration, returned/undelivered disposition and verified settlement records unavailable. |
+| Advance receipts/review/reconciliation | PASS locally | Focused payment/COD/fulfillment suite 10 files/128 tests; no live payment edits. |
+| Monitoring | BLOCKED | `GFS-Cloudflare-Analytics-Monitor` absent; no repeated token attempt. |
+| Production safety | PASS | API/Admin exact100%/0%; no deployment, D1, routing, payment, Meta, flag, Cron, Queue or customer mutation. |
+
 ## GFS-423 — Advance HTTP503 and Admin release readiness (2026-11-02 PKT)
 
 | Area | Result | Evidence |

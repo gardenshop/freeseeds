@@ -1,5 +1,18 @@
 # Status
 
+## GFS-424 — protect live payments and advance COD operations (2026-11-02 PKT)
+
+**Disposition: PASS for payment freeze/read-only investigation and local regression; BLOCKED for monitoring. No production mutation.**
+
+- **Owner directive:** JazzCash, Easypaisa and Bank Transfer are all working and receiving payments. No method, beneficiary, QR, bank detail, enabled state, amount, instruction, receipt, PAID state or pending order was changed. GFS-423 Admin preview HTTP503 is not classified as customer payment failure.
+- **Discrepancy result:** the Admin preview/configuration route is separate from the API customer path. Customer payment source requires the current enabled method with verified QR ownership and EN/UR copy, and formats the message from the persisted order `total_payable`; no customer-impacting defect was proven. GFS-414 remains undeployed by owner direction.
+- **Protected verification:** GitHub PR #11 remains open at `91f488bc082fe5473988cb441eeb07854a28fe3d`; Cloudflare identity is `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Meta identifiers remain unchanged. Routing is API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0%.
+- **COD read-only evidence:** authenticated Admin Orders rendered COD pending/packing/dispatched/delivered/collection-pending filters and tracking/fulfillment controls; the sanitized page counters showed 633 active orders, 330 fulfillment, 206 no-method, 22 delivery-failed and 91 unpaid-after-delivery. Source enforces tracking before dispatch, exact quoted-total collection and exact remittance before PAID. No courier connector, returned/undelivered state or verified settlement record was found; absence is an operational evidence gap, not proof that delivery is failing.
+- **Admin availability caveat:** subsequent sanitized API retries returned `ORDER_ADMIN_QUERY_FAILED`, `COD_MIGRATION_REQUIRED` and `ADMIN_REQUEST_FAILED`. These are Admin/D1 availability observations only; they do not override the owner’s payment confirmation or establish customer checkout failure.
+- **Smallest high-value improvement:** define an owner-approved courier settlement SOP requiring tracking, delivered/returned/undelivered disposition, collection date/amount, remittance date/amount and opaque evidence references reconciled to the immutable COD quote. No source or live configuration change is justified yet.
+- **Advance/receipts:** no payment edits, replay or synthetic payment/message was performed. Focused payment/COD/fulfillment/review suite passed 10 files/128 tests. Prior full366/366, build/lint and release-controller results remain valid; no source changed in GFS-424.
+- **Monitoring:** `GFS-Cloudflare-Analytics-Monitor` remains absent. Live GraphQL/five-minute qualification is BLOCKED once; no token experiment or bypass repeated. Cancellation/retention, CAPI, Instant Forms and optional reminders remain deferred/off.
+
 ## GFS-423 — Advance HTTP503 and Admin release readiness (2026-11-02 PKT)
 
 **Disposition: PASS for local repair coverage and protected read-only preflight; BLOCKED for live monitoring and production release. No production mutation.**

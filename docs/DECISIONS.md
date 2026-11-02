@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-424 — freeze working payment methods; defer Admin preview deployment (2026-11-02 PKT)
+
+**Decision:** preserve JazzCash, Easypaisa and Bank Transfer exactly as owner-confirmed working. Treat GFS-423 Admin HTTP503 as an Admin-preview/configuration discrepancy until actual customer-checkout failure is proven. Do not deploy the GFS-414 Admin repair solely for this symptom. Preserve EN/UR, verified beneficiary/QR ownership, persisted dynamic totals, receipts, PAID states and pending orders.
+
+COD remains read-only: source safely gates tracking, delivery lifecycle and exact collection/remittance evidence, but no courier integration or returned/undelivered state is evidenced. The next improvement is an owner-approved courier settlement SOP, not invented D1 evidence or live configuration. Monitoring remains blocked because the secure target is absent. No production mutation occurred.
+
 ## GFS-423 — keep live payment configuration fail-closed (2026-11-02 PKT)
 
 **Decision:** classify the live three-method HTTP503 result as an unavailable/unconfigured Admin baseline, not as permission to bypass payment safeguards. Preserve the checked-in GFS-414 repair for a separately approved Admin release. Dynamic persisted order totals remain the source of payable amounts; method existence, beneficiary/QR ownership, bilingual copy and receipt/review controls remain required.

@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-424 — protected payment and COD resources (2026-11-02 PKT)
+
+- **Payment freeze:** JazzCash, Easypaisa and Bank Transfer are owner-confirmed working. Their accounts, beneficiaries, QR/bank details, enabled state, instructions, totals, receipts, PAID states and pending orders are immutable under GFS-424.
+- **Path distinction:** API customer payment formatting uses verified enabled payment rows and persisted order totals; Admin preview/configuration endpoints are separate and were inspected read-only.
+- **COD:** lifecycle and evidence gates are present locally; courier connector, returned/undelivered disposition and verified settlement records are not available. Do not invent them.
+- **Monitoring:** `GFS-Cloudflare-Analytics-Monitor` absent; live qualification blocked. Routing remains API `b426ba47`100% / `e8018f3f`0%, Admin `e8c96c96`100% / `ee9b7baa`0%.
+
 ## GFS-423 — payment and release resources (2026-11-02 PKT)
 
 - **Live Admin baseline:** `e8c96c96`100%; candidate `ee9b7baa`0%. The baseline returns HTTP503 for JazzCash, Easypaisa and Bank Transfer instruction reads because live method configuration is unavailable/unconfigured. GFS-414 source repair is local and undeployed.

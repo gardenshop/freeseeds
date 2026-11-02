@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-02 — GFS-424 payment freeze and COD operations
+
+- Recorded the owner freeze protecting all three working payment methods and deferred GFS-414 Admin deployment because Admin preview HTTP503 is not customer-checkout evidence.
+- Completed read-only customer/Admin path comparison and COD workflow review. No customer, payment, order, courier, settlement or configuration mutation occurred.
+- Recorded the minimum courier settlement SOP requirement and monitoring BLOCKED status. Focused payment/COD/fulfillment tests passed 128/128.
+
 ## 2026-11-02 — GFS-423 Advance HTTP503 and Admin release readiness
 
 - Added regression coverage for dynamic JazzCash, Easypaisa and Bank Transfer instruction previews, including EN/UR fields, without changing runtime payment behavior.

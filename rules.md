@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-424 owner payment freeze and COD boundary (2026-11-02 PKT)
+
+- **OWNER PAYMENT FREEZE:** JazzCash, Easypaisa and Bank Transfer are confirmed by the owner as working and receiving payments. Never disable, suspend, reset, replace, reconfigure or deploy changes to their accounts, beneficiaries, QR codes, bank details, enabled status, amount calculation, instructions, receipts, PAID states or pending orders under this workstream.
+- Admin preview HTTP503 is not customer-checkout evidence. Investigate discrepancies read-only and distinguish Admin preview/configuration routes from the API customer path, which must continue to use verified payment-method rows, EN/UR completeness, ownership controls and persisted order totals. Do not deploy GFS-414 solely for the preview discrepancy.
+- COD read-only workflow evidence: `COD_PENDING` → `PACKING` → `DISPATCHED` → `DELIVERED` → `COLLECTION_PENDING` → `PAID`; tracking is required before dispatch and exact collection/remittance evidence is required before PAID. No courier connector or returned/undelivered state is invented; prepare an operational settlement SOP instead of changing live data.
+- Monitoring target remains absent; record BLOCKED once and do not repeat token creation/transfer experiments. No payment/configuration, D1, routing, deployment, Meta, recovery flag, Cron, Queue/DLQ or customer-message mutation is authorized.
+
 ## GFS-423 Advance HTTP503 and Admin release boundary (2026-11-02 PKT)
 
 - Fresh read-only identity/routing verification matched GitHub `gardenshop/freeseeds` PR #11, Cloudflare `gisupp@gmail.com` / Get Free Seeds `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, API `b426ba47`100% / `e8018f3f`0% and Admin `e8c96c96`100% / `ee9b7baa`0%. Meta targets remain business `568026370701542` / account `1198439777611633`.
