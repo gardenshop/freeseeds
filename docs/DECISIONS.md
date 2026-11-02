@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-441 - accept local monitoring hardening; hold live release for owner run (2026-11-03 PKT)
+
+**Decision:** accept the minimal observability assertions and synthetic tests. The adapter now rejects missing/malformed/stale/future metrics, nonzero Worker errors, wrong account/Worker identity, and non-single-account responses. Freshness is 15 minutes from a 10-minute query plus 5-minute ingestion allowance.
+
+**Boundary:** live monitoring is WAITING FOR OWNER RUN. Require three owner-session checkpoints spanning five minutes with sanitized GraphQL, health/denial, routing and rollback evidence. Do not upload or promote GFS-426, activate CAPI, or mutate production until monitoring and separate release approval pass.
+
 ## GFS-440 - accept corrected metadata; require host-side runtime evidence (2026-11-03 PKT)
 
 **Decision:** accept the owner screenshot as non-secret evidence that the Analytics credential metadata is now correct. Do not rerun the bridge from the sandbox, which cannot access the owner profile, and do not weaken validation or transfer the token.

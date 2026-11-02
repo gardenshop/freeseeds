@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-441 monitoring qualification resources (2026-11-03 PKT)
+
+- **Local adapter:** `scripts/cloudflare-observability.mjs` now validates account/Worker identity, metric shape, zero Worker errors and timestamp freshness; query window is 10 minutes with 5-minute ingestion allowance.
+- **Preflight:** `scripts/test-gfs-monitoring.mjs` explicitly asserts both Worker snapshots, health200, invalid/missing denial, protected-route denial and API/Admin exact 100/0 routing.
+- **Evidence:** observability 7/7; full 372/372; build/lint; adapter 8/8; deadline/rollback 18/18. No secret values or customer data registered.
+- **Live state:** owner credential metadata confirmed, but owner-session runtime output is pending. GFS-426 remains local-only; CAPI OFF.
+
 ## GFS-440 corrected Analytics credential evidence (2026-11-03 PKT)
 
 - **Owner metadata evidence:** Generic target `GFS-Cloudflare-Analytics-Monitor`; username `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; password stored; Enterprise persistence. No secret value registered.

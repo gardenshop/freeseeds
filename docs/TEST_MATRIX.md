@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-441 - monitoring assertion hardening (2026-11-03 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| GraphQL identity/error/freshness assertions | PASS | Exactly one filtered account; expected Worker identity; `errors=0`; timestamp valid, <=15 minutes old and <=1 minute future skew. |
+| Synthetic failure coverage | PASS 7/7 | Missing, malformed, stale, nonzero-error, account mismatch and Worker mismatch cases fail closed. |
+| Full regression | PASS 372/372 | Vitest full suite. |
+| Build/lint | PASS | `npm run build`; `npm run lint`. |
+| Adapter/deadline rollback | PASS | Adapter 8/8; deadline/rollback 18/18. |
+| Owner-session live monitoring | WAITING FOR OWNER RUN | Sandbox cannot access owner vault; three checkpoints over five minutes required. |
+| V1 rollback fixture | BLOCKED | `GFS_LEGACY_ROOT` unavailable; no protected checkout modified. |
+| Production mutation | NONE | No deployment, route, payment, D1, Meta, CAPI, Queue, Cron or customer change. |
+
 ## GFS-440 - corrected credential metadata and monitoring gate (2026-11-03 PKT)
 
 | Area | Result | Evidence |

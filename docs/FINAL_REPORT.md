@@ -1,5 +1,18 @@
 # Final Report
 
+## GFS-441 - final monitoring assertion hardening and COD readiness (2026-11-03 PKT)
+
+**Overall: local monitoring gates PASS; live qualification WAITING FOR OWNER RUN; GFS-426 remains release-blocked safely.**
+
+1. **Assertions:** added fail-closed account cardinality, API/Admin Worker identity, metric presence/shape, Worker `errors=0`, timestamp validity, 15-minute freshness and one-minute future-skew checks. The 15-minute limit is the 10-minute query window plus 5-minute ingestion allowance.
+2. **Local tests:** observability 7/7; synthetic missing, malformed, stale, nonzero-error and identity mismatch cases pass. Full suite 372/372; build/lint pass; adapter 8/8; deadline/rollback 18/18.
+3. **Owner runtime:** Credential Manager metadata is owner-confirmed, but this sandbox cannot execute in that Windows profile. GraphQL HTTP200/errors0, freshness, Access health/denial, three-sample five-minute qualification and live rollback are WAITING FOR OWNER RUN, not missing credential. One preflight is insufficient.
+4. **COD release:** GFS-426 Mark Payment Received remains local PASS372/372 and undeployed. No candidate upload, 0% validation, promotion, real PAID action or CAPI event occurred. CAPI remains OFF.
+5. **Protection:** API `b426ba47` 100% / `e8018f3f` 0%; Admin `e8c96c96` 100% / `ee9b7baa` 0% carried from verified routing. Advance methods, WhatsApp EN/UR, COD PKR125, recovery, webhook, Queue/DLQ, Cron, D1 and payment records were untouched.
+6. **Rollback:** local deadline/rollback 18/18 PASS; V1 fixture remains BLOCKED by unavailable `GFS_LEGACY_ROOT`. Live rollback qualification awaits owner-session monitoring evidence.
+7. **Completion:** local monitoring hardening 100%; owner live monitoring 0%/WAITING; local COD/CAPI 100%; production release 0%; protected production 100%.
+8. **Next action:** owner runs the existing bridge three times at roughly 0/150/300 seconds in the credential-owning session and returns sanitized results only; then request separate Admin-only GFS-426 0% release approval if all gates pass.
+
 ## GFS-440 - validate corrected credential and complete monitoring (2026-11-03 PKT)
 
 **Overall: credential metadata PASS by owner evidence; runtime monitoring BLOCKED on one owner-session execution.**

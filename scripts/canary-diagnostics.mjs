@@ -7,6 +7,8 @@ const SAFE_CLASS = /^[A-Za-z0-9_.$:-]{1,48}$/;
 
 export const DIAGNOSTIC_CODES = Object.freeze([
   "graphql_http200_errors", "graphql_empty_rows", "graphql_invalid_response", "graphql_http_failure",
+  "graphql_account_mismatch", "graphql_worker_mismatch", "graphql_metrics_errors", "graphql_timestamp_missing",
+  "graphql_timestamp_invalid", "graphql_metrics_stale", "graphql_metrics_future",
   "graphql_timeout", "graphql_network_error", "metrics_auth_unavailable", "health_unavailable",
   "wrangler_authentication", "wrangler_timeout", "wrangler_invalid_response", "unknown_routing_version",
   "monitor_retry_exhausted", "cancellation", "controller_exception", "watchdog_restoration_failed",

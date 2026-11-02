@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 - GFS-441 monitoring assertions and local qualification
+
+- Added fail-closed GraphQL account/Worker identity, zero-error, metric-presence and freshness checks; freshness uses a 10-minute query plus 5-minute ingestion allowance.
+- Added synthetic stale, missing, malformed, nonzero-error and identity mismatch coverage. Observability 7/7, full 372/372, build/lint, adapter 8/8 and deadline/rollback 18/18 pass.
+- Kept live qualification WAITING FOR OWNER RUN because the sandbox cannot access the owner Credential Manager. No production or payment behavior changed.
+
 ## 2026-11-03 - GFS-440 corrected Analytics credential metadata
 
 - Recorded owner evidence that the Analytics Credential Manager target now has the exact Get Free Seeds account-ID username, stored password and Enterprise persistence.

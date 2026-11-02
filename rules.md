@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-441 monitoring assertion boundary (2026-11-03 PKT)
+
+- Local observability now fails closed unless each GraphQL response has exactly one filtered account, the expected Worker script identity, integer metrics, zero reported Worker errors, and a valid latest timestamp. Freshness is limited to the 10-minute query window plus 5-minute ingestion allowance (15 minutes), with one-minute future skew allowed.
+- The monitoring preflight explicitly asserts API/Admin account and Worker identity, `errors=0`, nonnegative requests/freshness, authenticated health200, invalid/missing Access denial, protected-route denial, and exact 100/0 routing.
+- Synthetic coverage passes for missing, malformed, stale, future/error and account/Worker-mismatch metrics. Live owner-session monitoring remains WAITING FOR OWNER RUN; three checkpoints over five minutes are required and one preflight is insufficient.
+- No production Worker, routing, payment, D1, Meta, CAPI, Queue, Cron or customer-message mutation occurred. V1 rollback fixture remains unavailable only because `GFS_LEGACY_ROOT` is not configured.
+
 ## GFS-440 corrected Analytics credential boundary (2026-11-03 PKT)
 
 - Owner-provided Credential Manager evidence supersedes the GFS-439 metadata-correction request: `GFS-Cloudflare-Analytics-Monitor` now has username `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, a stored password, and Enterprise persistence.

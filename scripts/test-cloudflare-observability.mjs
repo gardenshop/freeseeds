@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import { createCloudflareObservability, sumMetricRows } from "./cloudflare-observability.mjs";
+import { createCloudflareObservability, sumMetricRows, validateMetricSnapshot } from "./cloudflare-observability.mjs";
 import { accessHeaders, readAccessCredentials } from "./cloudflare-access-credentials.mjs";
 import { readAnalyticsToken } from "./cloudflare-analytics-credentials.mjs";
 
@@ -19,6 +19,18 @@ test("aggregates genuine GraphQL rows and preserves zero errors as measured", ()
 test("empty or malformed metrics are unavailable, never fabricated as zero", () => {
   assert.throws(() => sumMetricRows([]), (error) => error.code === "graphql_empty_rows");
   assert.throws(() => sumMetricRows([{ sum: { requests: 1, errors: null } }]), (error) => error.code === "graphql_invalid_response");
+});
+
+test("fails closed for missing, malformed, stale and nonzero-error metric snapshots", () => {
+  const valid = { source: "cloudflare_graphql", accountTag: "account", worker: "worker", requests: 1, errors: 0, latestAt: "2026-11-02T20:00:00Z" };
+  const options = { accountTag: "account", workerName: "worker", now: new Date("2026-11-02T20:01:00Z") };
+  assert.throws(() => validateMetricSnapshot({ ...valid, latestAt: null }, options), (error) => error.code === "graphql_timestamp_missing");
+  assert.throws(() => validateMetricSnapshot({ ...valid, latestAt: "not-a-timestamp" }, options), (error) => error.code === "graphql_timestamp_invalid");
+  assert.throws(() => validateMetricSnapshot({ ...valid, latestAt: "2026-11-02T19:00:00Z" }, options), (error) => error.code === "graphql_metrics_stale");
+  assert.throws(() => validateMetricSnapshot({ ...valid, latestAt: "2026-11-02T20:02:01Z" }, options), (error) => error.code === "graphql_metrics_future");
+  assert.throws(() => validateMetricSnapshot({ ...valid, errors: 1 }, options), (error) => error.code === "graphql_metrics_errors");
+  assert.throws(() => validateMetricSnapshot({ ...valid, accountTag: "other" }, options), (error) => error.code === "graphql_account_mismatch");
+  assert.throws(() => validateMetricSnapshot({ ...valid, worker: "other" }, options), (error) => error.code === "graphql_worker_mismatch");
 });
 
 test("classifies GraphQL HTTP200 errors, HTTP failures, invalid JSON and timeouts", async () => {
@@ -63,14 +75,15 @@ test("dedicated Analytics token is process-scoped and preferred over Wrangler OA
     accountTag: "verified-account",
     analyticsToken: "dedicated-token",
     tokenPath: "missing-wrangler-config",
+    now: () => new Date("2026-11-02T13:01:00Z"),
     fetchImpl: async (_url, options) => {
       authorization = options.headers.Authorization;
-      return { ok: true, status: 200, json: async () => ({ data: { viewer: { accounts: [{ workersInvocationsAdaptive: [{ dimensions: { datetime: "2026-11-02T13:00:00Z" }, sum: { requests: 1, errors: 0 } }] }] } } }) };
+      return { ok: true, status: 200, json: async () => ({ data: { viewer: { accounts: [{ workersInvocationsAdaptive: [{ dimensions: { datetime: "2026-11-02T13:00:00Z", scriptName: "getfreeseeds-admin-staging" }, sum: { requests: 1, errors: 0 } }] }] } } }) };
     }
   });
   const metrics = await observability.readMetrics(worker);
   assert.equal(authorization, "Bearer dedicated-token");
-  assert.deepEqual(metrics, { source: "cloudflare_graphql", requests: 1, errors: 0, latestAt: "2026-11-02T13:00:00Z" });
+  assert.deepEqual(metrics, { source: "cloudflare_graphql", requests: 1, errors: 0, latestAt: "2026-11-02T13:00:00Z", accountTag: "verified-account", worker: "getfreeseeds-admin-staging", freshnessMs: 60000 });
 });
 
 test("reads HTTP health and authenticated GraphQL metrics without exposing the token", async () => {
@@ -87,13 +100,13 @@ test("reads HTTP health and authenticated GraphQL metrics without exposing the t
       fetchImpl: async (url, options) => {
         calls.push({ url, authorization: options?.headers?.Authorization, accessId: options?.headers?.["CF-Access-Client-Id"], accessSecret: options?.headers?.["CF-Access-Client-Secret"] });
         if (url.endsWith("/health")) return { status: 200 };
-        return { ok: true, json: async () => ({ data: { viewer: { accounts: [{ workersInvocationsAdaptive: [{ dimensions: { datetime: "2026-10-30T20:01:00Z" }, sum: { requests: 2, errors: 0 } }] }] } } }) };
+        return { ok: true, json: async () => ({ data: { viewer: { accounts: [{ workersInvocationsAdaptive: [{ dimensions: { datetime: "2026-10-30T20:01:00Z", scriptName: "getfreeseeds-admin-staging" }, sum: { requests: 2, errors: 0 } }] }] } } }) };
       }
     });
     const health = await observability.readHealth(worker);
     const metrics = await observability.readMetrics(worker);
     assert.equal(health.httpStatus, 200);
-    assert.deepEqual(metrics, { source: "cloudflare_graphql", requests: 2, errors: 0, latestAt: "2026-10-30T20:01:00Z" });
+    assert.deepEqual(metrics, { source: "cloudflare_graphql", requests: 2, errors: 0, latestAt: "2026-10-30T20:01:00Z", accountTag: "account", worker: "getfreeseeds-admin-staging", freshnessMs: 60000 });
     assert.equal(calls.length, 2);
     assert.equal(calls[1].authorization, "Bearer synthetic-secret-not-logged");
     assert.equal(calls[0].accessId, "access-id");

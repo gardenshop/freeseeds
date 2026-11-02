@@ -1,5 +1,15 @@
 # Status
 
+## GFS-441 - monitoring assertions hardened; owner run pending (2026-11-03 PKT)
+
+**Disposition: local monitoring gates PASS; live qualification WAITING FOR OWNER RUN; production unchanged.**
+
+- Added fail-closed checks for exactly one filtered account, expected API/Admin Worker identity, integer metrics, `errors=0`, valid timestamps and freshness. Threshold is 15 minutes: 10-minute GraphQL window plus 5-minute ingestion allowance; future skew is limited to one minute.
+- Focused observability tests pass 7/7, including missing, malformed, stale, nonzero-error and identity mismatch cases. Full suite passes 372/372; build/lint pass; adapter 8/8; deadline/rollback 18/18.
+- Owner Credential Manager evidence remains valid. The agent cannot execute in that Windows profile; live GraphQL, health/denial, three-sample five-minute monitoring and live rollback remain WAITING FOR OWNER RUN, not missing credential.
+- GFS-426 remains local PASS372/372 and undeployed. API/Admin remain the protected 100/0 baseline; Advance methods, WhatsApp, CAPI OFF, D1, Queue, Cron and payments were untouched.
+- V1 rollback fixture remains BLOCKED by missing `GFS_LEGACY_ROOT`; no protected checkout was modified.
+
 ## GFS-440 - corrected Analytics credential awaiting runtime qualification (2026-11-03 PKT)
 
 **Disposition: metadata PASS by owner evidence; runtime monitoring BLOCKED on owner-session execution.**

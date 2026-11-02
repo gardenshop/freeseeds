@@ -14,6 +14,15 @@ const EXPECTED = {
 };
 const CLOUDFLARE_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID || "cb5066a6d71ecdee0bd7ed8aacb4d3c2";
 
+function assertHealthyMetrics(metrics, worker) {
+  assert.equal(metrics.source, "cloudflare_graphql", `${worker.name}:metrics_source_invalid`);
+  assert.equal(metrics.accountTag, CLOUDFLARE_ACCOUNT_ID, `${worker.name}:account_mismatch`);
+  assert.equal(metrics.worker, worker.name, `${worker.name}:worker_mismatch`);
+  assert.equal(metrics.errors, 0, `${worker.name}:worker_errors_nonzero`);
+  assert.ok(Number.isInteger(metrics.requests) && metrics.requests >= 0, `${worker.name}:requests_missing`);
+  assert.ok(Number.isInteger(metrics.freshnessMs) && metrics.freshnessMs >= 0, `${worker.name}:metrics_freshness_missing`);
+}
+
 async function request(url, headers, timeoutMs = 15_000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -61,6 +70,8 @@ const [apiMetrics, adminMetrics, apiRouting, adminRouting] = await Promise.all([
   routing(EXPECTED.api),
   routing(EXPECTED.admin)
 ]);
+assertHealthyMetrics(apiMetrics, EXPECTED.api);
+assertHealthyMetrics(adminMetrics, EXPECTED.admin);
 assert.equal(apiRouting.baselinePercent, 100, "api_baseline_not_100");
 assert.equal(apiRouting.nonBaselinePercent, 0, "api_candidate_not_0");
 assert.equal(adminRouting.baselinePercent, 100, "admin_baseline_not_100");
