@@ -1,5 +1,14 @@
 # Status
 
+## GFS-417 — GraphQL monitoring and release readiness (2026-11-02 PKT)
+
+**Disposition: BLOCKED at authenticated GraphQL metrics. No production mutation.**
+
+- Exact endpoint is `https://api.cloudflare.com/client/v4/graphql`. The existing Wrangler OAuth token is present, current at the diagnostic check, and authenticated to `gisupp@gmail.com` / Get Free Seeds, but its recorded scope list has no Analytics read permission. GraphQL returns HTTP401. This is an external credential-scope gate, not a controller success to repair with mock data.
+- The existing `GFS-Admin-Health-Monitor` Windows bridge is separate Access authentication. It passed authenticated health3/3, missing/invalid denial and protected business-route isolation. It cannot authorize GraphQL metrics.
+- Monitoring qualification is not PASS: no HTTP200 GraphQL response, fresh metrics/timestamps, five-minute preflight or watchdog was claimed. Routing remains API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0% by read-only Wrangler status.
+- No token rotation, scope broadening, new connector, deployment, routing, flag, payment/order, D1, Meta, Cron, Queue/DLQ or customer-message mutation occurred. Prior full363/363, build/lint and local monitoring-controller results remain valid.
+
 ## GFS-416 — restore Admin monitoring and routing (2026-11-02 PKT)
 
 **Disposition: PASS for read-only routing reconciliation; BLOCKED for monitoring release gate. No mutation.**

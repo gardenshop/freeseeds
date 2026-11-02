@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-02 — GFS-417 GraphQL monitoring boundary
+
+- Diagnosed the exact GraphQL endpoint and HTTP401: the correct, unexpired Wrangler OAuth identity lacks recorded Analytics read scope.
+- Confirmed the Access service-credential bridge is separate and healthy for Admin health/isolation only. No credential rotation, scope change, token creation, deployment or routing mutation.
+- Kept verified API/Admin100%/0% routing and release readiness blocked pending one least-privileged approved metrics connector.
+
 ## 2026-11-02 — GFS-416 Admin monitoring and routing readback
 
 - Rechecked the protected identity and found current Wrangler routing already at Admin100%/0% and API100%/0%; no routing correction was performed.

@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-417 GraphQL monitoring boundary (2026-11-02 PKT)
+
+- **Root cause boundary:** the existing Wrangler OAuth token is present and unexpired at the check, and `wrangler whoami` matches `gisupp@gmail.com` / Get Free Seeds. Its recorded scopes include account/Workers/D1 access but no Analytics read scope; the exact GraphQL endpoint `https://api.cloudflare.com/client/v4/graphql` returns HTTP401. Do not copy, log, rotate or broaden the token.
+- **Credential separation:** `GFS-Admin-Health-Monitor` is the protected Access service-credential bridge only. It passes Admin health and isolation checks but cannot authorize Cloudflare GraphQL metrics. Do not use Access credentials as GraphQL credentials or bypass the failure.
+- **Release boundary:** routing is already API `b426ba47`100% / `e8018f3f`0% and Admin `e8c96c96`100% / `ee9b7baa`0%. No routing, deployment, flag, payment, D1, Meta, Cron, Queue/DLQ or customer-message mutation is authorized while GraphQL monitoring remains unavailable.
+
 ## GFS-416 Admin monitoring and routing readback boundary (2026-11-02 PKT)
 
 - **Identity:** Wrangler readback matched `gisupp@gmail.com` and Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; GitHub remains `gardenshop/freeseeds` PR #11 and Meta remains business `568026370701542`, account `1198439777611633`.

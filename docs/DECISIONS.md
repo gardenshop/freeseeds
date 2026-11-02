@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-417 — stop on missing GraphQL Analytics authorization (2026-11-02 PKT)
+
+**Decision:** classify GraphQL HTTP401 as a credential-scope blocker. The Wrangler OAuth token is valid for the protected account and not expired at the check, but its recorded scopes do not include Analytics read. The Access service token is intentionally separate and must not be reused for GraphQL.
+
+Do not create, rotate, copy, expose or broaden credentials; do not replace metrics with mocks or use dashboard cookies. Keep routing at the verified API/Admin100%/0% pair and do not activate a watchdog or release gate.
+
+**Next approval:** owner approval for one least-privileged supported Cloudflare Analytics-read connector/scope on the existing monitoring identity, or an approved equivalent metrics connector. After provision, rerun endpoint HTTP200/error/timestamp, health/denial/isolation, exact routing, fail-closed and five-minute read-only checks.
+
 ## GFS-416 — accept routing readback, stop on GraphQL/approval gates (2026-11-02 PKT)
 
 **Decision:** do not invoke Cloudflare rollout controls. Verified Wrangler status already shows the approved Admin100%/candidate0% target and API100%/candidate0%; the agent performed no correction. The previous 97.2%/2.8% dashboard result is stale/unloaded after refresh.

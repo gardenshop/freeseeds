@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-417 — GraphQL monitoring resources (2026-11-02 PKT)
+
+- **GraphQL:** exact endpoint `https://api.cloudflare.com/client/v4/graphql`; existing Wrangler OAuth selection; HTTP401. Token values are not recorded. Diagnostic scope list lacks Analytics read.
+- **Access:** `GFS-Admin-Health-Monitor` is the separate Access service-credential bridge; health/denial/isolation passed. It is not a GraphQL credential.
+- **Routing:** API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `ee9b7baa`0% from read-only Wrangler status. No watchdog or mutation.
+- **Gate:** five-minute monitoring and release qualification remain blocked until an owner-approved least-privileged metrics connector is available.
+
 ## GFS-416 — current Admin monitoring/routing evidence (2026-11-02 PKT)
 
 - **Identity:** Wrangler `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; GitHub `gardenshop/freeseeds` PR #11; Meta business/account identifiers remain protected targets.

@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-417 — GraphQL monitoring qualification (2026-11-02 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Wrangler identity/token presence | PASS | Correct account identity; token present and unexpired at diagnostic check; values not logged. |
+| GraphQL endpoint/authentication | BLOCKED | `https://api.cloudflare.com/client/v4/graphql` returned HTTP401; recorded OAuth scopes lack Analytics read. |
+| Access health/security boundary | PASS | Existing bridge: authenticated health3/3, missing/invalid denial and protected business-route denial. |
+| Metrics freshness/error checks | NOT RUN | No HTTP200 GraphQL response; no fabricated metrics. |
+| Five-minute monitoring/watchdog | NOT RUN | Authentication gate failed before release monitoring. |
+| Local controller safeguards | PASS | Observability5/5, adapter8/8, deadline/rollback18/18. |
+| Production safety | PASS | No credential, routing, deployment, flag, payment, D1, Meta, Cron or customer-message mutation. |
+
 ## GFS-416 — Admin monitoring and routing readback (2026-11-02 PKT)
 
 | Area | Result | Evidence |

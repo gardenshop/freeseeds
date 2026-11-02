@@ -1,5 +1,16 @@
 # Final Report
 
+## GFS-417 — GraphQL monitoring and release readiness (2026-11-02 PKT)
+
+**Overall: BLOCKED at GraphQL authentication; production untouched.**
+
+1. **Root cause:** the exact Cloudflare GraphQL endpoint returns HTTP401 using the existing Wrangler OAuth token. Identity is correct and the token was unexpired at the check, but its recorded scopes lack Analytics read. The Access bridge is a separate credential path and is not interchangeable.
+2. **Repair:** no safe local repair was proven. Existing controller fail-closed behavior is correct; no mock metrics, cookie reuse, token copy, rotation, scope broadening or new connector was attempted.
+3. **Monitoring:** health3/3, invalid/missing denial and protected-route isolation passed. GraphQL HTTP200/error/timestamp checks and five-minute monitoring are BLOCKED; no watchdog was armed.
+4. **Routing/rollback:** read-only Wrangler status is API `b426ba47`100% / `e8018f3f`0% and Admin `e8c96c96`100% / `ee9b7baa`0%. No routing change or rollback was performed. Local observability5/5, adapter8/8 and deadline/rollback18/18 passed; prior full363/363/build/lint remain valid.
+5. **Remaining P0 readiness:** GFS-414 dynamic Advance Admin repair remains source-only; COD settlement policy remains absent; recovery ON/start authorization remains unresolved; Advance receipt/reconciliation remains pending. Historical payment failures remain closed; migration0046, Meta, CAPI, Instant Forms and Automation V2 remain untouched/OFF as documented.
+6. **Next exact approval:** approve one least-privileged supported Analytics-read connector/scope for the existing monitoring identity, then rerun bounded monitoring. No production release approval is actionable before that gate passes.
+
 ## GFS-416 — Admin monitoring and routing (2026-11-02 PKT)
 
 **Overall: routing readback PASS; monitoring/release BLOCKED.**
