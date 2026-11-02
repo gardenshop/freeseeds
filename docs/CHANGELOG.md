@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-02 — GFS-416 Admin monitoring and routing readback
+
+- Rechecked the protected identity and found current Wrangler routing already at Admin100%/0% and API100%/0%; no routing correction was performed.
+- Existing credential bridge passed health/Access denial/isolation checks, but GraphQL metrics returned HTTP401. Recorded the monitoring blocker and explicit owner-approval boundary.
+- Full363/363, build/lint, observability5/5, adapter8/8 and deadline/rollback18/18 passed; no production state changed.
+
 ## 2026-11-02 — GFS-415 Admin baseline restoration boundary
 
 - Freshly rechecked Admin drift at `e8c96c96`97.2% / `ee9b7baa`2.8% and API isolation at `b426ba47`100% / `e8018f3f`0%.

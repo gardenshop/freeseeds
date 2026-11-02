@@ -1,5 +1,15 @@
 # Final Report
 
+## GFS-416 — Admin monitoring and routing (2026-11-02 PKT)
+
+**Overall: routing readback PASS; monitoring/release BLOCKED.**
+
+1. **Monitoring:** existing protected Windows bridge succeeded. Authenticated health3/3, missing/invalid denial and protected business-route denial passed. GraphQL metrics returned HTTP401, so monitoring is not PASS and no five-minute observation was run.
+2. **Routing:** fresh Wrangler status reports Admin `e8c96c96`100% / `ee9b7baa`0% and API `b426ba47`100% / `e8018f3f`0%. No Admin correction was performed; the earlier 97.2%/2.8% dashboard view was stale/unloaded after refresh.
+3. **Approval/rollback:** no independent explicit owner approval for mutation was present. No watchdog was armed and no live rollback was attempted. Local observability5/5, adapter8/8 and deadline/rollback18/18 passed; V1 rollback harness is blocked by a dirty external baseline checkout.
+4. **Regression/safety:** full363/363, build and lint passed. API, recovery ON/start, WhatsApp, payments, D1, Meta, Cron, Queue/DLQ and customer traffic were unchanged.
+5. **Next exact task:** restore authorized GraphQL monitoring credential/scope or approved metrics connector without rotating/exposing credentials, then rerun the bounded preflight. Do not perform routing work while owner approval or GraphQL monitoring remains unavailable.
+
 ## GFS-415 — Admin baseline restoration (2026-11-02 PKT)
 
 **Overall: BLOCKED before production mutation.**

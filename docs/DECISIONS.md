@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-416 — accept routing readback, stop on GraphQL/approval gates (2026-11-02 PKT)
+
+**Decision:** do not invoke Cloudflare rollout controls. Verified Wrangler status already shows the approved Admin100%/candidate0% target and API100%/candidate0%; the agent performed no correction. The previous 97.2%/2.8% dashboard result is stale/unloaded after refresh.
+
+**Monitoring boundary:** the protected credential bridge and Access checks are usable for health3/3, missing/invalid denial and business-route isolation, but GraphQL metrics return HTTP401. Five-minute monitoring, independent rollback arming and live release PASS are therefore unavailable. No credential rotation, Access-policy change or bypass is permitted.
+
+**Approval boundary:** GFS-416 explicitly requires separate owner approval and none is independently evidenced here. Keep all protected WhatsApp/API/recovery/payment/D1/Meta state unchanged. The next action is repair or owner-side authorization of the GraphQL monitoring credential/scope, followed by a fresh bounded preflight—not a routing mutation.
+
 ## GFS-415 — stop before Admin traffic mutation (2026-11-02 PKT)
 
 **Decision:** do not change routing in this session. Fresh read confirms the unexpected Admin `e8c96c96`97.2% / `ee9b7baa`2.8% split and API isolation, but the required service-auth health/monitoring gate is unavailable. The official Chrome MCP also requires explicit confirmation before invoking the live rollout control.

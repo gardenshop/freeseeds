@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-416 — current Admin monitoring/routing evidence (2026-11-02 PKT)
+
+- **Identity:** Wrangler `gisupp@gmail.com` / Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; GitHub `gardenshop/freeseeds` PR #11; Meta business/account identifiers remain protected targets.
+- **Routing:** Admin `e8c96c96`100% / `ee9b7baa`0%; API `b426ba47`100% / `e8018f3f`0% from fresh read-only Wrangler status. No mutation or watchdog.
+- **Monitoring:** Windows bridge available; health3/3, denial/isolation PASS; GraphQL HTTP401 BLOCKED. Credential values were not logged or recorded.
+- **Validation:** observability5/5, adapter8/8, deadline/rollback18/18, full363/363, build/lint PASS. V1 rollback fixture remains externally dirty and untouched.
+
 ## GFS-415 — Admin routing read-only evidence (2026-11-02 PKT)
 
 - **Cloudflare:** protected Get Free Seeds account URL verified; Admin active `e8c96c96`97.2% and candidate `ee9b7baa`2.8%; API active `b426ba47`100% and candidate `e8018f3f`0%.

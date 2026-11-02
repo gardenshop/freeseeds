@@ -1,5 +1,14 @@
 # Status
 
+## GFS-416 — restore Admin monitoring and routing (2026-11-02 PKT)
+
+**Disposition: PASS for read-only routing reconciliation; BLOCKED for monitoring release gate. No mutation.**
+
+- Verified Wrangler identity: `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Fresh read-only status reports Admin `e8c96c96`100% / `ee9b7baa`0% and API `b426ba47`100% / `e8018f3f`0%. The prior dashboard 97.2%/2.8% view did not survive refresh and was stale/unloaded; no correction was performed.
+- Existing Windows Credential Manager bridge read succeeded without exposing values. Monitoring preflight reached authenticated health3/3, missing/invalid credential denial and protected business-route denial. GraphQL metrics then failed HTTP401, so five-minute monitoring and rollback arming were not claimed.
+- Local observability5/5, adapter8/8, deadline/rollback18/18 and full regression363/363 passed; build/lint passed. The separate V1 rollback harness remains blocked by a dirty external baseline checkout and was not altered.
+- No owner approval was independently present for a live routing mutation. No deployment, routing, flag, recovery, payment/order, D1, Meta, Cron, Queue/DLQ or customer-message mutation occurred.
+
 ## GFS-415 — restore Admin 100% baseline (2026-11-02 PKT)
 
 **Disposition: BLOCKED safely before mutation.**

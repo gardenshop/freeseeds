@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-416 Admin monitoring and routing readback boundary (2026-11-02 PKT)
+
+- **Identity:** Wrangler readback matched `gisupp@gmail.com` and Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; GitHub remains `gardenshop/freeseeds` PR #11 and Meta remains business `568026370701542`, account `1198439777611633`.
+- **Fresh routing:** read-only Wrangler status now reports Admin `e8c96c96`100% / `ee9b7baa`0% and API `b426ba47`100% / `e8018f3f`0%. No GFS-416 routing mutation occurred. The earlier dashboard 97.2%/2.8% view was stale/unloaded and is not used as current truth.
+- **Monitoring:** the protected credential bridge read succeeded; authenticated health3/3, missing/invalid credential denial and protected business-route denial passed. Cloudflare GraphQL metrics returned HTTP401, so monitoring is not a release PASS. Do not rotate/expose credentials or invoke routing controls without separate explicit owner approval.
+
 ## GFS-415 Admin baseline restoration boundary (2026-11-02 PKT)
 
 - Fresh official Chrome/Cloudflare read: API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`97.2% / `ee9b7baa`2.8%. GitHub readback is `gardenshop/freeseeds` PR #11; Cloudflare account URL is the protected Get Free Seeds account; Meta Ads session remains on business `568026370701542`, account `1198439777611633`.

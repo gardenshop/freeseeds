@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-416 — Admin monitoring and routing readback (2026-11-02 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Identity and routing | PASS | Verified Wrangler identity/account; Admin `e8c96c96`100% / `ee9b7baa`0%; API `b426ba47`100% / `e8018f3f`0%. |
+| Credential bridge and Access boundary | PASS | Existing bridge read; authenticated health3/3; missing/invalid credentials denied; protected business routes denied. |
+| GraphQL metrics | BLOCKED | Cloudflare GraphQL returned HTTP401; no fabricated zero-error result. |
+| Five-minute monitoring / rollback | NOT RUN | Monitoring gate failed before any authorized mutation; no watchdog armed. |
+| Local monitoring/rollback tests | PASS | Observability5/5, adapter8/8, deadline/rollback18/18. V1 legacy harness blocked by dirty external baseline precondition. |
+| Full regression/build/lint | PASS | 30 files/363 tests; build and lint pass. |
+| Protected-state safety | PASS | No external mutation; API, recovery, payment, D1, Meta, Cron and customer traffic untouched. |
+
 ## GFS-415 — Admin baseline restoration (2026-11-02 PKT)
 
 | Area | Result | Evidence |
