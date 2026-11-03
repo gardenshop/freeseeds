@@ -1,5 +1,15 @@
 # Final Report
 
+## GFS-449 - Cloudflare Analytics authentication isolation (2026-11-03 PKT)
+
+**Overall: authentication failure isolated; token verifier PASS locally; live token state and monitoring remain blocked on owner execution.**
+
+1. **Evidence:** A_viewer failed HTTP400 with sanitized Cloudflare code `cf_9106`; B/C/D were not run. This is authentication evidence, not a query/schema failure.
+2. **Repair:** added an account-scoped token verifier using the official Cloudflare token endpoint. It never outputs token values, IDs, headers or raw responses.
+3. **Tests:** verifier 3/3; probe 3/3; observability 10/10; full 372/372; build/lint PASS. Existing adapter/deadline evidence remains 8/8 and 18/18.
+4. **Release:** GFS-426 remains local PASS372/372 and undeployed. No CAPI, payment, D1, routing, Meta, Queue, Cron or customer mutation occurred.
+5. **Next gate:** owner runs the verifier once. ACTIVE permits one full monitoring sample, then three checkpoints over five minutes; inactive/invalid requires one secure owner-side Credential Manager correction.
+
 ## GFS-448 - persistent GraphQL HTTP400 isolation (2026-11-03 PKT)
 
 **Overall: bounded isolation implementation PASS; live root cause still BLOCKED on one owner-profile probe; production protected.**

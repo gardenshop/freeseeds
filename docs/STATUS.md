@@ -1,5 +1,14 @@
 # Status
 
+## GFS-449 - Cloudflare token verification ready (2026-11-03 PKT)
+
+**Disposition: authentication failure isolated; verifier locally PASS; live token state and monitoring pending owner execution.**
+
+- GFS-448 A_viewer failed HTTP400 with sanitized Cloudflare code `cf_9106`; B/C/D were correctly not run. Query/schema work is paused.
+- Added an account-scoped `GET /accounts/{account_id}/tokens/verify` verifier behind the existing bridge. It checks whether the stored password is an active API token without revealing token material.
+- Tests: token verifier 3/3, probe 3/3, observability 10/10, full 372/372, build/lint PASS. GFS-426 remains local-only and undeployed.
+
+
 ## GFS-448 - bounded A/B/C/D GraphQL probe ready (2026-11-03 PKT)
 
 **Disposition: local isolation tool PASS; live root cause pending one owner-profile probe; monitoring remains 0/3.**

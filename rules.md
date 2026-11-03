@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-449 Cloudflare token verification boundary (2026-11-03 PKT)
+
+- Owner probe isolated the first failure at A_viewer: HTTP400 with provider code `cf_9106`, an authentication failure. Account/schema probing is paused until token verification completes.
+- Added `scripts/cloudflare-token-verify.mjs` using the official account token endpoint. It emits only HTTP status, normalized ACTIVE/EXPIRED/DISABLED/UNKNOWN state, sanitized provider code, auth-header-present boolean and PASS/FAIL.
+- The existing Credential Manager bridge remains process-only; no token value, ID, Authorization header or response body is copied to the sandbox, logs, Git or reports.
+- Local token-verifier tests 3/3, probe 3/3, observability 10/10, full 372/372 and build/lint PASS. Live token state and monitoring remain pending one owner-profile verifier run.
+
 ## GFS-448 bounded GraphQL isolation boundary (2026-11-03 PKT)
 
 - Added `scripts/cloudflare-graphql-probe.mjs`, a read-only fail-fast sequence limited to four requests: A viewer, B verified account, C minimal Worker metrics, D existing full monitoring query.

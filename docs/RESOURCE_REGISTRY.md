@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-449 Analytics credential verification (2026-11-03 PKT)
+
+- **Endpoint:** official Cloudflare `GET /accounts/{account_id}/tokens/verify`; account ID is fixed to the verified Get Free Seeds account.
+- **Adapter:** `scripts/cloudflare-token-verify.mjs`; reads only the process-scoped Analytics secret supplied by the existing Windows Credential Manager bridge.
+- **Output:** HTTP status, ACTIVE/EXPIRED/DISABLED/UNKNOWN, sanitized provider code, auth-header boolean and PASS/FAIL. Token values, token ID, headers and raw body are excluded.
+- **Evidence:** owner A_viewer returned HTTP400 `cf_9106`; local verifier 3/3, probe 3/3, observability 10/10, full 372/372, build/lint PASS. Live verifier result pending.
+
 ## GFS-448 GraphQL isolation resources (2026-11-03 PKT)
 
 - **Probe:** `scripts/cloudflare-graphql-probe.mjs`; bounded A/B/C/D sequence using the existing process-only Analytics token bridge.

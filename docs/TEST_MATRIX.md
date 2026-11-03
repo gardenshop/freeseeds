@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-449 - Analytics token verification (2026-11-03 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Authentication isolation | PASS | Owner A_viewer stopped at HTTP400 `cf_9106`; B/C/D were not run. |
+| Token verifier | PASS 3/3 | Active, inactive/401, and missing/malformed credential fixtures. |
+| Secret protection | PASS | Tests assert no token material is present in output. |
+| Probe/observability | PASS | Probe 3/3; observability 10/10. |
+| Full regression | PASS 372/372 | Vitest suite. |
+| Build/lint | PASS | TypeScript build and ESLint. |
+| Live token state | BLOCKED | Owner-profile verifier execution pending. |
+| Production mutation | NONE | No deployment, routing, payment, D1, Meta, CAPI or customer action. |
+
 ## GFS-448 - bounded GraphQL isolation probe (2026-11-03 PKT)
 
 | Area | Result | Evidence |

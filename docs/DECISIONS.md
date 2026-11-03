@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-449 - verify the stored credential before GraphQL work (2026-11-03 PKT)
+
+**Decision:** treat `cf_9106` as authentication evidence and pause query/schema changes. Verify the existing Windows-stored secret against Cloudflare’s account token-verification endpoint.
+
+**Security boundary:** output is allowlisted to status, normalized token state, sanitized provider code, header presence and PASS/FAIL. Do not export, replace or create credentials from the agent. If invalid, the owner must perform one secure Credential Manager correction.
+
+**Release gate:** only an ACTIVE token followed by a successful full monitoring sample permits the three five-minute checkpoints and separate GFS-426 approval request.
+
 ## GFS-448 - isolate before repairing persistent HTTP400 (2026-11-03 PKT)
 
 **Decision:** replace repeated full-monitor retries with one bounded A/B/C/D sequence. Stop at the first failure and repair only that proven layer.

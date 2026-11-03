@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 - GFS-449 Cloudflare token verifier
+
+- Isolated owner A_viewer HTTP400 `cf_9106` authentication failure; B/C/D were not run.
+- Added account-scoped token verification through the existing process-only bridge with allowlisted, secret-free output and tests.
+- Token verifier 3/3, probe 3/3, observability 10/10, full 372/372 and build/lint PASS. Live token state remains pending owner execution.
+
 ## 2026-11-03 - GFS-448 bounded GraphQL isolation probe
 
 - Added a fail-fast A/B/C/D probe for viewer, account, minimal Worker metrics and the existing full monitoring query, with no more than four read-only requests.
