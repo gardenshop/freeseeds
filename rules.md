@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-476 immutable API candidate boundary (2026-11-03 PKT)
+
+- The single owner-authorized upload-only mutation was consumed for API Worker `getfreeseeds-api-staging`: version `9f6a4ecf-bf7f-43ff-abe0-e0d67e53bfd3`, tag `gfs476-api-51e1e89`. Never attach, deploy, promote, override, test with customer webhooks, or retry the upload.
+- The upload unexpectedly changed runtime variable `PAYMENT_CHOICE_RECOVERY_ENABLED` from the verified `true` state to `false` despite `--keep-vars`. Treat configuration preservation as BLOCKED; do not claim full preservation or release readiness. Restore requires a separate explicit owner approval because the supported dashboard mutation is outside upload-only authority.
+- Preserve API baseline `b426ba47`100% / existing candidate `e8018f3f`0%, Admin `e8c96c96`100% / `e44703c3`0%, encrypted secrets, D1/R2/Queue/DLQ/Cron, EN/UR, payments, COD PKR125, +15/+210, customer state, Meta and CAPI OFF. The isolated preview health GET is not customer traffic.
+
 ## GFS-475 safe API resume acceptance boundary (2026-11-03 PKT)
 
 - GFS-474 resume behavior is accepted only in the local synthetic harness: a returning customer must send a new inbound message before OFFER, FERTILIZER, PROVINCE or REVIEW controls are re-presented. Do not add timers, unsolicited reminders, webhook replay, automatic order creation or customer outreach.

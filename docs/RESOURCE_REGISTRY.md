@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-476 immutable API candidate resources (2026-11-03 PKT)
+
+- **Upload:** one owner-authorized Wrangler upload created version `9f6a4ecf-bf7f-43ff-abe0-e0d67e53bfd3`, tag `gfs476-api-51e1e89`, source `51e1e8939cbdacd85cae58249051a9f3d78ea8ce`, bundle SHA-256 `468C26830E2B1BCECE289A893A1284E88D97FD8449ECD2D2C28D860F2F5272BA`.
+- **Routing:** API baseline `b426ba47`100%; existing candidate `e8018f3f`0%; Admin `e8c96c96`100% / `e44703c3`0%. New version is Ready but unattached. Preview health returned `ok=true`; no customer webhook.
+- **Bindings/config:** D1 `DB`, Queue `EVENTS`, R2 `RECEIPTS`, `CF_VERSION_METADATA`, Queue trigger, Cron and workers.dev route remain present; encrypted secret slots remain present and values uninspected. CAPI false.
+- **Preservation incident:** post-upload runtime `PAYMENT_CHOICE_RECOVERY_ENABLED=false`; pre-upload verified value was true. Dashboard restore was rejected as a separate unauthorized mutation. No second upload or workaround. Release gate is owner-approved restoration and readback.
+
 ## GFS-475 safe API resume acceptance resources (2026-11-03 PKT)
 
 - **Source:** PR11 local source `51e1e8939cbdacd85cae58249051a9f3d78ea8ce`; generated Worker `index.js` SHA-256 `468C26830E2B1BCECE289A893A1284E88D97FD8449ECD2D2C28D860F2F5272BA`, 1,174,907 bytes. Dry-run artifact was deleted after hashing; no upload/version ID exists for GFS-475.

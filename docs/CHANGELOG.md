@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 - GFS-476 immutable API candidate
+
+- Uploaded exactly one approved immutable API version with `--keep-vars --strict`: `9f6a4ecf-bf7f-43ff-abe0-e0d67e53bfd3`; no attachment or traffic change.
+- Verified source/bundle provenance and isolated preview health. Existing API/Admin routing remained100/0; CAPI OFF.
+- Found and recorded a preservation defect: `PAYMENT_CHOICE_RECOVERY_ENABLED` changed true→false during upload. Supported restoration was safety-blocked under upload-only authority; release remains blocked pending separate approval.
+
 ## 2026-11-03 - GFS-475 safe API resume acceptance
 
 - Accepted EN/UR inbound-only resume for OFFER, FERTILIZER, PROVINCE and REVIEW in the synthetic local provider harness; no additional source defect found.

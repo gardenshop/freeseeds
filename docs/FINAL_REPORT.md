@@ -1,5 +1,20 @@
 # Final Report
 
+## GFS-476 - immutable API candidate (2026-11-03 PKT)
+
+**Overall: upload and isolated version readback PASS; configuration-preservation gate BLOCKED; no attachment, traffic promotion or customer activity.**
+
+1. **Approval/transport:** exactly one explicit owner-authorized official Wrangler upload used `--keep-vars --strict` for `getfreeseeds-api-staging`; no deploy command.
+2. **Version:** `9f6a4ecf-bf7f-43ff-abe0-e0d67e53bfd3`, tag `gfs476-api-51e1e89`, Ready. Preview `/health` passed; no webhook POST or customer traffic.
+3. **Hashes:** tested source `51e1e8939cbdacd85cae58249051a9f3d78ea8ce`; bundle SHA-256 `468C26830E2B1BCECE289A893A1284E88D97FD8449ECD2D2C28D860F2F5272BA`; regenerated hash matched.
+4. **Preservation:** bindings and encrypted secret slots read back present, but runtime `PAYMENT_CHOICE_RECOVERY_ENABLED` changed verified true→false. Dashboard restoration was safety-blocked as a separate mutation; this remains BLOCKED and no bypass/retry occurred.
+5. **Acceptance/regression:** GFS-475 synthetic EN/UR stage acceptance remains PASS (focused2/2, guided104/104, full377/377, build/lint); audit remains BLOCKED. Uploaded preview health only; no live customer test.
+6. **Routing:** API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `e44703c3`0%; CAPI OFF. New version unattached.
+7. **Progress:** WhatsApp local92% / remaining8%; resume local100% / live0%; COD local100% / live70%. Candidate release readiness is blocked by configuration preservation.
+8. **External blockers:** Meta display name remains In Review; courier collection/remittance evidence remains missing.
+9. **Git:** verified after documentation commit/push below.
+10. **ONE next milestone:** separately approve restoration of only `PAYMENT_CHOICE_RECOVERY_ENABLED=true`, then independently verify settings/routing before considering any candidate attachment approval.
+
 ## GFS-475 - safe API resume acceptance (2026-11-03 PKT)
 
 **Overall: synthetic resume acceptance PASS; immutable candidate prepared locally but NOT UPLOADED; production/customer state unchanged.**

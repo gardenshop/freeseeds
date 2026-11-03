@@ -1,5 +1,11 @@
 # Get Free Seeds Plan
 
+## GFS-476 immutable API candidate (2026-11-03 PKT)
+
+The single approved upload-only mutation completed once using Wrangler `versions upload --keep-vars --strict` for `getfreeseeds-api-staging`, producing immutable version `9f6a4ecf-bf7f-43ff-abe0-e0d67e53bfd3`, tag `gfs476-api-51e1e89`. Cloudflare readback showed it Ready, while API baseline `b426ba47` stayed100% and existing `e8018f3f` stayed0%; no attachment, deployment or traffic test occurred. The isolated preview `/health` GET returned `ok=true`, `PRODUCTION_INTEGRATION_READY`, WhatsApp enabled.
+
+The upload did not preserve the verified runtime value `PAYMENT_CHOICE_RECOVERY_ENABLED=true`; post-upload settings read `false`. Encrypted secrets and bindings remained present, but this is a release-blocking configuration-preservation defect. The dashboard correctly rejected the attempted restore as a separate setting mutation. No bypass or second upload is allowed; separately approve restoration of this exact variable, then re-read settings and routing.
+
 ## GFS-475 safe API resume acceptance (2026-11-03 PKT)
 
 Local synthetic acceptance reuses the real API state machine and migrations with a SQLite fixture, mocked Meta provider, mocked Queue and synthetic-only identities. EN/UR OFFER, FERTILIZER, PROVINCE and REVIEW resume on inbound only; state preservation, invalid input rejection, dynamic province pricing, COD PKR125, all three Advance methods and duplicate suppression are covered without a production sender, customer database or outbound Queue.

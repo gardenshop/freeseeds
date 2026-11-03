@@ -1,5 +1,15 @@
 # Status
 
+## GFS-476 immutable API candidate (2026-11-03 PKT)
+
+**Disposition: upload PASS; immutable candidate verified; preservation gate BLOCKED; no traffic attachment or customer activity.**
+
+- One owner-authorized Wrangler upload completed with `--keep-vars --strict`: version `9f6a4ecf-bf7f-43ff-abe0-e0d67e53bfd3`, tag `gfs476-api-51e1e89`, source `51e1e8939cbdacd85cae58249051a9f3d78ea8ce`, bundle SHA-256 `468C26830E2B1BCECE289A893A1284E88D97FD8449ECD2D2C28D860F2F5272BA`.
+- Independent Cloudflare readback: new version Ready; active API baseline `b426ba47`100%; existing candidate `e8018f3f`0%; Admin remains `e8c96c96`100% / `e44703c3`0%. No deploy, attach, override, percentage change or customer webhook occurred.
+- Preview health GET passed with `ok=true`, `PRODUCTION_INTEGRATION_READY`, WhatsApp enabled. No POST, provider send, order, customer data or live webhook was used.
+- Post-upload settings preserved encrypted secret slots, D1 `DB`, Queue `EVENTS`, R2 `RECEIPTS`, version metadata, Cron, Queue trigger, guided Meta provider, CAPI false and other protected flags. However, `PAYMENT_CHOICE_RECOVERY_ENABLED` read `false`, replacing the verified pre-upload `true`; this is a configuration-preservation failure.
+- The supported dashboard restore action was safety-blocked as a separate mutation outside upload-only authorization. No workaround or retry was attempted. Audit remains BLOCKED by npm registry availability.
+
 ## GFS-475 safe API resume acceptance (2026-11-03 PKT)
 
 **Disposition: synthetic acceptance PASS; candidate prepared locally, NOT UPLOADED; production unchanged.**

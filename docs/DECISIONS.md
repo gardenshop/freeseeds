@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-476 - upload-only candidate and preservation blocker (2026-11-03 PKT)
+
+**Decision:** consume exactly one approved API upload. Accept version `9f6a4ecf-bf7f-43ff-abe0-e0d67e53bfd3` as Ready and isolated, with no deployment or traffic attachment.
+
+**Decision:** do not claim configuration preservation. Despite `--keep-vars`, Cloudflare now reads `PAYMENT_CHOICE_RECOVERY_ENABLED=false` where pre-upload verified state was `true`. The dashboard blocked restoration because it is a separate mutation. No second upload, Wrangler workaround, attachment or promotion is authorized.
+
+**Release gate:** owner must separately approve restoring only `PAYMENT_CHOICE_RECOVERY_ENABLED=true` through the supported dashboard path, followed by independent settings/routing readback. Until then the candidate is not release-ready.
+
 ## GFS-475 - accept synthetic resume and preserve existing candidate (2026-11-03 PKT)
 
 **Decision:** accept GFS-474 resume behavior locally with no further source change. The existing EN/UR synthetic journey proves all four repaired interactive states and the broader guided suite preserves province pricing, COD PKR125 and JazzCash/Easypaisa/Bank Transfer behavior.

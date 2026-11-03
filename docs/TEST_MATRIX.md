@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-476 immutable API candidate (2026-11-03 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Authorized upload count | PASS | Exactly one `versions upload --keep-vars --strict`; version `9f6a4ecf…`. |
+| Bundle/source provenance | PASS | Source `51e1e893`; bundle SHA-256 `468C2683…F5272BA`; regenerated hash matched. |
+| Version readback | PASS | Cloudflare lists new version Ready with GFS-476 tag; preview health GET passed. |
+| Attachment/traffic | PASS protected | API baseline `b426ba47`100%; existing candidate `e8018f3f`0%; no new version attachment. |
+| Bindings/secrets | PASS | D1, R2, Queue/DLQ, version metadata, Cron and encrypted secret slots present; values not exposed. |
+| Runtime flag preservation | BLOCKED | `PAYMENT_CHOICE_RECOVERY_ENABLED` changed from verified true to false after upload. |
+| Restore attempt | BLOCKED safely | Supported dashboard editor rejected separate mutation outside upload-only authority; no bypass. |
+| Synthetic acceptance | PASS carried forward | EN/UR OFFER/FERTILIZER/PROVINCE/REVIEW; duplicate, state, pricing, COD PKR125 and all Advance methods covered locally. |
+| Production/customer safety | PASS | No POST webhook, provider send, order/payment/customer mutation, deployment, Meta, CAPI or Admin action. |
+
 ## GFS-475 safe API resume acceptance (2026-11-03 PKT)
 
 | Gate | Result | Evidence |
