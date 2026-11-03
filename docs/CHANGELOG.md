@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 - GFS-451 Analytics authentication boundary
+
+- Recorded the owner post-GFS-450 result: HTTP400 `cf_6003`, token status UNKNOWN, header present, with all local credential-shape checks passing.
+- Read-only Cloudflare UI metadata confirms the dedicated credential is account-owned and scoped to Get Free Seeds `Account Analytics Read`; endpoint and Bearer source handling remain unchanged.
+- No bridge defect, expiry, permission mismatch or exact secret defect was proven. No token rotation or production mutation occurred; live monitoring remains blocked pending owner correction or explicit replacement approval.
+
 ## 2026-11-03 - GFS-450 Cloudflare token header diagnostics
 
 - Recorded owner HTTP400 `cf_6003` with header-present/token-status-unknown evidence; did not misclassify it as expiry or GraphQL failure.

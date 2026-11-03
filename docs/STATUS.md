@@ -1,5 +1,13 @@
 # Status
 
+## GFS-451 - Analytics credential remains unresolved (2026-11-03 PKT)
+
+**Disposition: metadata PASS, runtime authentication FAIL/UNKNOWN; COD release remains blocked.**
+
+- Owner rerun: HTTP400, `cf_6003`, token status UNKNOWN, header present; GFS-450 shape checks all passed. No unchanged test loop was repeated.
+- Cloudflare account UI confirms the named token is account-owned, scoped to Get Free Seeds with `Account Analytics Read`; source endpoint and Bearer handling are correct. Secret validity cannot be established without owner-vault access.
+- No source repair or token rotation is authorized. GFS-426 remains local-only; CAPI OFF; production and payments unchanged.
+
 ## GFS-450 - Cloudflare token header diagnostics (2026-11-03 PKT)
 
 **Disposition: account-token endpoint confirmed; CF6003 remains a live credential/header failure pending owner-session verification.**

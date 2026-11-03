@@ -1,5 +1,15 @@
 # Test Matrix
 
+## GFS-451 - Analytics authentication resolution (2026-11-03 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Token metadata | PASS | Authenticated account UI shows account-owned token, Get Free Seeds scope and Account Analytics Read. |
+| Endpoint/headers | PASS | Source uses `/accounts/{account_id}/tokens/verify` with one Bearer scheme and account validation. |
+| Owner runtime verification | FAIL/BLOCKED | HTTP400 `cf_6003`, token status UNKNOWN; secret validity remains owner-vault-only. |
+| GraphQL qualification | BLOCKED | No ACTIVE verifier result; no GraphQL or three-sample run authorized. |
+| Production safety | PASS | No credential rotation, deployment, routing, payment, D1, Meta, CAPI or customer mutation. |
+
 ## GFS-450 - Cloudflare token header 6003 handling (2026-11-03 PKT)
 
 | Area | Result | Evidence |

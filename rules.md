@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-451 Analytics credential unresolved (2026-11-03 PKT)
+
+- Owner rerun still returns HTTP400 `cf_6003`, `tokenStatus=UNKNOWN`, with the header-present and all local shape checks PASS. This proves the stored secret is not accepted by Cloudflare, but does not identify expiry, permission, token type mismatch or a bridge defect.
+- Authenticated Cloudflare UI confirms the named credential is an account-owned token scoped to the entire Get Free Seeds account with `Account Analytics Read`. The repository uses the documented account verify endpoint and Bearer scheme; no source or GraphQL change is justified.
+- Do not modify `GFS-Admin-Health-Monitor`, rotate the Analytics token, or weaken validation. The smallest next correction is owner-side: restore the original secret in the existing credential, or explicitly approve a replacement token with account-only Analytics Read and bounded expiry, saved directly under the existing target.
+- Live ACTIVE verification, GraphQL and five-minute monitoring remain blocked. No deployment, routing, payment, D1, Meta, CAPI, Queue, Cron or customer-message mutation occurred.
+
 ## GFS-450 Cloudflare token header 6003 boundary (2026-11-03 PKT)
 
 - Owner verifier evidence is HTTP400, `cf_6003`, `authHeaderPresent=true`, `tokenStatus=UNKNOWN`; this proves a Cloudflare header/request authentication failure but does not prove expiry or a GraphQL defect.

@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-451 Analytics credential resolution (2026-11-03 PKT)
+
+- **Metadata:** authenticated account UI confirms the named token is account-owned, scoped to the verified Get Free Seeds account with Account Analytics Read; no secret, token ID or exact expiry is recorded.
+- **Runtime:** owner verifier returns HTTP400 `cf_6003`, UNKNOWN, header present. Existing bridge, account check and endpoint are retained.
+- **Next owner action:** restore the original secret securely or explicitly approve one bounded replacement saved directly to the existing Credential Manager target. No token transfer or Admin credential change.
+- **Gate:** ACTIVE/PASS, GraphQL and five-minute monitoring remain pending; GFS-426 undeployed and CAPI OFF.
+
 ## GFS-450 Cloudflare token header diagnostics (2026-11-03 PKT)
 
 - **Credential metadata:** verified in the authenticated Get Free Seeds Cloudflare account UI as account-owned `Account Analytics Read`; no token value, ID or secret metadata recorded.

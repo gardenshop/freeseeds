@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-451 - require owner correction or explicit replacement approval (2026-11-03 PKT)
+
+**Decision:** classify the repeated `cf_6003` as unresolved token acceptance, not a proven bridge, endpoint or GraphQL defect. Keep the account endpoint, Bearer scheme, account check and fail-closed assertions unchanged.
+
+**Owner boundary:** first try restoring the original secret directly in the existing Windows Credential Manager target. If unavailable, obtain explicit approval for one replacement account-owned token limited to Get Free Seeds `Account Analytics Read`, with bounded expiry, and save it directly under the same target. Never transfer or expose the secret and never touch the Admin monitor credential.
+
+**Release boundary:** no ACTIVE verification, GraphQL probe, five-minute qualification or GFS-426 Admin release until the owner correction produces a sanitized verifier PASS.
+
 ## GFS-450 - preserve account-token verification and fail closed on header shape (2026-11-03 PKT)
 
 **Decision:** retain the account-scoped verify endpoint because the verified Cloudflare UI identifies the stored monitor credential as an account-owned token with Account Analytics Read. Do not switch to the user-token endpoint or modify permissions based on HTTP400 alone.

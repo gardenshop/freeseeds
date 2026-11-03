@@ -1,5 +1,17 @@
 # Final Report
 
+## GFS-451 - Analytics token unresolved; COD release held (2026-11-03 PKT)
+
+**Overall: metadata and source verification PASS; runtime authentication remains FAIL/BLOCKED.**
+
+1. **CF6003:** owner result remains HTTP400 `cf_6003`, header present, token status UNKNOWN. GFS-450 shape checks all pass; exact secret acceptance defect is unresolved.
+2. **Metadata:** Cloudflare UI confirms the named credential is account-owned, scoped to the verified Get Free Seeds account with Account Analytics Read. The account token endpoint and Bearer scheme are correct. Expiry/status cannot be validated through the UI without exposing the secret or a successful API verification.
+3. **Repair:** no source or bridge defect was proven; no token rotation was performed. The one required owner decision is restore the original secret or explicitly approve one replacement with account-only Analytics Read and bounded expiry, saved directly in Windows Credential Manager.
+4. **Monitoring:** verifier ACTIVE/PASS, GraphQL, and 0/150/300-second qualification are BLOCKED. No unsupported PASS is claimed.
+5. **Release:** GFS-426 remains local PASS372/372 and undeployed; CAPI OFF; rollback target `e8c96c96`. Last protected routing remains API `b426ba47`100%/`e8018f3f`0% and Admin `e8c96c96`100%/`ee9b7baa`0%.
+6. **Protection:** JazzCash, Easypaisa, Bank Transfer, WhatsApp, COD, Advance, D1, Queue/DLQ, Cron, Meta and customer traffic were not changed.
+7. **Next action:** owner performs one secure correction/approved replacement, then runs the existing verifier once. Only a sanitized PASS unlocks one GraphQL sample and subsequent five-minute qualification.
+
 ## GFS-450 - Cloudflare token header 6003 (2026-11-03 PKT)
 
 **Overall: local header diagnostics PASS; live authentication remains BLOCKED pending one secure owner-session correction/verification.**
