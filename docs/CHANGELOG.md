@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-03 - GFS-450 Cloudflare token header diagnostics
+
+- Recorded owner HTTP400 `cf_6003` with header-present/token-status-unknown evidence; did not misclassify it as expiry or GraphQL failure.
+- Verified through the authenticated Cloudflare account UI that the monitor credential is account-owned with Account Analytics Read, so the account token verification endpoint remains correct.
+- Added secret-free credential-shape validation and safe secondary provider-code reporting, including `cf_6111`; no credential value or raw provider response is exposed.
+- Verifier 5/5, full 372/372, build/lint PASS. Live token and five-minute monitoring remain pending one owner-session run.
+
 ## 2026-11-03 - GFS-449 Cloudflare token verifier
 
 - Isolated owner A_viewer HTTP400 `cf_9106` authentication failure; B/C/D were not run.

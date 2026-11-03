@@ -1,5 +1,17 @@
 # Final Report
 
+## GFS-450 - Cloudflare token header 6003 (2026-11-03 PKT)
+
+**Overall: local header diagnostics PASS; live authentication remains BLOCKED pending one secure owner-session correction/verification.**
+
+1. **Root cause status:** owner evidence is HTTP400 `cf_6003` with an auth header present and token status UNKNOWN. This establishes an invalid request-header/authentication condition, not expiry and not a proven GraphQL defect. The exact stored-secret defect is not visible to the sandbox.
+2. **Token type:** authenticated Cloudflare UI identifies `GFS-Cloudflare-Analytics-Monitor` as an account-owned token with `Account Analytics Read` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; the account verify endpoint is correct.
+3. **Repair:** verifier now rejects unsafe secret shapes before network access and emits only booleans/categories plus sanitized primary/secondary provider codes. It does not weaken account validation or expose secret material.
+4. **Tests:** focused verifier 5/5; full 372/372; build/lint PASS. No production or credential mutation occurred.
+5. **Live gate:** GraphQL and three 0/150/300-second monitoring checkpoints are NOT QUALIFIED. The existing owner bridge must be run once after this change and return sanitized results; do not repeat unchanged failing attempts.
+6. **Release:** GFS-426 remains local PASS372/372 and undeployed; rollback target remains `e8c96c96`. API/Admin expected routing remains `b426ba47`100%/`e8018f3f`0% and `e8c96c96`100%/`ee9b7baa`0%. Advance methods, WhatsApp and CAPI remain protected/OFF.
+7. **Next action:** owner runs the existing bridge from the correct worktree. If the verifier returns `credential_shape_invalid`, correct only the stored secret securely in Credential Manager; otherwise return sanitized HTTP status/provider codes for one bounded follow-up.
+
 ## GFS-449 - Cloudflare Analytics authentication isolation (2026-11-03 PKT)
 
 **Overall: authentication failure isolated; token verifier PASS locally; live token state and monitoring remain blocked on owner execution.**

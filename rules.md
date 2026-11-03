@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-450 Cloudflare token header 6003 boundary (2026-11-03 PKT)
+
+- Owner verifier evidence is HTTP400, `cf_6003`, `authHeaderPresent=true`, `tokenStatus=UNKNOWN`; this proves a Cloudflare header/request authentication failure but does not prove expiry or a GraphQL defect.
+- Authorized Cloudflare UI readback in the verified Get Free Seeds account shows `GFS-Cloudflare-Analytics-Monitor` as an **Account API token** with `Account Analytics Read`; the account endpoint `GET /accounts/{account_id}/tokens/verify` is therefore correct. The token value, ID and secret metadata are not recorded.
+- The verifier now fails closed before network access for absent values, accidental Bearer prefixes, surrounding whitespace, quotes, control characters, token-ID-like values, API-key-like values and placeholders. It reports only booleans/categories and a safe secondary provider code (including `cf_6111` when returned).
+- Local token verifier tests 5/5, full 372/372, build/lint PASS. No credential was created, copied, exported, logged or changed; live token status and monitoring remain pending one owner-session run.
+
 ## GFS-449 Cloudflare token verification boundary (2026-11-03 PKT)
 
 - Owner probe isolated the first failure at A_viewer: HTTP400 with provider code `cf_9106`, an authentication failure. Account/schema probing is paused until token verification completes.

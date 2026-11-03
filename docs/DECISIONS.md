@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-450 - preserve account-token verification and fail closed on header shape (2026-11-03 PKT)
+
+**Decision:** retain the account-scoped verify endpoint because the verified Cloudflare UI identifies the stored monitor credential as an account-owned token with Account Analytics Read. Do not switch to the user-token endpoint or modify permissions based on HTTP400 alone.
+
+**Security boundary:** validate only non-secret shape booleans/categories before sending a request; never print token values, lengths, prefixes, IDs, hashes, headers or raw responses. Include only sanitized provider codes, with a second code when present. An invalid stored secret requires one owner-side Credential Manager correction; no token recreation is authorized.
+
+**Release boundary:** local checks pass, but CF6003 means live token status is UNKNOWN until the existing owner bridge returns PASS. No GraphQL qualification or GFS-426 release approval can proceed from local fixtures alone.
+
 ## GFS-449 - verify the stored credential before GraphQL work (2026-11-03 PKT)
 
 **Decision:** treat `cf_9106` as authentication evidence and pause query/schema changes. Verify the existing Windows-stored secret against Cloudflare’s account token-verification endpoint.

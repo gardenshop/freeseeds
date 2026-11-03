@@ -1,5 +1,13 @@
 # Status
 
+## GFS-450 - Cloudflare token header diagnostics (2026-11-03 PKT)
+
+**Disposition: account-token endpoint confirmed; CF6003 remains a live credential/header failure pending owner-session verification.**
+
+- Cloudflare account UI confirms `GFS-Cloudflare-Analytics-Monitor` is an account-owned token with `Account Analytics Read` in the verified Get Free Seeds account. The account-scoped verify endpoint is correct; no token value or identifier is recorded.
+- Added fail-closed credential-shape checks for Bearer duplication, whitespace, quotes, control characters, token-ID/API-key-like substitutions and placeholders, plus safe primary/secondary provider-code output.
+- Local verifier 5/5, full 372/372, build/lint PASS. Live verifier, GraphQL and five-minute monitoring remain BLOCKED pending one owner-profile bridge run; no release or production mutation occurred.
+
 ## GFS-449 - Cloudflare token verification ready (2026-11-03 PKT)
 
 **Disposition: authentication failure isolated; verifier locally PASS; live token state and monitoring pending owner execution.**

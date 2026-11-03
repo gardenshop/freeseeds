@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-450 - Cloudflare token header 6003 handling (2026-11-03 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Token type/endpoint | PASS | Verified Cloudflare account UI shows account-owned `Account Analytics Read`; account verify endpoint retained. |
+| Shape validation | PASS 5/5 | Missing, Bearer-prefixed, quoted, control-character, token-ID/API-key-like and placeholder fixtures fail closed without a fetch. |
+| Secondary provider code | PASS | Sanitized `cf_6003` plus `cf_6111` fixture is reported without provider text. |
+| Focused verifier | PASS 5/5 | Active, inactive/401, missing, malformed and secondary-code cases. |
+| Full regression | PASS 372/372 | Vitest suite. |
+| Build/lint | PASS | TypeScript build and ESLint. |
+| Live token/monitoring | BLOCKED | Owner verifier returned HTTP400 `cf_6003`; a new owner-session run is required after the local guard. |
+| Production mutation | NONE | No token, Worker, routing, payment, D1, Meta, CAPI, Queue, Cron or customer action. |
+
 ## GFS-449 - Analytics token verification (2026-11-03 PKT)
 
 | Area | Result | Evidence |

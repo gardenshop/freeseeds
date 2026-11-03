@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-450 Cloudflare token header diagnostics (2026-11-03 PKT)
+
+- **Credential metadata:** verified in the authenticated Get Free Seeds Cloudflare account UI as account-owned `Account Analytics Read`; no token value, ID or secret metadata recorded.
+- **Endpoint:** `GET /accounts/{account_id}/tokens/verify`, retained per the account-token type; user-token endpoint not substituted.
+- **Adapter:** `scripts/cloudflare-token-verify.mjs` with `inspectAnalyticsToken` shape checks and allowlisted provider codes only.
+- **Tests:** verifier 5/5, full 372/372, build/lint PASS. Live CF6003 correction and monitoring remain owner-session dependent.
+
 ## GFS-449 Analytics credential verification (2026-11-03 PKT)
 
 - **Endpoint:** official Cloudflare `GET /accounts/{account_id}/tokens/verify`; account ID is fixed to the verified Get Free Seeds account.
