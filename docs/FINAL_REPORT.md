@@ -6380,3 +6380,12 @@ No authenticated candidate override/UI validation could occur because there is n
 Authenticated candidate override validation passed: Orders list/API HTTP200 and the candidate-only Mark Payment Received/original-payable UI control markup appeared; Conversations and Analytics each returned HTTP200. No customer/order record, payment/PAID state, D1, API, WhatsApp, Queue/Cron, Meta or CAPI action was changed. Overrides were cleared, and baseline Orders returned HTTP200 without the candidate marker. Focused COD Admin is27/27 PASS; build/lint PASS; full372/372 is carried from unchanged source.
 
 **Post-attach monitoring:** owner-session evidence passed health3/3 HTTP200, unauthenticated/invalid403, protected-route302 denial, GraphQL errors0 with fresh API/Admin metrics, correct account/Workers and exact API/Admin100/0. **Remaining gate:** separate explicit promotion approval; no percentage change or promotion is implied by this report.
+# GFS-457 final report (2026-11-03 PKT)
+
+1. **Incident:** OUTAGE DISPROVEN. `09:40:18 PKT` converted to `04:40:18 UTC`; Admin reads at ~05:10Z showed post-boundary activity and latest customer message `05:10:21Z`.
+2. **Evidence:** Conversations HTTP200; Analytics HTTP200/as-of `05:10:58Z` with sanitized aggregates (275 customer messages, 273 status callbacks, 45 new conversations, 10 submitted, 5 COD, 2 Advance). API health HTTP200 with WhatsApp enabled.
+3. **Meta/API/Queue/Admin:** canonical Ads Manager context authenticated without visible error; API healthy; Admin current. Queue dashboard and direct D1 aggregate were unavailable, so no unsupported Queue/D1 claim is made.
+4. **Repair:** none; no current software defect proven. No source tests were rerun because source was unchanged.
+5. **Release safety:** Admin baseline100% / non-baseline0%, API baseline100% / non-baseline0%, CAPI OFF. Dashboard read showed `e44703c3` Ready while the active zero slot displayed historical `ee9b7baa`; reconcile identity before promotion, with no routing mutation now.
+6. **Protection:** JazzCash, Easypaisa, Bank Transfer, WhatsApp EN/UR, COD, Advance, D1, Queue, Cron, recovery, Hoja isolation and customer traffic were untouched.
+7. **Next action:** read-only reconcile the Admin zero-slot candidate identity, then request separate explicit approval for any controlled GFS-426 traffic promotion. Do not treat this incident as authorization.
