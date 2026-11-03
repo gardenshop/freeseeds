@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-455 - fail closed on candidate-upload HTTP524 (2026-11-03 PKT)
+
+**Decision:** the authorized single GFS-426 Admin `versions upload --keep-vars` attempt is considered consumed and unsuccessful after Cloudflare returned HTTP524. Authoritative readback confirms no candidate was created and serving weights remain Admin baseline `e8c96c96`100% / old candidate `ee9b7baa`0%; API remains `b426ba47`100% / `e8018f3f`0%.
+
+**Boundary:** do not retry the upload, attach a candidate, set a version override, promote traffic, or alter live data under this authorization. The next action needs a new explicit one-upload approval once the Cloudflare upload failure is cleared; then repeat fresh identity/routing/rollback checks before upload.
+
 ## GFS-454 - monitoring gate is satisfied; hold release for separate authority (2026-11-03 PKT)
 
 **Decision:** accept the owner-session ACTIVE verifier, four-layer probe, preflight and five-minute three-sample evidence as the monitoring qualification. Preserve every fail-closed check; no monitoring bypass or token provenance assumption is introduced.

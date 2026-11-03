@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-455 - Admin candidate upload attempt (2026-11-03 PKT)
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Fresh Cloudflare identity | PASS | Wrangler reports `gisupp@gmail.com` / Get Free Seeds `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; authenticated dashboard URL matches the account. |
+| Admin/API baseline before upload | PASS | Admin `e8c96c96`100% / `ee9b7baa`0%; API `b426ba47`100% / `e8018f3f`0%. |
+| One authorized Admin upload | BLOCKED | `wrangler versions upload --keep-vars` returned Cloudflare HTTP524 after bundling; no candidate version ID was issued. |
+| Candidate/traffic readback | PASS (safe baseline) | Version list has no `gfs-426-c2ddcd1`; Admin deployment remains `e8c96c96`100% / `ee9b7baa`0%. |
+| Authenticated override/UI validation | NOT RUN | No candidate exists to override; fail-closed boundary prohibits retry/override. |
+| Regression suite | Carried PASS | No source/configuration changed; retain GFS-454/GFS-450 local evidence: full372/372, build/lint, observability10/10, probe3/3 and verifier5/5. |
+
 ## GFS-454 - owner-session monitoring qualification (2026-11-03 PKT)
 
 | Area | Result | Evidence |

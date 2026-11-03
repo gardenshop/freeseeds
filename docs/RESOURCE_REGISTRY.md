@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-455 Admin candidate upload boundary (2026-11-03 PKT)
+
+- **Account/identity:** fresh Wrangler and dashboard readback matched `gisupp@gmail.com` / Get Free Seeds `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- **Attempt:** one GFS-426 Admin `versions upload --keep-vars`, source `c2ddcd1319489a33c6ca213fd12ce0e4372e1b6b`, ended HTTP524 after bundling; no new version ID or tag is present in the authoritative list.
+- **Serving resources:** Admin remains `e8c96c96-ef94-4a33-bed6-7f284984002c`100% / `ee9b7baa-722d-406e-9acd-556b447f8d79`0%; API remains `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100% / `e8018f3f-53d3-4506-9c28-a46881842f8c`0%.
+- **Boundary:** no version override, customer/data/payment/Meta/CAPI mutation or retry under the consumed one-upload authorization.
+
 ## GFS-454 owner-session monitoring evidence (2026-11-03 PKT)
 
 - **Credential bridge:** `GFS-Cloudflare-Analytics-Monitor` now verifies ACTIVE/HTTP200 through the owner-session, process-only bridge; secret material remains absent from source, logs and reports.
