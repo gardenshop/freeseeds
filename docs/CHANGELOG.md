@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 - GFS-468 supported source-upload inspection
+
+- Verified the authenticated Cloudflare owner/account/isolated Worker and unchanged secret-only `c4533e19` deployment.
+- Confirmed the existing Worker dashboard offers Quick Edit only, without a file upload/import control; did not retry Monaco or use prohibited API/Wrangler/Git/direct transport.
+- Re-ran local syntax and focused watchdog tests: PASS 4/4. No Cloudflare or production mutation occurred.
+
 ## 2026-11-03 - GFS-467 isolated watchdog deployment attempt
 
 - Verified authenticated Cloudflare account/Worker identity and read back owner secret-only version c4533e19; prior code version 66f471ed remains.

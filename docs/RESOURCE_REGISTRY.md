@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-468 isolated watchdog source-transport state (2026-11-03 PKT)
+
+- **Fresh readback:** `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Worker `gfs464-isolated-watchdog`; active `c4533e19` secret-only version, prior `66f471ed`; bindings0 and queues0.
+- **Transport:** supported dashboard UI exposes only Quick Edit. No file-input/upload/import control was present; no source save/deployment occurred. API/Wrangler direct upload and dashboard Git application creation are outside the binding rules.
+- **Secret/scheduler:** TARGET_API_TOKEN value remained unobserved and unchanged; no DO class/migration/binding, ARM_SECRET, CLOUDFLARE_ACCOUNT_ID, schedule/alarm, arm or target version exists.
+- **Live proof:** no detached execution, target restore/readback, timing, retry, idempotence or stale-event proof has occurred.
+
 ## GFS-467 isolated watchdog deployment state (2026-11-03 PKT)
 
 - **Identity/readback:** authenticated dashboard visibly showed gisupp@gmail.com, Get Free Seeds account cb5066a6d71ecdee0bd7ed8aacb4d3c2, Worker gfs464-isolated-watchdog.

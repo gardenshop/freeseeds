@@ -1,5 +1,14 @@
 # Status
 
+## GFS-468 - resolve source upload and prove watchdog (2026-11-03 PKT)
+
+**Disposition: source transport BLOCKED by the permanent supported-method boundary; no external mutation.**
+
+- Fresh Chrome DevTools dashboard inspection verified `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, watchdog `gfs464-isolated-watchdog`, active secret-only `c4533e19`, prior code `66f471ed`, bindings0 and queues0.
+- Quick Edit has no supported file upload/import control. Dashboard Git import is an application-creation path; direct source upload requires API/Wrangler, both prohibited by `rules.md` for this task. No Monaco retry was attempted and no draft was saved.
+- `node --check` and watchdog focused tests pass 4/4 locally. No corrected version, Durable Object binding/migration, `CLOUDFLARE_ACCOUNT_ID`, `ARM_SECRET`, alarm/schedule, target GET/POST test, arm, detached execution or target restore exists.
+- TARGET_API_TOKEN was neither viewed nor changed. Admin `e8c96c96`100%/`e44703c3`0%, API `b426ba47`100%/`e8018f3f`0%, CAPI OFF; all protected production resources unchanged.
+
 ## GFS-467 - deploy and verify isolated watchdog (2026-11-03 PKT)
 
 **Disposition: MCP identity/readback PASS; corrected deployment and detached proof BLOCKED safely. Production unchanged.**

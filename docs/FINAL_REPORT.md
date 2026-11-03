@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-468 - resolve source upload and prove watchdog (2026-11-03 PKT)
+
+**Overall: LOCAL SOURCE PASS; SUPPORTED DEPLOYMENT TRANSPORT BLOCKED; LIVE PROOF NOT PROVEN.**
+
+Comparison with GFS-467: authenticated MCP navigation/readback remains usable and was freshly verified; the repeated Monaco route was intentionally not retried. Inspection established that the existing Worker has no supported dashboard file-upload/import control. Cloudflare's Git import is an application-creation path and direct source upload requires API/Wrangler, which `rules.md` prohibits.
+
+1. **Source upload / blocker:** BLOCKED. Quick Edit only; no usable upload/import control. No forbidden alternate transport used.
+2. **Watchdog deployed version:** unchanged `c4533e19` secret-only deployment; prior code `66f471ed`; no corrected source version.
+3. **Secret/binding/alarm:** TARGET_API_TOKEN unobserved and unchanged; bindings0/queues0; no DO migration/binding, `CLOUDFLARE_ACCOUNT_ID`, `ARM_SECRET` or alarm/schedule.
+4. **Detached execution / rollback:** NOT PROVEN. No target allocation, arm, alarm or authoritative target restore occurred.
+5. **Deadline, retry, idempotence:** local PASS only (`node --check`, watchdog4/4); no live minute6/minute8 evidence.
+6. **Regression / protection:** no source change. Focused syntax/tests pass; carried-forward broader tests remain as GFS-467 and audit remains BLOCKED by registry. No production, Meta, payment, customer, D1, Queue/DLQ, Cron or WhatsApp mutation.
+7. **Exact routing:** Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%; CAPI OFF.
+8. **Completion:** P0 preserve/readback 100%; P1 source transport inspection 100% but deployment 0%; P2 detached proof 0%; protection 100%.
+9. **Verified Git SHA:** pending this GFS-468 documentation commit and remote readback.
+10. **ONE next approval:** authorize one exact non-Monaco deployment transport, scoped only to `gfs464-isolated-watchdog`, preserving existing secrets; then repeat verified deployment/readback and isolated live proof.
+
 ## GFS-467 - deploy and verify isolated watchdog (2026-11-03 PKT)
 
 **Overall: MCP READBACK PASS; DEPLOYMENT/DETACHED PROOF BLOCKED SAFELY.**

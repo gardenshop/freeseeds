@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-468 Source Upload and Isolated Watchdog Boundary (2026-11-03 PKT)
+
+- Fresh authenticated Chrome DevTools MCP readback verified `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, and only `gfs464-isolated-watchdog`. The active version remains owner secret-only `c4533e19`; `66f471ed` remains prior code; bindings/workers0 and queues0.
+- The supported dashboard edit surface exposes Quick Edit only: no file input, upload, or import control was available. Cloudflare's dashboard Git-import flow is for application creation; direct file upload is an API/Wrangler transport. `rules.md` forbids direct API, Wrangler, DOM/evaluate, raw CDP, clipboard automation and session extraction, so neither is authorized for this existing Worker.
+- Local `node --check` and `scripts/test-gfs464-isolated-watchdog-worker.mjs` pass 4/4. The deployed dashboard code remains unchanged; no Durable Object migration/binding, scheduler/alarm, secret mutation, target deployment, arm or restore was performed.
+- Do not reinterpret this safe inspection as a live proof. Detached execution, target GET/POST authority, retry recovery, idempotence, stale-command behavior and minute6/minute8 restoration remain NOT PROVEN. Preserve Admin `e8c96c96`100%/`e44703c3`0%, API `b426ba47`100%/`e8018f3f`0%, CAPI OFF, the WhatsApp new-number lock, Hoja zero-connection rule, payments, customer state, D1, Queue/DLQ, Cron and Meta.
+
 ## GFS-467 Isolated Watchdog Deployment Boundary (2026-11-03 PKT)
 
 - Authenticated Chrome DevTools MCP access is partially restored: page selection, fresh snapshots, account identity, Worker identity and deployment readback succeeded. Verified dashboard identity was gisupp@gmail.com in Get Free Seeds account cb5066a6d71ecdee0bd7ed8aacb4d3c2.

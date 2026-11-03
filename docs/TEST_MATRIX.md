@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-468 source transport and proof boundary (2026-11-03 PKT)
+
+| Check | Result | Evidence / boundary |
+| --- | --- | --- |
+| Authenticated dashboard identity | PASS | `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, watchdog `gfs464-isolated-watchdog`. |
+| Source-upload/import control | BLOCKED | Existing-Worker dashboard exposed Quick Edit only; no file input/upload/import control. |
+| Alternate transport | NOT AUTHORIZED | Dashboard Git import is app creation; direct upload is API/Wrangler, both forbidden by binding rules. |
+| Syntax / focused watchdog | PASS | `node --check`; 4/4 focused tests. |
+| Authoritative deployment readback | PASS / unchanged | `c4533e19` secret-only active; `66f471ed` prior code; bindings0, queues0. |
+| Detached execution / restore | NOT PROVEN | No corrected deployment, DO binding/alarm, target test, arm or readback. |
+| Production protection | PASS | Admin/API exact 100%/0%; CAPI OFF; no protected-resource mutation. |
+
 ## GFS-467 deployment and detached proof (2026-11-03 PKT)
 
 | Check | Result | Evidence / boundary |

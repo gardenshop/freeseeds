@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-468 - do not substitute a forbidden deployment transport (2026-11-03 PKT)
+
+**Decision:** stop after the authenticated dashboard source-control inspection. The existing Worker exposes only Quick Edit and no file upload/import control. Do not connect Git, create an application, call a direct API, run Wrangler, or automate Monaco through a prohibited workaround.
+
+**Evidence:** fresh readback verified the correct owner/account/Worker and unchanged `c4533e19` secret-only deployment with bindings0/queues0. Local syntax and watchdog4/4 pass, but they cannot establish a deployed entry point or detached alarm.
+
+**One required approval:** amend `rules.md` with an owner-approved, exact non-Monaco deployment transport for only `gfs464-isolated-watchdog`, explicitly preserving existing secrets and limiting all writes to that Worker. Then repeat identity verification before one deployment.
+
 ## GFS-467 - stop at supported Quick Edit editor blocker (2026-11-03 PKT)
 
 **Decision:** accept authenticated MCP account/Worker/readback verification, but do not claim corrected deployment or detached proof. The owner-entered target token remains protected; the only new dashboard version is the secret-only c4533e19 version.
