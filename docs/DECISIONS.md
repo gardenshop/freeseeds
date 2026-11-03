@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-464 - retain independent isolated architecture; fail closed on UI guard (2026-11-03 PKT)
+
+**Decision:** retain the new isolated `gfs464-isolated-watchdog` and do not repurpose `gfs462-isolated-target` as its own watchdog. A self-targeted design does not meet the required independence guarantee.
+
+**Boundary:** Chrome DevTools MCP rejected Settings/Bindings navigation after initial creation because it could not verify the UI target. Treat that as a tooling blocker, not authority to use a direct API, account-wide token, browser automation workaround or another Worker. No target credential, secret, alarm/schedule, binding, source deployment or live isolated restore was created.
+
+**Release effect:** production Admin/API routing remains unchanged and the GFS-426 canary remains unauthorized. Require supported UI access and then prove isolated detached restoration/readback before requesting any production watchdog authority.
+
 ## GFS-463 - use the existing isolated target, subject to fresh owner authority (2026-11-03 PKT)
 
 **Decision:** do not create a second Worker. The existing isolated target is the minimum-resource path because its dashboard exposes code editing, Cron triggers and a target-only deployment-token option.

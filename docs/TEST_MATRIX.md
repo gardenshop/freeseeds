@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-464 isolated watchdog external proof (2026-11-03 PKT)
+
+| Check | Result | Evidence / boundary |
+| --- | --- | --- |
+| Approved isolated watchdog Worker creation | PASS | `gfs464-isolated-watchdog` exists in verified account; initial version `66f471ed`. |
+| Watchdog production isolation | PASS (initial resource) | Dashboard readback: zero Worker bindings and zero queues; no production credentials configured. |
+| Detached scheduler/alarm | BLOCKED | Supported Settings/Bindings navigation rejected by Chrome DevTools MCP safety guard; no workaround used. |
+| Target-restricted credential/secret | BLOCKED | Not created; no secret material exposed. |
+| Isolated restoration and authoritative readback | BLOCKED | No target code/version/schedule mutation occurred. |
+| Six-minute restore/eight-minute completion | UNPROVEN | Local GFS-462 fixture remains separate from live Cloudflare proof. |
+| Production routing protection | PASS | Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%; no promotion. |
+
+
 ## GFS-463 provisioning-path inspection (2026-11-03 PKT)
 
 | Check | Result | Evidence |

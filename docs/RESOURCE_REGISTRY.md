@@ -1,5 +1,10 @@
 # Resource Registry
 
+## GFS-464 isolated watchdog resource (2026-11-03 PKT)
+
+- **Watchdog Worker:** `gfs464-isolated-watchdog`, in Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, initial version `66f471ed`. Dashboard readback shows zero Worker bindings and zero queues; no credential, secret, schedule/alarm, target deployment authority or production binding is established.
+
+
 ## GFS-463 isolated provisioning inspection (2026-11-03 PKT)
 
 - **Existing isolated resource:** `gfs462-isolated-target`, version label `29c5d0b6`, in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no bindings, Cron triggers, queues, D1 or production Worker access observed.

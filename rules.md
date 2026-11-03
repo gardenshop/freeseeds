@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-464 isolated watchdog execution boundary (2026-11-03 PKT)
+
+- Owner approval authorized exactly one isolated watchdog Worker, one isolated schedule/alarm and binding, one target-restricted credential, and real restore/readback testing. It excludes every production resource and any Admin/API traffic change.
+- The verified Get Free Seeds account now contains the additional isolated Worker `gfs464-isolated-watchdog`, initial dashboard version `66f471ed`. It is separate from `gfs462-isolated-target`, has zero bindings/workers/queues, and has no established access to production Admin, API, payments, D1, Queue, Meta or CAPI.
+- A self-restoring target is not independent: target candidate code could suppress its own scheduler before restoration. A separate isolated watchdog is therefore the minimum architecture. Do not collapse this separation for a later production design.
+- Chrome DevTools MCP then rejected navigation to the new Worker Settings/Bindings view because it could not verify the supplied UI target. Do not bypass that safety guard with direct APIs, DOM/CDP workarounds or an account-wide credential. No code update, schedule/alarm, binding, secret/credential, target deployment change or live restore occurred after the Worker creation.
+- Detached execution, actual isolated restoration/readback and the six/eight-minute deadline remain **UNPROVEN**. Production remains Admin `e8c96c96`100% / `e44703c3`0%, API `b426ba47`100% / `e8018f3f`0%, CAPI OFF; all WhatsApp, payment, D1, Queue/DLQ, Cron and Meta protections remain in force.
+
 ## GFS-463 isolated watchdog provisioning boundary (2026-11-03 PKT)
 
 - Read-only Cloudflare inspection proves the existing `gfs462-isolated-target` supports a Worker code editor, Cron Trigger configuration and a dashboard option to create a token that can deploy only that Worker. No Cron, Durable Object binding, token, secret, source edit or deployment was created.

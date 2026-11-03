@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 - GFS-464 isolated watchdog execution
+
+- Created the approved non-production independent Worker `gfs464-isolated-watchdog` in the verified Get Free Seeds account; initial version `66f471ed`.
+- Recorded the fail-closed Chrome DevTools MCP Settings/Bindings navigation guard. No credential, binding, schedule/alarm, target source/version deployment or production resource changed.
+
+
 ## 2026-11-03 - GFS-463 isolated watchdog provisioning inspection
 
 - Identified the existing isolated target as the minimum-resource proof path: code editor, scheduled-event surface, Cron Trigger controls and a deploy-only token option scoped to that Worker.

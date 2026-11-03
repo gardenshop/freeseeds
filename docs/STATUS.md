@@ -1,5 +1,16 @@
 # Status
 
+## GFS-464 - isolated watchdog execution (2026-11-03 PKT)
+
+**Disposition: partially completed; detached restore proof BLOCKED by the supported browser safety guard. Production unchanged.**
+
+- In verified Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, the approved independent isolated Worker `gfs464-isolated-watchdog` was created. Initial version is `66f471ed`; dashboard readback shows zero Worker bindings and zero queues. It is not a production Worker and has no recorded production authority.
+- Separating this Worker from `gfs462-isolated-target` is required for independence: target code could disable a self-watchdog before restoration. This is the smallest architecture consistent with the proof goal.
+- Chrome DevTools MCP rejected subsequent Settings/Bindings navigation as an unverifiable UI target. No safety guard was bypassed. Consequently no target-restricted credential/secret, Durable Object/alarm/Cron, target source update, isolated version swap, detached run or restoration/readback test occurred.
+- Production remains Admin `e8c96c96`100% / `e44703c3`0%, API `b426ba47`100% / `e8018f3f`0%; CAPI OFF. WhatsApp, Advance payments, D1, Queue/DLQ, Cron, Meta and customer state are unchanged.
+
+**Next exact action:** restore supported Cloudflare dashboard control of the new isolated Worker's Settings/Bindings view, then create only a target-restricted credential/secret plus the isolated alarm and test real restoration/readback. Do not request production scope or a canary.
+
 ## GFS-463 - isolated watchdog provisioning path (2026-11-03 PKT)
 
 **Disposition: BLOCKED cleanly before external mutation.**

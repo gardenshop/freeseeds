@@ -1,5 +1,18 @@
 # Final Report
 
+## GFS-464 - isolated watchdog proof execution (2026-11-03 PKT)
+
+**Overall: PARTIAL / BLOCKED safely.**
+
+1. **Approval and browser guard:** owner approval covered one isolated Worker, schedule/alarm, target-restricted credential and isolated restore proof. The Worker creation succeeded; Chrome DevTools MCP then blocked Settings/Bindings navigation because it could not verify the UI target. No bypass was attempted.
+2. **Resources/scope:** `gfs464-isolated-watchdog` was created in verified account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, initial version `66f471ed`. Dashboard reports zero Worker bindings and zero queues. It has no recorded production authority.
+3. **Detached execution:** BLOCKED. No schedule/alarm or secure target-only credential can be configured while the supported UI control remains unavailable.
+4. **Restore/readback/deadline:** BLOCKED/UNPROVEN. No target mutation or isolated deployment restore was attempted; the GFS-462 local six/eight-minute fixture is not live proof.
+5. **Regression:** no repository source changed, so no redundant full suite was run. Existing GFS-462 evidence remains watchdog3/3, controller18/18, adapter8/8, full372/372, build/lint PASS.
+6. **Production protection:** Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%; CAPI OFF. WhatsApp, payments, D1, Queue/DLQ, Cron and Meta unchanged.
+7. **Next approval/action:** restore supported dashboard Settings/Bindings access for `gfs464-isolated-watchdog`, then use the existing approval to configure only target-scoped isolated proof resources and demonstrate detached restore/readback. No production watchdog/canary authority is requested.
+
+
 ## GFS-463 - finish isolated watchdog proof (2026-11-03 PKT)
 
 1. **Safety guard:** BLOCKED, correctly. Chrome DevTools MCP refuses the relevant external creation controls before mutation; this is consistent with GFS-463's requirement for fresh owner approval.
