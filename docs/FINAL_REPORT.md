@@ -1,5 +1,20 @@
 # Final Report
 
+## GFS-475 - safe API resume acceptance (2026-11-03 PKT)
+
+**Overall: synthetic resume acceptance PASS; immutable candidate prepared locally but NOT UPLOADED; production/customer state unchanged.**
+
+1. **Stage/language acceptance:** OFFER, FERTILIZER, PROVINCE and REVIEW each PASS in EN and UR. Controls are correct, validated details persist, invalid province input is rejected and duplicate replay creates no second reply/order.
+2. **Isolation:** local SQLite with real migrations/state machine, mocked Meta provider and Queue, synthetic-only identities, CAPI false. No production sender, customer DB, outbound Queue, real webhook or unsolicited reminder.
+3. **Source/regression:** no new defect and no source change after GFS-474. Focused2/2, guided104/104, full377/377, build/lint PASS; audit BLOCKED by registry. Dynamic province pricing, COD PKR125 and all three Advance methods remain covered.
+4. **Candidate:** NOT UPLOADED; no GFS-475 Cloudflare version. Prepared source `51e1e8939cbdacd85cae58249051a9f3d78ea8ce`, bundle SHA-256 `468C26830E2B1BCECE289A893A1284E88D97FD8449ECD2D2C28D860F2F5272BA`. Existing `e8018f3f` from source `ffa9eb4` remains0%; separate owner upload authority is required.
+5. **Routing:** API `b426ba47`100% / `e8018f3f`0%; Admin `e8c96c96`100% / `e44703c3`0%; CAPI OFF.
+6. **Zero regression:** bindings, encrypted secret slots, workers.dev route, Cron/Queue, D1/R2, EN/UR, +15/+210, COD/Advance, payments, receipts, PAID, phone isolation, Meta and watchdog remained unchanged. Runtime recovery true versus manifest false is explicitly guarded by future `--keep-vars --strict`.
+7. **Progress:** WhatsApp local readiness92% / remaining8% external/release gates; resume local100% / live0%; COD local100% / live70%.
+8. **External blockers:** Meta display name remains In Review; COD live settlement still needs genuine courier collection/remittance evidence.
+9. **Git:** verified after commit/push below.
+10. **ONE next action:** separately authorize one immutable API `versions upload --keep-vars --strict` with no deployment/attachment, followed by independent version and configuration readback.
+
 ## GFS-474 - recover incomplete WhatsApp orders (2026-11-03 PKT)
 
 **Overall: proven inbound-resume defect repaired locally and tested; no production mutation; separately approved release testing is still required.**

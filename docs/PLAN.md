@@ -1,5 +1,11 @@
 # Get Free Seeds Plan
 
+## GFS-475 safe API resume acceptance (2026-11-03 PKT)
+
+Local synthetic acceptance reuses the real API state machine and migrations with a SQLite fixture, mocked Meta provider, mocked Queue and synthetic-only identities. EN/UR OFFER, FERTILIZER, PROVINCE and REVIEW resume on inbound only; state preservation, invalid input rejection, dynamic province pricing, COD PKR125, all three Advance methods and duplicate suppression are covered without a production sender, customer database or outbound Queue.
+
+The release artifact is prepared but not uploaded: source `51e1e8939cbdacd85cae58249051a9f3d78ea8ce`, bundled `index.js` SHA-256 `468C26830E2B1BCECE289A893A1284E88D97FD8449ECD2D2C28D860F2F5272BA`. The only API source delta from existing0% candidate source `ffa9eb4a8a16eb475584812367e53966469fa0d2` is `apps/api/src/index.ts`. A future separately approved upload must preserve live variables/secrets with `--keep-vars --strict`, remain unattached until separately approved, and receive independent version/config readback.
+
 ## GFS-474 incomplete WhatsApp order recovery (2026-11-03 PKT)
 
 The bounded UTC `2026-10-28..2026-11-03` aggregate splits no-order pre-submit conversations into active under24h and inactive over24h. Current inactive stage totals are OFFER1079, LANGUAGE325, FULL_NAME260, PROVINCE251, FERTILIZER179, ADDRESS160, REVIEW61, CONTACT50, NEARBY47, CITY28, NEW9 and PRODUCT0 (total2449). Age buckets are 24–72h996 and 3–7d1453; languages are UR1702, EN413 and unknown-before-language334. These are recoverable inactivity snapshots, not proven intent to abandon.

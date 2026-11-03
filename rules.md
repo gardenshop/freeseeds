@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-475 safe API resume acceptance boundary (2026-11-03 PKT)
+
+- GFS-474 resume behavior is accepted only in the local synthetic harness: a returning customer must send a new inbound message before OFFER, FERTILIZER, PROVINCE or REVIEW controls are re-presented. Do not add timers, unsolicited reminders, webhook replay, automatic order creation or customer outreach.
+- Preserve the existing API candidate `e8018f3f-53d3-4506-9c28-a46881842f8c` at0% and baseline `b426ba47-1ead-4c4a-85ba-0a0b85d3e415` at100%. No API upload, candidate replacement, override, attachment, deployment or promotion is authorized by GFS-475.
+- Any separately authorized future API upload must use immutable tested source, `versions upload --keep-vars --strict`, and independent readback. Runtime `PAYMENT_CHOICE_RECOVERY_ENABLED=true` differs from the checked-in manifest default `false`; preserving dashboard variables is mandatory. Secrets must remain encrypted and uninspected.
+- Freeze Admin `e8c96c96`100% / `e44703c3`0%, CAPI OFF, live WhatsApp EN/UR, COD PKR125, all Advance methods, QR/beneficiaries/receipts, orders/PAID, D1, Queue/DLQ, Cron, webhook, +15/+210, new-number lock, Hoja zero-connection, Meta and watchdog resources.
+
 ## GFS-474 incomplete-order recovery boundary (2026-11-03 PKT)
 
 - Returning customers may resume only through a new inbound message. Re-present the controls for the persisted OFFER, FERTILIZER, PROVINCE or REVIEW state without discarding validated state data, creating an order, or sending an unsolicited reminder.

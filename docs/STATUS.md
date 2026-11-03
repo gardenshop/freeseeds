@@ -1,5 +1,16 @@
 # Status
 
+## GFS-475 safe API resume acceptance (2026-11-03 PKT)
+
+**Disposition: synthetic acceptance PASS; candidate prepared locally, NOT UPLOADED; production unchanged.**
+
+- EN and UR each passed OFFER, FERTILIZER, PROVINCE and REVIEW persisted-state resume. Correct buttons/list returned, validated fields survived, invalid province input stayed at PROVINCE, replay created no second send/order, and no order existed before confirmation.
+- Isolation is local and non-payable: real API/migrations plus SQLite, mocked provider `fetch`, mocked Queue, synthetic-only customer data, local deployment state and CAPI false. No production Meta sender, D1, Queue, webhook or customer endpoint was called.
+- Focused2/2, guided104/104, full32 files/377 tests, build and lint PASS. Wrangler4.149.0 `versions upload --dry-run --keep-vars --strict` bundled successfully; its debug-log write emitted a sandbox EPERM warning after dry-run completion. Audit remains BLOCKED at the npm advisory endpoint.
+- Authenticated Cloudflare dashboard read matched account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` and Worker `getfreeseeds-api-staging`: API `b426ba47`100% / `e8018f3f`0%. Existing candidate source is `ffa9eb4`; it was not replaced. Admin independently reads `e8c96c96`100% / `e44703c3`0%.
+- Runtime readback preserved encrypted secret slots; D1 `DB`, Queue `EVENTS`, R2 `RECEIPTS`, version metadata, one Cron and Queue consumer; workers.dev only with no custom route. CAPI false; guided Meta provider true; COD public/true; recovery true; five-stage reminders, automation and utility-template flags false.
+- Checked-in manifest defaults recovery false while runtime is true. This drift is protected: no upload occurred, and any future authorization must require `--keep-vars --strict` plus independent readback.
+
 ## GFS-474 incomplete WhatsApp order recovery (2026-11-03 PKT)
 
 **Disposition: largest recoverable defect repaired locally; safe inbound resume PASS; production unchanged.**

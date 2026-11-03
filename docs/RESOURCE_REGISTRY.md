@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-475 safe API resume acceptance resources (2026-11-03 PKT)
+
+- **Source:** PR11 local source `51e1e8939cbdacd85cae58249051a9f3d78ea8ce`; generated Worker `index.js` SHA-256 `468C26830E2B1BCECE289A893A1284E88D97FD8449ECD2D2C28D860F2F5272BA`, 1,174,907 bytes. Dry-run artifact was deleted after hashing; no upload/version ID exists for GFS-475.
+- **API routing:** deployment baseline remains `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100%; existing GFS-407 candidate `e8018f3f-53d3-4506-9c28-a46881842f8c`, source `ffa9eb4a8a16eb475584812367e53966469fa0d2`, remains0%. Current source changes only `apps/api/src/index.ts` relative to that candidate.
+- **Admin routing:** `e8c96c96-ef94-4a33-bed6-7f284984002c`100% / `e44703c3-694f-4ffd-9416-f8edf1aacf42`0%. No Admin work.
+- **Configuration:** D1 `DB` -> `getfreeseeds-staging`; Queue `EVENTS` -> `getfreeseeds-events-staging` with Queue trigger; R2 `RECEIPTS`; `CF_VERSION_METADATA`; one Cron (checked-in schedule `* * * * *`); workers.dev domain, no custom domain/route. Secret slots remain encrypted and values uninspected.
+- **Protected runtime:** guided Meta provider enabled, COD enabled/PUBLIC, CAPI false, recovery true with existing start time, five-stage reminders false, payment automation false and utility templates false. Manifest recovery default is false, so future authorized upload requires `--keep-vars --strict`.
+- **External state:** authenticated dashboard account URL matched `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no API/Admin version, deployment, override, binding, secret, route, trigger, D1, Queue, R2, Meta or customer mutation.
+
 ## GFS-474 incomplete-order recovery state (2026-11-03 PKT)
 
 - **Bounded aggregate:** active D1 `getfreeseeds-staging` / `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, read-only UI query. No identifiers or message bodies retained; no rows written.

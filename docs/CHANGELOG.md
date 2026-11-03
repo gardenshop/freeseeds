@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-03 - GFS-475 safe API resume acceptance
+
+- Accepted EN/UR inbound-only resume for OFFER, FERTILIZER, PROVINCE and REVIEW in the synthetic local provider harness; no additional source defect found.
+- Passed focused2/2, guided104/104, full377/377, build/lint and a Wrangler `--dry-run --keep-vars --strict`; audit remains blocked by the registry advisory endpoint.
+- Prepared immutable local source/bundle provenance and documented the single-file API diff from the existing0% candidate.
+- Read-only verified Cloudflare API/Admin100/0, protected bindings, encrypted secret presence, routes and runtime flags. No upload, deployment, message, customer/order/payment, D1, Queue/Cron, Meta, CAPI or watchdog mutation.
+
 ## 2026-11-03 - GFS-474 incomplete WhatsApp order recovery
 
 - Added aggregate-only stage/age/language diagnosis for inactive no-order and no-method snapshots; no customer identifiers retained.

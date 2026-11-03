@@ -1,5 +1,24 @@
 # Test Matrix
 
+## GFS-475 safe API resume acceptance (2026-11-03 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| OFFER resume EN / UR | PASS / PASS | Persisted state returns `CONTINUE_ORDER` and `CANCEL_OFFER`. |
+| FERTILIZER resume EN / UR | PASS / PASS | Persisted state returns `ADD_FERTILIZER` and `SEEDS_ONLY`. |
+| PROVINCE resume EN / UR | PASS / PASS | Invalid free text is rejected; current province list is re-presented. |
+| REVIEW resume EN / UR | PASS / PASS | Preserved province/contact; confirmation/cancel controls re-presented; no premature order. |
+| Duplicate inbound/replay | PASS | Same provider event produces no duplicate reply or order. |
+| Inbound-only isolation | PASS local | Mock provider/Queue and local SQLite only; no timer/reminder/customer endpoint. |
+| Pricing/payment regression | PASS | Guided104 covers dynamic province quote, COD PKR125 and all three Advance methods. |
+| Focused / guided / full | PASS | 2/2; 104/104; 32 files / 377 tests. |
+| Build / lint | PASS / PASS | TypeScript no-emit and ESLint. |
+| Security audit | BLOCKED | npm advisory endpoint unavailable; no PASS claim. |
+| Wrangler candidate dry-run | PASS with log warning | Wrangler4.149.0 bundle emitted; sandbox denied only debug-log file write. |
+| API readback | PASS read-only | `b426ba47`100% / `e8018f3f`0%; bindings/secrets/flags/routes inspected without values or mutation. |
+| Candidate upload | NOT AUTHORIZED / NOT RUN | Existing0% candidate preserved. |
+| Production zero-regression | PASS | Admin/API100/0, CAPI OFF; no send, D1/Queue/Cron/Meta/payment/order/deployment mutation. |
+
 ## GFS-474 incomplete-order recovery (2026-11-03 PKT)
 
 | Check | Result | Evidence / boundary |

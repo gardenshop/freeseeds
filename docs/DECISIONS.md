@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-475 - accept synthetic resume and preserve existing candidate (2026-11-03 PKT)
+
+**Decision:** accept GFS-474 resume behavior locally with no further source change. The existing EN/UR synthetic journey proves all four repaired interactive states and the broader guided suite preserves province pricing, COD PKR125 and JazzCash/Easypaisa/Bank Transfer behavior.
+
+**Decision:** do not upload or attach source under GFS-475. Existing API candidate `e8018f3f` remains0% and baseline `b426ba47` remains100%. The local bundle hash is release provenance, not a Cloudflare version ID. A future upload needs separate owner authority and must use `--keep-vars --strict` because live recovery is true while the manifest default is false.
+
+**Decision:** treat the dashboard overview/settings as authoritative current readback for account, Worker, routing, encrypted secret presence, bindings and flags. Two ambiguous dashboard controls were safety-blocked and were not retried; no bypass or credential loop is permitted.
+
 ## GFS-474 - resume persisted interactive checkout state (2026-11-03 PKT)
 
 **Decision:** repair only the proven inbound-resume presentation gap. When the state machine remains at OFFER, FERTILIZER, PROVINCE or REVIEW after a new inbound message, render that state’s approved controls again. Preserve state data and all existing validation/idempotence; do not restart the journey, create an order, or introduce outbound recovery.
