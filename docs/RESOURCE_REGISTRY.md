@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-454 owner-session monitoring evidence (2026-11-03 PKT)
+
+- **Credential bridge:** `GFS-Cloudflare-Analytics-Monitor` now verifies ACTIVE/HTTP200 through the owner-session, process-only bridge; secret material remains absent from source, logs and reports.
+- **GraphQL:** bounded A/B/C/D probe and full API/Admin monitoring reads passed HTTP200/errors0 with fresh metrics and verified account/Worker identity.
+- **Security/routing:** Access health/denial and business-route isolation passed; API `b426ba47` and Admin `e8c96c96` read100%, candidates0%.
+- **Release gate:** monitoring is complete. GFS-426 is still a local Admin-only candidate awaiting separate 0% validation approval; CAPI remains OFF.
+
 ## GFS-451 Analytics credential resolution (2026-11-03 PKT)
 
 - **Metadata:** authenticated account UI confirms the named token is account-owned, scoped to the verified Get Free Seeds account with Account Analytics Read; no secret, token ID or exact expiry is recorded.

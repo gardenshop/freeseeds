@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-454 - owner-session monitoring qualification (2026-11-03 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Updated Analytics credential | PASS | Owner bridge: HTTP200, ACTIVE, clean shape and no provider errors. |
+| GraphQL isolation | PASS | A viewer, account, minimal Worker and full monitoring queries each HTTP200/errors0. |
+| Monitoring preflight | PASS | Health3/3; Access and business-route denial; fresh zero-error metrics; exact routing. |
+| Five-minute qualification | PASS | Three owner-session samples over 0/150/300 seconds passed. |
+| Rollback/routing | PASS | Admin baseline `e8c96c96` and API baseline `b426ba47` each read100%; candidates0%. |
+| Production mutation | NONE | No deployment, routing, payment, D1, Meta, CAPI, Queue, Cron or customer action. |
+| GFS-426 release | WAITING FOR APPROVAL | Admin-only 0% candidate validation is prepared but not authorized. |
+
 ## GFS-451 - Analytics authentication resolution (2026-11-03 PKT)
 
 | Area | Result | Evidence |

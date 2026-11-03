@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 - GFS-454 authenticated monitoring qualification
+
+- Recorded owner-session Analytics verifier ACTIVE/HTTP200, GraphQL A/B/C/D PASS, full security/routing preflight PASS, and three successful monitoring samples spanning five minutes.
+- Confirmed API `b426ba47` and Admin `e8c96c96` at100% with candidates0%; preserved the Admin baseline as rollback.
+- No source change, deployment, token revocation, payment, D1, Meta, CAPI or customer mutation occurred. GFS-426 needs separate Admin-only 0% validation authority.
+
 ## 2026-11-03 - GFS-451 Analytics authentication boundary
 
 - Recorded the owner post-GFS-450 result: HTTP400 `cf_6003`, token status UNKNOWN, header present, with all local credential-shape checks passing.

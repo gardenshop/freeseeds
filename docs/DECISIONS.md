@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-454 - monitoring gate is satisfied; hold release for separate authority (2026-11-03 PKT)
+
+**Decision:** accept the owner-session ACTIVE verifier, four-layer probe, preflight and five-minute three-sample evidence as the monitoring qualification. Preserve every fail-closed check; no monitoring bypass or token provenance assumption is introduced.
+
+**Release boundary:** prepare the exact Admin-only GFS-426 0% validation request with `e8c96c96` rollback. Do not upload, route, promote, mark PAID, activate CAPI, or change API/WhatsApp/payments until that separate approval is granted.
+
 ## GFS-451 - require owner correction or explicit replacement approval (2026-11-03 PKT)
 
 **Decision:** classify the repeated `cf_6003` as unresolved token acceptance, not a proven bridge, endpoint or GraphQL defect. Keep the account endpoint, Bearer scheme, account check and fail-closed assertions unchanged.

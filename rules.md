@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-454 authenticated monitoring qualification (2026-11-03 PKT)
+
+- The owner-session verifier now returns HTTP200/`ACTIVE`/PASS for `GFS-Cloudflare-Analytics-Monitor`; no claim is made whether the owner restored the prior secret or installed a replacement.
+- Bounded probe A/B/C/D all returned HTTP200, zero GraphQL errors and valid data. Full preflight passed: authenticated health 3/3 HTTP200, unauthenticated/invalid health403, protected business routes denied302, fresh zero-error API/Admin metrics, and exact API/Admin baseline100%/candidate0% routing.
+- Three owner-session checkpoints spanning five minutes passed with the same health, denial/isolation, GraphQL freshness/error-zero and routing assertions. Admin rollback baseline `e8c96c96` was independently read back at100%; no live rollback or routing mutation was needed.
+- Monitoring is qualified for release gating. GFS-426 remains local-only; candidate upload, 0% validation, promotion, CAPI activation, real PAID action and all customer/payment/WhatsApp mutation still require separate explicit approval.
+
 ## GFS-451 Analytics credential unresolved (2026-11-03 PKT)
 
 - Owner rerun still returns HTTP400 `cf_6003`, `tokenStatus=UNKNOWN`, with the header-present and all local shape checks PASS. This proves the stored secret is not accepted by Cloudflare, but does not identify expiry, permission, token type mismatch or a bridge defect.
