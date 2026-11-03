@@ -1,5 +1,17 @@
 # Status
 
+## GFS-465 - MCP repair and isolated watchdog implementation (2026-11-03 PKT)
+
+**Disposition: MCP navigation repaired; live watchdog proof remains BLOCKED before unsafe continuation. Production unchanged.**
+
+- Selecting the verified Cloudflare page before taking a fresh snapshot repaired the stale UID registry. The new Worker's Settings page was reached and confirmed: no bindings, no queues, and no Cron trigger.
+- The approved credential template was inspected and created as `Individual Workers Editor` scoped to `gfs462-isolated-target`, seven-day expiry. The one-time secret was never read or transferred. Owner secure entry is still required before runtime testing.
+- A local Worker implementation and tests were added. It hard-codes the isolated target, validates real UUID versions and six/eight-minute deadlines, reads the latest deployment, posts only the target's baseline100%/candidate0% deployment, and independently verifies readback. Local tests: 2/2 PASS.
+- Quick Edit initially deployed wrapper text and reported `Unexpected token '*'`; the active version stayed `66f471ed`. Subsequent source transfer could not be safely verified in the editor, so no corrected external source version was deployed. No binding, DO alarm, schedule, target deployment or production mutation occurred.
+- Existing regression evidence is fresh: GFS-462 watchdog3/3, controller18/18, adapter8/8, full372/372, build and lint PASS.
+
+**One exact owner action:** enter the unexposed target-only token secret into the watchdog's `TARGET_API_TOKEN` secret binding after the corrected source is deployed; do not send it through chat, MCP output, clipboard automation or Git.
+
 ## GFS-464 - isolated watchdog execution (2026-11-03 PKT)
 
 **Disposition: partially completed; detached restore proof BLOCKED by the supported browser safety guard. Production unchanged.**

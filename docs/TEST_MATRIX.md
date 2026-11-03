@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-465 MCP/watchdog implementation (2026-11-03 PKT)
+
+| Check | Result | Evidence / boundary |
+| --- | --- | --- |
+| MCP page/session repair | PASS | Page selection before fresh snapshot made watchdog Settings reachable. |
+| Target-only credential scope | PASS | Cloudflare template: `Individual Workers Editor`, target `gfs462-isolated-target`, seven-day expiry. Secret not observed. |
+| Local watchdog implementation | PASS | `test-gfs464-isolated-watchdog-worker.mjs`: 2/2. |
+| External corrected source deployment | BLOCKED | First Quick Edit deployment rejected wrapper contamination (`Unexpected token '*'`); no corrected version created. |
+| Binding/DO alarm/schedule | NOT CONFIGURED | Settings readback showed zero bindings and no Cron; no unsafe continuation. |
+| Detached restore/readback | NOT PROVEN | Requires corrected external source, binding, owner-secure secret and real target versions. |
+| Regression | PASS | GFS-462 watchdog3/3, controller18/18, adapter8/8, full372/372, build/lint. |
+| Production routing | PASS / unchanged | Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%. |
+
 ## GFS-464 isolated watchdog external proof (2026-11-03 PKT)
 
 | Check | Result | Evidence / boundary |

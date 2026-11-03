@@ -1,5 +1,10 @@
 # Resource Registry
 
+## GFS-465 isolated credential and watchdog state (2026-11-03 PKT)
+
+- **Credential:** one Cloudflare template credential created for `gfs462-isolated-target`; permission `Individual Workers Editor`, seven-day expiry. Secret was not read or recorded. It is not attached to the watchdog yet.
+- **Watchdog:** `gfs464-isolated-watchdog` remains active at version `66f471ed`, with zero bindings and zero queues. No corrected source version, DO alarm, Cron trigger or target deployment was created.
+
 ## GFS-464 isolated watchdog resource (2026-11-03 PKT)
 
 - **Watchdog Worker:** `gfs464-isolated-watchdog`, in Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, initial version `66f471ed`. Dashboard readback shows zero Worker bindings and zero queues; no credential, secret, schedule/alarm, target deployment authority or production binding is established.

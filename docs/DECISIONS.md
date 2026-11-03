@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-465 - repair MCP session, hold external source deployment fail-closed (2026-11-03 PKT)
+
+**Decision:** keep the isolated watchdog Worker and target-only credential, but do not claim live watchdog readiness. Selecting page 40 before snapshot resolved the stale control registry; source deployment remains held after Quick Edit reported `Unexpected token '*'` from wrapper contamination and editor focus could not be safely re-established for a verified corrected deployment.
+
+**Security boundary:** the credential is `Individual Workers Editor` for `gfs462-isolated-target` only, seven-day expiry. Its secret was not observed. The local source is the only corrected implementation currently verified; no Cloudflare binding, DO alarm, schedule, target version update or restoration call was run.
+
+**Release effect:** production Admin/API routing, WhatsApp, payments, D1, Queue/DLQ, Cron, Meta and CAPI remain unchanged. Require one verified corrected Quick Edit deployment and owner-secure secret entry before any isolated arm/restore test.
+
 ## GFS-464 - retain independent isolated architecture; fail closed on UI guard (2026-11-03 PKT)
 
 **Decision:** retain the new isolated `gfs464-isolated-watchdog` and do not repurpose `gfs462-isolated-target` as its own watchdog. A self-targeted design does not meet the required independence guarantee.

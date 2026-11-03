@@ -1,5 +1,17 @@
 # Final Report
 
+## GFS-465 - MCP repair and watchdog proof status (2026-11-03 PKT)
+
+**Overall: BLOCKED safely before detached execution.**
+
+1. **MCP root cause/resolution:** stale control registration caused visible watchdog controls to be rejected. Selecting page 40 before each fresh snapshot repaired Settings navigation. Quick Edit remained slow/unreliable; the first deploy reported `Unexpected token '*'` because wrapper text was transferred, and no corrected external version was deployed.
+2. **Resources/permissions:** watchdog `gfs464-isolated-watchdog` remains active at `66f471ed`. The approved target-only credential is `Individual Workers Editor` scoped to `gfs462-isolated-target`, seven-day expiry. Secret value was never read, logged or transferred.
+3. **Scheduler/readiness:** Settings readback shows zero bindings and no Cron. No Durable Object alarm, schedule or target source update is active. Detached execution is BLOCKED.
+4. **Restoration/readback/deadline:** NOT PROVEN. Local worker tests pass 2/2, but no live target version readback or deployment restore occurred.
+5. **Regression:** watchdog worker2/2; GFS-462 watchdog3/3; controller18/18; adapter8/8; full372/372; build/lint PASS.
+6. **Production:** Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%; CAPI OFF. No production Worker, payment, WhatsApp, D1, Queue, Cron, Meta or customer mutation.
+7. **Next action:** owner securely enters the unexposed token into `TARGET_API_TOKEN` after a corrected external source deployment is verified; then configure only the approved DO binding/alarm and run real isolated restore/readback. No production watchdog or canary approval is requested.
+
 ## GFS-464 - isolated watchdog proof execution (2026-11-03 PKT)
 
 **Overall: PARTIAL / BLOCKED safely.**

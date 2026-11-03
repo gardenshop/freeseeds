@@ -11,6 +11,7 @@
     "test:canary:graphql-probe": "node --test scripts/test-cloudflare-graphql-probe.mjs",
     "test:canary:token-verify": "node --test scripts/test-cloudflare-token-verify.mjs",
     "test:watchdog:gfs462": "node --test scripts/test-gfs462-isolated-watchdog.mjs",
+    "test:watchdog:gfs464": "node --test scripts/test-gfs464-isolated-watchdog-worker.mjs",
     "test:d1:stress": "node --test scripts/test-d1-capacity-stress.mjs",
     "bench:d1:stress": "node scripts/d1-capacity-stress.mjs",
     "test:rollback:v1": "node --test scripts/test-v1-cod-rollback.mjs",

@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-465 MCP and isolated watchdog boundary (2026-11-03 PKT)
+
+- Selecting Cloudflare page `40` before each snapshot repaired the MCP stale-control issue; the verified `gfs464-isolated-watchdog` Settings page became reachable. No direct request, session extraction or guard bypass was used.
+- The approved target-only credential was created from the target Worker template as `Individual Workers Editor`, restricted to `gfs462-isolated-target`, with seven-day expiry. Its one-time secret was not read, copied, logged or committed. Secure owner entry into the watchdog secret store remains required.
+- The local watchdog implementation is allowlisted to `gfs462-isolated-target` and the official Workers deployment endpoint; it fails closed on missing secrets, target/version mismatch, stale deadlines, failed readback and non-idempotent restore. Local tests pass 2/2.
+- Quick Edit source transfer remains externally incomplete: the first deployment rejected wrapper text with a syntax error, and subsequent editor focus was unreliable. No corrected source version was deployed; active watchdog remains `66f471ed`. No binding, Durable Object alarm, schedule or production resource changed.
+- Detached execution, actual isolated restoration/readback and six/eight-minute deadline compliance remain **UNPROVEN**. Production remains Admin `e8c96c96`100% / `e44703c3`0%, API `b426ba47`100% / `e8018f3f`0%, CAPI OFF.
+
 ## GFS-464 isolated watchdog execution boundary (2026-11-03 PKT)
 
 - Owner approval authorized exactly one isolated watchdog Worker, one isolated schedule/alarm and binding, one target-restricted credential, and real restore/readback testing. It excludes every production resource and any Admin/API traffic change.

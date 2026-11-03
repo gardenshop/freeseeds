@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 - GFS-465 MCP and watchdog proof
+
+- Repaired Cloudflare MCP page targeting by selecting the verified page before each snapshot.
+- Added local fail-closed isolated watchdog source/tests and recorded the target-only seven-day credential scope without exposing its secret.
+- Recorded the Quick Edit syntax failure and stopped before binding, schedule, secret attachment or any production mutation.
+
 ## 2026-11-03 - GFS-464 isolated watchdog execution
 
 - Created the approved non-production independent Worker `gfs464-isolated-watchdog` in the verified Get Free Seeds account; initial version `66f471ed`.
