@@ -2246,3 +2246,9 @@ No secrets are stored in this registry.
 - Verified read context: Get Free Seeds Admin/API staging URLs and Cloudflare account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Meta Ads Manager canonical business `568026370701542` / account `1198439777611633`.
 - Read-only evidence: Admin Conversations/Analytics HTTP200, API `/health` HTTP200, canonical Ads Manager context. No secret, payload, customer identifier or message body recorded.
 - Limitation: shell Wrangler D1 query rejected with Cloudflare authorization code7403; Queue dashboard did not finish loading. These paths remain unqualified for this incident.
+# GFS-458 verified resources (2026-11-03 PKT)
+
+- Admin latest deployment: `46d02e50-5695-4dd8-bf24-b4367c70c48c`; configured versions `e8c96c96`100% and `e44703c3`0%.
+- GFS-426 version: `e44703c3-694f-4ffd-9416-f8edf1aacf42`, version117, tag `gfs-426-c2ddcd1`, source `c2ddcd1319489a33c6ca213fd12ce0e4372e1b6b`.
+- Queue: `getfreeseeds-events-staging` Active; matching staging DLQ Inactive. D1: `getfreeseeds-staging` / `17b7e9f6-e08b-4bff-a756-10de30b49ab1`.
+- Historical Admin deployment `034c190e-d233-4cab-9fa4-65aa068b1603` used `ee9b7baa` at0%; it is not the latest attachment.

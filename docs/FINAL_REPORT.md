@@ -6389,3 +6389,12 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 5. **Release safety:** Admin baseline100% / non-baseline0%, API baseline100% / non-baseline0%, CAPI OFF. Dashboard read showed `e44703c3` Ready while the active zero slot displayed historical `ee9b7baa`; reconcile identity before promotion, with no routing mutation now.
 6. **Protection:** JazzCash, Easypaisa, Bank Transfer, WhatsApp EN/UR, COD, Advance, D1, Queue, Cron, recovery, Hoja isolation and customer traffic were untouched.
 7. **Next action:** read-only reconcile the Admin zero-slot candidate identity, then request separate explicit approval for any controlled GFS-426 traffic promotion. Do not treat this incident as authorization.
+# GFS-458 final report (2026-11-03 PKT)
+
+1. **Authoritative Admin state:** latest deployment `46d02e50-5695-4dd8-bf24-b4367c70c48c`; `e8c96c96`100% / `e44703c3`0%.
+2. **Candidate identity:** `e44703c3` version117, tag `gfs-426-c2ddcd1`, source `c2ddcd1319489a33c6ca213fd12ce0e4372e1b6b`. `ee9b7baa` is historical in deployment `034c190e...`.
+3. **Dashboard discrepancy:** its traffic card showed 98.9%/1.1%, but the authoritative configured deployment remains 100%/0%; no correction was made.
+4. **Queue/DLQ:** staging queue Active, staging DLQ Inactive, average backlog0, average lag5.5s. D1 browser identity PASS; Wrangler 7403 is shell auth-context only.
+5. **Monitoring/rollback:** GFS-454 monitoring and GFS-456 candidate validation carried forward PASS; baseline rollback remains `e8c96c96`.
+6. **Protection:** API remains `b426ba47`100% / `e8018f3`0%; payments, WhatsApp, D1 data, Queue contents, Meta and CAPI OFF untouched.
+7. **Next approval:** one explicit Admin-only 10% canary authorization, capped at eight minutes with restoration by minute six, after interpreting the dashboard telemetry discrepancy. No canary was executed here.

@@ -3302,3 +3302,16 @@ Investigation query costs only (not production savings): representative `rows_re
 | Direct D1 aggregate | BLOCKED | Wrangler authorization error 7403; no mutation attempted |
 | Source repair/regression | N/A | No defect proven; no source changed |
 | Routing safety | PASS percentages / identity reconcile pending | Admin100%/0%, API100%/0%; zero-slot version identity needs read-only reconciliation |
+# GFS-458 reconciliation (2026-11-03 PKT)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Cloudflare account/Worker/environment | PASS | Account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, Admin production environment |
+| Latest Admin deployment | PASS | `46d02e50-5695-4dd8-bf24-b4367c70c48c` |
+| Configured Admin weights | PASS | `e8c96c96`100% / `e44703c3`0% |
+| Candidate provenance | PASS | Version117; tag `gfs-426-c2ddcd1`; source `c2ddcd1` |
+| Historical candidate separation | PASS | `ee9b7baa` is only in the prior deployment record |
+| Queue/DLQ | PASS | staging Active; staging DLQ Inactive; backlog0; lag5.5s |
+| D1 identity | PASS | `getfreeseeds-staging`, expected database ID, browser read-only |
+| Monitoring/rollback | PASS carried forward | GFS-454/GFS-456 evidence; no unchanged rerun |
+| Traffic mutation | PASS | No upload, promotion, rollback or data write |

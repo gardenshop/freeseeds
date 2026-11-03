@@ -2234,3 +2234,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 **Evidence boundary:** API health and Admin reads were live and successful. Aggregated Analytics showed current inbound/status/order activity. Meta Ads authentication was confirmed, but campaign delivery was not inferred. Queue and direct Wrangler D1 telemetry were unavailable from the authorized read paths; do not turn those limitations into a defect claim.
 
 **Safety boundary:** no repair, rollback, deployment, routing, D1, Queue, Meta, payment, Cron, flag, CAPI or customer-message mutation. Before any later Admin promotion, reconcile the dashboard's zero-traffic slot identity (`ee9b7baa` displayed active while `e44703c3` was Ready) without changing its 100%/0% percentages.
+# GFS-458 - authoritative Admin candidate decision (2026-11-03 PKT)
+
+**Decision:** accept `e44703c3` as the attached GFS-426 candidate in the latest Admin deployment. The prior `ee9b7baa` observation came from the older deployment record. The authoritative latest deployment is `46d02e50-5695-4dd8-bf24-b4367c70c48c` with `e8c96c96`100% and `e44703c3`0%.
+
+**Boundary:** the dashboard's 98.9%/1.1% traffic card is retained as telemetry requiring monitoring interpretation, not as a configured rollout. No upload, attachment, percentage change, rollback, payment, D1, Queue, Meta or customer mutation occurred.
+
+**Next gate:** prepare, but do not execute, one Admin-only 10% canary approval request. Any canary requires separate explicit approval, fresh monitoring, rollback protection, an eight-minute maximum window and restoration by minute six.

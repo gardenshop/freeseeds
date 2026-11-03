@@ -2002,3 +2002,7 @@
 
 - Added the bounded incident result: Admin Conversations and Analytics were live with post-boundary customer activity; the suspected WhatsApp outage was disproven.
 - Recorded evidence limitations for Wrangler D1 authorization and Queue dashboard loading. No source, production routing, payment, Meta, D1, Queue or customer-state changes were made.
+# 2026-11-03 - GFS-458 Admin candidate reconciliation
+
+- Reconciled the latest Admin deployment through authenticated Cloudflare API: GFS-426 `e44703c3` is attached at configured 0% beside baseline `e8c96c96` at 100%; `ee9b7baa` is historical.
+- Recorded Queue/DLQ and D1 browser-read evidence and clarified Wrangler 7403 as shell authorization-context failure. No production mutation occurred.

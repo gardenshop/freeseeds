@@ -2865,3 +2865,12 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Analytics returned HTTP200/as-of `05:10:58Z`: 275 customer messages, 273 status callbacks, 45 new conversations, 10 submitted orders, 5 COD confirmations and 2 Advance selections. API `/health` returned HTTP200 and WhatsApp enabled.
 - Meta Ads Manager was authenticated in the canonical business/account context with no visible auth error; campaign delivery was not asserted. Wrangler D1 read was blocked by Cloudflare code7403 and Queue dashboard read remained unavailable, so those remain evidence limitations.
 - Admin serving remained baseline100% / non-baseline0%; dashboard slot identity needs reconciliation because the active zero slot showed historical `ee9b7baa` while `e44703c3` was Ready in version history. No routing change was made. API remained100%/0%, CAPI OFF, payments and customer traffic untouched.
+# GFS-458 - Admin candidate reconciliation (2026-11-03 PKT)
+
+**Disposition: candidate identity and attachment PASS; no traffic mutation performed.**
+
+- Authoritative Cloudflare API read: latest Admin percentage deployment `46d02e50-5695-4dd8-bf24-b4367c70c48c` attaches `e8c96c96`100% and `e44703c3`0%.
+- `e44703c3` is version117, tag `gfs-426-c2ddcd1`, source `c2ddcd1319489a33c6ca213fd12ce0e4372e1b6b`; historical `ee9b7baa` belongs to the prior deployment.
+- Dashboard observed 98.9%/1.1% in its traffic card, but the control-plane deployment API remains 100%/0%; no promotion or correction was made.
+- Queue read: `getfreeseeds-events-staging` Active, its DLQ Inactive, average backlog0 and average lag5.5s. D1 browser identity read succeeded for `getfreeseeds-staging`; Wrangler 7403 is limited to the shell auth context.
+- GFS-454 monitoring and GFS-456 candidate validation remain the carried-forward gates. API remains `b426ba47`100% / `e8018f3`0%; CAPI and payments unchanged.
