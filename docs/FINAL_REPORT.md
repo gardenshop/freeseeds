@@ -6653,5 +6653,5 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 6. **Tests:** focused3/3, guided104/104, full378/378, build PASS, lint PASS. Audit BLOCKED by npm registry advisory endpoint/log permissions. No +15/+210 source regression was found.
 7. **Protection:** API `b426ba47`100%/`e8018f3f`0%; Admin `e8c96c96`100%/`e44703c3`0%; CAPI OFF. No WhatsApp, payment, order, D1, Queue/DLQ, Cron, Meta, customer or watchdog mutation occurred.
 8. **Progress:** WhatsApp92%/8% remaining; resume local100%/live0%; COD local100%/live70%; Meta display name In Review; courier settlement remains external evidence-gated.
-9. **Git:** local tested commit `caa5a3400c839f5db1aaab6edb06d2fcc3821e98`; remote SHA is verified after push below.
+9. **Git:** verified remote commit `d003ad4fcbd72638cde38f6c3be10bd1219599b0` on `codex/gfs221-cod-compat-001`.
 10. **One next action:** separately approve one corrected immutable API upload, then independently read back its recovery value and preserved configuration; do not attach or promote it.
