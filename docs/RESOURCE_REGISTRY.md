@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-446 GraphQL HTTP400 diagnostic boundary (2026-11-03 PKT)
+
+- **Query:** `scripts/cloudflare-observability.mjs` retains the corrected lowercase `string!` account/Worker variables and `Time!` datetime variables; read-only account schema confirms the queried dataset fields.
+- **Diagnostic:** HTTP400 bodies are reduced to bounded categories only. No raw provider text, Authorization header, token, customer data or secret is registered.
+- **Evidence:** owner sample 1 remains HTTP400, 0/3; local observability 10/10, full 372/372, build/lint, adapter 8/8 and deadline 18/18.
+- **Gate:** one owner diagnostic sample is required before any new five-minute qualification. API/Admin last verified routing remains 100/0; GFS-426 is local-only and CAPI OFF.
+
 ## GFS-444 live incident evidence (2026-11-03 PKT)
 
 - **Canonical resources:** authenticated Cloudflare Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; active D1 `getfreeseeds-staging`/`17b7e9f6-e08b-4bff-a756-10de30b49ab1`; canonical Meta Get Free Seeds business `568026370701542` with the approved account context.

@@ -1,5 +1,15 @@
 # Status
 
+## GFS-446 - persistent GraphQL HTTP400 requires sanitized cause (2026-11-03 PKT)
+
+**Disposition: live monitoring NOT QUALIFIED; owner sample 1 failed HTTP400; local diagnostic hardening PASS; production unchanged.**
+
+- The corrected lowercase `string!` query is present at the tested PR head. Authenticated read-only schema inspection confirms `Time` for the datetime filters and all queried fields are valid; no new query defect is proven.
+- The monitor now consumes an HTTP error body only to classify a bounded cause category (`schema`, `authorization`, `query_limit`, `query_syntax`, or `unknown`) and never retains response text or secrets.
+- Tests: observability 10/10, full 372/372, build/lint PASS, adapter 8/8, deadline controller 18/18. V1 rollback fixture remains unavailable because `GFS_LEGACY_ROOT` is unset.
+- Owner must run one post-change diagnostic sample and return only its sanitized category. Do not run three qualification samples until HTTP400 is resolved.
+
+
 ## GFS-444 - WhatsApp incident disproven; quiet period verified (2026-11-03 PKT)
 
 **Disposition: DISPROVEN as an infrastructure/webhook outage; no repair required; post-boundary customer E2E UNKNOWN because no inbound arrived.**

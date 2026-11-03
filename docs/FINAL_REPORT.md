@@ -1,5 +1,15 @@
 # Final Report
 
+## GFS-446 - persistent GraphQL HTTP400 (2026-11-03 PKT)
+
+**Overall: live monitoring BLOCKED by a persistent owner-session HTTP400; local diagnostic repair PASS; COD release remains safely held.**
+
+1. **Cause status:** owner sample 1 failed HTTP400 after the GFS-443 correction, so 0/3 live samples passed. Read-only authenticated schema evidence validates `Time` for datetime filters and the selected Worker fields; no second query defect is proven.
+2. **Repair:** added bounded GraphQL error-category classification and sanitized bridge diagnostics. Raw response text, headers, credentials and customer data are not retained. Query types and fail-closed identity/freshness/error gates remain unchanged.
+3. **Tests:** observability 10/10; full 372/372; build/lint PASS; adapter 8/8; deadline controller 18/18. V1 rollback fixture remains blocked by missing `GFS_LEGACY_ROOT`.
+4. **Production:** no deployment, routing, D1, payment, Meta, CAPI, Queue, Cron or customer-message mutation. Last verified routing is API `b426ba47`100%/`e8018f3f`0% and Admin `e8c96c96`100%/`ee9b7baa`0%.
+5. **Next action:** owner runs one diagnostic bridge sample and returns only the sanitized category. After the proven cause is repaired, run one PASS sample and then 0/150/300-second qualification; request separate GFS-426 Admin-only approval only after monitoring and rollback pass.
+
 ## GFS-444 - urgent WhatsApp activity and regression check (2026-11-03 PKT)
 
 **Overall: OUTAGE DISPROVEN for WhatsApp/webhook/Worker/Queue infrastructure; normal quiet period supported; no repair or production mutation.**

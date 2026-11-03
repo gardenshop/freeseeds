@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-446 - preserve valid query and classify persistent HTTP400 (2026-11-03 PKT)
+
+**Decision:** do not guess a second GraphQL query change. Read-only schema evidence validates the current `Time!` datetime variables, filters and selected fields. Add only secret-free HTTP400 cause classification so the owner can provide the missing evidence.
+
+**Boundary:** live qualification remains 0/3. A single diagnostic owner run is required before any new three-sample sequence. No production, payment, routing, D1, Meta, CAPI, Queue, Cron or customer-message mutation occurred.
+
+**Next gate:** use the sanitized category to make the smallest proven repair, then run one PASS sample followed by 0/150/300-second monitoring and separate GFS-426 release approval.
+
 ## GFS-444 - close screenshot incident as normal quiet period (2026-11-03 PKT)
 
 **Decision:** no source repair, rollback or deployment. The latest Conversations activity was a recovery send, not customer inbound. Bounded D1 aggregates, zero-error Worker metrics, webhook acceptance, provider-status update, empty active Queue/DLQ, API health and fresh Admin reads disprove a platform outage.

@@ -9,6 +9,15 @@ const GRAPHQL_URL = "https://api.cloudflare.com/client/v4/graphql";
 const DEFAULT_METRICS_WINDOW_MS = 10 * 60 * 1000;
 const DEFAULT_INGESTION_LATENCY_MS = 5 * 60 * 1000;
 const DEFAULT_FUTURE_SKEW_MS = 60 * 1000;
+const GRAPHQL_ERROR_PATTERNS = Object.freeze([
+  [/unknown type|undefined type/i, "schema_unknown_type"],
+  [/cannot query field|field .*not found/i, "schema_unknown_field"],
+  [/unknown argument|argument .*not found/i, "schema_unknown_argument"],
+  [/variable .*type|type .*variable/i, "schema_variable_type"],
+  [/parse|syntax|malformed query|invalid query/i, "query_syntax"],
+  [/permission|forbidden|unauthor/i, "authorization"],
+  [/limit|rate|complexity|cost/i, "query_limit"]
+]);
 const WORKERS_QUERY = `query Workers($accountTag: string!, $start: Time!, $end: Time!, $scriptName: string!) {
   viewer { accounts(filter: { accountTag: $accountTag }) {
     workersInvocationsAdaptive(limit: 100, filter: { scriptName: $scriptName, datetime_geq: $start, datetime_leq: $end }) {
@@ -20,6 +29,19 @@ const WORKERS_QUERY = `query Workers($accountTag: string!, $start: Time!, $end: 
 
 function defaultTokenPath() {
   return process.env.WRANGLER_CONFIG_FILE ?? path.join(os.homedir(), "AppData", "Roaming", "xdg.config", ".wrangler", "config", "default.toml");
+}
+
+function classifyGraphqlErrorMessage(message) {
+  const normalized = typeof message === "string" ? message : "";
+  return GRAPHQL_ERROR_PATTERNS.find(([pattern]) => pattern.test(normalized))?.[1] ?? "unknown";
+}
+
+export function summarizeGraphqlErrors(body) {
+  const errors = Array.isArray(body?.errors) ? body.errors : [];
+  return {
+    count: errors.length,
+    categories: [...new Set(errors.slice(0, 3).map((error) => classifyGraphqlErrorMessage(error?.message)))].filter(Boolean)
+  };
 }
 
 async function readOAuthToken(filePath) {
@@ -84,10 +106,11 @@ export function createCloudflareObservability({ accountTag, tokenPath = defaultT
       const code = signal?.aborted || error?.name === "AbortError" || error?.name === "TimeoutError" ? "graphql_timeout" : "graphql_network_error";
       throw diagnosticError(code, { stage: "metrics", operation: "graphql_fetch", errorClass: error?.name ?? "Error" });
     }
-    if (!response?.ok) throw diagnosticError("graphql_http_failure", { stage: "metrics", operation: "graphql_fetch", httpStatus: Number(response?.status) || 0 });
     let body;
     try { body = await response.json(); } catch { throw diagnosticError("graphql_invalid_response", { stage: "metrics", operation: "graphql_json", httpStatus: Number(response.status) || 0 }); }
-    if (Array.isArray(body?.errors) && body.errors.length > 0) throw diagnosticError("graphql_http200_errors", { stage: "metrics", operation: "graphql_response", httpStatus: Number(response.status) || 200 });
+    const graphqlErrors = summarizeGraphqlErrors(body);
+    if (!response?.ok) throw diagnosticError("graphql_http_failure", { stage: "metrics", operation: "graphql_fetch", httpStatus: Number(response?.status) || 0, causeCode: graphqlErrors.categories[0] });
+    if (graphqlErrors.count > 0) throw diagnosticError("graphql_http200_errors", { stage: "metrics", operation: "graphql_response", httpStatus: Number(response.status) || 200, causeCode: graphqlErrors.categories[0] });
     const accounts = body?.data?.viewer?.accounts;
     if (!Array.isArray(accounts) || accounts.length !== 1) throw diagnosticError("graphql_account_mismatch", { stage: "metrics", operation: "graphql_account", httpStatus: Number(response.status) || 200 });
     const rows = accounts[0]?.workersInvocationsAdaptive;

@@ -4,6 +4,16 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { accessHeaders, readAccessCredentials } from "./cloudflare-access-credentials.mjs";
 import { createCloudflareObservability } from "./cloudflare-observability.mjs";
+import { diagnosticRecord } from "./canary-diagnostics.mjs";
+
+process.on("uncaughtException", (error) => {
+  console.error(JSON.stringify(diagnosticRecord(error)));
+  process.exit(1);
+});
+process.on("unhandledRejection", (error) => {
+  console.error(JSON.stringify(diagnosticRecord(error)));
+  process.exit(1);
+});
 
 const execFileAsync = promisify(execFile);
 const WRANGLER = fileURLToPath(new URL("../node_modules/wrangler/bin/wrangler.js", import.meta.url));

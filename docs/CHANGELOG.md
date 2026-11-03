@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 - GFS-446 persistent GraphQL HTTP400 diagnostics
+
+- Recorded the owner post-fix HTTP400 sample without repeating three-sample qualification. Read-only schema inspection validated the current datetime scalar and selected Worker fields.
+- Added secret-free HTTP400 cause classification and monitoring-run diagnostic output; no raw response body, token, header, customer data or production resource is retained.
+- Observability 10/10, full 372/372, build/lint, adapter 8/8 and deadline 18/18 pass. Live monitoring remains blocked pending one diagnostic owner sample; no production mutation occurred.
+
 ## 2026-11-03 - GFS-444 WhatsApp incident read-only closure
 
 - Converted the reported PKT boundary to UTC and ran one aggregate-only D1 query, authenticated Admin reads, Cloudflare Worker/Queue metrics, public API health and canonical Meta identity checks.

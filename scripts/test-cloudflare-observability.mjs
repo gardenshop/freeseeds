@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import { createCloudflareObservability, sumMetricRows, validateMetricSnapshot } from "./cloudflare-observability.mjs";
+import { createCloudflareObservability, sumMetricRows, summarizeGraphqlErrors, validateMetricSnapshot } from "./cloudflare-observability.mjs";
 import { accessHeaders, readAccessCredentials } from "./cloudflare-access-credentials.mjs";
 import { readAnalyticsToken } from "./cloudflare-analytics-credentials.mjs";
 
@@ -54,6 +54,30 @@ test("classifies GraphQL HTTP200 errors, HTTP failures, invalid JSON and timeout
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+test("classifies HTTP400 GraphQL causes without retaining response text", () => {
+  assert.deepEqual(summarizeGraphqlErrors({ errors: [{ message: "Variable $start of type string used where Time is required" }] }), {
+    count: 1,
+    categories: ["schema_variable_type"]
+  });
+  assert.deepEqual(summarizeGraphqlErrors({ errors: [{ message: "forbidden account analytics" }, { message: "query cost exceeded" }] }), {
+    count: 2,
+    categories: ["authorization", "query_limit"]
+  });
+  assert.deepEqual(summarizeGraphqlErrors({ errors: [{ message: "contains-token-shaped-text-that-is-not-retained" }] }), {
+    count: 1,
+    categories: ["unknown"]
+  });
+});
+
+test("retains only a sanitized cause category for HTTP400", async () => {
+  const observability = createCloudflareObservability({
+    accountTag: "account",
+    analyticsToken: "synthetic-token",
+    fetchImpl: async () => ({ ok: false, status: 400, json: async () => ({ errors: [{ message: "Variable $start of type string used where Time is required" }] }) })
+  });
+  await assert.rejects(() => observability.readMetrics(worker), (error) => error.code === "graphql_http_failure" && error.diagnostic.causeCode === "schema_variable_type" && !JSON.stringify(error).includes("Time is required"));
 });
 
 test("uses Cloudflare lowercase string scalars and avoids the schema HTTP400", async () => {

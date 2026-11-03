@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-446 persistent GraphQL HTTP400 boundary (2026-11-03 PKT)
+
+- Owner rerun reached Cloudflare and still returned sanitized metrics `graphql_http_failure` HTTP400; qualification is 0/3 and no three-sample sequence was repeated.
+- Read-only authenticated Cloudflare schema inspection confirms `Time` is the scalar for `datetime_geq`/`datetime_leq`; `workersInvocationsAdaptive`, `status`, `requests`, and `errors` are valid. The current query is therefore not proven defective by the new evidence. Official documentation shows both the Workers-platform `Time!` form and the tutorial `string` form; no date-type change is made without the owner error category.
+- Local repair adds bounded classification of the response error as `schema_*`, `authorization`, `query_limit`, `query_syntax`, or `unknown`; response text, headers, tokens, customer data and secrets are never retained or printed. The query and fail-closed gates are unchanged.
+- Local observability is 10/10; full suite 372/372; build/lint, adapter 8/8 and deadline controller 18/18 pass. Standalone V1 rollback remains blocked only by missing `GFS_LEGACY_ROOT`.
+- Next owner action is one diagnostic bridge sample, not the three-sample qualification. Use its sanitized category to identify the actual cause; only then rerun 0/150/300-second qualification. No production mutation occurred.
+
 ## GFS-444 WhatsApp activity incident boundary (2026-11-03 PKT)
 
 - **Disposition: infrastructure outage DISPROVEN; normal quiet period supported.** The reported boundary `2026-11-03 00:50:26 PKT` is `2026-11-02T19:50:26Z`. The latest genuine customer inbound is `19:36:20.595Z` (00:36:20.595 PKT); bounded inbound counts are zero both before (`19:40:26Z`–`19:50:26Z`) and after (`19:50:26Z`–`20:00:26Z`). No customer trigger exists after the boundary to claim a bot-reply or checkout E2E result.

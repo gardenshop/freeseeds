@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-446 - persistent HTTP400 diagnostic hardening (2026-11-03 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Schema verification | PASS | Authenticated read-only schema reports `Time` datetime filters and valid queried Worker fields; no query-type defect proven. |
+| HTTP400 classification | PASS | Response is reduced to a bounded cause category; raw error text, headers and secrets are not retained. |
+| Observability tests | PASS 10/10 | Includes schema-category, authorization/limit-category and no-response-text assertions. |
+| Full regression | PASS 372/372 | Vitest suite. |
+| Adapter/deadline | PASS | Adapter 8/8; deadline controller 18/18. |
+| Build/lint | PASS | TypeScript build and ESLint. |
+| Live monitoring | BLOCKED | Owner HTTP400 sample 1; 0/3 qualification samples. |
+| V1 rollback fixture | BLOCKED | `GFS_LEGACY_ROOT` is not configured; no protected checkout modified. |
+
 ## GFS-444 - WhatsApp activity and regression read-only check (2026-11-03 PKT)
 
 | Area | Result | Evidence |
