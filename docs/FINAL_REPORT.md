@@ -1,5 +1,20 @@
 # Final Report
 
+## GFS-474 - recover incomplete WhatsApp orders (2026-11-03 PKT)
+
+**Overall: proven inbound-resume defect repaired locally and tested; no production mutation; separately approved release testing is still required.**
+
+1. **Stage counts:** bounded UTC inactive no-order snapshots total2449: OFFER1079, LANGUAGE325, FULL_NAME260, PROVINCE251, FERTILIZER179, ADDRESS160, REVIEW61, CONTACT50, NEARBY47, CITY28, NEW9, PRODUCT0. Active-under24h412. Inactive age24–72h996 /3–7d1453; UR1702 / EN413 / unknown334. These are inactivity candidates, not proven abandonment.
+2. **Defect/repair:** OFFER/FERTILIZER/PROVINCE/REVIEW retained state after an unrecognized or resume inbound but failed to re-render their buttons/list. The local API now selects controls from the persisted `nextState`; the duplicate unreachable OFFER branch was removed.
+3. **Safe resume:** PASS. New inbound re-presents the current step, retains validated language/fertilizer/province/contact data, rejects an invalid province, creates no premature order and suppresses provider-event replay.
+4. **No-method recovery:** current inactive136 / active41; inactive EN16/UR120, age24–72h64 /3–7d72. +15/+210 logic remains eligible-only, opt-out/window/idempotency guarded. Aggregate opt-outs, duplicate stage groups, failed recovery outbound and blocked-window rows were all0; no recovery defect found.
+5. **Tests:** pre-fix2/2 failed as expected; post-fix2/2 PASS; guided104/104; full32 files/377 tests; build/lint PASS. Existing suite retains EN/UR, province pricing, COD PKR125, JazzCash/Easypaisa/Bank Transfer, QR/payment safeguards and order deduplication. Audit BLOCKED externally.
+6. **External blockers:** Meta display name In Review; COD settlement still lacks genuine courier evidence/policy. GFS-425/GFS-426 controls and watchdog DEFERRED status unchanged.
+7. **Progress:** WhatsApp local readiness90%; order-resume local100% / live0% until separately approved deployment testing; COD local100% / live70%; no-method recovery source100% with live conversion outcome unmeasured.
+8. **Protection:** Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%; CAPI OFF. No deploy, customer send, order/payment/PAID/D1/Queue/Cron/webhook/Meta/watchdog mutation.
+9. **Git:** verified after commit/push below.
+10. **ONE next task:** separately approve a 0%-traffic API candidate upload and synthetic authenticated resume validation before any production exposure.
+
 ## GFS-473 - order funnel and fulfillment readiness (2026-11-03 PKT)
 
 **Overall: diagnosis complete; stale local reporting label repaired; public launch NO-GO; production unchanged.**

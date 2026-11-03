@@ -1,5 +1,11 @@
 # Get Free Seeds Plan
 
+## GFS-474 incomplete WhatsApp order recovery (2026-11-03 PKT)
+
+The bounded UTC `2026-10-28..2026-11-03` aggregate splits no-order pre-submit conversations into active under24h and inactive over24h. Current inactive stage totals are OFFER1079, LANGUAGE325, FULL_NAME260, PROVINCE251, FERTILIZER179, ADDRESS160, REVIEW61, CONTACT50, NEARBY47, CITY28, NEW9 and PRODUCT0 (total2449). Age buckets are 24–72h996 and 3–7d1453; languages are UR1702, EN413 and unknown-before-language334. These are recoverable inactivity snapshots, not proven intent to abandon.
+
+The minimal local repair reuses the state machine: any new inbound at OFFER/FERTILIZER/PROVINCE/REVIEW re-presents that state’s current controls while preserving validated fields. No order is created until normal confirmation, and duplicate provider events remain suppressed. Existing +15/+210 no-method recovery remains unchanged because no duplicate, opt-out, failed-outbound or blocked-window defect was proven. No deployment is authorized.
+
 ## GFS-473 order funnel and fulfillment readiness (2026-11-03 PKT)
 
 Use the existing read-only UTC analytics window to separate inbound events, snapshot contacts, submitted orders and current lifecycle states. Investigate `paid/fulfilled=0` as a report-window definition before treating it as an operational backlog. Top verified current snapshot bottlenecks are inactive pre-order conversations (2447), COD-confirmed lifecycle rows (374), and post-order/no-method rows (134); advance-pending (73) is tracked separately and classes may overlap.

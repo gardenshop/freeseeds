@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-474 incomplete-order recovery boundary (2026-11-03 PKT)
+
+- Returning customers may resume only through a new inbound message. Re-present the controls for the persisted OFFER, FERTILIZER, PROVINCE or REVIEW state without discarding validated state data, creating an order, or sending an unsolicited reminder.
+- Keep provider-event replay deduplication, state/action validation, province pricing, cooldown/order idempotence, opt-outs, service-window checks and +15/+210 recovery guards unchanged. No new outbound schedule, reminder, template or campaign is authorized.
+- Aggregate diagnosis only: never retain or publish customer identifiers, message bodies, order identifiers, payment references or raw state data. An inactive no-order snapshot is a recovery candidate, not proof of customer abandonment.
+- No production deployment, D1/order/payment/receipt/PAID mutation, customer message, Meta/CAPI action or watchdog work. Preserve Admin `e8c96c96`100% / `e44703c3`0%, API `b426ba47`100% / `e8018f3f`0%, CAPI OFF, EN/UR, COD PKR125, payments, Queue/DLQ, Cron, webhook, new-number lock and Hoja zero-connection.
+
 ## GFS-473 order-funnel diagnosis boundary (2026-11-03 PKT)
 
 - Read-only aggregate diagnosis uses UTC creation windows. `submitted`, `paid/fulfilled`, advance-selected and COD-confirmed are different lifecycle metrics; no zero-payment or unique-lead conversion claim may be inferred from them.

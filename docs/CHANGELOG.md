@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-03 - GFS-474 incomplete WhatsApp order recovery
+
+- Added aggregate-only stage/age/language diagnosis for inactive no-order and no-method snapshots; no customer identifiers retained.
+- Fixed the guided state machine so a new inbound at OFFER, FERTILIZER, PROVINCE or REVIEW re-presents the current approved controls while preserving validated data.
+- Added EN/UR interruption, invalid-province, replay-deduplication and no-premature-order acceptance tests.
+- Kept +15/+210 recovery, COD, Advance/payment configuration and all live resources unchanged. Focused2/2, guided104/104, full377/377, build/lint PASS; audit endpoint BLOCKED.
+
 ## 2026-11-03 - GFS-473 order funnel diagnosis
 
 - Reconciled the fresh UTC aggregate funnel and documented distinct event/order/lifecycle definitions, current snapshot bottlenecks, recovery statuses and the paid/fulfilled window limitation.

@@ -883,6 +883,39 @@ beforeEach(() => {
 
 afterEach(() => { sqlite.close(); vi.unstubAllGlobals(); });
 
+describe("GFS-474 interrupted checkout resume", () => {
+  it.each(["en", "ur"] as const)("re-presents the current interactive step without losing %s checkout data", async (locale) => {
+    await inbound("START");
+    await inbound(tap(locale === "ur" ? "LANG_UR" : "LANG_EN"));
+
+    await inbound("resume offer");
+    expect(conversation()).toMatchObject({ state: "OFFER", data: { language: locale } });
+    expect(buttons()).toEqual(["CONTINUE_ORDER", "CANCEL_OFFER"]);
+
+    await inbound(tap("CONTINUE_ORDER"));
+    await inbound("resume fertilizer");
+    expect(conversation()).toMatchObject({ state: "FERTILIZER", data: { language: locale } });
+    expect(buttons()).toEqual(["ADD_FERTILIZER", "SEEDS_ONLY"]);
+
+    await inbound(tap("SEEDS_ONLY"));
+    await inbound("not a listed province");
+    expect(conversation()).toMatchObject({ state: "PROVINCE", data: { language: locale, fertilizerSelected: false } });
+    expect(listRows().map((row) => row.id)).toContain("PROVINCE_SYNTHETIC_PROVINCE");
+
+    await inbound({ type: "list_reply", list_reply: { id: "PROVINCE_SYNTHETIC_PROVINCE", title: "Synthetic Province" } });
+    for (const value of ["Synthetic Customer", "123 Synthetic Street", "Synthetic Park", "Synthetic City", "03001234567"]) await inbound(value);
+    const reviewResume = await inbound("resume review", `gfs474-review-resume-${locale}`);
+    expect(conversation()).toMatchObject({ state: "REVIEW", data: { language: locale, province: "Synthetic Province", contactNumber: "03001234567" } });
+    expect(buttons()).toEqual(["CONFIRM_ORDER", "CANCEL_ORDER"]);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 0 });
+
+    const sendsAfterResume = sends.length;
+    await callback([reviewResume]);
+    expect(sends).toHaveLength(sendsAfterResume);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 0 });
+  });
+});
+
 describe("GFS-222 local advance and payment delivery repairs", () => {
   it("gates a concurrent same-method loser by the winning selection audit", async () => {
     const { order, selected } = await pendingPaymentFixture();

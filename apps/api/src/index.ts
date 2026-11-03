@@ -885,20 +885,18 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
     options = { buttons: [{ id: "LANG_UR", title: whatsAppActionLabel(welcomeUr, "LANG_UR") }, { id: "LANG_EN", title: whatsAppActionLabel(welcomeEn, "LANG_EN") }] };
   } else if (sessionFlowToken) {
     options = { flow: { id: flowId, token: sessionFlowToken } };
-  } else if ((state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) || (state === "NEW" && normalized === "GET_FREE_PACKS")) {
+  } else if (nextState === "OFFER") {
     options = { buttons: [
       { id: "CONTINUE_ORDER", title: offer.actionLabels?.CONTINUE_ORDER ?? (data.language === "ur" ? "آرڈر جاری رکھیں" : "Continue Order") },
       { id: "CANCEL_OFFER", title: data.language === "ur" ? "آفر منسوخ کریں." : "Cancel Offer" }
     ] };
-  } else if ((state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) || (state === "NEW" && normalized === "GET_FREE_PACKS")) {
-    options = { buttons: [{ id: "CONTINUE_ORDER", title: offer.actionLabels?.CONTINUE_ORDER ?? (data.language === "ur" ? "آرڈر جاری رکھیں" : "Continue Order") }, { id: "CANCEL_ORDER", title: offer.actionLabels?.CANCEL_ORDER ?? (data.language === "ur" ? "آرڈر منسوخ کریں" : "Cancel Order") }] };
-  } else if (state === "OFFER" && normalized === "CONTINUE_ORDER" && nextState === "FERTILIZER") {
+  } else if (nextState === "FERTILIZER") {
     options = { buttons: [{ id: "ADD_FERTILIZER", title: whatsAppActionLabel(fertilizer, "ADD_FERTILIZER") }, { id: "SEEDS_ONLY", title: whatsAppActionLabel(fertilizer, "SEEDS_ONLY") }] };
-  } else if ((state === "FERTILIZER" || state === "PRODUCT") && /^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/i.test(normalized) && nextState === "PROVINCE" && provinceRows.length) {
+  } else if (nextState === "PROVINCE" && provinceRows.length) {
     options = { list: { buttonText: province.listButtonLabel!, rows: provinceRows } };
-  } else if (state === "CONTACT" && nextState === "REVIEW" && data.language === "ur") {
+  } else if (nextState === "REVIEW" && data.language === "ur") {
     options = { buttons: [{ id: "CONFIRM_ORDER", title: "آرڈر کی تصدیق" }, { id: "CANCEL_ORDER", title: "آرڈر منسوخ کریں." }] };
-  } else if (state === "CONTACT" && nextState === "REVIEW") {
+  } else if (nextState === "REVIEW") {
     options = { buttons: [{ id: "CONFIRM_ORDER", title: data.language === "ur" ? "\u0622\u0631\u0688\u0631 \u06a9\u06cc \u062a\u0635\u062f\u06cc\u0642" : "Confirm Order" }, { id: "CANCEL_ORDER", title: data.language === "ur" ? "\u0622\u0631\u0688\u0631 \u0645\u0646\u0633\u0648\u062e" : "Cancel Order" }] };
   } else if (showPaymentChoice) {
     // Meta reply-button titles are limited to 20 characters. Keep the COD

@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-474 incomplete-order recovery (2026-11-03 PKT)
+
+| Check | Result | Evidence / boundary |
+| --- | --- | --- |
+| Pre-fix reproduction | FAIL as expected 2/2 | EN/UR new inbound at OFFER returned no Continue/Cancel controls. |
+| Inbound resume | PASS 2/2 | OFFER, FERTILIZER, PROVINCE and REVIEW controls re-presented from persisted state. |
+| State/data safety | PASS | Language, fertilizer choice, province and contact retained; invalid province rejected; zero premature orders. |
+| Replay/idempotence | PASS | Replayed provider event produced no second reply/order. |
+| Guided WhatsApp regression | PASS 104/104 | EN/UR, province fee, COD, Advance, invalid/stale inputs and order deduplication retained. |
+| No-method recovery guards | PASS read/local | +15/+210 eligibility, opt-out, window and idempotency code unchanged; aggregate duplicate/failed/blocked counts0. |
+| Full regression | PASS 32 files / 377 tests | Baseline375 plus two GFS-474 cases. |
+| Build / lint | PASS | TypeScript build and ESLint. |
+| Security audit | BLOCKED | npm advisory endpoint unavailable; no audit PASS claimed. |
+| Production protection | PASS | No deploy/message/D1 write/order/payment/Meta/CAPI/watchdog mutation; exact100/0 routing preserved. |
+
 ## GFS-473 order funnel diagnosis (2026-11-03 PKT)
 
 | Check | Result | Evidence / boundary |

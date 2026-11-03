@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-474 incomplete-order recovery state (2026-11-03 PKT)
+
+- **Bounded aggregate:** active D1 `getfreeseeds-staging` / `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, read-only UI query. No identifiers or message bodies retained; no rows written.
+- **Pre-order inactive2449:** OFFER1079, LANGUAGE325, FULL_NAME260, PROVINCE251, FERTILIZER179, ADDRESS160, REVIEW61, CONTACT50, NEARBY47, CITY28, NEW9, PRODUCT0. Active-under24h412; age24–72h996 /3–7d1453; UR1702 / EN413 / unknown334.
+- **No-method:** inactive136, active41; inactive EN16/UR120; age24–72h64 /3–7d72. Opt-outs0, duplicate stage groups0, failed recovery outbound0, blocked-window stages0 at read time.
+- **Local code:** `apps/api/src/index.ts` resumes persisted interactive controls only after new inbound; no unsolicited send, schedule, migration, binding, secret or live deployment.
+- **Protected state:** Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%; CAPI OFF; Meta In Review; COD live readiness70%; watchdog DEFERRED.
+
 ## GFS-473 order funnel state (2026-11-03 PKT)
 
 - **Fresh aggregate read:** UTC 2026-10-28..2026-11-03, to-exclusive 2026-11-04T00:00Z, as-of 2026-11-03T17:37:48Z: inbound23619, status callbacks23476, snapshot unique4030/new3957, submitted661, paid/fulfilled0, advance-selected78, COD-confirmed375, advance-pending76.

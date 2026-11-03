@@ -1,5 +1,17 @@
 # Status
 
+## GFS-474 incomplete WhatsApp order recovery (2026-11-03 PKT)
+
+**Disposition: largest recoverable defect repaired locally; safe inbound resume PASS; production unchanged.**
+
+- Authenticated read-only D1 aggregate in verified account/database found current inactive no-order stages: OFFER1079, LANGUAGE325, FULL_NAME260, PROVINCE251, FERTILIZER179, ADDRESS160, REVIEW61, CONTACT50, NEARBY47, CITY28, NEW9, PRODUCT0; total2449 versus 412 active-under24h snapshots. Normal live traffic explains the +2 change from GFS-473’s2447 snapshot.
+- Inactive ages: 24–72h996 and 3–7d1453. Inactive language: UR1702, EN413, unknown334 (LANGUAGE/NEW before selection). Storage has no historical intent/session-expiry fact, so none is labelled a true abandonment.
+- Proven defect: unrecognized/resume inbound at OFFER, FERTILIZER, PROVINCE and REVIEW preserved state but omitted the current interactive buttons/list. Local API now derives controls from `nextState`, re-presenting the persisted step without erasing fields or creating an order.
+- Safe-resume regression covers EN/UR, invalid province, persisted province/contact data, no premature order, and duplicate inbound replay. Existing guided suite also covers valid fields, dynamic province fee, all three Advance methods, COD PKR125, cooldown/idempotence and stale callbacks.
+- No-method read now finds136 inactive and41 active candidates; inactive EN16/UR120, ages24–72h64 and3–7d72. Existing +15/+210 scheduler/outbox code remains guarded by method/receipt/COD/terminal/opt-out/service-window/idempotency checks. Aggregate guard read: opt-outs0, duplicate stage groups0, failed recovery outbound0, blocked-window rows0; no defect repaired there.
+- Focused defect test first failed2/2, then passed2/2 after repair; guided104/104, full32 files/377 tests, build/lint PASS. Audit remains BLOCKED by npm advisory endpoint.
+- Meta display name remains In Review; COD local controls100% / live readiness70%. Admin/API100/0, CAPI OFF; no deployment, message, order/payment/D1/Meta/watchdog mutation.
+
 ## GFS-473 order funnel and fulfillment readiness (2026-11-03 PKT)
 
 **Disposition: diagnosis complete; one stale local analytics label repaired and regression-tested. Public launch remains NO-GO; production unchanged.**

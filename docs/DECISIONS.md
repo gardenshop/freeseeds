@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-474 - resume persisted interactive checkout state (2026-11-03 PKT)
+
+**Decision:** repair only the proven inbound-resume presentation gap. When the state machine remains at OFFER, FERTILIZER, PROVINCE or REVIEW after a new inbound message, render that state’s approved controls again. Preserve state data and all existing validation/idempotence; do not restart the journey, create an order, or introduce outbound recovery.
+
+**Evidence:** OFFER is the largest inactive no-order state at1079/2449, including UR851 and EN228. The pre-fix focused fixture reproduced missing controls in both locales. Post-fix fixtures retain language, fertilizer choice, province and contact, create zero premature orders and deduplicate replayed inbound events.
+
+**No-method decision:** keep +15/+210 unchanged. Current aggregate evidence found no duplicate stage, opt-out, failed recovery outbound or blocked-window defect. COD settlement evidence and Meta display-name approval remain separate external gates; no launch/deploy action is authorized.
+
 ## GFS-473 - diagnose funnel before fulfillment changes (2026-11-03 PKT)
 
 **Decision:** treat `paid/fulfilled=0` as a report-window lifecycle result until an approved aggregate current-status reconciliation proves otherwise. Do not mutate orders, payments or dispatch state. The current UTC read shows 661 orders created in-window and zero in PAID/fulfillment states under the report definition; it does not establish zero actual payments across historical orders.
