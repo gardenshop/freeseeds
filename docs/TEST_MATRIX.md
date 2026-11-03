@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-463 provisioning-path inspection (2026-11-03 PKT)
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Existing isolated target identity | PASS | Authenticated Cloudflare dashboard: `gfs462-isolated-target`, version label `29c5d0b6`, verified account. |
+| Supported code/scheduling surface | PASS | Worker Quick Edit exposes a scheduled-event handler; Settings lists Cron Triggers with no trigger configured. |
+| Least-scope credential option | PASS | Settings advertises a token that can deploy only this Worker; no token was created. |
+| Fresh mutation authority | BLOCKED | GFS-463 requires it and none was supplied; browser guard also refused creation controls before mutation. |
+| Detached scheduler/restore proof | NOT RUN | Requires the approved target update, isolated Durable Object/schedule and measured live test. |
+| Production protection | PASS | No production Worker, routing, data, payment, CAPI or customer-traffic mutation. |
+
 ## GFS-462 isolated watchdog proof (2026-11-03 PKT)
 
 | Check | Result | Evidence |

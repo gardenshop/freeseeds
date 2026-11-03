@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-463 isolated provisioning inspection (2026-11-03 PKT)
+
+- **Existing isolated resource:** `gfs462-isolated-target`, version label `29c5d0b6`, in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no bindings, Cron triggers, queues, D1 or production Worker access observed.
+- **Supported future path:** dashboard Quick Edit supports a `scheduled` handler; Settings provides Cron Trigger controls and advertises a per-Worker deploy-only token. None were used or created.
+- **Current limitation:** browser guard rejects create controls, and GFS-463 lacks the required fresh external-mutation approval. No watchdog/scheduler ID exists.
+
 ## GFS-462 isolated rollback proof (2026-11-03 PKT)
 
 - **Account identity:** Cloudflare `gisupp@gmail.com`, Get Free Seeds `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; verified in the authenticated dashboard before the isolated target creation.

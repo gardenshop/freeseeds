@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-463 isolated watchdog provisioning boundary (2026-11-03 PKT)
+
+- Read-only Cloudflare inspection proves the existing `gfs462-isolated-target` supports a Worker code editor, Cron Trigger configuration and a dashboard option to create a token that can deploy only that Worker. No Cron, Durable Object binding, token, secret, source edit or deployment was created.
+- The exact blocker is authority/tooling, not a local code defect: GFS-463 requires fresh owner approval for any new external resource, schedule or credential, while Chrome DevTools MCP refuses the relevant Worker-creation/trigger controls before mutation. Do not treat opening the existing editor as authority to save or deploy.
+- The minimal supported proof path is: update only `gfs462-isolated-target` with a Durable Object alarm-backed watchdog, add only its isolated binding/trigger, and use only a target-restricted deployment token held in that Worker. It must prove actual detached scheduler timing and authoritative isolated target restoration before any production credential is requested.
+- Preserve production Admin `e8c96c96`100% / `e44703c3`0%, API `b426ba47`100% / `e8018f3f`0%, CAPI OFF and all WhatsApp/payment/D1/Queue/Cron/Meta protections.
+
 ## GFS-462 isolated rollback proof (2026-11-03 PKT)
 
 - Owner approval authorizes exactly one isolated watchdog proof and one isolated test target only. Production Admin `e8c96c96` remains100% / `e44703c3`0%; API `b426ba47` remains100% / `e8018f3f`0%.

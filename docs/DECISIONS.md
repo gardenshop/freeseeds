@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-463 - use the existing isolated target, subject to fresh owner authority (2026-11-03 PKT)
+
+**Decision:** do not create a second Worker. The existing isolated target is the minimum-resource path because its dashboard exposes code editing, Cron triggers and a target-only deployment-token option.
+
+**Boundary:** no external mutation is authorized in GFS-463. Chrome DevTools MCP refused the relevant creation controls before mutation, and the task explicitly requires fresh approval. Require an exact approval for the existing target's code update, isolated Durable Object/schedule and target-only token/secret; require measured detached restore/readback before any production restoration permission or canary request.
+
 ## GFS-462 - isolated watchdog proof (2026-11-03 PKT)
 
 **Decision:** accept the local fail-closed proof and the single isolated target creation, but do not claim an independent Cloudflare watchdog or production rollback readiness.

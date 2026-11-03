@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 - GFS-463 isolated watchdog provisioning inspection
+
+- Identified the existing isolated target as the minimum-resource proof path: code editor, scheduled-event surface, Cron Trigger controls and a deploy-only token option scoped to that Worker.
+- Made no external mutation because fresh GFS-463 authority is absent and the browser safety guard rejected creation controls before mutation.
+- Recorded the precise approval needed for a real detached isolated proof; production routing, WhatsApp, payments, D1, Meta and CAPI remain unchanged.
+
 ## 2026-11-03 - GFS-462 isolated rollback proof
 
 - Added the isolated-only watchdog state machine and 3/3 focused tests: immutable target/version allowlist, six-minute restore start, eight-minute hard deadline, idempotent restore and fail-closed readback.

@@ -1,5 +1,16 @@
 # Status
 
+## GFS-463 - isolated watchdog provisioning path (2026-11-03 PKT)
+
+**Disposition: BLOCKED cleanly before external mutation.**
+
+- In the verified Get Free Seeds account, `gfs462-isolated-target` exposes supported Worker code editing, a scheduled-event handler surface and Cron Trigger settings. Its settings also advertise a token restricted to deploy only that Worker. No trigger, token, secret, binding, source edit or deployment was created.
+- The GFS-462 safety-guard blocker is explained: Chrome DevTools MCP rejects the relevant creation controls before mutation, and GFS-463 itself withholds fresh authorization for a schedule/credential/resource. This is not a production or source defect.
+- A valid isolated proof still needs owner authority to modify only this target, create its Durable Object/trigger and use a target-restricted token; then demonstrate real detached timing and a control-plane restore/readback. Local timers/configuration alone remain insufficient.
+- Production remains Admin `e8c96c96`100% / `e44703c3`0%, API `b426ba47`100% / `e8018f3f`0%; CAPI OFF; WhatsApp, payments, D1, Queue/DLQ, Cron and Meta unchanged.
+
+**Next exact authorization:** permit one update of `gfs462-isolated-target`, one isolated Durable Object binding/alarm or supported schedule, and one target-restricted token/secret solely for that target. No production Worker scope, routing write or canary.
+
 ## GFS-462 - isolated rollback proof (2026-11-03 PKT)
 
 **Disposition: local watchdog proof PASS; detached Cloudflare watchdog BLOCKED before creation. Production unchanged.**

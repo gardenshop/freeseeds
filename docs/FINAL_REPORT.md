@@ -1,5 +1,14 @@
 # Final Report
 
+## GFS-463 - finish isolated watchdog proof (2026-11-03 PKT)
+
+1. **Safety guard:** BLOCKED, correctly. Chrome DevTools MCP refuses the relevant external creation controls before mutation; this is consistent with GFS-463's requirement for fresh owner approval.
+2. **Supported path:** PASS read-only. Existing `gfs462-isolated-target` exposes Quick Edit, a scheduled-event handler surface, Cron Trigger settings and a per-Worker deploy-only token option. It is the minimum-resource path; a second Worker is unnecessary.
+3. **Resources/proof:** no new watchdog, scheduler, token, secret, binding or deployment exists. Detached execution, control-plane restore/readback and deadline compliance are NOT RUN, not inferred from local proof or configuration.
+4. **Regression:** no source changed, so GFS-462's watchdog3/3, full372/372, build/lint, controller18/18 and adapter8/8 results are carried forward without redundant reruns.
+5. **Protection:** Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%; CAPI OFF. WhatsApp, Advance/COD, payments, D1, Queue/DLQ, Cron, Meta and customer traffic unchanged.
+6. **Next exact authorization:** approve one source update to `gfs462-isolated-target`, one isolated Durable Object alarm/binding or supported schedule, and one token/secret restricted to that Worker. Then measure detached restore/readback; a production restoration credential and any canary remain separate approvals.
+
 ## GFS-462 - isolated rollback proof (2026-11-03 PKT)
 
 1. **Implementation/resources:** Local `scripts/gfs462-isolated-watchdog.mjs` and 3/3 focused tests pass. One isolated Cloudflare target `gfs462-isolated-target` was created in the verified Get Free Seeds account; its dashboard version label is `29c5d0b6`. No watchdog Worker, Durable Object/alarm, schedule, routing credential or production permission was created.
