@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-460 - do not expose Admin without an independent watchdog (2026-11-03 PKT)
+
+**Decision:** retain Admin baseline `e8c96c96`100% and GFS-426 candidate `e44703c3`0%. Do not reuse the blocked GFS-459 approval.
+
+**Evidence:** local controller/rollback tests18/18 PASS; authenticated dashboard IAM reads succeeded; no detached control-plane executor or non-interactive routing credential is available. Shell Wrangler authorization is `7403`. The Analytics:Read monitor credential is read-only and cannot perform deployment restoration.
+
+**Boundary:** no scheduler, token, external resource, deployment, percentage change, API action, payment/D1/Queue/Cron/Meta/CAPI mutation or customer traffic change. Next approval is only after the owner supplies the narrowly scoped independent executor and its isolated restore/readback evidence.
+
 ## GFS-456 - retain Admin candidate at0%; promotion needs a new gate (2026-11-03 PKT)
 
 **Decision:** GFS-455 HTTP524 did not create a delayed version. After fresh owner authority and upload availability checks, upload `e44703c3-694f-4ffd-9416-f8edf1aacf42` once and attach it only at0% beside baseline `e8c96c96`100%. This is required by Cloudflare for a version override; it is not a traffic promotion. The old0% candidate was replaced, and API routing is unchanged.

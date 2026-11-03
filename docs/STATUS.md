@@ -1,5 +1,15 @@
 # Status
 
+## GFS-460 - independent watchdog readiness (2026-11-03 PKT)
+
+**Disposition: BLOCKED before exposure; no canary approval reused.**
+
+- Read-only Cloudflare dashboard identity remains the verified Get Free Seeds account. Account IAM policy/role endpoints returned HTTP200, and the account-scoped dashboard data exposes deployment permissions; no credential or session material was exported.
+- The repository contains only the local monotonic deadline controller. Its isolated rollback suite remains 18/18 PASS, but no detached live executor, supported scheduler, or non-interactive routing credential is installed and independently verified.
+- Shell Wrangler remains unauthorized in this context (`7403`). A browser/agent timer would not satisfy the independent-watchdog requirement and was not used.
+- Admin remains `e8c96c96`100% / `e44703c3`0%; API remains `b426ba47`100% / `e8018f3f`0%. GFS-459 exposure was not run. WhatsApp, payments, D1, Queue/DLQ, Cron, Meta and CAPI were unchanged.
+- **Single blocker/action:** owner must provide or authorize a supported detached executor with narrowly scoped Admin deployment restoration permission, then prove idempotent restore/readback on an isolated or authorized nonproduction target before requesting a fresh 10% canary approval.
+
 ## GFS-456 - Admin GFS-426 candidate at 0%, UI validation PASS (2026-11-03 PKT)
 
 **Disposition: candidate validation and post-attach monitoring PASS; controlled promotion remains blocked pending separate promotion authority.**

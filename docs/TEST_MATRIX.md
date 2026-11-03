@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-460 independent watchdog readiness (2026-11-03 PKT)
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Existing deadline/rollback controller | PASS | Local synthetic suite 18/18; no live routing touched. |
+| Cloudflare account/IAM read-only inspection | PASS | Authenticated dashboard account and IAM endpoints returned HTTP200; no secret/session material recorded. |
+| Detached watchdog survives agent/browser loss | BLOCKED | No supported detached executor or non-interactive routing credential is available. |
+| Scoped Admin restore authority | BLOCKED | Interactive dashboard authority cannot be transferred to a detached process; Analytics:Read cannot write routing; Wrangler shell returns7403. |
+| GFS-459 10% exposure | NOT RUN | Fail-closed before mutation; Admin remains100%/0%, API100%/0%. |
+| Source regression | NOT RERUN | No source change under GFS-460; prior full372/372, build/lint and controller18/18 evidence carried. |
+
 ## GFS-456 - GFS-426 Admin0% candidate validation (2026-11-03 PKT)
 
 | Check | Result | Evidence |

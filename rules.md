@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-460 Independent Admin Canary Watchdog Boundary (2026-11-03 PKT)
+
+- The existing `canary-deadline-controller.mjs` is local release tooling only. Its rollback fixture suite is 18/18 PASS, but that does not prove an independent live watchdog.
+- A valid Admin canary requires a detached, fail-closed executor with narrowly scoped Admin deployment read/write authority, a hard eight-minute deadline, restoration beginning by minute six, and independent final `e8c96c96`100%/candidate0% readback. The Analytics:Read credential cannot authorize routing writes.
+- The authenticated Cloudflare dashboard read-only session exposes account-scoped deployment authority, but no supported detached executor or non-interactive routing credential is available. Shell Wrangler remains blocked by authorization context `7403`. Do not use a browser timer, local timer, interactive page, or agent process as a substitute.
+- GFS-459 remains unrun before exposure. Preserve Admin `e8c96c96`100% / `e44703c3`0%, API `b426ba47`100% / `e8018f3f`0%, and all WhatsApp, payment, D1, Queue, Cron, Meta and CAPI protections. A new canary approval is required after the watchdog gate is genuinely satisfied.
+
 ## GFS-454 authenticated monitoring qualification (2026-11-03 PKT)
 
 - The owner-session verifier now returns HTTP200/`ACTIVE`/PASS for `GFS-Cloudflare-Analytics-Monitor`; no claim is made whether the owner restored the prior secret or installed a replacement.

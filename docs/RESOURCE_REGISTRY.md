@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-460 independent watchdog boundary (2026-11-03 PKT)
+
+- **Serving resources:** Admin `e8c96c96-ef94-4a33-bed6-7f284984002c`100% / candidate `e44703c3-694f-4ffd-9416-f8edf1aacf42`0%; API `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100% / `e8018f3f-53d3-4506-9c28-a46881842f8c`0%.
+- **Watchdog:** local controller fixture18/18 PASS; no detached live watchdog, scheduler, routing credential or external resource exists. Analytics:Read is not a routing authority; Wrangler shell authorization is7403.
+- **Safety:** no canary exposure or external mutation. Next required owner action is a supported non-interactive Admin deployment restore executor with isolated idempotent readback evidence, followed by a fresh canary approval.
+
 ## GFS-456 Admin GFS-426 0% candidate resources (2026-11-03 PKT)
 
 - **Candidate:** Admin `e44703c3-694f-4ffd-9416-f8edf1aacf42`; tag `gfs-426-c2ddcd1`; immutable source `c2ddcd1319489a33c6ca213fd12ce0e4372e1b6b`; uploaded with `--keep-vars`.
