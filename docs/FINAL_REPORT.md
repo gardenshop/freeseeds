@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-471 - watchdog stop and WhatsApp launch readiness (2026-11-03 PKT)
+
+**Overall: WATCHDOG DEFERRED; PUBLIC WHATSAPP LAUNCH NO-GO; PRODUCTION UNCHANGED.**
+
+Compared with GFS-470, the credential loop is closed: the one-time scoped token is revoked, no replacement exists, and the isolated Worker/target are frozen. Current read-only evidence supports continuing existing lead activity only as Path A preparation; it does not support a public launch or an automatic watchdog claim.
+
+1. **WhatsApp launch GO/NO-GO:** **NO-GO.** Meta business `568026370701542`, ad account `1198439777611633`, and Get Free Seeds WABA linkage were verified. Sender is Connected/High, but display name remains **In Review**; Meta says display name appears after approval. The active campaign proves messaging activity, not order conversion.
+2. **Advance/COD readiness:** safe aggregate advance configuration is `paymentMethodsConfigured:true`; method/recipient/QR values were not read or changed. COD is enabled at **PKR125**, but collection and remittance policy references are absent. Dispatch guards remain available; final PAID/reconciliation is not release-proven. Mark Payment Received remains candidate0% and is optional.
+3. **Critical vs deferred:** critical blockers are Meta display-name/sender approval and owner-approved COD collection/remittance SOP/evidence. Deferred: isolated watchdog, Admin candidate, supervised canary, and any automatic 6/8-minute protection claim.
+4. **Admin/watchdog status:** Admin `e8c96c96`100% / `e44703c3`0%; watchdog `gfs464-isolated-watchdog` and target `gfs462-isolated-target` frozen; GFS-470 DEFERRED, not PASS. API `b426ba47`100% / `e8018f3f`0%; CAPI OFF.
+5. **Detached proof:** not run and not proven. No Worker deploy, DO/alarm, target change, credential, secret, scheduler, arm, restore or readback mutation occurred.
+6. **Current runtime evidence:** API `/health` returned OK with WhatsApp enabled; staging Queue active with backlog0/delayed0; latest authoritative DLQ read inactive/backlog0. Admin read-only orders console showed aggregate operational queues; no order/payment action was taken.
+7. **Regression/protection:** no source changed. Carried PASS: watchdog4/4, original3/3, controller18/18, adapter8/8, full372/372, build/lint. Audit remains BLOCKED by registry availability. WhatsApp EN/UR, new-number lock, Hoja zero-connection, COD/advance, beneficiaries, QR, D1, Queue/DLQ, Cron, webhook, orders, receipts, PAID, Meta and customer protections remain frozen.
+8. **Progress:** P0 GFS-470 closure/freeze **100%**; P1 current readiness evidence **85%** (Meta public approval and direct order-conversion attribution remain); P2 COD operational readiness **70%** (dispatch guards/readback present; settlement procedure/evidence absent). Independent watchdog proof **0% live / DEFERRED**.
+9. **Verified Git SHA:** this GFS-471 documentation change must be verified after commit/push; no SHA is claimed before that readback.
+10. **ONE highest-value next action:** obtain the owner-approved Meta display-name approval and a verified courier collection/remittance SOP/evidence path, then perform one fresh read-only launch gate; do not resume watchdog credentials.
+
 ## GFS-470 - scoped Wrangler authentication and watchdog deployment (2026-11-03 PKT)
 
 **Overall: SCOPE VERIFIED; CREDENTIAL SAFELY REVOKED; DEPLOYMENT AND LIVE PROOF BLOCKED.**

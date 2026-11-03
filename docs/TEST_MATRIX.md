@@ -1,5 +1,23 @@
 # Test Matrix
 
+## GFS-471 watchdog closure and WhatsApp launch readiness (2026-11-03 PKT)
+
+| Check | Result | Evidence / boundary |
+| --- | --- | --- |
+| GFS-470 credential disposition | PASS / REVOKED | Official token inventory no longer shows the GFS-470 token; no replacement created or exposed. |
+| Watchdog freeze | PASS | `gfs464-isolated-watchdog` and `gfs462-isolated-target` unchanged; no deploy/delete/schedule/binding/secret/credential action. Watchdog remains DEFERRED, not PASS. |
+| Production routing | PASS | Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%; CAPI OFF. |
+| Meta identity/WABA | PASS read-only | Business/ad account matched; Get Free Seeds messaging account linked to Garden Shop; sender Connected/High. No sender value recorded. |
+| Display-name/public eligibility | BLOCKED | Meta readback says display name `In Review` and visible only after approval. |
+| Lead activity/conversion | PARTIAL | Active messaging campaign and aggregate conversation activity observed; no order-linked conversion proof. No ad change. |
+| API/webhook health | PASS / PARTIAL | `/health` returned OK with WhatsApp enabled; current Queue active/backlog0/delayed0; latest authoritative DLQ read inactive/backlog0. No fresh webhook delivery mutation or replay. |
+| EN/UR ordering/recovery | PASS source-protected / live journey NOT RUN | Existing source/tests preserve EN/UR and +15/+210; no customer message or synthetic order. |
+| Advance configuration | PASS safe aggregate | `paymentMethodsConfigured:true`; method values/recipients/QR not read or recorded; no payment mutation. |
+| COD configuration | PARTIAL / NO-GO | Enabled, PKR125; collection/remittance policy references absent. Dispatch guards remain; final settlement not proven. |
+| COD operations | PARTIAL | Orders console read-only queues visible; no dispatch, collection, remittance, PAID or Admin candidate action. |
+| Regression | CARRIED PASS | No source change: watchdog4/4, original3/3, controller18/18, adapter8/8, full372/372, build/lint PASS; audit remains BLOCKED by registry availability. |
+| Zero regression | PASS | No WhatsApp, payment, beneficiary, QR, D1, Queue/DLQ, Cron, Meta, CAPI, customer or routing mutation. |
+
 ## GFS-470 scoped authentication and deployment (2026-11-03 PKT)
 
 | Check | Result | Evidence / boundary |

@@ -1,5 +1,13 @@
 # Get Free Seeds Plan
 
+## GFS-471 WhatsApp lead launch decision (2026-11-03 PKT)
+
+Path A is the current priority: keep existing WhatsApp lead activity under read-only observation and prepare launch only after Meta display-name/sender eligibility and COD settlement controls are approved. No campaign, message, order, payment, or CAPI mutation is included.
+
+Path B is deferred: a separately approved, supervised Admin canary may use supported Cloudflare rollback/readback, but this plan makes no automatic six-minute/eight-minute watchdog claim. The isolated watchdog and target are frozen and GFS-470 remains DEFERRED.
+
+Current release gate: Meta business `568026370701542` and ad account `1198439777611633` are verified; Get Free Seeds WABA is linked, sender is connected/high quality but display name remains **In Review**. COD is enabled at PKR125, while collection/remittance policy references are absent. Therefore public launch is NO-GO pending those gates.
+
 ## GFS-405 monitoring qualification and release-readiness boundary (2026-11-01 UTC)
 
 The dedicated monitoring application is correctly configured in the verified Get Free Seeds account: exact staging `/health` destination plus the existing `GFS-Admin-Health-Monitor` Service Auth policy. No Access mutation is required. The actual reproducible qualification defect was local harness ambiguity (two accounts without explicit selection and a stale Admin baseline); the harness now selects account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` and baseline `e8c96c96`. Three read-only cycles passed health/security/GraphQL/routing checks. GFS-403 remains source-ready but production migration, retention execution and API/Admin release require a separate approval; no production action is authorized here.

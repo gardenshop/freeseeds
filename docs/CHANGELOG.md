@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-03 - GFS-471 watchdog stop and WhatsApp launch hold
+
+- Closed GFS-470 as DEFERRED: confirmed the scoped credential was revoked, created no replacement, and froze the isolated watchdog/target resources.
+- Reverified Admin/API routing at100% baseline/0% candidate and CAPI OFF; no production, Meta, WhatsApp, payment, D1, Queue/DLQ or customer mutation occurred.
+- Read current Meta/WABA state: Get Free Seeds sender is connected/high quality but display name remains In Review; active lead metrics are not order-conversion proof.
+- Read current safe operational state: API health/WhatsApp enabled, staging Queue backlog0, advance configuration complete, COD enabled PKR125 but collection/remittance policies absent.
+- Recorded Path A (existing lead observation/preparation) and Path B (separately approved supervised Admin canary); no automatic watchdog timing claim.
+
 ## 2026-11-03 - GFS-470 scoped credential safety stop
 
 - Verified the official Worker-scoped token control showed `Individual Workers Editor` for `gfs464-isolated-watchdog` only.

@@ -1,5 +1,15 @@
 # Decisions
 
+## GFS-471 - stop watchdog loop; hold public WhatsApp launch (2026-11-03 PKT)
+
+**Decision:** close GFS-470 as **DEFERRED**, revoke and do not replace the scoped Wrangler credential, and freeze both isolated watchdog resources. No deployment, scheduling, credential, secret, target or production routing action is authorized under this decision.
+
+**Launch decision:** **NO-GO for public launch; Path A only for existing lead observation/preparation.** Meta identity is verified and the active messaging campaign proves activity, but the Get Free Seeds sender display name is still **In Review**. Aggregate messaging conversations are not order-conversion evidence. The existing EN/UR ordering implementation and API/Queue health remain protected, but a public launch claim would overstate current Meta eligibility.
+
+**COD decision:** COD is enabled at the fixed PKR125 fee, but live readback shows collection and remittance policy references are missing. Dispatch remains guarded by tracking and lifecycle rules; final PAID requires exact collection/remittance evidence. The Mark Payment Received candidate stays0% and is optional, not the essential blocker.
+
+**Release paths:** (A) continue existing lead activity without ad/message/payment changes while completing Meta approval and settlement evidence; (B) separately approve a supervised Admin canary using supported rollback/readback, with no automatic watchdog timing claim. No Path B execution or watchdog rule change is permitted here.
+
 ## GFS-470 - revoke exposed one-time credential and stop
 
 **Decision:** create only through the official Worker-scoped control, verify exact `Individual Workers Editor` scope, then revoke immediately when the one-time confirmation response rendered credential material in MCP output. Do not deploy with an exposed credential.

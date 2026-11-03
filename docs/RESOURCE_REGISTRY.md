@@ -1,5 +1,15 @@
 # Resource Registry
 
+## GFS-471 frozen watchdog and launch-readiness state (2026-11-03 PKT)
+
+- **Watchdog:** `gfs464-isolated-watchdog` and `gfs462-isolated-target` are frozen. GFS-470 is **DEFERRED**; no deployment, deletion, scheduler/alarm, DO binding, secret, target, or credential change occurred. The revoked GFS-470 token was not replaced.
+- **Production routing:** Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%; CAPI OFF. Cloudflare account identity was rechecked read-only as `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- **Meta:** business `568026370701542`, ad account `1198439777611633`, Get Free Seeds messaging account linked to Garden Shop. Sender status is Connected/High; display name remains In Review. No phone number, customer data or secret is recorded.
+- **Lead evidence:** active campaign activity is aggregate messaging-conversation evidence only; no direct order-conversion attribution is proven and no ad mutation occurred.
+- **Runtime:** API health currently reports WhatsApp enabled and production-integration-ready. Staging Queue is active with zero backlog/delayed backlog; latest authoritative DLQ read is inactive/zero backlog. No Queue/DLQ replay or Cron action occurred.
+- **Advance/COD:** safe aggregate read reports `paymentMethodsConfigured:true`; no method values, recipients or QR data were read. COD is enabled at PKR125; collection/remittance policy configuration is absent, so final settlement remains blocked.
+- **Release paths:** Path A is lead observation/preparation only; Path B requires a separate supervised Admin canary approval and must not claim automatic six/eight-minute watchdog protection.
+
 ## GFS-470 scoped Wrangler credential state (2026-11-03 PKT)
 
 - **Scope verified:** official Worker Settings control showed `Individual Workers Editor`, restricted to `gfs464-isolated-watchdog` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.

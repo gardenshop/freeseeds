@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-471 WhatsApp prioritization and watchdog freeze (2026-11-03 PKT)
+
+- GFS-470 is closed as **DEFERRED** for the independent watchdog. The exposed one-time MCP-rendered Wrangler credential is revoked; do not create, rotate, extract, or reuse a replacement token.
+- Freeze `gfs464-isolated-watchdog` and `gfs462-isolated-target`: no deployment, deletion, schedule/alarm, binding, secret, target, or credential change. The watchdog is not a PASS and cannot authorize production restoration.
+- Preserve Admin `e8c96c96` at100% / candidate `e44703c3` at0%, API `b426ba47` at100% / candidate `e8018f3f` at0%, and CAPI OFF. No Admin canary or production deployment is authorized.
+- WhatsApp launch remains conditional on current Meta display-name approval/sender eligibility and operational settlement evidence. Existing lead traffic may be observed read-only; do not change campaigns, send messages, create orders, mutate payments, or activate CAPI.
+- Preserve the new-number WhatsApp lock, Hoja Seeds zero-connection rule, EN/UR content, COD PKR125, advance methods, beneficiaries, QR, D1, Queue/DLQ, Cron, webhooks, orders, receipts and PAID states.
+
 ## GFS-470 Scoped Wrangler Authentication Boundary (2026-11-03 PKT)
 
 - Owner approval authorized one new Worker-scoped API token and one Wrangler upload/deploy, only for `gfs464-isolated-watchdog` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no account-wide or production authority.

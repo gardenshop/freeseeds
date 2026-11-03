@@ -1,5 +1,19 @@
 # Status
 
+## GFS-471 - watchdog stop and WhatsApp launch readiness (2026-11-03 PKT)
+
+**Disposition: watchdog DEFERRED and frozen; public WhatsApp launch NO-GO pending Meta display-name approval and COD settlement controls. Existing production routing unchanged.**
+
+- GFS-470 closure: the one-time Worker-scoped Wrangler credential was revoked after unsafe MCP rendering; no replacement was created and no upload/deploy occurred. `gfs464-isolated-watchdog` and `gfs462-isolated-target` remain frozen; no schedule, binding, secret, target or credential change occurred.
+- Fresh Cloudflare readback in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` confirmed Admin `e8c96c96`100% / `e44703c3`0% and API `b426ba47`100% / `e8018f3f`0%; CAPI remains OFF. No production mutation occurred.
+- Fresh Meta read-only readback matched business `568026370701542` and ad account `1198439777611633`. The Get Free Seeds messaging account is linked to Garden Shop; its sender is Connected with High quality, but the sender display name is **In Review** and Meta states the display name appears only after approval. This is a public-launch blocker.
+- Meta Ads Manager shows an active messaging campaign with aggregate messaging-conversation activity, but no authoritative linkage from those conversations to persisted orders or paid conversions. Treat lead evidence as activity, not conversion PASS; no campaign setting was changed.
+- Fresh API `/health` returned `ok:true`, `PRODUCTION_INTEGRATION_READY`, and WhatsApp enabled. Staging Queue is active with backlog0, delayed backlog0 and zero displayed consumer lag; the latest authoritative read also recorded staging DLQ inactive/backlog0. No replay or queue/DLQ change occurred.
+- Fresh Admin read-only records show 704 all orders, 18 payment-review orders, 2 confirmed-payment orders and 370 fulfillment orders. No customer identifiers are retained in this record.
+- Fresh safe configuration reads: `paymentMethodsConfigured:true` (advance amount remains null); COD `enabled:true`, fee PKR125, `collectionPolicyConfigured:false`, `remittancePolicyConfigured:false`. COD can be dispatched only through existing tracking/state guards; final PAID/reconciliation is not operationally proven without the missing verified settlement procedure.
+- EN/UR ordering and +15/+210 recovery remain source/test protected; no current customer-language journey, message, synthetic order, payment, beneficiary, receipt or PAID mutation was run. Hoja zero-connection and new-number locks remain active.
+- Decision: existing lead activity may continue under Path A observation; public launch is NO-GO until display-name approval/sender eligibility and an owner-approved courier collection/remittance SOP/evidence path are complete. Path B is a separate supervised Admin canary approval and does not claim automatic 6/8-minute protection.
+
 ## GFS-470 - scoped Wrangler authentication and watchdog deployment (2026-11-03 PKT)
 
 **Disposition: scoped token control verified, token revoked safely after MCP disclosure, upload/deploy BLOCKED. Production unchanged.**
