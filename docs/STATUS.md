@@ -1,5 +1,17 @@
 # Status
 
+## GFS-473 order funnel and fulfillment readiness (2026-11-03 PKT)
+
+**Disposition: diagnosis complete; one stale local analytics label repaired and regression-tested. Public launch remains NO-GO; production unchanged.**
+
+- Fresh authenticated read-only Admin Analytics for UTC `2026-10-28` through `2026-11-03` (to-exclusive `2026-11-04T00:00:00Z`, as-of `2026-11-03T17:37:48Z`) returned inbound customer events23619, status callbacks23476, snapshot unique contacts4030/new3957, submitted orders661, paid/fulfilled0, advance-selected78, COD-confirmed375, advance-pending76, and inbound-event/order ratio2.80%. These definitions are not interchangeable and do not prove zero actual payment.
+- Current snapshot classes returned pre-order2447, post-order/no-method134, advance-pending73, COD-confirmed374 and active411; classes can overlap. The three largest actionable bottlenecks are inactive pre-order completion, COD fulfillment/settlement evidence, and post-order payment-method selection; advance-pending is the adjacent payment-review backlog.
+- +15/+210 recovery statuses were read only: stage15 SENT2/DELIVERED21/READ87; stage210 SENT6/DELIVERED24/READ60. These are provider/lifecycle statuses, not proof of customer conversion.
+- Local defect fixed: analytics definitions no longer embed stale `2.49%`; the computed ratio is now inserted dynamically and explicitly disclaimed as neither unique-lead conversion nor payment rate. Attribution report review found no basis to claim a Meta conversion rate; campaign-to-order remains UNKNOWN and the route remains undeployed.
+- COD source/guards remain unchanged and locally fail-closed. Live collection/remittance policy and genuine courier evidence remain unavailable; no dispatch, settlement or PAID mutation occurred.
+- Fresh Meta identity read matched business `568026370701542`; sender remains Connected/High with display name In Review. No Meta action. Admin/API remain100/0, CAPI OFF, watchdog untouched/DEFERRED.
+- Gates: focused analytics4/4, full32 files/375 tests, build PASS, lint PASS; audit BLOCKED by npm advisory endpoint availability.
+
 ## GFS-472 - COD settlement and WhatsApp conversion readiness (2026-11-03 PKT)
 
 **Disposition: COD source controls locally READY/FAIL-CLOSED; live settlement remains BLOCKED by genuine courier evidence. Attribution report repaired locally; live campaign-to-order conversion remains UNKNOWN. Watchdog untouched.**

@@ -1,5 +1,11 @@
 # Get Free Seeds Plan
 
+## GFS-473 order funnel and fulfillment readiness (2026-11-03 PKT)
+
+Use the existing read-only UTC analytics window to separate inbound events, snapshot contacts, submitted orders and current lifecycle states. Investigate `paid/fulfilled=0` as a report-window definition before treating it as an operational backlog. Top verified current snapshot bottlenecks are inactive pre-order conversations (2447), COD-confirmed lifecycle rows (374), and post-order/no-method rows (134); advance-pending (73) is tracked separately and classes may overlap.
+
+COD remains locally fail-closed and live settlement remains blocked by missing genuine courier policy/evidence. Meta activity is not order conversion: the campaign denominator and safe persisted attributed-order aggregate are unavailable live, so campaign conversion stays UNKNOWN. Public launch remains NO-GO while the sender display name is In Review and settlement evidence is missing. No watchdog, deployment, customer, payment, Meta or CAPI mutation is in scope.
+
 ## GFS-472 COD settlement and attribution (2026-11-03 PKT)
 
 COD work reuses the existing Admin/D1 settlement controls. Local code already requires exact quoted totals, tracking before dispatch, delivery/collection lifecycle, distinct HMACed opaque collection/remittance evidence, authorized operator identity, idempotence and fail-closed PAID guards. No live status transition is authorized until genuine courier contract/evidence and owner verification are available.

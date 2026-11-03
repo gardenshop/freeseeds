@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-473 order funnel diagnosis (2026-11-03 PKT)
+
+| Check | Result | Evidence / boundary |
+| --- | --- | --- |
+| Stale conversion definition | PASS repaired | Dynamic computed value replaces stale hard-coded 2.49%; test asserts fixture value21.43%. |
+| Focused analytics | PASS 4/4 | `tests/admin-analytics.test.ts`. |
+| Full regression | PASS 32 files / 375 tests | No source behavior outside the local analytics label changed. |
+| Build / lint | PASS | `npm run build`; `npm run lint`. |
+| Security audit | BLOCKED | npm advisory endpoint unavailable; no audit PASS claimed. |
+| Live funnel read | PASS read-only | UTC 2026-10-28..2026-11-03; aggregate definitions recorded in STATUS. |
+| COD / Meta / production safety | PASS | No order/payment/dispatch/Meta/CAPI/deployment/watchdog mutation; exact routing preserved. |
+
 ## GFS-472 COD settlement and attribution (2026-11-03 PKT)
 
 | Check | Result | Evidence / boundary |

@@ -49,10 +49,12 @@ describe("GFS-339 inbound analytics", () => {
       orders: Record<string, number>;
       abandonment: { preOrder: number; postOrder: number; advancePending: number; codConfirmed: number; active: number; inactivityHours: number; filtered: Array<{ status: string; count: number }> };
       reminders: { available: boolean; delivered15: number; delivered210: number };
+      definitions: string[];
       queryCosts: Array<{ rowsRead: number }>;
     };
     expect(body.inbound).toMatchObject({ customerMessages: 14, textMessages: 8, interactiveMessages: 4, mediaMessages: 2, statusCallbacks: 7, uniqueContacts: 5, newContacts: 2, returningContacts: 3 });
     expect(body.orders).toMatchObject({ submitted: 3, paidOrFulfilled: 1, advanceSelected: 1, codConfirmed: 1, advancePending: 1, conversionPct: 21.43 });
+    expect(body.definitions.join(" ")).toContain("21.43%");
     expect(body.abandonment).toMatchObject({ preOrder: 1, postOrder: 1, advancePending: 1, codConfirmed: 1, active: 1, inactivityHours: 24 });
     expect(body.abandonment.filtered).toEqual([{ status: "POST_ORDER", count: 1 }]);
     expect(body.reminders).toMatchObject({ available: true, sent15: 0, delivered15: 2, read15: 0, sent210: 1, delivered210: 0, read210: 0 });

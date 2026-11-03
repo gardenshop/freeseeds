@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-03 - GFS-473 order funnel diagnosis
+
+- Reconciled the fresh UTC aggregate funnel and documented distinct event/order/lifecycle definitions, current snapshot bottlenecks, recovery statuses and the paid/fulfilled window limitation.
+- Repaired the local analytics definition that displayed stale hard-coded `2.49%`; it now renders the computed ratio with an explicit non-conversion disclaimer.
+- Confirmed COD guards remain fail-closed, Meta sender remains In Review/Connected/High, campaign conversion remains UNKNOWN, and no production/watchdog/payment/customer mutation occurred.
+- Focused4/4, full375/375, build/lint PASS; audit remains blocked by npm advisory endpoint availability.
+
 ## 2026-11-03 - GFS-472 COD settlement and attribution readiness
 
 - Reused and verified the existing COD settlement controls locally; no duplicate architecture or live status change added.

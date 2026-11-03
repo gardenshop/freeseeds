@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-473 - diagnose funnel before fulfillment changes (2026-11-03 PKT)
+
+**Decision:** treat `paid/fulfilled=0` as a report-window lifecycle result until an approved aggregate current-status reconciliation proves otherwise. Do not mutate orders, payments or dispatch state. The current UTC read shows 661 orders created in-window and zero in PAID/fulfillment states under the report definition; it does not establish zero actual payments across historical orders.
+
+**Local repair:** replace the stale hard-coded conversion text in `apps/admin/src/analytics.ts` with the computed inbound-event/order percentage and an explicit definition warning. Focused and full regression passed; no live deployment was made.
+
+**Release:** public launch remains NO-GO. COD is locally guarded but live settlement lacks genuine courier policy/evidence; Meta sender display name is In Review; campaign-to-order conversion is UNKNOWN without a compatible denominator. Preserve exact Admin/API routing, CAPI OFF, payment/WhatsApp protections and the frozen DEFERRED watchdog.
+
 ## GFS-472 - keep COD fail-closed; add aggregate attribution report (2026-11-03 PKT)
 
 **Decision:** do not change live COD settings or settlement state. Reuse the existing GFS-425/GFS-426 controls and treat the missing courier contract/policy and genuine collection/remittance evidence as the real blocker. Local source review found no proven COD defect requiring a route change.

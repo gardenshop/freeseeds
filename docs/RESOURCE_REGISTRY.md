@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-473 order funnel state (2026-11-03 PKT)
+
+- **Fresh aggregate read:** UTC 2026-10-28..2026-11-03, to-exclusive 2026-11-04T00:00Z, as-of 2026-11-03T17:37:48Z: inbound23619, status callbacks23476, snapshot unique4030/new3957, submitted661, paid/fulfilled0, advance-selected78, COD-confirmed375, advance-pending76.
+- **Snapshot bottlenecks:** pre-order2447, post-order/no-method134, advance-pending73, COD-confirmed374, active411. Classes may overlap and are not historical transitions. +15: SENT2/DELIVERED21/READ87; +210: SENT6/DELIVERED24/READ60.
+- **Local source repair:** analytics conversion prose is now computed from the selected aggregate window and explicitly not a unique-lead conversion or payment rate. Not deployed.
+- **Release protection:** COD settlement remains fail-closed with missing genuine courier evidence; Meta sender remains In Review/Connected/High; Admin/API100/0, CAPI OFF; watchdog DEFERRED/frozen; no production mutation.
+
 ## GFS-472 COD and attribution state (2026-11-03 PKT)
 
 - **COD:** existing GFS-425/GFS-426 Admin/D1 settlement controls are the only approved architecture. Local source/tests require exact original quote, tracking/lifecycle, collection and remittance evidence, authorized human actor, HMACed opaque references and idempotence before PAID.

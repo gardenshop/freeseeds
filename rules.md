@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-473 order-funnel diagnosis boundary (2026-11-03 PKT)
+
+- Read-only aggregate diagnosis uses UTC creation windows. `submitted`, `paid/fulfilled`, advance-selected and COD-confirmed are different lifecycle metrics; no zero-payment or unique-lead conversion claim may be inferred from them.
+- Preserve the existing fail-closed COD controls and PKR125 fee. No dispatch, collection, remittance, receipt, payment, PAID, customer, D1, Queue/DLQ, Cron, webhook or order mutation is authorized. Missing courier evidence remains a genuine blocker.
+- Preserve Meta business `568026370701542` / ad account `1198439777611633`; read aggregate campaign activity only. Display name remains In Review; no review, number, campaign or CAPI action is authorized.
+- Preserve Admin `e8c96c96`100% / `e44703c3`0%, API `b426ba47`100% / `e8018f3f`0%, CAPI OFF, the new-number lock, Hoja zero-connection rule, EN/UR, +15/+210 and all payment protections. Watchdog remains DEFERRED and frozen.
+
 ## GFS-472 COD settlement and attribution boundary (2026-11-03 PKT)
 
 - Do not revisit, deploy, schedule, credential, bind, delete or otherwise change the deferred watchdog resources.

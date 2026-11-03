@@ -221,7 +221,7 @@ export async function readInboundAnalytics(db: D1DatabaseLike, filters: Analytic
       "Customer inbound excludes STATUS callbacks and counts distinct provider_event_id; INTERACTIVE includes button, list, and Flow callbacks because historical subtype is not stored.",
       "Unique/new/returning contacts are SNAPSHOT ESTIMATES from the latest whatsapp_conversations row; historical sender attribution is unavailable because whatsapp_events does not store wa_id.",
       "Submitted orders are orders created in the selected UTC window. PAID/fulfilled includes PAID, PACKING, DISPATCHED, DELIVERED, or COD status PAID; it is not a unique-contact conversion.",
-      "The conversion percentage is submitted orders divided by distinct customer inbound events (2.49% in the verified window), not unique-lead conversion.",
+      `The conversion percentage is submitted orders divided by distinct customer inbound events (${customerMessages ? Number((submitted / customerMessages * 100).toFixed(2)) : 0}%). It is not unique-lead conversion or a payment rate.`,
       "PRE_ORDER and POST_ORDER require the current conversation/order snapshot to be inactive for 24 hours. Historical stage transitions are unavailable, so a historical zero is not proof of zero drop-off.",
       "ADVANCE_PENDING and COD_CONFIRMED are lifecycle snapshots, not mutually exclusive abandonment classes; paid, fulfilled, and cancelled orders are excluded from abandoned pre/post classification.",
       "Reminder statuses are separate: SENT/provider accepted, DELIVERED, and READ. They are stage rows updated in the UTC window; no resend or state write occurs.",

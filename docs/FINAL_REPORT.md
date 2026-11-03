@@ -1,5 +1,20 @@
 # Final Report
 
+## GFS-473 - order funnel and fulfillment readiness (2026-11-03 PKT)
+
+**Overall: diagnosis complete; stale local reporting label repaired; public launch NO-GO; production unchanged.**
+
+1. **Definitions/window:** Fresh read-only Admin Analytics used UTC creation dates `2026-10-28` through `2026-11-03` (to-exclusive `2026-11-04T00:00Z`). It returned inbound23619, status callbacks23476, snapshot unique4030/new3957, submitted661, paid/fulfilled0, advance-selected78, COD-confirmed375, advance-pending76, and inbound-event/order ratio2.80%. This is not unique-lead conversion, payment rate, or all-time payment evidence.
+2. **Three largest verified bottlenecks:** inactive pre-order snapshot2447; COD-confirmed lifecycle374 requiring fulfillment/settlement evidence; post-order/no-method snapshot134. Advance-pending73 is separately tracked; snapshot classes may overlap.
+3. **COD:** existing GFS-425/GFS-426 controls remain locally ready/fail-closed: tracking/lifecycle and exact collection/remittance guards prevent premature PAID. Live collection/remittance policy and genuine courier evidence remain missing; no dispatch/PAID action.
+4. **Meta attribution:** campaign-to-order conversion is UNKNOWN. Aggregate campaign activity is not compatible with persisted order conversion without a denominator; local attribution route remains undeployed and returns aggregate-only data.
+5. **Source fix/tests:** dynamic stale-ratio label repaired in `apps/admin/src/analytics.ts`; focused analytics4/4, full32 files/375 tests, build and lint PASS. Audit BLOCKED by npm advisory endpoint.
+6. **Launch:** NO-GO pending Meta display-name approval and genuine COD settlement evidence. Existing lead activity may continue under read-only observation.
+7. **Progress:** funnel diagnosis100%; local reporting repair100%; COD local controls100% / live readiness70%; attribution local report100% / live conversion UNKNOWN; WhatsApp remains gated by Meta review; watchdog DEFERRED.
+8. **Routing/protection:** Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%; CAPI OFF. New-number lock, Hoja zero-connection, EN/UR, COD PKR125, payments, receipts, PAID, D1, Queue/DLQ, Cron, webhook, orders and customer data unchanged.
+9. **Git:** verified after commit/push below; no external production mutation.
+10. **ONE next task:** obtain owner-approved genuine courier collection/remittance evidence and a compatible aggregate Meta attribution denominator, then rerun the launch gate.
+
 ## GFS-472 - COD settlement and WhatsApp conversion readiness (2026-11-03 PKT)
 
 **Overall: LOCAL COD CONTROLS READY/FAIL-CLOSED; LIVE SETTLEMENT BLOCKED BY GENUINE EVIDENCE; ATTRIBUTION REPORT READY LOCALLY BUT CAMPAIGN CONVERSION UNKNOWN; PRODUCTION UNCHANGED.**
