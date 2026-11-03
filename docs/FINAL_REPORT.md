@@ -1,5 +1,16 @@
 # Final Report
 
+## GFS-448 - persistent GraphQL HTTP400 isolation (2026-11-03 PKT)
+
+**Overall: bounded isolation implementation PASS; live root cause still BLOCKED on one owner-profile probe; production protected.**
+
+1. **A/B/C/D:** local fixtures PASS all four and prove fail-fast behavior. Live results are unavailable; no provider-layer result is invented.
+2. **Implementation:** maximum four read-only requests, stopping on first failure, with seven allowlisted output fields and no raw response or credential data.
+3. **Tests:** probe 3/3; observability 10/10; full 372/372; build/lint PASS; adapter 8/8; deadline controller 18/18.
+4. **Release:** monitoring remains 0/3. GFS-426 remains local PASS372/372 and undeployed; exact Admin rollback target remains `e8c96c96`, while the standalone V1 fixture still lacks `GFS_LEGACY_ROOT`.
+5. **Protection:** last verified routing API `b426ba47`100%/`e8018f3f`0%, Admin `e8c96c96`100%/`ee9b7baa`0%; WhatsApp and all Advance methods untouched; CAPI OFF.
+6. **Next action:** execute the new probe once from the credential-owning Windows profile. Use its first failing result to make the smallest proven repair before any monitoring qualification.
+
 ## GFS-447 - owner path corrected, HTTP400 still unclassified (2026-11-03 PKT)
 
 **Overall: live monitoring BLOCKED; path issue resolved; no exact GraphQL root cause proven; production protected.**

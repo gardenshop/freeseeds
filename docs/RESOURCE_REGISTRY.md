@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-448 GraphQL isolation resources (2026-11-03 PKT)
+
+- **Probe:** `scripts/cloudflare-graphql-probe.mjs`; bounded A/B/C/D sequence using the existing process-only Analytics token bridge.
+- **Tests:** `scripts/test-cloudflare-graphql-probe.mjs`; 3/3 PASS for bounded success, fail-fast error isolation and non-JSON classification.
+- **Output contract:** probe name, HTTP status, error count, sanitized category/code, response structure and PASS/FAIL only.
+- **Live gate:** owner-profile run pending; monitoring 0/3, GFS-426 local-only, CAPI OFF, production unchanged.
+
 ## GFS-447 owner diagnostic evidence (2026-11-03 PKT)
 
 - **Execution:** existing bridge ran from `D:\free seeds\gfs264-pr11`; credentials reached Cloudflare without being exposed.

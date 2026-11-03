@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-448 - isolate before repairing persistent HTTP400 (2026-11-03 PKT)
+
+**Decision:** replace repeated full-monitor retries with one bounded A/B/C/D sequence. Stop at the first failure and repair only that proven layer.
+
+**Safety:** maximum four read-only requests; allowlisted output only; no raw body, token, header or customer data. Existing monitoring validation is not weakened.
+
+**Gate:** owner runs the probe once through the existing bridge. No three-sample qualification or GFS-426 release work resumes until the failing layer is identified and repaired.
+
 ## GFS-447 - classify documented HTTP400 forms; hold release (2026-11-03 PKT)
 
 **Decision:** classify Cloudflare-documented parsing and dataset-limit messages, but do not guess a query or permission repair from `causeCode=unknown`. The corrected owner path proves execution reached Cloudflare, not the root cause.

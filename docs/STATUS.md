@@ -1,5 +1,14 @@
 # Status
 
+## GFS-448 - bounded A/B/C/D GraphQL probe ready (2026-11-03 PKT)
+
+**Disposition: local isolation tool PASS; live root cause pending one owner-profile probe; monitoring remains 0/3.**
+
+- Added a maximum-four-request, fail-fast probe isolating viewer authentication, account access, minimal Worker dataset access and the full monitoring query.
+- Output is strictly allowlisted and secret-free. Local probe 3/3, observability 10/10, full 372/372, build/lint, adapter 8/8 and deadline 18/18 pass.
+- No live A/B/C/D result exists yet. GFS-426 remains local-only and undeployed; no production mutation occurred.
+
+
 ## GFS-447 - owner path corrected; HTTP400 category still unknown (2026-11-03 PKT)
 
 **Disposition: path error corrected; valid owner request reached Cloudflare but remains HTTP400; local category coverage expanded; monitoring not qualified.**

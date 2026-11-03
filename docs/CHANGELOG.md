@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 - GFS-448 bounded GraphQL isolation probe
+
+- Added a fail-fast A/B/C/D probe for viewer, account, minimal Worker metrics and the existing full monitoring query, with no more than four read-only requests.
+- Added allowlisted, secret-free output and tests for all-pass, first-failure stop and non-JSON handling.
+- Probe 3/3, observability 10/10, full 372/372, build/lint, adapter 8/8 and deadline 18/18 pass. Live owner-profile probe remains the exact missing evidence.
+
 ## 2026-11-03 - GFS-447 HTTP400 category coverage
 
 - Corrected the owner bridge working-directory instruction; the valid run reached Cloudflare and returned sanitized HTTP400 with `causeCode=unknown`.

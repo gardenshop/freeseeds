@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-448 bounded GraphQL isolation boundary (2026-11-03 PKT)
+
+- Added `scripts/cloudflare-graphql-probe.mjs`, a read-only fail-fast sequence limited to four requests: A viewer, B verified account, C minimal Worker metrics, D existing full monitoring query.
+- Each probe emits only name, HTTP status, GraphQL error count, sanitized category/code, safe structure classification and PASS/FAIL. It retains no response text, headers, token, customer data or secret and stops on the first failure.
+- Local probe tests pass 3/3; observability 10/10; full 372/372; build/lint, adapter 8/8 and deadline controller 18/18 pass. Existing query/security/freshness validation is unchanged.
+- Live A/B/C/D results remain unavailable because the credential is owner-profile-only. One owner bridge run of the probe is the exact missing evidence; do not rerun full monitoring until the failing layer is known and repaired.
+
 ## GFS-447 owner diagnostic path and HTTP400 boundary (2026-11-03 PKT)
 
 - The first GFS-447 owner attempt was corrected to `D:\free seeds\gfs264-pr11`; the earlier `C:\WINDOWS\system32` path error was not a GraphQL result.

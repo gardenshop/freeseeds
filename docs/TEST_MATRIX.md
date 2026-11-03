@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-448 - bounded GraphQL isolation probe (2026-11-03 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Probe boundedness | PASS | A-D maximum four requests; stops at first failure. |
+| Output privacy | PASS | Only seven allowlisted fields; provider text and token absent. |
+| Probe tests | PASS 3/3 | All-pass, fail-fast GraphQL error and non-JSON cases. |
+| Observability | PASS 10/10 | Existing fail-closed monitoring tests. |
+| Full regression | PASS 372/372 | Vitest suite. |
+| Build/lint | PASS | TypeScript build and ESLint. |
+| Adapter/deadline | PASS | Adapter 8/8; deadline controller 18/18. |
+| Live A/B/C/D | BLOCKED | Owner-profile bridge run not yet available. |
+| Production mutation | NONE | No deployment, routing, payment, D1, Meta, CAPI or customer action. |
+
 ## GFS-447 - HTTP400 category coverage (2026-11-03 PKT)
 
 | Area | Result | Evidence |
