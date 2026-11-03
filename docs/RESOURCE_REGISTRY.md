@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-447 owner diagnostic evidence (2026-11-03 PKT)
+
+- **Execution:** existing bridge ran from `D:\free seeds\gfs264-pr11`; credentials reached Cloudflare without being exposed.
+- **Result:** sanitized metrics HTTP400, `causeCode=unknown`; no raw response, Ray ID, token, header or customer data registered.
+- **Local change:** documented parsing and dataset-limit categories added to `scripts/cloudflare-observability.mjs`; query and fail-closed gates unchanged.
+- **Gate:** live monitoring remains 0/3. One diagnostic rerun is required before qualification; GFS-426 remains local-only and CAPI OFF.
+
 ## GFS-446 GraphQL HTTP400 diagnostic boundary (2026-11-03 PKT)
 
 - **Query:** `scripts/cloudflare-observability.mjs` retains the corrected lowercase `string!` account/Worker variables and `Time!` datetime variables; read-only account schema confirms the queried dataset fields.

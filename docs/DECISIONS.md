@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-447 - classify documented HTTP400 forms; hold release (2026-11-03 PKT)
+
+**Decision:** classify Cloudflare-documented parsing and dataset-limit messages, but do not guess a query or permission repair from `causeCode=unknown`. The corrected owner path proves execution reached Cloudflare, not the root cause.
+
+**Release boundary:** monitoring remains 0/3. Require one diagnostic run with a recognized sanitized category before any new 0/150/300-second qualification. No production mutation occurred.
+
 ## GFS-446 - preserve valid query and classify persistent HTTP400 (2026-11-03 PKT)
 
 **Decision:** do not guess a second GraphQL query change. Read-only schema evidence validates the current `Time!` datetime variables, filters and selected fields. Add only secret-free HTTP400 cause classification so the owner can provide the missing evidence.

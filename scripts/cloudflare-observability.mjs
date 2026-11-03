@@ -14,7 +14,8 @@ const GRAPHQL_ERROR_PATTERNS = Object.freeze([
   [/cannot query field|field .*not found/i, "schema_unknown_field"],
   [/unknown argument|argument .*not found/i, "schema_unknown_argument"],
   [/variable .*type|type .*variable/i, "schema_variable_type"],
-  [/parse|syntax|malformed query|invalid query/i, "query_syntax"],
+  [/error parsing args|scalar fields must|object field must|query contains error|parse|syntax|malformed query|invalid query/i, "query_syntax"],
+  [/cannot request data older|number of fields|limit must be positive|query time range is too large/i, "dataset_limit"],
   [/permission|forbidden|unauthor/i, "authorization"],
   [/limit|rate|complexity|cost/i, "query_limit"]
 ]);

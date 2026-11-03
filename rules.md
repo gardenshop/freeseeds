@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-447 owner diagnostic path and HTTP400 boundary (2026-11-03 PKT)
+
+- The first GFS-447 owner attempt was corrected to `D:\free seeds\gfs264-pr11`; the earlier `C:\WINDOWS\system32` path error was not a GraphQL result.
+- The valid owner run reached Cloudflare and returned HTTP400 with sanitized `causeCode=unknown`; no exact query, schema, permission or limit defect is proven and no three-sample sequence was repeated.
+- The classifier now recognizes Cloudflare-documented parsing and dataset-limit categories while retaining fail-closed behavior and never logging response text, headers, tokens or customer data.
+- Focused observability is 10/10; full 372/372; build/lint PASS. Live monitoring remains 0/3 pending one diagnostic rerun that returns a recognized category or a sanitized shape classification.
+
 ## GFS-446 persistent GraphQL HTTP400 boundary (2026-11-03 PKT)
 
 - Owner rerun reached Cloudflare and still returned sanitized metrics `graphql_http_failure` HTTP400; qualification is 0/3 and no three-sample sequence was repeated.

@@ -1,5 +1,16 @@
 # Final Report
 
+## GFS-447 - owner path corrected, HTTP400 still unclassified (2026-11-03 PKT)
+
+**Overall: live monitoring BLOCKED; path issue resolved; no exact GraphQL root cause proven; production protected.**
+
+1. **Execution:** the system32 path failure was corrected. The valid owner bridge ran from the worktree and reached Cloudflare.
+2. **Live result:** HTTP400 with sanitized `causeCode=unknown`; 0/3 samples. No three-sample qualification was attempted.
+3. **Repair:** added documented parsing and dataset-limit error categories and tests. No speculative query, permission, credential or production change.
+4. **Tests:** observability 10/10; full 372/372; build/lint PASS. Existing adapter/deadline evidence remains 8/8 and 18/18; V1 rollback fixture still lacks `GFS_LEGACY_ROOT`.
+5. **Release:** API `b426ba47`100%/`e8018f3f`0%; Admin `e8c96c96`100%/`ee9b7baa`0% last verified. GFS-426 is local PASS372/372, undeployed; CAPI OFF; payments and WhatsApp untouched.
+6. **Next action:** owner runs one diagnostic sample from the worktree and returns only the new sanitized category. Repair the proven cause, then run one PASS sample and 0/150/300-second qualification before requesting separate Admin release approval.
+
 ## GFS-446 - persistent GraphQL HTTP400 (2026-11-03 PKT)
 
 **Overall: live monitoring BLOCKED by a persistent owner-session HTTP400; local diagnostic repair PASS; COD release remains safely held.**

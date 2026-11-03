@@ -1,5 +1,14 @@
 # Status
 
+## GFS-447 - owner path corrected; HTTP400 category still unknown (2026-11-03 PKT)
+
+**Disposition: path error corrected; valid owner request reached Cloudflare but remains HTTP400; local category coverage expanded; monitoring not qualified.**
+
+- The failed `C:\WINDOWS\system32` attempt was not evidence. From `D:\free seeds\gfs264-pr11`, the bridge returned sanitized HTTP400 with `causeCode=unknown`.
+- Added documented Cloudflare 400 categories for parsing and dataset-limit responses. No query edit, credential change or security weakening was made because the actual category remains unavailable.
+- Focused observability 10/10, full 372/372, build/lint PASS. Live qualification remains 0/3; GFS-426 remains undeployed.
+
+
 ## GFS-446 - persistent GraphQL HTTP400 requires sanitized cause (2026-11-03 PKT)
 
 **Disposition: live monitoring NOT QUALIFIED; owner sample 1 failed HTTP400; local diagnostic hardening PASS; production unchanged.**

@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-447 - HTTP400 category coverage (2026-11-03 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Owner path | PASS | Bridge executed from `D:\free seeds\gfs264-pr11`; prior system32 failure was path-only. |
+| Live HTTP400 | FAIL | Sanitized status 400, `causeCode=unknown`; 0/3 monitoring samples. |
+| Category regression | PASS 10/10 | Added documented parsing and dataset-limit message classifications without retaining response text. |
+| Full regression | PASS 372/372 | Vitest suite. |
+| Build/lint | PASS | TypeScript build and ESLint. |
+| Production mutation | NONE | No deployment, routing, payment, D1, Meta, CAPI or customer action. |
+
 ## GFS-446 - persistent HTTP400 diagnostic hardening (2026-11-03 PKT)
 
 | Area | Result | Evidence |

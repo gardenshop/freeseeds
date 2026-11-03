@@ -69,6 +69,14 @@ test("classifies HTTP400 GraphQL causes without retaining response text", () => 
     count: 1,
     categories: ["unknown"]
   });
+  assert.deepEqual(summarizeGraphqlErrors({ errors: [{ message: "query contains error, please review it and retry" }] }), {
+    count: 1,
+    categories: ["query_syntax"]
+  });
+  assert.deepEqual(summarizeGraphqlErrors({ errors: [{ message: "query time range is too large for this dataset" }] }), {
+    count: 1,
+    categories: ["dataset_limit"]
+  });
 });
 
 test("retains only a sanitized cause category for HTTP400", async () => {

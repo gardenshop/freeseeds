@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 - GFS-447 HTTP400 category coverage
+
+- Corrected the owner bridge working-directory instruction; the valid run reached Cloudflare and returned sanitized HTTP400 with `causeCode=unknown`.
+- Added Cloudflare-documented parsing and dataset-limit categories and regression cases. No speculative query, credential or permission change was made.
+- Focused observability 10/10, full 372/372 and build/lint PASS; live monitoring remains blocked at 0/3.
+
 ## 2026-11-03 - GFS-446 persistent GraphQL HTTP400 diagnostics
 
 - Recorded the owner post-fix HTTP400 sample without repeating three-sample qualification. Read-only schema inspection validated the current datetime scalar and selected Worker fields.
