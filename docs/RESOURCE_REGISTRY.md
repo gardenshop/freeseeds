@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-469 authorized Wrangler deployment state (2026-11-03 PKT)
+
+- **Approval:** one official Wrangler version upload and one subsequent deploy are authorized only for `gfs464-isolated-watchdog` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no production or account-wide authority.
+- **Prepared manifest:** `wrangler.gfs469.jsonc` points to the repaired Worker source, sets the verified account ID, binds `WATCHDOG_STATE` to `WatchdogState`, and declares one `new_classes` migration. No secret values are present.
+- **Transport state:** Wrangler4.149.0 dry-run PASS; `wrangler whoami` unauthenticated. No scoped Wrangler credential exists, so no version upload/deploy occurred. TARGET_API_TOKEN remains owner-managed and unexposed.
+- **External state:** active watchdog remains `c4533e19` secret-only; prior code `66f471ed`; bindings0/queues0; no alarm, target deployment, arm or restore.
+
 ## GFS-468 isolated watchdog source-transport state (2026-11-03 PKT)
 
 - **Fresh readback:** `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Worker `gfs464-isolated-watchdog`; active `c4533e19` secret-only version, prior `66f471ed`; bindings0 and queues0.

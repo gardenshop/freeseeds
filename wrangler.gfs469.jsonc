@@ -1,0 +1,22 @@
+{
+  "name": "gfs464-isolated-watchdog",
+  "main": "scripts/gfs464-isolated-watchdog-worker.mjs",
+  "compatibility_date": "2026-11-03",
+  "vars": {
+    "CLOUDFLARE_ACCOUNT_ID": "cb5066a6d71ecdee0bd7ed8aacb4d3c2"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "WATCHDOG_STATE",
+        "class_name": "WatchdogState"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "gfs469-watchdog-state-v1",
+      "new_classes": ["WatchdogState"]
+    }
+  ]
+}

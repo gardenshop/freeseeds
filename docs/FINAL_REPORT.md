@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-469 - authorized isolated Wrangler deployment (2026-11-03 PKT)
+
+**Overall: OWNER APPROVAL RECORDED; MANIFEST/LOCAL TESTS PASS; CLOUDFARE DEPLOYMENT BLOCKED BY MISSING SCOPED WRANGLER AUTH.**
+
+Compared with GFS-468: the owner approved one official Wrangler upload and one deploy for the existing isolated Worker. The minimal manifest was prepared and dry-run validated, but Wrangler identity is unauthenticated, so no external mutation was attempted.
+
+1. **Approval/transport:** one `wrangler versions upload` plus one `versions deploy`, only `gfs464-isolated-watchdog`; no production/account-wide authority.
+2. **Credential/account:** required verified account is `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; `wrangler whoami` is unauthenticated. No target-scoped Wrangler credential is available. TARGET_API_TOKEN was not used or exposed.
+3. **Version:** no new version. Active remains secret-only `c4533e19`; prior code `66f471ed`.
+4. **Manifest/binding:** dry-run PASS with exact source, `CLOUDFLARE_ACCOUNT_ID`, `WATCHDOG_STATE`/`WatchdogState`, and one migration. No secret, route, schedule or production binding.
+5. **Detached scheduler/restore:** NOT PROVEN; no upload, DO binding, alarm, target allocation, arm or live readback.
+6. **Deadline/retry/idempotence:** local evidence only; watchdog4/4 covers retry, deadline, allowlist and idempotence. Live minute6/minute8 behavior NOT PROVEN.
+7. **Tests/audit:** original3/3, controller18/18, adapter8/8, full372/372, build/lint PASS; audit BLOCKED by npm advisory endpoint.
+8. **Production routing:** Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%; CAPI OFF; no production mutation.
+9. **Completion:** P0 approval/preparation 100%; P1 authenticated upload/deploy 0% (preflight 100%); P2 detached proof 0%; production protection 100%.
+10. **ONE blocker/approval:** provide separately authorized target-scoped Wrangler authentication; do not use `wrangler login`, the target token, or account-wide credentials. Then perform the single reconciled upload and deploy.
+
 ## GFS-468 - resolve source upload and prove watchdog (2026-11-03 PKT)
 
 **Overall: LOCAL SOURCE PASS; SUPPORTED DEPLOYMENT TRANSPORT BLOCKED; LIVE PROOF NOT PROVEN.**

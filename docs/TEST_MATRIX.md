@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-469 authorized Wrangler deployment (2026-11-03 PKT)
+
+| Check | Result | Evidence / boundary |
+| --- | --- | --- |
+| Owner approval | PASS | One upload + one deploy, only `gfs464-isolated-watchdog`; no production/account-wide authority. |
+| Source/entry point | PASS | `scripts/gfs464-isolated-watchdog-worker.mjs`, default Worker entry, exported `WatchdogState`. |
+| Wrangler manifest | PASS | `wrangler.gfs469.jsonc`; exact Worker, account variable, DO binding and one migration only. |
+| Wrangler dry-run | PASS | Wrangler4.149.0 compiled 8.97 KiB upload; no external mutation. |
+| Wrangler identity | BLOCKED | `wrangler whoami`: unauthenticated; no scoped credential available. |
+| Version upload/deploy | NOT DONE | Correctly stopped before the one authorized mutation. |
+| Local regression | PASS | watchdog4/4, original3/3, controller18/18, adapter8/8, full372/372, build/lint. |
+| Audit | BLOCKED | npm advisory endpoint unavailable; no audit0 claim. |
+| Production protection | PASS | Admin/API100%/0%, CAPI OFF; no unrelated mutation. |
+
 ## GFS-468 source transport and proof boundary (2026-11-03 PKT)
 
 | Check | Result | Evidence / boundary |

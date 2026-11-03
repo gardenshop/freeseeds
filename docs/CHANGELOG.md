@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-03 - GFS-469 authorized Wrangler deployment gate
+
+- Recorded the owner-approved one-time Wrangler exception for the existing isolated watchdog only.
+- Added and dry-ran the minimal secret-free `wrangler.gfs469.jsonc` with the approved Durable Object binding/migration.
+- Stopped before upload because `wrangler whoami` is unauthenticated; no login, credential broadening or Cloudflare mutation occurred.
+- Re-ran watchdog, controller, adapter, full test, build and lint gates; audit remains blocked by registry availability.
+
 ## 2026-11-03 - GFS-468 supported source-upload inspection
 
 - Verified the authenticated Cloudflare owner/account/isolated Worker and unchanged secret-only `c4533e19` deployment.

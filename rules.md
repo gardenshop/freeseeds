@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-469 Authorized Isolated Wrangler Exception (2026-11-03 PKT)
+
+- Owner approval authorizes exactly one official Wrangler `versions upload` and one subsequent `versions deploy`, only for existing Worker `gfs464-isolated-watchdog` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, with no production, account-wide or unrelated Worker authority. This exception is single-use for GFS-469 and must not be reused.
+- The approved source is the repository module `scripts/gfs464-isolated-watchdog-worker.mjs`; the prepared manifest `wrangler.gfs469.jsonc` contains only the isolated Worker name, the fixed account variable, `WATCHDOG_STATE` → `WatchdogState`, and one `new_classes` migration. It contains no secrets, routes, schedules, production bindings or target token.
+- Wrangler 4.149.0 dry-run compiled the manifest successfully and reported only the intended Durable Object and account-variable bindings. Actual upload/deploy is BLOCKED because `wrangler whoami` reports no authentication and no separately authorized target-scoped Wrangler credential is present. Do not run `wrangler login`, use the target token for watchdog deployment, or broaden credentials.
+- If owner supplies a separately authorized, properly scoped Wrangler path, reverify account/Worker/current version immediately before the single upload, use `--keep-vars --strict`, independently read back the version and binding diff, then deploy only that verified version. Preserve TARGET_API_TOKEN and all unrelated configuration.
+
 ## GFS-468 Source Upload and Isolated Watchdog Boundary (2026-11-03 PKT)
 
 - Fresh authenticated Chrome DevTools MCP readback verified `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, and only `gfs464-isolated-watchdog`. The active version remains owner secret-only `c4533e19`; `66f471ed` remains prior code; bindings/workers0 and queues0.

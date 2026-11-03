@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-469 - hold approved Wrangler deployment at authentication gate (2026-11-03 PKT)
+
+**Decision:** accept the owner-approved one-upload/one-deploy exception, prepare and dry-run the isolated manifest, but stop before external mutation because Wrangler has no authenticated, separately scoped credential.
+
+**Scope:** only `gfs464-isolated-watchdog` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; source `scripts/gfs464-isolated-watchdog-worker.mjs`; DO binding `WATCHDOG_STATE`/`WatchdogState`; one migration; preserve TARGET_API_TOKEN with `--keep-vars`; no routes, schedules, production resources or account-wide credential.
+
+**Next approval/blocker:** provide a separately authorized target-scoped Wrangler authentication path. Do not use `wrangler login`, the target token, or a broader account credential. Then perform one reconciled upload followed by one verified deploy.
+
 ## GFS-468 - do not substitute a forbidden deployment transport (2026-11-03 PKT)
 
 **Decision:** stop after the authenticated dashboard source-control inspection. The existing Worker exposes only Quick Edit and no file upload/import control. Do not connect Git, create an application, call a direct API, run Wrangler, or automate Monaco through a prohibited workaround.

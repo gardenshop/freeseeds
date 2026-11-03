@@ -1,5 +1,14 @@
 # Status
 
+## GFS-469 - authorized isolated Wrangler deployment (2026-11-03 PKT)
+
+**Disposition: owner transport approval recorded; local manifest PASS; actual Cloudflare upload/deploy BLOCKED by missing separately scoped Wrangler authentication. Production unchanged.**
+
+- The one-time exception authorizes exactly one Wrangler versions upload and one subsequent deploy for `gfs464-isolated-watchdog` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; it excludes production and account-wide authority.
+- `wrangler.gfs469.jsonc` is minimal and secret-free: exact Worker source, `CLOUDFLARE_ACCOUNT_ID`, `WATCHDOG_STATE` binding to `WatchdogState`, and one migration. Wrangler 4.149.0 dry-run compiled successfully.
+- `wrangler whoami` returned unauthenticated. No target-scoped Wrangler credential is available; the existing target token is not valid authorization to deploy the watchdog. No upload, deploy, secret, binding, target, schedule or production mutation occurred.
+- Local gates: watchdog4/4, original3/3, controller18/18, adapter8/8, full372/372, build PASS, lint PASS. Audit remains BLOCKED by the npm advisory endpoint.
+
 ## GFS-468 - resolve source upload and prove watchdog (2026-11-03 PKT)
 
 **Disposition: source transport BLOCKED by the permanent supported-method boundary; no external mutation.**
