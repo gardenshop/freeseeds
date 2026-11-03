@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 - GFS-456 GFS-426 Admin 0% candidate validation
+
+- Reconciled the GFS-455 HTTP524: no delayed version existed; current upload path passed control-plane/dashboard/dry-run checks.
+- Uploaded Admin candidate `e44703c3-694f-4ffd-9416-f8edf1aacf42` (tag `gfs-426-c2ddcd1`) and created the required gradual deployment `e8c96c96`100% / candidate0%; API remains unchanged.
+- Candidate-only authenticated override checks passed for Orders, Conversations and Analytics. Cleared every temporary override after validation; no real order/payment/data/customer mutation and CAPI remains OFF.
+
 ## 2026-11-03 - GFS-455 Admin 0% validation attempt held
 
 - Per explicit authority, made one Admin-only `wrangler versions upload --keep-vars` attempt for GFS-426 source `c2ddcd1`; Cloudflare returned HTTP524 after bundling and issued no candidate version.

@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-456 - retain Admin candidate at0%; promotion needs a new gate (2026-11-03 PKT)
+
+**Decision:** GFS-455 HTTP524 did not create a delayed version. After fresh owner authority and upload availability checks, upload `e44703c3-694f-4ffd-9416-f8edf1aacf42` once and attach it only at0% beside baseline `e8c96c96`100%. This is required by Cloudflare for a version override; it is not a traffic promotion. The old0% candidate was replaced, and API routing is unchanged.
+
+**Boundary:** candidate override evidence passes for the protected Admin UI/API without a real order transition. Clear all override headers after validation. Require a fresh owner-session authenticated health/GraphQL/Access/routing monitoring run and separate explicit promotion approval before any percentage change. CAPI remains OFF; payment, D1, API, WhatsApp and customer state remain frozen.
+
 ## GFS-455 - fail closed on candidate-upload HTTP524 (2026-11-03 PKT)
 
 **Decision:** the authorized single GFS-426 Admin `versions upload --keep-vars` attempt is considered consumed and unsuccessful after Cloudflare returned HTTP524. Authoritative readback confirms no candidate was created and serving weights remain Admin baseline `e8c96c96`100% / old candidate `ee9b7baa`0%; API remains `b426ba47`100% / `e8018f3f`0%.

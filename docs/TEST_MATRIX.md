@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-456 - GFS-426 Admin0% candidate validation (2026-11-03 PKT)
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Upload availability / delayed candidate | PASS | Control-plane reads, authenticated dashboard and `--keep-vars` dry-run passed; no delayed GFS-455 candidate exists. |
+| One new Admin version | PASS | `e44703c3-694f-4ffd-9416-f8edf1aacf42`, tag `gfs-426-c2ddcd1`, source `c2ddcd1`. |
+| Exact serving weights | PASS | Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%. |
+| Authenticated candidate override | PASS | Orders API/list HTTP200 plus candidate-only Mark Payment Received/original-payable markup; Conversations HTTP200; Analytics HTTP200. No live order/payment action invoked. |
+| Override cleanup | PASS | All temporary browser headers cleared; baseline Orders HTTP200 and candidate markup absent. |
+| Focused regression | PASS | `tests/cod-admin.test.ts` 27/27; `npm run build`; `npm run lint`. Full372/372 carried, no Admin source/configuration change. |
+| Fresh post-attach owner monitor | WAITING | Owner-session Credential Manager bridge is required for health/GraphQL/Access/routing read-only evidence before promotion can be requested. |
+
 ## GFS-455 - Admin candidate upload attempt (2026-11-03 PKT)
 
 | Check | Result | Evidence |

@@ -1,5 +1,14 @@
 # Status
 
+## GFS-456 - Admin GFS-426 candidate at 0%, UI validation PASS (2026-11-03 PKT)
+
+**Disposition: candidate validation PASS; controlled promotion remains BLOCKED pending fresh owner-session monitoring and separate promotion authority.**
+
+- GFS-455's HTTP524 was transient: no delayed candidate was found; control-plane reads, dashboard and dry-run were healthy. Candidate `e44703c3-694f-4ffd-9416-f8edf1aacf42` (`gfs-426-c2ddcd1`, source `c2ddcd1`) uploaded successfully.
+- Admin gradual deployment is `e8c96c96`100% / `e44703c3`0%; API is unchanged at `b426ba47`100% / `e8018f3f`0%. The former Admin0% candidate was replaced only because Cloudflare permits two versions in a gradual deployment and requires an override target to be present there.
+- Authenticated override checks passed for Orders, Conversations and Analytics. Orders API/list HTTP200 and candidate-only Mark Payment Received/original-payable markup are present; no live order/payment action was invoked. Browser override headers were cleared and baseline Orders then returned HTTP200 without candidate markup.
+- Focused COD Admin27/27, TypeScript build and lint pass. Fresh owner-session health/GraphQL/security monitoring is pending; CAPI remains OFF and no customer/data/payment/API mutation occurred.
+
 ## GFS-455 - Admin candidate upload blocked fail-closed (2026-11-03 PKT)
 
 **Disposition: no candidate exists; validation and promotion are BLOCKED.**
