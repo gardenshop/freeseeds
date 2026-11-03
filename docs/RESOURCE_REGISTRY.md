@@ -1,5 +1,14 @@
 # Resource Registry
 
+## GFS-472 COD and attribution state (2026-11-03 PKT)
+
+- **COD:** existing GFS-425/GFS-426 Admin/D1 settlement controls are the only approved architecture. Local source/tests require exact original quote, tracking/lifecycle, collection and remittance evidence, authorized human actor, HMACed opaque references and idempotence before PAID.
+- **Live blocker:** COD is enabled at PKR125, but safe configuration read reports collection and remittance policy configuration false. No courier contract, delivery/return record, deductions, collection or remittance proof was accessible; no values or approval were fabricated.
+- **Attribution implementation:** local `/api/attribution-report` aggregates existing `meta_attribution`, `leads`, `orders`, `lead_sources` and conversation snapshots with daily buckets. It excludes customer/referral/payment identifiers and returns campaign conversion UNKNOWN without the Meta denominator. Not deployed.
+- **Current aggregate evidence:** UTC window 2026-10-28..2026-11-03 read-only Analytics returned inbound23583, new-conversation snapshot3951, submitted orders660, paid/fulfilled0, advance-selected78 and COD-confirmed374. These are lifecycle/aggregate values, not customer conversion proof.
+- **Meta sender:** fresh verified WABA phone-number read shows Get Free Seeds display name In Review, status Connected, quality High. No change performed. Business/ad identity remains the protected GFS-471 record.
+- **Routing/protection:** Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%; CAPI OFF; watchdog resources frozen/DEFERRED.
+
 ## GFS-471 frozen watchdog and launch-readiness state (2026-11-03 PKT)
 
 - **Watchdog:** `gfs464-isolated-watchdog` and `gfs462-isolated-target` are frozen. GFS-470 is **DEFERRED**; no deployment, deletion, scheduler/alarm, DO binding, secret, target, or credential change occurred. The revoked GFS-470 token was not replaced.

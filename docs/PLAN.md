@@ -1,5 +1,11 @@
 # Get Free Seeds Plan
 
+## GFS-472 COD settlement and attribution (2026-11-03 PKT)
+
+COD work reuses the existing Admin/D1 settlement controls. Local code already requires exact quoted totals, tracking before dispatch, delivery/collection lifecycle, distinct HMACed opaque collection/remittance evidence, authorized operator identity, idempotence and fail-closed PAID guards. No live status transition is authorized until genuine courier contract/evidence and owner verification are available.
+
+The local attribution report aggregates existing `meta_attribution`, `lead_sources`, `leads`, `orders` and WhatsApp conversation snapshots without returning identifiers or raw referral values. It reports persisted attribution and daily buckets, but intentionally leaves campaign-to-order conversion UNKNOWN because Meta campaign lead/conversation denominator data is not in D1. It is not deployed under this task.
+
 ## GFS-471 WhatsApp lead launch decision (2026-11-03 PKT)
 
 Path A is the current priority: keep existing WhatsApp lead activity under read-only observation and prepare launch only after Meta display-name/sender eligibility and COD settlement controls are approved. No campaign, message, order, payment, or CAPI mutation is included.

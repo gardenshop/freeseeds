@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-472 - keep COD fail-closed; add aggregate attribution report (2026-11-03 PKT)
+
+**Decision:** do not change live COD settings or settlement state. Reuse the existing GFS-425/GFS-426 controls and treat the missing courier contract/policy and genuine collection/remittance evidence as the real blocker. Local source review found no proven COD defect requiring a route change.
+
+**Attribution:** add only a local privacy-safe aggregate report over existing D1 attribution tables. It distinguishes persisted attributed leads/orders from WhatsApp conversation snapshots and refuses to claim campaign conversion without the Meta denominator. Do not use the existing detail `/api/leads` read for reporting because it contains customer fields.
+
+**Meta:** the fresh sender read remains In Review / Connected / High. Do not resubmit or modify Meta assets under this scope. The watchdog remains DEFERRED and untouched.
+
 ## GFS-471 - stop watchdog loop; hold public WhatsApp launch (2026-11-03 PKT)
 
 **Decision:** close GFS-470 as **DEFERRED**, revoke and do not replace the scoped Wrangler credential, and freeze both isolated watchdog resources. No deployment, scheduling, credential, secret, target or production routing action is authorized under this decision.

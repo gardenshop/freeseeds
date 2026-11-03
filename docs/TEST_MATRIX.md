@@ -1,5 +1,22 @@
 # Test Matrix
 
+## GFS-472 COD settlement and attribution (2026-11-03 PKT)
+
+| Check | Result | Evidence / boundary |
+| --- | --- | --- |
+| GFS-425 SOP reuse | PASS | Existing SOP fields retained: quote, courier/tracking, delivery/return, collection, deductions, remittance, opaque evidence and human verifier. |
+| COD source controls | PASS local | Existing endpoints/triggers enforce exact total, tracking-before-dispatch, lifecycle, distinct evidence, audit, idempotence and fail-closed PAID. |
+| Missing courier evidence | BLOCKED genuine | Live policy references are absent; no contract/report/collection/remittance proof was available. No invention or mutation. |
+| Duplicate/missing/partial/mismatch settlement | PASS local | Existing focused COD tests reject wrong amount, partial settlement, mismatched references and repeat writes; only exact collection+remittance reaches PAID. |
+| Live COD readiness | PARTIAL / NO-GO | PKR125 enabled; settlement policies/evidence absent. No dispatch or PAID action. |
+| Attribution persistence | PASS local | Existing tables retain CTWA/campaign/ad attribution linked to lead/order records. |
+| Aggregate attribution report | PASS local 3/3 | New `/api/attribution-report` returns daily aggregate counts only; no referral/customer/payment values. |
+| Live attribution | UNKNOWN | Current analytics read gave 23,583 inbound, 3,951 new-conversation snapshots, 660 submitted orders; campaign denominator and attributed-order aggregate were not safely available live. |
+| Meta sender review | PASS read-only / BLOCKED launch | Fresh Phone Numbers read: Get Free Seeds In Review, Connected, High. No submission/correction/campaign action. |
+| Regression | PASS | Full 32 files / 375 tests, build and lint pass. |
+| Security audit | BLOCKED | npm advisory endpoint unavailable; no audit PASS claimed. |
+| Production/watchdog protection | PASS | Exact Admin/API100/0, CAPI OFF; watchdog DEFERRED and untouched; no production mutation. |
+
 ## GFS-471 watchdog closure and WhatsApp launch readiness (2026-11-03 PKT)
 
 | Check | Result | Evidence / boundary |

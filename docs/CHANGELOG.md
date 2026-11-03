@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-03 - GFS-472 COD settlement and attribution readiness
+
+- Reused and verified the existing COD settlement controls locally; no duplicate architecture or live status change added.
+- Confirmed the genuine live blocker is missing courier collection/remittance policy and evidence, not a proven source defect.
+- Added a local privacy-safe daily attribution report over persisted D1 attribution/lead/order/conversation data; it excludes identifiers and does not claim campaign conversion without a Meta denominator.
+- Recorded current aggregate analytics and fresh Meta sender state: In Review, Connected, High. No Meta, payment, order, dispatch, CAPI, watchdog or production mutation occurred.
+- Focused attribution3/3, full375/375, build and lint pass; audit remains blocked by registry availability.
+
 ## 2026-11-03 - GFS-471 watchdog stop and WhatsApp launch hold
 
 - Closed GFS-470 as DEFERRED: confirmed the scoped credential was revoked, created no replacement, and froze the isolated watchdog/target resources.

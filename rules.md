@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-472 COD settlement and attribution boundary (2026-11-03 PKT)
+
+- Do not revisit, deploy, schedule, credential, bind, delete or otherwise change the deferred watchdog resources.
+- Reuse the existing COD settlement architecture. No dispatch, collection, remittance, PAID, receipt, payment, beneficiary, QR, order, D1, Queue/DLQ, Cron, webhook, Meta, CAPI or customer mutation is authorized in this work.
+- COD may reach PAID only after authorized human verification, exact original quoted total, valid tracking/delivery lifecycle, exact collection and exact remittance, and distinct opaque evidence references. Missing, duplicate, partial or mismatched evidence must fail closed.
+- Courier terms, collection records, remittance records, deductions, dates and proof must be genuine owner-provided evidence; never invent them. Current policy references are absent.
+- Lead attribution reporting must use aggregate-only reads. Do not expose customer names, phones, wa_ids, order IDs, referral IDs, provider IDs, payment references or raw Meta payloads. Campaign-to-order conversion is UNKNOWN without a Meta denominator.
+- Preserve the Meta sender review state **In Review**; do not resubmit display names, change numbers or modify campaigns. Preserve the new-number lock, Hoja zero-connection rule, EN/UR, +15/+210 and all payment protections.
+
 ## GFS-471 WhatsApp prioritization and watchdog freeze (2026-11-03 PKT)
 
 - GFS-470 is closed as **DEFERRED** for the independent watchdog. The exposed one-time MCP-rendered Wrangler credential is revoked; do not create, rotate, extract, or reuse a replacement token.

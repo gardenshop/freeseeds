@@ -5,6 +5,7 @@ import { analyticsCsv, AnalyticsInputError, parseAnalyticsFilters, readInboundAn
 import { ConversationInputError, parseConversationFilters, readConversation, readConversations, readConversationSummary } from "./conversations";
 import { conversationsDashboardPageHtml } from "./conversations-dashboard";
 import { CancellationInputError, cancellationDashboardPageHtml, parseCancellationFilters, readCancellationReport } from "./cancellations";
+import { readAttributionReport } from "./attribution";
 
   type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_CAPI_ENABLED?: string; REFERENCE_REQUESTS_ENABLED?: string; PAYMENT_CHOICE_RECOVERY_ENABLED?: string; COD_REFERENCE_HMAC_KEY?: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
 const app = new Hono<Env>();
@@ -673,6 +674,18 @@ async function analyticsResponse(c: AdminContext, exportResponse = false) {
 
 app.get("/api/analytics", (c) => analyticsResponse(c));
 app.get("/api/analytics/export", (c) => analyticsResponse(c, true));
+
+app.get("/api/attribution-report", async (c) => {
+  if (!c.env.DB) return c.json({ error: "ATTRIBUTION_REPORT_UNAVAILABLE" }, 503);
+  try {
+    const filters = parseAnalyticsFilters({ from: c.req.query("from"), to: c.req.query("to") });
+    return c.json(await readAttributionReport(c.env.DB, filters), 200, { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" });
+  } catch (error) {
+    if (error instanceof AnalyticsInputError) return c.json({ error: error.message }, 400);
+    if (isD1QuotaError(error)) return d1QuotaResponse(c, "ATTRIBUTION_REPORT_UNAVAILABLE");
+    throw error;
+  }
+});
 
 app.get("/api/csrf", (c) => c.json({ csrfToken: issueCsrfToken(c) }));
 

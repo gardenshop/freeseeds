@@ -1,5 +1,18 @@
 # Status
 
+## GFS-472 - COD settlement and WhatsApp conversion readiness (2026-11-03 PKT)
+
+**Disposition: COD source controls locally READY/FAIL-CLOSED; live settlement remains BLOCKED by genuine courier evidence. Attribution report repaired locally; live campaign-to-order conversion remains UNKNOWN. Watchdog untouched.**
+
+- **COD SOP reuse:** GFS-425 requirements remain the source of truth: original quote, courier/tracking, delivery or return disposition/date, exact collection, authorized deductions, exact remittance/date, opaque evidence references and authorized human verifier. GFS-426’s existing manual Admin/D1 collection/remittance endpoints are reused; no duplicate architecture was added.
+- **COD source status:** local guards require COD_PENDING→PACKING→DISPATCHED→DELIVERED→COLLECTION_PENDING, tracking before dispatch, exact quoted total, distinct normalized evidence references, human actor/audit, and idempotent repeat handling. DB triggers and endpoints prevent missing, partial, mismatched or duplicate settlement from marking PAID.
+- **Missing live evidence:** safe live readback still reports COD enabled at PKR125 but `collectionPolicyConfigured:false` and `remittancePolicyConfigured:false`. No genuine courier contract, tracking report, delivery/return record, collection amount, deduction, remittance amount/date or proof was available. No evidence or approval was invented.
+- **Attribution source repair:** added local read-only `/api/attribution-report`, aggregate-only and daily, over existing attribution/lead/order/conversation tables. It excludes identifiers and raw referral/payment values; campaign-to-order conversion is explicitly `null`/UNKNOWN without a Meta denominator.
+- **Current live aggregate window (UTC 2026-10-28 through 2026-11-03):** 23,583 customer inbound events, 3,951 new-conversation snapshot contacts, 660 submitted orders, 0 paid/fulfilled in the report window, 78 advance-selected and 374 COD-confirmed lifecycle snapshots. Existing 2.8% ratio is inbound-events-to-orders, not lead conversion. Current attributed-order count was not extracted from the detail endpoint because it returns protected customer fields; the new aggregate route is local and undeployed.
+- **Meta:** one fresh read confirmed Get Free Seeds sender **In Review**, Connected, High quality. No official review/correction action was separately authorized or performed; no campaign or number change.
+- **Tests:** attribution focused3/3, full32 files/375 tests, build PASS, lint PASS. Audit remains BLOCKED by npm advisory endpoint. Watchdog was not revisited.
+- **Protection:** Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%; CAPI OFF; no production deployment or operational mutation.
+
 ## GFS-471 - watchdog stop and WhatsApp launch readiness (2026-11-03 PKT)
 
 **Disposition: watchdog DEFERRED and frozen; public WhatsApp launch NO-GO pending Meta display-name approval and COD settlement controls. Existing production routing unchanged.**
