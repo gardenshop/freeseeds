@@ -1,5 +1,15 @@
 # Decisions
 
+## GFS-466 - repair locally, hold external proof at tooling boundary (2026-11-03 PKT)
+
+**Decision:** accept the clean Worker repair and local retry/idempotence/deadline proof, but do not claim a deployed version or detached restoration. The first Quick Edit failure was wrapper contamination (Unexpected token '*'); the corrected module is verified only in Git.
+
+**Safety boundary:** the Worker is fixed to gfs462-isolated-target and the official deployments endpoint. Retryable transport/server failures reschedule before the hard deadline; stale, missing, mismatched or permanent failures fail closed; repeated baseline readback is idempotent. No secret value is present in source/tests/logs.
+
+**External boundary:** no supported authenticated Chrome DevTools/Cloudflare control tools are exposed to this agent. Do not replace them with Wrangler, direct HTTP, raw CDP, clipboard automation or account-wide credentials. Before any future mutation, reverify gisupp@gmail.com / Get Free Seeds / account cb5066a6d71ecdee0bd7ed8aacb4d3c2, record it, then deploy exactly one source version and configure only the approved isolated binding/alarm.
+
+**Release effect:** no production Admin/API, WhatsApp, payment, D1, Queue/DLQ, Cron, Meta or CAPI change; no canary. The next approval is one supported authenticated isolated deployment/proof session, not production watchdog authorization.
+
 ## GFS-465 - repair MCP session, hold external source deployment fail-closed (2026-11-03 PKT)
 
 **Decision:** keep the isolated watchdog Worker and target-only credential, but do not claim live watchdog readiness. Selecting page 40 before snapshot resolved the stale control registry; source deployment remains held after Quick Edit reported `Unexpected token '*'` from wrapper contamination and editor focus could not be safely re-established for a verified corrected deployment.

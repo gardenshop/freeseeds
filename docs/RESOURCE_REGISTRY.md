@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-466 isolated watchdog repair state (2026-11-03 PKT)
+
+- Local source: scripts/gfs464-isolated-watchdog-worker.mjs is a clean deployable ES module for gfs464-isolated-watchdog; target allowlist is exactly gfs462-isolated-target, with exported WatchdogState Durable Object entry and no production bindings.
+- Local proof: watchdog4/4, GFS-462 watchdog3/3, controller18/18, adapter8/8, full372/372, build and lint PASS. npm audit could not reach the registry security endpoint.
+- External state: no corrected Cloudflare version, binding, Durable Object alarm, schedule, secret attachment, target deployment, arm or detached restore was created. Existing watchdog remains 66f471ed; the target-only credential secret remains unexposed.
+- Identity/mutation record: no external mutation occurred; therefore no mutation-time account verification was claimed. The last recorded verified identity remains gisupp@gmail.com / Get Free Seeds / cb5066a6d71ecdee0bd7ed8aacb4d3c2. A supported authenticated dashboard must be available and reverified before mutation.
+
 ## GFS-465 isolated credential and watchdog state (2026-11-03 PKT)
 
 - **Credential:** one Cloudflare template credential created for `gfs462-isolated-target`; permission `Individual Workers Editor`, seven-day expiry. Secret was not read or recorded. It is not attached to the watchdog yet.

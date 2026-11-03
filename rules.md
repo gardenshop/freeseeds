@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-466 Isolated Watchdog Repair Boundary (2026-11-03 PKT)
+
+- The Quick Edit Unexpected token '*' defect was wrapper contamination during external source transfer, not valid Worker syntax. The repository source is now a clean deployable ES module with the fixed target gfs462-isolated-target, exported Durable Object class WatchdogState, and no production bindings.
+- The alarm now distinguishes retryable network/408/425/429/5xx failures from permanent allowlist/readback failures, reschedules within the six-minute restore start/eight-minute hard deadline window, and fails closed at the deadline. Restore is idempotent: an authoritative baseline100%/candidate0% readback causes no second POST.
+- Local proof passed watchdog4/4, GFS-462 watchdog3/3, controller18/18, adapter8/8, full372/372, build and lint. npm audit was attempted but blocked by unavailable registry security endpoint; no audit0 claim is made.
+- No external mutation was performed in GFS-466: the supported authenticated Chrome DevTools/Cloudflare control surface is not exposed to this agent. Do not use direct API, Wrangler, raw CDP, clipboard automation, account-wide credentials or a browser workaround. Preserve the verified identity gisupp@gmail.com / Get Free Seeds / cb5066a6d71ecdee0bd7ed8aacb4d3c2 and verify it immediately before any future mutation.
+- Preserve Admin e8c96c96 100% / e44703c3 0%, API b426ba47 100% / e8018f3f 0%, CAPI OFF, the new-number WhatsApp lock, Hoja Seeds zero-connection rule, payments, D1, Queue/DLQ, Cron, Meta and customer state. No 10% canary or production watchdog authority is requested.
+
 ## GFS-465 MCP and isolated watchdog boundary (2026-11-03 PKT)
 
 - Selecting Cloudflare page `40` before each snapshot repaired the MCP stale-control issue; the verified `gfs464-isolated-watchdog` Settings page became reachable. No direct request, session extraction or guard bypass was used.

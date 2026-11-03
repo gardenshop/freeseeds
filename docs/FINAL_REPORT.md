@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-466 - repair and prove isolated watchdog (2026-11-03 PKT)
+
+**Overall: LOCAL REPAIR PASS; DETACHED CLOUDFLARE PROOF BLOCKED SAFELY.**
+
+Compared with GFS-465, the Quick Edit wrapper-contamination defect is repaired locally and the alarm now retries recoverable failures, proves idempotence, and stops at the hard deadline. No corrected Cloudflare version was deployed because authenticated Chrome DevTools/Cloudflare mutation tools are not exposed in this session.
+
+1. Syntax: PASS locally. Unexpected token '*' was wrapper text transferred into Quick Edit; scripts/gfs464-isolated-watchdog-worker.mjs is clean deployable ES module source with WatchdogState DO entry.
+2. Corrected deployed version: BLOCKED / none. Existing gfs464-isolated-watchdog remains at 66f471ed; no claim of corrected external code.
+3. Credential/binding: target-only credential scope remains recorded as Individual Workers Editor for gfs462-isolated-target, seven-day expiry; secret was never exposed. Binding/DO alarm/schedule remain unconfigured.
+4. Detached scheduler: NOT PROVEN. No supported authenticated Cloudflare/Chrome mutation surface was available; no direct API/Wrangler workaround used.
+5. Real target restore/readback: NOT RUN. No target version or synthetic 90/10 deployment was created or altered.
+6. Deadline/retry/idempotence: PASS locally: watchdog4/4 covers recoverable retry, deadline, permanent failure, stale target readback and duplicate no-write restore. Live timing remains unproven.
+7. Regression/production protection: watchdog4/4; GFS-462 watchdog3/3; controller18/18; adapter8/8; full372/372; build/lint PASS. npm audit attempted but registry security endpoint unavailable. Admin e8c96c96 100% / e44703c3 0%; API b426ba47 100% / e8018f3f 0%; CAPI OFF; WhatsApp, payments, D1, Queue/DLQ, Cron, Meta and customer state unchanged.
+8. Completion: P0 100% for source protection/local proof; P1 100% local / 0% external deployment; P2 0% detached proof / 100% production protection; overall GFS-466 55% (source/tests complete, external proof blocked).
+9. Verified Git SHA: pending final commit; remote SHA must be checked after push.
+10. ONE next blocker/approval: provide a supported authenticated Chrome DevTools/Cloudflare control session, then reverify gisupp@gmail.com / Get Free Seeds / cb5066a6d71ecdee0bd7ed8aacb4d3c2 before one isolated source deployment and DO/alarm configuration. No production watchdog approval.
+
 ## GFS-465 - MCP repair and watchdog proof status (2026-11-03 PKT)
 
 **Overall: BLOCKED safely before detached execution.**

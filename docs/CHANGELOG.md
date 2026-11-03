@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-03 - GFS-466 isolated watchdog repair
+
+- Repaired the clean deployable Worker module after diagnosing Quick Edit Unexpected token '*' wrapper contamination.
+- Added retryable alarm rescheduling, hard-deadline fail-closed handling, permanent-error handling, deployment API response validation and idempotent baseline readback.
+- Focused watchdog4/4 plus GFS-462 watchdog3/3, controller18/18, adapter8/8, full372/372, build and lint passed. npm audit was blocked by unavailable registry security endpoint.
+- No external deployment or production mutation occurred because authenticated Chrome DevTools/Cloudflare mutation tools were unavailable.
+
 ## 2026-11-03 - GFS-465 MCP and watchdog proof
 
 - Repaired Cloudflare MCP page targeting by selecting the verified page before each snapshot.

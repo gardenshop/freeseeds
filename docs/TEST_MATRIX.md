@@ -1,5 +1,21 @@
 # Test Matrix
 
+## GFS-466 isolated watchdog repair (2026-11-03 PKT)
+
+| Check | Result | Evidence / boundary |
+| --- | --- | --- |
+| Quick Edit syntax diagnosis | PASS | Unexpected token '*' was wrapper/editor contamination; repository module is clean ES module source. |
+| Worker entry/DO/API scope | PASS local | Default fetch routes to exported WatchdogState; target and deployments endpoint are hard-coded to gfs462-isolated-target. |
+| Retry/recovery | PASS | Recoverable failure reschedules before deadline and succeeds on second attempt. |
+| Deadline/permanent failure | PASS | Deadline fails closed; non-recoverable restore failure is terminal without alarm reschedule. |
+| Idempotence/stale readback | PASS | Baseline100%/candidate0% readback skips POST; missing target version blocks writes. |
+| Focused watchdog | PASS | 4/4. |
+| Regression | PASS | GFS-462 watchdog3/3, controller18/18, adapter8/8, full372/372, build/lint. |
+| Security audit | BLOCKED | npm audit --omit=dev --audit-level=high could not reach registry endpoint; no audit0 claim. |
+| External corrected deployment | BLOCKED | Authenticated Chrome DevTools/Cloudflare mutation tools are not exposed; no direct API/Wrangler workaround. |
+| Detached scheduler/restore/readback | NOT RUN | Requires supported identity-verified deployment, binding/alarm, owner-secure secret entry and authorized isolated target test. |
+| Production protection | PASS / unchanged | Admin/API remain100%/0%; CAPI OFF; WhatsApp, payment, D1, Queue/DLQ, Cron, Meta and customer state untouched. |
+
 ## GFS-465 MCP/watchdog implementation (2026-11-03 PKT)
 
 | Check | Result | Evidence / boundary |

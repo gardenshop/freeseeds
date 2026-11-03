@@ -1,5 +1,15 @@
 # Status
 
+## GFS-466 - repair and prove isolated watchdog (2026-11-03 PKT)
+
+**Disposition: source repair and local proof PASS; detached Cloudflare proof BLOCKED safely. Production unchanged.**
+
+- Replaced the clean local Worker source after diagnosing the Quick Edit Unexpected token '*' as transferred Markdown/editor wrapper text. The module exports the WatchdogState Durable Object entry, hard-codes only gfs462-isolated-target, uses the Cloudflare deployments API, and has no production resource bindings.
+- Fixed alarm behavior: retryable network/408/425/429/5xx failures reschedule before the eight-minute deadline; permanent failures stop; deadline expiry fails closed; duplicate restore readback skips a second POST.
+- Tests: watchdog4/4, GFS-462 watchdog3/3, controller18/18, adapter8/8, full372/372, build PASS, lint PASS. npm audit was attempted but the registry endpoint was unavailable.
+- No Cloudflare source deployment, version, binding, secret, alarm, schedule, target 90/10 test, arm, detached execution or restore occurred because authenticated Chrome DevTools/Cloudflare mutation tools are not exposed in this session. Existing watchdog remains gfs464-isolated-watchdog version 66f471ed; target-only secret remains unexposed.
+- Production remains Admin e8c96c96 100% / e44703c3 0%, API b426ba47 100% / e8018f3f 0%, CAPI OFF. WhatsApp, COD/Advance, payments, D1, Queue/DLQ, Cron, Meta and customer state are unchanged.
+
 ## GFS-465 - MCP repair and isolated watchdog implementation (2026-11-03 PKT)
 
 **Disposition: MCP navigation repaired; live watchdog proof remains BLOCKED before unsafe continuation. Production unchanged.**
