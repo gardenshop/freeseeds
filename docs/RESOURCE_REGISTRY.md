@@ -5,7 +5,7 @@
 - **Candidate:** Admin `e44703c3-694f-4ffd-9416-f8edf1aacf42`; tag `gfs-426-c2ddcd1`; immutable source `c2ddcd1319489a33c6ca213fd12ce0e4372e1b6b`; uploaded with `--keep-vars`.
 - **Deployment:** `46d02e50-5695-4dd8-bf24-b4367c70c48c` contains Admin baseline `e8c96c96-ef94-4a33-bed6-7f284984002c`100% and candidate `e44703c3-694f-4ffd-9416-f8edf1aacf42`0%. API deployment remains `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100% / `e8018f3f-53d3-4506-9c28-a46881842f8c`0%.
 - **Validation:** authenticated candidate override returned Orders/Conversations/Analytics HTTP200; Orders candidate control markup verified, no real action. Overrides were cleared and baseline reloaded.
-- **Gate:** owner-session post-attach monitoring remains pending; do not promote or mutate protected resources. CAPI OFF.
+- **Gate:** owner-session post-attach monitor PASS: health3/3 HTTP200, unauthenticated/invalid403, protected routes denied302, GraphQL API/Admin errors0/fresh and exact API/Admin100/0. Do not promote without separate approval. CAPI OFF.
 
 ## GFS-455 Admin candidate upload boundary (2026-11-03 PKT)
 

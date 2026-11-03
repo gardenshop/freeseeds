@@ -4,7 +4,7 @@
 
 **Decision:** GFS-455 HTTP524 did not create a delayed version. After fresh owner authority and upload availability checks, upload `e44703c3-694f-4ffd-9416-f8edf1aacf42` once and attach it only at0% beside baseline `e8c96c96`100%. This is required by Cloudflare for a version override; it is not a traffic promotion. The old0% candidate was replaced, and API routing is unchanged.
 
-**Boundary:** candidate override evidence passes for the protected Admin UI/API without a real order transition. Clear all override headers after validation. Require a fresh owner-session authenticated health/GraphQL/Access/routing monitoring run and separate explicit promotion approval before any percentage change. CAPI remains OFF; payment, D1, API, WhatsApp and customer state remain frozen.
+**Boundary:** candidate override evidence and the post-attach owner-session health/GraphQL/Access/routing monitor pass without a real order transition. All override headers were cleared. Require separate explicit promotion approval before any percentage change. CAPI remains OFF; payment, D1, API, WhatsApp and customer state remain frozen.
 
 ## GFS-455 - fail closed on candidate-upload HTTP524 (2026-11-03 PKT)
 

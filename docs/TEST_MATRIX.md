@@ -10,7 +10,7 @@
 | Authenticated candidate override | PASS | Orders API/list HTTP200 plus candidate-only Mark Payment Received/original-payable markup; Conversations HTTP200; Analytics HTTP200. No live order/payment action invoked. |
 | Override cleanup | PASS | All temporary browser headers cleared; baseline Orders HTTP200 and candidate markup absent. |
 | Focused regression | PASS | `tests/cod-admin.test.ts` 27/27; `npm run build`; `npm run lint`. Full372/372 carried, no Admin source/configuration change. |
-| Fresh post-attach owner monitor | WAITING | Owner-session Credential Manager bridge is required for health/GraphQL/Access/routing read-only evidence before promotion can be requested. |
+| Fresh post-attach owner monitor | PASS | Health3/3 HTTP200; unauthenticated/invalid403; `/orders`, `/analytics`, `/conversations` denied302; GraphQL API/Admin errors0 with fresh timestamps, correct account/Workers and exact API/Admin100/0. |
 
 ## GFS-455 - Admin candidate upload attempt (2026-11-03 PKT)
 
