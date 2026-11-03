@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-461 watchdog readiness (2026-11-03 PKT)
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Admin/API identity and baseline readback | PASS | Authenticated Cloudflare dashboard shows Admin `e8c96c96`100% / `e44703c3`0% and API frozen100%/0%. |
+| Existing deadline controller | PASS | 18/18 local fail-closed, deadline and rollback tests. |
+| Existing Cloudflare adapter | PASS | 8/8 local argv, scope, readback, retry and fail-closed tests. |
+| Independent scheduled executor | BLOCKED | No isolated Worker/schedule or detached routing credential exists; no live resource was created. |
+| Agent-disconnection survival / real readback | NOT PROVEN | Requires separately approved isolated watchdog proof. |
+| GFS-459 canary | NOT RUN | No exposure, deployment, traffic or production mutation. |
+
 ## GFS-460 independent watchdog readiness (2026-11-03 PKT)
 
 | Check | Result | Evidence |

@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-461 watchdog readiness boundary (2026-11-03 PKT)
+
+- **Existing local assets:** `scripts/canary-deadline-controller.mjs` and `scripts/cloudflare-canary-adapter.mjs`; controller18/18 and adapter8/8 pass. They are not independent live infrastructure.
+- **External resource state:** no watchdog Worker, schedule, credential, binding or deployment was created. A separate owner approval is required for one isolated Admin-only watchdog proof.
+- **Protected serving state:** Admin baseline `e8c96c96`100% / candidate `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%. WhatsApp, payment, D1, Queue/DLQ, Cron, Meta and CAPI remain untouched.
+
 ## GFS-460 independent watchdog boundary (2026-11-03 PKT)
 
 - **Serving resources:** Admin `e8c96c96-ef94-4a33-bed6-7f284984002c`100% / candidate `e44703c3-694f-4ffd-9416-f8edf1aacf42`0%; API `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100% / `e8018f3f-53d3-4506-9c28-a46881842f8c`0%.

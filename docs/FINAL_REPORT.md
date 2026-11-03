@@ -1,5 +1,16 @@
 # Final Report
 
+## GFS-461 - independent Admin rollback watchdog (2026-11-03 PKT)
+
+**Overall: BLOCKED safely before external resource creation and canary exposure.**
+
+1. **Watchdog:** local controller18/18 and adapter8/8 PASS; independent scheduled/live watchdog NOT READY.
+2. **Executor/permissions:** no isolated Worker, schedule or detached routing credential is available. Existing Cloudflare dashboard authority is interactive; no credential was created or exposed.
+3. **Deadline/restore:** local fixtures cover hard deadlines, interruption, duplicate locks, failures and Admin-only scope, but agent-disconnection survival and independent Cloudflare readback remain unproven.
+4. **Routing:** Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%. No canary ran.
+5. **Regression/protection:** no source or production resource changed; WhatsApp, payments, D1, Queue/DLQ, Cron, Meta and CAPI remain protected/OFF as applicable.
+6. **Next approval:** authorize one isolated Admin-only watchdog Worker/schedule and narrowly scoped deployment credential for disconnection-survival and idempotent restore testing. A later separate approval is required for a live watchdog and 10% canary.
+
 ## GFS-460 - independent watchdog readiness (2026-11-03 PKT)
 
 **Overall: BLOCKED safely before GFS-459 exposure.**

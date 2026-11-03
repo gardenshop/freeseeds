@@ -1,5 +1,11 @@
 # Decisions
 
+## GFS-461 - prepare, but do not create, independent watchdog infrastructure (2026-11-03 PKT)
+
+**Decision:** retain the current Admin/API 100%/0% baselines. The local controller and adapter pass their existing fixtures, but the GFS-460 blocker remains because no detached Cloudflare executor, isolated Worker, schedule or narrowly scoped routing credential is available.
+
+**Boundary:** do not create live or isolated external resources without a separate exact owner approval. The next approval may authorize only an isolated Admin-watchdog proof; it must exclude the WhatsApp API, payments, D1, Queue/DLQ, Cron, Meta and CAPI. A later approval is required for any live watchdog or 10% canary.
+
 ## GFS-460 - do not expose Admin without an independent watchdog (2026-11-03 PKT)
 
 **Decision:** retain Admin baseline `e8c96c96`100% and GFS-426 candidate `e44703c3`0%. Do not reuse the blocked GFS-459 approval.

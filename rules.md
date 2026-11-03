@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-461 Watchdog implementation boundary (2026-11-03 PKT)
+
+- The existing local controller and Wrangler adapter are testable but are not independent live rollback infrastructure. Do not present detached Node, Windows timers, browser timers, or Codex processes as a production watchdog.
+- Before creating any watchdog Worker, schedule, credential, binding or deployment, obtain a separate exact owner approval for an isolated/nonproduction proof. The proof must be restricted to the Admin control path, exclude the WhatsApp API/payment/D1/Queue/Cron/Meta resources, survive agent disconnection, and independently read back idempotent restoration.
+- No live Admin watchdog or GFS-459 canary is authorized by GFS-461. Preserve Admin `e8c96c96`100% / `e44703c3`0% and API `b426ba47`100% / `e8018f3f`0%.
+
 ## GFS-460 Independent Admin Canary Watchdog Boundary (2026-11-03 PKT)
 
 - The existing `canary-deadline-controller.mjs` is local release tooling only. Its rollback fixture suite is 18/18 PASS, but that does not prove an independent live watchdog.

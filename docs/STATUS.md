@@ -1,5 +1,14 @@
 # Status
 
+## GFS-461 - independent Admin rollback watchdog (2026-11-03 PKT)
+
+**Disposition: BLOCKED before live resource creation and canary exposure.**
+
+- Protected identity and current routing were rechecked in the authenticated Cloudflare dashboard: Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%.
+- Existing isolated safety evidence remains PASS: deadline/rollback controller18/18 and Cloudflare adapter8/8. These are local fixtures and do not prove detached Cloudflare scheduling or live routing authority.
+- No isolated/nonproduction Worker, schedule, credential or supported detached executor is available to test. Creating one requires separate owner approval and must exclude API, WhatsApp, payments, D1, Queue/DLQ, Cron, Meta and CAPI.
+- **Next exact approval:** authorize one isolated watchdog proof with a narrowly scoped Admin deployment read/write credential and schedule; no production binding or canary. Do not reuse the GFS-459 approval.
+
 ## GFS-460 - independent watchdog readiness (2026-11-03 PKT)
 
 **Disposition: BLOCKED before exposure; no canary approval reused.**
