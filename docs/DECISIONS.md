@@ -2379,3 +2379,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 **Boundary:** the dashboard's 98.9%/1.1% traffic card is retained as telemetry requiring monitoring interpretation, not as a configured rollout. No upload, attachment, percentage change, rollback, payment, D1, Queue, Meta or customer mutation occurred.
 
 **Next gate:** prepare, but do not execute, one Admin-only 10% canary approval request. Any canary requires separate explicit approval, fresh monitoring, rollback protection, an eight-minute maximum window and restoration by minute six.
+
+## GFS-477 decision — recovery flag is unattached-version drift (2026-11-03 PKT)
+
+- Accept the read-only version evidence: serving API baseline and old0% candidate are `true`; only unattached GFS-476 `9f6a4ecf-bf7f-43ff-abe0-e0d67e53bfd3` is `false`. Do not infer live regression from the unattached version.
+- Correct the checked-in API manifest to `PAYMENT_CHOICE_RECOVERY_ENABLED="true"` and enforce it with a focused test. Preserve the existing start timestamp and all unrelated configuration.
+- Do not upload, attach, deploy, override, restore, send messages, mutate orders/payments, enable CAPI or touch Admin/watchdog under GFS-477. A corrected immutable upload needs one new explicit approval.

@@ -6642,3 +6642,16 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 5. **Monitoring/rollback:** GFS-454 monitoring and GFS-456 candidate validation carried forward PASS; baseline rollback remains `e8c96c96`.
 6. **Protection:** API remains `b426ba47`100% / `e8018f3`0%; payments, WhatsApp, D1 data, Queue contents, Meta and CAPI OFF untouched.
 7. **Next approval:** one explicit Admin-only 10% canary authorization, capped at eight minutes with restoration by minute six, after interpreting the dashboard telemetry discrepancy. No canary was executed here.
+
+## GFS-477 final report — recovery flag configuration drift (2026-11-03 PKT)
+
+1. **Serving baseline:** `b426ba47` reads `PAYMENT_CHOICE_RECOVERY_ENABLED=true` and remains API100%; existing `e8018f3f` candidate is0% and also true.
+2. **New version:** unattached GFS-476 `9f6a4ecf-bf7f-43ff-abe0-e0d67e53bfd3` reads false with the preserved recovery start timestamp. It was not repaired in place.
+3. **Cause:** explicit false in `apps/api/wrangler.jsonc` was included in the new version; `--keep-vars` did not override an explicit manifest value. Live traffic was unaffected because that version was unattached.
+4. **Local correction:** manifest false→true plus `tests/api-manifest-config.test.ts`. Corrected dry-run passed; bundle SHA256 remained `468C26830E2B1BCECE289A893A1284E88D97FD8449ECD2D2C28D860F2F5272BA`.
+5. **Upload status:** no corrected version uploaded; GFS-477 supplied no upload approval. One separately approved immutable upload is the next release milestone, with no attachment or traffic promotion implied.
+6. **Tests:** focused3/3, guided104/104, full378/378, build PASS, lint PASS. Audit BLOCKED by npm registry advisory endpoint/log permissions. No +15/+210 source regression was found.
+7. **Protection:** API `b426ba47`100%/`e8018f3f`0%; Admin `e8c96c96`100%/`e44703c3`0%; CAPI OFF. No WhatsApp, payment, order, D1, Queue/DLQ, Cron, Meta, customer or watchdog mutation occurred.
+8. **Progress:** WhatsApp92%/8% remaining; resume local100%/live0%; COD local100%/live70%; Meta display name In Review; courier settlement remains external evidence-gated.
+9. **Git:** local tested commit `caa5a3400c839f5db1aaab6edb06d2fcc3821e98`; remote SHA is verified after push below.
+10. **One next action:** separately approve one corrected immutable API upload, then independently read back its recovery value and preserved configuration; do not attach or promote it.

@@ -2118,3 +2118,9 @@
 
 - Reconciled the latest Admin deployment through authenticated Cloudflare API: GFS-426 `e44703c3` is attached at configured 0% beside baseline `e8c96c96` at 100%; `ee9b7baa` is historical.
 - Recorded Queue/DLQ and D1 browser-read evidence and clarified Wrangler 7403 as shell authorization-context failure. No production mutation occurred.
+
+# 2026-11-03 - GFS-477 recovery flag drift correction
+
+- Proved through read-only version and deployment reads that recovery remained enabled on the serving API baseline and existing0% candidate; only unattached GFS-476 version `9f6a4ecf` carried the explicit false value.
+- Corrected the API manifest to true and added a focused anti-drift test. Dry-run, focused3/3, guided104/104, full378/378, build and lint passed; audit remains blocked by the registry endpoint.
+- No upload, attachment, deployment, customer traffic, payment, WhatsApp, Meta, CAPI, Admin or watchdog mutation occurred. Corrected immutable upload remains a separate approval gate.

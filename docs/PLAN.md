@@ -142,3 +142,7 @@ Self-review result: **PASS**.
 1. **Completed:** bounded live audit, payment-stage/Admin repair, migration rehearsal and one-time 0039/0040 apply on verified active D1, integrity readback, 0%-override smoke, sends-off promotion, and API trigger attachment.
 2. **Held safely:** reminder flags remain false because there are zero post-promotion orders and zero legitimate eligible recipients. No historical schedule or send is allowed.
 3. **Next authorized action:** when a genuinely new opted-in unpaid Advance order has a persisted inbound message identity/timestamp inside 24 hours, request/record the narrow activation authorization, then verify real Meta acceptance and status transitions. Keep utility-template approval false.
+
+## GFS-477 recovery-flag drift
+
+Read-only Cloudflare version/deployment evidence is complete. API baseline `b426ba47` is serving at100% with recovery enabled; `e8018f3f` remains0% with recovery enabled; unattached `9f6a4ecf-bf7f-43ff-abe0-e0d67e53bfd3` alone contains recovery disabled. The explicit false in the API manifest was corrected locally to true and guarded by a manifest test. No upload or routing mutation was performed. Next milestone is one separately approved immutable corrected upload, followed by independent readback only.

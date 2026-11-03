@@ -3553,3 +3553,18 @@ Investigation query costs only (not production savings): representative `rows_re
 | D1 identity | PASS | `getfreeseeds-staging`, expected database ID, browser read-only |
 | Monitoring/rollback | PASS carried forward | GFS-454/GFS-456 evidence; no unchanged rerun |
 | Traffic mutation | PASS | No upload, promotion, rollback or data write |
+
+## GFS-477 recovery manifest protection (2026-11-03 PKT)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Version-specific recovery readback | PASS | API baseline `b426ba47` true; old candidate `e8018f3f` true; unattached `9f6a4ecf` false |
+| Serving deployment | PASS | `b426ba47`100% / `e8018f3f`0%; no new attachment |
+| Local manifest guard | PASS | `tests/api-manifest-config.test.ts`; focused3/3 |
+| Guided acceptance | PASS | 104/104 |
+| Full regression | PASS | 378/378 |
+| Build/lint | PASS | TypeScript and ESLint |
+| Wrangler dry-run | PASS | `--keep-vars --strict`; corrected recovery value true |
+| Bundle provenance | PASS | SHA256 `468C26830E2B1BCECE289A893A1284E88D97FD8449ECD2D2C28D860F2F5272BA` |
+| Audit | BLOCKED | npm advisory endpoint and external log permissions |
+| Cloudflare mutation | NOT RUN | No GFS-477 upload approval; no deployment or traffic change |

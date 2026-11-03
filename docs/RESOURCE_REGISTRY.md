@@ -2374,3 +2374,10 @@ No secrets are stored in this registry.
 - GFS-426 version: `e44703c3-694f-4ffd-9416-f8edf1aacf42`, version117, tag `gfs-426-c2ddcd1`, source `c2ddcd1319489a33c6ca213fd12ce0e4372e1b6b`.
 - Queue: `getfreeseeds-events-staging` Active; matching staging DLQ Inactive. D1: `getfreeseeds-staging` / `17b7e9f6-e08b-4bff-a756-10de30b49ab1`.
 - Historical Admin deployment `034c190e-d233-4cab-9fa4-65aa068b1603` used `ee9b7baa` at0%; it is not the latest attachment.
+
+## GFS-477 verified resources (2026-11-03 PKT)
+
+- Cloudflare read-only resources: account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, Worker `getfreeseeds-api-staging`, serving baseline `b426ba47`100%, old candidate `e8018f3f`0%, unattached GFS-476 version `9f6a4ecf-bf7f-43ff-abe0-e0d67e53bfd3`. Recovery values were true/true/false respectively; no secret values were read or registered.
+- Source resources: `apps/api/wrangler.jsonc` corrected false→true; `tests/api-manifest-config.test.ts` added as a permanent guard. Source behavior remains the tested GFS-475 revision; bundle SHA256 is `468C26830E2B1BCECE289A893A1284E88D97FD8449ECD2D2C28D860F2F5272BA`.
+- Verification resources: focused3/3, guided104/104, full378/378, TypeScript build PASS, ESLint PASS, Wrangler dry-run PASS. npm audit is registered BLOCKED by advisory endpoint/log permissions.
+- No new version, deployment, attachment, traffic override, secret, binding, D1, Queue/DLQ, Cron, Meta, CAPI, payment, WhatsApp or customer-data resource was created or mutated. Corrected upload requires fresh approval.

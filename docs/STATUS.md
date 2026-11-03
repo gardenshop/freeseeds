@@ -3056,3 +3056,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Dashboard observed 98.9%/1.1% in its traffic card, but the control-plane deployment API remains 100%/0%; no promotion or correction was made.
 - Queue read: `getfreeseeds-events-staging` Active, its DLQ Inactive, average backlog0 and average lag5.5s. D1 browser identity read succeeded for `getfreeseeds-staging`; Wrangler 7403 is limited to the shell auth context.
 - GFS-454 monitoring and GFS-456 candidate validation remain the carried-forward gates. API remains `b426ba47`100% / `e8018f3`0%; CAPI and payments unchanged.
+
+## GFS-477 — API recovery flag drift (2026-11-03 PKT)
+
+- **Serving state:** API `b426ba47`100%; existing candidate `e8018f3f`0%; both read `PAYMENT_CHOICE_RECOVERY_ENABLED=true`. Authoritative deployment readback remained `b426ba47`100% / `e8018f3f`0%.
+- **Unattached version:** GFS-476 `9f6a4ecf-bf7f-43ff-abe0-e0d67e53bfd3` read `false` with the same recovery start timestamp. It is not attached and was not repaired in place.
+- **Cause/repair:** explicit manifest false overrode the intended value for that version; local `apps/api/wrangler.jsonc` now explicitly sets true and `tests/api-manifest-config.test.ts` prevents false drift. Corrected dry-run PASS; bundle SHA256 `468C26830E2B1BCECE289A893A1284E88D97FD8449ECD2D2C28D860F2F5272BA`.
+- **Verification:** focused3/3, guided104/104, full378/378, build PASS, lint PASS. Audit remains BLOCKED by npm registry advisory access/log permissions. No upload, deployment, attachment, customer test or live mutation.
+- **Readiness:** WhatsApp92% (resume local100%, live0%); COD local100%, live70%; Meta display name In Review. API/Admin remain exact100/0 and CAPI OFF. Next gate is separate approval for one corrected immutable upload.
