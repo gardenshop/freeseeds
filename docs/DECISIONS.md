@@ -1,5 +1,15 @@
 # Decisions
 
+## GFS-467 - stop at supported Quick Edit editor blocker (2026-11-03 PKT)
+
+**Decision:** accept authenticated MCP account/Worker/readback verification, but do not claim corrected deployment or detached proof. The owner-entered target token remains protected; the only new dashboard version is the secret-only c4533e19 version.
+
+**Blocker:** supported Quick Edit fill could not interact with Monaco, and keyboard transfer timed out or produced a partial unsaved draft. The draft was discarded. Do not use evaluate/DOM mutation, raw CDP, direct Cloudflare API, Wrangler, clipboard automation or extracted sessions.
+
+**Readback boundary:** gfs464-isolated-watchdog remains isolated with bindings0, queues0, no DO/alarm/scheduler, no target deployment mutation and no restore. Preserve Admin/API 100%/0%, CAPI OFF and all WhatsApp/payment/Meta/D1/Queue/Cron protections.
+
+**Next exact approval/blocker:** restore a supported Quick Edit editor path or provide an owner-approved supported source-upload control; then reverify account identity before one corrected isolated deployment. No production watchdog approval.
+
 ## GFS-466 - repair locally, hold external proof at tooling boundary (2026-11-03 PKT)
 
 **Decision:** accept the clean Worker repair and local retry/idempotence/deadline proof, but do not claim a deployed version or detached restoration. The first Quick Edit failure was wrapper contamination (Unexpected token '*'); the corrected module is verified only in Git.

@@ -1,5 +1,21 @@
 # Test Matrix
 
+## GFS-467 deployment and detached proof (2026-11-03 PKT)
+
+| Check | Result | Evidence / boundary |
+| --- | --- | --- |
+| Authenticated MCP access | PARTIAL PASS | Fresh page selection/snapshots worked; Cloudflare account identity and Worker were verified. |
+| Correct Worker/version readback | PASS | gfs464-isolated-watchdog read back; deployed c4533e19 is secret-only, prior code 66f471ed retained. |
+| Clean source transfer | BLOCKED | Quick Edit fill non-interactive; keyboard transfer timed out/partial; unsaved draft discarded. |
+| Corrected source deployment | NOT DONE | No corrected version created or deployed. |
+| Credential | PASS / secret protected | Owner-entered TARGET_API_TOKEN exists; value never observed. |
+| Binding/scheduler | NOT CONFIGURED | Worker bindings0, queues0; no DO migration/binding or alarm/schedule. |
+| Target deployment GET/POST | NOT RUN | No target baseline/candidate versions were prepared. |
+| Detached execution/restore/readback | NOT PROVEN | No arm or independent alarm run occurred. |
+| Deadline/retry/idempotence | LOCAL PASS ONLY | Watchdog4/4; no live timing evidence. |
+| Regression | PASS carried forward | Original3/3, controller18/18, adapter8/8, full372/372, build/lint; audit BLOCKED. |
+| Production protection | PASS / unchanged | Admin/API100%/0%; CAPI OFF; WhatsApp, payments, D1, Queue/DLQ, Cron, Meta and customer state untouched. |
+
 ## GFS-466 isolated watchdog repair (2026-11-03 PKT)
 
 | Check | Result | Evidence / boundary |

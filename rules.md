@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-467 Isolated Watchdog Deployment Boundary (2026-11-03 PKT)
+
+- Authenticated Chrome DevTools MCP access is partially restored: page selection, fresh snapshots, account identity, Worker identity and deployment readback succeeded. Verified dashboard identity was gisupp@gmail.com in Get Free Seeds account cb5066a6d71ecdee0bd7ed8aacb4d3c2.
+- The owner-secure TARGET_API_TOKEN entry exists without exposing its value. Dashboard readback shows deployed version c4533e19 is the secret-only version; prior code version 66f471ed remains in history. No corrected source was deployed.
+- Quick Edit Monaco editor interaction is not reliable through the supported MCP action: fill was non-interactive, large type transfer timed out/partially corrupted the unsaved draft, and bounded replacement failed at chunk5. The partial draft was explicitly discarded. Do not use DOM/evaluate mutation, raw CDP, direct API, Wrangler, clipboard automation or session extraction as a workaround.
+- Authoritative Worker readback remains isolated: bindings/workers0, queues0, no Durable Object binding, no scheduler/alarm, no arm, no target version change and no restore/readback execution. Production Admin/API routing remains e8c96c96/e44703c3 100%/0% and b426ba47/e8018f3f 100%/0%; CAPI OFF.
+- Preserve the new-number WhatsApp lock, Hoja Seeds zero-connection rule, payments, orders, D1, Queue/DLQ, Cron, Meta and customer state. No Admin canary or production watchdog authorization is requested. Audit remains BLOCKED by registry availability.
+
 ## GFS-466 Isolated Watchdog Repair Boundary (2026-11-03 PKT)
 
 - The Quick Edit Unexpected token '*' defect was wrapper contamination during external source transfer, not valid Worker syntax. The repository source is now a clean deployable ES module with the fixed target gfs462-isolated-target, exported Durable Object class WatchdogState, and no production bindings.

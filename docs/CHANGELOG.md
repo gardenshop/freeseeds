@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 - GFS-467 isolated watchdog deployment attempt
+
+- Verified authenticated Cloudflare account/Worker identity and read back owner secret-only version c4533e19; prior code version 66f471ed remains.
+- Quick Edit Monaco source transfer was blocked by supported MCP interaction timeouts and partial draft corruption; the unsaved draft was discarded.
+- No corrected deployment, Durable Object binding, scheduler, target version, detached restore, production, Meta, payment or customer mutation occurred.
+
 ## 2026-11-03 - GFS-466 isolated watchdog repair
 
 - Repaired the clean deployable Worker module after diagnosing Quick Edit Unexpected token '*' wrapper contamination.

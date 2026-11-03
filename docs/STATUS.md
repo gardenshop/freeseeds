@@ -1,5 +1,15 @@
 # Status
 
+## GFS-467 - deploy and verify isolated watchdog (2026-11-03 PKT)
+
+**Disposition: MCP identity/readback PASS; corrected deployment and detached proof BLOCKED safely. Production unchanged.**
+
+- Chrome DevTools MCP now supports fresh page selection/snapshots. Cloudflare identity was visibly gisupp@gmail.com; account URL is cb5066a6d71ecdee0bd7ed8aacb4d3c2; Worker is gfs464-isolated-watchdog.
+- Owner-secure TARGET_API_TOKEN is present without value exposure. Dashboard shows deployed version c4533e19 with commit message Add secret: TARGET_API_TOKEN; prior code version 66f471ed remains. No corrected source version was deployed.
+- Quick Edit Monaco editor could not reliably accept the clean source: fill timed out as non-interactive; keyboard transfer partially corrupted an unsaved draft and bounded replacement failed at chunk5. The partial draft was discarded through the supported dialog.
+- Readback: Worker bindings0, queues0, no Durable Object binding or scheduler/alarm, no target baseline/candidate versions, no arm and no detached restore/readback. No production resource was touched.
+- Carried-forward local gates remain watchdog4/4, original3/3, controller18/18, adapter8/8, full372/372, build/lint PASS; audit remains BLOCKED by registry availability.
+
 ## GFS-466 - repair and prove isolated watchdog (2026-11-03 PKT)
 
 **Disposition: source repair and local proof PASS; detached Cloudflare proof BLOCKED safely. Production unchanged.**

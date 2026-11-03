@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-467 isolated watchdog deployment state (2026-11-03 PKT)
+
+- **Identity/readback:** authenticated dashboard visibly showed gisupp@gmail.com, Get Free Seeds account cb5066a6d71ecdee0bd7ed8aacb4d3c2, Worker gfs464-isolated-watchdog.
+- **Versions:** c4533e19 is the owner secret-only deployment (Add secret: TARGET_API_TOKEN); 66f471ed is the prior code version. No corrected source version exists.
+- **Bindings/scheduler:** Worker bindings0, queues0, no Durable Object binding, migration, scheduler/alarm, arm state or target version deployment observed.
+- **Secret boundary:** TARGET_API_TOKEN value was never observed, logged, copied or committed. ARM_SECRET and CLOUDFLARE_ACCOUNT_ID were not configured/verified in the dashboard.
+- **MCP blocker:** Quick Edit Monaco editor did not accept fill reliably; keyboard source transfer timed out/partially corrupted the unsaved draft, which was discarded. No external source mutation or production mutation occurred.
+
 ## GFS-466 isolated watchdog repair state (2026-11-03 PKT)
 
 - Local source: scripts/gfs464-isolated-watchdog-worker.mjs is a clean deployable ES module for gfs464-isolated-watchdog; target allowlist is exactly gfs462-isolated-target, with exported WatchdogState Durable Object entry and no production bindings.

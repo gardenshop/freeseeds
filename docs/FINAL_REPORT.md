@@ -1,5 +1,21 @@
 # Final Report
 
+## GFS-467 - deploy and verify isolated watchdog (2026-11-03 PKT)
+
+**Overall: MCP READBACK PASS; DEPLOYMENT/DETACHED PROOF BLOCKED SAFELY.**
+
+Compared with every GFS-466 assignment: MCP account/Worker navigation is now partially usable; the owner-secure token is present without exposure; authoritative readback works; Quick Edit source transfer remains the blocker; no corrected source, binding, scheduler, target test or restore occurred.
+
+1. **MCP access:** PARTIAL PASS. Fresh select/snapshot verified gisupp@gmail.com, Get Free Seeds account cb5066a6d71ecdee0bd7ed8aacb4d3c2 and gfs464-isolated-watchdog. Monaco editor actions were unreliable.
+2. **Watchdog deployed version:** No corrected version. c4533e19 is the secret-only deployment; 66f471ed remains prior code.
+3. **Credential/binding/scheduler:** TARGET_API_TOKEN is owner-entered and protected; value not observed. Worker bindings0, queues0; no DO migration/binding, ARM_SECRET, CLOUDFLARE_ACCOUNT_ID or scheduler/alarm verified.
+4. **Detached execution/restore:** NOT PROVEN. No target baseline/candidate versions, arm, detached alarm or authoritative restore readback.
+5. **Deadline/retry/idempotence:** PASS locally only: watchdog4/4; live minute6/minute8 behavior NOT PROVEN.
+6. **Regression/production:** Original3/3, controller18/18, adapter8/8, full372/372, build/lint PASS carried forward; audit BLOCKED by registry. Admin e8c96c96 100% / e44703c3 0%; API b426ba47 100% / e8018f3f 0%; CAPI OFF; protected WhatsApp/payment/D1/Queue/Cron/Meta/customer state unchanged.
+7. **Completion:** P0 preserve/identity/readback 100% complete; P1 MCP 50%, corrected deployment/configuration 0%; P2 detached proof 0%, production protection 100%.
+8. **Verified Git SHA:** 916c146579be49f3c44b0b9b31adcb9a764751f0 was the verified PR11 starting HEAD; GFS-467 adds documentation only.
+9. **ONE blocker:** restore a supported Quick Edit source-upload/editor path, then reverify account identity before one isolated deployment. No production watchdog authorization.
+
 ## GFS-466 - repair and prove isolated watchdog (2026-11-03 PKT)
 
 **Overall: LOCAL REPAIR PASS; DETACHED CLOUDFLARE PROOF BLOCKED SAFELY.**
