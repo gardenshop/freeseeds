@@ -1,5 +1,15 @@
 # Final Report
 
+## GFS-462 - isolated rollback proof (2026-11-03 PKT)
+
+1. **Implementation/resources:** Local `scripts/gfs462-isolated-watchdog.mjs` and 3/3 focused tests pass. One isolated Cloudflare target `gfs462-isolated-target` was created in the verified Get Free Seeds account; its dashboard version label is `29c5d0b6`. No watchdog Worker, Durable Object/alarm, schedule, routing credential or production permission was created.
+2. **Approval/scope:** Owner approval was present for one isolated proof only. The target has no bindings/routes/queues/D1. The browser safety guard rejected the second Worker-creation flow before mutation, so detached Cloudflare execution could not be tested safely.
+3. **Independent execution/deadline:** Local evidence proves six-minute restore start, eight-minute hard deadline policy, immutable canary/target/version allowlist, idempotence, stale/conflicting request rejection and fail-closed readback. Live detached execution, agent-disconnection survival and actual Cloudflare deployment restoration are **NOT PROVEN**.
+4. **Regression:** `npm test` 31 files/372 tests PASS; build PASS; lint PASS; existing controller18/18 and adapter8/8 PASS. No source or external production defect was found.
+5. **Routing/protection:** Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%; CAPI OFF. WhatsApp EN/UR, COD/Advance, payments, D1, Queue/DLQ, Cron, Meta and customer traffic were untouched.
+6. **Comparison to GFS-461:** PASS for approved local isolated implementation and test target; BLOCKED for detached Worker/schedule and independent Cloudflare deployment restoration. No canary was exposed.
+7. **Next exact approval:** authorize one isolated watchdog Worker/schedule only if its permission can be restricted to `gfs462-isolated-target`, then run detached restore/readback and deadline tests. Request production Admin restoration permission separately afterward; do not request a canary under GFS-462.
+
 ## GFS-461 - independent Admin rollback watchdog (2026-11-03 PKT)
 
 **Overall: BLOCKED safely before external resource creation and canary exposure.**

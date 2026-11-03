@@ -1,5 +1,15 @@
 # Status
 
+## GFS-462 - isolated rollback proof (2026-11-03 PKT)
+
+**Disposition: local watchdog proof PASS; detached Cloudflare watchdog BLOCKED before creation. Production unchanged.**
+
+- Authenticated Cloudflare dashboard identity was `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. One isolated test target, `gfs462-isolated-target`, was created by the UI; dashboard version label `29c5d0b6`, no bindings/routes/queues/D1. No watchdog Worker, alarm/schedule or routing credential was created.
+- Local watchdog source is narrowly pinned to `gfs462-isolated-target`, synthetic baseline/candidate IDs, six-minute restore start and eight-minute deadline. Focused proof 3/3, repository full 372/372, build, lint, existing controller18/18 and adapter8/8 all PASS.
+- Browser safety refused a second Worker creation flow before mutation, so detached execution, scheduler survival and actual Cloudflare deployment restoration remain NOT PROVEN. No production Admin/API access was granted.
+- Final serving state remains Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%; CAPI OFF; WhatsApp, payments, D1, Queue/DLQ, Cron and Meta unchanged.
+- **Next exact approval:** authorize one isolated watchdog Worker/schedule only if Cloudflare can scope it to `gfs462-isolated-target`; then test its detached restore/readback. After that, separately approve any production Admin restoration permission. No canary approval is requested here.
+
 ## GFS-461 - independent Admin rollback watchdog (2026-11-03 PKT)
 
 **Disposition: BLOCKED before live resource creation and canary exposure.**

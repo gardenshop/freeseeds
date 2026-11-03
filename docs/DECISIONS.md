@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-462 - isolated watchdog proof (2026-11-03 PKT)
+
+**Decision:** accept the local fail-closed proof and the single isolated target creation, but do not claim an independent Cloudflare watchdog or production rollback readiness.
+
+- Local proof covers immutable canary identity, exact isolated target/version allowlist, six-minute restore start, eight-minute hard deadline, idempotent restore/readback, stale/conflicting request rejection and fail-closed mismatch handling.
+- The target was created in the verified account as `gfs462-isolated-target` with dashboard version label `29c5d0b6`; it has no production bindings. The browser safety guard rejected a second Worker-creation flow before mutation, so no watchdog Worker, schedule/alarm or routing credential exists.
+- Preserve Admin `e8c96c96`100% / `e44703c3`0% and API `b426ba47`100% / `e8018f3f`0%. Production restoration authority and canary exposure remain separately gated.
+
 ## GFS-461 - prepare, but do not create, independent watchdog infrastructure (2026-11-03 PKT)
 
 **Decision:** retain the current Admin/API 100%/0% baselines. The local controller and adapter pass their existing fixtures, but the GFS-460 blocker remains because no detached Cloudflare executor, isolated Worker, schedule or narrowly scoped routing credential is available.

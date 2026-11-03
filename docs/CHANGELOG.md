@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-03 - GFS-462 isolated rollback proof
+
+- Added the isolated-only watchdog state machine and 3/3 focused tests: immutable target/version allowlist, six-minute restore start, eight-minute hard deadline, idempotent restore and fail-closed readback.
+- Created one Cloudflare test target `gfs462-isolated-target` in the verified account; dashboard version label `29c5d0b6`. No bindings or production access were added.
+- The browser safety guard refused the separate watchdog Worker creation before mutation. No schedule/alarm, detached credential, production routing permission, canary, payment, D1, WhatsApp, Meta or CAPI change occurred.
+- Regression gates passed: full372/372, build, lint, controller18/18 and adapter8/8.
+
 ## 2026-11-03 - GFS-461 watchdog implementation held at approval boundary
 
 - Revalidated the protected Admin/API baseline and reran the existing local controller18/18 and adapter8/8 suites.

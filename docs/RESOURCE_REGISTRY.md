@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-462 isolated rollback proof (2026-11-03 PKT)
+
+- **Account identity:** Cloudflare `gisupp@gmail.com`, Get Free Seeds `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; verified in the authenticated dashboard before the isolated target creation.
+- **Isolated target:** `gfs462-isolated-target`, dashboard version label `29c5d0b6`; no bindings, routes, queues or D1 attachments observed. It is not a production service.
+- **Local watchdog:** `scripts/gfs462-isolated-watchdog.mjs` with `scripts/test-gfs462-isolated-watchdog.mjs`; synthetic allowlist only, no credentials/secrets.
+- **Not created:** watchdog Worker, Durable Object/schedule, detached routing credential, production Admin permission. Browser safety guard refused the second Worker-creation flow before mutation.
+- **Protected serving state:** Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%; CAPI OFF. WhatsApp, payments, D1, Queue/DLQ, Cron and Meta unchanged.
+
 ## GFS-461 watchdog readiness boundary (2026-11-03 PKT)
 
 - **Existing local assets:** `scripts/canary-deadline-controller.mjs` and `scripts/cloudflare-canary-adapter.mjs`; controller18/18 and adapter8/8 pass. They are not independent live infrastructure.

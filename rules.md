@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-462 isolated rollback proof (2026-11-03 PKT)
+
+- Owner approval authorizes exactly one isolated watchdog proof and one isolated test target only. Production Admin `e8c96c96` remains100% / `e44703c3`0%; API `b426ba47` remains100% / `e8018f3f`0%.
+- The verified Cloudflare account created `gfs462-isolated-target` only; its dashboard version label is `29c5d0b6`, and it has no bindings, routes, queues, D1 or access to the production Workers. No watchdog Worker, schedule, Durable Object, routing credential or production permission was created.
+- Local `scripts/gfs462-isolated-watchdog.mjs` is restricted to the isolated target and synthetic allowlisted versions. It restores at six minutes, hard-stops at eight minutes, rejects stale/conflicting requests, is idempotent, and fails closed on readback mismatch. Local proof is not live Cloudflare deployment restoration.
+- A second Worker-creation flow was refused by the browser safety guard before mutation. Do not treat the isolated target or local proof as permission to create production Admin routing authority. A separate approval is required for an isolated watchdog Worker/schedule if the UI can safely scope it, then a separate approval for production restoration permission.
+
 ## GFS-461 Watchdog implementation boundary (2026-11-03 PKT)
 
 - The existing local controller and Wrangler adapter are testable but are not independent live rollback infrastructure. Do not present detached Node, Windows timers, browser timers, or Codex processes as a production watchdog.

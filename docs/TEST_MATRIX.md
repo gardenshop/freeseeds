@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-462 isolated watchdog proof (2026-11-03 PKT)
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| Isolated target creation | PASS | Cloudflare dashboard created `gfs462-isolated-target` in the verified Get Free Seeds account; version label `29c5d0b6`, no bindings/routes/queues/D1. |
+| Local watchdog focused proof | PASS | `npm run test:watchdog:gfs462`: 3/3; immutable target/version allowlist, six-minute restore, idempotence and readback fail-closed. |
+| Full repository regression | PASS | `npm test`: 31 files / 372 tests. |
+| Build and lint | PASS | `npm run build`; `npm run lint`. |
+| Existing controller/adapter regression | PASS | Controller18/18 and adapter8/8. |
+| Detached Cloudflare watchdog Worker | BLOCKED | Browser safety guard refused the second Worker-creation flow before mutation; no schedule/alarm or routing credential exists. |
+| Independent scheduled execution/deadline | NOT PROVEN | Requires the isolated watchdog resource and detached execution test. |
+| Production routing/canary | NOT RUN | Admin/API remain100%/0%; no production permission or exposure. |
+
 ## GFS-461 watchdog readiness (2026-11-03 PKT)
 
 | Check | Result | Evidence |
