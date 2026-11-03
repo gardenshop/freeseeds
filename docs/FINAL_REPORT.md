@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-470 - scoped Wrangler authentication and watchdog deployment (2026-11-03 PKT)
+
+**Overall: SCOPE VERIFIED; CREDENTIAL SAFELY REVOKED; DEPLOYMENT AND LIVE PROOF BLOCKED.**
+
+Compared with GFS-469: the official Worker Settings token control was reached and confirmed the exact isolated scope, but the one-time confirmation response rendered credential material in MCP output. The token was immediately revoked; no secret was transferred to Wrangler and no Cloudflare Worker mutation followed.
+
+1. **Credential scope/status:** `Individual Workers Editor`, restricted to `gfs464-isolated-watchdog`; created then revoked immediately after unsafe MCP rendering. No value recorded.
+2. **Account/Worker verification:** authenticated dashboard showed `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, Worker `gfs464-isolated-watchdog`, active `c4533e19`.
+3. **Upload/deploy version:** none. No Wrangler authentication, upload or deploy occurred.
+4. **Preserved secrets/bindings:** TARGET_API_TOKEN remained encrypted and unchanged; no DO binding/migration, ARM secret, route, schedule or other binding was changed.
+5. **Detached rollback/readback:** NOT PROVEN; no target allocation, arm, alarm, GET/POST, restore or authoritative readback.
+6. **Deadline/retry/idempotence:** local-only evidence remains watchdog4/4; live minute6/minute8 behavior NOT PROVEN.
+7. **Regression/security:** prior local gates remain PASS (original3/3, controller18/18, adapter8/8, full372/372, build/lint); audit remains BLOCKED by npm registry. No production, Meta, payment, WhatsApp, D1, Queue/DLQ, Cron or customer mutation.
+8. **Production routing:** Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `e8018f3f`0%; CAPI OFF.
+9. **Completion:** P0 100%; P1 scope verification 100%, secure handoff/upload/deploy 0%; P2 0%; protection 100%.
+10. **ONE blocker/approval:** provide a secure owner-approved process-only or Windows Credential Manager handoff that prevents token disclosure in MCP output; then repeat one fresh scoped authentication, upload and deploy.
+
 ## GFS-469 - authorized isolated Wrangler deployment (2026-11-03 PKT)
 
 **Overall: OWNER APPROVAL RECORDED; MANIFEST/LOCAL TESTS PASS; CLOUDFARE DEPLOYMENT BLOCKED BY MISSING SCOPED WRANGLER AUTH.**

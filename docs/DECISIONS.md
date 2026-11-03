@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-470 - revoke exposed one-time credential and stop
+
+**Decision:** create only through the official Worker-scoped control, verify exact `Individual Workers Editor` scope, then revoke immediately when the one-time confirmation response rendered credential material in MCP output. Do not deploy with an exposed credential.
+
+**Security boundary:** TARGET_API_TOKEN remains unchanged; no clipboard, shell argument, environment persistence, source, log, Git or Wrangler transfer occurred. No broad token or `wrangler login` is authorized.
+
+**Blocker:** secure process-only/Windows Credential Manager handoff is not available. The next action requires an owner-approved secure handoff path that keeps the new token out of browser/MCP output, followed by fresh identity verification and one upload/deploy.
+
 ## GFS-469 - hold approved Wrangler deployment at authentication gate (2026-11-03 PKT)
 
 **Decision:** accept the owner-approved one-upload/one-deploy exception, prepare and dry-run the isolated manifest, but stop before external mutation because Wrangler has no authenticated, separately scoped credential.

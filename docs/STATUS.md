@@ -1,5 +1,14 @@
 # Status
 
+## GFS-470 - scoped Wrangler authentication and watchdog deployment (2026-11-03 PKT)
+
+**Disposition: scoped token control verified, token revoked safely after MCP disclosure, upload/deploy BLOCKED. Production unchanged.**
+
+- Fresh official Worker Settings UI showed `Individual Workers Editor` restricted to `gfs464-isolated-watchdog`; the existing `TARGET_API_TOKEN` remained encrypted and untouched.
+- The newly created one-time token was not transferred to Wrangler because the confirmation response rendered credential material in the MCP output. It was immediately revoked in the official Account API token UI. No credential value is recorded here.
+- Secure process-only or Windows Credential Manager handoff is unavailable. No `wrangler login`, upload, deploy, DO binding, migration, ARM secret, target mutation, alarm or restore occurred.
+- Current Cloudflare Worker remains `c4533e19` secret-only with bindings0/queues0. Production routing and protected protocols are unchanged.
+
 ## GFS-469 - authorized isolated Wrangler deployment (2026-11-03 PKT)
 
 **Disposition: owner transport approval recorded; local manifest PASS; actual Cloudflare upload/deploy BLOCKED by missing separately scoped Wrangler authentication. Production unchanged.**

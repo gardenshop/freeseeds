@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-470 scoped authentication and deployment (2026-11-03 PKT)
+
+| Check | Result | Evidence / boundary |
+| --- | --- | --- |
+| Owner approval | PASS | One new Worker-scoped token plus one upload/deploy, isolated Worker only. |
+| Official token scope | PASS | Worker Settings showed `Individual Workers Editor`, exact `gfs464-isolated-watchdog`. |
+| Secure handoff | BLOCKED | One-time confirmation rendered credential material in MCP output; no safe process-only/Credential Manager bridge available. |
+| Credential disposition | REVOKED | Newly created token revoked immediately through official Account API token UI; value not reused or recorded. |
+| TARGET_API_TOKEN | PRESERVED | Existing secret remained encrypted and unchanged. |
+| Wrangler upload/deploy | NOT DONE | Stopped before mutation; no credential transferred. |
+| Cloudflare state | UNCHANGED | `c4533e19` remains active; bindings0/queues0. |
+| Production protection | PASS | Admin/API100%/0%, CAPI OFF; no production or Meta/payment/WhatsApp action. |
+
 ## GFS-469 authorized Wrangler deployment (2026-11-03 PKT)
 
 | Check | Result | Evidence / boundary |

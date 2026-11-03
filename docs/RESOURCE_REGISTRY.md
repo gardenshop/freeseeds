@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-470 scoped Wrangler credential state (2026-11-03 PKT)
+
+- **Scope verified:** official Worker Settings control showed `Individual Workers Editor`, restricted to `gfs464-isolated-watchdog` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- **Disposition:** one new token was created, but its one-time confirmation response rendered credential material in MCP output; it was immediately revoked through the official Account API token UI. No token value, ID, expiry detail or credential material is recorded here.
+- **Handoff/deployment:** no secure process-only or Windows Credential Manager bridge was available; no Wrangler authentication, upload, deploy, secret, binding, target, alarm or restore occurred.
+- **Preserved state:** TARGET_API_TOKEN remains owner-managed and unexposed; active watchdog remains `c4533e19` secret-only, bindings0/queues0; production unchanged.
+
 ## GFS-469 authorized Wrangler deployment state (2026-11-03 PKT)
 
 - **Approval:** one official Wrangler version upload and one subsequent deploy are authorized only for `gfs464-isolated-watchdog` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no production or account-wide authority.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 - GFS-470 scoped credential safety stop
+
+- Verified the official Worker-scoped token control showed `Individual Workers Editor` for `gfs464-isolated-watchdog` only.
+- Revoked the newly created one-time token immediately because the MCP confirmation response rendered credential material; no value was copied, persisted, or used.
+- Stopped before Wrangler upload/deploy because a secure process-only credential handoff was unavailable. Existing secret and all production resources remain unchanged.
+
 ## 2026-11-03 - GFS-469 authorized Wrangler deployment gate
 
 - Recorded the owner-approved one-time Wrangler exception for the existing isolated watchdog only.

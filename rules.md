@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-470 Scoped Wrangler Authentication Boundary (2026-11-03 PKT)
+
+- Owner approval authorized one new Worker-scoped API token and one Wrangler upload/deploy, only for `gfs464-isolated-watchdog` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no account-wide or production authority.
+- The official Worker Settings control confirmed `Individual Workers Editor` and exact scope `gfs464-isolated-watchdog`. The one-time confirmation response rendered credential material in the MCP output, so the token was treated as compromised and immediately revoked through the official Account API token UI. Its value was not copied, transferred, persisted, logged in Git, or used by Wrangler.
+- Secure process-only/Windows Credential Manager handoff is unavailable in this execution context. Do not use the existing `TARGET_API_TOKEN`, browser clipboard, `wrangler login`, raw API, DOM/evaluate, session extraction, or any broader credential. No upload/deploy or binding/secret mutation occurred.
+- Preserve all prior GFS-469/GFS-468 boundaries and require a secure owner-approved credential handoff that does not render the secret in MCP output before retrying the one upload/deploy.
+
 ## GFS-469 Authorized Isolated Wrangler Exception (2026-11-03 PKT)
 
 - Owner approval authorizes exactly one official Wrangler `versions upload` and one subsequent `versions deploy`, only for existing Worker `gfs464-isolated-watchdog` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, with no production, account-wide or unrelated Worker authority. This exception is single-use for GFS-469 and must not be reused.
