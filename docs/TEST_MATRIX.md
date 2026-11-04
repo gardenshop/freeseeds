@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-COD-MO-05 controlled migration/HMAC verification (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Exact migration0047 | PASS | Targeted Cloudflare remote-file execution succeeded once (16 statements); no blanket migration command. |
+| Remote MO schema/guards | PASS | Marker `0047` once, empty MO table, two immutable guards, eight retained historical COD/payment guards. |
+| Historical/Advance preservation | PASS | No order/payment DML in migration; normal intake 832→834 paired orders/payments; Advance 3/3 enabled and COD enabled PKR125. |
+| Recovery boundary | PASS / no restore | Current Time Travel bookmark captured pre-write; restore remains separately authorized only. |
+| Admin HMAC binding | PASS | `COD_REFERENCE_HMAC_KEY` on nondeployed `05dedc81…`; value not read or logged. |
+| Routing/CAPI protection | PASS | API `b426ba47`100% / `d683ec45`0%; Admin `e8c96c96`100% / `e44703c3`0%; CAPI OFF, recovery ON. |
+| WhatsApp/API/Admin health | PASS | Fresh API health ready/WhatsApp enabled; fresh Orders/Conversations reads pass. |
+| Source regression | NOT RERUN | No source change; retained baseline 378 passed/1 skipped, build/lint PASS. |
+| MO Admin release | PENDING AUTHORIZATION | Prepared Admin version is nondeployed; controlled Admin-only deployment is the sole next action. |
+
 ## GFS-COD-MO-04 final D1 verification (2026-11-05 PKT)
 
 | Gate | Result | Evidence |

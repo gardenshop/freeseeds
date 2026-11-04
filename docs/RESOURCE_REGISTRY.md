@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-COD-MO-05 controlled release resources (2026-11-05 PKT)
+
+- **D1:** verified `getfreeseeds-staging` / `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Exact 0047 applied once; marker is one, `cod_mo_receipts` is empty, two immutable guards and eight retained historical guards are present. No order/payment rows were updated by migration.
+- **Recovery:** Time Travel bookmark captured before the write; retain privately. Recovery is available, but restore is forbidden without separate incident approval because customer intake remains live.
+- **Admin secret version:** nondeployed `05dedc81-7386-4289-82d1-15f7831bb4b7`, tag `gfs-cod-mo-05-hmac`, contains binding name `COD_REFERENCE_HMAC_KEY` plus the existing D1/R2/Queue bindings. Secret value is intentionally unrecorded. Active deployment remains `e8c96c96`100% / `e44703c3`0%.
+- **Protected runtime:** API `b426ba47`100% / `d683ec45`0%, D1/R2/Queue bindings unchanged, CAPI false and recovery true. API health reports WhatsApp enabled; Admin fresh reads pass. Advance is 3/3 enabled; COD is enabled at PKR125.
+
 ## GFS-COD-MO-04 final D1 verification resources (2026-11-05 PKT)
 
 - **Browser/identity:** official Chrome DevTools MCP `list_pages` first; Cloudflare Dashboard readback showed `gisupp@gmail.com` and Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. No Hoja account page was opened and no authentication or mutation occurred.

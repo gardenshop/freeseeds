@@ -4,6 +4,13 @@
 - **Controls:** HMAC-only MO reference, unique MO constraint, exact payable amount, operator confirmation, immutable ledger, atomic PAID transition and idempotent replay handling. No live migration/deployment or CAPI enablement occurred.
 - **Checkout:** quote-first explicit COD confirmation prevents new no-method orders; Advance remains separate.
 
+## GFS-COD-MO-05 - controlled migration and HMAC boundary (2026-11-05 PKT)
+
+- **Decision:** accept the authorized 0047 application and nondeploying Admin HMAC version preparation as complete. Do not treat either as authorization to deploy the Admin version or to change API/COD routing.
+- **Evidence:** verified D1 marker `0047` once, empty MO ledger, immutable receipt guards, retained historical guards, unchanged Advance/COD configuration, and continued healthy API/Admin reads. New version `05dedc81-7386-4289-82d1-15f7831bb4b7` contains the named HMAC binding and retains D1/R2/Queue bindings but is not in the active deployment.
+- **Recovery boundary:** a pre-write Time Travel bookmark exists; automatic restore is prohibited because it can discard new live orders.
+- **Next exact authorization:** deploy only the HMAC-bound Admin MO Received version through a separately approved controlled Admin release, then verify routing and live-safe reads. Keep API default-COD deferred and CAPI OFF.
+
 ## GFS-MCP-RESTORE - existing Chrome attachment recovered (2026-11-04 PKT)
 
 - **Decision:** accept the one fresh official Codex/Chrome DevTools MCP session as the correct existing-browser attachment. The saved `--autoConnect` registration returned ten existing tabs, including WhatsApp Web, Meta Ads Manager and Get Free Seeds admin pages; the MCP cache `about:blank` profile is rejected.

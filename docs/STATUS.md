@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-MO-05 controlled D1/HMAC preparation (2026-11-05 PKT)
+
+**Disposition: D1 and HMAC preparation PASS; Admin MO deployment remains separately gated.**
+
+- Targeted Cloudflare remote-file execution applied only 0047 (16 statements). Remote verification: marker once, empty MO ledger, two immutable guards, eight retained historical guards, and no order/payment DML in the migration. Live intake advanced aggregates from 832 to 834 orders/payments during the window; no historical record was altered.
+- Nondeploying `wrangler versions secret put` created version `05dedc81-7386-4289-82d1-15f7831bb4b7` with `COD_REFERENCE_HMAC_KEY`; the value was not exposed. Cloudflare confirms it is not deployed. Admin routing stays `e8c96c96`100% / `e44703c3`0%; API stays `b426ba47`100% / `d683ec45`0%.
+- Fresh API health is ready/WhatsApp enabled. Fresh Admin Orders and Conversations reads load without errors. Advance remains three enabled methods, COD remains PKR125 enabled, recovery remains ON and CAPI OFF. No deployment, traffic, customer, payment, WhatsApp or Meta mutation occurred.
+- A Time Travel bookmark was recorded before the D1 write. Do not restore automatically; a restore could discard later live orders. Existing source baseline remains 378 passed/1 skipped, build/lint PASS; no source test was rerun because no source changed.
+
 ## GFS-COD-MO-04 final D1 verification (2026-11-05 PKT)
 
 **Disposition: verification PASS; MO Admin release NO-GO pending migration and secret-binding gates.**

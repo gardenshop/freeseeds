@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-COD-MO-05 controlled D1/HMAC preparation (2026-11-05 PKT)
+
+**Overall: D1 and nondeploying HMAC preparation PASS; Admin MO release is NO-GO pending separate controlled-deployment authorization.**
+
+1. **Migration0047:** APPLIED once through targeted remote-file execution; no blanket migration or other pending migration was run.
+2. **MO table and guards:** PASS. `cod_mo_receipts` exists and is empty; HMAC uniqueness plus immutable update/delete guards exist; eight historical COD/payment guards remain.
+3. **Admin HMAC binding:** PASS. `COD_REFERENCE_HMAC_KEY` is bound to nondeployed Admin version `05dedc81-7386-4289-82d1-15f7831bb4b7` (`gfs-cod-mo-05-hmac`); value not read. Active Admin remains untouched.
+4. **Historical orders:** PRESERVED. Migration performed no order/payment DML; only normal live intake increased paired aggregates 832→834.
+5. **Advance payments:** UNCHANGED. Three configured methods remain enabled; COD remains enabled at PKR125.
+6. **Live WhatsApp health:** PASS. Fresh API health is ready with WhatsApp enabled; fresh Admin Orders/Conversations reads pass.
+7. **Production routing:** unchanged before/after: API `b426ba47`100% / `d683ec45`0%; Admin `e8c96c96`100% / `e44703c3`0%.
+8. **CAPI:** OFF. Recovery remains ON. D1/R2/Queue bindings remain intact; no Worker deployment occurred.
+9. **Tests/defects:** no source defect and no source change; retained baseline 378 passed/1 skipped, build/lint PASS. No new defect found.
+10. **Completion:** migration 100%; HMAC prepared 100%; Admin MO deployment 0%; API default-COD 0%; CAPI 0%.
+11. **Git SHA:** pending documentation commit and remote verification.
+12. **One next Admin MO deployment action:** authorize controlled deployment of only Admin version `05dedc81-7386-4289-82d1-15f7831bb4b7`, then perform read-only routing/health verification; do not deploy API.
+
 ## GFS-COD-MO-04 final D1 verification (2026-11-05 PKT)
 
 **Overall: local candidate PASS; controlled MO release NO-GO.**
