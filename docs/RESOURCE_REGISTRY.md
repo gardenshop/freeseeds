@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-COD-MO-04 final D1 verification resources (2026-11-05 PKT)
+
+- **Browser/identity:** official Chrome DevTools MCP `list_pages` first; Cloudflare Dashboard readback showed `gisupp@gmail.com` and Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. No Hoja account page was opened and no authentication or mutation occurred.
+- **D1:** `getfreeseeds-staging`, 831 orders, 831 payments, 45 receipt rows, 432 COD rows (431 pending/1 dispatched); markers `0030,0036,0037,0038,0039,0040,0041,0042,0043`; no `cod_mo_receipts` or `0047` marker. COD enabled/PKR125; policy hashes absent.
+- **Recovery:** official Time Travel window visible for 30 days; no bookmark or restore action taken.
+- **Workers:** Admin `e8c96c96`100% / `e44703c3`0% with no `COD_REFERENCE_HMAC_KEY` production secret binding; API `b426ba47`100% / `d683ec45`0%, `META_CAPI_ENABLED=false`, recovery enabled. No deployment or routing change.
+- **Local compatibility:** full local migration probe through 0047 passed MO table/trigger creation, `quick_check=ok` and empty foreign-key check. This is not remote migration proof.
+
 ## GFS-COD-MO source resources (2026-11-04 PKT)
 
 - **Settlement migration:** `migrations/0047_cod_pakistan_post_mo.sql`; creates the immutable `cod_mo_receipts` ledger and trigger-safe historical/MO PAID paths.

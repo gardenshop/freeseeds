@@ -1,5 +1,21 @@
 # Test Matrix
 
+## GFS-COD-MO-04 final D1 verification (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Chrome MCP connection | PASS | `list_pages` first; existing same-browser Cloudflare tab path; no auth renewal or mutation. |
+| Cloudflare identity/account | PASS | Visible `gisupp@gmail.com`, Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Hoja account not opened. |
+| Current D1 schema | PASS / pre-0047 | 831 orders, 831 payments, 45 receipts, 432 COD rows; markers through `0043`; no MO table. |
+| Current COD triggers/config | PASS read-only | 431 `COD_PENDING`, 1 `DISPATCHED`; PKR125 enabled; policy hashes absent. |
+| Migration0047 local compatibility | PASS | Full local schema probe: MO table, 20 triggers, marker `0047`, `quick_check=ok`, FK check empty. |
+| Admin HMAC binding | FAIL | Production Admin settings do not list `COD_REFERENCE_HMAC_KEY`; value was not read. |
+| D1 recovery readiness | PASS / limited | Time Travel 30-day window visible; no bookmark or restore performed. |
+| API/Admin routing | PASS protected | API `b426ba47`100% / `d683ec45`0%; Admin `e8c96c96`100% / `e44703c3`0%. |
+| CAPI/WhatsApp/payment protection | PASS unchanged | API CAPI false, recovery true; no traffic, order, payment, Meta, CAPI or WhatsApp mutation. |
+| Existing source baseline | NOT RERUN | Source unchanged; prior 378 passed / 1 skipped, build/lint PASS retained. |
+| MO Admin release | NO-GO | Remote schema and Admin HMAC binding are not ready; candidate remains 0%. |
+
 ## GFS-COD-MO source verification (2026-11-04 PKT)
 
 | Gate | Result | Evidence |

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-05 - GFS-COD-MO-04 final D1 verification
+
+- Official Chrome MCP and Cloudflare Dashboard readback passed for `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no authentication renewal or mutation occurred.
+- Read-only D1 confirmed 831 orders, 831 payments, 45 receipt rows, 432 COD sidecars, markers through `0043`, no `cod_mo_receipts`, and absent collection/remittance policy hashes. Time Travel recovery is available for 30 days; no bookmark or restore was performed.
+- Admin/API routing remains frozen at `e8c96c96`/`b426ba47` 100% with `e44703c3`/`d683ec45` 0%; Admin `COD_REFERENCE_HMAC_KEY` is absent, API CAPI is false and recovery is true. Local 0047 compatibility probe passed; MO release remains NO-GO. No source tests were repeated because source was unchanged.
+
 ## 2026-11-04 - GFS-COD-MO source-ready Pakistan Post settlement
 
 - Implemented Pakistan Post MO settlement with HMAC-only unique references, exact amount validation, immutable ledger, atomic PAID transition, operator audit and idempotent replay protection.

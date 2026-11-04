@@ -23,6 +23,13 @@
 - **Payment boundary:** 27 distinct receipt-bearing orders / 39 rows are split 21 `REVIEW`, 2 `APPROVED`, 4 `REJECTED`; the reported 18 receipts remain unreconciled. No receipt was promoted to paid.
 - **Safety:** no order, payment, customer, courier, WhatsApp, deployment, routing or configuration mutation occurred. No source defect was proven; no tests were required.
 
+## GFS-COD-MO-04 - final D1 verification (2026-11-05 PKT)
+
+- **Decision:** keep the Pakistan Post MO candidate and migration local-only. Do not apply migration 0047, bind `COD_REFERENCE_HMAC_KEY`, deploy Admin, or change API/COD routing in this verification.
+- **Evidence:** official Cloudflare UI identity matched `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; D1 `getfreeseeds-staging` remains pre-0047 with 831 orders, 432 COD sidecars, markers through `0043`, no MO table, and absent settlement policy hashes. Admin is `e8c96c96`100% / `e44703c3`0%; API is `b426ba47`100% / `d683ec45`0%, CAPI OFF.
+- **Compatibility:** local full-schema 0047 probe passed `quick_check`, foreign-key check, marker and trigger creation. This does not establish remote application or secret readiness. Time Travel is available for 30 days, but no bookmark/restore was performed.
+- **Next exact authorization:** apply only 0047 and add only the Admin `COD_REFERENCE_HMAC_KEY` secret through the supported official release controls, then perform read-only schema, secret-presence, rollback and routing readback before any MO use. API default-COD changes remain deferred.
+
 # Decisions
 
 ## GFS-META-04 - reject MCP blank profile (2026-11-04 PKT)

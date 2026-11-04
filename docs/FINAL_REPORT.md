@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-COD-MO-04 final D1 verification (2026-11-05 PKT)
+
+**Overall: local candidate PASS; controlled MO release NO-GO.**
+
+1. **Chrome MCP:** PASS. `list_pages` was first; existing browser context reused, with one official Cloudflare tab opened because none was present. No login/MFA or mutation.
+2. **Cloudflare read-only access:** PASS. Visible `gisupp@gmail.com` and Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Hoja account was not opened.
+3. **Production D1 schema:** YES, current schema verified. It is pre-0047: 831 orders, 831 payments, 45 receipt rows, 432 COD rows (431 pending, 1 dispatched), markers through `0043`, no MO table. COD enabled PKR125; policy hashes absent.
+4. **Migration0047:** PASS in isolated full-schema compatibility probe (`quick_check=ok`, FK check empty, table/triggers/marker created); not applied remotely.
+5. **API/Admin compatibility:** Existing routing protected: API `b426ba47`100% / `d683ec45`0%; Admin `e8c96c96`100% / `e44703c3`0%. Candidate requires the absent remote MO table and Admin HMAC binding.
+6. **Backup/recovery:** PASS/limited. D1 Time Travel 30-day window visible; no bookmark or restore performed.
+7. **HMAC binding:** FAIL for release readiness. `COD_REFERENCE_HMAC_KEY` is absent from production Admin settings; its value was never read.
+8. **MO Admin release:** NO-GO. Migration and secret-binding authorization/readback remain outstanding.
+9. **Advance/WhatsApp protection:** PASS unchanged. Advance history is present; API recovery is true, CAPI false, routing frozen, and no WhatsApp/order/payment/Meta mutation occurred.
+10. **Tests/routing/completion:** prior source baseline 378 passed/1 skipped, build/lint PASS; not rerun because source unchanged. Local MO/migration probe 100%; remote migration 0%; Admin candidate 0%; API candidate 0%; CAPI 0%.
+11. **Git SHA:** `f8c4a3c` before documentation evidence commit; verify final SHA after commit/push.
+12. **One exact next authorization:** authorize only migration `0047` plus Admin `COD_REFERENCE_HMAC_KEY` binding, followed by read-only schema/secret/routing/rollback readback; keep API default-COD release deferred.
+
 ## GFS-COD-MO source-ready handoff (2026-11-04 PKT)
 
 **Overall: implementation PASS locally; release authorization remains required.**

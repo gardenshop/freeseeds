@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-MO-04 final D1 verification (2026-11-05 PKT)
+
+**Disposition: verification PASS; MO Admin release NO-GO pending migration and secret-binding gates.**
+
+- Chrome MCP `list_pages` passed first; the existing browser context showed the official Cloudflare Dashboard as `gisupp@gmail.com` in Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. No login, MFA, or external mutation occurred.
+- Read-only D1 console: 831 orders, 831 payments, 45 payment-receipt rows, 432 COD sidecars (431 `COD_PENDING`, 1 `DISPATCHED`); COD enabled at PKR125, collection/remittance hashes absent. Schema markers end at `0043`; `cod_mo_receipts` and `0047` are absent.
+- Time Travel exposes a 30-day recovery window; restore was not selected and no bookmark was created. Admin settings show `e8c96c96`100% / `e44703c3`0% and no `COD_REFERENCE_HMAC_KEY` binding. API settings show `b426ba47`100% / `d683ec45`0%, CAPI false and recovery true.
+- New local isolated probe applied the full local schema through 0047 with MO table, 20 triggers, `quick_check=ok`, no foreign-key violations and marker `0047`. Existing 378/1 source baseline was not rerun because source was unchanged. No production D1, order, payment, customer, WhatsApp, Meta, CAPI, deployment or routing mutation occurred.
+
 ## GFS-COD-MO source-ready implementation (2026-11-04 PKT)
 
 **Disposition: PASS locally; release/deployment remains separately gated.**

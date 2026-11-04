@@ -1,5 +1,12 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-04 final D1 verification (2026-11-05 PKT)
+
+- Chrome MCP and official Cloudflare UI access passed for `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no auth renewal or mutation occurred.
+- Current `getfreeseeds-staging` D1 is pre-0047: 831 orders, 831 payments, 45 receipts, 432 COD rows (431 pending, 1 dispatched), markers through `0043`, no `cod_mo_receipts`; COD is enabled at PKR125 but both settlement policy hashes are absent.
+- Time Travel is available for 30 days; no bookmark or restore was performed. Admin `e8c96c96`100% / `e44703c3`0% lacks the `COD_REFERENCE_HMAC_KEY` production secret binding. API `b426ba47`100% / `d683ec45`0% remains CAPI OFF/recovery ON.
+- Local 0047 full-schema probe passed quick/FK checks and marker/table/trigger creation. Release remains **NO-GO**. Next action is one exact authorization to apply 0047 and bind the Admin HMAC secret through the official controlled release path, followed by read-only rollback/routing/configuration verification; do not authorize API default-COD changes.
+
 ## GFS-COD-MO release handoff (2026-11-04 PKT)
 
 - Apply migration `0047_cod_pakistan_post_mo.sql` only through the separately authorized release process, then verify the Admin `MO Received` path against a synthetic/read-only-safe fixture before live use.
