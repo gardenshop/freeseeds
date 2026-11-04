@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-COD-MO-08 Admin 10% canary and rollback (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Exact canary routing | PASS | Baseline `e8c96c96`90% / candidate `92c81e60`10%. |
+| Exposure and rollback | PASS | 73-second window, then exact baseline100%/candidate0% readback. |
+| Version metrics | PASS | Candidate invocations1→3; candidate errors0; two new requests were GET-only checks. |
+| Write isolation | PASS | Access identity, CSRF, HMAC, confirmation, exact amount and eligible COD-state guard writes; no endpoint invoked. |
+| Post-rollback integrity | PASS | API/WhatsApp and normal Admin reads healthy; D1/payment aggregates unchanged with zero verification writes. |
+| Permanent promotion | NO-GO | Candidate restored to0%; further traffic needs authorization. |
+
 ## GFS-COD-MO-07 Admin MO 0% attachment verification (2026-11-05 PKT)
 
 | Gate | Result | Evidence |

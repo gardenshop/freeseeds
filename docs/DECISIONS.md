@@ -1,3 +1,10 @@
+## GFS-COD-MO-08 - Admin 10% canary rollback boundary (2026-11-05 PKT)
+
+- **Decision:** accept the 73-second 90/10 Admin-only canary and mandatory restore as complete; current routing is `e8c96c96`100% / `92c81e60`0%. Permanent promotion is not authorized.
+- **Evidence:** candidate invocations1→3 with zero errors; Access/CSRF, HMAC, explicit confirmation, exact payable amount and eligible COD-state checks guard writes. Read-only Admin/API/D1 checks pass after rollback.
+- **Boundary:** no real MO/PAID action, API deployment, migration/restore, payment configuration, customer message, Meta change or CAPI activation occurred.
+- **Next exact authorization:** one instrumented Admin-only traffic decision with stated percentage/window, version-specific monitoring and mandatory rollback to `e8c96c96`100% / `92c81e60`0%.
+
 ## GFS-COD-MO - Pakistan Post Money Order model (2026-11-04 PKT)
 
 - **Decision:** replace new COD settlement's old two-evidence courier/remittance requirement with one verified Pakistan Post MO receipt while retaining historical evidence compatibility.

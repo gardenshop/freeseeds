@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-05 - GFS-COD-MO-08 Admin 10% canary
+
+- Ran one Admin-only 90% baseline `e8c96c96` /10% immutable candidate `92c81e60` canary for 73 seconds, then restored baseline100%/candidate0%; no non-versioned settings synchronization.
+- Candidate invocations rose1→3 with zero errors. The two new requests were GET-only checks; API/WhatsApp, Admin reads and D1/payment aggregates were unchanged. No real MO/PAID/customer/payment/WhatsApp/API/D1/Meta/CAPI mutation occurred.
+- Permanent promotion remains NO-GO without new explicit authorization and version-specific monitoring.
+
 ## 2026-11-05 - GFS-COD-MO-07 Admin MO 0% attachment
 
 - Attached only validated Admin MO candidate `92c81e60-3ec3-40b6-b912-ea81f94ee8af` at0% beside baseline `e8c96c96`100% in deployment `872f0a53-d9e1-4daa-b441-caf599c74d0a`; replaced only inactive `e44703c3`. No non-versioned settings sync, API action, traffic promotion, D1, secret, CAPI, customer, payment, message or Meta mutation.

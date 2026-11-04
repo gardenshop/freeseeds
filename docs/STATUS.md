@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-MO-08 Admin MO 10% canary (2026-11-05 PKT)
+
+**Disposition: bounded canary completed and rolled back; permanent promotion NO-GO.**
+
+- Cloudflare control-plane routing was baseline `e8c96c96`90% / candidate `92c81e60`10% for 73 seconds, then baseline100%/candidate0%. No non-versioned settings synchronization occurred.
+- Version metrics: candidate invocations1→3, errors0; the two new requests were safe GET-only Admin checks. No MO/PAID/payment/customer operation was submitted.
+- Post-rollback API health is ready/WhatsApp enabled and normal Orders/Conversations reads return200. D1 remains 834 orders/payments, 45 receipts, zero MO receipts, marker0047 once, Advance3/3 and COD PKR125 (`rows_written=0`). Recovery ON; CAPI OFF; API `b426ba47`100% / `d683ec45`0%.
+- No source repair or test rerun. Retain focused131/1, full378/1, build/lint PASS.
+
 ## GFS-COD-MO-07 Admin MO 0% attachment (2026-11-05 PKT)
 
 **Disposition: 0% attachment PASS; positive traffic remains prohibited.**

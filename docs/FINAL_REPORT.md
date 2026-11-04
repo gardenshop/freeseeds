@@ -1,5 +1,20 @@
 # Final Report
 
+## GFS-COD-MO-08 Admin 10% canary (2026-11-05 PKT)
+
+1. **Canary decision:** bounded execution PASS; permanent promotion NO-GO.
+2. **Routing:** baseline `e8c96c96`90% / candidate `92c81e60`10%, then mandatory baseline100%/candidate0% rollback.
+3. **Exposure:** 73 seconds; candidate invocations1→3 (two GET-only checks), errors0.
+4. **Monitoring/health:** official version metrics; API ready/WhatsApp enabled and normal Orders/Conversations reads200.
+5. **MO protection:** isolated acceptance retained; Access/CSRF/HMAC/confirmation/exact-amount/state guards pass; no live MO call.
+6. **Regression protection:** D1 aggregates unchanged with zero verification writes; Advance3/3, COD PKR125, recovery ON, CAPI OFF; API unchanged `b426ba47`100% / `d683ec45`0%.
+7. **Rollback:** PASS; current Admin `e8c96c96`100% / `92c81e60`0%.
+8. **Tests/fixes:** no defect/source change; retained focused131/1, full378/1, build/lint PASS.
+9. **Previous task:** GFS-COD-MO-07 attached candidate0%; this task alone performed the bounded exposure/restore.
+10. **Git/docs:** pending one documentation commit and remote SHA verification.
+11. **Stages:** migration/HMAC/candidate/0%-attach100%; canary execution100%; permanent Admin promotion0%; API/CAPI0%.
+12. **One next authorization:** instrumented Admin-only traffic decision with stated percentage/window and rollback to `e8c96c96`100% / `92c81e60`0%.
+
 ## GFS-COD-MO-07 Admin MO 0% attachment (2026-11-05 PKT)
 
 1. **Previous task comparison:** GFS-COD-MO-06 candidate/HMAC/configuration/tests were complete; this task attached only that existing candidate at0%.
