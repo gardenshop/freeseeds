@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-MO-06 Admin MO candidate preparation (2026-11-05 PKT)
+
+**Disposition: candidate PASS at 0% attachment state; traffic attachment/promotion remains separately gated.**
+
+- One `wrangler versions upload --keep-vars --strict` produced candidate `92c81e60-3ec3-40b6-b912-ea81f94ee8af` from source `48659993ce713978a3202b19265a6a6938922636`; Cloudflare returned a deploy instruction that was not run.
+- Candidate has the exact sanitized configuration footprint of HMAC version `05dedc81-7386-4289-82d1-15f7831bb4b7`: HMAC binding retained, D1/R2/Queue retained, no runtime-variable delta. Current deployment excludes candidate and remains Admin `e8c96c96`100% / `e44703c3`0%; API is unchanged `b426ba47`100% / `d683ec45`0%.
+- Focused COD MO/guided suite 131 passed/1 skipped; full 378 passed/1 skipped; build/lint PASS. Synthetic coverage verifies mandatory MO number, exact amount, uniqueness, protected ineligible orders, audit, atomic/idempotent PAID, Advance isolation and CAPI-off behavior. Candidate read-only Orders/Conversations preview passed and its override was cleared.
+- Fresh aggregate D1 reads remain 834 orders/payments, 45 receipt rows, zero MO receipts, three enabled Advance methods and COD PKR125. API health remains WhatsApp enabled; no customer/payment/message/CAPI/traffic mutation occurred.
+
 ## GFS-COD-MO-05 controlled D1/HMAC preparation (2026-11-05 PKT)
 
 **Disposition: D1 and HMAC preparation PASS; Admin MO deployment remains separately gated.**

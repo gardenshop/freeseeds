@@ -4,6 +4,13 @@
 - **Controls:** HMAC-only MO reference, unique MO constraint, exact payable amount, operator confirmation, immutable ledger, atomic PAID transition and idempotent replay handling. No live migration/deployment or CAPI enablement occurred.
 - **Checkout:** quote-first explicit COD confirmation prevents new no-method orders; Advance remains separate.
 
+## GFS-COD-MO-06 - immutable Admin MO candidate (2026-11-05 PKT)
+
+- **Decision:** accept Admin version `92c81e60-3ec3-40b6-b912-ea81f94ee8af` as the tested immutable MO candidate. It retains the HMAC binding/configuration fingerprint and is not part of the active deployment.
+- **Evidence:** build/lint, focused 131/1 and full 378/1 test suites pass; authenticated header-scoped candidate Orders/Conversations reads pass and the override was cleared. D1 aggregates/configuration and API health/WhatsApp remain stable.
+- **Boundary:** do not attach, deploy, promote or test any real payment/order transition. Keep live Admin/API routing, CAPI OFF, recovery ON and all payment/WhatsApp protections unchanged.
+- **Next exact authorization:** attach only this candidate at 0% controlled traffic, then read back routing/configuration/health before any promotion decision.
+
 ## GFS-COD-MO-05 - controlled migration and HMAC boundary (2026-11-05 PKT)
 
 - **Decision:** accept the authorized 0047 application and nondeploying Admin HMAC version preparation as complete. Do not treat either as authorization to deploy the Admin version or to change API/COD routing.

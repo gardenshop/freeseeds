@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-COD-MO-06 Admin candidate resources (2026-11-05 PKT)
+
+- **Candidate:** Admin version `92c81e60-3ec3-40b6-b912-ea81f94ee8af`, tag `gfs-cod-mo-06-4865999`, source SHA `48659993ce713978a3202b19265a6a6938922636`; uploaded immutable and unattached.
+- **Configuration:** candidate sanitized fingerprint equals inactive HMAC version fingerprint. Named HMAC, D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, R2 receipts and events Queue bindings are retained; secret values are unrecorded. Existing Access-authenticated Admin preview reads pass.
+- **Protected serving state:** candidate is absent from deployment. Admin `e8c96c96`100% / `e44703c3`0%; API `b426ba47`100% / `d683ec45`0%, recovery ON/CAPI OFF. D1 aggregate/configuration is unchanged.
+
 ## GFS-COD-MO-05 controlled release resources (2026-11-05 PKT)
 
 - **D1:** verified `getfreeseeds-staging` / `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Exact 0047 applied once; marker is one, `cod_mo_receipts` is empty, two immutable guards and eight retained historical guards are present. No order/payment rows were updated by migration.

@@ -1,5 +1,20 @@
 # Final Report
 
+## GFS-COD-MO-06 Admin MO release candidate (2026-11-05 PKT)
+
+1. **Admin candidate uploaded:** YES — immutable, nondeploying and unattached.
+2. **Candidate/source:** `92c81e60-3ec3-40b6-b912-ea81f94ee8af`; source SHA `48659993ce713978a3202b19265a6a6938922636`.
+3. **HMAC retained:** PASS. Candidate fingerprint exactly matches HMAC version `05dedc81…`; name retained without reading/regenerating its value.
+4. **MO Received acceptance:** PASS in focused synthetic coverage: required MO number, exact COD amount, duplicate/ineligible protection, operator audit, atomic/idempotent PAID and no CAPI purchase.
+5. **Advance isolation:** PASS. Focused and full regressions pass; live D1 remains three enabled Advance methods and COD PKR125.
+6. **CAPI:** OFF verified on frozen API; recovery ON.
+7. **Candidate configuration:** PASS. D1/R2/Queue, runtime variables and encrypted-secret names match the HMAC-bearing configuration; Access-authenticated read preview passed.
+8. **Tests/defects:** focused 131 passed/1 skipped, full 378 passed/1 skipped, build/lint PASS; no defect repaired.
+9. **Live routing before/after:** unchanged — API `b426ba47`100% / `d683ec45`0%; Admin `e8c96c96`100% / `e44703c3`0%. Candidate is not attached.
+10. **Completion:** D1 migration 100%; HMAC preparation 100%; Admin candidate 100%; Admin traffic attachment 0%; Admin promotion 0%; API default-COD/CAPI 0%.
+11. **Git SHA:** pending documentation commit and remote verification.
+12. **One next authorization:** attach only candidate `92c81e60-3ec3-40b6-b912-ea81f94ee8af` at controlled 0% traffic, then perform read-only routing/configuration/health verification; no promotion.
+
 ## GFS-COD-MO-05 controlled D1/HMAC preparation (2026-11-05 PKT)
 
 **Overall: D1 and nondeploying HMAC preparation PASS; Admin MO release is NO-GO pending separate controlled-deployment authorization.**

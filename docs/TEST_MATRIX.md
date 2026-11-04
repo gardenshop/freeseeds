@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-COD-MO-06 Admin MO candidate verification (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Immutable candidate upload | PASS | One nondeploying strict/keep-vars upload: `92c81e60…`; no attach or deploy command. |
+| HMAC retention/configuration | PASS | Candidate fingerprint equals HMAC version; named HMAC plus D1/R2/Queue and runtime variables retained. |
+| Candidate 0% state | PASS | Candidate absent from deployment; Admin remains `e8c96c96`100% / `e44703c3`0%. |
+| MO acceptance | PASS | Focused synthetic MO/guided suite 131 passed/1 skipped: mandatory number, exact amount, duplicate/ineligible protection, audit, atomic/idempotent PAID, Advance/CAPI isolation. |
+| Candidate preview/Access | PASS | Header-scoped authenticated Orders/Conversations reads pass; override cleared. |
+| Full regression/build/lint | PASS | 378 passed/1 skipped; TypeScript build and ESLint pass. |
+| Live protection | PASS | API routing unchanged; CAPI OFF/recovery ON, WhatsApp health enabled, D1 aggregate/config unchanged. |
+| Next release | PENDING AUTHORIZATION | Attach candidate only at 0%, then read-only verification; no promotion. |
+
 ## GFS-COD-MO-05 controlled migration/HMAC verification (2026-11-05 PKT)
 
 | Gate | Result | Evidence |

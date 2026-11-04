@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-05 - GFS-COD-MO-06 Admin MO candidate
+
+- Uploaded one immutable, nondeployed Admin MO candidate `92c81e60-3ec3-40b6-b912-ea81f94ee8af` from source `48659993ce713978a3202b19265a6a6938922636` using strict configuration preservation. Candidate fingerprint matches the HMAC-bearing version, including named HMAC/D1/R2/Queue/runtime configuration; secret values were never read.
+- Candidate is unattached; routing remains Admin `e8c96c96`100% / `e44703c3`0% and API `b426ba47`100% / `d683ec45`0%. Authenticated header-scoped candidate Orders/Conversations reads passed, then the override was cleared. No traffic, payment, customer, message, CAPI, D1 or API mutation.
+- Focused MO/guided 131 passed/1 skipped, full 378 passed/1 skipped, build/lint PASS. Existing Advance/COD/D1/API health protections remain unchanged.
+
 ## 2026-11-05 - GFS-COD-MO-05 controlled migration and HMAC preparation
 
 - Applied only `0047_cod_pakistan_post_mo.sql` through Cloudflare targeted remote-file execution. Remote readback: one marker, empty MO ledger, two immutable guards, eight retained COD/payment guards, Advance 3/3 enabled and COD PKR125 enabled. A pre-write Time Travel bookmark was captured; no restore was attempted.

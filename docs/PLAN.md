@@ -1,5 +1,12 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-06 Admin candidate ready (2026-11-05 PKT)
+
+- Uploaded exactly one immutable nondeployed Admin MO candidate: `92c81e60-3ec3-40b6-b912-ea81f94ee8af`, tag `gfs-cod-mo-06-4865999`, from tested source SHA `48659993ce713978a3202b19265a6a6938922636`.
+- Candidate configuration fingerprint exactly matches the prior HMAC-bearing version, including `COD_REFERENCE_HMAC_KEY`, D1/R2/Queue bindings and runtime variables. It is not in a deployment; Admin remains `e8c96c96`100% / `e44703c3`0% and API remains `b426ba47`100% / `d683ec45`0%.
+- Focused MO/guided 131 passed/1 skipped, full 378 passed/1 skipped, build/lint PASS. Header-scoped authenticated candidate preview passed Orders/Conversations reads and was cleared immediately afterward. CAPI remains OFF; recovery ON.
+- Next authorization: attach only candidate `92c81e60-3ec3-40b6-b912-ea81f94ee8af` at controlled 0% traffic and repeat read-only verification. No promotion or API action.
+
 ## GFS-COD-MO-05 controlled release preparation (2026-11-05 PKT)
 
 - Completed the authorized D1 step: exact migration `0047_cod_pakistan_post_mo.sql` applied once to `getfreeseeds-staging`. Remote readback shows marker `0047` once, empty `cod_mo_receipts`, two immutable receipt guards and eight retained historical COD/payment guards; Advance remains 3/3 enabled and COD is PKR125 enabled.
