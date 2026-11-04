@@ -4,6 +4,12 @@
 - **Evidence:** `select_page` and read-only `take_snapshot` passed for Ads Manager, matching business `568026370701542` and ad account `1198439777611633` in the official URL/UI.
 - **Boundary:** the already-open pages did not show WABA/sender, display-name approval, phone quality, messaging eligibility or advertising eligibility. Keep Meta advertising expansion NO-GO and do not navigate or mutate assets without a separately bounded read-only verification path. No external or source mutation occurred.
 
+## GFS-ADMIN-REPAIR incident boundary (2026-11-04 PKT)
+
+- **Decision:** classify the incident as **UNKNOWN impact** with a proven Admin Cloudflare Access/session boundary failure. The existing Admin HTML was present, but both read-only refreshes failed; Admin `/health` returned HTTP403 `text/html`, and Admin data fetches failed before status.
+- **Reason:** the Admin source's own authorization failure is JSON, so the observed HTML response is not evidence of a Worker exception or D1 quota error. The active Access identity/session state was not visible and no credentials were inspected.
+- **Safety:** do not deploy, rollback, weaken Access, use cookies/tokens, or claim API/WhatsApp health. API `/health` had no browser response and the host-side check could not connect. Keep routing API `b426ba47`100% / `d683ec45`0% and Admin `e8c96c96`100% / `e44703c3`0% unchanged.
+
 # Decisions
 
 ## GFS-META-04 - reject MCP blank profile (2026-11-04 PKT)

@@ -1,5 +1,20 @@
 # Final Report
 
+## GFS-ADMIN-REPAIR - Admin Conversations and Orders incident (2026-11-04 PKT)
+
+**Overall: recovery FAIL; Cloudflare Access/session boundary proven; impact UNKNOWN; no deployment, rollback or source repair performed.**
+
+1. **Root cause boundary:** Admin `/health` returned HTTP403 `text/html`; Admin conversation/summary/order/detail fetches failed before status. The HTML response is consistent with an upstream Access/session rejection, not the Worker's JSON authorization or D1-quota response. Exact Access session/policy state remains unverified.
+2. **Scope:** Admin refresh failure is proven; API/D1/WhatsApp impact is UNKNOWN because API `/health` had no browser response and the host-side check could not connect.
+3. **Correction:** one read-only Refresh attempt was made on each existing Admin page. No repair, rollback, deployment, Access change, API change or data mutation was performed.
+4. **Conversations:** FAIL; stale-data warning remains.
+5. **Orders:** FAIL; stale-data warning remains.
+6. **Versions/routing:** API `b426ba47`100% / `d683ec45`0%; Admin `e8c96c96`100% / `e44703c3`0%; unchanged.
+7. **Regression:** no source change, so focused/guided/full tests were not rerun. No regression was introduced by this diagnosis.
+8. **Protected baseline:** WhatsApp92%; resume local100%/live0%; COD local100%/live70%; Recovery ON; CAPI OFF. No customer, order, payment, webhook, Queue/DLQ, Cron, D1/R2 or Meta mutation.
+9. **Remaining blocker:** owner-supported Cloudflare Access reauthentication/session repair or an official authenticated Admin browser path is required; do not bypass Access or provide credentials through MCP.
+10. **Git:** documentation update pending commit/push; source unchanged.
+
 ## GFS-MCP-RESTORE - existing Chrome attachment and Meta boundary (2026-11-04 PKT)
 
 **Overall: Chrome attachment PASS; business/ad-account identity matched; full Meta eligibility verification remains BLOCKED by unavailable visible status labels; public expansion NO-GO.**

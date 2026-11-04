@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-04 - GFS-ADMIN-REPAIR incident diagnosis
+
+- Reached the existing Admin Conversations and Orders tabs through official Chrome MCP and attempted one read-only Refresh on each; both retained stale-data warnings.
+- Proven boundary: Admin `/health` returned HTTP403 `text/html`, while Admin data fetches failed before status, consistent with an upstream Cloudflare Access/session rejection. API/D1/WhatsApp impact remains UNKNOWN.
+- No deployment, rollback, Access change, source repair, customer/order/payment/WhatsApp/Meta/CAPI or configuration mutation.
+
 ## 2026-11-04 - GFS-MCP-RESTORE existing Chrome attachment
 
 - Restored the official existing-session Chrome MCP path with one fresh Codex `--autoConnect` session; `list_pages`, `select_page` and read-only Ads Manager snapshot passed.

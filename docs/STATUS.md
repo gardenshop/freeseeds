@@ -1,5 +1,14 @@
 # Status
 
+## GFS-ADMIN-REPAIR incident diagnosis (2026-11-04 PKT)
+
+**Disposition: Admin refresh FAIL; Cloudflare Access/session boundary proven; impact UNKNOWN; no repair/deployment/rollback performed.**
+
+- Fresh official Chrome MCP attached the existing Conversations and Orders tabs. Both read-only Refresh controls were clicked once; both retained the last-successful data warning.
+- Admin `/health` returned HTTP403 with `text/html`. `/api/conversations`, `/api/conversations/summary`, `/api/orders` and the selected detail fetches failed before receiving an HTTP status. Console error/warn counts were zero in the available browser log.
+- The Admin Worker source returns JSON for its own authorization failure, so the observed HTML403 is classified as an upstream Cloudflare Access/session response. Access identity was not visible, and no cookies/tokens were inspected.
+- API `/health` could not be independently read: the browser-context request had no response and the host-side network check could not connect. Therefore WhatsApp/D1 health is not claimed; no rollback or code repair is justified.
+
 ## GFS-MCP-RESTORE existing Chrome attachment (2026-11-04 PKT)
 
 **Disposition: authenticated Chrome attachment PASS; business/ad-account identity matched; WABA/sender and eligibility fields NOT VISIBLE; public expansion NO-GO.**

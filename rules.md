@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-ADMIN-REPAIR incident boundary (2026-11-04 PKT)
+
+- Existing staging Admin Conversations and Orders tabs were reached through a fresh official Chrome MCP session. Both visible read-only Refresh controls were used; no rows, order actions, messages, payments or other mutations were touched.
+- Both refreshes failed and retained stale data. Admin `/health` returned HTTP403 `text/html`; Admin conversation/summary/order/detail fetches failed before an HTTP status. This is a proven Cloudflare Access/session boundary failure, not proof of a Worker or D1 exception; the exact Access policy/session state and active account identity were not visible.
+- Browser-context API `/health` also returned no response, and the host-side diagnostic could not connect. Classify impact **UNKNOWN**, not ADMIN ONLY or SHARED D1/API. Do not rollback or deploy while API/D1 health is unverified. Existing API/Admin routing and all WhatsApp/payment protections remain unchanged.
+
 ## GFS-MCP-RESTORE verified existing Chrome attachment (2026-11-04 PKT)
 
 - Owner-enabled remote debugging plus one fresh official Codex session using the saved `chrome-devtools` registration (`npx -y chrome-devtools-mcp@latest --autoConnect`) restored the existing Chrome session. `list_pages` returned ten existing tabs, including WhatsApp Web, Meta Ads Manager, and the existing Get Free Seeds admin tabs; the cache `about:blank` profile was not used.

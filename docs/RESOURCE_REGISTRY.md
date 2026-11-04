@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-ADMIN-REPAIR incident evidence (2026-11-04 PKT)
+
+- **Admin browser:** existing staging Conversations and Orders tabs attached through official Chrome MCP; one read-only Refresh attempt per page failed and stale-data warnings remained.
+- **Admin request boundary:** `/health` returned HTTP403 `text/html`; conversation, summary, order and detail requests failed without a response status. No response bodies, headers, cookies, tokens, customer data or order identifiers were retained.
+- **Classification:** upstream Cloudflare Access/session failure is proven at the Admin boundary; API/D1/WhatsApp impact is UNKNOWN because API `/health` returned no browser response and the host-side check could not connect.
+- **Routing/protection:** no deployment, rollback, API change, D1/Queue/R2/Cron change, payment/order/customer/WhatsApp/Meta/CAPI or watchdog mutation occurred.
+
 ## GFS-MCP-RESTORE verified Chrome/MCP evidence (2026-11-04 PKT)
 
 - **MCP:** one fresh official Codex session loaded the saved `chrome-devtools` registration `npx -y chrome-devtools-mcp@latest --autoConnect`; `list_pages` returned ten existing tabs rather than the MCP cache profile.

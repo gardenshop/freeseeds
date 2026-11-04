@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-ADMIN-REPAIR incident verification (2026-11-04 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Existing Admin tab attachment | PASS | Official Chrome MCP selected existing Conversations and Orders tabs. |
+| Conversations refresh | FAIL | One visible read-only Refresh attempt retained stale-data warning. |
+| Orders refresh | FAIL | One visible read-only Refresh attempt retained stale-data warning. |
+| Admin `/health` | FAIL / Access boundary | HTTP403, `text/html`; not the Admin Worker's JSON response shape. |
+| Admin data endpoints | FAIL / unclassified | Conversations, summary, orders and selected detail failed before an HTTP status. |
+| API/D1/WhatsApp health | UNKNOWN | Browser API health had no response; host-side check could not connect. |
+| Source repair/deployment/rollback | NOT RUN | No source defect or safe target was proven; routing stayed unchanged. |
+| Protected state | PASS unchanged | No messages, orders, payments, customer data, Meta, CAPI, deployment or configuration mutation. |
+
 ## GFS-476 immutable API candidate (2026-11-03 PKT)
 
 | Gate | Result | Evidence |
