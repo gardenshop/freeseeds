@@ -1,5 +1,9 @@
 # Get Free Seeds Plan
 
+## GFS-ADMIN-P0 completed recovery (2026-11-04 PKT)
+
+Restore normal Admin operator access by renewing the expired Cloudflare Access session in the existing authorized Chrome profile; do not change Access policy or deploy code. Acceptance is complete: two consecutive manual refreshes passed for Conversations and Orders, including list/summary/detail reads with no stale warning. Continue normal operations on frozen API/Admin allocations; no follow-up deployment or source work is required.
+
 ## GFS-476 immutable API candidate (2026-11-03 PKT)
 
 The single approved upload-only mutation completed once using Wrangler `versions upload --keep-vars --strict` for `getfreeseeds-api-staging`, producing immutable version `9f6a4ecf-bf7f-43ff-abe0-e0d67e53bfd3`, tag `gfs476-api-51e1e89`. Cloudflare readback showed it Ready, while API baseline `b426ba47` stayed100% and existing `e8018f3f` stayed0%; no attachment, deployment or traffic test occurred. The isolated preview `/health` GET returned `ok=true`, `PRODUCTION_INTEGRATION_READY`, WhatsApp enabled.

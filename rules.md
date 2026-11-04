@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-ADMIN-P0 recovery boundary (2026-11-04 PKT)
+
+- This supersedes the earlier GFS-ADMIN-REPAIR diagnosis below. Normal Admin data requests returned HTTP302 to the Cloudflare Access login and then browser CORS/`net::ERR_FAILED`; Admin `/health` is governed by a separate Service Auth application and is not evidence for normal operator access.
+- Supported Cloudflare Access reauthentication in the existing authorized Chrome profile restored identity `gisupp@gmail.com`. Two consecutive manual Refresh actions then passed on both Conversations and Orders; lists, summaries and selected details populated and stale warnings cleared.
+- The incident was Admin-session-only: public API `/health` is HTTP200 with `PRODUCTION_INTEGRATION_READY` and WhatsApp enabled; fresh Admin reads prove active D1 access. Wrangler readback preserves API `b426ba47`100% / `d683ec45`0% and Admin `e8c96c96`100% / `e44703c3`0%; staging Queue producer/consumer and DLQ topology remains present.
+- No Access policy, Worker, deployment, routing, source, D1, Queue, payment, order, customer, WhatsApp, Meta, CAPI or watchdog mutation occurred. Preserve Recovery ON, CAPI OFF, the new-number WhatsApp lock and Hoja Seeds zero-connection rule.
+
 ## GFS-ADMIN-REPAIR incident boundary (2026-11-04 PKT)
 
 - Existing staging Admin Conversations and Orders tabs were reached through a fresh official Chrome MCP session. Both visible read-only Refresh controls were used; no rows, order actions, messages, payments or other mutations were touched.

@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-ADMIN-P0 recovery verification (2026-11-04 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Exact failure classification | PASS | Normal Admin routes returned HTTP302 to Access login, then browser CORS/`net::ERR_FAILED`; no 12-second timeout or Worker/D1 error. |
+| Operator identity after reauth | PASS | Supported same-profile Access reauth; identity HTTP200 and `gisupp@gmail.com` match. |
+| Conversations refresh x2 | PASS / PASS | List, summary and selected detail populated; stale warning absent. |
+| Orders refresh x2 | PASS / PASS | List and selected detail populated; stale warning absent. |
+| API / WhatsApp health | PASS | Public API `/health` HTTP200, ready state, WhatsApp enabled. |
+| D1 availability | PASS | Fresh Conversations/Orders list, aggregate and detail reads completed. |
+| Queue/DLQ topology | PASS unchanged | Staging Queue retains two producers/one consumer; DLQ remains registered. |
+| API/Admin allocation | PASS unchanged | API `b426ba47`100% / `d683ec45`0%; Admin `e8c96c96`100% / `e44703c3`0%. |
+| Source regression suite | NOT RUN | No source change; full378 rerun correctly omitted. |
+| Protected state | PASS unchanged | No policy, deployment, D1 write, payment/order/customer/Meta/CAPI/WhatsApp mutation. |
+
 ## GFS-ADMIN-REPAIR incident verification (2026-11-04 PKT)
 
 | Gate | Result | Evidence |

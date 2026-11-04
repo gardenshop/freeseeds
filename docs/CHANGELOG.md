@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-04 - GFS-ADMIN-P0 restored Orders and Conversations
+
+- Corrected the earlier diagnosis: normal Admin requests redirected HTTP302 to Cloudflare Access login; `/health` belongs to a separate Service Auth application and was not used to classify operator access.
+- Renewed the supported Access session for `gisupp@gmail.com` in the existing Chrome profile. Two consecutive manual refreshes passed on Conversations and Orders; list/summary/detail data loaded and stale warnings cleared.
+- Verified API health HTTP200/ready/WhatsApp enabled, D1-backed Admin reads, unchanged Queue/DLQ topology and frozen API/Admin allocations. No source, deployment, policy, routing, payment, order, customer, Meta, CAPI or WhatsApp mutation.
+
 ## 2026-11-04 - GFS-ADMIN-REPAIR incident diagnosis
 
 - Reached the existing Admin Conversations and Orders tabs through official Chrome MCP and attempted one read-only Refresh on each; both retained stale-data warnings.

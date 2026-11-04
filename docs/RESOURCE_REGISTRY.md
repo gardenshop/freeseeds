@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-ADMIN-P0 verified recovery resources (2026-11-04 PKT)
+
+- **Cloudflare identity:** Wrangler and post-reauth browser identity matched `gisupp@gmail.com` in Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no credential value was read.
+- **Access evidence:** normal Admin data routes redirected HTTP302 to Access login before reauthentication. Supported same-profile reauthentication restored HTTP200 identity and data access. Separate `/health` Service Auth behavior is excluded from normal Admin diagnosis.
+- **Runtime:** API health HTTP200/ready/WhatsApp enabled; D1 `getfreeseeds-staging` is reachable through fresh Admin reads. `getfreeseeds-events-staging` remains two producers/one consumer and its DLQ remains registered; backlog metrics were not exposed by the read-only CLI.
+- **Routing:** API `b426ba47`100% / `d683ec45`0%; Admin `e8c96c96`100% / `e44703c3`0%. No deployment, Access-policy, routing, data or configuration mutation.
+
 ## GFS-ADMIN-REPAIR incident evidence (2026-11-04 PKT)
 
 - **Admin browser:** existing staging Conversations and Orders tabs attached through official Chrome MCP; one read-only Refresh attempt per page failed and stale-data warnings remained.

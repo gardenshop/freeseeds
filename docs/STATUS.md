@@ -1,5 +1,15 @@
 # Status
 
+## GFS-ADMIN-P0 recovery (2026-11-04 PKT)
+
+**Disposition: RESTORED; expired/missing normal Admin Cloudflare Access session; Admin-only incident; no production mutation.**
+
+- Normal `/api/conversations` and `/api/orders/changes` requests returned HTTP302 to Access login, followed by browser CORS/`net::ERR_FAILED`. This excludes the 12-second frontend timeout, Worker exception and D1 query failure. The separate `/health` Service Auth application is not used for this conclusion.
+- Supported same-profile Access reauthentication restored `gisupp@gmail.com`; identity readback returned HTTP200 with an email match. No OTP/MFA prompt or policy/configuration change was required.
+- Conversations and Orders each passed two consecutive manual Refresh actions. Conversations list, summary and selected detail populated; Orders list and selected detail populated; both stale warnings cleared.
+- API `/health` returned HTTP200/`PRODUCTION_INTEGRATION_READY`/WhatsApp enabled. Fresh Admin reads prove D1 availability. Queue/DLQ topology remains attached; no shared outage evidence was found.
+- Routing remains API `b426ba47`100% / `d683ec45`0% and Admin `e8c96c96`100% / `e44703c3`0%. Recovery ON; CAPI OFF.
+
 ## GFS-ADMIN-REPAIR incident diagnosis (2026-11-04 PKT)
 
 **Disposition: Admin refresh FAIL; Cloudflare Access/session boundary proven; impact UNKNOWN; no repair/deployment/rollback performed.**

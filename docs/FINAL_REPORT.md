@@ -1,5 +1,20 @@
 # Final Report
 
+## GFS-ADMIN-P0 - Orders and Conversations restored (2026-11-04 PKT)
+
+**Overall: PASS; supported Cloudflare Access session renewal restored both Admin screens; incident was Admin-session-only.**
+
+1. **Root cause:** normal Admin data requests returned HTTP302 to Cloudflare Access login, then browser CORS/`net::ERR_FAILED`. The operator session was expired/missing. The separate `/health` Service Auth application is excluded from this diagnosis.
+2. **Correction:** supported same-profile Cloudflare Access reauthentication for `gisupp@gmail.com`; identity returned HTTP200/email match. No policy, Worker, deployment or rollback change.
+3. **Conversations:** PASS twice consecutively; list, summary and selected detail fresh; stale warning absent.
+4. **Orders:** PASS twice consecutively; list and selected detail fresh; stale warning absent.
+5. **Shared systems:** API `/health` HTTP200 with ready state and WhatsApp enabled; D1-backed Admin reads PASS; staging Queue/DLQ topology remains attached. No evidence of a shared outage.
+6. **Routing:** API `b426ba47`100% / `d683ec45`0%; Admin `e8c96c96`100% / `e44703c3`0%; unchanged. Recovery ON; CAPI OFF.
+7. **Regression:** no source change, so focused/full378/build/lint were not rerun. No production or data mutation occurred.
+8. **Progress:** WhatsApp92%; resume local100%/live0%; COD local100%/live70%. Existing operations GO/MAINTAIN; COD settlement remains independently blocked by genuine courier evidence.
+9. **Protection:** EN/UR, COD PKR125, JazzCash, Easypaisa, Bank Transfer, QR, +15/+210, orders, receipts, PAID, D1/R2, Queue/DLQ, Cron, webhook, customer data, new-number lock and Hoja zero-connection remain unchanged.
+10. **Remaining issue:** Queue backlog/retry counters were not available from the read-only CLI after the dashboard bridge failed before opening Cloudflare; topology is intact and no incident evidence points to Queue impact.
+
 ## GFS-ADMIN-REPAIR - Admin Conversations and Orders incident (2026-11-04 PKT)
 
 **Overall: recovery FAIL; Cloudflare Access/session boundary proven; impact UNKNOWN; no deployment, rollback or source repair performed.**

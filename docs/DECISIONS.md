@@ -2452,3 +2452,8 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Treat Meta as externally blocked: no authorized Chrome UI was available, and the connected read-only tool exposed zero consented business portfolios. Do not infer approval or eligibility.
 - Treat COD settlement as externally blocked until genuine courier contract and settlement evidence are supplied. Never mark orders PAID from absent or invented evidence.
 - Maintain existing operations and exact API/Admin routing. No public expansion, advertising mutation, payment change, canary, deployment or new GFS task.
+## GFS-ADMIN-P0 - renew operator session, no rollback (2026-11-04 PKT)
+
+- **Decision:** classify the incident as an expired/missing normal Admin Cloudflare Access session. Evidence is HTTP302 from normal data routes to Access login followed by browser CORS failure; the separate Service Auth `/health` response is excluded.
+- **Correction:** use supported Cloudflare Access reauthentication for `gisupp@gmail.com` in the existing profile. Do not change policies, redeploy Admin, roll back, or touch API routing.
+- **Acceptance:** two consecutive Conversations and Orders refreshes passed with list/summary/detail data and no stale warning. Public API health and D1-backed Admin reads passed; frozen routing and protected operational settings remain unchanged.
