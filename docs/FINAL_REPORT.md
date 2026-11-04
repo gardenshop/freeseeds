@@ -6655,3 +6655,15 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 8. **Progress:** WhatsApp92%/8% remaining; resume local100%/live0%; COD local100%/live70%; Meta display name In Review; courier settlement remains external evidence-gated.
 9. **Git:** verified remote commit `b82c6429d2581ff3005b397c861dfbea7ae933d4` on `codex/gfs221-cod-compat-001`.
 10. **One next action:** separately approve one corrected immutable API upload, then independently read back its recovery value and preserved configuration; do not attach or promote it.
+
+## GFS-478 final report — corrected API candidate (2026-11-04 PKT)
+
+1. **Corrected version:** uploaded exactly once as `d683ec45-1df2-4777-878e-4915fe55d1f4`/122, tag `gfs478-api-55b67a5`, using `--keep-vars --strict`.
+2. **Recovery:** read back `PAYMENT_CHOICE_RECOVERY_ENABLED=true`; start timestamp remained `2026-10-28T20:05:20.290Z`.
+3. **Protected configuration:** D1, R2, Queue, scheduled/fetch/queue handlers, all protected plain flags and secret binding presence matched; secret values were never read. CAPI remains false.
+4. **Routing:** API remains `b426ba47`100% / `e8018f3f`0%; version122 is immutable and unattached. No trigger deployment, attachment, override or promotion occurred.
+5. **Regression:** focused3/3 PASS; GFS-477 full378/378, guided104/104, build/lint PASS carried forward; audit remains BLOCKED by npm registry access. No customer webhook, message, order, payment or Meta action occurred.
+6. **Remaining launch blockers:** separate 0% attachment/isolated acceptance approval, Meta display-name review, and courier collection/remittance evidence. No production canary is authorized.
+7. **Completion:** upload/readback100%; attachment/isolated live acceptance0%; production promotion0%. WhatsApp92%/8% remaining; resume local100%/live0%; COD local100%/live70%.
+8. **Git:** tested source baseline `55b67a54e77ee29352f7c59169fff7ee2cc8761e`; final documentation commit is verified after push.
+9. **One next release decision:** approve or defer controlled 0% attachment and isolated acceptance; keep routing frozen unless separately approved.

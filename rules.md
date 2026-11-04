@@ -2130,3 +2130,9 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - Local correction is manifest-only (false to true) plus `tests/api-manifest-config.test.ts`, which rejects future false drift. Recovery start timestamp and unrelated bindings/flags remain protected. No GFS-477 upload, attachment, deployment or customer exposure is authorized or claimed.
 - Corrected dry-run showed recovery true; bundle SHA256 remained `468C26830E2B1BCECE289A893A1284E88D97FD8449ECD2D2C28D860F2F5272BA`. Focused3/3, guided104/104, full378/378, build and lint passed. `npm audit --omit=dev` remains BLOCKED by registry advisory endpoint/log permissions.
 - Preserve API `b426ba47`100% / `e8018f3f`0%, Admin `e8c96c96`100% / `e44703c3`0%, CAPI OFF, WhatsApp/payment/Queue/D1/Cron/Meta/Hoja boundaries and the new-number lock. A corrected immutable upload requires separate explicit approval.
+
+## GFS-478 corrected API candidate (2026-11-04 PKT)
+
+- One owner-authorized upload to `getfreeseeds-api-staging` created immutable version `d683ec45-1df2-4777-878e-4915fe55d1f4` (122), tag `gfs478-api-55b67a5`, using `--keep-vars --strict`. No retry, attachment, deployment, override or promotion was performed.
+- Independent readback matched recovery `true`, start `2026-10-28T20:05:20.290Z`, all protected plain flags, D1 `getfreeseeds-staging`, R2 `getfreeseeds-receipts-staging`, Queue `getfreeseeds-events-staging`, scheduled/fetch/queue handlers, and secret binding presence without values. The manifest cron remains `* * * * *`; upload alone did not change trigger execution.
+- Deployment readback remains API `b426ba47`100% / `e8018f3f`0%. The new version is previewable but unattached; no HTTP, scheduled or Queue execution is assigned to it through the production deployment. Preserve this boundary until separate attachment/acceptance approval.

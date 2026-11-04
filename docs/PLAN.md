@@ -146,3 +146,7 @@ Self-review result: **PASS**.
 ## GFS-477 recovery-flag drift
 
 Read-only Cloudflare version/deployment evidence is complete. API baseline `b426ba47` is serving at100% with recovery enabled; `e8018f3f` remains0% with recovery enabled; unattached `9f6a4ecf-bf7f-43ff-abe0-e0d67e53bfd3` alone contains recovery disabled. The explicit false in the API manifest was corrected locally to true and guarded by a manifest test. No upload or routing mutation was performed. Next milestone is one separately approved immutable corrected upload, followed by independent readback only.
+
+## GFS-478 corrected candidate
+
+The separately authorized single upload completed as version `d683ec45-1df2-4777-878e-4915fe55d1f4`/122. Readback passed recovery, bindings, protected flags and secret-presence checks. Routing remains unchanged at API100%/0%; no attachment, deployment, override, customer webhook or live acceptance was performed. Scheduled and Queue handlers exist in the artifact, but the unattached version receives no production trigger execution. Next decision is whether to separately approve a controlled 0% attachment and isolated acceptance.

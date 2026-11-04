@@ -2385,3 +2385,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Accept the read-only version evidence: serving API baseline and old0% candidate are `true`; only unattached GFS-476 `9f6a4ecf-bf7f-43ff-abe0-e0d67e53bfd3` is `false`. Do not infer live regression from the unattached version.
 - Correct the checked-in API manifest to `PAYMENT_CHOICE_RECOVERY_ENABLED="true"` and enforce it with a focused test. Preserve the existing start timestamp and all unrelated configuration.
 - Do not upload, attach, deploy, override, restore, send messages, mutate orders/payments, enable CAPI or touch Admin/watchdog under GFS-477. A corrected immutable upload needs one new explicit approval.
+
+## GFS-478 decision — immutable candidate uploaded, routing frozen (2026-11-04 PKT)
+
+- Accept version `d683ec45-1df2-4777-878e-4915fe55d1f4`/122 as the single corrected GFS-478 upload. Readback confirms recovery true and protected configuration/binding/secret presence without exposing secrets.
+- Keep API `b426ba47`100% / `e8018f3f`0%. Do not attach, override, deploy, promote or run customer/webhook tests. The scheduled and Queue handlers in the unattached artifact do not alter production execution.
+- The next action requires separate approval for controlled 0% attachment and isolated acceptance with monitoring and rollback; no production canary or automatic protection is implied.

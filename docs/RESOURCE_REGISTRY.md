@@ -2381,3 +2381,9 @@ No secrets are stored in this registry.
 - Source resources: `apps/api/wrangler.jsonc` corrected false→true; `tests/api-manifest-config.test.ts` added as a permanent guard. Source behavior remains the tested GFS-475 revision; bundle SHA256 is `468C26830E2B1BCECE289A893A1284E88D97FD8449ECD2D2C28D860F2F5272BA`.
 - Verification resources: focused3/3, guided104/104, full378/378, TypeScript build PASS, ESLint PASS, Wrangler dry-run PASS. npm audit is registered BLOCKED by advisory endpoint/log permissions.
 - No new version, deployment, attachment, traffic override, secret, binding, D1, Queue/DLQ, Cron, Meta, CAPI, payment, WhatsApp or customer-data resource was created or mutated. Corrected upload requires fresh approval.
+
+## GFS-478 verified resources (2026-11-04 PKT)
+
+- Cloudflare upload resource: account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, Worker `getfreeseeds-api-staging`, immutable version `d683ec45-1df2-4777-878e-4915fe55d1f4`/122, tag `gfs478-api-55b67a5`, source author `gisupp@gmail.com`. No token or secret value registered.
+- Readback resources: recovery true with start `2026-10-28T20:05:20.290Z`; D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, R2 `getfreeseeds-receipts-staging`, Queue `getfreeseeds-events-staging`, and secret binding names present. Fetch/scheduled/queue handlers present; manifest cron remains unchanged.
+- Routing resource: deployment `GFS-407 Approval U API baseline100 candidate0`, baseline `b426ba47`100% and candidate `e8018f3f`0%. Version122 is not attached. No HTTP, Queue, Cron, customer, payment or Meta action was performed against the preview.

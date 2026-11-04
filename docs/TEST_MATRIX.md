@@ -3568,3 +3568,17 @@ Investigation query costs only (not production savings): representative `rows_re
 | Bundle provenance | PASS | SHA256 `468C26830E2B1BCECE289A893A1284E88D97FD8449ECD2D2C28D860F2F5272BA` |
 | Audit | BLOCKED | npm advisory endpoint and external log permissions |
 | Cloudflare mutation | NOT RUN | No GFS-477 upload approval; no deployment or traffic change |
+
+## GFS-478 corrected API candidate (2026-11-04 PKT)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Owner-scoped upload | PASS | Exactly one `--keep-vars --strict` upload; version `d683ec45-1df2-4777-878e-4915fe55d1f4`/122 |
+| Recovery flag | PASS | `PAYMENT_CHOICE_RECOVERY_ENABLED=true`; start timestamp preserved |
+| Protected flags | PASS | Deployment, WhatsApp, COD, automation/reminder/utility, Meta and CAPI values read back; CAPI false |
+| D1/R2/Queue | PASS | `DB`, `RECEIPTS`, `EVENTS` names/resources read back |
+| Cron/handlers | PASS | Manifest cron `* * * * *`; fetch/scheduled/queue handlers present; no trigger deployment performed |
+| Secret preservation | PASS | Secret binding names present; values never read or logged |
+| Routing | PASS | API baseline `b426ba47`100% / `e8018f3f`0%; new version unattached |
+| Focused acceptance | PASS | Manifest plus EN/UR resume 3/3; GFS-477 full378/378 and guided104/104 carried |
+| Customer/production mutation | PASS | No attachment, deployment, webhook, message, order, payment, Meta, Admin, CAPI or watchdog action |

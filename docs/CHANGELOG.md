@@ -2124,3 +2124,9 @@
 - Proved through read-only version and deployment reads that recovery remained enabled on the serving API baseline and existing0% candidate; only unattached GFS-476 version `9f6a4ecf` carried the explicit false value.
 - Corrected the API manifest to true and added a focused anti-drift test. Dry-run, focused3/3, guided104/104, full378/378, build and lint passed; audit remains blocked by the registry endpoint.
 - No upload, attachment, deployment, customer traffic, payment, WhatsApp, Meta, CAPI, Admin or watchdog mutation occurred. Corrected immutable upload remains a separate approval gate.
+
+# 2026-11-04 - GFS-478 corrected API candidate
+
+- Per fresh owner approval, uploaded exactly one immutable API version with `--keep-vars --strict`: `d683ec45-1df2-4777-878e-4915fe55d1f4`/122, tag `gfs478-api-55b67a5`.
+- Independent readback confirmed recovery true, preserved start timestamp, protected flags, D1/R2/Queue resources and secret binding presence without secret values. API routing stayed baseline100% / candidate0%; the new version remains unattached.
+- Focused3/3 PASS; GFS-477 full378/378, guided104/104, build/lint PASS carried forward. No customer, payment, WhatsApp, Meta, Admin, CAPI, D1, Queue or Cron mutation occurred.

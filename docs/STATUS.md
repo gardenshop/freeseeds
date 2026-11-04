@@ -3064,3 +3064,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **Cause/repair:** explicit manifest false overrode the intended value for that version; local `apps/api/wrangler.jsonc` now explicitly sets true and `tests/api-manifest-config.test.ts` prevents false drift. Corrected dry-run PASS; bundle SHA256 `468C26830E2B1BCECE289A893A1284E88D97FD8449ECD2D2C28D860F2F5272BA`.
 - **Verification:** focused3/3, guided104/104, full378/378, build PASS, lint PASS. Audit remains BLOCKED by npm registry advisory access/log permissions. No upload, deployment, attachment, customer test or live mutation.
 - **Readiness:** WhatsApp92% (resume local100%, live0%); COD local100%, live70%; Meta display name In Review. API/Admin remain exact100/0 and CAPI OFF. Next gate is separate approval for one corrected immutable upload.
+
+## GFS-478 — corrected API candidate (2026-11-04 PKT)
+
+- **Upload:** owner-authorized single `--keep-vars --strict` upload created version `d683ec45-1df2-4777-878e-4915fe55d1f4`/122, tag `gfs478-api-55b67a5`. No retry or second upload.
+- **Readback:** recovery `true`; start timestamp preserved; `DEPLOYMENT_STATE=PRODUCTION_INTEGRATION_READY`; WhatsApp Meta/guided; COD enabled/PUBLIC; automation, reminders, utility templates, instant forms and CAPI false. D1/R2/Queue bindings and secret binding names were present; secret values were not read.
+- **Execution/routing:** authoritative deployment remains API `b426ba47`100% / `e8018f3f`0%. New version is unattached. Its fetch/scheduled/queue handlers and manifest cron do not receive production execution until attachment/deployment; no customer webhook, message, order or payment action occurred.
+- **Verification:** manifest/recovery focused3/3 PASS; GFS-477 carried full378/378, guided104/104, build/lint PASS; audit remains BLOCKED by npm registry access. Admin `e8c96c96`100% / `e44703c3`0%; CAPI OFF.
+- **Release state:** candidate is ready for separately approved 0% attachment and isolated acceptance only. Meta display name remains In Review; courier settlement evidence remains outstanding.
