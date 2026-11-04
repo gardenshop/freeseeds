@@ -14,7 +14,7 @@
 8. **MO Admin release:** NO-GO. Migration and secret-binding authorization/readback remain outstanding.
 9. **Advance/WhatsApp protection:** PASS unchanged. Advance history is present; API recovery is true, CAPI false, routing frozen, and no WhatsApp/order/payment/Meta mutation occurred.
 10. **Tests/routing/completion:** prior source baseline 378 passed/1 skipped, build/lint PASS; not rerun because source unchanged. Local MO/migration probe 100%; remote migration 0%; Admin candidate 0%; API candidate 0%; CAPI 0%.
-11. **Git SHA:** `f8c4a3c` before documentation evidence commit; verify final SHA after commit/push.
+11. **Git SHA:** `22c8da6b04bae5f0d894546177352cbbbe188fea` (pushed and remotely verified).
 12. **One exact next authorization:** authorize only migration `0047` plus Admin `COD_REFERENCE_HMAC_KEY` binding, followed by read-only schema/secret/routing/rollback readback; keep API default-COD release deferred.
 
 ## GFS-COD-MO source-ready handoff (2026-11-04 PKT)
