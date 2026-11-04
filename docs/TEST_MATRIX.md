@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-COD-MO-09 Admin 25% canary and rollback (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Exact canary routing | PASS | Deployment `ca322c04â€¦`: baseline `e8c96c96`75% / candidate `92c81e60`25%. |
+| Exposure and restore | PASS | 166-second window, then deployment `da825e47â€¦` exact100%/0%. |
+| Candidate metrics | PASS | Invocations3→5, errors0; candidate CPU2.41ms, stable aggregate latency. |
+| Candidate/Admin read acceptance | PASS | Candidate override MO/exact-amount UI plus normal Orders/Conversations GETs200 and complete assets. |
+| Payment/D1 protection | PASS | No mutation endpoint; D1 aggregates unchanged with zero verification writes; Advance3/3 and COD PKR125 unchanged. |
+| Real payment acceptance | INCONCLUSIVE | Deliberately not attempted; no live MO/PAID action is authorized. |
+| Permanent promotion | NO-GO | Candidate restored to0%; requires new authorization. |
+
 ## GFS-COD-MO-08 Admin 10% canary and rollback (2026-11-05 PKT)
 
 | Gate | Result | Evidence |

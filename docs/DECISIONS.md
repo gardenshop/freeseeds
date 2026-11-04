@@ -1,3 +1,10 @@
+## GFS-COD-MO-09 - Admin 25% canary rollback boundary (2026-11-05 PKT)
+
+- **Decision:** accept the 166-second 75/25 technical canary and mandatory restore; current routing is `e8c96c96`100% / `92c81e60`0%. It is not permanent-promotion authorization.
+- **Evidence:** candidate invocation count3→5, errors0, stable dashboard latency, candidate/normal read-only navigation/assets and post-rollback API/Admin/D1 checks pass. Write path retains Access/CSRF/HMAC/confirmation/exact-amount/state gates.
+- **Boundary:** no real MO/PAID payment acceptance, API deployment, migration/restore, secret/payment configuration, customer message, Meta change or CAPI action occurred.
+- **Next exact authorization:** one explicit permanent-Admin-promotion decision only after owner accepts the retained no-real-payment-acceptance boundary and specifies final monitoring/rollback controls.
+
 ## GFS-COD-MO-08 - Admin 10% canary rollback boundary (2026-11-05 PKT)
 
 - **Decision:** accept the 73-second 90/10 Admin-only canary and mandatory restore as complete; current routing is `e8c96c96`100% / `92c81e60`0%. Permanent promotion is not authorized.

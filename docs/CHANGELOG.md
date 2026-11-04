@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-05 - GFS-COD-MO-09 Admin 25% canary
+
+- Ran Admin-only canary deployment `ca322c04-2244-4ed0-b98f-987cd9aa6533` at baseline75% / immutable candidate25% for166 seconds; mandatory rollback `da825e47-2358-4b63-a18c-ce7022582f37` restored baseline100%/candidate0%. No settings synchronization.
+- Candidate metrics rose3→5 with zero errors; read-only candidate/navigation/assets, API/WhatsApp, Admin and D1/payment checks passed. No real MO/PAID/customer/payment/WhatsApp/API/D1/Meta/CAPI mutation. Permanent promotion remains NO-GO.
+
 ## 2026-11-05 - GFS-COD-MO-08 Admin 10% canary
 
 - Ran one Admin-only 90% baseline `e8c96c96` /10% immutable candidate `92c81e60` canary for 73 seconds, then restored baseline100%/candidate0%; no non-versioned settings synchronization.

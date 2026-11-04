@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-MO-09 Admin MO 25% canary (2026-11-05 PKT)
+
+**Disposition: bounded technical canary PASS and restored; permanent promotion NO-GO.**
+
+- Cloudflare deployment `ca322c04-2244-4ed0-b98f-987cd9aa6533` held `e8c96c96`75% / `92c81e60`25% for166 seconds. Rollback `da825e47-2358-4b63-a18c-ce7022582f37` now holds exact100%/0%.
+- Version metrics candidate invocations3→5, errors0; candidate CPU average2.41ms, overall request p50/p90/p99 253/355/487ms. Candidate override and normal GET navigation/assets passed; this does not claim real payment acceptance.
+- API health is ready/WhatsApp enabled; normal Orders/Conversations each return200. D1 aggregate is unchanged: 834 orders/payments,45 receipts,zero MO receipts,0047 marker once,Advance3/3,COD PKR125 (`rows_written=0`). Recovery ON; CAPI OFF; API remains `b426ba47`100% / `d683ec45`0%.
+- No defect, source change or test rerun. Retain focused131/1, full378/1, build/lint PASS.
+
 ## GFS-COD-MO-08 Admin MO 10% canary (2026-11-05 PKT)
 
 **Disposition: bounded canary completed and rolled back; permanent promotion NO-GO.**

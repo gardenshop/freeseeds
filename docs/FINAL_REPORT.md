@@ -1,5 +1,20 @@
 # Final Report
 
+## GFS-COD-MO-09 Admin 25% canary (2026-11-05 PKT)
+
+1. **Canary decision:** technical canary GO/PASS; permanent promotion NO-GO.
+2. **Deployments:** canary `ca322c04-2244-4ed0-b98f-987cd9aa6533` at baseline75%/candidate25%; rollback `da825e47-2358-4b63-a18c-ce7022582f37` at baseline100%/candidate0%.
+3. **Exposure/invocations:** 166 seconds; candidate invocations3→5, candidate errors0.
+4. **Latency/health:** candidate CPU2.41ms; overall request p50/p90/p99 253/355/487ms; API ready/WhatsApp enabled and normal Admin reads200.
+5. **MO/read-only acceptance:** candidate override shows MO UI/exact amount; normal navigation/assets pass; server guards Access/CSRF/HMAC/confirmation/exact amount/state. No real MO call.
+6. **Protection:** Advance3/3, COD PKR125,0047 marker, D1 orders/payments/receipts/MO ledger unchanged with zero verification writes; recovery ON, CAPI OFF, API unchanged.
+7. **Restoration:** PASS, exact100%/0% independently read back.
+8. **Defects/tests/blockers:** no defect/source change; retained focused131/1, full378/1, build/lint PASS. Real payment acceptance intentionally INCONCLUSIVE.
+9. **Previous task:** GFS-COD-MO-08 completed a 10%/73-second canary; this task increased only the Admin canary to25% and restored it.
+10. **Git/docs:** pending one documentation commit and remote SHA verification.
+11. **Stages:** migration/HMAC/candidate/0%-attach/10%/25%-canary100%; permanent Admin promotion0%; API/CAPI0%.
+12. **One next authorization:** explicit permanent-Admin-promotion decision with final monitoring and rollback controls, only after accepting the no-real-payment-acceptance boundary.
+
 ## GFS-COD-MO-08 Admin 10% canary (2026-11-05 PKT)
 
 1. **Canary decision:** bounded execution PASS; permanent promotion NO-GO.

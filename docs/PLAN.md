@@ -1,5 +1,11 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-09 Admin 25% canary and mandatory rollback (2026-11-05 PKT)
+
+- Deployment `ca322c04-2244-4ed0-b98f-987cd9aa6533` ran baseline `e8c96c96`75% / candidate `92c81e60`25% for166 seconds, then rollback `da825e47-2358-4b63-a18c-ce7022582f37` restored100%/0%. No non-versioned settings sync occurred.
+- Candidate metrics rose3→5 with zero errors; GET-only candidate/normal navigation, assets, API/WhatsApp health, Admin reads and D1/payment aggregates remained healthy.
+- This is technical-canary evidence only; permanent promotion and real payment acceptance remain NO-GO without new authorization.
+
 ## GFS-COD-MO-08 Admin 10% canary and mandatory rollback (2026-11-05 PKT)
 
 - Admin-only baseline `e8c96c96`90% / candidate `92c81e60`10% ran for 73 seconds, then restored exactly to baseline100%/candidate0%; no non-versioned settings sync occurred.
