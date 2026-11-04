@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-META-02 existing Chrome attachment gate (2026-11-04 PKT)
+
+- Official `list_pages` still succeeds but exposes only the MCP browser instance. Its official `chrome://inspect/#remote-debugging` page shows **Allow remote debugging for this browser instance** unchecked.
+- Do not click or bypass this security consent from the agent. It explicitly grants external apps access to saved data, cookies and site data. The owner must enable/allow the supported local connection, then a fresh Codex MCP process must call `list_pages` before Meta inspection.
+- No authenticated Meta tab, business/WABA/sender/ad-account status, screenshot or eligibility result is claimed. Preserve the new-number lock, Hoja zero-connection rule and all production/payment/customer protections.
+
 ## GFS-MCP-01 Chrome MCP / Meta verification boundary (2026-11-04 PKT)
 
 - The authorized Codex MCP registration was repaired once: global `chrome-devtools` is `npx -y chrome-devtools-mcp@latest --autoConnect`. The current agent exposes the official Chrome MCP namespace and 32 tools; `list_pages` succeeds.

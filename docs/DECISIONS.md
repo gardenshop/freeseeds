@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-META-02 - stop at Chrome security consent (2026-11-04 PKT)
+
+**Decision:** stop before Meta verification. Official Chrome MCP `list_pages` works, but the connected browser's official remote-debugging page shows its consent checkbox disabled/unchecked.
+
+**Safety:** do not enable the checkbox, bypass the warning, use another profile, expose a remote port, extract cookies/tokens or substitute Meta API/HTTP. Resume only after owner-visible consent and a fresh `list_pages` inventory shows the existing authenticated Meta tabs.
+
+**Result:** no Meta, Cloudflare, deployment, payment, order, customer message, campaign or production state changed.
+
 ## GFS-MCP-01 - repair tool registration, stop at authenticated attach gate (2026-11-04 PKT)
 
 **Decision:** accept the local MCP registration repair. The official `chrome-devtools` server is enabled with `npx -y chrome-devtools-mcp@latest --autoConnect`, and the active agent exposes `list_pages` plus the page-scoped tool set.

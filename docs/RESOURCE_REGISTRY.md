@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-META-02 Chrome attachment evidence (2026-11-04 PKT)
+
+- **MCP:** official `list_pages` succeeds, but the only page was the MCP browser instance. The official `chrome://inspect/#remote-debugging` page showed the local remote-debugging consent unchecked.
+- **Evidence boundary:** no authenticated Meta tabs, business/WABA/sender/ad-account identity, eligibility status or screenshot was captured. No cookie, token, alternate profile, remote endpoint or direct API was used.
+- **Required owner step:** enable/allow the documented local debugging connection, then start/reload a fresh Codex MCP process and inventory pages once.
+- **External state:** no Meta, Cloudflare, Worker, payment, order, D1/R2/Queue/DLQ/Cron, secret, customer, campaign or WhatsApp state changed.
+
 ## GFS-MCP-01 Chrome MCP recovery resources (2026-11-04 PKT)
 
 - **Codex MCP:** `D:\AI-Tools\Codex\home\config.toml` now has one enabled official `chrome-devtools` registration using `npx -y chrome-devtools-mcp@latest --autoConnect`; no duplicate was retained.

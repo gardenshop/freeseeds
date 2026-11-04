@@ -1,5 +1,13 @@
 # Status
 
+## GFS-META-02 existing Chrome attachment (2026-11-04 PKT)
+
+**Disposition: attachment BLOCKED at explicit Chrome security consent; Meta verification NOT RUN; no external state changed.**
+
+- Initial official `list_pages` succeeded and returned only the MCP browser instance. Its `chrome://inspect/#remote-debugging` UI shows the checkbox **Allow remote debugging for this browser instance** unchecked.
+- The UI warns that enabling it grants external apps access to saved data, cookies and site data. The agent did not click, bypass, launch another profile, expose a port, inspect cookies/tokens or start a competing MCP session.
+- Exact remaining step: the authorized owner must enable/allow this supported local Chrome connection, then a fresh MCP-enabled Codex process must run `list_pages`. Meta business `568026370701542`, ad account `1198439777611633`, WABA/sender, display-name, quality, messaging and advertising eligibility remain unverified.
+
 ## GFS-MCP-01 Chrome MCP and Meta verification (2026-11-04 PKT)
 
 **Disposition: Chrome MCP tool path PASS; authenticated existing-session attach BLOCKED; Meta verification NOT RUN; public launch NO-GO.**
