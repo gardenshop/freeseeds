@@ -12,7 +12,7 @@
 | Routing/CAPI protection | PASS | API `b426ba47`100% / `d683ec45`0%; Admin `e8c96c96`100% / `e44703c3`0%; CAPI OFF, recovery ON. |
 | WhatsApp/API/Admin health | PASS | Fresh API health ready/WhatsApp enabled; fresh Orders/Conversations reads pass. |
 | Source regression | NOT RERUN | No source change; retained baseline 378 passed/1 skipped, build/lint PASS. |
-| MO Admin release | PENDING AUTHORIZATION | Prepared Admin version is nondeployed; controlled Admin-only deployment is the sole next action. |
+| MO Admin release | PENDING AUTHORIZATION | Binding-only Admin version is nondeployed; next action is a controlled MO candidate retaining that binding, not a traffic deployment. |
 
 ## GFS-COD-MO-04 final D1 verification (2026-11-05 PKT)
 

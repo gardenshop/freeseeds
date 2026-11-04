@@ -9,7 +9,7 @@
 - **Decision:** accept the authorized 0047 application and nondeploying Admin HMAC version preparation as complete. Do not treat either as authorization to deploy the Admin version or to change API/COD routing.
 - **Evidence:** verified D1 marker `0047` once, empty MO ledger, immutable receipt guards, retained historical guards, unchanged Advance/COD configuration, and continued healthy API/Admin reads. New version `05dedc81-7386-4289-82d1-15f7831bb4b7` contains the named HMAC binding and retains D1/R2/Queue bindings but is not in the active deployment.
 - **Recovery boundary:** a pre-write Time Travel bookmark exists; automatic restore is prohibited because it can discard new live orders.
-- **Next exact authorization:** deploy only the HMAC-bound Admin MO Received version through a separately approved controlled Admin release, then verify routing and live-safe reads. Keep API default-COD deferred and CAPI OFF.
+- **Next exact authorization:** create and validate only an Admin MO Received candidate that explicitly retains the HMAC binding, then separately approve any traffic deployment. Do not deploy the binding-only version. Keep API default-COD deferred and CAPI OFF.
 
 ## GFS-MCP-RESTORE - existing Chrome attachment recovered (2026-11-04 PKT)
 

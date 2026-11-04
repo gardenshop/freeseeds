@@ -3,7 +3,7 @@
 ## 2026-11-05 - GFS-COD-MO-05 controlled migration and HMAC preparation
 
 - Applied only `0047_cod_pakistan_post_mo.sql` through Cloudflare targeted remote-file execution. Remote readback: one marker, empty MO ledger, two immutable guards, eight retained COD/payment guards, Advance 3/3 enabled and COD PKR125 enabled. A pre-write Time Travel bookmark was captured; no restore was attempted.
-- Created `COD_REFERENCE_HMAC_KEY` only on nondeployed Admin version `05dedc81-7386-4289-82d1-15f7831bb4b7` (`gfs-cod-mo-05-hmac`) through `wrangler versions secret put`; its value was never exposed. No `versions deploy`, Worker deploy, routing, CAPI, customer, payment, WhatsApp or Meta change occurred.
+- Created `COD_REFERENCE_HMAC_KEY` only on nondeployed binding-only Admin version `05dedc81-7386-4289-82d1-15f7831bb4b7` (`gfs-cod-mo-05-hmac`) through `wrangler versions secret put`; its value was never exposed. A future MO UI candidate must retain this binding. No `versions deploy`, Worker deploy, routing, CAPI, customer, payment, WhatsApp or Meta change occurred.
 - Fresh API health reports WhatsApp enabled; fresh Admin Orders/Conversations reads pass. API `b426ba47`100% / `d683ec45`0% and Admin `e8c96c96`100% / `e44703c3`0% are unchanged. Source unchanged, so the existing 378 passed/1 skipped and build/lint baseline was retained.
 
 ## 2026-11-05 - GFS-COD-MO-04 final D1 verification
