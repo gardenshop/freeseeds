@@ -73,6 +73,7 @@ beforeEach(() => {
     CREATE TABLE audit_log(id TEXT PRIMARY KEY,action TEXT,actor_type TEXT,actor_id TEXT,entity_type TEXT,entity_id TEXT,correlation_id TEXT,metadata_json TEXT,created_at TEXT);
   `);
   sqlite.exec(readFileSync("migrations/0030_cod_v1_compat.sql", "utf8"));
+  sqlite.exec(readFileSync("migrations/0047_cod_pakistan_post_mo.sql", "utf8"));
   db = new D1Adapter(sqlite);
 });
 
@@ -309,42 +310,43 @@ describe("COD Admin configuration and reconciliation", () => {
     expect(html).toContain('<option value="COD_PENDING">COD pending</option>');
     expect(readFileSync("apps/api/wrangler.jsonc", "utf8")).toContain('"COD_V1_ENABLED": "true"');
     expect(readFileSync("apps/api/wrangler.jsonc", "utf8")).toContain('"COD_ROLLOUT_MODE": "PUBLIC"');
-    expect(html).toContain("Mark Payment Received");
+    expect(html).toContain("MO Received");
     expect(html).toContain("/mark-payment-received");
-    expect(html).toContain("Original payable amount: PKR ");
-    expect(html).toContain("Confirm the actual COD payment was received and courier settlement is complete.");
+    expect(html).toContain("Original COD amount: PKR ");
+    expect(html).toContain("Pakistan Post MO number");
     expect(html).toContain("confirmed:true");
     expect(html).toContain("order.state==='COLLECTION_PENDING'");
   });
 
   it("marks an eligible COD order paid once through one audited manual confirmation", async () => {
     seedCod();
-    const response = await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, confirmed: true });
+    const response = await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, moNumber: "PK-MO-001", confirmed: true });
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ ok: true, paymentStatus: "PAID", capiQueue: "DISABLED" });
     expect(sqlite.prepare("SELECT state,payment_status FROM orders").get()).toEqual({ state: "PAID", payment_status: "PAID" });
     expect(sqlite.prepare("SELECT review_state,approved_amount,approved_by FROM payments").get()).toEqual({ review_state: "COD_PAID", approved_amount: 325, approved_by: "admin@example.test" });
-    expect(sqlite.prepare("SELECT status,collection_amount_pkr,remittance_amount_pkr,collection_actor,remittance_actor FROM cod_order_details").get()).toEqual({ status: "PAID", collection_amount_pkr: 325, remittance_amount_pkr: 325, collection_actor: "admin@example.test", remittance_actor: "admin@example.test" });
-    const audit = sqlite.prepare("SELECT action,actor_id,metadata_json FROM audit_log WHERE action='COD_PAYMENT_RECONCILED'").get() as { action: string; actor_id: string; metadata_json: string };
+    expect(sqlite.prepare("SELECT status FROM cod_order_details").get()).toEqual({ status: "PAID" });
+    expect(sqlite.prepare("SELECT mo_amount_pkr,operator_id FROM cod_mo_receipts").get()).toEqual({ mo_amount_pkr: 325, operator_id: "admin@example.test" });
+    const audit = sqlite.prepare("SELECT action,actor_id,metadata_json FROM audit_log WHERE action='COD_MO_RECEIVED'").get() as { action: string; actor_id: string; metadata_json: string };
     expect(audit.actor_id).toBe("admin@example.test");
-    expect(JSON.parse(audit.metadata_json)).toMatchObject({ orderId: "order-1", amountPkr: 325, settlementMode: "MANUAL_ADMIN_CONFIRMATION" });
-    const repeat = await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, confirmed: true });
+    expect(JSON.parse(audit.metadata_json)).toMatchObject({ orderId: "order-1", amountPkr: 325, settlementMode: "PAKISTAN_POST_MO" });
+    const repeat = await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, moNumber: "PK-MO-001", confirmed: true });
     expect(repeat.status).toBe(200);
     expect(await repeat.json()).toMatchObject({ alreadyPaid: true, paymentStatus: "PAID" });
-    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_PAYMENT_RECONCILED'").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_MO_RECEIVED'").get()).toEqual({ count: 1 });
   });
 
   it("rejects unauthorized, wrong-amount and premature manual COD confirmation", async () => {
     seedCod();
-    const unauthorized = await app.fetch(new Request("https://admin.example.test/api/orders/order-1/mark-payment-received", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, confirmed: true }) }), env());
+    const unauthorized = await app.fetch(new Request("https://admin.example.test/api/orders/order-1/mark-payment-received", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, moNumber: "PK-MO-001", confirmed: true }) }), env());
     expect(unauthorized.status).toBe(403);
-    expect((await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 324, confirmed: true })).status).toBe(409);
-    expect((await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, confirmed: false })).status).toBe(400);
+    expect((await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 324, moNumber: "PK-MO-001", confirmed: true })).status).toBe(409);
+    expect((await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, moNumber: "PK-MO-001", confirmed: false })).status).toBe(400);
   });
 
   it("rejects manual payment confirmation before collection pending", async () => {
     seedCod("COD_PENDING");
-    expect((await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, confirmed: true })).status).toBe(409);
+    expect((await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, moNumber: "PK-MO-001", confirmed: true })).status).toBe(409);
     expect(sqlite.prepare("SELECT state,payment_status FROM orders").get()).toEqual({ state: "COD_PENDING", payment_status: "COD_PENDING" });
   });
 
@@ -355,13 +357,13 @@ describe("COD Admin configuration and reconciliation", () => {
     sqlite.prepare("INSERT INTO meta_attribution(id,order_id,ctwa_clid) VALUES('attribution-1','order-1','synthetic-ctwa')").run();
     const events = { send: vi.fn(async () => { throw new Error("QUEUE_UNAVAILABLE"); }) };
     const runtime = env(hmacKey, "true", events);
-    const response = await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, confirmed: true }, undefined, runtime);
+    const response = await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, moNumber: "PK-MO-001", confirmed: true }, undefined, runtime);
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ paymentStatus: "PAID", capiQueue: "DEFERRED" });
     expect(events.send).toHaveBeenCalledTimes(1);
     expect(sqlite.prepare("SELECT event_id,event_name,send_status FROM capi_events").get()).toMatchObject({ event_id: "purchase_SIM-GFS222-DO-NOT-SHIP", event_name: "Purchase", send_status: "PENDING" });
     expect(sqlite.prepare("SELECT kind,idempotency_key,status FROM outbox_jobs").get()).toMatchObject({ kind: "CAPI_PURCHASE", idempotency_key: "purchase_SIM-GFS222-DO-NOT-SHIP", status: "PENDING" });
-    const repeat = await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, confirmed: true }, undefined, runtime);
+    const repeat = await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, moNumber: "PK-MO-001", confirmed: true }, undefined, runtime);
     expect(repeat.status).toBe(200);
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM capi_events WHERE event_name='Purchase'").get()).toEqual({ count: 1 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE kind='CAPI_PURCHASE'").get()).toEqual({ count: 1 });

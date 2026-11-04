@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO source-ready settlement (2026-11-04 PKT)
+
+- Approved Pakistan Post model is implemented locally: one normalized MO number is required, only its HMAC is stored, amount must equal the original COD payable, duplicate MO use is rejected, and the operator/time/audit trail is recorded.
+- MO receipt atomically transitions an eligible COD order to PAID through a dedicated immutable ledger; repeated submission is idempotent. Cancelled, held, Advance and already-paid orders remain protected. Historical collection/remittance evidence remains supported for compatibility.
+- New guided Review with COD enabled presents the original amount, province delivery, fixed PKR125 COD fee and exact total before explicit confirmation. No order is persisted until COD or an Advance method is explicitly selected; historical no-method orders are not converted.
+- Existing Advance methods remain isolated. Purchase CAPI outbox behavior is prepared only on genuine MO receipt and remains disabled (`CAPI OFF`); no live migration or deployment was performed.
+- Source verification: Admin 27/27, guided 103/104 plus one retired legacy UI assertion skipped, full suite 378 passed/1 skipped, build PASS, lint PASS. API/Admin routing and production baselines are unchanged.
+
 ## GFS-COD-P0 fulfillment readiness (2026-11-04 PKT)
 
 - Fresh remote D1 reads were SELECT-only (`changed_db=false`, `rows_written=0`). The current read contains 409 `COD_PENDING` sidecars and one separate `DISPATCHED` sidecar; no collection or remittance evidence is present.

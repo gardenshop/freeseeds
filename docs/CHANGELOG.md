@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-04 - GFS-COD-MO source-ready Pakistan Post settlement
+
+- Implemented Pakistan Post MO settlement with HMAC-only unique references, exact amount validation, immutable ledger, atomic PAID transition, operator audit and idempotent replay protection.
+- Replaced the Admin COD settlement action with `MO Received` and made guided COD quote-first so new orders cannot remain without a selected payment method.
+- Preserved historical settlement compatibility, Advance isolation and CAPI OFF. Full suite: 378 passed / 1 retired legacy assertion skipped; build/lint pass. No deployment or live migration.
+
 ## 2026-11-04 - GFS-P0-REVENUE operational snapshot
 
 - Added a fresh aggregate-only revenue pipeline snapshot: 20,590 distinct inbound events, 3,562 snapshot contacts, 578 submitted orders, and 2.81% event-to-order ratio for the UTC seven-day window.

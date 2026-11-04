@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-COD-MO source resources (2026-11-04 PKT)
+
+- **Settlement migration:** `migrations/0047_cod_pakistan_post_mo.sql`; creates the immutable `cod_mo_receipts` ledger and trigger-safe historical/MO PAID paths.
+- **Admin handler/UI:** `apps/admin/src/index.ts`; `MO Received` accepts the order confirmation, MO number and exact original COD amount; raw MO values are not returned or stored.
+- **Guided flow:** `apps/api/src/index.ts`; COD is quote-first and explicit, while Advance selection persists through the existing path. CAPI remains disabled.
+- **Verification:** focused Admin/guided tests, full 378-test regression, build and lint passed; no remote migration/deployment or live data mutation.
+
 ## GFS-P0-REVENUE fresh aggregate resources (2026-11-04 PKT)
 
 - **Window:** remote D1 `getfreeseeds-staging`, UTC `2026-10-29T00:00:00Z` through `2026-11-05T00:00:00Z`; aggregate SELECTs returned `changed_db=false` and `rows_written=0`.

@@ -1,5 +1,16 @@
 # Final Report
 
+## GFS-COD-MO source-ready handoff (2026-11-04 PKT)
+
+**Overall: implementation PASS locally; release authorization remains required.**
+
+1. **MO settlement:** Admin `MO Received` requires order confirmation, Pakistan Post MO number, exact original COD amount and explicit operator confirmation; only an HMAC reference is stored.
+2. **Safeguards:** unique MO use, immutable receipt, atomic COD PAID transition, operator/time/audit record, replay idempotency and protection for held/cancelled/Advance/already-paid orders.
+3. **Checkout:** COD quote shows province delivery, PKR125 fee and exact total before confirmation; no new order is persisted without COD or Advance selection. Historical no-method orders are unchanged.
+4. **Advance/CAPI:** JazzCash, Easypaisa and Bank Transfer remain isolated. Purchase outbox support is prepared for genuine MO receipt; CAPI remains OFF.
+5. **Verification:** Admin 27/27; guided 103/104 plus one retired legacy UI assertion skipped; full 378 passed/1 skipped; build and lint passed.
+6. **Release boundary:** migration `0047_cod_pakistan_post_mo.sql` is not applied remotely; no deployment, payment/order/customer/Meta/Cloudflare mutation occurred. API `b426ba47`100% / `d683ec45`0%; Admin `e8c96c96`100% / `e44703c3`0%.
+
 ## GFS-COD-P0 - real COD fulfillment readiness (2026-11-04 PKT)
 
 **Overall: courier booking BLOCKED; existing ordering and payment safeguards unchanged.**

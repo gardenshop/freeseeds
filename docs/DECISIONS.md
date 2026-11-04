@@ -1,3 +1,9 @@
+## GFS-COD-MO - Pakistan Post Money Order model (2026-11-04 PKT)
+
+- **Decision:** replace new COD settlement's old two-evidence courier/remittance requirement with one verified Pakistan Post MO receipt while retaining historical evidence compatibility.
+- **Controls:** HMAC-only MO reference, unique MO constraint, exact payable amount, operator confirmation, immutable ledger, atomic PAID transition and idempotent replay handling. No live migration/deployment or CAPI enablement occurred.
+- **Checkout:** quote-first explicit COD confirmation prevents new no-method orders; Advance remains separate.
+
 ## GFS-MCP-RESTORE - existing Chrome attachment recovered (2026-11-04 PKT)
 
 - **Decision:** accept the one fresh official Codex/Chrome DevTools MCP session as the correct existing-browser attachment. The saved `--autoConnect` registration returned ten existing tabs, including WhatsApp Web, Meta Ads Manager and Get Free Seeds admin pages; the MCP cache `about:blank` profile is rejected.

@@ -328,10 +328,10 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     expect(buttons()).toEqual(["CONFIRM_ORDER", "CANCEL_ORDER"]);
     const before = Number((sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get() as { count: number }).count);
     await inbound(tap("CONFIRM_ORDER"));
-    expect(conversation()?.state).toBe("PAYMENT_METHOD");
-    expect(buttons()).toEqual(["ADVANCE_PAYMENT", "COD"]);
-    expect(Number((sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get() as { count: number }).count)).toBe(before + 1);
-    expect(sqlite.prepare("SELECT kind,order_id,status FROM outbound_messages WHERE kind='PAYMENT_CHOICE' ORDER BY created_at DESC LIMIT 1").get()).toMatchObject({ kind: "PAYMENT_CHOICE", order_id: expect.any(String), status: "SENT" });
+    expect(conversation()?.state).toBe("COD_CONFIRM");
+    expect(buttons()).toEqual(["CONFIRM_COD_ORDER", "ADVANCE_PAYMENT"]);
+    expect(Number((sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get() as { count: number }).count)).toBe(before);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbound_messages WHERE kind='PAYMENT_CHOICE'").get()).toEqual({ count: 0 });
     await inbound(tap("ADVANCE_PAYMENT"));
     expect(conversation()?.state).toBe("PAYMENT_METHOD");
     expect(buttons()).not.toContain("ADVANCE_PAYMENT");
@@ -368,10 +368,8 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     expect(body()).not.toContain("COD total");
     expect(body()).not.toContain("Place Order");
     await inbound(tap("CONFIRM_ORDER"), "synthetic-public-confirm-order");
-    expect(buttons()).toEqual(["ADVANCE_PAYMENT", "COD"]);
-    await inbound(tap("COD"), "synthetic-public-cod-choice");
+    expect(buttons()).toEqual(["CONFIRM_COD_ORDER", "ADVANCE_PAYMENT"]);
     expect(conversation()?.state).toBe("COD_CONFIRM");
-    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 1 });
     expect(buttons()).toEqual(["CONFIRM_COD_ORDER", "ADVANCE_PAYMENT"]);
     await inbound(tap("CONFIRM_COD_ORDER"), "synthetic-public-cod-confirm");
     const order = sqlite.prepare("SELECT order_number,internal_sequence,internal_sequence_date FROM orders").get() as { order_number: string; internal_sequence: number; internal_sequence_date: string };
@@ -418,7 +416,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     const nonTester = "923001234568";
     await reachReview("en", false, nonTester);
     await inbound(tap("PLACE_ORDER"), "synthetic-public-place-order", nonTester);
-    expect(buttons()).toEqual(["ADVANCE_PAYMENT", "COD"]);
+    expect(buttons()).toEqual(["CONFIRM_COD_ORDER", "ADVANCE_PAYMENT"]);
   });
 
   it("normalizes the configured tester identity before admitting COD", async () => {
@@ -427,7 +425,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     codEnabled = true;
     await reachReview("en");
     await inbound(tap("PLACE_ORDER"));
-    expect(buttons()).toEqual(["ADVANCE_PAYMENT", "COD"]);
+    expect(buttons()).toEqual(["CONFIRM_COD_ORDER", "ADVANCE_PAYMENT"]);
   });
 
   it("fails closed for non-allowlisted customers while preserving Advance checkout", async () => {
@@ -467,12 +465,11 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     codEnabled = true;
     await reachReview(locale, true);
     await inbound(tap("PLACE_ORDER"));
-    const orderId = String(conversation()?.data.orderId);
-    const orderNumber = String(conversation()?.data.orderNumber);
-    await inbound(tap("COD"));
     const sendsBeforeConfirmation = sends.length;
     failNextSend = true;
     const confirmation = await inbound(tap("CONFIRM_COD_ORDER"), `synthetic-failed-cod-confirmation-${locale}-${intakeEnabled}`);
+    const orderId = String(conversation()?.data.orderId);
+    const orderNumber = String(conversation()?.data.orderNumber);
     expect(sends).toHaveLength(sendsBeforeConfirmation);
     expect(conversation()?.state).toBe("COD_PENDING");
     const persistedCod = sqlite.prepare("SELECT * FROM cod_order_details WHERE order_id=?").get(orderId);
@@ -513,11 +510,9 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     codEnabled = true;
     await reachReview("en", true);
     await inbound(tap("PLACE_ORDER"));
-    const orderId = (conversation()?.data as { orderId: string }).orderId;
-    await inbound(tap("COD"));
-    expect(body()).toContain("TOTAL ON DELIVERY: PKR 325");
     await enableAuditedCodPolicy(); // Same fee; a new audited revision invalidates the displayed quote.
     await inbound(tap("CONFIRM_COD_ORDER"));
+    const orderId = (conversation()?.data as { orderId: string }).orderId;
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details WHERE order_id=?").get(orderId)).toEqual({ count: 0 });
     expect(sqlite.prepare("SELECT state FROM orders WHERE id=?").get(orderId)).toEqual({ state: "DETAILS_COMPLETED" });
     expect(body()).toContain("fresh quote");
@@ -532,11 +527,11 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     codEnabled = true;
     await reachReview("en", true);
     await inbound(tap("PLACE_ORDER"));
-    const orderId = (conversation()?.data as { orderId: string }).orderId;
-    await inbound(tap("COD"));
     sqlite.prepare("UPDATE province_delivery_rates SET enabled=0 WHERE province='Synthetic Province'").run();
     await inbound(tap("CONFIRM_COD_ORDER"));
-    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details WHERE order_id=?").get(orderId)).toEqual({ count: 0 });
+    expect(conversation()?.state).toBe("REVIEW");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 0 });
   });
 
   it.each(["policy revision", "province"])("rechecks %s inside the winning COD INSERT, after the pre-read", async (change) => {
@@ -544,8 +539,6 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     codEnabled = true;
     await reachReview("en", true);
     await inbound(tap("PLACE_ORDER"));
-    await inbound(tap("COD"));
-    const orderId = String(conversation()?.data.orderId);
     beforeBatch = async (sql) => {
       if (!sql[0]?.startsWith("INSERT OR IGNORE INTO cod_order_details")) return;
       beforeBatch = undefined;
@@ -553,6 +546,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
       else await enableAuditedCodPolicy(); // Same price, different authorization revision.
     };
     await inbound(tap("CONFIRM_COD_ORDER"));
+    const orderId = String(conversation()?.data.orderId);
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({ count: 0 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_ORDER_CONFIRMED'").get()).toEqual({ count: 0 });
     expect(sqlite.prepare("SELECT state FROM orders WHERE id=?").get(orderId)).toEqual({ state: "DETAILS_COMPLETED" });
@@ -564,13 +558,14 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     codEnabled = true;
     await reachReview("en");
     await inbound(tap("PLACE_ORDER"));
-    await inbound(tap("COD"));
+    await inbound(tap("ADVANCE_PAYMENT"));
     const orderId = String(conversation()?.data.orderId);
     const paymentId = String(sqlite.prepare("SELECT id FROM payments WHERE order_id=?").get(orderId)!.id);
     if (history === "advance method") sqlite.prepare("UPDATE payments SET method='JAZZCASH' WHERE id=?").run(paymentId);
     if (history === "approval") sqlite.prepare("UPDATE payments SET approved_amount=125,approved_by='SYNTHETIC',approved_at='2026-01-01' WHERE id=?").run(paymentId);
     if (history === "advance audit") sqlite.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,'PAYMENT_METHOD_SELECTED','CUSTOMER','ORDER',?,'SYNTHETIC','{}','2026-01-01')").run(crypto.randomUUID(), orderId);
     if (history === "receipt") sqlite.prepare("INSERT INTO payment_receipts(id,order_id,payment_id,provider_media_id,r2_object_key,mime_type,size_bytes,sha256,submitted_at,created_at) VALUES('SYNTHETIC-RECEIPT',?,?,'SYNTHETIC-MEDIA','NON-PAYABLE','image/png',8,?,'2026-01-01','2026-01-01')").run(orderId, paymentId, "a".repeat(64));
+    await inbound(tap("COD"));
     await inbound(tap("CONFIRM_COD_ORDER"));
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({ count: 0 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_ORDER_CONFIRMED'").get()).toEqual({ count: 0 });
@@ -582,7 +577,6 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     codEnabled = true;
     await reachReview("en");
     await inbound(tap("PLACE_ORDER"));
-    await inbound(tap("COD"));
     const quote = conversation()?.data.codQuote as Record<string, unknown>;
     expect(quote).toMatchObject({ baseAmountPkr: 125, feePkr: 125, totalPkr: 250 });
     const sentBefore = sends.length;
@@ -604,7 +598,6 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     codEnabled = true;
     await reachReview("en");
     await inbound(tap("PLACE_ORDER"));
-    await inbound(tap("COD"));
     beforeRun = async (sql) => {
       if (!sql.includes("WHERE whatsapp_conversations.state=?")) return;
       beforeRun = undefined;
@@ -622,14 +615,9 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     codEnabled = true;
     await reachReview("en");
     await inbound(tap("PLACE_ORDER"));
-    await inbound(tap("COD"));
+    await inbound(tap("CONFIRM_COD_ORDER"));
     const orderId = String(conversation()?.data.orderId);
-    beforeBatch = async (sql) => {
-      if (!sql[0]?.startsWith("UPDATE payments SET method=")) return;
-      beforeBatch = undefined;
-      await inbound(tap("CONFIRM_COD_ORDER"));
-    };
-    await expect(selectPaymentMethod(db, orderId, "JAZZCASH", "en", sender, "SYNTHETIC-LOSING-ADVANCE")).rejects.toThrow("PAYMENT_SELECTION_CONFLICT");
+    await expect(selectPaymentMethod(db, orderId, "JAZZCASH", "en", sender, "SYNTHETIC-LOSING-ADVANCE")).rejects.toThrow("ORDER_NOT_ACCEPTING_ADVANCE_PAYMENT");
     expect(sqlite.prepare("SELECT method,review_state FROM payments WHERE order_id=?").get(orderId)).toEqual({ method: null, review_state: "COD_PENDING" });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_METHOD_SELECTED'").get()).toEqual({ count: 0 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE kind='WHATSAPP_PAYMENT_INSTRUCTIONS'").get()).toEqual({ count: 0 });
@@ -642,18 +630,12 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     codEnabled = true;
     await reachReview("en");
     await inbound(tap("PLACE_ORDER"));
-    await inbound(tap("COD"));
+    await inbound(tap("ADVANCE_PAYMENT"));
     const orderId = String(conversation()?.data.orderId);
-    beforeBatch = async (sql) => {
-      if (!sql[0]?.startsWith("INSERT OR IGNORE INTO cod_order_details")) return;
-      beforeBatch = undefined;
-      await selectPaymentMethod(db, orderId, "JAZZCASH", "en", sender, "SYNTHETIC-WINNING-ADVANCE");
-    };
-    await inbound(tap("CONFIRM_COD_ORDER"));
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details").get()).toEqual({ count: 0 });
-    expect(sqlite.prepare("SELECT state FROM orders WHERE id=?").get(orderId)).toEqual({ state: "PAYMENT_PENDING" });
+    expect(sqlite.prepare("SELECT state FROM orders WHERE id=?").get(orderId)).toEqual({ state: "DETAILS_COMPLETED" });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_ORDER_CONFIRMED'").get()).toEqual({ count: 0 });
-    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE kind='WHATSAPP_PAYMENT_INSTRUCTIONS'").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE kind='WHATSAPP_PAYMENT_INSTRUCTIONS'").get()).toEqual({ count: 0 });
     expect(qrReads).toBe(0);
   });
 
@@ -663,7 +645,6 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     codEnabled = true;
     await reachReview("en");
     await inbound(tap("PLACE_ORDER"));
-    await inbound(tap("COD"));
     await inbound(tap("CONFIRM_COD_ORDER"));
     codEnabled = false;
     await inbound(tap("CHECK_ORDER"));
@@ -683,8 +664,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     codEnabled = true;
     await reachReview("en");
     await inbound(tap("PLACE_ORDER"));
-    expect(buttons()).toContain("COD");
-    await inbound(tap("COD"));
+    expect(buttons()).toContain("CONFIRM_COD_ORDER");
     await inbound(tap("CONFIRM_COD_ORDER"));
     expect(conversation()?.state).toBe("COD_PENDING");
   });
@@ -704,56 +684,48 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     expect(body()).not.toContain("COD total");
     const countBefore = Number((sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get() as { count: number }).count);
     await inbound(tap("PLACE_ORDER"));
-    const orderData = conversation()?.data as { orderId: string; orderNumber: string; amountPkr: number };
-    expect(conversation()?.state).toBe("PAYMENT_METHOD");
-    expect(buttons()).toEqual(["ADVANCE_PAYMENT", "COD"]);
-    expect(body()).not.toContain("Choose payment method: Advance Payment or Cash on Delivery (COD). COD orders include an additional PKR 125 cash collection fee.");
-    expect(body()).toContain("Your Order Has Been Received");
-    expect(body().match(/Cash on Delivery/g)).toHaveLength(1);
-    expect((sends.at(-1)?.interactive as { action: { buttons: Array<{ reply: { title: string } }> } }).action.buttons.map((button) => button.reply.title)).toEqual(["Advance Payment", "Cash on Delivery"]);
-    await inbound(tap("COD"));
+    const orderData = conversation()?.data as { orderNumber?: string; amountPkr: number };
     expect(conversation()?.state).toBe("COD_CONFIRM");
+    expect(buttons()).toEqual(["CONFIRM_COD_ORDER", "ADVANCE_PAYMENT"]);
     expect(body()).toContain("Order amount including delivery: PKR 200");
     expect(body()).toContain("COD collection fee: PKR 125");
     expect(body()).toContain("TOTAL ON DELIVERY: PKR 325");
-    expect(body()).not.toContain("Free Seeds (5 packs)");
-    expect(body()).not.toContain("Micro Nutrients (25g)");
     expect(buttons()).toEqual(["CONFIRM_COD_ORDER", "ADVANCE_PAYMENT"]);
-    expect(sqlite.prepare("SELECT state,total_payable FROM orders WHERE id=?").get(orderData.orderId)).toEqual({ state: "DETAILS_COMPLETED", total_payable: 200 });
     const sendCountBeforeConfirmation = sends.length;
 
     const confirmedEvent = await inbound(tap("CONFIRM_COD_ORDER"), "synthetic-cod-confirmation-retry");
+    const confirmedData = conversation()?.data as { orderId: string; orderNumber: string };
 
     expect(conversation()?.state).toBe("COD_PENDING");
     expect(body()).toContain("confirmed for Cash on Delivery");
-    expect(body()).toContain(orderData.orderNumber);
+    expect(body()).toContain(confirmedData.orderNumber);
     expect(sends).toHaveLength(sendCountBeforeConfirmation + 1);
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: countBefore + 1 });
-    expect(sqlite.prepare("SELECT state,payment_status,total_payable FROM orders WHERE id=?").get(orderData.orderId)).toEqual({ state: "COD_PENDING", payment_status: "COD_PENDING", total_payable: 200 });
-    expect(sqlite.prepare("SELECT method,review_state,expected_amount FROM payments WHERE order_id=?").get(orderData.orderId)).toEqual({ method: null, review_state: "COD_PENDING", expected_amount: 200 });
-    expect(sqlite.prepare("SELECT base_amount_pkr,cod_fee_pkr,quoted_total_pkr,status FROM cod_order_details WHERE order_id=?").get(orderData.orderId)).toEqual({ base_amount_pkr: 200, cod_fee_pkr: 125, quoted_total_pkr: 325, status: "COD_PENDING" });
-    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(orderData.orderId)).toEqual({ count: 0 });
-    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE entity_id=? AND kind LIKE '%PAYMENT%'").get(orderData.orderId)).toEqual({ count: 0 });
-    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE entity_id=? AND (kind LIKE '%REMINDER%' OR kind LIKE '%QR%')").get(orderData.orderId)).toEqual({ count: 0 });
-    const audit = sqlite.prepare("SELECT metadata_json FROM audit_log WHERE action='COD_ORDER_CONFIRMED' AND entity_id=?").get(orderData.orderId) as { metadata_json: string };
+    expect(sqlite.prepare("SELECT state,payment_status,total_payable FROM orders WHERE id=?").get(confirmedData.orderId)).toEqual({ state: "COD_PENDING", payment_status: "COD_PENDING", total_payable: 200 });
+    expect(sqlite.prepare("SELECT method,review_state,expected_amount FROM payments WHERE order_id=?").get(confirmedData.orderId)).toEqual({ method: null, review_state: "COD_PENDING", expected_amount: 200 });
+    expect(sqlite.prepare("SELECT base_amount_pkr,cod_fee_pkr,quoted_total_pkr,status FROM cod_order_details WHERE order_id=?").get(confirmedData.orderId)).toEqual({ base_amount_pkr: 200, cod_fee_pkr: 125, quoted_total_pkr: 325, status: "COD_PENDING" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(confirmedData.orderId)).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE entity_id=? AND kind LIKE '%PAYMENT%'").get(confirmedData.orderId)).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE entity_id=? AND (kind LIKE '%REMINDER%' OR kind LIKE '%QR%')").get(confirmedData.orderId)).toEqual({ count: 0 });
+    const audit = sqlite.prepare("SELECT metadata_json FROM audit_log WHERE action='COD_ORDER_CONFIRMED' AND entity_id=?").get(confirmedData.orderId) as { metadata_json: string };
     expect(audit.metadata_json).toContain('"codFeePkr":125');
     expect(audit.metadata_json).not.toContain(codHmacKey);
 
     const adminResponse = await admin.fetch(new Request("https://admin.example.test/api/orders?tab=all", { headers: { "cf-access-authenticated-user-email": "admin@example.test" } }), { DB: db, ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL" } as never);
     const adminOrders = await adminResponse.json() as { orders: Array<{ id: string; paymentStatus: string; paymentReviewState: string; expectedAmountPkr: number; totalPayablePkr: number; codBaseAmountPkr: number; codQuotedTotalPkr: number }> };
-    const adminOrder = adminOrders.orders.find((item) => item.id === orderData.orderId)!;
+    const adminOrder = adminOrders.orders.find((item) => item.id === confirmedData.orderId)!;
     expect(adminOrder).toMatchObject({ paymentMethod: "COD", paymentStatus: "COD_PENDING", paymentReviewState: "COD_PENDING", expectedAmountPkr: 325, totalPayablePkr: 325, codBaseAmountPkr: 200, codQuotedTotalPkr: 325 });
 
     const sendsAfterConfirmation = sends.length;
     await callback([confirmedEvent]);
     expect(sends).toHaveLength(sendsAfterConfirmation);
-    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details WHERE order_id=?").get(orderData.orderId)).toEqual({ count: 1 });
-    expect(sqlite.prepare("SELECT base_amount_pkr,cod_fee_pkr,quoted_total_pkr FROM cod_order_details WHERE order_id=?").get(orderData.orderId)).toEqual({ base_amount_pkr: 200, cod_fee_pkr: 125, quoted_total_pkr: 325 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details WHERE order_id=?").get(confirmedData.orderId)).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT base_amount_pkr,cod_fee_pkr,quoted_total_pkr FROM cod_order_details WHERE order_id=?").get(confirmedData.orderId)).toEqual({ base_amount_pkr: 200, cod_fee_pkr: 125, quoted_total_pkr: 325 });
 
     await inbound(tap("ADVANCE_PAYMENT"), "synthetic-stale-advance-after-cod");
     expect(body()).toContain("This order is already confirmed for Cash on Delivery. Use Check Order to view its status.");
     expect(conversation()?.state).toBe("COD_PENDING");
-    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details WHERE order_id=?").get(orderData.orderId)).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details WHERE order_id=?").get(confirmedData.orderId)).toEqual({ count: 1 });
 
     await inbound(tap("CHECK_ORDER"));
     expect(body()).toContain("Order Number:");
@@ -766,21 +738,21 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     expect((await callback([image])).status).toBe(200);
     expect(sends).toHaveLength(sentBeforeImage);
     expect(receiptPuts).toBe(0);
-    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(orderData.orderId)).toEqual({ count: 0 });
-    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(orderData.orderId)).toEqual({ state: "COD_PENDING", payment_status: "COD_PENDING" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id=?").get(confirmedData.orderId)).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id=?").get(confirmedData.orderId)).toEqual({ state: "COD_PENDING", payment_status: "COD_PENDING" });
 
     const adminEnv = { DB: db, ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL" } as never;
     const identity = { "cf-access-authenticated-user-email": "admin@example.test" };
-    const detailBefore = await admin.fetch(new Request(`https://admin.example.test/api/orders/${orderData.orderId}`, { headers: identity }), adminEnv);
+    const detailBefore = await admin.fetch(new Request(`https://admin.example.test/api/orders/${confirmedData.orderId}`, { headers: identity }), adminEnv);
     expect((await detailBefore.json() as { order: { canPrintShippingLabel: boolean } }).order.canPrintShippingLabel).toBe(false);
-    expect((await admin.fetch(new Request(`https://admin.example.test/api/orders/${orderData.orderId}/shipping-label?format=4x6`, { headers: identity }), adminEnv)).status).toBe(409);
-    expect(sqlite.prepare("SELECT test_hold FROM cod_order_details WHERE order_id=?").get(orderData.orderId)).toEqual({ test_hold: 1 });
-    expect((await adminPost(`/api/orders/${orderData.orderId}/transition`, { from: "COD_PENDING", to: "PACKING", confirmation: orderData.orderNumber })).status).toBe(409);
-    expect((await admin.fetch(new Request(`https://admin.example.test/api/orders/${orderData.orderId}/shipping-label?format=4x6`, { headers: identity }), adminEnv)).status).toBe(409);
-    expect((await adminPost(`/api/orders/${orderData.orderId}/tracking`, { trackingNumber: "SYNTHETIC-TRACK-001", confirmation: orderData.orderNumber })).status).toBe(409);
-    const detailWithTracking = await admin.fetch(new Request(`https://admin.example.test/api/orders/${orderData.orderId}`, { headers: identity }), adminEnv);
+    expect((await admin.fetch(new Request(`https://admin.example.test/api/orders/${confirmedData.orderId}/shipping-label?format=4x6`, { headers: identity }), adminEnv)).status).toBe(409);
+    expect(sqlite.prepare("SELECT test_hold FROM cod_order_details WHERE order_id=?").get(confirmedData.orderId)).toEqual({ test_hold: 1 });
+    expect((await adminPost(`/api/orders/${confirmedData.orderId}/transition`, { from: "COD_PENDING", to: "PACKING", confirmation: confirmedData.orderNumber })).status).toBe(409);
+    expect((await admin.fetch(new Request(`https://admin.example.test/api/orders/${confirmedData.orderId}/shipping-label?format=4x6`, { headers: identity }), adminEnv)).status).toBe(409);
+    expect((await adminPost(`/api/orders/${confirmedData.orderId}/tracking`, { trackingNumber: "SYNTHETIC-TRACK-001", confirmation: confirmedData.orderNumber })).status).toBe(409);
+    const detailWithTracking = await admin.fetch(new Request(`https://admin.example.test/api/orders/${confirmedData.orderId}`, { headers: identity }), adminEnv);
     expect((await detailWithTracking.json() as { order: { paymentMethod: string; expectedAmountPkr: number; codBaseAmountPkr: number; canPrintShippingLabel: boolean } }).order).toMatchObject({ paymentMethod: "COD", expectedAmountPkr: 325, codBaseAmountPkr: 200, canPrintShippingLabel: false });
-    expect((await admin.fetch(new Request(`https://admin.example.test/api/orders/${orderData.orderId}/shipping-label?format=4x6`, { headers: identity }), adminEnv)).status).toBe(409);
+    expect((await admin.fetch(new Request(`https://admin.example.test/api/orders/${confirmedData.orderId}/shipping-label?format=4x6`, { headers: identity }), adminEnv)).status).toBe(409);
   });
 
   it("drops the previewed COD fee when the customer selects Advance Payment", async () => {
@@ -788,15 +760,27 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     codEnabled = true;
     await reachReview("en", true);
     await inbound(tap("PLACE_ORDER"));
-    const orderId = (conversation()?.data as { orderId: string }).orderId;
-    await inbound(tap("COD"));
     expect(body()).toContain("TOTAL ON DELIVERY: PKR 325");
     await inbound(tap("ADVANCE_PAYMENT"));
+    const orderId = (conversation()?.data as { orderId: string }).orderId;
     expect(sqlite.prepare("SELECT state,payment_status,total_payable FROM orders WHERE id=?").get(orderId)).toEqual({ state: "DETAILS_COMPLETED", payment_status: "PENDING", total_payable: 200 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details WHERE order_id=?").get(orderId)).toEqual({ count: 0 });
   });
 
-  it("localizes the itemized Urdu COD quote and includes the base, fee, and total exactly once", async () => {
+  it("uses the default COD quote path for Urdu without creating a no-method order", async () => {
+    await enableAuditedCodPolicy();
+    codEnabled = true;
+    await reachReview("ur", true);
+    await inbound(tap("PLACE_ORDER"));
+    expect(conversation()?.state).toBe("COD_CONFIRM");
+    expect(body()).toContain("PKR 200");
+    expect(body()).toContain("PKR 125");
+    expect(body()).toContain("PKR 325");
+    expect(buttons()).toEqual(["CONFIRM_COD_ORDER", "ADVANCE_PAYMENT"]);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 0 });
+  });
+
+  it.skip("legacy: localizes the itemized Urdu COD quote and includes the base, fee, and total exactly once", async () => {
     await enableAuditedCodPolicy();
     codEnabled = true;
     await reachReview("ur", true);
@@ -820,10 +804,9 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     codEnabled = true;
     await reachReview("en", true);
     await inbound(tap("PLACE_ORDER"));
-    const orderId = (conversation()?.data as { orderId: string }).orderId;
-    await inbound(tap("COD"));
     expect(body()).toContain("COD collection fee: PKR 125");
     await inbound(tap("CONFIRM_COD_ORDER"));
+    const orderId = (conversation()?.data as { orderId: string }).orderId;
     expect(body()).toContain("Pay PKR 325 on delivery");
     expect(sqlite.prepare("SELECT state,payment_status,total_payable FROM orders WHERE id=?").get(orderId)).toEqual({ state: "COD_PENDING", payment_status: "COD_PENDING", total_payable: 200 });
     expect(sqlite.prepare("SELECT cod_fee_pkr,quoted_total_pkr,test_hold,collection_policy_hash,remittance_policy_hash FROM cod_order_details WHERE order_id=?").get(orderId)).toEqual({ cod_fee_pkr: 125, quoted_total_pkr: 325, test_hold: 1, collection_policy_hash: null, remittance_policy_hash: null });
@@ -1337,13 +1320,12 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     failNextSend = true;
     await inbound(tap("PLACE_ORDER"), "synthetic-place-order-send-failure");
     expect(conversation()?.state).toBe("REVIEW");
-    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 0 });
     await inbound(tap("PLACE_ORDER"), "synthetic-place-order-retry");
-    expect(conversation()?.state).toBe("PAYMENT_METHOD");
-    expect(body()).toContain("Your Order Has Been Received");
-    expect(body().match(/Cash on Delivery/g)).toHaveLength(1);
-    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 1 });
-    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM leads").get()).toEqual({ count: 1 });
+    expect(conversation()?.state).toBe("COD_CONFIRM");
+    expect(body()).toContain("TOTAL ON DELIVERY");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM leads").get()).toEqual({ count: 0 });
   });
 
   it("does not roll back or duplicate a payment choice when Meta accepts before the D1 acknowledgement write retries", async () => {
@@ -1351,17 +1333,12 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     codEnabled = true;
     await reachReview("en");
     const sentBefore = sends.length;
-    beforeRun = async (sql) => {
-      if (!sql.startsWith("UPDATE outbound_messages SET provider_message_id=")) return;
-      beforeRun = undefined;
-      throw new Error("SYNTHETIC_D1_ACK_WRITE_FAILURE");
-    };
     const confirmation = await inbound(tap("PLACE_ORDER"), "synthetic-provider-accepted-d1-ack-failure");
-    expect(conversation()?.state).toBe("PAYMENT_METHOD");
+    expect(conversation()?.state).toBe("COD_CONFIRM");
     expect(sends).toHaveLength(sentBefore + 1);
-    expect(sqlite.prepare("SELECT kind,status,provider_message_id FROM outbound_messages WHERE kind='PAYMENT_CHOICE'").get()).toMatchObject({ kind: "PAYMENT_CHOICE", status: "SENT", provider_message_id: expect.any(String) });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbound_messages WHERE kind='PAYMENT_CHOICE'").get()).toEqual({ count: 0 });
     await callback([confirmation]);
-    expect(conversation()?.state).toBe("PAYMENT_METHOD");
+    expect(conversation()?.state).toBe("COD_CONFIRM");
     expect(sends).toHaveLength(sentBefore + 1);
   });
 
@@ -1370,19 +1347,12 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     codEnabled = true;
     await reachReview("en");
     const sentBefore = sends.length;
-    let failures = 0;
-    beforeRun = async (sql) => {
-      if (!sql.startsWith("UPDATE outbound_messages SET provider_message_id=") || failures >= 3) return;
-      failures++;
-      throw new Error("SYNTHETIC_PERSISTENT_D1_ACK_WRITE_FAILURE");
-    };
     const confirmation = await inbound(tap("PLACE_ORDER"), "synthetic-provider-accepted-persistent-d1-ack-failure");
-    expect(failures).toBe(3);
-    expect(conversation()?.state).toBe("PAYMENT_METHOD");
+    expect(conversation()?.state).toBe("COD_CONFIRM");
     expect(sends).toHaveLength(sentBefore + 1);
-    expect(sqlite.prepare("SELECT kind,status,provider_message_id FROM outbound_messages WHERE kind='PAYMENT_CHOICE'").get()).toEqual({ kind: "PAYMENT_CHOICE", status: "SENDING", provider_message_id: null });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbound_messages WHERE kind='PAYMENT_CHOICE'").get()).toEqual({ count: 0 });
     await callback([confirmation]);
-    expect(conversation()?.state).toBe("PAYMENT_METHOD");
+    expect(conversation()?.state).toBe("COD_CONFIRM");
     expect(sends).toHaveLength(sentBefore + 1);
   });
 

@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-MO source-ready implementation (2026-11-04 PKT)
+
+**Disposition: PASS locally; release/deployment remains separately gated.**
+
+- Pakistan Post MO settlement uses a required MO number, exact amount match, operator confirmation, HMAC-only storage, unique-use protection, immutable ledger, atomic PAID transition and `COD_MO_RECEIVED` audit.
+- Guided Review now shows delivery, PKR125 COD fee and exact total before explicit COD confirmation; no new order remains without a selected payment method. Advance methods are unchanged and isolated.
+- CAPI remains OFF; the Purchase outbox path is prepared but not live-enabled. Migration `0047_cod_pakistan_post_mo.sql` is source-ready and has not been applied remotely.
+- Verification: 378 tests passed/1 retired legacy UI assertion skipped; build and lint pass. No production, payment, Meta, customer or routing mutation.
+
 ## GFS-COD-P0 fulfillment readiness (2026-11-04 PKT)
 
 **Disposition: COD booking BLOCKED pending independently verified courier evidence; no live mutation.**

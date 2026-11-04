@@ -757,6 +757,18 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
     else if (!data.fullName || !data.deliveryAddress || !data.nearbyPlace || !data.city || !data.contactNumber || !data.province) {
       nextState = "FULL_NAME"; data = { language: data.language };
       reply = (await sessionContent("FIELD_FULL_NAME", "I need to restart safely. Please reply with your full name.")).text;
+    } else if (codAvailable) {
+      try {
+        const quote = await quoteOrder(db, { productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: data.province, fertilizerSelected: data.fertilizerSelected ?? false });
+        const feePkr = Number(codSettings!.fee_pkr);
+        const total = codQuote(quote.totalPayablePkr, feePkr);
+        data.codQuote = { baseAmountPkr: quote.totalPayablePkr, feePkr, totalPkr: total, policyRevision: codSettings!.revision, collectionPolicyHash: codSettings!.collection_policy_hash, remittancePolicyHash: codSettings!.remittance_policy_hash };
+        data.amountPkr = quote.totalPayablePkr;
+        nextState = "COD_CONFIRM";
+        reply = codConfirmationLines(quote.totalPayablePkr, feePkr, total, data.language ?? "en").join("\n");
+      } catch {
+        reply = (await sessionContent("VALIDATION", "The COD quote is unavailable. Please try again.")).text;
+      }
     } else {
       const submission = { fullName: data.fullName, deliveryAddress: data.deliveryAddress, nearbyPlace: data.nearbyPlace, city: data.city, contactNumber: data.contactNumber, productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: data.province, fertilizerSelected: data.fertilizerSelected ?? false, whatsappNumber: event.from };
       try {
@@ -792,15 +804,38 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
       reply = data.language === "ur" ? "COD کوٹ دستیاب نہیں۔ آپ کا موجودہ آرڈر تبدیل نہیں ہوا۔" : "The COD quote is unavailable. Your existing order is unchanged.";
     }
   }
-  else if (state === "COD_CONFIRM" && normalized === "ADVANCE_PAYMENT" && data.orderId) {
+  else if (state === "COD_CONFIRM" && normalized === "ADVANCE_PAYMENT") {
+    if (!data.orderId) {
+      const provisional = await ensureProvisionalOrder();
+      data.orderId = provisional.orderId;
+      data.orderNumber = provisional.orderNumber;
+      data.amountPkr = provisional.quote.totalPayablePkr;
+    }
     delete data.codQuote;
     nextState = "PAYMENT_METHOD";
     showAdvanceMethods = true;
     reply = (await sessionContent("PAYMENT", "Choose an enabled advance payment method for order {orderNumber}.", { orderNumber: data.orderNumber ?? "", amount: data.amountPkr })).text;
   }
-  else if (state === "COD_CONFIRM" && normalized === "CONFIRM_COD_ORDER" && data.orderId) {
-    const finalized = codAvailable ? await finalizeCodOrder(db, data.orderId, data.codQuote, event.id, event.from, originalStateData, codTestHoldForAdmission(codRolloutMode)) : "NOT_ELIGIBLE";
-    if (finalized === "CREATED") {
+  else if (state === "COD_CONFIRM" && normalized === "CONFIRM_COD_ORDER") {
+    let finalized: "CREATED" | "NOT_ELIGIBLE" = "NOT_ELIGIBLE";
+    let provisionalFailed = false;
+    try {
+      if (!data.orderId) {
+        const provisional = await ensureProvisionalOrder();
+        data.orderId = provisional.orderId;
+        data.orderNumber = provisional.orderNumber;
+        data.amountPkr = provisional.quote.totalPayablePkr;
+      }
+      finalized = codAvailable ? await finalizeCodOrder(db, data.orderId, data.codQuote, event.id, event.from, originalStateData, codTestHoldForAdmission(codRolloutMode)) : "NOT_ELIGIBLE";
+    } catch {
+      provisionalFailed = true;
+      delete data.codQuote;
+      nextState = "REVIEW";
+      reply = data.language === "ur" ? "COD quote اب دستیاب نہیں؛ صوبہ اور فیس دوبارہ چیک کر کے پھر تصدیق کریں۔" : "The COD quote is no longer available. Review the province and delivery fee, then request a fresh quote.";
+    }
+    if (provisionalFailed) {
+      // No order or payment was created when the authoritative quote could not be persisted.
+    } else if (finalized === "CREATED") {
       nextState = "COD_PENDING";
       const total = data.codQuote!.totalPkr;
       reply = codConfirmationReply(data.orderNumber ?? "", total);

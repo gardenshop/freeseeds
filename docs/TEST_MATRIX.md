@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-COD-MO source verification (2026-11-04 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| MO number/amount/confirmation | PASS | Focused Admin tests |
+| Unique MO/idempotent replay | PASS | Focused Admin tests |
+| PAID atomic transition/audit | PASS | Focused Admin tests and migration triggers |
+| Held/cancelled/Advance protection | PASS | Focused Admin/guided tests |
+| Default COD quote/no-method prevention | PASS | Guided EN/UR tests |
+| Advance isolation/CAPI disabled | PASS | Guided and Admin tests |
+| Full regression | PASS with one retired legacy assertion skipped | 378 passed / 1 skipped |
+| Build/lint | PASS | `npm.cmd run build`; `npm.cmd run lint` |
+
 ## GFS-P0-REVENUE aggregate verification (2026-11-04 PKT)
 
 | Gate | Result | Evidence |

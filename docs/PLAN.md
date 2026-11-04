@@ -1,5 +1,10 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO release handoff (2026-11-04 PKT)
+
+- Apply migration `0047_cod_pakistan_post_mo.sql` only through the separately authorized release process, then verify the Admin `MO Received` path against a synthetic/read-only-safe fixture before live use.
+- Keep CAPI OFF, API/Admin allocations frozen, and do not mark historical no-method orders or receipts as paid. The remaining release action is owner approval for migration/deployment, not further source development.
+
 ## GFS-P0-REVENUE operational conversion snapshot (2026-11-04 PKT)
 
 Use the existing Admin read-only filters to prioritize 21 payment-review orders, 407 COD_PENDING orders requiring genuine courier/tracking evidence, and the three confirmed fulfillment states. Prioritize the 1,479 OFFER-stage snapshot contacts as the highest drop-off worklist, but only apply existing inbound-only resume when a customer returns. No source repair or deployment is justified by this snapshot.
