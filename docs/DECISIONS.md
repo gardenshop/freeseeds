@@ -2403,3 +2403,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Do not allocate positive traffic: no fresh canary approval was provided, version identity was not observable in the health response, and aggregate error/payment/recovery monitoring was unavailable.
 - Classify live acceptance **INCONCLUSIVE**, not PASS. Keep `b426ba47`100% / `d683ec45`0% and preserve the exact supported restore command as the owner-authorized rollback path.
 - No upload, source change, customer message, webhook replay, order/payment mutation, Meta/CAPI/Admin/watchdog action occurred.
+
+## GFS-481 closure decision (2026-11-04 PKT)
+
+- Mark engineering development **COMPLETE** and hand off to business gates. Keep corrected API candidate at0%; do not create GFS-482, upload, canary or watchdog task.
+- Mark live resume release **DEFERRED/INCONCLUSIVE** until version attribution, runtime monitoring, explicit canary approval and rollback observation are available.
+- Mark expanded public launch **NO-GO/BLOCKED EXTERNALLY** until Meta display-name status is freshly verified/approved and genuine courier contract, collection, remittance and policy records are provided.
+- Keep existing COD and payment methods unchanged. Advance-only expansion, if desired, needs separate explicit owner approval and must not disable COD implicitly.
