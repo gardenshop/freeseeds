@@ -1,5 +1,11 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-10 final Admin MO release (2026-11-05 PKT)
+
+- Final Admin deployment `bbe4c470-e331-4c7e-9ac9-525c266c52c3` serves immutable MO candidate `92c81e60` at100%. API remains `b426ba47`100% / `d683ec45`0%; no settings sync or unrelated deployment occurred.
+- Fifteen-minute monitored PASS: candidate metrics5→41, errors0; repeated Admin/API GET health passed, UI/assets and exact-amount MO controls passed, D1/payment configuration stayed protected and CAPI remained OFF.
+- Keep the rollback target `e8c96c96`100% / `92c81e60`0% available for a proven regression. Real payment acceptance was intentionally not performed and remains separately gated.
+
 ## GFS-COD-MO-09 Admin 25% canary and mandatory rollback (2026-11-05 PKT)
 
 - Deployment `ca322c04-2244-4ed0-b98f-987cd9aa6533` ran baseline `e8c96c96`75% / candidate `92c81e60`25% for166 seconds, then rollback `da825e47-2358-4b63-a18c-ce7022582f37` restored100%/0%. No non-versioned settings sync occurred.

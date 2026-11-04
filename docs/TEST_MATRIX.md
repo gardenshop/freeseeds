@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-COD-MO-10 final Admin release verification (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Exact Admin release | PASS | Deployment `bbe4c470â€¦` serves candidate `92c81e60`100%; API remains frozen baseline100%/candidate0%. |
+| 15-minute monitoring | PASS | Repeated fail-closed Admin/API samples pass; candidate invocations5→41, errors0. |
+| UI/security/bindings | PASS | MO UI/exact amount/assets, Access/CSRF/HMAC/state guards and HMAC/D1/R2/Queue bindings verified. |
+| Payment/WhatsApp/D1 protection | PASS | API WhatsApp health, Advance3/3, COD PKR125,0047 marker,zero MO receipts and zero verification writes. Recovery ON; CAPI OFF. |
+| Real settlement acceptance | INCONCLUSIVE | No genuine MO/PAID transition was authorized or performed. |
+| Rollback readiness | PASS | Exact `e8c96c96`100% / `92c81e60`0% route retained for proven regression; no D1 restore. |
+
 ## GFS-COD-MO-09 Admin 25% canary and rollback (2026-11-05 PKT)
 
 | Gate | Result | Evidence |

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-05 - GFS-COD-MO-10 final Admin MO release
+
+- Promoted immutable Admin candidate `92c81e60-3ec3-40b6-b912-ea81f94ee8af` to100% in deployment `bbe4c470-e331-4c7e-9ac9-525c266c52c3`; API remains baseline `b426ba47`100% / `d683ec45`0%. No settings synchronization, API/Meta/CAPI/D1/secret/payment configuration action occurred.
+- Fifteen-minute fail-closed monitoring passed: candidate metrics5→41/errors0, Admin/API health and UI/assets pass, HMAC/D1/R2/Queue bindings remain, Advance/COD/D1 protection holds, recovery ON and CAPI OFF. No real MO/PAID action occurred; rollback route is retained.
+
 ## 2026-11-05 - GFS-COD-MO-09 Admin 25% canary
 
 - Ran Admin-only canary deployment `ca322c04-2244-4ed0-b98f-987cd9aa6533` at baseline75% / immutable candidate25% for166 seconds; mandatory rollback `da825e47-2358-4b63-a18c-ce7022582f37` restored baseline100%/candidate0%. No settings synchronization.

@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-MO-10 Admin MO final release (2026-11-05 PKT)
+
+**Disposition: GO — Admin MO candidate live at100%; API, WhatsApp and payment protections unchanged.**
+
+- Cloudflare deployment `bbe4c470-e331-4c7e-9ac9-525c266c52c3` is candidate `92c81e60`100%. API control-plane readback remains `b426ba47`100% / `d683ec45`0%; no non-versioned setting synchronization.
+- Fifteen-minute fail-closed monitoring passed. Candidate invocation counter rose5→41, candidate errors stayed0, candidate CPU average2.11ms and aggregate request p50/p90/p99 remained254/355/486ms. Repeated normal Admin Orders/Conversations GETs were200 and UI/assets showed MO Received/exact amount.
+- API health stayed ready/WhatsApp enabled. Candidate retains HMAC/D1/R2/Queue bindings. D1 has zero MO receipts,0047 marker once,Advance3/3,COD PKR125 and zero verification writes; recovery ON/CAPI OFF.
+- No real settlement action was attempted. Preserve rollback `e8c96c96`100% / `92c81e60`0% for a proven regression only; never restore D1 automatically. Retain focused131/1, full378/1, build/lint PASS.
+
 ## GFS-COD-MO-09 Admin MO 25% canary (2026-11-05 PKT)
 
 **Disposition: bounded technical canary PASS and restored; permanent promotion NO-GO.**

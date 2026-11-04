@@ -1,3 +1,11 @@
+## GFS-COD-MO-10 - final Admin MO release boundary (2026-11-05 PKT)
+
+- **Decision:** accept `bbe4c470-e331-4c7e-9ac9-525c266c52c3` as the final Admin-only release: immutable `92c81e60`100%. No API/CAPI/Meta/D1/secret/payment configuration action is implied.
+- **Evidence:** fifteen-minute fail-closed monitoring, candidate metrics5→41/errors0, stable latency, repeated authenticated Admin/API health, MO UI/assets, named HMAC/D1/R2/Queue bindings and D1/payment-configuration reads all pass.
+- **Boundary:** Pakistan Post MO settlement requires a genuine receipt, exact amount and human confirmation; no live MO/PAID action was used as release evidence. Advance, COD PKR125, WhatsApp/recovery, CAPI OFF and historical data protections remain unchanged.
+- **Rollback:** a proven regression may restore `e8c96c96`100% / `92c81e60`0%; do not automatically restore D1.
+- **Next exact authorization:** a separately authorized, genuinely evidenced Pakistan Post MO settlement acceptance on an eligible order, with explicit operator and payment-mutation scope.
+
 ## GFS-COD-MO-09 - Admin 25% canary rollback boundary (2026-11-05 PKT)
 
 - **Decision:** accept the 166-second 75/25 technical canary and mandatory restore; current routing is `e8c96c96`100% / `92c81e60`0%. It is not permanent-promotion authorization.
