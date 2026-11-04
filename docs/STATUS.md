@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-P0 fulfillment readiness (2026-11-04 PKT)
+
+**Disposition: COD booking BLOCKED pending independently verified courier evidence; no live mutation.**
+
+- Fresh aggregate D1 read: 409 `COD_PENDING`, one separate `DISPATCHED`, zero collection/remittance evidence. Customer/province fields and immutable quote arithmetic pass for the 409 rows; the quote is the stored original order amount plus PKR125 COD fee. Six rows remain on local test hold; 403 are released from that hold.
+- COD configuration is enabled at PKR125 but collection/remittance policy hashes are absent. No checked-in courier connector/agreement artifact or verified portal/terms was accessible; owner-reported courier agreement remains **NOT VERIFIED**, not declared absent.
+- Receipt reconciliation remains bounded: D1 shows 27 distinct receipt-bearing orders / 39 rows (21 `REVIEW`, 2 `APPROVED`, 4 `REJECTED`) versus the owner's report of 18 received receipts. No receipt was treated as payment proof and no payment status changed.
+- Pilot readiness is 0/5. Required next evidence is the authorized courier source and terms, secure booking path, explicit owner booking authorization, and private order-level confirmation before any transmission. No source defect or test-triggering change was found.
+
 ## GFS-P0-REVENUE fresh operational snapshot (2026-11-04 PKT)
 
 **Disposition: aggregate read PASS; highest bottleneck is OFFER-stage checkout drop-off; no code defect or live mutation identified.**

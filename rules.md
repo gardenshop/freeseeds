@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-P0 fulfillment readiness (2026-11-04 PKT)
+
+- Fresh remote D1 reads were SELECT-only (`changed_db=false`, `rows_written=0`). The current read contains 409 `COD_PENDING` sidecars and one separate `DISPATCHED` sidecar; no collection or remittance evidence is present.
+- All 409 current COD rows have complete stored customer/province fields and consistent immutable quote arithmetic: original order amount plus the configured PKR125 COD fee. Six remain under the local test hold and 403 are released from that hold. This is data completeness only; it is not courier readiness or customer-confirmation proof.
+- COD is enabled at PKR125, but the live configuration has no collection-policy or remittance-policy hash. No provider-specific courier connector, agreement artifact, portal identity, rates, settlement schedule, return terms or geographic coverage was independently accessible in the checked-in project or the timed-out browser bridge. The owner-reported agreement therefore remains **NOT VERIFIED**, not declared absent.
+- The owner-reported 18 Advance receipts do not reconcile one-to-one from aggregate data: D1 currently shows 27 distinct receipt-bearing orders / 39 receipt rows: 21 in `REVIEW`, 2 `APPROVED`, and 4 `REJECTED`. Receipt presence is not payment proof; keep the 21 review rows and 2 approved rows under existing independent-verification controls.
+- Courier-ready pilot count is **0/5** pending an authorized contract/portal or secure connector, verified terms, order-level private Admin review, explicit owner booking authorization and later tracking/delivery/collection/remittance evidence. No customer details were exported, no booking/message/dispatch/payment transition occurred, and COD settlement remains fail-closed.
+
 ## GFS-P0-REVENUE fresh aggregate boundary (2026-11-04 PKT)
 
 - Fresh SELECT-only remote D1 reads covered UTC `2026-10-29T00:00:00Z` through `2026-11-05T00:00:00Z`; all returned `changed_db=false` and `rows_written=0`. Chrome MCP Analytics timed out before a page read, so no browser aggregate claim is made.

@@ -1,5 +1,19 @@
 # Final Report
 
+## GFS-COD-P0 - real COD fulfillment readiness (2026-11-04 PKT)
+
+**Overall: courier booking BLOCKED; existing ordering and payment safeguards unchanged.**
+
+1. **Courier agreement:** NOT VERIFIED. The owner-reported agreement was not independently accessible; scoped repository search found no provider connector/agreement artifact and the authorized browser bridge timed out. No terms are invented.
+2. **Current terms:** only the live COD configuration is verified: enabled, PKR125 fee; collection/remittance policy hashes are absent. Rates, collection charges, settlement schedule, returns and geographic coverage remain external evidence requirements.
+3. **COD readiness:** 409 current `COD_PENDING`; one separate `DISPATCHED`; zero collection/remittance evidence. Stored customer/province fields and immutable quote arithmetic pass for the 409 rows, but 6 remain on test hold and all are blocked by missing verified courier policy/source and explicit booking authorization. Ready pilot: **0/5**.
+4. **Payment review:** D1 shows 27 distinct receipt-bearing orders / 39 rows: 21 `REVIEW`, 2 `APPROVED`, 4 `REJECTED`. This does not reconcile the owner's 18 received receipts one-to-one; no receipt was treated as paid.
+5. **Integration:** no verified secure courier booking/manifest integration or portal was available. No customer details were transmitted, no booking/message/dispatch occurred.
+6. **Evidence still required:** authorized courier agreement/portal identity; rate/charge/settlement/return/coverage terms; private order-level quote/address/customer-confirmation review; explicit owner approval for a maximum-five pilot; tracking/manifest, delivery, collection and remittance evidence.
+7. **Tests and safety:** no source change or defect; no test rerun required. D1 reads were SELECT-only with `changed_db=false` and `rows_written=0`; API `b426ba47`100% / `d683ec45`0%; Admin `e8c96c96`100% / `e44703c3`0%; Recovery ON; CAPI OFF.
+8. **Progress:** WhatsApp92%; resume local100%/live0%; COD local100%/live70%, unchanged because no new live fulfillment evidence exists.
+9. **Next fulfillment action:** owner provides/opens the authorized courier agreement and portal through the existing authenticated session, then approves one private <=5-order readiness review before any booking.
+
 ## GFS-P0-REVENUE - fresh order conversion snapshot (2026-11-04 PKT)
 
 **Overall: operational worklists identified; existing Admin/order code retained; no live mutation.**

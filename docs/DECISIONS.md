@@ -10,6 +10,13 @@
 - **Reason:** the Admin source's own authorization failure is JSON, so the observed HTML response is not evidence of a Worker exception or D1 quota error. The active Access identity/session state was not visible and no credentials were inspected.
 - **Safety:** do not deploy, rollback, weaken Access, use cookies/tokens, or claim API/WhatsApp health. API `/health` had no browser response and the host-side check could not connect. Keep routing API `b426ba47`100% / `d683ec45`0% and Admin `e8c96c96`100% / `e44703c3`0% unchanged.
 
+## GFS-COD-P0 - COD fulfillment decision (2026-11-04 PKT)
+
+- **Decision:** keep COD operationally read-only and fail-closed. Do not book a pilot until the owner-provided courier agreement/portal is independently identified and its rates, COD charges, settlement, returns and coverage are verified.
+- **Evidence:** current read-only D1 aggregate shows 409 `COD_PENDING`, one `DISPATCHED`, no collection/remittance evidence, PKR125 enabled, and both policy hashes absent. Stored customer/province completeness and quote arithmetic pass, but they do not establish courier readiness or customer confirmation.
+- **Payment boundary:** 27 distinct receipt-bearing orders / 39 rows are split 21 `REVIEW`, 2 `APPROVED`, 4 `REJECTED`; the reported 18 receipts remain unreconciled. No receipt was promoted to paid.
+- **Safety:** no order, payment, customer, courier, WhatsApp, deployment, routing or configuration mutation occurred. No source defect was proven; no tests were required.
+
 # Decisions
 
 ## GFS-META-04 - reject MCP blank profile (2026-11-04 PKT)
