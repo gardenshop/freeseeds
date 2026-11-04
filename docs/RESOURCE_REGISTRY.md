@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-META-04 profile mismatch evidence (2026-11-04 PKT)
+
+- **Chrome:** stable `156.0.8078.80`; real main process uses the normal default Chrome user-data root without alternate profile or remote-debugging flags.
+- **MCP:** separate process uses `C:\Users\Nazim\.cache\chrome-devtools-mcp\chrome-profile` with `--remote-debugging-pipe`; its only page is not accepted as authenticated evidence.
+- **Consent:** official `chrome://inspect/#remote-debugging` shows remote debugging unchecked. No cookies, tokens, profile stores, alternate browser, exposed port or Meta page was accessed.
+- **Gate:** owner-visible consent in the intended existing profile, followed by a fresh official autoConnect process and `list_pages`, is required before Meta verification.
+
 ## GFS-META-02 Chrome attachment evidence (2026-11-04 PKT)
 
 - **MCP:** official `list_pages` succeeds, but the only page was the MCP browser instance. The official `chrome://inspect/#remote-debugging` page showed the local remote-debugging consent unchecked.

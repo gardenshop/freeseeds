@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-META-04 - reject MCP blank profile (2026-11-04 PKT)
+
+**Decision:** reject the MCP-launched cache profile as the wrong browser. The real Chrome process uses the normal default user-data root but has no remote-debugging flag; the MCP process uses a separate `chrome-devtools-mcp\chrome-profile` with `--remote-debugging-pipe`.
+
+**Safety:** do not inspect cookies/profile stores, copy credentials, launch another browser, expose a port or bypass the remote-debugging consent. The owner must enable consent in the intended existing profile before a fresh official autoConnect session can verify Meta.
+
+**Result:** no authenticated profile, Meta business/WABA/ad-account identity or eligibility was verified; no external or source state changed.
+
 ## GFS-META-02 - stop at Chrome security consent (2026-11-04 PKT)
 
 **Decision:** stop before Meta verification. Official Chrome MCP `list_pages` works, but the connected browser's official remote-debugging page shows its consent checkbox disabled/unchecked.

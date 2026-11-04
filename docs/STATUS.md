@@ -1,5 +1,14 @@
 # Status
 
+## GFS-META-04 existing Chrome profile diagnosis (2026-11-04 PKT)
+
+**Disposition: WRONG PROFILE confirmed; authenticated attachment BLOCKED; Meta verification NOT RUN.**
+
+- Read-only process diagnostics identify Chrome stable `156.0.8078.80`. The real Chrome main process runs from the normal default Chrome user-data root, with no alternate profile flag and no remote-debugging flag.
+- The active MCP browser is separate: it runs with `C:\Users\Nazim\.cache\chrome-devtools-mcp\chrome-profile` and `--remote-debugging-pipe`, explaining the only `about:blank`/DevTools page. This session is rejected for Meta.
+- The official remote-debugging UI still shows the consent checkbox unchecked. The agent did not click it, inspect cookies/profile stores, launch another profile, expose a port or reinstall MCP.
+- The exact `gisupp@gmail.com` profile association cannot be verified until owner-visible consent is enabled in the intended existing Chrome profile and a fresh autoConnect session returns its tabs. Meta identity and eligibility remain unverified.
+
 ## GFS-META-02 existing Chrome attachment (2026-11-04 PKT)
 
 **Disposition: attachment BLOCKED at explicit Chrome security consent; Meta verification NOT RUN; no external state changed.**

@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-META-04 existing Chrome profile diagnosis (2026-11-04 PKT)
+
+- Read-only Windows diagnostics show Chrome stable `156.0.8078.80`. The real Chrome main process uses the normal default Chrome user-data root with no alternate `--user-data-dir`, `--profile-directory` or remote-debugging flag.
+- The MCP browser is a separate process using `C:\Users\Nazim\.cache\chrome-devtools-mcp\chrome-profile` and `--remote-debugging-pipe`; its `about:blank`/DevTools page is **WRONG PROFILE** and must not be used for Meta.
+- The exact `gisupp@gmail.com` profile association was not claimed because the real Chrome is not attached and cookies/profile stores were not inspected. Owner-visible remote-debugging consent in the intended profile is required; then use a fresh official autoConnect session.
+- Preserve all new-number, Hoja-isolation, payment, customer, deployment and production protections. No Meta or source mutation occurred.
+
 ## GFS-META-02 existing Chrome attachment gate (2026-11-04 PKT)
 
 - Official `list_pages` still succeeds but exposes only the MCP browser instance. Its official `chrome://inspect/#remote-debugging` page shows **Allow remote debugging for this browser instance** unchecked.
