@@ -6667,3 +6667,15 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 7. **Completion:** upload/readback100%; attachment/isolated live acceptance0%; production promotion0%. WhatsApp92%/8% remaining; resume local100%/live0%; COD local100%/live70%.
 8. **Git:** tested source baseline `55b67a54e77ee29352f7c59169fff7ee2cc8761e`; final documentation commit is verified after push.
 9. **One next release decision:** approve or defer controlled 0% attachment and isolated acceptance; keep routing frozen unless separately approved.
+
+## GFS-479 final report — controlled 0% API candidate acceptance (2026-11-04 PKT)
+
+1. **Version/source verification:** corrected `d683ec45-1df2-4777-878e-4915fe55d1f4`/122 matched the tested GFS-477 configuration; recovery true, timestamp and source/version metadata preserved.
+2. **Cron/Queue safety:** PASS. Protected flags/resources matched; Cron manifest unchanged and dry-run made no change; Queue has one unchanged consumer/DLQ configuration. Wrangler reported no non-versioned settings to sync.
+3. **Owner approval:** one explicit approval authorized replacing only the existing 0% candidate, retaining baseline100%, with exact prior allocation restoration if regression appeared.
+4. **Attachment:** PASS. Deployment `9b459a09-a7a5-404d-9302-48292bd07783` is exactly `b426ba47`100% / `d683ec45`0%; `e8018f3f` is no longer attached.
+5. **Independent readback:** serving GET `/health` HTTP200 with WhatsApp enabled; protected config and binding/secret presence read back. No positive traffic, POST, webhook, order, payment or customer message occurred.
+6. **Regression:** focused3/3 PASS; full378/378, guided104/104, build/lint carried from GFS-477; audit remains BLOCKED. No regression detected, but full live checkout/payment acceptance is not claimed.
+7. **Progress:** WhatsApp92%/8% remaining; resume local100%/live0%; COD local100%/live70%. Meta display name In Review; courier collection/remittance evidence remains outstanding.
+8. **Git:** source baseline `b77e496bc208f19fd9f77c102d894fed36acf39c`; final docs commit SHA will be verified after push.
+9. **One next release decision:** keep corrected candidate at0% for monitored observation or separately authorize isolated non-mutating acceptance; no positive allocation or live checkout test.

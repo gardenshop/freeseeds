@@ -3072,3 +3072,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **Execution/routing:** authoritative deployment remains API `b426ba47`100% / `e8018f3f`0%. New version is unattached. Its fetch/scheduled/queue handlers and manifest cron do not receive production execution until attachment/deployment; no customer webhook, message, order or payment action occurred.
 - **Verification:** manifest/recovery focused3/3 PASS; GFS-477 carried full378/378, guided104/104, build/lint PASS; audit remains BLOCKED by npm registry access. Admin `e8c96c96`100% / `e44703c3`0%; CAPI OFF.
 - **Release state:** candidate is ready for separately approved 0% attachment and isolated acceptance only. Meta display name remains In Review; courier settlement evidence remains outstanding.
+
+## GFS-479 — controlled 0% API acceptance (2026-11-04 PKT)
+
+- **Deployment:** owner-authorized single update created deployment `9b459a09-a7a5-404d-9302-48292bd07783`: `b426ba47`100% and `d683ec45`0%; old `e8018f3f` was replaced only.
+- **Safety readback:** version flags/bindings/secrets-presence matched baseline and old candidate; recovery true with timestamp preserved. Wrangler reported no non-versioned settings to sync. Cron dry-run exited without applying changes; Queue consumer remains `getfreeseeds-api-staging` with DLQ `getfreeseeds-events-staging-dlq`, batch10, retries5, wait5s.
+- **Health/protection:** serving GET `/health` returned200 and WhatsApp enabled. No POST/webhook/order/payment/customer message, real test order, Meta, CAPI, Admin or watchdog action occurred. No positive traffic was allocated.
+- **Rollback:** prior exact allocation is `b426ba47`100% / `e8018f3f`0%; owner explicitly authorized restoration if independent regression readback requires it. No restore was needed.
+- **Readiness:** controlled 0% attachment PASS; live checkout acceptance remains unproven. Meta display name remains In Review; courier collection/remittance evidence remains outstanding.

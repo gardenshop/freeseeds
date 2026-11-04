@@ -2130,3 +2130,9 @@
 - Per fresh owner approval, uploaded exactly one immutable API version with `--keep-vars --strict`: `d683ec45-1df2-4777-878e-4915fe55d1f4`/122, tag `gfs478-api-55b67a5`.
 - Independent readback confirmed recovery true, preserved start timestamp, protected flags, D1/R2/Queue resources and secret binding presence without secret values. API routing stayed baseline100% / candidate0%; the new version remains unattached.
 - Focused3/3 PASS; GFS-477 full378/378, guided104/104, build/lint PASS carried forward. No customer, payment, WhatsApp, Meta, Admin, CAPI, D1, Queue or Cron mutation occurred.
+
+# 2026-11-04 - GFS-479 controlled 0% API acceptance
+
+- Replaced only the API 0% candidate: baseline `b426ba47` remained100%; corrected `d683ec45` became0%; old `e8018f3f` was removed. Deployment `9b459a09-a7a5-404d-9302-48292bd07783`.
+- Independent protected-config comparison, GET-only health, Cron dry-run and Queue consumer readback passed. No non-versioned settings synced and no customer, payment, webhook, Meta, CAPI or positive traffic action occurred.
+- Rollback target remains the exact prior `b426ba47`100% / `e8018f3f`0% deployment. No restore was required; full live checkout acceptance remains unproven.

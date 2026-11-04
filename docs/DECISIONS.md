@@ -2391,3 +2391,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Accept version `d683ec45-1df2-4777-878e-4915fe55d1f4`/122 as the single corrected GFS-478 upload. Readback confirms recovery true and protected configuration/binding/secret presence without exposing secrets.
 - Keep API `b426ba47`100% / `e8018f3f`0%. Do not attach, override, deploy, promote or run customer/webhook tests. The scheduled and Queue handlers in the unattached artifact do not alter production execution.
 - The next action requires separate approval for controlled 0% attachment and isolated acceptance with monitoring and rollback; no production canary or automatic protection is implied.
+
+## GFS-479 decision — corrected candidate attached at 0% (2026-11-04 PKT)
+
+- Accept the authorized deployment `9b459a09-a7a5-404d-9302-48292bd07783`: baseline `b426ba47`100%, corrected `d683ec45`0%, old `e8018f3f` removed from the active deployment.
+- Protected configuration and event resources passed independent comparison; no non-versioned settings synced, Cron dry-run changed nothing, and the existing single Queue consumer/DLQ remained attached.
+- Retain the exact prior deployment as the authorized rollback target. Do not increase candidate traffic, run live checkout tests, send messages, or mutate customer/payment state. Health-only success is not full live acceptance.

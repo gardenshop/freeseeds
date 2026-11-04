@@ -2387,3 +2387,10 @@ No secrets are stored in this registry.
 - Cloudflare upload resource: account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, Worker `getfreeseeds-api-staging`, immutable version `d683ec45-1df2-4777-878e-4915fe55d1f4`/122, tag `gfs478-api-55b67a5`, source author `gisupp@gmail.com`. No token or secret value registered.
 - Readback resources: recovery true with start `2026-10-28T20:05:20.290Z`; D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, R2 `getfreeseeds-receipts-staging`, Queue `getfreeseeds-events-staging`, and secret binding names present. Fetch/scheduled/queue handlers present; manifest cron remains unchanged.
 - Routing resource: deployment `GFS-407 Approval U API baseline100 candidate0`, baseline `b426ba47`100% and candidate `e8018f3f`0%. Version122 is not attached. No HTTP, Queue, Cron, customer, payment or Meta action was performed against the preview.
+
+## GFS-479 verified resources (2026-11-04 PKT)
+
+- Deployment resource: `9b459a09-a7a5-404d-9302-48292bd07783`, baseline `b426ba47-1ead-4c4a-85ba-0a0b85d3e415`100%, corrected `d683ec45-1df2-4777-878e-4915fe55d1f4`0%; old `e8018f3f` removed from the active deployment.
+- Trigger resources: manifest cron `* * * * *`; non-mutating trigger dry-run exited without applying changes. Queue consumer remains one `getfreeseeds-api-staging` worker on `getfreeseeds-events-staging`, DLQ `getfreeseeds-events-staging-dlq`, batch10, retries5, max wait5000ms.
+- Readback resources: corrected version recovery true, timestamp unchanged, protected flags/bindings/secret names matched baseline, serving health HTTP200. No raw secret, customer payload, POST, webhook, order, payment or message resource was used.
+- Rollback resource: exact previous deployment allocation `b426ba47`100% / `e8018f3f`0%, expressly authorized if independent regression evidence appears; not invoked.

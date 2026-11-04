@@ -3582,3 +3582,17 @@ Investigation query costs only (not production savings): representative `rows_re
 | Routing | PASS | API baseline `b426ba47`100% / `e8018f3f`0%; new version unattached |
 | Focused acceptance | PASS | Manifest plus EN/UR resume 3/3; GFS-477 full378/378 and guided104/104 carried |
 | Customer/production mutation | PASS | No attachment, deployment, webhook, message, order, payment, Meta, Admin, CAPI or watchdog action |
+
+## GFS-479 controlled 0% attachment (2026-11-04 PKT)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Proposed allocation dry-run | PASS | `b426ba47`100% + `d683ec45`0%; only `e8018f3f` replaced |
+| Deployment readback | PASS | Deployment `9b459a09-a7a5-404d-9302-48292bd07783`; exact100/0 |
+| Recovery/payment flags | PASS | Recovery true/timestamp preserved; payment, COD, WhatsApp and CAPI flags matched |
+| D1/R2/Queue/secrets | PASS | Protected resources and secret binding names matched; values not read |
+| Cron safety | PASS | Existing `* * * * *` manifest; `triggers deploy --dry-run` made no change; no trigger sync in deployment |
+| Queue safety | PASS | One existing consumer; DLQ unchanged; batch10, retries5, wait5000ms |
+| Health | PASS | GET-only serving `/health` HTTP200, WhatsApp enabled |
+| Customer/live mutation | PASS | No POST, webhook, message, order, payment, Meta, CAPI or positive traffic action |
+| Full live acceptance | NOT PROVEN | Health-only and 0% attachment do not prove checkout/payment behavior |

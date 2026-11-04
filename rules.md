@@ -2136,3 +2136,9 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - One owner-authorized upload to `getfreeseeds-api-staging` created immutable version `d683ec45-1df2-4777-878e-4915fe55d1f4` (122), tag `gfs478-api-55b67a5`, using `--keep-vars --strict`. No retry, attachment, deployment, override or promotion was performed.
 - Independent readback matched recovery `true`, start `2026-10-28T20:05:20.290Z`, all protected plain flags, D1 `getfreeseeds-staging`, R2 `getfreeseeds-receipts-staging`, Queue `getfreeseeds-events-staging`, scheduled/fetch/queue handlers, and secret binding presence without values. The manifest cron remains `* * * * *`; upload alone did not change trigger execution.
 - Deployment readback remains API `b426ba47`100% / `e8018f3f`0%. The new version is previewable but unattached; no HTTP, scheduled or Queue execution is assigned to it through the production deployment. Preserve this boundary until separate attachment/acceptance approval.
+
+## GFS-479 controlled 0% acceptance (2026-11-04 PKT)
+
+- Owner-authorized one deployment replaced only old candidate `e8018f3f` with `d683ec45` at0%; baseline `b426ba47` remains100%. Deployment ID `9b459a09-a7a5-404d-9302-48292bd07783`.
+- Pre/post checks matched recovery, payment flags, D1/R2/Queue bindings, secret binding names, scheduled/fetch/queue handlers and the configured cron. Wrangler reported no non-versioned settings to sync; Cron dry-run made no change. Queue retains one consumer with the existing DLQ and retry settings.
+- GET-only health returned200. No POST, webhook, customer/order/payment action, message, Meta/CAPI/Admin/watchdog action occurred. The explicitly authorized restore path is the prior exact deployment if independent readback regresses.

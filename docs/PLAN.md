@@ -150,3 +150,7 @@ Read-only Cloudflare version/deployment evidence is complete. API baseline `b426
 ## GFS-478 corrected candidate
 
 The separately authorized single upload completed as version `d683ec45-1df2-4777-878e-4915fe55d1f4`/122. Readback passed recovery, bindings, protected flags and secret-presence checks. Routing remains unchanged at API100%/0%; no attachment, deployment, override, customer webhook or live acceptance was performed. Scheduled and Queue handlers exist in the artifact, but the unattached version receives no production trigger execution. Next decision is whether to separately approve a controlled 0% attachment and isolated acceptance.
+
+## GFS-479 controlled 0% acceptance
+
+The approved deployment was applied as baseline `b426ba47`100% plus corrected `d683ec45`0%, replacing only `e8018f3f`. Post-attach readback, GET-only health, Cron dry-run, Queue consumer readback and protected configuration comparison passed. No customer traffic allocation or live business test was performed. Keep the prior exact 100%/0% deployment as the authorized restore target if regression evidence appears.
