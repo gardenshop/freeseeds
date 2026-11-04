@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-COD-MO-07 Admin 0% deployment resources (2026-11-05 PKT)
+
+- **Deployment:** `872f0a53-d9e1-4daa-b441-caf599c74d0a`, percentage strategy, author `gisupp@gmail.com`; `e8c96c96`100% and `92c81e60`0%. No API deployment changed.
+- **Candidate safety:** exact HMAC-bearing candidate fingerprint retained with D1 `17b7e9f6-e08b-4bff-a756-10de30b49ab1`, R2 and Queue bindings. Candidate-only header GET proves distinct MO UI code; no mutation was sent.
+- **Serving verification:** fresh normal Admin Orders/Conversations and API WhatsApp health pass. API CAPI false/recovery true and protected payment configuration remain unchanged.
+
 ## GFS-COD-MO-06 Admin candidate resources (2026-11-05 PKT)
 
 - **Candidate:** Admin version `92c81e60-3ec3-40b6-b912-ea81f94ee8af`, tag `gfs-cod-mo-06-4865999`, source SHA `48659993ce713978a3202b19265a6a6938922636`; uploaded immutable and unattached.

@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-COD-MO-07 Admin MO 0% attachment verification (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Exact 0% attachment | PASS | Deployment `872f0a53…`: Admin baseline `e8c96c96`100%, candidate `92c81e60`0%, old inactive replaced. |
+| Candidate configuration/HMAC | PASS | Candidate fingerprint unchanged; named HMAC/D1/R2/Queue/runtime configuration retained. |
+| Candidate override execution | PASS | GET-only static Orders comparison: baseline has no MO UI; candidate contains `MO Received`, required MO number and exact-amount confirmation. |
+| Normal Admin/API health | PASS | Fresh baseline Orders/Conversations reads and API ready/WhatsApp-enabled health pass. |
+| Payment/WhatsApp protection | PASS | Advance 3/3, COD PKR125, recovery ON, CAPI OFF and API routing unchanged; no customer/payment/message mutation. |
+| Source regression | RETAINED | No source change: focused 131/1, full 378/1, build/lint remain PASS. |
+| Positive traffic | NOT AUTHORIZED | Candidate stays 0%; next canary requires separate authorization. |
+
 ## GFS-COD-MO-06 Admin MO candidate verification (2026-11-05 PKT)
 
 | Gate | Result | Evidence |

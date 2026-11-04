@@ -4,6 +4,13 @@
 - **Controls:** HMAC-only MO reference, unique MO constraint, exact payable amount, operator confirmation, immutable ledger, atomic PAID transition and idempotent replay handling. No live migration/deployment or CAPI enablement occurred.
 - **Checkout:** quote-first explicit COD confirmation prevents new no-method orders; Advance remains separate.
 
+## GFS-COD-MO-07 - Admin MO 0% attachment (2026-11-05 PKT)
+
+- **Decision:** accept deployment `872f0a53-d9e1-4daa-b441-caf599c74d0a` as the sole authorized attachment: existing Admin100% plus MO candidate0%. No rollback is required because independent routing/configuration/health readback passes.
+- **Evidence:** candidate override changes static Orders UI from no MO action to required-number/exact-amount MO Received while normal Admin/API reads stay healthy. Candidate HMAC/bindings/configuration are retained; API, D1 and payment configuration are unaffected.
+- **Boundary:** no positive traffic, source upload, API deployment, D1/Meta/CAPI/payment/customer mutation. The candidate is available only through 0% attachment and header-scoped GET verification.
+- **Next exact authorization:** bounded positive-traffic Admin canary only, with explicit percentage, duration, read-only acceptance checks and immediate routing rollback target `e8c96c96`100% / `92c81e60`0%.
+
 ## GFS-COD-MO-06 - immutable Admin MO candidate (2026-11-05 PKT)
 
 - **Decision:** accept Admin version `92c81e60-3ec3-40b6-b912-ea81f94ee8af` as the tested immutable MO candidate. It retains the HMAC binding/configuration fingerprint and is not part of the active deployment.

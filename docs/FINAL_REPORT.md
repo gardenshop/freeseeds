@@ -1,5 +1,19 @@
 # Final Report
 
+## GFS-COD-MO-07 Admin MO 0% attachment (2026-11-05 PKT)
+
+1. **Previous task comparison:** GFS-COD-MO-06 candidate/HMAC/configuration/tests were complete; this task attached only that existing candidate at0%.
+2. **Attachment:** PASS. Deployment `872f0a53-d9e1-4daa-b441-caf599c74d0a`.
+3. **Routing before/after:** API unchanged `b426ba47`100% / `d683ec45`0%; Admin before `e8c96c96`100% / `e44703c3`0%, after `e8c96c96`100% / `92c81e60`0%.
+4. **Override/health:** PASS. Candidate-only GET override changes static Orders UI to MO Received/required-number/exact-amount; fresh normal Admin reads and API WhatsApp health pass.
+5. **HMAC/bindings:** PASS. Candidate fingerprint unchanged; HMAC name/D1/R2/Queue/runtime configuration retained without value access.
+6. **MO acceptance:** PASS in prior isolated 131/1 suite; no real MO action submitted.
+7. **Advance/COD/WhatsApp:** PASS unchanged: three Advance methods, COD PKR125, recovery ON, CAPI OFF and WhatsApp enabled.
+8. **Tests/fixes/blockers:** no source change/fix; retained focused 131/1, full 378/1, build/lint PASS. Positive traffic remains the release blocker.
+9. **Git/docs:** pending one documentation commit and remote verification.
+10. **Stages:** migration100%, HMAC100%, candidate100%, 0% attachment100%, positive traffic0%, API/CAPI0%.
+11. **One next authorized action:** bounded positive-traffic Admin canary only, with explicit rollback to `e8c96c96`100% / `92c81e60`0%.
+
 ## GFS-COD-MO-06 Admin MO release candidate (2026-11-05 PKT)
 
 1. **Admin candidate uploaded:** YES — immutable, nondeploying and unattached.

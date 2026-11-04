@@ -1,5 +1,12 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-07 Admin candidate attached at 0% (2026-11-05 PKT)
+
+- Deployment `872f0a53-d9e1-4daa-b441-caf599c74d0a` now serves only Admin baseline `e8c96c96` at100% and MO candidate `92c81e60` at0%; former inactive `e44703c3` was replaced. No non-versioned setting sync occurred.
+- Candidate retains its verified HMAC/D1/R2/Queue/runtime configuration footprint. Candidate-only GET override proves the MO UI/required-number/exact-amount code is selected; no mutation endpoint was called.
+- Fresh baseline Admin reads and API health/WhatsApp enabled pass. API routing, Advance 3/3, COD PKR125, recovery ON and CAPI OFF remain unchanged.
+- Next authorization, if any: a separately approved bounded positive-traffic Admin canary with explicit rollback; no API/CAPI/D1 action.
+
 ## GFS-COD-MO-06 Admin candidate ready (2026-11-05 PKT)
 
 - Uploaded exactly one immutable nondeployed Admin MO candidate: `92c81e60-3ec3-40b6-b912-ea81f94ee8af`, tag `gfs-cod-mo-06-4865999`, from tested source SHA `48659993ce713978a3202b19265a6a6938922636`.

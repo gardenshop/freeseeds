@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-05 - GFS-COD-MO-07 Admin MO 0% attachment
+
+- Attached only validated Admin MO candidate `92c81e60-3ec3-40b6-b912-ea81f94ee8af` at0% beside baseline `e8c96c96`100% in deployment `872f0a53-d9e1-4daa-b441-caf599c74d0a`; replaced only inactive `e44703c3`. No non-versioned settings sync, API action, traffic promotion, D1, secret, CAPI, customer, payment, message or Meta mutation.
+- Independent readback retains candidate HMAC/bindings/runtime fingerprint. Header-scoped GET-only override proves candidate MO UI, required MO number and exact-amount confirmation; normal baseline Admin/API health remains PASS after override clear.
+
 ## 2026-11-05 - GFS-COD-MO-06 Admin MO candidate
 
 - Uploaded one immutable, nondeployed Admin MO candidate `92c81e60-3ec3-40b6-b912-ea81f94ee8af` from source `48659993ce713978a3202b19265a6a6938922636` using strict configuration preservation. Candidate fingerprint matches the HMAC-bearing version, including named HMAC/D1/R2/Queue/runtime configuration; secret values were never read.

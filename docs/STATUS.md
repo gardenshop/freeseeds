@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-MO-07 Admin MO 0% attachment (2026-11-05 PKT)
+
+**Disposition: 0% attachment PASS; positive traffic remains prohibited.**
+
+- Official deployment `872f0a53-d9e1-4daa-b441-caf599c74d0a` has Admin `e8c96c96`100% and `92c81e60`0%, exactly replacing only prior inactive `e44703c3`. Cloudflare reports no non-versioned settings sync.
+- Candidate HMAC/binding/runtime fingerprint remains identical to the verified pre-attach candidate. Header-scoped static GET comparison proves override execution: baseline lacks `MO Received`; candidate contains MO UI, required MO number and exact amount confirmation. No real order/payment was read back or mutated through that path.
+- Fresh normal Admin Orders/Conversations reads pass after clearing override; API health remains ready/WhatsApp enabled. API routing remains `b426ba47`100% / `d683ec45`0%; Advance/COD/D1 aggregate protections, recovery ON and CAPI OFF are unchanged.
+- No source change/test rerun or repair was needed. Existing 378 passed/1 skipped, focused 131/1, build/lint PASS remain release evidence.
+
 ## GFS-COD-MO-06 Admin MO candidate preparation (2026-11-05 PKT)
 
 **Disposition: candidate PASS at 0% attachment state; traffic attachment/promotion remains separately gated.**
