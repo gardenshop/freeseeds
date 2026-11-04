@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-LAUNCH-P0 Meta sender verification (2026-11-04 PKT)
+
+- Existing authenticated Meta UI read-only verification matched business `568026370701542`, ad account `1198439777611633` (`creeper seeds`), WABA `2616648355452496` (`Get Free Seeds`), and canonical sender `+923044429933`.
+- The sender is **Connected** with **High** quality. Display name is `Get Free Seeds` with exact status **In Review**; the UI also shows “Your display names were not approved.” Messaging eligibility and advertising eligibility/restrictions were not exposed as definitive labels, so neither is claimed PASS.
+- Existing WhatsApp operations remain GO/MAINTAIN. Public advertising expansion remains NO-GO until official advertising eligibility and display-name approval are established. COD settlement remains blocked by missing genuine courier evidence; resume candidate remains at0% pending its release gates.
+- The Meta session name was not visible, but all requested GFS asset IDs matched; no unrelated Hoja asset was accessed. No campaign, WABA, sender, template, ad, message, payment, Cloudflare, deployment, CAPI or source mutation occurred. Queue runtime counters remain **UNVERIFIED**, not failed; the Admin incident is CLOSED.
+
 ## GFS-ADMIN-P0 recovery boundary (2026-11-04 PKT)
 
 - This supersedes the earlier GFS-ADMIN-REPAIR diagnosis below. Normal Admin data requests returned HTTP302 to the Cloudflare Access login and then browser CORS/`net::ERR_FAILED`; Admin `/health` is governed by a separate Service Auth application and is not evidence for normal operator access.

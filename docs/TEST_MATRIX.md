@@ -1,5 +1,21 @@
 # Test Matrix
 
+## GFS-LAUNCH-P0 Meta verification (2026-11-04 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| GFS business | PASS | Meta UI showed business `568026370701542`. |
+| Ad account | PASS | Meta UI showed `1198439777611633` (`creeper seeds`). |
+| WABA | PASS | WhatsApp Manager UI showed `2616648355452496`, `Get Free Seeds`. |
+| Canonical sender | PASS | UI showed `+92 304 4429933`, matching `+923044429933`. |
+| Phone connection | PASS | UI showed Connected. |
+| Phone quality | PASS | UI showed High. |
+| Display name | BLOCKED | `Get Free Seeds` is In Review; UI says “Your display names were not approved.” |
+| Messaging eligibility | UNKNOWN | No definitive eligibility label was visible. |
+| Advertising eligibility | UNKNOWN | No definitive eligibility/restriction label was visible. |
+| Public expansion | NO-GO | Display-name approval and advertising eligibility are not established. |
+| Mutation safety | PASS | No Meta, campaign, sender, template, message, payment, deployment, CAPI or source mutation. |
+
 ## GFS-ADMIN-P0 recovery verification (2026-11-04 PKT)
 
 | Gate | Result | Evidence |

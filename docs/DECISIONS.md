@@ -2457,3 +2457,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Decision:** classify the incident as an expired/missing normal Admin Cloudflare Access session. Evidence is HTTP302 from normal data routes to Access login followed by browser CORS failure; the separate Service Auth `/health` response is excluded.
 - **Correction:** use supported Cloudflare Access reauthentication for `gisupp@gmail.com` in the existing profile. Do not change policies, redeploy Admin, roll back, or touch API routing.
 - **Acceptance:** two consecutive Conversations and Orders refreshes passed with list/summary/detail data and no stale warning. Public API health and D1-backed Admin reads passed; frozen routing and protected operational settings remain unchanged.
+## GFS-LAUNCH-P0 - Meta launch decision (2026-11-04 PKT)
+
+- **Decision:** verify and preserve the existing GFS Meta assets read-only: business `568026370701542`, ad account `1198439777611633`, WABA `2616648355452496`, sender `+923044429933`.
+- **Status:** sender Connected/High; display name `Get Free Seeds` is **In Review** and the UI reports “Your display names were not approved.” Messaging and advertising eligibility were not visibly confirmed.
+- **Launch:** existing WhatsApp operations GO/MAINTAIN; public advertising expansion NO-GO. COD remains blocked by missing genuine courier evidence; resume candidate remains0% pending release gates.
+- **Safety:** no Meta, Cloudflare, deployment, campaign, WABA, sender, template, ad, message, payment, CAPI or source mutation. Admin incident CLOSED; Queue runtime counters remain UNVERIFIED.

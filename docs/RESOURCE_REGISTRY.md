@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-LAUNCH-P0 Meta verification resources (2026-11-04 PKT)
+
+- **Meta business/ad account:** UI matched business `568026370701542` and ad account `1198439777611633` (`creeper seeds`).
+- **WABA/sender:** WhatsApp Manager matched WABA `2616648355452496` (`Get Free Seeds`) and sender `+923044429933`; state Connected, quality High.
+- **Display/eligibility:** display name `Get Free Seeds`, status In Review; visible banner “Your display names were not approved.” Messaging and advertising eligibility labels were not visible. No screenshot was saved because the MCP safe-screenshot output rejected local paths.
+- **Boundary:** existing WhatsApp operations remain GO/MAINTAIN; public advertising expansion NO-GO; no unrelated Hoja asset, campaign, WABA, sender, template, ad or message was accessed or changed. Admin incident CLOSED; Queue runtime counters remain UNVERIFIED.
+
 ## GFS-ADMIN-P0 verified recovery resources (2026-11-04 PKT)
 
 - **Cloudflare identity:** Wrangler and post-reauth browser identity matched `gisupp@gmail.com` in Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no credential value was read.

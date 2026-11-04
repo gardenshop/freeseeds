@@ -1,5 +1,20 @@
 # Final Report
 
+## GFS-LAUNCH-P0 - Meta sender and launch eligibility (2026-11-04 PKT)
+
+**Overall: GFS asset verification PASS; public advertising expansion NO-GO.**
+
+1. **Business/ad account:** Meta UI matched business `568026370701542` and ad account `1198439777611633` (`creeper seeds`).
+2. **WABA/sender:** WABA `2616648355452496` (`Get Free Seeds`); canonical sender `+923044429933`.
+3. **Display name:** `Get Free Seeds`, exact status **In Review**. Visible restriction: “Your display names were not approved.”
+4. **Phone state:** **Connected**, quality **High**.
+5. **Messaging eligibility:** UNKNOWN; no definitive official eligibility label was visible.
+6. **Advertising eligibility:** UNKNOWN; no definitive official eligibility/restriction label was visible. Public expansion is **NO-GO**.
+7. **Operations:** existing WhatsApp operations **GO/MAINTAIN**. Admin incident CLOSED; Queue runtime counters remain UNVERIFIED, not failed.
+8. **Independent blockers:** COD settlement remains blocked without genuine courier evidence. Resume candidate remains local100%/live0%; live/candidate release0% pending monitoring and approval gates.
+9. **Protection:** API `b426ba47`100% / `d683ec45`0%; Admin `e8c96c96`100% / `e44703c3`0%; Recovery ON; CAPI OFF; no regression or mutation.
+10. **Evidence boundary:** read-only official UI only; no campaign, WABA, sender, template, ad, message, payment, Cloudflare, deployment, CAPI or source change. No screenshot was saved because MCP rejected local screenshot paths.
+
 ## GFS-ADMIN-P0 - Orders and Conversations restored (2026-11-04 PKT)
 
 **Overall: PASS; supported Cloudflare Access session renewal restored both Admin screens; incident was Admin-session-only.**

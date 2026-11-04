@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-04 - GFS-LAUNCH-P0 Meta sender verification
+
+- Verified the exact GFS business, ad account, WABA and canonical sender through the existing authenticated Meta UI.
+- Recorded sender Connected/High and display name In Review with the visible “Your display names were not approved” restriction. Messaging and advertising eligibility were not visibly established.
+- Kept existing WhatsApp operations GO/MAINTAIN and public advertising expansion NO-GO. No Meta or production mutation occurred.
+
 ## 2026-11-04 - GFS-ADMIN-P0 restored Orders and Conversations
 
 - Corrected the earlier diagnosis: normal Admin requests redirected HTTP302 to Cloudflare Access login; `/health` belongs to a separate Service Auth application and was not used to classify operator access.

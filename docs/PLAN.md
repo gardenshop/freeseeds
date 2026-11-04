@@ -1,5 +1,9 @@
 # Get Free Seeds Plan
 
+## GFS-LAUNCH-P0 Meta launch gate (2026-11-04 PKT)
+
+The read-only Meta gate confirms the GFS business, ad account, WABA and canonical sender. Keep existing WhatsApp operations under observation/maintenance. Do not expand advertising while the sender display name is In Review and official advertising eligibility is not visibly established. COD settlement and the deferred resume candidate retain their independent blockers.
+
 ## GFS-ADMIN-P0 completed recovery (2026-11-04 PKT)
 
 Restore normal Admin operator access by renewing the expired Cloudflare Access session in the existing authorized Chrome profile; do not change Access policy or deploy code. Acceptance is complete: two consecutive manual refreshes passed for Conversations and Orders, including list/summary/detail reads with no stale warning. Continue normal operations on frozen API/Admin allocations; no follow-up deployment or source work is required.
