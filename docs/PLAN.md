@@ -154,3 +154,7 @@ The separately authorized single upload completed as version `d683ec45-1df2-4777
 ## GFS-479 controlled 0% acceptance
 
 The approved deployment was applied as baseline `b426ba47`100% plus corrected `d683ec45`0%, replacing only `e8018f3f`. Post-attach readback, GET-only health, Cron dry-run, Queue consumer readback and protected configuration comparison passed. No customer traffic allocation or live business test was performed. Keep the prior exact 100%/0% deployment as the authorized restore target if regression evidence appears.
+
+## GFS-480 release decision
+
+Final preflight remains safe but not sufficient for a live release: the override GET health passed, while version identity and aggregate error/payment/recovery monitoring were unavailable. No canary approval was present, so candidate traffic remains0% and live acceptance is INCONCLUSIVE.

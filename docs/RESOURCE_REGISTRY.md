@@ -2394,3 +2394,10 @@ No secrets are stored in this registry.
 - Trigger resources: manifest cron `* * * * *`; non-mutating trigger dry-run exited without applying changes. Queue consumer remains one `getfreeseeds-api-staging` worker on `getfreeseeds-events-staging`, DLQ `getfreeseeds-events-staging-dlq`, batch10, retries5, max wait5000ms.
 - Readback resources: corrected version recovery true, timestamp unchanged, protected flags/bindings/secret names matched baseline, serving health HTTP200. No raw secret, customer payload, POST, webhook, order, payment or message resource was used.
 - Rollback resource: exact previous deployment allocation `b426ba47`100% / `e8018f3f`0%, expressly authorized if independent regression evidence appears; not invoked.
+
+## GFS-480 verified resources (2026-11-04 PKT)
+
+- Read-only identity/deployment resources: verified Get Free Seeds account, Worker, deployment `9b459a09-a7a5-404d-9302-48292bd07783`, baseline `b426ba47`100% and corrected `d683ec45`0%.
+- Version smoke resource: `Cloudflare-Workers-Version-Overrides` GET health returned HTTP200/WhatsApp enabled; response carried no version metadata, so version attribution is not registered as PASS.
+- Monitoring limitation: authorized Wrangler reads covered configuration and Queue consumer attachment, not aggregate API errors, webhook failures, payment delivery, recovery outcomes or runtime Queue/DLQ backlog. No new credential or bypass was used.
+- Release resource: no positive canary approval or traffic increase; live acceptance registered INCONCLUSIVE. Current allocation is preserved; rollback dry-run passed.

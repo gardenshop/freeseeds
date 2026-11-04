@@ -3080,3 +3080,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **Health/protection:** serving GET `/health` returned200 and WhatsApp enabled. No POST/webhook/order/payment/customer message, real test order, Meta, CAPI, Admin or watchdog action occurred. No positive traffic was allocated.
 - **Rollback:** prior exact allocation is `b426ba47`100% / `e8018f3f`0%; owner explicitly authorized restoration if independent regression readback requires it. No restore was needed.
 - **Readiness:** controlled 0% attachment PASS; live checkout acceptance remains unproven. Meta display name remains In Review; courier collection/remittance evidence remains outstanding.
+
+## GFS-480 — final release decision (2026-11-04 PKT)
+
+- **Preflight:** account/Worker and deployment identities verified. Corrected version recovery true, protected flags/resources/secret names matched, and rollback dry-run reproduced `b426ba47`100% / `d683ec45`0%.
+- **Version smoke:** GET with the supported version-override header returned HTTP200 and WhatsApp enabled. The health payload omits version metadata, so actual responding version identity is NOT PROVEN.
+- **Monitoring gate:** no authorized aggregate API error, webhook-failure, payment-delivery or recovery-outcome monitoring read was available; Queue consumer configuration was readable but not runtime backlog/outcome telemetry.
+- **Canary:** none. No fresh explicit positive-traffic approval was supplied. Live acceptance is **INCONCLUSIVE**, candidate remains0%, and no restore was needed.
+- **Release state:** keep current routing frozen. Meta display name remains In Review; courier settlement evidence remains outstanding.

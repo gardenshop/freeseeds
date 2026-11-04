@@ -3596,3 +3596,16 @@ Investigation query costs only (not production savings): representative `rows_re
 | Health | PASS | GET-only serving `/health` HTTP200, WhatsApp enabled |
 | Customer/live mutation | PASS | No POST, webhook, message, order, payment, Meta, CAPI or positive traffic action |
 | Full live acceptance | NOT PROVEN | Health-only and 0% attachment do not prove checkout/payment behavior |
+
+## GFS-480 final release gate (2026-11-04 PKT)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Account/deployment identity | PASS | Verified account/Worker; deployment `b426ba47`100% / `d683ec45`0% |
+| Version configuration | PASS | Recovery true; protected flags, bindings and secret names matched |
+| Version-override GET | PASS / identity NOT PROVEN | HTTP200 health; payload omitted version metadata |
+| Rollback path | PASS dry-run | Exact `b426ba47`100% / `d683ec45`0% deployment spec accepted non-mutatingly |
+| Error/payment/recovery monitoring | BLOCKED | No authorized aggregate runtime telemetry available |
+| Positive canary | NOT RUN | No fresh explicit canary approval |
+| Live acceptance | INCONCLUSIVE | No positive traffic or live business event evidence |
+| Customer/production mutation | PASS | No POST, webhook, message, order, payment, Meta, CAPI or routing increase |

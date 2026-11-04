@@ -2397,3 +2397,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Accept the authorized deployment `9b459a09-a7a5-404d-9302-48292bd07783`: baseline `b426ba47`100%, corrected `d683ec45`0%, old `e8018f3f` removed from the active deployment.
 - Protected configuration and event resources passed independent comparison; no non-versioned settings synced, Cron dry-run changed nothing, and the existing single Queue consumer/DLQ remained attached.
 - Retain the exact prior deployment as the authorized rollback target. Do not increase candidate traffic, run live checkout tests, send messages, or mutate customer/payment state. Health-only success is not full live acceptance.
+
+## GFS-480 decision — no positive canary (2026-11-04 PKT)
+
+- Do not allocate positive traffic: no fresh canary approval was provided, version identity was not observable in the health response, and aggregate error/payment/recovery monitoring was unavailable.
+- Classify live acceptance **INCONCLUSIVE**, not PASS. Keep `b426ba47`100% / `d683ec45`0% and preserve the exact supported restore command as the owner-authorized rollback path.
+- No upload, source change, customer message, webhook replay, order/payment mutation, Meta/CAPI/Admin/watchdog action occurred.

@@ -2136,3 +2136,9 @@
 - Replaced only the API 0% candidate: baseline `b426ba47` remained100%; corrected `d683ec45` became0%; old `e8018f3f` was removed. Deployment `9b459a09-a7a5-404d-9302-48292bd07783`.
 - Independent protected-config comparison, GET-only health, Cron dry-run and Queue consumer readback passed. No non-versioned settings synced and no customer, payment, webhook, Meta, CAPI or positive traffic action occurred.
 - Rollback target remains the exact prior `b426ba47`100% / `e8018f3f`0% deployment. No restore was required; full live checkout acceptance remains unproven.
+
+# 2026-11-04 - GFS-480 final release decision
+
+- Read-only preflight confirmed account, deployment, recovery, protected configuration and rollback dry-run. Version-override GET health returned200, but actual version identity was not exposed by the health payload.
+- No fresh positive-canary approval or aggregate runtime error/payment/recovery monitoring was available. No canary was run; live acceptance is INCONCLUSIVE at0%.
+- Preserved API baseline100% / corrected candidate0%, with no upload, customer, payment, Meta, CAPI, Admin or watchdog mutation.

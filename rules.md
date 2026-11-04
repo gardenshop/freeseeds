@@ -2142,3 +2142,9 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - Owner-authorized one deployment replaced only old candidate `e8018f3f` with `d683ec45` at0%; baseline `b426ba47` remains100%. Deployment ID `9b459a09-a7a5-404d-9302-48292bd07783`.
 - Pre/post checks matched recovery, payment flags, D1/R2/Queue bindings, secret binding names, scheduled/fetch/queue handlers and the configured cron. Wrangler reported no non-versioned settings to sync; Cron dry-run made no change. Queue retains one consumer with the existing DLQ and retry settings.
 - GET-only health returned200. No POST, webhook, customer/order/payment action, message, Meta/CAPI/Admin/watchdog action occurred. The explicitly authorized restore path is the prior exact deployment if independent readback regresses.
+
+## GFS-480 release decision (2026-11-04 PKT)
+
+- Final read-only preflight confirms account/Worker identity, deployment `b426ba47`100% / `d683ec45`0%, recovery true, protected flags/resources, one Queue consumer and rollback dry-run.
+- Version-override GET health returned200, but the health payload does not expose version metadata; actual responding version identity is NOT PROVEN. API error/webhook/payment/recovery outcome monitoring was not available through the authorized read-only path.
+- No fresh positive-canary approval was supplied. Do not allocate traffic; classify live acceptance INCONCLUSIVE at0%. Preserve the exact current allocation and authorized restore path; no upload, source, payment, customer or watchdog work.

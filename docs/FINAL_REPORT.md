@@ -6679,3 +6679,15 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 7. **Progress:** WhatsApp92%/8% remaining; resume local100%/live0%; COD local100%/live70%. Meta display name In Review; courier collection/remittance evidence remains outstanding.
 8. **Git:** source baseline `b77e496bc208f19fd9f77c102d894fed36acf39c`; final docs commit SHA will be verified after push.
 9. **One next release decision:** keep corrected candidate at0% for monitored observation or separately authorize isolated non-mutating acceptance; no positive allocation or live checkout test.
+
+## GFS-480 final report — release decision (2026-11-04 PKT)
+
+1. **Candidate identification/smoke:** corrected `d683ec45` configuration and recovery true verified. Version-override GET `/health` returned200/WhatsApp enabled, but the response omitted version metadata; actual responding version is NOT PROVEN.
+2. **Monitoring/rollback:** protected configuration, Queue consumer and Cron dry-run passed. Exact restore allocation dry-run passed. Runtime error, webhook, payment-delivery and recovery-outcome monitoring was unavailable through the authorized read-only path.
+3. **Canary approval/exposure:** no fresh positive-canary approval; 0% exposure remained. No customer messages, webhooks, orders, payments or live tests.
+4. **Live acceptance:** **INCONCLUSIVE**, not PASS. No positive traffic was allocated.
+5. **Final routing:** API `b426ba47`100% / `d683ec45`0%; Admin `e8c96c96`100% / `e44703c3`0%; CAPI OFF.
+6. **Regression:** focused3/3, guided104/104, full378/378, build/lint PASS carried forward; audit BLOCKED. No detected regression in read-only checks.
+7. **Progress:** WhatsApp92%/8% remaining; resume local100%/live0%; COD local100%/live70%. Meta display name In Review; courier evidence remains outstanding.
+8. **Git:** source baseline `0a28b48dfb31f29036fd5ef87c1d3e271908c8cf`; final docs SHA will be verified after push.
+9. **One next decision:** obtain supported version-attributed monitoring/identity evidence and separately decide whether to authorize a maximum1% canary; do not change routing now.
