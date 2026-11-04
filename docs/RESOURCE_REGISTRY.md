@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-MCP-01 Chrome MCP recovery resources (2026-11-04 PKT)
+
+- **Codex MCP:** `D:\AI-Tools\Codex\home\config.toml` now has one enabled official `chrome-devtools` registration using `npx -y chrome-devtools-mcp@latest --autoConnect`; no duplicate was retained.
+- **Tool evidence:** the active agent exposes 32 Chrome DevTools MCP tools and `list_pages` succeeds. The returned inventory contains only `about:blank`; no authenticated Meta/Cloudflare/Admin page, screenshot or customer record was captured.
+- **Attach gate:** official package help requires Chrome 144+ and a permitted local remote-debugging connection through `chrome://inspect/#remote-debugging` for `--autoConnect`; installed Chrome is 156.0.8078.80. A fresh Codex MCP process is required after the owner-visible consent step.
+- **External state:** no Meta, Cloudflare, Worker, payment, order, D1/R2/Queue/DLQ/Cron, secret, customer, campaign or WhatsApp state changed.
+
 ## GFS-476 immutable API candidate resources (2026-11-03 PKT)
 
 - **Upload:** one owner-authorized Wrangler upload created version `9f6a4ecf-bf7f-43ff-abe0-e0d67e53bfd3`, tag `gfs476-api-51e1e89`, source `51e1e8939cbdacd85cae58249051a9f3d78ea8ce`, bundle SHA-256 `468C26830E2B1BCECE289A893A1284E88D97FD8449ECD2D2C28D860F2F5272BA`.

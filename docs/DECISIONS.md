@@ -1,5 +1,13 @@
 # Decisions
 
+## GFS-MCP-01 - repair tool registration, stop at authenticated attach gate (2026-11-04 PKT)
+
+**Decision:** accept the local MCP registration repair. The official `chrome-devtools` server is enabled with `npx -y chrome-devtools-mcp@latest --autoConnect`, and the active agent exposes `list_pages` plus the page-scoped tool set.
+
+**Decision:** do not treat `list_pages` returning only `about:blank` as a connected authenticated session. Stop Meta verification until the existing authorized Chrome has enabled/allowed the documented local remote-debugging connection and a fresh Codex process returns the existing tab inventory.
+
+**Safety:** no raw CDP, direct dashboard HTTP/API, alternate profile, cookie extraction, login, Meta mutation, deployment, payment/order mutation or customer message was attempted. Existing new-number, Hoja-isolation, routing and launch gates remain authoritative.
+
 ## GFS-476 - upload-only candidate and preservation blocker (2026-11-03 PKT)
 
 **Decision:** consume exactly one approved API upload. Accept version `9f6a4ecf-bf7f-43ff-abe0-e0d67e53bfd3` as Ready and isolated, with no deployment or traffic attachment.

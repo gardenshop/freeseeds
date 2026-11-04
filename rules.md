@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-MCP-01 Chrome MCP / Meta verification boundary (2026-11-04 PKT)
+
+- The authorized Codex MCP registration was repaired once: global `chrome-devtools` is `npx -y chrome-devtools-mcp@latest --autoConnect`. The current agent exposes the official Chrome MCP namespace and 32 tools; `list_pages` succeeds.
+- `list_pages` currently returns only `about:blank`, so tool availability is not authenticated existing-session evidence. The official package requires Chrome 144+ with remote debugging enabled and allowed through `chrome://inspect/#remote-debugging` for `--autoConnect`; Chrome stable is 156.0.8078.80.
+- Meta Business/WABA/sender/ad-account status is **NOT VERIFIED in this execution**. Do not substitute Meta MCP/API, raw CDP, direct dashboard HTTP, another profile, cookie extraction or a new remote endpoint. The next safe step is an owner-visible local Chrome remote-debugging consent, followed by a fresh Codex MCP process and one initial `list_pages` inventory.
+- Preserve the new-number WhatsApp lock, Hoja Seeds zero-connection rule, API/Admin routing, CAPI OFF, payments/COD, D1/R2/Queue/DLQ/Cron, customer data and all existing launch gates. No Meta, Cloudflare, deployment, payment, order, customer-message or production mutation occurred.
+
 ## GFS-476 immutable API candidate boundary (2026-11-03 PKT)
 
 - The single owner-authorized upload-only mutation was consumed for API Worker `getfreeseeds-api-staging`: version `9f6a4ecf-bf7f-43ff-abe0-e0d67e53bfd3`, tag `gfs476-api-51e1e89`. Never attach, deploy, promote, override, test with customer webhooks, or retry the upload.

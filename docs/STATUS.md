@@ -1,5 +1,15 @@
 # Status
 
+## GFS-MCP-01 Chrome MCP and Meta verification (2026-11-04 PKT)
+
+**Disposition: Chrome MCP tool path PASS; authenticated existing-session attach BLOCKED; Meta verification NOT RUN; public launch NO-GO.**
+
+- The global Codex registration was repaired once from the stale entry to `chrome-devtools` with `npx -y chrome-devtools-mcp@latest --autoConnect`. `codex mcp list` reports it enabled.
+- The active agent exposes 32 official Chrome DevTools MCP tools. `list_pages` succeeds, but the only returned page is `about:blank`; this is not evidence of the authorized authenticated Chrome tabs.
+- Official package help confirms `--autoConnect` requires Chrome 144+ with remote debugging enabled and allowed at `chrome://inspect/#remote-debugging`. Installed Chrome is 156.0.8078.80. No raw CDP, alternate profile, cookie, direct Meta HTTP/API, or remote endpoint workaround was used.
+- Meta business, WABA/sender, display-name approval, quality, advertising eligibility and ad-account status were not claimed because the authorized authenticated page inventory was unavailable. No screenshot, Meta mutation, message, campaign or customer-data operation occurred.
+- Exact remaining blocker: enable/allow the supported local remote-debugging connection in the existing authorized Chrome session, then start/reload a fresh Codex MCP process and call `list_pages` once before any Meta inspection.
+
 ## GFS-476 immutable API candidate (2026-11-03 PKT)
 
 **Disposition: upload PASS; immutable candidate verified; preservation gate BLOCKED; no traffic attachment or customer activity.**
