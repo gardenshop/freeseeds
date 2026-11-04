@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-P0-REVENUE fresh aggregate resources (2026-11-04 PKT)
+
+- **Window:** remote D1 `getfreeseeds-staging`, UTC `2026-10-29T00:00:00Z` through `2026-11-05T00:00:00Z`; aggregate SELECTs returned `changed_db=false` and `rows_written=0`.
+- **Funnel:** 20,590 distinct inbound events; 3,562 snapshot contacts (3,468 new / 94 returning); 578 submitted orders; 2.81% submitted ÷ inbound-event ratio.
+- **Worklists:** 268 no-method, 21 payment-review, 87 advance-pending/review, 407 COD_PENDING; one strict +210 recovery ledger candidate and no +15 candidate.
+- **Checkout/fulfillment:** pre-order3,247, OFFER1,479, inactive OFFER1,284, post-order/no-method152; current confirmed states one PAID, one PACKING/PAID and one DISPATCHED/COD_PENDING.
+- **Evidence boundary:** Chrome MCP Analytics timed out before reading the page; no customer identifiers or raw payloads were returned. D1 fallback remained aggregate-only and no code or production state changed.
+
 ## GFS-LAUNCH-P0 Meta verification resources (2026-11-04 PKT)
 
 - **Meta business/ad account:** UI matched business `568026370701542` and ad account `1198439777611633` (`creeper seeds`).

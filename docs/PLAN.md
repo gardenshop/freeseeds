@@ -1,5 +1,9 @@
 # Get Free Seeds Plan
 
+## GFS-P0-REVENUE operational conversion snapshot (2026-11-04 PKT)
+
+Use the existing Admin read-only filters to prioritize 21 payment-review orders, 407 COD_PENDING orders requiring genuine courier/tracking evidence, and the three confirmed fulfillment states. Prioritize the 1,479 OFFER-stage snapshot contacts as the highest drop-off worklist, but only apply existing inbound-only resume when a customer returns. No source repair or deployment is justified by this snapshot.
+
 ## GFS-LAUNCH-P0 Meta launch gate (2026-11-04 PKT)
 
 The read-only Meta gate confirms the GFS business, ad account, WABA and canonical sender. Keep existing WhatsApp operations under observation/maintenance. Do not expand advertising while the sender display name is In Review and official advertising eligibility is not visibly established. COD settlement and the deferred resume candidate retain their independent blockers.

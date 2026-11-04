@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-P0-REVENUE aggregate verification (2026-11-04 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Fresh aggregate read | PASS | Remote D1 SELECT-only reads; `changed_db=false`, `rows_written=0`. |
+| Conversation denominator | PASS | 20,590 distinct inbound events; 3,562 snapshot contacts, not message-event leads. |
+| Submitted orders | PASS | 578 orders in UTC seven-day window; event-to-order ratio 2.81%, not paid conversion. |
+| Payment worklists | PASS | Current no-method268, payment-review21, advance-pending/review87. |
+| COD worklist | PASS | Current COD_PENDING407; one additional DISPATCHED COD state; no settlement mutation. |
+| Confirmed fulfillment | PASS | One PAID, one PACKING/PAID, one DISPATCHED/COD_PENDING; seven-day paid/fulfilled0. |
+| Incomplete checkout | PASS | Pre-order3,247; OFFER1,479; inactive OFFER1,284; post-order/no-method152. |
+| Existing recovery | PASS / bounded | One strict pending +210 ledger candidate; +15 zero; no send or replay. |
+| Source repair/tests | NOT RUN | No source defect proven; no source change. |
+| Production safety | PASS | No deployment, campaign, customer message, payment/order write, Meta, CAPI or watchdog action. |
+
 ## GFS-LAUNCH-P0 Meta verification (2026-11-04 PKT)
 
 | Gate | Result | Evidence |

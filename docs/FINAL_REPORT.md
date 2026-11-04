@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-P0-REVENUE - fresh order conversion snapshot (2026-11-04 PKT)
+
+**Overall: operational worklists identified; existing Admin/order code retained; no live mutation.**
+
+1. **Fresh counts:** UTC seven-day window contained 20,590 distinct inbound customer events and 3,562 snapshot contacts (3,468 new / 94 returning). It produced 578 submitted orders.
+2. **Lead-to-order denominator:** 578 ÷ 20,590 = **2.81%** submitted orders per distinct inbound event. This is not unique-lead conversion or paid revenue; status callbacks were excluded.
+3. **Advance backlog:** current 87 advance-selected pending/review orders, including 21 current payment-review orders. Seven-day snapshot was 64 advance pending and 11 review.
+4. **COD backlog:** current 407 COD_PENDING orders require genuine courier/tracking evidence. One COD order is DISPATCHED; no collection/remittance evidence was created.
+5. **Confirmed fulfillment:** current states are one PAID, one PACKING/PAID and one DISPATCHED/COD_PENDING. Seven-day paid/fulfilled count was zero.
+6. **Recoverable incomplete checkouts:** 3,247 pre-order snapshots; 370 active under24h and 2,877 inactive. OFFER is the highest stage at 1,479, with 1,284 inactive. Post-order/no-method inactive snapshots total 152.
+7. **Worklists:** payment verification21; COD evidence407; safe fulfillment3 confirmed states; strict existing recovery ledger1 at +210 and0 at +15; highest drop-off OFFER1,479.
+8. **One improvement:** prioritize a private OFFER-stage Admin worklist and existing inbound-only resume. No new reminder, source repair, deployment or unsolicited customer message is justified.
+9. **Completed vs pending:** aggregate evidence and prioritization completed. Payment verification, courier evidence, dispatch, COD settlement and resume release still require their existing human/external gates. Meta eligibility remains unresolved but does not block maintaining existing ads.
+10. **Safety/routing:** all reads were SELECT-only with `changed_db=false`/`rows_written=0`; API `b426ba47`100% / `d683ec45`0%; Admin `e8c96c96`100% / `e44703c3`0%; Recovery ON; CAPI OFF. No regression, deployment, campaign, payment/order, customer, Meta, CAPI or watchdog mutation.
+11. **Progress:** WhatsApp92%; resume local100%/live0%; COD local100%/live70%.
+12. **Next milestone:** complete the 21 genuine payment reviews, then obtain courier/tracking evidence for the 407 COD_PENDING queue while monitoring the OFFER worklist.
+
 ## GFS-LAUNCH-P0 - Meta sender and launch eligibility (2026-11-04 PKT)
 
 **Overall: GFS asset verification PASS; public advertising expansion NO-GO.**

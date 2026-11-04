@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-P0-REVENUE fresh aggregate boundary (2026-11-04 PKT)
+
+- Fresh SELECT-only remote D1 reads covered UTC `2026-10-29T00:00:00Z` through `2026-11-05T00:00:00Z`; all returned `changed_db=false` and `rows_written=0`. Chrome MCP Analytics timed out before a page read, so no browser aggregate claim is made.
+- The window contained 20,590 distinct inbound customer events, 3,562 snapshot contacts (3,468 new / 94 returning), and 578 submitted orders. The source-defined submitted-orders ÷ distinct inbound-event rate is **2.81%**; it is not unique-lead conversion or paid revenue.
+- Current private worklists are 268 active no-payment-selection orders, 21 payment-review orders, 87 advance-selected pending/review orders, 407 COD_PENDING orders, and one strict existing-recovery ledger candidate at +210 minutes (none at +15). Confirmed states are one PAID, one PACKING/PAID and one DISPATCHED/COD_PENDING.
+- Current incomplete snapshots total 3,247 pre-order conversations: 370 active under24h and 2,877 inactive; OFFER is the largest stage at 1,479 (1,284 inactive). Post-order/no-method inactive snapshots total 152. Use existing Admin filters and inbound-only resume behavior; do not send unsolicited recovery or alter payment/order state.
+- Highest-value operational improvement is a private OFFER-stage worklist for customer-initiated follow-up; existing state-resume handles a new inbound without source changes. Preserve Meta eligibility as unresolved but not an obstacle to maintaining existing ads, API/Admin routing, payments, COD PKR125, EN/UR, D1/R2/Queue/DLQ/Cron, webhooks and customer data.
+
 ## GFS-LAUNCH-P0 Meta sender verification (2026-11-04 PKT)
 
 - Existing authenticated Meta UI read-only verification matched business `568026370701542`, ad account `1198439777611633` (`creeper seeds`), WABA `2616648355452496` (`Get Free Seeds`), and canonical sender `+923044429933`.

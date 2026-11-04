@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-04 - GFS-P0-REVENUE operational snapshot
+
+- Added a fresh aggregate-only revenue pipeline snapshot: 20,590 distinct inbound events, 3,562 snapshot contacts, 578 submitted orders, and 2.81% event-to-order ratio for the UTC seven-day window.
+- Identified current worklists: 268 no payment selection, 21 payment review, 87 advance pending/review, 407 COD_PENDING, and one strict +210 recovery ledger candidate.
+- Selected OFFER-stage drop-off as the highest-value operational bottleneck (1,479 snapshots; 1,284 inactive). Existing inbound-only resume is sufficient; no source repair, deployment, customer outreach or payment mutation occurred.
+
 ## 2026-11-04 - GFS-LAUNCH-P0 Meta sender verification
 
 - Verified the exact GFS business, ad account, WABA and canonical sender through the existing authenticated Meta UI.

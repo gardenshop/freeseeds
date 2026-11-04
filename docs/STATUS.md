@@ -1,5 +1,15 @@
 # Status
 
+## GFS-P0-REVENUE fresh operational snapshot (2026-11-04 PKT)
+
+**Disposition: aggregate read PASS; highest bottleneck is OFFER-stage checkout drop-off; no code defect or live mutation identified.**
+
+- UTC seven-day window `2026-10-29..2026-11-04` contained 20,590 distinct inbound customer events, 3,562 snapshot contacts (3,468 new / 94 returning), 578 submitted orders, and a source-defined event-to-order rate of 2.81%.
+- Current worklists: 268 active orders without payment selection, 21 payment-review orders, 87 advance-selected pending/review orders, 407 COD_PENDING orders, and one strict +210 recovery ledger candidate. No +15 candidate was present.
+- Confirmed current states: one PAID, one PACKING/PAID, one DISPATCHED/COD_PENDING. The seven-day window had zero paid/fulfilled orders.
+- Incomplete current snapshots: 3,247 pre-order; 370 active under24h, 2,877 inactive; OFFER is largest at 1,479, including 1,284 inactive. Post-order/no-method inactive total is 152.
+- Recommendation: operate the private OFFER and payment-review worklists through existing Admin tools and inbound-only resume. No source repair, deployment, customer message, payment transition, or COD dispatch is authorized.
+
 ## GFS-LAUNCH-P0 Meta verification (2026-11-04 PKT)
 
 **Disposition: GFS assets verified; sender Connected/High; display name In Review; messaging and advertising eligibility not visibly established; public expansion NO-GO.**

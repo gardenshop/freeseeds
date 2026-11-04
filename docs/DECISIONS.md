@@ -2463,3 +2463,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Status:** sender Connected/High; display name `Get Free Seeds` is **In Review** and the UI reports “Your display names were not approved.” Messaging and advertising eligibility were not visibly confirmed.
 - **Launch:** existing WhatsApp operations GO/MAINTAIN; public advertising expansion NO-GO. COD remains blocked by missing genuine courier evidence; resume candidate remains0% pending release gates.
 - **Safety:** no Meta, Cloudflare, deployment, campaign, WABA, sender, template, ad, message, payment, CAPI or source mutation. Admin incident CLOSED; Queue runtime counters remain UNVERIFIED.
+## GFS-P0-REVENUE - operational priority (2026-11-04 PKT)
+
+- **Decision:** keep the current WhatsApp ordering implementation and use existing Admin worklists. No proven source defect appears in the fresh aggregate.
+- **Priority:** OFFER-stage drop-off is highest at 1,479 current pre-order snapshots; 1,284 are inactive. Existing resume is inbound-only and must not become unsolicited outreach.
+- **Revenue controls:** route 21 payment-review orders to genuine verification, 407 COD_PENDING orders to courier/tracking evidence review, and confirmed states to safe fulfillment. Do not mark paid, dispatch, or settle COD from aggregate evidence.
+- **Boundary:** Meta eligibility remains unresolved but does not block maintaining existing ads/operations. API/Admin routing and all payment, D1, Queue, Cron, webhook and customer protections remain unchanged.
