@@ -2408,3 +2408,9 @@ No secrets are stored in this registry.
 - Final runtime: API `b426ba47`100% / `d683ec45`0%; Admin `e8c96c96`100% / `e44703c3`0%; recovery true; CAPI OFF. No secret values or customer identifiers registered.
 - Business evidence gap: no genuine courier contract/collection/remittance/policy record was available for verification. Meta official UI was not accessible in this session; last recorded display-name state is In Review and is not treated as fresh approval.
 - Closure boundary: resume local work complete; live release and public expansion deferred/blocked externally. No new credential, deployment, canary, CAPI, watchdog or GFS-482 resource.
+
+## GFS-OPS business verification resources (2026-11-04 PKT)
+
+- Meta identity requested: business `568026370701542`, ad account `1198439777611633`; official Chrome UI resource unavailable. Connected read-only business listing returned zero consented portfolios, so no approval/eligibility resource is registered.
+- Courier evidence resource: absent. Required future evidence is identity/contract, collection/remittance policies, tracking/delivery, exact collection, deductions, remittance amounts/dates, independent proof and human verifier.
+- Closure resource: existing WhatsApp operations preserved; public expansion and COD settlement blocked externally; no customer, payment, Meta, deployment or routing mutation.

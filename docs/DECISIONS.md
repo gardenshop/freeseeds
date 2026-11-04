@@ -2410,3 +2410,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Mark live resume release **DEFERRED/INCONCLUSIVE** until version attribution, runtime monitoring, explicit canary approval and rollback observation are available.
 - Mark expanded public launch **NO-GO/BLOCKED EXTERNALLY** until Meta display-name status is freshly verified/approved and genuine courier contract, collection, remittance and policy records are provided.
 - Keep existing COD and payment methods unchanged. Advance-only expansion, if desired, needs separate explicit owner approval and must not disable COD implicitly.
+
+## GFS-OPS closure decision (2026-11-04 PKT)
+
+- Treat Meta as externally blocked: no authorized Chrome UI was available, and the connected read-only tool exposed zero consented business portfolios. Do not infer approval or eligibility.
+- Treat COD settlement as externally blocked until genuine courier contract and settlement evidence are supplied. Never mark orders PAID from absent or invented evidence.
+- Maintain existing operations and exact API/Admin routing. No public expansion, advertising mutation, payment change, canary, deployment or new GFS task.
