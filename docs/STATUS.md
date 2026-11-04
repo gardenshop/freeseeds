@@ -1,5 +1,13 @@
 # Status
 
+## GFS-MCP-RESTORE existing Chrome attachment (2026-11-04 PKT)
+
+**Disposition: authenticated Chrome attachment PASS; business/ad-account identity matched; WABA/sender and eligibility fields NOT VISIBLE; public expansion NO-GO.**
+
+- One fresh official Codex session loaded the saved `chrome-devtools` `--autoConnect` registration and `list_pages` returned ten existing tabs, including WhatsApp Web, Meta Ads Manager and the existing Get Free Seeds admin tabs. The MCP cache profile/blank page was not used.
+- `select_page` and read-only `take_snapshot` passed for the existing Ads Manager page. The official Ads Manager URL/UI matched business `568026370701542` and ad account `1198439777611633`.
+- The already-open pages did not visibly show Get Free Seeds WABA/sender identity, display-name approval, phone quality, messaging eligibility or advertising eligibility. No screenshot or mutation was made. Existing operations remain GO/MAINTAIN; COD remains independently blocked.
+
 ## GFS-META-04 existing Chrome profile diagnosis (2026-11-04 PKT)
 
 **Disposition: WRONG PROFILE confirmed; authenticated attachment BLOCKED; Meta verification NOT RUN.**

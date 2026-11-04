@@ -1,3 +1,9 @@
+## GFS-MCP-RESTORE - existing Chrome attachment recovered (2026-11-04 PKT)
+
+- **Decision:** accept the one fresh official Codex/Chrome DevTools MCP session as the correct existing-browser attachment. The saved `--autoConnect` registration returned ten existing tabs, including WhatsApp Web, Meta Ads Manager and Get Free Seeds admin pages; the MCP cache `about:blank` profile is rejected.
+- **Evidence:** `select_page` and read-only `take_snapshot` passed for Ads Manager, matching business `568026370701542` and ad account `1198439777611633` in the official URL/UI.
+- **Boundary:** the already-open pages did not show WABA/sender, display-name approval, phone quality, messaging eligibility or advertising eligibility. Keep Meta advertising expansion NO-GO and do not navigate or mutate assets without a separately bounded read-only verification path. No external or source mutation occurred.
+
 # Decisions
 
 ## GFS-META-04 - reject MCP blank profile (2026-11-04 PKT)

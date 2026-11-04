@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-MCP-RESTORE verified Chrome/MCP evidence (2026-11-04 PKT)
+
+- **MCP:** one fresh official Codex session loaded the saved `chrome-devtools` registration `npx -y chrome-devtools-mcp@latest --autoConnect`; `list_pages` returned ten existing tabs rather than the MCP cache profile.
+- **Browser evidence:** existing WhatsApp Web, Ads Manager and Get Free Seeds admin tabs were visible. `select_page` and read-only `take_snapshot` passed on Ads Manager; its URL/UI matched business `568026370701542` and ad account `1198439777611633`.
+- **Eligibility boundary:** WABA/sender, display-name, phone-quality, messaging-eligibility and advertising-eligibility labels were not visible. No screenshot, cookie/token, customer data or Meta mutation was captured.
+- **External state:** no Meta, Cloudflare, Worker, payment, order, D1/R2/Queue/DLQ/Cron, secret, customer, campaign or WhatsApp state changed.
+
 ## GFS-META-04 profile mismatch evidence (2026-11-04 PKT)
 
 - **Chrome:** stable `156.0.8078.80`; real main process uses the normal default Chrome user-data root without alternate profile or remote-debugging flags.

@@ -1,5 +1,17 @@
 # Final Report
 
+## GFS-MCP-RESTORE - existing Chrome attachment and Meta boundary (2026-11-04 PKT)
+
+**Overall: Chrome attachment PASS; business/ad-account identity matched; full Meta eligibility verification remains BLOCKED by unavailable visible status labels; public expansion NO-GO.**
+
+1. **Connection:** one fresh official Codex session used the saved `chrome-devtools` `--autoConnect` registration. `list_pages` returned ten existing authenticated-session tabs, including WhatsApp Web, Ads Manager and Get Free Seeds admin tabs; no blank MCP profile was used.
+2. **MCP operations:** `list_pages`, `select_page` and read-only `take_snapshot` passed. No navigation, click, message, campaign, cookie/token inspection or mutation occurred.
+3. **Meta identity:** Ads Manager URL/UI matched business `568026370701542` and ad account `1198439777611633`.
+4. **Not visible:** Get Free Seeds WABA/sender, display-name approval, phone quality, messaging eligibility and advertising eligibility were not shown in the already-open pages; no claim is made for them.
+5. **Launch:** existing operations GO/MAINTAIN; public advertising expansion NO-GO; COD settlement remains blocked pending genuine courier evidence.
+6. **Protected baseline:** WhatsApp92%; resume local100%/live0%; COD local100%/live70%; API `b426ba47`100% / `d683ec45`0%; Admin `e8c96c96`100% / `e44703c3`0%; Recovery ON; CAPI OFF. No regression or production change was performed.
+7. **Git:** source unchanged; documentation update pending verification and push.
+
 ## GFS-476 - immutable API candidate (2026-11-03 PKT)
 
 **Overall: upload and isolated version readback PASS; configuration-preservation gate BLOCKED; no attachment, traffic promotion or customer activity.**

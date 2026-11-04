@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-MCP-RESTORE verified existing Chrome attachment (2026-11-04 PKT)
+
+- Owner-enabled remote debugging plus one fresh official Codex session using the saved `chrome-devtools` registration (`npx -y chrome-devtools-mcp@latest --autoConnect`) restored the existing Chrome session. `list_pages` returned ten existing tabs, including WhatsApp Web, Meta Ads Manager, and the existing Get Free Seeds admin tabs; the cache `about:blank` profile was not used.
+- `select_page` and read-only `take_snapshot` succeeded on the existing Ads Manager page. Its official URL/UI matched business `568026370701542` and ad account `1198439777611633`. WABA/sender, display-name approval, phone quality, messaging eligibility and advertising-eligibility labels were not visible in the already-open pages, so those claims remain unverified.
+- No navigation, Meta mutation, message, campaign, cookie/token inspection, screenshot containing customer data, Cloudflare, deployment, payment, order or source mutation occurred. Keep public expansion NO-GO, COD independently blocked, and the new-number/Hoja isolation rules unchanged.
+
 ## GFS-META-04 existing Chrome profile diagnosis (2026-11-04 PKT)
 
 - Read-only Windows diagnostics show Chrome stable `156.0.8078.80`. The real Chrome main process uses the normal default Chrome user-data root with no alternate `--user-data-dir`, `--profile-directory` or remote-debugging flag.

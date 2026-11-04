@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-04 - GFS-MCP-RESTORE existing Chrome attachment
+
+- Restored the official existing-session Chrome MCP path with one fresh Codex `--autoConnect` session; `list_pages`, `select_page` and read-only Ads Manager snapshot passed.
+- Matched business `568026370701542` and ad account `1198439777611633`. WABA/sender and eligibility labels were not visible, so advertising expansion remains NO-GO.
+- No browser, Meta, Cloudflare, deployment, payment, customer, source or production mutation.
+
 ## 2026-11-03 - GFS-476 immutable API candidate
 
 - Uploaded exactly one approved immutable API version with `--keep-vars --strict`: `9f6a4ecf-bf7f-43ff-abe0-e0d67e53bfd3`; no attachment or traffic change.
