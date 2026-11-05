@@ -389,3 +389,7 @@ Host execution and the disposable protected-credential test now PASS. Cloudflare
 ## GFS-COD-MO-42
 
 Member authority is PASS: the verified Cloudflare member is Super Administrator. The existing API credential remains insufficient for Account API Tokens Write, explaining HTTP403. Do not change member roles or create broad tokens. The remaining gate is secure provisioning: owner must provide an Account API Tokens Write credential directly to the approved host receiver, or an approved host-side creation path that never exposes the one-time secret.
+
+## GFS-COD-MO-43
+
+OAuth identity is valid for account readback but is not an acceptable scoped-token bootstrap: it lacks Account API Tokens Write and carries broad unrelated write permissions. Candidate GET/MO panel works, but filtered live-tail attribution returned zero records. Keep routing frozen. Next exact action is owner provisioning of a short-lived Account API Tokens Write credential directly into the passing host receiver, then create and verify one Worker-only token.

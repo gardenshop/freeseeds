@@ -2450,3 +2450,9 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - Official Cloudflare account member page under `cb5066a6d71ecdee0bd7ed8aacb4d3c2` shows `gisupp@gmail.com` with `Super Administrator - All Privileges`. No self-grant or member-policy change was made.
 - The MO-41 HTTP403 is attributable to the existing in-process token: its visible policy is Workers-only/read-only plus Editor and does not include Account API Tokens Write. The member identity is authorized, but that credential is not.
 - Secure host dummy bridge remains PASS. No token was created because browser/UI secret delivery into the host receiver is not proven. No deployment, traffic, payment, D1, API/Meta/CAPI or WhatsApp mutation occurred.
+
+## GFS-COD-MO-43 — OAuth readback PASS; scoped deployment access blocked (2026-11-05 PKT)
+
+- Approved host credential inventory contains no `GFS-Admin-Deploy-Scoped-2026`. No secret was read into agent output.
+- Host Wrangler OAuth is authenticated as `gisupp@gmail.com` on account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, but its permissions omit Account API Tokens Write and include broad unrelated product writes. It was used only for read-only deployment listing.
+- Official deployment readback confirms Admin baseline `3e4b7c26`100% / candidate `ce023b54`0%. Authenticated candidate GET rendered the MO read-only panel; version-filtered tail produced zero sanitized records, so fresh telemetry is not proven. No canary or mutation occurred.

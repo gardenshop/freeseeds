@@ -2731,3 +2731,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Decision:** member authority is sufficient; do not self-grant or alter account roles. The existing token, not the member, is the HTTP403 blocker.
 - **Boundary:** do not create a token through browser UI while its one-time secret would be exposed to the agent; do not create broad provisioning credentials or reuse the insufficient token for writes.
 - **Next exact action:** owner provides an Account API Tokens Write credential directly into the already-passing host receiver, or an approved host-side Cloudflare token-creation path with in-process secret capture.
+
+## GFS-COD-MO-43 — do not use broad OAuth as deployment bootstrap
+
+- **Decision:** keep Admin routing frozen and do not create a token through the broad OAuth identity. It lacks Account API Tokens Write and has unrelated write scopes.
+- **Evidence:** deployment readback PASS; candidate GET/MO panel PASS; version-filtered tail yielded zero records, so canary evidence is insufficient.
+- **Next exact action:** owner provisions Account API Tokens Write directly to the passing host receiver, then create one 24-hour Worker-only Editor token and reverify fresh telemetry/rollback.

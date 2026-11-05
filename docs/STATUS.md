@@ -3486,3 +3486,10 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Cloudflare member: **PASS** — `gisupp@gmail.com` is `Super Administrator - All Privileges` on the verified account.
 - HTTP403 root cause: **existing token authority insufficient**; its Worker policy does not prove Account API Tokens Write. No member role change was needed or attempted.
 - Host dummy bridge: **PASS**. Restricted token creation, Wrangler, fresh telemetry and rollback: **BLOCKED** because secure one-time secret capture is not available. Production unchanged.
+
+## GFS-COD-MO-43 — no scoped token; no canary (2026-11-05 PKT)
+
+- Credential inventory: scoped token absent.
+- Wrangler OAuth: correct account/member and read-only deployment listing PASS; Account API Tokens Write absent, so it is not used for token creation/deployment.
+- Deployment readback: Admin `3e4b7c26`100% / `ce023b54`0%. Candidate authenticated GET/MO panel PASS; filtered live tail returned zero records, therefore fresh monitoring BLOCKED.
+- No traffic, deployment, payment, D1, API/Meta/CAPI, WhatsApp or customer mutation.

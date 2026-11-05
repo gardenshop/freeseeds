@@ -4162,3 +4162,15 @@ Investigation query costs only (not production savings): representative `rows_re
 | Secure one-time secret capture | BLOCKED | No browser/API-to-host path without exposing secret |
 | Scoped token | NOT CREATED | Fail-closed |
 | Production mutation | PASS | No deployment, routing, payment, D1, API/Meta/CAPI or WhatsApp change |
+
+## GFS-COD-MO-43 deployment access (2026-11-05 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Scoped credential inventory | BLOCKED | `GFS-Admin-Deploy-Scoped-2026` absent |
+| Wrangler OAuth identity | PASS for readback | `gisupp@gmail.com`, verified account; broad permissions, no token-write |
+| Current deployment readback | PASS | Admin `3e4b7c26`100% / candidate `ce023b54`0% |
+| Candidate authenticated GET | PASS limited | MO read-only panel rendered; no write |
+| Fresh candidate tail | BLOCKED | Version-filtered sanitized tail returned 0 records |
+| Rollback execution | BLOCKED | No scoped deployment credential; no routing change |
+| Canary | NOT RUN | Fresh telemetry gate failed |

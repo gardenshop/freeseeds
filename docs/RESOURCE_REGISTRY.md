@@ -2651,3 +2651,9 @@ No secrets are stored in this registry.
 - Account/member resource: verified account dashboard shows `gisupp@gmail.com` as `Super Administrator - All Privileges`.
 - Existing API credential: Worker Editor/read-only policy; official permission-group API returned HTTP403, consistent with no Account API Tokens Write capability. No secret value recorded.
 - Secure capture: host dummy handler PASS, but no approved path transfers a newly created browser/API token directly into host storage without exposing it.
+
+## GFS-COD-MO-43 deployment access resources (2026-11-05 PKT)
+
+- Wrangler OAuth resource: `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; permissions include Workers write/tail read but omit Account API Tokens Write and include unrelated product writes. Readback only.
+- Deployment resource: official `wrangler deployments list` confirms Admin baseline `3e4b7c26`100% / candidate `ce023b54`0%.
+- Monitoring resource: candidate override GET rendered MO read-only UI; version-filtered tail returned zero sanitized records. No fresh telemetry resource registered.
