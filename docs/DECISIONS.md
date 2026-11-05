@@ -2701,3 +2701,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Decision:** no canary. The named token is whole-account Editor and the existing Individual Workers Editor targets an isolated Worker; neither satisfies the exact production scope.
 - **Boundary:** policy-editor interaction was stopped by the approved safety gate before mutation. Do not use broad Editor, Analytics-read, or isolated-token credentials; do not retry blocked bridge lookup.
 - **Next exact action:** owner provisions/corrects a short-lived Individual Workers Editor token restricted to `getfreeseeds-admin-staging` and provides the approved host bridge, then fresh candidate telemetry and rollback readback must pass.
+
+## GFS-COD-MO-37 — do not create an undeliverable secret
+
+- **Decision:** stop before token creation. A token secret must not be generated when the approved host receiver is unavailable.
+- **Boundary:** do not guess Cloudflare permission IDs/policy format, use broad Editor, reuse the isolated Worker token, or place a secret in browser/CLI/logs/files/chat. No deployment or canary.
+- **Next exact action:** owner makes the approved Windows credential handler callable and supplies a supported authenticated API/UI path that can validate the exact Worker-only Editor resource before creation.

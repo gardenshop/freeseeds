@@ -7283,3 +7283,18 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 9. **Documentation/Git:** updated evidence docs only; no secrets, PII or raw MO references.
 10. **Stages:** source/migration/preview/upload 100%; exact token scope 0% blocked; bridge/telemetry/rollback/canary 0%; settlement/CAPI 0%; protected production 100%.
 11. **One next MO-specific action:** provision or safely correct a short-lived Individual Workers Editor token restricted to `getfreeseeds-admin-staging`, make the approved host bridge callable, then verify fresh candidate telemetry and rollback before requesting one bounded canary.
+
+## GFS-COD-MO-37 final report — 2026-11-05 PKT
+
+1. **MO-36 comparison:** broad named Editor remains unsuitable; isolated Editor remains scoped to `gfs462-isolated-target`; no production Worker Editor credential exists.
+2. **Programmatic creation:** **BLOCKED safely**. No exact permission/resource schema or safe write identity was established, so no API request was sent.
+3. **Worker-only Editor scope:** **FAIL/UNAVAILABLE**. No token with exact `getfreeseeds-admin-staging` scope is available.
+4. **Secret storage:** **BLOCKED**. Approved host credential receiver/bridge is unavailable; no secret was generated or exposed.
+5. **Wrangler authorization:** **BLOCKED**. No safe process-only token injection or deployment readback was verified.
+6. **Fresh monitoring:** **BLOCKED**. No usable deployment credential/live tail; no unsupported metrics claim.
+7. **Rollback:** **BLOCKED**. Exact production deployment authorization/readback unverified.
+8. **Canary:** **NOT RUN**. Admin `3e4b7c26`100% / `ce023b54`0%; API unchanged.
+9. **Zero regression:** no deployment, traffic, payment/order/D1, API/Meta/CAPI, WhatsApp or customer mutation. Retained tests: focused 38/38; full 385 passed/1 skipped; build/lint PASS. No source changes, so tests not rerun.
+10. **Git/docs:** evidence-only documentation updated; no credentials, PII or MO references recorded.
+11. **Stages:** source/migration/preview 100%; exact token provisioning 0%; secure delivery/telemetry/rollback/canary/settlement/CAPI 0%; protected production 100%.
+12. **One next MO action:** owner enables the approved Windows credential handler and supported narrow-token API/UI path, then creates the 24-hour Worker-only Editor token and returns only sanitized scope/expiry status.

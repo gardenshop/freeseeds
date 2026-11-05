@@ -2621,3 +2621,9 @@ No secrets are stored in this registry.
 - Named token metadata: `GFS-Admin-Deploy-2026`, entire-account Workers Editor plus Workers Metadata/Content Read-Only, expiry 12 Nov 2026; no value recorded.
 - Existing Editor metadata: `GFS-464-isolated-watchdog-target`, Individual Workers Editor on `gfs462-isolated-target`; not the production Worker.
 - Policy correction: official editor action was safety-blocked before mutation. No deployment-capable production resource or secure host bridge is registered.
+
+## GFS-COD-MO-37 secure automation resources (2026-11-05 PKT)
+
+- Account token inventory: three visible tokens only; no exact Worker-scoped Editor resource for `getfreeseeds-admin-staging`.
+- Secret delivery: no callable approved Windows credential handler/host bridge. No token value or plaintext secret resource exists in this environment.
+- API authority: official token management page is readable, but exact programmatic permission IDs/resource schema and a safe write identity were not established; no creation request was sent.

@@ -369,3 +369,7 @@ The named token now exists but is account-wide read-only (`Workers Metadata Read
 ## GFS-COD-MO-36
 
 Read-only token scope is now known: the named token is whole-account Editor plus read-only permissions, and the existing Individual Workers Editor targets `gfs462-isolated-target`. The official policy editor is safety-blocked before mutation. Do not use either token for deployment. Owner must provision or safely correct a short-lived Worker-only Editor token for `getfreeseeds-admin-staging`, then expose an approved host bridge and verify fresh telemetry/rollback.
+
+## GFS-COD-MO-37
+
+Secure token automation is BLOCKED before creation: no approved host-side secret receiver is callable and the exact Cloudflare API permission/resource schema is not available through a safe authenticated API identity. Do not create a token that cannot be securely delivered. Next action is owner-side provisioning into the approved Windows credential handler, followed by sanitized scope/readback verification.

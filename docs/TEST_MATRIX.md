@@ -4100,3 +4100,16 @@ Investigation query costs only (not production savings): representative `rows_re
 | Fresh telemetry | BLOCKED | No safe deployment credential/live tail |
 | Rollback authority | BLOCKED | Production Worker scope not proven |
 | Canary | NOT RUN | Fail-closed; Admin 100% / candidate 0% |
+
+## GFS-COD-MO-37 secure token automation (2026-11-05 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Account identity | PASS | Official account-token page under `cb5066a6d71ecdee0bd7ed8aacb4d3c2` |
+| Exact Worker-scoped Editor available | FAIL | Named token broad; isolated Editor targets `gfs462-isolated-target` |
+| Programmatic creation | BLOCKED | No safe authenticated API/schema path; no request sent |
+| Secret receiver | BLOCKED | Approved host credential handler unavailable |
+| Secret exposure | PASS | No value generated, viewed, copied, logged or stored |
+| Fresh telemetry | BLOCKED | No usable deployment credential/live tail |
+| Rollback | BLOCKED | Exact production Worker authorization unverified |
+| Canary | NOT RUN | Fail-closed; Admin 100% / candidate 0% |
