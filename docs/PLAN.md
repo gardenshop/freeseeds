@@ -377,3 +377,7 @@ Secure token automation is BLOCKED before creation: no approved host-side secret
 ## GFS-COD-MO-38
 
 Authorization is present, but secure secret delivery is still BLOCKED by the unavailable approved host credential handler. Do not create the token until the same host context can receive and later retrieve it without exposure. Then perform one exact Worker-only 24-hour token creation and read-only scope verification.
+
+## GFS-COD-MO-39
+
+Host discovery remains BLOCKED: the available terminal is the sandbox identity and no approved host credential runner is callable. Do not implement an untrusted bridge or repeat Credential Manager lookup. The one required owner action is to provide a trusted host-side handler running under the same Wrangler identity, with allowlisted store/retrieve/delete operations and sanitized status only.

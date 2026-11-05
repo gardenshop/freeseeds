@@ -2713,3 +2713,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Decision:** owner authorization is insufficient without a verified secret receiver. Do not create or display the restricted token.
 - **Boundary:** do not repeat the sandbox Credential Manager lookup, guess API schemas, use broad/isolated tokens, or place a secret in browser/CLI/logs/files/chat.
 - **Next exact action:** owner enables the approved host credential handler for the same Wrangler execution identity and returns sanitized proof that store/retrieve works without exposing the value.
+
+## GFS-COD-MO-39 — do not build an untrusted credential bridge
+
+- **Decision:** stop before dummy or production credential operations. The available sandbox identity is not proven to be the approved Wrangler identity and no trusted handler is callable.
+- **Boundary:** no Credential Manager retry, unknown AdminService, elevation, impersonation, remote listener, secret creation or token provisioning.
+- **Next exact action:** owner provides one trusted host-side credential handler running under the same Wrangler identity and returning only sanitized store/retrieve/delete status.

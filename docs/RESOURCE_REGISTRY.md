@@ -2633,3 +2633,9 @@ No secrets are stored in this registry.
 - Authorization resource: owner approval exists for one least-privilege token; it does not itself provide a callable secret receiver.
 - Secret receiver resource: BLOCKED. Approved Windows credential handler is not callable in the Wrangler execution context; no secret resource was created.
 - Cloudflare token resources remain unchanged: broad named token, isolated Worker Editor, and Analytics-read token only.
+
+## GFS-COD-MO-39 host bridge resources (2026-11-05 PKT)
+
+- Execution context: `BI\\codexsandboxoffline` / `Nazim`; this is not proven to be the approved Wrangler host identity.
+- Approved bridge: none callable or discoverable in workspace; no remote listener or unknown service was invoked.
+- Secret state: no dummy or production credential was created, accessed or stored.
