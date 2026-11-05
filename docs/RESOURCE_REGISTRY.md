@@ -2538,3 +2538,8 @@ No secrets are stored in this registry.
 - Meta identity requested: business `568026370701542`, ad account `1198439777611633`; official Chrome UI resource unavailable. Connected read-only business listing returned zero consented portfolios, so no approval/eligibility resource is registered.
 - Courier evidence resource: absent. Required future evidence is identity/contract, collection/remittance policies, tracking/delivery, exact collection, deductions, remittance amounts/dates, independent proof and human verifier.
 - Closure resource: existing WhatsApp operations preserved; public expansion and COD settlement blocked externally; no customer, payment, Meta, deployment or routing mutation.
+## GFS-COD-MO-23 protected health verification (2026-11-05 PKT)
+
+- Existing bridge execution context: `BI\\CodexSandboxOffline` / `Nazim`; Windows Credential Manager has no stored credential entries. No secret value is registered.
+- Access resource remains the exact `/health` self-hosted application with its single Service Auth policy and existing service-token include. Authorized HTTP200 is unproven; browser/invalid requests are HTTP403.
+- Current read-only resources: Admin deployment `7aacd65b` / `3e4b7c26`100%; API deployment `9b459a09` / `b426ba47`100% + `d683ec45`0%; D1 `0047` once / `0048` absent; Time Travel available. No mutation.

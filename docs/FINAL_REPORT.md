@@ -1,5 +1,19 @@
 # Final Report
 
+## GFS-COD-MO-23 protected health verification (2026-11-05 PKT)
+
+1. **MO-22 comparison:** routing and Access configuration are reconciled; authorized Admin health 200 remains blocked.
+2. **Bridge cause:** current execution identity `BI\\CodexSandboxOffline` has no Windows Credential Manager entries; the existing bridge fails `credential_read_failed`.
+3. **Authorized `/health` HTTP200:** **BLOCKED**, not claimed; no secret was exposed or substituted.
+4. **Unauthorized rejection:** browser and invalid-header requests returned HTTP403 HTML.
+5. **Routing/Access:** Admin deployment `7aacd65b` serves `3e4b7c26`100%; API deployment `9b459a09` serves `b426ba47`100% / `d683ec45`0%; the exact Service Auth policy is unchanged.
+6. **D1 readiness:** `0047` exactly once, `0048` absent, no partial historical objects, zero-write readback, Time Travel available; migration readiness remains **BLOCKED** pending health 200.
+7. **Zero regression evidence:** Orders/Conversations reads and payment configuration reads remained healthy; Advance 3/3 and COD PKR125 unchanged. Fresh API health was not independently claimed.
+8. **Defects/tests:** no repair or source change; retained focused 34/34, full 385 passed/1 skipped, build/lint PASS.
+9. **Docs/Git:** this evidence is recorded in rules, plan, status, decisions, SOP, test matrix, resource registry and changelog; commit/push follows verification.
+10. **Stages:** routing 100%; Access policy 100%; bridge access 0%; authorized health 0%; migration 0%; release 0%.
+11. **Next authorization:** authorize only restoration of the existing approved credential into the existing bridge execution context, followed by one read-only Admin `/health` GET; no new secret or migration.
+
 ## GFS-COD-MO-22 routing and health reconciliation (2026-11-05 PKT)
 
 1. **MO-21 comparison:** routing mismatch is resolved as a metrics interpretation issue; configured Admin routing is verified by deployment status.

@@ -1,3 +1,9 @@
+## GFS-COD-MO-23 - fail closed when approved health credential is unavailable (2026-11-05 PKT)
+
+- Do not create, rotate, expose, or substitute a Service Auth credential. Do not weaken Access or infer an application HTTP200 from the expected unauthenticated HTTP403.
+- The existing bridge is unavailable because the current approved execution context has no Windows Credential Manager entry. Migration 0048 remains blocked pending one authorized GET through that bridge.
+- No deployment, routing, D1, payment/order, API/Meta/CAPI, WhatsApp, or customer mutation is permitted by this evidence.
+
 ## GFS-COD-MO-13 - do not retry without version-specific monitoring (2026-11-05 PKT)
 
 - **Decision:** retain Admin baseline at100% and candidate at0%. Candidate override is technically verified, but the bounded canary is not accepted because version-specific metrics were unavailable during exposure.

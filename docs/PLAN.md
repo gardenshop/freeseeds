@@ -1,5 +1,11 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-23 protected health verification (2026-11-05 PKT)
+
+- **BLOCKED safely:** the existing credential bridge cannot access its approved Windows Credential Manager target in the current execution context (`BI\\CodexSandboxOffline`; `cmdkey /list` reports no stored credentials). No alternate identity, token value, rotation, or bypass was used.
+- Access policy/configuration remains PASS and unauthenticated/invalid `/health` remains HTTP403. Authorized HTTP200 is not claimed. Admin/API routing and D1 preflight remain unchanged; 0048 is not applied.
+- Next exact action: make the already-approved credential available to the existing bridge execution context, then run one read-only `/health` GET. Do not send the secret in chat or create a new credential.
+
 ## GFS-COD-MO-22 Admin routing and health reconciliation (2026-11-05 PKT)
 
 - Official deployment status reconciles Admin to `7aacd65b-fe1d-4c47-9f92-5ba3bf791dc5`: candidate `3e4b7c26`100%. Dashboard 94.5/5.5 is last-24-hour observed traffic (768/45), not configured split. API remains `b426ba47`100% / `d683ec45`0%.

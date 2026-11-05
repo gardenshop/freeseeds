@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-23 protected health verification (2026-11-05 PKT)
+
+- The existing approved bridge was diagnosed read-only under execution identity `BI\\CodexSandboxOffline` / user `Nazim`; Windows Credential Manager reported no stored credentials. The bridge therefore fails closed with `credential_read_failed`. No credential value was read, copied, generated, rotated, or logged.
+- Cloudflare Access remains unchanged: the exact Admin `/health` application uses one Service Auth policy and the existing service-token include. Browser and invalid-header requests return the expected HTTP403; authorized HTTP200 remains unproven.
+- Official readback remains Admin `3e4b7c26`100% in deployment `7aacd65b`; canonical API Worker `getfreeseeds-api-staging` remains `b426ba47`100% / `d683ec45`0% in deployment `9b459a09`. D1 is `0047` once, `0048` absent, with zero-write SELECT metadata; Time Travel is available. Do not apply 0048 until the existing approved bridge can perform the authorized GET.
+- Preserve the new-number WhatsApp lock, Hoja Seeds zero-connection rule, payment protections, and all no-mutation boundaries.
+
 ## GFS-COD-MO-22 Admin routing and health reconciliation (2026-11-05 PKT)
 
 - **Routing reconciled read-only:** official deployment status reports Admin deployment `7aacd65b-fe1d-4c47-9f92-5ba3bf791dc5`, created `2026-11-05T07:25:12Z`, with `3e4b7c26-c36d-4d1c-baeb-d26629a9b4a1` configured at 100%. API deployment `9b459a09-a7a5-404d-9302-48292bd07783` remains `b426ba47`100% / `d683ec45`0%.

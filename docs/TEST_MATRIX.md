@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-COD-MO-23 protected health verification (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Existing bridge execution identity | PASS | `BI\\CodexSandboxOffline` / `Nazim`; metadata only. |
+| Approved credential target availability | BLOCKED | Windows Credential Manager reports no stored credentials; bridge fails `credential_read_failed`. |
+| Access policy/configuration | PASS | Exact `/health` Service Auth application/policy and existing service-token include; audit filter showed zero actions in last 7 days. |
+| Unauthorized `/health` rejection | PASS | Browser and invalid headers return HTTP403 HTML. |
+| Authorized `/health` HTTP200 | BLOCKED | Existing credential cannot be accessed safely in this context; no alternate identity or bypass. |
+| Current routing | PASS | Admin `3e4b7c26`100%; API `b426ba47`100% / `d683ec45`0%. |
+| D1 migration readiness | BLOCKED | `0047` once, `0048` absent, no partial objects, zero-write readback, Time Travel available; health gate incomplete. |
+| Production protection | PASS | No deployment, routing, Access, D1, payment/order, API/Meta/CAPI, WhatsApp or customer mutation. |
+
 ## GFS-COD-MO-22 routing and health reconciliation (2026-11-05 PKT)
 
 | Gate | Result | Evidence |

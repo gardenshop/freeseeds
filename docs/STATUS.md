@@ -1,5 +1,13 @@
 # Status
 
+## GFS-COD-MO-23 protected health verification (2026-11-05 PKT)
+
+**Disposition: BLOCKED safely at the approved credential bridge; no production mutation.**
+
+- Bridge diagnosis: execution identity `BI\\CodexSandboxOffline` / user `Nazim`; Windows Credential Manager has no entries, so the existing bridge returns `credential_read_failed`.
+- Access policy is intact and browser/invalid requests are HTTP403. Authorized `/health` HTTP200 is **not proven**.
+- Read-only current state: Admin `3e4b7c26`100%; API `b426ba47`100% / `d683ec45`0%; D1 `0047=1`, `0048=0`, no partial historical objects, Time Travel available. No source tests rerun; retained gates are focused 34/34, full 385/1, build/lint PASS.
+
 ## GFS-COD-MO-22 Admin routing and health reconciliation (2026-11-05 PKT)
 
 **Disposition: ROUTING PASS / D1 PREFLIGHT PASS / OPERATIONAL READINESS BLOCKED.**

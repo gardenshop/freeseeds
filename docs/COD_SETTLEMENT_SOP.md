@@ -1,5 +1,9 @@
 # COD Settlement SOP
 
+## GFS-COD-MO-23 health-monitor bridge gate (2026-11-05 PKT)
+
+The `/health` qualification must use the existing approved Service Auth bridge. If its credential target is unavailable, record `credential_read_failed` and stop. Never print, copy, export, rotate, regenerate, or bypass the credential. Browser/invalid HTTP403 is a security-boundary result, not application health evidence. Migration 0048 remains blocked until an authorized HTTP200 is obtained through the approved bridge.
+
 ## GFS-COD-MO-22 readiness gate (2026-11-05 PKT)
 
 Configured Admin routing is reconciled to candidate 100%; the dashboard 94.5/5.5 display is historical observed traffic. `/health` remains intentionally Service Auth-protected. Do not apply migration 0048 until an authorized service-auth health 200 is verified through the existing approved bridge.
