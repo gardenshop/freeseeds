@@ -2347,3 +2347,8 @@
 
 - Corrected the documented Cloudflare account ID from the authoritative account selector.
 - Attempted only the requested narrow account-owned deployment-token setup; no token was created because the safe custom-permission control was unavailable. No broader token or production mutation was used.
+
+## 2026-11-05 — GFS-COD-MO-35
+
+- Verified the named account token exists, but it is entire-account read-only metadata/content access and not the required Worker-only Editor credential.
+- No secret was accessed or logged; no existing Editor token was reused; bridge, fresh tail, rollback and canary remain blocked. Production state stayed unchanged.

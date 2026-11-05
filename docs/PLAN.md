@@ -361,3 +361,7 @@ No additional canary attempt is permitted. Account identity is reconciled, but f
 ## GFS-COD-MO-34
 
 Account identity is corrected. Do not create an overbroad token or use Analytics-read credentials for writes. Obtain a supported narrow account-owned Worker Editor token/bridge through an approved control, then verify fresh live-tail attribution and rollback before any canary.
+
+## GFS-COD-MO-35
+
+The named token now exists but is account-wide read-only (`Workers Metadata Read-Only` and `Workers Content Read-Only`) and cannot deploy or authorize rollback. Do not edit, reuse, rotate or broaden it. The next exact action is owner-side provisioning of a short-lived Individual Workers Editor token restricted to `getfreeseeds-admin-staging`, plus an approved host bridge; then verify fresh candidate telemetry and rollback readback before any canary.

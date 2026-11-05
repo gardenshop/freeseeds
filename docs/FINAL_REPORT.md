@@ -7257,3 +7257,15 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 9. **Git:** documentation-only update follows; no credentials, PII or secrets recorded.
 10. **Stages:** account identity100%; candidate preview/migration100%; deployment access0% blocked; fresh monitoring0% blocked; canary0%; promotion0%; settlement0%; CAPI0%.
 11. **One next MO-specific action:** obtain an approved supported path for the exact narrow Worker Editor token/bridge, then verify fresh candidate logs and rollback readback.
+
+## GFS-COD-MO-35 final report — 2026-11-05 PKT
+
+1. **Deployment token:** **BLOCKED** for the requested purpose. `GFS-Admin-Deploy-2026` exists, but the official account page shows entire-account `Workers Metadata Read-Only` and `Workers Content Read-Only`; it is not Worker Editor and cannot authorize deployment/rollback.
+2. **Narrow permissions:** **FAIL** for the requested Worker-only scope. No broad template was used; no permission edit or token action was performed.
+3. **Credential bridge:** **BLOCKED**. Existing approved host bridge remains unavailable; no repeated sandbox lookup was made and no secret was exposed.
+4. **Fresh candidate logs:** **BLOCKED**. Workers Logs remain disabled and Wrangler OAuth remains unavailable; no unsupported metrics claim is made.
+5. **Rollback readiness:** **BLOCKED**. Deployment-capable identity and independent routing readback are not proven. Admin remains `3e4b7c26`100% / `ce023b54`0%; API remains `b426ba47`100%.
+6. **Zero regression:** **PASS, read-only boundary.** No deployment, traffic, D1, order/payment, Access, API/Meta/CAPI, WhatsApp or customer mutation occurred. Existing test evidence remains focused 38/38, full 385 passed/1 skipped, build/lint PASS.
+7. **Documentation/Git:** Updated rules, plan, status, resource registry, decisions, test matrix, changelog and this report; no secrets, PII or MO references recorded.
+8. **Stages:** source/migration/preview/upload 100%; token provisioning 0% for required scope; bridge/telemetry/rollback 0% blocked; canary/promotion/settlement/CAPI 0%; protected production 100%.
+9. **One next MO-specific action:** owner provisions a short-lived Individual Workers Editor token restricted to `getfreeseeds-admin-staging` and makes the approved host bridge callable; then verify fresh candidate tail and rollback readback before requesting one bounded canary.

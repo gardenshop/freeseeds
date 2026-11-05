@@ -2689,3 +2689,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Evidence:** authoritative account ID is `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; requested account-token form was reached, but narrow custom permission activation was blocked by the safe browser control. No secret was displayed or handled.
 - **Boundary:** Analytics-read token remains read-only; no deployment, live tail, traffic, rollback, payment/order/D1, Access, API/Meta/CAPI, WhatsApp or customer mutation.
 - **Next exact action:** obtain an approved supported path for the exact narrow Worker Editor token/bridge, then verify fresh candidate logs and rollback readback.
+
+## GFS-COD-MO-35 — reject read-only account-wide token for deployment (2026-11-05 PKT)
+
+- **Decision:** stop before canary. `GFS-Admin-Deploy-2026` is account-wide read-only metadata/content access, not Worker Editor, so it cannot authorize deployment or rollback.
+- **Boundary:** never use Analytics-read or read-only token credentials for writes; do not reuse the unrelated Individual Workers Editor token without verified Worker scope. No secret inspection, permission edit, deployment, traffic, payment/order/D1, Access, API/Meta/CAPI, WhatsApp or customer mutation occurred.
+- **Next exact action:** owner provisions the exact short-lived Worker-only Editor token and approved host bridge, then fresh version-filtered logs and rollback readback must pass before any bounded canary.

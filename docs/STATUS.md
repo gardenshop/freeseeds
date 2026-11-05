@@ -3444,3 +3444,9 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Account identity corrected to `cb5066a6d71ecdee0bd7ed8aacb4d3c2` from the authoritative dashboard.
 - Account-owned token page was reached and the requested name entered, but the narrow custom-permission control was blocked by the approved tool safety gate. No token was created or exposed; the broader Workers template was rejected.
 - No Worker Editor bridge, fresh live tail, rollback access or canary is available. Routing and all production protections remain unchanged.
+
+## GFS-COD-MO-35 — named token is read-only; no canary (2026-11-05 PKT)
+
+- The verified account-token inventory contains `GFS-Admin-Deploy-2026`, expiring 12 Nov 2026, with entire-account `Workers Metadata Read-Only` and `Workers Content Read-Only` permissions. It is not a deployment token and does not satisfy the required Worker-only Editor scope.
+- No secret was accessed. No existing Editor token was reused because its target Worker scope was not independently verified. The approved host bridge, fresh live tail and rollback authority remain BLOCKED.
+- Admin remains `3e4b7c26`100% / `ce023b54`0%; API remains `b426ba47`100%. No production mutation occurred.

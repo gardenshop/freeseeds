@@ -2408,3 +2408,9 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - The account-owned API-token page is available. The requested token name `GFS-Admin-Deploy-2026` was entered, but the narrow custom-permission control could not be safely activated by the approved browser tool. The broader Workers template was not substituted; no deployment token was created and no secret was displayed, copied or logged.
 - Existing Analytics-read token remains read-only. No approved Worker Editor bridge or callable host-side credential injection path is available. Do not use the Analytics token for writes, bypass OAuth, or extract credentials.
 - Fresh live tail and rollback authorization remain BLOCKED; Workers Logs are disabled and Wrangler OAuth is expired/unreachable. No canary, deployment, traffic, payment/order/D1, Access, secret, API/Meta/CAPI, WhatsApp or customer mutation occurred.
+
+## GFS-COD-MO-35 — token exists but is not a deployment credential (2026-11-05 PKT)
+
+- Official account-token inventory confirms `GFS-Admin-Deploy-2026` exists under `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Its visible permissions are entire-account `Workers Metadata Read-Only` and `Workers Content Read-Only`, with expiry 12 Nov 2026; it is not the requested Worker-only Editor token.
+- No token value, action, edit, rotation or deletion was performed. The existing Individual Workers Editor token was not reused because its target Worker was not independently verified.
+- The approved host bridge, fresh live tail and rollback authority remain blocked; no deployment, canary, routing, payment/order/D1, Access, API/Meta/CAPI, WhatsApp or customer mutation occurred.

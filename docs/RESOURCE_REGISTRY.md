@@ -2609,3 +2609,9 @@ No secrets are stored in this registry.
 - Identity resource: account-owned API-token page under verified account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
 - Token resource: no `GFS-Admin-Deploy-2026` token was created; no secret value or token resource was registered. Existing Analytics-read token remains read-only.
 - Bridge resource: no callable approved Worker Editor credential bridge or live-tail resource; no deployment/canary resource exists.
+
+## GFS-COD-MO-35 access resources (2026-11-05 PKT)
+
+- Token metadata resource: `GFS-Admin-Deploy-2026` exists under the verified account, expires 12 Nov 2026, and exposes only entire-account `Workers Metadata Read-Only` plus `Workers Content Read-Only`; no value is recorded.
+- Scope decision: this token is not an acceptable deployment/rollback credential. Existing Individual Workers Editor token metadata is not reused because its Worker target is unverified.
+- Bridge/telemetry: approved host bridge remains unavailable, Wrangler OAuth unavailable and Workers Logs disabled; no fresh tail or deployment resource is registered.

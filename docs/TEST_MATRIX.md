@@ -4073,3 +4073,16 @@ Investigation query costs only (not production savings): representative `rows_re
 | Broad token substitution | REJECTED | Workers template not used because it exceeds requested scope |
 | Secure bridge/live tail | BLOCKED | No callable Worker Editor bridge; Workers Logs disabled; Wrangler OAuth unavailable |
 | Canary | NOT RUN | No fresh logs or rollback authority |
+
+## GFS-COD-MO-35 Worker access verification (2026-11-05 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Account identity | PASS | Official token page is under `cb5066a6d71ecdee0bd7ed8aacb4d3c2` |
+| Named token exists | PASS | `GFS-Admin-Deploy-2026` listed; value not accessed |
+| Required Worker-only Editor scope | FAIL | Token is entire-account `Workers Metadata Read-Only` + `Workers Content Read-Only` |
+| Token expiry | PASS | Dashboard shows expiry 12 Nov 2026; no edit performed |
+| Secure bridge | BLOCKED | Approved host-side bridge is not callable in this context |
+| Fresh candidate tail | BLOCKED | Workers Logs disabled; Wrangler OAuth unavailable |
+| Rollback authority | BLOCKED | No verified deployment-capable identity/readback |
+| Canary | NOT RUN | Fail-closed; Admin remains 100% / 0% |
