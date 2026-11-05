@@ -4113,3 +4113,15 @@ Investigation query costs only (not production savings): representative `rows_re
 | Fresh telemetry | BLOCKED | No usable deployment credential/live tail |
 | Rollback | BLOCKED | Exact production Worker authorization unverified |
 | Canary | NOT RUN | Fail-closed; Admin 100% / candidate 0% |
+
+## GFS-COD-MO-38 authorized token provisioning (2026-11-05 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Owner authorization | PASS | One least-privilege token authorized |
+| Secure receiver precondition | BLOCKED | Approved host credential handler remains unavailable from execution context |
+| Token creation | NOT ATTEMPTED | Fail-closed before secret generation |
+| Secret exposure | PASS | No value generated, viewed, copied or stored |
+| Existing production state | PASS | No deployment, routing, payment, D1, API/Meta/CAPI or WhatsApp mutation |
+| Scoped token | NOT CREATED | Receiver prerequisite failed |
+| Canary | NOT RUN | Admin remains 100% / candidate 0% |

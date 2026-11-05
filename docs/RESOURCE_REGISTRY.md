@@ -2627,3 +2627,9 @@ No secrets are stored in this registry.
 - Account token inventory: three visible tokens only; no exact Worker-scoped Editor resource for `getfreeseeds-admin-staging`.
 - Secret delivery: no callable approved Windows credential handler/host bridge. No token value or plaintext secret resource exists in this environment.
 - API authority: official token management page is readable, but exact programmatic permission IDs/resource schema and a safe write identity were not established; no creation request was sent.
+
+## GFS-COD-MO-38 secure provisioning boundary (2026-11-05 PKT)
+
+- Authorization resource: owner approval exists for one least-privilege token; it does not itself provide a callable secret receiver.
+- Secret receiver resource: BLOCKED. Approved Windows credential handler is not callable in the Wrangler execution context; no secret resource was created.
+- Cloudflare token resources remain unchanged: broad named token, isolated Worker Editor, and Analytics-read token only.

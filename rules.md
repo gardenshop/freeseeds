@@ -2426,3 +2426,9 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - Official account-token inventory under `cb5066a6d71ecdee0bd7ed8aacb4d3c2` still contains only three tokens: named broad Editor/read-only token, isolated Worker Editor, and Analytics-read token. No exact Worker-only deployment credential for `getfreeseeds-admin-staging` is available.
 - No programmatic token creation was attempted because no approved secure receiver/host bridge can accept the one-time secret without exposing it. The prior policy-control limitation was not retried. No token value was accessed, copied, logged or stored.
 - No deployment, traffic, monitoring tail, payment/order/D1, API/Meta/CAPI, WhatsApp or customer mutation occurred. Admin remains `3e4b7c26`100% / `ce023b54`0%.
+
+## GFS-COD-MO-38 — owner authorization does not replace secure receiver (2026-11-05 PKT)
+
+- Owner authorized one least-privilege token, but the required approved host-side Windows credential receiver remains unavailable from the authorized execution context, as established in MO-37.
+- No Cloudflare API/UI token creation was attempted. No secret was generated, exposed, copied, logged or stored. Existing broad/isolated tokens remain untouched and no deployment/canary was run.
+- Required next boundary: owner makes the trusted credential handler callable in the same Wrangler execution context, returning only sanitized storage status.

@@ -373,3 +373,7 @@ Read-only token scope is now known: the named token is whole-account Editor plus
 ## GFS-COD-MO-37
 
 Secure token automation is BLOCKED before creation: no approved host-side secret receiver is callable and the exact Cloudflare API permission/resource schema is not available through a safe authenticated API identity. Do not create a token that cannot be securely delivered. Next action is owner-side provisioning into the approved Windows credential handler, followed by sanitized scope/readback verification.
+
+## GFS-COD-MO-38
+
+Authorization is present, but secure secret delivery is still BLOCKED by the unavailable approved host credential handler. Do not create the token until the same host context can receive and later retrieve it without exposure. Then perform one exact Worker-only 24-hour token creation and read-only scope verification.

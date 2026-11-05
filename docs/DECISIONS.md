@@ -2707,3 +2707,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Decision:** stop before token creation. A token secret must not be generated when the approved host receiver is unavailable.
 - **Boundary:** do not guess Cloudflare permission IDs/policy format, use broad Editor, reuse the isolated Worker token, or place a secret in browser/CLI/logs/files/chat. No deployment or canary.
 - **Next exact action:** owner makes the approved Windows credential handler callable and supplies a supported authenticated API/UI path that can validate the exact Worker-only Editor resource before creation.
+
+## GFS-COD-MO-38 — stop before secret creation
+
+- **Decision:** owner authorization is insufficient without a verified secret receiver. Do not create or display the restricted token.
+- **Boundary:** do not repeat the sandbox Credential Manager lookup, guess API schemas, use broad/isolated tokens, or place a secret in browser/CLI/logs/files/chat.
+- **Next exact action:** owner enables the approved host credential handler for the same Wrangler execution identity and returns sanitized proof that store/retrieve works without exposing the value.
