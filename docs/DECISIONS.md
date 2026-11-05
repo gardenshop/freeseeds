@@ -2654,3 +2654,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Evidence:** Admin Orders/Conversations GETs were available, but fresh candidate-specific Cloudflare metrics/logs, CPU/latency and rollback monitoring were not. Wrangler auth refresh was unavailable and no alternate credential was used.
 - **Protection:** Admin remains `3e4b7c26`100% / `ce023b54`0%; API unchanged. No deployment, canary, payment/order/D1/secret/Access/API/Meta/CAPI/customer mutation occurred.
 - **Next exact authorization:** restore approved official Cloudflare candidate telemetry and rollback observation, then separately authorize one canary retry.
+
+## GFS-COD-MO-30 - retain no-canary state (2026-11-05 PKT)
+
+- **Decision:** monitoring restoration did not pass; keep Admin baseline100% / candidate0%.
+- **Evidence:** GFS-14 procedure requires authenticated Key Figures/version metrics. That dashboard page is unavailable in the existing browser session and Wrangler auth cannot refresh. Admin Orders/Conversations remain readable, but these do not prove candidate metrics.
+- **Boundary:** no canary, deployment, routing, payment/order/D1/secret/Access/API/Meta/CAPI/customer or WhatsApp mutation.
+- **Next exact authorization:** provide the approved authenticated Cloudflare Key Figures session or equivalent official version-attributed telemetry access, then separately authorize one 10% canary.

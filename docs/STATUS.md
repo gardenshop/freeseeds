@@ -3413,3 +3413,10 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **Available checks:** authenticated Admin Orders and Conversations GETs were available. API health fetch from the Admin origin was unavailable due browser cross-origin constraints; protected Admin `/health` remains unverified.
 - **Routing/protection:** Admin remains `3e4b7c26`100% / `ce023b54`0%; API unchanged `b426ba47`100% / `d683ec45`0%. No production or customer mutation occurred.
 - **Blocker:** existing Cloudflare dashboard session was unavailable and Wrangler auth could not refresh; no alternate credential or bypass was used.
+
+## GFS-COD-MO-30 — monitoring restoration blocked (2026-11-05 PKT)
+
+- Reviewed the GFS-14 Key Figures/version-separated monitoring procedure. The required authenticated Cloudflare dashboard page is not present in the existing Chrome session.
+- Wrangler authorization could not refresh because the Cloudflare auth server was unreachable. No credential/token workaround or Access change was attempted.
+- Orders/Conversations GETs remain available; API-origin health is blocked from the Admin browser by CORS, and protected Admin `/health` remains unverified.
+- No canary or monitoring repair occurred. Admin remains `3e4b7c26`100% / `ce023b54`0%; API remains unchanged.

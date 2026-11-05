@@ -2372,3 +2372,10 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - Authenticated Admin Orders and Conversations GET checks were available; API health fetch from the Admin origin was unavailable due cross-origin/browser constraints. These alternative checks do not replace the canary-specific monitoring requirement.
 - **No canary was started.** Admin remains `3e4b7c26`100% / `ce023b54`0%; API remains `b426ba47`100% / `d683ec45`0%. No deployment, routing, payment/order/D1, secret, Access, API/Meta/CAPI, WhatsApp or customer mutation occurred.
 - Do not retry the canary until official candidate-specific monitoring and rollback observation are available through the approved session.
+
+## GFS-COD-MO-30 — monitoring restoration remains blocked (2026-11-05 PKT)
+
+- GFS-14 procedure was reviewed. It requires the authenticated Cloudflare Admin Worker Key Figures/version-separated view with fresh timestamps and candidate attribution; aggregate dashboard cards and stale shell data are not sufficient.
+- The existing authenticated Chrome pages do not include the Cloudflare dashboard/Key Figures page. Wrangler’s stored authorization cannot refresh because the Cloudflare auth server is unreachable. No credential copy, token creation, bypass, Access change or alternate identity was attempted.
+- Safe Admin Orders and Conversations GET checks remain available. Direct API-origin health is not available from the Admin browser due cross-origin constraints; protected Admin `/health` HTTP200 remains unverified.
+- Candidate remains0% and baseline100%; no monitoring repair, deployment, canary, routing, D1, order/payment, secret, API/Meta/CAPI, WhatsApp or customer mutation occurred. Do not authorize a canary until the approved Key Figures route or equivalent official version-attributed telemetry is restored.

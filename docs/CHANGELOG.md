@@ -2322,3 +2322,8 @@
 
 - Canary stopped at preflight because fresh candidate-specific Cloudflare telemetry and rollback monitoring were unavailable. No 90/10 routing change occurred.
 - Preserved Admin100%/0%, API100%/0%, payment/D1/WhatsApp/Access protections and all no-mutation boundaries.
+
+## 2026-11-05 — GFS-COD-MO-30
+
+- Reviewed the GFS-14 monitoring procedure; official candidate-specific Key Figures telemetry remained unavailable because the dashboard session was absent and Wrangler auth could not refresh.
+- Kept canary at 0% and preserved Admin/API routing and all production protections. No monitoring repair or production mutation occurred.

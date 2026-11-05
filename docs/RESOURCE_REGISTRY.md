@@ -2578,3 +2578,9 @@ No secrets are stored in this registry.
 - Monitoring resource: no fresh official candidate-specific Cloudflare metric/log resource was available in the existing session; Wrangler auth refresh was unavailable. No alternate credential or token resource was created.
 - Read-only health resources: authenticated Admin Orders and Conversations available; API health from the Admin browser origin was blocked by cross-origin constraints; protected Admin `/health` remains unverified.
 - Routing resource: preserved Admin `3e4b7c26`100% / `ce023b54`0% and API `b426ba47`100% / `d683ec45`0%. No canary deployment resource exists for this task.
+
+## GFS-COD-MO-30 monitoring resources (2026-11-05 PKT)
+
+- Required GFS-14 resource: authenticated Cloudflare Admin Worker Key Figures/version-separated metrics page. Not available in the existing Chrome session; no substitute metric resource was accepted.
+- Wrangler resource: stored authorization could not refresh because the Cloudflare auth server was unreachable. No token/credential resource was created or exposed.
+- Protected read resources: Admin Orders/Conversations available; API-origin health unavailable from Admin browser due CORS; protected Admin `/health` remains unverified. Current configured routing is retained from prior authoritative readback only.

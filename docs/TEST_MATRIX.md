@@ -4020,3 +4020,14 @@ Investigation query costs only (not production savings): representative `rows_re
 | 90/10 canary | NOT RUN | Fail-closed before routing mutation |
 | Baseline routing | PASS | Admin100%/0%; API100%/0% preserved |
 | Production mutation protection | PASS | No deployment, traffic, POST, payment/order/D1 or customer action |
+
+## GFS-COD-MO-30 monitoring restoration (2026-11-05 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| GFS-14 procedure review | PASS | Key Figures/version-separated freshness requirements reviewed |
+| Official candidate metrics access | BLOCKED | Authenticated Cloudflare dashboard page unavailable |
+| Wrangler metrics access | BLOCKED | Stored authorization could not refresh |
+| Rollback observation readiness | BLOCKED | Candidate telemetry cannot be correlated |
+| Canary | NOT RUN | Fail-closed; candidate remains0% |
+| Routing/mutation protection | PASS | Admin100%/0%; API unchanged; no production writes |

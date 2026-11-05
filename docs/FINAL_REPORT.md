@@ -7191,3 +7191,16 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 9. **Docs/Git:** rules, status, plan, decisions, test matrix, resource registry, changelog and report updated; commit/push SHA follows.
 10. **Stages:** source/migration/preview100%; candidate upload/0% attachment100%; canary0% (blocked); permanent promotion0%; real settlement0%.
 11. **One next action:** restore official candidate-specific telemetry and rollback observation, then separately authorize one canary retry.
+
+## GFS-COD-MO-30 final report — 2026-11-05 PKT
+
+1. **MO-29 comparison:** prior canary block confirmed; no new exposure attempted.
+2. **Monitoring access:** **BLOCKED**. GFS-14 requires authenticated Cloudflare Key Figures/version-separated data, unavailable in the existing browser session.
+3. **Candidate metrics:** invocations, errors, CPU and 5xx were not freshly available; no missing data was treated as zero.
+4. **Freshness/attribution:** not proven. Wrangler auth could not refresh because the Cloudflare auth server was unreachable.
+5. **Rollback readiness:** **BLOCKED for canary observation**; no deployment or rollback action performed. Existing baseline remains untouched.
+6. **Regression:** Admin Orders/Conversations GETs remain available. Protected Admin `/health` HTTP200 and direct API health remain unverified in this path; no payment, D1, WhatsApp, API, Meta or CAPI mutation occurred.
+7. **Repairs/tests:** no local monitoring defect repair; prior focused38/38, full385/1, build/lint PASS retained.
+8. **Docs/Git:** rules, status, plan, decisions, test matrix, resource registry, changelog and report updated; commit/push SHA follows.
+9. **Stages:** preview/upload100%; monitoring restoration0% (blocked); canary0%; promotion0%; settlement0%.
+10. **One next action:** restore approved official candidate-attributed Cloudflare telemetry/Key Figures access, then separately authorize one 10% canary.

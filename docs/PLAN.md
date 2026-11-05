@@ -341,3 +341,7 @@ Candidate attribution is now PASS through the corrected quoted header and candid
 ## GFS-COD-MO-29
 
 Do not run the canary. Monitoring preflight is BLOCKED because fresh candidate-specific Cloudflare telemetry and rollback observation cannot be proven. Preserve Admin100%/0% and API100%/0% until the approved monitoring session is restored.
+
+## GFS-COD-MO-30
+
+Monitoring restoration is BLOCKED at access/session readiness. Restore the approved Cloudflare Key Figures/version-separated route or equivalent official candidate-attributed telemetry before requesting a canary. No routing change is permitted.
