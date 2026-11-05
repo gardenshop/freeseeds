@@ -4063,3 +4063,13 @@ Investigation query costs only (not production savings): representative `rows_re
 | Worker Editor/deployment identity | BLOCKED | Wrangler OAuth expired/unreachable; dashboard control not safely executable |
 | Rollback readback | BLOCKED | No authorized deployment operation performed or independently read back |
 | Canary retry | NOT RUN | Fail-closed; routing remains 100% / 0% |
+
+## GFS-COD-MO-34 access repair (2026-11-05 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Account ID | PASS | Authoritative account dashboard confirms `cb5066a6d71ecdee0bd7ed8aacb4d3c2` |
+| Narrow deployment token creation | BLOCKED | Custom permission control rejected by safety gate; no token created |
+| Broad token substitution | REJECTED | Workers template not used because it exceeds requested scope |
+| Secure bridge/live tail | BLOCKED | No callable Worker Editor bridge; Workers Logs disabled; Wrangler OAuth unavailable |
+| Canary | NOT RUN | No fresh logs or rollback authority |

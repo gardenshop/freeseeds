@@ -7243,3 +7243,17 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 8. **Tests/repairs:** no source defect or repair; prior focused 38/38, full 385 passed/1 skipped and build/lint PASS retained.
 9. **Stages:** source/migration/preview/upload100%; monitoring freshness partial; deployment permission0% blocked; canary0%; promotion0%; settlement0%; CAPI0%.
 10. **One next MO-specific action:** provide a supported Worker Editor/deployment identity and fresh version-filtered telemetry, then reauthorize one bounded canary.
+
+## GFS-COD-MO-34 final report — 2026-11-05 PKT
+
+1. **MO-33 comparison:** account mismatch resolved; deployment-access repair attempted without repeating OAuth or using unsafe credentials.
+2. **Actual account:** `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+3. **Deployment token:** requested `GFS-Admin-Deploy-2026` was not created. The narrow custom-permission control was blocked; broader Workers permissions were not substituted.
+4. **Secure bridge:** BLOCKED. No callable approved Worker Editor credential bridge or supported secret injection path is available.
+5. **Fresh live logs:** BLOCKED. Workers Logs disabled; Wrangler OAuth unavailable; no fresh version-filtered tail.
+6. **Rollback/canary:** BLOCKED / NOT RUN. Admin remains `3e4b7c26`100% / `ce023b54`0%; API unchanged.
+7. **MO evidence:** no genuine delivery/tracking/remittance source available; no settlement or order mutation.
+8. **Regression/tests:** no production mutation; prior focused 38/38, full 385 passed/1 skipped and build/lint PASS retained.
+9. **Git:** documentation-only update follows; no credentials, PII or secrets recorded.
+10. **Stages:** account identity100%; candidate preview/migration100%; deployment access0% blocked; fresh monitoring0% blocked; canary0%; promotion0%; settlement0%; CAPI0%.
+11. **One next MO-specific action:** obtain an approved supported path for the exact narrow Worker Editor token/bridge, then verify fresh candidate logs and rollback readback.

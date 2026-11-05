@@ -2342,3 +2342,8 @@
 
 - Reconciled Cloudflare account/Worker identity and confirmed current Admin 100%/0% routing.
 - Did not retry the canary because fresh candidate telemetry and a usable Worker Editor/rollback identity remain unavailable. No production mutation occurred.
+
+## 2026-11-05 — GFS-COD-MO-34
+
+- Corrected the documented Cloudflare account ID from the authoritative account selector.
+- Attempted only the requested narrow account-owned deployment-token setup; no token was created because the safe custom-permission control was unavailable. No broader token or production mutation was used.

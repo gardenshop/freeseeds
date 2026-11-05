@@ -2401,3 +2401,10 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - Existing Analytics-read monitoring token remains read-only and must not be used for deployment writes. Key Figures still show historical candidate metrics, but no fresh post-probe increment; Workers Logs are disabled. No alternate version-filtered live-log path is available in this session.
 - Existing deployment identity is not usable for this run: Wrangler OAuth is expired/unreachable, and dashboard traffic control could not be safely invoked through MCP. Therefore rollback execution/readback is not proven and the 90/10 canary was not retried.
 - No source, deployment, traffic, payment/order/D1, Access, secret, API/Meta/CAPI, WhatsApp or customer mutation occurred. API health and Admin read-only checks remain available; protected Admin `/health` HTTP200 remains unverified.
+
+## GFS-COD-MO-34 — account identity fixed; deployment token blocked (2026-11-05 PKT)
+
+- Authoritative account selector/dashboard confirmed `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; the earlier `cb5066a6c71...` value was a documentation typo and must not be used.
+- The account-owned API-token page is available. The requested token name `GFS-Admin-Deploy-2026` was entered, but the narrow custom-permission control could not be safely activated by the approved browser tool. The broader Workers template was not substituted; no deployment token was created and no secret was displayed, copied or logged.
+- Existing Analytics-read token remains read-only. No approved Worker Editor bridge or callable host-side credential injection path is available. Do not use the Analytics token for writes, bypass OAuth, or extract credentials.
+- Fresh live tail and rollback authorization remain BLOCKED; Workers Logs are disabled and Wrangler OAuth is expired/unreachable. No canary, deployment, traffic, payment/order/D1, Access, secret, API/Meta/CAPI, WhatsApp or customer mutation occurred.

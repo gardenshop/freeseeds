@@ -2603,3 +2603,9 @@ No secrets are stored in this registry.
 - Identity resource: authoritative Cloudflare dashboard account path matched `cb5066a6c71ecdee0bd7ed8aacb4d3c2` and Worker `getfreeseeds-admin-staging`; current configured routing is Admin baseline100% / candidate0%.
 - Monitoring resource: Key Figures historical version metrics remain visible; no fresh post-probe increment and Workers Logs are disabled. No alternate live-log resource was registered.
 - Deployment resource: no usable Worker Editor identity. Wrangler OAuth is expired/unreachable; no dashboard traffic mutation or rollback resource was created.
+
+## GFS-COD-MO-34 access resources (2026-11-05 PKT)
+
+- Identity resource: account-owned API-token page under verified account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- Token resource: no `GFS-Admin-Deploy-2026` token was created; no secret value or token resource was registered. Existing Analytics-read token remains read-only.
+- Bridge resource: no callable approved Worker Editor credential bridge or live-tail resource; no deployment/canary resource exists.

@@ -3438,3 +3438,9 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Cloudflare dashboard account/Worker identity was authoritative and matched the baseline; no account-ID discrepancy was found. Admin remains `3e4b7c26`100% / `ce023b54`0%.
 - Key Figures remain historical rather than fresh after the prior probe; Workers Logs are disabled. Wrangler OAuth remains expired/unreachable, and no safely executable dashboard deployment-control path was available.
 - **Canary:** NOT RUN and no retry attempted. No production mutation occurred; API/Admin read-only health evidence remains available and protected Admin `/health` remains unverified.
+
+## GFS-COD-MO-34 — deployment access blocked; no canary (2026-11-05 PKT)
+
+- Account identity corrected to `cb5066a6d71ecdee0bd7ed8aacb4d3c2` from the authoritative dashboard.
+- Account-owned token page was reached and the requested name entered, but the narrow custom-permission control was blocked by the approved tool safety gate. No token was created or exposed; the broader Workers template was rejected.
+- No Worker Editor bridge, fresh live tail, rollback access or canary is available. Routing and all production protections remain unchanged.

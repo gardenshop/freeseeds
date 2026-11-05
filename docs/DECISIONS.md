@@ -2682,3 +2682,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Evidence:** authoritative dashboard identity matches account/Worker and 100%/0% routing; Key Figures are historical, Workers Logs are disabled, Wrangler OAuth is expired/unreachable, and dashboard traffic control is not safely executable in this session.
 - **Boundary:** Analytics-read token remains read-only; no traffic, deployment, payment/order/D1, Access, secret, API/Meta/CAPI, WhatsApp or customer mutation.
 - **Next exact action:** provide a supported Worker Editor/deployment identity and fresh version-filtered telemetry, then separately reauthorize one bounded canary.
+
+## GFS-COD-MO-34 - reject broad token and stop (2026-11-05 PKT)
+
+- **Decision:** do not create or use a broader Workers token; no canary.
+- **Evidence:** authoritative account ID is `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; requested account-token form was reached, but narrow custom permission activation was blocked by the safe browser control. No secret was displayed or handled.
+- **Boundary:** Analytics-read token remains read-only; no deployment, live tail, traffic, rollback, payment/order/D1, Access, API/Meta/CAPI, WhatsApp or customer mutation.
+- **Next exact action:** obtain an approved supported path for the exact narrow Worker Editor token/bridge, then verify fresh candidate logs and rollback readback.

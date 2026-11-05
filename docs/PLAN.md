@@ -357,3 +357,7 @@ Official Key Figures access is partially restored, but the candidate probe was n
 ## GFS-COD-MO-33
 
 No additional canary attempt is permitted. Account identity is reconciled, but fresh version telemetry and Worker Editor/rollback access remain blocked. Restore one supported deployment-control identity and fresh version-filtered observation before any positive traffic.
+
+## GFS-COD-MO-34
+
+Account identity is corrected. Do not create an overbroad token or use Analytics-read credentials for writes. Obtain a supported narrow account-owned Worker Editor token/bridge through an approved control, then verify fresh live-tail attribution and rollback before any canary.
