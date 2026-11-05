@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-25 one-time migration preflight exception (2026-11-05 PKT)
+
+- **Owner-authorized one-time decision:** for this additive migration 0048 execution only, fresh authenticated Admin functional GETs, fresh API `/health` readiness, official routing, D1 integrity and recovery readiness replace the unavailable protected Admin Service Auth `/health` HTTP200 criterion. This does not bypass or modify Cloudflare Access, and the protected `/health` 200 remains explicitly unverified.
+- Fresh alternative evidence passed: Admin Orders page-load GET HTTP200, Conversations HTTP200, payment methods HTTP200, COD configuration HTTP200; API `/health` HTTP200 with `ok=true`, `state=PRODUCTION_INTEGRATION_READY`, WhatsApp enabled; Admin `3e4b7c26`100%, API `b426ba47`100% / `d683ec45`0%; D1 `0047` exactly once, `0048` absent, no partial objects, zero-write readback, and Time Travel bookmark obtained.
+- This exception authorizes only one targeted execution of `migrations/0048_historical_cod_mo.sql`. No other migration, deployment, routing, credential, payment, order, Meta, CAPI or Access action is included. Preserve the normal Service Auth procedure for all future release gates.
+
 ## GFS-COD-MO-24 health bridge access boundary (2026-11-05 PKT)
 
 - The approved bridge remains unavailable from this session. Chrome DevTools MCP exposes the existing authenticated browser pages, but no callable desktop/host bridge invocation is exposed. A system-session `AdminService` process is visible only by name/PID and has no accessible approved invocation interface; do not impersonate, elevate, or invoke it blindly.
