@@ -1,5 +1,13 @@
 # Status
 
+## GFS-COD-MO-16 permanent promotion preflight (2026-11-05 PKT)
+
+**Disposition: NO-GO / baseline identity mismatch; no production mutation.**
+
+- Read-only identity matched `gisupp@gmail.com` and account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Git HEAD remains `633d6cd9ba707489c3347e105c5072e4c86983bf`.
+- Actual Admin routing is deployment `ed9754ad-da6e-406c-aea3-d0bd86960ce8`, `e8c96c96`100% / `3e4b7c26`0%. Authorization expected `92c81e60`100% / `3e4b7c26`0%.
+- API remains `b426ba47`100% / `d683ec45`0%. No promotion or 15-minute monitoring occurred. Existing source/test evidence remains retained; no rerun was needed.
+
 ## GFS-COD-MO-15 final 10% canary and rollback (2026-11-05 PKT)
 
 **Disposition: technical canary PASS; baseline restored; permanent promotion not performed.**

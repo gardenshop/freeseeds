@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-05 - GFS-COD-MO-16 promotion preflight blocked
+
+- Stopped before permanent Admin promotion because live routing used `e8c96c96`100% / candidate`3e4b7c26`0%, while the authorization named `92c81e60` as the stable100% baseline. API remained unchanged; no production mutation occurred.
+
 ## 2026-11-05 - GFS-COD-MO-15 final 10% Admin canary
 
 - Ran the authorized Admin-only 90%/10% canary for219.45 seconds with fresh candidate telemetry15→18 invocations and0 errors; ordinary GET checks were healthy and two selected the candidate MO UI.

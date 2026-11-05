@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-COD-MO-16 permanent promotion preflight (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Account/operator/Git | PASS | Frozen Cloudflare account/operator matched; HEAD `633d6cd9ba707489c3347e105c5072e4c86983bf`. |
+| Admin baseline identity | BLOCKED | Actual deployment `ed9754ad...` is `e8c96c96`100% / candidate`3e4b7c26`0%; authorization expected `92c81e60`100%. |
+| API routing | PASS | `b426ba47`100% / `d683ec45`0%. |
+| Promotion | NOT RUN | Stopped before mutation due baseline mismatch. |
+| 15-minute monitoring | NOT RUN | No promotion occurred. |
+| Data/payment safety | PASS | No D1, payment, order, secret, source or customer mutation. |
+
 ## GFS-COD-MO-15 final 10% canary (2026-11-05 PKT)
 
 | Gate | Result | Evidence |

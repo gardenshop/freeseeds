@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-16 promotion preflight blocker (2026-11-05 PKT)
+
+- **NO-GO before mutation:** the live Admin deployment is `ed9754ad-da6e-406c-aea3-d0bd86960ce8`, routing `e8c96c96` 100% / `3e4b7c26` 0%. This does not match the GFS-COD-MO-16 frozen baseline naming `92c81e60` 100%.
+- API readback remains unchanged at `b426ba47` 100% / `d683ec45` 0%. The candidate was not promoted, no routing was changed, and no monitoring window started.
+- Do not silently replace the live baseline or reinterpret the rollback target. Require one explicit authorization either to establish `92c81e60` as the 100% baseline with candidate 0%, or to promote from the actual `e8c96c96` baseline with that exact rollback target.
+
 ## GFS-COD-MO-15 final 10% canary and rollback (2026-11-05 PKT)
 
 - Authorized Admin-only canary deployment `61708672-1d37-4784-b7a3-bc74801c723a` ran baseline `e8c96c96` 90% / candidate `3e4b7c26` 10% from `07:04:15Z` to mandatory rollback at `07:07:54Z` (219.45 seconds). No non-versioned settings were synchronized.

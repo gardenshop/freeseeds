@@ -1,5 +1,19 @@
 # Final Report
 
+## GFS-COD-MO-16 permanent Admin promotion preflight (2026-11-05 PKT)
+
+1. **Previous task:** GFS-COD-MO-15 technical 10% canary and rollback PASS; current live rollback baseline is `e8c96c96`.
+2. **GO/NO-GO:** **NO-GO before mutation** because the authorized stable baseline is `92c81e60`, but actual Admin routing is `e8c96c96`100% / candidate`3e4b7c26`0%.
+3. **Deployment/routing:** actual Admin deployment `ed9754ad-da6e-406c-aea3-d0bd86960ce8`; API remains `b426ba47`100% / `d683ec45`0%.
+4. **MO UI/monitoring:** not retested and no 15-minute promotion monitoring started; no traffic was changed.
+5. **Security/payment:** no promotion, payment/order/MO action, D1 change, secret change or customer message occurred.
+6. **Rollback:** safe actual rollback remains `e8c96c96`100% / `3e4b7c26`0%; the requested `92c81e60` rollback identity was not assumed.
+7. **Defects/tests:** no source defect; retained379 passed/1 skipped and build/lint PASS without rerun.
+8. **Documentation/Git:** this blocker is recorded in rules, plan, status, decisions, test matrix, changelog and report.
+9. **Stages:** source/UI100%; candidate100%; monitoring100%; 10% canary100%; rollback100%; permanent promotion0%; genuine MO settlement0%.
+10. **One next action:** authorize the exact baseline resolution—restore `92c81e60` to100% first, or reauthorize promotion from actual `e8c96c96` with its exact rollback target.
+
+
 ## GFS-COD-MO-15 final 10% Admin canary (2026-11-05 PKT)
 
 1. **Previous task:** GFS-COD-MO-14 restored reliable version-separated monitoring; this task used it for one authorized canary and did not repeat UI development.

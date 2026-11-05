@@ -2564,3 +2564,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Protection:** API routing stayed `b426ba47`100% / `d683ec45`0%; API health/WhatsApp enabled, Advance3/3, COD PKR125, D1 zero-write readback, Recovery ON and CAPI OFF all passed. HMAC/binding names remained present without value exposure.
 - **Boundary:** no real MO/PAID action, D1 restore, payment/order/customer-message, API/Meta/CAPI or source mutation occurred. One invalid read-only aggregate table name was corrected; it was not an application defect.
 - **Next exact authorization:** one explicit permanent Admin promotion decision, retaining the baseline rollback target and separately acknowledging that genuine MO settlement remains unvalidated.
+## GFS-COD-MO-16 - stop on Admin baseline mismatch (2026-11-05 PKT)
+
+- **Decision:** NO-GO and stop before promotion. Do not change routing to reconcile an authorization mismatch.
+- **Evidence:** official readback shows Admin deployment `ed9754ad-da6e-406c-aea3-d0bd86960ce8`, `e8c96c96`100% / candidate `3e4b7c26`0%; the task names `92c81e60` as the stable100% baseline. API remains unchanged at `b426ba47`100% / `d683ec45`0%.
+- **Boundary:** no Worker deployment, traffic change, source, D1, payment, secret, API, Meta, CAPI or customer mutation occurred.
+- **Next exact authorization:** explicitly resolve whether `92c81e60` must first be restored to100% or whether promotion should proceed from actual baseline `e8c96c96`, including the exact rollback target.
