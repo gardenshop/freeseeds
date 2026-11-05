@@ -345,3 +345,7 @@ Do not run the canary. Monitoring preflight is BLOCKED because fresh candidate-s
 ## GFS-COD-MO-30
 
 Monitoring restoration is BLOCKED at access/session readiness. Restore the approved Cloudflare Key Figures/version-separated route or equivalent official candidate-attributed telemetry before requesting a canary. No routing change is permitted.
+
+## GFS-COD-MO-31
+
+The approved alternative P0 checks are complete: fresh API health, Admin Orders/Conversations and privacy-safe funnel/reminder aggregates were read. Candidate-specific telemetry is still unavailable, so no canary or traffic change is permitted. Next executable task is business review of the aggregate funnel/reminder evidence; telemetry restoration remains a separate prerequisite for any canary.

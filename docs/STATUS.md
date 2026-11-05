@@ -3420,3 +3420,9 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Wrangler authorization could not refresh because the Cloudflare auth server was unreachable. No credential/token workaround or Access change was attempted.
 - Orders/Conversations GETs remain available; API-origin health is blocked from the Admin browser by CORS, and protected Admin `/health` remains unverified.
 - No canary or monitoring repair occurred. Admin remains `3e4b7c26`100% / `ce023b54`0%; API remains unchanged.
+
+## GFS-COD-MO-31 — alternate P0 evidence; canary not run (2026-11-05 PKT)
+
+- Fresh API-origin `/health` returned HTTP200, `PRODUCTION_INTEGRATION_READY`, `ok=true`, with WhatsApp enabled. Admin Orders and Conversations GETs returned HTTP200.
+- Privacy-safe Analytics read: UTC 2026-10-30–2026-11-05; inbound 20,197; snapshot unique contacts 3,491; new conversations 3,392; submitted orders 599; submitted/inbound 2.97%; `ADVANCE_PENDING` 56 classification / 57 snapshot; COD confirmed 337; reminders +15 delivered/read 29/97 and +210 delivered/read 32/80.
+- Candidate telemetry remained unavailable, so the authorized 90/10 canary was NOT RUN. Admin/API routing stayed unchanged and no production mutation occurred. Protected Admin `/health` HTTP200 remains unverified.

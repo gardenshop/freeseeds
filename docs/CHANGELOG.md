@@ -2327,3 +2327,8 @@
 
 - Reviewed the GFS-14 monitoring procedure; official candidate-specific Key Figures telemetry remained unavailable because the dashboard session was absent and Wrangler auth could not refresh.
 - Kept canary at 0% and preserved Admin/API routing and all production protections. No monitoring repair or production mutation occurred.
+
+## 2026-11-05 — GFS-COD-MO-31
+
+- Recorded fresh read-only API health, Admin Orders/Conversations and privacy-safe Analytics funnel/reminder evidence under the approved alternative P0 path.
+- Kept the canary at 0% because candidate-specific Cloudflare telemetry remained unavailable; Admin/API routing and all WhatsApp/payment/D1 protections were unchanged.

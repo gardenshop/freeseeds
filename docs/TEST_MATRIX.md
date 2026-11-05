@@ -4031,3 +4031,14 @@ Investigation query costs only (not production savings): representative `rows_re
 | Rollback observation readiness | BLOCKED | Candidate telemetry cannot be correlated |
 | Canary | NOT RUN | Fail-closed; candidate remains0% |
 | Routing/mutation protection | PASS | Admin100%/0%; API unchanged; no production writes |
+
+## GFS-COD-MO-31 alternate P0 verification (2026-11-05 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Fresh API health alternative | PASS | API-origin `/health` HTTP200; ready state; WhatsApp enabled |
+| Admin Orders/Conversations | PASS | Authenticated read-only GETs HTTP200 |
+| Privacy-safe funnel/reminder read | PASS | Analytics window and aggregate counts read; no identifiers or sends |
+| Candidate-specific telemetry | BLOCKED | No official Key Figures, version-labelled logs or equivalent attribution |
+| 90/10 Admin canary | NOT RUN | Fail-closed; Admin baseline100% / candidate0% |
+| Production protection | PASS | No traffic, deployment, POST, payment/order/D1, Access, secret or customer mutation |

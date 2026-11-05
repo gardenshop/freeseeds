@@ -2661,3 +2661,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Evidence:** GFS-14 procedure requires authenticated Key Figures/version metrics. That dashboard page is unavailable in the existing browser session and Wrangler auth cannot refresh. Admin Orders/Conversations remain readable, but these do not prove candidate metrics.
 - **Boundary:** no canary, deployment, routing, payment/order/D1/secret/Access/API/Meta/CAPI/customer or WhatsApp mutation.
 - **Next exact authorization:** provide the approved authenticated Cloudflare Key Figures session or equivalent official version-attributed telemetry access, then separately authorize one 10% canary.
+
+## GFS-COD-MO-31 - retain no-canary state and record P0 evidence (2026-11-05 PKT)
+
+- **Decision:** use the explicitly permitted read-only alternative for P0 assessment, but do not start the canary because candidate telemetry remains unavailable.
+- **Evidence:** API-origin `/health` HTTP200 with ready state and WhatsApp enabled; Admin Orders/Conversations HTTP200; privacy-safe Analytics window and reminder aggregates recorded without identifiers.
+- **Boundary:** Admin `3e4b7c26`100% / `ce023b54`0%, API unchanged; no deployment, routing, payment/order/D1, Access, secret, API/Meta/CAPI, WhatsApp or customer mutation. Protected Admin `/health` HTTP200 remains unverified.
+- **Next exact action:** business review of the privacy-safe funnel/reminder aggregates; separately restore official candidate-attributed telemetry before any canary authorization.

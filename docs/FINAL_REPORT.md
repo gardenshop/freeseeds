@@ -7204,3 +7204,16 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 8. **Docs/Git:** rules, status, plan, decisions, test matrix, resource registry, changelog and report updated; commit/push SHA follows.
 9. **Stages:** preview/upload100%; monitoring restoration0% (blocked); canary0%; promotion0%; settlement0%.
 10. **One next action:** restore approved official candidate-attributed Cloudflare telemetry/Key Figures access, then separately authorize one 10% canary.
+
+## GFS-COD-MO-31 final report — 2026-11-05 PKT
+
+1. **MO-30 comparison:** failed dashboard/Wrangler monitoring paths were not repeated; approved read-only alternative P0 checks completed.
+2. **Monitoring:** **BLOCKED for canary**. Fresh API/Admin reads were available, but candidate-specific telemetry remained unavailable.
+3. **Candidate metrics:** invocations, errors, CPU, latency and version-labelled 5xx were not available; missing data was not treated as zero.
+4. **Canary:** **NOT RUN**. No exposure or deployment occurred; Admin stayed `3e4b7c26`100% / `ce023b54`0%, API stayed `b426ba47`100% / `d683ec45`0%.
+5. **P0 evidence:** API `/health` HTTP200 with `PRODUCTION_INTEGRATION_READY`, `ok=true`, WhatsApp enabled; Admin Orders/Conversations HTTP200; privacy-safe Analytics read for 2026-10-30–2026-11-05 UTC: inbound 20,197, snapshot unique contacts 3,491, new conversations 3,392, submitted orders 599, 2.97% submitted/inbound, `ADVANCE_PENDING` 56 classification / 57 snapshot, COD confirmed 337, and reminder +15 delivered/read 29/97, +210 delivered/read 32/80. Protected Admin `/health` HTTP200 remains unverified.
+6. **Protection:** no source, deployment, traffic, payment/order/D1, Access, secret, API/Meta/CAPI, WhatsApp or customer mutation; advance/COD routing remained protected.
+7. **Tests/repairs:** no source defect or repair; prior focused 38/38, full 385 passed/1 skipped and build/lint PASS retained.
+8. **Documentation/Git:** rules, status, plan, decisions, test matrix, resource registry, changelog and report updated for this evidence.
+9. **Stages:** source/migration/preview/upload100%; monitoring restoration0% blocked; canary0%; promotion0%; settlement0%.
+10. **One next executable task:** business review of the privacy-safe Analytics funnel/reminder aggregates; no release or payment action.

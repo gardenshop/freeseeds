@@ -2584,3 +2584,10 @@ No secrets are stored in this registry.
 - Required GFS-14 resource: authenticated Cloudflare Admin Worker Key Figures/version-separated metrics page. Not available in the existing Chrome session; no substitute metric resource was accepted.
 - Wrangler resource: stored authorization could not refresh because the Cloudflare auth server was unreachable. No token/credential resource was created or exposed.
 - Protected read resources: Admin Orders/Conversations available; API-origin health unavailable from Admin browser due CORS; protected Admin `/health` remains unverified. Current configured routing is retained from prior authoritative readback only.
+
+## GFS-COD-MO-31 alternate P0 resources (2026-11-05 PKT)
+
+- Fresh API resource: exact API-origin `/health` returned HTTP200, `ok=true`, `PRODUCTION_INTEGRATION_READY`, WhatsApp enabled.
+- Fresh Admin resources: authenticated Orders and Conversations GETs returned HTTP200. No customer identifiers were registered.
+- Analytics resource: privacy-safe aggregate window 2026-10-30–2026-11-05 UTC with funnel, payment-class and reminder aggregates; page states no sends, resends, payment changes or customer identifiers.
+- Candidate telemetry resource: absent. No Key Figures/version-labelled logs/equivalent candidate metrics resource was available; no canary resource exists. Routing remains Admin baseline100% / candidate0% and API100% / 0%.
