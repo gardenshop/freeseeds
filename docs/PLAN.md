@@ -381,3 +381,7 @@ Authorization is present, but secure secret delivery is still BLOCKED by the una
 ## GFS-COD-MO-39
 
 Host discovery remains BLOCKED: the available terminal is the sandbox identity and no approved host credential runner is callable. Do not implement an untrusted bridge or repeat Credential Manager lookup. The one required owner action is to provide a trusted host-side handler running under the same Wrangler identity, with allowlisted store/retrieve/delete operations and sanitized status only.
+
+## GFS-COD-MO-41
+
+Host execution and the disposable protected-credential test now PASS. Cloudflare token-management authority remains BLOCKED: the approved in-process credential received HTTP403 from the official permission-group endpoint. Do not guess permission IDs or create a token. Next exact action is owner authorization/provisioning of an identity with Account API Tokens Write and the same approved host receiver, then re-run only the permission metadata check.

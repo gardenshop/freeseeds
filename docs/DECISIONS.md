@@ -2719,3 +2719,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Decision:** stop before dummy or production credential operations. The available sandbox identity is not proven to be the approved Wrangler identity and no trusted handler is callable.
 - **Boundary:** no Credential Manager retry, unknown AdminService, elevation, impersonation, remote listener, secret creation or token provisioning.
 - **Next exact action:** owner provides one trusted host-side credential handler running under the same Wrangler identity and returning only sanitized store/retrieve/delete status.
+
+## GFS-COD-MO-41 — do not guess token authority or schema
+
+- **Decision:** accept host bridge and dummy test as PASS, but stop token provisioning on official HTTP403.
+- **Boundary:** no guessed permission IDs/resource formats, no broad token reuse, no token creation, deployment, routing, monitoring tail, payment/order/D1, API/Meta/CAPI or WhatsApp mutation.
+- **Next exact action:** owner provides an authorized identity with Account API Tokens Write, used through the already-passing host receiver; verify permission metadata before one restricted-token creation.

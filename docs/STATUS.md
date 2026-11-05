@@ -3474,3 +3474,9 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Available execution identity: `BI\\codexsandboxoffline` / `Nazim`. No approved host credential handler or local runner was discoverable.
 - Bridge: **BLOCKED**. No unknown service, elevation, impersonation or repeated Credential Manager lookup was used.
 - Token creation, telemetry, Wrangler authorization and rollback: **NOT ATTEMPTED/BLOCKED**. Production routing and protected systems remain unchanged.
+
+## GFS-COD-MO-41 — bridge PASS; token authority blocked (2026-11-05 PKT)
+
+- Host execution: **PASS** under `bi\\nazim`; dummy Credential Manager store/retrieve/compare/delete: **PASS**.
+- Cloudflare permission metadata: **HTTP403** from the official account permission-group endpoint using the in-process existing credential. Token-management authority is **BLOCKED**.
+- Restricted token: **NOT CREATED**. Monitoring, Wrangler authorization and rollback remain blocked. Admin/API routing and production systems remain unchanged.

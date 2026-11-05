@@ -4136,3 +4136,16 @@ Investigation query costs only (not production savings): representative `rows_re
 | Secret exposure | PASS | No credential or token value accessed/generated |
 | Token creation | NOT RUN | Secure receiver prerequisite failed |
 | Production mutation | PASS | No deployment, routing, payment, D1, API/Meta/CAPI or WhatsApp change |
+
+## GFS-COD-MO-41 host and token authority (2026-11-05 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Approved host execution | PASS | Elevated `whoami` returned `bi\\nazim` |
+| Dummy credential round-trip | PASS | Host-only store/retrieve/compare/delete returned sanitized PASS |
+| Secret exposure | PASS | No credential value returned or logged |
+| Cloudflare permission metadata | BLOCKED | Official endpoint returned HTTP403 |
+| Account API Tokens Write | UNVERIFIED | Existing in-process credential lacks proven permission/authority |
+| Restricted token | NOT CREATED | No schema guessing or unsafe fallback |
+| Monitoring/rollback | BLOCKED | No scoped deployment credential |
+| Production mutation | PASS | No deployment, routing, payment, D1, API/Meta/CAPI or WhatsApp change |

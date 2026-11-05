@@ -2639,3 +2639,9 @@ No secrets are stored in this registry.
 - Execution context: `BI\\codexsandboxoffline` / `Nazim`; this is not proven to be the approved Wrangler host identity.
 - Approved bridge: none callable or discoverable in workspace; no remote listener or unknown service was invoked.
 - Secret state: no dummy or production credential was created, accessed or stored.
+
+## GFS-COD-MO-41 host/token resources (2026-11-05 PKT)
+
+- Host runner: approved elevated process under `bi\\nazim`; output sanitized.
+- Credential handler: disposable in-memory round-trip PASS; no persistent production secret was read or written by the test.
+- Cloudflare authority: official `/accounts/{account}/tokens/permission_groups` request returned HTTP403 using the existing in-process credential; no token-management resource was registered and no create request was sent.

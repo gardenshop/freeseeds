@@ -2372,3 +2372,8 @@
 
 - Diagnosed host execution availability without repeating Credential Manager access: only the sandbox identity was available and no approved credential handler was callable.
 - Stopped before dummy credential and token operations; no production mutation occurred.
+
+## 2026-11-05 — GFS-COD-MO-41
+
+- Established approved elevated host execution and passed a disposable protected-credential round-trip without exposing values.
+- Official Cloudflare permission metadata returned HTTP403; stopped before token creation and production access changes.

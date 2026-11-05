@@ -7325,3 +7325,17 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 9. **Docs/Git:** evidence-only docs updated; no secrets, PII or customer/MO data recorded.
 10. **Stages:** source/migration/preview 100%; bridge/token/telemetry/rollback/canary/settlement/CAPI 0% blocked; protected production 100%.
 11. **One next MO action:** owner provides a trusted host-side credential handler under the same Wrangler identity, with sanitized store/retrieve/delete status only; then run the disposable dummy test before creating one restricted token.
+
+## GFS-COD-MO-41 final report — 2026-11-05 PKT
+
+1. **MO-40 comparison:** host execution is no longer blocked; token creation remains blocked at Cloudflare authority.
+2. **Host bridge:** **PASS**. Approved elevated host command ran as `bi\\nazim`.
+3. **Dummy credential:** **PASS**. Disposable host-only store/retrieve/internal compare/delete succeeded; only PASS was returned.
+4. **Restricted token:** **NOT CREATED**. No unsafe fallback or broad token reuse.
+5. **Cloudflare authority:** **BLOCKED**. Official permission-group metadata request returned HTTP403 using the existing in-process credential; Account API Tokens Write is not proven.
+6. **Wrangler/deployment:** **BLOCKED**. No scoped token or deployment readback.
+7. **Monitoring/rollback:** **BLOCKED**. No authorized candidate tail or rollback authority.
+8. **Zero regression:** no deployment, traffic, payment/order/D1, API/Meta/CAPI, WhatsApp or customer mutation. Admin remains `3e4b7c26`100% / `ce023b54`0%; API `b426ba47`100%. Existing tests retained: focused 38/38; full 385 passed/1 skipped; build/lint PASS.
+9. **Docs/Git:** evidence-only docs updated; no secrets, PII or customer/MO data.
+10. **Stages:** host bridge/dummy test 100%; source/migration/preview 100%; token/telemetry/rollback/canary/settlement/CAPI 0% blocked; protected production 100%.
+11. **One next MO action:** owner provides an identity with Account API Tokens Write through the already-passing host receiver, then verify permission metadata before creating one 24-hour Worker-only Editor token.
