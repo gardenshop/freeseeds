@@ -3392,3 +3392,10 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **Candidate:** immutable Admin `ce023b54-4d38-43e5-842e-faa706e7606c`/121, source `4da5631c72a6651e855c8d76c53f0595cc7f0a2d`, deployment `f632e4d2-0716-4f53-a861-110d26a0e3a9`, exactly baseline `3e4b7c26`100% / candidate0%. API unchanged `b426ba47`100% / `d683ec45`0%.
 - **Preview:** candidate Orders GET HTTP200; detail-page candidate preview is INCONCLUSIVE because the authenticated Access browser session redirected to sign-in. No credentials were retried and no write was issued. Candidate remains at 0%.
 - **Regression evidence:** focused38/38, full385/385 with one skip, build PASS, lint PASS. Migration0048 remains applied once; no D1/payment/WhatsApp/Meta/CAPI mutation occurred. Protected Admin `/health` HTTP200 remains unverified.
+
+## GFS-COD-MO-27 — candidate preview boundary (2026-11-05 PKT)
+
+- Existing authenticated Chrome session recovered normally on the Orders page. Orders and Conversations GETs returned HTTP200; no credentials or Access settings were changed.
+- COD_PENDING detail showed `MO Received`, original COD amount and read-only eligibility explanation. Across 887 live rows, no DELIVERED order and no eligible historical no-method/Advance order was present, so the eligible form was not opened or fabricated.
+- Candidate override GETs remained read-only but version attribution was not independently exposed; candidate-specific detail acceptance is **INCONCLUSIVE**. Routing remains Admin `3e4b7c26`100% / `ce023b54`0%; API unchanged.
+- No payment/order/D1/WhatsApp/Meta/CAPI mutation occurred. Protected Admin `/health` HTTP200 and English dashboard preference remain unverified.

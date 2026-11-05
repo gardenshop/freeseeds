@@ -2633,3 +2633,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Evidence:** candidate `ce023b54-4d38-43e5-842e-faa706e7606c`/121 from source `4da5631c72a6651e855c8d76c53f0595cc7f0a2d`; deployment `f632e4d2-0716-4f53-a861-110d26a0e3a9`; Admin `3e4b7c26`100% / candidate0%; API unchanged. Candidate Orders GET was HTTP200. Local focused/full tests and build/lint passed.
 - **Limitations:** normal Cloudflare profile-language save returned403, so English is not verified. Candidate detail navigation hit the Access sign-in gate; authenticated historical MO detail acceptance is INCONCLUSIVE. No auth retry, bypass, write, customer action or payment action occurred.
 - **Next exact authorization:** one approved authenticated candidate detail GET/preview plus monitoring-backed bounded canary; permanent promotion and real settlement remain separately gated.
+
+## GFS-COD-MO-27 - preview remains gated (2026-11-05 PKT)
+
+- **Decision:** retain Admin baseline `3e4b7c26` at100% and candidate `ce023b54` at0%; no canary, promotion or settlement.
+- **Evidence:** existing approved browser session returned Orders and Conversations HTTP200. COD_PENDING detail showed the read-only MO panel and exact COD amount. Sanitized full-dataset read found 887 orders, zero DELIVERED, zero eligible historical no-method and zero eligible historical Advance records.
+- **Limitations:** candidate override produced safe GET output but no independently exposed version marker; candidate detail acceptance is INCONCLUSIVE. No synthetic delivery/tracking state, auth retry, credential change, POST or payment mutation was attempted.
+- **Next exact authorization:** obtain one supported version-attributed authenticated candidate detail GET on a genuine eligible record; do not authorize positive traffic before that evidence.

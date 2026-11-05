@@ -3984,3 +3984,14 @@ Investigation query costs only (not production savings): representative `rows_re
 | Candidate detail historical MO preview | INCONCLUSIVE | Access session redirected to sign-in; no credential retry/bypass |
 | English dashboard language | NOT PASS | Normal UI save returned HTTP403; German remained selected |
 | Production mutation protection | PASS | No positive traffic, POST, D1/payment/order/secret/API/Meta/CAPI change |
+
+## GFS-COD-MO-27 authenticated preview (2026-11-05 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Existing approved session reuse | PASS | Orders and Conversations authenticated GET HTTP200; no credential action |
+| COD_PENDING read-only MO UI | PASS | Original COD amount, status and ineligible explanation visible |
+| Genuine eligible historical record | BLOCKED | 887 live rows scanned; zero DELIVERED/tracked eligible records |
+| Historical no-method/Advance form | INCONCLUSIVE | No genuine eligible order available; no state fabricated |
+| Candidate version attribution | INCONCLUSIVE | Override GET safe, but response exposed no version marker |
+| POST/payment/D1 mutation protection | PASS | No POST, settlement, status, order or D1 write |

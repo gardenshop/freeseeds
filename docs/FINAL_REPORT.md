@@ -7150,3 +7150,17 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 10. **Documentation/Git:** rules, status, plan, decisions, test matrix, resource registry, changelog and this report updated; commit/push SHA follows.
 11. **Stages:** source/migration/local verification 100%; candidate upload/0% attachment 100%; candidate authenticated detail acceptance 0% complete (blocked); controlled canary and permanent promotion 0%; real MO settlement separately authorized/unvalidated.
 12. **One next action:** authorize one authenticated candidate detail GET/preview and bounded monitoring-backed Admin canary; do not promote or perform real settlement under this record.
+
+## GFS-COD-MO-27 final report — 2026-11-05 PKT
+
+1. **MO-26 comparison:** existing approved session was reused; candidate remains attached at0%; no deployment, migration or payment action occurred.
+2. **Access redirect cause:** the prior redirect was session/path state, not an Access bypass opportunity. The existing session subsequently served the Orders page normally; no credential retry or policy change was used.
+3. **Authenticated detail preview:** **INCONCLUSIVE** for candidate attribution and eligible historical settlement. Orders/Conversations GETs passed.
+4. **Order types:** COD_PENDING read-only MO panel passed with original amount and eligibility explanation. No DELIVERED/tracked historical no-method or Advance record existed among 887 rows; eligible form was not fabricated. Normal COD controls remained visible.
+5. **Routing:** Admin `3e4b7c26`100% / `ce023b54`0%; API unchanged `b426ba47`100% / `d683ec45`0%.
+6. **English:** remains NOT PASS/UNVERIFIED; prior normal UI save returned403 and was not retried.
+7. **Tests:** prior focused38/38, full385 passed/1 skipped, build/lint PASS; no source defect or repair identified.
+8. **Protection:** no POST, order/payment/D1 mutation, WhatsApp message, API/Meta/CAPI change or secret/Access change. Migration0048 remains previously verified applied once; protected Admin `/health`200 remains unverified.
+9. **Documentation/Git:** rules, status, plan, decisions, test matrix, resource registry, changelog and report updated; commit/push SHA follows.
+10. **Stages:** migration/local verification100%; candidate upload/0% attachment100%; authenticated COD read-only preview100%; version-attributed eligible historical preview0% (blocked); canary/promotion0%; real settlement0%.
+11. **One next action:** authorize one supported version-attributed authenticated candidate detail GET on a genuine eligible record; no positive traffic or settlement until PASS.

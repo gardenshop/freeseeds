@@ -2306,3 +2306,9 @@
 - Attempted the normal Cloudflare profile-language change; English did not persist because the normal save request returned HTTP403. No workaround was used.
 - Uploaded and attached one immutable Admin historical-COD candidate at 0% with preserved configuration: `ce023b54-4d38-43e5-842e-faa706e7606c`, deployment `f632e4d2-0716-4f53-a861-110d26a0e3a9`.
 - Candidate Orders GET passed; detail preview remained INCONCLUSIVE after Access sign-in redirection. No positive traffic or production mutation occurred. Focused38/38, full385/385 with one skip, build/lint PASS.
+
+## 2026-11-05 — GFS-COD-MO-27
+
+- Reused the existing approved Admin browser session without credential or Access changes. Orders and Conversations GETs returned HTTP200.
+- Verified COD_PENDING read-only MO panel and exact amount. No genuine DELIVERED/tracked eligible historical order existed in the 887-row read, so no historical form or settlement path was opened.
+- Candidate version attribution remained INCONCLUSIVE because the override response exposed no version marker. Routing stayed baseline100% / candidate0%; no mutation occurred.

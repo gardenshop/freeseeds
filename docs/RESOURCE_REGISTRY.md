@@ -2560,3 +2560,9 @@ No secrets are stored in this registry.
 - Candidate: Admin version `ce023b54-4d38-43e5-842e-faa706e7606c`/121, source HEAD `4da5631c72a6651e855c8d76c53f0595cc7f0a2d`, tag `gfs-cod-mo-26-4da5631`; deployment `f632e4d2-0716-4f53-a861-110d26a0e3a9`; configured 100% baseline `3e4b7c26` / 0% candidate.
 - API resource unchanged: deployment `9b459a09-a7a5-404d-9302-48292bd07783`, `b426ba47`100% / `d683ec45`0%. Candidate bindings/secret names were preserved without reading values.
 - Preview resource: authenticated candidate Orders GET HTTP200. Detail preview is not registered as PASS because Access redirected to sign-in; no credential or customer-data resource was captured. Temporary override headers were cleared.
+
+## GFS-COD-MO-27 preview resources (2026-11-05 PKT)
+
+- Existing approved browser resource was reused on the Admin hostname. Orders and Conversations GETs returned HTTP200; no credential material was read or transferred.
+- Sanitized Orders read covered 887 live rows: zero DELIVERED, zero eligible historical no-method and zero eligible historical Advance records. No customer identifiers or order IDs are registered.
+- COD_PENDING detail resource showed the read-only MO panel and exact original COD amount. Candidate override response had no version metadata; candidate attribution and eligible historical form acceptance remain INCONCLUSIVE.

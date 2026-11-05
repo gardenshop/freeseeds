@@ -329,3 +329,7 @@ No official Chrome UI was available. The connected read-only Meta tool returned 
 ## GFS-COD-MO-26
 
 The authorized 0% Admin candidate upload and attachment are complete. Candidate-specific Orders GET evidence is available, but detail UI preview is INCONCLUSIVE after the existing Access session redirected to sign-in; do not retry credentials or increase traffic. English dashboard language change also remains unverified/failed at the normal UI save boundary. Next action requires one separately authorized, authenticated candidate detail preview and bounded canary approval; no promotion is implied.
+
+## GFS-COD-MO-27
+
+The existing session was reused successfully, but the live dataset has no DELIVERED/tracked eligible historical record. COD_PENDING read-only MO UI passed; eligible historical form acceptance and candidate version attribution remain INCONCLUSIVE. Preserve Admin 100%/0% and request only version-attributed authenticated preview evidence before any canary authorization.
