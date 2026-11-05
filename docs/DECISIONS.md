@@ -2695,3 +2695,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Decision:** stop before canary. `GFS-Admin-Deploy-2026` is account-wide read-only metadata/content access, not Worker Editor, so it cannot authorize deployment or rollback.
 - **Boundary:** never use Analytics-read or read-only token credentials for writes; do not reuse the unrelated Individual Workers Editor token without verified Worker scope. No secret inspection, permission edit, deployment, traffic, payment/order/D1, Access, API/Meta/CAPI, WhatsApp or customer mutation occurred.
 - **Next exact action:** owner provisions the exact short-lived Worker-only Editor token and approved host bridge, then fresh version-filtered logs and rollback readback must pass before any bounded canary.
+
+## GFS-COD-MO-36 — reject broad Editor and isolated token (2026-11-05 PKT)
+
+- **Decision:** no canary. The named token is whole-account Editor and the existing Individual Workers Editor targets an isolated Worker; neither satisfies the exact production scope.
+- **Boundary:** policy-editor interaction was stopped by the approved safety gate before mutation. Do not use broad Editor, Analytics-read, or isolated-token credentials; do not retry blocked bridge lookup.
+- **Next exact action:** owner provisions/corrects a short-lived Individual Workers Editor token restricted to `getfreeseeds-admin-staging` and provides the approved host bridge, then fresh candidate telemetry and rollback readback must pass.

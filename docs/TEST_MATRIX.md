@@ -4086,3 +4086,17 @@ Investigation query costs only (not production savings): representative `rows_re
 | Fresh candidate tail | BLOCKED | Workers Logs disabled; Wrangler OAuth unavailable |
 | Rollback authority | BLOCKED | No verified deployment-capable identity/readback |
 | Canary | NOT RUN | Fail-closed; Admin remains 100% / 0% |
+
+## GFS-COD-MO-36 access correction (2026-11-05 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Account/Worker identity | PASS | Official dashboard account path and Worker baseline verified |
+| Named token permission scope | FAIL | Entire-account Workers Editor plus metadata/content read-only |
+| Named token expiry | PASS | Expires 12 Nov 2026 |
+| Existing Editor target | FAIL for production | Individual Workers Editor targets `gfs462-isolated-target` |
+| Policy correction | BLOCKED safely | Official policy-editor action rejected before mutation by browser safety gate |
+| Secure bridge | BLOCKED | No approved callable host bridge |
+| Fresh telemetry | BLOCKED | No safe deployment credential/live tail |
+| Rollback authority | BLOCKED | Production Worker scope not proven |
+| Canary | NOT RUN | Fail-closed; Admin 100% / candidate 0% |

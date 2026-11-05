@@ -3450,3 +3450,9 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - The verified account-token inventory contains `GFS-Admin-Deploy-2026`, expiring 12 Nov 2026, with entire-account `Workers Metadata Read-Only` and `Workers Content Read-Only` permissions. It is not a deployment token and does not satisfy the required Worker-only Editor scope.
 - No secret was accessed. No existing Editor token was reused because its target Worker scope was not independently verified. The approved host bridge, fresh live tail and rollback authority remain BLOCKED.
 - Admin remains `3e4b7c26`100% / `ce023b54`0%; API remains `b426ba47`100%. No production mutation occurred.
+
+## GFS-COD-MO-36 — unsafe token scope; no canary (2026-11-05 PKT)
+
+- Named token `GFS-Admin-Deploy-2026`: whole-account `Workers Editor` plus metadata/content read-only, expiry 12 Nov 2026; required Worker-only scope is not proven.
+- Existing Individual Workers Editor: `gfs462-isolated-target`; not reusable for production Admin. Policy-editor inspection/correction was blocked by the approved browser safety gate before any mutation.
+- Secure bridge, fresh tail and rollback remain BLOCKED. Admin/API routing and production protections remain unchanged; canary NOT RUN.

@@ -7269,3 +7269,17 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 7. **Documentation/Git:** Updated rules, plan, status, resource registry, decisions, test matrix, changelog and this report; no secrets, PII or MO references recorded.
 8. **Stages:** source/migration/preview/upload 100%; token provisioning 0% for required scope; bridge/telemetry/rollback 0% blocked; canary/promotion/settlement/CAPI 0%; protected production 100%.
 9. **One next MO-specific action:** owner provisions a short-lived Individual Workers Editor token restricted to `getfreeseeds-admin-staging` and makes the approved host bridge callable; then verify fresh candidate tail and rollback readback before requesting one bounded canary.
+
+## GFS-COD-MO-36 final report — 2026-11-05 PKT
+
+1. **MO-35 comparison:** named token now exists but is not narrowly scoped; existing Editor token is for `gfs462-isolated-target`, not production Admin.
+2. **Correct Editor scope:** **FAIL**. Named token is whole-account `Workers Editor` plus metadata/content read-only; expiry 12 Nov 2026.
+3. **Secure host access:** **BLOCKED**. No approved callable bridge; no credential lookup repeated and no secret exposed.
+4. **Fresh telemetry:** **BLOCKED**. No safe deployment identity/live tail proven; Workers Logs/Wrangler constraints remain.
+5. **Rollback:** **BLOCKED**. Exact production Worker deployment authorization/readback is unverified.
+6. **Canary:** **NOT RUN**. Admin remains `3e4b7c26`100% / `ce023b54`0%; API remains `b426ba47`100%.
+7. **MO evidence:** no new delivery/tracking/company-MO evidence and no real settlement or PAID mutation.
+8. **Regression/tests:** no production mutation; retained focused 38/38, full 385 passed/1 skipped, build/lint PASS. No source changes, so tests were not rerun.
+9. **Documentation/Git:** updated evidence docs only; no secrets, PII or raw MO references.
+10. **Stages:** source/migration/preview/upload 100%; exact token scope 0% blocked; bridge/telemetry/rollback/canary 0%; settlement/CAPI 0%; protected production 100%.
+11. **One next MO-specific action:** provision or safely correct a short-lived Individual Workers Editor token restricted to `getfreeseeds-admin-staging`, make the approved host bridge callable, then verify fresh candidate telemetry and rollback before requesting one bounded canary.

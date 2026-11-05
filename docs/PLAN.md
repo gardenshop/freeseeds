@@ -365,3 +365,7 @@ Account identity is corrected. Do not create an overbroad token or use Analytics
 ## GFS-COD-MO-35
 
 The named token now exists but is account-wide read-only (`Workers Metadata Read-Only` and `Workers Content Read-Only`) and cannot deploy or authorize rollback. Do not edit, reuse, rotate or broaden it. The next exact action is owner-side provisioning of a short-lived Individual Workers Editor token restricted to `getfreeseeds-admin-staging`, plus an approved host bridge; then verify fresh candidate telemetry and rollback readback before any canary.
+
+## GFS-COD-MO-36
+
+Read-only token scope is now known: the named token is whole-account Editor plus read-only permissions, and the existing Individual Workers Editor targets `gfs462-isolated-target`. The official policy editor is safety-blocked before mutation. Do not use either token for deployment. Owner must provision or safely correct a short-lived Worker-only Editor token for `getfreeseeds-admin-staging`, then expose an approved host bridge and verify fresh telemetry/rollback.

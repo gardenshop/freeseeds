@@ -2414,3 +2414,9 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - Official account-token inventory confirms `GFS-Admin-Deploy-2026` exists under `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Its visible permissions are entire-account `Workers Metadata Read-Only` and `Workers Content Read-Only`, with expiry 12 Nov 2026; it is not the requested Worker-only Editor token.
 - No token value, action, edit, rotation or deletion was performed. The existing Individual Workers Editor token was not reused because its target Worker was not independently verified.
 - The approved host bridge, fresh live tail and rollback authority remain blocked; no deployment, canary, routing, payment/order/D1, Access, API/Meta/CAPI, WhatsApp or customer mutation occurred.
+
+## GFS-COD-MO-36 — deployment token scope remains unsafe (2026-11-05 PKT)
+
+- Read-only Cloudflare evidence under authoritative account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`: `GFS-Admin-Deploy-2026` now has entire-account `Workers Editor`, `Workers Metadata Read-Only` and `Workers Content Read-Only`, expiring 12 Nov 2026. It is not restricted to `getfreeseeds-admin-staging`.
+- Existing `GFS-464-isolated-watchdog-target` is Individual Workers Editor for `gfs462-isolated-target`, not the production Admin Worker. It was not reused.
+- The official policy-editor action was blocked by the approved browser safety gate before mutation. No token secret, edit, rotation, deletion, bridge attempt, deployment, routing change or canary occurred. Keep Admin `3e4b7c26`100% / `ce023b54`0%.

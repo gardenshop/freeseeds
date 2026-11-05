@@ -2615,3 +2615,9 @@ No secrets are stored in this registry.
 - Token metadata resource: `GFS-Admin-Deploy-2026` exists under the verified account, expires 12 Nov 2026, and exposes only entire-account `Workers Metadata Read-Only` plus `Workers Content Read-Only`; no value is recorded.
 - Scope decision: this token is not an acceptable deployment/rollback credential. Existing Individual Workers Editor token metadata is not reused because its Worker target is unverified.
 - Bridge/telemetry: approved host bridge remains unavailable, Wrangler OAuth unavailable and Workers Logs disabled; no fresh tail or deployment resource is registered.
+
+## GFS-COD-MO-36 access resources (2026-11-05 PKT)
+
+- Named token metadata: `GFS-Admin-Deploy-2026`, entire-account Workers Editor plus Workers Metadata/Content Read-Only, expiry 12 Nov 2026; no value recorded.
+- Existing Editor metadata: `GFS-464-isolated-watchdog-target`, Individual Workers Editor on `gfs462-isolated-target`; not the production Worker.
+- Policy correction: official editor action was safety-blocked before mutation. No deployment-capable production resource or secure host bridge is registered.

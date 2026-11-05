@@ -2352,3 +2352,8 @@
 
 - Verified the named account token exists, but it is entire-account read-only metadata/content access and not the required Worker-only Editor credential.
 - No secret was accessed or logged; no existing Editor token was reused; bridge, fresh tail, rollback and canary remain blocked. Production state stayed unchanged.
+
+## 2026-11-05 — GFS-COD-MO-36
+
+- Verified token scopes: named token is whole-account Editor/read-only; existing Individual Workers Editor targets isolated Worker `gfs462-isolated-target`.
+- Policy correction was not performed because the approved browser safety gate blocked the action before mutation. No canary or production change occurred.
