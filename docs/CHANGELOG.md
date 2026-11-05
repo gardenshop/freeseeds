@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-05 - GFS-COD-MO-19 historical COD settlement fix
+
+- Traced ten supplied contacts read-only to ten unique matches: six no-method unpaid, two unpaid Advance and two existing COD; no genuine MO/company-receipt evidence was found and no production order changed.
+- Added local additive migration 0048 and a guarded historical MO Admin path that preserves original payment methods, quotes, Advance receipts and review history while requiring delivered/tracked status, exact original amount, evidence, reason and confirmation.
+- Focused 31/31, full 382 passed/1 skipped, build/lint PASS. Migration 0048 remains unapplied; no candidate upload, canary, deployment or payment mutation occurred.
+
 ## 2026-11-05 - GFS-COD-MO-18 first real settlement discovery
 
 - Read-only identity/routing and health checks passed. Admin candidate `3e4b7c26` remains 100% in deployment `7aacd65b`; API remains `b426ba47` 100% / `d683ec45` 0%.

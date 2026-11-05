@@ -1,5 +1,12 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-19 historical COD settlement fix (2026-11-05 PKT)
+
+- Ten-contact read-only trace found ten unique matches: six no-method unpaid, two unpaid Advance, and two existing COD records. No MO, company-receipt or collection evidence was verified; no production order was changed.
+- Implemented locally: additive immutable historical-MO ledger, Admin form, exact-original-amount guard, delivery/tracking guard, Advance-receipt protection, duplicate/idempotent/concurrency protection and audited atomic PAID transition without changing the original payment row.
+- Validation: focused 31/31, full 382 passed/1 skipped, build/lint PASS. The remote migration is not applied and no candidate/canary was released because the source requires the new table.
+- Next exact action: separately authorize and apply only migration 0048 after schema review, then upload the tested Admin candidate at 0% and independently preview it. No real settlement is authorized by this evidence.
+
 ## GFS-COD-MO-18 first real COD settlement discovery (2026-11-05 PKT)
 
 - Read-only identity, routing, Admin/API health, D1 schema, payment configuration and binding checks passed. Admin is candidate `3e4b7c26` at 100% in deployment `7aacd65b`; API is `b426ba47` 100% / `d683ec45` 0%.

@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-MO-19 historical COD settlement fix (2026-11-05 PKT)
+
+**Disposition: SOURCE PASS / RELEASE BLOCKED pending additive migration authorization.**
+
+- Ten contact searches returned ten unique matches without ambiguous phone-only attribution: six no-method unpaid, two unpaid Advance, and two existing COD records. No MO or company-receipt evidence was present; no production PAID transition occurred.
+- Local source adds `0048_historical_cod_mo.sql`, immutable historical MO records, guarded Admin form and endpoint. It preserves payment method, quote, Advance receipts and review history, and requires delivered/tracked status, exact original payable, evidence, reason and order-specific confirmation.
+- Focused tests 31/31; full regression 382 passed / 1 skipped; build and lint PASS. Remote D1 migration 0048 is not applied; Admin candidate upload, canary and deployment were intentionally not run.
+- Current routing remains Admin `3e4b7c26` 100% / rollback `e8c96c96` 100%; API `b426ba47` 100% / `d683ec45` 0%; Advance 3/3, COD PKR125, Recovery ON and CAPI OFF remain protected.
+
 ## GFS-COD-MO-18 first real COD settlement discovery (2026-11-05 PKT)
 
 **Disposition: NO-GO / blocked safely; no settlement mutation.**

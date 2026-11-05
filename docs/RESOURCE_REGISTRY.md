@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-COD-MO-19 historical settlement resources (2026-11-05 PKT)
+
+- **Local source:** `migrations/0048_historical_cod_mo.sql`; Admin endpoint `/api/orders/:id/mark-historical-cod-received`; no remote migration or version exists for this change.
+- **Discovery:** ten unique contact-to-order matches were classified only as six no-method unpaid, two unpaid Advance and two existing COD. No raw phone, order, MO or receipt identifiers were retained in project records.
+- **Guards:** immutable MO/evidence HMAC ledger, delivered/tracking requirement, exact original payable, explicit reason/confirmation, original payment-row preservation, unique MO, atomic audit and CAPI-disabled historical settlement.
+- **Release:** focused 31/31, full 382/1, build/lint PASS. Admin/API routing and all live payment/WhatsApp resources remain unchanged; migration review and application are the only current release blocker.
+
 ## GFS-COD-MO-18 settlement discovery resources (2026-11-05 PKT)
 
 - **Identity/routing:** `gisupp@gmail.com` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Admin candidate `3e4b7c26` 100% in deployment `7aacd65b`; API `b426ba47` 100% / `d683ec45` 0%.

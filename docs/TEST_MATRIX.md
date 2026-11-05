@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-COD-MO-19 historical COD settlement fix (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Ten-contact discovery | PASS | Ten unique matches; six no-method unpaid, two unpaid Advance, two existing COD; no ambiguous phone-only match retained. |
+| Historical UI | PASS locally | Unpaid non-COD order details expose Record historical MO Received, original payable and read-only eligibility explanation. |
+| Historical backend | PASS locally | Delivered/tracking, exact original amount, MO/evidence/reason/confirmation and Admin/CSRF guards are enforced. |
+| Advance protection | PASS | Original method, review state and receipts remain unchanged; unverified Advance receipt blocks historical settlement; verified PAID blocks it. |
+| Duplicate/concurrency | PASS | Unique MO and order ledger plus atomic batch/audit produce one winner and no duplicate PAID/audit. |
+| Existing COD path | PASS | Normal `COLLECTION_PENDING` MO path remains separate; COD sidecars are rejected by the historical endpoint. |
+| Regression | PASS | Focused 31/31; full 382 passed / 1 skipped; build/lint PASS. |
+| Production release | BLOCKED | Migration 0048 is not applied; candidate upload/canary/deployment not run. |
+
 ## GFS-COD-MO-18 first real settlement discovery (2026-11-05 PKT)
 
 | Gate | Result | Evidence |

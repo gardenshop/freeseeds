@@ -93,6 +93,13 @@
 
 # Decisions
 
+## GFS-COD-MO-19 - historical settlement is source-ready but not released (2026-11-05 PKT)
+
+- **Decision:** use a separate historical-MO ledger and guarded Admin endpoint; do not retrofit a COD sidecar or rewrite the original Advance/payment history.
+- **Evidence:** ten unique contact matches classified as six no-method unpaid, two unpaid Advance and two existing COD; none had verified MO/company-receipt evidence. No production mutation was made.
+- **Safety:** exact original payable is required; delivered plus tracking is required; pending Advance receipts, verified Advance PAID, existing COD orders, cancelled/held/archived/non-delivered orders, duplicate MO and concurrent losers fail closed. CAPI remains disabled.
+- **Release boundary:** migration 0048 is required and remains unapplied. No upload, canary, deployment or live payment action is authorized until that additive migration is separately approved and applied.
+
 ## GFS-COD-MO-18 - first real settlement remains blocked (2026-11-05 PKT)
 
 - **Decision:** do not submit MO Received or alter any order. There are no active unpaid `COLLECTION_PENDING` COD orders and no genuine MO/remittance/company-receipt evidence or order-specific approval.

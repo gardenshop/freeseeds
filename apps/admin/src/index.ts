@@ -156,7 +156,8 @@ function orderView(row: Record<string, unknown>, referenceRequestDispatchEnabled
     previewUrl: `/api/orders/${encodeURIComponent(String(row.id))}/receipts/${encodeURIComponent(String(receipt.id))}/preview`
   }));
   const receiptCount = Number(row.receipt_count ?? receipts.length);
-  const financial = String(row.state) === "PAID" || String(row.payment_status) === "PAID" || String(row.review_state ?? "") === "APPROVED" || row.approved_at != null || row.approved_amount != null;
+  const historicalMoSettled = row.historical_mo_order_id != null;
+  const financial = String(row.state) === "PAID" || String(row.payment_status) === "PAID" || String(row.review_state ?? "") === "APPROVED" || row.approved_at != null || row.approved_amount != null || historicalMoSettled;
   const state = String(row.state);
   const codTestHold = row.cod_status != null && Number(row.cod_test_hold) !== 0;
   const fulfillmentHold = String(row.order_number) === "FS-261019-000001" || codTestHold;
@@ -179,6 +180,10 @@ function orderView(row: Record<string, unknown>, referenceRequestDispatchEnabled
     codCollectionRecorded: row.cod_collection_at != null,
     codRemittanceRecorded: row.cod_remittance_at != null,
     codMoReceivedAt: row.cod_mo_received_at == null ? null : String(row.cod_mo_received_at),
+    historicalMoSettled,
+    historicalMoReceivedAt: row.historical_mo_received_at == null ? null : String(row.historical_mo_received_at),
+    historicalMoReceiptDate: row.historical_mo_receipt_date == null ? null : String(row.historical_mo_receipt_date),
+    historicalMoAmountPkr: row.historical_mo_amount_pkr == null ? null : Number(row.historical_mo_amount_pkr),
     fulfillmentStatus: row.cod_status != null ? String(row.cod_status) : ["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(state) ? state : "NOT_READY",
     province: row.province == null ? null : String(row.province),
     customerName: row.full_name == null ? null : String(row.full_name),
@@ -839,9 +844,60 @@ async function markCodPaymentReceived(c: AdminContext) {
   return c.json({ ok: true, paymentStatus: "PAID", moReceivedAt: now, capiQueue: event ? queued ? "QUEUED" : "DEFERRED" : "DISABLED" });
 }
 
+async function markHistoricalCodPaymentReceived(c: AdminContext) {
+  if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
+  if (!c.env.DB) return c.json({ error: "HISTORICAL_COD_UNAVAILABLE" }, 503);
+  const hmacKey = c.env.COD_REFERENCE_HMAC_KEY?.trim();
+  if (!hmacKey || hmacKey.length < 32) return c.json({ error: "COD_REFERENCE_HMAC_KEY_REQUIRED" }, 503);
+  let body: { confirmation?: unknown; amountPkr?: unknown; moNumber?: unknown; receiptDate?: unknown; evidenceReference?: unknown; reason?: unknown; confirmed?: unknown };
+  try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
+  const orderId = c.req.param("id");
+  const moNumber = normalizeCodEvidenceReference(body.moNumber);
+  const evidenceReference = settlementEvidenceReference(body.evidenceReference);
+  const reason = requiredReason(body.reason);
+  const receiptDate = typeof body.receiptDate === "string" && validOrderDate(body.receiptDate.trim()) ? body.receiptDate.trim() : undefined;
+  if (!moNumber) return c.json({ error: "COD_MO_NUMBER_REQUIRED" }, 400);
+  if (!receiptDate) return c.json({ error: "COD_RECEIPT_DATE_REQUIRED" }, 400);
+  if (!evidenceReference) return c.json({ error: "COD_EVIDENCE_REFERENCE_INVALID" }, 400);
+  if (!reason) return c.json({ error: "COD_HISTORICAL_REASON_REQUIRED" }, 400);
+  if (body.confirmation === undefined || body.confirmed !== true) return c.json({ error: "COD_PAYMENT_CONFIRMATION_REQUIRED" }, 400);
+  const current = await c.env.DB.prepare(`SELECT o.order_number,o.state,o.payment_status,o.archived_at,o.total_payable,p.method,p.review_state,p.approved_amount,p.approved_at,
+    (SELECT COUNT(*) FROM cod_order_details cod WHERE cod.order_id=o.id) AS cod_sidecar_count,
+    (SELECT COUNT(*) FROM cod_historical_mo_receipts mo WHERE mo.order_id=o.id) AS historical_count,
+    (SELECT COUNT(*) FROM payment_receipts receipt WHERE receipt.order_id=o.id) AS receipt_count,
+    EXISTS(SELECT 1 FROM audit_log tracking WHERE tracking.entity_type='ORDER' AND tracking.entity_id=o.id AND tracking.action='ORDER_TRACKING_ASSIGNED') AS tracking_assigned
+    FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=?`).bind(orderId).first<{ order_number:string; state:string; payment_status:string; archived_at:string|null; total_payable:number; method:string|null; review_state:string; approved_amount:number|null; approved_at:string|null; cod_sidecar_count:number; historical_count:number; receipt_count:number; tracking_assigned:number }>();
+  if (!current) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
+  if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
+  if (Number(current.historical_count) !== 0) return c.json({ error: "HISTORICAL_COD_ALREADY_RECORDED" }, 409);
+  if (Number(current.cod_sidecar_count) !== 0) return c.json({ error: "COD_NORMAL_SETTLEMENT_REQUIRED" }, 409);
+  if (current.state === "PAID" || current.payment_status === "PAID" || current.approved_amount != null || current.approved_at != null || current.review_state === "APPROVED" || current.review_state === "COD_PAID") return c.json({ error: "HISTORICAL_COD_ALREADY_SETTLED" }, 409);
+  if (current.archived_at || current.state === "CANCELLED") return c.json({ error: "HISTORICAL_COD_ORDER_NOT_SETTLEABLE" }, 409);
+  if (current.state !== "DELIVERED" || Number(current.tracking_assigned) !== 1) return c.json({ error: "HISTORICAL_COD_DELIVERY_REQUIRED" }, 409);
+  if (current.method !== null && Number(current.receipt_count) > 0) return c.json({ error: "HISTORICAL_ADVANCE_RECEIPT_RECONCILIATION_REQUIRED" }, 409);
+  if (!Number.isSafeInteger(body.amountPkr) || Number(body.amountPkr) !== Number(current.total_payable)) return c.json({ error: "COD_HISTORICAL_AMOUNT_MISMATCH" }, 409);
+  const moReferenceHmac = await codReferenceHmac(moNumber, hmacKey);
+  const evidenceReferenceHmac = await codReferenceHmac(evidenceReference, hmacKey);
+  const duplicate = await c.env.DB.prepare("SELECT 1 AS present FROM cod_historical_mo_receipts WHERE mo_reference_hmac=? LIMIT 1").bind(moReferenceHmac).first<{ present:number }>();
+  if (duplicate) return c.json({ error: "COD_MO_ALREADY_USED" }, 409);
+  const now = new Date().toISOString();
+  try {
+    const result = await c.env.DB.batch([
+      c.env.DB.prepare("INSERT INTO cod_historical_mo_receipts(order_id,mo_reference_hmac,received_amount_pkr,receipt_date,evidence_reference_hmac,settlement_reason,operator_id,received_at) SELECT ?,?,?,?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM cod_historical_mo_receipts WHERE order_id=?) AND EXISTS(SELECT 1 FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=? AND o.state='DELIVERED' AND o.payment_status<>'PAID' AND o.archived_at IS NULL AND o.total_payable=? AND p.approved_amount IS NULL AND p.review_state NOT IN ('APPROVED','COD_PAID') AND NOT EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id))").bind(orderId, moReferenceHmac, Number(body.amountPkr), receiptDate, evidenceReferenceHmac, reason, c.env.ADMIN_EMAIL, now, orderId, orderId, Number(body.amountPkr)),
+      c.env.DB.prepare("UPDATE orders SET state='PAID',payment_status='PAID',updated_at=? WHERE id=? AND changes()=1 AND state='DELIVERED' AND payment_status<>'PAID' AND archived_at IS NULL AND total_payable=? AND NOT EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=orders.id)").bind(now, orderId, Number(body.amountPkr)),
+      c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE changes()=1 AND EXISTS(SELECT 1 FROM orders WHERE id=? AND state='PAID' AND payment_status='PAID')").bind(`historical_cod_mo_${orderId}`, "COD_HISTORICAL_MO_RECEIVED", "ADMIN", c.env.ADMIN_EMAIL, "ORDER", orderId, crypto.randomUUID(), JSON.stringify({ orderId, amountPkr: Number(body.amountPkr), receiptDate, evidenceReferenceHmac, settlementMode: "HISTORICAL_PAKISTAN_POST_MO", reason }), now, orderId)
+    ]);
+    if (result.some((item) => Number(item.meta?.changes ?? 0) !== 1)) return c.json({ error: "COD_HISTORICAL_CONFIRMATION_STALE" }, 409);
+  } catch {
+    return c.json({ error: "COD_HISTORICAL_CONFIRMATION_FAILED" }, 409);
+  }
+  return c.json({ ok: true, paymentStatus: "PAID", historical: true, capiQueue: "DISABLED" });
+}
+
 app.post("/api/orders/:id/cod-collection", (c) => reconcileCodEvidence(c, "collection"));
 app.post("/api/orders/:id/cod-remittance", (c) => reconcileCodEvidence(c, "remittance"));
 app.post("/api/orders/:id/mark-payment-received", markCodPaymentReceived);
+app.post("/api/orders/:id/mark-historical-cod-received", markHistoricalCodPaymentReceived);
 app.get("/cod-settings", (c) => {
   const csrf = issueCsrfToken(c);
   return c.html(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>COD Settings</title><style>body{font:16px system-ui;max-width:760px;margin:2rem auto;padding:0 1rem;color:#17231c}label{display:block;margin:1rem 0}input,button{font:inherit;padding:.55rem}input[type=text],input[type=number],input[type=password]{display:block;width:100%;box-sizing:border-box}button{cursor:pointer}.muted{color:#59635a}.error{color:#a40019}</style></head><body><nav><a href="/">Admin home</a> | <a href="/orders">Orders</a></nav><h1>Cash on Delivery</h1><p class="muted">COD is disabled unless explicitly enabled with verified collection and remittance policy references. Evidence references are HMACed before storage; raw references are not persisted.</p><p id="status" role="status" class="muted">Loading settings…</p><form id="form"><label><input name="enabled" type="checkbox"> Enable COD intake</label><label>COD fee (PKR)<input name="feePkr" type="number" min="0" max="100000" step="1" value="125" required></label><label>Verified courier collection policy evidence reference<input name="collectionPolicyReference" type="password" autocomplete="off"></label><label>Verified exact-remittance policy evidence reference<input name="remittancePolicyReference" type="password" autocomplete="off"></label><button>Save audited settings</button></form><script>
@@ -854,6 +910,21 @@ form.onsubmit=async(e)=>{e.preventDefault();if(form.elements.enabled.checked&&!c
 });
 const COD_ORDERS_SCRIPT = String.raw`const addOrdinaryCodActions=addActions;addActions=(order)=>{addOrdinaryCodActions(order);if(!order.codOrder||order.archivedAt)return;const root=detail.querySelector('.actions');if(!root)return;const notice=[...root.querySelectorAll('p')].find((node)=>node.textContent.startsWith('COD only.'));if(notice)notice.textContent='COD only. Stored V1 advance amount '+money(order.codBaseAmountPkr)+' is unchanged; COD amount due '+money(order.codQuotedTotalPkr)+' includes fee '+money(order.codFeePkr)+'. Pakistan Post Money Order receipt is the COD settlement evidence; COD is not advance approval.';for(const button of root.querySelectorAll('button'))if(['Record courier collection','Reconcile exact remittance'].includes(button.textContent.trim()))button.remove();const next={COD_PENDING:['PACKING','Mark packing'],PACKING:['DISPATCHED','Mark dispatched'],DISPATCHED:['DELIVERED','Move to collection pending'],DELIVERED:['COLLECTION_PENDING','Move to collection pending']}[order.state];if(next&&(order.state!=='PACKING'||order.trackingNumber))root.append(actionButton(next[1],async()=>{if(confirmAction(order,next[1]))await run('/api/orders/'+encodeURIComponent(order.id)+'/transition',{from:order.state,to:next[0],confirmation:order.orderNumber})},'primary'));if(order.state==='COD_PENDING'&&!order.trackingNumber&&!root.querySelector('[data-cod-tracking]')){const button=actionButton('Assign Tracking',async()=>{const value=prompt('Tracking number');if(value&&confirmAction(order,'Assign tracking number'))await run('/api/orders/'+encodeURIComponent(order.id)+'/tracking',{trackingNumber:value,confirmation:order.orderNumber})});button.dataset.codTracking='true';root.append(button)}};`;
 const COD_HOLD_SCRIPT = String.raw`const addUnheldOrderActions=addActions;
+const addHistoricalMoInfo=(order,actionRoot)=>{
+  if(!actionRoot||order.codOrder)return;
+  const settled=order.historicalMoSettled||order.state==='PAID'||order.paymentStatus==='PAID'||order.paymentReviewState==='APPROVED';
+  if(settled)return;
+  const eligible=order.state==='DELIVERED'&&!!order.trackingNumber&&!order.fulfillmentHold&&!order.archivedAt;
+  const explanation=eligible?'Eligible for historical review: enter the genuine Pakistan Post MO, exact original payable, receipt date, private evidence reference and reason.':order.fulfillmentHold?'Read-only: fulfillment hold blocks historical settlement.':order.archivedAt||order.state==='CANCELLED'?'Read-only: cancelled or archived orders cannot be settled.':'Read-only: historical settlement requires verified DELIVERED state and assigned tracking; original payment history remains unchanged.';
+  const panel=document.createElement('section');panel.className='historical-cod-mo-info';panel.style.cssText='display:flex;flex-wrap:wrap;gap:7px 12px;flex:1 1 100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--wash)';
+  const title=document.createElement('strong');title.textContent='Record historical MO Received';panel.append(title);
+  const amount=document.createElement('p');amount.textContent='Original payable: '+money(order.totalPayablePkr);panel.append(amount);
+  const note=document.createElement('p');note.textContent='Actual MO amount must match exactly; any difference remains under review.';panel.append(note);
+  const status=document.createElement('p');status.textContent=explanation;panel.append(status);
+  if(!eligible){const button=actionButton('Record MO Received',()=>alert(explanation), '');button.disabled=true;button.title='Read-only until historical delivery and tracking evidence are present.';panel.append(button);actionRoot.append(panel);return}
+  panel.insertAdjacentHTML('beforeend','<form data-historical-cod-form style="display:grid;gap:6px;flex:1 1 100%"><label>MO number <input name="moNumber" required maxlength="128" autocomplete="off"></label><label>Actual amount received (PKR) <input name="amountPkr" type="number" min="0" step="1" required></label><label>Receipt date <input name="receiptDate" type="date" required></label><label>Private evidence reference <input name="evidenceReference" required maxlength="128" autocomplete="off"></label><label>Historical COD reason <textarea name="reason" required maxlength="500"></textarea></label><label>Operator confirmation <input name="confirmation" required autocomplete="off"></label><button type="submit" class="primary">Confirm historical MO Received</button><p class="action-status muted" role="status"></p></form>');
+  const form=panel.querySelector('[data-historical-cod-form]');if(!form)return;form.elements.amountPkr.value=String(order.totalPayablePkr);form.elements.confirmation.placeholder=order.orderNumber;form.addEventListener('submit',async(event)=>{event.preventDefault();const data=new FormData(form);if(data.get('confirmation')!==order.orderNumber)return alert('Enter the exact order number for confirmation.');if(!confirm('Record historical Pakistan Post MO for '+order.orderNumber+'? Original payable: PKR '+order.totalPayablePkr+'.'))return;const button=form.querySelector('button[type="submit"]');button.disabled=true;try{await run('/api/orders/'+encodeURIComponent(order.id)+'/mark-historical-cod-received',{confirmation:order.orderNumber,amountPkr:Number(data.get('amountPkr')),moNumber:data.get('moNumber'),receiptDate:data.get('receiptDate'),evidenceReference:data.get('evidenceReference'),reason:data.get('reason'),confirmed:true})}catch(error){form.querySelector('.action-status').textContent=error instanceof Error?error.message:'Historical settlement failed';button.disabled=false}});actionRoot.append(panel);
+};
 const addCodMoInfo=(order,actionRoot)=>{
   if(!actionRoot||!order.codOrder)return;
   const eligible=order.state==='COLLECTION_PENDING'&&order.codStatus==='COLLECTION_PENDING'&&!order.codMoReceivedAt&&!order.fulfillmentHold&&!order.archivedAt;
@@ -875,7 +946,8 @@ addActions=(order)=>{
   }
   addUnheldOrderActions(order);
   const actionRoot=detail.querySelector('.actions');
-  if(!actionRoot||!order.codOrder)return;
+  if(!actionRoot)return;
+  if(!order.codOrder){addHistoricalMoInfo(order,actionRoot);return}
   const notice=[...actionRoot.querySelectorAll('p')].find((node)=>node.textContent.startsWith('COD only.'));
   if(notice)notice.textContent='COD only. Original payable amount '+money(order.codQuotedTotalPkr)+' includes the PKR125 Pakistan Post COD fee. MO receipt is the settlement evidence; Advance approval is not used.';
   for(const button of actionRoot.querySelectorAll('button'))if(['Record courier collection','Reconcile exact remittance','Mark Payment Received'].includes(button.textContent.trim()))button.remove();
@@ -1807,7 +1879,7 @@ const ORDER_ADMIN_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,
   CASE WHEN cod.order_id IS NOT NULL THEN 'NOT_APPLICABLE' WHEN EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS' AND j.status IN ('DEAD_LETTER','PERMANENT_FAILURE')) THEN 'FAILED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status='READ') THEN 'READ' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status='DELIVERED') THEN 'DELIVERED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status IN ('SENT','SENDING')) OR EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS' AND j.status='SENT') THEN 'SENT' ELSE 'NOT_SENT' END AS payment_instruction_status,
   c.full_name,c.delivery_address,c.nearby_place,c.city,c.contact_number,c.normalized_phone,c.normalized_contact_number,c.whatsapp_number,c.normalized_whatsapp_number,c.wa_id,c.whatsapp_username,
   p.id AS payment_id,p.method,p.expected_amount,p.approved_amount,p.review_state,p.submitted_at,p.approved_by,p.approved_at,p.rejection_reason,p.customer_transaction_reference,p.created_at AS payment_created_at,p.updated_at AS payment_updated_at,
-  cod.status AS cod_status,cod.test_hold AS cod_test_hold,cod.base_amount_pkr AS cod_base_amount_pkr,cod.cod_fee_pkr,cod.quoted_total_pkr AS cod_quoted_total_pkr,cod.collection_at AS cod_collection_at,cod.remittance_at AS cod_remittance_at,mo.received_at AS cod_mo_received_at,
+  cod.status AS cod_status,cod.test_hold AS cod_test_hold,cod.base_amount_pkr AS cod_base_amount_pkr,cod.cod_fee_pkr,cod.quoted_total_pkr AS cod_quoted_total_pkr,cod.collection_at AS cod_collection_at,cod.remittance_at AS cod_remittance_at,mo.received_at AS cod_mo_received_at,historical_mo.order_id AS historical_mo_order_id,historical_mo.received_at AS historical_mo_received_at,historical_mo.receipt_date AS historical_mo_receipt_date,historical_mo.received_amount_pkr AS historical_mo_amount_pkr,
   EXISTS(SELECT 1 FROM payment_methods pm JOIN payment_qr_assets qa ON qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.derivative_sha256=pm.qr_sha256 AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref IS NOT NULL AND trim(qa.independent_evidence_ref)<>'' WHERE pm.method=p.method AND pm.enabled=1 AND pm.qr_owner_verified=1) AS payment_method_verified,
   EXISTS(SELECT 1 FROM outbox_jobs ref_request WHERE ref_request.entity_id=p.id AND ref_request.kind='WHATSAPP_TRANSACTION_REFERENCE_REQUEST' AND ref_request.status IN ('SENT','PENDING','RETRY')) AS reference_request_sent,
   EXISTS(SELECT 1 FROM audit_log tracking WHERE tracking.entity_type='ORDER' AND tracking.entity_id=o.id AND tracking.action='ORDER_TRACKING_ASSIGNED') AS has_tracking_number,
@@ -1817,7 +1889,8 @@ const ORDER_ADMIN_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,
   FROM orders o JOIN customers c ON c.id=o.customer_id
   LEFT JOIN payments p ON p.order_id=o.id
   LEFT JOIN cod_order_details cod ON cod.order_id=o.id
-  LEFT JOIN cod_mo_receipts mo ON mo.order_id=o.id`;
+  LEFT JOIN cod_mo_receipts mo ON mo.order_id=o.id
+  LEFT JOIN cod_historical_mo_receipts historical_mo ON historical_mo.order_id=o.id`;
 
 // The list endpoint must not run the detail projection for every row. The detail
 // projection contains correlated audit, receipt, outbox, and JSON subqueries;
@@ -1827,7 +1900,7 @@ const ORDER_ADMIN_LIST_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_st
   o.cancelled_at,o.cancelled_by,o.cancellation_reason,o.archived_at,o.archived_by,o.archive_reason,
   c.full_name,c.delivery_address,c.nearby_place,c.city,c.contact_number,c.normalized_phone,c.normalized_contact_number,c.whatsapp_number,c.normalized_whatsapp_number,c.wa_id,c.whatsapp_username,
   p.id AS payment_id,p.method,p.expected_amount,p.approved_amount,p.review_state,p.submitted_at,p.approved_by,p.approved_at,p.rejection_reason,p.customer_transaction_reference,p.created_at AS payment_created_at,p.updated_at AS payment_updated_at,
-  cod.status AS cod_status,cod.test_hold AS cod_test_hold,cod.base_amount_pkr AS cod_base_amount_pkr,cod.cod_fee_pkr,cod.quoted_total_pkr AS cod_quoted_total_pkr,cod.collection_at AS cod_collection_at,cod.remittance_at AS cod_remittance_at,mo.received_at AS cod_mo_received_at,
+  cod.status AS cod_status,cod.test_hold AS cod_test_hold,cod.base_amount_pkr AS cod_base_amount_pkr,cod.cod_fee_pkr,cod.quoted_total_pkr AS cod_quoted_total_pkr,cod.collection_at AS cod_collection_at,cod.remittance_at AS cod_remittance_at,mo.received_at AS cod_mo_received_at,historical_mo.order_id AS historical_mo_order_id,historical_mo.received_at AS historical_mo_received_at,historical_mo.receipt_date AS historical_mo_receipt_date,historical_mo.received_amount_pkr AS historical_mo_amount_pkr,
   CASE WHEN cod.order_id IS NOT NULL OR p.method IS NOT NULL THEN 'SELECTED' WHEN EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_CHOICE_RECOVERY' AND j.status IN ('DEAD_LETTER','PERMANENT_FAILURE')) OR EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind='PAYMENT_CHOICE_RECOVERY' AND m.status IN ('FAILED','PERMANENT_FAILURE')) THEN 'FAILED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind='PAYMENT_CHOICE_RECOVERY' AND m.status='READ') THEN 'READ' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind='PAYMENT_CHOICE_RECOVERY' AND m.status='DELIVERED') THEN 'DELIVERED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind='PAYMENT_CHOICE_RECOVERY' AND m.status IN ('SENT','SENDING')) OR EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_CHOICE_RECOVERY' AND j.status='SENT') THEN 'SENT' WHEN EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_CHOICE_RECOVERY' AND j.status IN ('PENDING','RETRY','QUEUED')) THEN 'PENDING' ELSE 'UNKNOWN' END AS payment_choice_status,
   CASE WHEN cod.order_id IS NOT NULL THEN 'NOT_APPLICABLE' WHEN EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS' AND j.status IN ('DEAD_LETTER','PERMANENT_FAILURE')) THEN 'FAILED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status='READ') THEN 'READ' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status='DELIVERED') THEN 'DELIVERED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status IN ('SENT','SENDING')) OR EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS' AND j.status='SENT') THEN 'SENT' ELSE 'NOT_SENT' END AS payment_instruction_status,
   COALESCE((SELECT group_concat(items.description || ' x ' || items.quantity, ', ') FROM order_items items WHERE items.order_id=o.id),'') AS item_summary,
@@ -1836,7 +1909,8 @@ const ORDER_ADMIN_LIST_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_st
   FROM orders o JOIN customers c ON c.id=o.customer_id
   LEFT JOIN payments p ON p.order_id=o.id
   LEFT JOIN cod_order_details cod ON cod.order_id=o.id
-  LEFT JOIN cod_mo_receipts mo ON mo.order_id=o.id`;
+  LEFT JOIN cod_mo_receipts mo ON mo.order_id=o.id
+  LEFT JOIN cod_historical_mo_receipts historical_mo ON historical_mo.order_id=o.id`;
 
 const ORDER_ADMIN_EXPORT_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,o.pack_quantity,o.delivery_fee,o.fertilizer_fee,o.total_payable,o.province,o.created_at,o.archived_at,
   c.full_name,c.delivery_address,c.nearby_place,c.city,c.contact_number,

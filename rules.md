@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-19 historical COD settlement fix (2026-11-05 PKT)
+
+- **Discovery:** ten supplied contact searches produced ten unique order matches, with no ambiguous phone-only match. Six were no-method unpaid records, two were unpaid Advance records (JazzCash/Easypaisa), and two were existing COD records: one PACKING with tracking and one COD_PENDING without tracking. None had an MO receipt or verified collection evidence.
+- **Source fix:** additive migration `0048_historical_cod_mo.sql` adds an immutable historical-MO ledger. Admin adds a guarded historical form and `/mark-historical-cod-received`; it requires delivered state, assigned tracking, exact original payable, MO number, receipt date, private evidence reference, reason and exact order confirmation.
+- Original payment method, order quote, Advance receipts and review history remain unchanged. Verified Advance PAID, pending Advance receipts, COD sidecars, cancelled/archived/held/non-delivered orders, wrong amount, duplicate MO, unauthorized and concurrent submissions fail closed. Historical settlement never queues CAPI.
+- **Release boundary:** local focused 31/31 and full 382/1 pass; build/lint pass. Migration 0048 is not applied to D1, the candidate is not uploaded, and no canary/deployment or payment mutation occurred. Separate authorization is required before remote migration, candidate upload and controlled release.
+- Preserve the new-number WhatsApp lock and Hoja Seeds zero-connection rule.
+
 ## GFS-COD-MO-18 first real COD settlement discovery (2026-11-05 PKT)
 
 - **NO-GO / safely blocked:** read-only discovery found 461 active COD_PENDING Admin rows and zero `COLLECTION_PENDING` rows. D1 sidecars are 459 `COD_PENDING`, one `DISPATCHED`, and one `PACKING`; `cod_mo_receipts` is empty and collection/remittance evidence counts are zero.

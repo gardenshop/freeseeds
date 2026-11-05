@@ -1,5 +1,20 @@
 # Final Report
 
+## GFS-COD-MO-19 historical COD settlement fix (2026-11-05 PKT)
+
+1. **Previous task:** GFS-COD-MO-18 safely blocked settlement because no eligible live MO evidence existed. That remains true.
+2. **Discovery:** ten unique contact searches found six no-method unpaid orders, two unpaid Advance orders and two existing COD orders; no ambiguous phone-only match was accepted. No raw identifiers are recorded.
+3. **Evidence:** no verified Pakistan Post MO, company receipt, collection evidence or order-specific live approval was available. Existing COD records were not eligible for the historical path.
+4. **Source behavior:** new immutable historical ledger and Admin form require delivered state, tracking, exact original payable, MO number, receipt date, private evidence reference, reason and exact order confirmation.
+5. **Protection:** original payment method, order quote, Advance receipts and review history remain unchanged. Verified Advance PAID, pending Advance receipts, duplicate MO, wrong amount, cancelled/held/archived/non-delivered orders and unauthorized/concurrent requests are rejected.
+6. **Tests:** focused 31/31; full 382 passed / 1 skipped; build/lint PASS. No defect remains in the local path.
+7. **Production:** migration 0048 is not applied; Admin candidate was not uploaded; no canary, deployment, order/payment/D1/WhatsApp/Meta/CAPI mutation occurred.
+8. **Routing/protection:** Admin `3e4b7c26` 100% / rollback `e8c96c96` 100%; API `b426ba47` 100% / `d683ec45` 0%; Advance 3/3, COD PKR125, Recovery ON, CAPI OFF.
+9. **Paid/pending:** zero production orders were marked PAID by this task; all traced records remain pending in live data.
+10. **Stages:** historical source/UI 100%; local tests 100%; genuine evidence 0%; migration/release 0%; real settlement 0%.
+11. **Documentation:** rules, plan, status, decisions, test matrix, resource registry, changelog, SOP and this report updated without PII, MO references, receipt images or secrets.
+12. **One next action:** separately authorize remote application of additive migration 0048, then upload the tested Admin candidate at 0% for authenticated preview; do not perform real settlement until genuine evidence and order-specific approval exist.
+
 ## GFS-COD-MO-18 first real COD settlement discovery (2026-11-05 PKT)
 
 1. **Previous task:** GFS-COD-MO-17 Admin release remained live and healthy; genuine settlement was explicitly untested.

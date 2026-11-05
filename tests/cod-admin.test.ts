@@ -74,6 +74,7 @@ beforeEach(() => {
   `);
   sqlite.exec(readFileSync("migrations/0030_cod_v1_compat.sql", "utf8"));
   sqlite.exec(readFileSync("migrations/0047_cod_pakistan_post_mo.sql", "utf8"));
+  sqlite.exec(readFileSync("migrations/0048_historical_cod_mo.sql", "utf8"));
   db = new D1Adapter(sqlite);
 });
 
@@ -93,6 +94,14 @@ function seedCod(status = "COLLECTION_PENDING", hold = 0, snapshot = true, order
 
 async function post(path: string, body: Record<string, unknown>, session?: Awaited<ReturnType<typeof csrf>>, runtime = env()) {
   return app.fetch(new Request(`https://admin.example.test${path}`, { method: "POST", headers: mutationHeaders(session ?? await csrf()), body: JSON.stringify(body) }), runtime);
+}
+
+function seedHistorical(method: string | null = null, state = "DELIVERED", orderNumber = "SIM-HISTORICAL-COD") {
+  const now = "2026-01-01T00:00:00.000Z";
+  sqlite.prepare("INSERT INTO orders(id,order_number,state,payment_status,total_payable,updated_at) VALUES('historical-order',?,?,?,200,?)").run(orderNumber, state, "PENDING", now);
+  sqlite.prepare("INSERT INTO payments(id,order_id,method,expected_amount,review_state,updated_at) VALUES('historical-payment','historical-order',?,200,'PENDING',?)").run(method, now);
+  sqlite.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,metadata_json,created_at) VALUES('historical-tracking','ORDER','SYSTEM','system','ORDER','historical-order','{}',?)").run(now);
+  sqlite.prepare("UPDATE audit_log SET action='ORDER_TRACKING_ASSIGNED' WHERE id='historical-tracking'").run();
 }
 
 function reconcile(kind: string, evidenceReference = `SYNTHETIC-${kind.toUpperCase()}-EVIDENCE`, session?: Awaited<ReturnType<typeof csrf>>) {
@@ -316,6 +325,9 @@ describe("COD Admin configuration and reconciliation", () => {
     expect(html).toContain("Pakistan Post MO number");
     expect(html).toContain("confirmed:true");
     expect(html).toContain("order.state==='COLLECTION_PENDING'");
+    expect(html).toContain("Record historical MO Received");
+    expect(html).toContain("mark-historical-cod-received");
+    expect(html).toContain("Private evidence reference");
   });
 
   it("shows read-only MO information on COD_PENDING without a payment submission", async () => {
@@ -392,6 +404,45 @@ describe("COD Admin configuration and reconciliation", () => {
     seedCod("COD_PENDING");
     expect((await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, moNumber: "PK-MO-001", confirmed: true })).status).toBe(409);
     expect(sqlite.prepare("SELECT state,payment_status FROM orders").get()).toEqual({ state: "COD_PENDING", payment_status: "COD_PENDING" });
+  });
+
+  it("settles one delivered historical COD order without changing original payment method or review history", async () => {
+    seedHistorical();
+    const response = await post("/api/orders/historical-order/mark-historical-cod-received", { confirmation: "SIM-HISTORICAL-COD", amountPkr: 200, moNumber: "PK-HIST-MO-001", receiptDate: "2026-01-01", evidenceReference: "PRIVATE-RECEIPT-001", reason: "Owner verified delivered COD and company receipt", confirmed: true });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ ok: true, historical: true, paymentStatus: "PAID", capiQueue: "DISABLED" });
+    expect(sqlite.prepare("SELECT state,payment_status,total_payable FROM orders WHERE id='historical-order'").get()).toEqual({ state: "PAID", payment_status: "PAID", total_payable: 200 });
+    expect(sqlite.prepare("SELECT method,review_state,approved_amount FROM payments WHERE id='historical-payment'").get()).toEqual({ method: null, review_state: "PENDING", approved_amount: null });
+    expect(sqlite.prepare("SELECT received_amount_pkr,receipt_date,operator_id FROM cod_historical_mo_receipts").get()).toEqual({ received_amount_pkr: 200, receipt_date: "2026-01-01", operator_id: "admin@example.test" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_HISTORICAL_MO_RECEIVED'").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM capi_events").get()).toEqual({ count: 0 });
+  });
+
+  it("blocks historical settlement for an unverified Advance receipt and preserves the receipt", async () => {
+    seedHistorical("EASYPAISA");
+    sqlite.prepare("UPDATE payments SET review_state='REVIEW' WHERE id='historical-payment'").run();
+    sqlite.prepare("INSERT INTO payment_receipts(id,order_id,payment_id) VALUES('advance-slip','historical-order','historical-payment')").run();
+    const response = await post("/api/orders/historical-order/mark-historical-cod-received", { confirmation: "SIM-HISTORICAL-COD", amountPkr: 200, moNumber: "PK-HIST-MO-002", receiptDate: "2026-01-01", evidenceReference: "PRIVATE-RECEIPT-002", reason: "Historical COD review", confirmed: true });
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: "HISTORICAL_ADVANCE_RECEIPT_RECONCILIATION_REQUIRED" });
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id='historical-order'").get()).toEqual({ state: "DELIVERED", payment_status: "PENDING" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_historical_mo_receipts").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_receipts WHERE order_id='historical-order'").get()).toEqual({ count: 1 });
+  });
+
+  it("rejects historical mismatches, non-delivered orders, duplicate MO and concurrent losers", async () => {
+    seedHistorical(null, "DISPATCHED");
+    expect((await post("/api/orders/historical-order/mark-historical-cod-received", { confirmation: "SIM-HISTORICAL-COD", amountPkr: 200, moNumber: "PK-HIST-MO-003", receiptDate: "2026-01-01", evidenceReference: "PRIVATE-RECEIPT-003", reason: "Historical COD review", confirmed: true })).status).toBe(409);
+    sqlite.prepare("UPDATE orders SET state='DELIVERED' WHERE id='historical-order'").run();
+    const mismatch = await post("/api/orders/historical-order/mark-historical-cod-received", { confirmation: "SIM-HISTORICAL-COD", amountPkr: 201, moNumber: "PK-HIST-MO-003", receiptDate: "2026-01-01", evidenceReference: "PRIVATE-RECEIPT-003", reason: "Historical COD review", confirmed: true });
+    expect(mismatch.status).toBe(409);
+    const [winner, loser] = await Promise.all([
+      post("/api/orders/historical-order/mark-historical-cod-received", { confirmation: "SIM-HISTORICAL-COD", amountPkr: 200, moNumber: "PK-HIST-MO-003", receiptDate: "2026-01-01", evidenceReference: "PRIVATE-RECEIPT-003", reason: "Historical COD review", confirmed: true }),
+      post("/api/orders/historical-order/mark-historical-cod-received", { confirmation: "SIM-HISTORICAL-COD", amountPkr: 200, moNumber: "PK-HIST-MO-003", receiptDate: "2026-01-01", evidenceReference: "PRIVATE-RECEIPT-003", reason: "Historical COD review", confirmed: true })
+    ]);
+    expect([winner.status, loser.status].sort()).toEqual([200, 409]);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_historical_mo_receipts").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_HISTORICAL_MO_RECEIVED'").get()).toEqual({ count: 1 });
   });
 
   it("queues one idempotent Purchase event and keeps payment paid when Queue delivery is unavailable", async () => {
