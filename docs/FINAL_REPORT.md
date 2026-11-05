@@ -1,5 +1,19 @@
 # Final Report
 
+## GFS-COD-MO-12 visible COD MO action (2026-11-05 PKT)
+
+1. **COD_PENDING option:** PASS locally. MO Received is visible with current COD amount, settlement status and read-only eligibility explanation; no payment submission path exists for ineligible states.
+2. **Eligibility/security:** PASS. Existing `COLLECTION_PENDING` endpoint remains authoritative for Access, CSRF, HMAC, exact amount, MO reference, confirmation, audit, duplicate and state guards.
+3. **UI evidence:** no customer-data screenshot was captured. Synthetic DOM acceptance passed; live candidate preview was not safely available.
+4. **Tests/repair:** focused 28/28; full 379 passed/1 skipped; build/lint PASS. No backend or migration change.
+5. **Release:** one candidate uploaded, `3e4b7c26-c36d-4d1c-baeb-d26629a9b4a1`; retained HMAC/D1/R2/Queue/secret slots. Preview failed TLS/404, so canary and promotion were not run.
+6. **Routing:** Admin prior candidate remains 100%; API remains unchanged at its frozen baseline; no positive traffic was exposed to the new candidate.
+7. **Protection:** WhatsApp, Advance, COD, D1, Meta, CAPI, real MO/PAID actions and customer messages were unchanged.
+8. **Previous task:** GFS-COD-MO-11 correctly established the state gate; this task adds visibility without weakening it.
+9. **Documentation/Git:** rules, plan, status, decisions, test matrix, changelog and this report updated in the release commit.
+10. **Stages:** visible UI/source 100%; local acceptance 100%; candidate upload 100%; authenticated preview 0%; canary/promotion 0%; genuine settlement acceptance 0%.
+11. **One next priority:** establish a supported authenticated preview for the immutable candidate, then authorize only the bounded Admin canary; do not attach or promote before that evidence.
+
 ## GFS-COD-MO-11 first real MO settlement discovery (2026-11-05 PKT)
 
 1. **GO/NO-GO:** NO-GO, safely blocked: no eligible unpaid `COLLECTION_PENDING` COD candidate or genuine remittance/company-receipt evidence.

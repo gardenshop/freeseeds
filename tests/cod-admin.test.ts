@@ -318,6 +318,50 @@ describe("COD Admin configuration and reconciliation", () => {
     expect(html).toContain("order.state==='COLLECTION_PENDING'");
   });
 
+  it("shows read-only MO information on COD_PENDING without a payment submission", async () => {
+    const response = await app.fetch(new Request("https://admin.example.test/orders", { headers: auth }), env());
+    const html = await response.text();
+    const script = html.slice(html.indexOf("const addUnheldOrderActions=addActions;"), html.indexOf("function renderDetail(data){"));
+    type SyntheticNode = {
+      tagName?: string;
+      className?: string;
+      textContent?: string;
+      onclick?: () => unknown;
+      title?: string;
+      style: Record<string, string>;
+      dataset: Record<string, string>;
+      children: SyntheticNode[];
+      append: (...nodes: SyntheticNode[]) => void;
+    };
+    const appended: SyntheticNode[] = [];
+    const root = {
+      querySelectorAll: () => [],
+      querySelector: () => null,
+      append: (...nodes: SyntheticNode[]) => appended.push(...nodes),
+      insertAdjacentHTML: () => undefined
+    };
+    const context = {
+      addActions: () => undefined,
+      detail: { querySelector: () => root },
+      document: {
+        createElement: (tag: string): SyntheticNode => ({ tagName: tag, className: "", style: {}, dataset: {}, children: [], append(...nodes: SyntheticNode[]) { this.children.push(...nodes); } })
+      },
+      actionButton: (label: string, handler: () => unknown, className: string): SyntheticNode => ({ textContent: label, onclick: handler, className, style: {}, dataset: {}, children: [], append: () => undefined, title: "" }),
+      money: (value: number) => `PKR ${value}`,
+      alert: vi.fn()
+    };
+    runInNewContext(`${script}\naddActions({codOrder:true,codStatus:'COD_PENDING',state:'COD_PENDING',codQuotedTotalPkr:625,orderNumber:'SYNTHETIC-COD'});`, context);
+    const panel = appended.find((node) => node.className === "cod-mo-info");
+    if (!panel) throw new Error("MO information panel was not rendered");
+    expect(panel.children.map((node) => node.textContent).join(" ")).toContain("COD amount: PKR 625");
+    expect(panel.children.map((node) => node.textContent).join(" ")).toContain("MO settlement status: COD_PENDING");
+    const button = panel.children.find((node) => node.textContent === "MO Received" && typeof node.onclick === "function");
+    if (!button?.onclick) throw new Error("MO information button was not rendered");
+    expect(button.className).toBe("");
+    await button.onclick();
+    expect(context.alert).toHaveBeenCalledOnce();
+  });
+
   it("marks an eligible COD order paid once through one audited manual confirmation", async () => {
     seedCod();
     const response = await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, moNumber: "PK-MO-001", confirmed: true });

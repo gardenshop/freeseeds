@@ -1,5 +1,13 @@
 # Status
 
+## GFS-COD-MO-12 visible COD MO action (2026-11-05 PKT)
+
+**Disposition: SOURCE PASS / RELEASE BLOCKED — candidate preview unavailable.**
+
+- The Admin UI now visibly presents MO Received information/action for COD detail states including `COD_PENDING`; only `COLLECTION_PENDING` can submit through the existing secure handler. No automatic fulfillment or payment transition was added.
+- Focused 28/28 and full 379/1 tests pass; build/lint pass. Candidate `3e4b7c26-c36d-4d1c-baeb-d26629a9b4a1` is Ready, retains named HMAC/D1/R2/Queue/secret slots, and is not attached.
+- The generated candidate preview failed TLS and the alternate preview form returned 404. Live Admin remains the prior candidate at 100%; no canary, promotion or rollback was performed.
+
 ## GFS-COD-MO-11 first real MO settlement gate (2026-11-05 PKT)
 
 **Disposition: NO-GO / blocked safely — no eligible real settlement exists.**

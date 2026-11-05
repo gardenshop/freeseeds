@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-COD-MO-12 visible COD MO action (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| COD_PENDING visible action | PASS | Synthetic browser-script assertion renders MO Received, current COD amount, settlement status and read-only explanation without a submission path. |
+| Secure eligible path | PASS | Existing `COLLECTION_PENDING` handler remains the only path to `/mark-payment-received`; focused suite preserves exact amount, HMAC, CSRF, confirmation, audit and duplicate guards. |
+| Protected states | PASS | Existing tests retain premature, unauthorized, wrong-amount, held, cancelled, Advance and duplicate protections; no automatic state transition was added. |
+| Regression/build/lint | PASS | Full 379 passed/1 skipped; TypeScript build and ESLint pass. |
+| Candidate upload/bindings | PASS | One candidate uploaded; HMAC/D1/R2/Queue/secret slots retained and routing remained baseline100%. |
+| Candidate preview | BLOCKED | Generated preview failed TLS; alternate preview form returned 404. No canary or promotion. |
+
 ## GFS-COD-MO-11 first real MO settlement discovery (2026-11-05 PKT)
 
 | Gate | Result | Evidence |

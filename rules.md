@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-12 visible COD MO action (2026-11-05 PKT)
+
+- Admin source now renders a visible MO Received information/action panel for every non-Advance COD detail, including `COD_PENDING`, with the current immutable COD amount, settlement status and eligibility explanation. Ineligible states are read-only and never call the payment endpoint; no order state is advanced automatically.
+- `COLLECTION_PENDING` continues to use the existing authenticated Access/CSRF/HMAC, exact amount, MO reference, confirmation, audit, duplicate and backend eligibility guards. Cancelled, held, archived, Advance and other non-COD records remain protected.
+- Local validation passed 379 tests/1 skipped, build and lint. One immutable candidate was uploaded with retained named bindings, but its authenticated version preview was unavailable (TLS failure/404); no canary or promotion is authorized until preview evidence is available.
+
 ## GFS-COD-MO-11 first real MO settlement gate (2026-11-05 PKT)
 
 - Read-only live verification confirms that Admin MO Received is intentionally available only for eligible `COLLECTION_PENDING` COD orders. A `COD_PENDING` order must not display or invoke it; the protected fulfillment sequence remains `COD_PENDING` → `PACKING` → `DISPATCHED` → `DELIVERED` → `COLLECTION_PENDING` → `PAID`.

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-05 - GFS-COD-MO-12 visible COD MO action
+
+- Added a read-only MO Received information/action panel to all COD detail states, including `COD_PENDING`, showing COD amount, settlement status and eligibility. Only eligible `COLLECTION_PENDING` orders retain the existing secure settlement submission path.
+- Added synthetic UI coverage; full 379 passed/1 skipped, build/lint pass. Uploaded one immutable candidate with retained bindings; preview was unavailable, so no canary or promotion occurred and live routing stayed unchanged.
+
 ## 2026-11-05 - GFS-COD-MO-11 first real MO settlement gate
 
 - Confirmed read-only that MO Received is deliberately unavailable on `COD_PENDING` orders and becomes eligible only at `COLLECTION_PENDING`. Aggregate discovery found no eligible unpaid MO candidate or recorded MO receipt, so no settlement was attempted.

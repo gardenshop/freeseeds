@@ -1,3 +1,9 @@
+## GFS-COD-MO-12 - stop before canary without candidate preview (2026-11-05 PKT)
+
+- **Decision:** accept the UI/source change locally, but do not attach or expose the new version to traffic. A candidate preview is a release prerequisite and was not established.
+- **Evidence:** local UI/security tests pass; Cloudflare readback shows the candidate Ready and unattached with the named HMAC/D1/R2/Queue/secret bindings retained. Existing Admin remains 100%; API is unchanged.
+- **Boundary:** do not weaken backend guards, use real payment evidence, or promote on static source/readback alone. Resume only after a supported authenticated candidate preview returns the new COD_PENDING read-only panel and collection-pending secure path.
+
 ## GFS-COD-MO-11 - do not expose MO Received before collection pending (2026-11-05 PKT)
 
 - **Decision:** retain the `COLLECTION_PENDING` eligibility gate. The absence of MO Received on a `COD_PENDING` order is expected protection, not a UI defect.

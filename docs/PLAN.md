@@ -1,5 +1,11 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-12 visible COD MO action (2026-11-05 PKT)
+
+- Source/UI acceptance is complete: all COD detail states show MO amount, settlement status and an eligibility explanation; only eligible `COLLECTION_PENDING` orders expose the existing secure submission path.
+- Candidate `3e4b7c26-c36d-4d1c-baeb-d26629a9b4a1` uploaded once with preserved HMAC/D1/R2/Queue bindings and remains unattached at 0%. Candidate preview evidence is blocked by TLS/404 preview failures; do not attach, canary or promote until a supported authenticated preview passes.
+- Next exact action: provide or authorize a supported candidate-preview verification path, then independently verify it before any Admin-only canary. API/CAPI, D1, payment and WhatsApp changes remain out of scope.
+
 ## GFS-COD-MO-11 first real MO settlement discovery (2026-11-05 PKT)
 
 - Read-only live Admin and aggregate D1 verification found no eligible unpaid `COLLECTION_PENDING` COD order and no recorded MO receipt. The viewed `COD_PENDING` order correctly withholds MO Received; no workaround or source repair is warranted.
