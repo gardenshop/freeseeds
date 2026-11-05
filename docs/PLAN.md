@@ -385,3 +385,7 @@ Host discovery remains BLOCKED: the available terminal is the sandbox identity a
 ## GFS-COD-MO-41
 
 Host execution and the disposable protected-credential test now PASS. Cloudflare token-management authority remains BLOCKED: the approved in-process credential received HTTP403 from the official permission-group endpoint. Do not guess permission IDs or create a token. Next exact action is owner authorization/provisioning of an identity with Account API Tokens Write and the same approved host receiver, then re-run only the permission metadata check.
+
+## GFS-COD-MO-42
+
+Member authority is PASS: the verified Cloudflare member is Super Administrator. The existing API credential remains insufficient for Account API Tokens Write, explaining HTTP403. Do not change member roles or create broad tokens. The remaining gate is secure provisioning: owner must provide an Account API Tokens Write credential directly to the approved host receiver, or an approved host-side creation path that never exposes the one-time secret.

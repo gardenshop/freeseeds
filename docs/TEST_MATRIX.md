@@ -4149,3 +4149,16 @@ Investigation query costs only (not production savings): representative `rows_re
 | Restricted token | NOT CREATED | No schema guessing or unsafe fallback |
 | Monitoring/rollback | BLOCKED | No scoped deployment credential |
 | Production mutation | PASS | No deployment, routing, payment, D1, API/Meta/CAPI or WhatsApp change |
+
+## GFS-COD-MO-42 Cloudflare authority (2026-11-05 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Account identity | PASS | Verified dashboard account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` |
+| Member authority | PASS | `gisupp@gmail.com`: Super Administrator - All Privileges |
+| Existing token API authority | BLOCKED | Permission-group API returned HTTP403; Worker policy lacks proven Account API Tokens Write |
+| Member role change | NOT NEEDED | No self-grant or policy mutation |
+| Host dummy bridge | PASS | Protected round-trip passed under `bi\\nazim` |
+| Secure one-time secret capture | BLOCKED | No browser/API-to-host path without exposing secret |
+| Scoped token | NOT CREATED | Fail-closed |
+| Production mutation | PASS | No deployment, routing, payment, D1, API/Meta/CAPI or WhatsApp change |

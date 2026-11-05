@@ -2444,3 +2444,9 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - Approved host execution passed: elevated `whoami` returned `bi\\nazim`, distinct from the sandbox identity.
 - Disposable Credential Manager round-trip passed entirely in host memory: store, internal retrieve/compare, delete; only sanitized `PASS` returned. No existing credentials were read by the dummy test.
 - The existing provisioning credential was used only in-process for the official Cloudflare permission-group GET, which returned sanitized HTTP403. Account API Tokens Write/permission authority is therefore unproven. No token creation request was sent, no secret was exposed, and no deployment/canary occurred.
+
+## GFS-COD-MO-42 — member authority PASS; provisioning credential blocked (2026-11-05 PKT)
+
+- Official Cloudflare account member page under `cb5066a6d71ecdee0bd7ed8aacb4d3c2` shows `gisupp@gmail.com` with `Super Administrator - All Privileges`. No self-grant or member-policy change was made.
+- The MO-41 HTTP403 is attributable to the existing in-process token: its visible policy is Workers-only/read-only plus Editor and does not include Account API Tokens Write. The member identity is authorized, but that credential is not.
+- Secure host dummy bridge remains PASS. No token was created because browser/UI secret delivery into the host receiver is not proven. No deployment, traffic, payment, D1, API/Meta/CAPI or WhatsApp mutation occurred.

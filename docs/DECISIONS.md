@@ -2725,3 +2725,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Decision:** accept host bridge and dummy test as PASS, but stop token provisioning on official HTTP403.
 - **Boundary:** no guessed permission IDs/resource formats, no broad token reuse, no token creation, deployment, routing, monitoring tail, payment/order/D1, API/Meta/CAPI or WhatsApp mutation.
 - **Next exact action:** owner provides an authorized identity with Account API Tokens Write, used through the already-passing host receiver; verify permission metadata before one restricted-token creation.
+
+## GFS-COD-MO-42 — no role change; no secret exposure
+
+- **Decision:** member authority is sufficient; do not self-grant or alter account roles. The existing token, not the member, is the HTTP403 blocker.
+- **Boundary:** do not create a token through browser UI while its one-time secret would be exposed to the agent; do not create broad provisioning credentials or reuse the insufficient token for writes.
+- **Next exact action:** owner provides an Account API Tokens Write credential directly into the already-passing host receiver, or an approved host-side Cloudflare token-creation path with in-process secret capture.

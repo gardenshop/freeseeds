@@ -2645,3 +2645,9 @@ No secrets are stored in this registry.
 - Host runner: approved elevated process under `bi\\nazim`; output sanitized.
 - Credential handler: disposable in-memory round-trip PASS; no persistent production secret was read or written by the test.
 - Cloudflare authority: official `/accounts/{account}/tokens/permission_groups` request returned HTTP403 using the existing in-process credential; no token-management resource was registered and no create request was sent.
+
+## GFS-COD-MO-42 authority resources (2026-11-05 PKT)
+
+- Account/member resource: verified account dashboard shows `gisupp@gmail.com` as `Super Administrator - All Privileges`.
+- Existing API credential: Worker Editor/read-only policy; official permission-group API returned HTTP403, consistent with no Account API Tokens Write capability. No secret value recorded.
+- Secure capture: host dummy handler PASS, but no approved path transfers a newly created browser/API token directly into host storage without exposing it.

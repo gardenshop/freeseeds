@@ -7339,3 +7339,16 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 9. **Docs/Git:** evidence-only docs updated; no secrets, PII or customer/MO data.
 10. **Stages:** host bridge/dummy test 100%; source/migration/preview 100%; token/telemetry/rollback/canary/settlement/CAPI 0% blocked; protected production 100%.
 11. **One next MO action:** owner provides an identity with Account API Tokens Write through the already-passing host receiver, then verify permission metadata before creating one 24-hour Worker-only Editor token.
+
+## GFS-COD-MO-42 final report — 2026-11-05 PKT
+
+1. **MO-41 comparison:** host bridge and dummy test remain PASS; Cloudflare member authority is now verified.
+2. **Member/permissions:** **PASS** — `gisupp@gmail.com` is Super Administrator - All Privileges for account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+3. **HTTP403 root cause:** existing in-process token lacks proven Account API Tokens Write; its visible policy is Worker Editor/read-only, not member authority.
+4. **Scoped token:** **BLOCKED/NOT CREATED**. No guessed schema, broad token, role change or secret exposure.
+5. **Secure storage:** host dummy bridge PASS; secure capture of a newly created token from browser/API into host storage is not available.
+6. **Wrangler/monitoring/rollback:** **BLOCKED** without the scoped deployment token.
+7. **Zero regression:** no deployment, routing, payment/order/D1, API/Meta/CAPI, WhatsApp or customer mutation. Admin remains `3e4b7c26`100% / `ce023b54`0%; API `b426ba47`100%. Tests retained: focused 38/38; full 385 passed/1 skipped; build/lint PASS.
+8. **Docs/Git:** evidence-only docs updated; no credentials, PII or customer/MO data.
+9. **Stages:** member/host bridge 100%; source/migration/preview 100%; scoped token/telemetry/rollback/canary/settlement/CAPI 0% blocked; protected production 100%.
+10. **One next MO action:** owner supplies Account API Tokens Write through the passing host receiver, or enables an approved host-side token-creation path with in-process secret capture; then create one 24-hour Worker-only Editor token.
