@@ -1,5 +1,10 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-11 first real MO settlement discovery (2026-11-05 PKT)
+
+- Read-only live Admin and aggregate D1 verification found no eligible unpaid `COLLECTION_PENDING` COD order and no recorded MO receipt. The viewed `COD_PENDING` order correctly withholds MO Received; no workaround or source repair is warranted.
+- Settlement remains blocked until an eligible order has genuine Pakistan Post MO/remittance and actual company-receipt evidence matching its immutable COD quote, followed by separately authorized authenticated Admin confirmation. No state or payment mutation occurred.
+
 ## GFS-COD-MO-10 final Admin MO release (2026-11-05 PKT)
 
 - Final Admin deployment `bbe4c470-e331-4c7e-9ac9-525c266c52c3` serves immutable MO candidate `92c81e60` at100%. API remains `b426ba47`100% / `d683ec45`0%; no settings sync or unrelated deployment occurred.

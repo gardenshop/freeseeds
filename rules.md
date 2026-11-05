@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-11 first real MO settlement gate (2026-11-05 PKT)
+
+- Read-only live verification confirms that Admin MO Received is intentionally available only for eligible `COLLECTION_PENDING` COD orders. A `COD_PENDING` order must not display or invoke it; the protected fulfillment sequence remains `COD_PENDING` → `PACKING` → `DISPATCHED` → `DELIVERED` → `COLLECTION_PENDING` → `PAID`.
+- The released Admin candidate remains at 100% with the named HMAC binding present. Aggregate D1 discovery found no eligible unpaid MO candidate and no recorded MO receipt. No authenticated Pakistan Post remittance/beneficiary evidence was supplied or found.
+- No fulfillment, order, payment, receipt, customer, routing, secret, deployment, D1, WhatsApp, Meta or CAPI write is authorized from this result. Never force state or expose the action early to bypass the exact-amount, authenticated operator and evidence gates.
+
 ## GFS-COD-MO source-ready settlement (2026-11-04 PKT)
 
 - Approved Pakistan Post model is implemented locally: one normalized MO number is required, only its HMAC is stored, amount must equal the original COD payable, duplicate MO use is rejected, and the operator/time/audit trail is recorded.

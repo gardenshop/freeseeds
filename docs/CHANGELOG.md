@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-05 - GFS-COD-MO-11 first real MO settlement gate
+
+- Confirmed read-only that MO Received is deliberately unavailable on `COD_PENDING` orders and becomes eligible only at `COLLECTION_PENDING`. Aggregate discovery found no eligible unpaid MO candidate or recorded MO receipt, so no settlement was attempted.
+- No source, deployment, routing, D1, order, payment, customer, WhatsApp, Meta, secret or CAPI mutation occurred.
+
 ## 2026-11-05 - GFS-COD-MO-10 final Admin MO release
 
 - Promoted immutable Admin candidate `92c81e60-3ec3-40b6-b912-ea81f94ee8af` to100% in deployment `bbe4c470-e331-4c7e-9ac9-525c266c52c3`; API remains baseline `b426ba47`100% / `d683ec45`0%. No settings synchronization, API/Meta/CAPI/D1/secret/payment configuration action occurred.

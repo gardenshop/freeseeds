@@ -1,5 +1,14 @@
 # Test Matrix
 
+## GFS-COD-MO-11 first real MO settlement discovery (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Released Admin eligibility UI | PASS | Authenticated GET confirms MO Received is gated at `COLLECTION_PENDING` and retains required MO-number/exact-amount controls. |
+| Eligible real-settlement candidate | BLOCKED | Aggregate read-only D1 discovery found no unpaid eligible `COLLECTION_PENDING` COD order and no MO receipt. |
+| Payment mutation | NOT RUN | No genuine Pakistan Post remittance or company-receipt evidence; no endpoint call or state transition is authorized. |
+| Regression | PASS / retained | No source/configuration change; API/Admin routing, Advance, COD, WhatsApp, recovery and CAPI boundaries remain unchanged. |
+
 ## GFS-COD-MO-10 final Admin release verification (2026-11-05 PKT)
 
 | Gate | Result | Evidence |

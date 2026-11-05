@@ -1,5 +1,13 @@
 # Status
 
+## GFS-COD-MO-11 first real MO settlement gate (2026-11-05 PKT)
+
+**Disposition: NO-GO / blocked safely — no eligible real settlement exists.**
+
+- Live Admin rendering confirms MO Received is deliberately restricted to `COLLECTION_PENDING`; a `COD_PENDING` order correctly shows fulfillment controls only.
+- Aggregate read-only D1 discovery found no unpaid eligible candidate and no MO receipt. No genuine settlement evidence was available.
+- No writes, source changes or tests were run; Admin/API routing, WhatsApp, Advance methods, COD PKR125, recovery ON and CAPI OFF remain unchanged.
+
 ## GFS-COD-MO-10 Admin MO final release (2026-11-05 PKT)
 
 **Disposition: GO — Admin MO candidate live at100%; API, WhatsApp and payment protections unchanged.**

@@ -1,3 +1,9 @@
+## GFS-COD-MO-11 - do not expose MO Received before collection pending (2026-11-05 PKT)
+
+- **Decision:** retain the `COLLECTION_PENDING` eligibility gate. The absence of MO Received on a `COD_PENDING` order is expected protection, not a UI defect.
+- **Evidence:** authenticated Admin GET confirms the released UI contains the collection-pending gate, required Pakistan Post MO number and exact-amount control; aggregate read-only D1 discovery found no live unpaid eligible candidate or receipt.
+- **Boundary:** no state advancement, payment action or evidence fabrication. Next settlement requires genuine matching Pakistan Post/company-receipt evidence on an already eligible order and separate authorization for one authenticated Admin confirmation.
+
 ## GFS-COD-MO-10 - final Admin MO release boundary (2026-11-05 PKT)
 
 - **Decision:** accept `bbe4c470-e331-4c7e-9ac9-525c266c52c3` as the final Admin-only release: immutable `92c81e60`100%. No API/CAPI/Meta/D1/secret/payment configuration action is implied.
