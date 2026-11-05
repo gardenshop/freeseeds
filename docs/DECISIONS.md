@@ -2597,3 +2597,8 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Evidence:** authenticated identity and D1 matched; remote `0047=1`, `0048=0`, historical table absent, normal MO rows zero, and read-only metadata reported zero writes. Recovery bookmark was recorded securely.
 - **Repair/boundary:** local migration marker and cross-ledger normal/historical MO HMAC rejection pass focused/full tests. No repaired source deployment, D1 write, payment mutation, API/Meta/CAPI change or candidate release is authorized by this task.
 - **Next exact authorization:** review and authorize one targeted execution of the repaired 0048 migration only; then separately authorize candidate upload/preview.
+## GFS-COD-MO-21 - stop on active-routing mismatch (2026-11-05 PKT)
+
+- **Decision:** do not apply repaired migration 0048 while the authenticated Cloudflare dashboard reports Admin `e8c96c96`94.5% / `3e4b7c26`5.5%, conflicting with the frozen `3e4b7c26`100% baseline.
+- **Evidence:** account/operator, source SHA and remote D1 preflight all match; D1 has no partial 0048 object or marker and verification writes are zero. The Admin `/health` GET returned 403, so live health is not established.
+- **Boundary:** no Time Travel bookmark, migration, deployment, routing edit, payment/order action, secret, API/Meta/CAPI or customer-message change. Resolve the routing/Access evidence with a separately authorized read-only audit first.

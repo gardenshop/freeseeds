@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-COD-MO-21 repaired 0048 preflight resources (2026-11-05 PKT)
+
+- **Verified local artifact:** repaired `migrations/0048_historical_cod_mo.sql` at authorized commit `ac743db`; marker statement present.
+- **Remote D1:** authorized account/database matched; `0047` once, `0048` absent, historical ledger absent, normal MO ledger empty; read-only query wrote zero rows.
+- **Safety blocker:** authenticated dashboard active provisioning was `e8c96c96`94.5% / `3e4b7c26`5.5%, conflicting with the authorized baseline and not reconciled by CLI history. No mutation is permitted until a separately authorized routing/Access read-only audit resolves this.
+
 ## GFS-COD-MO-20 migration 0048 preflight resources (2026-11-05 PKT)
 
 - **Identity/D1:** `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, `getfreeseeds-staging`; read-only schema shows `0047` once, `0048` absent, no historical table, normal MO table present with zero rows.

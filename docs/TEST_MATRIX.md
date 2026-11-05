@@ -1,5 +1,15 @@
 # Test Matrix
 
+## GFS-COD-MO-21 repaired 0048 preflight (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Repaired artifact | PASS | Authorized SHA; 0048 marker statement present. |
+| D1 preflight | PASS | `0047=1`, `0048=0`, no historical table, zero verification writes. |
+| Routing/health prerequisite | BLOCKED | Dashboard reports Admin `e8c96c96`94.5% / `3e4b7c26`5.5%; `/health` returned 403. |
+| Production mutation | NOT RUN | Fail-closed before bookmark or targeted migration. |
+| Retained local verification | PASS | MO-20 focused 34/34, full 385/1, build/lint PASS; no source change in MO-21. |
+
 ## GFS-COD-MO-20 migration 0048 preflight (2026-11-05 PKT)
 
 | Gate | Result | Evidence |

@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-21 repaired 0048 preflight (2026-11-05 PKT)
+
+- **BLOCKED before D1 write:** account/operator and repository matched (`gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, HEAD `ac743db`). The repaired 0048 file contains its marker and retains the expected local file digest. Remote D1 remains `0047=1`, `0048=0`, no historical table, zero normal MO rows, and SELECT metadata `changes=0`/`rows_written=0`.
+- Authenticated Cloudflare dashboard active provisioning showed Admin `e8c96c96` 94.5% and `3e4b7c26` 5.5%, conflicting with the frozen 100%/0% baseline. The CLI deployment history did not establish a matching current deployment, so routing is not safely established. Admin Orders APIs were readable, but `/health` returned 403.
+- Stop before migration, bookmark creation, deployment or any payment/order write. Do not reinterpret a conflicting dashboard metric as permission to write D1. Preserve the new-number WhatsApp lock and Hoja Seeds zero-connection rule.
+
 ## GFS-COD-MO-20 migration 0048 preflight (2026-11-05 PKT)
 
 - **BLOCKED before D1 write:** authenticated read-only preflight matched `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, database `getfreeseeds-staging`, and HEAD `345c9312`. D1 has marker `0047` once, no `0048` marker, no historical ledger, normal MO ledger present with zero rows, 886 orders and 886 payments; SELECT metadata reported `changes=0` and `rows_written=0`.

@@ -1,5 +1,11 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-21 repaired 0048 preflight (2026-11-05 PKT)
+
+- Repaired migration/source SHA matches the authorized commit and remote D1 has no partial 0048 state. No D1 write occurred.
+- Blocked before execution because authenticated Cloudflare active provisioning showed Admin `e8c96c96` 94.5% / `3e4b7c26` 5.5%, not the authorized baseline. CLI history did not safely reconcile the discrepancy; Admin `/health` also returned 403.
+- Next exact action: separately authorize a read-only routing/Access reconciliation; do not include a D1 migration, traffic change or payment action.
+
 ## GFS-COD-MO-20 migration 0048 preflight (2026-11-05 PKT)
 
 - Read-only identity/D1 preflight passed, but the exact migration was blocked before write because it omitted the required `0048` schema marker. Production remains unchanged: `0047` once, `0048` absent, historical table absent, normal MO rows zero, and SELECT metadata showed zero writes.

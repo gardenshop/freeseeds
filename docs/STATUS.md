@@ -1,5 +1,13 @@
 # Status
 
+## GFS-COD-MO-21 repaired 0048 preflight (2026-11-05 PKT)
+
+**Disposition: BLOCKED safely before D1 write / routing and health mismatch.**
+
+- Identity, account, repo SHA and repaired SQL matched. D1 readback remains `0047=1`, `0048=0`, historical table absent, normal MO ledger empty, and zero verification writes.
+- Authenticated dashboard showed unexpected Admin active provisioning `e8c96c96`94.5% / `3e4b7c26`5.5%. This conflicts with the frozen Admin `3e4b7c26`100% baseline; CLI history did not establish an unambiguous current routing.
+- Orders/payment configuration GETs remained readable and COD fee was PKR125, but Admin `/health` returned 403. No bookmark, D1 write, deployment, order/payment action, WhatsApp, Meta or CAPI action was performed.
+
 ## GFS-COD-MO-20 migration 0048 preflight (2026-11-05 PKT)
 
 **Disposition: BLOCKED safely before D1 write / local repair PASS.**

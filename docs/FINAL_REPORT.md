@@ -1,5 +1,19 @@
 # Final Report
 
+## GFS-COD-MO-21 repaired 0048 execution gate (2026-11-05 PKT)
+
+1. **MO-20 comparison:** repaired marker and cross-ledger protections are present locally; prior D1 state remained clean.
+2. **0048:** **BLOCKED**, not applied.
+3. **Schema evidence:** repaired SQL includes the `0048` marker; remote D1 is `0047=1`, `0048=0`, historical table absent, normal MO ledger empty, verification metadata zero-write.
+4. **Integrity/recovery:** no partial 0048 object and no D1 DML; a fresh bookmark was not created because the routing mismatch stopped preflight before the write stage.
+5. **Cross-ledger security:** retained local PASS from MO-20; no source change or deployment in this task.
+6. **Regression:** no production migration; Orders/payment configuration GETs remained readable and COD fee read PKR125, while Admin `/health` returned 403.
+7. **Routing:** dashboard active provisioning was Admin `e8c96c96`94.5% / `3e4b7c26`5.5%, conflicting with the requested `3e4b7c26`100%; API was not changed.
+8. **Blocker:** routing/Access evidence conflict; no attempt was made to alter routing or D1.
+9. **Documentation/Git:** rules, plan, status, registry, decisions, matrix, changelog, SOP and report record the fail-closed result.
+10. **Stages:** local migration/security 100%; D1 execution 0%; routing evidence unresolved; candidate release 0%; genuine settlement 0%.
+11. **One next authorization:** a read-only Cloudflare Admin routing and Access-health reconciliation only, with no D1 migration or traffic change.
+
 ## GFS-COD-MO-20 migration 0048 preflight (2026-11-05 PKT)
 
 1. **Previous task:** MO-19 source was present locally; migration 0048 remained unapplied.
