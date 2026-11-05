@@ -1,5 +1,12 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-18 first real COD settlement discovery (2026-11-05 PKT)
+
+- Read-only identity, routing, Admin/API health, D1 schema, payment configuration and binding checks passed. Admin is candidate `3e4b7c26` at 100% in deployment `7aacd65b`; API is `b426ba47` 100% / `d683ec45` 0%.
+- Admin returned 461 active COD_PENDING rows and zero collection-pending rows. D1 returned 459 COD_PENDING, one DISPATCHED and one PACKING sidecar; the MO ledger and collection/remittance evidence remain empty.
+- No genuine Pakistan Post or beneficiary/remittance evidence, eligible order, or order-specific approval was available. PAID was not attempted. First-five pilot readiness is 0/5 and remains read-only.
+- Next exact action: obtain owner-authorized Pakistan Post/courier account or agreement evidence and one real delivered/collection/remittance-backed `COLLECTION_PENDING` order, then separately authorize exactly one authenticated MO confirmation. No deployment, migration, API/Meta/CAPI, customer or payment action.
+
 ## GFS-COD-MO-17 final visible MO Admin release (2026-11-05 PKT)
 
 - GFS-COD-MO-16 baseline blocker is resolved: actual baseline `e8c96c96` promoted directly to candidate `3e4b7c26`; historical `92c81e60` was not restored.

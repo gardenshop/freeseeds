@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-COD-MO-18 settlement discovery resources (2026-11-05 PKT)
+
+- **Identity/routing:** `gisupp@gmail.com` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Admin candidate `3e4b7c26` 100% in deployment `7aacd65b`; API `b426ba47` 100% / `d683ec45` 0%.
+- **D1:** `getfreeseeds-staging` read-only schema contains `cod_order_details`, `cod_mo_receipts`, `orders`, `payments`, `payment_methods` and `audit_log`. Current aggregates: 459 COD_PENDING, one DISPATCHED, one PACKING; zero MO receipts and zero collection/remittance evidence. No identifiers or raw references retained.
+- **Payment/runtime:** three Advance methods enabled; COD enabled at PKR125; collection/remittance policy flags false; API recovery enabled and CAPI disabled. HMAC, D1, R2 and Queue binding names were read without values.
+- **Settlement evidence:** no eligible order, authenticated Pakistan Post/courier source, delivery/remittance/beneficiary receipt, or order-specific approval was accessible. Pilot readiness is 0/5. No booking, dispatch, customer contact, receipt, PAID, D1 or deployment mutation.
+
 ## GFS-COD-MO-07 Admin 0% deployment resources (2026-11-05 PKT)
 
 - **Deployment:** `872f0a53-d9e1-4daa-b441-caf599c74d0a`, percentage strategy, author `gisupp@gmail.com`; `e8c96c96`100% and `92c81e60`0%. No API deployment changed.

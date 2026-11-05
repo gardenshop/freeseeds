@@ -93,6 +93,13 @@
 
 # Decisions
 
+## GFS-COD-MO-18 - first real settlement remains blocked (2026-11-05 PKT)
+
+- **Decision:** do not submit MO Received or alter any order. There are no active unpaid `COLLECTION_PENDING` COD orders and no genuine MO/remittance/company-receipt evidence or order-specific approval.
+- **Evidence:** Admin read-only list returned 461 COD_PENDING and zero collection-pending rows; D1 returned 459 COD_PENDING, one DISPATCHED and one PACKING sidecar, zero MO receipts and zero collection/remittance evidence. All reads were SELECT-only with zero writes.
+- **Protection:** Admin candidate `3e4b7c26` remains 100%; API `b426ba47` remains 100%; Advance methods, COD PKR125, WhatsApp, Recovery ON, CAPI OFF, HMAC, bindings and existing order history remain unchanged.
+- **Next exact authorization:** obtain one genuine eligible order and matching Pakistan Post/courier delivery, MO/remittance and Garden Shop receipt evidence, then separately authorize one authenticated Admin confirmation for that order only.
+
 ## GFS-META-04 - reject MCP blank profile (2026-11-04 PKT)
 
 **Decision:** reject the MCP-launched cache profile as the wrong browser. The real Chrome process uses the normal default user-data root but has no remote-debugging flag; the MCP process uses a separate `chrome-devtools-mcp\chrome-profile` with `--remote-debugging-pipe`.

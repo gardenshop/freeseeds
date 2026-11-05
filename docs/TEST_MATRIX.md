@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-COD-MO-18 first real settlement discovery (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Account/operator/routing | PASS | Wrangler and dashboard identity matched frozen account/operator; Admin `3e4b7c26` 100% in `7aacd65b`; API `b426ba47` 100% / `d683ec45` 0%. |
+| Eligible real order | BLOCKED | Authenticated Admin returned 461 active COD_PENDING and zero `COLLECTION_PENDING` records. |
+| D1 schema/evidence | PASS / BLOCKED | COD, MO, order, payment and audit tables exist; D1 counts are 459 COD_PENDING, one DISPATCHED, one PACKING, zero MO receipts and zero collection/remittance evidence. |
+| Payment configuration | PASS / protected | JazzCash, Easypaisa and Bank Transfer enabled; COD PKR125 enabled; settlement policy flags remain false. |
+| Genuine MO evidence | BLOCKED | No authenticated Pakistan Post/courier, delivery, remittance, beneficiary receipt or order-specific approval was verified. |
+| Settlement POST/PAID | NOT RUN | Safely withheld; no real payment or order mutation. |
+| Pilot readiness | BLOCKED | 0/5; courier source, eligible order and matching evidence are missing. |
+| Regression baseline | RETAINED | No source change; 379 passed / 1 skipped and build/lint PASS remain valid. |
+
 ## GFS-COD-MO-17 final visible MO Admin release (2026-11-05 PKT)
 
 | Gate | Result | Evidence |

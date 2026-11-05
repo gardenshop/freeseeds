@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-18 first real COD settlement discovery (2026-11-05 PKT)
+
+- **NO-GO / safely blocked:** read-only discovery found 461 active COD_PENDING Admin rows and zero `COLLECTION_PENDING` rows. D1 sidecars are 459 `COD_PENDING`, one `DISPATCHED`, and one `PACKING`; `cod_mo_receipts` is empty and collection/remittance evidence counts are zero.
+- The authenticated operator is `gisupp@gmail.com` in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Admin candidate `3e4b7c26` remains 100% in deployment `7aacd65b`; API remains `b426ba47` 100% / `d683ec45` 0%.
+- Live read-only Admin configuration reports JazzCash, Easypaisa and Bank Transfer enabled, COD enabled at PKR125, and both collection/remittance policy configuration flags false. API version readback retains recovery enabled and `META_CAPI_ENABLED=false`; HMAC and D1/R2/Queue bindings remain present by name only.
+- No authentic Pakistan Post MO, dispatch/delivery/collection/remittance evidence, Garden Shop beneficiary receipt, or separate order-specific operator approval was verified. A reference alone is not funds proof. No Admin POST, PAID transition, receipt, D1, order, courier, message, WhatsApp, Meta or CAPI mutation occurred.
+- First-five pilot readiness is 0/5. Do not book, dispatch, contact customers, advance state, or mark PAID. Missing prerequisite is an owner-authorized courier/account source plus one genuine eligible order with matching delivery, MO/remittance and company-receipt evidence, followed by separate confirmation authorization.
+- Preserve the new-number WhatsApp lock and Hoja Seeds zero-connection rule.
+
 ## GFS-COD-MO-17 final visible MO Admin release (2026-11-05 PKT)
 
 - **GO:** immutable candidate `3e4b7c26-c36d-4d1c-baeb-d26629a9b4a1` is live at 100% Admin traffic in deployment `7aacd65b-fe1d-4c47-9f92-5ba3bf791dc5`. The current rollback target is `e8c96c96` 100% / candidate 0%; do not substitute historical `92c81e60`.

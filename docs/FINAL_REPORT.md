@@ -1,5 +1,20 @@
 # Final Report
 
+## GFS-COD-MO-18 first real COD settlement discovery (2026-11-05 PKT)
+
+1. **Previous task:** GFS-COD-MO-17 Admin release remained live and healthy; genuine settlement was explicitly untested.
+2. **Routing:** Admin `3e4b7c26` is 100% in deployment `7aacd65b`; API `b426ba47` is 100% / `d683ec45` 0%.
+3. **Genuine MO:** **NO.** Read-only Admin found 461 active COD_PENDING records and zero `COLLECTION_PENDING` records. No authentic Pakistan Post/courier MO, delivery, remittance, Garden Shop receipt or order-specific operator approval was verified.
+4. **Evidence:** D1 schema is present; aggregate sidecars are 459 COD_PENDING, one DISPATCHED and one PACKING. `cod_mo_receipts`, collection evidence and remittance evidence are all zero. Read-only D1 metadata reports zero rows written.
+5. **PAID:** **BLOCKED / not attempted.** No payment POST, receipt insertion or order transition occurred; duplicate and exact-amount guards remain the only approved path.
+6. **Pilot readiness:** **0/5.** Missing owner-authorized courier/account source, genuine eligible order, delivery/collection/remittance evidence and matching company receipt.
+7. **Protection:** JazzCash, Easypaisa and Bank Transfer remain enabled; COD remains PKR125; Recovery is ON; CAPI is OFF; HMAC/D1/R2/Queue bindings remain present by name; WhatsApp/API/Admin traffic was not changed.
+8. **Tests/defects:** No source change or defect repair. Retain 379 passed / 1 skipped and build/lint PASS; only read-only checks were added to this evidence record.
+9. **Documentation:** rules, plan, status, decisions, test matrix, resource registry, changelog and this report updated with aggregate-only evidence; no PII, raw MO reference, receipt image or secret recorded.
+10. **Completion:** Admin MO release 100%; settlement discovery 100%; genuine settlement acceptance 0%; first-five courier pilot readiness 0%; API/CAPI release 0%.
+11. **Safety:** No booking, dispatch, customer message, courier mutation, order/payment/D1 mutation, deployment, migration, Meta or CAPI change occurred.
+12. **One next action:** obtain owner-authorized Pakistan Post/courier evidence for one real delivered and collection/remittance-backed `COLLECTION_PENDING` order, then separately authorize exactly one authenticated MO confirmation.
+
 ## GFS-COD-MO-17 final Admin release (2026-11-05 PKT)
 
 1. **Previous task:** GFS-COD-MO-16 correctly stopped on a baseline mismatch. This task used the verified actual baseline `e8c96c96`; historical `92c81e60` was not restored.

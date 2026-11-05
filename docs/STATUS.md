@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-MO-18 first real COD settlement discovery (2026-11-05 PKT)
+
+**Disposition: NO-GO / blocked safely; no settlement mutation.**
+
+- Cloudflare identity matched `gisupp@gmail.com` and account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Admin candidate `3e4b7c26` is 100% in deployment `7aacd65b`; API routing is unchanged at `b426ba47` 100% / `d683ec45` 0%.
+- Authenticated Admin GETs returned 461 active COD_PENDING records and zero `COLLECTION_PENDING` records. D1 SELECT-only reads returned 459 COD_PENDING, one DISPATCHED and one PACKING sidecar, zero MO receipts and zero collection/remittance evidence; `changes=0`, `rows_written=0`.
+- Payment readback reports all three Advance methods enabled, COD PKR125 enabled, and both COD settlement-policy flags false. Recovery is ON, CAPI is OFF, WhatsApp/API health is retained, and named HMAC/D1/R2/Queue bindings remain present.
+- No genuine MO, matching delivery/remittance/company-receipt evidence or separate order-specific approval was verified. No POST, PAID, receipt, order, courier, customer, WhatsApp, Meta, CAPI, deployment or D1 mutation occurred. Pilot readiness: 0/5.
+
 ## GFS-COD-MO-17 final visible MO Admin release (2026-11-05 PKT)
 
 **Disposition: GO — candidate live at 100%; 15-minute monitoring PASS.**

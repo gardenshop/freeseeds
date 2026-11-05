@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-05 - GFS-COD-MO-18 first real settlement discovery
+
+- Read-only identity/routing and health checks passed. Admin candidate `3e4b7c26` remains 100% in deployment `7aacd65b`; API remains `b426ba47` 100% / `d683ec45` 0%.
+- Admin/D1 discovery found 461 active COD_PENDING records, zero collection-pending records, 459 COD_PENDING sidecars, one DISPATCHED, one PACKING, zero MO receipts and zero collection/remittance evidence. Payment configuration remains three Advance methods enabled and COD PKR125.
+- No genuine Pakistan Post evidence or order-specific approval was available; no MO/PAID POST, order, D1, courier, customer, WhatsApp, Meta, CAPI or deployment mutation occurred. First-five pilot readiness is 0/5.
+
 ## 2026-11-05 - GFS-COD-MO-17 final visible MO Admin release
 
 - Promoted immutable candidate `3e4b7c26-c36d-4d1c-baeb-d26629a9b4a1` to100% Admin traffic in deployment `7aacd65b-fe1d-4c47-9f92-5ba3bf791dc5`, directly from the actual `e8c96c96` baseline.
