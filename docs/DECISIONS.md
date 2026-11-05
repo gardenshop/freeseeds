@@ -2668,3 +2668,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Evidence:** API-origin `/health` HTTP200 with ready state and WhatsApp enabled; Admin Orders/Conversations HTTP200; privacy-safe Analytics window and reminder aggregates recorded without identifiers.
 - **Boundary:** Admin `3e4b7c26`100% / `ce023b54`0%, API unchanged; no deployment, routing, payment/order/D1, Access, secret, API/Meta/CAPI, WhatsApp or customer mutation. Protected Admin `/health` HTTP200 remains unverified.
 - **Next exact action:** business review of the privacy-safe funnel/reminder aggregates; separately restore official candidate-attributed telemetry before any canary authorization.
+
+## GFS-COD-MO-32 - stop before positive traffic (2026-11-05 PKT)
+
+- **Decision:** NO-GO for the 90/10 canary. Official version metrics are visible, but fresh post-probe ingestion and executable rollback access are not proven.
+- **Evidence:** Key Figures showed candidate `ce023b54` 18 invocations, 0% errors and 4.69 ms CPU; candidate override MO GET passed and was cleared. Wrangler OAuth dry-run failed as expired/unreachable; no dashboard traffic mutation was performed.
+- **Boundary:** Admin remains `3e4b7c26`100% / `ce023b54`0%; API unchanged; no deployment, traffic, payment/order/D1, Access, secret, API/Meta/CAPI, WhatsApp or customer mutation.
+- **Next exact action:** restore supported deployment-control access or Wrangler OAuth, then obtain one fresh candidate metric increment and independently verify rollback readback.

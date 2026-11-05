@@ -7217,3 +7217,16 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 8. **Documentation/Git:** rules, status, plan, decisions, test matrix, resource registry, changelog and report updated for this evidence.
 9. **Stages:** source/migration/preview/upload100%; monitoring restoration0% blocked; canary0%; promotion0%; settlement0%.
 10. **One next executable task:** business review of the privacy-safe Analytics funnel/reminder aggregates; no release or payment action.
+
+## GFS-COD-MO-32 final report — 2026-11-05 PKT
+
+1. **Monitoring token:** provisioned and confirmed through the existing Cloudflare account UI as Analytics-read only; value was not copied, logged or stored.
+2. **Candidate metrics:** Key Figures showed baseline `3e4b7c26` 484 invocations / 0% errors / 2.62 ms CPU and candidate `ce023b54` 18 / 0% / 4.69 ms CPU. Configured Admin routing remained 100% / 0%.
+3. **Freshness:** **BLOCKED**. The safe candidate override GET did not produce a visible metric increment after refresh.
+4. **Canary:** **NO-GO / NOT RUN**. No positive traffic or deployment occurred.
+5. **Rollback:** historical 90/10 and 100/0 rollout records are visible, but executable rollback access was not proven: Wrangler OAuth is expired/unreachable and dashboard traffic control was not safely executable through MCP.
+6. **MO preview:** candidate GET rendered the historical MO panel, exact COD amount and read-only eligibility; override cleared; no POST or payment mutation.
+7. **Regression:** API health HTTP200 with ready state and WhatsApp enabled; Admin Orders/Conversations readable; no payment, D1, Access, secret, API/Meta/CAPI, WhatsApp or customer mutation. Protected Admin `/health` HTTP200 remains unverified.
+8. **Tests/repairs:** no source defect or repair; prior focused 38/38, full 385 passed/1 skipped and build/lint PASS retained.
+9. **Stages:** historical MO source/migration/preview/upload100%; telemetry visibility partial; canary0% blocked; promotion0%; settlement0%; CAPI0%.
+10. **One next MO-specific action:** restore supported deployment-control access or Wrangler OAuth, then obtain one fresh candidate metric increment and independently verify rollback readback.

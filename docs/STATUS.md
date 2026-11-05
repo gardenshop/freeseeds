@@ -3426,3 +3426,9 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Fresh API-origin `/health` returned HTTP200, `PRODUCTION_INTEGRATION_READY`, `ok=true`, with WhatsApp enabled. Admin Orders and Conversations GETs returned HTTP200.
 - Privacy-safe Analytics read: UTC 2026-10-30–2026-11-05; inbound 20,197; snapshot unique contacts 3,491; new conversations 3,392; submitted orders 599; submitted/inbound 2.97%; `ADVANCE_PENDING` 56 classification / 57 snapshot; COD confirmed 337; reminders +15 delivered/read 29/97 and +210 delivered/read 32/80.
 - Candidate telemetry remained unavailable, so the authorized 90/10 canary was NOT RUN. Admin/API routing stayed unchanged and no production mutation occurred. Protected Admin `/health` HTTP200 remains unverified.
+
+## GFS-COD-MO-32 — monitoring partially restored; canary not run (2026-11-05 PKT)
+
+- Cloudflare Key Figures now rendered version-labelled metrics: baseline `3e4b7c26` 484 invocations / 0% errors / 2.62 ms CPU; candidate `ce023b54` 18 / 0% / 4.69 ms. Routing remained 100% / 0%.
+- Candidate override GET passed for the historical MO panel and was cleared; no POST or payment mutation occurred. The probe did not produce a fresh metric increment.
+- Wrangler dry-run failed because stored OAuth was expired/unreachable, and the dashboard traffic-control action was not safely executable through MCP. The 90/10 canary was therefore NOT RUN. API health and Admin read-only checks remained healthy; protected Admin `/health` remains unverified.

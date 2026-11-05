@@ -2591,3 +2591,9 @@ No secrets are stored in this registry.
 - Fresh Admin resources: authenticated Orders and Conversations GETs returned HTTP200. No customer identifiers were registered.
 - Analytics resource: privacy-safe aggregate window 2026-10-30–2026-11-05 UTC with funnel, payment-class and reminder aggregates; page states no sends, resends, payment changes or customer identifiers.
 - Candidate telemetry resource: absent. No Key Figures/version-labelled logs/equivalent candidate metrics resource was available; no canary resource exists. Routing remains Admin baseline100% / candidate0% and API100% / 0%.
+
+## GFS-COD-MO-32 monitoring resources (2026-11-05 PKT)
+
+- Cloudflare dashboard resource: correct account and Worker Key Figures page rendered version-labelled metrics. Baseline `3e4b7c26`: 484 invocations, 0% errors, 2.62 ms CPU. Candidate `ce023b54`: 18 invocations, 0% errors, 4.69 ms CPU.
+- Candidate preview resource: existing authenticated Admin hostname with quoted version override rendered the historical MO read-only panel and exact amount; header was cleared; no write resource registered.
+- Freshness/rollback resource: candidate count did not increment after the probe; Wrangler OAuth was expired/unreachable and no safe dashboard traffic mutation was performed. No canary deployment resource exists for GFS-32.

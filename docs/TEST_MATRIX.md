@@ -4042,3 +4042,14 @@ Investigation query costs only (not production savings): representative `rows_re
 | Candidate-specific telemetry | BLOCKED | No official Key Figures, version-labelled logs or equivalent attribution |
 | 90/10 Admin canary | NOT RUN | Fail-closed; Admin baseline100% / candidate0% |
 | Production protection | PASS | No traffic, deployment, POST, payment/order/D1, Access, secret or customer mutation |
+
+## GFS-COD-MO-32 monitoring/token preflight (2026-11-05 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Token/account scope | PASS | Existing Cloudflare UI confirms Analytics-read token in correct account; value not transferred or logged |
+| Version-labelled metrics | PASS | Key Figures baseline/candidate invocations, errors and CPU visible |
+| Fresh candidate ingestion | BLOCKED | Candidate count unchanged after safe override probe |
+| Candidate MO read | PASS | Override GET rendered exact COD amount and read-only MO eligibility; no POST |
+| Rollback execution/readback | BLOCKED | Wrangler OAuth expired/unreachable; dashboard traffic control not safely executable in MCP |
+| 90/10 canary | NOT RUN | Fail-closed; Admin remains100%/0% |

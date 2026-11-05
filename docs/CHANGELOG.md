@@ -2332,3 +2332,8 @@
 
 - Recorded fresh read-only API health, Admin Orders/Conversations and privacy-safe Analytics funnel/reminder evidence under the approved alternative P0 path.
 - Kept the canary at 0% because candidate-specific Cloudflare telemetry remained unavailable; Admin/API routing and all WhatsApp/payment/D1 protections were unchanged.
+
+## 2026-11-05 — GFS-COD-MO-32
+
+- Restored read-only Cloudflare Key Figures visibility and recorded version-labelled baseline/candidate metrics plus a safe candidate MO preview.
+- Did not start the canary: fresh metric ingestion and executable rollback access were not proven. Admin/API routing and production protections remained unchanged.
