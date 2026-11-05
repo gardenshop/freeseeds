@@ -1,5 +1,12 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-17 final visible MO Admin release (2026-11-05 PKT)
+
+- GFS-COD-MO-16 baseline blocker is resolved: actual baseline `e8c96c96` promoted directly to candidate `3e4b7c26`; historical `92c81e60` was not restored.
+- Final deployment `7aacd65b-fe1d-4c47-9f92-5ba3bf791dc5` serves candidate100%. Monitoring ran15m56s; candidate metrics19→45, errors0 and final candidate CPU2.47 ms.
+- Live COD_PENDING read-only acceptance, Orders/Conversations, API/WhatsApp, Advance3/3, COD PKR125 and D1 integrity all pass. Rollback target remains `e8c96c96`100% / candidate0%.
+- Admin release is complete. Genuine MO settlement acceptance remains separately gated; API/CAPI releases remain deferred.
+
 ## GFS-COD-MO-16 permanent promotion preflight (2026-11-05 PKT)
 
 - Promotion stopped before mutation because actual Admin routing is `e8c96c96`100% / `3e4b7c26`0% in deployment `ed9754ad-da6e-406c-aea3-d0bd86960ce8`, while the authorization identifies `92c81e60` as the stable100% baseline.

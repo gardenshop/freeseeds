@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-COD-MO-17 final visible MO Admin release (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Exact Admin release | PASS | Deployment `7aacd65b...` serves candidate `3e4b7c26`100%; no API deployment. |
+| 15-minute monitoring | PASS | `07:25:12Z`–`07:41:09Z`; candidate invocations19→45, errors0, final CPU2.47 ms. |
+| COD_PENDING visible/read-only UI | PASS | Genuine COD_PENDING record had positive quote, visible MO information/eligibility, and `moEligible=false`; no POST. |
+| Admin/API health | PASS | Orders/Conversations HTTP200; API health200 ready/WhatsApp enabled. |
+| Bindings/security | PASS | HMAC, D1, R2, Queue and Access-related named bindings retained; no values read. |
+| Payment/D1 protection | PASS | Advance3/3, COD PKR125; D1 `changes=0`, `rows_written=0`, zero MO receipts/COD-paid details. |
+| Rollback readiness | PASS | Exact `e8c96c96`100% / candidate0% target retained; not executed. |
+| Source regression | RETAINED | No source change;379 passed/1 skipped and build/lint PASS retained. |
+
 ## GFS-COD-MO-16 permanent promotion preflight (2026-11-05 PKT)
 
 | Gate | Result | Evidence |

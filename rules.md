@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-17 final visible MO Admin release (2026-11-05 PKT)
+
+- **GO:** immutable candidate `3e4b7c26-c36d-4d1c-baeb-d26629a9b4a1` is live at 100% Admin traffic in deployment `7aacd65b-fe1d-4c47-9f92-5ba3bf791dc5`. The current rollback target is `e8c96c96` 100% / candidate 0%; do not substitute historical `92c81e60`.
+- The monitored window ran from promotion `07:25:12Z` through final metrics `07:41:09Z` (15m56s). Candidate-specific invocations rose 19 to 45 with 0 errors; candidate CPU was 2.47 ms at the final read. Aggregate request duration was 258 ms and is not represented as candidate-only latency.
+- Authenticated live Admin checks passed: genuine non-archived COD_PENDING record had a positive quoted amount, visible MO Received/eligibility information and was ineligible/read-only; Orders and Conversations returned HTTP200. No payment POST, MO reference, PAID or order mutation was performed.
+- API remains `b426ba47` 100% / `d683ec45` 0%; health is ready with WhatsApp enabled. Advance JazzCash/Easypaisa/Bank Transfer are enabled, COD is enabled at PKR125, D1 verification was SELECT-only (`changes=0`, `rows_written=0`) with zero MO receipts and zero COD-paid details, Recovery remains ON and CAPI OFF.
+- HMAC, D1, R2, Queue and Access-related named bindings were retained without value exposure. Genuine Pakistan Post MO settlement remains separately authorized and untested. Preserve the new-number WhatsApp lock and Hoja Seeds zero-connection rule.
+
 ## GFS-COD-MO-16 promotion preflight blocker (2026-11-05 PKT)
 
 - **NO-GO before mutation:** the live Admin deployment is `ed9754ad-da6e-406c-aea3-d0bd86960ce8`, routing `e8c96c96` 100% / `3e4b7c26` 0%. This does not match the GFS-COD-MO-16 frozen baseline naming `92c81e60` 100%.

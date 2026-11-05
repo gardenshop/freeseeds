@@ -1,5 +1,15 @@
 # Status
 
+## GFS-COD-MO-17 final visible MO Admin release (2026-11-05 PKT)
+
+**Disposition: GO — candidate live at 100%; 15-minute monitoring PASS.**
+
+- Admin deployment `7aacd65b-fe1d-4c47-9f92-5ba3bf791dc5` serves `3e4b7c26`100%. Primary rollback is `e8c96c96`100% / candidate0%; historical `92c81e60` remains unused.
+- Monitoring `07:25:12Z`–`07:41:09Z`: candidate invocations19→45, candidate errors0, final candidate CPU2.47 ms. Aggregate request duration258 ms is not treated as candidate-only latency.
+- Genuine COD_PENDING GET acceptance passed: visible MO information, positive quoted amount and ineligible/read-only state. Orders/Conversations returned200; no payment endpoint was called.
+- API remains baseline100%/0% and health reports ready/WhatsApp enabled. Advance3/3, COD PKR125, Recovery ON and CAPI OFF remain unchanged. D1 SELECT readback has `changes=0`, `rows_written=0`, zero MO receipts and zero COD-paid details.
+- No source change or test rerun. Retain379 passed/1 skipped and build/lint PASS.
+
 ## GFS-COD-MO-16 permanent promotion preflight (2026-11-05 PKT)
 
 **Disposition: NO-GO / baseline identity mismatch; no production mutation.**

@@ -2570,3 +2570,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Evidence:** official readback shows Admin deployment `ed9754ad-da6e-406c-aea3-d0bd86960ce8`, `e8c96c96`100% / candidate `3e4b7c26`0%; the task names `92c81e60` as the stable100% baseline. API remains unchanged at `b426ba47`100% / `d683ec45`0%.
 - **Boundary:** no Worker deployment, traffic change, source, D1, payment, secret, API, Meta, CAPI or customer mutation occurred.
 - **Next exact authorization:** explicitly resolve whether `92c81e60` must first be restored to100% or whether promotion should proceed from actual baseline `e8c96c96`, including the exact rollback target.
+## GFS-COD-MO-17 - release visible MO Admin candidate (2026-11-05 PKT)
+
+- **Decision:** retain `3e4b7c26` at100% Admin traffic after monitored PASS. The GFS-COD-MO-16 baseline mismatch is resolved by using actual baseline `e8c96c96`; historical `92c81e60` was not deployed.
+- **Evidence:** deployment `7aacd65b-fe1d-4c47-9f92-5ba3bf791dc5`; 15m56s monitoring; candidate telemetry19→45, errors0, final CPU2.47 ms; authenticated COD_PENDING/Orders/Conversations/API checks and D1/payment-configuration readbacks pass.
+- **Rollback:** retain exact `e8c96c96`100% / `3e4b7c26`0% route for a proven regression. Never restore D1 automatically.
+- **Boundary:** no API, Meta, CAPI, secret, migration/restore, payment/order/customer-message or genuine MO/PAID action occurred. HMAC/D1/R2/Queue/Access binding names remain present without value exposure.
+- **Next exact authorization:** one genuinely evidenced Pakistan Post MO settlement on an already eligible COLLECTION_PENDING order, with an explicit one-payment mutation scope.

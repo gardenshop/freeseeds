@@ -1,5 +1,21 @@
 # Final Report
 
+## GFS-COD-MO-17 final Admin release (2026-11-05 PKT)
+
+1. **Previous task:** GFS-COD-MO-16 correctly stopped on a baseline mismatch. This task used the verified actual baseline `e8c96c96`; historical `92c81e60` was not restored.
+2. **Baseline resolution:** PASS — preflight matched Admin `e8c96c96`100% / candidate`3e4b7c26`0%, API baseline100%/0%, required named bindings and rollback readiness.
+3. **GO/Deployment:** **GO.** Deployment `7aacd65b-fe1d-4c47-9f92-5ba3bf791dc5` serves candidate `3e4b7c26` at100%.
+4. **Routing:** before Admin `e8c96c96`100% / candidate0%; after candidate100%. API stayed `b426ba47`100% / `d683ec45`0%.
+5. **COD_PENDING MO button:** PASS — genuine non-archived COD_PENDING read showed positive quoted amount, visible MO Received/eligibility information and read-only ineligibility; no payment POST.
+6. **Monitoring:** PASS, `07:25:12Z`–`07:41:09Z` (15m56s). Candidate telemetry19→45, errors0, final candidate CPU2.47 ms. Aggregate request duration258 ms is explicitly not candidate-only latency.
+7. **Safety:** Orders/Conversations200; API health200 ready/WhatsApp enabled; Advance3/3, COD PKR125, Recovery ON and CAPI OFF unchanged. D1 SELECT readback `changes=0`, `rows_written=0`, zero MO receipts/COD-paid details.
+8. **Rollback:** not used; ready as `e8c96c96`100% / candidate0%. Never restore D1 automatically.
+9. **Tests/fixes:** no source defect or change; retain379 passed/1 skipped and build/lint PASS.
+10. **Documentation/Git:** rules, decisions, status, test matrix, changelog and this report record the final release.
+11. **Stages:** visible UI100%; candidate100%; monitoring100%; canary100%; final Admin release100%; genuine MO settlement0%; API/CAPI release0%.
+12. **One next action:** separately authorize one genuine Pakistan Post MO settlement only after matching remittance/company-receipt evidence exists for an eligible COLLECTION_PENDING order.
+
+
 ## GFS-COD-MO-16 permanent Admin promotion preflight (2026-11-05 PKT)
 
 1. **Previous task:** GFS-COD-MO-15 technical 10% canary and rollback PASS; current live rollback baseline is `e8c96c96`.

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-05 - GFS-COD-MO-17 final visible MO Admin release
+
+- Promoted immutable candidate `3e4b7c26-c36d-4d1c-baeb-d26629a9b4a1` to100% Admin traffic in deployment `7aacd65b-fe1d-4c47-9f92-5ba3bf791dc5`, directly from the actual `e8c96c96` baseline.
+- Fifteen-minute monitored PASS: candidate metrics19→45/errors0; read-only COD_PENDING UI, Admin/API/WhatsApp, Advance/COD and D1 integrity checks passed. Retained rollback target is `e8c96c96`100% / candidate0%; no API/CAPI/payment action.
+
 ## 2026-11-05 - GFS-COD-MO-16 promotion preflight blocked
 
 - Stopped before permanent Admin promotion because live routing used `e8c96c96`100% / candidate`3e4b7c26`0%, while the authorization named `92c81e60` as the stable100% baseline. API remained unchanged; no production mutation occurred.
