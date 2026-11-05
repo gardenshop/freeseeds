@@ -3971,3 +3971,16 @@ Investigation query costs only (not production savings): representative `rows_re
 | COD settlement evidence | BLOCKED | No policy, tracking, collection, deduction, remittance or independent proof record |
 | Existing operations | GO/MAINTAIN | Current protected routing and services unchanged |
 | Public expansion | NO-GO | Meta and courier gates unresolved |
+
+## GFS-COD-MO-26 candidate verification (2026-11-05 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Focused Admin/migration tests | PASS | 38/38 |
+| Full source tests | PASS | 385 passed, 1 skipped |
+| Build/lint | PASS | `npm.cmd run build`, `npm.cmd run lint` |
+| Candidate upload/0% attachment | PASS | Candidate `ce023b54...` at 0%; baseline `3e4b7c26`100% |
+| Candidate Orders GET | PASS | Authenticated HTTP200; sanitized fields only |
+| Candidate detail historical MO preview | INCONCLUSIVE | Access session redirected to sign-in; no credential retry/bypass |
+| English dashboard language | NOT PASS | Normal UI save returned HTTP403; German remained selected |
+| Production mutation protection | PASS | No positive traffic, POST, D1/payment/order/secret/API/Meta/CAPI change |

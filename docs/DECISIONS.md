@@ -2626,3 +2626,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Access evidence:** `/health` is intentionally Service Auth-only under `GFS-Admin-Health-Monitoring`; browser and invalid credentials return 403. The approved credential-manager bridge is unavailable in this context, so no authorized health 200 is asserted.
 - **Boundary:** D1 preflight and Time Travel availability pass, but do not apply 0048 until the existing service-auth health check is executed successfully. No Access policy, credential, routing, D1, payment, API, Meta, CAPI or customer change occurred.
 - **Next exact authorization:** one read-only service-auth `/health` check using the existing approved bridge.
+
+## GFS-COD-MO-26 - candidate attached at 0%, preview gated (2026-11-05 PKT)
+
+- **Decision:** upload and attach exactly one immutable Admin historical-COD candidate at 0%; do not canary or promote.
+- **Evidence:** candidate `ce023b54-4d38-43e5-842e-faa706e7606c`/121 from source `4da5631c72a6651e855c8d76c53f0595cc7f0a2d`; deployment `f632e4d2-0716-4f53-a861-110d26a0e3a9`; Admin `3e4b7c26`100% / candidate0%; API unchanged. Candidate Orders GET was HTTP200. Local focused/full tests and build/lint passed.
+- **Limitations:** normal Cloudflare profile-language save returned403, so English is not verified. Candidate detail navigation hit the Access sign-in gate; authenticated historical MO detail acceptance is INCONCLUSIVE. No auth retry, bypass, write, customer action or payment action occurred.
+- **Next exact authorization:** one approved authenticated candidate detail GET/preview plus monitoring-backed bounded canary; permanent promotion and real settlement remain separately gated.

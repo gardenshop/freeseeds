@@ -3385,3 +3385,10 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **Meta:** official Chrome UI verification was unavailable. Connected read-only Meta business listing returned zero consented portfolios, so business/WABA/ad eligibility and display-name approval are not verified; gate remains BLOCKED EXTERNALLY.
 - **Courier/COD:** no genuine authorized contract, collection/remittance policy, tracking/delivery record, exact amount, deduction, remittance date/amount, independent proof or human verifier record was accessible. COD settlement remains BLOCKED.
 - **Decision:** existing controlled WhatsApp operations GO/MAINTAIN; public advertising expansion NO-GO; resume live release DEFERRED; no system mutation.
+
+## GFS-COD-MO-26 — Admin historical COD candidate (2026-11-05 PKT)
+
+- **Cloudflare language:** normal authenticated profile UI showed German. Selecting English produced a normal UI save request rejected with HTTP403; preference remained German. No workaround or resource mutation.
+- **Candidate:** immutable Admin `ce023b54-4d38-43e5-842e-faa706e7606c`/121, source `4da5631c72a6651e855c8d76c53f0595cc7f0a2d`, deployment `f632e4d2-0716-4f53-a861-110d26a0e3a9`, exactly baseline `3e4b7c26`100% / candidate0%. API unchanged `b426ba47`100% / `d683ec45`0%.
+- **Preview:** candidate Orders GET HTTP200; detail-page candidate preview is INCONCLUSIVE because the authenticated Access browser session redirected to sign-in. No credentials were retried and no write was issued. Candidate remains at 0%.
+- **Regression evidence:** focused38/38, full385/385 with one skip, build PASS, lint PASS. Migration0048 remains applied once; no D1/payment/WhatsApp/Meta/CAPI mutation occurred. Protected Admin `/health` HTTP200 remains unverified.

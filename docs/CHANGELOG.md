@@ -2300,3 +2300,9 @@
 ## 2026-11-05 — GFS-COD-MO-25
 
 - Applied repaired historical COD migration 0048 exactly once under the owner-authorized alternative preflight. Verified schema, guards, empty ledgers, preserved orders/payments, live Admin/API health and zero post-read writes. Protected Admin Service Auth `/health` remains unverified; no release or settlement occurred.
+
+## 2026-11-05 — GFS-COD-MO-26
+
+- Attempted the normal Cloudflare profile-language change; English did not persist because the normal save request returned HTTP403. No workaround was used.
+- Uploaded and attached one immutable Admin historical-COD candidate at 0% with preserved configuration: `ce023b54-4d38-43e5-842e-faa706e7606c`, deployment `f632e4d2-0716-4f53-a861-110d26a0e3a9`.
+- Candidate Orders GET passed; detail preview remained INCONCLUSIVE after Access sign-in redirection. No positive traffic or production mutation occurred. Focused38/38, full385/385 with one skip, build/lint PASS.

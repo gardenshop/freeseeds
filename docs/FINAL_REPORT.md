@@ -7135,3 +7135,18 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 7. **Routing/config/tests:** API `b426ba47`100% / `d683ec45`0%; Admin `e8c96c96`100% / `e44703c3`0%; recovery true; CAPI OFF; full378/378, guided104/104, build/lint PASS carried; audit BLOCKED.
 8. **Git:** final handover SHA will be verified after this warranted evidence update; no source change.
 9. **Exact outstanding documents:** official Meta display-name/eligibility evidence and genuine courier contract plus collection/remittance records. No GFS-482 created.
+
+## GFS-COD-MO-26 final report — 2026-11-05 PKT
+
+1. **MO-25 comparison:** migration0048 remains applied once; no new D1/payment mutation. The authorized Admin candidate upload and 0% attachment completed.
+2. **Cloudflare language:** **FAIL/UNVERIFIED** — normal profile UI remained German after the English save request returned HTTP403; no workaround.
+3. **Candidate:** `ce023b54-4d38-43e5-842e-faa706e7606c`/121, source `4da5631c72a6651e855c8d76c53f0595cc7f0a2d`, deployment `f632e4d2-0716-4f53-a861-110d26a0e3a9`.
+4. **Routing:** before/after Admin `3e4b7c26`100% / candidate0%; API `b426ba47`100% / `d683ec45`0%.
+5. **Historical MO preview:** **INCONCLUSIVE**. Candidate Orders GET was authenticated HTTP200; detail navigation redirected to Access sign-in. No credential retry/bypass and no POST.
+6. **Safeguards:** local historical/normal/Advance/cross-ledger controls remain covered by 38/38 focused tests; no real settlement, PAID transition or customer action.
+7. **Tests:** full385 passed, 1 skipped; build/lint PASS; no source repair was needed.
+8. **Regression/protection:** no detected WhatsApp, API, payment, D1, R2, Queue, Cron, Access, Meta, CAPI, Hoja or new-number-lock mutation. Migration0048/schema evidence remains prior verified. Protected Admin `/health` HTTP200 remains unverified.
+9. **Release disposition:** candidate stays at 0%; no canary or promotion. Existing live Admin remains 100%.
+10. **Documentation/Git:** rules, status, plan, decisions, test matrix, resource registry, changelog and this report updated; commit/push SHA follows.
+11. **Stages:** source/migration/local verification 100%; candidate upload/0% attachment 100%; candidate authenticated detail acceptance 0% complete (blocked); controlled canary and permanent promotion 0%; real MO settlement separately authorized/unvalidated.
+12. **One next action:** authorize one authenticated candidate detail GET/preview and bounded monitoring-backed Admin canary; do not promote or perform real settlement under this record.

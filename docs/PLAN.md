@@ -325,3 +325,7 @@ Engineering is closed as **READY FOR BUSINESS GATES**. Local resume repair and r
 ## GFS-OPS final business verification
 
 No official Chrome UI was available. The connected read-only Meta tool returned zero consented portfolios and cannot establish Meta/WABA/ad eligibility. Courier contract and settlement records remain unavailable. Close as existing operations GO/MAINTAIN, public expansion and COD settlement NO-GO/BLOCKED EXTERNALLY.
+
+## GFS-COD-MO-26
+
+The authorized 0% Admin candidate upload and attachment are complete. Candidate-specific Orders GET evidence is available, but detail UI preview is INCONCLUSIVE after the existing Access session redirected to sign-in; do not retry credentials or increase traffic. English dashboard language change also remains unverified/failed at the normal UI save boundary. Next action requires one separately authorized, authenticated candidate detail preview and bounded canary approval; no promotion is implied.
