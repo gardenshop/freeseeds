@@ -1,5 +1,20 @@
 # Final Report
 
+## GFS-COD-MO-13 preview, canary and rollback (2026-11-05 PKT)
+
+1. **Previous task:** GFS-COD-MO-12 source/UI PASS, candidate uploaded, preview initially blocked; no canary had run. This task corrected the override verification path.
+2. **TLS/404 root cause:** generated public preview URL was unusable (TLS failure/404); the supported authenticated version-override path was required. The initial unquoted dictionary value was ignored; official quoted Structured Header syntax passed.
+3. **Candidate override:** PASS. Candidate `3e4b7c26-c36d-4d1c-baeb-d26629a9b4a1` returned the new MO panel/read-only markers; normal baseline did not.
+4. **COD_PENDING UI:** PASS. A genuine existing COD read classified as COD_PENDING with a quoted amount; no payment submission was attempted.
+5. **Isolation/security:** PASS. Existing secure collection-pending handler and backend guards remain; no real MO/PAID write, Advance change or non-COD action occurred.
+6. **Canary:** NO-GO / INCONCLUSIVE. Deployment `83adbeee-2c8d-417d-8a9d-2d857b58c4ec`, Admin90% / candidate10%,129.6 seconds. Version-specific dashboard metrics did not load reliably.
+7. **Rollback:** PASS. Deployment `48194013-f0fb-4eab-9a92-307c38ee7baa` restored Admin baseline100% / candidate0% within the window. API remained `b426ba47`100% / `d683ec45`0%.
+8. **Monitoring/regression:** normal Orders/Conversations GETs were healthy, 12/12 with no5xx and max observed320ms; D1 readback had zero writes. No WhatsApp, Advance, COD, Meta, CAPI, customer or message regression detected.
+9. **Tests/fixes:** no source change; retained focused28/28, full379/1, build/lint PASS. No defect repair or retry.
+10. **Git/docs:** GFS-COD-MO-13 release evidence updated and pushed in the commit reported below.
+11. **Stages:** source/UI100%; candidate upload100%; authenticated override100%; 10% canary execution100%; accepted canary0%; rollback100%; permanent promotion0%; genuine settlement0%.
+12. **One next release action:** authorize a reliable candidate-specific metrics/observability monitor, then separately approve one new bounded Admin canary; do not promote or retry automatically.
+
 ## GFS-COD-MO-12 visible COD MO action (2026-11-05 PKT)
 
 1. **COD_PENDING option:** PASS locally. MO Received is visible with current COD amount, settlement status and read-only eligibility explanation; no payment submission path exists for ineligible states.
@@ -30,7 +45,7 @@
 2. **Admin routing:** deployment `bbe4c470-e331-4c7e-9ac9-525c266c52c3`; `92c81e60`100%.
 3. **API routing:** unchanged deployment `9b459a09-a7a5-404d-9302-48292bd07783`: `b426ba47`100% / `d683ec45`0%.
 4. **15-minute monitoring:** candidate invocations5→41, errors0, CPU2.11ms; aggregate request p50/p90/p99 254/355/486ms; all fail-closed Admin/API samples passed.
-5. **MO UI/security:** live MO Received/exact-amount UI and assets pass; HMAC, Access/CSRF, confirmation and eligible-state controls remain. Real settlement acceptance is intentionally INCONCLUSIVE.
+5. **MO UI/security:** live MO Received/exact-amount UI and assets pass; HMAC, Access/CSRF, confirmation and eligible-state controls remain. At this release point, final settlement acceptance was intentionally INCONCLUSIVE; MO-12 later added read-only visibility for earlier COD states.
 6. **Protection:** API WhatsApp health enabled; Advance3/3,COD PKR125,0047 marker,zero MO receipts and zero verification writes; recovery ON,CAPI OFF.
 7. **Rollback:** not performed; exact Admin rollback `e8c96c96`100% / `92c81e60`0% remains ready. Never restore D1 automatically.
 8. **Defects/tests:** no defect/fix/source change; retained focused131/1, full378/1, build/lint PASS.

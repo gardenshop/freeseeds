@@ -1,5 +1,11 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-13 preview, canary and rollback (2026-11-05 PKT)
+
+- Authenticated candidate override passed with the full Structured Header value and showed the new read-only COD MO panel; normal Admin remained baseline. Candidate binding/readback and genuine COD_PENDING classification passed without payment mutation.
+- Deployment `83adbeee-2c8d-417d-8a9d-2d857b58c4ec` exposed Admin baseline90% / candidate10% for129.6 seconds. Rollback deployment `48194013-f0fb-4eab-9a92-307c38ee7baa` restored100% / 0%; API remained unchanged.
+- **Release status: NO-GO / monitoring inconclusive.** Cloudflare version-specific metrics/dashboard did not load reliably. Do not retry or promote until candidate metrics and rollback monitoring are available.
+
 ## GFS-COD-MO-12 visible COD MO action (2026-11-05 PKT)
 
 - Source/UI acceptance is complete: all COD detail states show MO amount, settlement status and an eligibility explanation; only eligible `COLLECTION_PENDING` orders expose the existing secure submission path.
@@ -8,7 +14,7 @@
 
 ## GFS-COD-MO-11 first real MO settlement discovery (2026-11-05 PKT)
 
-- Read-only live Admin and aggregate D1 verification found no eligible unpaid `COLLECTION_PENDING` COD order and no recorded MO receipt. The viewed `COD_PENDING` order correctly withholds MO Received; no workaround or source repair is warranted.
+- Read-only live Admin and aggregate D1 verification found no eligible unpaid `COLLECTION_PENDING` COD order and no recorded MO receipt. MO-12 subsequently made the action visible as read-only on the viewed `COD_PENDING` state; no payment workaround or source-guard weakening is warranted.
 - Settlement remains blocked until an eligible order has genuine Pakistan Post MO/remittance and actual company-receipt evidence matching its immutable COD quote, followed by separately authorized authenticated Admin confirmation. No state or payment mutation occurred.
 
 ## GFS-COD-MO-10 final Admin MO release (2026-11-05 PKT)

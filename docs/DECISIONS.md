@@ -1,3 +1,9 @@
+## GFS-COD-MO-13 - do not retry without version-specific monitoring (2026-11-05 PKT)
+
+- **Decision:** retain Admin baseline at100% and candidate at0%. Candidate override is technically verified, but the bounded canary is not accepted because version-specific metrics were unavailable during exposure.
+- **Evidence:** exact override served candidate markers; normal GETs, Conversations, API routing and D1 read-only integrity remained healthy; rollback was independently read back as100%/0%.
+- **Boundary:** no permanent promotion, automatic retry, API/Meta/CAPI change, D1 restore, real MO/PAID action or customer communication. Next attempt requires a reliable candidate-specific metrics/rollback monitor and separate authorization.
+
 ## GFS-COD-MO-12 - stop before canary without candidate preview (2026-11-05 PKT)
 
 - **Decision:** accept the UI/source change locally, but do not attach or expose the new version to traffic. A candidate preview is a release prerequisite and was not established.
@@ -6,7 +12,7 @@
 
 ## GFS-COD-MO-11 - do not expose MO Received before collection pending (2026-11-05 PKT)
 
-- **Decision:** retain the `COLLECTION_PENDING` eligibility gate. The absence of MO Received on a `COD_PENDING` order is expected protection, not a UI defect.
+- **Decision:** retain the `COLLECTION_PENDING` payment-submission gate. A `COD_PENDING` order may show MO Received as read-only information, but final settlement remains unavailable.
 - **Evidence:** authenticated Admin GET confirms the released UI contains the collection-pending gate, required Pakistan Post MO number and exact-amount control; aggregate read-only D1 discovery found no live unpaid eligible candidate or receipt.
 - **Boundary:** no state advancement, payment action or evidence fabrication. Next settlement requires genuine matching Pakistan Post/company-receipt evidence on an already eligible order and separate authorization for one authenticated Admin confirmation.
 

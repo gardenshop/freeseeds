@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-13 preview, canary and rollback (2026-11-05 PKT)
+
+- The supported preview method is an authenticated `Cloudflare-Workers-Version-Overrides` Structured Header: `getfreeseeds-admin-staging="<full candidate version ID>"`. An unquoted dictionary value is invalid and must not be treated as candidate evidence.
+- Candidate `3e4b7c26` override readback passed the new COD MO panel and read-only copy; normal Admin readback remained on baseline. The genuine existing COD read was classified `COD_PENDING` with a quoted amount; no payment endpoint was called.
+- The authorized canary ran Admin baseline90% / candidate10% for129.6 seconds, then restored baseline100% / candidate0%. Version-specific dashboard metrics were unavailable, so canary outcome is **NO-GO / monitoring inconclusive**, despite healthy GETs and no D1 writes. Keep the live baseline and do not retry automatically.
+
 ## GFS-COD-MO-12 visible COD MO action (2026-11-05 PKT)
 
 - Admin source now renders a visible MO Received information/action panel for every non-Advance COD detail, including `COD_PENDING`, with the current immutable COD amount, settlement status and eligibility explanation. Ineligible states are read-only and never call the payment endpoint; no order state is advanced automatically.
@@ -8,7 +14,7 @@
 
 ## GFS-COD-MO-11 first real MO settlement gate (2026-11-05 PKT)
 
-- Read-only live verification confirms that Admin MO Received is intentionally available only for eligible `COLLECTION_PENDING` COD orders. A `COD_PENDING` order must not display or invoke it; the protected fulfillment sequence remains `COD_PENDING` → `PACKING` → `DISPATCHED` → `DELIVERED` → `COLLECTION_PENDING` → `PAID`.
+- Read-only live verification confirms that Admin MO payment submission is intentionally available only for eligible `COLLECTION_PENDING` COD orders. A `COD_PENDING` order may display read-only MO information but must not submit payment; the protected fulfillment sequence remains `COD_PENDING` → `PACKING` → `DISPATCHED` → `DELIVERED` → `COLLECTION_PENDING` → `PAID`.
 - The released Admin candidate remains at 100% with the named HMAC binding present. Aggregate D1 discovery found no eligible unpaid MO candidate and no recorded MO receipt. No authenticated Pakistan Post remittance/beneficiary evidence was supplied or found.
 - No fulfillment, order, payment, receipt, customer, routing, secret, deployment, D1, WhatsApp, Meta or CAPI write is authorized from this result. Never force state or expose the action early to bypass the exact-amount, authenticated operator and evidence gates.
 

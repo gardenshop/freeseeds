@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-COD-MO-13 preview, canary and rollback (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Full version override | PASS | Authenticated `Cloudflare-Workers-Version-Overrides` Structured Header selected candidate `3e4b7c26`; new panel/read-only markers returned. |
+| Genuine COD_PENDING read | PASS | Existing Admin GET classified a real record as COD/COD_PENDING with quoted amount and payment status; no identifiers retained. |
+| Normal Admin/API/Conversations health | PASS | Normal Admin Orders and Conversations GETs returned200; API routing stayed baseline100%/0%. |
+| 10% canary | INCONCLUSIVE / NO-GO | Deployment `83adbeee…`, baseline90% / candidate10%,129.6 seconds; version-specific dashboard metrics unavailable. |
+| Mandatory rollback | PASS | Deployment `48194013…` restored Admin baseline100% / candidate0% and was independently read back. |
+| Data/payment safety | PASS | D1 readback `changed_db=false`, `rows_written=0`; no MO/PAID/payment/customer/message mutation. |
+
 ## GFS-COD-MO-12 visible COD MO action (2026-11-05 PKT)
 
 | Gate | Result | Evidence |

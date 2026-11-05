@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-05 - GFS-COD-MO-13 preview, canary and rollback
+
+- Corrected version override verification to the official Structured Header dictionary syntax and confirmed candidate UI markers through authenticated GET-only requests.
+- Ran the authorized Admin90%/candidate10% canary for129.6 seconds, then restored100%/0%. Normal reads and D1 integrity remained healthy, but version-specific metrics were unavailable; no promotion or retry was performed.
+
 ## 2026-11-05 - GFS-COD-MO-12 visible COD MO action
 
 - Added a read-only MO Received information/action panel to all COD detail states, including `COD_PENDING`, showing COD amount, settlement status and eligibility. Only eligible `COLLECTION_PENDING` orders retain the existing secure settlement submission path.

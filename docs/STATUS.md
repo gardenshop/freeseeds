@@ -1,5 +1,13 @@
 # Status
 
+## GFS-COD-MO-13 preview, canary and rollback (2026-11-05 PKT)
+
+**Disposition: NO-GO / monitoring inconclusive; healthy baseline restored.**
+
+- Full structured version override passed: candidate served the new MO panel/read-only copy; normal Admin did not. A genuine existing COD_PENDING read classified correctly; no payment POST or customer mutation occurred.
+- Canary deployment `83adbeee-2c8d-417d-8a9d-2d857b58c4ec`: baseline90% / candidate10% for129.6 seconds. Mandatory rollback `48194013-f0fb-4eab-9a92-307c38ee7baa` restored baseline100% / candidate0%.
+- During exposure, unfiltered Orders and Conversations GETs were healthy (12/12, no 5xx, max observed 320ms); D1 readback after rollback reported `changed_db=false`, `rows_written=0`. Candidate-specific dashboard metrics were unavailable, so the canary is not a release PASS.
+
 ## GFS-COD-MO-12 visible COD MO action (2026-11-05 PKT)
 
 **Disposition: SOURCE PASS / RELEASE BLOCKED — candidate preview unavailable.**
