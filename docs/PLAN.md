@@ -333,3 +333,7 @@ The authorized 0% Admin candidate upload and attachment are complete. Candidate-
 ## GFS-COD-MO-27
 
 The existing session was reused successfully, but the live dataset has no DELIVERED/tracked eligible historical record. COD_PENDING read-only MO UI passed; eligible historical form acceptance and candidate version attribution remain INCONCLUSIVE. Preserve Admin 100%/0% and request only version-attributed authenticated preview evidence before any canary authorization.
+
+## GFS-COD-MO-28
+
+Candidate attribution is now PASS through the corrected quoted header and candidate-only historical UI markers on the same no-method order. Eligible-form behavior remains isolated-test evidence only because production has no eligible DELIVERED/tracked record. Keep candidate at0%; canary and settlement remain separately gated.

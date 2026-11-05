@@ -2640,3 +2640,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Evidence:** existing approved browser session returned Orders and Conversations HTTP200. COD_PENDING detail showed the read-only MO panel and exact COD amount. Sanitized full-dataset read found 887 orders, zero DELIVERED, zero eligible historical no-method and zero eligible historical Advance records.
 - **Limitations:** candidate override produced safe GET output but no independently exposed version marker; candidate detail acceptance is INCONCLUSIVE. No synthetic delivery/tracking state, auth retry, credential change, POST or payment mutation was attempted.
 - **Next exact authorization:** obtain one supported version-attributed authenticated candidate detail GET on a genuine eligible record; do not authorize positive traffic before that evidence.
+
+## GFS-COD-MO-28 - candidate attribution PASS at 0% (2026-11-05 PKT)
+
+- **Decision:** accept candidate attribution for read-only historical UI only; retain Admin `3e4b7c26`100% / `ce023b54`0%.
+- **Evidence:** corrected quoted header selected the candidate. Same no-method unpaid detail showed candidate-only historical title, amount/eligibility text and source marker; baseline reload showed none. Actual order remained non-delivered/untracked and no form or POST was available.
+- **Security:** isolated historical/Advance/cross-ledger tests passed38/38. No real eligible settlement, positive traffic, order/payment/D1/API/Meta/CAPI or Access mutation occurred. No version-labelled runtime metric was available.
+- **Next exact authorization:** one separately approved bounded Admin canary with candidate-specific monitoring; do not promote or settle yet.

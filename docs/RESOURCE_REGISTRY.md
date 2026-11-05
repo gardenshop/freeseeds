@@ -2566,3 +2566,9 @@ No secrets are stored in this registry.
 - Existing approved browser resource was reused on the Admin hostname. Orders and Conversations GETs returned HTTP200; no credential material was read or transferred.
 - Sanitized Orders read covered 887 live rows: zero DELIVERED, zero eligible historical no-method and zero eligible historical Advance records. No customer identifiers or order IDs are registered.
 - COD_PENDING detail resource showed the read-only MO panel and exact original COD amount. Candidate override response had no version metadata; candidate attribution and eligible historical form acceptance remain INCONCLUSIVE.
+
+## GFS-COD-MO-28 version-preview resources (2026-11-05 PKT)
+
+- Override resource: original Admin hostname with `Cloudflare-Workers-Version-Overrides` quoted candidate syntax; candidate-only historical UI markers appeared and disappeared on baseline reload for the same no-method unpaid detail.
+- Candidate detail resource: HTTP200; sanitized non-delivered/untracked/no-method/unpaid state; historical form correctly absent; no POST resource recorded.
+- Runtime attribution: UI-differential proof PASS; version-labelled Cloudflare metric unavailable. Temporary header cleared after preview. No customer identifiers or raw references registered.

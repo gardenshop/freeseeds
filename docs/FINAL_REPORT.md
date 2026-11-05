@@ -7164,3 +7164,16 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 9. **Documentation/Git:** rules, status, plan, decisions, test matrix, resource registry, changelog and report updated; commit/push SHA follows.
 10. **Stages:** migration/local verification100%; candidate upload/0% attachment100%; authenticated COD read-only preview100%; version-attributed eligible historical preview0% (blocked); canary/promotion0%; real settlement0%.
 11. **One next action:** authorize one supported version-attributed authenticated candidate detail GET on a genuine eligible record; no positive traffic or settlement until PASS.
+
+## GFS-COD-MO-28 final report — 2026-11-05 PKT
+
+1. **MO-27 comparison:** existing session reused; corrected override now proves candidate-only historical UI; candidate remains0%.
+2. **Candidate attribution:** **PASS** via `getfreeseeds-admin-staging="ce023b54-4d38-43e5-842e-faa706e7606c"` and differential same-order DOM/source markers. Version-labelled runtime metrics were unavailable.
+3. **Baseline/candidate UI:** baseline had no historical markers; candidate showed `Record historical MO Received`, original payable, exact-amount rule and delivered/tracking eligibility explanation.
+4. **No-method/Advance:** no-method actual order was unpaid, non-delivered and untracked; form correctly absent/read-only. Dataset had 119 unpaid and 2 PAID Advance orders; no Advance settlement was opened. COD_PENDING UI remained protected/read-only.
+5. **Isolated eligible tests:** PASS, existing focused suite 38/38, including eligible form, exact amount, confirmation, duplicate HMAC and Advance protections.
+6. **Regression:** no source repair; full385 passed/1 skipped, build/lint PASS carried. No WhatsApp, payment, D1, API, Meta, CAPI, Access or secret mutation.
+7. **Routing/zero-write:** Admin `3e4b7c26`100% / `ce023b54`0%; API `b426ba47`100% / `d683ec45`0%; headers cleared; no POST or production state change.
+8. **Docs/Git:** rules, status, plan, decisions, test matrix, resource registry, changelog and report updated; commit/push SHA follows.
+9. **Stages:** migration/local verification100%; upload/0% attachment100%; version-attributed read-only preview100%; isolated eligible validation100%; positive canary0%; permanent promotion0%; real settlement0%.
+10. **One next action:** authorize one bounded Admin canary with candidate-specific monitoring and mandatory rollback; no permanent promotion or payment action.

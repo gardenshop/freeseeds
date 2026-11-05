@@ -2312,3 +2312,8 @@
 - Reused the existing approved Admin browser session without credential or Access changes. Orders and Conversations GETs returned HTTP200.
 - Verified COD_PENDING read-only MO panel and exact amount. No genuine DELIVERED/tracked eligible historical order existed in the 887-row read, so no historical form or settlement path was opened.
 - Candidate version attribution remained INCONCLUSIVE because the override response exposed no version marker. Routing stayed baseline100% / candidate0%; no mutation occurred.
+
+## 2026-11-05 — GFS-COD-MO-28
+
+- Corrected the version-override syntax and verified candidate-only historical MO UI markers on the same no-method unpaid order; baseline comparison removed the markers.
+- Confirmed read-only eligibility behavior: actual non-delivered/untracked order had no historical submit form. Local isolated suite remained 38/38 PASS; no production writes or traffic changes.

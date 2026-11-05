@@ -3995,3 +3995,16 @@ Investigation query costs only (not production savings): representative `rows_re
 | Historical no-method/Advance form | INCONCLUSIVE | No genuine eligible order available; no state fabricated |
 | Candidate version attribution | INCONCLUSIVE | Override GET safe, but response exposed no version marker |
 | POST/payment/D1 mutation protection | PASS | No POST, settlement, status, order or D1 write |
+
+## GFS-COD-MO-28 version-attributed preview (2026-11-05 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Correct quoted version override | PASS | Candidate-only header selected `ce023b54...` on original hostname |
+| Candidate historical UI marker | PASS | Title, amount, exact-rule and eligibility markers present only with override |
+| Baseline comparison | PASS | Same no-method detail reload removed candidate historical markers |
+| No-method unpaid detail | PASS | HTTP200; non-delivered/untracked; read-only/no submit form |
+| Advance protection | PASS | 119 unpaid/2 PAID observed; no settlement action; local guards covered |
+| Eligible form/duplicate security | PASS (isolated) | Existing local suite 38/38; no production state fabricated |
+| Version-labelled runtime metric | UNAVAILABLE | No authorized candidate metric source exposed |
+| Header cleanup/routing | PASS | Headers cleared; Admin100% baseline/0% candidate |

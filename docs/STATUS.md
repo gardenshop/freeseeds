@@ -3399,3 +3399,10 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - COD_PENDING detail showed `MO Received`, original COD amount and read-only eligibility explanation. Across 887 live rows, no DELIVERED order and no eligible historical no-method/Advance order was present, so the eligible form was not opened or fabricated.
 - Candidate override GETs remained read-only but version attribution was not independently exposed; candidate-specific detail acceptance is **INCONCLUSIVE**. Routing remains Admin `3e4b7c26`100% / `ce023b54`0%; API unchanged.
 - No payment/order/D1/WhatsApp/Meta/CAPI mutation occurred. Protected Admin `/health` HTTP200 and English dashboard preference remain unverified.
+
+## GFS-COD-MO-28 — version-verified candidate detail (2026-11-05 PKT)
+
+- Correct quoted override syntax selected candidate `ce023b54-4d38-43e5-842e-faa706e7606c` on the original Admin hostname. The same no-method unpaid detail was compared with candidate header and baseline reload.
+- Candidate rendered the historical MO title, original-payable label, exact-amount rule and delivered/tracking eligibility explanation; the actual `DETAILS_COMPLETED`, unpaid, untracked order had no form or submit button. Baseline rendered none of the historical markers. Candidate attribution: **PASS** by candidate-only UI difference.
+- Local isolated suite: 38/38 PASS. No version-labelled Cloudflare metric was available, but no positive traffic or mutation occurred. Candidate remains0%, Admin baseline100%, API unchanged, temporary headers cleared.
+- Advance read-only dataset had 119 unpaid and 2 PAID Advance orders; no Advance settlement action was opened. Protected Admin `/health` HTTP200 and English preference remain unverified.
