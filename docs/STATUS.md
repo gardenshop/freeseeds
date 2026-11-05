@@ -3432,3 +3432,9 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Cloudflare Key Figures now rendered version-labelled metrics: baseline `3e4b7c26` 484 invocations / 0% errors / 2.62 ms CPU; candidate `ce023b54` 18 / 0% / 4.69 ms. Routing remained 100% / 0%.
 - Candidate override GET passed for the historical MO panel and was cleared; no POST or payment mutation occurred. The probe did not produce a fresh metric increment.
 - Wrangler dry-run failed because stored OAuth was expired/unreachable, and the dashboard traffic-control action was not safely executable through MCP. The 90/10 canary was therefore NOT RUN. API health and Admin read-only checks remained healthy; protected Admin `/health` remains unverified.
+
+## GFS-COD-MO-33 — deployment preflight blocked; no canary (2026-11-05 PKT)
+
+- Cloudflare dashboard account/Worker identity was authoritative and matched the baseline; no account-ID discrepancy was found. Admin remains `3e4b7c26`100% / `ce023b54`0%.
+- Key Figures remain historical rather than fresh after the prior probe; Workers Logs are disabled. Wrangler OAuth remains expired/unreachable, and no safely executable dashboard deployment-control path was available.
+- **Canary:** NOT RUN and no retry attempted. No production mutation occurred; API/Admin read-only health evidence remains available and protected Admin `/health` remains unverified.

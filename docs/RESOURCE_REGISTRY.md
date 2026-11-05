@@ -2597,3 +2597,9 @@ No secrets are stored in this registry.
 - Cloudflare dashboard resource: correct account and Worker Key Figures page rendered version-labelled metrics. Baseline `3e4b7c26`: 484 invocations, 0% errors, 2.62 ms CPU. Candidate `ce023b54`: 18 invocations, 0% errors, 4.69 ms CPU.
 - Candidate preview resource: existing authenticated Admin hostname with quoted version override rendered the historical MO read-only panel and exact amount; header was cleared; no write resource registered.
 - Freshness/rollback resource: candidate count did not increment after the probe; Wrangler OAuth was expired/unreachable and no safe dashboard traffic mutation was performed. No canary deployment resource exists for GFS-32.
+
+## GFS-COD-MO-33 preflight resources (2026-11-05 PKT)
+
+- Identity resource: authoritative Cloudflare dashboard account path matched `cb5066a6c71ecdee0bd7ed8aacb4d3c2` and Worker `getfreeseeds-admin-staging`; current configured routing is Admin baseline100% / candidate0%.
+- Monitoring resource: Key Figures historical version metrics remain visible; no fresh post-probe increment and Workers Logs are disabled. No alternate live-log resource was registered.
+- Deployment resource: no usable Worker Editor identity. Wrangler OAuth is expired/unreachable; no dashboard traffic mutation or rollback resource was created.

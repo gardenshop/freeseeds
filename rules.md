@@ -2394,3 +2394,10 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - One authenticated candidate override GET selected `ce023b54` and rendered the historical MO panel on a COD_PENDING order with exact COD amount and read-only eligibility; no POST or payment mutation occurred. The override was cleared and baseline reload remained healthy.
 - The candidate metric count did not change after the probe, so fresh candidate-attributed ingestion was not proven. Wrangler's supported deployment dry-run could not authenticate because stored OAuth was expired/unreachable; the dashboard traffic-control action could not be safely executed through the existing MCP session. Therefore no 90/10 canary was started.
 - Fresh API `/health` remained HTTP200 with `PRODUCTION_INTEGRATION_READY` and WhatsApp enabled; Admin Orders/Conversations remained readable. Protected Admin `/health` HTTP200 remains unverified. No deployment, traffic, payment/order/D1, Access, secret, API/Meta/CAPI, WhatsApp or customer mutation occurred.
+
+## GFS-COD-MO-33 — preflight still blocked; no repeated canary (2026-11-05 PKT)
+
+- Authoritative Cloudflare dashboard URL verified account `cb5066a6c71ecdee0bd7ed8aacb4d3c2` and Worker `getfreeseeds-admin-staging`; no account-ID discrepancy was found. Current Admin deployment remains baseline `3e4b7c26`100% / candidate `ce023b54`0%.
+- Existing Analytics-read monitoring token remains read-only and must not be used for deployment writes. Key Figures still show historical candidate metrics, but no fresh post-probe increment; Workers Logs are disabled. No alternate version-filtered live-log path is available in this session.
+- Existing deployment identity is not usable for this run: Wrangler OAuth is expired/unreachable, and dashboard traffic control could not be safely invoked through MCP. Therefore rollback execution/readback is not proven and the 90/10 canary was not retried.
+- No source, deployment, traffic, payment/order/D1, Access, secret, API/Meta/CAPI, WhatsApp or customer mutation occurred. API health and Admin read-only checks remain available; protected Admin `/health` HTTP200 remains unverified.

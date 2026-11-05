@@ -4053,3 +4053,13 @@ Investigation query costs only (not production savings): representative `rows_re
 | Candidate MO read | PASS | Override GET rendered exact COD amount and read-only MO eligibility; no POST |
 | Rollback execution/readback | BLOCKED | Wrangler OAuth expired/unreachable; dashboard traffic control not safely executable in MCP |
 | 90/10 canary | NOT RUN | Fail-closed; Admin remains100%/0% |
+
+## GFS-COD-MO-33 preflight reconciliation (2026-11-05 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Account/Worker identity | PASS | Authoritative dashboard URL matches account and `getfreeseeds-admin-staging` |
+| Fresh candidate telemetry | BLOCKED | No post-probe metric increment; Workers Logs disabled |
+| Worker Editor/deployment identity | BLOCKED | Wrangler OAuth expired/unreachable; dashboard control not safely executable |
+| Rollback readback | BLOCKED | No authorized deployment operation performed or independently read back |
+| Canary retry | NOT RUN | Fail-closed; routing remains 100% / 0% |

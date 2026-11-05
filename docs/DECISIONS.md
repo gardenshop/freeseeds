@@ -2675,3 +2675,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Evidence:** Key Figures showed candidate `ce023b54` 18 invocations, 0% errors and 4.69 ms CPU; candidate override MO GET passed and was cleared. Wrangler OAuth dry-run failed as expired/unreachable; no dashboard traffic mutation was performed.
 - **Boundary:** Admin remains `3e4b7c26`100% / `ce023b54`0%; API unchanged; no deployment, traffic, payment/order/D1, Access, secret, API/Meta/CAPI, WhatsApp or customer mutation.
 - **Next exact action:** restore supported deployment-control access or Wrangler OAuth, then obtain one fresh candidate metric increment and independently verify rollback readback.
+
+## GFS-COD-MO-33 - preserve fail-closed preflight (2026-11-05 PKT)
+
+- **Decision:** retain NO-GO and do not repeat the canary.
+- **Evidence:** authoritative dashboard identity matches account/Worker and 100%/0% routing; Key Figures are historical, Workers Logs are disabled, Wrangler OAuth is expired/unreachable, and dashboard traffic control is not safely executable in this session.
+- **Boundary:** Analytics-read token remains read-only; no traffic, deployment, payment/order/D1, Access, secret, API/Meta/CAPI, WhatsApp or customer mutation.
+- **Next exact action:** provide a supported Worker Editor/deployment identity and fresh version-filtered telemetry, then separately reauthorize one bounded canary.

@@ -353,3 +353,7 @@ The approved alternative P0 checks are complete: fresh API health, Admin Orders/
 ## GFS-COD-MO-32
 
 Official Key Figures access is partially restored, but the candidate probe was not reflected as fresh telemetry and rollback execution access is unavailable because Wrangler OAuth is expired/unreachable and the dashboard traffic action cannot be safely operated in this session. Keep Admin100%/0%; do not canary. Next MO-specific task: provide a supported deployment-control session or restore Wrangler OAuth, then recheck fresh candidate ingestion before one canary.
+
+## GFS-COD-MO-33
+
+No additional canary attempt is permitted. Account identity is reconciled, but fresh version telemetry and Worker Editor/rollback access remain blocked. Restore one supported deployment-control identity and fresh version-filtered observation before any positive traffic.
