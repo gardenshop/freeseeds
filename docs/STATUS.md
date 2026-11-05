@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-MO-14 observability repair (2026-11-05 PKT)
+
+**Disposition: PASS / release prerequisite restored; no traffic change.**
+
+- Cloudflare identity and account were read-only verified as `gisupp@gmail.com` in the frozen Get Free Seeds account. Current Admin deployment remains the GFS-COD-MO-13 rollback at baseline 100% / candidate 0%; API remains baseline 100% / candidate 0%.
+- The authenticated metrics view now renders version-separated telemetry: candidate `3e4b7c26` shows 14 invocations, 0 errors and 1.05 ms average CPU in the current 24-hour view. Candidate-specific latency was not available as a labelled value; aggregate latency remains visible.
+- Quoted candidate override GET returned HTTP 200 and the MO panel; baseline GET returned HTTP 200 without the panel. Conversations GET returned HTTP 200. No payment, order, D1 or customer-message write occurred.
+- No source change, repair deployment, positive traffic or test rerun. Retain source baseline 379 passed / 1 skipped and build/lint PASS. Monitoring is ready for a separately authorized canary only.
+
 ## GFS-COD-MO-13 preview, canary and rollback (2026-11-05 PKT)
 
 **Disposition: NO-GO / monitoring inconclusive; healthy baseline restored.**

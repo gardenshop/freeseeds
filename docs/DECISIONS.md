@@ -2550,3 +2550,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Priority:** OFFER-stage drop-off is highest at 1,479 current pre-order snapshots; 1,284 are inactive. Existing resume is inbound-only and must not become unsolicited outreach.
 - **Revenue controls:** route 21 payment-review orders to genuine verification, 407 COD_PENDING orders to courier/tracking evidence review, and confirmed states to safe fulfillment. Do not mark paid, dispatch, or settle COD from aggregate evidence.
 - **Boundary:** Meta eligibility remains unresolved but does not block maintaining existing ads/operations. API/Admin routing and all payment, D1, Queue, Cron, webhook and customer protections remain unchanged.
+## GFS-COD-MO-14 - restore candidate-specific monitoring (2026-11-05 PKT)
+
+- **Decision:** mark the monitoring prerequisite PASS and keep Admin at `e8c96c96` 100% / `3e4b7c26` 0%. Do not start a canary under this read-only authorization.
+- **Root cause:** the Cloudflare dashboard had previously remained in a loading/stale shell during GFS-COD-MO-13, so version metrics were not evidence at that time. Reopening the official metrics route and waiting for its data view rendered version-separated records.
+- **Evidence:** current 24-hour Key figures view labels candidate `3e4b7c26` with 14 invocations, 0 errors and 1.05 ms average CPU; authenticated quoted override and baseline GETs are distinguishable and both are read-only.
+- **Boundary:** candidate latency was not claimed because the visible latency percentile panels were aggregate; raw GraphQL/token inspection was not used. No Worker, traffic, D1, secret, payment, API, Meta, CAPI, WhatsApp or customer mutation occurred.
+- **Next exact authorization:** one bounded Admin-only canary with explicit exposure/window and mandatory rollback, using the loaded version metrics as the monitor.

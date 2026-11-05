@@ -1,5 +1,20 @@
 # Final Report
 
+## GFS-COD-MO-14 fix version monitoring (2026-11-05 PKT)
+
+1. **Previous task:** GFS-COD-MO-13 completed the 10% exposure and rollback but was NO-GO because version metrics did not render. No canary is repeated here.
+2. **Root cause:** the authenticated Cloudflare metrics route had remained at a loading/stale shell during the prior window. Navigating directly to Key figures and waiting restored the version-labelled data view.
+3. **Monitoring repair:** PASS for version-separated invocations/errors/CPU; candidate `3e4b7c26` shows 14 invocations, 0 errors and 1.05 ms average CPU in the current 24-hour view.
+4. **Candidate evidence:** the quoted version override returned HTTP 200 with the new MO panel; baseline returned HTTP 200 without it. Conversations GET returned HTTP 200. No write endpoint was called.
+5. **Error/latency visibility:** candidate errors are visible as 0 and candidate CPU as 1.05 ms. Candidate-specific latency is NOT AVAILABLE; visible latency percentiles are aggregate and are not used as candidate evidence.
+6. **GraphQL/Access:** the authenticated official dashboard rendered the data; raw GraphQL responses and credentials were not inspected. Access/session identity matched `gisupp@gmail.com` and the frozen account.
+7. **Protected routing:** Admin remains `e8c96c96` 100% / `3e4b7c26` 0%; API remains `b426ba47` 100% / `d683ec45` 0%. Recovery ON, CAPI OFF, Advance 3/3 and COD PKR125 remain protected.
+8. **Tests/repairs:** no source or production repair was necessary; retained 379 passed / 1 skipped and build/lint PASS. No D1/payment/order/customer mutation occurred.
+9. **Documentation/Git:** rules, plan, status, decisions, test matrix, changelog and this report record this new evidence only.
+10. **Stages:** source/UI 100%; candidate upload 100%; override 100%; monitoring prerequisite 100%; prior canary acceptance 0%; next canary 0%; permanent promotion 0%; genuine settlement 0%.
+11. **One next action:** authorize one bounded Admin-only canary using the verified version metrics, with explicit duration and mandatory rollback; do not promote under this task.
+
+
 ## GFS-COD-MO-13 preview, canary and rollback (2026-11-05 PKT)
 
 1. **Previous task:** GFS-COD-MO-12 source/UI PASS, candidate uploaded, preview initially blocked; no canary had run. This task corrected the override verification path.

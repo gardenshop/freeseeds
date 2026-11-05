@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-05 - GFS-COD-MO-14 monitoring repair
+
+- Revalidated official Cloudflare version-separated telemetry after navigating to the authenticated Admin metrics view and waiting for data rendering: candidate `3e4b7c26` showed 14 invocations, 0 errors and 1.05 ms average CPU in the current 24-hour range.
+- Confirmed the quoted candidate override and baseline GETs remain distinguishable; no source or production configuration change was made. Candidate-specific latency remains explicitly unclaimed because the visible latency panels were aggregate.
+
 ## 2026-11-05 - GFS-COD-MO-13 preview, canary and rollback
 
 - Corrected version override verification to the official Structured Header dictionary syntax and confirmed candidate UI markers through authenticated GET-only requests.

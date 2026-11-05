@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-COD-MO-14 observability repair (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Account/session identity | PASS | Authenticated Cloudflare dashboard and Wrangler identity matched the frozen account/operator; no token or cookie inspection. |
+| Version-separated telemetry | PASS | Official Key figures view, current 24-hour range: candidate `3e4b7c26` = 14 invocations, 0 errors, 1.05 ms average CPU; candidate and baseline rows rendered. |
+| Candidate-specific latency | NOT AVAILABLE | Visible latency percentile values were aggregate, so no candidate latency claim is made. |
+| Candidate override | PASS | Quoted Structured Header returned HTTP 200 with the new MO panel; baseline returned HTTP 200 without it. |
+| Admin/API health | PASS | Read-only Orders and Conversations GETs returned HTTP 200; routing stayed Admin 100/0 and API 100/0. |
+| Mutation safety | PASS | No deployment, traffic, D1, payment, order, secret, customer-message or CAPI action was performed. |
+| Regression tests | RETAINED | No source change; prior 379 passed / 1 skipped and build/lint PASS retained without rerun. |
+
 ## GFS-COD-MO-13 preview, canary and rollback (2026-11-05 PKT)
 
 | Gate | Result | Evidence |

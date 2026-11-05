@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-14 observability repair (2026-11-05 PKT)
+
+- Candidate-specific Cloudflare monitoring is now independently readable from the authenticated Admin Worker Key figures page after navigating to the metrics route and waiting for data rendering; no Worker configuration, deployment, traffic, D1, payment or secret mutation was made.
+- The current 24-hour version-separated view identifies candidate `3e4b7c26` with 14 invocations, 0 errors and 1.05 ms average CPU; the baseline and candidate remain Admin 100% / 0%. Candidate-specific latency was not claimed because the displayed latency percentile panels were aggregate rather than candidate-labelled.
+- The safe authenticated quoted override `getfreeseeds-admin-staging="3e4b7c26-c36d-4d1c-baeb-d26629a9b4a1"` returned HTTP 200 and the new MO panel while the unoverridden baseline returned HTTP 200 without it; Conversations also returned HTTP 200. No write endpoint was called.
+- Root cause of GFS-COD-MO-13 monitoring inconclusive status: the dashboard initially remained at a loading/stale shell and did not render version data during the canary; current navigation/wait procedure restores readable telemetry. Do not infer zero errors from an unloaded dashboard.
+- Dashboard session was authenticated to the frozen Cloudflare account as `gisupp@gmail.com`; candidate resources retain the HMAC secret slot, D1, R2 and Queue named bindings without exposing values. Keep the new-number WhatsApp lock and Hoja Seeds zero-connection rule.
+
 ## GFS-COD-MO-13 preview, canary and rollback (2026-11-05 PKT)
 
 - The supported preview method is an authenticated `Cloudflare-Workers-Version-Overrides` Structured Header: `getfreeseeds-admin-staging="<full candidate version ID>"`. An unquoted dictionary value is invalid and must not be treated as candidate evidence.

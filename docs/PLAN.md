@@ -1,5 +1,12 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-14 observability repair (2026-11-05 PKT)
+
+- Read-only verification now passes: authenticated Cloudflare Key figures rendered version-separated candidate telemetry for `3e4b7c26` (14 invocations, 0 errors, 1.05 ms average CPU) in the current 24-hour window.
+- The prior blocker was dashboard data not rendering during GFS-COD-MO-13, not a Worker deployment defect. The safe procedure is to open the Admin metrics route, wait for the data view, and require version-labelled records before any canary.
+- Current routing remains Admin `e8c96c96` 100% / `3e4b7c26` 0%; API remains `b426ba47` 100% / `d683ec45` 0%. No new canary or promotion is authorized by this task.
+- Next exact action: separately authorize one bounded Admin canary using the now-proven version metrics and mandatory rollback.
+
 ## GFS-COD-MO-13 preview, canary and rollback (2026-11-05 PKT)
 
 - Authenticated candidate override passed with the full Structured Header value and showed the new read-only COD MO panel; normal Admin remained baseline. Candidate binding/readback and genuine COD_PENDING classification passed without payment mutation.
