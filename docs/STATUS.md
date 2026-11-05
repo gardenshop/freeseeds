@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-MO-22 Admin routing and health reconciliation (2026-11-05 PKT)
+
+**Disposition: ROUTING PASS / D1 PREFLIGHT PASS / OPERATIONAL READINESS BLOCKED.**
+
+- Deployment API is authoritative: Admin `7aacd65b-fe1d-4c47-9f92-5ba3bf791dc5` has `3e4b7c26` at 100%; API `9b459a09-a7a5-404d-9302-48292bd07783` has `b426ba47`100% / `d683ec45`0%. Dashboard 94.5/5.5 is observed last-24-hour share (768/45) with approximately one-hour freshness.
+- `/health` is protected by the dedicated `GFS-Admin-Health-Monitoring` Service Auth app/policy. Browser and invalid requests return expected 403. Existing service credential lookup failed with `credential_read_failed`; no credential value was exposed or changed, and no authorized 200 was claimed.
+- Admin Orders/Conversations reads are HTTP200; all three Advance methods are enabled; COD is enabled at PKR125. D1 remains `0047=1`, `0048=0`, historical table absent, MO rows zero, and SELECT-only metadata shows no writes. Time Travel availability is PASS; no restore.
+- MO-20 local tests remain valid: focused 34/34, full 385/1, build/lint PASS. No source, routing, Access, D1, payment, WhatsApp, Meta or CAPI mutation occurred.
+
 ## GFS-COD-MO-21 repaired 0048 preflight (2026-11-05 PKT)
 
 **Disposition: BLOCKED safely before D1 write / routing and health mismatch.**

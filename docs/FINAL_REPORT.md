@@ -1,5 +1,18 @@
 # Final Report
 
+## GFS-COD-MO-22 routing and health reconciliation (2026-11-05 PKT)
+
+1. **MO-21 comparison:** routing mismatch is resolved as a metrics interpretation issue; configured Admin routing is verified by deployment status.
+2. **Admin deployment:** `7aacd65b-fe1d-4c47-9f92-5ba3bf791dc5`, created `2026-11-05T07:25:12Z`; `3e4b7c26` configured at 100%.
+3. **94.5/5.5 cause:** dashboard selected Last 24 hours; observed counts were 768 baseline and 45 candidate, giving 94.5/5.5. It is not configured traffic.
+4. **Health/403 cause:** `/health` is an exact-path Access application with one `GFS-Admin-Health-Monitor` Service Auth policy and service-token include. Browser and invalid credentials correctly return 403 HTML. Existing credential-manager bridge failed to read its credential in this context; authorized HTTP200 is therefore unverified.
+5. **API/WhatsApp/payment protection:** API deployment remains `b426ba47`100% / `d683ec45`0%; Orders/Conversations reads are 200; JazzCash, Easypaisa and Bank Transfer are enabled; COD is PKR125. API health was not independently confirmed because host/browser fetch was unavailable; no regression is inferred.
+6. **D1 readiness:** schema preflight is PASS (`0047=1`, `0048=0`, no historical table, zero MO rows, zero writes); Time Travel availability PASS. Overall migration readiness is **BLOCKED** pending authorized health 200.
+7. **Defects/verification:** no source defect or production defect found; dashboard interpretation and Access behavior reconciled. MO-20 retained local tests: focused 34/34, full 385/1, build/lint PASS.
+8. **Documentation/Git:** required rules, status, plan, registry, decisions, matrix, SOP, changelog and report updated without credentials or customer data.
+9. **Stages:** routing reconciliation 100%; D1 schema preflight 100%; authorized health proof 0%; migration execution 0%; Admin release 0%; genuine settlement 0%.
+10. **One next action:** authorize one read-only service-auth `/health` check through the existing approved credential bridge; no migration or traffic change.
+
 ## GFS-COD-MO-21 repaired 0048 execution gate (2026-11-05 PKT)
 
 1. **MO-20 comparison:** repaired marker and cross-ledger protections are present locally; prior D1 state remained clean.

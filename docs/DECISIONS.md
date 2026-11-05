@@ -2602,3 +2602,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Decision:** do not apply repaired migration 0048 while the authenticated Cloudflare dashboard reports Admin `e8c96c96`94.5% / `3e4b7c26`5.5%, conflicting with the frozen `3e4b7c26`100% baseline.
 - **Evidence:** account/operator, source SHA and remote D1 preflight all match; D1 has no partial 0048 object or marker and verification writes are zero. The Admin `/health` GET returned 403, so live health is not established.
 - **Boundary:** no Time Travel bookmark, migration, deployment, routing edit, payment/order action, secret, API/Meta/CAPI or customer-message change. Resolve the routing/Access evidence with a separately authorized read-only audit first.
+## GFS-COD-MO-22 - routing reconciled, health proof remains gated (2026-11-05 PKT)
+
+- **Decision:** treat deployment API as configured-routing source of truth. Admin `7aacd65b-fe1d-4c47-9f92-5ba3bf791dc5` is candidate `3e4b7c26`100%; dashboard 94.5/5.5 is last-24-hour observed traffic, calculated from 768/45 invocations.
+- **Access evidence:** `/health` is intentionally Service Auth-only under `GFS-Admin-Health-Monitoring`; browser and invalid credentials return 403. The approved credential-manager bridge is unavailable in this context, so no authorized health 200 is asserted.
+- **Boundary:** D1 preflight and Time Travel availability pass, but do not apply 0048 until the existing service-auth health check is executed successfully. No Access policy, credential, routing, D1, payment, API, Meta, CAPI or customer change occurred.
+- **Next exact authorization:** one read-only service-auth `/health` check using the existing approved bridge.

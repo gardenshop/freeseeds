@@ -1,5 +1,12 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-22 Admin routing and health reconciliation (2026-11-05 PKT)
+
+- Official deployment status reconciles Admin to `7aacd65b-fe1d-4c47-9f92-5ba3bf791dc5`: candidate `3e4b7c26`100%. Dashboard 94.5/5.5 is last-24-hour observed traffic (768/45), not configured split. API remains `b426ba47`100% / `d683ec45`0%.
+- Access readback confirms `/health` has its own Service Auth application/policy. Browser and invalid credentials return expected 403; the existing credential-manager bridge is unavailable in this context, so authorized health 200 is not claimed.
+- D1 preflight is ready (`0047=1`, `0048=0`, no partial objects, Time Travel available), but overall migration readiness remains blocked until approved service-auth health is verified.
+- Next exact action: authorize only a read-only service-auth `/health` check using the existing approved bridge; no migration or routing change.
+
 ## GFS-COD-MO-21 repaired 0048 preflight (2026-11-05 PKT)
 
 - Repaired migration/source SHA matches the authorized commit and remote D1 has no partial 0048 state. No D1 write occurred.

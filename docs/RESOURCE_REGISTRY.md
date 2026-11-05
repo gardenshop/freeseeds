@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-COD-MO-22 routing and health resources (2026-11-05 PKT)
+
+- **Configured deployment:** Admin `7aacd65b-fe1d-4c47-9f92-5ba3bf791dc5`, candidate `3e4b7c26`100%, created `2026-11-05T07:25:12Z`; API `9b459a09-a7a5-404d-9302-48292bd07783`, `b426ba47`100% / `d683ec45`0%.
+- **Observed metrics:** dashboard selected Last 24 hours and displayed 768 baseline / 45 candidate invocations, yielding observed 94.5/5.5; this is historical share, not deployment configuration.
+- **Access:** exact `/health` destination is protected by `GFS-Admin-Health-Monitoring` and one existing `GFS-Admin-Health-Monitor` Service Auth policy. Browser/invalid requests were denied 403. Existing service credential could not be read in this context; no credential value is recorded.
+- **D1 readiness:** `0047` once, `0048` absent, no historical table, zero MO rows, zero readback writes; Time Travel bookmark availability PASS. Migration remains unapplied pending authorized health proof.
+
 ## GFS-COD-MO-21 repaired 0048 preflight resources (2026-11-05 PKT)
 
 - **Verified local artifact:** repaired `migrations/0048_historical_cod_mo.sql` at authorized commit `ac743db`; marker statement present.

@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-22 Admin routing and health reconciliation (2026-11-05 PKT)
+
+- **Routing reconciled read-only:** official deployment status reports Admin deployment `7aacd65b-fe1d-4c47-9f92-5ba3bf791dc5`, created `2026-11-05T07:25:12Z`, with `3e4b7c26-c36d-4d1c-baeb-d26629a9b4a1` configured at 100%. API deployment `9b459a09-a7a5-404d-9302-48292bd07783` remains `b426ba47`100% / `d683ec45`0%.
+- The dashboard `94.5%`/`5.5%` was observed traffic over its selected **Last 24 hours** metrics window, not configured routing: the chart showed 768 baseline and 45 candidate invocations, whose candidate share is 5.5%. Dashboard freshness displayed approximately one hour; deployment API is authoritative for configured percentages.
+- **Access/health:** `/health` is isolated to `GFS-Admin-Health-Monitoring` with one `GFS-Admin-Health-Monitor` Service Auth policy and service-token include. Browser and invalid credentials correctly receive HTTP403 HTML. The approved credential-manager bridge could not read its existing credential in this context, so authorized health HTTP200 remains unproven; no policy or credential change was made.
+- Admin Orders/Conversations reads remain HTTP200; payment-method read shows JazzCash, Easypaisa and Bank Transfer enabled; COD read shows enabled with PKR125. D1 readback remains `0047=1`, `0048=0`, no historical table, zero MO rows, and zero write metadata. Time Travel availability returned a bookmark without restore.
+- **Readiness:** routing reconciliation PASS; D1 migration preflight PASS; operational health readiness BLOCKED pending an approved service-auth health check. Do not apply 0048 or alter routing until that check is completed. Preserve the new-number WhatsApp lock and Hoja Seeds zero-connection rule.
+
 ## GFS-COD-MO-21 repaired 0048 preflight (2026-11-05 PKT)
 
 - **BLOCKED before D1 write:** account/operator and repository matched (`gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, HEAD `ac743db`). The repaired 0048 file contains its marker and retains the expected local file digest. Remote D1 remains `0047=1`, `0048=0`, no historical table, zero normal MO rows, and SELECT metadata `changes=0`/`rows_written=0`.

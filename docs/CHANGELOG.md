@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-05 - GFS-COD-MO-22 routing and health reconciliation
+
+- Reconciled Admin configured routing from official deployment status: candidate `3e4b7c26`100% in deployment `7aacd65b`; dashboard 94.5/5.5 is historical last-24-hour observed share (768/45).
+- Confirmed `/health` is intentionally protected by the dedicated Service Auth application/policy. Browser and invalid requests returned 403; the existing credential bridge was unavailable, so authorized health 200 remains unverified.
+- D1 remains unchanged and migration 0048 unapplied. No routing, Access, payment, API, Meta, CAPI or customer mutation occurred.
+
 ## 2026-11-05 - GFS-COD-MO-21 repaired 0048 preflight
 
 - Verified repaired 0048 artifact and clean D1 preflight without a write. Stopped before migration because authenticated active Admin routing was `e8c96c96`94.5% / `3e4b7c26`5.5%, conflicting with the authorized baseline; Admin `/health` returned 403.

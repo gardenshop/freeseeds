@@ -1,5 +1,9 @@
 # COD Settlement SOP
 
+## GFS-COD-MO-22 readiness gate (2026-11-05 PKT)
+
+Configured Admin routing is reconciled to candidate 100%; the dashboard 94.5/5.5 display is historical observed traffic. `/health` remains intentionally Service Auth-protected. Do not apply migration 0048 until an authorized service-auth health 200 is verified through the existing approved bridge.
+
 ## GFS-COD-MO-21 routing gate (2026-11-05 PKT)
 
 Do not apply migration 0048 while Admin active provisioning or Access health conflicts with the approved baseline. Resolve routing and `/health` evidence through a separately authorized read-only audit before requesting a new migration window.

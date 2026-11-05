@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-COD-MO-22 routing and health reconciliation (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Configured Admin routing | PASS | Deployment `7aacd65b` reports `3e4b7c26` at 100%. |
+| Dashboard 94.5/5.5 explanation | PASS | Last-24-hour observed counts 768/45 produce 94.5/5.5; not configured traffic. |
+| API routing | PASS | `b426ba47`100% / `d683ec45`0% in deployment status. |
+| Access policy | PASS | Exact `/health` app with one Service Auth policy and service-token include; no policy mutation. |
+| Authorized Admin health | BLOCKED | Browser/invalid 403 expected; existing credential bridge unavailable, so no HTTP200 proof. |
+| Admin reads/payment config | PASS | Orders and Conversations 200; Advance 3/3 enabled; COD PKR125. |
+| D1 migration readiness | BLOCKED | `0047=1`, `0048=0`, no partial objects; Time Travel available, but health prerequisite incomplete. |
+| Production mutation | PASS | No routing, Access, D1, payment, API, Meta, CAPI or customer mutation. |
+
 ## GFS-COD-MO-21 repaired 0048 preflight (2026-11-05 PKT)
 
 | Gate | Result | Evidence |
