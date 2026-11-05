@@ -1,5 +1,12 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-15 final 10% canary and rollback (2026-11-05 PKT)
+
+- Authorized Admin canary passed technically: deployment `61708672-1d37-4784-b7a3-bc74801c723a` used baseline90% / candidate10% for219.45 seconds; candidate telemetry advanced15→18 with0 errors.
+- Twenty ordinary authenticated Orders GETs were all HTTP200; two selected the candidate-only MO panel. No override request was counted as ordinary canary evidence and no write endpoint was called.
+- Mandatory rollback `ed9754ad-da6e-406c-aea3-d0bd86960ce8` restored100%/0%; API stayed100%/0%. D1 and payment configuration remained read-only and unchanged.
+- **Release status:** technical canary PASS, permanent promotion still pending separate authorization. Genuine MO/PAID acceptance remains unperformed.
+
 ## GFS-COD-MO-14 observability repair (2026-11-05 PKT)
 
 - Read-only verification now passes: authenticated Cloudflare Key figures rendered version-separated candidate telemetry for `3e4b7c26` (14 invocations, 0 errors, 1.05 ms average CPU) in the current 24-hour window.

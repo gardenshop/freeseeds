@@ -1,5 +1,22 @@
 # Final Report
 
+## GFS-COD-MO-15 final 10% Admin canary (2026-11-05 PKT)
+
+1. **Previous task:** GFS-COD-MO-14 restored reliable version-separated monitoring; this task used it for one authorized canary and did not repeat UI development.
+2. **Canary:** **GO for technical canary / NO permanent promotion**. Deployment `61708672-1d37-4784-b7a3-bc74801c723a` ran Admin baseline90% / candidate10%.
+3. **Exposure:** `07:04:15Z` to `07:07:54Z`, 219.45 seconds. No other Worker was changed.
+4. **Metrics:** candidate invocations15→18, candidate errors0, candidate CPU3.09 ms; aggregate request duration258 ms. Metrics were fresh and version-labelled.
+5. **GET acceptance:** 20 ordinary authenticated Admin Orders GETs returned200; two selected the candidate-only MO panel. Baseline and candidate override reads were distinguished; Conversations returned200.
+6. **MO/security:** candidate MO panel and secure endpoint marker appeared; ineligible state remained read-only. No MO reference, PAID, payment or order write occurred.
+7. **Protection:** API remained `b426ba47`100% / `d683ec45`0%; API health HTTP200 showed ready/WhatsApp enabled. Advance JazzCash/Easypaisa/Bank Transfer remained enabled; COD remained enabled at PKR125.
+8. **D1/integrity:** SELECT-only readback reported `changes=0`, `rows_written=0`, 0 MO receipts and 0 COD-paid details. Recovery ON; CAPI OFF. No D1 restore.
+9. **Rollback:** **PASS**. Deployment `ed9754ad-da6e-406c-aea3-d0bd86960ce8` restored Admin `e8c96c96`100% / candidate `3e4b7c26`0%; final readback and health passed.
+10. **Defects/tests:** no source defect or repair; one invalid read-only table name was corrected. Retain379 passed/1 skipped and build/lint PASS without rerun.
+11. **Documentation/Git:** rules, plan, status, decisions, test matrix, changelog and this report updated; source unchanged.
+12. **Stages:** source/UI100%; candidate upload100%; monitoring100%; 10% technical canary100%; rollback100%; permanent promotion0%; genuine MO settlement0%.
+13. **One next action:** authorize one permanent Admin promotion to candidate100% only after explicitly accepting the retained rollback target and separate genuine-settlement gate.
+
+
 ## GFS-COD-MO-14 fix version monitoring (2026-11-05 PKT)
 
 1. **Previous task:** GFS-COD-MO-13 completed the 10% exposure and rollback but was NO-GO because version metrics did not render. No canary is repeated here.

@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-MO-15 final 10% canary and rollback (2026-11-05 PKT)
+
+**Disposition: technical canary PASS; baseline restored; permanent promotion not performed.**
+
+- Canary `61708672-1d37-4784-b7a3-bc74801c723a`: Admin baseline `e8c96c96`90% / candidate `3e4b7c26`10%, `07:04:15Z`–`07:07:54Z`, 219.45 seconds. Fresh candidate invocations15→18, errors0, CPU3.09 ms; aggregate request duration258 ms.
+- Twenty ordinary authenticated GETs returned200 and two selected the candidate MO panel. Baseline and candidate override GETs plus Conversations returned200; no payment/order write was sent.
+- Rollback `ed9754ad-da6e-406c-aea3-d0bd86960ce8` restored Admin100%/0%. API remained100%/0%. D1 readback reported `changes=0`, `rows_written=0`, zero MO receipts and zero COD-paid details.
+- API health HTTP200 confirmed ready/WhatsApp enabled. Advance3/3 and COD PKR125 remained unchanged. Retain source baseline379 passed/1 skipped and build/lint PASS without rerun.
+
 ## GFS-COD-MO-14 observability repair (2026-11-05 PKT)
 
 **Disposition: PASS / release prerequisite restored; no traffic change.**

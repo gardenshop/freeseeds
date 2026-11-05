@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-05 - GFS-COD-MO-15 final 10% Admin canary
+
+- Ran the authorized Admin-only 90%/10% canary for219.45 seconds with fresh candidate telemetry15→18 invocations and0 errors; ordinary GET checks were healthy and two selected the candidate MO UI.
+- Mandatory rollback restored Admin baseline100%/candidate0% in deployment `ed9754ad-da6e-406c-aea3-d0bd86960ce8`. API, D1, payments, WhatsApp and CAPI remained protected. Technical canary PASS; no permanent promotion.
+
 ## 2026-11-05 - GFS-COD-MO-14 monitoring repair
 
 - Revalidated official Cloudflare version-separated telemetry after navigating to the authenticated Admin metrics view and waiting for data rendering: candidate `3e4b7c26` showed 14 invocations, 0 errors and 1.05 ms average CPU in the current 24-hour range.

@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-COD-MO-15 final 10% canary (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Exact canary routing | PASS | `61708672-1d37-4784-b7a3-bc74801c723a`: baseline90% / candidate10%. |
+| Fresh candidate telemetry | PASS | Candidate invocations15→18, errors0, CPU3.09 ms; dashboard data was refreshed during exposure. |
+| Ordinary canary requests | PASS | 20 authenticated GETs, 20×HTTP200, 2 candidate-only MO-panel responses; override requests separate. |
+| MO UI/security | PASS | Baseline had no panel; candidate override showed MO panel and secure endpoint marker; no submit/write was made. |
+| Admin/API health | PASS | Orders/Conversations GETs200; API health200, ready and WhatsApp enabled; API routing unchanged. |
+| Payment/D1 protection | PASS | Advance3/3, COD PKR125; D1 `changes=0`, `rows_written=0`, zero MO receipts and zero COD-paid details. |
+| Mandatory rollback | PASS | `ed9754ad-da6e-406c-aea3-d0bd86960ce8` restored Admin100%/0% within the window. |
+| Source regression | RETAINED | No source change; prior379 passed/1 skipped and build/lint PASS retained without rerun. |
+
 ## GFS-COD-MO-14 observability repair (2026-11-05 PKT)
 
 | Gate | Result | Evidence |

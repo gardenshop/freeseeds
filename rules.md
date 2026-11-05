@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-15 final 10% canary and rollback (2026-11-05 PKT)
+
+- Authorized Admin-only canary deployment `61708672-1d37-4784-b7a3-bc74801c723a` ran baseline `e8c96c96` 90% / candidate `3e4b7c26` 10% from `07:04:15Z` to mandatory rollback at `07:07:54Z` (219.45 seconds). No non-versioned settings were synchronized.
+- Fresh candidate telemetry advanced 15 to 18 invocations with 0 candidate errors; candidate CPU was 3.09 ms and aggregate request duration was 258 ms. Twenty ordinary authenticated GETs were HTTP 200, with two candidate-only MO-panel responses; override reads were kept separate.
+- Rollback deployment `ed9754ad-da6e-406c-aea3-d0bd86960ce8` restored Admin `e8c96c96` 100% / candidate `3e4b7c26` 0%. API remained `b426ba47` 100% / `d683ec45` 0%. Post-rollback Admin Orders/Conversations reads and candidate override reads were HTTP 200.
+- D1 readback was SELECT-only (`changes=0`, `rows_written=0`), with zero MO receipts and zero COD-paid details. Advance JazzCash/Easypaisa/Bank Transfer remained enabled; COD remained enabled at PKR125. API health remained ready with WhatsApp enabled; Recovery stays ON and CAPI OFF.
+- This is accepted technical-canary evidence only. Keep permanent promotion and genuine MO settlement separately authorized; preserve the new-number WhatsApp lock and Hoja Seeds zero-connection rule.
+
 ## GFS-COD-MO-14 observability repair (2026-11-05 PKT)
 
 - Candidate-specific Cloudflare monitoring is now independently readable from the authenticated Admin Worker Key figures page after navigating to the metrics route and waiting for data rendering; no Worker configuration, deployment, traffic, D1, payment or secret mutation was made.

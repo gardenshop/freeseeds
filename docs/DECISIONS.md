@@ -2557,3 +2557,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Evidence:** current 24-hour Key figures view labels candidate `3e4b7c26` with 14 invocations, 0 errors and 1.05 ms average CPU; authenticated quoted override and baseline GETs are distinguishable and both are read-only.
 - **Boundary:** candidate latency was not claimed because the visible latency percentile panels were aggregate; raw GraphQL/token inspection was not used. No Worker, traffic, D1, secret, payment, API, Meta, CAPI, WhatsApp or customer mutation occurred.
 - **Next exact authorization:** one bounded Admin-only canary with explicit exposure/window and mandatory rollback, using the loaded version metrics as the monitor.
+## GFS-COD-MO-15 - accept bounded technical canary and restore baseline (2026-11-05 PKT)
+
+- **Decision:** accept the authorized 90/10 Admin canary as technical PASS and retain the rollback routing: `e8c96c96`100% / `3e4b7c26`0%. Do not permanently promote under this task.
+- **Evidence:** canary `61708672-1d37-4784-b7a3-bc74801c723a` ran219.45 seconds; candidate telemetry15→18 invocations,0 errors,3.09 ms CPU. Twenty ordinary GETs were200 and two selected the candidate-only MO UI. Rollback `ed9754ad-da6e-406c-aea3-d0bd86960ce8` was independently read back.
+- **Protection:** API routing stayed `b426ba47`100% / `d683ec45`0%; API health/WhatsApp enabled, Advance3/3, COD PKR125, D1 zero-write readback, Recovery ON and CAPI OFF all passed. HMAC/binding names remained present without value exposure.
+- **Boundary:** no real MO/PAID action, D1 restore, payment/order/customer-message, API/Meta/CAPI or source mutation occurred. One invalid read-only aggregate table name was corrected; it was not an application defect.
+- **Next exact authorization:** one explicit permanent Admin promotion decision, retaining the baseline rollback target and separately acknowledging that genuine MO settlement remains unvalidated.
