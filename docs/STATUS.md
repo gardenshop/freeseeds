@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-MO-20 migration 0048 preflight (2026-11-05 PKT)
+
+**Disposition: BLOCKED safely before D1 write / local repair PASS.**
+
+- Cloudflare identity matched `gisupp@gmail.com` and account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; D1 `getfreeseeds-staging` matched. HEAD is `345c9312`.
+- Remote readback: `0047` marker once, `0048` marker absent, historical table absent, normal MO table present with zero rows; 886 orders and 886 payments. The Time Travel bookmark was recorded securely and no restore was attempted.
+- The migration lacked its exact-once marker. Local repair adds it and cross-ledger normal/historical HMAC tests pass. Focused 34/34; full 385 passed / 1 skipped; build/lint PASS.
+- Admin/API routing, Advance/COD, WhatsApp, Recovery and CAPI remain unchanged. Remote migration, payment mutation, deployment and candidate release did not occur.
+
 ## GFS-COD-MO-19 historical COD settlement fix (2026-11-05 PKT)
 
 **Disposition: SOURCE PASS / RELEASE BLOCKED pending additive migration authorization.**

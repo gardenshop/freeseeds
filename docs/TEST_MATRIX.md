@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-COD-MO-20 migration 0048 preflight (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Identity/D1/recovery preflight | PASS | Account/D1 matched; official Time Travel bookmark recorded securely; no restore. |
+| Remote migration state | BLOCKED | `0047` once; `0048` marker/table absent; no write executed. |
+| Migration exact-once tracking | REPAIRED LOCALLY | Marker added to 0048; isolated setup records it once. |
+| Cross-ledger duplicate MO | PASS LOCALLY | Normal-ledger HMAC is rejected by historical path and historical-ledger HMAC by normal path. |
+| Regression | PASS | Focused 34/34; full 385 passed / 1 skipped; build/lint PASS. |
+| Production protection | PASS | No D1/order/payment/WhatsApp/Meta/CAPI mutation; routing unchanged. |
+
 ## GFS-COD-MO-19 historical COD settlement fix (2026-11-05 PKT)
 
 | Gate | Result | Evidence |

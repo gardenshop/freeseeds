@@ -1,5 +1,11 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-20 migration 0048 preflight (2026-11-05 PKT)
+
+- Read-only identity/D1 preflight passed, but the exact migration was blocked before write because it omitted the required `0048` schema marker. Production remains unchanged: `0047` once, `0048` absent, historical table absent, normal MO rows zero, and SELECT metadata showed zero writes.
+- Local repair adds marker tracking and cross-ledger duplicate rejection in both MO endpoints. Focused 34/34, full 385/1, build/lint PASS. No repaired source is deployed.
+- Next exact action: owner reviews the repaired migration and separately authorizes one targeted execution of the repaired `0048`; no candidate upload or settlement is included.
+
 ## GFS-COD-MO-19 historical COD settlement fix (2026-11-05 PKT)
 
 - Ten-contact read-only trace found ten unique matches: six no-method unpaid, two unpaid Advance, and two existing COD records. No MO, company-receipt or collection evidence was verified; no production order was changed.

@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-COD-MO-20 migration 0048 preflight resources (2026-11-05 PKT)
+
+- **Identity/D1:** `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, `getfreeseeds-staging`; read-only schema shows `0047` once, `0048` absent, no historical table, normal MO table present with zero rows.
+- **Recovery:** official D1 Time Travel bookmark recorded securely before the authorized write boundary; value is intentionally excluded from Git and reports. No restore occurred.
+- **Local repair:** migration marker and cross-ledger duplicate guards are tested locally only. Focused 34/34, full 385/1, build/lint PASS. No deployment or remote D1 write.
+
 ## GFS-COD-MO-19 historical settlement resources (2026-11-05 PKT)
 
 - **Local source:** `migrations/0048_historical_cod_mo.sql`; Admin endpoint `/api/orders/:id/mark-historical-cod-received`; no remote migration or version exists for this change.

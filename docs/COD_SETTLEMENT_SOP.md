@@ -1,5 +1,9 @@
 # COD Settlement SOP
 
+## GFS-COD-MO-20 release boundary (2026-11-05 PKT)
+
+The original 0048 migration is blocked before remote execution because it omitted its exact-once schema marker. The marker and cross-ledger duplicate protections are repaired and tested locally only; do not settle real orders or release the repaired source until the repaired migration is separately reviewed and targeted execution is authorized.
+
 ## Historical Pakistan Post MO
 
 This SOP is source-ready but not released until migration 0048 and the Admin candidate are separately authorized.

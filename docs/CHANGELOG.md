@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-05 - GFS-COD-MO-20 migration 0048 preflight
+
+- Read-only D1 preflight matched the authorized account/database and recorded recovery evidence. `0047` is present once; `0048` was absent; no remote write was made.
+- Blocked the original migration because it omitted exact-once schema-marker tracking. Locally added the marker and cross-ledger MO HMAC duplicate rejection; focused 34/34, full 385/1, build/lint PASS.
+- No deployment, candidate upload, payment/order mutation, WhatsApp, Meta or CAPI change. Repaired migration requires separate review/authorization before targeted execution.
+
 ## 2026-11-05 - GFS-COD-MO-19 historical COD settlement fix
 
 - Traced ten supplied contacts read-only to ten unique matches: six no-method unpaid, two unpaid Advance and two existing COD; no genuine MO/company-receipt evidence was found and no production order changed.

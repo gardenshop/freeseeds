@@ -1,5 +1,20 @@
 # Final Report
 
+## GFS-COD-MO-20 migration 0048 preflight (2026-11-05 PKT)
+
+1. **Previous task:** MO-19 source was present locally; migration 0048 remained unapplied.
+2. **Migration:** **BLOCKED**, not applied. The original file omitted its `0048` schema marker, violating exact-once verification.
+3. **D1 evidence:** account/D1 matched; `0047` marker once; `0048` marker/table absent; normal MO table present with zero rows; read-only query metadata had zero writes.
+4. **Recovery:** official Time Travel bookmark recorded securely before the write boundary; value omitted from chat/docs; no restore.
+5. **Records:** no existing order/payment DML; live intake may continue, so no static-count claim is used.
+6. **Security:** local repaired tests reject the same HMAC across normal and historical ledgers in both directions. No repaired source was deployed.
+7. **Regression:** focused 34/34; full 385 passed / 1 skipped; build/lint PASS.
+8. **Live protection:** Admin `3e4b7c26` 100% / rollback `e8c96c96` 100%; API `b426ba47` 100% / `d683ec45` 0%; Advance 3/3, COD PKR125, Recovery ON, CAPI OFF; no WhatsApp/Meta/payment change.
+9. **Defects:** migration marker omission and cross-ledger duplicate gap repaired locally; production remains unchanged.
+10. **Documentation/Git:** rules, plan, status, registry, decisions, matrix, changelog, SOP and this report updated without secrets/PII/raw references.
+11. **Stages:** source/security repair 100%; local verification 100%; remote migration 0%; candidate release 0%; genuine settlement 0%.
+12. **One next action:** review and separately authorize one targeted execution of the repaired 0048 migration; do not upload or promote Admin in that authorization.
+
 ## GFS-COD-MO-19 historical COD settlement fix (2026-11-05 PKT)
 
 1. **Previous task:** GFS-COD-MO-18 safely blocked settlement because no eligible live MO evidence existed. That remains true.

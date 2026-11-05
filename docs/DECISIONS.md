@@ -2591,3 +2591,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Rollback:** retain exact `e8c96c96`100% / `3e4b7c26`0% route for a proven regression. Never restore D1 automatically.
 - **Boundary:** no API, Meta, CAPI, secret, migration/restore, payment/order/customer-message or genuine MO/PAID action occurred. HMAC/D1/R2/Queue/Access binding names remain present without value exposure.
 - **Next exact authorization:** one genuinely evidenced Pakistan Post MO settlement on an already eligible COLLECTION_PENDING order, with an explicit one-payment mutation scope.
+## GFS-COD-MO-20 - stop before defective migration write (2026-11-05 PKT)
+
+- **Decision:** do not execute the original `0048_historical_cod_mo.sql`; it creates the historical ledger but omits the required `cod_schema_migrations` marker, so exact-once tracking is not established.
+- **Evidence:** authenticated identity and D1 matched; remote `0047=1`, `0048=0`, historical table absent, normal MO rows zero, and read-only metadata reported zero writes. Recovery bookmark was recorded securely.
+- **Repair/boundary:** local migration marker and cross-ledger normal/historical MO HMAC rejection pass focused/full tests. No repaired source deployment, D1 write, payment mutation, API/Meta/CAPI change or candidate release is authorized by this task.
+- **Next exact authorization:** review and authorize one targeted execution of the repaired 0048 migration only; then separately authorize candidate upload/preview.

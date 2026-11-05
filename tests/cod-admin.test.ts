@@ -83,6 +83,10 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+it("tracks historical migration 0048 exactly once", () => {
+  expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_schema_migrations WHERE version='0048'").get()).toEqual({ count: 1 });
+});
+
 // Independent synthetic settlement fixtures deliberately opt out at INSERT, never through an endpoint.
 function seedCod(status = "COLLECTION_PENDING", hold = 0, snapshot = true, orderNumber = "SIM-GFS222-DO-NOT-SHIP") {
   const now = "2026-01-01T00:00:00.000Z";
@@ -443,6 +447,28 @@ describe("COD Admin configuration and reconciliation", () => {
     expect([winner.status, loser.status].sort()).toEqual([200, 409]);
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_historical_mo_receipts").get()).toEqual({ count: 1 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_HISTORICAL_MO_RECEIVED'").get()).toEqual({ count: 1 });
+  });
+
+  it("blocks a normal-ledger MO from historical settlement", async () => {
+    seedCod();
+    seedHistorical();
+    const referenceHmac = await codReferenceHmac("PK-CROSS-LEDGER-001", hmacKey);
+    sqlite.prepare("INSERT INTO cod_mo_receipts(order_id,mo_reference_hmac,mo_amount_pkr,operator_id,received_at) VALUES(?,?,?,?,?)")
+      .run("order-1", referenceHmac, 200, "synthetic", "2026-01-01T00:00:00.000Z");
+    const response = await post("/api/orders/historical-order/mark-historical-cod-received", { confirmation: "SIM-HISTORICAL-COD", amountPkr: 200, moNumber: "PK-CROSS-LEDGER-001", receiptDate: "2026-01-01", evidenceReference: "PRIVATE-RECEIPT-CROSS-001", reason: "Cross-ledger duplicate test", confirmed: true });
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: "COD_MO_ALREADY_USED" });
+  });
+
+  it("blocks a historical-ledger MO from normal COD settlement", async () => {
+    seedCod();
+    seedHistorical();
+    const referenceHmac = await codReferenceHmac("PK-CROSS-LEDGER-002", hmacKey);
+    sqlite.prepare("INSERT INTO cod_historical_mo_receipts(order_id,mo_reference_hmac,received_amount_pkr,receipt_date,evidence_reference_hmac,settlement_reason,operator_id,received_at) VALUES(?,?,?,?,?,?,?,?)")
+      .run("historical-order", referenceHmac, 200, "2026-01-01", "synthetic-evidence", "Cross-ledger duplicate test", "synthetic", "2026-01-01T00:00:00.000Z");
+    const response = await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, moNumber: "PK-CROSS-LEDGER-002", confirmed: true });
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: "COD_MO_ALREADY_USED" });
   });
 
   it("queues one idempotent Purchase event and keeps payment paid when Queue delivery is unavailable", async () => {

@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-20 migration 0048 preflight (2026-11-05 PKT)
+
+- **BLOCKED before D1 write:** authenticated read-only preflight matched `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, database `getfreeseeds-staging`, and HEAD `345c9312`. D1 has marker `0047` once, no `0048` marker, no historical ledger, normal MO ledger present with zero rows, 886 orders and 886 payments; SELECT metadata reported `changes=0` and `rows_written=0`.
+- The original `0048_historical_cod_mo.sql` omitted its `cod_schema_migrations` insert, so exact-once tracking could not be verified. Per authorization, no remote migration was executed. Local repair adds the `0048` marker and both Admin MO endpoints now reject cross-ledger HMAC reuse; production deployment of that repair remains unauthorized.
+- Local validation after repair: focused 34/34, full 385 passed/1 skipped, build and lint PASS. The official D1 Time Travel bookmark was recorded securely before the blocked write; its value is not stored in Git or reports. No D1/order/payment/WhatsApp/Meta/CAPI mutation occurred.
+- Protected routing remains Admin `3e4b7c26` 100% / rollback `e8c96c96` 100%; API `b426ba47` 100% / `d683ec45` 0%; Advance 3/3, COD PKR125, Recovery ON, CAPI OFF. Preserve the new-number WhatsApp lock and Hoja Seeds zero-connection rule.
+
 ## GFS-COD-MO-19 historical COD settlement fix (2026-11-05 PKT)
 
 - **Discovery:** ten supplied contact searches produced ten unique order matches, with no ambiguous phone-only match. Six were no-method unpaid records, two were unpaid Advance records (JazzCash/Easypaisa), and two were existing COD records: one PACKING with tracking and one COD_PENDING without tracking. None had an MO receipt or verified collection evidence.

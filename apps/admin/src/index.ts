@@ -814,7 +814,7 @@ async function markCodPaymentReceived(c: AdminContext) {
   if (current.mo_reference_hmac) return current.mo_reference_hmac === moReferenceHmac && Number(current.mo_amount_pkr) === Number(body.amountPkr)
     ? c.json({ ok: true, alreadyRecorded: true, paymentStatus: current.payment_status })
     : c.json({ error: "COD_MO_ALREADY_RECORDED" }, 409);
-  const duplicateMo = await c.env.DB.prepare("SELECT order_id FROM cod_mo_receipts WHERE mo_reference_hmac=? LIMIT 1").bind(moReferenceHmac).first<{ order_id: string }>();
+  const duplicateMo = await c.env.DB.prepare("SELECT 1 AS present FROM cod_mo_receipts WHERE mo_reference_hmac=? UNION ALL SELECT 1 AS present FROM cod_historical_mo_receipts WHERE mo_reference_hmac=? LIMIT 1").bind(moReferenceHmac, moReferenceHmac).first<{ present: number }>();
   if (duplicateMo) return c.json({ error: "COD_MO_ALREADY_USED" }, 409);
   let customer: { customer_id: string; ctwa_clid: string | null } | null = null;
   const eventEnabled = c.env.META_CAPI_ENABLED === "true";
@@ -878,7 +878,7 @@ async function markHistoricalCodPaymentReceived(c: AdminContext) {
   if (!Number.isSafeInteger(body.amountPkr) || Number(body.amountPkr) !== Number(current.total_payable)) return c.json({ error: "COD_HISTORICAL_AMOUNT_MISMATCH" }, 409);
   const moReferenceHmac = await codReferenceHmac(moNumber, hmacKey);
   const evidenceReferenceHmac = await codReferenceHmac(evidenceReference, hmacKey);
-  const duplicate = await c.env.DB.prepare("SELECT 1 AS present FROM cod_historical_mo_receipts WHERE mo_reference_hmac=? LIMIT 1").bind(moReferenceHmac).first<{ present:number }>();
+  const duplicate = await c.env.DB.prepare("SELECT 1 AS present FROM cod_historical_mo_receipts WHERE mo_reference_hmac=? UNION ALL SELECT 1 AS present FROM cod_mo_receipts WHERE mo_reference_hmac=? LIMIT 1").bind(moReferenceHmac, moReferenceHmac).first<{ present:number }>();
   if (duplicate) return c.json({ error: "COD_MO_ALREADY_USED" }, 409);
   const now = new Date().toISOString();
   try {

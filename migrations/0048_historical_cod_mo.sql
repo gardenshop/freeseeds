@@ -32,3 +32,6 @@ WHEN (OLD.state <> NEW.state OR OLD.payment_status <> NEW.payment_status)
 BEGIN
   SELECT RAISE(ABORT,'COD_HISTORICAL_MO_AMOUNT_REQUIRED');
 END;
+
+INSERT OR IGNORE INTO cod_schema_migrations(version,applied_at)
+VALUES('0048',strftime('%Y-%m-%dT%H:%M:%fZ','now'));
