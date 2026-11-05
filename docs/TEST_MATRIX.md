@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-COD-MO-25 migration 0048 (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| One-time alternative preflight | PASS | Admin functional GETs, API ready/WhatsApp health, routing, D1 integrity and recovery bookmark passed; exception recorded in `rules.md`. |
+| Targeted execution | PASS | Only `migrations/0048_historical_cod_mo.sql`; one successful remote execution; no blanket migration. |
+| Exact-once markers | PASS | `0047` count 1 and `0048` count 1. |
+| Historical schema/guards | PASS | Table exists; HMAC UNIQUE; immutable UPDATE/DELETE triggers; exact historical amount PAID guard. |
+| Existing COD compatibility | PASS | Normal `cod_mo_receipts` and 0047 guards present; normal MO ledger remains empty. |
+| Data preservation | PASS | Historical ledger empty; orders/payments 888/888 before and after; post-read queries wrote zero rows. |
+| Live functional health | PASS | Admin Orders/Conversations/payment/COD GETs 200; API health 200, ready, WhatsApp enabled. |
+| Protected Admin health | UNVERIFIED | Browser `/health` remains expected HTTP403; no Service Auth HTTP200 claim. |
+| Production protection | PASS | No deployment, routing, Access, secret, payment/order, Meta/CAPI, customer or real settlement mutation. |
+
 ## GFS-COD-MO-24 health bridge restoration (2026-11-05 PKT)
 
 | Gate | Result | Evidence |

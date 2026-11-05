@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-MO-25 migration 0048 (2026-11-05 PKT)
+
+**Disposition: APPLIED ONCE / SCHEMA PASS / ZERO DETECTED REGRESSION.**
+
+- Targeted migration executed once after the documented one-time alternative preflight. Markers `0047` and `0048` are exactly once; historical ledger is empty; unique HMAC, immutable triggers and exact-amount guard are present; existing 0047 table/guards remain.
+- Orders/payments remained 888/888; normal and historical MO ledgers are empty; post-verification reads report zero writes. Recovery bookmarks were captured and no restore was performed.
+- Fresh Admin Orders/Conversations/payment/COD GETs and API health passed. Protected Admin `/health` remains Service Auth-unverified and browser HTTP403; no protected HTTP200 claim is made.
+- No deployment, routing, secret, payment/order, customer-message, Meta, CAPI or Access mutation occurred. Candidate release remains pending separate authorization.
+
 ## GFS-COD-MO-24 health bridge restoration (2026-11-05 PKT)
 
 **Disposition: BLOCKED safely — approved host-side bridge is not callable from this session.**

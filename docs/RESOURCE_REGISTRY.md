@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-COD-MO-25 migration 0048 (2026-11-05 PKT)
+
+- Targeted resource mutation: `migrations/0048_historical_cod_mo.sql` executed once on D1 `getfreeseeds-staging` after the documented one-time alternative gate. No secret, deployment, Access or payment resource changed.
+- Post-readback: markers `0047`/`0048` each once; historical table and three guards present; unique HMAC autoindex present; historical and normal MO ledgers empty; orders/payments 888/888; post-read queries zero writes. Recovery bookmarks were captured without restore.
+- Live routing remains Admin `3e4b7c26`100% / API `b426ba47`100% + `d683ec45`0%. Protected Admin Service Auth `/health` is still unverified; browser denial remains expected.
+
 ## GFS-COD-MO-22 routing and health resources (2026-11-05 PKT)
 
 - **Configured deployment:** Admin `7aacd65b-fe1d-4c47-9f92-5ba3bf791dc5`, candidate `3e4b7c26`100%, created `2026-11-05T07:25:12Z`; API `9b459a09-a7a5-404d-9302-48292bd07783`, `b426ba47`100% / `d683ec45`0%.

@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-25 migration 0048 applied (2026-11-05 PKT)
+
+- The owner-authorized one-time alternative preflight passed and only `migrations/0048_historical_cod_mo.sql` was executed once against `getfreeseeds-staging`. No other migration or business DML ran.
+- Markers `0047` and `0048` are each exactly once; `cod_historical_mo_receipts` exists and is empty; its HMAC is UNIQUE; immutable UPDATE/DELETE triggers and the historical exact-amount PAID guard exist; existing `cod_mo_receipts` and COD guards remain present. Orders/payments were 888/888 before and after, with no MO or unexpected PAID entry added. Recovery bookmarks were captured; no restore occurred.
+- Fresh Admin Orders/Conversations/payment/COD GETs passed; API `/health` returned HTTP200, `PRODUCTION_INTEGRATION_READY`, and WhatsApp enabled. Protected Admin `/health` still returns browser HTTP403 and remains **UNVERIFIED** for Service Auth; the one-time exception does not weaken Access or carry forward.
+- Migration stage is complete; Admin candidate upload/canary/promotion and real settlement remain separately unauthorized. Preserve the new-number WhatsApp lock and Hoja Seeds zero-connection rule.
+
 ## GFS-COD-MO-25 one-time migration preflight exception (2026-11-05 PKT)
 
 - **Owner-authorized one-time decision:** for this additive migration 0048 execution only, fresh authenticated Admin functional GETs, fresh API `/health` readiness, official routing, D1 integrity and recovery readiness replace the unavailable protected Admin Service Auth `/health` HTTP200 criterion. This does not bypass or modify Cloudflare Access, and the protected `/health` 200 remains explicitly unverified.

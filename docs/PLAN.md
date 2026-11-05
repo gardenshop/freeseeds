@@ -1,5 +1,12 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-25 migration 0048 completion (2026-11-05 PKT)
+
+- One-time owner-approved alternative preflight passed. Targeted `migrations/0048_historical_cod_mo.sql` executed once; no blanket migration, order/payment DML, deployment, Access, Meta or CAPI action occurred.
+- Read-only verification passed: `0047=1`, `0048=1`; historical table/unique HMAC/immutable triggers/amount guard present; historical and normal MO ledgers empty; orders/payments remained 888/888; post-read metadata wrote zero rows. Recovery bookmarks were captured without restore.
+- Fresh Admin GETs and API health passed. Protected Admin Service Auth `/health` remains unverified (browser 403); the one-time alternative does not change future health/release gates.
+- Next exact action: separately authorize Admin candidate 0% upload/preview only; no canary, promotion, payment or settlement.
+
 ## GFS-COD-MO-24 health bridge restoration (2026-11-05 PKT)
 
 - **BLOCKED safely:** existing Chrome DevTools MCP is available, but no callable authorized desktop/host bridge is exposed. A system-session `AdminService` process is observable without an approved invocation contract; no elevation or impersonation was attempted.

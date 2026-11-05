@@ -1,5 +1,18 @@
 # Final Report
 
+## GFS-COD-MO-25 migration 0048 (2026-11-05 PKT)
+
+1. **MO-24 comparison:** host bridge remains unavailable; owner-authorized alternative preflight was used only for this additive migration.
+2. **Alternative preflight:** **PASS** — fresh Admin Orders/Conversations/payment/COD GETs, API readiness/WhatsApp, routing, D1 integrity and recovery bookmark.
+3. **Migration:** **APPLIED once** using only `migrations/0048_historical_cod_mo.sql`; no blanket migration or business DML.
+4. **Schema/marker:** `0047=1`, `0048=1`; historical table empty; unique HMAC; immutable UPDATE/DELETE triggers; exact historical amount guard; existing 0047 ledger/guards retained.
+5. **Records/recovery:** orders/payments 888/888 before and after; normal/historical MO ledgers empty; post-read writes zero; recovery bookmarks captured, no restore.
+6. **Regression:** Admin GETs returned 200; API `/health` returned 200, `PRODUCTION_INTEGRATION_READY`, WhatsApp enabled; Advance 3/3 and COD PKR125 unchanged; protected Admin `/health` remains browser 403/unverified.
+7. **Tests/repairs:** no source repair; retained focused 34/34, full 385 passed/1 skipped, build/lint PASS; no real MO/PAID action.
+8. **Git/docs:** alternative and completion evidence recorded in rules, registry, status, decisions, SOP, test matrix, changelog and this report; push follows.
+9. **Stages:** alternative preflight 100%; migration 100%; schema verification 100%; protected health 0%; Admin release 0%; real settlement 0%.
+10. **Next authorization:** separately authorize Admin candidate 0% upload/preview only; do not include canary, promotion or payment settlement.
+
 ## GFS-COD-MO-24 health bridge restoration (2026-11-05 PKT)
 
 1. **MO-23 comparison:** the credential-store cause remains known; this run confirmed the approved host execution path is not exposed.

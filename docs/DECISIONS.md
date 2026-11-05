@@ -1,3 +1,9 @@
+## GFS-COD-MO-25 - apply repaired 0048 under one-time alternative gate (2026-11-05 PKT)
+
+- **Decision:** accept the owner-authorized fresh functional Admin/API/D1/recovery evidence for this additive migration only. This does not bypass or modify Access; protected Admin Service Auth `/health` remains unverified.
+- **Result:** targeted 0048 executed once and verified. Marker, historical schema, unique HMAC and immutable/amount guards pass; existing 0047 guards and data remain compatible; no real MO or PAID action occurred.
+- **Boundary:** do not rerun 0048, apply other migrations, restore D1, upload/deploy Admin/API, change routing/secrets/Access, or perform settlement without separate authorization.
+
 ## GFS-COD-MO-24 - stop when approved host bridge is unavailable (2026-11-05 PKT)
 
 - Chrome MCP is suitable for dashboard/browser readback only; it is not a service-token bridge. Do not inject credentials into browser JavaScript or the sandbox.

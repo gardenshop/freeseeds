@@ -2297,3 +2297,6 @@
 ## 2026-11-05 — GFS-COD-MO-24
 
 - Recorded the approved host-bridge access blocker. Existing browser/dashboard access and routing/D1 readback remain intact; no credential, deployment, Access, migration, payment or customer mutation occurred.
+## 2026-11-05 — GFS-COD-MO-25
+
+- Applied repaired historical COD migration 0048 exactly once under the owner-authorized alternative preflight. Verified schema, guards, empty ledgers, preserved orders/payments, live Admin/API health and zero post-read writes. Protected Admin Service Auth `/health` remains unverified; no release or settlement occurred.

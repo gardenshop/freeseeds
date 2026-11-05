@@ -1,5 +1,9 @@
 # COD Settlement SOP
 
+## GFS-COD-MO-25 migration 0048 completion (2026-11-05 PKT)
+
+Migration 0048 is applied once under the documented one-time alternative gate. The historical ledger starts empty; unique HMAC, immutable receipt controls and the exact historical amount guard are verified. Normal Service Auth health remains unverified and must not be represented as HTTP200. No real MO settlement is implied; candidate release and settlement require separate authorization.
+
 ## GFS-COD-MO-24 bridge invocation gate (2026-11-05 PKT)
 
 The approved host-side bridge must be invoked in its authorized Windows context and may return only sanitized HTTP status and health fields. Chrome DevTools MCP/dashboard access does not substitute for the bridge. A visible system process without an approved invocation interface must not be impersonated, elevated, or invoked blindly. Keep migration0048 blocked until authorized Admin `/health` HTTP200 is independently evidenced.
