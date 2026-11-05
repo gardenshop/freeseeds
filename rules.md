@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-24 health bridge access boundary (2026-11-05 PKT)
+
+- The approved bridge remains unavailable from this session. Chrome DevTools MCP exposes the existing authenticated browser pages, but no callable desktop/host bridge invocation is exposed. A system-session `AdminService` process is visible only by name/PID and has no accessible approved invocation interface; do not impersonate, elevate, or invoke it blindly.
+- Do not repeat the sandbox Credential Manager lookup, copy credentials into the browser/sandbox, or use a substitute identity. The single required owner-side action is to run the existing bridge in its approved Windows context and return only sanitized status/health data.
+- Fresh official readback remains Admin `3e4b7c26`100% / API `b426ba47`100% with `d683ec45`0%; D1 remains `0047` once and `0048` absent with zero-write metadata. Preserve all WhatsApp, Hoja, payment, Access and no-mutation protections.
+
 ## GFS-COD-MO-23 protected health verification (2026-11-05 PKT)
 
 - The existing approved bridge was diagnosed read-only under execution identity `BI\\CodexSandboxOffline` / user `Nazim`; Windows Credential Manager reported no stored credentials. The bridge therefore fails closed with `credential_read_failed`. No credential value was read, copied, generated, rotated, or logged.

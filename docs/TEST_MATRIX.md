@@ -1,5 +1,17 @@
 # Test Matrix
 
+## GFS-COD-MO-24 health bridge restoration (2026-11-05 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Existing Chrome MCP | PASS | Existing authenticated pages listed; dashboard access retained. |
+| Authorized host bridge invocation | BLOCKED | No callable desktop/host bridge exposed; visible system-session process has no approved invocation interface. |
+| Credential safety | PASS | No credential read, copy, injection, elevation, impersonation, rotation or substitute identity. |
+| Authorized Admin `/health` HTTP200 | BLOCKED | Cannot safely invoke the approved bridge from this session; no 200 claimed. |
+| Current routing | PASS | Admin `3e4b7c26`100%; API `b426ba47`100% / `d683ec45`0%. |
+| D1 readiness | BLOCKED | `0047` once, `0048` absent, no partial objects, zero-write readback; health gate incomplete. |
+| Production protection | PASS | No deployment, Access, D1, payment/order, API/Meta/CAPI, WhatsApp or customer mutation. |
+
 ## GFS-COD-MO-23 protected health verification (2026-11-05 PKT)
 
 | Gate | Result | Evidence |

@@ -1,5 +1,18 @@
 # Final Report
 
+## GFS-COD-MO-24 health bridge restoration (2026-11-05 PKT)
+
+1. **MO-23 comparison:** the credential-store cause remains known; this run confirmed the approved host execution path is not exposed.
+2. **Approved bridge:** **BLOCKED** from this session. Chrome MCP is browser/dashboard-only; no callable desktop bridge exists. A system-session process was not treated as an authorized interface.
+3. **Root cause/repair:** no permitted local repair is available without host access. No elevation, impersonation, credential handling, or bypass was attempted.
+4. **Authorized `/health` 200:** **BLOCKED**, not claimed.
+5. **Access/routing:** Access policy remains unchanged; Admin `3e4b7c26`100% and API `b426ba47`100% / `d683ec45`0% verified by official readback.
+6. **D1 readiness:** `0047` once, `0048` absent, no partial objects, zero writes; migration remains blocked pending health evidence.
+7. **Regression:** no production mutation; fresh routing/D1 checks pass. Existing Orders/Conversations, payment and WhatsApp evidence remains carried forward; no full tests rerun.
+8. **Documentation/Git:** this blocker is recorded in rules, plan, status, decisions, SOP, test matrix, resource registry and changelog.
+9. **Stages:** routing 100%; Access policy 100%; bridge invocation 0%; authorized health 0%; migration 0%; release 0%.
+10. **Next action:** owner/operator must invoke the existing approved bridge in its authorized Windows context and return sanitized status/health data only.
+
 ## GFS-COD-MO-23 protected health verification (2026-11-05 PKT)
 
 1. **MO-22 comparison:** routing and Access configuration are reconciled; authorized Admin health 200 remains blocked.

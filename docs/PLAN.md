@@ -1,5 +1,11 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-24 health bridge restoration (2026-11-05 PKT)
+
+- **BLOCKED safely:** existing Chrome DevTools MCP is available, but no callable authorized desktop/host bridge is exposed. A system-session `AdminService` process is observable without an approved invocation contract; no elevation or impersonation was attempted.
+- Fresh routing/D1 readback remains safe: Admin `3e4b7c26`100%, API `b426ba47`100% / `d683ec45`0%, `0047=1`, `0048=0`, no partial objects, zero D1 writes. Authorized Admin `/health` HTTP200 is not claimed.
+- Next exact action: owner/operator runs the existing bridge in its approved Windows context and returns only sanitized HTTP status/health fields; then separately request migration0048 authorization.
+
 ## GFS-COD-MO-23 protected health verification (2026-11-05 PKT)
 
 - **BLOCKED safely:** the existing credential bridge cannot access its approved Windows Credential Manager target in the current execution context (`BI\\CodexSandboxOffline`; `cmdkey /list` reports no stored credentials). No alternate identity, token value, rotation, or bypass was used.

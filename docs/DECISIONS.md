@@ -1,3 +1,9 @@
+## GFS-COD-MO-24 - stop when approved host bridge is unavailable (2026-11-05 PKT)
+
+- Chrome MCP is suitable for dashboard/browser readback only; it is not a service-token bridge. Do not inject credentials into browser JavaScript or the sandbox.
+- A visible system-session process is not sufficient authorization or an invocation contract. Do not impersonate or elevate. Require the owner-approved host process to run the existing bridge and emit sanitized health evidence.
+- No migration, deployment, Access change, payment/order action, API/Meta/CAPI action, or customer action is permitted by this evidence.
+
 ## GFS-COD-MO-23 - fail closed when approved health credential is unavailable (2026-11-05 PKT)
 
 - Do not create, rotate, expose, or substitute a Service Auth credential. Do not weaken Access or infer an application HTTP200 from the expected unauthenticated HTTP403.

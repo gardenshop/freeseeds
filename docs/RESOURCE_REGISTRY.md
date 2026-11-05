@@ -2543,3 +2543,7 @@ No secrets are stored in this registry.
 - Existing bridge execution context: `BI\\CodexSandboxOffline` / `Nazim`; Windows Credential Manager has no stored credential entries. No secret value is registered.
 - Access resource remains the exact `/health` self-hosted application with its single Service Auth policy and existing service-token include. Authorized HTTP200 is unproven; browser/invalid requests are HTTP403.
 - Current read-only resources: Admin deployment `7aacd65b` / `3e4b7c26`100%; API deployment `9b459a09` / `b426ba47`100% + `d683ec45`0%; D1 `0047` once / `0048` absent; Time Travel available. No mutation.
+## GFS-COD-MO-24 health bridge restoration (2026-11-05 PKT)
+
+- Existing Chrome DevTools MCP/browser pages are available. No callable approved desktop/host bridge interface is exposed in this session; no credential or process invocation was performed.
+- Fresh read-only resources: Admin deployment `7aacd65b` / `3e4b7c26`100%; API deployment `9b459a09` / `b426ba47`100% + `d683ec45`0%; D1 `0047` once / `0048` absent with zero writes. Authorized Admin health 200 remains unproven.

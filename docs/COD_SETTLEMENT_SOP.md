@@ -1,5 +1,9 @@
 # COD Settlement SOP
 
+## GFS-COD-MO-24 bridge invocation gate (2026-11-05 PKT)
+
+The approved host-side bridge must be invoked in its authorized Windows context and may return only sanitized HTTP status and health fields. Chrome DevTools MCP/dashboard access does not substitute for the bridge. A visible system process without an approved invocation interface must not be impersonated, elevated, or invoked blindly. Keep migration0048 blocked until authorized Admin `/health` HTTP200 is independently evidenced.
+
 ## GFS-COD-MO-23 health-monitor bridge gate (2026-11-05 PKT)
 
 The `/health` qualification must use the existing approved Service Auth bridge. If its credential target is unavailable, record `credential_read_failed` and stop. Never print, copy, export, rotate, regenerate, or bypass the credential. Browser/invalid HTTP403 is a security-boundary result, not application health evidence. Migration 0048 remains blocked until an authorized HTTP200 is obtained through the approved bridge.
