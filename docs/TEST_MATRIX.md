@@ -4008,3 +4008,15 @@ Investigation query costs only (not production savings): representative `rows_re
 | Eligible form/duplicate security | PASS (isolated) | Existing local suite 38/38; no production state fabricated |
 | Version-labelled runtime metric | UNAVAILABLE | No authorized candidate metric source exposed |
 | Header cleanup/routing | PASS | Headers cleared; Admin100% baseline/0% candidate |
+
+## GFS-COD-MO-29 canary preflight (2026-11-05 PKT)
+
+| Area | Result | Evidence |
+|---|---|---|
+| Admin Orders GET | PASS | Authenticated read-only request HTTP200 |
+| Admin Conversations GET | PASS | Authenticated read-only request HTTP200 |
+| Candidate-specific metrics/logs | BLOCKED | Fresh official telemetry unavailable |
+| Metric-backed rollback monitor | BLOCKED | Could not prove before exposure |
+| 90/10 canary | NOT RUN | Fail-closed before routing mutation |
+| Baseline routing | PASS | Admin100%/0%; API100%/0% preserved |
+| Production mutation protection | PASS | No deployment, traffic, POST, payment/order/D1 or customer action |

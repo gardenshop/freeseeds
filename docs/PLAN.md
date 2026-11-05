@@ -337,3 +337,7 @@ The existing session was reused successfully, but the live dataset has no DELIVE
 ## GFS-COD-MO-28
 
 Candidate attribution is now PASS through the corrected quoted header and candidate-only historical UI markers on the same no-method order. Eligible-form behavior remains isolated-test evidence only because production has no eligible DELIVERED/tracked record. Keep candidate at0%; canary and settlement remain separately gated.
+
+## GFS-COD-MO-29
+
+Do not run the canary. Monitoring preflight is BLOCKED because fresh candidate-specific Cloudflare telemetry and rollback observation cannot be proven. Preserve Admin100%/0% and API100%/0% until the approved monitoring session is restored.

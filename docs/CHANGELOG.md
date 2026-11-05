@@ -2317,3 +2317,8 @@
 
 - Corrected the version-override syntax and verified candidate-only historical MO UI markers on the same no-method unpaid order; baseline comparison removed the markers.
 - Confirmed read-only eligibility behavior: actual non-delivered/untracked order had no historical submit form. Local isolated suite remained 38/38 PASS; no production writes or traffic changes.
+
+## 2026-11-05 — GFS-COD-MO-29
+
+- Canary stopped at preflight because fresh candidate-specific Cloudflare telemetry and rollback monitoring were unavailable. No 90/10 routing change occurred.
+- Preserved Admin100%/0%, API100%/0%, payment/D1/WhatsApp/Access protections and all no-mutation boundaries.

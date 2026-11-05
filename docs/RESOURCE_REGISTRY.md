@@ -2572,3 +2572,9 @@ No secrets are stored in this registry.
 - Override resource: original Admin hostname with `Cloudflare-Workers-Version-Overrides` quoted candidate syntax; candidate-only historical UI markers appeared and disappeared on baseline reload for the same no-method unpaid detail.
 - Candidate detail resource: HTTP200; sanitized non-delivered/untracked/no-method/unpaid state; historical form correctly absent; no POST resource recorded.
 - Runtime attribution: UI-differential proof PASS; version-labelled Cloudflare metric unavailable. Temporary header cleared after preview. No customer identifiers or raw references registered.
+
+## GFS-COD-MO-29 canary resources (2026-11-05 PKT)
+
+- Monitoring resource: no fresh official candidate-specific Cloudflare metric/log resource was available in the existing session; Wrangler auth refresh was unavailable. No alternate credential or token resource was created.
+- Read-only health resources: authenticated Admin Orders and Conversations available; API health from the Admin browser origin was blocked by cross-origin constraints; protected Admin `/health` remains unverified.
+- Routing resource: preserved Admin `3e4b7c26`100% / `ce023b54`0% and API `b426ba47`100% / `d683ec45`0%. No canary deployment resource exists for this task.

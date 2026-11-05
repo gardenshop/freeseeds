@@ -2365,3 +2365,10 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - Candidate-only rendered markers were present: `Record historical MO Received`, original payable label, exact-amount rule, delivered/tracking eligibility rule, historical endpoint/form source, and no submit form for the actual non-delivered/untracked order. Baseline reload removed those historical markers. This is accepted candidate-attribution proof; no version-labelled runtime metric was available.
 - Candidate detail GET returned HTTP200 with sanitized state `DETAILS_COMPLETED`, payment `PENDING`, no method, no tracking, no hold, no archive and non-COD. No POST or mutation occurred. Candidate remained0%; baseline remained100%; temporary override headers were cleared.
 - Existing dataset contained unpaid Advance orders and two Advance PAID orders; no eligible historical Advance settlement was opened. Local isolated historical/Advance/cross-ledger suite passed38/38. Do not canary, promote or settle under this record.
+
+## GFS-COD-MO-29 — canary stopped before traffic (2026-11-05 PKT)
+
+- Preflight did not prove fresh candidate-specific Cloudflare invocations/errors/CPU/latency telemetry or an executable metric-backed rollback monitor. The existing Cloudflare dashboard page was not available in the reused browser session; Wrangler read-only auth could not refresh because the Cloudflare auth server was unreachable. No alternate credential or bypass was used.
+- Authenticated Admin Orders and Conversations GET checks were available; API health fetch from the Admin origin was unavailable due cross-origin/browser constraints. These alternative checks do not replace the canary-specific monitoring requirement.
+- **No canary was started.** Admin remains `3e4b7c26`100% / `ce023b54`0%; API remains `b426ba47`100% / `d683ec45`0%. No deployment, routing, payment/order/D1, secret, Access, API/Meta/CAPI, WhatsApp or customer mutation occurred.
+- Do not retry the canary until official candidate-specific monitoring and rollback observation are available through the approved session.

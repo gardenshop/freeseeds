@@ -2647,3 +2647,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Evidence:** corrected quoted header selected the candidate. Same no-method unpaid detail showed candidate-only historical title, amount/eligibility text and source marker; baseline reload showed none. Actual order remained non-delivered/untracked and no form or POST was available.
 - **Security:** isolated historical/Advance/cross-ledger tests passed38/38. No real eligible settlement, positive traffic, order/payment/D1/API/Meta/CAPI or Access mutation occurred. No version-labelled runtime metric was available.
 - **Next exact authorization:** one separately approved bounded Admin canary with candidate-specific monitoring; do not promote or settle yet.
+
+## GFS-COD-MO-29 - stop before canary (2026-11-05 PKT)
+
+- **Decision:** NO-GO at preflight; do not change Admin routing.
+- **Evidence:** Admin Orders/Conversations GETs were available, but fresh candidate-specific Cloudflare metrics/logs, CPU/latency and rollback monitoring were not. Wrangler auth refresh was unavailable and no alternate credential was used.
+- **Protection:** Admin remains `3e4b7c26`100% / `ce023b54`0%; API unchanged. No deployment, canary, payment/order/D1/secret/Access/API/Meta/CAPI/customer mutation occurred.
+- **Next exact authorization:** restore approved official Cloudflare candidate telemetry and rollback observation, then separately authorize one canary retry.

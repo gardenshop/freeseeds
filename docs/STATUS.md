@@ -3406,3 +3406,10 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Candidate rendered the historical MO title, original-payable label, exact-amount rule and delivered/tracking eligibility explanation; the actual `DETAILS_COMPLETED`, unpaid, untracked order had no form or submit button. Baseline rendered none of the historical markers. Candidate attribution: **PASS** by candidate-only UI difference.
 - Local isolated suite: 38/38 PASS. No version-labelled Cloudflare metric was available, but no positive traffic or mutation occurred. Candidate remains0%, Admin baseline100%, API unchanged, temporary headers cleared.
 - Advance read-only dataset had 119 unpaid and 2 PAID Advance orders; no Advance settlement action was opened. Protected Admin `/health` HTTP200 and English preference remain unverified.
+
+## GFS-COD-MO-29 — canary blocked at preflight (2026-11-05 PKT)
+
+- **Canary:** NOT RUN. Fresh candidate-specific Cloudflare metrics/logs and metric-backed rollback monitoring were unavailable, so no 90/10 deployment was attempted.
+- **Available checks:** authenticated Admin Orders and Conversations GETs were available. API health fetch from the Admin origin was unavailable due browser cross-origin constraints; protected Admin `/health` remains unverified.
+- **Routing/protection:** Admin remains `3e4b7c26`100% / `ce023b54`0%; API unchanged `b426ba47`100% / `d683ec45`0%. No production or customer mutation occurred.
+- **Blocker:** existing Cloudflare dashboard session was unavailable and Wrangler auth could not refresh; no alternate credential or bypass was used.
