@@ -2451,3 +2451,9 @@
 - Owner cleanup verified: temporary broad provisioning token absent from Cloudflare and approved local credential inventory; retained Worker-only policies verified.
 - Official dashboard-proxied GraphQL proved 35 watchdog invocations in the last hour, including two distinct UTC timestamps with request1/errors0. Watchdog remains DISARMED, route-free and production unchanged.
 - API/WhatsApp health remained PASS, Admin routing stayed 100/0, and Orders/Conversations Auto update completed two safe polling cycles.
+
+## 2026-11-06 — GFS-COD-MO-65
+
+- Repaired watchdog scheduled recovery, supported single-version baseline restore, baseline readback compatibility, and durable fail-closed arm configuration.
+- Deployed corrected isolated version `82560d6f-0da3-417e-97f9-d0413d239a43` DISARMED as `4ab96ae4-de8b-4f36-ab22-bf0ec350114a`; Cron and secret binding retained, route0.
+- Official GraphQL recorded post-deploy Cron invocations at 12:33:37Z and 12:34:37Z with request1/errors0. No Admin/API/payment/D1/Meta/CAPI mutation; disposable recovery remains unverified.

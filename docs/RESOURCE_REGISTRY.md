@@ -2720,3 +2720,8 @@ No secrets are stored in this registry.
 - Cron telemetry: official dashboard-proxied GraphQL, 35 version-labelled watchdog invocation rows in the last hour; representative timestamps `2026-11-06T12:10:37Z` and `2026-11-06T12:12:38Z`, request1/errors0.
 - Cleanup: `GFS-Watchdog-Provision-2026` absent from Cloudflare inventory and approved local credential-name listing. Retained `GFS-Watchdog-Deploy-Scoped-2026` targets only `gfs-cod-mo-55-watchdog`; retained `GFS-Admin-Deploy-Scoped-2026` targets only `getfreeseeds-admin-staging`.
 - Runtime: deployment `582da810-0023-4177-8b10-11a2da557818`, version `6e8f29d7-eef7-4281-a036-a21d99e52b59`, schedule `* * * * *`, route count0, binding `ADMIN_RECOVERY_TOKEN`.
+
+## GFS-COD-MO-65 verified watchdog runtime (2026-11-06 PKT)
+
+- Watchdog `gfs-cod-mo-55-watchdog`: deployment `4ab96ae4-de8b-4f36-ab22-bf0ec350114a`, version `82560d6f-0da3-417e-97f9-d0413d239a43`, 100%, Cron `* * * * *`, route0, no arm variables, `ADMIN_RECOVERY_TOKEN` binding name only.
+- Official GraphQL scheduled execution evidence: `2026-11-06T12:33:37Z` and `12:34:37Z`, each request1/errors0. Live Admin target not armed.

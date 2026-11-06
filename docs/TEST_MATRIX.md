@@ -4282,3 +4282,8 @@ Investigation query costs only (not production savings): representative `rows_re
 | MO-64 DISARMED/no-route safety | PASS | Version/deployment, schedule, route count0, binding name and inert scheduled handler verified. |
 | MO-64 recovery readiness | BOUNDED | Scope/expiry and local 6/6 PASS; disposable restoration not proven and expiry is 2026-11-07T18:59:59Z. |
 | MO-64 Admin polling | PASS | Orders and Conversations Auto update ON; two normal polling cycles completed without a payment/order action. |
+
+| MO-65 durable arm validation | PASS | Default DISARMED; malformed, drifted, expired, or insufficient-expiry configuration rejected without writes. |
+| MO-65 scheduled handler | PASS | Deadline path, exact single-version restore, predeadline no-write, retry/error handling and idempotent baseline readback; focused watchdog 10/10. |
+| MO-65 corrected deployment | PASS | Version `82560d6f-0da3-417e-97f9-d0413d239a43`, deployment `4ab96ae4-de8b-4f36-ab22-bf0ec350114a`, fresh Cron rows observed; route-free and DISARMED. |
+| MO-65 disposable real restore | UNVERIFIED | No separately authorized disposable target; no live Admin or frozen Worker used. |

@@ -2832,3 +2832,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Decision:** official GraphQL invocation evidence is now PASS: 35 watchdog rows in the last hour, including two distinct scheduled timestamps, request1/errors0. Zero public routes and the scheduled-only DISARMED handler provide the trigger separation.
 - **Cleanup:** PASS; the temporary broad provisioning token is absent from Cloudflare and local approved credential inventory. Retained Worker-only credentials were not changed.
 - **Boundary:** do not arm or expose Admin. Recovery credential expires `2026-11-07T18:59:59Z`, and disposable restoration remains unproven. The next release gate is separately authorized bounded canary planning with an independent rollback target before expiry.
+
+## GFS-COD-MO-65 — corrected recovery boundary (2026-11-06 PKT)
+
+- **Decision:** corrected watchdog is deployed only DISARMED. Durable arm configuration is explicit protected runtime state; deadline, exact account/Worker/version allowlist, expiry margin and drift checks are mandatory.
+- **Decision:** restore submits one exact baseline version at 100%; readback accepts that supported single-version state or the historical 100/0 state.
+- **Evidence:** deployment `4ab96ae4-de8b-4f36-ab22-bf0ec350114a`, version `82560d6f-0da3-417e-97f9-d0413d239a43`; official GraphQL rows at 12:33:37Z and 12:34:37Z, request1/errors0.
+- **Boundary:** no live Admin canary or arming until separately authorized disposable recovery proof is available and the recovery-token window is revalidated; expiry remains `2026-11-07T18:59:59Z`.

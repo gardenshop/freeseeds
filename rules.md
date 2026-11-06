@@ -2549,3 +2549,10 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - Watchdog readback remains deployment `582da810-0023-4177-8b10-11a2da557818`, version `6e8f29d7-eef7-4281-a036-a21d99e52b59`100%, schedule `* * * * *`, DISARMED, route count0, and binding `ADMIN_RECOVERY_TOKEN` only. Source scheduled handler returns DISARMED/wrote:false; no Admin, D1, payment, message or unrelated deployment write was observed.
 - Admin remains `3e4b7c26-c36d-4d1c-baeb-d26629a9b4a1`100% / `ce023b54-4d38-43e5-842e-faa706e7606c`0%; API health is HTTP200 with WhatsApp enabled. Orders and Conversations were restored to Auto update ON and recorded two successful normal polling cycles.
 - Recovery readiness is bounded: Admin credential scope is verified and expiry remains `2026-11-07T18:59:59Z`; local 6/6 safety tests remain PASS, but disposable restoration is not proven. Do not arm a canary beyond that expiry or claim live rollback proof.
+
+## GFS-COD-MO-65 — watchdog recovery repair (2026-11-06 PKT)
+
+- Repaired scheduled recovery: durable arm configuration, fail-closed expiry/allowlist/drift checks, and no public control route; default remains DISARMED.
+- Restore now submits one exact baseline version at 100%; readback accepts the supported single-version baseline and historical 100/0 split.
+- Focused watchdog tests 10/10 PASS; full suite 385 passed/1 skipped; build/lint PASS. Version `82560d6f-0da3-417e-97f9-d0413d239a43` deployed DISARMED as `4ab96ae4-de8b-4f36-ab22-bf0ec350114a`; Cron retained, route0, binding name retained, no arm vars.
+- Official GraphQL recorded post-deploy scheduled rows at `2026-11-06T12:33:37Z` and `12:34:37Z`, request1/errors0. Disposable real restoration remains unverified; live Admin/API, payment, D1, Meta/CAPI and frozen Workers were untouched.

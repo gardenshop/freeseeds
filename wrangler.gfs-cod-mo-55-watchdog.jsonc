@@ -3,5 +3,8 @@
   "main": "scripts/gfs-cod-mo-55-watchdog-worker.mjs",
   "compatibility_date": "2026-11-06",
   "workers_dev": false,
-  "preview_urls": false
+  "preview_urls": false,
+  "triggers": {
+    "crons": ["* * * * *"]
+  }
 }

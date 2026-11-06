@@ -7517,3 +7517,15 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 6. **Regression:** Admin `3e4b7c26`100% / candidate `ce023b54`0%; API `b426ba47`100%; API health HTTP200/WhatsApp enabled; Orders and Conversations Auto update ON with two successful polling cycles; no payment/order/D1/Meta/CAPI mutation.
 7. **Stages:** independent Cron evidence 100%; broad-token cleanup 100%; DISARMED safeguards 100%; disposable rollback 0%; live Admin canary 0%; real MO settlement 0%; CAPI 0%.
 8. **One next MO action:** request separate authorization for a bounded Admin-only canary only after confirming the complete rollback window fits before recovery-token expiry and obtaining an authorized disposable restoration proof or accepted owner exception.
+
+## GFS-COD-MO-65 — finish real rollback logic
+
+1. **MO-64 comparison:** Independent Cron evidence and cleanup remain valid; corrected recovery code was deployed only to the isolated watchdog. No live Admin canary or payment/MO/CAPI action occurred.
+2. **Four repairs:** scheduled handler executes durable arm state; restore submits one baseline at 100%; readback accepts one-version or old 100/0 baseline; deadline/expiry/allowlist validation is fail-closed.
+3. **Tests:** watchdog focused 10/10 PASS; full suite 385 passed/1 skipped; build/lint PASS.
+4. **Deployment:** PASS for DISARMED isolated deployment `4ab96ae4-de8b-4f36-ab22-bf0ec350114a`, version `82560d6f-0da3-417e-97f9-d0413d239a43`; Cron `* * * * *`, route0, recovery binding present, no arm variables.
+5. **Independent execution:** PASS. Official GraphQL returned fresh post-deploy scheduled rows at `12:33:37Z` and `12:34:37Z`, request1/errors0. This is not recovery proof.
+6. **Disposable recovery:** UNVERIFIED; no authorized disposable target was available. Live Admin and frozen Workers were untouched. Credential expiry remains `2026-11-07T18:59:59Z`.
+7. **Regression:** Admin baseline `3e4b7c26`100% / candidate `ce023b54`0%; API `b426ba47`100%; WhatsApp/Admin/API operational; no payment, order, D1, Meta or CAPI mutation.
+8. **Stages:** watchdog repair 100%; DISARMED deployment 100%; scheduled execution 100%; disposable recovery 0%; Admin canary 0%; real MO settlement 0%; CAPI 0%.
+9. **Next exact MO action:** separately authorize one disposable-target rollback proof and revalidate the recovery-token window; do not arm or canary live Admin before that gate.

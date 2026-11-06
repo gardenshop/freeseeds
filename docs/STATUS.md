@@ -3599,3 +3599,10 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Cron: **PASS**. Official dashboard-proxied GraphQL returned 35 watchdog invocation rows in the last hour, including `2026-11-06T12:10:37Z` and `2026-11-06T12:12:38Z`, each request1/errors0. Zero routes plus the scheduled-only inert handler distinguish these from manual GETs.
 - DISARMED: **PASS**. Deployment `582da810…`, version `6e8f29d7…`, schedule `* * * * *`, route count0, `ADMIN_RECOVERY_TOKEN` binding only; no production write observed.
 - Recovery remains bounded: expiry `2026-11-07T18:59:59Z`, local safety 6/6 PASS, disposable restore unavailable. Orders and Conversations Auto update were ON and two polling cycles succeeded; API health/WhatsApp remained PASS.
+
+## GFS-COD-MO-65 — recovery logic repaired (2026-11-06 PKT)
+
+- **PASS:** Scheduled handler now evaluates durable arm state; restore uses a supported single-version 100% baseline; baseline readback accepts one-version and prior 100/0 states; expiry/deadline/allowlist validation is fail-closed.
+- **PASS:** Focused watchdog tests 10/10; full suite 385 passed/1 skipped; build/lint PASS.
+- **PASS:** Isolated version `82560d6f-0da3-417e-97f9-d0413d239a43`, deployment `4ab96ae4-de8b-4f36-ab22-bf0ec350114a`, Cron retained, route0, recovery binding retained, no arm variables (DISARMED). GraphQL recorded post-deploy scheduled rows at 12:33:37Z and 12:34:37Z, request1/errors0.
+- **BOUNDED:** Disposable real rollback remains unverified. Admin remains 3e4b7c26 100% / ce023b54 0%; API remains b426ba47 100%; no live Admin recovery or payment/D1/Meta/CAPI write occurred.
