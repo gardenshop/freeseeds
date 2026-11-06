@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-MO-49 deployment readiness (2026-11-06 PKT)
+
+**Disposition: CREDENTIAL PASS / READ-ONLY READINESS PASS / CANDIDATE TELEMETRY BLOCKED.**
+
+- Final token is active through `2026-11-07T18:59:59Z` with exactly one Worker-scoped `Individual Workers Editor` policy for `getfreeseeds-admin-staging`; Wrangler readback passed.
+- Admin/API routing stayed unchanged. Sanitized authenticated Admin page checks, API health, candidate override markers, and aggregate Analytics (25 requests/0 errors) passed. No payment, D1, order, message, deployment or traffic mutation occurred.
+- Bootstrap local credential was deleted after its API access returned 403. Independent OAuth inventory was unavailable; revocation is not claimed beyond that evidence. English profile was already set to English.
+- Version-filtered live telemetry did not produce usable candidate evidence. Canary, promotion and settlement remain blocked.
+
 ## GFS-COD-MO-25 migration 0048 (2026-11-05 PKT)
 
 **Disposition: APPLIED ONCE / SCHEMA PASS / ZERO DETECTED REGRESSION.**

@@ -1,5 +1,16 @@
 # Final Report
 
+## GFS-COD-MO-49 deployment readiness (2026-11-06 PKT)
+
+1. **MO-48 comparison:** owner final credential is now present and verified; no token recreation was attempted.
+2. **Credential:** active token `a7310a2b9ed94f9346708136bac30615`, expiry `2026-11-07T18:59:59Z`, exactly `Individual Workers Editor` for `getfreeseeds-admin-staging` only; secret omitted.
+3. **Wrangler/rollback:** read-only deployment command passed; current Admin baseline/candidate routing stayed 100%/0%. Rollback was prepared/readable, not executed.
+4. **Monitoring:** aggregate Analytics passed with 25 requests/0 errors and fresh data. Candidate-specific tail/metrics were not usable; monitoring gate is BLOCKED.
+5. **Functional read-only checks:** Orders and Conversations sanitized page checks completed; API health was HTTP200/ready; candidate override UI markers changed as expected; override was cleared. No POST or payment/order mutation.
+6. **Cleanup/language:** bootstrap returned HTTP403 after revoke attempt and its local entry was deleted; independent OAuth inventory was unavailable. Cloudflare profile was already English.
+7. **Protection:** WhatsApp, Advance/COD, D1, Access, Recovery and CAPI boundaries unchanged. No canary, deployment, routing, settlement or CAPI action.
+8. **Next action:** obtain supported fresh candidate-specific telemetry, then separately authorize one bounded Admin canary. Git remains `0aa3d0f89632eed94af6163d289957d8c84ba962` before documentation update.
+
 ## GFS-COD-MO-25 migration 0048 (2026-11-05 PKT)
 
 1. **MO-24 comparison:** host bridge remains unavailable; owner-authorized alternative preflight was used only for this additive migration.

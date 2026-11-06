@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-06 - GFS-COD-MO-49 deployment readiness
+
+- Verified owner-created Worker-only Admin credential, process-only Wrangler readback, sanitized Admin/API health, candidate override UI attribution and fresh aggregate Analytics.
+- Revoked bootstrap access evidence: old credential returned HTTP403 and its local Credential Manager entry was deleted. No secret values recorded.
+- Candidate-specific live telemetry remains unavailable; no canary, promotion, payment, D1, Meta or CAPI mutation occurred. Cloudflare profile was already English.
+
 ## 2026-11-05 - GFS-COD-MO-22 routing and health reconciliation
 
 - Reconciled Admin configured routing from official deployment status: candidate `3e4b7c26`100% in deployment `7aacd65b`; dashboard 94.5/5.5 is historical last-24-hour observed share (768/45).

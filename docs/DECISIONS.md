@@ -1,3 +1,12 @@
+## GFS-COD-MO-49 - retain canary hold without candidate telemetry (2026-11-06 PKT)
+
+**Decision:** accept the owner-created Worker-only credential for read-only deployment verification, but do not canary or promote while version-labelled live telemetry is unavailable.
+
+- Final token scope and expiry passed; Wrangler deployment readback passed; Admin/API routing remained unchanged.
+- Aggregate Analytics (25 requests, 0 errors) and sanitized authenticated UI checks are supporting evidence only, not candidate-specific monitoring.
+- Bootstrap access became unauthorized after the authorized revoke attempt; the local bootstrap entry was deleted. Do not claim independent inventory absence.
+- English profile already displayed English. Next release action requires supported fresh candidate-specific tail/metrics and separate canary authorization.
+
 ## GFS-COD-MO-25 - apply repaired 0048 under one-time alternative gate (2026-11-05 PKT)
 
 - **Decision:** accept the owner-authorized fresh functional Admin/API/D1/recovery evidence for this additive migration only. This does not bypass or modify Access; protected Admin Service Auth `/health` remains unverified.

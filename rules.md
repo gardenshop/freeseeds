@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-49 deployment-readiness verification (2026-11-06 PKT)
+
+- Owner credential `GFS-Admin-Deploy-Scoped-2026` is active and expires `2026-11-07T18:59:59Z`. Official metadata confirms exactly one `Individual Workers Editor` policy scoped only to `getfreeseeds-admin-staging` script `c71a20a213bc496da647525971cae370`; no unrelated resource was granted.
+- Process-only Wrangler deployment readback passed. Admin remains `3e4b7c26`100% and candidate `ce023b54`0%; no deployment or routing mutation occurred. Authenticated Orders and Conversations page health passed through sanitized browser checks; API `/health` returned HTTP200 and `PRODUCTION_INTEGRATION_READY`.
+- Candidate override read-only UI attribution passed through the existing Admin hostname: baseline had one MO marker and candidate had three historical/MO markers. Override headers were cleared afterward. No POST or state mutation occurred.
+- Aggregate Analytics read passed with 25 requests, 0 errors and fresh timestamp, but candidate-specific live tail did not produce usable evidence. Do not treat aggregate metrics as candidate telemetry; canary remains blocked until fresh version-labelled logs/metrics are available.
+- Bootstrap token use became unauthorized (HTTP403) after the authorized revoke attempt; the bootstrap Credential Manager entry was deleted. Independent OAuth inventory was unavailable, so record revocation as evidenced by unauthorized readback, not as an independently listed absence.
+- Cloudflare profile already displayed English; no language mutation was needed. Protected Admin Service Auth `/health` remains separate and unverified. Preserve the new-number WhatsApp lock, Hoja Seeds zero-connection rule, CAPI OFF, payment protections and no-canary boundary.
+
 ## GFS-COD-MO-25 migration 0048 applied (2026-11-05 PKT)
 
 - The owner-authorized one-time alternative preflight passed and only `migrations/0048_historical_cod_mo.sql` was executed once against `getfreeseeds-staging`. No other migration or business DML ran.

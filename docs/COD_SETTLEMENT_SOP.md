@@ -1,5 +1,9 @@
 # COD Settlement SOP
 
+## Deployment-readiness boundary (2026-11-06 PKT)
+
+The final Admin deployment credential is Worker-scoped and verified for read-only deployment access. Aggregate Analytics is supporting evidence only; candidate-specific live telemetry is required before any Admin canary. Never treat aggregate zero errors as candidate zero errors. Bootstrap credentials are retired only after final verification, with secret values excluded from all records.
+
 ## GFS-COD-MO-25 migration 0048 completion (2026-11-05 PKT)
 
 Migration 0048 is applied once under the documented one-time alternative gate. The historical ledger starts empty; unique HMAC, immutable receipt controls and the exact historical amount guard are verified. Normal Service Auth health remains unverified and must not be represented as HTTP200. No real MO settlement is implied; candidate release and settlement require separate authorization.

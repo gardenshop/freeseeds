@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-COD-MO-49 deployment credential and monitoring (2026-11-06 PKT)
+
+- Final credential target `GFS-Admin-Deploy-Scoped-2026`: active, expiry `2026-11-07T18:59:59Z`, `Individual Workers Editor`, exact Admin Worker only. Secret value is not recorded.
+- Wrangler read-only deployment access passed. Admin baseline `3e4b7c26` remained 100%; candidate `ce023b54` remained 0%; API remained `b426ba47`100%. No routing mutation.
+- Bootstrap `GFS-CF-Token-Provision-2026` became unauthorized (HTTP403) after revoke attempt and its local Credential Manager entry was deleted. OAuth absence check was unavailable.
+- Aggregate Analytics was fresh (25 requests/0 errors); candidate-specific tail evidence remains unavailable. English profile readback was already English.
+
 ## GFS-COD-MO-25 migration 0048 (2026-11-05 PKT)
 
 - Targeted resource mutation: `migrations/0048_historical_cod_mo.sql` executed once on D1 `getfreeseeds-staging` after the documented one-time alternative gate. No secret, deployment, Access or payment resource changed.

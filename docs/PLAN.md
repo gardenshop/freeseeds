@@ -1,5 +1,11 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-49 deployment readiness (2026-11-06 PKT)
+
+- Final Worker-only credential verified active with exact `Individual Workers Editor` scope for `getfreeseeds-admin-staging`; process-only Wrangler deployment readback passed. Bootstrap became unauthorized after revoke and its local entry was removed.
+- Sanitized Admin Orders/Conversations page checks, API health, candidate override UI markers and aggregate Analytics passed without writes. Aggregate metrics are not candidate-specific.
+- Candidate live tail/version-labelled telemetry remains BLOCKED; no canary or routing change is authorized. Next exact action is to obtain supported fresh candidate-specific tail/metrics, then separately authorize the bounded Admin canary.
+
 ## GFS-COD-MO-25 migration 0048 completion (2026-11-05 PKT)
 
 - One-time owner-approved alternative preflight passed. Targeted `migrations/0048_historical_cod_mo.sql` executed once; no blanket migration, order/payment DML, deployment, Access, Meta or CAPI action occurred.

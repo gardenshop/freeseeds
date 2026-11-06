@@ -1,5 +1,20 @@
 # Test Matrix
 
+## GFS-COD-MO-49 deployment readiness (2026-11-06 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Final credential validity | PASS | Official verify HTTP200, active, expiry recorded without secret exposure. |
+| Exact Worker-only policy | PASS | `Individual Workers Editor`; only `getfreeseeds-admin-staging` script resource. |
+| Wrangler deployment readback | PASS | Process-only token; read-only deployment command exit 0; routing unchanged. |
+| Admin/API functional health | PASS | Sanitized authenticated Orders/Conversations checks; API `/health` HTTP200 ready. |
+| Candidate UI override | PASS | Baseline/candidate marker counts differed; header cleared; no writes. |
+| Aggregate Analytics | PASS | 25 requests, 0 errors, fresh timestamp; aggregate only. |
+| Candidate-specific telemetry | BLOCKED | Version-filtered tail produced no usable evidence; no zero-error claim. |
+| Bootstrap cleanup | PASS LIMITED | Bootstrap HTTP403 after revoke attempt and local entry deleted; independent OAuth inventory unavailable. |
+| English profile | PASS | Profile already displayed English; no mutation. |
+| Production protection | PASS | No deployment, traffic, D1, payment, message, Meta or CAPI mutation. |
+
 ## GFS-COD-MO-25 migration 0048 (2026-11-05 PKT)
 
 | Gate | Result | Evidence |
