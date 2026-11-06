@@ -2708,3 +2708,9 @@ No secrets are stored in this registry.
 - Wrangler OAuth resource: `gisupp@gmail.com`, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; permissions include Workers write/tail read but omit Account API Tokens Write and include unrelated product writes. Readback only.
 - Deployment resource: official `wrangler deployments list` confirms Admin baseline `3e4b7c26`100% / candidate `ce023b54`0%.
 - Monitoring resource: candidate override GET rendered MO read-only UI; version-filtered tail returned zero sanitized records. No fresh telemetry resource registered.
+
+## GFS-COD-MO-63 watchdog resources (2026-11-06 PKT)
+
+- Watchdog: `gfs-cod-mo-55-watchdog`, deployment `582da810-0023-4177-8b10-11a2da557818`, schedule `* * * * *`, DISARMED; official tail endpoint returned no event records.
+- Protected routing: Admin baseline `3e4b7c26-c36d-4d1c-baeb-d26629a9b4a1`100% / candidate `ce023b54-4d38-43e5-842e-faa706e7606c`0%; API `b426ba47`100%.
+- Token cleanup: `GFS-Watchdog-Provision-2026` remains active/present pending owner dashboard revoke; no secret value recorded. Worker-only credentials remain protected and untouched.

@@ -7496,3 +7496,13 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 9. **Docs/Git:** evidence-only updates; no secrets, PII or customer/MO identifiers recorded.
 10. **Stages:** host bridge/member/readback 100%; source/migration/preview 100%; scoped token/telemetry/rollback/canary/settlement/CAPI 0% blocked; protected production 100%.
 11. **One next MO action:** owner provisions Account API Tokens Write directly into the passing host receiver, then create one 24-hour Worker-only Editor token and reverify fresh candidate telemetry/rollback.
+
+## GFS-COD-MO-63 — Cron verification and cleanup
+
+1. **MO-62 comparison:** secret injection, Cron configuration, DISARMED safeguards, local focused 6/6, full 385/1 and build/lint evidence retained; no live Admin canary performed.
+2. **Cron evidence:** schedule and deployment readback PASS, but official tail endpoint returned HTTP200 with an empty result and dashboard Observability failed to render. Two genuine scheduled invocations/timestamps: **BLOCKED/UNVERIFIED**.
+3. **DISARMED/no-write:** configuration and local safeguards PASS; no live/frozen/disposable recovery write was attempted. Real independent restoration remains unproven.
+4. **Token cleanup:** `GFS-Watchdog-Provision-2026` was visible in the verified account inventory as Workers Admin. MCP rejected the revoke target as unsafe to resolve; no API retry or local deletion. Worker-only credentials untouched.
+5. **Protected health:** Admin baseline `3e4b7c26`100% / candidate `ce023b54`0%; API `b426ba47`100%; API health HTTP200 with WhatsApp enabled; Orders and Conversations Auto update ON; no payment, order, D1, Meta, CAPI or customer mutation.
+6. **Stage:** watchdog configuration/local tests 100%; independent Cron evidence 0%; broad-token cleanup 0%; disposable rollback proof 0%; live Admin canary and settlement remain 0%.
+7. **One next MO action:** owner uses the verified Cloudflare token page to revoke only `GFS-Watchdog-Provision-2026`, then provide two fresh official Cron event timestamps before any canary authorization.

@@ -4271,3 +4271,8 @@ Investigation query costs only (not production savings): representative `rows_re
 | Independent scheduled invocation | UNVERIFIED | Tail could not start because local Wrangler/npx could not resolve `npm-prefix.js`. |
 | Disposable recovery | NOT RUN | No separately authorized disposable target. |
 | Provisioning-token cleanup | BLOCKED | Cloudflare revoke returned HTTP 403; credential was retained. |
+
+| MO-63 official Cron events | BLOCKED | Dashboard tail endpoint HTTP200 with empty result; Observability UI failed to render; two genuine scheduled invocations not proven. |
+| MO-63 disarmed watchdog | PASS (configuration/local) | DISARMED deployment, binding metadata and local 6/6 safeguards retained; no live recovery experiment. |
+| MO-63 broad token cleanup | BLOCKED | Owner dashboard revoke action could not be safely targeted through MCP; no API retry or local deletion. |
+| MO-63 protected operations | PASS | Admin 100/0, API 100%, API health/WhatsApp, Orders/Conversations Auto update ON; no production mutation. |

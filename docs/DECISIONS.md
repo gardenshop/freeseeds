@@ -2820,3 +2820,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - `0xC0000409` was reproduced under Node 24 and avoided with process-only `--no-maglev`; invalid Wrangler sampling input was removed. Official Tail API sessions were created/deleted safely, and `trace-v1` fixed the handshake from HTTP406 to an open socket, but no bounded tail records arrived.
 - Key Figures supplied candidate `ce023b54` = 26 invocations, 0% errors, 5.86 ms median CPU with fresh chart data. Aggregate metrics remain non-substitutive.
 - Next authorization: one Admin-only bounded canary with exact 90/10 routing and mandatory restoration. No permanent promotion or MO settlement is included.
+
+## GFS-COD-MO-63 — do not claim Cron execution or risk token deletion (2026-11-06 PKT)
+
+- **Decision:** no canary readiness claim. The official watchdog event endpoint returned an empty result and the dashboard Observability view did not render; scheduled configuration alone does not prove independent invocation.
+- **Cleanup boundary:** do not retry the prior API HTTP403. The exact broad token was visible in the official account-token inventory, but MCP rejected the potentially ambiguous revoke target. Leave it unchanged and do not touch `GFS-Watchdog-Deploy-Scoped-2026` or `GFS-Admin-Deploy-Scoped-2026`.
+- **Next exact action:** owner performs the single dashboard revoke action for `GFS-Watchdog-Provision-2026` in the verified account, then supplies fresh official Cron event evidence (two timestamps) or enables an approved existing observability path; no live Admin canary before both.
