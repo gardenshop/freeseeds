@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-MO-60 Admin refresh recovery (2026-11-06 PKT)
+
+**Disposition: PASS after owner Access reauthentication; no source repair required.**
+
+- Orders and Conversations recovered from the MO-59 Access-session failure. Auto update is ON on both pages and persisted after reload; repeated authenticated full/delta/list/summary GETs returned HTTP 200.
+- Fresh sanitized D1-backed evidence showed four post-incident order changes, current conversation activity, and continued same-day inbound/submitted-order aggregates. API health remained HTTP 200 with WhatsApp enabled.
+- Existing focus/visibility and localStorage lock protections remain covered by the retained Admin tests. Queue/DLQ-specific health remains UNVERIFIED because no safe read-only metric was exposed.
+- Admin/API routing and all payment/CAPI/watchdog boundaries remain unchanged. MO release remains secondary; private watchdog provisioning remains blocked from MO-58.
+
 ## GFS-COD-MO-57 private watchdog provisioning (2026-11-06 PKT)
 
 **Disposition: LOCAL PRIVATE ARTIFACT PASS / EXTERNAL CREATION BLOCKED.**

@@ -1,5 +1,17 @@
 # Final Report
 
+## GFS-COD-MO-60 P0 Admin Refresh Incident (2026-11-06 PKT)
+
+1. **Cause:** expired Cloudflare Access browser session; `/api/orders/changes` and Conversations later redirected to Access and the browser reported CORS/failed fetch. Auto-update OFF was a separate preference state.
+2. **Recovery:** owner reauthenticated through the approved Access flow. Orders and Conversations then loaded with HTTP 200 responses.
+3. **Auto update:** PASS on both pages. Multiple full/delta Orders and list/summary Conversations polls succeeded; ON persisted after reload.
+4. **Processing:** sanitized D1/API evidence showed Orders total 958, four post-incident order changes, latest changed timestamp `10:32:17Z`, Conversations latest activity `10:32:07Z`, and same-day inbound/submitted-order aggregates. This supports continued processing during the Admin outage; no claim of specific new customer orders is made.
+5. **Health/protection:** API `/health` HTTP 200, production-ready, WhatsApp enabled. Advance 3/3 and COD PKR125 read-only checks PASS. Admin/API routing and CAPI/payment/D1/watchdog boundaries unchanged.
+6. **Multi-tab safety:** existing focus/visibility and localStorage lock implementation retained; no lock leak observed. Cross-tab contention was not artificially generated.
+7. **Queue/DLQ:** UNVERIFIED; no safe read-only Queue/DLQ metric was exposed. This is not inferred from Admin polling.
+8. **Tests:** no source change, so no redundant full regression. Existing Admin control/conversation lock tests and prior build/lint evidence retained.
+9. **Next action:** resume MO-specific work only after separately resolving the private watchdog creation-authority blocker; keep CAPI OFF.
+
 ## GFS-COD-MO-57 Private Watchdog Provisioning (2026-11-06 PKT)
 
 1. **MO-56 comparison:** local bridge retained; private Worker, scoped credential, secret injection and Cron were still incomplete. The private artifact/config and safety tests are now added.

@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-60 Admin refresh recovery (2026-11-06 PKT)
+
+- MO-59 root cause confirmed: the Admin Cloudflare Access browser session expired. After owner-approved reauthentication, Orders and Conversations loaded again and authenticated GETs returned HTTP 200.
+- Auto update was enabled through the existing UI on both pages. Multiple full/delta Orders polls and Conversations list/summary polls returned HTTP 200; the ON preference persisted after page reload. Existing focus/visibility and localStorage multi-tab lock guards remain present; no lock leak was observed.
+- Sanitized live read evidence: Orders total 958; four post-incident order changes were observed after 14:43 PKT and required a safe full reload; latest changed timestamp was 10:32:17Z. Conversations total 5,385 with 378 active in the last 24 hours and latest activity 10:32:07Z. Today’s read-only analytics showed inbound/customer activity and submitted-order aggregates, so the incident was Admin-session-only rather than an observed API/WhatsApp stop.
+- API `/health` returned HTTP 200 with production-ready state and WhatsApp enabled. Three advance payment methods remained enabled with QR readiness; COD remained enabled at PKR125. No payment, D1, routing, deployment, Meta, CAPI or watchdog mutation occurred.
+- Queue/DLQ-specific telemetry was not available through the authorized read-only surfaces and remains UNVERIFIED. Do not infer Queue/DLQ health from Admin polling alone.
+
 ## GFS-COD-MO-57 private watchdog artifact (2026-11-06 PKT)
 
 - Added `scripts/gfs-cod-mo-55-watchdog-worker.mjs` and `wrangler.gfs-cod-mo-55-watchdog.jsonc` as a private, fail-closed artifact: `workers_dev=false`, `preview_urls=false`, no routes/Cron/secrets, deny-all HTTP, and DISARMED scheduling.

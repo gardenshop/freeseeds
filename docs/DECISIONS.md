@@ -1,3 +1,11 @@
+## GFS-COD-MO-60 - Access session, not application outage (2026-11-06 PKT)
+
+**Decision:** close the P0 refresh incident after owner-approved Cloudflare Access reauthentication; do not modify Admin source or deployment.
+
+- The Orders document and delta requests redirected to Access only after the session expired. After reauthentication, Orders and Conversations full/incremental reads succeeded and Auto update stayed ON across reload.
+- D1-backed sanitized timestamps and same-day aggregates prove continued post-incident activity; they do not by themselves prove every webhook or Queue/DLQ delivery.
+- **Boundary:** Queue/DLQ telemetry remains unverified. Keep Admin/API routing, payment settings, CAPI OFF, watchdog and MO settlement unchanged.
+
 ## GFS-COD-MO-57 - keep private Worker creation fail-closed (2026-11-06 PKT)
 
 **Decision:** prepare and test the private watchdog artifact locally, but do not submit the public Hello World deployment offered by the dashboard.
