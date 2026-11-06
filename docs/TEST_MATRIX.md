@@ -4276,3 +4276,9 @@ Investigation query costs only (not production savings): representative `rows_re
 | MO-63 disarmed watchdog | PASS (configuration/local) | DISARMED deployment, binding metadata and local 6/6 safeguards retained; no live recovery experiment. |
 | MO-63 broad token cleanup | BLOCKED | Owner dashboard revoke action could not be safely targeted through MCP; no API retry or local deletion. |
 | MO-63 protected operations | PASS | Admin 100/0, API 100%, API health/WhatsApp, Orders/Conversations Auto update ON; no production mutation. |
+
+| MO-64 broad token cleanup | PASS | Temporary provisioning token absent from Cloudflare and approved local credential inventory; retained Worker-only tokens unchanged. |
+| MO-64 genuine Cron execution | PASS | Official GraphQL returned 35 watchdog rows; representative UTC timestamps 12:10:37Z and 12:12:38Z, request1/errors0. |
+| MO-64 DISARMED/no-route safety | PASS | Version/deployment, schedule, route count0, binding name and inert scheduled handler verified. |
+| MO-64 recovery readiness | BOUNDED | Scope/expiry and local 6/6 PASS; disposable restoration not proven and expiry is 2026-11-07T18:59:59Z. |
+| MO-64 Admin polling | PASS | Orders and Conversations Auto update ON; two normal polling cycles completed without a payment/order action. |

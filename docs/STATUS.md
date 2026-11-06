@@ -3592,3 +3592,10 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - DISARMED state, secret binding metadata, and local 6/6 watchdog safeguards remain from MO-62. No live Admin or frozen Worker was used for recovery testing; disposable restoration remains unavailable.
 - API health HTTP200/WhatsApp enabled, Admin `3e4b7c26`100% / candidate `ce023b54`0%, Orders and Conversations Auto update ON, and no production mutation were observed.
 - Temporary `GFS-Watchdog-Provision-2026` remains present. Dashboard revoke control could not be safely executed through MCP; no denied API revoke was retried and no local credential entry was deleted.
+
+## GFS-COD-MO-64 — independent execution verified (2026-11-06 PKT)
+
+- Cleanup: **PASS**. Broad provisioning token is absent from Cloudflare inventory and approved local credential-name listing. Retained watchdog/Admin credentials show exact Worker-only Editor policies.
+- Cron: **PASS**. Official dashboard-proxied GraphQL returned 35 watchdog invocation rows in the last hour, including `2026-11-06T12:10:37Z` and `2026-11-06T12:12:38Z`, each request1/errors0. Zero routes plus the scheduled-only inert handler distinguish these from manual GETs.
+- DISARMED: **PASS**. Deployment `582da810…`, version `6e8f29d7…`, schedule `* * * * *`, route count0, `ADMIN_RECOVERY_TOKEN` binding only; no production write observed.
+- Recovery remains bounded: expiry `2026-11-07T18:59:59Z`, local safety 6/6 PASS, disposable restore unavailable. Orders and Conversations Auto update were ON and two polling cycles succeeded; API health/WhatsApp remained PASS.

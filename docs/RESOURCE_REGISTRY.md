@@ -2714,3 +2714,9 @@ No secrets are stored in this registry.
 - Watchdog: `gfs-cod-mo-55-watchdog`, deployment `582da810-0023-4177-8b10-11a2da557818`, schedule `* * * * *`, DISARMED; official tail endpoint returned no event records.
 - Protected routing: Admin baseline `3e4b7c26-c36d-4d1c-baeb-d26629a9b4a1`100% / candidate `ce023b54-4d38-43e5-842e-faa706e7606c`0%; API `b426ba47`100%.
 - Token cleanup: `GFS-Watchdog-Provision-2026` remains active/present pending owner dashboard revoke; no secret value recorded. Worker-only credentials remain protected and untouched.
+
+## GFS-COD-MO-64 verified resources (2026-11-06 PKT)
+
+- Cron telemetry: official dashboard-proxied GraphQL, 35 version-labelled watchdog invocation rows in the last hour; representative timestamps `2026-11-06T12:10:37Z` and `2026-11-06T12:12:38Z`, request1/errors0.
+- Cleanup: `GFS-Watchdog-Provision-2026` absent from Cloudflare inventory and approved local credential-name listing. Retained `GFS-Watchdog-Deploy-Scoped-2026` targets only `gfs-cod-mo-55-watchdog`; retained `GFS-Admin-Deploy-Scoped-2026` targets only `getfreeseeds-admin-staging`.
+- Runtime: deployment `582da810-0023-4177-8b10-11a2da557818`, version `6e8f29d7-eef7-4281-a036-a21d99e52b59`, schedule `* * * * *`, route count0, binding `ADMIN_RECOVERY_TOKEN`.

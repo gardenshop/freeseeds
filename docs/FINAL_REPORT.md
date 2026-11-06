@@ -7506,3 +7506,14 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 5. **Protected health:** Admin baseline `3e4b7c26`100% / candidate `ce023b54`0%; API `b426ba47`100%; API health HTTP200 with WhatsApp enabled; Orders and Conversations Auto update ON; no payment, order, D1, Meta, CAPI or customer mutation.
 6. **Stage:** watchdog configuration/local tests 100%; independent Cron evidence 0%; broad-token cleanup 0%; disposable rollback proof 0%; live Admin canary and settlement remain 0%.
 7. **One next MO action:** owner uses the verified Cloudflare token page to revoke only `GFS-Watchdog-Provision-2026`, then provide two fresh official Cron event timestamps before any canary authorization.
+
+## GFS-COD-MO-64 — independent watchdog verification
+
+1. **MO-63 comparison:** Cron execution and cleanup gates are now PASS; no live Admin canary, promotion, settlement or CAPI action occurred.
+2. **Token cleanup:** PASS. Broad `GFS-Watchdog-Provision-2026` is absent from Cloudflare inventory and approved local credential names. Retained watchdog/Admin tokens are exact Worker-only Editor policies.
+3. **Cron:** PASS. Official GraphQL returned 35 watchdog invocation rows in the last hour; representative timestamps `2026-11-06T12:10:37Z` and `2026-11-06T12:12:38Z`, each request1/errors0. Zero routes and the scheduled-only handler distinguish Cron from manual GETs.
+4. **DISARMED/no-write:** PASS for verified runtime/configuration. Deployment `582da810…`, version `6e8f29d7…`, schedule `* * * * *`, route count0, recovery binding only, inert handler. No unrelated write observed.
+5. **Recovery:** bounded readiness PASS; Admin token scope and expiry `2026-11-07T18:59:59Z` verified and local safety 6/6 PASS. Disposable real restore remains BLOCKED/unproven.
+6. **Regression:** Admin `3e4b7c26`100% / candidate `ce023b54`0%; API `b426ba47`100%; API health HTTP200/WhatsApp enabled; Orders and Conversations Auto update ON with two successful polling cycles; no payment/order/D1/Meta/CAPI mutation.
+7. **Stages:** independent Cron evidence 100%; broad-token cleanup 100%; DISARMED safeguards 100%; disposable rollback 0%; live Admin canary 0%; real MO settlement 0%; CAPI 0%.
+8. **One next MO action:** request separate authorization for a bounded Admin-only canary only after confirming the complete rollback window fits before recovery-token expiry and obtaining an authorized disposable restoration proof or accepted owner exception.

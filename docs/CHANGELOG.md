@@ -2445,3 +2445,9 @@
 
 - Verified watchdog schedule/deployment and protected routing via authenticated Cloudflare APIs. Official event result was empty and dashboard Observability failed to render, so independent Cron invocation remains unverified.
 - Verified API health/WhatsApp, Admin 100/0 routing and both Admin auto-update controls ON. Dashboard inventory showed the temporary broad token; revoke was not executed because MCP could not safely target the exact action. No production mutation.
+
+## 2026-11-06 — GFS-COD-MO-64
+
+- Owner cleanup verified: temporary broad provisioning token absent from Cloudflare and approved local credential inventory; retained Worker-only policies verified.
+- Official dashboard-proxied GraphQL proved 35 watchdog invocations in the last hour, including two distinct UTC timestamps with request1/errors0. Watchdog remains DISARMED, route-free and production unchanged.
+- API/WhatsApp health remained PASS, Admin routing stayed 100/0, and Orders/Conversations Auto update completed two safe polling cycles.
