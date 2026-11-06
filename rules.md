@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-57 private watchdog artifact (2026-11-06 PKT)
+
+- Added `scripts/gfs-cod-mo-55-watchdog-worker.mjs` and `wrangler.gfs-cod-mo-55-watchdog.jsonc` as a private, fail-closed artifact: `workers_dev=false`, `preview_urls=false`, no routes/Cron/secrets, deny-all HTTP, and DISARMED scheduling.
+- Focused watchdog tests pass 5/5, including account/Worker/version allowlists, disarmed no-write, exact baseline restoration, idempotence and failed-readback handling. Config parse, TypeScript build and ESLint pass.
+- Cloudflare creation was not submitted: the authenticated wizard only offered public Hello World deployment. No new Worker, credential, secret, Cron, deployment, routing, payment, D1, WhatsApp, Meta or CAPI mutation occurred.
+- Next boundary: obtain one approved Workers product-Admin/API creation path and securely provision a Worker-only Editor credential for the new Worker before any private deployment or secret injection.
+
 ## GFS-COD-MO-55 secure watchdog credential bridge (2026-11-06 PKT)
 
 - Added a fixed-target host runner: it reads only `GFS-Admin-Deploy-Scoped-2026` inside the approved Windows process, injects the token only into the child process, calls the official Worker Secrets API for only `gfs-cod-mo-55-watchdog` / `ADMIN_RECOVERY_TOKEN`, and returns only status/error codes. It never prints, stores or returns credential text.

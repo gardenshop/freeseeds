@@ -1,3 +1,10 @@
+## GFS-COD-MO-57 - keep private Worker creation fail-closed (2026-11-06 PKT)
+
+**Decision:** prepare and test the private watchdog artifact locally, but do not submit the public Hello World deployment offered by the dashboard.
+
+- The artifact has no public control surface, is DISARMED by default, and allowlists only the verified account, Admin Worker and baseline/candidate versions.
+- No external Worker, secret, Cron, credential or routing mutation occurred. The next exact requirement is an approved Workers product-Admin/API creation path and Worker-only Editor credential.
+
 ## GFS-COD-MO-55 - local bridge ready, external injection held (2026-11-06 PKT)
 
 **Decision:** accept the mock-tested host-only runner, but do not read or transfer the real Admin credential before the new watchdog target and narrow deployment authority exist.

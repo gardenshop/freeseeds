@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-COD-MO-57 private watchdog artifact (2026-11-06 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Private flags and no public HTTP surface | PASS | `workers_dev=false`, `preview_urls=false`, no routes; deny-all fetch returns 404. |
+| Default DISARMED/no-write | PASS | Scheduled handler and controller produce no write while disarmed. |
+| Target/version allowlists | PASS | Wrong account, Worker and versions rejected. |
+| Exact restore/idempotence | PASS | Mock restores baseline 100% / candidate 0% once and ignores duplicate trigger. |
+| Failed readback handling | PASS | Mock failure is sanitized and no deployment write is attempted. |
+| External deployment | BLOCKED | No approved private Worker creation credential; public Hello World wizard not used. |
+
 ## GFS-COD-MO-55 secure credential bridge (2026-11-06 PKT)
 
 | Gate | Result | Evidence |

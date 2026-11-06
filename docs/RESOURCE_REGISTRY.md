@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-COD-MO-57 private watchdog artifact (2026-11-06 PKT)
+
+- Local artifact: `scripts/gfs-cod-mo-55-watchdog-worker.mjs` with `wrangler.gfs-cod-mo-55-watchdog.jsonc`; private flags are disabled for workers.dev and preview URLs, with no routes, Cron or secrets configured.
+- Allowlist: account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, target `getfreeseeds-admin-staging`, baseline `3e4b7c26-c36d-4d1c-baeb-d26629a9b4a1`, candidate `ce023b54-4d38-43e5-842e-faa706e7606c`.
+- Validation: focused 5/5, config parse, build and lint PASS. Cloudflare Worker creation/credential/secret resources remain absent.
+
 ## GFS-COD-MO-55 local credential bridge (2026-11-06 PKT)
 
 - Local resources: `scripts/run-with-gfs-watchdog-secret.ps1`, `scripts/cloudflare-watchdog-secret-inject.mjs` and `scripts/test-cloudflare-watchdog-secret-inject.mjs`.

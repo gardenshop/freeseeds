@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-06 - GFS-COD-MO-57 private watchdog artifact
+
+- Added the private, fail-closed watchdog Worker artifact and disabled workers.dev/preview configuration.
+- Added focused 5/5 tests for disarmed behavior, allowlists, exact restoration, idempotence and readback failures.
+- External Worker creation remains blocked because the available dashboard path only creates a public Hello World Worker; no external mutation was submitted.
+
 ## 2026-11-06 - GFS-COD-MO-55 secure watchdog credential bridge
 
 - Added a fixed-target, process-only Cloudflare Worker secret injection runner and synthetic redaction tests.

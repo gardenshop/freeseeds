@@ -1,5 +1,9 @@
 # COD Settlement SOP
 
+## Private watchdog boundary (2026-11-06 PKT)
+
+The MO rollback watchdog artifact is private and fail-closed: workers.dev and preview URLs are disabled, no routes or Cron are configured before credential verification, HTTP is deny-all, and the default state is DISARMED. External creation, scoped credential provisioning, secret injection and independent Cron proof remain separate gates. Never substitute a public Hello World deployment or the Admin recovery credential for the new Worker-only deployment credential.
+
 ## Deployment-readiness boundary (2026-11-06 PKT)
 
 The final Admin deployment credential is Worker-scoped and verified for read-only deployment access. Aggregate Analytics is supporting evidence only; candidate-specific live telemetry is required before any Admin canary. Never treat aggregate zero errors as candidate zero errors. Bootstrap credentials are retired only after final verification, with secret values excluded from all records.
