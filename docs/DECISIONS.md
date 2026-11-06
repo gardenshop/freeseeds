@@ -1,3 +1,11 @@
+## GFS-COD-MO-54 - stop before partial Worker creation (2026-11-06 PKT)
+
+**Decision:** accept the Super admin/account-authority check, but fail closed because protected Admin-target secret injection is unavailable.
+
+- The dashboard create path is visible, but a new Worker without its protected target credential would not be an independent rollback control.
+- Do not broaden the existing Admin token or expose it through browser automation, source, logs or chat.
+- Next owner action: provide an approved host-side secret API runner and narrow new-watchdog deployment credential; then create and deploy the watchdog disarmed.
+
 ## GFS-COD-MO-53 - do not create a partial watchdog (2026-11-06 PKT)
 
 **Decision:** fail closed before external creation because the secure deployment and runtime-secret authority for a new independent watchdog is incomplete.

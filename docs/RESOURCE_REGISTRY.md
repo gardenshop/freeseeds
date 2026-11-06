@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-COD-MO-54 authority and secret boundary (2026-11-06 PKT)
+
+- Authenticated Cloudflare dashboard readback showed account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, member `gisupp@gmail.com` with role **Super admin**, and the Workers & Pages `Create application` control.
+- No new watchdog Worker was registered. The required missing capability is a protected host/API injection path for the existing Admin-target Worker-only credential plus a narrow deployment credential for the new watchdog.
+- Existing frozen watchdog resources and all production resources remain unchanged.
+
 ## GFS-COD-MO-53 watchdog architecture boundary (2026-11-06 PKT)
 
 - Official dashboard readback matched account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; `gfs464-isolated-watchdog` and `gfs462-isolated-target` remain existing frozen resources. The create-application control was visible, but no mutation was performed.

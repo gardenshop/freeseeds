@@ -1,5 +1,15 @@
 # Test Matrix
 
+## GFS-COD-MO-54 watchdog deployment gate (2026-11-06 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Account/role | PASS | Official dashboard showed `gisupp@gmail.com` as Super admin in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. |
+| Worker creation path | PASS | Workers & Pages exposed `Create application`; no mutation was submitted. |
+| Protected Admin secret injection | BLOCKED | No approved non-exposing host/API transfer into a new Worker secret is available. |
+| New watchdog deployment | NOT RUN | Fail-closed before partial resource creation. |
+| Production protection | PASS | Admin/API, D1, payments, WhatsApp, Meta and CAPI were unchanged. |
+
 ## GFS-COD-MO-53 independent watchdog gate (2026-11-06 PKT)
 
 | Gate | Result | Evidence |

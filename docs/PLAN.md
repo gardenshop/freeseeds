@@ -1,5 +1,11 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-54 watchdog deployment (2026-11-06 PKT)
+
+- **Authority PASS:** the correct account dashboard shows `gisupp@gmail.com` as Super admin and exposes the Workers application creation path.
+- **Secure secret path BLOCKED:** the existing Admin Worker-only credential cannot be transferred into a new Worker secret through the approved host/API path without exposing or broadening it. No partial Worker was created.
+- Exact owner action: provide an approved host-side secret API runner and a narrow new-watchdog deployment credential, allowing the existing Admin credential to remain process-internal while being stored only as the watchdog’s protected secret.
+
 ## GFS-COD-MO-53 independent rollback watchdog (2026-11-06 PKT)
 
 - **Architecture defined, deployment BLOCKED:** use a new dedicated Cloudflare Worker with Cron scheduling; keep it disarmed by default and allow only `getfreeseeds-admin-staging`, baseline `3e4b7c26` and candidate `ce023b54`.
