@@ -45,3 +45,6 @@ This SOP is source-ready but not released until migration 0048 and the Admin can
 7. Stop on missing evidence, amount mismatch, pending Advance receipt, verified Advance payment, duplicate MO, concurrency conflict, or any state/hold mismatch. Do not force PAID or use direct D1 SQL.
 
 Current status: local implementation and tests PASS; migration 0048, candidate upload, deployment and genuine settlement remain pending separate authorization and evidence.
+## GFS-COD-MO-62 watchdog activation boundary (2026-11-06 PKT)
+
+The isolated watchdog may have its protected secret and one-minute Cron configured while remaining DISARMED. Secret injection must use separate process-only inputs: the scoped Worker credential authorizes the API request, and the Admin recovery credential is the secret value. A schedule readback is not proof of execution; require fresh official telemetry and disposable recovery proof before any live canary. If temporary token revocation returns HTTP 403, retain the credential and stop for owner-authorized token-management access.

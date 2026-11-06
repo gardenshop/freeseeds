@@ -11,11 +11,12 @@ function safeCode(value) {
   return /^[A-Za-z0-9_.:-]{1,48}$/.test(text) ? text : "unclassified";
 }
 
-function validateInput({ accountId, scriptName, secretName, token }) {
+function validateInput({ accountId, scriptName, secretName, authToken, secretValue }) {
   if (accountId !== ACCOUNT_ID) throw new Error("account_not_allowlisted");
   if (scriptName !== WATCHDOG_SCRIPT) throw new Error("watchdog_target_not_allowlisted");
   if (secretName !== SECRET_NAME) throw new Error("secret_name_not_allowlisted");
-  if (!TOKEN_SHAPE.test(String(token ?? ""))) throw new Error("credential_shape_invalid");
+  if (!TOKEN_SHAPE.test(String(authToken ?? ""))) throw new Error("credential_shape_invalid");
+  if (!TOKEN_SHAPE.test(String(secretValue ?? ""))) throw new Error("secret_shape_invalid");
 }
 
 function errorSummary(body) {
@@ -28,28 +29,34 @@ export async function injectWatchdogSecret({
   accountId = ACCOUNT_ID,
   scriptName = WATCHDOG_SCRIPT,
   secretName = SECRET_NAME,
-  token,
+  authToken,
+  secretValue,
   fetchImpl = fetch
 } = {}) {
-  validateInput({ accountId, scriptName, secretName, token });
+  validateInput({ accountId, scriptName, secretName, authToken, secretValue });
   const url = `${API_BASE}/accounts/${accountId}/workers/scripts/${scriptName}/secrets`;
   let response;
   try {
     response = await fetchImpl(url, {
       method: "PUT",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ name: secretName, text: token, type: "secret_text" })
+      headers: { Authorization: `Bearer ${authToken}`, "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ name: secretName, text: secretValue, type: "secret_text" })
     });
   } catch {
     return { httpStatus: 0, result: "FAIL", ...errorSummary({ errors: [{ code: "network" }] }) };
   }
   let body = {};
   try { body = await response.json(); } catch { body = {}; }
-  return { httpStatus: Number(response.status) || 0, result: response.status === 200 && body?.success === true ? "PASS" : "FAIL", ...errorSummary(body) };
+  // Cloudflare returns 201 when a new Worker secret version is created.
+  const accepted = (response.status === 200 || response.status === 201) && body?.success === true;
+  return { httpStatus: Number(response.status) || 0, result: accepted ? "PASS" : "FAIL", ...errorSummary(body) };
 }
 
 async function main() {
-  const result = await injectWatchdogSecret({ token: process.env.GFS_WATCHDOG_ADMIN_TOKEN });
+  const result = await injectWatchdogSecret({
+    authToken: process.env.GFS_WATCHDOG_API_TOKEN,
+    secretValue: process.env.GFS_ADMIN_RECOVERY_TOKEN
+  });
   process.stdout.write(`${JSON.stringify(result)}\n`);
   if (result.result !== "PASS") process.exitCode = 1;
 }

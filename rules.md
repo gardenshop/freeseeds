@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-62 watchdog activation (2026-11-06 PKT)
+
+- Owner credentials were validated only inside approved `bi\\nazim`; values never entered agent output. The scoped Worker credential authorized the new Worker, while the Admin recovery credential was used only as the secret value.
+- Repaired `scripts/cloudflare-watchdog-secret-inject.mjs` to separate API authorization from secret material and accept Cloudflare's HTTP 201 secret-creation response. Focused injection tests passed 6/6; full suite 385 passed/1 skipped, build and lint passed.
+- `ADMIN_RECOVERY_TOKEN` binding read back on watchdog version `bc2c166d-655a-4542-8013-0dad8c720812`; no value was read. The one-minute schedule is configured on version `6e8f29d7-eef7-4281-a036-a21d99e52b59`, deployment `582da810-0023-4177-8b10-11a2da557818`, at 100% of the isolated Worker.
+- Watchdog remains DISARMED; scheduled code performs no writes. Official tail observation was blocked by a local Wrangler/npx `npm-prefix.js` launch error, so real scheduled invocation and disposable recovery are UNVERIFIED.
+- Temporary provisioning-token revocation returned HTTP 403; its Credential Manager entry was retained. Do not retry without owner-authorized token-management capability. Admin/API/payment/WhatsApp/D1/Meta/CAPI boundaries remain unchanged.
+
 ## GFS-COD-MO-61 private watchdog deployment (2026-11-06 PKT)
 
 - Owner-provisioned host credential `GFS-Watchdog-Provision-2026` was read only inside the approved `bi\\nazim` process. Cloudflare account identity matched `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no secret value was exposed.

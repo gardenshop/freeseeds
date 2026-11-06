@@ -1,5 +1,13 @@
 # Status
 
+## GFS-COD-MO-62 watchdog activation (2026-11-06 PKT)
+
+**Disposition: SECRET/Cron PASS; independent invocation and cleanup BLOCKED.**
+
+- Secret binding `ADMIN_RECOVERY_TOKEN` verified on version `bc2c166d-655a-4542-8013-0dad8c720812`; one-minute Cron verified on version `6e8f29d7-eef7-4281-a036-a21d99e52b59`.
+- The watchdog remains DISARMED and has no public target. Injection separation repair passed focused 6/6; full 385/1, build and lint PASS.
+- Tail observation could not start because the local Wrangler/npx process failed to resolve `npm-prefix.js`; no invocation was claimed. Broad provisioning-token revocation returned HTTP 403 and was not retried.
+
 ## GFS-COD-MO-61 private watchdog deployment (2026-11-06 PKT)
 
 **Disposition: PRIVATE WORKER DEPLOYED DISARMED / SCOPED CREDENTIAL BLOCKED.**

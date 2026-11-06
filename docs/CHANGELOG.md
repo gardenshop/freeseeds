@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-06 - GFS-COD-MO-62 watchdog activation
+
+- Added separated credential handling for Worker secret injection and accepted Cloudflare HTTP 201 secret creation.
+- Configured the isolated one-minute watchdog Cron while retaining DISARMED state; live invocation proof and temporary-token cleanup remain blocked by external tooling/authority.
+
 ## 2026-11-06 - GFS-COD-MO-61 private watchdog deployment
 
 - Deployed the new watchdog Worker privately and DISARMED with no targets, Cron, bindings or secret.

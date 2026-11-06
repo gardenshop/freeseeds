@@ -1,5 +1,18 @@
 # Final Report
 
+## GFS-COD-MO-62 Activate Safe Watchdog (2026-11-06 PKT)
+
+1. **Scoped credential:** PASS; active and used only for the new watchdog. Admin recovery credential remained separate.
+2. **Secret injection:** PASS after local repair; Cloudflare HTTP 201 accepted and binding `ADMIN_RECOVERY_TOKEN` read back on version `bc2c166d-655a-4542-8013-0dad8c720812` without reading its value.
+3. **Cron:** PASS configuration. Version `6e8f29d7-eef7-4281-a036-a21d99e52b59`, deployment `582da810-0023-4177-8b10-11a2da557818`, schedule `* * * * *`, isolated Worker only.
+4. **DISARMED:** PASS; scheduled handler remains inert and no live Admin/frozen Worker was touched.
+5. **Independent execution:** UNVERIFIED. Wrangler tail failed locally because npx could not resolve `npm-prefix.js`; no missing log data was treated as success.
+6. **Recovery:** local safety tests PASS; disposable recovery NOT RUN because no separately authorized target exists.
+7. **Cleanup:** broad provisioning-token revoke HTTP 403; local credential retained and no retry made.
+8. **Regression:** Admin/API routing, Orders/Conversations, WhatsApp, Advance/COD, D1, Access, Meta and CAPI unchanged. Auto update was restored ON and persisted after reload; direct API health was 200.
+9. **Tests:** focused injection 6/6; full 385 passed/1 skipped; build/lint PASS.
+10. **Next action:** owner provides token-management authority to revoke the temporary provisioning credential and a supported official tail/telemetry path or authorized disposable target; keep watchdog DISARMED and CAPI OFF.
+
 ## GFS-COD-MO-61 Private Watchdog Deployment (2026-11-06 PKT)
 
 1. **Token authorization:** owner Workers Admin credential validated in approved host process; no secret exposed.

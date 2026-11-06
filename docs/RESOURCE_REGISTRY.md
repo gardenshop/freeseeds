@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-COD-MO-62 watchdog activation (2026-11-06 PKT)
+
+- **Secret version:** `bc2c166d-655a-4542-8013-0dad8c720812`; binding name `ADMIN_RECOVERY_TOKEN`; value unrecorded.
+- **Cron version/deployment:** `6e8f29d7-eef7-4281-a036-a21d99e52b59` / `582da810-0023-4177-8b10-11a2da557818`; schedule `* * * * *`; isolated Worker only.
+- **Observability:** schedule readback PASS; official tail unavailable due local Wrangler/npx module-resolution failure; real invocation and disposable recovery remain unverified.
+- **Cleanup:** `GFS-Watchdog-Provision-2026` revocation denied HTTP 403; local credential retained pending authorized token-management access.
+
 ## GFS-COD-MO-61 private watchdog deployment (2026-11-06 PKT)
 
 - **Account:** `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; **Worker:** `gfs-cod-mo-55-watchdog`.

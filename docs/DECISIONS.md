@@ -1,3 +1,10 @@
+## GFS-COD-MO-62 - fail closed after safe watchdog activation (2026-11-06 PKT)
+
+**Decision:** retain the watchdog DISARMED despite successful secret and Cron configuration because live scheduled invocation telemetry and disposable recovery proof are unavailable.
+
+- The injection script was repaired after Cloudflare returned the valid HTTP 201 create response; API authorization and secret value are now separate process-only inputs.
+- Do not infer independent execution from schedule configuration. Do not revoke the temporary provisioning credential after HTTP 403 unless the owner supplies token-management authority.
+
 ## GFS-COD-MO-61 - deploy private watchdog inert (2026-11-06 PKT)
 
 **Decision:** deploy exactly one new private Worker artifact, then stop before credential creation, secret injection and Cron because the required scoped provisioning authority is absent.

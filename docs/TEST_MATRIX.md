@@ -4260,3 +4260,14 @@ Investigation query costs only (not production savings): representative `rows_re
 | Watchdog safety behavior | PASS | Existing focused suite 5/5 passed. |
 | Scoped deployment credential | BLOCKED | No separate token-provisioning identity or Worker-only credential target exists. |
 | Independent Cron/recovery | NOT RUN | Correctly deferred until scoped credential and secret gates pass. |
+## GFS-COD-MO-62 watchdog activation (2026-11-06 PKT)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Credential separation | PASS | Scoped API token and Admin recovery value are separate process-only inputs. |
+| Secret injection | PASS | Cloudflare HTTP 201; binding metadata readback shows `ADMIN_RECOVERY_TOKEN`; value not read. |
+| DISARMED behavior | PASS | Existing watchdog safety suite 5/5; no live Admin target used. |
+| One-minute Cron configuration | PASS | Schedule and latest isolated deployment read back exactly. |
+| Independent scheduled invocation | UNVERIFIED | Tail could not start because local Wrangler/npx could not resolve `npm-prefix.js`. |
+| Disposable recovery | NOT RUN | No separately authorized disposable target. |
+| Provisioning-token cleanup | BLOCKED | Cloudflare revoke returned HTTP 403; credential was retained. |
