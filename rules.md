@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-53 independent watchdog gate (2026-11-06 PKT)
+
+- Read-only Cloudflare dashboard verification matched account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` and showed the existing `gfs464-isolated-watchdog` / `gfs462-isolated-target` resources. Both remain frozen and were not modified. The dashboard exposes `Create application`, but no new resource was created.
+- The required architecture is a separate dedicated Worker with a scheduled trigger, default-disarmed state, exact Admin baseline/candidate allowlists, one-time arm/deadline, idempotent official restoration and sanitized readback. Local `scripts/canary-deadline-controller.mjs` is not independent and cannot satisfy this gate.
+- **BLOCKED before creation/deployment:** no approved secure path currently provisions both the new watchdog’s Worker-scoped deployment authority and the protected Admin-target deployment credential as a Worker secret. Do not create a partial Worker, reuse frozen resources, broaden the Admin token, or put a token in source/logs.
+- No Worker, schedule, binding, secret, routing, payment, D1, message, Meta or CAPI mutation occurred. Preserve the new-number WhatsApp lock and Hoja Seeds zero-connection rule.
+
 ## GFS-COD-MO-52 controlled canary gate (2026-11-06 PKT)
 
 - Preflight readback confirmed the authenticated Cloudflare dashboard is account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, Worker `getfreeseeds-admin-staging`, Admin `3e4b7c26` at 100% and candidate `ce023b54` at 0%. Key Figures remain version-labelled, with candidate evidence from the prior repair available but delayed and not a real-time alert channel.

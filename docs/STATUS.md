@@ -1,5 +1,13 @@
 # Status
 
+## GFS-COD-MO-53 independent rollback watchdog (2026-11-06 PKT)
+
+**Disposition: BLOCKED before external creation — secure dual-credential path unavailable.**
+
+- Account readback passed: `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; dashboard listed the existing frozen watchdog resources and a supported create-application entry.
+- No new Worker, Cron trigger, binding, secret or deployment was created. The current Admin-only credential cannot safely establish a separate watchdog deployment and protected runtime target credential without broadening scope or exposing a secret.
+- No live Admin/API routing or application state changed. Retained local evidence remains focused 38/38, full 385 passed/1 skipped, build/lint PASS.
+
 ## GFS-COD-MO-52 controlled Admin canary (2026-11-06 PKT)
 
 **Disposition: NO-GO / NOT RUN — independent rollback watchdog unavailable.**

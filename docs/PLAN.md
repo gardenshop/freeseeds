@@ -1,5 +1,11 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-53 independent rollback watchdog (2026-11-06 PKT)
+
+- **Architecture defined, deployment BLOCKED:** use a new dedicated Cloudflare Worker with Cron scheduling; keep it disarmed by default and allow only `getfreeseeds-admin-staging`, baseline `3e4b7c26` and candidate `ce023b54`.
+- The official dashboard confirmed the protected account and existing frozen watchdog resources. No new Worker or schedule was created because the secure target-credential and watchdog-deployment authority path is not established.
+- Exact owner action: authorize one isolated Worker/Cron deployment package with a Worker-scoped deployment credential and owner-side protected injection of the Admin-target deployment credential; then verify disarmed operation before any Admin canary authorization.
+
 ## GFS-COD-MO-52 controlled Admin canary (2026-11-06 PKT)
 
 - **BLOCKED before exposure:** official dashboard/readback showed Admin `3e4b7c26` 100% and candidate `ce023b54` 0%; account and Worker matched the protected baseline.

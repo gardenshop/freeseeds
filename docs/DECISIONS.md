@@ -1,3 +1,11 @@
+## GFS-COD-MO-53 - do not create a partial watchdog (2026-11-06 PKT)
+
+**Decision:** fail closed before external creation because the secure deployment and runtime-secret authority for a new independent watchdog is incomplete.
+
+- The official dashboard account readback passed and the existing frozen watchdog resources were left untouched.
+- A local controller is not independent. Creating a Worker without a protected Admin-target credential, Worker-scoped deployment authority and verified Cron path would not satisfy the rollback safety requirement.
+- Next exact owner action: authorize the isolated Worker/Cron package and its two narrow credential paths, with owner-side protected secret injection; then verify disarmed execution and restoration against a disposable target.
+
 ## GFS-COD-MO-52 - fail closed before Admin canary (2026-11-06 PKT)
 
 **Decision:** do not expose the Admin candidate because the mandatory independent watchdog could not be proven callable.

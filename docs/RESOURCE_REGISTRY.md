@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-COD-MO-53 watchdog architecture boundary (2026-11-06 PKT)
+
+- Official dashboard readback matched account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; `gfs464-isolated-watchdog` and `gfs462-isolated-target` remain existing frozen resources. The create-application control was visible, but no mutation was performed.
+- Required future resources are a new dedicated watchdog Worker, one scheduled trigger, protected runtime credentials and an exact Admin target allowlist. None is registered by GFS-53.
+- Current Admin Worker-only credential is not a safe credential for creating the new watchdog or injecting its runtime target secret. No partial resource was created.
+
 ## GFS-COD-MO-52 canary control boundary (2026-11-06 PKT)
 
 - Current read-only identity matched account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` and Worker `getfreeseeds-admin-staging`; configured Admin routing remained `3e4b7c26` 100% / `ce023b54` 0%.
