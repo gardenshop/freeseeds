@@ -3606,3 +3606,10 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **PASS:** Focused watchdog tests 10/10; full suite 385 passed/1 skipped; build/lint PASS.
 - **PASS:** Isolated version `82560d6f-0da3-417e-97f9-d0413d239a43`, deployment `4ab96ae4-de8b-4f36-ab22-bf0ec350114a`, Cron retained, route0, recovery binding retained, no arm variables (DISARMED). GraphQL recorded post-deploy scheduled rows at 12:33:37Z and 12:34:37Z, request1/errors0.
 - **BOUNDED:** Disposable real rollback remains unverified. Admin remains 3e4b7c26 100% / ce023b54 0%; API remains b426ba47 100%; no live Admin recovery or payment/D1/Meta/CAPI write occurred.
+
+## GFS-COD-MO-66A — disposable Worker created (2026-11-06 PKT)
+
+- **PASS:** Private Worker `gfs-cod-mo-66-disposable` created in account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; deployment `882de8e4-c883-4562-bebe-908cfe47c3f3` is 100% baseline A.
+- **PASS:** Official readback shows zero routes, zero bindings, no Cron, and no workers.dev link. Existing Admin/API/watchdog/frozen resources are unchanged.
+- **PASS:** Local A/B artifacts validate and build/lint pass.
+- **BLOCKED:** Separate Worker-only credential for this disposable target is not available. No remote candidate B, 90/10 split, or rollback was attempted.

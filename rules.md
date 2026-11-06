@@ -2556,3 +2556,10 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - Restore now submits one exact baseline version at 100%; readback accepts the supported single-version baseline and historical 100/0 split.
 - Focused watchdog tests 10/10 PASS; full suite 385 passed/1 skipped; build/lint PASS. Version `82560d6f-0da3-417e-97f9-d0413d239a43` deployed DISARMED as `4ab96ae4-de8b-4f36-ab22-bf0ec350114a`; Cron retained, route0, binding name retained, no arm vars.
 - Official GraphQL recorded post-deploy scheduled rows at `2026-11-06T12:33:37Z` and `12:34:37Z`, request1/errors0. Disposable real restoration remains unverified; live Admin/API, payment, D1, Meta/CAPI and frozen Workers were untouched.
+
+## GFS-COD-MO-66A — private disposable target (2026-11-06 PKT)
+
+- Account identity was verified as `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. No existing nonfrozen disposable Worker was available; the frozen `gfs464-isolated-watchdog` and `gfs462-isolated-target` were not touched.
+- Created exactly one private Worker `gfs-cod-mo-66-disposable` with deployment `882de8e4-c883-4562-bebe-908cfe47c3f3`, one baseline version at 100%, zero routes, zero bindings, no Cron, and no workers.dev link. HTTP is deny-all for the proof artifact; no customer or production binding exists.
+- Local harmless proof versions are prepared: A returns 200/`A`, B returns 200/`B`; no remote B or traffic split was created. Build/lint/diff checks PASS.
+- Disposable Worker-only credential is not yet available. Do not use the production recovery secret or any broad token; real 90/10 testing remains blocked until the owner supplies a securely stored, target-only credential.

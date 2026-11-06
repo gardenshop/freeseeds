@@ -7529,3 +7529,15 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 7. **Regression:** Admin baseline `3e4b7c26`100% / candidate `ce023b54`0%; API `b426ba47`100%; WhatsApp/Admin/API operational; no payment, order, D1, Meta or CAPI mutation.
 8. **Stages:** watchdog repair 100%; DISARMED deployment 100%; scheduled execution 100%; disposable recovery 0%; Admin canary 0%; real MO settlement 0%; CAPI 0%.
 9. **Next exact MO action:** separately authorize one disposable-target rollback proof and revalidate the recovery-token window; do not arm or canary live Admin before that gate.
+
+## GFS-COD-MO-66A — private disposable Worker
+
+1. **Actual HEAD:** `dbf7886998901987a99f5d5e78aa683faf5bef11` at start; current commit includes this verified resource record.
+2. **Creation authority:** PASS through the authenticated verified Cloudflare account session.
+3. **Private Worker:** PASS. `gfs-cod-mo-66-disposable`, deployment `882de8e4-c883-4562-bebe-908cfe47c3f3`, baseline A 100%.
+4. **Exposure:** PASS. Zero routes, zero bindings, no Cron, and no workers.dev link; deny-all HTTP artifact.
+5. **A/B readiness:** PASS locally. A/B return 200 with distinct harmless markers; no remote B or traffic split.
+6. **Disposable credential:** BLOCKED. A separate Worker-only Editor credential for this exact target is not securely available; production recovery token was not used.
+7. **Regression:** Admin/API routing, WhatsApp, payments, D1, Access, watchdog and frozen Workers unchanged. Build/lint/diff PASS.
+8. **Stages:** private target 100%; local A/B preparation 100%; target credential 0%; real 90/10 rollback 0%; live Admin canary 0%; MO settlement 0%; CAPI 0%.
+9. **Next exact action:** owner securely provisions one target-only Worker Editor credential for `gfs-cod-mo-66-disposable` in the approved host receiver; then resume with remote B upload and bounded disposable proof.

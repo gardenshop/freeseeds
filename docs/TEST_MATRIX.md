@@ -4287,3 +4287,7 @@ Investigation query costs only (not production savings): representative `rows_re
 | MO-65 scheduled handler | PASS | Deadline path, exact single-version restore, predeadline no-write, retry/error handling and idempotent baseline readback; focused watchdog 10/10. |
 | MO-65 corrected deployment | PASS | Version `82560d6f-0da3-417e-97f9-d0413d239a43`, deployment `4ab96ae4-de8b-4f36-ab22-bf0ec350114a`, fresh Cron rows observed; route-free and DISARMED. |
 | MO-65 disposable real restore | UNVERIFIED | No separately authorized disposable target; no live Admin or frozen Worker used. |
+
+| MO-66A private Worker artifact | PASS | Deny-all A/B local artifacts; workers_dev/preview disabled, no routes/Cron/bindings; dry-run reports no bindings. |
+| MO-66A private Worker deployment | PASS | `gfs-cod-mo-66-disposable` deployment `882de8e4-c883-4562-bebe-908cfe47c3f3`, baseline A 100%, official route readback 0. |
+| MO-66A disposable target credential | BLOCKED | Exact Worker-only credential not yet securely available; no remote B or split attempted. |

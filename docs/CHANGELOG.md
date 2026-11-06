@@ -2457,3 +2457,8 @@
 - Repaired watchdog scheduled recovery, supported single-version baseline restore, baseline readback compatibility, and durable fail-closed arm configuration.
 - Deployed corrected isolated version `82560d6f-0da3-417e-97f9-d0413d239a43` DISARMED as `4ab96ae4-de8b-4f36-ab22-bf0ec350114a`; Cron and secret binding retained, route0.
 - Official GraphQL recorded post-deploy Cron invocations at 12:33:37Z and 12:34:37Z with request1/errors0. No Admin/API/payment/D1/Meta/CAPI mutation; disposable recovery remains unverified.
+
+## 2026-11-06 — GFS-COD-MO-66A
+
+- Created private disposable Worker `gfs-cod-mo-66-disposable` with baseline A only, zero routes/bindings/Cron and no workers.dev link.
+- Prepared local A/B rollback-proof artifacts; separate target-only credential remains the sole gate. No production or watchdog resource changed.

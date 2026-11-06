@@ -2839,3 +2839,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Decision:** restore submits one exact baseline version at 100%; readback accepts that supported single-version state or the historical 100/0 state.
 - **Evidence:** deployment `4ab96ae4-de8b-4f36-ab22-bf0ec350114a`, version `82560d6f-0da3-417e-97f9-d0413d239a43`; official GraphQL rows at 12:33:37Z and 12:34:37Z, request1/errors0.
 - **Boundary:** no live Admin canary or arming until separately authorized disposable recovery proof is available and the recovery-token window is revalidated; expiry remains `2026-11-07T18:59:59Z`.
+
+## GFS-COD-MO-66A — disposable target boundary (2026-11-06 PKT)
+
+- **Decision:** create only `gfs-cod-mo-66-disposable`; keep it private, route-free, binding-free, Cron-free, and baseline-only until a target-only credential is securely available.
+- **Evidence:** deployment `882de8e4-c883-4562-bebe-908cfe47c3f3`, 100% baseline A, zero routes/bindings, no workers.dev link.
+- **Boundary:** do not create the candidate version remotely, split traffic, or test recovery until a separate Worker-only Editor credential for this exact Worker is stored through the approved host receiver. Never use `ADMIN_RECOVERY_TOKEN`.

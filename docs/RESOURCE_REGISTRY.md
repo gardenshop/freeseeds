@@ -2725,3 +2725,9 @@ No secrets are stored in this registry.
 
 - Watchdog `gfs-cod-mo-55-watchdog`: deployment `4ab96ae4-de8b-4f36-ab22-bf0ec350114a`, version `82560d6f-0da3-417e-97f9-d0413d239a43`, 100%, Cron `* * * * *`, route0, no arm variables, `ADMIN_RECOVERY_TOKEN` binding name only.
 - Official GraphQL scheduled execution evidence: `2026-11-06T12:33:37Z` and `12:34:37Z`, each request1/errors0. Live Admin target not armed.
+
+## GFS-COD-MO-66A disposable resource (2026-11-06 PKT)
+
+- `gfs-cod-mo-66-disposable`: deployment `882de8e4-c883-4562-bebe-908cfe47c3f3`, baseline A at 100%, zero routes, zero bindings, no Cron, no workers.dev link.
+- Local proof artifacts: `scripts/gfs-cod-mo-66-disposable-worker-a.mjs`, `scripts/gfs-cod-mo-66-disposable-worker-b.mjs`, config `wrangler.gfs-cod-mo-66-disposable.jsonc`.
+- Disposable target-only credential: **BLOCKED/not provisioned**; no production secret or token is associated with this resource.

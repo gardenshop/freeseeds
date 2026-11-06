@@ -1,0 +1,7 @@
+{
+  "name": "gfs-cod-mo-66-disposable",
+  "main": "scripts/gfs-cod-mo-66-disposable-worker-a.mjs",
+  "compatibility_date": "2026-11-06",
+  "workers_dev": false,
+  "preview_urls": false
+}
