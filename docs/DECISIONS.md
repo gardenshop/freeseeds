@@ -2746,3 +2746,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Decision:** keep Admin routing frozen and do not create a token through the broad OAuth identity. It lacks Account API Tokens Write and has unrelated write scopes.
 - **Evidence:** deployment readback PASS; candidate GET/MO panel PASS; version-filtered tail yielded zero records, so canary evidence is insufficient.
 - **Next exact action:** owner provisions Account API Tokens Write directly to the passing host receiver, then create one 24-hour Worker-only Editor token and reverify fresh telemetry/rollback.
+## GFS-COD-MO-50 - stop without candidate canary (2026-11-06 PKT)
+
+**Decision:** do not start a canary. The official unfiltered Wrangler tail process crashed before emitting usable telemetry, so baseline log control and candidate-specific error visibility are unproven.
+
+- Do not interpret the crash, empty output or aggregate Analytics as zero candidate errors.
+- Preserve Admin baseline/candidate routing and all payment, WhatsApp, D1, Access and CAPI boundaries. Next action is an owner-approved supported Wrangler/tail execution path or equivalent official version-labelled telemetry; no redeploy merely to enable logs.

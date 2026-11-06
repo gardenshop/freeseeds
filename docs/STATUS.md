@@ -1,5 +1,13 @@
 # Status
 
+## GFS-COD-MO-50 candidate monitoring (2026-11-06 PKT)
+
+**Disposition: BASELINE HEALTH READ-ONLY PASS / VERSION TELEMETRY BLOCKED / NO CANARY.**
+
+- One bounded unfiltered `wrangler tail` probe using the approved Worker-only credential exited `-1073740791` before a usable log record. Only sanitized process status was retained; no raw logs, URLs, credentials or customer data were recorded.
+- Candidate-specific tail was not started after baseline control failed. Fresh candidate invocation, errors and CPU therefore remain unverified; prior candidate override markers and aggregate Analytics do not satisfy this gate.
+- Deployment readback and sanitized Orders/Conversations page checks remained healthy. Admin baseline/candidate routing was not changed; no production mutation occurred.
+
 ## GFS-COD-MO-49 deployment readiness (2026-11-06 PKT)
 
 **Disposition: CREDENTIAL PASS / READ-ONLY READINESS PASS / CANDIDATE TELEMETRY BLOCKED.**

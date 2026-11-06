@@ -1,5 +1,16 @@
 # Final Report
 
+## GFS-COD-MO-50 candidate monitoring (2026-11-06 PKT)
+
+1. **MO-49 comparison:** token, host bridge, readback and aggregate evidence remain valid; fresh version-labelled telemetry was not obtained.
+2. **Baseline tail:** **BLOCKED** — one bounded unfiltered official Wrangler tail exited `-1073740791` before a usable record; raw output was suppressed.
+3. **Candidate tail:** **BLOCKED/NOT STARTED** — baseline log control failed, so no fresh candidate invocation, error or CPU result is claimed.
+4. **Attribution diagnosis:** the current blocker is the Wrangler tail process failure before telemetry emission. Permission/filter cause cannot be distinguished from logs because no record was emitted.
+5. **Rollback preflight:** read-only deployment readback passed and expected version indicators were present; restoration was prepared/readable, not executed.
+6. **Regression:** sanitized Orders/Conversations checks remained complete; no routing, payment, D1, message, secret or CAPI mutation occurred. Existing aggregate Analytics and candidate UI override evidence are not candidate live telemetry.
+7. **Decision:** **NO CANARY**. Protected Admin `/health` Service Auth HTTP200 remains unverified; genuine MO settlement evidence remains pending.
+8. **Next action:** provide one supported owner-approved Wrangler/tail or equivalent official version-labelled telemetry execution path, then separately authorize the bounded canary.
+
 ## GFS-COD-MO-49 deployment readiness (2026-11-06 PKT)
 
 1. **MO-48 comparison:** owner final credential is now present and verified; no token recreation was attempted.

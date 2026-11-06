@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-50 candidate monitoring (2026-11-06 PKT)
+
+- One bounded unfiltered official Wrangler tail probe was run with the owner-approved Worker-only credential inside an isolated process. Wrangler exited `-1073740791` before producing a usable record (stdout 1 byte, stderr 556 bytes); raw output was not retained. This is a tooling/telemetry failure, not zero-error evidence.
+- Because baseline log control failed, the candidate tail was not probed and no fresh candidate invocation/error/CPU claim is made. Existing candidate override UI evidence and aggregate Analytics remain supporting evidence only.
+- Read-only deployment readback still found the expected Admin baseline/candidate indicators, and sanitized live Orders/Conversations pages were complete. No routing, deployment, payment, D1, message, secret or CAPI mutation occurred. Canary remains blocked until a supported fresh version-labelled telemetry path works.
+
 ## GFS-COD-MO-49 deployment-readiness verification (2026-11-06 PKT)
 
 - Owner credential `GFS-Admin-Deploy-Scoped-2026` is active and expires `2026-11-07T18:59:59Z`. Official metadata confirms exactly one `Individual Workers Editor` policy scoped only to `getfreeseeds-admin-staging` script `c71a20a213bc496da647525971cae370`; no unrelated resource was granted.
