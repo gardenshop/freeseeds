@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-61 private watchdog deployment (2026-11-06 PKT)
+
+- Owner-provisioned host credential `GFS-Watchdog-Provision-2026` was read only inside the approved `bi\\nazim` process. Cloudflare account identity matched `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no secret value was exposed.
+- The new `gfs-cod-mo-55-watchdog` Worker was deployed as version `0a5f8877-1b4f-4865-9b56-4322a47803e4` with no targets, routes, Cron, bindings or recovery secret. It remains DISARMED and inert.
+- Readback showed deployment `787f32af-fda5-45ab-8168-ed3b01eb7e8e`, version 100%, schedules 0 and bindings empty. The Worker-only scoped deployment credential was not present, so secret injection and Cron remain blocked.
+- Exact owner action: create or securely provide one separate account-token-provisioning identity with Account API Tokens Write, or create `GFS-Watchdog-Deploy-Scoped-2026` directly as Individual Workers Editor for this Worker only. Do not broaden the existing credential or inject `ADMIN_RECOVERY_TOKEN` before that gate.
+- Admin 3e4b7c26 100%, candidate ce023b54 0%, API b426ba47 100%, payment/WhatsApp/D1/Meta/CAPI boundaries were not changed.
+
 ## GFS-COD-MO-60 Admin refresh recovery (2026-11-06 PKT)
 
 - MO-59 root cause confirmed: the Admin Cloudflare Access browser session expired. After owner-approved reauthentication, Orders and Conversations loaded again and authenticated GETs returned HTTP 200.

@@ -1,3 +1,11 @@
+## GFS-COD-MO-61 - deploy private watchdog inert (2026-11-06 PKT)
+
+**Decision:** deploy exactly one new private Worker artifact, then stop before credential creation, secret injection and Cron because the required scoped provisioning authority is absent.
+
+- Account identity and owner token were validated inside the approved host process.
+- Wrangler reported no targets; API readback showed one version, no schedules and no bindings.
+- Do not use the broad owner provisioning credential as the watchdog runtime credential. Obtain one separate Worker-only Editor credential through an authorized token-provisioning identity before continuing.
+
 ## GFS-COD-MO-60 - Access session, not application outage (2026-11-06 PKT)
 
 **Decision:** close the P0 refresh incident after owner-approved Cloudflare Access reauthentication; do not modify Admin source or deployment.

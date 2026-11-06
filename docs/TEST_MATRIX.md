@@ -4250,3 +4250,13 @@ Investigation query costs only (not production savings): representative `rows_re
 | Fresh candidate tail | BLOCKED | Version-filtered sanitized tail returned 0 records |
 | Rollback execution | BLOCKED | No scoped deployment credential; no routing change |
 | Canary | NOT RUN | Fresh telemetry gate failed |
+## GFS-COD-MO-61 private watchdog deployment (2026-11-06 PKT)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Approved host/account identity | PASS | `bi\\nazim`; account readback matched protected account; secret value not exposed. |
+| Private Worker deployment | PASS | New Worker version deployed; Wrangler reported no targets. |
+| No schedules/bindings/secrets | PASS | Readback: schedules 0, bindings empty; secret injection was not attempted. |
+| Watchdog safety behavior | PASS | Existing focused suite 5/5 passed. |
+| Scoped deployment credential | BLOCKED | No separate token-provisioning identity or Worker-only credential target exists. |
+| Independent Cron/recovery | NOT RUN | Correctly deferred until scoped credential and secret gates pass. |

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-06 - GFS-COD-MO-61 private watchdog deployment
+
+- Deployed the new watchdog Worker privately and DISARMED with no targets, Cron, bindings or secret.
+- Verified account identity and retained the fail-closed stop because the separate Worker-only deployment credential is not available.
+
 ## 2026-11-06 - GFS-COD-MO-60 Admin refresh recovery
 
 - Resolved the observed Admin refresh outage through owner-approved Cloudflare Access reauthentication; no application or deployment change was needed.

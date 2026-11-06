@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-COD-MO-61 private watchdog deployment (2026-11-06 PKT)
+
+- **Account:** `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; **Worker:** `gfs-cod-mo-55-watchdog`.
+- **Deployment:** `787f32af-fda5-45ab-8168-ed3b01eb7e8e`; **version:** `0a5f8877-1b4f-4865-9b56-4322a47803e4`; 100% of the new Worker only.
+- **Safety state:** no targets/routes, no Cron schedules, no bindings, no secret; DISARMED/inert.
+- **Credential boundary:** owner provisioning credential target exists and remains protected; scoped Worker deployment target is absent. No secret values are recorded.
+
 ## GFS-COD-MO-57 private watchdog artifact (2026-11-06 PKT)
 
 - Local artifact: `scripts/gfs-cod-mo-55-watchdog-worker.mjs` with `wrangler.gfs-cod-mo-55-watchdog.jsonc`; private flags are disabled for workers.dev and preview URLs, with no routes, Cron or secrets configured.

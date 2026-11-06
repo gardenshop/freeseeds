@@ -1,5 +1,16 @@
 # Final Report
 
+## GFS-COD-MO-61 Private Watchdog Deployment (2026-11-06 PKT)
+
+1. **Token authorization:** owner Workers Admin credential validated in approved host process; no secret exposed.
+2. **Private Worker:** PASS. `gfs-cod-mo-55-watchdog` deployed as version `0a5f8877-1b4f-4865-9b56-4322a47803e4`, deployment `787f32af-fda5-45ab-8168-ed3b01eb7e8e`.
+3. **Exposure:** no targets deployed; readback showed no schedules or bindings. Worker remains DISARMED/inert.
+4. **Scoped credential:** BLOCKED. `GFS-Watchdog-Deploy-Scoped-2026` is absent and no token-provisioning credential was available.
+5. **Secret injection/Cron/recovery:** NOT RUN, correctly fail-closed. No `ADMIN_RECOVERY_TOKEN` was installed.
+6. **Tests:** watchdog safety suite 5/5 PASS; independent Cron and disposable recovery remain unproven.
+7. **Regression:** Admin/API routing, WhatsApp, payments, D1, Meta and CAPI were unchanged.
+8. **Next executable action:** owner creates/provides one separate Account API Tokens Write provisioning identity, or directly creates the Worker-only Editor credential for this new Worker; no live canary or settlement action.
+
 ## GFS-COD-MO-60 P0 Admin Refresh Incident (2026-11-06 PKT)
 
 1. **Cause:** expired Cloudflare Access browser session; `/api/orders/changes` and Conversations later redirected to Access and the browser reported CORS/failed fetch. Auto-update OFF was a separate preference state.
