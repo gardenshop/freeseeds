@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-06 - GFS-COD-MO-55 secure watchdog credential bridge
+
+- Added a fixed-target, process-only Cloudflare Worker secret injection runner and synthetic redaction tests.
+- Mock bridge 5/5, syntax, build and lint passed; real credential transfer and Cloudflare mutation remain blocked pending the new watchdog target and scoped deployment credential.
+
 ## 2026-11-06 - GFS-COD-MO-54 watchdog deployment gate
 
 - Verified the correct Super admin account authority and Workers creation path.

@@ -1,5 +1,11 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-55 secure watchdog credential bridge (2026-11-06 PKT)
+
+- **Local bridge PASS:** fixed allowlists cover only account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, future watchdog `gfs-cod-mo-55-watchdog` and secret binding `ADMIN_RECOVERY_TOKEN`; responses are sanitized.
+- **Mock/test PASS:** 5/5 bridge tests, Node syntax, PowerShell parse, build and lint. Real secret transfer was intentionally not attempted.
+- **External gate remains BLOCKED:** no new watchdog target or separate watchdog deployment credential exists. Next action is owner-provisioned narrow watchdog deployment authority, then disarmed Worker creation and protected secret injection.
+
 ## GFS-COD-MO-54 watchdog deployment (2026-11-06 PKT)
 
 - **Authority PASS:** the correct account dashboard shows `gisupp@gmail.com` as Super admin and exposes the Workers application creation path.

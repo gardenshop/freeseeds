@@ -1,3 +1,10 @@
+## GFS-COD-MO-55 - local bridge ready, external injection held (2026-11-06 PKT)
+
+**Decision:** accept the mock-tested host-only runner, but do not read or transfer the real Admin credential before the new watchdog target and narrow deployment authority exist.
+
+- The runner has fixed account/Worker/secret allowlists and redacts provider responses; mock tests pass 5/5.
+- Real injection remains blocked by the missing new watchdog Worker and separate Worker-scoped deployment credential. No secret or Cloudflare resource changed.
+
 ## GFS-COD-MO-54 - stop before partial Worker creation (2026-11-06 PKT)
 
 **Decision:** accept the Super admin/account-authority check, but fail closed because protected Admin-target secret injection is unavailable.

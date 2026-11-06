@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-55 secure watchdog credential bridge (2026-11-06 PKT)
+
+- Added a fixed-target host runner: it reads only `GFS-Admin-Deploy-Scoped-2026` inside the approved Windows process, injects the token only into the child process, calls the official Worker Secrets API for only `gfs-cod-mo-55-watchdog` / `ADMIN_RECOVERY_TOKEN`, and returns only status/error codes. It never prints, stores or returns credential text.
+- Synthetic mock validation passed 5/5; Node syntax, PowerShell parse, TypeScript build and ESLint passed. No real credential was read or transferred, and no Cloudflare API mutation occurred.
+- Real injection remains blocked until the new watchdog Worker exists and a separate narrow deployment credential for that Worker is securely available. Do not broaden the Admin token or inject it through browser/MCP/source/logs.
+
 ## GFS-COD-MO-54 watchdog deployment gate (2026-11-06 PKT)
 
 - Read-only dashboard verification passed for account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`: authenticated `gisupp@gmail.com` is shown as **Super admin**; the Workers & Pages `Create application` path is available. No creation action was submitted.

@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-COD-MO-55 local credential bridge (2026-11-06 PKT)
+
+- Local resources: `scripts/run-with-gfs-watchdog-secret.ps1`, `scripts/cloudflare-watchdog-secret-inject.mjs` and `scripts/test-cloudflare-watchdog-secret-inject.mjs`.
+- Allowlist: account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, future Worker `gfs-cod-mo-55-watchdog`, binding `ADMIN_RECOVERY_TOKEN`; only sanitized HTTP/error status is emitted.
+- Validation: mock 5/5, Node syntax, PowerShell parse, build and lint PASS. No real credential value or Cloudflare secret mutation was used. External injection remains pending the new Worker and its separate deployment credential.
+
 ## GFS-COD-MO-54 authority and secret boundary (2026-11-06 PKT)
 
 - Authenticated Cloudflare dashboard readback showed account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, member `gisupp@gmail.com` with role **Super admin**, and the Workers & Pages `Create application` control.

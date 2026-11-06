@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-COD-MO-55 secure credential bridge (2026-11-06 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Fixed target/account allowlist | PASS | Account, future watchdog name and `ADMIN_RECOVERY_TOKEN` reject mismatches. |
+| Mock success redaction | PASS | Sanitized status only; synthetic token absent from result. |
+| Mock HTTP/network failure redaction | PASS | Provider code/network status only; response text absent. |
+| Token validation | PASS | Malformed token rejected before HTTP. |
+| Tooling | PASS | Node syntax, PowerShell parse, build and lint. |
+| Real injection | BLOCKED | New watchdog and separate watchdog deployment credential do not exist; no real secret was read. |
+
 ## GFS-COD-MO-54 watchdog deployment gate (2026-11-06 PKT)
 
 | Gate | Result | Evidence |

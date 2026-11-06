@@ -1,5 +1,13 @@
 # Status
 
+## GFS-COD-MO-55 secure watchdog credential bridge (2026-11-06 PKT)
+
+**Disposition: LOCAL BRIDGE PASS / REAL INJECTION BLOCKED.**
+
+- Added `scripts/run-with-gfs-watchdog-secret.ps1` and `scripts/cloudflare-watchdog-secret-inject.mjs`; the runner is fixed-target, process-only and status-redacting.
+- Mock suite passed 5/5; Node syntax, PowerShell parse, build and lint passed. No real token was read, logged, transferred or sent to Cloudflare.
+- Injection cannot proceed safely until `gfs-cod-mo-55-watchdog` exists and its separate narrow deployment credential is available. Production and frozen Workers remain unchanged.
+
 ## GFS-COD-MO-54 watchdog deployment (2026-11-06 PKT)
 
 **Disposition: BLOCKED before creation — secure Admin-target secret injection unavailable.**
