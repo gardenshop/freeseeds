@@ -1,5 +1,14 @@
 # Test Matrix
 
+## GFS-COD-MO-52 controlled canary gate (2026-11-06 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Account/Worker/routing preflight | PASS | Authenticated dashboard readback matched the protected account, Worker, Admin `3e4b7c26` 100% and candidate `ce023b54` 0%. |
+| Independent watchdog | BLOCKED | Local deadline controller is not independent; isolated watchdog is frozen/non-production and cannot restore live Admin. |
+| Canary exposure | NOT RUN | Fail-closed before traffic mutation; exposure 0 seconds. |
+| Production protection | PASS | No deployment, routing, payment/order, D1, message, secret, Meta or CAPI mutation. |
+
 ## GFS-COD-MO-51 candidate monitoring repair (2026-11-06 PKT)
 
 | Gate | Result | Evidence |

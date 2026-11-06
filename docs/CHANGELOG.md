@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-06 - GFS-COD-MO-52 controlled Admin canary gate
+
+- Failed closed before exposure because no independent callable watchdog for live Admin restoration was available.
+- Confirmed protected Admin routing remained `3e4b7c26` 100% / `ce023b54` 0%; no production mutation occurred.
+
 ## 2026-11-06 - GFS-COD-MO-51 candidate monitoring repair
 
 - Diagnosed the Windows Wrangler crash (`0xC0000409`) and documented the process-only Node `--no-maglev` workaround plus invalid sampling argument.

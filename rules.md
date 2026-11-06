@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-52 controlled canary gate (2026-11-06 PKT)
+
+- Preflight readback confirmed the authenticated Cloudflare dashboard is account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, Worker `getfreeseeds-admin-staging`, Admin `3e4b7c26` at 100% and candidate `ce023b54` at 0%. Key Figures remain version-labelled, with candidate evidence from the prior repair available but delayed and not a real-time alert channel.
+- **NO-GO before exposure:** the required independent, fail-closed host watchdog was not callable. `scripts/canary-deadline-controller.mjs` is local release tooling only; the isolated watchdog is frozen/non-production and cannot restore the live Admin deployment. Do not substitute a Codex process, browser timer, detached Node process or Windows timer.
+- No canary, routing, deployment, payment, D1, message, secret, Meta or CAPI mutation occurred. Preserve the new-number WhatsApp lock, Hoja Seeds zero-connection rule, CAPI OFF and the 100%/0% Admin boundary.
+
 ## GFS-COD-MO-51 candidate monitoring repair (2026-11-06 PKT)
 
 - The prior Wrangler exit `-1073740791` maps to `0xC0000409` / `STATUS_STACK_BUFFER_OVERRUN`. Node `v24.15.0` with Wrangler `4.149.0` reproduced the native crash; a process-only `node --no-maglev` invocation avoided it. This is consistent with the documented Node Maglev Windows issue, but the OS-build root cause is not independently claimed.

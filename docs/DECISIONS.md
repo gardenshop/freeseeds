@@ -1,3 +1,11 @@
+## GFS-COD-MO-52 - fail closed before Admin canary (2026-11-06 PKT)
+
+**Decision:** do not expose the Admin candidate because the mandatory independent watchdog could not be proven callable.
+
+- Account/Worker and routing readback matched the protected baseline: Admin `3e4b7c26` 100% / `ce023b54` 0%.
+- The local deadline controller cannot satisfy independent rollback. The isolated watchdog is frozen/non-production and has no approved live Admin restoration authority.
+- No traffic, deployment, payment/order, D1, message, secret, Meta or CAPI mutation occurred. One next action is to obtain a separately approved callable fail-closed watchdog, then reauthorize one bounded canary.
+
 ## GFS-COD-MO-49 - retain canary hold without candidate telemetry (2026-11-06 PKT)
 
 **Decision:** accept the owner-created Worker-only credential for read-only deployment verification, but do not canary or promote while version-labelled live telemetry is unavailable.

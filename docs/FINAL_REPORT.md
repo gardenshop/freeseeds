@@ -1,5 +1,15 @@
 # Final Report
 
+## GFS-COD-MO-52 Controlled Admin Canary (2026-11-06 PKT)
+
+1. **MO-51 comparison:** version-labelled Key Figures and read-only deployment evidence remained available; the mandatory independent rollback gate was not satisfied.
+2. **Canary:** **NO-GO / NOT RUN**. The independent fail-closed watchdog was not callable. The local deadline controller is not independent, and the isolated watchdog is frozen/non-production.
+3. **Routing:** Admin remained `3e4b7c26` 100% / `ce023b54` 0%; API was not changed. Exposure was 0 seconds.
+4. **Monitoring:** prior candidate Key Figures evidence remains delayed supporting evidence, not a substitute for the missing independent watchdog. No canary monitoring window was opened.
+5. **Protection:** no deployment, traffic, payment/order, D1, message, secret, Meta or CAPI mutation occurred; WhatsApp, Advance, COD, Recovery and CAPI boundaries remain protected.
+6. **Tests:** retained focused 38/38, full 385 passed/1 skipped, build/lint PASS; no source changed.
+7. **Next action:** owner provides a separately approved callable fail-closed watchdog capable of restoring Admin `3e4b7c26` 100% / `ce023b54` 0%, then reauthorizes one bounded canary.
+
 ## GFS-COD-MO-51 Repair Tail Crash (2026-11-06 PKT)
 
 1. **MO-50 comparison:** Worker token, host bridge, deployment readback and routing remain valid; candidate telemetry is now available through Key Figures.

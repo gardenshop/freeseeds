@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-COD-MO-52 canary control boundary (2026-11-06 PKT)
+
+- Current read-only identity matched account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` and Worker `getfreeseeds-admin-staging`; configured Admin routing remained `3e4b7c26` 100% / `ce023b54` 0%.
+- No independent live rollback watchdog is registered or callable for this Admin canary. The local deadline controller is not an independent executor; the isolated watchdog remains frozen/non-production. No canary was started.
+- Keep the scoped deployment credential, candidate, API routing, D1, payments, WhatsApp, Access and CAPI settings unchanged.
+
 ## GFS-COD-MO-49 deployment credential and monitoring (2026-11-06 PKT)
 
 - Final credential target `GFS-Admin-Deploy-Scoped-2026`: active, expiry `2026-11-07T18:59:59Z`, `Individual Workers Editor`, exact Admin Worker only. Secret value is not recorded.

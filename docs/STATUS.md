@@ -1,5 +1,13 @@
 # Status
 
+## GFS-COD-MO-52 controlled Admin canary (2026-11-06 PKT)
+
+**Disposition: NO-GO / NOT RUN — independent rollback watchdog unavailable.**
+
+- Read-only Cloudflare dashboard evidence matched account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, Worker `getfreeseeds-admin-staging`, Admin `3e4b7c26` 100% and candidate `ce023b54` 0%.
+- The repository deadline controller is local release tooling only. The isolated watchdog is frozen and non-production; no approved callable watchdog for live Admin restoration was found. This fails the mandatory pre-exposure gate.
+- Exposure was 0 seconds; no deployment, routing, payment/order, D1, message, secret, Meta or CAPI mutation occurred. Prior tests remain focused 38/38, full 385 passed/1 skipped, build/lint PASS.
+
 ## GFS-COD-MO-51 monitoring repair (2026-11-06 PKT)
 
 **Disposition: MONITORING PASS VIA KEY FIGURES / TAIL STREAM NOT USABLE / NO CANARY.**

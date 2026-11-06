@@ -1,5 +1,11 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-52 controlled Admin canary (2026-11-06 PKT)
+
+- **BLOCKED before exposure:** official dashboard/readback showed Admin `3e4b7c26` 100% and candidate `ce023b54` 0%; account and Worker matched the protected baseline.
+- The mandatory independent watchdog gate failed. The local deadline controller is not independent, and the isolated watchdog is frozen/non-production without live Admin restoration authority.
+- No canary or traffic mutation was attempted. Next exact action: owner provides a separately approved callable fail-closed watchdog that can restore Admin `3e4b7c26` 100% / `ce023b54` 0%, then request a fresh bounded canary authorization.
+
 ## GFS-COD-MO-51 monitoring repair (2026-11-06 PKT)
 
 - **PASS:** Node/Wrangler crash diagnosis and bounded workaround. Use process-only `node --no-maglev`; do not pass invalid `--sampling-rate 100`. API tail sessions must use `trace-v1`, and must be deleted after use.
