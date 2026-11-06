@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-COD-MO-51 candidate monitoring repair (2026-11-06 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Crash diagnosis | PASS | Node `v24.15.0`/Wrangler `4.149.0`; `-1073740791` = `0xC0000409`; `--no-maglev` avoided native crash. |
+| Wrangler argument repair | PASS | Removed invalid `--sampling-rate 100`; default-sampling process remained alive. |
+| Temporary Tail API | PASS LIMITED | Create HTTP200; delete HTTP200; `trace-v1` required for WebSocket open; bounded stream emitted no records. |
+| Version-labelled Key Figures | PASS | Baseline `3e4b7c26` and candidate `ce023b54`; candidate 26 invocations, 0% errors, 5.86 ms median CPU; latest chart data ~6.7 minutes old. |
+| Candidate override | PASS | Authenticated GET HTTP200 with candidate markers; header cleared; no write. |
+| Production protection | PASS | Admin 100%/0%, API unchanged; no deployment, D1, payment, customer, Meta or CAPI mutation. |
+
 ## GFS-COD-MO-49 deployment readiness (2026-11-06 PKT)
 
 | Gate | Result | Evidence |

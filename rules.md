@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-51 candidate monitoring repair (2026-11-06 PKT)
+
+- The prior Wrangler exit `-1073740791` maps to `0xC0000409` / `STATUS_STACK_BUFFER_OVERRUN`. Node `v24.15.0` with Wrangler `4.149.0` reproduced the native crash; a process-only `node --no-maglev` invocation avoided it. This is consistent with the documented Node Maglev Windows issue, but the OS-build root cause is not independently claimed.
+- A separate CLI defect was corrected operationally: `--sampling-rate 100` is invalid for Wrangler 4.149.0; omitting the optional flag keeps the tail process alive. The official temporary Tail API returned HTTP200 and sessions deleted HTTP200. Its WebSocket requires Wrangler subprotocol `trace-v1`; without it the handshake returned HTTP406. With `trace-v1`, the socket opened, but bounded windows emitted no records, so tail output is not used as evidence.
+- The authenticated Cloudflare Key Figures page is the usable official fallback: current version-separated data showed baseline `3e4b7c26` and candidate `ce023b54`, candidate 26 invocations, 0% errors and 5.86 ms median CPU, with the chart latest timestamp approximately 6.7 minutes old at read time. Workers Logs remain disabled. Candidate override GET was read-only and headers were cleared afterward.
+- Monitoring prerequisite is now PASS via version-labelled Key Figures; rollback remains readback-only and no canary, routing, deployment, payment, D1, message, secret or CAPI mutation occurred. Preserve the new-number WhatsApp lock and Hoja Seeds zero-connection rule.
+
 ## GFS-COD-MO-50 candidate monitoring (2026-11-06 PKT)
 
 - One bounded unfiltered official Wrangler tail probe was run with the owner-approved Worker-only credential inside an isolated process. Wrangler exited `-1073740791` before producing a usable record (stdout 1 byte, stderr 556 bytes); raw output was not retained. This is a tooling/telemetry failure, not zero-error evidence.

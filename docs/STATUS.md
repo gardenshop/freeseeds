@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-MO-51 monitoring repair (2026-11-06 PKT)
+
+**Disposition: MONITORING PASS VIA KEY FIGURES / TAIL STREAM NOT USABLE / NO CANARY.**
+
+- Node `v24.15.0` reproduced the `0xC0000409` native tail crash; process-only `--no-maglev` avoided the crash. Wrangler `--sampling-rate 100` was separately rejected as an invalid range. The corrected default-sampling process stayed alive.
+- Official temporary Tail API creation/deletion passed (`200`/`200`). WebSocket handshake required `trace-v1`; without it returned `406`, with it opened, but two bounded windows delivered no records. Workers Logs are disabled, so no tail zero-error claim is made.
+- Key Figures now provides fresh version-labelled fallback evidence: baseline `3e4b7c26`, candidate `ce023b54`, candidate 26 invocations, 0% errors, 5.86 ms median CPU; chart latest data was approximately 6.7 minutes old. Candidate override GET returned 200 and was cleared.
+- Routing remains Admin baseline 100% / candidate 0%; no source, deployment, traffic, D1, payment, message, secret, Meta or CAPI mutation occurred.
+
 ## GFS-COD-MO-50 candidate monitoring (2026-11-06 PKT)
 
 **Disposition: BASELINE HEALTH READ-ONLY PASS / VERSION TELEMETRY BLOCKED / NO CANARY.**

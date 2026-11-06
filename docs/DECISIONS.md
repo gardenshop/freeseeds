@@ -2752,3 +2752,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 
 - Do not interpret the crash, empty output or aggregate Analytics as zero candidate errors.
 - Preserve Admin baseline/candidate routing and all payment, WhatsApp, D1, Access and CAPI boundaries. Next action is an owner-approved supported Wrangler/tail execution path or equivalent official version-labelled telemetry; no redeploy merely to enable logs.
+## GFS-COD-MO-51 - accept Key Figures monitoring fallback (2026-11-06 PKT)
+
+**Decision:** accept the authenticated version-separated Key Figures view as the current candidate-monitoring source; do not rely on the empty tail stream or begin a canary in this task.
+
+- `0xC0000409` was reproduced under Node 24 and avoided with process-only `--no-maglev`; invalid Wrangler sampling input was removed. Official Tail API sessions were created/deleted safely, and `trace-v1` fixed the handshake from HTTP406 to an open socket, but no bounded tail records arrived.
+- Key Figures supplied candidate `ce023b54` = 26 invocations, 0% errors, 5.86 ms median CPU with fresh chart data. Aggregate metrics remain non-substitutive.
+- Next authorization: one Admin-only bounded canary with exact 90/10 routing and mandatory restoration. No permanent promotion or MO settlement is included.

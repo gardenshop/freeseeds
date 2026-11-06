@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-06 - GFS-COD-MO-51 candidate monitoring repair
+
+- Diagnosed the Windows Wrangler crash (`0xC0000409`) and documented the process-only Node `--no-maglev` workaround plus invalid sampling argument.
+- Verified temporary Tail API lifecycle and required `trace-v1` WebSocket handshake; no raw tail data retained and no temporary session left active.
+- Restored usable version-labelled monitoring through authenticated Key Figures: candidate `ce023b54` 26 invocations, 0% errors and 5.86 ms median CPU. No canary or production mutation occurred.
+
 ## 2026-11-06 - GFS-COD-MO-49 deployment readiness
 
 - Verified owner-created Worker-only Admin credential, process-only Wrangler readback, sanitized Admin/API health, candidate override UI attribution and fresh aggregate Analytics.

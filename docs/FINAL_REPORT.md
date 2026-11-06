@@ -1,5 +1,17 @@
 # Final Report
 
+## GFS-COD-MO-51 Repair Tail Crash (2026-11-06 PKT)
+
+1. **MO-50 comparison:** Worker token, host bridge, deployment readback and routing remain valid; candidate telemetry is now available through Key Figures.
+2. **Crash diagnosis:** Node `v24.15.0`/Wrangler `4.149.0` reproduced exit `-1073740791` = `0xC0000409` (`STATUS_STACK_BUFFER_OVERRUN`). `node --no-maglev` avoided the native crash. The Node issue is consistent evidence, not an OS-build root-cause claim.
+3. **CLI repair:** `--sampling-rate 100` was invalid; default sampling kept the process alive. No global Node/runtime change was made.
+4. **Tail API:** temporary create/delete returned HTTP200/HTTP200. `trace-v1` changed the WebSocket from HTTP406 to open, but two bounded windows emitted no records; raw logs were not retained.
+5. **Monitoring:** **PASS via official Key Figures fallback.** Version-labelled view showed baseline `3e4b7c26` and candidate `ce023b54`; candidate 26 invocations, 0% errors and 5.86 ms median CPU. Latest chart timestamp was approximately 6.7 minutes old. Workers Logs remain disabled.
+6. **Candidate UI:** one authenticated version-override Orders GET returned HTTP200 with candidate MO markers; override headers were cleared. No POST or state mutation.
+7. **Rollback:** read-only deployment/routing readback remains ready; no rollback was executed. Admin stayed baseline100% / candidate0%; API stayed unchanged.
+8. **Regression/tests:** Orders/Conversations and API health remained read-only healthy; existing `385 passed / 1 skipped`, focused `38/38`, build/lint retained; no source change or test rerun was needed.
+9. **Decision:** **NO CANARY in MO-51.** Next exact authorization is one bounded Admin-only 90/10 canary using Key Figures monitoring and mandatory baseline restoration. Genuine MO settlement and CAPI remain off.
+
 ## GFS-COD-MO-50 candidate monitoring (2026-11-06 PKT)
 
 1. **MO-49 comparison:** token, host bridge, readback and aggregate evidence remain valid; fresh version-labelled telemetry was not obtained.

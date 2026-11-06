@@ -1,5 +1,11 @@
 # Get Free Seeds Plan
 
+## GFS-COD-MO-51 monitoring repair (2026-11-06 PKT)
+
+- **PASS:** Node/Wrangler crash diagnosis and bounded workaround. Use process-only `node --no-maglev`; do not pass invalid `--sampling-rate 100`. API tail sessions must use `trace-v1`, and must be deleted after use.
+- **PASS:** Official Key Figures version view is the accepted fallback while Workers Logs are disabled. It rendered baseline `3e4b7c26` and candidate `ce023b54` separately: candidate 26 invocations, 0% errors and 5.86 ms median CPU; latest chart data was approximately 6.7 minutes old. Tail transport opened but emitted no records, so it is not treated as evidence.
+- **Boundary:** Admin remains 100% baseline / 0% candidate; no canary or production mutation occurred. Next exact action is separately authorize one bounded Admin canary using the loaded version-labelled metrics and mandatory rollback.
+
 ## GFS-COD-MO-49 deployment readiness (2026-11-06 PKT)
 
 - Final Worker-only credential verified active with exact `Individual Workers Editor` scope for `getfreeseeds-admin-staging`; process-only Wrangler deployment readback passed. Bootstrap became unauthorized after revoke and its local entry was removed.
