@@ -19,10 +19,17 @@ $expired = [pscustomobject]@{ success = $true; result = [pscustomobject]@{ id = 
 Assert-Code (Test-GfsTokenLinkage -TokenVerify $expired -Metadata $metadata -PermissionGroups $groups -Now ([datetime]"2026-11-07T00:00:00Z") -ExpectedWorker $worker) "token_expired" "expired token"
 $wrongWorker = [pscustomobject]@{ success = $true; result = [pscustomobject]@{ id = $id; policies = @([pscustomobject]@{ effect = "allow"; resources = [pscustomobject]@{ "com.cloudflare.api.account.worker.script.other-worker" = "*" }; permission_groups = @([pscustomobject]@{ id = "workers-editor" }) }) } }
 Assert-Code (Test-GfsTokenLinkage -TokenVerify $verify -Metadata $wrongWorker -PermissionGroups $groups -Now ([datetime]"2026-11-07T00:00:00Z") -ExpectedWorker $worker) "token_scope_mismatch" "wrong worker"
+$wrongWorkerDiagnostics = (Test-GfsTokenLinkage -TokenVerify $verify -Metadata $wrongWorker -PermissionGroups $groups -Now ([datetime]"2026-11-07T00:00:00Z") -ExpectedWorker $worker).diagnostics
+if ($wrongWorkerDiagnostics.policy_count -ne "one" -or $wrongWorkerDiagnostics.resource_representation -ne "flat" -or $wrongWorkerDiagnostics.worker_reference_type -ne "other" -or $wrongWorkerDiagnostics.role_result -ne "pass" -or $wrongWorkerDiagnostics.permission_group_result -ne "matched") { throw "wrong worker diagnostics were not sanitized/accurate" }
 $nestedResources = [pscustomobject]@{ "com.cloudflare.api.account" = [pscustomobject]@{ worker = [pscustomobject]@{ script = [pscustomobject]@{ $worker = "*" } } } }
 $nestedPolicy = [pscustomobject]@{ effect = "allow"; resources = $nestedResources; permission_groups = @([pscustomobject]@{ id = "workers-editor" }) }
 $nestedMetadata = [pscustomobject]@{ success = $true; result = [pscustomobject]@{ id = $id; policies = @($nestedPolicy) } }
 Assert-Code (Test-GfsTokenLinkage -TokenVerify $verify -Metadata $nestedMetadata -PermissionGroups $groups -Now ([datetime]"2026-11-07T00:00:00Z") -ExpectedWorker $worker) "none" "nested exact Worker policy"
+$nestedDiagnostics = (Test-GfsTokenLinkage -TokenVerify $verify -Metadata $nestedMetadata -PermissionGroups $groups -Now ([datetime]"2026-11-07T00:00:00Z") -ExpectedWorker $worker).diagnostics
+if ($nestedDiagnostics.policy_count -ne "one" -or $nestedDiagnostics.resource_representation -ne "nested" -or $nestedDiagnostics.worker_reference_type -ne "name" -or $nestedDiagnostics.role_result -ne "pass" -or $nestedDiagnostics.permission_group_result -ne "matched") { throw "nested diagnostics were not sanitized/accurate" }
+$immutablePolicy = [pscustomobject]@{ effect = "allow"; resources = [pscustomobject]@{ "com.cloudflare.api.account.worker.script.0123456789abcdef0123456789abcdef" = "*" }; permission_groups = @([pscustomobject]@{ id = "workers-editor" }) }
+$immutableDiagnostics = Get-GfsPolicyDiagnostics -Policies @($immutablePolicy) -PermissionGroups $groups -Worker $worker
+if ($immutableDiagnostics.worker_reference_type -ne "immutable_id") { throw "immutable Worker reference was not classified safely" }
 $wrongRoleGroups = @([pscustomobject]@{ id = "workers-editor"; name = "Workers Routes Write" })
 Assert-Code (Test-GfsTokenLinkage -TokenVerify $verify -Metadata $nestedMetadata -PermissionGroups $wrongRoleGroups -Now ([datetime]"2026-11-07T00:00:00Z") -ExpectedWorker $worker) "token_scope_mismatch" "wrong role"
 $wildcardNested = [pscustomobject]@{ success = $true; result = [pscustomobject]@{ id = $id; policies = @([pscustomobject]@{ effect = "allow"; resources = [pscustomobject]@{ "com.cloudflare.api.account" = [pscustomobject]@{ worker = [pscustomobject]@{ script = "*" } } }; permission_groups = @([pscustomobject]@{ id = "workers-editor" }) }) } }
@@ -39,4 +46,5 @@ if ((Test-GfsLinkageTarget -AccountId "wrong" -Worker $worker) -ne "account_mism
 if ((Test-GfsLinkageTarget -AccountId "cb5066a6d71ecdee0bd7ed8aacb4d3c2" -Worker "wrong") -ne "worker_mismatch") { throw "wrong worker target accepted" }
 $safe = (Test-GfsTokenLinkage -TokenVerify $verify -Metadata $metadata -PermissionGroups $groups -Now ([datetime]"2026-11-07T00:00:00Z") -ExpectedWorker $worker | ConvertTo-Json -Compress)
 if ($safe -match $id -or $safe -match "synthetic-secret") { throw "sensitive output leaked" }
+if ($safe -match "0123456789abcdef|other-worker|Workers Routes") { throw "diagnostic output leaked sensitive policy identifiers" }
 "token_linkage_validation=PASS (13/13); credential_reader_add_type=PASS (2/2)"

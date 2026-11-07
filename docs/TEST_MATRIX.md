@@ -1,5 +1,15 @@
 # Test Matrix
 
+## GFS-COD-MO-85 integrated scope diagnosis (2026-11-07 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Restricted-token duplicate details call removed | PASS | Node verifies token status/expiry and Admin Worker deployment readback only; host linkage proof is required. |
+| Sanitized policy diagnostics | PASS | Policy count, resource representation, Worker reference class, role and group result are enum-only. |
+| Fail-closed scope acceptance | PASS | Unconfirmed/unsupported shapes, wildcard, extra resource, wrong Worker and wrong role remain rejected. |
+| PowerShell 5.1 focused execution | PASS | Linkage 13/13; runner validation 11/11 plus linkage gate 3/3 and reader Add-Type 2/2. |
+| Genuine host Preflight | NOT RUN | Sandbox cannot execute under the approved Windows identity or read approved Credential Manager entries. |
+
 ## GFS-COD-MO-84 policy parser repair (2026-11-07 PKT)
 
 | Gate | Result | Evidence |

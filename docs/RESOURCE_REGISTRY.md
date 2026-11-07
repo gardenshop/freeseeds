@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-COD-MO-85 integrated scope diagnosis (2026-11-07 PKT)
+
+- `scripts/verify-gfs-admin-token-linkage.ps1` remains the sole exact-policy verifier and now emits sanitized diagnostic classes on mismatch; it never emits raw policy data, token IDs or secret values.
+- `scripts/cloudflare-admin-deployment-preflight.mjs` no longer requests restricted account token details. The integrated runner supplies linkage proof from the separate metadata-read credential and uses the deployment credential only for active verification and Admin Worker readback.
+- Host execution remains pending under the approved Windows identity; no upload, routing, payment, D1, Meta, WhatsApp or CAPI mutation occurred.
+
 ## GFS-COD-MO-84 policy parser (2026-11-07 PKT)
 
 - `gfs-token-linkage-validation.ps1` and `cloudflare-admin-deployment-preflight.mjs` accept the official flat/nested token-resource representations only when the single exact Admin Worker leaf and permitted Editor role are present.

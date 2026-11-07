@@ -60,3 +60,18 @@ function Test-GfsTokenLinkageResult {
   if ([string]$Result.code -ne "none") { return [pscustomobject]@{ pass = $false; code = "token_linkage_code_unexpected" } }
   return [pscustomobject]@{ pass = $true; code = "none" }
 }
+
+function Get-GfsSafeLinkageDiagnosticCode {
+  param([object] $Diagnostics)
+  if ($null -eq $Diagnostics) { return "policy_unknown_resource_unknown_worker_unknown_role_unknown_group_unknown" }
+  $values = @(
+    [string]$Diagnostics.policy_count,
+    [string]$Diagnostics.resource_representation,
+    [string]$Diagnostics.worker_reference_type,
+    [string]$Diagnostics.role_result,
+    [string]$Diagnostics.permission_group_result
+  ) | ForEach-Object {
+    if ($_ -match '^(zero|one|multiple|unknown|missing|missing_id|flat|nested|array|empty|unsupported|name|immutable_id|other|pass|wrong|matched|unresolved)$') { $_ } else { "unknown" }
+  }
+  return "policy_{0}_resource_{1}_worker_{2}_role_{3}_group_{4}" -f $values[0], $values[1], $values[2], $values[3], $values[4]
+}

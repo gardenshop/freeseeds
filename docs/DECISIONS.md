@@ -2994,3 +2994,13 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Flattening is structural, not substring-based. Only one `allow` policy and one leaf matching the fixed account/Worker resource path with value `*` passes.
 - Permission-group IDs are resolved through metadata; only the granular Individual Workers Editor or documented legacy Workers Scripts Edit/Write role is accepted. Broad and unrelated roles remain blocked.
 - The Node preflight guard was updated alongside the PowerShell verifier so the integrated runner cannot pass one parser and fail the other. Host Preflight remains pending one rerun.
+## GFS-COD-MO-85 - diagnostic-first scope gate (2026-11-07 PKT)
+
+- Keep exact Worker-only policy proof in the existing two-credential PowerShell verifier. Do not let the restricted deployment token query account token details; its permitted proof is active status plus target Worker readback after linkage.
+- On a real scope mismatch, expose only enum-like diagnostic fields and stop. Do not accept an immutable Worker reference, new role schema or alternate resource shape until a sanitized owner-host result and authoritative documentation/record justify that exact representation.
+- The local gate is repaired and tested; the genuine host gate remains pending because this execution context is not `bi\\nazim` and cannot access the approved Credential Manager entries.
+## GFS-COD-MO-85 - diagnostic-first scope gate (2026-11-07 PKT)
+
+- Keep exact Worker-only policy proof in the existing two-credential PowerShell verifier. Do not let the restricted deployment token query account token details; its permitted proof is active status plus target Worker readback after linkage.
+- On a real scope mismatch, expose only enum-like diagnostic fields and stop. Do not accept an immutable Worker reference, new role schema or alternate resource shape until a sanitized owner-host result and authoritative documentation/record justify that exact representation.
+- The local gate is repaired and tested; the genuine host gate remains pending because this execution context is not the approved Windows identity and cannot access the approved Credential Manager entries.

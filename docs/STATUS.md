@@ -1,5 +1,13 @@
 # Status
 
+## GFS-COD-MO-85 - integrated scope diagnosis (2026-11-07 PKT)
+
+**Disposition: LOCAL REPAIR PASS / REAL HOST PREFLIGHT PENDING.**
+
+- Removed the restricted-token token-details call from Node preflight. The integrated runner now passes a fixed internal linkage proof only after the two-credential PowerShell verifier succeeds, then performs deployment-token activity and Admin Worker readback.
+- Added sanitized scope-failure diagnostics for policy count, resource representation, Worker reference type, role and permission-group result. No raw policy, token ID, token, URL or customer data is emitted.
+- Local PS5.1 linkage/runner tests, Node preflight tests, build and lint pass. The real approved host was not available in this sandbox; no live policy shape or host Preflight PASS is claimed. No upload or production mutation occurred.
+
 ## GFS-COD-MO-84 — real policy parser repair (2026-11-07 PKT)
 
 **Disposition: LOCAL PARSER PASS / HOST PREFLIGHT PENDING.**

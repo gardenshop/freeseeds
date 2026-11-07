@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-85 integrated scope diagnosis (2026-11-07 PKT)
+
+- The confirmed duplicate scope failure was removed from the Node deployment preflight: the restricted deployment token is used only for account-token verification and Admin Worker deployment readback. Exact policy/linkage proof must come first through the separate metadata-read credential; standalone Node execution remains `token_scope_unverified`.
+- The existing PowerShell verifier now returns only sanitized policy diagnostics on scope failure: policy count, flat/nested/unsupported resource representation, Worker reference class (`name`/`immutable_id`/other), role result and permission-group result. It still rejects all unconfirmed representations, wildcards, extra resources, wrong Workers and wrong roles.
+- Local PS5.1, Node, build and lint checks pass after this repair. A genuine `bi\\nazim` host Preflight was not executable from this sandbox; no real policy payload was inspected and no host PASS is claimed. The next owner run must return the sanitized diagnostic code before any parser acceptance is changed.
+- Production remains unchanged: Admin baseline `3e4b7c26`100% / candidate `ce023b54`0%, API `b426ba47`100%, watchdog DISARMED, WhatsApp/new-number and Hoja isolation, payments, D1, Meta and CAPI protections retained.
+
 ## GFS-COD-MO-84 real policy parser repair (2026-11-07 PKT)
 
 - Cloudflare documents token policy `resources` as either a flat `map[string]` or nested resource map. The validator now recursively flattens only documented object maps and requires exactly one leaf: `com.cloudflare.api.account.worker.script.getfreeseeds-admin-staging = "*"`.

@@ -17,11 +17,6 @@ function errorCode(value, fallback = "cloudflare_request_failed") {
   return SAFE_CODE.test(code) ? code : fallback;
 }
 
-function providerCode(body) {
-  const codes = Array.isArray(body?.errors) ? body.errors.map((e) => errorCode(e?.code, "provider_error")).filter(Boolean) : [];
-  return [...new Set(codes)].slice(0, 2);
-}
-
 function safeResult(result) {
   return {
     result,
@@ -53,7 +48,7 @@ function exactWorkerScope(policies) {
   return leaves.length === 1 && leaves[0].path === `com.cloudflare.api.account.worker.script.${WORKER_NAME}` && leaves[0].value === "*";
 }
 
-export async function verifyDeploymentCredential({ token, fetchImpl = fetch, now = new Date() } = {}) {
+export async function verifyDeploymentCredential({ token, fetchImpl = fetch, now = new Date(), linkageVerified = false } = {}) {
   const shape = inspectAnalyticsToken(token);
   if (shape.malformedHeaderValue) return { ...safeResult("FAIL"), code: "credential_shape_invalid" };
 
@@ -70,11 +65,7 @@ export async function verifyDeploymentCredential({ token, fetchImpl = fetch, now
 
   const tokenId = verified.body?.result?.id;
   if (!/^[a-f0-9]{32}$/i.test(String(tokenId ?? ""))) return { ...safeResult("FAIL"), code: "token_identity_missing" };
-  const details = await jsonRequest({ token, path: `/accounts/${ACCOUNT_ID}/tokens/${tokenId}`, fetchImpl });
-  if (details.response.status !== 200 || details.body?.success !== true) {
-    return { ...safeResult("FAIL"), code: "token_scope_unverified", httpStatus: details.response.status, providerCodes: providerCode(details.body) };
-  }
-  if (!exactWorkerScope(details.body?.result?.policies)) return { ...safeResult("FAIL"), code: "token_scope_mismatch" };
+  if (!linkageVerified) return { ...safeResult("FAIL"), code: "token_scope_unverified" };
 
   const worker = await jsonRequest({ token, path: `/accounts/${ACCOUNT_ID}/workers/scripts/${WORKER_NAME}/deployments`, fetchImpl });
   if (worker.response.status !== 200 || worker.body?.success !== true) {
@@ -84,7 +75,7 @@ export async function verifyDeploymentCredential({ token, fetchImpl = fetch, now
     ...safeResult("PASS"),
     tokenStatus: status,
     expiresOn,
-    scope: `ONLY:${WORKER_NAME}`,
+    scope: "PREVERIFIED_BY_HOST_LINKAGE",
     workerReadback: "PASS"
   };
 }
@@ -121,7 +112,10 @@ async function main() {
     console.log(JSON.stringify(await artifactDigest({ repoRoot, configPath })));
     return;
   }
-  const result = await verifyDeploymentCredential({ token: process.env.CLOUDFLARE_API_TOKEN });
+  const result = await verifyDeploymentCredential({
+    token: process.env.CLOUDFLARE_API_TOKEN,
+    linkageVerified: args.has("--linkage-verified")
+  });
   console.log(JSON.stringify(result));
   if (result.result !== "PASS") process.exitCode = 1;
 }

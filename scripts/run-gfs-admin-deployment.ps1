@@ -65,7 +65,8 @@ try {
   if ($linkageExit -ne 0 -or -not $linkageCheck.pass) {
     $safeCode = [string]$linkage.code
     if ($safeCode -notmatch '^[A-Za-z0-9_:-]{1,64}$') { $safeCode = $linkageCheck.code }
-    Fail ("cloudflare_token_linkage_" + $safeCode)
+    $diagnosticCode = Get-GfsSafeLinkageDiagnosticCode -Diagnostics $linkage.diagnostics
+    Fail ("cloudflare_token_linkage_" + $safeCode + "_" + $diagnosticCode)
   }
 } finally {
   $linkageOutput = $null
@@ -83,7 +84,7 @@ try {
   [Environment]::SetEnvironmentVariable("CLOUDFLARE_API_TOKEN", $secret, "Process")
   [Environment]::SetEnvironmentVariable("CLOUDFLARE_ACCOUNT_ID", $ExpectedAccount, "Process")
 
-  $preflightOutput = & node.exe $PreflightScript
+  $preflightOutput = & node.exe $PreflightScript --linkage-verified
   $preflightExit = $LASTEXITCODE
   $preflight = $preflightOutput | ConvertFrom-Json
   if ($preflightExit -ne 0 -or $preflight.result -ne "PASS") { Fail ("cloudflare_" + [string]$preflight.code) }
