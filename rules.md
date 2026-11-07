@@ -2578,3 +2578,14 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - Admin deployment `f632e4d2-0716-4f53-a861-110d26a0e3a9` remains baseline `3e4b7c26-c36d-4d1c-baeb-d26629a9b4a1`100% / candidate `ce023b54-4d38-43e5-842e-faa706e7606c`0%. Watchdog deployment `4ab96ae4-de8b-4f36-ab22-bf0ec350114a` remains version `82560d6f-0da3-417e-97f9-d0413d239a43`100%.
 - Watchdog remains DISARMED with only `ADMIN_RECOVERY_TOKEN` binding metadata; API `/health`, authenticated Orders and Conversations returned HTTP200. No arm, deployment, routing, D1, order, payment, WhatsApp, Meta or CAPI mutation occurred.
 - Credential/read-only preflight PASS. Runtime dry-arm and Admin 90/10 canary remain separate and were not executed.
+
+## GFS-COD-MO-67B — dry-run guard and fail-closed result (2026-11-07 PKT)
+
+- Added watchdog-only `DRY_RUN` state. At deadline it performs the existing authenticated Admin deployment GET, accepts only the exact baseline 100% state, returns `already_restored`, and cannot issue a deployment POST. Unknown/drifted routing and read errors fail closed.
+- Post-review repair: `DRY_RUN` now requires `WATCHDOG_DRY_RUN_EXPIRES_AT` and rejects missing, expired, deadline-overlapping, or over-five-minute windows. Focused watchdog tests are14/14 PASS; full385 passed/1 skipped; build/lint PASS.
+- Corrected source is deployed watchdog-only as version `d43d8649-d67b-46bb-8883-f4c219450aca`, deployment `97134a72-a627-48c9-983e-8aeadd717a91`, at100%. Readback shows only `ADMIN_RECOVERY_TOKEN`; Admin/API routing remains unchanged and authenticated Orders/Conversations/API health are HTTP200.
+- Added sanitized scheduled evidence fields only: event, status, code, wrote boolean and timestamp; no token, URL, customer, order or payment data is logged.
+- Focused watchdog suite passed13/13; full suite385 passed/1 skipped; build/lint PASS. The DRY_RUN focused tests assert one GET and zero POSTs for baseline and drift.
+- Watchdog-only versions were uploaded/deployed with the retained `ADMIN_RECOVERY_TOKEN` binding. The bounded DRY_RUN window used version `c5d8af8a-95a3-4dab-b392-c42d5adc5df1` with deadline `2026-11-07T07:31:38Z`.
+- Official tail started HTTP200 but yielded zero records and one WebSocket error; the dashboard GraphQL fallback was unavailable. Runtime `already_restored` evidence is therefore **INCONCLUSIVE**, not fabricated.
+- Mandatory cleanup completed: disarmed version `4be1baa7-8097-4d04-83d9-6172a2067eb8` is 100% in watchdog deployment `ab589e5c-c249-44d8-badc-d62b3eecbe47`, with no arm variables and the secret binding retained. Admin deployment `f632e4d2-0716-4f53-a861-110d26a0e3a9` remains unchanged at baseline100% / candidate0%; no Admin POST or customer/payment/D1/Meta/CAPI mutation occurred.

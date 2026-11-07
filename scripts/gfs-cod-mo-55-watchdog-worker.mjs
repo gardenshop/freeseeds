@@ -11,8 +11,10 @@ export const TARGET_SCRIPT = "getfreeseeds-admin-staging";
 export const BASELINE_VERSION = "3e4b7c26-c36d-4d1c-baeb-d26629a9b4a1";
 export const CANDIDATE_VERSION = "ce023b54-4d38-43e5-842e-faa706e7606c";
 export const DEFAULT_STATE = "DISARMED";
+export const DRY_RUN_STATE = "DRY_RUN";
 export const ARMED_STATE = "ARMED";
 export const RECOVERY_SAFETY_MARGIN_MS = 5 * 60 * 1000;
+export const DRY_RUN_MAX_WINDOW_MS = 5 * 60 * 1000;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -43,7 +45,7 @@ function numberValue(value) {
 export function readArmConfig(env = {}, now = Date.now()) {
   const state = String(env.WATCHDOG_STATE ?? DEFAULT_STATE).trim().toUpperCase();
   if (state === DEFAULT_STATE) return { status: DEFAULT_STATE, wrote: false };
-  if (state !== ARMED_STATE) throw fail("arm_state_invalid");
+  if (state !== ARMED_STATE && state !== DRY_RUN_STATE) throw fail("arm_state_invalid");
 
   const config = {
     accountId: String(env.WATCHDOG_ACCOUNT_ID ?? ""),
@@ -52,14 +54,21 @@ export function readArmConfig(env = {}, now = Date.now()) {
     candidate: String(env.WATCHDOG_CANDIDATE_VERSION ?? ""),
     startedAt: numberValue(env.WATCHDOG_STARTED_AT),
     deadlineAt: numberValue(env.WATCHDOG_DEADLINE_AT),
-    recoveryExpiresAt: numberValue(env.WATCHDOG_RECOVERY_EXPIRES_AT)
+    recoveryExpiresAt: numberValue(env.WATCHDOG_RECOVERY_EXPIRES_AT),
+    dryRunExpiresAt: numberValue(env.WATCHDOG_DRY_RUN_EXPIRES_AT)
   };
   validateArm(config, now);
   if (!Number.isFinite(config.recoveryExpiresAt)
     || config.deadlineAt + RECOVERY_SAFETY_MARGIN_MS > config.recoveryExpiresAt) {
     throw fail("recovery_expiry_insufficient");
   }
-  return { ...config, status: ARMED_STATE, wrote: false };
+  if (state === DRY_RUN_STATE && (!Number.isFinite(config.dryRunExpiresAt)
+    || config.dryRunExpiresAt <= config.deadlineAt
+    || config.dryRunExpiresAt - config.startedAt > DRY_RUN_MAX_WINDOW_MS
+    || now > config.dryRunExpiresAt)) {
+    throw fail("dry_run_expired");
+  }
+  return { ...config, status: state, wrote: false };
 }
 
 function deploymentVersions(body) {
@@ -114,6 +123,20 @@ export async function restoreDeployment({ fetchImpl = fetch, token } = {}) {
   return { code: "restored", wrote: true };
 }
 
+export async function verifyBaseline({ fetchImpl = fetch, token } = {}) {
+  if (!token) throw fail("recovery_secret_missing");
+  const endpoint = `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/scripts/${TARGET_SCRIPT}/deployments`;
+  const response = await fetchImpl(endpoint, { headers: {
+    Authorization: `Bearer ${token}`, Accept: "application/json", "content-type": "application/json"
+  }});
+  const body = await response.json().catch(() => null);
+  if (!response.ok || !body?.success) throw fail("deployment_readback_rejected");
+  const versions = deploymentVersions(body);
+  if (!isKnownDeployment(versions)) throw fail("routing_not_allowlisted");
+  if (!isBaseline(versions)) throw fail("baseline_not_restored");
+  return { code: "already_restored", wrote: false };
+}
+
 export async function runScheduled({ env = {}, fetchImpl = fetch, now = Date.now() } = {}) {
   let arm;
   try {
@@ -122,9 +145,13 @@ export async function runScheduled({ env = {}, fetchImpl = fetch, now = Date.now
     return { status: "REJECTED", wrote: false, code: error?.code ?? "arm_config_rejected" };
   }
   if (arm.status === DEFAULT_STATE) return arm;
-  if (now < arm.deadlineAt) return { status: ARMED_STATE, wrote: false };
+  if (now < arm.deadlineAt) return { status: arm.status, wrote: false };
 
   try {
+    if (arm.status === DRY_RUN_STATE) {
+      const result = await verifyBaseline({ fetchImpl, token: env.ADMIN_RECOVERY_TOKEN });
+      return { status: DRY_RUN_STATE, ...result };
+    }
     const result = await restoreDeployment({ fetchImpl, token: env.ADMIN_RECOVERY_TOKEN });
     return { status: "RESTORED", ...result };
   } catch (error) {
@@ -164,6 +191,14 @@ export default {
     return new Response("Not found", { status: 404 });
   },
   async scheduled(_controller, env) {
-    return runScheduled({ env });
+    const result = await runScheduled({ env });
+    console.log(JSON.stringify({
+      event: "watchdog_scheduled",
+      status: result.status,
+      code: result.code ?? null,
+      wrote: result.wrote === true,
+      timestamp: Date.now()
+    }));
+    return result;
   }
 };

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  ACCOUNT_ID, TARGET_SCRIPT, BASELINE_VERSION, CANDIDATE_VERSION,
+  ACCOUNT_ID, TARGET_SCRIPT, BASELINE_VERSION, CANDIDATE_VERSION, DRY_RUN_STATE,
   createRecoveryController, readArmConfig, runScheduled, validateTarget
 } from "./gfs-cod-mo-55-watchdog-worker.mjs";
 
@@ -17,6 +17,22 @@ const input = {
 test("HTTP surface is private and default schedule is disarmed", async () => {
   assert.equal((await (await import("./gfs-cod-mo-55-watchdog-worker.mjs")).default.fetch()).status, 404);
   assert.deepEqual(await (await import("./gfs-cod-mo-55-watchdog-worker.mjs")).default.scheduled(), { status: "DISARMED", wrote: false });
+});
+
+test("scheduled runtime evidence is sanitized", async () => {
+  const original = console.log;
+  let line;
+  console.log = (value) => { line = value; };
+  try {
+    await (await import("./gfs-cod-mo-55-watchdog-worker.mjs")).default.scheduled(undefined, {});
+  } finally {
+    console.log = original;
+  }
+  const evidence = JSON.parse(line);
+  assert.deepEqual(Object.keys(evidence).sort(), ["code", "event", "status", "timestamp", "wrote"]);
+  assert.deepEqual(evidence, {
+    event: "watchdog_scheduled", status: "DISARMED", code: null, wrote: false, timestamp: evidence.timestamp
+  });
 });
 
 test("wrong account, worker, or version is rejected", () => {
@@ -46,6 +62,55 @@ test("scheduled handler remains disarmed without durable activation", async () =
   let calls = 0;
   assert.deepEqual(await runScheduled({ fetchImpl: async () => { calls += 1; } }), { status: "DISARMED", wrote: false });
   assert.equal(calls, 0);
+});
+
+test("dry-run deadline verifies baseline with GET only", async () => {
+  const methods = [];
+  const env = {
+    WATCHDOG_STATE: DRY_RUN_STATE, WATCHDOG_ACCOUNT_ID: ACCOUNT_ID, WATCHDOG_TARGET_SCRIPT: TARGET_SCRIPT,
+    WATCHDOG_BASELINE_VERSION: BASELINE_VERSION, WATCHDOG_CANDIDATE_VERSION: CANDIDATE_VERSION,
+    WATCHDOG_STARTED_AT: "1000", WATCHDOG_DEADLINE_AT: "2000", WATCHDOG_DRY_RUN_EXPIRES_AT: "3000", WATCHDOG_RECOVERY_EXPIRES_AT: "400000",
+    ADMIN_RECOVERY_TOKEN: "token"
+  };
+  const fetchImpl = async (_url, options = {}) => {
+    methods.push(options.method ?? "GET");
+    return { ok: true, json: async () => ({ success: true, result: [{ versions: [
+      { version_id: BASELINE_VERSION, percentage: 100 }
+    ] }] }) };
+  };
+  assert.deepEqual(await runScheduled({ env, now: 2_000, fetchImpl }), {
+    status: DRY_RUN_STATE, wrote: false, code: "already_restored"
+  });
+  assert.deepEqual(methods, ["GET"]);
+});
+
+test("dry-run rejects drift without a deployment POST", async () => {
+  const methods = [];
+  const env = {
+    WATCHDOG_STATE: DRY_RUN_STATE, WATCHDOG_ACCOUNT_ID: ACCOUNT_ID, WATCHDOG_TARGET_SCRIPT: TARGET_SCRIPT,
+    WATCHDOG_BASELINE_VERSION: BASELINE_VERSION, WATCHDOG_CANDIDATE_VERSION: CANDIDATE_VERSION,
+    WATCHDOG_STARTED_AT: "1000", WATCHDOG_DEADLINE_AT: "2000", WATCHDOG_DRY_RUN_EXPIRES_AT: "3000", WATCHDOG_RECOVERY_EXPIRES_AT: "400000",
+    ADMIN_RECOVERY_TOKEN: "token"
+  };
+  const fetchImpl = async (_url, options = {}) => {
+    methods.push(options.method ?? "GET");
+    return { ok: true, json: async () => ({ success: true, result: [{ versions: [
+      { version_id: BASELINE_VERSION, percentage: 90 }, { version_id: CANDIDATE_VERSION, percentage: 10 }
+    ] }] }) };
+  };
+  assert.deepEqual(await runScheduled({ env, now: 2_000, fetchImpl }), {
+    status: "FAILED", wrote: false, code: "baseline_not_restored"
+  });
+  assert.deepEqual(methods, ["GET"]);
+});
+
+test("dry-run rejects after its short expiry window", () => {
+  assert.throws(() => readArmConfig({
+    WATCHDOG_STATE: DRY_RUN_STATE, WATCHDOG_ACCOUNT_ID: ACCOUNT_ID, WATCHDOG_TARGET_SCRIPT: TARGET_SCRIPT,
+    WATCHDOG_BASELINE_VERSION: BASELINE_VERSION, WATCHDOG_CANDIDATE_VERSION: CANDIDATE_VERSION,
+    WATCHDOG_STARTED_AT: "1000", WATCHDOG_DEADLINE_AT: "2000", WATCHDOG_DRY_RUN_EXPIRES_AT: "3000",
+    WATCHDOG_RECOVERY_EXPIRES_AT: "400000"
+  }, 3_001), /dry_run_expired/);
 });
 
 test("scheduled handler survives process state and restores after approved deadline", async () => {

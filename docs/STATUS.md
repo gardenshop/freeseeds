@@ -3626,3 +3626,10 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **PASS:** Intended Worker reads returned200 and cross-Worker reads returned403 in both directions.
 - **PASS:** Admin remained100/0, watchdog DISARMED/100%, API health200, and authenticated Orders/Conversations were200.
 - **NOT RUN:** No watchdog arm, Admin canary, deployment, payment/order, D1, WhatsApp, Meta or CAPI mutation. Runtime dry-arm evidence remains the next gate.
+
+## GFS-COD-MO-67B — safe watchdog dry-arm (2026-11-07 PKT)
+
+- **PASS:** Added and tested watchdog-only `DRY_RUN`; baseline and drift paths perform GET-only checks and zero deployment POSTs. Focused13/13, full385 passed/1 skipped, build/lint PASS.
+- **PASS:** Post-review DRY_RUN expiry guard rejects missing/expired/overlong windows; focused watchdog tests are14/14, full385 passed/1 skipped, build/lint PASS. Corrected watchdog version `d43d8649-d67b-46bb-8883-f4c219450aca` is deployed at100% in deployment `97134a72-a627-48c9-983e-8aeadd717a91` with only `ADMIN_RECOVERY_TOKEN`; Admin remains exact100/0 and no Admin write occurred.
+- **INCONCLUSIVE:** DRY_RUN version `c5d8af8a-95a3-4dab-b392-c42d5adc5df1` ran under the fixed deadline `07:31:38Z`; official tail started HTTP200 but returned zero records with one WebSocket error, and GraphQL fallback was unavailable. No `already_restored` runtime record was claimed.
+- **PASS:** Watchdog was disarmed immediately as version `4be1baa7-8097-4d04-83d9-6172a2067eb8` at100%; Admin remained `3e4b7c26`100% / `ce023b54`0%, API health/Orders/Conversations remained HTTP200, and no Admin/data mutation occurred.

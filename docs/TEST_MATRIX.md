@@ -4300,3 +4300,9 @@ Investigation query costs only (not production savings): representative `rows_re
 | MO-67A Worker scope isolation | PASS | Intended Worker reads returned200 and cross-target reads returned403 for both credentials. |
 | MO-67A read-only preflight | PASS | Admin100/0, watchdog DISARMED/100%, API health200, authenticated Orders/Conversations200; no writes. |
 | MO-67A runtime dry-arm/canary | NOT RUN | Credential gate resolved; no arm or Admin 90/10 exposure was executed in this task. |
+
+| MO-67B DRY_RUN guard | PASS | Deadline path performs authenticated baseline GET only; baseline returns `already_restored`, drift/errors fail closed, and focused tests observe zero POSTs. |
+| MO-67B DRY_RUN short expiry | PASS | Missing, expired, deadline-overlapping and over-five-minute windows fail closed; focused watchdog suite14/14. |
+| MO-67B corrected DISARMED deployment | PASS | Version `d43d8649...`, deployment `97134a72...`, 100%; only `ADMIN_RECOVERY_TOKEN` binding; Admin unchanged. |
+| MO-67B sanitized runtime evidence | INCONCLUSIVE | Tail HTTP200 produced zero records/one WebSocket error; GraphQL fallback unavailable; no runtime outcome was claimed. |
+| MO-67B mandatory disarm | PASS | Watchdog version `4be1baa7…`100%, no arm variables, secret binding retained; Admin remained exact 100/0. |

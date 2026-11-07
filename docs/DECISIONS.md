@@ -2857,3 +2857,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Use `/accounts/{account_id}/tokens/verify`; do not treat `/user/tokens/verify` HTTP401 as account-token invalidity.
 - Both retained credentials verified active, target isolation passed, and Admin/API/watchdog read-only state was unchanged.
 - This resolves credential preflight only. Runtime dry-arm evidence and the separately authorized Admin canary remain required; production remains DISARMED/100-0.
+
+## GFS-COD-MO-67B — dry-run fail-closed boundary (2026-11-07 PKT)
+
+- **Decision:** permit only the watchdog `DRY_RUN` state for runtime preflight; it may GET and verify Admin baseline but may not POST a deployment.
+- **Follow-up:** enforce a required `WATCHDOG_DRY_RUN_EXPIRES_AT` no more than five minutes after start and before the deadline. Corrected watchdog version `d43d8649-d67b-46bb-8883-f4c219450aca` is now DISARMED at100% in deployment `97134a72-a627-48c9-983e-8aeadd717a91`; runtime telemetry remains INCONCLUSIVE, so no canary authorization follows.
+- **Evidence:** local GET-only/drift tests passed13/13. The live tail/GraphQL channels did not provide a sanitized scheduled outcome, so runtime proof is INCONCLUSIVE.
+- **Boundary:** watchdog was returned to DISARMED and Admin remained baseline100% / candidate0%. No Admin canary, MO settlement or CAPI action is authorized until supported runtime evidence is available.

@@ -2712,6 +2712,7 @@ No secrets are stored in this registry.
 ## GFS-COD-MO-63 watchdog resources (2026-11-06 PKT)
 
 - Watchdog: `gfs-cod-mo-55-watchdog`, deployment `582da810-0023-4177-8b10-11a2da557818`, schedule `* * * * *`, DISARMED; official tail endpoint returned no event records.
+- Corrected MO-67B DISARMED deployment: `97134a72-a627-48c9-983e-8aeadd717a91`, version `d43d8649-d67b-46bb-8883-f4c219450aca`, 100%; only `ADMIN_RECOVERY_TOKEN` binding. DRY_RUN requires a short `WATCHDOG_DRY_RUN_EXPIRES_AT` window; live runtime outcome remains unverified.
 - Protected routing: Admin baseline `3e4b7c26-c36d-4d1c-baeb-d26629a9b4a1`100% / candidate `ce023b54-4d38-43e5-842e-faa706e7606c`0%; API `b426ba47`100%.
 - Token cleanup: `GFS-Watchdog-Provision-2026` remains active/present pending owner dashboard revoke; no secret value recorded. Worker-only credentials remain protected and untouched.
 

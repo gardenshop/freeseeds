@@ -2471,3 +2471,9 @@
 
 - Corrected account-token verification to `/accounts/{account_id}/tokens/verify`; both retained Worker-only credentials returned active HTTP200 with the stated expiry.
 - Proved cross-Worker denial, unchanged Admin 100/0 routing, watchdog DISARMED state, API health and authenticated Orders/Conversations reads. No arming or canary mutation occurred.
+
+## 2026-11-07 — GFS-COD-MO-67B
+
+- Added the watchdog-only GET/no-POST `DRY_RUN` guard and sanitized scheduled outcome logging; focused13/13, full385/1, build/lint PASS.
+- Ran one bounded DRY_RUN window, but official tail returned no records and GraphQL fallback was unavailable. Classified runtime proof INCONCLUSIVE and immediately restored watchdog DISARMED; Admin/API remained unchanged.
+- Added fail-closed five-minute DRY_RUN expiry validation, retested14/14 focused, and deployed corrected watchdog version `d43d8649-d67b-46bb-8883-f4c219450aca` at100% in `97134a72-a627-48c9-983e-8aeadd717a91`; no Admin/API routing or data mutation.

@@ -56,3 +56,9 @@ MO-66B evidence: disposable A90/B10 and A100 single-version restore were proven 
 ## GFS-COD-MO-62 watchdog activation boundary (2026-11-06 PKT)
 
 The isolated watchdog may have its protected secret and one-minute Cron configured while remaining DISARMED. Secret injection must use separate process-only inputs: the scoped Worker credential authorizes the API request, and the Admin recovery credential is the secret value. A schedule readback is not proof of execution; require fresh official telemetry and disposable recovery proof before any live canary. If temporary token revocation returns HTTP 403, retain the credential and stop for owner-authorized token-management access.
+
+## GFS-COD-MO-67B dry-run boundary (2026-11-07 PKT)
+
+The watchdog `DRY_RUN` state requires `WATCHDOG_DRY_RUN_EXPIRES_AT` no more than five minutes after start and before the recovery deadline. It may perform the authenticated Admin deployment GET and return `already_restored`, but must never issue a deployment POST. Missing, expired, overlong, or drifted windows fail closed. If official telemetry cannot expose the sanitized scheduled outcome, disarm immediately and classify runtime proof INCONCLUSIVE.
+
+The watchdog `DRY_RUN` state is the only permitted pre-canary runtime probe. At its fixed deadline it performs an authenticated GET of the exact Admin deployment and returns `already_restored` only for baseline100%; it must never submit a deployment POST. Runtime logging is sanitized to status/code/wrote/timestamp. If official tail or version-labelled telemetry cannot expose that outcome, classify the probe INCONCLUSIVE, disarm immediately, and do not run an Admin canary.
