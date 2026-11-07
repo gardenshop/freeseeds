@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-84 real policy parser repair (2026-11-07 PKT)
+
+- Cloudflare documents token policy `resources` as either a flat `map[string]` or nested resource map. The validator now recursively flattens only documented object maps and requires exactly one leaf: `com.cloudflare.api.account.worker.script.getfreeseeds-admin-staging = "*"`.
+- The permission group must resolve by ID to `Individual Workers Editor` or a documented legacy Workers Scripts Edit/Write role; account-wide, all-Worker, wrong-Worker, extra-resource, multiple-policy and wrong-role shapes fail closed.
+- PS5.1 parser tests pass 13/13; Node preflight tests pass 6/6; full 387 passed/1 skipped; build/lint PASS. No credential, deployment or production mutation occurred.
+
 ## GFS-COD-MO-83A final host gate (2026-11-07 PKT)
 
 - Owner-provided dashboard evidence shows the Credential Manager target name `GFS-Cloudflare-Token-Metadata-Read-2026` exists. This proves presence only; it does not prove token identity, active status, expiry or policy linkage.

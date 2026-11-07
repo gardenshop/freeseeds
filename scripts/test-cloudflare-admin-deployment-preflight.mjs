@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { test } from "node:test";
-import { artifactDigest, exactWorkerScope, verifyDeploymentCredential, WORKER_NAME } from "./cloudflare-admin-deployment-preflight.mjs";
+import { artifactDigest, exactWorkerScope, resourceLeaves, verifyDeploymentCredential, WORKER_NAME } from "./cloudflare-admin-deployment-preflight.mjs";
 
 const account = "cb5066a6d71ecdee0bd7ed8aacb4d3c2";
 const token = "synthetic-admin-token";
@@ -38,6 +38,15 @@ test("fails closed when policy is broad or missing", async () => {
   const broad = await verifyDeploymentCredential({ token, fetchImpl: apiFetch([], { scope: false }) });
   assert.equal(broad.code, "token_scope_mismatch");
   assert.equal(exactWorkerScope([]), false);
+});
+
+test("accepts documented nested resource maps only for the exact Worker", () => {
+  const nested = { "com.cloudflare.api.account": { worker: { script: { [WORKER_NAME]: "*" } } } };
+  assert.equal(exactWorkerScope([{ effect: "allow", resources: nested }]), true);
+  assert.equal(resourceLeaves(nested).length, 1);
+  assert.equal(exactWorkerScope([{ effect: "allow", resources: { "com.cloudflare.api.account": { worker: { script: "*" } } } }]), false);
+  assert.equal(exactWorkerScope([{ effect: "allow", resources: { "com.cloudflare.api.account.worker.script.other": "*" } }]), false);
+  assert.equal(exactWorkerScope([{ effect: "allow", resources: { [`com.cloudflare.api.account.worker.script.${WORKER_NAME}`]: "*", "com.cloudflare.api.account.worker.script.other": "*" } }]), false);
 });
 
 test("fails closed on inactive token and worker readback", async () => {

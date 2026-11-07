@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-07 - GFS-COD-MO-84
+
+- Repaired token-policy parsing for Cloudflare’s documented flat and nested resource maps in both PowerShell linkage and Node preflight guards.
+- Added fail-closed coverage for broad, wildcard, wrong-Worker, extra-resource, multiple-policy and wrong-role shapes.
+
 ## 2026-11-07 - GFS-COD-MO-83A
 
 - Recorded owner evidence that the metadata credential target exists and retained the single-command, read-only host Preflight gate.

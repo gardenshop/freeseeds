@@ -1,5 +1,13 @@
 # Status
 
+## GFS-COD-MO-84 — real policy parser repair (2026-11-07 PKT)
+
+**Disposition: LOCAL PARSER PASS / HOST PREFLIGHT PENDING.**
+
+- Corrected both PowerShell linkage and Node preflight guards to support Cloudflare’s documented flat or nested token-resource maps while retaining exact one-policy, one-Worker and Editor-role checks.
+- Rejected cases are covered for wrong Worker, all-Worker wildcard, extra resources, multiple policies, wrong role, inactive/expired token and metadata denial.
+- Results: PS5.1 13/13, Node 6/6, full 387 passed/1 skipped, build/lint PASS. Host Preflight has not been rerun after this repair; no upload is authorized.
+
 ## GFS-COD-MO-83A — final host gate (2026-11-07 PKT)
 
 **Disposition: LOCAL GATE PASS / HOST PREFLIGHT NOT RUN.**

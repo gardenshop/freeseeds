@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-COD-MO-84 policy parser repair (2026-11-07 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Flat exact Worker resource map | PASS | Exact single resource leaf and `*` value accepted. |
+| Nested exact Worker resource map | PASS | Documented nested map recursively resolves to the exact Worker leaf. |
+| Broad/wildcard/extra resources | PASS fail-closed | Account-wide, all-Worker, wrong-Worker and extra leaves reject. |
+| Policy count and effect | PASS fail-closed | Multiple policies and non-allow policies reject. |
+| Permission group role | PASS fail-closed | Exact Individual Workers Editor/legacy Workers Scripts Edit/Write accepted; wrong role rejects. |
+| Functional regression | PASS | PS5.1 13/13; Node 6/6; full 387/1; build/lint PASS. |
+
 ## GFS-COD-MO-83A final host gate (2026-11-07 PKT)
 
 | Gate | Result | Evidence |

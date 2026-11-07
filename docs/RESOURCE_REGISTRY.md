@@ -1,5 +1,10 @@
 # Resource Registry
 
+## GFS-COD-MO-84 policy parser (2026-11-07 PKT)
+
+- `gfs-token-linkage-validation.ps1` and `cloudflare-admin-deployment-preflight.mjs` accept the official flat/nested token-resource representations only when the single exact Admin Worker leaf and permitted Editor role are present.
+- Test fixtures contain synthetic IDs only; no real token policy payload, ID or credential is stored.
+
 ## GFS-COD-MO-83A final host evidence (2026-11-07 PKT)
 
 - Owner screenshot confirms the metadata target name `GFS-Cloudflare-Token-Metadata-Read-2026` is present in the approved host store; no secret or token ID is recorded.

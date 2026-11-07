@@ -40,14 +40,17 @@ async function jsonRequest({ token, path, fetchImpl = fetch, method = "GET" }) {
   return { response, body };
 }
 
+function resourceLeaves(value, prefix = "") {
+  if (value === null || value === undefined) return [];
+  if (typeof value !== "object" || Array.isArray(value)) return [{ path: prefix, value: String(value) }];
+  return Object.entries(value).flatMap(([key, child]) => resourceLeaves(child, prefix ? `${prefix}.${key}` : key));
+}
+
 function exactWorkerScope(policies) {
   if (!Array.isArray(policies) || policies.length === 0) return false;
-  const serialized = JSON.stringify(policies);
-  if (!serialized.includes(WORKER_NAME)) return false;
-  if (/com\.cloudflare\.api\.account(?:["'}:]|$)/i.test(serialized.replaceAll(WORKER_NAME, ""))) return false;
-  if (serialized.includes('"*"') && !serialized.includes(WORKER_NAME)) return false;
-  const workerNames = [...serialized.matchAll(/(?:worker\.script[.:/]|script[.:/])([A-Za-z0-9_-]+)/gi)].map((m) => m[1]);
-  return workerNames.length === 0 || workerNames.every((name) => name === WORKER_NAME);
+  if (policies.length !== 1 || policies[0]?.effect !== "allow") return false;
+  const leaves = resourceLeaves(policies[0]?.resources);
+  return leaves.length === 1 && leaves[0].path === `com.cloudflare.api.account.worker.script.${WORKER_NAME}` && leaves[0].value === "*";
 }
 
 export async function verifyDeploymentCredential({ token, fetchImpl = fetch, now = new Date() } = {}) {
@@ -131,4 +134,4 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   });
 }
 
-export { ACCOUNT_ID, WORKER_NAME, exactWorkerScope };
+export { ACCOUNT_ID, WORKER_NAME, exactWorkerScope, resourceLeaves };

@@ -2987,3 +2987,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Decision:** validate the deployment token with itself, but read its policy through a separate approved account-token metadata-read credential. Compare token IDs only inside the approved host process.
 - **Fail-closed behavior:** absent/denied metadata returns `METADATA_AUTH_REQUIRED`; matching token names or Worker readback alone never pass linkage.
 - **Boundary:** verifier has no upload/deployment code and must run before, not instead of, existing preflight.
+## GFS-COD-MO-84 - support documented nested token resources (2026-11-07 PKT)
+
+**Decision:** repair the real policy parser to support Cloudflare’s documented flat and nested `resources` maps without weakening exact scope.
+
+- Flattening is structural, not substring-based. Only one `allow` policy and one leaf matching the fixed account/Worker resource path with value `*` passes.
+- Permission-group IDs are resolved through metadata; only the granular Individual Workers Editor or documented legacy Workers Scripts Edit/Write role is accepted. Broad and unrelated roles remain blocked.
+- The Node preflight guard was updated alongside the PowerShell verifier so the integrated runner cannot pass one parser and fail the other. Host Preflight remains pending one rerun.
