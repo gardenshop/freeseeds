@@ -1,5 +1,15 @@
 # Test Matrix
 
+## GFS-COD-MO-91 existing-version recovery (2026-11-08 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Legacy/top-level annotation parsing | PASS | Node fixtures cover legacy metadata and `annotations["workers/tag"]` / `annotations["workers/message"]`. |
+| Modern endpoint fallback | PASS | Node fixture merges `/workers/workers/{worker}/versions` records when legacy annotations are absent. |
+| Recovery no-reupload guard | PASS | PS5.1 fixtures recover one exact version and reject absent or duplicate identities. |
+| Full regression | PASS | 33 files; 386 passed, 1 skipped; build/lint/parse PASS. |
+| Real host recovery / preview | PENDING | Requires approved `bi\\nazim` read-only execution and authenticated Chrome preview; no version ID is claimed. |
+
 ## GFS-COD-MO-90 readback repair (2026-11-07 PKT)
 
 | Gate | Result | Evidence |

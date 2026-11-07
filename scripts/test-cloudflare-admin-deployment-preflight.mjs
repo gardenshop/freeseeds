@@ -81,6 +81,25 @@ test("uses structured official version and deployment readback", async () => {
   ]);
 });
 
+test("resolves modern workers annotations when legacy metadata omits them", async () => {
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(url);
+    if (url.includes(`/scripts/${WORKER_NAME}/versions?`)) return response({ success: true, result: { items: [
+      { id: uuid, metadata: { created_on: "2026-11-07T18:00:00Z", source: "wrangler" } }
+    ] } });
+    if (url.includes(`/workers/${WORKER_NAME}/versions?`)) return response({ success: true, result: [
+      { id: uuid, created_on: "2026-11-07T18:00:00Z", annotations: { "workers/tag": "gfs90-existing", "workers/message": "GFS-COD-MO-90 exact" }, source: "wrangler" }
+    ] });
+    throw new Error("unexpected_request");
+  };
+  const result = await listWorkerVersions({ token, fetchImpl });
+  assert.equal(result.result, "PASS");
+  assert.equal(result.versions[0].tag, "gfs90-existing");
+  assert.equal(result.versions[0].message, "GFS-COD-MO-90 exact");
+  assert.equal(calls.length, 2);
+});
+
 test("rejects malformed official version/deployment shapes", async () => {
   const versions = await listWorkerVersions({ token, fetchImpl: async () => response({ success: true, result: { versions: [{ id: "not-a-version", metadata: {} }] } }) });
   assert.equal(versions.code, "invalid_response_shape");

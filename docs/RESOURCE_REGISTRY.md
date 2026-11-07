@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-COD-MO-91 recovery gate (2026-11-08 PKT)
+
+- The prior owner upload reported exit 0 but identity readback was `version_annotation_missing`; current version ID remains unrecorded until read-only recovery proves it.
+- `scripts/run-gfs-admin-deployment.ps1 -Mode Recover` performs no upload and resolves one exact `gfs90-<approved-sha>` tag plus expected message, UUID, creation time and Wrangler source. It uses legacy script-version metadata and the documented Worker-version annotation fallback.
+- Production Admin/API routing, watchdog, WhatsApp, payments, D1, Meta and CAPI were not mutated by this task.
+
 ## GFS-COD-MO-90 readback repair (2026-11-07 PKT)
 
 - `scripts/cloudflare-admin-deployment-preflight.mjs` consumes official versions `result.items` and deployments `result.deployments`, with sanitized provider status/code diagnostics and fail-closed shape checks.

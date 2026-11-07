@@ -86,20 +86,42 @@ export async function verifyDeploymentCredential({ token, fetchImpl = fetch, now
   };
 }
 
-function versionRecord(version) {
+function versionRecord(version, annotationSource = "legacy") {
   const id = String(version?.id ?? "");
-  const metadata = version?.metadata;
-  if (!VERSION_ID.test(id) || !metadata || typeof metadata !== "object" || Array.isArray(metadata)) return null;
-  const annotations = metadata.annotations && typeof metadata.annotations === "object" && !Array.isArray(metadata.annotations)
-    ? metadata.annotations
+  const metadata = version?.metadata && typeof version.metadata === "object" && !Array.isArray(version.metadata)
+    ? version.metadata
     : {};
+  const annotations = version?.annotations && typeof version.annotations === "object" && !Array.isArray(version.annotations)
+    ? version.annotations
+    : (metadata.annotations && typeof metadata.annotations === "object" && !Array.isArray(metadata.annotations) ? metadata.annotations : {});
+  const tag = typeof annotations["workers/tag"] === "string" ? annotations["workers/tag"]
+    : (typeof annotations.tag === "string" ? annotations.tag
+      : (typeof metadata.tag === "string" ? metadata.tag : null));
+  const message = typeof annotations["workers/message"] === "string" ? annotations["workers/message"]
+    : (typeof annotations.message === "string" ? annotations.message
+      : (typeof metadata.message === "string" ? metadata.message : null));
+  const createdOn = typeof version.created_on === "string" ? version.created_on : metadata.created_on;
+  const source = typeof version.source === "string" ? version.source : metadata.source;
+  if (!VERSION_ID.test(id)) return null;
   return {
     id,
-    tag: typeof metadata.tag === "string" ? metadata.tag : (typeof annotations.tag === "string" ? annotations.tag : null),
-    message: typeof metadata.message === "string" ? metadata.message : (typeof annotations.message === "string" ? annotations.message : null),
-    createdOn: typeof metadata.created_on === "string" ? metadata.created_on : null,
-    source: typeof metadata.source === "string" ? metadata.source : null
+    tag,
+    message,
+    createdOn: typeof createdOn === "string" ? createdOn : null,
+    source: typeof source === "string" ? source : null,
+    annotationSource: tag || message ? annotationSource : "none"
   };
+}
+
+async function listModernWorkerVersions({ token, fetchImpl = fetch } = {}) {
+  const listed = await jsonRequest({ token, path: `/accounts/${ACCOUNT_ID}/workers/workers/${WORKER_NAME}/versions?per_page=100`, fetchImpl });
+  if (listed.response.status !== 200 || listed.body?.success !== true) {
+    return { ...safeResult("FAIL"), code: "modern_worker_versions_readback_failed", httpStatus: listed.response.status, providerErrorCode: providerErrorCode(listed.body) };
+  }
+  const result = listed.body?.result;
+  const items = Array.isArray(result) ? result : result?.items;
+  if (!Array.isArray(items)) return { ...safeResult("FAIL"), code: "invalid_response_shape", httpStatus: listed.response.status };
+  return { ...safeResult("PASS"), versions: items.map((item) => versionRecord(item, "modern_annotations")).filter(Boolean) };
 }
 
 export async function listWorkerVersions({ token, fetchImpl = fetch } = {}) {
@@ -111,7 +133,15 @@ export async function listWorkerVersions({ token, fetchImpl = fetch } = {}) {
   if (!Array.isArray(items)) {
     return { ...safeResult("FAIL"), code: "invalid_response_shape", httpStatus: listed.response.status };
   }
-  return { ...safeResult("PASS"), versions: items.map(versionRecord).filter(Boolean) };
+  const legacyVersions = items.map((item) => versionRecord(item)).filter(Boolean);
+  if (legacyVersions.some((version) => version.annotationSource === "none")) {
+    const modern = await listModernWorkerVersions({ token, fetchImpl });
+    if (modern.result === "PASS") {
+      const modernById = new Map(modern.versions.map((version) => [version.id, version]));
+      return { ...safeResult("PASS"), versions: legacyVersions.map((version) => modernById.get(version.id) ?? version) };
+    }
+  }
+  return { ...safeResult("PASS"), versions: legacyVersions };
 }
 
 export async function deploymentSnapshot({ token, fetchImpl = fetch } = {}) {

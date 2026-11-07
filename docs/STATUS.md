@@ -1,5 +1,13 @@
 # Status
 
+## GFS-COD-MO-91 existing-version recovery (2026-11-08 PKT)
+
+**Disposition: LOCAL RECOVERY REPAIR PASS / REAL HOST RECOVERY PENDING.**
+
+- The owner host upload returned exit 0 but readback stopped at `version_annotation_missing`. The runner now checks for the existing exact version before any upload and exposes a read-only `Recover` mode; it will not blindly re-upload.
+- Legacy script-version records are merged with documented Worker-version annotations (`workers/tag` and `workers/message`) when the legacy response omits them. Exact tag/message, UUID, creation time and source are required; duplicates and mismatches fail closed.
+- Focused Node 9/9, PS5.1 runner 11/11 plus C# 2/2, full 386 passed/1 skipped, build/lint/parse pass. No Cloudflare mutation occurred in this task; version ID and preview remain pending approved host execution.
+
 ## GFS-COD-MO-90 readback repair (2026-11-07 PKT)
 
 **Disposition: LOCAL REPAIR PASS / LIVE READBACK PENDING.**

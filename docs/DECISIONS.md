@@ -1,3 +1,10 @@
+## GFS-COD-MO-91 recover before re-upload (2026-11-08 PKT)
+
+**Decision:** resolve the prior upload through read-only authoritative version records before permitting another upload.
+
+- The runner uses `-Mode Recover`, merges legacy and documented Worker-version annotation shapes, and accepts only one exact expected tag/message identity with valid UUID, creation time and source. It fails on absent, ambiguous or mismatched evidence.
+- No Cloudflare upload, deployment, routing, payment, order, D1, Meta or CAPI mutation occurred in this repair.
+
 ## GFS-COD-MO-90 official readback contract (2026-11-07 PKT)
 
 **Decision:** consume the documented versions `result.items` array and deployments `result.deployments` array, and stop the upload before any mutation when either readback is unavailable or malformed.

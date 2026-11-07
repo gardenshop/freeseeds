@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-08 - GFS-COD-MO-91
+
+- Added read-only existing-version recovery after an upload returned exit 0 but annotation readback failed.
+- Added legacy/modern Cloudflare annotation parsing and a no-reupload guard; local gates pass and no Cloudflare mutation occurred.
+
 ## 2026-11-07 - GFS-COD-MO-90
 
 - Corrected official Worker versions readback from `result.versions` to `result.items`; preserved `result.deployments` and added sanitized stage/provider diagnostics.

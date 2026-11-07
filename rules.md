@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-91 existing-version recovery (2026-11-08 PKT)
+
+- A host upload returned exit 0 but post-upload identity readback returned `version_annotation_missing`; no second upload is permitted until the existing version is identified.
+- Recovery now parses legacy metadata plus documented `annotations["workers/tag"]` / `annotations["workers/message"]` from the Worker-version endpoint, and adds read-only `-Mode Recover`. It returns exactly one existing version only for the expected tag, message, UUID, creation time and Wrangler source; absent, ambiguous or mismatched identity fails closed.
+- Existing routing is read back before recovery; the recovery mode performs no upload, deploy, routing, secret, order, payment or CAPI mutation. Node 9/9, PS5.1 runner 11/11 plus C# 2/2, full 386 passed/1 skipped, build/lint/parse pass.
+
 ## GFS-COD-MO-90 readback shape repair (2026-11-07 PKT)
 
 - The official Worker versions list is parsed from `result.items`; the deployments list remains `result.deployments`. A missing array is `invalid_response_shape`, while HTTP/provider failures retain only sanitized status and numeric provider code.

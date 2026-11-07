@@ -1,5 +1,9 @@
 # COD Settlement SOP
 
+## GFS-COD-MO-91 existing-version recovery (2026-11-08 PKT)
+
+If an upload exits successfully but annotations are not visible, stop uploads. Run the approved host runner in `Recover` mode. It reads the current deployment and versions, merges legacy records with the documented Worker-version annotation endpoint, and accepts only one exact expected tag/message identity with UUID, creation time and source. No identity proof means no re-upload and no preview claim.
+
 ## GFS-COD-MO-90 readback protocol (2026-11-07 PKT)
 
 The official versions response is `result.items`; deployments are `result.deployments`. The approved runner must report stage-specific sanitized readback failures, match one new version by exact tag/message and `created_on`, and verify the active deployment fingerprint is unchanged. Missing or ambiguous metadata is a hard stop. The operation remains upload-only and does not deploy, shift traffic, settle MO or enable CAPI.

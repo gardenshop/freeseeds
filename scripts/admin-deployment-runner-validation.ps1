@@ -98,6 +98,25 @@ function Test-GfsUploadedVersionReadback {
   return [pscustomobject]@{ pass = $true; code = "none"; versionId = [string]$matches[0].id }
 }
 
+function Test-GfsExistingVersionRecovery {
+  param(
+    [Parameter(Mandatory = $true)][object] $Versions,
+    [Parameter(Mandatory = $true)][string] $Message,
+    [Parameter(Mandatory = $true)][string] $Tag
+  )
+  if ([string]$Versions.result -ne "PASS") { return [pscustomobject]@{ pass = $false; code = "worker_versions_readback_failed" } }
+  $tagMatches = @($Versions.versions | Where-Object { [string]$_.tag -eq $Tag })
+  if ($tagMatches.Count -gt 1) { return [pscustomobject]@{ pass = $false; code = "existing_version_ambiguous" } }
+  if ($tagMatches.Count -eq 0) { return [pscustomobject]@{ pass = $false; code = "existing_version_not_found" } }
+  $candidate = $tagMatches[0]
+  if ([string]$candidate.message -and [string]$candidate.message -ne $Message) { return [pscustomobject]@{ pass = $false; code = "existing_version_identity_mismatch" } }
+  if ([string]$candidate.source -and [string]$candidate.source.ToLowerInvariant() -ne "wrangler") { return [pscustomobject]@{ pass = $false; code = "existing_version_source_mismatch" } }
+  if ([string]$candidate.id -notmatch '^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$') { return [pscustomobject]@{ pass = $false; code = "existing_version_id_invalid" } }
+  if (-not [string]$candidate.createdOn) { return [pscustomobject]@{ pass = $false; code = "existing_version_creation_time_missing" } }
+  try { [void]([datetime]$candidate.createdOn) } catch { return [pscustomobject]@{ pass = $false; code = "existing_version_creation_time_invalid" } }
+  return [pscustomobject]@{ pass = $true; code = "none"; versionId = [string]$candidate.id }
+}
+
 function Get-GfsSafeLinkageDiagnosticCode {
   param([object] $Diagnostics)
   if ($null -eq $Diagnostics) { return "policy_unknown_resource_unknown_worker_unknown_family_unknown_role_unknown_group_unknown" }

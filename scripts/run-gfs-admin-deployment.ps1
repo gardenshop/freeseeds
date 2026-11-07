@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-  [ValidateSet("Preflight", "Upload")]
+  [ValidateSet("Preflight", "Recover", "Upload")]
   [string] $Mode = "Preflight",
   [Parameter(Mandatory = $true)]
   [string] $ApprovedGitSha,
@@ -121,6 +121,17 @@ try {
   if ([string]$beforeVersions.result -ne "PASS") { Fail ("versions_before_failed_" + (Get-GfsReadbackFailureCode $beforeVersions)) }
   $uploadMessage = "GFS-COD-MO-90 $ApprovedGitSha $($digest.sha256)"
   $uploadTag = "gfs90-$ApprovedGitSha"
+  $existing = Test-GfsExistingVersionRecovery -Versions $beforeVersions -Message $uploadMessage -Tag $uploadTag
+  if ($Mode -eq "Recover") {
+    if (-not $existing.pass) { Fail $existing.code }
+    [pscustomobject]@{ result = "PASS"; mode = "EXISTING_VERSION_RECOVERED"; account = $ExpectedAccount; worker = $ExpectedWorker; gitSha = $ApprovedGitSha; artifactSha256 = $digest.sha256; versionId = $existing.versionId; deployed = $false; routingChanged = $false; tokenStatus = $preflight.tokenStatus; expiresOn = $preflight.expiresOn; scope = $preflight.scope } | ConvertTo-Json -Compress
+    exit 0
+  }
+  if ($existing.pass) {
+    [pscustomobject]@{ result = "PASS"; mode = "EXISTING_VERSION_RECOVERED"; account = $ExpectedAccount; worker = $ExpectedWorker; gitSha = $ApprovedGitSha; artifactSha256 = $digest.sha256; versionId = $existing.versionId; deployed = $false; routingChanged = $false; tokenStatus = $preflight.tokenStatus; expiresOn = $preflight.expiresOn; scope = $preflight.scope } | ConvertTo-Json -Compress
+    exit 0
+  }
+  if ($existing.code -notin @("existing_version_not_found")) { Fail $existing.code }
   $uploadStartedUtc = [DateTime]::UtcNow
   $uploadOutput = (& node.exe $WranglerScript versions upload --config $ConfigPath --name $ExpectedWorker --message $uploadMessage --tag $uploadTag 2>$null | Out-String).Trim()
   $uploadExit = $LASTEXITCODE
