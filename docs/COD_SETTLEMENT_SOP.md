@@ -1,8 +1,12 @@
 # COD Settlement SOP
 
+## GFS-COD-MO-90 readback protocol (2026-11-07 PKT)
+
+The official versions response is `result.items`; deployments are `result.deployments`. The approved runner must report stage-specific sanitized readback failures, match one new version by exact tag/message and `created_on`, and verify the active deployment fingerprint is unchanged. Missing or ambiguous metadata is a hard stop. The operation remains upload-only and does not deploy, shift traffic, settle MO or enable CAPI.
+
 ## GFS-COD-MO-89 upload safety (2026-11-07 PKT)
 
-Use Wrangler 4.149.0 `versions upload` without `--json`; after upload, query the official Worker versions list and require one new version matching the exact Git/artifact message and creation time. Compare the official active deployment readback before and after. Any ambiguity or routing change is a failure. This operation uploads a version only and must not deploy, shift traffic, settle MO, or enable CAPI.
+Use Wrangler 4.149.0 `versions upload` without `--json`; after upload, query the official Worker versions list and require one new version matching the exact Git/artifact tag/message and creation time. Compare the official active deployment readback before and after. Any ambiguity or routing change is a failure. This operation uploads a version only and must not deploy, shift traffic, settle MO, or enable CAPI.
 
 ## GFS-COD-MO-88 isolated preview gate (2026-11-07 PKT)
 

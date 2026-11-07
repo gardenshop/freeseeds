@@ -60,8 +60,8 @@ test("uses structured official version and deployment readback", async () => {
   const fetchImpl = async (url, options) => {
     assert.equal(options.headers.Authorization, `Bearer ${token}`);
     calls.push(url);
-    if (url.includes(`/scripts/${WORKER_NAME}/versions?`)) return response({ success: true, result: { versions: [
-      { id: uuid, metadata: { message: "GFS-COD-MO-89 synthetic", created_on: "2026-11-07T18:00:00Z", source: "wrangler" } }
+    if (url.includes(`/scripts/${WORKER_NAME}/versions?`)) return response({ success: true, result: { items: [
+      { id: uuid, metadata: { tag: "gfs89-synthetic", message: "GFS-COD-MO-89 synthetic", created_on: "2026-11-07T18:00:00Z", source: "wrangler" } }
     ] } });
     if (url.endsWith(`/scripts/${WORKER_NAME}/deployments`)) return response({ success: true, result: { deployments: [
       { id: "deployment-synthetic", versions: [{ version_id: uuid, percentage: 100 }] }
@@ -70,6 +70,7 @@ test("uses structured official version and deployment readback", async () => {
   };
   const versions = await listWorkerVersions({ token, fetchImpl });
   assert.equal(versions.result, "PASS");
+  assert.equal(versions.versions[0].tag, "gfs89-synthetic");
   assert.equal(versions.versions[0].message, "GFS-COD-MO-89 synthetic");
   const deployment = await deploymentSnapshot({ token, fetchImpl });
   assert.equal(deployment.result, "PASS");
@@ -82,10 +83,19 @@ test("uses structured official version and deployment readback", async () => {
 
 test("rejects malformed official version/deployment shapes", async () => {
   const versions = await listWorkerVersions({ token, fetchImpl: async () => response({ success: true, result: { versions: [{ id: "not-a-version", metadata: {} }] } }) });
-  assert.equal(versions.result, "PASS");
-  assert.deepEqual(versions.versions, []);
+  assert.equal(versions.code, "invalid_response_shape");
   const deployment = await deploymentSnapshot({ token, fetchImpl: async () => response({ success: true, result: { deployments: [{ id: "deployment-synthetic", versions: [{ version_id: "not-a-version", percentage: 100 }] }] } }) });
   assert.equal(deployment.code, "worker_deployment_shape_invalid");
+});
+
+test("returns sanitized official readback failures", async () => {
+  const denied = await listWorkerVersions({ token, fetchImpl: async () => response({ success: false, errors: [{ code: 10000, message: token }] }, 403) });
+  assert.equal(denied.code, "worker_versions_readback_failed");
+  assert.equal(denied.httpStatus, 403);
+  assert.equal(denied.providerErrorCode, "cf_10000");
+  assert.ok(!JSON.stringify(denied).includes(token));
+  const deployment = await deploymentSnapshot({ token, fetchImpl: async () => response({ success: true, result: {} }) });
+  assert.equal(deployment.code, "invalid_response_shape");
 });
 
 test("artifact digest is deterministic and includes tracked source/config", async () => {

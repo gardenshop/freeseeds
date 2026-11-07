@@ -1,9 +1,15 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-90 readback shape repair (2026-11-07 PKT)
+
+- The official Worker versions list is parsed from `result.items`; the deployments list remains `result.deployments`. A missing array is `invalid_response_shape`, while HTTP/provider failures retain only sanitized status and numeric provider code.
+- Version identity uses an exact upload tag plus message when available, `created_on`, new UUID and unchanged deployment fingerprint. Missing annotations, ambiguous matches, malformed records and routing changes fail closed; no UUID is scraped from CLI text.
+- Wrangler 4.149.0 upload uses supported `--message` and `--tag` only; the runner still invokes `versions upload` and never deploys or shifts traffic. Local Node 8/8, PS5.1 runner 11/11, C# 2/2, full 386 passed/1 skipped, build/lint/parse pass. No live upload occurred.
+
 ## GFS-COD-MO-89 Wrangler upload/readback repair (2026-11-07 PKT)
 
 - Wrangler 4.149.0 `versions upload` does not support `--json`; the approved upload syntax now omits it and uses the documented `--message` option only. Version identity is never extracted by UUID scraping.
-- After upload, the host runner uses the official account API version list (`GET /accounts/{account_id}/workers/scripts/{script_name}/versions`) and matches exactly one new UUID by the unique Git/artifact message, `created_on` after upload start and Wrangler source when present. It rejects missing creation evidence, duplicates and ambiguous matches.
+- After upload, the host runner uses the official account API version list (`GET /accounts/{account_id}/workers/scripts/{script_name}/versions`) and matches exactly one new UUID by the unique Git/artifact tag/message, `created_on` after upload start and Wrangler source when present. It rejects missing creation evidence, duplicates and ambiguous matches.
 - The runner snapshots the latest deployment before and after upload through the official deployments API and fails closed if the routing fingerprint changes. Upload remains `VERSIONS_UPLOAD_ONLY`; no deploy or traffic shift is performed.
 - Local Node readback tests 7/7, PS5.1 runner/linkage/C# tests, full suite 386 passed/1 skipped, build/lint and PS5.1 parse pass. Artifact digest remains `3d0d17a3a953c6804a84f3449cc7b11ab2b87f68b0e8c602e79ff23ab32f7911`. No Cloudflare upload was executed from this sandbox.
 

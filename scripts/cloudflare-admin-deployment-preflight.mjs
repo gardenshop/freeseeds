@@ -18,6 +18,11 @@ function errorCode(value, fallback = "cloudflare_request_failed") {
   return SAFE_CODE.test(code) ? code : fallback;
 }
 
+function providerErrorCode(body) {
+  const value = body?.errors?.[0]?.code;
+  return Number.isSafeInteger(value) ? errorCode(value, "provider_error") : null;
+}
+
 function safeResult(result) {
   return {
     result,
@@ -85,9 +90,13 @@ function versionRecord(version) {
   const id = String(version?.id ?? "");
   const metadata = version?.metadata;
   if (!VERSION_ID.test(id) || !metadata || typeof metadata !== "object" || Array.isArray(metadata)) return null;
+  const annotations = metadata.annotations && typeof metadata.annotations === "object" && !Array.isArray(metadata.annotations)
+    ? metadata.annotations
+    : {};
   return {
     id,
-    message: typeof metadata.message === "string" ? metadata.message : null,
+    tag: typeof metadata.tag === "string" ? metadata.tag : (typeof annotations.tag === "string" ? annotations.tag : null),
+    message: typeof metadata.message === "string" ? metadata.message : (typeof annotations.message === "string" ? annotations.message : null),
     createdOn: typeof metadata.created_on === "string" ? metadata.created_on : null,
     source: typeof metadata.source === "string" ? metadata.source : null
   };
@@ -95,11 +104,14 @@ function versionRecord(version) {
 
 export async function listWorkerVersions({ token, fetchImpl = fetch } = {}) {
   const listed = await jsonRequest({ token, path: `/accounts/${ACCOUNT_ID}/workers/scripts/${WORKER_NAME}/versions?per_page=100`, fetchImpl });
-  const versions = listed.body?.result?.versions;
-  if (listed.response.status !== 200 || listed.body?.success !== true || !Array.isArray(versions)) {
-    return { ...safeResult("FAIL"), code: "worker_versions_readback_failed", httpStatus: listed.response.status };
+  if (listed.response.status !== 200 || listed.body?.success !== true) {
+    return { ...safeResult("FAIL"), code: "worker_versions_readback_failed", httpStatus: listed.response.status, providerErrorCode: providerErrorCode(listed.body) };
   }
-  return { ...safeResult("PASS"), versions: versions.map(versionRecord).filter(Boolean) };
+  const items = listed.body?.result?.items;
+  if (!Array.isArray(items)) {
+    return { ...safeResult("FAIL"), code: "invalid_response_shape", httpStatus: listed.response.status };
+  }
+  return { ...safeResult("PASS"), versions: items.map(versionRecord).filter(Boolean) };
 }
 
 export async function deploymentSnapshot({ token, fetchImpl = fetch } = {}) {
@@ -108,8 +120,11 @@ export async function deploymentSnapshot({ token, fetchImpl = fetch } = {}) {
   const latest = Array.isArray(deployments) ? deployments[0] : null;
   const versions = Array.isArray(latest?.versions) ? latest.versions : null;
   const deploymentId = String(latest?.id ?? "");
-  if (listed.response.status !== 200 || listed.body?.success !== true || !latest || !deploymentId || !versions) {
-    return { ...safeResult("FAIL"), code: "worker_deployment_readback_failed", httpStatus: listed.response.status };
+  if (listed.response.status !== 200 || listed.body?.success !== true) {
+    return { ...safeResult("FAIL"), code: "worker_deployment_readback_failed", httpStatus: listed.response.status, providerErrorCode: providerErrorCode(listed.body) };
+  }
+  if (!Array.isArray(deployments) || !latest || !deploymentId || !Array.isArray(versions)) {
+    return { ...safeResult("FAIL"), code: "invalid_response_shape", httpStatus: listed.response.status };
   }
   const normalized = versions.map((version) => ({
     versionId: String(version?.version_id ?? ""),

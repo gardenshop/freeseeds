@@ -68,15 +68,16 @@ function Test-GfsUploadedVersionReadback {
     [Parameter(Mandatory = $true)][object] $BeforeVersions,
     [Parameter(Mandatory = $true)][object] $AfterVersions,
     [Parameter(Mandatory = $true)][string] $Message,
+    [Parameter(Mandatory = $true)][string] $Tag,
     [Parameter(Mandatory = $true)][datetime] $UploadStartedUtc
   )
   if ([string]$BeforeDeployment.result -ne "PASS" -or [string]$AfterDeployment.result -ne "PASS") { return [pscustomobject]@{ pass = $false; code = "deployment_readback_failed" } }
   if ([string]$BeforeDeployment.fingerprint -ne [string]$AfterDeployment.fingerprint) { return [pscustomobject]@{ pass = $false; code = "production_routing_changed" } }
   if ([string]$BeforeVersions.result -ne "PASS" -or [string]$AfterVersions.result -ne "PASS") { return [pscustomobject]@{ pass = $false; code = "worker_versions_readback_failed" } }
   $beforeIds = @($BeforeVersions.versions | ForEach-Object { [string]$_.id })
-  $messageMatches = @($AfterVersions.versions | Where-Object { [string]$_.message -eq $Message })
+  $annotationMatches = @($AfterVersions.versions | Where-Object { [string]$_.tag -eq $Tag -or [string]$_.message -eq $Message })
   $createdMissing = $false
-  $matches = @($messageMatches | Where-Object {
+  $matches = @($annotationMatches | Where-Object {
     $id = [string]$_.id
     if ($id -notmatch '^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$') { return $false }
     if ($beforeIds -contains $id) { return $false }
@@ -90,6 +91,8 @@ function Test-GfsUploadedVersionReadback {
   if ($matches.Count -gt 1) { return [pscustomobject]@{ pass = $false; code = "uploaded_version_ambiguous" } }
   if ($matches.Count -eq 0) {
     if ($createdMissing) { return [pscustomobject]@{ pass = $false; code = "version_creation_time_missing" } }
+    $annotationMissing = @($AfterVersions.versions | Where-Object { [string]$_.id -notin $beforeIds }).Count -gt 0
+    if ($annotationMissing) { return [pscustomobject]@{ pass = $false; code = "version_annotation_missing" } }
     return [pscustomobject]@{ pass = $false; code = "uploaded_version_readback_missing" }
   }
   return [pscustomobject]@{ pass = $true; code = "none"; versionId = [string]$matches[0].id }

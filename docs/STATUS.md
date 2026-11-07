@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-MO-90 readback repair (2026-11-07 PKT)
+
+**Disposition: LOCAL REPAIR PASS / LIVE READBACK PENDING.**
+
+- Fixed the pre-upload blocker: the versions endpoint returns `result.items`, not `result.versions`. Deployment snapshots continue to use `result.deployments`.
+- Readback failures now distinguish deployment versus versions stages and preserve sanitized HTTP/provider-code diagnostics; malformed response shapes fail as `invalid_response_shape`.
+- Upload identity now uses the supported Wrangler `--tag` and `--message`, with official list metadata, creation time, unique ID and unchanged routing fingerprint. No Cloudflare upload or preview was executed in this sandbox.
+- Node 8/8, PS5.1 runner 11/11 plus C# 2/2, full 386 passed/1 skipped, build/lint/parse pass. Artifact remains `3d0d17a3a953c6804a84f3449cc7b11ab2b87f68b0e8c602e79ff23ab32f7911`.
+
 ## GFS-COD-MO-89 Wrangler upload/readback repair (2026-11-07 PKT)
 
 **Disposition: LOCAL REPAIR PASS / REAL UPLOAD PENDING.**

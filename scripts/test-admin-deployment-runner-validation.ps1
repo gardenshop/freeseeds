@@ -49,17 +49,20 @@ $uploadHelp = (& node.exe $wranglerPath versions upload --help 2>$null | Out-Str
 if ($LASTEXITCODE -ne 0 -or $uploadHelp -notmatch "--message" -or $uploadHelp -match "(?m)^\s+--json\s") { throw "Wrangler upload help did not match the supported argument set" }
 $uuidA = "01234567-89ab-cdef-0123-456789abcdef"
 $uuidB = "11234567-89ab-cdef-0123-456789abcdef"
-$uploadMessage = "GFS-COD-MO-89 " + ("a" * 40) + " " + ("b" * 64)
+$uploadMessage = "GFS-COD-MO-90 " + ("a" * 40) + " " + ("b" * 64)
+$uploadTag = "gfs90-" + ("a" * 40)
 $beforeDeployment = [pscustomobject]@{ result = "PASS"; fingerprint = "same" }
 $afterDeployment = [pscustomobject]@{ result = "PASS"; fingerprint = "same" }
 $beforeVersions = [pscustomobject]@{ result = "PASS"; versions = @([pscustomobject]@{ id = $uuidA; message = "old"; createdOn = "2026-11-07T17:00:00Z"; source = "wrangler" }) }
-$afterVersions = [pscustomobject]@{ result = "PASS"; versions = @($beforeVersions.versions + [pscustomobject]@{ id = $uuidB; message = $uploadMessage; createdOn = "2026-11-07T18:01:00Z"; source = "wrangler" }) }
-$readback = Test-GfsUploadedVersionReadback -BeforeDeployment $beforeDeployment -AfterDeployment $afterDeployment -BeforeVersions $beforeVersions -AfterVersions $afterVersions -Message $uploadMessage -UploadStartedUtc ([datetime]"2026-11-07T18:00:00Z")
+$afterVersions = [pscustomobject]@{ result = "PASS"; versions = @($beforeVersions.versions + [pscustomobject]@{ id = $uuidB; tag = $uploadTag; message = $uploadMessage; createdOn = "2026-11-07T18:01:00Z"; source = "wrangler" }) }
+$readback = Test-GfsUploadedVersionReadback -BeforeDeployment $beforeDeployment -AfterDeployment $afterDeployment -BeforeVersions $beforeVersions -AfterVersions $afterVersions -Message $uploadMessage -Tag $uploadTag -UploadStartedUtc ([datetime]"2026-11-07T18:00:00Z")
 if (-not $readback.pass -or $readback.versionId -ne $uuidB) { throw "structured version readback did not identify the new version" }
-$ambiguous = [pscustomobject]@{ result = "PASS"; versions = @($afterVersions.versions + [pscustomobject]@{ id = "21234567-89ab-cdef-0123-456789abcdef"; message = $uploadMessage; createdOn = "2026-11-07T18:01:01Z"; source = "wrangler" }) }
-Assert-Code (Test-GfsUploadedVersionReadback -BeforeDeployment $beforeDeployment -AfterDeployment $afterDeployment -BeforeVersions $beforeVersions -AfterVersions $ambiguous -Message $uploadMessage -UploadStartedUtc ([datetime]"2026-11-07T18:00:00Z")) "uploaded_version_ambiguous" "ambiguous upload readback"
-Assert-Code (Test-GfsUploadedVersionReadback -BeforeDeployment $beforeDeployment -AfterDeployment ([pscustomobject]@{ result = "PASS"; fingerprint = "changed" }) -BeforeVersions $beforeVersions -AfterVersions $afterVersions -Message $uploadMessage -UploadStartedUtc ([datetime]"2026-11-07T18:00:00Z")) "production_routing_changed" "routing mutation detection"
-Assert-Code (Test-GfsUploadedVersionReadback -BeforeDeployment $beforeDeployment -AfterDeployment $afterDeployment -BeforeVersions $beforeVersions -AfterVersions ([pscustomobject]@{ result = "PASS"; versions = @([pscustomobject]@{ id = $uuidB; message = $uploadMessage; createdOn = $null; source = "wrangler" }) }) -Message $uploadMessage -UploadStartedUtc ([datetime]"2026-11-07T18:00:00Z")) "version_creation_time_missing" "creation evidence"
+$ambiguous = [pscustomobject]@{ result = "PASS"; versions = @($afterVersions.versions + [pscustomobject]@{ id = "21234567-89ab-cdef-0123-456789abcdef"; tag = $uploadTag; message = $uploadMessage; createdOn = "2026-11-07T18:01:01Z"; source = "wrangler" }) }
+Assert-Code (Test-GfsUploadedVersionReadback -BeforeDeployment $beforeDeployment -AfterDeployment $afterDeployment -BeforeVersions $beforeVersions -AfterVersions $ambiguous -Message $uploadMessage -Tag $uploadTag -UploadStartedUtc ([datetime]"2026-11-07T18:00:00Z")) "uploaded_version_ambiguous" "ambiguous upload readback"
+Assert-Code (Test-GfsUploadedVersionReadback -BeforeDeployment $beforeDeployment -AfterDeployment ([pscustomobject]@{ result = "PASS"; fingerprint = "changed" }) -BeforeVersions $beforeVersions -AfterVersions $afterVersions -Message $uploadMessage -Tag $uploadTag -UploadStartedUtc ([datetime]"2026-11-07T18:00:00Z")) "production_routing_changed" "routing mutation detection"
+Assert-Code (Test-GfsUploadedVersionReadback -BeforeDeployment $beforeDeployment -AfterDeployment $afterDeployment -BeforeVersions $beforeVersions -AfterVersions ([pscustomobject]@{ result = "PASS"; versions = @([pscustomobject]@{ id = $uuidB; tag = $uploadTag; message = $uploadMessage; createdOn = $null; source = "wrangler" }) }) -Message $uploadMessage -Tag $uploadTag -UploadStartedUtc ([datetime]"2026-11-07T18:00:00Z")) "version_creation_time_missing" "creation evidence"
+$missingAnnotation = [pscustomobject]@{ result = "PASS"; versions = @([pscustomobject]@{ id = $uuidB; createdOn = "2026-11-07T18:01:00Z"; source = "wrangler" }) }
+Assert-Code (Test-GfsUploadedVersionReadback -BeforeDeployment $beforeDeployment -AfterDeployment $afterDeployment -BeforeVersions $beforeVersions -AfterVersions $missingAnnotation -Message $uploadMessage -Tag $uploadTag -UploadStartedUtc ([datetime]"2026-11-07T18:00:00Z")) "version_annotation_missing" "annotation evidence"
 $safeLinkage = $validLinkage | ConvertTo-Json -Compress
 if ($safeLinkage -match "synthetic-secret|CLOUDFLARE_API_TOKEN|0123456789abcdef") { throw "token linkage output leaked sensitive data" }
 "runner_validation=PASS (11/11); linkage_gate=PASS (3/3); credential_reader_add_type=PASS (2/2)"

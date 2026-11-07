@@ -1,3 +1,10 @@
+## GFS-COD-MO-90 official readback contract (2026-11-07 PKT)
+
+**Decision:** consume the documented versions `result.items` array and deployments `result.deployments` array, and stop the upload before any mutation when either readback is unavailable or malformed.
+
+- The runner now reports separate sanitized `deployment_before/after_failed` and `versions_before/after_failed` categories, including HTTP status and numeric provider code where available.
+- A unique supported upload tag is matched together with the message, creation time, new version ID and unchanged active deployment fingerprint. No upload or preview occurred in this sandbox.
+
 ## GFS-COD-MO-89 upload gate (2026-11-07 PKT)
 
 **Decision:** replace the unsupported Wrangler `versions upload --json` argument and require structured authoritative readback before reporting upload success.

@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-COD-MO-90 readback repair (2026-11-07 PKT)
+
+- `scripts/cloudflare-admin-deployment-preflight.mjs` consumes official versions `result.items` and deployments `result.deployments`, with sanitized provider status/code diagnostics and fail-closed shape checks.
+- `scripts/run-gfs-admin-deployment.ps1` uses a unique `gfs90-<approved-sha>` tag plus message and separates before/after deployment/version failures. No live version ID exists because the owner-host upload has not run.
+- Artifact remains `3d0d17a3a953c6804a84f3449cc7b11ab2b87f68b0e8c602e79ff23ab32f7911`; protected Admin 100%/candidate 0%, API 100%, watchdog DISARMED, CAPI OFF remain unchanged.
+
 ## GFS-COD-MO-89 upload runner (2026-11-07 PKT)
 
 - `scripts/run-gfs-admin-deployment.ps1` uses supported Wrangler 4.149.0 upload syntax without `--json`.

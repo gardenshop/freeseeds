@@ -1,11 +1,21 @@
 # Test Matrix
 
+## GFS-COD-MO-90 readback repair (2026-11-07 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Official versions shape | PASS | Node fixture uses `result.items`; malformed legacy `result.versions` is rejected as `invalid_response_shape`. |
+| Deployment shape and diagnostics | PASS | Node fixture uses `result.deployments`; HTTP 403 retains only status and sanitized `cf_10000`; response shape failures are explicit. |
+| Version identity | PASS | PS5.1 fixtures require exact tag/message, new UUID, creation time and unchanged routing; duplicate and missing-annotation cases fail closed. |
+| Local regression | PASS | Node 8/8; PS5.1 runner 11/11, C# 2/2; full 386 passed/1 skipped; build/lint/parse PASS. |
+| Live readback/upload/preview | PENDING | Approved `bi\\nazim` host execution is required; no live version ID or preview is claimed. |
+
 ## GFS-COD-MO-89 upload runner repair (2026-11-07 PKT)
 
 | Gate | Result | Evidence |
 |---|---|---|
 | Wrangler syntax | PASS | Wrangler 4.149.0 help confirms `versions upload` has `--message` and no `--json`. |
-| Structured version readback | PASS | Node tests 7/7; official versions API records are matched by exact message, new ID, creation time and source. |
+| Structured version readback | PASS | Node tests 8/8; official versions API records are matched by exact tag/message, new ID, creation time and source. |
 | Ambiguity/routing safety | PASS | PS5.1 fixtures reject duplicate matches, missing creation time and changed deployment fingerprint. |
 | Full regression | PASS | 33 files; 386 passed, 1 skipped; build/lint/parse PASS. |
 | Real host upload | PENDING | Sandbox cannot invoke `bi\\nazim`; no version ID or live preview is claimed. |

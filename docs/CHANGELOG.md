@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-07 - GFS-COD-MO-90
+
+- Corrected official Worker versions readback from `result.versions` to `result.items`; preserved `result.deployments` and added sanitized stage/provider diagnostics.
+- Added tag-based authoritative version matching and malformed/ambiguous readback tests. Local gates pass; no live upload, preview or production mutation occurred.
+
 ## 2026-11-07 - GFS-COD-MO-89
 
 - Removed unsupported `--json` from Wrangler version upload and added structured version/deployment readback with fail-closed ambiguity and routing checks.
