@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-81 final scope evidence (2026-11-07 PKT)
+
+- Authenticated Cloudflare account-token detail evidence shows one policy only: account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, Worker `getfreeseeds-admin-staging`, `Individual Workers Editor`.
+- The account inventory showed one token with the exact name `GFS-Admin-Deploy-Scoped-2026`; full token IDs and values remain unrecorded. Prior host preflight reached the token-details stage, so its active/expiry gate had passed at that run.
+- Do not convert dashboard evidence into an automated PASS unless the approved host process independently confirms that the Credential Manager secret is the same token. Current preflight remains fail-closed.
+
 ## GFS-COD-MO-80 token scope gate (2026-11-07 PKT)
 
 - Account token verification and token-policy details are separate. A Worker-only token may verify successfully while its policy details remain unavailable; scope is never inferred from Worker readback.

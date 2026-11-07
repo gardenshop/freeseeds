@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-07 - GFS-COD-MO-81
+
+- Recorded authenticated dashboard proof of the exact Worker-only policy.
+- Retained the fail-closed preflight because policy-to-host-secret identity linkage is not machine-verified.
+
 ## 2026-11-07 - GFS-COD-MO-80
 
 - Added sanitized diagnostics for account token-details 403/404 responses without weakening exact Worker-scope verification.

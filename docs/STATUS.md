@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-MO-81 — final scope evidence (2026-11-07 PKT)
+
+**Disposition: POLICY SCOPE PASS / HOST-TOKEN LINKAGE BLOCKED.**
+
+- Authenticated Cloudflare detail evidence confirms the exact account, one policy, Worker `getfreeseeds-admin-staging`, and `Individual Workers Editor`. The account inventory contained one matching token name.
+- The prior owner preflight reached `token_scope_unverified`, which means its active/status/expiry checks passed before the details request. No expiry timestamp or token ID is recorded.
+- Exact linkage between the dashboard policy and the secret held by the host runner is not independently machine-verified. No preflight PASS, upload, deployment or production mutation is claimed.
+- One missing evidence item: approved host-side verifier returns only `token_identity_match=PASS` after comparing the Credential Manager token's verified identity to the authenticated dashboard token record, without emitting IDs or secrets.
+
 ## GFS-COD-MO-80 — token scope gate (2026-11-07 PKT)
 
 **Disposition: BLOCKED at independent exact-scope proof; no upload attempted.**

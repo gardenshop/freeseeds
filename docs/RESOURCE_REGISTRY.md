@@ -1,5 +1,10 @@
 # Resource Registry
 
+## GFS-COD-MO-81 final scope evidence (2026-11-07 PKT)
+
+- Cloudflare account-token detail confirms the deployment policy is limited to `getfreeseeds-admin-staging` with `Individual Workers Editor`; no token value or ID is recorded.
+- Exact linkage to `GFS-Admin-Deploy-Scoped-2026` in the approved host Credential Manager remains pending a sanitized host-side identity-match result. Preflight/upload remains blocked.
+
 ## GFS-COD-MO-80 deployment token scope (2026-11-07 PKT)
 
 - `GFS-Admin-Deploy-Scoped-2026` is listed as `Individual Workers Editor`; exact `getfreeseeds-admin-staging` resource scope remains unverified because account token-details read was denied/unavailable.

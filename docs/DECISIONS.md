@@ -2962,3 +2962,8 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Decision:** do not treat account-token verification or successful Worker readback as proof of exact Worker-only policy. Keep `token_scope_unverified` on denied/missing account token-details evidence.
 - **Repair:** expose only sanitized HTTP status/provider codes for details failure and test 403/404 behavior.
 - **Boundary:** no upload, deployment, routing, payment, D1, Meta, WhatsApp or CAPI action until exact scope is independently proven.
+## GFS-COD-MO-81 — retain fail-closed host-token linkage
+
+- **Decision:** accept the authenticated dashboard as policy evidence, but do not treat token name alone as proof that the host Credential Manager secret is the same token.
+- **Evidence:** one exact-name inventory row and one exact Worker-only policy; active/expiry passed in the prior host run before the details gate.
+- **Boundary:** retain `token_scope_unverified`/no-upload behavior until an approved host process returns only a sanitized identity-match result.

@@ -1,5 +1,15 @@
 # Test Matrix
 
+## GFS-COD-MO-81 final scope evidence (2026-11-07 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Account and Worker policy | PASS | Authenticated Cloudflare detail page shows the exact account, `getfreeseeds-admin-staging`, and `Individual Workers Editor` only. |
+| Matching-token uniqueness | PASS | Account inventory showed one exact `GFS-Admin-Deploy-Scoped-2026` row; IDs remain redacted. |
+| Active/expiry gate | PASS at prior host run | Owner preflight reached token-details verification; no timestamp is recorded here. |
+| Policy-to-host-secret identity match | BLOCKED | No approved host-side sanitized identity-match result is available. |
+| Upload authorization | BLOCKED | Existing fail-closed preflight remains unchanged. |
+
 ## GFS-COD-MO-80 token scope gate (2026-11-07 PKT)
 
 | Gate | Result | Evidence |
