@@ -2763,3 +2763,9 @@ No secrets are stored in this registry.
 
 - Private case [#02421284](https://www.support.cloudflare.com/s/case/500j2000000tULdAAM): `Workers scheduled application logs unavailable despite successful Cron invocations`.
 - Watchdog configuration verified: Logs/invocation logs/dashboard persistence enabled, log sampling 100%, Cron active, `ADMIN_RECOVERY_TOKEN` binding name only, route count0, DISARMED version `73a1f50c...`100%.
+
+## GFS-COD-MO-69 read-only readiness (2026-11-07 PKT)
+
+- Private case [#02421284](https://www.support.cloudflare.com/s/case/500j2000000tULdAAM) remains New; no correction or release authority.
+- API `b426ba47` remains100%; Admin `3e4b7c26`100% / `ce023b54`0%; watchdog `73a1f50c...` remains DISARMED. Canonical sender `03044429933`; Hoja/new-number isolation retained.
+- Read-only endpoints: API health/WhatsApp, Orders, Conversations, payment methods, COD configuration and province rates all responded HTTP200. No credentials, customer data or write payloads were recorded.

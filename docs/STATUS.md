@@ -3663,3 +3663,11 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **VERIFIED:** Watchdog logging, invocation logging, persistence and 100% sampling are enabled; Cron active; watchdog `73a1f50c...` remains DISARMED/100% and route-free. Root cause remains external/unknown pending Cloudflare response.
 - **PASS:** Admin exact100/0, API health/WhatsApp, Orders/Conversations, Advance3/3 and COD PKR125 readbacks passed. No production mutation.
 - **BLOCKED:** DRY_RUN, Admin canary, settlement and CAPI remain blocked pending a supported Cloudflare correction and separate authorization.
+
+## GFS-COD-MO-69 support gate and P0 lead readiness (2026-11-07 PKT)
+
+- **Support:** Case #02421284 checked once; status **New**, no response. MO logging/DRY_RUN/canary remains frozen.
+- **P0 reads:** API health/WhatsApp, Admin Orders, and Conversations HTTP200; sanitized totals 1,034 orders and 5,734 conversations; latest order activity `2026-11-07T10:55:37.720Z`.
+- **Payments:** three enabled methods (JazzCash/Easypaisa/Bank Transfer), COD enabled at PKR125, province-rate endpoint HTTP200 with seven enabled rates. No write.
+- **Readiness boundary:** Meta account/campaign context is readable, but sender eligibility/scale readiness and Queue/DLQ runtime remain unverified. Admin Orders/Conversations auto-update preferences currently read OFF; unchanged.
+- **Protected state:** Admin exact100/0, API100%, watchdog DISARMED, Advance3/3, Recovery ON, CAPI OFF, canonical sender/new-number lock and Hoja isolation preserved. No production mutation.

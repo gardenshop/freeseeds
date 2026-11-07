@@ -4325,3 +4325,9 @@ Investigation query costs only (not production savings): representative `rows_re
 | MO-68 watchdog logging configuration | PASS | Logs, invocation logs, dashboard persistence and 100% sampling verified enabled; Cron active and route-free DISARMED Worker retained. |
 | MO-68 Cloudflare escalation | PASS | Private Support case #02421284 submitted with sanitized scheduled-envelope, zero-index and zero-record-tail evidence. |
 | MO-68 runtime proof/canary | NOT RUN | Support submission does not establish application-log delivery or authorize DRY_RUN/production exposure. |
+
+| MO-69 Cloudflare case response | PENDING | Case #02421284 checked once; status New, no supported correction. No repeat polling or telemetry experiment. |
+| MO-69 API/WhatsApp/Admin reads | PASS | API health/WhatsApp, Orders and Conversations HTTP200; no write. |
+| MO-69 payment/COD/province reads | PASS | Three enabled payment methods, COD PKR125, seven enabled province rates; GET-only. |
+| MO-69 Meta/scale gate | BOUNDED | Verified account/campaign context readable; sender eligibility and Queue/DLQ runtime remain unverified. |
+| MO-69 Admin refresh preference | BLOCKED | Orders and Conversations auto-update preferences read OFF; intentionally unchanged under read-only authorization. |

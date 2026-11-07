@@ -72,3 +72,7 @@ The supported dashboard Query Builder must return the sanitized application reco
 ## GFS-COD-MO-68 Cloudflare escalation boundary (2026-11-07 PKT)
 
 Cloudflare Support case [#02421284](https://www.support.cloudflare.com/s/case/500j2000000tULdAAM) is the private escalation for missing scheduled application-log delivery. Logs, invocation logs, dashboard persistence and 100% sampling were verified enabled on the isolated watchdog before submission. The case does not authorize a setting change, DRY_RUN, Admin canary or settlement action. Resume runtime proof only after Cloudflare supplies a supported correction and a separately authorized release gate is confirmed.
+
+## GFS-COD-MO-69 support and lead-readiness boundary (2026-11-07 PKT)
+
+Check case #02421284 once per authorized task; a **New/Pending** case is not runtime evidence and freezes MO logging, DRY_RUN and canary work. Read-only API health, authenticated Orders/Conversations, payment methods, COD PKR125 and province-rate reads may establish existing operational health only. Meta campaign visibility does not prove sender eligibility or readiness to scale. Queue/DLQ counters must remain explicitly UNVERIFIED when unavailable. Do not alter Admin auto-update, campaigns, sender, CAPI, payments or customer state without separate authorization.

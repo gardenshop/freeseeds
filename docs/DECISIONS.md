@@ -2893,3 +2893,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Decision:** submit private Cloudflare Support case [#02421284](https://www.support.cloudflare.com/s/case/500j2000000tULdAAM) after confirming logging collection is enabled on the isolated watchdog.
 - **Evidence:** invocation logs, persistence and 100% sampling are enabled; scheduled envelopes exist, but indexed records and a 125-second real-time tail delivered no application fields.
 - **Boundary:** the ticket does not prove DRY_RUN or authorize any production routing, deployment or payment action. Await Cloudflare's supported remediation, then request a new bounded runtime-proof authorization.
+
+## GFS-COD-MO-69 support pending; preserve lead operations
+
+- Case #02421284 was checked once and remains **New** without a response. Stop MO logging/DRY_RUN/canary work until Cloudflare provides a supported correction.
+- Existing lead operations are read-only healthy at the API boundary: API health/WhatsApp, Orders and Conversations returned HTTP200. Payment configuration readback is healthy (three methods and COD PKR125).
+- This is not an ad-scale approval. Meta account/campaign context is readable, but sender eligibility and Queue/DLQ runtime are unverified. Admin auto-update is currently OFF in both stored preferences and was intentionally left unchanged under this read-only task.
+- No source, Cloudflare, Meta, payment, order, D1, message or customer mutation occurred.
