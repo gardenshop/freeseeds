@@ -1,3 +1,10 @@
+## GFS-COD-MO-83A - one final owner-host preflight (2026-11-07 PKT)
+
+**Decision:** accept the owner screenshot as metadata-target presence evidence only and require one integrated read-only Preflight under `bi\\nazim` for actual linkage and deployment readback.
+
+- Do not run a separate verifier command, create credentials, broaden permissions or use upload mode.
+- The local gate is PASS; the genuine host result remains unknown until the owner runs the approved command. Production remains unchanged.
+
 ## GFS-COD-MO-83 - require linkage before deployment preflight (2026-11-07 PKT)
 
 **Decision:** make the approved runner call the sanitized two-credential linkage verifier before its existing Cloudflare preflight.

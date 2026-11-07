@@ -1,5 +1,10 @@
 # Resource Registry
 
+## GFS-COD-MO-83A final host evidence (2026-11-07 PKT)
+
+- Owner screenshot confirms the metadata target name `GFS-Cloudflare-Token-Metadata-Read-2026` is present in the approved host store; no secret or token ID is recorded.
+- Actual token linkage and deployment readback remain pending the single integrated Preflight under `bi\\nazim`.
+
 ## GFS-COD-MO-83 integrated preflight gate (2026-11-07 PKT)
 
 - `scripts/run-gfs-admin-deployment.ps1` now requires the sanitized output of `verify-gfs-admin-token-linkage.ps1` before invoking the existing Cloudflare preflight.

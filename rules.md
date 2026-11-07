@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-83A final host gate (2026-11-07 PKT)
+
+- Owner-provided dashboard evidence shows the Credential Manager target name `GFS-Cloudflare-Token-Metadata-Read-2026` exists. This proves presence only; it does not prove token identity, active status, expiry or policy linkage.
+- The single approved command is the integrated `run-gfs-admin-deployment.ps1 -Mode Preflight` path. It must run under `bi\\nazim`; no separate verifier command is used and no upload mode is authorized.
+- Local mocked linkage/preflight, PS5.1 compilation, full tests, build and lint pass. Real host Preflight remains NOT RUN from the sandbox; production is unchanged.
+
 ## GFS-COD-MO-83 final linkage/preflight integration (2026-11-07 PKT)
 
 - The approved PowerShell runner now invokes the two-credential linkage verifier before the Cloudflare deployment preflight. It accepts only sanitized `PASS`, `token_identity_match=PASS`, `ACTIVE`, `VALID`, `VERIFIED`, `none`; missing or denied metadata remains fail-closed.

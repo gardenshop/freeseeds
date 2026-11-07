@@ -1,5 +1,14 @@
 # Test Matrix
 
+## GFS-COD-MO-83A final host gate (2026-11-07 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Metadata target presence | PASS | Owner screenshot shows `GFS-Cloudflare-Token-Metadata-Read-2026`; value and ID not exposed. |
+| Complete local mocked gate | PASS | PS5.1 linkage 8/8, runner 11/11, linkage gate 3/3, Node 5/5, full 387/1, build/lint PASS. |
+| Genuine host linkage | NOT RUN | Sandbox is not `bi\\azim`; owner command is required. |
+| Upload/deployment | NOT AUTHORIZED | Preflight-only boundary retained. |
+
 ## GFS-COD-MO-83 integrated linkage/preflight gate (2026-11-07 PKT)
 
 | Gate | Result | Evidence |
