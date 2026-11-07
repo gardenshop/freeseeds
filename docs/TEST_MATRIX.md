@@ -4359,3 +4359,9 @@ Investigation query costs only (not production savings): representative `rows_re
 
 | MO-75 dashboard upload path | BLOCKED | Authenticated dashboard control was safety-rejected as potentially production-affecting; no supported upload-without-traffic evidence. |
 | MO-75 protected state | PASS | No upload, routing, payment, D1, Meta, CAPI or customer mutation. |
+
+| MO-76 runner identity gate | PASS (local) | Fixed `bi\\nazim` requirement; sandbox identity is rejected before credential access. |
+| MO-76 token/scope mock verification | PASS | 4/4 Node tests cover active account token, exact Worker policy, broad-scope rejection, target readback failure and secret non-return. |
+| MO-76 artifact gate | PASS (local) | Clean-HEAD and deterministic 7-file Admin artifact digest checks pass. |
+| MO-76 PowerShell runner parse/upload boundary | PASS (local) | PowerShell parse passes; static guard confirms `versions upload` only and no `versions deploy`. |
+| MO-76 live host credential/scope | UNVERIFIED | Current sandbox is not `bi\\nazim`; no credential or Cloudflare request was accessed. |

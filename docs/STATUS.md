@@ -3704,3 +3704,10 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Correct authenticated Cloudflare account/Worker was confirmed read-only. Dashboard `Edit code` was safety-rejected by Chrome MCP because it may deploy; no upload or workaround was attempted.
 - No source-isolated MO artifact was uploaded and no version ID exists. Admin/API/WhatsApp/payments/D1/Meta/CAPI remain unchanged.
 - Preview remains BLOCKED until the approved `bi\\nazim` process-only deployment runner is callable.
+
+## GFS-COD-MO-76 secure deployment runner (2026-11-07 PKT)
+
+- Added `scripts/run-gfs-admin-deployment.ps1`; it fails closed unless running as `bi\\nazim`, from a clean repository at the supplied approved HEAD, with the exact tracked Admin artifact digest.
+- Read-only preflight verifies the account token through the official account-token endpoint, requires token-detail policy evidence for only `getfreeseeds-admin-staging`, and performs target Worker deployment readback. The optional mutation is Wrangler `versions upload` only; no deploy/routing action is included.
+- Local mock/API validation is 4/4; Node syntax and PowerShell parse pass. Sandbox identity remains `bi\\codexsandboxoffline`, so live credential validity/scope and host runner operation are **UNVERIFIED**. No Cloudflare or production mutation occurred.
+- Next gate is one owner-side execution under `bi\\nazim`; do not run upload mode until the isolated artifact and separate release authorization are confirmed.

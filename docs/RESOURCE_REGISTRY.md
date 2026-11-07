@@ -2801,3 +2801,9 @@ No secrets are stored in this registry.
 ## GFS-COD-MO-75 preview access (2026-11-07 PKT)
 - Dashboard account/Worker readback is correct. `Edit code` upload control is safety-blocked by MCP; no candidate version or deployment ID was created.
 - Required owner interface remains the approved `bi\\nazim` process-only deployment runner. No token value or customer data is recorded.
+
+## GFS-COD-MO-76 secure deployment runner (2026-11-07 PKT)
+
+- Runner: `scripts/run-gfs-admin-deployment.ps1`; fixed account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, Worker `getfreeseeds-admin-staging`, Credential Manager target name `GFS-Admin-Deploy-Scoped-2026`.
+- Current artifact identity: HEAD `cdbe8855f2936be9863fde24873153d2de5eba8a`, digest `cfe777513ca21aca476a755aaf93ab61797a418c03952752541794f679b209c4`, 7 tracked Admin source/config files.
+- Default/readback mode is safe; upload mode is Wrangler `versions upload` only and is not a deployment or traffic mutation. Live owner-host validation is pending; no secret value is recorded.

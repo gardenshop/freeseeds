@@ -2929,6 +2929,13 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Stop deployment and preview until the owner supplies the approved host-side `bi\\nazim` deployment runner/interface for the scoped Admin credential. No token value or guessed Wrangler command is acceptable.
 - Keep CAPI OFF and do not settle a real order until isolated preview, genuine evidence, separate authorization and Meta acknowledgement gates pass.
 
+## GFS-COD-MO-76 fixed secure host runner
+
+- **Decision:** use a repository-owned PowerShell runner with a fixed account/Worker, exact `bi\\nazim` identity gate, process-only Credential Manager handoff, and default read-only preflight. Do not reuse the health/analytics wrapper.
+- **Artifact gate:** require approved Git HEAD `cdbe8855f2936be9863fde24873153d2de5eba8a` and deterministic digest `cfe777513ca21aca476a755aaf93ab61797a418c03952752541794f679b209c4` for the current tracked Admin source/config set.
+- **Upload boundary:** if separately authorized, the runner may call only `wrangler versions upload`; it must report `deployed=false` and `routingChanged=false`. It may not deploy, attach, promote, read secrets, or alter production configuration.
+- **Evidence:** mock/API tests 4/4, Node syntax and PowerShell parse pass. Live host credential and scope remain unverified from the sandbox; no upload was attempted.
+
 ## GFS-COD-MO-75 — no dashboard deployment workaround (2026-11-07 PKT)
 - Treat the MCP safety rejection of dashboard `Edit code` as a deployment-access blocker, not permission to bypass via DOM, direct API, token extraction or health-wrapper reuse.
 - Stop at 0% until the approved host deployment runner is callable; do not claim preview or live MO completion.

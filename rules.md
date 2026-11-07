@@ -1,5 +1,13 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-76 secure Admin deployment runner (2026-11-07 PKT)
+
+- Added `scripts/run-gfs-admin-deployment.ps1` with fixed account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, fixed Worker `getfreeseeds-admin-staging`, exact identity gate `bi\\nazim`, clean-worktree/approved-HEAD gate, deterministic Admin source/config digest, and allowlisted Credential Manager target `GFS-Admin-Deploy-Scoped-2026`.
+- Default mode is read-only. The optional upload path invokes only the official local Wrangler `versions upload`; it never invokes `versions deploy`, changes traffic, or changes production configuration. Token text is process-only and cleared in `finally`; output is sanitized.
+- Local mock/API tests pass 4/4; Node syntax and PowerShell parsing pass. No real credential was read, no Cloudflare request or upload was made from the sandbox, and no production state changed. Owner-host validation remains required before any upload.
+- The approved source identity for this worktree is HEAD `cdbe8855f2936be9863fde24873153d2de5eba8a`, with deterministic Admin artifact digest `cfe777513ca21aca476a755aaf93ab61797a418c03952752541794f679b209c4` over 7 tracked Admin source/config files. Do not reuse this identity for a different artifact without recalculating the digest.
+- Preserve Admin `3e4b7c26`100% / candidate `ce023b54`0%, API `b426ba47`100%, watchdog DISARMED, WhatsApp/new-number lock, Hoja zero-connection, payments, D1, Meta and CAPI OFF.
+
 ## GFS-COD-MO-62 watchdog activation (2026-11-06 PKT)
 
 - Owner credentials were validated only inside approved `bi\\nazim`; values never entered agent output. The scoped Worker credential authorized the new Worker, while the Admin recovery credential was used only as the secret value.
