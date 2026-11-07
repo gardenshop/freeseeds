@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-COD-MO-82H host-token linkage verifier (2026-11-07 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Exact token-ID match | PASS local | Correct/mismatched IDs covered without outputting IDs. |
+| Expiry and active state | PASS local | Active valid and expired cases covered. |
+| Exact Worker policy and permission | PASS local | Wrong Worker/account and missing/invalid policy reject. |
+| Metadata denial/missing credential | PASS local | Returns only `METADATA_AUTH_REQUIRED`. |
+| Reader/runtime/output safety | PASS | PowerShell 5.1 reader compiles twice; wrong identity fails before credential access; no synthetic secret leaks. |
+| Real linkage | BLOCKED | Requires approved read-only account-token metadata credential in the named host target. |
+
 ## GFS-COD-MO-81 final scope evidence (2026-11-07 PKT)
 
 | Gate | Result | Evidence |

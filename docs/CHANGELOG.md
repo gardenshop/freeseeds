@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-07 - GFS-COD-MO-82H
+
+- Added a Windows PowerShell 5.1-safe, read-only host verifier for deployment-token identity linkage.
+- Refactored the Credential Manager reader into a shared `CredFree`-preserving helper and added 8/8 linkage mock coverage.
+
 ## 2026-11-07 - GFS-COD-MO-81
 
 - Recorded authenticated dashboard proof of the exact Worker-only policy.

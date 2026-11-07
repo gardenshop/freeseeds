@@ -2967,3 +2967,8 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Decision:** accept the authenticated dashboard as policy evidence, but do not treat token name alone as proof that the host Credential Manager secret is the same token.
 - **Evidence:** one exact-name inventory row and one exact Worker-only policy; active/expiry passed in the prior host run before the details gate.
 - **Boundary:** retain `token_scope_unverified`/no-upload behavior until an approved host process returns only a sanitized identity-match result.
+## GFS-COD-MO-82H — two-credential identity comparison
+
+- **Decision:** validate the deployment token with itself, but read its policy through a separate approved account-token metadata-read credential. Compare token IDs only inside the approved host process.
+- **Fail-closed behavior:** absent/denied metadata returns `METADATA_AUTH_REQUIRED`; matching token names or Worker readback alone never pass linkage.
+- **Boundary:** verifier has no upload/deployment code and must run before, not instead of, existing preflight.

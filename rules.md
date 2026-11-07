@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-82H host-token linkage verifier (2026-11-07 PKT)
+
+- Added `verify-gfs-admin-token-linkage.ps1`, which runs only as `bi\\nazim`, reads `GFS-Admin-Deploy-Scoped-2026` and the separate metadata credential target internally, verifies token status/expiry, compares exact token IDs internally, and validates one exact Worker-only edit policy.
+- Output is sanitized to identity-match, status, expiry status, scope and code. Missing/denied metadata returns `METADATA_AUTH_REQUIRED`; no names, IDs, token values, headers or fingerprints are emitted.
+- Shared C# 5 Credential Manager reader preserves `CredFree`; linkage mocks pass 8/8, existing runner checks 9/9, Node preflight 5/5, full 387/1, build/lint PASS. No credential, Cloudflare or production mutation occurred.
+
 ## GFS-COD-MO-81 final scope evidence (2026-11-07 PKT)
 
 - Authenticated Cloudflare account-token detail evidence shows one policy only: account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, Worker `getfreeseeds-admin-staging`, `Individual Workers Editor`.

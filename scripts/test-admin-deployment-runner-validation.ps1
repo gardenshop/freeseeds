@@ -15,7 +15,7 @@ $actualRoot = Invoke-GfsGitText -RepoRoot $root -Arguments @("rev-parse", "--sho
 if ($actualRoot.exitCode -ne 0 -or -not (Test-GfsCanonicalPathEqual $root $actualRoot.text)) { throw "actual git root lookup failed" }
 $invalidGit = Invoke-GfsGitText -RepoRoot "D:\not-a-repository" -Arguments @("status", "--porcelain")
 if ($invalidGit.exitCode -eq 0) { throw "invalid repository unexpectedly passed" }
-$runnerSource = Get-Content -Raw (Join-Path $PSScriptRoot "run-gfs-admin-deployment.ps1")
+$runnerSource = Get-Content -Raw (Join-Path $PSScriptRoot "gfs-credential-reader.ps1")
 $csharpMatch = [regex]::Match($runnerSource, 'Add-Type\s+-TypeDefinition\s+@"\r?\n(?<source>.*?)\r?\n"@', [System.Text.RegularExpressions.RegexOptions]::Singleline)
 if (-not $csharpMatch.Success) { throw "embedded C# source not found" }
 for ($i = 0; $i -lt 2; $i++) {

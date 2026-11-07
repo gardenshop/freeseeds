@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-COD-MO-82H host linkage verifier (2026-11-07 PKT)
+
+- New local scripts: `gfs-credential-reader.ps1`, `gfs-token-linkage-validation.ps1`, `verify-gfs-admin-token-linkage.ps1`, and `test-gfs-admin-token-linkage.ps1`.
+- Required Credential Manager targets by name only: deployment `GFS-Admin-Deploy-Scoped-2026`; metadata read `GFS-Cloudflare-Token-Metadata-Read-2026`.
+- The verifier is read-only, account/Worker fixed, and returns sanitized status only. No credential value, token ID or Cloudflare resource is recorded.
+
 ## GFS-COD-MO-81 final scope evidence (2026-11-07 PKT)
 
 - Cloudflare account-token detail confirms the deployment policy is limited to `getfreeseeds-admin-staging` with `Individual Workers Editor`; no token value or ID is recorded.
