@@ -2776,3 +2776,9 @@ No secrets are stored in this registry.
 - Cloudflare DLQ `getfreeseeds-events-staging-dlq`: inactive; backlog 0, retries 0, no ingested messages.
 - Queue consumer/subscription: no staging subscription shown by the approved dashboard; consumer binding remains unverified.
 - Meta Ads Manager: verified account/campaign context only; no sender, campaign, WABA or advertising mutation performed.
+
+## GFS-COD-MO-71 release resource boundary (2026-11-07 PKT)
+
+- Live Admin remains `3e4b7c26`100% with frozen candidate `ce023b54`0%; API remains `b426ba47`100%; watchdog `73a1f50c` DISARMED.
+- Local source correction is not a deployed resource. The current PR11 tree includes historical-MO changes after the live MO-12 baseline; no candidate upload was attempted.
+- Required next resource: an isolated Admin version containing only the auto-update correction, followed by authorized 0% preview and rollback readback.

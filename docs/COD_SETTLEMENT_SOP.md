@@ -80,3 +80,7 @@ Check case #02421284 once per authorized task; a **New/Pending** case is not run
 ## Lead operations protection during MO freeze
 
 Queue counters may be recorded read-only but do not substitute for a verified consumer binding. Meta campaign visibility does not establish sender or click-to-WhatsApp eligibility. No MO, CAPI, payment, customer-message or advertising mutation is allowed while the support gate is pending.
+
+## Admin auto-update release boundary
+
+The Orders auto-update repair must be released from a source-isolated Admin candidate based on the live-compatible baseline. Do not upload a broad tree that adds frozen historical-MO behavior. Keep Admin baseline 100%, candidate 0%, API unchanged, and require authenticated 0% preview plus rollback readback before any exposure.

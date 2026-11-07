@@ -3678,3 +3678,9 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Queue evidence: staging backlog 0, delayed backlog 0, retries 0, average consumer lag 5.63s, 31 ingested/31 acknowledged. Staging DLQ inactive with backlog 0, retries 0 and no ingested messages. No staging subscription was shown; consumer binding remains UNVERIFIED.
 - Meta account/campaign context was readable, but sender quality/limits/restrictions/template and click-to-WhatsApp eligibility were not proven. Lead-scale readiness is not approved.
 - Auto-update preferences are ON and persist after reload. Conversations polling passed. Orders exposed a local initialization defect; local `resumeOrdersAuto()` repair passed focused 19/19, full 385/1 skipped, build/lint. No Worker deployment occurred, so live Orders auto-update remains BLOCKED pending authorized release verification.
+
+## GFS-COD-MO-71 — Admin fix and safe release gate (2026-11-07 PKT)
+
+- Root cause confirmed: the previous startup replacement executed before the generated pagehide listener existed, making it ineffective.
+- Fixed locally with `load().finally(() => resumeOrdersAuto())`; rendered-script functional tests cover persisted startup, cycles, hidden pause and OFF cancellation. Focused 20/20; full 386 passed/1 skipped; build/lint PASS.
+- Release blocked safely: current PR11 source includes historical-MO changes after the live MO-12 Admin baseline, so it is not a narrow auto-update candidate. No upload, deployment or routing mutation occurred.

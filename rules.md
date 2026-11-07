@@ -2639,3 +2639,9 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - Queue `getfreeseeds-events-staging`: backlog 0, delayed backlog 0, retries 0, average consumer lag 5.63 seconds, 31 ingested and 31 acknowledged in the displayed window. Its DLQ was inactive with backlog 0, retries 0 and no ingested messages. No subscription was shown; consumer binding remains unverified.
 - Meta Ads Manager account/campaign context was readable, but sender quality, messaging limits, restrictions, template eligibility and click-to-WhatsApp eligibility were not exposed. Campaign visibility is not scale approval.
 - Orders and Conversations auto-update preferences were enabled and persisted after reload. Conversations polling was observed. Orders did not schedule `/api/orders/changes` after reload in the live baseline build; the defect was repaired locally by starting `resumeOrdersAuto()` after preference initialization. Focused Admin tests 19/19, full suite 385 passed/1 skipped, build/lint passed. No deployment was authorized; live Orders verification remains pending.
+
+## GFS-COD-MO-71 Admin auto-update release boundary (2026-11-07 PKT)
+
+- Root cause: the prior startup `.replace` ran before the generated `pagehide` listener was inserted, so it was a no-op. The rendered Orders page therefore did not resume persisted ON state after reload.
+- Local correction: call `resumeOrdersAuto()` from `load().finally(...)`, after initial hydration/load completes. Functional rendered-script coverage verifies startup, scheduled cycles, hidden-state pause and OFF cancellation; focused 20/20, full 386 passed/1 skipped, build/lint PASS.
+- Do not upload the broad current PR11 source as an auto-update-only candidate: it contains later historical-MO changes after the live MO-12 baseline. A source-isolated Admin candidate and approved deployment path are required. No deployment or routing change was made.

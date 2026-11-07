@@ -2907,3 +2907,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Record Queue read-only health only; no staging subscription was shown, so consumer identity is not claimed.
 - Keep Meta unchanged: account/campaign visibility is insufficient for ad-scale GO because sender eligibility and limits/restrictions were not verified.
 - Keep the Orders auto-update repair local. Require one authorized Admin candidate release and read-only verification before declaring live refresh reliable.
+
+## GFS-COD-MO-71 — isolate before Admin release
+
+- The MO-70 startup repair was confirmed as a replacement-ordering no-op and corrected locally after hydration completes.
+- Do not release the current broad PR11 tree for this fix: it includes historical-MO functionality beyond the live MO-12 baseline. Prepare a candidate from the live-compatible Admin baseline with only the auto-update correction.
+- Keep Admin 100/0, API 100%, watchdog DISARMED, MO support frozen, and Meta/payment state unchanged until that isolated candidate and deployment authority are verified.

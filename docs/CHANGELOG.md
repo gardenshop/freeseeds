@@ -2514,3 +2514,9 @@
 - Enabled and persisted Admin Orders/Conversations auto-update preferences; observed Conversations polling and diagnosed the Orders reload initialization defect.
 - Added the minimal local Orders auto-update startup repair and regression assertion. Focused 19/19, full 385 passed/1 skipped, build/lint PASS. No deployment performed.
 - Recorded read-only Queue/DLQ evidence and Meta eligibility limits. Lead-scale readiness remains PARTIAL/NO-GO until live Orders verification, consumer binding evidence and Meta sender eligibility are closed.
+
+## 2026-11-07 - GFS-COD-MO-71
+
+- Confirmed MO-70's Orders startup replacement was ordered before the listener insertion and therefore did nothing.
+- Corrected startup timing with `load().finally(...)`; added rendered-script functional coverage. Focused 20/20, full 386 passed/1 skipped, build/lint PASS.
+- Blocked broad upload because current PR11 contains historical-MO changes beyond the live MO-12 baseline. No deployment or routing change occurred.

@@ -4338,3 +4338,8 @@ Investigation query costs only (not production savings): representative `rows_re
 | MO-70 Meta scale eligibility | BOUNDED | Account/campaign context readable; sender quality, limits, restrictions, templates and click-to-WhatsApp eligibility not proven. |
 | MO-70 Orders auto-update local repair | PASS (local) | Initial `resumeOrdersAuto()` added; focused Admin 19/19, full 385 passed/1 skipped, build/lint PASS. |
 | MO-70 live Orders auto-update | BLOCKED | No deployment authorized; baseline live build did not schedule `/api/orders/changes` after reload despite ON preference. |
+
+| MO-71 Orders startup root cause | PASS | Startup replacement preceded insertion of the generated pagehide listener and was a no-op. |
+| MO-71 rendered Orders auto-update | PASS (local) | `load().finally(() => resumeOrdersAuto())`; persisted startup, cycles, hidden pause and OFF cancellation covered. Focused 20/20. |
+| MO-71 full regression | PASS | 386 passed, 1 skipped; build and lint PASS. |
+| MO-71 narrow Admin candidate | BLOCKED | Current tree contains historical-MO changes after live MO-12 baseline; no broad upload or routing mutation permitted. |

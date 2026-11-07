@@ -171,7 +171,7 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("Browser fetch failed; check connectivity or the Admin session.");
     expect(html).toContain("Access session expired or denied. Re-authenticate the Admin session.");
     expect(html).toContain("Asia/Karachi");
-    expect(html).toContain("hydrate();setTabs({});load();");
+    expect(html).toContain("hydrate();setTabs({});load().finally(()=>{if(typeof ordersAutoOn!=='undefined'&&ordersAutoOn)resumeOrdersAuto()});");
   });
 
   it("keeps the professional startup script parseable with all queues and auto-selection", async () => {
@@ -209,6 +209,54 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("window.addEventListener('focus',resumeOrdersAuto)");
     expect(html).toContain("if(ordersAutoOn)resumeOrdersAuto()");
     expect(html).toContain("},60000)");
+  });
+
+  it("starts persisted Orders auto-update after hydration and respects hidden/off state", async () => {
+    const response = await app.fetch(new Request("https://admin.example.test/orders", { headers: auth }), env(new AdminMemoryDb()));
+    const html = await response.text();
+    const script = html.match(/<script>([\s\S]*)<\/script>/)?.[1];
+    expect(script).toBeDefined();
+    expect(script!.indexOf("load().finally(()=>{if(typeof ordersAutoOn!=='undefined'&&ordersAutoOn)resumeOrdersAuto()});")).toBeGreaterThan(script!.indexOf("let ordersAutoTimer=null"));
+    const start = script!.indexOf("let ordersAutoTimer=null");
+    const end = script!.indexOf("const addActionsWithoutClearerReason", start);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+    let refreshCalls = 0;
+    let resolveRefresh: (() => void) | null = null;
+    const timers: Array<{ active: boolean; fn: () => void; ms: number }> = [];
+    const listeners = new Map<string, () => void>();
+    const button = { textContent: "", setAttribute: () => {}, onclick: undefined as (() => void) | undefined };
+    const storage = new Map([["gfs_admin_orders_auto_update", "on"]]);
+    const context = {
+      document: { hidden: false, hasFocus: () => true, querySelector: () => button, addEventListener: (name: string, fn: () => void) => listeners.set(name, fn) },
+      window: { addEventListener: (name: string, fn: () => void) => listeners.set(name, fn) },
+      localStorage: { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: string) => storage.set(key, value), removeItem: (key: string) => storage.delete(key) },
+      crypto: { randomUUID: () => "test-tab" },
+      setTimeout: (fn: () => void, ms: number) => { timers.push({ active: true, fn, ms }); return timers.length; },
+      clearTimeout: (id: number) => { if (timers[id - 1]) timers[id - 1].active = false; },
+      load: async () => {},
+      refreshOrders: () => { refreshCalls += 1; return new Promise<void>((resolve) => { resolveRefresh = resolve; }); },
+      refreshInFlight: false
+    };
+    new Script(`${script!.slice(start, end)};load().finally(()=>{if(typeof ordersAutoOn!=='undefined'&&ordersAutoOn)resumeOrdersAuto()})`).runInNewContext(context);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(refreshCalls).toBe(1);
+    context.document.hidden = true;
+    listeners.get("focus")!();
+    expect(refreshCalls).toBe(1);
+    context.document.hidden = false;
+    resolveRefresh!();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const first = timers.find((timer) => timer.active && timer.ms === 60000);
+    expect(first).toBeDefined();
+    const secondRun = first!.fn();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(refreshCalls).toBe(2);
+    resolveRefresh!();
+    await secondRun;
+    button.onclick!();
+    expect(storage.get("gfs_admin_orders_auto_update")).toBe("off");
+    expect(timers.some((timer) => timer.active)).toBe(false);
   });
 
   it("requires CSRF for payment and fulfillment detail mutations", async () => {
