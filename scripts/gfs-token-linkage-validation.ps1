@@ -118,8 +118,26 @@ function Get-GfsPolicyDiagnostics {
   return New-GfsTokenLinkageDiagnostics -PolicyCount $policyCount -ResourceRepresentation $representation -ResourceKeyShape $resourceKeyShape -WorkerReferenceType $workerReferenceType -WorkerResourceFamily $workerResourceFamily -RoleResult $roleResult -PermissionGroupResult $groupResult
 }
 
+function Test-GfsOpaqueWorkerResourceMatch {
+  param(
+    [object] $ResourceLeaf,
+    [object] $AuthoritativeWorkerRecord,
+    [string] $Worker
+  )
+  if ($null -eq $ResourceLeaf -or $null -eq $AuthoritativeWorkerRecord) { return $false }
+  $path = [string]$ResourceLeaf.path
+  if ($path -notlike "com.cloudflare.api.account.*" -or [string]$ResourceLeaf.value -ne "*") { return $false }
+  $reference = ($path -split '\.')[-1]
+  if ($reference -notmatch '^[a-fA-F0-9]{32}$' -and $reference -notmatch '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') { return $false }
+  if ([string]$AuthoritativeWorkerRecord.id -ne $Worker) { return $false }
+  # The official Worker Scripts list calls `id` the script name and `tag`
+  # the immutable script ID.  Match both internally; never accept name-only
+  # or a successful Worker read as proof of an opaque token resource.
+  return ([string]$AuthoritativeWorkerRecord.tag -eq $reference)
+}
+
 function Get-GfsExactWorkerPolicyDiagnostics {
-  param([object] $Policies, [object] $PermissionGroups, [string] $Worker)
+  param([object] $Policies, [object] $PermissionGroups, [string] $Worker, [object] $AuthoritativeWorkerRecord = $null)
   $diagnostics = Get-GfsPolicyDiagnostics -Policies $Policies -PermissionGroups $PermissionGroups -Worker $Worker
   $policyItems = @($Policies)
   if ($policyItems.Count -ne 1) { return [pscustomobject]@{ pass = $false; diagnostics = $diagnostics } }
@@ -127,7 +145,12 @@ function Get-GfsExactWorkerPolicyDiagnostics {
   if ([string]$policy.effect -ne "allow") { return [pscustomobject]@{ pass = $false; diagnostics = $diagnostics } }
   $resourceLeaves = @(Get-GfsResourceLeaves -Value $policy.resources)
   $expected = "com.cloudflare.api.account.worker.script.$Worker"
-  if ($resourceLeaves.Count -ne 1 -or [string]$resourceLeaves[0].path -ne $expected -or [string]$resourceLeaves[0].value -ne "*") { return [pscustomobject]@{ pass = $false; diagnostics = $diagnostics } }
+  $canonicalMatch = $resourceLeaves.Count -eq 1 -and [string]$resourceLeaves[0].path -eq $expected -and [string]$resourceLeaves[0].value -eq "*"
+  $opaqueMatch = $false
+  if (-not $canonicalMatch -and $resourceLeaves.Count -eq 1 -and $diagnostics.resource_representation -eq "flat" -and $diagnostics.worker_reference_type -eq "immutable_id") {
+    $opaqueMatch = Test-GfsOpaqueWorkerResourceMatch -ResourceLeaf $resourceLeaves[0] -AuthoritativeWorkerRecord $AuthoritativeWorkerRecord -Worker $Worker
+  }
+  if (-not $canonicalMatch -and -not $opaqueMatch) { return [pscustomobject]@{ pass = $false; diagnostics = $diagnostics } }
   $groups = @($policy.permission_groups)
   if ($groups.Count -ne 1 -or [string]::IsNullOrWhiteSpace([string]$groups[0].id)) { return [pscustomobject]@{ pass = $false; diagnostics = $diagnostics } }
   $matchedGroup = @($PermissionGroups | Where-Object { [string]$_.id -eq [string]$groups[0].id })
@@ -162,7 +185,8 @@ function Test-GfsTokenLinkage {
     [Parameter(Mandatory = $true)][object] $Metadata,
     [Parameter(Mandatory = $true)][object] $PermissionGroups,
     [Parameter(Mandatory = $true)][datetime] $Now,
-    [Parameter(Mandatory = $true)][string] $ExpectedWorker
+    [Parameter(Mandatory = $true)][string] $ExpectedWorker,
+    [object] $AuthoritativeWorkerRecord = $null
   )
   $status = [string]$TokenVerify.result.status
   $expiryText = [string]$TokenVerify.result.expires_on
@@ -174,7 +198,7 @@ function Test-GfsTokenLinkage {
   if ($tokenId -notmatch '^[a-fA-F0-9]{32}$') { return New-GfsTokenLinkageResult "FAIL" "FAIL" "ACTIVE" "VALID" "UNVERIFIED" "token_identity_missing" }
   if ($Metadata.success -ne $true) { return New-GfsTokenLinkageResult "FAIL" "UNKNOWN" "ACTIVE" "VALID" "UNVERIFIED" "METADATA_AUTH_REQUIRED" }
   if ([string]$Metadata.result.id -ne $tokenId) { return New-GfsTokenLinkageResult "FAIL" "FAIL" "ACTIVE" "VALID" "UNVERIFIED" "token_identity_mismatch" }
-  $policyCheck = Get-GfsExactWorkerPolicyDiagnostics -Policies $Metadata.result.policies -PermissionGroups $PermissionGroups -Worker $ExpectedWorker
+  $policyCheck = Get-GfsExactWorkerPolicyDiagnostics -Policies $Metadata.result.policies -PermissionGroups $PermissionGroups -Worker $ExpectedWorker -AuthoritativeWorkerRecord $AuthoritativeWorkerRecord
   if (-not $policyCheck.pass) { return New-GfsTokenLinkageResult "FAIL" "PASS" "ACTIVE" "VALID" "UNVERIFIED" "token_scope_mismatch" $policyCheck.diagnostics }
   return New-GfsTokenLinkageResult "PASS" "PASS" "ACTIVE" "VALID" "VERIFIED" "none" $policyCheck.diagnostics
 }

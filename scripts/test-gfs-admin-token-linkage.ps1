@@ -30,6 +30,16 @@ if ($nestedDiagnostics.policy_count -ne "one" -or $nestedDiagnostics.resource_re
 $immutablePolicy = [pscustomobject]@{ effect = "allow"; resources = [pscustomobject]@{ "com.cloudflare.api.account.worker.script.0123456789abcdef0123456789abcdef" = "*" }; permission_groups = @([pscustomobject]@{ id = "workers-editor" }) }
 $immutableDiagnostics = Get-GfsPolicyDiagnostics -Policies @($immutablePolicy) -PermissionGroups $groups -Worker $worker
 if ($immutableDiagnostics.worker_reference_type -ne "immutable_id" -or $immutableDiagnostics.resource_key_shape -ne "worker_script") { throw "immutable Worker reference was not classified safely" }
+$opaqueId = "abcdefabcdefabcdefabcdefabcdefab"
+$opaquePolicy = [pscustomobject]@{ effect = "allow"; resources = [pscustomobject]@{ "com.cloudflare.api.account.$opaqueId" = "*" }; permission_groups = @([pscustomobject]@{ id = "workers-editor" }) }
+$opaqueRecord = [pscustomobject]@{ id = $worker; tag = $opaqueId }
+$opaqueMetadata = [pscustomobject]@{ success = $true; result = [pscustomobject]@{ id = $id; policies = @($opaquePolicy) } }
+$opaqueResult = Test-GfsTokenLinkage -TokenVerify $verify -Metadata $opaqueMetadata -PermissionGroups $groups -Now ([datetime]"2026-11-07T00:00:00Z") -ExpectedWorker $worker -AuthoritativeWorkerRecord $opaqueRecord
+Assert-Code $opaqueResult "none" "authoritative immutable Worker tag match"
+$opaqueMismatch = Test-GfsTokenLinkage -TokenVerify $verify -Metadata $opaqueMetadata -PermissionGroups $groups -Now ([datetime]"2026-11-07T00:00:00Z") -ExpectedWorker $worker -AuthoritativeWorkerRecord ([pscustomobject]@{ id = $worker; tag = ("f" * 32) })
+Assert-Code $opaqueMismatch "token_scope_mismatch" "immutable Worker tag mismatch"
+$opaqueWithoutRecord = Test-GfsTokenLinkage -TokenVerify $verify -Metadata $opaqueMetadata -PermissionGroups $groups -Now ([datetime]"2026-11-07T00:00:00Z") -ExpectedWorker $worker
+Assert-Code $opaqueWithoutRecord "token_scope_mismatch" "immutable Worker without authority"
 $unknownFamilyPolicy = [pscustomobject]@{ effect = "allow"; resources = [pscustomobject]@{ "com.cloudflare.api.account.unknown.scope.$worker" = "*" }; permission_groups = @([pscustomobject]@{ id = "workers-editor" }) }
 $unknownFamilyDiagnostics = Get-GfsPolicyDiagnostics -Policies @($unknownFamilyPolicy) -PermissionGroups $groups -Worker $worker
 if ($unknownFamilyDiagnostics.worker_reference_type -ne "name" -or $unknownFamilyDiagnostics.resource_key_shape -ne "other" -or $unknownFamilyDiagnostics.worker_resource_family -ne "unknown") { throw "unknown resource family was not classified safely" }
@@ -50,4 +60,4 @@ if ((Test-GfsLinkageTarget -AccountId "cb5066a6d71ecdee0bd7ed8aacb4d3c2" -Worker
 $safe = (Test-GfsTokenLinkage -TokenVerify $verify -Metadata $metadata -PermissionGroups $groups -Now ([datetime]"2026-11-07T00:00:00Z") -ExpectedWorker $worker | ConvertTo-Json -Compress)
 if ($safe -match $id -or $safe -match "synthetic-secret") { throw "sensitive output leaked" }
 if ($safe -match "0123456789abcdef|other-worker|Workers Routes") { throw "diagnostic output leaked sensitive policy identifiers" }
-"token_linkage_validation=PASS (13/13); credential_reader_add_type=PASS (2/2)"
+"token_linkage_validation=PASS (16/16); credential_reader_add_type=PASS (2/2)"

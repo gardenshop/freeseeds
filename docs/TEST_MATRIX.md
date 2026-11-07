@@ -1,5 +1,15 @@
 # Test Matrix
 
+## GFS-COD-MO-87 immutable Worker resource mapping (2026-11-07 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Official identity mapping | PASS | Worker Scripts `id` is script name; `tag` is immutable script ID. |
+| Opaque policy acceptance | PASS LOCAL | One flat opaque leaf is accepted only after internal `tag` + script-name match and exact Editor policy checks. |
+| Wrong/missing/broad mapping | PASS fail-closed | Wrong tag, absent record, wildcard, extra resource, wrong Worker and wrong role reject. |
+| PS5.1/full validation | PASS | Linkage 16/16; runner 11/11 + linkage gate 3/3; Node 5/5; full 387 passed/1 skipped; build/lint/parse PASS. |
+| Genuine host Preflight | PENDING | Sandbox cannot execute as `bi\\nazim`; no live policy mapping or upload is claimed. |
+
 ## GFS-COD-MO-86 Worker-scope diagnosis (2026-11-07 PKT)
 
 | Gate | Result | Evidence |

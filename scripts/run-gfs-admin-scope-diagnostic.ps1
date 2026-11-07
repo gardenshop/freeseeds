@@ -57,10 +57,12 @@ try {
   $workerMatches = @()
   if ($workerList.available -and $workerList.body.success -eq $true) { $workerMatches = @($workerList.body.result | Where-Object { [string]$_.id -eq $WorkerName }) }
   $authoritative = if ($workerList.available -and $workerMatches.Count -eq 1) { "PASS" } elseif (-not $workerList.available) { "UNAVAILABLE" } else { "FAIL" }
+  $workerIdentity = if ($authoritative -ne "PASS") { "UNAVAILABLE" } elseif ([string]::IsNullOrWhiteSpace([string]$workerMatches[0].tag)) { "SCRIPT_NAME_ONLY" } else { "SCRIPT_NAME_AND_IMMUTABLE_TAG" }
   $diagnostics = $linkage.diagnostics
   $resolution = "UNRESOLVED"
   if ($authoritative -eq "PASS" -and $diagnostics.worker_reference_type -eq "name" -and ($diagnostics.worker_resource_family -eq "worker" -or $diagnostics.worker_resource_family -eq "workers")) { $resolution = "NAME_MATCH" }
-  elseif ($diagnostics.worker_reference_type -eq "immutable_id") { $resolution = "IMMUTABLE_ID_REQUIRES_AUTHORITATIVE_MATCH" }
+  elseif ($linkage.result -eq "PASS" -and $diagnostics.worker_reference_type -eq "immutable_id" -and $workerIdentity -eq "SCRIPT_NAME_AND_IMMUTABLE_TAG") { $resolution = "IMMUTABLE_TAG_MATCH" }
+  elseif ($diagnostics.worker_reference_type -eq "immutable_id") { $resolution = "IMMUTABLE_ID_REQUIRES_AUTHORITATIVE_TAG_MATCH" }
   Save-SafeResult ([pscustomobject]@{
     result = if ($linkage.result -eq "PASS" -and $resolution -eq "NAME_MATCH") { "PASS" } else { "DIAGNOSTIC" }
     linkage_code = Safe-Code ([string]$linkage.code) "linkage_failed"
@@ -69,6 +71,7 @@ try {
     expiry_status = [string]$linkage.expiry_status
     diagnostics = $diagnostics
     authoritative_worker_record = $authoritative
+    authoritative_worker_identity = $workerIdentity
     worker_scope_resolution = $resolution
     worker_read_status = [int]$workerList.status
   })

@@ -30,11 +30,16 @@ try {
   if (-not $verified.available) { Write-GfsLinkageResult (New-GfsTokenLinkageResult "FAIL" "UNKNOWN" "UNKNOWN" "UNKNOWN" "UNVERIFIED" "token_verify_failed") }
   $tokenId = [string]$verified.body.result.id
   if ($tokenId -notmatch '^[a-fA-F0-9]{32}$') { Write-GfsLinkageResult (New-GfsTokenLinkageResult "FAIL" "FAIL" "UNKNOWN" "UNKNOWN" "UNVERIFIED" "token_identity_missing") }
+  $workerList = Invoke-GfsCloudflareGet $deploymentToken "/accounts/$AccountId/workers/scripts"
+  if (-not $workerList.available -or $workerList.body.success -ne $true) { Write-GfsLinkageResult (New-GfsTokenLinkageResult "FAIL" "PASS" ([string]$verified.body.result.status).ToUpperInvariant() "UNKNOWN" "UNVERIFIED" "authoritative_worker_unavailable") }
+  $workerRecords = @($workerList.body.result | Where-Object { [string]$_.id -eq $WorkerName })
+  if ($workerRecords.Count -ne 1) { Write-GfsLinkageResult (New-GfsTokenLinkageResult "FAIL" "PASS" ([string]$verified.body.result.status).ToUpperInvariant() "UNKNOWN" "UNVERIFIED" "authoritative_worker_mismatch") }
+  $authoritativeWorker = $workerRecords[0]
   $metadata = Invoke-GfsCloudflareGet $metadataToken "/accounts/$AccountId/tokens/$tokenId"
   if (-not $metadata.available) { Write-GfsLinkageResult (New-GfsTokenLinkageResult "FAIL" "UNKNOWN" ([string]$verified.body.result.status).ToUpperInvariant() "UNKNOWN" "UNVERIFIED" "METADATA_AUTH_REQUIRED") }
   $groups = Invoke-GfsCloudflareGet $metadataToken "/accounts/$AccountId/tokens/permission_groups"
   if (-not $groups.available) { Write-GfsLinkageResult (New-GfsTokenLinkageResult "FAIL" "UNKNOWN" ([string]$verified.body.result.status).ToUpperInvariant() "UNKNOWN" "UNVERIFIED" "METADATA_AUTH_REQUIRED") }
-  Write-GfsLinkageResult (Test-GfsTokenLinkage -TokenVerify $verified.body -Metadata $metadata.body -PermissionGroups $groups.body.result -Now ([datetime]::UtcNow) -ExpectedWorker $WorkerName)
+  Write-GfsLinkageResult (Test-GfsTokenLinkage -TokenVerify $verified.body -Metadata $metadata.body -PermissionGroups $groups.body.result -Now ([datetime]::UtcNow) -ExpectedWorker $WorkerName -AuthoritativeWorkerRecord $authoritativeWorker)
 } finally {
   $deploymentToken = $null
   $metadataToken = $null

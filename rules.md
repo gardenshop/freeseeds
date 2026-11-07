@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-87 immutable Worker resource mapping (2026-11-07 PKT)
+
+- Official Cloudflare Worker Scripts metadata distinguishes `id` (script name) from `tag` (immutable script ID). The real host evidence was therefore not accepted from a name/list match alone.
+- The linkage validator now accepts the reported flat opaque resource only when one allow leaf, one exact Individual Workers Editor group, the fixed account, and the authoritative Worker record match internally on both script name and immutable `tag`. Missing, mismatched, wildcard, broad, extra or unknown mappings remain fail-closed.
+- PS5.1 linkage/runner tests, Node preflight tests, full suite, build, lint and PowerShell parsing pass locally. A genuine `bi\\nazim` rerun is still required to prove the live policy’s opaque key equals the Worker `tag`; sandbox identity cannot read the approved credentials. No upload or production mutation occurred.
+
 ## GFS-COD-MO-86 actual Worker-scope diagnosis (2026-11-07 PKT)
 
 - Owner evidence narrowed the real failure to one flat resource with role and permission group passing: policy_one_resource_flat_worker_missing_role_pass_group_matched. Token identity and active/expiry checks passed; exact Worker resource mapping did not.

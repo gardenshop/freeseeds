@@ -1,5 +1,13 @@
 # Status
 
+## GFS-COD-MO-87 immutable Worker resource mapping (2026-11-07 PKT)
+
+**Disposition: LOCAL REPAIR PASS / REAL HOST PROOF PENDING.**
+
+- Official Worker Scripts metadata defines `id` as the script name and `tag` as the immutable script ID. The prior validator stopped at `IMMUTABLE_ID_REQUIRES_AUTHORITATIVE_MATCH` because it compared only the name field.
+- The validator now matches the opaque policy reference to `tag` and the same record’s script `id`, while retaining exact one-policy/one-resource/Editor checks and fail-closed rejection of broad or unknown resources.
+- PS5.1 focused tests 16/16, runner validation 11/11 plus linkage gate 3/3, Node 5/5, full 387 passed/1 skipped, build/lint and PS5.1 parse pass. The approved host has not rerun the integrated Preflight, so live scope and deployment Preflight remain unproven.
+
 ## GFS-COD-MO-86 - actual Worker scope diagnosis (2026-11-07 PKT)
 
 **Disposition: DIAGNOSTIC READY / REAL POLICY MAPPING PENDING.**

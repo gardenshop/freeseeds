@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-COD-MO-87 Worker immutable-tag mapping (2026-11-07 PKT)
+
+- The supported Worker Scripts list record exposes the script name as `id` and the immutable script identifier as `tag`; the linkage verifier matches both internally without recording either value.
+- `scripts/gfs-token-linkage-validation.ps1` accepts the reported opaque flat policy reference only after that authoritative match and exact Worker-only Editor checks. No raw policy, token ID, token, or customer data is registered.
+- Live host confirmation remains pending; no Cloudflare mutation occurred.
+
 ## GFS-COD-MO-86 Worker-scope diagnostic (2026-11-07 PKT)
 
 - New host-only diagnostic: scripts/run-gfs-admin-scope-diagnostic.ps1.

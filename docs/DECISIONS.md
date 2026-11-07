@@ -194,6 +194,12 @@
 - **Compatibility:** local full-schema 0047 probe passed `quick_check`, foreign-key check, marker and trigger creation. This does not establish remote application or secret readiness. Time Travel is available for 30 days, but no bookmark/restore was performed.
 - **Next exact authorization:** apply only 0047 and add only the Admin `COD_REFERENCE_HMAC_KEY` secret through the supported official release controls, then perform read-only schema, secret-presence, rollback and routing readback before any MO use. API default-COD changes remain deferred.
 
+## GFS-COD-MO-87 - require immutable Worker tag linkage (2026-11-07 PKT)
+
+- **Decision:** use the official Worker Scripts record’s script `id` plus immutable `tag` as the only authoritative mapping for an opaque token-policy resource reference. Do not infer identity from ID format or a successful Worker list.
+- **Guard:** accept only one flat account resource, exact `*` leaf, exact Individual Workers Editor group and internal `tag`/script-name match. Keep all unknown/broad/wildcard/extra/mismatched cases rejected.
+- **Status:** local repair and tests pass; real `bi\\nazim` host Preflight is still pending. No upload, routing, payment, D1, Meta, WhatsApp or CAPI mutation occurred.
+
 # Decisions
 
 ## GFS-COD-MO-19 - historical settlement is source-ready but not released (2026-11-05 PKT)
