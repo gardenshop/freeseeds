@@ -2731,3 +2731,9 @@ No secrets are stored in this registry.
 - `gfs-cod-mo-66-disposable`: deployment `882de8e4-c883-4562-bebe-908cfe47c3f3`, baseline A at 100%, zero routes, zero bindings, no Cron, no workers.dev link.
 - Local proof artifacts: `scripts/gfs-cod-mo-66-disposable-worker-a.mjs`, `scripts/gfs-cod-mo-66-disposable-worker-b.mjs`, config `wrangler.gfs-cod-mo-66-disposable.jsonc`.
 - Disposable target-only credential: **BLOCKED/not provisioned**; no production secret or token is associated with this resource.
+
+## GFS-COD-MO-66B rollback evidence (2026-11-07 PKT)
+
+- A: `14683497-a36f-4239-a957-82d0720c2e36`; B: `bc47800e-7acf-454b-a510-86130d35988c`.
+- Deployments: A90/B10 `17122c90-b4c7-4423-a5a8-9e7dd0f9f8ef`; restored A100 `efb9d558-4238-4733-9c4e-35952b1f90d6`.
+- Credential `GFS-MO-66-Disposable-Deploy-2026` deleted from host store. Worker deletion HTTP403 under target-only scope; private baseline remains.

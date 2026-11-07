@@ -2845,3 +2845,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Decision:** create only `gfs-cod-mo-66-disposable`; keep it private, route-free, binding-free, Cron-free, and baseline-only until a target-only credential is securely available.
 - **Evidence:** deployment `882de8e4-c883-4562-bebe-908cfe47c3f3`, 100% baseline A, zero routes/bindings, no workers.dev link.
 - **Boundary:** do not create the candidate version remotely, split traffic, or test recovery until a separate Worker-only Editor credential for this exact Worker is stored through the approved host receiver. Never use `ADMIN_RECOVERY_TOKEN`.
+
+## GFS-COD-MO-66B — rollback proof boundary (2026-11-07 PKT)
+
+- **Decision:** disposable rollback proof is PASS only for the disposable target; it is not production watchdog recovery proof.
+- **Evidence:** A90/B10 `17122c90-b4c7-4423-a5a8-9e7dd0f9f8ef`; A100 restore `efb9d558-4238-4733-9c4e-35952b1f90d6`; guarded repeat wrote nothing.
+- **Cleanup:** target-only credential deleted. Worker deletion was denied by its narrow scope, so the private route-free baseline remains.
+- **Boundary:** production watchdog remains DISARMED; no live Admin canary or MO settlement is authorized by this proof.

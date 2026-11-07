@@ -4291,3 +4291,8 @@ Investigation query costs only (not production savings): representative `rows_re
 | MO-66A private Worker artifact | PASS | Deny-all A/B local artifacts; workers_dev/preview disabled, no routes/Cron/bindings; dry-run reports no bindings. |
 | MO-66A private Worker deployment | PASS | `gfs-cod-mo-66-disposable` deployment `882de8e4-c883-4562-bebe-908cfe47c3f3`, baseline A 100%, official route readback 0. |
 | MO-66A disposable target credential | BLOCKED | Exact Worker-only credential not yet securely available; no remote B or split attempted. |
+
+| MO-66B real disposable split | PASS | A90/B10 deployment `17122c90-b4c7-4423-a5a8-9e7dd0f9f8ef` read back exactly. |
+| MO-66B real disposable restore | PASS | A100 single-version deployment `efb9d558-4238-4733-9c4e-35952b1f90d6`; B absent. |
+| MO-66B idempotency | PASS | Guarded repeat preserved the same deployment ID and performed no write. |
+| MO-66B cleanup | BOUNDED | Credential deleted; Worker deletion HTTP403 under target-only scope, private baseline remains. |

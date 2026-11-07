@@ -2563,3 +2563,10 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - Created exactly one private Worker `gfs-cod-mo-66-disposable` with deployment `882de8e4-c883-4562-bebe-908cfe47c3f3`, one baseline version at 100%, zero routes, zero bindings, no Cron, and no workers.dev link. HTTP is deny-all for the proof artifact; no customer or production binding exists.
 - Local harmless proof versions are prepared: A returns 200/`A`, B returns 200/`B`; no remote B or traffic split was created. Build/lint/diff checks PASS.
 - Disposable Worker-only credential is not yet available. Do not use the production recovery secret or any broad token; real 90/10 testing remains blocked until the owner supplies a securely stored, target-only credential.
+
+## GFS-COD-MO-66B — disposable rollback proof (2026-11-07 PKT)
+
+- Target-only credential `GFS-MO-66-Disposable-Deploy-2026` was read only inside `bi\\nazim`, used only for `gfs-cod-mo-66-disposable`, then deleted; it is absent from the host store.
+- Baseline A: `14683497-a36f-4239-a957-82d0720c2e36`; candidate B: `bc47800e-7acf-454b-a510-86130d35988c`.
+- Real split PASS: `17122c90-b4c7-4423-a5a8-9e7dd0f9f8ef` read back A90/B10. Real restore PASS: `efb9d558-4238-4733-9c4e-35952b1f90d6` read back A100 with B absent. A guarded repeat preserved the same deployment ID and wrote nothing.
+- Pre-cleanup readback showed zero routes/bindings. Worker deletion returned HTTP403 under the target-only scope; private baseline remains. No production target was used.

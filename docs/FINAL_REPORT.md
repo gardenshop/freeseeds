@@ -7541,3 +7541,15 @@ Authenticated candidate override validation passed: Orders list/API HTTP200 and 
 7. **Regression:** Admin/API routing, WhatsApp, payments, D1, Access, watchdog and frozen Workers unchanged. Build/lint/diff PASS.
 8. **Stages:** private target 100%; local A/B preparation 100%; target credential 0%; real 90/10 rollback 0%; live Admin canary 0%; MO settlement 0%; CAPI 0%.
 9. **Next exact action:** owner securely provisions one target-only Worker Editor credential for `gfs-cod-mo-66-disposable` in the approved host receiver; then resume with remote B upload and bounded disposable proof.
+
+## GFS-COD-MO-66B — real disposable rollback
+
+1. **Credential:** PASS. Target-only credential used internally and deleted; no secret exposed.
+2. **Versions:** A `14683497-a36f-4239-a957-82d0720c2e36`; B `bc47800e-7acf-454b-a510-86130d35988c`.
+3. **90/10:** PASS. Deployment `17122c90-b4c7-4423-a5a8-9e7dd0f9f8ef` read back A90/B10.
+4. **Restore:** PASS. Deployment `efb9d558-4238-4733-9c4e-35952b1f90d6` read back A100 only; B inactive.
+5. **Idempotency:** PASS. Guarded repeat preserved the same deployment ID and wrote nothing.
+6. **Cleanup:** Credential deleted. Worker deletion HTTP403 under target-only scope; private baseline remains route-free/binding-free.
+7. **Regression:** Admin deployment `f632e4d2-0716-4f53-a861-110d26a0e3a9` remains 3e4b7c26 100% / ce023b54 0%; production watchdog remains `4ab96ae4-de8b-4f36-ab22-bf0ec350114a` DISARMED; API health HTTP200.
+8. **Stages:** disposable rollback 100%; cleanup 90%; production automatic recovery proof remains unverified; live Admin canary 0%; MO settlement 0%; CAPI 0%.
+9. **Next exact MO action:** request separate authorization for a controlled Admin canary only after revalidating the recovery-token window; this proof does not authorize live traffic or settlement.

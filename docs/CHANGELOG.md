@@ -2462,3 +2462,8 @@
 
 - Created private disposable Worker `gfs-cod-mo-66-disposable` with baseline A only, zero routes/bindings/Cron and no workers.dev link.
 - Prepared local A/B rollback-proof artifacts; separate target-only credential remains the sole gate. No production or watchdog resource changed.
+
+## 2026-11-07 — GFS-COD-MO-66B
+
+- Completed real disposable A90/B10 rollback proof and restored A100; guarded repeat was idempotent.
+- Deleted target-only credential. Worker deletion was denied by its narrow scope; private baseline remains. Production and watchdog unchanged.

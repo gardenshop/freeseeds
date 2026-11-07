@@ -3613,3 +3613,10 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **PASS:** Official readback shows zero routes, zero bindings, no Cron, and no workers.dev link. Existing Admin/API/watchdog/frozen resources are unchanged.
 - **PASS:** Local A/B artifacts validate and build/lint pass.
 - **BLOCKED:** Separate Worker-only credential for this disposable target is not available. No remote candidate B, 90/10 split, or rollback was attempted.
+
+## GFS-COD-MO-66B — real disposable rollback (2026-11-07 PKT)
+
+- **PASS:** A `14683497-a36f-4239-a957-82d0720c2e36` and B `bc47800e-7acf-454b-a510-86130d35988c` were verified.
+- **PASS:** `17122c90-b4c7-4423-a5a8-9e7dd0f9f8ef` read back A90/B10; `efb9d558-4238-4733-9c4e-35952b1f90d6` read back A100 only.
+- **PASS:** Guarded repeat was idempotent/no-write; disposable credential removed from host store.
+- **BOUNDED:** Worker deletion returned HTTP403 under target-only scope; private baseline remains without routes/bindings. Production remained unchanged.
