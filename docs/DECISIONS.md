@@ -2928,3 +2928,7 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Do not repurpose `scripts/run-with-gfs-monitor-credentials.ps1` for deployment; it only supplies health/analytics credentials.
 - Stop deployment and preview until the owner supplies the approved host-side `bi\\nazim` deployment runner/interface for the scoped Admin credential. No token value or guessed Wrangler command is acceptable.
 - Keep CAPI OFF and do not settle a real order until isolated preview, genuine evidence, separate authorization and Meta acknowledgement gates pass.
+
+## GFS-COD-MO-75 — no dashboard deployment workaround (2026-11-07 PKT)
+- Treat the MCP safety rejection of dashboard `Edit code` as a deployment-access blocker, not permission to bypass via DOM, direct API, token extraction or health-wrapper reuse.
+- Stop at 0% until the approved host deployment runner is callable; do not claim preview or live MO completion.

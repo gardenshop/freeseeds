@@ -2666,3 +2666,9 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - Cloudflare account identity remains the verified GFS account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; protected Admin/API routing is unchanged. The approved `bi\\nazim` deployment runner is not callable here, and no documented callable Wrangler deployment command exists in the repository.
 - `scripts/run-with-gfs-monitor-credentials.ps1` is health/analytics-only and must not be repurposed for Worker deployment. No token was read, extracted, retried or exposed; no upload or preview was attempted.
 - Exact owner unblock: provide the approved host-side deployment runner/interface that injects `GFS-Admin-Deploy-Scoped-2026` process-only and executes the source-isolated Admin upload/readback from `bi\\nazim`; return only sanitized version/deployment IDs. Do not send the token value or use the health wrapper.
+
+## GFS-COD-MO-75 final preview access gate (2026-11-07 PKT)
+
+- Authenticated Cloudflare dashboard readback confirmed the correct account and Admin Worker, but Chrome MCP safety-rejected the `Edit code` control because it could invoke a production-affecting deployment. No dashboard upload or indirect workaround was attempted.
+- No supported upload-without-traffic path is proven. Keep Admin `3e4b7c26`100% / `ce023b54`0%, API `b426ba47`100%, CAPI OFF and all payment/WhatsApp protections unchanged.
+- One owner action: from the approved `bi\\nazim` Windows context, provide/call the deployment runner that process-injects `GFS-Admin-Deploy-Scoped-2026` and performs the source-isolated Admin upload/readback; return only sanitized version/deployment IDs. Do not use the monitor wrapper or expose the token.

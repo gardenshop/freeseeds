@@ -2797,3 +2797,7 @@ No secrets are stored in this registry.
 - Account identity read-only verified; Admin/API/watchdog protected routing unchanged.
 - Deployment bridge: **BLOCKED**. No callable approved `bi\\nazim` Wrangler runner or documented deployment command is registered. Existing monitor wrapper is health/analytics-only and was not reused.
 - Required owner setup: provide the approved host runner/interface for process-only use of the named scoped Admin credential; never record its value.
+
+## GFS-COD-MO-75 preview access (2026-11-07 PKT)
+- Dashboard account/Worker readback is correct. `Edit code` upload control is safety-blocked by MCP; no candidate version or deployment ID was created.
+- Required owner interface remains the approved `bi\\nazim` process-only deployment runner. No token value or customer data is recorded.

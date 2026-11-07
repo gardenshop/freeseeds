@@ -92,3 +92,5 @@ Historical MO confirmation requires genuine delivered status with assigned track
 ## GFS-COD-MO-74 deployment bridge gate
 
 The health/analytics Credential Manager wrapper is not a Worker deployment bridge. Do not pass deployment credentials through it, the browser, MCP output or a guessed Wrangler command. Require the approved host-side `bi\\nazim` deployment runner to inject the scoped Admin credential process-only and return sanitized version/deployment readback before any isolated MO preview.
+
+The Cloudflare dashboard `Edit code` control is not accepted as a zero-traffic upload path unless the supported operation and exact routing effect are independently read back. If MCP safety blocks the control, stop; do not use DOM/CDP/API workarounds.

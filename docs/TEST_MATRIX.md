@@ -4356,3 +4356,6 @@ Investigation query costs only (not production savings): representative `rows_re
 | MO-74 account identity/routing protection | PASS (read-only) | Cloudflare account URL and protected Admin/API/watchdog state unchanged. |
 | MO-74 approved deployment bridge | BLOCKED | No callable/documented `bi\\nazim` Wrangler deployment runner; health/analytics wrapper is not a deployment path. |
 | MO-74 isolated MO preview | NOT RUN | Correctly stopped before upload; no positive traffic or production mutation. |
+
+| MO-75 dashboard upload path | BLOCKED | Authenticated dashboard control was safety-rejected as potentially production-affecting; no supported upload-without-traffic evidence. |
+| MO-75 protected state | PASS | No upload, routing, payment, D1, Meta, CAPI or customer mutation. |
