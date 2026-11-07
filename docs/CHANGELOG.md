@@ -2520,3 +2520,8 @@
 - Confirmed MO-70's Orders startup replacement was ordered before the listener insertion and therefore did nothing.
 - Corrected startup timing with `load().finally(...)`; added rendered-script functional coverage. Focused 20/20, full 386 passed/1 skipped, build/lint PASS.
 - Blocked broad upload because current PR11 contains historical-MO changes beyond the live MO-12 baseline. No deployment or routing change occurred.
+
+## 2026-11-07 - GFS-COD-MO-72
+- Prepared and pushed isolated Admin auto-update artifact `e9d5304` from live-compatible baseline `551c2ee`; functional focused 13/13, full 380/1 skipped, build/lint PASS.
+- Candidate upload/0% preview remains blocked by expired local Wrangler auth and unavailable approved host deployment bridge; Admin/API/watchdog routing stayed unchanged.
+- Corrected settlement SOP language to record migration0048 as applied exactly once. Historical MO, support logging, canary, payment and CAPI gates remain protected.

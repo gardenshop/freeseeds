@@ -2913,3 +2913,8 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - The MO-70 startup repair was confirmed as a replacement-ordering no-op and corrected locally after hydration completes.
 - Do not release the current broad PR11 tree for this fix: it includes historical-MO functionality beyond the live MO-12 baseline. Prepare a candidate from the live-compatible Admin baseline with only the auto-update correction.
 - Keep Admin 100/0, API 100%, watchdog DISARMED, MO support frozen, and Meta/payment state unchanged until that isolated candidate and deployment authority are verified.
+
+## GFS-COD-MO-72 — finite release decision
+- Accept the isolated artifact `e9d5304` from live-compatible source `551c2ee` as locally ready; do not upload it from this session because the official deployment credential path is unavailable.
+- Do not waive the watchdog rule for positive traffic. A future 0% preview may use the ordinary deployment/readback gate, but any canary still requires the independent fail-closed watchdog and separate authorization.
+- Keep migration0048 recorded as applied once; do not rerun it. Keep MO support case #02421284 pending and do not repeat logging/DRY_RUN work.

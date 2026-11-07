@@ -3684,3 +3684,8 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Root cause confirmed: the previous startup replacement executed before the generated pagehide listener existed, making it ineffective.
 - Fixed locally with `load().finally(() => resumeOrdersAuto())`; rendered-script functional tests cover persisted startup, cycles, hidden pause and OFF cancellation. Focused 20/20; full 386 passed/1 skipped; build/lint PASS.
 - Release blocked safely: current PR11 source includes historical-MO changes after the live MO-12 Admin baseline, so it is not a narrow auto-update candidate. No upload, deployment or routing mutation occurred.
+
+## GFS-COD-MO-72 — isolated Admin candidate (2026-11-07 PKT)
+- Isolated from live-compatible baseline `551c2ee`; candidate commit `e9d5304` on `codex/gfs72-admin-auto-isolated` contains only the auto-update startup correction and functional test.
+- Focused 13/13, full 380 passed/1 skipped, build/lint PASS. No Cloudflare candidate version was created: Wrangler auth is expired/unrefreshable and the approved host deployment bridge is unavailable.
+- Admin remains `3e4b7c26`100% / `ce023b54`0%; API `b426ba47`100%; watchdog DISARMED. Migration0048 is applied once and SOP pending language corrected. Historical MO remains separately blocked on source/release/evidence/settlement authorization.

@@ -14,23 +14,23 @@ Migration 0048 is applied once under the documented one-time alternative gate. T
 
 ## GFS-COD-MO-24 bridge invocation gate (2026-11-05 PKT)
 
-The approved host-side bridge must be invoked in its authorized Windows context and may return only sanitized HTTP status and health fields. Chrome DevTools MCP/dashboard access does not substitute for the bridge. A visible system process without an approved invocation interface must not be impersonated, elevated, or invoked blindly. Keep migration0048 blocked until authorized Admin `/health` HTTP200 is independently evidenced.
+The approved host-side bridge must be invoked in its authorized Windows context and may return only sanitized HTTP status and health fields. Chrome DevTools MCP/dashboard access does not substitute for the bridge. A visible system process without an approved invocation interface must not be impersonated, elevated, or invoked blindly. This was the pre-migration gate; migration0048 is now applied exactly once. Keep protected `/health` status separately recorded as unverified.
 
 ## GFS-COD-MO-23 health-monitor bridge gate (2026-11-05 PKT)
 
-The `/health` qualification must use the existing approved Service Auth bridge. If its credential target is unavailable, record `credential_read_failed` and stop. Never print, copy, export, rotate, regenerate, or bypass the credential. Browser/invalid HTTP403 is a security-boundary result, not application health evidence. Migration 0048 remains blocked until an authorized HTTP200 is obtained through the approved bridge.
+Historical pre-migration gate: the `/health` qualification must use the existing approved Service Auth bridge. If its credential target is unavailable, record `credential_read_failed` and stop. Never print, copy, export, rotate, regenerate, or bypass the credential. Browser/invalid HTTP403 is a security-boundary result, not application health evidence. Migration0048 was subsequently applied once under the authorized alternative gate; do not rerun it.
 
 ## GFS-COD-MO-22 readiness gate (2026-11-05 PKT)
 
-Configured Admin routing is reconciled to candidate 100%; the dashboard 94.5/5.5 display is historical observed traffic. `/health` remains intentionally Service Auth-protected. Do not apply migration 0048 until an authorized service-auth health 200 is verified through the existing approved bridge.
+Historical routing/readiness note. `/health` remains intentionally Service Auth-protected and its protected HTTP200 remains separately unverified. Migration0048 is already applied exactly once; never apply it again merely to satisfy this superseded gate.
 
 ## GFS-COD-MO-21 routing gate (2026-11-05 PKT)
 
-Do not apply migration 0048 while Admin active provisioning or Access health conflicts with the approved baseline. Resolve routing and `/health` evidence through a separately authorized read-only audit before requesting a new migration window.
+Historical pre-execution rule: do not apply migration0048 while Admin active provisioning or Access health conflicts with the approved baseline. The authorized migration window completed once; resolve any future routing or `/health` question through a separate read-only audit and do not rerun the migration.
 
 ## GFS-COD-MO-20 release boundary (2026-11-05 PKT)
 
-The original 0048 migration is blocked before remote execution because it omitted its exact-once schema marker. The marker and cross-ledger duplicate protections are repaired and tested locally only; do not settle real orders or release the repaired source until the repaired migration is separately reviewed and targeted execution is authorized.
+Historical pre-execution record: the original 0048 migration omitted its exact-once schema marker. The repaired marker and cross-ledger duplicate protections were reviewed, targeted execution was authorized, and 0048 was applied once. Do not rerun the migration or settle real orders without separate authorization.
 
 ## Historical Pakistan Post MO
 

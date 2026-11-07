@@ -4343,3 +4343,7 @@ Investigation query costs only (not production savings): representative `rows_re
 | MO-71 rendered Orders auto-update | PASS (local) | `load().finally(() => resumeOrdersAuto())`; persisted startup, cycles, hidden pause and OFF cancellation covered. Focused 20/20. |
 | MO-71 full regression | PASS | 386 passed, 1 skipped; build and lint PASS. |
 | MO-71 narrow Admin candidate | BLOCKED | Current tree contains historical-MO changes after live MO-12 baseline; no broad upload or routing mutation permitted. |
+| MO-72 isolated source diff | PASS | Baseline `551c2ee` plus only the Orders startup correction; candidate commit `e9d5304`; no historical-MO/CAPI source. |
+| MO-72 functional Orders startup | PASS | Persisted ON startup, two cycles, hidden pause, OFF cancellation and lock-safe execution; focused 13/13. |
+| MO-72 isolated candidate upload/0% preview | BLOCKED | Wrangler authentication expired/unrefreshable and approved host deployment bridge unavailable; no Cloudflare version created. |
+| MO-72 migration/SOP reconciliation | PASS | Migration0048 recorded as applied exactly once; outdated pending SOP statements corrected to historical/superseded. |

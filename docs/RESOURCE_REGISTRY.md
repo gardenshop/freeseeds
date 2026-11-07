@@ -2782,3 +2782,8 @@ No secrets are stored in this registry.
 - Live Admin remains `3e4b7c26`100% with frozen candidate `ce023b54`0%; API remains `b426ba47`100%; watchdog `73a1f50c` DISARMED.
 - Local source correction is not a deployed resource. The current PR11 tree includes historical-MO changes after the live MO-12 baseline; no candidate upload was attempted.
 - Required next resource: an isolated Admin version containing only the auto-update correction, followed by authorized 0% preview and rollback readback.
+
+## GFS-COD-MO-72 isolated Admin artifact (2026-11-07 PKT)
+- Source baseline: `551c2ee`; candidate branch `codex/gfs72-admin-auto-isolated`; candidate commit `e9d5304`.
+- Artifact is local/Git-only and not a Cloudflare version. It contains only the tested Orders startup correction and functional coverage; no traffic, bindings, payment, D1, Meta, CAPI or watchdog mutation occurred.
+- Deployment resource remains pending one supported authenticated Wrangler/host bridge invocation. Current live Admin/API/watchdog routing is unchanged.
