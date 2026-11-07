@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-COD-MO-79 PowerShell runtime repair (2026-11-07 PKT)
+
+- `scripts/run-gfs-admin-deployment.ps1` now uses C# 5-compatible Credential Manager reader syntax; `CredFree` and secret-safe process handling are retained.
+- Actual Windows PowerShell 5.1 `Add-Type` compilation passed twice. No credential value or external resource changed.
+- Broad PR11 remains preflight-only and upload-ineligible until a separately verified source-isolated MO artifact is supplied.
+
 ## GFS-COD-MO-62 watchdog activation (2026-11-06 PKT)
 
 - **Secret version:** `bc2c166d-655a-4542-8013-0dad8c720812`; binding name `ADMIN_RECOVERY_TOKEN`; value unrecorded.

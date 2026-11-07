@@ -1,5 +1,13 @@
 # Status
 
+## GFS-COD-MO-79 — PowerShell 5.1 runtime repair (2026-11-07 PKT)
+
+**Disposition: PASS locally / owner credential validation pending.**
+
+- Replaced the unsupported C# 7 `?: throw` expression in the embedded Credential Manager reader with C# 5-compatible statements while preserving `CredFree` and fail-closed handling.
+- Actual Windows PowerShell 5.1 compilation passed twice; pre-credential guard validation remains 9/9. Full suite/build/lint and parser checks remain required after this source change.
+- No real credential, upload, routing, payment, D1, Meta, WhatsApp or CAPI mutation occurred. Broad PR11 remains ineligible for upload.
+
 ## GFS-COD-MO-62 watchdog activation (2026-11-06 PKT)
 
 **Disposition: SECRET/Cron PASS; independent invocation and cleanup BLOCKED.**

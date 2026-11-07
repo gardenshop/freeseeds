@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-79 PowerShell 5.1 runtime repair (2026-11-07 PKT)
+
+- Replaced the C# 7 null-coalescing throw expression in the Win32 Credential Manager reader with C# 5-compatible assignment, null check, throw and return statements. `CredFree`, identity, Git/SHA, scope and secret guards remain unchanged.
+- Actual Windows PowerShell 5.1 `Add-Type` compilation passed twice; runner validation remains 9/9. No credential was read and no Cloudflare mutation occurred.
+- Preserve the broad-PR11 upload block and all WhatsApp/new-number, Hoja, payment, D1, Meta and CAPI protections.
+
 ## GFS-COD-MO-76 secure Admin deployment runner (2026-11-07 PKT)
 
 - Added `scripts/run-gfs-admin-deployment.ps1` with fixed account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, fixed Worker `getfreeseeds-admin-staging`, exact identity gate `bi\\nazim`, clean-worktree/approved-HEAD gate, deterministic Admin source/config digest, and allowlisted Credential Manager target `GFS-Admin-Deploy-Scoped-2026`.

@@ -15,6 +15,15 @@ $actualRoot = Invoke-GfsGitText -RepoRoot $root -Arguments @("rev-parse", "--sho
 if ($actualRoot.exitCode -ne 0 -or -not (Test-GfsCanonicalPathEqual $root $actualRoot.text)) { throw "actual git root lookup failed" }
 $invalidGit = Invoke-GfsGitText -RepoRoot "D:\not-a-repository" -Arguments @("status", "--porcelain")
 if ($invalidGit.exitCode -eq 0) { throw "invalid repository unexpectedly passed" }
+$runnerSource = Get-Content -Raw (Join-Path $PSScriptRoot "run-gfs-admin-deployment.ps1")
+$csharpMatch = [regex]::Match($runnerSource, 'Add-Type\s+-TypeDefinition\s+@"\r?\n(?<source>.*?)\r?\n"@', [System.Text.RegularExpressions.RegexOptions]::Singleline)
+if (-not $csharpMatch.Success) { throw "embedded C# source not found" }
+for ($i = 0; $i -lt 2; $i++) {
+  $className = "GfsAdminCredentialReaderRuntimeTest$i"
+  $csharp = $csharpMatch.Groups["source"].Value.Replace("GfsAdminCredentialReader", $className)
+  $compiledType = Add-Type -TypeDefinition $csharp -PassThru
+  if ($null -eq $compiledType) { throw "embedded C# compilation returned no type" }
+}
 function Assert-Pass($value, [string]$name) { if (-not $value.pass) { throw "$name expected PASS, got $($value.code)" } }
 function Assert-Code($value, [string]$expected, [string]$name) { if ($value.pass -or $value.code -ne $expected) { throw "$name expected $expected" } }
 function Invoke-Case($overrides = @{}) { $case = $base.Clone(); foreach ($key in $overrides.Keys) { $case[$key] = $overrides[$key] }; return (Test-GfsRunnerInputs @case) }
@@ -29,4 +38,4 @@ Assert-Code (Invoke-Case @{ ActualArtifactSha256 = ("c" * 64) }) "approved_artif
 Assert-Code (Test-GfsCredentialState -Available $false) "credential_read_failed" "missing credential"
 $safeOutput = (Test-GfsRunnerInputs @base | ConvertTo-Json -Compress) + (Test-GfsCredentialState -Available $false | ConvertTo-Json -Compress)
 if ($safeOutput -match "synthetic-secret|CLOUDFLARE_API_TOKEN") { throw "secret leaked in validation output" }
-"runner_validation=PASS (9/9)"
+"runner_validation=PASS (9/9); credential_reader_add_type=PASS (2/2)"

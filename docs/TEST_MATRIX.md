@@ -1,5 +1,14 @@
 # Test Matrix
 
+## GFS-COD-MO-79 PowerShell 5.1 runtime (2026-11-07 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Embedded Credential Manager C# compilation | PASS | Actual Windows PowerShell 5.1 `Add-Type` compiled the runner source twice. |
+| C# runtime compatibility repair | PASS | C# 5-compatible null assignment/check/throw/return replaces the unsupported `?: throw`. |
+| Existing runner guards | PASS | Clean Git, dirty tree, SHA, artifact, identity, repository and missing-credential gates remain covered 9/9. |
+| Production mutation | NOT RUN | No credential read, upload, deployment or routing change. |
+
 ## GFS-COD-MO-57 private watchdog artifact (2026-11-06 PKT)
 
 | Gate | Result | Evidence |

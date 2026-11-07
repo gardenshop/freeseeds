@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-07 - GFS-COD-MO-79
+
+- Replaced the unsupported PowerShell 5.1 embedded C# null-coalescing throw expression with C# 5-compatible Credential Manager code.
+- Added actual repeated Windows PowerShell 5.1 `Add-Type` compilation coverage; no production mutation occurred.
+
 ## 2026-11-06 - GFS-COD-MO-62 watchdog activation
 
 - Added separated credential handling for Worker secret injection and accepted Cloudflare HTTP 201 secret creation.

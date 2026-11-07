@@ -2942,6 +2942,12 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Evidence:** PowerShell validation passes 9/9: equivalent separators/case accepted; different repository, identity, SHA, dirty tree, artifact digest and missing credential rejected; no secret appears in output.
 - **Boundary:** this repairs preflight only. The current broad PR11 tree is not source-isolated historical MO; do not invoke upload mode.
 
+## GFS-COD-MO-79 — PowerShell 5.1 C# compatibility
+
+- **Decision:** keep the existing Win32 Credential Manager design and replace only the unsupported C# 7 `?: throw` expression with C# 5-compatible statements.
+- **Evidence:** actual Windows PowerShell 5.1 compiled the embedded source twice; existing fail-closed and secret-safe guards remain covered.
+- **Boundary:** preflight repair only. No upload, Admin/API deployment, routing, payment, D1, Meta, WhatsApp or CAPI action is authorized.
+
 ## GFS-COD-MO-78 — null-safe Git preflight
 
 - **Decision:** never call methods directly on native Git output. Join an array safely, check exit code separately, and reject repository/HEAD/status failures with sanitized codes.
