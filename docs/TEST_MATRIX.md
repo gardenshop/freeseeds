@@ -1,5 +1,15 @@
 # Test Matrix
 
+## GFS-COD-MO-89 upload runner repair (2026-11-07 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Wrangler syntax | PASS | Wrangler 4.149.0 help confirms `versions upload` has `--message` and no `--json`. |
+| Structured version readback | PASS | Node tests 7/7; official versions API records are matched by exact message, new ID, creation time and source. |
+| Ambiguity/routing safety | PASS | PS5.1 fixtures reject duplicate matches, missing creation time and changed deployment fingerprint. |
+| Full regression | PASS | 33 files; 386 passed, 1 skipped; build/lint/parse PASS. |
+| Real host upload | PENDING | Sandbox cannot invoke `bi\\nazim`; no version ID or live preview is claimed. |
+
 ## GFS-COD-MO-88 isolated historical MO candidate (2026-11-07 PKT)
 
 | Gate | Result | Evidence |

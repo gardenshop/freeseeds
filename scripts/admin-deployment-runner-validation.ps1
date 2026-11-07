@@ -61,6 +61,40 @@ function Test-GfsTokenLinkageResult {
   return [pscustomobject]@{ pass = $true; code = "none" }
 }
 
+function Test-GfsUploadedVersionReadback {
+  param(
+    [Parameter(Mandatory = $true)][object] $BeforeDeployment,
+    [Parameter(Mandatory = $true)][object] $AfterDeployment,
+    [Parameter(Mandatory = $true)][object] $BeforeVersions,
+    [Parameter(Mandatory = $true)][object] $AfterVersions,
+    [Parameter(Mandatory = $true)][string] $Message,
+    [Parameter(Mandatory = $true)][datetime] $UploadStartedUtc
+  )
+  if ([string]$BeforeDeployment.result -ne "PASS" -or [string]$AfterDeployment.result -ne "PASS") { return [pscustomobject]@{ pass = $false; code = "deployment_readback_failed" } }
+  if ([string]$BeforeDeployment.fingerprint -ne [string]$AfterDeployment.fingerprint) { return [pscustomobject]@{ pass = $false; code = "production_routing_changed" } }
+  if ([string]$BeforeVersions.result -ne "PASS" -or [string]$AfterVersions.result -ne "PASS") { return [pscustomobject]@{ pass = $false; code = "worker_versions_readback_failed" } }
+  $beforeIds = @($BeforeVersions.versions | ForEach-Object { [string]$_.id })
+  $messageMatches = @($AfterVersions.versions | Where-Object { [string]$_.message -eq $Message })
+  $createdMissing = $false
+  $matches = @($messageMatches | Where-Object {
+    $id = [string]$_.id
+    if ($id -notmatch '^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$') { return $false }
+    if ($beforeIds -contains $id) { return $false }
+    $created = $null
+    try { $created = ([datetime]$_.createdOn).ToUniversalTime() } catch { $created = $null }
+    if ($null -eq $created) { $createdMissing = $true; return $false }
+    if ($created -lt $UploadStartedUtc.ToUniversalTime()) { return $false }
+    if ([string]$_.source -and [string]$_.source.ToLowerInvariant() -ne "wrangler") { return $false }
+    return $true
+  })
+  if ($matches.Count -gt 1) { return [pscustomobject]@{ pass = $false; code = "uploaded_version_ambiguous" } }
+  if ($matches.Count -eq 0) {
+    if ($createdMissing) { return [pscustomobject]@{ pass = $false; code = "version_creation_time_missing" } }
+    return [pscustomobject]@{ pass = $false; code = "uploaded_version_readback_missing" }
+  }
+  return [pscustomobject]@{ pass = $true; code = "none"; versionId = [string]$matches[0].id }
+}
+
 function Get-GfsSafeLinkageDiagnosticCode {
   param([object] $Diagnostics)
   if ($null -eq $Diagnostics) { return "policy_unknown_resource_unknown_worker_unknown_family_unknown_role_unknown_group_unknown" }

@@ -1,5 +1,9 @@
 # COD Settlement SOP
 
+## GFS-COD-MO-89 upload safety (2026-11-07 PKT)
+
+Use Wrangler 4.149.0 `versions upload` without `--json`; after upload, query the official Worker versions list and require one new version matching the exact Git/artifact message and creation time. Compare the official active deployment readback before and after. Any ambiguity or routing change is a failure. This operation uploads a version only and must not deploy, shift traffic, settle MO, or enable CAPI.
+
 ## GFS-COD-MO-88 isolated preview gate (2026-11-07 PKT)
 
 The historical MO candidate must be built from the live-compatible Admin baseline plus only the guarded historical MO UI/route and its required dependencies. Do not upload the auto-update-only candidate or broad PR11. Migration 0048 is already applied once; do not rerun it. The approved host runner must recheck identity, token validity and the exact artifact digest, then use `VERSIONS_UPLOAD_ONLY`; this does not deploy or alter routing. CAPI remains OFF and a real MO settlement still requires genuine evidence and separate authorization.

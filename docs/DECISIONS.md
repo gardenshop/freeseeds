@@ -1,3 +1,10 @@
+## GFS-COD-MO-89 upload gate (2026-11-07 PKT)
+
+**Decision:** replace the unsupported Wrangler `versions upload --json` argument and require structured authoritative readback before reporting upload success.
+
+- The runner now calls Wrangler upload without `--json`, then queries the official versions endpoint and matches one new version by unique Git/artifact message and creation timestamp. It also verifies the active deployment fingerprint is unchanged.
+- Ambiguous versions, missing metadata, upload errors or any routing change fail closed. No Cloudflare upload or production mutation occurred in this sandbox.
+
 ## GFS-COD-MO-88 candidate boundary (2026-11-07 PKT)
 
 **Decision:** prepare one 0%-traffic historical MO upload from the live-compatible baseline plus required historical MO code only; do not upload the auto-update-only candidate or broad PR11.

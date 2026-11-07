@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { test } from "node:test";
-import { artifactDigest, exactWorkerScope, resourceLeaves, verifyDeploymentCredential, WORKER_NAME } from "./cloudflare-admin-deployment-preflight.mjs";
+import { artifactDigest, deploymentSnapshot, exactWorkerScope, listWorkerVersions, resourceLeaves, verifyDeploymentCredential, WORKER_NAME } from "./cloudflare-admin-deployment-preflight.mjs";
 
 const account = "cb5066a6d71ecdee0bd7ed8aacb4d3c2";
 const token = "synthetic-admin-token";
@@ -53,6 +53,39 @@ test("fails closed on inactive token and worker readback", async () => {
   assert.equal(inactive.code, "credential_shape_invalid");
   const denied = await verifyDeploymentCredential({ token, fetchImpl: apiFetch([], { workerStatus: 403 }), linkageVerified: true });
   assert.equal(denied.code, "worker_readback_failed");
+});
+
+test("uses structured official version and deployment readback", async () => {
+  const calls = [];
+  const fetchImpl = async (url, options) => {
+    assert.equal(options.headers.Authorization, `Bearer ${token}`);
+    calls.push(url);
+    if (url.includes(`/scripts/${WORKER_NAME}/versions?`)) return response({ success: true, result: { versions: [
+      { id: uuid, metadata: { message: "GFS-COD-MO-89 synthetic", created_on: "2026-11-07T18:00:00Z", source: "wrangler" } }
+    ] } });
+    if (url.endsWith(`/scripts/${WORKER_NAME}/deployments`)) return response({ success: true, result: { deployments: [
+      { id: "deployment-synthetic", versions: [{ version_id: uuid, percentage: 100 }] }
+    ] } });
+    throw new Error("unexpected_request");
+  };
+  const versions = await listWorkerVersions({ token, fetchImpl });
+  assert.equal(versions.result, "PASS");
+  assert.equal(versions.versions[0].message, "GFS-COD-MO-89 synthetic");
+  const deployment = await deploymentSnapshot({ token, fetchImpl });
+  assert.equal(deployment.result, "PASS");
+  assert.match(deployment.fingerprint, /^[a-f0-9]{64}$/);
+  assert.deepEqual(calls, [
+    `https://api.cloudflare.com/client/v4/accounts/${account}/workers/scripts/${WORKER_NAME}/versions?per_page=100`,
+    `https://api.cloudflare.com/client/v4/accounts/${account}/workers/scripts/${WORKER_NAME}/deployments`
+  ]);
+});
+
+test("rejects malformed official version/deployment shapes", async () => {
+  const versions = await listWorkerVersions({ token, fetchImpl: async () => response({ success: true, result: { versions: [{ id: "not-a-version", metadata: {} }] } }) });
+  assert.equal(versions.result, "PASS");
+  assert.deepEqual(versions.versions, []);
+  const deployment = await deploymentSnapshot({ token, fetchImpl: async () => response({ success: true, result: { deployments: [{ id: "deployment-synthetic", versions: [{ version_id: "not-a-version", percentage: 100 }] }] } }) });
+  assert.equal(deployment.code, "worker_deployment_shape_invalid");
 });
 
 test("artifact digest is deterministic and includes tracked source/config", async () => {

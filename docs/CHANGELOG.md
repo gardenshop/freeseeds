@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-07 - GFS-COD-MO-89
+
+- Removed unsupported `--json` from Wrangler version upload and added structured version/deployment readback with fail-closed ambiguity and routing checks.
+- Local gates pass; no live upload or production mutation occurred.
+
 ## 2026-11-07 - GFS-COD-MO-88
 
 - Isolated the historical MO Admin candidate from the auto-update-only GFS-70/GFS-71 delta and recomputed the approved artifact digest.

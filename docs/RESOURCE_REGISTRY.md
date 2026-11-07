@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-COD-MO-89 upload runner (2026-11-07 PKT)
+
+- `scripts/run-gfs-admin-deployment.ps1` uses supported Wrangler 4.149.0 upload syntax without `--json`.
+- It records no raw CLI output, identifies the new version through official structured API readback, and verifies deployment fingerprint stability. Artifact digest remains `3d0d17a3a953c6804a84f3449cc7b11ab2b87f68b0e8c602e79ff23ab32f7911`.
+- No version ID exists yet; the approved host must run the single upload command after syncing the next commit.
+
 ## GFS-COD-MO-88 isolated Admin candidate (2026-11-07 PKT)
 
 - Source boundary: live-compatible Admin baseline `551c2ee` plus historical MO UI/guarded route and required disabled-CAPI outbox dependencies; auto-update-only GFS-70/GFS-71 candidate excluded.

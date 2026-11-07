@@ -24,6 +24,13 @@ $WranglerScript = Join-Path $RepoRoot "node_modules\wrangler\bin\wrangler.js"
 
 function Fail([string] $Code) { throw $Code }
 
+function Invoke-GfsNodeJson {
+  param([Parameter(Mandatory = $true)][string[]] $Arguments)
+  $output = (& node.exe @Arguments 2>$null | Out-String).Trim()
+  if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($output)) { return $null }
+  try { return ($output | ConvertFrom-Json) } catch { return $null }
+}
+
 if ($env:OS -ne "Windows_NT") { Fail "windows_host_required" }
 $identity = (whoami).Trim()
 if ($identity.ToLowerInvariant() -ne $ExpectedUser.ToLowerInvariant()) { Fail "approved_identity_required" }
@@ -94,16 +101,29 @@ try {
     exit 0
   }
 
-  $uploadOutput = (& node.exe $WranglerScript versions upload --config $ConfigPath --name $ExpectedWorker --message ("GFS-COD-MO-76 " + $ApprovedGitSha) --json 2>&1 | Out-String)
+  $beforeDeployment = Invoke-GfsNodeJson @($PreflightScript, "--deployment-snapshot")
+  $beforeVersions = Invoke-GfsNodeJson @($PreflightScript, "--versions-snapshot")
+  if ($null -eq $beforeDeployment -or $null -eq $beforeVersions) { Fail "deployment_readback_before_failed" }
+  $uploadMessage = "GFS-COD-MO-89 $ApprovedGitSha $($digest.sha256)"
+  $uploadStartedUtc = [DateTime]::UtcNow
+  $uploadOutput = (& node.exe $WranglerScript versions upload --config $ConfigPath --name $ExpectedWorker --message $uploadMessage 2>$null | Out-String).Trim()
   $uploadExit = $LASTEXITCODE
-  $versionMatch = [regex]::Match($uploadOutput, "(?i)\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b")
   if ($uploadExit -ne 0) { Fail "wrangler_versions_upload_failed" }
-  if (-not $versionMatch.Success) { Fail "uploaded_version_id_missing" }
-  [pscustomobject]@{ result = "PASS"; mode = "VERSIONS_UPLOAD_ONLY"; account = $ExpectedAccount; worker = $ExpectedWorker; gitSha = $ApprovedGitSha; artifactSha256 = $digest.sha256; versionId = $versionMatch.Value; deployed = $false; routingChanged = $false; tokenStatus = $preflight.tokenStatus; expiresOn = $preflight.expiresOn; scope = $preflight.scope } | ConvertTo-Json -Compress
+  $afterDeployment = Invoke-GfsNodeJson @($PreflightScript, "--deployment-snapshot")
+  $afterVersions = Invoke-GfsNodeJson @($PreflightScript, "--versions-snapshot")
+  if ($null -eq $afterDeployment -or $null -eq $afterVersions) { Fail "deployment_readback_after_failed" }
+  $readback = Test-GfsUploadedVersionReadback -BeforeDeployment $beforeDeployment -AfterDeployment $afterDeployment -BeforeVersions $beforeVersions -AfterVersions $afterVersions -Message $uploadMessage -UploadStartedUtc $uploadStartedUtc
+  if (-not $readback.pass) { Fail $readback.code }
+  [pscustomobject]@{ result = "PASS"; mode = "VERSIONS_UPLOAD_ONLY"; account = $ExpectedAccount; worker = $ExpectedWorker; gitSha = $ApprovedGitSha; artifactSha256 = $digest.sha256; versionId = $readback.versionId; deployed = $false; routingChanged = $false; tokenStatus = $preflight.tokenStatus; expiresOn = $preflight.expiresOn; scope = $preflight.scope } | ConvertTo-Json -Compress
 } finally {
   [Environment]::SetEnvironmentVariable("CLOUDFLARE_API_TOKEN", $oldToken, "Process")
   [Environment]::SetEnvironmentVariable("CLOUDFLARE_ACCOUNT_ID", $oldAccount, "Process")
   $secret = $null
   $preflightOutput = $null
   $uploadOutput = $null
+  $beforeDeployment = $null
+  $afterDeployment = $null
+  $beforeVersions = $null
+  $afterVersions = $null
+  $readback = $null
 }

@@ -11,6 +11,7 @@ const API_BASE = "https://api.cloudflare.com/client/v4";
 const ACCOUNT_ID = "cb5066a6d71ecdee0bd7ed8aacb4d3c2";
 const WORKER_NAME = "getfreeseeds-admin-staging";
 const SAFE_CODE = /^[A-Za-z0-9_.:-]{1,64}$/;
+const VERSION_ID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 
 function errorCode(value, fallback = "cloudflare_request_failed") {
   const code = Number.isSafeInteger(value) ? `cf_${value}` : String(value ?? "");
@@ -80,6 +81,47 @@ export async function verifyDeploymentCredential({ token, fetchImpl = fetch, now
   };
 }
 
+function versionRecord(version) {
+  const id = String(version?.id ?? "");
+  const metadata = version?.metadata;
+  if (!VERSION_ID.test(id) || !metadata || typeof metadata !== "object" || Array.isArray(metadata)) return null;
+  return {
+    id,
+    message: typeof metadata.message === "string" ? metadata.message : null,
+    createdOn: typeof metadata.created_on === "string" ? metadata.created_on : null,
+    source: typeof metadata.source === "string" ? metadata.source : null
+  };
+}
+
+export async function listWorkerVersions({ token, fetchImpl = fetch } = {}) {
+  const listed = await jsonRequest({ token, path: `/accounts/${ACCOUNT_ID}/workers/scripts/${WORKER_NAME}/versions?per_page=100`, fetchImpl });
+  const versions = listed.body?.result?.versions;
+  if (listed.response.status !== 200 || listed.body?.success !== true || !Array.isArray(versions)) {
+    return { ...safeResult("FAIL"), code: "worker_versions_readback_failed", httpStatus: listed.response.status };
+  }
+  return { ...safeResult("PASS"), versions: versions.map(versionRecord).filter(Boolean) };
+}
+
+export async function deploymentSnapshot({ token, fetchImpl = fetch } = {}) {
+  const listed = await jsonRequest({ token, path: `/accounts/${ACCOUNT_ID}/workers/scripts/${WORKER_NAME}/deployments`, fetchImpl });
+  const deployments = listed.body?.result?.deployments;
+  const latest = Array.isArray(deployments) ? deployments[0] : null;
+  const versions = Array.isArray(latest?.versions) ? latest.versions : null;
+  const deploymentId = String(latest?.id ?? "");
+  if (listed.response.status !== 200 || listed.body?.success !== true || !latest || !deploymentId || !versions) {
+    return { ...safeResult("FAIL"), code: "worker_deployment_readback_failed", httpStatus: listed.response.status };
+  }
+  const normalized = versions.map((version) => ({
+    versionId: String(version?.version_id ?? ""),
+    percentage: Number(version?.percentage)
+  })).sort((left, right) => left.versionId.localeCompare(right.versionId));
+  if (normalized.some((version) => !VERSION_ID.test(version.versionId) || !Number.isFinite(version.percentage))) {
+    return { ...safeResult("FAIL"), code: "worker_deployment_shape_invalid" };
+  }
+  const fingerprint = createHash("sha256").update(JSON.stringify({ deploymentId, versions: normalized })).digest("hex");
+  return { ...safeResult("PASS"), fingerprint, activeVersionCount: normalized.length };
+}
+
 async function trackedFiles(repoRoot, configPath) {
   const configRelative = relative(repoRoot, resolve(repoRoot, configPath)).replaceAll("\\", "/");
   const { stdout } = await execFileAsync("git", ["-C", repoRoot, "ls-files", "apps/admin/src", configRelative], { windowsHide: true });
@@ -112,6 +154,18 @@ async function main() {
     console.log(JSON.stringify(await artifactDigest({ repoRoot, configPath })));
     return;
   }
+  if (args.has("--versions-snapshot")) {
+    const result = await listWorkerVersions({ token: process.env.CLOUDFLARE_API_TOKEN });
+    console.log(JSON.stringify(result));
+    if (result.result !== "PASS") process.exitCode = 1;
+    return;
+  }
+  if (args.has("--deployment-snapshot")) {
+    const result = await deploymentSnapshot({ token: process.env.CLOUDFLARE_API_TOKEN });
+    console.log(JSON.stringify(result));
+    if (result.result !== "PASS") process.exitCode = 1;
+    return;
+  }
   const result = await verifyDeploymentCredential({
     token: process.env.CLOUDFLARE_API_TOKEN,
     linkageVerified: args.has("--linkage-verified")
@@ -128,4 +182,4 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   });
 }
 
-export { ACCOUNT_ID, WORKER_NAME, exactWorkerScope, resourceLeaves };
+export { ACCOUNT_ID, WORKER_NAME, VERSION_ID, exactWorkerScope, resourceLeaves };

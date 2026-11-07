@@ -1,5 +1,13 @@
 # Status
 
+## GFS-COD-MO-89 Wrangler upload/readback repair (2026-11-07 PKT)
+
+**Disposition: LOCAL REPAIR PASS / REAL UPLOAD PENDING.**
+
+- The prior host attempt failed safely because `versions upload --json` is unsupported. The runner now uses supported upload arguments and structured official API readback, not arbitrary stdout parsing.
+- It records a unique Git/artifact message, requires exactly one newly created version, and compares deployment fingerprints before/after upload. No production routing or Cloudflare resource was changed.
+- Local Node readback tests 7/7, PS5.1 runner tests, full suite 386 passed/1 skipped, build/lint and parse pass. Candidate artifact digest remains `3d0d17a3a953c6804a84f3449cc7b11ab2b87f68b0e8c602e79ff23ab32f7911`; live version ID and preview remain pending approved host execution.
+
 ## GFS-COD-MO-88 isolated historical MO candidate (2026-11-07 PKT)
 
 **Disposition: LOCAL CANDIDATE PASS / HOST UPLOAD PENDING.**

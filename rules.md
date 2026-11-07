@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-89 Wrangler upload/readback repair (2026-11-07 PKT)
+
+- Wrangler 4.149.0 `versions upload` does not support `--json`; the approved upload syntax now omits it and uses the documented `--message` option only. Version identity is never extracted by UUID scraping.
+- After upload, the host runner uses the official account API version list (`GET /accounts/{account_id}/workers/scripts/{script_name}/versions`) and matches exactly one new UUID by the unique Git/artifact message, `created_on` after upload start and Wrangler source when present. It rejects missing creation evidence, duplicates and ambiguous matches.
+- The runner snapshots the latest deployment before and after upload through the official deployments API and fails closed if the routing fingerprint changes. Upload remains `VERSIONS_UPLOAD_ONLY`; no deploy or traffic shift is performed.
+- Local Node readback tests 7/7, PS5.1 runner/linkage/C# tests, full suite 386 passed/1 skipped, build/lint and PS5.1 parse pass. Artifact digest remains `3d0d17a3a953c6804a84f3449cc7b11ab2b87f68b0e8c602e79ff23ab32f7911`. No Cloudflare upload was executed from this sandbox.
+
 ## GFS-COD-MO-88 isolated historical MO candidate (2026-11-07 PKT)
 
 - Candidate source is the live-compatible `551c2ee` Admin baseline plus the historical MO UI/guarded route, migration-0048 integration and disabled-CAPI outbox dependencies; the GFS-70/GFS-71 auto-update-only startup delta and its isolated candidate are excluded.
