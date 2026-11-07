@@ -2887,3 +2887,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Evidence:** official Wrangler tail ran under the approved host identity for 125 seconds and returned zero application records; raw credentials/log payloads were not retained.
 - **Decision:** classify tail application visibility BLOCKED and do not run DRY_RUN. Query Builder was not retried.
 - **Boundary:** obtain Cloudflare-supported real-time log delivery or a documented support/permission fix before retrying the runtime proof.
+
+## GFS-COD-MO-68 — support escalation boundary
+
+- **Decision:** submit private Cloudflare Support case [#02421284](https://www.support.cloudflare.com/s/case/500j2000000tULdAAM) after confirming logging collection is enabled on the isolated watchdog.
+- **Evidence:** invocation logs, persistence and 100% sampling are enabled; scheduled envelopes exist, but indexed records and a 125-second real-time tail delivered no application fields.
+- **Boundary:** the ticket does not prove DRY_RUN or authorize any production routing, deployment or payment action. Await Cloudflare's supported remediation, then request a new bounded runtime-proof authorization.

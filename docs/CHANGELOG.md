@@ -2497,3 +2497,8 @@
 
 - Ran one bounded official host Wrangler tail; zero application records were delivered in 125 seconds.
 - Recorded the real-time telemetry blocker and withheld DRY_RUN; production remained unchanged.
+
+## 2026-11-07 — GFS-COD-MO-68
+
+- Submitted private Cloudflare Support case #02421284 for scheduled Workers application-log delivery; verified watchdog logging settings are enabled.
+- Kept watchdog DISARMED and all production Admin/API/payment/WhatsApp state unchanged.

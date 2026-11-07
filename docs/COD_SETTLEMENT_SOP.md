@@ -68,3 +68,7 @@ Enable Workers Logs only on the private watchdog when authorized; keep Traces, I
 ## GFS-COD-MO-67D query limitation
 
 The supported dashboard Query Builder must return the sanitized application record for the exact DRY_RUN version before runtime proof is accepted. A successful query response with zero rows, or a Live invocation envelope without application fields, is insufficient. Do not inspect browser request headers/cookies or bypass the dashboard query path; if the version-indexed query returns zero for known scheduled records, stop without another DRY_RUN and report the ingestion/indexing blocker.
+
+## GFS-COD-MO-68 Cloudflare escalation boundary (2026-11-07 PKT)
+
+Cloudflare Support case [#02421284](https://www.support.cloudflare.com/s/case/500j2000000tULdAAM) is the private escalation for missing scheduled application-log delivery. Logs, invocation logs, dashboard persistence and 100% sampling were verified enabled on the isolated watchdog before submission. The case does not authorize a setting change, DRY_RUN, Admin canary or settlement action. Resume runtime proof only after Cloudflare supplies a supported correction and a separately authorized release gate is confirmed.

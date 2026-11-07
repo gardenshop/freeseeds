@@ -4321,3 +4321,7 @@ Investigation query costs only (not production savings): representative `rows_re
 | MO-67F official Wrangler tail | BLOCKED | Approved host tail remained alive for 125 seconds but emitted zero application records; no zero-error claim. |
 | MO-67F token preflight | PASS | Account-token verification HTTP200/active; expiry remained `2026-11-07T18:59:59Z`. |
 | MO-67F DRY_RUN | NOT RUN | Tail application fields unavailable; no Admin write or production mutation. |
+
+| MO-68 watchdog logging configuration | PASS | Logs, invocation logs, dashboard persistence and 100% sampling verified enabled; Cron active and route-free DISARMED Worker retained. |
+| MO-68 Cloudflare escalation | PASS | Private Support case #02421284 submitted with sanitized scheduled-envelope, zero-index and zero-record-tail evidence. |
+| MO-68 runtime proof/canary | NOT RUN | Support submission does not establish application-log delivery or authorize DRY_RUN/production exposure. |

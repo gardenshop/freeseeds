@@ -2758,3 +2758,8 @@ No secrets are stored in this registry.
 
 - Official Wrangler tail for `gfs-cod-mo-55-watchdog` ran for 125 seconds under the approved host and emitted zero application records. No raw log payload or credential was retained.
 - Watchdog remains DISARMED and Admin remains exact100/0; DRY_RUN remains blocked pending supported real-time application-log delivery.
+
+## GFS-COD-MO-68 Cloudflare support resource (2026-11-07 PKT)
+
+- Private case [#02421284](https://www.support.cloudflare.com/s/case/500j2000000tULdAAM): `Workers scheduled application logs unavailable despite successful Cron invocations`.
+- Watchdog configuration verified: Logs/invocation logs/dashboard persistence enabled, log sampling 100%, Cron active, `ADMIN_RECOVERY_TOKEN` binding name only, route count0, DISARMED version `73a1f50c...`100%.

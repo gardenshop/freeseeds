@@ -3656,3 +3656,10 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **BLOCKED:** Official host Wrangler tail remained alive for the bounded 125-second window but produced zero sanitized application records. This does not prove zero errors or DRY_RUN success.
 - **PASS:** Account-token verification was HTTP200/active; authenticated Orders and Conversations returned HTTP200; no Query Builder retry, DRY_RUN, deployment, Admin, payment, D1, Meta, CAPI or customer mutation occurred.
 - **NEXT GATE:** Cloudflare-supported real-time log delivery or a permission/support correction is required before another DRY_RUN.
+
+## GFS-COD-MO-68 — Cloudflare logging escalation (2026-11-07 PKT)
+
+- **PASS:** Support case [#02421284](https://www.support.cloudflare.com/s/case/500j2000000tULdAAM) submitted with sanitized evidence for missing scheduled Workers application logs.
+- **VERIFIED:** Watchdog logging, invocation logging, persistence and 100% sampling are enabled; Cron active; watchdog `73a1f50c...` remains DISARMED/100% and route-free. Root cause remains external/unknown pending Cloudflare response.
+- **PASS:** Admin exact100/0, API health/WhatsApp, Orders/Conversations, Advance3/3 and COD PKR125 readbacks passed. No production mutation.
+- **BLOCKED:** DRY_RUN, Admin canary, settlement and CAPI remain blocked pending a supported Cloudflare correction and separate authorization.
