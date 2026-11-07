@@ -2546,3 +2546,7 @@
 ## 2026-11-07 - GFS-COD-MO-77
 - Repaired the runner's raw Windows-path comparison and added 9/9 fail-closed validation coverage.
 - Confirmed the broad PR11 tree remains upload-ineligible for historical MO; no Cloudflare or production mutation occurred.
+
+## 2026-11-07 - GFS-COD-MO-78
+- Fixed the Windows PowerShell 5.1 clean-Git `$null.Trim()` preflight failure with null-safe output and explicit Git exit checks.
+- Added regression coverage and retained the broad-PR11 no-upload boundary; no production mutation occurred.

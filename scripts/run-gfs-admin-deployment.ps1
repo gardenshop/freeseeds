@@ -27,9 +27,15 @@ $identity = (whoami).Trim()
 if ($identity.ToLowerInvariant() -ne $ExpectedUser.ToLowerInvariant()) { Fail "approved_identity_required" }
 
 $resolvedRepo = (Resolve-Path $RepoRoot).Path
-$gitRoot = (& git -C $resolvedRepo rev-parse --show-toplevel).Trim()
-$head = (& git -C $resolvedRepo rev-parse HEAD).Trim()
-$dirty = (& git -C $resolvedRepo status --porcelain).Trim()
+$gitRootResult = Invoke-GfsGitText -RepoRoot $resolvedRepo -Arguments @("rev-parse", "--show-toplevel")
+if ($gitRootResult.exitCode -ne 0 -or [string]::IsNullOrWhiteSpace($gitRootResult.text)) { Fail "git_repository_lookup_failed" }
+$gitRoot = $gitRootResult.text
+$headResult = Invoke-GfsGitText -RepoRoot $resolvedRepo -Arguments @("rev-parse", "HEAD")
+if ($headResult.exitCode -ne 0 -or [string]::IsNullOrWhiteSpace($headResult.text)) { Fail "git_head_lookup_failed" }
+$head = $headResult.text
+$dirtyResult = Invoke-GfsGitText -RepoRoot $resolvedRepo -Arguments @("status", "--porcelain")
+if ($dirtyResult.exitCode -ne 0) { Fail "git_status_failed" }
+$dirty = $dirtyResult.text
 
 $digestJson = & node.exe $PreflightScript --artifact-digest --repo-root $resolvedRepo --config "apps/admin/wrangler.jsonc"
 if ($LASTEXITCODE -ne 0) { Fail "artifact_digest_failed" }
@@ -60,7 +66,7 @@ $oldToken = [Environment]::GetEnvironmentVariable("CLOUDFLARE_API_TOKEN", "Proce
 $oldAccount = [Environment]::GetEnvironmentVariable("CLOUDFLARE_ACCOUNT_ID", "Process")
 try {
   if ($CredentialTarget -ne "GFS-Admin-Deploy-Scoped-2026") { Fail "credential_target_not_allowlisted" }
-  $secret = [GfsAdminCredentialReader]::ReadSecret($CredentialTarget)
+  try { $secret = [GfsAdminCredentialReader]::ReadSecret($CredentialTarget) } catch { Fail "credential_read_failed" }
   if ([string]::IsNullOrWhiteSpace($secret)) { Fail "credential_incomplete" }
   [Environment]::SetEnvironmentVariable("CLOUDFLARE_API_TOKEN", $secret, "Process")
   [Environment]::SetEnvironmentVariable("CLOUDFLARE_ACCOUNT_ID", $ExpectedAccount, "Process")

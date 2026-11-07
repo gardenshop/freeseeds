@@ -2812,3 +2812,8 @@ No secrets are stored in this registry.
 
 - Path guard repaired to canonical, case-insensitive Windows comparison; runner remains fixed to the named account/Worker and Credential Manager target.
 - Current PR11 is broad, not a source-isolated MO artifact. No upload/version/routing mutation is authorized or recorded.
+
+## GFS-COD-MO-78 runner preflight repair (2026-11-07 PKT)
+
+- Git output handling is null-safe under Windows PowerShell 5.1; native Git exit codes remain mandatory. No live resource changed.
+- The current broad PR11 tree remains ineligible for Admin upload; source-isolated artifact verification is a separate gate.

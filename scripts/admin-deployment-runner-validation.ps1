@@ -9,6 +9,20 @@ function Test-GfsCanonicalPathEqual {
   return (Get-GfsCanonicalPath $Left) -ceq (Get-GfsCanonicalPath $Right)
 }
 
+function Invoke-GfsGitText {
+  param([Parameter(Mandatory = $true)][string] $RepoRoot, [Parameter(Mandatory = $true)][string[]] $Arguments)
+  $previousErrorAction = $ErrorActionPreference
+  $ErrorActionPreference = "SilentlyContinue"
+  try {
+    $lines = @(& git -c core.excludesfile= -C $RepoRoot @Arguments 2>$null)
+    $exitCode = $LASTEXITCODE
+  } finally {
+    $ErrorActionPreference = $previousErrorAction
+  }
+  $text = (@($lines) -join [Environment]::NewLine).Trim()
+  return [pscustomobject]@{ exitCode = $exitCode; text = $text }
+}
+
 function Test-GfsRunnerInputs {
   param(
     [Parameter(Mandatory = $true)][string] $Identity,

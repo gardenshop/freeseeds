@@ -14,6 +14,12 @@
 - Validation passes 9/9, including missing-credential fail-closed behavior and secret-safe output. Full 387 passed/1 skipped, build/lint and PowerShell parse pass. Current PR11 is broad and not eligible for historical-MO upload mode.
 - No Cloudflare, Admin, API, payment, D1, Meta, WhatsApp or CAPI mutation occurred.
 
+## GFS-COD-MO-78 clean Git preflight repair (2026-11-07 PKT)
+
+- Root cause: PowerShell 5.1 returned no objects for a clean `git status --porcelain`; calling `.Trim()` on that `$null` caused the preflight exception. The runner now joins output null-safely and checks each native Git exit code separately.
+- PowerShell 5.1 validation passes 9/9, including clean-output handling, invalid Git root/failure, dirty-tree rejection, identity/SHA/artifact rejection, missing credential and secret-safe output. No credential was read and no Cloudflare mutation occurred.
+- Preserve the broad-PR11 upload block: only a separately verified source-isolated MO artifact may ever use upload mode.
+
 ## GFS-COD-MO-62 watchdog activation (2026-11-06 PKT)
 
 - Owner credentials were validated only inside approved `bi\\nazim`; values never entered agent output. The scoped Worker credential authorized the new Worker, while the Admin recovery credential was used only as the secret value.

@@ -3717,3 +3717,9 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Root cause: PowerShell compared `D:/free seeds/gfs264-pr11` and Git's `D:\\free seeds\\gfs264-pr11` as raw strings. The runner now compares canonical full paths case-insensitively and preserves the repository, identity, SHA, clean-tree and artifact-digest gates.
 - Regression validation passes 9/9 for separator/case equivalence and all required rejection paths, including missing credential and secret-safe output. Full 387 passed/1 skipped; build/lint and PowerShell parse pass.
 - Current PR11 remains broad and is not an approved historical-MO artifact. Upload mode remains prohibited for this tree; no Cloudflare or production mutation occurred.
+
+## GFS-COD-MO-78 — clean Git preflight repair (2026-11-07 PKT)
+
+- Confirmed the PowerShell 5.1 failure was `.Trim()` on null output from clean `git status --porcelain`.
+- Repaired with null-safe text joining, explicit exit-code checks for repository root, HEAD and status, and sanitized credential-read failure handling. PowerShell 5.1 validation is 9/9; full 387 passed/1 skipped; build/lint and parse pass.
+- No credential, upload, routing, payment, D1, Meta, WhatsApp or CAPI mutation occurred. Broad PR11 remains upload-blocked.

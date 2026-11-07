@@ -2942,6 +2942,12 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Evidence:** PowerShell validation passes 9/9: equivalent separators/case accepted; different repository, identity, SHA, dirty tree, artifact digest and missing credential rejected; no secret appears in output.
 - **Boundary:** this repairs preflight only. The current broad PR11 tree is not source-isolated historical MO; do not invoke upload mode.
 
+## GFS-COD-MO-78 — null-safe Git preflight
+
+- **Decision:** never call methods directly on native Git output. Join an array safely, check exit code separately, and reject repository/HEAD/status failures with sanitized codes.
+- **Evidence:** actual Windows PowerShell 5.1 validation passes 9/9; clean status, invalid repository, Git failure, identity, SHA, dirty-tree, artifact and credential gates are covered.
+- **Boundary:** preflight is repaired only. No upload, Admin/API deployment, payment, D1, Meta, WhatsApp or CAPI action is authorized.
+
 ## GFS-COD-MO-75 — no dashboard deployment workaround (2026-11-07 PKT)
 - Treat the MCP safety rejection of dashboard `Edit code` as a deployment-access blocker, not permission to bypass via DOM, direct API, token extraction or health-wrapper reuse.
 - Stop at 0% until the approved host deployment runner is callable; do not claim preview or live MO completion.

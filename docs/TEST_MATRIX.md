@@ -4366,6 +4366,10 @@ Investigation query costs only (not production savings): representative `rows_re
 | MO-77 credential/output safety | PASS | Missing credential fails closed; validation output contains no credential value or secret variable. |
 | MO-77 full regression | PASS | Focused runner 9/9; full 387 passed/1 skipped; build/lint/PowerShell parse PASS. |
 
+| MO-78 clean `git status` null output | PASS | PowerShell 5.1 handles empty output without method calls on `$null`. |
+| MO-78 Git exit-code handling | PASS | Repository root, HEAD, status and invalid Git failures reject with sanitized codes. |
+| MO-78 credential/output safety | PASS | Missing credential remains fail-closed; no credential value appears in test output. |
+
 | MO-76 runner identity gate | PASS (local) | Fixed `bi\\nazim` requirement; sandbox identity is rejected before credential access. |
 | MO-76 token/scope mock verification | PASS | 4/4 Node tests cover active account token, exact Worker policy, broad-scope rejection, target readback failure and secret non-return. |
 | MO-76 artifact gate | PASS (local) | Clean-HEAD and deterministic 7-file Admin artifact digest checks pass. |

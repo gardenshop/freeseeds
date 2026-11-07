@@ -9,6 +9,12 @@ $base = @{
   ExpectedGitSha = $sha; ActualGitSha = $sha; WorktreeDirty = $false;
   ExpectedArtifactSha256 = $digest; ActualArtifactSha256 = $digest
 }
+$cleanStatus = Invoke-GfsGitText -RepoRoot $root -Arguments @("status", "--porcelain")
+if ($cleanStatus.exitCode -ne 0 -or $null -eq $cleanStatus.text) { throw "git status did not produce safe text" }
+$actualRoot = Invoke-GfsGitText -RepoRoot $root -Arguments @("rev-parse", "--show-toplevel")
+if ($actualRoot.exitCode -ne 0 -or -not (Test-GfsCanonicalPathEqual $root $actualRoot.text)) { throw "actual git root lookup failed" }
+$invalidGit = Invoke-GfsGitText -RepoRoot "D:\not-a-repository" -Arguments @("status", "--porcelain")
+if ($invalidGit.exitCode -eq 0) { throw "invalid repository unexpectedly passed" }
 function Assert-Pass($value, [string]$name) { if (-not $value.pass) { throw "$name expected PASS, got $($value.code)" } }
 function Assert-Code($value, [string]$expected, [string]$name) { if ($value.pass -or $value.code -ne $expected) { throw "$name expected $expected" } }
 function Invoke-Case($overrides = @{}) { $case = $base.Clone(); foreach ($key in $overrides.Keys) { $case[$key] = $overrides[$key] }; return (Test-GfsRunnerInputs @case) }
