@@ -3004,3 +3004,8 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Keep exact Worker-only policy proof in the existing two-credential PowerShell verifier. Do not let the restricted deployment token query account token details; its permitted proof is active status plus target Worker readback after linkage.
 - On a real scope mismatch, expose only enum-like diagnostic fields and stop. Do not accept an immutable Worker reference, new role schema or alternate resource shape until a sanitized owner-host result and authoritative documentation/record justify that exact representation.
 - The local gate is repaired and tested; the genuine host gate remains pending because this execution context is not the approved Windows identity and cannot access the approved Credential Manager entries.
+## GFS-COD-MO-86 - do not guess the flat resource key (2026-11-07 PKT)
+
+- The real scope mismatch is not evidence for account-wide access and must not be bypassed. Keep exact Worker-only authorization fail-closed.
+- Use one host diagnostic to classify the key family and compare the Worker reference against the read-only Workers Scripts record. Only then may the parser accept that exact documented representation.
+- No upload, traffic, payment, D1, Meta, WhatsApp or CAPI mutation is authorized.

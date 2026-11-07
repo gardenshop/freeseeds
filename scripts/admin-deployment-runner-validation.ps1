@@ -63,15 +63,17 @@ function Test-GfsTokenLinkageResult {
 
 function Get-GfsSafeLinkageDiagnosticCode {
   param([object] $Diagnostics)
-  if ($null -eq $Diagnostics) { return "policy_unknown_resource_unknown_worker_unknown_role_unknown_group_unknown" }
+  if ($null -eq $Diagnostics) { return "policy_unknown_resource_unknown_worker_unknown_family_unknown_role_unknown_group_unknown" }
   $values = @(
     [string]$Diagnostics.policy_count,
     [string]$Diagnostics.resource_representation,
+    [string]$Diagnostics.resource_key_shape,
     [string]$Diagnostics.worker_reference_type,
+    [string]$Diagnostics.worker_resource_family,
     [string]$Diagnostics.role_result,
     [string]$Diagnostics.permission_group_result
   ) | ForEach-Object {
-    if ($_ -match '^(zero|one|multiple|unknown|missing|missing_id|flat|nested|array|empty|unsupported|name|immutable_id|other|pass|wrong|matched|unresolved)$') { $_ } else { "unknown" }
+    if ($_ -match '^(zero|one|multiple|unknown|missing|missing_id|flat|nested|array|empty|unsupported|name|immutable_id|other|worker|workers|worker_script|workers_script|script|pass|wrong|matched|unresolved)$') { $_ } else { "unknown" }
   }
-  return "policy_{0}_resource_{1}_worker_{2}_role_{3}_group_{4}" -f $values[0], $values[1], $values[2], $values[3], $values[4]
+  return "policy_{0}_resource_{1}_shape_{2}_worker_{3}_family_{4}_role_{5}_group_{6}" -f $values[0], $values[1], $values[2], $values[3], $values[4], $values[5], $values[6]
 }

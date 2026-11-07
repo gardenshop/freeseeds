@@ -29,7 +29,10 @@ $nestedDiagnostics = (Test-GfsTokenLinkage -TokenVerify $verify -Metadata $neste
 if ($nestedDiagnostics.policy_count -ne "one" -or $nestedDiagnostics.resource_representation -ne "nested" -or $nestedDiagnostics.worker_reference_type -ne "name" -or $nestedDiagnostics.role_result -ne "pass" -or $nestedDiagnostics.permission_group_result -ne "matched") { throw "nested diagnostics were not sanitized/accurate" }
 $immutablePolicy = [pscustomobject]@{ effect = "allow"; resources = [pscustomobject]@{ "com.cloudflare.api.account.worker.script.0123456789abcdef0123456789abcdef" = "*" }; permission_groups = @([pscustomobject]@{ id = "workers-editor" }) }
 $immutableDiagnostics = Get-GfsPolicyDiagnostics -Policies @($immutablePolicy) -PermissionGroups $groups -Worker $worker
-if ($immutableDiagnostics.worker_reference_type -ne "immutable_id") { throw "immutable Worker reference was not classified safely" }
+if ($immutableDiagnostics.worker_reference_type -ne "immutable_id" -or $immutableDiagnostics.resource_key_shape -ne "worker_script") { throw "immutable Worker reference was not classified safely" }
+$unknownFamilyPolicy = [pscustomobject]@{ effect = "allow"; resources = [pscustomobject]@{ "com.cloudflare.api.account.unknown.scope.$worker" = "*" }; permission_groups = @([pscustomobject]@{ id = "workers-editor" }) }
+$unknownFamilyDiagnostics = Get-GfsPolicyDiagnostics -Policies @($unknownFamilyPolicy) -PermissionGroups $groups -Worker $worker
+if ($unknownFamilyDiagnostics.worker_reference_type -ne "name" -or $unknownFamilyDiagnostics.resource_key_shape -ne "other" -or $unknownFamilyDiagnostics.worker_resource_family -ne "unknown") { throw "unknown resource family was not classified safely" }
 $wrongRoleGroups = @([pscustomobject]@{ id = "workers-editor"; name = "Workers Routes Write" })
 Assert-Code (Test-GfsTokenLinkage -TokenVerify $verify -Metadata $nestedMetadata -PermissionGroups $wrongRoleGroups -Now ([datetime]"2026-11-07T00:00:00Z") -ExpectedWorker $worker) "token_scope_mismatch" "wrong role"
 $wildcardNested = [pscustomobject]@{ success = $true; result = [pscustomobject]@{ id = $id; policies = @([pscustomobject]@{ effect = "allow"; resources = [pscustomobject]@{ "com.cloudflare.api.account" = [pscustomobject]@{ worker = [pscustomobject]@{ script = "*" } } }; permission_groups = @([pscustomobject]@{ id = "workers-editor" }) }) } }

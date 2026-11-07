@@ -42,8 +42,8 @@ $validLinkage = [pscustomobject]@{ result = "PASS"; token_identity_match = "PASS
 Assert-Pass (Test-GfsTokenLinkageResult $validLinkage) "valid token linkage result"
 Assert-Code (Test-GfsTokenLinkageResult ([pscustomobject]@{ result = "FAIL"; token_identity_match = "UNKNOWN"; tokenStatus = "UNKNOWN"; expiry_status = "UNKNOWN"; scope = "UNVERIFIED"; code = "METADATA_AUTH_REQUIRED" })) "token_linkage_not_passed" "metadata unavailable"
 Assert-Code (Test-GfsTokenLinkageResult ([pscustomobject]@{ result = "PASS"; token_identity_match = "PASS"; tokenStatus = "ACTIVE"; expiry_status = "VALID"; scope = "UNVERIFIED"; code = "none" })) "token_scope_unverified" "scope unavailable"
-$diagnosticCode = Get-GfsSafeLinkageDiagnosticCode ([pscustomobject]@{ policy_count = "one"; resource_representation = "nested"; worker_reference_type = "immutable_id"; role_result = "wrong"; permission_group_result = "matched" })
-if ($diagnosticCode -ne "policy_one_resource_nested_worker_immutable_id_role_wrong_group_matched") { throw "sanitized linkage diagnostic code mismatch" }
+$diagnosticCode = Get-GfsSafeLinkageDiagnosticCode ([pscustomobject]@{ policy_count = "one"; resource_representation = "nested"; resource_key_shape = "workers_script"; worker_reference_type = "immutable_id"; worker_resource_family = "workers"; role_result = "wrong"; permission_group_result = "matched" })
+if ($diagnosticCode -ne "policy_one_resource_nested_shape_workers_script_worker_immutable_id_family_workers_role_wrong_group_matched") { throw "sanitized linkage diagnostic code mismatch" }
 $safeLinkage = $validLinkage | ConvertTo-Json -Compress
 if ($safeLinkage -match "synthetic-secret|CLOUDFLARE_API_TOKEN|0123456789abcdef") { throw "token linkage output leaked sensitive data" }
 "runner_validation=PASS (11/11); linkage_gate=PASS (3/3); credential_reader_add_type=PASS (2/2)"

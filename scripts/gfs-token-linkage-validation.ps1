@@ -4,14 +4,18 @@ function New-GfsTokenLinkageDiagnostics {
   param(
     [string] $PolicyCount = "unknown",
     [string] $ResourceRepresentation = "unknown",
+    [string] $ResourceKeyShape = "unknown",
     [string] $WorkerReferenceType = "unknown",
+    [string] $WorkerResourceFamily = "unknown",
     [string] $RoleResult = "unknown",
     [string] $PermissionGroupResult = "unknown"
   )
   return [pscustomobject]@{
     policy_count = $PolicyCount
     resource_representation = $ResourceRepresentation
+    resource_key_shape = $ResourceKeyShape
     worker_reference_type = $WorkerReferenceType
+    worker_resource_family = $WorkerResourceFamily
     role_result = $RoleResult
     permission_group_result = $PermissionGroupResult
   }
@@ -25,17 +29,19 @@ function New-GfsTokenLinkageResult {
 
 function Get-GfsSafeLinkageDiagnosticCode {
   param([object] $Diagnostics)
-  if ($null -eq $Diagnostics) { return "policy_unknown_resource_unknown_worker_unknown_role_unknown_group_unknown" }
+  if ($null -eq $Diagnostics) { return "policy_unknown_resource_unknown_worker_unknown_family_unknown_role_unknown_group_unknown" }
   $values = @(
     [string]$Diagnostics.policy_count,
     [string]$Diagnostics.resource_representation,
+    [string]$Diagnostics.resource_key_shape,
     [string]$Diagnostics.worker_reference_type,
+    [string]$Diagnostics.worker_resource_family,
     [string]$Diagnostics.role_result,
     [string]$Diagnostics.permission_group_result
   ) | ForEach-Object {
-    if ($_ -match '^(zero|one|multiple|unknown|missing|missing_id|flat|nested|array|empty|unsupported|name|immutable_id|other|pass|wrong|matched|unresolved)$') { $_ } else { "unknown" }
+    if ($_ -match '^(zero|one|multiple|unknown|missing|missing_id|flat|nested|array|empty|unsupported|name|immutable_id|other|worker|workers|worker_script|workers_script|script|pass|wrong|matched|unresolved)$') { $_ } else { "unknown" }
   }
-  return "policy_{0}_resource_{1}_worker_{2}_role_{3}_group_{4}" -f $values[0], $values[1], $values[2], $values[3], $values[4]
+  return "policy_{0}_resource_{1}_shape_{2}_worker_{3}_family_{4}_role_{5}_group_{6}" -f $values[0], $values[1], $values[2], $values[3], $values[4], $values[5], $values[6]
 }
 
 function Get-GfsResourceLeaves {
@@ -76,8 +82,22 @@ function Get-GfsPolicyDiagnostics {
   }
 
   $workerReferenceType = "missing"
+  $workerResourceFamily = "unknown"
+  $resourceKeyShape = "unknown"
   $workerLeaves = @($leaves | Where-Object { $_.path -match '^com\.cloudflare\.api\.account\.(worker|workers)\.script\.' })
+  if ($leaves.Count -eq 1 -and [string]$leaves[0].path -like "com.cloudflare.api.account.*") {
+    $keyTail = ([string]$leaves[0].path -replace '^com\.cloudflare\.api\.account\.', "")
+    if ($keyTail -match '^worker\.script\.') { $resourceKeyShape = "worker_script"; $workerResourceFamily = "worker" }
+    elseif ($keyTail -match '^workers\.script\.') { $resourceKeyShape = "workers_script"; $workerResourceFamily = "workers" }
+    elseif ($keyTail -match '^script\.') { $resourceKeyShape = "script" }
+    else { $resourceKeyShape = "other" }
+    $lastSegment = ([string]$leaves[0].path -split '\.')[-1]
+    if ($lastSegment -eq $Worker) { $workerReferenceType = "name" }
+    elseif ($lastSegment -match '^[a-fA-F0-9]{32}$' -or $lastSegment -match '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') { $workerReferenceType = "immutable_id" }
+    elseif ($lastSegment -ne "script" -and $lastSegment -ne "worker" -and $lastSegment -ne "workers") { $workerReferenceType = "other" }
+  }
   if ($workerLeaves.Count -gt 0) {
+    $workerResourceFamily = if ([string]$workerLeaves[0].path -match '^com\.cloudflare\.api\.account\.(worker|workers)\.script\.') { $Matches[1] } else { "unknown" }
     $suffix = [string]$workerLeaves[0].path -replace '^com\.cloudflare\.api\.account\.(worker|workers)\.script\.', ""
     if ($suffix -eq $Worker) { $workerReferenceType = "name" }
     elseif ($suffix -match '^[a-fA-F0-9]{32}$' -or $suffix -match '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') { $workerReferenceType = "immutable_id" }
@@ -95,7 +115,7 @@ function Get-GfsPolicyDiagnostics {
       $roleResult = if (@($roleNames | Where-Object { $_ -match '^(?i:Individual Workers Editor|Workers Scripts (Write|Edit))$' }).Count -eq 1) { "pass" } else { "wrong" }
     }
   }
-  return New-GfsTokenLinkageDiagnostics -PolicyCount $policyCount -ResourceRepresentation $representation -WorkerReferenceType $workerReferenceType -RoleResult $roleResult -PermissionGroupResult $groupResult
+  return New-GfsTokenLinkageDiagnostics -PolicyCount $policyCount -ResourceRepresentation $representation -ResourceKeyShape $resourceKeyShape -WorkerReferenceType $workerReferenceType -WorkerResourceFamily $workerResourceFamily -RoleResult $roleResult -PermissionGroupResult $groupResult
 }
 
 function Get-GfsExactWorkerPolicyDiagnostics {

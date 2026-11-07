@@ -1,5 +1,13 @@
 # Status
 
+## GFS-COD-MO-86 - actual Worker scope diagnosis (2026-11-07 PKT)
+
+**Disposition: DIAGNOSTIC READY / REAL POLICY MAPPING PENDING.**
+
+- Real sanitized evidence: one flat resource, Worker reference missing under the prior classifier, role PASS and permission group matched. No token or raw policy data was recorded.
+- Official Worker metadata uses the script name as the script id; the validator has not accepted an unverified alternate resource key.
+- Added a single host-only diagnostic that writes sanitized classifications and authoritative Worker-list match status to ignored local storage. Sandbox execution is blocked by identity separation.
+
 ## GFS-COD-MO-85 - integrated scope diagnosis (2026-11-07 PKT)
 
 **Disposition: LOCAL REPAIR PASS / REAL HOST PREFLIGHT PENDING.**

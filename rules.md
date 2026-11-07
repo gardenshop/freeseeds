@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-86 actual Worker-scope diagnosis (2026-11-07 PKT)
+
+- Owner evidence narrowed the real failure to one flat resource with role and permission group passing: policy_one_resource_flat_worker_missing_role_pass_group_matched. Token identity and active/expiry checks passed; exact Worker resource mapping did not.
+- Cloudflare's Worker Scripts list identifies a script by its id/script name, and Individual Workers Editor is the supported per-Worker role. The validator therefore remains fail-closed until the flat key family is observed and matched to the authoritative script record; no plural/alternate key was guessed.
+- Added one ignored-file host diagnostic, scripts/run-gfs-admin-scope-diagnostic.ps1. It reuses the existing credential reader, checks the authoritative Worker script list read-only, and writes only enum classifications to .gfs-local/admin-scope-diagnostic.json. The sandbox cannot run it as bi\\nazim; no real policy payload or host PASS is claimed.
+
 ## GFS-COD-MO-85 integrated scope diagnosis (2026-11-07 PKT)
 
 - The confirmed duplicate scope failure was removed from the Node deployment preflight: the restricted deployment token is used only for account-token verification and Admin Worker deployment readback. Exact policy/linkage proof must come first through the separate metadata-read credential; standalone Node execution remains `token_scope_unverified`.

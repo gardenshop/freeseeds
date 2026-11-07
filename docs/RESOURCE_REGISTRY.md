@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-COD-MO-86 Worker-scope diagnostic (2026-11-07 PKT)
+
+- New host-only diagnostic: scripts/run-gfs-admin-scope-diagnostic.ps1.
+- It uses only the existing named credentials internally, checks the Worker Scripts list read-only, and writes enum-only output to ignored .gfs-local/admin-scope-diagnostic.json.
+- No resource key, token ID, token value, raw response or customer data is stored. Exact parser acceptance remains blocked pending one sanitized host result.
+
 ## GFS-COD-MO-85 integrated scope diagnosis (2026-11-07 PKT)
 
 - `scripts/verify-gfs-admin-token-linkage.ps1` remains the sole exact-policy verifier and now emits sanitized diagnostic classes on mismatch; it never emits raw policy data, token IDs or secret values.

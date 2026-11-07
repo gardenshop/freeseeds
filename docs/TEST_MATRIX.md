@@ -1,5 +1,14 @@
 # Test Matrix
 
+## GFS-COD-MO-86 Worker-scope diagnosis (2026-11-07 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Real failure classification retained | PASS | One flat resource; Worker missing; role/group pass. |
+| Unknown key-family classification | PASS | Synthetic names classify as other without accepting authorization. |
+| Authoritative Worker identity check | READY | One host diagnostic performs read-only script-list matching; sandbox cannot execute host credentials. |
+| Parser acceptance | BLOCKED | Exact real flat key family is not yet proven. |
+
 ## GFS-COD-MO-85 integrated scope diagnosis (2026-11-07 PKT)
 
 | Gate | Result | Evidence |
