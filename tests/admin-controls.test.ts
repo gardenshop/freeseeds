@@ -110,15 +110,42 @@ describe("GFS-109 admin controls", () => {
     }
   });
 
+  it("renders a responsive, privacy-safe Admin home navigation", async () => {
+    const response = await app.fetch(new Request("https://admin.example.test/", { headers: auth }), env(new AdminMemoryDb()));
+    expect(response.status).toBe(200);
+    const html = await response.text();
+    expect(html).toContain("Get Free Seeds Admin");
+    expect(html).toContain("grid-template-columns:repeat(4,minmax(0,1fr))");
+    expect(html).toContain("@media(max-width:560px)");
+    for (const path of ["/orders", "/analytics", "/conversations", "/payment-settings", "/cod-settings", "/whatsapp-content", "/meta-activation"]) expect(html).toContain(`href=\"${path}\"`);
+    expect(html).not.toContain("SELECT");
+    expect(html).not.toContain("customerName");
+  });
+
+  it("bounds Analytics tables inside keyboard-focusable mobile scroll regions", async () => {
+    const response = await app.fetch(new Request("https://admin.example.test/analytics", { headers: auth }), env(new AdminMemoryDb()));
+    expect(response.status).toBe(200);
+    const html = await response.text();
+    expect(html).toContain("container.style.maxWidth='100%'");
+    expect(html).toContain("container.style.overflowX='auto'");
+    expect(html).toContain("container.style.webkitOverflowScrolling='touch'");
+    expect(html).toContain("container.tabIndex=0");
+    expect(html).toContain("Daily inbound events table");
+    expect(html).toContain("Abandoned checkout classification table");
+    expect(html).toContain("/api/analytics/export?");
+  });
+
   it("renders the tabbed, URL-hydrated split-pane order workspace", async () => {
     const response = await app.fetch(new Request("https://admin.example.test/orders?q=synthetic&paymentStatus=REVIEW&archived=all", { headers: auth }), env(new AdminMemoryDb()));
     expect(response.status).toBe(200);
     const html = await response.text();
     expect(html).toContain("new URLSearchParams(location.search)");
+    expect(html).toContain('id="download-export"');
+    expect(html).toContain("/api/orders/export?");
     for (const tab of ["All Orders", "Verify Payments", "Confirmed Payments", "Fulfillment"]) expect(html).toContain(tab);
     for (const size of ["25", "50", "100"]) expect(html).toContain(`<option>${size}</option>`);
     expect(html).toContain("selectedId=list[0].id");
-    expect(html).toContain("grid-template-rows:minmax(280px,42vh)");
+    expect(html).toContain(".orders{display:flex;flex:1 1 auto;flex-direction:column;gap:8px;overflow:auto;min-height:0}");
     expect(html).toContain("/api/payments/'");
     expect(html).toContain("request-clearer-receipt");
     expect(html).toContain("Reason code: TEST_IMAGE_NOT_PAYMENT_PROOF or INSUFFICIENT_OR_UNCLEAR_RECEIPT");
@@ -128,6 +155,8 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("Mark Packing");
     expect(html).toContain("Mark Dispatched");
     expect(html).toContain("Mark Delivered");
+    expect(html).toContain("gfs_admin_orders_auto_update");
+    expect(html).toContain("document.hasFocus()");
   });
 
   it("renders bounded, stale-safe startup request handling", async () => {
@@ -139,7 +168,10 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("if(listController)listController.abort()");
     expect(html).toContain("if(generation!==listGeneration||isAbort(error))return");
     expect(html).toContain("Orders could not be loaded. Use Refresh to try again.");
-    expect(html).toContain("hydrate();setTabs({});load();");
+    expect(html).toContain("Browser fetch failed; check connectivity or the Admin session.");
+    expect(html).toContain("Access session expired or denied. Re-authenticate the Admin session.");
+    expect(html).toContain("Asia/Karachi");
+    expect(html).toContain("hydrate();setTabs({});load().finally(()=>{if(typeof ordersAutoOn!=='undefined'&&ordersAutoOn)resumeOrdersAuto()});");
   });
 
   it("keeps the professional startup script parseable with all queues and auto-selection", async () => {
@@ -152,6 +184,79 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("setTabs(data.counts)");
     expect(html).toContain("selectedId=list[0].id");
     expect(html).toContain("if(id)await show(id)");
+  });
+
+  it("bounds order cards and gives Refresh visible safe feedback", async () => {
+    const response = await app.fetch(new Request("https://admin.example.test/orders", { headers: auth }), env(new AdminMemoryDb()));
+    expect(response.status).toBe(200);
+    const html = await response.text();
+    expect(html).toContain("height:calc(100vh - 285px)");
+    expect(html).toContain("grid-template-rows:minmax(0,1fr)");
+    expect(html).toContain("min-width:0;min-height:0;overflow:hidden");
+    expect(html).toContain(".orders{display:flex;flex:1 1 auto;flex-direction:column;gap:8px;overflow:auto;min-height:0}");
+    expect(html).toContain("max-height:42vh");
+    expect(html).toContain("Checking latest orders...");
+    expect(html).toContain("· Checked ");
+    expect(html).toContain("const refreshWithoutFeedback=refreshOrders");
+    expect(html).toContain("const hasVisibleOrders=Boolean(ordersRoot.querySelector('[data-order-id]'))");
+    expect(html).toContain("Refresh failed; showing the last successful orders.");
+    expect(html).toContain('id="orders-auto"');
+    expect(html).toContain('.refresh[aria-pressed="true"]{background:#17603C;color:#fff');
+    expect(html).toContain('.refresh[aria-pressed="false"]{background:#fff;color:#17231c');
+    expect(html).toContain("gfs_admin_orders_auto_update");
+    expect(html).toContain("document.hasFocus()");
+    expect(html).toContain("gfs_admin_orders_auto_lock");
+    expect(html).toContain("window.addEventListener('focus',resumeOrdersAuto)");
+    expect(html).toContain("if(ordersAutoOn)resumeOrdersAuto()");
+    expect(html).toContain("},60000)");
+  });
+
+  it("starts persisted Orders auto-update after hydration and respects hidden/off state", async () => {
+    const response = await app.fetch(new Request("https://admin.example.test/orders", { headers: auth }), env(new AdminMemoryDb()));
+    const html = await response.text();
+    const script = html.match(/<script>([\s\S]*)<\/script>/)?.[1];
+    expect(script).toBeDefined();
+    expect(script!.indexOf("load().finally(()=>{if(typeof ordersAutoOn!=='undefined'&&ordersAutoOn)resumeOrdersAuto()});")).toBeGreaterThan(script!.indexOf("let ordersAutoTimer=null"));
+    const start = script!.indexOf("let ordersAutoTimer=null");
+    const end = script!.indexOf("const addActionsWithoutClearerReason", start);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+    let refreshCalls = 0;
+    let resolveRefresh: (() => void) | null = null;
+    const timers: Array<{ active: boolean; fn: () => void; ms: number }> = [];
+    const listeners = new Map<string, () => void>();
+    const button = { textContent: "", setAttribute: () => {}, onclick: undefined as (() => void) | undefined };
+    const storage = new Map([["gfs_admin_orders_auto_update", "on"]]);
+    const context = {
+      document: { hidden: false, hasFocus: () => true, querySelector: () => button, addEventListener: (name: string, fn: () => void) => listeners.set(name, fn) },
+      window: { addEventListener: (name: string, fn: () => void) => listeners.set(name, fn) },
+      localStorage: { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: string) => storage.set(key, value), removeItem: (key: string) => storage.delete(key) },
+      crypto: { randomUUID: () => "test-tab" },
+      setTimeout: (fn: () => void, ms: number) => { timers.push({ active: true, fn, ms }); return timers.length; },
+      clearTimeout: (id: number) => { if (timers[id - 1]) timers[id - 1].active = false; },
+      load: async () => {},
+      refreshOrders: () => { refreshCalls += 1; return new Promise<void>((resolve) => { resolveRefresh = resolve; }); },
+      refreshInFlight: false
+    };
+    new Script(`${script!.slice(start, end)};load().finally(()=>{if(typeof ordersAutoOn!=='undefined'&&ordersAutoOn)resumeOrdersAuto()})`).runInNewContext(context);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(refreshCalls).toBe(1);
+    context.document.hidden = true;
+    listeners.get("focus")!();
+    expect(refreshCalls).toBe(1);
+    context.document.hidden = false;
+    resolveRefresh!();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const first = timers.find((timer) => timer.active && timer.ms === 60000);
+    expect(first).toBeDefined();
+    const secondRun = first!.fn();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(refreshCalls).toBe(2);
+    resolveRefresh!();
+    await secondRun;
+    button.onclick!();
+    expect(storage.get("gfs_admin_orders_auto_update")).toBe("off");
+    expect(timers.some((timer) => timer.active)).toBe(false);
   });
 
   it("requires CSRF for payment and fulfillment detail mutations", async () => {

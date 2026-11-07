@@ -11,6 +11,15 @@ async function csrfHeaders(contentType = "application/json") {
 }
 
 describe("admin payment configuration", () => {
+  it("reports reminders as not deployed when the reminder schema is unavailable", async () => {
+    const response = await app.fetch(new Request("https://admin.example.test/api/payment-reminders", { headers: access }), env);
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({
+      error: "REMINDERS_NOT_DEPLOYED",
+      message: "Reminder migrations are not deployed on this database; no schedules, templates, or deliveries are available."
+    });
+  });
+
   it("renders transaction-reference, reference-request and settlement-confirmation controls", async () => {
     const response = await app.fetch(new Request("https://admin.example.test/orders", { headers: access }), env);
     const html = await response.text();
@@ -19,6 +28,10 @@ describe("admin payment configuration", () => {
     expect(html).toContain("Request Reference");
     expect(html).toContain("Receiving-account settlement evidence reference");
     expect(html).toContain("I verified the actual credit in the authorized Garden Shop receiving account");
+    expect(html).toContain("Confirm PAID");
+    expect(html).toContain("Use the settlement-confirmation panel; direct approval is disabled.");
+    expect(html).toContain("settlementEvidenceRef:evidenceRef(),settlementConfirmed:true");
+    expect(html).not.toContain("Approve after verified settlement");
     expect(html).toContain("data.message==='string'");
   });
 
@@ -41,6 +54,111 @@ describe("admin payment configuration", () => {
     }), env);
     expect(valid.status).toBe(200);
     expect(await valid.json()).toMatchObject({ ok: true, advanceAmountPkr: 250 });
+  });
+
+  it("renders a payment-copy preview without requiring a legacy fixed amount", async () => {
+    const sql: string[] = [];
+    const previewEnv = {
+      ...env,
+      DB: {
+        prepare(query: string) {
+          sql.push(query);
+          const statement = {
+            bind: (..._args: unknown[]) => statement,
+            first: async () => ({
+              id: "synthetic-method",
+              method: "JAZZCASH",
+              display_name: "JazzCash",
+              recipient_name: "Synthetic Recipient",
+              till_id: "SYNTHETIC-TILL",
+              instructions: "Pay {amount} to {recipientName}.",
+              reference_instruction: "Include {orderNumber}.",
+              enabled: 1,
+              sort_order: 10
+            })
+          };
+          return statement;
+        }
+      }
+    } as unknown as Parameters<typeof app.fetch>[1];
+    const response = await app.fetch(new Request("https://admin.example.test/api/payment-instructions/JAZZCASH", { headers: access }), previewEnv);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ method: "JAZZCASH", configured: true });
+    expect(sql.some((query) => query.includes("payment_configuration"))).toBe(false);
+  });
+
+  it.each([
+    ["JAZZCASH", "JazzCash"],
+    ["EASYPAISA", "Easypaisa"],
+    ["BANK_TRANSFER", "Bank Transfer"]
+  ] as const)("renders the dynamic %s preview with bilingual copy", async (method, displayName) => {
+    const previewEnv = {
+      ...env,
+      DB: {
+        prepare(query: string) {
+          const statement = {
+            bind: (..._args: unknown[]) => statement,
+            first: async () => ({
+              id: `synthetic-${method.toLowerCase()}`,
+              method,
+              display_name: displayName,
+              recipient_name: "Synthetic Recipient",
+              till_id: "SYNTHETIC-TILL",
+              instructions: "Pay {amount} to {recipientName}.",
+              instructions_ur: "{amount} {recipientName} کو ادا کریں۔",
+              reference_instruction: "Include {orderNumber}.",
+              reference_instruction_ur: "{orderNumber} شامل کریں۔",
+              receipt_instructions: "Send the receipt.",
+              receipt_instructions_ur: "رسید بھیجیں۔",
+              enabled: 1,
+              sort_order: 10
+            })
+          };
+          return statement;
+        }
+      }
+    } as unknown as Parameters<typeof app.fetch>[1];
+    const response = await app.fetch(new Request(`https://admin.example.test/api/payment-instructions/${method}`, { headers: access }), previewEnv);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      method,
+      displayName,
+      configured: true,
+      instructions: "Pay {amount} to {recipientName}.",
+      instructionsUr: "{amount} {recipientName} کو ادا کریں۔",
+      referenceInstructionUr: "{orderNumber} شامل کریں۔"
+    });
+  });
+
+  it("reports dynamic payment methods as configured when the legacy amount is null", async () => {
+    const row = {
+      id: "synthetic-method",
+      method: "JAZZCASH",
+      display_name: "JazzCash",
+      recipient_name: "Synthetic Recipient",
+      till_id: "SYNTHETIC-TILL",
+      instructions: "Pay {amount} to {recipientName}.",
+      reference_instruction: "Include {orderNumber}.",
+      enabled: 1,
+      sort_order: 10
+    };
+    const dynamicEnv = {
+      ...env,
+      DEPLOYMENT_STATE: "LOCAL",
+      DB: {
+        prepare(query: string) {
+          const statement = {
+            bind: (..._args: unknown[]) => statement,
+            all: async () => ({ results: query.includes("payment_methods") ? [row] : [] }),
+            first: async () => null
+          };
+          return statement;
+        }
+      }
+    } as unknown as Parameters<typeof app.fetch>[1];
+    const response = await app.fetch(new Request("https://admin.example.test/api/configuration", { headers: access }), dynamicEnv);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ advanceAmountPkr: null, paymentMethods: [{ method: "JAZZCASH", configured: true }] });
   });
 
   it("protects catalog mutations and validates prices before a write", async () => {

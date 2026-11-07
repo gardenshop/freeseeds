@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { ORDER_NUMBER_ALLOCATION_SQL, OrderCooldownError, allocateOrderNumber, karachiOrderDate, nextOrderNumber, persistFlowSubmission, persistInstantFormSubmission } from "@gfs/core";
+import { CROCKFORD_BASE32, ORDER_NUMBER_ALLOCATION_SQL, ORDER_REFERENCE_MAX_ATTEMPTS, OrderCooldownError, allocateOrderIdentity, karachiOrderDate, nextOrderNumber, persistFlowSubmission, persistInstantFormSubmission } from "@gfs/core";
 
 function sequenceDatabase() {
   const sequences = new Map<string, number>();
@@ -101,10 +101,12 @@ function replayDatabase() {
 }
 
 describe("GFS-104 order number allocation", () => {
-  it("formats new order IDs with a Karachi date and six-digit sequence", () => {
+  it("formats new order references as opaque Crockford Base32 groups", () => {
     const date = new Date("2026-10-12T12:00:00.000Z");
-    expect(nextOrderNumber(date, 1)).toBe("FS-261012-000001");
-    expect(nextOrderNumber(date, 999999)).toBe("FS-261012-999999");
+    const reference = nextOrderNumber(date, 1);
+    expect(reference).toMatch(/^FS-[0-9A-HJKMNP-TV-Z]{4}(?:-[0-9A-HJKMNP-TV-Z]{4}){2}$/);
+    expect(reference).not.toContain("261012");
+    expect(CROCKFORD_BASE32).not.toMatch(/[ILOU]/);
     expect(() => nextOrderNumber(date, 0)).toThrow("ORDER_SEQUENCE_EXHAUSTED");
     expect(() => nextOrderNumber(date, 1000000)).toThrow("ORDER_SEQUENCE_EXHAUSTED");
   });
@@ -114,22 +116,25 @@ describe("GFS-104 order number allocation", () => {
     expect(karachiOrderDate(new Date("2026-10-12T19:00:00.000Z"))).toBe("20261013");
   });
 
-  it("allocates unique same-day sequences through one atomic D1 upsert", async () => {
+  it("allocates private same-day sequences while references remain random", async () => {
     const { db, queries } = sequenceDatabase();
     const now = new Date("2026-10-12T12:00:00.000Z");
-    const orderNumbers = await Promise.all(Array.from({ length: 20 }, () => allocateOrderNumber(db, now)));
-    expect(new Set(orderNumbers).size).toBe(20);
-    expect(orderNumbers).toEqual(Array.from({ length: 20 }, (_, index) => `FS-261012-${String(index + 1).padStart(6, "0")}`));
+    const identities = await Promise.all(Array.from({ length: 20 }, () => allocateOrderIdentity(db, now)));
+    expect(new Set(identities.map((identity) => identity.orderNumber)).size).toBe(20);
+    expect(identities.map((identity) => identity.internalSequence)).toEqual(Array.from({ length: 20 }, (_, index) => index + 1));
+    expect(identities.every((identity) => identity.internalSequenceDate === "20261012")).toBe(true);
     expect(queries).toHaveLength(20);
     expect(ORDER_NUMBER_ALLOCATION_SQL).toContain("ON CONFLICT(order_date) DO UPDATE");
     expect(ORDER_NUMBER_ALLOCATION_SQL).toContain("RETURNING next_sequence - 1 AS sequence");
   });
 
-  it("starts each Karachi date at sequence one", async () => {
+  it("starts each Karachi date at private sequence one", async () => {
     const { db } = sequenceDatabase();
-    await expect(allocateOrderNumber(db, new Date("2026-10-12T18:59:59.999Z"))).resolves.toBe("FS-261012-000001");
-    await expect(allocateOrderNumber(db, new Date("2026-10-12T19:00:00.000Z"))).resolves.toBe("FS-261013-000001");
+    await expect(allocateOrderIdentity(db, new Date("2026-10-12T18:59:59.999Z"))).resolves.toMatchObject({ internalSequence: 1, internalSequenceDate: "20261012" });
+    await expect(allocateOrderIdentity(db, new Date("2026-10-12T19:00:00.000Z"))).resolves.toMatchObject({ internalSequence: 1, internalSequenceDate: "20261013" });
   });
+
+  it("keeps bounded allocation retries explicit", () => expect(ORDER_REFERENCE_MAX_ATTEMPTS).toBe(5));
 
   it("returns the original order for Instant Form, Meta Flow, and WhatsApp replays", async () => {
     const { db, allocationCount, batchCount } = replayDatabase();

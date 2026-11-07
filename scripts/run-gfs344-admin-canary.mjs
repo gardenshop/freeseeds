@@ -1,0 +1,38 @@
+import os from "node:os";
+import path from "node:path";
+import { createCloudflareCanaryAdapter } from "./cloudflare-canary-adapter.mjs";
+import { createCloudflareObservability } from "./cloudflare-observability.mjs";
+import { readAccessCredentials } from "./cloudflare-access-credentials.mjs";
+import { runCanary } from "./canary-deadline-controller.mjs";
+
+const startedAt = new Date().toISOString();
+const workers = {
+  api: { name: "getfreeseeds-api-staging", healthUrl: "https://getfreeseeds-api-staging.get-free-seeds.workers.dev", baseline: "b426ba47-1ead-4c4a-85ba-0a0b85d3e415", candidate: "6ef27f02-23ac-46c0-a291-157e246a8dbc" },
+  admin: { name: "getfreeseeds-admin-staging", healthUrl: "https://getfreeseeds-admin-staging.get-free-seeds.workers.dev", baseline: "494a3dce-5d52-4b66-b3ff-bef64b31b406", candidate: "4fe564a6-bcd7-4106-82ee-00f7b14c4bec" }
+};
+const observability = createCloudflareObservability({ accountTag: "cb5066a6d71ecdee0bd7ed8aacb4d3c2", accessCredentials: readAccessCredentials(process.env, { required: true }) });
+const adapter = createCloudflareCanaryAdapter({
+  scope: "admin",
+  targetCandidatePercent: 10,
+  messagePrefix: "GFS-366",
+  workers,
+  readHealth: observability.readHealth,
+  readMetrics: observability.readMetrics
+});
+
+const result = await runCanary({
+  scope: "admin",
+  targetCandidatePercent: 10,
+  durationMs: 8 * 60 * 1000,
+  restoreMarginMs: 2 * 60 * 1000,
+  pollIntervalMs: 5_000,
+  pollTimeoutMs: 30_000,
+  commandTimeoutMs: 30_000,
+  lockPath: path.join(os.tmpdir(), "gfs366-admin-canary.lock"),
+  execute: adapter.execute,
+  readTraffic: adapter.readTraffic,
+  audit: (event) => console.log(JSON.stringify(event))
+});
+
+console.log(JSON.stringify({ startedAt, endedAt: new Date().toISOString(), result }));
+if (!result.ok) process.exitCode = 1;

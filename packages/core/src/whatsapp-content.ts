@@ -33,6 +33,7 @@ export const WHATSAPP_ACTION_IDS = [
   "CHECK_ORDER",
   "SUPPORT",
   "CONTINUE_ORDER",
+  "CANCEL_OFFER",
   "CANCEL_ORDER"
 ] as const;
 
@@ -41,7 +42,7 @@ export type WhatsAppActionId = z.infer<typeof WhatsAppActionId>;
 
 export const WHATSAPP_TEMPLATE_ACTION_IDS: Partial<Record<WhatsAppTemplateKey, readonly WhatsAppActionId[]>> = {
   WELCOME: ["LANG_EN", "LANG_UR"],
-  OFFER: ["CONTINUE_ORDER", "CANCEL_ORDER"],
+  OFFER: ["CONTINUE_ORDER", "CANCEL_OFFER"],
   FERTILIZER: ["ADD_FERTILIZER", "SEEDS_ONLY"],
   REVIEW: ["PLACE_ORDER", "BACK"],
   PAYMENT: [],
@@ -49,7 +50,7 @@ export const WHATSAPP_TEMPLATE_ACTION_IDS: Partial<Record<WhatsAppTemplateKey, r
   SUPPORT: ["SUPPORT"]
 };
 
-const SAFE_PLACEHOLDERS = new Set(["orderNumber", "amount", "totalPkr", "province", "paymentMethod", "recipientName", "tillId"]);
+const SAFE_PLACEHOLDERS = new Set(["orderNumber", "amount", "totalPkr", "province", "paymentMethod", "recipientName", "tillId", "orderSummaryItems", "deliveryFee", "orderTotal", "codFee"]);
 const PRIVATE_R2_KEY = /^whatsapp-content\/(?!.*(?:^|\/)\.\.?\/)[A-Za-z0-9][A-Za-z0-9/_.-]{0,510}$/;
 
 export type WhatsAppContent = {
@@ -83,12 +84,29 @@ function validatePlaceholders(value: string): void {
 
 function validateContent(content: WhatsAppContent): WhatsAppContent {
   const parsed = contentSchema.parse(content);
-  for (const value of [parsed.text, parsed.buttonLabel, parsed.listButtonLabel, parsed.listDescription, ...Object.values(parsed.actionLabels ?? {})]) if (value) validatePlaceholders(value);
+  for (const value of [parsed.text, parsed.buttonLabel, parsed.listButtonLabel, parsed.listDescription, ...Object.values(parsed.actionLabels ?? {})]) {
+    if (value) {
+      if (/<\/?[A-Za-z][^>]*>/i.test(value)) throw new Error("WHATSAPP_CONTENT_HTML_NOT_ALLOWED");
+      validatePlaceholders(value);
+    }
+  }
   return parsed;
 }
 
 export function whatsAppActionIdsForTemplate(templateKey: WhatsAppTemplateKey): readonly WhatsAppActionId[] {
   return WHATSAPP_TEMPLATE_ACTION_IDS[templateKey] ?? [];
+}
+
+// The production label table still constrains OFFER cancellation to the legacy
+// CANCEL_ORDER storage key. Keep that schema compatible while exposing the
+// unambiguous runtime action ID. A future migration may remove this adapter.
+export function storedWhatsAppActionId(templateKey: WhatsAppTemplateKey, actionId: WhatsAppActionId): WhatsAppActionId {
+  return templateKey === "OFFER" && actionId === "CANCEL_OFFER" ? "CANCEL_ORDER" : actionId;
+}
+
+export function runtimeWhatsAppActionId(templateKey: WhatsAppTemplateKey, storedActionId: string): WhatsAppActionId | undefined {
+  const candidate = templateKey === "OFFER" && storedActionId === "CANCEL_ORDER" ? "CANCEL_OFFER" : storedActionId;
+  return WhatsAppActionId.safeParse(candidate).data;
 }
 
 export function validateWhatsAppTemplateContent(templateKey: WhatsAppTemplateKey, content: WhatsAppContent): WhatsAppContent {
@@ -115,7 +133,7 @@ export function parseWhatsAppContentDraft(value: unknown, templateKey?: WhatsApp
   return { contentEn, contentUr, ...(mediaR2Key ? { mediaR2Key } : {}) };
 }
 
-export function renderWhatsAppContent(template: string, values: Partial<Record<(typeof WHATSAPP_TEMPLATE_KEYS)[number] | "orderNumber" | "amount" | "totalPkr" | "province" | "paymentMethod" | "recipientName" | "tillId", string | number>>): string {
+export function renderWhatsAppContent(template: string, values: Partial<Record<(typeof WHATSAPP_TEMPLATE_KEYS)[number] | "orderNumber" | "amount" | "totalPkr" | "province" | "paymentMethod" | "recipientName" | "tillId" | "orderSummaryItems" | "deliveryFee" | "orderTotal" | "codFee", string | number>>): string {
   return template.replace(/\{([^{}]+)\}/g, (match, name: string) => {
     if (!SAFE_PLACEHOLDERS.has(name)) return match;
     const value = values[name as keyof typeof values];
@@ -129,11 +147,22 @@ export async function publishedWhatsAppContent(db: D1Database, key: WhatsAppTemp
   try {
     const labels = await db.prepare("SELECT action_id,label_en,label_ur FROM whatsapp_content_version_action_labels WHERE template_key=? AND version=? ORDER BY action_id").bind(key, row.version).all<{ action_id: string; label_en: string; label_ur: string }>();
     const expected = new Set(whatsAppActionIdsForTemplate(key));
-    const actionLabels = Object.fromEntries((labels.results ?? []).flatMap((label) => {
-      const actionId = WhatsAppActionId.safeParse(label.action_id).data;
+    const raw = JSON.parse(locale === "ur" ? row.content_ur_json : row.content_en_json) as WhatsAppContent;
+    const normalizedEmbeddedLabels = Object.fromEntries(Object.entries(raw.actionLabels ?? {}).flatMap(([storedId, label]) => {
+      const actionId = runtimeWhatsAppActionId(key, storedId);
+      return actionId && expected.has(actionId) && label ? [[actionId, label]] : [];
+    }));
+    const storedLabels = Object.fromEntries((labels.results ?? []).flatMap((label) => {
+      const actionId = runtimeWhatsAppActionId(key, label.action_id);
       return actionId && expected.has(actionId) ? [[actionId, locale === "ur" ? label.label_ur : label.label_en]] : [];
     }));
-    const content = validateWhatsAppTemplateContent(key, { ...(JSON.parse(locale === "ur" ? row.content_ur_json : row.content_en_json) as WhatsAppContent), ...(Object.keys(actionLabels).length ? { actionLabels } : {}) });
+    const actionLabels = { ...normalizedEmbeddedLabels, ...storedLabels } as Partial<Record<WhatsAppActionId, string>>;
+    if (key === "OFFER") {
+      actionLabels.CONTINUE_ORDER ??= locale === "ur" ? "آرڈر جاری رکھیں" : "Continue Order";
+      actionLabels.CANCEL_OFFER ??= locale === "ur" ? "آفر منسوخ کریں." : "Cancel Offer";
+    }
+    const { actionLabels: _legacyActionLabels, ...rawContent } = raw;
+    const content = validateWhatsAppTemplateContent(key, { ...rawContent, ...(Object.keys(actionLabels).length ? { actionLabels } : {}) });
     if (sessionKey) {
       try {
         const media = await selectPublishedWhatsAppContentMedia(db, key, sessionKey);

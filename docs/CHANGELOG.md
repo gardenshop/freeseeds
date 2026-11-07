@@ -1,5 +1,1196 @@
 # Changelog
 
+## 2026-11-07 - GFS-COD-MO-84
+
+- Repaired token-policy parsing for Cloudflare’s documented flat and nested resource maps in both PowerShell linkage and Node preflight guards.
+- Added fail-closed coverage for broad, wildcard, wrong-Worker, extra-resource, multiple-policy and wrong-role shapes.
+
+## 2026-11-07 - GFS-COD-MO-83A
+
+- Recorded owner evidence that the metadata credential target exists and retained the single-command, read-only host Preflight gate.
+- Reconfirmed local integration and full regression results; no production mutation occurred.
+
+## 2026-11-07 - GFS-COD-MO-83
+
+- Integrated the sanitized two-credential token-linkage gate into the approved Admin deployment runner before Cloudflare preflight.
+- Added fail-closed result-shape validation and PS5.1 coverage for valid, metadata-unavailable and unverified-scope outcomes. No production mutation occurred.
+
+## 2026-11-07 - GFS-COD-MO-82H
+
+- Added a Windows PowerShell 5.1-safe, read-only host verifier for deployment-token identity linkage.
+- Refactored the Credential Manager reader into a shared `CredFree`-preserving helper and added 8/8 linkage mock coverage.
+
+## 2026-11-07 - GFS-COD-MO-81
+
+- Recorded authenticated dashboard proof of the exact Worker-only policy.
+- Retained the fail-closed preflight because policy-to-host-secret identity linkage is not machine-verified.
+
+## 2026-11-07 - GFS-COD-MO-80
+
+- Added sanitized diagnostics for account token-details 403/404 responses without weakening exact Worker-scope verification.
+- Confirmed preflight remains blocked until independent dashboard evidence proves the named token is limited to `getfreeseeds-admin-staging`.
+
+## 2026-11-07 - GFS-COD-MO-79
+
+- Replaced the unsupported PowerShell 5.1 embedded C# null-coalescing throw expression with C# 5-compatible Credential Manager code.
+- Added actual repeated Windows PowerShell 5.1 `Add-Type` compilation coverage; no production mutation occurred.
+
+## 2026-11-06 - GFS-COD-MO-62 watchdog activation
+
+- Added separated credential handling for Worker secret injection and accepted Cloudflare HTTP 201 secret creation.
+- Configured the isolated one-minute watchdog Cron while retaining DISARMED state; live invocation proof and temporary-token cleanup remain blocked by external tooling/authority.
+
+## 2026-11-06 - GFS-COD-MO-61 private watchdog deployment
+
+- Deployed the new watchdog Worker privately and DISARMED with no targets, Cron, bindings or secret.
+- Verified account identity and retained the fail-closed stop because the separate Worker-only deployment credential is not available.
+
+## 2026-11-06 - GFS-COD-MO-60 Admin refresh recovery
+
+- Resolved the observed Admin refresh outage through owner-approved Cloudflare Access reauthentication; no application or deployment change was needed.
+- Enabled and verified persistent Auto update on Orders and Conversations with successful authenticated polling. Recorded continued sanitized D1/API/WhatsApp activity and the remaining Queue/DLQ observability limitation.
+
+## 2026-11-06 - GFS-COD-MO-57 private watchdog artifact
+
+- Added the private, fail-closed watchdog Worker artifact and disabled workers.dev/preview configuration.
+- Added focused 5/5 tests for disarmed behavior, allowlists, exact restoration, idempotence and readback failures.
+- External Worker creation remains blocked because the available dashboard path only creates a public Hello World Worker; no external mutation was submitted.
+
+## 2026-11-06 - GFS-COD-MO-55 secure watchdog credential bridge
+
+- Added a fixed-target, process-only Cloudflare Worker secret injection runner and synthetic redaction tests.
+- Mock bridge 5/5, syntax, build and lint passed; real credential transfer and Cloudflare mutation remain blocked pending the new watchdog target and scoped deployment credential.
+
+## 2026-11-06 - GFS-COD-MO-54 watchdog deployment gate
+
+- Verified the correct Super admin account authority and Workers creation path.
+- Failed closed before Worker creation because protected Admin-target secret injection is not safely callable; no Cloudflare resource changed.
+
+## 2026-11-06 - GFS-COD-MO-53 watchdog gate
+
+- Defined the separate Worker/Cron watchdog architecture and failed closed before creation because secure deployment and protected target-secret authority were incomplete.
+- Confirmed existing frozen watchdog resources and account identity without changing Cloudflare state.
+
+## 2026-11-06 - GFS-COD-MO-52 controlled Admin canary gate
+
+- Failed closed before exposure because no independent callable watchdog for live Admin restoration was available.
+- Confirmed protected Admin routing remained `3e4b7c26` 100% / `ce023b54` 0%; no production mutation occurred.
+
+## 2026-11-06 - GFS-COD-MO-51 candidate monitoring repair
+
+- Diagnosed the Windows Wrangler crash (`0xC0000409`) and documented the process-only Node `--no-maglev` workaround plus invalid sampling argument.
+- Verified temporary Tail API lifecycle and required `trace-v1` WebSocket handshake; no raw tail data retained and no temporary session left active.
+- Restored usable version-labelled monitoring through authenticated Key Figures: candidate `ce023b54` 26 invocations, 0% errors and 5.86 ms median CPU. No canary or production mutation occurred.
+
+## 2026-11-06 - GFS-COD-MO-49 deployment readiness
+
+- Verified owner-created Worker-only Admin credential, process-only Wrangler readback, sanitized Admin/API health, candidate override UI attribution and fresh aggregate Analytics.
+- Revoked bootstrap access evidence: old credential returned HTTP403 and its local Credential Manager entry was deleted. No secret values recorded.
+- Candidate-specific live telemetry remains unavailable; no canary, promotion, payment, D1, Meta or CAPI mutation occurred. Cloudflare profile was already English.
+
+## 2026-11-05 - GFS-COD-MO-22 routing and health reconciliation
+
+- Reconciled Admin configured routing from official deployment status: candidate `3e4b7c26`100% in deployment `7aacd65b`; dashboard 94.5/5.5 is historical last-24-hour observed share (768/45).
+- Confirmed `/health` is intentionally protected by the dedicated Service Auth application/policy. Browser and invalid requests returned 403; the existing credential bridge was unavailable, so authorized health 200 remains unverified.
+- D1 remains unchanged and migration 0048 unapplied. No routing, Access, payment, API, Meta, CAPI or customer mutation occurred.
+
+## 2026-11-05 - GFS-COD-MO-21 repaired 0048 preflight
+
+- Verified repaired 0048 artifact and clean D1 preflight without a write. Stopped before migration because authenticated active Admin routing was `e8c96c96`94.5% / `3e4b7c26`5.5%, conflicting with the authorized baseline; Admin `/health` returned 403.
+- No bookmark, D1 deployment, traffic change, payment/order action, WhatsApp, Meta or CAPI mutation. A read-only routing/Access reconciliation is required before reconsidering migration execution.
+
+## 2026-11-05 - GFS-COD-MO-20 migration 0048 preflight
+
+- Read-only D1 preflight matched the authorized account/database and recorded recovery evidence. `0047` is present once; `0048` was absent; no remote write was made.
+- Blocked the original migration because it omitted exact-once schema-marker tracking. Locally added the marker and cross-ledger MO HMAC duplicate rejection; focused 34/34, full 385/1, build/lint PASS.
+- No deployment, candidate upload, payment/order mutation, WhatsApp, Meta or CAPI change. Repaired migration requires separate review/authorization before targeted execution.
+
+## 2026-11-05 - GFS-COD-MO-19 historical COD settlement fix
+
+- Traced ten supplied contacts read-only to ten unique matches: six no-method unpaid, two unpaid Advance and two existing COD; no genuine MO/company-receipt evidence was found and no production order changed.
+- Added local additive migration 0048 and a guarded historical MO Admin path that preserves original payment methods, quotes, Advance receipts and review history while requiring delivered/tracked status, exact original amount, evidence, reason and confirmation.
+- Focused 31/31, full 382 passed/1 skipped, build/lint PASS. Migration 0048 remains unapplied; no candidate upload, canary, deployment or payment mutation occurred.
+
+## 2026-11-05 - GFS-COD-MO-18 first real settlement discovery
+
+- Read-only identity/routing and health checks passed. Admin candidate `3e4b7c26` remains 100% in deployment `7aacd65b`; API remains `b426ba47` 100% / `d683ec45` 0%.
+- Admin/D1 discovery found 461 active COD_PENDING records, zero collection-pending records, 459 COD_PENDING sidecars, one DISPATCHED, one PACKING, zero MO receipts and zero collection/remittance evidence. Payment configuration remains three Advance methods enabled and COD PKR125.
+- No genuine Pakistan Post evidence or order-specific approval was available; no MO/PAID POST, order, D1, courier, customer, WhatsApp, Meta, CAPI or deployment mutation occurred. First-five pilot readiness is 0/5.
+
+## 2026-11-05 - GFS-COD-MO-17 final visible MO Admin release
+
+- Promoted immutable candidate `3e4b7c26-c36d-4d1c-baeb-d26629a9b4a1` to100% Admin traffic in deployment `7aacd65b-fe1d-4c47-9f92-5ba3bf791dc5`, directly from the actual `e8c96c96` baseline.
+- Fifteen-minute monitored PASS: candidate metrics19→45/errors0; read-only COD_PENDING UI, Admin/API/WhatsApp, Advance/COD and D1 integrity checks passed. Retained rollback target is `e8c96c96`100% / candidate0%; no API/CAPI/payment action.
+
+## 2026-11-05 - GFS-COD-MO-16 promotion preflight blocked
+
+- Stopped before permanent Admin promotion because live routing used `e8c96c96`100% / candidate`3e4b7c26`0%, while the authorization named `92c81e60` as the stable100% baseline. API remained unchanged; no production mutation occurred.
+
+## 2026-11-05 - GFS-COD-MO-15 final 10% Admin canary
+
+- Ran the authorized Admin-only 90%/10% canary for219.45 seconds with fresh candidate telemetry15→18 invocations and0 errors; ordinary GET checks were healthy and two selected the candidate MO UI.
+- Mandatory rollback restored Admin baseline100%/candidate0% in deployment `ed9754ad-da6e-406c-aea3-d0bd86960ce8`. API, D1, payments, WhatsApp and CAPI remained protected. Technical canary PASS; no permanent promotion.
+
+## 2026-11-05 - GFS-COD-MO-14 monitoring repair
+
+- Revalidated official Cloudflare version-separated telemetry after navigating to the authenticated Admin metrics view and waiting for data rendering: candidate `3e4b7c26` showed 14 invocations, 0 errors and 1.05 ms average CPU in the current 24-hour range.
+- Confirmed the quoted candidate override and baseline GETs remain distinguishable; no source or production configuration change was made. Candidate-specific latency remains explicitly unclaimed because the visible latency panels were aggregate.
+
+## 2026-11-05 - GFS-COD-MO-13 preview, canary and rollback
+
+- Corrected version override verification to the official Structured Header dictionary syntax and confirmed candidate UI markers through authenticated GET-only requests.
+- Ran the authorized Admin90%/candidate10% canary for129.6 seconds, then restored100%/0%. Normal reads and D1 integrity remained healthy, but version-specific metrics were unavailable; no promotion or retry was performed.
+
+## 2026-11-05 - GFS-COD-MO-12 visible COD MO action
+
+- Added a read-only MO Received information/action panel to all COD detail states, including `COD_PENDING`, showing COD amount, settlement status and eligibility. Only eligible `COLLECTION_PENDING` orders retain the existing secure settlement submission path.
+- Added synthetic UI coverage; full 379 passed/1 skipped, build/lint pass. Uploaded one immutable candidate with retained bindings; preview was unavailable, so no canary or promotion occurred and live routing stayed unchanged.
+
+## 2026-11-05 - GFS-COD-MO-11 first real MO settlement gate
+
+- Confirmed read-only that MO Received is deliberately unavailable on `COD_PENDING` orders and becomes eligible only at `COLLECTION_PENDING`. Aggregate discovery found no eligible unpaid MO candidate or recorded MO receipt, so no settlement was attempted.
+- No source, deployment, routing, D1, order, payment, customer, WhatsApp, Meta, secret or CAPI mutation occurred.
+
+## 2026-11-05 - GFS-COD-MO-10 final Admin MO release
+
+- Promoted immutable Admin candidate `92c81e60-3ec3-40b6-b912-ea81f94ee8af` to100% in deployment `bbe4c470-e331-4c7e-9ac9-525c266c52c3`; API remains baseline `b426ba47`100% / `d683ec45`0%. No settings synchronization, API/Meta/CAPI/D1/secret/payment configuration action occurred.
+- Fifteen-minute fail-closed monitoring passed: candidate metrics5→41/errors0, Admin/API health and UI/assets pass, HMAC/D1/R2/Queue bindings remain, Advance/COD/D1 protection holds, recovery ON and CAPI OFF. No real MO/PAID action occurred; rollback route is retained.
+
+## 2026-11-05 - GFS-COD-MO-09 Admin 25% canary
+
+- Ran Admin-only canary deployment `ca322c04-2244-4ed0-b98f-987cd9aa6533` at baseline75% / immutable candidate25% for166 seconds; mandatory rollback `da825e47-2358-4b63-a18c-ce7022582f37` restored baseline100%/candidate0%. No settings synchronization.
+- Candidate metrics rose3→5 with zero errors; read-only candidate/navigation/assets, API/WhatsApp, Admin and D1/payment checks passed. No real MO/PAID/customer/payment/WhatsApp/API/D1/Meta/CAPI mutation. Permanent promotion remains NO-GO.
+
+## 2026-11-05 - GFS-COD-MO-08 Admin 10% canary
+
+- Ran one Admin-only 90% baseline `e8c96c96` /10% immutable candidate `92c81e60` canary for 73 seconds, then restored baseline100%/candidate0%; no non-versioned settings synchronization.
+- Candidate invocations rose1→3 with zero errors. The two new requests were GET-only checks; API/WhatsApp, Admin reads and D1/payment aggregates were unchanged. No real MO/PAID/customer/payment/WhatsApp/API/D1/Meta/CAPI mutation occurred.
+- Permanent promotion remains NO-GO without new explicit authorization and version-specific monitoring.
+
+## 2026-11-05 - GFS-COD-MO-07 Admin MO 0% attachment
+
+- Attached only validated Admin MO candidate `92c81e60-3ec3-40b6-b912-ea81f94ee8af` at0% beside baseline `e8c96c96`100% in deployment `872f0a53-d9e1-4daa-b441-caf599c74d0a`; replaced only inactive `e44703c3`. No non-versioned settings sync, API action, traffic promotion, D1, secret, CAPI, customer, payment, message or Meta mutation.
+- Independent readback retains candidate HMAC/bindings/runtime fingerprint. Header-scoped GET-only override proves candidate MO UI, required MO number and exact-amount confirmation; normal baseline Admin/API health remains PASS after override clear.
+
+## 2026-11-05 - GFS-COD-MO-06 Admin MO candidate
+
+- Uploaded one immutable, nondeployed Admin MO candidate `92c81e60-3ec3-40b6-b912-ea81f94ee8af` from source `48659993ce713978a3202b19265a6a6938922636` using strict configuration preservation. Candidate fingerprint matches the HMAC-bearing version, including named HMAC/D1/R2/Queue/runtime configuration; secret values were never read.
+- Candidate is unattached; routing remains Admin `e8c96c96`100% / `e44703c3`0% and API `b426ba47`100% / `d683ec45`0%. Authenticated header-scoped candidate Orders/Conversations reads passed, then the override was cleared. No traffic, payment, customer, message, CAPI, D1 or API mutation.
+- Focused MO/guided 131 passed/1 skipped, full 378 passed/1 skipped, build/lint PASS. Existing Advance/COD/D1/API health protections remain unchanged.
+
+## 2026-11-05 - GFS-COD-MO-05 controlled migration and HMAC preparation
+
+- Applied only `0047_cod_pakistan_post_mo.sql` through Cloudflare targeted remote-file execution. Remote readback: one marker, empty MO ledger, two immutable guards, eight retained COD/payment guards, Advance 3/3 enabled and COD PKR125 enabled. A pre-write Time Travel bookmark was captured; no restore was attempted.
+- Created `COD_REFERENCE_HMAC_KEY` only on nondeployed binding-only Admin version `05dedc81-7386-4289-82d1-15f7831bb4b7` (`gfs-cod-mo-05-hmac`) through `wrangler versions secret put`; its value was never exposed. A future MO UI candidate must retain this binding. No `versions deploy`, Worker deploy, routing, CAPI, customer, payment, WhatsApp or Meta change occurred.
+- Fresh API health reports WhatsApp enabled; fresh Admin Orders/Conversations reads pass. API `b426ba47`100% / `d683ec45`0% and Admin `e8c96c96`100% / `e44703c3`0% are unchanged. Source unchanged, so the existing 378 passed/1 skipped and build/lint baseline was retained.
+
+## 2026-11-05 - GFS-COD-MO-04 final D1 verification
+
+- Official Chrome MCP and Cloudflare Dashboard readback passed for `gisupp@gmail.com` / Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; no authentication renewal or mutation occurred.
+- Read-only D1 confirmed 831 orders, 831 payments, 45 receipt rows, 432 COD sidecars, markers through `0043`, no `cod_mo_receipts`, and absent collection/remittance policy hashes. Time Travel recovery is available for 30 days; no bookmark or restore was performed.
+- Admin/API routing remains frozen at `e8c96c96`/`b426ba47` 100% with `e44703c3`/`d683ec45` 0%; Admin `COD_REFERENCE_HMAC_KEY` is absent, API CAPI is false and recovery is true. Local 0047 compatibility probe passed; MO release remains NO-GO. No source tests were repeated because source was unchanged.
+
+## 2026-11-04 - GFS-COD-MO source-ready Pakistan Post settlement
+
+- Implemented Pakistan Post MO settlement with HMAC-only unique references, exact amount validation, immutable ledger, atomic PAID transition, operator audit and idempotent replay protection.
+- Replaced the Admin COD settlement action with `MO Received` and made guided COD quote-first so new orders cannot remain without a selected payment method.
+- Preserved historical settlement compatibility, Advance isolation and CAPI OFF. Full suite: 378 passed / 1 retired legacy assertion skipped; build/lint pass. No deployment or live migration.
+
+## 2026-11-04 - GFS-P0-REVENUE operational snapshot
+
+- Added a fresh aggregate-only revenue pipeline snapshot: 20,590 distinct inbound events, 3,562 snapshot contacts, 578 submitted orders, and 2.81% event-to-order ratio for the UTC seven-day window.
+- Identified current worklists: 268 no payment selection, 21 payment review, 87 advance pending/review, 407 COD_PENDING, and one strict +210 recovery ledger candidate.
+- Selected OFFER-stage drop-off as the highest-value operational bottleneck (1,479 snapshots; 1,284 inactive). Existing inbound-only resume is sufficient; no source repair, deployment, customer outreach or payment mutation occurred.
+
+## 2026-11-04 - GFS-LAUNCH-P0 Meta sender verification
+
+- Verified the exact GFS business, ad account, WABA and canonical sender through the existing authenticated Meta UI.
+- Recorded sender Connected/High and display name In Review with the visible “Your display names were not approved” restriction. Messaging and advertising eligibility were not visibly established.
+- Kept existing WhatsApp operations GO/MAINTAIN and public advertising expansion NO-GO. No Meta or production mutation occurred.
+
+## 2026-11-04 - GFS-ADMIN-P0 restored Orders and Conversations
+
+- Corrected the earlier diagnosis: normal Admin requests redirected HTTP302 to Cloudflare Access login; `/health` belongs to a separate Service Auth application and was not used to classify operator access.
+- Renewed the supported Access session for `gisupp@gmail.com` in the existing Chrome profile. Two consecutive manual refreshes passed on Conversations and Orders; list/summary/detail data loaded and stale warnings cleared.
+- Verified API health HTTP200/ready/WhatsApp enabled, D1-backed Admin reads, unchanged Queue/DLQ topology and frozen API/Admin allocations. No source, deployment, policy, routing, payment, order, customer, Meta, CAPI or WhatsApp mutation.
+
+## 2026-11-04 - GFS-ADMIN-REPAIR incident diagnosis
+
+- Reached the existing Admin Conversations and Orders tabs through official Chrome MCP and attempted one read-only Refresh on each; both retained stale-data warnings.
+- Proven boundary: Admin `/health` returned HTTP403 `text/html`, while Admin data fetches failed before status, consistent with an upstream Cloudflare Access/session rejection. API/D1/WhatsApp impact remains UNKNOWN.
+- No deployment, rollback, Access change, source repair, customer/order/payment/WhatsApp/Meta/CAPI or configuration mutation.
+
+## 2026-11-04 - GFS-MCP-RESTORE existing Chrome attachment
+
+- Restored the official existing-session Chrome MCP path with one fresh Codex `--autoConnect` session; `list_pages`, `select_page` and read-only Ads Manager snapshot passed.
+- Matched business `568026370701542` and ad account `1198439777611633`. WABA/sender and eligibility labels were not visible, so advertising expansion remains NO-GO.
+- No browser, Meta, Cloudflare, deployment, payment, customer, source or production mutation.
+
+## 2026-11-03 - GFS-476 immutable API candidate
+
+- Uploaded exactly one approved immutable API version with `--keep-vars --strict`: `9f6a4ecf-bf7f-43ff-abe0-e0d67e53bfd3`; no attachment or traffic change.
+- Verified source/bundle provenance and isolated preview health. Existing API/Admin routing remained100/0; CAPI OFF.
+- Found and recorded a preservation defect: `PAYMENT_CHOICE_RECOVERY_ENABLED` changed true→false during upload. Supported restoration was safety-blocked under upload-only authority; release remains blocked pending separate approval.
+
+## 2026-11-03 - GFS-475 safe API resume acceptance
+
+- Accepted EN/UR inbound-only resume for OFFER, FERTILIZER, PROVINCE and REVIEW in the synthetic local provider harness; no additional source defect found.
+- Passed focused2/2, guided104/104, full377/377, build/lint and a Wrangler `--dry-run --keep-vars --strict`; audit remains blocked by the registry advisory endpoint.
+- Prepared immutable local source/bundle provenance and documented the single-file API diff from the existing0% candidate.
+- Read-only verified Cloudflare API/Admin100/0, protected bindings, encrypted secret presence, routes and runtime flags. No upload, deployment, message, customer/order/payment, D1, Queue/Cron, Meta, CAPI or watchdog mutation.
+
+## 2026-11-03 - GFS-474 incomplete WhatsApp order recovery
+
+- Added aggregate-only stage/age/language diagnosis for inactive no-order and no-method snapshots; no customer identifiers retained.
+- Fixed the guided state machine so a new inbound at OFFER, FERTILIZER, PROVINCE or REVIEW re-presents the current approved controls while preserving validated data.
+- Added EN/UR interruption, invalid-province, replay-deduplication and no-premature-order acceptance tests.
+- Kept +15/+210 recovery, COD, Advance/payment configuration and all live resources unchanged. Focused2/2, guided104/104, full377/377, build/lint PASS; audit endpoint BLOCKED.
+
+## 2026-11-03 - GFS-473 order funnel diagnosis
+
+- Reconciled the fresh UTC aggregate funnel and documented distinct event/order/lifecycle definitions, current snapshot bottlenecks, recovery statuses and the paid/fulfilled window limitation.
+- Repaired the local analytics definition that displayed stale hard-coded `2.49%`; it now renders the computed ratio with an explicit non-conversion disclaimer.
+- Confirmed COD guards remain fail-closed, Meta sender remains In Review/Connected/High, campaign conversion remains UNKNOWN, and no production/watchdog/payment/customer mutation occurred.
+- Focused4/4, full375/375, build/lint PASS; audit remains blocked by npm advisory endpoint availability.
+
+## 2026-11-03 - GFS-472 COD settlement and attribution readiness
+
+- Reused and verified the existing COD settlement controls locally; no duplicate architecture or live status change added.
+- Confirmed the genuine live blocker is missing courier collection/remittance policy and evidence, not a proven source defect.
+- Added a local privacy-safe daily attribution report over persisted D1 attribution/lead/order/conversation data; it excludes identifiers and does not claim campaign conversion without a Meta denominator.
+- Recorded current aggregate analytics and fresh Meta sender state: In Review, Connected, High. No Meta, payment, order, dispatch, CAPI, watchdog or production mutation occurred.
+- Focused attribution3/3, full375/375, build and lint pass; audit remains blocked by registry availability.
+
+## 2026-11-03 - GFS-471 watchdog stop and WhatsApp launch hold
+
+- Closed GFS-470 as DEFERRED: confirmed the scoped credential was revoked, created no replacement, and froze the isolated watchdog/target resources.
+- Reverified Admin/API routing at100% baseline/0% candidate and CAPI OFF; no production, Meta, WhatsApp, payment, D1, Queue/DLQ or customer mutation occurred.
+- Read current Meta/WABA state: Get Free Seeds sender is connected/high quality but display name remains In Review; active lead metrics are not order-conversion proof.
+- Read current safe operational state: API health/WhatsApp enabled, staging Queue backlog0, advance configuration complete, COD enabled PKR125 but collection/remittance policies absent.
+- Recorded Path A (existing lead observation/preparation) and Path B (separately approved supervised Admin canary); no automatic watchdog timing claim.
+
+## 2026-11-03 - GFS-470 scoped credential safety stop
+
+- Verified the official Worker-scoped token control showed `Individual Workers Editor` for `gfs464-isolated-watchdog` only.
+- Revoked the newly created one-time token immediately because the MCP confirmation response rendered credential material; no value was copied, persisted, or used.
+- Stopped before Wrangler upload/deploy because a secure process-only credential handoff was unavailable. Existing secret and all production resources remain unchanged.
+
+## 2026-11-03 - GFS-469 authorized Wrangler deployment gate
+
+- Recorded the owner-approved one-time Wrangler exception for the existing isolated watchdog only.
+- Added and dry-ran the minimal secret-free `wrangler.gfs469.jsonc` with the approved Durable Object binding/migration.
+- Stopped before upload because `wrangler whoami` is unauthenticated; no login, credential broadening or Cloudflare mutation occurred.
+- Re-ran watchdog, controller, adapter, full test, build and lint gates; audit remains blocked by registry availability.
+
+## 2026-11-03 - GFS-468 supported source-upload inspection
+
+- Verified the authenticated Cloudflare owner/account/isolated Worker and unchanged secret-only `c4533e19` deployment.
+- Confirmed the existing Worker dashboard offers Quick Edit only, without a file upload/import control; did not retry Monaco or use prohibited API/Wrangler/Git/direct transport.
+- Re-ran local syntax and focused watchdog tests: PASS 4/4. No Cloudflare or production mutation occurred.
+
+## 2026-11-03 - GFS-467 isolated watchdog deployment attempt
+
+- Verified authenticated Cloudflare account/Worker identity and read back owner secret-only version c4533e19; prior code version 66f471ed remains.
+- Quick Edit Monaco source transfer was blocked by supported MCP interaction timeouts and partial draft corruption; the unsaved draft was discarded.
+- No corrected deployment, Durable Object binding, scheduler, target version, detached restore, production, Meta, payment or customer mutation occurred.
+
+## 2026-11-03 - GFS-466 isolated watchdog repair
+
+- Repaired the clean deployable Worker module after diagnosing Quick Edit Unexpected token '*' wrapper contamination.
+- Added retryable alarm rescheduling, hard-deadline fail-closed handling, permanent-error handling, deployment API response validation and idempotent baseline readback.
+- Focused watchdog4/4 plus GFS-462 watchdog3/3, controller18/18, adapter8/8, full372/372, build and lint passed. npm audit was blocked by unavailable registry security endpoint.
+- No external deployment or production mutation occurred because authenticated Chrome DevTools/Cloudflare mutation tools were unavailable.
+
+## 2026-11-03 - GFS-465 MCP and watchdog proof
+
+- Repaired Cloudflare MCP page targeting by selecting the verified page before each snapshot.
+- Added local fail-closed isolated watchdog source/tests and recorded the target-only seven-day credential scope without exposing its secret.
+- Recorded the Quick Edit syntax failure and stopped before binding, schedule, secret attachment or any production mutation.
+
+## 2026-11-03 - GFS-464 isolated watchdog execution
+
+- Created the approved non-production independent Worker `gfs464-isolated-watchdog` in the verified Get Free Seeds account; initial version `66f471ed`.
+- Recorded the fail-closed Chrome DevTools MCP Settings/Bindings navigation guard. No credential, binding, schedule/alarm, target source/version deployment or production resource changed.
+
+
+## 2026-11-03 - GFS-463 isolated watchdog provisioning inspection
+
+- Identified the existing isolated target as the minimum-resource proof path: code editor, scheduled-event surface, Cron Trigger controls and a deploy-only token option scoped to that Worker.
+- Made no external mutation because fresh GFS-463 authority is absent and the browser safety guard rejected creation controls before mutation.
+- Recorded the precise approval needed for a real detached isolated proof; production routing, WhatsApp, payments, D1, Meta and CAPI remain unchanged.
+
+## 2026-11-03 - GFS-462 isolated rollback proof
+
+- Added the isolated-only watchdog state machine and 3/3 focused tests: immutable target/version allowlist, six-minute restore start, eight-minute hard deadline, idempotent restore and fail-closed readback.
+- Created one Cloudflare test target `gfs462-isolated-target` in the verified account; dashboard version label `29c5d0b6`. No bindings or production access were added.
+- The browser safety guard refused the separate watchdog Worker creation before mutation. No schedule/alarm, detached credential, production routing permission, canary, payment, D1, WhatsApp, Meta or CAPI change occurred.
+- Regression gates passed: full372/372, build, lint, controller18/18 and adapter8/8.
+
+## 2026-11-03 - GFS-461 watchdog implementation held at approval boundary
+
+- Revalidated the protected Admin/API baseline and reran the existing local controller18/18 and adapter8/8 suites.
+- Confirmed no independent Cloudflare Worker, schedule or detached routing credential is available. No live or isolated external resource was created without owner approval.
+- Preserved Admin `e8c96c96`100% / `e44703c3`0%, API `b426ba47`100% / `e8018f3f`0%, and all WhatsApp/payment/D1/Queue/Cron/Meta/CAPI protections.
+
+## 2026-11-03 - GFS-460 independent watchdog gate held
+
+- Confirmed read-only Cloudflare dashboard IAM/account access in the verified Get Free Seeds account without exporting credentials or session data.
+- Confirmed the local deadline controller remains synthetic-only (18/18 PASS). No supported detached routing executor or non-interactive Admin restoration credential is available; Wrangler shell authorization remains7403.
+- Kept Admin `e8c96c96`100% / `e44703c3`0% and API `b426ba47`100% / `e8018f3f`0%. GFS-459 canary was not run; WhatsApp, payments, D1, Meta, Queue, Cron and CAPI were untouched.
+
+## 2026-11-03 - GFS-456 GFS-426 Admin 0% candidate validation
+
+- Reconciled the GFS-455 HTTP524: no delayed version existed; current upload path passed control-plane/dashboard/dry-run checks.
+- Uploaded Admin candidate `e44703c3-694f-4ffd-9416-f8edf1aacf42` (tag `gfs-426-c2ddcd1`) and created the required gradual deployment `e8c96c96`100% / candidate0%; API remains unchanged.
+- Candidate-only authenticated override checks passed for Orders, Conversations and Analytics. Cleared every temporary override after validation; no real order/payment/data/customer mutation and CAPI remains OFF.
+
+## 2026-11-03 - GFS-455 Admin 0% validation attempt held
+
+- Per explicit authority, made one Admin-only `wrangler versions upload --keep-vars` attempt for GFS-426 source `c2ddcd1`; Cloudflare returned HTTP524 after bundling and issued no candidate version.
+- Immediate authoritative version/deployment readback confirmed no new candidate and preserved Admin `e8c96c96`100% / `ee9b7baa`0% and API `b426ba47`100% / `e8018f3f`0%.
+- Did not retry, attach, override, promote or validate a non-existent candidate. No production/data/payment/WhatsApp/Meta/CAPI mutation occurred.
+
+## 2026-11-03 - GFS-454 authenticated monitoring qualification
+
+- Recorded owner-session Analytics verifier ACTIVE/HTTP200, GraphQL A/B/C/D PASS, full security/routing preflight PASS, and three successful monitoring samples spanning five minutes.
+- Confirmed API `b426ba47` and Admin `e8c96c96` at100% with candidates0%; preserved the Admin baseline as rollback.
+- No source change, deployment, token revocation, payment, D1, Meta, CAPI or customer mutation occurred. GFS-426 needs separate Admin-only 0% validation authority.
+
+## 2026-11-03 - GFS-451 Analytics authentication boundary
+
+- Recorded the owner post-GFS-450 result: HTTP400 `cf_6003`, token status UNKNOWN, header present, with all local credential-shape checks passing.
+- Read-only Cloudflare UI metadata confirms the dedicated credential is account-owned and scoped to Get Free Seeds `Account Analytics Read`; endpoint and Bearer source handling remain unchanged.
+- No bridge defect, expiry, permission mismatch or exact secret defect was proven. No token rotation or production mutation occurred; live monitoring remains blocked pending owner correction or explicit replacement approval.
+
+## 2026-11-03 - GFS-450 Cloudflare token header diagnostics
+
+- Recorded owner HTTP400 `cf_6003` with header-present/token-status-unknown evidence; did not misclassify it as expiry or GraphQL failure.
+- Verified through the authenticated Cloudflare account UI that the monitor credential is account-owned with Account Analytics Read, so the account token verification endpoint remains correct.
+- Added secret-free credential-shape validation and safe secondary provider-code reporting, including `cf_6111`; no credential value or raw provider response is exposed.
+- Verifier 5/5, full 372/372, build/lint PASS. Live token and five-minute monitoring remain pending one owner-session run.
+
+## 2026-11-03 - GFS-449 Cloudflare token verifier
+
+- Isolated owner A_viewer HTTP400 `cf_9106` authentication failure; B/C/D were not run.
+- Added account-scoped token verification through the existing process-only bridge with allowlisted, secret-free output and tests.
+- Token verifier 3/3, probe 3/3, observability 10/10, full 372/372 and build/lint PASS. Live token state remains pending owner execution.
+
+## 2026-11-03 - GFS-448 bounded GraphQL isolation probe
+
+- Added a fail-fast A/B/C/D probe for viewer, account, minimal Worker metrics and the existing full monitoring query, with no more than four read-only requests.
+- Added allowlisted, secret-free output and tests for all-pass, first-failure stop and non-JSON handling.
+- Probe 3/3, observability 10/10, full 372/372, build/lint, adapter 8/8 and deadline 18/18 pass. Live owner-profile probe remains the exact missing evidence.
+
+## 2026-11-03 - GFS-447 HTTP400 category coverage
+
+- Corrected the owner bridge working-directory instruction; the valid run reached Cloudflare and returned sanitized HTTP400 with `causeCode=unknown`.
+- Added Cloudflare-documented parsing and dataset-limit categories and regression cases. No speculative query, credential or permission change was made.
+- Focused observability 10/10, full 372/372 and build/lint PASS; live monitoring remains blocked at 0/3.
+
+## 2026-11-03 - GFS-446 persistent GraphQL HTTP400 diagnostics
+
+- Recorded the owner post-fix HTTP400 sample without repeating three-sample qualification. Read-only schema inspection validated the current datetime scalar and selected Worker fields.
+- Added secret-free HTTP400 cause classification and monitoring-run diagnostic output; no raw response body, token, header, customer data or production resource is retained.
+- Observability 10/10, full 372/372, build/lint, adapter 8/8 and deadline 18/18 pass. Live monitoring remains blocked pending one diagnostic owner sample; no production mutation occurred.
+
+## 2026-11-03 - GFS-444 WhatsApp incident read-only closure
+
+- Converted the reported PKT boundary to UTC and ran one aggregate-only D1 query, authenticated Admin reads, Cloudflare Worker/Queue metrics, public API health and canonical Meta identity checks.
+- Disproved an infrastructure/webhook outage: no customer inbound in adjacent windows, while callbacks/provider status, zero-error Workers, Admin refresh and Queue/DLQ health continued. Kept post-boundary customer E2E UNKNOWN because no natural inbound arrived.
+- No code repair or production mutation; GFS-443 Analytics credential monitoring remains a separate owner-session gate.
+
+## 2026-11-03 - GFS-443 GraphQL HTTP400 schema repair
+
+- Diagnosed owner-session sample 1's sanitized metrics HTTP400 as uppercase `String!` declarations for `accountTag` and `scriptName`; Cloudflare's official Workers Analytics examples use lowercase `string!`.
+- Corrected only those two scalar declarations and added an HTTP400 regression mock. Observability 8/8, full 372/372, build/lint, adapter 8/8 and deadline/rollback 18/18 pass.
+- Live qualification remains pending three sanitized owner-session samples over five minutes. No production, payment, routing, D1, Meta, CAPI, Queue, Cron or customer mutation occurred.
+
+## 2026-11-03 - GFS-441 monitoring assertions and local qualification
+
+- Added fail-closed GraphQL account/Worker identity, zero-error, metric-presence and freshness checks; freshness uses a 10-minute query plus 5-minute ingestion allowance.
+- Added synthetic stale, missing, malformed, nonzero-error and identity mismatch coverage. Observability 7/7, full 372/372, build/lint, adapter 8/8 and deadline/rollback 18/18 pass.
+- Kept live qualification WAITING FOR OWNER RUN because the sandbox cannot access the owner Credential Manager. No production or payment behavior changed.
+
+## 2026-11-03 - GFS-440 corrected Analytics credential metadata
+
+- Recorded owner evidence that the Analytics Credential Manager target now has the exact Get Free Seeds account-ID username, stored password and Enterprise persistence.
+- Did not access the owner vault from the sandbox or rerun an invalid sandbox bridge check. GraphQL and five-minute monitoring remain pending owner-session execution.
+- Kept GFS-426 release, CAPI, payments, routing and customer traffic unchanged.
+
+## 2026-11-03 - GFS-439 Analytics credential identity gate
+
+- Owner-session bridge reached the existing Analytics Credential Manager target but failed closed with `analytics_credential_account_mismatch`.
+- Preserved the validation and recorded the owner-only metadata correction: set the stored username to the exact Get Free Seeds account ID without exposing or replacing the token unless secure preservation is impossible.
+- Kept GraphQL/five-minute monitoring and GFS-426 release blocked; no production, payment, Meta, CAPI or customer mutation occurred.
+
+## 2026-11-02 - GFS-434 close pre-live payment dead letters
+
+- Closed 19 five-attempt `PAYMENT_TEXT_DELIVERY_FAILED` dead letters dated 2026-10-23 through 2026-10-25 as owner-confirmed pre-live test data; closed 8 historical `GFS177_PAYMENT_METHODS_DISABLED` permanent failures as the same non-production class.
+- Did not replay, delete, queue, message customers or edit payment/order state. Current Admin cohorts remain separate: 210 no-method and 22 payment-instruction-failed.
+- No current source defect was proven. The D1 date-split query was attempted but Wrangler OAuth was unavailable in the current shell; no unsupported post-live count was recorded.
+- Preserved payment freeze, CAPI OFF, GFS-426 undeployed, routing and all WhatsApp protections.
+
+## 2026-11-02 - GFS-433 bounded pending-order bottleneck review
+
+- Classified the current active no-method cohort as 210 (GFS-432 snapshot 209): five sanitized recent traces showed no method and no payment-instruction send, with some recovery delivery/read states and no sampled follow-up response. No causation was inferred.
+- Distinguished 22 payment-instruction delivery failures from courier delivery failures. A bounded, zero-write D1 aggregate found 19 five-attempt `PAYMENT_TEXT_DELIVERY_FAILED` dead letters and 8 `GFS177_PAYMENT_METHODS_DISABLED` permanent failures; no replay or deletion occurred.
+- Found no reproducible source defect. Preserved all three working Advance methods, EN/UR, COD, WhatsApp, recovery and CAPI OFF. No source code or production behavior changed.
+- Kept monitoring and GFS-426 release blocked by the already recorded absent Analytics credential; no repeated token attempt was made.
+
+## 2026-11-02 - GFS-432 read-only WhatsApp conversion review
+
+- Captured bounded aggregate funnel evidence: rolling 24h 116 submitted orders (69 COD, 12 Advance, 35 no method); 7-day UTC 21,620 inbound events and 589 submitted orders.
+- Read +15/+210 status distributions, no-method/delivery-failed/unpaid-after-delivery cohorts, and payment-method readiness without exposing customer records or changing state.
+- Verified API health 200/WhatsApp enabled and authoritative API/Admin 100/0 routing. No source defect was proven; no runtime repair, reminder change, payment change, deployment, CAPI activation or customer send occurred.
+- Carried the absent Analytics credential as the single external monitoring blocker without repeating token experiments.
+
+## 2026-11-02 - GFS-431 local COD + CAPI acceptance
+
+- Added focused synthetic assertions for the GFS-426 Admin payable/confirmation UI contract.
+- Added synthetic Meta CAPI provider tests for Purchase payload quality and fail-closed response handling.
+- Verified 31 test files / 372 tests, build, lint, observability, adapter and deadline/rollback suites. No production source, routing, payment, Meta or customer behavior changed.
+- Kept live CAPI OFF and GFS-426 undeployed because the approved Analytics credential is absent and separate release approval is still required.
+
+## 2026-11-02 - GFS-430 monitoring hold
+
+- Performed the single approved Analytics credential check; target remains absent.
+- Kept GFS-426 undeployed and preserved all GFS-429 local/routing/regression evidence without repeating closed investigations.
+
+## 2026-11-02 - GFS-429 GFS-426 COD release preflight
+
+- Verified the Admin-only candidate, active D1 schema compatibility, Service Auth health/isolation, exact Wrangler routing and full local regression.
+- Kept release blocked because Analytics monitoring and explicit owner release approval are absent; no production mutation occurred.
+
+## 2026-11-02 — GFS-428 routing verification and release readiness
+
+- Closed the Admin 97.8/2.2 discrepancy using authoritative Wrangler 100/0 readback; no routing mutation was needed.
+- Recorded the missing monitoring credentials and the gated Admin-only GFS-426 release plan. Local regression remains green; no production release occurred.
+
+## 2026-11-02 — GFS-427 WhatsApp production recovery investigation
+
+- Disproved the suspected WhatsApp outage using authenticated, aggregate-only live evidence; no restoration was needed or performed.
+- Documented the active `-staging` service/D1 namespace, live Queue/Admin/API continuity, absence of a fresh post-boundary order without manufacturing traffic, and the separate unapproved Admin97.8/2.2 routing exposure.
+
+## 2026-11-02 — GFS-426 manual COD confirmation and CAPI readiness
+
+- Added local Admin-only `Mark Payment Received` for eligible COD orders, with exact amount, authenticated audit, atomic PAID transition and idempotent repeat handling.
+- Reused the existing Purchase CAPI/outbox path behind the existing OFF flag; Queue failure remains durable/retryable and no Meta send was activated.
+- Superseded the GFS-425 complex courier SOP per owner policy. Full370/370, focused COD27/27, build/lint and safety-controller checks pass.
+
+## 2026-11-02 — GFS-425 COD courier settlement readiness
+
+- Documented the minimal courier settlement SOP using existing Admin/database controls; no duplicate functionality or code was added.
+- Defined required tracking, delivery disposition, collection/remittance, evidence, exception and authorized-verifier fields. Owner SOP/courier-source approval remains pending.
+- Reverified payment freeze, routing and monitoring BLOCKED status. No live order, payment, COD, D1, deployment or customer-message mutation occurred.
+
+## 2026-11-02 — GFS-424 payment freeze and COD operations
+
+- Recorded the owner freeze protecting all three working payment methods and deferred GFS-414 Admin deployment because Admin preview HTTP503 is not customer-checkout evidence.
+- Completed read-only customer/Admin path comparison and COD workflow review. No customer, payment, order, courier, settlement or configuration mutation occurred.
+- Recorded the minimum courier settlement SOP requirement and monitoring BLOCKED status. Focused payment/COD/fulfillment tests passed 128/128.
+
+## 2026-11-02 — GFS-423 Advance HTTP503 and Admin release readiness
+
+- Added regression coverage for dynamic JazzCash, Easypaisa and Bank Transfer instruction previews, including EN/UR fields, without changing runtime payment behavior.
+- Reverified protected identities and exact API/Admin100%/0% routing. Read-only live Admin still reports null legacy amount, unconfigured methods and HTTP503 instruction endpoints; no payment or deployment mutation was made.
+- Confirmed the monitor target is absent; live GraphQL/five-minute qualification remains blocked. Full366/366, build, lint, observability6/6, adapter8/8 and deadline/rollback18/18 pass. V1 rollback fixture remains unavailable.
+
+## 2026-11-02 — GFS-419 dedicated Analytics credential integration
+
+- Added process-only dedicated Analytics-token selection to Cloudflare observability while preserving Wrangler OAuth fallback.
+- Extended the protected Windows bridge with optional Analytics credential loading, exact Get Free Seeds account-ID validation and environment restoration; no secret values or credential records were created.
+- Passed observability6/6, adapter8/8, deadline/rollback18/18, clean V1 rollback4/4, full363/363, build and lint. Live monitoring remains blocked pending explicit token approval/provisioning.
+
+## 2026-11-02 — GFS-418 GraphQL connector boundary
+
+- Reverified protected identities/routing and inspected official Cloudflare user/account token inventories; no existing Analytics-read connector is available.
+- Did not create or alter a token because explicit owner security approval and approved secure storage were not supplied. Kept existing Wrangler OAuth, Access credentials and production routing unchanged.
+- Local observability5/5, adapter8/8 and deadline/rollback18/18 passed; live five-minute monitoring remains blocked by GraphQL HTTP401.
+
+## 2026-11-02 — GFS-417 GraphQL monitoring boundary
+
+- Diagnosed the exact GraphQL endpoint and HTTP401: the correct, unexpired Wrangler OAuth identity lacks recorded Analytics read scope.
+- Confirmed the Access service-credential bridge is separate and healthy for Admin health/isolation only. No credential rotation, scope change, token creation, deployment or routing mutation.
+- Kept verified API/Admin100%/0% routing and release readiness blocked pending one least-privileged approved metrics connector.
+
+## 2026-11-02 — GFS-416 Admin monitoring and routing readback
+
+- Rechecked the protected identity and found current Wrangler routing already at Admin100%/0% and API100%/0%; no routing correction was performed.
+- Existing credential bridge passed health/Access denial/isolation checks, but GraphQL metrics returned HTTP401. Recorded the monitoring blocker and explicit owner-approval boundary.
+- Full363/363, build/lint, observability5/5, adapter8/8 and deadline/rollback18/18 passed; no production state changed.
+
+## 2026-11-02 — GFS-415 Admin baseline restoration boundary
+
+- Freshly rechecked Admin drift at `e8c96c96`97.2% / `ee9b7baa`2.8% and API isolation at `b426ba47`100% / `e8018f3f`0%.
+- Confirmed authenticated Orders/Conversations access, but stopped before the live rollout control because service-auth health/monitoring and explicit mutation confirmation were not available. No production mutation.
+
+## 2026-11-02 — GFS-414 recovery reconciliation and P0 readiness
+
+- Freshly verified API100%/0% and detected Admin97.2%/2.8% candidate exposure; no routing mutation performed.
+- Reconciled effective recovery ON/start against the checked-in false default; authorization/provenance remains unresolved, so no flag change or restart was made.
+- Repaired Admin-only dynamic-payment read/preview gates that incorrectly required a legacy fixed amount; added regression coverage. No checkout, WhatsApp, payment-state or production deployment change.
+- Recorded fresh COD307 pending/1 dispatched with no collection/remittance or settlement-policy evidence. Focused68/68, full363/363, build/lint PASS.
+
+## 2026-11-02 — GFS-413 P0 recovery/payment reliability
+
+- Diagnosed live recovery drift and historical payment-instruction terminal failures using bounded authenticated read-only evidence.
+- Confirmed no current recovery eligibility, no opt-out/fallback rows, historical failure dates, COD settlement-policy gap, and missing Advance amount without changing production.
+- Ran focused179/179 and full361/361 tests plus build/lint; no local source defect was proven and no replay/resend or payment/configuration mutation occurred.
+
+## 2026-11-02 — GFS-412 authenticated P0 verification
+
+- Restored official Chrome DevTools MCP and verified Cloudflare, Admin, D1, Queue and Meta read-only access.
+- Recorded exact API/Admin routing and the unexpected live recovery flag/start timestamp without changing it.
+- Recorded live COD settlement-policy and Advance-configuration blockers, bounded recovery outcomes, Queue metrics, D1 integrity and migration provenance.
+- No source repair or production mutation; GFS-411 regression baseline remains 361/361, build/lint PASS.
+
+
+## 2026-11-02 — GFS-411 P0 launch operations
+
+- Added a permanent freeze and evidence boundary for COD, Advance, webhook, Admin and Meta operations.
+- Recorded a bounded, fail-closed +15/+210 activation plan; recovery, five-stage reminders, Automation V2 and utility templates remain OFF.
+- Recorded fresh 3/3 API health and expected unauthenticated Admin 403; authenticated dashboard/D1 evidence is blocked by the unavailable Chrome DevTools MCP.
+- Ran full 30-file / 361-test suite, build and lint: PASS. No source defect or production mutation was found.
+
+
+## 2026-11-02 - GFS-410 cancellation closure and recovery reconciliation
+
+- Closed GFS-403 through GFS-409 as deferred/blocked work; retained source, tests, migrations and historical evidence, with cancellation candidates held at0%.
+- Reconciled official Cloudflare routing and runtime configuration read-only: API baseline `b426ba47`100% / candidate `e8018f3f`0%; Admin baseline `e8c96c96`100% / candidate `ee9b7baa`0%; recovery, five-stage, automation and utility flags false.
+- Confirmed the recovery implementation is fail-closed and locally sound; no source repair, production mutation, customer send, migration, retention deletion, Meta/payment change or deployment was performed.
+- Recorded focused118/118 and full361/361 tests, build/lint PASS, and the unresolved D1 provenance/integrity-readback blocker.
+
+## 2026-11-01 - GFS-409 cancellation-feedback deferment and COD recovery measurement
+
+- Deferred GFS-403 cancellation feedback and the proposed retention scheduler; preserved source/docs, held cancellation API/Admin candidates at0%, and performed no production mutation or customer send.
+- Read-only aggregate D1 report measured rolling24h/7d inbound, conversations, orders, Advance/COD/no-method, recovery stage statuses, duplicate/failure/overdue controls and COD temporal association without exporting identifiers or claiming causality.
+- Recorded current production flag mismatch: recovery reads false despite historical stage rows and earlier candidate metadata; did not enable or repair the flag. Recorded D1 migration history through0043 with0044/0045/0046 absent while cancellation objects exist; no migration reconciliation was attempted.
+- Preserved API `b426ba47`100% / `e8018f3f`0%, Admin `e8c96c96`100% / `ee9b7baa`0%, COD PKR125, WhatsApp protections, Meta identity and Hoja/ThanNow isolation.
+
+
+## 2026-11-01 - GFS-408 canary blocked safely at preflight
+
+- Proved the exact API candidate can store optional free-text suggestions but has no activated physical deletion caller; stopped before traffic because Approval V forbids retention activation.
+- Recorded one passing monitoring cycle, one fail-closed GraphQL HTTP200-error cycle and a later recovery observation. No retry was treated as canary qualification.
+- Kept API/Admin routing100/0, did not arm a watchdog, and performed no traffic mutation. Reverified D1 zero cancellation/feedback rows, matched orders/payments, Queue/DLQ, full361 regression and rollback4/4.
+
+## 2026-11-01 - GFS-407 API/Admin 0% candidate validation
+
+- Uploaded exact source `ffa9eb4` as API `e8018f3f` and Admin `ee9b7baa`, preserving deployed variables and strict binding parity, then attached both at0% beside the unchanged100% baselines.
+- Passed exact API preview health/unsigned-webhook rejection, authenticated Admin version-override monitoring, cancellation analytics, protected Admin surface and responsive Chrome acceptance without exposing either candidate to customer traffic.
+- Reverified D1 integrity/zero-write retention, Queue/DLQ, routing and security. No canary, promotion, watchdog, customer message, retention deletion, migration, payment, Meta, flag, Cron or unrelated deployment occurred.
+
+## 2026-11-01 - GFS-406 migration0046 and release readiness
+
+- Added an isolated populated-schema compatibility test proving migration0046 is additive, idempotent, FK-clean and preserves legacy conversation/order/payment rows.
+- Applied only exact migration0046 to canonical staging D1 after identity, hash, history, schema, count and Time Travel gates. Verified two new empty tables, five indexes, three foreign keys, clean integrity and unchanged order/payment signatures; 0044/0045 remain unapplied.
+- Ran the approved bounded retention dry-run twice with zero eligible rows and zero writes. No deletion or schedule was enabled.
+- Prepared API/Admin bundles with Wrangler dry-run only and retained live API/Admin routing unchanged. Full361/361, build/lint, monitoring5/5 + 8/8 + 18/18 and rollback4/4 passed; audit remains10 moderate dev-only findings.
+
+## 2026-11-01 — GFS-405 secure monitoring and release readiness
+
+- Diagnosed the monitoring gate without changing Cloudflare: the dedicated app already has the exact staging `/health` destination and existing Service Auth policy. Repaired only the local qualification harness account selection and stale Admin baseline.
+- Passed three read-only health/security/GraphQL/routing cycles: authenticated health200, invalid/unauthenticated denial, business-route isolation, GraphQL errors0 and frozen API/Admin routing. Unit observability/adapter/deadline suites remain5/5, 8/8 and 18/18.
+- Completed read-only D1 preflight through migration0043 with 0044/0045/0046 absent and zero writes. No migration, retention deletion, API/Admin deployment, canary, payment, Meta, Queue/Cron, customer or WhatsApp mutation occurred.
+
+## 2026-11-01 — GFS-404 cancellation feedback retention and release readiness
+
+- Added a dry-run-by-default, separately gated retention path for physically deleting expired cancellation suggestion text in bounded, indexed D1 batches. Immutable cancellation facts and reason rows are retained; no route, queue, Cron or automatic deletion was added.
+- Added synthetic retention tests for expiry, dry-run, batch bounds, retry/idempotency, future-row protection, transaction behavior and fact/reason preservation. Full360/360 across29, build, lint, rollback4/4 and monitoring unit tests5/5 + 8/8 + 18/18 passed.
+- Kept migration0046 local-only and production frozen. Monitoring remains blocked by the missing Cloudflare Access policy attachment/health403; no API/Admin deploy, migration, D1 write/deletion, canary, payment, Meta, Queue/Cron, customer or WhatsApp mutation occurred.
+
+## 2026-11-01 — GFS-403 cancellation reasons, feedback and analytics
+
+- Added distinct OFFER `CANCEL_OFFER` labels in EN/UR while preserving REVIEW and legacy callback compatibility.
+- Added cancellation-first optional reason/suggestion/skip/restart handling, append-only provider-deduplicated local schema proposal0046, privacy masking and 90-day Admin visibility boundary.
+- Added authenticated read-only cancellation analytics and exact cancellation stage/history to Conversations.
+- Added synthetic EN/UR, stage, duplicate, stale, service-window, order/payment safety, retention, filter and browser acceptance coverage. Focused127/127, full356/356, build/lint, rollback4/4, diff/secret scan PASS; audit remains10 moderate dev-only findings.
+- Tested source is `ac52cbe0a9959ab4a53631174a1de86584d12d0c`. No migration, deploy, canary, D1 write, customer/payment/Meta/WhatsApp/flag/Queue/Cron mutation occurred; live Admin/API versions remain unchanged.
+
+## GFS-402 Approval R: Admin footer and Refresh release (2026-11-01)
+
+- Released tested GFS-401 source `1a28987c6327e7ec8695e21b66dc2b08df360df9` as Admin `e8c96c96` at100% in deployment `c7a0eb5b-3a1e-41fb-bf8c-8ac630113418`; exact rollback `07e75c15` is0%; API stayed `b426ba47`100% / `d603f077`0%.
+- Verified Orders footer/list/detail reachability at25/50/100 rows and responsive desktop/tablet/mobile sizes; verified Conversations queued/manual Refresh status, selected detail update and one list+summary+detail request without duplicates.
+- Watchdog armed before cutover, observed candidate100% with API safe, did not roll back, and was disarmed after acceptance. rollback4/4, full347/347, focused24/24, deadline18/18, adapter8/8, observability5/5, build and lint passed. No protected protocol or WhatsApp regression detected.
+
+## GFS-401 Orders footer and Conversations Refresh (2026-11-01)
+
+- Fixed the active Orders renderer so the list scrolls within the workspace, pagination stays reachable, and long details/actions scroll independently; added privacy-safe rendered-layout coverage for 25/50/100 rows.
+- Fixed silent manual Conversations Refresh clicks during an active request by queuing one follow-up, showing immediate queued/checking state, and refreshing selected detail on manual refresh without changing automatic polling or the five-minute summary cap.
+- Full347/347, focused24/24, build and lint passed. Admin candidate `e8c96c96` attached at0%; serving `07e75c15` remains100%, rollback `36665bef`0%; API remained `b426ba47`100% / `d603f077`0%. No cutover, watchdog, API, WhatsApp, Meta, payment, D1 or migration mutation.
+- Tested source commit `1a28987` and protected docs are pushed to PR #11; remote SHA independently verified as `0890f461512dd40820c6c1a8472b2e7a979062d5`.
+
+## GFS-400 Permanent Admin layout lock (2026-11-01)
+
+- Fixed the malformed GFS-399 shell CSS replacement that caused the desktop Admin content to start at the far left; `margin:auto` and padding now remain inside the shell rule. Added a rendered-geometry regression guard and browser cleanup requirements.
+- Candidate `07e75c15` passed 0% authenticated desktop/tablet/mobile acceptance and was promoted once to Admin100%; rollback `36665bef` remains0%. API stayed `b426ba47`100% / `d603f077`0%.
+- Normal post-cutover geometry passed: CSS1920 shell x100.5/1700, workspace1652, master/detail697/941; mobile/tablet stacking and root overflow passed. Orders/Conversations Auto Update state behavior was unchanged.
+- Initial watchdog PID19860 failed before observation due a temporary Windows path defect and did not mutate routing. Corrected PID3872 observed candidate100% and stopped after acceptance without rollback. Full346/346, layout4/4, build, lint and rollback4/4 passed.
+- Fresh Cloudflare target identity and canonical Meta read-only identity passed. GitHub remote is correct but push is pending invalid CLI-token reauthentication. Known favicon404 and10 moderate dev-only minimatch advisories remain; no audit0 claim.
+
+ - Git follow-up: pushed the tested GFS-400 source/docs to PR #11; remote SHA `98af3a56c757a48559147f8a8dd79277b2cbfedf` independently verified.
+
+## GFS-399 Auto Update button colors and Admin-only release (2026-11-01)
+
+- Added CSS attribute-selector states for Orders and Conversations Auto Update buttons: ON is green/white, OFF is neutral/dark, with accessible focus styling and unchanged dimensions/storage behavior.
+- Validated exact candidate `36665bef` at0% across desktop/tablet/mobile, then promoted it once to100%; retained `dfef46ea` as exact rollback at0%. API remained `b426ba47`100% / `d603f077`0%.
+- Detached five-minute watchdog PID18696 armed before cutover, did not trigger, and was stopped after acceptance before deadline. Final routing and canonical identity readbacks passed.
+- Full345/345, focused22/22, build, lint, diff check and rollback4/4 passed. Known favicon404 and10 moderate dev-only `minimatch` advisories remain accurately documented; no audit0 claim.
+
+## GFS-398 Approval Q Admin-only cutover (2026-11-01)
+
+- Promoted exact validated Admin candidate `dfef46ea` to100% and set exact rollback `ceb3e680` to0% in deployment `a1e3dedc`; API stayed `b426ba47`100% / `d603f077`0%.
+- Verified fresh target Cloudflare identity, exact candidate/binding immutability, and owner-approved D1/audit residual risk. No runtime/source, bindings, API, D1, migration, flag, payment, Meta, Queue/Cron, WhatsApp or customer state changed.
+- Armed and independently verified a five-minute Admin-only rollback watchdog; it did not trigger and was stopped before deadline after sanitized live acceptance and final routing readback.
+- Live read-only Admin checks passed Orders filter/pagination/Refresh/default-OFF auto update, Conversations list/summary/detail, Analytics, Payment Settings and COD. Protected unauthenticated health403 was documented without claiming health200. GraphQL metadata was Admin21/API113 with zero errors.
+
+## GFS-397 Permanent desktop view regression fix (2026-11-01)
+
+- Proved the reported330px Orders pane came from a stale Chrome `320x800` mobile/touch device-metrics override; clearing the override restored the real desktop layout. No runtime CSS change or new Admin upload was made.
+- Revalidated existing candidate `dfef46ea` at CSS1920/1675/1440/1280, tablet768 and mobile430/390/360/320 at DPR0.8/1. Desktop split widths were `697/941px` at CSS1920 and `510/689px` at CSS1280; root overflow and clipped header actions were absent.
+- Added `tests/admin-layout.test.ts` with synthetic computed-dimension, ratio, breakpoint and fixed330px regression assertions. Focused15/15, full345/345, build, lint and rollback4/4 pass.
+- Cleared Chrome emulation and candidate headers after testing. Admin remains100% frozen on `ceb3e680` with `dfef46ea` at0%; API and WhatsApp remain untouched. Prior10 moderate unfixed dev-only `minimatch` findings remain documented; no audit0 claim.
+- Pushed layout commit `38ebf66ef66c560ea5915c8174d82d417d4fd25d` and protected-record commits to the existing `gardenshop/freeseeds` PR branch; the final remote SHA was independently verified.
+
+## GFS-396 Approval P Admin 0% validation (2026-11-01)
+
+- Uploaded exact tested HEAD `d591ce8` as Admin version `dfef46ea-3358-4f58-9253-3bb046a91d64` and attached it at0% beside `ceb3e680`100%; no promotion or API mutation occurred.
+- Passed authenticated candidate override acceptance for Orders, Conversations, Analytics, Payment Settings and COD. Three repeated Orders/Conversations cycles returned HTTP200; candidate summary returned200 versus frozen baseline404.
+- Verified PKT/activity semantics, manual Refresh, default-OFF auto-update controls, visible/focused gating, cross-tab lease, hidden pause, stale retention, responsive widths and console cleanliness using sanitized metrics.
+- Recorded candidate query-cost metadata and audited the residual dependency risk: approximately11,493 list /6,556 summary rows per Conversations refresh, approximately96,926 Analytics rows for the tested window, and 10 moderate unfixed dev-only `minimatch` advisories.
+
+## GFS-395 live PKT verification and release blockers (2026-11-01)
+
+- Re-ran the fixed PKT formatter against the reported UTC instant, midnight rollover, invalid input and multiple host timezones; local result is stable and source remains UTC-backed.
+- Ran three sanitized browser cycles: Orders list/changes/detail and Conversations list/detail were HTTP200 JSON; the frozen older Admin returned HTTP404 for `/api/conversations/summary`, correctly classified as a version-surface mismatch.
+- Restored and verified official Wrangler identity for the target Get Free Seeds account without making a mutation. GitHub remote SHA was read back, but the existing CLI token remains invalid and no push occurred.
+- Official npm audit now reaches the registry and reports 10 moderate `minimatch` findings with no available fix; audit is not PASS. Full342/342, build/lint and diff checks pass.
+
+## GFS-394 Admin refresh reliability and Pakistan time (2026-11-01)
+
+- Added source-only stale-safe refresh handling for Orders/Conversations: explicit browser/HTTP/Access/timeout errors, atomic Conversations list/summary commit, last-successful data retention and stale-data age.
+- Corrected conversation activity semantics by exposing last customer message and last conversation update separately; fixed all displayed conversation times to `Asia/Karachi` PKT while keeping UTC storage unchanged.
+- Focused31/31, full342/342, build, lint and diff check pass. Live failures were not reproduced; no deployment, push, D1, Meta, WhatsApp, payment or flag mutation occurred.
+- Wrangler auth and npm audit remain blocked by external auth/registry conditions.
+
+## GFS-386 diagnostic repair (2026-10-31)
+
+- Added safe allowlisted diagnostics and bounded persistence across monitor/controller rollback paths. Raw GraphQL bodies, credentials, customer identifiers and payment data remain prohibited.
+- Focused adapter8/8, observability5/5, controller18/18, full339/339, build/lint and audit0 pass. Read-only baseline qualification classified one `graphql_http200_errors` / `monitor_retry_exhausted` event and recovered on the next check.
+- No canary, deployment, API candidate change, customer/Meta/payment/D1/migration/flag/Queue/Cron mutation occurred. Release remains blocked pending monitoring stability.
+
+## GFS-385 API canary disposition (2026-10-31)
+
+- Executed the separately approved one-time API1% canary for candidate `d603f077`; no synthetic customer event, order, payment, message or Meta action was performed.
+- Candidate was observed at13.9s. The monitor/controller failed safely at109.7s; API baseline restoration was verified at123.5s. Detached watchdog was armed before exposure and disarmed after independent readback.
+- Result is FAIL-SAFE/INCONCLUSIVE because the original controller emitted only sanitized `controller_error`; no raw error or secret was retained. Final routing is API `b426ba47`100%/candidate0%, Admin `ceb3e680`100%/rollback0%. No promotion.
+
+## GFS-363 secure monitoring gate (2026-10-31)
+
+- Added a minimal native Windows Credential Manager bridge and fail-closed Access-header injection for the existing monitoring controller; no credential value is recorded.
+- Verified focused bridge/observability, adapter, deadline and rollback tests, full334/334, build and lint.
+- Host-context credential read succeeded, but live `/health` returned HTTP403 because the Cloudflare application readback currently shows no attached policy (`--`). No Access, routing, credential, customer, payment, Meta, migration, or canary mutation occurred.
+
+## GFS-357 Access setup and Admin monitoring gate (2026-10-31)
+
+- Read-only Chrome DevTools MCP verification passed for the Get Free Seeds Cloudflare account and the existing `GFS-Admin-Health-Monitor` Service Auth policy: exactly one Include Service Token rule, matching the sole enabled token of that name; existing Admin Operator remains Allow.
+- Prepared the exact Approval B proposal for a dedicated Self-hosted `/health` application on `getfreeseeds-admin-staging.get-free-seeds.workers.dev`. No application save, token creation, policy change, credential transfer, or monitoring/canary action occurred.
+
+## GFS-342 Analytics + Conversations release readiness (2026-10-30)
+
+- Added cross-customer isolation assertions to the conversation regression fixture; no Admin runtime source change was required after GFS-341.
+- Verified focused201/201, full334/334, build/lint/audit0, Admin dry-run, rollback4/4, adapter5/5 and deadline10/10.
+- Uploaded combined Admin candidate `19188b21-60da-4b03-bd89-72cb49468100` and staged it at0% in deployment `00566a27-064e-4bd0-b3e2-079efe69cffd`; frozen Admin remains100% and API is unchanged.
+- Passed authenticated version-targeted Analytics, CSV, Conversations, Orders, payments and COD read-only acceptance. No migration, canary, promotion, customer/Meta/payment/flag or API mutation occurred.
+
+## GFS-341 customer conversation viewer (2026-10-30)
+
+- Added protected read-only Admin conversation list/detail APIs and mobile viewer with masked references, bounded pagination, linked order/payment/recovery state, and explicit legacy transcript-unavailable messaging.
+- Added local-only proposed migration0045 for future sanitized message history with idempotency indexes and monotonic provider status protection. It was not applied or activated.
+- Added 4 focused tests; full334/334, build and lint pass. No production or customer-facing mutation occurred.
+
+## GFS-339 inbound analytics and abandoned checkout reporting (2026-10-30)
+
+- Added protected Admin inbound analytics with UTC presets, status filtering, aggregate CSV, event/contact/order/recovery metrics, conservative abandonment classes, definitions, and D1 read-cost metadata.
+- Added local-only proposed migration0044 indexes for `whatsapp_events`, conversation snapshots, orders, and leads. No remote migration was applied.
+- Reconciled staging 2026-10-30 UTC counts and measured the optimized abandonment query at 5,857 rows versus 11,099 for the original JSON order join. Full329/329, build/lint/audit0 and rollback4/4 pass; no production mutation.
+
+## GFS-338 API-only candidate gate (2026-10-30)
+
+- Added tested API-only scope to the local deadline controller and Cloudflare adapter; Admin remains frozen and is included in final readback.
+- Uploaded API acknowledgement-repair candidate `b0e883cd-16b8-4f8e-8fd8-c12bd46c4428` at 0% after identity, binding, flag and integrity checks.
+- Recorded a fail-closed canary attempt: restricted-agent readback failed before exposure, host readback verified frozen routing, and the live retry was blocked by the execution safety gate. No live savings or canary PASS is claimed.
+
+## GFS-337 payment-choice acknowledgement safeguard (2026-10-30)
+
+- Added bounded, read-only incident correlation for the reported order, newest30 no-method orders, matched24h funnels and frozen-version payment-choice health; no customer identifiers or provider IDs were recorded.
+- Split provider-send failure from post-acceptance D1 acknowledgement failure in `sendConversationReply`. Accepted sends now retry only status persistence three times and cannot roll the conversation back or trigger duplicate resend.
+- Added synthetic tests for transient and persistent post-provider D1 acknowledgement failures, conversation-state preservation and exact-once send behavior.
+- Verified full326/326, build/lint, offline audit0, rollback4/4, marker0043/ten indexes/integrity, and zero overdue recovery/duplicate recovery/false PAID/malformed COD quote. No production deployment or state mutation.
+
+## GFS-336 (2026-10-30)
+
+- Corrected the D1 stress harness denominator, pacing, warmup, A/B ordering, baseline schema indexes, `ANALYZE` setup, read-only/mixed separation, lock metrics, and bounded late-work handling.
+- Repeated corrected 50k measurements rule out the GFS-335 1.7-second recovery result as a fixture artifact; no production migration or index change was made.
+- Added aged, sanitized failure evidence for outbound replies, payment-instruction dead letters, and the CAPI backlog. Provider/customer impact remains unverified.
+
+## GFS-335 (2026-10-30)
+
+- Added a local-only deterministic D1 capacity harness and isolation test covering 245/1k/10k/50k synthetic orders, pre/post0043 variants, Admin/delta/recovery paths, mixed writes, and 1–100 RPS ramps.
+- Recorded actual read-only staging D1 integrity, query-plan, duration, and `rows_read` evidence. The remaining observed production scan is the payment-reminder opt-out anti-join; no schema change was made.
+- Recorded the isolated 50k post-index contention warning without presenting it as production capacity or authorizing a migration/remediation.
+
+## GFS-334 (2026-10-30)
+
+- Added a shell-free Cloudflare canary adapter and four tests after proving Windows `shell:true` split spaced Wrangler messages during GFS-333.
+- Completed read-only 7-day order, outbox, WhatsApp-event, CAPI, and equal pre/post migration measurements. Recorded the decline and funnel-data limitation without inventing causation or daily D1 savings.
+- Captured live D1 EXPLAIN plans for Admin delta and recovery due-stage paths; no production or customer state changed and no canary was retried.
+
+## GFS-333 (2026-10-30)
+
+- Performed authorized preflight and focused 64/64 acceptance; migration0043/integrity and controller9/9 evidence remained clean.
+- Stopped the limited canary fail-closed after Windows command-adapter and Wrangler route/restore failures. Final readback verified frozen API/Admin at 100% and candidates at 0%; no canary or customer mutation is claimed.
+- Recorded the release blocker; no retry, promotion, migration replay, flag change or live D1 savings claim was made.
+
+## GFS-332 (2026-10-30)
+
+- Resolved the meaning of Cloudflare API10007 through read-only official discovery: configured unsuffixed Worker names are absent; actual scripts are `getfreeseeds-api-staging` and `getfreeseeds-admin-staging`.
+- Reverified actual-name API/Admin versions and 100%/0% routing, D1/Queue/R2/Cron topology, protected reminder flags and rollback availability. No production or customer-facing mutation occurred.
+- Kept release NO-GO pending one new owner authorization tied to the discovered names and tested deadline controller. No live D1 savings claim was added.
+
+## GFS-331 (2026-10-30)
+
+- Fast-forward pushed the verified local package from remote `9682e2a` to `64023f1c72b70786432b14fca0589d302b0d3498` using authenticated `gardenshop` GitHub access; remote controller, tests, migration0043 and Admin paths were read back.
+- Read-only Cloudflare identity/D1 verification passed for `gisupp@gmail.com`: marker0043=1, ten indexes, quick check ok, foreign-key check empty.
+- Production API/Admin deployment lookups returned API10007 because the configured Worker names do not exist in the authenticated account. No live version, traffic, canary or promotion claim was made; release remains blocked pending resource reconciliation.
+- Controller9/9 and targeted safety56/56 pass; prior full324/324, focused121/121, build/lint/audit0 and rollback4/4 remain valid. No customer or production mutation occurred.
+
+## GFS-330 deadline-controller implementation (2026-10-30)
+
+- Added local-only `scripts/canary-deadline-controller.mjs` and its 9-scenario synthetic test harness; added `test:canary:deadline` without changing Worker runtime behavior.
+- Verified monotonic deadline, early restore, bounded commands/readbacks, overlap/interruption protection, immediate rollback, 5xx/delayed-routing fail-closed behavior, final routing readback and sanitized audit output.
+- Passed focused9/9, full324/324, build, lint, offline audit0 and legacy rollback4/4. No live canary, deployment, migration, flag, Meta, customer, payment or message mutation occurred.
+- Kept live-savings and strict platform-cap claims unmade; candidates remain0% pending new scoped owner authorization.
+
+## GFS-331 (2026-10-30)
+
+- Reverified PR #11 identity and branch through supported GitHub MCP. Attempted the authorized non-force fast-forward of local commit `6b22c7254259ee5348b41012087191341a3b66b8`; GitHub denied it with `Resource not accessible by integration`, and branch readback confirmed no remote change.
+- Recorded Chrome DevTools MCP `list_pages` unavailable in this execution context. No alternate browser/CDP/HTTP/MFA path was used; Meta eligibility and Business ancestry remain the prior GFS-330 UNVERIFIED result.
+- Preserved frozen public routing, candidate 0%, migration/release evidence, Hoja/new-number protections and all payment/COD safeguards. No source, production, Meta, Cloudflare, D1, traffic, migration or message change.
+
+## GFS-330 (2026-10-30)
+
+- Completed the read-only coexistence and release audit using official Chrome DevTools MCP inventory and existing authenticated tabs; no dashboard mutation, candidate onboarding, QR/OTP, subscription change, message, migration replay, traffic change, or deployment occurred.
+- Recorded Meta coexistence as **UNVERIFIED** for the candidate number and clean Business ancestry as **UNVERIFIED** because candidate-specific evidence was unavailable and the known Hoja-linked Business Suite asset was not opened.
+- Preserved canonical sender, new-number lock, Hoja zero-connection, frozen public service, 100%/0% routing, migration0043 integrity, payment/COD safeguards, and deferred Meta 500 handling.
+- Added only privacy-safe documentation. Local PR #11 was at `9682e2a` before this update; push was not attempted because the `gardenshop` GitHub token is invalid.
+
+## GFS-329 (2026-10-29)
+
+- Reverified frozen API/Admin routing at 100% and optimized candidates at 0%; migration0043 marker/indexes and D1 integrity remain clean.
+- Triaged the current Cloudflare aggregate: graph.facebook.com returned two HTTP500 subrequests among approximately6k 2xx; Worker runtime errors remain zero.
+- Found no correlated outbound FAILED status, outbox retry/dead-letter, or failure/error audit action in the canary window. Exact request-level Meta route/code/timestamp remains unavailable because Workers Observability is disabled; no resend or source repair was performed.
+- Corrected the activity boundary: two WhatsApp submissions, one conversation reset and one COD confirmation occurred naturally during the window; no PAID/approval transition was observed and baseline/candidate attribution is unavailable.
+- Designed, but did not deploy, a hard canary deadline with safety margin, bounded monitor timeouts, immediate restore, and final split verification.
+
+## GFS-328 (2026-10-29)
+
+- Applied additive migration0043 once to authorized GFS staging D1; created ten indexes and marker0043; post-apply quick/FK checks passed.
+- Uploaded exact PR HEAD API `6ef27f02` and Admin `c2321eab`, staged both at 0%, ran bounded 1% canaries, then restored both to 0%. Frozen API `b426ba47` and Admin `494a3dce` remain 100%.
+- Verified candidate API health/webhook rejection and authenticated Admin initial, delta, concurrent, filter, cursor and CSV behavior without customer-state mutation.
+- Recorded zero Worker errors (API40 invocations; Admin14), clean recovery/duplicate invariants, and transparent canary timing deviations (API about15m40s; Admin cumulative about15m03s).
+- Measured unchanged Refresh at 25 D1 rows and indexed recovery at 127 rows; retained explicit boundaries against claiming full-day/live-total savings.
+- No source, customer journey, reminder flag, Meta asset, payment, COD, Queue or customer message was changed.
+
+## GFS-325 (2026-10-29)
+
+- Completed final read-only preflight: Cloudflare/GFS identity, D1 binding, frozen Worker versions, GitHub PR SHA, migration compatibility and rollback path verified without production mutation.
+- Confirmed migration0043 is additive with distinct indexes and acknowledged index write-maintenance cost; local plans improve cursor/reconciliation scans, while live after-read savings remain unmeasured.
+- Reconfirmed focused121/121 and rollback4/4; full324/324, build/lint/audit0 and integrity remain valid. Added the guarded migration→candidate→canary→monitor→rollback sequence; no deployment or flag change.
+
+## GFS-319 (2026-10-29)
+
+- Compared the frozen remote baseline (`04d06bc`: 321/321, build/lint) with optimized source commit `e198e50` (324/324, build/lint); the extra tests cover Admin/Cron/recovery safety.
+- Rechecked the source boundary: checkout WhatsApp business behavior is unchanged; only Admin delta paths, recovery-stage lookup, Cron reconciliation, additive indexes, tests and release records differ.
+- Official GitHub MCP still reports `ai-photo-studio` with repository `push=false`; no push, deployment, migration, traffic or flag mutation was attempted.
+
+## GFS-318 (2026-10-29)
+
+- Completed the local guarded-release package: multi-source Admin delta invalidation, explicit full reload, indexed date/cursor/recovery/Cron paths, regression coverage and migration0043 rehearsal are ready for owner-authorized release.
+- Recorded bounded live attribution without claiming savings: staging was 494M rows read in the last 24 hours; the two Admin count aggregates were 135.42M and 209.64M, recovery candidate scanning 68.91M, and the old Admin list 33.3M.
+- Local release gates pass (focused121/121, full324/324, build, lint, audit0, integrity, rollback4/4). Push is blocked by the authenticated GitHub connector (`ai-photo-studio`, repository `push=false`); migration0043 and traffic remain unapplied/unpromoted.
+- Secured the tested package locally as commit `e198e50`; remote remains `04d06bc` until the single owner permission action is completed.
+
+## GFS-317 (2026-10-29)
+
+- Captured official read-only D1 attribution: 534.3M current-period account rows, 494M staging rows in the last 24 hours, and a ranked visible top-ten fingerprint set led by two Admin count aggregates.
+- Repaired the local delta cursor so payment, COD-detail, outbound delivery and outbox changes invalidate Admin state even when the parent order timestamp is unchanged. Added covering updated-time indexes and an indexed recovery candidate path to migration0043.
+- Verified active API/Admin versions and rollbacks read-only; no deployment, migration, traffic, flag, Meta, payment, COD, customer or Hoja mutation. GitHub push remains blocked by read-only connector permission.
+
+## GFS-316 (2026-10-29)
+
+- Added a local-only Admin/Cron read-path optimization: indexed order sync cursor, bounded `/api/orders/changes`, explicit Full reload, private/no-store API responses, range-based date filtering, and overlap-safe unchanged Refresh behavior.
+- Added additive migration `0043_admin_cron_read_paths.sql` for order cursor, outbound, outbox and recovery-stage lookup paths. It was locally rehearsed only; no remote migration or deployment was performed.
+- Gated Cron delivery reconciliation by the enabled reminder/recovery paths, avoided no-op status updates, and changed recovery candidate exclusion to the keyed recovery-stage table. Focused tests pass 120/120; live 534.3M attribution remains blocked pending official authenticated Cloudflare diagnostics.
+
+## GFS-305 (2026-10-29)
+
+- Ran the owner-authorized reversible 1%/99% sends-off canary for API and Admin, then restored the frozen API `45b01d86` and Admin `f0212429` to 100%.
+- API health and Admin CSV remained successful; no candidate-attributed natural webhook, WAMID or customer-visible reply was available. Recovery counts remained zero and all flags stayed false.
+- Final release is protected but two-follow-up activation remains pending one supported connection to the authorized tester profile.
+
+## GFS-304 (2026-10-29)
+
+- Rechecked the frozen production pair, candidate provenance, published +15/+210 EN/UR templates, real-state eligibility, D1 integrity and rollback path.
+- Searched the connected WhatsApp profile for the authorized tester without finding the tester conversation; confirmed it is the business-sender session. No traffic, flag, customer, payment or reminder mutation was performed.
+- Re-ran 318/318, build, lint, audit0 and rollback4/4. Candidate deployment and two-follow-up activation remain NO-GO/PENDING genuine tester access.
+
+## GFS-303 (2026-10-29)
+
+- Reverified the frozen API/Admin pair, GFS Cloudflare identity, active D1 binding, live health, Admin CSV endpoint and existing +15/+210 recovery implementation without changing traffic or flags.
+- Read back four published internal EN/UR recovery templates; confirmed realistic `DETAILS_COMPLETED`/`PENDING` and `PAYMENT_METHOD` eligibility coverage, independent +15/+210 stages, and zero recovery backlog/outbox/sends.
+- Corrected a timezone-sensitive synthetic order-date assertion to use the canonical Karachi order-date helper. Full 318/318, build, lint, D1 integrity and rollback4/4 pass.
+- Kept candidate deployment and activation NO-GO because the authenticated WhatsApp session is the business sender, not the authorized tester. No live WAMID or delivery claim was made.
+
+## GFS-297 (2026-10-28)
+
+- Identified the live button defect as API version attribution: shared CMS v9 text masked the old API’s legacy button generator while the corrected API remained at 0%.
+- Promoted API candidate `45b01d86` to 100% with `d808a31c` retained at 0% rollback. Genuine tester proof showed exact Confirm Order/Cancel Order buttons and safe cancellation.
+- Preserved Admin `b4c45278`, CSV export HTTP200/18-column contract, D1 migrations0039/0040, signed webhook, COD/Advance safeguards and reminders OFF.
+- Full 316/316, build, lint, audit0 and rollback4/4 passed. Live payment/COD was not attempted because no protected hold path exists.
+
+## GFS-296 (2026-10-28)
+
+- Repaired REVIEW/payment routing so the CMS summary is followed by Confirm Order/Cancel Order, confirmation creates/reuses one order before payment choice, Advance goes directly to methods, and legacy callbacks remain supported.
+- Published CMS REVIEW v9 confirmation/cancellation wording; dynamic totals and bilingual rendering remain intact.
+- Staged candidate `45b01d86`, ran a bounded genuine tester canary, and restored healthy API `d808a31c` to 100% when candidate-specific live button proof was not established. Admin `b4c45278` and reminders OFF were preserved.
+- Quality gates passed: 103/103 focused, 316/316 full, build, lint, rollback4/4, and diff check. No live order/payment/reminder mutation.
+
+## GFS-295 (2026-10-28)
+
+- Recovered and verified the prior authorized tester and canonical business conversation by exact phone identity without storing identifiers in the repository.
+- Ran a reversible 25%→33% API canary, captured genuine new-versus-old summary behavior, then promoted `d808a31c` to100% with `8e670de8` retained0%.
+- Verified genuine English and Urdu customer-visible CMS summaries, payment buttons and READ Meta delivery. Reused legitimate prior fields; zero orders/payments were created and reminders stayed off.
+- Reverified API health, Admin CSV HTTP200/154 records/18 columns, focused101/101, full314/314, build, lint, audit0 and rollback4/4.
+
+## GFS-294 (2026-10-28)
+
+- Inspected the authenticated WhatsApp Web and canonical Meta Manager connections without exposing message/customer data. WhatsApp Web is connected, but no authorized GFS/tester conversation or recipient is identifiable.
+- Reverified active/candidate API health, Cloudflare account/D1 configuration, REVIEW v8 dynamic placeholders and Cron-only reminder reconciliation. No traffic, reminder, customer, payment, order, Meta or schema mutation occurred.
+- Kept the candidate at0% and healthy API at100%; the remaining blocker is one owner-authorized tester identity/conversation or authenticated test device.
+
+## GFS-293 (2026-10-28)
+
+- Verified the staged API candidate health and published bilingual REVIEW v8 dynamic summary contract without changing the live healthy API or Admin export.
+- Confirmed qualified reminder delivery-status SQL remains in the scheduled handler only; it is not executed on inbound customer webhooks.
+- Did not perform a canary or promotion because no authorized genuine tester interaction, outbound WAMID, or rendered WhatsApp proof was available. Reminders remain paused.
+- Focused101/101, full314/314, build, lint, audit0 and rollback4/4 pass.
+
+## GFS-292 (2026-10-28)
+
+- Fixed the actual production Orders template so the existing protected Excel-compatible CSV export button is visible; promoted Admin `b4c45278` to100% with `c2e87231` retained as rollback.
+- Verified authenticated live export HTTP200, 144-row unpaged/filter parity, 18-column contract, private/no-store response and no sensitive fields. No API, D1, payment, customer, Meta or reminder mutation was made.
+- Kept API `8e670de8` at100% and summary candidate `d808a31c` at0% because genuine authorized WhatsApp inbound/outbound/WAMID proof was unavailable. Reminders remain paused.
+- Final gates: focused18/18, full314/314, build, lint, audit0 and rollback4/4.
+
+## GFS-291 (2026-10-28)
+
+- Added an authenticated Admin Orders export as Excel-compatible UTF-8 CSV with the existing filters, bounded keyset pagination across all matching rows, duplicate suppression, formula-injection protection, Urdu/leading-zero preservation, and no private receipt/QR/settlement data.
+- Added the Orders-page `Download Excel (CSV)` action; it downloads the current filter set rather than only the visible page.
+- Staged Admin `2b1609d5` and API `d808a31c` at0% while retaining healthy Admin `c2e87231` and API `8e670de8` at100%. Reminders remain paused and no genuine customer traffic, WAMID, payment, order, receipt, COD, migration, or Meta message was created.
+- Focused9/9, full314/314, build, lint, audit0, and rollback4/4 pass. Genuine WhatsApp device acceptance remains pending, so no full promotion claim is made.
+
+## GFS-290 (2026-10-28)
+
+- Added a safe CMS-backed dynamic Order Summary on the existing `REVIEW` key with bilingual EN/UR copy, quote/config-derived item rows, delivery fee, total, native bold formatting, and raw-HTML/placeholder validation.
+- Connected the actual guided CONTACT→REVIEW response to the published CMS content with a deterministic local fallback; removed duplicate first-message payment totals and COD-fee disclosure while preserving the existing buttons and COD confirmation.
+- Published Admin CMS `REVIEW` version8 through the authenticated GFS Admin candidate. Uploaded API `e914f77e` and Admin `783a9480` at0% beside the healthy production baseline; no customer traffic, payment, order, reminder, or schema mutation was performed.
+- Focused101/101, full312/312, build, lint, and rollback4/4 pass. Genuine device acceptance/WAMID and candidate promotion remain pending.
+
+## GFS-278 (2026-10-28)
+
+- Confirmed PR #11 is the authoritative `codex/gfs221-cod-compat-001` checkout; preserved the unrelated V2 worktree and its uncommitted compatibility patch separately.
+- Reproduced the current live Orders path read-only: list/detail, tabs, filters, search, archive modes, pagination and refresh all returned HTTP200 JSON. Confirmed `internal_sequence` and `internal_sequence_date` exist in live D1; no runtime repair or deployment was justified.
+- Audited current D1 using masked aggregates and found no reminder outbox or outbound-message rows. Reminder sending remains safely blocked because this V1 branch has no reminder engine or approved out-of-window template path.
+- Replaced one stale hard-coded private-sequence-date test expectation with a date-derived assertion. Focused84/84, full292/292, build, lint, offline audit0 and rollback4/4 pass; the registry audit endpoint was unavailable without authorized external metadata upload.
+- No external mutation, message send, deployment, migration replay, billing change, customer/payment/receipt change, or GitHub push occurred; GitHub authentication is pending supported `gardenshop` reauthentication.
+
+## 2026-10-28 (GFS-276 final E2E evidence)
+
+- Read-only reconciled the specified genuine JazzCash order: HTTP200 list/detail, pending review, reference, five unique private JPEG receipts, and no PAID audit.
+- Recorded natural public COD evidence: random reference, two items, exact PKR125 fee, public hold false, COD confirmation, dispatch/tracking audits, and no PAID state.
+- Closed the functional launch decision as public lead/order GO, Advance GO with settlement safeguards, and PUBLIC COD GO. Receipt-count reconciliation and period-separated outbound metrics remain pending.
+
+## 2026-10-28 (GFS-275 final live evidence)
+
+- Reverified sanitized Admin Orders counts/statuses, Payment Settings, payment-method API, D1 usage, Query Insights, Admin error metrics, migration0038 and active traffic.
+- Confirmed insufficient period-separated post-index traffic for a valid outbound cost conclusion; retained the existing indexed repair and made no runtime change.
+- Customer-device and receipt acceptance remain pending; no synthetic or financial mutation was used.
+
+## 2026-10-28 (GFS-274 post-launch evidence)
+
+- Read-only verified Paid D1 capacity, canonical Cloudflare identity, active Admin/API versions, and low-impact authenticated Admin availability.
+- Recorded Query Insights billing-period and last-24-hour aggregates, including the outbound status fingerprint, without synthetic traffic or repeated expensive probes.
+- No runtime, migration, billing, payment, customer, receipt, fulfillment, webhook, or deployment mutation was made.
+
+## 2026-10-27 (GFS-270 EXPLAIN-backed indexes)
+
+- Extended migration0037 with order pagination and WhatsApp/customer lookup indexes. Local EXPLAIN changed Orders pagination from temp-sort to indexed ordering and customer status from Orders scan to indexed multi-index lookup.
+- Pushed existing GFS-268/269 commits through authenticated Git Credential Manager as `gardenshop`; no Cloudflare/D1 mutation occurred.
+- Live quota remains 8.06M/5M, so migration application, deployment, runtime smoke and production AFTER rows_read remain pending reset.
+
+## 2026-10-27 (GFS-269 recovery checkpoint)
+
+- Rechecked Cloudflare D1 analytics read-only: quota remains 8.06M/5M rows read; no production SQL or Admin refresh was performed.
+- Revalidated local GFS-268 `fca32a3`, migration0037 in-memory integrity, focused53/53, full292/292, build, lint and rollback4/4.
+- Deferred live migration, deployment, 0%-traffic smoke, promotion and AFTER rows_read measurement until quota recovery. GitHub push is pending owner reauthentication because the stored CLI token is invalid.
+
+## 2026-10-27 (GFS-268 D1 quota-safe Admin repair)
+
+- Confirmed Cloudflare D1 Free-tier exhaustion from the authenticated GFS dashboard: 8M/5M rows read today; the old full Admin order projection accounted for about 3.29M rows-read across 77 calls.
+- Reduced order-list scans by combining exact queue/selected-tab counts and preserving bounded lightweight pagination. Added fail-closed JSON503 handling for Admin detail, receipts, Payment Settings, and API order/payment failures; no stale financial decision is cached.
+- Added unapplied additive entity-key indexes in migration `0037_quota_safe_admin_reads.sql`; no live D1/schema, customer, payment, receipt, traffic, billing, Meta, or secret mutation was made.
+- Focused53/53, full292/292, build, lint and rollback4/4 pass. Live Admin promotion and push remain blocked pending quota recovery and authenticated smoke.
+
+## 2026-10-27 (GFS-261 mobile validation and receipt media)
+
+- Added strict new-customer mobile validation with 11-digit storage normalization and bilingual CONTACT rejection behavior; preserved Meta identifiers and historical records.
+- Repaired receipt association for standalone, replied, forwarded/shared and supported image-document media with ambiguity fail-closed behavior, private R2 storage and provider-media deduplication.
+- Preserved Admin REVIEW/PENDING semantics, receipt history, COD exclusion, payment verification and localized acknowledgement.
+- Passed focused101/101, full287/287, build, lint, audit0 and rollback4/4. Deployed API `428defd5-e7aa-4800-b001-976f403c735e` at100%; Admin remains `615e1156-2747-457a-8623-11d1e967f911` at100%; PUBLIC COD retained.
+- No genuine receipt upload was performed because an authorized customer device was unavailable; no synthetic inbound or payment evidence was recorded.
+
+## 2026-10-27 (GFS-260 post-launch verification)
+
+- Read back PUBLIC deployment, Admin health, D1 integrity, COD state, webhook aggregates, and outbox failures without mutation.
+- Found no post-launch customer interaction and no post-launch outbox failure; retained PUBLIC unchanged. No documentation-only release commit is required beyond this new evidence record.
+
+## 2026-10-27 (GFS-259 authorized PUBLIC COD)
+
+- Verified the newer genuine COD_PENDING acceptance: PKR675 total, PKR125 once, no receipt/PAID, one confirmation, and DO NOT SHIP.
+- Uploaded PUBLIC-mode API `089f5671…`, passed 0%-traffic health/unsigned-webhook smoke, and promoted it to100%. The prior repaired TESTER_ONLY API remains0%; COD-OFF rollback retained.
+- Final checks pass:283/283, build, lint, audit0, rollback4/4. No unsolicited post-switch customer traffic was generated.
+
+## 2026-10-27 (GFS-258 live retry gate)
+
+- Rechecked the preserved conversation and active runtime through official MCP/Admin and read-only API boundaries. No new inbound arrived; no customer/order/payment mutation was made.
+- Kept repaired API TESTER_ONLY at100%, PUBLIC disabled, and COD-OFF rollback retained. Remaining action is one authenticated tester tap on the existing Place Order button.
+
+## 2026-10-27 (GFS-257 review-to-payment repair)
+
+- Traced the genuine Place Order event to a Meta HTTP400 caused by an overlong COD reply-button title.
+- Added a valid short COD button label and duplicate-safe retry recovery; corrected and published Review EN/UR Place Order copy.
+- Uploaded and promoted API `4d218abf…` in controlled TESTER_ONLY mode after 0%-traffic health/unsigned-webhook smoke. PUBLIC remains withheld pending one genuine tester retry.
+- Verified focused79/79, full283/283, build, lint, audit0, and rollback4/4. No migration or customer/payment-history mutation.
+
+## 2026-10-27 (GFS-254 final public gate)
+
+- Rechecked current tester evidence and runtime identity/health. The existing genuine JazzCash receipt-review interaction predates the payment-copy deployment; no newer inbound exists.
+- Held PUBLIC at the safety gate. No traffic, D1, order, payment, Meta or secret mutation occurred.
+
+## 2026-10-27 (GFS-253 payment-choice copy)
+
+- Updated only the payment-selection EN/UR copy and COD button label to include the audited PKR125 cash-collection fee and `(COD)`.
+- Focused78/78, full282/282, build, lint, offline audit and rollback4/4 pass. Uploaded candidate `a5722925-650c-42db-bc75-a8c3242e8a4b`, smoke-tested it, and activated it100% TESTER_ONLY.
+- A genuine newer tester Advance interaction reached pending JazzCash receipt review without PAID. It predates this deployment; PUBLIC remains withheld pending fresh post-deploy acceptance.
+
+## 2026-10-27 (GFS-252 final Advance gate)
+
+- Checked Admin Test Controls first; no newer tester-originated continuation was present. Reverified Admin/COD preflight without changing traffic or customer data.
+- Held PUBLIC because the authorized tester device is unavailable for genuine Advance-method and COD-to-Advance verification. No synthetic inbound or fake payment evidence was used.
+
+## 2026-10-27 (GFS-251 public gate hold)
+
+- Reverified official MCP, Cloudflare identity, API/Admin runtime health, signed-webhook rejection and current TESTER_ONLY traffic without changing deployment state.
+- Held PUBLIC because the approved tester's authenticated WhatsApp device is not exposed for a fresh Advance regression and COD-to-Advance pre-confirmation check. No synthetic inbound or unrelated Web profile was used.
+
+## 2026-10-27 (GFS-250 polished COD flow)
+
+- Replaced the COD quote with a dynamic seeds-first itemized summary in EN/UR: item rows, D1 Delivery Fee, audited COD Cash Collection Fee and TOTAL PAYABLE ON DELIVERY. Removed the misleading Advance-total wording.
+- Added safe handling for stale Advance buttons after COD confirmation and simplified COD Check Order status text without courier/remittance internals.
+- Focused tests, full **282/282**, build, lint, offline audit and rollback **4/4** passed. No D1 migration or customer data write was performed.
+- Uploaded and activated API `ba15b8ba-e3b3-4581-9b23-c2e688797132` at100% TESTER_ONLY; retained prior API and COD-OFF versioned rollback. PUBLIC remains off.
+
+## 2026-10-27 (GFS-249 controlled TESTER_ONLY activation)
+
+- Provisioned the approved tester secret through supported protected controls without recording its value; restored the unexpected auto-promoted secret version and uploaded current HEAD with preserved secrets/bindings.
+- Promoted API `64594da5-6a97-4167-835f-cbd5987bd876` in TESTER_ONLY mode and Admin `615e1156-2747-457a-8623-11d1e967f911` for controlled staging. Retained API COD-OFF `2500e268-8985-4fd4-a141-68633f16315d` as rollback; public mode untouched.
+- Enabled the audited D1 COD policy at PKR125. A real signed START reached the tester conversation's LANGUAGE state. No COD order, payment, shipment or PAID transition was created.
+- Acceptance remains paused for the tester's own language reply; no synthetic inbound or unrelated Web profile was used.
+
+## 2026-10-27 (GFS-248 three-state rollout and fresh candidates)
+
+- Added fail-closed `OFF` / `TESTER_ONLY` / `PUBLIC` COD rollout mode and tests. Final local gates: focused78/78, full281/281, build/lint/audit0.
+- Uploaded fresh API `83e82edf…` and Admin `615e1156…`; staged each at0% beside original v90/v82 at100%. Version-targeted API/Admin smoke passed; D1 integrity/COD0030/fee125 passed read-only.
+- Protected tester-secret provisioning stopped at the host privacy boundary; no clipboard workaround, policy enable, traffic promotion, customer mutation or public activation. Genuine acceptance remains blocked.
+
+## 2026-10-27 (GFS-247 tester-only COD admission)
+
+- Added fail-closed tester-only COD admission using normalized inbound identity and protected runtime secret `COD_TESTER_WA_ID`; cooldown exemptions no longer imply COD eligibility.
+- Added focused coverage for identity normalization, non-tester Advance-only behavior and missing-secret denial. Focused 76/76 and full279/279 pass; build/lint/offline audit pass.
+- No migration, D1, deployment, traffic, secret, Meta, WhatsApp or customer mutation. Live tester acceptance remains blocked pending precise staging authorization, supported secret provisioning and genuine tester-originated inbound.
+
+## 2026-10-27 (GFS-246 final staging readiness)
+
+- Reused the existing owner-approved tester registration; no duplicate registration/reset or source change.
+- Revalidated by read-only Wrangler: GFS account identity and API/Admin deployment history keep originals v90/v82 at100% and candidates `48d4c590…` / `091f1a3f…` at0%; COD remains off. API/Admin dry-runs bind the expected existing staging resources.
+- Full276/276, focused signed-callback/Advance/COD100/100, actual V1 rollback harness4/4, build/lint/audit0 pass. Prior GFS-242 D1 health/COD0030 evidence reused, not reapplied.
+- Confirmed COD admission is global, not tester-restricted. Live signed event, Advance customer checkout, remote rollback and real COD acceptance remain blocked on official browser/tool exposure and genuine tester-initiated inbound. No messages, WAMIDs, orders, dashboard mutations or traffic promotion.
+
+## 2026-10-27 (GFS-245 approved tester present)
+
+- Verified the explicitly approved customer already exists in supported Admin Test Controls; no duplicate registration or history mutation was performed.
+- Reaffirmed canonical Meta sender authority and excluded the unrelated WhatsApp Web profile. Awaiting a real tester-initiated inbound message; no simulation or live deployment occurred.
+
+## 2026-10-27 (GFS-244 tester resolution stop)
+
+- Reverified Admin tester registration, canonical Meta sender, Cloudflare identity and original-only traffic. The available WhatsApp Web profile still matched neither supplied identity; no account switch, registration, message or runtime mutation occurred.
+- Preserved COD-OFF candidates at0% and originals at100%; live acceptance remains blocked.
+
+## 2026-10-27 (GFS-243 tester verification gate)
+
+- Privately matched the supplied customer to the existing Admin tester entry and the supplied receiver to the connected canonical GFS sender asset. The available WhatsApp Web owner profile did not match either; no message or identity mutation was made.
+- Rechecked staged API/Admin health through supported version overrides; original-only traffic and COD-OFF state were preserved.
+
+## 2026-10-27 (GFS-242 authorized COD0030 and candidate repair)
+
+- Applied only reviewed COD0030 to original staging D1 after checksum, Time Travel, schema, aggregate-preservation and integrity checks. Marker0030 exists; COD remains disabled; no legacy migrations replayed.
+- Diagnosed a post-migration Admin health false result as candidate absence from the current deployment, re-staged the existing candidate at0% with v82 at100%, and retested `paymentConfigured=true`.
+- Revalidated API health200/unsigned403, full276, build/lint/offline audit and rollback4/4. COD activation and real WhatsApp testing remain held for running Advance/signed callback and private tester identity confirmation.
+
+## 2026-10-27 (GFS-241 COD-OFF staging)
+
+- Staged API candidate `48d4c590-5a2a-4447-a0c8-b163c0ae93fe` at0% with v90 at100%; verified COD OFF, candidate health200 and unsigned webhook403 through the supported browser version override. Existing Admin candidate remains0% with v82 at100%.
+- Revalidated full276, build, lint, offline audit and rollback4/4. No source repair or customer/D1/Meta mutation.
+- Stopped before remote COD0030, `COD_V1_ENABLED=true`, traffic promotion and WhatsApp messaging because prior approval does not cover those mutations and the registered tester remains mismatched.
+
+## 2026-10-27 (GFS-240 Chrome bridge recovery and Admin health smoke)
+
+- Recovered the official Chrome DevTools MCP in one native approved Codex session; same-session `list_pages`, authenticated Admin and Cloudflare snapshots passed with the expected account identity and Access protection.
+- Uploaded Admin candidate `091f1a3f-595b-4530-b54a-d7253af60664`, tested it at0% beside v82 at100% through the supported version-override header, and observed HTTP200 `/health` with `paymentConfigured=true`. Version URLs stayed disabled.
+- Restored original Admin v82 alone at100% and verified deployment history. No customer, D1, migration, Meta or WhatsApp mutation.
+- Re-ran targeted124 and rollback4 checks: PASS. Live signed callback, Advance customer checkout and genuine WhatsApp COD remain unclaimed because the registered tester profile is still unavailable/mismatched.
+
+## 2026-10-27 (GFS-238 Admin smoke preflight stop)
+
+- Verified requested PR11 worktree/head and official Codex 0.164.0 host registration. Current Kilo session has no callable Chrome MCP tools; approved Codex attempts did not reach `list_pages`. No unsupported reconnect, dashboard substitute, or config change.
+- Revalidated health-focused32/32, full276/276, PR10-source rollback4/4, build/lint/audit0 and API/Admin dry-runs. No deployed Admin fix or live health result is claimed; no Cloudflare/D1/Meta/WhatsApp/customer/payment mutation.
+- Updated all protected run records. Next step is the authorized Admin-only zero-traffic smoke after official MCP inventory and visible identity/Access preflight succeed.
+
+## 2026-10-26 (GFS-237 payment health diagnostic repair)
+
+- Fixed pre-existing Admin health dependency on legacy fixed advance. Reuse verified method helper with same-method EN/UR eligibility; preserve existing callers/defaults and ANY-method semantics. No checkout/recipient/QR/receipt/ownership configuration changed.
+- Added32 synthetic health/eligibility/Access/privacy regression cases;26 failed before fix, all pass after.145focused/276full/build/lint/audit0/V1harness4/COD-off dry-runs pass.
+- Authenticated boolean-only original-D1 diagnostics show all three methods eligible despite old health false; corrected prior configuration-restoration claim. Current integrity/FK/ledger and recovery pass, COD0030 unapplied.
+- User approved a scoped staging behavior-based compatibility alternative. Separately approved repaired Admin0% smoke stopped before upload at unavailable MCP inventory; no traffic/schema/setting/Meta change or live test.
+
+## 2026-10-26 (GFS-236 0%-traffic runtime smoke)
+
+- Uploaded PR11 API v91/Admin v83 as COD-off versions, tested them only at0% with public Version URLs disabled, then restored original API v90/Admin v82 to sole100% deployments. No live route promotion, source edit, DB write/migration or Meta event.
+- API v91 health200/unsigned webhook403; Admin v83 Access health200, paymentConfigured=false. This blocks claiming Advance ready.
+- Full244/focused128/V1 harness4/build/lint/audit0 pass. Tester mismatch remains; no live test/WAMIDs/order.
+
+## 2026-10-26 (GFS-235 source provenance and tester gate)
+
+- Read-only history provides active API v90/Admin v82 timestamps/ETags but no SHA; both predate PR10 commit. Dashboard source retrieval unavailable; no edit/deploy. This proves a source-provenance gap, not a specific runtime defect.
+- Candidate webhook-signature path unchanged; receipt/outbox/COD diffs pass focused122/full244, V1 harness4, build/lint/audit0 and dry-runs.
+- Prior tester mismatch remains; no recheck/message. No D1 migration, flag or Worker mutation.
+
+## 2026-10-26 (GFS-234 clean D1 works; original reads recovered)
+
+- Created separately approved synthetic-only diagnostic D1; SELECT1, schema-only V1 baseline + COD0030, quick/FK, same-order SQL persistence, replay and DO NOT SHIP checks pass. No V2 schema/customer export, Worker binding or Meta change.
+- User-authorized bounded original-D1 comparison now passes SELECT1, quick/FK and all63 expected V1 definitions; original empty migration ledger untouched. Historical API7403 cause remains unknown and is not reproduced; technical support ineligibility never implied corruption.
+- Admin Access matches and Test Controls is available. After owner opened Profile and approved recheck, tester MISMATCH remains; no WhatsApp message/live order. Active deployed-source download failed; no rollout.
+- Full244/focused27/V1 harness4/build/lint/audit0/dry-runs pass; public health200,unsigned webhook403,unauthenticated Admin302. Registered diagnostic resource/review deadline, safe single-DB decision and public escalation routes. No application source/runtime change.
+
+## 2026-10-26 (GFS-233 support eligibility and MCP recovery)
+
+- One approved same-execution Chrome MCP `list_pages` succeeded and reached Cloudflare Support. A subsequent fresh exec again lacked the tool; intermittent session exposure remains.
+- Cloudflare Free Support rejected D1 API7403 for `getfreeseeds-staging` as ineligible; no case/reference, D1 query, scope or account change. Owner-side eligible support/paid-plan route required.
+- Refreshed actual API v90/Admin v82 deployment history and API/Admin dry-runs; no deploy. Focused27/full244/V1 rollback4/build/lint/audit0 pass. No live WhatsApp evidence.
+
+## 2026-10-26 (GFS-232 activation preflight)
+
+- Fresh Wrangler identity/account check passed with `d1:write`; D1 was not queried. Codex0.164.0 official Chrome MCP is configured/enabled and doctor healthy, but approved execution did not expose `list_pages`; no support case/reference. No scope or identity change.
+- Prior Test Controls UNAVAILABLE/own-Profile mismatch remain; no further checks, message, deploy, migration, flag or real order. Local focused27/full244/rollback4/build/lint/audit0 pass.
+- No application code changed. Seven reports track the exact MCP/session recovery step and live blockers.
+
+## 2026-10-26 (GFS-231 hard-gate preflight)
+
+- Official page inventory succeeded after a transient list timeout. Cloudflare dashboard identity was not visible, so no support ticket/navigation; no case reference. D1 was not retried.
+- Broad Orders-page snapshot was rejected for PII risk. After explicit approval, the same Admin tab navigated to `/test-controls`; scoped tester/exemptions read returned UNAVAILABLE, so the agent stopped before WhatsApp Profile. No chat/message; prior own-Profile mismatch remains. Live COD/advance journey not run.
+- Source unchanged; no staging or operational mutation. GFS-230 local test results remain last valid regression evidence.
+
+## 2026-10-26 (GFS-230 priority staging gate recheck)
+
+- Official Chrome MCP page inventory recovered (11 existing tabs); prior tester mismatch remains a hard no-send stop. Admin Access identity is matched; Meta operator remains unverified.
+- Read-only Wrangler metadata confirms current API v90/Admin v82 but no source SHA. Test Controls auto-loaded exemptions and returned UNAVAILABLE; no direct Wrangler/raw D1 query or subsequent retry. No migration, deployment, secret/flag change, order, screenshot or WAMID. The approved Cloudflare owner/support D1 diagnosis remains pending.
+- Focused27/full244/rollback4, build/lint/audit0 and API/Admin dry-runs pass; local candidate COD remains false and no live acceptance is claimed.
+
+## 2026-10-26 (GFS-229 access diagnosis and local revalidation)
+
+- Fresh approved-review Codex 0.164.0 execution listed existing tabs and performed narrow identity checks: Admin Access match, Cloudflare account ID visible/email unavailable, GitHub UI absent/CLI gardenshop, Meta operator unavailable, canonical WABA/sender visible in WhatsApp Manager, tester Profile mismatch. No navigation, message, or mutation.
+- Wrangler verifies the expected GFS account and `d1:write`; historical API7403 remains an unresolved D1 resource/API authorization issue. No retry, scope change, identity switch or external write.
+- Revalidated PR #11: focused COD 27/27, full 244/244, clean V1-source rollback 4/4, build/lint, production audit0, API/Admin dry-runs. Candidate remains COD OFF; no migration, deployment, secret, order, WAMID or screenshot.
+- Updated release status and mandatory stop criteria; staging remains blocked.
+
+## 2026-10-26 (GFS-228 scope simplification)
+
+- Simplified COD Admin settings to an audited toggle and fixed PKR125 fee; COD_PENDING intake no longer requires collection/remittance references or collection HMAC.
+- Preserved audit revision, province quote, same-order COD_PENDING, no advance receipt/QR/outbox/reminder, DO NOT SHIP and separate verified-cash settlement gate.
+- Focused100/full244, build/lint/audit0, dry-runs passed; source `046426e` pushed to PR #11. Staging remains blocked by D1 API7403/ledger, source parity, Chrome/tester/Meta identity.
+
+## 2026-10-26 (GFS-227 final gate)
+
+- Reconfirmed Admin Access identity from GFS-226; fresh Chrome MCP page listing failed twice, so tester/Meta checks were stopped without retry or send.
+- Official D1 schema query returned API7403 for the expected account/database. No scope widening, account switch, data export, migration or deploy.
+- Focused100/full244, build/lint/audit0, API/Admin dry-runs pass locally; live staging and COD remain unaccepted. Updated all required GFS-227 reports/protocols.
+
+## 2026-10-26 (GFS-226 Access identity follow-up)
+
+- Verified staging Admin Cloudflare Access identity via the exact same-origin `get-identity` endpoint: expected email and hostname matched; no identity JSON/JWT retained.
+- New Chrome MCP session failed list_pages twice. Stopped without retry; approved tester/Meta operator comparison remains blocked; no message/order.
+- Reconfirmed active Worker source parity and D1 clone/empty-ledger blockers. No migration, secret, policy, Worker or customer mutation. Local 244-test and build/security results remain valid.
+
+## 2026-10-26 (GFS-225 activation blockers)
+
+- Confirmed Codex 0.164/MCP approved-review access and Cloudflare identity; Admin header identity, GitHub browser login, Meta operator, phone link and authorized tester remain unverified/mismatched.
+- Read-only active API health GET returned 200/service only, without deployment/COD/D1 state. No source parity claim.
+- Reconfirmed empty D1 migration ledger, populated schema, clean quick/FK, available Time Travel, no D1 clone/fork support. Idempotent COD 0030 remains unapplied; no bulk replay or ledger fabrication.
+- No API/Admin/Meta/D1/secret/test-order mutation, live WAMID, screenshot, or public launch. Candidate remains COD disabled.
+
+## 2026-10-26 (GFS-224 bridge repair and D1 safe fallback)
+
+- Updated official Codex CLI 0.147→0.164, diagnosed prior MCP cancellation, and performed approved read-only service checks. Cloudflare identity matches; GitHub CLI matches, UI does not; Meta operator/tester and Admin header identity remain unverified.
+- Verified remote API/Admin versions and legacy D1 metadata. The D1 ledger is empty although legacy tables exist; all Wrangler migrations appear pending. D1 quick/FK checks pass. Official Cloudflare docs confirm no clone/fork; Time Travel restore is destructive in-place. Schema-only export failed auth, no data copied.
+- Converted COD 0030 to an idempotent COD-only sidecar marker that preserves `d1_migrations`, with populated-schema/replay/empty-ledger regressions. Still unapplied pending source parity and backup-clone/equivalent.
+- Full test/build/lint/audit/dry-run validation passed; COD flag false. No Worker/migration/secret/Meta/message/order change; live WAMID/screenshot none.
+
+## 2026-10-26 (GFS-223 staging preflight)
+
+- Diagnosed Chrome MCP `user cancelled`: previous CLI used `approval_policy=never` for an evaluator marked potentially mutating. Fresh approved-review mode exposed/listed pages and sanitized existing-tab inspection without bypass.
+- Verified only GitHub/Cloudflare CLI identities; no service UI tab for Cloudflare/GitHub/Admin. Meta canonical WABA absent from tabs, tester match false.
+- Verified read-only Worker versions and shared D1 binding. Remote D1 integrity passes and a Time Travel bookmark is available, but `d1_migrations` has zero rows and Wrangler shows all migrations pending against populated legacy schema. Do not replay; do not apply COD migration.
+- No live source-parity proof, HMAC binding, courier record, migration, deploy, WhatsApp test, order or production change. Candidate source remains fail-closed.
+
+## 2026-10-26 (GFS-222 release-defect repair and acceptance boundaries)
+
+- Reproduced undisplayed COD fee changes and disabled-province admission with two failing diagnostic tests before source repair.
+- Added populated V1 migration/schema/history preservation, safe replay-failure and migration-transaction rollback checks; corrected Admin test adapter to model atomic D1 batches and injected audit-write failure rollback.
+- Added `npm run test:rollback:v1` to exercise actual unchanged V1 API/Admin source against synthetic retained COD schema. This is not a remote Worker rollback or full old-V1 COD compatibility claim.
+- Repaired quote/revision/province admission, advance/COD race-loser side effects and conversation CAS, policy-disable historical reconciliation, duplicate/stale financial audits, staging DO NOT SHIP enforcement, and inherited advance delivery/QR retry defects. Same-event failed confirmation now recovers the persisted reply without repeating financial writes.
+- Source `bf3a231` pushed to PR #11; migration blob `4993557afd135c7cb778f565b95ca95eb4431ffd` remains unapplied. Clean-install validation: focused124/full244, baseline176 and old-source rollback4; build/lint/online audit0 and both Wrangler dry-runs pass.
+- Recorded continued staging-only authority and exact MCP blocker: page listing succeeded, but authenticated read-only snapshot/DOM checks were canceled. No external migration/deployment/secret/policy/message/order change or production promotion.
+
+## 2026-10-25 (GFS-221 V1-compatible COD candidate)
+
+- Added a separate V1 compatibility branch from PR #10 source base `cf01f44`; source commit `0ce3dac` implements COD choice, bilingual itemized quote, same-order COD_PENDING confirmation, Admin fulfillment/reconciliation and fail-closed financial guards.
+- Added `0030_cod_v1_compat.sql`, strictly additive COD-only schema/triggers; no shared migration was applied. Candidate retains original advance amount/history and explicitly sets staging COD runtime flag false.
+- Focused COD/advance suite 42/42 and full suite 186/186 pass; build, lint, zero-vulnerability offline audit, API/Admin Wrangler dry-runs pass. Synthetic-only/local evidence.
+- MCP config/doctor passed and fresh Codex CLI exposed `list_pages`; subsequent authenticated Cloudflare navigation was canceled. No account/binding/Meta/courier record or live tester was verified; no secret, migration, deploy, rollback, message or order mutation.
+- No production promotion or PR #9 merge. Independent operational preflight and live acceptance remain blocked.
+- Pushed source/docs to the separate GFS compatibility branch and opened stacked review PR #11 against the V1 PR #10 branch.
+
 ## 2026-10-24 (GFS-209)
 
 - Completed a real V1 receipt E2E. A first new sticker was correctly classified as `MESSAGE` and ignored. A distinct, clearly labeled JPEG photo replying to the target Easypaisa instruction was classified `MEDIA`, persisted to private R2/D1, and appeared in the authenticated Admin Receipts preview.
@@ -728,3 +1919,669 @@
 - GFS-46 verified native customer WhatsApp data `+923034901810` from the canonical Form lead and added E.164 normalization tests. It remains recipient data, never the GFS sender `+923328883383`.
 - GFS-46 added a safe deferred `WHATSAPP_ORDER_CONFIRMATION` outbox reference after durable lead/order persistence; OTP/App-WABA/provider gates defer it, and payment remains blocked without Garden Shop configuration.
 - GFS-47 separated customer-entered contact and Meta auto-fetched WhatsApp numbers in D1, added E.164 normalization/priority/fallback tests, rejected sender/old CTA recipients, and deployed API `97c038d1-6382-4a3e-9509-2ad2005472b9`. No WhatsApp send was attempted.
+
+## 2026-10-27: GFS-264 Secure References, COD Hold Repair, and Two-Choice Checkout
+
+- Recovered reviewed GFS-263-compatible changes into writable PR#11 without overwriting the read-only V2 checkout.
+- Added opaque cryptographic customer references with bounded collision retry and private daily Admin sequence columns; historical references remain unchanged.
+- Added trusted public/test COD classification, additive audited hold release, and retained fail-closed test holds and collection/remittance controls.
+- Reduced the new guided path to review-time Advance/COD choice while retaining stale-button compatibility and one provisional order.
+- Local gates: 290/290 tests, build, lint, rollback 4/4 PASS. npm audit endpoint BLOCKED. No live mutation or deployment performed.
+
+## 2026-10-27: GFS-265 Protected Release Recheck
+
+- Repaired the deployment candidate’s stale COD-OFF vars to preserve `COD_V1_ENABLED=true` and `COD_ROLLOUT_MODE=PUBLIC`; updated the corresponding regression assertion.
+- Re-ran full290/290, focused121/121, build, lint, Worker dry-runs, diff-check, and rollback4/4. Audit remains blocked by registry endpoint failure.
+- Completed isolated targeted 0035/0036 rehearsal and read-only live D1/runtime checks. No live migration, deployment, hold release, customer message, receipt, or financial mutation was made because supported OAuth/recovery gates were unavailable.
+## 2026-10-27 — GFS-266
+
+- Simplified Admin Advance payment review to one prominent `Confirm PAID` action while retaining secure settlement and audit guards.
+- Reused saved transaction references and hid duplicate Save/Request controls after a reference exists; COD remains excluded.
+- Confirmed locally that missing settlement evidence is rejected and the payment remains under review.
+- Recorded live P0 evidence as REVIEW/no approval because independent receiving-account settlement proof was unavailable. No live D1, Worker, traffic, receipt, customer-message, or financial mutation was made.
+
+## 2026-10-27 — GFS-266 live release completion
+
+- Restored supported Wrangler OAuth, recorded a D1 Time Travel bookmark, and applied targeted 0035/0036 statements after rehearsal; integrity checks passed.
+- Staged 0% smoke and promoted API `24d72438…` and Admin response-fix `cd155f20…` to 100%, retaining prior versions at 0% rollback. PUBLIC COD and Advance configuration remained intact.
+- Released one verified genuine public COD hold through the authenticated audited workflow; the order remains unpaid COD_PENDING and six other COD rows remain held.
+- Repaired false conflict reporting after trigger-backed COD release by re-reading authoritative D1 state. The cited Advance payment remains REVIEW because settlement proof is missing.
+
+## 2026-10-27 — GFS-267 Admin Orders HTTP500 repair
+
+- Correlated `/api/orders` HTTP500 to D1 free-tier daily row-read limit code7500.
+- Added a narrow list projection and structured JSON503 failure path; no fake counts or financial mutations.
+- Regression: focused6/6, full291/291, build, lint, rollback4/4. Candidate `92955132` is staged0%; active `cd155f20` remains100% pending quota recovery.
+
+## 2026-10-27 — GFS-271 D1 query-cost investigation
+
+- Captured read-only Cloudflare D1 usage and Query Insights without production SQL probes.
+- Identified the dominant legacy Admin list projection (77 calls, 3.29M rows) and mapped remaining high-cost families to webhook status and WhatsApp content paths.
+- Verified migration0037/index plans and synthetic 20/50/100/1,000-order behavior locally. Live before/after rows-read and release smoke remain blocked by the exhausted daily quota.
+
+## 2026-10-27 — GFS-273 optimized Admin release
+
+- Verified Paid D1 capacity and applied the existing indexed Admin release without replaying migration0037.
+- Authenticated version-override smoke proved candidate `66426d2a` handled Orders, Payment Settings, payment methods, and detail; promoted it to 100% with `cd155f20` retained at 0% rollback.
+- Measured Orders list cost at ~50 rows/request (300/6) versus historical ~42.9k/request (3.43M/80). Added targeted migration0038 provider/status index for the measured outbound update scan; EXPLAIN confirms index usage.
+- Regression: focused104/104, full292/292, build, lint, rollback4/4. No customer, payment, receipt, COD hold, fulfillment, webhook, or WhatsApp mutation.
+
+## 2026-10-28 — GFS-279 reminder recovery + COD fallback
+
+- Recovered the compatible V2 reminder engine with +15/+30/+60/+210/+240 stages and removed the legacy +270 cancellation path.
+- Added explicit Confirm COD / Keep Advance / Cancel Order handling with PKR125 exactly-once safeguards, consent audit, reminder stop, Queue retry/idempotency, opt-out, locale/template/window, and delivery-status gates.
+- Added Admin Payment Reminders CMS/timeline endpoints and additive migrations 0039/0040. Local focused tests 10/10, full tests 302/302, build, lint, offline audit, rollback4/4 passed.
+- No live migration, template publication, reminder send, WAMID, COD conversion, or deployment was performed; GitHub authentication and release gates remain blocked.
+
+## 2026-10-28 — GFS-280 push and safe activation gate
+
+- Restored the supported `gardenshop` Git Credential Manager identity and pushed the existing reminder branch; added a narrow locale/consent payload repair in `02231cb`.
+- Utility template names are now persisted from the migration and future Admin drafts. Meta sends preserve `en_US`/`ur` and +240 sends carry the three consent payloads.
+- Local verification is 303/303 with build, lint, offline audit, Worker dry-runs, and rollback4/4 passing. No live migration, deployment, send, WAMID, or COD conversion was performed.
+- Two canonical GFS Utility templates are In review; no template is approved. Production activation remains NO-GO.
+
+## 2026-10-28 — GFS-281 strict 24-hour-only reminders
+
+- Removed the reminder queue’s Meta utility-template fallback and kept `PAYMENT_UTILITY_TEMPLATES_APPROVED=false`.
+- Added service-window checks at schedule creation, due-stage claiming, and immediately before provider send. Missing or expired inbound identity/timestamps permanently block the schedule and prevent backlog delivery.
+- Kept the existing five stages, local CMS EN/UR copy, +240 explicit COD consent, PKR125 fee guard, opt-out, and no-silence-conversion safeguards.
+- Reverified Workers Paid and Cloudflare identity. Production D1 marker/integrity query remains blocked by the documented safety gate; no migration, deployment, template mutation, or customer send occurred.
+
+## 2026-10-28 — GFS-282 D1 gate diagnosis and release hold
+
+- Verified `gisupp@gmail.com`, Get Free Seeds, Workers Paid, the production D1 binding, and read-only Studio schema visibility.
+- Recorded that the bounded marker query was rejected before execution by the local/tool over-quota safety gate requiring owner capacity approval; no alternative path was used.
+- Kept migrations0039/0040, candidate deployment, reminder flags, Cron/Queue activation, customer sends, WAMIDs, delivery claims, and COD conversions unchanged and unclaimed.
+- Local strict-window quality remains green: 309/309, build, lint, offline audit 0 vulnerabilities, rollback4/4.
+
+## 2026-10-28 — GFS-284 owner-approved D1 preflight
+
+- Executed one bounded, read-only preflight against production `getfreeseeds-prod` under explicit owner authorization.
+- Verified identity/Paid/WABA, pre-reminder schema, absent reminder/COD sidecar/ledger objects, zero trigger rows, `quick_check=ok`, empty FK check, and an existing protected Time Travel bookmark.
+- Did not create a bookmark, apply migrations, deploy Workers, change flags, send reminders, or mutate customer/payment/COD state. Migration readiness is held on the production schema/binding mismatch.
+
+## 2026-10-28 - GFS-285 binding and Admin safety repair
+
+- Verified active API/Admin Worker provenance and corrected the authoritative D1 identity to staging UUID `17b7e9f6-e08b-4bff-a756-10de30b49ab1`; the production-name database was not touched.
+- Hardened the active Admin page builder so any legacy direct payment approval button is disabled; settlement confirmation remains the only approval path and sends both required backend fields.
+- Added truthful reminder-schema failure handling with `REMINDERS_NOT_DEPLOYED` instead of an empty timeline when the deployed schema/route is absent.
+- Performed bounded Admin aggregate reads only: 125 total, 8 review, 2 approved/paid, 45 fulfillment; no customer data was stored. No live payment approval, migration, deployment, activation, send, WAMID, or COD conversion occurred.
+
+## 2026-10-28 - GFS-286 diagnosis and sends-off release
+
+- Identified the active D1 by API/Admin binding evidence, not the database name; preserved the production-name database untouched.
+- Audited the unpaid Advance funnel using bounded aggregate evidence and repaired Admin visibility with payment-stage filters/counts and truthful instruction-delivery status. Settlement approval remains evidence-gated.
+- Applied migrations0039/0040 once to the verified active D1 after rehearsal; repaired and reconciled the missing 0039 custom marker. `quick_check=ok` and FK check empty.
+- Smoke-tested API/Admin candidates through Cloudflare 0%-traffic version overrides, promoted API `8e670de8` and Admin `c2e87231` to 100%, retained prior versions at 0%, and attached the API minute Cron plus Queue producer/consumer.
+- Kept `PAYMENT_REMINDERS_V2_ENABLED`, `PAYMENT_AUTOMATION_V2_ENABLED`, and `PAYMENT_UTILITY_TEMPLATES_APPROVED` false. No post-promotion eligible recipient existed; no reminder schedule, send, WAMID, delivery, COD conversion, or historical replay was performed.
+- Quality gates passed: full 310/310, build, lint, offline audit 0 vulnerabilities, and rollback4/4.
+
+## 2026-10-28 — GFS-287 clean checkout and new-order reminder activation
+
+- Simplified the contact-stage WhatsApp response to one dynamic bilingual order summary with one total and a short configured COD-fee disclosure.
+- Simplified COD selection to a short consent quote: amount including delivery, COD collection fee, total on delivery, and existing Confirm COD Order / Advance Payment buttons.
+- Published all 10 existing internal reminder CMS copies through the authenticated Admin UI; utility approval remains false and no Meta templates were created.
+- Uploaded/staged and then promoted API `7b662e0d`; enabled only the two reminder flags for new eligible Advance orders. Preserved API rollback `8e670de8` at 0% and Admin `c2e87231` unchanged.
+- Verified active D1 schema/markers/integrity and aggregate state: zero schedules, stages, reminder outbox jobs, WAMIDs, and delivery events; zero orders created after activation. No live send or delivery is claimed.
+- Quality gates: focused 104/104, full 310/310, build, lint, offline audit 0 vulnerabilities, rollback4/4.
+
+## 2026-10-28 — GFS-288 emergency WhatsApp restore / freeze
+
+- Performed bounded read-only incident diagnostics across the active API, D1, Admin reminder timeline, Cloudflare deployment view, and canonical Meta activity view.
+- Kept API `7b662e0d` at 100%, rollback `8e670de8` at 0%, and Admin `c2e87231` at 100%; no rollback, deployment, traffic, schema, order, payment, or customer mutation.
+- Recorded incident-window aggregate evidence and Admin reset overlap without storing customer identifiers, screenshots, secrets, or uncorrelated WAMIDs.
+- Reconfirmed five stages, strict 24-hour service-window policy, no +270 cancellation, explicit PKR125 COD consent, and utility-template approval false.
+- Quality: focused 102/102, full 310/310, build/lint PASS; npm audit and rollback4/4 remain environment-blocked as documented.
+
+## 2026-10-28 — GFS-289 emergency WhatsApp restoration
+
+- Authenticated and executed the owner-authorized traffic rollback: API `8e670de8` is 100%, faulty `7b662e0d` is 0%, Admin unchanged.
+- Proved the GFS-287 regression: enabled reminder flags synchronously invoked reminder delivery reconciliation on inbound webhooks, and live D1 rejects its unqualified `status` expression as ambiguous.
+- Qualified target columns, moved reconciliation to Cron, removed it from customer webhooks, and restored deployment defaults to reminder/automation OFF with utility templates false.
+- Verified genuine post-rollback provider delivery/read traffic and conversation progression without creating an order, replaying messages, resetting state, or mutating payments/COD.
+- Quality gates passed: focused 104/104, full 312/312, build, lint, audit0, rollback4/4.
+
+## 2026-10-28 - GFS-298 bilingual confirmation candidate
+
+- Added safe `{codFee}` CMS placeholder validation/rendering and the exact EN/UR confirmation fallback.
+- Removed the duplicate hardcoded payment-choice/COD-fee paragraph after confirmation while preserving generated payment buttons and payment/COD safeguards.
+- Uploaded API candidate `c4908cb5` and Admin validator candidate `f0212429`; staged and guarded-tested them without leaving the new API live.
+- Published CMS Confirmation version 4, verified both locales/placeholders, then restored published version 3 to maintain compatibility with the active API baseline while genuine fresh tester acceptance is pending.
+- Quality: focused 103/103, full 316/316, build/lint PASS, rollback4/4 PASS; registry audit unavailable. No order, payment, D1, reminder, Meta, or billing mutation occurred.
+## 2026-10-28 - GFS-299 payment funnel and gated recovery
+
+- Added order-linked `PAYMENT_CHOICE` correlation for future confirmation replies; generic historical conversation rows are not backfilled.
+- Added unapplied migration 0041 and a disabled-by-default, owner-requested 24-hour payment-choice recovery outbox path with eligibility rechecks, idempotency, retries, and permanent window blocking.
+- Added Admin payment-choice status/read-model filtering and a CSRF-protected recovery request endpoint; no live recovery request was made.
+- Read-only Admin evidence: 184 active orders, 67 no-method; no method-level A-G attribution was proven. Reminder flags stayed false/false/false and no WAMIDs were claimed.
+- Quality: focused 117/117, full 316/316, build/lint PASS. Production migration, deployment, recovery sends, and reminder activation remain NO-GO pending separate approval.
+
+## 2026-10-28 - GFS-301 bounded payment-choice recovery
+
+- Added additive 0042 stage storage for exactly +15/+210 recovery, with explicit activation boundary, bounded due claims, service-window blocking, and distinct idempotency keys.
+- Reused the existing Queue path and preserved the original order/payment/COD records; initial `PAYMENT_CHOICE` confirmation no longer falsely suppresses recovery.
+- Added explicit next-action fallback copy with dynamic order amount/COD fee and an explicit recovery-off Wrangler default.
+- Quality: focused 89/89, full 317/317, build/lint PASS; local migration rehearsal PASS. No remote mutation or customer send.
+
+## 2026-10-28 - GFS-302 eligibility repair and bounded release
+
+- Fixed recovery discovery/dispatch to recognize actual no-method `DETAILS_COMPLETED`/`PAYMENT_PENDING` orders and `PAYMENT_METHOD`/`PAYMENT_PENDING` conversations; preserved all payment, receipt, COD, hold, opt-out and 24-hour suppression gates.
+- Added dedicated internal CMS-backed +15/+210 EN/UR stage copy with dynamic placeholders and safe no-COD fallback; five-stage Advance reminders remain separate and OFF.
+- Owner-authorized 0041/0042 applied once to verified D1 `17b7e9f6…`; post-apply integrity and marker checks PASS. Sends-off API/Admin candidates are staged at 0% with protected baseline traffic unchanged.
+- Quality: focused 95/95, full 318/318, build, lint, and diff check PASS. No historical recovery send, WAMID, delivery, payment mutation, COD conversion or billing change. Genuine acceptance remains pending.
+
+## 2026-10-29 - GFS-306 final two-reminder release
+
+- Added privacy-safe Worker version attribution to the webhook completion path and a version-metadata binding; no customer payload, phone, token or raw WAMID is logged.
+- Proved the sends-off API through a bounded 10% canary with genuine candidate-attributed traffic, one handled inbound, and provider-accepted DELIVERED/READ outcomes.
+- Promoted API/Admin sends-off candidates after health, signed-webhook, Orders, CMS and 18-column CSV checks; retained reversible 0% rollback versions.
+- Activated only `PAYMENT_CHOICE_RECOVERY_ENABLED` at `2026-10-28T20:05:20.290Z`. Advance reminder, automation and utility-template flags remain false.
+- Verified two natural post-cutoff orders scheduled exactly +15/+210. Both +15 due-time rechecks suppressed no-longer-eligible customers with zero Queue jobs/messages/WAMIDs; historical stages remain zero. Live reminder delivery remains PENDING honestly.
+- Quality: focused 91/91, full 319/319, build/lint, audit0, D1 integrity and rollback4/4 PASS.
+
+## 2026-10-29 - GFS-307 bounded audit and Admin recovery-status correction
+
+- Audited the three specified orders with bounded read-only D1 evidence; found no missing-send or window defect and performed no catch-up sends.
+- Corrected Admin source so ordinary `PAYMENT_CHOICE` checkout messages cannot masquerade as recovery delivery; exposed recovery stage due/reason/provider-presence fields in the reminder timeline.
+- Verified focused Admin 14/14, full 319/319, build, lint and diff check. Live Admin deployment remains pending guarded authorization; no recovery WAMID is claimed.
+
+## 2026-10-29 - GFS-308 recovery delivery reconciliation
+
+- Audited every post-activation order with bounded read-only D1 queries: 28 orders, 12 scheduled rows per stage, 3 genuine recovery provider acknowledgements, and no overdue eligible no-send.
+- Fixed the narrow delivery reconciliation gap so `PAYMENT_CHOICE_RECOVERY` provider states update their stage rows; ordinary `PAYMENT_CHOICE` remains excluded.
+- Added regression coverage; full 320/320, build, lint and D1 integrity checks pass. No production deployment, backfill, forced send, payment mutation or COD conversion was performed.
+
+## 2026-10-29 - GFS-309 deployed recovery status fix
+
+- Deployed API `b426ba47` and Admin `494a3dce` through 0%-traffic staging and guarded promotion; retained API `9af8991d` and Admin `76e33a3d` as rollback.
+- Moved recovery delivery reconciliation outside the disabled five-stage reminder block so the minute Cron updates recovery stages while Advance reminders remain OFF.
+- Verified D1 stage/provider agreement: READ, DELIVERED and SENT. Focused 93/93, full 321/321, build/lint, rollback4/4 and D1 integrity pass. Authenticated Admin UI screenshot remains unavailable, not claimed.
+
+## 2026-10-29 - GFS-310 stable freeze
+
+- Reverified frozen API/Admin traffic, GFS identities, D1, flags and current post-cutoff audit: 29 orders, no eligible overdue no-send, no recovery-attributed payment conversion.
+- Confirmed +15 READ/DELIVERED and +210 SENT provider-backed stage truth; no Admin source or runtime defect was proven.
+- Recorded the Access/Chrome UI evidence boundary and froze the working release. Full 321/321, build, lint, audit0, rollback4/4 and D1 integrity pass.
+
+## 2026-10-29 - GFS-311 final acceptance audit
+
+- Audited new natural activity: 32 post-cutoff orders, five provider-backed recovery recipients, and no overdue eligible no-send.
+- Measured observed conversion as +15 0/3 and +210 0/2; all recipients remain no-method/PENDING with no receipt or PAID evidence. No causal attribution was claimed.
+- Confirmed Admin routes remain Access-protected without the authenticated Chrome session; visual proof is pending. No source, traffic, flag, payment, or reminder mutation occurred.
+- **2026-10-29 — GFS-312 payment conversion investigation:** Reverified the frozen release and performed bounded, read-only recovery audit. Found 32 post-activation orders, five provider-backed recovery recipients, and observed zero order-linked payment selections after +15/+210. Confirmed no recovery delivery failure or callback defect from available evidence; reran focused callback/state tests 93/93. No source, traffic, flag, payment, order, Meta, or D1 mutation was made. Admin visual and fresh D1 scope remain blocked by unavailable Access/Chrome session and Cloudflare token error 10000.
+- **Quality rerun:** full 321/321, build, and lint passed. Current rollback harness was blocked by missing `GFS_LEGACY_ROOT`; the previously verified rollback4/4 checkpoint remains authoritative and no guessed path was used.
+- **2026-10-29 — GFS-313 diagnostic access and rollback:** Reconfirmed frozen Worker traffic and GFS identity. Validated the documented clean V1 rollback root at `cf01f444` and passed rollback4/4; focused recovery/interactive suites passed 109/109. Exact live D1 eligibility and Admin visual acceptance remain blocked by missing D1 OAuth scope/API10000 and unavailable Chrome DevTools/Access session. No source, traffic, flag, D1, order, payment, Meta, or billing mutation occurred.
+- **2026-10-29 — GFS-314 final access checkpoint:** Attempted official Wrangler reauthentication once; it timed out without changing scopes. Reconfirmed frozen Worker traffic, passed full321/321, build, lint, offline audit0, and rollback4/4 against the trusted V1 root. Exact live D1/Admin evidence remains blocked; no runtime, traffic, flag, D1, order, payment, Meta, or billing mutation occurred.
+- **2026-10-29 — GFS-315 authorized live D1 audit:** D1 scope became available through official Wrangler. Bounded scheduler-join reads found 44 current post-activation orders and resolved exact method-null reasons: 15 `COD_PENDING`, 11 `COD_CONFIRM`, 7 eligible. Recovery stages are provider-backed with no overdue eligible no-send; D1 integrity, markers, templates, and opt-out checks pass. Admin visual proof remains blocked by missing authenticated Chrome/Access connector. No writes, sends, flags, payments, or deployments occurred.
+# 2026-10-30 — GFS-340 analytics accuracy and Admin-only 0% staging
+
+- Corrected analytics labels and semantics: contact metrics are snapshot estimates; conversion is orders/inbound messages; PAID/fulfilled and COD lifecycle are distinct; reminder SENT/provider-accepted, DELIVERED, and READ are separate.
+- Fixed abandonment SQL to exclude customers with any submitted order from PRE_ORDER/ACTIVE and terminal/cancelled orders from POST_ORDER. Added real node:sqlite D1-compatible fixtures for lifecycle, duplicate callback, UTC-boundary, later-activity, and reminder-status cases.
+- Verified full330/330, focused analytics4/4, build/lint/audit0, and legacy rollback4/4. Read-only D1 measurements recorded; migration0044 remains unapplied and its unqueried leads index was removed from the local proposal.
+- Verified `gisupp@gmail.com` / Get Free Seeds account, uploaded Admin-only version `c7e984d1-74a8-47d8-9277-fd7c8b41e329`, and routed it at0% against frozen Admin `494a3dce`100%. API remained frozen; no customer, payment, Meta, D1, migration, or API canary action occurred.
+## 2026-10-30 — GFS-343 Admin canary fail-closed
+
+- Added and tested Admin-only bounded canary support with configurable percentage, API-frozen guard, restoration margin, lock, timeout, and verified final readback. Pushed as `10527d589ad8c5545a4a50be3c2704b951a0ce47`.
+- Authorized Admin 10% candidate checks passed for analytics, CSV, conversations, Orders, payment configuration, and COD configuration. The controller then hit a host control-plane `command_timeout`; restoration was automatic and verified before the cap.
+- Final state remained frozen API/Admin 100%, candidates 0%. No customer, payment, Meta, migration, flag, or API mutation occurred; Admin 100% promotion was not attempted.
+## 2026-10-30 — GFS-344 release-controller repair
+
+- Repaired the Admin-only controller after GFS-343's deployment-status readback timeout: genuine HTTP/GraphQL health is mandatory, command/readback bounds are extended, late remote completion is verified before success, and an unverified rollback retains the lock.
+- Added observability and fault tests: controller13/13, adapter6/6, observability3/3, full334/334, build/lint/audit0, rollback4/4.
+- Host preflight correctly refused exposure because Admin HTTP health was302 without the authenticated Access session. No canary, promotion, customer/payment/Meta action, migration, or flag change occurred. Source is pushed at bd8e59e.
+
+## 2026-10-30 - GFS-345 evening order-decline audit
+
+- Added read-only D1/Cloudflare/Meta correlation evidence. The first abnormal bucket was 17:30Z/22:30 PKT, where inbound events and orders fell together; no webhook, payment-choice, Queue/Cron, Worker, D1, or Admin-display defect was proven.
+- Verified D1/Admin full-date parity 68/68, migration0043 plus ten indexes, quick-check/FK integrity, frozen Worker routing and unchanged reminder policy. No source repair, deployment, canary, D1 write, ad edit, customer send, payment, or flag mutation occurred.
+- Meta hourly attribution remains blocked by unavailable hourly report fields/timezone; active campaign/day delivery is not causal proof.
+
+## 2026-10-31 - GFS-346 Meta/Admin release gate
+
+- Verified official Meta Ads Reporting hourly delivery for 30-Oct and 23-29 Oct in read-only mode. Displayed 22:00-23:00: 581 impressions, Rs30.46 spend, 28 link clicks and 24 messaging conversations; exact UTC mapping remains unavailable because the report exposes `Etc/UTC` on the date control but no authoritative account timezone value.
+- Reverified API HTTP200 and Admin HTTP302 Access from host, authenticated Chrome Admin HTTP200, and genuine Cloudflare GraphQL API28/0 and Admin9/0 samples. No Access bypass, canary or deployment occurred.
+- Recorded bounded D1 counts-only health evidence and retained controller13/13, adapter6/6 and observability3/3. No source change was needed.
+
+## 2026-10-31 - GFS-347 Admin monitoring gate
+
+- Reverified GitHub `gardenshop`, Cloudflare `gisupp@gmail.com`, API/Admin frozen routing and Admin candidate `19188b21` at0%. No production mutation occurred.
+- Checked the supported Cloudflare surfaces read-only. Host Admin remains HTTP302; Chrome Access session remains HTTP200. No Access credential environment binding exists; Worker secret-name list contains only `FLOW_PUBLIC_KEY` and `META_ACCESS_TOKEN`. Canary was not attempted.
+- Meta account overview confirmed the authorized ad account and one active campaign but did not expose the authoritative timezone. Attribution remains PARTIAL. No source repair or general audit rerun was performed.
+
+## 2026-10-31 - GFS-348 Access monitoring gate
+
+- Read-only inventory confirmed the existing staging Admin Access application and owner-email policy. No machine credential, policy, route, Worker, secret, or user authorization changed.
+- Host health remains HTTP302 without Access; authenticated browser health is HTTP200. The bounded Admin canary was not attempted because approved automated monitoring credentials/bridge are unavailable. Live routing and WhatsApp protections remain unchanged.
+
+## 2026-10-31 - GFS-349 Access resolution gate
+
+- Verified `gardenshop` GitHub and Cloudflare `gisupp@gmail.com` account read-only. The available environment has no official Chrome DevTools/Zero Trust connector and Wrangler OAuth has no Access-management scope.
+- No token, policy, route, Worker, customer, payment, Meta, D1, flag, reminder, or traffic mutation occurred. Admin canary remains blocked at the monitoring gate; no source repair was justified.
+
+## 2026-10-31 - GFS-350 Access provisioning gate
+
+- Reverified PR HEAD, GitHub/Cloudflare identities and frozen Admin/API routing read-only. Wrangler OAuth has no Access-management scope and no approved host Access credential is present.
+- GFS-350 token provisioning and Admin canary were not attempted; no production or Access configuration changed. Exact blocker remains official Zero Trust provisioning into approved host secret storage.
+
+## 2026-10-31 - GFS-351 Access permission gate
+
+- Checked available MCP registrations once; no Cloudflare Zero Trust/Chrome DevTools connector is present. A relevant browser connector was discoverable but remains unconnected and unused.
+- Access-management permissions could not be verified or granted. No token, policy, credential transfer, production mutation, or Admin canary occurred.
+
+## 2026-10-31 - GFS-364 Access 403 repair
+
+- Corrected the monitoring smoke-test version override to Cloudflare's structured-dictionary header syntax and added a narrow Service Auth `GET /health` Worker gate using `ctx.access`.
+- Uploaded/deployed the repair at0% beside Admin baseline100%; real protected health, denial, isolation, GraphQL, routing and regression checks passed. No canary or promotion occurred.
+## 2026-10-31 - GFS-365 safety and combined candidate readiness
+
+- Added isolated controller coverage for expired, revoked, unavailable, and recovered monitoring credentials; no active credential was changed.
+- Staged and real-tested combined Admin candidate `4fe564a6-bcd7-4106-82ee-00f7b14c4bec` at0%; baseline and API remain100%. Approval D is requested, not executed.
+## 2026-10-31 - GFS-366 canary stopped safely
+
+- Updated the Admin canary runner to target the verified combined candidate. The approved run failed closed during baseline health preflight before any exposure because baseline Service Auth monitoring was unhealthy; routing remained unchanged.
+## 2026-10-31 - GFS-367 baseline monitor diagnosis
+
+- Confirmed the Admin baseline's HTTP403 is the legacy owner-email authorization gate under Service Auth. No routing or production mutation occurred; canary remains blocked pending a separately approved baseline-compatible repair.
+
+## GFS-368 urgent WhatsApp ordering diagnosis (2026-10-31)
+
+- Performed bounded read-only D1, Admin, Cloudflare telemetry, Chrome DevTools and canonical Meta identity checks; no source or production configuration changed.
+- Verified inbound activity continued after 14:17 PKT, D1/Admin active-order parity at399, latest order timestamp14:17:21 PKT, active checkout snapshots, successful outbound statuses, zero bounded webhook-rejection rows, and GraphQL errors0.
+- Classified the alleged stop as disproven but causal attribution **E / INCONCLUSIVE**; no repair or canary was authorized. Meta hourly values/timezone remain unavailable.
+
+## GFS-369 Admin baseline health bridge preparation (2026-10-31)
+
+- Built and tested a minimal bridge from exact Admin baseline source `901f3f6`, adding only Service Auth authorization for `GET /health`; all other Admin routes retain owner-email authorization.
+- Uploaded version `3bbf5cf6-87d7-47ee-9a2b-17e0165af1e1` without deploying it or changing traffic. Confirmed it is distinct from both serving baseline and combined candidate.
+- Verified focused33/33, bridge full321/321, current full335/335, build/lint/audit0, controller17/17, adapter6/6, observability4/4 and rollback4/4.
+- Live override testing remains blocked until owner-approved 0% attachment to the active deployment; API/Admin routing and WhatsApp remain unchanged.
+
+## GFS-370 Approval E validation and restoration (2026-10-31)
+
+- Temporarily deployed legacy Admin baseline100% plus health bridge0%, validated the exact bridge with authenticated version override, then restored legacy baseline100% plus combined candidate0%.
+- Verified health200 x3, missing/invalid403, monitoring-token isolation, human Admin continuity, GraphQL errors0 and exact routing.
+- Re-ran controller17/17, adapter6/6, observability4/4 and rollback4/4. No source, Access, token, API, WhatsApp, payment, Meta, D1, migration, flag, Queue or Cron change was made.
+- Aggregate-only D1/Admin evidence showed continued inbound/order processing; no customer identifiers or payloads were retained.
+
+## GFS-371 health-compatible Admin baseline activation (2026-10-31)
+
+- Replaced the legacy Admin baseline with tested health bridge `3bbf5cf6`100%, retaining combined candidate `4fe564a6`0% and API baseline100%.
+- Verified direct serving health, Access denial/isolation, human Admin Orders/payment settings, GraphQL telemetry, matched D1/Admin payment/COD/order aggregates and continued WhatsApp inbound.
+- Armed an independent interruption rollback watchdog and disarmed it only after exact serving readback. No rollback was required.
+- No source, API, Access, token, customer, payment, Meta, D1, migration, flag, Queue or Cron mutation was made.
+
+## GFS-372 bounded Admin canary and restoration (2026-10-31)
+
+- Ran one Approval D canary at bridge90% + candidate10% for approximately53 seconds, with an interruption watchdog.
+- Observed candidate-only Analytics/Conversations responses, health/security PASS, GraphQL errors0, Admin/D1 parity and continued WhatsApp inbound.
+- Restored bridge100% + candidate0% before minute6 and independently verified API100%. Customer-flow acceptance remains INCONCLUSIVE because traffic was monitoring-generated.
+
+## 2026-10-31 - GFS-373 authenticated Admin operator acceptance
+
+- Used the existing authorized Chrome session with the supported structured Cloudflare version override to exercise exact candidate `4fe564a6` at0%; no deployment or production traffic changed.
+- Verified read-only Analytics, CSV, Conversations with masking, Orders, Payment Settings, responsive layouts, latency and candidate-versus-bridge version selection. No secrets, cookies, customer identifiers, message bodies or write actions were retained.
+- Recorded the fresh D1/control-plane limitation: Wrangler OAuth was expired/unreachable and GitHub remote readback was unavailable. Full Admin promotion remains pending separate owner approval and fresh control-plane authentication.
+
+## 2026-10-31 - GFS-374 Approval G staged-promotion gate
+
+- Reverified Cloudflare identity, HEAD, current Admin/API routing and approved versions.
+- Stopped before mutation after confirming the bridge returns404 for candidate-only Analytics/Conversations while the candidate returns200. Wrangler percentage deployment exposes no supported session-affinity/path-routing control.
+- No staged Admin promotion, API deployment, customer, WhatsApp, payment, Meta, D1, Access, flag, migration, Queue or Cron mutation occurred. Requested one scoped correction before retry.
+
+## 2026-10-31 - GFS-375 Approval H direct Admin cutover
+
+- Executed the approved direct Admin cutover: candidate `4fe564a6`100%, health bridge `3bbf5cf6`0%; API `b426ba47` remained100%.
+- Armed a detached five-minute Windows rollback watchdog before mutation and disarmed it only after independent final routing and acceptance readback.
+- Verified health/security, Analytics, CSV, Conversations, Orders, Payment Settings, D1/Admin parity, GraphQL45/0, valid inbound states, recovery FAILED0 and zero D1 writes. No API, WhatsApp, customer, payment, Meta, migration, flag, Queue or Cron mutation occurred.
+
+## 2026-10-31 - GFS-376 API acknowledgement release readiness
+
+- Reverified authorized identities and frozen routing: API `b426ba47`100% + `6ef27f02`0%; Admin `4fe564a6`100% + bridge0%.
+- Found and blocked a release regression in uploaded version `b0e883cd`: it contains the acknowledgement repair but omits the serving Cron-only recovery reconciliation.
+- Prepared a local exact replacement from base `901f3f6` with only the GFS-309 Cron patch and acknowledgement patch; config unchanged. Added explicit pre-acceptance Meta timeout fault coverage. Focused6/6, exact-tree324/324, build/lint/audit0 and current PR336/336/control/rollback gates pass.
+- No Worker upload, active-deployment membership, traffic, D1, customer, payment, Meta, migration, flag, Queue or Cron change occurred. Exact upload/0%-attachment/conditional1%-canary approval remains pending.
+
+## 2026-10-31 - GFS-377 Admin desktop view
+
+- Replaced the plain Admin root with a static responsive operations home and added privacy-safe navigation coverage.
+- Verified focused3/3, full337/337, build, lint, and offline audit0. Read-only Chrome checks of unchanged Admin routes across four viewport emulations found no horizontal overflow or console errors.
+- No Cloudflare deployment or production mutation occurred. GFS-376 API replacement remains local-only and approval-gated.
+
+## 2026-10-31 - GFS-378 Admin Orders layout and Refresh
+
+- Diagnosed the live 1675x900 Orders view: 42vh grid sizing stretched the first card and the centered shell produced the reported blank gutter.
+- Repaired the source with a bounded workspace, scrollable content-sized order cards, wider desktop shell, mobile cap, and visible guarded Refresh feedback.
+- Live Refresh reached the changes endpoint with HTTP200; focused checks, full338/338, build, lint, and audit0 passed. No deployment or customer-bearing screenshot occurred.
+
+## 2026-10-31 - GFS-379 Admin UI deployment
+
+- Uploaded and directly activated approved Admin UI version `72cff93f-d589-4046-9bce-45477f53f829`; retained `4fe564a6` as the exact rollback version at0%.
+- Verified protected monitoring, responsive operator routes, bounded Orders layout, visible Refresh result, and `/api/orders/changes` HTTP200 through authorized tools. No private data or secrets were recorded.
+- API stayed `b426ba47`100%; no WhatsApp, Meta, payment, D1, migration, Queue, Cron, or flag mutation occurred.
+
+## 2026-10-31 - GFS-380 Chrome viewport/layout diagnosis
+
+- Reproduced the owner’s narrow Admin homepage as stale Chrome device emulation/host DPR state. Clearing emulation restored the intended desktop dashboard without source or deployment changes.
+- Verified homepage CSS widths1920/1675/1440/1280/768/390/360/320 with4/4/4/4/2/1/1/1 columns; all12 modules and footer were reachable.
+- Recorded the separate pre-existing Analytics mobile table overflow as unmodified follow-up scope. Production Admin/API routing and WhatsApp protections remained unchanged.
+
+## 2026-10-31 - GFS-381 Analytics mobile overflow fix
+
+- Added a minimal focusable/touch-scrollable boundary around the existing Analytics daily inbound and abandoned checkout tables.
+- Verified CSS1920/1440/1280/768/430/390/360/320, focused16/16, full339/339, build, lint, and audit0.
+- No production deployment or API/WhatsApp/customer/payment/Meta/D1/migration/flag mutation. Separate Admin deployment approval remains required.
+
+## 2026-10-31 - GFS-382 Admin mobile release
+
+- Uploaded and directly deployed the tested Analytics mobile UI fix as Admin `ceb3e680` 100%, retaining `72cff93f` as rollback at 0%.
+- Verified sanitized Chrome acceptance at CSS 1920/1440/1280/768/430/390/360/320: no page overflow, mobile table scrolling, controls/routes, and no console errors.
+- Verified protected monitoring and independent routing readback; API `b426ba47` stayed 100%. No WhatsApp, customer, payment, Meta, D1, migration, flag, Queue, or Cron mutation.
+
+## 2026-10-31 - GFS-383 corrected API repair test
+
+- Verified approved corrected source SHA256 `462e6f6e...de4c50`; uploaded API candidate `d603f077` and validated it at0% with health200 x3 and unsigned webhook403.
+- Ran one Approval K API-only 1% canary with detached rollback control. A monitoring/readback error triggered fail-closed restoration after approximately154 seconds; final API baseline100%/candidate0% was independently verified.
+- No customer events were generated or replayed. Admin `ceb3e680`100% and WhatsApp/API baseline protections remained in place; no full API promotion occurred.
+
+## 2026-10-31 - GFS-384 API canary monitoring repair
+
+- Diagnosed the GFS-383 fail-safe as a transient GraphQL metrics/control-plane read failure; the original controller exception text was unavailable after its temporary log was removed.
+- Added one bounded complete-read retry to the canary adapter, preserving cancellation, stale-data prohibition, unknown-version rejection, and fail-closed rollback behavior.
+- Verified adapter8/8, controller17/17, observability4/4, rollback4/4, full339/339, build/lint/audit0, runtime health/security, and D1 read-only no-write evidence. No new canary or production deployment was run.
+
+## 2026-10-31 - GFS-387 Orders network resilience
+
+- Diagnosed the live Admin Orders report with sanitized read-only Chrome/network evidence; Orders list, detail, changes, Refresh, and reload returned HTTP200, with no Orders API failure reproduced.
+- Added a minimal stale-safe behavior so transient refresh/load failure retains the last successful order cards and clearly reports stale data, while existing retry, timeout, cancellation, race, filter, pagination, and selection behavior remains protected.
+- Verified focused12/12, full339/339, build, lint, dependency audit0 vulnerabilities, controller18/18, adapter8/8, and observability5/5. No deployment or WhatsApp/customer/API mutation.
+
+## 2026-10-31 - GFS-388 Admin auto-refresh and Conversations dashboard
+
+- Added server-side read-only conversation summary aggregates and a responsive masked Conversations dashboard.
+- Added visible-tab 30-second polling, hidden pause/resume, bounded retry/timeout, stale-safe update guards, manual Refresh, Auto ON/OFF, selected-detail refresh on change, and reduced-motion-safe highlights. Orders continues to use the GFS-387 stale-safe path.
+- Verified focused18/18, full341/341, build, lint, and dependency audit0 vulnerabilities. Synthetic Chrome responsive acceptance passed; live-data browser acceptance remains blocked by the unavailable `cloudflared` remote preview. No production deployment or WhatsApp/API mutation.
+
+## 2026-10-31 - GFS-389 D1-safe Admin auto-update controls
+
+- Added separate Orders and Conversations Auto update switches, default OFF, browser-local persistence, 60-second visible polling, hidden-tab pause, one-in-flight protection, and stale-safe behavior.
+- Capped automatic Conversations summary aggregate refresh at five minutes after measuring remote D1 cost; manual/initial summary reads remain available. Bounded read-only D1 measurements reported zero writes.
+- Verified focused18/18, full341/341, build, lint, and audit0. No deployment or API/WhatsApp/customer/payment/Meta/D1/migration/flag mutation. Live-data acceptance remains blocked by unavailable `cloudflared`.
+
+## 2026-10-31 - GFS-390 Approval M Admin live validation
+
+- Uploaded exact tested Admin HEAD as `ab5be96b-d5fa-42d5-8f5c-1b0bf536bbf2` and attached it at0% beside `ceb3e680`100%; API stayed frozen at `b426ba47`100%.
+- Passed secure health/isolation, real-data Orders/Conversations, manual Refresh, Auto OFF default and local preference persistence checks through authorized Chrome/Windows tools.
+
+## 2026-10-31 - GFS-391 D1 cost gate and Admin release hold
+
+- Recorded read-only Cloudflare Workers Paid/D1 allowance and populated staging usage: 5M included rows read/day; 20.77M rows read and 317.81k rows written in the displayed last24h interval.
+- Reviewed query plans and retained the existing OFF-by-default, hidden-paused, in-flight-protected polling controls. No migration/index, source, deployment, D1 write, API, WhatsApp, customer, payment, Meta, flag, Queue or Cron change was made.
+- Blocked automatic polling and Admin cutover because positive included capacity is not verified under the owner’s <=10% budget rule. Admin/API routing remains frozen at `ceb3e680`100%/`ab5be96b`0% and `b426ba47`100%/`d603f077`0%.
+- Measured live D1 rows: Conversations list10,439, summary5,873, Orders changes equivalent9,042; all writes0. Did not cut over because approved D1 budget and complete auto-cost gate are unavailable.
+- Updated the monitoring harness to accept the current Admin baseline via protected process environment. Full341/341, build, lint, controller18/18, adapter8/8, observability5/5, and audit0 pass.
+
+## 2026-11-01 - GFS-393 entitlement and release-blocker verification
+
+- Verified active Workers Paid subscription and official Paid D1 allowance; measured read-only billing-period usage across the visible account databases.
+- Located the documented clean legacy root and passed rollback/security4/4. npm audit remains blocked by the registry advisory endpoint, with logs safely redirected to writable temp storage.
+- Did not upload or attach the Admin candidate because Wrangler auth expired and could not refresh. API and Admin routing, WhatsApp, D1, Meta, payment, migration, flag, Queue and Cron state were not mutated.
+
+## 2026-11-01 - GFS-392 Admin clipping and active-only update safety
+
+- Fixed the active Orders template's desktop grid clipping with bounded rows, min-size guards, a content-sized scrollable list, and neutral header actions.
+- Hardened existing Orders/Conversations auto-update controls with visible+focused gating, one-flight protection, local-storage leases, 60-second scheduling, and hidden/blur/pagehide pause. Both remain OFF by default; no server polling was added.
+- Exposed only the existing stored `whatsapp_username` in protected Orders detail when present; no customer IP/location inference or API capture was added.
+- Verified focused30/30, full341/341, build, lint, controller18/18, adapter8/8 and observability5/5. npm audit and legacy rollback remain BLOCKED by external registry/log permissions and missing `GFS_LEGACY_ROOT`.
+- No deployment or production mutation. Official Workers Paid entitlement remains unresolved (UI5M rows read/day versus owner25B monthly claim); Admin/API routing remains frozen.
+- 2026-11-02 GFS-420: Reviewed and created one account-scoped Analytics:Read token with 24-hour expiry, but secure transfer was rejected by Chrome MCP. Deleted the token; no secret was stored or logged, and no production state changed. Monitoring remains blocked.
+- 2026-11-02 GFS-421: Added a disposable native Credential Manager round-trip/bridge-scope test using only synthetic data. Write/read/delete and cleanup passed. No real Cloudflare token was created; owner-mediated secure entry remains required. Local Admin payment repair and full regression checks passed.
+- 2026-11-02 GFS-422: Confirmed the owner Analytics credential target is absent and stopped monitoring without token creation. Read-only Admin aggregates advanced COD/Advance readiness: COD PKR125 enabled but collection/remittance policies false; Advance amount null and payment instructions fail closed. Documented the GFS-414 Admin-only release/rollback gates; no deployment or production mutation.
+# 2026-11-03 - GFS-457 live conversation check
+
+- Added the bounded incident result: Admin Conversations and Analytics were live with post-boundary customer activity; the suspected WhatsApp outage was disproven.
+- Recorded evidence limitations for Wrangler D1 authorization and Queue dashboard loading. No source, production routing, payment, Meta, D1, Queue or customer-state changes were made.
+# 2026-11-03 - GFS-458 Admin candidate reconciliation
+
+- Reconciled the latest Admin deployment through authenticated Cloudflare API: GFS-426 `e44703c3` is attached at configured 0% beside baseline `e8c96c96` at 100%; `ee9b7baa` is historical.
+- Recorded Queue/DLQ and D1 browser-read evidence and clarified Wrangler 7403 as shell authorization-context failure. No production mutation occurred.
+
+# 2026-11-03 - GFS-477 recovery flag drift correction
+
+- Proved through read-only version and deployment reads that recovery remained enabled on the serving API baseline and existing0% candidate; only unattached GFS-476 version `9f6a4ecf` carried the explicit false value.
+- Corrected the API manifest to true and added a focused anti-drift test. Dry-run, focused3/3, guided104/104, full378/378, build and lint passed; audit remains blocked by the registry endpoint.
+- No upload, attachment, deployment, customer traffic, payment, WhatsApp, Meta, CAPI, Admin or watchdog mutation occurred. Corrected immutable upload remains a separate approval gate.
+
+# 2026-11-04 - GFS-478 corrected API candidate
+
+- Per fresh owner approval, uploaded exactly one immutable API version with `--keep-vars --strict`: `d683ec45-1df2-4777-878e-4915fe55d1f4`/122, tag `gfs478-api-55b67a5`.
+- Independent readback confirmed recovery true, preserved start timestamp, protected flags, D1/R2/Queue resources and secret binding presence without secret values. API routing stayed baseline100% / candidate0%; the new version remains unattached.
+- Focused3/3 PASS; GFS-477 full378/378, guided104/104, build/lint PASS carried forward. No customer, payment, WhatsApp, Meta, Admin, CAPI, D1, Queue or Cron mutation occurred.
+
+# 2026-11-04 - GFS-479 controlled 0% API acceptance
+
+- Replaced only the API 0% candidate: baseline `b426ba47` remained100%; corrected `d683ec45` became0%; old `e8018f3f` was removed. Deployment `9b459a09-a7a5-404d-9302-48292bd07783`.
+- Independent protected-config comparison, GET-only health, Cron dry-run and Queue consumer readback passed. No non-versioned settings synced and no customer, payment, webhook, Meta, CAPI or positive traffic action occurred.
+- Rollback target remains the exact prior `b426ba47`100% / `e8018f3f`0% deployment. No restore was required; full live checkout acceptance remains unproven.
+
+# 2026-11-04 - GFS-480 final release decision
+
+- Read-only preflight confirmed account, deployment, recovery, protected configuration and rollback dry-run. Version-override GET health returned200, but actual version identity was not exposed by the health payload.
+- No fresh positive-canary approval or aggregate runtime error/payment/recovery monitoring was available. No canary was run; live acceptance is INCONCLUSIVE at0%.
+- Preserved API baseline100% / corrected candidate0%, with no upload, customer, payment, Meta, CAPI, Admin or watchdog mutation.
+
+# 2026-11-04 - GFS-481 project closure
+
+- Closed local resume development as complete and deferred live release at API100%/0%; no new upload, canary, monitoring loop or watchdog work.
+- Recorded public-launch NO-GO/BLOCKED EXTERNALLY: last Meta display-name evidence is In Review but fresh UI verification was unavailable; genuine courier contract/collection/remittance/policy evidence is missing.
+- Preserved existing WhatsApp, payment, COD, D1, R2, Queue/DLQ, Cron, webhook, order, CAPI and phone-isolation boundaries. No GFS-482 created.
+
+# 2026-11-04 - GFS-OPS final business verification
+
+- Closed business-gate verification without mutation. Official Chrome UI was unavailable; connected read-only Meta listing returned zero consented portfolios and did not establish approval or eligibility.
+- Confirmed no genuine courier contract or settlement evidence was accessible. Existing controlled operations remain GO/MAINTAIN; public expansion and COD settlement remain NO-GO/BLOCKED EXTERNALLY.
+## 2026-11-05 — GFS-COD-MO-23
+
+- Recorded the protected `/health` verification blocker: the existing approved credential bridge cannot read its target in the current execution context. Access policy, routing and D1 preflight remain read-only verified; no migration or production mutation occurred.
+## 2026-11-05 — GFS-COD-MO-24
+
+- Recorded the approved host-bridge access blocker. Existing browser/dashboard access and routing/D1 readback remain intact; no credential, deployment, Access, migration, payment or customer mutation occurred.
+## 2026-11-05 — GFS-COD-MO-25
+
+- Applied repaired historical COD migration 0048 exactly once under the owner-authorized alternative preflight. Verified schema, guards, empty ledgers, preserved orders/payments, live Admin/API health and zero post-read writes. Protected Admin Service Auth `/health` remains unverified; no release or settlement occurred.
+
+## 2026-11-05 — GFS-COD-MO-26
+
+- Attempted the normal Cloudflare profile-language change; English did not persist because the normal save request returned HTTP403. No workaround was used.
+- Uploaded and attached one immutable Admin historical-COD candidate at 0% with preserved configuration: `ce023b54-4d38-43e5-842e-faa706e7606c`, deployment `f632e4d2-0716-4f53-a861-110d26a0e3a9`.
+- Candidate Orders GET passed; detail preview remained INCONCLUSIVE after Access sign-in redirection. No positive traffic or production mutation occurred. Focused38/38, full385/385 with one skip, build/lint PASS.
+
+## 2026-11-05 — GFS-COD-MO-27
+
+- Reused the existing approved Admin browser session without credential or Access changes. Orders and Conversations GETs returned HTTP200.
+- Verified COD_PENDING read-only MO panel and exact amount. No genuine DELIVERED/tracked eligible historical order existed in the 887-row read, so no historical form or settlement path was opened.
+- Candidate version attribution remained INCONCLUSIVE because the override response exposed no version marker. Routing stayed baseline100% / candidate0%; no mutation occurred.
+
+## 2026-11-05 — GFS-COD-MO-28
+
+- Corrected the version-override syntax and verified candidate-only historical MO UI markers on the same no-method unpaid order; baseline comparison removed the markers.
+- Confirmed read-only eligibility behavior: actual non-delivered/untracked order had no historical submit form. Local isolated suite remained 38/38 PASS; no production writes or traffic changes.
+
+## 2026-11-05 — GFS-COD-MO-29
+
+- Canary stopped at preflight because fresh candidate-specific Cloudflare telemetry and rollback monitoring were unavailable. No 90/10 routing change occurred.
+- Preserved Admin100%/0%, API100%/0%, payment/D1/WhatsApp/Access protections and all no-mutation boundaries.
+
+## 2026-11-05 — GFS-COD-MO-30
+
+- Reviewed the GFS-14 monitoring procedure; official candidate-specific Key Figures telemetry remained unavailable because the dashboard session was absent and Wrangler auth could not refresh.
+- Kept canary at 0% and preserved Admin/API routing and all production protections. No monitoring repair or production mutation occurred.
+
+## 2026-11-05 — GFS-COD-MO-31
+
+- Recorded fresh read-only API health, Admin Orders/Conversations and privacy-safe Analytics funnel/reminder evidence under the approved alternative P0 path.
+- Kept the canary at 0% because candidate-specific Cloudflare telemetry remained unavailable; Admin/API routing and all WhatsApp/payment/D1 protections were unchanged.
+
+## 2026-11-05 — GFS-COD-MO-32
+
+- Restored read-only Cloudflare Key Figures visibility and recorded version-labelled baseline/candidate metrics plus a safe candidate MO preview.
+- Did not start the canary: fresh metric ingestion and executable rollback access were not proven. Admin/API routing and production protections remained unchanged.
+
+## 2026-11-05 — GFS-COD-MO-33
+
+- Reconciled Cloudflare account/Worker identity and confirmed current Admin 100%/0% routing.
+- Did not retry the canary because fresh candidate telemetry and a usable Worker Editor/rollback identity remain unavailable. No production mutation occurred.
+
+## 2026-11-05 — GFS-COD-MO-34
+
+- Corrected the documented Cloudflare account ID from the authoritative account selector.
+- Attempted only the requested narrow account-owned deployment-token setup; no token was created because the safe custom-permission control was unavailable. No broader token or production mutation was used.
+
+## 2026-11-05 — GFS-COD-MO-35
+
+- Verified the named account token exists, but it is entire-account read-only metadata/content access and not the required Worker-only Editor credential.
+- No secret was accessed or logged; no existing Editor token was reused; bridge, fresh tail, rollback and canary remain blocked. Production state stayed unchanged.
+
+## 2026-11-05 — GFS-COD-MO-36
+
+- Verified token scopes: named token is whole-account Editor/read-only; existing Individual Workers Editor targets isolated Worker `gfs462-isolated-target`.
+- Policy correction was not performed because the approved browser safety gate blocked the action before mutation. No canary or production change occurred.
+
+## 2026-11-05 — GFS-COD-MO-37
+
+- Rechecked the official account-token inventory without creating or exposing a secret.
+- Secure token automation remains blocked by unavailable approved secret delivery and unproven exact API policy schema; no deployment or canary occurred.
+
+## 2026-11-05 — GFS-COD-MO-38
+
+- Recorded owner authorization for one restricted token, but stopped before creation because the approved secure Windows credential receiver remains unavailable.
+- No Cloudflare or production mutation occurred.
+
+## 2026-11-05 — GFS-COD-MO-39
+
+- Diagnosed host execution availability without repeating Credential Manager access: only the sandbox identity was available and no approved credential handler was callable.
+- Stopped before dummy credential and token operations; no production mutation occurred.
+
+## 2026-11-05 — GFS-COD-MO-41
+
+- Established approved elevated host execution and passed a disposable protected-credential round-trip without exposing values.
+- Official Cloudflare permission metadata returned HTTP403; stopped before token creation and production access changes.
+
+## 2026-11-05 — GFS-COD-MO-42
+
+- Reconciled member authority: verified `gisupp@gmail.com` is Super Administrator on the correct Cloudflare account.
+- Identified HTTP403 as insufficient existing token authority; did not alter roles or expose a one-time token secret.
+
+## 2026-11-05 — GFS-COD-MO-43
+
+- Verified host credential inventory, Wrangler OAuth account/readback and current Admin deployment.
+- Candidate MO read-only GET passed, but version-filtered live tail produced no attributable records; no token, deployment or canary occurred.
+
+## 2026-11-06 — GFS-COD-MO-63
+
+- Verified watchdog schedule/deployment and protected routing via authenticated Cloudflare APIs. Official event result was empty and dashboard Observability failed to render, so independent Cron invocation remains unverified.
+- Verified API health/WhatsApp, Admin 100/0 routing and both Admin auto-update controls ON. Dashboard inventory showed the temporary broad token; revoke was not executed because MCP could not safely target the exact action. No production mutation.
+
+## 2026-11-06 — GFS-COD-MO-64
+
+- Owner cleanup verified: temporary broad provisioning token absent from Cloudflare and approved local credential inventory; retained Worker-only policies verified.
+- Official dashboard-proxied GraphQL proved 35 watchdog invocations in the last hour, including two distinct UTC timestamps with request1/errors0. Watchdog remains DISARMED, route-free and production unchanged.
+- API/WhatsApp health remained PASS, Admin routing stayed 100/0, and Orders/Conversations Auto update completed two safe polling cycles.
+
+## 2026-11-06 — GFS-COD-MO-65
+
+- Repaired watchdog scheduled recovery, supported single-version baseline restore, baseline readback compatibility, and durable fail-closed arm configuration.
+- Deployed corrected isolated version `82560d6f-0da3-417e-97f9-d0413d239a43` DISARMED as `4ab96ae4-de8b-4f36-ab22-bf0ec350114a`; Cron and secret binding retained, route0.
+- Official GraphQL recorded post-deploy Cron invocations at 12:33:37Z and 12:34:37Z with request1/errors0. No Admin/API/payment/D1/Meta/CAPI mutation; disposable recovery remains unverified.
+
+## 2026-11-06 — GFS-COD-MO-66A
+
+- Created private disposable Worker `gfs-cod-mo-66-disposable` with baseline A only, zero routes/bindings/Cron and no workers.dev link.
+- Prepared local A/B rollback-proof artifacts; separate target-only credential remains the sole gate. No production or watchdog resource changed.
+
+## 2026-11-07 — GFS-COD-MO-66B
+
+- Completed real disposable A90/B10 rollback proof and restored A100; guarded repeat was idempotent.
+- Deleted target-only credential. Worker deletion was denied by its narrow scope; private baseline remains. Production and watchdog unchanged.
+## 2026-11-07 — GFS-COD-MO-67A
+
+- Corrected account-token verification to `/accounts/{account_id}/tokens/verify`; both retained Worker-only credentials returned active HTTP200 with the stated expiry.
+- Proved cross-Worker denial, unchanged Admin 100/0 routing, watchdog DISARMED state, API health and authenticated Orders/Conversations reads. No arming or canary mutation occurred.
+
+## 2026-11-07 — GFS-COD-MO-67B
+
+- Added the watchdog-only GET/no-POST `DRY_RUN` guard and sanitized scheduled outcome logging; focused13/13, full385/1, build/lint PASS.
+- Ran one bounded DRY_RUN window, but official tail returned no records and GraphQL fallback was unavailable. Classified runtime proof INCONCLUSIVE and immediately restored watchdog DISARMED; Admin/API remained unchanged.
+- Added fail-closed five-minute DRY_RUN expiry validation, retested14/14 focused, and deployed corrected watchdog version `d43d8649-d67b-46bb-8883-f4c219450aca` at100% in `97134a72-a627-48c9-983e-8aeadd717a91`; no Admin/API routing or data mutation.
+## 2026-11-07 — GFS-COD-MO-67C
+
+- Enabled Workers Logs only for the isolated watchdog and verified two genuine version-attributed DISARMED Cron events with sanitized no-write output.
+- Ran one bounded GET-only DRY_RUN. The scheduled invocation was version-attributed, but the official event view did not expose the application `already_restored` result; classified INCONCLUSIVE.
+- Mandatory disarm completed at version `73a1f50c-46a2-48d5-b5e5-d01f2bd34c7a` / deployment `907d4813-11bd-44fc-9621-fc39dda47b3f`; Admin/API/payment/D1/Meta/CAPI remained unchanged.
+## 2026-11-07 — GFS-COD-MO-67D
+
+- Verified the existing sanitized watchdog logging source and tested official version-filtered Observability queries.
+- Known scheduled versions returned zero indexed rows while Live view exposed only invocation envelopes; DRY_RUN was not repeated and remains blocked.
+- Watchdog remains DISARMED and production Admin/API/payment/D1/Meta/CAPI state is unchanged.
+
+## 2026-11-07 — GFS-COD-MO-67E
+
+- Verified watchdog structured logging and official version-filtered Query Builder behavior.
+- Recorded the confirmed log-index mismatch and withheld a repeat DRY_RUN; no production mutation.
+
+## 2026-11-07 — GFS-COD-MO-67F
+
+- Ran one bounded official host Wrangler tail; zero application records were delivered in 125 seconds.
+- Recorded the real-time telemetry blocker and withheld DRY_RUN; production remained unchanged.
+
+## 2026-11-07 — GFS-COD-MO-68
+
+- Submitted private Cloudflare Support case #02421284 for scheduled Workers application-log delivery; verified watchdog logging settings are enabled.
+- Kept watchdog DISARMED and all production Admin/API/payment/WhatsApp state unchanged.
+
+## 2026-11-07 - GFS-COD-MO-69
+
+- Checked Cloudflare Support case #02421284 once; it remains New with no response. MO logging, DRY_RUN and canary work remain frozen.
+- Recorded fresh GET-only P0 reads: API/WhatsApp, Orders/Conversations, three payment methods, COD PKR125 and province rates passed. Meta account/campaign context was readable, but sender eligibility and Queue/DLQ runtime remain unverified.
+- Recorded Admin Orders/Conversations auto-update preferences as OFF; no preference or production configuration was changed. No source, Cloudflare, Meta, payment, order, D1, customer-message or CAPI mutation occurred.
+
+## 2026-11-07 - GFS-COD-MO-70
+
+- Enabled and persisted Admin Orders/Conversations auto-update preferences; observed Conversations polling and diagnosed the Orders reload initialization defect.
+- Added the minimal local Orders auto-update startup repair and regression assertion. Focused 19/19, full 385 passed/1 skipped, build/lint PASS. No deployment performed.
+- Recorded read-only Queue/DLQ evidence and Meta eligibility limits. Lead-scale readiness remains PARTIAL/NO-GO until live Orders verification, consumer binding evidence and Meta sender eligibility are closed.
+
+## 2026-11-07 - GFS-COD-MO-71
+
+- Confirmed MO-70's Orders startup replacement was ordered before the listener insertion and therefore did nothing.
+- Corrected startup timing with `load().finally(...)`; added rendered-script functional coverage. Focused 20/20, full 386 passed/1 skipped, build/lint PASS.
+- Blocked broad upload because current PR11 contains historical-MO changes beyond the live MO-12 baseline. No deployment or routing change occurred.
+
+## 2026-11-07 - GFS-COD-MO-72
+- Prepared and pushed isolated Admin auto-update artifact `e9d5304` from live-compatible baseline `551c2ee`; functional focused 13/13, full 380/1 skipped, build/lint PASS.
+- Candidate upload/0% preview remains blocked by expired local Wrangler auth and unavailable approved host deployment bridge; Admin/API/watchdog routing stayed unchanged.
+- Corrected settlement SOP language to record migration0048 as applied exactly once. Historical MO, support logging, canary, payment and CAPI gates remain protected.
+
+## 2026-11-07 - GFS-COD-MO-73
+- Repaired historical MO settlement to enqueue one idempotent durable CAPI Purchase record after guarded PAID when enabled; Queue failure remains deferred/non-blocking.
+- Added local regression coverage; focused 35/35, full 387 passed/1 skipped, build/lint PASS.
+- No deployment, real settlement, CAPI send, Meta change or customer/payment mutation; live release remains blocked on deployment access and genuine evidence.
+
+## 2026-11-07 - GFS-COD-MO-74
+- Verified Cloudflare identity read-only and stopped at the missing approved `bi\\nazim` deployment runner.
+- Confirmed the existing monitor wrapper is not a deployment path. No credential exposure, upload, preview, routing, payment, D1, Meta or CAPI mutation occurred.
+
+## 2026-11-07 - GFS-COD-MO-75
+- Authenticated Cloudflare dashboard readback was verified, but its `Edit code` control was safety-blocked by MCP as potentially deployment-affecting.
+- No upload, preview, routing, payment, D1, Meta, CAPI or customer mutation occurred. Owner host-runner access remains the single unblock.
+
+## 2026-11-07 - GFS-COD-MO-76
+- Added a fixed, process-only PowerShell Admin deployment runner with identity, account, Worker, clean-HEAD and artifact-digest gates.
+- Added 4/4 mock/API tests and syntax/PowerShell parse checks. The runner defaults to read-only and its optional path is official Wrangler `versions upload` only; no live credential, upload or production mutation occurred.
+
+## 2026-11-07 - GFS-COD-MO-77
+- Repaired the runner's raw Windows-path comparison and added 9/9 fail-closed validation coverage.
+- Confirmed the broad PR11 tree remains upload-ineligible for historical MO; no Cloudflare or production mutation occurred.
+
+## 2026-11-07 - GFS-COD-MO-78
+- Fixed the Windows PowerShell 5.1 clean-Git `$null.Trim()` preflight failure with null-safe output and explicit Git exit checks.
+- Added regression coverage and retained the broad-PR11 no-upload boundary; no production mutation occurred.

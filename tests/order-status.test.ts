@@ -52,4 +52,15 @@ describe("Check Order details", () => {
     expect(formatCustomerOrderStatus(order!)).toContain("Payment approved.");
     expect(formatCustomerOrderStatus(order!)).toContain("Fulfillment: Dispatched.");
   });
+
+  it("renders COD status without internal reconciliation language", async () => {
+    const order = await getLatestOrderForWaId(statusDb({ ...base, state: "COD_PENDING", payment_status: "COD_PENDING", method: null, expected_amount: 250, review_state: "COD_PENDING", cod_quoted_total_pkr: 375 }), "923001234567");
+    const message = formatCustomerOrderStatus(order!);
+    expect(message).toContain("Order Number: FS-261012-999001");
+    expect(message).toContain("Payment Method: COD");
+    expect(message).toContain("Order Status: COD Confirmed/Pending Dispatch");
+    expect(message).toContain("Total Due on Delivery: PKR 375");
+    expect(message).not.toContain("courier");
+    expect(message).not.toContain("remittance");
+  });
 });
