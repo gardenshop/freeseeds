@@ -3711,3 +3711,9 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Read-only preflight verifies the account token through the official account-token endpoint, requires token-detail policy evidence for only `getfreeseeds-admin-staging`, and performs target Worker deployment readback. The optional mutation is Wrangler `versions upload` only; no deploy/routing action is included.
 - Local mock/API validation is 4/4; Node syntax and PowerShell parse pass. Sandbox identity remains `bi\\codexsandboxoffline`, so live credential validity/scope and host runner operation are **UNVERIFIED**. No Cloudflare or production mutation occurred.
 - Next gate is one owner-side execution under `bi\\nazim`; do not run upload mode until the isolated artifact and separate release authorization are confirmed.
+
+## GFS-COD-MO-77 — runner path repair (2026-11-07 PKT)
+
+- Root cause: PowerShell compared `D:/free seeds/gfs264-pr11` and Git's `D:\\free seeds\\gfs264-pr11` as raw strings. The runner now compares canonical full paths case-insensitively and preserves the repository, identity, SHA, clean-tree and artifact-digest gates.
+- Regression validation passes 9/9 for separator/case equivalence and all required rejection paths, including missing credential and secret-safe output. Full 387 passed/1 skipped; build/lint and PowerShell parse pass.
+- Current PR11 remains broad and is not an approved historical-MO artifact. Upload mode remains prohibited for this tree; no Cloudflare or production mutation occurred.

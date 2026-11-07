@@ -2542,3 +2542,7 @@
 ## 2026-11-07 - GFS-COD-MO-76
 - Added a fixed, process-only PowerShell Admin deployment runner with identity, account, Worker, clean-HEAD and artifact-digest gates.
 - Added 4/4 mock/API tests and syntax/PowerShell parse checks. The runner defaults to read-only and its optional path is official Wrangler `versions upload` only; no live credential, upload or production mutation occurred.
+
+## 2026-11-07 - GFS-COD-MO-77
+- Repaired the runner's raw Windows-path comparison and added 9/9 fail-closed validation coverage.
+- Confirmed the broad PR11 tree remains upload-ineligible for historical MO; no Cloudflare or production mutation occurred.

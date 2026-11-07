@@ -2932,9 +2932,15 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 ## GFS-COD-MO-76 fixed secure host runner
 
 - **Decision:** use a repository-owned PowerShell runner with a fixed account/Worker, exact `bi\\nazim` identity gate, process-only Credential Manager handoff, and default read-only preflight. Do not reuse the health/analytics wrapper.
-- **Artifact gate:** require final verified Git HEAD `2fa287941d45b9ed84e89ad918b7ea28a96bd58c` and deterministic digest `cfe777513ca21aca476a755aaf93ab61797a418c03952752541794f679b209c4` for the current tracked Admin source/config set.
+- **Artifact gate:** require the exact approved Git HEAD supplied at invocation and deterministic digest `cfe777513ca21aca476a755aaf93ab61797a418c03952752541794f679b209c4` for the current tracked Admin source/config set.
 - **Upload boundary:** if separately authorized, the runner may call only `wrangler versions upload`; it must report `deployed=false` and `routingChanged=false`. It may not deploy, attach, promote, read secrets, or alter production configuration.
 - **Evidence:** mock/API tests 4/4, Node syntax and PowerShell parse pass. Live host credential and scope remain unverified from the sandbox; no upload was attempted.
+
+## GFS-COD-MO-77 — canonical path comparison
+
+- **Decision:** normalize both `Resolve-Path` and `git rev-parse --show-toplevel` with Windows full-path semantics, trim separators, and compare case-insensitively. Raw string comparison is prohibited.
+- **Evidence:** PowerShell validation passes 9/9: equivalent separators/case accepted; different repository, identity, SHA, dirty tree, artifact digest and missing credential rejected; no secret appears in output.
+- **Boundary:** this repairs preflight only. The current broad PR11 tree is not source-isolated historical MO; do not invoke upload mode.
 
 ## GFS-COD-MO-75 — no dashboard deployment workaround (2026-11-07 PKT)
 - Treat the MCP safety rejection of dashboard `Edit code` as a deployment-access blocker, not permission to bypass via DOM, direct API, token extraction or health-wrapper reuse.

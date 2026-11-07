@@ -4360,6 +4360,12 @@ Investigation query costs only (not production savings): representative `rows_re
 | MO-75 dashboard upload path | BLOCKED | Authenticated dashboard control was safety-rejected as potentially production-affecting; no supported upload-without-traffic evidence. |
 | MO-75 protected state | PASS | No upload, routing, payment, D1, Meta, CAPI or customer mutation. |
 
+| MO-77 canonical path equivalence | PASS | Slash/backslash and case differences normalize to the same Windows repository path. |
+| MO-77 repository mismatch rejection | PASS | Different Git root returns `repository_mismatch`. |
+| MO-77 identity/SHA/tree/artifact rejection | PASS | Wrong identity, Git SHA, dirty tree and artifact digest fail closed. |
+| MO-77 credential/output safety | PASS | Missing credential fails closed; validation output contains no credential value or secret variable. |
+| MO-77 full regression | PASS | Focused runner 9/9; full 387 passed/1 skipped; build/lint/PowerShell parse PASS. |
+
 | MO-76 runner identity gate | PASS (local) | Fixed `bi\\nazim` requirement; sandbox identity is rejected before credential access. |
 | MO-76 token/scope mock verification | PASS | 4/4 Node tests cover active account token, exact Worker policy, broad-scope rejection, target readback failure and secret non-return. |
 | MO-76 artifact gate | PASS (local) | Clean-HEAD and deterministic 7-file Admin artifact digest checks pass. |

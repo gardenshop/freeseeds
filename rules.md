@@ -5,8 +5,14 @@
 - Added `scripts/run-gfs-admin-deployment.ps1` with fixed account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, fixed Worker `getfreeseeds-admin-staging`, exact identity gate `bi\\nazim`, clean-worktree/approved-HEAD gate, deterministic Admin source/config digest, and allowlisted Credential Manager target `GFS-Admin-Deploy-Scoped-2026`.
 - Default mode is read-only. The optional upload path invokes only the official local Wrangler `versions upload`; it never invokes `versions deploy`, changes traffic, or changes production configuration. Token text is process-only and cleared in `finally`; output is sanitized.
 - Local mock/API tests pass 4/4; Node syntax and PowerShell parsing pass. No real credential was read, no Cloudflare request or upload was made from the sandbox, and no production state changed. Owner-host validation remains required before any upload.
-- The reviewed source baseline was `cdbe8855f2936be9863fde24873153d2de5eba8a`; final verified repository HEAD is `2fa287941d45b9ed84e89ad918b7ea28a96bd58c`, with unchanged deterministic Admin artifact digest `cfe777513ca21aca476a755aaf93ab61797a418c03952752541794f679b209c4` over 7 tracked Admin source/config files. Do not reuse this identity for a different artifact without recalculating the digest.
+- The reviewed source baseline was `cdbe8855f2936be9863fde24873153d2de5eba8a`; the deterministic Admin artifact digest is `cfe777513ca21aca476a755aaf93ab61797a418c03952752541794f679b209c4` over 7 tracked Admin source/config files. The runner requires the exact approved Git HEAD supplied at invocation; do not reuse this identity for a different artifact without recalculating the digest.
 - Preserve Admin `3e4b7c26`100% / candidate `ce023b54`0%, API `b426ba47`100%, watchdog DISARMED, WhatsApp/new-number lock, Hoja zero-connection, payments, D1, Meta and CAPI OFF.
+
+## GFS-COD-MO-77 runner path repair (2026-11-07 PKT)
+
+- Root cause: raw string comparison treated slash/case variants of the same Windows repository as different. `admin-deployment-runner-validation.ps1` now canonicalizes full paths and compares them case-insensitively; repository, identity, approved HEAD, clean-tree and artifact digest gates remain enforced.
+- Validation passes 9/9, including missing-credential fail-closed behavior and secret-safe output. Full 387 passed/1 skipped, build/lint and PowerShell parse pass. Current PR11 is broad and not eligible for historical-MO upload mode.
+- No Cloudflare, Admin, API, payment, D1, Meta, WhatsApp or CAPI mutation occurred.
 
 ## GFS-COD-MO-62 watchdog activation (2026-11-06 PKT)
 

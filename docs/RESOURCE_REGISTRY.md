@@ -2805,5 +2805,10 @@ No secrets are stored in this registry.
 ## GFS-COD-MO-76 secure deployment runner (2026-11-07 PKT)
 
 - Runner: `scripts/run-gfs-admin-deployment.ps1`; fixed account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, Worker `getfreeseeds-admin-staging`, Credential Manager target name `GFS-Admin-Deploy-Scoped-2026`.
-- Current artifact identity: HEAD `2fa287941d45b9ed84e89ad918b7ea28a96bd58c`, digest `cfe777513ca21aca476a755aaf93ab61797a418c03952752541794f679b209c4`, 7 tracked Admin source/config files.
+- Current artifact identity is supplied per invocation; digest `cfe777513ca21aca476a755aaf93ab61797a418c03952752541794f679b209c4` covers 7 tracked Admin source/config files.
 - Default/readback mode is safe; upload mode is Wrangler `versions upload` only and is not a deployment or traffic mutation. Live owner-host validation is pending; no secret value is recorded.
+
+## GFS-COD-MO-77 runner repair (2026-11-07 PKT)
+
+- Path guard repaired to canonical, case-insensitive Windows comparison; runner remains fixed to the named account/Worker and Credential Manager target.
+- Current PR11 is broad, not a source-isolated MO artifact. No upload/version/routing mutation is authorized or recorded.

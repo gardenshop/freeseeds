@@ -18,6 +18,7 @@ $ExpectedUser = "bi\nazim"
 $ConfigPath = Join-Path $RepoRoot "apps\admin\wrangler.jsonc"
 $PreflightScript = Join-Path $PSScriptRoot "cloudflare-admin-deployment-preflight.mjs"
 $WranglerScript = Join-Path $RepoRoot "node_modules\wrangler\bin\wrangler.js"
+. (Join-Path $PSScriptRoot "admin-deployment-runner-validation.ps1")
 
 function Fail([string] $Code) { throw $Code }
 
@@ -27,16 +28,14 @@ if ($identity.ToLowerInvariant() -ne $ExpectedUser.ToLowerInvariant()) { Fail "a
 
 $resolvedRepo = (Resolve-Path $RepoRoot).Path
 $gitRoot = (& git -C $resolvedRepo rev-parse --show-toplevel).Trim()
-if ($gitRoot -ne $resolvedRepo) { Fail "repository_mismatch" }
 $head = (& git -C $resolvedRepo rev-parse HEAD).Trim()
-if ($head -ne $ApprovedGitSha) { Fail "approved_git_sha_mismatch" }
 $dirty = (& git -C $resolvedRepo status --porcelain).Trim()
-if ($dirty) { Fail "worktree_not_clean" }
 
 $digestJson = & node.exe $PreflightScript --artifact-digest --repo-root $resolvedRepo --config "apps/admin/wrangler.jsonc"
 if ($LASTEXITCODE -ne 0) { Fail "artifact_digest_failed" }
 $digest = $digestJson | ConvertFrom-Json
-if ($digest.sha256 -ne $ExpectedArtifactSha256.ToLowerInvariant()) { Fail "approved_artifact_mismatch" }
+$inputCheck = Test-GfsRunnerInputs -Identity $identity -ExpectedIdentity $ExpectedUser -RepoRoot $resolvedRepo -GitRoot $gitRoot -ExpectedGitSha $ApprovedGitSha -ActualGitSha $head -WorktreeDirty ([bool]$dirty) -ExpectedArtifactSha256 $ExpectedArtifactSha256 -ActualArtifactSha256 $digest.sha256
+if (-not $inputCheck.pass) { Fail $inputCheck.code }
 
 $configText = Get-Content -Raw $ConfigPath
 if ($configText -notmatch '"name"\s*:\s*"getfreeseeds-admin-staging"') { Fail "worker_config_mismatch" }
