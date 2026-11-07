@@ -4296,3 +4296,7 @@ Investigation query costs only (not production savings): representative `rows_re
 | MO-66B real disposable restore | PASS | A100 single-version deployment `efb9d558-4238-4733-9c4e-35952b1f90d6`; B absent. |
 | MO-66B idempotency | PASS | Guarded repeat preserved the same deployment ID and performed no write. |
 | MO-66B cleanup | BOUNDED | Credential deleted; Worker deletion HTTP403 under target-only scope, private baseline remains. |
+| MO-67A account-token verification | PASS | Both retained account API tokens returned HTTP200/active through `/accounts/{account_id}/tokens/verify`; expiry verified; values not exposed. |
+| MO-67A Worker scope isolation | PASS | Intended Worker reads returned200 and cross-target reads returned403 for both credentials. |
+| MO-67A read-only preflight | PASS | Admin100/0, watchdog DISARMED/100%, API health200, authenticated Orders/Conversations200; no writes. |
+| MO-67A runtime dry-arm/canary | NOT RUN | Credential gate resolved; no arm or Admin 90/10 exposure was executed in this task. |

@@ -2467,3 +2467,7 @@
 
 - Completed real disposable A90/B10 rollback proof and restored A100; guarded repeat was idempotent.
 - Deleted target-only credential. Worker deletion was denied by its narrow scope; private baseline remains. Production and watchdog unchanged.
+## 2026-11-07 — GFS-COD-MO-67A
+
+- Corrected account-token verification to `/accounts/{account_id}/tokens/verify`; both retained Worker-only credentials returned active HTTP200 with the stated expiry.
+- Proved cross-Worker denial, unchanged Admin 100/0 routing, watchdog DISARMED state, API health and authenticated Orders/Conversations reads. No arming or canary mutation occurred.

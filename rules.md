@@ -2570,3 +2570,11 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - Baseline A: `14683497-a36f-4239-a957-82d0720c2e36`; candidate B: `bc47800e-7acf-454b-a510-86130d35988c`.
 - Real split PASS: `17122c90-b4c7-4423-a5a8-9e7dd0f9f8ef` read back A90/B10. Real restore PASS: `efb9d558-4238-4733-9c4e-35952b1f90d6` read back A100 with B absent. A guarded repeat preserved the same deployment ID and wrote nothing.
 - Pre-cleanup readback showed zero routes/bindings. Worker deletion returned HTTP403 under the target-only scope; private baseline remains. No production target was used.
+## GFS-COD-MO-67A — account-token verification and read-only preflight (2026-11-07 PKT)
+
+- Correct endpoint: `GET /accounts/{account_id}/tokens/verify` with Bearer authentication; prior HTTP401 came from `/user/tokens/verify`.
+- Both retained Worker-only credentials returned HTTP200, active status and expiry `2026-11-07T18:59:59Z`; no values were exposed. Fresh UTC evidence left approximately 11.83 hours.
+- Scope isolation passed: each credential reached only its intended Worker (HTTP200) and was denied the other Worker (HTTP403).
+- Admin deployment `f632e4d2-0716-4f53-a861-110d26a0e3a9` remains baseline `3e4b7c26-c36d-4d1c-baeb-d26629a9b4a1`100% / candidate `ce023b54-4d38-43e5-842e-faa706e7606c`0%. Watchdog deployment `4ab96ae4-de8b-4f36-ab22-bf0ec350114a` remains version `82560d6f-0da3-417e-97f9-d0413d239a43`100%.
+- Watchdog remains DISARMED with only `ADMIN_RECOVERY_TOKEN` binding metadata; API `/health`, authenticated Orders and Conversations returned HTTP200. No arm, deployment, routing, D1, order, payment, WhatsApp, Meta or CAPI mutation occurred.
+- Credential/read-only preflight PASS. Runtime dry-arm and Admin 90/10 canary remain separate and were not executed.

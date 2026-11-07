@@ -3620,3 +3620,9 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **PASS:** `17122c90-b4c7-4423-a5a8-9e7dd0f9f8ef` read back A90/B10; `efb9d558-4238-4733-9c4e-35952b1f90d6` read back A100 only.
 - **PASS:** Guarded repeat was idempotent/no-write; disposable credential removed from host store.
 - **BOUNDED:** Worker deletion returned HTTP403 under target-only scope; private baseline remains without routes/bindings. Production remained unchanged.
+## GFS-COD-MO-67A — corrected account-token preflight (2026-11-07 PKT)
+
+- **PASS:** Account-token verification returned HTTP200/active for both retained credentials with the stated expiry; prior HTTP401 was the wrong `/user/tokens/verify` endpoint.
+- **PASS:** Intended Worker reads returned200 and cross-Worker reads returned403 in both directions.
+- **PASS:** Admin remained100/0, watchdog DISARMED/100%, API health200, and authenticated Orders/Conversations were200.
+- **NOT RUN:** No watchdog arm, Admin canary, deployment, payment/order, D1, WhatsApp, Meta or CAPI mutation. Runtime dry-arm evidence remains the next gate.

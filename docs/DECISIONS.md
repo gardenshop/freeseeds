@@ -2852,3 +2852,8 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Evidence:** A90/B10 `17122c90-b4c7-4423-a5a8-9e7dd0f9f8ef`; A100 restore `efb9d558-4238-4733-9c4e-35952b1f90d6`; guarded repeat wrote nothing.
 - **Cleanup:** target-only credential deleted. Worker deletion was denied by its narrow scope, so the private route-free baseline remains.
 - **Boundary:** production watchdog remains DISARMED; no live Admin canary or MO settlement is authorized by this proof.
+## GFS-COD-MO-67A — account-token verification boundary (2026-11-07 PKT)
+
+- Use `/accounts/{account_id}/tokens/verify`; do not treat `/user/tokens/verify` HTTP401 as account-token invalidity.
+- Both retained credentials verified active, target isolation passed, and Admin/API/watchdog read-only state was unchanged.
+- This resolves credential preflight only. Runtime dry-arm evidence and the separately authorized Admin canary remain required; production remains DISARMED/100-0.
