@@ -1,5 +1,12 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-88 isolated historical MO candidate (2026-11-07 PKT)
+
+- Candidate source is the live-compatible `551c2ee` Admin baseline plus the historical MO UI/guarded route, migration-0048 integration and disabled-CAPI outbox dependencies; the GFS-70/GFS-71 auto-update-only startup delta and its isolated candidate are excluded.
+- Local generated-HTML/guard tests, full suite (386 passed/1 skipped), build, lint and PS5.1 parse pass. Current runner digest is `3d0d17a3a953c6804a84f3449cc7b11ab2b87f68b0e8c602e79ff23ab32f7911` over 7 tracked Admin files.
+- Owner supplied a sanitized `READ_ONLY_PREFLIGHT` PASS for the prior approved host context. Expiry must be rechecked by the same runner immediately before upload. No upload, traffic change, settlement, CAPI activation or production mutation has occurred here.
+- Migration 0048 is already applied once and must not be rerun. CAPI remains OFF; outbox code is retained but no Purchase delivery is activated. The only next release operation is the single approved-host `VERSIONS_UPLOAD_ONLY` command recorded in the task report; 0% preview remains unverified until its version ID is returned.
+
 ## GFS-COD-MO-87 immutable Worker resource mapping (2026-11-07 PKT)
 
 - Official Cloudflare Worker Scripts metadata distinguishes `id` (script name) from `tag` (immutable script ID). The real host evidence was therefore not accepted from a name/list match alone.

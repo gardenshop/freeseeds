@@ -1,5 +1,16 @@
 # Test Matrix
 
+## GFS-COD-MO-88 isolated historical MO candidate (2026-11-07 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Source boundary | PASS | `551c2ee` baseline plus historical MO/guard/outbox dependencies; GFS-70/GFS-71 auto-update startup delta excluded. |
+| Generated Admin HTML and MO guards | PASS | Existing `cod-admin` and Admin control tests; no real order or settlement mutation. |
+| Full regression | PASS | 33 files; 386 passed, 1 skipped. |
+| Build/lint/PS5.1 parse | PASS | `npm run build`, `npm run lint`, Windows PowerShell parser. |
+| Artifact identity | PASS LOCAL | SHA256 `3d0d17a3a953c6804a84f3449cc7b11ab2b87f68b0e8c602e79ff23ab32f7911`; 7 tracked Admin files. |
+| Host upload / 0% preview | PENDING | Sandbox cannot invoke approved `bi\\nazim`; use the single runner command in the final report. |
+
 ## GFS-COD-MO-87 immutable Worker resource mapping (2026-11-07 PKT)
 
 | Gate | Result | Evidence |

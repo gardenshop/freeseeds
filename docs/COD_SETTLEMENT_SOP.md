@@ -1,5 +1,9 @@
 # COD Settlement SOP
 
+## GFS-COD-MO-88 isolated preview gate (2026-11-07 PKT)
+
+The historical MO candidate must be built from the live-compatible Admin baseline plus only the guarded historical MO UI/route and its required dependencies. Do not upload the auto-update-only candidate or broad PR11. Migration 0048 is already applied once; do not rerun it. The approved host runner must recheck identity, token validity and the exact artifact digest, then use `VERSIONS_UPLOAD_ONLY`; this does not deploy or alter routing. CAPI remains OFF and a real MO settlement still requires genuine evidence and separate authorization.
+
 ## Private watchdog boundary (2026-11-06 PKT)
 
 The MO rollback watchdog artifact is private and fail-closed: workers.dev and preview URLs are disabled, no routes or Cron are configured before credential verification, HTTP is deny-all, and the default state is DISARMED. External creation, scoped credential provisioning, secret injection and independent Cron proof remain separate gates. Never substitute a public Hello World deployment or the Admin recovery credential for the new Worker-only deployment credential.

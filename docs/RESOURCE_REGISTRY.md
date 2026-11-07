@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-COD-MO-88 isolated Admin candidate (2026-11-07 PKT)
+
+- Source boundary: live-compatible Admin baseline `551c2ee` plus historical MO UI/guarded route and required disabled-CAPI outbox dependencies; auto-update-only GFS-70/GFS-71 candidate excluded.
+- Local artifact digest: `3d0d17a3a953c6804a84f3449cc7b11ab2b87f68b0e8c602e79ff23ab32f7911`; 7 tracked Admin files. No Cloudflare version ID exists yet because the approved host upload was not run here.
+- Protected state remains unchanged: Admin baseline 100% / candidate 0%, API 100%, watchdog DISARMED, WhatsApp canonical sender retained, CAPI OFF, migration 0048 not rerun.
+
 ## GFS-COD-MO-87 Worker immutable-tag mapping (2026-11-07 PKT)
 
 - The supported Worker Scripts list record exposes the script name as `id` and the immutable script identifier as `tag`; the linkage verifier matches both internally without recording either value.

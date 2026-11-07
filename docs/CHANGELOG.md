@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-07 - GFS-COD-MO-88
+
+- Isolated the historical MO Admin candidate from the auto-update-only GFS-70/GFS-71 delta and recomputed the approved artifact digest.
+- Local tests/build/lint/PS5.1 parse pass; no upload, traffic, settlement, CAPI or production mutation occurred.
+
 ## 2026-11-07 - GFS-COD-MO-84
 
 - Repaired token-policy parsing for Cloudflare’s documented flat and nested resource maps in both PowerShell linkage and Node preflight guards.

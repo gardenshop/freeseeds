@@ -1,5 +1,13 @@
 # Status
 
+## GFS-COD-MO-88 isolated historical MO candidate (2026-11-07 PKT)
+
+**Disposition: LOCAL CANDIDATE PASS / HOST UPLOAD PENDING.**
+
+- The candidate is based on the live-compatible `551c2ee` Admin source with historical MO UI, guarded settlement route, ledger protections and disabled-CAPI outbox dependencies only. The auto-update-only GFS-70/GFS-71 delta is absent.
+- Local generated-HTML/guard tests, full suite (386 passed/1 skipped), build, lint and PS5.1 parse pass. Artifact digest: `3d0d17a3a953c6804a84f3449cc7b11ab2b87f68b0e8c602e79ff23ab32f7911`; 7 tracked Admin files.
+- Owner host preflight was reported PASS, but this sandbox cannot invoke `bi\\nazim`; no Cloudflare version ID or live Admin screen result is claimed. Production remains Admin 100% baseline / candidate 0%, API 100%, watchdog DISARMED, CAPI OFF.
+
 ## GFS-COD-MO-87 immutable Worker resource mapping (2026-11-07 PKT)
 
 **Disposition: LOCAL REPAIR PASS / REAL HOST PROOF PENDING.**

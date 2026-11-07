@@ -1,3 +1,10 @@
+## GFS-COD-MO-88 candidate boundary (2026-11-07 PKT)
+
+**Decision:** prepare one 0%-traffic historical MO upload from the live-compatible baseline plus required historical MO code only; do not upload the auto-update-only candidate or broad PR11.
+
+- The source boundary was checked against `551c2ee`; only historical MO/CAPI-outbox/migration dependencies remain in the Admin source diff. Migration 0048 is complete and was not rerun.
+- The isolated artifact passed local tests/build/lint/PS5.1 parse with digest `3d0d17a3a953c6804a84f3449cc7b11ab2b87f68b0e8c602e79ff23ab32f7911`. Upload and authenticated preview are pending the approved host runner; no production mutation occurred.
+
 ## GFS-COD-MO-83A - one final owner-host preflight (2026-11-07 PKT)
 
 **Decision:** accept the owner screenshot as metadata-target presence evidence only and require one integrated read-only Preflight under `bi\\nazim` for actual linkage and deployment readback.
