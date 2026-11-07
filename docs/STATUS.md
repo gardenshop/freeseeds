@@ -3633,3 +3633,9 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **PASS:** Post-review DRY_RUN expiry guard rejects missing/expired/overlong windows; focused watchdog tests are14/14, full385 passed/1 skipped, build/lint PASS. Corrected watchdog version `d43d8649-d67b-46bb-8883-f4c219450aca` is deployed at100% in deployment `97134a72-a627-48c9-983e-8aeadd717a91` with only `ADMIN_RECOVERY_TOKEN`; Admin remains exact100/0 and no Admin write occurred.
 - **INCONCLUSIVE:** DRY_RUN version `c5d8af8a-95a3-4dab-b392-c42d5adc5df1` ran under the fixed deadline `07:31:38Z`; official tail started HTTP200 but returned zero records with one WebSocket error, and GraphQL fallback was unavailable. No `already_restored` runtime record was claimed.
 - **PASS:** Watchdog was disarmed immediately as version `4be1baa7-8097-4d04-83d9-6172a2067eb8` at100%; Admin remained `3e4b7c26`100% / `ce023b54`0%, API health/Orders/Conversations remained HTTP200, and no Admin/data mutation occurred.
+## GFS-COD-MO-67C — telemetry and DRY_RUN (2026-11-07 PKT)
+
+- **PASS:** Watchdog-only Workers Logs are enabled with invocation persistence and 100% sampling; Traces, Issues and Logpush remain off.
+- **PASS:** Two genuine DISARMED Cron events were observed for version `d43d8649...` at 12:53:39.058 and 12:54:38.597 PKT, with outcome `ok` and sanitized `wrote=false`.
+- **INCONCLUSIVE:** The bounded DRY_RUN version `c854dce7...` produced a fresh version-attributed scheduled event at 13:01:38.374 PKT, but the official event view did not expose the sanitized `already_restored` result. No success was claimed.
+- **PASS:** Mandatory disarm restored version `73a1f50c...` at 100% in deployment `907d4813...`; only `ADMIN_RECOVERY_TOKEN` binding remains. Admin stayed exact 100/0; authenticated Orders/Conversations returned HTTP200; no production data mutation occurred.

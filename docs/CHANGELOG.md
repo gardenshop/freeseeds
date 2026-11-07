@@ -2477,3 +2477,8 @@
 - Added the watchdog-only GET/no-POST `DRY_RUN` guard and sanitized scheduled outcome logging; focused13/13, full385/1, build/lint PASS.
 - Ran one bounded DRY_RUN window, but official tail returned no records and GraphQL fallback was unavailable. Classified runtime proof INCONCLUSIVE and immediately restored watchdog DISARMED; Admin/API remained unchanged.
 - Added fail-closed five-minute DRY_RUN expiry validation, retested14/14 focused, and deployed corrected watchdog version `d43d8649-d67b-46bb-8883-f4c219450aca` at100% in `97134a72-a627-48c9-983e-8aeadd717a91`; no Admin/API routing or data mutation.
+## 2026-11-07 — GFS-COD-MO-67C
+
+- Enabled Workers Logs only for the isolated watchdog and verified two genuine version-attributed DISARMED Cron events with sanitized no-write output.
+- Ran one bounded GET-only DRY_RUN. The scheduled invocation was version-attributed, but the official event view did not expose the application `already_restored` result; classified INCONCLUSIVE.
+- Mandatory disarm completed at version `73a1f50c-46a2-48d5-b5e5-d01f2bd34c7a` / deployment `907d4813-11bd-44fc-9621-fc39dda47b3f`; Admin/API/payment/D1/Meta/CAPI remained unchanged.

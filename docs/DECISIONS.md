@@ -2864,3 +2864,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Follow-up:** enforce a required `WATCHDOG_DRY_RUN_EXPIRES_AT` no more than five minutes after start and before the deadline. Corrected watchdog version `d43d8649-d67b-46bb-8883-f4c219450aca` is now DISARMED at100% in deployment `97134a72-a627-48c9-983e-8aeadd717a91`; runtime telemetry remains INCONCLUSIVE, so no canary authorization follows.
 - **Evidence:** local GET-only/drift tests passed13/13. The live tail/GraphQL channels did not provide a sanitized scheduled outcome, so runtime proof is INCONCLUSIVE.
 - **Boundary:** watchdog was returned to DISARMED and Admin remained baseline100% / candidate0%. No Admin canary, MO settlement or CAPI action is authorized until supported runtime evidence is available.
+## GFS-COD-MO-67C — telemetry evidence boundary
+
+- **Decision:** watchdog-only Workers Logs may be enabled for runtime evidence; Admin/API logs and broader observability products remain unchanged.
+- **Evidence:** two real DISARMED Cron events were version-attributed to `d43d8649...` with `outcome=ok` and sanitized `wrote=false`. The bounded DRY_RUN invocation was attributed to `c854dce7...`, but its application result was not exposed by the official event view.
+- **Decision:** classify DRY_RUN runtime proof INCONCLUSIVE, disarm immediately, and do not authorize an Admin canary from this evidence.
+- **Final state:** watchdog version `73a1f50c...` is 100% with only `ADMIN_RECOVERY_TOKEN`; Admin remained `f632e4d2...` baseline100% / candidate0%.

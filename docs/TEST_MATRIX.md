@@ -4306,3 +4306,7 @@ Investigation query costs only (not production savings): representative `rows_re
 | MO-67B corrected DISARMED deployment | PASS | Version `d43d8649...`, deployment `97134a72...`, 100%; only `ADMIN_RECOVERY_TOKEN` binding; Admin unchanged. |
 | MO-67B sanitized runtime evidence | INCONCLUSIVE | Tail HTTP200 produced zero records/one WebSocket error; GraphQL fallback unavailable; no runtime outcome was claimed. |
 | MO-67B mandatory disarm | PASS | Watchdog version `4be1baa7…`100%, no arm variables, secret binding retained; Admin remained exact 100/0. |
+| MO-67C watchdog-only log enablement | PASS | Invocation logs/persistence/100% sampling enabled only for `gfs-cod-mo-55-watchdog`; Traces, Issues and Logpush off. |
+| MO-67C genuine DISARMED Cron evidence | PASS | Version `d43d8649...` events at 12:53:39.058 and 12:54:38.597 PKT; outcome `ok`, sanitized `wrote=false`. |
+| MO-67C DRY_RUN application outcome | INCONCLUSIVE | Version `c854dce7...` scheduled event observed, but official event view did not expose `already_restored`/`wrote=false` application output. |
+| MO-67C mandatory disarm and zero regression | PASS | Version `73a1f50c...` at 100%; only named secret binding; Admin exact100/0; Orders/Conversations HTTP200; no production mutation. |
