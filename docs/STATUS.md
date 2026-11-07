@@ -3694,3 +3694,8 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Repaired historical `Confirm MO Received` to create one durable idempotent `CAPI_PURCHASE` outbox/capi row after a guarded PAID commit when enabled. Queue failure is deferred and does not undo PAID; production CAPI remains OFF.
 - Focused COD Admin 35/35, full 387 passed/1 skipped, build/lint PASS. No live settlement, CAPI send, customer message, D1/payment mutation or deployment occurred.
 - Live button/settlement remains **NOT VERIFIED**: isolated candidate upload/readback, genuine delivered+tracked evidence, separate settlement authorization and Meta acknowledgement are still required.
+
+## GFS-COD-MO-74 — deployment access and preview (2026-11-07 PKT)
+- Cloudflare account identity was read-only verified. Deployment is **BLOCKED**: no callable approved `bi\\nazim` deployment runner or documented Wrangler deployment command is available in this session.
+- The existing monitor credential wrapper is health/analytics-only and was not misused. No secret, upload, routing change, payment/order mutation, D1 write, Meta/CAPI action or customer message occurred.
+- CAPI remains OFF; local MO-73 tests remain valid. Historical MO preview and live settlement remain unverified.

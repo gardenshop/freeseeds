@@ -2660,3 +2660,9 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - Settlement still requires genuine delivered + assigned tracking evidence, exact original payable, operator confirmation, non-duplicate HMACs, and all existing Advance/hold/archive guards. No live order was settled or changed.
 - Local verification: focused COD Admin 35/35, full 387 passed/1 skipped, build/lint PASS. Live Admin remains `3e4b7c26`100% / `ce023b54`0%, API `b426ba47`100%, watchdog DISARMED; no deployment, CAPI send or Meta mutation occurred.
 - Live MO is **NOT LIVE/NOT VERIFIED**: isolated deployment access and genuine eligible evidence are still missing. Do not claim PAID or Meta acknowledgement.
+
+## GFS-COD-MO-74 deployment-access boundary (2026-11-07 PKT)
+
+- Cloudflare account identity remains the verified GFS account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; protected Admin/API routing is unchanged. The approved `bi\\nazim` deployment runner is not callable here, and no documented callable Wrangler deployment command exists in the repository.
+- `scripts/run-with-gfs-monitor-credentials.ps1` is health/analytics-only and must not be repurposed for Worker deployment. No token was read, extracted, retried or exposed; no upload or preview was attempted.
+- Exact owner unblock: provide the approved host-side deployment runner/interface that injects `GFS-Admin-Deploy-Scoped-2026` process-only and executes the source-isolated Admin upload/readback from `bi\\nazim`; return only sanitized version/deployment IDs. Do not send the token value or use the health wrapper.

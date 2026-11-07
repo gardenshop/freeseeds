@@ -88,3 +88,7 @@ The Orders auto-update repair must be released from a source-isolated Admin cand
 ## GFS-COD-MO-73 final MO/CAPI settlement gate
 
 Historical MO confirmation requires genuine delivered status with assigned tracking, exact original payable, private evidence and operator confirmation. The guarded transaction records the immutable receipt, marks the correct order PAID, and—only when CAPI is enabled—creates one idempotent durable `CAPI_PURCHASE` outbox record after PAID. Queue or Meta failure must not undo PAID; the outbox remains authoritative. CAPI is OFF in production. Never claim live settlement or Meta acknowledgement without approved deployment, genuine evidence and provider acknowledgement.
+
+## GFS-COD-MO-74 deployment bridge gate
+
+The health/analytics Credential Manager wrapper is not a Worker deployment bridge. Do not pass deployment credentials through it, the browser, MCP output or a guessed Wrangler command. Require the approved host-side `bi\\nazim` deployment runner to inject the scoped Admin credential process-only and return sanitized version/deployment readback before any isolated MO preview.

@@ -2792,3 +2792,8 @@ No secrets are stored in this registry.
 - Historical MO source now includes guarded idempotent CAPI Purchase outbox creation after PAID when enabled; local source only, not deployed.
 - Protected live resources remain Admin `3e4b7c26`100% / candidate `ce023b54`0%, API `b426ba47`100%, watchdog DISARMED, CAPI OFF, canonical sender and Hoja/new-number isolation unchanged.
 - Genuine settlement evidence and an approved isolated deployment/Meta acknowledgement path remain required; no secrets, raw MO references or customer data are recorded here.
+
+## GFS-COD-MO-74 deployment resource status (2026-11-07 PKT)
+- Account identity read-only verified; Admin/API/watchdog protected routing unchanged.
+- Deployment bridge: **BLOCKED**. No callable approved `bi\\nazim` Wrangler runner or documented deployment command is registered. Existing monitor wrapper is health/analytics-only and was not reused.
+- Required owner setup: provide the approved host runner/interface for process-only use of the named scoped Admin credential; never record its value.

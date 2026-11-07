@@ -2923,3 +2923,8 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Keep the historical MO fix local until the source-isolated release and evidence gates pass. When enabled, the handler writes one idempotent Purchase outbox record after PAID; Queue failure is non-blocking.
 - Do not enable CAPI, settle a real order, promote Admin, or claim Meta acknowledgement without approved deployment and genuine evidence.
 - Keep Admin/API/watchdog/WhatsApp/payment/Hoja protections unchanged.
+
+## GFS-COD-MO-74 — stop at missing deployment bridge (2026-11-07 PKT)
+- Do not repurpose `scripts/run-with-gfs-monitor-credentials.ps1` for deployment; it only supplies health/analytics credentials.
+- Stop deployment and preview until the owner supplies the approved host-side `bi\\nazim` deployment runner/interface for the scoped Admin credential. No token value or guessed Wrangler command is acceptable.
+- Keep CAPI OFF and do not settle a real order until isolated preview, genuine evidence, separate authorization and Meta acknowledgement gates pass.

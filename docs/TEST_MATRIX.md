@@ -4352,3 +4352,7 @@ Investigation query costs only (not production savings): representative `rows_re
 | MO-73 focused/full/build/lint | PASS | Focused COD Admin 35/35; full 387 passed/1 skipped; build and lint PASS. |
 | MO-73 genuine settlement evidence | BLOCKED | No verified eligible delivered/tracked order and exact private Pakistan Post evidence supplied; no live PAID action performed. |
 | MO-73 live deployment/UI/Meta acknowledgement | BLOCKED | Isolated deployment bridge unavailable; production CAPI remains OFF and no Meta acknowledgement was attempted. |
+
+| MO-74 account identity/routing protection | PASS (read-only) | Cloudflare account URL and protected Admin/API/watchdog state unchanged. |
+| MO-74 approved deployment bridge | BLOCKED | No callable/documented `bi\\nazim` Wrangler deployment runner; health/analytics wrapper is not a deployment path. |
+| MO-74 isolated MO preview | NOT RUN | Correctly stopped before upload; no positive traffic or production mutation. |
