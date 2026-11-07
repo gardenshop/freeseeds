@@ -2932,7 +2932,7 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 ## GFS-COD-MO-76 fixed secure host runner
 
 - **Decision:** use a repository-owned PowerShell runner with a fixed account/Worker, exact `bi\\nazim` identity gate, process-only Credential Manager handoff, and default read-only preflight. Do not reuse the health/analytics wrapper.
-- **Artifact gate:** require approved Git HEAD `cdbe8855f2936be9863fde24873153d2de5eba8a` and deterministic digest `cfe777513ca21aca476a755aaf93ab61797a418c03952752541794f679b209c4` for the current tracked Admin source/config set.
+- **Artifact gate:** require final verified Git HEAD `ebfd82379ac4ebd259802625a76ba59933608044` and deterministic digest `cfe777513ca21aca476a755aaf93ab61797a418c03952752541794f679b209c4` for the current tracked Admin source/config set.
 - **Upload boundary:** if separately authorized, the runner may call only `wrangler versions upload`; it must report `deployed=false` and `routingChanged=false`. It may not deploy, attach, promote, read secrets, or alter production configuration.
 - **Evidence:** mock/API tests 4/4, Node syntax and PowerShell parse pass. Live host credential and scope remain unverified from the sandbox; no upload was attempted.
 
