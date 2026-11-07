@@ -65,3 +65,6 @@ The watchdog `DRY_RUN` state is the only permitted pre-canary runtime probe. At 
 ## GFS-COD-MO-67C observability boundary
 
 Enable Workers Logs only on the private watchdog when authorized; keep Traces, Issues and Logpush off unless separately approved. Configuration and a generic scheduled invocation do not prove the DRY_RUN result. Require a version-attributed scheduled event plus the sanitized application result `status=DRY_RUN`, `code=already_restored`, `wrote=false`, and timestamp. If the official event view exposes only the invocation envelope, classify the DRY_RUN INCONCLUSIVE and disarm immediately. The final disarmed readback must show 100% watchdog routing, no arm variables, the named recovery-secret binding, and unchanged Admin 100/0 routing.
+## GFS-COD-MO-67D query limitation
+
+The supported dashboard Query Builder must return the sanitized application record for the exact DRY_RUN version before runtime proof is accepted. A successful query response with zero rows, or a Live invocation envelope without application fields, is insufficient. Do not inspect browser request headers/cookies or bypass the dashboard query path; if the version-indexed query returns zero for known scheduled records, stop without another DRY_RUN and report the ingestion/indexing blocker.

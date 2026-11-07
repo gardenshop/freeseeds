@@ -2482,3 +2482,8 @@
 - Enabled Workers Logs only for the isolated watchdog and verified two genuine version-attributed DISARMED Cron events with sanitized no-write output.
 - Ran one bounded GET-only DRY_RUN. The scheduled invocation was version-attributed, but the official event view did not expose the application `already_restored` result; classified INCONCLUSIVE.
 - Mandatory disarm completed at version `73a1f50c-46a2-48d5-b5e5-d01f2bd34c7a` / deployment `907d4813-11bd-44fc-9621-fc39dda47b3f`; Admin/API/payment/D1/Meta/CAPI remained unchanged.
+## 2026-11-07 — GFS-COD-MO-67D
+
+- Verified the existing sanitized watchdog logging source and tested official version-filtered Observability queries.
+- Known scheduled versions returned zero indexed rows while Live view exposed only invocation envelopes; DRY_RUN was not repeated and remains blocked.
+- Watchdog remains DISARMED and production Admin/API/payment/D1/Meta/CAPI state is unchanged.

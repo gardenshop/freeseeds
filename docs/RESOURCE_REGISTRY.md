@@ -2744,3 +2744,7 @@ No secrets are stored in this registry.
 - Genuine DISARMED event evidence: version `d43d8649...`, timestamps 12:53:39.058 and 12:54:38.597 PKT, outcome `ok`, sanitized no-write result.
 - DRY_RUN version `c854dce7...` was observed at 13:01:38.374 PKT but application outcome was not exposed; runtime proof remains INCONCLUSIVE.
 - Final disarmed resource: version `73a1f50c...`, deployment `907d4813...`, 100%, Cron `* * * * *`, route-free, binding name `ADMIN_RECOVERY_TOKEN` only. Admin deployment remained `f632e4d2...` baseline100% / candidate0%.
+## GFS-COD-MO-67D observability blocker (2026-11-07 PKT)
+
+- Official Query Builder version filters for DRY_RUN `c854dce7...` and DISARMED `d43d8649...` returned zero indexed rows despite Live invocation envelopes. Existing source logging is structured and sanitized; no source change or second DRY_RUN was performed.
+- Final watchdog remains version `73a1f50c...`, deployment `907d4813...`, 100%, Cron active, route-free, `ADMIN_RECOVERY_TOKEN` binding only.

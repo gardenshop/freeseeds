@@ -2870,3 +2870,8 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Evidence:** two real DISARMED Cron events were version-attributed to `d43d8649...` with `outcome=ok` and sanitized `wrote=false`. The bounded DRY_RUN invocation was attributed to `c854dce7...`, but its application result was not exposed by the official event view.
 - **Decision:** classify DRY_RUN runtime proof INCONCLUSIVE, disarm immediately, and do not authorize an Admin canary from this evidence.
 - **Final state:** watchdog version `73a1f50c...` is 100% with only `ADMIN_RECOVERY_TOKEN`; Admin remained `f632e4d2...` baseline100% / candidate0%.
+## GFS-COD-MO-67D — stop on query/index mismatch
+
+- **Evidence:** Query Builder filters for `c854dce7...` and known DISARMED `d43d8649...` returned zero rows, while Live view showed scheduled envelopes. The existing structured console logging source is present and unchanged.
+- **Decision:** do not run another DRY_RUN until an official query path exposes `status=DRY_RUN`, `code=already_restored`, `wrote=false`, and timestamp. Browser-cookie/request-body inspection is not an approved workaround.
+- **Safety:** watchdog remains DISARMED; Admin/API/payment/D1/Meta/CAPI state remains unchanged.

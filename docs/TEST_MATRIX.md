@@ -4310,3 +4310,6 @@ Investigation query costs only (not production savings): representative `rows_re
 | MO-67C genuine DISARMED Cron evidence | PASS | Version `d43d8649...` events at 12:53:39.058 and 12:54:38.597 PKT; outcome `ok`, sanitized `wrote=false`. |
 | MO-67C DRY_RUN application outcome | INCONCLUSIVE | Version `c854dce7...` scheduled event observed, but official event view did not expose `already_restored`/`wrote=false` application output. |
 | MO-67C mandatory disarm and zero regression | PASS | Version `73a1f50c...` at 100%; only named secret binding; Admin exact100/0; Orders/Conversations HTTP200; no production mutation. |
+| MO-67D structured logging source | PASS | Existing scheduled handler emits sanitized event/status/code/wrote/timestamp fields; no source defect found. |
+| MO-67D version-indexed query | BLOCKED | Query Builder returned 0 success/0 error rows for DRY_RUN `c854dce7...` and known DISARMED `d43d8649...`, despite Live invocation envelopes. |
+| MO-67D second DRY_RUN | NOT RUN | Correctly withheld because the application-result channel remains unproven. |

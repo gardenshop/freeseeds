@@ -3639,3 +3639,8 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **PASS:** Two genuine DISARMED Cron events were observed for version `d43d8649...` at 12:53:39.058 and 12:54:38.597 PKT, with outcome `ok` and sanitized `wrote=false`.
 - **INCONCLUSIVE:** The bounded DRY_RUN version `c854dce7...` produced a fresh version-attributed scheduled event at 13:01:38.374 PKT, but the official event view did not expose the sanitized `already_restored` result. No success was claimed.
 - **PASS:** Mandatory disarm restored version `73a1f50c...` at 100% in deployment `907d4813...`; only `ADMIN_RECOVERY_TOKEN` binding remains. Admin stayed exact 100/0; authenticated Orders/Conversations returned HTTP200; no production data mutation occurred.
+## GFS-COD-MO-67D — DRY_RUN result (2026-11-07 PKT)
+
+- **BLOCKED:** Official Query Builder version filters for DRY_RUN `c854dce7...` and known DISARMED `d43d8649...` returned HTTP-success with 0 success/0 error events, while Live view exposed only invocation envelopes. The application result is not safely provable.
+- **PASS:** Existing source emits sanitized `event/status/code/wrote/timestamp`; no code change or second DRY_RUN was made. Token verification is active HTTP200 with expiry `18:59:59Z`; margin exceeded nine hours at preflight.
+- **PASS:** Watchdog remains DISARMED `73a1f50c...` at 100%; Admin remains exact100/0 and no production mutation occurred.
