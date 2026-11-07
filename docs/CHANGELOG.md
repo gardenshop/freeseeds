@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-07 - GFS-COD-MO-80
+
+- Added sanitized diagnostics for account token-details 403/404 responses without weakening exact Worker-scope verification.
+- Confirmed preflight remains blocked until independent dashboard evidence proves the named token is limited to `getfreeseeds-admin-staging`.
+
 ## 2026-11-07 - GFS-COD-MO-79
 
 - Replaced the unsupported PowerShell 5.1 embedded C# null-coalescing throw expression with C# 5-compatible Credential Manager code.

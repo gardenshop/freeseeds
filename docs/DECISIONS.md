@@ -2957,3 +2957,8 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 ## GFS-COD-MO-75 — no dashboard deployment workaround (2026-11-07 PKT)
 - Treat the MCP safety rejection of dashboard `Edit code` as a deployment-access blocker, not permission to bypass via DOM, direct API, token extraction or health-wrapper reuse.
 - Stop at 0% until the approved host deployment runner is callable; do not claim preview or live MO completion.
+## GFS-COD-MO-80 — fail closed on unavailable token policy
+
+- **Decision:** do not treat account-token verification or successful Worker readback as proof of exact Worker-only policy. Keep `token_scope_unverified` on denied/missing account token-details evidence.
+- **Repair:** expose only sanitized HTTP status/provider codes for details failure and test 403/404 behavior.
+- **Boundary:** no upload, deployment, routing, payment, D1, Meta, WhatsApp or CAPI action until exact scope is independently proven.

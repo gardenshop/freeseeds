@@ -1,5 +1,13 @@
 # Test Matrix
 
+## GFS-COD-MO-80 token scope gate (2026-11-07 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Details 403/404 handling | PASS | Sanitized HTTP status/provider-code tests; no response message or credential leakage. |
+| Exact Worker-only scope | UNVERIFIED | Dashboard list labels Individual Workers Editor, but exact resource detail was not safely readable through MCP. |
+| Fail-closed upload gate | PASS | Upload remains blocked while exact scope evidence is unavailable. |
+
 ## GFS-COD-MO-79 PowerShell 5.1 runtime (2026-11-07 PKT)
 
 | Gate | Result | Evidence |

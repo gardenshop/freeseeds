@@ -1,5 +1,14 @@
 # Status
 
+## GFS-COD-MO-80 — token scope gate (2026-11-07 PKT)
+
+**Disposition: BLOCKED at independent exact-scope proof; no upload attempted.**
+
+- Owner preflight reached `token_scope_unverified`. Account-token verification and token-details are separate operations; Worker access does not establish policy scope.
+- Added sanitized provider-code/status reporting for details 403/404 responses. Focused preflight tests pass 5/5; PowerShell guards remain 9/9 with C# compilation 2/2; full suite 387/1, build/lint/parser PASS.
+- Dashboard list labels `GFS-Admin-Deploy-Scoped-2026` as `Individual Workers Editor`, but exact Worker scope was not safely readable through the current MCP snapshot. No credential, upload, routing, payment, D1, Meta, WhatsApp or CAPI mutation occurred.
+- Required owner action: open the token detail view and return a sanitized screenshot showing active/expiry, `Individual Workers Editor`, and exact Worker `getfreeseeds-admin-staging`; never show token value or full token ID.
+
 ## GFS-COD-MO-79 — PowerShell 5.1 runtime repair (2026-11-07 PKT)
 
 **Disposition: PASS locally / owner credential validation pending.**

@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-80 token scope gate (2026-11-07 PKT)
+
+- Account token verification and token-policy details are separate. A Worker-only token may verify successfully while its policy details remain unavailable; scope is never inferred from Worker readback.
+- Preflight now returns only sanitized HTTP status/provider codes for denied token-details responses and remains fail-closed as `token_scope_unverified`.
+- The dashboard list labels the named token `Individual Workers Editor`, but exact `getfreeseeds-admin-staging` scope remains unverified through the safe MCP snapshot. No upload is authorized.
+
 ## GFS-COD-MO-79 PowerShell 5.1 runtime repair (2026-11-07 PKT)
 
 - Replaced the C# 7 null-coalescing throw expression in the Win32 Credential Manager reader with C# 5-compatible assignment, null check, throw and return statements. `CredFree`, identity, Git/SHA, scope and secret guards remain unchanged.

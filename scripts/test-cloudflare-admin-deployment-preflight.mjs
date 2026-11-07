@@ -14,12 +14,12 @@ const uuid = "01234567-89ab-cdef-0123-456789abcdef";
 const response = (body, status = 200) => ({ status, json: async () => body });
 const execFile = promisify(execFileCallback);
 
-function apiFetch(calls, { scope = true, workerStatus = 200 } = {}) {
+function apiFetch(calls, { scope = true, workerStatus = 200, detailsStatus = 200, detailsErrors = [] } = {}) {
   return async (url, options) => {
     assert.equal(options.headers.Authorization, `Bearer ${token}`);
     calls.push(url);
     if (url.endsWith("/tokens/verify")) return response({ success: true, result: { id: tokenId, status: "active", expires_on: "2099-01-01T00:00:00Z" } });
-    if (url.endsWith(`/tokens/${tokenId}`)) return response({ success: true, result: { policies: scope ? [{ effect: "allow", resources: { [`com.cloudflare.api.account.worker.script.${WORKER_NAME}`]: "*" }, permission_groups: [{ id: "workers-editor" }] }] : [{ effect: "allow", resources: { "com.cloudflare.api.account": "*" } }] } });
+    if (url.endsWith(`/tokens/${tokenId}`)) return response(detailsStatus === 200 ? { success: true, result: { policies: scope ? [{ effect: "allow", resources: { [`com.cloudflare.api.account.worker.script.${WORKER_NAME}`]: "*" }, permission_groups: [{ id: "workers-editor" }] }] : [{ effect: "allow", resources: { "com.cloudflare.api.account": "*" } }] } } : { success: false, errors: detailsErrors }, detailsStatus);
     if (url.endsWith(`/scripts/${WORKER_NAME}/deployments`)) return response({ success: true, result: [{ id: uuid }] }, workerStatus);
     throw new Error("unexpected_request");
   };
@@ -45,6 +45,17 @@ test("fails closed on inactive token and worker readback", async () => {
   assert.equal(inactive.code, "credential_shape_invalid");
   const denied = await verifyDeploymentCredential({ token, fetchImpl: apiFetch([], { workerStatus: 403 }) });
   assert.equal(denied.code, "worker_readback_failed");
+});
+
+test("reports sanitized scope-detail denial without weakening the gate", async () => {
+  const denied = await verifyDeploymentCredential({ token, fetchImpl: apiFetch([], { detailsStatus: 403, detailsErrors: [{ code: 9109, message: "hidden" }] }) });
+  assert.equal(denied.code, "token_scope_unverified");
+  assert.equal(denied.httpStatus, 403);
+  assert.deepEqual(denied.providerCodes, ["cf_9109"]);
+  const missing = await verifyDeploymentCredential({ token, fetchImpl: apiFetch([], { detailsStatus: 404, detailsErrors: [{ code: 9109 }] }) });
+  assert.equal(missing.code, "token_scope_unverified");
+  assert.deepEqual(missing.providerCodes, ["cf_9109"]);
+  assert.ok(!JSON.stringify(denied).includes("hidden"));
 });
 
 test("artifact digest is deterministic and includes tracked source/config", async () => {

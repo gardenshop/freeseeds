@@ -69,7 +69,7 @@ export async function verifyDeploymentCredential({ token, fetchImpl = fetch, now
   if (!/^[a-f0-9]{32}$/i.test(String(tokenId ?? ""))) return { ...safeResult("FAIL"), code: "token_identity_missing" };
   const details = await jsonRequest({ token, path: `/accounts/${ACCOUNT_ID}/tokens/${tokenId}`, fetchImpl });
   if (details.response.status !== 200 || details.body?.success !== true) {
-    return { ...safeResult("FAIL"), code: "token_scope_unverified", httpStatus: details.response.status };
+    return { ...safeResult("FAIL"), code: "token_scope_unverified", httpStatus: details.response.status, providerCodes: providerCode(details.body) };
   }
   if (!exactWorkerScope(details.body?.result?.policies)) return { ...safeResult("FAIL"), code: "token_scope_mismatch" };
 

@@ -1,5 +1,10 @@
 # Resource Registry
 
+## GFS-COD-MO-80 deployment token scope (2026-11-07 PKT)
+
+- `GFS-Admin-Deploy-Scoped-2026` is listed as `Individual Workers Editor`; exact `getfreeseeds-admin-staging` resource scope remains unverified because account token-details read was denied/unavailable.
+- Preflight remains fail-closed and emits only sanitized details status/provider codes. No upload or production resource changed.
+
 ## GFS-COD-MO-79 PowerShell runtime repair (2026-11-07 PKT)
 
 - `scripts/run-gfs-admin-deployment.ps1` now uses C# 5-compatible Credential Manager reader syntax; `CredFree` and secret-safe process handling are retained.
