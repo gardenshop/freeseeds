@@ -422,6 +422,20 @@ describe("COD Admin configuration and reconciliation", () => {
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM capi_events").get()).toEqual({ count: 0 });
   });
 
+  it("creates one durable historical Purchase outbox event without blocking PAID when Queue is unavailable", async () => {
+    seedHistorical();
+    sqlite.prepare("INSERT INTO customers(id) VALUES('historical-customer')").run();
+    sqlite.prepare("UPDATE orders SET customer_id='historical-customer' WHERE id='historical-order'").run();
+    sqlite.prepare("INSERT INTO meta_attribution(id,order_id,ctwa_clid) VALUES('historical-attribution','historical-order','synthetic-historical-ctwa')").run();
+    const events = { send: vi.fn(async () => { throw new Error("QUEUE_UNAVAILABLE"); }) };
+    const response = await post("/api/orders/historical-order/mark-historical-cod-received", { confirmation: "SIM-HISTORICAL-COD", amountPkr: 200, moNumber: "PK-HIST-MO-CAPI-001", receiptDate: "2026-01-01", evidenceReference: "PRIVATE-RECEIPT-CAPI-001", reason: "Owner verified delivered COD and company receipt", confirmed: true }, undefined, env(hmacKey, "true", events));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ ok: true, paymentStatus: "PAID", historical: true, capiQueue: "DEFERRED" });
+    expect(events.send).toHaveBeenCalledTimes(1);
+    expect(sqlite.prepare("SELECT event_id,event_name,send_status FROM capi_events").get()).toMatchObject({ event_id: "purchase_SIM-HISTORICAL-COD", event_name: "Purchase", send_status: "PENDING" });
+    expect(sqlite.prepare("SELECT kind,idempotency_key,status FROM outbox_jobs").get()).toMatchObject({ kind: "CAPI_PURCHASE", idempotency_key: "purchase_SIM-HISTORICAL-COD", status: "PENDING" });
+  });
+
   it("blocks historical settlement for an unverified Advance receipt and preserves the receipt", async () => {
     seedHistorical("EASYPAISA");
     sqlite.prepare("UPDATE payments SET review_state='REVIEW' WHERE id='historical-payment'").run();

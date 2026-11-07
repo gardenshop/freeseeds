@@ -84,3 +84,7 @@ Queue counters may be recorded read-only but do not substitute for a verified co
 ## Admin auto-update release boundary
 
 The Orders auto-update repair must be released from a source-isolated Admin candidate based on the live-compatible baseline. Do not upload a broad tree that adds frozen historical-MO behavior. Keep Admin baseline 100%, candidate 0%, API unchanged, and require authenticated 0% preview plus rollback readback before any exposure.
+
+## GFS-COD-MO-73 final MO/CAPI settlement gate
+
+Historical MO confirmation requires genuine delivered status with assigned tracking, exact original payable, private evidence and operator confirmation. The guarded transaction records the immutable receipt, marks the correct order PAID, and—only when CAPI is enabled—creates one idempotent durable `CAPI_PURCHASE` outbox record after PAID. Queue or Meta failure must not undo PAID; the outbox remains authoritative. CAPI is OFF in production. Never claim live settlement or Meta acknowledgement without approved deployment, genuine evidence and provider acknowledgement.

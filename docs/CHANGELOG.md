@@ -2525,3 +2525,8 @@
 - Prepared and pushed isolated Admin auto-update artifact `e9d5304` from live-compatible baseline `551c2ee`; functional focused 13/13, full 380/1 skipped, build/lint PASS.
 - Candidate upload/0% preview remains blocked by expired local Wrangler auth and unavailable approved host deployment bridge; Admin/API/watchdog routing stayed unchanged.
 - Corrected settlement SOP language to record migration0048 as applied exactly once. Historical MO, support logging, canary, payment and CAPI gates remain protected.
+
+## 2026-11-07 - GFS-COD-MO-73
+- Repaired historical MO settlement to enqueue one idempotent durable CAPI Purchase record after guarded PAID when enabled; Queue failure remains deferred/non-blocking.
+- Added local regression coverage; focused 35/35, full 387 passed/1 skipped, build/lint PASS.
+- No deployment, real settlement, CAPI send, Meta change or customer/payment mutation; live release remains blocked on deployment access and genuine evidence.

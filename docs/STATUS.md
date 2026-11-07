@@ -3689,3 +3689,8 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - Isolated from live-compatible baseline `551c2ee`; candidate commit `e9d5304` on `codex/gfs72-admin-auto-isolated` contains only the auto-update startup correction and functional test.
 - Focused 13/13, full 380 passed/1 skipped, build/lint PASS. No Cloudflare candidate version was created: Wrangler auth is expired/unrefreshable and the approved host deployment bridge is unavailable.
 - Admin remains `3e4b7c26`100% / `ce023b54`0%; API `b426ba47`100%; watchdog DISARMED. Migration0048 is applied once and SOP pending language corrected. Historical MO remains separately blocked on source/release/evidence/settlement authorization.
+
+## GFS-COD-MO-73 — final historical MO and CAPI source gate (2026-11-07 PKT)
+- Repaired historical `Confirm MO Received` to create one durable idempotent `CAPI_PURCHASE` outbox/capi row after a guarded PAID commit when enabled. Queue failure is deferred and does not undo PAID; production CAPI remains OFF.
+- Focused COD Admin 35/35, full 387 passed/1 skipped, build/lint PASS. No live settlement, CAPI send, customer message, D1/payment mutation or deployment occurred.
+- Live button/settlement remains **NOT VERIFIED**: isolated candidate upload/readback, genuine delivered+tracked evidence, separate settlement authorization and Meta acknowledgement are still required.

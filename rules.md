@@ -2653,3 +2653,10 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - Migration0048 is applied exactly once; outdated pending language in the settlement SOP is marked historical/superseded. Protected Admin `/health` Service Auth HTTP200 remains unverified and is not waived.
 - The independent watchdog is mandatory for any positive Admin traffic exposure/canary under the protected release protocol, but is not a prerequisite for local isolation or a future authorized 0% preview. No traffic exposure is authorized here.
 - Historical `Confirm MO Received` remains incomplete until a source-isolated historical-MO candidate is separately authorized/deployed, a genuine eligible delivered/tracked order and exact original payable/evidence are available, and the real settlement action receives separate authorization. No payment or customer mutation was performed.
+
+## GFS-COD-MO-73 final MO/CAPI boundary (2026-11-07 PKT)
+
+- Historical settlement now creates one idempotent durable `CAPI_PURCHASE` outbox record only after the guarded PAID transition, when `META_CAPI_ENABLED=true`; Queue/Meta delivery failure leaves PAID and the durable outbox intact. Production CAPI remains OFF.
+- Settlement still requires genuine delivered + assigned tracking evidence, exact original payable, operator confirmation, non-duplicate HMACs, and all existing Advance/hold/archive guards. No live order was settled or changed.
+- Local verification: focused COD Admin 35/35, full 387 passed/1 skipped, build/lint PASS. Live Admin remains `3e4b7c26`100% / `ce023b54`0%, API `b426ba47`100%, watchdog DISARMED; no deployment, CAPI send or Meta mutation occurred.
+- Live MO is **NOT LIVE/NOT VERIFIED**: isolated deployment access and genuine eligible evidence are still missing. Do not claim PAID or Meta acknowledgement.

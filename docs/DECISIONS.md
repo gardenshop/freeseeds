@@ -2918,3 +2918,8 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Accept the isolated artifact `e9d5304` from live-compatible source `551c2ee` as locally ready; do not upload it from this session because the official deployment credential path is unavailable.
 - Do not waive the watchdog rule for positive traffic. A future 0% preview may use the ordinary deployment/readback gate, but any canary still requires the independent fail-closed watchdog and separate authorization.
 - Keep migration0048 recorded as applied once; do not rerun it. Keep MO support case #02421284 pending and do not repeat logging/DRY_RUN work.
+
+## GFS-COD-MO-73 — close source gap, retain live gates (2026-11-07 PKT)
+- Keep the historical MO fix local until the source-isolated release and evidence gates pass. When enabled, the handler writes one idempotent Purchase outbox record after PAID; Queue failure is non-blocking.
+- Do not enable CAPI, settle a real order, promote Admin, or claim Meta acknowledgement without approved deployment and genuine evidence.
+- Keep Admin/API/watchdog/WhatsApp/payment/Hoja protections unchanged.

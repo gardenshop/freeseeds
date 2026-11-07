@@ -4347,3 +4347,8 @@ Investigation query costs only (not production savings): representative `rows_re
 | MO-72 functional Orders startup | PASS | Persisted ON startup, two cycles, hidden pause, OFF cancellation and lock-safe execution; focused 13/13. |
 | MO-72 isolated candidate upload/0% preview | BLOCKED | Wrangler authentication expired/unrefreshable and approved host deployment bridge unavailable; no Cloudflare version created. |
 | MO-72 migration/SOP reconciliation | PASS | Migration0048 recorded as applied exactly once; outdated pending SOP statements corrected to historical/superseded. |
+
+| MO-73 historical MO CAPI outbox repair | PASS (local) | Guarded historical PAID transition creates one idempotent Purchase outbox/capi record only when enabled; Queue failure leaves PAID durable. |
+| MO-73 focused/full/build/lint | PASS | Focused COD Admin 35/35; full 387 passed/1 skipped; build and lint PASS. |
+| MO-73 genuine settlement evidence | BLOCKED | No verified eligible delivered/tracked order and exact private Pakistan Post evidence supplied; no live PAID action performed. |
+| MO-73 live deployment/UI/Meta acknowledgement | BLOCKED | Isolated deployment bridge unavailable; production CAPI remains OFF and no Meta acknowledgement was attempted. |

@@ -2787,3 +2787,8 @@ No secrets are stored in this registry.
 - Source baseline: `551c2ee`; candidate branch `codex/gfs72-admin-auto-isolated`; candidate commit `e9d5304`.
 - Artifact is local/Git-only and not a Cloudflare version. It contains only the tested Orders startup correction and functional coverage; no traffic, bindings, payment, D1, Meta, CAPI or watchdog mutation occurred.
 - Deployment resource remains pending one supported authenticated Wrangler/host bridge invocation. Current live Admin/API/watchdog routing is unchanged.
+
+## GFS-COD-MO-73 source/release registry (2026-11-07 PKT)
+- Historical MO source now includes guarded idempotent CAPI Purchase outbox creation after PAID when enabled; local source only, not deployed.
+- Protected live resources remain Admin `3e4b7c26`100% / candidate `ce023b54`0%, API `b426ba47`100%, watchdog DISARMED, CAPI OFF, canonical sender and Hoja/new-number isolation unchanged.
+- Genuine settlement evidence and an approved isolated deployment/Meta acknowledgement path remain required; no secrets, raw MO references or customer data are recorded here.

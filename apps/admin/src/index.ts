@@ -862,12 +862,12 @@ async function markHistoricalCodPaymentReceived(c: AdminContext) {
   if (!evidenceReference) return c.json({ error: "COD_EVIDENCE_REFERENCE_INVALID" }, 400);
   if (!reason) return c.json({ error: "COD_HISTORICAL_REASON_REQUIRED" }, 400);
   if (body.confirmation === undefined || body.confirmed !== true) return c.json({ error: "COD_PAYMENT_CONFIRMATION_REQUIRED" }, 400);
-  const current = await c.env.DB.prepare(`SELECT o.order_number,o.state,o.payment_status,o.archived_at,o.total_payable,p.method,p.review_state,p.approved_amount,p.approved_at,
+  const current = await c.env.DB.prepare(`SELECT o.order_number,o.customer_id,o.state,o.payment_status,o.archived_at,o.total_payable,ma.ctwa_clid,p.method,p.review_state,p.approved_amount,p.approved_at,
     (SELECT COUNT(*) FROM cod_order_details cod WHERE cod.order_id=o.id) AS cod_sidecar_count,
     (SELECT COUNT(*) FROM cod_historical_mo_receipts mo WHERE mo.order_id=o.id) AS historical_count,
     (SELECT COUNT(*) FROM payment_receipts receipt WHERE receipt.order_id=o.id) AS receipt_count,
     EXISTS(SELECT 1 FROM audit_log tracking WHERE tracking.entity_type='ORDER' AND tracking.entity_id=o.id AND tracking.action='ORDER_TRACKING_ASSIGNED') AS tracking_assigned
-    FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=?`).bind(orderId).first<{ order_number:string; state:string; payment_status:string; archived_at:string|null; total_payable:number; method:string|null; review_state:string; approved_amount:number|null; approved_at:string|null; cod_sidecar_count:number; historical_count:number; receipt_count:number; tracking_assigned:number }>();
+    FROM orders o JOIN payments p ON p.order_id=o.id LEFT JOIN meta_attribution ma ON ma.order_id=o.id WHERE o.id=?`).bind(orderId).first<{ order_number:string; customer_id:string|null; state:string; payment_status:string; archived_at:string|null; total_payable:number; ctwa_clid:string|null; method:string|null; review_state:string; approved_amount:number|null; approved_at:string|null; cod_sidecar_count:number; historical_count:number; receipt_count:number; tracking_assigned:number }>();
   if (!current) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
   if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
   if (Number(current.historical_count) !== 0) return c.json({ error: "HISTORICAL_COD_ALREADY_RECORDED" }, 409);
@@ -877,22 +877,32 @@ async function markHistoricalCodPaymentReceived(c: AdminContext) {
   if (current.state !== "DELIVERED" || Number(current.tracking_assigned) !== 1) return c.json({ error: "HISTORICAL_COD_DELIVERY_REQUIRED" }, 409);
   if (current.method !== null && Number(current.receipt_count) > 0) return c.json({ error: "HISTORICAL_ADVANCE_RECEIPT_RECONCILIATION_REQUIRED" }, 409);
   if (!Number.isSafeInteger(body.amountPkr) || Number(body.amountPkr) !== Number(current.total_payable)) return c.json({ error: "COD_HISTORICAL_AMOUNT_MISMATCH" }, 409);
+  const eventEnabled = c.env.META_CAPI_ENABLED === "true";
+  if (eventEnabled && !current.customer_id) return c.json({ error: "COD_CAPI_SOURCE_UNAVAILABLE" }, 503);
   const moReferenceHmac = await codReferenceHmac(moNumber, hmacKey);
   const evidenceReferenceHmac = await codReferenceHmac(evidenceReference, hmacKey);
   const duplicate = await c.env.DB.prepare("SELECT 1 AS present FROM cod_historical_mo_receipts WHERE mo_reference_hmac=? UNION ALL SELECT 1 AS present FROM cod_mo_receipts WHERE mo_reference_hmac=? LIMIT 1").bind(moReferenceHmac, moReferenceHmac).first<{ present:number }>();
   if (duplicate) return c.json({ error: "COD_MO_ALREADY_USED" }, 409);
   const now = new Date().toISOString();
+  const event = eventEnabled ? createPurchaseEvent(current.order_number, approvedPurchaseValue(Number(body.amountPkr), Number(current.total_payable)), current.ctwa_clid ? { ctwaClid: current.ctwa_clid } : undefined) : undefined;
   try {
-    const result = await c.env.DB.batch([
+    const statements: D1PreparedStatement[] = [
       c.env.DB.prepare("INSERT INTO cod_historical_mo_receipts(order_id,mo_reference_hmac,received_amount_pkr,receipt_date,evidence_reference_hmac,settlement_reason,operator_id,received_at) SELECT ?,?,?,?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM cod_historical_mo_receipts WHERE order_id=?) AND EXISTS(SELECT 1 FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=? AND o.state='DELIVERED' AND o.payment_status<>'PAID' AND o.archived_at IS NULL AND o.total_payable=? AND p.approved_amount IS NULL AND p.review_state NOT IN ('APPROVED','COD_PAID') AND NOT EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id))").bind(orderId, moReferenceHmac, Number(body.amountPkr), receiptDate, evidenceReferenceHmac, reason, c.env.ADMIN_EMAIL, now, orderId, orderId, Number(body.amountPkr)),
       c.env.DB.prepare("UPDATE orders SET state='PAID',payment_status='PAID',updated_at=? WHERE id=? AND changes()=1 AND state='DELIVERED' AND payment_status<>'PAID' AND archived_at IS NULL AND total_payable=? AND NOT EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=orders.id)").bind(now, orderId, Number(body.amountPkr)),
       c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE changes()=1 AND EXISTS(SELECT 1 FROM orders WHERE id=? AND state='PAID' AND payment_status='PAID')").bind(`historical_cod_mo_${orderId}`, "COD_HISTORICAL_MO_RECEIVED", "ADMIN", c.env.ADMIN_EMAIL, "ORDER", orderId, crypto.randomUUID(), JSON.stringify({ orderId, amountPkr: Number(body.amountPkr), receiptDate, evidenceReferenceHmac, settlementMode: "HISTORICAL_PAKISTAN_POST_MO", reason }), now, orderId)
-    ]);
+    ];
+    if (event && current.customer_id) {
+      statements.push(c.env.DB.prepare("INSERT OR IGNORE INTO capi_events (id,event_id,event_name,order_id,customer_id,send_status,created_at,updated_at) SELECT ?,?,?,?,?,?,?,? FROM orders o WHERE o.id=? AND changes()=1 AND o.state='PAID'").bind(crypto.randomUUID(), event.eventId, event.eventName, orderId, current.customer_id, "PENDING", now, now, orderId));
+      statements.push(c.env.DB.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) SELECT ?,?,?,?,?,?,?,?,? FROM orders o WHERE o.id=? AND changes()=1 AND o.state='PAID'").bind(crypto.randomUUID(), event.eventId, "CAPI_PURCHASE", orderId, JSON.stringify(event), "PENDING", now, now, now, orderId));
+    }
+    const result = await c.env.DB.batch(statements);
     if (result.some((item) => Number(item.meta?.changes ?? 0) !== 1)) return c.json({ error: "COD_HISTORICAL_CONFIRMATION_STALE" }, 409);
+    let queued = false;
+    try { if (event && c.env.EVENTS) { await c.env.EVENTS.send({ kind: "CAPI_PURCHASE", idempotencyKey: event.eventId, entityId: orderId, schemaVersion: 1 }); queued = true; } } catch { /* Durable outbox remains authoritative. */ }
+    return c.json({ ok: true, paymentStatus: "PAID", historical: true, capiQueue: event ? queued ? "QUEUED" : "DEFERRED" : "DISABLED" });
   } catch {
     return c.json({ error: "COD_HISTORICAL_CONFIRMATION_FAILED" }, 409);
   }
-  return c.json({ ok: true, paymentStatus: "PAID", historical: true, capiQueue: "DISABLED" });
 }
 
 app.post("/api/orders/:id/cod-collection", (c) => reconcileCodEvidence(c, "collection"));
