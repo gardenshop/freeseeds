@@ -2900,3 +2900,10 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Existing lead operations are read-only healthy at the API boundary: API health/WhatsApp, Orders and Conversations returned HTTP200. Payment configuration readback is healthy (three methods and COD PKR125).
 - This is not an ad-scale approval. Meta account/campaign context is readable, but sender eligibility and Queue/DLQ runtime are unverified. Admin auto-update is currently OFF in both stored preferences and was intentionally left unchanged under this read-only task.
 - No source, Cloudflare, Meta, payment, order, D1, message or customer mutation occurred.
+
+## GFS-COD-MO-70 — preserve lead operations (2026-11-07 PKT)
+
+- Keep MO logging/DRY_RUN/canary frozen while case #02421284 is pending.
+- Record Queue read-only health only; no staging subscription was shown, so consumer identity is not claimed.
+- Keep Meta unchanged: account/campaign visibility is insufficient for ad-scale GO because sender eligibility and limits/restrictions were not verified.
+- Keep the Orders auto-update repair local. Require one authorized Admin candidate release and read-only verification before declaring live refresh reliable.

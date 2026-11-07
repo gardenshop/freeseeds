@@ -207,6 +207,7 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("document.hasFocus()");
     expect(html).toContain("gfs_admin_orders_auto_lock");
     expect(html).toContain("window.addEventListener('focus',resumeOrdersAuto)");
+    expect(html).toContain("if(ordersAutoOn)resumeOrdersAuto()");
     expect(html).toContain("},60000)");
   });
 

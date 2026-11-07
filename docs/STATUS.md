@@ -3671,3 +3671,10 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **Payments:** three enabled methods (JazzCash/Easypaisa/Bank Transfer), COD enabled at PKR125, province-rate endpoint HTTP200 with seven enabled rates. No write.
 - **Readiness boundary:** Meta account/campaign context is readable, but sender eligibility/scale readiness and Queue/DLQ runtime remain unverified. Admin Orders/Conversations auto-update preferences currently read OFF; unchanged.
 - **Protected state:** Admin exact100/0, API100%, watchdog DISARMED, Advance3/3, Recovery ON, CAPI OFF, canonical sender/new-number lock and Hoja isolation preserved. No production mutation.
+
+## GFS-COD-MO-70 — P0 lead readiness (2026-11-07 PKT)
+
+- API/WhatsApp, Admin Orders/Conversations, three payment methods, COD PKR125 and seven province rates passed read-only checks. Protected routing was unchanged.
+- Queue evidence: staging backlog 0, delayed backlog 0, retries 0, average consumer lag 5.63s, 31 ingested/31 acknowledged. Staging DLQ inactive with backlog 0, retries 0 and no ingested messages. No staging subscription was shown; consumer binding remains UNVERIFIED.
+- Meta account/campaign context was readable, but sender quality/limits/restrictions/template and click-to-WhatsApp eligibility were not proven. Lead-scale readiness is not approved.
+- Auto-update preferences are ON and persist after reload. Conversations polling passed. Orders exposed a local initialization defect; local `resumeOrdersAuto()` repair passed focused 19/19, full 385/1 skipped, build/lint. No Worker deployment occurred, so live Orders auto-update remains BLOCKED pending authorized release verification.

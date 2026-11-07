@@ -76,3 +76,7 @@ Cloudflare Support case [#02421284](https://www.support.cloudflare.com/s/case/50
 ## GFS-COD-MO-69 support and lead-readiness boundary (2026-11-07 PKT)
 
 Check case #02421284 once per authorized task; a **New/Pending** case is not runtime evidence and freezes MO logging, DRY_RUN and canary work. Read-only API health, authenticated Orders/Conversations, payment methods, COD PKR125 and province-rate reads may establish existing operational health only. Meta campaign visibility does not prove sender eligibility or readiness to scale. Queue/DLQ counters must remain explicitly UNVERIFIED when unavailable. Do not alter Admin auto-update, campaigns, sender, CAPI, payments or customer state without separate authorization.
+
+## Lead operations protection during MO freeze
+
+Queue counters may be recorded read-only but do not substitute for a verified consumer binding. Meta campaign visibility does not establish sender or click-to-WhatsApp eligibility. No MO, CAPI, payment, customer-message or advertising mutation is allowed while the support gate is pending.

@@ -4331,3 +4331,10 @@ Investigation query costs only (not production savings): representative `rows_re
 | MO-69 payment/COD/province reads | PASS | Three enabled payment methods, COD PKR125, seven enabled province rates; GET-only. |
 | MO-69 Meta/scale gate | BOUNDED | Verified account/campaign context readable; sender eligibility and Queue/DLQ runtime remain unverified. |
 | MO-69 Admin refresh preference | BLOCKED | Orders and Conversations auto-update preferences read OFF; intentionally unchanged under read-only authorization. |
+
+| MO-70 Queue staging metrics | PASS | Backlog 0, delayed backlog 0, retries 0, average lag 5.63s, 31 ingested/31 acknowledged. |
+| MO-70 staging DLQ | PASS | Inactive; backlog 0, retries 0, no ingested messages. |
+| MO-70 queue consumer binding | UNVERIFIED | No staging subscription shown by the approved dashboard. |
+| MO-70 Meta scale eligibility | BOUNDED | Account/campaign context readable; sender quality, limits, restrictions, templates and click-to-WhatsApp eligibility not proven. |
+| MO-70 Orders auto-update local repair | PASS (local) | Initial `resumeOrdersAuto()` added; focused Admin 19/19, full 385 passed/1 skipped, build/lint PASS. |
+| MO-70 live Orders auto-update | BLOCKED | No deployment authorized; baseline live build did not schedule `/api/orders/changes` after reload despite ON preference. |

@@ -2508,3 +2508,9 @@
 - Checked Cloudflare Support case #02421284 once; it remains New with no response. MO logging, DRY_RUN and canary work remain frozen.
 - Recorded fresh GET-only P0 reads: API/WhatsApp, Orders/Conversations, three payment methods, COD PKR125 and province rates passed. Meta account/campaign context was readable, but sender eligibility and Queue/DLQ runtime remain unverified.
 - Recorded Admin Orders/Conversations auto-update preferences as OFF; no preference or production configuration was changed. No source, Cloudflare, Meta, payment, order, D1, customer-message or CAPI mutation occurred.
+
+## 2026-11-07 - GFS-COD-MO-70
+
+- Enabled and persisted Admin Orders/Conversations auto-update preferences; observed Conversations polling and diagnosed the Orders reload initialization defect.
+- Added the minimal local Orders auto-update startup repair and regression assertion. Focused 19/19, full 385 passed/1 skipped, build/lint PASS. No deployment performed.
+- Recorded read-only Queue/DLQ evidence and Meta eligibility limits. Lead-scale readiness remains PARTIAL/NO-GO until live Orders verification, consumer binding evidence and Meta sender eligibility are closed.

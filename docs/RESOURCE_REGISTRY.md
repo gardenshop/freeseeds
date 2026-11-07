@@ -2769,3 +2769,10 @@ No secrets are stored in this registry.
 - Private case [#02421284](https://www.support.cloudflare.com/s/case/500j2000000tULdAAM) remains New; no correction or release authority.
 - API `b426ba47` remains100%; Admin `3e4b7c26`100% / `ce023b54`0%; watchdog `73a1f50c...` remains DISARMED. Canonical sender `03044429933`; Hoja/new-number isolation retained.
 - Read-only endpoints: API health/WhatsApp, Orders, Conversations, payment methods, COD configuration and province rates all responded HTTP200. No credentials, customer data or write payloads were recorded.
+
+## GFS-COD-MO-70 read-only resources (2026-11-07 PKT)
+
+- Cloudflare Queue `getfreeseeds-events-staging`: active; backlog 0, delayed backlog 0, retries 0, average lag 5.63s, 31 ingested/31 acknowledged.
+- Cloudflare DLQ `getfreeseeds-events-staging-dlq`: inactive; backlog 0, retries 0, no ingested messages.
+- Queue consumer/subscription: no staging subscription shown by the approved dashboard; consumer binding remains unverified.
+- Meta Ads Manager: verified account/campaign context only; no sender, campaign, WABA or advertising mutation performed.
