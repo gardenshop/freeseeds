@@ -4313,3 +4313,7 @@ Investigation query costs only (not production savings): representative `rows_re
 | MO-67D structured logging source | PASS | Existing scheduled handler emits sanitized event/status/code/wrote/timestamp fields; no source defect found. |
 | MO-67D version-indexed query | BLOCKED | Query Builder returned 0 success/0 error rows for DRY_RUN `c854dce7...` and known DISARMED `d43d8649...`, despite Live invocation envelopes. |
 | MO-67D second DRY_RUN | NOT RUN | Correctly withheld because the application-result channel remains unproven. |
+
+| MO-67E structured logger | PASS | Existing watchdog logger emits sanitized event/status/code/wrote/timestamp fields; no source change needed. |
+| MO-67E version-index query | BLOCKED | Official Query Builder returned zero indexed rows for known DRY_RUN and DISARMED versions despite Live envelopes. |
+| MO-67E repeat DRY_RUN | NOT RUN | Safety gate remains blocked; no Admin write or production mutation. |

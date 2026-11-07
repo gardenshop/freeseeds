@@ -2875,3 +2875,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Evidence:** Query Builder filters for `c854dce7...` and known DISARMED `d43d8649...` returned zero rows, while Live view showed scheduled envelopes. The existing structured console logging source is present and unchanged.
 - **Decision:** do not run another DRY_RUN until an official query path exposes `status=DRY_RUN`, `code=already_restored`, `wrote=false`, and timestamp. Browser-cookie/request-body inspection is not an approved workaround.
 - **Safety:** watchdog remains DISARMED; Admin/API/payment/D1/Meta/CAPI state remains unchanged.
+
+## GFS-COD-MO-67E — stop on official log-index mismatch
+
+- **Decision:** retain the existing sanitized structured logger and do not alter Admin/API observability.
+- **Evidence:** Query Builder returned zero indexed success/error rows for known DRY_RUN `c854dce7...` and DISARMED `d43d8649...` over 24 hours, while Live view showed scheduled envelopes.
+- **Boundary:** do not repeat DRY_RUN or start an Admin canary until an approved query/index path exposes the application result. Browser request-body/cookie inspection is prohibited.

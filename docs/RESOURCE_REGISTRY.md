@@ -2748,3 +2748,8 @@ No secrets are stored in this registry.
 
 - Official Query Builder version filters for DRY_RUN `c854dce7...` and DISARMED `d43d8649...` returned zero indexed rows despite Live invocation envelopes. Existing source logging is structured and sanitized; no source change or second DRY_RUN was performed.
 - Final watchdog remains version `73a1f50c...`, deployment `907d4813...`, 100%, Cron active, route-free, `ADMIN_RECOVERY_TOKEN` binding only.
+
+## GFS-COD-MO-67E log-index evidence (2026-11-07 PKT)
+
+- Watchdog `gfs-cod-mo-55-watchdog` remains DISARMED, Cron `* * * * *`, route-free, with `ADMIN_RECOVERY_TOKEN` binding metadata only.
+- Query Builder version filters for `c854dce7...` and `d43d8649...` returned zero indexed rows over 24 hours; application result remains unproven. No second DRY_RUN was executed.

@@ -3644,3 +3644,9 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **BLOCKED:** Official Query Builder version filters for DRY_RUN `c854dce7...` and known DISARMED `d43d8649...` returned HTTP-success with 0 success/0 error events, while Live view exposed only invocation envelopes. The application result is not safely provable.
 - **PASS:** Existing source emits sanitized `event/status/code/wrote/timestamp`; no code change or second DRY_RUN was made. Token verification is active HTTP200 with expiry `18:59:59Z`; margin exceeded nine hours at preflight.
 - **PASS:** Watchdog remains DISARMED `73a1f50c...` at 100%; Admin remains exact100/0 and no production mutation occurred.
+
+## GFS-COD-MO-67E — log-index repair (2026-11-07 PKT)
+
+- **PASS:** HEAD/account and token preflight verified; watchdog-only sanitized logging source and settings are present.
+- **BLOCKED:** Official Query Builder returned no indexed rows for both known DRY_RUN and DISARMED versions despite Live invocation envelopes. This does not prove zero errors or a DRY_RUN result.
+- **NOT RUN:** No second DRY_RUN, Admin canary, deployment, payment, D1, Meta, CAPI or customer mutation. Watchdog remains DISARMED and Admin exact100/0.

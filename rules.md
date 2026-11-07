@@ -2602,3 +2602,11 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - Official Observability Query Builder filters for DRY_RUN `c854dce7...` and known DISARMED `d43d8649...` over 24 hours returned HTTP-success query execution but `0 Success`, `0 Errors`, and no events, while Live view exposed scheduled invocation envelopes. This is an ingestion/query-index mismatch, not proof of zero errors or of the DRY_RUN result.
 - The safe request-body inspection path was rejected because it could expose authenticated browser cookies. No workaround or cookie extraction was attempted. No second DRY_RUN was started because the application-result channel remains unproven.
 - `/accounts/{account_id}/tokens/verify` returned HTTP200/active for both retained Worker-only credentials with expiry `2026-11-07T18:59:59Z`; at `2026-11-07T09:14:18Z` the margin exceeded nine hours. Watchdog remains DISARMED at `73a1f50c...`; Admin remains exact100/0.
+
+## GFS-COD-MO-67E — watchdog log-index repair (2026-11-07 PKT)
+
+- HEAD `045288604ea66cdc64fde692ca7f146ad0cc829c` and account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` verified. Existing watchdog source emits sanitized `event/status/code/wrote/timestamp`; no source repair was justified.
+- Watchdog-only invocation logging, persistence and 100% sampling remain enabled. Official Query Builder version filters for known DRY_RUN `c854dce7...` and DISARMED `d43d8649...` over 24 hours each returned 0 success, 0 errors and no indexed events although Live view exposed scheduled envelopes. This is an official query/index mismatch, not zero-error evidence.
+- Dashboard telemetry query execution was HTTP-success, but request-body inspection was rejected because it could expose authenticated browser cookies; no workaround or credential extraction was attempted. No second DRY_RUN was run.
+- Both retained account tokens verified active through `/accounts/{account_id}/tokens/verify`, expiry `2026-11-07T18:59:59Z`; watchdog remains DISARMED and Admin remains exact100/0. No production mutation occurred.
+- Next gate: obtain an approved Cloudflare observability query/index fix or supported application-log query exposing `status=DRY_RUN`, `code=already_restored`, `wrote=false`; then run one bounded DRY_RUN. No Admin canary before that evidence.

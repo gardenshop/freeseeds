@@ -2487,3 +2487,8 @@
 - Verified the existing sanitized watchdog logging source and tested official version-filtered Observability queries.
 - Known scheduled versions returned zero indexed rows while Live view exposed only invocation envelopes; DRY_RUN was not repeated and remains blocked.
 - Watchdog remains DISARMED and production Admin/API/payment/D1/Meta/CAPI state is unchanged.
+
+## 2026-11-07 — GFS-COD-MO-67E
+
+- Verified watchdog structured logging and official version-filtered Query Builder behavior.
+- Recorded the confirmed log-index mismatch and withheld a repeat DRY_RUN; no production mutation.
