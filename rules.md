@@ -2610,3 +2610,10 @@ The dashboard's active-card traffic telemetry briefly showed 98.9%/1.1%; this is
 - Dashboard telemetry query execution was HTTP-success, but request-body inspection was rejected because it could expose authenticated browser cookies; no workaround or credential extraction was attempted. No second DRY_RUN was run.
 - Both retained account tokens verified active through `/accounts/{account_id}/tokens/verify`, expiry `2026-11-07T18:59:59Z`; watchdog remains DISARMED and Admin remains exact100/0. No production mutation occurred.
 - Next gate: obtain an approved Cloudflare observability query/index fix or supported application-log query exposing `status=DRY_RUN`, `code=already_restored`, `wrote=false`; then run one bounded DRY_RUN. No Admin canary before that evidence.
+
+## GFS-COD-MO-67F — real-time tail blocker (2026-11-07 PKT)
+
+- Approved host identity `bi\\nazim`, HEAD `c7eb1e3ffe38f1dd3d997697e35b907bc9f176a8`, and account were verified. The official Wrangler tail was run with the watchdog credential held only in the host process; raw output and stderr were suppressed.
+- The bounded 125-second tail process remained alive but produced `records=0`; no application-level `DISARMED` fields were observable. This is a real-time telemetry/platform blocker, not zero-error evidence. Query Builder was not retried.
+- Token verification remained HTTP200/active at `2026-11-07T09:33:10Z`, expiry `2026-11-07T18:59:59Z`. Admin Orders and Conversations returned HTTP200. No DRY_RUN, deployment, Admin write, payment, D1, Meta, CAPI or customer mutation occurred.
+- Release boundary: require Cloudflare-supported real-time Workers Logs delivery or an approved support/permission fix. Do not repeat tail/index loops or run DRY_RUN until application-level `status=DRY_RUN`, `code=already_restored`, `wrote=false` can be captured.

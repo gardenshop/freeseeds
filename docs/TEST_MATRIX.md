@@ -4317,3 +4317,7 @@ Investigation query costs only (not production savings): representative `rows_re
 | MO-67E structured logger | PASS | Existing watchdog logger emits sanitized event/status/code/wrote/timestamp fields; no source change needed. |
 | MO-67E version-index query | BLOCKED | Official Query Builder returned zero indexed rows for known DRY_RUN and DISARMED versions despite Live envelopes. |
 | MO-67E repeat DRY_RUN | NOT RUN | Safety gate remains blocked; no Admin write or production mutation. |
+
+| MO-67F official Wrangler tail | BLOCKED | Approved host tail remained alive for 125 seconds but emitted zero application records; no zero-error claim. |
+| MO-67F token preflight | PASS | Account-token verification HTTP200/active; expiry remained `2026-11-07T18:59:59Z`. |
+| MO-67F DRY_RUN | NOT RUN | Tail application fields unavailable; no Admin write or production mutation. |

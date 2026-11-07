@@ -2881,3 +2881,9 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - **Decision:** retain the existing sanitized structured logger and do not alter Admin/API observability.
 - **Evidence:** Query Builder returned zero indexed success/error rows for known DRY_RUN `c854dce7...` and DISARMED `d43d8649...` over 24 hours, while Live view showed scheduled envelopes.
 - **Boundary:** do not repeat DRY_RUN or start an Admin canary until an approved query/index path exposes the application result. Browser request-body/cookie inspection is prohibited.
+
+## GFS-COD-MO-67F — stop on real-time tail absence
+
+- **Evidence:** official Wrangler tail ran under the approved host identity for 125 seconds and returned zero application records; raw credentials/log payloads were not retained.
+- **Decision:** classify tail application visibility BLOCKED and do not run DRY_RUN. Query Builder was not retried.
+- **Boundary:** obtain Cloudflare-supported real-time log delivery or a documented support/permission fix before retrying the runtime proof.

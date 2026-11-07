@@ -2753,3 +2753,8 @@ No secrets are stored in this registry.
 
 - Watchdog `gfs-cod-mo-55-watchdog` remains DISARMED, Cron `* * * * *`, route-free, with `ADMIN_RECOVERY_TOKEN` binding metadata only.
 - Query Builder version filters for `c854dce7...` and `d43d8649...` returned zero indexed rows over 24 hours; application result remains unproven. No second DRY_RUN was executed.
+
+## GFS-COD-MO-67F real-time tail evidence (2026-11-07 PKT)
+
+- Official Wrangler tail for `gfs-cod-mo-55-watchdog` ran for 125 seconds under the approved host and emitted zero application records. No raw log payload or credential was retained.
+- Watchdog remains DISARMED and Admin remains exact100/0; DRY_RUN remains blocked pending supported real-time application-log delivery.

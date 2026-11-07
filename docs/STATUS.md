@@ -3650,3 +3650,9 @@ Next action: complete the protected Meta Flow publication gate after public-key 
 - **PASS:** HEAD/account and token preflight verified; watchdog-only sanitized logging source and settings are present.
 - **BLOCKED:** Official Query Builder returned no indexed rows for both known DRY_RUN and DISARMED versions despite Live invocation envelopes. This does not prove zero errors or a DRY_RUN result.
 - **NOT RUN:** No second DRY_RUN, Admin canary, deployment, payment, D1, Meta, CAPI or customer mutation. Watchdog remains DISARMED and Admin exact100/0.
+
+## GFS-COD-MO-67F — final runtime proof (2026-11-07 PKT)
+
+- **BLOCKED:** Official host Wrangler tail remained alive for the bounded 125-second window but produced zero sanitized application records. This does not prove zero errors or DRY_RUN success.
+- **PASS:** Account-token verification was HTTP200/active; authenticated Orders and Conversations returned HTTP200; no Query Builder retry, DRY_RUN, deployment, Admin, payment, D1, Meta, CAPI or customer mutation occurred.
+- **NEXT GATE:** Cloudflare-supported real-time log delivery or a permission/support correction is required before another DRY_RUN.
