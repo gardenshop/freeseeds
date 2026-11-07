@@ -1,5 +1,11 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-83 final linkage/preflight integration (2026-11-07 PKT)
+
+- The approved PowerShell runner now invokes the two-credential linkage verifier before the Cloudflare deployment preflight. It accepts only sanitized `PASS`, `token_identity_match=PASS`, `ACTIVE`, `VALID`, `VERIFIED`, `none`; missing or denied metadata remains fail-closed.
+- Windows PowerShell 5.1 focused validation passes: linkage 8/8, runner 11/11, linkage gate 3/3, Credential Manager Add-Type 2/2; Node preflight 5/5; full 387 passed/1 skipped; build/lint PASS.
+- Real host linkage is **NOT RUN/BLOCKED** in the sandbox because execution is not `bi\\nazim` and no metadata credential is available here. No upload, deployment, routing, payment, D1, Meta, WhatsApp or CAPI mutation occurred.
+
 ## GFS-COD-MO-82H host-token linkage verifier (2026-11-07 PKT)
 
 - Added `verify-gfs-admin-token-linkage.ps1`, which runs only as `bi\\nazim`, reads `GFS-Admin-Deploy-Scoped-2026` and the separate metadata credential target internally, verifies token status/expiry, compares exact token IDs internally, and validates one exact Worker-only edit policy.

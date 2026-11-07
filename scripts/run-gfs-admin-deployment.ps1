@@ -17,6 +17,7 @@ $ExpectedWorker = "getfreeseeds-admin-staging"
 $ExpectedUser = "bi\nazim"
 $ConfigPath = Join-Path $RepoRoot "apps\admin\wrangler.jsonc"
 $PreflightScript = Join-Path $PSScriptRoot "cloudflare-admin-deployment-preflight.mjs"
+$LinkageScript = Join-Path $PSScriptRoot "verify-gfs-admin-token-linkage.ps1"
 $WranglerScript = Join-Path $RepoRoot "node_modules\wrangler\bin\wrangler.js"
 . (Join-Path $PSScriptRoot "admin-deployment-runner-validation.ps1")
 . (Join-Path $PSScriptRoot "gfs-credential-reader.ps1")
@@ -48,6 +49,29 @@ $configText = Get-Content -Raw $ConfigPath
 if ($configText -notmatch '"name"\s*:\s*"getfreeseeds-admin-staging"') { Fail "worker_config_mismatch" }
 if ($configText -notmatch '"account_id"\s*:\s*"cb5066a6d71ecdee0bd7ed8aacb4d3c2"') { Fail "account_config_mismatch" }
 if (-not (Test-Path -LiteralPath $WranglerScript)) { Fail "official_wrangler_missing" }
+
+if (-not (Test-Path -LiteralPath $LinkageScript)) { Fail "token_linkage_verifier_missing" }
+
+$linkageOutput = $null
+$linkage = $null
+$linkageCheck = $null
+try {
+  $windowsPowerShell = Join-Path $env:WINDIR "System32\WindowsPowerShell\v1.0\powershell.exe"
+  if (-not (Test-Path -LiteralPath $windowsPowerShell)) { Fail "windows_powershell_missing" }
+  $linkageOutput = (& $windowsPowerShell -NoProfile -ExecutionPolicy Bypass -File $LinkageScript 2>$null | Out-String).Trim()
+  $linkageExit = $LASTEXITCODE
+  try { $linkage = $linkageOutput | ConvertFrom-Json } catch { Fail "cloudflare_token_linkage_unreadable" }
+  $linkageCheck = Test-GfsTokenLinkageResult $linkage
+  if ($linkageExit -ne 0 -or -not $linkageCheck.pass) {
+    $safeCode = [string]$linkage.code
+    if ($safeCode -notmatch '^[A-Za-z0-9_:-]{1,64}$') { $safeCode = $linkageCheck.code }
+    Fail ("cloudflare_token_linkage_" + $safeCode)
+  }
+} finally {
+  $linkageOutput = $null
+  $linkage = $null
+  $linkageCheck = $null
+}
 
 $secret = $null
 $oldToken = [Environment]::GetEnvironmentVariable("CLOUDFLARE_API_TOKEN", "Process")

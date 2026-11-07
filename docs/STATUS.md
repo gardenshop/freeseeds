@@ -1,11 +1,19 @@
 # Status
 
+## GFS-COD-MO-83 — integrated credential linkage/preflight (2026-11-07 PKT)
+
+**Disposition: LOCAL END-TO-END GATE PASS / REAL HOST LINKAGE BLOCKED.**
+
+- The approved runner now calls the read-only two-credential verifier before its Cloudflare preflight. It rejects missing metadata, identity mismatch, inactive/expired tokens, wrong account/Worker and unverified policy; only the sanitized PASS shape can continue.
+- PowerShell 5.1 linkage 8/8, runner 11/11, linkage-gate 3/3, reader Add-Type 2/2; Node 5/5; full 387 passed/1 skipped; build/lint PASS.
+- Real host execution is not claimed: this environment is not `bi\\nazim`, and `GFS-Cloudflare-Token-Metadata-Read-2026` is unavailable here. No upload, deployment or production mutation occurred.
+
 ## GFS-COD-MO-82H — host-token linkage verifier (2026-11-07 PKT)
 
 **Disposition: LOCAL VERIFIER PASS / METADATA CREDENTIAL REQUIRED.**
 
 - Added a read-only, `bi\\nazim`-gated verifier. It reads the deployment credential and a separate account-token metadata-read credential only inside the approved host process, verifies active/unexpired state, compares token IDs internally, and validates exact Worker-only edit policy plus resolved permission group.
-- Local PowerShell 5.1 linkage tests pass 8/8; shared reader compiles twice; existing runner 9/9, Node 5/5, full 387/1, build/lint/parser PASS. Wrong host identity exits before credential access.
+- Local PowerShell 5.1 linkage tests pass 8/8; shared reader compiles twice; integrated runner 11/11 plus linkage gate 3/3, Node 5/5, full 387/1, build/lint/parser PASS. Wrong host identity exits before credential access.
 - The required metadata credential target is `GFS-Cloudflare-Token-Metadata-Read-2026`. If absent or denied, output is only `METADATA_AUTH_REQUIRED`; no preflight PASS, upload or production action is claimed.
 
 ## GFS-COD-MO-81 — final scope evidence (2026-11-07 PKT)

@@ -1,5 +1,11 @@
 # Resource Registry
 
+## GFS-COD-MO-83 integrated preflight gate (2026-11-07 PKT)
+
+- `scripts/run-gfs-admin-deployment.ps1` now requires the sanitized output of `verify-gfs-admin-token-linkage.ps1` before invoking the existing Cloudflare preflight.
+- Accepted linkage fields are fixed to `PASS`, identity `PASS`, token `ACTIVE`, expiry `VALID`, scope `VERIFIED`, code `none`; any other result stops before upload or deployment.
+- Real host execution is pending `bi\\azim` plus the separately approved metadata-read Credential Manager target. No token values or IDs are recorded.
+
 ## GFS-COD-MO-82H host linkage verifier (2026-11-07 PKT)
 
 - New local scripts: `gfs-credential-reader.ps1`, `gfs-token-linkage-validation.ps1`, `verify-gfs-admin-token-linkage.ps1`, and `test-gfs-admin-token-linkage.ps1`.

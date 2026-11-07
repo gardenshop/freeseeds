@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-07 - GFS-COD-MO-83
+
+- Integrated the sanitized two-credential token-linkage gate into the approved Admin deployment runner before Cloudflare preflight.
+- Added fail-closed result-shape validation and PS5.1 coverage for valid, metadata-unavailable and unverified-scope outcomes. No production mutation occurred.
+
 ## 2026-11-07 - GFS-COD-MO-82H
 
 - Added a Windows PowerShell 5.1-safe, read-only host verifier for deployment-token identity linkage.

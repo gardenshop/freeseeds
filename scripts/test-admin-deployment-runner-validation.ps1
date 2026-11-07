@@ -38,4 +38,10 @@ Assert-Code (Invoke-Case @{ ActualArtifactSha256 = ("c" * 64) }) "approved_artif
 Assert-Code (Test-GfsCredentialState -Available $false) "credential_read_failed" "missing credential"
 $safeOutput = (Test-GfsRunnerInputs @base | ConvertTo-Json -Compress) + (Test-GfsCredentialState -Available $false | ConvertTo-Json -Compress)
 if ($safeOutput -match "synthetic-secret|CLOUDFLARE_API_TOKEN") { throw "secret leaked in validation output" }
-"runner_validation=PASS (9/9); credential_reader_add_type=PASS (2/2)"
+$validLinkage = [pscustomobject]@{ result = "PASS"; token_identity_match = "PASS"; tokenStatus = "ACTIVE"; expiry_status = "VALID"; scope = "VERIFIED"; code = "none" }
+Assert-Pass (Test-GfsTokenLinkageResult $validLinkage) "valid token linkage result"
+Assert-Code (Test-GfsTokenLinkageResult ([pscustomobject]@{ result = "FAIL"; token_identity_match = "UNKNOWN"; tokenStatus = "UNKNOWN"; expiry_status = "UNKNOWN"; scope = "UNVERIFIED"; code = "METADATA_AUTH_REQUIRED" })) "token_linkage_not_passed" "metadata unavailable"
+Assert-Code (Test-GfsTokenLinkageResult ([pscustomobject]@{ result = "PASS"; token_identity_match = "PASS"; tokenStatus = "ACTIVE"; expiry_status = "VALID"; scope = "UNVERIFIED"; code = "none" })) "token_scope_unverified" "scope unavailable"
+$safeLinkage = $validLinkage | ConvertTo-Json -Compress
+if ($safeLinkage -match "synthetic-secret|CLOUDFLARE_API_TOKEN|0123456789abcdef") { throw "token linkage output leaked sensitive data" }
+"runner_validation=PASS (11/11); linkage_gate=PASS (3/3); credential_reader_add_type=PASS (2/2)"

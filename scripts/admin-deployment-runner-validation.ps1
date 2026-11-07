@@ -48,3 +48,15 @@ function Test-GfsCredentialState {
   if (-not $Available) { return [pscustomobject]@{ pass = $false; code = "credential_read_failed" } }
   return [pscustomobject]@{ pass = $true; code = "none" }
 }
+
+function Test-GfsTokenLinkageResult {
+  param([Parameter(Mandatory = $true)][object] $Result)
+  if ($null -eq $Result) { return [pscustomobject]@{ pass = $false; code = "token_linkage_result_missing" } }
+  if ([string]$Result.result -ne "PASS") { return [pscustomobject]@{ pass = $false; code = "token_linkage_not_passed" } }
+  if ([string]$Result.token_identity_match -ne "PASS") { return [pscustomobject]@{ pass = $false; code = "token_identity_unverified" } }
+  if ([string]$Result.tokenStatus -ne "ACTIVE") { return [pscustomobject]@{ pass = $false; code = "token_not_active" } }
+  if ([string]$Result.expiry_status -ne "VALID") { return [pscustomobject]@{ pass = $false; code = "token_expiry_unverified" } }
+  if ([string]$Result.scope -ne "VERIFIED") { return [pscustomobject]@{ pass = $false; code = "token_scope_unverified" } }
+  if ([string]$Result.code -ne "none") { return [pscustomobject]@{ pass = $false; code = "token_linkage_code_unexpected" } }
+  return [pscustomobject]@{ pass = $true; code = "none" }
+}

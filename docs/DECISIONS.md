@@ -1,3 +1,11 @@
+## GFS-COD-MO-83 - require linkage before deployment preflight (2026-11-07 PKT)
+
+**Decision:** make the approved runner call the sanitized two-credential linkage verifier before its existing Cloudflare preflight.
+
+- A successful Worker readback or token name is insufficient. The runner now requires exact internal token-ID comparison, active/unexpired state and one exact Worker-only policy before any preflight continuation.
+- Missing metadata authority, wrong identity, malformed result or unverified scope fails closed. The verifier and runner emit no secret, full token ID, header, cookie or raw provider response.
+- Local PS5.1 and full regression evidence is PASS; real host linkage and any upload remain blocked until the owner supplies the approved metadata-read credential in the `bi\\nazim` store.
+
 ## GFS-COD-MO-62 - fail closed after safe watchdog activation (2026-11-06 PKT)
 
 **Decision:** retain the watchdog DISARMED despite successful secret and Cron configuration because live scheduled invocation telemetry and disposable recovery proof are unavailable.

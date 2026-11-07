@@ -1,5 +1,15 @@
 # Test Matrix
 
+## GFS-COD-MO-83 integrated linkage/preflight gate (2026-11-07 PKT)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Linkage verifier integration | PASS local | Runner invokes the verifier before Cloudflare preflight and rejects non-PASS output. |
+| Valid sanitized linkage shape | PASS | `PASS/ PASS / ACTIVE / VALID / VERIFIED / none` accepted. |
+| Metadata unavailable or scope unverified | PASS fail-closed | `METADATA_AUTH_REQUIRED` and `UNVERIFIED` are rejected without upload. |
+| PowerShell 5.1 and secret safety | PASS | Reader Add-Type 2/2; runner validation 11/11; no token/ID output. |
+| Real host linkage | BLOCKED | Requires `bi\\nazim` plus approved metadata-read credential. |
+
 ## GFS-COD-MO-82H host-token linkage verifier (2026-11-07 PKT)
 
 | Gate | Result | Evidence |
