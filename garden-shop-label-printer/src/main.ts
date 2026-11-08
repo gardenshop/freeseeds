@@ -21,7 +21,7 @@ import {
 } from "./engine";
 import "./style.css";
 import "../public/label.css";
-import { LABEL_FOOTER, LABEL_LAYOUT, fitTextMm, fitTextPx, labelBoxes, labelFontFamily, usesArabicScript, usesComplexScript } from "./layout";
+import { CODE128_LAYOUT, LABEL_FOOTER, LABEL_LAYOUT, fitTextMm, fitTextPx, labelBoxes, labelFontFamily, usesArabicScript, usesComplexScript } from "./layout";
 import { restoreZeroFormattedCells } from "./xlsx";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
@@ -307,9 +307,13 @@ async function renderBarcode(canvas: HTMLCanvasElement, tracking: string) {
   jsBarcode.default(canvas, tracking, {
     format: "CODE128",
     displayValue: false,
-    margin: 4,
-    height: 8,
-    width: 1,
+    margin: 10,
+    marginTop: CODE128_LAYOUT.verticalQuietZonePx,
+    marginBottom: CODE128_LAYOUT.verticalQuietZonePx,
+    marginLeft: CODE128_LAYOUT.horizontalQuietZonePx,
+    marginRight: CODE128_LAYOUT.horizontalQuietZonePx,
+    height: CODE128_LAYOUT.heightPx,
+    width: CODE128_LAYOUT.moduleWidthPx,
   });
 }
 
@@ -319,9 +323,13 @@ async function renderBarcodeSvg(tracking: string) {
   jsBarcode.default(svg, tracking, {
     format: "CODE128",
     displayValue: false,
-    margin: 4,
-    height: 8,
-    width: 1,
+    margin: 10,
+    marginTop: CODE128_LAYOUT.verticalQuietZonePx,
+    marginBottom: CODE128_LAYOUT.verticalQuietZonePx,
+    marginLeft: CODE128_LAYOUT.horizontalQuietZonePx,
+    marginRight: CODE128_LAYOUT.horizontalQuietZonePx,
+    height: CODE128_LAYOUT.heightPx,
+    width: CODE128_LAYOUT.moduleWidthPx,
     lineColor: "#000000",
     background: "#ffffff",
   });
@@ -337,7 +345,51 @@ async function renderBarcodeSvg(tracking: string) {
     }))
     .filter((rect) => rect.width > 0 && rect.height > 0);
   if (!width || !height || !bars.length) throw new Error("BARCODE_VECTOR_GENERATION_FAILED");
-  return { width, height, moduleWidth: 1, bars };
+  return { width, height, moduleWidth: CODE128_LAYOUT.moduleWidthPx, bars };
+}
+
+function fitPdfText(
+  value: string,
+  widthMm: number,
+  heightMm: number,
+  maxFontPx: number,
+  minFontPx: number,
+  font: { widthOfTextAtSize(text: string, size: number): number },
+  lineHeight = 1,
+) {
+  const widthPt = widthMm * MM_TO_POINTS - 0.8;
+  const heightPt = heightMm * MM_TO_POINTS - 0.4;
+  const words = value.trim().split(/\s+/u).filter(Boolean);
+  const wrap = (fontSize: number) => {
+    const sizePt = fontSize * 0.75;
+    const lines: string[] = [];
+    let line = "";
+    for (const word of words) {
+      const candidate = line ? `${line} ${word}` : word;
+      if (font.widthOfTextAtSize(candidate, sizePt) <= widthPt) {
+        line = candidate;
+        continue;
+      }
+      if (line) lines.push(line);
+      line = "";
+      for (const character of [...word]) {
+        const piece = line + character;
+        if (font.widthOfTextAtSize(piece, sizePt) > widthPt && line) {
+          lines.push(line);
+          line = character;
+        } else line = piece;
+      }
+    }
+    if (line) lines.push(line);
+    return lines;
+  };
+  for (let fontSize = maxFontPx; fontSize >= minFontPx; fontSize -= 0.25) {
+    const lines = wrap(fontSize);
+    if (lines.length * fontSize * 0.75 * lineHeight <= heightPt)
+      return { fontSize, lines, fits: true };
+  }
+  const lines = wrap(minFontPx);
+  return { fontSize: minFontPx, lines, fits: lines.length * minFontPx * 0.75 * lineHeight <= heightPt };
 }
 
 function measureLabels(root: ParentNode = document, canvasDocument: Document = document) {
@@ -356,7 +408,10 @@ function measureLabels(root: ParentNode = document, canvasDocument: Document = d
         const style = canvasDocument.defaultView?.getComputedStyle(element);
         const reserved = selector === ".receiver-name" && row?.warnings.length ? 8 * (96 / 25.4) : 0;
         const width = element.clientWidth - (style ? parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) : 0) - reserved;
-        const result = fitTextPx(context, text, width, element.clientHeight, max, min, bold);
+        const lineHeight = style?.lineHeight && style.lineHeight !== "normal"
+          ? parseFloat(style.lineHeight) / Math.max(1, parseFloat(style.fontSize))
+          : 1.15;
+        const result = fitTextPx(context, text, width, element.clientHeight, max, min, bold, lineHeight);
         element.style.fontFamily = labelFontFamily(text);
         element.dir = usesArabicScript(text) ? "rtl" : "ltr";
         element.classList.toggle("text-overflow", !result.fits);
@@ -369,17 +424,18 @@ function measureLabels(root: ParentNode = document, canvasDocument: Document = d
         }
         if (!result.fits) overflow = true;
       };
-      fit(".order-id", row?.orderId || "ORDER ID NOT PROVIDED", 7.3, 5.8, true);
-      fit(".product-text", row?.product || "PRODUCT NOT PROVIDED", 7, 5);
-      fit(".cod-block", `VPL COD ${row?.cod || "Amount missing"}`, 6.3, 5, true);
-      fit(".tracking-text", row?.tracking || "TRACKING NUMBER REQUIRED", 7, 5.5, true);
-      fit(".city-text", row?.city || "City missing", 9, 6, true);
-      fit(".province-text", row?.province || "Province missing", 7.5, 5.5, true);
-      fit(".receiver-name", row?.name || "Receiver name required", 9, 6, true);
-      fit(".address-text", row?.address || "Delivery address required", 8, 5.5);
-      fit(".landmark", `Near by: ${row?.landmark || "Not provided"}`, 7, 5);
-      fit(".contact", row?.phone || "Contact number required", 8.5, 6, true);
-      fit("footer", LABEL_FOOTER, 6, 4.5);
+      fit(".order-id", row?.orderId || "ORDER ID NOT PROVIDED", 10.5, 8, true);
+      fit(".product-text", row?.product || "PRODUCT NOT PROVIDED", 9, 7);
+      fit(".cod-block span", "VPL COD", 8.5, 6.5, true);
+      fit(".cod-block strong", row?.cod ? `Rs ${row.cod}` : "Amount missing", 12, 8, true);
+      fit(".tracking-text", row?.tracking || "TRACKING NUMBER REQUIRED", 10, 7.5, true);
+      fit(".city-text", row?.city || "City missing", 13, 8.5, true);
+      fit(".province-text", row?.province || "Province missing", 10.5, 7.5, true);
+      fit(".receiver-name", row?.name || "Receiver name required", 15, 9.5, true);
+      fit(".address-text", row?.address || "Delivery address required", 14, 8.5);
+      fit(".landmark", `Near by: ${row?.landmark || "Not provided"}`, 10, 7);
+      fit(".contact", row?.phone || "Contact number required", 13, 9.5, true);
+      fit("footer", LABEL_FOOTER, 8, 6.5);
       label.classList.toggle("layout-overflow", overflow);
       if (overflow && row && !row.warnings.some((warning) => warning.startsWith("Text does not fit")))
         row.warnings.push("Text does not fit at minimum readable size; edit the record before printing.");
@@ -555,7 +611,10 @@ async function makePdf(items = currentOrders(), position = startPosition) {
         minFont: number,
         isBold = false,
       ) => {
-        const fit = fitTextMm(measure, text, box.width, box.height, maxFont, minFont, isBold);
+        const lineHeight = 1;
+        const fit = usesComplexScript(text)
+          ? fitTextMm(measure, text, box.width, box.height, maxFont, minFont, isBold, lineHeight)
+          : fitPdfText(text, box.width, box.height, maxFont, minFont, isBold ? bold : font, lineHeight);
         if (!fit.fits) {
           row.warnings.push("Text does not fit at minimum readable size; edit this record before printing.");
           pdfPage.drawText("EDIT REQUIRED", {
@@ -586,7 +645,7 @@ async function makePdf(items = currentOrders(), position = startPosition) {
           ctx.textAlign = rtl ? "right" : "left";
           ctx.textBaseline = "top";
           fit.lines.forEach((lineText, lineIndex) => {
-            ctx.fillText(lineText, rtl ? widthPx : 0, lineIndex * fit.fontSize * 1.15, widthPx);
+          ctx.fillText(lineText, rtl ? widthPx : 0, lineIndex * fit.fontSize * lineHeight, widthPx);
           });
           const image = await pdf.embedPng(canvas.toDataURL("image/png"));
           pdfPage.drawImage(image, {
@@ -598,7 +657,7 @@ async function makePdf(items = currentOrders(), position = startPosition) {
           return;
         }
         const size = fit.fontSize * 0.75;
-        const lineHeightMm = (fit.fontSize * 1.15) / (96 / 25.4);
+        const lineHeightMm = (fit.fontSize * lineHeight) / (96 / 25.4);
         fit.lines.forEach((lineText, lineIndex) => {
           const baselineMm = box.y + (lineIndex + 0.9) * lineHeightMm;
           pdfPage.drawText(lineText, {
@@ -606,7 +665,7 @@ async function makePdf(items = currentOrders(), position = startPosition) {
             y: pageH - (yMm + baselineMm) * mm,
             size,
             font: isBold ? bold : font,
-            maxWidth: box.width * mm,
+            maxWidth: Math.max(1, box.width * mm - 0.8),
             color: rgb(0, 0, 0),
           });
         });
@@ -621,15 +680,15 @@ async function makePdf(items = currentOrders(), position = startPosition) {
       drawRule(boxes.top.x, boxes.top.y + boxes.top.height, boxes.top.x + boxes.top.width, boxes.top.y + boxes.top.height);
       drawRule(boxes.cod.x, boxes.top.y, boxes.cod.x, boxes.top.y + boxes.top.height, 0.8);
       drawRule(boxes.product.x, boxes.top.y, boxes.product.x, boxes.top.y + boxes.top.height, 0.8);
-      await drawBoxText(row.orderId || "ORDER ID NOT PROVIDED", boxes.orderId, 7.3, 5.8, true);
-      await drawBoxText(row.product || "PRODUCT NOT PROVIDED", boxes.product, 7, 5, true);
-      await drawBoxText(row.cod ? `VPL COD Rs ${row.cod}` : "VPL COD amount missing", boxes.cod, 7.5, 5, true);
+      await drawBoxText(row.orderId || "ORDER ID NOT PROVIDED", boxes.orderId, 10.5, 8, true);
+      await drawBoxText(row.product || "PRODUCT NOT PROVIDED", boxes.product, 9, 7, true);
+      await drawBoxText(row.cod ? `VPL COD Rs ${row.cod}` : "VPL COD amount missing", boxes.cod, 12, 8, true);
       drawRule(boxes.middle.x, boxes.middle.y + boxes.middle.height, boxes.middle.x + boxes.middle.width, boxes.middle.y + boxes.middle.height);
       drawRule(boxes.destination.x, boxes.middle.y, boxes.destination.x, boxes.middle.y + boxes.middle.height, 0.8);
       drawRule(boxes.content.x, boxes.footer.y, boxes.content.x + boxes.content.width, boxes.footer.y);
-      await drawBoxText(row.tracking || "TRACKING NUMBER REQUIRED", boxes.tracking, 7, 5.5, true);
-      await drawBoxText(row.city || "City missing", { ...boxes.destination, height: boxes.destination.height * 0.55 }, 9, 6, true);
-      await drawBoxText(row.province || "Province missing", { ...boxes.destination, y: boxes.destination.y + boxes.destination.height * 0.55, height: boxes.destination.height * 0.45 }, 7.5, 5.5, true);
+      await drawBoxText(row.tracking || "TRACKING NUMBER REQUIRED", boxes.tracking, 10, 7.5, true);
+      await drawBoxText(row.city || "City missing", { ...boxes.destination, height: boxes.destination.height * 0.55 }, 13, 8.5, true);
+      await drawBoxText(row.province || "Province missing", { ...boxes.destination, y: boxes.destination.y + boxes.destination.height * 0.55, height: boxes.destination.height * 0.45 }, 10.5, 7.5, true);
       pdfPage.drawRectangle({
         x: (xMm + boxes.to.x) * mm,
         y: pageH - (yMm + boxes.to.y + boxes.to.height) * mm,
@@ -638,12 +697,12 @@ async function makePdf(items = currentOrders(), position = startPosition) {
         borderColor: rgb(0, 0, 0),
         borderWidth: 0.8,
       });
-      await drawBoxText("TO:", { ...boxes.toHeading, width: boxes.toHeading.width - 8 }, 7, 5.5, true);
-      await drawBoxText(row.name || "Receiver name required", { ...boxes.name, width: boxes.name.width - 8 }, 9, 6, true);
-      await drawBoxText(row.address || "Delivery address required", boxes.address, 8, 5.5);
-      await drawBoxText(`Near by: ${row.landmark || "Not provided"}`, boxes.landmark, 7, 5);
-      await drawBoxText(row.phone || "Contact number required", boxes.contact, 8.5, 6, true);
-      await drawBoxText(LABEL_FOOTER, boxes.footer, 6, 4.5);
+      await drawBoxText("TO:", { ...boxes.toHeading, width: boxes.toHeading.width - 8 }, 8, 6.5, true);
+      await drawBoxText(row.name || "Receiver name required", { ...boxes.name, width: boxes.name.width - 8 }, 15, 9.5, true);
+      await drawBoxText(row.address || "Delivery address required", boxes.address, 14, 8.5);
+      await drawBoxText(`Near by: ${row.landmark || "Not provided"}`, boxes.landmark, 10, 7);
+      await drawBoxText(row.phone || "Contact number required", boxes.contact, 13, 9.5, true);
+      await drawBoxText(LABEL_FOOTER, boxes.footer, 8, 6.5);
 
       if (row.tracking) {
         const barcode = await renderBarcodeSvg(row.tracking);
@@ -652,7 +711,7 @@ async function makePdf(items = currentOrders(), position = startPosition) {
           mm * boxes.barcode.height / barcode.height,
           0.75,
         );
-        if (scale / mm * barcode.moduleWidth < 0.19) {
+        if (scale / mm * barcode.moduleWidth < CODE128_LAYOUT.minimumModuleMm) {
           row.warnings.push("Tracking barcode is too dense for this label; edit or use another layout.");
           drawBoxText("BARCODE TOO WIDE · EDIT RECORD", boxes.barcode, 7, 5, true);
         } else {

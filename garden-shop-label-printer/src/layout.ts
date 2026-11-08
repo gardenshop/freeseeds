@@ -9,6 +9,14 @@ const ARABIC_SCRIPT = /[\u0600-\u06ff\u0750-\u077f\u08a0-\u08ff]/u;
 const NON_LATIN = /[^\u0000-\u00ff]/u;
 const ARABIC_FONT = '"Noto Naskh Arabic", Arial, sans-serif';
 
+export const CODE128_LAYOUT = {
+  moduleWidthPx: 1,
+  heightPx: 22,
+  horizontalQuietZonePx: 10,
+  verticalQuietZonePx: 1,
+  minimumModuleMm: 0.19,
+} as const;
+
 export function usesArabicScript(text: string): boolean {
   return ARABIC_SCRIPT.test(text);
 }
@@ -32,13 +40,13 @@ export const LABEL_LAYOUT = {
   footerHeightMm: 3,
   toInsetMm: 0.65,
   toHeadingMm: 2,
-  toNameMm: 2.8,
+  toNameMm: 4.5,
   toLandmarkMm: 2.5,
-  toContactMm: 2.7,
+  toContactMm: 3,
   fieldGapMm: 0.3,
   orderProductRatio: 0.72,
-  orderIdRatio: 0.38,
-  barcodeRatio: 0.66,
+  orderIdRatio: 0.45,
+  barcodeRatio: 0.7,
 } as const;
 
 export const LABEL_FOOTER =
@@ -183,13 +191,14 @@ export function fitTextMm(
   maxFontPx: number,
   minFontPx: number,
   bold = false,
+  lineHeight = 1.15,
 ) {
   return fitText(
     ctx,
     text,
     widthMm * PX_PER_MM,
     heightMm * PX_PER_MM,
-    { maxFont: maxFontPx, minFont: minFontPx, bold, fontFamily: labelFontFamily(text) },
+    { maxFont: maxFontPx, minFont: minFontPx, bold, lineHeight, fontFamily: labelFontFamily(text) },
   );
 }
 
@@ -201,11 +210,13 @@ export function fitTextPx(
   maxFontPx: number,
   minFontPx: number,
   bold = false,
+  lineHeight = 1.15,
 ) {
   return fitText(ctx, text, widthPx, heightPx, {
     maxFont: maxFontPx,
     minFont: minFontPx,
     bold,
+    lineHeight,
     fontFamily: labelFontFamily(text),
   });
 }

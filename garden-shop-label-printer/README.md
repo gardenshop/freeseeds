@@ -24,7 +24,24 @@ npm run test:browser
 
 `test:browser` starts an isolated Vite server, uses local Chrome, imports a synthetic `.xlsx`, verifies the A4/label measurements and every visible barcode, creates/rasterizes sample and 500-order PDFs, and saves synthetic screenshots under `test-evidence/`. PDFs there are git-ignored. No customer fixture is used.
 
-Latest verification: 27/27 unit/security tests passed; browser smoke passed XLSX/leading-zero import, monitoring-outage resilience, 3- and 18-barcode decode checks, 500-order/28-page PDF generation, preview/print/PDF geometry, mobile overflow and long-address bounds; build passed; `npm audit --audit-level=moderate` reported 0 advisories. The staging Page and Super-Admin-only Worker/D1/Access are deployed. A synthetic authenticated import/labels/PDF event round-tripped through remote D1; the dashboard reported `Audit chain: VERIFIED`. No physical print was performed.
+## Staging Build
+
+The default build is intentionally local-only. Before building assets for the authorized staging Pages project, configure the public monitor and Admin URLs in the build environment; do not set `VITE_MONITOR_URL` to an empty value or the deployed app will disable monitoring:
+
+```powershell
+$env:VITE_MONITOR_URL = "https://garden-shop-label-printer-monitor-staging.get-free-seeds.workers.dev"
+$env:VITE_ADMIN_URL = "https://getfreeseeds-admin-staging.get-free-seeds.workers.dev/"
+npm run build
+npx --no-install wrangler whoami
+# Confirm Get Free Seeds / cb5066a6d71ecdee0bd7ed8aacb4d3c2 in the Dashboard.
+npx --no-install wrangler --cwd "D:\Temp\kilo" pages deploy "D:\free seeds\garden-shop-label-printer\dist" --project-name garden-shop-label-printer-staging --branch main
+Remove-Item Env:VITE_MONITOR_URL
+Remove-Item Env:VITE_ADMIN_URL
+```
+
+Recheck account identity and the Dashboard before each Cloudflare mutation. Confirm the new production deployment and perform a fresh-cache browser check for `Audit service configured` before treating the deployment as ready.
+
+Latest verification: 27/27 unit/security tests passed; browser smoke passed XLSX/leading-zero import, monitoring-outage resilience, 3- and 18-barcode decode checks, 500-order/28-page PDF generation, preview/print/PDF geometry, mobile overflow and long-address bounds; the configured staging build passed; `npm audit --audit-level=moderate` reported 0 advisories. The Super-Admin-only Worker/D1/Access are deployed. Synthetic authenticated import, label-generation and PDF events round-tripped through remote D1; the report returned `Audit chain: VERIFIED`. The latest Pages deployment was fresh-cache checked and its JS/CSS asset hashes matched the configured local build. No physical print was performed.
 
 The repository-wide regression suite also passed 269 tests and the root build passed. Focused ESLint passed for the changed Admin source/helper/tests. The repository-wide lint command still fails while traversing unrelated dirty agent worktrees; those files were not changed or staged. Root `npm audit` reports six moderate development-tool advisories; `npm audit --omit=dev` reports zero. No existing WhatsApp/API/Admin Worker was deployed or changed.
 
@@ -55,6 +72,6 @@ Excel data stays in browser memory. Only event category, counts, batch ID, templ
 - `test-evidence/staging-label-preview-xlsx-urdu.png`: browser rendering of the imported synthetic `.xlsx` with zero-format phone and Urdu text.
 - `test-evidence/staging-label-preview-xlsx-urdu.png`: the live Page rendering a synthetic `.xlsx` with zero-formatted phone and Urdu address text.
 - `test-evidence/admin-home-live-no-label-card.png`: the actual active Admin Operations home confirming the tile is not live.
-- Latest staging Page deployment: `3afcfd90-6fbe-41c4-b005-814a1fe83ac1` at `garden-shop-label-printer-staging.pages.dev`. Monitor Worker version: `89a245c0-2532-4b02-8def-4cd675f9a845`; Access App and D1 identities are in `RULES.md`.
+- Latest staging Page deployment: `079a9b44-8b34-4714-a86d-339706ae85f2` at `garden-shop-label-printer-staging.pages.dev`. Monitor Worker version: `89a245c0-2532-4b02-8def-4cd675f9a845`; Access App and D1 identities are in `RULES.md`.
 - The 15 historical orders were not present in authorized project fixtures; protected root `images/` was not inspected. Physical printer/stock calibration is not tested.
 - The task's latest attached reference image was not available in the active message context, so pixel-perfect image comparison remains outstanding.

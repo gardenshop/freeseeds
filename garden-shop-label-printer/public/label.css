@@ -39,7 +39,7 @@
   height: 100%;
   min-width: 0;
   display: grid;
-  grid-template-columns: 38% 62%;
+  grid-template-columns: 45% 55%;
   align-items: center;
 }
 .order-id,
@@ -61,11 +61,11 @@
   border-right: 0.25mm solid #111;
   padding-right: 0.5mm;
   font-weight: 700;
-  font-size: 7.3px;
+  font-size: 10.5px;
 }
 .product-text {
   padding-left: 0.7mm;
-  font-size: 7px;
+  font-size: 9px;
   font-weight: 600;
 }
 .cod-block {
@@ -79,10 +79,11 @@
   font-size: 6.3px;
   line-height: 1.1;
 }
-.cod-block strong { font-size: 8.2px; }
+.cod-block strong { font-size: 12px; }
+.cod-block span { font-size: 8.5px; }
 .label-middle {
   display: grid;
-  grid-template-columns: 66% 34%;
+  grid-template-columns: 70% 30%;
   align-items: stretch;
   border-bottom: 0.2mm solid #111;
 }
@@ -124,31 +125,31 @@
   min-width: 0;
   min-height: 0;
   display: grid;
-  grid-template-rows: 2mm 2.8mm minmax(0, 1fr) 2.5mm 2.7mm;
+  grid-template-rows: 2mm 4.5mm minmax(0, 1fr) 2.5mm 3mm;
   gap: 0.3mm;
   padding: 0.65mm;
   border: 0.3mm solid #111;
 }
 .to-heading { font-size: 7px; line-height: 1; font-weight: 800; }
 .receiver-name {
-  font-size: 9px;
+  font-size: 15px;
   line-height: 1;
   font-weight: 800;
 }
 .label.has-warning .receiver-name { padding-right: 8mm; }
 .address-text {
-  font-size: 8px;
+  font-size: 14px;
   line-height: 1.08;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 .landmark {
-  font-size: 7px;
+  font-size: 10px;
   line-height: 1;
 }
 .landmark strong { font-weight: 800; }
 .contact {
-  font-size: 8.5px;
+  font-size: 13px;
   line-height: 1;
   font-weight: 800;
 }
@@ -157,7 +158,7 @@
   display: flex;
   align-items: center;
   white-space: nowrap;
-  font-size: 6px;
+  font-size: 8px;
   line-height: 1;
   border-top: 0.2mm solid #111;
 }
@@ -197,18 +198,18 @@
   --middle-height: calc(9mm * var(--zoom));
   --footer-height: calc(3mm * var(--zoom));
 }
-.sheet .label .order-id { font-size: calc(7.3px * var(--zoom)); }
-.sheet .label .product-text { font-size: calc(7px * var(--zoom)); }
-.sheet .label .cod-block { font-size: calc(6.3px * var(--zoom)); }
-.sheet .label .cod-block strong { font-size: calc(8.2px * var(--zoom)); }
-.sheet .label .tracking-text { font-size: calc(7px * var(--zoom)); }
-.sheet .label .destination { font-size: calc(9px * var(--zoom)); }
-.sheet .label .destination .province-text { font-size: calc(7.5px * var(--zoom)); }
-.sheet .label .receiver-name { font-size: calc(9px * var(--zoom)); }
-.sheet .label .address-text { font-size: calc(8px * var(--zoom)); }
-.sheet .label .landmark { font-size: calc(7px * var(--zoom)); }
-.sheet .label .contact { font-size: calc(8.5px * var(--zoom)); }
-.sheet .label footer { font-size: calc(6px * var(--zoom)); }
+.sheet .label .order-id { font-size: calc(10.5px * var(--zoom)); }
+.sheet .label .product-text { font-size: calc(9px * var(--zoom)); }
+.sheet .label .cod-block { font-size: calc(8.5px * var(--zoom)); }
+.sheet .label .cod-block strong { font-size: calc(12px * var(--zoom)); }
+.sheet .label .tracking-text { font-size: calc(10px * var(--zoom)); }
+.sheet .label .destination { font-size: calc(13px * var(--zoom)); }
+.sheet .label .destination .province-text { font-size: calc(10.5px * var(--zoom)); }
+.sheet .label .receiver-name { font-size: calc(15px * var(--zoom)); }
+.sheet .label .address-text { font-size: calc(14px * var(--zoom)); }
+.sheet .label .landmark { font-size: calc(10px * var(--zoom)); }
+.sheet .label .contact { font-size: calc(13px * var(--zoom)); }
+.sheet .label footer { font-size: calc(8px * var(--zoom)); }
 .sheet .label .label-warning { font-size: calc(5.5px * var(--zoom)); }
 .mapping-warning { margin: -12px 0 16px; border-left: 3px solid var(--orange); background: #f5e6d9; padding: 12px; color: #673a25; font-size: 11px; }
 .individual-preview .label {
