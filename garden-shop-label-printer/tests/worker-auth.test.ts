@@ -83,7 +83,7 @@ describe("monitoring Worker authorization", () => {
 
   it("detects a tampered audit-chain event", async () => {
     const db = {
-      prepare() { return { async all() { return { results: [{ id: "synthetic-id", actor_hash: "actor", role: "STAFF", event_type: "FILE_PROCESSED", batch_id: "synthetic-batch", template_version: "gfs-a4-18-v1", counts_json: "{}", error_code: null, created_at: "2026-01-01T00:00:00.000Z", previous_hash: "GENESIS", event_hash: "tampered" }] }; } }; },
+      prepare() { return { async all() { return { results: [{ id: "synthetic-id", actor_hash: "actor", role: "STAFF", event_type: "FILE_PROCESSED", batch_id: "synthetic-batch", template_version: "gfs-a4-18-v2", counts_json: "{}", error_code: null, created_at: "2026-01-01T00:00:00.000Z", previous_hash: "GENESIS", event_hash: "tampered" }] }; } }; },
     } as unknown as D1Database;
     expect(await verifyChain(db, { ...envBase, LABEL_AUDIT_DB: db } as never)).toBe("FAILED");
   });
