@@ -39,7 +39,11 @@ The repository-wide architecture discovery and full implementation history remai
 
 ## Deployment State
 
-- Status: standalone MVP locally built/tested and deployed to an Admin-only staging Pages project. Dedicated monitor Worker/D1/Access are live and a synthetic authenticated audit round-trip passed; no physical print was performed.
-- GitHub identity/repository and Wrangler account identity are recorded in `RULES.md`. Commit `3186b85` is pushed to `origin/codex/garden-shop-label-printer-mvp`; it contains only this app, evidence, and label-specific plans. Existing unrelated dirty worktree files remain unstaged and unchanged.
+- Standalone MVP code/unit/browser tests/build: **100% locally verified**. Synthetic XLSX, phone zero-padding, 18/19/100/500 batches, all generated Code 128 values, Unicode PDF fallback and overflow warnings are covered.
+- Staging Pages/monitor/D1/Access: **100% for the Super Admin canary**. Remote import/labels/PDF audit events and hash-chain verification passed; no physical printer test was performed.
+- Staff authorization: **0%**; no authorized staff roster/group exists. Current staging Access deliberately allows only the verified Super Admin.
+- Admin integration: **source implementation 100%, active Admin rollout 0%**. The card/redirect code and route tests are pushed; active Cloudflare Admin version `3e4b7c26...` is still at 100% and does not yet contain the tile. The Admin source baseline does not match the checkout, so promotion is blocked pending source reconciliation.
+- Production release: **0%**. No Pages production hostname, Admin Worker traffic shift, or production order binding was changed.
+- GitHub identity/repository and Wrangler account identity are recorded in `RULES.md`. The standalone branch is `origin/codex/garden-shop-label-printer-mvp`; recent commits include `16cc9d2` (Admin integration source), `04b155c` (Unicode PDF fix), and the staged follow-up documentation/tests. Existing unrelated dirty worktree files remain unstaged and unchanged.
 - Owner authorized an Admin-only staging canary; free-tier/account inventory, Pages deployment, D1 ID, Worker version and Access App ID are recorded in `RULES.md`. Staff email/group roster is unavailable, so staging is Super-Admin-only. The checked-out Admin template does not match the active Operations home/source; do not deploy it over active version `3e4b`. The Admin tile/redirect code is locally implemented/tested and pushed, but not live. This is the Admin launch blocker.
 - Rollback: restore the last approved standalone Pages/Worker versions; preserve the dedicated audit D1. Do not modify existing Admin navigation unless the separate integration proposal is approved and passes review.
