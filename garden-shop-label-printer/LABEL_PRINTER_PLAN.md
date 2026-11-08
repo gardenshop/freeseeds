@@ -40,6 +40,6 @@ The repository-wide architecture discovery and full implementation history remai
 ## Deployment State
 
 - Status: standalone MVP locally built/tested; migration and SQL smoke ran against Wrangler local D1 only. No Pages/Worker/D1/Access resources provisioned; no production deployment.
-- GitHub identity/repository and Wrangler account identity are recorded in `RULES.md`. The current checkout is an unrelated GFS payments branch. Push only from a cleanly verified Label Printer branch with label-specific files staged.
+- GitHub identity/repository and Wrangler account identity are recorded in `RULES.md`. Commit `3186b85` is pushed to `origin/codex/garden-shop-label-printer-mvp`; it contains only this app, evidence, and label-specific plans. Existing unrelated dirty worktree files remain unstaged and unchanged.
 - Cloudflare staging is blocked on explicit owner/security/resource approval and a dedicated resource registry entry. After approval, verify identity immediately before each mutation, create only new named resources, configure a dedicated Access audience and staff/admin allowlists, apply this project's D1 migration, and smoke-test denial/report roles before use.
 - Rollback: restore the last approved standalone Pages/Worker versions; preserve the dedicated audit D1. Do not modify existing Admin navigation unless the separate integration proposal is approved and passes review.
