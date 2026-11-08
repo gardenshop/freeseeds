@@ -64,6 +64,7 @@ try {
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("requestfailed", (request) => failedRequests.push(`${request.url()}: ${request.failure()?.errorText}`));
   await page.goto(baseUrl, { waitUntil: "networkidle" });
+  assert.equal(await page.locator("#backToAdmin").getAttribute("href"), "https://getfreeseeds-admin-staging.get-free-seeds.workers.dev/");
   await page.locator("#workbook").setInputFiles({ name: "synthetic-import.xlsx", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buffer: Buffer.from(syntheticXlsx()) });
   await page.locator("#applyMapping").waitFor();
   await page.locator("#applyMapping").click();

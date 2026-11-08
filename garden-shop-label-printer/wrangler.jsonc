@@ -1,22 +1,22 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "garden-shop-label-printer-monitor",
+  "name": "garden-shop-label-printer-monitor-staging",
+  "account_id": "cb5066a6d71ecdee0bd7ed8aacb4d3c2",
   "main": "worker/index.ts",
   "compatibility_date": "2026-10-01",
-  "workers_dev": false,
+  "workers_dev": true,
   "d1_databases": [
     {
       "binding": "LABEL_AUDIT_DB",
-      "database_name": "garden-shop-label-printer-audit",
-      "database_id": "REPLACE_WITH_NEW_DEDICATED_D1_ID",
+      "database_name": "garden-shop-label-printer-audit-staging",
+      "database_id": "e2f5c4e0-d86a-48ea-af65-9786a58a70c7",
       "migrations_dir": "migrations"
     }
   ],
   "vars": {
-    "ACCESS_TEAM_DOMAIN": "REPLACE_WITH_APPROVED_ACCESS_TEAM",
-    "ACCESS_AUDIENCE": "REPLACE_WITH_NEW_ACCESS_APPLICATION_AUD",
-    "APP_ORIGIN": "REPLACE_WITH_EXACT_STATIC_APP_ORIGIN",
-    "STAFF_EMAILS": "",
-    "SUPER_ADMIN_EMAILS": ""
+    "ACCESS_TEAM_DOMAIN": "soft-scene-0bc2.cloudflareaccess.com",
+    "ACCESS_AUDIENCE": "01c00bbec37de1ad14d4388028edd1492119d008be9c140699e95116d6004c8e",
+    "APP_ORIGIN": "https://garden-shop-label-printer-staging.pages.dev",
+    "STAFF_EMAILS": ""
   }
 }

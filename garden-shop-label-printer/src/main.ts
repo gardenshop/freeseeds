@@ -26,6 +26,9 @@ import { restoreZeroFormattedCells } from "./xlsx";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 const monitoringUrl =
   import.meta.env.VITE_MONITOR_URL?.replace(/\/$/, "") ?? "";
+const adminUrl =
+  import.meta.env.VITE_ADMIN_URL ??
+  "https://getfreeseeds-admin-staging.get-free-seeds.workers.dev/";
 const sampleHeaders = [
   "Order ID",
   "Name",
@@ -147,7 +150,7 @@ function currentOrders(): Array<{ row: Order; index: number }> {
 }
 
 function nav() {
-  return `<header class="topbar"><a class="brand" href="#upload" data-view="upload"><span class="brand-mark">GS</span><span><b>Garden Shop</b><small>LABEL STUDIO / INTERNAL</small></span></a><nav aria-label="Main navigation">${[
+  return `<header class="topbar"><a class="brand" href="#upload" data-view="upload"><span class="brand-mark">GS</span><span><b>Garden Shop</b><small>LABEL STUDIO / INTERNAL</small></span></a><a class="admin-return" id="backToAdmin" href="${esc(adminUrl)}" rel="noopener noreferrer">← Back to Admin</a><nav aria-label="Main navigation">${[
     ["upload", "Import"],
     ["review", "Review"],
     ["preview", "Sheet preview"],
@@ -1095,6 +1098,7 @@ render();
 declare global {
   interface ImportMetaEnv {
     readonly VITE_MONITOR_URL?: string;
+    readonly VITE_ADMIN_URL?: string;
   }
   interface ImportMeta {
     readonly env: ImportMetaEnv;

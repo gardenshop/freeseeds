@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
+import { injectLabelPrinterCard, labelPrinterUrl, STAGING_LABEL_PRINTER_URL } from "./label-printer";
 import { canTransition, createMetaActivationService, createWhatsAppProvider, customerTransactionReferenceHash, getLatestOrderForWaId, hashV2CodVerificationReference, isInsideWhatsAppServiceWindow, MetaActivationAction, normalizeCustomerTransactionReference, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, hasPaymentMessagePlaceholders, isPaymentMethodComplete, isPaymentMethodLocaleComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseV2CodPolicy, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, publishedWhatsAppContent, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, V2CodPolicy, V2CodPolicySchema, WhatsAppActionId, whatsAppActionIdsForTemplate, whatsAppActionLabel, WhatsAppContent, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
 
   type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; CF_ACCESS_TEAM_DOMAIN?: string; META_CAPI_ENABLED?: string; REFERENCE_REQUESTS_ENABLED?: string; ORDER_STATUS_NOTIFICATIONS_V2_ENABLED?: string; COD_V2_ENABLED?: string; COD_ADMIN_UI_ENABLED?:string;COD_POLICY_HMAC_KEY?: string; PAYMENT_CONFIRMATION_V2_UI_ENABLED?:string;PAYMENT_CONFIRMATION_V2_ENABLED?: string; PAYMENT_AUTOMATION_V2_ENABLED?: string; PAYMENT_REMINDERS_V2_ENABLED?: string; PAYMENT_UTILITY_TEMPLATES_APPROVED?: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
@@ -660,6 +661,33 @@ app.use("*", async (c, next) => {
   if (c.env.DEPLOYMENT_STATE === "V2_ISOLATED_STAGING" && !(await authorizedV2AccessJwt(c))) return c.json({ error: "ACCESS_JWT_REQUIRED" }, 401);
   if (!authorized(c)) return c.json({ error: "ADMIN_ACCESS_REQUIRED" }, 403);
   await next();
+});
+
+function configuredLabelPrinter(c: AdminContext): string | null {
+  const env = c.env as Env["Bindings"] & { LABEL_PRINTER_URL?: string };
+  return labelPrinterUrl(env.LABEL_PRINTER_URL || STAGING_LABEL_PRINTER_URL);
+}
+
+app.use("/", async (c, next) => {
+  if (c.req.method !== "GET" || c.req.path !== "/") return next();
+  await next();
+  const target = configuredLabelPrinter(c);
+  if (!target || !c.res.headers.get("content-type")?.includes("text/html")) return;
+  const response = c.res.clone();
+  const html = await response.text();
+  const updated = injectLabelPrinterCard(html, target);
+  if (updated === html) return;
+  const headers = new Headers(response.headers);
+  headers.delete("content-length");
+  c.res = new Response(updated, { status: response.status, statusText: response.statusText, headers });
+});
+
+app.get("/labels-printing", (c) => {
+  const target = configuredLabelPrinter(c);
+  if (!target) return c.text("Labels & Printing is not configured for this Admin environment.", 503);
+  c.header("Cache-Control", "no-store");
+  c.header("Referrer-Policy", "no-referrer");
+  return c.redirect(target, 302);
 });
 
 app.get("/health", async (c) => {

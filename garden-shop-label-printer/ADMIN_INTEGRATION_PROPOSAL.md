@@ -1,12 +1,12 @@
-# Proposed Existing-Admin Integration (Not Applied)
+# Existing-Admin Integration (Staging Code; Not Live)
 
 ## Scope
 
-This is a proposal only, prepared after local unit, browser/PDF and authorization tests passed. No existing Admin, API, payment, WhatsApp, Worker, D1, queue, or deployment file was modified. The label app works independently; this navigation link is not required for its operation. Remote Access/D1 resources are not approved or deployed, so the proposal is not yet executable.
+The scoped redirect/card code is implemented in the working Admin source and has a focused Hono test. No Admin Worker deployment has been made. The active Cloudflare Admin (`getfreeseeds-admin-staging`, version `3e4b7c26...`, 100%) renders a newer Operations-card template than the checked-out Admin source; the checkout also has unrelated dirty Admin changes. Do not deploy the checkout over the active Worker. The staging Label Printer Page/monitor is live and Access-protected, but the Admin tile is not live.
 
 ## Minimal Change
 
-After the separate application is deployed and its dedicated Cloudflare Access policy has been verified, add one normal external link in the existing authenticated Admin navigation:
+The branch adds this logical link through the existing Admin Operations card structure and `/labels-printing` protected redirect:
 
 ```html
 <a href="https://APPROVED-LABEL-APP-ORIGIN" rel="noopener noreferrer">
@@ -14,16 +14,16 @@ After the separate application is deployed and its dedicated Cloudflare Access p
 </a>
 ```
 
-Use the repository's existing Admin navigation convention rather than pasting this HTML literally if that screen is rendered by a typed template. Do not pass order IDs, customer details, payment data, auth tokens, or a reusable signed token in the link. The label app must require its own Cloudflare Access session and its Worker must independently validate the signed Access JWT and role allowlist.
+The real active Admin source baseline must be reconciled first; adapt the same card to that template without replacing its current module list. The redirect checks the existing Admin Access guard and sends the user to the dedicated Pages URL with no tokens or customer data in the URL. The Pages/Worker Access app then independently validates the signed JWT and Super Admin role.
 
 ## Required Approval and Preflight
 
-- Product and security owners approve the standalone hostname, label workflow, role roster, privacy notice, retention and staff-confirmation semantics.
+- Product/security owners approve the staff role roster, privacy notice, retention and staff-confirmation semantics. The current canary Access policy is Super Admin only; staff identities were not provided.
 - Verify Cloudflare account identity with `wrangler whoami` immediately before each resource mutation and record timestamp/account/resource/change in the approved operations record. The account must be the authorized Garden Shop account, not Hoja Seeds.
 - Approve new Pages/Worker/D1 resource names, billing/quota impact, Access policy, CORS origin and rollback versions; register resources independently of existing production D1 and Worker entries.
-- Review the exact one-link diff in the existing Admin as a separate change request. Do not proxy existing Admin APIs or bind/reuse any production database, Worker secret, queue, or Access audience.
-- Test denied and approved roles in staging, confirm monitoring reports are Super Admin-only, and obtain production smoke/rollback approval before release.
+- Reconcile the exact active Admin source/version before preparing the canary; preserve the 3e4b rollback and do not include pre-existing dirty Admin changes. Do not proxy existing Admin APIs or bind/reuse any production database, Worker secret, queue, or Access audience.
+- Add the Pages URL to the Admin Worker environment only in the reviewed canary version, test denied/approved roles, confirm monitoring reports are Super Admin-only, and obtain production smoke/rollback approval before promotion.
 
 ## Rollback
 
-Remove or disable only the new navigation link if it was separately merged. Roll the independent Pages site and monitoring Worker to their approved prior versions. Preserve the audit D1 and do not modify existing GFS or Hoja Seeds systems.
+Rollback the Admin canary to the active version `3e4b7c26...` (100%) and remove only the `LABEL_PRINTER_URL` variable/route from the canary. Roll the independent staging Pages/monitor Worker to their recorded prior versions if needed; preserve the audit D1. Do not modify other GFS or Hoja Seeds systems.
