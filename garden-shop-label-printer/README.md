@@ -26,23 +26,15 @@ npm run test:browser
 
 Latest verification: 27/27 unit/security tests passed; browser smoke passed XLSX/leading-zero import, monitoring-outage resilience, 3- and 18-barcode decode checks, 500-order/28-page PDF generation, preview/print/PDF geometry, mobile overflow and long-address bounds; build passed; `npm audit --audit-level=moderate` reported 0 advisories. The staging Page and Super-Admin-only Worker/D1/Access are deployed. A synthetic authenticated import/labels/PDF event round-tripped through remote D1; the dashboard reported `Audit chain: VERIFIED`. No physical print was performed.
 
-## Separate monitoring deployment preparation
+The repository-wide regression suite also passed 269 tests and the root build passed. Focused ESLint passed for the changed Admin source/helper/tests. The repository-wide lint command still fails while traversing unrelated dirty agent worktrees; those files were not changed or staged. Root `npm audit` reports six moderate development-tool advisories; `npm audit --omit=dev` reports zero. No existing WhatsApp/API/Admin Worker was deployed or changed.
 
-The owner authorized an isolated staging canary. Its D1, Pages project/assets, Admin-only Access app, monitor Worker and encrypted HMAC/Super Admin secrets are provisioned. Before **each next** Cloudflare mutation, run `npx wrangler whoami`, confirm the visible account name and account ID are the approved Garden Shop account (never Hoja Seeds), and record the timestamp, identity, resource name and change. Stop if the account is unexpected. Never bind existing production/V2 Workers, D1, queues, or Access apps.
+## Staging Deployment Status
 
-After approvals and account identity confirmation, the deployment sequence is:
+The owner authorized an isolated staging canary. Current resources and identities are inventoried in `RULES.md`: staging D1 and migration, Pages project/deployment, dedicated Access app for the Pages/Worker hosts, monitor Worker, and encrypted audit/Admin secrets. The Access policy currently permits only the verified Super Admin because no staff roster/group was supplied. Before **each next** Cloudflare mutation, run `npx wrangler whoami`, confirm the `Get Free Seeds` account ID in the Dashboard, and record the timestamp/resource/action. Never use Hoja Seeds or existing production/V2 bindings.
 
-1. The dedicated staging D1 `garden-shop-label-printer-audit-staging` has already been created as `e2f5c4e0-d86a-48ea-af65-9786a58a70c7`; its only migration was applied to that new database. Do not use an ID from an existing repo database.
-2. Set the full `ACCESS_TEAM_DOMAIN` (for example `team.cloudflareaccess.com`), `ACCESS_AUDIENCE`, exact `APP_ORIGIN`, and approved staff/Super Admin allowlists in the standalone config. Configure a dedicated Cloudflare Access app/policies for the new UI/Worker. The Worker validates the signed Access JWT and independently checks role allowlists.
-3. Provision fresh random `AUDIT_ACTOR_KEY` and `AUDIT_CHAIN_KEY` secrets using `npx wrangler secret put AUDIT_ACTOR_KEY` and `npx wrangler secret put AUDIT_CHAIN_KEY`. Do not reuse existing secrets or put values in Vite config/source.
-4. The D1 migration, Worker deployment, Access destination/audience and encrypted Worker secrets are already configured for the Admin-only canary.
-5. Build with `VITE_MONITOR_URL=https://garden-shop-label-printer-monitor-staging.get-free-seeds.workers.dev` and `VITE_ADMIN_URL=https://getfreeseeds-admin-staging.get-free-seeds.workers.dev/`. CSP in `public/_headers` allowlists only the monitor origin.
-6. The built static `dist` assets are deployed to `garden-shop-label-printer-staging.pages.dev` on its `main` environment, protected by the dedicated Access app.
-7. Super Admin reports, audit integrity, synthetic events, PDF geometry and rollback identities were verified. Staff onboarding and physical printer calibration remain outstanding. Production use remains paused.
+Staging smoke verified the actual `.pages.dev` app, browser XLSX import with a zero-formatted numeric phone, Urdu name/address rendering and PDF generation, Access-authenticated report access, remote D1 aggregate events, and a verified audit chain. A pre-fix synthetic 55-row PDF error remains in append-only audit history; after the Unicode fallback, one-row Urdu PDF generation succeeded and the local 500-row PDF test passed. No physical printer test or Admin Worker deployment was performed.
 
-Staging operations to date: dedicated D1 create/migration, Pages project/assets deployment, Access app restricted to the existing Admin Operator/Super Admin policy, monitor Worker deployment, encrypted actor/chain/Super Admin secrets, and Access CORS-preflight configuration. An unintended fail-closed Worker from the root-directory Pages command was deleted. An anonymous report request received an Access redirect; authenticated synthetic import/label/PDF events appeared in the dashboard and the audit chain verified. Roll back only the isolated Pages/Worker versions; preserve the audit database.
-
-For local migration/schema smoke, the migration was also applied to Wrangler's local emulator and a synthetic row was inserted/read back. This is not a live Worker-to-D1 or Cloudflare Access test. Local emulator state is ignored under `.wrangler/`.
+Local migration/schema smoke also passed against Wrangler's local emulator. This is separate from the remote staging D1. Roll back only isolated Pages/Worker versions; preserve audit history and the D1 database.
 
 ## Print calibration
 
@@ -50,7 +42,7 @@ Select A4 portrait, actual size/100%, and disable browser headers/footers. Valid
 
 ## Privacy and integration
 
-Excel data stays in browser memory. Only event category, counts, batch ID, template version, staff pseudonym and bounded error code reach monitoring. No addresses, contact values, order/customer/product names, workbook or PDF content are transmitted. A minimal `/labels-printing` Admin redirect and Operations-card injector are implemented and unit-tested; neither is deployed to the live Admin. The active Admin source baseline differs from this checkout and contains unrelated dirty changes, so rollout is blocked to prevent regression. See `ADMIN_INTEGRATION_PROPOSAL.md`.
+Excel data stays in browser memory. Only event category, counts, batch ID, template version, staff pseudonym and bounded error code reach monitoring. No addresses, contact values, order/customer/product names, workbook or PDF content are transmitted. The `/labels-printing` Admin redirect and Operations-card injector are committed and unit-tested but not in the active Admin Worker. The live Admin home still has no Label Printer card. Its active version is `3e4b7c26...` at 100%; the checked-out legacy Admin template/source differs, and unrelated dirty Admin changes are preserved. No Admin version was uploaded or promoted. See `ADMIN_INTEGRATION_PROPOSAL.md`.
 
 ## Current Verification Evidence
 
@@ -60,7 +52,9 @@ Excel data stays in browser memory. Only event category, counts, batch ID, templ
 - `test-evidence/browser-print-sheet.png`: headless browser print DOM with shared label CSS and measured 210×297 mm sheet/65×44 mm labels.
 - `test-evidence/pdf-sample-page.png` and `test-evidence/pdf-500-first-page.png`: PDF.js raster comparisons from generated PDFs.
 - `test-evidence/staging-label-preview.png`: the live Access-protected staging Page with synthetic rows.
+- `test-evidence/staging-label-preview-xlsx-urdu.png`: browser rendering of the imported synthetic `.xlsx` with zero-format phone and Urdu text.
+- `test-evidence/staging-label-preview-xlsx-urdu.png`: the live Page rendering a synthetic `.xlsx` with zero-formatted phone and Urdu address text.
 - `test-evidence/admin-home-live-no-label-card.png`: the actual active Admin Operations home confirming the tile is not live.
-- Staging Page deployment host: `0b504d51.garden-shop-label-printer-staging.pages.dev` (canonical `garden-shop-label-printer-staging.pages.dev`). Monitor Worker version: `89a245c0-2532-4b02-8def-4cd675f9a845`; Access App and D1 identities are in `RULES.md`.
+- Latest staging Page deployment: `3afcfd90-6fbe-41c4-b005-814a1fe83ac1` at `garden-shop-label-printer-staging.pages.dev`. Monitor Worker version: `89a245c0-2532-4b02-8def-4cd675f9a845`; Access App and D1 identities are in `RULES.md`.
 - The 15 historical orders were not present in authorized project fixtures; protected root `images/` was not inspected. Physical printer/stock calibration is not tested.
 - The task's latest attached reference image was not available in the active message context, so pixel-perfect image comparison remains outstanding.

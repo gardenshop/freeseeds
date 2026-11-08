@@ -5,6 +5,21 @@ import {
 } from "./engine";
 
 const PX_PER_MM = 96 / 25.4;
+const ARABIC_SCRIPT = /[\u0600-\u06ff\u0750-\u077f\u08a0-\u08ff]/u;
+const NON_LATIN = /[^\u0000-\u00ff]/u;
+const ARABIC_FONT = '"Noto Naskh Arabic", Arial, sans-serif';
+
+export function usesArabicScript(text: string): boolean {
+  return ARABIC_SCRIPT.test(text);
+}
+
+export function usesComplexScript(text: string): boolean {
+  return NON_LATIN.test(text);
+}
+
+export function labelFontFamily(text: string): string {
+  return usesArabicScript(text) ? ARABIC_FONT : "Arial, sans-serif";
+}
 
 export const LABEL_LAYOUT = {
   widthMm: LABEL_WIDTH_MM,
@@ -174,6 +189,23 @@ export function fitTextMm(
     text,
     widthMm * PX_PER_MM,
     heightMm * PX_PER_MM,
-    { maxFont: maxFontPx, minFont: minFontPx, bold },
+    { maxFont: maxFontPx, minFont: minFontPx, bold, fontFamily: labelFontFamily(text) },
   );
+}
+
+export function fitTextPx(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  widthPx: number,
+  heightPx: number,
+  maxFontPx: number,
+  minFontPx: number,
+  bold = false,
+) {
+  return fitText(ctx, text, widthPx, heightPx, {
+    maxFont: maxFontPx,
+    minFont: minFontPx,
+    bold,
+    fontFamily: labelFontFamily(text),
+  });
 }

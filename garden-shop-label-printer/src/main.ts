@@ -4,11 +4,12 @@ import {
   type ImportMapping,
   type Order,
 } from "./types";
+import "@fontsource/noto-naskh-arabic/arabic-400.css";
+import "@fontsource/noto-naskh-arabic/arabic-700.css";
 import {
   A4_POINTS,
   addA4Page,
   detectMapping,
-  fitText,
   labelBox,
   findAmbiguousMappings,
   MM_TO_POINTS,
@@ -20,7 +21,7 @@ import {
 } from "./engine";
 import "./style.css";
 import "../public/label.css";
-import { LABEL_FOOTER, LABEL_LAYOUT, fitTextMm, labelBoxes } from "./layout";
+import { LABEL_FOOTER, LABEL_LAYOUT, fitTextMm, fitTextPx, labelBoxes, labelFontFamily, usesArabicScript, usesComplexScript } from "./layout";
 import { restoreZeroFormattedCells } from "./xlsx";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
@@ -355,7 +356,9 @@ function measureLabels(root: ParentNode = document, canvasDocument: Document = d
         const style = canvasDocument.defaultView?.getComputedStyle(element);
         const reserved = selector === ".receiver-name" && row?.warnings.length ? 8 * (96 / 25.4) : 0;
         const width = element.clientWidth - (style ? parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) : 0) - reserved;
-        const result = fitText(context, text, width, element.clientHeight, { maxFont: max, minFont: min, bold });
+        const result = fitTextPx(context, text, width, element.clientHeight, max, min, bold);
+        element.style.fontFamily = labelFontFamily(text);
+        element.dir = usesArabicScript(text) ? "rtl" : "ltr";
         element.classList.toggle("text-overflow", !result.fits);
         const placeholder = element.querySelector(".overflow-placeholder");
         if (!result.fits && !placeholder)
@@ -400,6 +403,15 @@ function markLabelWarning(label: HTMLElement) {
 }
 
 function preparePrintLayout(popup: Window) {
+  const fontStyles = popup.document.createElement("style");
+  fontStyles.textContent = [...document.styleSheets]
+    .flatMap((sheet) => {
+      try { return [...sheet.cssRules]; } catch { return []; }
+    })
+    .filter((rule) => rule instanceof CSSFontFaceRule && rule.cssText.includes("Noto Naskh Arabic"))
+    .map((rule) => rule.cssText)
+    .join("\n");
+  popup.document.head.append(fontStyles);
   const sharedStyles = popup.document.createElement("link");
   sharedStyles.rel = "stylesheet";
   sharedStyles.href = "/label.css";
@@ -536,7 +548,7 @@ async function makePdf(items = currentOrders(), position = startPosition) {
         borderWidth: 0.45,
       });
       const row = item.row;
-      const drawBoxText = (
+      const drawBoxText = async (
         text: string,
         box: (typeof boxes)[keyof typeof boxes],
         maxFont: number,
@@ -553,6 +565,35 @@ async function makePdf(items = currentOrders(), position = startPosition) {
             font: bold,
             maxWidth: Math.max(2, box.width * mm),
             color: rgb(0, 0, 0),
+          });
+          return;
+        }
+        if (usesComplexScript(text)) {
+          await document.fonts.load(`${isBold ? "700 " : ""}${fit.fontSize}px "Noto Naskh Arabic"`);
+          const scale = 4;
+          const pxPerMm = 96 / 25.4;
+          const widthPx = box.width * pxPerMm;
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.ceil(widthPx * scale);
+          canvas.height = Math.ceil(box.height * pxPerMm * scale);
+          const ctx = canvas.getContext("2d");
+          if (!ctx) throw new Error("COMPLEX_TEXT_CANVAS_UNAVAILABLE");
+          ctx.scale(scale, scale);
+          ctx.fillStyle = "#000";
+          ctx.font = `${isBold ? "700 " : "400 "}${fit.fontSize}px ${labelFontFamily(text)}`;
+          const rtl = usesArabicScript(text);
+          ctx.direction = rtl ? "rtl" : "ltr";
+          ctx.textAlign = rtl ? "right" : "left";
+          ctx.textBaseline = "top";
+          fit.lines.forEach((lineText, lineIndex) => {
+            ctx.fillText(lineText, rtl ? widthPx : 0, lineIndex * fit.fontSize * 1.15, widthPx);
+          });
+          const image = await pdf.embedPng(canvas.toDataURL("image/png"));
+          pdfPage.drawImage(image, {
+            x: (xMm + box.x) * mm,
+            y: pageH - (yMm + box.y + box.height) * mm,
+            width: box.width * mm,
+            height: box.height * mm,
           });
           return;
         }
@@ -580,15 +621,15 @@ async function makePdf(items = currentOrders(), position = startPosition) {
       drawRule(boxes.top.x, boxes.top.y + boxes.top.height, boxes.top.x + boxes.top.width, boxes.top.y + boxes.top.height);
       drawRule(boxes.cod.x, boxes.top.y, boxes.cod.x, boxes.top.y + boxes.top.height, 0.8);
       drawRule(boxes.product.x, boxes.top.y, boxes.product.x, boxes.top.y + boxes.top.height, 0.8);
-      drawBoxText(row.orderId || "ORDER ID NOT PROVIDED", boxes.orderId, 7.3, 5.8, true);
-      drawBoxText(row.product || "PRODUCT NOT PROVIDED", boxes.product, 7, 5, true);
-      drawBoxText(row.cod ? `VPL COD Rs ${row.cod}` : "VPL COD amount missing", boxes.cod, 7.5, 5, true);
+      await drawBoxText(row.orderId || "ORDER ID NOT PROVIDED", boxes.orderId, 7.3, 5.8, true);
+      await drawBoxText(row.product || "PRODUCT NOT PROVIDED", boxes.product, 7, 5, true);
+      await drawBoxText(row.cod ? `VPL COD Rs ${row.cod}` : "VPL COD amount missing", boxes.cod, 7.5, 5, true);
       drawRule(boxes.middle.x, boxes.middle.y + boxes.middle.height, boxes.middle.x + boxes.middle.width, boxes.middle.y + boxes.middle.height);
       drawRule(boxes.destination.x, boxes.middle.y, boxes.destination.x, boxes.middle.y + boxes.middle.height, 0.8);
       drawRule(boxes.content.x, boxes.footer.y, boxes.content.x + boxes.content.width, boxes.footer.y);
-      drawBoxText(row.tracking || "TRACKING NUMBER REQUIRED", boxes.tracking, 7, 5.5, true);
-      drawBoxText(row.city || "City missing", { ...boxes.destination, height: boxes.destination.height * 0.55 }, 9, 6, true);
-      drawBoxText(row.province || "Province missing", { ...boxes.destination, y: boxes.destination.y + boxes.destination.height * 0.55, height: boxes.destination.height * 0.45 }, 7.5, 5.5, true);
+      await drawBoxText(row.tracking || "TRACKING NUMBER REQUIRED", boxes.tracking, 7, 5.5, true);
+      await drawBoxText(row.city || "City missing", { ...boxes.destination, height: boxes.destination.height * 0.55 }, 9, 6, true);
+      await drawBoxText(row.province || "Province missing", { ...boxes.destination, y: boxes.destination.y + boxes.destination.height * 0.55, height: boxes.destination.height * 0.45 }, 7.5, 5.5, true);
       pdfPage.drawRectangle({
         x: (xMm + boxes.to.x) * mm,
         y: pageH - (yMm + boxes.to.y + boxes.to.height) * mm,
@@ -597,12 +638,12 @@ async function makePdf(items = currentOrders(), position = startPosition) {
         borderColor: rgb(0, 0, 0),
         borderWidth: 0.8,
       });
-      drawBoxText("TO:", { ...boxes.toHeading, width: boxes.toHeading.width - 8 }, 7, 5.5, true);
-      drawBoxText(row.name || "Receiver name required", { ...boxes.name, width: boxes.name.width - 8 }, 9, 6, true);
-      drawBoxText(row.address || "Delivery address required", boxes.address, 8, 5.5);
-      drawBoxText(`Near by: ${row.landmark || "Not provided"}`, boxes.landmark, 7, 5);
-      drawBoxText(row.phone || "Contact number required", boxes.contact, 8.5, 6, true);
-      drawBoxText(LABEL_FOOTER, boxes.footer, 6, 4.5);
+      await drawBoxText("TO:", { ...boxes.toHeading, width: boxes.toHeading.width - 8 }, 7, 5.5, true);
+      await drawBoxText(row.name || "Receiver name required", { ...boxes.name, width: boxes.name.width - 8 }, 9, 6, true);
+      await drawBoxText(row.address || "Delivery address required", boxes.address, 8, 5.5);
+      await drawBoxText(`Near by: ${row.landmark || "Not provided"}`, boxes.landmark, 7, 5);
+      await drawBoxText(row.phone || "Contact number required", boxes.contact, 8.5, 6, true);
+      await drawBoxText(LABEL_FOOTER, boxes.footer, 6, 4.5);
 
       if (row.tracking) {
         const barcode = await renderBarcodeSvg(row.tracking);

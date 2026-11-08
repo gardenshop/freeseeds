@@ -123,10 +123,10 @@ export function pagesForCount(count: number, startPosition = 1): number {
   return count === 0 ? 0 : Math.ceil((startPosition - 1 + count) / LABELS_PER_PAGE);
 }
 
-export function fitText(ctx: CanvasRenderingContext2D, value: string, width: number, height: number, options: { maxFont: number; minFont: number; lineHeight?: number; bold?: boolean }): { fontSize: number; lines: string[]; fits: boolean } {
+export function fitText(ctx: CanvasRenderingContext2D, value: string, width: number, height: number, options: { maxFont: number; minFont: number; lineHeight?: number; bold?: boolean; fontFamily?: string }): { fontSize: number; lines: string[]; fits: boolean } {
   const words = value.trim().split(/\s+/).filter(Boolean);
   for (let size = options.maxFont; size >= options.minFont; size -= 0.25) {
-    ctx.font = `${options.bold ? "700 " : ""}${size}px Arial`;
+    ctx.font = `${options.bold ? "700 " : ""}${size}px ${options.fontFamily ?? "Arial"}`;
     const lines: string[] = [];
     let current = "";
     for (const word of words) {
@@ -148,7 +148,7 @@ export function fitText(ctx: CanvasRenderingContext2D, value: string, width: num
     const lineHeight = (options.lineHeight ?? 1.15) * size;
     if (lines.length * lineHeight <= height) return { fontSize: size, lines, fits: true };
   }
-  ctx.font = `${options.bold ? "700 " : ""}${options.minFont}px Arial`;
+  ctx.font = `${options.bold ? "700 " : ""}${options.minFont}px ${options.fontFamily ?? "Arial"}`;
   const lines: string[] = [];
   let current = "";
   for (const word of words) {

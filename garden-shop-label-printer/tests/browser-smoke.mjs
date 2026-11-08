@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright-core";
@@ -30,8 +30,9 @@ function syntheticXlsx() {
     "[Content_Types].xml": xml('<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>'),
     "_rels/.rels": xml('<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'),
     "xl/workbook.xml": xml('<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Orders" sheetId="1" r:id="rId1"/></sheets></workbook>'),
-    "xl/_rels/workbook.xml.rels": xml('<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>'),
-    "xl/worksheets/sheet1.xml": xml('<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>Order ID</t></is></c><c r="B1" t="inlineStr"><is><t>Name</t></is></c><c r="C1" t="inlineStr"><is><t>Cell #</t></is></c><c r="D1" t="inlineStr"><is><t>Address</t></is></c><c r="E1" t="inlineStr"><is><t>Tracking Number</t></is></c><c r="F1" t="inlineStr"><is><t>COD</t></is></c><c r="G1" t="inlineStr"><is><t>Product</t></is></c><c r="H1" t="inlineStr"><is><t>City</t></is></c><c r="I1" t="inlineStr"><is><t>Province</t></is></c></row><row r="2"><c r="A2" t="inlineStr"><is><t>XLSX-SYN-001</t></is></c><c r="B2" t="inlineStr"><is><t>Synthetic Excel Receiver</t></is></c><c r="C2" t="inlineStr"><is><t>00001234567</t></is></c><c r="D2" t="inlineStr"><is><t>Synthetic Excel Street</t></is></c><c r="E2" t="inlineStr"><is><t>TRK000001</t></is></c><c r="F2"><v>1250</v></c><c r="G2" t="inlineStr"><is><t>Synthetic Product</t></is></c><c r="H2" t="inlineStr"><is><t>Sahiwal</t></is></c><c r="I2" t="inlineStr"><is><t>Punjab</t></is></c></row></sheetData></worksheet>'),
+    "xl/_rels/workbook.xml.rels": xml('<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'),
+    "xl/styles.xml": xml('<?xml version="1.0" encoding="UTF-8"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="00000000000"/></numFmts><fonts count="1"><font/></fonts><fills count="1"><fill/></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0"/></cellXfs></styleSheet>'),
+    "xl/worksheets/sheet1.xml": xml('<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>Order ID</t></is></c><c r="B1" t="inlineStr"><is><t>Name</t></is></c><c r="C1" t="inlineStr"><is><t>Cell #</t></is></c><c r="D1" t="inlineStr"><is><t>Address</t></is></c><c r="E1" t="inlineStr"><is><t>Tracking Number</t></is></c><c r="F1" t="inlineStr"><is><t>COD</t></is></c><c r="G1" t="inlineStr"><is><t>Product</t></is></c><c r="H1" t="inlineStr"><is><t>City</t></is></c><c r="I1" t="inlineStr"><is><t>Province</t></is></c></row><row r="2"><c r="A2" t="inlineStr"><is><t>XLSX-SYN-001</t></is></c><c r="B2" t="inlineStr"><is><t>مصنوعی گاہک</t></is></c><c r="C2" s="1"><v>1234567</v></c><c r="D2" t="inlineStr"><is><t>گلی نمبر ایک، نمونہ پتہ، مکان ۱۲</t></is></c><c r="E2" t="inlineStr"><is><t>TRK000001</t></is></c><c r="F2"><v>1250</v></c><c r="G2" t="inlineStr"><is><t>Synthetic Product</t></is></c><c r="H2" t="inlineStr"><is><t>Sahiwal</t></is></c><c r="I2" t="inlineStr"><is><t>Punjab</t></is></c></row></sheetData></worksheet>'),
   });
 }
 
@@ -56,6 +57,7 @@ async function loadPdf(path, screenshotName) {
 
 try {
   await mkdir(evidence, { recursive: true });
+  await writeFile(join("D:\\Temp\\kilo", "garden-shop-label-printer-synthetic.xlsx"), Buffer.from(syntheticXlsx()));
   await waitForServer();
   browser = await chromium.launch({ headless: true, executablePath: chromePath, args: ["--no-sandbox"] });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1200 }, acceptDownloads: true });
@@ -73,6 +75,8 @@ try {
   assert.match(await page.locator("body").innerText(), /XLSX-SYN-001/);
   await page.locator('[data-view="preview"]').first().click();
   assert.equal(await page.locator(".sheet .contact").first().innerText(), "00001234567");
+  assert.match(await page.locator(".sheet .receiver-name").first().innerText(), /مصنوعی/);
+  assert.match(await page.locator(".sheet .address-text").first().innerText(), /گلی نمبر ایک/);
   await page.locator('[data-view="review"]').first().click();
   await page.locator("#newBatch").click();
   await page.locator("#sample").click();
@@ -144,9 +148,9 @@ try {
   const quote = (value) => `"${String(value).replaceAll('"', '""')}"`;
   const records = Array.from({ length: 500 }, (_, index) => [
     `GS-SYN-${String(index + 1).padStart(4, "0")}`,
-    index === 0 ? "A Synthetic Receiver Name With Several Descriptive Words" : `Synthetic Receiver ${index + 1}`,
+    index === 0 ? "مصنوعی گاہک" : index === 1 ? "Synthetic Receiver Name With Several Descriptive Words" : `Synthetic Receiver ${index + 1}`,
     `000${String(index + 1).padStart(8, "0")}`,
-    index === 0 ? "Synthetic long-address segment, ".repeat(50) : `House ${index + 1}, Model Town`,
+    index === 0 ? "گلی نمبر ایک، نمونہ پتہ، مکان ۱۲" : index === 1 ? "Synthetic long-address segment, ".repeat(50) : `House ${index + 1}, Model Town`,
     `TRK${String(index + 1).padStart(10, "0")}`,
     String((index % 8) * 125),
     `Synthetic Garden Product ${index % 11}`,
@@ -155,16 +159,18 @@ try {
     index === 0 ? "Near the synthetic public library crossing" : "Main market",
   ]);
   const csv = [headers, ...records].map((row) => row.map(quote).join(",")).join("\r\n");
+  await writeFile(join("D:\\Temp\\kilo", "garden-shop-label-printer-synthetic-500.csv"), Buffer.from(csv));
   await page.locator('[data-view="upload"]').first().click();
   await page.locator("#workbook").setInputFiles({ name: "synthetic-500.csv", mimeType: "text/csv", buffer: Buffer.from(csv) });
   await page.locator("#applyMapping").waitFor();
   await page.locator("#applyMapping").click();
+  await page.getByText("Review every parcel.").waitFor({ timeout: 30000 });
   assert.match(await page.locator("body").innerText(), /500 imported/);
   await page.locator('[data-view="preview"]').first().click();
   await page.waitForFunction(() => [...document.querySelectorAll(".sheet canvas[data-barcode]")].length === 18 && [...document.querySelectorAll(".sheet canvas[data-barcode]")].every((canvas) => canvas.dataset.verified === "true"), { timeout: 30000 });
-  assert.ok(await page.locator(".label.layout-overflow").count() > 0, "the overlong synthetic address must be visibly flagged");
+  assert.ok(await page.locator('.label[data-label-index="1"] .overflow-placeholder').count() > 0, "the overlong synthetic address must be visibly flagged without overlap");
   await page.screenshot({ path: join(evidence, "label-preview-500.png"), fullPage: true });
-  const overflowLayout = await page.locator(".sheet .label").first().evaluate((label) => {
+  const overflowLayout = await page.locator('.sheet .label[data-label-index="1"]').evaluate((label) => {
     const address = label.querySelector(".address-text");
     const nearby = label.querySelector(".landmark");
     const contact = label.querySelector(".contact");
@@ -183,6 +189,7 @@ try {
   const batchPdfRendered = await loadPdf(batchPath, "pdf-500-first-page.png");
   const batchPdf = batchPdfRendered.pdf;
   assert.equal(batchPdf.getPageCount(), 28);
+  assert.equal(batchPdfRendered.hasRasterImage, true, "complex-script text must use the Unicode-safe raster fallback");
   assert.ok(Math.abs(batchPdf.getPage(0).getSize().width - 595.2756) < 0.01);
   assert.ok(Math.abs(batchPdf.getPage(0).getSize().height - 841.8898) < 0.01);
   assert.deepEqual(errors, []);
