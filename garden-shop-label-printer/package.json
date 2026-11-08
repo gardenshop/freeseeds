@@ -1,0 +1,30 @@
+{
+  "name": "garden-shop-label-printer",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && tsc -p tsconfig.worker.json --noEmit && vite build",
+    "test": "vitest run",
+    "test:browser": "node tests/browser-smoke.mjs",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@zxing/library": "^0.21.3",
+    "jsbarcode": "^3.12.3",
+    "pdf-lib": "^1.17.1",
+    "read-excel-file": "^9.3.14"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260927.1",
+    "@napi-rs/canvas": "^1.1.0",
+    "@types/jsbarcode": "^3.11.4",
+    "fflate": "^0.8.3",
+    "pdfjs-dist": "^6.5.438",
+    "playwright-core": "^1.65.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.12",
+    "vitest": "^5.1.0"
+  }
+}

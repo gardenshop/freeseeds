@@ -1,0 +1,218 @@
+.label {
+  --label-width: 65mm;
+  --label-height: 44mm;
+  --label-inset: 1mm;
+  --label-gap: 0.4mm;
+  --top-height: 6.5mm;
+  --middle-height: 9mm;
+  --footer-height: 3mm;
+  width: var(--label-width);
+  height: var(--label-height);
+  flex: none;
+  padding: var(--label-inset);
+  display: grid;
+  grid-template-rows: var(--top-height) var(--middle-height) minmax(0, 1fr) var(--footer-height);
+  gap: var(--label-gap);
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  color: #111;
+  border: 0.2mm solid #111;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.label-top,
+.label-middle,
+.to-box,
+.label footer {
+  min-width: 0;
+  min-height: 0;
+}
+.label-top {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 72% 28%;
+  align-items: stretch;
+  border-bottom: 0.2mm solid #111;
+}
+.order-product {
+  max-width: none;
+  height: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 38% 62%;
+  align-items: center;
+}
+.order-id,
+.product-text,
+.cod-block,
+.destination,
+.receiver-name,
+.address-text,
+.landmark,
+.contact,
+.tracking-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.order-id {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  border-right: 0.25mm solid #111;
+  padding-right: 0.5mm;
+  font-weight: 700;
+  font-size: 7.3px;
+}
+.product-text {
+  padding-left: 0.7mm;
+  font-size: 7px;
+  font-weight: 600;
+}
+.cod-block {
+  border-left: 0.2mm solid #111;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  padding-left: 0.5mm;
+  text-align: right;
+  font-size: 6.3px;
+  line-height: 1.1;
+}
+.cod-block strong { font-size: 8.2px; }
+.label-middle {
+  display: grid;
+  grid-template-columns: 66% 34%;
+  align-items: stretch;
+  border-bottom: 0.2mm solid #111;
+}
+.barcode-group {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: 2.5mm minmax(0, 1fr);
+  justify-items: center;
+  border-right: 0.25mm solid #111;
+  padding-right: 0.7mm;
+}
+.tracking-text {
+  width: 100%;
+  text-align: center;
+  font-size: 7px;
+  line-height: 1;
+  font-weight: 700;
+}
+.barcode-canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+.destination {
+  padding-left: 0.8mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  font-size: 9px;
+  line-height: 1.05;
+  font-weight: 800;
+}
+.destination .province-text { font-size: 7.5px; }
+.to-box {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 2mm 2.8mm minmax(0, 1fr) 2.5mm 2.7mm;
+  gap: 0.3mm;
+  padding: 0.65mm;
+  border: 0.3mm solid #111;
+}
+.to-heading { font-size: 7px; line-height: 1; font-weight: 800; }
+.receiver-name {
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 800;
+}
+.label.has-warning .receiver-name { padding-right: 8mm; }
+.address-text {
+  font-size: 8px;
+  line-height: 1.08;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.landmark {
+  font-size: 7px;
+  line-height: 1;
+}
+.landmark strong { font-weight: 800; }
+.contact {
+  font-size: 8.5px;
+  line-height: 1;
+  font-weight: 800;
+}
+.label footer {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: 6px;
+  line-height: 1;
+  border-top: 0.2mm solid #111;
+}
+.label-warning {
+  position: absolute;
+  z-index: 3;
+  right: 1.3mm;
+  top: 18mm;
+  background: #fff;
+  color: #111;
+  border: 0.2mm solid #111;
+  padding: 0.3mm 0.5mm;
+  font: 700 5.5px Arial, sans-serif;
+}
+.layout-overflow { outline: 0.45mm solid #111; outline-offset: -0.5mm; }
+.text-overflow { position: relative !important; overflow: hidden !important; }
+.overflow-placeholder { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; overflow: hidden; background: #fff; color: #111; font: 700 5.5px Arial, sans-serif; white-space: normal; }
+.layout-warning {
+  position: absolute;
+  left: 1mm;
+  bottom: 3mm;
+  background: #fff;
+  border: 0.2mm solid #111;
+  color: #111;
+  font: 700 5.5px Arial, sans-serif;
+  padding: 0.2mm 0.5mm;
+  z-index: 3;
+}
+.sheet .label {
+  width: calc(65mm * var(--zoom));
+  height: calc(44mm * var(--zoom));
+  --label-width: calc(65mm * var(--zoom));
+  --label-height: calc(44mm * var(--zoom));
+  --label-inset: calc(1mm * var(--zoom));
+  --label-gap: calc(0.4mm * var(--zoom));
+  --top-height: calc(6.5mm * var(--zoom));
+  --middle-height: calc(9mm * var(--zoom));
+  --footer-height: calc(3mm * var(--zoom));
+}
+.sheet .label .order-id { font-size: calc(7.3px * var(--zoom)); }
+.sheet .label .product-text { font-size: calc(7px * var(--zoom)); }
+.sheet .label .cod-block { font-size: calc(6.3px * var(--zoom)); }
+.sheet .label .cod-block strong { font-size: calc(8.2px * var(--zoom)); }
+.sheet .label .tracking-text { font-size: calc(7px * var(--zoom)); }
+.sheet .label .destination { font-size: calc(9px * var(--zoom)); }
+.sheet .label .destination .province-text { font-size: calc(7.5px * var(--zoom)); }
+.sheet .label .receiver-name { font-size: calc(9px * var(--zoom)); }
+.sheet .label .address-text { font-size: calc(8px * var(--zoom)); }
+.sheet .label .landmark { font-size: calc(7px * var(--zoom)); }
+.sheet .label .contact { font-size: calc(8.5px * var(--zoom)); }
+.sheet .label footer { font-size: calc(6px * var(--zoom)); }
+.sheet .label .label-warning { font-size: calc(5.5px * var(--zoom)); }
+.mapping-warning { margin: -12px 0 16px; border-left: 3px solid var(--orange); background: #f5e6d9; padding: 12px; color: #673a25; font-size: 11px; }
+.individual-preview .label {
+  width: 65mm;
+  height: 44mm;
+  min-height: 0;
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "garden-shop-label-printer-monitor",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": false,
+  "d1_databases": [
+    {
+      "binding": "LABEL_AUDIT_DB",
+      "database_name": "garden-shop-label-printer-audit",
+      "database_id": "REPLACE_WITH_NEW_DEDICATED_D1_ID",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "ACCESS_TEAM_DOMAIN": "REPLACE_WITH_APPROVED_ACCESS_TEAM",
+    "ACCESS_AUDIENCE": "REPLACE_WITH_NEW_ACCESS_APPLICATION_AUD",
+    "APP_ORIGIN": "REPLACE_WITH_EXACT_STATIC_APP_ORIGIN",
+    "STAFF_EMAILS": "",
+    "SUPER_ADMIN_EMAILS": ""
+  }
+}
