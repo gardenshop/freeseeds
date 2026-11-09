@@ -56,6 +56,18 @@ async function loadPdf(path, screenshotName) {
   return { pdf, page: pdf.getPage(0), pageCount: pdf.getPageCount(), text, hasRasterImage: operators.fnArray.some((op) => op === OPS.paintImageXObject || op === OPS.paintInlineImageXObject) };
 }
 
+async function saveGeneratedPdf(page, path) {
+  const before = await page.locator('a[download^="garden-shop-labels-"]').count();
+  await page.locator("#savePdf").click();
+  await page.waitForFunction((count) => document.querySelectorAll('a[download^="garden-shop-labels-"]').length > count, before, { timeout: 30000 });
+  const link = page.locator('a[download^="garden-shop-labels-"]').nth(before);
+  await link.waitFor({ state: "attached", timeout: 30000 });
+  const href = await link.getAttribute("href");
+  assert.ok(href?.startsWith("blob:"), "PDF export must create a local blob download");
+  const bytes = await page.evaluate(async (url) => [...new Uint8Array(await (await fetch(url)).arrayBuffer())], href);
+  await writeFile(path, Buffer.from(bytes));
+}
+
 try {
   await mkdir(evidence, { recursive: true });
   await writeFile(join("D:\\Temp\\kilo", "garden-shop-label-printer-synthetic.xlsx"), Buffer.from(syntheticXlsx()));
@@ -98,8 +110,8 @@ try {
   assert.ok(Math.abs(geometry.sheetHeightMm - 297) < 0.1, JSON.stringify(geometry));
   assert.ok(Math.abs(geometry.labelWidthMm - 65) < 0.1, JSON.stringify(geometry));
   assert.ok(Math.abs(geometry.labelHeightMm - 44) < 0.1, JSON.stringify(geometry));
-  assert.deepEqual(geometry.firstRow.map((value) => Math.round(value * 10) / 10), [5, 72.5, 140]);
-  assert.deepEqual(geometry.firstColumn.map((value) => Math.round(value)), [8, 55, 102, 149, 196, 243]);
+  assert.deepEqual(geometry.firstRow.map((value) => Math.round(value * 10) / 10), [6.5, 72.5, 138.5]);
+  assert.deepEqual(geometry.firstColumn.map((value) => Math.round(value)), [14, 59, 104, 149, 194, 239]);
   assert.ok(await page.getByText("Near by:").count() > 0);
   assert.ok(await page.getByText("TO:").count() > 0);
   assert.equal(await page.locator(".sheet .vpl-box").first().getAttribute("aria-label"), "VPL 1250/-");
@@ -108,7 +120,7 @@ try {
   assert.ok(await page.locator(".sheet .vpl-amount").first().evaluate((el) => el.scrollWidth <= el.clientWidth), "VPL amount must not clip inside its capsule");
   assert.equal(await page.locator(".sheet .footer-from").first().innerText(), "From:");
   assert.equal(await page.locator(".sheet .footer-sender").first().innerText(), "Garden Shop");
-  assert.equal(await page.locator(".sheet .footer-address").first().innerText(), "C/o City Post Office, Sahiwal, Punjab");
+  assert.equal(await page.locator(".sheet .footer-address").first().innerText(), "C/o City Post Office, Sahiwal");
   assert.equal(await page.locator(".individual-preview .phone-number").first().innerText(), "03001234567");
   assert.equal(await page.locator(".individual-preview .phone-number").first().evaluate((el) => el.classList.contains("text-overflow")), false);
   assert.ok(await page.locator(".individual-preview .phone-number").first().evaluate((el) => el.scrollWidth <= el.clientWidth), "individual phone value must not clip");
@@ -171,11 +183,8 @@ try {
   previewFields.forEach((field, index) => field.forEach((value, coordinate) => assert.ok(Math.abs(value - printFields[index][coordinate]) < 0.15, `preview/print geometry mismatch ${index}/${coordinate}: preview ${value}, print ${printFields[index][coordinate]}`)));
   await printPopup.screenshot({ path: join(evidence, "browser-print-sheet.png"), fullPage: true });
   await printPopup.close();
-  const sampleDownload = page.waitForEvent("download");
-  await page.locator("#savePdf").click();
-  const sample = await sampleDownload;
   const samplePath = join(evidence, "synthetic-sample.pdf");
-  await sample.saveAs(samplePath);
+  await saveGeneratedPdf(page, samplePath);
   const samplePdf = await loadPdf(samplePath, "pdf-sample-page.png");
   assert.equal(samplePdf.pageCount, 1);
   assert.ok(Math.abs(samplePdf.page.getSize().width - 595.2756) < 0.01);
@@ -186,7 +195,8 @@ try {
   assert.match(samplePdf.text, /TRK000001/);
   assert.match(samplePdf.text, /Near by:/);
   assert.match(samplePdf.text, /To:/);
-  assert.match(samplePdf.text, /C\/o City Post Office, Sahiwal, Punjab/);
+  assert.match(samplePdf.text, /C\/o City Post Office, Sahiwal/);
+  assert.doesNotMatch(samplePdf.text, /C\/o City Post Office, Sahiwal, Punjab/);
   assert.equal(samplePdf.hasRasterImage, false, "PDF barcode must stay vector");
 
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, deviceScaleFactor: 1 });
@@ -213,7 +223,7 @@ try {
     index === 2 ? "Premium Vegetable Seed Mix" : `Synthetic Garden Product ${index % 11}`,
     index === 1 ? "Nowshera" : index === 2 ? "Mardan District" : "Sahiwal",
     index === 1 ? "Khyber Pakhtunkhwa (KPK)" : "Punjab",
-    index === 0 ? "Near the synthetic public library crossing" : "Main market",
+    index === 0 ? "Library" : "Main market",
   ]);
   const csv = [headers, ...records].map((row) => row.map(quote).join(",")).join("\r\n");
   await writeFile(join("D:\\Temp\\kilo", "garden-shop-label-printer-synthetic-500.csv"), Buffer.from(csv));
@@ -230,7 +240,7 @@ try {
   assert.equal(await page.locator('.label[data-label-index="1"] .province-text').evaluate((el) => el.classList.contains("text-overflow")), false);
   assert.equal(await page.locator('.label[data-label-index="2"] .city-text').evaluate((el) => el.textContent?.replace(/\s+/g, " ").trim()), "Mardan District");
   assert.equal(await page.locator('.label[data-label-index="2"] .city-text').evaluate((el) => el.classList.contains("text-overflow")), false);
-  assert.ok(await page.locator('.label[data-label-index="2"] .product-text .overflow-placeholder').count() > 0, "exceptionally long product must be flagged instead of clipped");
+  assert.equal(await page.locator('.label[data-label-index="2"] .product-text strong').evaluate((el) => el.classList.contains("text-overflow")), false, "long product must fit by wrapping or measured resizing");
   await page.locator(".sheet").screenshot({ path: join(evidence, "label-preview-500.png") });
   const overflowLayout = await page.locator('.sheet .label[data-label-index="1"]').evaluate((label) => {
     const address = label.querySelector(".address-text");
@@ -260,19 +270,21 @@ try {
     }
   }
   assert.equal(decoded500, 500);
+  await page.locator('[data-view="review"]').first().click();
+  await page.locator('input[data-select="1"]').uncheck();
+  assert.match(await page.locator("body").innerText(), /1 available to select/);
+  await page.locator('[data-view="preview"]').first().click();
   await page.locator('[data-view="print"]').first().click();
   assert.match(await page.locator("body").innerText(), /28 A4 pages/);
-  const batchDownload = page.waitForEvent("download");
-  await page.locator("#savePdf").click();
-  const batch = await batchDownload;
   const batchPath = join(evidence, "synthetic-500-labels.pdf");
-  await batch.saveAs(batchPath);
+  await saveGeneratedPdf(page, batchPath);
   const batchPdfRendered = await loadPdf(batchPath, "pdf-500-first-page.png");
   const batchPdf = batchPdfRendered.pdf;
   assert.equal(batchPdf.getPageCount(), 28);
   assert.equal(batchPdfRendered.hasRasterImage, true, "complex-script text must use the Unicode-safe raster fallback");
-  assert.match(batchPdfRendered.text, /Nowshera/);
-  assert.match(batchPdfRendered.text, /Khyber Pakhtunkhwa/);
+  assert.doesNotMatch(batchPdfRendered.text, /Nowshera/);
+  assert.doesNotMatch(batchPdfRendered.text, /Khyber Pakhtunkhwa/);
+  assert.match(batchPdfRendered.text, /Mardan District/);
   assert.ok(Math.abs(batchPdf.getPage(0).getSize().width - 595.2756) < 0.01);
   await page.locator('[data-view="review"]').first().click();
   await page.locator('[data-edit="2"]').click();

@@ -43,14 +43,14 @@ Recheck account identity and the Dashboard before each Cloudflare mutation. Conf
 
 ## Approved Geometry and Content Rules
 
-- A4 portrait is 210 × 297 mm. Labels are 65 × 44 mm; the 3 × 6 grid starts at x=5, 72.5, 140 mm and y=8, 55, 102, 149, 196, 243 mm (2.5 mm horizontal and 3 mm vertical gaps).
-- Each label uses a 0.4,0.4 mm inset 64.2 × 43.2 mm outer border. `src/layout.ts` is the millimeter source of truth for the Order ID/Product/VPL header, tracking/destination band, TO block, contact row, and one-line footer.
+- A4 portrait is 210 × 297 mm. Labels are 65 × 44 mm; the centered 3 × 6 grid starts at x=6.5, 72.5, 138.5 mm and y=14, 59, 104, 149, 194, 239 mm with exactly 1 mm horizontal and vertical gutters.
+- Each label uses a 0.4,0.4 mm inset 64.2 × 43.2 mm outer border. `src/layout.ts` is the millimeter source of truth for the tracking/destination/VPL band, TO block, Order ID/Product block between TO and FROM, contact row, and one-line footer.
 - Preview, browser print, and PDF share that geometry. Text is measured with the active font per label; short text retains larger sizes, longer text wraps/resizes, and exceptional overflow stays in the source/editor while the output is visibly flagged.
-- VPL is formatted as a heavy `VPL amount/-` capsule, never the old small `VPL COD Rs` line. The province is white text on a black badge; Garden Shop uses a green footer accent.
+- VPL is formatted as a heavy `VPL amount/-` capsule, never the old small `VPL COD Rs` line. The province is white text on a black badge; Garden Shop uses a green footer accent. The location pin and phone icon are intentionally absent. The footer ends at `Sahiwal`.
 - Accepted phone forms normalize to exactly 11 digits beginning `03`: 10 digits beginning `3` receive a leading zero, and `+92`/`92` plus a valid 10-digit mobile become local form. Invalid/incomplete phones are flagged and block print/PDF until corrected. Exact duplicate contact tokens are removed only from the displayed address; source address is retained. Test fixtures use synthetic digits only; never store real order phones in tests or evidence.
 - Code 128 auto-switches between B/C sets, includes ≥10X horizontal quiet zones, remains vector in PDF, and is proportionally fit only while module width stays at least 0.19 mm. Unusable values are flagged instead of silently shrinking or clipping.
 
-Latest verification: `npm test` (32 tests), configured `npm run build`, full `npm run test:browser` (3/18/500 barcode decodes; one- and 28-page PDFs; real XLSX/CSV; exact grid and preview/print geometry; screenshot baseline), and `npm audit --audit-level=moderate` all passed. The final Pages deployment is recorded below. A fresh staging session loaded matching JS/CSS hashes and confirmed `Audit service configured`; the final synthetic import and two-label PDF events returned HTTP 201, the downloaded PDF was inspected, and the protected report showed `Audit chain: VERIFIED`. No physical print is claimed.
+Latest verification: `npm test` (33 tests), configured `npm run build`, full `npm run test:browser` (3/18/500 barcode decodes; one- and 28-page PDFs; real XLSX/CSV; exact centered 1 mm grid and preview/print geometry; screenshot baseline), and `npm audit --audit-level=moderate` all passed. The final Pages deployment is recorded below. A fresh staging session loaded matching JS/CSS hashes and confirmed `Audit service configured`; the final synthetic import and two-label PDF events returned HTTP 201, the downloaded PDF was inspected, and the protected report showed `Audit chain: VERIFIED`. No physical print is claimed.
 
 The repository-wide regression suite also passed 269 tests and the root build passed. Focused ESLint passed for the changed Admin source/helper/tests. The repository-wide lint command still fails while traversing unrelated dirty agent worktrees; those files were not changed or staged. Root `npm audit` reports six moderate development-tool advisories; `npm audit --omit=dev` reports zero. No existing WhatsApp/API/Admin Worker was deployed or changed.
 
@@ -58,14 +58,14 @@ The repository-wide regression suite also passed 269 tests and the root build pa
 
 The owner authorized an isolated staging canary. Current resources and identities are inventoried in `RULES.md`: staging D1 and migration, Pages project/deployment, dedicated Access app for the Pages/Worker hosts, monitor Worker, and encrypted audit/Admin secrets. The Access policy currently permits only the verified Super Admin because no staff roster/group was supplied. Before **each next** Cloudflare mutation, run `npx wrangler whoami`, confirm the `Get Free Seeds` account ID in the Dashboard, and record the timestamp/resource/action. Never use Hoja Seeds or existing production/V2 bindings.
 
-The final `434ea52f` `.pages.dev` build was loaded in a fresh authenticated tab and confirmed `Audit service configured`; an isolated unauthenticated browser context was redirected to Cloudflare Access. A synthetic import, label event and downloaded 2-label/1-page PDF returned HTTP 201; batch `5d39728b-9adf-4d00-9641-5d6ec248741b` appeared in the protected report with `Audit chain: VERIFIED`. The generated PDF was inspected. Earlier synthetic audit errors remain in append-only history. No physical printer test or Admin Worker deployment was performed.
+The prior `434ea52f` `.pages.dev` build was loaded in a fresh authenticated tab and confirmed `Audit service configured`; an isolated unauthenticated browser context was redirected to Cloudflare Access. This final geometry repair is locally verified but not yet deployed: the fresh Wrangler identity gate on 2026-11-09 found an expired token and could not refresh because Cloudflare was unreachable. No Pages mutation was attempted. Earlier synthetic audit errors remain in append-only history. No physical printer test or Admin Worker deployment was performed.
 
 Local migration/schema smoke also passed against Wrangler's local emulator. This is separate from the remote staging D1. Roll back only isolated Pages/Worker versions; preserve audit history and the D1 database.
 
 ## Print calibration
 
 1. Use the intended printer/driver with plain A4 paper first. Select A4 portrait and Actual size/100%; disable browser headers/footers and do not select label stock yet.
-2. Measure the printed label outline and A4 origin/grid with a ruler: each label must be 65 × 44 mm, with the documented 5/72.5/140 mm x starts and 8/55/102/149/196/243 mm y starts.
+2. Measure the printed label outline and A4 origin/grid with a ruler: each label must be 65 × 44 mm, with the documented 6.5/72.5/138.5 mm x starts and 14/59/104/149/194/239 mm y starts.
 3. Scan the printed Code 128 tracking value and verify the 10X side quiet zones, VPL box, full address/contact row, and one-line footer are not clipped.
 4. If scale/offset is wrong, correct only printer-driver scaling/margins, then print and measure a new plain-paper sheet. Do not compensate by changing the approved app geometry.
 5. Use approved pre-cut stock only after the plain-paper measurements pass and the owner confirms the printer/stock pair.

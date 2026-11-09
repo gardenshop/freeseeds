@@ -12,12 +12,11 @@ The repository-wide architecture discovery and full implementation history remai
 
 ## Required Final Label
 
-- A4 portrait 210 × 297 mm; 3 columns × 6 rows; label 65 × 44 mm. Column x positions are 5, 72.5, 140 mm and row y positions 8, 55, 102, 149, 196, 243 mm; horizontal/vertical gaps are 2.5/3 mm.
+- A4 portrait 210 × 297 mm; 3 columns × 6 rows; label 65 × 44 mm. Column x positions are 6.5, 72.5, 138.5 mm and row y positions 14, 59, 104, 149, 194, 239 mm; horizontal/vertical gaps are exactly 1/1 mm and the grid is centered.
 - Outer outline: x=0.4, y=0.4, w=64.2, h=43.2 mm; 1 mm corner radius; 0.20 mm black stroke.
-- Header: Order ID (1.2,1.2,19.8,6.2), Product (21,1.2,22.6,6.2), and thick rounded VPL capsule (44.4,1.2,19.4,6.2). VPL text is large `VPL amount/-`, not the old small `VPL COD Rs` line.
-- Tracking caption/value/barcode occupy y=8.5..18.5 mm. Tracking text box x=1.7 y=10.2 w=31.5 h=3.3; Code 128 box x=1.7 y=13.7 w=31.5 h=4.8 with 10X horizontal quiet zones. Divider x=34; destination starts x=34.7 and uses a large city plus white-on-black province badge.
-- `TO` frame (1.3,19.2,62.4,18.1 mm): arrow tag; receiver starts near x=9.5/y=19.7; full measured/wrapped address uses x=9.5..63/y=23..32.7; contact row y=32.8 onward keeps `Near by:` at left and a prominent bold mobile at right. Dynamic receiver/address rows never overlap contact/footer.
-- Footer region y=37.8..43.0 mm: black `From:` tag, bold Garden Shop green accent, vertical rule, and exact one-line `C/o City Post Office, Sahiwal, Punjab`.
+- Tracking caption/value/barcode occupy y=0.6..10.1 mm; tracking text is x=1.7 y=2.4 w=30.5 h=2.8 and the vector Code 128 box is x=1.7 y=5.4 w=30.5 h=4.7 with 10X horizontal quiet zones. Destination and the premium VPL box are on the right; no location pin is used.
+- `TO` frame (1.3,10.8,62.4,22.6 mm): arrow tag; receiver starts near x=9.5/y=11.2; full normalized/wrapped address uses x=9.5..63/y=14.8..25; contact row stays above the frame bottom. Order ID and Product share one block at y=33.7..39.0 between TO and FROM.
+- Footer region y=39.3..43.4 mm: black `From:` tag, bold Garden Shop green accent, vertical rule, and exact one-line `C/o City Post Office, Sahiwal`.
 - All screen, print and PDF positions/text derive from shared millimeter boxes and the active-font fitting model. Urdu shaping uses Noto Naskh Arabic. Code 128 auto-switches B/C, preserves 10X quiet zones, uses a minimum 0.19 mm module, stays vector in PDF, and is checked by decoding the rendered canvas.
 - Normalize valid Pakistani mobile formats to exactly 11 digits beginning `03`; flag invalid/incomplete input, preserve it only for correction, never print it, and block PDF/print until corrected. Exact phone duplicates are removed only from the displayed address; source is retained.
 
@@ -42,7 +41,7 @@ The repository-wide architecture discovery and full implementation history remai
 ## Deployment State
 
 - Standalone premium design/unit/browser/build: **100% software-verified**. Phone normalization, exact geometry, per-label fitting/overflow warnings, preview/print geometry, screenshot golden and all 500 synthetic Code 128 decodes pass.
-- Staging Pages/monitor/D1/Access: **100% for the Super Admin canary** at Pages version `434ea52f-780c-47c1-bf72-1ac013187006`. Fresh-session configured Page, synthetic 2-label PDF download and audit-chain verification passed. Physical printer/stock calibration remains **0% / NOT TESTED**.
+- Staging Pages/monitor/D1/Access: **prior canary verified** at Pages version `434ea52f-780c-47c1-bf72-1ac013187006`; the final geometry repair is locally verified but not deployed because the 2026-11-09 fresh Wrangler identity check found an expired token and could not refresh. Physical printer/stock calibration remains **0% / NOT TESTED**.
 - Staff authorization: **0%**; no authorized staff roster/group exists. Current staging Access deliberately allows only the verified Super Admin.
 - Admin integration: **not part of this design-repair task**. Existing card/redirect source remains separate and inactive; the active Cloudflare Admin version `3e4b7c26...` stays at 100% and was not changed.
 - Production release: **0%**. No Pages production hostname, Admin Worker traffic shift, or production order binding was changed.

@@ -48,5 +48,5 @@ export const FIELDS: Array<{ key: keyof ImportMapping; label: string; aliases: s
 ];
 
 export const EMPTY_ORDER = (): Order => ({
-  rowNumber: 0, serial: "", orderId: "", name: "", email: "", phone: "", address: "", sourceAddress: "", facebookName: "", tracking: "", cod: "", product: "", city: "", province: "", landmark: "", senderName: "Garden Shop", senderAddress: "C/o City Post Office, Sahiwal, Punjab", warnings: [],
+  rowNumber: 0, serial: "", orderId: "", name: "", email: "", phone: "", address: "", sourceAddress: "", facebookName: "", tracking: "", cod: "", product: "", city: "", province: "", landmark: "", senderName: "Garden Shop", senderAddress: "C/o City Post Office, Sahiwal", warnings: [],
 });

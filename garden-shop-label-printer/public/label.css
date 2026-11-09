@@ -150,17 +150,6 @@
   white-space: pre-line;
   overflow-wrap: anywhere;
 }
-.city-text::before {
-  content: "";
-  display: inline-block;
-  width: 2.5mm;
-  height: 2.5mm;
-  margin-right: 0.8mm;
-  border-radius: 80% 80% 80% 0;
-  background: #080808;
-  transform: rotate(-45deg);
-  vertical-align: -0.15mm;
-}
 .province-text {
   max-width: 100%;
   padding: 0.45mm 1.6mm;
@@ -319,3 +308,28 @@
 .individual-preview .label .contact { font-size: 15px; }
 .individual-preview .label .address-text { font-size: 14px; }
 .mapping-warning { margin: -12px 0 16px; border-left: 3px solid var(--orange); background: #f5e6d9; padding: 12px; color: #673a25; font-size: 11px; }
+
+/* Final repair geometry: centered 1 mm gutters and one shared label model. */
+@page { size: A4 portrait; margin: 0; }
+.sheet {
+  width: calc(210mm * var(--zoom));
+  height: calc(297mm * var(--zoom));
+  min-width: 0;
+  min-height: 0;
+  padding: calc(14mm * var(--zoom)) calc(6.5mm * var(--zoom));
+  grid-template-columns: repeat(3, calc(65mm * var(--zoom)));
+  grid-template-rows: repeat(6, calc(44mm * var(--zoom)));
+  column-gap: calc(1mm * var(--zoom));
+  row-gap: calc(1mm * var(--zoom));
+}
+.sheet .label { width: calc(65mm * var(--zoom)); height: calc(44mm * var(--zoom)); }
+.order-product-frame { border: 0.2mm solid #111; z-index: 0; }
+.order-product-frame::after { content: ""; position: absolute; left: 45.67%; top: 0; bottom: 0; width: 0.2mm; background: #111; }
+.order-id, .product-text { border: 0; background: transparent; z-index: 1; }
+.destination { gap: 0.2mm; }
+.city-text { font-size: 15px; }
+.province-text { font-size: 8.5px; }
+.address-text { line-height: 1.08; }
+.contact { gap: 0; }
+.footer-sender { color: #23612d; }
+.footer-address { font-size: 8px; }

@@ -14,6 +14,7 @@ import {
   findAmbiguousMappings,
   MM_TO_POINTS,
   normalizeRows,
+  normalizeAddressText,
   normalizePakistaniPhone,
   pagesForCount,
   parseCsv,
@@ -23,7 +24,7 @@ import {
 } from "./engine";
 import "./style.css";
 import "../public/label.css";
-import { CODE128_LAYOUT, destinationBoxes, fitTextMm, fitTextPx, formatVpl, labelBoxes, labelFontFamily, recipientBoxes, usesArabicScript, usesComplexScript } from "./layout";
+import { CODE128_LAYOUT, destinationBoxes, fitTextMm, fitTextPx, formatVpl, labelBoxes, labelFontFamily, LABEL_FOOTER_ADDRESS, recipientBoxes, usesArabicScript, usesComplexScript } from "./layout";
 import { restoreZeroFormattedCells } from "./xlsx";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
@@ -208,36 +209,71 @@ function boxStyle(box: { x: number; y: number; width: number; height: number }) 
 }
 
 function labelMarkup(row: Order, index: number, _compact = false) {
-  const warnings = row.warnings.length
-    ? `<span class="label-warning">CHECK</span>`
-    : "";
   const boxes = labelBoxes();
   const phone = normalizePakistaniPhone(row.phone);
-  const vpl = formatVpl(row.cod);
+  const vpl = row.cod.trim() ? formatVpl(row.cod) : "VPL";
   const vplAmount = vpl.replace(/^VPL\s*/u, "");
-  return `<article class="label" data-label-index="${index}">${warnings}
-    <div class="order-id layout-box" ${boxStyle(boxes.orderId)}><span class="field-heading">Order ID</span><strong>${esc(row.orderId || "ORDER ID NOT PROVIDED")}</strong></div>
-    <div class="product-text layout-box" ${boxStyle(boxes.product)}><span class="field-heading">Product</span><strong>${esc(row.product || "PRODUCT NOT PROVIDED")}</strong></div>
+  return `<article class="label" data-label-index="${index}">
+    <div class="order-product-frame layout-box" ${boxStyle(boxes.orderProduct)} aria-hidden="true"></div>
+    <div class="order-id layout-box" ${boxStyle(boxes.orderId)}><span class="field-heading">Order ID</span><strong>${esc(row.orderId)}</strong></div>
+    <div class="product-text layout-box" ${boxStyle(boxes.product)}><span class="field-heading">Product</span><strong>${esc(row.product)}</strong></div>
     <div class="vpl-box layout-box" ${boxStyle(boxes.vpl)} aria-label="${esc(vpl)}"><span class="vpl-prefix">VPL</span><strong class="vpl-amount">${esc(vplAmount)}</strong></div>
     <span class="tracking-caption layout-box" ${boxStyle(boxes.trackingCaption)}>TRACKING NUMBER</span>
-    <strong class="tracking-text layout-box" ${boxStyle(boxes.tracking)}>${esc(row.tracking || "TRACKING NUMBER REQUIRED")}</strong>
+    <strong class="tracking-text layout-box" ${boxStyle(boxes.tracking)}>${esc(row.tracking)}</strong>
     <canvas class="barcode-canvas layout-box" ${boxStyle(boxes.barcode)} data-barcode="${index}" aria-label="Code 128 tracking ${esc(row.tracking)}"></canvas>
     <span class="tracking-divider layout-box" ${boxStyle(boxes.trackingDivider)} aria-hidden="true"></span>
-    <div class="destination layout-box" ${boxStyle(boxes.destination)}><strong class="city-text">${esc(row.city || "City missing")}</strong><span class="province-text">${esc(row.province || "Province missing")}</span></div>
+    <div class="destination layout-box" ${boxStyle(boxes.destination)}><strong class="city-text">${esc(row.city)}</strong><span class="province-text">${esc(row.province)}</span></div>
     <div class="to-border layout-box" ${boxStyle(boxes.to)} aria-hidden="true"></div>
     <b class="to-heading layout-box" ${boxStyle(boxes.toTag)}>To:</b>
-    <strong class="receiver-name layout-box" ${boxStyle(boxes.name)}>${esc(row.name || "Receiver name required")}</strong>
-    <div class="address-text layout-box" ${boxStyle(boxes.address)}>${esc(row.address || "Delivery address required")}</div>
+    <strong class="receiver-name layout-box" ${boxStyle(boxes.name)}>${esc(row.name)}</strong>
+    <div class="address-text layout-box" ${boxStyle(boxes.address)}>${esc(row.address)}</div>
     <strong class="nearby-label layout-box" ${boxStyle(boxes.nearbyLabel)}>Near by:</strong>
-    <div class="landmark layout-box" ${boxStyle(boxes.landmark)}>${row.landmark ? esc(row.landmark) : '<span class="missing">Not provided</span>'}</div>
+    <div class="landmark layout-box" ${boxStyle(boxes.landmark)}>${esc(row.landmark)}</div>
     <span class="contact-divider layout-box" ${boxStyle(boxes.contactDivider)} aria-hidden="true"></span>
-    <div class="contact layout-box" ${boxStyle(boxes.contact)}>${phone ? `<span class="phone-icon" aria-hidden="true">☎</span><strong class="phone-number">${esc(phone)}</strong>` : '<span class="invalid-phone">INVALID PHONE · EDIT</span>'}</div>
+    <div class="contact layout-box" ${boxStyle(boxes.contact)}>${phone ? `<strong class="phone-number">${esc(phone)}</strong>` : ""}</div>
     <div class="footer-rule layout-box" ${boxStyle(boxes.footer)} aria-hidden="true"></div>
     <strong class="footer-from layout-box" ${boxStyle(boxes.footerFrom)}>From:</strong>
     <b class="footer-sender layout-box" ${boxStyle(boxes.footerSender)}>${esc(row.senderName || "Garden Shop")}</b>
     <span class="footer-divider layout-box" ${boxStyle(boxes.footerDivider)} aria-hidden="true"></span>
-    <span class="footer-address layout-box" ${boxStyle(boxes.footerAddress)}>${esc(row.senderAddress || "C/o City Post Office, Sahiwal, Punjab")}</span>
+    <span class="footer-address layout-box" ${boxStyle(boxes.footerAddress)}>${LABEL_FOOTER_ADDRESS}</span>
   </article>`;
+}
+
+function hasLayoutOverflow(row: Order): boolean {
+  const context = document.createElement("canvas").getContext("2d");
+  if (!context) return true;
+  const boxes = labelBoxes();
+  const recipient = recipientBoxes(context, row.name);
+  const destination = destinationBoxes(context, row.city, row.province);
+  const check = (text: string, box: { width: number; height: number }, max: number, min: number, bold = false, wrap = true) =>
+    !text.trim() || fitTextMm(context, text, box.width, box.height, max, min, bold, 1.08, wrap).fits;
+  return ![
+    check(row.orderId, boxes.orderId, 9, 6.5, true, false),
+    check(row.product, boxes.product, 8.5, 6.5, true),
+    check(row.cod ? formatVpl(row.cod).replace(/^VPL\s*/u, "") : "", { width: boxes.vpl.width - 5.45, height: boxes.vpl.height - 0.5 }, 16, 9.5, true, false),
+    check(row.tracking, boxes.tracking, 10, 8, true, false),
+    check(row.city, destination.city, 13, 9, true),
+    check(row.province, destination.province, 8.5, 6.5, true),
+    check(row.name, recipient.name, 12, 9, true),
+    check(row.address, recipient.address, 11, 8),
+    check(row.landmark, boxes.landmark, 9.5, 7.5),
+    check(normalizePakistaniPhone(row.phone) ?? "", boxes.contact, 11, 9, true, false),
+    check("From:", boxes.footerFrom, 9, 7, true, false),
+    check("Garden Shop", boxes.footerSender, 10, 6.5, true, false),
+    check(LABEL_FOOTER_ADDRESS, boxes.footerAddress, 8, 6.5, false, false),
+  ].every(Boolean);
+}
+
+function printBlocker(row: Order): string | undefined {
+  if (!row.name) return "Receiver name is required.";
+  if (!normalizePakistaniPhone(row.phone)) return "Correct invalid contact numbers before printing.";
+  if (!row.address) return "Delivery address is required.";
+  if (!row.tracking) return "Tracking number is required for the barcode.";
+  if (!row.city || !row.province) return "Destination city and province are required.";
+  if (hasLayoutOverflow(row)) return "Correct text that cannot fit at the readable minimum.";
+  if (row.warnings.some((warning) => /^(Text does not fit|Tracking barcode is too dense|Generated barcode)/u.test(warning)))
+    return "Correct the flagged layout or barcode before printing.";
+  return undefined;
 }
 
 function renderPreview() {
@@ -266,13 +302,13 @@ function renderPreview() {
 function renderPrint() {
   const chosen = currentOrders();
   const pages = pagesForCount(chosen.length, startPosition);
-  const invalidPhones = chosen.some(({ row }) => !normalizePakistaniPhone(row.phone));
+  const blocked = chosen.some(({ row }) => printBlocker(row));
   return `<section class="section-heading"><div><p class="kicker">OUTPUT / ACTUAL SIZE</p><h1>Ready for the printer.</h1><p>${chosen.length} labels · ${pages} A4 page${pages === 1 ? "" : "s"} · unused slots stay blank</p></div><div class="output-badge">100%<small>PHYSICAL SCALE</small></div></section>
     <section class="print-panel"><div class="print-summary"><h2>Print setup</h2><p>Use A4 portrait and Actual size / 100% in the printer dialog. Turn off browser headers and footers.</p>
-    ${invalidPhones ? '<p class="mapping-warning" role="alert">Correct invalid contact numbers before printing or exporting.</p>' : ""}
+    ${blocked ? '<p class="mapping-warning" role="alert">Resolve every flagged required field, barcode, or layout overflow before printing or exporting.</p>' : ""}
     <label>Start at position<select id="printStart">${Array.from({ length: 18 }, (_, i) => `<option value="${i + 1}" ${startPosition === i + 1 ? "selected" : ""}>Label ${i + 1}</option>`).join("")}</select></label>
     <label>Number of labels<input id="countLimit" type="number" min="0" max="${chosen.length}" value="${countLimit || chosen.length}" aria-describedby="countHelp"></label><small id="countHelp">Set to ${chosen.length} to print the full selection.</small>
-    <div class="print-actions"><button class="button primary" id="printNow" ${invalidPhones ? "disabled" : ""}>Print ${chosen.length} labels</button><button class="button secondary" id="savePdf" ${invalidPhones ? "disabled" : ""}>Download PDF</button><button class="button ghost" id="printOne" ${activeLabel < 0 || !normalizePakistaniPhone(rows[activeLabel]?.phone ?? "") ? "disabled" : ""}>Print individual</button></div>
+    <div class="print-actions"><button class="button primary" id="printNow" ${blocked ? "disabled" : ""}>Print ${chosen.length} labels</button><button class="button secondary" id="savePdf" ${blocked ? "disabled" : ""}>Download PDF</button><button class="button ghost" id="printOne" ${activeLabel < 0 || !rows[activeLabel] || printBlocker(rows[activeLabel]) ? "disabled" : ""}>Print individual</button></div>
     <label class="confirm-print"><input id="confirmPrinted" type="checkbox"> I confirm the print job completed on the printer.</label></div>
     <div class="print-notice"><b>Print requests are not print proof.</b><p>Browser print is logged as a request. Only the separate confirmation above records staff-confirmed completion; neither signal comes from printer telemetry.</p><p>Check one test sheet with a ruler before using pre-cut stock. Physical dimensions depend on printer and driver.</p></div></section><p class="status-line" role="status">${esc(statusMessage)}</p>`;
 }
@@ -355,14 +391,11 @@ function sizeBarcode(canvas: HTMLCanvasElement, index: number): boolean {
     const label = canvas.closest<HTMLElement>(".label");
     canvas.style.visibility = "hidden";
     flagLabel(label, index, "Tracking barcode is too dense for the scan-safe width; edit this tracking value.");
-    if (label && !label.querySelector(".barcode-warning"))
-      label.insertAdjacentHTML("beforeend", `<span class="barcode-warning layout-box" ${boxStyle(box)}>BARCODE TOO DENSE · EDIT</span>`);
     return false;
   }
   canvas.style.visibility = "visible";
   canvas.style.setProperty("--bar-width", `${canvas.width * scale / pxPerMm}mm`);
   canvas.style.setProperty("--bar-height", `${canvas.height * scale / pxPerMm}mm`);
-  canvas.closest<HTMLElement>(".label")?.querySelector(".barcode-warning")?.remove();
   return true;
 }
 
@@ -424,17 +457,17 @@ function measureLabels(root: ParentNode = document, canvasDocument: Document = d
       destinationElement?.style.setProperty("--province-row-height", `${destination.province.height}mm`);
       destinationElement?.classList.toggle("long-province", destination.province.height > 3.1);
       destinationElement?.classList.toggle("short-province", destination.province.height < 3.1);
-      const zoomScale = label.closest(".sheet") ? zoom : 1;
       const fit = (selector: string, text: string, max: number, min: number, bold = false, wrap = true) => {
         const element = label.querySelector<HTMLElement>(selector);
         if (!element || !text) return;
         const style = canvasDocument.defaultView?.getComputedStyle(element);
-        const reserved = selector === ".city-text" ? 3.3 * (96 / 25.4) * zoomScale : 0;
+        const reserved = 0;
         const width = element.clientWidth - (style ? parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) : 0) - reserved;
         const height = element.clientHeight - (style ? parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) : 0);
         const lineHeight = style?.lineHeight && style.lineHeight !== "normal"
           ? parseFloat(style.lineHeight) / Math.max(1, parseFloat(style.fontSize))
           : 1.15;
+        const zoomScale = label.closest(".sheet") ? zoom : 1;
         const result = fitTextPx(context, text, width, height, max * zoomScale, min * zoomScale, bold, lineHeight, wrap);
         element.style.fontFamily = labelFontFamily(text);
         element.dir = usesArabicScript(text) ? "rtl" : "ltr";
@@ -450,27 +483,26 @@ function measureLabels(root: ParentNode = document, canvasDocument: Document = d
         }
         if (!result.fits) overflow = true;
       };
-      fit(".order-id strong", row?.orderId || "ORDER ID NOT PROVIDED", 11, 8, true, false);
-      fit(".product-text strong", row?.product || "PRODUCT NOT PROVIDED", 10, 7.5, true);
+      fit(".order-id strong", row?.orderId || "", 9, 6.5, true, false);
+      fit(".product-text strong", row?.product || "", 8.5, 6.5, true);
       fit(".vpl-prefix", "VPL", 9, 7.5, true, false);
-      const vpl = formatVpl(row?.cod ?? "");
-      fit(".vpl-amount", vpl.replace(/^VPL\s*/u, ""), 20, 14.7, true, false);
+      const vpl = row?.cod?.trim() ? formatVpl(row.cod) : "VPL";
+      fit(".vpl-amount", vpl.replace(/^VPL\s*/u, ""), 16, 9.5, true, false);
       fit(".tracking-caption", "TRACKING NUMBER", 7, 6, true, false);
-      fit(".tracking-text", row?.tracking || "TRACKING NUMBER REQUIRED", 15, 12, true, false);
-      fit(".city-text", row?.city || "City missing", 18, 12, true);
-      fit(".province-text", row?.province || "Province missing", 11, 8.5, true);
-      fit(".receiver-name", row?.name || "Receiver name required", 16, 12, true);
-      fit(".address-text", row?.address || "Delivery address required", 14, 11);
+      fit(".tracking-text", row?.tracking || "", 10, 8, true, false);
+      fit(".city-text", row?.city || "", 13, 9, true);
+      fit(".province-text", row?.province || "", 8.5, 6.5, true);
+      fit(".receiver-name", row?.name || "", 12, 9, true);
+      fit(".address-text", row?.address || "", 11, 8);
       fit(".nearby-label", "Near by:", 9.5, 7.5, true, false);
       fit(".landmark", row?.landmark || "Not provided", 9.5, 7.5);
       fit(".phone-number", normalizePakistaniPhone(row?.phone ?? "") ?? "INVALID PHONE · EDIT", 16, 12, true, false);
       fit(".footer-from", "From:", 12, 9, true, false);
-      fit(".footer-sender", row?.senderName || "Garden Shop", 14, 10, true, false);
-      fit(".footer-address", row?.senderAddress || "C/o City Post Office, Sahiwal, Punjab", 10, 7, false, false);
+      fit(".footer-sender", "Garden Shop", 10, 6.5, true, false);
+      fit(".footer-address", LABEL_FOOTER_ADDRESS, 8, 6.5, false, false);
       label.classList.toggle("layout-overflow", overflow);
       if (overflow && row && !row.warnings.some((warning) => warning.startsWith("Text does not fit")))
         row.warnings.push("Text does not fit at minimum readable size; edit the record before printing.");
-      if (overflow) markLabelWarning(label);
     });
 }
 
@@ -479,15 +511,10 @@ function flagLabel(label: HTMLElement | null, index: number, warning: string) {
   if (label) {
     label.classList.add("layout-overflow");
     label.classList.add("has-warning");
-    markLabelWarning(label);
     measureLabels(label.ownerDocument, label.ownerDocument);
   }
 }
 
-function markLabelWarning(label: HTMLElement) {
-  if (!label.querySelector(".label-warning"))
-    label.insertAdjacentHTML("afterbegin", '<span class="label-warning">CHECK</span>');
-}
 
 function preparePrintLayout(popup: Window) {
   const fontStyles = popup.document.createElement("style");
@@ -523,7 +550,7 @@ function openPrintPopup(items: Array<{ row: Order; index: number }>, position: n
     }).join("")}</main>`,
   ).join("");
   popup.document.open();
-  popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Garden Shop labels</title><link rel="stylesheet" href="/label.css"><style>@page{size:A4 portrait;margin:0}*{box-sizing:border-box}html,body{margin:0;width:210mm;height:297mm;background:#fff}.print-sheet{width:210mm;height:297mm;padding:8mm 5mm;display:grid;grid-template-columns:repeat(3,65mm);grid-template-rows:repeat(6,44mm);column-gap:2.5mm;row-gap:3mm;overflow:hidden}.page-break{break-after:page}.empty-label{width:65mm;height:44mm}@media screen{body{width:210mm;margin:12mm auto}}</style></head><body>${sheets}</body></html>`);
+  popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Garden Shop labels</title><link rel="stylesheet" href="/label.css"><style>@page{size:A4 portrait;margin:0}*{box-sizing:border-box}html,body{margin:0;width:210mm;height:297mm;background:#fff}.print-sheet{width:210mm;height:297mm;padding:14mm 6.5mm;display:grid;grid-template-columns:repeat(3,65mm);grid-template-rows:repeat(6,44mm);column-gap:1mm;row-gap:1mm;overflow:hidden}.page-break{break-after:page}.empty-label{width:65mm;height:44mm}@media screen{body{width:210mm;margin:12mm auto}}</style></head><body>${sheets}</body></html>`);
   popup.addEventListener("load", async () => {
     await Promise.all(
       [...popup.document.querySelectorAll<HTMLCanvasElement>("canvas[data-barcode]")].map(async (canvas) => {
@@ -610,7 +637,7 @@ function templateCsv() {
       "Punjab",
       "Near landmark",
       "Garden Shop",
-    "C/o City Post Office, Sahiwal, Punjab",
+      "C/o City Post Office, Sahiwal",
     ],
   ]
     .map((line) => line.map((cell) => safeCsvCell(cell)).join(","))
@@ -626,13 +653,15 @@ function download(blob: Blob, name: string) {
     link = document.createElement("a");
   link.href = url;
   link.download = name;
+  document.body.append(link);
   link.click();
-  URL.revokeObjectURL(url);
+  window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  window.setTimeout(() => link.remove(), 30_000);
 }
 
 async function makePdf(items = currentOrders(), position = startPosition) {
   if (!items.length) throw new Error("NO_LABELS_SELECTED");
-  if (items.some(({ row }) => !normalizePakistaniPhone(row.phone))) throw new Error("INVALID_PHONE_FOR_LABEL");
+  if (items.some(({ row }) => printBlocker(row))) throw new Error("LABEL_REQUIRES_CORRECTION");
   const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica),
@@ -669,14 +698,6 @@ async function makePdf(items = currentOrders(), position = startPosition) {
         const fit = fitTextMm(measure, text, box.width, box.height, maxFont, minFont, isBold, lineHeight, wrap);
         if (!fit.fits) {
           if (!row.warnings.some((warning) => warning.startsWith("Text does not fit"))) row.warnings.push("Text does not fit at minimum readable size; edit this record before printing.");
-          pdfPage.drawText("EDIT REQUIRED", {
-            x: (xMm + box.x + 0.3) * mm,
-            y: pageH - (yMm + box.y + Math.min(box.height, 2.1)) * mm,
-            size: 4.2,
-            font: bold,
-            maxWidth: Math.max(2, (box.width - 0.6) * mm),
-            color,
-          });
           return;
         }
         if (usesComplexScript(text)) {
@@ -745,47 +766,41 @@ async function makePdf(items = currentOrders(), position = startPosition) {
       };
 
       outline(boxes.outline, 1, 0.2);
-      await headerText("Order ID", row.orderId || "ORDER ID NOT PROVIDED", boxes.orderId, 11, false);
-      await headerText("Product", row.product || "PRODUCT NOT PROVIDED", boxes.product, 10, true, 0.9);
       outline(boxes.vpl, 1, 0.5);
-      const vpl = formatVpl(row.cod);
+      const vpl = row.cod.trim() ? formatVpl(row.cod) : "VPL";
       const vplAmount = vpl.replace(/^VPL\s*/u, "");
       await drawBoxText("VPL", { ...boxes.vpl, x: boxes.vpl.x + 0.25, y: boxes.vpl.y + 0.25, width: 4.8, height: boxes.vpl.height - 0.5 }, 8, 7.5, true, rgb(0, 0, 0), "left", 1, false);
-      await drawBoxText(vplAmount, { ...boxes.vpl, x: boxes.vpl.x + 5.2, y: boxes.vpl.y + 0.25, width: boxes.vpl.width - 5.45, height: boxes.vpl.height - 0.5 }, 20, 14.7, true, rgb(0, 0, 0), "center", 0.95, false);
+      await drawBoxText(vplAmount, { ...boxes.vpl, x: boxes.vpl.x + 5.2, y: boxes.vpl.y + 0.25, width: boxes.vpl.width - 5.45, height: boxes.vpl.height - 0.5 }, 16, 9.5, true, rgb(0, 0, 0), "center", 0.95, false);
 
       await drawBoxText("TRACKING NUMBER", boxes.trackingCaption, 7, 6, true, rgb(0, 0, 0), "center", 1, false);
-      await drawBoxText(row.tracking || "TRACKING NUMBER REQUIRED", boxes.tracking, 15, 12, true, rgb(0, 0, 0), "center", 1, false);
+      await drawBoxText(row.tracking, boxes.tracking, 10, 8, true, rgb(0, 0, 0), "center", 1, false);
       fillRect(boxes.trackingDivider, rgb(0, 0, 0));
-      const destination = destinationBoxes(measure, row.city || "City missing", row.province || "Province missing");
-      const pinWidth = 2.5 * mm;
-      const pinHeight = 2.8 * mm;
-      const pinX = (xMm + destination.city.x + 0.1) * mm;
-      const pinTop = pageH - (yMm + destination.city.y + (destination.city.height - 2.8) / 2) * mm;
-      pdfPage.drawSvgPath(`M ${pinWidth / 2} 0 C ${pinWidth * 0.18} 0 ${pinWidth * 0.03} ${pinHeight * 0.22} ${pinWidth * 0.03} ${pinHeight * 0.46} C ${pinWidth * 0.03} ${pinHeight * 1.02} ${pinWidth / 2} ${pinHeight} ${pinWidth / 2} ${pinHeight} C ${pinWidth / 2} ${pinHeight} ${pinWidth * 0.97} ${pinHeight * 1.02} ${pinWidth * 0.97} ${pinHeight * 0.46} C ${pinWidth * 0.97} ${pinHeight * 0.22} ${pinWidth * 0.82} 0 ${pinWidth / 2} 0 Z`, { x: pinX, y: pinTop, color: rgb(0, 0, 0) });
-      pdfPage.drawCircle({ x: pinX + pinWidth / 2, y: pinTop - pinHeight * 0.42, size: 0.42 * mm, color: rgb(1, 1, 1) });
-      await drawBoxText(row.city || "City missing", { ...destination.city, x: destination.city.x + 3.3, width: destination.city.width - 3.3 }, 18, 12, true, rgb(0, 0, 0), "center", 0.95);
+      const destination = destinationBoxes(measure, row.city, row.province);
+      await drawBoxText(row.city, destination.city, 15, 9, true, rgb(0, 0, 0), "center", 0.95);
       outline(destination.province, 1.2, 0.2, rgb(0, 0, 0));
-      await drawBoxText(row.province || "Province missing", { ...destination.province, x: destination.province.x + 1.6, y: destination.province.y + 0.15, width: destination.province.width - 3.2, height: destination.province.height - 0.3 }, 11, 8.5, true, rgb(1, 1, 1), "center", destination.province.height > 3.1 ? 0.95 : 1);
+      await drawBoxText(row.province, { ...destination.province, x: destination.province.x + 0.8, y: destination.province.y + 0.15, width: destination.province.width - 1.6, height: destination.province.height - 0.3 }, 8.5, 6.5, true, rgb(1, 1, 1), "center", destination.province.height > 3.1 ? 0.95 : 1);
 
       outline(boxes.to, 1, 0.3);
       const tagWidth = boxes.toTag.width * mm;
       const tagHeight = boxes.toTag.height * mm;
       pdfPage.drawSvgPath(`M 0 0 L ${tagWidth * 0.86} 0 L ${tagWidth} ${tagHeight / 2} L ${tagWidth * 0.86} ${tagHeight} L 0 ${tagHeight} Z`, { x: (xMm + boxes.toTag.x) * mm, y: pageH - (yMm + boxes.toTag.y) * mm, color: rgb(0.03, 0.03, 0.03) });
       await drawBoxText("To:", boxes.toTag, 12, 10, true, rgb(1, 1, 1), "center");
-      const recipient = recipientBoxes(measure, row.name || "Receiver name required");
-      await drawBoxText(row.name || "Receiver name required", recipient.name, 16, 12, true, rgb(0, 0, 0), "left", 1);
-      await drawBoxText(row.address || "Delivery address required", recipient.address, 14, 11, false, rgb(0, 0, 0), "left", 1.08);
+      const recipient = recipientBoxes(measure, row.name);
+      await drawBoxText(row.name, recipient.name, 12, 9, true, rgb(0, 0, 0), "left", 1);
+      await drawBoxText(row.address, recipient.address, 11, 8, false, rgb(0, 0, 0), "left", 1.08);
       await drawBoxText("Near by:", boxes.nearbyLabel, 9.5, 7.5, true, rgb(0, 0, 0), "left", 1, false);
-      await drawBoxText(row.landmark || "Not provided", boxes.landmark, 9.5, 7.5);
+      await drawBoxText(row.landmark, boxes.landmark, 9.5, 7.5);
       fillRect(boxes.contactDivider, rgb(0, 0, 0));
-      pdfPage.drawSvgPath("M 0.4 0.4 C 0.8 0.1 1.3 0.3 1.6 0.7 L 2.1 1.5 C 2.3 1.8 2.1 2.1 1.8 2.4 L 1.4 2.8 C 2.1 3.9 3 4.8 4.1 5.4 L 4.5 5 C 4.8 4.7 5.1 4.6 5.4 4.8 L 6.2 5.3 C 6.6 5.6 6.8 6.1 6.5 6.5 C 6 7.2 5.2 7.2 4.4 6.9 C 2.1 6 0.9 4.7 0.1 2.6 C -0.2 1.8 -0.2 0.9 0.4 0.4 Z", { x: (xMm + boxes.contact.x + 0.2) * mm, y: pageH - (yMm + boxes.contact.y + 0.2) * mm, scale: 0.55 * mm, color: rgb(0, 0, 0) });
-      await drawBoxText(normalizePakistaniPhone(row.phone)!, { ...boxes.contact, x: boxes.contact.x + 4.5, width: boxes.contact.width - 4.5 }, 16, 12, true, rgb(0, 0, 0), "left", 1, false);
+      await drawBoxText(normalizePakistaniPhone(row.phone)!, boxes.contact, 11, 9, true, rgb(0, 0, 0), "center", 1, false);
+      outline(boxes.orderProduct, 0, 0.2);
+      await headerText("Order ID", row.orderId, boxes.orderId, 9, false);
+      await headerText("Product", row.product, boxes.product, 8.5, true, 0.95);
       fillRect({ ...boxes.footer, height: 0.2 }, rgb(0, 0, 0));
       fillRect(boxes.footerFrom, rgb(0.03, 0.03, 0.03));
-      await drawBoxText("From:", boxes.footerFrom, 12, 9, true, rgb(1, 1, 1), "center", 1, false);
-      await drawBoxText(row.senderName || "Garden Shop", boxes.footerSender, 14, 10, true, rgb(0.14, 0.38, 0.18), "left", 1, false);
+      await drawBoxText("From:", boxes.footerFrom, 9, 7, true, rgb(1, 1, 1), "center", 1, false);
+      await drawBoxText("Garden Shop", boxes.footerSender, 10, 7, true, rgb(0.14, 0.38, 0.18), "left", 1, false);
       fillRect(boxes.footerDivider, rgb(0, 0, 0));
-      await drawBoxText(row.senderAddress || "C/o City Post Office, Sahiwal, Punjab", boxes.footerAddress, 10, 7, false, rgb(0, 0, 0), "left", 1, false);
+      await drawBoxText(LABEL_FOOTER_ADDRESS, boxes.footerAddress, 8, 6.5, false, rgb(0, 0, 0), "left", 1, false);
 
       if (row.tracking) {
         const barcode = await renderBarcodeSvg(row.tracking);
@@ -795,7 +810,6 @@ async function makePdf(items = currentOrders(), position = startPosition) {
         );
         if (scale * barcode.moduleWidth * 25.4 / 72 < CODE128_LAYOUT.minimumModuleMm) {
           if (!row.warnings.some((warning) => warning.startsWith("Tracking barcode is too dense"))) row.warnings.push("Tracking barcode is too dense for this label; edit or use another layout.");
-          await drawBoxText("BARCODE TOO WIDE · EDIT", boxes.barcode, 7, 5.5, true, rgb(0, 0, 0), "center");
         } else {
           const barcodeWidth = barcode.width * scale;
           const barcodeHeight = barcode.height * scale;
@@ -811,15 +825,6 @@ async function makePdf(items = currentOrders(), position = startPosition) {
             });
           }
         }
-      }
-      if (row.warnings.length) {
-        pdfPage.drawText("CHECK", {
-          x: (xMm + boxes.to.x + boxes.to.width - 8) * mm,
-          y: pageH - (yMm + boxes.to.y + 2) * mm,
-          size: 4.2,
-          font: bold,
-          color: rgb(0, 0, 0),
-        });
       }
     }
   }
@@ -1078,8 +1083,8 @@ function bind() {
       render();
       return;
     }
-    if (items.some(({ row }) => !normalizePakistaniPhone(row.phone))) {
-      statusMessage = "Correct invalid contact numbers before printing.";
+    if (items.some(({ row }) => printBlocker(row))) {
+      statusMessage = "Resolve flagged required fields, barcode, or layout issues before printing.";
       render();
       return;
     }
@@ -1102,9 +1107,9 @@ function bind() {
   document.querySelector("#savePdf")?.addEventListener("click", async () => {
     try {
       const items = currentOrders(),
-        invalidPhones = items.some(({ row }) => !normalizePakistaniPhone(row.phone));
-      if (invalidPhones) {
-        statusMessage = "Correct invalid contact numbers before exporting a PDF.";
+        blocked = items.some(({ row }) => printBlocker(row));
+      if (blocked) {
+        statusMessage = "Resolve flagged required fields, barcode, or layout issues before exporting a PDF.";
         render();
         return;
       }
@@ -1124,8 +1129,8 @@ function bind() {
   document.querySelector("#printOne")?.addEventListener("click", async () => {
     if (activeLabel < 0) return;
     const order = rows[activeLabel];
-    if (!normalizePakistaniPhone(order.phone)) {
-      statusMessage = "Correct the invalid contact number before printing.";
+    if (printBlocker(order)) {
+      statusMessage = "Resolve the flagged required field, barcode, or layout issue before printing.";
       render();
       return;
     }
@@ -1177,7 +1182,7 @@ function editOrder(index: number) {
   ];
   const form = document.createElement("form");
   form.className = "edit-form";
-  form.innerHTML = `<dialog open><h2>Edit label details</h2><p>Edits stay local and are not sent to monitoring.</p>${order.sourceAddress !== order.address ? `<p class="source-note">A repeated contact number was removed from the displayed address after an exact match. The imported source address is retained below.</p><button class="button secondary" type="button" id="restoreSourceAddress">Restore imported source address</button>` : ""}${fields.map(([key, label]) => `<label>${esc(label)}<input name="${key}" value="${esc(order[key])}" ${key === "phone" ? 'inputmode="tel"' : ""}></label>`).join("")}<div class="button-row"><button class="button secondary" type="button" data-cancel>Cancel</button><button class="button primary">Save changes</button></div></dialog>`;
+  form.innerHTML = `<dialog open><h2>Edit label details</h2><p>Edits stay local and are not sent to monitoring.</p>${order.sourceAddress !== order.address ? `<p class="source-note">The imported address value is retained below for editing and audit; only the display copy is normalized.</p><button class="button secondary" type="button" id="restoreSourceAddress">Restore imported source address</button>` : ""}${fields.map(([key, label]) => `<label>${esc(label)}<input name="${key}" value="${esc(order[key])}" ${key === "phone" ? 'inputmode="tel"' : ""}></label>`).join("")}<div class="button-row"><button class="button secondary" type="button" data-cancel>Cancel</button><button class="button primary">Save changes</button></div></dialog>`;
   app.append(form);
   form
     .querySelector("[data-cancel]")
@@ -1192,7 +1197,9 @@ function editOrder(index: number) {
     const data = new FormData(form);
     for (const [key] of fields)
       order[key] = String(data.get(key) ?? "") as never;
-    if (order.address !== previousAddress) order.sourceAddress = order.address;
+    const enteredAddress = String(data.get("address") ?? "");
+    if (enteredAddress !== previousAddress) order.sourceAddress = enteredAddress;
+    order.address = normalizeAddressText(enteredAddress);
     const repeatedContact = safeContactRemoval(order.address, order.phone);
     if (repeatedContact.removed) order.address = repeatedContact.address;
     const normalizedPhone = normalizePakistaniPhone(order.phone);
@@ -1220,7 +1227,7 @@ function editOrder(index: number) {
       order.warnings.push(
         "Tracking number is missing; barcode cannot be generated.",
       );
-    if (order.sourceAddress !== order.address)
+    if (repeatedContact.removed)
       order.warnings.push(
         "Exact contact match removed from displayed address; original source is available in the editor.",
       );

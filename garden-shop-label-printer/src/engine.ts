@@ -6,8 +6,8 @@ export const LABELS_PER_PAGE = 18;
 export const LABEL_WIDTH_MM = 65;
 export const LABEL_HEIGHT_MM = 44;
 export const A4 = { width: 210, height: 297 } as const;
-export const A4_LABEL_COLUMNS_MM = [5, 72.5, 140] as const;
-export const A4_LABEL_ROWS_MM = [8, 55, 102, 149, 196, 243] as const;
+export const A4_LABEL_COLUMNS_MM = [6.5, 72.5, 138.5] as const;
+export const A4_LABEL_ROWS_MM = [14, 59, 104, 149, 194, 239] as const;
 export const MM_TO_POINTS = 72 / 25.4;
 export const A4_POINTS = {
   width: A4.width * MM_TO_POINTS,
@@ -71,6 +71,11 @@ export function safeContactRemoval(address: string, phone: string): { address: s
   return { address: cleaned, removed: true };
 }
 
+/** Collapse spreadsheet-only layout whitespace for display while retaining the raw source separately. */
+export function normalizeAddressText(value: string): string {
+  return value.replace(/[\t\r\n]+/gu, " ").replace(/\s+/gu, " ").trim();
+}
+
 export function normalizePakistaniPhone(value: string): string | undefined {
   const compact = value.trim().replace(/[\s().\-/–—,:;]/gu, "");
   if (!/^\+?\d+$/u.test(compact)) return undefined;
@@ -94,9 +99,9 @@ export function normalizeRows(headers: string[], rows: unknown[][], mapping: Imp
     };
     const order: Order = {
       rowNumber: index + 2, serial: value("serial"), orderId: value("orderId"), name: value("name"), email: value("email"), phone: value("phone"),
-      address: value("address"), sourceAddress: value("address"), facebookName: value("facebookName"), tracking: value("tracking"), cod: value("cod"),
+      address: normalizeAddressText(value("address")), sourceAddress: value("address"), facebookName: value("facebookName"), tracking: value("tracking"), cod: value("cod"),
       product: value("product"), city: value("city"), province: value("province"), landmark: value("landmark"),
-      senderName: value("senderName") || "Garden Shop", senderAddress: value("senderAddress") || "C/o City Post Office, Sahiwal, Punjab", warnings: [],
+      senderName: value("senderName") || "Garden Shop", senderAddress: value("senderAddress") || "C/o City Post Office, Sahiwal", warnings: [],
     };
     if (!sourceIsCsv && order.phone && typeof cells[headerIndex.get(mapping.phone) ?? -1] === "number") order.warnings.push("Phone cell was numeric; verify leading zeros against the original source.");
     const importedPhone = order.phone;

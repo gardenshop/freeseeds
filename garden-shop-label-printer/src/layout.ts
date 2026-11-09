@@ -42,32 +42,34 @@ export const LABEL_LAYOUT = {
   widthMm: LABEL_WIDTH_MM,
   heightMm: LABEL_HEIGHT_MM,
   outline: { x: 0.4, y: 0.4, width: 64.2, height: 43.2, radius: 1, stroke: 0.2 },
-  orderId: { x: 1.2, y: 1.2, width: 19.8, height: 6.2 },
-  product: { x: 21, y: 1.2, width: 22.6, height: 6.2 },
-  vpl: { x: 44.4, y: 1.2, width: 19.4, height: 6.2 },
-  trackingCaption: { x: 1.7, y: 8.5, width: 31.5, height: 1.7 },
-  tracking: { x: 1.7, y: 10.2, width: 31.5, height: 3.3 },
-  barcode: { x: 1.7, y: 13.7, width: 31.5, height: 4.8 },
-  trackingDivider: { x: 34, y: 8.5, width: 0.25, height: 10.2 },
-  destination: { x: 34.7, y: 8.5, width: 29, height: 10.2 },
-  city: { x: 35.1, y: 8.8, width: 28.2, height: 5.7 },
-  province: { x: 35.1, y: 15.1, width: 28.2, height: 3.1 },
-  to: { x: 1.3, y: 19.2, width: 62.4, height: 18.1, radius: 1 },
-  toTag: { x: 1.8, y: 19.7, width: 7.1, height: 3.2 },
-  name: { x: 9.5, y: 19.7, width: 45.5, height: 3.2 },
-  address: { x: 9.5, y: 23, width: 53.5, height: 9.6 },
-  nearbyLabel: { x: 2, y: 33.4, width: 9.5, height: 3.2 },
-  landmark: { x: 11.8, y: 33.4, width: 19, height: 3.2 },
-  contactDivider: { x: 31.5, y: 32.8, width: 0.25, height: 4.5 },
-  contact: { x: 32.7, y: 33.4, width: 30, height: 3.2 },
-  footer: { x: 1.2, y: 37.8, width: 62.6, height: 5.2 },
-  footerFrom: { x: 1.6, y: 38.35, width: 8.3, height: 4.05 },
-  footerSender: { x: 10.4, y: 38.25, width: 18.8, height: 4.1 },
-  footerDivider: { x: 29.7, y: 38.3, width: 0.25, height: 4 },
-  footerAddress: { x: 30.5, y: 38.4, width: 32.5, height: 3.8 },
+  trackingCaption: { x: 1.7, y: 0.6, width: 30.5, height: 1.7 },
+  tracking: { x: 1.7, y: 2.4, width: 30.5, height: 2.8 },
+  barcode: { x: 1.7, y: 5.4, width: 30.5, height: 4.7 },
+  trackingDivider: { x: 32.6, y: 0.6, width: 0.25, height: 9.5 },
+  destination: { x: 33.2, y: 0.6, width: 15.4, height: 9.5 },
+  city: { x: 33.5, y: 0.8, width: 14.8, height: 5.1 },
+  province: { x: 33.5, y: 6.3, width: 14.8, height: 3.3 },
+  vpl: { x: 49.0, y: 1.1, width: 14.2, height: 7.8 },
+  to: { x: 1.3, y: 10.8, width: 62.4, height: 22.6, radius: 1 },
+  toTag: { x: 1.8, y: 11.2, width: 7.1, height: 3.1 },
+  name: { x: 9.5, y: 11.2, width: 45.5, height: 3.1 },
+  address: { x: 9.5, y: 14.8, width: 53.5, height: 10.2 },
+  nearbyLabel: { x: 2, y: 25.5, width: 9.5, height: 2.8 },
+  landmark: { x: 11.8, y: 25.5, width: 19, height: 2.8 },
+  contactDivider: { x: 31.5, y: 28.8, width: 0.25, height: 3.4 },
+  contact: { x: 32.7, y: 29.1, width: 30, height: 3.0 },
+  orderProduct: { x: 1.3, y: 33.7, width: 62.4, height: 5.3 },
+  orderId: { x: 1.3, y: 33.7, width: 28.5, height: 5.3 },
+  product: { x: 29.8, y: 33.7, width: 33.9, height: 5.3 },
+  footer: { x: 1.3, y: 39.3, width: 62.4, height: 4.1 },
+  footerFrom: { x: 1.6, y: 39.75, width: 8.0, height: 3.2 },
+  footerSender: { x: 10.0, y: 39.7, width: 17.0, height: 3.3 },
+  footerDivider: { x: 27.5, y: 39.7, width: 0.25, height: 3.2 },
+  footerAddress: { x: 28.3, y: 39.75, width: 35.0, height: 3.2 },
 } as const;
 
-export const LABEL_FOOTER = "From: Garden Shop | C/o City Post Office, Sahiwal, Punjab";
+export const LABEL_FOOTER = "From: Garden Shop | C/o City Post Office, Sahiwal";
+export const LABEL_FOOTER_ADDRESS = "C/o City Post Office, Sahiwal";
 
 export type BoxMm = { x: number; y: number; width: number; height: number };
 export type LabelBoxes = {
@@ -81,7 +83,7 @@ export function labelBoxes(): LabelBoxes {
 
 export function recipientBoxes(ctx: CanvasRenderingContext2D, name: string) {
   const initial = LABEL_LAYOUT.name;
-  const initialFit = fitTextMm(ctx, name, initial.width, initial.height, 16, 12, true, 1);
+  const initialFit = fitTextMm(ctx, name, initial.width, initial.height, 12, 9, true, 1);
   const nameBox: BoxMm = { ...initial, height: initialFit.fits ? initial.height : 6.4 };
   const addressY = nameBox.y + nameBox.height + 0.1;
   return {
@@ -89,7 +91,7 @@ export function recipientBoxes(ctx: CanvasRenderingContext2D, name: string) {
     address: {
       ...LABEL_LAYOUT.address,
       y: addressY,
-      height: 32.6 - addressY,
+      height: 25.1 - addressY,
     },
   };
 }
@@ -99,11 +101,12 @@ export function destinationBoxes(ctx: CanvasRenderingContext2D, city: string, pr
   const provinceBase = LABEL_LAYOUT.province;
   const cityFits = fitTextMm(ctx, city, cityBase.width, cityBase.height, 18, 12, true, 0.95).fits;
   const provinceFits = fitTextMm(ctx, province, provinceBase.width, provinceBase.height, 11, 8.5, true, 1).fits;
-  const cityHeight = !cityFits && provinceFits ? 6.2 : !provinceFits && cityFits ? 4.1 : !cityFits ? 4.1 : cityBase.height;
-  const provinceY = cityBase.y + cityHeight + 0.6;
+  const longProvince = province.trim().length > 15 || !provinceFits;
+  const cityHeight = longProvince && province.trim().length > 15 ? 4.4 : !cityFits ? 6.2 : cityBase.height;
+  const provinceY = cityBase.y + cityHeight + 0.4;
   return {
     city: { ...cityBase, height: cityHeight },
-    province: { ...provinceBase, y: provinceY, height: 18.2 - provinceY },
+    province: { ...provinceBase, y: provinceY, height: 9.7 - provinceY },
   };
 }
 
