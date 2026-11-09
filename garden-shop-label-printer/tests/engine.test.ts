@@ -15,27 +15,27 @@ describe("local workbook and sheet engine", () => {
 
   it("fails malformed CSV and safely removes an exact contact match only", () => {
     expect(() => parseCsv('Name,Address\nA,"broken')).toThrow("CSV_UNCLOSED_QUOTE");
-    expect(safeContactRemoval("Street 4, 03335154332, Sahiwal", "03335154332")).toEqual({ address: "Street 4, Sahiwal", removed: true });
-    expect(safeContactRemoval("Street 4, 0333515433, Sahiwal", "03335154332").address).toBe("Street 4, 0333515433, Sahiwal");
+    expect(safeContactRemoval("Street 4, 03330000000, Sahiwal", "03330000000")).toEqual({ address: "Street 4, Sahiwal", removed: true });
+    expect(safeContactRemoval("Street 4, 0333000000, Sahiwal", "03330000000").address).toBe("Street 4, 0333000000, Sahiwal");
   });
 
   it("keeps the original source address when removing an exact displayed phone duplicate", () => {
     const headers = ["Name", "Cell #", "Address"];
-    const [order] = normalizeRows(headers, [["Sample", "03335154332", "Street 5, 03335154332, Sahiwal"]], detectMapping(headers), true);
+    const [order] = normalizeRows(headers, [["Sample", "03330000000", "Street 5, 03330000000, Sahiwal"]], detectMapping(headers), true);
     expect(order.address).toBe("Street 5, Sahiwal");
-    expect(order.sourceAddress).toBe("Street 5, 03335154332, Sahiwal");
+    expect(order.sourceAddress).toBe("Street 5, 03330000000, Sahiwal");
     expect(order.warnings.some((warning) => warning.startsWith("Exact contact match"))).toBe(true);
   });
 
   it("normalizes supported Pakistani mobile formats and rejects incomplete values", () => {
-    expect(normalizePakistaniPhone("3335154321")).toBe("03335154321");
-    expect(normalizePakistaniPhone("3359632440")).toBe("03359632440");
-    expect(normalizePakistaniPhone("3017598026")).toBe("03017598026");
-    expect(normalizePakistaniPhone("0333-515-4321")).toBe("03335154321");
-    expect(normalizePakistaniPhone("+92 (333) 515-4321")).toBe("03335154321");
-    expect(normalizePakistaniPhone("92 335 963 2440")).toBe("03359632440");
+    expect(normalizePakistaniPhone("3330000000")).toBe("03330000000");
+    expect(normalizePakistaniPhone("3350000000")).toBe("03350000000");
+    expect(normalizePakistaniPhone("3010000000")).toBe("03010000000");
+    expect(normalizePakistaniPhone("0333-000-0000")).toBe("03330000000");
+    expect(normalizePakistaniPhone("+92 (333) 000-0000")).toBe("03330000000");
+    expect(normalizePakistaniPhone("92 335 000 0000")).toBe("03350000000");
     expect(normalizePakistaniPhone("03440000001")).toBe("03440000001");
-    expect(normalizePakistaniPhone("335963244")).toBeUndefined();
+    expect(normalizePakistaniPhone("335000000")).toBeUndefined();
     expect(normalizePakistaniPhone("0215550000")).toBeUndefined();
     expect(normalizePakistaniPhone("03ABC123456")).toBeUndefined();
   });
@@ -51,8 +51,8 @@ describe("local workbook and sheet engine", () => {
   it("preserves phone values as text and never invents order IDs", () => {
     const headers = ["Sr. no", "Name", "Cell #", "Address", "Facebook Name", "COD", "Product"];
     const mapping = detectMapping(headers);
-    const [order] = normalizeRows(headers, [["1", "Sample", "03335154321", "Main Street", "FB-person", "1250", "Seeds"]], mapping, true);
-    expect(order.phone).toBe("03335154321");
+    const [order] = normalizeRows(headers, [["1", "Sample", "03330000000", "Main Street", "FB-person", "1250", "Seeds"]], mapping, true);
+    expect(order.phone).toBe("03330000000");
     expect(order.orderId).toBe("");
     expect(order.tracking).toBe("");
     expect(order.warnings).toContain("Order ID is missing; none was generated.");
@@ -70,7 +70,7 @@ describe("local workbook and sheet engine", () => {
       "xl/workbook.xml": xml('<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Orders" sheetId="1" r:id="rId1"/></sheets></workbook>'),
       "xl/_rels/workbook.xml.rels": xml('<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'),
       "xl/styles.xml": xml('<?xml version="1.0" encoding="UTF-8"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="00000000000"/></numFmts><fonts count="1"><font/></fonts><fills count="1"><fill/></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0"/></cellXfs></styleSheet>'),
-      "xl/worksheets/sheet1.xml": xml('<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>Order ID</t></is></c><c r="B1" t="inlineStr"><is><t>Name</t></is></c><c r="C1" t="inlineStr"><is><t>Cell #</t></is></c><c r="D1" t="inlineStr"><is><t>Address</t></is></c><c r="E1" t="inlineStr"><is><t>Tracking Number</t></is></c><c r="F1" t="inlineStr"><is><t>COD</t></is></c><c r="G1" t="inlineStr"><is><t>Product</t></is></c><c r="H1" t="inlineStr"><is><t>City</t></is></c><c r="I1" t="inlineStr"><is><t>Province</t></is></c></row><row r="2"><c r="A2" t="inlineStr"><is><t>GS-SYN-001</t></is></c><c r="B2" t="inlineStr"><is><t>Synthetic Receiver</t></is></c><c r="C2" s="1"><v>3335154332</v></c><c r="D2" t="inlineStr"><is><t>Test Street 1</t></is></c><c r="E2" t="inlineStr"><is><t>TRACK-SYN-0001</t></is></c><c r="F2"><v>1250</v></c><c r="G2" t="inlineStr"><is><t>Seed Mix</t></is></c><c r="H2" t="inlineStr"><is><t>Sahiwal</t></is></c><c r="I2" t="inlineStr"><is><t>Punjab</t></is></c></row></sheetData></worksheet>'),
+      "xl/worksheets/sheet1.xml": xml('<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>Order ID</t></is></c><c r="B1" t="inlineStr"><is><t>Name</t></is></c><c r="C1" t="inlineStr"><is><t>Cell #</t></is></c><c r="D1" t="inlineStr"><is><t>Address</t></is></c><c r="E1" t="inlineStr"><is><t>Tracking Number</t></is></c><c r="F1" t="inlineStr"><is><t>COD</t></is></c><c r="G1" t="inlineStr"><is><t>Product</t></is></c><c r="H1" t="inlineStr"><is><t>City</t></is></c><c r="I1" t="inlineStr"><is><t>Province</t></is></c></row><row r="2"><c r="A2" t="inlineStr"><is><t>GS-SYN-001</t></is></c><c r="B2" t="inlineStr"><is><t>Synthetic Receiver</t></is></c><c r="C2" s="1"><v>3330000000</v></c><c r="D2" t="inlineStr"><is><t>Test Street 1</t></is></c><c r="E2" t="inlineStr"><is><t>TRACK-SYN-0001</t></is></c><c r="F2"><v>1250</v></c><c r="G2" t="inlineStr"><is><t>Seed Mix</t></is></c><c r="H2" t="inlineStr"><is><t>Sahiwal</t></is></c><c r="I2" t="inlineStr"><is><t>Punjab</t></is></c></row></sheetData></worksheet>'),
     };
     const workbook = Buffer.from(zipSync(files));
     const matrix = await readXlsxSheet(workbook);
@@ -78,7 +78,7 @@ describe("local workbook and sheet engine", () => {
     const headers = (matrix.shift() ?? []).map((cell) => String(cell ?? ""));
     const orderRows = normalizeRows(headers, matrix, detectMapping(headers));
     expect(orderRows).toHaveLength(1);
-    expect(orderRows[0].phone).toBe("03335154332");
+    expect(orderRows[0].phone).toBe("03330000000");
     expect(orderRows[0].warnings).not.toContain("Phone cell was numeric; verify leading zeros against the original source.");
     expect(orderRows[0].tracking).toBe("TRACK-SYN-0001");
     expect(orderRows[0].cod).toBe("1250");
@@ -89,10 +89,10 @@ describe("local workbook and sheet engine", () => {
   it("uses Facebook Name as tracking only after explicit mapping", () => {
     const headers = ["Name", "Cell #", "Address", "Facebook Name"];
     const mapping = detectMapping(headers);
-    const [withoutSelection] = normalizeRows(headers, [["Sample", "03335154321", "Main Street", "track-abc"]], mapping, true);
+    const [withoutSelection] = normalizeRows(headers, [["Sample", "03330000000", "Main Street", "track-abc"]], mapping, true);
     expect(withoutSelection.tracking).toBe("");
     mapping.tracking = "Facebook Name";
-    const [withSelection] = normalizeRows(headers, [["Sample", "03335154321", "Main Street", "track-abc"]], mapping, true);
+    const [withSelection] = normalizeRows(headers, [["Sample", "03330000000", "Main Street", "track-abc"]], mapping, true);
     expect(withSelection.tracking).toBe("track-abc");
   });
 
