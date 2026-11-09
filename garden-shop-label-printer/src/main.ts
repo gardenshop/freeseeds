@@ -14,14 +14,16 @@ import {
   findAmbiguousMappings,
   MM_TO_POINTS,
   normalizeRows,
+  normalizePakistaniPhone,
   pagesForCount,
   parseCsv,
+  safeContactRemoval,
   safeCsvCell,
   TEMPLATE_VERSION,
 } from "./engine";
 import "./style.css";
 import "../public/label.css";
-import { CODE128_LAYOUT, LABEL_FOOTER, LABEL_LAYOUT, fitTextMm, fitTextPx, labelBoxes, labelFontFamily, usesArabicScript, usesComplexScript } from "./layout";
+import { CODE128_LAYOUT, destinationBoxes, fitTextMm, fitTextPx, formatVpl, labelBoxes, labelFontFamily, recipientBoxes, usesArabicScript, usesComplexScript } from "./layout";
 import { restoreZeroFormattedCells } from "./xlsx";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
@@ -47,7 +49,7 @@ const sampleRows = [
   [
     "GS-TEST-001",
     "Amina Sample",
-    "00001234567",
+    "03001234567",
     "House 14, Model Town",
     "",
     "TRK000001",
@@ -60,7 +62,7 @@ const sampleRows = [
   [
     "",
     "Zara Example",
-    "00001234568",
+    "03001234568",
     "Street 8, Satellite Town",
     "",
     "TRK000002",
@@ -73,7 +75,7 @@ const sampleRows = [
   [
     "GS-TEST-003",
     "M. Sample",
-    "00001234569",
+    "03001234569",
     "Village Noor Pur, Post Office Noor Pur",
     "",
     "TRK000003",
@@ -201,11 +203,41 @@ function renderReview() {
   return `<section class="section-heading"><div><p class="kicker">DISPATCH / DATA REVIEW</p><h1>Review every parcel.</h1><p>${rows.length} imported · ${rows.filter((row) => row.warnings.length).length} flagged · ${rows.length - selected.size} available to select</p></div><button class="button secondary" id="newBatch">Start another batch</button></section><div class="toolbar"><label class="search">⌕ <input id="rowSearch" type="search" placeholder="Search name, city, product…" value="${esc(q)}"></label><button class="button ghost" id="selectAll">${selected.size === rows.length ? "Clear selection" : "Select all"}</button><span class="selection-count">${selected.size} selected</span></div><div class="table-wrap"><table><thead><tr><th></th><th>ORDER / NAME</th><th>CITY</th><th>TRACKING</th><th>PRODUCT</th><th>COD</th><th>VALIDATION</th></tr></thead><tbody>${filtered.map(({ row, index }) => `<tr><td><input type="checkbox" data-select="${index}" ${selected.has(index) ? "checked" : ""} aria-label="Select row ${index + 1}"></td><td><button class="row-edit" data-edit="${index}"><b>${esc(row.orderId || "No Order ID")}</b><span>${esc(row.name || "Unnamed receiver")}</span></button></td><td>${esc([row.city, row.province].filter(Boolean).join(", ") || "—")}</td><td>${esc(row.tracking || "—")}</td><td>${esc(row.product || "—")}</td><td>${esc(row.cod || "—")}</td><td>${row.warnings.length ? `<span class="warning-badge" title="${esc(row.warnings.join("; "))}">${row.warnings.length} check${row.warnings.length > 1 ? "s" : ""}</span>` : '<span class="ok-badge">Ready</span>'}</td></tr>`).join("") || '<tr><td colspan="7" class="empty-row">No matching orders.</td></tr>'}</tbody></table></div><div class="button-row end"><button class="button primary" data-view="preview">Open A4 preview <span>→</span></button></div><p class="status-line" role="status">${esc(statusMessage)}</p>`;
 }
 
-function labelMarkup(row: Order, index: number, compact = false) {
+function boxStyle(box: { x: number; y: number; width: number; height: number }) {
+  return `style="--box-x:${box.x}mm;--box-y:${box.y}mm;--box-width:${box.width}mm;--box-height:${box.height}mm"`;
+}
+
+function labelMarkup(row: Order, index: number, _compact = false) {
   const warnings = row.warnings.length
     ? `<span class="label-warning">CHECK</span>`
     : "";
-  return `<article class="label ${compact ? "compact" : ""}" data-label-index="${index}">${warnings}<div class="label-top"><div class="order-product"><div class="order-id"><strong>${esc(row.orderId || "ORDER ID NOT PROVIDED")}</strong></div><div class="product-text">${esc(row.product || "PRODUCT NOT PROVIDED")}</div></div><div class="cod-block"><span>VPL COD</span><strong>${row.cod ? `Rs ${esc(row.cod)}` : "Amount missing"}</strong></div></div><div class="label-middle"><div class="barcode-group"><span class="tracking-text">${esc(row.tracking || "TRACKING NUMBER REQUIRED")}</span><canvas class="barcode-canvas" data-barcode="${index}" aria-label="Code 128 tracking ${esc(row.tracking)}"></canvas></div><div class="destination"><strong class="city-text">${esc(row.city || "City missing")}</strong><span class="province-text">${esc(row.province || "Province missing")}</span></div></div><section class="to-box" aria-label="To"><b class="to-heading">TO:</b><strong class="receiver-name">${esc(row.name || "Receiver name required")}</strong><div class="address-text">${esc(row.address || "Delivery address required")}</div><div class="landmark"><strong>Near by:</strong> ${row.landmark ? esc(row.landmark) : '<span class="missing">Not provided</span>'}</div><div class="contact">${esc(row.phone || "Contact number required")}</div></section><footer>${esc(LABEL_FOOTER)}</footer></article>`;
+  const boxes = labelBoxes();
+  const phone = normalizePakistaniPhone(row.phone);
+  const vpl = formatVpl(row.cod);
+  const vplAmount = vpl.replace(/^VPL\s*/u, "");
+  return `<article class="label" data-label-index="${index}">${warnings}
+    <div class="order-id layout-box" ${boxStyle(boxes.orderId)}><span class="field-heading">Order ID</span><strong>${esc(row.orderId || "ORDER ID NOT PROVIDED")}</strong></div>
+    <div class="product-text layout-box" ${boxStyle(boxes.product)}><span class="field-heading">Product</span><strong>${esc(row.product || "PRODUCT NOT PROVIDED")}</strong></div>
+    <div class="vpl-box layout-box" ${boxStyle(boxes.vpl)} aria-label="${esc(vpl)}"><span class="vpl-prefix">VPL</span><strong class="vpl-amount">${esc(vplAmount)}</strong></div>
+    <span class="tracking-caption layout-box" ${boxStyle(boxes.trackingCaption)}>TRACKING NUMBER</span>
+    <strong class="tracking-text layout-box" ${boxStyle(boxes.tracking)}>${esc(row.tracking || "TRACKING NUMBER REQUIRED")}</strong>
+    <canvas class="barcode-canvas layout-box" ${boxStyle(boxes.barcode)} data-barcode="${index}" aria-label="Code 128 tracking ${esc(row.tracking)}"></canvas>
+    <span class="tracking-divider layout-box" ${boxStyle(boxes.trackingDivider)} aria-hidden="true"></span>
+    <div class="destination layout-box" ${boxStyle(boxes.destination)}><strong class="city-text">${esc(row.city || "City missing")}</strong><span class="province-text">${esc(row.province || "Province missing")}</span></div>
+    <div class="to-border layout-box" ${boxStyle(boxes.to)} aria-hidden="true"></div>
+    <b class="to-heading layout-box" ${boxStyle(boxes.toTag)}>To:</b>
+    <strong class="receiver-name layout-box" ${boxStyle(boxes.name)}>${esc(row.name || "Receiver name required")}</strong>
+    <div class="address-text layout-box" ${boxStyle(boxes.address)}>${esc(row.address || "Delivery address required")}</div>
+    <strong class="nearby-label layout-box" ${boxStyle(boxes.nearbyLabel)}>Near by:</strong>
+    <div class="landmark layout-box" ${boxStyle(boxes.landmark)}>${row.landmark ? esc(row.landmark) : '<span class="missing">Not provided</span>'}</div>
+    <span class="contact-divider layout-box" ${boxStyle(boxes.contactDivider)} aria-hidden="true"></span>
+    <div class="contact layout-box" ${boxStyle(boxes.contact)}>${phone ? `<span class="phone-icon" aria-hidden="true">☎</span><strong class="phone-number">${esc(phone)}</strong>` : '<span class="invalid-phone">INVALID PHONE · EDIT</span>'}</div>
+    <div class="footer-rule layout-box" ${boxStyle(boxes.footer)} aria-hidden="true"></div>
+    <strong class="footer-from layout-box" ${boxStyle(boxes.footerFrom)}>From:</strong>
+    <b class="footer-sender layout-box" ${boxStyle(boxes.footerSender)}>${esc(row.senderName || "Garden Shop")}</b>
+    <span class="footer-divider layout-box" ${boxStyle(boxes.footerDivider)} aria-hidden="true"></span>
+    <span class="footer-address layout-box" ${boxStyle(boxes.footerAddress)}>${esc(row.senderAddress || "C/o City Post Office, Sahiwal, Punjab")}</span>
+  </article>`;
 }
 
 function renderPreview() {
@@ -228,13 +260,21 @@ function renderPreview() {
     )
     .join(
       "",
-    )}</div><p class="status-line" role="status">${esc(statusMessage)}</p>`;
+    )}</div><p class="status-line" role="status">${esc(statusMessage)}</p>`.replace("monochrome", "black print · Garden Shop green accent");
 }
 
 function renderPrint() {
   const chosen = currentOrders();
   const pages = pagesForCount(chosen.length, startPosition);
-  return `<section class="section-heading"><div><p class="kicker">OUTPUT / ACTUAL SIZE</p><h1>Ready for the printer.</h1><p>${chosen.length} labels · ${pages} A4 page${pages === 1 ? "" : "s"} · unused slots stay blank</p></div><div class="output-badge">100%<small>PHYSICAL SCALE</small></div></section><section class="print-panel"><div class="print-summary"><h2>Print setup</h2><p>Use A4 portrait and Actual size / 100% in the printer dialog. Turn off browser headers and footers.</p><label>Start at position<select id="printStart">${Array.from({ length: 18 }, (_, i) => `<option value="${i + 1}" ${startPosition === i + 1 ? "selected" : ""}>Label ${i + 1}</option>`).join("")}</select></label><label>Number of labels<input id="countLimit" type="number" min="0" max="${chosen.length}" value="${countLimit || chosen.length}" aria-describedby="countHelp"></label><small id="countHelp">Set to ${chosen.length} to print the full selection.</small><div class="print-actions"><button class="button primary" id="printNow">Print ${chosen.length} labels</button><button class="button secondary" id="savePdf">Download PDF</button><button class="button ghost" id="printOne" ${activeLabel < 0 ? "disabled" : ""}>Print individual</button></div><label class="confirm-print"><input id="confirmPrinted" type="checkbox"> I confirm the print job completed on the printer.</label></div><div class="print-notice"><b>Print requests are not print proof.</b><p>Browser print is logged as a request. Only the separate confirmation above records staff-confirmed completion; neither signal comes from printer telemetry.</p><p>Check one test sheet with a ruler before using pre-cut stock. Physical dimensions depend on printer and driver.</p></div></section><p class="status-line" role="status">${esc(statusMessage)}</p>`;
+  const invalidPhones = chosen.some(({ row }) => !normalizePakistaniPhone(row.phone));
+  return `<section class="section-heading"><div><p class="kicker">OUTPUT / ACTUAL SIZE</p><h1>Ready for the printer.</h1><p>${chosen.length} labels · ${pages} A4 page${pages === 1 ? "" : "s"} · unused slots stay blank</p></div><div class="output-badge">100%<small>PHYSICAL SCALE</small></div></section>
+    <section class="print-panel"><div class="print-summary"><h2>Print setup</h2><p>Use A4 portrait and Actual size / 100% in the printer dialog. Turn off browser headers and footers.</p>
+    ${invalidPhones ? '<p class="mapping-warning" role="alert">Correct invalid contact numbers before printing or exporting.</p>' : ""}
+    <label>Start at position<select id="printStart">${Array.from({ length: 18 }, (_, i) => `<option value="${i + 1}" ${startPosition === i + 1 ? "selected" : ""}>Label ${i + 1}</option>`).join("")}</select></label>
+    <label>Number of labels<input id="countLimit" type="number" min="0" max="${chosen.length}" value="${countLimit || chosen.length}" aria-describedby="countHelp"></label><small id="countHelp">Set to ${chosen.length} to print the full selection.</small>
+    <div class="print-actions"><button class="button primary" id="printNow" ${invalidPhones ? "disabled" : ""}>Print ${chosen.length} labels</button><button class="button secondary" id="savePdf" ${invalidPhones ? "disabled" : ""}>Download PDF</button><button class="button ghost" id="printOne" ${activeLabel < 0 || !normalizePakistaniPhone(rows[activeLabel]?.phone ?? "") ? "disabled" : ""}>Print individual</button></div>
+    <label class="confirm-print"><input id="confirmPrinted" type="checkbox"> I confirm the print job completed on the printer.</label></div>
+    <div class="print-notice"><b>Print requests are not print proof.</b><p>Browser print is logged as a request. Only the separate confirmation above records staff-confirmed completion; neither signal comes from printer telemetry.</p><p>Check one test sheet with a ruler before using pre-cut stock. Physical dimensions depend on printer and driver.</p></div></section><p class="status-line" role="status">${esc(statusMessage)}</p>`;
 }
 
 function renderAdmin() {
@@ -277,18 +317,7 @@ function drawBarcodes() {
       if (!tracking) return;
       try {
         await renderBarcode(canvas, tracking);
-        if (canvas.width > canvas.parentElement!.clientWidth) {
-          flagLabel(canvas.closest<HTMLElement>(".label"), index, "Tracking barcode exceeds the available scan-safe box.");
-          canvas.style.visibility = "hidden";
-          const group = canvas.parentElement!;
-          group.classList.add("barcode-overflow");
-          if (!group.querySelector(".barcode-warning"))
-            group.insertAdjacentHTML("beforeend", '<span class="barcode-warning">BARCODE TOO WIDE · EDIT</span>');
-        } else {
-          canvas.style.visibility = "visible";
-          canvas.parentElement?.classList.remove("barcode-overflow");
-          canvas.parentElement?.querySelector(".barcode-warning")?.remove();
-        }
+        if (!sizeBarcode(canvas, index)) return;
         void verifyBarcode(canvas, tracking).then(() => {
           canvas.dataset.verified = "true";
         }).catch(() => {
@@ -315,6 +344,26 @@ async function renderBarcode(canvas: HTMLCanvasElement, tracking: string) {
     height: CODE128_LAYOUT.heightPx,
     width: CODE128_LAYOUT.moduleWidthPx,
   });
+}
+
+function sizeBarcode(canvas: HTMLCanvasElement, index: number): boolean {
+  const box = labelBoxes().barcode;
+  const pxPerMm = 96 / 25.4;
+  const scale = Math.min(1, box.width * pxPerMm / canvas.width, box.height * pxPerMm / canvas.height);
+  const moduleMm = scale * CODE128_LAYOUT.moduleWidthPx / pxPerMm;
+  if (moduleMm < CODE128_LAYOUT.minimumModuleMm) {
+    const label = canvas.closest<HTMLElement>(".label");
+    canvas.style.visibility = "hidden";
+    flagLabel(label, index, "Tracking barcode is too dense for the scan-safe width; edit this tracking value.");
+    if (label && !label.querySelector(".barcode-warning"))
+      label.insertAdjacentHTML("beforeend", `<span class="barcode-warning layout-box" ${boxStyle(box)}>BARCODE TOO DENSE · EDIT</span>`);
+    return false;
+  }
+  canvas.style.visibility = "visible";
+  canvas.style.setProperty("--bar-width", `${canvas.width * scale / pxPerMm}mm`);
+  canvas.style.setProperty("--bar-height", `${canvas.height * scale / pxPerMm}mm`);
+  canvas.closest<HTMLElement>(".label")?.querySelector(".barcode-warning")?.remove();
+  return true;
 }
 
 async function renderBarcodeSvg(tracking: string) {
@@ -348,50 +397,6 @@ async function renderBarcodeSvg(tracking: string) {
   return { width, height, moduleWidth: CODE128_LAYOUT.moduleWidthPx, bars };
 }
 
-function fitPdfText(
-  value: string,
-  widthMm: number,
-  heightMm: number,
-  maxFontPx: number,
-  minFontPx: number,
-  font: { widthOfTextAtSize(text: string, size: number): number },
-  lineHeight = 1,
-) {
-  const widthPt = widthMm * MM_TO_POINTS - 0.8;
-  const heightPt = heightMm * MM_TO_POINTS - 0.4;
-  const words = value.trim().split(/\s+/u).filter(Boolean);
-  const wrap = (fontSize: number) => {
-    const sizePt = fontSize * 0.75;
-    const lines: string[] = [];
-    let line = "";
-    for (const word of words) {
-      const candidate = line ? `${line} ${word}` : word;
-      if (font.widthOfTextAtSize(candidate, sizePt) <= widthPt) {
-        line = candidate;
-        continue;
-      }
-      if (line) lines.push(line);
-      line = "";
-      for (const character of [...word]) {
-        const piece = line + character;
-        if (font.widthOfTextAtSize(piece, sizePt) > widthPt && line) {
-          lines.push(line);
-          line = character;
-        } else line = piece;
-      }
-    }
-    if (line) lines.push(line);
-    return lines;
-  };
-  for (let fontSize = maxFontPx; fontSize >= minFontPx; fontSize -= 0.25) {
-    const lines = wrap(fontSize);
-    if (lines.length * fontSize * 0.75 * lineHeight <= heightPt)
-      return { fontSize, lines, fits: true };
-  }
-  const lines = wrap(minFontPx);
-  return { fontSize: minFontPx, lines, fits: lines.length * minFontPx * 0.75 * lineHeight <= heightPt };
-}
-
 function measureLabels(root: ParentNode = document, canvasDocument: Document = document) {
   const context = canvasDocument.createElement("canvas").getContext("2d");
   if (!context) return;
@@ -402,40 +407,66 @@ function measureLabels(root: ParentNode = document, canvasDocument: Document = d
         row = rows[rowIndex];
       label.classList.toggle("has-warning", Boolean(row?.warnings.length));
       let overflow = false;
-      const fit = (selector: string, text: string, max: number, min: number, bold = false) => {
+      const setBox = (selector: string, box: { x: number; y: number; width: number; height: number }) => {
+        const element = label.querySelector<HTMLElement>(selector);
+        if (!element) return;
+        element.style.setProperty("--box-x", `${box.x}mm`);
+        element.style.setProperty("--box-y", `${box.y}mm`);
+        element.style.setProperty("--box-width", `${box.width}mm`);
+        element.style.setProperty("--box-height", `${box.height}mm`);
+      };
+      const recipient = recipientBoxes(context, row?.name ?? "");
+      setBox(".receiver-name", recipient.name);
+      setBox(".address-text", recipient.address);
+      const destination = destinationBoxes(context, row?.city ?? "", row?.province ?? "");
+      const destinationElement = label.querySelector<HTMLElement>(".destination");
+      destinationElement?.style.setProperty("--city-row-height", `${destination.city.height}mm`);
+      destinationElement?.style.setProperty("--province-row-height", `${destination.province.height}mm`);
+      destinationElement?.classList.toggle("long-province", destination.province.height > 3.1);
+      destinationElement?.classList.toggle("short-province", destination.province.height < 3.1);
+      const zoomScale = label.closest(".sheet") ? zoom : 1;
+      const fit = (selector: string, text: string, max: number, min: number, bold = false, wrap = true) => {
         const element = label.querySelector<HTMLElement>(selector);
         if (!element || !text) return;
         const style = canvasDocument.defaultView?.getComputedStyle(element);
-        const reserved = selector === ".receiver-name" && row?.warnings.length ? 8 * (96 / 25.4) : 0;
+        const reserved = selector === ".city-text" ? 3.3 * (96 / 25.4) * zoomScale : 0;
         const width = element.clientWidth - (style ? parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) : 0) - reserved;
+        const height = element.clientHeight - (style ? parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) : 0);
         const lineHeight = style?.lineHeight && style.lineHeight !== "normal"
           ? parseFloat(style.lineHeight) / Math.max(1, parseFloat(style.fontSize))
           : 1.15;
-        const result = fitTextPx(context, text, width, element.clientHeight, max, min, bold, lineHeight);
+        const result = fitTextPx(context, text, width, height, max * zoomScale, min * zoomScale, bold, lineHeight, wrap);
         element.style.fontFamily = labelFontFamily(text);
         element.dir = usesArabicScript(text) ? "rtl" : "ltr";
+        element.style.whiteSpace = wrap ? "pre-line" : "nowrap";
+        element.textContent = result.lines.join("\n");
         element.classList.toggle("text-overflow", !result.fits);
         const placeholder = element.querySelector(".overflow-placeholder");
         if (!result.fits && !placeholder)
           element.insertAdjacentHTML("beforeend", '<span class="overflow-placeholder">TEXT TOO LONG · EDIT RECORD</span>');
         if (result.fits) {
-          placeholder?.remove();
+          element.querySelector(".overflow-placeholder")?.remove();
           element.style.fontSize = `${result.fontSize}px`;
         }
         if (!result.fits) overflow = true;
       };
-      fit(".order-id", row?.orderId || "ORDER ID NOT PROVIDED", 10.5, 8, true);
-      fit(".product-text", row?.product || "PRODUCT NOT PROVIDED", 9, 7);
-      fit(".cod-block span", "VPL COD", 8.5, 6.5, true);
-      fit(".cod-block strong", row?.cod ? `Rs ${row.cod}` : "Amount missing", 12, 8, true);
-      fit(".tracking-text", row?.tracking || "TRACKING NUMBER REQUIRED", 10, 7.5, true);
-      fit(".city-text", row?.city || "City missing", 13, 8.5, true);
-      fit(".province-text", row?.province || "Province missing", 10.5, 7.5, true);
-      fit(".receiver-name", row?.name || "Receiver name required", 15, 9.5, true);
-      fit(".address-text", row?.address || "Delivery address required", 14, 8.5);
-      fit(".landmark", `Near by: ${row?.landmark || "Not provided"}`, 10, 7);
-      fit(".contact", row?.phone || "Contact number required", 13, 9.5, true);
-      fit("footer", LABEL_FOOTER, 8, 6.5);
+      fit(".order-id strong", row?.orderId || "ORDER ID NOT PROVIDED", 11, 8, true, false);
+      fit(".product-text strong", row?.product || "PRODUCT NOT PROVIDED", 10, 7.5, true);
+      fit(".vpl-prefix", "VPL", 9, 7.5, true, false);
+      const vpl = formatVpl(row?.cod ?? "");
+      fit(".vpl-amount", vpl.replace(/^VPL\s*/u, ""), 20, 14.7, true, false);
+      fit(".tracking-caption", "TRACKING NUMBER", 7, 6, true, false);
+      fit(".tracking-text", row?.tracking || "TRACKING NUMBER REQUIRED", 15, 12, true, false);
+      fit(".city-text", row?.city || "City missing", 18, 12, true);
+      fit(".province-text", row?.province || "Province missing", 11, 8.5, true);
+      fit(".receiver-name", row?.name || "Receiver name required", 16, 12, true);
+      fit(".address-text", row?.address || "Delivery address required", 14, 11);
+      fit(".nearby-label", "Near by:", 9.5, 7.5, true, false);
+      fit(".landmark", row?.landmark || "Not provided", 9.5, 7.5);
+      fit(".phone-number", normalizePakistaniPhone(row?.phone ?? "") ?? "INVALID PHONE · EDIT", 16, 12, true, false);
+      fit(".footer-from", "From:", 12, 9, true, false);
+      fit(".footer-sender", row?.senderName || "Garden Shop", 14, 10, true, false);
+      fit(".footer-address", row?.senderAddress || "C/o City Post Office, Sahiwal, Punjab", 10, 7, false, false);
       label.classList.toggle("layout-overflow", overflow);
       if (overflow && row && !row.warnings.some((warning) => warning.startsWith("Text does not fit")))
         row.warnings.push("Text does not fit at minimum readable size; edit the record before printing.");
@@ -477,6 +508,36 @@ function preparePrintLayout(popup: Window) {
   }, { once: true });
   sharedStyles.addEventListener("error", () => popup.close(), { once: true });
   popup.document.head.append(sharedStyles);
+}
+
+function openPrintPopup(items: Array<{ row: Order; index: number }>, position: number) {
+  const popup = window.open("", "_blank");
+  if (!popup) return undefined;
+  const pages = pagesForCount(items.length, position);
+  const sheets = Array.from({ length: pages }, (_, pageNo) =>
+    `<main class="print-sheet ${pageNo < pages - 1 ? "page-break" : ""}">${Array.from({ length: 18 }, (_, slot) => {
+      const index = pageNo * 18 + slot - (position - 1);
+      return index >= 0 && items[index]
+        ? labelMarkup(items[index].row, items[index].index)
+        : '<div class="empty-label" aria-hidden="true"></div>';
+    }).join("")}</main>`,
+  ).join("");
+  popup.document.open();
+  popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Garden Shop labels</title><link rel="stylesheet" href="/label.css"><style>@page{size:A4 portrait;margin:0}*{box-sizing:border-box}html,body{margin:0;width:210mm;height:297mm;background:#fff}.print-sheet{width:210mm;height:297mm;padding:8mm 5mm;display:grid;grid-template-columns:repeat(3,65mm);grid-template-rows:repeat(6,44mm);column-gap:2.5mm;row-gap:3mm;overflow:hidden}.page-break{break-after:page}.empty-label{width:65mm;height:44mm}@media screen{body{width:210mm;margin:12mm auto}}</style></head><body>${sheets}</body></html>`);
+  popup.addEventListener("load", async () => {
+    await Promise.all(
+      [...popup.document.querySelectorAll<HTMLCanvasElement>("canvas[data-barcode]")].map(async (canvas) => {
+        const item = items.find(({ index }) => index === Number(canvas.dataset.barcode));
+        if (item?.row.tracking) {
+          await renderBarcode(canvas, item.row.tracking);
+          sizeBarcode(canvas, item.index);
+        }
+      }),
+    );
+    preparePrintLayout(popup);
+  }, { once: true });
+  popup.document.close();
+  return popup;
 }
 
 async function parseFile(file: File) {
@@ -539,7 +600,7 @@ function templateCsv() {
       "",
       "Sample Customer",
       "",
-      "00001234567",
+       "03001234567",
       "Street and house number",
       "",
       "TRACK123456",
@@ -571,6 +632,7 @@ function download(blob: Blob, name: string) {
 
 async function makePdf(items = currentOrders(), position = startPosition) {
   if (!items.length) throw new Error("NO_LABELS_SELECTED");
+  if (items.some(({ row }) => !normalizePakistaniPhone(row.phone))) throw new Error("INVALID_PHONE_FOR_LABEL");
   const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica),
@@ -581,6 +643,7 @@ async function makePdf(items = currentOrders(), position = startPosition) {
   const measureCanvas = document.createElement("canvas");
   const measure = measureCanvas.getContext("2d");
   if (!measure) throw new Error("TEXT_MEASUREMENT_UNAVAILABLE");
+  await document.fonts.ready;
   const totalPages = pagesForCount(items.length, position);
   for (let pageNo = 0; pageNo < totalPages; pageNo += 1) {
     const pdfPage = addA4Page(pdf);
@@ -590,19 +653,7 @@ async function makePdf(items = currentOrders(), position = startPosition) {
       if (!item) continue;
       const geometry = labelBox(itemIndex, position),
         xMm = geometry.x,
-        yMm = geometry.y,
-        x = xMm * mm,
-        y = pageH - (yMm + LABEL_LAYOUT.heightMm) * mm;
-      const w = LABEL_LAYOUT.widthMm * mm,
-        h = LABEL_LAYOUT.heightMm * mm;
-      pdfPage.drawRectangle({
-        x,
-        y,
-        width: w,
-        height: h,
-        borderColor: rgb(0.15, 0.15, 0.15),
-        borderWidth: 0.45,
-      });
+        yMm = geometry.y;
       const row = item.row;
       const drawBoxText = async (
         text: string,
@@ -610,20 +661,21 @@ async function makePdf(items = currentOrders(), position = startPosition) {
         maxFont: number,
         minFont: number,
         isBold = false,
+        color = rgb(0, 0, 0),
+        align: "left" | "center" | "right" = "left",
+        lineHeight = 1,
+        wrap = true,
       ) => {
-        const lineHeight = 1;
-        const fit = usesComplexScript(text)
-          ? fitTextMm(measure, text, box.width, box.height, maxFont, minFont, isBold, lineHeight)
-          : fitPdfText(text, box.width, box.height, maxFont, minFont, isBold ? bold : font, lineHeight);
+        const fit = fitTextMm(measure, text, box.width, box.height, maxFont, minFont, isBold, lineHeight, wrap);
         if (!fit.fits) {
-          row.warnings.push("Text does not fit at minimum readable size; edit this record before printing.");
+          if (!row.warnings.some((warning) => warning.startsWith("Text does not fit"))) row.warnings.push("Text does not fit at minimum readable size; edit this record before printing.");
           pdfPage.drawText("EDIT REQUIRED", {
-            x: (xMm + box.x) * mm,
+            x: (xMm + box.x + 0.3) * mm,
             y: pageH - (yMm + box.y + Math.min(box.height, 2.1)) * mm,
             size: 4.2,
             font: bold,
-            maxWidth: Math.max(2, box.width * mm),
-            color: rgb(0, 0, 0),
+            maxWidth: Math.max(2, (box.width - 0.6) * mm),
+            color,
           });
           return;
         }
@@ -642,10 +694,11 @@ async function makePdf(items = currentOrders(), position = startPosition) {
           ctx.font = `${isBold ? "700 " : "400 "}${fit.fontSize}px ${labelFontFamily(text)}`;
           const rtl = usesArabicScript(text);
           ctx.direction = rtl ? "rtl" : "ltr";
-          ctx.textAlign = rtl ? "right" : "left";
+          ctx.textAlign = rtl ? "right" : align;
           ctx.textBaseline = "top";
           fit.lines.forEach((lineText, lineIndex) => {
-          ctx.fillText(lineText, rtl ? widthPx : 0, lineIndex * fit.fontSize * lineHeight, widthPx);
+            const left = align === "center" ? widthPx / 2 : align === "right" || rtl ? widthPx : 0;
+            ctx.fillText(lineText, left, lineIndex * fit.fontSize * lineHeight, widthPx);
           });
           const image = await pdf.embedPng(canvas.toDataURL("image/png"));
           pdfPage.drawImage(image, {
@@ -659,61 +712,90 @@ async function makePdf(items = currentOrders(), position = startPosition) {
         const size = fit.fontSize * 0.75;
         const lineHeightMm = (fit.fontSize * lineHeight) / (96 / 25.4);
         fit.lines.forEach((lineText, lineIndex) => {
-          const baselineMm = box.y + (lineIndex + 0.9) * lineHeightMm;
+          const baselineMm = box.y + (lineIndex + 0.86) * lineHeightMm;
+          const textWidth = (isBold ? bold : font).widthOfTextAtSize(lineText, size);
+          const boxWidth = box.width * mm;
+          const left = align === "center" ? (boxWidth - textWidth) / 2 : align === "right" ? boxWidth - textWidth : 0;
           pdfPage.drawText(lineText, {
-            x: (xMm + box.x) * mm,
+            x: (xMm + box.x) * mm + Math.max(0, left),
             y: pageH - (yMm + baselineMm) * mm,
             size,
             font: isBold ? bold : font,
-            maxWidth: Math.max(1, box.width * mm - 0.8),
-            color: rgb(0, 0, 0),
+            maxWidth: Math.max(1, boxWidth - Math.max(0, left)),
+            color,
           });
         });
       };
-      const drawRule = (x1Mm: number, y1Mm: number, x2Mm: number, y2Mm: number, thickness = 0.55) =>
-        pdfPage.drawLine({
-          start: { x: (xMm + x1Mm) * mm, y: pageH - (yMm + y1Mm) * mm },
-          end: { x: (xMm + x2Mm) * mm, y: pageH - (yMm + y2Mm) * mm },
-          thickness,
-          color: rgb(0, 0, 0),
-        });
-      drawRule(boxes.top.x, boxes.top.y + boxes.top.height, boxes.top.x + boxes.top.width, boxes.top.y + boxes.top.height);
-      drawRule(boxes.cod.x, boxes.top.y, boxes.cod.x, boxes.top.y + boxes.top.height, 0.8);
-      drawRule(boxes.product.x, boxes.top.y, boxes.product.x, boxes.top.y + boxes.top.height, 0.8);
-      await drawBoxText(row.orderId || "ORDER ID NOT PROVIDED", boxes.orderId, 10.5, 8, true);
-      await drawBoxText(row.product || "PRODUCT NOT PROVIDED", boxes.product, 9, 7, true);
-      await drawBoxText(row.cod ? `VPL COD Rs ${row.cod}` : "VPL COD amount missing", boxes.cod, 12, 8, true);
-      drawRule(boxes.middle.x, boxes.middle.y + boxes.middle.height, boxes.middle.x + boxes.middle.width, boxes.middle.y + boxes.middle.height);
-      drawRule(boxes.destination.x, boxes.middle.y, boxes.destination.x, boxes.middle.y + boxes.middle.height, 0.8);
-      drawRule(boxes.content.x, boxes.footer.y, boxes.content.x + boxes.content.width, boxes.footer.y);
-      await drawBoxText(row.tracking || "TRACKING NUMBER REQUIRED", boxes.tracking, 10, 7.5, true);
-      await drawBoxText(row.city || "City missing", { ...boxes.destination, height: boxes.destination.height * 0.55 }, 13, 8.5, true);
-      await drawBoxText(row.province || "Province missing", { ...boxes.destination, y: boxes.destination.y + boxes.destination.height * 0.55, height: boxes.destination.height * 0.45 }, 10.5, 7.5, true);
-      pdfPage.drawRectangle({
-        x: (xMm + boxes.to.x) * mm,
-        y: pageH - (yMm + boxes.to.y + boxes.to.height) * mm,
-        width: boxes.to.width * mm,
-        height: boxes.to.height * mm,
-        borderColor: rgb(0, 0, 0),
-        borderWidth: 0.8,
-      });
-      await drawBoxText("TO:", { ...boxes.toHeading, width: boxes.toHeading.width - 8 }, 8, 6.5, true);
-      await drawBoxText(row.name || "Receiver name required", { ...boxes.name, width: boxes.name.width - 8 }, 15, 9.5, true);
-      await drawBoxText(row.address || "Delivery address required", boxes.address, 14, 8.5);
-      await drawBoxText(`Near by: ${row.landmark || "Not provided"}`, boxes.landmark, 10, 7);
-      await drawBoxText(row.phone || "Contact number required", boxes.contact, 13, 9.5, true);
-      await drawBoxText(LABEL_FOOTER, boxes.footer, 8, 6.5);
+      const fillRect = (box: { x: number; y: number; width: number; height: number }, color: ReturnType<typeof rgb>) =>
+        pdfPage.drawRectangle({ x: (xMm + box.x) * mm, y: pageH - (yMm + box.y + box.height) * mm, width: box.width * mm, height: box.height * mm, color });
+      const outline = (box: { x: number; y: number; width: number; height: number }, radius: number, stroke: number, color?: ReturnType<typeof rgb>) => {
+        const left = (xMm + box.x) * mm;
+        const top = pageH - (yMm + box.y) * mm;
+        const r = radius * mm;
+        const width = box.width * mm;
+        const height = box.height * mm;
+        pdfPage.drawSvgPath(`M ${r} 0 L ${width - r} 0 Q ${width} 0 ${width} ${r} L ${width} ${height - r} Q ${width} ${height} ${width - r} ${height} L ${r} ${height} Q 0 ${height} 0 ${height - r} L 0 ${r} Q 0 0 ${r} 0 Z`, { x: left, y: top, borderColor: rgb(0, 0, 0), borderWidth: stroke * mm, ...(color ? { color } : {}) });
+      };
+      const headerText = async (title: string, data: string, box: { x: number; y: number; width: number; height: number }, maxFont: number, wrapData = true, dataLineHeight = 1) => {
+        const strip = { x: box.x, y: box.y, width: box.width, height: 2 };
+        fillRect(strip, rgb(0.03, 0.03, 0.03));
+        pdfPage.drawRectangle({ x: (xMm + box.x) * mm, y: pageH - (yMm + box.y + box.height) * mm, width: box.width * mm, height: box.height * mm, borderColor: rgb(0, 0, 0), borderWidth: 0.2 * mm });
+        await drawBoxText(title, { ...strip, y: strip.y + 0.05, height: strip.height - 0.1 }, 6.2, 5.7, true, rgb(1, 1, 1), "left", 1, false);
+        await drawBoxText(data, { ...box, x: box.x + 0.45, y: box.y + 2, width: box.width - 0.8, height: box.height - 2.1 }, maxFont, 7.5, true, rgb(0, 0, 0), "left", dataLineHeight, wrapData);
+      };
+
+      outline(boxes.outline, 1, 0.2);
+      await headerText("Order ID", row.orderId || "ORDER ID NOT PROVIDED", boxes.orderId, 11, false);
+      await headerText("Product", row.product || "PRODUCT NOT PROVIDED", boxes.product, 10, true, 0.9);
+      outline(boxes.vpl, 1, 0.5);
+      const vpl = formatVpl(row.cod);
+      const vplAmount = vpl.replace(/^VPL\s*/u, "");
+      await drawBoxText("VPL", { ...boxes.vpl, x: boxes.vpl.x + 0.25, y: boxes.vpl.y + 0.25, width: 4.8, height: boxes.vpl.height - 0.5 }, 8, 7.5, true, rgb(0, 0, 0), "left", 1, false);
+      await drawBoxText(vplAmount, { ...boxes.vpl, x: boxes.vpl.x + 5.2, y: boxes.vpl.y + 0.25, width: boxes.vpl.width - 5.45, height: boxes.vpl.height - 0.5 }, 20, 14.7, true, rgb(0, 0, 0), "center", 0.95, false);
+
+      await drawBoxText("TRACKING NUMBER", boxes.trackingCaption, 7, 6, true, rgb(0, 0, 0), "center", 1, false);
+      await drawBoxText(row.tracking || "TRACKING NUMBER REQUIRED", boxes.tracking, 15, 12, true, rgb(0, 0, 0), "center", 1, false);
+      fillRect(boxes.trackingDivider, rgb(0, 0, 0));
+      const destination = destinationBoxes(measure, row.city || "City missing", row.province || "Province missing");
+      const pinWidth = 2.5 * mm;
+      const pinHeight = 2.8 * mm;
+      const pinX = (xMm + destination.city.x + 0.1) * mm;
+      const pinTop = pageH - (yMm + destination.city.y + (destination.city.height - 2.8) / 2) * mm;
+      pdfPage.drawSvgPath(`M ${pinWidth / 2} 0 C ${pinWidth * 0.18} 0 ${pinWidth * 0.03} ${pinHeight * 0.22} ${pinWidth * 0.03} ${pinHeight * 0.46} C ${pinWidth * 0.03} ${pinHeight * 1.02} ${pinWidth / 2} ${pinHeight} ${pinWidth / 2} ${pinHeight} C ${pinWidth / 2} ${pinHeight} ${pinWidth * 0.97} ${pinHeight * 1.02} ${pinWidth * 0.97} ${pinHeight * 0.46} C ${pinWidth * 0.97} ${pinHeight * 0.22} ${pinWidth * 0.82} 0 ${pinWidth / 2} 0 Z`, { x: pinX, y: pinTop, color: rgb(0, 0, 0) });
+      pdfPage.drawCircle({ x: pinX + pinWidth / 2, y: pinTop - pinHeight * 0.42, size: 0.42 * mm, color: rgb(1, 1, 1) });
+      await drawBoxText(row.city || "City missing", { ...destination.city, x: destination.city.x + 3.3, width: destination.city.width - 3.3 }, 18, 12, true, rgb(0, 0, 0), "center", 0.95);
+      outline(destination.province, 1.2, 0.2, rgb(0, 0, 0));
+      await drawBoxText(row.province || "Province missing", { ...destination.province, x: destination.province.x + 1.6, y: destination.province.y + 0.15, width: destination.province.width - 3.2, height: destination.province.height - 0.3 }, 11, 8.5, true, rgb(1, 1, 1), "center", destination.province.height > 3.1 ? 0.95 : 1);
+
+      outline(boxes.to, 1, 0.3);
+      const tagWidth = boxes.toTag.width * mm;
+      const tagHeight = boxes.toTag.height * mm;
+      pdfPage.drawSvgPath(`M 0 0 L ${tagWidth * 0.86} 0 L ${tagWidth} ${tagHeight / 2} L ${tagWidth * 0.86} ${tagHeight} L 0 ${tagHeight} Z`, { x: (xMm + boxes.toTag.x) * mm, y: pageH - (yMm + boxes.toTag.y) * mm, color: rgb(0.03, 0.03, 0.03) });
+      await drawBoxText("To:", boxes.toTag, 12, 10, true, rgb(1, 1, 1), "center");
+      const recipient = recipientBoxes(measure, row.name || "Receiver name required");
+      await drawBoxText(row.name || "Receiver name required", recipient.name, 16, 12, true, rgb(0, 0, 0), "left", 1);
+      await drawBoxText(row.address || "Delivery address required", recipient.address, 14, 11, false, rgb(0, 0, 0), "left", 1.08);
+      await drawBoxText("Near by:", boxes.nearbyLabel, 9.5, 7.5, true, rgb(0, 0, 0), "left", 1, false);
+      await drawBoxText(row.landmark || "Not provided", boxes.landmark, 9.5, 7.5);
+      fillRect(boxes.contactDivider, rgb(0, 0, 0));
+      pdfPage.drawSvgPath("M 0.4 0.4 C 0.8 0.1 1.3 0.3 1.6 0.7 L 2.1 1.5 C 2.3 1.8 2.1 2.1 1.8 2.4 L 1.4 2.8 C 2.1 3.9 3 4.8 4.1 5.4 L 4.5 5 C 4.8 4.7 5.1 4.6 5.4 4.8 L 6.2 5.3 C 6.6 5.6 6.8 6.1 6.5 6.5 C 6 7.2 5.2 7.2 4.4 6.9 C 2.1 6 0.9 4.7 0.1 2.6 C -0.2 1.8 -0.2 0.9 0.4 0.4 Z", { x: (xMm + boxes.contact.x + 0.2) * mm, y: pageH - (yMm + boxes.contact.y + 0.2) * mm, scale: 0.55 * mm, color: rgb(0, 0, 0) });
+      await drawBoxText(normalizePakistaniPhone(row.phone)!, { ...boxes.contact, x: boxes.contact.x + 4.5, width: boxes.contact.width - 4.5 }, 16, 12, true, rgb(0, 0, 0), "left", 1, false);
+      fillRect({ ...boxes.footer, height: 0.2 }, rgb(0, 0, 0));
+      fillRect(boxes.footerFrom, rgb(0.03, 0.03, 0.03));
+      await drawBoxText("From:", boxes.footerFrom, 12, 9, true, rgb(1, 1, 1), "center", 1, false);
+      await drawBoxText(row.senderName || "Garden Shop", boxes.footerSender, 14, 10, true, rgb(0.14, 0.38, 0.18), "left", 1, false);
+      fillRect(boxes.footerDivider, rgb(0, 0, 0));
+      await drawBoxText(row.senderAddress || "C/o City Post Office, Sahiwal, Punjab", boxes.footerAddress, 10, 7, false, rgb(0, 0, 0), "left", 1, false);
 
       if (row.tracking) {
         const barcode = await renderBarcodeSvg(row.tracking);
         const scale = Math.min(
           mm * boxes.barcode.width / barcode.width,
           mm * boxes.barcode.height / barcode.height,
-          0.75,
         );
-        if (scale / mm * barcode.moduleWidth < CODE128_LAYOUT.minimumModuleMm) {
-          row.warnings.push("Tracking barcode is too dense for this label; edit or use another layout.");
-          drawBoxText("BARCODE TOO WIDE · EDIT RECORD", boxes.barcode, 7, 5, true);
+        if (scale * barcode.moduleWidth * 25.4 / 72 < CODE128_LAYOUT.minimumModuleMm) {
+          if (!row.warnings.some((warning) => warning.startsWith("Tracking barcode is too dense"))) row.warnings.push("Tracking barcode is too dense for this label; edit or use another layout.");
+          await drawBoxText("BARCODE TOO WIDE · EDIT", boxes.barcode, 7, 5.5, true, rgb(0, 0, 0), "center");
         } else {
           const barcodeWidth = barcode.width * scale;
           const barcodeHeight = barcode.height * scale;
@@ -732,8 +814,8 @@ async function makePdf(items = currentOrders(), position = startPosition) {
       }
       if (row.warnings.length) {
         pdfPage.drawText("CHECK", {
-          x: (xMm + boxes.to.x + boxes.to.width - 9) * mm,
-          y: pageH - (yMm + boxes.to.y + 1.5) * mm,
+          x: (xMm + boxes.to.x + boxes.to.width - 8) * mm,
+          y: pageH - (yMm + boxes.to.y + 2) * mm,
           size: 4.2,
           font: bold,
           color: rgb(0, 0, 0),
@@ -901,7 +983,7 @@ function bind() {
       view = "review";
       page = 0;
       activeLabel = rows.findIndex((row) => row.tracking);
-      const failed = rows.filter((row) => !row.name || !row.phone || !row.address || !row.tracking).length;
+      const failed = rows.filter((row) => !row.name || !normalizePakistaniPhone(row.phone) || !row.address || !row.tracking).length;
       await logEvent("LABELS_GENERATED", {
         labels: rows.length - failed,
         warnings: rows.filter((row) => row.warnings.length).length,
@@ -996,7 +1078,12 @@ function bind() {
       render();
       return;
     }
-    const popup = window.open("", "_blank");
+    if (items.some(({ row }) => !normalizePakistaniPhone(row.phone))) {
+      statusMessage = "Correct invalid contact numbers before printing.";
+      render();
+      return;
+    }
+    const popup = openPrintPopup(items, startPosition);
     if (!popup) {
       statusMessage = "Allow pop-ups to print.";
       render();
@@ -1007,37 +1094,6 @@ function bind() {
       pages: pagesForCount(items.length, startPosition),
     });
     printRequested = true;
-    const printHtml = `<!doctype html><html><head><title>Garden Shop labels</title><style>@page{size:A4 portrait;margin:0}*{box-sizing:border-box}body{margin:0;font:7pt Arial}.print-sheet{width:210mm;height:297mm;padding:0;display:grid;grid-template-columns:repeat(3,65mm);grid-template-rows:repeat(6,44mm);column-gap:${(210 - 195) / 4}mm;row-gap:${(297 - 264) / 7}mm;padding:${(297 - 264) / 7}mm ${(210 - 195) / 4}mm}.label{width:65mm;height:44mm;border:.15mm solid #111;padding:1.2mm;display:flex;flex-direction:column;overflow:hidden;position:relative}.label-top{height:7mm;border-bottom:.2mm solid #111;display:flex;justify-content:space-between;gap:1mm;font-size:6pt}.order-product{display:flex;flex-direction:column;max-width:59%;overflow:hidden}.order-product>*{white-space:nowrap;overflow:hidden;text-overflow:clip}.destination{text-align:right;display:flex;flex-direction:column}.barcode-area{height:9mm;display:flex;flex-direction:column;align-items:center}.barcode-text{font-size:6pt;font-weight:bold}.barcode{width:90%;height:6mm;object-fit:fill}.recipient{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}.recipient>strong{font-size:8pt}.address-text{font-size:6.5pt;overflow-wrap:anywhere}.landmark,.contact{font-size:6pt}footer{height:3mm;font-size:4.2pt;white-space:nowrap;border-top:.1mm solid #555}@media print{html,body{width:210mm;height:297mm}.page-break{break-after:page}}</style></head><body>${Array.from(
-      { length: pagesForCount(items.length, startPosition) },
-      (_, p) =>
-        `<main class="print-sheet ${p < pagesForCount(items.length, startPosition) - 1 ? "page-break" : ""}">${Array.from(
-          { length: 18 },
-          (_, slot) => {
-            const i = p * 18 + slot - (startPosition - 1);
-            return i >= 0 && items[i]
-              ? labelMarkup(items[i].row, items[i].index)
-              : "<div></div>";
-          },
-        ).join("")}</main>`,
-    ).join("")}</body></html>`;
-    popup.document.open();
-    popup.document.write(printHtml);
-    popup.document.close();
-    popup.addEventListener(
-      "load",
-      async () => {
-        await Promise.all(
-          [...popup.document.querySelectorAll<HTMLCanvasElement>("canvas[data-barcode]")].map(async (canvas) => {
-            const row = items.find(
-              (item) => item.index === Number(canvas.dataset.barcode),
-            )?.row;
-            if (row?.tracking) await renderBarcode(canvas, row.tracking);
-          }),
-        );
-        preparePrintLayout(popup);
-      },
-      { once: true },
-    );
     await logEvent("LABELS_GENERATED", {
       labels: items.length,
       pages: pagesForCount(items.length, startPosition),
@@ -1046,7 +1102,13 @@ function bind() {
   document.querySelector("#savePdf")?.addEventListener("click", async () => {
     try {
       const items = currentOrders(),
-        blob = await makePdf(items);
+        invalidPhones = items.some(({ row }) => !normalizePakistaniPhone(row.phone));
+      if (invalidPhones) {
+        statusMessage = "Correct invalid contact numbers before exporting a PDF.";
+        render();
+        return;
+      }
+      const blob = await makePdf(items);
       download(blob, `garden-shop-labels-${batchId.slice(0, 8)}.pdf`);
       await logEvent("PDF_GENERATED", {
         labels: items.length,
@@ -1061,8 +1123,13 @@ function bind() {
   });
   document.querySelector("#printOne")?.addEventListener("click", async () => {
     if (activeLabel < 0) return;
-    const order = rows[activeLabel],
-      popup = window.open("", "_blank");
+    const order = rows[activeLabel];
+    if (!normalizePakistaniPhone(order.phone)) {
+      statusMessage = "Correct the invalid contact number before printing.";
+      render();
+      return;
+    }
+    const popup = openPrintPopup([{ row: order, index: activeLabel }], startPosition);
     if (!popup) {
       statusMessage = "Allow pop-ups to print.";
       render();
@@ -1073,24 +1140,6 @@ function bind() {
       pages: 1,
     });
     printRequested = true;
-    popup.document.open();
-    popup.document.write(
-      `<!doctype html><html><head><title>Garden Shop label</title><style>@page{size:A4 portrait;margin:0}*{box-sizing:border-box}body{margin:0;width:210mm;height:297mm;display:grid;place-items:center;font:8pt Arial}.label{width:65mm;height:44mm;border:.2mm solid #111;padding:1.4mm;display:flex;flex-direction:column;overflow:hidden;position:relative;color:#111}.label-top{height:8mm;border-bottom:.2mm solid #111;display:flex;justify-content:space-between;font-size:6pt}.order-product,.destination{display:flex;flex-direction:column}.destination{text-align:right}.barcode-area{height:10mm;display:flex;flex-direction:column;align-items:center}.barcode-text{font-weight:bold}.barcode{width:92%;height:7mm}.recipient{flex:1;overflow:hidden;display:flex;flex-direction:column}.recipient>strong{font-size:9pt}.address-text,.landmark,.contact{font-size:7pt;overflow-wrap:anywhere}footer{font-size:5pt;white-space:nowrap}</style></head><body>${labelMarkup(order, activeLabel)}</body></html>`,
-    );
-    popup.document.close();
-    popup.addEventListener(
-      "load",
-      async () => {
-        const canvas = popup.document.querySelector<HTMLCanvasElement>(
-          "canvas[data-barcode]",
-        );
-        if (canvas && order.tracking) {
-          await renderBarcode(canvas, order.tracking);
-        }
-        preparePrintLayout(popup);
-      },
-      { once: true },
-    );
   });
   document
     .querySelector("#confirmPrinted")
@@ -1144,17 +1193,28 @@ function editOrder(index: number) {
     for (const [key] of fields)
       order[key] = String(data.get(key) ?? "") as never;
     if (order.address !== previousAddress) order.sourceAddress = order.address;
+    const repeatedContact = safeContactRemoval(order.address, order.phone);
+    if (repeatedContact.removed) order.address = repeatedContact.address;
+    const normalizedPhone = normalizePakistaniPhone(order.phone);
+    if (normalizedPhone) order.phone = normalizedPhone;
     order.warnings = order.warnings.filter(
       (warning) =>
         !warning.startsWith("Duplicate") &&
         !warning.startsWith("Exact contact match") &&
+        !warning.startsWith("Contact number is invalid") &&
         !warning.startsWith("Receiver name") &&
         !warning.startsWith("Contact number") &&
         !warning.startsWith("Delivery address") &&
-        !warning.startsWith("Tracking number"),
+        !warning.startsWith("Tracking number") &&
+        !warning.startsWith("Text does not fit") &&
+        !warning.startsWith("Tracking barcode is too dense") &&
+        !warning.startsWith("Generated barcode"),
     );
     if (!order.name) order.warnings.push("Receiver name is required.");
     if (!order.phone) order.warnings.push("Contact number is missing.");
+    else if (!normalizedPhone) order.warnings.push("Contact number is invalid; enter a Pakistani mobile number with 11 digits.");
+    if (repeatedContact.removed)
+      order.warnings.push("Exact contact match removed from displayed address; original source is retained in the editor.");
     if (!order.address) order.warnings.push("Delivery address is required.");
     if (!order.tracking)
       order.warnings.push(

@@ -6,6 +6,8 @@ export const LABELS_PER_PAGE = 18;
 export const LABEL_WIDTH_MM = 65;
 export const LABEL_HEIGHT_MM = 44;
 export const A4 = { width: 210, height: 297 } as const;
+export const A4_LABEL_COLUMNS_MM = [5, 72.5, 140] as const;
+export const A4_LABEL_ROWS_MM = [8, 55, 102, 149, 196, 243] as const;
 export const MM_TO_POINTS = 72 / 25.4;
 export const A4_POINTS = {
   width: A4.width * MM_TO_POINTS,
@@ -69,6 +71,15 @@ export function safeContactRemoval(address: string, phone: string): { address: s
   return { address: cleaned, removed: true };
 }
 
+export function normalizePakistaniPhone(value: string): string | undefined {
+  const compact = value.trim().replace(/[\s().\-/–—,:;]/gu, "");
+  if (!/^\+?\d+$/u.test(compact)) return undefined;
+  if (/^03\d{9}$/u.test(compact)) return compact;
+  if (/^3\d{9}$/u.test(compact)) return `0${compact}`;
+  const international = /^(?:\+?92)(3\d{9})$/u.exec(compact);
+  return international ? `0${international[1]}` : undefined;
+}
+
 function textValue(value: unknown): string {
   return value === null || value === undefined ? "" : String(value).trim();
 }
@@ -88,11 +99,15 @@ export function normalizeRows(headers: string[], rows: unknown[][], mapping: Imp
       senderName: value("senderName") || "Garden Shop", senderAddress: value("senderAddress") || "C/o City Post Office, Sahiwal, Punjab", warnings: [],
     };
     if (!sourceIsCsv && order.phone && typeof cells[headerIndex.get(mapping.phone) ?? -1] === "number") order.warnings.push("Phone cell was numeric; verify leading zeros against the original source.");
-    const deduped = safeContactRemoval(order.address, order.phone);
+    const importedPhone = order.phone;
+    const deduped = safeContactRemoval(order.address, importedPhone);
     if (deduped.removed) {
       order.address = deduped.address;
       order.warnings.push("Exact contact match removed from displayed address; original source is retained in the editor.");
     }
+    const normalizedPhone = normalizePakistaniPhone(importedPhone);
+    if (normalizedPhone) order.phone = normalizedPhone;
+    else if (importedPhone) order.warnings.push("Contact number is invalid; enter a Pakistani mobile number with 11 digits.");
     if (!order.name) order.warnings.push("Receiver name is required.");
     if (!order.phone) order.warnings.push("Contact number is missing.");
     if (!order.address) order.warnings.push("Delivery address is required.");
@@ -103,7 +118,7 @@ export function normalizeRows(headers: string[], rows: unknown[][], mapping: Imp
   });
   const phones = new Map<string, number[]>(), tracks = new Map<string, number[]>();
   orders.forEach((order, index) => {
-    const phone = order.phone.replace(/\D/g, "");
+    const phone = normalizePakistaniPhone(order.phone) ?? order.phone.replace(/\D/g, "");
     const tracking = order.tracking.trim().toLocaleUpperCase();
     if (phone) phones.set(phone, [...(phones.get(phone) ?? []), index]);
     if (tracking) tracks.set(tracking, [...(tracks.get(tracking) ?? []), index]);
@@ -123,41 +138,48 @@ export function pagesForCount(count: number, startPosition = 1): number {
   return count === 0 ? 0 : Math.ceil((startPosition - 1 + count) / LABELS_PER_PAGE);
 }
 
-export function fitText(ctx: CanvasRenderingContext2D, value: string, width: number, height: number, options: { maxFont: number; minFont: number; lineHeight?: number; bold?: boolean; fontFamily?: string }): { fontSize: number; lines: string[]; fits: boolean } {
+export function fitText(ctx: CanvasRenderingContext2D, value: string, width: number, height: number, options: { maxFont: number; minFont: number; lineHeight?: number; bold?: boolean; fontFamily?: string; noWrap?: boolean }): { fontSize: number; lines: string[]; fits: boolean } {
   const words = value.trim().split(/\s+/).filter(Boolean);
-  for (let size = options.maxFont; size >= options.minFont; size -= 0.25) {
-    ctx.font = `${options.bold ? "700 " : ""}${size}px ${options.fontFamily ?? "Arial"}`;
+  const lineHeight = options.lineHeight ?? 1.15;
+  if (options.noWrap) {
+    for (let size = options.maxFont; size >= options.minFont; size -= 0.25) {
+      ctx.font = `${options.bold ? "900 " : ""}${size}px ${options.fontFamily ?? "Arial"}`;
+      if (ctx.measureText(value).width <= width && size * lineHeight <= height)
+        return { fontSize: size, lines: [value], fits: true };
+    }
+    return { fontSize: options.minFont, lines: [value], fits: false };
+  }
+  const wrap = (size: number) => {
+    ctx.font = `${options.bold ? "900 " : ""}${size}px ${options.fontFamily ?? "Arial"}`;
     const lines: string[] = [];
     let current = "";
     for (const word of words) {
       const candidate = current ? `${current} ${word}` : word;
-      if (ctx.measureText(candidate).width <= width) current = candidate;
-      else {
-        if (current) lines.push(current);
-        if (ctx.measureText(word).width > width) {
-          let piece = "";
-          for (const char of word) {
-            if (ctx.measureText(piece + char).width > width && piece) { lines.push(piece); piece = char; }
-            else piece += char;
-          }
-          current = piece;
-        } else current = word;
+      if (ctx.measureText(candidate).width <= width) {
+        current = candidate;
+        continue;
+      }
+      if (current) lines.push(current);
+      current = "";
+      const characters = typeof Intl.Segmenter === "function"
+        ? [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(word)].map((item) => item.segment)
+        : [...word];
+      for (const character of characters) {
+        if (ctx.measureText(current + character).width > width && current) {
+          lines.push(current);
+          current = character;
+        } else current += character;
       }
     }
     if (current) lines.push(current);
-    const lineHeight = (options.lineHeight ?? 1.15) * size;
-    if (lines.length * lineHeight <= height) return { fontSize: size, lines, fits: true };
+    return lines;
+  };
+  for (let size = options.maxFont; size >= options.minFont; size -= 0.25) {
+    const lines = wrap(size);
+    if (lines.length * lineHeight * size <= height) return { fontSize: size, lines, fits: true };
   }
-  ctx.font = `${options.bold ? "700 " : ""}${options.minFont}px ${options.fontFamily ?? "Arial"}`;
-  const lines: string[] = [];
-  let current = "";
-  for (const word of words) {
-    const candidate = current ? `${current} ${word}` : word;
-    if (ctx.measureText(candidate).width <= width) current = candidate;
-    else { if (current) lines.push(current); current = word; }
-  }
-  if (current) lines.push(current);
-  return { fontSize: options.minFont, lines, fits: lines.length * (options.lineHeight ?? 1.15) * options.minFont <= height };
+  const lines = wrap(options.minFont);
+  return { fontSize: options.minFont, lines, fits: lines.length * lineHeight * options.minFont <= height };
 }
 
 export function safeCsvCell(value: string): string {
@@ -170,7 +192,5 @@ export function labelBox(index: number, startPosition = 1): { x: number; y: numb
   const absolute = startPosition - 1 + index;
   const slot = absolute % LABELS_PER_PAGE;
   const col = slot % 3, row = Math.floor(slot / 3);
-  const gutterX = (A4.width - 3 * LABEL_WIDTH_MM) / 4;
-  const gutterY = (A4.height - 6 * LABEL_HEIGHT_MM) / 7;
-  return { x: gutterX + col * (LABEL_WIDTH_MM + gutterX), y: gutterY + row * (LABEL_HEIGHT_MM + gutterY), page: Math.floor(absolute / LABELS_PER_PAGE) + 1, slot };
+  return { x: A4_LABEL_COLUMNS_MM[col], y: A4_LABEL_ROWS_MM[row], page: Math.floor(absolute / LABELS_PER_PAGE) + 1, slot };
 }

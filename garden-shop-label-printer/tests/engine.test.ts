@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { PDFDocument } from "pdf-lib";
 import { zipSync } from "fflate";
 import { readSheet as readXlsxSheet } from "read-excel-file/node";
-import { A4, A4_POINTS, addA4Page, detectMapping, findAmbiguousMappings, fitText, labelBox, LABEL_HEIGHT_MM, LABELS_PER_PAGE, LABEL_WIDTH_MM, normalizeRows, pagesForCount, parseCsv, safeContactRemoval, safeCsvCell } from "../src/engine";
-import { LABEL_FOOTER, LABEL_LAYOUT, labelBoxes } from "../src/layout";
+import { A4, A4_LABEL_COLUMNS_MM, A4_LABEL_ROWS_MM, A4_POINTS, addA4Page, detectMapping, findAmbiguousMappings, fitText, labelBox, LABEL_HEIGHT_MM, LABELS_PER_PAGE, LABEL_WIDTH_MM, normalizePakistaniPhone, normalizeRows, pagesForCount, parseCsv, safeContactRemoval, safeCsvCell } from "../src/engine";
+import { LABEL_FOOTER, LABEL_LAYOUT, destinationBoxes, formatVpl, labelBoxes, recipientBoxes } from "../src/layout";
 import { restoreZeroFormattedCells } from "../src/xlsx";
 
 describe("local workbook and sheet engine", () => {
@@ -15,29 +15,50 @@ describe("local workbook and sheet engine", () => {
 
   it("fails malformed CSV and safely removes an exact contact match only", () => {
     expect(() => parseCsv('Name,Address\nA,"broken')).toThrow("CSV_UNCLOSED_QUOTE");
-    expect(safeContactRemoval("Street 4, 00001234567, Sahiwal", "00001234567")).toEqual({ address: "Street 4, Sahiwal", removed: true });
-    expect(safeContactRemoval("Street 4, 0000123456, Sahiwal", "00001234567").address).toBe("Street 4, 0000123456, Sahiwal");
+    expect(safeContactRemoval("Street 4, 03335154332, Sahiwal", "03335154332")).toEqual({ address: "Street 4, Sahiwal", removed: true });
+    expect(safeContactRemoval("Street 4, 0333515433, Sahiwal", "03335154332").address).toBe("Street 4, 0333515433, Sahiwal");
   });
 
   it("keeps the original source address when removing an exact displayed phone duplicate", () => {
     const headers = ["Name", "Cell #", "Address"];
-    const [order] = normalizeRows(headers, [["Sample", "00001234567", "Street 5, 00001234567, Sahiwal"]], detectMapping(headers), true);
+    const [order] = normalizeRows(headers, [["Sample", "03335154332", "Street 5, 03335154332, Sahiwal"]], detectMapping(headers), true);
     expect(order.address).toBe("Street 5, Sahiwal");
-    expect(order.sourceAddress).toBe("Street 5, 00001234567, Sahiwal");
+    expect(order.sourceAddress).toBe("Street 5, 03335154332, Sahiwal");
     expect(order.warnings.some((warning) => warning.startsWith("Exact contact match"))).toBe(true);
+  });
+
+  it("normalizes supported Pakistani mobile formats and rejects incomplete values", () => {
+    expect(normalizePakistaniPhone("3335154321")).toBe("03335154321");
+    expect(normalizePakistaniPhone("3359632440")).toBe("03359632440");
+    expect(normalizePakistaniPhone("3017598026")).toBe("03017598026");
+    expect(normalizePakistaniPhone("0333-515-4321")).toBe("03335154321");
+    expect(normalizePakistaniPhone("+92 (333) 515-4321")).toBe("03335154321");
+    expect(normalizePakistaniPhone("92 335 963 2440")).toBe("03359632440");
+    expect(normalizePakistaniPhone("03440000001")).toBe("03440000001");
+    expect(normalizePakistaniPhone("335963244")).toBeUndefined();
+    expect(normalizePakistaniPhone("0215550000")).toBeUndefined();
+    expect(normalizePakistaniPhone("03ABC123456")).toBeUndefined();
+  });
+
+  it("flags invalid imported phones and preserves them for correction without treating them as output", () => {
+    const headers = ["Name", "Cell #", "Address"];
+    const [order] = normalizeRows(headers, [["Synthetic Receiver", "335963244", "Synthetic Street"]], detectMapping(headers), true);
+    expect(order.phone).toBe("335963244");
+    expect(normalizePakistaniPhone(order.phone)).toBeUndefined();
+    expect(order.warnings).toContain("Contact number is invalid; enter a Pakistani mobile number with 11 digits.");
   });
 
   it("preserves phone values as text and never invents order IDs", () => {
     const headers = ["Sr. no", "Name", "Cell #", "Address", "Facebook Name", "COD", "Product"];
     const mapping = detectMapping(headers);
-    const [order] = normalizeRows(headers, [["1", "Sample", "00001234567", "Main Street", "FB-person", "1250", "Seeds"]], mapping, true);
-    expect(order.phone).toBe("00001234567");
+    const [order] = normalizeRows(headers, [["1", "Sample", "03335154321", "Main Street", "FB-person", "1250", "Seeds"]], mapping, true);
+    expect(order.phone).toBe("03335154321");
     expect(order.orderId).toBe("");
     expect(order.tracking).toBe("");
     expect(order.warnings).toContain("Order ID is missing; none was generated.");
     expect(order.warnings).toContain("Tracking number is missing; barcode cannot be generated.");
     const [numericPhone] = normalizeRows(headers, [["2", "Sample", 3001234567, "Main Street", "", "", "Seeds"]], mapping, false);
-    expect(numericPhone.phone).toBe("3001234567");
+    expect(numericPhone.phone).toBe("03001234567");
     expect(numericPhone.warnings).toContain("Phone cell was numeric; verify leading zeros against the original source.");
   });
 
@@ -49,7 +70,7 @@ describe("local workbook and sheet engine", () => {
       "xl/workbook.xml": xml('<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Orders" sheetId="1" r:id="rId1"/></sheets></workbook>'),
       "xl/_rels/workbook.xml.rels": xml('<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'),
       "xl/styles.xml": xml('<?xml version="1.0" encoding="UTF-8"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="00000000000"/></numFmts><fonts count="1"><font/></fonts><fills count="1"><fill/></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0"/></cellXfs></styleSheet>'),
-      "xl/worksheets/sheet1.xml": xml('<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>Order ID</t></is></c><c r="B1" t="inlineStr"><is><t>Name</t></is></c><c r="C1" t="inlineStr"><is><t>Cell #</t></is></c><c r="D1" t="inlineStr"><is><t>Address</t></is></c><c r="E1" t="inlineStr"><is><t>Tracking Number</t></is></c><c r="F1" t="inlineStr"><is><t>COD</t></is></c><c r="G1" t="inlineStr"><is><t>Product</t></is></c><c r="H1" t="inlineStr"><is><t>City</t></is></c><c r="I1" t="inlineStr"><is><t>Province</t></is></c></row><row r="2"><c r="A2" t="inlineStr"><is><t>GS-SYN-001</t></is></c><c r="B2" t="inlineStr"><is><t>Synthetic Receiver</t></is></c><c r="C2" s="1"><v>1234567</v></c><c r="D2" t="inlineStr"><is><t>Test Street 1</t></is></c><c r="E2" t="inlineStr"><is><t>TRACK-SYN-0001</t></is></c><c r="F2"><v>1250</v></c><c r="G2" t="inlineStr"><is><t>Seed Mix</t></is></c><c r="H2" t="inlineStr"><is><t>Sahiwal</t></is></c><c r="I2" t="inlineStr"><is><t>Punjab</t></is></c></row></sheetData></worksheet>'),
+      "xl/worksheets/sheet1.xml": xml('<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>Order ID</t></is></c><c r="B1" t="inlineStr"><is><t>Name</t></is></c><c r="C1" t="inlineStr"><is><t>Cell #</t></is></c><c r="D1" t="inlineStr"><is><t>Address</t></is></c><c r="E1" t="inlineStr"><is><t>Tracking Number</t></is></c><c r="F1" t="inlineStr"><is><t>COD</t></is></c><c r="G1" t="inlineStr"><is><t>Product</t></is></c><c r="H1" t="inlineStr"><is><t>City</t></is></c><c r="I1" t="inlineStr"><is><t>Province</t></is></c></row><row r="2"><c r="A2" t="inlineStr"><is><t>GS-SYN-001</t></is></c><c r="B2" t="inlineStr"><is><t>Synthetic Receiver</t></is></c><c r="C2" s="1"><v>3335154332</v></c><c r="D2" t="inlineStr"><is><t>Test Street 1</t></is></c><c r="E2" t="inlineStr"><is><t>TRACK-SYN-0001</t></is></c><c r="F2"><v>1250</v></c><c r="G2" t="inlineStr"><is><t>Seed Mix</t></is></c><c r="H2" t="inlineStr"><is><t>Sahiwal</t></is></c><c r="I2" t="inlineStr"><is><t>Punjab</t></is></c></row></sheetData></worksheet>'),
     };
     const workbook = Buffer.from(zipSync(files));
     const matrix = await readXlsxSheet(workbook);
@@ -57,7 +78,7 @@ describe("local workbook and sheet engine", () => {
     const headers = (matrix.shift() ?? []).map((cell) => String(cell ?? ""));
     const orderRows = normalizeRows(headers, matrix, detectMapping(headers));
     expect(orderRows).toHaveLength(1);
-    expect(orderRows[0].phone).toBe("00001234567");
+    expect(orderRows[0].phone).toBe("03335154332");
     expect(orderRows[0].warnings).not.toContain("Phone cell was numeric; verify leading zeros against the original source.");
     expect(orderRows[0].tracking).toBe("TRACK-SYN-0001");
     expect(orderRows[0].cod).toBe("1250");
@@ -68,10 +89,10 @@ describe("local workbook and sheet engine", () => {
   it("uses Facebook Name as tracking only after explicit mapping", () => {
     const headers = ["Name", "Cell #", "Address", "Facebook Name"];
     const mapping = detectMapping(headers);
-    const [withoutSelection] = normalizeRows(headers, [["Sample", "00001234567", "Main Street", "track-abc"]], mapping, true);
+    const [withoutSelection] = normalizeRows(headers, [["Sample", "03335154321", "Main Street", "track-abc"]], mapping, true);
     expect(withoutSelection.tracking).toBe("");
     mapping.tracking = "Facebook Name";
-    const [withSelection] = normalizeRows(headers, [["Sample", "00001234567", "Main Street", "track-abc"]], mapping, true);
+    const [withSelection] = normalizeRows(headers, [["Sample", "03335154321", "Main Street", "track-abc"]], mapping, true);
     expect(withSelection.tracking).toBe("track-abc");
   });
 
@@ -84,7 +105,7 @@ describe("local workbook and sheet engine", () => {
   it("marks duplicate phone and tracking without removing rows", () => {
     const headers = ["Order ID", "Name", "Cell #", "Address", "Tracking Number", "COD", "Product"];
     const mapping = detectMapping(headers);
-    const imported = normalizeRows(headers, Array.from({ length: 19 }, (_, index) => [`ORD-${index}`, `Person ${index}`, index % 2 ? "00000000001" : "00000000002", `Street ${index}`, "TRACK-REPEAT", String(index * 100), `Product ${index}`]), mapping, true);
+    const imported = normalizeRows(headers, Array.from({ length: 19 }, (_, index) => [`ORD-${index}`, `Person ${index}`, index % 2 ? "03000000001" : "03000000002", `Street ${index}`, "TRACK-REPEAT", String(index * 100), `Product ${index}`]), mapping, true);
     expect(imported).toHaveLength(19);
     expect(imported.every((row) => row.warnings.includes("Duplicate tracking number."))).toBe(true);
   });
@@ -106,8 +127,11 @@ describe("local workbook and sheet engine", () => {
     expect(pagesForCount(100)).toBe(6);
     expect(pagesForCount(500)).toBe(28);
     expect(pagesForCount(18, 18)).toBe(2);
-    expect(labelBox(0)).toMatchObject({ page: 1, slot: 0, x: 3.75, y: 4.714285714285714 });
-    expect(labelBox(17)).toMatchObject({ page: 1, slot: 17 });
+    expect(labelBox(0)).toMatchObject({ page: 1, slot: 0, x: 5, y: 8 });
+    expect(labelBox(2)).toMatchObject({ x: 140, y: 8 });
+    expect(labelBox(17)).toMatchObject({ page: 1, slot: 17, x: 140, y: 243 });
+    expect(A4_LABEL_COLUMNS_MM).toEqual([5, 72.5, 140]);
+    expect(A4_LABEL_ROWS_MM).toEqual([8, 55, 102, 149, 196, 243]);
     expect(LABELS_PER_PAGE).toBe(18);
     expect(A4).toEqual({ width: 210, height: 297 });
     expect(LABEL_WIDTH_MM).toBe(65);
@@ -130,6 +154,14 @@ describe("local workbook and sheet engine", () => {
     expect(fitted.lines.join(" ").length).toBeGreaterThan(100);
   });
 
+  it("keeps single-line fields intact while fitting them to width", () => {
+    const ctx = { font: "", measureText: (text: string) => ({ width: text.length * 4 }) } as CanvasRenderingContext2D;
+    const fitted = fitText(ctx, "VPL 1250/-", 42, 20, { maxFont: 20, minFont: 13, noWrap: true });
+    expect(fitted.fits).toBe(true);
+    expect(fitted.lines).toEqual(["VPL 1250/-"]);
+    expect(fitted.fontSize).toBeLessThan(20);
+  });
+
   it("creates PDF pages with exact A4 media dimensions", async () => {
     const pdf = await PDFDocument.create();
     const page = addA4Page(pdf);
@@ -144,8 +176,10 @@ describe("local workbook and sheet engine", () => {
     expect(LABEL_LAYOUT.widthMm).toBe(65);
     expect(LABEL_LAYOUT.heightMm).toBe(44);
     expect(boxes.orderId.x).toBeLessThan(boxes.product.x);
-    expect(boxes.toHeading.height).toBe(LABEL_LAYOUT.toHeadingMm);
-    expect(boxes.name.y).toBeGreaterThan(boxes.toHeading.y + boxes.toHeading.height);
+    expect(boxes.to).toMatchObject({ x: 1.3, y: 19.2, width: 62.4, height: 18.1 });
+    expect(boxes.trackingCaption).toMatchObject({ x: 1.7, y: 8.5, width: 31.5, height: 1.7 });
+    expect(boxes.barcode).toMatchObject({ x: 1.7, y: 13.7, width: 31.5, height: 4.8 });
+    expect(boxes.vpl).toMatchObject({ x: 44.4, y: 1.2, width: 19.4, height: 6.2 });
     expect(boxes.tracking.y).toBeLessThan(boxes.barcode.y);
     expect(boxes.destination.x).toBeGreaterThan(boxes.barcode.x);
     for (const box of Object.values(boxes)) {
@@ -154,5 +188,28 @@ describe("local workbook and sheet engine", () => {
       expect(box.x + box.width).toBeLessThanOrEqual(LABEL_WIDTH_MM);
       expect(box.y + box.height).toBeLessThanOrEqual(LABEL_HEIGHT_MM);
     }
+  });
+
+  it("formats the VPL capsule and expands a receiver name only when needed", () => {
+    expect(formatVpl("550")).toBe("VPL 550/-");
+    expect(formatVpl("Rs 1,250/-")).toBe("VPL 1,250/-");
+    expect(formatVpl("VPL COD Rs 550")).toBe("VPL 550/-");
+    expect(formatVpl("")).toBe("VPL AMOUNT NEEDED");
+    const ctx = { font: "", measureText: (text: string) => ({ width: text.length * 9 }) } as CanvasRenderingContext2D;
+    const boxes = recipientBoxes(ctx, "A long synthetic receiver name that wraps");
+    expect(boxes.name.height).toBeGreaterThan(LABEL_LAYOUT.name.height);
+    expect(boxes.address.y).toBeGreaterThan(boxes.name.y + boxes.name.height);
+    expect(boxes.address.y + boxes.address.height).toBeCloseTo(32.6);
+  });
+
+  it("rebalances the destination city and province rows for long names", () => {
+    const ctx = { font: "", measureText: (text: string) => ({ width: text.length * 9 }) } as CanvasRenderingContext2D;
+    const provinceLong = destinationBoxes(ctx, "Nowshera", "Khyber Pakhtunkhwa (KPK)");
+    expect(provinceLong.city.height).toBeLessThan(LABEL_LAYOUT.city.height);
+    expect(provinceLong.province.height).toBeGreaterThan(LABEL_LAYOUT.province.height);
+    expect(provinceLong.province.y + provinceLong.province.height).toBeCloseTo(18.2);
+    const cityLong = destinationBoxes(ctx, "A long destination city", "Punjab");
+    expect(cityLong.city.height).toBeGreaterThan(LABEL_LAYOUT.city.height);
+    expect(cityLong.province.height).toBeLessThan(LABEL_LAYOUT.province.height);
   });
 });

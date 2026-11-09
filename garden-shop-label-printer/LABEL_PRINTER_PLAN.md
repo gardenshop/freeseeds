@@ -12,22 +12,24 @@ The repository-wide architecture discovery and full implementation history remai
 
 ## Required Final Label
 
-- A4 portrait 210 × 297 mm; 3 columns × 6 rows; label 65 × 44 mm.
-- Top row: Order ID and Product in one ruled block; VPL COD amount aligned right.
-- Middle row: tracking reference above Code 128 barcode, with destination city/province prominent alongside.
-- `TO` bordered area: bold receiver name, complete measured/wrapped address, `Near by:` landmark line, bold/prominent contact number.
-- One-line footer exactly: `From: Garden Shop | C/o City Post Office, Sahiwal, Punjab`.
-- All screen, print and PDF positions/text derive from a common layout model. Use vector PDF text and vector barcode bars where supported. Flag minimum-font overflow rather than clipping.
+- A4 portrait 210 × 297 mm; 3 columns × 6 rows; label 65 × 44 mm. Column x positions are 5, 72.5, 140 mm and row y positions 8, 55, 102, 149, 196, 243 mm; horizontal/vertical gaps are 2.5/3 mm.
+- Outer outline: x=0.4, y=0.4, w=64.2, h=43.2 mm; 1 mm corner radius; 0.20 mm black stroke.
+- Header: Order ID (1.2,1.2,19.8,6.2), Product (21,1.2,22.6,6.2), and thick rounded VPL capsule (44.4,1.2,19.4,6.2). VPL text is large `VPL amount/-`, not the old small `VPL COD Rs` line.
+- Tracking caption/value/barcode occupy y=8.5..18.5 mm. Tracking text box x=1.7 y=10.2 w=31.5 h=3.3; Code 128 box x=1.7 y=13.7 w=31.5 h=4.8 with 10X horizontal quiet zones. Divider x=34; destination starts x=34.7 and uses a large city plus white-on-black province badge.
+- `TO` frame (1.3,19.2,62.4,18.1 mm): arrow tag; receiver starts near x=9.5/y=19.7; full measured/wrapped address uses x=9.5..63/y=23..32.7; contact row y=32.8 onward keeps `Near by:` at left and a prominent bold mobile at right. Dynamic receiver/address rows never overlap contact/footer.
+- Footer region y=37.8..43.0 mm: black `From:` tag, bold Garden Shop green accent, vertical rule, and exact one-line `C/o City Post Office, Sahiwal, Punjab`.
+- All screen, print and PDF positions/text derive from shared millimeter boxes and the active-font fitting model. Urdu shaping uses Noto Naskh Arabic. Code 128 auto-switches B/C, preserves 10X quiet zones, uses a minimum 0.19 mm module, stays vector in PDF, and is checked by decoding the rendered canvas.
+- Normalize valid Pakistani mobile formats to exactly 11 digits beginning `03`; flag invalid/incomplete input, preserve it only for correction, never print it, and block PDF/print until corrected. Exact phone duplicates are removed only from the displayed address; source is retained.
 
 ## Audit Findings and Remaining Limits
 
 - Previous mismatched output layouts are replaced by one label HTML/CSS model for preview and browser print and a shared millimeter geometry model for vector PDF text/barcode bars.
 - An in-memory real `.xlsx` fixture exercises the browser parser and zero-padded numeric phone recovery. Browser smoke also imports a real synthetic XLSX and verifies a leading-zero contact.
-- Barcode tests generate and decode every synthetic value for 18/19/100/500 batches. Browser smoke decodes every barcode rendered on both the 3-label and 18-label sheets and checks shared page/label dimensions.
+- Barcode tests generate and decode exact synthetic tracking values for 18/19/100/500 batches. Browser smoke decodes all 500 labels across all sheets and compares preview/print field boxes against each other, in addition to fixed A4/label geometry and screenshot evidence.
 - Wrangler applied this project's migration to a dedicated staging D1 (ID recorded in `RULES.md`). A Super Admin-authenticated synthetic import/labels/PDF event round-tripped through the deployed Worker/D1; the report returned `Audit chain: VERIFIED`. Worker/JWT edge cases remain unit-tested with mocked JWKS/D1.
 - No authorized 15-order historical fixture was located/used. Do not inspect the protected root `images/` collection or use real customer fixtures without specific authorization.
 - No open label-printer-specific GitHub issue was returned by the read-only repository query.
-- The latest label reference image is not present as an attachment in the current task context. Written specifications were implemented; pixel-for-pixel comparison to the missing image remains unverified.
+- The owner supplied the approved premium reference for this repair; its hierarchy is visually checked against new preview and generated-PDF screenshots. Physical print/stock measurement is not represented by screenshot comparison.
 
 ## Verification Gates
 
@@ -39,11 +41,12 @@ The repository-wide architecture discovery and full implementation history remai
 
 ## Deployment State
 
-- Standalone MVP code/unit/browser tests/build: **100% locally verified**. Synthetic XLSX, phone zero-padding, 18/19/100/500 batches, all generated Code 128 values, Unicode PDF fallback and overflow warnings are covered.
-- Staging Pages/monitor/D1/Access: **100% for the Super Admin canary**. Remote import/labels/PDF audit events and hash-chain verification passed; no physical printer test was performed.
+- Standalone premium design/unit/browser/build: **100% software-verified**. Phone normalization, exact geometry, per-label fitting/overflow warnings, preview/print geometry, screenshot golden and all 500 synthetic Code 128 decodes pass.
+- Staging Pages/monitor/D1/Access: **100% for the Super Admin canary** at Pages version `434ea52f-780c-47c1-bf72-1ac013187006`. Fresh-session configured Page, synthetic 2-label PDF download and audit-chain verification passed. Physical printer/stock calibration remains **0% / NOT TESTED**.
 - Staff authorization: **0%**; no authorized staff roster/group exists. Current staging Access deliberately allows only the verified Super Admin.
-- Admin integration: **source implementation 100%, active Admin rollout 0%**. The card/redirect code and route tests are pushed; active Cloudflare Admin version `3e4b7c26...` is still at 100% and does not yet contain the tile. The Admin source baseline does not match the checkout, so promotion is blocked pending source reconciliation.
+- Admin integration: **not part of this design-repair task**. Existing card/redirect source remains separate and inactive; the active Cloudflare Admin version `3e4b7c26...` stays at 100% and was not changed.
 - Production release: **0%**. No Pages production hostname, Admin Worker traffic shift, or production order binding was changed.
+- Physical printer/stock: **0% / NOT TESTED**. No ruler measurement, scanner test on paper, or pre-cut label stock was used.
 - GitHub identity/repository and Wrangler account identity are recorded in `RULES.md`. The standalone branch is `origin/codex/garden-shop-label-printer-mvp`; recent commits include `16cc9d2` (Admin integration source), `04b155c` (Unicode PDF fix), and the staged follow-up documentation/tests. Existing unrelated dirty worktree files remain unstaged and unchanged.
-- Owner authorized an Admin-only staging canary; free-tier/account inventory, Pages deployment, D1 ID, Worker version and Access App ID are recorded in `RULES.md`. Staff email/group roster is unavailable, so staging is Super-Admin-only. The checked-out Admin template does not match the active Operations home/source; do not deploy it over active version `3e4b`. The Admin tile/redirect code is locally implemented/tested and pushed, but not live. This is the Admin launch blocker.
+- The older Admin card/redirect proposal and active baseline mismatch are historical context only; this repair explicitly made no Admin changes. Staff email/group roster is unavailable, so staging remains Super-Admin-only. No Admin tile is live, and the active version remains `3e4b...` pending a separate authorized Admin task.
 - Rollback: restore the last approved standalone Pages/Worker versions; preserve the dedicated audit D1. Do not modify existing Admin navigation unless the separate integration proposal is approved and passes review.
