@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { CODE128_LAYOUT } from "../src/layout";
 
 describe("Code 128 output verification", () => {
-  it.each([18, 19, 100, 500])("generates and decodes all %i tracking barcodes exactly", (count) => {
+  it.each([18, 19, 55, 100, 500])("generates and decodes all %i tracking barcodes exactly", (count) => {
     const hints = new Map([[DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.CODE_128]]]);
     const values = Array.from({ length: count }, (_, index) => `TRK${String(index + 1).padStart(10, "0")}`);
     for (const expected of values) {

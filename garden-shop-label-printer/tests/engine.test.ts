@@ -119,7 +119,7 @@ describe("local workbook and sheet engine", () => {
     expect(imported.every((row) => row.warnings.includes("Duplicate tracking number."))).toBe(true);
   });
 
-  it.each([18, 19, 100, 500])("accounts for all %i synthetic import rows", (count) => {
+  it.each([18, 19, 55, 100, 500])("accounts for all %i synthetic import rows", (count) => {
     const headers = ["Order ID", "Name", "Cell #", "Address", "Tracking Number", "COD", "Product", "City", "Province", "Nearby Landmark"];
     const mapping = detectMapping(headers);
     const fixture = Array.from({ length: count }, (_, index) => [index % 3 ? `TEST-${index + 1}` : "", `Synthetic ${index + 1}`, index % 29 ? `0300${String(index).padStart(7, "0")}` : "", `Long road ${index}, house ${index + 1}`, `TRACK-${index + 1}`, String((index % 9) * 125), `Product ${index % 6}`, "Sahiwal", "Punjab", "Near landmark"]);
@@ -130,9 +130,10 @@ describe("local workbook and sheet engine", () => {
     expect(imported.filter((row) => row.warnings.includes("Contact number is missing.")).length).toBeGreaterThan(0);
   });
 
-  it("paginates 18, 19, 100, 500 and variable sheet starts", () => {
+  it("paginates 18, 19, 55, 100, 500 and variable sheet starts", () => {
     expect(pagesForCount(18)).toBe(1);
     expect(pagesForCount(19)).toBe(2);
+    expect(pagesForCount(55)).toBe(4);
     expect(pagesForCount(100)).toBe(6);
     expect(pagesForCount(500)).toBe(28);
     expect(pagesForCount(18, 18)).toBe(2);
