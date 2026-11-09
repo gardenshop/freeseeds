@@ -24,7 +24,7 @@
 
 ## Final geometry repair verification (2026-11-09)
 
-- The centered 1 mm grid, reordered label bands, shared preview/print/PDF fitting, multiline-address normalization, barcode safeguards, and synthetic evidence passed locally: 33 unit tests, build, and browser/PDF smoke with 500 barcode decodes and 28-page export.
+- The centered 1 mm grid, reordered label bands, shared preview/print/PDF fitting, multiline-address normalization, barcode safeguards, and synthetic evidence passed locally: 35 unit tests, build, and browser/PDF smoke with 500 barcode decodes and 28-page export. Barcode/import acceptance batches cover 18, 19, 55, 100, and 500 rows.
 - A fresh `npx --no-install wrangler whoami` check was attempted before any staging mutation, but the stored Cloudflare token was expired and refresh could not reach the Cloudflare auth service. No current account identity was confirmed, no Pages deployment was attempted, and no Admin/API/WhatsApp/COD/Meta/production resource was changed.
 - Prior Pages deployment `434ea52f-780c-47c1-bf72-1ac013187006` remains the last known deployed version; it is not evidence that this final geometry repair is live. Re-authenticate and repeat the account/dashboard identity gate before deploying this repair.
 
