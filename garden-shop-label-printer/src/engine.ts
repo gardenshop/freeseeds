@@ -1,7 +1,7 @@
 import type { PDFDocument, PDFPage } from "pdf-lib";
 import { FIELDS, type ImportMapping, type Order } from "./types";
 
-export const TEMPLATE_VERSION = "gfs-a4-18-v2";
+export const TEMPLATE_VERSION = "gfs-a4-18-v3";
 export const LABELS_PER_PAGE = 18;
 export const LABEL_WIDTH_MM = 65;
 export const LABEL_HEIGHT_MM = 44;
@@ -127,7 +127,7 @@ export function normalizeRows(headers: string[], rows: unknown[][], mapping: Imp
     if (!order.name) order.warnings.push("Receiver name is required.");
     if (!order.phone) order.warnings.push("Contact number is missing.");
     if (!order.address) order.warnings.push("Delivery address is required.");
-    if (!order.orderId) order.warnings.push("Source Order ID is required to reserve a printed reference.");
+    if (!order.orderId) order.warnings.push("Source Order ID is missing; the printed reference is local-only.");
     if (!order.tracking) order.warnings.push("Tracking number is missing; barcode cannot be generated.");
     if (!order.city || !order.province) order.warnings.push("Destination city or province is missing; confirm before printing.");
     if (!order.cod) order.warnings.push("VPL amount is required.");

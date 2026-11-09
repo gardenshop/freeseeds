@@ -124,6 +124,11 @@ try {
   const importedReferences = await page.locator(".sheet .printed-reference").allInnerTexts();
   assert.equal(new Set(importedReferences).size, importedReferences.length, "distinct source orders must have unique printed references");
   assert.equal(await page.locator(".sheet .contact-number").first().innerText(), "03330000000");
+  assert.equal(await page.locator(".sheet .tracking-value").first().innerText(), "TRK000001");
+  assert.ok(await page.locator(".sheet .tracking-value").first().evaluate((el) => el.getBoundingClientRect().bottom <= el.parentElement.querySelector(".barcode-canvas").getBoundingClientRect().top + 1), "tracking value must sit above the barcode");
+  assert.doesNotMatch(await page.locator(".sheet").innerText(), /TRACKING NUMBER/u);
+  assert.equal(await page.locator(".sheet .label-warning").count(), 0, "warnings must stay out of the label");
+  assert.equal(await page.locator(".sheet .printed-reference").first().evaluate((el) => getComputedStyle(el).fontWeight), "500");
   assert.equal(await page.locator(".sheet .contact-number").first().evaluate((el) => el.classList.contains("text-overflow")), false);
   assert.ok(await page.locator(".sheet .contact-number").first().evaluate((el) => el.scrollWidth <= el.clientWidth), "normalized mobile must fit completely in the contact row");
   assert.match(await page.locator(".sheet .receiver-name").first().innerText(), /مصنوعی/);
@@ -248,7 +253,7 @@ try {
   assert.doesNotMatch(samplePdf.text, /GS-TEST-001/);
   assert.match(samplePdf.text, /VPL/);
   assert.match(samplePdf.text, /1250\/-/);
-  assert.doesNotMatch(samplePdf.text, /TRK000001/);
+  assert.match(samplePdf.text, /TRK000001/);
   assert.match(samplePdf.text, /Near by:/);
   assert.match(samplePdf.text, /To:/);
   assert.match(samplePdf.text, /C\/o City Post Office, Sahiwal/);
@@ -351,14 +356,19 @@ try {
 
   await page.locator("#newBatch").click();
   const overlongAddress = Array.from({ length: 40 }, (_, index) => `Synthetic address segment ${String(index + 1).padStart(2, "0")}`).join("\r\n");
-  const overflowCsv = [headers, ["SYN-OVERFLOW-001", "Synthetic Receiver Overflow", "03300000019", overlongAddress, "TRK001", "550", "Synthetic Seed Pack", "Sahiwal", "Punjab", "Synthetic Park"]]
+  const overflowCsv = [headers,
+    ["SYN-OVERFLOW-001", "Synthetic Receiver Overflow", "03300000019", overlongAddress, "TRK001", "550", "Synthetic Seed Pack", "Sahiwal", "Punjab", "Synthetic Park"],
+    ["", "Synthetic Receiver Optional", "03300000020", "House 2, Test Street", "TRK002", "550", "", "Sahiwal", "Punjab", ""],
+  ]
     .map((row) => row.map(quote).join(",")).join("\r\n");
   await page.locator("#workbook").setInputFiles({ name: "synthetic-overlong.csv", mimeType: "text/csv", buffer: Buffer.from(overflowCsv) });
   await page.locator("#applyMapping").click();
   await page.getByText("Review every parcel.").waitFor({ timeout: 30000 });
   await page.locator('[data-view="preview"]').first().click();
   await page.waitForFunction(() => document.querySelector(".sheet canvas[data-barcode]")?.dataset.verified === "true", { timeout: 30000 });
-  assert.ok(await page.locator('.label[data-label-index="0"] .address-text .overflow-placeholder').count() > 0);
+  assert.equal(await page.locator('.sheet .label[data-label-index="0"] .overflow-placeholder').count(), 0);
+  assert.equal(await page.locator('.sheet .label[data-label-index="0"] .address-text').evaluate((el) => el.classList.contains("text-overflow")), true);
+  assert.match(await page.locator('.label[data-label-index="1"] .printed-reference').innerText(), /^FS-2611-\d{5}$/u);
   await page.screenshot({ path: join(evidence, "label-preview-overflow.png"), fullPage: true });
   const overflowLayout = await page.locator('.sheet .label[data-label-index="0"]').evaluate((label) => {
     const bottom = (selector) => label.querySelector(selector).getBoundingClientRect().bottom;
@@ -367,14 +377,21 @@ try {
   });
   assert.deepEqual(overflowLayout, { addressBeforeNearby: true, nearbyInsideTo: true, contactAboveTo: true, productBeforeFooter: true });
   await page.locator('[data-view="print"]').first().click();
-  assert.equal(await page.locator("#savePdf").isDisabled(), true, "overflowing source must be corrected rather than printed with a placeholder");
+  assert.equal(await page.locator("#savePdf").isDisabled(), false, "one bad row must not block a valid batch");
+  assert.match(await page.locator("body").innerText(), /1 selected label will be excluded/);
+  const mixedPath = join(evidence, "synthetic-overflow-filtered.pdf");
+  await saveGeneratedPdf(page, mixedPath);
+  const mixedPdf = await loadPdf(mixedPath, "pdf-overflow-filtered.png");
+  assert.equal(mixedPdf.pageCount, 1);
+  assert.doesNotMatch(mixedPdf.text, /TRK001/u);
+  assert.match(mixedPdf.text, /TRK002/u);
   await page.locator('[data-view="review"]').first().click();
   await page.locator('[data-edit="0"]').click();
   await page.locator("#restoreSourceAddress").click();
   assert.equal(await page.locator('.edit-form [name="address"]').inputValue(), overlongAddress.replace(/\r\n/g, "\n"));
   await page.locator(".edit-form [data-cancel]").click();
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ geometry, printGeometry, decodedBarcodeCounts: [3, 18, decoded500], samplePdfPages: samplePdf.pageCount, batch500PdfPages: batchPdf.getPageCount(), overflowLayout, browserErrors: errors, evidence: ["test-evidence/approved-label-layout.png", "test-evidence/label-preview-synthetic.png", "test-evidence/label-preview-500-v2.png", "test-evidence/label-preview-overflow.png", "test-evidence/label-preview-mobile.png", "test-evidence/browser-print-sheet.png", "test-evidence/pdf-sample-page.png", "test-evidence/pdf-500-first-page.png"] }, null, 2));
+  console.log(JSON.stringify({ geometry, printGeometry, decodedBarcodeCounts: [3, 18, decoded500], samplePdfPages: samplePdf.pageCount, batch500PdfPages: batchPdf.getPageCount(), overflowLayout, browserErrors: errors, evidence: ["test-evidence/approved-label-layout.png", "test-evidence/label-preview-synthetic.png", "test-evidence/label-preview-500-v2.png", "test-evidence/label-preview-overflow.png", "test-evidence/label-preview-mobile.png", "test-evidence/browser-print-sheet.png", "test-evidence/pdf-sample-page.png", "test-evidence/pdf-500-first-page.png", "test-evidence/pdf-overflow-filtered.png"] }, null, 2));
 } finally {
   await browser?.close();
   server.kill();

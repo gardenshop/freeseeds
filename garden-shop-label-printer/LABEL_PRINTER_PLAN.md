@@ -12,6 +12,8 @@ The repository-wide architecture discovery and full implementation history remai
 
 ## Required Final Label
 
+V3 supersedes the earlier compact-band notes below: tracking text is now above the barcode, the Order/contact block is y=17.6..22.4, the TO frame is y=22.7..36.7, and impossible rows are excluded individually while valid rows continue.
+
 - A4 portrait 210 × 297 mm; 3 columns × 6 rows; label 65 × 44 mm. Column x positions are 6.5, 72.5, 138.5 mm and row y positions 14, 59, 104, 149, 194, 239 mm; horizontal/vertical gaps are exactly 1/1 mm and the grid is centered.
 - Outer outline: x=0.4, y=0.4, w=64.2, h=43.2 mm; 1 mm corner radius; 0.20 mm black stroke.
 - Barcode/VPL band occupies y=1.0..18.2 mm. Vector Code 128 is on the left x=1.7..33.2 with 10X quiet zones and no readable tracking value. The right VPL capsule at x=44.4,y=1.1,w=19.4,h=7.5 stacks `VPL` above the prominent amount. City/province are directly below the amount; no location pin is rendered.
@@ -22,6 +24,13 @@ The repository-wide architecture discovery and full implementation history remai
 - Normalize valid Pakistani mobiles to exactly 11 digits beginning `03`; flag invalid/incomplete values, never invent digits, block PDF/print, and keep the original address while removing only an exact duplicate phone token from the display copy.
 
 ## Audit Findings and Remaining Limits
+
+## V3 Final Polish (2026-11-09)
+
+- Tracking text is the actual tracking ID at x=1.7..33.2/y=0.8..3.0 mm, directly above vector Code 128 bars at y=3.2..17.4. The VPL capsule remains stacked and bordered; the city/province band is directly below it.
+- Order/contact is now y=17.6..22.4; the enlarged TO frame is y=22.7..36.7 with a full-width Near by row at y=33.9..36.4; Product is y=37.0..39.1 and the footer remains y=39.4..43.3.
+- Missing Order ID/Product/Near by remain Review warnings. The printed FS reference is locally reserved from tracking when source Order ID is absent; original source fields remain unchanged and offline cross-device uniqueness is not claimed.
+- Long text is measured with the active font. Impossible rows remain editable and are excluded individually from print/PDF while valid selected rows continue. No CHECK, TEXT TOO LONG, EDIT REQUIRED or fabricated Not provided text is emitted on labels.
 
 - Previous mismatched output layouts are replaced by one label HTML/CSS model for preview and browser print and a shared millimeter geometry model for vector PDF text/barcode bars.
 - An in-memory real `.xlsx` fixture exercises the browser parser and zero-padded numeric phone recovery. Browser smoke also imports a real synthetic XLSX and verifies a leading-zero contact.
@@ -41,8 +50,8 @@ The repository-wide architecture discovery and full implementation history remai
 
 ## Deployment State
 
-- Standalone premium design/unit/browser/build: **100% software-verified**. Phone normalization, exact geometry, per-label fitting/overflow warnings, preview/print geometry, screenshot golden and all 500 synthetic Code 128 decodes pass.
-- V2 staging deployment: **PASS** at Page `3b9404e3-92a5-4e02-9bd4-b626f96eb833`, uploaded after fresh account/Dashboard identity verification. Isolated asset/preview/PDF acceptance: **BLOCKED** by the required Super Admin Access sign-in; the shared browser tab had pre-existing rows and was not used. After login, use only `test-evidence/staging-acceptance-18.csv`. Physical printer/stock calibration remains **0% / NOT TESTED**.
+- Standalone V3 design/unit/browser/build: **100% software-verified**. Phone normalization, exact geometry, tracking-above-barcode placement, enlarged TO/nearby band, per-label fitting/row exclusion, preview/print/PDF geometry, screenshot golden and all 500 synthetic Code 128 decodes pass.
+- Prior V2 staging deployment: **PASS** at Page `3b9404e3-92a5-4e02-9bd4-b626f96eb833`; V3 deployment and isolated live PDF acceptance remain **BLOCKED** by the required identity/Access gates. The shared browser tab had pre-existing rows and was not used. After login, use only `test-evidence/staging-acceptance-18.csv`. Physical printer/stock calibration remains **0% / NOT TESTED**.
 - Staff authorization: **0%**; no authorized staff roster/group exists. Current staging Access deliberately allows only the verified Super Admin.
 - Admin integration: **not part of this design-repair task**. Existing card/redirect source remains separate and inactive; the active Cloudflare Admin version `3e4b7c26...` stays at 100% and was not changed.
 - Production release: **0%**. No Pages production hostname, Admin Worker traffic shift, or production order binding was changed.

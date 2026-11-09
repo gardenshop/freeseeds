@@ -42,25 +42,26 @@ export const LABEL_LAYOUT = {
   widthMm: LABEL_WIDTH_MM,
   heightMm: LABEL_HEIGHT_MM,
   outline: { x: 0.4, y: 0.4, width: 64.2, height: 43.2, radius: 1, stroke: 0.2 },
-  barcode: { x: 1.7, y: 1.0, width: 31.5, height: 17.2 },
-  trackingDivider: { x: 34.0, y: 1.0, width: 0.25, height: 17.2 },
+  trackingText: { x: 1.7, y: 0.8, width: 31.5, height: 2.2 },
+  barcode: { x: 1.7, y: 3.2, width: 31.5, height: 14.2 },
+  trackingDivider: { x: 34.0, y: 1.0, width: 0.25, height: 16.4 },
   vpl: { x: 44.4, y: 1.1, width: 19.4, height: 7.5 },
-  destination: { x: 34.7, y: 8.9, width: 29, height: 9.2 },
-  city: { x: 35.1, y: 9.2, width: 28.2, height: 4.6 },
-  province: { x: 35.1, y: 14.0, width: 28.2, height: 3.5 },
-  orderProduct: { x: 1.3, y: 18.5, width: 62.4, height: 5.2 },
-  orderId: { x: 1.3, y: 18.5, width: 30.8, height: 5.2 },
-  contactDivider: { x: 32.5, y: 18.7, width: 0.25, height: 4.8 },
-  contact: { x: 33.1, y: 18.5, width: 30.6, height: 5.2 },
-  to: { x: 1.3, y: 24.1, width: 62.4, height: 12.2, radius: 1 },
-  toTag: { x: 1.8, y: 24.4, width: 7.1, height: 3.1 },
-  name: { x: 9.5, y: 24.4, width: 45.5, height: 3.1 },
-  address: { x: 9.5, y: 27.7, width: 53.5, height: 5.6 },
-  nearbyLabel: { x: 2, y: 33.4, width: 9.5, height: 2.6 },
-  landmark: { x: 11.8, y: 33.4, width: 19, height: 2.6 },
-  product: { x: 1.3, y: 36.6, width: 62.4, height: 2.5 },
-  productLabel: { x: 2, y: 36.8, width: 8.5, height: 2.0 },
-  productValue: { x: 11, y: 36.85, width: 52, height: 2.0 },
+  destination: { x: 34.7, y: 8.7, width: 29, height: 8.4 },
+  city: { x: 35.1, y: 9.0, width: 28.2, height: 4.0 },
+  province: { x: 35.1, y: 13.2, width: 28.2, height: 3.6 },
+  orderProduct: { x: 1.3, y: 17.6, width: 62.4, height: 4.8 },
+  orderId: { x: 1.3, y: 17.6, width: 30.8, height: 4.8 },
+  contactDivider: { x: 32.5, y: 17.8, width: 0.25, height: 4.4 },
+  contact: { x: 33.1, y: 17.6, width: 30.6, height: 4.8 },
+  to: { x: 1.3, y: 22.7, width: 62.4, height: 14.0, radius: 1 },
+  toTag: { x: 1.8, y: 23.0, width: 7.1, height: 2.8 },
+  name: { x: 9.5, y: 23.0, width: 45.5, height: 3.0 },
+  address: { x: 9.5, y: 26.25, width: 53.5, height: 7.45 },
+  nearbyLabel: { x: 2, y: 33.9, width: 9.5, height: 2.5 },
+  landmark: { x: 11.8, y: 33.9, width: 50.5, height: 2.5 },
+  product: { x: 1.3, y: 37.0, width: 62.4, height: 2.1 },
+  productLabel: { x: 2, y: 37.05, width: 8.5, height: 1.9 },
+  productValue: { x: 11, y: 37.05, width: 52, height: 1.9 },
   footer: { x: 1.3, y: 39.4, width: 62.4, height: 3.9 },
   footerFrom: { x: 1.6, y: 39.75, width: 9.0, height: 3.1 },
   footerSender: { x: 11.1, y: 39.7, width: 18.8, height: 3.3 },
@@ -84,14 +85,14 @@ export function labelBoxes(): LabelBoxes {
 export function recipientBoxes(ctx: CanvasRenderingContext2D, name: string) {
   const initial = LABEL_LAYOUT.name;
   const initialFit = fitTextMm(ctx, name, initial.width, initial.height, 12, 9, true, 1);
-  const nameBox: BoxMm = { ...initial, height: initialFit.fits ? initial.height : 6.4 };
+  const nameBox: BoxMm = { ...initial, height: initialFit.fits ? initial.height : 4.25 };
   const addressY = nameBox.y + nameBox.height + 0.2;
   return {
     name: nameBox,
     address: {
       ...LABEL_LAYOUT.address,
       y: addressY,
-      height: 33.3 - addressY,
+      height: LABEL_LAYOUT.nearbyLabel.y - 0.2 - addressY,
     },
   };
 }
@@ -106,7 +107,7 @@ export function destinationBoxes(ctx: CanvasRenderingContext2D, city: string, pr
   const provinceY = cityBase.y + cityHeight + 0.2;
   return {
     city: { ...cityBase, height: cityHeight },
-    province: { ...provinceBase, y: provinceY, height: 17.6 - provinceY },
+    province: { ...provinceBase, y: provinceY, height: 17.4 - provinceY },
   };
 }
 

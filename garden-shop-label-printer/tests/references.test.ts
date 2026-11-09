@@ -33,4 +33,13 @@ describe("secure printed label references", () => {
   it("keys persistence by original Order ID and tracking", () => {
     expect(labelReferenceSourceKey(" SYN-001 ", " trk-syn-001 ")).toBe('["SYN-001","TRK-SYN-001"]');
   });
+
+  it("allows a local reference when the source Order ID is missing but tracking exists", async () => {
+    const reserved = await reserveUniqueReference(
+      new Date(2026, 10, 9),
+      () => 88_704,
+      async (candidate) => candidate,
+    );
+    expect(reserved).toBe("FS-2611-88704");
+  });
 });

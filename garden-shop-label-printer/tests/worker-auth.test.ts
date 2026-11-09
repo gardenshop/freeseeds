@@ -62,7 +62,7 @@ describe("monitoring Worker authorization", () => {
     expect(report.status).toBe(403);
     const event = await worker.fetch(new Request("https://monitor.example/api/events", {
       method: "POST", headers: { "Content-Type": "application/json", "cf-access-jwt-assertion": staffToken, Origin: envBase.APP_ORIGIN },
-      body: JSON.stringify({ eventType: "LABELS_GENERATED", batchId: crypto.randomUUID(), templateVersion: "gfs-a4-18-v2", counts: { labels: 19, warnings: 1 } }),
+      body: JSON.stringify({ eventType: "LABELS_GENERATED", batchId: crypto.randomUUID(), templateVersion: "gfs-a4-18-v3", counts: { labels: 19, warnings: 1 } }),
     }), env);
     expect(event.status).toBe(201);
   });

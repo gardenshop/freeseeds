@@ -118,7 +118,7 @@ export async function reserveLabelReference(
 ): Promise<string> {
   const sourceOrderId = orderId.trim();
   const trackingNumber = tracking.trim();
-  if (!sourceOrderId || !trackingNumber) throw new Error("REFERENCE_SOURCE_REQUIRED");
+  if (!trackingNumber) throw new Error("REFERENCE_TRACKING_REQUIRED");
   const sourceKey = labelReferenceSourceKey(sourceOrderId, trackingNumber);
   const db = await openDatabase();
   const existing = await readBySourceKey(db, sourceKey);
@@ -137,7 +137,7 @@ export async function reserveLabelReference(
 export async function updateLabelReferenceSource(reference: string, orderId: string, tracking: string): Promise<void> {
   const sourceOrderId = orderId.trim();
   const trackingNumber = tracking.trim();
-  if (!sourceOrderId || !trackingNumber) throw new Error("REFERENCE_SOURCE_REQUIRED");
+  if (!trackingNumber) throw new Error("REFERENCE_TRACKING_REQUIRED");
   const sourceKey = labelReferenceSourceKey(sourceOrderId, trackingNumber);
   const db = await openDatabase();
   await new Promise<void>((resolve, reject) => {

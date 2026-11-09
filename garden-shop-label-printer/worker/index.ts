@@ -12,6 +12,7 @@ type Env = {
 type Claims = { iss?: string; aud?: string | string[]; email?: string; exp?: number; nbf?: number; sub?: string };
 type Actor = { hash: string; role: "STAFF" | "SUPER_ADMIN" };
 const EVENT_TYPES = new Set(["FILE_PROCESSED", "LABELS_GENERATED", "PDF_GENERATED", "PRINT_REQUESTED", "PRINT_CONFIRMED", "REPRINT_REQUESTED", "APP_ERROR"]);
+const TEMPLATE_VERSIONS = new Set(["gfs-a4-18-v2", "gfs-a4-18-v3"]);
 const COUNT_KEYS = new Set(["rows", "labels", "warnings", "failed", "pages"]);
 let certCache: { expiresAt: number; keys: JsonWebKey[] } | undefined;
 
@@ -143,7 +144,7 @@ export default {
       let body: Record<string, unknown>;
       try { body = JSON.parse(rawBody) as Record<string, unknown>; } catch { return json({ error: "JSON_INVALID" }, 400); }
       const allowed = new Set(["eventType", "batchId", "templateVersion", "counts", "errorCode"]);
-      if (Object.keys(body).some((key) => !allowed.has(key)) || typeof body.eventType !== "string" || !EVENT_TYPES.has(body.eventType) || typeof body.batchId !== "string" || !/^[0-9a-f-]{36}$/i.test(body.batchId) || body.templateVersion !== "gfs-a4-18-v2" || !body.counts || typeof body.counts !== "object" || Array.isArray(body.counts)) return json({ error: "EVENT_SCHEMA_INVALID" }, 400);
+      if (Object.keys(body).some((key) => !allowed.has(key)) || typeof body.eventType !== "string" || !EVENT_TYPES.has(body.eventType) || typeof body.batchId !== "string" || !/^[0-9a-f-]{36}$/i.test(body.batchId) || typeof body.templateVersion !== "string" || !TEMPLATE_VERSIONS.has(body.templateVersion) || !body.counts || typeof body.counts !== "object" || Array.isArray(body.counts)) return json({ error: "EVENT_SCHEMA_INVALID" }, 400);
       const counts = body.counts as Record<string, unknown>;
       if (Object.keys(counts).some((key) => !COUNT_KEYS.has(key)) || Object.values(counts).some((n) => !Number.isSafeInteger(n) || Number(n) < 0 || Number(n) > 100000)) return json({ error: "EVENT_COUNTS_INVALID" }, 400);
       if (body.errorCode !== undefined && (typeof body.errorCode !== "string" || !/^[A-Z0-9_]{1,64}$/.test(body.errorCode))) return json({ error: "ERROR_CODE_INVALID" }, 400);
