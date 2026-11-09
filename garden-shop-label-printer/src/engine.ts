@@ -72,8 +72,19 @@ export function safeContactRemoval(address: string, phone: string): { address: s
 }
 
 /** Collapse spreadsheet-only layout whitespace for display while retaining the raw source separately. */
+const ADDRESS_TERMS = new Map([
+  ["house", "House"], ["street", "Street"], ["road", "Road"], ["rd", "Rd"], ["lane", "Lane"],
+  ["main", "Main"], ["block", "Block"], ["sector", "Sector"], ["phase", "Phase"], ["colony", "Colony"], ["town", "Town"],
+  ["city", "City"], ["village", "Village"], ["district", "District"], ["apartment", "Apartment"],
+  ["flat", "Flat"], ["plot", "Plot"], ["near", "Near"], ["opposite", "Opposite"],
+]);
+
 export function normalizeAddressText(value: string): string {
-  return value.replace(/[\t\r\n]+/gu, " ").replace(/\s+/gu, " ").trim();
+  return value
+    .replace(/[\t\r\n]+/gu, " ")
+    .replace(/\s+/gu, " ")
+    .trim()
+    .replace(/\b[A-Za-z]+\b/gu, (word) => ADDRESS_TERMS.get(word.toLowerCase()) ?? word);
 }
 
 export function normalizePakistaniPhone(value: string): string | undefined {
@@ -98,7 +109,7 @@ export function normalizeRows(headers: string[], rows: unknown[][], mapping: Imp
       return column === undefined ? "" : textValue(cells[column]);
     };
     const order: Order = {
-      rowNumber: index + 2, serial: value("serial"), orderId: value("orderId"), name: value("name"), email: value("email"), phone: value("phone"),
+      rowNumber: index + 2, serial: value("serial"), orderId: value("orderId"), printedReference: "", name: value("name"), email: value("email"), phone: value("phone"),
       address: normalizeAddressText(value("address")), sourceAddress: value("address"), facebookName: value("facebookName"), tracking: value("tracking"), cod: value("cod"),
       product: value("product"), city: value("city"), province: value("province"), landmark: value("landmark"),
       senderName: value("senderName") || "Garden Shop", senderAddress: value("senderAddress") || "C/o City Post Office, Sahiwal", warnings: [],
@@ -116,9 +127,11 @@ export function normalizeRows(headers: string[], rows: unknown[][], mapping: Imp
     if (!order.name) order.warnings.push("Receiver name is required.");
     if (!order.phone) order.warnings.push("Contact number is missing.");
     if (!order.address) order.warnings.push("Delivery address is required.");
-    if (!order.orderId) order.warnings.push("Order ID is missing; none was generated.");
+    if (!order.orderId) order.warnings.push("Source Order ID is required to reserve a printed reference.");
     if (!order.tracking) order.warnings.push("Tracking number is missing; barcode cannot be generated.");
     if (!order.city || !order.province) order.warnings.push("Destination city or province is missing; confirm before printing.");
+    if (!order.cod) order.warnings.push("VPL amount is required.");
+    if (!order.product) order.warnings.push("Product description is required.");
     return order;
   });
   const phones = new Map<string, number[]>(), tracks = new Map<string, number[]>();

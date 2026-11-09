@@ -6,4 +6,5 @@
 .admin-return{color:var(--green);font-size:10px;font-weight:750;text-decoration:none;white-space:nowrap}.admin-return:hover{text-decoration:underline}
 .sheet{width:calc(210mm * var(--zoom));height:calc(297mm * var(--zoom));min-width:0;min-height:0;padding:calc(4.7142857mm * var(--zoom)) calc(3.75mm * var(--zoom));grid-template-columns:repeat(3,calc(65mm * var(--zoom)));grid-template-rows:repeat(6,calc(44mm * var(--zoom)));gap:calc(4.7142857mm * var(--zoom)) calc(3.75mm * var(--zoom))}.sheet .label{width:calc(65mm * var(--zoom));height:calc(44mm * var(--zoom))}
 .source-note{padding:8px;background:#f5e6d9;color:#854522!important}
-.sheet{padding:calc(8mm * var(--zoom)) calc(5mm * var(--zoom));grid-template-columns:repeat(3,calc(65mm * var(--zoom)));grid-template-rows:repeat(6,calc(44mm * var(--zoom)));column-gap:calc(2.5mm * var(--zoom));row-gap:calc(3mm * var(--zoom))}
+.sheet{padding:calc(14mm * var(--zoom)) calc(6.5mm * var(--zoom));grid-template-columns:repeat(3,calc(65mm * var(--zoom)));grid-template-rows:repeat(6,calc(44mm * var(--zoom)));column-gap:calc(1mm * var(--zoom));row-gap:calc(1mm * var(--zoom))}
+.edit-form textarea{width:100%;min-height:90px;resize:vertical;padding:10px 12px;border:1px solid var(--line);border-radius:3px;background:#fffdf8;color:var(--ink);font:inherit;line-height:1.35;white-space:pre-wrap}

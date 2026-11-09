@@ -26,6 +26,7 @@ import "./style.css";
 import "../public/label.css";
 import { CODE128_LAYOUT, destinationBoxes, fitTextMm, fitTextPx, formatVpl, labelBoxes, labelFontFamily, LABEL_FOOTER_ADDRESS, recipientBoxes, usesArabicScript, usesComplexScript } from "./layout";
 import { restoreZeroFormattedCells } from "./xlsx";
+import { LABEL_REFERENCE_NOTICE, reserveLabelReference, updateLabelReferenceSource } from "./references";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 const monitoringUrl =
@@ -61,7 +62,7 @@ const sampleRows = [
     "Clock Tower",
   ],
   [
-    "",
+    "GS-TEST-002",
     "Zara Example",
     "03001234568",
     "Street 8, Satellite Town",
@@ -101,6 +102,7 @@ let countLimit = -1;
 let activeLabel = -1;
 let importedFileName = "";
 let printRequested = false;
+let colorAccent = false;
 let statusMessage = "Workbook data stays in this browser tab.";
 
 const esc = (value: unknown) =>
@@ -142,6 +144,18 @@ async function logEvent(
       "Monitoring unavailable. Label work is safe and was not lost.";
     render();
     return false;
+  }
+}
+
+async function reserveRowReferences(orders: Order[]) {
+  for (const row of orders) {
+    if (row.printedReference || !row.orderId.trim() || !row.tracking.trim()) continue;
+    try {
+      row.printedReference = await reserveLabelReference(row.orderId, row.tracking);
+    } catch (error) {
+      const reason = error instanceof Error ? ` (${error.message})` : "";
+      row.warnings.push(`Printed reference could not be reserved locally${reason}; retry before printing.`);
+    }
   }
 }
 
@@ -213,24 +227,25 @@ function labelMarkup(row: Order, index: number, _compact = false) {
   const phone = normalizePakistaniPhone(row.phone);
   const vpl = row.cod.trim() ? formatVpl(row.cod) : "VPL";
   const vplAmount = vpl.replace(/^VPL\s*/u, "");
-  return `<article class="label" data-label-index="${index}">
-    <div class="order-product-frame layout-box" ${boxStyle(boxes.orderProduct)} aria-hidden="true"></div>
-    <div class="order-id layout-box" ${boxStyle(boxes.orderId)}><span class="field-heading">Order ID</span><strong>${esc(row.orderId)}</strong></div>
-    <div class="product-text layout-box" ${boxStyle(boxes.product)}><span class="field-heading">Product</span><strong>${esc(row.product)}</strong></div>
-    <div class="vpl-box layout-box" ${boxStyle(boxes.vpl)} aria-label="${esc(vpl)}"><span class="vpl-prefix">VPL</span><strong class="vpl-amount">${esc(vplAmount)}</strong></div>
-    <span class="tracking-caption layout-box" ${boxStyle(boxes.trackingCaption)}>TRACKING NUMBER</span>
-    <strong class="tracking-text layout-box" ${boxStyle(boxes.tracking)}>${esc(row.tracking)}</strong>
-    <canvas class="barcode-canvas layout-box" ${boxStyle(boxes.barcode)} data-barcode="${index}" aria-label="Code 128 tracking ${esc(row.tracking)}"></canvas>
+  const warnings = row.warnings.length ? `<span class="label-warning" title="${esc(row.warnings.join("; "))}">CHECK</span>` : "";
+  return `<article class="label ${colorAccent ? "color-accent" : ""}" data-label-index="${index}">${warnings}
+    <canvas class="barcode-canvas layout-box" ${boxStyle(boxes.barcode)} data-barcode="${index}" data-source="${esc(row.tracking)}" aria-label="Code 128 barcode"></canvas>
     <span class="tracking-divider layout-box" ${boxStyle(boxes.trackingDivider)} aria-hidden="true"></span>
+    <div class="vpl-box layout-box" ${boxStyle(boxes.vpl)} aria-label="${esc(vpl)}"><strong class="vpl-prefix">VPL</strong><strong class="vpl-amount">${esc(vplAmount)}</strong></div>
     <div class="destination layout-box" ${boxStyle(boxes.destination)}><strong class="city-text">${esc(row.city)}</strong><span class="province-text">${esc(row.province)}</span></div>
+    <div class="order-product-frame layout-box" ${boxStyle(boxes.orderProduct)} aria-hidden="true"></div>
+    <div class="order-id layout-box" ${boxStyle(boxes.orderId)}><span class="field-heading">Order ID</span><strong class="printed-reference">${esc(row.printedReference)}</strong></div>
+    <span class="contact-divider layout-box" ${boxStyle(boxes.contactDivider)} aria-hidden="true"></span>
+    <div class="contact layout-box" ${boxStyle(boxes.contact)}><span class="field-heading">Contact Number</span><strong class="contact-number">${phone ? esc(phone) : ""}</strong></div>
     <div class="to-border layout-box" ${boxStyle(boxes.to)} aria-hidden="true"></div>
     <b class="to-heading layout-box" ${boxStyle(boxes.toTag)}>To:</b>
     <strong class="receiver-name layout-box" ${boxStyle(boxes.name)}>${esc(row.name)}</strong>
     <div class="address-text layout-box" ${boxStyle(boxes.address)}>${esc(row.address)}</div>
     <strong class="nearby-label layout-box" ${boxStyle(boxes.nearbyLabel)}>Near by:</strong>
     <div class="landmark layout-box" ${boxStyle(boxes.landmark)}>${esc(row.landmark)}</div>
-    <span class="contact-divider layout-box" ${boxStyle(boxes.contactDivider)} aria-hidden="true"></span>
-    <div class="contact layout-box" ${boxStyle(boxes.contact)}>${phone ? `<strong class="phone-number">${esc(phone)}</strong>` : ""}</div>
+    <div class="product-row-frame layout-box" ${boxStyle(boxes.product)} aria-hidden="true"></div>
+    <b class="product-label layout-box" ${boxStyle(boxes.productLabel)}>Product:</b>
+    <strong class="product-value layout-box" ${boxStyle(boxes.productValue)}>${esc(row.product)}</strong>
     <div class="footer-rule layout-box" ${boxStyle(boxes.footer)} aria-hidden="true"></div>
     <strong class="footer-from layout-box" ${boxStyle(boxes.footerFrom)}>From:</strong>
     <b class="footer-sender layout-box" ${boxStyle(boxes.footerSender)}>${esc(row.senderName || "Garden Shop")}</b>
@@ -239,40 +254,48 @@ function labelMarkup(row: Order, index: number, _compact = false) {
   </article>`;
 }
 
-function hasLayoutOverflow(row: Order): boolean {
+function overflowingLayoutFields(row: Order): string[] {
   const context = document.createElement("canvas").getContext("2d");
-  if (!context) return true;
+  if (!context) return ["text measurement"];
   const boxes = labelBoxes();
   const recipient = recipientBoxes(context, row.name);
   const destination = destinationBoxes(context, row.city, row.province);
-  const check = (text: string, box: { width: number; height: number }, max: number, min: number, bold = false, wrap = true) =>
-    !text.trim() || fitTextMm(context, text, box.width, box.height, max, min, bold, 1.08, wrap).fits;
-  return ![
-    check(row.orderId, boxes.orderId, 9, 6.5, true, false),
-    check(row.product, boxes.product, 8.5, 6.5, true),
-    check(row.cod ? formatVpl(row.cod).replace(/^VPL\s*/u, "") : "", { width: boxes.vpl.width - 5.45, height: boxes.vpl.height - 0.5 }, 16, 9.5, true, false),
-    check(row.tracking, boxes.tracking, 10, 8, true, false),
-    check(row.city, destination.city, 13, 9, true),
-    check(row.province, destination.province, 8.5, 6.5, true),
-    check(row.name, recipient.name, 12, 9, true),
-    check(row.address, recipient.address, 11, 8),
-    check(row.landmark, boxes.landmark, 9.5, 7.5),
-    check(normalizePakistaniPhone(row.phone) ?? "", boxes.contact, 11, 9, true, false),
-    check("From:", boxes.footerFrom, 9, 7, true, false),
-    check("Garden Shop", boxes.footerSender, 10, 6.5, true, false),
-    check(LABEL_FOOTER_ADDRESS, boxes.footerAddress, 8, 6.5, false, false),
-  ].every(Boolean);
+  const check = (text: string, box: { width: number; height: number }, max: number, min: number, bold = false, wrap = true, lineHeight = 1) =>
+    !text.trim() || fitTextMm(context, text, box.width, box.height, max, min, bold, lineHeight, wrap).fits;
+  const checks: Array<[string, boolean]> = [
+    ["printed reference", check(row.printedReference, { width: boxes.orderId.width, height: boxes.orderId.height - 1.8 }, 11, 8, true, false)],
+    ["product", check(row.product, boxes.productValue, 10, 7.5, true, false, 1)],
+    ["VPL heading", check("VPL", { width: boxes.vpl.width, height: 1.8 }, 8.5, 7, true, false, 0.95)],
+    ["VPL amount", check(row.cod ? formatVpl(row.cod).replace(/^VPL\s*/u, "") : "", { width: boxes.vpl.width - 1, height: 5.2 }, 20, 14, true, false, 0.95)],
+    ["destination city", check(row.city, destination.city, 15, 10.5, true, true, 0.95)],
+    ["province", check(row.province, destination.province, 9.5, 6.5, true, true, destination.province.height > 3.1 ? 0.95 : 1)],
+    ["receiver name", check(row.name, recipient.name, 12, 9, true, true, 1)],
+    ["address", check(row.address, recipient.address, 11, 8)],
+    ["landmark", check(row.landmark, boxes.landmark, 9.5, 7.5, false, true, 1)],
+    ["contact heading", check("Contact Number", { width: boxes.contact.width, height: 1.8 }, 6.5, 6, true, false, 0.95)],
+    ["phone", check(normalizePakistaniPhone(row.phone) ?? "", { width: boxes.contact.width, height: boxes.contact.height - 1.8 }, 16, 12, true, false, 1)],
+    ["From", check("From:", boxes.footerFrom, 9, 7, true, false, 1)],
+    ["sender", check("Garden Shop", boxes.footerSender, 10, 6.5, true, false, 1)],
+    ["footer address", check(LABEL_FOOTER_ADDRESS, boxes.footerAddress, 8, 6.5, false, false, 1)],
+    ["product heading", check("Product:", boxes.productLabel, 7.5, 6.5, true, false, 1)],
+  ];
+  return checks.filter(([, fits]) => !fits).map(([field]) => field);
 }
 
 function printBlocker(row: Order): string | undefined {
+  if (!row.orderId.trim()) return "Original Order ID is required for the printed reference.";
+  if (!row.tracking.trim()) return "Tracking number is required for the Code 128 barcode.";
+  if (!row.printedReference) return "Printed reference has not been reserved in this browser.";
   if (!row.name) return "Receiver name is required.";
   if (!normalizePakistaniPhone(row.phone)) return "Correct invalid contact numbers before printing.";
   if (!row.address) return "Delivery address is required.";
-  if (!row.tracking) return "Tracking number is required for the barcode.";
+  if (!row.cod) return "VPL amount is required.";
+  if (!row.product) return "Product description is required.";
   if (!row.city || !row.province) return "Destination city and province are required.";
-  if (hasLayoutOverflow(row)) return "Correct text that cannot fit at the readable minimum.";
-  if (row.warnings.some((warning) => /^(Text does not fit|Tracking barcode is too dense|Generated barcode)/u.test(warning)))
-    return "Correct the flagged layout or barcode before printing.";
+  const overflows = overflowingLayoutFields(row);
+  if (overflows.length) return `Text does not fit: ${overflows.join(", ")}. Correct it in Review.`;
+  const blockingWarning = row.warnings.find((warning) => !warning.startsWith("Exact contact match removed from displayed address"));
+  if (blockingWarning) return blockingWarning;
   return undefined;
 }
 
@@ -296,18 +319,21 @@ function renderPreview() {
     )
     .join(
       "",
-    )}</div><p class="status-line" role="status">${esc(statusMessage)}</p>`.replace("monochrome", "black print · Garden Shop green accent");
+    )}</div><p class="status-line" role="status">${esc(statusMessage)}</p>`.replace("monochrome", "1 mm gutters · black-and-white, green optional");
 }
 
 function renderPrint() {
   const chosen = currentOrders();
   const pages = pagesForCount(chosen.length, startPosition);
-  const blocked = chosen.some(({ row }) => printBlocker(row));
+  const blockedItem = chosen.find(({ row }) => printBlocker(row));
+  const blockedReason = blockedItem ? printBlocker(blockedItem.row) : undefined;
+  const blocked = Boolean(blockedItem);
   return `<section class="section-heading"><div><p class="kicker">OUTPUT / ACTUAL SIZE</p><h1>Ready for the printer.</h1><p>${chosen.length} labels · ${pages} A4 page${pages === 1 ? "" : "s"} · unused slots stay blank</p></div><div class="output-badge">100%<small>PHYSICAL SCALE</small></div></section>
     <section class="print-panel"><div class="print-summary"><h2>Print setup</h2><p>Use A4 portrait and Actual size / 100% in the printer dialog. Turn off browser headers and footers.</p>
-    ${blocked ? '<p class="mapping-warning" role="alert">Resolve every flagged required field, barcode, or layout overflow before printing or exporting.</p>' : ""}
+    ${blocked ? `<p class="mapping-warning" role="alert">Label ${blockedItem!.index + 1}: ${esc(blockedReason ?? "Resolve this record in Review before printing.")}</p>` : ""}
     <label>Start at position<select id="printStart">${Array.from({ length: 18 }, (_, i) => `<option value="${i + 1}" ${startPosition === i + 1 ? "selected" : ""}>Label ${i + 1}</option>`).join("")}</select></label>
     <label>Number of labels<input id="countLimit" type="number" min="0" max="${chosen.length}" value="${countLimit || chosen.length}" aria-describedby="countHelp"></label><small id="countHelp">Set to ${chosen.length} to print the full selection.</small>
+    <label class="confirm-print"><input id="colorAccent" type="checkbox" ${colorAccent ? "checked" : ""}> Use the Garden Shop green accent (color printer)</label>
     <div class="print-actions"><button class="button primary" id="printNow" ${blocked ? "disabled" : ""}>Print ${chosen.length} labels</button><button class="button secondary" id="savePdf" ${blocked ? "disabled" : ""}>Download PDF</button><button class="button ghost" id="printOne" ${activeLabel < 0 || !rows[activeLabel] || printBlocker(rows[activeLabel]) ? "disabled" : ""}>Print individual</button></div>
     <label class="confirm-print"><input id="confirmPrinted" type="checkbox"> I confirm the print job completed on the printer.</label></div>
     <div class="print-notice"><b>Print requests are not print proof.</b><p>Browser print is logged as a request. Only the separate confirmation above records staff-confirmed completion; neither signal comes from printer telemetry.</p><p>Check one test sheet with a ruler before using pre-cut stock. Physical dimensions depend on printer and driver.</p></div></section><p class="status-line" role="status">${esc(statusMessage)}</p>`;
@@ -331,6 +357,8 @@ function render() {
               ? renderPrint()
               : renderAdmin();
   app.innerHTML = `${nav()}<main class="main">${body}</main><footer class="app-footer"><span>GARDEN SHOP LABEL PRINTER <i>·</i> TEMPLATE ${TEMPLATE_VERSION}</span><span>INDEPENDENT TOOL / NO ORDER SYSTEM CONNECTION</span></footer>`;
+  if (["review", "preview", "print"].includes(view))
+    app.querySelector(".main")?.insertAdjacentHTML("afterbegin", `<p class="reference-scope-notice" role="note">${esc(LABEL_REFERENCE_NOTICE)}</p>`);
   if (view === "print" && countLimit === 0) {
     const countInput = document.querySelector<HTMLInputElement>("#countLimit");
     if (countInput) countInput.value = "0";
@@ -483,20 +511,19 @@ function measureLabels(root: ParentNode = document, canvasDocument: Document = d
         }
         if (!result.fits) overflow = true;
       };
-      fit(".order-id strong", row?.orderId || "", 9, 6.5, true, false);
-      fit(".product-text strong", row?.product || "", 8.5, 6.5, true);
-      fit(".vpl-prefix", "VPL", 9, 7.5, true, false);
+      fit(".printed-reference", row?.printedReference || "", 11, 8, true, false);
+      fit(".product-value", row?.product || "", 10, 7.5, true, false);
+      fit(".vpl-prefix", "VPL", 8.5, 7, true, false);
       const vpl = row?.cod?.trim() ? formatVpl(row.cod) : "VPL";
-      fit(".vpl-amount", vpl.replace(/^VPL\s*/u, ""), 16, 9.5, true, false);
-      fit(".tracking-caption", "TRACKING NUMBER", 7, 6, true, false);
-      fit(".tracking-text", row?.tracking || "", 10, 8, true, false);
-      fit(".city-text", row?.city || "", 13, 9, true);
-      fit(".province-text", row?.province || "", 8.5, 6.5, true);
+      fit(".vpl-amount", vpl.replace(/^VPL\s*/u, ""), 20, 14, true, false);
+      fit(".city-text", row?.city || "", 15, 10.5, true);
+      fit(".province-text", row?.province || "", 9.5, 6.5, true);
       fit(".receiver-name", row?.name || "", 12, 9, true);
       fit(".address-text", row?.address || "", 11, 8);
       fit(".nearby-label", "Near by:", 9.5, 7.5, true, false);
       fit(".landmark", row?.landmark || "Not provided", 9.5, 7.5);
-      fit(".phone-number", normalizePakistaniPhone(row?.phone ?? "") ?? "INVALID PHONE · EDIT", 16, 12, true, false);
+      fit(".contact-number", normalizePakistaniPhone(row?.phone ?? "") ?? "", 16, 12, true, false);
+      fit(".product-label", "Product:", 7.5, 6.5, true, false);
       fit(".footer-from", "From:", 12, 9, true, false);
       fit(".footer-sender", "Garden Shop", 10, 6.5, true, false);
       fit(".footer-address", LABEL_FOOTER_ADDRESS, 8, 6.5, false, false);
@@ -516,7 +543,7 @@ function flagLabel(label: HTMLElement | null, index: number, warning: string) {
 }
 
 
-function preparePrintLayout(popup: Window) {
+function preparePrintLayout(popup: Window): Promise<void> {
   const fontStyles = popup.document.createElement("style");
   fontStyles.textContent = [...document.styleSheets]
     .flatMap((sheet) => {
@@ -529,12 +556,16 @@ function preparePrintLayout(popup: Window) {
   const sharedStyles = popup.document.createElement("link");
   sharedStyles.rel = "stylesheet";
   sharedStyles.href = "/label.css";
-  sharedStyles.addEventListener("load", () => {
-    measureLabels(popup.document, popup.document);
-    popup.requestAnimationFrame(() => popup.print());
-  }, { once: true });
-  sharedStyles.addEventListener("error", () => popup.close(), { once: true });
+  const ready = new Promise<void>((resolve, reject) => {
+    sharedStyles.addEventListener("load", async () => {
+      await popup.document.fonts.ready;
+      measureLabels(popup.document, popup.document);
+      resolve();
+    }, { once: true });
+    sharedStyles.addEventListener("error", () => reject(new Error("PRINT_STYLESHEET_FAILED")), { once: true });
+  });
   popup.document.head.append(sharedStyles);
+  return ready;
 }
 
 function openPrintPopup(items: Array<{ row: Order; index: number }>, position: number) {
@@ -561,7 +592,25 @@ function openPrintPopup(items: Array<{ row: Order; index: number }>, position: n
         }
       }),
     );
-    preparePrintLayout(popup);
+    try {
+      await preparePrintLayout(popup);
+      if (items.some(({ row }) => printBlocker(row))) {
+        popup.close();
+        statusMessage = "Review the highlighted label fields before printing.";
+        render();
+        return;
+      }
+      const counts = { labels: items.length, pages: pagesForCount(items.length, position) };
+      await logEvent("LABELS_GENERATED", counts);
+      await logEvent(printRequested ? "REPRINT_REQUESTED" : "PRINT_REQUESTED", counts);
+      printRequested = true;
+      popup.focus();
+      popup.print();
+    } catch {
+      popup.close();
+      statusMessage = "The print layout could not be prepared. The batch remains available for correction.";
+      render();
+    }
   }, { once: true });
   popup.document.close();
   return popup;
@@ -661,7 +710,8 @@ function download(blob: Blob, name: string) {
 
 async function makePdf(items = currentOrders(), position = startPosition) {
   if (!items.length) throw new Error("NO_LABELS_SELECTED");
-  if (items.some(({ row }) => printBlocker(row))) throw new Error("LABEL_REQUIRES_CORRECTION");
+  const initialBlocker = items.map(({ row }) => printBlocker(row)).find(Boolean);
+  if (initialBlocker) throw new Error(`LABEL_REQUIRES_CORRECTION: ${initialBlocker}`);
   const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica),
@@ -694,10 +744,11 @@ async function makePdf(items = currentOrders(), position = startPosition) {
         align: "left" | "center" | "right" = "left",
         lineHeight = 1,
         wrap = true,
+        fieldName = "label text",
       ) => {
         const fit = fitTextMm(measure, text, box.width, box.height, maxFont, minFont, isBold, lineHeight, wrap);
         if (!fit.fits) {
-          if (!row.warnings.some((warning) => warning.startsWith("Text does not fit"))) row.warnings.push("Text does not fit at minimum readable size; edit this record before printing.");
+          if (!row.warnings.some((warning) => warning.startsWith("Text does not fit"))) row.warnings.push(`Text does not fit: ${fieldName}. Edit this record before printing.`);
           return;
         }
         if (usesComplexScript(text)) {
@@ -712,7 +763,7 @@ async function makePdf(items = currentOrders(), position = startPosition) {
           if (!ctx) throw new Error("COMPLEX_TEXT_CANVAS_UNAVAILABLE");
           ctx.scale(scale, scale);
           ctx.fillStyle = "#000";
-          ctx.font = `${isBold ? "700 " : "400 "}${fit.fontSize}px ${labelFontFamily(text)}`;
+          ctx.font = `${isBold ? "900 " : "400 "}${fit.fontSize}px ${labelFontFamily(text)}`;
           const rtl = usesArabicScript(text);
           ctx.direction = rtl ? "rtl" : "ltr";
           ctx.textAlign = rtl ? "right" : align;
@@ -757,50 +808,46 @@ async function makePdf(items = currentOrders(), position = startPosition) {
         const height = box.height * mm;
         pdfPage.drawSvgPath(`M ${r} 0 L ${width - r} 0 Q ${width} 0 ${width} ${r} L ${width} ${height - r} Q ${width} ${height} ${width - r} ${height} L ${r} ${height} Q 0 ${height} 0 ${height - r} L 0 ${r} Q 0 0 ${r} 0 Z`, { x: left, y: top, borderColor: rgb(0, 0, 0), borderWidth: stroke * mm, ...(color ? { color } : {}) });
       };
-      const headerText = async (title: string, data: string, box: { x: number; y: number; width: number; height: number }, maxFont: number, wrapData = true, dataLineHeight = 1) => {
-        const strip = { x: box.x, y: box.y, width: box.width, height: 2 };
-        fillRect(strip, rgb(0.03, 0.03, 0.03));
-        pdfPage.drawRectangle({ x: (xMm + box.x) * mm, y: pageH - (yMm + box.y + box.height) * mm, width: box.width * mm, height: box.height * mm, borderColor: rgb(0, 0, 0), borderWidth: 0.2 * mm });
-        await drawBoxText(title, { ...strip, y: strip.y + 0.05, height: strip.height - 0.1 }, 6.2, 5.7, true, rgb(1, 1, 1), "left", 1, false);
-        await drawBoxText(data, { ...box, x: box.x + 0.45, y: box.y + 2, width: box.width - 0.8, height: box.height - 2.1 }, maxFont, 7.5, true, rgb(0, 0, 0), "left", dataLineHeight, wrapData);
-      };
-
       outline(boxes.outline, 1, 0.2);
       outline(boxes.vpl, 1, 0.5);
       const vpl = row.cod.trim() ? formatVpl(row.cod) : "VPL";
       const vplAmount = vpl.replace(/^VPL\s*/u, "");
-      await drawBoxText("VPL", { ...boxes.vpl, x: boxes.vpl.x + 0.25, y: boxes.vpl.y + 0.25, width: 4.8, height: boxes.vpl.height - 0.5 }, 8, 7.5, true, rgb(0, 0, 0), "left", 1, false);
-      await drawBoxText(vplAmount, { ...boxes.vpl, x: boxes.vpl.x + 5.2, y: boxes.vpl.y + 0.25, width: boxes.vpl.width - 5.45, height: boxes.vpl.height - 0.5 }, 16, 9.5, true, rgb(0, 0, 0), "center", 0.95, false);
-
-      await drawBoxText("TRACKING NUMBER", boxes.trackingCaption, 7, 6, true, rgb(0, 0, 0), "center", 1, false);
-      await drawBoxText(row.tracking, boxes.tracking, 10, 8, true, rgb(0, 0, 0), "center", 1, false);
+      await drawBoxText("VPL", { ...boxes.vpl, x: boxes.vpl.x + 0.3, y: boxes.vpl.y + 0.1, width: boxes.vpl.width - 0.6, height: 2 }, 8.5, 7, true, rgb(0, 0, 0), "center", 0.95, false, "VPL heading");
+      await drawBoxText(vplAmount, { ...boxes.vpl, x: boxes.vpl.x + 0.3, y: boxes.vpl.y + 2.1, width: boxes.vpl.width - 0.6, height: 5.2 }, 20, 14, true, rgb(0, 0, 0), "center", 0.95, false, "VPL amount");
       fillRect(boxes.trackingDivider, rgb(0, 0, 0));
       const destination = destinationBoxes(measure, row.city, row.province);
-      await drawBoxText(row.city, destination.city, 15, 9, true, rgb(0, 0, 0), "center", 0.95);
+      await drawBoxText(row.city, destination.city, 15, 9, true, rgb(0, 0, 0), "center", 0.95, true, "destination city");
       outline(destination.province, 1.2, 0.2, rgb(0, 0, 0));
-      await drawBoxText(row.province, { ...destination.province, x: destination.province.x + 0.8, y: destination.province.y + 0.15, width: destination.province.width - 1.6, height: destination.province.height - 0.3 }, 8.5, 6.5, true, rgb(1, 1, 1), "center", destination.province.height > 3.1 ? 0.95 : 1);
+      await drawBoxText(row.province, { ...destination.province, x: destination.province.x + 0.8, y: destination.province.y + 0.15, width: destination.province.width - 1.6, height: destination.province.height - 0.3 }, 8.5, 6.5, true, rgb(1, 1, 1), "center", destination.province.height > 3.1 ? 0.95 : 1, true, "destination province");
 
       outline(boxes.to, 1, 0.3);
       const tagWidth = boxes.toTag.width * mm;
       const tagHeight = boxes.toTag.height * mm;
       pdfPage.drawSvgPath(`M 0 0 L ${tagWidth * 0.86} 0 L ${tagWidth} ${tagHeight / 2} L ${tagWidth * 0.86} ${tagHeight} L 0 ${tagHeight} Z`, { x: (xMm + boxes.toTag.x) * mm, y: pageH - (yMm + boxes.toTag.y) * mm, color: rgb(0.03, 0.03, 0.03) });
-      await drawBoxText("To:", boxes.toTag, 12, 10, true, rgb(1, 1, 1), "center");
+      await drawBoxText("To:", boxes.toTag, 12, 10, true, rgb(1, 1, 1), "center", 1, true, "To tag");
       const recipient = recipientBoxes(measure, row.name);
-      await drawBoxText(row.name, recipient.name, 12, 9, true, rgb(0, 0, 0), "left", 1);
-      await drawBoxText(row.address, recipient.address, 11, 8, false, rgb(0, 0, 0), "left", 1.08);
-      await drawBoxText("Near by:", boxes.nearbyLabel, 9.5, 7.5, true, rgb(0, 0, 0), "left", 1, false);
-      await drawBoxText(row.landmark, boxes.landmark, 9.5, 7.5);
+      await drawBoxText(row.name, recipient.name, 12, 9, true, rgb(0, 0, 0), "left", 1, true, "receiver name");
+      await drawBoxText(row.address, recipient.address, 11, 8, false, rgb(0, 0, 0), "left", 1.08, true, "address");
+      await drawBoxText("Near by:", boxes.nearbyLabel, 9.5, 7.5, true, rgb(0, 0, 0), "left", 1, false, "Near by caption");
+      await drawBoxText(row.landmark, boxes.landmark, 9.5, 7.5, false, rgb(0, 0, 0), "left", 1, true, "Near by value");
+      outline(boxes.orderProduct, 0.8, 0.25);
       fillRect(boxes.contactDivider, rgb(0, 0, 0));
-      await drawBoxText(normalizePakistaniPhone(row.phone)!, boxes.contact, 11, 9, true, rgb(0, 0, 0), "center", 1, false);
-      outline(boxes.orderProduct, 0, 0.2);
-      await headerText("Order ID", row.orderId, boxes.orderId, 9, false);
-      await headerText("Product", row.product, boxes.product, 8.5, true, 0.95);
+      const referenceHeading = { ...boxes.orderId, y: boxes.orderId.y + 0.15, height: 1.7 };
+      const referenceValue = { ...boxes.orderId, y: boxes.orderId.y + 1.9, height: boxes.orderId.height - 2.05 };
+      const contactHeading = { ...boxes.contact, y: boxes.contact.y + 0.15, height: 1.7 };
+      const contactValue = { ...boxes.contact, y: boxes.contact.y + 1.9, height: boxes.contact.height - 1.9 };
+      await drawBoxText("Order ID", referenceHeading, 6.5, 6, true, rgb(0, 0, 0), "left", 1, false, "Order ID caption");
+      await drawBoxText(row.printedReference, referenceValue, 11, 8, true, rgb(0, 0, 0), "left", 1, false, "printed reference");
+      await drawBoxText("Contact Number", contactHeading, 6.5, 6, true, rgb(0, 0, 0), "left", 1, false, "contact caption");
+      await drawBoxText(normalizePakistaniPhone(row.phone)!, contactValue, 16, 12, true, rgb(0, 0, 0), "right", 1, false, "contact number");
+      outline(boxes.product, 0, 0.2);
+      await drawBoxText("Product:", boxes.productLabel, 7.5, 6.5, true, rgb(0, 0, 0), "left", 1, false, "Product caption");
+      await drawBoxText(row.product, boxes.productValue, 10, 7.5, true, rgb(0, 0, 0), "left", 1, false, "product");
       fillRect({ ...boxes.footer, height: 0.2 }, rgb(0, 0, 0));
-      fillRect(boxes.footerFrom, rgb(0.03, 0.03, 0.03));
-      await drawBoxText("From:", boxes.footerFrom, 9, 7, true, rgb(1, 1, 1), "center", 1, false);
-      await drawBoxText("Garden Shop", boxes.footerSender, 10, 7, true, rgb(0.14, 0.38, 0.18), "left", 1, false);
+      await drawBoxText("From:", boxes.footerFrom, 9, 7, true, rgb(0, 0, 0), "left", 1, false, "From caption");
+      await drawBoxText("Garden Shop", boxes.footerSender, 10, 7, true, colorAccent ? rgb(0.14, 0.38, 0.18) : rgb(0, 0, 0), "left", 1, false, "sender name");
       fillRect(boxes.footerDivider, rgb(0, 0, 0));
-      await drawBoxText(LABEL_FOOTER_ADDRESS, boxes.footerAddress, 8, 6.5, false, rgb(0, 0, 0), "left", 1, false);
+      await drawBoxText(LABEL_FOOTER_ADDRESS, boxes.footerAddress, 8, 6.5, false, rgb(0, 0, 0), "left", 1, false, "footer address");
 
       if (row.tracking) {
         const barcode = await renderBarcodeSvg(row.tracking);
@@ -828,6 +875,8 @@ async function makePdf(items = currentOrders(), position = startPosition) {
       }
     }
   }
+  const renderingBlocker = items.map(({ row }) => printBlocker(row)).find(Boolean);
+  if (renderingBlocker) throw new Error(`PDF_CONTENT_REQUIRES_REVIEW: ${renderingBlocker}`);
   const pdfBytes = await pdf.save();
   return new Blob(
     [
@@ -983,12 +1032,13 @@ function bind() {
         mapping,
         importedFileName.toLowerCase().endsWith(".csv"),
       );
+      await reserveRowReferences(rows);
       selected.clear();
       rows.forEach((_, i) => selected.add(i));
       view = "review";
       page = 0;
       activeLabel = rows.findIndex((row) => row.tracking);
-      const failed = rows.filter((row) => !row.name || !normalizePakistaniPhone(row.phone) || !row.address || !row.tracking).length;
+      const failed = rows.filter((row) => printBlocker(row)).length;
       await logEvent("LABELS_GENERATED", {
         labels: rows.length - failed,
         warnings: rows.filter((row) => row.warnings.length).length,
@@ -1076,6 +1126,10 @@ function bind() {
     countLimit = Number((event.target as HTMLInputElement).value);
     render();
   });
+  document.querySelector("#colorAccent")?.addEventListener("change", (event) => {
+    colorAccent = (event.target as HTMLInputElement).checked;
+    render();
+  });
   document.querySelector("#printNow")?.addEventListener("click", async () => {
     const items = currentOrders();
     if (!items.length) {
@@ -1094,22 +1148,13 @@ function bind() {
       render();
       return;
     }
-    await logEvent(printRequested ? "REPRINT_REQUESTED" : "PRINT_REQUESTED", {
-      labels: items.length,
-      pages: pagesForCount(items.length, startPosition),
-    });
-    printRequested = true;
-    await logEvent("LABELS_GENERATED", {
-      labels: items.length,
-      pages: pagesForCount(items.length, startPosition),
-    });
   });
   document.querySelector("#savePdf")?.addEventListener("click", async () => {
     try {
-      const items = currentOrders(),
-        blocked = items.some(({ row }) => printBlocker(row));
-      if (blocked) {
-        statusMessage = "Resolve flagged required fields, barcode, or layout issues before exporting a PDF.";
+      const items = currentOrders();
+      const blocker = items.map(({ row }) => printBlocker(row)).find(Boolean);
+      if (blocker) {
+        statusMessage = blocker;
         render();
         return;
       }
@@ -1120,8 +1165,7 @@ function bind() {
         pages: pagesForCount(items.length, startPosition),
       });
     } catch (error) {
-      statusMessage =
-        "PDF generation failed. Your editable batch remains available.";
+      statusMessage = error instanceof Error ? error.message : "PDF generation failed. The editable batch remains available.";
       await logEvent("APP_ERROR", {}, "PDF_GENERATION_FAILED");
       render();
     }
@@ -1140,11 +1184,6 @@ function bind() {
       render();
       return;
     }
-    await logEvent(printRequested ? "REPRINT_REQUESTED" : "PRINT_REQUESTED", {
-      labels: 1,
-      pages: 1,
-    });
-    printRequested = true;
   });
   document
     .querySelector("#confirmPrinted")
@@ -1182,19 +1221,34 @@ function editOrder(index: number) {
   ];
   const form = document.createElement("form");
   form.className = "edit-form";
-  form.innerHTML = `<dialog open><h2>Edit label details</h2><p>Edits stay local and are not sent to monitoring.</p>${order.sourceAddress !== order.address ? `<p class="source-note">The imported address value is retained below for editing and audit; only the display copy is normalized.</p><button class="button secondary" type="button" id="restoreSourceAddress">Restore imported source address</button>` : ""}${fields.map(([key, label]) => `<label>${esc(label)}<input name="${key}" value="${esc(order[key])}" ${key === "phone" ? 'inputmode="tel"' : ""}></label>`).join("")}<div class="button-row"><button class="button secondary" type="button" data-cancel>Cancel</button><button class="button primary">Save changes</button></div></dialog>`;
+  form.innerHTML = `<dialog open><h2>Edit label details</h2><p>Edits stay local and are not sent to monitoring.</p>${order.sourceAddress !== order.address ? `<p class="source-note">The original imported address is retained for correction; only the print copy is normalized.</p><button class="button secondary" type="button" id="restoreSourceAddress">Restore imported source address</button>` : ""}${fields.map(([key, label]) => key === "address" ? `<label>${esc(label)}<textarea name="address" rows="3">${esc(order.address)}</textarea></label>` : `<label>${esc(label)}<input name="${key}" value="${esc(order[key])}" ${key === "phone" ? 'inputmode="tel"' : ""}></label>`).join("")}<div class="button-row"><button class="button secondary" type="button" data-cancel>Cancel</button><button class="button primary">Save changes</button></div></dialog>`;
   app.append(form);
   form
     .querySelector("[data-cancel]")
     ?.addEventListener("click", () => form.remove());
   form.querySelector("#restoreSourceAddress")?.addEventListener("click", () => {
-    const address = form.querySelector<HTMLInputElement>('input[name="address"]');
+    const address = form.querySelector<HTMLTextAreaElement | HTMLInputElement>('[name="address"]');
     if (address) address.value = order.sourceAddress;
   });
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const previousAddress = order.address;
     const data = new FormData(form);
+    const nextOrderId = String(data.get("orderId") ?? "");
+    const nextTracking = String(data.get("tracking") ?? "");
+    try {
+      if (!order.printedReference && nextOrderId.trim() && nextTracking.trim()) {
+        order.printedReference = await reserveLabelReference(nextOrderId, nextTracking);
+      } else if (order.printedReference && nextOrderId.trim() && nextTracking.trim() &&
+        (nextOrderId !== order.orderId || nextTracking !== order.tracking)) {
+        await updateLabelReferenceSource(order.printedReference, nextOrderId, nextTracking);
+      }
+    } catch {
+      const dialog = form.querySelector("dialog");
+      dialog?.querySelector(".reference-edit-error")?.remove();
+      dialog?.insertAdjacentHTML("afterbegin", '<p class="mapping-warning reference-edit-error" role="alert">The printed reference could not be safely reserved or remapped. Keep the current value and correct the source fields.</p>');
+      return;
+    }
     for (const [key] of fields)
       order[key] = String(data.get(key) ?? "") as never;
     const enteredAddress = String(data.get("address") ?? "");
@@ -1208,25 +1262,36 @@ function editOrder(index: number) {
       (warning) =>
         !warning.startsWith("Duplicate") &&
         !warning.startsWith("Exact contact match") &&
+        !warning.startsWith("Phone cell was numeric") &&
         !warning.startsWith("Contact number is invalid") &&
         !warning.startsWith("Receiver name") &&
         !warning.startsWith("Contact number") &&
         !warning.startsWith("Delivery address") &&
         !warning.startsWith("Tracking number") &&
+        !warning.startsWith("Source Order ID") &&
+        !warning.startsWith("Printed reference") &&
+        !warning.startsWith("VPL amount") &&
+        !warning.startsWith("Product description") &&
+        !warning.startsWith("Destination city or province") &&
         !warning.startsWith("Text does not fit") &&
         !warning.startsWith("Tracking barcode is too dense") &&
         !warning.startsWith("Generated barcode"),
     );
     if (!order.name) order.warnings.push("Receiver name is required.");
+    if (!order.orderId.trim()) order.warnings.push("Source Order ID is required to reserve a printed reference.");
+    if (!order.printedReference) order.warnings.push("Printed reference has not been reserved in this browser.");
     if (!order.phone) order.warnings.push("Contact number is missing.");
     else if (!normalizedPhone) order.warnings.push("Contact number is invalid; enter a Pakistani mobile number with 11 digits.");
     if (repeatedContact.removed)
       order.warnings.push("Exact contact match removed from displayed address; original source is retained in the editor.");
     if (!order.address) order.warnings.push("Delivery address is required.");
+    if (!order.cod) order.warnings.push("VPL amount is required.");
+    if (!order.product) order.warnings.push("Product description is required.");
     if (!order.tracking)
       order.warnings.push(
         "Tracking number is missing; barcode cannot be generated.",
       );
+    if (!order.city || !order.province) order.warnings.push("Destination city or province is missing; confirm before printing.");
     if (repeatedContact.removed)
       order.warnings.push(
         "Exact contact match removed from displayed address; original source is available in the editor.",

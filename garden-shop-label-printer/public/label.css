@@ -99,26 +99,6 @@
   text-align: center;
   white-space: nowrap;
 }
-.tracking-caption {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 6.6px;
-  line-height: 1;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  white-space: nowrap;
-}
-.tracking-text {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  font-weight: 900;
-  line-height: 1;
-  white-space: nowrap;
-  letter-spacing: 0.015em;
-}
 .barcode-canvas {
   left: calc(var(--box-x) + (var(--box-width) - var(--bar-width)) / 2);
   top: calc(var(--box-y) + (var(--box-height) - var(--bar-height)) / 2);
@@ -333,3 +313,54 @@
 .contact { gap: 0; }
 .footer-sender { color: #23612d; }
 .footer-address { font-size: 8px; }
+.vpl-box { flex-direction: column; gap: 0.15mm; padding: 0.1mm; }
+.vpl-prefix { font-size: 8px; letter-spacing: 0.04em; }
+.vpl-box .vpl-amount { width: 100%; font-size: 20px; line-height: 0.95; letter-spacing: -0.035em; }
+.destination { gap: 0.2mm; padding: 0.3mm 0.3mm 0.5mm; }
+.city-text { font-size: 15px; }
+.province-text { font-size: 8.5px; }
+.order-product-frame::after { display: none; }
+.order-id, .contact { display: block; border: 0; background: transparent; }
+.order-id .field-heading, .contact .field-heading {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1.8mm;
+  padding: 0;
+  color: #4f554e;
+  background: transparent;
+  font-size: 6.3px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.order-id .printed-reference, .contact .contact-number {
+  position:absolute;
+  left:0;
+  right:0;
+  top:1.9mm;
+  bottom:0;
+  display:flex;
+  align-items:center;
+  overflow:hidden;
+  font-size:15px;
+  font-weight:900;
+  line-height:1;
+  white-space:nowrap;
+}
+.contact .contact-number { justify-content:flex-end; }
+.order-product-frame::after { display:none; }
+.product-row-frame { border-top:0.2mm solid #333; border-bottom:0.2mm solid #333; }
+.product-label, .product-value { display:flex; align-items:center; overflow:hidden; white-space:nowrap; line-height:1; }
+.product-label { font-size:8px; font-weight:800; }
+.product-value { font-size:10px; font-weight:750; }
+.footer-from { justify-content:flex-start; padding-left:0.6mm; color:#080808; background:transparent; }
+.vpl-box { flex-direction:column; gap:0.15mm; padding:0.1mm; }
+.vpl-prefix { font-size:8px; letter-spacing:0.04em; }
+.vpl-box .vpl-amount { width:100%; font-size:20px; line-height:0.95; letter-spacing:-0.035em; }
+.destination { gap:0.2mm; padding:0.3mm 0.3mm 0.5mm; }
+.city-text { font-size:15px; }
+.province-text { font-size:8.5px; }
+.footer-sender { color:#080808; }
+.color-accent .footer-sender { color:#23612d; }
+.label-warning { top:23.9mm; }
+.reference-scope-notice { margin:0 0 12px; padding:8px 10px; border-left:2px solid #8a6b27; background:#f3efdf; color:#58513c; font-size:10px; }
+@media print { .label-warning, .overflow-placeholder, .barcode-warning { display:none !important; } }

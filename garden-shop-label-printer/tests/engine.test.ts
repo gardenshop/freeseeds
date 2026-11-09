@@ -49,6 +49,13 @@ describe("local workbook and sheet engine", () => {
     expect(normalizePakistaniPhone("03ABC123456")).toBeUndefined();
   });
 
+  it("normalizes common English address terms but preserves names and Urdu source text", () => {
+    expect(normalizeAddressText("house 12\r\nMAIN RoAd, sector 4, McDonald Estate"))
+      .toBe("House 12 Main Road, Sector 4, McDonald Estate");
+    expect(normalizeAddressText("گلی نمبر ایک، HOUSE 12"))
+      .toBe("گلی نمبر ایک، House 12");
+  });
+
   it("flags invalid imported phones and preserves them for correction without treating them as output", () => {
     const headers = ["Name", "Cell #", "Address"];
     const [order] = normalizeRows(headers, [["Synthetic Receiver", "335963244", "Synthetic Street"]], detectMapping(headers), true);
@@ -64,7 +71,7 @@ describe("local workbook and sheet engine", () => {
     expect(order.phone).toBe("03330000000");
     expect(order.orderId).toBe("");
     expect(order.tracking).toBe("");
-    expect(order.warnings).toContain("Order ID is missing; none was generated.");
+    expect(order.warnings).toContain("Source Order ID is required to reserve a printed reference.");
     expect(order.warnings).toContain("Tracking number is missing; barcode cannot be generated.");
     const [numericPhone] = normalizeRows(headers, [["2", "Sample", 3001234567, "Main Street", "", "", "Seeds"]], mapping, false);
     expect(numericPhone.phone).toBe("03001234567");
@@ -185,13 +192,17 @@ describe("local workbook and sheet engine", () => {
     expect(LABEL_FOOTER).toBe("From: Garden Shop | C/o City Post Office, Sahiwal");
     expect(LABEL_LAYOUT.widthMm).toBe(65);
     expect(LABEL_LAYOUT.heightMm).toBe(44);
-    expect(boxes.orderId.x).toBeLessThan(boxes.product.x);
-    expect(boxes.to).toMatchObject({ x: 1.3, y: 10.8, width: 62.4, height: 22.6 });
-    expect(boxes.trackingCaption).toMatchObject({ x: 1.7, y: 0.6, width: 30.5, height: 1.7 });
-    expect(boxes.barcode).toMatchObject({ x: 1.7, y: 5.4, width: 30.5, height: 4.7 });
-    expect(boxes.vpl).toMatchObject({ x: 49, y: 1.1, width: 14.2, height: 7.8 });
-    expect(boxes.tracking.y).toBeLessThan(boxes.barcode.y);
-    expect(boxes.destination.x).toBeGreaterThan(boxes.barcode.x);
+    expect(boxes.barcode).toMatchObject({ x: 1.7, y: 1, width: 31.5, height: 17.2 });
+    expect(boxes.vpl).toMatchObject({ x: 44.4, y: 1.1, width: 19.4, height: 7.5 });
+    expect(boxes.destination).toMatchObject({ x: 34.7, y: 8.9, width: 29, height: 9.2 });
+    expect(boxes.city.y).toBeGreaterThanOrEqual(boxes.vpl.y + boxes.vpl.height);
+    expect(boxes.orderProduct).toMatchObject({ x: 1.3, y: 18.5, width: 62.4, height: 5.2 });
+    expect(boxes.orderId.y).toBe(boxes.contact.y);
+    expect(boxes.contactDivider.x).toBeGreaterThan(boxes.orderId.x);
+    expect(boxes.product.y).toBeCloseTo(boxes.to.y + boxes.to.height + 0.3);
+    expect(boxes.footer.y).toBeCloseTo(boxes.product.y + boxes.product.height + 0.3);
+    expect(boxes.to).toMatchObject({ x: 1.3, y: 24.1, width: 62.4, height: 12.2 });
+    expect(boxes.nearbyLabel.y).toBeCloseTo(boxes.address.y + boxes.address.height + 0.1);
     for (const box of Object.values(boxes)) {
       expect(box.x).toBeGreaterThanOrEqual(0);
       expect(box.y).toBeGreaterThanOrEqual(0);
@@ -209,17 +220,18 @@ describe("local workbook and sheet engine", () => {
     const boxes = recipientBoxes(ctx, "A long synthetic receiver name that wraps");
     expect(boxes.name.height).toBeGreaterThan(LABEL_LAYOUT.name.height);
     expect(boxes.address.y).toBeGreaterThan(boxes.name.y + boxes.name.height);
-    expect(boxes.address.y + boxes.address.height).toBeCloseTo(25.1);
+    expect(boxes.address.y + boxes.address.height).toBeCloseTo(33.3);
   });
 
   it("rebalances the destination city and province rows for long names", () => {
-    const ctx = { font: "", measureText: (text: string) => ({ width: text.length * 9 }) } as CanvasRenderingContext2D;
+    const ctx = { font: "", measureText: (text: string) => ({ width: text.length * 10 }) } as CanvasRenderingContext2D;
     const provinceLong = destinationBoxes(ctx, "Nowshera", "Khyber Pakhtunkhwa (KPK)");
     expect(provinceLong.city.height).toBeLessThan(LABEL_LAYOUT.city.height);
     expect(provinceLong.province.height).toBeGreaterThan(LABEL_LAYOUT.province.height);
-    expect(provinceLong.province.y + provinceLong.province.height).toBeCloseTo(9.7);
+    expect(provinceLong.province.y + provinceLong.province.height).toBeCloseTo(17.6);
     const cityLong = destinationBoxes(ctx, "A long destination city", "Punjab");
     expect(cityLong.city.height).toBeGreaterThan(LABEL_LAYOUT.city.height);
     expect(cityLong.province.height).toBeLessThan(LABEL_LAYOUT.province.height);
   });
+
 });

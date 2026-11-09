@@ -14,11 +14,12 @@ The repository-wide architecture discovery and full implementation history remai
 
 - A4 portrait 210 × 297 mm; 3 columns × 6 rows; label 65 × 44 mm. Column x positions are 6.5, 72.5, 138.5 mm and row y positions 14, 59, 104, 149, 194, 239 mm; horizontal/vertical gaps are exactly 1/1 mm and the grid is centered.
 - Outer outline: x=0.4, y=0.4, w=64.2, h=43.2 mm; 1 mm corner radius; 0.20 mm black stroke.
-- Tracking caption/value/barcode occupy y=0.6..10.1 mm; tracking text is x=1.7 y=2.4 w=30.5 h=2.8 and the vector Code 128 box is x=1.7 y=5.4 w=30.5 h=4.7 with 10X horizontal quiet zones. Destination and the premium VPL box are on the right; no location pin is used.
-- `TO` frame (1.3,10.8,62.4,22.6 mm): arrow tag; receiver starts near x=9.5/y=11.2; full normalized/wrapped address uses x=9.5..63/y=14.8..25; contact row stays above the frame bottom. Order ID and Product share one block at y=33.7..39.0 between TO and FROM.
-- Footer region y=39.3..43.4 mm: black `From:` tag, bold Garden Shop green accent, vertical rule, and exact one-line `C/o City Post Office, Sahiwal`.
-- All screen, print and PDF positions/text derive from shared millimeter boxes and the active-font fitting model. Urdu shaping uses Noto Naskh Arabic. Code 128 auto-switches B/C, preserves 10X quiet zones, uses a minimum 0.19 mm module, stays vector in PDF, and is checked by decoding the rendered canvas.
-- Normalize valid Pakistani mobile formats to exactly 11 digits beginning `03`; flag invalid/incomplete input, preserve it only for correction, never print it, and block PDF/print until corrected. Exact phone duplicates are removed only from the displayed address; source is retained.
+- Barcode/VPL band occupies y=1.0..18.2 mm. Vector Code 128 is on the left x=1.7..33.2 with 10X quiet zones and no readable tracking value. The right VPL capsule at x=44.4,y=1.1,w=19.4,h=7.5 stacks `VPL` above the prominent amount. City/province are directly below the amount; no location pin is rendered.
+- Order ID/contact share one bordered horizontal block (1.3,18.5,62.4,5.2 mm) with a divider at x=32.5. The left value is the separate printed `FS-YYMM-XXXXX` reference; the original source ID remains in Review. The TO frame (1.3,24.1,62.4,12.2 mm) contains the bold To/name, full wrapped address and `Near by:` immediately after the address. Product occupies a compact row y=36.6..39.1 before FROM.
+- Footer region y=39.4..43.3 mm is one row: `From: Garden Shop | C/o City Post Office, Sahiwal`. Black-and-white is default; Garden Shop green is optional for color printing.
+- Preview, browser print and PDF derive from the same millimeter boxes and active-font fitting model. Urdu shaping uses Noto Naskh Arabic. Code 128 auto-switches B/C, preserves 10X quiet zones, uses a minimum 0.19 mm module, remains vector in PDF, and is checked by exact-source decode.
+- Printed references use secure random `FS-YYMM-XXXXX` values. IndexedDB collision-checks and persists the source Order ID/tracking/reference mapping locally so re-imports/reprints retain it. Original source IDs are not changed. Offline cross-device global uniqueness cannot be guaranteed; the UI explicitly warns and site data must be retained.
+- Normalize valid Pakistani mobiles to exactly 11 digits beginning `03`; flag invalid/incomplete values, never invent digits, block PDF/print, and keep the original address while removing only an exact duplicate phone token from the display copy.
 
 ## Audit Findings and Remaining Limits
 
@@ -41,7 +42,7 @@ The repository-wide architecture discovery and full implementation history remai
 ## Deployment State
 
 - Standalone premium design/unit/browser/build: **100% software-verified**. Phone normalization, exact geometry, per-label fitting/overflow warnings, preview/print geometry, screenshot golden and all 500 synthetic Code 128 decodes pass.
-- Staging deployment: **PASS** at `330217eb-763d-45ac-8a87-ad7437a055a7`; configured monitor assets and `Audit service configured` were confirmed in a fresh tab. Final acceptance: **BLOCKED** because the isolated browser requires a manual Super-Admin Cloudflare Access login, while the shared browser tab contains pre-existing order rows that were not touched. Use only `test-evidence/staging-acceptance-18.csv` after login. Physical printer/stock calibration remains **0% / NOT TESTED**.
+- V2 staging deployment: **PENDING**; current Page `330217eb-763d-45ac-8a87-ad7437a055a7` is the prior version. The isolated acceptance context requires a manual Super-Admin Access login, and the shared browser tab contained pre-existing rows that were not touched. Use only `test-evidence/staging-acceptance-18.csv` after login. Physical printer/stock calibration remains **0% / NOT TESTED**.
 - Staff authorization: **0%**; no authorized staff roster/group exists. Current staging Access deliberately allows only the verified Super Admin.
 - Admin integration: **not part of this design-repair task**. Existing card/redirect source remains separate and inactive; the active Cloudflare Admin version `3e4b7c26...` stays at 100% and was not changed.
 - Production release: **0%**. No Pages production hostname, Admin Worker traffic shift, or production order binding was changed.

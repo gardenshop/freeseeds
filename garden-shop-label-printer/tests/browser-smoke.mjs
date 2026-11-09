@@ -58,8 +58,15 @@ async function loadPdf(path, screenshotName) {
 
 async function saveGeneratedPdf(page, path) {
   const before = await page.locator('a[download^="garden-shop-labels-"]').count();
+  assert.equal(await page.locator("#savePdf").isDisabled(), false, `PDF control is disabled: ${await page.locator("body").innerText()}`);
+  const statusBefore = await page.locator(".status-line").first().innerText();
   await page.locator("#savePdf").click();
-  await page.waitForFunction((count) => document.querySelectorAll('a[download^="garden-shop-labels-"]').length > count, before, { timeout: 30000 });
+  await page.waitForFunction(({ count, status }) => {
+    const links = document.querySelectorAll('a[download^="garden-shop-labels-"]');
+    const currentStatus = document.querySelector(".status-line")?.innerText ?? "";
+    return links.length > count || currentStatus !== status;
+  }, { count: before, status: statusBefore }, { timeout: 180000 });
+  assert.ok(await page.locator('a[download^="garden-shop-labels-"]').count() > before, `PDF export failed: ${await page.locator("body").innerText()}`);
   const link = page.locator('a[download^="garden-shop-labels-"]').nth(before);
   await link.waitFor({ state: "attached", timeout: 30000 });
   const href = await link.getAttribute("href");
@@ -74,6 +81,31 @@ try {
   await waitForServer();
   browser = await chromium.launch({ headless: true, executablePath: chromePath, args: ["--no-sandbox"] });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1200 }, acceptDownloads: true });
+  await page.addInitScript(() => {
+    const NativeDate = Date;
+    const fixedNow = NativeDate.UTC(2026, 10, 15, 12);
+    class FixedDate extends NativeDate {
+      constructor(...args) { super(...(args.length ? args : [fixedNow])); }
+      static now() { return fixedNow; }
+    }
+    Object.defineProperty(window, "Date", { configurable: true, value: FixedDate });
+    const nativeRandom = Crypto.prototype.getRandomValues;
+    let state = 0x6d2b79f5;
+    Object.defineProperty(Crypto.prototype, "getRandomValues", {
+      configurable: true,
+      writable: true,
+      value(array) {
+        if (array instanceof Uint32Array && array.length === 1) {
+          state ^= state << 13;
+          state ^= state >>> 17;
+          state ^= state << 5;
+          array[0] = state >>> 0;
+          return array;
+        }
+        return nativeRandom.call(this, array);
+      },
+    });
+  });
   const errors = [];
   const failedRequests = [];
   page.on("pageerror", (error) => errors.push(error.message));
@@ -87,11 +119,20 @@ try {
   assert.ok((await page.locator("body").innerText()).includes("Monitoring unavailable. Label work is safe and was not lost."), JSON.stringify({ body: await page.locator("body").innerText(), failedRequests }));
   assert.match(await page.locator("body").innerText(), /XLSX-SYN-001/);
   await page.locator('[data-view="preview"]').first().click();
-  assert.equal(await page.locator(".sheet .phone-number").first().innerText(), "03330000000");
-  assert.equal(await page.locator(".sheet .phone-number").first().evaluate((el) => el.classList.contains("text-overflow")), false);
-  assert.ok(await page.locator(".sheet .phone-number").first().evaluate((el) => el.scrollWidth <= el.clientWidth), "normalized mobile must fit completely in the contact row");
+  const firstPrintedReference = await page.locator(".sheet .printed-reference").first().innerText();
+  assert.match(firstPrintedReference, /^FS-2611-\d{5}$/u);
+  const importedReferences = await page.locator(".sheet .printed-reference").allInnerTexts();
+  assert.equal(new Set(importedReferences).size, importedReferences.length, "distinct source orders must have unique printed references");
+  assert.equal(await page.locator(".sheet .contact-number").first().innerText(), "03330000000");
+  assert.equal(await page.locator(".sheet .contact-number").first().evaluate((el) => el.classList.contains("text-overflow")), false);
+  assert.ok(await page.locator(".sheet .contact-number").first().evaluate((el) => el.scrollWidth <= el.clientWidth), "normalized mobile must fit completely in the contact row");
   assert.match(await page.locator(".sheet .receiver-name").first().innerText(), /مصنوعی/);
   assert.match(await page.locator(".sheet .address-text").first().innerText(), /گلی نمبر ایک/);
+  await page.reload({ waitUntil: "networkidle" });
+  await page.locator("#workbook").setInputFiles({ name: "synthetic-import.xlsx", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buffer: Buffer.from(syntheticXlsx()) });
+  await page.locator("#applyMapping").click();
+  await page.locator('[data-view="preview"]').first().click();
+  assert.equal(await page.locator(".sheet .printed-reference").first().innerText(), firstPrintedReference, "reimports and reprints must keep the original printed reference");
   await page.locator('[data-view="review"]').first().click();
   await page.locator("#newBatch").click();
   await page.locator("#sample").click();
@@ -104,14 +145,18 @@ try {
     const slots = [...sheet.children];
     const mm = (px) => px * 25.4 / 96;
     const offset = (index) => { const box = slots[index].getBoundingClientRect(); return [mm(box.left - rect.left), mm(box.top - rect.top)]; };
-    return { sheetWidthMm: mm(rect.width), sheetHeightMm: mm(rect.height), labelWidthMm: mm(label.width), labelHeightMm: mm(label.height), firstRow: [offset(0)[0], offset(1)[0], offset(2)[0]], firstColumn: [offset(0)[1], offset(3)[1], offset(6)[1], offset(9)[1], offset(12)[1], offset(15)[1]] };
+    return { sheetWidthMm: mm(rect.width), sheetHeightMm: mm(rect.height), labelWidthMm: mm(label.width), labelHeightMm: mm(label.height), slotCount: slots.length, firstRow: [offset(0)[0], offset(1)[0], offset(2)[0]], firstColumn: [offset(0)[1], offset(3)[1], offset(6)[1], offset(9)[1], offset(12)[1], offset(15)[1]] };
   });
   assert.ok(Math.abs(geometry.sheetWidthMm - 210) < 0.1, JSON.stringify(geometry));
   assert.ok(Math.abs(geometry.sheetHeightMm - 297) < 0.1, JSON.stringify(geometry));
   assert.ok(Math.abs(geometry.labelWidthMm - 65) < 0.1, JSON.stringify(geometry));
   assert.ok(Math.abs(geometry.labelHeightMm - 44) < 0.1, JSON.stringify(geometry));
+  assert.equal(geometry.slotCount, 18);
   assert.deepEqual(geometry.firstRow.map((value) => Math.round(value * 10) / 10), [6.5, 72.5, 138.5]);
   assert.deepEqual(geometry.firstColumn.map((value) => Math.round(value)), [14, 59, 104, 149, 194, 239]);
+  assert.ok(Math.abs(geometry.firstRow[1] - geometry.firstRow[0] - 65 - 1) < 0.02);
+  assert.ok(Math.abs(geometry.firstRow[2] - geometry.firstRow[1] - 65 - 1) < 0.02);
+  assert.ok(Math.abs(geometry.firstColumn[1] - geometry.firstColumn[0] - 44 - 1) < 0.02);
   assert.ok(await page.getByText("Near by:").count() > 0);
   assert.ok(await page.getByText("TO:").count() > 0);
   assert.equal(await page.locator(".sheet .vpl-box").first().getAttribute("aria-label"), "VPL 1250/-");
@@ -121,9 +166,10 @@ try {
   assert.equal(await page.locator(".sheet .footer-from").first().innerText(), "From:");
   assert.equal(await page.locator(".sheet .footer-sender").first().innerText(), "Garden Shop");
   assert.equal(await page.locator(".sheet .footer-address").first().innerText(), "C/o City Post Office, Sahiwal");
-  assert.equal(await page.locator(".individual-preview .phone-number").first().innerText(), "03001234567");
-  assert.equal(await page.locator(".individual-preview .phone-number").first().evaluate((el) => el.classList.contains("text-overflow")), false);
-  assert.ok(await page.locator(".individual-preview .phone-number").first().evaluate((el) => el.scrollWidth <= el.clientWidth), "individual phone value must not clip");
+  assert.equal(await page.locator(".sheet .city-text").first().evaluate((el) => getComputedStyle(el, "::before").content), "none");
+  assert.equal(await page.locator(".individual-preview .contact-number").first().innerText(), "03001234567");
+  assert.equal(await page.locator(".individual-preview .contact-number").first().evaluate((el) => el.classList.contains("text-overflow")), false);
+  assert.ok(await page.locator(".individual-preview .contact-number").first().evaluate((el) => el.scrollWidth <= el.clientWidth), "individual phone value must not clip");
   await page.screenshot({ path: join(evidence, "label-preview-synthetic.png"), fullPage: true });
   const labelScreenshot = await page.locator('.sheet .label[data-label-index="0"]').screenshot({ animations: "disabled" });
   const labelBaselinePath = join(evidence, "approved-label-layout.png");
@@ -149,7 +195,7 @@ try {
   const previewFieldsBeforePrint = await page.locator(".sheet .label").first().evaluate((label) => {
     const mm = (px) => px * 25.4 / 96;
     const labelBox = label.getBoundingClientRect();
-    return [".vpl-box", ".tracking-text", ".barcode-canvas", ".to-border", ".receiver-name", ".address-text", ".footer-address"].map((selector) => {
+    return [".vpl-box", ".barcode-canvas", ".order-product-frame", ".contact-divider", ".to-border", ".receiver-name", ".address-text", ".product-row-frame", ".footer-address"].map((selector) => {
       const box = label.querySelector(selector).getBoundingClientRect();
       return [mm(box.left - labelBox.left), mm(box.top - labelBox.top), mm(box.width), mm(box.height)];
     });
@@ -157,13 +203,22 @@ try {
   const readFields = (root) => root.evaluate((label) => {
     const mm = (px) => px * 25.4 / 96;
     const labelBox = label.getBoundingClientRect();
-    return [".vpl-box", ".tracking-text", ".barcode-canvas", ".to-border", ".receiver-name", ".address-text", ".footer-address"].map((selector) => {
+    return [".vpl-box", ".barcode-canvas", ".order-product-frame", ".contact-divider", ".to-border", ".receiver-name", ".address-text", ".product-row-frame", ".footer-address"].map((selector) => {
       const box = label.querySelector(selector).getBoundingClientRect();
       return [mm(box.left - labelBox.left), mm(box.top - labelBox.top), mm(box.width), mm(box.height)];
     });
   });
   const previewFields = previewFieldsBeforePrint;
   await page.locator('[data-view="print"]').first().click();
+  const printDisabled = await page.locator("#printNow").isDisabled();
+  assert.equal(printDisabled, false, `sample records unexpectedly blocked: ${await page.locator("body").innerText()}`);
+  const colorToggle = page.locator("#colorAccent");
+  assert.equal(await colorToggle.isChecked(), false, "black-and-white is the default print mode");
+  await colorToggle.check();
+  await page.locator('[data-view="preview"]').first().click();
+  assert.equal(await page.locator(".sheet .footer-sender").first().evaluate((el) => getComputedStyle(el).color), "rgb(35, 97, 45)");
+  await page.locator('[data-view="print"]').first().click();
+  await page.locator("#colorAccent").uncheck();
   const printPopupEvent = page.waitForEvent("popup");
   await page.locator("#printNow").click();
   const printPopup = await printPopupEvent;
@@ -189,14 +244,16 @@ try {
   assert.equal(samplePdf.pageCount, 1);
   assert.ok(Math.abs(samplePdf.page.getSize().width - 595.2756) < 0.01);
   assert.ok(Math.abs(samplePdf.page.getSize().height - 841.8898) < 0.01);
-  assert.match(samplePdf.text, /GS-TEST-001/);
+  assert.match(samplePdf.text, /FS-\d{4}-\d{5}/);
+  assert.doesNotMatch(samplePdf.text, /GS-TEST-001/);
   assert.match(samplePdf.text, /VPL/);
   assert.match(samplePdf.text, /1250\/-/);
-  assert.match(samplePdf.text, /TRK000001/);
+  assert.doesNotMatch(samplePdf.text, /TRK000001/);
   assert.match(samplePdf.text, /Near by:/);
   assert.match(samplePdf.text, /To:/);
   assert.match(samplePdf.text, /C\/o City Post Office, Sahiwal/);
   assert.doesNotMatch(samplePdf.text, /C\/o City Post Office, Sahiwal, Punjab/);
+  assert.doesNotMatch(samplePdf.text, /EDIT REQUIRED/);
   assert.equal(samplePdf.hasRasterImage, false, "PDF barcode must stay vector");
 
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, deviceScaleFactor: 1 });
@@ -215,14 +272,14 @@ try {
   const quote = (value) => `"${String(value).replaceAll('"', '""')}"`;
   const records = Array.from({ length: 500 }, (_, index) => [
     `GS-SYN-${String(index + 1).padStart(4, "0")}`,
-    index === 0 ? "مصنوعی گاہک" : index === 1 ? "Synthetic Receiver Name With Several Descriptive Words" : `Synthetic Receiver ${index + 1}`,
+    index === 0 ? "مصنوعی گاہک" : index === 10 ? "A Long Synthetic Receiver Name With Several Words" : `Synthetic Receiver ${index + 1}`,
     `03${String(index + 1).padStart(9, "0")}`,
-    index === 0 ? "گلی نمبر ایک، نمونہ پتہ، مکان ۱۲" : index === 1 ? "Synthetic long-address segment, ".repeat(50) : `House ${index + 1}, Model Town`,
+    index === 0 ? "گلی نمبر ایک، نمونہ پتہ، مکان ۱۲" : `House ${String(index + 1).padStart(2, "0")}, Synthetic Street ${String(index + 1).padStart(2, "0")}, Block B, Synthetic Town`,
     `TRK${String(index + 1).padStart(10, "0")}`,
     String((index % 8) * 125),
     index === 2 ? "Premium Vegetable Seed Mix" : `Synthetic Garden Product ${index % 11}`,
-    index === 1 ? "Nowshera" : index === 2 ? "Mardan District" : "Sahiwal",
-    index === 1 ? "Khyber Pakhtunkhwa (KPK)" : "Punjab",
+    index === 2 ? "Gujranwala" : index === 3 ? "Islamabad" : index === 4 ? "گوجرانوالہ" : index === 15 ? "Nowshera" : "Sahiwal",
+    index === 15 ? "Khyber Pakhtunkhwa (KPK)" : "Punjab",
     index === 0 ? "Library" : "Main market",
   ]);
   const csv = [headers, ...records].map((row) => row.map(quote).join(",")).join("\r\n");
@@ -235,30 +292,29 @@ try {
   assert.match(await page.locator("body").innerText(), /500 imported/);
   await page.locator('[data-view="preview"]').first().click();
   await page.waitForFunction(() => [...document.querySelectorAll(".sheet canvas[data-barcode]")].length === 18 && [...document.querySelectorAll(".sheet canvas[data-barcode]")].every((canvas) => canvas.dataset.verified === "true"), { timeout: 30000 });
-  assert.ok(await page.locator('.label[data-label-index="1"] .overflow-placeholder').count() > 0, "the overlong synthetic address must be visibly flagged without overlap");
-  assert.equal(await page.locator('.label[data-label-index="1"] .province-text').evaluate((el) => el.textContent?.replace(/\s+/g, " ").trim()), "Khyber Pakhtunkhwa (KPK)");
-  assert.equal(await page.locator('.label[data-label-index="1"] .province-text').evaluate((el) => el.classList.contains("text-overflow")), false);
-  assert.equal(await page.locator('.label[data-label-index="2"] .city-text').evaluate((el) => el.textContent?.replace(/\s+/g, " ").trim()), "Mardan District");
+  assert.equal(await page.locator('.label[data-label-index="1"] .overflow-placeholder').count(), 0, "medium synthetic address must not be clipped");
+  assert.equal(await page.locator('.label[data-label-index="3"] .city-text').textContent(), "Islamabad");
+  assert.equal(await page.locator('.label[data-label-index="4"] .city-text').textContent(), "گوجرانوالہ");
+  assert.equal(await page.locator('.label[data-label-index="3"] .city-text').evaluate((el) => el.classList.contains("text-overflow")), false);
+  assert.equal(await page.locator('.label[data-label-index="4"] .city-text').evaluate((el) => el.classList.contains("text-overflow")), false);
+  assert.equal(await page.locator('.label[data-label-index="15"] .province-text').evaluate((el) => el.textContent?.replace(/\s+/g, " ").trim()), "Khyber Pakhtunkhwa (KPK)");
+  assert.equal(await page.locator('.label[data-label-index="15"] .province-text').evaluate((el) => el.classList.contains("text-overflow")), false);
+  assert.equal(await page.locator('.label[data-label-index="2"] .city-text').evaluate((el) => el.textContent?.replace(/\s+/g, "").trim()), "Gujranwala");
   assert.equal(await page.locator('.label[data-label-index="2"] .city-text').evaluate((el) => el.classList.contains("text-overflow")), false);
-  assert.equal(await page.locator('.label[data-label-index="2"] .product-text strong').evaluate((el) => el.classList.contains("text-overflow")), false, "long product must fit by wrapping or measured resizing");
-  await page.locator(".sheet").screenshot({ path: join(evidence, "label-preview-500.png") });
-  const overflowLayout = await page.locator('.sheet .label[data-label-index="1"]').evaluate((label) => {
-    const address = label.querySelector(".address-text");
-    const nearby = label.querySelector(".landmark");
-    const contact = label.querySelector(".contact");
-    const footer = label.querySelector(".footer-from");
-    const bottom = (element) => element.getBoundingClientRect().bottom;
-    return { warning: Boolean(label.querySelector(".overflow-placeholder")), addressBeforeNearby: bottom(address) <= nearby.getBoundingClientRect().top + 1, nearbyBeforeContact: nearby.getBoundingClientRect().right <= contact.getBoundingClientRect().left, contactBeforeFooter: bottom(contact) <= footer.getBoundingClientRect().top + 1 };
-  });
-  assert.deepEqual(overflowLayout, { warning: true, addressBeforeNearby: true, nearbyBeforeContact: true, contactBeforeFooter: true });
+  assert.equal(await page.locator('.label[data-label-index="2"] .product-value').evaluate((el) => el.classList.contains("text-overflow")), false, "long product must fit by measured resizing");
+  await page.locator(".sheet").screenshot({ path: join(evidence, "label-preview-500-v2.png") });
   let decoded500 = 0;
+  const printedReferences = [];
   for (let pageIndex = 0; pageIndex < 28; pageIndex += 1) {
     const expectedCount = Math.min(18, 500 - pageIndex * 18);
-    const decoded = await page.locator(".sheet canvas[data-barcode]").evaluateAll((canvases) => canvases.map((canvas) => ({ index: Number(canvas.dataset.barcode), verified: canvas.dataset.verified, tracking: canvas.getAttribute("aria-label")?.replace("Code 128 tracking ", "") })));
+    const decoded = await page.locator(".sheet canvas[data-barcode]").evaluateAll((canvases) => canvases.map((canvas) => ({ index: Number(canvas.dataset.barcode), verified: canvas.dataset.verified, tracking: canvas.dataset.source })));
+    const refs = await page.locator(".sheet .printed-reference").allInnerTexts();
     assert.equal(decoded.length, expectedCount, `unexpected label count on synthetic sheet ${pageIndex + 1}`);
     assert.deepEqual(decoded.map((item) => item.index), Array.from({ length: expectedCount }, (_, index) => pageIndex * 18 + index));
     assert.ok(decoded.every((item) => item.verified === "true"), `barcode decode failed on synthetic sheet ${pageIndex + 1}`);
     assert.deepEqual(decoded.map((item) => item.tracking), records.slice(pageIndex * 18, pageIndex * 18 + expectedCount).map((row) => row[4]));
+    assert.ok(refs.every((reference) => /^FS-2611-\d{5}$/u.test(reference)));
+    printedReferences.push(...refs);
     decoded500 += decoded.length;
     if (pageIndex < 27) {
       await page.locator("#nextPage").click();
@@ -270,9 +326,8 @@ try {
     }
   }
   assert.equal(decoded500, 500);
+  assert.equal(new Set(printedReferences).size, 500);
   await page.locator('[data-view="review"]').first().click();
-  await page.locator('input[data-select="1"]').uncheck();
-  assert.match(await page.locator("body").innerText(), /1 available to select/);
   await page.locator('[data-view="preview"]').first().click();
   await page.locator('[data-view="print"]').first().click();
   assert.match(await page.locator("body").innerText(), /28 A4 pages/);
@@ -282,17 +337,44 @@ try {
   const batchPdf = batchPdfRendered.pdf;
   assert.equal(batchPdf.getPageCount(), 28);
   assert.equal(batchPdfRendered.hasRasterImage, true, "complex-script text must use the Unicode-safe raster fallback");
-  assert.doesNotMatch(batchPdfRendered.text, /Nowshera/);
-  assert.doesNotMatch(batchPdfRendered.text, /Khyber Pakhtunkhwa/);
-  assert.match(batchPdfRendered.text, /Mardan District/);
+  assert.match(batchPdfRendered.text, /Nowshera/);
+  assert.match(batchPdfRendered.text, /Khyber Pakhtunkhwa/);
+  assert.match(batchPdfRendered.text, /Gujranwala/);
+  assert.doesNotMatch(batchPdfRendered.text, /TRK0000000011/);
+  assert.doesNotMatch(batchPdfRendered.text, /EDIT REQUIRED/);
   assert.ok(Math.abs(batchPdf.getPage(0).getSize().width - 595.2756) < 0.01);
   await page.locator('[data-view="review"]').first().click();
   await page.locator('[data-edit="2"]').click();
   assert.equal(await page.locator('.edit-form input[name="product"]').inputValue(), "Premium Vegetable Seed Mix");
   await page.locator(".edit-form [data-cancel]").click();
   assert.ok(Math.abs(batchPdf.getPage(0).getSize().height - 841.8898) < 0.01);
+
+  await page.locator("#newBatch").click();
+  const overlongAddress = Array.from({ length: 40 }, (_, index) => `Synthetic address segment ${String(index + 1).padStart(2, "0")}`).join("\r\n");
+  const overflowCsv = [headers, ["SYN-OVERFLOW-001", "Synthetic Receiver Overflow", "03300000019", overlongAddress, "TRK001", "550", "Synthetic Seed Pack", "Sahiwal", "Punjab", "Synthetic Park"]]
+    .map((row) => row.map(quote).join(",")).join("\r\n");
+  await page.locator("#workbook").setInputFiles({ name: "synthetic-overlong.csv", mimeType: "text/csv", buffer: Buffer.from(overflowCsv) });
+  await page.locator("#applyMapping").click();
+  await page.getByText("Review every parcel.").waitFor({ timeout: 30000 });
+  await page.locator('[data-view="preview"]').first().click();
+  await page.waitForFunction(() => document.querySelector(".sheet canvas[data-barcode]")?.dataset.verified === "true", { timeout: 30000 });
+  assert.ok(await page.locator('.label[data-label-index="0"] .address-text .overflow-placeholder').count() > 0);
+  await page.screenshot({ path: join(evidence, "label-preview-overflow.png"), fullPage: true });
+  const overflowLayout = await page.locator('.sheet .label[data-label-index="0"]').evaluate((label) => {
+    const bottom = (selector) => label.querySelector(selector).getBoundingClientRect().bottom;
+    const top = (selector) => label.querySelector(selector).getBoundingClientRect().top;
+    return { addressBeforeNearby: bottom(".address-text") <= top(".nearby-label") + 1, nearbyInsideTo: bottom(".landmark") <= bottom(".to-border") + 1, contactAboveTo: bottom(".contact") <= top(".to-border") + 2, productBeforeFooter: bottom(".product-row-frame") <= top(".footer-from") + 1 };
+  });
+  assert.deepEqual(overflowLayout, { addressBeforeNearby: true, nearbyInsideTo: true, contactAboveTo: true, productBeforeFooter: true });
+  await page.locator('[data-view="print"]').first().click();
+  assert.equal(await page.locator("#savePdf").isDisabled(), true, "overflowing source must be corrected rather than printed with a placeholder");
+  await page.locator('[data-view="review"]').first().click();
+  await page.locator('[data-edit="0"]').click();
+  await page.locator("#restoreSourceAddress").click();
+  assert.equal(await page.locator('.edit-form [name="address"]').inputValue(), overlongAddress.replace(/\r\n/g, "\n"));
+  await page.locator(".edit-form [data-cancel]").click();
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ geometry, printGeometry, decodedBarcodeCounts: [3, 18, decoded500], samplePdfPages: samplePdf.pageCount, batch500PdfPages: batchPdf.getPageCount(), overflowLayout, browserErrors: errors, evidence: ["test-evidence/approved-label-layout.png", "test-evidence/label-preview-synthetic.png", "test-evidence/label-preview-500.png", "test-evidence/label-preview-mobile.png", "test-evidence/browser-print-sheet.png", "test-evidence/pdf-sample-page.png", "test-evidence/pdf-500-first-page.png"] }, null, 2));
+  console.log(JSON.stringify({ geometry, printGeometry, decodedBarcodeCounts: [3, 18, decoded500], samplePdfPages: samplePdf.pageCount, batch500PdfPages: batchPdf.getPageCount(), overflowLayout, browserErrors: errors, evidence: ["test-evidence/approved-label-layout.png", "test-evidence/label-preview-synthetic.png", "test-evidence/label-preview-500-v2.png", "test-evidence/label-preview-overflow.png", "test-evidence/label-preview-mobile.png", "test-evidence/browser-print-sheet.png", "test-evidence/pdf-sample-page.png", "test-evidence/pdf-500-first-page.png"] }, null, 2));
 } finally {
   await browser?.close();
   server.kill();
