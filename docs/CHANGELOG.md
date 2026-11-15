@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-11-15 - GFS-COD-MO-92
+
+- Fixed the token-linkage account-wide listing credential selection, added both-token validity checks and sanitized HTTP/provider diagnostics; added synthetic PS mock cases and removed hard-coded D: paths from runner tests.
+- Full Node386/1 skipped, build/lint and Wrangler4.149 upload help pass. PS5.1 files parse with0 errors, but actual mocks remain blocked by Restricted execution policy; no bypass.
+- Recorded artifact SHA mismatch, inaccessible approved host/MCP, prior unresolved version_annotation_missing, GitHub writer/CI limits and missing support/Meta/current Cloudflare readback. No upload, preview, token scope change, production or customer mutation.
+
+## 2026-11-15 - GFS-COD-MO-92
+
+- Repaired token-linkage readback to separate per-Worker deployment credential from account metadata listing; verify both token status/expiry and use targeted Worker deployment reads. Added sanitized HTTP/provider diagnostics and PowerShell mocked-response cases; raw provider/token data is never output.
+- Removed hard-coded D: paths from runner tests so validation derives the selected C: worktree. Prior wrong-prompt temporary worktree/ref was removed; no source change from that prompt remains.
+- Node full386/1 skipped, build/lint and Wrangler upload-help pass. PS5.1 parser has0 errors, but mocked script tests cannot run under effective Restricted policy. No execution-policy bypass.
+- Public artifact digest mismatch, inaccessible authorized `bi\nazim` host, absent Chrome/Cloudflare/Meta/inbox MCP and prior `version_annotation_missing` prevent token check, support readback, inventory, version recovery, preview and upload. No live mutation or push.
+
 ## 2026-11-08 - GFS-COD-MO-91
 
 - Added read-only existing-version recovery after an upload returned exit 0 but annotation readback failed.

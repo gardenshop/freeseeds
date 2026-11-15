@@ -1,5 +1,28 @@
 # Status
 
+## GFS-COD-MO-92: local fix complete, live gates blocked (2026-11-15 UTC)
+
+**LOCAL SOURCE REPAIR: PASS. LIVE TOKEN/INBOX/INVENTORY: BLOCKED. EXISTING VERSION/0%-PREVIEW: BLOCKED.**
+
+- `verify-gfs-admin-token-linkage.ps1` previously used the per-Worker deployment token for account-wide script enumeration and erased HTTP/provider errors. It now uses the separate read-only metadata credential for that map, verifies both token status/expiry, performs a targeted deployment read with the least-privilege token, and returns sanitized status/provider diagnostics with separate wrong-account/missing-resource/forbidden/expired/revoked/API/shape categories.
+- Added helper-level PS mock cases for Cloudflare success/error envelopes, malformed response, HTTP401/403/404/500, expired/revoked, wrong account/Worker, transport and redaction. Removed D: hardcodes from the PS runner test. These do not prove full run-gfs orchestration. PowerShell5.1 syntax parses four modified scripts with0 errors, but actual PS/mock execution is BLOCKED by effective Restricted policy; no bypass. The required host identity is `bi\nazim`; current host is not it.
+- Node full suite386 passed/1 skipped, build/lint PASS; Wrangler4.149 upload-help PASS with `--tag`/`--message`, no `--json`. These local results are not live credential/version proof.
+- The previous upload exit0 still has `version_annotation_missing`; no existing version ID is recovered. The provided artifact SHA `3d0d17a3…` mismatches the local seven-file Admin artifact `8e60e57d…` (Git LF vs Windows checkout CRLF noted). No Recover command, second upload, traffic change or preview is safe until both source/artifact identity and readbacks pass.
+- No approved Chrome/Cloudflare/Meta/inbox MCP, token status or actual case#02421284 reply was obtained. GitHub public metadata confirms `gardenshop/freeseeds`, branch ad956563 at task HEAD, PR11 open; check-runs0/status pending/artifacts0. Branch unprotected but gardenshop write identity is not authenticated; no push.
+- No live Cloudflare/Meta business, Admin/API state, D1 migration0048, R2, Queue/DLQ, watchdog, WABA/campaign, payment, settlement, sender, Recovery/CAPI or source-parity read was made. Historical safeguards are preserved; production unchanged.
+
+## GFS-COD-MO-92 local repair / live access blocked (2026-11-15 UTC)
+
+**LOCAL PARSER/REGRESSION: PASS WHERE EXECUTABLE / TOKEN READBACK, EXISTING-VERSION RECOVERY, UPLOAD AND PREVIEW: BLOCKED.**
+
+- Confirmed source defect: `verify-gfs-admin-token-linkage.ps1` used the least-privilege per-Worker deployment token for account-wide `GET /workers/scripts` and suppressed all response diagnostics. It now verifies both credential status/expiry, uses the separate read-only metadata credential for the account-wide map, checks the exact Worker deployment endpoint with the scoped credential, and returns sanitized stage/HTTP/provider codes. No token values or raw error bodies are output; no token scope was broadened.
+- Added mocked PowerShell 5.1 response tests for official success/result arrays, invalid shapes, HTTP401/403/404/500, expired/revoked, wrong account vs missing Worker, transport errors and secret redaction. Updated the runner test to derive its repo root instead of touching D:. The request/response tests are **NOT EXECUTED** because Windows effective policy is Restricted; only AST parse of four PS files passed with0 syntax errors. No bypass/policy change.
+- Node full suite386 passed/1 skipped, build/lint PASS. `wrangler versions upload --help` confirms supported `--tag`/`--message` and no `--json`; no upload was issued.
+- Existing GFS-91 host upload exit0/readback `version_annotation_missing` remains unresolved; no existing version ID, preview or routing comparison is available. The local Admin artifact hash `8e60e57d...` differs from the supplied `3d0d17a3...`; do not issue a recovery/upload command until artifact provenance is reconciled.
+- Current workspace host is not the runner's `bi\nazim` identity. Official Chrome DevTools, Cloudflare, Meta and inbox MCP tools are unavailable, so token status/expiry, support case #02421284, Cloudflare/Meta inventories and live baseline remain UNVERIFIED.
+- Public GitHub confirms target branch `codex/gfs88-admin-mo-isolated` at ad956563 and PR11 remains open. Branch status is `pending` with0 statuses/0 check runs; Actions artifacts total0; branch is unprotected. `gh`/authorized gardenshop write identity is unavailable; no push attempted.
+- The mistaken MO-90 worktree/branch created before prompt correction was clean and removed; no source edit or live call occurred under that prompt. Current MO-92 changes remain only on the local working branch; no remote publication or production/customer/D1/payment/Meta/CAPI/traffic/routing mutation occurred.
+
 ## GFS-COD-MO-91 existing-version recovery (2026-11-08 PKT)
 
 **Disposition: LOCAL RECOVERY REPAIR PASS / REAL HOST RECOVERY PENDING.**

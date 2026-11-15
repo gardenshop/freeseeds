@@ -22,9 +22,125 @@ function New-GfsTokenLinkageDiagnostics {
 }
 
 function New-GfsTokenLinkageResult {
-  param([string] $Result, [string] $IdentityMatch, [string] $TokenStatus, [string] $ExpiryStatus, [string] $Scope, [string] $Code, [object] $Diagnostics = $null)
+  param([string] $Result, [string] $IdentityMatch, [string] $TokenStatus, [string] $ExpiryStatus, [string] $Scope, [string] $Code, [object] $Diagnostics = $null, [int] $HttpStatus = 0, [string] $ProviderErrorCode = "none", [string] $MetadataTokenStatus = "unknown", [string] $MetadataExpiryStatus = "unknown")
   if ($null -eq $Diagnostics) { $Diagnostics = New-GfsTokenLinkageDiagnostics }
-  return [pscustomobject]@{ result = $Result; token_identity_match = $IdentityMatch; tokenStatus = $TokenStatus; expiry_status = $ExpiryStatus; scope = $Scope; code = $Code; diagnostics = $Diagnostics }
+  return [pscustomobject]@{ result = $Result; token_identity_match = $IdentityMatch; tokenStatus = $TokenStatus; expiry_status = $ExpiryStatus; metadata_token_status = $MetadataTokenStatus; metadata_expiry_status = $MetadataExpiryStatus; scope = $Scope; code = $Code; httpStatus = $(if ($HttpStatus -gt 0) { $HttpStatus } else { $null }); providerErrorCode = $ProviderErrorCode; diagnostics = $Diagnostics }
+}
+
+function Get-GfsCloudflareProviderErrorCode {
+  param([object] $Body)
+  $errors = @($Body.errors)
+  if ($errors.Count -eq 0) { return "none" }
+  $code = [string]$errors[0].code
+  if ($code -match '^\d{1,12}$') { return "cf_$code" }
+  return "unknown"
+}
+
+function Get-GfsCloudflareFailureCode {
+  param([string] $Path, [int] $HttpStatus, [string] $ProviderErrorCode = "none", [string] $ProviderMessage = "")
+  $stage = "cloudflare"
+  if ($Path -match '/tokens/verify$') { $stage = "token_verify" }
+  elseif ($Path -match '/workers/scripts$') { $stage = "authoritative_worker" }
+  elseif ($Path -match '/workers/scripts/[^/]+/deployments$') { $stage = "target_worker" }
+  elseif ($Path -match '/tokens/permission_groups$') { $stage = "permission_groups" }
+  elseif ($Path -match '/tokens/[a-fA-F0-9]{32}$') { $stage = "token_metadata" }
+
+  if ($stage -eq "token_verify" -and $ProviderMessage -match '(?i)\b(expired|expiration)\b') { $failure = "token_expired" }
+  elseif ($stage -eq "token_verify" -and $ProviderMessage -match '(?i)\b(revoked|disabled)\b') { $failure = "token_revoked" }
+  elseif ($HttpStatus -eq 401) { $failure = "${stage}_unauthorized" }
+  elseif ($HttpStatus -eq 403) { $failure = "${stage}_forbidden" }
+  elseif ($HttpStatus -eq 404 -and $stage -eq "token_verify") { $failure = "wrong_account" }
+  elseif ($HttpStatus -eq 404 -and $stage -eq "authoritative_worker") { $failure = "authoritative_worker_missing" }
+  elseif ($HttpStatus -eq 404 -and $stage -eq "target_worker") { $failure = "target_worker_missing" }
+  elseif ($HttpStatus -eq 404) { $failure = "${stage}_resource_missing" }
+  elseif ($HttpStatus -gt 0) { $failure = "${stage}_api_error" }
+  else { $failure = "${stage}_transport_error" }
+
+  if ($HttpStatus -gt 0) { $failure += "_http$HttpStatus" }
+  if ($ProviderErrorCode -match '^cf_\d{1,12}$') { $failure += "_$ProviderErrorCode" }
+  return $failure
+}
+
+function ConvertTo-GfsCloudflareReadbackResult {
+  param([string] $Path, [int] $HttpStatus, [object] $Body)
+  $providerCode = Get-GfsCloudflareProviderErrorCode $Body
+  $successProperty = if ($null -ne $Body) { $Body.PSObject.Properties["success"] } else { $null }
+  if ($HttpStatus -lt 200 -or $HttpStatus -ge 300) {
+    $message = [string]@($Body.errors)[0].message
+    $code = Get-GfsCloudflareFailureCode -Path $Path -HttpStatus $HttpStatus -ProviderErrorCode $providerCode -ProviderMessage $message
+    return [pscustomobject]@{ available = $false; body = $null; httpStatus = $HttpStatus; providerErrorCode = $providerCode; failureCode = $code }
+  }
+  if ($null -eq $successProperty -or $successProperty.Value -isnot [bool]) {
+    return [pscustomobject]@{ available = $false; body = $null; httpStatus = $HttpStatus; providerErrorCode = $providerCode; failureCode = "invalid_response_shape" }
+  }
+  if ($successProperty.Value -ne $true) {
+    $message = [string]@($Body.errors)[0].message
+    $code = Get-GfsCloudflareFailureCode -Path $Path -HttpStatus $HttpStatus -ProviderErrorCode $providerCode -ProviderMessage $message
+    return [pscustomobject]@{ available = $false; body = $null; httpStatus = $HttpStatus; providerErrorCode = $providerCode; failureCode = $code }
+  }
+  return [pscustomobject]@{ available = $true; body = $Body; httpStatus = $HttpStatus; providerErrorCode = "none"; failureCode = "none" }
+}
+
+function Invoke-GfsCloudflareGet {
+  param([string] $Token, [string] $Path, [scriptblock] $MockRequest = $null)
+  if ($null -ne $MockRequest) {
+    try {
+      $mock = & $MockRequest $Token $Path
+      if ($null -eq $mock -or $mock.PSObject.Properties["httpStatus"] -eq $null -or $mock.PSObject.Properties["body"] -eq $null) {
+        return [pscustomobject]@{ available = $false; body = $null; httpStatus = $null; providerErrorCode = "none"; failureCode = "invalid_response_shape" }
+      }
+      return ConvertTo-GfsCloudflareReadbackResult -Path $Path -HttpStatus ([int]$mock.httpStatus) -Body $mock.body
+    } catch {
+      return [pscustomobject]@{ available = $false; body = $null; httpStatus = $null; providerErrorCode = "none"; failureCode = (Get-GfsCloudflareFailureCode -Path $Path -HttpStatus 0) }
+    }
+  }
+
+  try {
+    $body = Invoke-RestMethod -Method Get -Uri ("https://api.cloudflare.com/client/v4" + $Path) -Headers @{ Authorization = "Bearer $Token"; Accept = "application/json" } -ErrorAction Stop
+    return ConvertTo-GfsCloudflareReadbackResult -Path $Path -HttpStatus 200 -Body $body
+  } catch {
+    $response = $_.Exception.Response
+    $httpStatus = 0
+    $errorBody = $null
+    $providerMessage = ""
+    if ($null -ne $response) {
+      try { $httpStatus = [int]$response.StatusCode } catch { $httpStatus = 0 }
+      $reader = $null
+      try {
+        $stream = $response.GetResponseStream()
+        if ($null -ne $stream) {
+          $reader = New-Object System.IO.StreamReader($stream)
+          $rawBody = $reader.ReadToEnd()
+          try { $errorBody = ConvertFrom-Json -InputObject $rawBody -ErrorAction Stop; $providerMessage = [string]@($errorBody.errors)[0].message } catch { }
+          $rawBody = $null
+        }
+      } catch { }
+      finally {
+        if ($null -ne $reader) { $reader.Dispose() }
+        try { $response.Close() } catch { }
+      }
+    }
+    $providerCode = Get-GfsCloudflareProviderErrorCode $errorBody
+    $failureCode = Get-GfsCloudflareFailureCode -Path $Path -HttpStatus $httpStatus -ProviderErrorCode $providerCode -ProviderMessage $providerMessage
+    $providerMessage = $null
+    $errorBody = $null
+    return [pscustomobject]@{ available = $false; body = $null; httpStatus = $(if ($httpStatus -gt 0) { $httpStatus } else { $null }); providerErrorCode = $providerCode; failureCode = $failureCode }
+  }
+}
+
+function Test-GfsTokenVerificationState {
+  param([object] $TokenVerify, [datetime] $Now)
+  $status = [string]$TokenVerify.result.status
+  $normalizedStatus = $status.ToUpperInvariant()
+  $expiryText = [string]$TokenVerify.result.expires_on
+  $expiry = [datetime]::MinValue
+  if ($normalizedStatus -eq "REVOKED" -or $normalizedStatus -eq "DISABLED") { return [pscustomobject]@{ pass = $false; tokenStatus = "REVOKED"; expiryStatus = "UNKNOWN"; code = "token_revoked" } }
+  if ($normalizedStatus -eq "EXPIRED") { return [pscustomobject]@{ pass = $false; tokenStatus = "EXPIRED"; expiryStatus = "EXPIRED"; code = "token_expired" } }
+  if (-not [datetime]::TryParse($expiryText, [ref]$expiry)) { return [pscustomobject]@{ pass = $false; tokenStatus = $(if ($normalizedStatus) { $normalizedStatus } else { "UNKNOWN" }); expiryStatus = "UNKNOWN"; code = "token_expiry_missing" } }
+  if ($normalizedStatus -eq "EXPIRED" -or $expiry.ToUniversalTime() -le $Now.ToUniversalTime()) { return [pscustomobject]@{ pass = $false; tokenStatus = "EXPIRED"; expiryStatus = "EXPIRED"; code = "token_expired" } }
+  if ($TokenVerify.success -ne $true -or $normalizedStatus -ne "ACTIVE") { return [pscustomobject]@{ pass = $false; tokenStatus = $(if ($normalizedStatus) { $normalizedStatus } else { "UNKNOWN" }); expiryStatus = "VALID"; code = "token_not_active" } }
+  if ([string]$TokenVerify.result.id -notmatch '^[a-fA-F0-9]{32}$') { return [pscustomobject]@{ pass = $false; tokenStatus = "ACTIVE"; expiryStatus = "VALID"; code = "token_identity_missing" } }
+  return [pscustomobject]@{ pass = $true; tokenStatus = "ACTIVE"; expiryStatus = "VALID"; code = "none" }
 }
 
 function Get-GfsSafeLinkageDiagnosticCode {
@@ -188,14 +304,9 @@ function Test-GfsTokenLinkage {
     [Parameter(Mandatory = $true)][string] $ExpectedWorker,
     [object] $AuthoritativeWorkerRecord = $null
   )
-  $status = [string]$TokenVerify.result.status
-  $expiryText = [string]$TokenVerify.result.expires_on
-  $expiry = [datetime]::MinValue
-  if (-not [datetime]::TryParse($expiryText, [ref]$expiry)) { return New-GfsTokenLinkageResult "FAIL" "FAIL" ($status.ToUpperInvariant()) "UNKNOWN" "UNVERIFIED" "token_expiry_missing" }
-  if ($TokenVerify.success -ne $true -or $status.ToUpperInvariant() -ne "ACTIVE") { return New-GfsTokenLinkageResult "FAIL" "FAIL" ($status.ToUpperInvariant()) "EXPIRED" "UNVERIFIED" "token_not_active" }
-  if ($expiry.ToUniversalTime() -le $Now.ToUniversalTime()) { return New-GfsTokenLinkageResult "FAIL" "FAIL" "ACTIVE" "EXPIRED" "UNVERIFIED" "token_expired" }
+  $tokenState = Test-GfsTokenVerificationState -TokenVerify $TokenVerify -Now $Now
+  if (-not $tokenState.pass) { return New-GfsTokenLinkageResult "FAIL" "FAIL" $tokenState.tokenStatus $tokenState.expiryStatus "UNVERIFIED" $tokenState.code }
   $tokenId = [string]$TokenVerify.result.id
-  if ($tokenId -notmatch '^[a-fA-F0-9]{32}$') { return New-GfsTokenLinkageResult "FAIL" "FAIL" "ACTIVE" "VALID" "UNVERIFIED" "token_identity_missing" }
   if ($Metadata.success -ne $true) { return New-GfsTokenLinkageResult "FAIL" "UNKNOWN" "ACTIVE" "VALID" "UNVERIFIED" "METADATA_AUTH_REQUIRED" }
   if ([string]$Metadata.result.id -ne $tokenId) { return New-GfsTokenLinkageResult "FAIL" "FAIL" "ACTIVE" "VALID" "UNVERIFIED" "token_identity_mismatch" }
   $policyCheck = Get-GfsExactWorkerPolicyDiagnostics -Policies $Metadata.result.policies -PermissionGroups $PermissionGroups -Worker $ExpectedWorker -AuthoritativeWorkerRecord $AuthoritativeWorkerRecord

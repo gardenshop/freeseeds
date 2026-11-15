@@ -1,5 +1,40 @@
 # Test Matrix
 
+## GFS-COD-MO-92 local verification (2026-11-15 UTC)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Cloudflare list-token root cause | FIXED LOCALLY | Account-wide Worker map now uses separate read-only metadata token; deployment token performs targeted deployment read. |
+| Sanitized diagnostics | IMPLEMENTED | Static category plus HTTP status and numeric `cf_` provider code; raw body/message/token omitted. |
+| Expired/revoked/401/403/404/API/shape mocks | ADDED, NOT RUN | PS5.1 test file updated; current policy prevents execution. |
+| PS5.1 syntax | PASS ONLY | Parser on validation/verifier/two tests:0 syntax errors; no PS code executed. |
+| Node full suite | PASS | 386 passed,1 skipped. |
+| Build/lint | PASS | Current isolated MO branch. |
+| Wrangler upload CLI | PASS HELP ONLY | Wrangler4.149.0 lists `versions upload`, `--tag`,`--message`,`--keep-vars`,`--strict`; no `--json`. No upload. |
+| Artifact provenance | FAIL CLOSED | Expected3d0d17a3…; current7-file Admin digest8e60e57d…; LF Git blobs/CRLF worktree. |
+| Real token/linkage/account | UNVERIFIED | No token value read, no authenticated Cloudflare MCP, not approved `bi\nazim` host. |
+| Existing version recovery / preview | BLOCKED | GFS-91 annotation readback failure unresolved; version ID and immutable match absent. |
+| Support, Meta and live resources | UNVERIFIED | No authenticated inbox/Chrome/Cloudflare/Meta tools. |
+| GitHub write/CI | BLOCKED/PENDING | Public branch ad956; status pending/0 contexts, check-runs0, artifacts0; no authenticated gardenshop writer. |
+
+## GFS-COD-MO-92 verification (2026-11-15 UTC)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Linkage failure root cause | FIXED LOCALLY | Account-wide `/workers/scripts` map now uses the separate metadata credential; targeted deployment read uses scoped credential. |
+| Sanitized diagnostics | IMPLEMENTED | HTTP status/provider code separated; static expiry/revocation/403/404/API/transport/invalid-shape codes; raw message/token not returned. |
+| PowerShell mock matrix | ADDED, NOT RUN | Official envelope, malformed shape,401/403/404/500, expired/revoked, wrong-account/worker, transport, redaction; Restricted policy blocks script execution. |
+| Full `run-gfs-admin-deployment.ps1` orchestration tests | BLOCKED | No complete end-to-end mock of host identity/Credential Manager/Wrangler orchestration was run; actual PS invocation is policy-restricted. |
+| PowerShell syntax | PASS | Windows PowerShell5.1 Parser.ParseFile: four affected PS files,0 syntax errors. Parsing is not execution PASS. |
+| Node/full tests | PASS | 386 passed,1 skipped; same current MO branch. |
+| Build/lint | PASS | Current isolated MO branch. |
+| Wrangler CLI | PASS READ-ONLY | Wrangler4.149.0 `versions upload --help`: supports `--tag`,`--message`; no `--json`; no upload performed. |
+| Artifact check | BLOCKED | Supplied3d0d17a3… differs from local seven-file digest8e60e57d…; Windows checkout is CRLF while Git blobs are LF. |
+| Authorized preupload snapshots | BLOCKED | Current identity is not `bi\nazim`; no Cloudflare MCP or valid credential read. |
+| Existing upload recovery | BLOCKED | GFS-91 `version_annotation_missing`; current version list/details unavailable; no version ID proven. |
+| 0% upload/preview | NOT ATTEMPTED | Exact existing version, artifact provenance and live baseline are not proven; duplicates prohibited. |
+| Support/Meta/GitHub authenticated checks | BLOCKED/PARTIAL | No Chrome/inbox/Meta MCP; GitHub public metadata only, no write credential. |
+
 ## GFS-COD-MO-91 existing-version recovery (2026-11-08 PKT)
 
 | Gate | Result | Evidence |

@@ -3043,3 +3043,22 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - The real scope mismatch is not evidence for account-wide access and must not be bypassed. Keep exact Worker-only authorization fail-closed.
 - Use one host diagnostic to classify the key family and compare the Worker reference against the read-only Workers Scripts record. Only then may the parser accept that exact documented representation.
 - No upload, traffic, payment, D1, Meta, WhatsApp or CAPI mutation is authorized.
+## GFS-COD-MO-92 fail closed on token-list permissions and artifact mismatch (2026-11-15 UTC)
+
+**Decision:** repair diagnostics locally; do not retry credentials, query the support inbox, recover a version, upload or preview without the authorized host and authenticated tools.
+
+- Account-wide Worker metadata enumeration must not use the per-Worker deployment credential. The implementation now uses the separately named read-only metadata credential for the map and token metadata, plus a targeted Worker deployments read using the least-privilege deployment credential. If metadata credential scope is insufficient, retain sanitized HTTP/provider evidence and stop; do not broaden permissions.
+- Preserve both token states and fail distinctly on expired, revoked, forbidden, wrong-account/token-verify404, missing Worker, malformed response, transport and generic API errors. Never log raw provider messages, headers, secrets or token IDs.
+- Existing upload readback failure `version_annotation_missing` requires read-only GFS-91 `Recover` first. Since the actual existing version cannot be inspected here, no duplicate upload or 0% preview is authorized.
+- The supplied candidate digest does not match the seven tracked Admin files in the recovered source checkout. Do not recompute/replace the approved release hash by guess, nor use the stale hash to upload. Reconcile exact source and artifact on the approved host first.
+- Effective local PowerShell policy is Restricted and the agent identity fails the exact `bi\nazim` gate. Do not bypass policy, invoke the credential verifier/runner, or read Credential Manager here. Mock PS tests are added but execution remains blocked.
+- Preserve the existing branch/remote; public checks show no current CI run/artifact and no authenticated gardenshop write identity. Commit/push only after local PS tests can run under an approved host/account; no force/merge or remote claim.
+## GFS-COD-MO-92 repair access diagnostics; do not recover/upload offline (2026-11-15 UTC)
+
+**Decision:** fix the local account-scope diagnostic, but stop before any real credential read, existing-version recovery, upload or preview.
+
+- Per-Worker deployment token no longer enumerates all Workers. The separate metadata-read credential is used for account inventory/token metadata; the scoped credential is used for targeted Worker deployment read. Both validity states and exact deployment-token policy are checked, with sanitized HTTP status/provider code. Never broaden tokens or expose raw error details.
+- No authenticated browser MCP, Cloudflare account identity, Credential Manager token status, support inbox, or approved `bi\nazim` host is available. Do not retry token diagnosis or search alternate sessions. Recorded Nov7 token expiry is past, not a fresh status check.
+- Current GFS-91 upload is still unidentified after `version_annotation_missing`; read-only Recover must find one exact existing version before any preview. The supplied release artifact SHA fails the local exact-commit comparison. No duplicate upload or version guess.
+- PS5.1 mocks are prepared but cannot run under Restricted policy. No bypass/setting change. Node/full build/lint PASS; no live equivalence inferred.
+- GitHub public branch/PR metadata only. Do not push without verified gardenshop write identity; preserve the local branch and no remote state claim. No live/financial/Meta/WhatsApp mutation.

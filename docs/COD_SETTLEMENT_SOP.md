@@ -1,5 +1,19 @@
 # COD Settlement SOP
 
+## GFS-COD-MO-92 diagnostic and no-reupload stop (2026-11-15 UTC)
+
+The deployment token is per-Worker; never use it for account-wide Worker listing or broaden it. Verify both credential status/expiry first. Use the separate metadata-read credential only for metadata/token/Worker mapping, and the scoped credential for targeted Worker deployment read. Record sanitized HTTP/provider codes, not raw errors/secrets.
+
+The prior uploaded version is unresolved after `version_annotation_missing`. Use read-only `Recover` first and require one exact tag/message/Git/artifact/created-time/source match plus unchanged active deployment fingerprint. If there is no unique match, stop. The current approved artifact SHA mismatches local Admin files and the PS5.1 mock suite could not execute under Restricted; no Recover command, reupload or preview is ready.
+
+## GFS-COD-MO-92 read-only access and no-duplicate gate (2026-11-15 UTC)
+
+The previous upload returned exit0 but version identity readback failed. Always use the existing `Recover` mode first; it is read-only and must prove exactly one existing Worker version from authoritative tag/message/Git/artifact/creation/source evidence with the active deployment fingerprint unchanged. If missing or ambiguous, STOP; never reupload blindly. Current version ID and preview remain unverified.
+
+The deployment token is restricted to the exact Admin Worker. Do not use it for account-wide script listing or broaden its scope. Use the separate approved metadata-read token for any metadata map; use targeted Worker deployment readbacks with the scoped token. Capture sanitized HTTP status/provider code only; no bearer values or raw error body.
+
+No owner rerun/upload is ready while local artifact `8e60e57d...` differs from approved `3d0d17a3...`, the authorized `bi\nazim` host is unavailable, or PS5.1 helper/full runner integration tests have not executed under an approved policy. Keep Admin100%/candidate0%, API100%, watchdog DISARMED, WhatsApp/Advance/COD/Recovery protections, CAPI OFF and all customer/payment/D1 gates. This SOP grants no deployment, preview, settlement or activation authority.
+
 ## GFS-COD-MO-91 existing-version recovery (2026-11-08 PKT)
 
 If an upload exits successfully but annotations are not visible, stop uploads. Run the approved host runner in `Recover` mode. It reads the current deployment and versions, merges legacy records with the documented Worker-version annotation endpoint, and accepts only one exact expected tag/message identity with UUID, creation time and source. No identity proof means no re-upload and no preview claim.

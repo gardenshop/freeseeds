@@ -1,5 +1,24 @@
 # Resource Registry
 
+## GFS-COD-MO-92 current access boundary (2026-11-15 UTC)
+
+- Target GitHub repo is public `gardenshop/freeseeds`. Public isolated branch `codex/gfs88-admin-mo-isolated` is ad956563f2187e6a5c830fbd3a64691192681802; PR11 is open at 5e4aa7530910368465942828bcd495fd0fbf3aab. Public branch metadata says unprotected; latest status pending0, check runs0, Actions artifacts0. Public commit author maps to a collaborator account, not evidence of current `gardenshop` write identity. No GitHub CLI/authorized writer available.
+- Cloudflare target account ID cb5066a6d71ecdee0bd7ed8aacb4d3c2 and credential target names `GFS-Admin-Deploy-Scoped-2026`, `GFS-Cloudflare-Token-Metadata-Read-2026` are source/task records only. Actual account/user, token IDs/status/expiry/permissions were not read. Nov7 recorded expiry is historical/past; no tokens inspected.
+- Corrected linkage source file uses the metadata-read credential for `/workers/scripts` mapping and per-Worker credential for `/workers/scripts/{name}/deployments`; it reports only HTTP status and numeric provider code. No authentication call made.
+- Expected uploaded Admin artifact3d0d17a3a953c6804a84f3449cc7b11ab2b87f68b0e8c602e79ff23ab32f7911. Recovered branch C: computed hash8e60e57d0d2231853bbca0d01a3b5d7679693de74846cf9194d174430a678eff over seven files. `git ls-files --eol` shows index LF/worktree CRLF for Admin entry/config. Mismatch remains a release stop; no upload.
+- Previous real upload exit0/readback `version_annotation_missing` is latest historical event; exact version UUID/deployment/traffic fingerprint is still not recovered. No second upload or preview.
+- Account API/Admin versions, routes/bindings, D10048, R2, Queue/DLQ, watchdog, logs, support case#02421284, Meta business/WABA/phone/webhooks/templates/campaign/ad account/CAPI remain UNVERIFIED. No customer, secret or inbox contents accessed; no production mutation.
+
+## GFS-COD-MO-92 access and artifact status (2026-11-15 UTC)
+
+- Repo public identity `gardenshop/freeseeds`; isolated branch `codex/gfs88-admin-mo-isolated` public/local HEAD `ad956563f2187e6a5c830fbd3a64691192681802`, unprotected. PR11 is open with head `5e4aa7530910368465942828bcd495fd0fbf3aab`; public status pending/0 contexts, check-runs0, Actions artifacts0. Public commit account mapping is not authenticated push authorization. No `gh` CLI or gardenshop write token is available.
+- Exact live Cloudflare account, tokens, Admin/API versions/routing/bindings, D10048, R2, Queue/DLQ, watchdog, CAPI and credentials remain UNVERIFIED. User-recorded token expiry Nov7, 2026 is historical/past; actual active/revoked state was not read. No token values or Credential Manager records accessed.
+- Source targets remain `GFS-Admin-Deploy-Scoped-2026` and `GFS-Cloudflare-Token-Metadata-Read-2026`. The verifier no longer asks the per-Worker deployment token to enumerate all Workers; the metadata token is used for metadata listing, and the deployment token performs a targeted Worker deployment read. Any permissions failure is logged only as safe numeric status/provider code; no scope changes.
+- Uploaded candidate current identity remains unknown: prior host Wrangler exit0 followed by `version_annotation_missing`; GFS-91 read-only recovery has not run. No version ID/time/active traffic preview recorded and no duplicate upload.
+- Supplied artifact `3d0d17a3a953c6804a84f3449cc7b11ab2b87f68b0e8c602e79ff23ab32f7911`; current C: branch artifact digest `8e60e57d0d2231853bbca0d01a3b5d7679693de74846cf9194d174430a678eff` (7 tracked Admin files). Git index LF, worktree CRLF. Match is BLOCKED, not inferred.
+- No official Chrome DevTools, Cloudflare, Meta or support-inbox MCP is available. Case #02421284 latest reply, correct visible account/session, Meta Business/WABA/phone/campaign and current live payment/WhatsApp settings remain UNVERIFIED. Historical protections remain in rules, not current readback.
+- No upload, deployment, deployment routing, D1/R2/Queue access/write, payment, order, settlement, Meta/CAPI/WhatsApp or customer operation occurred.
+
 ## GFS-COD-MO-91 recovery gate (2026-11-08 PKT)
 
 - The prior owner upload reported exit 0 but identity readback was `version_annotation_missing`; current version ID remains unrecorded until read-only recovery proves it.
