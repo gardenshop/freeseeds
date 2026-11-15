@@ -1,12 +1,24 @@
 # Status
 
+## GFS-COD-MO-94 recovered system / unresolved artifact provenance (2026-11-15 UTC)
+
+**C: WORKSPACE AND BACKUP: PASS / HASH PROVENANCE: UNRESOLVED / LIVE ACCESS, MO RECOVERY AND RELEASE: BLOCKED.**
+
+- Task-start C: repo is `C:\Free Seeds\freeseeds-mo`, branch `codex/gfs88-admin-mo-isolated`, HEAD `b7adb4d7603a959ee863f76c537839ee00730f56`, clean; three local commits are ahead of unchanged remote ad956563. Old BitLocker D: was not touched.
+- User-requested backup digest9e8f86936f7c18efea58689718730ebded3372b249fa6e1ec952e6e0740772e6 matches; `git bundle verify` passes. Existing bundle was not modified/restored over files.
+- Artifact investigation is complete but approval remains blocked: identical seven Admin Git blobs at GFS-88 commit3017338, ce6c398, ad956563. The GFS-88 helper hashes sorted path+NUL+raw bytes+NUL. The exact seven-file manifest, sizes and SHA256 are in RESOURCE_REGISTRY. Git-LF aggregate d70ff1c9…; C: CRLF aggregate8e60e57d…. Recorded3d0d17a3… matches neither, even at the commit where recorded. The original artifact/generation evidence is missing, so no replacement SHA is inferred.
+- Source/tests unchanged since MO-92: Node386/1 skipped, build/lint PASS retained; PS5.1 actual mock execution remains blocked by Restricted. No tests rerun.
+- Cloudflare token status/permissions, account, Admin/API active versions, bindings, D10048, R2, Queue/DLQ, watchdog, support case#02421284, Meta/WABA/phone/campaign/CAPI, and previous uploaded version remain UNVERIFIED. No Chrome MCP/list_pages or authorized host. No version ID/preview; `version_annotation_missing` still prohibits duplicate upload.
+- Public GitHub shows PR11 open at5e4aa753, MO remote ad956563; status pending/0 contexts, check-runs0, artifacts0, branch unprotected. Three local commits remain unpushed; no authenticated gardenshop identity was verified. No push.
+- Local workspace/backup/hash investigation100% complete; artifact's historical provenance unresolved; external inventory0/4 components, existing-version recovery0/1, preview0%, upload0%. Production/customer systems unchanged.
+
 ## GFS-COD-MO-93 workspace and artifact identity (2026-11-15 UTC)
 
 **LOCAL WORKSPACE: PASS / ORIGINAL ARTIFACT PROVENANCE: BLOCKED / LIVE ACCESS AND MO RECOVERY: BLOCKED.**
 
 - Recovered C: workspace matches the `.code-workspace` Historical MO folder. At task start, branch `codex/gfs88-admin-mo-isolated` HEAD was `56fc0e91e88fd575d2eb553d57793259379d0998`, clean and2 commits ahead of unchanged remote ad956563. Commits are d836e82 (MO-92 repair/docs) and56fc0e9 (publication status); GFS-93 documentation is saved locally on the same branch.
 - Verified the existing backup without writes: `.recovery-backups\gfs-cod-mo-92-20261115\final.bundle`, SHA256 `9e8f86936f7c18efea58689718730ebded3372b249fa6e1ec952e6e0740772e6`; `git bundle verify` PASS. No restore/overwrite.
-- Seven tracked Admin files are unchanged across commits3017338, ce6c398 and ad956563. The preflight raw-worktree digest is8e60e57d… with CRLF; Git-blob LF digest isd70ff1c…. Recorded artifact3d0d17a3… matches neither. The earlier baseline551c2ee has other file bytes and yields blob edcc1fec…/CRLF95215687…. Therefore the source revisions are consistent, but recorded digest provenance/algorithm is not; exact cause remains unresolved. No digest substitution/upload.
+- Seven tracked Admin files are unchanged across commits3017338, ce6c398 and ad956563. The GFS-88 helper in3017338 hashes sorted path+NUL+raw bytes+NUL. Exact per-file Git/C: byte counts and SHA256 are in RESOURCE_REGISTRY: aggregate Git-LF isd70ff1c… and C: CRLF8e60e57d…. Recorded3d0d17a3… matches neither, even at the commit where it was recorded. Baseline551c2ee has a different tree (blob edcc1fec…/CRLF95215687…). Thus line endings explain LF-vs-CRLF but not the approved digest; its original input/method remains unknown. No substitution/upload.
 - Existing full validation remains Node386/1 skipped, build/lint PASS. PowerShell5.1 mocks remain unexecuted under Restricted policy; no source/dependency changed in MO-93, so suites were not rerun. D: untouched.
 - MCP/page inventory is unavailable. Cloudflare/Meta/support inbox, tokens, live Admin/API/D1/R2/Queue/watchdog/WABA/CAPI, and uploaded MO version remain UNVERIFIED. GFS-91 `version_annotation_missing` still prohibits duplicate upload; no version ID or preview.
 - GitHub remote remains ad956563; public CI/status has0 runs/statuses, artifacts0, branch unprotected. Local commits are unpushed because no authenticated gardenshop writer was verified. No live mutation.

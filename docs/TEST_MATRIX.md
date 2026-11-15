@@ -1,5 +1,19 @@
 # Test Matrix
 
+## GFS-COD-MO-94 continuity and artifact proof (2026-11-15 UTC)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| C: repo/branch/HEAD/status | PASS | `freeseeds-mo`, `codex/gfs88-admin-mo-isolated`, task-start b7adb4d…, clean,3 local commits ahead of remote ad956563. |
+| Requested final.bundle | PASS | SHA256 `9e8f86936f7c18efea58689730ebded3372b249fa6e1ec952e6e0740772e6`; verify pass; no restore. |
+| Seven Admin Git blob identity | PASS | Same files at3017338/ce6c398/ad956563. |
+| Digest method/source | RECONCILED, APPROVAL BLOCKED | Exact per-file bytes/hashes recorded in RESOURCE_REGISTRY. Git-LF aggregate d70ff1c9…; C: CRLF8e60e57d…; approved3d0d17a3… matches neither. Old input provenance missing. |
+| Test/build/lint | RETAINED PASS | MO-92 Node386/1 skipped, build/lint; no code/dependency changes in MO-94. |
+| PowerShell mocks | BLOCKED | Effective Restricted policy; no bypass. |
+| MCP/live inventory | BLOCKED | No Chrome DevTools/Cloudflare/Meta/inbox MCP or authorized host; `list_pages` not run. |
+| Existing upload/version/preview | BLOCKED | `version_annotation_missing`; no version ID, routing snapshot, or preview. No reupload. |
+| GitHub write | BLOCKED | Public PR/branch read only; no authenticated gardenshop write identity. |
+
 ## GFS-COD-MO-93 recovery state (2026-11-15 UTC)
 
 | Gate | Result | Evidence |

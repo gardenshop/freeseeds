@@ -3070,3 +3070,11 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Source files/config are identical at GFS-88 commit3017338, task commit ce6c398, and public remote ad956563. The current hash helper hashes raw checkout bytes, producing Git-blob LF `d70ff1c9…` and C: CRLF `8e60e57d…`. Neither is the approved historical3d0d17a3…. Thus line endings explain the local LF/CRLF difference, but not the supplied artifact discrepancy; original generated artifact/hash manifest is absent. Do not guess, replace the approved hash, or upload.
 - No tests are repeated because code/dependencies are unchanged. PS5.1 actual execution remains blocked; no policy bypass. Node/build/lint pass from MO-92.
 - No Chrome MCP, authenticated Cloudflare/Meta/inbox or approved `bi\nazim` host is available. Preserve the unresolved GFS-91 upload as a read-only recovery-only case. No duplicate upload, preview, deployment, routing, payment, D1, Meta, CAPI or message.
+## GFS-COD-MO-94 close local hash investigation; retain release stop (2026-11-15 UTC)
+
+**Decision:** preserve the recovered C: repository and verified bundles; do not alter the artifact approval, recover/upload a Worker version, or claim live readiness.
+
+- Current branch/task-start HEAD and three local commits were verified; public remote remains ad956563. No destructive Git operation or D: access.
+- The expected3d0d17a3… SHA was recorded in GFS-88 commit3017338, whose exact seven tracked Admin files are unchanged at ce6c398 and ad956563. The hash helper at3017338 is the same path+NUL+raw-bytes+NUL method. Git-LF and C:-CRLF per-file hashes/totals are recorded in RESOURCE_REGISTRY; both aggregates differ from3d0…. So the discrepancy is not a branch change or merely line endings; the original digest input/method cannot be established. Keep the approved SHA and stop.
+- The prior successful upload's `version_annotation_missing` remains unresolved. No current version/traffic fingerprint is independently read; no second upload/preview.
+- No authenticated browser/cloud/inbox MCP or `bi\nazim` host. Public GitHub read only; no verified gardenShop write identity. No production/customer mutation; protected live settings remain historical.

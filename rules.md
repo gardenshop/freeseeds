@@ -1,5 +1,14 @@
 # Get Free Seeds Binding Rules
 
+## GFS-COD-MO-94 recovered C: state and artifact provenance stop (2026-11-15 UTC)
+
+- Use only `C:\Free Seeds\freeseeds-mo`; never access/mount/search the BitLocker D: drive. Task-start branch HEAD `b7adb4d7603a959ee863f76c537839ee00730f56` was clean, with three local MO commits over remote ad956563. Preserve commits and bundles; no reset/overwrite.
+- The requested `final.bundle` remains SHA256 `9e8f86936f7c18efea58689718730ebded3372b249fa6e1ec952e6e0740772e6` and verifies. The additional MO-93 bundle is stored under C: backups; never restore over valid files.
+- Artifact diagnosis: GFS-88 code uses sorted `git ls-files` paths and SHA256 path UTF-8 + NUL + raw bytes + NUL. Seven Admin Git blobs are identical at3017338/ce6c398/ad956563; exact per-file blob/checkout bytes and hashes are in RESOURCE_REGISTRY. LF gives d70ff1c9…, C: CRLF gives8e60e57d…; recorded3d0d17a3… matches neither, including at the commit where recorded. Line endings explain only the LF/CRLF delta. Original generating input/manifest remains unknowable; do not substitute/upload.
+- Tests/code unchanged from MO-92. Reuse its Node386/1 skipped, build/lint results; PowerShell remains blocked by Restricted policy. No policy bypass.
+- No approved Chrome/Cloudflare/Meta/support MCP or authorized `bi\nazim` host is available. Do not read credentials or infer account state. Existing GFS-91 `version_annotation_missing` remains a no-duplicate-upload gate; no version ID/preview.
+- No deployment, Recover against live, upload, route/traffic, D1/R2/Queue, payment/order, settlement, WhatsApp, Meta/CAPI or customer mutation. Last-recorded Admin/API/Watchdog/Advance/COD/province/Recovery/CAPI/Hoja baselines remain historical until freshly verified.
+
 ## GFS-COD-MO-93 recovered-workspace and artifact reconciliation (2026-11-15 UTC)
 
 - Use only the C: workspace `C:\Free Seeds\freeseeds-mo`; exact working branch is `codex/gfs88-admin-mo-isolated` at `56fc0e91e88fd575d2eb553d57793259379d0998`. It preserves local MO-92 commits `d836e82` and `56fc0e9` on top of remote `ad956563f2187e6a5c830fbd3a64691192681802`; do not reset or overwrite. Protected D: is never accessed.

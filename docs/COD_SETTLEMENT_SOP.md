@@ -1,5 +1,11 @@
 # COD Settlement SOP
 
+## GFS-COD-MO-94 artifact and version recovery gate (2026-11-15 UTC)
+
+Preserve the approved artifact SHA `3d0d17a3…` as historical evidence only; the exact seven-file source tree at GFS-88/ce6/ad956 produces neither that Git-LF nor C:-CRLF hash under the recorded path+NUL+raw-bytes+NUL helper. The detailed manifest is in RESOURCE_REGISTRY. Until the original artifact or hash-generation evidence is found and independently compared, no replacement hash, read-only version attribution, preview, or upload is approved.
+
+The previous upload's identity readback failed. Use authorized read-only recovery first and require unique version/source/artifact evidence plus unchanged routing. Never blindly upload again. This recovered local workspace and bundle do not authorize production action.
+
 ## GFS-COD-MO-93 artifact identity stop (2026-11-15 UTC)
 
 The isolated C: branch/source is recovered and clean, but the approved artifact digest3d0d17a3… does not match the current seven-file Admin source using either canonical Git-blob bytes or current Windows checkout bytes. Preserve both the recorded approval and source; do not compute a replacement approval by guess. Recover the historical generated artifact/hash manifest or obtain owner reapproval of an explicitly rebuilt artifact before any MO recovery/preview/upload.

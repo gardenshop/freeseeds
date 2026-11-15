@@ -4,7 +4,20 @@
 
 - Active C: worktree: `C:\Free Seeds\freeseeds-mo`; branch `codex/gfs88-admin-mo-isolated`; task-start HEAD56fc0e91e88fd575d2eb553d57793259379d0998; remote source head ad956563f2187e6a5c830fbd3a64691192681802. Two MO-92 commits were already ahead at task start; GFS-93 docs are local on this branch. Other PR11/auto/label worktrees remain preserved. Protected D: not touched.
 - Backup `.recovery-backups\gfs-cod-mo-92-20261115\final.bundle` SHA256 `9e8f86936f7c18efea58689718730ebded3372b249fa6e1ec952e6e0740772e6`; bundle verify passes.
-- Artifact files are `git ls-files apps/admin/src apps/admin/wrangler.jsonc` (7 paths). Blob contents at3017338, ce6c398 and ad956563 are identical. Preflight hashes relative path + NUL + file bytes + NUL: Git blob LF d70ff1c9512cf36e874762aa1d908f4edfa5da3ecec49977ab9afe07bd944780; current Windows CRLF8e60e57d0d2231853bbca0d01a3b5d7679693de74846cf9194d174430a678eff. At historical551c2ee, blobs edcc1fecbb9a8de48ee4ba457343d67ffe32b00df485a395abf0796fb09ce3e5 / CRLF9521568717d7f1157266c9e78fc9e98b6dd75b28e596d8492804042dc25385cb. Approved artifact3d0d17a3… matches none. Exact source of the old recorded digest remains unknown; do not substitute.
+- Artifact inputs are the sorted seven paths from `git ls-files apps/admin/src apps/admin/wrangler.jsonc`. The GFS-88 helper in commit3017338 (lines97-100) hashes each relative path UTF-8, NUL, raw file bytes, NUL. The blobs at3017338, ce6c398 and ad956563 are identical. Exact per-file evidence for ad956563:
+
+| File | Git blob bytes | Git blob SHA256 | C: bytes | C: SHA256 |
+|---|---:|---|---:|---|
+| apps/admin/src/analytics.ts | 17565 | 9e3d5ba9176f489092d2e05a9c5446c97db4dd4be433e0ff23d69a2d426da683 | 17821 | 673cdb5d34b33eefd2f5fceb143e5aa974ac637132b0a75aa99c24b3527cf0d9 |
+| apps/admin/src/attribution.ts | 7039 | 95d035c22af8cfad5806a4ccbe30a84b1ba0eceb353755ec3897015b95a9c069 | 7153 | 47be37f5c69ff4a9074aeb94b0bcf0e88d408e18169bd2ad6b35167e3981ea87 |
+| apps/admin/src/cancellations.ts | 10733 | 83c3ba1da930bf26013e1c1bb6a66630b76d918dc85bfe0c1c89957057ab7ba2 | 10812 | 20ad2fbd034460fced25c8316e77f65b4a58db66c4ba594cda1507be44c5a2ba |
+| apps/admin/src/conversations-dashboard.ts | 18036 | b92aae37c0dfa7e449db54306aa14137681b0efbb999ca646becfba002006a92 | 18074 | bcfe79bb0ceb4c5f53bbbfc0b5415e44783b9ef866b45368baf1853799c1c1f8 |
+| apps/admin/src/conversations.ts | 21995 | 1dfa65116c162f76180b0d966a9d8ba21bce7ae89f3e56d32ff6758b3b6ef91c | 22113 | 11de0c2bc199237129678945663bae1156cf0ff3ec150e319f03d58c4b21cddd |
+| apps/admin/src/index.ts | 424809 | 751942113929e94f596ce9d4a5b6d9b451a18198d7203fe9eed21159d493f7e8 | 427519 | a5292d201bf91cd558ddb8d39e6ec1a7d4359ac9f4f0d2fccd23082f56d7ab66 |
+| apps/admin/wrangler.jsonc | 1109 | ed94af5bc0acda066d8764cc3fe30dcb3ec2d62db6c22f11fd18d150d9033c94 | 1122 | adeb9938c8eb6dd4fcc1ba3009b002fb41c6ec18bba2728511bfc60aa1491858 |
+| Total | 501286 | Git-blob aggregate `d70ff1c9512cf36e874762aa1d908f4edfa5da3ecec49977ab9afe07bd944780` | 504614 | preflight aggregate `8e60e57d0d2231853bbca0d01a3b5d7679693de74846cf9194d174430a678eff` |
+
+`git ls-files --eol` confirms index LF and C: checkout CRLF, adding3328 bytes. This explains d70… vs8e60…, but approved3d0… matches neither. The exact original input/method is absent; the old digest is not reproducible from its documented seven-file tree and hash algorithm. Do not substitute or upload.
 - No live Cloudflare, Meta or support evidence was gathered. Previous Admin/API routing, D1 migration0048, R2/Queue/DLQ, Access, watchdog, token status, WABA/campaign and CAPI entries elsewhere are historical only. GFS-91 existing upload remains unversioned because annotation readback failed; no new upload/preview.
 
 ## GFS-COD-MO-92 current access boundary (2026-11-15 UTC)
