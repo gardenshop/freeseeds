@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-COD-MO-93 recovered state and digest evidence (2026-11-15 UTC)
+
+- Active C: worktree: `C:\Free Seeds\freeseeds-mo`; branch `codex/gfs88-admin-mo-isolated`; task-start HEAD56fc0e91e88fd575d2eb553d57793259379d0998; remote source head ad956563f2187e6a5c830fbd3a64691192681802. Two MO-92 commits were already ahead at task start; GFS-93 docs are local on this branch. Other PR11/auto/label worktrees remain preserved. Protected D: not touched.
+- Backup `.recovery-backups\gfs-cod-mo-92-20261115\final.bundle` SHA256 `9e8f86936f7c18efea58689718730ebded3372b249fa6e1ec952e6e0740772e6`; bundle verify passes.
+- Artifact files are `git ls-files apps/admin/src apps/admin/wrangler.jsonc` (7 paths). Blob contents at3017338, ce6c398 and ad956563 are identical. Preflight hashes relative path + NUL + file bytes + NUL: Git blob LF d70ff1c9512cf36e874762aa1d908f4edfa5da3ecec49977ab9afe07bd944780; current Windows CRLF8e60e57d0d2231853bbca0d01a3b5d7679693de74846cf9194d174430a678eff. At historical551c2ee, blobs edcc1fecbb9a8de48ee4ba457343d67ffe32b00df485a395abf0796fb09ce3e5 / CRLF9521568717d7f1157266c9e78fc9e98b6dd75b28e596d8492804042dc25385cb. Approved artifact3d0d17a3… matches none. Exact source of the old recorded digest remains unknown; do not substitute.
+- No live Cloudflare, Meta or support evidence was gathered. Previous Admin/API routing, D1 migration0048, R2/Queue/DLQ, Access, watchdog, token status, WABA/campaign and CAPI entries elsewhere are historical only. GFS-91 existing upload remains unversioned because annotation readback failed; no new upload/preview.
+
 ## GFS-COD-MO-92 current access boundary (2026-11-15 UTC)
 
 - Target GitHub repo is public `gardenshop/freeseeds`. Public isolated branch `codex/gfs88-admin-mo-isolated` is ad956563f2187e6a5c830fbd3a64691192681802; PR11 is open at 5e4aa7530910368465942828bcd495fd0fbf3aab. Public branch metadata says unprotected; latest status pending0, check runs0, Actions artifacts0. Public commit author maps to a collaborator account, not evidence of current `gardenshop` write identity. No GitHub CLI/authorized writer available.

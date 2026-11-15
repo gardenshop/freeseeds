@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS-COD-MO-93 recovery state (2026-11-15 UTC)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| C: workspace/repo/branch/head/status | PASS | `freeseeds-mo`, isolated branch; local56fc0e91 clean, remote ad956563; two preserved local commits. |
+| Final backup | PASS | Hash9e8f86936f7c18efea58689718730ebded3372b249fa6e1ec952e6e0740772e6; `git bundle verify` passes; no restore. |
+| Seven Admin source files across GFS-88/ce6/ad956 | SAME GIT CONTENT | All tracked file blobs identical. |
+| Approved hash3d0d17a3… versus current | BLOCKED | Git blob LF digestd70ff1c9…; C: CRLF raw digest8e60e57d…; neither matches3d0d. Earlier baseline551c2ee is also distinct. Exact old digest provenance unavailable. |
+| Current test/build/lint | RETAINED PASS | MO-92 ran Node386/1 skipped, build/lint PASS; no code/dependency changes in MO-93 so not rerun. |
+| PowerShell mocks/runner | BLOCKED | Restricted policy; no bypass. |
+| Cloudflare/Meta/inbox/live version | UNVERIFIED | No authenticated MCP/host access; prior version_annotation_missing remains. |
+| Upload/preview | NOT ATTEMPTED | Artifact provenance/version ID not proven; duplicate upload prohibited. |
+
 ## GFS-COD-MO-92 local verification (2026-11-15 UTC)
 
 | Gate | Result | Evidence |

@@ -1,5 +1,16 @@
 # Status
 
+## GFS-COD-MO-93 workspace and artifact identity (2026-11-15 UTC)
+
+**LOCAL WORKSPACE: PASS / ORIGINAL ARTIFACT PROVENANCE: BLOCKED / LIVE ACCESS AND MO RECOVERY: BLOCKED.**
+
+- Recovered C: workspace matches the `.code-workspace` Historical MO folder. At task start, branch `codex/gfs88-admin-mo-isolated` HEAD was `56fc0e91e88fd575d2eb553d57793259379d0998`, clean and2 commits ahead of unchanged remote ad956563. Commits are d836e82 (MO-92 repair/docs) and56fc0e9 (publication status); GFS-93 documentation is saved locally on the same branch.
+- Verified the existing backup without writes: `.recovery-backups\gfs-cod-mo-92-20261115\final.bundle`, SHA256 `9e8f86936f7c18efea58689718730ebded3372b249fa6e1ec952e6e0740772e6`; `git bundle verify` PASS. No restore/overwrite.
+- Seven tracked Admin files are unchanged across commits3017338, ce6c398 and ad956563. The preflight raw-worktree digest is8e60e57d… with CRLF; Git-blob LF digest isd70ff1c…. Recorded artifact3d0d17a3… matches neither. The earlier baseline551c2ee has other file bytes and yields blob edcc1fec…/CRLF95215687…. Therefore the source revisions are consistent, but recorded digest provenance/algorithm is not; exact cause remains unresolved. No digest substitution/upload.
+- Existing full validation remains Node386/1 skipped, build/lint PASS. PowerShell5.1 mocks remain unexecuted under Restricted policy; no source/dependency changed in MO-93, so suites were not rerun. D: untouched.
+- MCP/page inventory is unavailable. Cloudflare/Meta/support inbox, tokens, live Admin/API/D1/R2/Queue/watchdog/WABA/CAPI, and uploaded MO version remain UNVERIFIED. GFS-91 `version_annotation_missing` still prohibits duplicate upload; no version ID or preview.
+- GitHub remote remains ad956563; public CI/status has0 runs/statuses, artifacts0, branch unprotected. Local commits are unpushed because no authenticated gardenshop writer was verified. No live mutation.
+
 ## GFS-COD-MO-92: local fix complete, live gates blocked (2026-11-15 UTC)
 
 **LOCAL SOURCE REPAIR: PASS. LIVE TOKEN/INBOX/INVENTORY: BLOCKED. EXISTING VERSION/0%-PREVIEW: BLOCKED.**

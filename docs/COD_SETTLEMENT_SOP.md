@@ -1,5 +1,11 @@
 # COD Settlement SOP
 
+## GFS-COD-MO-93 artifact identity stop (2026-11-15 UTC)
+
+The isolated C: branch/source is recovered and clean, but the approved artifact digest3d0d17a3… does not match the current seven-file Admin source using either canonical Git-blob bytes or current Windows checkout bytes. Preserve both the recorded approval and source; do not compute a replacement approval by guess. Recover the historical generated artifact/hash manifest or obtain owner reapproval of an explicitly rebuilt artifact before any MO recovery/preview/upload.
+
+The previous upload is still unresolved (`version_annotation_missing`). Use read-only Recover first, never duplicate upload. No active deployment ID/preview exists in this local evidence. All live release and settlement gates remain separate.
+
 ## GFS-COD-MO-92 diagnostic and no-reupload stop (2026-11-15 UTC)
 
 The deployment token is per-Worker; never use it for account-wide Worker listing or broaden it. Verify both credential status/expiry first. Use the separate metadata-read credential only for metadata/token/Worker mapping, and the scoped credential for targeted Worker deployment read. Record sanitized HTTP/provider codes, not raw errors/secrets.

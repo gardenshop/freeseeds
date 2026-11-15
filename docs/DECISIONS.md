@@ -3062,3 +3062,11 @@ PR #8 required CI run `39262725184` was triggered after the push and failed befo
 - Current GFS-91 upload is still unidentified after `version_annotation_missing`; read-only Recover must find one exact existing version before any preview. The supplied release artifact SHA fails the local exact-commit comparison. No duplicate upload or version guess.
 - PS5.1 mocks are prepared but cannot run under Restricted policy. No bypass/setting change. Node/full build/lint PASS; no live equivalence inferred.
 - GitHub public branch/PR metadata only. Do not push without verified gardenshop write identity; preserve the local branch and no remote state claim. No live/financial/Meta/WhatsApp mutation.
+## GFS-COD-MO-93 preserve recovered branch; reject digest substitution (2026-11-15 UTC)
+
+**Decision:** preserve current local branch/bundle and stop the MO release path at the unresolved historical artifact digest and unavailable authorized live access.
+
+- Local C: branch/head and backup hash were verified; two MO-92 commits remain clean and unpushed. Do not restore a bundle over current files, access the protected D: drive, or reset the branch.
+- Source files/config are identical at GFS-88 commit3017338, task commit ce6c398, and public remote ad956563. The current hash helper hashes raw checkout bytes, producing Git-blob LF `d70ff1c9…` and C: CRLF `8e60e57d…`. Neither is the approved historical3d0d17a3…. Thus line endings explain the local LF/CRLF difference, but not the supplied artifact discrepancy; original generated artifact/hash manifest is absent. Do not guess, replace the approved hash, or upload.
+- No tests are repeated because code/dependencies are unchanged. PS5.1 actual execution remains blocked; no policy bypass. Node/build/lint pass from MO-92.
+- No Chrome MCP, authenticated Cloudflare/Meta/inbox or approved `bi\nazim` host is available. Preserve the unresolved GFS-91 upload as a read-only recovery-only case. No duplicate upload, preview, deployment, routing, payment, D1, Meta, CAPI or message.
