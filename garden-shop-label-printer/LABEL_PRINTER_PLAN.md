@@ -12,6 +12,14 @@ The repository-wide architecture discovery and full implementation history remai
 
 ## V4 Local Status (2026-11-16)
 
+### LP-034 Release Update (Supersedes Historical Blockers)
+
+- Correct source checkout/branch/SHA verified: `D:\free seeds`, `codex/garden-shop-label-printer-mvp`, `c7dc3fbb150b7a8b10807d89afb49a052dda04de`. No source changes or repeated expensive tests.
+- MCP and fresh GFS Dashboard/OAuth identity PASS; Super Admin-only Access policy PASS. No config repair required. Monitor Worker/D1 unchanged by post-upload readback.
+- Fresh configured build and static-only staging deploy PASS: `2420ee42-08ac-4d0d-a620-caa7197f0966`, active on `garden-shop-label-printer-staging.pages.dev`. Rollback is verified prior active `2db928f2-0ccd-4f7a-aa9a-19db2bfc29d4`. See RULES.md for identity/time/resource evidence.
+- Isolated anonymous staging request challenged by Access PASS. Owner login in context `gfs-lp034-synthetic` / tab 10 is the next dependency. Shared populated tab is preserved. Live import/PDF/barcode/audit acceptance remains BLOCKED, not inferred from local evidence.
+- Stage completion/remaining: source/local quality 100%/0%; MCP/identity/Access preflight 100%/0%; static deployment 100%/0%; fresh live application/PDF/audit acceptance 0%/100%; physical printer/stock 0%/100%. Overall software release estimate 75%/25% (four equally weighted software stages, hardware excluded).
+
 - Windows repair used the existing portable Node 24.22.3 at `E:\DevTools\Node\node-v24.22.3-win-x64`, not a reinstall. USER PATH now includes it while retaining `F:\Git\cmd`; npm/npx use `.cmd` due to the unchanged Restricted execution policy. npm cache is `F:\npm-cache`; local Wrangler 4.149.0, lockfile, project dependencies, Chrome/Edge and Playwright were already installed.
 - Correct existing worktree was recovered at `D:\free seeds`, on `codex/garden-shop-label-printer-mvp`; no worktree creation or switch was needed. The project remains isolated under `garden-shop-label-printer/`. Do not stage unrelated dirty files or `.kilo/`.
 - A4 geometry remains 210 × 297 mm, 65 × 44 mm labels, 3 × 6, 1 mm gutters, x=6.5/72.5/138.5 mm and y=14/59/104/149/194/239 mm. The new custom preset is 190.5 × 254 mm, 63 × 42 mm, 3 × 6 (18 labels), 0.5/0.333 mm gutters, x=0.25/63.75/127.25 mm and y=0.1675/42.5005/84.8335/127.1665/169.4995/211.8325 mm. Its narrow 0.25 mm side and 0.1675 mm top/bottom margins are warned in the UI.
