@@ -56,16 +56,21 @@ async function loadPdf(path, screenshotName) {
   return { pdf, page: pdf.getPage(0), pageCount: pdf.getPageCount(), text, hasRasterImage: operators.fnArray.some((op) => op === OPS.paintImageXObject || op === OPS.paintInlineImageXObject) };
 }
 
-async function saveGeneratedPdf(page, path) {
+async function saveGeneratedPdf(page, path, timeout = 300000) {
   const before = await page.locator('a[download^="garden-shop-labels-"]').count();
   assert.equal(await page.locator("#savePdf").isDisabled(), false, `PDF control is disabled: ${await page.locator("body").innerText()}`);
   const statusBefore = await page.locator(".status-line").first().innerText();
   await page.locator("#savePdf").click();
-  await page.waitForFunction(({ count, status }) => {
-    const links = document.querySelectorAll('a[download^="garden-shop-labels-"]');
-    const currentStatus = document.querySelector(".status-line")?.innerText ?? "";
-    return links.length > count || currentStatus !== status;
-  }, { count: before, status: statusBefore }, { timeout: 180000 });
+  try {
+    await page.waitForFunction(({ count, status }) => {
+      const links = document.querySelectorAll('a[download^="garden-shop-labels-"]');
+      const currentStatus = document.querySelector(".status-line")?.innerText ?? "";
+      return links.length > count || currentStatus !== status;
+    }, { count: before, status: statusBefore }, { timeout });
+  } catch (error) {
+    const status = await page.locator(".status-line").allInnerTexts();
+    throw new Error(`PDF export timed out (${timeout} ms); status=${JSON.stringify(status)}; pdfEnabled=${await page.locator("#savePdf").isEnabled()}`, { cause: error });
+  }
   assert.ok(await page.locator('a[download^="garden-shop-labels-"]').count() > before, `PDF export failed: ${await page.locator("body").innerText()}`);
   const link = page.locator('a[download^="garden-shop-labels-"]').nth(before);
   await link.waitFor({ state: "attached", timeout: 30000 });
@@ -403,6 +408,48 @@ try {
   assert.doesNotMatch(batchPdfRendered.text, /TRK0000000011/);
   assert.doesNotMatch(batchPdfRendered.text, /EDIT REQUIRED/);
   assert.ok(Math.abs(batchPdf.getPage(0).getSize().width - 595.2756) < 0.01);
+  await page.locator("#paperPreset").selectOption("CUSTOM");
+  await page.locator('[data-view="preview"]').first().click();
+  await page.waitForFunction(() => [...document.querySelectorAll(".sheet canvas[data-barcode]")].length === 18 && [...document.querySelectorAll(".sheet canvas[data-barcode]")].every((canvas) => canvas.dataset.verified === "true"), { timeout: 30000 });
+  await page.locator(".sheet").screenshot({ path: join(evidence, "label-preview-custom-500.png") });
+  let customDecoded500 = 0;
+  const customPrintedReferences = [];
+  for (let pageIndex = 0; pageIndex < 28; pageIndex += 1) {
+    const expectedCount = Math.min(18, 500 - pageIndex * 18);
+    const decoded = await page.locator(".sheet canvas[data-barcode]").evaluateAll((canvases) => canvases.map((canvas) => ({ index: Number(canvas.dataset.barcode), verified: canvas.dataset.verified, tracking: canvas.dataset.source })));
+    const refs = await page.locator(".sheet .printed-reference").allInnerTexts();
+    assert.equal(decoded.length, expectedCount, `unexpected custom label count on sheet ${pageIndex + 1}`);
+    assert.deepEqual(decoded.map((item) => item.index), Array.from({ length: expectedCount }, (_, index) => pageIndex * 18 + index));
+    assert.ok(decoded.every((item) => item.verified === "true"), `custom Code 128 decode failed on sheet ${pageIndex + 1}`);
+    assert.deepEqual(decoded.map((item) => item.tracking), records.slice(pageIndex * 18, pageIndex * 18 + expectedCount).map((row) => row[4]));
+    customPrintedReferences.push(...refs);
+    customDecoded500 += decoded.length;
+    if (pageIndex < 27) {
+      await page.locator("#nextPage").click();
+      const nextCount = Math.min(18, 500 - (pageIndex + 1) * 18);
+      await page.waitForFunction((count) => {
+        const canvases = [...document.querySelectorAll(".sheet canvas[data-barcode]")];
+        return canvases.length === count && canvases.every((canvas) => canvas.dataset.verified === "true");
+      }, nextCount, { timeout: 30000 });
+    }
+  }
+  assert.equal(customDecoded500, 500);
+  assert.deepEqual(customPrintedReferences, printedReferences, "switching to custom stock must preserve all 500 references");
+  await page.locator('[data-view="review"]').first().click();
+  await page.locator('[data-view="preview"]').first().click();
+  await page.locator('[data-view="print"]').first().click();
+  assert.match(await page.locator("body").innerText(), /499 labels · 28 Custom · 190\.5 × 254 mm/);
+  const customBatchPath = join(evidence, "synthetic-500-labels-custom.pdf");
+  await saveGeneratedPdf(page, customBatchPath);
+  const customBatchRendered = await loadPdf(customBatchPath, "pdf-custom-500-first-page.png");
+  const customBatchPdf = customBatchRendered.pdf;
+  assert.equal(customBatchPdf.getPageCount(), 28);
+  assert.equal(customBatchRendered.hasRasterImage, true, "custom complex-script labels must use the Unicode-safe fallback");
+  assert.match(customBatchRendered.text, /Nowshera/);
+  assert.match(customBatchRendered.text, /Gujranwala/);
+  assert.doesNotMatch(customBatchRendered.text, /TRK0000000011/);
+  assert.ok(customBatchPdf.getPages().every((pdfPage) => Math.abs(pdfPage.getSize().width - 190.5 * 72 / 25.4) < 0.01 && Math.abs(pdfPage.getSize().height - 254 * 72 / 25.4) < 0.01), "every custom PDF page must have the exact custom MediaBox");
+  await page.locator("#paperPreset").selectOption("A4");
   await page.locator('[data-view="review"]').first().click();
   await page.locator('[data-edit="2"]').click();
   assert.equal(await page.locator('.edit-form input[name="product"]').inputValue(), "Premium Vegetable Seed Mix");
@@ -447,7 +494,7 @@ try {
   assert.equal(await page.locator('.edit-form [name="address"]').inputValue(), overlongAddress.replace(/\r\n/g, "\n"));
   await page.locator(".edit-form [data-cancel]").click();
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ geometry, printGeometry, decodedBarcodeCounts: [3, 18, decoded500], samplePdfPages: samplePdf.pageCount, batch500PdfPages: batchPdf.getPageCount(), overflowLayout, browserErrors: errors, evidence: ["test-evidence/approved-label-layout.png", "test-evidence/label-preview-synthetic.png", "test-evidence/label-preview-500-v2.png", "test-evidence/label-preview-overflow.png", "test-evidence/label-preview-mobile.png", "test-evidence/browser-print-sheet.png", "test-evidence/pdf-sample-page.png", "test-evidence/pdf-500-first-page.png", "test-evidence/pdf-overflow-filtered.png"] }, null, 2));
+  console.log(JSON.stringify({ geometry, printGeometry, decodedBarcodeCounts: [3, 18, decoded500, customDecoded500], samplePdfPages: samplePdf.pageCount, batch500PdfPages: batchPdf.getPageCount(), customBatch500PdfPages: customBatchPdf.getPageCount(), overflowLayout, browserErrors: errors, evidence: ["test-evidence/approved-label-layout.png", "test-evidence/label-preview-synthetic.png", "test-evidence/label-preview-500-v2.png", "test-evidence/label-preview-custom-500.png", "test-evidence/label-preview-overflow.png", "test-evidence/label-preview-mobile.png", "test-evidence/browser-print-sheet.png", "test-evidence/pdf-sample-page.png", "test-evidence/pdf-500-first-page.png", "test-evidence/pdf-custom-500-first-page.png", "test-evidence/pdf-overflow-filtered.png"] }, null, 2));
 } finally {
   await browser?.close();
   server.kill();

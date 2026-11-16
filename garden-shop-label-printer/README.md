@@ -22,7 +22,7 @@ npm run build
 npm run test:browser
 ```
 
-`test:browser` starts an isolated Vite server, imports synthetic `.xlsx` and `.csv` files, verifies A4 and custom grids, compares preview/browser-print/PDF geometry, checks both PDF MediaBoxes, decodes all 500 A4 Code 128 values over every sheet, creates/rasterizes 1- and 28-page PDFs, and saves synthetic screenshots under `test-evidence/`. PDFs there are git-ignored. No customer fixture is used.
+`test:browser` starts an isolated Vite server, imports synthetic `.xlsx` and `.csv` files, verifies A4 and custom grids, compares preview/browser-print/PDF geometry, checks both PDF MediaBoxes, decodes all 500 A4 and all 500 custom Code 128 values over every sheet, creates/rasterizes 1- and 28-page PDFs for both presets, and saves synthetic screenshots under `test-evidence/`. PDFs there are git-ignored. No customer fixture is used.
 
 ## Staging Build
 
@@ -54,7 +54,7 @@ Recheck account identity and the Dashboard before each Cloudflare mutation. Conf
 - Accepted phone forms normalize to exactly 11 digits beginning `03`: 10 digits beginning `3` receive a leading zero, and `+92`/`92` plus a valid 10-digit mobile become local form. Invalid/incomplete phones are flagged and block print/PDF until corrected. Exact duplicate contact tokens are removed only from the displayed address; source address is retained. Test fixtures use synthetic digits only; never store real order phones in tests or evidence.
 - Order ID uses normal weight; the contact number is bold in the divided row. Product remains present. Footer is exactly `From: Garden Shop | C/o City Post Office, Sahiwal`. Code 128 auto-switches between B/C sets, includes ≥10X horizontal quiet zones, remains vector in PDF, and is proportionally fit only while module width stays at least 0.19 mm. Unusable values are flagged instead of silently shrinking or clipping.
 
-V4 local verification (2026-11-16): 42 unit tests, TypeScript/worker checks plus Vite build, and Playwright browser/PDF regression passed. Browser evidence verifies both page sizes, custom print/preview alignment, custom PDF MediaBox and margin warning, stable references, and 500 A4 Code 128 decodes. The overlong-address row remains in source/editing and is explicitly excluded from output. The screenshot baseline was deliberately refreshed after visual inspection to reflect the requested TO hierarchy and final V4 geometry. No physical print is claimed. Cloudflare staging was not deployed or freshly inventoried: existing Wrangler reports unauthenticated and no Dashboard/MCP is available in this session. The last deployment ID in historical records is `3b9404e3-92a5-4e02-9bd4-b626f96eb833`; do not treat it as fresh verification.
+V4 local verification (2026-11-16): 42 unit tests, TypeScript/worker checks plus Vite build, and Playwright browser/PDF regression passed. Browser evidence verifies both page sizes, custom print/preview alignment, exact MediaBoxes across all 28 pages, stable references, and 500 Code 128 decodes for each preset. The overlong-address row remains in source/editing and is explicitly excluded from output. The screenshot baseline was deliberately refreshed after visual inspection to reflect the requested TO hierarchy and final V4 geometry. No physical print is claimed. Cloudflare staging was not deployed or freshly inventoried: the last read-only Wrangler identity check reported unauthenticated, and no Dashboard/MCP action surface is available in this agent session. The last deployment ID in historical records is `3b9404e3-92a5-4e02-9bd4-b626f96eb833`; do not treat it as fresh verification.
 
 The repository-wide regression suite also passed 269 tests and the root build passed. Focused ESLint passed for the changed Admin source/helper/tests. The repository-wide lint command still fails while traversing unrelated dirty agent worktrees; those files were not changed or staged. Root `npm audit` reports six moderate development-tool advisories; `npm audit --omit=dev` reports zero. No existing WhatsApp/API/Admin Worker was deployed or changed.
 
@@ -62,7 +62,7 @@ The repository-wide regression suite also passed 269 tests and the root build pa
 
 The owner authorized an isolated staging canary. Current resources and identities are inventoried in `RULES.md`: staging D1 and migration, Pages project/deployment, dedicated Access app for the Pages/Worker hosts, monitor Worker, and encrypted audit/Admin secrets. The Access policy currently permits only the verified Super Admin because no staff roster/group was supplied. Before **each next** Cloudflare mutation, run `npx wrangler whoami`, confirm the `Get Free Seeds` account ID in the Dashboard, and record the timestamp/resource/action. Never use Hoja Seeds or existing production/V2 bindings.
 
-The last Pages deployment recorded in historical notes is `3b9404e3-92a5-4e02-9bd4-b626f96eb833`; this task did not freshly read the live deployment. Wrangler 4.149.0 returned `You are not authenticated` for the read-only identity check. No login/MFA gate was bypassed and no staging or production resource was changed. A shared/default Chrome tab contained a pre-populated order batch and was not interacted with, screenshotted, exported, or processed. No physical printer test or Admin Worker deployment was performed.
+The last Pages deployment recorded in historical notes is `3b9404e3-92a5-4e02-9bd4-b626f96eb833`; this task did not freshly read the live deployment. The last read-only Wrangler 4.149.0 identity check returned `You are not authenticated`; no repeated login attempt was made without new auth evidence. No login/MFA gate was bypassed and no staging or production resource was changed. A shared/default Chrome tab contained a pre-populated order batch and was not interacted with, screenshotted, exported, or processed. No physical printer test or Admin Worker deployment was performed.
 
 Local migration/schema smoke also passed against Wrangler's local emulator. This is separate from the remote staging D1. Roll back only isolated Pages/Worker versions; preserve audit history and the D1 database.
 
@@ -84,7 +84,7 @@ Excel data stays in browser memory. Only event category, counts, batch ID, templ
 
 ## Current Verification Evidence
 
-V4 adds `test-evidence/browser-print-custom-sheet.png` and `test-evidence/pdf-custom-sheet.png` for the custom preset. `test-evidence/pdf-overflow-filtered.png` shows a valid selected row exporting while an impossible overlong row is excluded.
+V4 adds `test-evidence/browser-print-custom-sheet.png` and `test-evidence/pdf-custom-sheet.png` for the custom preset, plus `test-evidence/label-preview-custom-500.png` and `test-evidence/pdf-custom-500-first-page.png` for the custom 500-row acceptance. `test-evidence/pdf-overflow-filtered.png` shows a valid selected row exporting while an impossible overlong row is excluded.
 
 - `test-evidence/staging-label-preview.png`: prior compact-layout defect screenshot.
 - `test-evidence/label-preview-synthetic.png`, `label-preview-500-v2.png`, `label-preview-overflow.png`, and `label-preview-mobile.png`: local synthetic content and narrow-screen previews.
