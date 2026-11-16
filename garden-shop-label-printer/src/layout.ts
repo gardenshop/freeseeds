@@ -1,6 +1,8 @@
 import {
   LABEL_HEIGHT_MM,
   LABEL_WIDTH_MM,
+  PAPER_PRESETS,
+  type PaperPreset,
   fitText,
 } from "./engine";
 
@@ -42,31 +44,31 @@ export const LABEL_LAYOUT = {
   widthMm: LABEL_WIDTH_MM,
   heightMm: LABEL_HEIGHT_MM,
   outline: { x: 0.4, y: 0.4, width: 64.2, height: 43.2, radius: 1, stroke: 0.2 },
-  trackingText: { x: 1.7, y: 0.8, width: 31.5, height: 2.2 },
-  barcode: { x: 1.7, y: 3.2, width: 31.5, height: 14.2 },
-  trackingDivider: { x: 34.0, y: 1.0, width: 0.25, height: 16.4 },
-  vpl: { x: 44.4, y: 1.1, width: 19.4, height: 7.5 },
-  destination: { x: 34.7, y: 8.7, width: 29, height: 8.4 },
-  city: { x: 35.1, y: 9.0, width: 28.2, height: 4.0 },
-  province: { x: 35.1, y: 13.2, width: 28.2, height: 3.6 },
-  orderProduct: { x: 1.3, y: 17.6, width: 62.4, height: 4.8 },
-  orderId: { x: 1.3, y: 17.6, width: 30.8, height: 4.8 },
-  contactDivider: { x: 32.5, y: 17.8, width: 0.25, height: 4.4 },
-  contact: { x: 33.1, y: 17.6, width: 30.6, height: 4.8 },
-  to: { x: 1.3, y: 22.7, width: 62.4, height: 14.0, radius: 1 },
-  toTag: { x: 1.8, y: 23.0, width: 7.1, height: 2.8 },
-  name: { x: 9.5, y: 23.0, width: 45.5, height: 3.0 },
-  address: { x: 9.5, y: 26.25, width: 53.5, height: 7.45 },
-  nearbyLabel: { x: 2, y: 33.9, width: 9.5, height: 2.5 },
-  landmark: { x: 11.8, y: 33.9, width: 50.5, height: 2.5 },
-  product: { x: 1.3, y: 37.0, width: 62.4, height: 2.1 },
-  productLabel: { x: 2, y: 37.05, width: 8.5, height: 1.9 },
-  productValue: { x: 11, y: 37.05, width: 52, height: 1.9 },
-  footer: { x: 1.3, y: 39.4, width: 62.4, height: 3.9 },
-  footerFrom: { x: 1.6, y: 39.75, width: 9.0, height: 3.1 },
-  footerSender: { x: 11.1, y: 39.7, width: 18.8, height: 3.3 },
-  footerDivider: { x: 30.4, y: 39.7, width: 0.25, height: 3.2 },
-  footerAddress: { x: 31.2, y: 39.75, width: 31.8, height: 3.2 },
+  trackingText: { x: 1.7, y: 0.8, width: 31.5, height: 2.0 },
+  barcode: { x: 1.7, y: 3.0, width: 31.5, height: 8.4 },
+  trackingDivider: { x: 34.0, y: 0.5, width: 0.25, height: 14.0 },
+  vpl: { x: 44.4, y: 0.5, width: 19.4, height: 7.0 },
+  destination: { x: 34.7, y: 7.7, width: 29, height: 6.8 },
+  city: { x: 35.1, y: 7.9, width: 28.2, height: 4.0 },
+  province: { x: 35.1, y: 12.1, width: 28.2, height: 2.4 },
+  orderProduct: { x: 1.3, y: 14.8, width: 62.4, height: 4.7 },
+  orderId: { x: 1.3, y: 14.8, width: 30.8, height: 4.7 },
+  contactDivider: { x: 32.5, y: 15.0, width: 0.25, height: 4.3 },
+  contact: { x: 33.1, y: 14.8, width: 30.6, height: 4.7 },
+  to: { x: 1.3, y: 19.8, width: 62.4, height: 15.8, radius: 1 },
+  toTag: { x: 1.8, y: 20.1, width: 7.1, height: 2.8 },
+  name: { x: 9.5, y: 20.1, width: 53.5, height: 2.8 },
+  address: { x: 9.5, y: 23.2, width: 53.5, height: 6.8 },
+  nearbyLabel: { x: 2, y: 30.3, width: 10.5, height: 3.5 },
+  landmark: { x: 12.8, y: 30.3, width: 49.5, height: 3.5 },
+  product: { x: 1.3, y: 35.9, width: 62.4, height: 3.1 },
+  productLabel: { x: 2, y: 36.05, width: 8.5, height: 2.7 },
+  productValue: { x: 11, y: 36.05, width: 52, height: 2.7 },
+  footer: { x: 1.3, y: 39.2, width: 62.4, height: 4.2 },
+  footerFrom: { x: 1.6, y: 39.65, width: 9.0, height: 3.3 },
+  footerSender: { x: 11.1, y: 39.6, width: 18.8, height: 3.4 },
+  footerDivider: { x: 30.4, y: 39.6, width: 0.25, height: 3.3 },
+  footerAddress: { x: 31.2, y: 39.65, width: 31.8, height: 3.3 },
 } as const;
 
 export const LABEL_FOOTER = "From: Garden Shop | C/o City Post Office, Sahiwal";
@@ -77,37 +79,44 @@ export type LabelBoxes = {
   [Key in Exclude<keyof typeof LABEL_LAYOUT, "widthMm" | "heightMm">]: BoxMm;
 };
 
-export function labelBoxes(): LabelBoxes {
+export function labelBoxes(preset: PaperPreset = PAPER_PRESETS.A4): LabelBoxes {
   const { widthMm: _width, heightMm: _height, ...boxes } = LABEL_LAYOUT;
-  return boxes;
+  const scaleX = preset.labelWidthMm / LABEL_WIDTH_MM;
+  const scaleY = preset.labelHeightMm / LABEL_HEIGHT_MM;
+  return Object.fromEntries(Object.entries(boxes).map(([key, box]) => [key, {
+    x: box.x * scaleX, y: box.y * scaleY, width: box.width * scaleX, height: box.height * scaleY,
+  }])) as LabelBoxes;
 }
 
-export function recipientBoxes(ctx: CanvasRenderingContext2D, name: string) {
-  const initial = LABEL_LAYOUT.name;
+export function recipientBoxes(ctx: CanvasRenderingContext2D, name: string, preset: PaperPreset = PAPER_PRESETS.A4) {
+  const boxes = labelBoxes(preset);
+  const initial = boxes.name;
   const initialFit = fitTextMm(ctx, name, initial.width, initial.height, 12, 9, true, 1);
-  const nameBox: BoxMm = { ...initial, height: initialFit.fits ? initial.height : 4.25 };
+  const nameBox: BoxMm = { ...initial, height: initialFit.fits ? initial.height : 4.25 * preset.labelHeightMm / LABEL_HEIGHT_MM };
   const addressY = nameBox.y + nameBox.height + 0.2;
   return {
     name: nameBox,
     address: {
-      ...LABEL_LAYOUT.address,
+      ...boxes.address,
       y: addressY,
-      height: LABEL_LAYOUT.nearbyLabel.y - 0.2 - addressY,
+      height: boxes.nearbyLabel.y - 0.2 * preset.labelHeightMm / LABEL_HEIGHT_MM - addressY,
     },
   };
 }
 
-export function destinationBoxes(ctx: CanvasRenderingContext2D, city: string, province: string) {
-  const cityBase = LABEL_LAYOUT.city;
-  const provinceBase = LABEL_LAYOUT.province;
-  const cityFits = fitTextMm(ctx, city, cityBase.width, cityBase.height, 18, 12, true, 0.95).fits;
-  const provinceFits = fitTextMm(ctx, province, provinceBase.width, provinceBase.height, 11, 8.5, true, 1).fits;
+export function destinationBoxes(ctx: CanvasRenderingContext2D, city: string, province: string, preset: PaperPreset = PAPER_PRESETS.A4) {
+  const boxes = labelBoxes(preset);
+  const cityBase = boxes.city;
+  const provinceBase = boxes.province;
+  const cityFits = fitTextMm(ctx, city, cityBase.width, cityBase.height, 18, 7, true, 0.95).fits;
+  const provinceFits = fitTextMm(ctx, province, provinceBase.width, provinceBase.height, 11, 6, true, 1).fits;
   const longProvince = province.trim().length > 15 || !provinceFits;
-  const cityHeight = !cityFits ? 6 : longProvince ? 3.9 : cityBase.height;
-  const provinceY = cityBase.y + cityHeight + 0.2;
+  const scaleY = preset.labelHeightMm / LABEL_HEIGHT_MM;
+  const cityHeight = longProvince ? cityBase.height - 0.4 * scaleY : !cityFits ? 4.4 * scaleY : cityBase.height;
+  const provinceY = cityBase.y + cityHeight + 0.2 * scaleY;
   return {
     city: { ...cityBase, height: cityHeight },
-    province: { ...provinceBase, y: provinceY, height: 17.4 - provinceY },
+    province: { ...provinceBase, y: provinceY, height: 14.5 * scaleY - provinceY },
   };
 }
 

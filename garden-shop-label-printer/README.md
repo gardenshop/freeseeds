@@ -1,6 +1,6 @@
 # Garden Shop Label Printer
 
-Independent browser-based spreadsheet import, label preview, A4 print/PDF, and privacy-minimized operational monitoring. This application does not connect to the existing Garden Shop order systems. Excel parsing uses `read-excel-file` in-browser; files are not sent to the monitoring service.
+Independent browser-based spreadsheet import, label preview, A4/custom print/PDF, and privacy-minimized operational monitoring. This application does not connect to the existing Garden Shop order systems. Excel parsing uses `read-excel-file` in-browser; files are not sent to the monitoring service.
 
 ## Local development
 
@@ -22,7 +22,7 @@ npm run build
 npm run test:browser
 ```
 
-`test:browser` starts an isolated Vite server, imports synthetic `.xlsx` and `.csv` files, verifies the exact A4 grid and preview/print geometry, decodes all 500 Code 128 values over every sheet, creates/rasterizes 1- and 28-page PDFs, and saves synthetic screenshots under `test-evidence/`. PDFs there are git-ignored. No customer fixture is used.
+`test:browser` starts an isolated Vite server, imports synthetic `.xlsx` and `.csv` files, verifies A4 and custom grids, compares preview/browser-print/PDF geometry, checks both PDF MediaBoxes, decodes all 500 A4 Code 128 values over every sheet, creates/rasterizes 1- and 28-page PDFs, and saves synthetic screenshots under `test-evidence/`. PDFs there are git-ignored. No customer fixture is used.
 
 ## Staging Build
 
@@ -43,16 +43,18 @@ Recheck account identity and the Dashboard before each Cloudflare mutation. Conf
 
 ## Approved Geometry and Content Rules
 
-- A4 portrait is 210 × 297 mm. Labels are 65 × 44 mm; the centered 3 × 6 grid starts at x=6.5, 72.5, 138.5 mm and y=14, 59, 104, 149, 194, 239 mm with exactly 1 mm horizontal and vertical gutters.
-- Each label uses a 0.4,0.4 mm inset 64.2 × 43.2 mm outer border. `src/layout.ts` is the millimeter source of truth: tracking text x=1.7..33.2/y=0.8..3.0, vector Code 128 x=1.7..33.2/y=3.2..17.4; right VPL capsule x=44.4, y=1.1, w=19.4, h=7.5, city/province directly below; Order ID/contact block y=17.6..22.4; TO frame y=22.7..36.7; Product y=37.0..39.1; FROM y=39.4..43.3.
-- Preview, browser print, and PDF share that geometry. Text is measured with the active font per label; short text retains larger sizes, longer text wraps/resizes, and impossible overflow stays in the source/editor while that row is excluded from output. Valid rows in the same batch remain printable.
+- **A4 preset:** portrait 210 × 297 mm; 65 × 44 mm labels; 3 × 6; 1 mm gutters; x starts 6.5, 72.5, 138.5 mm and y starts 14, 59, 104, 149, 194, 239 mm. The PDF MediaBox is 595.2756 × 841.8898 pt.
+- **Custom preset:** portrait 190.5 × 254 mm; 63 × 42 mm labels; exactly 18 per sheet; horizontal gap 0.5 mm and vertical gap 0.333 mm. Nominal x starts are 0.25, 63.75, 127.25 mm; y starts are 0.1675, 42.5005, 84.8335, 127.1665, 169.4995, 211.8325 mm. The PDF MediaBox is 540.9449 × 720 pt. Browser CSS grid measurements may vary by less than 0.03 mm from nominal due to subpixel layout; PDF coordinates use exact millimeter constants.
+- The custom sheet has only 0.25 mm side and 0.1675 mm top/bottom margins. The UI warns that many printers/drivers will clip it; use compatible near-edge hardware and calibrate on plain paper before label stock. Preset switching changes layout only, never imported orders or reserved tracking references.
+- Each label uses a 0.4 mm inset 64.2 × 43.2 mm outer border. `src/layout.ts` is the millimeter source of truth. Tracking text is x=1.7, y=0.8, w=31.5, h=2.0 mm; vector Code 128 is x=1.7, y=3.0, w=31.5, h=8.4 mm. The top barcode/VPL region ends at y=14.5 mm and is shorter than the 15.8 mm TO frame. VPL is x=44.4, y=0.5, w=19.4, h=7.0 mm; destination starts below at y=7.7 mm. Order/contact share y=14.8..19.5 mm; TO is x=1.3, y=19.8, w=62.4, h=15.8 mm; Product is y=35.9..39.0; the one-line footer is y=39.2..43.4 mm.
+- Preview, browser print, and PDF share preset-derived geometry. Names, addresses, nearby, city, province and Urdu are measured using active fonts. Unfit rows are outlined and marked non-printable in preview; they remain editable with original imported text and are excluded from PDF/print, while other valid rows continue. Noncritical optional-field warnings do not block a batch.
 - VPL is a bordered two-line block (`VPL` then heavy `amount/-`), never the old small `VPL COD Rs` line. City sits below the amount, with no location pin. The province is white on black. Printing defaults to black-and-white; Garden Shop can optionally use green. Footer text is `From: Garden Shop | C/o City Post Office, Sahiwal` on one row.
 - Printed references use `FS-YYMM-XXXXX`; YYMM is the browser-local calendar month at first reservation and XXXXX is generated with Web Crypto, never a counter. IndexedDB collision-checks and maps source Order ID/tracking to the reference. Re-imports/reprints in that browser profile retain it. Offline cross-device uniqueness cannot be guaranteed and is called out in the UI; retain site data for reprints.
 - Address normalization standardizes only common unambiguous English terms, preserves source text and Urdu, and supports multiline editing. Printed references remain separate from original Order IDs; source IDs are not modified. IndexedDB maps source Order ID + tracking to the stable printed reference; the offline cross-device uniqueness limitation is disclosed in-app.
 - Accepted phone forms normalize to exactly 11 digits beginning `03`: 10 digits beginning `3` receive a leading zero, and `+92`/`92` plus a valid 10-digit mobile become local form. Invalid/incomplete phones are flagged and block print/PDF until corrected. Exact duplicate contact tokens are removed only from the displayed address; source address is retained. Test fixtures use synthetic digits only; never store real order phones in tests or evidence.
-- Code 128 auto-switches between B/C sets, includes ≥10X horizontal quiet zones, remains vector in PDF, and is proportionally fit only while module width stays at least 0.19 mm. Unusable values are flagged instead of silently shrinking or clipping.
+- Order ID uses normal weight; the contact number is bold in the divided row. Product remains present. Footer is exactly `From: Garden Shop | C/o City Post Office, Sahiwal`. Code 128 auto-switches between B/C sets, includes ≥10X horizontal quiet zones, remains vector in PDF, and is proportionally fit only while module width stays at least 0.19 mm. Unusable values are flagged instead of silently shrinking or clipping.
 
-Latest V3 local verification: 41 unit tests, configured build, and Playwright browser/PDF regression passed. The browser run decoded all 500 synthetic barcodes, verified stable FS references across re-import, validated the 1 mm A4 grid and preview/print/PDF geometry, rendered the actual downloaded PDFs, and confirmed a mixed batch exports valid rows while excluding an impossible overlong row. The current V3 bundle is not deployed; Pages `3b9404e3` remains the prior V2 deployment. The isolated-session live acceptance is still blocked at Cloudflare Access sign-in. No physical print is claimed.
+V4 local verification (2026-11-16): 42 unit tests, TypeScript/worker checks plus Vite build, and Playwright browser/PDF regression passed. Browser evidence verifies both page sizes, custom print/preview alignment, custom PDF MediaBox and margin warning, stable references, and 500 A4 Code 128 decodes. The overlong-address row remains in source/editing and is explicitly excluded from output. The screenshot baseline was deliberately refreshed after visual inspection to reflect the requested TO hierarchy and final V4 geometry. No physical print is claimed. Cloudflare staging was not deployed or freshly inventoried: existing Wrangler reports unauthenticated and no Dashboard/MCP is available in this session. The last deployment ID in historical records is `3b9404e3-92a5-4e02-9bd4-b626f96eb833`; do not treat it as fresh verification.
 
 The repository-wide regression suite also passed 269 tests and the root build passed. Focused ESLint passed for the changed Admin source/helper/tests. The repository-wide lint command still fails while traversing unrelated dirty agent worktrees; those files were not changed or staged. Root `npm audit` reports six moderate development-tool advisories; `npm audit --omit=dev` reports zero. No existing WhatsApp/API/Admin Worker was deployed or changed.
 
@@ -60,7 +62,7 @@ The repository-wide regression suite also passed 269 tests and the root build pa
 
 The owner authorized an isolated staging canary. Current resources and identities are inventoried in `RULES.md`: staging D1 and migration, Pages project/deployment, dedicated Access app for the Pages/Worker hosts, monitor Worker, and encrypted audit/Admin secrets. The Access policy currently permits only the verified Super Admin because no staff roster/group was supplied. Before **each next** Cloudflare mutation, run `npx wrangler whoami`, confirm the `Get Free Seeds` account ID in the Dashboard, and record the timestamp/resource/action. Never use Hoja Seeds or existing production/V2 bindings.
 
-The current Pages deployment is `3b9404e3-92a5-4e02-9bd4-b626f96eb833`. A shared/default Chrome tab contained a pre-populated order batch and was not interacted with, screenshotted, exported, or processed. A clean isolated browser context reached Cloudflare Access sign-in (`auth_status=NONE`), so no V2 acceptance import or PDF event was generated. Earlier synthetic audit errors remain in append-only history. No physical printer test or Admin Worker deployment was performed.
+The last Pages deployment recorded in historical notes is `3b9404e3-92a5-4e02-9bd4-b626f96eb833`; this task did not freshly read the live deployment. Wrangler 4.149.0 returned `You are not authenticated` for the read-only identity check. No login/MFA gate was bypassed and no staging or production resource was changed. A shared/default Chrome tab contained a pre-populated order batch and was not interacted with, screenshotted, exported, or processed. No physical printer test or Admin Worker deployment was performed.
 
 Local migration/schema smoke also passed against Wrangler's local emulator. This is separate from the remote staging D1. Roll back only isolated Pages/Worker versions; preserve audit history and the D1 database.
 
@@ -82,7 +84,7 @@ Excel data stays in browser memory. Only event category, counts, batch ID, templ
 
 ## Current Verification Evidence
 
-V3 adds `test-evidence/pdf-overflow-filtered.png`, which is the rendered PDF proof that a valid selected row exports while an impossible overlong row is excluded.
+V4 adds `test-evidence/browser-print-custom-sheet.png` and `test-evidence/pdf-custom-sheet.png` for the custom preset. `test-evidence/pdf-overflow-filtered.png` shows a valid selected row exporting while an impossible overlong row is excluded.
 
 - `test-evidence/staging-label-preview.png`: prior compact-layout defect screenshot.
 - `test-evidence/label-preview-synthetic.png`, `label-preview-500-v2.png`, `label-preview-overflow.png`, and `label-preview-mobile.png`: local synthetic content and narrow-screen previews.

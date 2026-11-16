@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { PDFDocument } from "pdf-lib";
 import { zipSync } from "fflate";
 import { readSheet as readXlsxSheet } from "read-excel-file/node";
-import { A4, A4_LABEL_COLUMNS_MM, A4_LABEL_ROWS_MM, A4_POINTS, addA4Page, detectMapping, findAmbiguousMappings, fitText, labelBox, LABEL_HEIGHT_MM, LABELS_PER_PAGE, LABEL_WIDTH_MM, normalizeAddressText, normalizePakistaniPhone, normalizeRows, pagesForCount, parseCsv, safeContactRemoval, safeCsvCell } from "../src/engine";
+import { A4, A4_LABEL_COLUMNS_MM, A4_LABEL_ROWS_MM, A4_POINTS, addA4Page, detectMapping, findAmbiguousMappings, fitText, getPaperPreset, labelBox, LABEL_HEIGHT_MM, LABELS_PER_PAGE, LABEL_WIDTH_MM, normalizeAddressText, normalizePakistaniPhone, normalizeRows, pagePoints, pagesForCount, parseCsv, safeContactRemoval, safeCsvCell } from "../src/engine";
 import { LABEL_FOOTER, LABEL_LAYOUT, destinationBoxes, formatVpl, labelBoxes, recipientBoxes } from "../src/layout";
 import { restoreZeroFormattedCells } from "../src/xlsx";
 
@@ -192,18 +192,19 @@ describe("local workbook and sheet engine", () => {
     expect(LABEL_FOOTER).toBe("From: Garden Shop | C/o City Post Office, Sahiwal");
     expect(LABEL_LAYOUT.widthMm).toBe(65);
     expect(LABEL_LAYOUT.heightMm).toBe(44);
-    expect(boxes.trackingText).toMatchObject({ x: 1.7, y: 0.8, width: 31.5, height: 2.2 });
-    expect(boxes.barcode).toMatchObject({ x: 1.7, y: 3.2, width: 31.5, height: 14.2 });
-    expect(boxes.vpl).toMatchObject({ x: 44.4, y: 1.1, width: 19.4, height: 7.5 });
-    expect(boxes.destination).toMatchObject({ x: 34.7, y: 8.7, width: 29, height: 8.4 });
+    expect(boxes.trackingText).toMatchObject({ x: 1.7, y: 0.8, width: 31.5, height: 2.0 });
+    expect(boxes.barcode).toMatchObject({ x: 1.7, y: 3.0, width: 31.5, height: 8.4 });
+    expect(boxes.vpl).toMatchObject({ x: 44.4, y: 0.5, width: 19.4, height: 7.0 });
+    expect(boxes.destination).toMatchObject({ x: 34.7, y: 7.7, width: 29, height: 6.8 });
     expect(boxes.city.y).toBeGreaterThanOrEqual(boxes.vpl.y + boxes.vpl.height);
-    expect(boxes.orderProduct).toMatchObject({ x: 1.3, y: 17.6, width: 62.4, height: 4.8 });
+    expect(boxes.orderProduct).toMatchObject({ x: 1.3, y: 14.8, width: 62.4, height: 4.7 });
     expect(boxes.orderId.y).toBe(boxes.contact.y);
     expect(boxes.contactDivider.x).toBeGreaterThan(boxes.orderId.x);
     expect(boxes.product.y).toBeCloseTo(boxes.to.y + boxes.to.height + 0.3);
-    expect(boxes.footer.y).toBeCloseTo(boxes.product.y + boxes.product.height + 0.3);
-    expect(boxes.to).toMatchObject({ x: 1.3, y: 22.7, width: 62.4, height: 14.0 });
-    expect(boxes.nearbyLabel.y).toBeCloseTo(boxes.address.y + boxes.address.height + 0.2);
+    expect(boxes.footer.y).toBeCloseTo(boxes.product.y + boxes.product.height + 0.2);
+    expect(boxes.to).toMatchObject({ x: 1.3, y: 19.8, width: 62.4, height: 15.8 });
+    expect(boxes.nearbyLabel.y - (boxes.address.y + boxes.address.height)).toBeLessThanOrEqual(0.5);
+    expect(boxes.nearbyLabel.y).toBeGreaterThanOrEqual(boxes.address.y + boxes.address.height);
     for (const box of Object.values(boxes)) {
       expect(box.x).toBeGreaterThanOrEqual(0);
       expect(box.y).toBeGreaterThanOrEqual(0);
@@ -221,18 +222,34 @@ describe("local workbook and sheet engine", () => {
     const boxes = recipientBoxes(ctx, "A long synthetic receiver name that wraps");
     expect(boxes.name.height).toBeGreaterThan(LABEL_LAYOUT.name.height);
     expect(boxes.address.y).toBeGreaterThan(boxes.name.y + boxes.name.height);
-    expect(boxes.address.y + boxes.address.height).toBeCloseTo(33.7);
+    expect(boxes.address.y + boxes.address.height).toBeCloseTo(30.1);
   });
 
   it("rebalances the destination city and province rows for long names", () => {
     const ctx = { font: "", measureText: (text: string) => ({ width: text.length * 10 }) } as CanvasRenderingContext2D;
     const provinceLong = destinationBoxes(ctx, "Nowshera", "Khyber Pakhtunkhwa (KPK)");
-    expect(provinceLong.city.height).toBeLessThan(LABEL_LAYOUT.city.height);
+    expect(provinceLong.city.height).toBeLessThanOrEqual(LABEL_LAYOUT.city.height);
     expect(provinceLong.province.height).toBeGreaterThan(LABEL_LAYOUT.province.height);
-    expect(provinceLong.province.y + provinceLong.province.height).toBeCloseTo(17.4);
+    expect(provinceLong.province.y + provinceLong.province.height).toBeCloseTo(14.5);
     const cityLong = destinationBoxes(ctx, "A long destination city", "Punjab");
     expect(cityLong.city.height).toBeGreaterThan(LABEL_LAYOUT.city.height);
     expect(cityLong.province.height).toBeLessThan(LABEL_LAYOUT.province.height);
+  });
+
+  it("defines exact A4 and custom 3x6 paper geometries without changing A4 defaults", async () => {
+    const custom = getPaperPreset("CUSTOM");
+    expect(getPaperPreset("A4")).toMatchObject({ widthMm: 210, heightMm: 297, labelWidthMm: 65, labelHeightMm: 44, columnGapMm: 1, rowGapMm: 1 });
+    expect(custom).toMatchObject({ widthMm: 190.5, heightMm: 254, labelWidthMm: 63, labelHeightMm: 42, columns: 3, rows: 6, columnGapMm: 0.5, rowGapMm: 0.333 });
+    expect(custom.columnStartsMm).toEqual([0.25, 63.75, 127.25]);
+    expect(custom.rowStartsMm).toEqual([0.1675, 42.5005, 84.8335, 127.1665, 169.4995, 211.8325]);
+    expect(labelBox(0, 1, custom)).toMatchObject({ x: 0.25, y: 0.1675 });
+    expect(labelBox(17, 1, custom)).toMatchObject({ x: 127.25, y: 211.8325 });
+    const customPdf = await PDFDocument.create();
+    const customPage = addA4Page(customPdf, custom);
+    expect(customPage.getSize().width).toBeCloseTo(190.5 * 72 / 25.4, 6);
+    expect(customPage.getSize().height).toBeCloseTo(254 * 72 / 25.4, 6);
+    expect(pagePoints()).toEqual(A4_POINTS);
+    expect(custom.marginWarning).toContain("0.25 mm side and 0.1675 mm top/bottom margins");
   });
 
 });

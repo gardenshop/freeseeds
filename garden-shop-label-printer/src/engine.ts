@@ -1,7 +1,7 @@
 import type { PDFDocument, PDFPage } from "pdf-lib";
 import { FIELDS, type ImportMapping, type Order } from "./types";
 
-export const TEMPLATE_VERSION = "gfs-a4-18-v3";
+export const TEMPLATE_VERSION = "gfs-paper-presets-v4";
 export const LABELS_PER_PAGE = 18;
 export const LABEL_WIDTH_MM = 65;
 export const LABEL_HEIGHT_MM = 44;
@@ -9,13 +9,51 @@ export const A4 = { width: 210, height: 297 } as const;
 export const A4_LABEL_COLUMNS_MM = [6.5, 72.5, 138.5] as const;
 export const A4_LABEL_ROWS_MM = [14, 59, 104, 149, 194, 239] as const;
 export const MM_TO_POINTS = 72 / 25.4;
+export type PaperPresetId = "A4" | "CUSTOM";
+export type PaperPreset = {
+  id: PaperPresetId;
+  label: string;
+  widthMm: number;
+  heightMm: number;
+  labelWidthMm: number;
+  labelHeightMm: number;
+  columns: 3;
+  rows: 6;
+  columnGapMm: number;
+  rowGapMm: number;
+  columnStartsMm: readonly number[];
+  rowStartsMm: readonly number[];
+  marginWarning?: string;
+};
+export const PAPER_PRESETS = {
+  A4: {
+    id: "A4", label: "A4 · 65 × 44 mm labels", widthMm: 210, heightMm: 297,
+    labelWidthMm: 65, labelHeightMm: 44, columns: 3, rows: 6,
+    columnGapMm: 1, rowGapMm: 1, columnStartsMm: A4_LABEL_COLUMNS_MM,
+    rowStartsMm: A4_LABEL_ROWS_MM,
+  },
+  CUSTOM: {
+    id: "CUSTOM", label: "Custom · 190.5 × 254 mm · 63 × 42 mm labels", widthMm: 190.5, heightMm: 254,
+    labelWidthMm: 63, labelHeightMm: 42, columns: 3, rows: 6,
+    columnGapMm: 0.5, rowGapMm: 0.333, columnStartsMm: [0.25, 63.75, 127.25],
+    rowStartsMm: [0.1675, 42.5005, 84.8335, 127.1665, 169.4995, 211.8325],
+    marginWarning: "This custom sheet leaves only 0.25 mm side and 0.1675 mm top/bottom margins. Use only printer hardware that supports near-edge printing; driver clipping may occur.",
+  },
+} as const satisfies Record<PaperPresetId, PaperPreset>;
+export function getPaperPreset(id: PaperPresetId = "A4"): PaperPreset {
+  return PAPER_PRESETS[id];
+}
+export function pagePoints(preset: PaperPreset = PAPER_PRESETS.A4) {
+  return { width: preset.widthMm * MM_TO_POINTS, height: preset.heightMm * MM_TO_POINTS };
+}
 export const A4_POINTS = {
   width: A4.width * MM_TO_POINTS,
   height: A4.height * MM_TO_POINTS,
 } as const;
 
-export function addA4Page(pdf: PDFDocument): PDFPage {
-  return pdf.addPage([A4_POINTS.width, A4_POINTS.height]);
+export function addA4Page(pdf: PDFDocument, preset: PaperPreset = PAPER_PRESETS.A4): PDFPage {
+  const size = pagePoints(preset);
+  return pdf.addPage([size.width, size.height]);
 }
 
 export function normalizeHeader(value: unknown): string {
@@ -205,10 +243,10 @@ export function safeCsvCell(value: string): string {
   return `"${safe.replace(/"/g, '""')}"`;
 }
 
-export function labelBox(index: number, startPosition = 1): { x: number; y: number; page: number; slot: number } {
+export function labelBox(index: number, startPosition = 1, preset: PaperPreset = PAPER_PRESETS.A4): { x: number; y: number; page: number; slot: number } {
   if (!Number.isInteger(startPosition) || startPosition < 1 || startPosition > LABELS_PER_PAGE) throw new Error("SHEET_POSITION_INVALID");
   const absolute = startPosition - 1 + index;
   const slot = absolute % LABELS_PER_PAGE;
-  const col = slot % 3, row = Math.floor(slot / 3);
-  return { x: A4_LABEL_COLUMNS_MM[col], y: A4_LABEL_ROWS_MM[row], page: Math.floor(absolute / LABELS_PER_PAGE) + 1, slot };
+  const col = slot % preset.columns, row = Math.floor(slot / preset.columns);
+  return { x: preset.columnStartsMm[col], y: preset.rowStartsMm[row], page: Math.floor(absolute / LABELS_PER_PAGE) + 1, slot };
 }

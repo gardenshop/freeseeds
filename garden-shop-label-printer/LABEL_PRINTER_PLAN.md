@@ -6,13 +6,24 @@ The repository-wide architecture discovery and full implementation history remai
 
 1. Upload `.xlsx`/`.csv` locally; choose worksheet/header and confirm field mapping.
 2. Review, edit, search, select, and resolve duplicate or ambiguous rows.
-3. Preview exact 65 × 44 mm labels on an A4 3 × 6 sheet.
+3. Select A4 (65 × 44 mm labels) or custom (63 × 42 mm labels) and preview the exact 3 × 6 sheet.
 4. Generate PDF or print via the same label layout; report actual-size setting and printer calibration requirements.
 5. If approved, emit privacy-minimized activity to the dedicated, Access-protected monitoring Worker. Staff and Super Admin roles remain separate.
 
-## Required Final Label
+## V4 Local Status (2026-11-16)
 
-V3 supersedes the earlier compact-band notes below: tracking text is now above the barcode, the Order/contact block is y=17.6..22.4, the TO frame is y=22.7..36.7, and impossible rows are excluded individually while valid rows continue.
+- Correct existing worktree was recovered at `D:\free seeds`, on `codex/garden-shop-label-printer-mvp`; no worktree creation or switch was needed. The project remains isolated under `garden-shop-label-printer/`. Do not stage unrelated dirty files or `.kilo/`.
+- A4 geometry remains 210 × 297 mm, 65 × 44 mm labels, 3 × 6, 1 mm gutters, x=6.5/72.5/138.5 mm and y=14/59/104/149/194/239 mm. The new custom preset is 190.5 × 254 mm, 63 × 42 mm, 3 × 6 (18 labels), 0.5/0.333 mm gutters, x=0.25/63.75/127.25 mm and y=0.1675/42.5005/84.8335/127.1665/169.4995/211.8325 mm. Its narrow 0.25 mm side and 0.1675 mm top/bottom margins are warned in the UI.
+- Repaired V3 `measureLabels()` runtime failure (undefined active `preset`), which prevented dynamic fitting. Final V4 top barcode/VPL region ends at y=14.5 mm, shorter than the TO frame (15.8 mm). Source geometry, dynamic English/Urdu fitting, explicit clipped-row preview warning, stable FS references, and row-level print exclusion are documented in project `README.md` and `RULES.md`.
+- Verified locally: `npm test` 42/42; `npm run build` TypeScript checks and Vite build PASS; `npm run test:browser` PASS with exact A4/custom PDF MediaBoxes, custom browser print/preview alignment, 500 A4 Code 128 decodes, and preserved/excluded overlong source address. Custom browser PDF uses synthetic sample rows; custom 500-row decode was not run. No physical printer calibration is claimed. No lint script exists in the package.
+- The approved single-label screenshot baseline was intentionally refreshed after visual review for the requested V4 geometry; generated synthetic A4/custom preview, browser print, and PDF renders are in `test-evidence/`.
+- Git remote/repository and branch were read-only verified; local HEAD/remote SHA are recorded in `RULES.md`. GitHub CLI is unavailable, so authenticated username/write permission and push remain unverified. Wrangler 4.149.0 reports unauthenticated; no Cloudflare Dashboard identity or fresh live inventory was available. No Git push, Pages deploy, Worker/D1/Access mutation, or production operation is claimed. The last recorded Pages version is historical only.
+- Completion: implementation/local layout 100%; unit/build/browser validation 100% for exercised cases; Git synchronization 0% pending fresh authorized GitHub identity; staging deployment/monitoring verification 0% pending Cloudflare authentication and Dashboard account identity; physical printer/stock calibration 0%.
+- Rollback only a future standalone Pages version through the authenticated Pages history after fresh account and active-version verification. Preserve the monitor Worker, Access policy, audit D1 and chain. Never revert unrelated project data or alter existing Admin/API/WhatsApp/COD/Advance/production/Meta resources.
+
+## Required Final Label (V3 History)
+
+Historical V3 layout notes below are superseded by the V4 geometry and fit rules in `README.md` and the V4 status above.
 
 - A4 portrait 210 × 297 mm; 3 columns × 6 rows; label 65 × 44 mm. Column x positions are 6.5, 72.5, 138.5 mm and row y positions 14, 59, 104, 149, 194, 239 mm; horizontal/vertical gaps are exactly 1/1 mm and the grid is centered.
 - Outer outline: x=0.4, y=0.4, w=64.2, h=43.2 mm; 1 mm corner radius; 0.20 mm black stroke.
@@ -50,12 +61,12 @@ V3 supersedes the earlier compact-band notes below: tracking text is now above t
 
 ## Deployment State
 
-- Standalone V3 design/unit/browser/build: **100% software-verified**. Phone normalization, exact geometry, tracking-above-barcode placement, enlarged TO/nearby band, per-label fitting/row exclusion, preview/print/PDF geometry, screenshot golden and all 500 synthetic Code 128 decodes pass.
-- Prior V2 staging deployment: **PASS** at Page `3b9404e3-92a5-4e02-9bd4-b626f96eb833`; V3 deployment and isolated live PDF acceptance remain **BLOCKED** by the required identity/Access gates. The shared browser tab had pre-existing rows and was not used. After login, use only `test-evidence/staging-acceptance-18.csv`. Physical printer/stock calibration remains **0% / NOT TESTED**.
+- Historical V3 design/unit/browser/build: **100% software-verified** at the time recorded. Current V4 local verification is summarized above; custom 500-row browser decoding is not tested.
+- Prior V2 staging deployment: **historical only** at Page `3b9404e3-92a5-4e02-9bd4-b626f96eb833`; V4 deployment and isolated live PDF acceptance remain **BLOCKED** because Wrangler is unauthenticated and current Dashboard identity/live deployment were not verified. The shared browser tab had pre-existing rows and was not used. After authorized access, use only `test-evidence/staging-acceptance-18.csv`. Physical printer/stock calibration remains **0% / NOT TESTED**.
 - Staff authorization: **0%**; no authorized staff roster/group exists. Current staging Access deliberately allows only the verified Super Admin.
 - Admin integration: **not part of this design-repair task**. Existing card/redirect source remains separate and inactive; the active Cloudflare Admin version `3e4b7c26...` stays at 100% and was not changed.
 - Production release: **0%**. No Pages production hostname, Admin Worker traffic shift, or production order binding was changed.
 - Physical printer/stock: **0% / NOT TESTED**. No ruler measurement, scanner test on paper, or pre-cut label stock was used.
-- GitHub identity/repository and Wrangler account identity are recorded in `RULES.md`. HEAD `f7303ada1295679806125e6408de59c0e3a47ce2` is pushed to `origin/codex/garden-shop-label-printer-mvp`; the preceding three commits are in its ancestry. GitHub and Wrangler authentication checks passed. Existing unrelated dirty worktree files remain unstaged and unchanged.
+- The historical V3 push and prior identity checks are recorded in `RULES.md`. For V4 the local branch and remote SHA were freshly read, but authenticated GitHub identity/write access was not verified and no V4 push is claimed. Cloudflare Wrangler currently reports unauthenticated. Existing unrelated dirty worktree files remain unstaged and unchanged.
 - The older Admin card/redirect proposal and active baseline mismatch are historical context only; this repair explicitly made no Admin changes. Staff email/group roster is unavailable, so staging remains Super-Admin-only. No Admin tile is live, and the active version remains `3e4b...` pending a separate authorized Admin task.
 - Rollback: V2 Page `3b9404e3-92a5-4e02-9bd4-b626f96eb833` can be rolled back to prior Pages version `330217eb-763d-45ac-8a87-ad7437a055a7` through the authenticated Pages Deployments view after fresh account identity verification. Preserve the monitor Worker, Access policy and dedicated audit D1. Do not modify existing Admin navigation.

@@ -241,7 +241,7 @@
   right: 1.7mm;
   top: 19.4mm;
   width: 7mm;
-  height: 1.5mm;
+  height: 1.3mm;
   display: grid;
   place-items: center;
   padding: 0.2mm 0.8mm;
@@ -295,7 +295,7 @@
   height: calc(var(--bar-height) * var(--zoom));
 }
 .sheet .label-warning { font-size: calc(5.5px * var(--zoom)); }
-.individual-preview .label { width: 65mm; height: 44mm; }
+.individual-preview .label { width: var(--label-width, 65mm); height: var(--label-height, 44mm); }
 .individual-preview .label .contact { font-size: 15px; }
 .individual-preview .label .address-text { font-size: 14px; }
 .mapping-warning { margin: -12px 0 16px; border-left: 3px solid var(--orange); background: #f5e6d9; padding: 12px; color: #673a25; font-size: 11px; }
@@ -303,17 +303,18 @@
 /* Final repair geometry: centered 1 mm gutters and one shared label model. */
 @page { size: A4 portrait; margin: 0; }
 .sheet {
-  width: calc(210mm * var(--zoom));
-  height: calc(297mm * var(--zoom));
+  width: calc(var(--page-width, 210mm) * var(--zoom));
+  height: calc(var(--page-height, 297mm) * var(--zoom));
   min-width: 0;
   min-height: 0;
-  padding: calc(14mm * var(--zoom)) calc(6.5mm * var(--zoom));
-  grid-template-columns: repeat(3, calc(65mm * var(--zoom)));
-  grid-template-rows: repeat(6, calc(44mm * var(--zoom)));
-  column-gap: calc(1mm * var(--zoom));
-  row-gap: calc(1mm * var(--zoom));
+  padding: calc(var(--page-padding-y, 14mm) * var(--zoom)) calc(var(--page-padding-x, 6.5mm) * var(--zoom));
+  grid-template-columns: repeat(3, calc(var(--label-width, 65mm) * var(--zoom)));
+  grid-template-rows: repeat(6, calc(var(--label-height, 44mm) * var(--zoom)));
+  column-gap: calc(var(--grid-gap-x, 1mm) * var(--zoom));
+  row-gap: calc(var(--grid-gap-y, 1mm) * var(--zoom));
 }
-.sheet .label { width: calc(65mm * var(--zoom)); height: calc(44mm * var(--zoom)); }
+.sheet .label { width: calc(var(--label-width, 65mm) * var(--zoom)); height: calc(var(--label-height, 44mm) * var(--zoom)); }
+.label { width: var(--label-width, 65mm); height: var(--label-height, 44mm); }
 .order-product-frame { border: 0.2mm solid #111; z-index: 0; }
 .order-product-frame::after { content: ""; position: absolute; left: 45.67%; top: 0; bottom: 0; width: 0.2mm; background: #111; }
 .order-id, .product-text { border: 0; background: transparent; z-index: 1; }
@@ -325,8 +326,8 @@
 .footer-sender { color: #23612d; }
 .footer-address { font-size: 8px; }
 .vpl-box { flex-direction: column; gap: 0.15mm; padding: 0.1mm; }
-.vpl-prefix { font-size: 8px; letter-spacing: 0.04em; }
-.vpl-box .vpl-amount { width: 100%; font-size: 20px; line-height: 0.95; letter-spacing: -0.035em; }
+.vpl-prefix { font-size: 6.5px; letter-spacing: 0.04em; }
+.vpl-box .vpl-amount { width: 100%; font-size: 14px; line-height: 0.95; letter-spacing: -0.035em; }
 .destination { gap: 0.2mm; padding: 0.3mm 0.3mm 0.5mm; }
 .city-text { font-size: 15px; }
 .province-text { font-size: 8.5px; }
@@ -347,18 +348,18 @@
   position:absolute;
   left:0;
   right:0;
-  top:1.55mm;
+  top:1.35mm;
   bottom:0;
   display:flex;
   align-items:center;
   overflow:hidden;
-  font-size:15px;
+  font-size:12px;
   font-weight:500;
   line-height:1;
   white-space:nowrap;
 }
 .contact .contact-number { justify-content:flex-end; }
-.contact .contact-number { font-weight:900; }
+.contact .contact-number { font-weight:900; font-size:14px; }
 .order-product-frame::after { display:none; }
 .product-row-frame { border-top:0.2mm solid #333; border-bottom:0.2mm solid #333; }
 .product-label, .product-value { display:flex; align-items:center; overflow:hidden; white-space:nowrap; line-height:1; }
@@ -366,9 +367,9 @@
 .product-value { font-size:10px; font-weight:750; }
 .footer-from { justify-content:flex-start; padding-left:0.6mm; color:#080808; background:transparent; }
 .vpl-box { flex-direction:column; gap:0.15mm; padding:0.1mm; }
-.vpl-prefix { font-size:8px; letter-spacing:0.04em; }
-.vpl-box .vpl-amount { width:100%; font-size:20px; line-height:0.95; letter-spacing:-0.035em; }
-.destination { gap:0.2mm; padding:0.3mm 0.3mm 0.5mm; }
+.vpl-prefix { font-size:6.5px; letter-spacing:0.04em; }
+.vpl-box .vpl-amount { width:100%; font-size:14px; line-height:0.95; letter-spacing:-0.035em; }
+.destination { gap:0.2mm; padding:0.1mm 0.3mm 0; }
 .city-text { font-size:15px; }
 .province-text { font-size:8.5px; }
 .footer-sender { color:#080808; }

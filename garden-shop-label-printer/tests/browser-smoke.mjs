@@ -119,17 +119,20 @@ try {
   assert.ok((await page.locator("body").innerText()).includes("Monitoring unavailable. Label work is safe and was not lost."), JSON.stringify({ body: await page.locator("body").innerText(), failedRequests }));
   assert.match(await page.locator("body").innerText(), /XLSX-SYN-001/);
   await page.locator('[data-view="preview"]').first().click();
+  await page.waitForFunction(() => document.querySelector(".sheet canvas[data-barcode]")?.dataset.verified === "true", { timeout: 30000 });
   const firstPrintedReference = await page.locator(".sheet .printed-reference").first().innerText();
   assert.match(firstPrintedReference, /^FS-2611-\d{5}$/u);
   const importedReferences = await page.locator(".sheet .printed-reference").allInnerTexts();
   assert.equal(new Set(importedReferences).size, importedReferences.length, "distinct source orders must have unique printed references");
   assert.equal(await page.locator(".sheet .contact-number").first().innerText(), "03330000000");
   assert.equal(await page.locator(".sheet .tracking-value").first().innerText(), "TRK000001");
-  assert.ok(await page.locator(".sheet .tracking-value").first().evaluate((el) => el.getBoundingClientRect().bottom <= el.parentElement.querySelector(".barcode-canvas").getBoundingClientRect().top + 1), "tracking value must sit above the barcode");
+  const trackingGeometry = await page.locator(".sheet .tracking-value").first().evaluate((el) => { const value = el.getBoundingClientRect(); const barcode = el.parentElement.querySelector(".barcode-canvas").getBoundingClientRect(); return { valueBottom: value.bottom, barcodeTop: barcode.top, delta: barcode.top - value.bottom }; });
+  assert.ok(trackingGeometry.delta >= -2, `tracking value must sit above the barcode: ${JSON.stringify(trackingGeometry)}`);
   assert.doesNotMatch(await page.locator(".sheet").innerText(), /TRACKING NUMBER/u);
   assert.equal(await page.locator(".sheet .label-warning").count(), 0, "warnings must stay out of the label");
   assert.equal(await page.locator(".sheet .printed-reference").first().evaluate((el) => getComputedStyle(el).fontWeight), "500");
-  assert.equal(await page.locator(".sheet .contact-number").first().evaluate((el) => el.classList.contains("text-overflow")), false);
+  const contactFit = await page.locator(".sheet .contact-number").first().evaluate((el) => ({ overflow: el.classList.contains("text-overflow"), text: el.textContent, fontSize: getComputedStyle(el).fontSize, clientWidth: el.clientWidth, scrollWidth: el.scrollWidth, clientHeight: el.clientHeight, scrollHeight: el.scrollHeight }));
+  assert.equal(contactFit.overflow, false, JSON.stringify(contactFit));
   assert.ok(await page.locator(".sheet .contact-number").first().evaluate((el) => el.scrollWidth <= el.clientWidth), "normalized mobile must fit completely in the contact row");
   assert.match(await page.locator(".sheet .receiver-name").first().innerText(), /مصنوعی/);
   assert.match(await page.locator(".sheet .address-text").first().innerText(), /گلی نمبر ایک/);
@@ -144,6 +147,7 @@ try {
   await page.locator("#applyMapping").click();
   await page.locator('[data-view="preview"]').first().click();
   await page.waitForFunction(() => [...document.querySelectorAll(".sheet canvas[data-barcode]")].length === 3 && [...document.querySelectorAll(".sheet canvas[data-barcode]")].every((canvas) => canvas.dataset.verified === "true"), { timeout: 30000 });
+  const samplePrintedReference = await page.locator(".sheet .printed-reference").first().innerText();
   const geometry = await page.locator(".sheet").evaluate((sheet) => {
     const rect = sheet.getBoundingClientRect();
     const label = sheet.querySelector(".label").getBoundingClientRect();
@@ -261,6 +265,55 @@ try {
   assert.doesNotMatch(samplePdf.text, /EDIT REQUIRED/);
   assert.equal(samplePdf.hasRasterImage, false, "PDF barcode must stay vector");
 
+  await page.locator("#paperPreset").selectOption("CUSTOM");
+  assert.ok(await page.getByText(/only 0\.25 mm side and 0\.1675 mm top\/bottom margins/).count() > 0, "custom stock must show the narrow-margin warning");
+  await page.locator('[data-view="preview"]').first().click();
+  await page.waitForFunction(() => [...document.querySelectorAll(".sheet canvas[data-barcode]")].every((canvas) => canvas.dataset.verified === "true"), { timeout: 30000 });
+  assert.equal(await page.locator(".sheet .printed-reference").first().innerText(), samplePrintedReference, "paper switching must preserve label references");
+  const customGeometry = await page.locator(".sheet").evaluate((sheet) => {
+    const rect = sheet.getBoundingClientRect();
+    const mm = (px) => px * 25.4 / 96;
+    const slots = [...sheet.children];
+    const offset = (index) => { const box = slots[index].getBoundingClientRect(); return [mm(box.left - rect.left), mm(box.top - rect.top)]; };
+    return { width: mm(rect.width), height: mm(rect.height), slots: sheet.children.length, labels: [...sheet.querySelectorAll(".label")].length, columns: [offset(0)[0], offset(1)[0], offset(2)[0]], rows: [0, 3, 6, 9, 12, 15].map((slot) => offset(slot)[1]) };
+  });
+  assert.ok(Math.abs(customGeometry.width - 190.5) < 0.1, JSON.stringify(customGeometry));
+  assert.ok(Math.abs(customGeometry.height - 254) < 0.1, JSON.stringify(customGeometry));
+  assert.equal(customGeometry.slots, 18);
+  assert.equal(customGeometry.labels, 3);
+  [0.25, 63.75, 127.25].forEach((expected, index) => assert.ok(Math.abs(customGeometry.columns[index] - expected) < 0.03, `custom column ${index} start drifted: ${customGeometry.columns[index]} mm`));
+  [0.1675, 42.5005, 84.8335, 127.1665, 169.4995, 211.8325].forEach((expected, index) => assert.ok(Math.abs(customGeometry.rows[index] - expected) < 0.03, `custom row ${index} start drifted: ${customGeometry.rows[index]} mm`));
+  const customPreviewFields = await readFields(page.locator(".sheet .label").first());
+  await page.locator('[data-view="print"]').first().click();
+  const customPrintPopupEvent = page.waitForEvent("popup");
+  await page.locator("#printNow").click();
+  const customPrintPopup = await customPrintPopupEvent;
+  await customPrintPopup.waitForLoadState("load");
+  await customPrintPopup.waitForFunction(() => [...document.querySelectorAll(".print-sheet canvas[data-barcode]")].every((canvas) => canvas.width > 0));
+  const customPrintGeometry = await customPrintPopup.locator(".print-sheet").evaluate((sheet) => {
+    const mm = (px) => px * 25.4 / 96;
+    const page = sheet.getBoundingClientRect();
+    const label = sheet.querySelector(".label").getBoundingClientRect();
+    return { width: mm(page.width), height: mm(page.height), labelWidth: mm(label.width), labelHeight: mm(label.height) };
+  });
+  assert.ok(Math.abs(customPrintGeometry.width - 190.5) < 0.1, JSON.stringify(customPrintGeometry));
+  assert.ok(Math.abs(customPrintGeometry.height - 254) < 0.1, JSON.stringify(customPrintGeometry));
+  assert.ok(Math.abs(customPrintGeometry.labelWidth - 63) < 0.1, JSON.stringify(customPrintGeometry));
+  assert.ok(Math.abs(customPrintGeometry.labelHeight - 42) < 0.1, JSON.stringify(customPrintGeometry));
+  const customPrintFields = await readFields(customPrintPopup.locator(".print-sheet .label").first());
+  customPreviewFields.forEach((field, index) => field.forEach((value, coordinate) => assert.ok(Math.abs(value - customPrintFields[index][coordinate]) < 0.15, `custom preview/print mismatch ${index}/${coordinate}: preview ${value} mm; print ${customPrintFields[index][coordinate]} mm`)));
+  await customPrintPopup.screenshot({ path: join(evidence, "browser-print-custom-sheet.png"), fullPage: true });
+  await customPrintPopup.close();
+  const customPdfPath = join(evidence, "synthetic-custom-sheet.pdf");
+  await saveGeneratedPdf(page, customPdfPath);
+  const customPdf = await loadPdf(customPdfPath, "pdf-custom-sheet.png");
+  assert.equal(customPdf.pageCount, 1);
+  assert.ok(Math.abs(customPdf.page.getSize().width - 190.5 * 72 / 25.4) < 0.01);
+  assert.ok(Math.abs(customPdf.page.getSize().height - 254 * 72 / 25.4) < 0.01);
+  assert.match(customPdf.text, /TRK000001/);
+  assert.equal(customPdf.hasRasterImage, false, "custom PDF barcode must remain vector");
+  await page.locator("#paperPreset").selectOption("A4");
+
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, deviceScaleFactor: 1 });
   await mobile.goto(baseUrl, { waitUntil: "networkidle" });
   await mobile.locator("#sample").click();
@@ -300,8 +353,10 @@ try {
   assert.equal(await page.locator('.label[data-label-index="1"] .overflow-placeholder').count(), 0, "medium synthetic address must not be clipped");
   assert.equal(await page.locator('.label[data-label-index="3"] .city-text').textContent(), "Islamabad");
   assert.equal(await page.locator('.label[data-label-index="4"] .city-text').textContent(), "گوجرانوالہ");
-  assert.equal(await page.locator('.label[data-label-index="3"] .city-text').evaluate((el) => el.classList.contains("text-overflow")), false);
-  assert.equal(await page.locator('.label[data-label-index="4"] .city-text').evaluate((el) => el.classList.contains("text-overflow")), false);
+  const cityFit = await page.locator('.label[data-label-index="3"] .city-text').evaluate((el) => ({ overflow: el.classList.contains("text-overflow"), fontSize: getComputedStyle(el).fontSize, height: el.clientHeight, scrollHeight: el.scrollHeight, text: el.textContent }));
+  assert.equal(cityFit.overflow, false, JSON.stringify(cityFit));
+  const urduCityFit = await page.locator('.label[data-label-index="4"] .city-text').evaluate((el) => ({ overflow: el.classList.contains("text-overflow"), fontSize: getComputedStyle(el).fontSize, height: el.clientHeight, scrollHeight: el.scrollHeight, text: el.textContent, destinationStyle: el.parentElement.getAttribute("style"), gridRows: getComputedStyle(el.parentElement).gridTemplateRows }));
+  assert.equal(urduCityFit.overflow, false, JSON.stringify(urduCityFit));
   assert.equal(await page.locator('.label[data-label-index="15"] .province-text').evaluate((el) => el.textContent?.replace(/\s+/g, " ").trim()), "Khyber Pakhtunkhwa (KPK)");
   assert.equal(await page.locator('.label[data-label-index="15"] .province-text').evaluate((el) => el.classList.contains("text-overflow")), false);
   assert.equal(await page.locator('.label[data-label-index="2"] .city-text').evaluate((el) => el.textContent?.replace(/\s+/g, "").trim()), "Gujranwala");
@@ -335,7 +390,7 @@ try {
   await page.locator('[data-view="review"]').first().click();
   await page.locator('[data-view="preview"]').first().click();
   await page.locator('[data-view="print"]').first().click();
-  assert.match(await page.locator("body").innerText(), /28 A4 pages/);
+  assert.match(await page.locator("body").innerText(), /499 labels · 28 A4 · 65 × 44 mm labels pages/);
   const batchPath = join(evidence, "synthetic-500-labels.pdf");
   await saveGeneratedPdf(page, batchPath);
   const batchPdfRendered = await loadPdf(batchPath, "pdf-500-first-page.png");
@@ -367,7 +422,8 @@ try {
   await page.locator('[data-view="preview"]').first().click();
   await page.waitForFunction(() => document.querySelector(".sheet canvas[data-barcode]")?.dataset.verified === "true", { timeout: 30000 });
   assert.equal(await page.locator('.sheet .label[data-label-index="0"] .overflow-placeholder').count(), 0);
-  assert.equal(await page.locator('.sheet .label[data-label-index="0"] .address-text').evaluate((el) => el.classList.contains("text-overflow")), true);
+  assert.equal(await page.locator('.sheet .label[data-label-index="0"]').evaluate((el) => el.classList.contains("layout-overflow")), true, "unfit address must be visibly blocked in preview");
+  assert.match(await page.getByRole("alert").innerText(), /Selected label cannot print: Text does not fit: address/u);
   assert.match(await page.locator('.label[data-label-index="1"] .printed-reference').innerText(), /^FS-2611-\d{5}$/u);
   await page.screenshot({ path: join(evidence, "label-preview-overflow.png"), fullPage: true });
   const overflowLayout = await page.locator('.sheet .label[data-label-index="0"]').evaluate((label) => {

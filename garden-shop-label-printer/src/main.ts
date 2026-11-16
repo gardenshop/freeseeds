@@ -7,7 +7,10 @@ import {
 import "@fontsource/noto-naskh-arabic/arabic-400.css";
 import "@fontsource/noto-naskh-arabic/arabic-700.css";
 import {
-  A4_POINTS,
+  PAPER_PRESETS,
+  type PaperPresetId,
+  getPaperPreset,
+  pagePoints,
   addA4Page,
   detectMapping,
   labelBox,
@@ -99,6 +102,7 @@ let page = 0;
 let zoom = 1;
 let startPosition = 1;
 let countLimit = -1;
+let paperPresetId: PaperPresetId = "A4";
 let activeLabel = -1;
 let importedFileName = "";
 let printRequested = false;
@@ -167,6 +171,10 @@ function currentOrders(): Array<{ row: Order; index: number }> {
   return countLimit >= 0 ? chosen.slice(0, countLimit) : chosen;
 }
 
+function currentPaperPreset() {
+  return getPaperPreset(paperPresetId);
+}
+
 function nav() {
   return `<header class="topbar"><a class="brand" href="#upload" data-view="upload"><span class="brand-mark">GS</span><span><b>Garden Shop</b><small>LABEL STUDIO / INTERNAL</small></span></a><a class="admin-return" id="backToAdmin" href="${esc(adminUrl)}" rel="noopener noreferrer">← Back to Admin</a><nav aria-label="Main navigation">${[
     ["upload", "Import"],
@@ -223,11 +231,13 @@ function boxStyle(box: { x: number; y: number; width: number; height: number }) 
 }
 
 function labelMarkup(row: Order, index: number, _compact = false) {
-  const boxes = labelBoxes();
+  const preset = currentPaperPreset();
+  const boxes = labelBoxes(preset);
   const phone = normalizePakistaniPhone(row.phone);
   const vpl = row.cod.trim() ? formatVpl(row.cod) : "VPL";
   const vplAmount = vpl.replace(/^VPL\s*/u, "");
-  return `<article class="label ${colorAccent ? "color-accent" : ""}" data-label-index="${index}">
+  const blockedReason = printBlocker(row);
+  return `<article class="label ${colorAccent ? "color-accent" : ""} ${blockedReason ? "layout-overflow" : ""}" data-label-index="${index}" data-paper-preset="${preset.id}" style="--label-width:${preset.labelWidthMm}mm;--label-height:${preset.labelHeightMm}mm">
     <span class="tracking-value layout-box" ${boxStyle(boxes.trackingText)}->${esc(row.tracking)}</span>
     <canvas class="barcode-canvas layout-box" ${boxStyle(boxes.barcode)} data-barcode="${index}" data-source="${esc(row.tracking)}" aria-label="Code 128 barcode"></canvas>
     <span class="tracking-divider layout-box" ${boxStyle(boxes.trackingDivider)} aria-hidden="true"></span>
@@ -257,24 +267,25 @@ function labelMarkup(row: Order, index: number, _compact = false) {
 function overflowingLayoutFields(row: Order): string[] {
   const context = document.createElement("canvas").getContext("2d");
   if (!context) return ["text measurement"];
-  const boxes = labelBoxes();
-  const recipient = recipientBoxes(context, row.name);
-  const destination = destinationBoxes(context, row.city, row.province);
+  const preset = currentPaperPreset();
+  const boxes = labelBoxes(preset);
+  const recipient = recipientBoxes(context, row.name, preset);
+  const destination = destinationBoxes(context, row.city, row.province, preset);
   const check = (text: string, box: { width: number; height: number }, max: number, min: number, bold = false, wrap = true, lineHeight = 1) =>
     !text.trim() || fitTextMm(context, text, box.width, box.height, max, min, bold, lineHeight, wrap).fits;
   const checks: Array<[string, boolean]> = [
     ["tracking text", check(row.tracking, boxes.trackingText, 9, 6.5, true, false)],
-    ["printed reference", check(row.printedReference, { width: boxes.orderId.width, height: boxes.orderId.height - 1.8 }, 11, 8, false, false)],
+    ["printed reference", check(row.printedReference, { width: boxes.orderId.width, height: boxes.orderId.height - 1.35 * preset.labelHeightMm / 44 }, 11, 8, false, false)],
     ["product", check(row.product, boxes.productValue, 10, 6.5, true, false, 1)],
-    ["VPL heading", check("VPL", { width: boxes.vpl.width, height: 1.8 }, 8.5, 7, true, false, 0.95)],
-    ["VPL amount", check(row.cod ? formatVpl(row.cod).replace(/^VPL\s*/u, "") : "", { width: boxes.vpl.width - 1, height: 5.2 }, 20, 14, true, false, 0.95)],
-    ["destination city", check(row.city, destination.city, 15, 10.5, true, true, 0.95)],
-    ["province", check(row.province, destination.province, 9.5, 6.5, true, true, destination.province.height > 3.1 ? 0.95 : 1)],
+    ["VPL heading", check("VPL", { width: boxes.vpl.width, height: 1.6 * preset.labelHeightMm / 44 }, 8, 6, true, false, 0.95)],
+    ["VPL amount", check(row.cod ? formatVpl(row.cod).replace(/^VPL\s*/u, "") : "", { width: boxes.vpl.width - 1, height: 5 * preset.labelHeightMm / 44 }, 14, 10, true, false, 0.95)],
+    ["destination city", check(row.city, destination.city, usesArabicScript(row.city) ? 10.5 : 15, 7, true, true, 0.95)],
+    ["province", check(row.province, destination.province, 9.5, 6, true, true, destination.province.height > 3.1 ? 0.95 : 1)],
     ["receiver name", check(row.name, recipient.name, 12, 9, true, true, 1)],
     ["address", check(row.address, recipient.address, 11, 8)],
     ["landmark", check(row.landmark, boxes.landmark, 9.5, 7.5, false, true, 1)],
-    ["contact heading", check("Contact Number", { width: boxes.contact.width, height: 1.8 }, 6.5, 6, true, false, 0.95)],
-    ["phone", check(normalizePakistaniPhone(row.phone) ?? "", { width: boxes.contact.width, height: boxes.contact.height - 1.55 }, 16, 12, true, false, 1)],
+    ["contact heading", check("Contact Number", { width: boxes.contact.width, height: 1.3 * preset.labelHeightMm / 44 }, 6.3, 4.5, true, false, 0.95)],
+    ["phone", check(normalizePakistaniPhone(row.phone) ?? "", { width: boxes.contact.width, height: boxes.contact.height - 1.35 * preset.labelHeightMm / 44 }, 12, 9, true, false, 1)],
     ["From", check("From:", boxes.footerFrom, 9, 7, true, false, 1)],
     ["sender", check("Garden Shop", boxes.footerSender, 10, 6.5, true, false, 1)],
     ["footer address", check(LABEL_FOOTER_ADDRESS, boxes.footerAddress, 8, 6.5, false, false, 1)],
@@ -310,18 +321,21 @@ function printBlocker(row: Order): string | undefined {
 }
 
 function renderPreview() {
+  const preset = currentPaperPreset();
   const chosen = currentOrders();
   const pages = Math.max(1, pagesForCount(chosen.length, startPosition));
   const currentPage = Math.min(page, pages - 1);
   page = currentPage;
-  const pageItems = Array.from({ length: 18 }, (_, slot) => {
+  const pageItems = Array.from({ length: preset.rows * preset.columns }, (_, slot) => {
     const orderIndex = currentPage * 18 + slot - (startPosition - 1);
     return orderIndex >= 0 && chosen[orderIndex]
       ? labelMarkup(chosen[orderIndex].row, chosen[orderIndex].index)
       : '<div class="empty-label" aria-hidden="true"></div>';
   });
   const row = activeLabel >= 0 ? rows[activeLabel] : undefined;
-  return `<section class="section-heading"><div><p class="kicker">LAYOUT / A4 PORTRAIT</p><h1>Sheet preview.</h1><p>65 × 44 mm labels · 3 columns × 6 rows · monochrome</p></div><div class="preview-controls"><button class="button secondary" id="zoomOut" aria-label="Zoom out">−</button><span>${Math.round(zoom * 100)}%</span><button class="button secondary" id="zoomIn" aria-label="Zoom in">+</button></div></section><div class="preview-layout"><div class="sheet-scroller"><div class="sheet" style="--zoom:${zoom}">${pageItems.join("")}</div></div><aside class="preview-aside"><span class="kicker">BATCH SHEET</span><strong>${chosen.length} <small>labels</small></strong><div class="page-nav"><button id="prevPage" ${currentPage <= 0 ? "disabled" : ""}>←</button><span>Page ${currentPage + 1} / ${pages}</span><button id="nextPage" ${currentPage >= pages - 1 ? "disabled" : ""}>→</button></div><label>Start at position<select id="startPosition">${Array.from({ length: 18 }, (_, i) => `<option value="${i + 1}" ${startPosition === i + 1 ? "selected" : ""}>Label ${i + 1}</option>`).join("")}</select></label>${row ? `<div class="individual-preview"><span class="kicker">INDIVIDUAL LABEL · ROW ${row.rowNumber}</span>${labelMarkup(row, activeLabel, true)}</div>` : '<p class="micro">Click an order below or in Review to inspect its label.</p>'}<button class="button primary full" data-view="print">Continue to print <span>→</span></button></aside></div><div class="preview-selection">${chosen
+  const rowBlocker = row ? printBlocker(row) : undefined;
+  const paperStyle = `--zoom:${zoom};--page-width:${preset.widthMm}mm;--page-height:${preset.heightMm}mm;--label-width:${preset.labelWidthMm}mm;--label-height:${preset.labelHeightMm}mm;--page-padding-x:${preset.columnStartsMm[0]}mm;--page-padding-y:${preset.rowStartsMm[0]}mm;--grid-gap-x:${preset.columnGapMm}mm;--grid-gap-y:${preset.rowGapMm}mm`;
+  return `<section class="section-heading"><div><p class="kicker">LAYOUT / ${esc(preset.label)}</p><h1>Sheet preview.</h1><p>${preset.labelWidthMm} × ${preset.labelHeightMm} mm labels · 3 columns × 6 rows · ${preset.columnGapMm} / ${preset.rowGapMm} mm gutters</p></div><div class="preview-controls"><button class="button secondary" id="zoomOut" aria-label="Zoom out">−</button><span>${Math.round(zoom * 100)}%</span><button class="button secondary" id="zoomIn" aria-label="Zoom in">+</button></div></section><div class="preview-layout"><div class="sheet-scroller"><div class="sheet" style="${paperStyle}">${pageItems.join("")}</div></div><aside class="preview-aside"><span class="kicker">BATCH SHEET</span><strong>${chosen.length} <small>labels</small></strong><div class="page-nav"><button id="prevPage" ${currentPage <= 0 ? "disabled" : ""}>←</button><span>Page ${currentPage + 1} / ${pages}</span><button id="nextPage" ${currentPage >= pages - 1 ? "disabled" : ""}>→</button></div><label>Start at position<select id="startPosition">${Array.from({ length: 18 }, (_, i) => `<option value="${i + 1}" ${startPosition === i + 1 ? "selected" : ""}>Label ${i + 1}</option>`).join("")}</select></label>${row ? `<div class="individual-preview"><span class="kicker">INDIVIDUAL LABEL · ROW ${row.rowNumber}</span>${labelMarkup(row, activeLabel, true)}</div>${rowBlocker ? `<p class="mapping-warning" role="alert">Selected label cannot print: ${esc(rowBlocker)} Review this complete field before printing.</p>` : ""}` : '<p class="micro">Click an order below or in Review to inspect its label.</p>'}<button class="button primary full" data-view="print">Continue to print <span>→</span></button></aside></div><div class="preview-selection">${chosen
     .slice(currentPage * 18, currentPage * 18 + 18)
     .map(
       ({ row, index }) =>
@@ -333,6 +347,7 @@ function renderPreview() {
 }
 
 function renderPrint() {
+  const preset = currentPaperPreset();
   const selectedOrders = currentOrders();
   const excluded = selectedOrders.filter(({ row }) => printBlocker(row));
   const chosen = selectedOrders.filter(({ row }) => !printBlocker(row));
@@ -341,8 +356,9 @@ function renderPrint() {
   const blockedReason = blockedItem ? printBlocker(blockedItem.row) : undefined;
   const blocked = Boolean(blockedItem);
   const countValue = countLimit > 0 ? Math.min(countLimit, chosen.length) : chosen.length;
-  return `<section class="section-heading"><div><p class="kicker">OUTPUT / ACTUAL SIZE</p><h1>Ready for the printer.</h1><p>${chosen.length} labels · ${pages} A4 page${pages === 1 ? "" : "s"} · unused slots stay blank</p></div><div class="output-badge">100%<small>PHYSICAL SCALE</small></div></section>
-    <section class="print-panel"><div class="print-summary"><h2>Print setup</h2><p>Use A4 portrait and Actual size / 100% in the printer dialog. Turn off browser headers and footers.</p>
+  return `<section class="section-heading"><div><p class="kicker">OUTPUT / ACTUAL SIZE</p><h1>Ready for the printer.</h1><p>${chosen.length} labels · ${pages} ${esc(preset.label)} page${pages === 1 ? "" : "s"} · unused slots stay blank</p></div><div class="output-badge">100%<small>PHYSICAL SCALE</small></div></section>
+    <section class="print-panel"><div class="print-summary"><h2>Print setup</h2><p>Use ${esc(preset.label)} portrait and Actual size / 100% in the printer dialog. Turn off browser headers and footers.</p>${preset.marginWarning ? `<p class="mapping-warning" role="alert">${esc(preset.marginWarning)}</p>` : ""}
+    <label>Paper preset<select id="paperPreset">${Object.values(PAPER_PRESETS).map((option) => `<option value="${option.id}" ${paperPresetId === option.id ? "selected" : ""}>${esc(option.label)}</option>`).join("")}</select></label>
     ${excluded.length ? `<p class="mapping-warning" role="alert">${excluded.length} selected label${excluded.length === 1 ? "" : "s"} will be excluded from output until corrected or deselected.</p>` : ""}${blocked ? `<p class="mapping-warning" role="alert">Label ${blockedItem!.index + 1}: ${esc(blockedReason ?? "Resolve this record in Review before printing.")}</p>` : ""}
     <label>Start at position<select id="printStart">${Array.from({ length: 18 }, (_, i) => `<option value="${i + 1}" ${startPosition === i + 1 ? "selected" : ""}>Label ${i + 1}</option>`).join("")}</select></label>
     <label>Number of labels<input id="countLimit" type="number" min="0" max="${chosen.length}" value="${countValue}" aria-describedby="countHelp"></label><small id="countHelp">Set to ${chosen.length} to print the full valid selection.</small>
@@ -424,7 +440,7 @@ async function renderBarcode(canvas: HTMLCanvasElement, tracking: string) {
 }
 
 function sizeBarcode(canvas: HTMLCanvasElement, index: number): boolean {
-  const box = labelBoxes().barcode;
+  const box = labelBoxes(currentPaperPreset()).barcode;
   const pxPerMm = 96 / 25.4;
   const scale = Math.min(1, box.width * pxPerMm / canvas.width, box.height * pxPerMm / canvas.height);
   const moduleMm = scale * CODE128_LAYOUT.moduleWidthPx / pxPerMm;
@@ -474,6 +490,7 @@ async function renderBarcodeSvg(tracking: string) {
 function measureLabels(root: ParentNode = document, canvasDocument: Document = document) {
   const context = canvasDocument.createElement("canvas").getContext("2d");
   if (!context) return;
+  const preset = currentPaperPreset();
   root
     .querySelectorAll<HTMLElement>(".label[data-label-index]")
     .forEach((label) => {
@@ -489,10 +506,10 @@ function measureLabels(root: ParentNode = document, canvasDocument: Document = d
         element.style.setProperty("--box-width", `${box.width}mm`);
         element.style.setProperty("--box-height", `${box.height}mm`);
       };
-      const recipient = recipientBoxes(context, row?.name ?? "");
+      const recipient = recipientBoxes(context, row?.name ?? "", preset);
       setBox(".receiver-name", recipient.name);
       setBox(".address-text", recipient.address);
-      const destination = destinationBoxes(context, row?.city ?? "", row?.province ?? "");
+      const destination = destinationBoxes(context, row?.city ?? "", row?.province ?? "", preset);
       const destinationElement = label.querySelector<HTMLElement>(".destination");
       destinationElement?.style.setProperty("--city-row-height", `${destination.city.height}mm`);
       destinationElement?.style.setProperty("--province-row-height", `${destination.province.height}mm`);
@@ -514,24 +531,26 @@ function measureLabels(root: ParentNode = document, canvasDocument: Document = d
         element.dir = usesArabicScript(text) ? "rtl" : "ltr";
         element.style.whiteSpace = wrap ? "pre-line" : "nowrap";
         element.textContent = result.lines.join("\n");
-        element.classList.toggle("text-overflow", !result.fits);
-        if (!result.fits) element.setAttribute("data-text-overflow", "true");
         element.style.fontSize = String(result.fontSize) + "px";
-        if (!result.fits) overflow = true;
+        const clipped = !result.fits || element.scrollWidth > element.clientWidth + 1;
+        element.classList.toggle("text-overflow", clipped);
+        if (clipped) element.setAttribute("data-text-overflow", "true");
+        else element.removeAttribute("data-text-overflow");
+        if (clipped) overflow = true;
       };
       fit(".tracking-value", row?.tracking || "", 9, 6.5, true, false);
       fit(".printed-reference", row?.printedReference || "", 11, 8, false, false);
       fit(".product-value", row?.product || "", 10, 6.5, true, false);
-      fit(".vpl-prefix", "VPL", 8.5, 7, true, false);
+      fit(".vpl-prefix", "VPL", 6.5, 6, true, false);
       const vpl = row?.cod?.trim() ? formatVpl(row.cod) : "VPL";
-      fit(".vpl-amount", vpl.replace(/^VPL\s*/u, ""), 20, 14, true, false);
-      fit(".city-text", row?.city || "", 15, 10.5, true);
-      fit(".province-text", row?.province || "", 9.5, 6.5, true);
+      fit(".vpl-amount", vpl.replace(/^VPL\s*/u, ""), 14, 10, true, false);
+      fit(".city-text", row?.city || "", usesArabicScript(row?.city || "") ? 10.5 : 15, 7, true);
+      fit(".province-text", row?.province || "", 9.5, 6, true);
       fit(".receiver-name", row?.name || "", 12, 9, true);
-      fit(".address-text", row?.address || "", 11, 8);
+      fit(".address-text", label.querySelector<HTMLElement>(".address-text")?.textContent ?? "", 11, 8);
       fit(".nearby-label", "Near by:", 9.5, 7.5, true, false);
       fit(".landmark", row?.landmark || "", 9.5, 7.5);
-      fit(".contact-number", normalizePakistaniPhone(row?.phone ?? "") ?? "", 16, 12, true, false);
+      fit(".contact-number", normalizePakistaniPhone(row?.phone ?? "") ?? "", 12, 9, true, false);
       fit(".product-label", "Product:", 7.5, 6.5, true, false);
       fit(".footer-from", "From:", 12, 9, true, false);
       fit(".footer-sender", "Garden Shop", 10, 6.5, true, false);
@@ -578,6 +597,7 @@ function preparePrintLayout(popup: Window): Promise<void> {
 }
 
 function openPrintPopup(items: Array<{ row: Order; index: number }>, position: number) {
+  const preset = currentPaperPreset();
   const popup = window.open("", "_blank");
   if (!popup) return undefined;
   const pages = pagesForCount(items.length, position);
@@ -590,7 +610,7 @@ function openPrintPopup(items: Array<{ row: Order; index: number }>, position: n
     }).join("")}</main>`,
   ).join("");
   popup.document.open();
-  popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Garden Shop labels</title><link rel="stylesheet" href="/label.css"><style>@page{size:A4 portrait;margin:0}*{box-sizing:border-box}html,body{margin:0;width:210mm;height:297mm;background:#fff}.print-sheet{width:210mm;height:297mm;padding:14mm 6.5mm;display:grid;grid-template-columns:repeat(3,65mm);grid-template-rows:repeat(6,44mm);column-gap:1mm;row-gap:1mm;overflow:hidden}.page-break{break-after:page}.empty-label{width:65mm;height:44mm}@media screen{body{width:210mm;margin:12mm auto}}</style></head><body>${sheets}</body></html>`);
+  popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Garden Shop labels</title><link rel="stylesheet" href="/label.css"><style>@page{size:${preset.widthMm}mm ${preset.heightMm}mm;margin:0}*{box-sizing:border-box}html,body{margin:0;width:${preset.widthMm}mm;height:${preset.heightMm}mm;background:#fff}.print-sheet{width:${preset.widthMm}mm;height:${preset.heightMm}mm;padding:${preset.rowStartsMm[0]}mm ${preset.columnStartsMm[0]}mm;display:grid;grid-template-columns:repeat(${preset.columns},${preset.labelWidthMm}mm);grid-template-rows:repeat(${preset.rows},${preset.labelHeightMm}mm);column-gap:${preset.columnGapMm}mm;row-gap:${preset.rowGapMm}mm;overflow:hidden}.page-break{break-after:page}.empty-label{width:${preset.labelWidthMm}mm;height:${preset.labelHeightMm}mm}@media screen{body{width:${preset.widthMm}mm;margin:12mm auto}}</style></head><body>${sheets}</body></html>`);
   popup.addEventListener("load", async () => {
     await Promise.all(
       [...popup.document.querySelectorAll<HTMLCanvasElement>("canvas[data-barcode]")].map(async (canvas) => {
@@ -725,21 +745,24 @@ async function makePdf(items = currentOrders(), position = startPosition) {
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica),
     bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const preset = currentPaperPreset();
+  const scaleX = preset.labelWidthMm / 65;
+  const scaleY = preset.labelHeightMm / 44;
   const mm = MM_TO_POINTS,
-    pageH = A4_POINTS.height;
-  const boxes = labelBoxes();
+    pageH = pagePoints(preset).height;
+  const boxes = labelBoxes(preset);
   const measureCanvas = document.createElement("canvas");
   const measure = measureCanvas.getContext("2d");
   if (!measure) throw new Error("TEXT_MEASUREMENT_UNAVAILABLE");
   await document.fonts.ready;
   const totalPages = pagesForCount(items.length, position);
   for (let pageNo = 0; pageNo < totalPages; pageNo += 1) {
-    const pdfPage = addA4Page(pdf);
+    const pdfPage = addA4Page(pdf, preset);
     for (let slot = 0; slot < 18; slot += 1) {
       const itemIndex = pageNo * 18 + slot - (position - 1),
         item = items[itemIndex];
       if (!item) continue;
-      const geometry = labelBox(itemIndex, position),
+      const geometry = labelBox(itemIndex, position, preset),
         xMm = geometry.x,
         yMm = geometry.y;
       const row = item.row;
@@ -822,34 +845,34 @@ async function makePdf(items = currentOrders(), position = startPosition) {
       await drawBoxText(row.tracking, boxes.trackingText, 9, 6.5, true, rgb(0, 0, 0), "center", 1, false, "tracking value");
       const vpl = row.cod.trim() ? formatVpl(row.cod) : "VPL";
       const vplAmount = vpl.replace(/^VPL\s*/u, "");
-      await drawBoxText("VPL", { ...boxes.vpl, x: boxes.vpl.x + 0.3, y: boxes.vpl.y + 0.1, width: boxes.vpl.width - 0.6, height: 2 }, 8.5, 7, true, rgb(0, 0, 0), "center", 0.95, false, "VPL heading");
-      await drawBoxText(vplAmount, { ...boxes.vpl, x: boxes.vpl.x + 0.3, y: boxes.vpl.y + 2.1, width: boxes.vpl.width - 0.6, height: 5.2 }, 20, 14, true, rgb(0, 0, 0), "center", 0.95, false, "VPL amount");
+      await drawBoxText("VPL", { ...boxes.vpl, x: boxes.vpl.x + 0.3 * scaleX, y: boxes.vpl.y + 0.1 * scaleY, width: boxes.vpl.width - 0.6 * scaleX, height: 1.6 * scaleY }, 6.5, 6, true, rgb(0, 0, 0), "center", 0.95, false, "VPL heading");
+      await drawBoxText(vplAmount, { ...boxes.vpl, x: boxes.vpl.x + 0.3 * scaleX, y: boxes.vpl.y + 1.8 * scaleY, width: boxes.vpl.width - 0.6 * scaleX, height: 5 * scaleY }, 14, 10, true, rgb(0, 0, 0), "center", 0.95, false, "VPL amount");
       fillRect(boxes.trackingDivider, rgb(0, 0, 0));
-      const destination = destinationBoxes(measure, row.city, row.province);
-      await drawBoxText(row.city, destination.city, 15, 9, true, rgb(0, 0, 0), "center", 0.95, true, "destination city");
+      const destination = destinationBoxes(measure, row.city, row.province, preset);
+      await drawBoxText(row.city, destination.city, usesArabicScript(row.city) ? 10.5 : 15, 7, true, rgb(0, 0, 0), "center", 0.95, true, "destination city");
       outline(destination.province, 1.2, 0.2, rgb(0, 0, 0));
-      await drawBoxText(row.province, { ...destination.province, x: destination.province.x + 0.8, y: destination.province.y + 0.15, width: destination.province.width - 1.6, height: destination.province.height - 0.3 }, 8.5, 6.5, true, rgb(1, 1, 1), "center", destination.province.height > 3.1 ? 0.95 : 1, true, "destination province");
+      await drawBoxText(row.province, { ...destination.province, x: destination.province.x + 0.8 * scaleX, y: destination.province.y + 0.15 * scaleY, width: destination.province.width - 1.6 * scaleX, height: destination.province.height - 0.3 * scaleY }, 8.5, 6, true, rgb(1, 1, 1), "center", destination.province.height > 3.1 * scaleY ? 0.95 : 1, true, "destination province");
 
       outline(boxes.to, 1, 0.3);
       const tagWidth = boxes.toTag.width * mm;
       const tagHeight = boxes.toTag.height * mm;
       pdfPage.drawSvgPath(`M 0 0 L ${tagWidth * 0.86} 0 L ${tagWidth} ${tagHeight / 2} L ${tagWidth * 0.86} ${tagHeight} L 0 ${tagHeight} Z`, { x: (xMm + boxes.toTag.x) * mm, y: pageH - (yMm + boxes.toTag.y) * mm, color: rgb(0.03, 0.03, 0.03) });
       await drawBoxText("To:", boxes.toTag, 12, 10, true, rgb(1, 1, 1), "center", 1, true, "To tag");
-      const recipient = recipientBoxes(measure, row.name);
+      const recipient = recipientBoxes(measure, row.name, preset);
       await drawBoxText(row.name, recipient.name, 12, 9, true, rgb(0, 0, 0), "left", 1, true, "receiver name");
       await drawBoxText(row.address, recipient.address, 11, 8, false, rgb(0, 0, 0), "left", 1.08, true, "address");
       await drawBoxText("Near by:", boxes.nearbyLabel, 9.5, 7.5, true, rgb(0, 0, 0), "left", 1, false, "Near by caption");
       await drawBoxText(row.landmark, boxes.landmark, 9.5, 7.5, false, rgb(0, 0, 0), "left", 1, true, "Near by value");
       outline(boxes.orderProduct, 0.8, 0.25);
       fillRect(boxes.contactDivider, rgb(0, 0, 0));
-      const referenceHeading = { ...boxes.orderId, y: boxes.orderId.y + 0.1, height: 1.5 };
-      const referenceValue = { ...boxes.orderId, y: boxes.orderId.y + 1.55, height: boxes.orderId.height - 1.55 };
-      const contactHeading = { ...boxes.contact, y: boxes.contact.y + 0.1, height: 1.5 };
-      const contactValue = { ...boxes.contact, y: boxes.contact.y + 1.55, height: boxes.contact.height - 1.55 };
-      await drawBoxText("Order ID", referenceHeading, 6.5, 6, true, rgb(0, 0, 0), "left", 1, false, "Order ID caption");
+      const referenceHeading = { ...boxes.orderId, y: boxes.orderId.y + 0.1 * scaleY, height: 1.3 * scaleY };
+      const referenceValue = { ...boxes.orderId, y: boxes.orderId.y + 1.35 * scaleY, height: boxes.orderId.height - 1.35 * scaleY };
+      const contactHeading = { ...boxes.contact, y: boxes.contact.y + 0.1 * scaleY, height: 1.3 * scaleY };
+      const contactValue = { ...boxes.contact, y: boxes.contact.y + 1.35 * scaleY, height: boxes.contact.height - 1.35 * scaleY };
+      await drawBoxText("Order ID", referenceHeading, 6.3, 4.5, true, rgb(0, 0, 0), "left", 1, false, "Order ID caption");
       await drawBoxText(row.printedReference, referenceValue, 11, 8, false, rgb(0, 0, 0), "left", 1, false, "printed reference");
-      await drawBoxText("Contact Number", contactHeading, 6.5, 6, true, rgb(0, 0, 0), "left", 1, false, "contact caption");
-      await drawBoxText(normalizePakistaniPhone(row.phone)!, contactValue, 16, 12, true, rgb(0, 0, 0), "right", 1, false, "contact number");
+      await drawBoxText("Contact Number", contactHeading, 6.3, 4.5, true, rgb(0, 0, 0), "left", 1, false, "contact caption");
+      await drawBoxText(normalizePakistaniPhone(row.phone)!, contactValue, 12, 9, true, rgb(0, 0, 0), "right", 1, false, "contact number");
       outline(boxes.product, 0, 0.2);
       await drawBoxText("Product:", boxes.productLabel, 7.5, 6.5, true, rgb(0, 0, 0), "left", 1, false, "Product caption");
       await drawBoxText(row.product, boxes.productValue, 10, 6.5, true, rgb(0, 0, 0), "left", 1, false, "product");
@@ -1130,6 +1153,11 @@ function bind() {
     );
   document.querySelector("#printStart")?.addEventListener("change", (event) => {
     startPosition = Number((event.target as HTMLSelectElement).value);
+    render();
+  });
+  document.querySelector("#paperPreset")?.addEventListener("change", (event) => {
+    paperPresetId = (event.target as HTMLSelectElement).value as PaperPresetId;
+    page = 0;
     render();
   });
   document.querySelector("#countLimit")?.addEventListener("change", (event) => {
