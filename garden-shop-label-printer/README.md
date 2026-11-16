@@ -84,7 +84,7 @@ Excel data stays in browser memory. Only event category, counts, batch ID, templ
 
 ## Current Verification Evidence
 
-V4 adds `test-evidence/browser-print-custom-sheet.png` and `test-evidence/pdf-custom-sheet.png` for the custom preset, plus `test-evidence/label-preview-custom-500.png` and `test-evidence/pdf-custom-500-first-page.png` for the custom 500-row acceptance. `test-evidence/pdf-overflow-filtered.png` shows a valid selected row exporting while an impossible overlong row is excluded.
+V4 has local synthetic screenshots for the custom preset and custom 500-row acceptance; these generated image files remain local and are not published. `test-evidence/pdf-overflow-filtered.png` shows a valid selected row exporting while an impossible overlong row is excluded.
 
 - `test-evidence/staging-label-preview.png`: prior compact-layout defect screenshot.
 - `test-evidence/label-preview-synthetic.png`, `label-preview-500-v2.png`, `label-preview-overflow.png`, and `label-preview-mobile.png`: local synthetic content and narrow-screen previews.
