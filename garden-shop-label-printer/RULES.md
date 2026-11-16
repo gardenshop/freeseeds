@@ -1,5 +1,15 @@
 # Garden Shop Label Printer Rules
 
+## Windows Toolchain Recovery (2026-11-16)
+
+- Existing portable Node.js 24.22.3, npm/npx 11.19.1 are at `E:\DevTools\Node\node-v24.22.3-win-x64`; no reinstall/download was performed. This directory is appended to Windows USER PATH, preserving `F:\Git\cmd`. New PowerShell resolves `node`; run `npm.cmd`/`npx.cmd` because the system execution policy remains `Restricted`. No execution-policy change or bypass was used.
+- npm cache is redirected to the existing `F:\npm-cache`; prefix remains E: with the portable Node distribution. No global Wrangler or other package was installed. Project-pinned Wrangler is 4.149.0; lockfile and dependencies were already present.
+- F: has Git 2.56.1 and Git Credential Manager 2.9.1; authenticated GCM identity is `gardenshop`. Chrome 157.0.8103.79 and Edge 157.0.4341.60 are already installed on C:. Playwright/Vitest/ZXing project dependencies and browser test prerequisites were present; no browser download occurred.
+- From a newly started PowerShell, `node --version`, `npm.cmd --version`, `npx.cmd --version`, and `git --version` returned `v24.22.3`, `11.19.1`, `11.19.1`, and `2.56.1.windows.1`. Project-local `npx.cmd --no-install wrangler --version` returned `4.149.0`.
+- Fresh tests on the reinstalled OS: all 42 unit tests, TypeScript/Worker checks and Vite build passed; browser suite passed twice after the download-event harness repair, with 500 A4 and 500 custom barcode decodes and 28-page PDFs for both. Local V4 remains published at `583f121fcfc51c6ab97a341f16963cf4b7f59ba2` before this toolchain record.
+- Cloudflare `wrangler whoami` remains `You are not authenticated`; Wrangler help confirms supported `login --device`. Device login requires owner SSO/MFA. No Chrome DevTools MCP action namespace is exposed, Dashboard identity is not verified, and no Pages deployment or remote mutation was performed.
+- Owner's next Cloudflare step: from the project PowerShell run `npx.cmd --no-install wrangler login --device`, complete the official Cloudflare browser SSO/MFA as `gisupp@gmail.com`, confirm the Dashboard shows `Get Free Seeds` / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, then run `npx.cmd --no-install wrangler whoami`. Never share the device code, token, or credential; deployment remains blocked until this evidence and the authenticated Dashboard are verified.
+
 ## V4 Local Verification and Release Gate (2026-11-16)
 
 - Active checkout is `D:\free seeds`, repository `gardenshop/freeseeds`, branch `codex/garden-shop-label-printer-mvp`; local HEAD at inspection is `fc1ee510a6ff45b9545d69cf83097449532df0e4`; origin branch SHA is `902251cb8aaec4090f637c3109e98c2c752c4185`. Existing checkout was used; no branch switch, reset, force operation, or extra worktree was needed. Pre-existing unrelated dirty files and `.kilo/` remain untouched and unstaged.

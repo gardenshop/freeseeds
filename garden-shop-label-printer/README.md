@@ -8,8 +8,8 @@ Requires Node.js 20.19+ and npm. The automated browser/PDF screenshot smoke also
 
 ```powershell
 cd "D:\free seeds\garden-shop-label-printer"
-npm install
-npm run dev
+npm.cmd ci
+npm.cmd run dev
 ```
 
 Open the loopback URL shown by Vite. The default local mode has no monitoring backend configured; imports, previews, printing and PDF generation remain local. The app does not retain customer rows after the tab closes.
@@ -17,12 +17,19 @@ Open the loopback URL shown by Vite. The default local mode has no monitoring ba
 ## Build and tests
 
 ```powershell
-npm test
-npm run build
-npm run test:browser
+npm.cmd test
+npm.cmd run build
+npm.cmd run test:browser
 ```
 
 `test:browser` starts an isolated Vite server, imports synthetic `.xlsx` and `.csv` files, verifies A4 and custom grids, compares preview/browser-print/PDF geometry, checks both PDF MediaBoxes, decodes all 500 A4 and all 500 custom Code 128 values over every sheet, creates/rasterizes 1- and 28-page PDFs for both presets, and saves synthetic screenshots under `test-evidence/`. PDFs there are git-ignored. No customer fixture is used.
+
+## Reinstalled Windows Toolchain (2026-11-16)
+
+- Node.js 24.22.3, npm/npx 11.19.1 already existed portably at `E:\DevTools\Node\node-v24.22.3-win-x64`; no reinstall was needed. That directory was appended to USER PATH, retaining `F:\Git\cmd`. New PowerShell resolves `node`; use `npm.cmd`/`npx.cmd` because execution policy remains `Restricted` and was not changed.
+- npm cache is `F:\npm-cache`; npm prefix remains with the existing portable Node install on E:. No global package was installed. Git 2.56.1 and Git Credential Manager 2.9.1 are on F:; GCM verified `gardenshop`.
+- Chrome 157.0.8103.79 and Edge 157.0.4341.60 are already installed on C:. Project lockfile, node_modules, Vitest, Playwright and ZXing are present; no `npm ci` or browser download was needed. The project-local Wrangler is 4.149.0; no global Wrangler install was made.
+- Fresh-environment validation: 42/42 unit tests, TypeScript/Worker/Vite build, and the complete Playwright browser/PDF suite PASS, including A4/custom 500-label barcode decoding and 28-page PDF pagination. `wrangler login --device` is supported, but Wrangler identity remains unauthenticated pending owner SSO/MFA. No Cloudflare deploy occurred.
 
 ## Staging Build
 
@@ -31,10 +38,12 @@ The default build is intentionally local-only. Before building assets for the au
 ```powershell
 $env:VITE_MONITOR_URL = "https://garden-shop-label-printer-monitor-staging.get-free-seeds.workers.dev"
 $env:VITE_ADMIN_URL = "https://getfreeseeds-admin-staging.get-free-seeds.workers.dev/"
-npm run build
-npx --no-install wrangler whoami
+npm.cmd run build
+# Owner completes official SSO/MFA in the browser opened by this supported device flow.
+npx.cmd --no-install wrangler login --device
+npx.cmd --no-install wrangler whoami
 # Confirm Get Free Seeds / cb5066a6d71ecdee0bd7ed8aacb4d3c2 in the Dashboard.
-npx --no-install wrangler --cwd "D:\Temp\kilo" pages deploy "D:\free seeds\garden-shop-label-printer\dist" --project-name garden-shop-label-printer-staging --branch main
+npx.cmd --no-install wrangler --cwd "D:\Temp\kilo" pages deploy "D:\free seeds\garden-shop-label-printer\dist" --project-name garden-shop-label-printer-staging --branch main
 Remove-Item Env:VITE_MONITOR_URL
 Remove-Item Env:VITE_ADMIN_URL
 ```
@@ -54,7 +63,7 @@ Recheck account identity and the Dashboard before each Cloudflare mutation. Conf
 - Accepted phone forms normalize to exactly 11 digits beginning `03`: 10 digits beginning `3` receive a leading zero, and `+92`/`92` plus a valid 10-digit mobile become local form. Invalid/incomplete phones are flagged and block print/PDF until corrected. Exact duplicate contact tokens are removed only from the displayed address; source address is retained. Test fixtures use synthetic digits only; never store real order phones in tests or evidence.
 - Order ID uses normal weight; the contact number is bold in the divided row. Product remains present. Footer is exactly `From: Garden Shop | C/o City Post Office, Sahiwal`. Code 128 auto-switches between B/C sets, includes ≥10X horizontal quiet zones, remains vector in PDF, and is proportionally fit only while module width stays at least 0.19 mm. Unusable values are flagged instead of silently shrinking or clipping.
 
-V4 local verification (2026-11-16): 42 unit tests, TypeScript/worker checks plus Vite build, and Playwright browser/PDF regression passed. Browser evidence verifies both page sizes, custom print/preview alignment, exact MediaBoxes across all 28 pages, stable references, and 500 Code 128 decodes for each preset. The overlong-address row remains in source/editing and is explicitly excluded from output. The screenshot baseline was deliberately refreshed after visual inspection to reflect the requested TO hierarchy and final V4 geometry. No physical print is claimed. Cloudflare staging was not deployed or freshly inventoried: the last read-only Wrangler identity check reported unauthenticated, and no Dashboard/MCP action surface is available in this agent session. The last deployment ID in historical records is `3b9404e3-92a5-4e02-9bd4-b626f96eb833`; do not treat it as fresh verification.
+V4 local verification (2026-11-16): 42 unit tests, TypeScript/Worker checks plus Vite build, and the complete Playwright browser/PDF regression passed again on the reinstalled Windows environment. Browser evidence verifies both page sizes, custom print/preview alignment, exact MediaBoxes across all 28 pages, stable references, and 500 Code 128 decodes for each preset. The overlong-address row remains editable and is explicitly excluded from output. The screenshot baseline was deliberately refreshed after visual inspection to reflect the requested TO hierarchy and final V4 geometry. No physical print is claimed. Cloudflare staging was not deployed or freshly inventoried: Wrangler's read-only identity check reports unauthenticated, and no Chrome DevTools MCP action surface is exposed in this agent session. The last deployment ID in historical records is `3b9404e3-92a5-4e02-9bd4-b626f96eb833`; do not treat it as fresh verification.
 
 The repository-wide regression suite also passed 269 tests and the root build passed. Focused ESLint passed for the changed Admin source/helper/tests. The repository-wide lint command still fails while traversing unrelated dirty agent worktrees; those files were not changed or staged. Root `npm audit` reports six moderate development-tool advisories; `npm audit --omit=dev` reports zero. No existing WhatsApp/API/Admin Worker was deployed or changed.
 

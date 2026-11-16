@@ -57,27 +57,12 @@ async function loadPdf(path, screenshotName) {
 }
 
 async function saveGeneratedPdf(page, path, timeout = 300000) {
-  const before = await page.locator('a[download^="garden-shop-labels-"]').count();
   assert.equal(await page.locator("#savePdf").isDisabled(), false, `PDF control is disabled: ${await page.locator("body").innerText()}`);
-  const statusBefore = await page.locator(".status-line").first().innerText();
+  const downloadEvent = page.waitForEvent("download", { timeout });
   await page.locator("#savePdf").click();
-  try {
-    await page.waitForFunction(({ count, status }) => {
-      const links = document.querySelectorAll('a[download^="garden-shop-labels-"]');
-      const currentStatus = document.querySelector(".status-line")?.innerText ?? "";
-      return links.length > count || currentStatus !== status;
-    }, { count: before, status: statusBefore }, { timeout });
-  } catch (error) {
-    const status = await page.locator(".status-line").allInnerTexts();
-    throw new Error(`PDF export timed out (${timeout} ms); status=${JSON.stringify(status)}; pdfEnabled=${await page.locator("#savePdf").isEnabled()}`, { cause: error });
-  }
-  assert.ok(await page.locator('a[download^="garden-shop-labels-"]').count() > before, `PDF export failed: ${await page.locator("body").innerText()}`);
-  const link = page.locator('a[download^="garden-shop-labels-"]').nth(before);
-  await link.waitFor({ state: "attached", timeout: 30000 });
-  const href = await link.getAttribute("href");
-  assert.ok(href?.startsWith("blob:"), "PDF export must create a local blob download");
-  const bytes = await page.evaluate(async (url) => [...new Uint8Array(await (await fetch(url)).arrayBuffer())], href);
-  await writeFile(path, Buffer.from(bytes));
+  const download = await downloadEvent;
+  assert.match(download.suggestedFilename(), /^garden-shop-labels-[a-f0-9]+\.pdf$/u);
+  await download.saveAs(path);
 }
 
 try {
