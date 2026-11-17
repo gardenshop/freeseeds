@@ -16,6 +16,7 @@ const evidence = resolve(process.env.LP_TEST_EVIDENCE_DIR ?? join(project, "test
 const temporary = resolve(process.env.LP_TEST_TMP_DIR ?? "D:\\Temp\\kilo");
 const baseUrl = "http://127.0.0.1:4174";
 const chromePath = process.env.CHROME_PATH ?? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+const hpSafeEdgeMm = 4.233 + 1;
 const server = spawn(process.execPath, [join(project, "node_modules", "vite", "bin", "vite.js"), "--host", "127.0.0.1", "--port", "4174", "--strictPort"], { cwd: project, stdio: "ignore", windowsHide: true, env: { ...process.env, VITE_MONITOR_URL: "http://127.0.0.1:4175" } });
 let browser;
 
@@ -65,6 +66,35 @@ async function saveGeneratedPdf(page, path, timeout = 300000) {
   const download = await downloadEvent;
   assert.match(download.suggestedFilename(), /^garden-shop-labels-[a-f0-9]+\.pdf$/u);
   await download.saveAs(path);
+}
+
+async function rasterPdfPage(bytes, scale = 4) {
+  globalThis.DOMMatrix ??= DOMMatrix;
+  globalThis.ImageData ??= ImageData;
+  globalThis.Path2D ??= Path2D;
+  const document = await getDocument({ data: Uint8Array.from(bytes), disableWorker: true, useSystemFonts: true }).promise;
+  const page = await document.getPage(1);
+  const viewport = page.getViewport({ scale });
+  const canvas = createCanvas(Math.round(viewport.width), Math.round(viewport.height));
+  await page.render({ canvasContext: canvas.getContext("2d"), viewport, canvasFactory: { create: (width, height) => { const value = createCanvas(width, height); return { canvas: value, context: value.getContext("2d") }; }, reset: (target, width, height) => { target.canvas.width = width; target.canvas.height = height; }, destroy: (target) => { target.canvas.width = 0; target.canvas.height = 0; } } }).promise;
+  return canvas;
+}
+
+function rasterDarkBounds(canvas, box, scale = 4) {
+  const pxPerMm = scale * 72 / 25.4;
+  const x1 = Math.max(0, Math.floor(box.x * pxPerMm));
+  const y1 = Math.max(0, Math.floor(box.y * pxPerMm));
+  const x2 = Math.min(canvas.width, Math.ceil((box.x + box.width) * pxPerMm));
+  const y2 = Math.min(canvas.height, Math.ceil((box.y + box.height) * pxPerMm));
+  const data = canvas.getContext("2d").getImageData(x1, y1, x2 - x1, y2 - y1).data;
+  let minX = Infinity; let minY = Infinity; let maxX = -1; let maxY = -1;
+  for (let y = 0; y < y2 - y1; y += 1) for (let x = 0; x < x2 - x1; x += 1) {
+    const pixel = (y * (x2 - x1) + x) * 4;
+    if (data[pixel] < 64 && data[pixel + 1] < 64 && data[pixel + 2] < 64) { minX = Math.min(minX, x + x1); minY = Math.min(minY, y + y1); maxX = Math.max(maxX, x + x1); maxY = Math.max(maxY, y + y1); }
+  }
+  assert.ok(maxX >= 0, "barcode bars must exist within their expected PDF cell");
+  const result = { left: minX / pxPerMm, top: minY / pxPerMm, right: (maxX + 1) / pxPerMm, bottom: (maxY + 1) / pxPerMm };
+  return { ...result, quiet: { left: result.left - box.x, right: box.x + box.width - result.right, top: result.top - box.y, bottom: box.y + box.height - result.bottom } };
 }
 
 try {
@@ -284,6 +314,7 @@ try {
   const customPrintPopup = await customPrintPopupEvent;
   await customPrintPopup.waitForLoadState("load");
   await customPrintPopup.waitForFunction(() => [...document.querySelectorAll(".print-sheet canvas[data-barcode]")].every((canvas) => canvas.width > 0));
+  assert.equal(await customPrintPopup.locator("body").evaluate((body) => getComputedStyle(body).marginTop), "0px", "custom screen preview must not add the old 12 mm screen-only top offset");
   const customPrintGeometry = await customPrintPopup.locator(".print-sheet").evaluate((sheet) => {
     const mm = (px) => px * 25.4 / 96;
     const page = sheet.getBoundingClientRect();
@@ -294,7 +325,10 @@ try {
   assert.ok(Math.abs(customPrintGeometry.height - 254) < 0.1, JSON.stringify(customPrintGeometry));
   assert.ok(Math.abs(customPrintGeometry.labelWidth - 63) < 0.1, JSON.stringify(customPrintGeometry));
   assert.ok(Math.abs(customPrintGeometry.labelHeight - 42) < 0.1, JSON.stringify(customPrintGeometry));
-  assert.equal(await customPrintPopup.locator('link[rel="stylesheet"][href="/label.css"]').count(), 1, "Image Print must load label.css once so its A4 @page rule cannot override the custom size");
+  assert.equal(await customPrintPopup.locator('link[rel="stylesheet"][href="/label.css"]').count(), 1);
+  const customPageRules = await customPrintPopup.evaluate(() => [...document.styleSheets].flatMap((sheet) => { try { return [...sheet.cssRules]; } catch { return []; } }).filter((rule) => rule.constructor.name === "CSSPageRule").map((rule) => rule.cssText));
+  assert.equal(customPageRules.length, 1, `custom Image Print must have one authoritative @page rule: ${JSON.stringify(customPageRules)}`);
+  assert.match(customPageRules[0], /190\.5mm 254mm/u);
   assert.equal(await customPrintPopup.evaluate(() => window.__labelPrintRequested), true, "Image Print must reach the browser print call");
   await customPrintPopup.emulateMedia({ media: "print" });
   const safeContentBounds = await customPrintPopup.locator(".print-sheet").evaluate((sheet) => {
@@ -303,10 +337,10 @@ try {
     const boxes = [...sheet.querySelectorAll(".layout-box")].map((element) => element.getBoundingClientRect());
     return { left: mm(Math.min(...boxes.map((box) => box.left)) - page.left), right: mm(Math.max(...boxes.map((box) => box.right)) - page.left), top: mm(Math.min(...boxes.map((box) => box.top)) - page.top), bottom: mm(Math.max(...boxes.map((box) => box.bottom)) - page.top) };
   });
-  assert.ok(safeContentBounds.left >= 4.233 - 0.03, JSON.stringify(safeContentBounds));
-  assert.ok(safeContentBounds.right <= 190.5 - 4.233 + 0.03, JSON.stringify(safeContentBounds));
-  assert.ok(safeContentBounds.top >= 4.233 - 0.03, JSON.stringify(safeContentBounds));
-  assert.ok(safeContentBounds.bottom <= 254 - 4.233 + 0.03, JSON.stringify(safeContentBounds));
+  assert.ok(safeContentBounds.left >= hpSafeEdgeMm - 0.03, JSON.stringify(safeContentBounds));
+  assert.ok(safeContentBounds.right <= 190.5 - hpSafeEdgeMm + 0.03, JSON.stringify(safeContentBounds));
+  assert.ok(safeContentBounds.top >= hpSafeEdgeMm - 0.03, JSON.stringify(safeContentBounds));
+  assert.ok(safeContentBounds.bottom <= 254 - hpSafeEdgeMm + 0.03, JSON.stringify(safeContentBounds));
   const imagePrintPdf = await customPrintPopup.pdf({ preferCSSPageSize: true, printBackground: true, displayHeaderFooter: false, scale: 1 });
   const imagePrintDocument = await PDFDocument.load(imagePrintPdf);
   assert.equal(imagePrintDocument.getPageCount(), 1, "18-slot custom Image Print calibration must remain one page");
@@ -324,6 +358,22 @@ try {
   assert.match(customPdf.text, /TRK000001/);
   assert.equal(customPdf.hasRasterImage, false, "custom PDF barcode must remain vector");
   await page.locator("#paperPreset").selectOption("A4");
+  const a4PrintPopupEvent = page.waitForEvent("popup");
+  await page.locator("#printNow").click();
+  const a4PrintPopup = await a4PrintPopupEvent;
+  await a4PrintPopup.waitForLoadState("load");
+  const a4PageRules = await a4PrintPopup.evaluate(() => [...document.styleSheets].flatMap((sheet) => { try { return [...sheet.cssRules]; } catch { return []; } }).filter((rule) => rule.constructor.name === "CSSPageRule").map((rule) => rule.cssText));
+  assert.equal(a4PageRules.length, 1, `A4 Image Print must also have one page rule: ${JSON.stringify(a4PageRules)}`);
+  assert.match(a4PageRules[0], /210mm 297mm/u);
+  assert.equal(await a4PrintPopup.locator("body").evaluate((body) => getComputedStyle(body).marginTop), "45.3543px", "A4's existing screen-only preview spacing is unchanged");
+  await a4PrintPopup.emulateMedia({ media: "print" });
+  assert.equal(await a4PrintPopup.locator("body").evaluate((body) => getComputedStyle(body).margin), "0px");
+  const a4ImagePrintPdf = await a4PrintPopup.pdf({ preferCSSPageSize: true, printBackground: true, displayHeaderFooter: false, scale: 1 });
+  const a4ImagePrintDocument = await PDFDocument.load(a4ImagePrintPdf);
+  assert.equal(a4ImagePrintDocument.getPageCount(), 1);
+  assert.ok(Math.abs(a4ImagePrintDocument.getPage(0).getSize().width - (210 * 72 / 25.4)) < 0.71, `A4 Image Print MediaBox must remain within 0.25 mm: ${JSON.stringify(a4ImagePrintDocument.getPage(0).getSize())}`);
+  assert.ok(Math.abs(a4ImagePrintDocument.getPage(0).getSize().height - (297 * 72 / 25.4)) < 0.71, `A4 Image Print MediaBox must remain within 0.25 mm: ${JSON.stringify(a4ImagePrintDocument.getPage(0).getSize())}`);
+  await a4PrintPopup.close();
 
   const calibrationContext = await browser.newContext({ viewport: { width: 1440, height: 1200 }, deviceScaleFactor: 4 });
   await calibrationContext.addInitScript(() => Object.defineProperty(window, "print", { configurable: true, value: () => { window.__labelPrintRequested = true; } }));
@@ -361,7 +411,11 @@ try {
   assert.equal(calibrationGeometry.labels, 18);
   [0.25, 63.75, 127.25].forEach((expected, column) => assert.ok(Math.abs(calibrationGeometry.cells[column][0] - expected) < 0.03, `calibration x${column} drifted: ${calibrationGeometry.cells[column][0]} mm`));
   [0.1675, 42.5005, 84.8335, 127.1665, 169.4995, 211.8325].forEach((expected, row) => assert.ok(Math.abs(calibrationGeometry.cells[row * 3][1] - expected) < 0.03, `calibration y${row} drifted: ${calibrationGeometry.cells[row * 3][1]} mm`));
-  assert.ok(calibrationGeometry.contentBounds.left >= 4.233 - 0.03 && calibrationGeometry.contentBounds.right <= 190.5 - 4.233 + 0.03 && calibrationGeometry.contentBounds.top >= 4.233 - 0.03 && calibrationGeometry.contentBounds.bottom <= 254 - 4.233 + 0.03, JSON.stringify(calibrationGeometry.contentBounds));
+  assert.ok(calibrationGeometry.contentBounds.left >= hpSafeEdgeMm - 0.03 && calibrationGeometry.contentBounds.right <= 190.5 - hpSafeEdgeMm + 0.03 && calibrationGeometry.contentBounds.top >= hpSafeEdgeMm - 0.03 && calibrationGeometry.contentBounds.bottom <= 254 - hpSafeEdgeMm + 0.03, JSON.stringify(calibrationGeometry.contentBounds));
+  const calibrationBarcodeBoxes = await calibrationPopup.locator(".print-sheet canvas[data-barcode]").evaluateAll((canvases) => {
+    const sheet = document.querySelector(".print-sheet").getBoundingClientRect();
+    return canvases.map((canvas) => { const rect = canvas.getBoundingClientRect(); const mm = (px) => px * 25.4 / 96; return { source: canvas.dataset.source, x: mm(rect.left - sheet.left), y: mm(rect.top - sheet.top), width: mm(rect.width), height: mm(rect.height) }; });
+  });
   const calibrationHints = new Map([[DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.CODE_128]]]);
   for (let index = 0; index < 18; index += 1) {
     const barcode = calibrationPopup.locator(".print-sheet canvas[data-barcode]").nth(index);
@@ -374,11 +428,68 @@ try {
     const decoded = reader.decode(new BinaryBitmap(new HybridBinarizer(new HTMLCanvasElementLuminanceSource(canvas)))).getText();
     assert.equal(decoded, expected, `P2055-scaled Image Print barcode ${index + 1} must decode`);
   }
-  const calibrationPrintPdf = await calibrationPopup.pdf({ preferCSSPageSize: true, printBackground: true, displayHeaderFooter: false, scale: 1 });
-  const calibrationPrintDocument = await PDFDocument.load(calibrationPrintPdf);
+  const calibrationPrintPdf = Buffer.from(await calibrationPopup.pdf({ preferCSSPageSize: true, printBackground: true, displayHeaderFooter: false, scale: 1 }));
+  const calibrationPrintPdfRasterSource = Buffer.from(calibrationPrintPdf);
+  const calibrationPrintDocument = await PDFDocument.load(Buffer.from(calibrationPrintPdf));
   assert.equal(calibrationPrintDocument.getPageCount(), 1);
   assert.ok(Math.abs(calibrationPrintDocument.getPage(0).getSize().width - (190.5 * 72 / 25.4)) < 0.01);
   assert.ok(Math.abs(calibrationPrintDocument.getPage(0).getSize().height - (254 * 72 / 25.4)) < 0.01);
+
+  const calibrationPdfPath = join(temporary, `lp037-savepdf-18-${Date.now()}.pdf`);
+  await saveGeneratedPdf(calibrationPage, calibrationPdfPath);
+  const calibrationPdfBytes = Buffer.from(await readFile(calibrationPdfPath));
+  const calibrationPdfJsBytes = Buffer.from(calibrationPdfBytes);
+  const calibrationPdfRasterBytes = Buffer.from(calibrationPdfBytes);
+  const calibrationSavePdf = await PDFDocument.load(Buffer.from(calibrationPdfBytes));
+  assert.equal(calibrationSavePdf.getPageCount(), 1);
+  assert.ok(Math.abs(calibrationSavePdf.getPage(0).getSize().width - (190.5 * 72 / 25.4)) < 0.01);
+  assert.ok(Math.abs(calibrationSavePdf.getPage(0).getSize().height - (254 * 72 / 25.4)) < 0.01);
+  const calibrationPdfJs = await getDocument({ data: Uint8Array.from(calibrationPdfJsBytes), disableWorker: true, useSystemFonts: true }).promise;
+  const calibrationSavePage = await calibrationPdfJs.getPage(1);
+  const calibrationViewport = calibrationSavePage.getViewport({ scale: 1 });
+  const saveText = (await calibrationSavePage.getTextContent()).items.filter((item) => "str" in item && item.str.trim());
+  const saveTextBounds = saveText.map((item) => {
+    const [x, y] = calibrationViewport.convertToViewportPoint(item.transform[4], item.transform[5]);
+    const mm = (value) => value * 25.4 / 72;
+    return { left: mm(x), right: mm(x + item.width), top: mm(y - item.height), bottom: mm(y) };
+  });
+  const pdfContentBounds = { left: Math.min(...saveTextBounds.map((box) => box.left)), right: Math.max(...saveTextBounds.map((box) => box.right)), top: Math.min(...saveTextBounds.map((box) => box.top)), bottom: Math.max(...saveTextBounds.map((box) => box.bottom)) };
+  assert.ok(pdfContentBounds.left >= hpSafeEdgeMm - 0.03 && pdfContentBounds.right <= 190.5 - hpSafeEdgeMm + 0.03 && pdfContentBounds.top >= hpSafeEdgeMm - 0.03 && pdfContentBounds.bottom <= 254 - hpSafeEdgeMm + 0.03, JSON.stringify(pdfContentBounds));
+  const saveTextAll = saveText.map((item) => item.str).join(" ");
+  for (const item of calibrationRows) assert.ok(saveTextAll.includes(item[4]), "Download PDF must retain every synthetic barcode value");
+
+  const imagePrintRaster = await rasterPdfPage(calibrationPrintPdfRasterSource, 4);
+  const downloadPdfRaster = await rasterPdfPage(calibrationPdfRasterBytes, 4);
+  assert.equal(imagePrintRaster.width, downloadPdfRaster.width, "paired custom pages must render at the same width/DPI");
+  assert.equal(imagePrintRaster.height, downloadPdfRaster.height, "paired custom pages must render at the same height/DPI");
+  for (let index = 0; index < calibrationBarcodeBoxes.length; index += 1) {
+    const printBars = rasterDarkBounds(imagePrintRaster, calibrationBarcodeBoxes[index], 4);
+    const pdfBars = rasterDarkBounds(downloadPdfRaster, calibrationBarcodeBoxes[index], 4);
+    for (const edge of ["left", "top", "right", "bottom"]) assert.ok(Math.abs(printBars[edge] - pdfBars[edge]) < 0.25, `Image Print/PDF barcode ${index + 1} ${edge} bound differs: print ${printBars[edge]} mm, PDF ${pdfBars[edge]} mm`);
+    for (const edge of ["left", "top", "right", "bottom"]) assert.ok(Math.abs(printBars.quiet[edge] - pdfBars.quiet[edge]) < 0.25, `Image Print/PDF barcode ${index + 1} ${edge} quiet zone differs: print ${printBars.quiet[edge]} mm, PDF ${pdfBars.quiet[edge]} mm`);
+  }
+
+  globalThis.DOMMatrix ??= DOMMatrix;
+  globalThis.ImageData ??= ImageData;
+  globalThis.Path2D ??= Path2D;
+  const printRasterViewport = calibrationSavePage.getViewport({ scale: 4 });
+  const printRaster = createCanvas(Math.round(printRasterViewport.width), Math.round(printRasterViewport.height));
+  await calibrationSavePage.render({ canvasContext: printRaster.getContext("2d"), viewport: printRasterViewport, canvasFactory: { create: (width, height) => { const canvas = createCanvas(width, height); return { canvas, context: canvas.getContext("2d") }; }, reset: (target, width, height) => { target.canvas.width = width; target.canvas.height = height; }, destroy: (target) => { target.canvas.width = 0; target.canvas.height = 0; } } }).promise;
+  const saveBarcodeHints = new Map([[DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.CODE_128]]]);
+  const pdfPixelsPerMm = 4 * 72 / 25.4;
+  for (let index = 0; index < calibrationBarcodeBoxes.length; index += 1) {
+    const box = calibrationBarcodeBoxes[index];
+    const x = Math.max(0, Math.floor((box.x - 2) * pdfPixelsPerMm));
+    const y = Math.max(0, Math.floor((box.y - 2) * pdfPixelsPerMm));
+    const right = Math.min(printRaster.width, Math.ceil((box.x + box.width + 2) * pdfPixelsPerMm));
+    const bottom = Math.min(printRaster.height, Math.ceil((box.y + box.height + 2) * pdfPixelsPerMm));
+    const crop = createCanvas(right - x, bottom - y);
+    crop.getContext("2d").drawImage(printRaster, x, y, right - x, bottom - y, 0, 0, right - x, bottom - y);
+    const reader = new MultiFormatReader();
+    reader.setHints(saveBarcodeHints);
+    const decoded = reader.decode(new BinaryBitmap(new HybridBinarizer(new HTMLCanvasElementLuminanceSource(crop)))).getText();
+    assert.equal(decoded, box.source, `Download PDF Code 128 barcode ${index + 1} must decode after the shared HP inset`);
+  }
   await calibrationContext.close();
 
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, deviceScaleFactor: 1 });

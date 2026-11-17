@@ -88,6 +88,68 @@ export function labelBoxes(preset: PaperPreset = PAPER_PRESETS.A4): LabelBoxes {
   }])) as LabelBoxes;
 }
 
+export const HP_P2055_IMAGEABLE_EDGE_MM = 4.233;
+export const HP_P2055_PRINT_ALLOWANCE_MM = 1;
+export const HP_P2055_SAFE_EDGE_MM = HP_P2055_IMAGEABLE_EDGE_MM + HP_P2055_PRINT_ALLOWANCE_MM;
+
+export type LabelContentTransform = { offsetX: number; offsetY: number; scaleX: number; scaleY: number };
+
+const IDENTITY_LABEL_CONTENT_TRANSFORM: LabelContentTransform = { offsetX: 0, offsetY: 0, scaleX: 1, scaleY: 1 };
+
+/** Maps only label content into the printer's imageable area; sheet/label coordinates never move. */
+export function labelContentTransform(
+  preset: PaperPreset,
+  slot: number,
+  hpP2055SafeArea = true,
+): LabelContentTransform {
+  if (!hpP2055SafeArea || preset.id !== "CUSTOM") return IDENTITY_LABEL_CONTENT_TRANSFORM;
+  if (!Number.isInteger(slot) || slot < 0 || slot >= preset.rows * preset.columns) throw new Error("LABEL_SLOT_INVALID");
+
+  const boxes = Object.entries(labelBoxes(preset)).filter(([name]) => name !== "outline").map(([, box]) => box);
+  const contentRightMm = Math.max(...boxes.map((box) => box.x + box.width));
+  const contentBottomMm = Math.max(...boxes.map((box) => box.y + box.height));
+  const column = slot % preset.columns;
+  const row = Math.floor(slot / preset.columns);
+  const columnStart = preset.columnStartsMm[column];
+  const rowStart = preset.rowStartsMm[row];
+  if (columnStart === undefined || rowStart === undefined) throw new Error("LABEL_SLOT_INVALID");
+
+  let offsetX = 0;
+  let offsetY = 0;
+  let scaleX = 1;
+  let scaleY = 1;
+  if (column === 0) {
+    offsetX = HP_P2055_SAFE_EDGE_MM - columnStart;
+    scaleX = (preset.labelWidthMm - offsetX) / contentRightMm;
+  } else if (column === preset.columns - 1) {
+    scaleX = (preset.widthMm - HP_P2055_SAFE_EDGE_MM - columnStart) / contentRightMm;
+  }
+  if (row === 0) {
+    offsetY = HP_P2055_SAFE_EDGE_MM - rowStart;
+    scaleY = (preset.labelHeightMm - offsetY) / contentBottomMm;
+  } else if (row === preset.rows - 1) {
+    scaleY = (preset.heightMm - HP_P2055_SAFE_EDGE_MM - rowStart) / contentBottomMm;
+  }
+  if (scaleX <= 0 || scaleY <= 0) throw new Error("PRINT_SAFE_AREA_UNAVAILABLE");
+  return { offsetX, offsetY, scaleX, scaleY };
+}
+
+export function transformLabelContentBox(box: BoxMm, transform: LabelContentTransform): BoxMm {
+  return {
+    x: transform.offsetX + box.x * transform.scaleX,
+    y: transform.offsetY + box.y * transform.scaleY,
+    width: box.width * transform.scaleX,
+    height: box.height * transform.scaleY,
+  };
+}
+
+export function transformLabelContentPoint(point: { x: number; y: number }, transform: LabelContentTransform) {
+  return {
+    x: transform.offsetX + point.x * transform.scaleX,
+    y: transform.offsetY + point.y * transform.scaleY,
+  };
+}
+
 export function recipientBoxes(ctx: CanvasRenderingContext2D, name: string, preset: PaperPreset = PAPER_PRESETS.A4) {
   const boxes = labelBoxes(preset);
   const initial = boxes.name;

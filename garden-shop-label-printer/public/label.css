@@ -305,7 +305,6 @@
 .mapping-warning { margin: -12px 0 16px; border-left: 3px solid var(--orange); background: #f5e6d9; padding: 12px; color: #673a25; font-size: 11px; }
 
 /* Final repair geometry: centered 1 mm gutters and one shared label model. */
-@page { size: A4 portrait; margin: 0; }
 .sheet {
   width: calc(var(--page-width, 210mm) * var(--zoom));
   height: calc(var(--page-height, 297mm) * var(--zoom));

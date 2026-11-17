@@ -27,7 +27,7 @@ import {
 } from "./engine";
 import "./style.css";
 import "../public/label.css";
-import { CODE128_LAYOUT, destinationBoxes, fitTextMm, fitTextPx, formatVpl, labelBoxes, labelFontFamily, LABEL_FOOTER_ADDRESS, recipientBoxes, usesArabicScript, usesComplexScript } from "./layout";
+import { CODE128_LAYOUT, destinationBoxes, fitTextMm, fitTextPx, formatVpl, HP_P2055_PRINT_ALLOWANCE_MM, HP_P2055_SAFE_EDGE_MM, labelBoxes, labelContentTransform, labelFontFamily, LABEL_FOOTER_ADDRESS, recipientBoxes, transformLabelContentBox, transformLabelContentPoint, usesArabicScript, usesComplexScript } from "./layout";
 import { restoreZeroFormattedCells } from "./xlsx";
 import { LABEL_REFERENCE_NOTICE, reserveLabelReference, updateLabelReferenceSource } from "./references";
 
@@ -358,7 +358,7 @@ function renderPrint() {
   const blocked = Boolean(blockedItem);
   const countValue = countLimit > 0 ? Math.min(countLimit, chosen.length) : chosen.length;
   return `<section class="section-heading"><div><p class="kicker">OUTPUT / ACTUAL SIZE</p><h1>Ready for the printer.</h1><p>${chosen.length} labels · ${pages} ${esc(preset.label)} page${pages === 1 ? "" : "s"} · unused slots stay blank</p></div><div class="output-badge">100%<small>PHYSICAL SCALE</small></div></section>
-    <section class="print-panel"><div class="print-summary"><h2>Print setup</h2><p>Use ${esc(preset.label)} portrait and Actual size / 100% in the printer dialog. Turn off browser headers and footers.</p>${preset.id === "CUSTOM" ? `<p class="mapping-warning" role="alert">HP LaserJet P2055dn: select or define 190.5 × 254 mm custom portrait paper in both the browser and printer driver. Disable Fit/Shrink and duplex; use Tray 1/manual feed when supported. The HP safe-area option keeps content inside this non-borderless printer’s measured 4.233 mm margins; label boundaries and downloaded PDF geometry remain unchanged. Verify one calibration sheet before using pre-cut stock.</p><label class="confirm-print"><input id="hpP2055SafeArea" type="checkbox" ${hpP2055SafeArea ? "checked" : ""}> HP LaserJet P2055dn safe-area content inset</label>` : ""}${preset.marginWarning ? `<p class="mapping-warning" role="alert">${esc(preset.marginWarning)}</p>` : ""}
+    <section class="print-panel"><div class="print-summary"><h2>Print setup</h2><p>Use ${esc(preset.label)} portrait and Actual size / 100% in the printer dialog. Turn off browser headers and footers.</p>${preset.id === "CUSTOM" ? `<p class="mapping-warning" role="alert">HP LaserJet P2055dn: select or define 190.5 × 254 mm custom portrait paper in both browser and driver. Disable Fit/Shrink and duplex; use Tray 1/manual feed when supported. The optional shared HP profile reserves a ${HP_P2055_PRINT_ALLOWANCE_MM} mm practical gap beyond the measured 4.233 mm hardware edge (content edge ${HP_P2055_SAFE_EDGE_MM} mm); label cells and PDF MediaBox remain unchanged. Verify one calibration sheet before using pre-cut stock.</p><label class="confirm-print"><input id="hpP2055SafeArea" type="checkbox" ${hpP2055SafeArea ? "checked" : ""}> HP LaserJet P2055dn safe-area content inset for Image Print and PDF</label>` : ""}${preset.marginWarning ? `<p class="mapping-warning" role="alert">${esc(preset.marginWarning)}</p>` : ""}
     <label>Paper preset<select id="paperPreset">${Object.values(PAPER_PRESETS).map((option) => `<option value="${option.id}" ${paperPresetId === option.id ? "selected" : ""}>${esc(option.label)}</option>`).join("")}</select></label>
     ${excluded.length ? `<p class="mapping-warning" role="alert">${excluded.length} selected label${excluded.length === 1 ? "" : "s"} will be excluded from output until corrected or deselected.</p>` : ""}${blocked ? `<p class="mapping-warning" role="alert">Label ${blockedItem!.index + 1}: ${esc(blockedReason ?? "Resolve this record in Review before printing.")}</p>` : ""}
     <label>Start at position<select id="printStart">${Array.from({ length: 18 }, (_, i) => `<option value="${i + 1}" ${startPosition === i + 1 ? "selected" : ""}>Label ${i + 1}</option>`).join("")}</select></label>
@@ -592,29 +592,13 @@ function preparePrintLayout(popup: Window): Promise<void> {
 function openPrintPopup(items: Array<{ row: Order; index: number }>, position: number) {
   const preset = currentPaperPreset();
   const hpP2055SafeCss = preset.id === "CUSTOM" && hpP2055SafeArea
-    ? (() => {
-      const imageableMarginMm = 4.233;
-      const customBoxes = Object.entries(labelBoxes(preset)).filter(([key]) => key !== "outline").map(([, box]) => box);
-      const maxBoxX = Math.max(...customBoxes.map((box) => box.x + box.width));
-      const maxBoxY = Math.max(...customBoxes.map((box) => box.y + box.height));
-      const rightCellImageableWidth = preset.widthMm - imageableMarginMm - preset.columnStartsMm[2];
-      const bottomRowImageableHeight = preset.heightMm - imageableMarginMm - preset.rowStartsMm[5];
-      const leftCellImageableWidth = preset.labelWidthMm - (imageableMarginMm - preset.columnStartsMm[0]);
-      const topRowImageableHeight = preset.labelHeightMm - (imageableMarginMm - preset.rowStartsMm[0]);
-      const leftXScale = leftCellImageableWidth / maxBoxX;
-      const rightXScale = rightCellImageableWidth / maxBoxX;
-      const topYScale = topRowImageableHeight / maxBoxY;
-      const bottomYScale = bottomRowImageableHeight / maxBoxY;
-      const xInset = imageableMarginMm - preset.columnStartsMm[0];
-      const yInset = imageableMarginMm - preset.rowStartsMm[0];
-      return `<style>
-        .print-sheet>.label:nth-child(3n + 1)>.label-content{--hp-safe-x:${xInset}mm;--hp-safe-scale-x:${leftXScale}}
-        .print-sheet>.label:nth-child(3n)>.label-content{--hp-safe-scale-x:${rightXScale}}
-        .print-sheet>.label:nth-child(-n + 3)>.label-content{--hp-safe-y:${yInset}mm;--hp-safe-scale-y:${topYScale}}
-        .print-sheet>.label:nth-child(n + 16)>.label-content{--hp-safe-scale-y:${bottomYScale}}
-        .print-sheet>.label>.label-content{transform:translate(var(--hp-safe-x,0mm),var(--hp-safe-y,0mm)) scale(var(--hp-safe-scale-x,1),var(--hp-safe-scale-y,1));transform-origin:top left}
-      </style>`;
-    })()
+    ? `<style>${Array.from({ length: preset.rows * preset.columns }, (_, slot) => {
+      const transform = labelContentTransform(preset, slot, true);
+      if (transform.offsetX === 0 && transform.offsetY === 0 && transform.scaleX === 1 && transform.scaleY === 1) return "";
+      const css = (value: number) => Number(value.toFixed(8));
+      const cell = `.print-sheet>.label:nth-child(${slot + 1})`;
+      return `${cell}>.label-content{transform:translate(${css(transform.offsetX)}mm,${css(transform.offsetY)}mm) scale(${css(transform.scaleX)},${css(transform.scaleY)});transform-origin:top left}${cell}>.label-content .barcode-canvas{transform:scale(${css(1 / transform.scaleX)},${css(1 / transform.scaleY)});transform-origin:top left}`;
+    }).join("\n")}</style>`
     : "";
   const popup = window.open("", "_blank");
   if (!popup) return undefined;
@@ -628,7 +612,8 @@ function openPrintPopup(items: Array<{ row: Order; index: number }>, position: n
     }).join("")}</main>`,
   ).join("");
   popup.document.open();
-  popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Garden Shop labels</title><link rel="stylesheet" href="/label.css"><style>@page{size:${preset.widthMm}mm ${preset.heightMm}mm;margin:0}*{box-sizing:border-box}html,body{margin:0;width:${preset.widthMm}mm;height:${preset.heightMm}mm;background:#fff}.print-sheet{width:${preset.widthMm}mm;height:${preset.heightMm}mm;padding:${preset.rowStartsMm[0]}mm ${preset.columnStartsMm[0]}mm;display:grid;grid-template-columns:repeat(${preset.columns},${preset.labelWidthMm}mm);grid-template-rows:repeat(${preset.rows},${preset.labelHeightMm}mm);column-gap:${preset.columnGapMm}mm;row-gap:${preset.rowGapMm}mm;overflow:hidden}.page-break{break-after:page}.empty-label{width:${preset.labelWidthMm}mm;height:${preset.labelHeightMm}mm}@media screen{body{width:${preset.widthMm}mm;margin:12mm auto}}</style>${hpP2055SafeCss}</head><body>${sheets}</body></html>`);
+  const screenMargin = preset.id === "CUSTOM" ? "0" : "12mm";
+  popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Garden Shop labels</title><link rel="stylesheet" href="/label.css"><style>@page{size:${preset.widthMm}mm ${preset.heightMm}mm;margin:0}*{box-sizing:border-box}html,body{margin:0;width:${preset.widthMm}mm;height:${preset.heightMm}mm;background:#fff}.print-sheet{width:${preset.widthMm}mm;height:${preset.heightMm}mm;padding:${preset.rowStartsMm[0]}mm ${preset.columnStartsMm[0]}mm;display:grid;grid-template-columns:repeat(${preset.columns},${preset.labelWidthMm}mm);grid-template-rows:repeat(${preset.rows},${preset.labelHeightMm}mm);column-gap:${preset.columnGapMm}mm;row-gap:${preset.rowGapMm}mm;overflow:hidden}.page-break{break-after:page}.empty-label{width:${preset.labelWidthMm}mm;height:${preset.labelHeightMm}mm}@media screen{body{width:${preset.widthMm}mm;margin:${screenMargin} auto}}</style>${hpP2055SafeCss}</head><body>${sheets}</body></html>`);
   popup.addEventListener("load", async () => {
     await Promise.all(
       [...popup.document.querySelectorAll<HTMLCanvasElement>("canvas[data-barcode]")].map(async (canvas) => {
@@ -767,6 +752,7 @@ async function makePdf(items = currentOrders(), position = startPosition) {
   const scaleX = preset.labelWidthMm / 65;
   const scaleY = preset.labelHeightMm / 44;
   const mm = MM_TO_POINTS,
+    pxPerMm = 96 / 25.4,
     pageH = pagePoints(preset).height;
   const boxes = labelBoxes(preset);
   const measureCanvas = document.createElement("canvas");
@@ -784,6 +770,8 @@ async function makePdf(items = currentOrders(), position = startPosition) {
         xMm = geometry.x,
         yMm = geometry.y;
       const row = item.row;
+      const safeTransform = labelContentTransform(preset, geometry.slot, hpP2055SafeArea);
+      const mapContentBox = (box: (typeof boxes)[keyof typeof boxes]) => transformLabelContentBox(box, safeTransform);
       const drawBoxText = async (
         text: string,
         box: (typeof boxes)[keyof typeof boxes],
@@ -796,7 +784,9 @@ async function makePdf(items = currentOrders(), position = startPosition) {
         wrap = true,
         fieldName = "label text",
       ) => {
-        const fit = fitTextMm(measure, text, box.width, box.height, maxFont, minFont, isBold, lineHeight, wrap);
+        const safeBox = mapContentBox(box);
+        const safeFontScale = Math.min(safeTransform.scaleX, safeTransform.scaleY);
+        const fit = fitTextMm(measure, text, safeBox.width, safeBox.height, maxFont * safeFontScale, minFont * safeFontScale, isBold, lineHeight, wrap);
         if (!fit.fits) {
           if (!row.warnings.some((warning) => warning.startsWith("Text does not fit"))) row.warnings.push(`Text does not fit: ${fieldName}. Edit this record before printing.`);
           return;
@@ -805,10 +795,10 @@ async function makePdf(items = currentOrders(), position = startPosition) {
           await document.fonts.load(`${isBold ? "700 " : ""}${fit.fontSize}px "Noto Naskh Arabic"`);
           const scale = 4;
           const pxPerMm = 96 / 25.4;
-          const widthPx = box.width * pxPerMm;
+          const widthPx = safeBox.width * pxPerMm;
           const canvas = document.createElement("canvas");
           canvas.width = Math.ceil(widthPx * scale);
-          canvas.height = Math.ceil(box.height * pxPerMm * scale);
+          canvas.height = Math.ceil(safeBox.height * pxPerMm * scale);
           const ctx = canvas.getContext("2d");
           if (!ctx) throw new Error("COMPLEX_TEXT_CANVAS_UNAVAILABLE");
           ctx.scale(scale, scale);
@@ -824,22 +814,22 @@ async function makePdf(items = currentOrders(), position = startPosition) {
           });
           const image = await pdf.embedPng(canvas.toDataURL("image/png"));
           pdfPage.drawImage(image, {
-            x: (xMm + box.x) * mm,
-            y: pageH - (yMm + box.y + box.height) * mm,
-            width: box.width * mm,
-            height: box.height * mm,
+            x: (xMm + safeBox.x) * mm,
+            y: pageH - (yMm + safeBox.y + safeBox.height) * mm,
+            width: safeBox.width * mm,
+            height: safeBox.height * mm,
           });
           return;
         }
         const size = fit.fontSize * 0.75;
         const lineHeightMm = (fit.fontSize * lineHeight) / (96 / 25.4);
         fit.lines.forEach((lineText, lineIndex) => {
-          const baselineMm = box.y + (lineIndex + 0.86) * lineHeightMm;
+          const baselineMm = safeBox.y + (lineIndex + 0.86) * lineHeightMm;
           const textWidth = (isBold ? bold : font).widthOfTextAtSize(lineText, size);
-          const boxWidth = box.width * mm;
+          const boxWidth = safeBox.width * mm;
           const left = align === "center" ? (boxWidth - textWidth) / 2 : align === "right" ? boxWidth - textWidth : 0;
           pdfPage.drawText(lineText, {
-            x: (xMm + box.x) * mm + Math.max(0, left),
+            x: (xMm + safeBox.x) * mm + Math.max(0, left),
             y: pageH - (yMm + baselineMm) * mm,
             size,
             font: isBold ? bold : font,
@@ -848,17 +838,20 @@ async function makePdf(items = currentOrders(), position = startPosition) {
           });
         });
       };
-      const fillRect = (box: { x: number; y: number; width: number; height: number }, color: ReturnType<typeof rgb>) =>
-        pdfPage.drawRectangle({ x: (xMm + box.x) * mm, y: pageH - (yMm + box.y + box.height) * mm, width: box.width * mm, height: box.height * mm, color });
-      const outline = (box: { x: number; y: number; width: number; height: number }, radius: number, stroke: number, color?: ReturnType<typeof rgb>) => {
-        const left = (xMm + box.x) * mm;
-        const top = pageH - (yMm + box.y) * mm;
+      const fillRect = (box: { x: number; y: number; width: number; height: number }, color: ReturnType<typeof rgb>) => {
+        const safeBox = mapContentBox(box);
+        pdfPage.drawRectangle({ x: (xMm + safeBox.x) * mm, y: pageH - (yMm + safeBox.y + safeBox.height) * mm, width: safeBox.width * mm, height: safeBox.height * mm, color });
+      };
+      const outline = (box: { x: number; y: number; width: number; height: number }, radius: number, stroke: number, color?: ReturnType<typeof rgb>, applySafeArea = true) => {
+        const outlineBox = applySafeArea ? mapContentBox(box) : box;
+        const left = (xMm + outlineBox.x) * mm;
+        const top = pageH - (yMm + outlineBox.y) * mm;
         const r = radius * mm;
-        const width = box.width * mm;
-        const height = box.height * mm;
+        const width = outlineBox.width * mm;
+        const height = outlineBox.height * mm;
         pdfPage.drawSvgPath(`M ${r} 0 L ${width - r} 0 Q ${width} 0 ${width} ${r} L ${width} ${height - r} Q ${width} ${height} ${width - r} ${height} L ${r} ${height} Q 0 ${height} 0 ${height - r} L 0 ${r} Q 0 0 ${r} 0 Z`, { x: left, y: top, borderColor: rgb(0, 0, 0), borderWidth: stroke * mm, ...(color ? { color } : {}) });
       };
-      outline(boxes.outline, 1, 0.2);
+      outline(boxes.outline, 1, 0.2, undefined, false);
       outline(boxes.vpl, 1, 0.5);
       await drawBoxText(row.tracking, boxes.trackingText, 9, 6.5, true, rgb(0, 0, 0), "center", 1, false, "tracking value");
       const vpl = row.cod.trim() ? formatVpl(row.cod) : "VPL";
@@ -872,9 +865,10 @@ async function makePdf(items = currentOrders(), position = startPosition) {
       await drawBoxText(row.province, { ...destination.province, x: destination.province.x + 0.8 * scaleX, y: destination.province.y + 0.15 * scaleY, width: destination.province.width - 1.6 * scaleX, height: destination.province.height - 0.3 * scaleY }, 8.5, 6, true, rgb(1, 1, 1), "center", destination.province.height > 3.1 * scaleY ? 0.95 : 1, true, "destination province");
 
       outline(boxes.to, 1, 0.3);
-      const tagWidth = boxes.toTag.width * mm;
-      const tagHeight = boxes.toTag.height * mm;
-      pdfPage.drawSvgPath(`M 0 0 L ${tagWidth * 0.86} 0 L ${tagWidth} ${tagHeight / 2} L ${tagWidth * 0.86} ${tagHeight} L 0 ${tagHeight} Z`, { x: (xMm + boxes.toTag.x) * mm, y: pageH - (yMm + boxes.toTag.y) * mm, color: rgb(0.03, 0.03, 0.03) });
+      const tagBox = mapContentBox(boxes.toTag);
+      const tagWidth = tagBox.width * mm;
+      const tagHeight = tagBox.height * mm;
+      pdfPage.drawSvgPath(`M 0 0 L ${tagWidth * 0.86} 0 L ${tagWidth} ${tagHeight / 2} L ${tagWidth * 0.86} ${tagHeight} L 0 ${tagHeight} Z`, { x: (xMm + tagBox.x) * mm, y: pageH - (yMm + tagBox.y) * mm, color: rgb(0.03, 0.03, 0.03) });
       await drawBoxText("To:", boxes.toTag, 12, 10, true, rgb(1, 1, 1), "center", 1, true, "To tag");
       const recipient = recipientBoxes(measure, row.name, preset);
       await drawBoxText(row.name, recipient.name, 12, 9, true, rgb(0, 0, 0), "left", 1, true, "receiver name");
@@ -911,8 +905,22 @@ async function makePdf(items = currentOrders(), position = startPosition) {
         } else {
           const barcodeWidth = barcode.width * scale;
           const barcodeHeight = barcode.height * scale;
-          const left = (xMm + boxes.barcode.x) * mm + (boxes.barcode.width * mm - barcodeWidth) / 2;
-          const top = pageH - (yMm + boxes.barcode.y) * mm - (boxes.barcode.height * mm - barcodeHeight) / 2;
+          const cssScale = Math.min(1, boxes.barcode.width * pxPerMm / barcode.width, boxes.barcode.height * pxPerMm / barcode.height);
+          const cssQuietXmm = CODE128_LAYOUT.horizontalQuietZonePx * cssScale / pxPerMm;
+          const cssQuietYmm = CODE128_LAYOUT.verticalQuietZonePx * cssScale / pxPerMm;
+          const svgQuietXmm = Math.min(...barcode.bars.map((bar) => bar.x)) * scale / mm;
+          const svgQuietYmm = Math.min(...barcode.bars.map((bar) => bar.y)) * scale / mm;
+          const barcodeOrigin = transformLabelContentPoint({
+            x: boxes.barcode.x + (boxes.barcode.width - barcodeWidth / mm) / 2,
+            y: boxes.barcode.y + (boxes.barcode.height - barcodeHeight / mm) / 2,
+          }, safeTransform);
+          // Canvas and SVG have the same symbol/module geometry but expose different leading quiet-zone offsets; align the vector bars to the canvas print origin only on the custom sheet.
+          if (preset.id === "CUSTOM") {
+            barcodeOrigin.x += cssQuietXmm - svgQuietXmm;
+            barcodeOrigin.y += cssQuietYmm - svgQuietYmm;
+          }
+          const left = (xMm + barcodeOrigin.x) * mm;
+          const top = pageH - (yMm + barcodeOrigin.y) * mm;
           for (const bar of barcode.bars) {
             pdfPage.drawRectangle({
               x: left + bar.x * scale,

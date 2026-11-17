@@ -3,7 +3,7 @@ import { PDFDocument } from "pdf-lib";
 import { zipSync } from "fflate";
 import { readSheet as readXlsxSheet } from "read-excel-file/node";
 import { A4, A4_LABEL_COLUMNS_MM, A4_LABEL_ROWS_MM, A4_POINTS, addA4Page, detectMapping, findAmbiguousMappings, fitText, getPaperPreset, labelBox, LABEL_HEIGHT_MM, LABELS_PER_PAGE, LABEL_WIDTH_MM, normalizeAddressText, normalizePakistaniPhone, normalizeRows, pagePoints, pagesForCount, parseCsv, safeContactRemoval, safeCsvCell } from "../src/engine";
-import { LABEL_FOOTER, LABEL_LAYOUT, destinationBoxes, formatVpl, labelBoxes, recipientBoxes } from "../src/layout";
+import { HP_P2055_SAFE_EDGE_MM, LABEL_FOOTER, LABEL_LAYOUT, destinationBoxes, formatVpl, labelBoxes, labelContentTransform, recipientBoxes, transformLabelContentBox, transformLabelContentPoint } from "../src/layout";
 import { restoreZeroFormattedCells } from "../src/xlsx";
 
 describe("local workbook and sheet engine", () => {
@@ -210,6 +210,50 @@ describe("local workbook and sheet engine", () => {
       expect(box.y).toBeGreaterThanOrEqual(0);
       expect(box.x + box.width).toBeLessThanOrEqual(LABEL_WIDTH_MM);
       expect(box.y + box.height).toBeLessThanOrEqual(LABEL_HEIGHT_MM);
+    }
+  });
+
+  it("maps custom edge content into the measured HP safe area without moving label cells", () => {
+    const preset = getPaperPreset("CUSTOM");
+    const allBoxes = labelBoxes(preset);
+    const boxes = Object.entries(allBoxes).filter(([name]) => name !== "outline" && name !== "barcode").map(([, box]) => box);
+    const maxX = Math.max(...boxes.map((box) => box.x + box.width));
+    const maxY = Math.max(...boxes.map((box) => box.y + box.height));
+    const first = labelContentTransform(preset, 0);
+    expect(first.offsetX).toBeCloseTo(HP_P2055_SAFE_EDGE_MM - 0.25, 10);
+    expect(first.offsetY).toBeCloseTo(HP_P2055_SAFE_EDGE_MM - 0.1675, 10);
+    expect(labelContentTransform(preset, 1).offsetX).toBe(0);
+    expect(labelContentTransform(preset, 1).offsetY).toBe(first.offsetY);
+    expect(labelContentTransform(preset, 2).offsetX).toBe(0);
+    expect(labelContentTransform(preset, 15).offsetY).toBe(0);
+    expect(labelContentTransform(preset, 15).scaleY).toBeCloseTo((254 - HP_P2055_SAFE_EDGE_MM - preset.rowStartsMm[5]!) / maxY, 10);
+    expect(labelContentTransform(preset, 0, false)).toEqual({ offsetX: 0, offsetY: 0, scaleX: 1, scaleY: 1 });
+    expect(labelContentTransform(getPaperPreset("A4"), 0)).toEqual({ offsetX: 0, offsetY: 0, scaleX: 1, scaleY: 1 });
+
+    for (let slot = 0; slot < 18; slot += 1) {
+      const column = slot % 3;
+      const row = Math.floor(slot / 3);
+      const transform = labelContentTransform(preset, slot);
+      const pageX = preset.columnStartsMm[column]!;
+      const pageY = preset.rowStartsMm[row]!;
+      const physicalCell = labelBox(slot, 1, preset);
+      expect(physicalCell).toMatchObject({ page: 1, slot, x: pageX, y: pageY });
+      for (const box of boxes) {
+        const mapped = transformLabelContentBox(box, transform);
+        expect(mapped.x).toBeGreaterThanOrEqual(-0.001);
+        expect(mapped.y).toBeGreaterThanOrEqual(-0.001);
+        expect(mapped.x + mapped.width).toBeLessThanOrEqual(preset.labelWidthMm + 0.001);
+        expect(mapped.y + mapped.height).toBeLessThanOrEqual(preset.labelHeightMm + 0.001);
+        expect(pageX + mapped.x).toBeGreaterThanOrEqual(HP_P2055_SAFE_EDGE_MM - 0.001);
+        expect(pageY + mapped.y).toBeGreaterThanOrEqual(HP_P2055_SAFE_EDGE_MM - 0.001);
+        expect(pageX + mapped.x + mapped.width).toBeLessThanOrEqual(preset.widthMm - HP_P2055_SAFE_EDGE_MM + 0.001);
+        expect(pageY + mapped.y + mapped.height).toBeLessThanOrEqual(preset.heightMm - HP_P2055_SAFE_EDGE_MM + 0.001);
+      }
+      const barcodePosition = transformLabelContentPoint(allBoxes.barcode, transform);
+      expect(pageX + barcodePosition.x).toBeGreaterThanOrEqual(HP_P2055_SAFE_EDGE_MM - 0.001);
+      expect(pageY + barcodePosition.y).toBeGreaterThanOrEqual(HP_P2055_SAFE_EDGE_MM - 0.001);
+      expect(pageX + barcodePosition.x + allBoxes.barcode.width).toBeLessThanOrEqual(preset.widthMm - HP_P2055_SAFE_EDGE_MM + 0.001);
+      expect(pageY + barcodePosition.y + allBoxes.barcode.height).toBeLessThanOrEqual(preset.heightMm - HP_P2055_SAFE_EDGE_MM + 0.001);
     }
   });
 
