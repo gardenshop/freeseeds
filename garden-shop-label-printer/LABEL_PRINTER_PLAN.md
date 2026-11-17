@@ -12,6 +12,14 @@ The repository-wide architecture discovery and full implementation history remai
 
 ## V4 Local Status (2026-11-16)
 
+### GFS-LP-036 Staging Release
+
+- Wrangler OAuth `whoami` PASS at `2026-11-17T12:36:40.354+05:00`: `gisupp@gmail.com`, Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Source checkout branch `codex/garden-shop-label-printer-mvp`, SHA `cb52289fc7287d05f2ec1ebc182bd108d9120731`.
+- Dashboard PASS pre-deploy: Super Admin, existing Pages `garden-shop-label-printer-staging`, existing Access app/domain with only Super Admin Allow. Active rollback before deployment `2420ee42-08ac-4d0d-a620-caa7197f0966`; prior successful version `f80abfe1-52fc-4f03-b6f1-a35388c01d7f`.
+- Static-only Pages deployment PASS: `a8287aa3-31dc-4446-a6be-c3127fac0e80`, `https://a8287aa3.garden-shop-label-printer-staging.pages.dev`, source `cb52289`, Production/main. Wrangler ignored the app Worker config and uploaded only dist assets/_headers. Stable Pages URL loaded the app. Rollback remains `2420ee42`.
+- Monitor Worker/D1 were only read before deploy and remain as registered; no Worker, D1, Access or production mutation.
+- Live acceptance BLOCKED: an isolated unauthenticated staging tab reached the Super Admin Access challenge. The shared populated tab was not used. No XLSX/CSV imports, live PDF download, PDF_GENERATED/audit VERIFIED, or served hash assertion occurred. Next owner action: sign in as `gisupp@gmail.com` in the isolated tab, return to blank import, then run synthetic live acceptance. Physical printer calibration remains NOT TESTED.
+
 ### GFS-LP-035 Image Print Repair
 
 - Root cause: `preparePrintLayout()` appended a second `/label.css` after the inline custom `@page`, so that later stylesheet reset the print MediaBox to A4 although the DOM/grid was 190.5 × 254 mm. Removed the duplicate load and wait on the original stylesheet. Download PDF implementation/geometry remains unchanged; A4 unaffected.

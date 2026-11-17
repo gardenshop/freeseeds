@@ -69,6 +69,16 @@ The repository-wide regression suite also passed 269 tests and the root build pa
 
 ## Staging Deployment Status
 
+### GFS-LP-036 Staging Deployment
+
+**PASS — static V4 deployed** to the existing `garden-shop-label-printer-staging` Pages project from branch `codex/garden-shop-label-printer-mvp`, source `cb52289fc7287d05f2ec1ebc182bd108d9120731`. Deployment ID: **`a8287aa3-31dc-4446-a6be-c3127fac0e80`** at `https://a8287aa3.garden-shop-label-printer-staging.pages.dev`; stable URL: `https://garden-shop-label-printer-staging.pages.dev`. Wrangler lists it first in Production with source `cb52289`; the stable URL loaded the Label Printer blank screen. The verified pre-deploy active rollback is **`2420ee42-08ac-4d0d-a620-caa7197f0966`** (the earlier successful deployment `f80abfe1` precedes it).
+
+Fresh Wrangler 4.149.0 `whoami` at `2026-11-17T12:36:40.354+05:00` verified `gisupp@gmail.com`, Get Free Seeds, account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Dashboard verified Super Admin and the existing Access app `ed474c4d-2dcf-4f48-8e53-c321b8d2723d` with Allow restricted to that Super Admin identity. A clean isolated request reached Access sign-in. No Access policy changes.
+
+Upload used the staging-configured standalone Vite `dist/` and only five static files plus `_headers` (eight assets reused). Wrangler explicitly ignored the project Worker config because it lacks `pages_build_output_dir`; no Worker deploy occurred. Monitor Worker remains `89a245c0-2532-4b02-8def-4cd675f9a845`; audit D1 remains `e2f5c4e0-d86a-48ea-af65-9786a58a70c7` (2 tables, 94.2 kB); neither was mutated.
+
+**Live acceptance BLOCKED at fresh-context Access sign-in:** the new isolated browser tab is challenged. The existing shared populated Label Printer tab was not inspected or touched. No synthetic XLSX/CSV, live print/PDF, `PDF_GENERATED`, audit-chain `VERIFIED`, or served-marker assertion was performed in this run. Complete Super Admin Access sign-in in the isolated tab and return to the blank import screen; then perform only synthetic acceptance and report checks. Physical HP calibration remains NOT TESTED and still requires one later plain-paper sheet.
+
 ### GFS-LP-035 HP P2055dn Image Print
 
 The Image Print popup previously loaded `/label.css` twice. The second load followed the popup's custom `@page` rule and its A4 rule won the CSS cascade: browser print output was A4 (210 × 297 mm) while the label sheet remained 190.5 × 254 mm. The popup now reuses its already loaded stylesheet. Browser print-to-PDF confirms the Image Print MediaBox is 540 × 720 pt (190.5 × 254 mm), one page for 18 labels. Download PDF is unchanged.
