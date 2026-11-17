@@ -36,7 +36,7 @@ function syntheticXlsx() {
     "xl/workbook.xml": xml('<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Orders" sheetId="1" r:id="rId1"/></sheets></workbook>'),
     "xl/_rels/workbook.xml.rels": xml('<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'),
     "xl/styles.xml": xml('<?xml version="1.0" encoding="UTF-8"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="00000000000"/></numFmts><fonts count="1"><font/></fonts><fills count="1"><fill/></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0"/></cellXfs></styleSheet>'),
-    "xl/worksheets/sheet1.xml": xml('<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>Order ID</t></is></c><c r="B1" t="inlineStr"><is><t>Name</t></is></c><c r="C1" t="inlineStr"><is><t>Cell #</t></is></c><c r="D1" t="inlineStr"><is><t>Address</t></is></c><c r="E1" t="inlineStr"><is><t>Tracking Number</t></is></c><c r="F1" t="inlineStr"><is><t>COD</t></is></c><c r="G1" t="inlineStr"><is><t>Product</t></is></c><c r="H1" t="inlineStr"><is><t>City</t></is></c><c r="I1" t="inlineStr"><is><t>Province</t></is></c></row><row r="2"><c r="A2" t="inlineStr"><is><t>XLSX-SYN-001</t></is></c><c r="B2" t="inlineStr"><is><t>مصنوعی گاہک</t></is></c><c r="C2" s="1"><v>3330000000</v></c><c r="D2" t="inlineStr"><is><t>گلی نمبر ایک، نمونہ پتہ، مکان ۱۲</t></is></c><c r="E2" t="inlineStr"><is><t>TRK000001</t></is></c><c r="F2"><v>1250</v></c><c r="G2" t="inlineStr"><is><t>Synthetic Product</t></is></c><c r="H2" t="inlineStr"><is><t>Sahiwal</t></is></c><c r="I2" t="inlineStr"><is><t>Punjab</t></is></c></row></sheetData></worksheet>'),
+    "xl/worksheets/sheet1.xml": xml('<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>Order ID</t></is></c><c r="B1" t="inlineStr"><is><t>Name</t></is></c><c r="C1" t="inlineStr"><is><t>Cell #</t></is></c><c r="D1" t="inlineStr"><is><t>Address</t></is></c><c r="E1" t="inlineStr"><is><t>Tracking Number</t></is></c><c r="F1" t="inlineStr"><is><t>COD</t></is></c><c r="G1" t="inlineStr"><is><t>Product</t></is></c><c r="H1" t="inlineStr"><is><t>City</t></is></c><c r="I1" t="inlineStr"><is><t>Province</t></is></c></row><row r="2"><c r="A2" t="inlineStr"><is><t>XLSX-SYN-001</t></is></c><c r="B2" t="inlineStr"><is><t>مصنوعی گاہک</t></is></c><c r="C2" s="1"><v>3330000000</v></c><c r="D2" t="inlineStr"><is><t>گلی نمبر ایک، نمونہ پتہ، مکان ۱۲</t></is></c><c r="E2" t="inlineStr"><is><t>VPL000001</t></is></c><c r="F2"><v>1250</v></c><c r="G2" t="inlineStr"><is><t>Synthetic Product</t></is></c><c r="H2" t="inlineStr"><is><t>Sahiwal</t></is></c><c r="I2" t="inlineStr"><is><t>Punjab</t></is></c></row></sheetData></worksheet>'),
   });
 }
 
@@ -136,7 +136,7 @@ try {
   await page.goto(baseUrl, { waitUntil: "networkidle" });
   assert.equal(await page.locator("#backToAdmin").getAttribute("href"), "https://getfreeseeds-admin-staging.get-free-seeds.workers.dev/");
   await page.locator("#workbook").setInputFiles({ name: "synthetic-import.xlsx", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buffer: Buffer.from(syntheticXlsx()) });
-  await page.locator("#applyMapping").waitFor();
+  await page.locator("#applyMapping").waitFor().catch(async (error) => { throw new Error(`${error.message}\nWorkbook mapping page: ${await page.locator("body").innerText()}`); });
   await page.locator("#applyMapping").click();
   await page.waitForTimeout(1500);
   assert.ok((await page.locator("body").innerText()).includes("Monitoring unavailable. Label work is safe and was not lost."), JSON.stringify({ body: await page.locator("body").innerText(), failedRequests }));
@@ -148,7 +148,7 @@ try {
   const importedReferences = await page.locator(".sheet .printed-reference").allInnerTexts();
   assert.equal(new Set(importedReferences).size, importedReferences.length, "distinct source orders must have unique printed references");
   assert.equal(await page.locator(".sheet .contact-number").first().innerText(), "03330000000");
-  assert.equal(await page.locator(".sheet .tracking-value").first().innerText(), "TRK000001");
+  assert.equal(await page.locator(".sheet .tracking-value").first().innerText(), "VPL000001");
   const trackingGeometry = await page.locator(".sheet .tracking-value").first().evaluate((el) => { const value = el.getBoundingClientRect(); const barcode = el.parentElement.querySelector(".barcode-canvas").getBoundingClientRect(); return { valueBottom: value.bottom, barcodeTop: barcode.top, delta: barcode.top - value.bottom }; });
   assert.ok(trackingGeometry.delta >= -2, `tracking value must sit above the barcode: ${JSON.stringify(trackingGeometry)}`);
   assert.doesNotMatch(await page.locator(".sheet").innerText(), /TRACKING NUMBER/u);
@@ -191,8 +191,8 @@ try {
   assert.ok(Math.abs(geometry.firstColumn[1] - geometry.firstColumn[0] - 44 - 1) < 0.02);
   assert.ok(await page.getByText("Near by:").count() > 0);
   assert.ok(await page.getByText("TO:").count() > 0);
-  assert.equal(await page.locator(".sheet .vpl-box").first().getAttribute("aria-label"), "VPL 1250/-");
-  assert.equal(await page.locator(".sheet .vpl-amount").first().innerText(), "1250/-");
+  assert.equal(await page.locator(".sheet .vpl-box").first().getAttribute("aria-label"), "VPL 1250+75");
+  assert.equal((await page.locator(".sheet .vpl-amount").first().innerText()).replace(/\s+/gu, ""), "1250+75");
   assert.equal(await page.locator(".sheet .vpl-amount").first().evaluate((el) => el.classList.contains("text-overflow")), false);
   assert.ok(await page.locator(".sheet .vpl-amount").first().evaluate((el) => el.scrollWidth <= el.clientWidth), "VPL amount must not clip inside its capsule");
   assert.equal(await page.locator(".sheet .footer-from").first().innerText(), "From:");
@@ -204,6 +204,7 @@ try {
   assert.ok(await page.locator(".individual-preview .contact-number").first().evaluate((el) => el.scrollWidth <= el.clientWidth), "individual phone value must not clip");
   await page.screenshot({ path: join(evidence, "label-preview-synthetic.png"), fullPage: true });
   const labelScreenshot = await page.locator('.sheet .label[data-label-index="0"]').screenshot({ animations: "disabled" });
+  await writeFile(join(evidence, "label-output-synthetic.png"), labelScreenshot);
   const labelBaselinePath = join(project, "test-evidence", "approved-label-layout.png");
   if (process.env.UPDATE_LABEL_BASELINE === "1") {
     await writeFile(labelBaselinePath, labelScreenshot);
@@ -279,14 +280,96 @@ try {
   assert.match(samplePdf.text, /FS-\d{4}-\d{5}/);
   assert.doesNotMatch(samplePdf.text, /GS-TEST-001/);
   assert.match(samplePdf.text, /VPL/);
-  assert.match(samplePdf.text, /1250\/-/);
-  assert.match(samplePdf.text, /TRK000001/);
+  assert.match(samplePdf.text, /1250/u);
+  assert.match(samplePdf.text, /\+75/u);
+  assert.match(samplePdf.text, /VPL000001/);
   assert.match(samplePdf.text, /Near by:/);
   assert.match(samplePdf.text, /To:/);
   assert.match(samplePdf.text, /C\/o City Post Office, Sahiwal/);
   assert.doesNotMatch(samplePdf.text, /C\/o City Post Office, Sahiwal, Punjab/);
   assert.doesNotMatch(samplePdf.text, /EDIT REQUIRED/);
   assert.equal(samplePdf.hasRasterImage, false, "PDF barcode must stay vector");
+
+  const prefixPage = await browser.newPage({ viewport: { width: 1440, height: 1200 }, acceptDownloads: true });
+  await prefixPage.addInitScript(() => Object.defineProperty(window, "print", { configurable: true, value: () => { window.__labelPrintRequested = true; } }));
+  await prefixPage.goto(baseUrl, { waitUntil: "networkidle" });
+  const prefixHeaders = ["Order ID", "Name", "Cell #", "Address", "Tracking Number", "COD", "Product", "City", "Province", "Nearby Landmark"];
+  const prefixRows = [
+    ["PREFIX-RGL", "Synthetic RGL Receiver", "03300000031", "Synthetic RGL Road", "rgl001", "50000", "RGL Product", "Sahiwal", "Punjab", "RGL Market"],
+    ["PREFIX-UMS", "Synthetic UMS Receiver", "03300000032", "Synthetic UMS Road", "ums002", "", "UMS Product", "Multan", "Punjab", "UMS Market"],
+    ["PREFIX-VPL", "Synthetic VPL Receiver", "03300000033", "Synthetic VPL Road", "vpl003", "25,000", "VPL Product", "Okara", "Punjab", "VPL Market"],
+    ["PREFIX-VPP", "Synthetic VPP Receiver", "03300000034", "Synthetic VPP Road", "vpp004", "65000", "VPP Product", "Lahore", "Punjab", "VPP Market"],
+  ];
+  const prefixQuote = (value) => `"${String(value).replaceAll('"', '""')}"`;
+  const prefixCsv = [prefixHeaders, ...prefixRows].map((row) => row.map(prefixQuote).join(",")).join("\r\n");
+  await prefixPage.locator("#workbook").setInputFiles({ name: "synthetic-prefixes.csv", mimeType: "text/csv", buffer: Buffer.from(prefixCsv) });
+  await prefixPage.locator("#applyMapping").waitFor();
+  await prefixPage.locator("#applyMapping").click();
+  await prefixPage.locator('[data-view="preview"]').first().click();
+  await prefixPage.waitForFunction(() => [...document.querySelectorAll(".sheet canvas[data-barcode]")].length === 4 && [...document.querySelectorAll(".sheet canvas[data-barcode]")].every((canvas) => canvas.dataset.verified === "true"), { timeout: 30000 }).catch(async (error) => { throw new Error(`${error.message}\nPrefix preview: ${await prefixPage.locator("body").innerText()}\nBarcodes: ${JSON.stringify(await prefixPage.locator(".sheet canvas[data-barcode]").evaluateAll((nodes) => nodes.map((node) => ({ source: node.dataset.source, verified: node.dataset.verified }))))}`); });
+  assert.equal(await prefixPage.locator('.sheet .label[data-tracking-prefix="RGL"] .vpl-box').count(), 0);
+  assert.equal(await prefixPage.locator('.sheet .label[data-tracking-prefix="UMS"] .vpl-box').count(), 0);
+  assert.equal((await prefixPage.locator('.sheet .label[data-tracking-prefix="VPL"] .vpl-box .vpl-amount').innerText()).replace(/\s+/gu, ""), "25000+175");
+  assert.equal((await prefixPage.locator('.sheet .label[data-tracking-prefix="VPP"] .vpl-box .vpl-amount').innerText()).replace(/\s+/gu, ""), "65000+375");
+  assert.equal(await prefixPage.locator('.sheet .label[data-tracking-prefix="RGL"] .barcode-canvas').getAttribute("data-source"), "rgl001", "prefix normalization must not modify the barcode value");
+  assert.equal(await prefixPage.locator('.sheet .label[data-tracking-prefix="VPL"] .vpl-commission').evaluate((el) => Number.parseFloat(getComputedStyle(el).fontSize) / Number.parseFloat(getComputedStyle(el.parentElement.querySelector(".vpl-declared")).fontSize)), 0.3);
+  const commissionLine = await prefixPage.locator('.sheet .label[data-tracking-prefix="VPL"] .vpl-amount').evaluate((el) => {
+    const amount = el.querySelector(".vpl-declared").getBoundingClientRect(); const fee = el.querySelector(".vpl-commission").getBoundingClientRect();
+    return { sameLine: fee.left >= amount.right - 0.5 && fee.top < amount.bottom && fee.bottom > amount.top, amount, fee };
+  });
+  assert.equal(commissionLine.sameLine, true, JSON.stringify(commissionLine));
+  const expandedDestination = await prefixPage.locator('.sheet .label[data-tracking-prefix="RGL"] .destination').evaluate((el) => {
+    const mm = (px) => px * 25.4 / 96;
+    const label = el.closest(".label").getBoundingClientRect(); const box = el.getBoundingClientRect();
+    return { y: mm(box.top - label.top), height: mm(box.height), city: el.querySelector(".city-text").textContent, province: el.querySelector(".province-text").textContent };
+  });
+  assert.ok(Math.abs(expandedDestination.y - 0.5) < 0.03, JSON.stringify(expandedDestination));
+  assert.ok(Math.abs(expandedDestination.height - 14) < 0.03, JSON.stringify(expandedDestination));
+  assert.equal(expandedDestination.city, "Sahiwal");
+  assert.equal(expandedDestination.province, "Punjab");
+  await prefixPage.locator(".sheet").screenshot({ path: join(evidence, "prefix-layout-samples.png") });
+  await prefixPage.locator('[data-view="print"]').first().click();
+  assert.equal(await prefixPage.locator("#printNow").isDisabled(), false, `valid prefix records must print: ${await prefixPage.locator("body").innerText()}`);
+  const prefixPrintEvent = prefixPage.waitForEvent("popup");
+  await prefixPage.locator("#printNow").click();
+  const prefixPrint = await prefixPrintEvent;
+  await prefixPrint.waitForLoadState("load");
+  const prefixVisibleAmountBoxes = await prefixPrint.locator(".print-sheet .vpl-box").count();
+  assert.equal(prefixVisibleAmountBoxes, 2);
+  assert.equal(await prefixPrint.locator('.print-sheet [data-tracking-prefix="RGL"] .destination').count(), 1);
+  assert.equal((await prefixPrint.locator('.print-sheet [data-tracking-prefix="VPL"] .vpl-amount').innerText()).replace(/\s+/gu, ""), "25000+175");
+  assert.equal((await prefixPrint.locator('.print-sheet [data-tracking-prefix="VPP"] .vpl-amount').innerText()).replace(/\s+/gu, ""), "65000+375");
+  await prefixPrint.screenshot({ path: join(evidence, "prefixes-image-print.png"), fullPage: true });
+  await prefixPrint.close();
+  const prefixPdfPath = join(evidence, "synthetic-prefixes.pdf");
+  await saveGeneratedPdf(prefixPage, prefixPdfPath);
+  const prefixPdf = await loadPdf(prefixPdfPath, "prefixes-pdf-page.png");
+  assert.equal(prefixPdf.pageCount, 1);
+  assert.match(prefixPdf.text, /25000/u);
+  assert.match(prefixPdf.text, /\+175/u);
+  assert.match(prefixPdf.text, /65000/u);
+  assert.match(prefixPdf.text, /\+375/u);
+  assert.doesNotMatch(prefixPdf.text, /50000|40000|\+0/u, "RGL/UMS declared amounts and commissions must not print");
+
+  await prefixPage.locator('[data-view="review"]').first().click();
+  await prefixPage.locator("#newBatch").click();
+  const invalidRows = [
+    ["PREFIX-UNKNOWN", "Synthetic Unknown Receiver", "03300000041", "Synthetic Unknown Road", "XYZ001", "25000", "Unknown Product", "Sahiwal", "Punjab", "Unknown Market"],
+    ["PREFIX-OVER", "Synthetic Over Receiver", "03300000042", "Synthetic Over Road", "VPL-OVER001", "100001", "Over Product", "Multan", "Punjab", "Over Market"],
+  ];
+  const invalidCsv = [prefixHeaders, ...invalidRows].map((row) => row.map(prefixQuote).join(",")).join("\r\n");
+  await prefixPage.locator("#workbook").setInputFiles({ name: "synthetic-invalid-prefixes.csv", mimeType: "text/csv", buffer: Buffer.from(invalidCsv) });
+  await prefixPage.locator("#applyMapping").waitFor();
+  await prefixPage.locator("#applyMapping").click();
+  await prefixPage.locator('[data-view="preview"]').first().click();
+  await prefixPage.locator('[data-view="print"]').first().click();
+  assert.equal(await prefixPage.locator("#printNow").isDisabled(), true);
+  assert.match(await prefixPage.locator("body").innerText(), /Unsupported tracking prefix/u);
+  await prefixPage.locator('[data-view="review"]').first().click();
+  assert.match(await prefixPage.locator('[data-edit="1"]').evaluate((el) => el.closest("tr").querySelector(".warning-badge").title), /exceeds Rs\. 100,000/u);
+  await prefixPage.locator('[data-edit="1"]').click();
+  assert.equal(await prefixPage.locator('.edit-form input[name="cod"]').inputValue(), "100001");
+  await prefixPage.close();
 
   await page.locator("#paperPreset").selectOption("CUSTOM");
   assert.ok(await page.getByText(/only 0\.25 mm side and 0\.1675 mm top\/bottom margins/).count() > 0, "custom stock must show the narrow-margin warning");
@@ -355,7 +438,7 @@ try {
   assert.equal(customPdf.pageCount, 1);
   assert.ok(Math.abs(customPdf.page.getSize().width - 190.5 * 72 / 25.4) < 0.01);
   assert.ok(Math.abs(customPdf.page.getSize().height - 254 * 72 / 25.4) < 0.01);
-  assert.match(customPdf.text, /TRK000001/);
+  assert.match(customPdf.text, /VPL000001/);
   assert.equal(customPdf.hasRasterImage, false, "custom PDF barcode must remain vector");
   await page.locator("#paperPreset").selectOption("A4");
   const a4PrintPopupEvent = page.waitForEvent("popup");
@@ -380,7 +463,7 @@ try {
   const calibrationPage = await calibrationContext.newPage();
   await calibrationPage.goto(baseUrl, { waitUntil: "networkidle" });
   const calibrationHeaders = ["Order ID", "Name", "Cell #", "Address", "Tracking Number", "COD", "Product", "City", "Province", "Nearby Landmark"];
-  const calibrationRows = Array.from({ length: 18 }, (_, index) => [`CAL-PRINT-${String(index + 1).padStart(3, "0")}`, `Synthetic Receiver ${index + 1}`, `03${String(index + 1).padStart(9, "0")}`, `Synthetic calibration road ${index + 1}`, `TRK${String(index + 1).padStart(10, "0")}`, "1250", "Synthetic Product", "Sahiwal", "Punjab", "Calibration market"]);
+  const calibrationRows = Array.from({ length: 18 }, (_, index) => [`CAL-PRINT-${String(index + 1).padStart(3, "0")}`, `Synthetic Receiver ${index + 1}`, `03${String(index + 1).padStart(9, "0")}`, `Synthetic calibration road ${index + 1}`, `VPL${String(index + 1).padStart(10, "0")}`, "1250", "Synthetic Product", "Sahiwal", "Punjab", "Calibration market"]);
   const calibrationQuote = (value) => `"${String(value).replaceAll('"', '""')}"`;
   const calibrationCsv = [calibrationHeaders, ...calibrationRows].map((row) => row.map(calibrationQuote).join(",")).join("\r\n");
   await calibrationPage.locator("#workbook").setInputFiles({ name: "synthetic-calibration-18.csv", mimeType: "text/csv", buffer: Buffer.from(calibrationCsv) });
@@ -511,8 +594,8 @@ try {
     index === 0 ? "مصنوعی گاہک" : index === 10 ? "A Long Synthetic Receiver Name With Several Words" : `Synthetic Receiver ${index + 1}`,
     `03${String(index + 1).padStart(9, "0")}`,
     index === 0 ? "گلی نمبر ایک، نمونہ پتہ، مکان ۱۲" : `House ${String(index + 1).padStart(2, "0")}, Synthetic Street ${String(index + 1).padStart(2, "0")}, Block B, Synthetic Town`,
-    `TRK${String(index + 1).padStart(10, "0")}`,
-    String((index % 8) * 125),
+    `VPL${String(index + 1).padStart(10, "0")}`,
+    String(500 + (index % 8) * 125),
     index === 2 ? "Premium Vegetable Seed Mix" : `Synthetic Garden Product ${index % 11}`,
     index === 2 ? "Gujranwala" : index === 3 ? "Islamabad" : index === 4 ? "گوجرانوالہ" : index === 15 ? "Nowshera" : "Sahiwal",
     index === 15 ? "Khyber Pakhtunkhwa (KPK)" : "Punjab",
@@ -578,7 +661,7 @@ try {
   assert.match(batchPdfRendered.text, /Nowshera/);
   assert.match(batchPdfRendered.text, /Khyber Pakhtunkhwa/);
   assert.match(batchPdfRendered.text, /Gujranwala/);
-  assert.doesNotMatch(batchPdfRendered.text, /TRK0000000011/);
+  assert.doesNotMatch(batchPdfRendered.text, /VPL0000000011/);
   assert.doesNotMatch(batchPdfRendered.text, /EDIT REQUIRED/);
   assert.ok(Math.abs(batchPdf.getPage(0).getSize().width - 595.2756) < 0.01);
   await page.locator("#paperPreset").selectOption("CUSTOM");
@@ -620,7 +703,7 @@ try {
   assert.equal(customBatchRendered.hasRasterImage, true, "custom complex-script labels must use the Unicode-safe fallback");
   assert.match(customBatchRendered.text, /Nowshera/);
   assert.match(customBatchRendered.text, /Gujranwala/);
-  assert.doesNotMatch(customBatchRendered.text, /TRK0000000011/);
+  assert.doesNotMatch(customBatchRendered.text, /VPL0000000011/);
   assert.ok(customBatchPdf.getPages().every((pdfPage) => Math.abs(pdfPage.getSize().width - 190.5 * 72 / 25.4) < 0.01 && Math.abs(pdfPage.getSize().height - 254 * 72 / 25.4) < 0.01), "every custom PDF page must have the exact custom MediaBox");
   await page.locator("#paperPreset").selectOption("A4");
   await page.locator('[data-view="review"]').first().click();
@@ -632,8 +715,8 @@ try {
   await page.locator("#newBatch").click();
   const overlongAddress = Array.from({ length: 40 }, (_, index) => `Synthetic address segment ${String(index + 1).padStart(2, "0")}`).join("\r\n");
   const overflowCsv = [headers,
-    ["SYN-OVERFLOW-001", "Synthetic Receiver Overflow", "03300000019", overlongAddress, "TRK001", "550", "Synthetic Seed Pack", "Sahiwal", "Punjab", "Synthetic Park"],
-    ["", "Synthetic Receiver Optional", "03300000020", "House 2, Test Street", "TRK002", "550", "", "Sahiwal", "Punjab", ""],
+    ["SYN-OVERFLOW-001", "Synthetic Receiver Overflow", "03300000019", overlongAddress, "VPL001", "550", "Synthetic Seed Pack", "Sahiwal", "Punjab", "Synthetic Park"],
+    ["", "Synthetic Receiver Optional", "03300000020", "House 2, Test Street", "VPL002", "550", "", "Sahiwal", "Punjab", ""],
   ]
     .map((row) => row.map(quote).join(",")).join("\r\n");
   await page.locator("#workbook").setInputFiles({ name: "synthetic-overlong.csv", mimeType: "text/csv", buffer: Buffer.from(overflowCsv) });
@@ -659,15 +742,15 @@ try {
   await saveGeneratedPdf(page, mixedPath);
   const mixedPdf = await loadPdf(mixedPath, "pdf-overflow-filtered.png");
   assert.equal(mixedPdf.pageCount, 1);
-  assert.doesNotMatch(mixedPdf.text, /TRK001/u);
-  assert.match(mixedPdf.text, /TRK002/u);
+  assert.doesNotMatch(mixedPdf.text, /VPL001/u);
+  assert.match(mixedPdf.text, /VPL002/u);
   await page.locator('[data-view="review"]').first().click();
   await page.locator('[data-edit="0"]').click();
   await page.locator("#restoreSourceAddress").click();
   assert.equal(await page.locator('.edit-form [name="address"]').inputValue(), overlongAddress.replace(/\r\n/g, "\n"));
   await page.locator(".edit-form [data-cancel]").click();
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ geometry, printGeometry, decodedBarcodeCounts: [3, 18, decoded500, customDecoded500], samplePdfPages: samplePdf.pageCount, batch500PdfPages: batchPdf.getPageCount(), customBatch500PdfPages: customBatchPdf.getPageCount(), overflowLayout, browserErrors: errors, evidence: ["test-evidence/approved-label-layout.png", "test-evidence/label-preview-synthetic.png", "test-evidence/label-preview-500-v2.png", "test-evidence/label-preview-custom-500.png", "test-evidence/label-preview-overflow.png", "test-evidence/label-preview-mobile.png", "test-evidence/browser-print-sheet.png", "test-evidence/pdf-sample-page.png", "test-evidence/pdf-500-first-page.png", "test-evidence/pdf-custom-500-first-page.png", "test-evidence/pdf-overflow-filtered.png"] }, null, 2));
+  console.log(JSON.stringify({ geometry, printGeometry, decodedBarcodeCounts: [3, 18, decoded500, customDecoded500], prefixExamples: { types: ["RGL", "UMS", "VPL", "VPP"], hiddenAmountBoxes: 2, visibleAmountBoxes: prefixVisibleAmountBoxes, rglUmsAmountsAbsentFromPdf: !/50000|40000|\+0/u.test(prefixPdf.text), imagePrintValues: ["25000+175", "65000+375"], pdfValuesMatch: /25000/u.test(prefixPdf.text) && /\+175/u.test(prefixPdf.text) && /65000/u.test(prefixPdf.text) && /\+375/u.test(prefixPdf.text) }, samplePdfPages: samplePdf.pageCount, batch500PdfPages: batchPdf.getPageCount(), customBatch500PdfPages: customBatchPdf.getPageCount(), overflowLayout, browserErrors: errors, evidence: ["test-evidence/approved-label-layout.png", "label-output-synthetic.png", "prefix-layout-samples.png", "prefixes-image-print.png", "prefixes-pdf-page.png", "test-evidence/label-preview-500-v2.png", "test-evidence/label-preview-custom-500.png", "test-evidence/label-preview-overflow.png", "test-evidence/label-preview-mobile.png", "test-evidence/browser-print-sheet.png", "test-evidence/pdf-sample-page.png", "test-evidence/pdf-500-first-page.png", "test-evidence/pdf-custom-500-first-page.png", "test-evidence/pdf-overflow-filtered.png"] }, null, 2));
 } finally {
   await browser?.close();
   server.kill();

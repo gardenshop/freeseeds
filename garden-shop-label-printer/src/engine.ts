@@ -1,5 +1,6 @@
 import type { PDFDocument, PDFPage } from "pdf-lib";
 import { FIELDS, type ImportMapping, type Order } from "./types";
+import { normalizeTrackingReference, trackingLabelDisplay } from "./tracking-rules";
 
 export const TEMPLATE_VERSION = "gfs-paper-presets-v4";
 export const LABELS_PER_PAGE = 18;
@@ -168,14 +169,17 @@ export function normalizeRows(headers: string[], rows: unknown[][], mapping: Imp
     if (!order.orderId) order.warnings.push("Source Order ID is missing; the printed reference is local-only.");
     if (!order.tracking) order.warnings.push("Tracking number is missing; barcode cannot be generated.");
     if (!order.city || !order.province) order.warnings.push("Destination city or province is missing; confirm before printing.");
-    if (!order.cod) order.warnings.push("VPL amount is required.");
+    if (order.tracking.trim()) {
+      const display = trackingLabelDisplay(order.tracking, order.cod);
+      if (display.error) order.warnings.push(display.error);
+    }
     if (!order.product) order.warnings.push("Product description is required.");
     return order;
   });
   const phones = new Map<string, number[]>(), tracks = new Map<string, number[]>();
   orders.forEach((order, index) => {
     const phone = normalizePakistaniPhone(order.phone) ?? order.phone.replace(/\D/g, "");
-    const tracking = order.tracking.trim().toLocaleUpperCase();
+    const tracking = normalizeTrackingReference(order.tracking);
     if (phone) phones.set(phone, [...(phones.get(phone) ?? []), index]);
     if (tracking) tracks.set(tracking, [...(tracks.get(tracking) ?? []), index]);
   });

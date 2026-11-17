@@ -3,7 +3,7 @@ import { PDFDocument } from "pdf-lib";
 import { zipSync } from "fflate";
 import { readSheet as readXlsxSheet } from "read-excel-file/node";
 import { A4, A4_LABEL_COLUMNS_MM, A4_LABEL_ROWS_MM, A4_POINTS, addA4Page, detectMapping, findAmbiguousMappings, fitText, getPaperPreset, labelBox, LABEL_HEIGHT_MM, LABELS_PER_PAGE, LABEL_WIDTH_MM, normalizeAddressText, normalizePakistaniPhone, normalizeRows, pagePoints, pagesForCount, parseCsv, safeContactRemoval, safeCsvCell } from "../src/engine";
-import { HP_P2055_SAFE_EDGE_MM, LABEL_FOOTER, LABEL_LAYOUT, destinationBoxes, formatVpl, labelBoxes, labelContentTransform, recipientBoxes, transformLabelContentBox, transformLabelContentPoint } from "../src/layout";
+import { fitCommissionExpression, HP_P2055_SAFE_EDGE_MM, LABEL_FOOTER, LABEL_LAYOUT, destinationBoxes, formatVpl, labelBoxes, labelContentTransform, recipientBoxes, transformLabelContentBox, transformLabelContentPoint } from "../src/layout";
 import { restoreZeroFormattedCells } from "../src/xlsx";
 
 describe("local workbook and sheet engine", () => {
@@ -213,19 +213,26 @@ describe("local workbook and sheet engine", () => {
     }
   });
 
-  it("maps custom edge content into the measured HP safe area without moving label cells", () => {
+  it("applies the HP safe area only to sheet-edge labels", () => {
     const preset = getPaperPreset("CUSTOM");
     const allBoxes = labelBoxes(preset);
     const boxes = Object.entries(allBoxes).filter(([name]) => name !== "outline" && name !== "barcode").map(([, box]) => box);
     const maxX = Math.max(...boxes.map((box) => box.x + box.width));
     const maxY = Math.max(...boxes.map((box) => box.y + box.height));
+    const horizontalInset = HP_P2055_SAFE_EDGE_MM - preset.columnStartsMm[0]!;
+    const verticalInset = HP_P2055_SAFE_EDGE_MM - preset.rowStartsMm[0]!;
     const first = labelContentTransform(preset, 0);
-    expect(first.offsetX).toBeCloseTo(HP_P2055_SAFE_EDGE_MM - 0.25, 10);
-    expect(first.offsetY).toBeCloseTo(HP_P2055_SAFE_EDGE_MM - 0.1675, 10);
+    expect(first.offsetX).toBeCloseTo(horizontalInset, 10);
+    expect(first.offsetY).toBeCloseTo(verticalInset, 10);
+    expect(first.scaleX).toBeCloseTo((preset.labelWidthMm - horizontalInset) / maxX, 10);
+    expect(first.scaleY).toBeCloseTo((preset.labelHeightMm - verticalInset) / maxY, 10);
+    expect(labelContentTransform(preset, 1).scaleX).toBe(1);
     expect(labelContentTransform(preset, 1).offsetX).toBe(0);
-    expect(labelContentTransform(preset, 1).offsetY).toBe(first.offsetY);
-    expect(labelContentTransform(preset, 2).offsetX).toBe(0);
-    expect(labelContentTransform(preset, 15).offsetY).toBe(0);
+    expect(labelContentTransform(preset, 1).scaleY).toBe(first.scaleY);
+    expect(labelContentTransform(preset, 2).scaleX).toBeLessThan(1);
+    expect(labelContentTransform(preset, 2).scaleY).toBe(first.scaleY);
+    expect(labelContentTransform(preset, 7)).toEqual({ offsetX: 0, offsetY: 0, scaleX: 1, scaleY: 1 });
+    expect(labelContentTransform(preset, 15).scaleX).toBeLessThan(1);
     expect(labelContentTransform(preset, 15).scaleY).toBeCloseTo((254 - HP_P2055_SAFE_EDGE_MM - preset.rowStartsMm[5]!) / maxY, 10);
     expect(labelContentTransform(preset, 0, false)).toEqual({ offsetX: 0, offsetY: 0, scaleX: 1, scaleY: 1 });
     expect(labelContentTransform(getPaperPreset("A4"), 0)).toEqual({ offsetX: 0, offsetY: 0, scaleX: 1, scaleY: 1 });
@@ -252,7 +259,7 @@ describe("local workbook and sheet engine", () => {
       const barcodePosition = transformLabelContentPoint(allBoxes.barcode, transform);
       expect(pageX + barcodePosition.x).toBeGreaterThanOrEqual(HP_P2055_SAFE_EDGE_MM - 0.001);
       expect(pageY + barcodePosition.y).toBeGreaterThanOrEqual(HP_P2055_SAFE_EDGE_MM - 0.001);
-      expect(pageX + barcodePosition.x + allBoxes.barcode.width).toBeLessThanOrEqual(preset.widthMm - HP_P2055_SAFE_EDGE_MM + 0.001);
+      expect(pageX + barcodePosition.x + allBoxes.barcode.width * transform.scaleX).toBeLessThanOrEqual(preset.widthMm - HP_P2055_SAFE_EDGE_MM + 0.001);
       expect(pageY + barcodePosition.y + allBoxes.barcode.height).toBeLessThanOrEqual(preset.heightMm - HP_P2055_SAFE_EDGE_MM + 0.001);
     }
   });
@@ -278,6 +285,27 @@ describe("local workbook and sheet engine", () => {
     const cityLong = destinationBoxes(ctx, "A long destination city", "Punjab");
     expect(cityLong.city.height).toBeGreaterThan(LABEL_LAYOUT.city.height);
     expect(cityLong.province.height).toBeLessThan(LABEL_LAYOUT.province.height);
+  });
+
+  it("expands the destination into the amount-box area without changing the label geometry", () => {
+    const ctx = { font: "", measureText: (text: string) => ({ width: text.length * 2 }) } as CanvasRenderingContext2D;
+    const boxes = labelBoxes(getPaperPreset("CUSTOM"));
+    const destination = destinationBoxes(ctx, "Sahiwal", "Punjab", getPaperPreset("CUSTOM"), true);
+    expect(boxes.vpl.x).toBeCloseTo(44.4 * 63 / 65);
+    expect(boxes.vpl.y).toBeCloseTo(0.5 * 42 / 44);
+    expect(boxes.vpl.width).toBeCloseTo(19.4 * 63 / 65);
+    expect(boxes.vpl.height).toBeCloseTo(7 * 42 / 44);
+    expect(destination.container).toMatchObject({ x: boxes.destination.x, y: boxes.vpl.y, width: boxes.destination.width });
+    expect(destination.container.height).toBeCloseTo(14 * 42 / 44);
+    expect(destination.city.y).toBeLessThan(boxes.destination.y);
+    expect(destination.province.y + destination.province.height).toBeCloseTo(14.5 * 42 / 44);
+  });
+
+  it("fits a single-line amount/fee pair and keeps the fee subordinate", () => {
+    const ctx = { font: "", measureText: (text: string) => ({ width: text.length * Number.parseFloat(/([0-9.]+)px/u.exec((ctx as { font: string }).font)?.[1] ?? "10") * 0.55 }) } as CanvasRenderingContext2D;
+    const fit = fitCommissionExpression(ctx, "25000", 175, 100, 26);
+    expect(fit.fits).toBe(true);
+    expect(fit.commissionFontSize).toBeCloseTo(fit.fontSize * 0.3);
   });
 
   it("defines exact A4 and custom 3x6 paper geometries without changing A4 defaults", async () => {

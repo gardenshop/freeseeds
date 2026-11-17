@@ -378,6 +378,14 @@
 .footer-sender { color:#080808; }
 .color-accent .footer-sender { color:#23612d; }
 .label-warning { top:23.9mm; }
+.vpl-box .vpl-amount { display:flex; align-items:baseline; justify-content:center; gap:0.25mm; width:100%; min-width:0; white-space:nowrap; }
+.vpl-declared { flex:none; font-size:20px; font-weight:900; line-height:1; white-space:nowrap; }
+.vpl-commission { flex:none; color:#555; font-size:6px; font-weight:500; line-height:1; white-space:nowrap; }
+.vpl-box.invalid-amount .vpl-declared { font-size:11px; color:#8b1e1e; }
+.expanded-destination { gap:0.6mm; padding:0.2mm 0.3mm 0; }
+.expanded-destination .city-text { align-self:center; font-size:20px; }
+.expanded-destination .province-text { padding:0.3mm 1.6mm; }
+.prefix-warning { display:flex; align-items:center; justify-content:center; border:0.5mm solid #8b1e1e; border-radius:1mm; color:#8b1e1e; font-size:7px; font-weight:900; text-align:center; }
 .label-warning { display:none !important; }
 .text-overflow { visibility: visible !important; color: #9e392e; }
 .overflow-placeholder { display:none !important; }

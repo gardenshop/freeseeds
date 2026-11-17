@@ -27,7 +27,8 @@ import {
 } from "./engine";
 import "./style.css";
 import "../public/label.css";
-import { CODE128_LAYOUT, destinationBoxes, fitTextMm, fitTextPx, formatVpl, HP_P2055_PRINT_ALLOWANCE_MM, HP_P2055_SAFE_EDGE_MM, labelBoxes, labelContentTransform, labelFontFamily, LABEL_FOOTER_ADDRESS, recipientBoxes, transformLabelContentBox, transformLabelContentPoint, usesArabicScript, usesComplexScript } from "./layout";
+import { CODE128_LAYOUT, destinationBoxes, fitCommissionExpression, fitTextMm, fitTextPx, HP_P2055_PRINT_ALLOWANCE_MM, HP_P2055_SAFE_EDGE_MM, labelBoxes, labelContentTransform, labelFontFamily, LABEL_FOOTER_ADDRESS, recipientBoxes, transformLabelContentBox, transformLabelContentPoint, usesArabicScript, usesComplexScript } from "./layout";
+import { normalizeTrackingReference, trackingLabelDisplay } from "./tracking-rules";
 import { restoreZeroFormattedCells } from "./xlsx";
 import { LABEL_REFERENCE_NOTICE, reserveLabelReference, updateLabelReferenceSource } from "./references";
 
@@ -57,7 +58,7 @@ const sampleRows = [
     "03001234567",
     "House 14, Model Town",
     "",
-    "TRK000001",
+    "VPL000001",
     "1250",
     "Garden Seed Mix",
     "Sahiwal",
@@ -70,7 +71,7 @@ const sampleRows = [
     "03001234568",
     "Street 8, Satellite Town",
     "",
-    "TRK000002",
+    "VPL000002",
     "800",
     "Kitchen Garden Starter",
     "Multan",
@@ -83,7 +84,7 @@ const sampleRows = [
     "03001234569",
     "Village Noor Pur, Post Office Noor Pur",
     "",
-    "TRK000003",
+    "VPL000003",
     "1800",
     "Tomato Seeds x 4",
     "Okara",
@@ -224,7 +225,7 @@ function renderReview() {
         row.city,
       ].some((field) => field.toLowerCase().includes(q)),
     );
-  return `<section class="section-heading"><div><p class="kicker">DISPATCH / DATA REVIEW</p><h1>Review every parcel.</h1><p>${rows.length} imported · ${rows.filter((row) => row.warnings.length).length} flagged · ${rows.length - selected.size} available to select</p></div><button class="button secondary" id="newBatch">Start another batch</button></section><div class="toolbar"><label class="search">⌕ <input id="rowSearch" type="search" placeholder="Search name, city, product…" value="${esc(q)}"></label><button class="button ghost" id="selectAll">${selected.size === rows.length ? "Clear selection" : "Select all"}</button><span class="selection-count">${selected.size} selected</span></div><div class="table-wrap"><table><thead><tr><th></th><th>ORDER / NAME</th><th>CITY</th><th>TRACKING</th><th>PRODUCT</th><th>COD</th><th>VALIDATION</th></tr></thead><tbody>${filtered.map(({ row, index }) => `<tr><td><input type="checkbox" data-select="${index}" ${selected.has(index) ? "checked" : ""} aria-label="Select row ${index + 1}"></td><td><button class="row-edit" data-edit="${index}"><b>${esc(row.orderId || "No Order ID")}</b><span>${esc(row.name || "Unnamed receiver")}</span></button></td><td>${esc([row.city, row.province].filter(Boolean).join(", ") || "—")}</td><td>${esc(row.tracking || "—")}</td><td>${esc(row.product || "—")}</td><td>${esc(row.cod || "—")}</td><td>${row.warnings.length ? `<span class="warning-badge" title="${esc(row.warnings.join("; "))}">${row.warnings.length} check${row.warnings.length > 1 ? "s" : ""}</span>` : '<span class="ok-badge">Ready</span>'}</td></tr>`).join("") || '<tr><td colspan="7" class="empty-row">No matching orders.</td></tr>'}</tbody></table></div><div class="button-row end"><button class="button primary" data-view="preview">Open A4 preview <span>→</span></button></div><p class="status-line" role="status">${esc(statusMessage)}</p>`;
+  return `<section class="section-heading"><div><p class="kicker">DISPATCH / DATA REVIEW</p><h1>Review every parcel.</h1><p>${rows.length} imported · ${rows.filter((row) => row.warnings.length).length} flagged · ${rows.length - selected.size} available to select</p></div><button class="button secondary" id="newBatch">Start another batch</button></section><div class="toolbar"><label class="search">⌕ <input id="rowSearch" type="search" placeholder="Search name, city, product…" value="${esc(q)}"></label><button class="button ghost" id="selectAll">${selected.size === rows.length ? "Clear selection" : "Select all"}</button><span class="selection-count">${selected.size} selected</span></div><div class="table-wrap"><table><thead><tr><th></th><th>ORDER / NAME</th><th>CITY</th><th>TRACKING</th><th>PRODUCT</th><th>DECLARED VALUE</th><th>VALIDATION</th></tr></thead><tbody>${filtered.map(({ row, index }) => `<tr><td><input type="checkbox" data-select="${index}" ${selected.has(index) ? "checked" : ""} aria-label="Select row ${index + 1}"></td><td><button class="row-edit" data-edit="${index}"><b>${esc(row.orderId || "No Order ID")}</b><span>${esc(row.name || "Unnamed receiver")}</span></button></td><td>${esc([row.city, row.province].filter(Boolean).join(", ") || "—")}</td><td>${esc(row.tracking || "—")}</td><td>${esc(row.product || "—")}</td><td>${esc(row.cod || "—")}</td><td>${row.warnings.length ? `<span class="warning-badge" title="${esc(row.warnings.join("; "))}">${row.warnings.length} check${row.warnings.length > 1 ? "s" : ""}</span>` : '<span class="ok-badge">Ready</span>'}</td></tr>`).join("") || '<tr><td colspan="7" class="empty-row">No matching orders.</td></tr>'}</tbody></table></div><div class="button-row end"><button class="button primary" data-view="preview">Open A4 preview <span>→</span></button></div><p class="status-line" role="status">${esc(statusMessage)}</p>`;
 }
 
 function boxStyle(box: { x: number; y: number; width: number; height: number }) {
@@ -235,15 +236,21 @@ function labelMarkup(row: Order, index: number, _compact = false) {
   const preset = currentPaperPreset();
   const boxes = labelBoxes(preset);
   const phone = normalizePakistaniPhone(row.phone);
-  const vpl = row.cod.trim() ? formatVpl(row.cod) : "VPL";
-  const vplAmount = vpl.replace(/^VPL\s*/u, "");
+  const display = trackingLabelDisplay(row.tracking, row.cod);
+  const destination = destinationBoxes(document.createElement("canvas").getContext("2d")!, row.city, row.province, preset, display.expandDestination);
   const blockedReason = printBlocker(row);
-  return `<article class="label ${colorAccent ? "color-accent" : ""} ${blockedReason ? "layout-overflow" : ""}" data-label-index="${index}" data-paper-preset="${preset.id}" style="--label-width:${preset.labelWidthMm}mm;--label-height:${preset.labelHeightMm}mm"><div class="label-content">
+  const prefixClass = display.prefix === "UNKNOWN" ? "prefix-unknown" : `prefix-${display.prefix.toLowerCase()}`;
+  const trackingBox = display.showAmountBox
+    ? `<div class="vpl-box layout-box ${display.error ? "invalid-amount" : ""}" ${boxStyle(boxes.vpl)} aria-label="${esc(display.error ?? `${display.prefix} ${display.declaredAmount}+${display.commission}`)}"><strong class="vpl-prefix">${display.prefix}</strong><div class="vpl-amount"><span class="vpl-declared">${display.declaredAmount ?? "FIX AMOUNT"}</span>${display.commission === undefined ? "" : `<span class="vpl-commission">+${display.commission}</span>`}</div></div>`
+    : display.prefix === "UNKNOWN"
+      ? `<div class="prefix-warning layout-box" ${boxStyle(boxes.vpl)}>CHECK PREFIX</div>`
+      : "";
+  return `<article class="label ${prefixClass} ${colorAccent ? "color-accent" : ""} ${blockedReason ? "layout-overflow" : ""}" data-label-index="${index}" data-paper-preset="${preset.id}" data-tracking-prefix="${display.prefix}" style="--label-width:${preset.labelWidthMm}mm;--label-height:${preset.labelHeightMm}mm"><div class="label-content">
     <span class="tracking-value layout-box" ${boxStyle(boxes.trackingText)}->${esc(row.tracking)}</span>
     <canvas class="barcode-canvas layout-box" ${boxStyle(boxes.barcode)} data-barcode="${index}" data-source="${esc(row.tracking)}" aria-label="Code 128 barcode"></canvas>
     <span class="tracking-divider layout-box" ${boxStyle(boxes.trackingDivider)} aria-hidden="true"></span>
-    <div class="vpl-box layout-box" ${boxStyle(boxes.vpl)} aria-label="${esc(vpl)}"><strong class="vpl-prefix">VPL</strong><strong class="vpl-amount">${esc(vplAmount)}</strong></div>
-    <div class="destination layout-box" ${boxStyle(boxes.destination)}><strong class="city-text">${esc(row.city)}</strong><span class="province-text">${esc(row.province)}</span></div>
+    ${trackingBox}
+    <div class="destination layout-box ${display.expandDestination ? "expanded-destination" : ""}" ${boxStyle(destination.container)}><strong class="city-text">${esc(row.city)}</strong><span class="province-text">${esc(row.province)}</span></div>
     <div class="order-product-frame layout-box" ${boxStyle(boxes.orderProduct)} aria-hidden="true"></div>
     <div class="order-id layout-box" ${boxStyle(boxes.orderId)}><span class="field-heading">Order ID</span><strong class="printed-reference">${esc(row.printedReference)}</strong></div>
     <span class="contact-divider layout-box" ${boxStyle(boxes.contactDivider)} aria-hidden="true"></span>
@@ -270,16 +277,15 @@ function overflowingLayoutFields(row: Order): string[] {
   if (!context) return ["text measurement"];
   const preset = currentPaperPreset();
   const boxes = labelBoxes(preset);
+  const display = trackingLabelDisplay(row.tracking, row.cod);
   const recipient = recipientBoxes(context, row.name, preset);
-  const destination = destinationBoxes(context, row.city, row.province, preset);
+  const destination = destinationBoxes(context, row.city, row.province, preset, display.expandDestination);
   const check = (text: string, box: { width: number; height: number }, max: number, min: number, bold = false, wrap = true, lineHeight = 1) =>
     !text.trim() || fitTextMm(context, text, box.width, box.height, max, min, bold, lineHeight, wrap).fits;
   const checks: Array<[string, boolean]> = [
     ["tracking text", check(row.tracking, boxes.trackingText, 9, 6.5, true, false)],
     ["printed reference", check(row.printedReference, { width: boxes.orderId.width, height: boxes.orderId.height - 1.35 * preset.labelHeightMm / 44 }, 11, 8, false, false)],
     ["product", check(row.product, boxes.productValue, 10, 6.5, true, false, 1)],
-    ["VPL heading", check("VPL", { width: boxes.vpl.width, height: 1.6 * preset.labelHeightMm / 44 }, 8, 6, true, false, 0.95)],
-    ["VPL amount", check(row.cod ? formatVpl(row.cod).replace(/^VPL\s*/u, "") : "", { width: boxes.vpl.width - 1, height: 5 * preset.labelHeightMm / 44 }, 14, 10, true, false, 0.95)],
     ["destination city", check(row.city, destination.city, usesArabicScript(row.city) ? 10.5 : 15, 7, true, true, 0.95)],
     ["province", check(row.province, destination.province, 9.5, 6, true, true, destination.province.height > 3.1 ? 0.95 : 1)],
     ["receiver name", check(row.name, recipient.name, 12, 9, true, true, 1)],
@@ -292,16 +298,23 @@ function overflowingLayoutFields(row: Order): string[] {
     ["footer address", check(LABEL_FOOTER_ADDRESS, boxes.footerAddress, 8, 6.5, false, false, 1)],
     ["product heading", check("Product:", boxes.productLabel, 7.5, 6.5, true, false, 1)],
   ];
+  if (display.showAmountBox && display.declaredAmount !== undefined && display.commission !== undefined) {
+    const widthPx = (boxes.vpl.width - 1) * 96 / 25.4;
+    const heightPx = 5 * preset.labelHeightMm / 44 * 96 / 25.4;
+    const fit = fitCommissionExpression(context, String(display.declaredAmount), display.commission, widthPx, heightPx);
+    checks.push(["declared amount and commission", fit.fits]);
+  }
   return checks.filter(([, fits]) => !fits).map(([field]) => field);
 }
 
 function printBlocker(row: Order): string | undefined {
   if (!row.tracking.trim()) return "Tracking number is required for the Code 128 barcode.";
+  const trackingDisplay = trackingLabelDisplay(row.tracking, row.cod);
+  if (trackingDisplay.error) return trackingDisplay.error;
   if (!row.printedReference) return "Printed reference has not been reserved in this browser.";
   if (!row.name) return "Receiver name is required.";
   if (!normalizePakistaniPhone(row.phone)) return "Correct invalid contact numbers before printing.";
   if (!row.address) return "Delivery address is required.";
-  if (!row.cod) return "VPL amount is required.";
   if (!row.city || !row.province) return "Destination city and province are required.";
   const overflows = overflowingLayoutFields(row);
   if (overflows.length) return "Text does not fit: " + overflows.join(", ") + ". Correct or exclude this label.";
@@ -312,7 +325,9 @@ function printBlocker(row: Order): string | undefined {
     warning.startsWith("Delivery address is required") ||
     warning.startsWith("Receiver name is required") ||
     warning.startsWith("Destination city or province") ||
-    warning.startsWith("VPL amount") ||
+    warning.startsWith("Unsupported tracking prefix") ||
+    warning.startsWith("Declared VPL amount") ||
+    warning.startsWith("Declared VPP amount") ||
     warning.startsWith("Printed reference") ||
     warning.startsWith("Tracking barcode is too dense") ||
     warning.startsWith("Duplicate tracking number"),
@@ -488,6 +503,29 @@ async function renderBarcodeSvg(tracking: string) {
   return { width, height, moduleWidth: CODE128_LAYOUT.moduleWidthPx, bars };
 }
 
+function barcodeCanvasInkBounds(canvas: HTMLCanvasElement) {
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context) throw new Error("BARCODE_CANVAS_CONTEXT_UNAVAILABLE");
+  const { data, width, height } = context.getImageData(0, 0, canvas.width, canvas.height);
+  let left = width;
+  let top = height;
+  let right = -1;
+  let bottom = -1;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const pixel = (y * width + x) * 4;
+      if (data[pixel] < 128 && data[pixel + 1] < 128 && data[pixel + 2] < 128 && data[pixel + 3] > 0) {
+        left = Math.min(left, x);
+        top = Math.min(top, y);
+        right = Math.max(right, x + 1);
+        bottom = Math.max(bottom, y + 1);
+      }
+    }
+  }
+  if (right < 0 || bottom < 0) throw new Error("BARCODE_CANVAS_EMPTY");
+  return { left, top, right, bottom };
+}
+
 function measureLabels(root: ParentNode = document, canvasDocument: Document = document) {
   const context = canvasDocument.createElement("canvas").getContext("2d");
   if (!context) return;
@@ -507,21 +545,29 @@ function measureLabels(root: ParentNode = document, canvasDocument: Document = d
         element.style.setProperty("--box-width", `${box.width}mm`);
         element.style.setProperty("--box-height", `${box.height}mm`);
       };
+      const display = row ? trackingLabelDisplay(row.tracking, row.cod) : trackingLabelDisplay("", "");
       const recipient = recipientBoxes(context, row?.name ?? "", preset);
       setBox(".receiver-name", recipient.name);
       setBox(".address-text", recipient.address);
-      const destination = destinationBoxes(context, row?.city ?? "", row?.province ?? "", preset);
+      const destination = destinationBoxes(context, row?.city ?? "", row?.province ?? "", preset, display.expandDestination);
+      setBox(".destination", destination.container);
       const destinationElement = label.querySelector<HTMLElement>(".destination");
       destinationElement?.style.setProperty("--city-row-height", `${destination.city.height}mm`);
       destinationElement?.style.setProperty("--province-row-height", `${destination.province.height}mm`);
       destinationElement?.classList.toggle("long-province", destination.province.height > 3.1);
       destinationElement?.classList.toggle("short-province", destination.province.height < 3.1);
-      const fit = (selector: string, text: string, max: number, min: number, bold = false, wrap = true) => {
+      destinationElement?.classList.toggle("expanded-destination", display.expandDestination);
+      const fit = (selector: string, text: string, max: number, min: number, bold = false, wrap = true, availableWidth?: number) => {
         const element = label.querySelector<HTMLElement>(selector);
         if (!element || !text) return;
+        if (availableWidth !== undefined) {
+          element.style.width = "max-content";
+          element.style.maxWidth = `${availableWidth}px`;
+          element.style.boxSizing = "border-box";
+        }
         const style = canvasDocument.defaultView?.getComputedStyle(element);
         const reserved = 0;
-        const width = element.clientWidth - (style ? parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) : 0) - reserved;
+        const width = (availableWidth ?? element.clientWidth) - (style ? parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) : 0) - reserved;
         const height = element.clientHeight - (style ? parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) : 0);
         const lineHeight = style?.lineHeight && style.lineHeight !== "normal"
           ? parseFloat(style.lineHeight) / Math.max(1, parseFloat(style.fontSize))
@@ -542,11 +588,32 @@ function measureLabels(root: ParentNode = document, canvasDocument: Document = d
       fit(".tracking-value", row?.tracking || "", 9, 6.5, true, false);
       fit(".printed-reference", row?.printedReference || "", 11, 8, false, false);
       fit(".product-value", row?.product || "", 10, 6.5, true, false);
-      fit(".vpl-prefix", "VPL", 6.5, 6, true, false);
-      const vpl = row?.cod?.trim() ? formatVpl(row.cod) : "VPL";
-      fit(".vpl-amount", vpl.replace(/^VPL\s*/u, ""), 14, 10, true, false);
-      fit(".city-text", row?.city || "", usesArabicScript(row?.city || "") ? 10.5 : 15, 7, true);
-      fit(".province-text", row?.province || "", 9.5, 6, true);
+      if (display.showAmountBox) {
+        fit(".vpl-prefix", display.prefix, 6.5, 5.5, true, false);
+        const amount = label.querySelector<HTMLElement>(".vpl-declared");
+        const commission = label.querySelector<HTMLElement>(".vpl-commission");
+        const amountLine = label.querySelector<HTMLElement>(".vpl-amount");
+        if (amount && amountLine && display.declaredAmount !== undefined && display.commission !== undefined) {
+          amount.textContent = String(display.declaredAmount);
+          if (commission) commission.textContent = `+${display.commission}`;
+          const result = fitCommissionExpression(
+            context,
+            amount.textContent,
+            display.commission,
+            amountLine.clientWidth,
+            amountLine.clientHeight,
+            20 * (label.closest(".sheet") ? zoom : 1),
+            8 * (label.closest(".sheet") ? zoom : 1),
+          );
+          amount.style.fontSize = `${result.fontSize}px`;
+          if (commission) commission.style.fontSize = `${result.commissionFontSize}px`;
+          amountLine.classList.toggle("text-overflow", !result.fits);
+          if (!result.fits) overflow = true;
+        } else if (amount) fit(".vpl-declared", "FIX AMOUNT", 12, 7, true, false);
+      }
+      fit(".city-text", row?.city || "", display.expandDestination ? 20 : usesArabicScript(row?.city || "") ? 10.5 : 15, 7, true);
+      const provinceWidth = destination.province.width * 96 / 25.4;
+      fit(".province-text", row?.province || "", 9.5, 6, true, false, provinceWidth);
       fit(".receiver-name", row?.name || "", 12, 9, true);
       fit(".address-text", label.querySelector<HTMLElement>(".address-text")?.textContent ?? "", 11, 8);
       fit(".nearby-label", "Near by:", 9.5, 7.5, true, false);
@@ -770,6 +837,7 @@ async function makePdf(items = currentOrders(), position = startPosition) {
         xMm = geometry.x,
         yMm = geometry.y;
       const row = item.row;
+      const trackingDisplay = trackingLabelDisplay(row.tracking, row.cod);
       const safeTransform = labelContentTransform(preset, geometry.slot, hpP2055SafeArea);
       const mapContentBox = (box: (typeof boxes)[keyof typeof boxes]) => transformLabelContentBox(box, safeTransform);
       const drawBoxText = async (
@@ -842,6 +910,35 @@ async function makePdf(items = currentOrders(), position = startPosition) {
         const safeBox = mapContentBox(box);
         pdfPage.drawRectangle({ x: (xMm + safeBox.x) * mm, y: pageH - (yMm + safeBox.y + safeBox.height) * mm, width: safeBox.width * mm, height: safeBox.height * mm, color });
       };
+      const drawCommissionExpression = (declared: number, commission: number, box: (typeof boxes)[keyof typeof boxes]) => {
+        const safeBox = mapContentBox(box);
+        const safeFontScale = Math.min(safeTransform.scaleX, safeTransform.scaleY);
+        const fit = fitCommissionExpression(
+          measure,
+          String(declared),
+          commission,
+          safeBox.width * pxPerMm,
+          safeBox.height * pxPerMm,
+          20 * safeFontScale,
+          8 * safeFontScale,
+        );
+        if (!fit.fits) {
+          if (!row.warnings.some((warning) => warning.startsWith("Text does not fit"))) row.warnings.push("Text does not fit: declared amount and commission. Edit this record before printing.");
+          return;
+        }
+        const amountSize = fit.fontSize * 0.75;
+        const feeSize = fit.commissionFontSize * 0.75;
+        const amountText = String(declared);
+        const feeText = `+${commission}`;
+        const amountWidth = bold.widthOfTextAtSize(amountText, amountSize);
+        const feeWidth = font.widthOfTextAtSize(feeText, feeSize);
+        const gap = 0.75;
+        const boxWidth = safeBox.width * mm;
+        const startX = (xMm + safeBox.x) * mm + Math.max(0, (boxWidth - amountWidth - gap - feeWidth) / 2);
+        const baseline = pageH - (yMm + safeBox.y + safeBox.height / 2) * mm - amountSize * 0.3;
+        pdfPage.drawText(amountText, { x: startX, y: baseline, size: amountSize, font: bold, maxWidth: amountWidth, color: rgb(0, 0, 0) });
+        pdfPage.drawText(feeText, { x: startX + amountWidth + gap, y: baseline + (amountSize - feeSize) * 0.25, size: feeSize, font, maxWidth: feeWidth, color: rgb(0.28, 0.28, 0.28) });
+      };
       const outline = (box: { x: number; y: number; width: number; height: number }, radius: number, stroke: number, color?: ReturnType<typeof rgb>, applySafeArea = true) => {
         const outlineBox = applySafeArea ? mapContentBox(box) : box;
         const left = (xMm + outlineBox.x) * mm;
@@ -852,14 +949,19 @@ async function makePdf(items = currentOrders(), position = startPosition) {
         pdfPage.drawSvgPath(`M ${r} 0 L ${width - r} 0 Q ${width} 0 ${width} ${r} L ${width} ${height - r} Q ${width} ${height} ${width - r} ${height} L ${r} ${height} Q 0 ${height} 0 ${height - r} L 0 ${r} Q 0 0 ${r} 0 Z`, { x: left, y: top, borderColor: rgb(0, 0, 0), borderWidth: stroke * mm, ...(color ? { color } : {}) });
       };
       outline(boxes.outline, 1, 0.2, undefined, false);
-      outline(boxes.vpl, 1, 0.5);
+      if (trackingDisplay.showAmountBox) outline(boxes.vpl, 1, 0.5);
       await drawBoxText(row.tracking, boxes.trackingText, 9, 6.5, true, rgb(0, 0, 0), "center", 1, false, "tracking value");
-      const vpl = row.cod.trim() ? formatVpl(row.cod) : "VPL";
-      const vplAmount = vpl.replace(/^VPL\s*/u, "");
-      await drawBoxText("VPL", { ...boxes.vpl, x: boxes.vpl.x + 0.3 * scaleX, y: boxes.vpl.y + 0.1 * scaleY, width: boxes.vpl.width - 0.6 * scaleX, height: 1.6 * scaleY }, 6.5, 6, true, rgb(0, 0, 0), "center", 0.95, false, "VPL heading");
-      await drawBoxText(vplAmount, { ...boxes.vpl, x: boxes.vpl.x + 0.3 * scaleX, y: boxes.vpl.y + 1.8 * scaleY, width: boxes.vpl.width - 0.6 * scaleX, height: 5 * scaleY }, 14, 10, true, rgb(0, 0, 0), "center", 0.95, false, "VPL amount");
+      if (trackingDisplay.showAmountBox) {
+        await drawBoxText(trackingDisplay.prefix, { ...boxes.vpl, x: boxes.vpl.x + 0.3 * scaleX, y: boxes.vpl.y + 0.1 * scaleY, width: boxes.vpl.width - 0.6 * scaleX, height: 1.6 * scaleY }, 6.5, 5.5, true, rgb(0, 0, 0), "center", 0.95, false, `${trackingDisplay.prefix} heading`);
+        if (trackingDisplay.declaredAmount !== undefined && trackingDisplay.commission !== undefined) {
+          drawCommissionExpression(trackingDisplay.declaredAmount, trackingDisplay.commission, { ...boxes.vpl, x: boxes.vpl.x + 0.3 * scaleX, y: boxes.vpl.y + 1.8 * scaleY, width: boxes.vpl.width - 0.6 * scaleX, height: 5 * scaleY });
+        }
+      } else if (trackingDisplay.prefix === "UNKNOWN") {
+        outline(boxes.vpl, 1, 0.5);
+        await drawBoxText("CHECK PREFIX", boxes.vpl, 8, 6, true, rgb(0, 0, 0), "center", 1, false, "unsupported tracking prefix");
+      }
       fillRect(boxes.trackingDivider, rgb(0, 0, 0));
-      const destination = destinationBoxes(measure, row.city, row.province, preset);
+      const destination = destinationBoxes(measure, row.city, row.province, preset, trackingDisplay.expandDestination);
       await drawBoxText(row.city, destination.city, usesArabicScript(row.city) ? 10.5 : 15, 7, true, rgb(0, 0, 0), "center", 0.95, true, "destination city");
       outline(destination.province, 1.2, 0.2, rgb(0, 0, 0));
       await drawBoxText(row.province, { ...destination.province, x: destination.province.x + 0.8 * scaleX, y: destination.province.y + 0.15 * scaleY, width: destination.province.width - 1.6 * scaleX, height: destination.province.height - 0.3 * scaleY }, 8.5, 6, true, rgb(1, 1, 1), "center", destination.province.height > 3.1 * scaleY ? 0.95 : 1, true, "destination province");
@@ -896,39 +998,62 @@ async function makePdf(items = currentOrders(), position = startPosition) {
 
       if (row.tracking) {
         const barcode = await renderBarcodeSvg(row.tracking);
-        const scale = Math.min(
-          mm * boxes.barcode.width / barcode.width,
-          mm * boxes.barcode.height / barcode.height,
-        );
-        if (scale * barcode.moduleWidth * 25.4 / 72 < CODE128_LAYOUT.minimumModuleMm) {
-          if (!row.warnings.some((warning) => warning.startsWith("Tracking barcode is too dense"))) row.warnings.push("Tracking barcode is too dense for this label; edit or use another layout.");
+        if (preset.id === "CUSTOM") {
+          const canvasBarcode = document.createElement("canvas");
+          await renderBarcode(canvasBarcode, row.tracking);
+          const ink = barcodeCanvasInkBounds(canvasBarcode);
+          const cssScale = Math.min(1, boxes.barcode.width * pxPerMm / canvasBarcode.width, boxes.barcode.height * pxPerMm / canvasBarcode.height);
+          const canvasScaleMm = cssScale / pxPerMm;
+          const moduleMm = CODE128_LAYOUT.moduleWidthPx * canvasScaleMm;
+          if (moduleMm < CODE128_LAYOUT.minimumModuleMm) {
+            if (!row.warnings.some((warning) => warning.startsWith("Tracking barcode is too dense"))) row.warnings.push("Tracking barcode is too dense for this label after the HP content inset; edit this tracking value.");
+          } else {
+            const imageWidthMm = canvasBarcode.width * canvasScaleMm;
+            const imageHeightMm = canvasBarcode.height * canvasScaleMm;
+            const imageLeft = boxes.barcode.x + (boxes.barcode.width - imageWidthMm) / 2;
+            const imageTop = boxes.barcode.y + (boxes.barcode.height - imageHeightMm) / 2;
+            const imageOrigin = transformLabelContentPoint({ x: imageLeft, y: imageTop }, safeTransform);
+            const targetInkLeft = imageOrigin.x + ink.left * canvasScaleMm;
+            const targetInkTop = imageOrigin.y + ink.top * canvasScaleMm;
+            const targetInkWidth = (ink.right - ink.left) * canvasScaleMm;
+            const targetInkHeight = (ink.bottom - ink.top) * canvasScaleMm;
+            const svgLeft = Math.min(...barcode.bars.map((bar) => bar.x));
+            const svgTop = Math.min(...barcode.bars.map((bar) => bar.y));
+            const svgRight = Math.max(...barcode.bars.map((bar) => bar.x + bar.width));
+            const svgBottom = Math.max(...barcode.bars.map((bar) => bar.y + bar.height));
+            const scaleX = targetInkWidth * mm / (svgRight - svgLeft);
+            const scaleY = targetInkHeight * mm / (svgBottom - svgTop);
+            const left = (xMm + targetInkLeft) * mm - svgLeft * scaleX;
+            const top = pageH - (yMm + targetInkTop) * mm + svgTop * scaleY;
+            if (geometry.slot < 3) console.info("LP037_PDF_BARCODE_GEOMETRY", JSON.stringify({ slot: geometry.slot, canvasPx: [canvasBarcode.width, canvasBarcode.height], inkPx: ink, cssScale, canvasScaleMm, safeTransform, imageBoxMm: [imageLeft, imageTop, imageWidthMm, imageHeightMm], targetInkMm: [targetInkLeft, targetInkTop, targetInkWidth, targetInkHeight], svgInkPx: [svgLeft, svgTop, svgRight, svgBottom], vectorScalePtPerPx: [scaleX, scaleY], pdfOriginPt: [left, top] }));
+            for (const bar of barcode.bars) {
+              pdfPage.drawRectangle({ x: left + bar.x * scaleX, y: top - (bar.y + bar.height) * scaleY, width: bar.width * scaleX, height: bar.height * scaleY, color: rgb(0, 0, 0) });
+            }
+          }
+          canvasBarcode.width = 0;
+          canvasBarcode.height = 0;
         } else {
+          const scale = Math.min(mm * boxes.barcode.width / barcode.width, mm * boxes.barcode.height / barcode.height);
+          if (scale * barcode.moduleWidth * 25.4 / 72 < CODE128_LAYOUT.minimumModuleMm) {
+            if (!row.warnings.some((warning) => warning.startsWith("Tracking barcode is too dense"))) row.warnings.push("Tracking barcode is too dense for this label; edit or use another layout.");
+          } else {
           const barcodeWidth = barcode.width * scale;
           const barcodeHeight = barcode.height * scale;
-          const cssScale = Math.min(1, boxes.barcode.width * pxPerMm / barcode.width, boxes.barcode.height * pxPerMm / barcode.height);
-          const cssQuietXmm = CODE128_LAYOUT.horizontalQuietZonePx * cssScale / pxPerMm;
-          const cssQuietYmm = CODE128_LAYOUT.verticalQuietZonePx * cssScale / pxPerMm;
-          const svgQuietXmm = Math.min(...barcode.bars.map((bar) => bar.x)) * scale / mm;
-          const svgQuietYmm = Math.min(...barcode.bars.map((bar) => bar.y)) * scale / mm;
-          const barcodeOrigin = transformLabelContentPoint({
-            x: boxes.barcode.x + (boxes.barcode.width - barcodeWidth / mm) / 2,
-            y: boxes.barcode.y + (boxes.barcode.height - barcodeHeight / mm) / 2,
-          }, safeTransform);
-          // Canvas and SVG have the same symbol/module geometry but expose different leading quiet-zone offsets; align the vector bars to the canvas print origin only on the custom sheet.
-          if (preset.id === "CUSTOM") {
-            barcodeOrigin.x += cssQuietXmm - svgQuietXmm;
-            barcodeOrigin.y += cssQuietYmm - svgQuietYmm;
-          }
-          const left = (xMm + barcodeOrigin.x) * mm;
-          const top = pageH - (yMm + barcodeOrigin.y) * mm;
-          for (const bar of barcode.bars) {
-            pdfPage.drawRectangle({
-              x: left + bar.x * scale,
-              y: top - (bar.y + bar.height) * scale,
-              width: bar.width * scale,
-              height: bar.height * scale,
-              color: rgb(0, 0, 0),
-            });
+            const barcodeOrigin = transformLabelContentPoint({
+              x: boxes.barcode.x + (boxes.barcode.width - barcodeWidth / mm) / 2,
+              y: boxes.barcode.y + (boxes.barcode.height - barcodeHeight / mm) / 2,
+            }, safeTransform);
+            const left = (xMm + barcodeOrigin.x) * mm;
+            const top = pageH - (yMm + barcodeOrigin.y) * mm;
+            for (const bar of barcode.bars) {
+              pdfPage.drawRectangle({
+                x: left + bar.x * scale,
+                y: top - (bar.y + bar.height) * scale,
+                width: bar.width * scale,
+                height: bar.height * scale,
+                color: rgb(0, 0, 0),
+              });
+            }
           }
         }
       }
@@ -1280,7 +1405,7 @@ function editOrder(index: number) {
     ["facebookName", "Facebook Name"],
     ["tracking", "Tracking number"],
     ["product", "Product"],
-    ["cod", "VPL COD amount"],
+    ["cod", "Declared amount (VPL/VPP only)"],
     ["city", "City"],
     ["province", "Province"],
     ["landmark", "Near by"],
@@ -1339,6 +1464,9 @@ function editOrder(index: number) {
         !warning.startsWith("Source Order ID") &&
         !warning.startsWith("Printed reference") &&
         !warning.startsWith("VPL amount") &&
+        !warning.startsWith("Declared VPL amount") &&
+        !warning.startsWith("Declared VPP amount") &&
+        !warning.startsWith("Unsupported tracking prefix") &&
         !warning.startsWith("Product description") &&
         !warning.startsWith("Destination city or province") &&
         !warning.startsWith("Text does not fit") &&
@@ -1353,12 +1481,15 @@ function editOrder(index: number) {
     if (repeatedContact.removed)
       order.warnings.push("Exact contact match removed from displayed address; original source is retained in the editor.");
     if (!order.address) order.warnings.push("Delivery address is required.");
-    if (!order.cod) order.warnings.push("VPL amount is required.");
     if (!order.product) order.warnings.push("Product description is required.");
     if (!order.tracking)
       order.warnings.push(
         "Tracking number is missing; barcode cannot be generated.",
       );
+    else {
+      const display = trackingLabelDisplay(order.tracking, order.cod);
+      if (display.error) order.warnings.push(display.error);
+    }
     if (!order.city || !order.province) order.warnings.push("Destination city or province is missing; confirm before printing.");
     if (repeatedContact.removed)
       order.warnings.push(
@@ -1387,7 +1518,7 @@ function editOrder(index: number) {
           );
     };
     duplicates("phone", (value) => value.replace(/\D/g, ""));
-    duplicates("tracking", (value) => value.trim().toUpperCase());
+    duplicates("tracking", normalizeTrackingReference);
     form.remove();
     render();
   });

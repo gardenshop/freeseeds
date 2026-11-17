@@ -39,7 +39,7 @@ export const FIELDS: Array<{ key: keyof ImportMapping; label: string; aliases: s
   { key: "address", label: "Address", aliases: ["Address", "Delivery Address"], required: true },
   { key: "facebookName", label: "Facebook Name", aliases: ["Facebook Name"], required: false },
   { key: "tracking", label: "Tracking Number", aliases: ["Tracking Number", "Tracking", "Consignment Number"], required: true },
-  { key: "cod", label: "COD / VPL COD", aliases: ["COD", "VPL COD", "COD Amount"], required: true },
+  { key: "cod", label: "Declared Amount (VPL/VPP only)", aliases: ["COD", "VPL COD", "COD Amount", "Declared Amount", "VPP COD"], required: false },
   { key: "product", label: "Product", aliases: ["Product", "Products", "Item"], required: true },
   { key: "city", label: "City", aliases: ["City", "Destination City"], required: true },
   { key: "province", label: "Province", aliases: ["Province", "State"], required: true },

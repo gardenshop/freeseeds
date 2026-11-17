@@ -150,6 +150,14 @@ export function transformLabelContentPoint(point: { x: number; y: number }, tran
   };
 }
 
+/** Keeps the tracking divider after the barcode when the barcode canvas keeps its scan-safe physical size. */
+export function trackingDividerContentX(preset: PaperPreset, barcodeCanvasWidthMm: number, transform: LabelContentTransform): number {
+  const boxes = labelBoxes(preset);
+  const barcodeLeft = boxes.barcode.x + (boxes.barcode.width - barcodeCanvasWidthMm) / 2;
+  const originalGap = boxes.trackingDivider.x - (barcodeLeft + barcodeCanvasWidthMm);
+  return barcodeLeft + barcodeCanvasWidthMm / transform.scaleX + originalGap;
+}
+
 export function recipientBoxes(ctx: CanvasRenderingContext2D, name: string, preset: PaperPreset = PAPER_PRESETS.A4) {
   const boxes = labelBoxes(preset);
   const initial = boxes.name;
@@ -166,20 +174,63 @@ export function recipientBoxes(ctx: CanvasRenderingContext2D, name: string, pres
   };
 }
 
-export function destinationBoxes(ctx: CanvasRenderingContext2D, city: string, province: string, preset: PaperPreset = PAPER_PRESETS.A4) {
+export function destinationBoxes(
+  ctx: CanvasRenderingContext2D,
+  city: string,
+  province: string,
+  preset: PaperPreset = PAPER_PRESETS.A4,
+  expanded = false,
+) {
   const boxes = labelBoxes(preset);
-  const cityBase = boxes.city;
-  const provinceBase = boxes.province;
-  const cityFits = fitTextMm(ctx, city, cityBase.width, cityBase.height, 18, 7, true, 0.95).fits;
-  const provinceFits = fitTextMm(ctx, province, provinceBase.width, provinceBase.height, 11, 6, true, 1).fits;
-  const longProvince = province.trim().length > 15 || !provinceFits;
+  const scaleX = preset.labelWidthMm / LABEL_WIDTH_MM;
   const scaleY = preset.labelHeightMm / LABEL_HEIGHT_MM;
-  const cityHeight = longProvince ? cityBase.height - 0.4 * scaleY : !cityFits ? 4.4 * scaleY : cityBase.height;
+  const container: BoxMm = expanded
+    ? { ...boxes.destination, y: boxes.vpl.y, height: 14 * scaleY }
+    : boxes.destination;
+  const cityBase: BoxMm = expanded
+    ? { x: container.x + 0.4 * scaleX, y: container.y + 0.4 * scaleY, width: container.width - 0.8 * scaleX, height: 7.4 * scaleY }
+    : boxes.city;
+  const provinceBase: BoxMm = expanded
+    ? { x: container.x + 0.4 * scaleX, y: 0, width: container.width - 0.8 * scaleX, height: 0 }
+    : boxes.province;
+  const cityFits = fitTextMm(ctx, city, cityBase.width, cityBase.height, 18, 7, true, 0.95).fits;
+  const initialProvinceY = expanded ? cityBase.y + cityBase.height + 0.2 * scaleY : provinceBase.y;
+  const initialProvinceHeight = expanded ? 14.5 * scaleY - initialProvinceY : provinceBase.height;
+  const provinceFits = fitTextMm(ctx, province, provinceBase.width, initialProvinceHeight, 11, 6, true, 1).fits;
+  const longProvince = province.trim().length > 15 || !provinceFits;
+  const cityHeight = longProvince ? cityBase.height - 0.4 * scaleY : !cityFits ? (expanded ? 5.6 : 4.4) * scaleY : cityBase.height;
   const provinceY = cityBase.y + cityHeight + 0.2 * scaleY;
   return {
+    container,
     city: { ...cityBase, height: cityHeight },
     province: { ...provinceBase, y: provinceY, height: 14.5 * scaleY - provinceY },
   };
+}
+
+export type CommissionExpressionFit = { fontSize: number; commissionFontSize: number; fits: boolean };
+
+/** Fits the declared amount plus the smaller, lighter commission as one unbroken line. */
+export function fitCommissionExpression(
+  ctx: CanvasRenderingContext2D,
+  declaredAmount: string,
+  commission: number,
+  widthPx: number,
+  heightPx: number,
+  maxFontPx = 20,
+  minFontPx = 9,
+): CommissionExpressionFit {
+  const extra = `+${commission}`;
+  for (let size = maxFontPx; size >= minFontPx; size -= 0.25) {
+    const commissionSize = size * 0.3;
+    ctx.font = `900 ${size}px Arial, sans-serif`;
+    const amountWidth = ctx.measureText(declaredAmount).width;
+    ctx.font = `500 ${commissionSize}px Arial, sans-serif`;
+    const commissionWidth = ctx.measureText(extra).width;
+    if (amountWidth + commissionWidth + 1 <= widthPx && size * 1.05 <= heightPx) {
+      return { fontSize: size, commissionFontSize: commissionSize, fits: true };
+    }
+  }
+  return { fontSize: minFontPx, commissionFontSize: minFontPx * 0.3, fits: false };
 }
 
 export function fitTextMm(
