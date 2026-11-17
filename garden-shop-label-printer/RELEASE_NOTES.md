@@ -2,7 +2,7 @@
 
 ## GFS-LP-040 — VPL/VPP Commission and Prefix-Aware Labels
 
-**Status:** Local implementation and regression tests PASS. **Not committed, pushed, or deployed.**
+**Status:** Local implementation and regression tests PASS. Committed and pushed. **Not deployed.**
 
 ### Behavior
 
@@ -55,4 +55,6 @@ Calculation uses exact integer currency operations. Each complete Rs. 20,000 blo
 ### Release gate
 
 - Starting checkout was `D:\free seeds`, repository `gardenshop/freeseeds`, branch `codex/garden-shop-label-printer-mvp`, starting HEAD `f806aee62a72803f10ba77d9065400cfb6cef7f2`; LP-039 and other pre-existing working-tree changes were retained.
-- No LP-040 commit SHA or Pages deployment ID exists yet. No GitHub push or Cloudflare mutation was performed. Before release, inspect/stage only intended standalone Label Printer source, tests, docs and approved screenshot baseline; verify the requested GitHub branch/account and freshly verify Get Free Seeds Cloudflare account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` in both Wrangler and Dashboard. Deploy static assets only to the existing `garden-shop-label-printer-staging` project, preserve its previous active version for rollback, then perform live synthetic acceptance through authorized Chrome DevTools. Access, Worker, D1, Admin and production resources must remain unchanged.
+- Commit `a1aeca5311154af7dc27eaffe05f564c82ce2a92` (`feat: add tracking prefix commission layouts`) was pushed to `origin/codex/garden-shop-label-printer-mvp`. Git Credential Manager reports GitHub account `gardenshop`; the configured remote is `https://github.com/gardenshop/freeseeds.git`, and remote branch readback matches the pushed SHA. All root-level Admin/API/core/worktree changes and non-baseline generated evidence remain unstaged and untouched.
+- Wrangler `whoami` confirmed `Get Free Seeds` / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Account-pinned read-only Pages queries returned only the existing `garden-shop-label-printer-staging` project. The latest listed Production deployment is `aae85a83-663d-449f-a20c-52418ed5b5e3` (source `0e64a6f`); the prior list entry is `a8287aa3-31dc-4446-a6be-c3127fac0e80`. This CLI history is not Dashboard confirmation of the active version or rollback target. The current tool session exposes no Chrome DevTools MCP, so Dashboard identity/Access, live serve checks and synthetic live prints were not performed; no Pages/Worker/D1/Access mutation occurred and there is no LP-040 deployment ID.
+- Next release action: in an isolated Label Printer staging tab, reload VS Code/Kilo if needed to expose the authorized Chrome DevTools MCP, verify the Dashboard selector is Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, confirm the active deployment/rollback target, and complete the existing authorized Access sign-in if challenged. Then deploy only `dist/` to the existing Pages project and verify live synthetic Image Print/Save PDF. Do not inspect or alter shared order tabs; preserve Access, Worker, D1, Admin/API and production resources.
