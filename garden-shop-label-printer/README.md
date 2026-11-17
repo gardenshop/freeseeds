@@ -49,10 +49,13 @@ The default build is intentionally local-only. Before building assets for the au
 $env:VITE_MONITOR_URL = "https://garden-shop-label-printer-monitor-staging.get-free-seeds.workers.dev"
 $env:VITE_ADMIN_URL = "https://getfreeseeds-admin-staging.get-free-seeds.workers.dev/"
 npm.cmd run build
-# Verify Wrangler and Dashboard identity before any mutation.
+# From dist only: use Wrangler CWD=dist (no Worker config is present there).
+Set-Location "D:\free seeds\garden-shop-label-printer\dist"
+$env:CLOUDFLARE_ACCOUNT_ID = "cb5066a6d71ecdee0bd7ed8aacb4d3c2"
 npx.cmd --no-install wrangler whoami
-# Deploy only static assets from a config-free directory; never run Worker deploy detection here.
-npx.cmd --no-install wrangler --cwd "D:\free seeds\garden-shop-label-printer\dist" pages deploy "D:\free seeds\garden-shop-label-printer\dist" --project-name garden-shop-label-printer-staging --branch main
+npx.cmd --no-install wrangler pages deploy . --project-name garden-shop-label-printer-staging --branch main --commit-hash 880736940168eccb0b2e2de4cd4ee35e25fa7781 --commit-message "GFS-LP-040 VPL VPP commission layouts" --commit-dirty false
+Set-Location "D:\free seeds\garden-shop-label-printer"
+Remove-Item Env:CLOUDFLARE_ACCOUNT_ID
 Remove-Item Env:VITE_MONITOR_URL
 Remove-Item Env:VITE_ADMIN_URL
 ```

@@ -1,5 +1,25 @@
 # Garden Shop Label Printer Release Notes
 
+## GFS-LP-041 — LP-040 Static Staging Deployment
+
+**Status:** Static deployment **PASS**. Live feature/audit acceptance **BLOCKED at Cloudflare Access**. No code changes were required.
+
+### Preflight and deployment
+
+- Published source: `880736940168eccb0b2e2de4cd4ee35e25fa7781` (commission feature commit `a1aeca5311154af7dc27eaffe05f564c82ce2a92`). Wrangler 4.149.0 `whoami` immediately before upload confirmed Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- Account-pinned Pages inventory confirmed the existing `garden-shop-label-printer-staging` project. Production branch is `main`; immediately prior production was `aae85a83-663d-449f-a20c-52418ed5b5e3`, rollback target.
+- Rebuilt published source with `VITE_MONITOR_URL=https://garden-shop-label-printer-monitor-staging.get-free-seeds.workers.dev` and `VITE_ADMIN_URL=https://getfreeseeds-admin-staging.get-free-seeds.workers.dev/`. The verified output contains only `index.html`, `label.css`, `_headers`, and static assets; `dist/` has no `wrangler.jsonc` or Worker entry.
+- From `dist/` as Wrangler's working directory, uploaded only static Pages assets and `_headers` to the existing project, explicitly pinning account, project, `main`, and source SHA. Wrangler reported five uploaded files/eight reused; it warned that the ancestor monitor `wrangler.jsonc` lacked `pages_build_output_dir` and explicitly ignored it. No Worker/D1/Access deployment or configuration change was made.
+- New Pages deployment `13081dbe-5090-4ad5-97bb-7ea5eafd9931`, Production/main, source `8807369`, unique URL `https://13081dbe.garden-shop-label-printer-staging.pages.dev`. Wrangler's production history now lists this deployment first. Stable URL: `https://garden-shop-label-printer-staging.pages.dev`. It returns an anonymous HTTP 302 Access challenge, proving the Access gate remains active; without an authenticated session, the served asset hash/active Dashboard marker could not be inspected.
+- Existing policy's last Dashboard-verified configuration was Super-Admin-only; this task made no Access changes. Exact policy/allowed identity was **NOT reread** because Wrangler OAuth lacks Access-policy read scope (`CLOUDFLARE_API_TOKEN` is absent) and Chrome DevTools MCP is unavailable. Do not represent the prior policy snapshot as a fresh Dashboard read.
+- Latest read-only Monitor Worker history remains version `89a245c0-2532-4b02-8def-4cd675f9a845` at 100%. The Pages upload made no D1 writes and no audit rows. The previous Pages deployment `aae85a83-663d-449f-a20c-52418ed5b5e3` remains available as the rollback target. Before rollback, freshly verify account and active version, then use Cloudflare Pages deployment history to restore that version only; do not touch Worker, D1, Access, Admin/API/WhatsApp or production resources.
+
+### Live checks still required
+
+- **BLOCKED:** stable URL challenge prevented live synthetic RGL/UMS/VPL/VPP import, live screenshots, Image Print/Save PDF comparison, `PDF_GENERATED`, audit-chain `VERIFIED`, and served-asset marker comparison. No live records/events were submitted. Prior 82/82 unit tests, local browser suite, and local visual examples remain PASS but are not live acceptance.
+- Access enforcement is rechecked; exact Super-Admin-only policy and active Dashboard version are **NOT TESTED** in this session. Physical HP calibration is **NOT TESTED**.
+- Single owner action: in a fresh isolated Chrome tab, authenticate to `https://garden-shop-label-printer-staging.pages.dev` as the already-authorized Super Admin and leave the blank import page open. Never use populated tabs, copy cookies, or bypass Access. Then verify served assets, run synthetic feature/print/PDF checks, and confirm the PDF event/audit chain.
+
 ## GFS-LP-040 — VPL/VPP Commission and Prefix-Aware Labels
 
 **Status:** Local implementation and regression tests PASS. Committed and pushed. **Not deployed.**
