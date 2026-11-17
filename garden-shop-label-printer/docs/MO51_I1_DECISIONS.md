@@ -27,10 +27,10 @@ Status: I1 local core only. Not an official MO form, renderer, PDF, UI, staging,
 
 ## Local Verification Record
 
-- Targeted MO suite: `npm.cmd test -- --run tests/mo-core.test.ts` -> **29/29 PASS**.
-- Full unit regression: `npm.cmd test` -> **111/111 PASS** across 6 test files.
+- Targeted MO suite: `npm.cmd test -- --run tests/mo-core.test.ts` -> **30/30 PASS**.
+- Full unit regression: `npm.cmd test` -> **112/112 PASS** across 6 test files.
 - Build: `npm.cmd run build` -> application TypeScript, Worker TypeScript and Vite production build **PASS**.
 - Existing browser/PDF regression: `npm.cmd run test:browser` with `LP_TEST_EVIDENCE_DIR=D:\Temp\kilo\gfs-lp043-evidence` and `LP_TEST_TMP_DIR=D:\Temp\kilo\gfs-lp043-tmp` -> **PASS**, no browser errors; A4 geometry, `[3,18,500,500]` barcode decodes, RGL/UMS/VPL/VPP commission parity, 1-page sample and 28-page A4/custom batches passed. Evidence and fixtures were redirected out of the worktree to preserve pre-existing dirty screenshots.
-- During the first targeted run, three test rows had incomplete expected-position tuples (N=1, 2, 5); corrected the test vectors and reran. A later snapshot-hardening change was covered by another 29/29 targeted pass and the final 111-test/build/browser gates above. No production test assertion or existing label baseline was weakened or refreshed.
+- During the first targeted run, three test rows had incomplete expected-position tuples (N=1, 2, 5); corrected the test vectors and reran. Snapshot hardening and the explicit large-integer overflow case each received targeted and full unit reruns. Final build/browser gates above passed before the last test-only overflow fixture; no production source or existing label assertion changed in that follow-up. No production test assertion or existing label baseline was weakened or refreshed.
 - Existing label source/output path comparison: no change in `src/main.ts`, `src/layout.ts`, `src/label.css`, `src/engine.ts`, `src/types.ts`, or `src/tracking-rules.ts`. No package, app integration, Worker, print/PDF, import, monitoring, or external resource change.
 - Local regressions do not prove MO-51 official field semantics, Urdu rendering, staging/LP-041 acceptance, physical duplex behavior, postal/payment acceptance, or deployment.

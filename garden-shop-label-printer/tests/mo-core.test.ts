@@ -96,7 +96,7 @@ describe("MO-51 isolated adapter", () => {
     expect(result.excluded[0].reasons.map(({ code }) => code)).toContain("TRACKING_INVALID");
   });
 
-  it.each(["", "0", "-1", "1.5", "1,00,000", "100001", "not money"])("excludes invalid declared amount %j without changing source", (amount) => {
+  it.each(["", "0", "-1", "1.5", "1,00,000", "100001", "999999999999999999999999999999", "not money"])("excludes invalid declared amount %j without changing source", (amount) => {
     const row = order("VPL1", amount);
     const result = project([row]);
     expect(result.candidates).toHaveLength(0);
