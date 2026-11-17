@@ -69,6 +69,22 @@ The repository-wide regression suite also passed 269 tests and the root build pa
 
 ## Staging Deployment Status
 
+### GFS-LP-037 Unified Print/PDF Geometry
+
+Both `#printNow` and `#savePdf` now use one canonical custom content transform, derived from the HP P2055dn's 4.233 mm non-imageable edge plus a 1 mm safety allowance (5.233 mm safe page edge). The paper, 63 × 42 mm cells, 18 positions and 0.5/0.333 mm gaps do not move. The first column's content inset is deliberately about 4.983 mm relative to that label edge, and the top row inset is about 5.0655 mm; these are hardware-protection insets, not misalignment. The custom print popup has a single preset-specific `@page` rule. Its custom **screen-only** top margin is now zero; print body margins remain zero. A4 is unchanged.
+
+Root cause confirmed by paired synthetic output: before repair, Image Print applied the HP insets only in CSS; Save PDF used the original un-inset boxes. Label 1 Order ID x was 5.447 mm in Image Print vs 1.510 mm in PDF; column 2 was 65.001 vs 65.010 mm. Both page MediaBoxes were already 540 × 720 pt, so the reported 15 mm right margin was not an internal PDF page margin. The former 12 mm `@media screen` popup margin plus the HP top inset explained the screen preview's apparent ~15–16 mm top gap. The current P2055dn Windows default remains Letter/Simplex: select the 190.5 × 254 mm custom portrait form in the browser and driver, Actual Size/100%, no Fit/Shrink, headers/footers off, duplex off, and Tray 1/manual feed where supported.
+
+Vector PDF bar placement now matches the browser Canvas quiet-zone origin; the paired raster comparison is within 0.25 mm and all 18 barcodes decode in both outputs. Text glyph rasterization still differs between Chromium/Arial and the PDF font renderer; field boxes share geometry, do not clip, and are not claimed pixel-identical. A4 browser print remains within 0.25 mm of nominal 210 × 297 mm, and the downloaded A4/custom PDF regression remains unchanged.
+
+Validation: **43 unit tests PASS**, TypeScript/Worker build PASS, and the full browser suite PASS with `[3, 18, 500, 500]` barcode counts and 28-page A4/custom PDFs. Current owner screenshots were not attached or found in the project; fresh synthetic paired renders/diff were generated only under the approved temp directory. Physical HP calibration is still **NOT TESTED**; request one plain-paper sheet after deployment and measure four edges. Do not use pre-cut stock until it passes.
+
+### GFS-LP-037 Staging Deployment
+
+Source `0e64a6fd45e1e65e6fe92cd398b3b2445da9ccb1` is active in the existing staging Pages project as **`aae85a83-663d-449f-a20c-52418ed5b5e3`**, `https://aae85a83.garden-shop-label-printer-staging.pages.dev`. The stable URL is `https://garden-shop-label-printer-staging.pages.dev`; Dashboard confirms Production/Success and rollback to prior active **`a8287aa3-31dc-4446-a6be-c3127fac0e80`**. Only standalone `dist/` files and `_headers` were uploaded; the Worker config was ignored.
+
+Fresh Wrangler/Dashboard preflight confirmed Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, active Super Admin, and the existing Super-Admin-only staging Access rule. Monitor Worker and audit D1 remain unchanged. **Live acceptance is BLOCKED** at a new isolated tab's Access challenge; no synthetic XLSX/CSV, print/PDF, `PDF_GENERATED`, or audit-chain query was performed. Do not use the two populated tabs. One owner action: sign in as the authorized Super Admin in the isolated staging tab and return to the blank import page. Physical HP calibration remains NOT TESTED and requires one later plain-paper sheet.
+
 ### GFS-LP-036 Staging Deployment
 
 **PASS — static V4 deployed** to the existing `garden-shop-label-printer-staging` Pages project from branch `codex/garden-shop-label-printer-mvp`, source `cb52289fc7287d05f2ec1ebc182bd108d9120731`. Deployment ID: **`a8287aa3-31dc-4446-a6be-c3127fac0e80`** at `https://a8287aa3.garden-shop-label-printer-staging.pages.dev`; stable URL: `https://garden-shop-label-printer-staging.pages.dev`. Wrangler lists it first in Production with source `cb52289`; the stable URL loaded the Label Printer blank screen. The verified pre-deploy active rollback is **`2420ee42-08ac-4d0d-a620-caa7197f0966`** (the earlier successful deployment `f80abfe1` precedes it).

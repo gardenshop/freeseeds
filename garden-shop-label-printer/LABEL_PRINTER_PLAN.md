@@ -12,6 +12,16 @@ The repository-wide architecture discovery and full implementation history remai
 
 ## V4 Local Status (2026-11-16)
 
+### GFS-LP-037 Unified Geometry Repair
+
+- Confirmed root cause: HP P2055 safe content insets existed only in the Image Print popup; `makePdf()` still used un-inset label boxes. Label/page dimensions were already correct. Screen mode also added a 12 mm popup body margin; print mode body margin was zero. The shared `label.css` A4 page rule was removed from popup composition; the popup now has one dynamic page-size rule.
+- Both renderers now share `labelContentTransform()` and the same safe-zone geometry. P2055 safe edge is 4.233 mm hardware + 1 mm practical = 5.233 mm. Cell boundaries and physical positions stay unchanged. First-column content offset (4.983 mm from cell edge) and first-row offset (5.0655 mm) are documented physical tradeoffs. Save PDF vectors now align barcode quiet zones with Image Print Canvas geometry.
+- Before: label 1 Order ID x=5.447 mm Image Print / 1.510 mm Save PDF; column 2 x=65.001 / 65.010 mm. After: shared field-box anchors agree within 0.02 mm. Page sizes stay 190.5 × 254 mm / 540 × 720 pt; A4 unchanged within 0.25 mm. Font renderer differences remain, but text stays within safe bounds.
+- Tests: 43 unit tests/build PASS; paired synthetic 18-label Image Print/Save PDF page and cell geometry PASS; 18/18 Code 128 decodes in both, quiet-zone edge bounds match within0.25 mm. Full browser regression `[3,18,500,500]` and 28-page A4/custom PDFs PASS. Current owner four screenshots were unavailable; fresh temp-only synthetic paired renders/diff used instead.
+- Physical calibration: **NOT TESTED**; driver defaults to Letter/Simplex and was not changed. Require one plain-paper P2055dn sheet with custom form 190.5 × 254 mm portrait, Actual Size/100%, Fit/Shrink off, headers/footers off, duplex off, Tray 1/manual feed. Pre-cut stock remains blocked until four edge offsets pass.
+- Deployment PASS: source `0e64a6fd45e1e65e6fe92cd398b3b2445da9ccb1`, active Pages `aae85a83-663d-449f-a20c-52418ed5b5e3` at the existing project, Production/main. Immediate rollback is prior active `a8287aa3-31dc-4446-a6be-c3127fac0e80`. Only `dist/` assets/_headers were uploaded; Worker config ignored.
+- Wrangler and Dashboard account/Access checks PASS. Monitor Worker/D1 unchanged. Live acceptance BLOCKED: isolated tab reached Super Admin Access challenge; no synthetic import/PDF/event or audit verification. Don't inspect populated tabs. Next owner action is one Access sign-in, then resume synthetic acceptance. No physical calibration.
+
 ### GFS-LP-036 Staging Release
 
 - Wrangler OAuth `whoami` PASS at `2026-11-17T12:36:40.354+05:00`: `gisupp@gmail.com`, Get Free Seeds / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Source checkout branch `codex/garden-shop-label-printer-mvp`, SHA `cb52289fc7287d05f2ec1ebc182bd108d9120731`.
