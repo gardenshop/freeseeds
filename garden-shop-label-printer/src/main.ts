@@ -34,7 +34,8 @@ import { LABEL_REFERENCE_NOTICE, reserveLabelReference, updateLabelReferenceSour
 import "./mo/view.css";
 import { projectMoRecords } from "./mo/adapter";
 import { formatSenderCnic } from "./mo/cnic";
-import { renderMoPrintView } from "./mo/view";
+import { renderMoPrintView, type MoPdfViewState } from "./mo/view";
+import type { MoBackPreviewRotation } from "./mo/renderer";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 const monitoringUrl =
@@ -116,6 +117,9 @@ let colorAccent = false;
 let statusMessage = "Workbook data stays in this browser tab.";
 let moSenderCnicInput = "";
 let moSheetIndex = 0;
+let moBackRotation: MoBackPreviewRotation = "none";
+let moPdfState: MoPdfViewState = Object.freeze({ exporting: false });
+let moPdfAbort: AbortController | undefined;
 
 const esc = (value: unknown) =>
   String(value ?? "").replace(
@@ -396,9 +400,60 @@ function renderAdmin() {
 }
 
 function renderMo() {
+  const projection = currentMoProjection();
+  return renderMoPrintView(projection, moSenderCnicInput, moSheetIndex, moBackRotation, moPdfState);
+}
+
+function currentMoProjection() {
   const selectedIndexes = new Set(currentOrders().map(({ index }) => index));
-  const projection = projectMoRecords(rows, { selectedSourceIndexes: selectedIndexes, requiredFields: [] });
-  return renderMoPrintView(projection, moSenderCnicInput, moSheetIndex);
+  return projectMoRecords(rows, { selectedSourceIndexes: selectedIndexes, requiredFields: [] });
+}
+
+async function downloadMoPdf() {
+  if (moPdfAbort || view !== "mo") return;
+  const projection = currentMoProjection();
+  if (!projection.candidates.length || formatSenderCnic(moSenderCnicInput).status === "invalid") return;
+  const controller = new AbortController();
+  moPdfAbort = controller;
+  moPdfState = Object.freeze({ exporting: true, message: "Preparing blank manual-completion PDF…" });
+  render();
+  try {
+    const { createMoPdfBlob } = await import("./mo/pdf");
+    const blob = await createMoPdfBlob(projection.candidates, moSenderCnicInput, {
+      signal: controller.signal,
+      backRotation: moBackRotation,
+      onProgress: ({ completedPages, totalPages }) => {
+        moPdfState = Object.freeze({ exporting: true, progress: Object.freeze({ completedPages, totalPages }) });
+        const status = document.querySelector<HTMLElement>("#moPdfStatus");
+        if (status) status.textContent = `Preparing blank forms: ${completedPages}/${totalPages} pages`;
+      },
+    });
+    if (controller.signal.aborted) throw new DOMException("MO PDF export cancelled", "AbortError");
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `mo51-manual-completion-${projection.candidates.length}-forms.pdf`;
+    link.hidden = true;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    moPdfState = Object.freeze({ exporting: false, message: `Downloaded ${Math.ceil(projection.candidates.length / 2) * 2}-page blank manual-completion packet.` });
+  } catch (error) {
+    const cancelled = error instanceof DOMException && error.name === "AbortError";
+    if (moPdfAbort === controller) {
+      const detail = error instanceof Error ? error.message.slice(0, 120) : "UNKNOWN_LOCAL_ERROR";
+      moPdfState = Object.freeze({
+        exporting: false,
+        error: cancelled ? "Export cancelled. No PDF was produced." : `MO PDF export failed (${detail}). No file was downloaded.`,
+      });
+    }
+  } finally {
+    if (moPdfAbort === controller) {
+      moPdfAbort = undefined;
+      render();
+    }
+  }
 }
 
 function render() {
@@ -1183,10 +1238,17 @@ function bind() {
       if (target === "preview" && !rows.length) return;
       if (target === "print" && !rows.length) return;
       if (target === "mo" && !rows.length) return;
-      if (view === "mo" && target !== "mo") moSenderCnicInput = "";
+      if (view === "mo" && target !== "mo") {
+        moPdfAbort?.abort();
+        moPdfAbort = undefined;
+        moSenderCnicInput = "";
+        moPdfState = Object.freeze({ exporting: false });
+      }
       if (target === "mo" && view !== "mo") {
         moSenderCnicInput = "";
         moSheetIndex = 0;
+        moBackRotation = "none";
+        moPdfState = Object.freeze({ exporting: false });
       }
       view = target;
       render();
@@ -1215,6 +1277,16 @@ function bind() {
   document.querySelector<HTMLSelectElement>("#moSheetSelect")?.addEventListener("change", (event) => {
     moSheetIndex = Number((event.target as HTMLSelectElement).value);
     render();
+  });
+  document.querySelector<HTMLSelectElement>("#moBackRotation")?.addEventListener("change", (event) => {
+    moBackRotation = (event.target as HTMLSelectElement).value as MoBackPreviewRotation;
+    render();
+  });
+  document.querySelector("#downloadMoPdf")?.addEventListener("click", () => void downloadMoPdf());
+  document.querySelector("#cancelMoPdf")?.addEventListener("click", () => {
+    moPdfAbort?.abort();
+    const status = document.querySelector<HTMLElement>("#moPdfStatus");
+    if (status) status.textContent = "Cancelling export…";
   });
   document
     .querySelector<HTMLInputElement>("#workbook")
@@ -1306,11 +1378,15 @@ function bind() {
       ),
     );
   document.querySelector("#newBatch")?.addEventListener("click", () => {
+    moPdfAbort?.abort();
+    moPdfAbort = undefined;
     rows = [];
     rawRows = [];
     headers = [];
     moSenderCnicInput = "";
     moSheetIndex = 0;
+    moBackRotation = "none";
+    moPdfState = Object.freeze({ exporting: false });
     selected.clear();
     countLimit = -1;
     printRequested = false;

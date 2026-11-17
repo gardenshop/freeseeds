@@ -68,16 +68,81 @@ async function saveGeneratedPdf(page, path, timeout = 300000) {
   await download.saveAs(path);
 }
 
-async function rasterPdfPage(bytes, scale = 4) {
+async function saveMoGeneratedPdf(page, path, expectedPages) {
+  assert.equal(await page.locator("#downloadMoPdf").isDisabled(), false, `MO PDF control is disabled: ${await page.locator("body").innerText()}`);
+  const downloadEvent = page.waitForEvent("download", { timeout: 90000 }).then((download) => ({ download }), (error) => ({ error: error.message }));
+  await page.locator("#downloadMoPdf").click();
+  await page.waitForFunction(() => {
+    const status = document.querySelector("#moPdfStatus")?.textContent ?? "";
+    return status.startsWith("MO PDF export failed") || status.startsWith("Export cancelled") || status.startsWith("Downloaded ");
+  }, { timeout: 90000 }).catch(async (error) => { throw new Error(`${error.message}\nMO status=${await page.locator("#moPdfStatus").innerText()}`); });
+  const status = await page.locator("#moPdfStatus").innerText();
+  if (status.startsWith("MO PDF export failed") || status.startsWith("Export cancelled")) throw new Error(status);
+  const result = await downloadEvent;
+  if (result.error) throw new Error(`${result.error}\nMO status=${status}`);
+  const download = result.download;
+  assert.match(download.suggestedFilename(), /^mo51-manual-completion-\d+-forms\.pdf$/u);
+  assert.doesNotMatch(download.suggestedFilename(), /\d{13}/u, "CNIC must not enter the generated filename");
+  await download.saveAs(path);
+  assert.equal(await page.locator('iframe[title="Temporary MO-51 PDF rasterizer"]').count(), 0, "successful export must remove temporary rasterizer frames");
+  const bytes = Buffer.from(await readFile(path));
+  const document = await PDFDocument.load(bytes);
+  assert.equal(document.getPageCount(), expectedPages);
+  for (const pdfPage of document.getPages()) {
+    const { width, height } = pdfPage.getSize();
+    assert.ok(Math.abs(width - (297 * 72 / 25.4)) < 0.01, `MO page width ${width}pt is not A4 landscape`);
+    assert.ok(Math.abs(height - (210 * 72 / 25.4)) < 0.01, `MO page height ${height}pt is not A4 landscape`);
+    assert.equal(pdfPage.getRotation().angle, 0, "physical page rotation remains unset");
+  }
+  assert.match(document.getTitle(), /blank manual-completion/u);
+  assert.doesNotMatch(`${document.getTitle()} ${document.getSubject() ?? ""} ${document.getKeywords() ?? ""}`, /0000012345678|00000-1234567-8/u, "CNIC must not enter PDF metadata");
+  return { bytes, document };
+}
+
+async function assertMoOddBlank(download, count) {
+  if (count % 2 !== 1) return;
+  const lastPage = download.document.getPageCount();
+  assertBlankRightHalf(await rasterPdfPage(download.bytes, 2, lastPage - 1));
+  assertBlankRightHalf(await rasterPdfPage(download.bytes, 2, lastPage));
+}
+
+async function rasterPdfPage(bytes, scale = 4, pageNumber = 1) {
   globalThis.DOMMatrix ??= DOMMatrix;
   globalThis.ImageData ??= ImageData;
   globalThis.Path2D ??= Path2D;
   const document = await getDocument({ data: Uint8Array.from(bytes), disableWorker: true, useSystemFonts: true }).promise;
-  const page = await document.getPage(1);
+  const page = await document.getPage(pageNumber);
   const viewport = page.getViewport({ scale });
   const canvas = createCanvas(Math.round(viewport.width), Math.round(viewport.height));
   await page.render({ canvasContext: canvas.getContext("2d"), viewport, canvasFactory: { create: (width, height) => { const value = createCanvas(width, height); return { canvas: value, context: value.getContext("2d") }; }, reset: (target, width, height) => { target.canvas.width = width; target.canvas.height = height; }, destroy: (target) => { target.canvas.width = 0; target.canvas.height = 0; } } }).promise;
   return canvas;
+}
+
+function assertBlankRightHalf(canvas) {
+  const split = Math.floor(canvas.width / 2);
+  const image = canvas.getContext("2d").getImageData(split, 0, canvas.width - split, canvas.height).data;
+  let inkPixels = 0;
+  for (let index = 0; index < image.length; index += 4) {
+    if (image[index] < 250 || image[index + 1] < 250 || image[index + 2] < 250) inkPixels += 1;
+  }
+  assert.equal(inkPixels, 0, `odd unused PDF half must be blank; found ${inkPixels} ink pixels`);
+}
+
+async function compareMoPdfWithPreview(page, face, pdfBytes, pageNumber) {
+  const previewBytes = await page.frameLocator(face === "front" ? "#moFrontPreview" : "#moBackPreview").locator(".mo-sheet").screenshot();
+  const previewImage = await loadImage(previewBytes);
+  const raster = await rasterPdfPage(pdfBytes, 1, pageNumber);
+  const normalized = createCanvas(raster.width, raster.height);
+  normalized.getContext("2d").drawImage(previewImage, 0, 0, raster.width, raster.height);
+  const left = raster.getContext("2d").getImageData(0, 0, raster.width, raster.height).data;
+  const right = normalized.getContext("2d").getImageData(0, 0, normalized.width, normalized.height).data;
+  let difference = 0;
+  for (let index = 0; index < left.length; index += 4) {
+    difference += Math.abs(left[index] - right[index]) + Math.abs(left[index + 1] - right[index + 1]) + Math.abs(left[index + 2] - right[index + 2]);
+  }
+  const meanDifference = difference / (raster.width * raster.height * 3 * 255);
+  assert.ok(meanDifference < 0.1, `${face} PDF raster should match I2 preview; normalized mean difference ${meanDifference}`);
+  return raster;
 }
 
 function rasterDarkBounds(canvas, box, scale = 4) {
@@ -776,7 +841,24 @@ try {
       const frame = document.querySelector("#moFrontPreview");
       return frame?.contentDocument?.querySelector(".mo-sheet") && frame.contentDocument.fonts.status === "loaded";
     }, { timeout: 30000 });
-    assert.match(await page.locator(".mo-summary").innerText(), new RegExp(`${count}\\s+eligible VPL/VPP records`, "u"));
+    assert.match(await page.locator(".mo-summary").innerText(), new RegExp(`${count}\\s+eligible VPL/VPP rows used for blank-copy quantity only`, "u"));
+  }
+
+  async function importMoMixedPrefixes() {
+    if (await page.locator("#newBatch").count() === 0) await page.locator('[data-view="review"]').first().click();
+    await page.locator("#newBatch").click();
+    const mixedRows = ["VPL000101", "RGL000102", "VPP000103", "UMS000104", "VPP000105"].map((tracking, index) => [
+      `MO-MIX-SYN-${index + 1}`, `Synthetic Mixed ${index + 1}`, "03001234567", `Synthetic mixed address ${index + 1}`,
+      tracking, "25000", "Synthetic item", "Sahiwal", "Punjab", "Synthetic landmark",
+    ]);
+    const csv = [headers, ...mixedRows].map((row) => row.map(quote).join(",")).join("\r\n");
+    await page.locator("#workbook").setInputFiles({ name: "mo-mixed-prefixes-synthetic.csv", mimeType: "text/csv", buffer: Buffer.from(csv) });
+    await page.locator("#applyMapping").click();
+    await page.getByText("Review every parcel.").waitFor({ timeout: 30000 });
+    await page.locator('[data-view="mo"]').click();
+    await page.waitForFunction(() => document.querySelector("#moFrontPreview")?.contentDocument?.querySelector(".mo-sheet"));
+    assert.match(await page.locator(".mo-summary").innerText(), /3\s+eligible VPL\/VPP rows/u);
+    assert.equal(await page.locator(".mo-exclusions summary").innerText(), "2 excluded imported records");
   }
 
   async function inspectMoFace(face, expectedSlots, cnic) {
@@ -866,6 +948,18 @@ try {
   assert.equal(allRequests.length, requestsBeforeCnicCheck, "CNIC entry must not cause any request or monitoring event");
   assert.equal(allRequests.some((url) => /googleapis|gstatic/u.test(url)), false, "MO font rendering must be local");
 
+  const moPdfPath = join(temporary, "mo51-synthetic-two-forms.pdf");
+  const moPdfDownload = await saveMoGeneratedPdf(page, moPdfPath, 2);
+  assert.equal(moPdfDownload.document.getTitle(), "MO-51 blank manual-completion forms");
+  const moPdfFirst = await loadPdf(moPdfPath, "mo51-pdf-n2-front.png");
+  assert.equal(moPdfFirst.pageCount, 2);
+  assert.equal(moPdfFirst.hasRasterImage, true, "MO artwork should be rasterized from the shared I2 preview");
+  assert.equal(moPdfFirst.text, "", "PDF must not contain selectable imported order or identity text");
+  const moPdfFrontRaster = await compareMoPdfWithPreview(page, "front", moPdfDownload.bytes, 1);
+  const moPdfBackRaster = await compareMoPdfWithPreview(page, "back", moPdfDownload.bytes, 2);
+  assert.ok(moPdfFrontRaster.width > 800 && moPdfBackRaster.width > 800, "300-DPI artwork should rasterize at full A4 bounds");
+  assert.equal(allRequests.some((url) => /googleapis|gstatic/u.test(url)), false, "PDF rasterization must use only local fonts/resources");
+
   await page.locator("#moSenderCnic").fill("123456789012");
   assert.equal(await page.locator("#moSenderCnic").getAttribute("aria-invalid"), "true");
   assert.equal(await page.locator("#moFrontPreview").count(), 0, "invalid nonblank CNIC must withhold the paired preview");
@@ -882,6 +976,8 @@ try {
   await inspectMoFace("front", [1, null], "");
   await inspectMoFace("back", [1, null], "");
   await page.screenshot({ path: join(evidence, "mo51-proof-n3-sheet2-odd-blank.png"), fullPage: true });
+  const mo3Pdf = await saveMoGeneratedPdf(page, join(temporary, "mo51-synthetic-n3.pdf"), 4);
+  await assertMoOddBlank(mo3Pdf, 3);
 
   await importMoBatch(5);
   await inspectMoFace("front", [0, 3], "");
@@ -892,6 +988,8 @@ try {
   await inspectMoFace("front", [2, null], "");
   await inspectMoFace("back", [2, null], "");
   await page.screenshot({ path: join(evidence, "mo51-proof-n5-sheet3-odd-blank.png"), fullPage: true });
+  const mo5Pdf = await saveMoGeneratedPdf(page, join(temporary, "mo51-synthetic-n5.pdf"), 6);
+  await assertMoOddBlank(mo5Pdf, 5);
 
   await importMoBatch(100);
   await inspectMoFace("front", [0, 50], "");
@@ -904,6 +1002,29 @@ try {
   await inspectMoFace("front", [49, 99], "");
   await inspectMoFace("back", [49, 99], "");
   await page.screenshot({ path: join(evidence, "mo51-proof-n100-sheet50.png"), fullPage: true });
+  const mo100Pdf = await saveMoGeneratedPdf(page, join(temporary, "mo51-synthetic-n100.pdf"), 100);
+  await compareMoPdfWithPreview(page, "front", mo100Pdf.bytes, 99);
+  await compareMoPdfWithPreview(page, "back", mo100Pdf.bytes, 100);
+  await page.locator("#moSheetSelect").selectOption({ label: "1" });
+
+  for (const count of [1, 50, 99, 101]) {
+    await importMoBatch(count);
+    const pdf = await saveMoGeneratedPdf(page, join(temporary, `mo51-synthetic-n${count}.pdf`), 2 * Math.ceil(count / 2));
+    await assertMoOddBlank(pdf, count);
+  }
+
+  await importMoMixedPrefixes();
+  const mixedMoPdf = await saveMoGeneratedPdf(page, join(temporary, "mo51-synthetic-mixed-prefixes.pdf"), 4);
+  await assertMoOddBlank(mixedMoPdf, 3);
+
+  await importMoBatch(101);
+  const cancelDownload = page.waitForEvent("download", { timeout: 3000 }).then(() => true, () => false);
+  await page.locator("#downloadMoPdf").click();
+  await page.locator("#cancelMoPdf").click();
+  await page.waitForFunction(() => document.querySelector("#moPdfStatus")?.textContent?.startsWith("Export cancelled"));
+  assert.equal(await cancelDownload, false, "cancelled MO export must not produce a downloadable PDF");
+  assert.equal(await page.locator('iframe[title="Temporary MO-51 PDF rasterizer"]').count(), 0, "temporary rasterizer frames must be removed after cancellation");
+
   await page.locator('[data-view="review"]').first().click();
   await page.locator('[data-view="mo"]').click();
   assert.equal(await page.locator("#moSenderCnic").inputValue(), "", "navigating away and back must clear the volatile sender CNIC");
