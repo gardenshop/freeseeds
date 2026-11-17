@@ -31,6 +31,10 @@ import { CODE128_LAYOUT, destinationBoxes, fitCommissionExpression, fitTextMm, f
 import { normalizeTrackingReference, trackingLabelDisplay } from "./tracking-rules";
 import { restoreZeroFormattedCells } from "./xlsx";
 import { LABEL_REFERENCE_NOTICE, reserveLabelReference, updateLabelReferenceSource } from "./references";
+import "./mo/view.css";
+import { projectMoRecords } from "./mo/adapter";
+import { formatSenderCnic } from "./mo/cnic";
+import { renderMoPrintView } from "./mo/view";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 const monitoringUrl =
@@ -110,6 +114,8 @@ let importedFileName = "";
 let printRequested = false;
 let colorAccent = false;
 let statusMessage = "Workbook data stays in this browser tab.";
+let moSenderCnicInput = "";
+let moSheetIndex = 0;
 
 const esc = (value: unknown) =>
   String(value ?? "").replace(
@@ -183,6 +189,7 @@ function nav() {
     ["review", "Review"],
     ["preview", "Sheet preview"],
     ["print", "Print & export"],
+    ["mo", "MO Print"],
     ["admin", "Monitoring"],
   ]
     .map(
@@ -388,6 +395,12 @@ function renderAdmin() {
   return `<section class="section-heading"><div><p class="kicker">RESTRICTED / SUPER ADMIN</p><h1>Operational activity.</h1><p>Reports are provided by the separately authenticated monitoring Worker. This page does not grant access by itself.</p></div><button class="button secondary" id="refreshAdmin">Refresh report</button></section><div id="adminReports" class="admin-reports"><div class="report-card">Loading protected report…</div></div><p class="status-line" role="status">${esc(statusMessage)}</p>`;
 }
 
+function renderMo() {
+  const selectedIndexes = new Set(currentOrders().map(({ index }) => index));
+  const projection = projectMoRecords(rows, { selectedSourceIndexes: selectedIndexes, requiredFields: [] });
+  return renderMoPrintView(projection, moSenderCnicInput, moSheetIndex);
+}
+
 function render() {
   const body =
     view === "upload"
@@ -400,7 +413,9 @@ function render() {
             ? renderPreview()
             : view === "print"
               ? renderPrint()
-              : renderAdmin();
+              : view === "mo"
+                ? renderMo()
+                : renderAdmin();
   app.innerHTML = `${nav()}<main class="main">${body}</main><footer class="app-footer"><span>GARDEN SHOP LABEL PRINTER <i>·</i> TEMPLATE ${TEMPLATE_VERSION}</span><span>INDEPENDENT TOOL / NO ORDER SYSTEM CONNECTION</span></footer>`;
   if (["review", "preview", "print"].includes(view))
     app.querySelector(".main")?.insertAdjacentHTML("afterbegin", `<p class="reference-scope-notice" role="note">${esc(LABEL_REFERENCE_NOTICE)}</p>`);
@@ -1167,10 +1182,40 @@ function bind() {
       const target = (node as HTMLElement).dataset.view!;
       if (target === "preview" && !rows.length) return;
       if (target === "print" && !rows.length) return;
+      if (target === "mo" && !rows.length) return;
+      if (view === "mo" && target !== "mo") moSenderCnicInput = "";
+      if (target === "mo" && view !== "mo") {
+        moSenderCnicInput = "";
+        moSheetIndex = 0;
+      }
       view = target;
       render();
     }),
   );
+  document.querySelector<HTMLInputElement>("#moSenderCnic")?.addEventListener("input", (event) => {
+    moSenderCnicInput = (event.target as HTMLInputElement).value;
+    const result = formatSenderCnic(moSenderCnicInput);
+    const input = event.target as HTMLInputElement;
+    input.setAttribute("aria-invalid", String(result.status === "invalid"));
+    const error = document.querySelector<HTMLElement>("#moCnicError");
+    if (error) error.textContent = result.status === "invalid" ? "Enter exactly 13 digits, optionally grouped 5-7-1, or clear the field." : "";
+    if (result.status === "invalid") document.querySelector(".mo-face-list")?.remove();
+  });
+  document.querySelector<HTMLInputElement>("#moSenderCnic")?.addEventListener("change", () => render());
+  document.querySelector("#moPrevSheet")?.addEventListener("click", () => {
+    moSheetIndex = Math.max(0, moSheetIndex - 1);
+    render();
+  });
+  document.querySelector("#moNextSheet")?.addEventListener("click", () => {
+    const selectedIndexes = new Set(currentOrders().map(({ index }) => index));
+    const projection = projectMoRecords(rows, { selectedSourceIndexes: selectedIndexes, requiredFields: [] });
+    moSheetIndex = Math.min(Math.ceil(projection.candidates.length / 2) - 1, moSheetIndex + 1);
+    render();
+  });
+  document.querySelector<HTMLSelectElement>("#moSheetSelect")?.addEventListener("change", (event) => {
+    moSheetIndex = Number((event.target as HTMLSelectElement).value);
+    render();
+  });
   document
     .querySelector<HTMLInputElement>("#workbook")
     ?.addEventListener("change", async (event) => {
@@ -1264,6 +1309,8 @@ function bind() {
     rows = [];
     rawRows = [];
     headers = [];
+    moSenderCnicInput = "";
+    moSheetIndex = 0;
     selected.clear();
     countLimit = -1;
     printRequested = false;

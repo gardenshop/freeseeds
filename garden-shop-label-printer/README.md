@@ -11,6 +11,13 @@ Independent browser-based spreadsheet import, label preview, A4/custom print/PDF
 - Exact commission in integer rupees: add Rs. 100 per complete Rs. 20,000. A zero remainder adds Rs. 0; a positive remainder below Rs. 10,000 adds Rs. 75; Rs. 10,000 to below Rs. 20,000 adds Rs. 100. Maximum Rs. 500. The same validated display model drives Image Print and Save PDF.
 - Preserve the expanded LP-039 label layout and outer sheet/cell geometry below. HP P2055dn protection is page-edge-aware (5.233 mm target), affects only content at sheet edges, and is not borderless printing. Do not reduce all labels or fields to accommodate commission.
 
+## MO-51 Local Preview (I2)
+
+- `MO Print` is a separate paired preview for selected, valid VPL/VPP records. It uses the uploaded blank two-sided MO-51 artwork, locally bundled Noto Naskh Arabic, and I1 cut-and-stack pairing. Existing label data and label output are unchanged. RGL/UMS/unknown/invalid rows are excluded with reasons.
+- The form source declares 148 × 220 mm despite its A5 title. I2 uniformly scales each complete source face into a 148.5 × 210 mm half of A4 landscape. The original uploaded file remains unchanged. The preview is screen-only; it does not generate an MO PDF or print job.
+- Sender CNIC # is optional and volatile within the MO Print session. Accept 13 digits with optional hyphens, preserve leading zeroes, and display in 5-7-1 groups. Blank is allowed; invalid nonblank input withholds the paired preview. The value is not stored, logged, sent, imported, added to labels, or copied into another party's form fields. Tests use synthetic identity values only.
+- The uploaded HTML does not identify physical front/back order. Its title side is provisionally displayed first. No physical duplex rotation is approved. Unresolved postal roles and all unknown MO fields remain blank; local preview is not official-form, staging, audit, payment, postal or physical-printer acceptance.
+
 ## Local development
 
 Requires Node.js 20.19+ and npm. The automated browser/PDF screenshot smoke also requires Node.js 22.13+ and Google Chrome (or set `CHROME_PATH` to a compatible Chrome binary).

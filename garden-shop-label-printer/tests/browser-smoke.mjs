@@ -131,8 +131,10 @@ try {
   });
   const errors = [];
   const failedRequests = [];
+  const allRequests = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("requestfailed", (request) => failedRequests.push(`${request.url()}: ${request.failure()?.errorText}`));
+  page.on("request", (request) => allRequests.push(request.url()));
   await page.goto(baseUrl, { waitUntil: "networkidle" });
   assert.equal(await page.locator("#backToAdmin").getAttribute("href"), "https://getfreeseeds-admin-staging.get-free-seeds.workers.dev/");
   await page.locator("#workbook").setInputFiles({ name: "synthetic-import.xlsx", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buffer: Buffer.from(syntheticXlsx()) });
@@ -749,8 +751,165 @@ try {
   await page.locator("#restoreSourceAddress").click();
   assert.equal(await page.locator('.edit-form [name="address"]').inputValue(), overlongAddress.replace(/\r\n/g, "\n"));
   await page.locator(".edit-form [data-cancel]").click();
+
+  async function importMoBatch(count) {
+    if (await page.locator("#newBatch").count() === 0) await page.locator('[data-view="review"]').first().click();
+    await page.locator("#newBatch").click();
+    const moRows = Array.from({ length: count }, (_, index) => [
+      `MO-SYN-${String(index + 1).padStart(3, "0")}`,
+      `Synthetic Receiver ${index + 1}`,
+      "03001234567",
+      `Synthetic address ${index + 1}, long Urdu test پتہ ${index + 1}`,
+      `${index % 2 ? "VPP" : "VPL"}${String(index + 1).padStart(6, "0")}`,
+      "25000",
+      "Synthetic parcel only",
+      "Sahiwal",
+      "Punjab",
+      "Synthetic landmark",
+    ]);
+    const csv = [headers, ...moRows].map((row) => row.map(quote).join(",")).join("\r\n");
+    await page.locator("#workbook").setInputFiles({ name: `mo-synthetic-${count}.csv`, mimeType: "text/csv", buffer: Buffer.from(csv) });
+    await page.locator("#applyMapping").click();
+    await page.getByText("Review every parcel.").waitFor({ timeout: 30000 });
+    await page.locator('[data-view="mo"]').click();
+    await page.waitForFunction(() => {
+      const frame = document.querySelector("#moFrontPreview");
+      return frame?.contentDocument?.querySelector(".mo-sheet") && frame.contentDocument.fonts.status === "loaded";
+    }, { timeout: 30000 });
+    assert.match(await page.locator(".mo-summary").innerText(), new RegExp(`${count}\\s+eligible VPL/VPP records`, "u"));
+  }
+
+  async function inspectMoFace(face, expectedSlots, cnic) {
+    const frame = page.frameLocator(face === "front" ? "#moFrontPreview" : "#moBackPreview");
+    await expectMoSheet(face, expectedSlots);
+    assert.equal(await frame.locator("[data-mo-sender-cnic]").count(), face === "back" && cnic ? expectedSlots.filter((value) => value !== null).length : 0);
+    if (face === "back" && cnic) {
+      const atSenderCnicPosition = await frame.locator("[data-mo-sender-cnic]").evaluateAll((values) => values.every((value) => {
+        const senderLabels = value.closest(".page")?.querySelector('div[style*="width:104px"]');
+        const senderBlock = senderLabels?.parentElement;
+        return value.parentElement === senderBlock?.children[2]?.children[2];
+      }));
+      assert.equal(atSenderCnicPosition, true, "CNIC belongs only in the sender identity line");
+    }
+    assert.equal(await frame.locator(".page").first().evaluate((form) => getComputedStyle(form).overflow), "visible");
+    assert.equal(await frame.locator("[dir=rtl]").count() > 0, true, "Urdu page direction must remain RTL");
+    assert.equal(await frame.locator("[data-mo-sender-cnic]").allTextContents().then((values) => values.every((value) => value === "00000-1234567-8")), true);
+    const metrics = await frame.locator(".mo-sheet").evaluate((sheet) => {
+      const rect = sheet.getBoundingClientRect();
+      const half = sheet.querySelector(".mo-half").getBoundingClientRect();
+      const pages = Array.from(sheet.querySelectorAll(".page"));
+      const page = pages[0]?.getBoundingClientRect();
+      const outside = pages.flatMap((form) => {
+        const bounds = form.getBoundingClientRect();
+        return Array.from(form.querySelectorAll("*"))
+          .map((element) => element.getBoundingClientRect())
+          .filter((item) => item.width > 0 && item.height > 0 && (item.left < bounds.left - 0.5 || item.top < bounds.top - 0.5 || item.right > bounds.right + 0.5 || item.bottom > bounds.bottom + 0.5)).length;
+      });
+      const textSizes = pages.flatMap((form) => Array.from(form.querySelectorAll("div,span"))
+        .filter((element) => element.childElementCount === 0 && element.textContent?.trim())
+        .map((element) => Number.parseFloat(getComputedStyle(element).fontSize)));
+      const stampsInside = pages.every((form) => {
+        const bounds = form.getBoundingClientRect();
+        return Array.from(form.querySelectorAll("[style*='border-radius:50%']")).every((stamp) => {
+          const item = stamp.getBoundingClientRect();
+          return item.left >= bounds.left - 0.5 && item.top >= bounds.top - 0.5 && item.right <= bounds.right + 0.5 && item.bottom <= bounds.bottom + 0.5;
+        });
+      });
+      const faceText = sheet.innerText;
+      return { widthMm: rect.width * 25.4 / 96, heightMm: rect.height * 25.4 / 96, halfWidthMm: half.width * 25.4 / 96, pageWidthMm: page.width * 25.4 / 96, pageHeightMm: page.height * 25.4 / 96, overflowCount: outside.reduce((sum, count) => sum + count, 0), minimumEffectiveTextPt: Math.min(...textSizes) * 0.75 * (210 / 220), stampsInside, fontReady: document.fonts.check('9px "Noto Naskh Arabic"', "اردو"), text: faceText };
+    });
+    assert.ok(Math.abs(metrics.widthMm - 297) < 0.1);
+    assert.ok(Math.abs(metrics.heightMm - 210) < 0.1);
+    assert.ok(Math.abs(metrics.halfWidthMm - 148.5) < 0.1);
+    assert.ok(metrics.pageWidthMm <= 148.5 && Math.abs(metrics.pageHeightMm - 210) < 0.1);
+    assert.equal(metrics.overflowCount, 0, "visible template elements must remain inside the fitted source page");
+    assert.ok(metrics.minimumEffectiveTextPt >= 6.4, `smallest source text should remain at least 6.4pt after uniform fit: ${metrics.minimumEffectiveTextPt}`);
+    assert.equal(metrics.stampsInside, true, "stamp/signature geometry must remain inside both form bounds");
+    assert.equal(metrics.fontReady, true, "locally bundled Urdu font must be available");
+    assert.doesNotMatch(metrics.text, /Synthetic Receiver|MO-SYN-|03001234567|Synthetic address/u, "order fields must not leak into the unresolved postal fields");
+  }
+
+  async function expectMoSheet(face, expectedSlots) {
+    const frame = page.frameLocator(face === "front" ? "#moFrontPreview" : "#moBackPreview");
+    const slots = await frame.locator(".mo-half").evaluateAll((halves) => halves.map((half) => half.dataset.moSourceIndex === undefined ? null : Number(half.dataset.moSourceIndex)));
+    assert.deepEqual(slots, expectedSlots, `${face} slot identities must match cut-and-stack pairing`);
+    const faceName = await frame.locator(".mo-sheet").getAttribute("data-mo-face");
+    assert.equal(faceName, face);
+    assert.equal(await frame.locator(".mo-sheet").getAttribute("data-mo-rotation"), "none", "physical back rotation is not approved or applied");
+  }
+
+  await importMoBatch(2);
+  await page.locator("#moSenderCnic").fill("0000012345678");
+  await page.locator("#moSenderCnic").press("Tab");
+  await page.waitForFunction(() => document.querySelector("#moBackPreview")?.contentDocument?.querySelectorAll("[data-mo-sender-cnic]").length === 2).catch(async (error) => {
+    throw new Error(`${error.message}\nMO body: ${await page.locator("body").innerText()}\nBrowser errors: ${JSON.stringify(errors)}`);
+  });
+  await inspectMoFace("front", [0, 1], "00000-1234567-8");
+  await inspectMoFace("back", [0, 1], "00000-1234567-8");
+  await page.screenshot({ path: join(evidence, "mo51-proof-n2-sheet1-cnic-synthetic.png"), fullPage: true });
+  const requestsBeforeCnicCheck = allRequests.length;
+  const storedCnic = await page.evaluate(async () => {
+    const database = await new Promise((resolve, reject) => {
+      const request = indexedDB.open("gfs-label-references-v1");
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const records = await new Promise((resolve, reject) => {
+      const request = database.transaction("references", "readonly").objectStore("references").getAll();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    database.close();
+    return JSON.stringify({ local: { ...localStorage }, session: { ...sessionStorage }, records });
+  });
+  assert.doesNotMatch(storedCnic, /00000-1234567-8|0000012345678/u, "CNIC must not enter browser storage");
+  assert.equal(allRequests.length, requestsBeforeCnicCheck, "CNIC entry must not cause any request or monitoring event");
+  assert.equal(allRequests.some((url) => /googleapis|gstatic/u.test(url)), false, "MO font rendering must be local");
+
+  await page.locator("#moSenderCnic").fill("123456789012");
+  assert.equal(await page.locator("#moSenderCnic").getAttribute("aria-invalid"), "true");
+  assert.equal(await page.locator("#moFrontPreview").count(), 0, "invalid nonblank CNIC must withhold the paired preview");
+  await page.locator("#moSenderCnic").fill("");
+  await page.locator("#moSenderCnic").press("Tab");
+  await page.waitForSelector("#moBackPreview");
+  assert.equal(await page.frameLocator("#moBackPreview").locator("[data-mo-sender-cnic]").count(), 0, "blank optional CNIC leaves the original form line blank");
+
+  await importMoBatch(3);
+  await inspectMoFace("front", [0, 2], "");
+  await inspectMoFace("back", [0, 2], "");
+  await page.screenshot({ path: join(evidence, "mo51-proof-n3-sheet1.png"), fullPage: true });
+  await page.locator("#moNextSheet").click();
+  await inspectMoFace("front", [1, null], "");
+  await inspectMoFace("back", [1, null], "");
+  await page.screenshot({ path: join(evidence, "mo51-proof-n3-sheet2-odd-blank.png"), fullPage: true });
+
+  await importMoBatch(5);
+  await inspectMoFace("front", [0, 3], "");
+  await inspectMoFace("back", [0, 3], "");
+  await page.screenshot({ path: join(evidence, "mo51-proof-n5-sheet1.png"), fullPage: true });
+  await page.locator("#moNextSheet").click();
+  await page.locator("#moNextSheet").click();
+  await inspectMoFace("front", [2, null], "");
+  await inspectMoFace("back", [2, null], "");
+  await page.screenshot({ path: join(evidence, "mo51-proof-n5-sheet3-odd-blank.png"), fullPage: true });
+
+  await importMoBatch(100);
+  await inspectMoFace("front", [0, 50], "");
+  await inspectMoFace("back", [0, 50], "");
+  await page.screenshot({ path: join(evidence, "mo51-proof-n100-sheet1.png"), fullPage: true });
+  await page.locator("#moSheetSelect").selectOption({ label: "50" });
+  await page.waitForFunction(() => document.querySelector("#moSheetSelect")?.value === "49" && document.querySelector("#moFrontPreview")?.contentDocument?.querySelector(".mo-half")?.getAttribute("data-mo-source-index") === "49").catch(async (error) => {
+    throw new Error(`${error.message}\nMO sheet controls: ${await page.locator(".mo-sheet-nav").innerText()}\nSelect value: ${await page.locator("#moSheetSelect").inputValue()}\nFront slots: ${JSON.stringify(await page.frameLocator("#moFrontPreview").locator(".mo-half").evaluateAll((halves) => halves.map((half) => half.getAttribute("data-mo-source-index"))))}`);
+  });
+  await inspectMoFace("front", [49, 99], "");
+  await inspectMoFace("back", [49, 99], "");
+  await page.screenshot({ path: join(evidence, "mo51-proof-n100-sheet50.png"), fullPage: true });
+  await page.locator('[data-view="review"]').first().click();
+  await page.locator('[data-view="mo"]').click();
+  assert.equal(await page.locator("#moSenderCnic").inputValue(), "", "navigating away and back must clear the volatile sender CNIC");
+
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ geometry, printGeometry, decodedBarcodeCounts: [3, 18, decoded500, customDecoded500], prefixExamples: { types: ["RGL", "UMS", "VPL", "VPP"], hiddenAmountBoxes: 2, visibleAmountBoxes: prefixVisibleAmountBoxes, rglUmsAmountsAbsentFromPdf: !/50000|40000|\+0/u.test(prefixPdf.text), imagePrintValues: ["25000+175", "65000+375"], pdfValuesMatch: /25000/u.test(prefixPdf.text) && /\+175/u.test(prefixPdf.text) && /65000/u.test(prefixPdf.text) && /\+375/u.test(prefixPdf.text) }, samplePdfPages: samplePdf.pageCount, batch500PdfPages: batchPdf.getPageCount(), customBatch500PdfPages: customBatchPdf.getPageCount(), overflowLayout, browserErrors: errors, evidence: ["test-evidence/approved-label-layout.png", "label-output-synthetic.png", "prefix-layout-samples.png", "prefixes-image-print.png", "prefixes-pdf-page.png", "test-evidence/label-preview-500-v2.png", "test-evidence/label-preview-custom-500.png", "test-evidence/label-preview-overflow.png", "test-evidence/label-preview-mobile.png", "test-evidence/browser-print-sheet.png", "test-evidence/pdf-sample-page.png", "test-evidence/pdf-500-first-page.png", "test-evidence/pdf-custom-500-first-page.png", "test-evidence/pdf-overflow-filtered.png"] }, null, 2));
+  console.log(JSON.stringify({ geometry, printGeometry, decodedBarcodeCounts: [3, 18, decoded500, customDecoded500], prefixExamples: { types: ["RGL", "UMS", "VPL", "VPP"], hiddenAmountBoxes: 2, visibleAmountBoxes: prefixVisibleAmountBoxes, rglUmsAmountsAbsentFromPdf: !/50000|40000|\+0/u.test(prefixPdf.text), imagePrintValues: ["25000+175", "65000+375"], pdfValuesMatch: /25000/u.test(prefixPdf.text) && /\+175/u.test(prefixPdf.text) && /65000/u.test(prefixPdf.text) && /\+375/u.test(prefixPdf.text) }, samplePdfPages: samplePdf.pageCount, batch500PdfPages: batchPdf.getPageCount(), customBatch500PdfPages: customBatchPdf.getPageCount(), overflowLayout, moProofs: ["mo51-proof-n2-sheet1-cnic-synthetic.png", "mo51-proof-n3-sheet1.png", "mo51-proof-n3-sheet2-odd-blank.png", "mo51-proof-n5-sheet1.png", "mo51-proof-n5-sheet3-odd-blank.png", "mo51-proof-n100-sheet1.png", "mo51-proof-n100-sheet50.png"], browserErrors: errors, evidence: ["test-evidence/approved-label-layout.png", "label-output-synthetic.png", "prefix-layout-samples.png", "prefixes-image-print.png", "test-evidence/label-preview-500-v2.png", "test-evidence/label-preview-custom-500.png", "test-evidence/label-preview-overflow.png", "test-evidence/label-preview-mobile.png", "test-evidence/browser-print-sheet.png", "test-evidence/pdf-sample-page.png", "test-evidence/pdf-500-first-page.png", "test-evidence/pdf-custom-500-first-page.png", "test-evidence/pdf-overflow-filtered.png"] }, null, 2));
 } finally {
   await browser?.close();
   server.kill();
