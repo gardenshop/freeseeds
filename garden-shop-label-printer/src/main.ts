@@ -103,6 +103,7 @@ let zoom = 1;
 let startPosition = 1;
 let countLimit = -1;
 let paperPresetId: PaperPresetId = "A4";
+let hpP2055SafeArea = true;
 let activeLabel = -1;
 let importedFileName = "";
 let printRequested = false;
@@ -237,7 +238,7 @@ function labelMarkup(row: Order, index: number, _compact = false) {
   const vpl = row.cod.trim() ? formatVpl(row.cod) : "VPL";
   const vplAmount = vpl.replace(/^VPL\s*/u, "");
   const blockedReason = printBlocker(row);
-  return `<article class="label ${colorAccent ? "color-accent" : ""} ${blockedReason ? "layout-overflow" : ""}" data-label-index="${index}" data-paper-preset="${preset.id}" style="--label-width:${preset.labelWidthMm}mm;--label-height:${preset.labelHeightMm}mm">
+  return `<article class="label ${colorAccent ? "color-accent" : ""} ${blockedReason ? "layout-overflow" : ""}" data-label-index="${index}" data-paper-preset="${preset.id}" style="--label-width:${preset.labelWidthMm}mm;--label-height:${preset.labelHeightMm}mm"><div class="label-content">
     <span class="tracking-value layout-box" ${boxStyle(boxes.trackingText)}->${esc(row.tracking)}</span>
     <canvas class="barcode-canvas layout-box" ${boxStyle(boxes.barcode)} data-barcode="${index}" data-source="${esc(row.tracking)}" aria-label="Code 128 barcode"></canvas>
     <span class="tracking-divider layout-box" ${boxStyle(boxes.trackingDivider)} aria-hidden="true"></span>
@@ -261,7 +262,7 @@ function labelMarkup(row: Order, index: number, _compact = false) {
     <b class="footer-sender layout-box" ${boxStyle(boxes.footerSender)}>${esc(row.senderName || "Garden Shop")}</b>
     <span class="footer-divider layout-box" ${boxStyle(boxes.footerDivider)} aria-hidden="true"></span>
     <span class="footer-address layout-box" ${boxStyle(boxes.footerAddress)}>${LABEL_FOOTER_ADDRESS}</span>
-  </article>`;
+  </div></article>`;
 }
 
 function overflowingLayoutFields(row: Order): string[] {
@@ -357,7 +358,7 @@ function renderPrint() {
   const blocked = Boolean(blockedItem);
   const countValue = countLimit > 0 ? Math.min(countLimit, chosen.length) : chosen.length;
   return `<section class="section-heading"><div><p class="kicker">OUTPUT / ACTUAL SIZE</p><h1>Ready for the printer.</h1><p>${chosen.length} labels · ${pages} ${esc(preset.label)} page${pages === 1 ? "" : "s"} · unused slots stay blank</p></div><div class="output-badge">100%<small>PHYSICAL SCALE</small></div></section>
-    <section class="print-panel"><div class="print-summary"><h2>Print setup</h2><p>Use ${esc(preset.label)} portrait and Actual size / 100% in the printer dialog. Turn off browser headers and footers.</p>${preset.marginWarning ? `<p class="mapping-warning" role="alert">${esc(preset.marginWarning)}</p>` : ""}
+    <section class="print-panel"><div class="print-summary"><h2>Print setup</h2><p>Use ${esc(preset.label)} portrait and Actual size / 100% in the printer dialog. Turn off browser headers and footers.</p>${preset.id === "CUSTOM" ? `<p class="mapping-warning" role="alert">HP LaserJet P2055dn: select or define 190.5 × 254 mm custom portrait paper in both the browser and printer driver. Disable Fit/Shrink and duplex; use Tray 1/manual feed when supported. The HP safe-area option keeps content inside this non-borderless printer’s measured 4.233 mm margins; label boundaries and downloaded PDF geometry remain unchanged. Verify one calibration sheet before using pre-cut stock.</p><label class="confirm-print"><input id="hpP2055SafeArea" type="checkbox" ${hpP2055SafeArea ? "checked" : ""}> HP LaserJet P2055dn safe-area content inset</label>` : ""}${preset.marginWarning ? `<p class="mapping-warning" role="alert">${esc(preset.marginWarning)}</p>` : ""}
     <label>Paper preset<select id="paperPreset">${Object.values(PAPER_PRESETS).map((option) => `<option value="${option.id}" ${paperPresetId === option.id ? "selected" : ""}>${esc(option.label)}</option>`).join("")}</select></label>
     ${excluded.length ? `<p class="mapping-warning" role="alert">${excluded.length} selected label${excluded.length === 1 ? "" : "s"} will be excluded from output until corrected or deselected.</p>` : ""}${blocked ? `<p class="mapping-warning" role="alert">Label ${blockedItem!.index + 1}: ${esc(blockedReason ?? "Resolve this record in Review before printing.")}</p>` : ""}
     <label>Start at position<select id="printStart">${Array.from({ length: 18 }, (_, i) => `<option value="${i + 1}" ${startPosition === i + 1 ? "selected" : ""}>Label ${i + 1}</option>`).join("")}</select></label>
@@ -581,23 +582,40 @@ function preparePrintLayout(popup: Window): Promise<void> {
     .map((rule) => rule.cssText)
     .join("\n");
   popup.document.head.append(fontStyles);
-  const sharedStyles = popup.document.createElement("link");
-  sharedStyles.rel = "stylesheet";
-  sharedStyles.href = "/label.css";
-  const ready = new Promise<void>((resolve, reject) => {
-    sharedStyles.addEventListener("load", async () => {
-      await popup.document.fonts.ready;
-      measureLabels(popup.document, popup.document);
-      resolve();
-    }, { once: true });
-    sharedStyles.addEventListener("error", () => reject(new Error("PRINT_STYLESHEET_FAILED")), { once: true });
+  const sharedStyles = popup.document.querySelector<HTMLLinkElement>('link[rel="stylesheet"][href="/label.css"]');
+  if (!sharedStyles?.sheet) return Promise.reject(new Error("PRINT_STYLESHEET_FAILED"));
+  return popup.document.fonts.ready.then(() => {
+    measureLabels(popup.document, popup.document);
   });
-  popup.document.head.append(sharedStyles);
-  return ready;
 }
 
 function openPrintPopup(items: Array<{ row: Order; index: number }>, position: number) {
   const preset = currentPaperPreset();
+  const hpP2055SafeCss = preset.id === "CUSTOM" && hpP2055SafeArea
+    ? (() => {
+      const imageableMarginMm = 4.233;
+      const customBoxes = Object.entries(labelBoxes(preset)).filter(([key]) => key !== "outline").map(([, box]) => box);
+      const maxBoxX = Math.max(...customBoxes.map((box) => box.x + box.width));
+      const maxBoxY = Math.max(...customBoxes.map((box) => box.y + box.height));
+      const rightCellImageableWidth = preset.widthMm - imageableMarginMm - preset.columnStartsMm[2];
+      const bottomRowImageableHeight = preset.heightMm - imageableMarginMm - preset.rowStartsMm[5];
+      const leftCellImageableWidth = preset.labelWidthMm - (imageableMarginMm - preset.columnStartsMm[0]);
+      const topRowImageableHeight = preset.labelHeightMm - (imageableMarginMm - preset.rowStartsMm[0]);
+      const leftXScale = leftCellImageableWidth / maxBoxX;
+      const rightXScale = rightCellImageableWidth / maxBoxX;
+      const topYScale = topRowImageableHeight / maxBoxY;
+      const bottomYScale = bottomRowImageableHeight / maxBoxY;
+      const xInset = imageableMarginMm - preset.columnStartsMm[0];
+      const yInset = imageableMarginMm - preset.rowStartsMm[0];
+      return `<style>
+        .print-sheet>.label:nth-child(3n + 1)>.label-content{--hp-safe-x:${xInset}mm;--hp-safe-scale-x:${leftXScale}}
+        .print-sheet>.label:nth-child(3n)>.label-content{--hp-safe-scale-x:${rightXScale}}
+        .print-sheet>.label:nth-child(-n + 3)>.label-content{--hp-safe-y:${yInset}mm;--hp-safe-scale-y:${topYScale}}
+        .print-sheet>.label:nth-child(n + 16)>.label-content{--hp-safe-scale-y:${bottomYScale}}
+        .print-sheet>.label>.label-content{transform:translate(var(--hp-safe-x,0mm),var(--hp-safe-y,0mm)) scale(var(--hp-safe-scale-x,1),var(--hp-safe-scale-y,1));transform-origin:top left}
+      </style>`;
+    })()
+    : "";
   const popup = window.open("", "_blank");
   if (!popup) return undefined;
   const pages = pagesForCount(items.length, position);
@@ -610,7 +628,7 @@ function openPrintPopup(items: Array<{ row: Order; index: number }>, position: n
     }).join("")}</main>`,
   ).join("");
   popup.document.open();
-  popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Garden Shop labels</title><link rel="stylesheet" href="/label.css"><style>@page{size:${preset.widthMm}mm ${preset.heightMm}mm;margin:0}*{box-sizing:border-box}html,body{margin:0;width:${preset.widthMm}mm;height:${preset.heightMm}mm;background:#fff}.print-sheet{width:${preset.widthMm}mm;height:${preset.heightMm}mm;padding:${preset.rowStartsMm[0]}mm ${preset.columnStartsMm[0]}mm;display:grid;grid-template-columns:repeat(${preset.columns},${preset.labelWidthMm}mm);grid-template-rows:repeat(${preset.rows},${preset.labelHeightMm}mm);column-gap:${preset.columnGapMm}mm;row-gap:${preset.rowGapMm}mm;overflow:hidden}.page-break{break-after:page}.empty-label{width:${preset.labelWidthMm}mm;height:${preset.labelHeightMm}mm}@media screen{body{width:${preset.widthMm}mm;margin:12mm auto}}</style></head><body>${sheets}</body></html>`);
+  popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Garden Shop labels</title><link rel="stylesheet" href="/label.css"><style>@page{size:${preset.widthMm}mm ${preset.heightMm}mm;margin:0}*{box-sizing:border-box}html,body{margin:0;width:${preset.widthMm}mm;height:${preset.heightMm}mm;background:#fff}.print-sheet{width:${preset.widthMm}mm;height:${preset.heightMm}mm;padding:${preset.rowStartsMm[0]}mm ${preset.columnStartsMm[0]}mm;display:grid;grid-template-columns:repeat(${preset.columns},${preset.labelWidthMm}mm);grid-template-rows:repeat(${preset.rows},${preset.labelHeightMm}mm);column-gap:${preset.columnGapMm}mm;row-gap:${preset.rowGapMm}mm;overflow:hidden}.page-break{break-after:page}.empty-label{width:${preset.labelWidthMm}mm;height:${preset.labelHeightMm}mm}@media screen{body{width:${preset.widthMm}mm;margin:12mm auto}}</style>${hpP2055SafeCss}</head><body>${sheets}</body></html>`);
   popup.addEventListener("load", async () => {
     await Promise.all(
       [...popup.document.querySelectorAll<HTMLCanvasElement>("canvas[data-barcode]")].map(async (canvas) => {
@@ -1158,6 +1176,10 @@ function bind() {
   document.querySelector("#paperPreset")?.addEventListener("change", (event) => {
     paperPresetId = (event.target as HTMLSelectElement).value as PaperPresetId;
     page = 0;
+    render();
+  });
+  document.querySelector("#hpP2055SafeArea")?.addEventListener("change", (event) => {
+    hpP2055SafeArea = (event.target as HTMLInputElement).checked;
     render();
   });
   document.querySelector("#countLimit")?.addEventListener("change", (event) => {

@@ -13,6 +13,10 @@
   print-color-adjust: exact;
   -webkit-print-color-adjust: exact;
 }
+.label-content {
+  position: absolute;
+  inset: 0;
+}
 .label::before {
   position: absolute;
   z-index: 5;

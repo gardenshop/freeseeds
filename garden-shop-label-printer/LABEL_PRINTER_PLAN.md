@@ -12,6 +12,15 @@ The repository-wide architecture discovery and full implementation history remai
 
 ## V4 Local Status (2026-11-16)
 
+### GFS-LP-035 Image Print Repair
+
+- Root cause: `preparePrintLayout()` appended a second `/label.css` after the inline custom `@page`, so that later stylesheet reset the print MediaBox to A4 although the DOM/grid was 190.5 × 254 mm. Removed the duplicate load and wait on the original stylesheet. Download PDF implementation/geometry remains unchanged; A4 unaffected.
+- Added a custom-only, opt-out HP P2055dn safe-content profile. Driver default is Letter/Simplex; no named 190.5 × 254 mm form is registered. Driver accepts dynamic custom sizes including the required sheet. In-memory custom PrintSettings reports 4.233 mm non-imageable edges / 182.033 × 245.533 mm printable area. The profile repositions/scales only the content layer in the first/last rows and columns; physical label cells and gaps stay fixed.
+- Full print regression PASS: 18 labels/slots, locked x/y positions within 0.03 mm, all content boxes within driver-reported area, 18 Code 128 decodes at 4× raster density, 190.5 × 254 mm one-page browser print PDF. Full browser output retained 28-page A4/custom batch PDFs and `[3, 18, 500, 500]` barcode decode counts; 42 unit tests/build pass. This is not physical print proof.
+- Driver remains unchanged, with current Letter default. Operator must choose/define Custom 190.5 × 254 mm portrait, Actual Size/100%, no Fit/Shrink, browser headers/footers off, duplex off, Tray 1/manual. HP is non-borderless.
+- Physical calibration: **NOT TESTED**. Next gate is one synthetic sheet on plain paper; owner returns that sheet or four edge measurements. Pre-cut stock remains blocked.
+- Deployment is **BLOCKED** pending fresh authorization: read-only CLI history lists prior `2420ee42-08ac-4d0d-a620-caa7197f0966` / source `c7dc3fb`, but the Dashboard active version was not reverified. Current `wrangler whoami` reports no API token; the final Kilo CLI Dashboard `list_pages` call timed out. No Pages/Worker/D1/Access/production mutation occurred. Reauthorize Wrangler, verify account/Access/rollback through working Dashboard MCP, then static-only deploy and document the new ID.
+
 ### LP-034 Release Update (Supersedes Historical Blockers)
 
 - Correct source checkout/branch/SHA verified: `D:\free seeds`, `codex/garden-shop-label-printer-mvp`, `c7dc3fbb150b7a8b10807d89afb49a052dda04de`. No source changes or repeated expensive tests.

@@ -8,10 +8,12 @@ import { chromium } from "playwright-core";
 import { PDFDocument } from "pdf-lib";
 import { zipSync } from "fflate";
 import { createCanvas, DOMMatrix, ImageData, loadImage, Path2D } from "@napi-rs/canvas";
+import { BarcodeFormat, BinaryBitmap, DecodeHintType, HTMLCanvasElementLuminanceSource, HybridBinarizer, MultiFormatReader } from "@zxing/library";
 import { OPS, getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 
 const project = resolve(fileURLToPath(new URL("..", import.meta.url)));
-const evidence = join(project, "test-evidence");
+const evidence = resolve(process.env.LP_TEST_EVIDENCE_DIR ?? join(project, "test-evidence"));
+const temporary = resolve(process.env.LP_TEST_TMP_DIR ?? "D:\\Temp\\kilo");
 const baseUrl = "http://127.0.0.1:4174";
 const chromePath = process.env.CHROME_PATH ?? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
 const server = spawn(process.execPath, [join(project, "node_modules", "vite", "bin", "vite.js"), "--host", "127.0.0.1", "--port", "4174", "--strictPort"], { cwd: project, stdio: "ignore", windowsHide: true, env: { ...process.env, VITE_MONITOR_URL: "http://127.0.0.1:4175" } });
@@ -67,7 +69,8 @@ async function saveGeneratedPdf(page, path, timeout = 300000) {
 
 try {
   await mkdir(evidence, { recursive: true });
-  await writeFile(join("D:\\Temp\\kilo", "garden-shop-label-printer-synthetic.xlsx"), Buffer.from(syntheticXlsx()));
+  await mkdir(temporary, { recursive: true });
+  await writeFile(join(temporary, "garden-shop-label-printer-synthetic.xlsx"), Buffer.from(syntheticXlsx()));
   await waitForServer();
   browser = await chromium.launch({ headless: true, executablePath: chromePath, args: ["--no-sandbox"] });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1200 }, acceptDownloads: true });
@@ -171,7 +174,7 @@ try {
   assert.ok(await page.locator(".individual-preview .contact-number").first().evaluate((el) => el.scrollWidth <= el.clientWidth), "individual phone value must not clip");
   await page.screenshot({ path: join(evidence, "label-preview-synthetic.png"), fullPage: true });
   const labelScreenshot = await page.locator('.sheet .label[data-label-index="0"]').screenshot({ animations: "disabled" });
-  const labelBaselinePath = join(evidence, "approved-label-layout.png");
+  const labelBaselinePath = join(project, "test-evidence", "approved-label-layout.png");
   if (process.env.UPDATE_LABEL_BASELINE === "1") {
     await writeFile(labelBaselinePath, labelScreenshot);
   } else {
@@ -273,8 +276,9 @@ try {
   assert.equal(customGeometry.labels, 3);
   [0.25, 63.75, 127.25].forEach((expected, index) => assert.ok(Math.abs(customGeometry.columns[index] - expected) < 0.03, `custom column ${index} start drifted: ${customGeometry.columns[index]} mm`));
   [0.1675, 42.5005, 84.8335, 127.1665, 169.4995, 211.8325].forEach((expected, index) => assert.ok(Math.abs(customGeometry.rows[index] - expected) < 0.03, `custom row ${index} start drifted: ${customGeometry.rows[index]} mm`));
-  const customPreviewFields = await readFields(page.locator(".sheet .label").first());
   await page.locator('[data-view="print"]').first().click();
+  assert.equal(await page.locator("#hpP2055SafeArea").isChecked(), true, "the custom print preset must default to measured P2055dn safe-area insets");
+  await page.context().addInitScript(() => Object.defineProperty(window, "print", { configurable: true, value: () => { window.__labelPrintRequested = true; } }));
   const customPrintPopupEvent = page.waitForEvent("popup");
   await page.locator("#printNow").click();
   const customPrintPopup = await customPrintPopupEvent;
@@ -290,8 +294,25 @@ try {
   assert.ok(Math.abs(customPrintGeometry.height - 254) < 0.1, JSON.stringify(customPrintGeometry));
   assert.ok(Math.abs(customPrintGeometry.labelWidth - 63) < 0.1, JSON.stringify(customPrintGeometry));
   assert.ok(Math.abs(customPrintGeometry.labelHeight - 42) < 0.1, JSON.stringify(customPrintGeometry));
-  const customPrintFields = await readFields(customPrintPopup.locator(".print-sheet .label").first());
-  customPreviewFields.forEach((field, index) => field.forEach((value, coordinate) => assert.ok(Math.abs(value - customPrintFields[index][coordinate]) < 0.15, `custom preview/print mismatch ${index}/${coordinate}: preview ${value} mm; print ${customPrintFields[index][coordinate]} mm`)));
+  assert.equal(await customPrintPopup.locator('link[rel="stylesheet"][href="/label.css"]').count(), 1, "Image Print must load label.css once so its A4 @page rule cannot override the custom size");
+  assert.equal(await customPrintPopup.evaluate(() => window.__labelPrintRequested), true, "Image Print must reach the browser print call");
+  await customPrintPopup.emulateMedia({ media: "print" });
+  const safeContentBounds = await customPrintPopup.locator(".print-sheet").evaluate((sheet) => {
+    const mm = (px) => px * 25.4 / 96;
+    const page = sheet.getBoundingClientRect();
+    const boxes = [...sheet.querySelectorAll(".layout-box")].map((element) => element.getBoundingClientRect());
+    return { left: mm(Math.min(...boxes.map((box) => box.left)) - page.left), right: mm(Math.max(...boxes.map((box) => box.right)) - page.left), top: mm(Math.min(...boxes.map((box) => box.top)) - page.top), bottom: mm(Math.max(...boxes.map((box) => box.bottom)) - page.top) };
+  });
+  assert.ok(safeContentBounds.left >= 4.233 - 0.03, JSON.stringify(safeContentBounds));
+  assert.ok(safeContentBounds.right <= 190.5 - 4.233 + 0.03, JSON.stringify(safeContentBounds));
+  assert.ok(safeContentBounds.top >= 4.233 - 0.03, JSON.stringify(safeContentBounds));
+  assert.ok(safeContentBounds.bottom <= 254 - 4.233 + 0.03, JSON.stringify(safeContentBounds));
+  const imagePrintPdf = await customPrintPopup.pdf({ preferCSSPageSize: true, printBackground: true, displayHeaderFooter: false, scale: 1 });
+  const imagePrintDocument = await PDFDocument.load(imagePrintPdf);
+  assert.equal(imagePrintDocument.getPageCount(), 1, "18-slot custom Image Print calibration must remain one page");
+  assert.ok(Math.abs(imagePrintDocument.getPage(0).getSize().width - (190.5 * 72 / 25.4)) < 0.01, "custom Image Print MediaBox width must be 190.5 mm");
+  assert.ok(Math.abs(imagePrintDocument.getPage(0).getSize().height - (254 * 72 / 25.4)) < 0.01, "custom Image Print MediaBox height must be 254 mm");
+  await customPrintPopup.emulateMedia({ media: "screen" });
   await customPrintPopup.screenshot({ path: join(evidence, "browser-print-custom-sheet.png"), fullPage: true });
   await customPrintPopup.close();
   const customPdfPath = join(evidence, "synthetic-custom-sheet.pdf");
@@ -303,6 +324,62 @@ try {
   assert.match(customPdf.text, /TRK000001/);
   assert.equal(customPdf.hasRasterImage, false, "custom PDF barcode must remain vector");
   await page.locator("#paperPreset").selectOption("A4");
+
+  const calibrationContext = await browser.newContext({ viewport: { width: 1440, height: 1200 }, deviceScaleFactor: 4 });
+  await calibrationContext.addInitScript(() => Object.defineProperty(window, "print", { configurable: true, value: () => { window.__labelPrintRequested = true; } }));
+  const calibrationPage = await calibrationContext.newPage();
+  await calibrationPage.goto(baseUrl, { waitUntil: "networkidle" });
+  const calibrationHeaders = ["Order ID", "Name", "Cell #", "Address", "Tracking Number", "COD", "Product", "City", "Province", "Nearby Landmark"];
+  const calibrationRows = Array.from({ length: 18 }, (_, index) => [`CAL-PRINT-${String(index + 1).padStart(3, "0")}`, `Synthetic Receiver ${index + 1}`, `03${String(index + 1).padStart(9, "0")}`, `Synthetic calibration road ${index + 1}`, `TRK${String(index + 1).padStart(10, "0")}`, "1250", "Synthetic Product", "Sahiwal", "Punjab", "Calibration market"]);
+  const calibrationQuote = (value) => `"${String(value).replaceAll('"', '""')}"`;
+  const calibrationCsv = [calibrationHeaders, ...calibrationRows].map((row) => row.map(calibrationQuote).join(",")).join("\r\n");
+  await calibrationPage.locator("#workbook").setInputFiles({ name: "synthetic-calibration-18.csv", mimeType: "text/csv", buffer: Buffer.from(calibrationCsv) });
+  await calibrationPage.locator("#applyMapping").waitFor();
+  await calibrationPage.locator("#applyMapping").click();
+  await calibrationPage.getByText("Review every parcel.").waitFor();
+  await calibrationPage.locator('[data-view="preview"]').first().click();
+  await calibrationPage.waitForFunction(() => [...document.querySelectorAll(".sheet canvas[data-barcode]")].length === 18 && [...document.querySelectorAll(".sheet canvas[data-barcode]")].every((canvas) => canvas.dataset.verified === "true"));
+  await calibrationPage.locator('[data-view="print"]').first().click();
+  await calibrationPage.locator("#paperPreset").selectOption("CUSTOM");
+  assert.equal(await calibrationPage.locator("#hpP2055SafeArea").isChecked(), true);
+  const calibrationPopupEvent = calibrationPage.waitForEvent("popup");
+  await calibrationPage.locator("#printNow").click();
+  const calibrationPopup = await calibrationPopupEvent;
+  await calibrationPopup.waitForLoadState("load");
+  await calibrationPopup.waitForFunction(() => document.querySelectorAll(".print-sheet>.label").length === 18 && [...document.querySelectorAll(".print-sheet canvas[data-barcode]")].every((canvas) => canvas.width > 0));
+  await calibrationPopup.emulateMedia({ media: "print" });
+  const calibrationGeometry = await calibrationPopup.locator(".print-sheet").evaluate((sheet) => {
+    const mm = (px) => px * 25.4 / 96;
+    const page = sheet.getBoundingClientRect();
+    const cells = [...sheet.children].map((cell) => { const box = cell.getBoundingClientRect(); return [mm(box.left - page.left), mm(box.top - page.top), mm(box.width), mm(box.height)]; });
+    const boxes = [...sheet.querySelectorAll(".layout-box")].map((element) => element.getBoundingClientRect());
+    return { width: mm(page.width), height: mm(page.height), slots: cells.length, labels: sheet.querySelectorAll(".label").length, cells, contentBounds: { left: mm(Math.min(...boxes.map((box) => box.left)) - page.left), right: mm(Math.max(...boxes.map((box) => box.right)) - page.left), top: mm(Math.min(...boxes.map((box) => box.top)) - page.top), bottom: mm(Math.max(...boxes.map((box) => box.bottom)) - page.top) } };
+  });
+  assert.ok(Math.abs(calibrationGeometry.width - 190.5) < 0.1, JSON.stringify(calibrationGeometry));
+  assert.ok(Math.abs(calibrationGeometry.height - 254) < 0.1, JSON.stringify(calibrationGeometry));
+  assert.equal(calibrationGeometry.slots, 18);
+  assert.equal(calibrationGeometry.labels, 18);
+  [0.25, 63.75, 127.25].forEach((expected, column) => assert.ok(Math.abs(calibrationGeometry.cells[column][0] - expected) < 0.03, `calibration x${column} drifted: ${calibrationGeometry.cells[column][0]} mm`));
+  [0.1675, 42.5005, 84.8335, 127.1665, 169.4995, 211.8325].forEach((expected, row) => assert.ok(Math.abs(calibrationGeometry.cells[row * 3][1] - expected) < 0.03, `calibration y${row} drifted: ${calibrationGeometry.cells[row * 3][1]} mm`));
+  assert.ok(calibrationGeometry.contentBounds.left >= 4.233 - 0.03 && calibrationGeometry.contentBounds.right <= 190.5 - 4.233 + 0.03 && calibrationGeometry.contentBounds.top >= 4.233 - 0.03 && calibrationGeometry.contentBounds.bottom <= 254 - 4.233 + 0.03, JSON.stringify(calibrationGeometry.contentBounds));
+  const calibrationHints = new Map([[DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.CODE_128]]]);
+  for (let index = 0; index < 18; index += 1) {
+    const barcode = calibrationPopup.locator(".print-sheet canvas[data-barcode]").nth(index);
+    const expected = await barcode.getAttribute("data-source");
+    const image = await loadImage(await barcode.screenshot({ scale: "device" }));
+    const canvas = createCanvas(image.width, image.height);
+    canvas.getContext("2d").drawImage(image, 0, 0);
+    const reader = new MultiFormatReader();
+    reader.setHints(calibrationHints);
+    const decoded = reader.decode(new BinaryBitmap(new HybridBinarizer(new HTMLCanvasElementLuminanceSource(canvas)))).getText();
+    assert.equal(decoded, expected, `P2055-scaled Image Print barcode ${index + 1} must decode`);
+  }
+  const calibrationPrintPdf = await calibrationPopup.pdf({ preferCSSPageSize: true, printBackground: true, displayHeaderFooter: false, scale: 1 });
+  const calibrationPrintDocument = await PDFDocument.load(calibrationPrintPdf);
+  assert.equal(calibrationPrintDocument.getPageCount(), 1);
+  assert.ok(Math.abs(calibrationPrintDocument.getPage(0).getSize().width - (190.5 * 72 / 25.4)) < 0.01);
+  assert.ok(Math.abs(calibrationPrintDocument.getPage(0).getSize().height - (254 * 72 / 25.4)) < 0.01);
+  await calibrationContext.close();
 
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, deviceScaleFactor: 1 });
   await mobile.goto(baseUrl, { waitUntil: "networkidle" });
@@ -331,7 +408,7 @@ try {
     index === 0 ? "Library" : "Main market",
   ]);
   const csv = [headers, ...records].map((row) => row.map(quote).join(",")).join("\r\n");
-  await writeFile(join("D:\\Temp\\kilo", "garden-shop-label-printer-synthetic-500.csv"), Buffer.from(csv));
+  await writeFile(join(temporary, "garden-shop-label-printer-synthetic-500.csv"), Buffer.from(csv));
   await page.locator('[data-view="upload"]').first().click();
   await page.locator("#workbook").setInputFiles({ name: "synthetic-500.csv", mimeType: "text/csv", buffer: Buffer.from(csv) });
   await page.locator("#applyMapping").waitFor();

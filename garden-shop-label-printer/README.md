@@ -69,6 +69,22 @@ The repository-wide regression suite also passed 269 tests and the root build pa
 
 ## Staging Deployment Status
 
+### GFS-LP-035 HP P2055dn Image Print
+
+The Image Print popup previously loaded `/label.css` twice. The second load followed the popup's custom `@page` rule and its A4 rule won the CSS cascade: browser print output was A4 (210 × 297 mm) while the label sheet remained 190.5 × 254 mm. The popup now reuses its already loaded stylesheet. Browser print-to-PDF confirms the Image Print MediaBox is 540 × 720 pt (190.5 × 254 mm), one page for 18 labels. Download PDF is unchanged.
+
+On custom preset, **HP LaserJet P2055dn safe-area content inset** is enabled by default. It adjusts only the label-content layer in Image Print; the cut cells remain 63 × 42 mm at the same 3 × 6 positions, with 0.5/0.333 mm gutters. The optional profile is device-specific; disable it only for hardware with a verified larger/borderless imageable area. A4 and downloadable PDFs are unaffected.
+
+Windows' currently installed `HP LaserJet P205X series PCL6 Class Driver` defaults to Letter and Simplex. The driver lists Tray 1/Manual Feed and permits custom paper dimensions in a range that contains 190.5 × 254 mm, but no matching named form is currently listed. A non-persisting in-memory custom-form query reports a 182.033 × 245.533 mm imageable region, 4.233 mm from each sheet edge. This is a driver capability report, not a physical measurement; the HP P2055dn is not borderless.
+
+Before printing: define/select **190.5 × 254 mm portrait** in both browser and HP driver; select **Actual size / 100%**, not Fit/Shrink; turn browser headers/footers and duplex off; choose Tray 1/manual feed where supported. The exact sheet origin/cell positions remain locked and are not a software alignment knob.
+
+Validation: 18-label custom Image Print page size/positions and all 18 post-inset Code 128 canvases pass at 4× browser raster density; print content boxes fit the driver-reported imageable area. The full browser suite also decoded `[3, 18, 500, 500]` barcode batches and retained 28-page A4/custom PDFs. All 42 unit tests, TypeScript checks and Vite build pass. These are software/browser results, **not physical printer calibration**.
+
+**Physical gate NOT TESTED:** request exactly one synthetic 18-label custom calibration sheet on plain paper, with the P2055dn profile enabled and settings above. Return the sheet or four measured edge offsets; do not waste stock or claim print-ready until checked. Do not use pre-cut stock yet.
+
+**LP-035 staging deployment BLOCKED:** only read-only CLI history was available, with prior deployment `2420ee42-08ac-4d0d-a620-caa7197f0966` / source `c7dc3fb`; its active Dashboard status was not freshly verified. Current `wrangler whoami` returned `No API token found`, and the final Kilo CLI Dashboard `list_pages` preflight timed out. No Cloudflare mutation/deploy was attempted. Restore official Wrangler OAuth, verify the GFS Dashboard identity and Access in a working Kilo Code session, then deploy only this standalone app's `dist/` and record the new ID/rollback.
+
 ### GFS-LP-034 Current V4 Release
 
 V4 source `c7dc3fbb150b7a8b10807d89afb49a052dda04de` from `D:\free seeds`, branch `codex/garden-shop-label-printer-mvp`, was built with the documented monitor/Admin URLs and uploaded starting `2026-11-16T22:48:53Z`. New Pages deployment: **`2420ee42-08ac-4d0d-a620-caa7197f0966`** at `https://2420ee42.garden-shop-label-printer-staging.pages.dev`. Dashboard confirms it active on `https://garden-shop-label-printer-staging.pages.dev`. Static `dist/` assets/_headers only were uploaded; Wrangler ignored the ancestor Worker config. Verified pre-upload active rollback: **`2db928f2-0ccd-4f7a-aa9a-19db2bfc29d4`**. These observations supersede historical status below.
