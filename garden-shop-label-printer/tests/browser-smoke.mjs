@@ -68,10 +68,11 @@ async function saveGeneratedPdf(page, path, timeout = 300000) {
   await download.saveAs(path);
 }
 
-async function saveMoGeneratedPdf(page, path, expectedPages) {
-  assert.equal(await page.locator("#downloadMoPdf").isDisabled(), false, `MO PDF control is disabled: ${await page.locator("body").innerText()}`);
+async function saveMoGeneratedPdf(page, path, expectedPages, kind = "blank") {
+  const control = page.locator(kind === "draft" ? "#downloadMoDraftPdf" : "#downloadMoPdf");
+  assert.equal(await control.isDisabled(), false, `MO PDF control is disabled: ${await page.locator("body").innerText()}`);
   const downloadEvent = page.waitForEvent("download", { timeout: 90000 }).then((download) => ({ download }), (error) => ({ error: error.message }));
-  await page.locator("#downloadMoPdf").click();
+  await control.click();
   await page.waitForFunction(() => {
     const status = document.querySelector("#moPdfStatus")?.textContent ?? "";
     return status.startsWith("MO PDF export failed") || status.startsWith("Export cancelled") || status.startsWith("Downloaded ");
@@ -81,7 +82,7 @@ async function saveMoGeneratedPdf(page, path, expectedPages) {
   const result = await downloadEvent;
   if (result.error) throw new Error(`${result.error}\nMO status=${status}`);
   const download = result.download;
-  assert.match(download.suggestedFilename(), /^mo51-manual-completion-\d+-forms\.pdf$/u);
+  assert.match(download.suggestedFilename(), kind === "draft" ? /^mo51-user-confirmed-draft-\d+-forms\.pdf$/u : /^mo51-manual-completion-\d+-forms\.pdf$/u);
   assert.doesNotMatch(download.suggestedFilename(), /\d{13}/u, "CNIC must not enter the generated filename");
   await download.saveAs(path);
   assert.equal(await page.locator('iframe[title="Temporary MO-51 PDF rasterizer"]').count(), 0, "successful export must remove temporary rasterizer frames");
@@ -94,7 +95,7 @@ async function saveMoGeneratedPdf(page, path, expectedPages) {
     assert.ok(Math.abs(height - (210 * 72 / 25.4)) < 0.01, `MO page height ${height}pt is not A4 landscape`);
     assert.equal(pdfPage.getRotation().angle, 0, "physical page rotation remains unset");
   }
-  assert.match(document.getTitle(), /blank manual-completion/u);
+  assert.match(document.getTitle(), kind === "draft" ? /user-confirmed .*draft/u : /blank manual-completion/u);
   assert.doesNotMatch(`${document.getTitle()} ${document.getSubject() ?? ""} ${document.getKeywords() ?? ""}`, /0000012345678|00000-1234567-8/u, "CNIC must not enter PDF metadata");
   return { bytes, document };
 }
@@ -143,6 +144,74 @@ async function compareMoPdfWithPreview(page, face, pdfBytes, pageNumber) {
   const meanDifference = difference / (raster.width * raster.height * 3 * 255);
   assert.ok(meanDifference < 0.1, `${face} PDF raster should match I2 preview; normalized mean difference ${meanDifference}`);
   return raster;
+}
+
+async function setMoMapping(page, sourceIndex, key, value) {
+  const card = page.locator(`[data-mo-review-index="${sourceIndex}"]`);
+  if ((await card.getAttribute("open")) === null) await card.locator("summary").click();
+  const choice = card.locator(`[data-mo-map-choice-key="${key}"][data-mo-map-choice-value="${value}"]`);
+  let expectedStatePosition;
+  if (await choice.count()) {
+    await choice.click();
+    const statePosition = { articleNumberSource: 0, principalSource: 1, senderSource: 2, receiverSource: 3 }[key];
+    expectedStatePosition = statePosition;
+    if (statePosition !== undefined) {
+      await page.waitForFunction(({ index, position, expected }) => {
+        const item = (document.querySelector("[data-mo-view]")?.getAttribute("data-mo-pending-state") ?? "").split("|").find((entry) => entry.startsWith(`${index}:`));
+        return item?.split(":")[1]?.split("/")[position] === expected;
+      }, { index: sourceIndex, position: statePosition, expected: value }).catch(async (error) => {
+        throw new Error(`${error.message}\nPending=${await page.locator("[data-mo-view]").getAttribute("data-mo-pending-state")}\nConfirmed=${await page.locator("[data-mo-view]").getAttribute("data-mo-mapping-state")}\nChoice buttons=${await page.locator(`[data-mo-review-index="${sourceIndex}"] [data-mo-map-choice-key="${key}"]`).count()}`);
+      });
+      await page.waitForFunction(({ index, position, expected }) => {
+        const item = (document.querySelector("[data-mo-view]")?.getAttribute("data-mo-mapping-state") ?? "").split("|").find((entry) => entry.startsWith(`${index}:`));
+        return item?.split(":")[1]?.split("/")[position] === expected;
+      }, { index: sourceIndex, position: statePosition, expected: value });
+    }
+  } else {
+    const control = card.locator(`[data-mo-map-key="${key}"]`);
+    await control.fill(value);
+    await page.locator("#confirmMoMappings").click();
+    await page.waitForFunction(() => /Confirmed \d+ MO-session row choices/u.test(document.querySelector("#moPdfStatus")?.textContent ?? ""));
+  }
+  if (expectedStatePosition !== undefined) {
+    await page.waitForFunction(({ index, position, expected }) => {
+      const item = (document.querySelector("[data-mo-view]")?.getAttribute("data-mo-mapping-state") ?? "").split("|").find((entry) => entry.startsWith(`${index}:`));
+      return item?.split(":")[1]?.split("/")[position] === expected;
+    }, { index: sourceIndex, position: expectedStatePosition, expected: value }, { timeout: 5000 }).catch(async (error) => {
+      throw new Error(`${error.message}\nPending=${await page.locator("[data-mo-view]").getAttribute("data-mo-pending-state")}\nConfirmed=${await page.locator("[data-mo-view]").getAttribute("data-mo-mapping-state")}\nStatus=${await page.locator("#moPdfStatus").innerText()}`);
+    });
+  }
+  const fieldByChoice = {
+    articleNumberSource: "articleNumber",
+    principalSource: "principal",
+    senderSource: "senderName",
+    receiverSource: "receiverName",
+    manualArticleNumber: "articleNumber",
+    manualPrincipal: "principal",
+    manualSenderName: "senderName",
+    manualSenderAddress: "senderAddress",
+    manualSenderPhone: "senderPhone",
+    manualReceiverName: "receiverName",
+    manualReceiverAddress: "receiverAddress",
+    manualReceiverPhone: "receiverPhone",
+  };
+  const field = value && value !== "blank" && !(value === "manual" && key.endsWith("Source")) ? fieldByChoice[key] ?? null : null;
+  await page.waitForFunction(({ index, expectedField }) => {
+    const form = document.querySelector("#moFrontPreview")?.contentDocument?.querySelector(`.page[data-mo-source-index="${index}"]`);
+    return Boolean(form) && (expectedField === null || form.dataset.moVisibleFields?.split(",").includes(expectedField));
+  }, { index: sourceIndex, expectedField: field }).catch(async (error) => {
+    throw new Error(`${error.message}\nConfirm status=${await page.locator("#moPdfStatus").innerText()}\nMO mapping state=${await page.locator("[data-mo-view]").getAttribute("data-mo-mapping-state")}\nCard state=${JSON.stringify({ sender: await page.locator(`[data-mo-review-index="${sourceIndex}"]`).getAttribute("data-mo-sender-source"), receiver: await page.locator(`[data-mo-review-index="${sourceIndex}"]`).getAttribute("data-mo-receiver-source"), resolved: await page.locator(`[data-mo-review-index="${sourceIndex}"]`).getAttribute("data-mo-resolved-fields") })}\nControls=${JSON.stringify(await page.locator("[data-mo-map-index][data-mo-map-key]").evaluateAll((controls) => controls.map((input) => ({ key: input.getAttribute("data-mo-map-key"), index: input.getAttribute("data-mo-map-index") }))))}`);
+  });
+}
+
+async function compareMoPdfPages(firstBytes, secondBytes, pageNumber) {
+  const first = await rasterPdfPage(firstBytes, 1, pageNumber);
+  const second = await rasterPdfPage(secondBytes, 1, pageNumber);
+  const left = first.getContext("2d").getImageData(0, 0, first.width, first.height).data;
+  const right = second.getContext("2d").getImageData(0, 0, second.width, second.height).data;
+  let difference = 0;
+  for (let index = 0; index < left.length; index += 4) difference += Math.abs(left[index] - right[index]) + Math.abs(left[index + 1] - right[index + 1]) + Math.abs(left[index + 2] - right[index + 2]);
+  return difference / (first.width * first.height * 3 * 255);
 }
 
 function rasterDarkBounds(canvas, box, scale = 4) {
@@ -197,9 +266,14 @@ try {
   const errors = [];
   const failedRequests = [];
   const allRequests = [];
+  let moSourceDataRequested = false;
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("requestfailed", (request) => failedRequests.push(`${request.url()}: ${request.failure()?.errorText}`));
-  page.on("request", (request) => allRequests.push(request.url()));
+  page.on("request", (request) => {
+    allRequests.push(request.url());
+    const content = `${request.url()} ${request.postData() ?? ""}`;
+    if (/Synthetic Receiver|Synthetic address|آزمائشی|0000012345678|00000-1234567-8/u.test(content)) moSourceDataRequested = true;
+  });
   await page.goto(baseUrl, { waitUntil: "networkidle" });
   assert.equal(await page.locator("#backToAdmin").getAttribute("href"), "https://getfreeseeds-admin-staging.get-free-seeds.workers.dev/");
   await page.locator("#workbook").setInputFiles({ name: "synthetic-import.xlsx", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buffer: Buffer.from(syntheticXlsx()) });
@@ -824,7 +898,7 @@ try {
       `MO-SYN-${String(index + 1).padStart(3, "0")}`,
       `Synthetic Receiver ${index + 1}`,
       "03001234567",
-      `Synthetic address ${index + 1}, long Urdu test پتہ ${index + 1}`,
+      `Synthetic St ${index + 1}`,
       `${index % 2 ? "VPP" : "VPL"}${String(index + 1).padStart(6, "0")}`,
       "25000",
       "Synthetic parcel only",
@@ -841,7 +915,7 @@ try {
       const frame = document.querySelector("#moFrontPreview");
       return frame?.contentDocument?.querySelector(".mo-sheet") && frame.contentDocument.fonts.status === "loaded";
     }, { timeout: 30000 });
-    assert.match(await page.locator(".mo-summary").innerText(), new RegExp(`${count}\\s+eligible VPL/VPP rows used for blank-copy quantity only`, "u"));
+    assert.match(await page.locator(".mo-summary").innerText(), new RegExp(`${count}\\s+eligible VPL/VPP rows used for copy quantity only`, "u"));
   }
 
   async function importMoMixedPrefixes() {
@@ -917,7 +991,7 @@ try {
     assert.ok(metrics.minimumEffectiveTextPt >= 6.4, `smallest source text should remain at least 6.4pt after uniform fit: ${metrics.minimumEffectiveTextPt}`);
     assert.equal(metrics.stampsInside, true, "stamp/signature geometry must remain inside both form bounds");
     assert.equal(metrics.fontReady, true, "locally bundled Urdu font must be available");
-    assert.doesNotMatch(metrics.text, /Synthetic Receiver|MO-SYN-|03001234567|Synthetic address/u, "order fields must not leak into the unresolved postal fields");
+    assert.doesNotMatch(metrics.text, /Synthetic Receiver|MO-SYN-|03001234567|Synthetic St/u, "order fields must not leak into the unresolved postal fields");
   }
 
   async function expectMoSheet(face, expectedSlots) {
@@ -980,6 +1054,75 @@ try {
   await page.locator("#moSenderCnic").press("Tab");
   await page.waitForSelector("#moBackPreview");
   assert.equal(await page.frameLocator("#moFrontPreview").locator("[data-mo-sender-cnic]").count(), 0, "blank optional CNIC leaves the original form line blank");
+  await page.locator("#moSenderCnic").fill("0000012345678");
+  await page.locator("#moSenderCnic").press("Tab");
+  await page.waitForFunction(() => document.querySelector("#moFrontPreview")?.contentDocument?.querySelectorAll("[data-mo-sender-cnic]").length === 2);
+
+  await setMoMapping(page, 0, "articleNumberSource", "tracking");
+  await setMoMapping(page, 0, "principalSource", "declared-principal");
+  await setMoMapping(page, 0, "senderSource", "article-sender");
+  await setMoMapping(page, 0, "receiverSource", "article-receiver");
+  await setMoMapping(page, 0, "receiverSource", "manual");
+  await setMoMapping(page, 0, "manualReceiverName", "آزمائشی وصول کنندہ");
+  await setMoMapping(page, 0, "manualReceiverAddress", "گلی ۱۲، آزمائشی پتہ");
+  await setMoMapping(page, 0, "manualReceiverPhone", "03009876543");
+  const confirmedFront = await page.frameLocator("#moFrontPreview").locator(".mo-sheet").innerText();
+  const confirmedBack = await page.frameLocator("#moBackPreview").locator(".mo-sheet").innerText();
+  const mappedKeys = (await page.frameLocator("#moFrontPreview").locator('.page[data-mo-source-index="0"]').getAttribute("data-mo-visible-fields")).split(",");
+  assert.deepEqual(mappedKeys.sort(), ["articleNumber", "principal", "receiverAddress", "receiverName", "receiverPhone", "senderAddress", "senderName"].sort());
+  assert.match(confirmedFront, /VPL000001/u, "selected exact tracking source appears in the V.P. article field");
+  assert.match(confirmedFront, /25000/u, "only validated principal is selected; no label commission is added");
+  assert.doesNotMatch(confirmedFront, /25175/u, "label commission must not be merged into principal");
+  assert.match(confirmedFront, /آزمائشی وصول کنندہ/u, "synthetic manual Urdu receiver name renders in the front form");
+  assert.match(confirmedFront, /گلی ۱۲، آزمائشی پتہ/u, "synthetic Urdu address is preserved in RTL text");
+  assert.match(confirmedFront, /03009876543/u);
+  assert.equal(await page.frameLocator("#moFrontPreview").locator('[data-mo-field="receiver-name"]').getAttribute("dir"), "auto");
+  assert.equal(await page.frameLocator("#moFrontPreview").locator('[data-mo-field="receiver-name"]').getAttribute("data-mo-provenance"), "manual MO-session entry");
+  assert.match(confirmedBack, /M\.O\.-51 \(Revised\)/u, "candidate fields do not swap front/back artwork");
+  assert.equal(await page.frameLocator("#moFrontPreview").locator(".mo-draft-marker").count(), 1);
+  assert.equal(await page.frameLocator("#moBackPreview").locator(".mo-draft-marker").count(), 1);
+  assert.equal(await page.locator("#downloadMoDraftPdf").isDisabled(), false, await page.locator("#moMappingFitError").innerText());
+  const mappedStorage = await page.evaluate(async () => {
+    const database = await new Promise((resolve, reject) => {
+      const request = indexedDB.open("gfs-label-references-v1");
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const references = await new Promise((resolve, reject) => {
+      const request = database.transaction("references", "readonly").objectStore("references").getAll();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    database.close();
+    return JSON.stringify({ localStorage: { ...localStorage }, sessionStorage: { ...sessionStorage }, references });
+  });
+  assert.doesNotMatch(mappedStorage, /آزمائشی وصول کنندہ|گلی ۱۲، آزمائشی پتہ|Synthetic Merchant|25000/u, "user-confirmed MO values must remain memory-only");
+  assert.equal(allRequests.some((url) => /آزمائشی|Synthetic Receiver 1|Synthetic address 1|00000-1234567-8/u.test(url)), false, "MO candidate values and Sender CNIC must not enter request URLs");
+  assert.equal(moSourceDataRequested, false, "candidate fields and CNIC must not enter monitoring, analytics or other request payloads");
+  const userConfirmedPdf = await saveMoGeneratedPdf(page, join(temporary, "mo51-synthetic-user-confirmed-draft.pdf"), 2, "draft");
+  const draftFrontRaster = await compareMoPdfWithPreview(page, "front", userConfirmedPdf.bytes, 1);
+  const draftBackRaster = await compareMoPdfWithPreview(page, "back", userConfirmedPdf.bytes, 2);
+  assert.ok(draftFrontRaster.width > 800 && draftBackRaster.width > 800);
+  assert.match(userConfirmedPdf.document.getSubject(), /user-confirmed draft/iu);
+  await writeFile(join(evidence, "mo51-lp047-populated-draft-pdf-page1-front-synthetic.png"), draftFrontRaster.toBuffer("image/png"));
+  await writeFile(join(evidence, "mo51-lp047-populated-draft-pdf-page2-back-synthetic.png"), draftBackRaster.toBuffer("image/png"));
+  await page.frameLocator("#moFrontPreview").locator(".mo-sheet").screenshot({ path: join(evidence, "mo51-lp047-populated-draft-preview-front-synthetic.png") });
+  await page.frameLocator("#moBackPreview").locator(".mo-sheet").screenshot({ path: join(evidence, "mo51-lp047-populated-draft-preview-back-synthetic.png") });
+  const blankAfterMapping = await saveMoGeneratedPdf(page, join(temporary, "mo51-synthetic-blank-after-mapping.pdf"), 2);
+  assert.match(blankAfterMapping.document.getTitle(), /blank manual-completion/u);
+  assert.ok(await compareMoPdfPages(moPdfDownload.bytes, blankAfterMapping.bytes, 1) < 0.01, "blank manual-completion PDF must ignore all selected source mappings");
+  assert.ok(await compareMoPdfPages(moPdfDownload.bytes, blankAfterMapping.bytes, 2) < 0.01);
+
+  await setMoMapping(page, 0, "receiverSource", "manual");
+  await setMoMapping(page, 0, "manualReceiverAddress", "Synthetic long address ".repeat(80));
+  await page.waitForFunction(() => /receiver-address/u.test(document.querySelector("#moMappingFitError")?.textContent ?? ""), { timeout: 5000 }).catch(async (error) => {
+    const bounds = await page.frameLocator("#moFrontPreview").locator("[data-mo-field=receiver-address]").evaluate((field) => ({ textLength: field.textContent?.length, fieldWidth: field.getBoundingClientRect().width, lineWidth: field.parentElement?.getBoundingClientRect().width, visibleKeys: field.closest(".page")?.dataset.moVisibleFields }));
+    throw new Error(`${error.message}\nFit status=${await page.locator("#moMappingFitError").innerText()}\nBounds=${JSON.stringify(bounds)}\nDraft disabled=${await page.locator("#downloadMoDraftPdf").isDisabled()}`);
+  });
+  assert.equal(await page.locator("#downloadMoDraftPdf").isDisabled(), true, "long mapped addresses must block draft PDF; never truncate");
+  assert.equal(await page.locator("#downloadMoPdf").isDisabled(), false, "blank manual-completion packet remains a separate option");
+  await setMoMapping(page, 0, "receiverSource", "article-receiver");
+  await page.waitForFunction(() => !(document.querySelector("#moMappingFitError")?.textContent ?? "").length);
 
   await importMoBatch(3);
   await inspectMoFace("front", [0, 2], "");
@@ -1052,17 +1195,26 @@ try {
     await assertMoOddBlank(pdf, count);
   }
 
+  await importMoBatch(101);
+  await setMoMapping(page, 0, "articleNumberSource", "tracking");
+  await setMoMapping(page, 0, "principalSource", "declared-principal");
+  await setMoMapping(page, 0, "senderSource", "article-sender");
+  const draft101 = await saveMoGeneratedPdf(page, join(temporary, "mo51-user-confirmed-draft-n101.pdf"), 102, "draft");
+  const draft101Front = await compareMoPdfWithPreview(page, "front", draft101.bytes, 1);
+  const draft101Back = await compareMoPdfWithPreview(page, "back", draft101.bytes, 2);
+  await writeFile(join(evidence, "mo51-lp047-populated-draft-n101-page1-front-synthetic.png"), draft101Front.toBuffer("image/png"));
+  await writeFile(join(evidence, "mo51-lp047-populated-draft-n101-page2-back-synthetic.png"), draft101Back.toBuffer("image/png"));
+  await assertMoOddBlank(draft101, 101);
+  const cancelledDraftDownload = page.waitForEvent("download", { timeout: 3000 }).then(() => true, () => false);
+  await page.locator("#downloadMoDraftPdf").click();
+  await page.locator("#cancelMoPdf").click();
+  await page.waitForFunction(() => document.querySelector("#moPdfStatus")?.textContent?.startsWith("Export cancelled"));
+  assert.equal(await cancelledDraftDownload, false, "cancelled populated draft must not produce a PDF download");
+  assert.equal(await page.locator('iframe[title="Temporary MO-51 PDF rasterizer"]').count(), 0, "cancelled populated draft must clean temporary rasterizer frames");
+
   await importMoMixedPrefixes();
   const mixedMoPdf = await saveMoGeneratedPdf(page, join(temporary, "mo51-synthetic-mixed-prefixes.pdf"), 4);
   await assertMoOddBlank(mixedMoPdf, 3);
-
-  await importMoBatch(101);
-  const cancelDownload = page.waitForEvent("download", { timeout: 3000 }).then(() => true, () => false);
-  await page.locator("#downloadMoPdf").click();
-  await page.locator("#cancelMoPdf").click();
-  await page.waitForFunction(() => document.querySelector("#moPdfStatus")?.textContent?.startsWith("Export cancelled"));
-  assert.equal(await cancelDownload, false, "cancelled MO export must not produce a downloadable PDF");
-  assert.equal(await page.locator('iframe[title="Temporary MO-51 PDF rasterizer"]').count(), 0, "temporary rasterizer frames must be removed after cancellation");
 
   await page.locator('[data-view="review"]').first().click();
   await page.locator('[data-view="mo"]').click();

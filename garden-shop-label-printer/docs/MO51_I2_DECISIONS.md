@@ -47,3 +47,9 @@ Status: local screen preview only. No MO PDF, print job, physical calibration, p
 
 - The prior I2 assumption that source section 2 was front because it carried the title was reversed and is superseded. The owner confirms source section 1 is FRONT: Month Stamp, VPL/VPP, value area, sender/receiver and optional Sender CNIC. Source section 2 is BACK: M.O.-51 Revised, PAKISTAN MONEY ORDER, office, stamp and signature areas.
 - Current renderer mapping and regenerated proofs follow this authority. Sender CNIC stays in section 1 only. The correction does not swap logical left/right record slots or imply physical duplex rotation; that remains uncalibrated.
+
+## GFS-LP-047 Candidate Review Extension
+
+- LP-047 adds default-blank source-choice/manual-entry controls per selected row. A source-choice button is an explicit confirmation for this MO session; manual entries require the MO-only Confirm action. Provenance remains user-confirmed/unverified, not official.
+- Only source values explicitly selected for a row are inserted into the front/section 1 preview; no value is copied to `Order` or another label feature. Populated forms have a visible DRAFT/non-postal-verified mark. Unselected fields remain blank and overflows are blocked without shrink/truncation.
+- The requested Hoja Seeds sample workbook was not accessed under the inherited zero-Hoja rule; verification uses synthetic data only.

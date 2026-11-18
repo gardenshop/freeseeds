@@ -42,3 +42,17 @@ Status: local blank manual-completion PDF packet only. Not an official completed
 - The owner has authoritatively corrected the source-face order: HTML section 1 is FRONT; section 2 is BACK. This supersedes LP-044/045 provisional “title side is front” wording and the earlier `mo51-pdf-n2-front.png` proof, which displayed section 2 on page 1.
 - Correct I3 outputs now put section 1 on every front PDF page and section 2 on every reverse PDF page. Record slot pairing remains unchanged. No physical rotation, mirror, or printer orientation was introduced. Sender CNIC is now on the front/section 1 sender identity line only.
 - LP-046 proof filenames explicitly include `front` or `back`; page images are content-asserted for Month Stamp/VPL/VPP versus M.O.-51 Revised/PAKISTAN MONEY ORDER and compared against actual PDF raster pages.
+
+## GFS-LP-047 User-Confirmed Draft Extension
+
+- The I3 blank manual-completion PDF continues to ignore all mapping state. LP-047 adds a separately titled/meta-labelled DRAFT PDF only when explicitly confirmed per-row MO-session fields exist. Each populated copy has a visible user-confirmed/not-postal-verified mark; this does not enable completed-order export.
+- Candidate/manual values appear only in the front/section 1 sender/article/amount fields explicitly selected by the operator. Commission is never merged. Other legal and postal fields remain blank. The downloaded DRAFT is user-requested local output and is not stored or transmitted by the application.
+- Per-field provenance, public source review, missing-field requirements and the explicit prohibition on Hoja Seeds sample data are in `docs/MO51_LP047_FIELD_REGISTER.md` and `docs/MO51_LP047_DECISIONS.md`.
+
+## GFS-LP-047 Candidate Mapping Extension
+
+- I3's blank manual-completion PDF remains independent and ignores all mapping state.
+- LP-047 adds volatile per-row source/manual choices. Nothing is populated until the user explicitly selects a source or enters manual text; provenance is labelled as a shipping-label candidate or manual MO-session entry, never official postal verification.
+- A populated preview/DRAFT PDF includes a visible per-form `USER-CONFIRMED DRAFT · NOT POSTAL VERIFIED` mark and incomplete-order metadata. There is no completed-order export while MO-51 requiredness and legal roles are unresolved.
+- Only exact tracking, validated declared principal (commission separately excluded), label-party candidates, and manual MO-session fields are available as candidates. No order ID/MO number substitution, automatic role equation, amount-in-words conversion, or amount/fee combination is added. Overlong mapped text blocks DRAFT export instead of truncation.
+- LP-046 section-1-front / section-2-back mapping, cut stack, A4 dimensions, per-face rotation uncertainty, CNIC privacy, and LP-041 staging/audit gates remain in force.

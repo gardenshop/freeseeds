@@ -3,7 +3,8 @@ import html2canvas from "html2canvas";
 import type { MoCandidate } from "./adapter";
 import { formatSenderCnic } from "./cnic";
 import { imposeMoCandidates } from "./imposition";
-import { renderMoPreviewDocuments, type MoBackPreviewRotation } from "./renderer";
+import { findMoFieldOverflows, renderMoPreviewDocuments, type MoBackPreviewRotation } from "./renderer";
+import { emptyMoSessionMapping, hasVisibleMoFields, resolveMoVisibleFields, type MoSessionMapping } from "./mapping";
 
 const PT_PER_MM = 72 / 25.4;
 const PAGE_WIDTH_PT = 297 * PT_PER_MM;
@@ -26,6 +27,8 @@ export type MoPdfProgress = Readonly<{ completedPages: number; totalPages: numbe
 export type MoPdfOptions = Readonly<{
   signal?: AbortSignal;
   backRotation?: MoBackPreviewRotation;
+  mappings?: ReadonlyMap<number, MoSessionMapping>;
+  draftMode?: boolean;
   onProgress?: (progress: MoPdfProgress) => void;
 }>;
 
@@ -69,6 +72,8 @@ async function facePng(srcdoc: string, signal?: AbortSignal): Promise<Uint8Array
     throwIfAborted(signal);
     const sheet = doc.querySelector<HTMLElement>(".mo-sheet");
     if (!sheet) throw new Error(`MO_PDF_PREVIEW_SHEET_MISSING:${doc.readyState}`);
+    const overflows = findMoFieldOverflows(doc);
+    if (overflows.length) throw new Error(`MO_FIELD_OVERFLOW:${overflows.join(",")}`);
     canvas = await abortable(html2canvas(sheet, {
       scale: DPI / 96,
       backgroundColor: "#fff",
@@ -111,28 +116,33 @@ export async function createMoPdfBlob(
   senderCnicInput: string,
   options: MoPdfOptions = {},
 ): Promise<Blob> {
-  const { signal, onProgress, backRotation = "none" } = options;
+  const { signal, onProgress, backRotation = "none", mappings = new Map(), draftMode = false } = options;
   throwIfAborted(signal);
   if (!candidates.length) throw new Error("MO_PDF_NO_ELIGIBLE_RECORDS");
   const cnic = formatSenderCnic(senderCnicInput);
   if (cnic.status === "invalid") throw new Error("MO_SENDER_CNIC_INVALID");
 
+  const hasDraftFields = candidates.some((candidate) => hasVisibleMoFields(resolveMoVisibleFields(candidate, mappings.get(candidate.sourceIndex) ?? emptyMoSessionMapping())));
+  if (draftMode && !hasDraftFields) throw new Error("MO_DRAFT_REQUIRES_USER_CONFIRMED_FIELDS");
+  const appliedMappings = draftMode ? mappings : new Map<number, MoSessionMapping>();
+
   const plan = imposeMoCandidates(candidates);
   const totalPages = plan.pdfPageCount;
   const pdf = await PDFDocument.create();
-  pdf.setTitle("MO-51 blank manual-completion forms");
-  pdf.setSubject("Blank forms for manual completion; not an official completed money order");
-  pdf.setKeywords(["MO-51", "blank", "manual completion", "not completed"]);
+  pdf.setTitle(draftMode ? "MO-51 user-confirmed incomplete draft forms" : "MO-51 blank manual-completion forms");
+  pdf.setSubject(draftMode ? "User-confirmed draft values; unresolved postal fields remain blank; not an official completed money order" : "Blank forms for manual completion; not an official completed money order");
+  pdf.setKeywords(draftMode ? ["MO-51", "user-confirmed draft", "not postal verified", "incomplete"] : ["MO-51", "blank", "manual completion", "not completed"]);
   const imageCache = new Map<string, Awaited<ReturnType<typeof pdf.embedPng>>>();
   let completedPages = 0;
 
   for (const sheet of plan.sheets) {
     for (const face of ["front", "back"] as const) {
       throwIfAborted(signal);
-      const key = `${face}:${sheet.front.right ? "two-forms" : "blank-right"}:${cnic.status === "valid" ? cnic.formatted : "no-cnic"}:${face === "back" ? backRotation : "none"}`;
+      const visualFields = [sheet.front.left, sheet.front.right].map((candidate) => candidate ? resolveMoVisibleFields(candidate, appliedMappings.get(candidate.sourceIndex) ?? emptyMoSessionMapping()) : null);
+      const key = `${face}:${sheet.front.right ? "two-forms" : "blank-right"}:${cnic.status === "valid" ? cnic.formatted : "no-cnic"}:${face === "back" ? backRotation : "none"}:${JSON.stringify(visualFields)}`;
       let image = imageCache.get(key);
       if (!image) {
-        const docs = renderMoPreviewDocuments(sheet, cnic.status === "valid" ? cnic.formatted : "", backRotation);
+        const docs = renderMoPreviewDocuments(sheet, cnic.status === "valid" ? cnic.formatted : "", backRotation, appliedMappings);
         const png = await facePng(docs[face], signal);
         throwIfAborted(signal);
         image = await pdf.embedPng(png);

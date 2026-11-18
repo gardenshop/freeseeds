@@ -35,7 +35,8 @@ import "./mo/view.css";
 import { projectMoRecords } from "./mo/adapter";
 import { formatSenderCnic } from "./mo/cnic";
 import { renderMoPrintView, type MoPdfViewState } from "./mo/view";
-import type { MoBackPreviewRotation } from "./mo/renderer";
+import { findMoFieldOverflows, type MoBackPreviewRotation } from "./mo/renderer";
+import { emptyMoSessionMapping, hasMoSessionMapping, moSessionMappingError, type MoSessionMapping, type MoSessionMappingKey } from "./mo/mapping";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 const monitoringUrl =
@@ -120,6 +121,9 @@ let moSheetIndex = 0;
 let moBackRotation: MoBackPreviewRotation = "none";
 let moPdfState: MoPdfViewState = Object.freeze({ exporting: false });
 let moPdfAbort: AbortController | undefined;
+let moSessionMappings = new Map<number, MoSessionMapping>();
+let moPendingMappings = new Map<number, MoSessionMapping>();
+let moMappingHandlersBound = false;
 
 const esc = (value: unknown) =>
   String(value ?? "").replace(
@@ -401,7 +405,7 @@ function renderAdmin() {
 
 function renderMo() {
   const projection = currentMoProjection();
-  return renderMoPrintView(projection, moSenderCnicInput, moSheetIndex, moBackRotation, moPdfState);
+  return renderMoPrintView(projection, moSenderCnicInput, moSheetIndex, moBackRotation, moPdfState, moSessionMappings, moPendingMappings);
 }
 
 function currentMoProjection() {
@@ -409,19 +413,88 @@ function currentMoProjection() {
   return projectMoRecords(rows, { selectedSourceIndexes: selectedIndexes, requiredFields: [] });
 }
 
-async function downloadMoPdf() {
+function updatePendingMoMapping(event: Event): void {
+  const input = event.target;
+  if (!(input instanceof HTMLInputElement) || !input.matches("[data-mo-map-index][data-mo-map-key]")) return;
+  const sourceIndex = Number(input.dataset.moMapIndex);
+  const key = input.dataset.moMapKey as MoSessionMappingKey;
+  if (!Number.isInteger(sourceIndex) || !key) return;
+  const current = moPendingMappings.get(sourceIndex) ?? moSessionMappings.get(sourceIndex) ?? emptyMoSessionMapping();
+  moPendingMappings.set(sourceIndex, Object.freeze({ ...current, [key]: input.value }));
+  const status = document.querySelector<HTMLElement>("#moPdfStatus");
+  if (status) status.textContent = "Unconfirmed MO-session edit; press Confirm to apply to this draft only.";
+}
+
+function confirmMoSessionChoices(): void {
+  moSessionMappings = new Map(moPendingMappings);
+  moPendingMappings = new Map(moSessionMappings);
+  const selected = Array.from(moSessionMappings, ([index, mapping]) => ({ index, mapping }))
+    .filter(({ mapping }) => hasMoSessionMapping(mapping));
+  const partyChoices = selected.flatMap(({ index, mapping }) => [
+    mapping.senderSource === "blank" ? "" : `${index}:sender=${mapping.senderSource}`,
+    mapping.receiverSource === "blank" ? "" : `${index}:receiver=${mapping.receiverSource}`,
+  ]).filter(Boolean);
+  moPdfState = Object.freeze({
+    exporting: false,
+    message: `Confirmed ${selected.length} MO-session row choices. ${partyChoices.join(", ")}. Not postal-verified.`,
+  });
+  render();
+}
+
+function bindMoMappingHandlers(): void {
+  if (moMappingHandlersBound) return;
+  app.addEventListener("input", updatePendingMoMapping);
+  app.addEventListener("change", updatePendingMoMapping);
+  app.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const choice = target.closest<HTMLButtonElement>("[data-mo-map-choice-key][data-mo-map-choice-index][data-mo-map-choice-value]");
+    if (choice) {
+      event.preventDefault();
+      const sourceIndex = Number(choice.dataset.moMapChoiceIndex);
+      const key = choice.dataset.moMapChoiceKey as MoSessionMappingKey;
+      const value = choice.dataset.moMapChoiceValue;
+      if (!Number.isInteger(sourceIndex) || !key || value === undefined) return;
+      const current = moPendingMappings.get(sourceIndex) ?? moSessionMappings.get(sourceIndex) ?? emptyMoSessionMapping();
+      const confirmed = Object.freeze({ ...current, [key]: value });
+      moPendingMappings.set(sourceIndex, confirmed);
+      moSessionMappings.set(sourceIndex, confirmed);
+      moPdfState = Object.freeze({ exporting: false, message: `Confirmed ${key} source for row ${sourceIndex + 1}; user-confirmed only, not postal-verified.` });
+      render();
+      return;
+    }
+    if (target.closest("#confirmMoMappings")) {
+      event.preventDefault();
+      confirmMoSessionChoices();
+    }
+  });
+  moMappingHandlersBound = true;
+}
+
+async function downloadMoPdf(draftMode = false) {
   if (moPdfAbort || view !== "mo") return;
   const projection = currentMoProjection();
   if (!projection.candidates.length || formatSenderCnic(moSenderCnicInput).status === "invalid") return;
+  if (draftMode && !projection.candidates.some((candidate) => hasMoSessionMapping(moSessionMappings.get(candidate.sourceIndex) ?? emptyMoSessionMapping()))) return;
+  if (draftMode) {
+    const invalidMapping = projection.candidates.map((candidate) => moSessionMappingError(moSessionMappings.get(candidate.sourceIndex) ?? emptyMoSessionMapping())).find(Boolean);
+    if (invalidMapping) {
+      moPdfState = Object.freeze({ exporting: false, error: invalidMapping });
+      render();
+      return;
+    }
+  }
   const controller = new AbortController();
   moPdfAbort = controller;
-  moPdfState = Object.freeze({ exporting: true, message: "Preparing blank manual-completion PDF…" });
+  moPdfState = Object.freeze({ exporting: true, message: draftMode ? "Preparing user-confirmed draft PDF…" : "Preparing blank manual-completion PDF…" });
   render();
   try {
     const { createMoPdfBlob } = await import("./mo/pdf");
     const blob = await createMoPdfBlob(projection.candidates, moSenderCnicInput, {
       signal: controller.signal,
       backRotation: moBackRotation,
+      mappings: draftMode ? moSessionMappings : undefined,
+      draftMode,
       onProgress: ({ completedPages, totalPages }) => {
         moPdfState = Object.freeze({ exporting: true, progress: Object.freeze({ completedPages, totalPages }) });
         const status = document.querySelector<HTMLElement>("#moPdfStatus");
@@ -432,13 +505,13 @@ async function downloadMoPdf() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `mo51-manual-completion-${projection.candidates.length}-forms.pdf`;
+    link.download = `mo51-${draftMode ? "user-confirmed-draft" : "manual-completion"}-${projection.candidates.length}-forms.pdf`;
     link.hidden = true;
     document.body.append(link);
     link.click();
     link.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    moPdfState = Object.freeze({ exporting: false, message: `Downloaded ${Math.ceil(projection.candidates.length / 2) * 2}-page blank manual-completion packet.` });
+    moPdfState = Object.freeze({ exporting: false, message: `Downloaded ${Math.ceil(projection.candidates.length / 2) * 2}-page ${draftMode ? "user-confirmed DRAFT" : "blank manual-completion"} packet.` });
   } catch (error) {
     const cancelled = error instanceof DOMException && error.name === "AbortError";
     if (moPdfAbort === controller) {
@@ -818,6 +891,17 @@ async function parseFile(file: File) {
   await logEvent("FILE_PROCESSED", { rows: rawRows.length });
   view = "mapping";
   render();
+}
+
+function validateMoPreviewFit(): void {
+  const frames = Array.from(document.querySelectorAll<HTMLIFrameElement>("#moFrontPreview,#moBackPreview"));
+  void Promise.all(frames.map((frame) => frame.contentDocument?.fonts?.ready ?? Promise.resolve())).then(() => {
+    const overflows = frames.flatMap((frame) => frame.contentDocument ? findMoFieldOverflows(frame.contentDocument) : []);
+    const status = document.querySelector<HTMLElement>("#moMappingFitError");
+    if (status) status.textContent = overflows.length ? `Mapped text does not fit: ${Array.from(new Set(overflows)).join(", ")}. Shorten or clear it; it will not be truncated.` : "";
+    const draftButton = document.querySelector<HTMLButtonElement>("#downloadMoDraftPdf");
+    if (draftButton) draftButton.disabled = overflows.length > 0 || Boolean(document.querySelector("#moSenderCnic[aria-invalid='true']"));
+  });
 }
 
 function templateCsv() {
@@ -1231,6 +1315,7 @@ async function loadAdmin() {
 }
 
 function bind() {
+  bindMoMappingHandlers();
   document.querySelectorAll<HTMLElement>("[data-view]").forEach((node) =>
     node.addEventListener("click", (event) => {
       event.preventDefault();
@@ -1243,12 +1328,16 @@ function bind() {
         moPdfAbort = undefined;
         moSenderCnicInput = "";
         moPdfState = Object.freeze({ exporting: false });
+        moSessionMappings = new Map();
+        moPendingMappings = new Map();
       }
       if (target === "mo" && view !== "mo") {
         moSenderCnicInput = "";
         moSheetIndex = 0;
         moBackRotation = "none";
         moPdfState = Object.freeze({ exporting: false });
+        moSessionMappings = new Map();
+        moPendingMappings = new Map();
       }
       view = target;
       render();
@@ -1288,6 +1377,10 @@ function bind() {
     const status = document.querySelector<HTMLElement>("#moPdfStatus");
     if (status) status.textContent = "Cancelling export…";
   });
+  document.querySelector("#downloadMoDraftPdf")?.addEventListener("click", () => void downloadMoPdf(true));
+  for (const frame of Array.from(document.querySelectorAll<HTMLIFrameElement>("#moFrontPreview,#moBackPreview"))) {
+    frame.addEventListener("load", validateMoPreviewFit);
+  }
   document
     .querySelector<HTMLInputElement>("#workbook")
     ?.addEventListener("change", async (event) => {
@@ -1387,6 +1480,8 @@ function bind() {
     moSheetIndex = 0;
     moBackRotation = "none";
     moPdfState = Object.freeze({ exporting: false });
+    moSessionMappings = new Map();
+    moPendingMappings = new Map();
     selected.clear();
     countLimit = -1;
     printRequested = false;
