@@ -864,8 +864,17 @@ try {
   async function inspectMoFace(face, expectedSlots, cnic) {
     const frame = page.frameLocator(face === "front" ? "#moFrontPreview" : "#moBackPreview");
     await expectMoSheet(face, expectedSlots);
-    assert.equal(await frame.locator("[data-mo-sender-cnic]").count(), face === "back" && cnic ? expectedSlots.filter((value) => value !== null).length : 0);
-    if (face === "back" && cnic) {
+    const formText = await frame.locator(".mo-sheet").innerText();
+    if (face === "front") {
+      assert.match(formText, /Month Stamp/u, "Section 1 sender/intimation artwork must be the front");
+      assert.match(formText, /V\. P\. L\./u);
+      assert.match(formText, /V\. P\. P\./u);
+    } else {
+      assert.match(formText, /M\.O\.-51 \(Revised\)/u, "Section 2 M.O.-51 title artwork must be the back");
+      assert.match(formText, /PAKISTAN MONEY ORDER/u);
+    }
+    assert.equal(await frame.locator("[data-mo-sender-cnic]").count(), face === "front" && cnic ? expectedSlots.filter((value) => value !== null).length : 0);
+    if (face === "front" && cnic) {
       const atSenderCnicPosition = await frame.locator("[data-mo-sender-cnic]").evaluateAll((values) => values.every((value) => {
         const senderLabels = value.closest(".page")?.querySelector('div[style*="width:104px"]');
         const senderBlock = senderLabels?.parentElement;
@@ -923,12 +932,14 @@ try {
   await importMoBatch(2);
   await page.locator("#moSenderCnic").fill("0000012345678");
   await page.locator("#moSenderCnic").press("Tab");
-  await page.waitForFunction(() => document.querySelector("#moBackPreview")?.contentDocument?.querySelectorAll("[data-mo-sender-cnic]").length === 2).catch(async (error) => {
+  await page.waitForFunction(() => document.querySelector("#moFrontPreview")?.contentDocument?.querySelectorAll("[data-mo-sender-cnic]").length === 2).catch(async (error) => {
     throw new Error(`${error.message}\nMO body: ${await page.locator("body").innerText()}\nBrowser errors: ${JSON.stringify(errors)}`);
   });
   await inspectMoFace("front", [0, 1], "00000-1234567-8");
   await inspectMoFace("back", [0, 1], "00000-1234567-8");
   await page.screenshot({ path: join(evidence, "mo51-proof-n2-sheet1-cnic-synthetic.png"), fullPage: true });
+  await page.frameLocator("#moFrontPreview").locator(".mo-sheet").screenshot({ path: join(evidence, "mo51-proof-n2-front-cnic-synthetic.png") });
+  await page.frameLocator("#moBackPreview").locator(".mo-sheet").screenshot({ path: join(evidence, "mo51-proof-n2-back.png") });
   const requestsBeforeCnicCheck = allRequests.length;
   const storedCnic = await page.evaluate(async () => {
     const database = await new Promise((resolve, reject) => {
@@ -957,6 +968,8 @@ try {
   assert.equal(moPdfFirst.text, "", "PDF must not contain selectable imported order or identity text");
   const moPdfFrontRaster = await compareMoPdfWithPreview(page, "front", moPdfDownload.bytes, 1);
   const moPdfBackRaster = await compareMoPdfWithPreview(page, "back", moPdfDownload.bytes, 2);
+  await writeFile(join(evidence, "mo51-pdf-n2-page1-front.png"), moPdfFrontRaster.toBuffer("image/png"));
+  await writeFile(join(evidence, "mo51-pdf-n2-page2-back.png"), moPdfBackRaster.toBuffer("image/png"));
   assert.ok(moPdfFrontRaster.width > 800 && moPdfBackRaster.width > 800, "300-DPI artwork should rasterize at full A4 bounds");
   assert.equal(allRequests.some((url) => /googleapis|gstatic/u.test(url)), false, "PDF rasterization must use only local fonts/resources");
 
@@ -966,35 +979,58 @@ try {
   await page.locator("#moSenderCnic").fill("");
   await page.locator("#moSenderCnic").press("Tab");
   await page.waitForSelector("#moBackPreview");
-  assert.equal(await page.frameLocator("#moBackPreview").locator("[data-mo-sender-cnic]").count(), 0, "blank optional CNIC leaves the original form line blank");
+  assert.equal(await page.frameLocator("#moFrontPreview").locator("[data-mo-sender-cnic]").count(), 0, "blank optional CNIC leaves the original form line blank");
 
   await importMoBatch(3);
   await inspectMoFace("front", [0, 2], "");
   await inspectMoFace("back", [0, 2], "");
   await page.screenshot({ path: join(evidence, "mo51-proof-n3-sheet1.png"), fullPage: true });
+  await page.frameLocator("#moFrontPreview").locator(".mo-sheet").screenshot({ path: join(evidence, "mo51-proof-n3-front-sheet1.png") });
+  await page.frameLocator("#moBackPreview").locator(".mo-sheet").screenshot({ path: join(evidence, "mo51-proof-n3-back-sheet1.png") });
   await page.locator("#moNextSheet").click();
   await inspectMoFace("front", [1, null], "");
   await inspectMoFace("back", [1, null], "");
   await page.screenshot({ path: join(evidence, "mo51-proof-n3-sheet2-odd-blank.png"), fullPage: true });
+  await page.frameLocator("#moFrontPreview").locator(".mo-sheet").screenshot({ path: join(evidence, "mo51-proof-n3-front-sheet2-odd-blank.png") });
+  await page.frameLocator("#moBackPreview").locator(".mo-sheet").screenshot({ path: join(evidence, "mo51-proof-n3-back-sheet2-odd-blank.png") });
   const mo3Pdf = await saveMoGeneratedPdf(page, join(temporary, "mo51-synthetic-n3.pdf"), 4);
+  const mo3PdfFront = await compareMoPdfWithPreview(page, "front", mo3Pdf.bytes, 3);
+  const mo3PdfBack = await compareMoPdfWithPreview(page, "back", mo3Pdf.bytes, 4);
+  await writeFile(join(evidence, "mo51-pdf-n3-page3-front-odd-blank.png"), mo3PdfFront.toBuffer("image/png"));
+  await writeFile(join(evidence, "mo51-pdf-n3-page4-back-odd-blank.png"), mo3PdfBack.toBuffer("image/png"));
   await assertMoOddBlank(mo3Pdf, 3);
 
   await importMoBatch(5);
   await inspectMoFace("front", [0, 3], "");
   await inspectMoFace("back", [0, 3], "");
   await page.screenshot({ path: join(evidence, "mo51-proof-n5-sheet1.png"), fullPage: true });
+  await page.frameLocator("#moFrontPreview").locator(".mo-sheet").screenshot({ path: join(evidence, "mo51-proof-n5-front-sheet1.png") });
+  await page.frameLocator("#moBackPreview").locator(".mo-sheet").screenshot({ path: join(evidence, "mo51-proof-n5-back-sheet1.png") });
   await page.locator("#moNextSheet").click();
   await page.locator("#moNextSheet").click();
   await inspectMoFace("front", [2, null], "");
   await inspectMoFace("back", [2, null], "");
   await page.screenshot({ path: join(evidence, "mo51-proof-n5-sheet3-odd-blank.png"), fullPage: true });
+  await page.frameLocator("#moFrontPreview").locator(".mo-sheet").screenshot({ path: join(evidence, "mo51-proof-n5-front-sheet3-odd-blank.png") });
+  await page.frameLocator("#moBackPreview").locator(".mo-sheet").screenshot({ path: join(evidence, "mo51-proof-n5-back-sheet3-odd-blank.png") });
   const mo5Pdf = await saveMoGeneratedPdf(page, join(temporary, "mo51-synthetic-n5.pdf"), 6);
+  const mo5PdfFront = await compareMoPdfWithPreview(page, "front", mo5Pdf.bytes, 5);
+  const mo5PdfBack = await compareMoPdfWithPreview(page, "back", mo5Pdf.bytes, 6);
+  await writeFile(join(evidence, "mo51-pdf-n5-page5-front-odd-blank.png"), mo5PdfFront.toBuffer("image/png"));
+  await writeFile(join(evidence, "mo51-pdf-n5-page6-back-odd-blank.png"), mo5PdfBack.toBuffer("image/png"));
   await assertMoOddBlank(mo5Pdf, 5);
 
   await importMoBatch(100);
   await inspectMoFace("front", [0, 50], "");
   await inspectMoFace("back", [0, 50], "");
   await page.screenshot({ path: join(evidence, "mo51-proof-n100-sheet1.png"), fullPage: true });
+  await page.frameLocator("#moFrontPreview").locator(".mo-sheet").screenshot({ path: join(evidence, "mo51-proof-n100-front-sheet1.png") });
+  await page.frameLocator("#moBackPreview").locator(".mo-sheet").screenshot({ path: join(evidence, "mo51-proof-n100-back-sheet1.png") });
+  const mo100Pdf = await saveMoGeneratedPdf(page, join(temporary, "mo51-synthetic-n100.pdf"), 100);
+  const mo100PdfFirstFront = await compareMoPdfWithPreview(page, "front", mo100Pdf.bytes, 1);
+  const mo100PdfFirstBack = await compareMoPdfWithPreview(page, "back", mo100Pdf.bytes, 2);
+  await writeFile(join(evidence, "mo51-pdf-n100-page1-front-sheet1.png"), mo100PdfFirstFront.toBuffer("image/png"));
+  await writeFile(join(evidence, "mo51-pdf-n100-page2-back-sheet1.png"), mo100PdfFirstBack.toBuffer("image/png"));
   await page.locator("#moSheetSelect").selectOption({ label: "50" });
   await page.waitForFunction(() => document.querySelector("#moSheetSelect")?.value === "49" && document.querySelector("#moFrontPreview")?.contentDocument?.querySelector(".mo-half")?.getAttribute("data-mo-source-index") === "49").catch(async (error) => {
     throw new Error(`${error.message}\nMO sheet controls: ${await page.locator(".mo-sheet-nav").innerText()}\nSelect value: ${await page.locator("#moSheetSelect").inputValue()}\nFront slots: ${JSON.stringify(await page.frameLocator("#moFrontPreview").locator(".mo-half").evaluateAll((halves) => halves.map((half) => half.getAttribute("data-mo-source-index"))))}`);
@@ -1002,9 +1038,12 @@ try {
   await inspectMoFace("front", [49, 99], "");
   await inspectMoFace("back", [49, 99], "");
   await page.screenshot({ path: join(evidence, "mo51-proof-n100-sheet50.png"), fullPage: true });
-  const mo100Pdf = await saveMoGeneratedPdf(page, join(temporary, "mo51-synthetic-n100.pdf"), 100);
-  await compareMoPdfWithPreview(page, "front", mo100Pdf.bytes, 99);
-  await compareMoPdfWithPreview(page, "back", mo100Pdf.bytes, 100);
+  await page.frameLocator("#moFrontPreview").locator(".mo-sheet").screenshot({ path: join(evidence, "mo51-proof-n100-front-sheet50.png") });
+  await page.frameLocator("#moBackPreview").locator(".mo-sheet").screenshot({ path: join(evidence, "mo51-proof-n100-back-sheet50.png") });
+  const mo100PdfFront = await compareMoPdfWithPreview(page, "front", mo100Pdf.bytes, 99);
+  const mo100PdfBack = await compareMoPdfWithPreview(page, "back", mo100Pdf.bytes, 100);
+  await writeFile(join(evidence, "mo51-pdf-n100-page99-front-sheet50.png"), mo100PdfFront.toBuffer("image/png"));
+  await writeFile(join(evidence, "mo51-pdf-n100-page100-back-sheet50.png"), mo100PdfBack.toBuffer("image/png"));
   await page.locator("#moSheetSelect").selectOption({ label: "1" });
 
   for (const count of [1, 50, 99, 101]) {
@@ -1030,7 +1069,7 @@ try {
   assert.equal(await page.locator("#moSenderCnic").inputValue(), "", "navigating away and back must clear the volatile sender CNIC");
 
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ geometry, printGeometry, decodedBarcodeCounts: [3, 18, decoded500, customDecoded500], prefixExamples: { types: ["RGL", "UMS", "VPL", "VPP"], hiddenAmountBoxes: 2, visibleAmountBoxes: prefixVisibleAmountBoxes, rglUmsAmountsAbsentFromPdf: !/50000|40000|\+0/u.test(prefixPdf.text), imagePrintValues: ["25000+175", "65000+375"], pdfValuesMatch: /25000/u.test(prefixPdf.text) && /\+175/u.test(prefixPdf.text) && /65000/u.test(prefixPdf.text) && /\+375/u.test(prefixPdf.text) }, samplePdfPages: samplePdf.pageCount, batch500PdfPages: batchPdf.getPageCount(), customBatch500PdfPages: customBatchPdf.getPageCount(), overflowLayout, moProofs: ["mo51-proof-n2-sheet1-cnic-synthetic.png", "mo51-proof-n3-sheet1.png", "mo51-proof-n3-sheet2-odd-blank.png", "mo51-proof-n5-sheet1.png", "mo51-proof-n5-sheet3-odd-blank.png", "mo51-proof-n100-sheet1.png", "mo51-proof-n100-sheet50.png"], browserErrors: errors, evidence: ["test-evidence/approved-label-layout.png", "label-output-synthetic.png", "prefix-layout-samples.png", "prefixes-image-print.png", "test-evidence/label-preview-500-v2.png", "test-evidence/label-preview-custom-500.png", "test-evidence/label-preview-overflow.png", "test-evidence/label-preview-mobile.png", "test-evidence/browser-print-sheet.png", "test-evidence/pdf-sample-page.png", "test-evidence/pdf-500-first-page.png", "test-evidence/pdf-custom-500-first-page.png", "test-evidence/pdf-overflow-filtered.png"] }, null, 2));
+  console.log(JSON.stringify({ geometry, printGeometry, decodedBarcodeCounts: [3, 18, decoded500, customDecoded500], prefixExamples: { types: ["RGL", "UMS", "VPL", "VPP"], hiddenAmountBoxes: 2, visibleAmountBoxes: prefixVisibleAmountBoxes, rglUmsAmountsAbsentFromPdf: !/50000|40000|\+0/u.test(prefixPdf.text), imagePrintValues: ["25000+175", "65000+375"], pdfValuesMatch: /25000/u.test(prefixPdf.text) && /\+175/u.test(prefixPdf.text) && /65000/u.test(prefixPdf.text) && /\+375/u.test(prefixPdf.text) }, samplePdfPages: samplePdf.pageCount, batch500PdfPages: batchPdf.getPageCount(), customBatch500PdfPages: customBatchPdf.getPageCount(), overflowLayout, moProofs: ["mo51-proof-n2-front-cnic-synthetic.png", "mo51-proof-n2-back.png", "mo51-proof-n3-front-sheet1.png", "mo51-proof-n3-back-sheet1.png", "mo51-proof-n3-front-sheet2-odd-blank.png", "mo51-proof-n3-back-sheet2-odd-blank.png", "mo51-proof-n5-front-sheet1.png", "mo51-proof-n5-back-sheet1.png", "mo51-proof-n5-front-sheet3-odd-blank.png", "mo51-proof-n5-back-sheet3-odd-blank.png", "mo51-proof-n100-front-sheet1.png", "mo51-proof-n100-back-sheet1.png", "mo51-proof-n100-front-sheet50.png", "mo51-proof-n100-back-sheet50.png"], moPdfProofs: ["mo51-pdf-n2-page1-front.png", "mo51-pdf-n2-page2-back.png", "mo51-pdf-n3-page3-front-odd-blank.png", "mo51-pdf-n3-page4-back-odd-blank.png", "mo51-pdf-n5-page5-front-odd-blank.png", "mo51-pdf-n5-page6-back-odd-blank.png", "mo51-pdf-n100-page1-front-sheet1.png", "mo51-pdf-n100-page2-back-sheet1.png", "mo51-pdf-n100-page99-front-sheet50.png", "mo51-pdf-n100-page100-back-sheet50.png"], browserErrors: errors, evidence: ["test-evidence/approved-label-layout.png", "label-output-synthetic.png", "prefix-layout-samples.png", "prefixes-image-print.png", "test-evidence/label-preview-500-v2.png", "test-evidence/label-preview-custom-500.png", "test-evidence/label-preview-overflow.png", "test-evidence/label-preview-mobile.png", "test-evidence/browser-print-sheet.png", "test-evidence/pdf-sample-page.png", "test-evidence/pdf-500-first-page.png", "test-evidence/pdf-custom-500-first-page.png", "test-evidence/pdf-overflow-filtered.png"] }, null, 2));
 } finally {
   await browser?.close();
   server.kill();

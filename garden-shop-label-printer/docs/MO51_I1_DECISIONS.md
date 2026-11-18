@@ -34,3 +34,8 @@ Status: I1 local core only. Not an official MO form, renderer, PDF, UI, staging,
 - During the first targeted run, three test rows had incomplete expected-position tuples (N=1, 2, 5); corrected the test vectors and reran. Snapshot hardening and the explicit large-integer overflow case each received targeted and full unit reruns. Final build/browser gates above passed before the last test-only overflow fixture; no production source or existing label assertion changed in that follow-up. No production test assertion or existing label baseline was weakened or refreshed.
 - Existing label source/output path comparison: no change in `src/main.ts`, `src/layout.ts`, `src/label.css`, `src/engine.ts`, `src/types.ts`, or `src/tracking-rules.ts`. No package, app integration, Worker, print/PDF, import, monitoring, or external resource change.
 - Local regressions do not prove MO-51 official field semantics, Urdu rendering, staging/LP-041 acceptance, physical duplex behavior, postal/payment acceptance, or deployment.
+
+## GFS-LP-046 Authoritative Face-Mapping Addendum
+
+- The owner correction supersedes I1's then-unresolved source-face ordering: uploaded HTML section 1 is FRONT (Month Stamp, VPL/VPP, amount, sender/receiver details and intimation); section 2 is BACK (M.O.-51 Revised title, PAKISTAN MONEY ORDER, postal office, stamps and signatures).
+- This is a face-content mapping only. I1 left/right slot pairing, selected order, cut-and-stack, and odd blank-half rules do not change. No physical duplex edge, mirror, or 180-degree turn is approved by this correction.

@@ -6,6 +6,9 @@ import type { MoCandidate } from "./adapter";
 import { formatSenderCnic } from "./cnic";
 import type { MoFaceSlots, MoSheet } from "./imposition";
 
+const FRONT_SECTION_INDEX = 0;
+const BACK_SECTION_INDEX = 1;
+
 export const MO_FORM_GEOMETRY = Object.freeze({
   sheetWidthMm: 297,
   sheetHeightMm: 210,
@@ -64,7 +67,7 @@ function localDocument(slots: MoFaceSlots, sourcePageIndex: 0 | 1, senderCnic: s
       }
     });
 
-    if (sourcePageIndex === 0 && cnic.status === "valid") {
+    if (sourcePageIndex === FRONT_SECTION_INDEX && cnic.status === "valid") {
       const labels = sourcePage.querySelector<HTMLElement>('div[style*="width:104px"]');
       if (!labels?.textContent?.includes("شناختی کارڈ نمبر")) throw new Error("MO_TEMPLATE_SENDER_CNIC_LABEL_NOT_FOUND");
       const block = labels?.parentElement;
@@ -85,11 +88,11 @@ function localDocument(slots: MoFaceSlots, sourcePageIndex: 0 | 1, senderCnic: s
       line.append(value);
     }
 
-    const previewTransform = sourcePageIndex === 0 && rotation === "rotate-180" ? "transform:rotate(180deg);transform-origin:center" : "";
+    const previewTransform = sourcePageIndex === BACK_SECTION_INDEX && rotation === "rotate-180" ? "transform:rotate(180deg);transform-origin:center" : "";
     return `<div class="mo-half" data-mo-slot="${slot}" data-mo-source-index="${candidate.sourceIndex}" style="${previewTransform}">${sourcePage.outerHTML}</div>`;
   };
 
-  const face = sourcePageIndex === 1 ? "front" : "back";
+  const face = sourcePageIndex === FRONT_SECTION_INDEX ? "front" : "back";
   const pageCss = `
     @font-face{font-family:'Noto Naskh Arabic';font-style:normal;font-weight:400;font-display:block;src:url('${urduRegularUrl}') format('woff2')}
     @font-face{font-family:'Noto Naskh Arabic';font-style:normal;font-weight:500;font-display:block;src:url('${urduMediumUrl}') format('woff2')}
@@ -109,8 +112,8 @@ export function renderMoPreviewDocuments(
   backRotation: MoBackPreviewRotation = "none",
 ): MoPreviewDocuments {
   return Object.freeze({
-    front: localDocument(sheet.front, 1, senderCnic, "none"),
-    back: localDocument(sheet.back, 0, senderCnic, backRotation),
+    front: localDocument(sheet.front, FRONT_SECTION_INDEX, senderCnic, "none"),
+    back: localDocument(sheet.back, BACK_SECTION_INDEX, senderCnic, backRotation),
     physicalRotationApproved: false,
   });
 }

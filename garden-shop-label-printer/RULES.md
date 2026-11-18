@@ -20,6 +20,12 @@
 - Preserve original label tests and reference outputs. Unit, TypeScript/build and original browser/PDF regressions must pass independently; MO page count, media box, rendered odd blanks, preview comparison and cancellation are separate gates. Passing local tests is not postal/legal, authenticated staging, payment, printer or operational acceptance.
 - Rollback: disable/remove only the MO download control/module and revert the I3 commit; no database cleanup is needed. Do not delete, alter or silently recall files already downloaded by a user. Keep LP-041 Access/audit/live acceptance unresolved until separately verified. No Cloudflare, Meta, WhatsApp, Admin/API, COD/payment, D1, migration, route or production change is authorized by I3.
 
+## GFS-LP-046 MO-51 Face Mapping Correction
+
+- Authoritative face mapping is original HTML section 1 = FRONT (Month Stamp, VPL/VPP, amount, sender/receiver details, optional Sender CNIC and intimation); section 2 = BACK (M.O.-51 Revised, PAKISTAN MONEY ORDER, postal office, stamps and signatures). The PDF emits section 1 on page 1, section 2 on page 2, for every sheet.
+- This corrects/supersedes the provisional I2/I3 title-side-first assumption. Do not swap I1 left/right data slots; I1 cut-and-stack pairing remains unchanged. Do not add a 180-degree flip as part of this correction. Any physical duplex orientation is still unapproved until calibrated on the target printer.
+- Sender CNIC remains exclusively on the sender line in section 1. Preserve all other I3 blank/manual completion, local-only CNIC, legal-role, label-isolation and no-deployment protections.
+
 ## GFS-LP-041 Staging Release Record (2026-11-17)
 
 - Before Pages upload, project-local Wrangler 4.149.0 `whoami` returned `Get Free Seeds` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Account-pinned Pages inventory confirmed only the existing `garden-shop-label-printer-staging` project, Production branch `main`, prior Production `aae85a83-663d-449f-a20c-52418ed5b5e3`, and rollback candidate `a8287aa3-31dc-4446-a6be-c3127fac0e80`. The current stable URL returned an anonymous Access HTTP 302 challenge. The prior Dashboard-verified policy was Super-Admin-only; no Access change was made, but this release session did not have Access-policy read scope or Chrome MCP to independently reread its allowed identity.
