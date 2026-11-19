@@ -78,6 +78,37 @@ describe("local workbook and sheet engine", () => {
     expect(numericPhone.warnings).toContain("Phone cell was numeric; verify leading zeros against the original source.");
   });
 
+  it("maps the GFS 18-11 workbook header shape without using workbook data", () => {
+    const headers = ["Order Reference/ID", "Order Date", "Customer Name", "Full Delivery Address", "Nearby Landmark", "City", "Contact Number", "Province", "Product", "COD", "Tracking", "Sender", "S.Address"];
+    expect(detectMapping(headers)).toMatchObject({
+      orderId: "Order Reference/ID",
+      orderDate: "Order Date",
+      name: "Customer Name",
+      address: "Full Delivery Address",
+      landmark: "Nearby Landmark",
+      phone: "Contact Number",
+      city: "City",
+      province: "Province",
+      product: "Product",
+      cod: "COD",
+      tracking: "Tracking",
+      senderName: "Sender",
+      senderAddress: "S.Address",
+    });
+  });
+
+  it("formats numeric Excel dates for the MO-51 Month Stamp without changing CSV text", () => {
+    const headers = ["Order Date"];
+    const serialFor = (year: number, month: number, day: number, epoch: number) => (Date.UTC(year, month - 1, day) - epoch) / 86_400_000;
+    const serial1900 = serialFor(2026, 11, 18, Date.UTC(1899, 11, 30));
+    const serial1904 = serialFor(2026, 11, 18, Date.UTC(1904, 0, 1));
+    expect(normalizeRows(headers, [[serial1900]], detectMapping(headers), false, false)[0].orderDate).toBe("18-11-26");
+    expect(normalizeRows(headers, [[serial1904]], detectMapping(headers), false, true)[0].orderDate).toBe("18-11-26");
+    expect(normalizeRows(headers, [[0]], detectMapping(headers), false, false)[0].orderDate).toBe("0");
+    expect(normalizeRows(headers, [[0]], detectMapping(headers), false, true)[0].orderDate).toBe("01-01-04");
+    expect(normalizeRows(headers, [["2026/11/18"]], detectMapping(headers), true)[0].orderDate).toBe("2026/11/18");
+  });
+
   it("imports a real synthetic XLSX workbook and preserves textual leading zeros", async () => {
     const xml = (value: string) => new TextEncoder().encode(value);
     const files = {
@@ -90,7 +121,7 @@ describe("local workbook and sheet engine", () => {
     };
     const workbook = Buffer.from(zipSync(files));
     const matrix = await readXlsxSheet(workbook);
-    restoreZeroFormattedCells(new Uint8Array(workbook), matrix);
+    expect(restoreZeroFormattedCells(new Uint8Array(workbook), matrix)).toBe(false);
     const headers = (matrix.shift() ?? []).map((cell) => String(cell ?? ""));
     const orderRows = normalizeRows(headers, matrix, detectMapping(headers));
     expect(orderRows).toHaveLength(1);
@@ -100,6 +131,9 @@ describe("local workbook and sheet engine", () => {
     expect(orderRows[0].cod).toBe("1250");
     expect(orderRows[0].city).toBe("Sahiwal");
     expect(orderRows[0].province).toBe("Punjab");
+    const date1904Xml = new TextDecoder().decode(files["xl/workbook.xml"]).replace("<sheets>", '<workbookPr date1904="1"/><sheets>');
+    const date1904Workbook = Buffer.from(zipSync({ ...files, "xl/workbook.xml": xml(date1904Xml) }));
+    expect(restoreZeroFormattedCells(new Uint8Array(date1904Workbook), [])).toBe(true);
   });
 
   it("uses Facebook Name as tracking only after explicit mapping", () => {

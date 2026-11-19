@@ -135,11 +135,31 @@ export function normalizePakistaniPhone(value: string): string | undefined {
   return international ? `0${international[1]}` : undefined;
 }
 
+function monthStamp(value: unknown, date1904: boolean): string {
+  if (value instanceof Date && Number.isFinite(value.getTime())) {
+    const day = String(value.getUTCDate()).padStart(2, "0");
+    const month = String(value.getUTCMonth() + 1).padStart(2, "0");
+    const year = String(value.getUTCFullYear()).slice(-2);
+    return `${day}-${month}-${year}`;
+  }
+  if (typeof value === "number" && Number.isFinite(value) && value >= (date1904 ? 0 : 1) && value <= 2_958_465) {
+    const epoch = date1904 ? Date.UTC(1904, 0, 1) : Date.UTC(1899, 11, 30);
+    const date = new Date(epoch + Math.floor(value) * 86_400_000);
+    if (Number.isFinite(date.getTime())) {
+      const day = String(date.getUTCDate()).padStart(2, "0");
+      const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+      const year = String(date.getUTCFullYear()).slice(-2);
+      return `${day}-${month}-${year}`;
+    }
+  }
+  return textValue(value);
+}
+
 function textValue(value: unknown): string {
   return value === null || value === undefined ? "" : String(value).trim();
 }
 
-export function normalizeRows(headers: string[], rows: unknown[][], mapping: ImportMapping, sourceIsCsv = false): Order[] {
+export function normalizeRows(headers: string[], rows: unknown[][], mapping: ImportMapping, sourceIsCsv = false, date1904 = false): Order[] {
   const headerIndex = new Map(headers.map((header, index) => [header, index]));
   const orders = rows.map((cells, index) => {
     const value = (key: keyof ImportMapping): string => {
@@ -148,7 +168,7 @@ export function normalizeRows(headers: string[], rows: unknown[][], mapping: Imp
       return column === undefined ? "" : textValue(cells[column]);
     };
     const order: Order = {
-      rowNumber: index + 2, serial: value("serial"), orderId: value("orderId"), printedReference: "", name: value("name"), email: value("email"), phone: value("phone"),
+      rowNumber: index + 2, serial: value("serial"), orderId: value("orderId"), orderDate: sourceIsCsv ? value("orderDate") : monthStamp(cells[headerIndex.get(mapping.orderDate) ?? -1], date1904), printedReference: "", name: value("name"), email: value("email"), phone: value("phone"),
       address: normalizeAddressText(value("address")), sourceAddress: value("address"), facebookName: value("facebookName"), tracking: value("tracking"), cod: value("cod"),
       product: value("product"), city: value("city"), province: value("province"), landmark: value("landmark"),
       senderName: value("senderName") || "Garden Shop", senderAddress: value("senderAddress") || "C/o City Post Office, Sahiwal", warnings: [],

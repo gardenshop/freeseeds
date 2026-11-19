@@ -25,7 +25,7 @@ function padWithNumberMask(value: number, format: string): string | undefined {
   return String(value).padStart(mask.length, "0");
 }
 
-export function restoreZeroFormattedCells(bytes: Uint8Array, rows: unknown[][]): void {
+export function restoreZeroFormattedCells(bytes: Uint8Array, rows: unknown[][]): boolean {
   const archive = unzipSync(bytes);
   const decode = (path: string) => {
     const part = archive[path];
@@ -34,15 +34,15 @@ export function restoreZeroFormattedCells(bytes: Uint8Array, rows: unknown[][]):
   const workbook = decode("xl/workbook.xml");
   const firstSheet = /<sheet\b[^>]*>/.exec(workbook)?.[0];
   const relationshipId = firstSheet && attribute(firstSheet, "r:id");
-  if (!relationshipId) return;
+  if (!relationshipId) return /date1904="1"/.test(workbook);
   const relations = decode("xl/_rels/workbook.xml.rels");
   const sheetRelation = relations.match(/<Relationship\b[^>]*\/>/g)?.find((tag) => attribute(tag, "Id") === relationshipId);
   const target = sheetRelation && attribute(sheetRelation, "Target");
-  if (!target) return;
+  if (!target) return /date1904="1"/.test(workbook);
   const sheetPath = normalizePart(target.startsWith("xl/") ? target : `xl/${target}`);
   const sheetXml = decode(sheetPath);
   const stylesXml = decode("xl/styles.xml");
-  if (!sheetXml || !stylesXml) return;
+  if (!sheetXml || !stylesXml) return /date1904="1"/.test(workbook);
 
   const formats = new Map<number, string>();
   const numFmts = /<numFmt\b[^>]*\/>/g;
@@ -73,4 +73,5 @@ export function restoreZeroFormattedCells(bytes: Uint8Array, rows: unknown[][]):
       row[column] = padWithNumberMask(numeric, format) ?? row[column];
     }
   }
+  return /<workbookPr\b[^>]*date1904="1"/.test(workbook);
 }

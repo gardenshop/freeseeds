@@ -6,6 +6,7 @@ import type { MoCandidate } from "./adapter";
 import { formatSenderCnic } from "./cnic";
 import type { MoFaceSlots, MoSheet } from "./imposition";
 import { emptyMoSessionMapping, hasVisibleMoFields, resolveMoVisibleFields, type MoSessionMapping, type MoVisibleField } from "./mapping";
+import { resolveMoLayoutSource, type MoLayout } from "./layout";
 
 const FRONT_SECTION_INDEX = 0;
 const BACK_SECTION_INDEX = 1;
@@ -58,6 +59,7 @@ function localDocument(
   senderCnic: string,
   rotation: MoBackPreviewRotation,
   mappings: ReadonlyMap<number, MoSessionMapping>,
+  layout?: MoLayout,
 ): string {
   const cnic = formatSenderCnic(senderCnic);
   if (cnic.status === "invalid") throw new Error("MO_SENDER_CNIC_INVALID");
@@ -72,7 +74,8 @@ function localDocument(
     const sourcePage = sourcePages[sourcePageIndex].cloneNode(true) as HTMLElement;
     sourcePage.dataset.moSourceIndex = String(candidate.sourceIndex);
     sourcePage.dataset.moPrefix = candidate.prefix;
-    const visibleFields = resolveMoVisibleFields(candidate, mappings.get(candidate.sourceIndex) ?? emptyMoSessionMapping());
+    const layoutActive = Boolean(layout?.fields.length);
+    const visibleFields = layoutActive ? {} : resolveMoVisibleFields(candidate, mappings.get(candidate.sourceIndex) ?? emptyMoSessionMapping());
     sourcePage.dataset.moVisibleFields = Object.entries(visibleFields).filter(([, field]) => Boolean(field?.value.trim())).map(([key]) => key).join(",");
     sourcePage.style.margin = "0";
     sourcePage.style.boxShadow = "none";
@@ -90,7 +93,7 @@ function localDocument(
       }
     });
 
-    if (sourcePageIndex === FRONT_SECTION_INDEX) {
+    if (!layoutActive && sourcePageIndex === FRONT_SECTION_INDEX) {
       const articleLabel = Array.from(sourcePage.querySelectorAll("span")).find((element) => element.textContent?.trim() === "No. of V. P. Article");
       appendMoValue(articleLabel?.parentElement as HTMLElement | undefined, visibleFields.articleNumber, "article-number", "90px");
       const principalBox = sourcePage.querySelector<HTMLElement>('div[style*="width:172px"]');
@@ -124,15 +127,41 @@ function localDocument(
       const value = sourcePage.ownerDocument.createElement("span");
       value.className = "mo-sender-cnic-value";
       value.dataset.moSenderCnic = "true";
+      value.dataset.moField = "sender-cnic";
       value.dir = "ltr";
       value.textContent = cnic.formatted;
-      value.style.cssText = "position:absolute;left:2px;bottom:0;background:#fff;padding:0 2px;white-space:nowrap;direction:ltr;unicode-bidi:isolate;font:10px 'Times New Roman',serif;line-height:1.1";
+      const cnicLayout = layout?.fields.find((field) => field.source === "senderCnic");
+      const cnicFontPx = cnicLayout ? cnicLayout.fontSizePt * 96 / 72 : 10;
+      value.style.cssText = `position:absolute;left:2px;bottom:0;background:#fff;padding:0 2px;white-space:nowrap;direction:ltr;unicode-bidi:isolate;font:${cnicFontPx}px 'Times New Roman',serif;line-height:1.1;text-align:${cnicLayout?.alignment ?? "left"}`;
       line.append(value);
     }
 
     const previewTransform = sourcePageIndex === BACK_SECTION_INDEX && rotation === "rotate-180" ? "transform:rotate(180deg);transform-origin:center" : "";
     const draftMarker = hasVisibleMoFields(visibleFields) ? `<div class="mo-draft-marker" role="note">USER-CONFIRMED DRAFT · NOT POSTAL VERIFIED</div>` : "";
-    return `<div class="mo-half" data-mo-slot="${slot}" data-mo-source-index="${candidate.sourceIndex}" data-mo-draft="${String(hasVisibleMoFields(visibleFields))}" style="${previewTransform}">${draftMarker}${sourcePage.outerHTML}</div>`;
+    const layoutFields = layoutActive && layout
+      ? layout.fields.filter((field) => field.source !== "senderCnic" && field.face === (sourcePageIndex === FRONT_SECTION_INDEX ? "front" : "back")).map((field) => {
+        const resolved = resolveMoLayoutSource(candidate, field.source, senderCnic, mappings.get(candidate.sourceIndex) ?? emptyMoSessionMapping());
+        const box = sourcePage.ownerDocument.createElement("div");
+        box.className = "mo-layout-field";
+        box.dataset.moLayoutField = field.id;
+        box.dataset.moLayoutSource = field.source;
+        box.style.cssText = `position:absolute;left:${field.xMm}mm;top:${field.yMm}mm;width:${field.widthMm}mm;height:${field.heightMm}mm;box-sizing:border-box;color:#000;font:${field.fontSizePt}pt 'Noto Naskh Arabic',Arial,sans-serif;text-align:${field.alignment};white-space:${field.wrap ? "normal" : "nowrap"};overflow:visible`;
+        if (resolved) {
+          const text = sourcePage.ownerDocument.createElement("span");
+          text.dataset.moLayoutText = field.id;
+          text.dataset.moProvenance = resolved.provenance;
+          text.textContent = resolved.value;
+          text.dir = "auto";
+          text.style.cssText = `display:${field.wrap ? "block" : "inline-block"};width:${field.wrap ? "100%" : "max-content"};min-height:100%;overflow:visible;white-space:${field.wrap ? "normal" : "nowrap"};unicode-bidi:isolate`;
+          box.append(text);
+        } else if (field.source !== "senderCnic") {
+          box.dataset.moLayoutMissing = field.id;
+          box.textContent = `MISSING ${field.source}`;
+        }
+        return box.outerHTML;
+      }).join("")
+      : "";
+    return `<div class="mo-half" data-mo-slot="${slot}" data-mo-source-index="${candidate.sourceIndex}" data-mo-draft="${String(hasVisibleMoFields(visibleFields))}" style="${previewTransform}">${draftMarker}${sourcePage.outerHTML}${layoutFields}</div>`;
   };
 
   const face = sourcePageIndex === FRONT_SECTION_INDEX ? "front" : "back";
@@ -145,6 +174,7 @@ function localDocument(
     .mo-half>.page{margin:0!important;box-shadow:none!important;break-after:auto!important}
     .mo-blank{background:#fff}.page{font-kerning:normal;text-rendering:optimizeLegibility}
     .mo-draft-marker{position:absolute;z-index:20;top:1mm;right:1mm;border:0.3mm solid #a71923;background:#fff;color:#a71923;padding:0.5mm 1mm;font:7px Arial,sans-serif;white-space:nowrap}
+    .mo-layout-field{z-index:10;box-sizing:border-box;color:#000;background:transparent;border:0}.mo-layout-field[data-mo-layout-missing]{color:#a71923;background:#fff5f5;border:.2mm solid #a71923;font:7px Arial,sans-serif}
   `;
   return `<!doctype html><html lang="ur" dir="rtl"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; font-src 'self' data:"><meta name="viewport" content="width=device-width, initial-scale=1"><title>MO-51 ${face} preview</title><style>${pageCss}</style></head><body><div class="mo-sheet" data-mo-face="${face}" data-mo-rotation="${rotation}" style="display:flex;width:297mm;height:210mm;direction:ltr">${half(slots.left, "left")}${half(slots.right, "right")}</div></body></html>`;
 }
@@ -155,14 +185,16 @@ export function renderMoPreviewDocuments(
   senderCnic: string,
   backRotation: MoBackPreviewRotation = "none",
   mappings: ReadonlyMap<number, MoSessionMapping> = new Map(),
+  layout?: MoLayout,
 ): MoPreviewDocuments {
-  const draftMode = [...mappings].some(([sourceIndex, mapping]) => {
+  const layoutActive = Boolean(layout?.fields.length);
+  const draftMode = !layoutActive && [...mappings].some(([sourceIndex, mapping]) => {
     const candidate = [sheet.front.left, sheet.front.right].find((record) => record?.sourceIndex === sourceIndex);
     return candidate ? hasVisibleMoFields(resolveMoVisibleFields(candidate, mapping)) : false;
   });
   return Object.freeze({
-    front: localDocument(sheet.front, FRONT_SECTION_INDEX, senderCnic, "none", mappings),
-    back: localDocument(sheet.back, BACK_SECTION_INDEX, senderCnic, backRotation, mappings),
+    front: localDocument(sheet.front, FRONT_SECTION_INDEX, senderCnic, "none", mappings, layout),
+    back: localDocument(sheet.back, BACK_SECTION_INDEX, senderCnic, backRotation, mappings, layout),
     physicalRotationApproved: false,
     draftMode,
   });
@@ -183,7 +215,16 @@ export function findMoFieldOverflows(doc: Document): readonly string[] {
       overflows.push(`${field.dataset.moField ?? "unknown"}:${inner.width.toFixed(1)}/${outer.width.toFixed(1)}px`);
     }
   }
+  for (const field of Array.from(doc.querySelectorAll<HTMLElement>("[data-mo-layout-text]"))) {
+    const box = field.parentElement;
+    if (!box) continue;
+    if (field.scrollWidth > box.clientWidth + 1 || field.scrollHeight > box.clientHeight + 1) overflows.push(`${field.dataset.moLayoutText ?? "layout-field"}:text-overflow`);
+  }
   return Object.freeze(overflows);
+}
+
+export function findMoLayoutMissingFields(doc: Document): readonly string[] {
+  return Object.freeze(Array.from(doc.querySelectorAll<HTMLElement>("[data-mo-layout-missing]"), (field) => field.dataset.moLayoutMissing ?? "unknown"));
 }
 
 export function escapeMoAttribute(value: string): string {

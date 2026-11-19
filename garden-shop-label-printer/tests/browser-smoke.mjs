@@ -100,6 +100,69 @@ async function saveMoGeneratedPdf(page, path, expectedPages, kind = "blank") {
   return { bytes, document };
 }
 
+async function saveMoLayoutPdf(page, path, expectedPages) {
+  assert.equal(await page.locator("#downloadMoLayoutPdf").isDisabled(), false, `MO layout PDF disabled: ${await page.locator("#moMappingFitError").innerText()}`);
+  const downloadEvent = page.waitForEvent("download", { timeout: 300000 });
+  let statusTimer;
+  const exportFailure = new Promise((resolve) => {
+    statusTimer = setInterval(async () => {
+      const status = await page.locator("#moPdfStatus").innerText().catch(() => "");
+      if (status.startsWith("MO PDF export failed") || status.startsWith("Export cancelled")) resolve({ error: status });
+    }, 100);
+  });
+  let download;
+  try {
+    await page.locator("#downloadMoLayoutPdf").click();
+    const outcome = await Promise.race([downloadEvent.then((result) => ({ download: result })), exportFailure]);
+    if (outcome.error) throw new Error(outcome.error);
+    download = outcome.download;
+  } finally {
+    clearInterval(statusTimer);
+  }
+  assert.match(download.suggestedFilename(), /^mo51-layout-batch-\d+-forms\.pdf$/u);
+  const pathValue = path;
+  await download.saveAs(pathValue);
+  const bytes = Buffer.from(await readFile(pathValue));
+  const document = await PDFDocument.load(bytes);
+  assert.equal(document.getPageCount(), expectedPages);
+  assert.equal(document.getTitle(), "MO-51 user-defined layout batch");
+  for (const pdfPage of document.getPages()) {
+    const { width, height } = pdfPage.getSize();
+    assert.ok(Math.abs(width - (297 * 72 / 25.4)) < 0.01);
+    assert.ok(Math.abs(height - (210 * 72 / 25.4)) < 0.01);
+    assert.equal(pdfPage.getRotation().angle, 0);
+  }
+  return { bytes, document };
+}
+
+async function addMoLayoutField(page, source, xMm, yMm, widthMm = 42, heightMm = 8, fontSizePt = 9, wrap = false, alignment = "left") {
+  await page.evaluate(({ sourceId, x, y }) => {
+    const chip = document.querySelector(`[data-mo-layout-source="${sourceId}"]`);
+    const overlay = document.querySelector('[data-mo-editor-overlay="front"]');
+    if (!chip || !overlay) throw new Error("MO_LAYOUT_DROP_TARGET_MISSING");
+    const transfer = new DataTransfer();
+    transfer.setData("application/x-mo-layout-source", sourceId);
+    const rect = overlay.getBoundingClientRect();
+    const drop = new Event("drop", { bubbles: true, cancelable: true });
+    Object.defineProperties(drop, {
+      dataTransfer: { value: transfer },
+      clientX: { value: rect.left + x / 297 * rect.width },
+      clientY: { value: rect.top + y / 210 * rect.height },
+    });
+    overlay.dispatchEvent(drop);
+  }, { sourceId: source, x: xMm, y: yMm });
+  await page.locator("#moLayoutWidth").waitFor();
+  for (const [selector, value] of [["#moLayoutX", xMm], ["#moLayoutY", yMm], ["#moLayoutWidth", widthMm], ["#moLayoutHeight", heightMm], ["#moLayoutFontSize", fontSizePt]]) {
+    const input = page.locator(selector);
+    await input.fill(String(value));
+    await input.press("Tab");
+  }
+  await page.locator("#moLayoutAlignment").selectOption(alignment);
+  const wrapInput = page.locator("#moLayoutWrap");
+  if (wrap) await wrapInput.check();
+  else await wrapInput.uncheck();
+}
+
 async function assertMoOddBlank(download, count) {
   if (count % 2 !== 1) return;
   const lastPage = download.document.getPageCount();
@@ -129,8 +192,11 @@ function assertBlankRightHalf(canvas) {
   assert.equal(inkPixels, 0, `odd unused PDF half must be blank; found ${inkPixels} ink pixels`);
 }
 
-async function compareMoPdfWithPreview(page, face, pdfBytes, pageNumber) {
-  const previewBytes = await page.frameLocator(face === "front" ? "#moFrontPreview" : "#moBackPreview").locator(".mo-sheet").screenshot();
+async function compareMoPdfWithPreview(page, face, pdfBytes, pageNumber, layout = false) {
+  const previewFrame = face === "front"
+    ? layout ? "#moLayoutFrontPreview" : "#moFrontPreview"
+    : layout ? "#moLayoutBackPreview" : "#moBackPreview";
+  const previewBytes = await page.frameLocator(previewFrame).locator(".mo-sheet").screenshot();
   const previewImage = await loadImage(previewBytes);
   const raster = await rasterPdfPage(pdfBytes, 1, pageNumber);
   const normalized = createCanvas(raster.width, raster.height);
@@ -142,11 +208,13 @@ async function compareMoPdfWithPreview(page, face, pdfBytes, pageNumber) {
     difference += Math.abs(left[index] - right[index]) + Math.abs(left[index + 1] - right[index + 1]) + Math.abs(left[index + 2] - right[index + 2]);
   }
   const meanDifference = difference / (raster.width * raster.height * 3 * 255);
-  assert.ok(meanDifference < 0.1, `${face} PDF raster should match I2 preview; normalized mean difference ${meanDifference}`);
+  assert.ok(meanDifference < 0.1, `${face} PDF raster should match its preview; normalized mean difference ${meanDifference}`);
   return raster;
 }
 
 async function setMoMapping(page, sourceIndex, key, value) {
+  const overrides = page.locator(".mo-manual-overrides,.mo-mapping-review");
+  if (await overrides.count() && (await overrides.first().getAttribute("open")) === null) await overrides.first().locator(":scope > summary").click();
   const card = page.locator(`[data-mo-review-index="${sourceIndex}"]`);
   if ((await card.getAttribute("open")) === null) await card.locator("summary").click();
   const choice = card.locator(`[data-mo-map-choice-key="${key}"][data-mo-map-choice-value="${value}"]`);
@@ -728,7 +796,7 @@ try {
   await mobile.screenshot({ path: join(evidence, "label-preview-mobile.png"), fullPage: false });
   await mobile.close();
 
-  const headers = ["Order ID", "Name", "Cell #", "Address", "Tracking Number", "COD", "Product", "City", "Province", "Nearby Landmark"];
+  const headers = ["Order ID", "Name", "Cell #", "Address", "Tracking Number", "COD", "Product", "City", "Province", "Nearby Landmark", "Order Date"];
   const quote = (value) => `"${String(value).replaceAll('"', '""')}"`;
   const records = Array.from({ length: 500 }, (_, index) => [
     `GS-SYN-${String(index + 1).padStart(4, "0")}`,
@@ -905,6 +973,7 @@ try {
       "Sahiwal",
       "Punjab",
       "Synthetic landmark",
+      "18-11-26",
     ]);
     const csv = [headers, ...moRows].map((row) => row.map(quote).join(",")).join("\r\n");
     await page.locator("#workbook").setInputFiles({ name: `mo-synthetic-${count}.csv`, mimeType: "text/csv", buffer: Buffer.from(csv) });
@@ -915,7 +984,7 @@ try {
       const frame = document.querySelector("#moFrontPreview");
       return frame?.contentDocument?.querySelector(".mo-sheet") && frame.contentDocument.fonts.status === "loaded";
     }, { timeout: 30000 });
-    assert.match(await page.locator(".mo-summary").innerText(), new RegExp(`${count}\\s+eligible VPL/VPP rows used for copy quantity only`, "u"));
+    assert.match(await page.locator(".mo-summary").innerText(), new RegExp(`${count}\\s+eligible VPL/VPP rows`, "u"));
   }
 
   async function importMoMixedPrefixes() {
@@ -923,7 +992,7 @@ try {
     await page.locator("#newBatch").click();
     const mixedRows = ["VPL000101", "RGL000102", "VPP000103", "UMS000104", "VPP000105"].map((tracking, index) => [
       `MO-MIX-SYN-${index + 1}`, `Synthetic Mixed ${index + 1}`, "03001234567", `Synthetic mixed address ${index + 1}`,
-      tracking, "25000", "Synthetic item", "Sahiwal", "Punjab", "Synthetic landmark",
+      tracking, "25000", "Synthetic item", "Sahiwal", "Punjab", "Synthetic landmark", "18-11-26",
     ]);
     const csv = [headers, ...mixedRows].map((row) => row.map(quote).join(",")).join("\r\n");
     await page.locator("#workbook").setInputFiles({ name: "mo-mixed-prefixes-synthetic.csv", mimeType: "text/csv", buffer: Buffer.from(csv) });
@@ -1215,6 +1284,122 @@ try {
   await importMoMixedPrefixes();
   const mixedMoPdf = await saveMoGeneratedPdf(page, join(temporary, "mo51-synthetic-mixed-prefixes.pdf"), 4);
   await assertMoOddBlank(mixedMoPdf, 3);
+
+  await importMoBatch(3);
+  await addMoLayoutField(page, "tracking", 74, 45, 42, 8, 9, false, "left");
+  assert.equal(await page.locator("#moLayoutFrontPreview").count(), 1);
+  assert.equal(await page.locator("#moFrontPreview").count(), 0, "legacy preview IDs are omitted when the layout preview is active");
+  await page.locator("#moLayoutSave").click();
+  const savedLayout = await page.evaluate(() => JSON.parse(localStorage.getItem("gfs-mo51-layout-v1") ?? "null"));
+  assert.equal(savedLayout.fields.length, 1);
+  assert.equal(savedLayout.fields[0].source, "tracking");
+  assert.doesNotMatch(JSON.stringify(savedLayout), /VPL000001|Synthetic Receiver|03001234567/u, "saved layouts must contain bindings and geometry, not record values");
+  await page.locator("#moLayoutReload").click();
+  assert.ok(await page.locator("[data-mo-layout-id]").count() >= 1);
+  const pairedLayoutPdf = await saveMoLayoutPdf(page, join(temporary, "mo51-layout-paired-synthetic.pdf"), 4);
+  await assertMoOddBlank(pairedLayoutPdf, 3);
+  await page.locator("#moPrintSideMode").selectOption("front-only");
+  const frontOnlyLayoutPdf = await saveMoLayoutPdf(page, join(temporary, "mo51-layout-front-only-synthetic.pdf"), 2);
+  assert.equal(frontOnlyLayoutPdf.document.getPageCount(), 2);
+  await page.locator("#moPrintSideMode").selectOption("back-only");
+  const backOnlyLayoutPdf = await saveMoLayoutPdf(page, join(temporary, "mo51-layout-back-only-synthetic.pdf"), 2);
+  assert.equal(backOnlyLayoutPdf.document.getPageCount(), 2);
+  await page.locator("#moPrintSideMode").selectOption("paired");
+  const layoutPrintPopupEvent = page.waitForEvent("popup", { timeout: 30000 });
+  await page.locator("#printMoBatch").click();
+  const layoutPrintPopup = await layoutPrintPopupEvent;
+  await page.waitForFunction(() => (document.querySelector("#moPdfStatus")?.textContent ?? "").startsWith("Mapped batch opened; browser print dialog requested."), undefined, { timeout: 30000 });
+  assert.notEqual(layoutPrintPopup.url(), "about:blank", "Print MO Batch must open the generated local PDF in a browser tab");
+  await layoutPrintPopup.close();
+  await page.locator("#moLayoutReset").click();
+  assert.equal(await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1")), null);
+  assert.equal(await page.locator("[data-mo-layout-id]").count(), 0);
+
+  await importMoBatch(100);
+  await page.locator("#moPrintSideMode").selectOption("paired");
+  await addMoLayoutField(page, "tracking", 62, 45, 77.3, 5, 8);
+  await addMoLayoutField(page, "declaredPrincipal", 13.5, 43.5, 43.4, 12.6, 8.5, false, "center");
+  await addMoLayoutField(page, "name", 7.7, 112.8, 100.7, 4.8, 8.5);
+  await addMoLayoutField(page, "address", 7.7, 117.6, 100.7, 9.6, 7.5, true);
+  await addMoLayoutField(page, "phone", 83, 122.4, 25.4, 4.8, 7.5);
+  await addMoLayoutField(page, "orderDate", 27, 18, 13.8, 10.5, 6.5, false, "center");
+  await page.locator("#moLayoutSave").click();
+  const n100Pair = async () => page.frameLocator("#moLayoutFrontPreview").locator(".mo-half[data-mo-slot]").evaluateAll((halves) => halves.map((half) => ({
+    slot: half.getAttribute("data-mo-slot"),
+    sourceIndex: Number(half.getAttribute("data-mo-source-index")),
+    fields: Object.fromEntries([...half.querySelectorAll("[data-mo-layout-source]")].map((field) => [field.getAttribute("data-mo-layout-source"), field.textContent.trim()])),
+  })));
+  const n100FirstPair = await n100Pair();
+  assert.deepEqual(n100FirstPair.map((item) => item.sourceIndex + 1), [1, 51], "N=100 first sheet must pair records 1/51");
+  assert.deepEqual(n100FirstPair.map((item) => [item.fields.tracking, item.fields.declaredPrincipal, item.fields.name, item.fields.orderDate]), [
+    ["VPL000001", "25000", "Synthetic Receiver 1", "18-11-26"],
+    ["VPL000051", "25000", "Synthetic Receiver 51", "18-11-26"],
+  ], "N=100 first-sheet fields must belong to records 1/51");
+  const n100LayoutPdf = await saveMoLayoutPdf(page, join(temporary, "mo51-layout-synthetic-n100.pdf"), 100);
+  await compareMoPdfWithPreview(page, "front", n100LayoutPdf.bytes, 1, true);
+  await compareMoPdfWithPreview(page, "back", n100LayoutPdf.bytes, 2, true);
+  await page.locator("#moSheetSelect").selectOption({ label: "50" });
+  await page.waitForFunction(() => document.querySelector("#moSheetSelect")?.value === "49" && document.querySelector("#moLayoutFrontPreview")?.contentDocument?.querySelector('.mo-half[data-mo-slot="left"]')?.getAttribute("data-mo-source-index") === "49" && document.querySelector("#moLayoutFrontPreview")?.contentDocument?.querySelector('.mo-half[data-mo-slot="right"]')?.getAttribute("data-mo-source-index") === "99", undefined, { timeout: 15000 });
+  const n100LastPair = await n100Pair();
+  assert.deepEqual(n100LastPair.map((item) => item.sourceIndex + 1), [50, 100], "N=100 final sheet must pair records 50/100");
+  assert.deepEqual(n100LastPair.map((item) => [item.fields.tracking, item.fields.declaredPrincipal, item.fields.name, item.fields.orderDate]), [
+    ["VPP000050", "25000", "Synthetic Receiver 50", "18-11-26"],
+    ["VPP000100", "25000", "Synthetic Receiver 100", "18-11-26"],
+  ], "N=100 final-sheet fields must belong to records 50/100");
+  await compareMoPdfWithPreview(page, "front", n100LayoutPdf.bytes, 99, true);
+  await compareMoPdfWithPreview(page, "back", n100LayoutPdf.bytes, 100, true);
+  console.log(JSON.stringify({ moLayoutN100: { pages: n100LayoutPdf.document.getPageCount(), firstPair: [1, 51], finalPair: [50, 100], verifiedFields: 22, monthStampFormat: "DD-MM-YY", previewPdfPagesCompared: [1, 2, 99, 100] } }));
+  await page.locator("#moLayoutReset").click();
+  assert.equal(await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1")), null);
+
+  await importMoBatch(500);
+  await page.locator("#moPrintSideMode").selectOption("paired");
+  await addMoLayoutField(page, "tracking", 74, 45, 42, 8, 9, false, "left");
+  await page.locator("#moLayoutSave").click();
+  const n500Layout = await page.evaluate(() => JSON.stringify(JSON.parse(localStorage.getItem("gfs-mo51-layout-v1") ?? "null")));
+  assert.doesNotMatch(n500Layout, /Synthetic Receiver|VPL000001|VPP000002/u, "N=500 saved layout must contain definitions only");
+  const n500Pair = async () => page.frameLocator("#moLayoutFrontPreview").locator(".mo-half[data-mo-slot]").evaluateAll((halves) => Object.fromEntries(halves.map((half) => [half.getAttribute("data-mo-slot"), Number(half.getAttribute("data-mo-source-index")) + 1])));
+  assert.deepEqual(await n500Pair(), { left: 1, right: 251 }, "N=500 first front pair must be records 1/251");
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Performance.enable");
+  const rendererHeap = async () => (await cdp.send("Performance.getMetrics")).metrics.find((metric) => metric.name === "JSHeapUsedSize")?.value ?? 0;
+  await page.locator("#downloadMoLayoutPdf").click();
+  await page.waitForFunction(() => /^Rendering mapped batch: \d+\/500 pages$/u.test(document.querySelector("#moPdfStatus")?.textContent ?? ""), undefined, { timeout: 60000 });
+  await page.locator("#cancelMoPdf").click();
+  await page.waitForFunction(() => (document.querySelector("#moPdfStatus")?.textContent ?? "").includes("Output cancelled; no PDF was produced."), undefined, { timeout: 30000 });
+  assert.equal(await page.locator('iframe[title="Temporary MO-51 PDF rasterizer"]').count(), 0, "cancelled N=500 layout export must clean temporary raster frames");
+  const heapBefore = await rendererHeap();
+  let heapPeak = heapBefore;
+  const heapTimer = setInterval(() => { void rendererHeap().then((value) => { heapPeak = Math.max(heapPeak, value); }).catch(() => {}); }, 1000);
+  const n500Started = Date.now();
+  let n500LayoutPdf;
+  try {
+    n500LayoutPdf = await saveMoLayoutPdf(page, join(temporary, "mo51-layout-synthetic-n500.pdf"), 500);
+  } finally {
+    clearInterval(heapTimer);
+  }
+  const n500ElapsedMs = Date.now() - n500Started;
+  const heapAfter = await rendererHeap();
+  assert.equal(await page.locator('iframe[title="Temporary MO-51 PDF rasterizer"]').count(), 0, "large mapped export must remove its temporary raster frames");
+  assert.equal(await page.locator("#moSheetSelect").inputValue(), "0");
+  await compareMoPdfWithPreview(page, "front", n500LayoutPdf.bytes, 1, true);
+  await page.locator("#moSheetSelect").selectOption({ label: "125" });
+  await page.waitForFunction(() => {
+    const halves = document.querySelector("#moLayoutFrontPreview")?.contentDocument?.querySelectorAll(".mo-half[data-mo-slot]");
+    return halves?.length === 2 && Number(halves[0].getAttribute("data-mo-source-index")) === 124 && Number(halves[1].getAttribute("data-mo-source-index")) === 374;
+  }, undefined, { timeout: 15000 });
+  assert.deepEqual(await n500Pair(), { left: 125, right: 375 }, "N=500 middle sheet 125 must pair records 125/375");
+  await compareMoPdfWithPreview(page, "front", n500LayoutPdf.bytes, 249, true);
+  await compareMoPdfWithPreview(page, "back", n500LayoutPdf.bytes, 250, true);
+  await page.locator("#moSheetSelect").selectOption({ label: "250" });
+  await page.waitForFunction(() => {
+    const halves = document.querySelector("#moLayoutFrontPreview")?.contentDocument?.querySelectorAll(".mo-half[data-mo-slot]");
+    return halves?.length === 2 && Number(halves[0].getAttribute("data-mo-source-index")) === 249 && Number(halves[1].getAttribute("data-mo-source-index")) === 499;
+  }, undefined, { timeout: 15000 });
+  assert.deepEqual(await n500Pair(), { left: 250, right: 500 }, "N=500 final sheet must pair records 250/500");
+  await compareMoPdfWithPreview(page, "front", n500LayoutPdf.bytes, 499, true);
+  await compareMoPdfWithPreview(page, "back", n500LayoutPdf.bytes, 500, true);
+  console.log(JSON.stringify({ moLayoutN500: { pages: n500LayoutPdf.document.getPageCount(), pdfBytes: n500LayoutPdf.bytes.length, elapsedMs: n500ElapsedMs, rendererHeapBeforeBytes: heapBefore, rendererHeapPeakBytes: heapPeak, rendererHeapAfterBytes: heapAfter, firstPair: [1, 251], middlePair: [125, 375], finalPair: [250, 500], previewPdfPagesCompared: [1, 249, 250, 499, 500] } }));
 
   await page.locator('[data-view="review"]').first().click();
   await page.locator('[data-view="mo"]').click();

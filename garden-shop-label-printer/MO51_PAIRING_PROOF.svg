@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1410" viewBox="0 0 1200 1410" role="img" aria-labelledby="title desc">
+  <title id="title">GFS-LP-042 MO-51 planning geometry and duplex pairing proof</title>
+  <desc id="desc">Synthetic ordinal-only design proof, not a rendered postal form or physical printer acceptance. Landscape A4 contains two portrait halves. The proposed long-edge profile retains the same record in each back slot and rotates each back form 180 degrees. Examples cover all sheets for two, three, and five records, and representative sheets for one hundred records; the companion architecture document enumerates every one-hundred-record sheet.</desc>
+  <defs>
+    <style>
+      text { font-family: Arial, sans-serif; fill: #152b34; }
+      .title { font-size: 28px; font-weight: 700; }
+      .heading { font-size: 21px; font-weight: 700; }
+      .body { font-size: 16px; }
+      .small { font-size: 13px; }
+      .sheet { fill: #fff; stroke: #526875; stroke-width: 1.5; }
+      .front { fill: #e7f4ef; stroke: #21765c; }
+      .back { fill: #eaf0fa; stroke: #385c97; }
+      .cut { stroke: #ad7b32; stroke-width: 1.5; stroke-dasharray: 5 4; }
+      .grid { font-size: 19px; font-weight: 700; text-anchor: middle; }
+    </style>
+    <g id="pair-row">
+      <rect class="sheet" x="130" y="0" width="440" height="54"/>
+      <path class="cut" d="M350 0v54"/>
+      <rect class="sheet" x="650" y="0" width="440" height="54"/>
+      <path class="cut" d="M870 0v54"/>
+    </g>
+  </defs>
+  <rect width="1200" height="1410" fill="#f5f7f8"/>
+  <text class="title" x="40" y="48">MO-51 / Architecture Pairing Proof</text>
+  <text class="body" x="40" y="79">PLAN ONLY. Synthetic ordinal IDs. No customer data. Not a postal-form render or printer acceptance.</text>
+  <text class="heading" x="40" y="125">Physical Geometry / Proposed Long-Edge Duplex Profile</text>
+  <g transform="translate(44 155) scale(1.65)">
+    <rect class="sheet" width="297" height="210"/>
+    <rect class="front" x="7.134" y="5.233" width="134.232" height="199.534"/>
+    <rect class="front" x="155.634" y="5.233" width="134.232" height="199.534"/>
+    <path class="cut" d="M148.5 0v210"/>
+    <text x="74.25" y="35" text-anchor="middle" font-size="12">FRONT / L</text>
+    <text x="222.75" y="35" text-anchor="middle" font-size="12">FRONT / R</text>
+    <text x="74.25" y="100" text-anchor="middle" font-size="10">148.5 x 210 mm</text>
+    <text x="222.75" y="100" text-anchor="middle" font-size="10">148.5 x 210 mm</text>
+    <text x="148.5" y="227" text-anchor="middle" font-size="10">A4 landscape / 297 x 210 mm / cut x = 148.5 mm</text>
+  </g>
+  <g transform="translate(650 155) scale(1.65)">
+    <rect class="sheet" width="297" height="210"/>
+    <g transform="translate(148.5 210) rotate(180)">
+      <rect class="back" x="7.134" y="5.233" width="134.232" height="199.534"/>
+      <text x="74.25" y="35" text-anchor="middle" font-size="12">BACK / SAME L ID</text>
+      <text x="74.25" y="100" text-anchor="middle" font-size="10">180-degree rotation</text>
+    </g>
+    <g transform="translate(297 210) rotate(180)">
+      <rect class="back" x="7.134" y="5.233" width="134.232" height="199.534"/>
+      <text x="74.25" y="35" text-anchor="middle" font-size="12">BACK / SAME R ID</text>
+      <text x="74.25" y="100" text-anchor="middle" font-size="10">180-degree rotation</text>
+    </g>
+    <path class="cut" d="M148.5 0v210"/>
+    <text x="148.5" y="227" text-anchor="middle" font-size="10">Back PDF view / rotate EACH half, not the complete sheet</text>
+  </g>
+  <text class="small" x="40" y="566">Green/blue boxes show conservative 90.6973% fit of the 148 x 220 mm source, not actual field bounds.</text>
+  <text class="small" x="40" y="589">Dashed cut lines, colored frames and ordinal labels are proof annotations only; unused output halves must be entirely blank.</text>
+  <text class="heading" x="40" y="632">Cut-And-Stack Examples</text>
+  <text class="body" x="220" y="663">FRONT PDF: L | R (upright)</text>
+  <text class="body" x="695" y="663">BACK PDF: L | R (each rotated 180)</text>
+  <g transform="translate(0 680)">
+    <use href="#pair-row"/>
+    <text class="body" x="40" y="32">N=2 / S1</text>
+    <text class="grid" x="240" y="34">F1</text><text class="grid" x="460" y="34">F2</text>
+    <text class="grid" x="760" y="34">B1 / 180</text><text class="grid" x="980" y="34">B2 / 180</text>
+  </g>
+  <g transform="translate(0 748)">
+    <use href="#pair-row"/>
+    <text class="body" x="40" y="32">N=3 / S1</text>
+    <text class="grid" x="240" y="34">F1</text><text class="grid" x="460" y="34">F3</text>
+    <text class="grid" x="760" y="34">B1 / 180</text><text class="grid" x="980" y="34">B3 / 180</text>
+  </g>
+  <g transform="translate(0 816)">
+    <use href="#pair-row"/>
+    <text class="body" x="40" y="32">N=3 / S2</text>
+    <text class="grid" x="240" y="34">F2</text><text class="grid" x="460" y="34">BLANK</text>
+    <text class="grid" x="760" y="34">B2 / 180</text><text class="grid" x="980" y="34">BLANK</text>
+  </g>
+  <g transform="translate(0 884)">
+    <use href="#pair-row"/>
+    <text class="body" x="40" y="32">N=5 / S1</text>
+    <text class="grid" x="240" y="34">F1</text><text class="grid" x="460" y="34">F4</text>
+    <text class="grid" x="760" y="34">B1 / 180</text><text class="grid" x="980" y="34">B4 / 180</text>
+  </g>
+  <g transform="translate(0 952)">
+    <use href="#pair-row"/>
+    <text class="body" x="40" y="32">N=5 / S2</text>
+    <text class="grid" x="240" y="34">F2</text><text class="grid" x="460" y="34">F5</text>
+    <text class="grid" x="760" y="34">B2 / 180</text><text class="grid" x="980" y="34">B5 / 180</text>
+  </g>
+  <g transform="translate(0 1020)">
+    <use href="#pair-row"/>
+    <text class="body" x="40" y="32">N=5 / S3</text>
+    <text class="grid" x="240" y="34">F3</text><text class="grid" x="460" y="34">BLANK</text>
+    <text class="grid" x="760" y="34">B3 / 180</text><text class="grid" x="980" y="34">BLANK</text>
+  </g>
+  <g transform="translate(0 1110)">
+    <use href="#pair-row"/>
+    <text class="body" x="20" y="32">N=100 / S1</text>
+    <text class="grid" x="240" y="34">F1</text><text class="grid" x="460" y="34">F51</text>
+    <text class="grid" x="760" y="34">B1 / 180</text><text class="grid" x="980" y="34">B51 / 180</text>
+  </g>
+  <g transform="translate(0 1178)">
+    <use href="#pair-row"/>
+    <text class="body" x="16" y="32">N=100 / S25</text>
+    <text class="grid" x="240" y="34">F25</text><text class="grid" x="460" y="34">F75</text>
+    <text class="grid" x="760" y="34">B25 / 180</text><text class="grid" x="980" y="34">B75 / 180</text>
+  </g>
+  <g transform="translate(0 1246)">
+    <use href="#pair-row"/>
+    <text class="body" x="16" y="32">N=100 / S50</text>
+    <text class="grid" x="240" y="34">F50</text><text class="grid" x="460" y="34">F100</text>
+    <text class="grid" x="760" y="34">B50 / 180</text><text class="grid" x="980" y="34">B100 / 180</text>
+  </g>
+  <text class="body" x="40" y="1341">N=100: all 50 sheets and their front/back IDs are enumerated in MO51_ARCHITECTURE_PLAN.md.</text>
+  <text class="small" x="40" y="1374">Long-edge needs physical calibration. Short-edge swapped slots violate right-half blank on both PDF pages and are rejected.</text>
+</svg>

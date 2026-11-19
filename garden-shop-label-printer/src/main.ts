@@ -32,11 +32,13 @@ import { normalizeTrackingReference, trackingLabelDisplay } from "./tracking-rul
 import { restoreZeroFormattedCells } from "./xlsx";
 import { LABEL_REFERENCE_NOTICE, reserveLabelReference, updateLabelReferenceSource } from "./references";
 import "./mo/view.css";
+import "./mo/editor.css";
 import { projectMoRecords } from "./mo/adapter";
 import { formatSenderCnic } from "./mo/cnic";
 import { renderMoPrintView, type MoPdfViewState } from "./mo/view";
-import { findMoFieldOverflows, type MoBackPreviewRotation } from "./mo/renderer";
+import { findMoFieldOverflows, findMoLayoutMissingFields, type MoBackPreviewRotation } from "./mo/renderer";
 import { emptyMoSessionMapping, hasMoSessionMapping, moSessionMappingError, type MoSessionMapping, type MoSessionMappingKey } from "./mo/mapping";
+import { MO_LAYOUT_SOURCES, defaultMoLayout, loadMoLayout, newMoLayoutField, removeMoLayoutField, resetMoLayout, resolveMoLayoutSource, saveMoLayout, updateMoLayoutField as updateLayoutFieldConfig, validateMoLayout, type MoDataSource, type MoLayout, type MoLayoutAlignment, type MoLayoutFace, type MoLayoutField } from "./mo/layout";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 const monitoringUrl =
@@ -100,6 +102,7 @@ const sampleRows = [
 ];
 let headers: string[] = [];
 let rawRows: unknown[][] = [];
+let workbookDate1904 = false;
 let rows: Order[] = [];
 let mapping: ImportMapping = detectMapping([]);
 let batchId = crypto.randomUUID();
@@ -123,7 +126,19 @@ let moPdfState: MoPdfViewState = Object.freeze({ exporting: false });
 let moPdfAbort: AbortController | undefined;
 let moSessionMappings = new Map<number, MoSessionMapping>();
 let moPendingMappings = new Map<number, MoSessionMapping>();
+function initialMoLayout(): MoLayout {
+  try { return loadMoLayout(window.localStorage); } catch { return defaultMoLayout(); }
+}
+let moLayout = initialMoLayout();
+let moLayoutEditMode = true;
+let moLayoutSampleSourceIndex: number | undefined;
+let moSelectedLayoutFieldId: string | undefined;
+let moLayoutStatus = "Layout definitions are local-only; record values are never saved.";
+let moLayoutError = "";
+let moPrintSideMode: "paired" | "front-only" | "back-only" = "paired";
 let moMappingHandlersBound = false;
+let moLayoutPointer: Readonly<{ id: string; face: MoLayoutFace; slot: number; mode: "move" | "resize"; startX: number; startY: number; field: MoLayoutField }> | undefined;
+let moPrintWindow: Window | null = null;
 
 const esc = (value: unknown) =>
   String(value ?? "").replace(
@@ -405,12 +420,194 @@ function renderAdmin() {
 
 function renderMo() {
   const projection = currentMoProjection();
-  return renderMoPrintView(projection, moSenderCnicInput, moSheetIndex, moBackRotation, moPdfState, moSessionMappings, moPendingMappings);
+  const sample = projection.candidates.find((candidate) => candidate.sourceIndex === moLayoutSampleSourceIndex) ?? projection.candidates[0];
+  if (sample && moLayoutSampleSourceIndex === undefined) moLayoutSampleSourceIndex = sample.sourceIndex;
+  return renderMoPrintView(projection, moSenderCnicInput, moSheetIndex, moBackRotation, moPdfState, moSessionMappings, moPendingMappings, moLayout, moLayoutEditMode, moLayoutSampleSourceIndex, moSelectedLayoutFieldId, moLayoutStatus, moPrintSideMode, moLayoutError);
 }
 
 function currentMoProjection() {
   const selectedIndexes = new Set(currentOrders().map(({ index }) => index));
   return projectMoRecords(rows, { selectedSourceIndexes: selectedIndexes, requiredFields: [] });
+}
+
+function replaceMoLayout(layout: MoLayout, status = "Unsaved MO layout changes."): void {
+  try {
+    moLayout = validateMoLayout(layout);
+    moLayoutStatus = status;
+    moLayoutError = "";
+  } catch (error) {
+    moLayoutError = error instanceof Error ? error.message : "MO_LAYOUT_INVALID";
+    moLayoutStatus = "Layout change rejected; positions remain unchanged.";
+  }
+  render();
+}
+
+function persistMoLayout(): void {
+  try {
+    saveMoLayout(moLayout, window.localStorage);
+    moLayoutStatus = "Layout saved locally (positions/binding IDs only; no record values).";
+    moLayoutError = "";
+  } catch {
+    moLayoutError = "MO_LAYOUT_SAVE_FAILED: browser storage unavailable.";
+    moLayoutStatus = "Layout remains in this tab only.";
+  }
+  render();
+}
+
+function reloadMoLayout(): void {
+  try {
+    moLayout = loadMoLayout(window.localStorage);
+    moLayoutStatus = "Saved layout reloaded (definitions only).";
+    moLayoutError = "";
+    moSelectedLayoutFieldId = undefined;
+  } catch {
+    moLayoutError = "MO_LAYOUT_LOAD_FAILED";
+  }
+  render();
+}
+
+function resetMoLayoutSession(): void {
+  try {
+    moLayout = resetMoLayout(window.localStorage);
+    moLayoutStatus = "Layout reset to the reusable blank MO-51 default.";
+    moLayoutError = "";
+    moSelectedLayoutFieldId = undefined;
+  } catch {
+    moLayout = defaultMoLayout();
+    moLayoutStatus = "Layout reset in this tab only; browser storage unavailable.";
+    moLayoutError = "MO_LAYOUT_STORAGE_UNAVAILABLE";
+  }
+  render();
+}
+
+function saveMoLayoutFieldChange(fieldId: string, patch: Partial<Omit<MoLayoutField, "id">>): void {
+  try {
+    moLayout = updateLayoutFieldConfig(moLayout, fieldId, patch);
+    moLayoutStatus = "Unsaved layout changes (record values are not stored).";
+    moLayoutError = "";
+  } catch (error) {
+    moLayoutError = error instanceof Error ? error.message : "MO_LAYOUT_INVALID";
+  }
+  render();
+}
+
+function applyLayoutProperty(fieldId: string, key: string, value: string | boolean): void {
+  const field = moLayout.fields.find((item) => item.id === fieldId);
+  if (!field) return;
+  if (field.source === "senderCnic" && (key === "xMm" || key === "yMm")) {
+    moLayoutError = "Sender CNIC is pinned to the section-1 sender identity line.";
+    moLayoutStatus = "Sender CNIC position is protected.";
+    render();
+    return;
+  }
+  const numeric = typeof value === "string" ? Number(value) : NaN;
+  if (key === "source" && typeof value === "string") saveMoLayoutFieldChange(fieldId, { source: value as MoDataSource });
+  else if (key === "xMm" && Number.isFinite(numeric)) saveMoLayoutFieldChange(fieldId, { xMm: numeric });
+  else if (key === "yMm" && Number.isFinite(numeric)) saveMoLayoutFieldChange(fieldId, { yMm: numeric });
+  else if (key === "widthMm" && Number.isFinite(numeric)) saveMoLayoutFieldChange(fieldId, { widthMm: numeric });
+  else if (key === "heightMm" && Number.isFinite(numeric)) saveMoLayoutFieldChange(fieldId, { heightMm: numeric });
+  else if (key === "fontSizePt" && Number.isFinite(numeric)) saveMoLayoutFieldChange(fieldId, { fontSizePt: numeric });
+  else if (key === "alignment" && (value === "left" || value === "center" || value === "right")) saveMoLayoutFieldChange(fieldId, { alignment: value as MoLayoutAlignment });
+  else if (key === "wrap" && typeof value === "boolean") saveMoLayoutFieldChange(fieldId, { wrap: value });
+}
+
+function sampleSheetIndex(projection = currentMoProjection(), sourceIndex = moLayoutSampleSourceIndex): number {
+  const ordinal = projection.candidates.findIndex((candidate) => candidate.sourceIndex === sourceIndex);
+  if (ordinal < 0) return 0;
+  const split = Math.ceil(projection.candidates.length / 2);
+  return ordinal < split ? ordinal : ordinal - split;
+}
+
+function updateMoLayoutField(fieldId: string, patch: Partial<Omit<MoLayoutField, "id">>): void {
+  try {
+    moLayout = updateLayoutFieldConfig(moLayout, fieldId, patch);
+    moSelectedLayoutFieldId = fieldId;
+    moLayoutStatus = "Unsaved layout changes (field values are not stored).";
+    moLayoutError = "";
+  } catch (error) {
+    moLayoutError = error instanceof Error ? error.message : "MO_LAYOUT_INVALID";
+  }
+  render();
+}
+
+function addMoLayoutSource(source: MoDataSource, face: MoLayoutFace, sheetXmm: number, yMm: number, slot: 0 | 1): void {
+  let xMm = Math.max(0, Math.min(148.5 - 42, sheetXmm - slot * 148.5));
+  let topMm = Math.max(0, Math.min(210 - 8, yMm));
+  let widthMm = Math.min(42, 148.5 - xMm);
+  let heightMm = Math.min(8, 210 - topMm);
+  if (source === "senderCnic") {
+    const anchor = findSenderCnicLayoutPosition(face, slot === 0 ? "left" : "right");
+    if (!anchor) {
+      moLayoutError = "Sender CNIC is pinned to its section-1 sender identity line; drop it on the front face only.";
+      moLayoutStatus = "Field was not added.";
+      render();
+      return;
+    }
+    xMm = anchor.xMm;
+    topMm = anchor.yMm;
+    widthMm = Math.min(42, 148.5 - xMm);
+    heightMm = Math.min(5, 210 - topMm);
+    face = "front";
+  }
+  const id = crypto.randomUUID();
+  const field = newMoLayoutField(id, source, face, xMm, topMm);
+  const bounded = validateMoLayout({
+    ...moLayout,
+    fields: [...moLayout.fields, Object.freeze({ ...field, widthMm, heightMm })],
+  });
+  moLayout = bounded;
+  moSelectedLayoutFieldId = id;
+  moLayoutStatus = "Unsaved layout changes (positions/source IDs only).";
+  moLayoutError = "";
+  render();
+}
+
+function handleMoLayoutDrop(overlay: HTMLElement, event: DragEvent): void {
+  event.preventDefault();
+  if (!moLayoutEditMode || !event.dataTransfer) return;
+  const rect = overlay.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+  const xAcross = Math.max(0, Math.min(297, (event.clientX - rect.left) * 297 / rect.width));
+  const yMm = Math.max(0, Math.min(210, (event.clientY - rect.top) * 210 / rect.height));
+  const slot = (xAcross >= 148.5 ? 1 : 0) as 0 | 1;
+  const existingId = event.dataTransfer.getData("application/x-mo-layout-field");
+  const source = event.dataTransfer.getData("application/x-mo-layout-source") as MoDataSource;
+  const face = overlay.dataset.moEditorOverlay as MoLayoutFace;
+  if (existingId) {
+    const current = moLayout.fields.find((field) => field.id === existingId);
+    if (!current) return;
+    if (current.source === "senderCnic") {
+      const anchor = findSenderCnicLayoutPosition(face, slot === 0 ? "left" : "right");
+      if (!anchor) {
+        moLayoutError = "Sender CNIC is pinned to the section-1 sender identity line; it cannot move to a receiver/back field.";
+        render();
+        return;
+      }
+      updateMoLayoutField(existingId, { face: "front", xMm: anchor.xMm, yMm: anchor.yMm, widthMm: Math.min(42, 148.5 - anchor.xMm), heightMm: Math.min(5, 210 - anchor.yMm) });
+      return;
+    }
+    const xMm = Math.max(0, Math.min(148.5 - current.widthMm, xAcross - slot * 148.5));
+    const newY = Math.max(0, Math.min(210 - current.heightMm, yMm));
+    updateMoLayoutField(existingId, { face, xMm, yMm: newY });
+    return;
+  }
+  if (!MO_LAYOUT_SOURCES.some((item) => item.id === source)) return;
+  addMoLayoutSource(source, face, xAcross, yMm, slot);
+}
+
+function findSenderCnicLayoutPosition(face: "front" | "back", slot: "left" | "right"): Readonly<{ xMm: number; yMm: number }> | undefined {
+  if (face !== "front") return undefined;
+  const doc = document.querySelector<HTMLIFrameElement>("#moLayoutFrontPreview")?.contentDocument;
+  const half = doc?.querySelector<HTMLElement>(`.mo-half[data-mo-slot="${slot}"]`);
+  const page = half?.querySelector<HTMLElement>(".page");
+  const labels = page?.querySelector<HTMLElement>('div[style*="width:104px"]');
+  if (!half || !page || !labels?.textContent?.includes("شناختی کارڈ نمبر")) return undefined;
+  const line = labels.parentElement?.children[2]?.children[2] as HTMLElement | undefined;
+  if (!line) return undefined;
+  const halfRect = half.getBoundingClientRect();
+  const lineRect = line.getBoundingClientRect();
+  const mmPerPx = 148.5 / halfRect.width;
+  return Object.freeze({ xMm: Math.max(0, (lineRect.left - halfRect.left + 2) * mmPerPx), yMm: Math.max(0, (lineRect.top - halfRect.top) * (210 / halfRect.height)) });
 }
 
 function updatePendingMoMapping(event: Event): void {
@@ -524,6 +721,99 @@ async function downloadMoPdf(draftMode = false) {
   } finally {
     if (moPdfAbort === controller) {
       moPdfAbort = undefined;
+      render();
+    }
+  }
+}
+
+async function runMoLayoutOutput(printAfterBuild: boolean): Promise<void> {
+  if (moPdfAbort || view !== "mo") return;
+  const projection = currentMoProjection();
+  if (!projection.candidates.length) {
+    moLayoutError = "No eligible selected VPL/VPP records.";
+    render();
+    return;
+  }
+  if (!moLayout.fields.length) {
+    moLayoutError = "Drag at least one source field onto the MO-51 artwork before batch output.";
+    render();
+    return;
+  }
+  if (formatSenderCnic(moSenderCnicInput).status === "invalid") {
+    moLayoutError = "Sender CNIC is invalid; correct or clear it before output.";
+    render();
+    return;
+  }
+  const missing = projection.candidates.flatMap((candidate, index) => moLayout.fields
+    .filter((field) => field.source !== "senderCnic" && !resolveMoLayoutSource(candidate, field.source, moSenderCnicInput, moSessionMappings.get(candidate.sourceIndex) ?? emptyMoSessionMapping()))
+    .map((field) => `eligible-${index + 1}:${field.id}(${field.source})`));
+  if (missing.length || moLayoutError) {
+    moLayoutError = missing.length ? `Missing selected layout values: ${missing.join(", ")}` : moLayoutError;
+    render();
+    return;
+  }
+
+  const popup = printAfterBuild ? window.open("about:blank", "_blank") : null;
+  if (printAfterBuild && !popup) {
+    moLayoutError = "MO_PRINT_POPUP_BLOCKED: allow a local print tab, then retry.";
+    render();
+    return;
+  }
+  moPrintWindow = popup;
+  const controller = new AbortController();
+  moPdfAbort = controller;
+  moPdfState = Object.freeze({ exporting: true, message: printAfterBuild ? "Preparing batch for the system print dialog…" : "Preparing mapped batch PDF…" });
+  render();
+  let url: string | undefined;
+  try {
+    const { createMoPdfBlob } = await import("./mo/pdf");
+    const blob = await createMoPdfBlob(projection.candidates, moSenderCnicInput, {
+      signal: controller.signal,
+      backRotation: moBackRotation,
+      mappings: moSessionMappings,
+      layout: moLayout,
+      sideMode: moPrintSideMode,
+      onProgress: ({ completedPages, totalPages }) => {
+        moPdfState = Object.freeze({ exporting: true, progress: Object.freeze({ completedPages, totalPages }) });
+        const status = document.querySelector<HTMLElement>("#moPdfStatus");
+        if (status) status.textContent = `Rendering mapped batch: ${completedPages}/${totalPages} pages`;
+      },
+    });
+    if (controller.signal.aborted) throw new DOMException("MO layout output cancelled", "AbortError");
+    url = URL.createObjectURL(blob);
+    if (printAfterBuild && popup) {
+      popup.addEventListener("load", () => {
+        if (!popup.closed) {
+          popup.focus();
+          popup.print();
+        }
+      }, { once: true });
+      popup.location.href = url;
+      popup.addEventListener("pagehide", () => { if (url) URL.revokeObjectURL(url); }, { once: true });
+      window.setTimeout(() => { if (url) URL.revokeObjectURL(url); }, 300000);
+      moPdfState = Object.freeze({ exporting: false, message: "Mapped batch opened; browser print dialog requested. Duplex calibration remains pending." });
+    } else {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `mo51-layout-batch-${projection.candidates.length}-forms.pdf`;
+      link.hidden = true;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => { if (url) URL.revokeObjectURL(url); }, 1000);
+      moPdfState = Object.freeze({ exporting: false, message: `Downloaded ${Math.ceil(projection.candidates.length / 2) * (moPrintSideMode === "paired" ? 2 : 1)}-page mapped layout PDF.` });
+    }
+    moLayoutError = "";
+  } catch (error) {
+    if (url) URL.revokeObjectURL(url);
+    if (popup && !popup.closed) popup.close();
+    moPrintWindow = null;
+    const cancelled = error instanceof DOMException && error.name === "AbortError";
+    moPdfState = Object.freeze({ exporting: false, error: cancelled ? "Output cancelled; no PDF was produced." : `MO layout output failed (${error instanceof Error ? error.message.slice(0, 120) : "local error"}); no file was emitted.` });
+  } finally {
+    if (moPdfAbort === controller) {
+      moPdfAbort = undefined;
+      if (!printAfterBuild || moPdfState.error) moPrintWindow = null;
       render();
     }
   }
@@ -863,6 +1153,7 @@ async function parseFile(file: File) {
   importedFileName = file.name;
   batchId = crypto.randomUUID();
   if (file.name.toLowerCase().endsWith(".csv")) {
+    workbookDate1904 = false;
     const parsed = parseCsv(await file.text());
     headers = (parsed.shift() ?? []).map((value) =>
       value.replace(/^\uFEFF/, "").trim(),
@@ -872,7 +1163,7 @@ async function parseFile(file: File) {
     const { readSheet } = await import("read-excel-file/browser");
     const fileBytes = await file.arrayBuffer();
     const matrix = (await readSheet(file)) as unknown[][];
-    restoreZeroFormattedCells(new Uint8Array(fileBytes), matrix);
+    workbookDate1904 = restoreZeroFormattedCells(new Uint8Array(fileBytes), matrix);
     headers = (matrix.shift() ?? []).map((value) => String(value ?? "").trim());
     rawRows = matrix;
   }
@@ -894,13 +1185,20 @@ async function parseFile(file: File) {
 }
 
 function validateMoPreviewFit(): void {
-  const frames = Array.from(document.querySelectorAll<HTMLIFrameElement>("#moFrontPreview,#moBackPreview"));
+  const frames = Array.from(document.querySelectorAll<HTMLIFrameElement>("#moFrontPreview,#moBackPreview,#moLayoutFrontPreview,#moLayoutBackPreview"));
   void Promise.all(frames.map((frame) => frame.contentDocument?.fonts?.ready ?? Promise.resolve())).then(() => {
     const overflows = frames.flatMap((frame) => frame.contentDocument ? findMoFieldOverflows(frame.contentDocument) : []);
+    const missingLayout = frames.flatMap((frame) => frame.contentDocument ? findMoLayoutMissingFields(frame.contentDocument) : []);
+    const layoutIssue = [...new Set([...overflows, ...missingLayout])];
+    moLayoutError = layoutIssue.length ? `Mapped layout fields require attention: ${layoutIssue.join(", ")}` : "";
     const status = document.querySelector<HTMLElement>("#moMappingFitError");
-    if (status) status.textContent = overflows.length ? `Mapped text does not fit: ${Array.from(new Set(overflows)).join(", ")}. Shorten or clear it; it will not be truncated.` : "";
+    if (status) status.textContent = moLayoutError;
     const draftButton = document.querySelector<HTMLButtonElement>("#downloadMoDraftPdf");
     if (draftButton) draftButton.disabled = overflows.length > 0 || Boolean(document.querySelector("#moSenderCnic[aria-invalid='true']"));
+    const layoutDownload = document.querySelector<HTMLButtonElement>("#downloadMoLayoutPdf");
+    if (layoutDownload) layoutDownload.disabled = layoutIssue.length > 0;
+    const layoutPrint = document.querySelector<HTMLButtonElement>("#printMoBatch");
+    if (layoutPrint) layoutPrint.disabled = layoutIssue.length > 0;
   });
 }
 
@@ -1334,6 +1632,7 @@ function bind() {
       if (target === "mo" && view !== "mo") {
         moSenderCnicInput = "";
         moSheetIndex = 0;
+        moLayoutSampleSourceIndex = undefined;
         moBackRotation = "none";
         moPdfState = Object.freeze({ exporting: false });
         moSessionMappings = new Map();
@@ -1371,14 +1670,110 @@ function bind() {
     moBackRotation = (event.target as HTMLSelectElement).value as MoBackPreviewRotation;
     render();
   });
+  document.querySelector("#moLayoutSave")?.addEventListener("click", persistMoLayout);
+  document.querySelector("#moLayoutReload")?.addEventListener("click", reloadMoLayout);
+  document.querySelector("#moLayoutReset")?.addEventListener("click", resetMoLayoutSession);
+  document.querySelector<HTMLSelectElement>("#moLayoutEditMode")?.addEventListener("change", (event) => {
+    moLayoutEditMode = (event.target as HTMLSelectElement).value === "edit";
+    render();
+  });
+  document.querySelector<HTMLSelectElement>("#moLayoutSampleRecord")?.addEventListener("change", (event) => {
+    moLayoutSampleSourceIndex = Number((event.target as HTMLSelectElement).value);
+    moSheetIndex = sampleSheetIndex(currentMoProjection(), moLayoutSampleSourceIndex);
+    moSelectedLayoutFieldId = undefined;
+    render();
+  });
+  document.querySelector<HTMLSelectElement>("#moLayoutBackRotation")?.addEventListener("change", (event) => {
+    moBackRotation = (event.target as HTMLSelectElement).value as MoBackPreviewRotation;
+    render();
+  });
+  document.querySelector<HTMLSelectElement>("#moPrintSideMode")?.addEventListener("change", (event) => {
+    moPrintSideMode = (event.target as HTMLSelectElement).value as typeof moPrintSideMode;
+    render();
+  });
+  const selectedLayoutField = document.querySelector<HTMLElement>("[data-mo-selected-layout-field]")?.dataset.moSelectedLayoutField;
+  document.querySelector<HTMLSelectElement>("#moLayoutSource")?.addEventListener("change", (event) => applyLayoutProperty(selectedLayoutField ?? "", "source", (event.target as HTMLSelectElement).value));
+  document.querySelectorAll<HTMLInputElement>("#moLayoutX,#moLayoutY,#moLayoutWidth,#moLayoutHeight,#moLayoutFontSize").forEach((input) => {
+    input.addEventListener("change", () => applyLayoutProperty(selectedLayoutField ?? "", input.id === "moLayoutX" ? "xMm" : input.id === "moLayoutY" ? "yMm" : input.id === "moLayoutWidth" ? "widthMm" : input.id === "moLayoutHeight" ? "heightMm" : "fontSizePt", input.value));
+  });
+  document.querySelector<HTMLSelectElement>("#moLayoutAlignment")?.addEventListener("change", (event) => applyLayoutProperty(selectedLayoutField ?? "", "alignment", (event.target as HTMLSelectElement).value));
+  document.querySelector<HTMLInputElement>("#moLayoutWrap")?.addEventListener("change", (event) => applyLayoutProperty(selectedLayoutField ?? "", "wrap", (event.target as HTMLInputElement).checked));
+  document.querySelector("#moLayoutRemoveField")?.addEventListener("click", () => {
+    if (!selectedLayoutField) return;
+    replaceMoLayout(removeMoLayoutField(moLayout, selectedLayoutField));
+    moSelectedLayoutFieldId = undefined;
+  });
+  document.querySelectorAll<HTMLElement>("[data-mo-layout-source]").forEach((chip) => chip.addEventListener("dragstart", (event) => {
+    const transfer = (event as DragEvent).dataTransfer;
+    if (!transfer) return;
+    transfer.effectAllowed = "copy";
+    transfer.setData("application/x-mo-layout-source", chip.dataset.moLayoutSource ?? "");
+  }));
+  document.querySelectorAll<HTMLElement>("[data-mo-editor-overlay]").forEach((overlay) => {
+    overlay.addEventListener("dragover", (event) => {
+      if (moLayoutEditMode) event.preventDefault();
+    });
+    overlay.addEventListener("drop", (event) => handleMoLayoutDrop(overlay, event as DragEvent));
+  });
+  document.querySelectorAll<HTMLElement>(".mo-editor-field[data-mo-layout-id]").forEach((fieldBox) => {
+    fieldBox.addEventListener("dragstart", (event) => {
+      const transfer = (event as DragEvent).dataTransfer;
+      if (!transfer) return;
+      transfer.effectAllowed = "move";
+      transfer.setData("application/x-mo-layout-field", fieldBox.dataset.moLayoutId ?? "");
+    });
+    fieldBox.addEventListener("click", (event) => {
+      if ((event.target as HTMLElement).closest("[data-mo-resize-handle]")) return;
+      moSelectedLayoutFieldId = fieldBox.dataset.moLayoutId;
+      render();
+    });
+    fieldBox.addEventListener("pointerdown", (event) => {
+      if (!(event.target as HTMLElement).closest("[data-mo-resize-handle]") || !moLayoutEditMode) return;
+      const id = fieldBox.dataset.moLayoutId;
+      const field = moLayout.fields.find((item) => item.id === id);
+      if (!id || !field) return;
+      event.preventDefault();
+      event.stopPropagation();
+      moSelectedLayoutFieldId = id;
+      fieldBox.setPointerCapture(event.pointerId);
+      moLayoutPointer = Object.freeze({ id, face: field.face, slot: Number(fieldBox.dataset.moLayoutSlot) || 0, mode: "resize", startX: event.clientX, startY: event.clientY, field });
+    });
+    fieldBox.addEventListener("pointermove", (event) => {
+      const pointer = moLayoutPointer;
+      if (!pointer || pointer.id !== fieldBox.dataset.moLayoutId) return;
+      const overlay = document.querySelector<HTMLElement>(`[data-mo-editor-overlay="${pointer.face}"]`);
+      if (!overlay) return;
+      const rect = overlay.getBoundingClientRect();
+      const deltaX = (event.clientX - pointer.startX) * 297 / rect.width;
+      const deltaY = (event.clientY - pointer.startY) * 210 / rect.height;
+      const widthMm = Math.max(8, Math.min(148.5 - pointer.field.xMm, pointer.field.widthMm + deltaX));
+      const heightMm = Math.max(3, Math.min(210 - pointer.field.yMm, pointer.field.heightMm + deltaY));
+      const updated = updateLayoutFieldConfig(moLayout, pointer.id, { widthMm, heightMm });
+      moLayout = updated;
+      moLayoutStatus = "Unsaved layout changes (positions/bindings only).";
+      document.querySelectorAll<HTMLElement>(`.mo-editor-field[data-mo-layout-id="${pointer.id}"]`).forEach((box) => {
+        box.style.width = `${widthMm * 96 / 25.4}px`;
+        box.style.height = `${heightMm * 96 / 25.4}px`;
+      });
+    });
+    fieldBox.addEventListener("pointerup", () => {
+      if (!moLayoutPointer || moLayoutPointer.id !== fieldBox.dataset.moLayoutId) return;
+      moLayoutPointer = undefined;
+      render();
+    });
+  });
   document.querySelector("#downloadMoPdf")?.addEventListener("click", () => void downloadMoPdf());
+  document.querySelector("#downloadMoLayoutPdf")?.addEventListener("click", () => void runMoLayoutOutput(false));
+  document.querySelector("#printMoBatch")?.addEventListener("click", () => void runMoLayoutOutput(true));
   document.querySelector("#cancelMoPdf")?.addEventListener("click", () => {
     moPdfAbort?.abort();
+    moPrintWindow?.close();
+    moPrintWindow = null;
     const status = document.querySelector<HTMLElement>("#moPdfStatus");
     if (status) status.textContent = "Cancelling export…";
   });
   document.querySelector("#downloadMoDraftPdf")?.addEventListener("click", () => void downloadMoPdf(true));
-  for (const frame of Array.from(document.querySelectorAll<HTMLIFrameElement>("#moFrontPreview,#moBackPreview"))) {
+  for (const frame of Array.from(document.querySelectorAll<HTMLIFrameElement>("#moFrontPreview,#moBackPreview,#moLayoutFrontPreview,#moLayoutBackPreview"))) {
     frame.addEventListener("load", validateMoPreviewFit);
   }
   document
@@ -1425,6 +1820,7 @@ function bind() {
         rawRows,
         mapping,
         importedFileName.toLowerCase().endsWith(".csv"),
+        workbookDate1904,
       );
       await reserveRowReferences(rows);
       selected.clear();
@@ -1479,6 +1875,8 @@ function bind() {
     moSenderCnicInput = "";
     moSheetIndex = 0;
     moBackRotation = "none";
+    moLayoutSampleSourceIndex = undefined;
+    moSelectedLayoutFieldId = undefined;
     moPdfState = Object.freeze({ exporting: false });
     moSessionMappings = new Map();
     moPendingMappings = new Map();
@@ -1616,6 +2014,7 @@ function editOrder(index: number) {
   const fields: Array<[keyof Order, string]> = [
     ["serial", "Sr. no"],
     ["orderId", "Order ID"],
+    ["orderDate", "MO-51 Month Stamp (DD-MM-YY)"],
     ["name", "Receiver name"],
     ["email", "Email"],
     ["phone", "Contact number (text)"],
