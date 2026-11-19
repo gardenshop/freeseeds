@@ -780,6 +780,9 @@ async function runMoLayoutOutput(printAfterBuild: boolean): Promise<void> {
       },
     });
     if (controller.signal.aborted) throw new DOMException("MO layout output cancelled", "AbortError");
+    const pageCount = Math.ceil(projection.candidates.length / 2) * (moPrintSideMode === "paired" ? 2 : 1);
+    await logEvent("PDF_GENERATED", { rows: projection.candidates.length, pages: pageCount });
+    if (controller.signal.aborted) throw new DOMException("MO layout output cancelled", "AbortError");
     url = URL.createObjectURL(blob);
     if (printAfterBuild && popup) {
       popup.addEventListener("load", () => {
@@ -801,7 +804,7 @@ async function runMoLayoutOutput(printAfterBuild: boolean): Promise<void> {
       link.click();
       link.remove();
       window.setTimeout(() => { if (url) URL.revokeObjectURL(url); }, 1000);
-      moPdfState = Object.freeze({ exporting: false, message: `Downloaded ${Math.ceil(projection.candidates.length / 2) * (moPrintSideMode === "paired" ? 2 : 1)}-page mapped layout PDF.` });
+      moPdfState = Object.freeze({ exporting: false, message: `Downloaded ${pageCount}-page mapped layout PDF.` });
     }
     moLayoutError = "";
   } catch (error) {

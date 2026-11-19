@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createServer } from "node:http";
 import { chromium } from "playwright-core";
 import { PDFDocument } from "pdf-lib";
 import { zipSync } from "fflate";
@@ -18,6 +19,36 @@ const baseUrl = "http://127.0.0.1:4174";
 const chromePath = process.env.CHROME_PATH ?? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
 const hpSafeEdgeMm = 4.233 + 1;
 const server = spawn(process.execPath, [join(project, "node_modules", "vite", "bin", "vite.js"), "--host", "127.0.0.1", "--port", "4174", "--strictPort"], { cwd: project, stdio: "ignore", windowsHide: true, env: { ...process.env, VITE_MONITOR_URL: "http://127.0.0.1:4175" } });
+const mappedPdfAuditEvents = [];
+let captureMappedPdfAudit = false;
+const monitoringStub = createServer((request, response) => {
+  response.setHeader("access-control-allow-origin", "http://127.0.0.1:4174");
+  response.setHeader("access-control-allow-credentials", "true");
+  response.setHeader("access-control-allow-methods", "POST, OPTIONS");
+  response.setHeader("access-control-allow-headers", "content-type");
+  response.setHeader("vary", "Origin");
+  if (request.method === "OPTIONS") {
+    response.writeHead(204).end();
+    return;
+  }
+  if (request.method !== "POST" || request.url !== "/api/events") {
+    response.writeHead(404).end();
+    return;
+  }
+  let body = "";
+  request.setEncoding("utf8");
+  request.on("data", (chunk) => { body += chunk; });
+  request.on("end", () => {
+    let event;
+    try { event = JSON.parse(body); } catch { response.writeHead(400).end(); return; }
+    if (captureMappedPdfAudit && event.eventType === "PDF_GENERATED") {
+      mappedPdfAuditEvents.push(event);
+      response.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ ok: true }));
+      return;
+    }
+    response.writeHead(503, { "content-type": "application/json" }).end(JSON.stringify({ ok: false, error: "SYNTHETIC_MONITOR_UNAVAILABLE" }));
+  });
+});
 let browser;
 
 async function waitForServer() {
@@ -303,6 +334,10 @@ try {
   await mkdir(evidence, { recursive: true });
   await mkdir(temporary, { recursive: true });
   await writeFile(join(temporary, "garden-shop-label-printer-synthetic.xlsx"), Buffer.from(syntheticXlsx()));
+  await new Promise((resolveListen, rejectListen) => {
+    monitoringStub.once("error", rejectListen);
+    monitoringStub.listen(4175, "127.0.0.1", resolveListen);
+  });
   await waitForServer();
   browser = await chromium.launch({ headless: true, executablePath: chromePath, args: ["--no-sandbox"] });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1200 }, acceptDownloads: true });
@@ -1335,7 +1370,13 @@ try {
     ["VPL000001", "25000", "Synthetic Receiver 1", "18-11-26"],
     ["VPL000051", "25000", "Synthetic Receiver 51", "18-11-26"],
   ], "N=100 first-sheet fields must belong to records 1/51");
+  captureMappedPdfAudit = true;
   const n100LayoutPdf = await saveMoLayoutPdf(page, join(temporary, "mo51-layout-synthetic-n100.pdf"), 100);
+  captureMappedPdfAudit = false;
+  const mappedPdfAudit = mappedPdfAuditEvents.at(-1);
+  assert.equal(mappedPdfAudit?.eventType, "PDF_GENERATED", "mapped MO PDF must emit the existing audit event after generation");
+  assert.deepEqual(mappedPdfAudit?.counts, { rows: 100, pages: 100 }, "MO audit evidence must contain counts only");
+  assert.doesNotMatch(JSON.stringify(mappedPdfAudit), /Synthetic Receiver|VPL000001|Sahiwal|03001234567/u, "MO PDF audit event must not contain customer values");
   await compareMoPdfWithPreview(page, "front", n100LayoutPdf.bytes, 1, true);
   await compareMoPdfWithPreview(page, "back", n100LayoutPdf.bytes, 2, true);
   await page.locator("#moSheetSelect").selectOption({ label: "50" });
@@ -1409,5 +1450,6 @@ try {
   console.log(JSON.stringify({ geometry, printGeometry, decodedBarcodeCounts: [3, 18, decoded500, customDecoded500], prefixExamples: { types: ["RGL", "UMS", "VPL", "VPP"], hiddenAmountBoxes: 2, visibleAmountBoxes: prefixVisibleAmountBoxes, rglUmsAmountsAbsentFromPdf: !/50000|40000|\+0/u.test(prefixPdf.text), imagePrintValues: ["25000+175", "65000+375"], pdfValuesMatch: /25000/u.test(prefixPdf.text) && /\+175/u.test(prefixPdf.text) && /65000/u.test(prefixPdf.text) && /\+375/u.test(prefixPdf.text) }, samplePdfPages: samplePdf.pageCount, batch500PdfPages: batchPdf.getPageCount(), customBatch500PdfPages: customBatchPdf.getPageCount(), overflowLayout, moProofs: ["mo51-proof-n2-front-cnic-synthetic.png", "mo51-proof-n2-back.png", "mo51-proof-n3-front-sheet1.png", "mo51-proof-n3-back-sheet1.png", "mo51-proof-n3-front-sheet2-odd-blank.png", "mo51-proof-n3-back-sheet2-odd-blank.png", "mo51-proof-n5-front-sheet1.png", "mo51-proof-n5-back-sheet1.png", "mo51-proof-n5-front-sheet3-odd-blank.png", "mo51-proof-n5-back-sheet3-odd-blank.png", "mo51-proof-n100-front-sheet1.png", "mo51-proof-n100-back-sheet1.png", "mo51-proof-n100-front-sheet50.png", "mo51-proof-n100-back-sheet50.png"], moPdfProofs: ["mo51-pdf-n2-page1-front.png", "mo51-pdf-n2-page2-back.png", "mo51-pdf-n3-page3-front-odd-blank.png", "mo51-pdf-n3-page4-back-odd-blank.png", "mo51-pdf-n5-page5-front-odd-blank.png", "mo51-pdf-n5-page6-back-odd-blank.png", "mo51-pdf-n100-page1-front-sheet1.png", "mo51-pdf-n100-page2-back-sheet1.png", "mo51-pdf-n100-page99-front-sheet50.png", "mo51-pdf-n100-page100-back-sheet50.png"], browserErrors: errors, evidence: ["test-evidence/approved-label-layout.png", "label-output-synthetic.png", "prefix-layout-samples.png", "prefixes-image-print.png", "test-evidence/label-preview-500-v2.png", "test-evidence/label-preview-custom-500.png", "test-evidence/label-preview-overflow.png", "test-evidence/label-preview-mobile.png", "test-evidence/browser-print-sheet.png", "test-evidence/pdf-sample-page.png", "test-evidence/pdf-500-first-page.png", "test-evidence/pdf-custom-500-first-page.png", "test-evidence/pdf-overflow-filtered.png"] }, null, 2));
 } finally {
   await browser?.close();
+  if (monitoringStub.listening) await new Promise((resolveClose) => monitoringStub.close(resolveClose));
   server.kill();
 }
