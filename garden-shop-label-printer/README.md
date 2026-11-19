@@ -31,6 +31,13 @@ Independent browser-based spreadsheet import, label preview, A4/custom print/PDF
 - Permanent decision, local actual-workbook verification and synthetic regression evidence: `docs/MO51_LP048_DECISIONS.md` and `docs/MO51_LP049_DECISIONS.md`. The browser suite tests N=1,2,3,5,50,99,100,101,500; paired/front/back output; the N=100 1/51 and 50/100 cut-stack boundaries; N=500 populated PDF performance/cancellation; print popup; and preview/PDF MediaBox parity. All committed test data remains synthetic.
 - Local PASS is not authenticated staging/audit/served-asset acceptance, physical printer/duplex calibration or official postal acceptance. Chrome DevTools MCP availability, authorized account/Access and physical printing remain distinct release gates. Verify the exact account in CLI and Dashboard before any Cloudflare mutation; preserve Access and never upload the real workbook/customer data.
 
+## LP-050 protected staging state
+
+- Static LP-050 source `b0671eddaacff76cb67f82ebff2a56319ccb128a` is deployed to the existing staging Pages project as deployment `f2141840-4291-496d-909f-93131b0fb9de` (15 static assets, no Worker). The pre-release successful deployment `13081dbe-5090-4ad5-97bb-7ea5eafd9931` is the immediate rollback target; Access and the stable URL are unchanged.
+- Synthetic staging N=42 import, per-batch source mapping, field binding/preview and a 42-page paired PDF passed. The existing browser-local saved mapping profile was left unchanged; synthetic batch mapping selected `Order Reference/ID` instead of a prefilled `Order Date` for Order ID. The staging browser now has a saved synthetic layout definition (source IDs/geometry only); reset it before further use.
+- **Staging acceptance is blocked:** the existing monitor Worker rejects the actual mapped-PDF `PDF_GENERATED` event with HTTP 400 because its allowed template versions are `gfs-a4-18-v2`/`v3`, while this app emits `gfs-paper-presets-v4`. The event is not appended; the audit summary was `VERIFIED` before the synthetic run only. Do not change the Worker/Access or relabel the MO form to force acceptance. Stage Print MO Batch, existing label flow and post-event audit-chain verification remain untested.
+- The staged synthetic batch had a pre-existing device mapping preset that assigned `Order Date` to `Order ID`; the test corrected that column for the current batch without saving over the user's preset. Correct the saved source map in the Import screen before relying on it for future batches.
+
 ## Local development
 
 Requires Node.js 20.19+ and npm. The automated browser/PDF screenshot smoke also requires Node.js 22.13+ and Google Chrome (or set `CHROME_PATH` to a compatible Chrome binary).
