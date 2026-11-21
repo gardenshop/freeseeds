@@ -68,6 +68,13 @@ Independent browser-based spreadsheet import, label preview, A4/custom print/PDF
 - Wrangler read-only identity and the existing Pages project pass. Dashboard identity, active deployment and verified rollback remain unconfirmed; therefore LP-055 did not deploy or run authenticated staging acceptance. The staging-configured `dist` must not be published until those Dashboard gates pass.
 - The Monitor's prior `PDF_GENERATED` HTTP 400 for `gfs-paper-presets-v4` remains an independent audit blocker. No Worker, D1, Access, Admin/API, WhatsApp, COD/payment, Meta or production change occurred. Details: `docs/MO51_LP055_RELEASE.md`.
 
+## LP-056 Staging Release and Acceptance
+
+- Official `chrome_devtools.list_pages` was available after the VS Code/Kilo reload. Dashboard identity and the existing Access app/policy were verified without mutation. Static staging deployment `5307cf95-851e-4757-b341-becfeaae1788` is successful from source `eba513247c580ba5120c01e9fc17eabf3e485586`; the pre-release successful version `f2141840-4291-496d-909f-93131b0fb9de` is the rollback reference.
+- Fresh unit tests pass 140/140 and the staging-endpoint build passes. Authenticated synthetic N42 import, first 1/22 preview, front/back role separation, legacy correction, editor interactions, session-only optional CNIC, and clean A4 preview were partially accepted.
+- Staging print acceptance stopped when the newly opened Print MO Batch popup rendered a pre-existing populated label view instead of PDF. The tab was not edited or exported and was closed; do not share the session/tool output because one snapshot incidentally exposed customer data. N42 final pair, N100, actual PDF raster, and staging original-label regression remain unverified.
+- Monitor `gfs-paper-presets-v4` `PDF_GENERATED` HTTP 400 remains blocked; a synthetic `FILE_PROCESSED` request also failed with `ERR_QUIC_PROTOCOL_ERROR`. No Worker/D1/Access/other protected system changed. Details: `docs/MO51_LP056_RELEASE.md`.
+
 ## LP-050 protected staging state
 
 - Static LP-050 source `b0671eddaacff76cb67f82ebff2a56319ccb128a` is deployed to the existing staging Pages project as deployment `f2141840-4291-496d-909f-93131b0fb9de` (15 static assets, no Worker). The pre-release successful deployment `13081dbe-5090-4ad5-97bb-7ea5eafd9931` is the immediate rollback target; Access and the stable URL are unchanged.
