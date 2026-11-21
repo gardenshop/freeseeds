@@ -36,9 +36,9 @@ import "./mo/editor.css";
 import { projectMoRecords } from "./mo/adapter";
 import { formatSenderCnic } from "./mo/cnic";
 import { renderMoPrintView, type MoPdfViewState } from "./mo/view";
-import { findMoFieldOverflows, findMoLayoutMissingFields, type MoBackPreviewRotation } from "./mo/renderer";
+import { findMoFieldOverflows, findMoFieldOverlaps, findMoLayoutMissingFields, type MoBackPreviewRotation } from "./mo/renderer";
 import { emptyMoSessionMapping, hasMoSessionMapping, moSessionMappingError, type MoSessionMapping, type MoSessionMappingKey } from "./mo/mapping";
-import { MO_LAYOUT_SOURCES, defaultMoLayout, loadMoLayout, newMoLayoutField, removeMoLayoutField, resetMoLayout, resolveMoLayoutSource, saveMoLayout, updateMoLayoutField as updateLayoutFieldConfig, validateMoLayout, type MoDataSource, type MoLayout, type MoLayoutAlignment, type MoLayoutFace, type MoLayoutField } from "./mo/layout";
+import { correctMoPartyPositions, hasLegacyMoPartyPositions, MO_LAYOUT_SOURCES, defaultMoLayout, loadMoLayout, newMoLayoutField, removeMoLayoutField, resetMoLayout, resolveMoLayoutSource, saveMoLayout, updateMoLayoutField as updateLayoutFieldConfig, validateMoLayout, type MoDataSource, type MoLayout, type MoLayoutAlignment, type MoLayoutFace, type MoLayoutField } from "./mo/layout";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 const monitoringUrl =
@@ -136,8 +136,15 @@ let moSelectedLayoutFieldId: string | undefined;
 let moLayoutStatus = "Layout definitions are local-only; record values are never saved.";
 let moLayoutError = "";
 let moPrintSideMode: "paired" | "front-only" | "back-only" = "paired";
+let moCleanPreview = false;
+let moCleanPreviewFace: "front" | "back" = "front";
+let moPendingLayoutSource: MoDataSource | undefined;
+let moEditorZoom = 1;
+let moEditorResizeObserver: ResizeObserver | undefined;
+let moEditorWindowResizeBound = false;
 let moMappingHandlersBound = false;
-let moLayoutPointer: Readonly<{ id: string; face: MoLayoutFace; slot: number; mode: "move" | "resize"; startX: number; startY: number; field: MoLayoutField }> | undefined;
+let moLayoutPointer: Readonly<{ id: string; face: MoLayoutFace; slot: number; mode: "move" | "resize"; startX: number; startY: number; grabXmm: number; grabYmm: number; field: MoLayoutField }> | undefined;
+let moLastSourceDragAt = 0;
 let moPrintWindow: Window | null = null;
 
 const esc = (value: unknown) =>
@@ -454,6 +461,20 @@ function persistMoLayout(): void {
   render();
 }
 
+function correctLegacyMoPartyPositions(): void {
+  try {
+    if (!hasLegacyMoPartyPositions(moLayout)) return;
+    moLayout = correctMoPartyPositions(moLayout);
+    saveMoLayout(moLayout, window.localStorage);
+    moLayoutStatus = "Legacy positions corrected and saved. Receiver fields now target the upper block; Sender fields, including the pinned session-only CNIC, target the lower block.";
+    moLayoutError = "";
+  } catch (error) {
+    moLayoutError = error instanceof Error ? error.message : "MO_LAYOUT_PARTY_CORRECTION_FAILED";
+    moLayoutStatus = "Party-position correction was not saved; layout fields remain unchanged.";
+  }
+  render();
+}
+
 function reloadMoLayout(): void {
   try {
     moLayout = loadMoLayout(window.localStorage);
@@ -472,6 +493,8 @@ function resetMoLayoutSession(): void {
     moLayoutStatus = "Layout reset to the reusable blank MO-51 default.";
     moLayoutError = "";
     moSelectedLayoutFieldId = undefined;
+    moPendingLayoutSource = undefined;
+    moCleanPreview = false;
   } catch {
     moLayout = defaultMoLayout();
     moLayoutStatus = "Layout reset in this tab only; browser storage unavailable.";
@@ -507,6 +530,7 @@ function applyLayoutProperty(fieldId: string, key: string, value: string | boole
   else if (key === "widthMm" && Number.isFinite(numeric)) saveMoLayoutFieldChange(fieldId, { widthMm: numeric });
   else if (key === "heightMm" && Number.isFinite(numeric)) saveMoLayoutFieldChange(fieldId, { heightMm: numeric });
   else if (key === "fontSizePt" && Number.isFinite(numeric)) saveMoLayoutFieldChange(fieldId, { fontSizePt: numeric });
+  else if (key === "bold" && typeof value === "boolean") saveMoLayoutFieldChange(fieldId, { bold: value });
   else if (key === "alignment" && (value === "left" || value === "center" || value === "right")) saveMoLayoutFieldChange(fieldId, { alignment: value as MoLayoutAlignment });
   else if (key === "wrap" && typeof value === "boolean") saveMoLayoutFieldChange(fieldId, { wrap: value });
 }
@@ -516,6 +540,328 @@ function sampleSheetIndex(projection = currentMoProjection(), sourceIndex = moLa
   if (ordinal < 0) return 0;
   const split = Math.ceil(projection.candidates.length / 2);
   return ordinal < split ? ordinal : ordinal - split;
+}
+
+function updateMoEditorViewport(): void {
+  const surface = document.querySelector<HTMLElement>(".mo-clean-preview:not([hidden]) .mo-clean-preview-stage-wrap")
+    ?? document.querySelector<HTMLElement>(".mo-layout-editor:not([hidden]) .mo-layout-surfaces");
+  const availableWidth = surface?.clientWidth || Math.max(320, window.innerWidth - 32);
+  const fit = Math.min(1, availableWidth / 1123);
+  const scale = Math.max(0.25, Math.min(2, fit * moEditorZoom));
+  for (const stage of Array.from(document.querySelectorAll<HTMLElement>(".mo-editor-stage,.mo-final-preview-stage"))) {
+    stage.style.width = `${1123 * scale}px`;
+    stage.style.height = `${794 * scale}px`;
+    stage.style.setProperty("--mo-editor-scale", String(scale));
+    for (const child of Array.from(stage.querySelectorAll<HTMLElement>(":scope > iframe,:scope > .mo-editor-overlay"))) {
+      child.style.width = "1123px";
+      child.style.height = "794px";
+      child.style.transform = `scale(${scale})`;
+      child.style.transformOrigin = "top left";
+    }
+    for (const handle of Array.from(stage.querySelectorAll<HTMLElement>(".mo-editor-field [data-mo-resize-handle]"))) {
+      const screenHandle = 16 / scale;
+      handle.style.width = `${screenHandle}px`;
+      handle.style.height = `${screenHandle}px`;
+      handle.style.right = `${-screenHandle / 2}px`;
+      handle.style.bottom = `${-screenHandle / 2}px`;
+    }
+    for (const field of Array.from(stage.querySelectorAll<HTMLElement>(".mo-editor-field"))) {
+      field.style.borderWidth = `${(field.classList.contains("selected") ? 2 : 1) / scale}px`;
+      if (field.classList.contains("selected")) {
+        field.style.outlineWidth = `${2 / scale}px`;
+        field.style.outlineOffset = `${1 / scale}px`;
+      }
+    }
+    for (const label of Array.from(stage.querySelectorAll<HTMLElement>(".mo-editor-field .mo-editor-binding"))) {
+      label.style.fontSize = `${10 / scale}px`;
+      label.style.top = `${-15 / scale}px`;
+      label.style.maxWidth = `${240 / scale}px`;
+    }
+  }
+  const zoomOutput = document.querySelector<HTMLOutputElement>("#moZoomLevel");
+  if (zoomOutput) zoomOutput.value = `${Math.round(scale * 100)}%`;
+}
+
+function observeMoEditorViewport(): void {
+  moEditorResizeObserver?.disconnect();
+  moEditorResizeObserver = undefined;
+  const surface = document.querySelector<HTMLElement>(".mo-clean-preview:not([hidden]) .mo-clean-preview-stage-wrap")
+    ?? document.querySelector<HTMLElement>(".mo-layout-editor:not([hidden]) .mo-layout-surfaces");
+  if (surface && "ResizeObserver" in window) {
+    moEditorResizeObserver = new ResizeObserver(updateMoEditorViewport);
+    moEditorResizeObserver.observe(surface);
+  }
+  if (!moEditorWindowResizeBound) {
+    window.addEventListener("resize", updateMoEditorViewport, { passive: true });
+    moEditorWindowResizeBound = true;
+  }
+  updateMoEditorViewport();
+}
+
+function bindMoEditorUi(): void {
+  const editor = document.querySelector<HTMLElement>(".mo-layout-editor");
+  if (!editor) {
+    moEditorResizeObserver?.disconnect();
+    moEditorResizeObserver = undefined;
+    return;
+  }
+  editor.id = "moLayoutEditor";
+  if (hasLegacyMoPartyPositions(moLayout) && !editor.querySelector("#moCorrectLegacyPartyPositions")) {
+    const warning = document.createElement("div");
+    warning.className = "mo-party-position-warning";
+    warning.setAttribute("role", "alert");
+    warning.innerHTML = "<strong>Saved legacy party positions detected.</strong> Correct only Sender/Receiver fields still placed in their old front blocks; bindings, sizes, alignment and other customized fields are preserved. PDF and print stay disabled until corrected.";
+    const correction = document.createElement("button");
+    correction.type = "button";
+    correction.id = "moCorrectLegacyPartyPositions";
+    correction.textContent = "Correct Sender/Receiver Positions";
+    correction.addEventListener("click", correctLegacyMoPartyPositions);
+    warning.append(correction);
+    editor.querySelector(".mo-layout-workbench")?.before(warning);
+  }
+  const instructions = editor.querySelector<HTMLElement>("header>div>p");
+  if (instructions) instructions.textContent = "Drag a source onto either A5 half, or select it and click a form position. Move fields by dragging; resize from the visible corner handle. Coordinates remain millimetres regardless of screen zoom.";
+
+  editor.querySelectorAll<HTMLButtonElement>(".mo-source-chip[data-mo-layout-source]").forEach((chip) => {
+    chip.setAttribute("aria-pressed", String(moPendingLayoutSource === chip.dataset.moLayoutSource));
+    chip.addEventListener("click", (event) => {
+      if (performance.now() - moLastSourceDragAt < 500) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const source = chip.dataset.moLayoutSource as MoDataSource | undefined;
+      if (!source || !moLayoutEditMode) return;
+      moPendingLayoutSource = moPendingLayoutSource === source ? undefined : source;
+      moLayoutStatus = moPendingLayoutSource ? `Selected ${MO_LAYOUT_SOURCES.find((item) => item.id === source)?.label ?? source}; click a front or back form position.` : "Field placement cancelled.";
+      render();
+    });
+  });
+  editor.querySelectorAll<HTMLElement>("[data-mo-editor-overlay]").forEach((overlay) => {
+    if (moPendingLayoutSource) overlay.dataset.moPendingSource = moPendingLayoutSource;
+    else delete overlay.dataset.moPendingSource;
+    overlay.addEventListener("click", (event) => {
+      const target = event.target as HTMLElement;
+      if (!moLayoutEditMode || !moPendingLayoutSource || target.closest(".mo-editor-field")) return;
+      const rect = overlay.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const xAcross = Math.max(0, Math.min(297, (event.clientX - rect.left) * 297 / rect.width));
+      const yMm = Math.max(0, Math.min(210, (event.clientY - rect.top) * 210 / rect.height));
+      addMoLayoutSource(moPendingLayoutSource, overlay.dataset.moEditorOverlay as MoLayoutFace, xAcross, yMm, xAcross >= 148.5 ? 1 : 0);
+    });
+  });
+
+  const actions = editor.querySelector<HTMLElement>(".mo-layout-actions");
+  if (actions && moLayout.fields.length && !actions.querySelector("#moPreviewFinal")) {
+    const previewButton = document.createElement("button");
+    previewButton.type = "button";
+    previewButton.id = "moPreviewFinal";
+    previewButton.className = "mo-preview-final-button";
+    previewButton.textContent = "Preview Final MO";
+    previewButton.addEventListener("click", () => {
+      moPendingLayoutSource = undefined;
+      moCleanPreview = true;
+      render();
+    });
+    const reset = actions.querySelector("#moLayoutReset");
+    (reset?.parentElement ?? actions).insertBefore(previewButton, reset?.nextSibling ?? null);
+  }
+  if (actions && !actions.querySelector("#moEditorZoomControls")) {
+    const zoom = document.createElement("div");
+    zoom.id = "moEditorZoomControls";
+    zoom.className = "mo-editor-zoom-controls";
+    zoom.setAttribute("aria-label", "MO editor zoom");
+    zoom.innerHTML = `<button type="button" id="moFitToWidth">Fit to Width</button><button type="button" id="moZoomOut" aria-label="Zoom out">−</button><output id="moZoomLevel">100%</output><button type="button" id="moZoomIn" aria-label="Zoom in">+</button><button type="button" id="moZoomReset">Reset Zoom</button>`;
+    actions.append(zoom);
+    zoom.querySelector("#moFitToWidth")?.addEventListener("click", () => { moEditorZoom = 1; updateMoEditorViewport(); });
+    zoom.querySelector("#moZoomReset")?.addEventListener("click", () => { moEditorZoom = 1; updateMoEditorViewport(); });
+    zoom.querySelector("#moZoomIn")?.addEventListener("click", () => { moEditorZoom = Math.min(2, moEditorZoom + 0.1); updateMoEditorViewport(); });
+    zoom.querySelector("#moZoomOut")?.addEventListener("click", () => { moEditorZoom = Math.max(0.4, moEditorZoom - 0.1); updateMoEditorViewport(); });
+  }
+
+  const fontInput = editor.querySelector<HTMLInputElement>("#moLayoutFontSize");
+  const properties = editor.querySelector<HTMLElement>(".mo-layout-properties[data-mo-selected-layout-field]");
+  if (fontInput && properties && !properties.querySelector("#moLayoutFontIncrease")) {
+    const selectedId = properties.dataset.moSelectedLayoutField;
+    const selected = moLayout.fields.find((field) => field.id === selectedId);
+    const label = fontInput.closest("label");
+    if (selected && label) {
+      const controls = document.createElement("div");
+      controls.className = "mo-font-adjust";
+      const decrease = document.createElement("button");
+      decrease.type = "button";
+      decrease.id = "moLayoutFontDecrease";
+      decrease.setAttribute("aria-label", "Decrease font size");
+      decrease.textContent = "−";
+      const increase = document.createElement("button");
+      increase.type = "button";
+      increase.id = "moLayoutFontIncrease";
+      increase.setAttribute("aria-label", "Increase font size");
+      increase.textContent = "+";
+      controls.append(decrease, fontInput, increase);
+      label.append(controls);
+      const bold = document.createElement("button");
+      bold.type = "button";
+      bold.id = "moLayoutBold";
+      bold.className = "mo-bold-toggle";
+      bold.setAttribute("aria-pressed", String(selected.bold));
+      bold.textContent = selected.bold ? "Bold: On" : "Bold: Off";
+      label.insertAdjacentElement("afterend", bold);
+      decrease.addEventListener("click", () => applyLayoutProperty(selected.id, "fontSizePt", String(Math.max(4, selected.fontSizePt - 0.5))));
+      increase.addEventListener("click", () => applyLayoutProperty(selected.id, "fontSizePt", String(Math.min(48, selected.fontSizePt + 0.5))));
+      bold.addEventListener("click", () => applyLayoutProperty(selected.id, "bold", !selected.bold));
+    }
+  }
+  if (moCleanPreview && moLayout.fields.length) renderMoCleanPreview(editor);
+  else document.querySelector(".mo-clean-preview")?.remove();
+  observeMoEditorViewport();
+}
+
+function renderMoCleanPreview(editor: HTMLElement): void {
+  document.querySelector(".mo-clean-preview")?.remove();
+  const parent = editor.parentElement;
+  if (!parent) return;
+  const sourceFrames = {
+    front: editor.querySelector<HTMLIFrameElement>("#moLayoutFrontPreview"),
+    back: editor.querySelector<HTMLIFrameElement>("#moLayoutBackPreview"),
+  };
+  const preview = document.createElement("section");
+  preview.className = "mo-clean-preview";
+  preview.id = "moFinalMoPreview";
+  const header = document.createElement("header");
+  const heading = document.createElement("div");
+  heading.innerHTML = "<h2>Preview Final MO</h2><p>Clean A4 landscape preview of the same saved layout, selected records, original artwork and millimetre coordinates used by PDF/print.</p>";
+  const returnButton = document.createElement("button");
+  returnButton.type = "button";
+  returnButton.id = "moReturnToLayout";
+  returnButton.textContent = "Return to Layout Editor";
+  returnButton.addEventListener("click", () => { moCleanPreview = false; render(); });
+  header.append(heading, returnButton);
+
+  const toolbar = document.createElement("div");
+  toolbar.className = "mo-clean-preview-toolbar";
+  const faceLabel = document.createElement("label");
+  faceLabel.textContent = "Face";
+  const faceSelect = document.createElement("select");
+  faceSelect.id = "moCleanPreviewFace";
+  faceSelect.innerHTML = `<option value="front" ${moCleanPreviewFace === "front" ? "selected" : ""}>Front · Section 1</option><option value="back" ${moCleanPreviewFace === "back" ? "selected" : ""}>Back · Section 2</option>`;
+  faceLabel.append(faceSelect);
+  faceSelect.addEventListener("change", () => {
+    moCleanPreviewFace = faceSelect.value === "back" ? "back" : "front";
+    const frame = preview.querySelector<HTMLIFrameElement>("#moFinalPreview");
+    if (frame) {
+      frame.srcdoc = sourceFrames[moCleanPreviewFace]?.srcdoc ?? "";
+      frame.title = `MO-51 final ${moCleanPreviewFace} sheet preview`;
+    }
+  });
+  toolbar.append(faceLabel);
+  const sampleLabel = editor.querySelector<HTMLLabelElement>("#moLayoutSampleRecord")?.closest("label");
+  const faceModeLabel = editor.querySelector<HTMLSelectElement>("#moPrintSideMode")?.closest("label");
+  const rotationLabel = editor.querySelector<HTMLSelectElement>("#moLayoutBackRotation")?.closest("label");
+  const zoomControls = editor.querySelector<HTMLElement>("#moEditorZoomControls");
+  const cnicControls = document.querySelector<HTMLElement>(".mo-controls");
+  const sheetNav = document.querySelector<HTMLElement>(".mo-sheet-nav");
+  if (sampleLabel) toolbar.append(sampleLabel);
+  if (faceModeLabel) toolbar.append(faceModeLabel);
+  if (rotationLabel) toolbar.append(rotationLabel);
+  if (zoomControls) toolbar.append(zoomControls);
+  if (cnicControls) toolbar.append(cnicControls);
+  if (sheetNav) toolbar.append(sheetNav);
+
+  const adjustment = document.createElement("div");
+  adjustment.className = "mo-clean-preview-adjust";
+  adjustment.setAttribute("aria-label", "Selected field preview formatting");
+  const fieldLabel = document.createElement("label");
+  fieldLabel.textContent = "Adjust field";
+  const fieldSelect = document.createElement("select");
+  fieldSelect.id = "moPreviewAdjustField";
+  for (const field of moLayout.fields) {
+    const option = document.createElement("option");
+    option.value = field.id;
+    option.textContent = MO_LAYOUT_SOURCES.find((source) => source.id === field.source)?.label ?? field.source;
+    option.selected = field.id === moSelectedLayoutFieldId || (!moSelectedLayoutFieldId && field === moLayout.fields[0]);
+    fieldSelect.append(option);
+  }
+  fieldLabel.append(fieldSelect);
+  fieldSelect.addEventListener("change", () => { moSelectedLayoutFieldId = fieldSelect.value; render(); });
+  adjustment.append(fieldLabel);
+  const selected = moLayout.fields.find((field) => field.id === moSelectedLayoutFieldId) ?? moLayout.fields[0];
+  if (selected) {
+    const fontLabel = document.createElement("label");
+    fontLabel.textContent = "Font size (pt)";
+    const fontControls = document.createElement("div");
+    fontControls.className = "mo-font-adjust";
+    const decrease = document.createElement("button");
+    decrease.type = "button";
+    decrease.id = "moPreviewFontDecrease";
+    decrease.textContent = "−";
+    decrease.setAttribute("aria-label", "Decrease selected field font size");
+    const fontSize = document.createElement("input");
+    fontSize.id = "moPreviewFontSize";
+    fontSize.type = "number";
+    fontSize.min = "4";
+    fontSize.max = "48";
+    fontSize.step = "0.5";
+    fontSize.value = String(selected.fontSizePt);
+    const increase = document.createElement("button");
+    increase.type = "button";
+    increase.id = "moPreviewFontIncrease";
+    increase.textContent = "+";
+    increase.setAttribute("aria-label", "Increase selected field font size");
+    fontControls.append(decrease, fontSize, increase);
+    fontLabel.append(fontControls);
+    const bold = document.createElement("button");
+    bold.type = "button";
+    bold.id = "moPreviewBold";
+    bold.className = "mo-bold-toggle";
+    bold.setAttribute("aria-pressed", String(selected.bold));
+    bold.textContent = selected.bold ? "Bold: On" : "Bold: Off";
+    const setFont = (value: number) => applyLayoutProperty(selected.id, "fontSizePt", String(Math.max(4, Math.min(48, value))));
+    decrease.addEventListener("click", () => setFont(selected.fontSizePt - 0.5));
+    increase.addEventListener("click", () => setFont(selected.fontSizePt + 0.5));
+    fontSize.addEventListener("change", () => setFont(Number(fontSize.value)));
+    bold.addEventListener("click", () => applyLayoutProperty(selected.id, "bold", !selected.bold));
+    adjustment.append(fontLabel, bold);
+  }
+
+  const stageWrap = document.createElement("div");
+  stageWrap.className = "mo-clean-preview-stage-wrap";
+  const stage = document.createElement("div");
+  stage.className = "mo-final-preview-stage";
+  stage.id = "moFinalPreviewStage";
+  const frame = document.createElement("iframe");
+  frame.id = "moFinalPreview";
+  frame.title = `MO-51 final ${moCleanPreviewFace} sheet preview`;
+  frame.setAttribute("sandbox", "allow-same-origin");
+  frame.setAttribute("referrerpolicy", "no-referrer");
+  frame.srcdoc = sourceFrames[moCleanPreviewFace]?.srcdoc ?? "";
+  stage.append(frame);
+  stageWrap.append(stage);
+
+  const cleanWarning = document.createElement("p");
+  cleanWarning.className = "mo-clean-preview-warning";
+  const warningText = editor.querySelector<HTMLElement>(".mo-mapping-fit-error")?.textContent?.trim() ?? "";
+  cleanWarning.textContent = warningText;
+  cleanWarning.hidden = !warningText;
+
+  const actions = document.createElement("div");
+  actions.className = "mo-clean-preview-actions";
+  const layoutActions = editor.querySelector<HTMLElement>(".mo-layout-actions");
+  const visibleButtons = ["#moLayoutSave", "#moLayoutReload", "#downloadMoPdf", "#downloadMoLayoutPdf", "#printMoBatch", "#cancelMoPdf"];
+  for (const selector of visibleButtons) {
+    const button = editor.querySelector<HTMLButtonElement>(selector) ?? document.querySelector<HTMLButtonElement>(selector);
+    if (button) actions.append(button);
+  }
+  const status = document.querySelector<HTMLElement>("#moPdfStatus");
+  if (status) actions.append(status);
+  void layoutActions;
+
+  preview.append(header, toolbar, adjustment, cleanWarning, stageWrap, actions);
+  editor.insertAdjacentElement("afterend", preview);
+  const hiddenSelectors = [".mo-heading", ".mo-warning", ".mo-summary", ".mo-required-fields", ".mo-manual-overrides", ".mo-mapping-review", ".mo-exclusions", ".mo-sheet-nav", ".mo-controls", ".mo-export-controls", "#moMappingFitError"];
+  for (const selector of hiddenSelectors) {
+    const element = document.querySelector<HTMLElement>(selector);
+    if (element && !preview.contains(element)) element.hidden = true;
+  }
+  editor.hidden = true;
 }
 
 function updateMoLayoutField(fieldId: string, patch: Partial<Omit<MoLayoutField, "id">>): void {
@@ -549,6 +895,15 @@ function addMoLayoutSource(source: MoDataSource, face: MoLayoutFace, sheetXmm: n
     heightMm = Math.min(5, 210 - topMm);
     face = "front";
   }
+  const existing = moLayout.fields.find((field) => field.source === source && field.face === face && Math.abs(field.xMm - xMm) < 2 && Math.abs(field.yMm - topMm) < 2);
+  if (existing) {
+    moSelectedLayoutFieldId = existing.id;
+    moPendingLayoutSource = undefined;
+    moLayoutStatus = "That source is already placed here; the existing field is selected.";
+    moLayoutError = "";
+    render();
+    return;
+  }
   const id = crypto.randomUUID();
   const field = newMoLayoutField(id, source, face, xMm, topMm);
   const bounded = validateMoLayout({
@@ -559,6 +914,7 @@ function addMoLayoutSource(source: MoDataSource, face: MoLayoutFace, sheetXmm: n
   moSelectedLayoutFieldId = id;
   moLayoutStatus = "Unsaved layout changes (positions/source IDs only).";
   moLayoutError = "";
+  moPendingLayoutSource = undefined;
   render();
 }
 
@@ -593,6 +949,51 @@ function handleMoLayoutDrop(overlay: HTMLElement, event: DragEvent): void {
   }
   if (!MO_LAYOUT_SOURCES.some((item) => item.id === source)) return;
   addMoLayoutSource(source, face, xAcross, yMm, slot);
+}
+
+function updateMoLayoutPointer(event: PointerEvent): void {
+  const pointer = moLayoutPointer;
+  if (!pointer) return;
+  const overlay = document.querySelector<HTMLElement>(`[data-mo-editor-overlay="${pointer.face}"]`);
+  if (!overlay) return;
+  const rect = overlay.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+  const deltaX = (event.clientX - pointer.startX) * 297 / rect.width;
+  const deltaY = (event.clientY - pointer.startY) * 210 / rect.height;
+  let patch: Partial<Omit<MoLayoutField, "id">>;
+  if (pointer.mode === "move") {
+    if (pointer.field.source === "senderCnic") return;
+    const absoluteX = (event.clientX - rect.left) * 297 / rect.width;
+    const slot = absoluteX >= 148.5 ? 1 : 0;
+    const absoluteY = (event.clientY - rect.top) * 210 / rect.height;
+    patch = {
+      xMm: Math.max(0, Math.min(148.5 - pointer.field.widthMm, absoluteX - slot * 148.5 - pointer.grabXmm)),
+      yMm: Math.max(0, Math.min(210 - pointer.field.heightMm, absoluteY - pointer.grabYmm)),
+    };
+  } else {
+    patch = {
+      widthMm: Math.max(4, Math.min(148.5 - pointer.field.xMm, pointer.field.widthMm + deltaX)),
+      heightMm: Math.max(3, Math.min(210 - pointer.field.yMm, pointer.field.heightMm + deltaY)),
+    };
+  }
+  try {
+    moLayout = updateLayoutFieldConfig(moLayout, pointer.id, patch);
+    moLayoutStatus = "Unsaved layout changes (positions/bindings only).";
+    moLayoutError = "";
+  } catch (error) {
+    moLayoutError = error instanceof Error ? error.message : "MO_LAYOUT_INVALID";
+    return;
+  }
+  const updated = moLayout.fields.find((field) => field.id === pointer.id);
+  if (!updated) return;
+  const pxPerMm = 96 / 25.4;
+  for (const box of Array.from(document.querySelectorAll<HTMLElement>(`.mo-editor-field[data-mo-layout-id="${pointer.id}"]`))) {
+    const slot = Number(box.dataset.moLayoutSlot) || 0;
+    box.style.left = `${(slot * 148.5 + updated.xMm) * pxPerMm}px`;
+    box.style.top = `${updated.yMm * pxPerMm}px`;
+    box.style.width = `${updated.widthMm * pxPerMm}px`;
+    box.style.height = `${updated.heightMm * pxPerMm}px`;
+  }
 }
 
 function findSenderCnicLayoutPosition(face: "front" | "back", slot: "left" | "right"): Readonly<{ xMm: number; yMm: number }> | undefined {
@@ -1192,7 +1593,9 @@ function validateMoPreviewFit(): void {
   void Promise.all(frames.map((frame) => frame.contentDocument?.fonts?.ready ?? Promise.resolve())).then(() => {
     const overflows = frames.flatMap((frame) => frame.contentDocument ? findMoFieldOverflows(frame.contentDocument) : []);
     const missingLayout = frames.flatMap((frame) => frame.contentDocument ? findMoLayoutMissingFields(frame.contentDocument) : []);
-    const layoutIssue = [...new Set([...overflows, ...missingLayout])];
+    const overlaps = frames.flatMap((frame) => frame.contentDocument ? findMoFieldOverlaps(frame.contentDocument) : []);
+    const legacyPartyPositionIssue = hasLegacyMoPartyPositions(moLayout) ? ["legacy-sender-receiver-positions"] : [];
+    const layoutIssue = [...new Set([...overflows, ...missingLayout, ...overlaps, ...legacyPartyPositionIssue])];
     moLayoutError = layoutIssue.length ? `Mapped layout fields require attention: ${layoutIssue.join(", ")}` : "";
     const status = document.querySelector<HTMLElement>("#moMappingFitError");
     if (status) status.textContent = moLayoutError;
@@ -1631,6 +2034,10 @@ function bind() {
         moPdfState = Object.freeze({ exporting: false });
         moSessionMappings = new Map();
         moPendingMappings = new Map();
+        moCleanPreview = false;
+        moPendingLayoutSource = undefined;
+        moEditorResizeObserver?.disconnect();
+        moEditorResizeObserver = undefined;
       }
       if (target === "mo" && view !== "mo") {
         moSenderCnicInput = "";
@@ -1640,6 +2047,10 @@ function bind() {
         moPdfState = Object.freeze({ exporting: false });
         moSessionMappings = new Map();
         moPendingMappings = new Map();
+        moCleanPreview = false;
+        moCleanPreviewFace = "front";
+        moPendingLayoutSource = undefined;
+        moEditorZoom = 1;
       }
       view = target;
       render();
@@ -1709,6 +2120,7 @@ function bind() {
   document.querySelectorAll<HTMLElement>("[data-mo-layout-source]").forEach((chip) => chip.addEventListener("dragstart", (event) => {
     const transfer = (event as DragEvent).dataTransfer;
     if (!transfer) return;
+    if (chip.classList.contains("mo-source-chip")) moLastSourceDragAt = performance.now();
     transfer.effectAllowed = "copy";
     transfer.setData("application/x-mo-layout-source", chip.dataset.moLayoutSource ?? "");
   }));
@@ -1719,51 +2131,43 @@ function bind() {
     overlay.addEventListener("drop", (event) => handleMoLayoutDrop(overlay, event as DragEvent));
   });
   document.querySelectorAll<HTMLElement>(".mo-editor-field[data-mo-layout-id]").forEach((fieldBox) => {
-    fieldBox.addEventListener("dragstart", (event) => {
-      const transfer = (event as DragEvent).dataTransfer;
-      if (!transfer) return;
-      transfer.effectAllowed = "move";
-      transfer.setData("application/x-mo-layout-field", fieldBox.dataset.moLayoutId ?? "");
-    });
     fieldBox.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
       if ((event.target as HTMLElement).closest("[data-mo-resize-handle]")) return;
+      moPendingLayoutSource = undefined;
       moSelectedLayoutFieldId = fieldBox.dataset.moLayoutId;
       render();
     });
     fieldBox.addEventListener("pointerdown", (event) => {
-      if (!(event.target as HTMLElement).closest("[data-mo-resize-handle]") || !moLayoutEditMode) return;
+      if (!moLayoutEditMode || event.button !== 0) return;
       const id = fieldBox.dataset.moLayoutId;
       const field = moLayout.fields.find((item) => item.id === id);
       if (!id || !field) return;
+      const handle = Boolean((event.target as HTMLElement).closest("[data-mo-resize-handle]"));
+      const overlay = document.querySelector<HTMLElement>(`[data-mo-editor-overlay="${field.face}"]`);
+      const rect = overlay?.getBoundingClientRect();
+      if (!rect?.width || !rect.height) return;
       event.preventDefault();
       event.stopPropagation();
+      moPendingLayoutSource = undefined;
       moSelectedLayoutFieldId = id;
+      const slot = Number(fieldBox.dataset.moLayoutSlot) || 0;
+      const pointerXmm = (event.clientX - rect.left) * 297 / rect.width - slot * 148.5;
+      const pointerYmm = (event.clientY - rect.top) * 210 / rect.height;
       fieldBox.setPointerCapture(event.pointerId);
-      moLayoutPointer = Object.freeze({ id, face: field.face, slot: Number(fieldBox.dataset.moLayoutSlot) || 0, mode: "resize", startX: event.clientX, startY: event.clientY, field });
+      moLayoutPointer = Object.freeze({ id, face: field.face, slot, mode: handle ? "resize" : "move", startX: event.clientX, startY: event.clientY, grabXmm: pointerXmm - field.xMm, grabYmm: pointerYmm - field.yMm, field });
     });
     fieldBox.addEventListener("pointermove", (event) => {
-      const pointer = moLayoutPointer;
-      if (!pointer || pointer.id !== fieldBox.dataset.moLayoutId) return;
-      const overlay = document.querySelector<HTMLElement>(`[data-mo-editor-overlay="${pointer.face}"]`);
-      if (!overlay) return;
-      const rect = overlay.getBoundingClientRect();
-      const deltaX = (event.clientX - pointer.startX) * 297 / rect.width;
-      const deltaY = (event.clientY - pointer.startY) * 210 / rect.height;
-      const widthMm = Math.max(8, Math.min(148.5 - pointer.field.xMm, pointer.field.widthMm + deltaX));
-      const heightMm = Math.max(3, Math.min(210 - pointer.field.yMm, pointer.field.heightMm + deltaY));
-      const updated = updateLayoutFieldConfig(moLayout, pointer.id, { widthMm, heightMm });
-      moLayout = updated;
-      moLayoutStatus = "Unsaved layout changes (positions/bindings only).";
-      document.querySelectorAll<HTMLElement>(`.mo-editor-field[data-mo-layout-id="${pointer.id}"]`).forEach((box) => {
-        box.style.width = `${widthMm * 96 / 25.4}px`;
-        box.style.height = `${heightMm * 96 / 25.4}px`;
-      });
+      if (moLayoutPointer?.id === fieldBox.dataset.moLayoutId) updateMoLayoutPointer(event);
     });
-    fieldBox.addEventListener("pointerup", () => {
+    const finishPointer = () => {
       if (!moLayoutPointer || moLayoutPointer.id !== fieldBox.dataset.moLayoutId) return;
       moLayoutPointer = undefined;
       render();
-    });
+    };
+    fieldBox.addEventListener("pointerup", finishPointer);
+    fieldBox.addEventListener("pointercancel", finishPointer);
   });
   document.querySelector("#downloadMoPdf")?.addEventListener("click", () => void downloadMoPdf());
   document.querySelector("#downloadMoLayoutPdf")?.addEventListener("click", () => void runMoLayoutOutput(false));
@@ -1880,6 +2284,10 @@ function bind() {
     moBackRotation = "none";
     moLayoutSampleSourceIndex = undefined;
     moSelectedLayoutFieldId = undefined;
+    moPendingLayoutSource = undefined;
+    moCleanPreview = false;
+    moCleanPreviewFace = "front";
+    moEditorZoom = 1;
     moPdfState = Object.freeze({ exporting: false });
     moSessionMappings = new Map();
     moPendingMappings = new Map();
@@ -2010,6 +2418,7 @@ function bind() {
   document
     .querySelector("#refreshAdmin")
     ?.addEventListener("click", () => void loadAdmin());
+  bindMoEditorUi();
 }
 
 function editOrder(index: number) {

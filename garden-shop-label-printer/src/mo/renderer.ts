@@ -53,6 +53,30 @@ function appendMoValue(container: HTMLElement | undefined, field: MoVisibleField
   container.append(value);
 }
 
+/** Section 1's two complete party blocks are swapped; their captions and following postcode boxes move as a unit. */
+function placeReceiverAboveSender(sourcePage: HTMLElement): void {
+  const partyLabels = Array.from(sourcePage.querySelectorAll<HTMLElement>('div[style*="width:104px"]'));
+  const senderLabel = partyLabels.find((block) => block.textContent?.includes("بھیجنے والے کا نام"));
+  const receiverLabel = partyLabels.find((block) => block.textContent?.includes("وصول کرنے والے"));
+  const sender = senderLabel?.parentElement as HTMLElement | undefined;
+  const receiver = receiverLabel?.parentElement as HTMLElement | undefined;
+  if (!sender || !receiver || !sender.nextElementSibling || !receiver.nextElementSibling || sender.parentElement !== receiver.parentElement) {
+    throw new Error("MO_TEMPLATE_PARTY_BLOCKS_NOT_FOUND");
+  }
+  const senderPostcode = sender.nextElementSibling;
+  const receiverPostcode = receiver.nextElementSibling;
+  sender.dataset.moPartyBlock = "sender";
+  receiver.dataset.moPartyBlock = "receiver";
+  sender.querySelector<HTMLElement>("div")?.setAttribute("data-mo-party-caption", "sender");
+  receiver.querySelector<HTMLElement>("div")?.setAttribute("data-mo-party-caption", "receiver");
+  const senderMarker = sourcePage.ownerDocument.createComment("sender-block-position");
+  const receiverMarker = sourcePage.ownerDocument.createComment("receiver-block-position");
+  sender.before(senderMarker);
+  receiver.before(receiverMarker);
+  senderMarker.replaceWith(receiver, receiverPostcode);
+  receiverMarker.replaceWith(sender, senderPostcode);
+}
+
 function localDocument(
   slots: MoFaceSlots,
   sourcePageIndex: 0 | 1,
@@ -72,6 +96,7 @@ function localDocument(
   const half = (candidate: MoCandidate | null, slot: "left" | "right") => {
     if (!candidate) return `<div class="mo-half mo-blank" data-mo-slot="${slot}" aria-label="Blank unused form area"></div>`;
     const sourcePage = sourcePages[sourcePageIndex].cloneNode(true) as HTMLElement;
+    if (sourcePageIndex === FRONT_SECTION_INDEX) placeReceiverAboveSender(sourcePage);
     sourcePage.dataset.moSourceIndex = String(candidate.sourceIndex);
     sourcePage.dataset.moPrefix = candidate.prefix;
     const layoutActive = Boolean(layout?.fields.length);
@@ -100,7 +125,7 @@ function localDocument(
       appendMoValue(principalBox ?? undefined, visibleFields.principal, "principal");
 
       const partyBlocks = Array.from(sourcePage.querySelectorAll<HTMLElement>('div[style*="width:104px"]'));
-      const senderBlock = partyBlocks.find((block) => block.textContent?.includes("شناختی کارڈ نمبر"));
+      const senderBlock = partyBlocks.find((block) => block.textContent?.includes("بھیجنے والے کا نام"));
       const receiverBlock = partyBlocks.find((block) => block !== senderBlock && block.textContent?.includes("وصول کرنے والے"));
       const senderLines = senderBlock?.parentElement?.children[2]?.children;
       const receiverLines = receiverBlock?.parentElement?.children[2]?.children;
@@ -113,7 +138,7 @@ function localDocument(
     }
 
     if (sourcePageIndex === FRONT_SECTION_INDEX && cnic.status === "valid") {
-      const labels = sourcePage.querySelector<HTMLElement>('div[style*="width:104px"]');
+      const labels = Array.from(sourcePage.querySelectorAll<HTMLElement>('div[style*="width:104px"]')).find((block) => block.textContent?.includes("بھیجنے والے کا نام"));
       if (!labels?.textContent?.includes("شناختی کارڈ نمبر")) throw new Error("MO_TEMPLATE_SENDER_CNIC_LABEL_NOT_FOUND");
       const block = labels?.parentElement;
       const writingLines = block?.children[2]
@@ -145,7 +170,7 @@ function localDocument(
         box.className = "mo-layout-field";
         box.dataset.moLayoutField = field.id;
         box.dataset.moLayoutSource = field.source;
-        box.style.cssText = `position:absolute;left:${field.xMm}mm;top:${field.yMm}mm;width:${field.widthMm}mm;height:${field.heightMm}mm;box-sizing:border-box;color:#000;font:${field.fontSizePt}pt 'Noto Naskh Arabic',Arial,sans-serif;text-align:${field.alignment};white-space:${field.wrap ? "normal" : "nowrap"};overflow:visible`;
+        box.style.cssText = `position:absolute;left:${field.xMm}mm;top:${field.yMm}mm;width:${field.widthMm}mm;height:${field.heightMm}mm;box-sizing:border-box;color:#000;font:${field.bold ? "700 " : "400 "}${field.fontSizePt}pt 'Noto Naskh Arabic',Arial,sans-serif;text-align:${field.alignment};white-space:${field.wrap ? "normal" : "nowrap"};overflow:visible`;
         if (resolved) {
           const text = sourcePage.ownerDocument.createElement("span");
           text.dataset.moLayoutText = field.id;
@@ -225,6 +250,28 @@ export function findMoFieldOverflows(doc: Document): readonly string[] {
 
 export function findMoLayoutMissingFields(doc: Document): readonly string[] {
   return Object.freeze(Array.from(doc.querySelectorAll<HTMLElement>("[data-mo-layout-missing]"), (field) => field.dataset.moLayoutMissing ?? "unknown"));
+}
+
+/** Dynamic layout boxes must not intersect each other or the pinned session-only CNIC. */
+export function findMoFieldOverlaps(doc: Document): readonly string[] {
+  const overlaps: string[] = [];
+  const intersects = (left: DOMRect, right: DOMRect): boolean => Math.min(left.right, right.right) - Math.max(left.left, right.left) > 0.5
+    && Math.min(left.bottom, right.bottom) - Math.max(left.top, right.top) > 0.5;
+  for (const half of Array.from(doc.querySelectorAll<HTMLElement>(".mo-half[data-mo-slot],.mo-layout-crop"))) {
+    const fields = Array.from(half.querySelectorAll<HTMLElement>(":scope > .mo-layout-field"));
+    for (let left = 0; left < fields.length; left += 1) {
+      for (let right = left + 1; right < fields.length; right += 1) {
+        if (intersects(fields[left].getBoundingClientRect(), fields[right].getBoundingClientRect())) {
+          overlaps.push(`${half.dataset.moSlot}:overlap:${fields[left].dataset.moLayoutSource ?? "field"}/${fields[right].dataset.moLayoutSource ?? "field"}`);
+        }
+      }
+    }
+    const cnic = half.querySelector<HTMLElement>(".mo-sender-cnic-value");
+    if (cnic) for (const field of fields) if (intersects(cnic.getBoundingClientRect(), field.getBoundingClientRect())) {
+      overlaps.push(`${half.dataset.moSlot}:overlap:senderCnic/${field.dataset.moLayoutSource ?? "field"}`);
+    }
+  }
+  return Object.freeze(overlaps.filter((value, index, values) => values.indexOf(value) === index));
 }
 
 export function escapeMoAttribute(value: string): string {

@@ -46,15 +46,23 @@ export type MoLayoutField = Readonly<{
   widthMm: number;
   heightMm: number;
   fontSizePt: number;
+  bold: boolean;
   alignment: MoLayoutAlignment;
   wrap: boolean;
 }>;
 
 export type MoLayout = Readonly<{
-  version: 1;
+  version: 2;
   name: "Default MO-51 Layout";
+  /** Version 1 layouts were authored with the old sender-upper/receiver-lower form. */
+  partyPositionVersion: 1 | 2;
   fields: readonly MoLayoutField[];
 }>;
+
+const PARTY_BLOCK_SWAP_MM = 27;
+const PARTY_BLOCK_SPLIT_Y_MM = 105;
+const senderSources = new Set<MoDataSource>(["senderName", "senderAddress", "manualSenderName", "manualSenderAddress", "manualSenderPhone"]);
+const receiverSources = new Set<MoDataSource>(["name", "address", "sourceAddress", "phone", "city", "province", "landmark", "manualReceiverName", "manualReceiverAddress", "manualReceiverPhone"]);
 
 export type MoResolvedLayoutField = Readonly<{
   value: string;
@@ -66,14 +74,15 @@ const sourceIds = new Set<string>(MO_LAYOUT_SOURCES.map(({ id }) => id));
 
 /** Blank, reusable coordinate system; field binding occurs only when the user drops a palette field. */
 export function defaultMoLayout(): MoLayout {
-  return Object.freeze({ version: 1, name: "Default MO-51 Layout", fields: Object.freeze([]) });
+  return Object.freeze({ version: 2, name: "Default MO-51 Layout", partyPositionVersion: 2, fields: Object.freeze([]) });
 }
 
 /** Strip unknown keys so no source/customer value can leak into the saved layout object. */
 export function validateMoLayout(value: unknown): MoLayout {
   if (!value || typeof value !== "object") throw new Error("MO_LAYOUT_INVALID");
-  const data = value as { version?: unknown; fields?: unknown };
-  if (data.version !== 1 || !Array.isArray(data.fields) || data.fields.length > 100) throw new Error("MO_LAYOUT_INVALID");
+  const data = value as { version?: unknown; partyPositionVersion?: unknown; fields?: unknown };
+  if ((data.version !== 1 && data.version !== 2) || !Array.isArray(data.fields) || data.fields.length > 100) throw new Error("MO_LAYOUT_INVALID");
+  if (data.version === 2 && data.partyPositionVersion !== 1 && data.partyPositionVersion !== 2) throw new Error("MO_LAYOUT_INVALID_PARTY_POSITION_VERSION");
   const fields: MoLayoutField[] = [];
   const ids = new Set<string>();
   for (const raw of data.fields) {
@@ -89,6 +98,7 @@ export function validateMoLayout(value: unknown): MoLayout {
     if (x < 0 || y < 0 || width <= 0 || height <= 0 || x + width > 148.5 || y + height > 210 || fontSize < 4 || fontSize > 48) throw new Error("MO_LAYOUT_OUT_OF_BOUNDS");
     if (field.alignment !== "left" && field.alignment !== "center" && field.alignment !== "right") throw new Error("MO_LAYOUT_INVALID_ALIGNMENT");
     if (typeof field.wrap !== "boolean") throw new Error("MO_LAYOUT_INVALID_WRAP");
+    if (field.bold !== undefined && typeof field.bold !== "boolean") throw new Error("MO_LAYOUT_INVALID_BOLD");
     ids.add(field.id);
     fields.push(Object.freeze({
       id: field.id,
@@ -99,11 +109,40 @@ export function validateMoLayout(value: unknown): MoLayout {
       widthMm: width,
       heightMm: height,
       fontSizePt: fontSize,
+      bold: field.bold === true,
       alignment: field.alignment,
       wrap: field.wrap,
     }));
   }
-  return Object.freeze({ version: 1, name: "Default MO-51 Layout", fields: Object.freeze(fields) });
+  const partyPositionVersion = data.version === 1
+    ? (fields.some((field) => field.face === "front" && (senderSources.has(field.source) || receiverSources.has(field.source))) ? 1 : 2)
+    : data.partyPositionVersion as 1 | 2;
+  return Object.freeze({ version: 2, name: "Default MO-51 Layout", partyPositionVersion, fields: Object.freeze(fields) });
+}
+
+export function hasLegacyMoPartyPositions(layout: MoLayout): boolean {
+  if (layout.partyPositionVersion !== 1) return false;
+  return layout.fields.some((field) => field.face === "front" && (
+    (senderSources.has(field.source) && field.yMm < PARTY_BLOCK_SPLIT_Y_MM)
+    || (receiverSources.has(field.source) && field.yMm >= PARTY_BLOCK_SPLIT_Y_MM)
+  ));
+}
+
+/** Translate only party fields still in their old block, preserving all other field styling and geometry. */
+export function correctMoPartyPositions(layout: MoLayout): MoLayout {
+  const fields = layout.fields.map((field) => {
+    if (field.face !== "front") return field;
+    const delta = senderSources.has(field.source) && field.yMm < PARTY_BLOCK_SPLIT_Y_MM
+      ? PARTY_BLOCK_SWAP_MM
+      : receiverSources.has(field.source) && field.yMm >= PARTY_BLOCK_SPLIT_Y_MM
+        ? -PARTY_BLOCK_SWAP_MM
+        : 0;
+    if (!delta) return field;
+    const yMm = field.yMm + delta;
+    if (yMm < 0 || yMm + field.heightMm > 210) throw new Error("MO_LAYOUT_PARTY_CORRECTION_OUT_OF_BOUNDS");
+    return Object.freeze({ ...field, yMm });
+  });
+  return validateMoLayout({ version: 2, partyPositionVersion: 2, fields });
 }
 
 export function loadMoLayout(storage: Pick<Storage, "getItem">): MoLayout {
@@ -128,7 +167,7 @@ export function resetMoLayout(storage: Pick<Storage, "removeItem">): MoLayout {
 export function newMoLayoutField(id: string, source: MoDataSource, face: MoLayoutFace, xMm: number, yMm: number): MoLayoutField {
   const widthMm = Math.min(42, 148.5 - xMm);
   const heightMm = Math.min(8, 210 - yMm);
-  return Object.freeze({ id, source, face, xMm, yMm, widthMm, heightMm, fontSizePt: 9, alignment: "left", wrap: false });
+  return Object.freeze({ id, source, face, xMm, yMm, widthMm, heightMm, fontSizePt: 10, bold: false, alignment: "left", wrap: false });
 }
 
 export function updateMoLayoutField(layout: MoLayout, fieldId: string, patch: Partial<Omit<MoLayoutField, "id">>): MoLayout {

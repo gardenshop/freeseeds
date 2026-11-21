@@ -81,8 +81,18 @@ function renderMoEditorStage(
     const width = field.widthMm * pxPerMm;
     const height = field.heightMm * pxPerMm;
     const label = MO_LAYOUT_SOURCES.find((item) => item.id === field.source)?.label ?? field.source;
-    const sampleValue = resolveMoLayoutSource(sample, field.source, cnic, mapping)?.value ?? "No value for sample";
-    return `<div class="mo-editor-field ${selectedFieldId === field.id ? "selected" : ""}" draggable="true" data-mo-layout-id="${escapeHtml(field.id)}" data-mo-layout-source="${field.source}" data-mo-layout-face="${face}" data-mo-layout-slot="${slot}" title="${escapeHtml(sampleValue)}" style="left:${left}px;top:${top}px;width:${width}px;height:${height}px;text-align:${field.alignment};font-size:${field.fontSizePt}pt;white-space:${field.wrap ? "normal" : "nowrap"}"><span>${escapeHtml(label)}</span><i data-mo-resize-handle aria-hidden="true"></i></div>`;
+    const bindingLabel = field.source === "articleType" ? "VPL/VPP"
+      : field.source === "declaredPrincipal" ? "Principal"
+        : field.source === "tracking" ? "Tracking"
+          : field.source === "senderName" ? "Sender"
+            : field.source === "senderAddress" ? "Sender address"
+              : field.source === "name" ? "Receiver"
+                : field.source === "address" ? "Address"
+                  : field.source === "phone" ? "Contact"
+                    : field.source === "orderDate" ? "Month Stamp"
+                      : label;
+    const sampleValue = resolveMoLayoutSource(sample, field.source, cnic, mapping)?.value ?? "";
+    return `<div class="mo-editor-field ${selectedFieldId === field.id ? "selected" : ""} ${sampleValue ? "has-value" : "missing-value"}" data-mo-layout-id="${escapeHtml(field.id)}" data-mo-layout-source="${field.source}" data-mo-layout-face="${face}" data-mo-layout-slot="${slot}" title="${escapeHtml(sampleValue || `No sample value for ${label}`)}" style="left:${left}px;top:${top}px;width:${width}px;height:${height}px;text-align:${field.alignment};font-size:${field.fontSizePt}pt;font-weight:${field.bold ? "700" : "400"};white-space:${field.wrap ? "normal" : "nowrap"}"><span class="mo-editor-value">${escapeHtml(sampleValue || "NO SAMPLE VALUE")}</span><small class="mo-editor-binding">${escapeHtml(bindingLabel)}</small><i data-mo-resize-handle role="button" tabindex="0" aria-label="Resize ${escapeHtml(label)} field"></i></div>`;
   })).join("") : "";
   return `<div class="mo-editor-stage" data-mo-editor-stage style="width:1123px;height:794px"><iframe id="${face === "front" ? "moLayoutFrontPreview" : "moLayoutBackPreview"}" title="MO-51 ${face} layout editor preview" sandbox="allow-same-origin" referrerpolicy="no-referrer" srcdoc="${escapeMoAttribute(srcdoc)}"></iframe><div class="mo-editor-overlay" data-mo-editor-overlay="${face}" data-mo-editor-active="${String(editing)}" aria-label="${face} field placement surface">${boxes}</div></div>`;
 }
@@ -104,7 +114,7 @@ function renderLayoutEditor(
 ): string {
   const palette = MO_LAYOUT_SOURCES.map(({ id, label }) => {
     const value = sample ? resolveMoLayoutSource(sample, id, senderCnic, mapping)?.value : undefined;
-    return `<button type="button" draggable="true" data-mo-layout-source="${id}" class="mo-source-chip"><span>${escapeHtml(label)}</span><small>${escapeHtml(value ?? "No value for sample")}</small></button>`;
+    return `<button type="button" draggable="true" data-mo-layout-source="${id}" class="mo-source-chip" aria-pressed="false"><span>${escapeHtml(label)}</span><small>${escapeHtml(value ?? "No value for sample")}</small></button>`;
   }).join("");
   const selected = layout.fields.find((field) => field.id === selectedFieldId);
   const sampleOptions = projection.candidates.map((candidate, index) => `<option value="${candidate.sourceIndex}" ${candidate.sourceIndex === sampleIndex ? "selected" : ""}>Eligible ${index + 1} (source row ${candidate.sourceIndex + 1})</option>`).join("");

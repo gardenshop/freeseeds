@@ -3,9 +3,9 @@ import html2canvas from "html2canvas";
 import type { MoCandidate } from "./adapter";
 import { formatSenderCnic } from "./cnic";
 import { imposeMoCandidates } from "./imposition";
-import { findMoFieldOverflows, renderMoPreviewDocuments, type MoBackPreviewRotation } from "./renderer";
+import { findMoFieldOverflows, findMoFieldOverlaps, renderMoPreviewDocuments, type MoBackPreviewRotation } from "./renderer";
 import { emptyMoSessionMapping, hasVisibleMoFields, resolveMoVisibleFields, type MoSessionMapping } from "./mapping";
-import { resolveMoLayoutSource, type MoLayout } from "./layout";
+import { hasLegacyMoPartyPositions, resolveMoLayoutSource, type MoLayout } from "./layout";
 
 const PT_PER_MM = 72 / 25.4;
 const PAGE_WIDTH_PT = 297 * PT_PER_MM;
@@ -75,6 +75,8 @@ async function facePng(srcdoc: string, signal?: AbortSignal, backgroundColor: st
     if (!sheet) throw new Error(`MO_PDF_PREVIEW_SHEET_MISSING:${doc.readyState}`);
     const overflows = findMoFieldOverflows(doc);
     if (overflows.length) throw new Error(`MO_FIELD_OVERFLOW:${overflows.join(",")}`);
+    const overlaps = findMoFieldOverlaps(doc);
+    if (overlaps.length) throw new Error(`MO_FIELD_OVERLAP:${overlaps.join(",")}`);
     const bounds = sheet.getBoundingClientRect();
     const width = bounds.width;
     const height = bounds.height;
@@ -170,6 +172,7 @@ export async function createMoPdfBlob(
   if (cnic.status === "invalid") throw new Error("MO_SENDER_CNIC_INVALID");
 
   const layoutActive = Boolean(layout?.fields.length);
+  if (layoutActive && layout && hasLegacyMoPartyPositions(layout)) throw new Error("MO_LAYOUT_PARTY_POSITION_CORRECTION_REQUIRED");
   const hasDraftFields = !layoutActive && candidates.some((candidate) => hasVisibleMoFields(resolveMoVisibleFields(candidate, mappings.get(candidate.sourceIndex) ?? emptyMoSessionMapping())));
   if (draftMode && !hasDraftFields) throw new Error("MO_DRAFT_REQUIRES_USER_CONFIRMED_FIELDS");
   const appliedMappings = layoutActive || draftMode ? mappings : new Map<number, MoSessionMapping>();
@@ -229,6 +232,7 @@ export async function createMoPdfBlob(
               widthMm: field.widthMm,
               heightMm: field.heightMm,
               fontSizePt: field.fontSizePt,
+              bold: field.bold,
               alignment: field.alignment,
               wrap: field.wrap,
               value: resolveMoLayoutSource(candidate, field.source, senderCnicInput, appliedMappings.get(candidate.sourceIndex) ?? emptyMoSessionMapping())?.value ?? "",
