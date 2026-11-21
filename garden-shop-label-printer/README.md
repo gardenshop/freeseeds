@@ -48,6 +48,19 @@ Independent browser-based spreadsheet import, label preview, A4/custom print/PDF
 - The mapped A4 sheet remains 297 × 210 mm landscape, two 148.5 × 210 mm halves, paired by the existing cut-and-stack `ceil(N/2)` rule. Fit/zoom are view-only; mapping, principal, exact tracking and row identity are unchanged. No commission is added and no postal field is invented or claimed to be officially verified.
 - LP-052 tests and synthetic raster evidence are recorded in `docs/MO51_LP052_DECISIONS.md`. They do not verify staging, physical duplex alignment or official postal acceptance.
 
+## LP-053 Secure Staging Release Gate
+
+- Source LP-052 is pushed at `248e8c8b0b65591d78095f0442849f65bccfe1d3`. Local LP-051/052 tests and build passed at that source. The current staging Pages deployment remains LP-050 (`f2141840-4291-496d-909f-93131b0fb9de`, source `b0671ed`); the prior successful Pages deployment is `13081dbe-5090-4ad5-97bb-7ea5eafd9931`. CLI history is not Dashboard confirmation of the active version.
+- LP-050 exposed an Access session cookie. Do not reuse or disclose it. Cloudflare documents application-scoped token revocation at Zero Trust → Access controls → Applications → select the verified staging Access application → Edit → **Revoke existing tokens**. Verify the Get Free Seeds account and exact application/hostnames first; this action revokes that application's sessions without changing policy. Wait for invalidation, then authenticate in a fresh isolated context and verify the Dashboard identity before staging work. If authorized Dashboard controls are unavailable, remain local-only.
+- A CLI-only identity/project check is not Dashboard identity or permission verification. The existing Monitor Worker still rejects `PDF_GENERATED` for `gfs-paper-presets-v4` with HTTP 400; this is an independent audit gate and must not be bypassed by a Worker edit or template-version spoof.
+- Full security/release state and the precise owner action are in `docs/MO51_LP053_RELEASE.md`. No LP-053 deployment or staging acceptance is claimed.
+
+## LP-054 LP-052 Protected Staging Attempt
+
+- Source remains `248e8c8b0b65591d78095f0442849f65bccfe1d3`; read-only Wrangler confirms Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` and the existing Pages project. Latest CLI history is still LP-050 deployment `f2141840-4291-496d-909f-93131b0fb9de` (source `b0671ed`); prior successful rollback is `13081dbe-5090-4ad5-97bb-7ea5eafd9931`.
+- The owner reports successful app-scoped Access token revocation and fresh login to the staging Import screen; do not retest or reuse the exposed token. No staging deployment has yet occurred in LP-054. Official Chrome DevTools MCP is configured but `chrome_devtools.list_pages` was not exposed; without it, do not automate staging or bypass the authenticated browser.
+- Same-HEAD unit/build/browser+PDF/original-label regressions pass. LP-052 static release and staging acceptance remain pending the browser-bridge recovery and mandatory identity/page inspection. Audit HTTP 400 remains a separate Worker contract blocker; physical duplex remains unverified. Full diagnostics: `docs/MO51_LP054_RELEASE.md`.
+
 ## LP-050 protected staging state
 
 - Static LP-050 source `b0671eddaacff76cb67f82ebff2a56319ccb128a` is deployed to the existing staging Pages project as deployment `f2141840-4291-496d-909f-93131b0fb9de` (15 static assets, no Worker). The pre-release successful deployment `13081dbe-5090-4ad5-97bb-7ea5eafd9931` is the immediate rollback target; Access and the stable URL are unchanged.

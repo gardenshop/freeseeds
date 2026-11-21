@@ -1,0 +1,33 @@
+# GFS-LP-053 — Secure LP-052 Staging Release
+
+## Preflight (read-only)
+
+- Expected source: `248e8c8b0b65591d78095f0442849f65bccfe1d3`; branch: `codex/garden-shop-label-printer-mvp`; remote: `https://github.com/gardenshop/freeseeds.git`. Local HEAD equals the fetched `origin/codex/garden-shop-label-printer-mvp` HEAD. No runtime changes were made in LP-053.
+- The repository has unrelated dirty Admin/API/core/root/docs/worktree files plus existing generated browser evidence under `test-evidence/`. They were preserved and not staged, edited, cleaned or committed. LP-053 changes only this release record, project `README.md`, and project `RULES.md`.
+- Read-only Wrangler OAuth identity was Get Free Seeds / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Pages inventory returned the existing `garden-shop-label-printer-staging` project. Wrangler OAuth's reported scopes did not include Access control/session management. No secret or cookie value is recorded here.
+- CLI deployment history lists current top entry `f2141840-4291-496d-909f-93131b0fb9de` (Production/main, source `b0671ed`) and immediately prior successful entry `13081dbe-5090-4ad5-97bb-7ea5eafd9931` (source `8807369`). The active version, Access app/policy identity and stable URL were not independently confirmed in Dashboard during LP-053; CLI history is not an active-version assertion.
+
+## Access-session revocation capability and gate
+
+- Cloudflare's official [Access session management documentation](https://developers.cloudflare.com/cloudflare-one/access-controls/access-settings/session-management/) describes per-application revocation: **Zero Trust → Access controls → Applications → select the application → Edit → Revoke existing tokens**. The docs say existing application tokens are invalidated; the user may authenticate again if their identity still passes the existing policy. This does not require changing policy. It is narrower than per-user revocation across all applications, but revokes all live sessions for that application, not only one browser token.
+- The required Chrome DevTools MCP/Dashboard interface is not exposed in this execution. The available Wrangler OAuth has no Access session-management scope. Therefore the exact staging Access application, its currently effective policy, Dashboard account selector and the revocation control could not be independently verified or invoked. No cookie was read, reused, copied, sent or displayed. **Revocation and fresh Dashboard authentication are NOT VERIFIED.**
+- Do not deploy or perform authenticated staging acceptance until the authorized admin completes one manual action: in the Cloudflare Dashboard after confirming account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, open Zero Trust → Access controls → Applications, identify the existing app whose verified host list contains the staging Pages site (and its shared monitor host, if applicable), open Edit → **Revoke existing tokens**, and confirm the revocation. Do not alter its policy. After token invalidation (Cloudflare documents 20–30 seconds), test only through an isolated fresh authorized browser: verify the old session no longer grants the app, sign in normally, and confirm the Dashboard account name and ID. Do not reuse the exposed cookie or bypass Access.
+
+## Local regression status
+
+- The source at expected HEAD was already fully verified in LP-052; no runtime code changed after those checks. Same-HEAD results: `npm.cmd test` 140/140; `npm.cmd run build` TypeScript/Worker checks and Vite build PASS; `npm.cmd run test:browser` PASS with zero browser errors.
+- Existing LP-052 browser evidence uses synthetic data only and covers Sender upper/Receiver lower role binding correction, Urdu captions, pinned session-only Sender CNIC, pre-LP-052 schema-v1 layout correction, pointer drag/reposition/resize, font and bold controls, zoom/Fit to Width, clean preview, PDF raster and print popup, 800–1920 px widths, and existing label/PDF regressions.
+- Pairing coverage includes N=42 (`1/22`, `11/32`, `21/42`), N=100 (`1/51`, `50/100`), N=500, odd blanks, mixed prefixes and preserved row/tracking/principal identity. N=500 generated 500 MO pages in 74,324 ms (renderer JS heap peak 40,669,092 bytes; not process memory). Actual synthetic PDF raster: `D:\Temp\kilo\lp052-evidence\lp052-legacy-corrected-pdf-front-synthetic.png`.
+- No real customer data/workbook was opened or used. LP-053 made no feature change, no runtime test fixture change and no external mutation.
+
+## Release and independent blockers
+
+- **LP-052 Pages deployment: NOT DEPLOYED.** Security gates did not pass. No build-from-source staging configuration, `dist` upload, URL smoke, source served-asset assertion, stable-URL check, or Dashboard rollback verification was attempted. Existing Pages and Access state was left unchanged.
+- **Staging acceptance: BLOCKED.** Browser DevTools MCP unavailable; no staging pointer/font/legacy/preview/PDF/print/label interaction was performed. Do not treat local tests as staging evidence.
+- **Monitor contract: BLOCKED independently.** LP-050's actual `PDF_GENERATED` request was rejected HTTP 400 because `gfs-paper-presets-v4` is outside the Monitor Worker allowlist (`gfs-a4-18-v2`/`v3`). LP-053 only inspected the existing release decision and did not call/mutate Worker, D1 or create an audit event. No template spoofing, validation bypass or invented audit success is allowed. A client/Worker compatibility change requires separate authorization; audit acceptance needs a real end-to-end event plus verified audit-chain result.
+- Read-only contract trace confirms the rejection point: `src/engine.ts` sets `TEMPLATE_VERSION="gfs-paper-presets-v4"`; `src/main.ts:158-181` sends the existing event fields `eventType`, `batchId`, `templateVersion`, `counts` and optional `errorCode`. `worker/index.ts:15` allows only `gfs-a4-18-v2` and `gfs-a4-18-v3`; its schema validation at line 147 rejects any other version before the append at lines 153-154. The smallest plausible compatibility change is an additive Worker allowlist entry plus Worker/API contract tests; this is **not authorized** in LP-053 and was not made. Client version spoofing would misrepresent the template and is prohibited.
+- Physical duplex alignment and official postal acceptance remain **NOT TESTED / NOT VERIFIED**.
+
+## Result
+
+CLI account/project and Git source preflight: **PASS**. Same-HEAD local regressions: **PASS**. Supported per-application revocation path: **DISCOVERED, NOT EXECUTED/VERIFIED**. Static release and authenticated staging: **BLOCKED** pending Dashboard session revocation and fresh identity verification. Audit acceptance remains separately **BLOCKED** by the Monitor contract.
