@@ -93,6 +93,14 @@
 - If security identity gates are verified and the authorized browser MCP is available, publish only the configured standalone `dist/` to `garden-shop-label-printer-staging` on `main`; never call `wrangler deploy`. Do not touch Worker, D1, Access policy, Admin/API, Meta, WhatsApp, COD/payments, or production routes. Keep audit HTTP 400, physical duplex and postal acceptance as separate gates.
 - LP-054 evidence and exact bridge diagnostics are additive in `docs/MO51_LP054_RELEASE.md`.
 
+## GFS-LP-055 Chrome MCP recovery and release gate
+
+- The expected LP-055 source is `1d05f5bdedf667acd8aa93be01cb4cb48ac635b7`. The official global `chrome-devtools-mcp@1.13.0` registration is enabled, but a gateway log containing only `Initialized` and absent `chrome_devtools.list_pages` means the bridge was not exposed by the running IDE host. The supported recovery is VS Code/Kilo **Developer: Reload Window**; after reconnect, call `list_pages` first. Do not use direct CDP/debug-port access, cookie extraction, shell automation, another profile, or Access bypass.
+- Wrangler read-only identity is `gisupp@gmail.com` / Get Free Seeds / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; the existing Pages project is listed. This does not verify Dashboard identity, active version, or rollback. Do not deploy until all three are visibly verified through authorized Chrome MCP. Do not revoke Access tokens again based on the owner-confirmed prior revocation.
+- Fresh unit tests pass 140/140 and the staging-configured build passes. LP-054 browser evidence is reusable because `src/`, `tests/`, and package manifests are unchanged at LP-055 HEAD; do not overwrite existing dirty generated evidence unnecessarily. No staging deployment or authenticated staging test is claimed.
+- Preserve Monitor audit blocker HTTP 400 for `gfs-paper-presets-v4`; never spoof a template version, weaken validation, or alter Worker/D1 without separate authorization. No Admin/API/WhatsApp/COD/payment/Meta/production mutation.
+- LP-055 deployment, staging acceptance, served assets, active/rollback verification, physical duplex, and postal acceptance remain blocked or untested as recorded in `docs/MO51_LP055_RELEASE.md`.
+
 ## GFS-LP-041 Staging Release Record (2026-11-17)
 
 - Before Pages upload, project-local Wrangler 4.149.0 `whoami` returned `Get Free Seeds` / account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`. Account-pinned Pages inventory confirmed only the existing `garden-shop-label-printer-staging` project, Production branch `main`, prior Production `aae85a83-663d-449f-a20c-52418ed5b5e3`, and rollback candidate `a8287aa3-31dc-4446-a6be-c3127fac0e80`. The current stable URL returned an anonymous Access HTTP 302 challenge. The prior Dashboard-verified policy was Super-Admin-only; no Access change was made, but this release session did not have Access-policy read scope or Chrome MCP to independently reread its allowed identity.

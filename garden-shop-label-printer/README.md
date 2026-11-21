@@ -61,6 +61,13 @@ Independent browser-based spreadsheet import, label preview, A4/custom print/PDF
 - The owner reports successful app-scoped Access token revocation and fresh login to the staging Import screen; do not retest or reuse the exposed token. No staging deployment has yet occurred in LP-054. Official Chrome DevTools MCP is configured but `chrome_devtools.list_pages` was not exposed; without it, do not automate staging or bypass the authenticated browser.
 - Same-HEAD unit/build/browser+PDF/original-label regressions pass. LP-052 static release and staging acceptance remain pending the browser-bridge recovery and mandatory identity/page inspection. Audit HTTP 400 remains a separate Worker contract blocker; physical duplex remains unverified. Full diagnostics: `docs/MO51_LP054_RELEASE.md`.
 
+## LP-055 Chrome MCP Recovery and Release Gate
+
+- Expected HEAD `1d05f5bdedf667acd8aa93be01cb4cb48ac635b7` is on the target branch. Unit tests pass 140/140 and the staging-configured build passes. LP-054 browser/PDF and original-label evidence remains applicable because printer source, tests and package manifests are unchanged; existing generated evidence was not rewritten.
+- The official `chrome-devtools-mcp@1.13.0` registration is enabled, but the current VS Code gateway log contains only `Initialized` and this agent has no `chrome_devtools.list_pages` action. The only supported next action is VS Code/Kilo **Developer: Reload Window**; after recovery, `list_pages` must be the first browser action.
+- Wrangler read-only identity and the existing Pages project pass. Dashboard identity, active deployment and verified rollback remain unconfirmed; therefore LP-055 did not deploy or run authenticated staging acceptance. The staging-configured `dist` must not be published until those Dashboard gates pass.
+- The Monitor's prior `PDF_GENERATED` HTTP 400 for `gfs-paper-presets-v4` remains an independent audit blocker. No Worker, D1, Access, Admin/API, WhatsApp, COD/payment, Meta or production change occurred. Details: `docs/MO51_LP055_RELEASE.md`.
+
 ## LP-050 protected staging state
 
 - Static LP-050 source `b0671eddaacff76cb67f82ebff2a56319ccb128a` is deployed to the existing staging Pages project as deployment `f2141840-4291-496d-909f-93131b0fb9de` (15 static assets, no Worker). The pre-release successful deployment `13081dbe-5090-4ad5-97bb-7ea5eafd9931` is the immediate rollback target; Access and the stable URL are unchanged.
