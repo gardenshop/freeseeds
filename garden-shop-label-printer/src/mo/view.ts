@@ -81,18 +81,25 @@ function renderMoEditorStage(
     const width = field.widthMm * pxPerMm;
     const height = field.heightMm * pxPerMm;
     const label = MO_LAYOUT_SOURCES.find((item) => item.id === field.source)?.label ?? field.source;
-    const bindingLabel = field.source === "articleType" ? "VPL/VPP"
-      : field.source === "declaredPrincipal" ? "Principal"
-        : field.source === "tracking" ? "Tracking"
-          : field.source === "senderName" ? "Sender"
-            : field.source === "senderAddress" ? "Sender address"
-              : field.source === "name" ? "Receiver"
-                : field.source === "address" ? "Address"
-                  : field.source === "phone" ? "Contact"
-                    : field.source === "orderDate" ? "Month Stamp"
-                      : label;
+    const semanticCnic = field.source === "senderCnic";
+    const bindingLabel = semanticCnic ? "Sender identity anchor (MO only)"
+      : field.source === "articleType" ? "VPL/VPP"
+        : field.source === "declaredPrincipal" ? "Principal"
+          : field.source === "tracking" ? "Tracking"
+            : field.source === "senderName" ? "Sender"
+              : field.source === "senderAddress" ? "Sender address"
+                : field.source === "name" ? "Receiver"
+                  : field.source === "address" ? "Address"
+                    : field.source === "phone" ? "Contact"
+                      : field.source === "orderDate" ? "Month Stamp"
+                        : label;
     const sampleValue = resolveMoLayoutSource(sample, field.source, cnic, mapping)?.value ?? "";
-    return `<div class="mo-editor-field ${selectedFieldId === field.id ? "selected" : ""} ${sampleValue ? "has-value" : "missing-value"}" data-mo-layout-id="${escapeHtml(field.id)}" data-mo-layout-source="${field.source}" data-mo-layout-face="${face}" data-mo-layout-slot="${slot}" title="${escapeHtml(sampleValue || `No sample value for ${label}`)}" style="left:${left}px;top:${top}px;width:${width}px;height:${height}px;text-align:${field.alignment};font-size:${field.fontSizePt}pt;font-weight:${field.bold ? "700" : "400"};white-space:${field.wrap ? "normal" : "nowrap"}"><span class="mo-editor-value">${escapeHtml(sampleValue || "NO SAMPLE VALUE")}</span><small class="mo-editor-binding">${escapeHtml(bindingLabel)}</small><i data-mo-resize-handle role="button" tabindex="0" aria-label="Resize ${escapeHtml(label)} field"></i></div>`;
+    const emptyOptionalCnic = semanticCnic && !sampleValue;
+    const value = emptyOptionalCnic ? "" : sampleValue || "NO SAMPLE VALUE";
+    const missing = !sampleValue && !semanticCnic;
+    const title = semanticCnic ? "Optional CNIC · pinned to Sender identity line; follows Sender position." : sampleValue || `No sample value for ${label}`;
+    const resizeHandle = semanticCnic ? "" : `<i data-mo-resize-handle role="button" tabindex="0" aria-label="Resize ${escapeHtml(label)} field"></i>`;
+    return `<div class="mo-editor-field ${selectedFieldId === field.id ? "selected" : ""} ${missing ? "missing-value" : "has-value"}" data-mo-layout-id="${escapeHtml(field.id)}" data-mo-layout-source="${field.source}" data-mo-layout-face="${face}" data-mo-layout-slot="${slot}" data-mo-layout-width-mm="${field.widthMm}" data-mo-layout-height-mm="${field.heightMm}" title="${escapeHtml(title)}" aria-label="${escapeHtml(bindingLabel)} · ${slot === 0 ? "left" : "right"} form" style="left:${left}px;top:${top}px;width:${width}px;height:${height}px;text-align:${field.alignment};font-size:${field.fontSizePt}pt;font-weight:${field.bold ? "700" : "400"};white-space:${field.wrap ? "normal" : "nowrap"}"><span class="mo-editor-value">${escapeHtml(value)}</span><small class="mo-editor-binding">${escapeHtml(bindingLabel)}</small>${resizeHandle}</div>`;
   })).join("") : "";
   return `<div class="mo-editor-stage" data-mo-editor-stage style="width:1123px;height:794px"><iframe id="${face === "front" ? "moLayoutFrontPreview" : "moLayoutBackPreview"}" title="MO-51 ${face} layout editor preview" sandbox="allow-same-origin" referrerpolicy="no-referrer" srcdoc="${escapeMoAttribute(srcdoc)}"></iframe><div class="mo-editor-overlay" data-mo-editor-overlay="${face}" data-mo-editor-active="${String(editing)}" aria-label="${face} field placement surface">${boxes}</div></div>`;
 }

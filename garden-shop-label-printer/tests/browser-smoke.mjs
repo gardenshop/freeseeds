@@ -719,7 +719,7 @@ try {
   [0.1675, 42.5005, 84.8335, 127.1665, 169.4995, 211.8325].forEach((expected, index) => assert.ok(Math.abs(customGeometry.rows[index] - expected) < 0.03, `custom row ${index} start drifted: ${customGeometry.rows[index]} mm`));
   await page.locator('[data-view="print"]').first().click();
   assert.equal(await page.locator("#hpP2055SafeArea").isChecked(), true, "the custom print preset must default to measured P2055dn safe-area insets");
-  await page.context().addInitScript(() => Object.defineProperty(window, "print", { configurable: true, value: () => { window.__labelPrintRequested = true; } }));
+  await page.context().addInitScript(() => Object.defineProperty(window, "print", { configurable: true, value: () => { window.__labelPrintRequested = true; window.__moPrintRequested = true; } }));
   const customPrintPopupEvent = page.waitForEvent("popup");
   await page.locator("#printNow").click();
   const customPrintPopup = await customPrintPopupEvent;
@@ -1369,7 +1369,7 @@ try {
 
   await setMoMapping(page, 0, "receiverSource", "manual");
   await setMoMapping(page, 0, "manualReceiverAddress", "Synthetic long address ".repeat(80));
-  await page.waitForFunction(() => /receiver-address/u.test(document.querySelector("#moMappingFitError")?.textContent ?? ""), { timeout: 5000 }).catch(async (error) => {
+  await page.waitForFunction(() => /Receiver address/iu.test(document.querySelector("#moMappingFitError")?.textContent ?? ""), { timeout: 5000 }).catch(async (error) => {
     const bounds = await page.frameLocator("#moFrontPreview").locator("[data-mo-field=receiver-address]").evaluate((field) => ({ textLength: field.textContent?.length, fieldWidth: field.getBoundingClientRect().width, lineWidth: field.parentElement?.getBoundingClientRect().width, visibleKeys: field.closest(".page")?.dataset.moVisibleFields }));
     throw new Error(`${error.message}\nFit status=${await page.locator("#moMappingFitError").innerText()}\nBounds=${JSON.stringify(bounds)}\nDraft disabled=${await page.locator("#downloadMoDraftPdf").isDisabled()}`);
   });
@@ -1526,9 +1526,30 @@ try {
   const layoutPrintPopupEvent = page.waitForEvent("popup", { timeout: 30000 });
   await page.locator("#printMoBatch").click();
   const layoutPrintPopup = await layoutPrintPopupEvent;
-  await page.waitForFunction(() => (document.querySelector("#moPdfStatus")?.textContent ?? "").startsWith("Mapped batch opened; browser print dialog requested."), undefined, { timeout: 30000 });
+  await page.waitForFunction(() => {
+    const status = document.querySelector("#moPdfStatus")?.textContent ?? "";
+    return status.startsWith("Verified MO PDF opened;") || status.startsWith("MO_PRINT_TARGET_REJECTED:");
+  }, undefined, { timeout: 30000 }).catch(async (error) => {
+    const popupState = { url: layoutPrintPopup.url(), closed: layoutPrintPopup.isClosed(), contentType: await layoutPrintPopup.evaluate(() => document.contentType).catch(() => "UNAVAILABLE") };
+    throw new Error(`${error.message}\nMO status=${await page.locator("#moPdfStatus").innerText()}\nSynthetic popup=${JSON.stringify(popupState)}`);
+  });
+  const printStatus = await page.locator("#moPdfStatus").innerText();
+  assert.match(printStatus, /^Verified MO PDF opened;/u, `Print MO Batch must fail closed on an unexpected target: ${printStatus}`);
   await layoutPrintPopup.waitForURL((url) => url.href !== "about:blank", { timeout: 30000 });
+  const printPopupDiagnostics = {
+    url: layoutPrintPopup.url(),
+    title: await layoutPrintPopup.title().catch(() => "UNAVAILABLE"),
+    contentType: await layoutPrintPopup.evaluate(() => document.contentType).catch(() => "UNAVAILABLE"),
+    pdfEmbeds: await layoutPrintPopup.locator('embed[type="application/pdf"],object[type="application/pdf"]').count().catch(() => -1),
+  };
+  console.log(JSON.stringify({ syntheticPrintPopupDiagnostics: printPopupDiagnostics }));
   assert.notEqual(layoutPrintPopup.url(), "about:blank", "Print MO Batch must open the generated local PDF in a browser tab");
+  const verifiedPrintUrl = new URL(printPopupDiagnostics.url);
+  assert.equal(layoutPrintPopup === page, false, "Print MO Batch must use a distinct popup target");
+  assert.equal(verifiedPrintUrl.protocol, "blob:", "Print MO Batch must open a generated PDF blob, never a label-app route");
+  assert.equal(verifiedPrintUrl.origin, new URL(baseUrl).origin, "print popup must belong to the current synthetic app origin");
+  assert.equal(printPopupDiagnostics.contentType, "application/pdf", "print popup must contain only the generated MO PDF");
+  assert.equal(await layoutPrintPopup.evaluate(() => window.__moPrintRequested === true), true, "the print call must occur only after PDF target verification");
   await layoutPrintPopup.close();
   await page.locator("#moReturnToLayout").click();
   await page.locator("#moLayoutReset").click();
@@ -1551,23 +1572,36 @@ try {
     { id: "legacy-sender-name", source: "senderName", face: "front", xMm: 7.7, yMm: 85.8, widthMm: 100.7, heightMm: 4.8, fontSizePt: 8.5, alignment: "left", wrap: false },
     { id: "legacy-receiver-name", source: "name", face: "front", xMm: 7.7, yMm: 112.8, widthMm: 100.7, heightMm: 4.8, fontSizePt: 8.5, alignment: "left", wrap: false },
     { id: "legacy-custom-tracking", source: "tracking", face: "front", xMm: 74, yMm: 45, widthMm: 42, heightMm: 8, fontSizePt: 9, alignment: "center", wrap: false, bold: true },
-    { id: "legacy-back-field", source: "tracking", face: "back", xMm: 30, yMm: 46, widthMm: 42, heightMm: 8, fontSizePt: 8, alignment: "left", wrap: false },
   ] };
   await page.evaluate((layout) => localStorage.setItem("gfs-mo51-layout-v1", JSON.stringify(layout)), preLp052Layout);
   await page.locator("#moLayoutReload").click();
   await page.locator("#moCorrectLegacyPartyPositions").waitFor();
   await page.waitForFunction(() => document.querySelector("#downloadMoLayoutPdf")?.disabled === true);
   await page.locator("#moCorrectLegacyPartyPositions").click();
-  await page.waitForFunction(() => !document.querySelector("#moCorrectLegacyPartyPositions") && document.querySelector("#downloadMoLayoutPdf")?.disabled === false);
+  await page.waitForFunction(() => !document.querySelector("#moCorrectLegacyPartyPositions") && document.querySelector("#downloadMoLayoutPdf")?.disabled === true && /Tracking \(exact imported string\) overlaps printed MO text/u.test(document.querySelector("#moMappingFitError")?.textContent ?? ""));
   const migratedLayout = await page.evaluate(() => JSON.parse(localStorage.getItem("gfs-mo51-layout-v1") ?? "null"));
   assert.equal(migratedLayout.version, 2, "pre-LP-052 saved layout upgrades to one current schema");
   assert.equal(migratedLayout.partyPositionVersion, 2);
-  assert.deepEqual(migratedLayout.fields.map(({ id, yMm, bold, widthMm }) => ({ id, yMm, bold, widthMm })), [
-    { id: "legacy-sender-name", yMm: 112.8, bold: false, widthMm: 100.7 },
-    { id: "legacy-receiver-name", yMm: 85.8, bold: false, widthMm: 100.7 },
-    { id: "legacy-custom-tracking", yMm: 45, bold: true, widthMm: 42 },
-    { id: "legacy-back-field", yMm: 46, bold: false, widthMm: 42 },
+  assert.deepEqual(migratedLayout.fields.map(({ id, xMm, yMm, bold, widthMm }) => ({ id, xMm, yMm, bold, widthMm })), [
+    { id: "legacy-sender-name", xMm: 7.7, yMm: 112.8, bold: false, widthMm: 100.7 },
+    { id: "legacy-receiver-name", xMm: 7.7, yMm: 85.8, bold: false, widthMm: 100.7 },
+    { id: "legacy-custom-tracking", xMm: 74, yMm: 45, bold: true, widthMm: 42 },
   ], "legacy correction preserves all IDs, bindings, styles and unrelated coordinates");
+  await page.waitForFunction(() => document.querySelector("#downloadMoLayoutPdf")?.disabled === true && /Tracking \(exact imported string\) overlaps printed MO text/u.test(document.querySelector("#moMappingFitError")?.textContent ?? ""), undefined, { timeout: 10000 });
+  const legacyTrackingIssue = await page.locator("#moMappingFitError").innerText();
+  assert.match(legacyTrackingIssue, /Source row 1, left form \(front\): Tracking \(exact imported string\) overlaps printed MO text “No\. of V\. P\. Article”/u);
+  await page.getByRole("button", { name: "Select Tracking (exact imported string) (front)" }).first().click();
+  assert.equal(await page.locator(".mo-layout-properties").getAttribute("data-mo-selected-layout-field"), "legacy-custom-tracking", "artwork collision must select the field that needs repair");
+  await page.locator("#moLayoutX").fill("95");
+  await page.locator("#moLayoutX").press("Tab");
+  await page.locator("#moLayoutWidth").fill("48");
+  await page.locator("#moLayoutWidth").press("Tab");
+  await page.locator("#moLayoutHeight").fill("4.8");
+  await page.locator("#moLayoutHeight").press("Tab");
+  await page.waitForFunction(() => document.querySelector("#downloadMoLayoutPdf")?.disabled === false && !/Tracking \(exact imported string\) overlaps printed MO text/u.test(document.querySelector("#moMappingFitError")?.textContent ?? ""), undefined, { timeout: 10000 });
+  await page.locator("#moLayoutSave").click();
+  const repairedLegacyTracking = await page.evaluate(() => JSON.parse(localStorage.getItem("gfs-mo51-layout-v1") ?? "null").fields.find((field) => field.id === "legacy-custom-tracking"));
+  assert.deepEqual({ xMm: repairedLegacyTracking.xMm, yMm: repairedLegacyTracking.yMm, widthMm: repairedLegacyTracking.widthMm, heightMm: repairedLegacyTracking.heightMm }, { xMm: 95, yMm: 45, widthMm: 48, heightMm: 4.8 });
   const legacyMigrationPdf = await saveMoLayoutPdf(page, join(temporary, "mo51-lp052-legacy-corrected-synthetic.pdf"), 4);
   const legacyPdfRaster = await rasterPdfPage(legacyMigrationPdf.bytes, 1, 1);
   await writeFile(join(evidence, "lp052-legacy-corrected-pdf-front-synthetic.png"), legacyPdfRaster.toBuffer("image/png"));
@@ -1578,9 +1612,52 @@ try {
 
   await importMoBatch(42);
   await page.locator("#moPrintSideMode").selectOption("paired");
-  await addMoLayoutField(page, "articleType", 7.7, 33.3, 11.6, 3.7, 6.5, false, "center");
-  await addMoLayoutField(page, "declaredPrincipal", 13.5, 43.5, 43.4, 12.6, 8.5, false, "center");
-  await addMoLayoutField(page, "tracking", 62, 45, 77.3, 5, 8);
+  await page.frameLocator("#moLayoutFrontPreview").locator("[data-mo-sender-cnic-anchor]").first().waitFor();
+  const senderCnicPlacementProbe = await page.evaluate(() => {
+    const overlay = document.querySelector('[data-mo-editor-overlay="front"]');
+    if (!overlay) return { error: "FRONT_OVERLAY_MISSING", placed: -1 };
+    const rect = overlay.getBoundingClientRect();
+    const transfer = new DataTransfer();
+    transfer.setData("application/x-mo-layout-source", "senderCnic");
+    const drop = new Event("drop", { bubbles: true, cancelable: true });
+    Object.defineProperties(drop, {
+      dataTransfer: { value: transfer },
+      clientX: { value: rect.left + rect.width * 0.25 },
+      clientY: { value: rect.top + rect.height * 0.6 },
+    });
+    overlay.dispatchEvent(drop);
+    return {
+      placed: document.querySelectorAll('.mo-editor-field[data-mo-layout-source="senderCnic"]').length,
+      error: document.querySelector("#moMappingFitError")?.textContent?.trim() ?? "",
+    };
+  });
+  console.log(JSON.stringify({ senderCnicPlacementProbe }));
+  assert.equal(senderCnicPlacementProbe.error, "", "Sender CNIC must resolve the semantic Sender line after Receiver/Sender reordering");
+  assert.equal(senderCnicPlacementProbe.placed, 2, "the semantic Sender CNIC field must appear on both front halves only");
+  await page.waitForFunction(() => {
+    const boxes = [...document.querySelectorAll('.mo-editor-field[data-mo-layout-source="senderCnic"]')];
+    return boxes.length === 2 && boxes.every((box) => box.dataset.moSemanticAnchorReady === "true");
+  }, undefined, { timeout: 10000 });
+  const cnicAnchorAlignment = await page.evaluate(() => {
+    const frame = document.querySelector("#moLayoutFrontPreview");
+    const overlay = document.querySelector('[data-mo-editor-overlay="front"]');
+    if (!(frame instanceof HTMLIFrameElement) || !(overlay instanceof HTMLElement) || !frame.contentDocument) return [];
+    const frameRect = frame.getBoundingClientRect(), overlayRect = overlay.getBoundingClientRect();
+    const scaleX = frameRect.width / frame.clientWidth, scaleY = frameRect.height / frame.clientHeight;
+    return ["left", "right"].map((slot) => {
+      const box = overlay.querySelector(`.mo-editor-field[data-mo-layout-source="senderCnic"][data-mo-layout-slot="${slot === "left" ? 0 : 1}"]`);
+      const line = frame.contentDocument.querySelector(`.mo-half[data-mo-slot="${slot}"] [data-mo-party-block="sender"] [data-mo-sender-cnic-anchor]`);
+      if (!box || !line) return { slot, missing: true };
+      const boxRect = box.getBoundingClientRect(), lineRect = line.getBoundingClientRect();
+      const expectedLeft = frameRect.left + (lineRect.left + 2) * scaleX;
+      const expectedBottom = frameRect.top + lineRect.bottom * scaleY;
+      return { slot, aligned: Math.abs(boxRect.left - expectedLeft) < 1 && Math.abs(boxRect.bottom - expectedBottom) < 1, boxLeft: boxRect.left, expectedLeft, boxBottom: boxRect.bottom, expectedBottom, lineLeft: lineRect.left, lineBottom: lineRect.bottom, frameLeft: frameRect.left, frameTop: frameRect.top, overlayLeft: overlayRect.left, overlayTop: overlayRect.top, scaleX, scaleY };
+    });
+  });
+  assert.deepEqual(cnicAnchorAlignment.map(({ aligned }) => aligned), [true, true], "editor CNIC boxes must track the Sender artwork anchor on both halves");
+  await page.locator("#moLayoutReset").click();
+  await addMoLayoutField(page, "declaredPrincipal", 18, 50, 35, 5, 8.5, false, "center");
+  await addMoLayoutField(page, "tracking", 95, 45, 48, 4.8, 8);
   await addMoLayoutField(page, "senderName", 7.7, 112.8, 100.7, 4.8, 8.5);
   await addMoLayoutField(page, "senderAddress", 7.7, 117.6, 100.7, 4.8, 8);
   await addMoLayoutField(page, "name", 7.7, 85.8, 100.7, 4.8, 8.5);
@@ -1594,6 +1671,13 @@ try {
   await page.locator("#moLayoutHeight").fill("16");
   await page.locator("#moLayoutHeight").press("Tab");
   await page.waitForFunction(() => document.querySelector("#downloadMoLayoutPdf")?.disabled === true && /overlap/u.test(document.querySelector("#moMappingFitError")?.textContent ?? ""), undefined, { timeout: 10000 });
+  const overlapMessage = await page.locator("#moMappingFitError").innerText();
+  assert.match(overlapMessage, /Source row 1, left form \(front\): Label receiver\/display address overlaps Label city/u);
+  assert.match(overlapMessage, /Source row 1, left form \(front\): Label receiver\/display address overlaps Label province/u);
+  assert.doesNotMatch(overlapMessage, /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/iu, "printable layout errors must not expose field UUIDs");
+  const addressFieldId = await page.locator('.mo-editor-field[data-mo-layout-source="address"]').first().getAttribute("data-mo-layout-id");
+  await page.getByRole("button", { name: "Select Label receiver/display address (front)" }).first().click();
+  assert.equal(await page.locator(".mo-layout-properties").getAttribute("data-mo-selected-layout-field"), addressFieldId, "a diagnostic action must select the affected field for repair");
   await page.locator("#moLayoutHeight").fill("9.6");
   await page.locator("#moLayoutHeight").press("Tab");
   await page.waitForFunction(() => document.querySelector("#downloadMoLayoutPdf")?.disabled === false, undefined, { timeout: 10000 });
@@ -1605,10 +1689,12 @@ try {
   })));
   const n42First = await n42Pair();
   assert.deepEqual(n42First.map((item) => item.sourceIndex + 1), [1, 22], "N=42 staging-sized batch first sheet must pair 1/22");
-  assert.deepEqual(n42First.map((item) => [item.fields.articleType, item.fields.tracking, item.fields.declaredPrincipal, item.fields.name, item.fields.senderName, item.fields.senderAddress, item.fields.phone, item.fields.orderDate]), [
-    ["VPL", "VPL000001", "25000", "Synthetic Receiver 1", "Synthetic Sender", "Synthetic Sender Return", "03001234567", "18-11-26"],
-    ["VPP", "VPP000022", "25000", "Synthetic Receiver 22", "Synthetic Sender", "Synthetic Sender Return", "03001234567", "18-11-26"],
+  assert.deepEqual(n42First.map((item) => [item.fields.tracking, item.fields.declaredPrincipal, item.fields.name, item.fields.senderName, item.fields.senderAddress, item.fields.phone, item.fields.orderDate]), [
+    ["VPL000001", "25000", "Synthetic Receiver 1", "Synthetic Sender", "Synthetic Sender Return", "03001234567", "18-11-26"],
+    ["VPP000022", "25000", "Synthetic Receiver 22", "Synthetic Sender", "Synthetic Sender Return", "03001234567", "18-11-26"],
   ], "N=42 first-sheet values must come from their source rows");
+  assert.match(n42First[0].fields.tracking, /^VPL/u);
+  assert.match(n42First[1].fields.tracking, /^VPP/u);
   assert.notEqual(n42First[0].fields.orderDate, "31-12-99", "Month Stamp sample must not use the Excel zero-date fallback");
   const n42PartyOrder = await page.frameLocator("#moLayoutFrontPreview").locator('.mo-half[data-mo-slot="left"]').evaluate((half) => {
     const receiver = half.querySelector('[data-mo-party-block="receiver"]');
@@ -1619,8 +1705,10 @@ try {
   assert.match(n42PartyOrder.receiverCaption ?? "", /وصول کرنے والے/u);
   assert.match(n42PartyOrder.senderCaption ?? "", /بھیجنے والے کا نام/u);
   const n42LayoutPdf = await saveMoLayoutPdf(page, join(temporary, "mo51-layout-synthetic-n42.pdf"), 42);
-  await compareMoPdfWithPreview(page, "front", n42LayoutPdf.bytes, 1, true);
-  await compareMoPdfWithPreview(page, "back", n42LayoutPdf.bytes, 2, true);
+  const n42PdfPage1Front = await compareMoPdfWithPreview(page, "front", n42LayoutPdf.bytes, 1, true);
+  const n42PdfPage2Back = await compareMoPdfWithPreview(page, "back", n42LayoutPdf.bytes, 2, true);
+  await writeFile(join(evidence, "lp057-mo-n42-pdf-page1-front-synthetic.png"), n42PdfPage1Front.toBuffer("image/png"));
+  await writeFile(join(evidence, "lp057-mo-n42-pdf-page2-back-synthetic.png"), n42PdfPage2Back.toBuffer("image/png"));
   await page.locator("#moSheetSelect").selectOption({ label: "11" });
   await page.waitForFunction(() => document.querySelector("#moSheetSelect")?.value === "10" && document.querySelector("#moLayoutFrontPreview")?.contentDocument?.querySelector('.mo-half[data-mo-slot="left"]')?.getAttribute("data-mo-source-index") === "10" && document.querySelector("#moLayoutFrontPreview")?.contentDocument?.querySelector('.mo-half[data-mo-slot="right"]')?.getAttribute("data-mo-source-index") === "31", undefined, { timeout: 15000 });
   const n42MiddleFront = await n42Pair("front"), n42MiddleBack = await n42Pair("back");
@@ -1634,13 +1722,15 @@ try {
   const n42LastFront = await n42Pair("front"), n42LastBack = await n42Pair("back");
   assert.deepEqual(n42LastFront.map((item) => item.sourceIndex + 1), [21, 42], "N=42 final sheet must pair 21/42");
   assert.deepEqual(n42LastBack.map((item) => item.sourceIndex), n42LastFront.map((item) => item.sourceIndex), "N=42 backs must match the same source rows");
-  assert.deepEqual(n42LastFront.map((item) => [item.fields.articleType, item.fields.tracking, item.fields.declaredPrincipal, item.fields.name, item.fields.orderDate]), [
-    ["VPL", "VPL000021", "25000", "Synthetic Receiver 21", "18-11-26"],
-    ["VPP", "VPP000042", "25000", "Synthetic Receiver 42", "18-11-26"],
+  assert.deepEqual(n42LastFront.map((item) => [item.fields.tracking, item.fields.declaredPrincipal, item.fields.name, item.fields.orderDate]), [
+    ["VPL000021", "25000", "Synthetic Receiver 21", "18-11-26"],
+    ["VPP000042", "25000", "Synthetic Receiver 42", "18-11-26"],
   ]);
-  await compareMoPdfWithPreview(page, "front", n42LayoutPdf.bytes, 41, true);
-  await compareMoPdfWithPreview(page, "back", n42LayoutPdf.bytes, 42, true);
-  console.log(JSON.stringify({ moLayoutN42: { pages: n42LayoutPdf.document.getPageCount(), firstPair: [1, 22], middlePair: [11, 32], finalPair: [21, 42], sourceFieldsChecked: 11, previewPdfPagesCompared: [1, 2, 21, 22, 41, 42] } }));
+  const n42PdfPage41Front = await compareMoPdfWithPreview(page, "front", n42LayoutPdf.bytes, 41, true);
+  const n42PdfPage42Back = await compareMoPdfWithPreview(page, "back", n42LayoutPdf.bytes, 42, true);
+  await writeFile(join(evidence, "lp057-mo-n42-pdf-page41-front-synthetic.png"), n42PdfPage41Front.toBuffer("image/png"));
+  await writeFile(join(evidence, "lp057-mo-n42-pdf-page42-back-synthetic.png"), n42PdfPage42Back.toBuffer("image/png"));
+  console.log(JSON.stringify({ moLayoutN42: { pages: n42LayoutPdf.document.getPageCount(), firstPair: [1, 22], middlePair: [11, 32], finalPair: [21, 42], sourceFieldsChecked: 10, previewPdfPagesCompared: [1, 2, 21, 22, 41, 42] } }));
   await page.locator("#moLayoutReset").click();
   assert.equal(await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1")), null);
 
@@ -1648,9 +1738,8 @@ try {
   await importMoBatch(100);
   console.log(JSON.stringify({ moLayoutN100: "imported" }));
   await page.locator("#moPrintSideMode").selectOption("paired");
-  await addMoLayoutField(page, "articleType", 7.7, 33.3, 11.6, 3.7, 6.5, false, "center");
-  await addMoLayoutField(page, "tracking", 62, 45, 77.3, 5, 8);
-  await addMoLayoutField(page, "declaredPrincipal", 13.5, 43.5, 43.4, 12.6, 8.5, false, "center");
+  await addMoLayoutField(page, "tracking", 95, 45, 48, 4.8, 8);
+  await addMoLayoutField(page, "declaredPrincipal", 18, 50, 35, 5, 8.5, false, "center");
   await addMoLayoutField(page, "senderName", 7.7, 112.8, 100.7, 4.8, 8.5);
   await addMoLayoutField(page, "senderAddress", 7.7, 117.6, 100.7, 4.8, 8);
   await addMoLayoutField(page, "name", 7.7, 85.8, 100.7, 4.8, 8.5, false, "left", { bold: true });
@@ -1677,9 +1766,9 @@ try {
   })));
   const n100FirstPair = await n100Pair();
   assert.deepEqual(n100FirstPair.map((item) => item.sourceIndex + 1), [1, 51], "N=100 first sheet must pair records 1/51");
-  assert.deepEqual(n100FirstPair.map((item) => [item.fields.articleType, item.fields.tracking, item.fields.declaredPrincipal, item.fields.name, item.fields.senderName, item.fields.senderAddress, item.fields.address, item.fields.phone, item.fields.city, item.fields.province, item.fields.orderDate]), [
-    ["VPL", "VPL000001", "25000", "Synthetic Receiver 1", "Synthetic Sender", "Synthetic Sender Return", "Synthetic St 1", "03001234567", "Sahiwal", "Punjab", "18-11-26"],
-    ["VPL", "VPL000051", "25000", "Synthetic Receiver 51", "Synthetic Sender", "Synthetic Sender Return", "Synthetic St 51", "03001234567", "Sahiwal", "Punjab", "18-11-26"],
+  assert.deepEqual(n100FirstPair.map((item) => [item.fields.tracking, item.fields.declaredPrincipal, item.fields.name, item.fields.senderName, item.fields.senderAddress, item.fields.address, item.fields.phone, item.fields.city, item.fields.province, item.fields.orderDate]), [
+    ["VPL000001", "25000", "Synthetic Receiver 1", "Synthetic Sender", "Synthetic Sender Return", "Synthetic St 1", "03001234567", "Sahiwal", "Punjab", "18-11-26"],
+    ["VPL000051", "25000", "Synthetic Receiver 51", "Synthetic Sender", "Synthetic Sender Return", "Synthetic St 51", "03001234567", "Sahiwal", "Punjab", "18-11-26"],
   ], "N=100 first-sheet fields must belong to records 1/51");
   captureMappedPdfAudit = true;
   console.log(JSON.stringify({ moLayoutN100: "pdf-start" }));
@@ -1703,22 +1792,26 @@ try {
   assert.deepEqual(mappedPdfAudit?.counts, { rows: 100, pages: 100 }, "MO audit evidence must contain counts only");
   assert.doesNotMatch(JSON.stringify(mappedPdfAudit), /Synthetic Receiver|VPL000001|Sahiwal|03001234567/u, "MO PDF audit event must not contain customer values");
   await page.locator("#moCleanPreviewFace").selectOption("front");
-  await compareMoPdfWithPreview(page, "front", n100LayoutPdf.bytes, 1, true);
+  const n100PdfPage1Front = await compareMoPdfWithPreview(page, "front", n100LayoutPdf.bytes, 1, true);
+  await writeFile(join(evidence, "lp057-mo-n100-pdf-page1-front-synthetic.png"), n100PdfPage1Front.toBuffer("image/png"));
   await page.locator("#moCleanPreviewFace").selectOption("back");
-  await compareMoPdfWithPreview(page, "back", n100LayoutPdf.bytes, 2, true);
+  const n100PdfPage2Back = await compareMoPdfWithPreview(page, "back", n100LayoutPdf.bytes, 2, true);
+  await writeFile(join(evidence, "lp057-mo-n100-pdf-page2-back-synthetic.png"), n100PdfPage2Back.toBuffer("image/png"));
   await page.locator("#moSheetSelect").selectOption({ label: "50" });
   await page.waitForFunction(() => document.querySelector("#moSheetSelect")?.value === "49" && document.querySelector("#moLayoutFrontPreview")?.contentDocument?.querySelector('.mo-half[data-mo-slot="left"]')?.getAttribute("data-mo-source-index") === "49" && document.querySelector("#moLayoutFrontPreview")?.contentDocument?.querySelector('.mo-half[data-mo-slot="right"]')?.getAttribute("data-mo-source-index") === "99", undefined, { timeout: 15000 });
   await page.locator("#moCleanPreviewFace").selectOption("front");
   const n100LastPair = await n100Pair();
   assert.deepEqual(n100LastPair.map((item) => item.sourceIndex + 1), [50, 100], "N=100 final sheet must pair records 50/100");
-  assert.deepEqual(n100LastPair.map((item) => [item.fields.articleType, item.fields.tracking, item.fields.declaredPrincipal, item.fields.name, item.fields.senderName, item.fields.senderAddress, item.fields.address, item.fields.phone, item.fields.city, item.fields.province, item.fields.orderDate]), [
-    ["VPP", "VPP000050", "25000", "Synthetic Receiver 50", "Synthetic Sender", "Synthetic Sender Return", "Synthetic St 50", "03001234567", "Sahiwal", "Punjab", "18-11-26"],
-    ["VPP", "VPP000100", "25000", "Synthetic Receiver 100", "Synthetic Sender", "Synthetic Sender Return", "Synthetic St 100", "03001234567", "Sahiwal", "Punjab", "18-11-26"],
+  assert.deepEqual(n100LastPair.map((item) => [item.fields.tracking, item.fields.declaredPrincipal, item.fields.name, item.fields.senderName, item.fields.senderAddress, item.fields.address, item.fields.phone, item.fields.city, item.fields.province, item.fields.orderDate]), [
+    ["VPP000050", "25000", "Synthetic Receiver 50", "Synthetic Sender", "Synthetic Sender Return", "Synthetic St 50", "03001234567", "Sahiwal", "Punjab", "18-11-26"],
+    ["VPP000100", "25000", "Synthetic Receiver 100", "Synthetic Sender", "Synthetic Sender Return", "Synthetic St 100", "03001234567", "Sahiwal", "Punjab", "18-11-26"],
   ], "N=100 final-sheet fields must belong to records 50/100");
-  await compareMoPdfWithPreview(page, "front", n100LayoutPdf.bytes, 99, true);
+  const n100PdfPage99Front = await compareMoPdfWithPreview(page, "front", n100LayoutPdf.bytes, 99, true);
+  await writeFile(join(evidence, "lp057-mo-n100-pdf-page99-front-synthetic.png"), n100PdfPage99Front.toBuffer("image/png"));
   await page.locator("#moCleanPreviewFace").selectOption("back");
-  await compareMoPdfWithPreview(page, "back", n100LayoutPdf.bytes, 100, true);
-  console.log(JSON.stringify({ moLayoutN100: { pages: n100LayoutPdf.document.getPageCount(), firstPair: [1, 51], finalPair: [50, 100], sourceFieldsChecked: 11, verifiedValues: 22, monthStampFormat: "DD-MM-YY", previewPdfPagesCompared: [1, 2, 99, 100] } }));
+  const n100PdfPage100Back = await compareMoPdfWithPreview(page, "back", n100LayoutPdf.bytes, 100, true);
+  await writeFile(join(evidence, "lp057-mo-n100-pdf-page100-back-synthetic.png"), n100PdfPage100Back.toBuffer("image/png"));
+  console.log(JSON.stringify({ moLayoutN100: { pages: n100LayoutPdf.document.getPageCount(), firstPair: [1, 51], finalPair: [50, 100], sourceFieldsChecked: 10, verifiedValues: 20, monthStampFormat: "DD-MM-YY", previewPdfPagesCompared: [1, 2, 99, 100] } }));
   await page.locator("#moReturnToLayout").click();
   await page.locator("#moLayoutReset").click();
   assert.equal(await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1")), null);
@@ -1734,7 +1827,7 @@ try {
     for (const count of [42, 100]) {
       await importMoBatchFresh(n500Page, count);
       await n500Page.locator("#moPrintSideMode").selectOption("paired");
-      await addMoLayoutField(n500Page, "tracking", 74, 45, 42, 8, 9, false, "left");
+      await addMoLayoutField(n500Page, "tracking", 95, 45, 48, 4.8, 9, false, "left");
       await n500Page.locator("#moLayoutSave").click();
       const split = Math.ceil(count / 2);
       const pair = await n500Page.frameLocator("#moLayoutFrontPreview").locator(".mo-half[data-mo-slot]").evaluateAll((halves) => Object.fromEntries(halves.map((half) => [half.getAttribute("data-mo-slot"), Number(half.getAttribute("data-mo-source-index")) + 1])));
@@ -1749,7 +1842,7 @@ try {
     console.log(JSON.stringify({ moLayoutSequentialBatches: sequentialBatchChecks }));
     await importMoBatchFresh(n500Page, 500);
     await n500Page.locator("#moPrintSideMode").selectOption("paired");
-    await addMoLayoutField(n500Page, "tracking", 74, 45, 42, 8, 9, false, "left");
+    await addMoLayoutField(n500Page, "tracking", 95, 45, 48, 4.8, 9, false, "left");
     await n500Page.locator("#moLayoutSave").click();
     const n500Layout = await n500Page.evaluate(() => JSON.stringify(JSON.parse(localStorage.getItem("gfs-mo51-layout-v1") ?? "null")));
     assert.doesNotMatch(n500Layout, /Synthetic Receiver|VPL000001|VPP000002/u, "N=500 saved layout must contain definitions only");

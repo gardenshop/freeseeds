@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { projectMoRecords } from "../src/mo/adapter";
-import { correctMoPartyPositions, defaultMoLayout, hasLegacyMoPartyPositions, loadMoLayout, newMoLayoutField, resetMoLayout, resolveMoLayoutSource, saveMoLayout, validateMoLayout } from "../src/mo/layout";
+import { correctMoPartyPositions, defaultMoLayout, hasLegacyMoPartyPositions, loadMoLayout, newMoLayoutField, resetMoLayout, resolveMoLayoutSource, saveMoLayout, updateMoLayoutField, validateMoLayout } from "../src/mo/layout";
 import { emptyMoSessionMapping } from "../src/mo/mapping";
 import { EMPTY_ORDER } from "../src/types";
 
@@ -55,6 +55,7 @@ describe("MO-51 persistent layout definitions", () => {
     const legacy = validateMoLayout({ version: 1, fields: [
       { ...newMoLayoutField("sender-name", "senderName", "front", 19.4, 86), fontSizePt: 13, bold: true, wrap: true, alignment: "right" },
       { ...newMoLayoutField("sender-phone", "manualSenderPhone", "front", 20, 92) },
+      { ...newMoLayoutField("sender-cnic", "senderCnic", "front", 22, 86) },
       { ...newMoLayoutField("receiver-name", "name", "front", 18, 113), widthMm: 52 },
       { ...newMoLayoutField("receiver-address", "address", "front", 20, 121), widthMm: 72 },
       { ...newMoLayoutField("custom-title", "tracking", "front", 34, 52), widthMm: 61, fontSizePt: 15, bold: true },
@@ -68,6 +69,7 @@ describe("MO-51 persistent layout definitions", () => {
     expect(hasLegacyMoPartyPositions(corrected)).toBe(false);
     expect(corrected.fields.find((field) => field.id === "sender-name")).toMatchObject({ source: "senderName", xMm: 19.4, yMm: 113, fontSizePt: 13, bold: true, wrap: true, alignment: "right" });
     expect(corrected.fields.find((field) => field.id === "sender-phone")?.yMm).toBe(119);
+    expect(corrected.fields.find((field) => field.id === "sender-cnic")).toMatchObject({ source: "senderCnic", face: "front", xMm: 22, yMm: 113 });
     expect(corrected.fields.find((field) => field.id === "receiver-name")?.yMm).toBe(86);
     expect(corrected.fields.find((field) => field.id === "receiver-address")?.yMm).toBe(94);
     expect(corrected.fields.find((field) => field.id === "custom-title")).toEqual(legacy.fields.find((field) => field.id === "custom-title"));
@@ -97,6 +99,15 @@ describe("MO-51 persistent layout definitions", () => {
     const field = newMoLayoutField("same", "name", "front", 5, 5);
     expect(() => validateMoLayout({ ...defaultMoLayout(), fields: [field, field] })).toThrow("MO_LAYOUT_INVALID_FIELD_ID");
     expect(() => validateMoLayout({ ...defaultMoLayout(), fields: [newMoLayoutField("cnic-back", "senderCnic", "back", 15, 15)] })).toThrow("MO_SENDER_CNIC_SECTION1_ONLY");
+  });
+
+  it("anchors Sender CNIC to the semantic Sender group instead of editable saved coordinates", () => {
+    const cnic = newMoLayoutField("sender-cnic-anchor", "senderCnic", "front", 22, 113);
+    const layout = validateMoLayout({ ...defaultMoLayout(), fields: [cnic] });
+    expect(() => updateMoLayoutField(layout, cnic.id, { xMm: 24 })).toThrow("MO_SENDER_CNIC_SEMANTIC_ANCHOR");
+    expect(() => updateMoLayoutField(layout, cnic.id, { yMm: 90 })).toThrow("MO_SENDER_CNIC_SEMANTIC_ANCHOR");
+    expect(() => updateMoLayoutField(layout, cnic.id, { widthMm: 30 })).toThrow("MO_SENDER_CNIC_SEMANTIC_ANCHOR");
+    expect(updateMoLayoutField(layout, cnic.id, { fontSizePt: 11 }).fields[0]).toMatchObject({ source: "senderCnic", xMm: 22, yMm: 113, fontSizePt: 11 });
   });
 
   it("resolves reviewed sources per candidate without mutating the frozen snapshot", () => {

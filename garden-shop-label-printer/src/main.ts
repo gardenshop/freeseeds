@@ -36,9 +36,10 @@ import "./mo/editor.css";
 import { projectMoRecords } from "./mo/adapter";
 import { formatSenderCnic } from "./mo/cnic";
 import { renderMoPrintView, type MoPdfViewState } from "./mo/view";
-import { findMoFieldOverflows, findMoFieldOverlaps, findMoLayoutMissingFields, type MoBackPreviewRotation } from "./mo/renderer";
+import { findMoLayoutDiagnostics, type MoBackPreviewRotation } from "./mo/renderer";
 import { emptyMoSessionMapping, hasMoSessionMapping, moSessionMappingError, type MoSessionMapping, type MoSessionMappingKey } from "./mo/mapping";
 import { correctMoPartyPositions, hasLegacyMoPartyPositions, MO_LAYOUT_SOURCES, defaultMoLayout, loadMoLayout, newMoLayoutField, removeMoLayoutField, resetMoLayout, resolveMoLayoutSource, saveMoLayout, updateMoLayoutField as updateLayoutFieldConfig, validateMoLayout, type MoDataSource, type MoLayout, type MoLayoutAlignment, type MoLayoutFace, type MoLayoutField } from "./mo/layout";
+import { isExpectedMoPrintTarget } from "./mo/print-target";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 const monitoringUrl =
@@ -517,8 +518,8 @@ function saveMoLayoutFieldChange(fieldId: string, patch: Partial<Omit<MoLayoutFi
 function applyLayoutProperty(fieldId: string, key: string, value: string | boolean): void {
   const field = moLayout.fields.find((item) => item.id === fieldId);
   if (!field) return;
-  if (field.source === "senderCnic" && (key === "xMm" || key === "yMm")) {
-    moLayoutError = "Sender CNIC is pinned to the section-1 sender identity line.";
+  if (field.source === "senderCnic" && ["face", "xMm", "yMm", "widthMm", "heightMm"].includes(key)) {
+    moLayoutError = "Sender CNIC position and field bounds follow the semantic Sender identity line.";
     moLayoutStatus = "Sender CNIC position is protected.";
     render();
     return;
@@ -606,6 +607,61 @@ function bindMoEditorUi(): void {
     return;
   }
   editor.id = "moLayoutEditor";
+  for (const box of Array.from(editor.querySelectorAll<HTMLElement>('.mo-editor-field[data-mo-layout-source="senderCnic"]'))) {
+    box.querySelector("[data-mo-resize-handle]")?.remove();
+    box.setAttribute("aria-label", `Optional Sender CNIC, semantic Sender anchor, ${box.dataset.moLayoutSlot === "0" ? "left" : "right"} form`);
+    const value = box.querySelector<HTMLElement>(".mo-editor-value");
+    if (value?.textContent === "NO SAMPLE VALUE") value.textContent = "";
+    box.classList.remove("missing-value");
+    box.classList.add("has-value");
+  }
+  const selectedProperties = editor.querySelector<HTMLElement>(".mo-layout-properties[data-mo-selected-layout-field]");
+  const selectedLayoutField = selectedProperties?.dataset.moSelectedLayoutField
+    ? moLayout.fields.find((field) => field.id === selectedProperties.dataset.moSelectedLayoutField)
+    : undefined;
+  if (selectedProperties && selectedLayoutField?.source === "senderCnic") {
+    for (const input of Array.from(selectedProperties.querySelectorAll<HTMLInputElement | HTMLSelectElement>("#moLayoutSource,#moLayoutX,#moLayoutY,#moLayoutWidth,#moLayoutHeight,#moLayoutWrap"))) {
+      const label = input.closest("label");
+      if (label) label.hidden = true;
+      input.disabled = true;
+    }
+    if (!selectedProperties.querySelector("#moSenderCnicAnchorHelp")) {
+      const help = document.createElement("p");
+      help.id = "moSenderCnicAnchorHelp";
+      help.setAttribute("role", "note");
+      help.textContent = "Position and bounds follow the semantic Sender identity line and move with Sender during swaps or legacy-layout correction. Adjust font and alignment only.";
+      selectedProperties.insertBefore(help, selectedProperties.querySelector("#moLayoutFontSize")?.closest("label") ?? null);
+    }
+  }
+  const frontFrame = editor.querySelector<HTMLIFrameElement>("#moLayoutFrontPreview");
+  if (frontFrame) {
+    const syncSenderCnicAnchors = () => window.requestAnimationFrame(() => {
+      const doc = frontFrame.contentDocument;
+      const overlay = editor.querySelector<HTMLElement>('[data-mo-editor-overlay="front"]');
+      if (!doc || !overlay) return;
+      const frameRect = frontFrame.getBoundingClientRect();
+      const overlayRect = overlay.getBoundingClientRect();
+      if (!frameRect.width || !frameRect.height || !frontFrame.clientWidth || !frontFrame.clientHeight) return;
+      for (const slot of ["left", "right"] as const) {
+        const box = overlay.querySelector<HTMLElement>(`.mo-editor-field[data-mo-layout-source="senderCnic"][data-mo-layout-slot="${slot === "left" ? 0 : 1}"]`);
+        const line = doc.querySelector<HTMLElement>(`.mo-half[data-mo-slot="${slot}"] [data-mo-party-block="sender"] [data-mo-sender-cnic-anchor]`);
+        if (!box || !line) continue;
+        const anchor = line.getBoundingClientRect();
+        const savedWidthMm = Number(box.dataset.moLayoutWidthMm) || 42;
+        const savedHeightMm = Number(box.dataset.moLayoutHeightMm) || 5;
+        const width = Math.min(savedWidthMm * (96 / 25.4), Math.max(0, anchor.width - 4));
+        const height = Math.min(savedHeightMm * (96 / 25.4), anchor.height);
+        box.style.left = `${frameRect.left - overlayRect.left + anchor.left + 2}px`;
+        box.style.top = `${frameRect.top - overlayRect.top + anchor.bottom - height}px`;
+        box.style.width = `${width}px`;
+        box.style.height = `${height}px`;
+        box.dataset.moSemanticAnchorReady = "true";
+        box.title = "Optional Sender CNIC · anchored to the Sender identity line.";
+      }
+    });
+    frontFrame.addEventListener("load", syncSenderCnicAnchors);
+    if (frontFrame.contentDocument?.readyState === "complete") syncSenderCnicAnchors();
+  }
   if (hasLegacyMoPartyPositions(moLayout) && !editor.querySelector("#moCorrectLegacyPartyPositions")) {
     const warning = document.createElement("div");
     warning.className = "mo-party-position-warning";
@@ -620,7 +676,7 @@ function bindMoEditorUi(): void {
     editor.querySelector(".mo-layout-workbench")?.before(warning);
   }
   const instructions = editor.querySelector<HTMLElement>("header>div>p");
-  if (instructions) instructions.textContent = "Drag a source onto either A5 half, or select it and click a form position. Move fields by dragging; resize from the visible corner handle. Coordinates remain millimetres regardless of screen zoom.";
+  if (instructions) instructions.textContent = "Drag a source onto either A5 half, or select it and click a form position. Move/resize ordinary fields; Sender CNIC follows the semantic Sender identity line. Edit mode intentionally repeats its selected sample on both halves; Preview Final MO and output use the paired records. Coordinates remain millimetres regardless of screen zoom.";
 
   editor.querySelectorAll<HTMLButtonElement>(".mo-source-chip[data-mo-layout-source]").forEach((chip) => {
     chip.setAttribute("aria-pressed", String(moPendingLayoutSource === chip.dataset.moLayoutSource));
@@ -939,7 +995,10 @@ function handleMoLayoutDrop(overlay: HTMLElement, event: DragEvent): void {
         render();
         return;
       }
-      updateMoLayoutField(existingId, { face: "front", xMm: anchor.xMm, yMm: anchor.yMm, widthMm: Math.min(42, 148.5 - anchor.xMm), heightMm: Math.min(5, 210 - anchor.yMm) });
+      moSelectedLayoutFieldId = existingId;
+      moLayoutStatus = "Sender CNIC remains anchored to the semantic Sender identity line.";
+      moLayoutError = "";
+      render();
       return;
     }
     const xMm = Math.max(0, Math.min(148.5 - current.widthMm, xAcross - slot * 148.5));
@@ -954,6 +1013,7 @@ function handleMoLayoutDrop(overlay: HTMLElement, event: DragEvent): void {
 function updateMoLayoutPointer(event: PointerEvent): void {
   const pointer = moLayoutPointer;
   if (!pointer) return;
+  if (pointer.field.source === "senderCnic") return;
   const overlay = document.querySelector<HTMLElement>(`[data-mo-editor-overlay="${pointer.face}"]`);
   if (!overlay) return;
   const rect = overlay.getBoundingClientRect();
@@ -962,7 +1022,6 @@ function updateMoLayoutPointer(event: PointerEvent): void {
   const deltaY = (event.clientY - pointer.startY) * 210 / rect.height;
   let patch: Partial<Omit<MoLayoutField, "id">>;
   if (pointer.mode === "move") {
-    if (pointer.field.source === "senderCnic") return;
     const absoluteX = (event.clientX - rect.left) * 297 / rect.width;
     const slot = absoluteX >= 148.5 ? 1 : 0;
     const absoluteY = (event.clientY - rect.top) * 210 / rect.height;
@@ -1000,11 +1059,8 @@ function findSenderCnicLayoutPosition(face: "front" | "back", slot: "left" | "ri
   if (face !== "front") return undefined;
   const doc = document.querySelector<HTMLIFrameElement>("#moLayoutFrontPreview")?.contentDocument;
   const half = doc?.querySelector<HTMLElement>(`.mo-half[data-mo-slot="${slot}"]`);
-  const page = half?.querySelector<HTMLElement>(".page");
-  const labels = page?.querySelector<HTMLElement>('div[style*="width:104px"]');
-  if (!half || !page || !labels?.textContent?.includes("شناختی کارڈ نمبر")) return undefined;
-  const line = labels.parentElement?.children[2]?.children[2] as HTMLElement | undefined;
-  if (!line) return undefined;
+  const line = half?.querySelector<HTMLElement>('[data-mo-party-block="sender"] [data-mo-sender-cnic-anchor]');
+  if (!half || !line) return undefined;
   const halfRect = half.getBoundingClientRect();
   const lineRect = line.getBoundingClientRect();
   const mmPerPx = 148.5 / halfRect.width;
@@ -1145,9 +1201,9 @@ async function runMoLayoutOutput(printAfterBuild: boolean): Promise<void> {
     render();
     return;
   }
-  const missing = projection.candidates.flatMap((candidate, index) => moLayout.fields
+  const missing = projection.candidates.flatMap((candidate) => moLayout.fields
     .filter((field) => field.source !== "senderCnic" && !resolveMoLayoutSource(candidate, field.source, moSenderCnicInput, moSessionMappings.get(candidate.sourceIndex) ?? emptyMoSessionMapping()))
-    .map((field) => `eligible-${index + 1}:${field.id}(${field.source})`));
+    .map((field) => `source row ${candidate.sourceIndex + 1}: ${MO_LAYOUT_SOURCES.find((source) => source.id === field.source)?.label ?? "mapped field"}`));
   if (missing.length || moLayoutError) {
     moLayoutError = missing.length ? `Missing selected layout values: ${missing.join(", ")}` : moLayoutError;
     render();
@@ -1181,21 +1237,77 @@ async function runMoLayoutOutput(printAfterBuild: boolean): Promise<void> {
       },
     });
     if (controller.signal.aborted) throw new DOMException("MO layout output cancelled", "AbortError");
+    if (blob.type !== "application/pdf") throw new Error("MO_OUTPUT_NOT_APPLICATION_PDF");
     const pageCount = Math.ceil(projection.candidates.length / 2) * (moPrintSideMode === "paired" ? 2 : 1);
     await logEvent("PDF_GENERATED", { rows: projection.candidates.length, pages: pageCount });
     if (controller.signal.aborted) throw new DOMException("MO layout output cancelled", "AbortError");
     url = URL.createObjectURL(blob);
     if (printAfterBuild && popup) {
-      popup.addEventListener("load", () => {
-        if (!popup.closed) {
+      const printUrl = url;
+      let targetTimer: number | undefined;
+      let verificationTimer: number | undefined;
+      let settled = false;
+      const clearVerificationTimers = (): void => {
+        if (targetTimer !== undefined) window.clearTimeout(targetTimer);
+        if (verificationTimer !== undefined) window.clearInterval(verificationTimer);
+      };
+      const failClosed = (reason: string): void => {
+        if (settled) return;
+        settled = true;
+        clearVerificationTimers();
+        if (!popup.closed) popup.close();
+        URL.revokeObjectURL(printUrl);
+        moPrintWindow = null;
+        moPdfState = Object.freeze({ exporting: false, error: `MO_PRINT_TARGET_REJECTED: ${reason}. No print was requested.` });
+        render();
+      };
+      const verifyPopupTarget = (): void => {
+        if (settled) return;
+        if (popup.closed) {
+          failClosed("the generated PDF popup closed before verification");
+          return;
+        }
+        let actualUrl = "";
+        let contentType = "";
+        try {
+          actualUrl = popup.location.href;
+          contentType = popup.document.contentType;
+        } catch {
+          // Cross-origin or browser-internal pages are never valid print targets.
+          failClosed("the print target is not an accessible same-origin PDF document");
+          return;
+        }
+        if (actualUrl === "about:blank") return;
+        if (actualUrl !== printUrl) {
+          failClosed("popup did not resolve to the exact generated PDF blob");
+          return;
+        }
+        if (!isExpectedMoPrintTarget(actualUrl, printUrl, contentType)) return;
+        settled = true;
+        clearVerificationTimers();
+        // Only bind cleanup after the expected blob loaded; the initial about:blank pagehide is not the PDF lifecycle.
+        popup.addEventListener("pagehide", () => {
+          URL.revokeObjectURL(printUrl);
+          if (moPrintWindow === popup) moPrintWindow = null;
+        }, { once: true });
+        moPdfState = Object.freeze({ exporting: false, message: "Verified MO PDF opened; browser print dialog requested. Duplex calibration remains pending." });
+        render();
+        try {
           popup.focus();
           popup.print();
+        } catch {
+          URL.revokeObjectURL(printUrl);
+          moPrintWindow = null;
+          moPdfState = Object.freeze({ exporting: false, error: "MO_PRINT_TARGET_REJECTED: the verified PDF could not be opened for printing. No print was requested." });
+          if (!popup.closed) popup.close();
+          render();
         }
-      }, { once: true });
-      popup.location.href = url;
-      popup.addEventListener("pagehide", () => { if (url) URL.revokeObjectURL(url); }, { once: true });
-      window.setTimeout(() => { if (url) URL.revokeObjectURL(url); }, 300000);
-      moPdfState = Object.freeze({ exporting: false, message: "Mapped batch opened; browser print dialog requested. Duplex calibration remains pending." });
+      };
+      verificationTimer = window.setInterval(verifyPopupTarget, 100);
+      targetTimer = window.setTimeout(() => failClosed("the generated PDF did not load in the print target"), 30000);
+      popup.location.href = printUrl;
+      window.setTimeout(() => URL.revokeObjectURL(printUrl), 300000);
+      moPdfState = Object.freeze({ exporting: false, message: "Waiting for the generated MO PDF target to verify before printing…" });
     } else {
       const link = document.createElement("a");
       link.href = url;
@@ -1591,20 +1703,55 @@ async function parseFile(file: File) {
 function validateMoPreviewFit(): void {
   const frames = Array.from(document.querySelectorAll<HTMLIFrameElement>("#moFrontPreview,#moBackPreview,#moLayoutFrontPreview,#moLayoutBackPreview"));
   void Promise.all(frames.map((frame) => frame.contentDocument?.fonts?.ready ?? Promise.resolve())).then(() => {
-    const overflows = frames.flatMap((frame) => frame.contentDocument ? findMoFieldOverflows(frame.contentDocument) : []);
-    const missingLayout = frames.flatMap((frame) => frame.contentDocument ? findMoLayoutMissingFields(frame.contentDocument) : []);
-    const overlaps = frames.flatMap((frame) => frame.contentDocument ? findMoFieldOverlaps(frame.contentDocument) : []);
-    const legacyPartyPositionIssue = hasLegacyMoPartyPositions(moLayout) ? ["legacy-sender-receiver-positions"] : [];
-    const layoutIssue = [...new Set([...overflows, ...missingLayout, ...overlaps, ...legacyPartyPositionIssue])];
-    moLayoutError = layoutIssue.length ? `Mapped layout fields require attention: ${layoutIssue.join(", ")}` : "";
-    const status = document.querySelector<HTMLElement>("#moMappingFitError");
-    if (status) status.textContent = moLayoutError;
+    const diagnostics = frames.flatMap((frame) => frame.contentDocument ? findMoLayoutDiagnostics(frame.contentDocument) : []);
+    if (hasLegacyMoPartyPositions(moLayout)) diagnostics.push({ code: "legacy", message: "Saved Sender/Receiver fields are still in their legacy blocks; correct the saved positions before output." });
+    const unique = diagnostics.filter((issue, index, all) => all.findIndex((other) => other.code === issue.code && other.message === issue.message && other.fieldId === issue.fieldId && other.relatedFieldId === issue.relatedFieldId) === index);
+    moLayoutError = unique.length ? "Mapped layout fields require attention." : "";
+    const oldStatus = document.querySelector<HTMLElement>("#moMappingFitError");
+    if (oldStatus) {
+      const status = document.createElement("div");
+      status.id = "moMappingFitError";
+      status.className = "mo-mapping-fit-error";
+      status.setAttribute("role", "alert");
+      if (unique.length) {
+        const summary = document.createElement("p");
+        summary.textContent = "Mapped layout fields require attention. Review the affected source rows and select a field to repair it.";
+        const list = document.createElement("ul");
+        for (const issue of unique) {
+          const item = document.createElement("li");
+          const message = document.createElement("span");
+          message.textContent = issue.message;
+          item.append(message);
+          const fieldIds = [...new Set([issue.fieldId, issue.relatedFieldId].filter((id): id is string => Boolean(id)))];
+          for (const fieldId of fieldIds) {
+            const field = moLayout.fields.find((candidate) => candidate.id === fieldId);
+            if (!field) continue;
+            const label = MO_LAYOUT_SOURCES.find((source) => source.id === field.source)?.label ?? "mapped field";
+            const select = document.createElement("button");
+            select.type = "button";
+            select.textContent = `Select ${label} (${field.face})`;
+            select.addEventListener("click", () => {
+              moSelectedLayoutFieldId = field.id;
+              moLayoutEditMode = true;
+              moCleanPreview = false;
+              moLayoutStatus = `Selected ${label} for layout repair.`;
+              moLayoutError = "";
+              render();
+            });
+            item.append(select);
+          }
+          list.append(item);
+        }
+        status.append(summary, list);
+      }
+      oldStatus.replaceWith(status);
+    }
     const draftButton = document.querySelector<HTMLButtonElement>("#downloadMoDraftPdf");
-    if (draftButton) draftButton.disabled = overflows.length > 0 || Boolean(document.querySelector("#moSenderCnic[aria-invalid='true']"));
+    if (draftButton) draftButton.disabled = unique.some((issue) => issue.code === "overflow" || issue.code === "overlap" || issue.code === "artwork-overlap") || Boolean(document.querySelector("#moSenderCnic[aria-invalid='true']"));
     const layoutDownload = document.querySelector<HTMLButtonElement>("#downloadMoLayoutPdf");
-    if (layoutDownload) layoutDownload.disabled = layoutIssue.length > 0;
+    if (layoutDownload) layoutDownload.disabled = unique.length > 0;
     const layoutPrint = document.querySelector<HTMLButtonElement>("#printMoBatch");
-    if (layoutPrint) layoutPrint.disabled = layoutIssue.length > 0;
+    if (layoutPrint) layoutPrint.disabled = unique.length > 0;
   });
 }
 
@@ -2144,6 +2291,7 @@ function bind() {
       const id = fieldBox.dataset.moLayoutId;
       const field = moLayout.fields.find((item) => item.id === id);
       if (!id || !field) return;
+      if (field.source === "senderCnic") return;
       const handle = Boolean((event.target as HTMLElement).closest("[data-mo-resize-handle]"));
       const overlay = document.querySelector<HTMLElement>(`[data-mo-editor-overlay="${field.face}"]`);
       const rect = overlay?.getBoundingClientRect();

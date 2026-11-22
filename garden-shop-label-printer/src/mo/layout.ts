@@ -61,7 +61,7 @@ export type MoLayout = Readonly<{
 
 const PARTY_BLOCK_SWAP_MM = 27;
 const PARTY_BLOCK_SPLIT_Y_MM = 105;
-const senderSources = new Set<MoDataSource>(["senderName", "senderAddress", "manualSenderName", "manualSenderAddress", "manualSenderPhone"]);
+const senderSources = new Set<MoDataSource>(["senderName", "senderAddress", "senderCnic", "manualSenderName", "manualSenderAddress", "manualSenderPhone"]);
 const receiverSources = new Set<MoDataSource>(["name", "address", "sourceAddress", "phone", "city", "province", "landmark", "manualReceiverName", "manualReceiverAddress", "manualReceiverPhone"]);
 
 export type MoResolvedLayoutField = Readonly<{
@@ -171,8 +171,12 @@ export function newMoLayoutField(id: string, source: MoDataSource, face: MoLayou
 }
 
 export function updateMoLayoutField(layout: MoLayout, fieldId: string, patch: Partial<Omit<MoLayoutField, "id">>): MoLayout {
+  const current = layout.fields.find((field) => field.id === fieldId);
+  if (!current) throw new Error("MO_LAYOUT_FIELD_NOT_FOUND");
+  if (current.source === "senderCnic" && ["face", "xMm", "yMm", "widthMm", "heightMm"].some((key) => key in patch)) {
+    throw new Error("MO_SENDER_CNIC_SEMANTIC_ANCHOR");
+  }
   const fields = layout.fields.map((field) => field.id === fieldId ? Object.freeze({ ...field, ...patch }) : field);
-  if (!fields.some((field) => field.id === fieldId)) throw new Error("MO_LAYOUT_FIELD_NOT_FOUND");
   return validateMoLayout({ ...layout, fields });
 }
 

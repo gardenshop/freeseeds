@@ -17,10 +17,14 @@ describe("MO-51 isolated adapter", () => {
     [2, 1, 2, [1, 2, 1, 2]],
     [3, 2, 4, [1, 3, 2, null]],
     [5, 3, 6, [1, 4, 3, null]],
+    [42, 21, 42, [1, 22, 21, 42]],
     [50, 25, 50, [1, 26, 25, 50]],
     [99, 50, 100, [1, 51, 50, null]],
     [100, 50, 100, [1, 51, 50, 100]],
     [101, 51, 102, [1, 52, 51, null]],
+    [123, 62, 124, [1, 63, 62, null]],
+    [124, 62, 124, [1, 63, 62, 124]],
+    [500, 250, 500, [1, 251, 250, 500]],
   ] as const)("imposes N=%i into %i sheets and %i logical PDF pages", (count, sheets, pages, expectedPositions) => {
     const records = Array.from({ length: count }, (_, index) => order(`VPL${index + 1}`));
     const eligible = project(records).candidates;

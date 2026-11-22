@@ -6,7 +6,7 @@ import type { MoCandidate } from "./adapter";
 import { formatSenderCnic } from "./cnic";
 import type { MoFaceSlots, MoSheet } from "./imposition";
 import { emptyMoSessionMapping, hasVisibleMoFields, resolveMoVisibleFields, type MoSessionMapping, type MoVisibleField } from "./mapping";
-import { resolveMoLayoutSource, type MoLayout } from "./layout";
+import { MO_LAYOUT_SOURCES, resolveMoLayoutSource, type MoDataSource, type MoLayout } from "./layout";
 
 const FRONT_SECTION_INDEX = 0;
 const BACK_SECTION_INDEX = 1;
@@ -77,6 +77,22 @@ function placeReceiverAboveSender(sourcePage: HTMLElement): void {
   receiverMarker.replaceWith(sender, senderPostcode);
 }
 
+function senderCnicLine(sourcePage: HTMLElement): HTMLElement {
+  const sender = sourcePage.querySelector<HTMLElement>('[data-mo-party-block="sender"]');
+  const labels = sender?.querySelector<HTMLElement>('div[style*="width:104px"]');
+  if (!sender || !labels?.textContent?.includes("شناختی کارڈ نمبر")) throw new Error("MO_TEMPLATE_SENDER_CNIC_LABEL_NOT_FOUND");
+  const writingLines = sender.children[2]
+    ? Array.from(sender.children[2].children).filter((element): element is HTMLElement =>
+      element instanceof HTMLElement && element.style.height === "19px" && Boolean(element.style.borderBottom),
+    )
+    : [];
+  if (writingLines.length !== 4) throw new Error("MO_TEMPLATE_SENDER_CNIC_POSITION_NOT_FOUND");
+  const line = writingLines[2];
+  line.dataset.moSenderCnicAnchor = "true";
+  line.style.position = "relative";
+  return line;
+}
+
 function localDocument(
   slots: MoFaceSlots,
   sourcePageIndex: 0 | 1,
@@ -97,6 +113,7 @@ function localDocument(
     if (!candidate) return `<div class="mo-half mo-blank" data-mo-slot="${slot}" aria-label="Blank unused form area"></div>`;
     const sourcePage = sourcePages[sourcePageIndex].cloneNode(true) as HTMLElement;
     if (sourcePageIndex === FRONT_SECTION_INDEX) placeReceiverAboveSender(sourcePage);
+    const cnicLine = sourcePageIndex === FRONT_SECTION_INDEX ? senderCnicLine(sourcePage) : undefined;
     sourcePage.dataset.moSourceIndex = String(candidate.sourceIndex);
     sourcePage.dataset.moPrefix = candidate.prefix;
     const layoutActive = Boolean(layout?.fields.length);
@@ -138,27 +155,20 @@ function localDocument(
     }
 
     if (sourcePageIndex === FRONT_SECTION_INDEX && cnic.status === "valid") {
-      const labels = Array.from(sourcePage.querySelectorAll<HTMLElement>('div[style*="width:104px"]')).find((block) => block.textContent?.includes("بھیجنے والے کا نام"));
-      if (!labels?.textContent?.includes("شناختی کارڈ نمبر")) throw new Error("MO_TEMPLATE_SENDER_CNIC_LABEL_NOT_FOUND");
-      const block = labels?.parentElement;
-      const writingLines = block?.children[2]
-        ? Array.from(block.children[2].children).filter((element): element is HTMLElement =>
-          element instanceof HTMLElement && element.style.height === "19px" && Boolean(element.style.borderBottom),
-        )
-        : [];
-      if (writingLines.length !== 4) throw new Error("MO_TEMPLATE_SENDER_CNIC_POSITION_NOT_FOUND");
-      const line = writingLines[2];
-      line.style.position = "relative";
+      if (!cnicLine) throw new Error("MO_TEMPLATE_SENDER_CNIC_POSITION_NOT_FOUND");
       const value = sourcePage.ownerDocument.createElement("span");
       value.className = "mo-sender-cnic-value";
       value.dataset.moSenderCnic = "true";
       value.dataset.moField = "sender-cnic";
+      value.dataset.moLayoutSource = "senderCnic";
       value.dir = "ltr";
       value.textContent = cnic.formatted;
       const cnicLayout = layout?.fields.find((field) => field.source === "senderCnic");
+      if (cnicLayout) value.dataset.moLayoutField = cnicLayout.id;
       const cnicFontPx = cnicLayout ? cnicLayout.fontSizePt * 96 / 72 : 10;
-      value.style.cssText = `position:absolute;left:2px;bottom:0;background:#fff;padding:0 2px;white-space:nowrap;direction:ltr;unicode-bidi:isolate;font:${cnicFontPx}px 'Times New Roman',serif;line-height:1.1;text-align:${cnicLayout?.alignment ?? "left"}`;
-      line.append(value);
+      const cnicFontWeight = cnicLayout?.bold ? "700" : "400";
+      value.style.cssText = `position:absolute;left:2px;right:2px;bottom:0;box-sizing:border-box;background:#fff;padding:0 2px;white-space:nowrap;direction:ltr;unicode-bidi:isolate;font:${cnicFontWeight} ${cnicFontPx}px 'Times New Roman',serif;line-height:1.1;text-align:${cnicLayout?.alignment ?? "left"}`;
+      cnicLine.append(value);
     }
 
     const previewTransform = sourcePageIndex === BACK_SECTION_INDEX && rotation === "rotate-180" ? "transform:rotate(180deg);transform-origin:center" : "";
@@ -170,17 +180,17 @@ function localDocument(
         box.className = "mo-layout-field";
         box.dataset.moLayoutField = field.id;
         box.dataset.moLayoutSource = field.source;
-        box.style.cssText = `position:absolute;left:${field.xMm}mm;top:${field.yMm}mm;width:${field.widthMm}mm;height:${field.heightMm}mm;box-sizing:border-box;color:#000;font:${field.bold ? "700 " : "400 "}${field.fontSizePt}pt 'Noto Naskh Arabic',Arial,sans-serif;text-align:${field.alignment};white-space:${field.wrap ? "normal" : "nowrap"};overflow:visible`;
+        box.style.cssText = `position:absolute;left:${field.xMm}mm;top:${field.yMm}mm;width:${field.widthMm}mm;height:${field.heightMm}mm;box-sizing:border-box;color:#000;font:${field.bold ? "700 " : "400 "}${field.fontSizePt}pt 'Noto Naskh Arabic',Arial,sans-serif;line-height:1.2;text-align:${field.alignment};white-space:${field.wrap ? "normal" : "nowrap"};overflow:visible`;
         if (resolved) {
           const text = sourcePage.ownerDocument.createElement("span");
           text.dataset.moLayoutText = field.id;
           text.dataset.moProvenance = resolved.provenance;
           text.textContent = resolved.value;
           text.dir = "auto";
-          text.style.cssText = `display:${field.wrap ? "block" : "inline-block"};width:${field.wrap ? "100%" : "max-content"};min-height:100%;overflow:visible;white-space:${field.wrap ? "normal" : "nowrap"};unicode-bidi:isolate`;
+          text.style.cssText = `display:block;width:${field.wrap ? "100%" : "max-content"};min-height:100%;overflow:visible;line-height:1.2;white-space:${field.wrap ? "normal" : "nowrap"};unicode-bidi:isolate`;
           box.append(text);
         } else if (field.source !== "senderCnic") {
-          box.dataset.moLayoutMissing = field.id;
+          box.dataset.moLayoutMissing = field.source;
           box.textContent = `MISSING ${field.source}`;
         }
         return box.outerHTML;
@@ -225,36 +235,122 @@ export function renderMoPreviewDocuments(
   });
 }
 
-/** Caller checks this in both onscreen preview and PDF raster frames. Never truncate mapped text. */
-export function findMoFieldOverflows(doc: Document): readonly string[] {
-  const overflows: string[] = [];
+export type MoLayoutDiagnostic = Readonly<{
+  code: "overflow" | "overlap" | "artwork-overlap" | "missing" | "legacy";
+  message: string;
+  fieldId?: string;
+  relatedFieldId?: string;
+  source?: MoDataSource;
+}>;
+
+function sourceLabel(source: string | undefined, fallback = "Mapped field"): string {
+  return MO_LAYOUT_SOURCES.find((item) => item.id === source)?.label ?? fallback;
+}
+
+function staticFieldLabel(field: string | undefined): string {
+  const labels: Readonly<Record<string, string>> = {
+    "article-number": "V.P. article number",
+    principal: "Amount principal",
+    "sender-name": "Sender name",
+    "sender-address-phone": "Sender address/contact",
+    "receiver-name": "Receiver name",
+    "receiver-address": "Receiver address",
+    "receiver-phone": "Receiver contact phone",
+    "sender-cnic": "Sender CNIC",
+  };
+  return labels[field ?? ""] ?? (field ?? "Artwork field").replace(/[-_]+/gu, " ");
+}
+
+function recordLocation(element: HTMLElement): string {
+  const half = element.closest<HTMLElement>(".mo-half[data-mo-source-index]");
+  const page = element.closest<HTMLElement>(".page[data-mo-source-index]");
+  const sourceIndex = Number(half?.dataset.moSourceIndex ?? page?.dataset.moSourceIndex);
+  const record = Number.isFinite(sourceIndex) ? `Source row ${sourceIndex + 1}` : "MO artwork";
+  const slot = half?.dataset.moSlot;
+  const face = element.closest<HTMLElement>(".mo-sheet[data-mo-face]")?.dataset.moFace;
+  return `${record}${slot ? `, ${slot} form` : ""}${face ? ` (${face})` : ""}`;
+}
+
+function renderedTextRects(element: HTMLElement): readonly DOMRect[] {
+  const document = element.ownerDocument;
+  const walker = document.createTreeWalker(element, document.defaultView?.NodeFilter.SHOW_TEXT ?? 4);
+  const rects: DOMRect[] = [];
+  let node = walker.nextNode();
+  while (node) {
+    if (node.textContent?.trim()) {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      rects.push(...Array.from(range.getClientRects()).filter((rect) => rect.width > 0.5 && rect.height > 0.5));
+    }
+    node = walker.nextNode();
+  }
+  return rects;
+}
+
+function staticArtworkTextRects(page: HTMLElement): readonly Readonly<{ rect: DOMRect; label: string }>[] {
+  const document = page.ownerDocument;
+  const walker = document.createTreeWalker(page, document.defaultView?.NodeFilter.SHOW_TEXT ?? 4);
+  const rects: Array<Readonly<{ rect: DOMRect; label: string }>> = [];
+  let node = walker.nextNode();
+  while (node) {
+    const parent = node.parentElement;
+    const label = node.textContent?.trim().replace(/\s+/gu, " ") ?? "";
+    if (label && !parent?.closest("[data-mo-field],[data-mo-layout-text],[data-mo-sender-cnic],[data-mo-layout-missing]")) {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      rects.push(...Array.from(range.getClientRects())
+        .filter((rect) => rect.width > 0.5 && rect.height > 0.5)
+        .map((rect) => Object.freeze({ rect, label: label.slice(0, 48) })));
+    }
+    node = walker.nextNode();
+  }
+  return rects;
+}
+
+/** Inspect rendered text against its actual printable field box; values are never truncated or silently shrunk. */
+export function findMoLayoutDiagnostics(doc: Document): readonly MoLayoutDiagnostic[] {
+  const issues: MoLayoutDiagnostic[] = [];
+  const push = (issue: MoLayoutDiagnostic): void => { issues.push(Object.freeze(issue)); };
   for (const field of Array.from(doc.querySelectorAll<HTMLElement>("[data-mo-field]"))) {
     const parent = field.parentElement;
     if (!parent) {
-      overflows.push(`${field.dataset.moField ?? "unknown"}:no-container`);
+      const source = field.dataset.moLayoutSource as MoDataSource | undefined;
+      const label = source ? sourceLabel(source) : staticFieldLabel(field.dataset.moField);
+      push({ code: "overflow", message: `${recordLocation(field)}: ${label} has no printable line bounds.`, fieldId: field.dataset.moLayoutField, source });
       continue;
     }
     const outer = parent.getBoundingClientRect();
     const inner = field.getBoundingClientRect();
-    if (!outer.width || !outer.height || inner.left < outer.left - 0.5 || inner.right > outer.right + 0.5 || inner.top < outer.top - 0.5 || inner.bottom > outer.bottom + 0.5) {
-      overflows.push(`${field.dataset.moField ?? "unknown"}:${inner.width.toFixed(1)}/${outer.width.toFixed(1)}px`);
+    const isPinnedCnic = field.dataset.moField === "sender-cnic";
+    const overflow = isPinnedCnic
+      ? !outer.width || !outer.height || field.scrollWidth > parent.clientWidth + 1 || field.scrollHeight > parent.clientHeight + 1
+      : !outer.width || !outer.height || inner.left < outer.left - 0.5 || inner.right > outer.right + 0.5 || inner.top < outer.top - 0.5 || inner.bottom > outer.bottom + 0.5;
+    if (overflow) {
+      const source = field.dataset.moLayoutSource as MoDataSource | undefined;
+      const label = source ? sourceLabel(source) : staticFieldLabel(field.dataset.moField);
+      push({ code: "overflow", message: `${recordLocation(field)}: ${label} exceeds its printable line bounds.`, fieldId: field.dataset.moLayoutField, source });
     }
   }
   for (const field of Array.from(doc.querySelectorAll<HTMLElement>("[data-mo-layout-text]"))) {
     const box = field.parentElement;
     if (!box) continue;
-    if (field.scrollWidth > box.clientWidth + 1 || field.scrollHeight > box.clientHeight + 1) overflows.push(`${field.dataset.moLayoutText ?? "layout-field"}:text-overflow`);
+    const fieldBounds = box.getBoundingClientRect();
+    const textBounds = field.getBoundingClientRect();
+    const outside = field.scrollWidth > box.clientWidth + 1 || field.scrollHeight > box.clientHeight + 1
+      || textBounds.left < fieldBounds.left - 0.5 || textBounds.right > fieldBounds.right + 0.5
+      || textBounds.top < fieldBounds.top - 0.5 || textBounds.bottom > fieldBounds.bottom + 0.5;
+    if (outside) {
+      const fieldId = box.dataset.moLayoutField ?? field.dataset.moLayoutText;
+      const source = box.dataset.moLayoutSource as MoDataSource | undefined;
+      const measurement = `text ${Math.round(textBounds.width)}×${Math.round(textBounds.height)}px; field ${Math.round(fieldBounds.width)}×${Math.round(fieldBounds.height)}px`;
+      push({ code: "overflow", message: `${recordLocation(field)}: ${sourceLabel(source)} text exceeds its printable field bounds (${measurement}).`, fieldId, source });
+    }
   }
-  return Object.freeze(overflows);
-}
+  for (const field of Array.from(doc.querySelectorAll<HTMLElement>("[data-mo-layout-missing]"))) {
+    const source = field.dataset.moLayoutSource as MoDataSource | undefined;
+    push({ code: "missing", message: `${recordLocation(field)}: ${sourceLabel(source)} has no value for this record.`, fieldId: field.dataset.moLayoutField, source });
+  }
 
-export function findMoLayoutMissingFields(doc: Document): readonly string[] {
-  return Object.freeze(Array.from(doc.querySelectorAll<HTMLElement>("[data-mo-layout-missing]"), (field) => field.dataset.moLayoutMissing ?? "unknown"));
-}
-
-/** Dynamic layout boxes must not intersect each other or the pinned session-only CNIC. */
-export function findMoFieldOverlaps(doc: Document): readonly string[] {
-  const overlaps: string[] = [];
   const intersects = (left: DOMRect, right: DOMRect): boolean => Math.min(left.right, right.right) - Math.max(left.left, right.left) > 0.5
     && Math.min(left.bottom, right.bottom) - Math.max(left.top, right.top) > 0.5;
   for (const half of Array.from(doc.querySelectorAll<HTMLElement>(".mo-half[data-mo-slot],.mo-layout-crop"))) {
@@ -262,16 +358,51 @@ export function findMoFieldOverlaps(doc: Document): readonly string[] {
     for (let left = 0; left < fields.length; left += 1) {
       for (let right = left + 1; right < fields.length; right += 1) {
         if (intersects(fields[left].getBoundingClientRect(), fields[right].getBoundingClientRect())) {
-          overlaps.push(`${half.dataset.moSlot}:overlap:${fields[left].dataset.moLayoutSource ?? "field"}/${fields[right].dataset.moLayoutSource ?? "field"}`);
+          const source = fields[left].dataset.moLayoutSource as MoDataSource | undefined;
+          const other = sourceLabel(fields[right].dataset.moLayoutSource, "another field");
+          push({ code: "overlap", message: `${recordLocation(fields[left])}: ${sourceLabel(source)} overlaps ${other}.`, fieldId: fields[left].dataset.moLayoutField, relatedFieldId: fields[right].dataset.moLayoutField, source });
         }
       }
     }
     const cnic = half.querySelector<HTMLElement>(".mo-sender-cnic-value");
     if (cnic) for (const field of fields) if (intersects(cnic.getBoundingClientRect(), field.getBoundingClientRect())) {
-      overlaps.push(`${half.dataset.moSlot}:overlap:senderCnic/${field.dataset.moLayoutSource ?? "field"}`);
+      const source = field.dataset.moLayoutSource as MoDataSource | undefined;
+      push({ code: "overlap", message: `${recordLocation(field)}: Sender CNIC overlaps ${sourceLabel(source)}.`, fieldId: cnic.dataset.moLayoutField, relatedFieldId: field.dataset.moLayoutField, source: "senderCnic" });
+    }
+    const staticPage = half.querySelector<HTMLElement>(".page[data-mo-source-index]");
+    if (staticPage) {
+      const artworkRects = staticArtworkTextRects(staticPage);
+      const dynamicText = Array.from(half.querySelectorAll<HTMLElement>(".mo-layout-field [data-mo-layout-text],.page [data-mo-field]"));
+      for (const field of dynamicText) {
+        const glyphRects = renderedTextRects(field);
+        const collisions = artworkRects.filter((artwork) => glyphRects.some((glyph) => intersects(glyph, artwork.rect)));
+        if (!collisions.length) continue;
+        const layoutBox = field.closest<HTMLElement>(".mo-layout-field");
+        const source = (layoutBox?.dataset.moLayoutSource ?? field.dataset.moLayoutSource) as MoDataSource | undefined;
+        const label = source ? sourceLabel(source) : staticFieldLabel(field.dataset.moField);
+        const printed = collisions[0];
+        const halfRect = half.getBoundingClientRect();
+        const printedXmm = halfRect.width ? (printed.rect.left - halfRect.left) * 148.5 / halfRect.width : 0;
+        const printedYmm = halfRect.height ? (printed.rect.top - halfRect.top) * 210 / halfRect.height : 0;
+        push({ code: "artwork-overlap", message: `${recordLocation(field)}: ${label} overlaps printed MO text “${printed.label}” near x=${printedXmm.toFixed(1)} mm, y=${printedYmm.toFixed(1)} mm.`, fieldId: layoutBox?.dataset.moLayoutField ?? field.dataset.moLayoutField, source });
+      }
     }
   }
-  return Object.freeze(overlaps.filter((value, index, values) => values.indexOf(value) === index));
+  return Object.freeze(issues.filter((issue, index, values) => values.findIndex((other) => other.code === issue.code && other.message === issue.message && other.fieldId === issue.fieldId) === index));
+}
+
+/** Compatibility helpers expose readable messages to the PDF fail-closed gate. */
+export function findMoFieldOverflows(doc: Document): readonly string[] {
+  return Object.freeze(findMoLayoutDiagnostics(doc).filter((issue) => issue.code === "overflow").map((issue) => issue.message));
+}
+
+export function findMoLayoutMissingFields(doc: Document): readonly string[] {
+  return Object.freeze(findMoLayoutDiagnostics(doc).filter((issue) => issue.code === "missing").map((issue) => issue.message));
+}
+
+/** Dynamic layout boxes must not intersect each other or the anchored session-only CNIC. */
+export function findMoFieldOverlaps(doc: Document): readonly string[] {
+  return Object.freeze(findMoLayoutDiagnostics(doc).filter((issue) => issue.code === "overlap" || issue.code === "artwork-overlap").map((issue) => issue.message));
 }
 
 export function escapeMoAttribute(value: string): string {
