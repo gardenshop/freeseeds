@@ -286,3 +286,10 @@
 - Final varied-value browser/PDF suite completed through the existing-label tail with N42/N100/N500 MO pair/raster checks and `browserErrors: []`. The first 600-second monitor window ended while the managed process continued; the process exited after the full summary. Do not weaken assertions or interpret a monitor-window boundary as a test failure.
 - Staging acceptance is blocked by the isolated Access challenge and a populated shared profile; no live synthetic batch was submitted. A snapshot incident is recorded without values in `docs/MO51_LP057_DECISIONS.md`; treat session output as sensitive. Reauthenticate only in a fresh isolated staging context before live tests.
 - Preserve the separate `PDF_GENERATED` HTTP 400 for `gfs-paper-presets-v4`; no version spoofing, validation weakening, or Worker/D1 changes without separate authorization. Physical duplex/postal acceptance remain untested.
+
+## GFS-LP-058 final staging acceptance
+
+- LP-057 app source `b09769198aaecee33cdc35ba80b9c1657ea6ccf4` is deployed as Pages version `0e27536b-630d-4910-ab95-3ec55d2e870b`; immediate rollback `5307cf95-851e-4757-b341-becfeaae1788` is verified successful. Static `dist/` only; no Worker/D1/Access/API/Admin/WhatsApp/COD/payment/Meta/production change.
+- Local unit/build/browser/PDF/label tests pass. Live staging acceptance requires an isolated, freshly authorized synthetic-only context. Never reload or inspect a populated shared profile, use its records, or expose its values. An LP-058 snapshot incident is documented without values in `docs/MO51_LP058_ACCEPTANCE.md`; treat session output as sensitive.
+- If the isolated context shows Cloudflare Access sign-in, stop until the owner completes authorization there. Do not bypass Access or copy tokens/cookies/headers. Do not enter CNIC in a shared profile.
+- Keep the `gfs-paper-presets-v4` `PDF_GENERATED` HTTP 400 separately blocked; do not spoof versions or modify Worker/D1 without separate authorization. Do not claim physical duplex/postal acceptance before controlled print checks.
