@@ -459,7 +459,7 @@ try {
   page.on("request", (request) => {
     allRequests.push(request.url());
     const content = `${request.url()} ${request.postData() ?? ""}`;
-    if (/Synthetic Receiver|Synthetic address|آزمائشی|0000012345678|00000-1234567-8/u.test(content)) moSourceDataRequested = true;
+    if (/Synthetic Receiver|Synthetic address|آزمائشی|0000012345678|00000-1234567-8|\b03\d{9}\b|VPL000001|VPP000022|20100/u.test(content)) moSourceDataRequested = true;
   });
   await page.goto(baseUrl, { waitUntil: "networkidle" });
   assert.equal(await page.locator("#backToAdmin").getAttribute("href"), "https://getfreeseeds-admin-staging.get-free-seeds.workers.dev/");
@@ -1078,21 +1078,28 @@ try {
   assert.equal(await page.locator('.edit-form [name="address"]').inputValue(), overlongAddress.replace(/\r\n/g, "\n"));
   await page.locator(".edit-form [data-cancel]").click();
 
+  const syntheticMoPhone = (index) => `03${String(100000000 + index + 1).padStart(9, "0")}`;
+  const syntheticMoAmount = (index) => String(20000 + (index + 1) * 100);
+  const syntheticMoDate = (index) => {
+    const date = new Date(Date.UTC(2026, 0, index + 1));
+    return `${String(date.getUTCDate()).padStart(2, "0")}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCFullYear()).slice(-2)}`;
+  };
+
   async function importMoBatch(count) {
     if (await page.locator("#newBatch").count() === 0) await page.locator('[data-view="review"]').first().click();
     await page.locator("#newBatch").click();
     const moRows = Array.from({ length: count }, (_, index) => [
       `MO-SYN-${String(index + 1).padStart(3, "0")}`,
       `Synthetic Receiver ${index + 1}`,
-      "03001234567",
+      syntheticMoPhone(index),
       index === 10 ? `Synthetic St 11 Block 3 ${Array.from({ length: 4 }, (_, part) => `Address Segment ${part + 1}`).join(" ")}` : `Synthetic St ${index + 1}`,
       `${index % 2 ? "VPP" : "VPL"}${String(index + 1).padStart(6, "0")}`,
-      "25000",
+      syntheticMoAmount(index),
       "Synthetic parcel only",
       "Sahiwal",
       "Punjab",
       "Synthetic landmark",
-      "18-11-26",
+      syntheticMoDate(index),
       "Synthetic Sender",
       "Synthetic Sender Return",
     ]);
@@ -1120,15 +1127,15 @@ try {
     const rows = Array.from({ length: count }, (_, index) => [
       `MO-SYN-${String(index + 1).padStart(3, "0")}`,
       `Synthetic Receiver ${index + 1}`,
-      "03001234567",
+      syntheticMoPhone(index),
       index === 10 ? `Synthetic St 11 Block 3 ${Array.from({ length: 4 }, (_, part) => `Address Segment ${part + 1}`).join(" ")}` : `Synthetic St ${index + 1}`,
       `${index % 2 ? "VPP" : "VPL"}${String(index + 1).padStart(6, "0")}`,
-      "25000",
+      syntheticMoAmount(index),
       "Synthetic parcel only",
       "Sahiwal",
       "Punjab",
       "Synthetic landmark",
-      "18-11-26",
+      syntheticMoDate(index),
       "Synthetic Sender",
       "Synthetic Sender Return",
     ]);
@@ -1144,8 +1151,8 @@ try {
     if (await page.locator("#newBatch").count() === 0) await page.locator('[data-view="review"]').first().click();
     await page.locator("#newBatch").click();
     const mixedRows = ["VPL000101", "RGL000102", "VPP000103", "UMS000104", "VPP000105"].map((tracking, index) => [
-      `MO-MIX-SYN-${index + 1}`, `Synthetic Mixed ${index + 1}`, "03001234567", `Synthetic mixed address ${index + 1}`,
-      tracking, "25000", "Synthetic item", "Sahiwal", "Punjab", "Synthetic landmark", "18-11-26", "Synthetic Sender", "Synthetic Sender Return",
+      `MO-MIX-SYN-${index + 1}`, `Synthetic Mixed ${index + 1}`, syntheticMoPhone(index), `Synthetic mixed address ${index + 1}`,
+      tracking, syntheticMoAmount(index), "Synthetic item", "Sahiwal", "Punjab", "Synthetic landmark", syntheticMoDate(index), "Synthetic Sender", "Synthetic Sender Return",
     ]);
     const csv = [headers, ...mixedRows].map((row) => row.map(quote).join(",")).join("\r\n");
     await page.locator("#workbook").setInputFiles({ name: "mo-mixed-prefixes-synthetic.csv", mimeType: "text/csv", buffer: Buffer.from(csv) });
@@ -1325,8 +1332,8 @@ try {
   const mappedPartyY = await page.frameLocator("#moFrontPreview").locator('.mo-half[data-mo-slot="left"]').evaluate((half) => ({ receiver: half.querySelector('[data-mo-party-block="receiver"]')?.getBoundingClientRect().top, sender: half.querySelector('[data-mo-party-block="sender"]')?.getBoundingClientRect().top }));
   assert.ok(mappedPartyY.receiver < mappedPartyY.sender, "mapped distinct party values retain the corrected vertical roles");
   assert.match(confirmedFront, /VPL000001/u, "selected exact tracking source appears in the V.P. article field");
-  assert.match(confirmedFront, /25000/u, "only validated principal is selected; no label commission is added");
-  assert.doesNotMatch(confirmedFront, /25175/u, "label commission must not be merged into principal");
+  assert.match(confirmedFront, /20100/u, "only the imported principal is selected; no label commission is added");
+  assert.doesNotMatch(confirmedFront, /20275/u, "label commission must not be merged into principal");
   assert.match(confirmedFront, /آزمائشی وصول کنندہ/u, "synthetic manual Urdu receiver name renders in the front form");
   assert.match(confirmedFront, /گلی ۱۲، آزمائشی پتہ/u, "synthetic Urdu address is preserved in RTL text");
   assert.match(confirmedFront, /03009876543/u);
@@ -1350,8 +1357,8 @@ try {
     database.close();
     return JSON.stringify({ localStorage: { ...localStorage }, sessionStorage: { ...sessionStorage }, references });
   });
-  assert.doesNotMatch(mappedStorage, /آزمائشی وصول کنندہ|گلی ۱۲، آزمائشی پتہ|Synthetic Merchant|25000/u, "user-confirmed MO values must remain memory-only");
-  assert.equal(allRequests.some((url) => /آزمائشی|Synthetic Receiver 1|Synthetic address 1|00000-1234567-8/u.test(url)), false, "MO candidate values and Sender CNIC must not enter request URLs");
+  assert.doesNotMatch(mappedStorage, /آزمائشی وصول کنندہ|گلی ۱۲، آزمائشی پتہ|Synthetic Merchant|20100|\b03\d{9}\b/u, "user-confirmed MO values must remain memory-only");
+  assert.equal(allRequests.some((url) => /آزمائشی|Synthetic Receiver 1|Synthetic address 1|00000-1234567-8|\b03\d{9}\b|VPL000001|20100/u.test(url)), false, "MO candidate values and Sender CNIC must not enter request URLs");
   assert.equal(moSourceDataRequested, false, "candidate fields and CNIC must not enter monitoring, analytics or other request payloads");
   const userConfirmedPdf = await saveMoGeneratedPdf(page, join(temporary, "mo51-synthetic-user-confirmed-draft.pdf"), 2, "draft");
   const draftFrontRaster = await compareMoPdfWithPreview(page, "front", userConfirmedPdf.bytes, 1);
@@ -1690,8 +1697,8 @@ try {
   const n42First = await n42Pair();
   assert.deepEqual(n42First.map((item) => item.sourceIndex + 1), [1, 22], "N=42 staging-sized batch first sheet must pair 1/22");
   assert.deepEqual(n42First.map((item) => [item.fields.tracking, item.fields.declaredPrincipal, item.fields.name, item.fields.senderName, item.fields.senderAddress, item.fields.phone, item.fields.orderDate]), [
-    ["VPL000001", "25000", "Synthetic Receiver 1", "Synthetic Sender", "Synthetic Sender Return", "03001234567", "18-11-26"],
-    ["VPP000022", "25000", "Synthetic Receiver 22", "Synthetic Sender", "Synthetic Sender Return", "03001234567", "18-11-26"],
+    ["VPL000001", "20100", "Synthetic Receiver 1", "Synthetic Sender", "Synthetic Sender Return", "03100000001", "01-01-26"],
+    ["VPP000022", "22200", "Synthetic Receiver 22", "Synthetic Sender", "Synthetic Sender Return", "03100000022", "22-01-26"],
   ], "N=42 first-sheet values must come from their source rows");
   assert.match(n42First[0].fields.tracking, /^VPL/u);
   assert.match(n42First[1].fields.tracking, /^VPP/u);
@@ -1723,8 +1730,8 @@ try {
   assert.deepEqual(n42LastFront.map((item) => item.sourceIndex + 1), [21, 42], "N=42 final sheet must pair 21/42");
   assert.deepEqual(n42LastBack.map((item) => item.sourceIndex), n42LastFront.map((item) => item.sourceIndex), "N=42 backs must match the same source rows");
   assert.deepEqual(n42LastFront.map((item) => [item.fields.tracking, item.fields.declaredPrincipal, item.fields.name, item.fields.orderDate]), [
-    ["VPL000021", "25000", "Synthetic Receiver 21", "18-11-26"],
-    ["VPP000042", "25000", "Synthetic Receiver 42", "18-11-26"],
+    ["VPL000021", "22100", "Synthetic Receiver 21", "21-01-26"],
+    ["VPP000042", "24200", "Synthetic Receiver 42", "11-02-26"],
   ]);
   const n42PdfPage41Front = await compareMoPdfWithPreview(page, "front", n42LayoutPdf.bytes, 41, true);
   const n42PdfPage42Back = await compareMoPdfWithPreview(page, "back", n42LayoutPdf.bytes, 42, true);
@@ -1767,8 +1774,8 @@ try {
   const n100FirstPair = await n100Pair();
   assert.deepEqual(n100FirstPair.map((item) => item.sourceIndex + 1), [1, 51], "N=100 first sheet must pair records 1/51");
   assert.deepEqual(n100FirstPair.map((item) => [item.fields.tracking, item.fields.declaredPrincipal, item.fields.name, item.fields.senderName, item.fields.senderAddress, item.fields.address, item.fields.phone, item.fields.city, item.fields.province, item.fields.orderDate]), [
-    ["VPL000001", "25000", "Synthetic Receiver 1", "Synthetic Sender", "Synthetic Sender Return", "Synthetic St 1", "03001234567", "Sahiwal", "Punjab", "18-11-26"],
-    ["VPL000051", "25000", "Synthetic Receiver 51", "Synthetic Sender", "Synthetic Sender Return", "Synthetic St 51", "03001234567", "Sahiwal", "Punjab", "18-11-26"],
+    ["VPL000001", "20100", "Synthetic Receiver 1", "Synthetic Sender", "Synthetic Sender Return", "Synthetic St 1", "03100000001", "Sahiwal", "Punjab", "01-01-26"],
+    ["VPL000051", "25100", "Synthetic Receiver 51", "Synthetic Sender", "Synthetic Sender Return", "Synthetic St 51", "03100000051", "Sahiwal", "Punjab", "20-02-26"],
   ], "N=100 first-sheet fields must belong to records 1/51");
   captureMappedPdfAudit = true;
   console.log(JSON.stringify({ moLayoutN100: "pdf-start" }));
@@ -1803,8 +1810,8 @@ try {
   const n100LastPair = await n100Pair();
   assert.deepEqual(n100LastPair.map((item) => item.sourceIndex + 1), [50, 100], "N=100 final sheet must pair records 50/100");
   assert.deepEqual(n100LastPair.map((item) => [item.fields.tracking, item.fields.declaredPrincipal, item.fields.name, item.fields.senderName, item.fields.senderAddress, item.fields.address, item.fields.phone, item.fields.city, item.fields.province, item.fields.orderDate]), [
-    ["VPP000050", "25000", "Synthetic Receiver 50", "Synthetic Sender", "Synthetic Sender Return", "Synthetic St 50", "03001234567", "Sahiwal", "Punjab", "18-11-26"],
-    ["VPP000100", "25000", "Synthetic Receiver 100", "Synthetic Sender", "Synthetic Sender Return", "Synthetic St 100", "03001234567", "Sahiwal", "Punjab", "18-11-26"],
+    ["VPP000050", "25000", "Synthetic Receiver 50", "Synthetic Sender", "Synthetic Sender Return", "Synthetic St 50", "03100000050", "Sahiwal", "Punjab", "19-02-26"],
+    ["VPP000100", "30000", "Synthetic Receiver 100", "Synthetic Sender", "Synthetic Sender Return", "Synthetic St 100", "03100000100", "Sahiwal", "Punjab", "10-04-26"],
   ], "N=100 final-sheet fields must belong to records 50/100");
   const n100PdfPage99Front = await compareMoPdfWithPreview(page, "front", n100LayoutPdf.bytes, 99, true);
   await writeFile(join(evidence, "lp057-mo-n100-pdf-page99-front-synthetic.png"), n100PdfPage99Front.toBuffer("image/png"));
