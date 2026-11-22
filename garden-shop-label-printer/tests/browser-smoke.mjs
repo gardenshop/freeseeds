@@ -139,7 +139,7 @@ async function saveMoLayoutPdf(page, path, expectedPages, timeout = 300000) {
   const exportFailure = new Promise((resolve) => {
     statusTimer = setInterval(async () => {
       const status = await page.locator("#moPdfStatus").innerText().catch(() => "");
-      if (status.startsWith("MO PDF export failed") || status.startsWith("Export cancelled")) resolve({ error: status });
+      if (status.startsWith("MO PDF export failed") || status.startsWith("MO layout output failed") || status.startsWith("MO_PRINT_TARGET_REJECTED:") || status.startsWith("Export cancelled")) resolve({ error: status });
     }, 100);
   });
   let download;
@@ -1369,6 +1369,9 @@ try {
   await writeFile(join(evidence, "mo51-lp047-populated-draft-pdf-page2-back-synthetic.png"), draftBackRaster.toBuffer("image/png"));
   await page.frameLocator("#moFrontPreview").locator(".mo-sheet").screenshot({ path: join(evidence, "mo51-lp047-populated-draft-preview-front-synthetic.png") });
   await page.frameLocator("#moBackPreview").locator(".mo-sheet").screenshot({ path: join(evidence, "mo51-lp047-populated-draft-preview-back-synthetic.png") });
+  await page.locator('[data-view="review"]').first().click();
+  await page.locator('[data-view="mo"]').click();
+  assert.equal(await page.locator("#moSenderCnic").inputValue(), "", "leaving and returning to MO must clear the session-only CNIC");
   const blankAfterMapping = await saveMoGeneratedPdf(page, join(temporary, "mo51-synthetic-blank-after-mapping.pdf"), 2);
   assert.match(blankAfterMapping.document.getTitle(), /blank manual-completion/u);
   assert.ok(await compareMoPdfPages(moPdfDownload.bytes, blankAfterMapping.bytes, 1) < 0.01, "blank manual-completion PDF must ignore all selected source mappings");
@@ -1557,7 +1560,25 @@ try {
   assert.equal(verifiedPrintUrl.origin, new URL(baseUrl).origin, "print popup must belong to the current synthetic app origin");
   assert.equal(printPopupDiagnostics.contentType, "application/pdf", "print popup must contain only the generated MO PDF");
   assert.equal(await layoutPrintPopup.evaluate(() => window.__moPrintRequested === true), true, "the print call must occur only after PDF target verification");
+  const popupPdf = await page.evaluate(async (url) => {
+    const response = await fetch(url);
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    let binary = "";
+    for (let offset = 0; offset < bytes.length; offset += 0x8000) binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+    return { status: response.status, contentType: response.headers.get("content-type"), byteLength: bytes.byteLength, base64: btoa(binary) };
+  }, layoutPrintPopup.url());
+  assert.equal(popupPdf.status, 200, "generated PDF blob must remain readable while its print popup is open");
+  assert.equal(popupPdf.contentType, "application/pdf");
+  assert.ok(popupPdf.byteLength > 0);
+  const popupPdfDocument = await PDFDocument.load(Buffer.from(popupPdf.base64, "base64"));
+  assert.equal(popupPdfDocument.getPageCount(), 4, "the 3-record paired PDF should contain 4 pages");
+  const popupMediaBox = popupPdfDocument.getPage(0).getSize();
+  assert.ok(Math.abs(popupMediaBox.width * 25.4 / 72 - 297) < 0.1 && Math.abs(popupMediaBox.height * 25.4 / 72 - 210) < 0.1, "the print popup PDF must use the A4 landscape MediaBox");
   await layoutPrintPopup.close();
+  await page.waitForFunction(async (url) => {
+    try { return !(await fetch(url).then((response) => response.ok)); }
+    catch { return true; }
+  }, layoutPrintPopup.url(), { timeout: 5000 });
   await page.locator("#moReturnToLayout").click();
   await page.locator("#moLayoutReset").click();
   assert.equal(await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1")), null);
@@ -1898,10 +1919,6 @@ try {
   } finally {
     await n500Context.close();
   }
-
-  await page.locator('[data-view="review"]').first().click();
-  await page.locator('[data-view="mo"]').click();
-  assert.equal(await page.locator("#moSenderCnic").inputValue(), "", "navigating away and back must clear the volatile sender CNIC");
 
   assert.deepEqual(errors, []);
   console.log(JSON.stringify({ geometry, printGeometry, decodedBarcodeCounts: [3, 18, decoded500, customDecoded500], prefixExamples: { types: ["RGL", "UMS", "VPL", "VPP"], hiddenAmountBoxes: 2, visibleAmountBoxes: prefixVisibleAmountBoxes, rglUmsAmountsAbsentFromPdf: !/50000|40000|\+0/u.test(prefixPdf.text), imagePrintValues: ["25000+175", "65000+375"], pdfValuesMatch: /25000/u.test(prefixPdf.text) && /\+175/u.test(prefixPdf.text) && /65000/u.test(prefixPdf.text) && /\+375/u.test(prefixPdf.text) }, samplePdfPages: samplePdf.pageCount, batch500PdfPages: batchPdf.getPageCount(), customBatch500PdfPages: customBatchPdf.getPageCount(), overflowLayout, moProofs: ["mo51-proof-n2-front-cnic-synthetic.png", "mo51-proof-n2-back.png", "mo51-proof-n3-front-sheet1.png", "mo51-proof-n3-back-sheet1.png", "mo51-proof-n3-front-sheet2-odd-blank.png", "mo51-proof-n3-back-sheet2-odd-blank.png", "mo51-proof-n5-front-sheet1.png", "mo51-proof-n5-back-sheet1.png", "mo51-proof-n5-front-sheet3-odd-blank.png", "mo51-proof-n5-back-sheet3-odd-blank.png", "mo51-proof-n100-front-sheet1.png", "mo51-proof-n100-back-sheet1.png", "mo51-proof-n100-front-sheet50.png", "mo51-proof-n100-back-sheet50.png"], moPdfProofs: ["mo51-pdf-n2-page1-front.png", "mo51-pdf-n2-page2-back.png", "mo51-pdf-n3-page3-front-odd-blank.png", "mo51-pdf-n3-page4-back-odd-blank.png", "mo51-pdf-n5-page5-front-odd-blank.png", "mo51-pdf-n5-page6-back-odd-blank.png", "mo51-pdf-n100-page1-front-sheet1.png", "mo51-pdf-n100-page2-back-sheet1.png", "mo51-pdf-n100-page99-front-sheet50.png", "mo51-pdf-n100-page100-back-sheet50.png"], browserErrors: errors, evidence: ["test-evidence/approved-label-layout.png", "label-output-synthetic.png", "prefix-layout-samples.png", "prefixes-image-print.png", "test-evidence/label-preview-500-v2.png", "test-evidence/label-preview-custom-500.png", "test-evidence/label-preview-overflow.png", "test-evidence/label-preview-mobile.png", "test-evidence/browser-print-sheet.png", "test-evidence/pdf-sample-page.png", "test-evidence/pdf-500-first-page.png", "test-evidence/pdf-custom-500-first-page.png", "test-evidence/pdf-overflow-filtered.png"] }, null, 2));

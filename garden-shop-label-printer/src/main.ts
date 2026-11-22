@@ -1246,10 +1246,14 @@ async function runMoLayoutOutput(printAfterBuild: boolean): Promise<void> {
       const printUrl = url;
       let targetTimer: number | undefined;
       let verificationTimer: number | undefined;
+      let popupClosePoll: number | undefined;
+      let revokeFallbackTimer: number | undefined;
       let settled = false;
       const clearVerificationTimers = (): void => {
         if (targetTimer !== undefined) window.clearTimeout(targetTimer);
         if (verificationTimer !== undefined) window.clearInterval(verificationTimer);
+        if (popupClosePoll !== undefined) window.clearInterval(popupClosePoll);
+        if (revokeFallbackTimer !== undefined) window.clearTimeout(revokeFallbackTimer);
       };
       const failClosed = (reason: string): void => {
         if (settled) return;
@@ -1285,11 +1289,19 @@ async function runMoLayoutOutput(printAfterBuild: boolean): Promise<void> {
         if (!isExpectedMoPrintTarget(actualUrl, printUrl, contentType)) return;
         settled = true;
         clearVerificationTimers();
-        // Only bind cleanup after the expected blob loaded; the initial about:blank pagehide is not the PDF lifecycle.
-        popup.addEventListener("pagehide", () => {
+        // PDF viewers may fire pagehide while transitioning from the blob; retain the URL until the popup closes.
+        popupClosePoll = window.setInterval(() => {
+          if (!popup.closed) return;
+          if (popupClosePoll !== undefined) window.clearInterval(popupClosePoll);
+          if (revokeFallbackTimer !== undefined) window.clearTimeout(revokeFallbackTimer);
           URL.revokeObjectURL(printUrl);
           if (moPrintWindow === popup) moPrintWindow = null;
-        }, { once: true });
+        }, 500);
+        revokeFallbackTimer = window.setTimeout(() => {
+          if (popupClosePoll !== undefined) window.clearInterval(popupClosePoll);
+          URL.revokeObjectURL(printUrl);
+          if (popup.closed && moPrintWindow === popup) moPrintWindow = null;
+        }, 1800000);
         moPdfState = Object.freeze({ exporting: false, message: "Verified MO PDF opened; browser print dialog requested. Duplex calibration remains pending." });
         render();
         try {
@@ -1306,7 +1318,6 @@ async function runMoLayoutOutput(printAfterBuild: boolean): Promise<void> {
       verificationTimer = window.setInterval(verifyPopupTarget, 100);
       targetTimer = window.setTimeout(() => failClosed("the generated PDF did not load in the print target"), 30000);
       popup.location.href = printUrl;
-      window.setTimeout(() => URL.revokeObjectURL(printUrl), 300000);
       moPdfState = Object.freeze({ exporting: false, message: "Waiting for the generated MO PDF target to verify before printing…" });
     } else {
       const link = document.createElement("a");
