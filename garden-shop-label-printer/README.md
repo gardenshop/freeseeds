@@ -59,6 +59,12 @@ Independent browser-based spreadsheet import, label preview, A4/custom print/PDF
 - `Repair Layout` is MO-only and opt-in: it creates a proposed source-preserving layout, shows a clean preview and all-record validation, and leaves the current saved layout unchanged until **Apply Repair**. Apply persists field definitions only. Unsupported/ambiguous/back/Intimation fields remain unmoved with direct-adjustment diagnostics; no default bindings or customer/CNIC values are introduced.
 - The validated N100 synthetic flow downloads a 100-page A4-landscape PDF and opens that generated PDF blob for Print MO Batch. Lower Intimation amount/date/tracking/Receiver anchors are source-profiled when explicitly mapped. See `docs/MO51_LP061_DECISIONS.md` for visual proof, coverage and remaining staging/audit gates.
 
+## LP-062 Existing-layout recovery and staging status
+
+- Use **Review Layout → Repair Layout → Preview Changes → Apply Repair → Download/Print**. The proposal does not change the saved layout until Apply; full-batch errors continue to block both output actions. Direct adjustment is available for unresolved mapped fields.
+- LP-061 is committed locally and pushed, but the latest Wrangler-listed staging deployment still points to source `948df20` (pre-LP-061). The current session cannot verify the Dashboard through official Chrome DevTools MCP, so the staging UI has not been verified or redeployed. Do not claim the owner’s live page is fixed until fresh isolated staging acceptance passes. See `docs/MO51_LP062_DECISIONS.md`.
+- Keep the independent `PDF_GENERATED` Monitor HTTP 400 blocked. Do not modify the Worker/D1, spoof the template version, or bypass Access to make MO output work.
+
 ## MO-51 Sender/Receiver Front Positions (LP-052)
 
 - On MO FRONT / HTML section 1, the complete Receiver block (Urdu caption, receiver name/address/phone lines and its postcode boxes) is upper; the complete Sender block (Urdu caption, sender name/address/contact lines, optional Sender CNIC line and postcode boxes) is lower. The form's BACK / HTML section 2, stamps, and imported sender/receiver values are unchanged. The renderer moves presentation blocks only; mapping sources are never exchanged.
