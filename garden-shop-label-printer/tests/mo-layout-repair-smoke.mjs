@@ -50,7 +50,7 @@ const syntheticRows = Array.from({ length: 100 }, (_, index) => {
   const suffix = row === 1 ? "پتہ آزمائشی Urdu" : row === 51 ? "طویل وصول کنندہ پتہ Urdu" : "";
   return [
     `LP061-SYN-${String(row).padStart(3, "0")}`,
-    `Synthetic Receiver ${row}${long ? ` Extended Recipient ${suffix}` : ""}`,
+    `Synthetic Receiver ${row}${long ? ` Extended ${row === 1 ? "دوست" : "وصول"}` : ""}`,
     `03${String(100000000 + row).padStart(9, "0")}`,
     `Synthetic Street ${row}${long ? ` Block ${row} ${"Address Segment ".repeat(5)}${suffix}` : ""}`,
     `${row % 2 ? "VPL" : "VPP"}${String(row).padStart(6, "0")}`,
@@ -71,20 +71,23 @@ function badExistingLayout() {
     version: 2,
     partyPositionVersion: 2,
     fields: [
-      field("tracking", "tracking", 74, 45, 42, 8, 9),
-      field("principal", "declaredPrincipal", 18, 50, 35, 5, 8.5, false, "center"),
-      field("sender-name", "senderName", 7.7, 112.8, 100.7, 4.8, 8.5),
-      field("sender-address", "senderAddress", 7.7, 117.6, 38, 4.8, 8),
-      field("receiver-name", "name", 7.7, 85.8, 70, 4.8, 8.5, false, "left", true),
-      field("receiver-address", "address", 7.7, 90.6, 74, 16, 7.5, true),
-      field("receiver-phone", "phone", 83, 100.2, 25.4, 4.8, 7.5),
-      field("receiver-city", "city", 7.7, 105, 50, 4.8, 7),
-      field("receiver-province", "province", 60, 105, 48.4, 4.8, 7),
-      field("order-date", "orderDate", 27, 18, 13.8, 10.5, 6.5, false, "center"),
-      field("intimation-principal", "declaredPrincipal", 12, 150, 35, 8, 8),
-      field("intimation-date", "orderDate", 12, 158, 35, 8, 7),
-      field("intimation-tracking", "tracking", 12, 176, 42, 8, 8),
-      field("intimation-receiver", "name", 12, 188, 42, 8, 8),
+      field("saved-tracking-top", "tracking", 85.5561, 42.4496, 49.2662, 4.5869, 10, false, "left", true),
+      field("saved-order-date-intimation", "orderDate", 39, 168.8, 38.6602, 4.5, 8, false, "center", true),
+      field("saved-principal-top", "declaredPrincipal", 13.5, 43.5, 43.4, 12.6, 27, false, "center", true),
+      field("saved-sender-name-top", "senderName", 7.4077, 117.0735, 100.7, 4.8, 13, false, "left", true),
+      field("saved-sender-address-top", "senderAddress", 7.7, 123.4186, 100.7, 4.8, 10, false, "left", true),
+      field("saved-receiver-name-top", "name", 7.9645, 85.271, 101.1176, 5.2176, 12),
+      field("saved-receiver-address-top", "address", 7.4216, 91.296, 100.9784, 9.0432, 7.5, true),
+      field("saved-receiver-phone-top", "phone", 82.7355, 104.9131, 25.4, 4.8, 8, false, "left", true),
+      field("saved-city-top", "city", 7.9784, 100.1304, 50, 4.8, 10),
+      field("saved-province-top", "province", 59.5824, 100.6176, 48.4, 4.8, 10),
+      field("saved-principal-intimation", "declaredPrincipal", 87.9363, 150.6234, 42, 5.6196, 9, false, "center"),
+      field("saved-tracking-intimation", "tracking", 81.0601, 172.8401, 42.2645, 4.2972, 9, false, "left", true),
+      field("saved-phone-intimation", "phone", 39.5383, 183.1322, 41.7355, 5.0907, 9, false, "left", true),
+      field("saved-original-amount-intimation", "sourceAmount", 92.0933, 166.1246, 42, 4.8262, 10, false, "left", true),
+      field("saved-receiver-name-intimation", "name", 39.8028, 177.233, 94.1006, 5.0907, 10),
+      field("saved-sender-name-intimation", "senderName", 3.6151, 181.7309, 32.5259, 7.5013, 15, false, "center", true),
+      field("saved-sender-cnic", "senderCnic", 8.1825, 122.6734, 42, 5, 10),
     ],
   };
 }
@@ -213,11 +216,38 @@ try {
     const status = document.querySelector("#moRepairBatchStatus")?.textContent ?? "";
     return status.startsWith("PASS ·") || status.includes("blocking diagnostics remain") || status.includes("Full-batch validation failed");
   }, undefined, { timeout: 180000 });
-  const repairStatus = await page.locator("#moRepairBatchStatus").innerText();
+  const firstRepairStatus = await page.locator("#moRepairBatchStatus").innerText();
   const storedDuringPreview = await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1"));
   assert.equal(storedDuringPreview, storedBeforeRepair, "proposed positions must not overwrite the saved layout before Apply");
-  assert.match(repairStatus, /^PASS · 100 selected records checked/u, `Repair proposal did not pass all N100 records: ${repairStatus}\n${await page.locator("#moRepairSummary").innerText()}`);
-  assert.equal(await page.locator("#moApplyLayoutRepair").isEnabled(), true);
+  assert.match(firstRepairStatus, /blocking diagnostics remain/u, `the copied saved SenderName field should remain blocked rather than be moved over stamp artwork: ${firstRepairStatus}`);
+  const senderNameIssue = page.locator('#moRepairSummary [data-mo-repair-unresolved="saved-sender-name-intimation"]');
+  assert.equal(await senderNameIssue.count(), 1, "unplaceable lower Intimation SenderName must be identified with a direct correction control");
+  assert.equal(await senderNameIssue.locator('[data-mo-repair-select="saved-sender-name-intimation"]').count(), 1);
+  assert.equal(await page.locator("#moApplyLayoutRepair").isEnabled(), true, "supported fields may be previewed/applied without hiding the unresolved field");
+
+  // In this synthetic fixture only, explicitly remove the duplicate lower-Intimation SenderName field.
+  // The production proposal never removes this custom binding automatically.
+  await senderNameIssue.locator('[data-mo-repair-select="saved-sender-name-intimation"]').click();
+  await page.locator("#moLayoutRemoveField").waitFor({ timeout: 30000 });
+  assert.equal(await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1")), storedBeforeRepair, "selecting the direct correction must not persist automatically");
+  await page.locator("#moLayoutRemoveField").click();
+  assert.equal(await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1")), storedBeforeRepair, "removing the synthetic duplicate remains unsaved until Save Layout");
+  await page.locator("#moLayoutSave").click();
+  const manuallyCorrectedLayout = await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1"));
+  assert.ok(manuallyCorrectedLayout);
+  assert.equal(JSON.parse(manuallyCorrectedLayout).fields.length, 16);
+  assert.ok(JSON.parse(manuallyCorrectedLayout).fields.some((field) => field.id === "saved-sender-name-top" && field.source === "senderName"), "the lower Sender block retains the SenderName source binding");
+  await page.waitForFunction(() => {
+    const status = document.querySelector("#moMappingFitError")?.textContent ?? "";
+    return status.includes("Mapped layout fields require attention") && !status.startsWith("Checking ");
+  }, undefined, { timeout: 180000 });
+
+  await page.locator("#moRepairLayout").click();
+  await page.locator("#moFinalPreview").waitFor({ timeout: 30000 });
+  await page.waitForFunction(() => document.querySelector("#moRepairBatchStatus")?.textContent?.startsWith("PASS · 100 selected records checked"), undefined, { timeout: 180000 });
+  const repairStatus = await page.locator("#moRepairBatchStatus").innerText();
+  const storedBeforeApply = await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1"));
+  assert.equal(storedBeforeApply, manuallyCorrectedLayout, "the corrected layout definition remains unchanged during the second proposal preview");
   const proposalText = await page.frameLocator("#moFinalPreview").locator(".mo-sheet").innerText();
   assert.match(proposalText, /VPL000001/u);
   assert.match(proposalText, /VPL000051/u);
@@ -240,8 +270,14 @@ try {
   assert.ok(savedAfterRepair, "explicit Apply Repair must save the MO layout definition");
   assert.doesNotMatch(savedAfterRepair, /LP061-SYN|Synthetic Receiver|Synthetic Street|03100000001|00000-1234567-8/u, "saved MO layout must contain no imported values or Sender CNIC");
   const savedLayout = JSON.parse(savedAfterRepair);
-  assert.equal(savedLayout.fields.length, 14);
-  assert.equal(savedLayout.fields.find((field) => field.id === "tracking").xMm, 103);
+  assert.equal(savedLayout.fields.length, 16, "the explicit direct correction removes only the unfit duplicate; all other saved definitions remain");
+  assert.equal(savedLayout.fields.find((field) => field.id === "saved-tracking-top").xMm, 103);
+  assert.equal(savedLayout.fields.find((field) => field.id === "saved-principal-top").fontSizePt, 10);
+  assert.equal(savedLayout.fields.find((field) => field.id === "saved-principal-top").bold, true);
+  assert.equal(savedLayout.fields.find((field) => field.id === "saved-sender-name-top").fontSizePt, 9.5);
+  assert.equal(savedLayout.fields.some((field) => field.id === "saved-sender-name-intimation"), false, "the unsafe duplicate lower SenderName was removed only by the explicit synthetic direct correction");
+  assert.deepEqual({ xMm: savedLayout.fields.find((field) => field.id === "saved-original-amount-intimation").xMm, yMm: savedLayout.fields.find((field) => field.id === "saved-original-amount-intimation").yMm }, { xMm: 39.22, yMm: 169.11 }, "the original amount remains on the separate Price Payable line, never in declared principal");
+  assert.deepEqual({ xMm: savedLayout.fields.find((field) => field.id === "saved-phone-intimation").xMm, yMm: savedLayout.fields.find((field) => field.id === "saved-phone-intimation").yMm }, { xMm: 108.72, yMm: 180.14 });
   assert.deepEqual(auditEvents.filter((event) => event.eventType === "PDF_GENERATED"), [], "repair preview alone must not claim a PDF was generated");
 
   const downloadEvent = page.waitForEvent("download", { timeout: 180000 });
@@ -304,7 +340,7 @@ try {
   const diagnosticLines = beforeRepair.diagnostics.split(/\n/u).filter((line) => line.startsWith("Source row "));
   console.log(JSON.stringify({ lp061N100: {
     beforeRepair: { selectedRows: beforeRepair.visiblePair, count: diagnosticLines.length, firstIssues: diagnosticLines.slice(0, 4), downloadDisabled: beforeRepair.downloadDisabled, printDisabled: beforeRepair.printDisabled },
-    repairStatus, savedFieldCount: savedLayout.fields.length,
+    initialRepairStatus: firstRepairStatus, directCorrection: "removed duplicate lower Intimation SenderName only in this synthetic acceptance fixture", repairStatus, savedFieldCount: savedLayout.fields.length,
     download: { filename: download.suggestedFilename(), pageCount: pdf.getPageCount(), mediaBox, firstRaster, lastRaster },
     print: { popupUrlScheme: new URL(popupDetails.url).protocol, contentType: popupDetails.type, printRequested: popupDetails.printed, popupFetch, popupFetchAfterClose },
     pdfGeneratedAuditCounts: generatedAudit.map(({ rows, pages }) => ({ rows, pages })), evidence,

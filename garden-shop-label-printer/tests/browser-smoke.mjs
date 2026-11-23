@@ -1560,7 +1560,7 @@ try {
     return download && print && !download.disabled && !print.disabled;
   }, undefined, { timeout: 120000 });
   const appliedTracking = await page.evaluate(() => JSON.parse(localStorage.getItem("gfs-mo51-layout-v1") ?? "null").fields.find((field) => field.source === "tracking"));
-  assert.deepEqual({ xMm: appliedTracking.xMm, widthMm: appliedTracking.widthMm, heightMm: appliedTracking.heightMm, fontSizePt: appliedTracking.fontSizePt, bold: appliedTracking.bold }, { xMm: 103, widthMm: 36, heightMm: 4.8, fontSizePt: 9, bold: true }, "explicit repair must preserve readable font and bold style while correcting geometry");
+  assert.deepEqual({ xMm: appliedTracking.xMm, widthMm: appliedTracking.widthMm, heightMm: appliedTracking.heightMm, fontSizePt: appliedTracking.fontSizePt, bold: appliedTracking.bold }, { xMm: 103, widthMm: 36, heightMm: 5.6, fontSizePt: 9, bold: true }, "explicit repair must preserve readable font and bold style while correcting geometry");
   await page.locator("#moPreviewFinal").click();
   await page.locator("#moFinalPreview").waitFor();
   await page.frameLocator("#moFinalPreview").locator(".mo-layout-field").first().waitFor();

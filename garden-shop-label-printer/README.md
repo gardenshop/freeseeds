@@ -62,8 +62,14 @@ Independent browser-based spreadsheet import, label preview, A4/custom print/PDF
 ## LP-062 Existing-layout recovery and staging status
 
 - Use **Review Layout → Repair Layout → Preview Changes → Apply Repair → Download/Print**. The proposal does not change the saved layout until Apply; full-batch errors continue to block both output actions. Direct adjustment is available for unresolved mapped fields.
-- LP-061 is committed locally and pushed, but the latest Wrangler-listed staging deployment still points to source `948df20` (pre-LP-061). The current session cannot verify the Dashboard through official Chrome DevTools MCP, so the staging UI has not been verified or redeployed. Do not claim the owner’s live page is fixed until fresh isolated staging acceptance passes. See `docs/MO51_LP062_DECISIONS.md`.
-- Keep the independent `PDF_GENERATED` Monitor HTTP 400 blocked. Do not modify the Worker/D1, spoof the template version, or bypass Access to make MO output work.
+- This section records the earlier LP-062 checkpoint, when the official MCP tool was unavailable and the live Dashboard had not been checked. LP-063's refreshed deployment/authentication state is recorded in `docs/MO51_LP063_DECISIONS.md`.
+
+## LP-063 Final MO print unblock
+
+- Build the static app with the Dashboard-listed staging Monitor/Admin origins, and upload `dist/` only. LP-063 adds safe explicit font proposals for legacy oversized fields and a separate lower-Intimation Price Payable slot for `sourceAmount`; declared principal still uses only the validated principal source, never commission.
+- Existing saved layouts stay unchanged until Apply. The observed lower-Intimation SenderName duplicate overlaps protected stamp artwork and has no approved safe slot; Repair Layout leaves it unchanged and exposes a direct field-selection control. Do not remove/rebind that custom field without operator approval; mapped Download/Print must remain blocked until it is directly corrected.
+- A fresh same-profile staging tab must be structurally empty before synthetic import. Do not touch the existing populated/shared tabs. See `docs/MO51_LP063_DECISIONS.md` for the verified deployment, live Access gate and saved-layout issue.
+- Keep `PDF_GENERATED` HTTP 400 separate; do not change Worker/D1/Access policy or spoof versions.
 
 ## MO-51 Sender/Receiver Front Positions (LP-052)
 

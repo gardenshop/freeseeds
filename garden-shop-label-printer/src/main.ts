@@ -856,7 +856,10 @@ function startMoLayoutRepairPreview(): void {
   const cnic = formatSenderCnic(moSenderCnicInput);
   const senderCnic = cnic.status === "valid" ? cnic.formatted : "";
   const faces = moPrintSideMode === "front-only" ? ["front"] as const : moPrintSideMode === "back-only" ? ["back"] as const : ["front", "back"] as const;
-  void validateMoBatchLayout(projection.candidates, senderCnic, moBackRotation, moSessionMappings, plan.layout, faces, controller.signal).then((report) => {
+  void validateMoBatchLayout(projection.candidates, senderCnic, moBackRotation, moSessionMappings, plan.layout, faces, controller.signal, (checked, total) => {
+    const status = document.querySelector<HTMLElement>("#moRepairBatchStatus");
+    if (status && moLayoutRepairPreview?.plan === plan) status.textContent = `Validating all ${projection.candidates.length} selected records (${checked}/${total} front/back face documents)…`;
+  }).then((report) => {
     if (controller.signal.aborted || moLayoutRepairPreview?.plan !== plan) return;
     moLayoutRepairPreview = Object.freeze({ plan, validation: report.diagnostics.length ? "blocked" : "valid", report });
     moLayoutStatus = `Proposal checked against all ${report.checkedRecords} selected records (${report.sheetCount} sheets; ${report.checkedFaceDocuments} rendered face documents).`;
@@ -936,13 +939,14 @@ function renderMoCleanPreview(editor: HTMLElement): void {
           : `PASS · ${repairPreview.report?.checkedRecords ?? 0} selected records checked across ${repairPreview.report?.sheetCount ?? 0} sheets and ${repairPreview.report?.checkedFaceDocuments ?? 0} rendered front/back face documents.${unresolvedCount ? ` ${unresolvedCount} ambiguous/Intimation fields were preserved for direct adjustment.` : ""}`;
     const changeItems = repairPreview.plan.changes.map((change) => {
       const label = MO_LAYOUT_SOURCES.find((source) => source.id === change.source)?.label ?? change.source;
-      const before = `x${change.before.xMm.toFixed(1)} y${change.before.yMm.toFixed(1)} · ${change.before.widthMm.toFixed(1)}×${change.before.heightMm.toFixed(1)} mm · ${change.before.wrap ? "wrap" : "no wrap"}`;
-      const after = `x${change.after.xMm.toFixed(1)} y${change.after.yMm.toFixed(1)} · ${change.after.widthMm.toFixed(1)}×${change.after.heightMm.toFixed(1)} mm · ${change.after.wrap ? "wrap" : "no wrap"}`;
-      return `<li data-mo-repair-field="${esc(change.fieldId)}"><b>${esc(label)}</b>: ${esc(before)} → ${esc(after)}</li>`;
+      const bold = repairPreview.plan.layout.fields.find((field) => field.id === change.fieldId)?.bold ? "Bold retained" : "Regular retained";
+      const before = `x${change.before.xMm.toFixed(1)} y${change.before.yMm.toFixed(1)} · ${change.before.widthMm.toFixed(1)}×${change.before.heightMm.toFixed(1)} mm · ${change.before.fontSizePt.toFixed(1)} pt · ${change.before.wrap ? "wrap" : "no wrap"}`;
+      const after = `x${change.after.xMm.toFixed(1)} y${change.after.yMm.toFixed(1)} · ${change.after.widthMm.toFixed(1)}×${change.after.heightMm.toFixed(1)} mm · ${change.after.fontSizePt.toFixed(1)} pt · ${change.after.wrap ? "wrap" : "no wrap"}`;
+      return `<li data-mo-repair-field="${esc(change.fieldId)}"><b>${esc(label)}</b>: ${esc(before)} → ${esc(after)} · ${esc(bold)}</li>`;
     }).join("");
     const unresolvedItems = repairPreview.plan.unresolved.map((issue) => {
       const label = MO_LAYOUT_SOURCES.find((source) => source.id === issue.source)?.label ?? issue.source;
-      return `<li data-mo-repair-unresolved="${esc(issue.fieldId)}"><b>${esc(label)}</b>: ${esc(issue.message)}</li>`;
+      return `<li data-mo-repair-unresolved="${esc(issue.fieldId)}"><b>${esc(label)}</b>: ${esc(issue.message)} <button type="button" data-mo-repair-select="${esc(issue.fieldId)}">Select ${esc(label)} in editor</button></li>`;
     }).join("");
     const blockingItems = (repairPreview.report?.diagnostics ?? []).map((issue) => {
       const label = issue.source ? MO_LAYOUT_SOURCES.find((source) => source.id === issue.source)?.label ?? issue.source : "Mapped field";
@@ -1941,7 +1945,10 @@ function scheduleMoLayoutBatchValidation(projection: ReturnType<typeof currentMo
     const cnic = formatSenderCnic(moSenderCnicInput);
     const senderCnic = cnic.status === "valid" ? cnic.formatted : "";
     const faces = moPrintSideMode === "front-only" ? ["front"] as const : moPrintSideMode === "back-only" ? ["back"] as const : ["front", "back"] as const;
-    void validateMoBatchLayout(capturedProjection.candidates, senderCnic, moBackRotation, moSessionMappings, capturedLayout, faces, controller.signal).then((report) => {
+    void validateMoBatchLayout(capturedProjection.candidates, senderCnic, moBackRotation, moSessionMappings, capturedLayout, faces, controller.signal, (checked, total) => {
+      const progress = document.querySelector<HTMLElement>("#moMappingFitError p");
+      if (progress && moLayoutBatchState?.signature === signature && moLayoutBatchGeneration === generation) progress.textContent = `Checking ${capturedProjection.candidates.length} records (${checked}/${total} rendered faces). Output remains blocked.`;
+    }).then((report) => {
       if (controller.signal.aborted || generation !== moLayoutBatchGeneration || currentMoLayoutSignature(moLayout) !== signature) return;
       const status = report.diagnostics.length ? "blocked" : "valid";
       moLayoutBatchState = Object.freeze({ signature, status, report });

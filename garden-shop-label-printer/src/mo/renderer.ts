@@ -454,16 +454,22 @@ export async function validateMoBatchLayout(
   layout: MoLayout,
   faces: readonly ("front" | "back")[] = ["front", "back"],
   signal?: AbortSignal,
+  onProgress?: (checkedFaceDocuments: number, totalFaceDocuments: number) => void,
 ): Promise<MoBatchLayoutValidation> {
   const imposition = imposeMoCandidates(candidates);
   const diagnostics: MoLayoutDiagnostic[] = [];
   let checkedFaceDocuments = 0;
+  const totalFaceDocuments = imposition.sheetCount * faces.length;
   if (!candidates.length || !layout.fields.length) {
+    onProgress?.(0, totalFaceDocuments);
     return Object.freeze({ checkedRecords: candidates.length, sheetCount: imposition.sheetCount, checkedFaceDocuments, diagnostics: Object.freeze([]) });
   }
-  for (const sheet of imposition.sheets) {
-    if (signal?.aborted) throw new Error("MO_LAYOUT_BATCH_VALIDATION_CANCELLED");
-    const docs = renderMoPreviewDocuments(sheet, senderCnic, backRotation, mappings, layout);
+  const frames = new Map<"front" | "back", HTMLIFrameElement>();
+  const documents = new Map<"front" | "back", Document>();
+  try {
+    const firstSheet = imposition.sheets[0];
+    if (!firstSheet) return Object.freeze({ checkedRecords: candidates.length, sheetCount: 0, checkedFaceDocuments, diagnostics: Object.freeze([]) });
+    const firstDocs = renderMoPreviewDocuments(firstSheet, senderCnic, backRotation, mappings, layout);
     for (const face of faces) {
       if (signal?.aborted) throw new Error("MO_LAYOUT_BATCH_VALIDATION_CANCELLED");
       const frame = document.createElement("iframe");
@@ -477,22 +483,40 @@ export async function validateMoBatchLayout(
         frame.addEventListener("load", () => { window.clearTimeout(timeout); resolve(); }, { once: true });
         frame.addEventListener("error", () => { window.clearTimeout(timeout); reject(new Error("MO_LAYOUT_BATCH_DOCUMENT_LOAD_FAILED")); }, { once: true });
       });
-      frame.srcdoc = docs[face];
+      frame.srcdoc = firstDocs[face];
       document.body.append(frame);
-      try {
-        await loaded;
-        const frameDocument = frame.contentDocument;
-        if (!frameDocument?.querySelector(".mo-sheet")) {
-          throw new Error(`MO_LAYOUT_BATCH_DOCUMENT_NOT_READY:${face}:sheet-${sheet.sheetNumber}:state=${frameDocument?.readyState ?? "missing"}:bodyChildren=${frameDocument?.body?.childElementCount ?? 0}:srcdocBytes=${docs[face].length}`);
-        }
-        await frameDocument.fonts.ready;
+      await loaded;
+      const frameDocument = frame.contentDocument;
+      if (!frameDocument?.querySelector(".mo-sheet")) throw new Error(`MO_LAYOUT_BATCH_DOCUMENT_NOT_READY:${face}`);
+      await frameDocument.fonts.ready;
+      frames.set(face, frame);
+      documents.set(face, frameDocument);
+    }
+
+    for (const sheet of imposition.sheets) {
+      if (signal?.aborted) throw new Error("MO_LAYOUT_BATCH_VALIDATION_CANCELLED");
+      const docs = sheet === firstSheet ? firstDocs : renderMoPreviewDocuments(sheet, senderCnic, backRotation, mappings, layout);
+      for (const face of faces) {
         if (signal?.aborted) throw new Error("MO_LAYOUT_BATCH_VALIDATION_CANCELLED");
-        checkedFaceDocuments += 1;
+        const frameDocument = documents.get(face);
+        const frame = frames.get(face);
+        if (!frameDocument || !frame) throw new Error(`MO_LAYOUT_BATCH_DOCUMENT_NOT_READY:${face}:sheet-${sheet.sheetNumber}`);
+        if (sheet !== firstSheet) {
+          const parsed = new DOMParser().parseFromString(docs[face], "text/html");
+          const nextSheet = parsed.querySelector(".mo-sheet");
+          if (!nextSheet) throw new Error(`MO_LAYOUT_BATCH_DOCUMENT_NOT_READY:${face}:sheet-${sheet.sheetNumber}`);
+          frameDocument.body.replaceChildren(frameDocument.importNode(nextSheet, true));
+          await new Promise<void>((resolve) => frame.contentWindow?.requestAnimationFrame(() => frame.contentWindow?.requestAnimationFrame(() => resolve())) ?? resolve());
+          await frameDocument.fonts.ready;
+        }
+        if (!frameDocument.querySelector(".mo-sheet")) throw new Error(`MO_LAYOUT_BATCH_DOCUMENT_NOT_READY:${face}:sheet-${sheet.sheetNumber}`);
         diagnostics.push(...findMoLayoutDiagnostics(frameDocument));
-      } finally {
-        frame.remove();
+        checkedFaceDocuments += 1;
+        if (checkedFaceDocuments % 10 === 0 || checkedFaceDocuments === totalFaceDocuments) onProgress?.(checkedFaceDocuments, totalFaceDocuments);
       }
     }
+  } finally {
+    for (const frame of frames.values()) frame.remove();
   }
   const unique = diagnostics.filter((issue, index, values) => values.findIndex((other) => other.code === issue.code && other.message === issue.message && other.fieldId === issue.fieldId && other.relatedFieldId === issue.relatedFieldId) === index);
   return Object.freeze({ checkedRecords: candidates.length, sheetCount: imposition.sheetCount, checkedFaceDocuments, diagnostics: Object.freeze(unique) });
