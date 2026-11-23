@@ -147,6 +147,7 @@ let moMappingHandlersBound = false;
 let moLayoutPointer: Readonly<{ id: string; face: MoLayoutFace; slot: number; mode: "move" | "resize"; startX: number; startY: number; grabXmm: number; grabYmm: number; field: MoLayoutField }> | undefined;
 let moLastSourceDragAt = 0;
 let moPrintWindow: Window | null = null;
+const MO_PRINT_BLOB_URL_FALLBACK_MS = 30 * 60 * 1000;
 
 const esc = (value: unknown) =>
   String(value ?? "").replace(
@@ -465,8 +466,10 @@ function persistMoLayout(): void {
 function correctLegacyMoPartyPositions(): void {
   try {
     if (!hasLegacyMoPartyPositions(moLayout)) return;
-    moLayout = correctMoPartyPositions(moLayout);
-    saveMoLayout(moLayout, window.localStorage);
+    const correctedLayout = correctMoPartyPositions(moLayout);
+    // Persist first: a storage failure must leave the in-memory layout legacy-gated too.
+    saveMoLayout(correctedLayout, window.localStorage);
+    moLayout = correctedLayout;
     moLayoutStatus = "Legacy positions corrected and saved. Receiver fields now target the upper block; Sender fields, including the pinned session-only CNIC, target the lower block.";
     moLayoutError = "";
   } catch (error) {
@@ -933,10 +936,8 @@ function updateMoLayoutField(fieldId: string, patch: Partial<Omit<MoLayoutField,
 }
 
 function addMoLayoutSource(source: MoDataSource, face: MoLayoutFace, sheetXmm: number, yMm: number, slot: 0 | 1): void {
-  let xMm = Math.max(0, Math.min(148.5 - 42, sheetXmm - slot * 148.5));
-  let topMm = Math.max(0, Math.min(210 - 8, yMm));
-  let widthMm = Math.min(42, 148.5 - xMm);
-  let heightMm = Math.min(8, 210 - topMm);
+  let xMm = Math.max(0, Math.min(148.5, sheetXmm - slot * 148.5));
+  let topMm = Math.max(0, Math.min(210, yMm));
   if (source === "senderCnic") {
     const anchor = findSenderCnicLayoutPosition(face, slot === 0 ? "left" : "right");
     if (!anchor) {
@@ -947,11 +948,12 @@ function addMoLayoutSource(source: MoDataSource, face: MoLayoutFace, sheetXmm: n
     }
     xMm = anchor.xMm;
     topMm = anchor.yMm;
-    widthMm = Math.min(42, 148.5 - xMm);
-    heightMm = Math.min(5, 210 - topMm);
     face = "front";
   }
-  const existing = moLayout.fields.find((field) => field.source === source && field.face === face && Math.abs(field.xMm - xMm) < 2 && Math.abs(field.yMm - topMm) < 2);
+  const field = newMoLayoutField(crypto.randomUUID(), source, face, xMm, topMm);
+  xMm = field.xMm;
+  topMm = field.yMm;
+  const existing = moLayout.fields.find((current) => current.source === source && current.face === face && Math.abs(current.xMm - xMm) < 2 && Math.abs(current.yMm - topMm) < 2);
   if (existing) {
     moSelectedLayoutFieldId = existing.id;
     moPendingLayoutSource = undefined;
@@ -960,14 +962,9 @@ function addMoLayoutSource(source: MoDataSource, face: MoLayoutFace, sheetXmm: n
     render();
     return;
   }
-  const id = crypto.randomUUID();
-  const field = newMoLayoutField(id, source, face, xMm, topMm);
-  const bounded = validateMoLayout({
-    ...moLayout,
-    fields: [...moLayout.fields, Object.freeze({ ...field, widthMm, heightMm })],
-  });
+  const bounded = validateMoLayout({ ...moLayout, fields: [...moLayout.fields, field] });
   moLayout = bounded;
-  moSelectedLayoutFieldId = id;
+  moSelectedLayoutFieldId = field.id;
   moLayoutStatus = "Unsaved layout changes (positions/source IDs only).";
   moLayoutError = "";
   moPendingLayoutSource = undefined;
@@ -1246,13 +1243,11 @@ async function runMoLayoutOutput(printAfterBuild: boolean): Promise<void> {
       const printUrl = url;
       let targetTimer: number | undefined;
       let verificationTimer: number | undefined;
-      let popupClosePoll: number | undefined;
       let revokeFallbackTimer: number | undefined;
       let settled = false;
       const clearVerificationTimers = (): void => {
         if (targetTimer !== undefined) window.clearTimeout(targetTimer);
         if (verificationTimer !== undefined) window.clearInterval(verificationTimer);
-        if (popupClosePoll !== undefined) window.clearInterval(popupClosePoll);
         if (revokeFallbackTimer !== undefined) window.clearTimeout(revokeFallbackTimer);
       };
       const failClosed = (reason: string): void => {
@@ -1289,19 +1284,11 @@ async function runMoLayoutOutput(printAfterBuild: boolean): Promise<void> {
         if (!isExpectedMoPrintTarget(actualUrl, printUrl, contentType)) return;
         settled = true;
         clearVerificationTimers();
-        // PDF viewers may fire pagehide while transitioning from the blob; retain the URL until the popup closes.
-        popupClosePoll = window.setInterval(() => {
-          if (!popup.closed) return;
-          if (popupClosePoll !== undefined) window.clearInterval(popupClosePoll);
-          if (revokeFallbackTimer !== undefined) window.clearTimeout(revokeFallbackTimer);
+        // Chrome may replace the about:blank target with its PDF viewer; do not revoke on that target's pagehide.
+        revokeFallbackTimer = window.setTimeout(() => {
           URL.revokeObjectURL(printUrl);
           if (moPrintWindow === popup) moPrintWindow = null;
-        }, 500);
-        revokeFallbackTimer = window.setTimeout(() => {
-          if (popupClosePoll !== undefined) window.clearInterval(popupClosePoll);
-          URL.revokeObjectURL(printUrl);
-          if (popup.closed && moPrintWindow === popup) moPrintWindow = null;
-        }, 1800000);
+        }, MO_PRINT_BLOB_URL_FALLBACK_MS);
         moPdfState = Object.freeze({ exporting: false, message: "Verified MO PDF opened; browser print dialog requested. Duplex calibration remains pending." });
         render();
         try {

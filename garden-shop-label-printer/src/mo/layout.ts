@@ -164,10 +164,44 @@ export function resetMoLayout(storage: Pick<Storage, "removeItem">): MoLayout {
   return defaultMoLayout();
 }
 
+type DefaultFieldGeometry = Readonly<{ widthMm: number; heightMm: number; fontSizePt: number; wrap: boolean }>;
+
+const defaultFieldGeometry: Readonly<Record<MoDataSource, DefaultFieldGeometry>> = Object.freeze({
+  tracking: { widthMm: 55, heightMm: 7, fontSizePt: 9, wrap: false },
+  orderDate: { widthMm: 28, heightMm: 6, fontSizePt: 9, wrap: false },
+  articleType: { widthMm: 22, heightMm: 6, fontSizePt: 10, wrap: false },
+  declaredPrincipal: { widthMm: 32, heightMm: 7, fontSizePt: 10, wrap: false },
+  sourceAmount: { widthMm: 55, heightMm: 8, fontSizePt: 9, wrap: true },
+  name: { widthMm: 75, heightMm: 7, fontSizePt: 9, wrap: true },
+  address: { widthMm: 105, heightMm: 12, fontSizePt: 8, wrap: true },
+  sourceAddress: { widthMm: 105, heightMm: 12, fontSizePt: 8, wrap: true },
+  phone: { widthMm: 48, heightMm: 6, fontSizePt: 9, wrap: false },
+  city: { widthMm: 36, heightMm: 6, fontSizePt: 9, wrap: true },
+  province: { widthMm: 36, heightMm: 6, fontSizePt: 9, wrap: true },
+  landmark: { widthMm: 72, heightMm: 9, fontSizePt: 8, wrap: true },
+  senderName: { widthMm: 75, heightMm: 7, fontSizePt: 9, wrap: true },
+  senderAddress: { widthMm: 105, heightMm: 12, fontSizePt: 8, wrap: true },
+  email: { widthMm: 72, heightMm: 8, fontSizePt: 8, wrap: true },
+  facebookName: { widthMm: 72, heightMm: 8, fontSizePt: 8, wrap: true },
+  product: { widthMm: 72, heightMm: 8, fontSizePt: 8, wrap: true },
+  senderCnic: { widthMm: 40, heightMm: 6, fontSizePt: 10, wrap: false },
+  manualArticleNumber: { widthMm: 45, heightMm: 6, fontSizePt: 9, wrap: false },
+  manualPrincipal: { widthMm: 32, heightMm: 7, fontSizePt: 10, wrap: false },
+  manualSenderName: { widthMm: 75, heightMm: 7, fontSizePt: 9, wrap: true },
+  manualSenderAddress: { widthMm: 105, heightMm: 12, fontSizePt: 8, wrap: true },
+  manualSenderPhone: { widthMm: 48, heightMm: 6, fontSizePt: 9, wrap: false },
+  manualReceiverName: { widthMm: 75, heightMm: 7, fontSizePt: 9, wrap: true },
+  manualReceiverAddress: { widthMm: 105, heightMm: 12, fontSizePt: 8, wrap: true },
+  manualReceiverPhone: { widthMm: 48, heightMm: 6, fontSizePt: 9, wrap: false },
+});
+
 export function newMoLayoutField(id: string, source: MoDataSource, face: MoLayoutFace, xMm: number, yMm: number): MoLayoutField {
-  const widthMm = Math.min(42, 148.5 - xMm);
-  const heightMm = Math.min(8, 210 - yMm);
-  return Object.freeze({ id, source, face, xMm, yMm, widthMm, heightMm, fontSizePt: 10, bold: false, alignment: "left", wrap: false });
+  const geometry = defaultFieldGeometry[source];
+  const x = Math.max(0, Math.min(xMm, 148.5 - Math.min(4, geometry.widthMm)));
+  const y = Math.max(0, Math.min(yMm, 210 - Math.min(3, geometry.heightMm)));
+  const widthMm = Math.min(geometry.widthMm, 148.5 - x);
+  const heightMm = Math.min(geometry.heightMm, 210 - y);
+  return Object.freeze({ id, source, face, xMm: x, yMm: y, widthMm, heightMm, fontSizePt: geometry.fontSizePt, bold: false, alignment: "left", wrap: geometry.wrap });
 }
 
 export function updateMoLayoutField(layout: MoLayout, fieldId: string, patch: Partial<Omit<MoLayoutField, "id">>): MoLayout {

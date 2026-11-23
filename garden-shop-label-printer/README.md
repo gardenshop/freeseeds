@@ -40,6 +40,19 @@ Independent browser-based spreadsheet import, label preview, A4/custom print/PDF
 - Before mapped output, validation blocks missing sources, overflow, or geometric intersections between mapped fields and the pinned session-only Sender CNIC. Correct the layout rather than relying on clipped, overlapping or invented values. Blank/manual-completion and explicitly user-confirmed DRAFT paths remain separate; no official postal role or acceptance is implied.
 - LP-051 decisions and synthetic local regression evidence are recorded in `docs/MO51_LP051_DECISIONS.md`. Local tests/build/browser checks do not establish staging acceptance, audit-chain acceptance, physical duplex/printer calibration, or official postal acceptance. Do not deploy LP-051 while the recorded Access-session and audit-contract blockers remain unresolved.
 
+## LP-059 MO PDF popup lifecycle
+
+- `Print MO Batch` verifies the popup's exact generated blob URL and `application/pdf` content type before calling `print()`. After verification, keep that blob URL available while the browser PDF viewer is open; Chrome may replace the popup target, so `popup.closed` polling is not a reliable early-revocation signal.
+- Revoke the URL on explicit failure, or after the bounded 30-minute fallback. The local browser regression fetches and parses the PDF after the viewer has opened; this is a local lifecycle check, not staging or physical-print acceptance.
+- LP-059's N42 staging run used synthetic records only and rendered a 42-page PDF, but the blob became unreadable while the PDF viewer remained open. The targeted polling removal is locally validated and still needs a staging retest. Do not change the monitor Worker/D1 or spoof the `PDF_GENERATED` template version to bypass its separate HTTP 400 contract blocker. See `docs/MO51_LP059_ACCEPTANCE.md`.
+
+## LP-060 Final MO layout repair
+
+- The default layout remains intentionally empty. Only an explicitly selected palette source creates a field; new fields receive source-appropriate initial size/font/wrapping and remain editable. This improves first placement without silently binding records or rewriting customized layouts.
+- Edit overlays and binding tags are translucent so they do not paint over printed artwork. The editor carries each saved millimetre coordinate; the clean preview/PDF use that same geometry. Text is not silently clipped, shrunk or truncated; output diagnostics remain fail-closed.
+- Legacy Sender/Receiver correction is transactional: save must succeed before the current in-memory layout changes. A storage failure leaves the old definition and PDF/print correction gate intact. Successful correction preserves IDs, bindings, custom dimensions, font, weight, alignment, wrapping and unrelated fields.
+- Print MO Batch still verifies the exact generated blob URL and `application/pdf` before printing. After verification, do not revoke based on `popup.closed`/`pagehide`; retain the blob through viewer close and apply the bounded 30-minute cleanup. Local popup/visual evidence and staging status are recorded in `docs/MO51_LP060_DECISIONS.md`.
+
 ## MO-51 Sender/Receiver Front Positions (LP-052)
 
 - On MO FRONT / HTML section 1, the complete Receiver block (Urdu caption, receiver name/address/phone lines and its postcode boxes) is upper; the complete Sender block (Urdu caption, sender name/address/contact lines, optional Sender CNIC line and postcode boxes) is lower. The form's BACK / HTML section 2, stamps, and imported sender/receiver values are unchanged. The renderer moves presentation blocks only; mapping sources are never exchanged.

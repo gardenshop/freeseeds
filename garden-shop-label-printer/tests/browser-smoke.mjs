@@ -1481,11 +1481,39 @@ try {
   await assertMoOddBlank(mixedMoPdf, 3);
 
   await importMoBatch(3);
+  await page.locator('.mo-source-chip[data-mo-layout-source="address"]').click();
+  const initialFrontOverlay = page.locator('[data-mo-editor-overlay="front"]');
+  const initialFrontBounds = await initialFrontOverlay.boundingBox();
+  assert.ok(initialFrontBounds, "front editor must provide a field placement surface");
+  await initialFrontOverlay.click({ position: { x: 10 / 297 * initialFrontBounds.width, y: 80 / 210 * initialFrontBounds.height } });
+  assert.equal(await page.locator("#moLayoutWidth").inputValue(), "105", "address fields should start with a readable source-appropriate width");
+  assert.equal(await page.locator("#moLayoutHeight").inputValue(), "12", "address fields should start with space for wrapped lines");
+  assert.equal(await page.locator("#moLayoutFontSize").inputValue(), "8");
+  assert.equal(await page.locator("#moLayoutWrap").isChecked(), true);
+  await page.locator("#moLayoutRemoveField").click();
+  assert.equal(await page.locator("[data-mo-layout-id]").count(), 0, "the unbound default layout remains empty until an operator places a field");
   await addMoLayoutField(page, "tracking", 74, 45, 42, 8, 9, false, "left", { nativeDrag: true });
   assert.equal(await page.locator("#moLayoutFrontPreview").count(), 1);
   assert.equal(await page.locator("#moFrontPreview").count(), 0, "legacy preview IDs are omitted when the layout preview is active");
   assert.equal((await page.locator(".mo-editor-value").first().innerText()).trim(), "VPL000001", "editor field should show the mapped sample value, not only its binding label");
   assert.match(await page.locator(".mo-editor-binding").first().innerText(), /Tracking/u, "binding should remain visible as a separate editor label");
+  const editorField = page.locator('.mo-editor-field[data-mo-layout-source="tracking"][data-mo-layout-slot="0"]');
+  const editorFieldId = await editorField.getAttribute("data-mo-layout-id");
+  assert.ok(editorFieldId, "newly placed field must retain its stable layout identifier");
+  const editorFieldMm = await editorField.evaluate((element) => ({
+    x: Number(element.getAttribute("data-mo-layout-x-mm")), y: Number(element.getAttribute("data-mo-layout-y-mm")),
+    width: Number(element.dataset.moLayoutWidthMm), height: Number(element.dataset.moLayoutHeightMm),
+    valueBackground: getComputedStyle(element.querySelector(".mo-editor-value")).backgroundColor,
+    bindingAlpha: Number(getComputedStyle(element.querySelector(".mo-editor-binding")).backgroundColor.match(/rgba?\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\)/u)?.[1] ?? 1),
+  }));
+  const previewFieldMm = await page.frameLocator("#moLayoutFrontPreview").locator(`.mo-layout-field[data-mo-layout-field="${editorFieldId}"]`).first().evaluate((element) => ({
+    x: Number.parseFloat(element.style.left), y: Number.parseFloat(element.style.top),
+    width: Number.parseFloat(element.style.width), height: Number.parseFloat(element.style.height),
+  }));
+  assert.deepEqual({ x: editorFieldMm.x, y: editorFieldMm.y, width: editorFieldMm.width, height: editorFieldMm.height }, previewFieldMm, "editor and rendered preview must use the same mm geometry");
+  assert.equal(editorFieldMm.valueBackground, "rgba(0, 0, 0, 0)", "editable value overlay must not mask the printed artwork");
+  assert.ok(editorFieldMm.bindingAlpha < 1, "binding tag must remain translucent over printed artwork");
+  await page.locator("[data-mo-editor-stage]").first().screenshot({ path: join(evidence, "lp060-editor-overlays-synthetic.png") });
   const pointerMetrics = await assertMoPointerGestures(page, "tracking");
   const fontBefore = Number(await page.locator("#moLayoutFontSize").inputValue());
   await page.locator("#moLayoutFontIncrease").click();
@@ -1533,6 +1561,14 @@ try {
   const backOnlyLayoutPdf = await saveMoLayoutPdf(page, join(temporary, "mo51-layout-back-only-synthetic.pdf"), 2);
   assert.equal(backOnlyLayoutPdf.document.getPageCount(), 2);
   await page.locator("#moPrintSideMode").selectOption("paired");
+  await page.evaluate(() => {
+    const original = window.setTimeout;
+    Object.defineProperty(window, "__moOriginalWindowSetTimeout", { value: original, configurable: true });
+    window.setTimeout = function (handler, timeout, ...args) {
+      if (timeout === 30 * 60 * 1000) Object.defineProperty(window, "__moPdfBlobCleanupDelayMs", { value: timeout, writable: true, configurable: true });
+      return original.call(window, handler, timeout, ...args);
+    };
+  });
   const layoutPrintPopupEvent = page.waitForEvent("popup", { timeout: 30000 });
   await page.locator("#printMoBatch").click();
   const layoutPrintPopup = await layoutPrintPopupEvent;
@@ -1560,6 +1596,7 @@ try {
   assert.equal(verifiedPrintUrl.origin, new URL(baseUrl).origin, "print popup must belong to the current synthetic app origin");
   assert.equal(printPopupDiagnostics.contentType, "application/pdf", "print popup must contain only the generated MO PDF");
   assert.equal(await layoutPrintPopup.evaluate(() => window.__moPrintRequested === true), true, "the print call must occur only after PDF target verification");
+  assert.equal(await page.evaluate(() => window.__moPdfBlobCleanupDelayMs), 1800000, "verified PDF blob cleanup must remain bounded to 30 minutes");
   const popupPdf = await page.evaluate(async (url) => {
     const response = await fetch(url);
     const bytes = new Uint8Array(await response.arrayBuffer());
@@ -1574,11 +1611,23 @@ try {
   assert.equal(popupPdfDocument.getPageCount(), 4, "the 3-record paired PDF should contain 4 pages");
   const popupMediaBox = popupPdfDocument.getPage(0).getSize();
   assert.ok(Math.abs(popupMediaBox.width * 25.4 / 72 - 297) < 0.1 && Math.abs(popupMediaBox.height * 25.4 / 72 - 210) < 0.1, "the print popup PDF must use the A4 landscape MediaBox");
+  await page.waitForTimeout(1000);
+  const readableWhilePopupOpen = await page.evaluate(async (url) => {
+    try { const response = await fetch(url); return response.ok && (await response.arrayBuffer()).byteLength > 0; }
+    catch { return false; }
+  }, layoutPrintPopup.url());
+  assert.equal(readableWhilePopupOpen, true, "the PDF blob must remain available after the PDF viewer finishes opening");
   await layoutPrintPopup.close();
-  await page.waitForFunction(async (url) => {
-    try { return !(await fetch(url).then((response) => response.ok)); }
-    catch { return true; }
-  }, layoutPrintPopup.url(), { timeout: 5000 });
+  const readableAfterPopupClose = await page.evaluate(async (url) => {
+    try { const response = await fetch(url); return response.ok && (await response.arrayBuffer()).byteLength > 0; }
+    catch { return false; }
+  }, printPopupDiagnostics.url);
+  assert.equal(readableAfterPopupClose, true, "popup.closed after viewer open must not prematurely revoke the generated PDF blob");
+  await page.evaluate(() => {
+    window.setTimeout = window.__moOriginalWindowSetTimeout;
+    delete window.__moOriginalWindowSetTimeout;
+    delete window.__moPdfBlobCleanupDelayMs;
+  });
   await page.locator("#moReturnToLayout").click();
   await page.locator("#moLayoutReset").click();
   assert.equal(await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1")), null);
@@ -1605,6 +1654,24 @@ try {
   await page.locator("#moLayoutReload").click();
   await page.locator("#moCorrectLegacyPartyPositions").waitFor();
   await page.waitForFunction(() => document.querySelector("#downloadMoLayoutPdf")?.disabled === true);
+  const storedLegacyBeforeFailedCorrection = await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1"));
+  await page.evaluate(() => {
+    const prototype = Storage.prototype;
+    const original = prototype.setItem;
+    Object.defineProperty(window, "__moOriginalStorageSetItem", { value: original, configurable: true });
+    prototype.setItem = function (key, value) {
+      if (key === "gfs-mo51-layout-v1") throw new DOMException("synthetic storage blocked", "QuotaExceededError");
+      return original.call(this, key, value);
+    };
+  });
+  await page.locator("#moCorrectLegacyPartyPositions").click();
+  await page.waitForFunction(() => /Party-position correction was not saved/u.test(document.querySelector("[data-mo-view]")?.textContent ?? ""));
+  assert.equal(await page.locator("#moCorrectLegacyPartyPositions").count(), 1, "failed persistence must keep the legacy correction gate active");
+  assert.equal(await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1")), storedLegacyBeforeFailedCorrection, "failed persistence must preserve the saved legacy layout");
+  await page.evaluate(() => {
+    Storage.prototype.setItem = window.__moOriginalStorageSetItem;
+    delete window.__moOriginalStorageSetItem;
+  });
   await page.locator("#moCorrectLegacyPartyPositions").click();
   await page.waitForFunction(() => !document.querySelector("#moCorrectLegacyPartyPositions") && document.querySelector("#downloadMoLayoutPdf")?.disabled === true && /Tracking \(exact imported string\) overlaps printed MO text/u.test(document.querySelector("#moMappingFitError")?.textContent ?? ""));
   const migratedLayout = await page.evaluate(() => JSON.parse(localStorage.getItem("gfs-mo51-layout-v1") ?? "null"));

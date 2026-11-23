@@ -36,9 +36,18 @@ describe("MO-51 persistent layout definitions", () => {
     expect(storage.getItem("gfs-mo51-layout-v1")).toBeNull();
   });
 
+  it("uses source-appropriate initial field geometry while keeping the default unbound", () => {
+    expect(defaultMoLayout().fields).toEqual([]);
+    expect(newMoLayoutField("receiver-name", "name", "front", 10, 80)).toMatchObject({ widthMm: 75, heightMm: 7, fontSizePt: 9, wrap: true });
+    expect(newMoLayoutField("receiver-address", "address", "front", 10, 88)).toMatchObject({ widthMm: 105, heightMm: 12, fontSizePt: 8, wrap: true });
+    expect(newMoLayoutField("sender-phone", "manualSenderPhone", "front", 10, 118)).toMatchObject({ widthMm: 48, heightMm: 6, fontSizePt: 9, wrap: false });
+    expect(newMoLayoutField("article", "tracking", "front", 10, 40)).toMatchObject({ widthMm: 55, heightMm: 7, fontSizePt: 9, wrap: false });
+    expect(newMoLayoutField("edge-address", "address", "front", 147.5, 209.5)).toMatchObject({ xMm: 144.5, yMm: 207, widthMm: 4, heightMm: 3 });
+  });
+
   it("migrates saved definitions without bold styling and persists font controls only", () => {
     const field = newMoLayoutField("f-style", "tracking", "front", 10, 20);
-    expect(field.fontSizePt).toBe(10);
+    expect(field.fontSizePt).toBe(9);
     expect(field.bold).toBe(false);
     const legacy = { ...field } as Record<string, unknown>;
     delete legacy.bold;

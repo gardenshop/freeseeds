@@ -6,3 +6,13 @@ dist/
 !.env.example
 coverage/
 test-evidence/*.pdf
+# Test-run snapshots are generated from synthetic fixtures and retained locally.
+test-evidence/lp057-*/
+test-evidence/label-output-synthetic.png
+test-evidence/label-preview-custom-500.png
+test-evidence/lp051-mo-*.png
+test-evidence/mo51-*.png
+test-evidence/pdf-custom-500-first-page.png
+test-evidence/prefix-layout-samples.png
+test-evidence/prefixes-image-print.png
+test-evidence/prefixes-pdf-page.png
