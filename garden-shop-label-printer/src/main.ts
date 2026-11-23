@@ -36,9 +36,10 @@ import "./mo/editor.css";
 import { projectMoRecords } from "./mo/adapter";
 import { formatSenderCnic } from "./mo/cnic";
 import { renderMoPrintView, type MoPdfViewState } from "./mo/view";
-import { findMoLayoutDiagnostics, type MoBackPreviewRotation } from "./mo/renderer";
+import { findMoLayoutDiagnostics, validateMoBatchLayout, type MoBackPreviewRotation, type MoBatchLayoutValidation, type MoLayoutDiagnostic } from "./mo/renderer";
 import { emptyMoSessionMapping, hasMoSessionMapping, moSessionMappingError, type MoSessionMapping, type MoSessionMappingKey } from "./mo/mapping";
 import { correctMoPartyPositions, hasLegacyMoPartyPositions, MO_LAYOUT_SOURCES, defaultMoLayout, loadMoLayout, newMoLayoutField, removeMoLayoutField, resetMoLayout, resolveMoLayoutSource, saveMoLayout, updateMoLayoutField as updateLayoutFieldConfig, validateMoLayout, type MoDataSource, type MoLayout, type MoLayoutAlignment, type MoLayoutFace, type MoLayoutField } from "./mo/layout";
+import { proposeMoLayoutRepair, type MoLayoutRepairPlan } from "./mo/layout-repair";
 import { isExpectedMoPrintTarget } from "./mo/print-target";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
@@ -136,6 +137,14 @@ let moLayoutSampleSourceIndex: number | undefined;
 let moSelectedLayoutFieldId: string | undefined;
 let moLayoutStatus = "Layout definitions are local-only; record values are never saved.";
 let moLayoutError = "";
+type MoLayoutBatchState = Readonly<{ signature: string; status: "pending" | "checking" | "valid" | "blocked" | "error"; report?: MoBatchLayoutValidation; error?: string }>;
+type MoLayoutRepairPreview = Readonly<{ plan: MoLayoutRepairPlan; validation: "pending" | "checking" | "valid" | "blocked" | "error"; report?: MoBatchLayoutValidation; error?: string }>;
+let moLayoutBatchState: MoLayoutBatchState | undefined;
+let moLayoutBatchAbort: AbortController | undefined;
+let moLayoutBatchTimer: number | undefined;
+let moLayoutBatchGeneration = 0;
+let moLayoutRepairPreview: MoLayoutRepairPreview | undefined;
+let moLayoutRepairAbort: AbortController | undefined;
 let moPrintSideMode: "paired" | "front-only" | "back-only" = "paired";
 let moCleanPreview = false;
 let moCleanPreviewFace: "front" | "back" = "front";
@@ -427,11 +436,34 @@ function renderAdmin() {
   return `<section class="section-heading"><div><p class="kicker">RESTRICTED / SUPER ADMIN</p><h1>Operational activity.</h1><p>Reports are provided by the separately authenticated monitoring Worker. This page does not grant access by itself.</p></div><button class="button secondary" id="refreshAdmin">Refresh report</button></section><div id="adminReports" class="admin-reports"><div class="report-card">Loading protected report…</div></div><p class="status-line" role="status">${esc(statusMessage)}</p>`;
 }
 
+function currentMoLayoutSignature(layout: MoLayout, projection = currentMoProjection()): string {
+  const formattedCnic = formatSenderCnic(moSenderCnicInput);
+  const cnic = formattedCnic.status === "valid" ? formattedCnic.formatted : "";
+  return JSON.stringify({
+    fields: layout.fields,
+    indexes: projection.candidates.map((candidate) => candidate.sourceIndex),
+    values: projection.candidates.map((candidate) => layout.fields.map((field) => resolveMoLayoutSource(candidate, field.source, cnic, moSessionMappings.get(candidate.sourceIndex) ?? emptyMoSessionMapping())?.value ?? "")),
+    sideMode: moPrintSideMode,
+    backRotation: moBackRotation,
+  });
+}
+
 function renderMo() {
   const projection = currentMoProjection();
+  const layout = moLayoutRepairPreview?.plan.layout ?? moLayout;
+  if (moLayoutRepairPreview) moLayoutError = "Repair proposal preview only; Apply Repair to change the saved layout.";
+  else if (!projection.candidates.length) moLayoutError = "No eligible selected VPL/VPP records.";
+  else if (layout.fields.length) {
+    const signature = currentMoLayoutSignature(layout, projection);
+    const state = moLayoutBatchState?.signature === signature ? moLayoutBatchState : undefined;
+    if (hasLegacyMoPartyPositions(layout)) moLayoutError = "Saved Sender/Receiver positions are legacy; run Repair Layout before output.";
+    else if (!state || state.status === "pending" || state.status === "checking") moLayoutError = "Validating mapped fields across all selected records.";
+    else if (state.status === "valid") moLayoutError = "";
+    else moLayoutError = state.status === "error" ? "Full-batch layout validation failed; output remains blocked." : "Mapped layout fields require attention.";
+  } else moLayoutError = "";
   const sample = projection.candidates.find((candidate) => candidate.sourceIndex === moLayoutSampleSourceIndex) ?? projection.candidates[0];
   if (sample && moLayoutSampleSourceIndex === undefined) moLayoutSampleSourceIndex = sample.sourceIndex;
-  return renderMoPrintView(projection, moSenderCnicInput, moSheetIndex, moBackRotation, moPdfState, moSessionMappings, moPendingMappings, moLayout, moLayoutEditMode, moLayoutSampleSourceIndex, moSelectedLayoutFieldId, moLayoutStatus, moPrintSideMode, moLayoutError);
+  return renderMoPrintView(projection, moSenderCnicInput, moSheetIndex, moBackRotation, moPdfState, moSessionMappings, moPendingMappings, layout, moLayoutEditMode, moLayoutSampleSourceIndex, moSelectedLayoutFieldId, moLayoutStatus, moPrintSideMode, moLayoutError);
 }
 
 function currentMoProjection() {
@@ -709,6 +741,17 @@ function bindMoEditorUi(): void {
   });
 
   const actions = editor.querySelector<HTMLElement>(".mo-layout-actions");
+  if (actions && !actions.querySelector("#moRepairLayout")) {
+    const repair = document.createElement("button");
+    repair.type = "button";
+    repair.id = "moRepairLayout";
+    repair.textContent = "Repair Layout";
+    repair.disabled = !moLayout.fields.length || Boolean(moPdfAbort);
+    repair.title = moLayout.fields.length ? "Preview safe MO-only positions and validate every selected record before applying." : "Add explicit mapped fields before repairing a layout.";
+    repair.addEventListener("click", startMoLayoutRepairPreview);
+    const reset = actions.querySelector("#moLayoutReset");
+    (reset?.parentElement ?? actions).insertBefore(repair, reset?.nextSibling ?? null);
+  }
   if (actions && moLayout.fields.length && !actions.querySelector("#moPreviewFinal")) {
     const previewButton = document.createElement("button");
     previewButton.type = "button";
@@ -774,10 +817,91 @@ function bindMoEditorUi(): void {
   observeMoEditorViewport();
 }
 
+function cancelMoLayoutRepairPreview(): void {
+  moLayoutRepairAbort?.abort();
+  moLayoutRepairAbort = undefined;
+  moLayoutRepairPreview = undefined;
+  moCleanPreview = false;
+  moLayoutEditMode = true;
+  moLayoutStatus = "Repair preview cancelled; the saved layout is unchanged.";
+  render();
+}
+
+function startMoLayoutRepairPreview(): void {
+  if (!moLayout.fields.length || moPdfAbort) return;
+  let plan: MoLayoutRepairPlan;
+  try {
+    plan = proposeMoLayoutRepair(moLayout);
+  } catch (error) {
+    moLayoutError = error instanceof Error ? error.message : "MO_LAYOUT_REPAIR_PROPOSAL_FAILED";
+    moLayoutStatus = "No repair proposal was applied; the saved layout remains unchanged.";
+    render();
+    return;
+  }
+  moLayoutRepairAbort?.abort();
+  const preview: MoLayoutRepairPreview = Object.freeze({ plan, validation: "pending" });
+  moLayoutRepairPreview = preview;
+  moPendingLayoutSource = undefined;
+  moSelectedLayoutFieldId = undefined;
+  moLayoutEditMode = false;
+  moCleanPreview = true;
+  moCleanPreviewFace = "front";
+  moLayoutStatus = `Previewing ${plan.changes.length} proposed safe layout changes; nothing is saved until Apply Repair.`;
+  moLayoutError = "Repair proposal preview only; saved layout and output remain unchanged.";
+  render();
+
+  const controller = new AbortController();
+  moLayoutRepairAbort = controller;
+  const projection = currentMoProjection();
+  const cnic = formatSenderCnic(moSenderCnicInput);
+  const senderCnic = cnic.status === "valid" ? cnic.formatted : "";
+  const faces = moPrintSideMode === "front-only" ? ["front"] as const : moPrintSideMode === "back-only" ? ["back"] as const : ["front", "back"] as const;
+  void validateMoBatchLayout(projection.candidates, senderCnic, moBackRotation, moSessionMappings, plan.layout, faces, controller.signal).then((report) => {
+    if (controller.signal.aborted || moLayoutRepairPreview?.plan !== plan) return;
+    moLayoutRepairPreview = Object.freeze({ plan, validation: report.diagnostics.length ? "blocked" : "valid", report });
+    moLayoutStatus = `Proposal checked against all ${report.checkedRecords} selected records (${report.sheetCount} sheets; ${report.checkedFaceDocuments} rendered face documents).`;
+    render();
+  }).catch((error) => {
+    if (controller.signal.aborted || moLayoutRepairPreview?.plan !== plan) return;
+    const message = error instanceof Error ? error.message : "MO_LAYOUT_BATCH_VALIDATION_FAILED";
+    moLayoutRepairPreview = Object.freeze({ plan, validation: "error", error: message });
+    moLayoutStatus = "The proposed layout could not be fully validated; no changes were saved.";
+    render();
+  });
+}
+
+function applyMoLayoutRepair(): void {
+  const preview = moLayoutRepairPreview;
+  if (!preview || !preview.plan.changes.length || preview.validation === "pending" || preview.validation === "checking" || preview.validation === "error") return;
+  try {
+    saveMoLayout(preview.plan.layout, window.localStorage);
+    moLayout = preview.plan.layout;
+    moLayoutRepairAbort?.abort();
+    moLayoutRepairAbort = undefined;
+    moLayoutRepairPreview = undefined;
+    moLayoutBatchAbort?.abort();
+    moLayoutBatchAbort = undefined;
+    if (moLayoutBatchTimer !== undefined) window.clearTimeout(moLayoutBatchTimer);
+    moLayoutBatchTimer = undefined;
+    moLayoutBatchState = undefined;
+    moLayoutBatchGeneration += 1;
+    moCleanPreview = false;
+    moLayoutEditMode = true;
+    moLayoutStatus = `Applied ${preview.plan.changes.length} approved MO layout changes; validating the full selected batch.`;
+    moLayoutError = "Validating mapped fields across all selected records.";
+    render();
+  } catch {
+    moLayoutStatus = "Repair could not be saved; the previous saved and in-memory layout remains unchanged.";
+    moLayoutError = "MO_LAYOUT_REPAIR_SAVE_FAILED";
+    render();
+  }
+}
+
 function renderMoCleanPreview(editor: HTMLElement): void {
   document.querySelector(".mo-clean-preview")?.remove();
   const parent = editor.parentElement;
   if (!parent) return;
+  const repairPreview = moLayoutRepairPreview;
   const sourceFrames = {
     front: editor.querySelector<HTMLIFrameElement>("#moLayoutFrontPreview"),
     back: editor.querySelector<HTMLIFrameElement>("#moLayoutBackPreview"),
@@ -787,13 +911,46 @@ function renderMoCleanPreview(editor: HTMLElement): void {
   preview.id = "moFinalMoPreview";
   const header = document.createElement("header");
   const heading = document.createElement("div");
-  heading.innerHTML = "<h2>Preview Final MO</h2><p>Clean A4 landscape preview of the same saved layout, selected records, original artwork and millimetre coordinates used by PDF/print.</p>";
+  heading.innerHTML = repairPreview
+    ? "<h2>Repair Layout · Proposed Preview</h2><p>This is a temporary proposal. The saved layout and MO PDF/print output stay unchanged until Apply Repair is explicitly selected.</p>"
+    : "<h2>Preview Final MO</h2><p>Clean A4 landscape preview of the same saved layout, selected records, original artwork and millimetre coordinates used by PDF/print.</p>";
   const returnButton = document.createElement("button");
   returnButton.type = "button";
-  returnButton.id = "moReturnToLayout";
-  returnButton.textContent = "Return to Layout Editor";
-  returnButton.addEventListener("click", () => { moCleanPreview = false; render(); });
+  returnButton.id = repairPreview ? "moCancelRepairPreview" : "moReturnToLayout";
+  returnButton.textContent = repairPreview ? "Cancel Repair Preview" : "Return to Layout Editor";
+  returnButton.addEventListener("click", () => { if (repairPreview) cancelMoLayoutRepairPreview(); else { moCleanPreview = false; render(); } });
   header.append(heading, returnButton);
+
+  let repairSummary: HTMLElement | undefined;
+  if (repairPreview) {
+    repairSummary = document.createElement("section");
+    repairSummary.className = "mo-repair-summary";
+    repairSummary.id = "moRepairSummary";
+    const unresolvedCount = repairPreview.plan.unresolved.length;
+    const validation = repairPreview.validation === "pending" || repairPreview.validation === "checking"
+      ? `Checking all ${currentMoProjection().candidates.length} selected records across front/back HTML sections…`
+      : repairPreview.validation === "error"
+        ? `Full-batch validation failed; output remains blocked. ${repairPreview.error ?? ""}`
+        : repairPreview.report?.diagnostics.length
+          ? `${repairPreview.report.diagnostics.length} blocking diagnostics remain after the proposed repairs; you can apply safe changes, then adjust listed fields directly. ${unresolvedCount ? `${unresolvedCount} ambiguous/Intimation placements were preserved.` : ""}`
+          : `PASS · ${repairPreview.report?.checkedRecords ?? 0} selected records checked across ${repairPreview.report?.sheetCount ?? 0} sheets and ${repairPreview.report?.checkedFaceDocuments ?? 0} rendered front/back face documents.${unresolvedCount ? ` ${unresolvedCount} ambiguous/Intimation fields were preserved for direct adjustment.` : ""}`;
+    const changeItems = repairPreview.plan.changes.map((change) => {
+      const label = MO_LAYOUT_SOURCES.find((source) => source.id === change.source)?.label ?? change.source;
+      const before = `x${change.before.xMm.toFixed(1)} y${change.before.yMm.toFixed(1)} · ${change.before.widthMm.toFixed(1)}×${change.before.heightMm.toFixed(1)} mm · ${change.before.wrap ? "wrap" : "no wrap"}`;
+      const after = `x${change.after.xMm.toFixed(1)} y${change.after.yMm.toFixed(1)} · ${change.after.widthMm.toFixed(1)}×${change.after.heightMm.toFixed(1)} mm · ${change.after.wrap ? "wrap" : "no wrap"}`;
+      return `<li data-mo-repair-field="${esc(change.fieldId)}"><b>${esc(label)}</b>: ${esc(before)} → ${esc(after)}</li>`;
+    }).join("");
+    const unresolvedItems = repairPreview.plan.unresolved.map((issue) => {
+      const label = MO_LAYOUT_SOURCES.find((source) => source.id === issue.source)?.label ?? issue.source;
+      return `<li data-mo-repair-unresolved="${esc(issue.fieldId)}"><b>${esc(label)}</b>: ${esc(issue.message)}</li>`;
+    }).join("");
+    const blockingItems = (repairPreview.report?.diagnostics ?? []).map((issue) => {
+      const label = issue.source ? MO_LAYOUT_SOURCES.find((source) => source.id === issue.source)?.label ?? issue.source : "Mapped field";
+      const select = issue.fieldId ? `<button type="button" data-mo-repair-select="${esc(issue.fieldId)}">Select ${esc(label)} in editor</button>` : "";
+      return `<li>${esc(issue.message)} ${select}</li>`;
+    }).join("");
+    repairSummary.innerHTML = `<p id="moRepairBatchStatus" role="status">${esc(validation)}</p><h3>Proposed mapped-field changes (${repairPreview.plan.changes.length})</h3>${changeItems ? `<ul>${changeItems}</ul>` : "<p>No safe automatic changes proposed.</p>"}${blockingItems ? `<h3>Blocking issues (${repairPreview.report?.diagnostics.length ?? 0})</h3><ul>${blockingItems}</ul>` : ""}${unresolvedItems ? `<h3>Preserved for direct adjustment (${repairPreview.plan.unresolved.length})</h3><ul>${unresolvedItems}</ul>` : ""}`;
+  }
 
   const toolbar = document.createElement("div");
   toolbar.className = "mo-clean-preview-toolbar";
@@ -819,11 +976,17 @@ function renderMoCleanPreview(editor: HTMLElement): void {
   const cnicControls = document.querySelector<HTMLElement>(".mo-controls");
   const sheetNav = document.querySelector<HTMLElement>(".mo-sheet-nav");
   if (sampleLabel) toolbar.append(sampleLabel);
-  if (faceModeLabel) toolbar.append(faceModeLabel);
-  if (rotationLabel) toolbar.append(rotationLabel);
+  if (!repairPreview && faceModeLabel) toolbar.append(faceModeLabel);
+  if (!repairPreview && rotationLabel) toolbar.append(rotationLabel);
   if (zoomControls) toolbar.append(zoomControls);
-  if (cnicControls) toolbar.append(cnicControls);
+  if (!repairPreview && cnicControls) toolbar.append(cnicControls);
   if (sheetNav) toolbar.append(sheetNav);
+  if (repairPreview) {
+    const cnicNote = document.createElement("p");
+    cnicNote.className = "mo-repair-cnic-note";
+    cnicNote.textContent = "Sender CNIC is not part of this layout repair preview; enter or clear the optional session-only value after applying.";
+    toolbar.append(cnicNote);
+  }
 
   const adjustment = document.createElement("div");
   adjustment.className = "mo-clean-preview-adjust";
@@ -880,6 +1043,7 @@ function renderMoCleanPreview(editor: HTMLElement): void {
     bold.addEventListener("click", () => applyLayoutProperty(selected.id, "bold", !selected.bold));
     adjustment.append(fontLabel, bold);
   }
+  if (repairPreview) adjustment.hidden = true;
 
   const stageWrap = document.createElement("div");
   stageWrap.className = "mo-clean-preview-stage-wrap";
@@ -899,21 +1063,51 @@ function renderMoCleanPreview(editor: HTMLElement): void {
   cleanWarning.className = "mo-clean-preview-warning";
   const warningText = editor.querySelector<HTMLElement>(".mo-mapping-fit-error")?.textContent?.trim() ?? "";
   cleanWarning.textContent = warningText;
-  cleanWarning.hidden = !warningText;
+  cleanWarning.hidden = repairPreview !== undefined || !warningText;
 
   const actions = document.createElement("div");
   actions.className = "mo-clean-preview-actions";
   const layoutActions = editor.querySelector<HTMLElement>(".mo-layout-actions");
-  const visibleButtons = ["#moLayoutSave", "#moLayoutReload", "#downloadMoPdf", "#downloadMoLayoutPdf", "#printMoBatch", "#cancelMoPdf"];
-  for (const selector of visibleButtons) {
-    const button = editor.querySelector<HTMLButtonElement>(selector) ?? document.querySelector<HTMLButtonElement>(selector);
-    if (button) actions.append(button);
+  const visibleButtons = ["#moLayoutSave", "#moLayoutReload", "#moRepairLayout", "#downloadMoPdf", "#downloadMoLayoutPdf", "#printMoBatch", "#cancelMoPdf"];
+  if (repairPreview) {
+    const apply = document.createElement("button");
+    apply.type = "button";
+    apply.id = "moApplyLayoutRepair";
+    const blockedCount = repairPreview.report?.diagnostics.length ?? 0;
+    const remainingCount = blockedCount + repairPreview.plan.unresolved.length;
+    apply.textContent = remainingCount ? `Apply safe changes (${remainingCount} issues remain)` : `Apply Repair (${repairPreview.plan.changes.length} changes)`;
+    apply.disabled = repairPreview.validation === "pending" || repairPreview.validation === "checking" || repairPreview.validation === "error" || repairPreview.plan.changes.length === 0;
+    apply.addEventListener("click", applyMoLayoutRepair);
+    actions.append(apply);
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.id = "moCancelLayoutRepair";
+    cancel.textContent = "Cancel without changing saved layout";
+    cancel.addEventListener("click", cancelMoLayoutRepairPreview);
+    actions.append(cancel);
+  } else {
+    for (const selector of visibleButtons) {
+      const button = editor.querySelector<HTMLButtonElement>(selector) ?? document.querySelector<HTMLButtonElement>(selector);
+      if (button) actions.append(button);
+    }
   }
   const status = document.querySelector<HTMLElement>("#moPdfStatus");
   if (status) actions.append(status);
   void layoutActions;
 
-  preview.append(header, toolbar, adjustment, cleanWarning, stageWrap, actions);
+  preview.append(header, ...(repairSummary ? [repairSummary] : []), toolbar, adjustment, cleanWarning, stageWrap, actions);
+  preview.querySelectorAll<HTMLButtonElement>("[data-mo-repair-select]").forEach((button) => button.addEventListener("click", () => {
+    const fieldId = button.dataset.moRepairSelect;
+    const field = moLayoutRepairPreview?.plan.layout.fields.find((candidate) => candidate.id === fieldId);
+    moLayoutRepairPreview = undefined;
+    moCleanPreview = false;
+    if (field) {
+      moSelectedLayoutFieldId = field.id;
+      moLayoutEditMode = true;
+      moLayoutStatus = `Selected ${MO_LAYOUT_SOURCES.find((source) => source.id === field.source)?.label ?? field.source} for direct adjustment. The proposed repair was not applied.`;
+    }
+    render();
+  }));
   editor.insertAdjacentElement("afterend", preview);
   const hiddenSelectors = [".mo-heading", ".mo-warning", ".mo-summary", ".mo-required-fields", ".mo-manual-overrides", ".mo-mapping-review", ".mo-exclusions", ".mo-sheet-nav", ".mo-controls", ".mo-export-controls", "#moMappingFitError"];
   for (const selector of hiddenSelectors) {
@@ -1699,58 +1893,131 @@ async function parseFile(file: File) {
 }
 
 function validateMoPreviewFit(): void {
+  if (moLayoutRepairPreview) return;
   const frames = Array.from(document.querySelectorAll<HTMLIFrameElement>("#moFrontPreview,#moBackPreview,#moLayoutFrontPreview,#moLayoutBackPreview"));
   void Promise.all(frames.map((frame) => frame.contentDocument?.fonts?.ready ?? Promise.resolve())).then(() => {
-    const diagnostics = frames.flatMap((frame) => frame.contentDocument ? findMoLayoutDiagnostics(frame.contentDocument) : []);
-    if (hasLegacyMoPartyPositions(moLayout)) diagnostics.push({ code: "legacy", message: "Saved Sender/Receiver fields are still in their legacy blocks; correct the saved positions before output." });
-    const unique = diagnostics.filter((issue, index, all) => all.findIndex((other) => other.code === issue.code && other.message === issue.message && other.fieldId === issue.fieldId && other.relatedFieldId === issue.relatedFieldId) === index);
-    moLayoutError = unique.length ? "Mapped layout fields require attention." : "";
-    const oldStatus = document.querySelector<HTMLElement>("#moMappingFitError");
-    if (oldStatus) {
-      const status = document.createElement("div");
-      status.id = "moMappingFitError";
-      status.className = "mo-mapping-fit-error";
-      status.setAttribute("role", "alert");
-      if (unique.length) {
-        const summary = document.createElement("p");
-        summary.textContent = "Mapped layout fields require attention. Review the affected source rows and select a field to repair it.";
-        const list = document.createElement("ul");
-        for (const issue of unique) {
-          const item = document.createElement("li");
-          const message = document.createElement("span");
-          message.textContent = issue.message;
-          item.append(message);
-          const fieldIds = [...new Set([issue.fieldId, issue.relatedFieldId].filter((id): id is string => Boolean(id)))];
-          for (const fieldId of fieldIds) {
-            const field = moLayout.fields.find((candidate) => candidate.id === fieldId);
-            if (!field) continue;
-            const label = MO_LAYOUT_SOURCES.find((source) => source.id === field.source)?.label ?? "mapped field";
-            const select = document.createElement("button");
-            select.type = "button";
-            select.textContent = `Select ${label} (${field.face})`;
-            select.addEventListener("click", () => {
-              moSelectedLayoutFieldId = field.id;
-              moLayoutEditMode = true;
-              moCleanPreview = false;
-              moLayoutStatus = `Selected ${label} for layout repair.`;
-              moLayoutError = "";
-              render();
-            });
-            item.append(select);
-          }
-          list.append(item);
-        }
-        status.append(summary, list);
-      }
-      oldStatus.replaceWith(status);
-    }
-    const draftButton = document.querySelector<HTMLButtonElement>("#downloadMoDraftPdf");
-    if (draftButton) draftButton.disabled = unique.some((issue) => issue.code === "overflow" || issue.code === "overlap" || issue.code === "artwork-overlap") || Boolean(document.querySelector("#moSenderCnic[aria-invalid='true']"));
-    const layoutDownload = document.querySelector<HTMLButtonElement>("#downloadMoLayoutPdf");
-    if (layoutDownload) layoutDownload.disabled = unique.length > 0;
-    const layoutPrint = document.querySelector<HTMLButtonElement>("#printMoBatch");
-    if (layoutPrint) layoutPrint.disabled = unique.length > 0;
+    const visible = frames.flatMap((frame) => frame.contentDocument ? findMoLayoutDiagnostics(frame.contentDocument) : []);
+    const projection = currentMoProjection();
+    if (moLayout.fields.length) scheduleMoLayoutBatchValidation(projection, moLayout, visible);
+    else updateMoLayoutDiagnosticUi(visible, false);
   });
+}
+
+function uniqueMoLayoutDiagnostics(issues: readonly MoLayoutDiagnostic[]): MoLayoutDiagnostic[] {
+  return issues.filter((issue, index, all) => all.findIndex((other) => other.code === issue.code && other.message === issue.message && other.fieldId === issue.fieldId && other.relatedFieldId === issue.relatedFieldId) === index);
+}
+
+function scheduleMoLayoutBatchValidation(projection: ReturnType<typeof currentMoProjection>, layout: MoLayout, visible: readonly MoLayoutDiagnostic[]): void {
+  const signature = currentMoLayoutSignature(layout, projection);
+  const state = moLayoutBatchState;
+  if (state?.signature === signature && state.status === "valid") {
+    updateMoLayoutDiagnosticUi([...visible, ...(state.report?.diagnostics ?? [])], false, state.report);
+    return;
+  }
+  if (state?.signature === signature && (state.status === "pending" || state.status === "checking")) {
+    updateMoLayoutDiagnosticUi(visible, true);
+    return;
+  }
+  if (state?.signature === signature && (state.status === "blocked" || state.status === "error")) {
+    updateMoLayoutDiagnosticUi([...visible, ...(state.report?.diagnostics ?? [])], false, state.report, state.error);
+    return;
+  }
+
+  moLayoutBatchAbort?.abort();
+  moLayoutBatchAbort = undefined;
+  if (moLayoutBatchTimer !== undefined) window.clearTimeout(moLayoutBatchTimer);
+  const generation = ++moLayoutBatchGeneration;
+  moLayoutBatchState = Object.freeze({ signature, status: "pending" });
+  updateMoLayoutDiagnosticUi(visible, true);
+  const capturedLayout = layout;
+  const capturedProjection = projection;
+  moLayoutBatchTimer = window.setTimeout(() => {
+    moLayoutBatchTimer = undefined;
+    if (generation !== moLayoutBatchGeneration) return;
+    const controller = new AbortController();
+    moLayoutBatchAbort = controller;
+    moLayoutBatchState = Object.freeze({ signature, status: "checking" });
+    updateMoLayoutDiagnosticUi(visible, true);
+    const cnic = formatSenderCnic(moSenderCnicInput);
+    const senderCnic = cnic.status === "valid" ? cnic.formatted : "";
+    const faces = moPrintSideMode === "front-only" ? ["front"] as const : moPrintSideMode === "back-only" ? ["back"] as const : ["front", "back"] as const;
+    void validateMoBatchLayout(capturedProjection.candidates, senderCnic, moBackRotation, moSessionMappings, capturedLayout, faces, controller.signal).then((report) => {
+      if (controller.signal.aborted || generation !== moLayoutBatchGeneration || currentMoLayoutSignature(moLayout) !== signature) return;
+      const status = report.diagnostics.length ? "blocked" : "valid";
+      moLayoutBatchState = Object.freeze({ signature, status, report });
+      updateMoLayoutDiagnosticUi([...visible, ...report.diagnostics], false, report);
+    }).catch((error) => {
+      if (controller.signal.aborted || generation !== moLayoutBatchGeneration) return;
+      const message = error instanceof Error ? error.message : "MO_LAYOUT_BATCH_VALIDATION_FAILED";
+      moLayoutBatchState = Object.freeze({ signature, status: "error", error: message });
+      updateMoLayoutDiagnosticUi(visible, false, undefined, message);
+    });
+  }, 250);
+}
+
+function updateMoLayoutDiagnosticUi(issues: readonly MoLayoutDiagnostic[], pending: boolean, report?: MoBatchLayoutValidation, validationError?: string): void {
+  const allIssues = [...issues];
+  if (!currentMoProjection().candidates.length) allIssues.push({ code: "missing", message: "No eligible selected VPL/VPP records." });
+  if (hasLegacyMoPartyPositions(moLayout)) allIssues.push({ code: "legacy", message: "Saved Sender/Receiver fields remain in legacy blocks; apply a correction before output." });
+  if (validationError) allIssues.push({ code: "legacy", message: `Full-batch validation failed; output remains blocked (${validationError}).` });
+  const unique = uniqueMoLayoutDiagnostics(allIssues);
+  const cnicInvalid = Boolean(document.querySelector("#moSenderCnic[aria-invalid='true']"));
+  moLayoutError = pending ? "Validating mapped fields across all selected records." : unique.length ? "Mapped layout fields require attention." : cnicInvalid ? "Correct or clear the optional Sender CNIC before output." : "";
+  const editorAlert = document.querySelector<HTMLElement>(".mo-layout-editor > .mo-mapping-fit-error");
+  if (editorAlert && !moLayoutRepairPreview) { editorAlert.textContent = moLayoutError; editorAlert.hidden = !moLayoutError; }
+  const cleanWarning = document.querySelector<HTMLElement>(".mo-clean-preview-warning");
+  if (cleanWarning && !moLayoutRepairPreview) { cleanWarning.textContent = moLayoutError; cleanWarning.hidden = !moLayoutError; }
+  const oldStatus = document.querySelector<HTMLElement>("#moMappingFitError");
+  if (oldStatus) {
+    const status = document.createElement("div");
+    status.id = "moMappingFitError";
+    status.className = "mo-mapping-fit-error";
+    status.setAttribute("role", pending ? "status" : unique.length || cnicInvalid ? "alert" : "status");
+    const summary = document.createElement("p");
+    if (pending) summary.textContent = `Checking ${currentMoProjection().candidates.length} selected records across every printed face. Download and print stay disabled until this check finishes.`;
+    else if (unique.length) summary.textContent = "Mapped layout fields require attention. Review the affected source rows and select a field to repair it.";
+    else if (cnicInvalid) summary.textContent = moLayoutError;
+    else if (report) summary.textContent = `PASS · ${report.checkedRecords} eligible records checked on ${report.sheetCount} sheets (${report.checkedFaceDocuments} rendered face documents).`;
+    if (summary.textContent) status.append(summary);
+    if (unique.length) {
+      const list = document.createElement("ul");
+      for (const issue of unique) {
+        const item = document.createElement("li");
+        const message = document.createElement("span");
+        message.textContent = issue.message;
+        item.append(message);
+        const fieldIds = [...new Set([issue.fieldId, issue.relatedFieldId].filter((id): id is string => Boolean(id)))];
+        for (const fieldId of fieldIds) {
+          const field = moLayout.fields.find((candidate) => candidate.id === fieldId);
+          if (!field) continue;
+          const label = MO_LAYOUT_SOURCES.find((source) => source.id === field.source)?.label ?? "mapped field";
+          const select = document.createElement("button");
+          select.type = "button";
+          select.textContent = `Select ${label} (${field.face})`;
+          select.addEventListener("click", () => {
+            moSelectedLayoutFieldId = field.id;
+            moLayoutEditMode = true;
+            moCleanPreview = false;
+            moLayoutStatus = `Selected ${label} for direct layout adjustment.`;
+            render();
+          });
+          item.append(select);
+        }
+        list.append(item);
+      }
+      status.append(list);
+    }
+    oldStatus.replaceWith(status);
+  }
+  const blocked = pending || unique.length > 0 || cnicInvalid || Boolean(validationError);
+  const draftButton = document.querySelector<HTMLButtonElement>("#downloadMoDraftPdf");
+  if (draftButton) draftButton.disabled = blocked;
+  const layoutDownload = document.querySelector<HTMLButtonElement>("#downloadMoLayoutPdf");
+  if (layoutDownload) layoutDownload.disabled = blocked;
+  const layoutPrint = document.querySelector<HTMLButtonElement>("#printMoBatch");
+  if (layoutPrint) layoutPrint.disabled = blocked;
+  const statusLine = document.querySelector<HTMLElement>(".mo-layout-status");
+  if (statusLine && !pending && !unique.length && !validationError && report) statusLine.textContent = `Validated all ${report.checkedRecords} selected records across ${report.sheetCount} sheets.`;
 }
 
 function templateCsv() {

@@ -4,7 +4,7 @@ import urduMediumUrl from "@fontsource/noto-naskh-arabic/files/noto-naskh-arabic
 import urduBoldUrl from "@fontsource/noto-naskh-arabic/files/noto-naskh-arabic-arabic-700-normal.woff2?url";
 import type { MoCandidate } from "./adapter";
 import { formatSenderCnic } from "./cnic";
-import type { MoFaceSlots, MoSheet } from "./imposition";
+import { imposeMoCandidates, type MoFaceSlots, type MoSheet } from "./imposition";
 import { emptyMoSessionMapping, hasVisibleMoFields, resolveMoVisibleFields, type MoSessionMapping, type MoVisibleField } from "./mapping";
 import { MO_LAYOUT_SOURCES, resolveMoLayoutSource, type MoDataSource, type MoLayout } from "./layout";
 
@@ -128,6 +128,10 @@ function localDocument(
     sourcePage.style.transformOrigin = "top left";
     sourcePage.style.transform = `scale(${MO_FORM_GEOMETRY.uniformScale})`;
 
+    if (sourcePageIndex === FRONT_SECTION_INDEX) {
+      sourcePage.querySelector<HTMLElement>('div[style*="width:172px"]')?.setAttribute("data-mo-allowed-text-overlap", "declaredPrincipal,manualPrincipal,principal");
+    }
+
     sourcePage.querySelectorAll<HTMLElement>("[style]").forEach((element) => {
       if (element.style.fontFamily.includes("Noto Nastaliq Urdu")) {
         element.style.fontFamily = "'Noto Naskh Arabic', serif";
@@ -139,6 +143,7 @@ function localDocument(
       const articleLabel = Array.from(sourcePage.querySelectorAll("span")).find((element) => element.textContent?.trim() === "No. of V. P. Article");
       appendMoValue(articleLabel?.parentElement as HTMLElement | undefined, visibleFields.articleNumber, "article-number", "90px");
       const principalBox = sourcePage.querySelector<HTMLElement>('div[style*="width:172px"]');
+      if (principalBox) principalBox.dataset.moAllowedTextOverlap = "declaredPrincipal,manualPrincipal,principal";
       appendMoValue(principalBox ?? undefined, visibleFields.principal, "principal");
 
       const partyBlocks = Array.from(sourcePage.querySelectorAll<HTMLElement>('div[style*="width:104px"]'));
@@ -271,17 +276,38 @@ function recordLocation(element: HTMLElement): string {
   return `${record}${slot ? `, ${slot} form` : ""}${face ? ` (${face})` : ""}`;
 }
 
+type GraphemeSegment = Readonly<{ index: number; segment: string }>;
+const GraphemeSegmenter = (Intl as unknown as { Segmenter?: new (locales?: string | string[], options?: { granularity: "grapheme" }) => { segment(value: string): Iterable<GraphemeSegment> } }).Segmenter;
+const graphemeSegmenter = GraphemeSegmenter ? new GraphemeSegmenter(undefined, { granularity: "grapheme" }) : undefined;
+
+function textNodeGlyphRects(node: Node): readonly DOMRect[] {
+  const text = node.textContent ?? "";
+  if (!text.trim()) return [];
+  let offset = 0;
+  const fallbackSegments = Array.from(text).map((segment) => {
+    const current = { index: offset, segment };
+    offset += segment.length;
+    return current;
+  });
+  const segments: readonly GraphemeSegment[] = graphemeSegmenter ? Array.from(graphemeSegmenter.segment(text)) : fallbackSegments;
+  const range = node.ownerDocument!.createRange();
+  const rects: DOMRect[] = [];
+  for (const segment of segments) {
+    if (!segment.segment.trim()) continue;
+    range.setStart(node, segment.index);
+    range.setEnd(node, segment.index + segment.segment.length);
+    rects.push(...Array.from(range.getClientRects()).filter((rect) => rect.width > 0.25 && rect.height > 0.5));
+  }
+  return rects;
+}
+
 function renderedTextRects(element: HTMLElement): readonly DOMRect[] {
   const document = element.ownerDocument;
   const walker = document.createTreeWalker(element, document.defaultView?.NodeFilter.SHOW_TEXT ?? 4);
   const rects: DOMRect[] = [];
   let node = walker.nextNode();
   while (node) {
-    if (node.textContent?.trim()) {
-      const range = document.createRange();
-      range.selectNodeContents(node);
-      rects.push(...Array.from(range.getClientRects()).filter((rect) => rect.width > 0.5 && rect.height > 0.5));
-    }
+    rects.push(...textNodeGlyphRects(node));
     node = walker.nextNode();
   }
   return rects;
@@ -295,16 +321,33 @@ function staticArtworkTextRects(page: HTMLElement): readonly Readonly<{ rect: DO
   while (node) {
     const parent = node.parentElement;
     const label = node.textContent?.trim().replace(/\s+/gu, " ") ?? "";
-    if (label && !parent?.closest("[data-mo-field],[data-mo-layout-text],[data-mo-sender-cnic],[data-mo-layout-missing]")) {
-      const range = document.createRange();
-      range.selectNodeContents(node);
-      rects.push(...Array.from(range.getClientRects())
-        .filter((rect) => rect.width > 0.5 && rect.height > 0.5)
-        .map((rect) => Object.freeze({ rect, label: label.slice(0, 48) })));
+    if (label && !parent?.closest("[data-mo-field],[data-mo-layout-text],[data-mo-sender-cnic],[data-mo-layout-missing],.mo-editor-field,.mo-editor-binding,[data-mo-editor-only]")) {
+      rects.push(...textNodeGlyphRects(node).map((rect) => Object.freeze({ rect, label: label.slice(0, 48) })));
     }
     node = walker.nextNode();
   }
   return rects;
+}
+
+function staticArtworkGraphicRects(page: HTMLElement): readonly Readonly<{ rect: DOMRect; label: string; allowedSources: readonly string[] }>[] {
+  const result: Array<Readonly<{ rect: DOMRect; label: string; allowedSources: readonly string[] }>> = [];
+  for (const element of Array.from(page.querySelectorAll<HTMLElement>("*"))) {
+    if (element.closest("[data-mo-field],[data-mo-layout-text],[data-mo-sender-cnic],[data-mo-layout-missing]")) continue;
+    const style = element.ownerDocument.defaultView?.getComputedStyle(element);
+    if (!style) continue;
+    const sideCount = [style.borderTopWidth, style.borderRightWidth, style.borderBottomWidth, style.borderLeftWidth].filter((width) => Number.parseFloat(width) > 0.5).length;
+    const background = style.backgroundColor.replaceAll(" ", "");
+    const filled = background !== "transparent" && background !== "rgba(0,0,0,0)" && !/^rgba?\(255,255,255(?:,1)?\)$/u.test(background);
+    if (sideCount < 3 && !filled) continue;
+    const rect = element.getBoundingClientRect();
+    if (rect.width < 3 || rect.height < 3) continue;
+    result.push(Object.freeze({
+      rect,
+      label: "printed artwork/stamp box",
+      allowedSources: Object.freeze((element.dataset.moAllowedTextOverlap ?? "").split(",").filter(Boolean)),
+    }));
+  }
+  return Object.freeze(result);
 }
 
 /** Inspect rendered text against its actual printable field box; values are never truncated or silently shrunk. */
@@ -371,24 +414,88 @@ export function findMoLayoutDiagnostics(doc: Document): readonly MoLayoutDiagnos
     }
     const staticPage = half.querySelector<HTMLElement>(".page[data-mo-source-index]");
     if (staticPage) {
-      const artworkRects = staticArtworkTextRects(staticPage);
+      const artworkRects: readonly Readonly<{ rect: DOMRect; label: string; allowedSources: readonly string[] }>[] = [
+        ...staticArtworkTextRects(staticPage).map((artwork) => Object.freeze({ ...artwork, allowedSources: Object.freeze([] as string[]) })),
+        ...staticArtworkGraphicRects(staticPage),
+      ];
       const dynamicText = Array.from(half.querySelectorAll<HTMLElement>(".mo-layout-field [data-mo-layout-text],.page [data-mo-field]"));
       for (const field of dynamicText) {
         const glyphRects = renderedTextRects(field);
-        const collisions = artworkRects.filter((artwork) => glyphRects.some((glyph) => intersects(glyph, artwork.rect)));
-        if (!collisions.length) continue;
         const layoutBox = field.closest<HTMLElement>(".mo-layout-field");
         const source = (layoutBox?.dataset.moLayoutSource ?? field.dataset.moLayoutSource) as MoDataSource | undefined;
+        const staticField = field.dataset.moField;
+        const collisions = artworkRects.filter((artwork) => !artwork.allowedSources.includes(source ?? "") && !artwork.allowedSources.includes(staticField ?? "")).filter((artwork) => glyphRects.some((glyph) => intersects(glyph, artwork.rect)));
+        if (!collisions.length) continue;
         const label = source ? sourceLabel(source) : staticFieldLabel(field.dataset.moField);
         const printed = collisions[0];
         const halfRect = half.getBoundingClientRect();
         const printedXmm = halfRect.width ? (printed.rect.left - halfRect.left) * 148.5 / halfRect.width : 0;
         const printedYmm = halfRect.height ? (printed.rect.top - halfRect.top) * 210 / halfRect.height : 0;
-        push({ code: "artwork-overlap", message: `${recordLocation(field)}: ${label} overlaps printed MO text “${printed.label}” near x=${printedXmm.toFixed(1)} mm, y=${printedYmm.toFixed(1)} mm.`, fieldId: layoutBox?.dataset.moLayoutField ?? field.dataset.moLayoutField, source });
+        push({ code: "artwork-overlap", message: `${recordLocation(field)}: ${label} overlaps ${printed.label === "printed artwork/stamp box" ? printed.label : `printed MO text “${printed.label}”`} near x=${printedXmm.toFixed(1)} mm, y=${printedYmm.toFixed(1)} mm.`, fieldId: layoutBox?.dataset.moLayoutField ?? field.dataset.moLayoutField, source });
       }
     }
   }
   return Object.freeze(issues.filter((issue, index, values) => values.findIndex((other) => other.code === issue.code && other.message === issue.message && other.fieldId === issue.fieldId) === index));
+}
+
+export type MoBatchLayoutValidation = Readonly<{
+  checkedRecords: number;
+  sheetCount: number;
+  checkedFaceDocuments: number;
+  diagnostics: readonly MoLayoutDiagnostic[];
+}>;
+
+/** Validate each selected record on both HTML faces in isolated, offscreen layout documents. */
+export async function validateMoBatchLayout(
+  candidates: readonly MoCandidate[],
+  senderCnic: string,
+  backRotation: MoBackPreviewRotation,
+  mappings: ReadonlyMap<number, MoSessionMapping>,
+  layout: MoLayout,
+  faces: readonly ("front" | "back")[] = ["front", "back"],
+  signal?: AbortSignal,
+): Promise<MoBatchLayoutValidation> {
+  const imposition = imposeMoCandidates(candidates);
+  const diagnostics: MoLayoutDiagnostic[] = [];
+  let checkedFaceDocuments = 0;
+  if (!candidates.length || !layout.fields.length) {
+    return Object.freeze({ checkedRecords: candidates.length, sheetCount: imposition.sheetCount, checkedFaceDocuments, diagnostics: Object.freeze([]) });
+  }
+  for (const sheet of imposition.sheets) {
+    if (signal?.aborted) throw new Error("MO_LAYOUT_BATCH_VALIDATION_CANCELLED");
+    const docs = renderMoPreviewDocuments(sheet, senderCnic, backRotation, mappings, layout);
+    for (const face of faces) {
+      if (signal?.aborted) throw new Error("MO_LAYOUT_BATCH_VALIDATION_CANCELLED");
+      const frame = document.createElement("iframe");
+      frame.title = `Temporary MO-51 ${face} validation`;
+      frame.setAttribute("sandbox", "allow-same-origin");
+      frame.setAttribute("aria-hidden", "true");
+      frame.tabIndex = -1;
+      frame.style.cssText = "position:fixed;left:-1200px;top:0;width:1123px;height:794px;border:0;opacity:0;pointer-events:none;z-index:-1";
+      const loaded = new Promise<void>((resolve, reject) => {
+        const timeout = window.setTimeout(() => reject(new Error("MO_LAYOUT_BATCH_DOCUMENT_TIMEOUT")), 30000);
+        frame.addEventListener("load", () => { window.clearTimeout(timeout); resolve(); }, { once: true });
+        frame.addEventListener("error", () => { window.clearTimeout(timeout); reject(new Error("MO_LAYOUT_BATCH_DOCUMENT_LOAD_FAILED")); }, { once: true });
+      });
+      frame.srcdoc = docs[face];
+      document.body.append(frame);
+      try {
+        await loaded;
+        const frameDocument = frame.contentDocument;
+        if (!frameDocument?.querySelector(".mo-sheet")) {
+          throw new Error(`MO_LAYOUT_BATCH_DOCUMENT_NOT_READY:${face}:sheet-${sheet.sheetNumber}:state=${frameDocument?.readyState ?? "missing"}:bodyChildren=${frameDocument?.body?.childElementCount ?? 0}:srcdocBytes=${docs[face].length}`);
+        }
+        await frameDocument.fonts.ready;
+        if (signal?.aborted) throw new Error("MO_LAYOUT_BATCH_VALIDATION_CANCELLED");
+        checkedFaceDocuments += 1;
+        diagnostics.push(...findMoLayoutDiagnostics(frameDocument));
+      } finally {
+        frame.remove();
+      }
+    }
+  }
+  const unique = diagnostics.filter((issue, index, values) => values.findIndex((other) => other.code === issue.code && other.message === issue.message && other.fieldId === issue.fieldId && other.relatedFieldId === issue.relatedFieldId) === index);
+  return Object.freeze({ checkedRecords: candidates.length, sheetCount: imposition.sheetCount, checkedFaceDocuments, diagnostics: Object.freeze(unique) });
 }
 
 /** Compatibility helpers expose readable messages to the PDF fail-closed gate. */

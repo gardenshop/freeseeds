@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { projectMoRecords } from "../src/mo/adapter";
 import { correctMoPartyPositions, defaultMoLayout, hasLegacyMoPartyPositions, loadMoLayout, newMoLayoutField, resetMoLayout, resolveMoLayoutSource, saveMoLayout, updateMoLayoutField, validateMoLayout } from "../src/mo/layout";
+import { proposeMoLayoutRepair } from "../src/mo/layout-repair";
 import { emptyMoSessionMapping } from "../src/mo/mapping";
 import { EMPTY_ORDER } from "../src/types";
 
@@ -99,6 +100,48 @@ describe("MO-51 persistent layout definitions", () => {
     expect(() => correctMoPartyPositions(legacy)).toThrow("MO_LAYOUT_PARTY_CORRECTION_OUT_OF_BOUNDS");
     expect(legacy.fields[0].yMm).toBe(100);
     expect(legacy.partyPositionVersion).toBe(1);
+  });
+
+  it("proposes a non-persisted repair while preserving bindings, readable styles and unsupported custom positions", () => {
+    const saved = validateMoLayout({ version: 2, partyPositionVersion: 2, fields: [
+      { ...newMoLayoutField("tracking-top", "tracking", "front", 74, 45), widthMm: 42, heightMm: 8 },
+      { ...newMoLayoutField("principal", "declaredPrincipal", "front", 25, 60), widthMm: 20, fontSizePt: 10, bold: true },
+      { ...newMoLayoutField("receiver-name", "name", "front", 10, 80), widthMm: 50, fontSizePt: 9, bold: true },
+      { ...newMoLayoutField("receiver-address", "address", "front", 10, 88), heightMm: 16, wrap: true },
+      { ...newMoLayoutField("receiver-phone", "phone", "front", 83, 100), heightMm: 4.8 },
+      { ...newMoLayoutField("receiver-city", "city", "front", 10, 105), widthMm: 50 },
+      { ...newMoLayoutField("receiver-province", "province", "front", 60, 105), widthMm: 48.4 },
+      { ...newMoLayoutField("sender-name", "senderName", "front", 12, 110), fontSizePt: 9.5, bold: true },
+      { ...newMoLayoutField("sender-address", "senderAddress", "front", 12, 116), fontSizePt: 8, wrap: false },
+      { ...newMoLayoutField("sender-phone", "manualSenderPhone", "front", 12, 122), widthMm: 48 },
+      { ...newMoLayoutField("sender-cnic", "senderCnic", "front", 12, 122), fontSizePt: 10, bold: true },
+      { ...newMoLayoutField("receiver-name-intimation", "name", "front", 12, 182), widthMm: 42 },
+      { ...newMoLayoutField("intimation-tracking", "tracking", "front", 12, 177), widthMm: 42 },
+      { ...newMoLayoutField("intimation-principal", "declaredPrincipal", "front", 12, 150), widthMm: 35 },
+      { ...newMoLayoutField("intimation-date", "orderDate", "front", 12, 150), widthMm: 35 },
+      { ...newMoLayoutField("intimation-product", "product", "front", 12, 188), widthMm: 40 },
+      { ...newMoLayoutField("custom-back", "tracking", "back", 12, 30), widthMm: 44 },
+    ] });
+    const original = structuredClone(saved);
+    const proposal = proposeMoLayoutRepair(saved);
+    expect(saved).toEqual(original);
+    expect(proposal.layout.fields.find((field) => field.id === "tracking-top")).toMatchObject({ xMm: 103, yMm: 45, widthMm: 36, heightMm: 4.8, wrap: false });
+    expect(proposal.layout.fields.find((field) => field.id === "principal")).toMatchObject({ xMm: 18, yMm: 50, widthMm: 35, heightMm: 5, fontSizePt: 10, bold: true });
+    expect(proposal.layout.fields.find((field) => field.id === "receiver-address")).toMatchObject({ xMm: 7.65, yMm: 90.58, widthMm: 65, heightMm: 14.4, wrap: true });
+    expect(proposal.layout.fields.find((field) => field.id === "receiver-phone")).toMatchObject({ xMm: 78.65, yMm: 90.58, widthMm: 29.72, heightMm: 4.8 });
+    expect(proposal.layout.fields.find((field) => field.id === "receiver-city")).toMatchObject({ xMm: 78.65, yMm: 95.38, widthMm: 29.72, heightMm: 4.8, wrap: true });
+    expect(proposal.layout.fields.find((field) => field.id === "receiver-province")).toMatchObject({ xMm: 78.65, yMm: 100.18, widthMm: 30.8, heightMm: 4.8, wrap: false });
+    expect(proposal.layout.fields.find((field) => field.id === "sender-phone")).toMatchObject({ xMm: 78.65, yMm: 117.6, widthMm: 29.72, heightMm: 4.8 });
+    expect(proposal.layout.fields.find((field) => field.id === "sender-cnic")).toEqual(saved.fields.find((field) => field.id === "sender-cnic"));
+    expect(proposal.layout.fields.find((field) => field.id === "receiver-name-intimation")).toMatchObject({ xMm: 39.22, yMm: 180.14, widthMm: 94.94, heightMm: 4.8 });
+    expect(proposal.layout.fields.find((field) => field.id === "intimation-tracking")).toMatchObject({ xMm: 39.22, yMm: 174.67, widthMm: 89.61, heightMm: 4.8 });
+    expect(proposal.layout.fields.find((field) => field.id === "intimation-principal")).toMatchObject({ xMm: 39.22, yMm: 152.44, widthMm: 41.13, heightMm: 4.8 });
+    expect(proposal.layout.fields.find((field) => field.id === "intimation-date")).toMatchObject({ xMm: 83.09, yMm: 169.2, widthMm: 43.01, heightMm: 4.8 });
+    expect(proposal.layout.fields.find((field) => field.id === "intimation-product")).toEqual(saved.fields.find((field) => field.id === "intimation-product"));
+    expect(proposal.layout.fields.find((field) => field.id === "custom-back")).toEqual(saved.fields.find((field) => field.id === "custom-back"));
+    expect(proposal.unresolved.map((issue) => issue.fieldId)).toContain("intimation-product");
+    expect(proposal.unresolved.map((issue) => issue.fieldId)).toContain("custom-back");
+    expect(proposal.changes.length).toBeGreaterThan(0);
   });
 
   it("rejects clipping, invalid source identifiers and duplicate field keys", () => {

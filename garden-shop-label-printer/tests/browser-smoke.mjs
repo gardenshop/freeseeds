@@ -133,7 +133,13 @@ async function saveMoGeneratedPdf(page, path, expectedPages, kind = "blank") {
 }
 
 async function saveMoLayoutPdf(page, path, expectedPages, timeout = 300000) {
+  await page.waitForFunction(() => {
+    const button = document.querySelector("#downloadMoLayoutPdf");
+    const status = document.querySelector("#moMappingFitError")?.textContent ?? "";
+    return Boolean(button && !button.disabled) || status.includes("Mapped layout fields require attention") || status.includes("Full-batch validation failed");
+  }, undefined, { timeout: Math.min(timeout, 180000) });
   assert.equal(await page.locator("#downloadMoLayoutPdf").isDisabled(), false, `MO layout PDF disabled: ${await page.locator("#moMappingFitError").innerText()}`);
+  assert.equal(await page.locator("#printMoBatch").isDisabled(), false, `Print MO Batch disabled after full-batch validation: ${await page.locator("#moMappingFitError").innerText()}`);
   const downloadEvent = page.waitForEvent("download", { timeout });
   let statusTimer;
   const exportFailure = new Promise((resolve) => {
@@ -1541,6 +1547,23 @@ try {
   assert.equal(await page.frameLocator("#moFinalPreview").locator(".mo-editor-field,.mo-editor-binding,[data-mo-editor-overlay]").count(), 0, "clean preview must not expose edit outlines or binding labels");
   const cleanFirstSample = await page.frameLocator("#moFinalPreview").locator('[data-mo-layout-source="tracking"] [data-mo-layout-text]').first().innerText();
   assert.equal(cleanFirstSample.trim(), "VPL000001", "clean preview must show the mapped record value");
+  const layoutBeforeRepairPreview = await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1"));
+  await page.locator("#moRepairLayout").click();
+  await page.waitForFunction(() => document.querySelector("#moRepairBatchStatus")?.textContent?.startsWith("PASS · 3 selected records checked"), undefined, { timeout: 120000 });
+  assert.equal(await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1")), layoutBeforeRepairPreview, "repair proposal must not persist before explicit Apply");
+  const proposedTrackingX = await page.frameLocator("#moFinalPreview").locator(".mo-layout-field").first().evaluate((field) => Number.parseFloat(field.style.left));
+  assert.equal(proposedTrackingX, 103, "repair proposal must move the colliding tracking value to the safe article-number line");
+  await page.locator("#moApplyLayoutRepair").click();
+  await page.waitForFunction(() => {
+    const download = document.querySelector("#downloadMoLayoutPdf");
+    const print = document.querySelector("#printMoBatch");
+    return download && print && !download.disabled && !print.disabled;
+  }, undefined, { timeout: 120000 });
+  const appliedTracking = await page.evaluate(() => JSON.parse(localStorage.getItem("gfs-mo51-layout-v1") ?? "null").fields.find((field) => field.source === "tracking"));
+  assert.deepEqual({ xMm: appliedTracking.xMm, widthMm: appliedTracking.widthMm, heightMm: appliedTracking.heightMm, fontSizePt: appliedTracking.fontSizePt, bold: appliedTracking.bold }, { xMm: 103, widthMm: 36, heightMm: 4.8, fontSizePt: 9, bold: true }, "explicit repair must preserve readable font and bold style while correcting geometry");
+  await page.locator("#moPreviewFinal").click();
+  await page.locator("#moFinalPreview").waitFor();
+  await page.frameLocator("#moFinalPreview").locator(".mo-layout-field").first().waitFor();
   await page.frameLocator("#moFinalPreview").locator(".mo-sheet").screenshot({ path: join(evidence, "lp051-mo-clean-preview-front-n3.png") });
   await page.locator("#moCleanPreviewFace").selectOption("back");
   await page.waitForFunction(() => document.querySelector("#moFinalPreview")?.srcdoc.includes('data-mo-face="back"'));
@@ -1687,16 +1710,16 @@ try {
   assert.match(legacyTrackingIssue, /Source row 1, left form \(front\): Tracking \(exact imported string\) overlaps printed MO text “No\. of V\. P\. Article”/u);
   await page.getByRole("button", { name: "Select Tracking (exact imported string) (front)" }).first().click();
   assert.equal(await page.locator(".mo-layout-properties").getAttribute("data-mo-selected-layout-field"), "legacy-custom-tracking", "artwork collision must select the field that needs repair");
-  await page.locator("#moLayoutX").fill("95");
+  await page.locator("#moLayoutX").fill("103");
   await page.locator("#moLayoutX").press("Tab");
-  await page.locator("#moLayoutWidth").fill("48");
+  await page.locator("#moLayoutWidth").fill("36");
   await page.locator("#moLayoutWidth").press("Tab");
   await page.locator("#moLayoutHeight").fill("4.8");
   await page.locator("#moLayoutHeight").press("Tab");
   await page.waitForFunction(() => document.querySelector("#downloadMoLayoutPdf")?.disabled === false && !/Tracking \(exact imported string\) overlaps printed MO text/u.test(document.querySelector("#moMappingFitError")?.textContent ?? ""), undefined, { timeout: 10000 });
   await page.locator("#moLayoutSave").click();
   const repairedLegacyTracking = await page.evaluate(() => JSON.parse(localStorage.getItem("gfs-mo51-layout-v1") ?? "null").fields.find((field) => field.id === "legacy-custom-tracking"));
-  assert.deepEqual({ xMm: repairedLegacyTracking.xMm, yMm: repairedLegacyTracking.yMm, widthMm: repairedLegacyTracking.widthMm, heightMm: repairedLegacyTracking.heightMm }, { xMm: 95, yMm: 45, widthMm: 48, heightMm: 4.8 });
+  assert.deepEqual({ xMm: repairedLegacyTracking.xMm, yMm: repairedLegacyTracking.yMm, widthMm: repairedLegacyTracking.widthMm, heightMm: repairedLegacyTracking.heightMm }, { xMm: 103, yMm: 45, widthMm: 36, heightMm: 4.8 });
   const legacyMigrationPdf = await saveMoLayoutPdf(page, join(temporary, "mo51-lp052-legacy-corrected-synthetic.pdf"), 4);
   const legacyPdfRaster = await rasterPdfPage(legacyMigrationPdf.bytes, 1, 1);
   await writeFile(join(evidence, "lp052-legacy-corrected-pdf-front-synthetic.png"), legacyPdfRaster.toBuffer("image/png"));
@@ -1752,7 +1775,7 @@ try {
   assert.deepEqual(cnicAnchorAlignment.map(({ aligned }) => aligned), [true, true], "editor CNIC boxes must track the Sender artwork anchor on both halves");
   await page.locator("#moLayoutReset").click();
   await addMoLayoutField(page, "declaredPrincipal", 18, 50, 35, 5, 8.5, false, "center");
-  await addMoLayoutField(page, "tracking", 95, 45, 48, 4.8, 8);
+  await addMoLayoutField(page, "tracking", 103, 45, 36, 4.8, 8);
   await addMoLayoutField(page, "senderName", 7.7, 112.8, 100.7, 4.8, 8.5);
   await addMoLayoutField(page, "senderAddress", 7.7, 117.6, 100.7, 4.8, 8);
   await addMoLayoutField(page, "name", 7.7, 85.8, 100.7, 4.8, 8.5);
@@ -1775,8 +1798,16 @@ try {
   assert.equal(await page.locator(".mo-layout-properties").getAttribute("data-mo-selected-layout-field"), addressFieldId, "a diagnostic action must select the affected field for repair");
   await page.locator("#moLayoutHeight").fill("9.6");
   await page.locator("#moLayoutHeight").press("Tab");
-  await page.waitForFunction(() => document.querySelector("#downloadMoLayoutPdf")?.disabled === false, undefined, { timeout: 10000 });
-  await page.locator("#moLayoutSave").click();
+  const savedLayoutBeforeRepairPreview = await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1"));
+  await page.locator("#moRepairLayout").click();
+  await page.waitForFunction(() => document.querySelector("#moRepairBatchStatus")?.textContent?.startsWith("PASS · 42 selected records checked"), undefined, { timeout: 180000 });
+  assert.equal(await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1")), savedLayoutBeforeRepairPreview, "N42 proposal must leave the previously saved custom layout unchanged until Apply");
+  await page.locator("#moApplyLayoutRepair").click();
+  await page.waitForFunction(() => {
+    const download = document.querySelector("#downloadMoLayoutPdf");
+    const print = document.querySelector("#printMoBatch");
+    return download && print && !download.disabled && !print.disabled;
+  }, undefined, { timeout: 180000 });
   const n42Pair = async (face = "front") => page.frameLocator(face === "front" ? "#moLayoutFrontPreview" : "#moLayoutBackPreview").locator(".mo-half[data-mo-slot]").evaluateAll((halves) => halves.map((half) => ({
     slot: half.getAttribute("data-mo-slot"),
     sourceIndex: Number(half.getAttribute("data-mo-source-index")),
@@ -1833,7 +1864,7 @@ try {
   await importMoBatch(100);
   console.log(JSON.stringify({ moLayoutN100: "imported" }));
   await page.locator("#moPrintSideMode").selectOption("paired");
-  await addMoLayoutField(page, "tracking", 95, 45, 48, 4.8, 8);
+  await addMoLayoutField(page, "tracking", 103, 45, 36, 4.8, 8);
   await addMoLayoutField(page, "declaredPrincipal", 18, 50, 35, 5, 8.5, false, "center");
   await addMoLayoutField(page, "senderName", 7.7, 112.8, 100.7, 4.8, 8.5);
   await addMoLayoutField(page, "senderAddress", 7.7, 117.6, 100.7, 4.8, 8);
@@ -1844,7 +1875,27 @@ try {
   await addMoLayoutField(page, "province", 60, 105, 48.4, 4.8, 7);
   await addMoLayoutField(page, "orderDate", 27, 18, 13.8, 10.5, 6.5, false, "center");
   await page.locator("#moLayoutSave").click();
-  console.log(JSON.stringify({ moLayoutN100: "layout-saved" }));
+  await page.waitForFunction(() => {
+    const text = document.querySelector("#moMappingFitError")?.textContent ?? "";
+    return text.includes("Mapped layout fields require attention") && !text.startsWith("Checking ");
+  }, undefined, { timeout: 180000 });
+  assert.equal(await page.locator("#downloadMoLayoutPdf").isDisabled(), true, "pre-repair N100 fields must keep mapped output blocked");
+  const n100LayoutBeforeProposal = await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1"));
+  console.log(JSON.stringify({ moLayoutN100: "blocking-layout-reproduced" }));
+  await page.locator("#moRepairLayout").click();
+  await page.waitForFunction(() => document.querySelector("#moRepairBatchStatus")?.textContent?.startsWith("PASS · 100 selected records checked"), undefined, { timeout: 180000 });
+  assert.equal(await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1")), n100LayoutBeforeProposal, "N100 repair preview must not alter the customized saved layout");
+  await page.locator("#moApplyLayoutRepair").click();
+  await page.waitForFunction(() => {
+    const download = document.querySelector("#downloadMoLayoutPdf");
+    const print = document.querySelector("#printMoBatch");
+    return download && print && !download.disabled && !print.disabled;
+  }, undefined, { timeout: 180000 });
+  const n100RepairedLayout = await page.evaluate(() => JSON.parse(localStorage.getItem("gfs-mo51-layout-v1") ?? "null"));
+  assert.equal(n100RepairedLayout.fields.find((field) => field.source === "tracking").xMm, 103);
+  assert.equal(n100RepairedLayout.fields.find((field) => field.source === "address").heightMm, 14.4);
+  assert.equal(n100RepairedLayout.fields.find((field) => field.source === "name").bold, true, "Repair Layout must preserve the customized bold face");
+  console.log(JSON.stringify({ moLayoutN100: "layout-repaired-and-validated" }));
   await page.locator("#moPreviewFinal").click();
   await page.locator("#moFinalPreview").waitFor();
   console.log(JSON.stringify({ moLayoutN100: "preview-open" }));
@@ -1922,7 +1973,7 @@ try {
     for (const count of [42, 100]) {
       await importMoBatchFresh(n500Page, count);
       await n500Page.locator("#moPrintSideMode").selectOption("paired");
-      await addMoLayoutField(n500Page, "tracking", 95, 45, 48, 4.8, 9, false, "left");
+      await addMoLayoutField(n500Page, "tracking", 103, 45, 36, 4.8, 9, false, "left");
       await n500Page.locator("#moLayoutSave").click();
       const split = Math.ceil(count / 2);
       const pair = await n500Page.frameLocator("#moLayoutFrontPreview").locator(".mo-half[data-mo-slot]").evaluateAll((halves) => Object.fromEntries(halves.map((half) => [half.getAttribute("data-mo-slot"), Number(half.getAttribute("data-mo-source-index")) + 1])));
@@ -1937,7 +1988,7 @@ try {
     console.log(JSON.stringify({ moLayoutSequentialBatches: sequentialBatchChecks }));
     await importMoBatchFresh(n500Page, 500);
     await n500Page.locator("#moPrintSideMode").selectOption("paired");
-    await addMoLayoutField(n500Page, "tracking", 95, 45, 48, 4.8, 9, false, "left");
+    await addMoLayoutField(n500Page, "tracking", 103, 45, 36, 4.8, 9, false, "left");
     await n500Page.locator("#moLayoutSave").click();
     const n500Layout = await n500Page.evaluate(() => JSON.stringify(JSON.parse(localStorage.getItem("gfs-mo51-layout-v1") ?? "null")));
     assert.doesNotMatch(n500Layout, /Synthetic Receiver|VPL000001|VPP000002/u, "N=500 saved layout must contain definitions only");

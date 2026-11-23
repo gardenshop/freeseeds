@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && tsc -p tsconfig.worker.json --noEmit && vite build",
     "test": "vitest run",
     "test:browser": "node tests/browser-smoke.mjs",
+    "test:mo-repair": "node tests/mo-layout-repair-smoke.mjs",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {

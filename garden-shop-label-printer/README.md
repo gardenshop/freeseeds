@@ -53,6 +53,12 @@ Independent browser-based spreadsheet import, label preview, A4/custom print/PDF
 - Legacy Sender/Receiver correction is transactional: save must succeed before the current in-memory layout changes. A storage failure leaves the old definition and PDF/print correction gate intact. Successful correction preserves IDs, bindings, custom dimensions, font, weight, alignment, wrapping and unrelated fields.
 - Print MO Batch still verifies the exact generated blob URL and `application/pdf` before printing. After verification, do not revoke based on `popup.closed`/`pagehide`; retain the blob through viewer close and apply the bounded 30-minute cleanup. Local popup/visual evidence and staging status are recorded in `docs/MO51_LP060_DECISIONS.md`.
 
+## LP-061 Mapped MO output unblock
+
+- Existing mapped layouts are checked against every selected source row and both active print faces before mapped Download/Print controls enable. The check measures rendered grapheme boxes, source-text bounds and non-line static artwork boxes; the explicit declared-principal box is the only principal overprint allowance. Editor labels/handles are never part of printable measurements.
+- `Repair Layout` is MO-only and opt-in: it creates a proposed source-preserving layout, shows a clean preview and all-record validation, and leaves the current saved layout unchanged until **Apply Repair**. Apply persists field definitions only. Unsupported/ambiguous/back/Intimation fields remain unmoved with direct-adjustment diagnostics; no default bindings or customer/CNIC values are introduced.
+- The validated N100 synthetic flow downloads a 100-page A4-landscape PDF and opens that generated PDF blob for Print MO Batch. Lower Intimation amount/date/tracking/Receiver anchors are source-profiled when explicitly mapped. See `docs/MO51_LP061_DECISIONS.md` for visual proof, coverage and remaining staging/audit gates.
+
 ## MO-51 Sender/Receiver Front Positions (LP-052)
 
 - On MO FRONT / HTML section 1, the complete Receiver block (Urdu caption, receiver name/address/phone lines and its postcode boxes) is upper; the complete Sender block (Urdu caption, sender name/address/contact lines, optional Sender CNIC line and postcode boxes) is lower. The form's BACK / HTML section 2, stamps, and imported sender/receiver values are unchanged. The renderer moves presentation blocks only; mapping sources are never exchanged.
