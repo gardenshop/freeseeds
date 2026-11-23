@@ -862,7 +862,7 @@ function startMoLayoutRepairPreview(): void {
   }).then((report) => {
     if (controller.signal.aborted || moLayoutRepairPreview?.plan !== plan) return;
     moLayoutRepairPreview = Object.freeze({ plan, validation: report.diagnostics.length ? "blocked" : "valid", report });
-    moLayoutStatus = `Proposal checked against all ${report.checkedRecords} selected records (${report.sheetCount} sheets; ${report.checkedFaceDocuments} rendered face documents).`;
+    moLayoutStatus = `Proposal checked against all ${report.checkedRecords} selected records (${report.sheetCount} sheets; ${report.checkedFaceDocuments} rendered face documents; ${Math.round(report.validationDurationMs)} ms; static artwork ${report.staticArtworkGeometryMeasurements} measured/${report.staticArtworkGeometryCacheHits} reused).`;
     render();
   }).catch((error) => {
     if (controller.signal.aborted || moLayoutRepairPreview?.plan !== plan) return;
@@ -936,7 +936,7 @@ function renderMoCleanPreview(editor: HTMLElement): void {
         ? `Full-batch validation failed; output remains blocked. ${repairPreview.error ?? ""}`
         : repairPreview.report?.diagnostics.length
           ? `${repairPreview.report.diagnostics.length} blocking diagnostics remain after the proposed repairs; you can apply safe changes, then adjust listed fields directly. ${unresolvedCount ? `${unresolvedCount} ambiguous/Intimation placements were preserved.` : ""}`
-          : `PASS · ${repairPreview.report?.checkedRecords ?? 0} selected records checked across ${repairPreview.report?.sheetCount ?? 0} sheets and ${repairPreview.report?.checkedFaceDocuments ?? 0} rendered front/back face documents.${unresolvedCount ? ` ${unresolvedCount} ambiguous/Intimation fields were preserved for direct adjustment.` : ""}`;
+          : `PASS · ${repairPreview.report?.checkedRecords ?? 0} selected records checked across ${repairPreview.report?.sheetCount ?? 0} sheets and ${repairPreview.report?.checkedFaceDocuments ?? 0} rendered front/back face documents (${Math.round(repairPreview.report?.validationDurationMs ?? 0)} ms; static artwork ${repairPreview.report?.staticArtworkGeometryMeasurements ?? 0} measured/${repairPreview.report?.staticArtworkGeometryCacheHits ?? 0} reused).${unresolvedCount ? ` ${unresolvedCount} ambiguous/Intimation fields were preserved for direct adjustment.` : ""}`;
     const changeItems = repairPreview.plan.changes.map((change) => {
       const label = MO_LAYOUT_SOURCES.find((source) => source.id === change.source)?.label ?? change.source;
       const bold = repairPreview.plan.layout.fields.find((field) => field.id === change.fieldId)?.bold ? "Bold retained" : "Regular retained";
@@ -1984,8 +1984,35 @@ function updateMoLayoutDiagnosticUi(issues: readonly MoLayoutDiagnostic[], pendi
     if (pending) summary.textContent = `Checking ${currentMoProjection().candidates.length} selected records across every printed face. Download and print stay disabled until this check finishes.`;
     else if (unique.length) summary.textContent = "Mapped layout fields require attention. Review the affected source rows and select a field to repair it.";
     else if (cnicInvalid) summary.textContent = moLayoutError;
-    else if (report) summary.textContent = `PASS · ${report.checkedRecords} eligible records checked on ${report.sheetCount} sheets (${report.checkedFaceDocuments} rendered face documents).`;
+    else if (report) summary.textContent = `PASS · ${report.checkedRecords} eligible records checked on ${report.sheetCount} sheets (${report.checkedFaceDocuments} rendered face documents; ${Math.round(report.validationDurationMs)} ms; static artwork ${report.staticArtworkGeometryMeasurements} measured/${report.staticArtworkGeometryCacheHits} reused).`;
     if (summary.textContent) status.append(summary);
+    if (pending && moLayoutBatchAbort) {
+      const cancel = document.createElement("button");
+      cancel.type = "button";
+      cancel.id = "cancelMoLayoutValidation";
+      cancel.textContent = "Cancel full-batch validation";
+      cancel.addEventListener("click", () => {
+        const signature = currentMoLayoutSignature(moLayout);
+        moLayoutBatchAbort?.abort();
+        moLayoutBatchAbort = undefined;
+        if (moLayoutBatchTimer !== undefined) window.clearTimeout(moLayoutBatchTimer);
+        moLayoutBatchTimer = undefined;
+        moLayoutBatchState = Object.freeze({ signature, status: "error", error: "MO_LAYOUT_BATCH_VALIDATION_CANCELLED" });
+        updateMoLayoutDiagnosticUi(issues, false, undefined, "MO_LAYOUT_BATCH_VALIDATION_CANCELLED");
+      });
+      status.append(cancel);
+    } else if (validationError === "MO_LAYOUT_BATCH_VALIDATION_CANCELLED") {
+      const retry = document.createElement("button");
+      retry.type = "button";
+      retry.id = "retryMoLayoutValidation";
+      retry.textContent = "Run full-batch validation again";
+      retry.addEventListener("click", () => {
+        moLayoutBatchState = undefined;
+        moLayoutError = "";
+        render();
+      });
+      status.append(retry);
+    }
     if (unique.length) {
       const list = document.createElement("ul");
       for (const issue of unique) {

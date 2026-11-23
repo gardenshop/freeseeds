@@ -1,0 +1,37 @@
+# GFS-LP-064 — Remove MO Field Duplication and Finish Printing
+
+## Baseline and safety
+
+- Branch: `codex/garden-shop-label-printer-mvp`; starting HEAD and remote branch were `0c99a66fd9d3875bc20e053ede9bf6dcb5f3947c`. Preserve the **51 unrelated paths** (25 modified tracked plus 26 untracked); stage only the printer-project files listed in the final release commit.
+- Wrangler and Dashboard verified the Get Free Seeds account (`cb5066a6d71ecdee0bd7ed8aacb4d3c2`, `gisupp@gmail.com`) and Pages project `garden-shop-label-printer-staging`. Dashboard showed active deployment `d58113da-8b1d-4250-b1a6-2ee05317611d` (source `0c99a66`); rollback candidate `5fc8e73c-cd12-4cff-bd52-d94e25ed1f5a` is the prior LP-061 source. The older LP-059 fallback is `0efcbfc6-1de1-43a1-8aff-01b460f3c4d1`.
+- No owner screenshot was attached or found locally; the visual issue was reproduced with synthetic records. The owner-approved saved layout contains 16 fields after removal of only the lower-Intimation `SenderName` duplicate; the lower Sender-block field and 15 approved adjustments remain.
+- Safety incident: during MCP recovery a populated shared tab was mistaken for the synthetic session. Interaction stopped when the populated state was recognized; the generated snapshot output file was removed. No row values were copied into source, tests, screenshots, or repository documentation. Subsequent staging work used a new, structurally empty page with generated synthetic data only. A separately isolated browser context presented Cloudflare Access; it was not bypassed.
+
+## Root-cause findings
+
+- The actual duplicate was the lower-Intimation `senderName` placement: it overlapped protected stamp artwork while the same sender name was already present in the lower Sender block. The owner explicitly approved removing that one field. This was a saved-layout correction, not a code rule to delete repeated source values generally.
+- Inspection of the resulting 16-field layout found unique field IDs and no exact same-source/same-position duplicates. Tracking, declared principal, Receiver name and contact repeat only at separate main-form and lower-Intimation positions. Those values remain because they represent distinct fields/sections; text equality alone is not evidence of accidental duplication. `sourceAmount` remains separate from validated principal.
+- Layout-active rendering suppresses the legacy mapped-value layer. Clean PDF composition uses the static artwork background plus one overlay document per populated half; editor handles/binding labels are not part of PDF output. `validateMoLayout` rejects repeated IDs, and geometric field/artwork overlaps remain blocking.
+- The N100 delay came from recomputing static artwork glyph/graphic rectangles for every face/slot and reporting progress only every 10 faces. The local pre-change repair smoke took 223.9 s end-to-end; the repaired N100 validation after caching completed in 4.365 s. The whole smoke also includes imports, blocked-layout diagnostics, PDF rasterization, print-target checks and cancellation.
+
+## Implementation
+
+- `src/mo/renderer.ts`: cache only static artwork geometry within one validation call, keyed by face/rotation/slot; dynamic row glyphs remain uncached. Report per-face progress and yield to the UI after every face, with a timer fallback. Return elapsed time and aggregate cache measurements/hits for diagnostics.
+- `src/main.ts`: display validation timing/cache counts and expose an explicit full-batch Cancel / Retry action. Cancellation leaves output disabled and cannot be mistaken for a PASS.
+- Tests: verify unique IDs, one value node per field per half, no duplicate source+position binding, no editor-only output nodes, intentional repeated sources only at separate positions, progress 1/100 through 100/100, cache reuse, cancellation and fail-closed Download/Print. The layout unit test confirms duplicate IDs are rejected even at different coordinates while legitimate repeated sources at distinct coordinates remain valid.
+- No saved field binding, position, font, or artwork was changed by this code work. No Worker, D1, Access, Admin/API, WhatsApp, COD/payment, Meta, or production route was changed.
+
+## Verification and PDF evidence
+
+- `npm run test:mo-repair`: **PASS**. N100 validated all 100 selected rows across 50 sheets / 100 front-and-back face documents. The repaired-layout pass recorded **4 static geometries measured, 196 reused**, in **4.365 s**. Progress reached each face; cancellation kept both output buttons disabled.
+- `npm test`: **PASS**. `npm run build`: **PASS**. Full `npm run test:browser`: **PASS**, including N2, N42, N100, N500 and original-label regressions; `browserErrors: []`. The N500 MO PDF contained 500 pages and rendered in about 61.2 s. Full regression evidence uses synthetic records and an external temp directory.
+- Local N100 PDF: 50 A4-landscape cut-stack sheets, 100 duplex pages; first pair 1/51, final pair 50/100; front is Section 1, back is Section 2; odd-half blanks remain covered by regression. Local download was a valid 100-page PDF. Local Print MO Batch opened only the generated `blob:` PDF with `application/pdf`; target verification preceded the print call. No physical printer was used.
+- Synthetic raster evidence before/after the cache change is under `C:\Users\nazim\AppData\Local\Temp\kilo\gfs-lp064-baseline` and `...\gfs-lp064-after-cache-rerun`. The visual output is unchanged by the performance fix. An unsafe pre-correction PDF was not emitted; the pre-repair layout remained blocked by diagnostics.
+
+## Staging and remaining gates
+
+- On the existing LP-063 staging deployment, a fresh same-profile page was structurally empty before synthetic N100 import. It showed 100 eligible VPL/VPP rows, 50 sheets and 100 pages. Download MO PDF completed and the app reported a 100-page mapped-layout download. Print MO Batch opened a `blob:` popup; DevTools verified `application/pdf`, 100 pages, and the app status `Verified MO PDF opened; browser print dialog requested.` This is pre-LP-064 staging evidence only.
+- The DevTools call initially timed out during print rendering, then recovered through the official `list_pages` call. No physical print was submitted. The isolated browser context itself still requires Cloudflare Access authorization; the synthetic live check used a fresh, structurally empty page in the already-authorized profile, not a populated shared tab.
+- The fresh isolated context reached Cloudflare Access. The same-profile synthetic batch emitted two `POST /api/events` HTTP 400 responses from Monitor; that independent blocker remains unchanged. No Worker/D1/Access configuration was changed and no Access bypass was attempted.
+- LP-064 source is locally built with Dashboard-listed staging origins (`https://garden-shop-label-printer-monitor-staging.get-free-seeds.workers.dev` and `https://getfreeseeds-admin-staging.get-free-seeds.workers.dev/`) but not deployed at this record's creation. Existing active deployment and rollback remain as listed above. Deploy only static `dist/` after fresh identity/rollback verification and only when official MCP can verify served assets and the N100 generated-PDF print target. Physical duplex/postal acceptance remains untested.
+- Git implementation/docs changes are to be committed and pushed non-force only in the approved printer-project scope; preserve all 51 unrelated paths and stage no generated PDF/screenshot/customer data.

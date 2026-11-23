@@ -157,8 +157,18 @@ describe("MO-51 persistent layout definitions", () => {
     expect(() => validateMoLayout({ ...outside, fields: [{ ...outside.fields[0], widthMm: 40 }] })).toThrow("MO_LAYOUT_OUT_OF_BOUNDS");
     expect(() => validateMoLayout({ ...defaultMoLayout(), fields: [{ ...newMoLayoutField("f-bad", "tracking", "front", 5, 5), source: "orderId" }] })).toThrow("MO_LAYOUT_INVALID_SOURCE");
     const field = newMoLayoutField("same", "name", "front", 5, 5);
-    expect(() => validateMoLayout({ ...defaultMoLayout(), fields: [field, field] })).toThrow("MO_LAYOUT_INVALID_FIELD_ID");
+    expect(() => validateMoLayout({ ...defaultMoLayout(), fields: [field, { ...field, xMm: 80, yMm: 150 }] })).toThrow("MO_LAYOUT_INVALID_FIELD_ID");
     expect(() => validateMoLayout({ ...defaultMoLayout(), fields: [newMoLayoutField("cnic-back", "senderCnic", "back", 15, 15)] })).toThrow("MO_SENDER_CNIC_SECTION1_ONLY");
+  });
+
+  it("preserves intentional repeated source bindings only as separate field placements", () => {
+    const repeated = validateMoLayout({ ...defaultMoLayout(), fields: [
+      newMoLayoutField("tracking-article", "tracking", "front", 80, 42),
+      newMoLayoutField("tracking-intimation", "tracking", "front", 38, 174),
+    ] });
+    expect(repeated.fields).toHaveLength(2);
+    expect(new Set(repeated.fields.map(({ id }) => id)).size).toBe(2);
+    expect(new Set(repeated.fields.map(({ xMm, yMm, widthMm, heightMm }) => `${xMm}/${yMm}/${widthMm}/${heightMm}`)).size).toBe(2);
   });
 
   it("anchors Sender CNIC to the semantic Sender group instead of editable saved coordinates", () => {

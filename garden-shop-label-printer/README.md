@@ -67,9 +67,17 @@ Independent browser-based spreadsheet import, label preview, A4/custom print/PDF
 ## LP-063 Final MO print unblock
 
 - Build the static app with the Dashboard-listed staging Monitor/Admin origins, and upload `dist/` only. LP-063 adds safe explicit font proposals for legacy oversized fields and a separate lower-Intimation Price Payable slot for `sourceAmount`; declared principal still uses only the validated principal source, never commission.
-- Existing saved layouts stay unchanged until Apply. The observed lower-Intimation SenderName duplicate overlaps protected stamp artwork and has no approved safe slot; Repair Layout leaves it unchanged and exposes a direct field-selection control. Do not remove/rebind that custom field without operator approval; mapped Download/Print must remain blocked until it is directly corrected.
+- Existing saved layouts stay unchanged until Apply. LP-063 found a lower-Intimation SenderName duplicate overlapping protected stamp artwork; the owner later explicitly approved removing only that duplicate in LP-064, leaving the lower Sender-block field and the 15 approved adjustments intact.
 - A fresh same-profile staging tab must be structurally empty before synthetic import. Do not touch the existing populated/shared tabs. See `docs/MO51_LP063_DECISIONS.md` for the verified deployment, live Access gate and saved-layout issue.
 - Keep `PDF_GENERATED` HTTP 400 separate; do not change Worker/D1/Access policy or spoof versions.
+
+## LP-064 Field duplication and responsive N100 validation
+
+- Saved MO field IDs must be unique. Clean preview/PDF output contains exactly one value node per configured field ID in each intended form slot and no editor badges, handles or selection overlays. Repeated sources are allowed only at distinct designated MO positions; never deduplicate by matching text, since values may intentionally repeat between the main form and lower Intimation.
+- Keep the upper Receiver / lower Sender order and optional Sender CNIC on the Sender identity line. `declaredPrincipal` remains commission-excluded; `sourceAmount` remains the separate lower Price Payable source. Preserve stamps/signatures and all approved field bindings/positions unless a specific collision is independently demonstrated.
+- Full-batch validation caches static artwork geometry only for the duration of one check, keyed by face/rotation/slot. It never caches record values. Report progress after every face, yield so the UI/cancel action remains responsive, and keep output disabled after cancellation until a fresh validation passes.
+- Local synthetic verification: N100 first pair 1/51, last pair 50/100; 100 paired PDF pages over 50 A4-landscape sheets. The repaired-layout check recorded 4 static-artwork measurements / 196 cache hits and 4.365 s. N2/N42/N100/N500, browser/PDF and existing-label regressions are recorded in `docs/MO51_LP064_DECISIONS.md`.
+- On the existing LP-063 staging build, synthetic N100 download completed and Print MO Batch opened the generated 100-page `application/pdf` blob. LP-064 is not deployed yet; post-deploy asset/N100 verification and physical duplex/postal checks remain separate. The Monitor `PDF_GENERATED` HTTP 400 remains separate.
 
 ## MO-51 Sender/Receiver Front Positions (LP-052)
 

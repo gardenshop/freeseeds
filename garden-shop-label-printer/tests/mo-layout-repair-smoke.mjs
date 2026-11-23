@@ -210,6 +210,16 @@ try {
   assert.ok(!pageErrors.length, `unexpected synthetic page errors: ${pageErrors.join(" | ")}`);
 
   const storedBeforeRepair = await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1"));
+  await page.evaluate(() => {
+    window.__lp064RepairProgress = [];
+    const observe = () => {
+      const text = document.querySelector("#moRepairBatchStatus")?.textContent ?? "";
+      const match = /\((\d+)\/(\d+) front\/back face documents\)/u.exec(text);
+      if (match) window.__lp064RepairProgress.push(`${match[1]}/${match[2]}`);
+    };
+    window.__lp064RepairProgressObserver = new MutationObserver(observe);
+    window.__lp064RepairProgressObserver.observe(document.body, { subtree: true, childList: true, characterData: true });
+  });
   await page.locator("#moRepairLayout").click();
   await page.locator("#moFinalPreview").waitFor({ timeout: 30000 });
   await page.waitForFunction(() => {
@@ -242,10 +252,15 @@ try {
     return status.includes("Mapped layout fields require attention") && !status.startsWith("Checking ");
   }, undefined, { timeout: 180000 });
 
+  await page.evaluate(() => { window.__lp064RepairProgress.length = 0; });
   await page.locator("#moRepairLayout").click();
   await page.locator("#moFinalPreview").waitFor({ timeout: 30000 });
   await page.waitForFunction(() => document.querySelector("#moRepairBatchStatus")?.textContent?.startsWith("PASS · 100 selected records checked"), undefined, { timeout: 180000 });
   const repairStatus = await page.locator("#moRepairBatchStatus").innerText();
+  const repairProgress = await page.evaluate(() => { window.__lp064RepairProgressObserver?.disconnect(); return window.__lp064RepairProgress; });
+  const distinctRepairProgress = repairProgress.filter((value, index) => index === 0 || value !== repairProgress[index - 1]);
+  assert.deepEqual(distinctRepairProgress, Array.from({ length: 100 }, (_, index) => `${index + 1}/100`), "N100 progress must report every face and yield between checks");
+  assert.match(repairStatus, /static artwork 4 measured\/196 reused/u, "static artwork geometry should be measured once per face/slot and safely reused");
   const storedBeforeApply = await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1"));
   assert.equal(storedBeforeApply, manuallyCorrectedLayout, "the corrected layout definition remains unchanged during the second proposal preview");
   const proposalText = await page.frameLocator("#moFinalPreview").locator(".mo-sheet").innerText();
@@ -256,6 +271,33 @@ try {
   assert.ok((proposalText.match(/VPL000001/gu) ?? []).length >= 2, "exact tracking must fill both article-number and lower Intimation number fields");
   assert.ok((proposalText.match(/20100/gu) ?? []).length >= 2, "validated principal must be repeated in lower Intimation without adding commission");
   assert.ok((proposalText.match(/Synthetic Receiver 1/gu) ?? []).length >= 2, "Receiver name must appear in the upper party block and lower Intimation line");
+  const expectedFrontFieldIds = JSON.parse(manuallyCorrectedLayout).fields.filter((field) => field.face === "front" && field.source !== "senderCnic").map((field) => field.id).sort();
+  const renderStructure = await page.frameLocator("#moFinalPreview").locator(".mo-half[data-mo-source-index]").evaluateAll((halves) => halves.map((half) => {
+    const fields = [...half.querySelectorAll(":scope > .mo-layout-field")];
+    const ids = fields.map((field) => field.dataset.moLayoutField);
+    const placements = new Map();
+    for (const field of fields) {
+      const key = [field.dataset.moLayoutSource, field.style.left, field.style.top, field.style.width, field.style.height].join("|");
+      placements.set(key, (placements.get(key) ?? 0) + 1);
+    }
+    return {
+      fieldCount: fields.length,
+      ids: ids.sort(),
+      duplicateIds: ids.filter((id, index) => ids.indexOf(id) !== index),
+      duplicateSourcePlacements: [...placements].filter(([, count]) => count > 1).map(([key]) => key),
+      valuesPerField: fields.map((field) => field.querySelectorAll(":scope > [data-mo-layout-text]").length),
+      editorOnlyNodes: half.querySelectorAll(".mo-editor-field,.mo-editor-binding,[data-mo-resize-handle],[data-mo-editor-only]").length,
+    };
+  }));
+  assert.equal(renderStructure.length, 2, "the first and source-51 forms must each have one clean output half");
+  for (const form of renderStructure) {
+    assert.equal(form.fieldCount, expectedFrontFieldIds.length, "one layout node must be rendered for each configured non-CNIC field");
+    assert.deepEqual(form.ids, expectedFrontFieldIds, "each intended field ID must render exactly once per form");
+    assert.deepEqual(form.duplicateIds, [], "a duplicated field ID must never render twice in one form");
+    assert.deepEqual(form.duplicateSourcePlacements, [], "repeated sources are allowed only at distinct designated MO positions");
+    assert.ok(form.valuesPerField.every((count) => count === 1), "every configured layout box must contain exactly one value node");
+    assert.equal(form.editorOnlyNodes, 0, "clean preview contains no editor values, labels, handles or selections");
+  }
   const proposedPair = await page.frameLocator("#moFinalPreview").locator(".mo-half[data-mo-source-index]").evaluateAll((halves) => halves.map((half) => Number(half.getAttribute("data-mo-source-index")) + 1));
   assert.deepEqual(proposedPair, [1, 51]);
   assert.equal(await page.frameLocator("#moFinalPreview").locator(".mo-editor-field,.mo-editor-binding,[data-mo-resize-handle]").count(), 0, "repair proposal preview must contain no editing handles/tags");
@@ -337,10 +379,20 @@ try {
   assert.equal(generatedAudit.length, 2, "only actual download and print PDF generation should emit the local synthetic audit event");
   assert.deepEqual(generatedAudit.map((event) => ({ rows: event.rows, pages: event.pages })), [{ rows: 100, pages: 100 }, { rows: 100, pages: 100 }]);
   assert.deepEqual(pageErrors, []);
+  await page.locator("#moPrintSideMode").selectOption("front-only");
+  await page.locator("#cancelMoLayoutValidation").waitFor({ timeout: 30000 });
+  const cancelProgress = await page.locator("#moMappingFitError").innerText();
+  assert.match(cancelProgress, /Checking 100 records \(\d+\/50 rendered faces\)/u);
+  await page.locator("#cancelMoLayoutValidation").click();
+  await page.locator("#retryMoLayoutValidation").waitFor({ timeout: 30000 });
+  assert.match(await page.locator("#moMappingFitError").innerText(), /MO_LAYOUT_BATCH_VALIDATION_CANCELLED/u);
+  assert.equal(await page.locator("#downloadMoLayoutPdf").isDisabled(), true, "cancelled validation keeps download blocked");
+  assert.equal(await page.locator("#printMoBatch").isDisabled(), true, "cancelled validation keeps print blocked");
   const diagnosticLines = beforeRepair.diagnostics.split(/\n/u).filter((line) => line.startsWith("Source row "));
   console.log(JSON.stringify({ lp061N100: {
     beforeRepair: { selectedRows: beforeRepair.visiblePair, count: diagnosticLines.length, firstIssues: diagnosticLines.slice(0, 4), downloadDisabled: beforeRepair.downloadDisabled, printDisabled: beforeRepair.printDisabled },
     initialRepairStatus: firstRepairStatus, directCorrection: "removed duplicate lower Intimation SenderName only in this synthetic acceptance fixture", repairStatus, savedFieldCount: savedLayout.fields.length,
+    fieldRenderStructure: renderStructure.map(({ fieldCount, duplicateIds, duplicateSourcePlacements, editorOnlyNodes }) => ({ fieldCount, duplicateIds, duplicateSourcePlacements, editorOnlyNodes })),
     download: { filename: download.suggestedFilename(), pageCount: pdf.getPageCount(), mediaBox, firstRaster, lastRaster },
     print: { popupUrlScheme: new URL(popupDetails.url).protocol, contentType: popupDetails.type, printRequested: popupDetails.printed, popupFetch, popupFetchAfterClose },
     pdfGeneratedAuditCounts: generatedAudit.map(({ rows, pages }) => ({ rows, pages })), evidence,

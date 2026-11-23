@@ -350,8 +350,32 @@ function staticArtworkGraphicRects(page: HTMLElement): readonly Readonly<{ rect:
   return Object.freeze(result);
 }
 
+type StaticArtworkRect = Readonly<{ rect: DOMRect; label: string; allowedSources: readonly string[] }>;
+type StaticArtworkGeometryCache = Map<string, readonly StaticArtworkRect[]>;
+
+function staticArtworkCacheKey(half: HTMLElement): string {
+  const sheet = half.closest<HTMLElement>(".mo-sheet[data-mo-face]");
+  return `${sheet?.dataset.moFace ?? "unknown"}|${sheet?.dataset.moRotation ?? "none"}|${half.dataset.moSlot ?? "unknown"}`;
+}
+
+function yieldToMoLayoutUi(): Promise<void> {
+  return new Promise((resolve) => {
+    let settled = false;
+    let fallback = 0;
+    const finish = (): void => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(fallback);
+      resolve();
+    };
+    fallback = window.setTimeout(finish, 50);
+    if (document.visibilityState === "visible") window.requestAnimationFrame(finish);
+    else finish();
+  });
+}
+
 /** Inspect rendered text against its actual printable field box; values are never truncated or silently shrunk. */
-export function findMoLayoutDiagnostics(doc: Document): readonly MoLayoutDiagnostic[] {
+export function findMoLayoutDiagnostics(doc: Document, artworkGeometryCache?: StaticArtworkGeometryCache): readonly MoLayoutDiagnostic[] {
   const issues: MoLayoutDiagnostic[] = [];
   const push = (issue: MoLayoutDiagnostic): void => { issues.push(Object.freeze(issue)); };
   for (const field of Array.from(doc.querySelectorAll<HTMLElement>("[data-mo-field]"))) {
@@ -414,10 +438,15 @@ export function findMoLayoutDiagnostics(doc: Document): readonly MoLayoutDiagnos
     }
     const staticPage = half.querySelector<HTMLElement>(".page[data-mo-source-index]");
     if (staticPage) {
-      const artworkRects: readonly Readonly<{ rect: DOMRect; label: string; allowedSources: readonly string[] }>[] = [
-        ...staticArtworkTextRects(staticPage).map((artwork) => Object.freeze({ ...artwork, allowedSources: Object.freeze([] as string[]) })),
-        ...staticArtworkGraphicRects(staticPage),
-      ];
+      const cacheKey = staticArtworkCacheKey(half);
+      let artworkRects = artworkGeometryCache?.get(cacheKey);
+      if (!artworkRects) {
+        artworkRects = Object.freeze([
+          ...staticArtworkTextRects(staticPage).map((artwork) => Object.freeze({ ...artwork, allowedSources: Object.freeze([] as string[]) })),
+          ...staticArtworkGraphicRects(staticPage),
+        ]);
+        artworkGeometryCache?.set(cacheKey, artworkRects);
+      }
       const dynamicText = Array.from(half.querySelectorAll<HTMLElement>(".mo-layout-field [data-mo-layout-text],.page [data-mo-field]"));
       for (const field of dynamicText) {
         const glyphRects = renderedTextRects(field);
@@ -443,6 +472,9 @@ export type MoBatchLayoutValidation = Readonly<{
   sheetCount: number;
   checkedFaceDocuments: number;
   diagnostics: readonly MoLayoutDiagnostic[];
+  validationDurationMs: number;
+  staticArtworkGeometryMeasurements: number;
+  staticArtworkGeometryCacheHits: number;
 }>;
 
 /** Validate each selected record on both HTML faces in isolated, offscreen layout documents. */
@@ -457,18 +489,22 @@ export async function validateMoBatchLayout(
   onProgress?: (checkedFaceDocuments: number, totalFaceDocuments: number) => void,
 ): Promise<MoBatchLayoutValidation> {
   const imposition = imposeMoCandidates(candidates);
+  const startedAt = performance.now();
   const diagnostics: MoLayoutDiagnostic[] = [];
   let checkedFaceDocuments = 0;
+  let staticArtworkGeometryMeasurements = 0;
+  let staticArtworkGeometryCacheHits = 0;
   const totalFaceDocuments = imposition.sheetCount * faces.length;
   if (!candidates.length || !layout.fields.length) {
     onProgress?.(0, totalFaceDocuments);
-    return Object.freeze({ checkedRecords: candidates.length, sheetCount: imposition.sheetCount, checkedFaceDocuments, diagnostics: Object.freeze([]) });
+    return Object.freeze({ checkedRecords: candidates.length, sheetCount: imposition.sheetCount, checkedFaceDocuments, diagnostics: Object.freeze([]), validationDurationMs: performance.now() - startedAt, staticArtworkGeometryMeasurements, staticArtworkGeometryCacheHits });
   }
   const frames = new Map<"front" | "back", HTMLIFrameElement>();
   const documents = new Map<"front" | "back", Document>();
+  const artworkGeometryCache: StaticArtworkGeometryCache = new Map();
   try {
     const firstSheet = imposition.sheets[0];
-    if (!firstSheet) return Object.freeze({ checkedRecords: candidates.length, sheetCount: 0, checkedFaceDocuments, diagnostics: Object.freeze([]) });
+     if (!firstSheet) return Object.freeze({ checkedRecords: candidates.length, sheetCount: 0, checkedFaceDocuments, diagnostics: Object.freeze([]), validationDurationMs: performance.now() - startedAt, staticArtworkGeometryMeasurements, staticArtworkGeometryCacheHits });
     const firstDocs = renderMoPreviewDocuments(firstSheet, senderCnic, backRotation, mappings, layout);
     for (const face of faces) {
       if (signal?.aborted) throw new Error("MO_LAYOUT_BATCH_VALIDATION_CANCELLED");
@@ -510,16 +546,31 @@ export async function validateMoBatchLayout(
           await frameDocument.fonts.ready;
         }
         if (!frameDocument.querySelector(".mo-sheet")) throw new Error(`MO_LAYOUT_BATCH_DOCUMENT_NOT_READY:${face}:sheet-${sheet.sheetNumber}`);
-        diagnostics.push(...findMoLayoutDiagnostics(frameDocument));
+        const measuredBefore = artworkGeometryCache.size;
+        const populatedHalves = frameDocument.querySelectorAll(".mo-half[data-mo-slot] .page[data-mo-source-index]").length;
+        diagnostics.push(...findMoLayoutDiagnostics(frameDocument, artworkGeometryCache));
+        const measuredNow = artworkGeometryCache.size - measuredBefore;
+        staticArtworkGeometryMeasurements += measuredNow;
+        staticArtworkGeometryCacheHits += Math.max(0, populatedHalves - measuredNow);
         checkedFaceDocuments += 1;
-        if (checkedFaceDocuments % 10 === 0 || checkedFaceDocuments === totalFaceDocuments) onProgress?.(checkedFaceDocuments, totalFaceDocuments);
+        onProgress?.(checkedFaceDocuments, totalFaceDocuments);
+        await yieldToMoLayoutUi();
+        if (signal?.aborted) throw new Error("MO_LAYOUT_BATCH_VALIDATION_CANCELLED");
       }
     }
   } finally {
     for (const frame of frames.values()) frame.remove();
   }
   const unique = diagnostics.filter((issue, index, values) => values.findIndex((other) => other.code === issue.code && other.message === issue.message && other.fieldId === issue.fieldId && other.relatedFieldId === issue.relatedFieldId) === index);
-  return Object.freeze({ checkedRecords: candidates.length, sheetCount: imposition.sheetCount, checkedFaceDocuments, diagnostics: Object.freeze(unique) });
+  return Object.freeze({
+    checkedRecords: candidates.length,
+    sheetCount: imposition.sheetCount,
+    checkedFaceDocuments,
+    diagnostics: Object.freeze(unique),
+    validationDurationMs: performance.now() - startedAt,
+    staticArtworkGeometryMeasurements,
+    staticArtworkGeometryCacheHits,
+  });
 }
 
 /** Compatibility helpers expose readable messages to the PDF fail-closed gate. */
