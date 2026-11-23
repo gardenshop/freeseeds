@@ -362,15 +362,28 @@ function yieldToMoLayoutUi(): Promise<void> {
   return new Promise((resolve) => {
     let settled = false;
     let fallback = 0;
+    let channel: MessageChannel | undefined;
     const finish = (): void => {
       if (settled) return;
       settled = true;
       window.clearTimeout(fallback);
+      channel?.port1.close();
+      channel?.port2.close();
       resolve();
     };
+    if (document.visibilityState === "visible") {
+      fallback = window.setTimeout(finish, 50);
+      window.requestAnimationFrame(finish);
+      return;
+    }
     fallback = window.setTimeout(finish, 50);
-    if (document.visibilityState === "visible") window.requestAnimationFrame(finish);
-    else finish();
+    if (typeof MessageChannel !== "undefined") {
+      channel = new MessageChannel();
+      channel.port1.onmessage = finish;
+      channel.port2.postMessage(undefined);
+      return;
+    }
+    fallback = window.setTimeout(finish, 0);
   });
 }
 
@@ -542,8 +555,8 @@ export async function validateMoBatchLayout(
           const nextSheet = parsed.querySelector(".mo-sheet");
           if (!nextSheet) throw new Error(`MO_LAYOUT_BATCH_DOCUMENT_NOT_READY:${face}:sheet-${sheet.sheetNumber}`);
           frameDocument.body.replaceChildren(frameDocument.importNode(nextSheet, true));
-          await new Promise<void>((resolve) => frame.contentWindow?.requestAnimationFrame(() => frame.contentWindow?.requestAnimationFrame(() => resolve())) ?? resolve());
           await frameDocument.fonts.ready;
+          frameDocument.querySelector<HTMLElement>(".mo-sheet")?.getBoundingClientRect();
         }
         if (!frameDocument.querySelector(".mo-sheet")) throw new Error(`MO_LAYOUT_BATCH_DOCUMENT_NOT_READY:${face}:sheet-${sheet.sheetNumber}`);
         const measuredBefore = artworkGeometryCache.size;

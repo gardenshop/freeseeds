@@ -252,12 +252,49 @@ try {
     return status.includes("Mapped layout fields require attention") && !status.startsWith("Checking ");
   }, undefined, { timeout: 180000 });
 
-  await page.evaluate(() => { window.__lp064RepairProgress.length = 0; });
+  await page.evaluate(() => {
+    window.__lp064RepairProgress.length = 0;
+    window.__lp064ThrottledRafCalls = 0;
+    Object.defineProperty(document, "visibilityState", { configurable: true, value: "hidden" });
+    const patchFrame = (frame) => {
+      if (!frame.title.startsWith("Temporary MO-51")) return;
+      const throttle = () => {
+        const view = frame.contentWindow;
+        if (!view || view.__lp064ThrottledRafInstalled) return;
+        Object.defineProperty(view, "__lp064ThrottledRafInstalled", { configurable: true, value: true });
+        Object.defineProperty(view, "requestAnimationFrame", {
+          configurable: true,
+          value: (callback) => {
+            window.__lp064ThrottledRafCalls += 1;
+            return window.setTimeout(() => callback(view.performance.now()), 500);
+          },
+        });
+      };
+      frame.addEventListener("load", throttle, { once: true });
+      if (frame.contentDocument?.readyState === "complete") throttle();
+    };
+    window.__lp064ThrottledRafObserver = new MutationObserver((records) => {
+      for (const node of records.flatMap((record) => [...record.addedNodes])) {
+        if (node instanceof HTMLIFrameElement) patchFrame(node);
+        if (node instanceof Element) for (const frame of node.querySelectorAll("iframe")) patchFrame(frame);
+      }
+    });
+    window.__lp064ThrottledRafObserver.observe(document.body, { subtree: true, childList: true });
+  });
   await page.locator("#moRepairLayout").click();
   await page.locator("#moFinalPreview").waitFor({ timeout: 30000 });
   await page.waitForFunction(() => document.querySelector("#moRepairBatchStatus")?.textContent?.startsWith("PASS · 100 selected records checked"), undefined, { timeout: 180000 });
   const repairStatus = await page.locator("#moRepairBatchStatus").innerText();
-  const repairProgress = await page.evaluate(() => { window.__lp064RepairProgressObserver?.disconnect(); return window.__lp064RepairProgress; });
+  const throttledRafCalls = await page.evaluate(() => {
+    window.__lp064RepairProgressObserver?.disconnect();
+    window.__lp064ThrottledRafObserver?.disconnect();
+    delete document.visibilityState;
+    return window.__lp064ThrottledRafCalls;
+  });
+  assert.equal(throttledRafCalls, 0, "background validation must not wait on throttled iframe animation frames");
+  const durationMs = Number(/\((\d+) ms; static artwork/u.exec(repairStatus)?.[1]);
+  assert.ok(durationMs > 0 && durationMs < 30000, `background N100 validation should remain responsive, got ${durationMs} ms`);
+  const repairProgress = await page.evaluate(() => window.__lp064RepairProgress);
   const distinctRepairProgress = repairProgress.filter((value, index) => index === 0 || value !== repairProgress[index - 1]);
   assert.deepEqual(distinctRepairProgress, Array.from({ length: 100 }, (_, index) => `${index + 1}/100`), "N100 progress must report every face and yield between checks");
   assert.match(repairStatus, /static artwork 4 measured\/196 reused/u, "static artwork geometry should be measured once per face/slot and safely reused");
