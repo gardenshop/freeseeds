@@ -992,63 +992,6 @@ function renderMoCleanPreview(editor: HTMLElement): void {
     toolbar.append(cnicNote);
   }
 
-  const adjustment = document.createElement("div");
-  adjustment.className = "mo-clean-preview-adjust";
-  adjustment.setAttribute("aria-label", "Selected field preview formatting");
-  const fieldLabel = document.createElement("label");
-  fieldLabel.textContent = "Adjust field";
-  const fieldSelect = document.createElement("select");
-  fieldSelect.id = "moPreviewAdjustField";
-  for (const field of moLayout.fields) {
-    const option = document.createElement("option");
-    option.value = field.id;
-    option.textContent = MO_LAYOUT_SOURCES.find((source) => source.id === field.source)?.label ?? field.source;
-    option.selected = field.id === moSelectedLayoutFieldId || (!moSelectedLayoutFieldId && field === moLayout.fields[0]);
-    fieldSelect.append(option);
-  }
-  fieldLabel.append(fieldSelect);
-  fieldSelect.addEventListener("change", () => { moSelectedLayoutFieldId = fieldSelect.value; render(); });
-  adjustment.append(fieldLabel);
-  const selected = moLayout.fields.find((field) => field.id === moSelectedLayoutFieldId) ?? moLayout.fields[0];
-  if (selected) {
-    const fontLabel = document.createElement("label");
-    fontLabel.textContent = "Font size (pt)";
-    const fontControls = document.createElement("div");
-    fontControls.className = "mo-font-adjust";
-    const decrease = document.createElement("button");
-    decrease.type = "button";
-    decrease.id = "moPreviewFontDecrease";
-    decrease.textContent = "−";
-    decrease.setAttribute("aria-label", "Decrease selected field font size");
-    const fontSize = document.createElement("input");
-    fontSize.id = "moPreviewFontSize";
-    fontSize.type = "number";
-    fontSize.min = "4";
-    fontSize.max = "48";
-    fontSize.step = "0.5";
-    fontSize.value = String(selected.fontSizePt);
-    const increase = document.createElement("button");
-    increase.type = "button";
-    increase.id = "moPreviewFontIncrease";
-    increase.textContent = "+";
-    increase.setAttribute("aria-label", "Increase selected field font size");
-    fontControls.append(decrease, fontSize, increase);
-    fontLabel.append(fontControls);
-    const bold = document.createElement("button");
-    bold.type = "button";
-    bold.id = "moPreviewBold";
-    bold.className = "mo-bold-toggle";
-    bold.setAttribute("aria-pressed", String(selected.bold));
-    bold.textContent = selected.bold ? "Bold: On" : "Bold: Off";
-    const setFont = (value: number) => applyLayoutProperty(selected.id, "fontSizePt", String(Math.max(4, Math.min(48, value))));
-    decrease.addEventListener("click", () => setFont(selected.fontSizePt - 0.5));
-    increase.addEventListener("click", () => setFont(selected.fontSizePt + 0.5));
-    fontSize.addEventListener("change", () => setFont(Number(fontSize.value)));
-    bold.addEventListener("click", () => applyLayoutProperty(selected.id, "bold", !selected.bold));
-    adjustment.append(fontLabel, bold);
-  }
-  if (repairPreview) adjustment.hidden = true;
-
   const stageWrap = document.createElement("div");
   stageWrap.className = "mo-clean-preview-stage-wrap";
   const stage = document.createElement("div");
@@ -1099,7 +1042,7 @@ function renderMoCleanPreview(editor: HTMLElement): void {
   if (status) actions.append(status);
   void layoutActions;
 
-  preview.append(header, ...(repairSummary ? [repairSummary] : []), toolbar, adjustment, cleanWarning, stageWrap, actions);
+  preview.append(header, ...(repairSummary ? [repairSummary] : []), toolbar, cleanWarning, stageWrap, actions);
   preview.querySelectorAll<HTMLButtonElement>("[data-mo-repair-select]").forEach((button) => button.addEventListener("click", () => {
     const fieldId = button.dataset.moRepairSelect;
     const field = moLayoutRepairPreview?.plan.layout.fields.find((candidate) => candidate.id === fieldId);

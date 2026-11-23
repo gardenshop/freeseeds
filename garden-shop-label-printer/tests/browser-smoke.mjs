@@ -1569,12 +1569,12 @@ try {
   await page.waitForFunction(() => document.querySelector("#moFinalPreview")?.srcdoc.includes('data-mo-face="back"'));
   await page.frameLocator("#moFinalPreview").locator(".mo-sheet").screenshot({ path: join(evidence, "lp051-mo-clean-preview-back-n3.png") });
   await page.locator("#moCleanPreviewFace").selectOption("front");
-  await page.locator("#moPreviewAdjustField").selectOption({ label: "Tracking (exact imported string)" });
-  const previewFont = Number(await page.locator("#moPreviewFontSize").inputValue());
-  await page.locator("#moPreviewFontIncrease").click();
-  assert.equal(Number(await page.locator("#moPreviewFontSize").inputValue()), previewFont + 0.5, "clean preview font controls must update the shared layout");
-  await page.locator("#moPreviewBold").click();
-  assert.equal(await page.locator("#moPreviewBold").getAttribute("aria-pressed"), "false", "clean preview bold control must update the selected field");
+  const cleanPreviewEditorControls = await page.locator("#moFinalMoPreview").evaluate((preview) => ({
+    adjustmentPanel: preview.querySelectorAll(".mo-clean-preview-adjust,#moPreviewAdjustField,#moPreviewFontSize,#moPreviewBold,#moPreviewFontDecrease,#moPreviewFontIncrease").length,
+    editingLabels: [...preview.querySelectorAll("label")].filter((label) => /Adjust field|Font size \(pt\)/u.test(label.textContent ?? "")).length,
+    editorOnlyVisibleNodes: [...preview.querySelectorAll(".mo-editor-field,.mo-editor-binding,[data-mo-resize-handle],[data-mo-editor-only]")].filter((node) => node.getClientRects().length > 0).length,
+  }));
+  assert.deepEqual(cleanPreviewEditorControls, { adjustmentPanel: 0, editingLabels: 0, editorOnlyVisibleNodes: 0 }, "clean preview must contain no field/font/bold editor controls, labels or overlays");
   const pairedLayoutPdf = await saveMoLayoutPdf(page, join(temporary, "mo51-layout-paired-synthetic.pdf"), 4);
   await assertMoOddBlank(pairedLayoutPdf, 3);
   await page.locator("#moPrintSideMode").selectOption("front-only");

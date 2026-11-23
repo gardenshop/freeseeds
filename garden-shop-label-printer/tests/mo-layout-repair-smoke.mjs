@@ -320,6 +320,15 @@ try {
   assert.equal(savedLayout.fields.some((field) => field.id === "saved-sender-name-intimation"), false, "the unsafe duplicate lower SenderName was removed only by the explicit synthetic direct correction");
   assert.deepEqual({ xMm: savedLayout.fields.find((field) => field.id === "saved-original-amount-intimation").xMm, yMm: savedLayout.fields.find((field) => field.id === "saved-original-amount-intimation").yMm }, { xMm: 39.22, yMm: 169.11 }, "the original amount remains on the separate Price Payable line, never in declared principal");
   assert.deepEqual({ xMm: savedLayout.fields.find((field) => field.id === "saved-phone-intimation").xMm, yMm: savedLayout.fields.find((field) => field.id === "saved-phone-intimation").yMm }, { xMm: 108.72, yMm: 180.14 });
+  await page.locator("#moPreviewFinal").click();
+  await page.locator("#moReturnToLayout").waitFor();
+  const cleanPreviewControls = await page.locator("#moFinalMoPreview").evaluate((preview) => ({
+    editorControls: preview.querySelectorAll(".mo-clean-preview-adjust,#moPreviewAdjustField,#moPreviewFontSize,#moPreviewBold").length,
+    editorOnlyNodes: preview.querySelectorAll(".mo-editor-field,.mo-editor-binding,[data-mo-resize-handle],[data-mo-editor-only]").length,
+    finalFrameEditorNodes: preview.querySelector("#moFinalPreview")?.contentDocument?.querySelectorAll(".mo-editor-field,.mo-editor-binding,[data-mo-resize-handle],[data-mo-editor-only]").length ?? null,
+  }));
+  assert.deepEqual(cleanPreviewControls, { editorControls: 0, editorOnlyNodes: 0, finalFrameEditorNodes: 0 }, "Preview Final MO must not expose field/font/bold editing controls or editor overlays");
+  await page.locator("#moReturnToLayout").click();
   assert.deepEqual(auditEvents.filter((event) => event.eventType === "PDF_GENERATED"), [], "repair preview alone must not claim a PDF was generated");
 
   const downloadEvent = page.waitForEvent("download", { timeout: 180000 });
