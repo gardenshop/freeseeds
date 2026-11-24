@@ -99,7 +99,7 @@ Independent browser-based spreadsheet import, label preview, A4/custom print/PDF
 ## City Ink-Bounds Correction (LP-072)
 
 - The saved City field is `x=78.65, y=95.38, w=29.72, h=4.8 mm`, 10 pt, left aligned and wrapped. On Urdu glyphs, Chrome Range bounds can begin 4 px above the CSS line box; using `Range.top` as a font baseline falsely put actual ink 0.85 px outside an 18.14 px field. Layout validation now positions Canvas ink metrics from the text span's CSS line-box baseline and uses Range geometry only to identify wrapped lines. No tolerance was widened; true out-of-field glyphs and protected-artwork collisions still block. See `docs/MO51_LP072_DECISIONS.md`.
-- LP-072 synthetic N2, 76-record/38-sheet and N100 checks exercise the exact saved layout and the affected Urdu-script City shapes. The N100 PDF is parsed and raster-checked for pairs 1/51 and 50/100. Existing-label output is checked separately; live staging results and deployment ID are recorded in the LP-072 decision record only after verification.
+- LP-072 local synthetic N2, 76-record/38-sheet and N100 checks exercise the saved City geometry and affected Urdu-script shapes. Live staging N2 PDF/Print MO target and N76 validation passed on the deployed source; N100 PDF parsing/raster verifies pairs 1/51 and 50/100. Deployment, served assets, rollback and label regression evidence are in `docs/MO51_LP072_DECISIONS.md`.
 
 ## MO-51 Sender/Receiver Front Positions (LP-052)
 
