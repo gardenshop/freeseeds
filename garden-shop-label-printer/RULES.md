@@ -359,3 +359,17 @@
 - Group identical layout diagnostics across records into one useful message with affected-record count. Still visit every selected record/face. A real collision must offer direct field selection or a safe proposal; never persist a proposal until the operator explicitly Applies it.
 - Time validation, DOM rendering, html2canvas rasterization, PNG encoding, PDF assembly/save and browser download separately. Cache static artwork geometry/assets only within one export; do not cache dynamic row-value overlays across records. Render paired HTML once per sheet and parse overlay DOM once per face. Keep progress, cancellation, bounded cleanup and readable raster resolution.
 - Preserve CNIC as optional, MO-only and session-only; keep principal commission-excluded and `sourceAmount` on its separate Price Payable line. Do not change Worker, D1, API, Access, Admin, WhatsApp, COD/payment, Meta or production routing. Preserve the new-number WhatsApp lock and Hoja Seeds zero-connection rule.
+
+## CHROME MCP PROFILE POLICY
+
+1. Always connect official Chrome DevTools MCP to the currently open, authorized Chrome profile associated with `gisupp@gmail.com`.
+2. Reuse the existing authenticated Chrome session.
+3. Never automatically create another Chrome profile, temporary profile, Incognito window, or isolated browser.
+4. Do not launch duplicate Chrome instances or change the debugging configuration without authorization.
+5. Use `chrome_devtools.list_pages` first to identify existing Dashboard and staging tabs.
+6. Verify the correct Cloudflare account and authenticated identity before any external mutation.
+7. Never inspect, snapshot, export, modify, or reuse customer records in populated tabs or restored application storage.
+8. Synthetic acceptance must use demonstrably empty, test-only application state. A new tab in the same profile does not guarantee data isolation. If customer data is restored or a safe test state cannot be established, stop that testing gate without reading customer values.
+9. Never access cookies, tokens, authentication headers or saved passwords.
+10. If MCP disconnects, attempt one supported reconnect. Never bypass Cloudflare Access or substitute unauthorized browser access.
+11. This policy applies to Garden Shop Label Printer development and staging operations. Existing production security protections remain unchanged.

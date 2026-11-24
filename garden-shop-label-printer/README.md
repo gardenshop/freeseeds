@@ -86,7 +86,15 @@ Independent browser-based spreadsheet import, label preview, A4/custom print/PDF
 - Overflow/collision checks use Canvas actual-ink metrics positioned by grapheme ranges, not CSS line-box height or `scrollHeight`. Actual glyph overflow and static-artwork intersections still block. Repeated diagnostics are grouped by affected-record count while every selected face is checked. Only the Month Stamp border is allowed to receive `orderDate`; its printed label remains checked.
 - PDF rendering generates paired HTML once per sheet, parses overlay DOM once per face, runs one local field check per raster, reuses static artwork only, and does not cache row-value overlays across records. Phase timing separates validation, DOM preparation, html2canvas, PNG encoding, PDF assembly/save, and browser download.
 - Synthetic evidence: N2 shows one centered `550` per form and a matching 2-page PDF raster; N42 pairs 1/22 and 21/42; full-layout N96 pairs 1/49 and 48/96; N100 pairs 1/51 and 50/100. N96 local PDF download is about 40.5 s, versus the owner-reported 5–7 minutes. N2/N42/N96/N100 and the final original-label regression are recorded in `docs/MO51_LP065_DECISIONS.md`.
-- Staging remains on LP-064 because the official isolated Chrome DevTools MCP/Access gate is unavailable. No LP-065 live PDF/print acceptance is claimed; Monitor HTTP 400 remains separate.
+- LP-065 source is live as Pages deployment `3a683220-964b-4eaa-b624-433f6263c620` (`e2b2df8`). LP-070 verified it read-only. Live MO/label acceptance remains blocked until a demonstrably empty synthetic-only state is available in the authorized profile; the Monitor HTTP 400 remains separate.
+
+## Chrome MCP Profile Policy (LP-070)
+
+- Use official Chrome DevTools MCP with the already-open, authorized `gisupp@gmail.com` Chrome profile and authenticated session. Call `chrome_devtools.list_pages` first; do not launch duplicate Chrome, another profile, Incognito or an isolated browser.
+- Before a Cloudflare mutation, verify the authenticated identity and correct account. Never access credentials/cookies/tokens or inspect, snapshot, export, change or reuse customer records in a populated tab or restored application storage.
+- Staging synthetic acceptance requires a demonstrably empty, test-only application state. A new same-profile tab is not proof of isolation. If that state cannot be established safely, stop that acceptance gate without reading values. A supported MCP reconnect is limited to one attempt; never bypass Access.
+- Preserve production security and all existing protected-system rules. Full policy: `RULES.md`, **CHROME MCP PROFILE POLICY**.
+- LP-070 MCP page listing found the authenticated Get Free Seeds Dashboard (`cb5066a6d71ecdee0bd7ed8aacb4d3c2`) and an existing staging tab. The staging tab was not inspected because its stored application state was not independently established as synthetic-only. N2, N100 PDF/Print MO Batch and existing-label staging acceptance are therefore **BLOCKED / NOT TESTED**; no deployment or protected-service change was made. See `docs/MO51_LP070_DECISIONS.md`.
 
 ## MO-51 Sender/Receiver Front Positions (LP-052)
 
