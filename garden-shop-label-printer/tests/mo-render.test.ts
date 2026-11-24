@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { formatSenderCnic } from "../src/mo/cnic";
-import { MO_FORM_GEOMETRY } from "../src/mo/renderer";
+import { glyphInkTopFromLineBox, MO_FORM_GEOMETRY } from "../src/mo/renderer";
 
 describe("MO-51 sender CNIC", () => {
   it("allows a blank optional value", () => {
@@ -28,5 +28,24 @@ describe("MO-51 artwork fit", () => {
     expect(geometry.halfWidthMm - geometry.sourceWidthMm * geometry.uniformScale).toBeCloseTo(7.2272727, 6);
     expect(geometry.sheetWidthMm).toBe(297);
     expect(geometry.sheetHeightMm).toBe(210);
+  });
+
+  it("anchors Urdu City ink to the CSS line box rather than the taller Range rectangle", () => {
+    const fieldTop = 360.4875;
+    const fieldHeight = 18.1375;
+    const lineRangeTop = fieldTop - 4;
+    const fontAscent = 14;
+    const fontDescent = 8;
+    const actualAscent = 10.8534;
+    const actualDescent = 4;
+    const inkTop = glyphInkTopFromLineBox(fieldTop, 16, fontAscent, fontDescent, actualAscent);
+    const inkBottom = inkTop + actualAscent + actualDescent;
+
+    expect(lineRangeTop + fontAscent - actualAscent).toBeLessThan(fieldTop);
+    expect(inkTop).toBeGreaterThanOrEqual(fieldTop);
+    expect(inkBottom).toBeLessThanOrEqual(fieldTop + fieldHeight);
+    const wrappedLineTop = glyphInkTopFromLineBox(fieldTop, 16, fontAscent, fontDescent, actualAscent, 1);
+    expect(wrappedLineTop).toBeCloseTo(inkTop + 16, 6);
+    expect(wrappedLineTop + actualAscent + actualDescent).toBeGreaterThan(fieldTop + fieldHeight);
   });
 });

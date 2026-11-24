@@ -373,3 +373,10 @@
 9. Never access cookies, tokens, authentication headers or saved passwords.
 10. If MCP disconnects, attempt one supported reconnect. Never bypass Cloudflare Access or substitute unauthorized browser access.
 11. This policy applies to Garden Shop Label Printer development and staging operations. Existing production security protections remain unchanged.
+
+## LP-072 MO CITY INK VALIDATION
+
+- For layout-field overflow checks, place Canvas actual-ink metrics from the CSS text line-box baseline. Do not treat `Range.getClientRects().top` as the font baseline; use Range geometry only to identify the wrapped-line index.
+- Keep horizontal glyph bounds, printable-page bounds, protected-artwork collision checks and grouped per-source-row diagnostics active. Do not add arbitrary tolerances, suppress City diagnostics, or change unrelated saved fields/bindings.
+- Validate the complete selected batch before enabling MO PDF/print. Keep PDF output A4 landscape with front as Section 1 and back as Section 2; only the verified generated `application/pdf` may become the Print MO Batch target. Physical duplex requires separate calibration and is never automatic.
+- Use the currently open authorized Chrome profile. Do not inspect populated customer tabs or persisted customer values; use only demonstrably synthetic test state. Preserve Sender CNIC as optional, MO-only and session-only, and preserve the Hoja Seeds zero-connection rule.

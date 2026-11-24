@@ -298,13 +298,36 @@ type GraphemeSegment = Readonly<{ index: number; segment: string }>;
 const GraphemeSegmenter = (Intl as unknown as { Segmenter?: new (locales?: string | string[], options?: { granularity: "grapheme" }) => { segment(value: string): Iterable<GraphemeSegment> } }).Segmenter;
 const graphemeSegmenter = GraphemeSegmenter ? new GraphemeSegmenter(undefined, { granularity: "grapheme" }) : undefined;
 
-function textNodeGlyphRects(node: Node, context?: CanvasRenderingContext2D): readonly DOMRect[] {
+export function glyphInkTopFromLineBox(
+  lineBoxTop: number,
+  lineHeight: number,
+  fontAscent: number,
+  fontDescent: number,
+  actualAscent: number,
+  lineIndex = 0,
+): number {
+  const leading = lineHeight - fontAscent - fontDescent;
+  return lineBoxTop + leading / 2 + fontAscent + lineIndex * lineHeight - actualAscent;
+}
+
+function textNodeGlyphRects(node: Node, context?: CanvasRenderingContext2D, lineBox?: HTMLElement): readonly DOMRect[] {
   const text = node.textContent ?? "";
   if (!text.trim()) return [];
   const document = node.ownerDocument;
   const view = document?.defaultView;
   const measure = context ?? document?.createElement("canvas").getContext("2d") ?? undefined;
-  const style = node.parentElement && view ? view.getComputedStyle(node.parentElement) : undefined;
+  const styleElement = lineBox ?? node.parentElement;
+  const style = styleElement && view ? view.getComputedStyle(styleElement) : undefined;
+  const lineBoxBounds = lineBox?.getBoundingClientRect();
+  const lineHeight = style ? Number.parseFloat(style.lineHeight) : Number.NaN;
+  const hasTransform = Boolean(lineBox && view && (() => {
+    let element: HTMLElement | null = lineBox;
+    while (element) {
+      if (view.getComputedStyle(element).transform !== "none") return true;
+      element = element.parentElement;
+    }
+    return false;
+  })());
   if (measure && style) {
     measure.font = [style.fontStyle, style.fontVariant, style.fontWeight, style.fontSize, style.fontFamily].filter(Boolean).join(" ");
     measure.direction = style.direction === "rtl" ? "rtl" : "ltr";
@@ -319,6 +342,7 @@ function textNodeGlyphRects(node: Node, context?: CanvasRenderingContext2D): rea
   const segments: readonly GraphemeSegment[] = graphemeSegmenter ? Array.from(graphemeSegmenter.segment(text)) : fallbackSegments;
   const range = node.ownerDocument!.createRange();
   const rects: DOMRect[] = [];
+  let firstRangeTop: number | undefined;
   for (const segment of segments) {
     if (!segment.segment.trim()) continue;
     range.setStart(node, segment.index);
@@ -326,15 +350,21 @@ function textNodeGlyphRects(node: Node, context?: CanvasRenderingContext2D): rea
     const metrics = measure?.measureText(segment.segment);
     for (const rect of Array.from(range.getClientRects()).filter((item) => item.width > 0.25 && item.height > 0.5)) {
       const fontAscent = metrics?.fontBoundingBoxAscent;
+      const fontDescent = metrics?.fontBoundingBoxDescent;
       const actualAscent = metrics?.actualBoundingBoxAscent;
       const actualDescent = metrics?.actualBoundingBoxDescent;
-      const inkMetricsAvailable = [fontAscent, actualAscent, actualDescent].every((value) => Number.isFinite(value))
+      const inkMetricsAvailable = [fontAscent, fontDescent, actualAscent, actualDescent].every((value) => Number.isFinite(value))
         && (actualAscent ?? 0) + (actualDescent ?? 0) > 0.5;
       if (!inkMetricsAvailable) {
         rects.push(rect);
         continue;
       }
-      const inkTop = rect.top + (fontAscent ?? 0) - (actualAscent ?? 0);
+      firstRangeTop ??= rect.top;
+      const lineIndex = lineHeight > 0 ? Math.max(0, Math.round((rect.top - firstRangeTop) / lineHeight)) : 0;
+      const hasLineBoxMetrics = lineBoxBounds && !hasTransform && lineHeight > 0 && Number.isFinite(lineHeight);
+      const inkTop = hasLineBoxMetrics
+        ? glyphInkTopFromLineBox(lineBoxBounds.top, lineHeight, fontAscent!, fontDescent!, actualAscent!, lineIndex)
+        : rect.top + (fontAscent ?? 0) - (actualAscent ?? 0);
       const inkHeight = (actualAscent ?? 0) + (actualDescent ?? 0);
       rects.push(new DOMRect(rect.left, inkTop, rect.width, Math.max(0.5, inkHeight)));
     }
@@ -346,10 +376,11 @@ function renderedTextRects(element: HTMLElement): readonly DOMRect[] {
   const document = element.ownerDocument;
   const walker = document.createTreeWalker(element, document.defaultView?.NodeFilter.SHOW_TEXT ?? 4);
   const context = document.createElement("canvas").getContext("2d") ?? undefined;
+  const lineBox = element.hasAttribute("data-mo-layout-text") ? element : undefined;
   const rects: DOMRect[] = [];
   let node = walker.nextNode();
   while (node) {
-    rects.push(...textNodeGlyphRects(node, context));
+    rects.push(...textNodeGlyphRects(node, context, lineBox));
     node = walker.nextNode();
   }
   return rects;
