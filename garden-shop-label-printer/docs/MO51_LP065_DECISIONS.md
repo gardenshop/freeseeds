@@ -1,0 +1,30 @@
+# GFS-LP-065 — Fast MO Print Rendering Repair
+
+## Baseline and safety
+
+- Branch/starting HEAD: `codex/garden-shop-label-printer-mvp` / `9e237351c37efaa5000b5ccaf94727bcec3186c4`. Preserve the 51 unrelated pending paths; stage only printer-project files.
+- The owner screenshot/log was not accessible as a local file in this execution. The issue was reproduced with generated N2/N42/N96/N100 synthetic records only. No populated customer tab was opened or inspected.
+- Read-only Wrangler checks confirmed Get Free Seeds account `cb5066a6d71ecdee0bd7ed8aacb4d3c2` (`gisupp@gmail.com`) and Pages project `garden-shop-label-printer-staging`. Current active deployment remains LP-064 `f5f40d5f-4d68-4693-9da6-0024ca249f19`; rollback is `4fe92786-94b7-43e5-aca6-4a337bf98648`.
+
+## Confirmed defects and corrections
+
+- **Duplicate amount in Edit fields:** the iframe already painted the mapped value while the editor overlay also painted `.mo-editor-value`. N2 showed two value paint layers in Edit fields. The overlay now retains selection/resize/binding UI only; the iframe remains the single value source. Clean preview and PDF each have one value node per amount field/slot.
+- **Alignment mismatch:** the preview value span used `width:max-content`; a centered parent therefore left the block at its left edge. The span now uses `width:100%` and `text-align:inherit`, preserving the saved alignment/font/bold/wrapping. Synthetic N2 text center offset changed from **−56.69 px** to **0 px**; editor and clean preview computed font size, weight, wrap and mm geometry match.
+- **Line-box validation errors:** `scrollHeight`/`Range` line boxes were being treated as ink. N2 measured a 162.5×45.3 px text span but only 18.9×19 px actual `550` glyphs; the amount passed and did not intersect the printed `Rs.` label. A synthetic N96 principal line box measured 61 px high while Canvas actual ink was 26 px inside a 48 px field; repeated Principal line-box failures disappeared. A deliberately 4×3 mm amount box still fails closed. Canvas actual ink bounds are positioned by DOM grapheme ranges.
+- **Real collisions remain blocked:** the N42 City value at x7.7/y105 collided with the printed City label near x15.7/y105.7 and was reported once for 42 affected records. Address/City and Address/Province boxes overlapped, but their visible glyphs did not, so they are not false blockers. The test moves City to its designated value line and reduces the address box to its safe row. `orderDate` is allowed inside the Month Stamp border only; the Month Stamp label remains collision-checked. The `Rs.` label is not broadly exempted.
+- **Grouped validation:** repeated identical field errors are collapsed into one message with affected-record count. All records/faces are still checked. The narrow-field test reports one Principal error affecting the selected records; N96 reports grouped issues and no repeated Principal line-box error. The N42 static City collision is grouped as 42 affected records, while non-overlapping Address/City and Address/Province glyphs do not block. A genuine collision can select the affected field; safe repair remains preview-only until explicit Apply.
+- **PDF work:** timing callbacks separate HTML generation, iframe DOM readiness, PDF-local field checks, overlay preparation, html2canvas, PNG encoding, PDF assembly, PDF save, and browser download. The export renders paired HTML once per sheet and parses overlay DOM once per face. PDF-local overflow/overlap checks run once, not twice. Static artwork is cached; dynamic row-value overlays are not cached across records. Static Month Stamp art is reusable only with empty/session-independent values.
+
+## Synthetic verification
+
+- **N2:** two distinct synthetic rows with COD 550; one centered `550` per main amount box on both forms; 2-page paired PDF; preview/PDF raster mean difference **0.0375**. First/final pair 1/2. No CNIC supplied or saved. Before/after editor, clean-preview and PDF-page PNGs are in `C:\Users\nazim\AppData\Local\Temp\kilo\gfs-lp065-n2-before` and `...\gfs-lp065-n2-legacy-final`.
+- **N42:** 42 pages / 21 sheets; first pair 1/22, final pair 21/42. Real City-label collision grouped across the affected rows; direct correction and repair preview passed without auto-saving proposals.
+- **N96:** full 16-field repaired layout, 96 pages / 48 sheets; first pair 1/49, final pair 48/96. Download completed in about **40.5 s**, versus the owner-reported 5–7 minutes. Phase profile showed roughly 3–4 s validation, 9–10 s html2canvas, 4–5 s PNG encoding, 9–10 s PDF assembly and 14–16 s PDF save; DOM generation/preparation was comparatively small. Static geometry was measured 4 times and reused 188 times.
+- **N100:** full-layout local smoke passed 100 rows / 50 sheets / 100 PDF pages; first pair 1/51, final pair 50/100. Download produced a readable PDF; Print MO Batch opened only the generated `application/pdf` blob with 100 pages. No physical printer was used.
+- Final `npm test`: **PASS** (154 tests). Staging-origin `npm run build`: **PASS**. The single final `npm run test:browser`: **PASS**, including N2/N42/N100/N500 and original-label regressions, `browserErrors: []`; N500 rendered 500 pages in about **70.4 s**. Synthetic screenshots/PDFs are stored only in external `C:\Users\nazim\AppData\Local\Temp\kilo\gfs-lp065-*` evidence folders; none are committed.
+
+## Staging and release gate
+
+- No LP-065 deployment was made. The official Chrome DevTools MCP was unavailable in this execution, so the authorized isolated-browser live test could not be performed. The existing LP-064 deployment and rollback remain unchanged. No Access bypass, raw CDP, Worker/D1 change or production-route change was attempted.
+- The final static `dist/` bundle is built locally with the Dashboard-listed staging Monitor/Admin origins. Deploy only after official MCP and normal Access authorization are available, then verify live N100 download/print target. Physical duplex/postal calibration remains untested.
+- Monitor `/api/events` HTTP 400 remains a separate blocker. Preserve the new-number WhatsApp lock and Hoja Seeds zero-connection rule.

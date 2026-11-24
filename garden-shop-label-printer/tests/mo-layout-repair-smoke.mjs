@@ -40,24 +40,29 @@ const server = spawn(process.execPath, [join(project, "node_modules", "vite", "b
 
 const headers = ["Order ID", "Name", "Cell #", "Address", "Tracking Number", "COD", "Product", "City", "Province", "Nearby Landmark", "Order Date", "Sender", "S.Address"];
 const quote = (value) => `"${String(value).replaceAll('"', '""')}"`;
+const batchSize = Number(process.env.LP_TEST_MO_REPAIR_ROWS ?? "100");
+assert.ok(batchSize === 96 || batchSize === 100, "focused repair smoke supports N96/N100 only");
+const partnerRow = Math.floor(batchSize / 2) + 1;
+const sheetCount = Math.ceil(batchSize / 2);
+const faceDocumentCount = sheetCount * 2;
 const dateFor = (index) => {
   const date = new Date(Date.UTC(2026, 0, index + 1));
   return `${String(date.getUTCDate()).padStart(2, "0")}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCFullYear()).slice(-2)}`;
 };
-const syntheticRows = Array.from({ length: 100 }, (_, index) => {
+const syntheticRows = Array.from({ length: batchSize }, (_, index) => {
   const row = index + 1;
-  const long = row === 1 || row === 51;
-  const suffix = row === 1 ? "پتہ آزمائشی Urdu" : row === 51 ? "طویل وصول کنندہ پتہ Urdu" : "";
+  const long = row === 1 || row === partnerRow;
+  const suffix = row === 1 ? "پتہ آزمائشی Urdu" : row === partnerRow ? "طویل وصول کنندہ پتہ Urdu" : "";
   return [
-    `LP061-SYN-${String(row).padStart(3, "0")}`,
+    `LP065-SYN-${String(row).padStart(3, "0")}`,
     `Synthetic Receiver ${row}${long ? ` Extended ${row === 1 ? "دوست" : "وصول"}` : ""}`,
     `03${String(100000000 + row).padStart(9, "0")}`,
     `Synthetic Street ${row}${long ? ` Block ${row} ${"Address Segment ".repeat(5)}${suffix}` : ""}`,
     `${row % 2 ? "VPL" : "VPP"}${String(row).padStart(6, "0")}`,
     String(20000 + row * 100),
     `Synthetic Parcel ${row}`,
-    row === 51 ? "Gujranwala" : row === 1 ? "گوجرانوالہ" : "Sahiwal",
-    row === 51 ? "Khyber Pakhtunkhwa (KPK)" : "Punjab",
+    row === partnerRow ? "Gujranwala" : row === 1 ? "گوجرانوالہ" : "Sahiwal",
+    row === partnerRow ? "Khyber Pakhtunkhwa (KPK)" : "Punjab",
     `Synthetic Landmark ${row}`,
     dateFor(index),
     `Synthetic Sender ${row}`,
@@ -147,12 +152,12 @@ try {
   await page.locator("button[data-edit]").first().waitFor({ timeout: 30000 });
   await page.locator("#newBatch").click();
   const csv = [headers, ...syntheticRows].map((row) => row.map(quote).join(",")).join("\r\n");
-  await page.locator("#workbook").setInputFiles({ name: "lp061-synthetic-n100.csv", mimeType: "text/csv", buffer: Buffer.from(csv) });
+  await page.locator("#workbook").setInputFiles({ name: `lp065-synthetic-n${batchSize}.csv`, mimeType: "text/csv", buffer: Buffer.from(csv) });
   await page.locator("#applyMapping").click();
   await page.getByText("Review every parcel.").waitFor({ timeout: 30000 });
   await page.locator('[data-view="mo"]').click();
   await page.locator(".mo-summary").waitFor({ timeout: 30000 });
-  assert.match(await page.locator(".mo-summary").innerText(), /100\s+eligible VPL\/VPP rows/u);
+  assert.match(await page.locator(".mo-summary").innerText(), new RegExp(`${batchSize}\\s+eligible VPL/VPP rows`, "u"));
   await page.evaluate((layout) => localStorage.setItem("gfs-mo51-layout-v1", JSON.stringify(layout)), badExistingLayout());
   await page.locator("#moLayoutReload").click();
   await page.waitForFunction(() => document.querySelector("#moLayoutFrontPreview")?.contentDocument?.querySelector(".mo-sheet") && document.querySelector("#moLayoutFrontPreview")?.contentDocument?.fonts.status === "loaded", { timeout: 30000 });
@@ -166,6 +171,29 @@ try {
     downloadDisabled: document.querySelector("#downloadMoLayoutPdf")?.disabled ?? null,
     printDisabled: document.querySelector("#printMoBatch")?.disabled ?? null,
     visiblePair: [...(document.querySelector("#moLayoutFrontPreview")?.contentDocument?.querySelectorAll(".mo-half[data-mo-source-index]") ?? [])].map((half) => Number(half.getAttribute("data-mo-source-index")) + 1),
+    principalTextMeasurements: (() => {
+      const doc = document.querySelector("#moLayoutFrontPreview")?.contentDocument;
+      const half = doc?.querySelector('.mo-half[data-mo-slot="left"]');
+      return [...(half?.querySelectorAll('.mo-layout-field[data-mo-layout-source="declaredPrincipal"] [data-mo-layout-text]') ?? [])].map((span) => {
+        const box = span.parentElement;
+        const range = span.ownerDocument.createRange();
+        range.selectNodeContents(span);
+        const rects = [...range.getClientRects()];
+        const style = span.ownerDocument.defaultView.getComputedStyle(span);
+        const canvas = span.ownerDocument.createElement("canvas");
+        const context = canvas.getContext("2d");
+        context.font = `${style.fontStyle} ${style.fontVariant} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+        context.direction = style.direction;
+        const textMetrics = context.measureText(span.textContent ?? "");
+        return {
+          fieldId: box?.dataset.moLayoutField,
+          field: box && { width: Number(box.clientWidth.toFixed(1)), height: Number(box.clientHeight.toFixed(1)) },
+          span: { width: Number(span.getBoundingClientRect().width.toFixed(1)), height: Number(span.getBoundingClientRect().height.toFixed(1)), scrollWidth: span.scrollWidth, scrollHeight: span.scrollHeight },
+          glyphRects: rects.map((rect) => ({ x: Number(rect.x.toFixed(1)), y: Number(rect.y.toFixed(1)), width: Number(rect.width.toFixed(1)), height: Number(rect.height.toFixed(1)) })),
+          canvasMetrics: { width: Number(textMetrics.width.toFixed(1)), actualAscent: Number(textMetrics.actualBoundingBoxAscent.toFixed(1)), actualDescent: Number(textMetrics.actualBoundingBoxDescent.toFixed(1)), fontAscent: Number(textMetrics.fontBoundingBoxAscent.toFixed(1)), fontDescent: Number(textMetrics.fontBoundingBoxDescent.toFixed(1)) },
+        };
+      });
+    })(),
   }));
   const artworkAnchors = await page.frameLocator("#moLayoutFrontPreview").locator('.mo-half[data-mo-slot="left"]').evaluate((half) => {
     const halfRect = half.getBoundingClientRect();
@@ -201,12 +229,13 @@ try {
     }));
     return { partyLines, principal: principal ? mmRect(principal) : null, tracking: articleNumber ? mmRect(articleNumber) : null, topDate: topDateLine ? mmRect(topDateLine) : null, intimationRows };
   });
-  console.log(JSON.stringify({ lp061N100BeforeRepair: beforeRepair, artworkAnchors, pageErrors }));
-  assert.deepEqual(beforeRepair.visiblePair, [1, 51]);
+  console.log(JSON.stringify({ [`lp065N${batchSize}BeforeRepair`]: beforeRepair, artworkAnchors, pageErrors }));
+  assert.deepEqual(beforeRepair.visiblePair, [1, partnerRow]);
   assert.equal(beforeRepair.downloadDisabled, true);
   assert.equal(beforeRepair.printDisabled, true);
-  assert.match(beforeRepair.diagnostics, /Source row 1/u);
-  assert.match(beforeRepair.diagnostics, /Source row 51/u);
+  assert.match(beforeRepair.diagnostics, new RegExp(`affects ${batchSize} selected records`, "u"), "batch validation groups repeated layout errors by affected record count");
+  assert.doesNotMatch(beforeRepair.diagnostics, /Validated declared principal.*affects \d+ selected records/u, "font line-box height alone must not create repeated principal-overflow failures");
+  assert.doesNotMatch(beforeRepair.diagnostics, /declared principal.*overlaps printed MO text “Rs\.”/u, "the static Rs. label is only blocking when actual principal glyphs intersect it");
   assert.ok(!pageErrors.length, `unexpected synthetic page errors: ${pageErrors.join(" | ")}`);
 
   const storedBeforeRepair = await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1"));
@@ -247,10 +276,12 @@ try {
   assert.ok(manuallyCorrectedLayout);
   assert.equal(JSON.parse(manuallyCorrectedLayout).fields.length, 16);
   assert.ok(JSON.parse(manuallyCorrectedLayout).fields.some((field) => field.id === "saved-sender-name-top" && field.source === "senderName"), "the lower Sender block retains the SenderName source binding");
-  await page.waitForFunction(() => {
+  await page.waitForFunction((count) => {
     const status = document.querySelector("#moMappingFitError")?.textContent ?? "";
-    return status.includes("Mapped layout fields require attention") && !status.startsWith("Checking ");
-  }, undefined, { timeout: 180000 });
+    return status.startsWith(`PASS · ${count} eligible records checked`)
+      || status.includes("Mapped layout fields require attention")
+      || status.includes("Full-batch validation failed");
+  }, batchSize, { timeout: 180000 });
 
   await page.evaluate(() => {
     window.__lp064RepairProgress.length = 0;
@@ -283,8 +314,16 @@ try {
   });
   await page.locator("#moRepairLayout").click();
   await page.locator("#moFinalPreview").waitFor({ timeout: 30000 });
-  await page.waitForFunction(() => document.querySelector("#moRepairBatchStatus")?.textContent?.startsWith("PASS · 100 selected records checked"), undefined, { timeout: 180000 });
+  await page.waitForFunction((count) => {
+    const status = document.querySelector("#moRepairBatchStatus")?.textContent ?? "";
+    return status.startsWith(`PASS · ${count} selected records checked`) || /\d+ blocking diagnostics remain/u.test(status) || status.includes("Full-batch validation failed");
+  }, batchSize, { timeout: 180000 });
   const repairStatus = await page.locator("#moRepairBatchStatus").innerText();
+  if (!repairStatus.startsWith(`PASS · ${batchSize} selected records checked`)) {
+    const blockingDetails = await page.locator("#moRepairSummary li").allInnerTexts();
+    console.log(JSON.stringify({ [`lp065N${batchSize}RepairBlocker`]: { repairStatus, blockingDetails, progress: await page.evaluate(() => window.__lp064RepairProgress) } }));
+    throw new Error(`LP065_N${batchSize}_SAFE_REPAIR_BLOCKED`);
+  }
   const throttledRafCalls = await page.evaluate(() => {
     window.__lp064RepairProgressObserver?.disconnect();
     window.__lp064ThrottledRafObserver?.disconnect();
@@ -293,18 +332,23 @@ try {
   });
   assert.equal(throttledRafCalls, 0, "background validation must not wait on throttled iframe animation frames");
   const durationMs = Number(/\((\d+) ms; static artwork/u.exec(repairStatus)?.[1]);
-  assert.ok(durationMs > 0 && durationMs < 30000, `background N100 validation should remain responsive, got ${durationMs} ms`);
+  assert.ok(durationMs > 0 && durationMs < 30000, `background N${batchSize} validation should remain responsive, got ${durationMs} ms`);
   const repairProgress = await page.evaluate(() => window.__lp064RepairProgress);
   const distinctRepairProgress = repairProgress.filter((value, index) => index === 0 || value !== repairProgress[index - 1]);
-  assert.deepEqual(distinctRepairProgress, Array.from({ length: 100 }, (_, index) => `${index + 1}/100`), "N100 progress must report every face and yield between checks");
-  assert.match(repairStatus, /static artwork 4 measured\/196 reused/u, "static artwork geometry should be measured once per face/slot and safely reused");
+  assert.deepEqual(distinctRepairProgress, Array.from({ length: faceDocumentCount }, (_, index) => `${index + 1}/${faceDocumentCount}`), `N${batchSize} progress must report every face and yield between checks`);
+  if (!repairStatus.startsWith(`PASS · ${batchSize} selected records checked`)) {
+    const blockingDetails = await page.locator("#moRepairSummary li").allInnerTexts();
+    console.log(JSON.stringify({ n96RepairPreviewStatus: repairStatus, blockingDetails }));
+  }
+  assert.ok(repairStatus.startsWith(`PASS · ${batchSize} selected records checked`), "safe proposal plus explicit duplicate removal must validate every rendered face");
+  assert.match(repairStatus, new RegExp(`static artwork 4 measured/${faceDocumentCount * 2 - 4} reused`, "u"), "static artwork geometry should be measured once per face/slot and safely reused");
   const storedBeforeApply = await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1"));
   assert.equal(storedBeforeApply, manuallyCorrectedLayout, "the corrected layout definition remains unchanged during the second proposal preview");
   const proposalText = await page.frameLocator("#moFinalPreview").locator(".mo-sheet").innerText();
   assert.match(proposalText, /VPL000001/u);
-  assert.match(proposalText, /VPL000051/u);
+  assert.match(proposalText, new RegExp(`VPL${String(partnerRow).padStart(6, "0")}`, "u"));
   assert.match(proposalText, /Synthetic Receiver 1/u);
-  assert.match(proposalText, /Synthetic Receiver 51/u);
+  assert.match(proposalText, new RegExp(`Synthetic Receiver ${partnerRow}`, "u"));
   assert.ok((proposalText.match(/VPL000001/gu) ?? []).length >= 2, "exact tracking must fill both article-number and lower Intimation number fields");
   assert.ok((proposalText.match(/20100/gu) ?? []).length >= 2, "validated principal must be repeated in lower Intimation without adding commission");
   assert.ok((proposalText.match(/Synthetic Receiver 1/gu) ?? []).length >= 2, "Receiver name must appear in the upper party block and lower Intimation line");
@@ -326,7 +370,7 @@ try {
       editorOnlyNodes: half.querySelectorAll(".mo-editor-field,.mo-editor-binding,[data-mo-resize-handle],[data-mo-editor-only]").length,
     };
   }));
-  assert.equal(renderStructure.length, 2, "the first and source-51 forms must each have one clean output half");
+  assert.equal(renderStructure.length, 2, `the first and source-${partnerRow} forms must each have one clean output half`);
   for (const form of renderStructure) {
     assert.equal(form.fieldCount, expectedFrontFieldIds.length, "one layout node must be rendered for each configured non-CNIC field");
     assert.deepEqual(form.ids, expectedFrontFieldIds, "each intended field ID must render exactly once per form");
@@ -336,9 +380,9 @@ try {
     assert.equal(form.editorOnlyNodes, 0, "clean preview contains no editor values, labels, handles or selections");
   }
   const proposedPair = await page.frameLocator("#moFinalPreview").locator(".mo-half[data-mo-source-index]").evaluateAll((halves) => halves.map((half) => Number(half.getAttribute("data-mo-source-index")) + 1));
-  assert.deepEqual(proposedPair, [1, 51]);
+  assert.deepEqual(proposedPair, [1, partnerRow]);
   assert.equal(await page.frameLocator("#moFinalPreview").locator(".mo-editor-field,.mo-editor-binding,[data-mo-resize-handle]").count(), 0, "repair proposal preview must contain no editing handles/tags");
-  await page.frameLocator("#moFinalPreview").locator(".mo-sheet").screenshot({ path: join(evidence, "lp061-n100-proposed-firstpair.png") });
+  await page.frameLocator("#moFinalPreview").locator(".mo-sheet").screenshot({ path: join(evidence, `lp065-n${batchSize}-proposed-firstpair.png`) });
   await page.locator("#moApplyLayoutRepair").click();
   await page.waitForFunction(() => {
     const download = document.querySelector("#downloadMoLayoutPdf");
@@ -347,7 +391,7 @@ try {
   }, undefined, { timeout: 180000 });
   const savedAfterRepair = await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1"));
   assert.ok(savedAfterRepair, "explicit Apply Repair must save the MO layout definition");
-  assert.doesNotMatch(savedAfterRepair, /LP061-SYN|Synthetic Receiver|Synthetic Street|03100000001|00000-1234567-8/u, "saved MO layout must contain no imported values or Sender CNIC");
+  assert.doesNotMatch(savedAfterRepair, /LP065-SYN|Synthetic Receiver|Synthetic Address|03000000101|00000-1234567-8/u, "saved MO layout must contain no imported values or Sender CNIC");
   const savedLayout = JSON.parse(savedAfterRepair);
   assert.equal(savedLayout.fields.length, 16, "the explicit direct correction removes only the unfit duplicate; all other saved definitions remain");
   assert.equal(savedLayout.fields.find((field) => field.id === "saved-tracking-top").xMm, 103);
@@ -368,22 +412,30 @@ try {
   await page.locator("#moReturnToLayout").click();
   assert.deepEqual(auditEvents.filter((event) => event.eventType === "PDF_GENERATED"), [], "repair preview alone must not claim a PDF was generated");
 
+  const downloadStartedAt = performance.now();
   const downloadEvent = page.waitForEvent("download", { timeout: 180000 });
   await page.locator("#downloadMoLayoutPdf").click();
   const download = await downloadEvent;
-  assert.match(download.suggestedFilename(), /mo51-layout-batch-100-forms\.pdf/u);
-  const pdfPath = join(evidence, "lp061-n100-repaired.pdf");
+  const browserDownloadMs = performance.now() - downloadStartedAt;
+  const pdfTimingStatus = await page.evaluate(() => document.querySelector("#moPdfStatus")?.textContent ?? "PDF timing status node was not mounted after export");
+  assert.match(download.suggestedFilename(), new RegExp(`mo51-layout-batch-${batchSize}-forms\\.pdf`, "u"));
+  const pdfPath = join(evidence, `lp065-n${batchSize}-repaired.pdf`);
   await download.saveAs(pdfPath);
   const pdfBytes = await readFile(pdfPath);
   const pdf = await PDFDocument.load(pdfBytes);
-  assert.equal(pdf.getPageCount(), 100, "N100 paired output must contain 50 sheets × 2 pages");
+  assert.equal(pdf.getPageCount(), faceDocumentCount, `N${batchSize} paired output must contain ${sheetCount} sheets × 2 pages`);
   const mediaBox = pdf.getPage(0).getSize();
   assert.ok(Math.abs(mediaBox.width * 25.4 / 72 - 297) < 0.1 && Math.abs(mediaBox.height * 25.4 / 72 - 210) < 0.1, "downloaded PDF must use A4 landscape MediaBox");
   const pdfJs = await getDocument({ data: new Uint8Array(pdfBytes), disableWorker: true, useSystemFonts: true }).promise;
-  const firstRaster = await rasterPdfPage(pdfJs, 1, join(evidence, "lp061-n100-pdf-front-first-1-51.png"));
-  const lastRaster = await rasterPdfPage(pdfJs, 99, join(evidence, "lp061-n100-pdf-front-last-50-100.png"));
+  const firstRaster = await rasterPdfPage(pdfJs, 1, join(evidence, `lp065-n${batchSize}-pdf-front-first-1-${partnerRow}.png`));
+  const lastRaster = await rasterPdfPage(pdfJs, faceDocumentCount - 1, join(evidence, `lp065-n${batchSize}-pdf-front-last-${sheetCount}-${batchSize}.png`));
   assert.equal(firstRaster.containsRaster, true, "actual downloaded PDF front page must contain rendered MO artwork/content");
   assert.equal(lastRaster.containsRaster, true);
+  const verifyPrintTarget = process.env.LP_TEST_MO_REPAIR_SKIP_PRINT !== "1";
+  let popupDetails;
+  let popupFetch;
+  let popupFetchAfterClose;
+  if (verifyPrintTarget) {
   await page.evaluate(() => {
     const original = window.setTimeout;
     Object.defineProperty(window, "__moOriginalWindowSetTimeout", { value: original, configurable: true });
@@ -399,12 +451,12 @@ try {
     throw new Error(`${error.message}\nPrint status=${await page.locator("#moPdfStatus").innerText()}\nPopup=${popup.url()}`);
   });
   await popup.waitForURL((url) => url.href.startsWith("blob:"), { timeout: 30000 });
-  const popupDetails = { url: popup.url(), type: await popup.evaluate(() => document.contentType), printed: await popup.evaluate(() => window.__moPrintRequested === true) };
+  popupDetails = { url: popup.url(), type: await popup.evaluate(() => document.contentType), printed: await popup.evaluate(() => window.__moPrintRequested === true) };
   assert.equal(new URL(popupDetails.url).protocol, "blob:");
   assert.equal(popupDetails.type, "application/pdf");
   assert.equal(popupDetails.printed, true, "Print MO Batch must call print only on the verified generated PDF target");
   assert.equal(await page.evaluate(() => window.__moPdfBlobCleanupDelayMs), 1800000);
-  const popupFetch = await page.evaluate(async (url) => {
+  popupFetch = await page.evaluate(async (url) => {
     const response = await fetch(url);
     const bytes = new Uint8Array(await response.arrayBuffer());
     let binary = "";
@@ -415,32 +467,40 @@ try {
   assert.equal(popupFetch.type, "application/pdf");
   assert.ok(popupFetch.bytes > 0);
   const popupPdf = await PDFDocument.load(Buffer.from(popupFetch.base64, "base64"));
-  assert.equal(popupPdf.getPageCount(), 100, "Print MO Batch popup must display the same 100-page generated PDF");
+  assert.equal(popupPdf.getPageCount(), faceDocumentCount, "Print MO Batch popup must display the same generated paired PDF");
   delete popupFetch.base64;
   await popup.close();
-  const popupFetchAfterClose = await page.evaluate(async (url) => { try { const response = await fetch(url); return response.ok && (await response.arrayBuffer()).byteLength > 0; } catch { return false; } }, popupDetails.url);
+  popupFetchAfterClose = await page.evaluate(async (url) => { try { const response = await fetch(url); return response.ok && (await response.arrayBuffer()).byteLength > 0; } catch { return false; } }, popupDetails.url);
   assert.equal(popupFetchAfterClose, true, "popup.closed after verification must not revoke the PDF blob");
   await page.evaluate(() => { window.setTimeout = window.__moOriginalWindowSetTimeout; delete window.__moOriginalWindowSetTimeout; delete window.__moPdfBlobCleanupDelayMs; });
+  }
   const generatedAudit = auditEvents.filter((event) => event.eventType === "PDF_GENERATED");
-  assert.equal(generatedAudit.length, 2, "only actual download and print PDF generation should emit the local synthetic audit event");
-  assert.deepEqual(generatedAudit.map((event) => ({ rows: event.rows, pages: event.pages })), [{ rows: 100, pages: 100 }, { rows: 100, pages: 100 }]);
+  assert.equal(generatedAudit.length, verifyPrintTarget ? 2 : 1, "only actual PDF generation should emit the local synthetic audit event");
+  assert.deepEqual(generatedAudit.map((event) => ({ rows: event.rows, pages: event.pages })), [
+    ...Array.from({ length: verifyPrintTarget ? 2 : 1 }, () => ({ rows: batchSize, pages: faceDocumentCount })),
+  ]);
   assert.deepEqual(pageErrors, []);
   await page.locator("#moPrintSideMode").selectOption("front-only");
   await page.locator("#cancelMoLayoutValidation").waitFor({ timeout: 30000 });
+  await page.waitForFunction((sheets) => {
+    const status = document.querySelector("#moMappingFitError")?.textContent ?? "";
+    return /\(\d+\/\d+ rendered faces\)/u.test(status) && status.includes(`/${sheets} rendered faces`);
+  }, sheetCount, { timeout: 30000 });
   const cancelProgress = await page.locator("#moMappingFitError").innerText();
-  assert.match(cancelProgress, /Checking 100 records \(\d+\/50 rendered faces\)/u);
+  assert.match(cancelProgress, new RegExp(`Checking ${batchSize} records \\(\\d+\\/${sheetCount} rendered faces\\)`, "u"));
   await page.locator("#cancelMoLayoutValidation").click();
   await page.locator("#retryMoLayoutValidation").waitFor({ timeout: 30000 });
   assert.match(await page.locator("#moMappingFitError").innerText(), /MO_LAYOUT_BATCH_VALIDATION_CANCELLED/u);
   assert.equal(await page.locator("#downloadMoLayoutPdf").isDisabled(), true, "cancelled validation keeps download blocked");
   assert.equal(await page.locator("#printMoBatch").isDisabled(), true, "cancelled validation keeps print blocked");
-  const diagnosticLines = beforeRepair.diagnostics.split(/\n/u).filter((line) => line.startsWith("Source row "));
-  console.log(JSON.stringify({ lp061N100: {
-    beforeRepair: { selectedRows: beforeRepair.visiblePair, count: diagnosticLines.length, firstIssues: diagnosticLines.slice(0, 4), downloadDisabled: beforeRepair.downloadDisabled, printDisabled: beforeRepair.printDisabled },
+  const groupedDiagnosticLines = beforeRepair.diagnostics.split(/\n/u).filter((line) => /affects \d+ selected records/u.test(line));
+  const principalGroup = groupedDiagnosticLines.find((line) => /declared principal/u.test(line)) ?? null;
+  console.log(JSON.stringify({ [`lp065N${batchSize}`]: {
+    beforeRepair: { selectedRows: beforeRepair.visiblePair, groupedDiagnosticCount: groupedDiagnosticLines.length, principalGroup, firstIssues: groupedDiagnosticLines.slice(0, 4), downloadDisabled: beforeRepair.downloadDisabled, printDisabled: beforeRepair.printDisabled },
     initialRepairStatus: firstRepairStatus, directCorrection: "removed duplicate lower Intimation SenderName only in this synthetic acceptance fixture", repairStatus, savedFieldCount: savedLayout.fields.length,
     fieldRenderStructure: renderStructure.map(({ fieldCount, duplicateIds, duplicateSourcePlacements, editorOnlyNodes }) => ({ fieldCount, duplicateIds, duplicateSourcePlacements, editorOnlyNodes })),
-    download: { filename: download.suggestedFilename(), pageCount: pdf.getPageCount(), mediaBox, firstRaster, lastRaster },
-    print: { popupUrlScheme: new URL(popupDetails.url).protocol, contentType: popupDetails.type, printRequested: popupDetails.printed, popupFetch, popupFetchAfterClose },
+    download: { filename: download.suggestedFilename(), browserDownloadMs, pdfTimingStatus, pageCount: pdf.getPageCount(), mediaBox, firstRaster, lastRaster },
+    print: verifyPrintTarget ? { popupUrlScheme: new URL(popupDetails.url).protocol, contentType: popupDetails.type, printRequested: popupDetails.printed, popupFetch, popupFetchAfterClose } : { skippedForN96PerformanceProbe: true },
     pdfGeneratedAuditCounts: generatedAudit.map(({ rows, pages }) => ({ rows, pages })), evidence,
   } }));
   await context.close();

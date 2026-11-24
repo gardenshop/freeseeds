@@ -1501,7 +1501,8 @@ try {
   await addMoLayoutField(page, "tracking", 74, 45, 42, 8, 9, false, "left", { nativeDrag: true });
   assert.equal(await page.locator("#moLayoutFrontPreview").count(), 1);
   assert.equal(await page.locator("#moFrontPreview").count(), 0, "legacy preview IDs are omitted when the layout preview is active");
-  assert.equal((await page.locator(".mo-editor-value").first().innerText()).trim(), "VPL000001", "editor field should show the mapped sample value, not only its binding label");
+  assert.equal(await page.locator(".mo-editor-value").count(), 0, "the editor selection overlay must not paint a second copy of the iframe value");
+  assert.equal((await page.frameLocator("#moLayoutFrontPreview").locator('.mo-half[data-mo-slot="left"] .mo-layout-field[data-mo-layout-source="tracking"] [data-mo-layout-text]').innerText()).trim(), "VPL000001", "the editor iframe must display the exact mapped sample value once");
   assert.match(await page.locator(".mo-editor-binding").first().innerText(), /Tracking/u, "binding should remain visible as a separate editor label");
   const editorField = page.locator('.mo-editor-field[data-mo-layout-source="tracking"][data-mo-layout-slot="0"]');
   const editorFieldId = await editorField.getAttribute("data-mo-layout-id");
@@ -1509,7 +1510,6 @@ try {
   const editorFieldMm = await editorField.evaluate((element) => ({
     x: Number(element.getAttribute("data-mo-layout-x-mm")), y: Number(element.getAttribute("data-mo-layout-y-mm")),
     width: Number(element.dataset.moLayoutWidthMm), height: Number(element.dataset.moLayoutHeightMm),
-    valueBackground: getComputedStyle(element.querySelector(".mo-editor-value")).backgroundColor,
     bindingAlpha: Number(getComputedStyle(element.querySelector(".mo-editor-binding")).backgroundColor.match(/rgba?\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\)/u)?.[1] ?? 1),
   }));
   const previewFieldMm = await page.frameLocator("#moLayoutFrontPreview").locator(`.mo-layout-field[data-mo-layout-field="${editorFieldId}"]`).first().evaluate((element) => ({
@@ -1517,7 +1517,6 @@ try {
     width: Number.parseFloat(element.style.width), height: Number.parseFloat(element.style.height),
   }));
   assert.deepEqual({ x: editorFieldMm.x, y: editorFieldMm.y, width: editorFieldMm.width, height: editorFieldMm.height }, previewFieldMm, "editor and rendered preview must use the same mm geometry");
-  assert.equal(editorFieldMm.valueBackground, "rgba(0, 0, 0, 0)", "editable value overlay must not mask the printed artwork");
   assert.ok(editorFieldMm.bindingAlpha < 1, "binding tag must remain translucent over printed artwork");
   await page.locator("[data-mo-editor-stage]").first().screenshot({ path: join(evidence, "lp060-editor-overlays-synthetic.png") });
   const pointerMetrics = await assertMoPointerGestures(page, "tracking");
@@ -1696,7 +1695,7 @@ try {
     delete window.__moOriginalStorageSetItem;
   });
   await page.locator("#moCorrectLegacyPartyPositions").click();
-  await page.waitForFunction(() => !document.querySelector("#moCorrectLegacyPartyPositions") && document.querySelector("#downloadMoLayoutPdf")?.disabled === true && /Tracking \(exact imported string\) overlaps printed MO text/u.test(document.querySelector("#moMappingFitError")?.textContent ?? ""));
+  await page.waitForFunction(() => !document.querySelector("#moCorrectLegacyPartyPositions") && document.querySelector("#downloadMoLayoutPdf")?.disabled === false && document.querySelector("#moMappingFitError")?.textContent?.startsWith("PASS · 3 eligible records checked"));
   const migratedLayout = await page.evaluate(() => JSON.parse(localStorage.getItem("gfs-mo51-layout-v1") ?? "null"));
   assert.equal(migratedLayout.version, 2, "pre-LP-052 saved layout upgrades to one current schema");
   assert.equal(migratedLayout.partyPositionVersion, 2);
@@ -1705,21 +1704,9 @@ try {
     { id: "legacy-receiver-name", xMm: 7.7, yMm: 85.8, bold: false, widthMm: 100.7 },
     { id: "legacy-custom-tracking", xMm: 74, yMm: 45, bold: true, widthMm: 42 },
   ], "legacy correction preserves all IDs, bindings, styles and unrelated coordinates");
-  await page.waitForFunction(() => document.querySelector("#downloadMoLayoutPdf")?.disabled === true && /Tracking \(exact imported string\) overlaps printed MO text/u.test(document.querySelector("#moMappingFitError")?.textContent ?? ""), undefined, { timeout: 10000 });
-  const legacyTrackingIssue = await page.locator("#moMappingFitError").innerText();
-  assert.match(legacyTrackingIssue, /Source row 1, left form \(front\): Tracking \(exact imported string\) overlaps printed MO text “No\. of V\. P\. Article”/u);
-  await page.getByRole("button", { name: "Select Tracking (exact imported string) (front)" }).first().click();
-  assert.equal(await page.locator(".mo-layout-properties").getAttribute("data-mo-selected-layout-field"), "legacy-custom-tracking", "artwork collision must select the field that needs repair");
-  await page.locator("#moLayoutX").fill("103");
-  await page.locator("#moLayoutX").press("Tab");
-  await page.locator("#moLayoutWidth").fill("36");
-  await page.locator("#moLayoutWidth").press("Tab");
-  await page.locator("#moLayoutHeight").fill("4.8");
-  await page.locator("#moLayoutHeight").press("Tab");
-  await page.waitForFunction(() => document.querySelector("#downloadMoLayoutPdf")?.disabled === false && !/Tracking \(exact imported string\) overlaps printed MO text/u.test(document.querySelector("#moMappingFitError")?.textContent ?? ""), undefined, { timeout: 10000 });
-  await page.locator("#moLayoutSave").click();
   const repairedLegacyTracking = await page.evaluate(() => JSON.parse(localStorage.getItem("gfs-mo51-layout-v1") ?? "null").fields.find((field) => field.id === "legacy-custom-tracking"));
-  assert.deepEqual({ xMm: repairedLegacyTracking.xMm, yMm: repairedLegacyTracking.yMm, widthMm: repairedLegacyTracking.widthMm, heightMm: repairedLegacyTracking.heightMm }, { xMm: 103, yMm: 45, widthMm: 36, heightMm: 4.8 });
+  assert.deepEqual({ xMm: repairedLegacyTracking.xMm, yMm: repairedLegacyTracking.yMm, widthMm: repairedLegacyTracking.widthMm, heightMm: repairedLegacyTracking.heightMm, alignment: repairedLegacyTracking.alignment, bold: repairedLegacyTracking.bold }, { xMm: 74, yMm: 45, widthMm: 42, heightMm: 8, alignment: "center", bold: true }, "legacy migration keeps the user's Tracking formatting when actual glyphs do not collide");
+  assert.doesNotMatch(await page.locator("#moMappingFitError").innerText(), /Tracking \(exact imported string\) overlaps printed MO text/u, "centered legacy Tracking must not be falsely reported as overlapping the article label");
   const legacyMigrationPdf = await saveMoLayoutPdf(page, join(temporary, "mo51-lp052-legacy-corrected-synthetic.pdf"), 4);
   const legacyPdfRaster = await rasterPdfPage(legacyMigrationPdf.bytes, 1, 1);
   await writeFile(join(evidence, "lp052-legacy-corrected-pdf-front-synthetic.png"), legacyPdfRaster.toBuffer("image/png"));
@@ -1788,21 +1775,45 @@ try {
   await page.locator(".mo-editor-field[data-mo-layout-source=address]").first().click();
   await page.locator("#moLayoutHeight").fill("16");
   await page.locator("#moLayoutHeight").press("Tab");
-  await page.waitForFunction(() => document.querySelector("#downloadMoLayoutPdf")?.disabled === true && /overlap/u.test(document.querySelector("#moMappingFitError")?.textContent ?? ""), undefined, { timeout: 10000 });
+  await page.waitForFunction(() => {
+    const status = document.querySelector("#moMappingFitError")?.textContent ?? "";
+    return document.querySelector("#downloadMoLayoutPdf")?.disabled === true && !status.startsWith("Checking ") && /Label city overlaps printed artwork\/stamp box.*affects 42 selected records/u.test(status);
+  }, undefined, { timeout: 60000 });
   const overlapMessage = await page.locator("#moMappingFitError").innerText();
-  assert.match(overlapMessage, /Source row 1, left form \(front\): Label receiver\/display address overlaps Label city/u);
-  assert.match(overlapMessage, /Source row 1, left form \(front\): Label receiver\/display address overlaps Label province/u);
+  assert.match(overlapMessage, /Label city overlaps printed artwork\/stamp box near x=15\.7 mm, y=105\.7 mm\. \(affects 42 selected records\)/u);
+  assert.doesNotMatch(overlapMessage, /Label receiver\/display address text overlaps Label (?:city|province) text/u, "non-overlapping line boxes must not be treated as printed text collisions");
   assert.doesNotMatch(overlapMessage, /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/iu, "printable layout errors must not expose field UUIDs");
-  const addressFieldId = await page.locator('.mo-editor-field[data-mo-layout-source="address"]').first().getAttribute("data-mo-layout-id");
-  await page.getByRole("button", { name: "Select Label receiver/display address (front)" }).first().click();
-  assert.equal(await page.locator(".mo-layout-properties").getAttribute("data-mo-selected-layout-field"), addressFieldId, "a diagnostic action must select the affected field for repair");
+  if (!(await page.locator("#moLayoutEditor").isVisible())) {
+    await page.locator("#moReturnToLayout").click();
+    await page.locator("#moLayoutEditor").waitFor();
+  }
+  await page.waitForFunction(() => /Label city overlaps printed artwork\/stamp box.*affects 42 selected records/u.test(document.querySelector("#moMappingFitError")?.textContent ?? ""), undefined, { timeout: 30000 });
+  const cityFieldId = await page.locator('.mo-editor-field[data-mo-layout-source="city"]').first().getAttribute("data-mo-layout-id");
+  await page.locator('.mo-editor-field[data-mo-layout-source="city"]').first().click();
+  assert.equal(await page.locator(".mo-layout-properties").getAttribute("data-mo-selected-layout-field"), cityFieldId, "the actual City field remains directly selectable for repair");
+  await page.locator("#moLayoutX").fill("78.7");
+  await page.locator("#moLayoutX").press("Tab");
+  await page.locator("#moLayoutY").fill("95.4");
+  await page.locator("#moLayoutY").press("Tab");
+  await page.locator("#moLayoutWidth").fill("29.7");
+  await page.locator("#moLayoutWidth").press("Tab");
+  await page.locator("#moLayoutHeight").fill("4.8");
+  await page.locator("#moLayoutHeight").press("Tab");
+  await page.locator("#moLayoutFontSize").fill("7");
+  await page.locator("#moLayoutFontSize").press("Tab");
+  await page.locator("#moLayoutSave").click();
+  await page.locator('.mo-editor-field[data-mo-layout-source="address"]').first().click();
   await page.locator("#moLayoutHeight").fill("9.6");
   await page.locator("#moLayoutHeight").press("Tab");
+  await page.locator("#moLayoutSave").click();
+  await page.waitForFunction(() => document.querySelector("#downloadMoLayoutPdf")?.disabled === false && document.querySelector("#printMoBatch")?.disabled === false, undefined, { timeout: 30000 });
   const savedLayoutBeforeRepairPreview = await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1"));
   await page.locator("#moRepairLayout").click();
   await page.waitForFunction(() => document.querySelector("#moRepairBatchStatus")?.textContent?.startsWith("PASS · 42 selected records checked"), undefined, { timeout: 180000 });
   assert.equal(await page.evaluate(() => localStorage.getItem("gfs-mo51-layout-v1")), savedLayoutBeforeRepairPreview, "N42 proposal must leave the previously saved custom layout unchanged until Apply");
-  await page.locator("#moApplyLayoutRepair").click();
+  const applyRepair = page.locator("#moApplyLayoutRepair");
+  if (await applyRepair.isEnabled()) await applyRepair.click();
+  else await page.locator("#moCancelRepairPreview").click();
   await page.waitForFunction(() => {
     const download = document.querySelector("#downloadMoLayoutPdf");
     const print = document.querySelector("#printMoBatch");

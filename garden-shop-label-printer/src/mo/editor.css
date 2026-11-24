@@ -9,8 +9,6 @@
 .mo-editor-field.selected{z-index:12;border:2px solid #9b4d22;background:#fff0d91c;outline:2px solid #f4b183;outline-offset:1px}
 .mo-editor-field:focus-visible{outline:2px solid #225ca8;outline-offset:2px}
 .mo-editor-field.missing-value{border-color:#a71923;background:transparent}
-.mo-editor-field .mo-editor-value{display:block;box-sizing:border-box;width:100%;min-height:100%;overflow:visible;padding:1px 3px;background:transparent;color:#102c30;line-height:1.1;unicode-bidi:isolate;-webkit-text-stroke:1.5px #fff;paint-order:stroke fill;text-shadow:0 0 2px #fff}
-.mo-editor-field.missing-value .mo-editor-value{color:#a71923;font-weight:700}
 .mo-editor-field .mo-editor-binding{position:absolute;top:-15px;left:0;z-index:2;max-width:240px;overflow:hidden;padding:1px 4px;border:1px solid #176d77;background:#f7fbfc88;color:#17434a;font:600 10px/1.2 ui-sans-serif,system-ui;text-overflow:ellipsis;white-space:nowrap;pointer-events:none;-webkit-text-stroke:.5px #fff;paint-order:stroke fill;text-shadow:0 0 2px #fff}
 .mo-editor-field.selected .mo-editor-binding{border-color:#9b4d22;background:#fff8f188;color:#684018}
 .mo-editor-field>i[data-mo-resize-handle]{position:absolute;right:-7px;bottom:-7px;z-index:3;width:14px;height:14px;border:2px solid #fff;border-radius:2px;background:#9b4d22;box-shadow:0 0 0 1px #643515;cursor:nwse-resize;touch-action:none}

@@ -130,6 +130,8 @@ function localDocument(
 
     if (sourcePageIndex === FRONT_SECTION_INDEX) {
       sourcePage.querySelector<HTMLElement>('div[style*="width:172px"]')?.setAttribute("data-mo-allowed-text-overlap", "declaredPrincipal,manualPrincipal,principal");
+      const monthStampLabel = Array.from(sourcePage.querySelectorAll<HTMLElement>("div")).find((element) => element.textContent?.trim() === "Month Stamp" && element.children.length === 0);
+      (monthStampLabel?.nextElementSibling as HTMLElement | null)?.setAttribute("data-mo-allowed-text-overlap", "orderDate");
     }
 
     sourcePage.querySelectorAll<HTMLElement>("[style]").forEach((element) => {
@@ -192,7 +194,7 @@ function localDocument(
           text.dataset.moProvenance = resolved.provenance;
           text.textContent = resolved.value;
           text.dir = "auto";
-          text.style.cssText = `display:block;width:${field.wrap ? "100%" : "max-content"};min-height:100%;overflow:visible;line-height:1.2;white-space:${field.wrap ? "normal" : "nowrap"};unicode-bidi:isolate`;
+           text.style.cssText = `display:block;box-sizing:border-box;width:100%;min-height:100%;overflow:visible;line-height:1.2;text-align:inherit;white-space:${field.wrap ? "normal" : "nowrap"};unicode-bidi:isolate`;
           box.append(text);
         } else if (field.source !== "senderCnic") {
           box.dataset.moLayoutMissing = field.source;
@@ -246,10 +248,26 @@ export type MoLayoutDiagnostic = Readonly<{
   fieldId?: string;
   relatedFieldId?: string;
   source?: MoDataSource;
+  affectedRecords?: number;
 }>;
 
 function sourceLabel(source: string | undefined, fallback = "Mapped field"): string {
   return MO_LAYOUT_SOURCES.find((item) => item.id === source)?.label ?? fallback;
+}
+
+function groupMoBatchDiagnostics(diagnostics: readonly MoLayoutDiagnostic[]): readonly MoLayoutDiagnostic[] {
+  const groups = new Map<string, { issue: MoLayoutDiagnostic; message: string; records: Set<number> }>();
+  for (const issue of diagnostics) {
+    const location = /^Source row (\d+)(?:, (?:left|right) form \((?:front|back)\))?: (.+)$/u.exec(issue.message);
+    const message = location?.[2] ?? issue.message;
+    const key = JSON.stringify([issue.code, issue.fieldId ?? "", issue.relatedFieldId ?? "", issue.source ?? "", message]);
+    const group = groups.get(key) ?? { issue, message, records: new Set<number>() };
+    if (location) group.records.add(Number(location[1]));
+    groups.set(key, group);
+  }
+  return Object.freeze([...groups.values()].map(({ issue, message, records }) => records.size > 1
+    ? Object.freeze({ ...issue, message: `${message} (affects ${records.size} selected records)`, affectedRecords: records.size })
+    : issue));
 }
 
 function staticFieldLabel(field: string | undefined): string {
@@ -280,9 +298,18 @@ type GraphemeSegment = Readonly<{ index: number; segment: string }>;
 const GraphemeSegmenter = (Intl as unknown as { Segmenter?: new (locales?: string | string[], options?: { granularity: "grapheme" }) => { segment(value: string): Iterable<GraphemeSegment> } }).Segmenter;
 const graphemeSegmenter = GraphemeSegmenter ? new GraphemeSegmenter(undefined, { granularity: "grapheme" }) : undefined;
 
-function textNodeGlyphRects(node: Node): readonly DOMRect[] {
+function textNodeGlyphRects(node: Node, context?: CanvasRenderingContext2D): readonly DOMRect[] {
   const text = node.textContent ?? "";
   if (!text.trim()) return [];
+  const document = node.ownerDocument;
+  const view = document?.defaultView;
+  const measure = context ?? document?.createElement("canvas").getContext("2d") ?? undefined;
+  const style = node.parentElement && view ? view.getComputedStyle(node.parentElement) : undefined;
+  if (measure && style) {
+    measure.font = [style.fontStyle, style.fontVariant, style.fontWeight, style.fontSize, style.fontFamily].filter(Boolean).join(" ");
+    measure.direction = style.direction === "rtl" ? "rtl" : "ltr";
+    measure.textAlign = "left";
+  }
   let offset = 0;
   const fallbackSegments = Array.from(text).map((segment) => {
     const current = { index: offset, segment };
@@ -296,7 +323,21 @@ function textNodeGlyphRects(node: Node): readonly DOMRect[] {
     if (!segment.segment.trim()) continue;
     range.setStart(node, segment.index);
     range.setEnd(node, segment.index + segment.segment.length);
-    rects.push(...Array.from(range.getClientRects()).filter((rect) => rect.width > 0.25 && rect.height > 0.5));
+    const metrics = measure?.measureText(segment.segment);
+    for (const rect of Array.from(range.getClientRects()).filter((item) => item.width > 0.25 && item.height > 0.5)) {
+      const fontAscent = metrics?.fontBoundingBoxAscent;
+      const actualAscent = metrics?.actualBoundingBoxAscent;
+      const actualDescent = metrics?.actualBoundingBoxDescent;
+      const inkMetricsAvailable = [fontAscent, actualAscent, actualDescent].every((value) => Number.isFinite(value))
+        && (actualAscent ?? 0) + (actualDescent ?? 0) > 0.5;
+      if (!inkMetricsAvailable) {
+        rects.push(rect);
+        continue;
+      }
+      const inkTop = rect.top + (fontAscent ?? 0) - (actualAscent ?? 0);
+      const inkHeight = (actualAscent ?? 0) + (actualDescent ?? 0);
+      rects.push(new DOMRect(rect.left, inkTop, rect.width, Math.max(0.5, inkHeight)));
+    }
   }
   return rects;
 }
@@ -304,10 +345,11 @@ function textNodeGlyphRects(node: Node): readonly DOMRect[] {
 function renderedTextRects(element: HTMLElement): readonly DOMRect[] {
   const document = element.ownerDocument;
   const walker = document.createTreeWalker(element, document.defaultView?.NodeFilter.SHOW_TEXT ?? 4);
+  const context = document.createElement("canvas").getContext("2d") ?? undefined;
   const rects: DOMRect[] = [];
   let node = walker.nextNode();
   while (node) {
-    rects.push(...textNodeGlyphRects(node));
+    rects.push(...textNodeGlyphRects(node, context));
     node = walker.nextNode();
   }
   return rects;
@@ -316,13 +358,14 @@ function renderedTextRects(element: HTMLElement): readonly DOMRect[] {
 function staticArtworkTextRects(page: HTMLElement): readonly Readonly<{ rect: DOMRect; label: string }>[] {
   const document = page.ownerDocument;
   const walker = document.createTreeWalker(page, document.defaultView?.NodeFilter.SHOW_TEXT ?? 4);
+  const context = document.createElement("canvas").getContext("2d") ?? undefined;
   const rects: Array<Readonly<{ rect: DOMRect; label: string }>> = [];
   let node = walker.nextNode();
   while (node) {
     const parent = node.parentElement;
     const label = node.textContent?.trim().replace(/\s+/gu, " ") ?? "";
     if (label && !parent?.closest("[data-mo-field],[data-mo-layout-text],[data-mo-sender-cnic],[data-mo-layout-missing],.mo-editor-field,.mo-editor-binding,[data-mo-editor-only]")) {
-      rects.push(...textNodeGlyphRects(node).map((rect) => Object.freeze({ rect, label: label.slice(0, 48) })));
+      rects.push(...textNodeGlyphRects(node, context).map((rect) => Object.freeze({ rect, label: label.slice(0, 48) })));
     }
     node = walker.nextNode();
   }
@@ -411,18 +454,25 @@ export function findMoLayoutDiagnostics(doc: Document, artworkGeometryCache?: St
       push({ code: "overflow", message: `${recordLocation(field)}: ${label} exceeds its printable line bounds.`, fieldId: field.dataset.moLayoutField, source });
     }
   }
+  const layoutGlyphRects = new Map<HTMLElement, readonly DOMRect[]>();
   for (const field of Array.from(doc.querySelectorAll<HTMLElement>("[data-mo-layout-text]"))) {
     const box = field.parentElement;
     if (!box) continue;
     const fieldBounds = box.getBoundingClientRect();
-    const textBounds = field.getBoundingClientRect();
-    const outside = field.scrollWidth > box.clientWidth + 1 || field.scrollHeight > box.clientHeight + 1
-      || textBounds.left < fieldBounds.left - 0.5 || textBounds.right > fieldBounds.right + 0.5
-      || textBounds.top < fieldBounds.top - 0.5 || textBounds.bottom > fieldBounds.bottom + 0.5;
+    const glyphRects = renderedTextRects(field);
+    layoutGlyphRects.set(field, glyphRects);
+    const outside = !fieldBounds.width || !fieldBounds.height || glyphRects.some((glyph) => glyph.left < fieldBounds.left - 0.5
+      || glyph.right > fieldBounds.right + 0.5 || glyph.top < fieldBounds.top - 0.5 || glyph.bottom > fieldBounds.bottom + 0.5);
     if (outside) {
       const fieldId = box.dataset.moLayoutField ?? field.dataset.moLayoutText;
       const source = box.dataset.moLayoutSource as MoDataSource | undefined;
-      const measurement = `text ${Math.round(textBounds.width)}×${Math.round(textBounds.height)}px; field ${Math.round(fieldBounds.width)}×${Math.round(fieldBounds.height)}px`;
+      const inkBounds = glyphRects.reduce((bounds, glyph) => ({
+        left: Math.min(bounds.left, glyph.left), right: Math.max(bounds.right, glyph.right),
+        top: Math.min(bounds.top, glyph.top), bottom: Math.max(bounds.bottom, glyph.bottom),
+      }), { left: Number.POSITIVE_INFINITY, right: Number.NEGATIVE_INFINITY, top: Number.POSITIVE_INFINITY, bottom: Number.NEGATIVE_INFINITY });
+      const inkWidth = Number.isFinite(inkBounds.left) ? inkBounds.right - inkBounds.left : 0;
+      const inkHeight = Number.isFinite(inkBounds.top) ? inkBounds.bottom - inkBounds.top : 0;
+      const measurement = `glyphs ${Math.round(inkWidth)}×${Math.round(inkHeight)}px; field ${Math.round(fieldBounds.width)}×${Math.round(fieldBounds.height)}px`;
       push({ code: "overflow", message: `${recordLocation(field)}: ${sourceLabel(source)} text exceeds its printable field bounds (${measurement}).`, fieldId, source });
     }
   }
@@ -437,10 +487,23 @@ export function findMoLayoutDiagnostics(doc: Document, artworkGeometryCache?: St
     const fields = Array.from(half.querySelectorAll<HTMLElement>(":scope > .mo-layout-field"));
     for (let left = 0; left < fields.length; left += 1) {
       for (let right = left + 1; right < fields.length; right += 1) {
-        if (intersects(fields[left].getBoundingClientRect(), fields[right].getBoundingClientRect())) {
-          const source = fields[left].dataset.moLayoutSource as MoDataSource | undefined;
-          const other = sourceLabel(fields[right].dataset.moLayoutSource, "another field");
-          push({ code: "overlap", message: `${recordLocation(fields[left])}: ${sourceLabel(source)} overlaps ${other}.`, fieldId: fields[left].dataset.moLayoutField, relatedFieldId: fields[right].dataset.moLayoutField, source });
+        const first = fields[left];
+        const second = fields[right];
+        const source = first.dataset.moLayoutSource as MoDataSource | undefined;
+        const firstText = first.querySelector<HTMLElement>("[data-mo-layout-text]");
+        const secondText = second.querySelector<HTMLElement>("[data-mo-layout-text]");
+        const firstInk = firstText ? layoutGlyphRects.get(firstText) ?? renderedTextRects(firstText) : [];
+        const secondInk = secondText ? layoutGlyphRects.get(secondText) ?? renderedTextRects(secondText) : [];
+        const sameSourcePosition = source === second.dataset.moLayoutSource
+          && first.style.left === second.style.left
+          && first.style.top === second.style.top
+          && first.style.width === second.style.width
+          && first.style.height === second.style.height;
+        if (sameSourcePosition) {
+          push({ code: "overlap", message: `${recordLocation(first)}: ${sourceLabel(source)} is bound more than once to the same print position.`, fieldId: first.dataset.moLayoutField, relatedFieldId: second.dataset.moLayoutField, source });
+        } else if (firstInk.some((a) => secondInk.some((b) => intersects(a, b)))) {
+          const other = sourceLabel(second.dataset.moLayoutSource, "another field");
+          push({ code: "overlap", message: `${recordLocation(first)}: ${sourceLabel(source)} text overlaps ${other} text.`, fieldId: first.dataset.moLayoutField, relatedFieldId: second.dataset.moLayoutField, source });
         }
       }
     }
@@ -462,7 +525,7 @@ export function findMoLayoutDiagnostics(doc: Document, artworkGeometryCache?: St
       }
       const dynamicText = Array.from(half.querySelectorAll<HTMLElement>(".mo-layout-field [data-mo-layout-text],.page [data-mo-field]"));
       for (const field of dynamicText) {
-        const glyphRects = renderedTextRects(field);
+        const glyphRects = layoutGlyphRects.get(field) ?? renderedTextRects(field);
         const layoutBox = field.closest<HTMLElement>(".mo-layout-field");
         const source = (layoutBox?.dataset.moLayoutSource ?? field.dataset.moLayoutSource) as MoDataSource | undefined;
         const staticField = field.dataset.moField;
@@ -574,7 +637,7 @@ export async function validateMoBatchLayout(
   } finally {
     for (const frame of frames.values()) frame.remove();
   }
-  const unique = diagnostics.filter((issue, index, values) => values.findIndex((other) => other.code === issue.code && other.message === issue.message && other.fieldId === issue.fieldId && other.relatedFieldId === issue.relatedFieldId) === index);
+  const unique = groupMoBatchDiagnostics(diagnostics);
   return Object.freeze({
     checkedRecords: candidates.length,
     sheetCount: imposition.sheetCount,

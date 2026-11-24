@@ -3,7 +3,7 @@ import html2canvas from "html2canvas";
 import type { MoCandidate } from "./adapter";
 import { formatSenderCnic } from "./cnic";
 import { imposeMoCandidates } from "./imposition";
-import { findMoFieldOverflows, findMoFieldOverlaps, renderMoPreviewDocuments, type MoBackPreviewRotation } from "./renderer";
+import { findMoLayoutDiagnostics, renderMoPreviewDocuments, type MoBackPreviewRotation } from "./renderer";
 import { emptyMoSessionMapping, hasVisibleMoFields, resolveMoVisibleFields, type MoSessionMapping } from "./mapping";
 import { hasLegacyMoPartyPositions, resolveMoLayoutSource, type MoLayout } from "./layout";
 
@@ -22,6 +22,7 @@ export const MO_PDF_GEOMETRY = Object.freeze({
 });
 
 export type MoPdfProgress = Readonly<{ completedPages: number; totalPages: number }>;
+export type MoPdfPhase = "html-generation" | "dom-ready" | "pdf-local-validation" | "overlay-preparation" | "html2canvas" | "png-encode" | "pdf-assembly" | "pdf-save";
 export type MoBatchSideMode = "paired" | "front-only" | "back-only";
 export type MoPdfOptions = Readonly<{
   signal?: AbortSignal;
@@ -31,6 +32,7 @@ export type MoPdfOptions = Readonly<{
   layout?: MoLayout;
   sideMode?: MoBatchSideMode;
   onProgress?: (progress: MoPdfProgress) => void;
+  onTiming?: (phase: MoPdfPhase, durationMs: number) => void;
 }>;
 
 function abortError(): DOMException {
@@ -51,8 +53,9 @@ function abortable<T>(promise: Promise<T>, signal?: AbortSignal): Promise<T> {
   });
 }
 
-async function facePng(srcdoc: string, signal?: AbortSignal, backgroundColor: string | null = "#fff"): Promise<Uint8Array> {
+async function facePng(srcdoc: string, signal?: AbortSignal, backgroundColor: string | null = "#fff", onTiming?: MoPdfOptions["onTiming"]): Promise<Uint8Array> {
   throwIfAborted(signal);
+  const domStartedAt = performance.now();
   const frame = document.createElement("iframe");
   frame.setAttribute("sandbox", "allow-same-origin");
   frame.setAttribute("aria-hidden", "true");
@@ -73,13 +76,18 @@ async function facePng(srcdoc: string, signal?: AbortSignal, backgroundColor: st
     throwIfAborted(signal);
     const sheet = doc.querySelector<HTMLElement>(".mo-sheet");
     if (!sheet) throw new Error(`MO_PDF_PREVIEW_SHEET_MISSING:${doc.readyState}`);
-    const overflows = findMoFieldOverflows(doc);
+    onTiming?.("dom-ready", performance.now() - domStartedAt);
+    const localValidationStartedAt = performance.now();
+    const localDiagnostics = findMoLayoutDiagnostics(doc);
+    onTiming?.("pdf-local-validation", performance.now() - localValidationStartedAt);
+    const overflows = localDiagnostics.filter((issue) => issue.code === "overflow").map((issue) => issue.message);
     if (overflows.length) throw new Error(`MO_FIELD_OVERFLOW:${overflows.join(",")}`);
-    const overlaps = findMoFieldOverlaps(doc);
+    const overlaps = localDiagnostics.filter((issue) => issue.code === "overlap" || issue.code === "artwork-overlap").map((issue) => issue.message);
     if (overlaps.length) throw new Error(`MO_FIELD_OVERLAP:${overlaps.join(",")}`);
     const bounds = sheet.getBoundingClientRect();
     const width = bounds.width;
     const height = bounds.height;
+    const rasterStartedAt = performance.now();
     canvas = await abortable(html2canvas(sheet, {
       scale: DPI / 96,
       backgroundColor,
@@ -93,11 +101,15 @@ async function facePng(srcdoc: string, signal?: AbortSignal, backgroundColor: st
       foreignObjectRendering: false,
       removeContainer: true,
     }), signal);
+    onTiming?.("html2canvas", performance.now() - rasterStartedAt);
     throwIfAborted(signal);
     if (canvas.width !== Math.floor(width * DPI / 96) || canvas.height !== Math.floor(height * DPI / 96)) throw new Error(`MO_PDF_RASTER_SIZE_INVALID:${canvas.width}x${canvas.height}`);
+    const encodeStartedAt = performance.now();
     const png = await abortable(new Promise<Blob>((resolve, reject) => canvas!.toBlob((blob) => blob ? resolve(blob) : reject(new Error("MO_PDF_PNG_ENCODE_FAILED")), "image/png")), signal);
     throwIfAborted(signal);
-    return new Uint8Array(await png.arrayBuffer());
+    const bytes = new Uint8Array(await png.arrayBuffer());
+    onTiming?.("png-encode", performance.now() - encodeStartedAt);
+    return bytes;
   } finally {
     frame.remove();
     if (canvas) {
@@ -107,8 +119,7 @@ async function facePng(srcdoc: string, signal?: AbortSignal, backgroundColor: st
   }
 }
 
-function layoutOverlayDocument(srcdoc: string, slot: "left" | "right", rotate: boolean): Readonly<{ srcdoc: string; xMm: number; yMm: number; widthMm: number; heightMm: number }> | undefined {
-  const source = new DOMParser().parseFromString(srcdoc, "text/html");
+function layoutOverlayDocument(source: Document, slot: "left" | "right", rotate: boolean): Readonly<{ srcdoc: string; xMm: number; yMm: number; widthMm: number; heightMm: number }> | undefined {
   const half = source.querySelector<HTMLElement>(`.mo-half[data-mo-slot="${slot}"]`);
   if (!half) throw new Error("MO_LAYOUT_OVERLAY_HALF_MISSING");
   const fields = Array.from(half.querySelectorAll<HTMLElement>(":scope > .mo-layout-field"));
@@ -165,7 +176,7 @@ export async function createMoPdfBlob(
   senderCnicInput: string,
   options: MoPdfOptions = {},
 ): Promise<Blob> {
-  const { signal, onProgress, backRotation = "none", mappings = new Map(), draftMode = false, layout, sideMode = "paired" } = options;
+  const { signal, onProgress, onTiming, backRotation = "none", mappings = new Map(), draftMode = false, layout, sideMode = "paired" } = options;
   throwIfAborted(signal);
   if (!candidates.length) throw new Error("MO_PDF_NO_ELIGIBLE_RECORDS");
   const cnic = formatSenderCnic(senderCnicInput);
@@ -193,56 +204,52 @@ export async function createMoPdfBlob(
   pdf.setTitle(layoutActive ? "MO-51 user-defined layout batch" : draftMode ? "MO-51 user-confirmed incomplete draft forms" : "MO-51 blank manual-completion forms");
   pdf.setSubject(layoutActive ? "User-defined field layout batch; official postal acceptance is not asserted" : draftMode ? "User-confirmed draft values; unresolved postal fields remain blank; not an official completed money order" : "Blank forms for manual completion; not an official completed money order");
   pdf.setKeywords(layoutActive ? ["MO-51", "user-defined layout", "batch"] : draftMode ? ["MO-51", "user-confirmed draft", "not postal verified", "incomplete"] : ["MO-51", "blank", "manual completion", "not completed"]);
-  const imageCache = new Map<string, Awaited<ReturnType<typeof pdf.embedPng>>>();
+  const blankArtworkCache = new Map<string, Awaited<ReturnType<typeof pdf.embedPng>>>();
   const layoutArtworkCache = new Map<string, Awaited<ReturnType<typeof pdf.embedPng>>>();
-  const layoutOverlayCache = new Map<string, Awaited<ReturnType<typeof pdf.embedPng>>>();
   let completedPages = 0;
 
   for (const sheet of plan.sheets) {
+    throwIfAborted(signal);
+    const htmlStartedAt = performance.now();
+    const docs = renderMoPreviewDocuments(sheet, cnic.status === "valid" ? cnic.formatted : "", backRotation, appliedMappings, layoutActive ? layout : undefined);
+    onTiming?.("html-generation", performance.now() - htmlStartedAt);
     for (const face of faces) {
       throwIfAborted(signal);
       const faceCandidates = face === "front" ? sheet.front : sheet.back;
-      const visualFields = layoutActive && layout
-        ? [faceCandidates.left, faceCandidates.right].map((candidate) => candidate ? layout.fields.filter((field) => field.face === face).map((field) => resolveMoLayoutSource(candidate, field.source, senderCnicInput, appliedMappings.get(candidate.sourceIndex) ?? emptyMoSessionMapping())) : null)
-        : [faceCandidates.left, faceCandidates.right].map((candidate) => candidate ? resolveMoVisibleFields(candidate, appliedMappings.get(candidate.sourceIndex) ?? emptyMoSessionMapping()) : null);
-      const docs = renderMoPreviewDocuments(sheet, cnic.status === "valid" ? cnic.formatted : "", backRotation, appliedMappings, layoutActive ? layout : undefined);
+      const assemblyStartedAt = performance.now();
+      let facePreparationMs = 0;
+      const onPageTiming: MoPdfOptions["onTiming"] = (phase, durationMs) => {
+        onTiming?.(phase, durationMs);
+        if (phase === "dom-ready" || phase === "pdf-local-validation" || phase === "overlay-preparation" || phase === "html2canvas" || phase === "png-encode") {
+          facePreparationMs += durationMs;
+        }
+      };
       const page = pdf.addPage([PAGE_WIDTH_PT, PAGE_HEIGHT_PT]);
       if (layoutActive && layout) {
         const cnicValue = cnic.status === "valid" ? cnic.formatted : "";
         const artworkKey = `${face}:${faceCandidates.right ? "two-forms" : "blank-right"}:${face === "back" ? backRotation : "none"}:${cnicValue}`;
-        let artwork = layoutArtworkCache.get(artworkKey);
+        const staticArtworkOnly = cnicValue.length === 0;
+        let artwork = staticArtworkOnly ? layoutArtworkCache.get(artworkKey) : undefined;
         if (!artwork) {
           const artworkDocs = renderMoPreviewDocuments(sheet, cnicValue, backRotation, new Map());
-          artwork = await pdf.embedPng(await facePng(artworkDocs[face], signal));
-          layoutArtworkCache.set(artworkKey, artwork);
+          artwork = await pdf.embedPng(await facePng(artworkDocs[face], signal, "#fff", onPageTiming));
+          if (staticArtworkOnly) layoutArtworkCache.set(artworkKey, artwork);
         }
         page.drawImage(artwork, { x: 0, y: 0, width: PAGE_WIDTH_PT, height: PAGE_HEIGHT_PT });
 
+        const overlayStartedAt = performance.now();
+        const overlaySource = new DOMParser().parseFromString(docs[face], "text/html");
+        const overlays = new Map<"left" | "right", ReturnType<typeof layoutOverlayDocument>>([
+          ["left", layoutOverlayDocument(overlaySource, "left", face === "back" && backRotation === "rotate-180")],
+          ["right", layoutOverlayDocument(overlaySource, "right", face === "back" && backRotation === "rotate-180")],
+        ]);
+        onPageTiming("overlay-preparation", performance.now() - overlayStartedAt);
         for (const slot of ["left", "right"] as const) {
           const candidate = faceCandidates[slot];
           if (!candidate) continue;
-          const overlay = layoutOverlayDocument(docs[face], slot, face === "back" && backRotation === "rotate-180");
+          const overlay = overlays.get(slot);
           if (!overlay) continue;
-          const overlayValues = layout.fields
-            .filter((field) => field.face === face && field.source !== "senderCnic")
-            .map((field) => ({
-              source: field.source,
-              xMm: field.xMm,
-              yMm: field.yMm,
-              widthMm: field.widthMm,
-              heightMm: field.heightMm,
-              fontSizePt: field.fontSizePt,
-              bold: field.bold,
-              alignment: field.alignment,
-              wrap: field.wrap,
-              value: resolveMoLayoutSource(candidate, field.source, senderCnicInput, appliedMappings.get(candidate.sourceIndex) ?? emptyMoSessionMapping())?.value ?? "",
-            }));
-          const overlayKey = `${face}:${face === "back" ? backRotation : "none"}:${JSON.stringify(overlayValues)}`;
-          let image = layoutOverlayCache.get(overlayKey);
-          if (!image) {
-            image = await pdf.embedPng(await facePng(overlay.srcdoc, signal, null));
-            layoutOverlayCache.set(overlayKey, image);
-          }
+          const image = await pdf.embedPng(await facePng(overlay.srcdoc, signal, null, onPageTiming));
           const mmToPoints = PAGE_WIDTH_PT / 297;
           page.drawImage(image, {
             x: ((slot === "right" ? 148.5 : 0) + overlay.xMm) * mmToPoints,
@@ -252,14 +259,17 @@ export async function createMoPdfBlob(
           });
         }
       } else {
+        const visualFields = [faceCandidates.left, faceCandidates.right].map((candidate) => candidate ? resolveMoVisibleFields(candidate, appliedMappings.get(candidate.sourceIndex) ?? emptyMoSessionMapping()) : null);
         const key = `${face}:${faceCandidates.right ? "two-forms" : "blank-right"}:${cnic.status === "valid" ? cnic.formatted : "no-cnic"}:${face === "back" ? backRotation : "none"}:${JSON.stringify(visualFields)}`;
-        let image = imageCache.get(key);
+        const staticArtworkOnly = visualFields.every((fields) => !fields || !hasVisibleMoFields(fields)) && cnic.status !== "valid";
+        let image = staticArtworkOnly ? blankArtworkCache.get(key) : undefined;
         if (!image) {
-          image = await pdf.embedPng(await facePng(docs[face], signal));
-          imageCache.set(key, image);
+          image = await pdf.embedPng(await facePng(docs[face], signal, "#fff", onPageTiming));
+          if (staticArtworkOnly) blankArtworkCache.set(key, image);
         }
         page.drawImage(image, { x: 0, y: 0, width: PAGE_WIDTH_PT, height: PAGE_HEIGHT_PT });
       }
+      onTiming?.("pdf-assembly", Math.max(0, performance.now() - assemblyStartedAt - facePreparationMs));
       completedPages += 1;
       onProgress?.(Object.freeze({ completedPages, totalPages }));
       await yieldToUi();
@@ -267,7 +277,9 @@ export async function createMoPdfBlob(
   }
 
   throwIfAborted(signal);
+  const pdfSaveStartedAt = performance.now();
   const bytes = await pdf.save({ useObjectStreams: true });
+  onTiming?.("pdf-save", performance.now() - pdfSaveStartedAt);
   throwIfAborted(signal);
   const buffer = new ArrayBuffer(bytes.byteLength);
   new Uint8Array(buffer).set(bytes);

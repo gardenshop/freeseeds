@@ -1360,6 +1360,12 @@ async function runMoLayoutOutput(printAfterBuild: boolean): Promise<void> {
   moPdfState = Object.freeze({ exporting: true, message: printAfterBuild ? "Preparing batch for the system print dialog…" : "Preparing mapped batch PDF…" });
   render();
   let url: string | undefined;
+  const phaseTimes = new Map<string, { durationMs: number; count: number }>();
+  const validationDurationMs = moLayoutBatchState?.report?.validationDurationMs ?? 0;
+  const phaseSummary = (): string => {
+    const phases = [...phaseTimes.entries()].map(([phase, measurement]) => `${phase} ${Math.round(measurement.durationMs)}ms/${measurement.count}`);
+    return `validation ${Math.round(validationDurationMs)}ms${phases.length ? `; ${phases.join("; ")}` : ""}`;
+  };
   try {
     const { createMoPdfBlob } = await import("./mo/pdf");
     const blob = await createMoPdfBlob(projection.candidates, moSenderCnicInput, {
@@ -1368,6 +1374,10 @@ async function runMoLayoutOutput(printAfterBuild: boolean): Promise<void> {
       mappings: moSessionMappings,
       layout: moLayout,
       sideMode: moPrintSideMode,
+      onTiming: (phase, durationMs) => {
+        const current = phaseTimes.get(phase) ?? { durationMs: 0, count: 0 };
+        phaseTimes.set(phase, { durationMs: current.durationMs + durationMs, count: current.count + 1 });
+      },
       onProgress: ({ completedPages, totalPages }) => {
         moPdfState = Object.freeze({ exporting: true, progress: Object.freeze({ completedPages, totalPages }) });
         const status = document.querySelector<HTMLElement>("#moPdfStatus");
@@ -1430,7 +1440,7 @@ async function runMoLayoutOutput(printAfterBuild: boolean): Promise<void> {
           URL.revokeObjectURL(printUrl);
           if (moPrintWindow === popup) moPrintWindow = null;
         }, MO_PRINT_BLOB_URL_FALLBACK_MS);
-        moPdfState = Object.freeze({ exporting: false, message: "Verified MO PDF opened; browser print dialog requested. Duplex calibration remains pending." });
+        moPdfState = Object.freeze({ exporting: false, message: `Verified MO PDF opened; browser print dialog requested. Duplex calibration remains pending. ${phaseSummary()}.` });
         render();
         try {
           popup.focus();
@@ -1453,10 +1463,12 @@ async function runMoLayoutOutput(printAfterBuild: boolean): Promise<void> {
       link.download = `mo51-layout-batch-${projection.candidates.length}-forms.pdf`;
       link.hidden = true;
       document.body.append(link);
+      const browserDownloadStartedAt = performance.now();
       link.click();
       link.remove();
       window.setTimeout(() => { if (url) URL.revokeObjectURL(url); }, 1000);
-      moPdfState = Object.freeze({ exporting: false, message: `Downloaded ${pageCount}-page mapped layout PDF.` });
+      const browserDownloadTriggerMs = Math.round(performance.now() - browserDownloadStartedAt);
+      moPdfState = Object.freeze({ exporting: false, message: `Downloaded ${pageCount}-page mapped layout PDF. Browser download trigger ${browserDownloadTriggerMs}ms; ${phaseSummary()}.` });
     }
     moLayoutError = "";
   } catch (error) {
@@ -1858,7 +1870,7 @@ function scheduleMoLayoutBatchValidation(projection: ReturnType<typeof currentMo
   const signature = currentMoLayoutSignature(layout, projection);
   const state = moLayoutBatchState;
   if (state?.signature === signature && state.status === "valid") {
-    updateMoLayoutDiagnosticUi([...visible, ...(state.report?.diagnostics ?? [])], false, state.report);
+    updateMoLayoutDiagnosticUi(state.report?.diagnostics ?? visible, false, state.report);
     return;
   }
   if (state?.signature === signature && (state.status === "pending" || state.status === "checking")) {
@@ -1866,7 +1878,7 @@ function scheduleMoLayoutBatchValidation(projection: ReturnType<typeof currentMo
     return;
   }
   if (state?.signature === signature && (state.status === "blocked" || state.status === "error")) {
-    updateMoLayoutDiagnosticUi([...visible, ...(state.report?.diagnostics ?? [])], false, state.report, state.error);
+    updateMoLayoutDiagnosticUi(state.report?.diagnostics ?? visible, false, state.report, state.error);
     return;
   }
 
@@ -1895,7 +1907,7 @@ function scheduleMoLayoutBatchValidation(projection: ReturnType<typeof currentMo
       if (controller.signal.aborted || generation !== moLayoutBatchGeneration || currentMoLayoutSignature(moLayout) !== signature) return;
       const status = report.diagnostics.length ? "blocked" : "valid";
       moLayoutBatchState = Object.freeze({ signature, status, report });
-      updateMoLayoutDiagnosticUi([...visible, ...report.diagnostics], false, report);
+      updateMoLayoutDiagnosticUi(report.diagnostics, false, report);
     }).catch((error) => {
       if (controller.signal.aborted || generation !== moLayoutBatchGeneration) return;
       const message = error instanceof Error ? error.message : "MO_LAYOUT_BATCH_VALIDATION_FAILED";
