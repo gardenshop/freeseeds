@@ -101,10 +101,11 @@ Independent browser-based spreadsheet import, label preview, A4/custom print/PDF
 - The saved City field is `x=78.65, y=95.38, w=29.72, h=4.8 mm`, 10 pt, left aligned and wrapped. On Urdu glyphs, Chrome Range bounds can begin 4 px above the CSS line box; using `Range.top` as a font baseline falsely put actual ink 0.85 px outside an 18.14 px field. Layout validation now positions Canvas ink metrics from the text span's CSS line-box baseline and uses Range geometry only to identify wrapped lines. No tolerance was widened; true out-of-field glyphs and protected-artwork collisions still block. See `docs/MO51_LP072_DECISIONS.md`.
 - LP-072 local synthetic N2, 76-record/38-sheet and N100 checks exercise the saved City geometry and affected Urdu-script shapes. Live staging N2 PDF/Print MO target and N76 validation passed on the deployed source; N100 PDF parsing/raster verifies pairs 1/51 and 50/100. Deployment, served assets, rollback and label regression evidence are in `docs/MO51_LP072_DECISIONS.md`.
 
-## Lossless MO PDF Raster Pipeline (LP-073)
+## MO PDF Optimization Decision (LP-074)
 
-- The MO-only predictor path reads the same 300-DPI Canvas samples and writes lossless RGB/alpha PDF image streams using standard Flate `/DecodeParms` predictors. It avoids intermediate PNG encoding and PDF-lib PNG decode/re-encode; image geometry, alpha, page size and HTML/Urdu rendering remain unchanged. The legacy PNG path remains selectable as a fallback.
-- A 256×192 synthetic alpha-raster PDF.js comparison is pixel-identical and A4 landscape. Its legacy image-pipeline PDF was 2,886 bytes versus 2,477 bytes with predictor streams (14.2% smaller); this is a component microbenchmark, not an N76 production-size claim. Actual staging N2/N76/N100 size and timing remain pending official MCP recovery. Details: `docs/MO51_LP073_DECISIONS.md`.
+- The legacy PNG renderer remains the production default. Predictor-15 increased full-form N2/N76 PDF size; direct RGBA overlay runs were pixel-identical in a warmed N76 comparison but had variable timing, so no raw mode is released by default. Grouped crops were also rejected after N2 regressed.
+- Local same-layout N76 legacy output was 3.61 MB / 142.7 s; the direct-overlay candidate ranged 3.58–3.61 MB and 66.6–240.3 s across runs. These runs do not establish a reliable speed or size improvement against the owner-reported staging baseline of 22.1 MB / ~233 s. See `docs/MO51_LP074_DECISIONS.md`.
+- N100 local PDF parsing/raster verified page 1 pair 1/51, page 99 pair 50/100 and page 100 back; an N3 odd batch verified the blank right half. Full unit suite passed 157/157 and build passed. Staging was not changed while the optimization candidate failed the release gate; `legacy-png` remains default.
 
 ## MO-51 Sender/Receiver Front Positions (LP-052)
 

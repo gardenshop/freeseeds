@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createCanvas, DOMMatrix, ImageData, Path2D } from "@napi-rs/canvas";
-import { PDFDocument, PDFDict, PDFName, PDFNumber, PDFRawStream, PDFRef } from "pdf-lib";
+import { PDFDocument, PDFDict, PDFName, PDFRawStream, PDFRef } from "pdf-lib";
 import { projectMoRecords } from "../src/mo/adapter";
 import { createMoPdfBlob, drawMoRasterImage, MO_PDF_GEOMETRY } from "../src/mo/pdf";
 import { EMPTY_ORDER } from "../src/types";
@@ -53,7 +53,7 @@ describe("MO-51 PDF export gate", () => {
 
   it("can cancel lossless raster encoding between bounded row chunks", async () => {
     const width = 512;
-    const height = 512;
+    const height = 1024;
     const pixels = new Uint8ClampedArray(width * height * 4);
     const controller = new AbortController();
     const pdf = await PDFDocument.create();
@@ -64,7 +64,7 @@ describe("MO-51 PDF export gate", () => {
       .rejects.toMatchObject({ name: "AbortError" });
   });
 
-  it("uses lossless PDF predictor image streams and preserves the legacy PNG raster", async () => {
+  it("embeds direct RGBA image streams without changing the legacy PNG raster", async () => {
     const width = 256;
     const height = 192;
     const canvas = createCanvas(width, height);
@@ -114,17 +114,13 @@ describe("MO-51 PDF export gate", () => {
     const imageRef = xObjects.values()[0] as PDFRef;
     expect(imageRef).toBeDefined();
     const image = loaded.context.lookup(imageRef, PDFRawStream);
-    const imageParameters = image.dict.lookup(PDFName.of("DecodeParms"), PDFDict);
-    expect(imageParameters.lookup(PDFName.of("Predictor"), PDFNumber).asNumber()).toBe(15);
-    expect(imageParameters.lookup(PDFName.of("Colors"), PDFNumber).asNumber()).toBe(3);
+    expect(image.dict.lookupMaybe(PDFName.of("DecodeParms"), PDFDict)).toBeUndefined();
     expect(loaded.getPages()[0].getSize().width).toBeCloseTo(MO_PDF_GEOMETRY.widthPt, 6);
     expect(loaded.getPages()[0].getSize().height).toBeCloseTo(MO_PDF_GEOMETRY.heightPt, 6);
     const mask = image.dict.lookup(PDFName.of("SMask"), PDFRawStream);
-    const maskParameters = mask.dict.lookup(PDFName.of("DecodeParms"), PDFDict);
-    expect(maskParameters.lookup(PDFName.of("Predictor"), PDFNumber).asNumber()).toBe(15);
-    expect(maskParameters.lookup(PDFName.of("Colors"), PDFNumber).asNumber()).toBe(1);
+    expect(mask.dict.lookupMaybe(PDFName.of("DecodeParms"), PDFDict)).toBeUndefined();
 
-    expect(optimizedBytes.byteLength).toBeLessThan(baselineBytes.byteLength);
+    expect(optimizedBytes.byteLength).toBeLessThanOrEqual(baselineBytes.byteLength);
     expect(await rasterFirstPdfPage(optimizedBytes)).toEqual(await rasterFirstPdfPage(baselineBytes));
   });
 });

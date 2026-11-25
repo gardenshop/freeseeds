@@ -381,9 +381,9 @@
 - Validate the complete selected batch before enabling MO PDF/print. Keep PDF output A4 landscape with front as Section 1 and back as Section 2; only the verified generated `application/pdf` may become the Print MO Batch target. Physical duplex requires separate calibration and is never automatic.
 - Use the currently open authorized Chrome profile. Do not inspect populated customer tabs or persisted customer values; use only demonstrably synthetic test state. Preserve Sender CNIC as optional, MO-only and session-only, and preserve the Hoja Seeds zero-connection rule.
 
-## LP-073 LOSSLESS MO PDF IMAGES
+## LP-074 MO PDF OPTIMIZATION GATE
 
-- Keep MO PDF images at the approved 300 DPI and exact A4 landscape geometry. The optimized path may replace intermediate PNGs with lossless PDF Flate image streams using standard PNG predictors; retain RGB values, alpha soft masks, static artwork caching and the `legacy-png` fallback.
-- Do not introduce JPEG, downsampling, palette quantization, font substitution or vector text without before/after PDF raster proof for Urdu, small text, ruled artwork, stamps and signatures. Verify image resources, MediaBox, page count, print MIME target, and first/middle/last cut-stack identities with synthetic data.
-- Benchmark N2/N10/N76/N100 using the same environment and measure DOM readiness, html2canvas, raster readback, image encoding, PDF assembly/save, final bytes and peak memory separately. A component microbenchmark is not a staging PDF-size or print-acceptance claim.
-- Preserve cancellation/progress and clear temporary pixel buffers after each image. Never log or persist customer values/CNIC; do not change label PDF/barcode code. No Worker, D1, Access, Admin/API, WhatsApp, COD/payment, Meta, production-routing or Hoja Seeds changes.
+- Keep `legacy-png` as the default renderer until same-environment N2/N10/N76/N100 full PDFs pass page-raster, size, time, download and print-target checks. Experimental `raw-overlays` must remain opt-in when it is slower, has material timing variance or does not lower full-batch size.
+- Keep the approved 300 DPI, exact A4-landscape geometry, HTML FRONT/Section 1 and BACK/Section 2, field bindings, RGB/alpha appearance and static-art cache. Do not introduce JPEG, downsampling, palette quantization, font substitution or vector text without before/after full-page raster proof for Urdu, small text, ruled artwork, stamps and signatures.
+- Count actual embedded image/soft-mask resources and report image bytes separately from PDF object overhead. Compare fresh legacy and optimized PDFs in the same visible browser environment; do not extrapolate from small-raster microbenchmarks or background-throttled runs.
+- Preserve progress, cancellation and cleanup. Never log or persist customer values/CNIC; do not change label PDF/barcode code. No Worker, D1, Access, Admin/API, WhatsApp, COD/payment, Meta, production-routing or Hoja Seeds changes.
