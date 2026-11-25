@@ -179,9 +179,31 @@ Using Node24 in-memory SQLite and synthetic order/payment/MO IDs only, a source-
 | Same HMAC digest inserted in normal and historical MO tables, each with its own unique index | Both rows accepted | REPRODUCED per-ledger namespace gap. Actual concurrent network requests were not raced. |
 | Same-method TID differing only by outer ASCII spaces under existing unique index | Second insert rejected by SQLite uniqueness | REPRODUCED existing index protection for that scope; not proof of all-provider canonicalization or parallel Admin error handling. |
 
-Application source independently confirms cross-ledger MO prechecks are outside settlement batch, expected amount is not consistently revalidated before all later writes, and changed-row assertions happen after `DB.batch()`. Zero-row D1 updates are successful SQL statements; only an actual thrown exception rolls back. The race condition between simultaneous normal/historical MO prechecks was not forced concurrently. TID requests were not concurrently submitted through the HTTP route; actual account/method scope remains a gap to test in S3. Do not present these synthetic results as an endpoint test.
+Application source independently confirmed cross-ledger MO prechecks were outside settlement batch, expected amount was not consistently revalidated before all later writes, and changed-row assertions happened after `DB.batch()`. This initial source-shaped reproduction motivated the actual-route work in `docs/GFS_ORDERFLOW_FIN_ATOMIC_001.md`; the corrected route regressions now cover these cases, and synthetic cross-ledger preflight conflicts are explicitly detected before migration0049. Initial SQLite probes are not the final endpoint evidence.
 
-Other source-level (not reproduced) hazards: recovery claim/outbox has a crash gap; V2 READ reconciliation conflicts with its stage CHECK/completion predicate; payment-part send+DB acknowledgement can retry after provider acceptance. Required repair: put winner predicates and all writes in a transactional guard that aborts/rolls back on any expected zero-row write; enforce cross-ledger settlement uniqueness in one transactional authority; handle provider acceptance separately from database acknowledgement; test concurrent routes with the real Admin handler in synthetic D1 before approval.
+Other source-level hazards remain outside FIN-ATOMIC and were not changed: recovery claim/outbox crash gap; dormant V2 READ reconciliation vs stage CHECK/completion predicate; payment-part send+DB acknowledgement retry after provider acceptance. Retain these as separate reminder/outbound tasks; no dormant scheduler was enabled.
+
+## FIN-ATOMIC actual-route resolution (2026-11-25)
+
+Implemented locally after the initial source-shaped reproductions. Test evidence uses `tests/cod-admin.test.ts`, invokes the actual Admin app's Hono financial POST routes, and backs them with synthetic Node SQLite D1-compatible transactions/fault hooks:
+
+| Actual route case | Corrected result |
+|---|---|
+| Advance approval order cancelled between preflight and batch | HTTP409; payment remains REVIEW, order remains CANCELLED, no approval audit |
+| COD MO expected amount changed between preflight and batch | HTTP409; no MO receipt, COD sidecar remains COLLECTION_PENDING, payment/order remain COD_PENDING/COLLECTION_PENDING |
+| Concurrent payment approvals for same Advance order | One200/one409; one PAID state, one PAYMENT_APPROVED audit, one CAPI Purchase event and one durable outbox job when test CAPI env is enabled |
+| Concurrent same-method TID saves to different orders | One200/one409; one reference/audit, no paid/dispatch state change |
+| Same reference text in BANK vs EASYPAISA | Both accepted as existing method-scoped uniqueness defines; no global TID namespace introduced |
+| Concurrent normal vs historical settlement with same MO digest | One200/one409; one ledger receipt, one shared claim and one financial audit |
+| Concurrent/replayed exact same-order MO | Idempotent200 response only if saved HMAC, exact amount and final PAID state match; no duplicate audit/outbox |
+| Injected approval/MO audit or Purchase-outbox statement failure | HTTP error; SQLite transaction rolls back all prior financial, ledger, audit and event writes |
+| Historical delivered/tracking/Advance-receipt/incident guards | Stale or protected state rejected; no MO or PAID write |
+
+Migration candidate `migrations/0049_cod_mo_global_reference_claims.sql` adds a count-only legacy conflict preflight, backfills existing HMACs, enforces one global claim via database triggers, and captures older-Worker inserts to preserve rollback compatibility. Tests verify clean backfill, reapplication, duplicate historical conflict stops without changing either legacy receipt, and normal/historical trigger claims. This migration was applied **only to synthetic test databases**; no production schema marker was written.
+
+`GFS-ORDERFLOW-FIN-ATOMIC-001` closes the two transaction hazards in this audit with actual route tests; the initial generic/source-shaped reproductions remain as history. S0 A06 (per-contact FEP evidence) and A10 (release-specific rollback readiness) remain partial. Postal amount logic is separate `GFS-ORDERFLOW-FIN-MO-002`.
+
+Final validation after the correction: cod-admin actual-route/migration suite50/50; full Vitest34 files410 passed/1 skipped; Node52/52; TypeScript/lint passed; production dependency audit0 vulnerabilities. Cloudflare read-only recheck shows Admin3e4b7c26 100%/ce023b54 0% and APIb426ba47 100%/d683ec45 0%, with no new deployment. Full npm audit still has six moderate dev-tool findings; no unrelated dependency upgrade was performed.
 
 ## Hono dependency security
 
@@ -246,7 +268,7 @@ The owner supplied the verbatim numbered register in the GFS ORDERFLOW instructi
 | O17 | Send WhatsApp only within verified free eligibility | Actual WABA account aggregate pricing is available and currently all delivered in period is categorized free; per-contact referral/response/FEP evidence and centralized guard absent. | PARTIAL; no automation enable |
 | O18 | Audit paid-order confirmation development | Secure Admin payment/MO approval, paid DB state and optional CAPI outbox exist. No distinct WhatsApp customer “payment received/Advance paid” confirmation handler found; CAPI is disabled and unchanged. | PARTIAL |
 | O19 | Simplify Admin approval to manual TID then confirm, after funds verified | Admin already stores textual reference and has gated settlement approval requiring evidence/reference/method/receipt; not the requested simple TID-only interaction. Real funds remain operator verified. | PARTIAL; reuse handler, no bypass |
-| O20 | Save TID; atomically reject same reference across different orders | Text and index exist; unique scope is method+normalized value, so same value under two methods is accepted. Synthetic same-method normalized duplicate is rejected; actual concurrent route behavior not exercised. | PARTIAL; broader namespace/race tests required |
+| O20 | Save TID; atomically reject same reference across different orders | Actual concurrent Admin save tests exercise the existing unique index; one same-method race winner, one rejection. Same text in different methods remains allowed by provider-specific method scope. | PARTIAL; simpler TID UX/account-specific scope decision remain |
 | O21 | Audit existing functionality/reuse | Complete source/schema/UI audit and extension points recorded. | VERIFIED audit |
 | O22 | Permanent Markdown task register | `docs/GFS_ORDER_001_TASK_REGISTER.md` exists and is being updated under master reference. | VERIFIED |
 | O23 | Step-by-step plan/handover/protected protocols/zero regression | Master plan, test matrix, handover and protections exist; new features not implemented, and one unsupported unfiltered Node test invocation failed while authoritative suites passed. | PARTIAL; no zero-regression claim for REV.2 implementation |

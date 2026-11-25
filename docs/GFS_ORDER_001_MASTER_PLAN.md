@@ -19,7 +19,7 @@ Stock/reservation authority is absent. Verify actual campaign inventory first; d
 | S0 | Isolation, fresh audit, original/revised mapping, identities, nine records | O01-O23 mapped. Numeric owner2/5 crosswalk unavailable; exact candidates/proposal documented. Meta account/analytics/templates verified; per-contact FEP evidence remains unknown. GitHub gardenshop author/private noreply identity and write permission verified. Full release-specific rollback remains unproven; S0 stays PARTIAL. |
 | S1 | Existing review/selection/recovery/Queue | Fixed T0/+10/+25/+30 across switches; explicit COD; timely receipt OR TID protection; stale-job suppression; no24/48h; honest stock. Suppress legacy decision schedules atomically for new-version orders. |
 | S2 | Read-only A-G report and shared dispatch guard | Evidence-based non-overlap; conflicts/F protected; only finalized A/B eligible after other checks; C review, D one authorized sequence, E excluded. No retroactive bulk writes. Event-based rates with known denominators. |
-| S3 | Existing secure Admin reference/approval | Enter TID -> Confirm Payment; operator verifies funds; textual leading zeros; scope/uniqueness/replay/concurrent rejection/audit; all-or-nothing state. Audit duplicates before constraints. Existing receipt security stays until an equally secure alternative is proven. |
+| S3 | Existing secure Admin reference/approval | Atomic approval and same-method concurrent TID guard corrections are implemented/tested locally in FIN-ATOMIC. Simple TID -> Confirm Payment UX, operator funds verification workflow and complete acceptance remain. Preserve existing provider/method uniqueness scope, leading zeros, receipts, audit and CSRF/HMAC/Access. |
 | S4 | Existing inbound/provider/window/outbox | Minimized referral/FEP/pricing persistence; final free-only guard on every send/retry; conservative account expiry, opt-out and approved utility routing/metrics. No activation until separately authorized account tests. |
 | S5 | Existing atomic D1 allocation pattern | Separate VPL/RGL prefix/month sequences1-9999; Karachi rollover; concurrency/collision/replay/exhaustion. Postal registration blocked; internal reference not advertised as official booking. |
 | S6 | Native private HTML renderer/R2 pipeline | Individual PDF/image, barcode/all fields, ownership/privacy; VPL principal+commission, RGL no amount; gross unchanged. Verified tariff/settlement design required. |
@@ -28,6 +28,10 @@ Stock/reservation authority is absent. Verify actual campaign inventory first; d
 | S9 | Integration/staging/release | Full synthetic/fake-clock/provider regressions, private visual checks, separately authorized controlled tests, writer/accounts/rollback/scoped migration/canary authorization. No production action from this plan alone. |
 
 Prioritize S1-S4 after S0 closes. Postal blockers need not prevent a later proven-safe manual-dispatch release, but that safety/authorization is not established now and S0 is not waived.
+
+## Current local security gate progress (2026-11-25)
+
+Hono SEC-HONO-001 and Admin financial atomicity FIN-ATOMIC-001 have local corrections and synthetic actual-route regressions; see their dedicated reports. Neither closes a numbered S0-S9 stage or authorizes production changes. Additive migration0049 remains local/unapplied. Next task is GFS-ORDERFLOW-INTENT-030. Separate FIN-MO-002 gross/principal accounting remains mandatory before S5/S6 postal settlement activation.
 
 ## Original owner register map
 

@@ -800,23 +800,31 @@ async function markCodPaymentReceived(c: AdminContext) {
   let body: { confirmation?: unknown; amountPkr?: unknown; moNumber?: unknown; confirmed?: unknown };
   try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
   const orderId = c.req.param("id");
-  const current = await c.env.DB.prepare("SELECT o.order_number,o.state,o.payment_status,o.archived_at,o.total_payable,cod.base_amount_pkr,cod.status,cod.quoted_total_pkr,cod.test_hold,p.review_state,mo.mo_reference_hmac,mo.mo_amount_pkr,mo.received_at AS mo_received_at FROM orders o JOIN payments p ON p.order_id=o.id JOIN cod_order_details cod ON cod.order_id=o.id LEFT JOIN cod_mo_receipts mo ON mo.order_id=o.id WHERE o.id=?").bind(orderId).first<{ order_number: string; state: string; payment_status: string; archived_at: string | null; total_payable: number; base_amount_pkr: number; status: string; quoted_total_pkr: number; test_hold: number; review_state: string; mo_reference_hmac: string | null; mo_amount_pkr: number | null; mo_received_at: string | null }>();
+  const current = await c.env.DB.prepare("SELECT o.order_number,o.state,o.payment_status,o.archived_at,o.total_payable,cod.base_amount_pkr,cod.status,cod.quoted_total_pkr,cod.test_hold,p.expected_amount,p.review_state,mo.mo_reference_hmac,mo.mo_amount_pkr,mo.received_at AS mo_received_at FROM orders o JOIN payments p ON p.order_id=o.id JOIN cod_order_details cod ON cod.order_id=o.id LEFT JOIN cod_mo_receipts mo ON mo.order_id=o.id WHERE o.id=?").bind(orderId).first<{ order_number: string; state: string; payment_status: string; archived_at: string | null; total_payable: number; base_amount_pkr: number; status: string; quoted_total_pkr: number; test_hold: number; expected_amount: number; review_state: string; mo_reference_hmac: string | null; mo_amount_pkr: number | null; mo_received_at: string | null }>();
   if (!current) return c.json({ error: "COD_ORDER_NOT_FOUND" }, 404);
   if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
   const moNumber = normalizeCodEvidenceReference(body.moNumber);
   if (!moNumber) return c.json({ error: "COD_MO_NUMBER_REQUIRED" }, 400);
-  if (!Number.isSafeInteger(body.amountPkr) || Number(body.amountPkr) !== Number(current.quoted_total_pkr) || Number(current.total_payable) !== Number(current.base_amount_pkr)) return c.json({ error: "COD_MO_AMOUNT_MISMATCH" }, 409);
-  if (current.state === "PAID" && current.payment_status === "PAID" && current.status === "PAID" && current.review_state === "COD_PAID") return c.json({ ok: true, alreadyPaid: true, paymentStatus: "PAID", capiQueue: "UNCHANGED" });
+  if (!Number.isSafeInteger(body.amountPkr) || Number(body.amountPkr) !== Number(current.quoted_total_pkr) || Number(current.total_payable) !== Number(current.base_amount_pkr) || Number(current.expected_amount) !== Number(current.base_amount_pkr)) return c.json({ error: "COD_MO_AMOUNT_MISMATCH" }, 409);
+  if (body.confirmed !== true) return c.json({ error: "COD_PAYMENT_CONFIRMATION_REQUIRED" }, 400);
   if (current.order_number === "FS-261019-000001") return c.json({ error: "FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED" }, 409);
   if (Number(current.test_hold) !== 0) return c.json({ error: "COD_TEST_HOLD_DO_NOT_SHIP" }, 409);
-  if (body.confirmed !== true) return c.json({ error: "COD_PAYMENT_CONFIRMATION_REQUIRED" }, 400);
-  if (current.archived_at || current.state !== "COLLECTION_PENDING" || current.status !== "COLLECTION_PENDING" || current.payment_status !== "COD_PENDING" || current.review_state !== "COD_PENDING") return c.json({ error: "COD_PAYMENT_NOT_READY" }, 409);
   const moReferenceHmac = await codReferenceHmac(moNumber, hmacKey);
-  if (current.mo_reference_hmac) return current.mo_reference_hmac === moReferenceHmac && Number(current.mo_amount_pkr) === Number(body.amountPkr)
-    ? c.json({ ok: true, alreadyRecorded: true, paymentStatus: current.payment_status })
-    : c.json({ error: "COD_MO_ALREADY_RECORDED" }, 409);
+  if (current.state === "PAID" && current.payment_status === "PAID" && current.status === "PAID" && current.review_state === "COD_PAID") {
+    return current.mo_reference_hmac === moReferenceHmac && Number(current.mo_amount_pkr) === Number(body.amountPkr)
+      ? c.json({ ok: true, alreadyPaid: true, paymentStatus: "PAID", capiQueue: "UNCHANGED" })
+      : c.json({ error: "COD_MO_ALREADY_RECORDED" }, 409);
+  }
+  if (current.mo_reference_hmac) return c.json({ error: "COD_MO_ALREADY_RECORDED" }, 409);
+  if (current.archived_at || current.state !== "COLLECTION_PENDING" || current.status !== "COLLECTION_PENDING" || current.payment_status !== "COD_PENDING" || current.review_state !== "COD_PENDING") return c.json({ error: "COD_PAYMENT_NOT_READY" }, 409);
   const duplicateMo = await c.env.DB.prepare("SELECT 1 AS present FROM cod_mo_receipts WHERE mo_reference_hmac=? UNION ALL SELECT 1 AS present FROM cod_historical_mo_receipts WHERE mo_reference_hmac=? LIMIT 1").bind(moReferenceHmac, moReferenceHmac).first<{ present: number }>();
-  if (duplicateMo) return c.json({ error: "COD_MO_ALREADY_USED" }, 409);
+  if (duplicateMo) {
+    const sameOrder = await c.env.DB.prepare("SELECT mo.mo_reference_hmac,mo.mo_amount_pkr,cod.status,o.state,o.payment_status FROM cod_mo_receipts mo JOIN cod_order_details cod ON cod.order_id=mo.order_id JOIN orders o ON o.id=mo.order_id WHERE mo.order_id=?").bind(orderId).first<{ mo_reference_hmac: string; mo_amount_pkr: number; status: string; state: string; payment_status: string }>();
+    if (sameOrder) return sameOrder.mo_reference_hmac === moReferenceHmac && Number(sameOrder.mo_amount_pkr) === Number(body.amountPkr) && sameOrder.status === "PAID" && sameOrder.state === "PAID" && sameOrder.payment_status === "PAID"
+      ? c.json({ ok: true, alreadyPaid: true, paymentStatus: "PAID", capiQueue: "UNCHANGED" })
+      : c.json({ error: "COD_MO_ALREADY_RECORDED" }, 409);
+    return c.json({ error: "COD_MO_ALREADY_USED" }, 409);
+  }
   let customer: { customer_id: string; ctwa_clid: string | null } | null = null;
   const eventEnabled = c.env.META_CAPI_ENABLED === "true";
   if (eventEnabled) {
@@ -827,7 +835,7 @@ async function markCodPaymentReceived(c: AdminContext) {
   const now = new Date().toISOString();
   const event = eventEnabled ? createPurchaseEvent(current.order_number, approvedPurchaseValue(amount, amount), customer?.ctwa_clid ? { ctwaClid: customer.ctwa_clid } : undefined) : undefined;
   const statements: D1PreparedStatement[] = [
-    c.env.DB.prepare("INSERT INTO cod_mo_receipts(order_id,mo_reference_hmac,mo_amount_pkr,operator_id,received_at) SELECT ?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM cod_mo_receipts WHERE mo_reference_hmac=?)").bind(orderId, moReferenceHmac, amount, c.env.ADMIN_EMAIL, now, moReferenceHmac),
+    c.env.DB.prepare("INSERT INTO cod_mo_receipts(order_id,mo_reference_hmac,mo_amount_pkr,operator_id,received_at) SELECT ?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM cod_mo_receipts WHERE mo_reference_hmac=?) AND EXISTS(SELECT 1 FROM orders o JOIN payments p ON p.order_id=o.id JOIN cod_order_details cod ON cod.order_id=o.id WHERE o.id=? AND o.state='COLLECTION_PENDING' AND o.payment_status='COD_PENDING' AND o.archived_at IS NULL AND o.total_payable=cod.base_amount_pkr AND cod.status='COLLECTION_PENDING' AND cod.test_hold=0 AND cod.quoted_total_pkr=? AND p.review_state='COD_PENDING' AND p.approved_amount IS NULL AND p.expected_amount=cod.base_amount_pkr)").bind(orderId, moReferenceHmac, amount, c.env.ADMIN_EMAIL, now, moReferenceHmac, orderId, current.quoted_total_pkr),
     c.env.DB.prepare("UPDATE cod_order_details SET status='PAID',updated_at=? WHERE order_id=? AND changes()=1 AND status='COLLECTION_PENDING' AND test_hold=0 AND EXISTS(SELECT 1 FROM cod_mo_receipts mo WHERE mo.order_id=cod_order_details.order_id AND mo.mo_amount_pkr=quoted_total_pkr)").bind(now, orderId),
     c.env.DB.prepare("UPDATE payments SET review_state='COD_PAID',approved_amount=?,approved_by=?,approved_at=?,updated_at=? WHERE order_id=? AND changes()=1 AND review_state='COD_PENDING' AND approved_amount IS NULL AND expected_amount=? AND EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=payments.order_id AND cod.status='PAID' AND cod.quoted_total_pkr=?)").bind(amount, c.env.ADMIN_EMAIL, now, now, orderId, current.base_amount_pkr, amount),
     c.env.DB.prepare("UPDATE orders SET state='PAID',payment_status='PAID',updated_at=? WHERE id=? AND changes()=1 AND state='COLLECTION_PENDING' AND payment_status='COD_PENDING' AND total_payable=? AND EXISTS(SELECT 1 FROM payments p JOIN cod_order_details cod ON cod.order_id=p.order_id JOIN cod_mo_receipts mo ON mo.order_id=cod.order_id WHERE p.order_id=orders.id AND p.review_state='COD_PAID' AND p.approved_amount=cod.quoted_total_pkr AND cod.status='PAID' AND mo.mo_amount_pkr=cod.quoted_total_pkr)").bind(now, orderId, current.base_amount_pkr),
@@ -838,8 +846,21 @@ async function markCodPaymentReceived(c: AdminContext) {
     statements.push(c.env.DB.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) SELECT ?,?,?,?,?,?,?,?,? FROM orders o WHERE o.id=? AND changes()=1 AND o.state='PAID'").bind(crypto.randomUUID(), event.eventId, "CAPI_PURCHASE", orderId, JSON.stringify(event), "PENDING", now, now, now, orderId));
   }
   let result: D1Result[];
-  try { result = await c.env.DB.batch(statements); } catch { return c.json({ error: "COD_PAYMENT_CONFIRMATION_FAILED" }, 409); }
-  if (result.slice(0, 5).some((item) => Number(item.meta?.changes ?? 0) !== 1)) return c.json({ error: "COD_MO_CONFIRMATION_STALE" }, 409);
+  try { result = await c.env.DB.batch(statements); } catch (error) {
+    if (error instanceof Error && /COD_MO_ALREADY_USED|cod_mo_reference_claims\.mo_reference_hmac/i.test(error.message)) return c.json({ error: "COD_MO_ALREADY_USED" }, 409);
+    if (error instanceof Error && /cod_mo_receipts\.order_id/i.test(error.message)) return c.json({ error: "COD_MO_ALREADY_RECORDED" }, 409);
+    return c.json({ error: "COD_PAYMENT_CONFIRMATION_FAILED" }, 409);
+  }
+  if (Number(result[0].meta?.changes ?? 0) !== 1) {
+    const recorded = await c.env.DB.prepare("SELECT mo.mo_reference_hmac,mo.mo_amount_pkr,cod.status,o.state,o.payment_status FROM cod_mo_receipts mo JOIN cod_order_details cod ON cod.order_id=mo.order_id JOIN orders o ON o.id=mo.order_id WHERE mo.order_id=?").bind(orderId).first<{ mo_reference_hmac: string; mo_amount_pkr: number; status: string; state: string; payment_status: string }>();
+    if (recorded) return recorded.mo_reference_hmac === moReferenceHmac && Number(recorded.mo_amount_pkr) === Number(body.amountPkr) && recorded.status === "PAID" && recorded.state === "PAID" && recorded.payment_status === "PAID"
+      ? c.json({ ok: true, alreadyPaid: true, paymentStatus: "PAID", capiQueue: "UNCHANGED" })
+      : c.json({ error: "COD_MO_ALREADY_RECORDED" }, 409);
+    const claimed = await c.env.DB.prepare("SELECT 1 AS present FROM cod_mo_reference_claims WHERE mo_reference_hmac=?").bind(moReferenceHmac).first<{ present: number }>();
+    if (claimed) return c.json({ error: "COD_MO_ALREADY_USED" }, 409);
+    return c.json({ error: "COD_MO_CONFIRMATION_STALE" }, 409);
+  }
+  if (result.slice(1, 5).some((item) => Number(item.meta?.changes ?? 0) !== 1)) return c.json({ error: "COD_MO_CONFIRMATION_STALE" }, 409);
   let queued = false;
   try { if (event && c.env.EVENTS) { await c.env.EVENTS.send({ kind: "CAPI_PURCHASE", idempotencyKey: event.eventId, entityId: orderId, schemaVersion: 1 }); queued = true; } } catch { /* Durable outbox remains authoritative. */ }
   return c.json({ ok: true, paymentStatus: "PAID", moReceivedAt: now, capiQueue: event ? queued ? "QUEUED" : "DEFERRED" : "DISABLED" });
@@ -864,43 +885,64 @@ async function markHistoricalCodPaymentReceived(c: AdminContext) {
   if (body.confirmation === undefined || body.confirmed !== true) return c.json({ error: "COD_PAYMENT_CONFIRMATION_REQUIRED" }, 400);
   const current = await c.env.DB.prepare(`SELECT o.order_number,o.customer_id,o.state,o.payment_status,o.archived_at,o.total_payable,ma.ctwa_clid,p.method,p.review_state,p.approved_amount,p.approved_at,
     (SELECT COUNT(*) FROM cod_order_details cod WHERE cod.order_id=o.id) AS cod_sidecar_count,
-    (SELECT COUNT(*) FROM cod_historical_mo_receipts mo WHERE mo.order_id=o.id) AS historical_count,
+     (SELECT COUNT(*) FROM cod_historical_mo_receipts mo WHERE mo.order_id=o.id) AS historical_count,
+     (SELECT mo_reference_hmac FROM cod_historical_mo_receipts mo WHERE mo.order_id=o.id) AS historical_mo_reference_hmac,
+     (SELECT received_amount_pkr FROM cod_historical_mo_receipts mo WHERE mo.order_id=o.id) AS historical_mo_amount_pkr,
     (SELECT COUNT(*) FROM payment_receipts receipt WHERE receipt.order_id=o.id) AS receipt_count,
     EXISTS(SELECT 1 FROM audit_log tracking WHERE tracking.entity_type='ORDER' AND tracking.entity_id=o.id AND tracking.action='ORDER_TRACKING_ASSIGNED') AS tracking_assigned
-    FROM orders o JOIN payments p ON p.order_id=o.id LEFT JOIN meta_attribution ma ON ma.order_id=o.id WHERE o.id=?`).bind(orderId).first<{ order_number:string; customer_id:string|null; state:string; payment_status:string; archived_at:string|null; total_payable:number; ctwa_clid:string|null; method:string|null; review_state:string; approved_amount:number|null; approved_at:string|null; cod_sidecar_count:number; historical_count:number; receipt_count:number; tracking_assigned:number }>();
+   FROM orders o JOIN payments p ON p.order_id=o.id LEFT JOIN meta_attribution ma ON ma.order_id=o.id WHERE o.id=?`).bind(orderId).first<{ order_number:string; customer_id:string|null; state:string; payment_status:string; archived_at:string|null; total_payable:number; ctwa_clid:string|null; method:string|null; review_state:string; approved_amount:number|null; approved_at:string|null; cod_sidecar_count:number; historical_count:number; historical_mo_reference_hmac:string|null; historical_mo_amount_pkr:number|null; receipt_count:number; tracking_assigned:number }>();
   if (!current) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
   if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
-  if (Number(current.historical_count) !== 0) return c.json({ error: "HISTORICAL_COD_ALREADY_RECORDED" }, 409);
+  if (current.order_number === "FS-261019-000001") return c.json({ error: "FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED" }, 409);
+  if (!Number.isSafeInteger(body.amountPkr) || Number(body.amountPkr) !== Number(current.total_payable)) return c.json({ error: "COD_HISTORICAL_AMOUNT_MISMATCH" }, 409);
+  const moReferenceHmac = await codReferenceHmac(moNumber, hmacKey);
+  if (Number(current.historical_count) !== 0) return current.historical_mo_reference_hmac === moReferenceHmac && Number(current.historical_mo_amount_pkr) === Number(body.amountPkr) && current.state === "PAID" && current.payment_status === "PAID"
+    ? c.json({ ok: true, alreadyRecorded: true, historical: true, paymentStatus: "PAID", capiQueue: "UNCHANGED" })
+    : c.json({ error: "HISTORICAL_COD_ALREADY_RECORDED" }, 409);
   if (Number(current.cod_sidecar_count) !== 0) return c.json({ error: "COD_NORMAL_SETTLEMENT_REQUIRED" }, 409);
   if (current.state === "PAID" || current.payment_status === "PAID" || current.approved_amount != null || current.approved_at != null || current.review_state === "APPROVED" || current.review_state === "COD_PAID") return c.json({ error: "HISTORICAL_COD_ALREADY_SETTLED" }, 409);
   if (current.archived_at || current.state === "CANCELLED") return c.json({ error: "HISTORICAL_COD_ORDER_NOT_SETTLEABLE" }, 409);
   if (current.state !== "DELIVERED" || Number(current.tracking_assigned) !== 1) return c.json({ error: "HISTORICAL_COD_DELIVERY_REQUIRED" }, 409);
   if (current.method !== null && Number(current.receipt_count) > 0) return c.json({ error: "HISTORICAL_ADVANCE_RECEIPT_RECONCILIATION_REQUIRED" }, 409);
-  if (!Number.isSafeInteger(body.amountPkr) || Number(body.amountPkr) !== Number(current.total_payable)) return c.json({ error: "COD_HISTORICAL_AMOUNT_MISMATCH" }, 409);
   const eventEnabled = c.env.META_CAPI_ENABLED === "true";
   if (eventEnabled && !current.customer_id) return c.json({ error: "COD_CAPI_SOURCE_UNAVAILABLE" }, 503);
-  const moReferenceHmac = await codReferenceHmac(moNumber, hmacKey);
   const evidenceReferenceHmac = await codReferenceHmac(evidenceReference, hmacKey);
   const duplicate = await c.env.DB.prepare("SELECT 1 AS present FROM cod_historical_mo_receipts WHERE mo_reference_hmac=? UNION ALL SELECT 1 AS present FROM cod_mo_receipts WHERE mo_reference_hmac=? LIMIT 1").bind(moReferenceHmac, moReferenceHmac).first<{ present:number }>();
-  if (duplicate) return c.json({ error: "COD_MO_ALREADY_USED" }, 409);
+  if (duplicate) {
+    const sameOrder = await c.env.DB.prepare("SELECT mo.mo_reference_hmac,mo.received_amount_pkr,o.state,o.payment_status FROM cod_historical_mo_receipts mo JOIN orders o ON o.id=mo.order_id WHERE mo.order_id=?").bind(orderId).first<{ mo_reference_hmac: string; received_amount_pkr: number; state: string; payment_status: string }>();
+    if (sameOrder) return sameOrder.mo_reference_hmac === moReferenceHmac && Number(sameOrder.received_amount_pkr) === Number(body.amountPkr) && sameOrder.state === "PAID" && sameOrder.payment_status === "PAID"
+      ? c.json({ ok: true, alreadyRecorded: true, historical: true, paymentStatus: "PAID", capiQueue: "UNCHANGED" })
+      : c.json({ error: "HISTORICAL_COD_ALREADY_RECORDED" }, 409);
+    return c.json({ error: "COD_MO_ALREADY_USED" }, 409);
+  }
   const now = new Date().toISOString();
   const event = eventEnabled ? createPurchaseEvent(current.order_number, approvedPurchaseValue(Number(body.amountPkr), Number(current.total_payable)), current.ctwa_clid ? { ctwaClid: current.ctwa_clid } : undefined) : undefined;
   try {
     const statements: D1PreparedStatement[] = [
-      c.env.DB.prepare("INSERT INTO cod_historical_mo_receipts(order_id,mo_reference_hmac,received_amount_pkr,receipt_date,evidence_reference_hmac,settlement_reason,operator_id,received_at) SELECT ?,?,?,?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM cod_historical_mo_receipts WHERE order_id=?) AND EXISTS(SELECT 1 FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=? AND o.state='DELIVERED' AND o.payment_status<>'PAID' AND o.archived_at IS NULL AND o.total_payable=? AND p.approved_amount IS NULL AND p.review_state NOT IN ('APPROVED','COD_PAID') AND NOT EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id))").bind(orderId, moReferenceHmac, Number(body.amountPkr), receiptDate, evidenceReferenceHmac, reason, c.env.ADMIN_EMAIL, now, orderId, orderId, Number(body.amountPkr)),
-      c.env.DB.prepare("UPDATE orders SET state='PAID',payment_status='PAID',updated_at=? WHERE id=? AND changes()=1 AND state='DELIVERED' AND payment_status<>'PAID' AND archived_at IS NULL AND total_payable=? AND NOT EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=orders.id)").bind(now, orderId, Number(body.amountPkr)),
+       c.env.DB.prepare("INSERT INTO cod_historical_mo_receipts(order_id,mo_reference_hmac,received_amount_pkr,receipt_date,evidence_reference_hmac,settlement_reason,operator_id,received_at) SELECT ?,?,?,?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM cod_historical_mo_receipts WHERE order_id=?) AND EXISTS(SELECT 1 FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=? AND o.order_number=? AND o.order_number<>'FS-261019-000001' AND o.state='DELIVERED' AND o.payment_status<>'PAID' AND o.archived_at IS NULL AND o.total_payable=? AND p.approved_amount IS NULL AND p.approved_at IS NULL AND p.review_state NOT IN ('APPROVED','COD_PAID') AND NOT (p.method IS NOT NULL AND EXISTS(SELECT 1 FROM payment_receipts r WHERE r.order_id=o.id AND r.payment_id=p.id)) AND EXISTS(SELECT 1 FROM audit_log tracking WHERE tracking.entity_type='ORDER' AND tracking.entity_id=o.id AND tracking.action='ORDER_TRACKING_ASSIGNED') AND NOT EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id))").bind(orderId, moReferenceHmac, Number(body.amountPkr), receiptDate, evidenceReferenceHmac, reason, c.env.ADMIN_EMAIL, now, orderId, orderId, current.order_number, Number(body.amountPkr)),
+       c.env.DB.prepare("UPDATE orders SET state='PAID',payment_status='PAID',updated_at=? WHERE id=? AND changes()=1 AND order_number=? AND order_number<>'FS-261019-000001' AND state='DELIVERED' AND payment_status<>'PAID' AND archived_at IS NULL AND total_payable=? AND EXISTS(SELECT 1 FROM payments p WHERE p.order_id=orders.id AND p.approved_amount IS NULL AND p.approved_at IS NULL AND p.review_state NOT IN ('APPROVED','COD_PAID') AND NOT (p.method IS NOT NULL AND EXISTS(SELECT 1 FROM payment_receipts r WHERE r.order_id=orders.id AND r.payment_id=p.id))) AND EXISTS(SELECT 1 FROM audit_log tracking WHERE tracking.entity_type='ORDER' AND tracking.entity_id=orders.id AND tracking.action='ORDER_TRACKING_ASSIGNED') AND NOT EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=orders.id)").bind(now, orderId, current.order_number, Number(body.amountPkr)),
       c.env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE changes()=1 AND EXISTS(SELECT 1 FROM orders WHERE id=? AND state='PAID' AND payment_status='PAID')").bind(`historical_cod_mo_${orderId}`, "COD_HISTORICAL_MO_RECEIVED", "ADMIN", c.env.ADMIN_EMAIL, "ORDER", orderId, crypto.randomUUID(), JSON.stringify({ orderId, amountPkr: Number(body.amountPkr), receiptDate, evidenceReferenceHmac, settlementMode: "HISTORICAL_PAKISTAN_POST_MO", reason }), now, orderId)
     ];
     if (event && current.customer_id) {
       statements.push(c.env.DB.prepare("INSERT OR IGNORE INTO capi_events (id,event_id,event_name,order_id,customer_id,send_status,created_at,updated_at) SELECT ?,?,?,?,?,?,?,? FROM orders o WHERE o.id=? AND changes()=1 AND o.state='PAID'").bind(crypto.randomUUID(), event.eventId, event.eventName, orderId, current.customer_id, "PENDING", now, now, orderId));
       statements.push(c.env.DB.prepare("INSERT OR IGNORE INTO outbox_jobs (id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) SELECT ?,?,?,?,?,?,?,?,? FROM orders o WHERE o.id=? AND changes()=1 AND o.state='PAID'").bind(crypto.randomUUID(), event.eventId, "CAPI_PURCHASE", orderId, JSON.stringify(event), "PENDING", now, now, now, orderId));
     }
-    const result = await c.env.DB.batch(statements);
-    if (result.some((item) => Number(item.meta?.changes ?? 0) !== 1)) return c.json({ error: "COD_HISTORICAL_CONFIRMATION_STALE" }, 409);
+     const result = await c.env.DB.batch(statements);
+     if (Number(result[0]?.meta?.changes ?? 0) !== 1) {
+       const recorded = await c.env.DB.prepare("SELECT mo.mo_reference_hmac,mo.received_amount_pkr,o.state,o.payment_status FROM cod_historical_mo_receipts mo JOIN orders o ON o.id=mo.order_id WHERE mo.order_id=?").bind(orderId).first<{ mo_reference_hmac: string; received_amount_pkr: number; state: string; payment_status: string }>();
+       if (recorded) return recorded.mo_reference_hmac === moReferenceHmac && Number(recorded.received_amount_pkr) === Number(body.amountPkr) && recorded.state === "PAID" && recorded.payment_status === "PAID"
+         ? c.json({ ok: true, alreadyRecorded: true, historical: true, paymentStatus: "PAID", capiQueue: "UNCHANGED" })
+         : c.json({ error: "HISTORICAL_COD_ALREADY_RECORDED" }, 409);
+       const claimed = await c.env.DB.prepare("SELECT 1 AS present FROM cod_mo_reference_claims WHERE mo_reference_hmac=?").bind(moReferenceHmac).first<{ present: number }>();
+       if (claimed) return c.json({ error: "COD_MO_ALREADY_USED" }, 409);
+       return c.json({ error: "COD_HISTORICAL_CONFIRMATION_STALE" }, 409);
+     }
+     if (result.slice(1).some((item) => Number(item.meta?.changes ?? 0) !== 1)) return c.json({ error: "COD_HISTORICAL_CONFIRMATION_STALE" }, 409);
     let queued = false;
     try { if (event && c.env.EVENTS) { await c.env.EVENTS.send({ kind: "CAPI_PURCHASE", idempotencyKey: event.eventId, entityId: orderId, schemaVersion: 1 }); queued = true; } } catch { /* Durable outbox remains authoritative. */ }
     return c.json({ ok: true, paymentStatus: "PAID", historical: true, capiQueue: event ? queued ? "QUEUED" : "DEFERRED" : "DISABLED" });
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && /COD_MO_ALREADY_USED|cod_mo_reference_claims\.mo_reference_hmac/i.test(error.message)) return c.json({ error: "COD_MO_ALREADY_USED" }, 409);
     return c.json({ error: "COD_HISTORICAL_CONFIRMATION_FAILED" }, 409);
   }
 }
@@ -2589,9 +2631,9 @@ app.post("/api/payments/:id/approve", async (c) => {
     const now = new Date().toISOString();
     const refHash=await customerTransactionReferenceHash(transactionReference);
     const statements=[
-      c.env.DB.prepare("UPDATE payments SET review_state='APPROVED',approved_amount=?,approved_by=?,approved_at=?,updated_at=? WHERE id=? AND order_id=? AND review_state='REVIEW' AND customer_transaction_reference=? AND expected_amount=? AND EXISTS(SELECT 1 FROM payment_receipts r WHERE r.payment_id=payments.id AND r.order_id=payments.order_id AND r.r2_object_key<>'' AND r.sha256<>'')").bind(amount,c.env.ADMIN_EMAIL,now,now,c.req.param("id"),current.order_id,transactionReference,current.expected_amount),
-      c.env.DB.prepare("UPDATE orders SET state='PAID',payment_status='PAID',updated_at=? WHERE id=? AND order_number=? AND state='PAYMENT_REVIEW' AND archived_at IS NULL AND total_payable=? AND EXISTS(SELECT 1 FROM payments p WHERE p.id=? AND p.order_id=orders.id AND p.review_state='APPROVED' AND p.approved_amount=orders.total_payable AND p.customer_transaction_reference=? AND p.method=? ) AND EXISTS(SELECT 1 FROM payment_methods pm JOIN payment_qr_assets qa ON qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.derivative_sha256=pm.qr_sha256 WHERE pm.method=? AND pm.enabled=1 AND pm.qr_owner_verified=1 AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref IS NOT NULL AND trim(qa.independent_evidence_ref)<>'') AND EXISTS(SELECT 1 FROM payment_receipts r WHERE r.payment_id=? AND r.order_id=orders.id AND r.r2_object_key<>'' AND r.sha256<>'')").bind(now,current.order_id,current.order_number,current.total_payable,c.req.param("id"),transactionReference,current.method,current.method,c.req.param("id")),
-      c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=? AND o.state='PAID' AND p.id=? AND p.review_state='APPROVED' AND p.approved_by=? AND p.approved_at=? AND p.customer_transaction_reference=? AND p.approved_amount=o.total_payable)").bind(crypto.randomUUID(),"PAYMENT_APPROVED","ADMIN",c.env.ADMIN_EMAIL,"PAYMENT",c.req.param("id"),crypto.randomUUID(),JSON.stringify({orderId:current.order_id,orderNumber:current.order_number,method:current.method,amountPkr:amount,transactionReferenceHash:refHash,settlementEvidenceRef,qrSha256:current.qr_sha256}),now,current.order_id,c.req.param("id"),c.env.ADMIN_EMAIL,now,transactionReference)
+      c.env.DB.prepare("UPDATE payments SET review_state='APPROVED',approved_amount=?,approved_by=?,approved_at=?,updated_at=? WHERE id=? AND order_id=? AND method=? AND review_state='REVIEW' AND approved_amount IS NULL AND approved_by IS NULL AND approved_at IS NULL AND customer_transaction_reference=? AND expected_amount=? AND EXISTS(SELECT 1 FROM orders o WHERE o.id=payments.order_id AND o.id=? AND o.order_number=? AND o.state='PAYMENT_REVIEW' AND o.archived_at IS NULL AND o.total_payable=payments.expected_amount AND o.total_payable=?) AND EXISTS(SELECT 1 FROM payment_methods pm JOIN payment_qr_assets qa ON qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.derivative_sha256=pm.qr_sha256 WHERE pm.method=payments.method AND pm.method=? AND pm.enabled=1 AND pm.qr_owner_verified=1 AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref IS NOT NULL AND trim(qa.independent_evidence_ref)<>'') AND EXISTS(SELECT 1 FROM payment_receipts r WHERE r.payment_id=payments.id AND r.order_id=payments.order_id AND r.r2_object_key<>'' AND r.sha256<>'')").bind(amount,c.env.ADMIN_EMAIL,now,now,c.req.param("id"),current.order_id,current.method,transactionReference,current.expected_amount,current.order_id,current.order_number,current.total_payable,current.method),
+      c.env.DB.prepare("UPDATE orders SET state='PAID',payment_status='PAID',updated_at=? WHERE id=? AND changes()=1 AND order_number=? AND state='PAYMENT_REVIEW' AND archived_at IS NULL AND total_payable=? AND EXISTS(SELECT 1 FROM payments p WHERE p.id=? AND p.order_id=orders.id AND p.review_state='APPROVED' AND p.approved_amount=orders.total_payable AND p.customer_transaction_reference=? AND p.method=? ) AND EXISTS(SELECT 1 FROM payment_methods pm JOIN payment_qr_assets qa ON qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.derivative_sha256=pm.qr_sha256 WHERE pm.method=? AND pm.enabled=1 AND pm.qr_owner_verified=1 AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref IS NOT NULL AND trim(qa.independent_evidence_ref)<>'') AND EXISTS(SELECT 1 FROM payment_receipts r WHERE r.payment_id=? AND r.order_id=orders.id AND r.r2_object_key<>'' AND r.sha256<>'')").bind(now,current.order_id,current.order_number,current.total_payable,c.req.param("id"),transactionReference,current.method,current.method,c.req.param("id")),
+      c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE changes()=1 AND EXISTS(SELECT 1 FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=? AND o.state='PAID' AND p.id=? AND p.review_state='APPROVED' AND p.approved_by=? AND p.approved_at=? AND p.customer_transaction_reference=? AND p.approved_amount=o.total_payable)").bind(crypto.randomUUID(),"PAYMENT_APPROVED","ADMIN",c.env.ADMIN_EMAIL,"PAYMENT",c.req.param("id"),crypto.randomUUID(),JSON.stringify({orderId:current.order_id,orderNumber:current.order_number,method:current.method,amountPkr:amount,transactionReferenceHash:refHash,settlementEvidenceRef,qrSha256:current.qr_sha256}),now,current.order_id,c.req.param("id"),c.env.ADMIN_EMAIL,now,transactionReference)
     ];
     if(event){
       statements.push(c.env.DB.prepare("INSERT OR IGNORE INTO capi_events (id,event_id,event_name,order_id,customer_id,send_status,created_at,updated_at) SELECT ?,?,?,?,?,?,?,? FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=? AND o.state='PAID' AND p.id=? AND p.review_state='APPROVED'").bind(crypto.randomUUID(),event.eventId,event.eventName,current.order_id,current.customer_id,"PENDING",now,now,current.order_id,c.req.param("id")));

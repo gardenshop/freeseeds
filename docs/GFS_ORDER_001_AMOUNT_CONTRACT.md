@@ -20,7 +20,7 @@ Commission is restricted to postal output and necessary private validation/accou
 
 Normal MO handler `apps/admin/src/index.ts:795-845` requires `cod.quoted_total_pkr` and approves/stores gross; legacy collection/remittance748-786 also expects gross. Historical848-905/migration0048 protect original payable. None models principal/commission. A550 MO against gross625 currently fails. Label-only changes would produce unreconcilable accounting.
 
-S6 requires audited prospective accounting distinguishing gross, actual remitted principal and commission evidence under verified tariff. Preserve history, HMAC/audit/Access/CSRF, actual received funds and immutable ledgers. Do not rewrite historical records, weaken guards or silently mark gross paid from unsupported principal. Late/historical differences require explicit reconciliation. Both MO ledgers currently0 rows; absence is not authorization to skip protections. CAPI remains untouched.
+The separate prospective accounting correction is tracked as **GFS-ORDERFLOW-FIN-MO-002** and is mandatory before S5/S6 can activate postal settlement. It must distinguish gross, actual remitted principal and commission evidence under a verified tariff. Preserve history, HMAC/audit/Access/CSRF, actual received funds and immutable ledgers. Do not rewrite historical records, weaken guards or silently mark gross paid from unsupported principal. Late/historical differences require explicit reconciliation. The audit snapshot had both MO ledgers at0 rows; absence is not authorization to skip protections. CAPI remains untouched.
 
 ## Acceptance
 

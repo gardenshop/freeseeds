@@ -10,6 +10,10 @@ const auth = { "cf-access-authenticated-user-email": "admin@example.test" };
 
 class D1Adapter {
   private pending: Promise<unknown> = Promise.resolve();
+  beforeFirst?: (sql: string) => Promise<void>;
+  beforeRun?: (sql: string, batchStatementIndex: number) => void;
+  private nextBatchHook?: () => void;
+  private batchStatementIndex = -1;
   constructor(readonly sqlite: DatabaseSync) {}
 
   prepare(sql: string): D1PreparedStatement {
@@ -19,28 +23,49 @@ class D1Adapter {
   private prepareBound(sql: string, args: unknown[]): D1PreparedStatement {
     return {
       bind: (...values: unknown[]) => this.prepareBound(sql, values),
-      first: async <T>() => this.sqlite.prepare(sql).get(...args as SQLInputValue[]) as T ?? null,
+      first: async <T>() => {
+        await this.beforeFirst?.(sql);
+        return this.sqlite.prepare(sql).get(...args as SQLInputValue[]) as T ?? null;
+      },
       all: async <T>() => ({ results: this.sqlite.prepare(sql).all(...args as SQLInputValue[]) as T[] }),
-      run: async () => ({ meta: { changes: Number(this.sqlite.prepare(sql).run(...args as SQLInputValue[]).changes) } })
+      run: async () => {
+        this.beforeRun?.(sql, this.batchStatementIndex);
+        return { meta: { changes: Number(this.sqlite.prepare(sql).run(...args as SQLInputValue[]).changes) } };
+      }
     } as unknown as D1PreparedStatement;
   }
 
   batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]> {
-    const result = this.pending.then(() => this.executeBatch<T>(statements));
+    const beforeBatch = this.nextBatchHook;
+    this.nextBatchHook = undefined;
+    const result = this.pending.then(async () => {
+      beforeBatch?.();
+      return this.executeBatch<T>(statements);
+    });
     this.pending = result.catch(() => undefined);
     return result;
+  }
+
+  beforeNextBatch(hook: () => void) {
+    this.nextBatchHook = hook;
   }
 
   private async executeBatch<T>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]> {
     const results: D1Result<T>[] = [];
     this.sqlite.exec("BEGIN");
     try {
-      for (const statement of statements) results.push({ meta: (await (statement as unknown as { run(): Promise<{ meta: { changes: number } }> }).run()).meta } as D1Result<T>);
+      for (let index = 0; index < statements.length; index++) {
+        this.batchStatementIndex = index;
+        const statement = statements[index];
+        results.push({ meta: (await (statement as unknown as { run(): Promise<{ meta: { changes: number } }> }).run()).meta } as D1Result<T>);
+      }
       this.sqlite.exec("COMMIT");
       return results;
     } catch (error) {
       this.sqlite.exec("ROLLBACK");
       throw error;
+    } finally {
+      this.batchStatementIndex = -1;
     }
   }
 }
@@ -64,10 +89,12 @@ beforeEach(() => {
   sqlite.exec(`
     PRAGMA foreign_keys=ON;
     CREATE TABLE orders(id TEXT PRIMARY KEY,order_number TEXT NOT NULL,customer_id TEXT,state TEXT NOT NULL,payment_status TEXT NOT NULL,total_payable INTEGER NOT NULL,archived_at TEXT,updated_at TEXT);
-    CREATE TABLE payments(id TEXT PRIMARY KEY,order_id TEXT NOT NULL,method TEXT,expected_amount INTEGER NOT NULL,review_state TEXT NOT NULL,approved_amount INTEGER,approved_by TEXT,approved_at TEXT,updated_at TEXT);
-    CREATE TABLE payment_receipts(id TEXT PRIMARY KEY,order_id TEXT NOT NULL,payment_id TEXT NOT NULL);
+    CREATE TABLE payments(id TEXT PRIMARY KEY,order_id TEXT NOT NULL,method TEXT,expected_amount INTEGER NOT NULL,review_state TEXT NOT NULL,approved_amount INTEGER,approved_by TEXT,approved_at TEXT,customer_transaction_reference TEXT,updated_at TEXT);
+    CREATE TABLE payment_receipts(id TEXT PRIMARY KEY,order_id TEXT NOT NULL,payment_id TEXT NOT NULL,r2_object_key TEXT,sha256 TEXT);
     CREATE TABLE customers(id TEXT PRIMARY KEY);
     CREATE TABLE meta_attribution(id TEXT PRIMARY KEY,order_id TEXT NOT NULL,ctwa_clid TEXT);
+    CREATE TABLE payment_methods(method TEXT PRIMARY KEY,enabled INTEGER,qr_owner_verified INTEGER,qr_r2_key TEXT,qr_sha256 TEXT);
+    CREATE TABLE payment_qr_assets(method TEXT,derivative_r2_key TEXT,derivative_sha256 TEXT,active INTEGER,decoder_agreement INTEGER,payload_match INTEGER,scan_pass INTEGER,independent_ownership_verified INTEGER,independent_evidence_ref TEXT);
     CREATE TABLE capi_events(id TEXT PRIMARY KEY,event_id TEXT NOT NULL UNIQUE,event_name TEXT NOT NULL,order_id TEXT NOT NULL,customer_id TEXT NOT NULL,send_status TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
     CREATE TABLE outbox_jobs(id TEXT PRIMARY KEY,idempotency_key TEXT NOT NULL UNIQUE,kind TEXT NOT NULL,entity_id TEXT NOT NULL,payload_json TEXT NOT NULL,status TEXT NOT NULL,available_at TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
     CREATE TABLE audit_log(id TEXT PRIMARY KEY,action TEXT,actor_type TEXT,actor_id TEXT,entity_type TEXT,entity_id TEXT,correlation_id TEXT,metadata_json TEXT,created_at TEXT);
@@ -75,6 +102,8 @@ beforeEach(() => {
   sqlite.exec(readFileSync("migrations/0030_cod_v1_compat.sql", "utf8"));
   sqlite.exec(readFileSync("migrations/0047_cod_pakistan_post_mo.sql", "utf8"));
   sqlite.exec(readFileSync("migrations/0048_historical_cod_mo.sql", "utf8"));
+  sqlite.exec(readFileSync("migrations/0049_cod_mo_global_reference_claims.sql", "utf8"));
+  sqlite.exec(readFileSync("migrations/0029_normalize_legacy_payment_references.sql", "utf8"));
   db = new D1Adapter(sqlite);
 });
 
@@ -85,6 +114,42 @@ afterEach(() => {
 
 it("tracks historical migration 0048 exactly once", () => {
   expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_schema_migrations WHERE version='0048'").get()).toEqual({ count: 1 });
+});
+
+it("backfills the shared MO namespace, rejects legacy conflicts, and remains compatible with old ledger inserts", () => {
+  expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_schema_migrations WHERE version='0049'").get()).toEqual({ count: 1 });
+  seedCod();
+  seedHistorical();
+  sqlite.prepare("INSERT INTO cod_mo_receipts(order_id,mo_reference_hmac,mo_amount_pkr,operator_id,received_at) VALUES('order-1','legacy-normal-hmac',325,'synthetic','2026-01-01')").run();
+  sqlite.prepare("INSERT INTO cod_historical_mo_receipts(order_id,mo_reference_hmac,received_amount_pkr,receipt_date,evidence_reference_hmac,settlement_reason,operator_id,received_at) VALUES('historical-order','legacy-historical-hmac',200,'2026-01-01','evidence-hmac','synthetic test','synthetic','2026-01-01')").run();
+  expect(sqlite.prepare("SELECT ledger_type,COUNT(*) AS count FROM cod_mo_reference_claims GROUP BY ledger_type ORDER BY ledger_type").all()).toEqual([
+    { ledger_type: "HISTORICAL", count: 1 },
+    { ledger_type: "NORMAL", count: 1 }
+  ]);
+  sqlite.prepare("INSERT INTO orders(id,order_number,state,payment_status,total_payable,updated_at) VALUES('order-2','SIM-GFS222-SECOND','COLLECTION_PENDING','COD_PENDING',200,'synthetic')").run();
+  sqlite.prepare("INSERT INTO payments(id,order_id,method,expected_amount,review_state,updated_at) VALUES('payment-2','order-2',NULL,200,'COD_PENDING','synthetic')").run();
+  sqlite.prepare("INSERT INTO cod_order_details(order_id,base_amount_pkr,cod_fee_pkr,quoted_total_pkr,status,policy_revision,collection_policy_hash,remittance_policy_hash,test_hold,created_at,updated_at) VALUES('order-2',200,125,325,'COLLECTION_PENDING','synthetic-policy','a','b',0,'synthetic','synthetic')").run();
+  expect(() => sqlite.prepare("INSERT INTO cod_mo_receipts(order_id,mo_reference_hmac,mo_amount_pkr,operator_id,received_at) VALUES('order-2','legacy-historical-hmac',325,'synthetic','2026-01-02')").run()).toThrow(/cod_mo_reference_claims\.mo_reference_hmac/i);
+  expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_mo_receipts WHERE order_id='order-2'").get()).toEqual({ count: 0 });
+  sqlite.exec(readFileSync("migrations/0049_cod_mo_global_reference_claims.sql", "utf8"));
+  expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_mo_reference_claims").get()).toEqual({ count: 2 });
+});
+
+it("aborts migration 0049 preflight on an existing cross-ledger digest conflict without changing legacy rows", () => {
+  const conflictDb = new DatabaseSync(":memory:");
+  try {
+    conflictDb.exec("CREATE TABLE cod_schema_migrations(version TEXT PRIMARY KEY,applied_at TEXT NOT NULL); CREATE TABLE cod_mo_receipts(order_id TEXT PRIMARY KEY,mo_reference_hmac TEXT UNIQUE,received_at TEXT NOT NULL); CREATE TABLE cod_historical_mo_receipts(order_id TEXT PRIMARY KEY,mo_reference_hmac TEXT UNIQUE,received_at TEXT NOT NULL);");
+    conflictDb.prepare("INSERT INTO cod_mo_receipts VALUES('normal-order','same-synthetic-hmac','2026-01-01')").run();
+    conflictDb.prepare("INSERT INTO cod_historical_mo_receipts VALUES('historical-order','same-synthetic-hmac','2026-01-01')").run();
+    conflictDb.exec("BEGIN");
+    expect(() => conflictDb.exec(readFileSync("migrations/0049_cod_mo_global_reference_claims.sql", "utf8"))).toThrow(/CHECK constraint failed/);
+    conflictDb.exec("ROLLBACK");
+    expect(conflictDb.prepare("SELECT COUNT(*) AS count FROM cod_mo_receipts").get()).toEqual({ count: 1 });
+    expect(conflictDb.prepare("SELECT COUNT(*) AS count FROM cod_historical_mo_receipts").get()).toEqual({ count: 1 });
+    expect(conflictDb.prepare("SELECT COUNT(*) AS count FROM sqlite_schema WHERE name='cod_mo_reference_claims'").get()).toEqual({ count: 0 });
+  } finally {
+    conflictDb.close();
+  }
 });
 
 // Independent synthetic settlement fixtures deliberately opt out at INSERT, never through an endpoint.
@@ -111,6 +176,315 @@ function seedHistorical(method: string | null = null, state = "DELIVERED", order
 function reconcile(kind: string, evidenceReference = `SYNTHETIC-${kind.toUpperCase()}-EVIDENCE`, session?: Awaited<ReturnType<typeof csrf>>) {
   return post(`/api/orders/order-1/cod-${kind}`, { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, evidenceReference }, session);
 }
+
+function seedAdvanceApproval(orderId: string, paymentId: string, orderNumber: string, method = "BANK", reference: string | null = "SYNTHETIC-ADVANCE-TID-001", amount = 625) {
+  const now = "2026-01-01T00:00:00.000Z";
+  sqlite.prepare("INSERT OR IGNORE INTO customers(id) VALUES(?)").run(`customer-${orderId}`);
+  sqlite.prepare("INSERT INTO orders(id,order_number,customer_id,state,payment_status,total_payable,updated_at) VALUES(?,?,?,'PAYMENT_REVIEW','PENDING',?,?)").run(orderId, orderNumber, `customer-${orderId}`, amount, now);
+  sqlite.prepare("INSERT INTO payments(id,order_id,method,expected_amount,review_state,customer_transaction_reference,updated_at) VALUES(?,?,?,?,'REVIEW',?,?)").run(paymentId, orderId, method, amount, reference, now);
+  sqlite.prepare("INSERT INTO payment_receipts(id,order_id,payment_id,r2_object_key,sha256) VALUES(?,?,?,'private/synthetic-receipt','a')").run(`receipt-${paymentId}`, orderId, paymentId);
+  const qrKey = `private/qr/${method}`;
+  const qrSha = "b".repeat(64);
+  sqlite.prepare("INSERT OR IGNORE INTO payment_methods(method,enabled,qr_owner_verified,qr_r2_key,qr_sha256) VALUES(?,1,1,?,?)").run(method, qrKey, qrSha);
+  sqlite.prepare("INSERT OR IGNORE INTO payment_qr_assets(method,derivative_r2_key,derivative_sha256,active,decoder_agreement,payload_match,scan_pass,independent_ownership_verified,independent_evidence_ref) VALUES(?,?,?,1,1,1,1,1,'SYNTHETIC-QR-OWNERSHIP')").run(method, qrKey, qrSha);
+}
+
+function synchronizeFirstQueries(predicate: (sql: string) => boolean, participants = 2) {
+  let arrivals = 0;
+  let release!: () => void;
+  const barrier = new Promise<void>((resolve) => { release = resolve; });
+  db.beforeFirst = async (sql) => {
+    if (!predicate(sql)) return;
+    arrivals += 1;
+    if (arrivals === participants) {
+      db.beforeFirst = undefined;
+      release();
+    }
+    await barrier;
+  };
+}
+
+describe("actual Admin financial atomicity and duplicate races", () => {
+  it("rejects unauthorized and incorrect-amount Advance approval without financial writes", async () => {
+    seedAdvanceApproval("approval-order-guards", "approval-payment-guards", "SIM-APPROVAL-GUARDS");
+    const body = JSON.stringify({ orderId: "approval-order-guards", confirmation: "SIM-APPROVAL-GUARDS", settlementEvidenceRef: "SYNTHETIC-SETTLEMENT-EVIDENCE", settlementConfirmed: true });
+    const unauthorized = await app.fetch(new Request("https://admin.example.test/api/payments/approval-payment-guards/approve", { method: "POST", headers: { "content-type": "application/json" }, body }), env());
+    expect(unauthorized.status).toBe(403);
+    sqlite.prepare("UPDATE payments SET expected_amount=624 WHERE id='approval-payment-guards'").run();
+
+    const mismatch = await post("/api/payments/approval-payment-guards/approve", JSON.parse(body), await csrf());
+    expect(mismatch.status).toBe(409);
+    expect(await mismatch.json()).toMatchObject({ error: "PAYMENT_AMOUNT_MISMATCH" });
+    expect(sqlite.prepare("SELECT review_state,approved_amount FROM payments WHERE id='approval-payment-guards'").get()).toEqual({ review_state: "REVIEW", approved_amount: null });
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id='approval-order-guards'").get()).toEqual({ state: "PAYMENT_REVIEW", payment_status: "PENDING" });
+  });
+
+  it("keeps an Advance payment under review when the order becomes stale after preflight", async () => {
+    seedAdvanceApproval("approval-order-stale", "approval-payment-stale", "SIM-APPROVAL-STALE");
+    const session = await csrf();
+    db.beforeNextBatch(() => sqlite.prepare("UPDATE orders SET state='CANCELLED' WHERE id='approval-order-stale'").run());
+
+    const response = await post("/api/payments/approval-payment-stale/approve", {
+      orderId: "approval-order-stale",
+      confirmation: "SIM-APPROVAL-STALE",
+      settlementEvidenceRef: "SYNTHETIC-CREDIT-EVIDENCE-STALE",
+      settlementConfirmed: true
+    }, session);
+
+    expect(response.status).toBe(409);
+    expect(sqlite.prepare("SELECT review_state FROM payments WHERE id='approval-payment-stale'").get()).toEqual({ review_state: "REVIEW" });
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id='approval-order-stale'").get()).toEqual({ state: "CANCELLED", payment_status: "PENDING" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_APPROVED'").get()).toEqual({ count: 0 });
+  });
+
+  it("keeps COD receipt and sidecar unchanged when the payment update fails after preflight", async () => {
+    seedCod();
+    db.beforeNextBatch(() => sqlite.prepare("UPDATE payments SET expected_amount=201 WHERE id='payment-1'").run());
+
+    const response = await post("/api/orders/order-1/mark-payment-received", {
+      confirmation: "SIM-GFS222-DO-NOT-SHIP",
+      amountPkr: 325,
+      moNumber: "PK-SYNTHETIC-PAYMENT-FAIL",
+      confirmed: true
+    });
+
+    expect(response.status).toBe(409);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_mo_receipts").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT status FROM cod_order_details WHERE order_id='order-1'").get()).toEqual({ status: "COLLECTION_PENDING" });
+    expect(sqlite.prepare("SELECT review_state,approved_amount FROM payments WHERE id='payment-1'").get()).toEqual({ review_state: "COD_PENDING", approved_amount: null });
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id='order-1'").get()).toEqual({ state: "COLLECTION_PENDING", payment_status: "COD_PENDING" });
+  });
+
+  it("does not duplicate approval audit or settle twice when two Admin requests race", async () => {
+    seedAdvanceApproval("approval-order-race", "approval-payment-race", "SIM-APPROVAL-RACE");
+    const session = await csrf();
+    const events = { send: vi.fn(async () => undefined) };
+    const runtime = env(hmacKey, "true", events);
+    synchronizeFirstQueries((sql) => sql.startsWith("SELECT p.review_state,p.method"));
+    const request = () => post("/api/payments/approval-payment-race/approve", {
+      orderId: "approval-order-race",
+      confirmation: "SIM-APPROVAL-RACE",
+      settlementEvidenceRef: "SYNTHETIC-CREDIT-EVIDENCE-RACE",
+      settlementConfirmed: true
+    }, session, runtime);
+
+    const responses = await Promise.all([request(), request()]);
+    expect(responses.map((response) => response.status).sort()).toEqual([200, 409]);
+    expect(sqlite.prepare("SELECT review_state,approved_amount FROM payments WHERE id='approval-payment-race'").get()).toEqual({ review_state: "APPROVED", approved_amount: 625 });
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id='approval-order-race'").get()).toEqual({ state: "PAID", payment_status: "PAID" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_APPROVED' AND entity_id='approval-payment-race'").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM capi_events WHERE order_id='approval-order-race' AND event_name='Purchase'").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE entity_id='approval-order-race' AND kind='CAPI_PURCHASE'").get()).toEqual({ count: 1 });
+    expect(events.send).toHaveBeenCalledTimes(1);
+  });
+
+  it("rolls back an Advance approval when its required audit write fails", async () => {
+    seedAdvanceApproval("approval-order-audit-fail", "approval-payment-audit-fail", "SIM-APPROVAL-AUDIT-FAIL");
+    db.beforeRun = (sql, index) => {
+      if (index === 2 && sql.startsWith("INSERT INTO audit_log")) throw new Error("SYNTHETIC_APPROVAL_AUDIT_FAILURE");
+    };
+
+    const response = await post("/api/payments/approval-payment-audit-fail/approve", {
+      orderId: "approval-order-audit-fail",
+      confirmation: "SIM-APPROVAL-AUDIT-FAIL",
+      settlementEvidenceRef: "SYNTHETIC-CREDIT-EVIDENCE-AUDIT",
+      settlementConfirmed: true
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: "APPROVAL_FAILED" });
+    expect(sqlite.prepare("SELECT review_state,approved_amount FROM payments WHERE id='approval-payment-audit-fail'").get()).toEqual({ review_state: "REVIEW", approved_amount: null });
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id='approval-order-audit-fail'").get()).toEqual({ state: "PAYMENT_REVIEW", payment_status: "PENDING" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_APPROVED'").get()).toEqual({ count: 0 });
+  });
+
+  it("rolls back a normal MO settlement when its required financial audit fails", async () => {
+    seedCod();
+    db.beforeRun = (sql, index) => {
+      if (index === 4 && sql.startsWith("INSERT INTO audit_log")) throw new Error("SYNTHETIC_COD_MO_AUDIT_FAILURE");
+    };
+
+    const response = await post("/api/orders/order-1/mark-payment-received", {
+      confirmation: "SIM-GFS222-DO-NOT-SHIP",
+      amountPkr: 325,
+      moNumber: "PK-MO-AUDIT-ROLLBACK",
+      confirmed: true
+    });
+
+    expect(response.status).toBe(409);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_mo_receipts").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT status FROM cod_order_details WHERE order_id='order-1'").get()).toEqual({ status: "COLLECTION_PENDING" });
+    expect(sqlite.prepare("SELECT review_state,approved_amount FROM payments WHERE id='payment-1'").get()).toEqual({ review_state: "COD_PENDING", approved_amount: null });
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id='order-1'").get()).toEqual({ state: "COLLECTION_PENDING", payment_status: "COD_PENDING" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_MO_RECEIVED'").get()).toEqual({ count: 0 });
+  });
+
+  it("rolls back a historical MO settlement when its required audit write fails", async () => {
+    seedHistorical();
+    db.beforeRun = (sql, index) => {
+      if (index === 2 && sql.startsWith("INSERT INTO audit_log")) throw new Error("SYNTHETIC_HISTORICAL_MO_AUDIT_FAILURE");
+    };
+
+    const response = await post("/api/orders/historical-order/mark-historical-cod-received", {
+      confirmation: "SIM-HISTORICAL-COD",
+      amountPkr: 200,
+      moNumber: "PK-HIST-MO-AUDIT-ROLLBACK",
+      receiptDate: "2026-01-01",
+      evidenceReference: "SYNTHETIC-HISTORICAL-AUDIT-EVIDENCE",
+      reason: "Synthetic audit rollback test",
+      confirmed: true
+    });
+
+    expect(response.status).toBe(409);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_historical_mo_receipts").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id='historical-order'").get()).toEqual({ state: "DELIVERED", payment_status: "PENDING" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_HISTORICAL_MO_RECEIVED'").get()).toEqual({ count: 0 });
+  });
+
+  it("rolls back normal MO settlement and CAPI outbox when a required durable outbox write fails", async () => {
+    seedCod();
+    sqlite.prepare("INSERT INTO customers(id) VALUES('customer-1')").run();
+    sqlite.prepare("UPDATE orders SET customer_id='customer-1' WHERE id='order-1'").run();
+    sqlite.prepare("INSERT INTO meta_attribution(id,order_id,ctwa_clid) VALUES('attribution-1','order-1','synthetic-ctwa')").run();
+    db.beforeRun = (sql, index) => {
+      if (index === 6 && sql.startsWith("INSERT OR IGNORE INTO outbox_jobs")) throw new Error("SYNTHETIC_OUTBOX_FAILURE");
+    };
+    const events = { send: vi.fn(async () => undefined) };
+
+    const response = await post("/api/orders/order-1/mark-payment-received", {
+      confirmation: "SIM-GFS222-DO-NOT-SHIP",
+      amountPkr: 325,
+      moNumber: "PK-MO-OUTBOX-ROLLBACK",
+      confirmed: true
+    }, undefined, env(hmacKey, "true", events));
+
+    expect(response.status).toBe(409);
+    expect(events.send).not.toHaveBeenCalled();
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_mo_receipts").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT status FROM cod_order_details WHERE order_id='order-1'").get()).toEqual({ status: "COLLECTION_PENDING" });
+    expect(sqlite.prepare("SELECT review_state FROM payments WHERE id='payment-1'").get()).toEqual({ review_state: "COD_PENDING" });
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id='order-1'").get()).toEqual({ state: "COLLECTION_PENDING", payment_status: "COD_PENDING" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM capi_events").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE kind='CAPI_PURCHASE'").get()).toEqual({ count: 0 });
+  });
+
+  it("serializes concurrent duplicate TID submissions across different orders using the existing method scope", async () => {
+    seedAdvanceApproval("tid-order-one", "tid-payment-one", "SIM-TID-ORDER-ONE", "BANK", null);
+    seedAdvanceApproval("tid-order-two", "tid-payment-two", "SIM-TID-ORDER-TWO", "BANK", null);
+    const session = await csrf();
+    synchronizeFirstQueries((sql) => sql.startsWith("SELECT id FROM payments WHERE id<>? AND method=?"));
+    const request = (paymentId: string, orderId: string, orderNumber: string) => post(`/api/payments/${paymentId}/transaction-reference`, {
+      orderId,
+      confirmation: orderNumber,
+      reference: "SYNTHETIC-TID-RACE-001"
+    }, session);
+
+    const responses = await Promise.all([
+      request("tid-payment-one", "tid-order-one", "SIM-TID-ORDER-ONE"),
+      request("tid-payment-two", "tid-order-two", "SIM-TID-ORDER-TWO")
+    ]);
+    expect(responses.map((response) => response.status).sort(), JSON.stringify(await Promise.all(responses.map((response) => response.clone().json())))).toEqual([200, 409]);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payments WHERE customer_transaction_reference='SYNTHETIC-TID-RACE-001'").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_TRANSACTION_REFERENCE_SAVED'").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders WHERE state<>'PAYMENT_REVIEW' OR payment_status<>'PENDING'").get()).toEqual({ count: 0 });
+  });
+
+  it("rejects the same provider reference across orders but preserves method-scoped identifiers", async () => {
+    seedAdvanceApproval("tid-provider-order-one", "tid-provider-payment-one", "SIM-TID-PROVIDER-ONE", "BANK", null);
+    seedAdvanceApproval("tid-provider-order-two", "tid-provider-payment-two", "SIM-TID-PROVIDER-TWO", "EASYPAISA", null);
+    const session = await csrf();
+    const request = (paymentId: string, orderId: string, orderNumber: string) => post(`/api/payments/${paymentId}/transaction-reference`, {
+      orderId,
+      confirmation: orderNumber,
+      reference: "SYNTHETIC-PROVIDER-TID-001"
+    }, session);
+
+    expect((await request("tid-provider-payment-one", "tid-provider-order-one", "SIM-TID-PROVIDER-ONE")).status).toBe(200);
+    expect((await request("tid-provider-payment-two", "tid-provider-order-two", "SIM-TID-PROVIDER-TWO")).status).toBe(200);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payments WHERE customer_transaction_reference='SYNTHETIC-PROVIDER-TID-001'").get()).toEqual({ count: 2 });
+  });
+
+  it("reproduces concurrent normal/historical MO reference reuse through both Admin handlers", async () => {
+    seedCod("COLLECTION_PENDING");
+    seedHistorical();
+    const session = await csrf();
+    synchronizeFirstQueries((sql) => sql.startsWith("SELECT 1 AS present FROM cod_mo_receipts") || sql.startsWith("SELECT 1 AS present FROM cod_historical_mo_receipts"));
+
+    const normal = post("/api/orders/order-1/mark-payment-received", {
+      confirmation: "SIM-GFS222-DO-NOT-SHIP",
+      amountPkr: 325,
+      moNumber: "PK-CROSS-LEDGER-RACE-001",
+      confirmed: true
+    }, session);
+    const historical = post("/api/orders/historical-order/mark-historical-cod-received", {
+      confirmation: "SIM-HISTORICAL-COD",
+      amountPkr: 200,
+      moNumber: "PK-CROSS-LEDGER-RACE-001",
+      receiptDate: "2026-01-01",
+      evidenceReference: "SYNTHETIC-HISTORICAL-EVIDENCE-RACE",
+      reason: "Synthetic cross-ledger concurrency test",
+      confirmed: true
+    }, session);
+
+    const responses = await Promise.all([normal, historical]);
+    expect(responses.map((response) => response.status).sort()).toEqual([200, 409]);
+    const rejected = responses.find((response) => response.status === 409)!;
+    expect(await rejected.json()).toMatchObject({ error: "COD_MO_ALREADY_USED" });
+    const normalDigest = await codReferenceHmac("PK-CROSS-LEDGER-RACE-001", hmacKey);
+    expect(sqlite.prepare("SELECT (SELECT COUNT(*) FROM cod_mo_receipts WHERE mo_reference_hmac=?) + (SELECT COUNT(*) FROM cod_historical_mo_receipts WHERE mo_reference_hmac=?) AS count").get(normalDigest, normalDigest)).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action IN ('COD_MO_RECEIVED','COD_HISTORICAL_MO_RECEIVED')").get()).toEqual({ count: 1 });
+  });
+
+  it("returns an idempotent result for simultaneous same-order MO retries", async () => {
+    seedCod("COLLECTION_PENDING");
+    const session = await csrf();
+    synchronizeFirstQueries((sql) => sql.startsWith("SELECT 1 AS present FROM cod_mo_receipts"));
+    const request = () => post("/api/orders/order-1/mark-payment-received", {
+      confirmation: "SIM-GFS222-DO-NOT-SHIP",
+      amountPkr: 325,
+      moNumber: "PK-MO-SAME-ORDER-RACE",
+      confirmed: true
+    }, session);
+
+    const responses = await Promise.all([request(), request()]);
+    expect(responses.map((response) => response.status)).toEqual([200, 200]);
+    const results = await Promise.all(responses.map((response) => response.json() as Promise<Record<string, unknown>>));
+    expect(results.some((result) => result.alreadyPaid === true)).toBe(true);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_mo_receipts").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_mo_reference_claims").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_MO_RECEIVED'").get()).toEqual({ count: 1 });
+  });
+
+  it("rejects stale and protected historical COD settlement before recording an MO", async () => {
+    seedHistorical();
+    db.beforeNextBatch(() => sqlite.prepare("UPDATE orders SET state='CANCELLED' WHERE id='historical-order'").run());
+    const stale = await post("/api/orders/historical-order/mark-historical-cod-received", {
+      confirmation: "SIM-HISTORICAL-COD",
+      amountPkr: 200,
+      moNumber: "PK-HIST-MO-STALE",
+      receiptDate: "2026-01-01",
+      evidenceReference: "SYNTHETIC-HISTORICAL-STALE-EVIDENCE",
+      reason: "Synthetic stale state test",
+      confirmed: true
+    });
+    expect(stale.status).toBe(409);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_historical_mo_receipts").get()).toEqual({ count: 0 });
+
+    sqlite.prepare("UPDATE orders SET state='DELIVERED',order_number='FS-261019-000001' WHERE id='historical-order'").run();
+    const held = await post("/api/orders/historical-order/mark-historical-cod-received", {
+      confirmation: "FS-261019-000001",
+      amountPkr: 200,
+      moNumber: "PK-HIST-MO-HELD",
+      receiptDate: "2026-01-01",
+      evidenceReference: "SYNTHETIC-HISTORICAL-HOLD-EVIDENCE",
+      reason: "Synthetic protected hold test",
+      confirmed: true
+    });
+    expect(held.status).toBe(409);
+    expect(await held.json()).toMatchObject({ error: "FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_historical_mo_receipts").get()).toEqual({ count: 0 });
+  });
+});
 
 describe("COD Admin configuration and reconciliation", () => {
   it("enables basic COD intake at PKR 125 without collection HMAC or remittance policy references", async () => {
@@ -261,7 +635,7 @@ describe("COD Admin configuration and reconciliation", () => {
     expect(() => sqlite.exec("UPDATE orders SET payment_status='PAID' WHERE id='order-1'")).toThrow(/COD_/);
     expect(() => sqlite.exec("INSERT INTO audit_log(id,entity_type,entity_id,action) VALUES('tracking','ORDER','order-1','ORDER_TRACKING_ASSIGNED')")).toThrow("COD_TEST_HOLD_DO_NOT_SHIP");
     expect(() => sqlite.exec("UPDATE cod_order_details SET test_hold=0 WHERE order_id='order-1'")).toThrow("COD_SNAPSHOT_IMMUTABLE");
-    expect(() => sqlite.exec("INSERT INTO payment_receipts VALUES('receipt','order-1','payment-1')")).toThrow("COD_DOES_NOT_ACCEPT_ADVANCE_RECEIPTS");
+    expect(() => sqlite.exec("INSERT INTO payment_receipts(id,order_id,payment_id) VALUES('receipt','order-1','payment-1')")).toThrow("COD_DOES_NOT_ACCEPT_ADVANCE_RECEIPTS");
   });
 
   it("keeps price, policy and evidence snapshots immutable and retains the incident hold", async () => {
@@ -281,10 +655,10 @@ describe("COD Admin configuration and reconciliation", () => {
 
   it("blocks advance receipt reassignment by either order or payment association", () => {
     seedCod();
-    sqlite.exec("INSERT INTO orders(id,order_number,state,payment_status,total_payable,archived_at,updated_at) VALUES('advance','SIM-ADVANCE','PAYMENT_REVIEW','PENDING',200,NULL,'synthetic'); INSERT INTO payments(id,order_id,expected_amount,review_state) VALUES('advance-payment','advance',200,'REVIEW'); INSERT INTO payment_receipts VALUES('advance-receipt','advance','advance-payment')");
+    sqlite.exec("INSERT INTO orders(id,order_number,state,payment_status,total_payable,archived_at,updated_at) VALUES('advance','SIM-ADVANCE','PAYMENT_REVIEW','PENDING',200,NULL,'synthetic'); INSERT INTO payments(id,order_id,expected_amount,review_state) VALUES('advance-payment','advance',200,'REVIEW'); INSERT INTO payment_receipts(id,order_id,payment_id) VALUES('advance-receipt','advance','advance-payment')");
     expect(() => sqlite.exec("UPDATE payment_receipts SET order_id='order-1' WHERE id='advance-receipt'")).toThrow("COD_DOES_NOT_ACCEPT_ADVANCE_RECEIPTS");
     expect(() => sqlite.exec("UPDATE payment_receipts SET payment_id='payment-1' WHERE id='advance-receipt'")).toThrow("COD_DOES_NOT_ACCEPT_ADVANCE_RECEIPTS");
-    expect(() => sqlite.exec("INSERT INTO payment_receipts VALUES('wrong-association','advance','payment-1')")).toThrow("COD_DOES_NOT_ACCEPT_ADVANCE_RECEIPTS");
+    expect(() => sqlite.exec("INSERT INTO payment_receipts(id,order_id,payment_id) VALUES('wrong-association','advance','payment-1')")).toThrow("COD_DOES_NOT_ACCEPT_ADVANCE_RECEIPTS");
     expect(sqlite.prepare("SELECT order_id,payment_id FROM payment_receipts").get()).toEqual({ order_id: "advance", payment_id: "advance-payment" });
   });
 
@@ -394,6 +768,10 @@ describe("COD Admin configuration and reconciliation", () => {
     expect(repeat.status).toBe(200);
     expect(await repeat.json()).toMatchObject({ alreadyPaid: true, paymentStatus: "PAID" });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_MO_RECEIVED'").get()).toEqual({ count: 1 });
+    const conflictingReplay = await post("/api/orders/order-1/mark-payment-received", { confirmation: "SIM-GFS222-DO-NOT-SHIP", amountPkr: 325, moNumber: "PK-MO-DIFFERENT-REPLAY", confirmed: true });
+    expect(conflictingReplay.status).toBe(409);
+    expect(await conflictingReplay.json()).toEqual({ error: "COD_MO_ALREADY_RECORDED" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_mo_receipts").get()).toEqual({ count: 1 });
   });
 
   it("rejects unauthorized, wrong-amount and premature manual COD confirmation", async () => {
@@ -420,6 +798,10 @@ describe("COD Admin configuration and reconciliation", () => {
     expect(sqlite.prepare("SELECT received_amount_pkr,receipt_date,operator_id FROM cod_historical_mo_receipts").get()).toEqual({ received_amount_pkr: 200, receipt_date: "2026-01-01", operator_id: "admin@example.test" });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_HISTORICAL_MO_RECEIVED'").get()).toEqual({ count: 1 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM capi_events").get()).toEqual({ count: 0 });
+    const replay = await post("/api/orders/historical-order/mark-historical-cod-received", { confirmation: "SIM-HISTORICAL-COD", amountPkr: 200, moNumber: "PK-HIST-MO-001", receiptDate: "2026-01-01", evidenceReference: "PRIVATE-RECEIPT-001", reason: "Owner verified delivered COD and company receipt", confirmed: true });
+    expect(replay.status).toBe(200);
+    expect(await replay.json()).toMatchObject({ ok: true, alreadyRecorded: true, historical: true, paymentStatus: "PAID" });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_HISTORICAL_MO_RECEIVED'").get()).toEqual({ count: 1 });
   });
 
   it("creates one durable historical Purchase outbox event without blocking PAID when Queue is unavailable", async () => {
@@ -458,7 +840,8 @@ describe("COD Admin configuration and reconciliation", () => {
       post("/api/orders/historical-order/mark-historical-cod-received", { confirmation: "SIM-HISTORICAL-COD", amountPkr: 200, moNumber: "PK-HIST-MO-003", receiptDate: "2026-01-01", evidenceReference: "PRIVATE-RECEIPT-003", reason: "Historical COD review", confirmed: true }),
       post("/api/orders/historical-order/mark-historical-cod-received", { confirmation: "SIM-HISTORICAL-COD", amountPkr: 200, moNumber: "PK-HIST-MO-003", receiptDate: "2026-01-01", evidenceReference: "PRIVATE-RECEIPT-003", reason: "Historical COD review", confirmed: true })
     ]);
-    expect([winner.status, loser.status].sort()).toEqual([200, 409]);
+    expect([winner.status, loser.status].sort(), JSON.stringify(await Promise.all([winner.clone().json(), loser.clone().json()]))).toEqual([200, 200]);
+    expect([await winner.clone().json(), await loser.clone().json()].some((body) => (body as { alreadyRecorded?: boolean }).alreadyRecorded === true)).toBe(true);
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_historical_mo_receipts").get()).toEqual({ count: 1 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='COD_HISTORICAL_MO_RECEIVED'").get()).toEqual({ count: 1 });
   });

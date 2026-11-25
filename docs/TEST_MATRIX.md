@@ -13,6 +13,64 @@
 | Full dependency audit | OPEN / OUT OF SCOPE | 6 moderate dev-tool findings remain through minimatch GHSA-g3hv-75wg-m249 and existing @typescript-eslint dependencies. No unrelated dependency upgrade permitted. |
 | Cloudflare production | NO MUTATION | Admin3e4b7c26 100%/ce023b54 0%; APIb426ba47 100%/d683ec45 0% read-only before/after. No deployments or config changes. |
 | Protected projects | PASS | Label Printer923/923 SHA checks; standalone MO Printing and Hoja untouched. |
+
+Detailed advisory mapping, tests, rollback/security invariants and limitations: [GFS ORDERFLOW SEC-HONO-001](GFS_ORDERFLOW_SEC_HONO_001.md).
+
+## GFS ORDERFLOW financial atomicity (2026-11-25 UTC)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Actual Admin HTTP atomicity/concurrency | PASS | `tests/cod-admin.test.ts`: Advance/order and COD payment-state races, concurrent approval/TID/MO, provider-scoped TID, exact replay, wrong amount/operator, audit/outbox failure rollback and historical incident guards run through the real Admin Hono routes with synthetic D1/SQLite. |
+| Shared MO reference migration | PASS, LOCAL ONLY | Migration0049 preflight rejects an existing cross-ledger HMAC duplicate and preserves both legacy rows; backfill, idempotent reapply, old-Worker direct insert claims and unique-trigger behavior are covered in synthetic SQLite. Not applied to production. |
+| Full regression | PASS410 / SKIP1 | Final run:34 Vitest files; Node52/52, build/lint and production dependency audit0. Full development audit still retains six moderate findings. |
+| Postal amounts | NOT CHANGED | Customer gross and current gross MO contract unchanged; prospective Rs.625/VPL550+75/MO550 accounting remains FIN-MO-002. |
+| Production and protected projects | NO MUTATION | No production D1 migration/Worker deployment; Label Printer923 hashes, standalone MO Printing and Hoja remain unchanged. |
+
+Detailed reproduction, trigger/backfill model and rollback requirements: [GFS ORDERFLOW FIN-ATOMIC-001](GFS_ORDERFLOW_FIN_ATOMIC_001.md).
+
+## GFS-COD-MO-109 canonical D validation (2026-11-16 UTC)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| D branch/source promotion | PASS | D HEAD `0b2c3b4...`, exact four-commit MO fast-forward; seven-file source composite remains `3d0d17a3...`. |
+| E/F backups/restore | PASS | D `.git` object files identical on F; `fsck` and restored clones pass; both original dangling commits retained. C bundle plus nine-file edit patch verified/restored. |
+| Tool/cache migration | PASS | E Git375 files, Node1994 files, npm cache352 files SHA-identical; Git2.56.1, Node24.22.3/npm11.19.1 execute. |
+| MO/Admin | PASS 52/52 | D: `npm test -- tests/cod-admin.test.ts tests/admin-controls.test.ts tests/admin-layout.test.ts`. |
+| COD/Advance | PASS 90/90 | Eight D suites; no production tests. |
+| Full suite | PASS 386 / SKIP 1 | 33 test files; runnable tests all pass. |
+| Node safety mocks | PASS 46/46 | Five mocked safety suites; no live API or writes. |
+| TypeScript/lint | PASS | D `npm run build`, `npm run lint`. |
+| Wrangler validation | PASS local | Admin/API `versions upload --dry-run --keep-vars --strict`; no upload; output outside D. Admin bundle same 1,323,158-byte SHA `6fd90013...`. |
+| PowerShell integration | BLOCKED | Normal test invocation denied by Restricted policy; no bypass. |
+| VS Code migration | BLOCKED | Running app; full data exceeds E free. F extension split planned but state copy deferred until shutdown. |
+| Chrome MCP | CONFIGURED / CONSENT BLOCKED | Official 1.13.0 integrity and CLI help verified; D config disables input/network/JS/file/telemetry/update, with no server startup/tab access before owner permit. |
+| Live preview/zero regression | BLOCKED | No `list_pages` or current account/state readback. Existing candidate remains unrouted by historical evidence only. |
+
+
+## GFS-COD-MO-108 fresh local validation (2026-11-16 UTC)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Both Git object stores | PASS | `git fsck --full --no-reflogs` exit 0; original has two preserved dangling commits, not corruption. |
+| Original historical composite | PASS | Seven raw D: files hash exactly to `3d0d17a3...`; original mixed EOL recorded in RESOURCE_REGISTRY. |
+| Exact-commit clean bundle | PASS | Export `ae4a5cb...`, fresh locked `npm ci --ignore-scripts`, official Wrangler 4.149.0 dry-run; 1,323,158 bytes, full SHA `6fd900138e8f8aeef51035bf58fa447fb064fa6e226cb4d4aee488f1be4ab49f`, matches recorded provider module. |
+| Working-source independent bundle | PASS | C: dry-run emits the identical full hash and size; no upload. |
+| Focused MO/Admin | PASS 52/52 | `npm test -- tests/cod-admin.test.ts tests/admin-controls.test.ts tests/admin-layout.test.ts`; synthetic SQLite/generated HTML only. |
+| COD/Advance regression | PASS 90/90 | Eight suites: cod-admin, cod-migration-compat, admin-payment, admin-payment-settings-ui, admin-payment-ownership-preservation, payment-reference, payment-reminders-v2, service-window. |
+| Full app suite | PASS 386 / SKIP 1 | `npm test -- --reporter=dot`, 33 test files pass. No production settlement tests. |
+| Node safety scripts | PASS 46/46 | Five mocked suites: deployment-preflight, token-verify, canary-adapter, observability, gfs-cod-mo-55-watchdog. No real deployment/payment/API action. |
+| Build/lint | PASS | `npm run build` (`tsc --noEmit`) and `npm run lint`. |
+| Worker config/bundle validation | PASS LOCAL | Official Admin and API `versions upload --dry-run --keep-vars --strict`; no remote configuration validation claim. |
+| PowerShell syntax | PASS | Four validation/verifier/test scripts, zero Parser.ParseFile errors. |
+| PowerShell integration | BLOCKED | Effective Restricted; ordinary `powershell.exe -NoProfile -File scripts/test-gfs-admin-token-linkage.ps1` denied. No bypass, inline reimplementation or policy change. |
+| Production dependency audit | OPEN SECURITY REVIEW | `npm audit --omit=dev`: Hono 4.13.13, one moderate package/five advisories; patch 4.13.16. CVE-2026-126358 may skip wildcard middleware; Admin uses default router and global `app.use("*", authorizedForAdmin)`. Route bypass was not proven. No lockfile mutation. |
+| Authenticated MCP/live inventory | BLOCKED | Chrome MCP initializes with a 20-second timeout; no exposed browser/provider actions or `list_pages`. |
+| MO live visual preview | BLOCKED | No Orders/Conversations, eligible/ineligible UI, bilingual/mobile/button/error visual acceptance; generated HTML tests are not browser proof. |
+| Current protected baseline/zero regression | UNVERIFIED LIVE | No routing/payment/sender/D1/watchdog/CAPI readback today; no production mutation performed. |
+| GitHub publication | BLOCKED | Public refs/PR fresh; no verified authorized Git writer; no commit/push. |
+
+Portable Git/Node were checksum-verified and used process-only. Reproduction used pinned dependencies, not latest upgrades. The historical deployed hash comparison and original source digest are separate evidence types. No current provider module download or release PASS is implied.
+
 ## GFS-COD-MO-94 continuity and artifact proof (2026-11-15 UTC)
 
 | Gate | Result | Evidence |

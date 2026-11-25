@@ -18,4 +18,6 @@ The [message sequence](docs/GFS_ORDER_001_MESSAGE_SEQUENCE.md), [free-window pol
 
 ## Security Status
 
-Hono is pinned to4.13.16; all five known Hono advisories are removed from the production dependency audit. See [GFS ORDERFLOW SEC-HONO-001](docs/GFS_ORDERFLOW_SEC_HONO_001.md) for reproduction, tests, remaining development-only audit findings and release boundaries. This local correction is not deployed. Next engineering task: GFS-ORDERFLOW-FIN-ATOMIC-001.
+Hono is pinned to4.13.16; all five known Hono advisories are removed from the production dependency audit. See [SEC-HONO-001](docs/GFS_ORDERFLOW_SEC_HONO_001.md) for tests and scope.
+
+Admin approval and MO settlement now use conditional D1 statement chains plus migration candidate0049's shared MO-reference HMAC claim triggers. Synthetic actual-route regressions reproduce and prevent the identified partial commits and duplicate normal/historical MO race. See [FIN-ATOMIC-001](docs/GFS_ORDERFLOW_FIN_ATOMIC_001.md). These changes are local and **not deployed**; migration0049 is not applied to production. Next product task: **GFS-ORDERFLOW-INTENT-030**. The separate gross625/VPL550+75/MO550 accounting change remains required before any new postal settlement activation.
