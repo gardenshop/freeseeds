@@ -1,5 +1,18 @@
 # Test Matrix
 
+## GFS ORDERFLOW Hono security correction (2026-11-25 UTC)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Pre-fix vulnerable-route reproduction | PASS | Hono4.13.13 scoped wildcard patterns returned HTTP200, skipped auth middleware and reached synthetic protected handlers. No live route/access used. |
+| Patched Hono | PASS | Exact4.13.16 dependency/lock pin; only package.json and package-lock.json Hono entries changed. |
+| Focused security suite | PASS9/9 | `tests/hono-security.test.ts`: two wildcard patterns, four encoded terminators, unauthorized/mismatched Access, financial approval POST denial, valid Admin auth, Access health restriction, invalid/valid signed webhook. |
+| Full regression | PASS395 / SKIP1 | 34 Vitest files; documented Node controller/capacity scripts52/52. |
+| TypeScript/lint | PASS | `npm.cmd run build`; `npm.cmd run lint`. One fixture typing error was repaired and these were rerun. |
+| Production audit | PASS | `npm.cmd audit --omit=dev`:0 vulnerabilities; all5 prior Hono advisories absent. |
+| Full dependency audit | OPEN / OUT OF SCOPE | 6 moderate dev-tool findings remain through minimatch GHSA-g3hv-75wg-m249 and existing @typescript-eslint dependencies. No unrelated dependency upgrade permitted. |
+| Cloudflare production | NO MUTATION | Admin3e4b7c26 100%/ce023b54 0%; APIb426ba47 100%/d683ec45 0% read-only before/after. No deployments or config changes. |
+| Protected projects | PASS | Label Printer923/923 SHA checks; standalone MO Printing and Hoja untouched. |
 ## GFS-COD-MO-94 continuity and artifact proof (2026-11-15 UTC)
 
 | Gate | Result | Evidence |

@@ -1,4 +1,9 @@
-# Status
+# GFS ORDERFLOW / Get Free Seeds Status
+
+## GFS ORDERFLOW / GFS-ORDER-001 REV.2 S0 (2026-11-25)
+
+S0 audit **80% (8/10 fully satisfied units), PARTIAL**; WhatsApp leads launch **NO-GO**. Fixed12:47Z cohort:2129 orders,56/24h,421/7d,2078/30d. Hono is locally pinned to4.13.16; pre-fix two wildcard-pattern bypass cases reproduced and corrected. Final focused tests9/9, full Vitest395/1 skipped, Node52/52, TypeScript/lint pass, and production dependency audit0 vulnerabilities. Full npm audit retains6 moderate dev-tool advisories in `@typescript-eslint`/minimatch; no unrelated upgrades made. No deployment occurred. Meta account/Page/WABA/sender/ad account and aggregate pricing remain verified read-only; display name In Review, templates Active - Quality pending, individual FEP expiry unknown. Owner-provided profile email remains unverified account context. O01-O23 mapped; notification numeric crosswalk handled with documented candidates and replacement proposal. S0 still80%; A06 per-contact FEP evidence and A10 release-specific rollback readiness remain partial. See [Hono report](GFS_ORDERFLOW_SEC_HONO_001.md), [audit](GFS_ORDER_001_CURRENT_AUDIT.md), [handover](GFS_ORDER_001_HANDOVER.md), [register](GFS_ORDER_001_TASK_REGISTER.md). No production routing change. Next task: **GFS-ORDERFLOW-FIN-ATOMIC-001**.
+
 
 ## GFS-COD-MO-94 recovered system / unresolved artifact provenance (2026-11-15 UTC)
 

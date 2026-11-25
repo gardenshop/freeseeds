@@ -1,3 +1,14 @@
+## GFS ORDERFLOW master identity and profile context (2026-11-25 UTC)
+
+Permanent master project is **GFS ORDERFLOW**, encompassing GFS-ORDER-001 REV.2, all S0-S9 work, historical decisions and subtasks. Keep established file names/task IDs; Label Printer, standalone Money Order Printing and Hoja Seeds remain separate. Owner reports Facebook profile contact `ayesha.butt55@hotmail.com`; this is not an auth factor or independent browser-session proof. Never ask for authentication secrets; owner personally clears a Meta challenge.
+
+## GFS ORDERFLOW Hono security correction (2026-11-25 UTC)
+
+Pin Hono4.13.16 as the minimum patched version for the five recorded GHSA advisories; regressions reproduced two pre-fix generic wildcard path skips and now pass under the fix. The application's global Access middleware and API signature boundaries are regression-tested; no live app exploitability is claimed. Full evidence is in `docs/GFS_ORDERFLOW_SEC_HONO_001.md`. Production dependency audit is clean; unrelated development audit findings remain deferred because the scope forbids unrelated dependency upgrades. No production rollout was made. Next task is synthetic financial atomicity/cross-ledger settlement protection, not the customer-order feature stages.
+
+## GFS-ORDER-001 REV.2 S0 boundaries (2026-11-25 UTC)
+
+Owner approved the existing isolated lifecycle checkout with inherited edits preserved. [MASTER_PLAN](GFS_ORDER_001_MASTER_PLAN.md) governs REV.2; S0 remains partial, not a release PASS. Do not invent original23/owner2&5 mapping, infer free billing from24h/all-ad traffic, automate Pakistan Post contrary to its terms, or rewrite MO gross/history to fit principal. Reuse native Free Seeds private labels without Label Printer dependencies. No runtime/production change or stage commit yet. [HANDOVER](GFS_ORDER_001_HANDOVER.md) records blockers and next task.
 ## GFS-COD-MO-91 recover before re-upload (2026-11-08 PKT)
 
 **Decision:** resolve the prior upload through read-only authoritative version records before permitting another upload.
