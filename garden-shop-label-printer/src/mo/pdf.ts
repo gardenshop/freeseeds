@@ -1,4 +1,4 @@
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, PDFNumber, PDFOperator, PDFOperatorNames, type PDFImage, type PDFPage, type PDFRef } from "pdf-lib";
 import html2canvas from "html2canvas";
 import type { MoCandidate } from "./adapter";
 import { formatSenderCnic } from "./cnic";
@@ -22,7 +22,7 @@ export const MO_PDF_GEOMETRY = Object.freeze({
 });
 
 export type MoPdfProgress = Readonly<{ completedPages: number; totalPages: number }>;
-export type MoPdfPhase = "html-generation" | "dom-ready" | "pdf-local-validation" | "overlay-preparation" | "html2canvas" | "png-encode" | "pdf-assembly" | "pdf-save";
+export type MoPdfPhase = "html-generation" | "dom-ready" | "pdf-local-validation" | "overlay-preparation" | "html2canvas" | "raster-readback" | "image-encode" | "png-encode" | "pdf-assembly" | "pdf-save";
 export type MoBatchSideMode = "paired" | "front-only" | "back-only";
 export type MoPdfOptions = Readonly<{
   signal?: AbortSignal;
@@ -31,9 +31,16 @@ export type MoPdfOptions = Readonly<{
   draftMode?: boolean;
   layout?: MoLayout;
   sideMode?: MoBatchSideMode;
+  imageEncoding?: "predictor" | "legacy-png";
   onProgress?: (progress: MoPdfProgress) => void;
   onTiming?: (phase: MoPdfPhase, durationMs: number) => void;
 }>;
+
+export type MoRasterPixels = Readonly<{ width: number; height: number; data: Uint8ClampedArray }>;
+
+type EmbeddedMoImage = Readonly<{ kind: "predictor"; ref: PDFRef; width: number; height: number }> | Readonly<{ kind: "legacy-png"; image: PDFImage }>;
+
+type ImagePlacement = Readonly<{ x: number; y: number; width: number; height: number }>;
 
 function abortError(): DOMException {
   return new DOMException("MO PDF export cancelled", "AbortError");
@@ -53,7 +60,13 @@ function abortable<T>(promise: Promise<T>, signal?: AbortSignal): Promise<T> {
   });
 }
 
-async function facePng(srcdoc: string, signal?: AbortSignal, backgroundColor: string | null = "#fff", onTiming?: MoPdfOptions["onTiming"]): Promise<Uint8Array> {
+async function withRenderedFace<T>(
+  srcdoc: string,
+  signal: AbortSignal | undefined,
+  backgroundColor: string | null,
+  onTiming: MoPdfOptions["onTiming"],
+  consume: (canvas: HTMLCanvasElement) => Promise<T>,
+): Promise<T> {
   throwIfAborted(signal);
   const domStartedAt = performance.now();
   const frame = document.createElement("iframe");
@@ -104,12 +117,7 @@ async function facePng(srcdoc: string, signal?: AbortSignal, backgroundColor: st
     onTiming?.("html2canvas", performance.now() - rasterStartedAt);
     throwIfAborted(signal);
     if (canvas.width !== Math.floor(width * DPI / 96) || canvas.height !== Math.floor(height * DPI / 96)) throw new Error(`MO_PDF_RASTER_SIZE_INVALID:${canvas.width}x${canvas.height}`);
-    const encodeStartedAt = performance.now();
-    const png = await abortable(new Promise<Blob>((resolve, reject) => canvas!.toBlob((blob) => blob ? resolve(blob) : reject(new Error("MO_PDF_PNG_ENCODE_FAILED")), "image/png")), signal);
-    throwIfAborted(signal);
-    const bytes = new Uint8Array(await png.arrayBuffer());
-    onTiming?.("png-encode", performance.now() - encodeStartedAt);
-    return bytes;
+    return await consume(canvas);
   } finally {
     frame.remove();
     if (canvas) {
@@ -117,6 +125,130 @@ async function facePng(srcdoc: string, signal?: AbortSignal, backgroundColor: st
       canvas.height = 0;
     }
   }
+}
+
+async function faceRaster(srcdoc: string, signal?: AbortSignal, backgroundColor: string | null = "#fff", onTiming?: MoPdfOptions["onTiming"]): Promise<MoRasterPixels> {
+  return withRenderedFace(srcdoc, signal, backgroundColor, onTiming, async (canvas) => {
+    const readbackStartedAt = performance.now();
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("MO_PDF_CANVAS_CONTEXT_UNAVAILABLE");
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+    onTiming?.("raster-readback", performance.now() - readbackStartedAt);
+    throwIfAborted(signal);
+    return Object.freeze({ width: canvas.width, height: canvas.height, data: pixels.data });
+  });
+}
+
+async function facePng(srcdoc: string, signal?: AbortSignal, backgroundColor: string | null = "#fff", onTiming?: MoPdfOptions["onTiming"]): Promise<Uint8Array> {
+  return withRenderedFace(srcdoc, signal, backgroundColor, onTiming, async (canvas) => {
+    const encodeStartedAt = performance.now();
+    const png = await abortable(new Promise<Blob>((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("MO_PDF_PNG_ENCODE_FAILED")), "image/png")), signal);
+    throwIfAborted(signal);
+    const bytes = new Uint8Array(await png.arrayBuffer());
+    onTiming?.("png-encode", performance.now() - encodeStartedAt);
+    return bytes;
+  });
+}
+
+async function predictorRows(raster: MoRasterPixels, channels: 1 | 3, channelOffsets: readonly number[], signal?: AbortSignal): Promise<Uint8Array> {
+  const { width, height, data } = raster;
+  if (data.length !== width * height * 4 || channelOffsets.length !== channels) throw new Error("MO_PDF_RASTER_CHANNELS_INVALID");
+  const rowBytes = width * channels;
+  const encoded = new Uint8Array(height * (rowBytes + 1));
+  for (let y = 0; y < height; y += 1) {
+    if (y > 0 && y % 256 === 0) {
+      throwIfAborted(signal);
+      await yieldToUi();
+    }
+    const sourceRow = y * width * 4;
+    const targetRow = y * (rowBytes + 1);
+    encoded[targetRow] = 1;
+    for (let x = 0; x < width; x += 1) {
+      const sourcePixel = sourceRow + x * 4;
+      const targetPixel = targetRow + 1 + x * channels;
+      for (let channel = 0; channel < channels; channel += 1) {
+        const current = data[sourcePixel + channelOffsets[channel]];
+        const left = x > 0 ? data[sourcePixel - 4 + channelOffsets[channel]] : 0;
+        encoded[targetPixel + channel] = (current - left) & 0xff;
+      }
+    }
+  }
+  return encoded;
+}
+
+async function embedPredictorRaster(pdf: PDFDocument, raster: MoRasterPixels, hasAlpha: boolean, signal?: AbortSignal, onTiming?: MoPdfOptions["onTiming"]): Promise<EmbeddedMoImage> {
+  throwIfAborted(signal);
+  const encodeStartedAt = performance.now();
+  const context = pdf.context;
+  const colorBytes = await predictorRows(raster, 3, [0, 1, 2], signal);
+  throwIfAborted(signal);
+  const alphaRef = hasAlpha
+    ? context.register(context.flateStream(await predictorRows(raster, 1, [3], signal), {
+      Type: "XObject",
+      Subtype: "Image",
+      Width: raster.width,
+      Height: raster.height,
+      BitsPerComponent: 8,
+      ColorSpace: "DeviceGray",
+      DecodeParms: { Predictor: 15, Colors: 1, BitsPerComponent: 8, Columns: raster.width },
+    }))
+    : undefined;
+  throwIfAborted(signal);
+  const ref = context.register(context.flateStream(colorBytes, {
+    Type: "XObject",
+    Subtype: "Image",
+    Width: raster.width,
+    Height: raster.height,
+    BitsPerComponent: 8,
+    ColorSpace: "DeviceRGB",
+    DecodeParms: { Predictor: 15, Colors: 3, BitsPerComponent: 8, Columns: raster.width },
+    SMask: alphaRef,
+  }));
+  onTiming?.("image-encode", performance.now() - encodeStartedAt);
+  return Object.freeze({ kind: "predictor", ref, width: raster.width, height: raster.height });
+}
+
+async function embedFaceImage(
+  pdf: PDFDocument,
+  srcdoc: string,
+  backgroundColor: string | null,
+  imageEncoding: MoPdfOptions["imageEncoding"],
+  signal?: AbortSignal,
+  onTiming?: MoPdfOptions["onTiming"],
+): Promise<EmbeddedMoImage> {
+  if (imageEncoding === "legacy-png") {
+    return Object.freeze({ kind: "legacy-png", image: await pdf.embedPng(await facePng(srcdoc, signal, backgroundColor, onTiming)) });
+  }
+  const raster = await faceRaster(srcdoc, signal, backgroundColor, onTiming);
+  return embedPredictorRaster(pdf, raster, backgroundColor === null, signal, onTiming);
+}
+
+function drawEmbeddedImage(page: PDFPage, image: EmbeddedMoImage, placement: ImagePlacement): void {
+  if (image.kind === "legacy-png") {
+    page.drawImage(image.image, placement);
+    return;
+  }
+  const key = page.node.newXObject("Image", image.ref);
+  page.pushOperators(
+    PDFOperator.of(PDFOperatorNames.PushGraphicsState),
+    PDFOperator.of(PDFOperatorNames.ConcatTransformationMatrix, [
+      PDFNumber.of(placement.width), PDFNumber.of(0), PDFNumber.of(0), PDFNumber.of(placement.height), PDFNumber.of(placement.x), PDFNumber.of(placement.y),
+    ]),
+    PDFOperator.of(PDFOperatorNames.DrawObject, [key]),
+    PDFOperator.of(PDFOperatorNames.PopGraphicsState),
+  );
+}
+
+export async function drawMoRasterImage(
+  pdf: PDFDocument,
+  page: PDFPage,
+  raster: MoRasterPixels,
+  placement: ImagePlacement,
+  hasAlpha = true,
+  signal?: AbortSignal,
+): Promise<void> {
+  const image = await embedPredictorRaster(pdf, raster, hasAlpha, signal);
+  drawEmbeddedImage(page, image, placement);
 }
 
 function layoutOverlayDocument(source: Document, slot: "left" | "right", rotate: boolean): Readonly<{ srcdoc: string; xMm: number; yMm: number; widthMm: number; heightMm: number }> | undefined {
@@ -162,7 +294,10 @@ function layoutOverlayDocument(source: Document, slot: "left" | "right", rotate:
 }
 
 function yieldToUi(): Promise<void> {
-  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
+  return new Promise((resolve) => {
+    if (typeof requestAnimationFrame === "function") requestAnimationFrame(() => resolve());
+    else setTimeout(resolve, 0);
+  });
 }
 
 /**
@@ -176,7 +311,7 @@ export async function createMoPdfBlob(
   senderCnicInput: string,
   options: MoPdfOptions = {},
 ): Promise<Blob> {
-  const { signal, onProgress, onTiming, backRotation = "none", mappings = new Map(), draftMode = false, layout, sideMode = "paired" } = options;
+  const { signal, onProgress, onTiming, backRotation = "none", mappings = new Map(), draftMode = false, layout, sideMode = "paired", imageEncoding = "predictor" } = options;
   throwIfAborted(signal);
   if (!candidates.length) throw new Error("MO_PDF_NO_ELIGIBLE_RECORDS");
   const cnic = formatSenderCnic(senderCnicInput);
@@ -204,8 +339,8 @@ export async function createMoPdfBlob(
   pdf.setTitle(layoutActive ? "MO-51 user-defined layout batch" : draftMode ? "MO-51 user-confirmed incomplete draft forms" : "MO-51 blank manual-completion forms");
   pdf.setSubject(layoutActive ? "User-defined field layout batch; official postal acceptance is not asserted" : draftMode ? "User-confirmed draft values; unresolved postal fields remain blank; not an official completed money order" : "Blank forms for manual completion; not an official completed money order");
   pdf.setKeywords(layoutActive ? ["MO-51", "user-defined layout", "batch"] : draftMode ? ["MO-51", "user-confirmed draft", "not postal verified", "incomplete"] : ["MO-51", "blank", "manual completion", "not completed"]);
-  const blankArtworkCache = new Map<string, Awaited<ReturnType<typeof pdf.embedPng>>>();
-  const layoutArtworkCache = new Map<string, Awaited<ReturnType<typeof pdf.embedPng>>>();
+  const blankArtworkCache = new Map<string, EmbeddedMoImage>();
+  const layoutArtworkCache = new Map<string, EmbeddedMoImage>();
   let completedPages = 0;
 
   for (const sheet of plan.sheets) {
@@ -220,7 +355,7 @@ export async function createMoPdfBlob(
       let facePreparationMs = 0;
       const onPageTiming: MoPdfOptions["onTiming"] = (phase, durationMs) => {
         onTiming?.(phase, durationMs);
-        if (phase === "dom-ready" || phase === "pdf-local-validation" || phase === "overlay-preparation" || phase === "html2canvas" || phase === "png-encode") {
+        if (phase === "dom-ready" || phase === "pdf-local-validation" || phase === "overlay-preparation" || phase === "html2canvas" || phase === "raster-readback" || phase === "image-encode" || phase === "png-encode") {
           facePreparationMs += durationMs;
         }
       };
@@ -232,10 +367,11 @@ export async function createMoPdfBlob(
         let artwork = staticArtworkOnly ? layoutArtworkCache.get(artworkKey) : undefined;
         if (!artwork) {
           const artworkDocs = renderMoPreviewDocuments(sheet, cnicValue, backRotation, new Map());
-          artwork = await pdf.embedPng(await facePng(artworkDocs[face], signal, "#fff", onPageTiming));
+          if (imageEncoding === "legacy-png") artwork = await embedFaceImage(pdf, artworkDocs[face], "#fff", imageEncoding, signal, onPageTiming);
+          else artwork = await embedPredictorRaster(pdf, await faceRaster(artworkDocs[face], signal, "#fff", onPageTiming), false, signal, onPageTiming);
           if (staticArtworkOnly) layoutArtworkCache.set(artworkKey, artwork);
         }
-        page.drawImage(artwork, { x: 0, y: 0, width: PAGE_WIDTH_PT, height: PAGE_HEIGHT_PT });
+        drawEmbeddedImage(page, artwork, { x: 0, y: 0, width: PAGE_WIDTH_PT, height: PAGE_HEIGHT_PT });
 
         const overlayStartedAt = performance.now();
         const overlaySource = new DOMParser().parseFromString(docs[face], "text/html");
@@ -249,9 +385,11 @@ export async function createMoPdfBlob(
           if (!candidate) continue;
           const overlay = overlays.get(slot);
           if (!overlay) continue;
-          const image = await pdf.embedPng(await facePng(overlay.srcdoc, signal, null, onPageTiming));
+          const image = imageEncoding === "legacy-png"
+            ? await embedFaceImage(pdf, overlay.srcdoc, null, imageEncoding, signal, onPageTiming)
+            : await embedPredictorRaster(pdf, await faceRaster(overlay.srcdoc, signal, null, onPageTiming), true, signal, onPageTiming);
           const mmToPoints = PAGE_WIDTH_PT / 297;
-          page.drawImage(image, {
+          drawEmbeddedImage(page, image, {
             x: ((slot === "right" ? 148.5 : 0) + overlay.xMm) * mmToPoints,
             y: PAGE_HEIGHT_PT - (overlay.yMm + overlay.heightMm) * mmToPoints,
             width: overlay.widthMm * mmToPoints,
@@ -264,10 +402,11 @@ export async function createMoPdfBlob(
         const staticArtworkOnly = visualFields.every((fields) => !fields || !hasVisibleMoFields(fields)) && cnic.status !== "valid";
         let image = staticArtworkOnly ? blankArtworkCache.get(key) : undefined;
         if (!image) {
-          image = await pdf.embedPng(await facePng(docs[face], signal, "#fff", onPageTiming));
+          if (imageEncoding === "legacy-png") image = await embedFaceImage(pdf, docs[face], "#fff", imageEncoding, signal, onPageTiming);
+          else image = await embedPredictorRaster(pdf, await faceRaster(docs[face], signal, "#fff", onPageTiming), false, signal, onPageTiming);
           if (staticArtworkOnly) blankArtworkCache.set(key, image);
         }
-        page.drawImage(image, { x: 0, y: 0, width: PAGE_WIDTH_PT, height: PAGE_HEIGHT_PT });
+        drawEmbeddedImage(page, image, { x: 0, y: 0, width: PAGE_WIDTH_PT, height: PAGE_HEIGHT_PT });
       }
       onTiming?.("pdf-assembly", Math.max(0, performance.now() - assemblyStartedAt - facePreparationMs));
       completedPages += 1;
@@ -281,7 +420,8 @@ export async function createMoPdfBlob(
   const bytes = await pdf.save({ useObjectStreams: true });
   onTiming?.("pdf-save", performance.now() - pdfSaveStartedAt);
   throwIfAborted(signal);
-  const buffer = new ArrayBuffer(bytes.byteLength);
-  new Uint8Array(buffer).set(bytes);
+  const buffer = bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength
+    ? bytes.buffer as ArrayBuffer
+    : bytes.slice().buffer as ArrayBuffer;
   return new Blob([buffer], { type: "application/pdf" });
 }
